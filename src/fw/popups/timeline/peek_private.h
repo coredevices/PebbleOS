@@ -19,14 +19,14 @@ typedef struct TimelinePeek {
   Window window;
   Layer layout_layer;
   PeekLayout *peek_layout;
-  Animation *animation; //!< Currently running animation
-  bool exists; //!< Whether there exists an item to show in peek.
-  bool started; //!< Whether the item has started.
-  bool enabled; //!< Whether to persistently show or hide the peek.
-  bool visible; //!< Whether the peek is visible or not.
-  bool first; //!< Whether the item is the first item in Timeline.
-  bool removing_concurrent; //!< Whether the removing concurrent animation is occurring.
-  bool future_empty; //!< Whether Timeline future is empty.
+  Animation *animation;      //!< Currently running animation
+  bool exists;               //!< Whether there exists an item to show in peek.
+  bool started;              //!< Whether the item has started.
+  bool enabled;              //!< Whether to persistently show or hide the peek.
+  bool visible;              //!< Whether the peek is visible or not.
+  bool first;                //!< Whether the item is the first item in Timeline.
+  bool removing_concurrent;  //!< Whether the removing concurrent animation is occurring.
+  bool future_empty;         //!< Whether Timeline future is empty.
 } TimelinePeek;
 
 #if UNITTEST

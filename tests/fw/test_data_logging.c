@@ -57,15 +57,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
-
 #include "pbl/kernel/sched.h"
 pbl_tick_t pbl_uptime_ticks(void) {
   return 1337;
 }
 
 #include "kernel/memory_layout.h"
-const MpuRegion* memory_layout_get_app_region(void) {
+const MpuRegion *memory_layout_get_app_region(void) {
   return NULL;
 }
 bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf, size_t length) {
@@ -73,7 +71,7 @@ bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf,
 }
 
 // We can't include all of stubs_process_manager because it conflicts with fake_app_manager.h
-bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
+bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   return true;
 }
 
@@ -87,8 +85,8 @@ static DataLoggingSendDataMessage s_prev_send_data_hdr;
 static uint8_t s_prev_send_data[COMM_MAX_OUTBOUND_PAYLOAD_SIZE];
 static uint32_t s_prev_send_data_bytes;
 
-static void prv_transport_sent_data_cb(uint16_t endpoint_id,
-                                       const uint8_t* data, unsigned int data_length) {
+static void prv_transport_sent_data_cb(uint16_t endpoint_id, const uint8_t *data,
+                                       unsigned int data_length) {
   PBL_LOG_INFO("Received %d bytes of data from watch", data_length);
   if (data_length >= sizeof(s_prev_send_data_hdr)) {
     memcpy(&s_prev_send_data_hdr, data, sizeof(s_prev_send_data_hdr));
@@ -103,7 +101,6 @@ static void prv_transport_sent_data_cb(uint16_t endpoint_id,
   }
 }
 
-
 // ----------------------------------------------------------------------------------------
 // Setup
 static void prv_init_fake_flash(void) {
@@ -112,7 +109,7 @@ static void prv_init_fake_flash(void) {
   pfs_format(false /* write erase headers */);
 
   PBL_LOG_INFO("\nFile system size: %d, avail: %d", (int)pfs_get_size(),
-          (int)get_available_pfs_space());
+               (int)get_available_pfs_space());
 }
 
 // ----------------------------------------------------------------------------------------
@@ -129,8 +126,8 @@ static uint32_t prv_get_random_buffer(uint8_t **buf, unsigned int size) {
 }
 
 // ----------------------------------------------------------------------------------------
-static void prv_data_log_chain(DataLoggingSessionRef logging_session, uint8_t *buf,
-                               int item_size, int num_items) {
+static void prv_data_log_chain(DataLoggingSessionRef logging_session, uint8_t *buf, int item_size,
+                               int num_items) {
   int num_bytes = item_size * num_items;
   while (num_bytes > 0) {
     unsigned int chunk_size;
@@ -173,7 +170,7 @@ static uint32_t prv_log_random_data(DataLoggingSessionRef logging_session, int i
 
   prv_data_log_chain(logging_session, random_buf, item_size, num_items);
 
-  free (random_buf);
+  free(random_buf);
   return (random_crc);
 }
 
@@ -194,12 +191,12 @@ void test_data_logging__initialize(void) {
   fake_system_task_callbacks_invoke_pending();
 
   // Create the system comm session
-  //Transport *transport = (Transport *) ~0;
-  //s_session = comm_session_open(transport, &s_transport_imp,
+  // Transport *transport = (Transport *) ~0;
+  // s_session = comm_session_open(transport, &s_transport_imp,
   //                                         TransportDestinationSystem);
   fake_comm_session_init();
-  Transport *transport = fake_transport_create(TransportDestinationSystem, NULL,
-                                               prv_transport_sent_data_cb);
+  Transport *transport =
+      fake_transport_create(TransportDestinationSystem, NULL, prv_transport_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
 }
 
@@ -237,8 +234,8 @@ void test_data_logging__log_consume_non_buffered(void) {
 
   // Create sessions
   for (int i = 0; i < 10; i++) {
-    logging_sessions[i] =  (DataLoggingSessionRef)dls_create(i, DATA_LOGGING_BYTE_ARRAY, item_size,
-                            false /*buffered*/, false /*resume*/, &system_uuid);
+    logging_sessions[i] = (DataLoggingSessionRef)dls_create(
+        i, DATA_LOGGING_BYTE_ARRAY, item_size, false /*buffered*/, false /*resume*/, &system_uuid);
     cl_assert(logging_sessions[i]);
   }
 
@@ -247,7 +244,6 @@ void test_data_logging__log_consume_non_buffered(void) {
     prv_log_consume_random(logging_sessions[i], item_size, rand() % 16);
   }
 }
-
 
 // ----------------------------------------------------------------------------------------
 void test_data_logging__log_consume_large_items(void) {
@@ -268,7 +264,6 @@ void test_data_logging__log_consume_large_items(void) {
   }
 }
 
-
 // ----------------------------------------------------------------------------------------
 // Test writing and consuming so much that we are forced to reallocate the file partway
 // through
@@ -286,15 +281,14 @@ void test_data_logging__log_realloc(void) {
   // Log Consume
   for (int i = 0; i < 5; i++) {
     // Each write is 1/8 to 1/4 of the initial file size.
-    int num_bytes = DLS_FILE_INIT_SIZE_BYTES/8 + (rand() % DLS_FILE_INIT_SIZE_BYTES/8);
+    int num_bytes = DLS_FILE_INIT_SIZE_BYTES / 8 + (rand() % DLS_FILE_INIT_SIZE_BYTES / 8);
 
     // By doing 16 loops, we are sure to cycle through the allocated file size at least twice.
-    for (int j=0; j<16; j++) {
+    for (int j = 0; j < 16; j++) {
       prv_log_consume_random(logging_sessions[i], item_size, num_bytes);
     }
   }
 }
-
 
 // ----------------------------------------------------------------------------------------
 // Filling up the file system. We should be limited to creating DLS_MAX_DATA_BYTES worth
@@ -349,7 +343,6 @@ void test_data_logging__fill_quota(void) {
   cl_assert(total_bytes < DLS_TOTAL_STORAGE_BYTES);
 }
 
-
 // ----------------------------------------------------------------------------------------
 // Test logging a LOT of data.
 void test_data_logging__large_session(void) {
@@ -357,18 +350,17 @@ void test_data_logging__large_session(void) {
   DataLoggingSessionRef logging_session;
   Uuid system_uuid = UUID_SYSTEM;
 
-  logging_session = (DataLoggingSessionRef)dls_create(0, DATA_LOGGING_BYTE_ARRAY, item_size,
-                            false /*buffered*/, false /*resume*/, &system_uuid);
+  logging_session = (DataLoggingSessionRef)dls_create(
+      0, DATA_LOGGING_BYTE_ARRAY, item_size, false /*buffered*/, false /*resume*/, &system_uuid);
   cl_assert(logging_session);
   fake_system_task_callbacks_invoke_pending();
 
   // We should be able to create a really large session.
-  int num_bytes = DLS_MAX_DATA_BYTES/2;
+  int num_bytes = DLS_MAX_DATA_BYTES / 2;
   int num_items = num_bytes / item_size;
   cl_assert(num_bytes > 0);
   prv_log_consume_random(logging_session, item_size, num_items);
 }
-
 
 // ----------------------------------------------------------------------------------------
 void test_data_logging__interleave(void) {
@@ -409,7 +401,6 @@ void test_data_logging__interleave(void) {
   }
 }
 
-
 // ----------------------------------------------------------------------------------------
 static void prv_do_recovery_test(int num_sessions) {
   unsigned int num_bytes[num_sessions];
@@ -418,8 +409,8 @@ static void prv_do_recovery_test(int num_sessions) {
 
   // Log some random data
   for (int i = 0; i < num_sessions; i++) {
-    DataLoggingSessionRef logging_session = data_logging_create(i, DATA_LOGGING_UINT, item_size,
-                                                                false);
+    DataLoggingSessionRef logging_session =
+        data_logging_create(i, DATA_LOGGING_UINT, item_size, false);
     cl_assert(logging_session);
     num_bytes[i] = rand() % 12345;
     crcs[i] = prv_log_random_data(logging_session, item_size, num_bytes[i]);
@@ -461,7 +452,7 @@ void test_data_logging__recover_five(void) {
 // ----------------------------------------------------------------------------------------
 //! Try passing garbage pointers to sessions to data logging functions.
 void test_data_logging__invalid_session_garbage(void) {
-  uint32_t data[] = { 1, 2, 3 };
+  uint32_t data[] = {1, 2, 3};
 
   // Make sure logging to bogus sessions does the right thing.
   cl_assert_equal_i(data_logging_log(0, data, ARRAY_LENGTH(data)), DATA_LOGGING_INVALID_PARAMS);
@@ -475,7 +466,7 @@ void test_data_logging__invalid_session_garbage(void) {
 // ----------------------------------------------------------------------------------------
 //! Try using sessions after we've closed them.
 void test_data_logging__invalid_session_use_after_close(void) {
-  uint32_t data[] = { 1, 2, 3 };
+  uint32_t data[] = {1, 2, 3};
 
   DataLoggingSessionRef session = data_logging_create(0x1234, DATA_LOGGING_UINT, 4, false);
   cl_assert(session);
@@ -495,17 +486,15 @@ void test_data_logging__invalid_session_use_after_close(void) {
 // ----------------------------------------------------------------------------------------
 //! Try passing invalid params to data_logging_log
 void test_data_logging__invalid_params(void) {
-  uint32_t data[] = { 1, 2, 3 };
+  uint32_t data[] = {1, 2, 3};
 
   DataLoggingSessionRef session = data_logging_create(0x1234, DATA_LOGGING_UINT, 4, false);
   cl_assert(session);
   fake_system_task_callbacks_invoke_pending();
 
   // Log to the session after it's closed.
-  cl_assert_equal_i(data_logging_log(session, NULL, 4),
-                    DATA_LOGGING_INVALID_PARAMS);
-  cl_assert_equal_i(data_logging_log(NULL, data, ARRAY_LENGTH(data)),
-                    DATA_LOGGING_INVALID_PARAMS);
+  cl_assert_equal_i(data_logging_log(session, NULL, 4), DATA_LOGGING_INVALID_PARAMS);
+  cl_assert_equal_i(data_logging_log(NULL, data, ARRAY_LENGTH(data)), DATA_LOGGING_INVALID_PARAMS);
 
   // Finish the session without a crash
   data_logging_finish(0);
@@ -526,18 +515,18 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
     uuid = &system_uuid;
   }
   logging_session = (DataLoggingSessionRef)dls_create(0, DATA_LOGGING_BYTE_ARRAY, item_size,
-                            buffered, false /*resume*/, uuid);
+                                                      buffered, false /*resume*/, uuid);
   cl_assert(logging_session);
   fake_system_task_callbacks_invoke_pending();
 
   // This sends the open session request out the transport
   fake_comm_session_process_send_next();
 
-
   // Generate the received ack from the phone endpoint
   CommSession *session = comm_session_get_system_session();
-  uint8_t ack_data[] = { ~DLS_ENDPOINT_CMD_MASK | DataLoggingEndpointCmdAck,
-                     dls_test_get_session_id(logging_session)};
+  uint8_t ack_data[] = {
+      ~DLS_ENDPOINT_CMD_MASK | DataLoggingEndpointCmdAck, dls_test_get_session_id(logging_session)
+  };
   data_logging_protocol_msg_callback(session, ack_data, 2);
   fake_system_task_callbacks_invoke_pending();
 
@@ -546,7 +535,6 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
 
   // Finish up the session so that all data gets sent out the endpoint
   data_logging_finish(logging_session);
-
 
   // ---------------------------------------------------------------------------
   // Consume it using the method used by the data logging endpoint
@@ -557,11 +545,10 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
   uint32_t rcv_bytes = 0;
   s_prev_send_data_bytes = 0;
   dls_private_send_session(logging_session, true /*empty*/);
-  const int items_per_send = (COMM_MAX_OUTBOUND_PAYLOAD_SIZE - sizeof(DataLoggingSendDataMessage))
-                           / item_size;
+  const int items_per_send =
+      (COMM_MAX_OUTBOUND_PAYLOAD_SIZE - sizeof(DataLoggingSendDataMessage)) / item_size;
   const int num_sends = num_items / items_per_send;
   for (int i = 0; i < num_sends + 5; i++) {
-
     // This sends a chunk out and it should show up in our prv_transport_sent_data_cb callback
     fake_comm_session_process_send_next();
     cl_assert(s_prev_send_data_bytes <= buf_size - rcv_bytes);
@@ -581,7 +568,6 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
   // Free buffer
   free(rcv_buffer);
 }
-
 
 // ----------------------------------------------------------------------------------------
 // Test using the endpoint to empty the session
@@ -607,5 +593,3 @@ void test_data_logging__send_session_medium(void) {
 void test_data_logging__send_session_small(void) {
   prv_endpoint_test(true /*buffered*/, 19, 45);
 }
-
-

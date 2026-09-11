@@ -30,7 +30,7 @@ void test_health_activity_summary_card__initialize(void) {
   rtc_set_time(1704557975);
 
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -70,25 +70,21 @@ static void prv_create_card_and_render(HealthData *health_data) {
 //////////////////////
 
 void test_health_activity_summary_card__render_no_data(void) {
-  prv_create_card_and_render(&(HealthData) {});
+  prv_create_card_and_render(&(HealthData){});
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
 void test_health_activity_summary_card__no_current_steps(void) {
   HealthData health_data = {
-    .step_data = 0,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 750,
-    .step_average_last_updated_time = 975,
+      .step_data = 0,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 750,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -97,19 +93,15 @@ void test_health_activity_summary_card__no_current_steps(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical1(void) {
   HealthData health_data = {
-    .step_data = 170,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 340,
-    .step_average_last_updated_time = 975,
+      .step_data = 170,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 340,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -118,19 +110,15 @@ void test_health_activity_summary_card__render_current_behind_typical1(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical2(void) {
   HealthData health_data = {
-    .step_data = 320,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 340,
-    .step_average_last_updated_time = 975,
+      .step_data = 320,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 340,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -139,19 +127,15 @@ void test_health_activity_summary_card__render_current_behind_typical2(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical3(void) {
   HealthData health_data = {
-    .step_data = 460,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 555,
-    .step_average_last_updated_time = 975,
+      .step_data = 460,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 555,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -160,19 +144,15 @@ void test_health_activity_summary_card__render_current_behind_typical3(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical4(void) {
   HealthData health_data = {
-    .step_data = 699,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 840,
-    .step_average_last_updated_time = 975,
+      .step_data = 699,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 840,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -181,19 +161,15 @@ void test_health_activity_summary_card__render_current_behind_typical4(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical5(void) {
   HealthData health_data = {
-    .step_data = 837,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 914,
-    .step_average_last_updated_time = 975,
+      .step_data = 837,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 914,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -202,19 +178,15 @@ void test_health_activity_summary_card__render_current_behind_typical5(void) {
 
 void test_health_activity_summary_card__render_current_equals_typical(void) {
   HealthData health_data = {
-    .step_data = 837,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 837,
-    .step_average_last_updated_time = 975,
+      .step_data = 837,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 837,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -223,19 +195,15 @@ void test_health_activity_summary_card__render_current_equals_typical(void) {
 
 void test_health_activity_summary_card__render_current_above_typical1(void) {
   HealthData health_data = {
-    .step_data = 340,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 170,
-    .step_average_last_updated_time = 975,
+      .step_data = 340,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 170,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -244,19 +212,15 @@ void test_health_activity_summary_card__render_current_above_typical1(void) {
 
 void test_health_activity_summary_card__render_current_above_typical2(void) {
   HealthData health_data = {
-    .step_data = 400,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 379,
-    .step_average_last_updated_time = 975,
+      .step_data = 400,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 379,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -265,19 +229,15 @@ void test_health_activity_summary_card__render_current_above_typical2(void) {
 
 void test_health_activity_summary_card__render_current_above_typical3(void) {
   HealthData health_data = {
-    .step_data = 780,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 480,
-    .step_average_last_updated_time = 975,
+      .step_data = 780,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 480,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -286,19 +246,15 @@ void test_health_activity_summary_card__render_current_above_typical3(void) {
 
 void test_health_activity_summary_card__render_current_above_typical4(void) {
   HealthData health_data = {
-    .step_data = 866,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 700,
-    .step_average_last_updated_time = 975,
+      .step_data = 866,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 700,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -307,19 +263,15 @@ void test_health_activity_summary_card__render_current_above_typical4(void) {
 
 void test_health_activity_summary_card__render_current_above_typical5(void) {
   HealthData health_data = {
-    .step_data = 970,
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 900,
-    .step_average_last_updated_time = 975,
+      .step_data = 970,
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 900,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
@@ -328,22 +280,17 @@ void test_health_activity_summary_card__render_current_above_typical5(void) {
 
 void test_health_activity_summary_card__render_current_above_expected(void) {
   HealthData health_data = {
-    .step_data = {2000},
-    .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-                      10, 10, 10, 10, 10, 50}, // 1000
-    .current_step_average = 800,
-    .step_average_last_updated_time = 975,
+      .step_data = {2000},
+      .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+                        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 50},  // 1000
+      .current_step_average = 800,
+      .step_average_last_updated_time = 975,
   };
 
   prv_create_card_and_render(&health_data);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
-

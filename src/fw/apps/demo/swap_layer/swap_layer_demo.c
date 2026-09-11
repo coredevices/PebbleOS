@@ -45,38 +45,34 @@ typedef struct {
 } TestNotification;
 
 static const TestNotification notifications[] = {
-  {
-    .type = TimelineItemTypeNotification,
-    .layout_id = LayoutIdNotification,
-    .icon_id = TIMELINE_RESOURCE_NOTIFICATION_GOOGLE_HANGOUTS,
-    .bg_color = GColorJaegerGreenARGB8,
-    .title = "Henry Levak",
-    .body = "Welcome mighty Irken soldiers! "
-      "You are the finest examples of military training the Irken army has to offer! "
-      "Good for you. Standing behind us, however, are the soldiers we've chosen for roles "
-      "in one of the most crucial parts in Operation Impending Doom II! "
-      "[mockingly] You in the audience just get to sit and watch.",
-    .time_offset = -MINUTES(5)
-  },
-  {
-    .type = TimelineItemTypeNotification,
-    .layout_id = LayoutIdNotification,
-    .icon_id = TIMELINE_RESOURCE_GENERIC_EMAIL,
-    .bg_color = GColorVividCeruleanARGB8,
-    .title = "Henry Levak",
-    .subtitle = "Henry sent you a 1-1 message",
-    .body = "What is an alternative",
-    .time_offset = -MINUTES(5)
-  },
-  {
-    .type = TimelineItemTypeReminder,
-    .layout_id = LayoutIdReminder,
-    .icon_id = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,
-    .title = "Implementation Design Review",
-    .location = "High (Room 12)\nPebble PA Office",
-    .body = "with Liron Damir and 10 other people",
-    .time_offset = MINUTES(10),
-  }
+    {.type = TimelineItemTypeNotification,
+     .layout_id = LayoutIdNotification,
+     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_GOOGLE_HANGOUTS,
+     .bg_color = GColorJaegerGreenARGB8,
+     .title = "Henry Levak",
+     .body = "Welcome mighty Irken soldiers! "
+             "You are the finest examples of military training the Irken army has to offer! "
+             "Good for you. Standing behind us, however, are the soldiers we've chosen for roles "
+             "in one of the most crucial parts in Operation Impending Doom II! "
+             "[mockingly] You in the audience just get to sit and watch.",
+     .time_offset = -MINUTES(5)},
+    {.type = TimelineItemTypeNotification,
+     .layout_id = LayoutIdNotification,
+     .icon_id = TIMELINE_RESOURCE_GENERIC_EMAIL,
+     .bg_color = GColorVividCeruleanARGB8,
+     .title = "Henry Levak",
+     .subtitle = "Henry sent you a 1-1 message",
+     .body = "What is an alternative",
+     .time_offset = -MINUTES(5)},
+    {
+        .type = TimelineItemTypeReminder,
+        .layout_id = LayoutIdReminder,
+        .icon_id = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,
+        .title = "Implementation Design Review",
+        .location = "High (Room 12)\nPebble PA Office",
+        .body = "with Liron Damir and 10 other people",
+        .time_offset = MINUTES(10),
+    }
 };
 
 #define NUM_NOTIFS ((int)ARRAY_LENGTH(notifications))
@@ -94,7 +90,6 @@ static LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_pos
   PBL_LOG_DBG("getting layer %d", rel_position);
   SwapLayerDemoData *data = context;
 
-
   int8_t new_idx = data->idx + rel_position;
   if (0 > new_idx || new_idx >= NUM_NOTIFS) {
     return NULL;
@@ -103,8 +98,7 @@ static LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_pos
   return data->layout_layers[new_idx];
 }
 
-static void prv_layout_removed_handler(SwapLayer *swap_layer, LayoutLayer *layout,
-                                       void *context) {
+static void prv_layout_removed_handler(SwapLayer *swap_layer, LayoutLayer *layout, void *context) {
   // layer_destroy(layer);
 }
 
@@ -113,7 +107,7 @@ static void prv_layout_will_appear_handler(SwapLayer *swap_layer, LayoutLayer *l
 }
 
 static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *layout,
-                                         int8_t rel_change, void *context) {
+                                          int8_t rel_change, void *context) {
   SwapLayerDemoData *data = context;
   data->idx += rel_change;
 }
@@ -123,14 +117,13 @@ static void prv_update_colors_handler(SwapLayer *swap_layer, GColor bg_color,
   SwapLayerDemoData *data = context;
 
   GColor status_color = PBL_IF_RECT_ELSE((status_bar_filled) ? bg_color : GColorWhite, GColorClear);
-  status_bar_layer_set_colors(&data->status_layer, status_color,
-                              gcolor_legible_over(status_color));
+  status_bar_layer_set_colors(&data->status_layer, status_color, gcolor_legible_over(status_color));
 }
 
 static void prv_show_incoming_call(void *data) {
   PebblePhoneCaller caller = {
-    .number = "+55 408-555-1212",
-    .name = "Pankajavalli Balamurugan",
+      .number = "+55 408-555-1212",
+      .name = "Pankajavalli Balamurugan",
   };
   phone_ui_handle_incoming_call(&caller, false, PhoneCallSource_PP);
 }
@@ -167,14 +160,15 @@ static void prv_window_load(Window *window) {
   swap_layer_frame.origin.y += STATUS_BAR_LAYER_HEIGHT;
   swap_layer_frame.size.h -= STATUS_BAR_LAYER_HEIGHT;
   swap_layer_init(swap_layer, &swap_layer_frame);
-  swap_layer_set_callbacks(swap_layer, data, (SwapLayerCallbacks) {
-    .get_layout_handler = prv_get_layout_handler,
-    .layout_removed_handler = prv_layout_removed_handler,
-    .layout_will_appear_handler = prv_layout_will_appear_handler,
-    .layout_did_appear_handler = prv_layout_did_appear_handler,
-    .update_colors_handler = prv_update_colors_handler,
-    .click_config_provider = prv_click_config_provider,
-  });
+  swap_layer_set_callbacks(swap_layer, data,
+                           (SwapLayerCallbacks){
+                               .get_layout_handler = prv_get_layout_handler,
+                               .layout_removed_handler = prv_layout_removed_handler,
+                               .layout_will_appear_handler = prv_layout_will_appear_handler,
+                               .layout_did_appear_handler = prv_layout_did_appear_handler,
+                               .update_colors_handler = prv_update_colors_handler,
+                               .click_config_provider = prv_click_config_provider,
+                           });
   layer_add_child(root, swap_layer_get_layer(swap_layer));
 
   // configure status layer
@@ -196,10 +190,9 @@ static void handle_init(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Swap Layer"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
-
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
 
   for (int i = 0; i < NUM_NOTIFS; i++) {
     TestNotification notif = notifications[i];
@@ -239,19 +232,18 @@ static void handle_init(void) {
 
     uint32_t timestamp = (rtc_get_time() + notif.time_offset);
 
-    TimelineItem *notification =
-        timeline_item_create_with_attributes(timestamp, 0, notif.type,
-                                             notif.layout_id, &attr_list, NULL);
+    TimelineItem *notification = timeline_item_create_with_attributes(
+        timestamp, 0, notif.type, notif.layout_id, &attr_list, NULL);
 
     const LayoutLayerConfig config = {
-      .frame = &window->layer.frame,
-      .attributes = &notification->attr_list,
-      .mode = LayoutLayerModeCard,
-      .app_id = &notification->header.parent_id,
-      .context =  &(NotificationLayoutInfo) {
-        .item = notification,
-        .show_notification_timestamp = true,
-      },
+        .frame = &window->layer.frame,
+        .attributes = &notification->attr_list,
+        .mode = LayoutLayerModeCard,
+        .app_id = &notification->header.parent_id,
+        .context = &(NotificationLayoutInfo){
+            .item = notification,
+            .show_notification_timestamp = true,
+        },
     };
     LayoutLayer *layout = layout_create(notification->header.layout, &config);
 
@@ -271,15 +263,17 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* swap_layer_demo_get_app_info() {
+const PebbleProcessMd *swap_layer_demo_get_app_info() {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = s_main,
-      // UUID: 12a32d95-ef69-46d4-a0b9-854cc62f97f9
-      .uuid = {0x12, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4,
-               0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f, 0x97, 0xf9},
-    },
-    .name = "SwapLayer Demo",
+      .common =
+          {
+              .main_func = s_main,
+              // UUID: 12a32d95-ef69-46d4-a0b9-854cc62f97f9
+              .uuid =
+                  {0x12, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6,
+                   0x2f, 0x97, 0xf9},
+          },
+      .name = "SwapLayer Demo",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

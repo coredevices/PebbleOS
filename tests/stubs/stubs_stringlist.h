@@ -15,6 +15,6 @@ size_t WEAK string_list_count(StringList *list) {
   return 0;
 }
 
-char * WEAK string_list_get_at(StringList *list, size_t index) {
+char *WEAK string_list_get_at(StringList *list, size_t index) {
   return NULL;
 }

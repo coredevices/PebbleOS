@@ -31,13 +31,15 @@ bool WEAK pin_db_exists_with_parent(const TimelineItemId *parent_id) {
 }
 
 status_t WEAK pin_db_next_item_header(TimelineItem *next_item_out,
-                                 TimelineItemStorageFilterCallback filter) {
+                                      TimelineItemStorageFilterCallback filter) {
   return S_SUCCESS;
 }
 
-void WEAK pin_db_init(void) {}
+void WEAK pin_db_init(void) {
+}
 
-void WEAK pin_db_deinit(void) {}
+void WEAK pin_db_deinit(void) {
+}
 
 status_t WEAK pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   return S_SUCCESS;

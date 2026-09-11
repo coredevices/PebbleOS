@@ -57,9 +57,9 @@ static bool s_bg_callback_pending;
 static SingleListNode *s_pending_main_head;
 static bool s_main_callback_pending;
 
-static Receiver *prv_default_kernel_receiver_prepare(
-    CommSession *session, const PebbleProtocolEndpoint *endpoint,
-    size_t total_payload_size) {
+static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
+                                                     const PebbleProtocolEndpoint *endpoint,
+                                                     size_t total_payload_size) {
   if (total_payload_size == 0) {
     return NULL;  // Ignore zero-length messages
   }
@@ -68,26 +68,26 @@ static Receiver *prv_default_kernel_receiver_prepare(
   DefaultReceiverImpl *receiver = kernel_zalloc(size_needed);
 
   if (!receiver) {
-    PBL_LOG_WRN("Could not allocate receiver, handler:%p size:%d",
-            endpoint->handler, (int)size_needed);
+    PBL_LOG_WRN("Could not allocate receiver, handler:%p size:%d", endpoint->handler,
+                (int)size_needed);
     return NULL;
   }
 
   const bool should_use_kernel_main =
       (endpoint->receiver_opt == &g_default_kernel_receiver_opt_main);
-  *receiver = (DefaultReceiverImpl) {
-    .session = session,
-    .endpoint = endpoint,
-    .total_payload_size = total_payload_size,
-    .should_use_kernel_main = should_use_kernel_main,
-    .curr_pos = 0
+  *receiver = (DefaultReceiverImpl){
+      .session = session,
+      .endpoint = endpoint,
+      .total_payload_size = total_payload_size,
+      .should_use_kernel_main = should_use_kernel_main,
+      .curr_pos = 0
   };
 
   return (Receiver *)receiver;
 }
 
-static void prv_default_kernel_receiver_write(
-    Receiver *receiver, const uint8_t *data, size_t length) {
+static void prv_default_kernel_receiver_write(Receiver *receiver, const uint8_t *data,
+                                              size_t length) {
   DefaultReceiverImpl *impl = (DefaultReceiverImpl *)receiver;
 
   PBL_ASSERTN((impl->curr_pos + length) <= impl->total_payload_size);
@@ -97,11 +97,10 @@ static void prv_default_kernel_receiver_write(
 }
 
 static void prv_wipe_receiver_data(DefaultReceiverImpl *receiver) {
-  *receiver = (DefaultReceiverImpl) { };
+  *receiver = (DefaultReceiverImpl){};
 }
 
-static void prv_append_to_pending_list(DefaultReceiverImpl *impl,
-                                       SingleListNode **head) {
+static void prv_append_to_pending_list(DefaultReceiverImpl *impl, SingleListNode **head) {
   slist_init(&impl->node);
   if (*head) {
     slist_append(*head, &impl->node);
@@ -161,8 +160,7 @@ static void prv_default_kernel_receiver_finish(Receiver *receiver) {
   impl->handler_scheduled = true;
 
   if ((int)impl->total_payload_size != impl->curr_pos) {
-    PBL_LOG_WRN("Got fewer bytes than expected for handler %p",
-            impl->endpoint->handler);
+    PBL_LOG_WRN("Got fewer bytes than expected for handler %p", impl->endpoint->handler);
   }
 
   // Coalesce callbacks: append to the pending list and only schedule a new
@@ -187,15 +185,15 @@ static void prv_default_kernel_receiver_finish(Receiver *receiver) {
 static void prv_default_kernel_receiver_cleanup(Receiver *receiver) {
   DefaultReceiverImpl *impl = (DefaultReceiverImpl *)receiver;
   if (impl->handler_scheduled) {
-    return; // the kernel BG/main callback will free the data
+    return;  // the kernel BG/main callback will free the data
   }
   prv_wipe_receiver_data(impl);
   kernel_free(impl);
 }
 
 const ReceiverImplementation g_default_kernel_receiver_implementation = {
-  .prepare = prv_default_kernel_receiver_prepare,
-  .write = prv_default_kernel_receiver_write,
-  .finish = prv_default_kernel_receiver_finish,
-  .cleanup = prv_default_kernel_receiver_cleanup,
+    .prepare = prv_default_kernel_receiver_prepare,
+    .write = prv_default_kernel_receiver_write,
+    .finish = prv_default_kernel_receiver_finish,
+    .cleanup = prv_default_kernel_receiver_cleanup,
 };

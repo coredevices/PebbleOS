@@ -77,7 +77,9 @@ static void prv_host_task_main(void *unused) {
   nimble_port_run();
 }
 
-static void prv_ble_hs_stop_cb(int status, void *arg) { pbl_sem_give(&s_host_stopped); }
+static void prv_ble_hs_stop_cb(int status, void *arg) {
+  pbl_sem_give(&s_host_stopped);
+}
 
 // ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {
@@ -126,8 +128,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   }
 
   if (s_driver_state != DriverStateStopped) {
-    PBL_LOG_ERR("Unexpected driver state %u; refusing to start",
-                  (unsigned)s_driver_state);
+    PBL_LOG_ERR("Unexpected driver state %u; refusing to start", (unsigned)s_driver_state);
     return false;
   }
 
@@ -206,4 +207,5 @@ void bt_driver_stop(void) {
   nimble_store_unload();
 }
 
-void bt_driver_power_down_controller_on_boot(void) {}
+void bt_driver_power_down_controller_on_boot(void) {
+}

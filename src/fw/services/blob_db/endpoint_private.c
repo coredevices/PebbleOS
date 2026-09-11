@@ -16,7 +16,7 @@ void blob_db_enabled(bool enabled) {
 const uint8_t *endpoint_private_read_token_db_id(const uint8_t *iter, BlobDBToken *out_token,
                                                  BlobDBId *out_db_id) {
   // read token
-  *out_token = *(BlobDBToken*)iter;
+  *out_token = *(BlobDBToken *)iter;
   iter += sizeof(BlobDBToken);
   // read database id
   *out_db_id = *iter;

@@ -6,7 +6,8 @@
 #include "pbl/services/imaging.h"
 #include "pbl/util/attributes.h"
 
-void WEAK imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {}
+void WEAK imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {
+}
 
 bool WEAK imaging_is_type_supported(ImagingImageType image_type) {
   return false;

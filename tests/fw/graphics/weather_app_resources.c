@@ -14,27 +14,24 @@
 #endif
 
 GDrawCommandImage *weather_app_resource_create_cloud() {
-  GPoint c0_points[] =
-      {{22, 6}, {28, 1}, {39, 1}, {46, 10}, {46, 23}, {4, 23}, {4, 14}, {12, 6}};
-  GPoint c1_points[] =
-      {{17, 12}, {28, 1}, {39, 1}, {46, 10}, {46, 23}, {4, 23}, {4, 14}, {12, 6}, {22, 6}};
+  GPoint c0_points[] = {{22, 6}, {28, 1}, {39, 1}, {46, 10}, {46, 23}, {4, 23}, {4, 14}, {12, 6}};
+  GPoint c1_points[] = {{17, 12}, {28, 1}, {39, 1}, {46, 10}, {46, 23},
+                        {4, 23},  {4, 14}, {12, 6}, {22, 6}};
 
-  GPoint c2_points[] = {{ 5, 35}, {17, 23}};
-  GPoint c3_points[] = {{ 9, 43}, {29, 23}};
+  GPoint c2_points[] = {{5, 35}, {17, 23}};
+  GPoint c3_points[] = {{9, 43}, {29, 23}};
   GPoint c4_points[] = {{23, 41}, {41, 23}};
 
   const uint16_t num_commands = 5;
 
   GDrawCommandImage *image = task_malloc(
-      sizeof(GDrawCommandImage) +
-          sizeof(GDrawCommand) * num_commands +
-          sizeof(c0_points) + sizeof(c1_points) + sizeof(c2_points)+ sizeof(c3_points) +
-          sizeof(c4_points));
+      sizeof(GDrawCommandImage) + sizeof(GDrawCommand) * num_commands + sizeof(c0_points) +
+      sizeof(c1_points) + sizeof(c2_points) + sizeof(c3_points) + sizeof(c4_points));
 
   *image = (GDrawCommandImage){
       .version = 1,
       .size = GSize(48, 48),
-      .command_list = (GDrawCommandList) {
+      .command_list = (GDrawCommandList){
           .num_commands = num_commands,
       },
   };
@@ -81,19 +78,18 @@ GDrawCommandImage *weather_app_resource_create_cloud() {
   return image;
 }
 
-#define COPY_POINTS(target, source) \
-  for (size_t i=0; i < ARRAY_LENGTH(source); i++) { \
-    (target)[i] = (source)[i]; \
+#define COPY_POINTS(target, source)                   \
+  for (size_t i = 0; i < ARRAY_LENGTH(source); i++) { \
+    (target)[i] = (source)[i];                        \
   }
 
 GDrawCommandImage *weather_app_resource_create_cloud_25px(void) {
   GDrawCommandImage *result = weather_app_resource_create_cloud();
   result->size = GSize(25, 25);
 
-  GPoint c0_points[] =
-      {        {10, 4}, {13, 1}, {19, 1}, {23, 6}, {23, 13}, {1, 13}, {1, 8}, {4, 4}};
-  GPoint c1_points[] =
-      {{7, 7}, {13, 1}, {19, 1}, {23, 6}, {23, 13}, {1, 13}, {1, 8}, {4, 4}, {10, 4}};
+  GPoint c0_points[] = {{10, 4}, {13, 1}, {19, 1}, {23, 6}, {23, 13}, {1, 13}, {1, 8}, {4, 4}};
+  GPoint c1_points[] = {{7, 7},  {13, 1}, {19, 1}, {23, 6}, {23, 13},
+                        {1, 13}, {1, 8},  {4, 4},  {10, 4}};
   GPoint c2_points[] = {{1, 19}, {7, 13}};
   GPoint c3_points[] = {{3, 24}, {14, 13}};
   GPoint c4_points[] = {{11, 23}, {21, 13}};
@@ -108,26 +104,23 @@ GDrawCommandImage *weather_app_resource_create_cloud_25px(void) {
 GDrawCommandImage *weather_app_resource_create_sun(void) {
   GPoint c0_points[] = {{47, 23}, {5, 23}};
   GPoint c1_points[] = {{13, 10}, {39, 36}};
-  GPoint c2_points[] = {{26,  2}, {26, 44}};
+  GPoint c2_points[] = {{26, 2}, {26, 44}};
   GPoint c3_points[] = {{39, 10}, {13, 36}};
-  GPoint c4_points[] = {{21, 11}, {31, 11}, {39, 18}, {39, 28}, {31, 36}, {21, 36}, {13, 28},
-      {13, 18}};
+  GPoint c4_points[] = {{21, 11}, {31, 11}, {39, 18}, {39, 28},
+                        {31, 36}, {21, 36}, {13, 28}, {13, 18}};
   const uint16_t num_commands = 5;
 
   GDrawCommandImage *image = task_malloc(
-      sizeof(GDrawCommandImage) +
-          sizeof(GDrawCommand) * num_commands +
-          sizeof(c0_points) + sizeof(c1_points) + sizeof(c2_points) + sizeof(c3_points) +
-          sizeof(c4_points));
+      sizeof(GDrawCommandImage) + sizeof(GDrawCommand) * num_commands + sizeof(c0_points) +
+      sizeof(c1_points) + sizeof(c2_points) + sizeof(c3_points) + sizeof(c4_points));
 
   *image = (GDrawCommandImage){
       .version = 1,
       .size = GSize(48, 48),
-      .command_list = (GDrawCommandList) {
+      .command_list = (GDrawCommandList){
           .num_commands = num_commands,
       },
   };
-
 
   GDrawCommandList *list = &image->command_list;
   GDrawCommand *c0 = gdraw_command_list_get_command(list, 0);

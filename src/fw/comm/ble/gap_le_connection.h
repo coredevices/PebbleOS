@@ -53,28 +53,28 @@ typedef struct GAPLEConnection {
   BTDeviceInternal device;
 
   //! Whether we are the master for this connection.
-  bool local_is_master:1;
+  bool local_is_master : 1;
 
   //! Whether the connection is encrypted or not.
-  bool is_encrypted:1;
+  bool is_encrypted : 1;
 
   //! Whether GATT service discovery is in progress
-  bool gatt_is_service_discovery_in_progress:1;
+  bool gatt_is_service_discovery_in_progress : 1;
 
   //! Whether the connected device is our gateway (aka "the phone running Pebble app")
-  bool is_gateway:1;
+  bool is_gateway : 1;
 
   //! @see pebble_pairing_service.c
-  bool is_subscribed_to_connection_status_notifications:1;
-  bool is_subscribed_to_gatt_mtu_notifications:1;
+  bool is_subscribed_to_connection_status_notifications : 1;
+  bool is_subscribed_to_gatt_mtu_notifications : 1;
 
   //! Whether the device is subscribed to heart rate monitor value updates (the other device has
   //! enabled the "Notifications" bit of the CCCD).
-  bool hrm_service_is_subscribed:1;
+  bool hrm_service_is_subscribed : 1;
 
   //! The number of service discovery retries.
   //! See field `gatt_service_discovery_watchdog_timer`
-  uint8_t gatt_service_discovery_retries:GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS;
+  uint8_t gatt_service_discovery_retries : GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS;
 
   //! The generation number of the remote services that have been discovered.
   uint8_t gatt_service_discovery_generation;
@@ -144,10 +144,8 @@ typedef struct GAPLEConnection {
   RtcTicks ticks_since_connection;
 } GAPLEConnection;
 
-
 GAPLEConnection *gap_le_connection_add(const BTDeviceInternal *device,
-                                       const SMIdentityResolvingKey *irk,
-                                       bool local_is_master,
+                                       const SMIdentityResolvingKey *irk, bool local_is_master,
                                        TimerID param_watchdog_timer);
 
 //! Checks to see if the LE connection is in our list of currently tracked
@@ -175,14 +173,11 @@ GAPLEConnection *gap_le_connection_by_gatt_id(unsigned int connection_id);
 //! Find the GAPLEConnection by IRK.
 GAPLEConnection *gap_le_connection_find_by_irk(const SMIdentityResolvingKey *irk);
 
-typedef bool (*GAPLEConnectionFindCallback)(GAPLEConnection *connection,
-                                            void *data);
+typedef bool (*GAPLEConnectionFindCallback)(GAPLEConnection *connection, void *data);
 
-GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter,
-                                        void *data);
+GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter, void *data);
 
-typedef void (*GAPLEConnectionForEachCallback)(GAPLEConnection *connection,
-                                               void *data);
+typedef void (*GAPLEConnectionForEachCallback)(GAPLEConnection *connection, void *data);
 
 void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data);
 
@@ -195,5 +190,5 @@ void gap_le_connection_set_gateway(GAPLEConnection *connection, bool is_gateway)
 
 GAPLEConnection *gap_le_connection_get_gateway(void);
 
-void gap_le_connection_copy_device_name(
-    const GAPLEConnection *connection, char *name_out, size_t namelen);
+void gap_le_connection_copy_device_name(const GAPLEConnection *connection, char *name_out,
+                                        size_t namelen);

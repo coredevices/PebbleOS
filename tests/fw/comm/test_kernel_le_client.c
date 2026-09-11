@@ -108,9 +108,9 @@ void ppogatt_reset_disconnect_counter(void) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static const BTDeviceInternal s_test_device = {
-  .address = (const BTDeviceAddress) {
-    .octets = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
-  },
+    .address = (const BTDeviceAddress){
+        .octets = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+    },
 };
 
 typedef enum {
@@ -120,9 +120,9 @@ typedef enum {
 } TestServiceInstance;
 
 static BLEService s_service_handles[] = {
-  TestServiceInstanceComplete,
-  TestServiceInstanceIncomplete,
-  TestServiceInstanceUnsupported,
+    TestServiceInstanceComplete,
+    TestServiceInstanceIncomplete,
+    TestServiceInstanceUnsupported,
 };
 
 typedef enum {
@@ -144,10 +144,9 @@ Uuid gatt_client_service_get_uuid(BLEService service_ref) {
   }
 }
 
-uint8_t gatt_client_service_get_characteristics_matching_uuids(BLEService service_ref,
-                                                         BLECharacteristic characteristics_out[],
-                                                         const Uuid matching_characteristic_uuids[],
-                                                         uint8_t num_characteristics) {
+uint8_t gatt_client_service_get_characteristics_matching_uuids(
+    BLEService service_ref, BLECharacteristic characteristics_out[],
+    const Uuid matching_characteristic_uuids[], uint8_t num_characteristics) {
   cl_assert_equal_i(num_characteristics, TestCharacteristicCount);
   switch (service_ref) {
     case TestServiceInstanceComplete:
@@ -166,10 +165,8 @@ uint8_t gatt_client_service_get_characteristics_matching_uuids(BLEService servic
 }
 
 static int s_read_responses_consumed_count;
-void gatt_client_consume_read_response(uintptr_t object_ref,
-                                       uint8_t value_out[],
-                                       uint16_t value_length,
-                                       GAPLEClient client) {
+void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+                                       uint16_t value_length, GAPLEClient client) {
   ++s_read_responses_consumed_count;
 }
 
@@ -179,12 +176,10 @@ void test_client_handle_service_discovered(BLECharacteristic *characteristics) {
 }
 
 void test_client_invalidate_all_references(void) {
-
 }
 
 void test_client_handle_service_removed(BLECharacteristic *characteristics,
                                         uint8_t num_characteristics) {
-
 }
 
 static bool s_can_handle_characteristic;
@@ -193,19 +188,15 @@ bool test_client_can_handle_characteristic(BLECharacteristic characteristic) {
 }
 
 void test_client_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {
-
 }
 
 void test_client_handle_subscribe(BLECharacteristic characteristic,
                                   BLESubscription subscription_type, BLEGATTError error) {
-
 }
 
 void test_client_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
                                              size_t value_length, BLEGATTError error) {
-
 }
-
 
 // Tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,14 +217,14 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
   // Simulate the client goes away:
   s_can_handle_characteristic = false;
 
-  PebbleEvent e = (PebbleEvent) {
-    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-    .bluetooth.le.gatt_client = {
-      .object_ref = TestCharacteristicInstanceCompleteOne,
-      .value_length = 1,
-      .gatt_error = BLEGATTErrorSuccess,
-      .subtype = PebbleBLEGATTClientEventTypeCharacteristicRead,
-    },
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+      .bluetooth.le.gatt_client = {
+          .object_ref = TestCharacteristicInstanceCompleteOne,
+          .value_length = 1,
+          .gatt_error = BLEGATTErrorSuccess,
+          .subtype = PebbleBLEGATTClientEventTypeCharacteristicRead,
+      },
   };
 
   kernel_le_client_handle_event(&e);
@@ -250,24 +241,23 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
 
 void test_kernel_le_client__service_added(void) {
   uint8_t num_services_added = ARRAY_LENGTH(s_service_handles);
-  PebbleBLEGATTClientServiceEventInfo *info =
-      kernel_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) +
-                    (num_services_added * sizeof(BLEService)));
+  PebbleBLEGATTClientServiceEventInfo *info = kernel_malloc(
+      sizeof(PebbleBLEGATTClientServiceEventInfo) + (num_services_added * sizeof(BLEService)));
 
-  *info = (PebbleBLEGATTClientServiceEventInfo) {
-    .status = BTErrnoOK,
-    .type = PebbleServicesAdded,
-    .device = s_test_device,
+  *info = (PebbleBLEGATTClientServiceEventInfo){
+      .status = BTErrnoOK,
+      .type = PebbleServicesAdded,
+      .device = s_test_device,
   };
   info->services_added_data.num_services_added = num_services_added;
   memcpy(info->services_added_data.services, s_service_handles, sizeof(s_service_handles));
 
-  PebbleEvent e = (PebbleEvent) {
-    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-    .bluetooth.le.gatt_client_service = {
-      .info = info,
-      .subtype = PebbleBLEGATTClientEventTypeServiceChange,
-    },
+  PebbleEvent e = (PebbleEvent){
+      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+      .bluetooth.le.gatt_client_service = {
+          .info = info,
+          .subtype = PebbleBLEGATTClientEventTypeServiceChange,
+      },
   };
 
   kernel_le_client_handle_event(&e);

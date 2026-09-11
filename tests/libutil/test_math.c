@@ -22,9 +22,10 @@ static void check_atan2(int16_t x, int16_t y) {
   int32_t ours = atan2_lookup(y, x) * 180 / TRIG_PI;
   double theirs = atan2(y, x) / 3.14159 * 180;
   // atan2 returns in range [-pi, +pi], but we have [0,2pi].
-  if (theirs < 0) theirs += 360;
+  if (theirs < 0)
+    theirs += 360;
 
-  cl_assert(abs(ours - (int) theirs) < 3); // Allow 3 degrees difference max
+  cl_assert(abs(ours - (int)theirs) < 3);  // Allow 3 degrees difference max
 }
 
 static double log_two(uint32_t n) {
@@ -71,9 +72,9 @@ void test_math__atan2(void) {
   check_atan2(0, 0);
   check_atan2(0, 10);
   check_atan2(10, 0);
-  check_atan2(-32768, 1); // <- causes overflow for int16
-  check_atan2(1, -32768); // <- causes overflow for int16
-  check_atan2(20001, 20000); // <- causes overflow if numbers are added in an int16
+  check_atan2(-32768, 1);     // <- causes overflow for int16
+  check_atan2(1, -32768);     // <- causes overflow for int16
+  check_atan2(20001, 20000);  // <- causes overflow if numbers are added in an int16
   check_atan2(32767, 1);
   check_atan2(1, 32767);
   check_atan2(32767, 0);
@@ -112,23 +113,23 @@ void test_math__sign_extend(void) {
 void test_math__serial_distance32(void) {
   {
     int32_t dist = serial_distance32(0x0, 0x1);
-    cl_assert_equal_i(dist,  1);
+    cl_assert_equal_i(dist, 1);
   }
   {
     int32_t dist = serial_distance32(0x1, 0x0);
-    cl_assert_equal_i(dist,  -1);
+    cl_assert_equal_i(dist, -1);
   }
   {
     int32_t dist = serial_distance32(0x0, 0xffffffff);
-    cl_assert_equal_i(dist,  -1);
+    cl_assert_equal_i(dist, -1);
   }
   {
     int32_t dist = serial_distance32(0xffffffff, 0x0);
-    cl_assert_equal_i(dist,  1);
+    cl_assert_equal_i(dist, 1);
   }
   {
     int32_t dist = serial_distance32(0x0, 0x7fffffff);
-    cl_assert_equal_i(dist,  0x7fffffff);
+    cl_assert_equal_i(dist, 0x7fffffff);
   }
 }
 

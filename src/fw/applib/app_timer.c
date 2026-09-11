@@ -11,22 +11,17 @@
 //!
 //! Surprise! All this is is a dumb wrapper around evented_timer!
 
-DEFINE_SYSCALL(AppTimer*, app_timer_register, uint32_t timeout_ms,
-                                              AppTimerCallback callback,
-                                              void* callback_data) {
+DEFINE_SYSCALL(AppTimer *, app_timer_register, uint32_t timeout_ms, AppTimerCallback callback,
+               void *callback_data) {
   // No need to check callback_data, we only dereference it in userspace anyway.
-  return (AppTimer*)(uintptr_t)evented_timer_register(timeout_ms, false, callback, callback_data);
+  return (AppTimer *)(uintptr_t)evented_timer_register(timeout_ms, false, callback, callback_data);
 }
 
-DEFINE_SYSCALL(AppTimer*, app_timer_register_repeatable, uint32_t timeout_ms,
-                                                         AppTimerCallback callback,
-                                                         void* callback_data,
-                                                         bool repeating) {
+DEFINE_SYSCALL(AppTimer *, app_timer_register_repeatable, uint32_t timeout_ms,
+               AppTimerCallback callback, void *callback_data, bool repeating) {
   // No need to check callback_data, we only dereference it in userspace anyway.
-  return (AppTimer*)(uintptr_t)evented_timer_register(timeout_ms,
-                                                      repeating,
-                                                      callback,
-                                                      callback_data);
+  return (AppTimer *)(uintptr_t)evented_timer_register(timeout_ms, repeating, callback,
+                                                       callback_data);
 }
 
 DEFINE_SYSCALL(bool, app_timer_reschedule, AppTimer *timer, uint32_t new_timeout_ms) {
@@ -36,7 +31,8 @@ DEFINE_SYSCALL(bool, app_timer_reschedule, AppTimer *timer, uint32_t new_timeout
       return (false);
     }
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule", (unsigned)timer);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
+              (unsigned)timer);
       syscall_failed();
     }
   }
@@ -50,7 +46,8 @@ DEFINE_SYSCALL(void, app_timer_cancel, AppTimer *timer) {
       return;
     }
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule", (unsigned)timer);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
+              (unsigned)timer);
       syscall_failed();
     }
   }
@@ -64,7 +61,8 @@ DEFINE_SYSCALL(void *, app_timer_get_data, AppTimer *timer) {
       return NULL;
     }
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule", (unsigned)timer);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
+              (unsigned)timer);
       syscall_failed();
     }
   }

@@ -48,13 +48,13 @@ typedef struct PACKED {
 } InitRequestExtraInfo;
 
 typedef struct PACKED {
-  PutBytesCommand cmd:8;
+  PutBytesCommand cmd : 8;
   uint32_t total_size;
-  PutBytesObjectType type:7;
-  bool has_cookie:1;
+  PutBytesObjectType type : 7;
+  bool has_cookie : 1;
   union {
     struct {
-      const uint8_t index; ///< The 0-indexed position for 'banked' objects.
+      const uint8_t index;  ///< The 0-indexed position for 'banked' objects.
       char filename[];
     };
     uint32_t cookie;
@@ -65,7 +65,7 @@ typedef struct PACKED {
 } InitRequest;
 
 typedef struct PACKED {
-  PutBytesCommand cmd:8;
+  PutBytesCommand cmd : 8;
   uint32_t token;
 } SharedHeader;
 
@@ -208,7 +208,7 @@ static uint8_t *prv_get_next_pb_job_buffer(void) {
   }
 
   if (jobs_pending == put_jobs->num_allocated_pb_jobs) {
-    return NULL; // Remote has sent data without us ACKing the previous payload!
+    return NULL;  // Remote has sent data without us ACKing the previous payload!
   }
 
   return put_jobs->job[write_idx].buffer;
@@ -222,8 +222,8 @@ static void prv_finalize_pb_job(void) {
   prv_lock_pb_job_state();
   {
     PBL_ASSERTN(put_jobs->num_ops_pending != put_jobs->num_allocated_pb_jobs);
-    uint8_t write_idx = (put_jobs->read_idx + put_jobs->num_ops_pending) %
-        put_jobs->num_allocated_pb_jobs;
+    uint8_t write_idx =
+        (put_jobs->read_idx + put_jobs->num_ops_pending) % put_jobs->num_allocated_pb_jobs;
     job = &put_jobs->job[write_idx];
     job->request_length = s_pb_state.receiver.length;
     put_jobs->num_ops_pending++;
@@ -289,13 +289,14 @@ static bool prv_init_put_job_queue_if_necessary(void) {
   for (i = 0; i < MAX_BATCHED_PB_PUT_OPS; i++) {
     // Note: If heap pressure becomes an issue, we could also consider only
     // using pre-acking if there is a certain amount of space free in the heap
-    uint8_t *buffer = (uint8_t *) kernel_zalloc(PUT_BYTES_PP_BUFFER_SIZE);
+    uint8_t *buffer = (uint8_t *)kernel_zalloc(PUT_BYTES_PP_BUFFER_SIZE);
     if (!buffer) {
       if (i == 0) {
         PBL_LOG_ERR("Not enough memory to service PB request, abort!");
         prv_deinit_put_job_queue();
         return false;
-      } if (i == 1) {
+      }
+      if (i == 1) {
         PBL_LOG_DBG("Not enough memory for PB pre-ack, falling back to legacy mode");
         put_jobs->enable_preack = false;
         break;
@@ -310,8 +311,8 @@ static bool prv_init_put_job_queue_if_necessary(void) {
 }
 
 static void prv_set_responsiveness(ResponseTimeState state, uint16_t timeout_secs) {
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerPpPutBytes, state, timeout_secs);
+  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes, state,
+                                  timeout_secs);
 }
 
 static void prv_send_nack_from_system_task(void *data) {
@@ -328,10 +329,10 @@ static void prv_add_nack_no_token_system_callback(void) {
 }
 
 static void prv_cleanup(void) {
-  PBL_LOG_DBG("Put bytes cleanup. Tok: %"PRIu32, s_pb_state.token);
+  PBL_LOG_DBG("Put bytes cleanup. Tok: %" PRIu32, s_pb_state.token);
 
   prv_deinit_put_job_queue();
-  s_pb_state.receiver = (__typeof__(s_pb_state.receiver)) {};
+  s_pb_state.receiver = (__typeof__(s_pb_state.receiver)){};
 
   if (s_pb_state.timer_id) {
     new_timer_delete(s_pb_state.timer_id);
@@ -349,15 +350,15 @@ static void prv_cleanup(void) {
   prv_set_responsiveness(ResponseTimeMin, 10);
 
   PebbleEvent event = {
-    .type = PEBBLE_PUT_BYTES_EVENT,
-    .put_bytes = {
-      .type = PebblePutBytesEventTypeCleanup,
-      .object_type = s_pb_state.type,
-      .has_cookie = s_pb_state.has_cookie,
-      .progress_percent = 0,
-      .total_size = s_pb_state.total_size,
-      .failed = !s_pb_state.is_success,
-    },
+      .type = PEBBLE_PUT_BYTES_EVENT,
+      .put_bytes = {
+          .type = PebblePutBytesEventTypeCleanup,
+          .object_type = s_pb_state.type,
+          .has_cookie = s_pb_state.has_cookie,
+          .progress_percent = 0,
+          .total_size = s_pb_state.total_size,
+          .failed = !s_pb_state.is_success,
+      },
   };
 
   event_put(&event);
@@ -365,12 +366,10 @@ static void prv_cleanup(void) {
   // NOTE: Preserve the type field because that is checked by the install handler after we
   //  cleanup (cleanup is called after a commit).
   PutBytesObjectType type = s_pb_state.type;
-  s_pb_state = (PutBytesState) {
-    .type = type
-  };
+  s_pb_state = (PutBytesState){.type = type};
 }
 
-static void prv_cleanup_from_system_task(void* data) {
+static void prv_cleanup_from_system_task(void *data) {
   pbl_sem_take(&s_pb_semaphore, PBL_FOREVER);
   prv_cleanup();
   pbl_sem_give(&s_pb_semaphore);
@@ -385,32 +384,30 @@ static void prv_fail(uint32_t token) {
   prv_add_nack_system_callback(token);
 }
 
-static void prv_timer_callback(void* data) {
-  PBL_LOG_WRN("Put bytes Tok: %"PRIu32" timed out after %"PRIu32"ms, cleaning up.",
-      s_pb_state.token, PUT_TIMEOUT_MS);
+static void prv_timer_callback(void *data) {
+  PBL_LOG_WRN("Put bytes Tok: %" PRIu32 " timed out after %" PRIu32 "ms, cleaning up.",
+              s_pb_state.token, PUT_TIMEOUT_MS);
   prv_cleanup_async();
 }
 
 static bool prv_has_valid_fw_update_state_for_object_type(PutBytesObjectType type) {
 #ifndef CONFIG_RECOVERY_FW
   if (!firmware_update_is_in_progress()) {
-    bool is_fw_update_object = (type == ObjectFirmware ||
-                                type == ObjectRecovery ||
-                                type == ObjectSysResources);
+    bool is_fw_update_object =
+        (type == ObjectFirmware || type == ObjectRecovery || type == ObjectSysResources);
     if (is_fw_update_object) {
       PBL_LOG_ERR("Cannot handle object type=<0x%x> when not in FW update mode", type);
       return false;
     }
   }
   return true;
-#else // safe mode FW
+#else  // safe mode FW
   return true;
 #endif
 }
 
 static bool prv_has_invalid_fw_update_state(const PutBytesCommand command) {
-  if (command == PutBytesAbort ||
-      command == PutBytesInit) {
+  if (command == PutBytesAbort || command == PutBytesInit) {
     return false;
   }
   // Check only for Put, Commit, Install
@@ -425,13 +422,10 @@ static void prv_send_response(ResponseCode code, uint32_t token) {
   struct {
     uint8_t response_code;
     uint32_t token;
-  } PACKED msg = {
-    .response_code = code,
-    .token = htonl(token)
-  };
+  } PACKED msg = {.response_code = code, .token = htonl(token)};
 
   bool success = comm_session_send_data(comm_session_get_system_session(), PB_ENDPOINT_ID,
-                                        (uint8_t*) &msg, sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
+                                        (uint8_t *)&msg, sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
   if (!success) {
     PBL_LOG_WRN("PutBytes timeout sending response");
   }
@@ -450,9 +444,9 @@ static void prv_commit_object(uint32_t crc) {
 #ifndef CONFIG_PBLBOOT
   if (s_pb_state.type == ObjectFirmware || s_pb_state.type == ObjectRecovery) {
     FirmwareDescription fw_descr = {
-      .description_length = sizeof(FirmwareDescription),
-      .firmware_length = s_pb_state.total_size + s_pb_state.append_offset,
-      .checksum = crc
+        .description_length = sizeof(FirmwareDescription),
+        .firmware_length = s_pb_state.total_size + s_pb_state.append_offset,
+        .checksum = crc
     };
 
     fw_descr.checksum = pb_storage_calculate_crc(&s_pb_state.storage, PutBytesCrcType_CRC32);
@@ -460,7 +454,7 @@ static void prv_commit_object(uint32_t crc) {
   }
 #endif
 
-  struct InstallableObject* o = s_ready_to_install + (s_pb_state.type - 1);
+  struct InstallableObject *o = s_ready_to_install + (s_pb_state.type - 1);
   o->token = s_pb_state.token;
   o->type = s_pb_state.type;
   o->index = s_pb_state.index;
@@ -486,7 +480,7 @@ static void prv_finish_fw_update_if_completed(void) {
 }
 
 static void prv_do_install(uint32_t token) {
-  struct InstallableObject* o = NULL;
+  struct InstallableObject *o = NULL;
   for (int i = 0; i < NumObjects; ++i) {
     if (s_ready_to_install[i].token == token) {
       o = &s_ready_to_install[i];
@@ -500,18 +494,18 @@ static void prv_do_install(uint32_t token) {
     return;
   }
 
-  PBL_LOG_DBG("PutBytes install CB. Tok: %"PRIu32", type: %d", token, o->type);
+  PBL_LOG_DBG("PutBytes install CB. Tok: %" PRIu32 ", type: %d", token, o->type);
 
   switch (o->type) {
-  case ObjectFirmware:
-  case ObjectSysResources:
-    prv_finish_fw_update_if_completed();
-    break;
-  case ObjectRecovery:
-    boot_bit_set(BOOT_BIT_NEW_PRF_AVAILABLE);
-    // >>> Fall-through! <<<
-  default:
-    break;
+    case ObjectFirmware:
+    case ObjectSysResources:
+      prv_finish_fw_update_if_completed();
+      break;
+    case ObjectRecovery:
+      boot_bit_set(BOOT_BIT_NEW_PRF_AVAILABLE);
+      // >>> Fall-through! <<<
+    default:
+      break;
   }
 
   o->token = 0;
@@ -524,19 +518,18 @@ static void prv_do_install(uint32_t token) {
 }
 
 static void prv_do_abort(void) {
-  PBL_LOG_DBG("PutBytes abort CB. Tok: %"PRIu32".", s_pb_state.token);
+  PBL_LOG_DBG("PutBytes abort CB. Tok: %" PRIu32 ".", s_pb_state.token);
   prv_mark_pb_jobs_complete(1);
   prv_cleanup_and_send_response(ResponseAck);
 }
 
 static bool prv_has_invalid_token(const PutBytesCommand command, uint32_t request_token) {
-  if (command == PutBytesInit ||
-      command == PutBytesInstall) {
+  if (command == PutBytesInit || command == PutBytesInstall) {
     return false;
   }
   if (s_pb_state.token != request_token) {
-    PBL_LOG_ERR("%d: Token does not match; got 0x%" PRIx32 ", expected 0x%" PRIx32,
-            command, request_token, s_pb_state.token);
+    PBL_LOG_ERR("%d: Token does not match; got 0x%" PRIx32 ", expected 0x%" PRIx32, command,
+                request_token, s_pb_state.token);
     return true;
   }
   return false;
@@ -563,8 +556,9 @@ static bool prv_has_invalid_request_length(const PutBytesCommand command, uint32
   const size_t expected_length = prv_expected_minimum_length_by_command(command);
   const bool has_invalid_length = (actual_length < expected_length);
   if (has_invalid_length) {
-    PBL_LOG_ERR("Invalid message length for command %"PRIu32"; expected=%"PRIu32", actual=%"PRIu32,
-            (uint32_t)command, (uint32_t)expected_length, (uint32_t)actual_length);
+    PBL_LOG_ERR("Invalid message length for command %" PRIu32 "; expected=%" PRIu32
+                ", actual=%" PRIu32,
+                (uint32_t)command, (uint32_t)expected_length, (uint32_t)actual_length);
   }
   return has_invalid_length;
 }
@@ -632,8 +626,8 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
   switch (request->type) {
 #ifndef CONFIG_RECOVERY_FW
     case ObjectFile: {
-      storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo) +
-                                         strlen(request->filename) + 1);
+      storage_info =
+          kernel_malloc_check(sizeof(PutBytesStorageInfo) + strlen(request->filename) + 1);
       strcpy(storage_info->filename, request->filename);
       break;
     }
@@ -682,7 +676,7 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
 static void prv_do_init(void) {
   bool success = false;
 
-  InitRequest* request = (InitRequest*) s_pb_state.receiver.buffer;
+  InitRequest *request = (InitRequest *)s_pb_state.receiver.buffer;
 
   if (prv_is_init_object_type_invalid(request->type)) {
     goto exit;
@@ -704,7 +698,7 @@ static void prv_do_init(void) {
     const uint32_t append_offset_magic = 0xBE4354EF;
     if (ntohl(info->init_req_magic) == append_offset_magic) {
       append_offset = ntohl(info->append_offset);
-      PBL_LOG_INFO("Restarting FW Update at offset %"PRIu32, append_offset);
+      PBL_LOG_INFO("Restarting FW Update at offset %" PRIu32, append_offset);
     }
   }
 
@@ -723,9 +717,8 @@ static void prv_do_init(void) {
   const uint32_t r = rand();
   s_pb_state.token = MAX(1, r);
 
-  PBL_LOG_DBG("PutBytes Init CB. Type: %d, Idx: %"PRIu32", Size: %"PRIu32" Tok: %"PRIu32,
-          (int) s_pb_state.type, s_pb_state.index,
-          s_pb_state.total_size, s_pb_state.token);
+  PBL_LOG_DBG("PutBytes Init CB. Type: %d, Idx: %" PRIu32 ", Size: %" PRIu32 " Tok: %" PRIu32,
+              (int)s_pb_state.type, s_pb_state.index, s_pb_state.total_size, s_pb_state.token);
 
   success = prv_setup_storage_for_init_request(request, index);
 
@@ -737,15 +730,15 @@ static void prv_do_init(void) {
   }
 
   PebbleEvent event = {
-    .type = PEBBLE_PUT_BYTES_EVENT,
-    .put_bytes = {
-      .type = PebblePutBytesEventTypeStart,
-      .object_type = s_pb_state.type,
-      .has_cookie = s_pb_state.has_cookie,
-      .progress_percent = 0,
-      .total_size = s_pb_state.total_size,
-      .failed = false
-    },
+      .type = PEBBLE_PUT_BYTES_EVENT,
+      .put_bytes = {
+          .type = PebblePutBytesEventTypeStart,
+          .object_type = s_pb_state.type,
+          .has_cookie = s_pb_state.has_cookie,
+          .progress_percent = 0,
+          .total_size = s_pb_state.total_size,
+          .failed = false
+      },
   };
   event_put(&event);
 
@@ -755,8 +748,7 @@ static void prv_do_init(void) {
 
 exit:
   prv_mark_pb_jobs_complete(1);
-  prv_send_response(success ? ResponseAck : ResponseNack,
-                    success ? s_pb_state.token : 0);
+  prv_send_response(success ? ResponseAck : ResponseNack, success ? s_pb_state.token : 0);
 
   if (!success) {
     prv_cleanup();
@@ -773,14 +765,13 @@ static bool prv_do_put(const PutRequest *request, uint32_t request_size, uint32_
   uint32_t remaining_bytes = s_pb_state.remaining_bytes;
   pbl_sem_give(&s_pb_semaphore);
 
-  if (prv_check_putrequest_for_errors(request, request_size) ||
-      (data_length > remaining_bytes)) {
+  if (prv_check_putrequest_for_errors(request, request_size) || (data_length > remaining_bytes)) {
     prv_fail(token);
     return false;
   }
 
-  PBL_LOG_DBG("PutBytes put CB. type: %"PRIu32", length: %"PRIu32,
-          (uint32_t)s_pb_state.type, data_length);
+  PBL_LOG_DBG("PutBytes put CB. type: %" PRIu32 ", length: %" PRIu32, (uint32_t)s_pb_state.type,
+              data_length);
 
   pb_storage_append(&s_pb_state.storage, request->data, data_length);
 
@@ -805,18 +796,19 @@ static void prv_do_commit(void) {
     PBL_LOG_DBG("PutBytes pushed %d bytes/sec", bytes_per_sec);
   }
 
-  bluetooth_analytics_handle_put_bytes_stats(
-      commit_succeeded, s_pb_state.type,
-      s_pb_state.total_size, elapsed_time_ms, &s_pb_state.conn_event_stats);
+  bluetooth_analytics_handle_put_bytes_stats(commit_succeeded, s_pb_state.type,
+                                             s_pb_state.total_size, elapsed_time_ms,
+                                             &s_pb_state.conn_event_stats);
 
   if (commit_succeeded) {
     s_pb_state.is_success = true;
-    PBL_LOG_DBG("PutBytes commit CB. CRC matches! Calculated CRC is 0x%"PRIx32
-            " expected 0x%"PRIx32, calculated_crc, crc);
+    PBL_LOG_DBG("PutBytes commit CB. CRC matches! Calculated CRC is 0x%" PRIx32
+                " expected 0x%" PRIx32,
+                calculated_crc, crc);
     prv_commit_object(crc);
   } else {
-    PBL_LOG_ERR("PutBytes commit CB. Calculated CRC is 0x%"PRIx32" expected 0x%"PRIx32,
-            calculated_crc, crc);
+    PBL_LOG_ERR("PutBytes commit CB. Calculated CRC is 0x%" PRIx32 " expected 0x%" PRIx32,
+                calculated_crc, crc);
   }
 
   s_pb_state.is_success &= commit_succeeded;
@@ -826,24 +818,24 @@ static void prv_do_commit(void) {
 
 static bool prv_is_valid_command_for_current_state(PutBytesCommand command) {
   switch (s_pb_state.current_command) {
-  case PutBytesIdle:
-    return (command == PutBytesInit || command == PutBytesInstall);
-  case PutBytesInit:
-    return (command == PutBytesPut || command == PutBytesAbort);
-  case PutBytesPut:
-    return (command == PutBytesPut || command == PutBytesCommit || command == PutBytesAbort);
-  case PutBytesCommit:
-  case PutBytesAbort:
-  case PutBytesInstall:
-  default:
-    return false;
+    case PutBytesIdle:
+      return (command == PutBytesInit || command == PutBytesInstall);
+    case PutBytesInit:
+      return (command == PutBytesPut || command == PutBytesAbort);
+    case PutBytesPut:
+      return (command == PutBytesPut || command == PutBytesCommit || command == PutBytesAbort);
+    case PutBytesCommit:
+    case PutBytesAbort:
+    case PutBytesInstall:
+    default:
+      return false;
   }
 }
 
 static bool prv_is_invalid_command_for_current_state(PutBytesCommand command) {
   if (!prv_is_valid_command_for_current_state(command)) {
-    PBL_LOG_ERR("PutBytes command 0x%x not permitted in current state 0x%x",
-            command, s_pb_state.current_command);
+    PBL_LOG_ERR("PutBytes command 0x%x not permitted in current state 0x%x", command,
+                s_pb_state.current_command);
     return true;
   }
   return false;
@@ -857,10 +849,10 @@ static uint32_t prv_parse_token(const PutBytesCommand command, const SharedHeade
 }
 
 static bool prv_check_for_state_error(PutBytesCommand cmd, uint32_t token, uint32_t req_length) {
-  const bool has_error = (prv_is_invalid_command_for_current_state(cmd) ||
-                          prv_has_invalid_request_length(cmd, req_length) ||
-                          prv_has_invalid_token(cmd, token) ||
-                          prv_has_invalid_fw_update_state(cmd));
+  const bool has_error =
+      (prv_is_invalid_command_for_current_state(cmd) ||
+       prv_has_invalid_request_length(cmd, req_length) || prv_has_invalid_token(cmd, token) ||
+       prv_has_invalid_fw_update_state(cmd));
 
   return has_error;
 }
@@ -924,23 +916,23 @@ static void prv_process_put_requests_system_task_cb(void *unused) {
     uint32_t bytes_transferred = initial_remaining_bytes - s_pb_state.remaining_bytes;
 
     PebbleEvent event = {
-      .type = PEBBLE_PUT_BYTES_EVENT,
-      .put_bytes = {
-        .type = PebblePutBytesEventTypeProgress,
-        .object_type = s_pb_state.type,
-        .has_cookie = s_pb_state.has_cookie,
-        .progress_percent = prv_get_progress_percent(),
-        .bytes_transferred = bytes_transferred,
-        .failed = false,
-      },
+        .type = PEBBLE_PUT_BYTES_EVENT,
+        .put_bytes = {
+            .type = PebblePutBytesEventTypeProgress,
+            .object_type = s_pb_state.type,
+            .has_cookie = s_pb_state.has_cookie,
+            .progress_percent = prv_get_progress_percent(),
+            .bytes_transferred = bytes_transferred,
+            .failed = false,
+        },
     };
     event_put(&event);
   }
   pbl_sem_give(&s_pb_semaphore);
 
   // (re)start timer for next event
-  PBL_ASSERTN(new_timer_start(s_pb_state.timer_id, PUT_TIMEOUT_MS, prv_timer_callback,
-                              &s_pb_state, 0 /*flags*/));
+  PBL_ASSERTN(new_timer_start(s_pb_state.timer_id, PUT_TIMEOUT_MS, prv_timer_callback, &s_pb_state,
+                              0 /*flags*/));
 
   prv_mark_pb_jobs_complete(num_put_jobs);
 
@@ -954,7 +946,7 @@ static void prv_process_put_requests_system_task_cb(void *unused) {
   }
   prv_unlock_pb_job_state();
 
-  if (do_ack) { // If we did not pre-ack, we need to ack the packet now!
+  if (do_ack) {  // If we did not pre-ack, we need to ack the packet now!
     prv_send_response(ResponseAck, token);
   }
 }
@@ -962,8 +954,7 @@ static void prv_process_put_requests_system_task_cb(void *unused) {
 static void prv_process_msg_system_task_callback(void *unused) {
   pbl_sem_take(&s_pb_semaphore, PBL_FOREVER);
 
-  if (!s_pb_state.receiver.buffer ||
-      s_pb_state.receiver.length == 0) {
+  if (!s_pb_state.receiver.buffer || s_pb_state.receiver.length == 0) {
     PBL_LOG_WRN("No message pending, PutBytes cancelled in the mean time?");
     prv_send_response(ResponseNack, s_pb_state.token);
     goto finally;
@@ -988,7 +979,7 @@ static void prv_process_msg_system_task_callback(void *unused) {
       prv_do_init();
       break;
     case PutBytesPut:
-      WTF; // Put Requests have their own handler
+      WTF;  // Put Requests have their own handler
       break;
     case PutBytesCommit:
       prv_do_commit();
@@ -1021,16 +1012,13 @@ void put_bytes_cancel(void) {
   }
 
   if (s_pb_state.current_command == PutBytesIdle) {
-    PBL_LOG_DBG("Attempted to cancel put_bytes while idle, %d",
-            s_pb_state.current_command);
-  } else if (s_pb_state.type == ObjectWatchApp ||
-             s_pb_state.type == ObjectAppResources ||
+    PBL_LOG_DBG("Attempted to cancel put_bytes while idle, %d", s_pb_state.current_command);
+  } else if (s_pb_state.type == ObjectWatchApp || s_pb_state.type == ObjectAppResources ||
              s_pb_state.type == ObjectWatchWorker) {
     PBL_LOG_DBG("Forcefully cancelling put_bytes transfer of app binaries");
     prv_cleanup();
   } else {
-    PBL_LOG_DBG("Attempted to cancel put_bytes with a non desired type, %d",
-            s_pb_state.type);
+    PBL_LOG_DBG("Attempted to cancel put_bytes with a non desired type, %d", s_pb_state.type);
   }
 
   pbl_sem_give(&s_pb_semaphore);
@@ -1059,15 +1047,15 @@ static void prv_expect_init_timeout_cb(void *data) {
   }
 
   PebbleEvent event = {
-    .type = PEBBLE_PUT_BYTES_EVENT,
-    .put_bytes = {
-      .type = PebblePutBytesEventTypeInitTimeout,
-      .object_type = ObjectUnknown,
-      .has_cookie = false,
-      .progress_percent = 0,
-      .total_size = 0,
-      .failed = true,
-    },
+      .type = PEBBLE_PUT_BYTES_EVENT,
+      .put_bytes = {
+          .type = PebblePutBytesEventTypeInitTimeout,
+          .object_type = ObjectUnknown,
+          .has_cookie = false,
+          .progress_percent = 0,
+          .total_size = 0,
+          .failed = true,
+      },
   };
   event_put(&event);
 
@@ -1091,8 +1079,7 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
   pbl_sem_give(&s_pb_semaphore);
 }
 
-void put_bytes_handle_comm_session_event(const PebbleCommSessionEvent *
-                                         comm_session_event) {
+void put_bytes_handle_comm_session_event(const PebbleCommSessionEvent *comm_session_event) {
   if (comm_session_event->is_system) {
     prv_cleanup_async();
   }
@@ -1133,7 +1120,7 @@ static bool prv_prepare(size_t total_payload_length) {
 
   if (!s_pb_state.receiver.buffer) {
     if (!prv_init_put_job_queue_if_necessary()) {
-      return false; // OOM
+      return false;  // OOM
     }
     s_pb_state.receiver.buffer = prv_get_next_pb_job_buffer();
     s_pb_state.receiver.length = 0;
@@ -1175,14 +1162,15 @@ Receiver *prv_receiver_prepare(CommSession *session, const PebbleProtocolEndpoin
 }
 
 static void prv_validate_and_preack_request_if_needed(const uint8_t *rcvd_data, uint8_t length) {
-  if (prv_receiver_contains_put_request()) { // beginning of a PutRequest msg?
+  if (prv_receiver_contains_put_request()) {  // beginning of a PutRequest msg?
     PutRequest *request = (PutRequest *)rcvd_data;
     uint32_t tot_payload_size = s_pb_state.receiver.length;
 
     // We only need the PutRequest Header to do some sanity checking so perform the check
     // now so we don't pre-ACK malformed packets
-    if ((tot_payload_size < sizeof(PutRequest)) || ((length >= sizeof(PutRequest)) &&
-        prv_check_putrequest_for_errors(request, tot_payload_size))) {
+    if ((tot_payload_size < sizeof(PutRequest)) ||
+        ((length >= sizeof(PutRequest)) &&
+         prv_check_putrequest_for_errors(request, tot_payload_size))) {
       s_pb_state.receiver.should_nack = true;
     }
 
@@ -1203,7 +1191,7 @@ void prv_receiver_write(Receiver *receiver, const uint8_t *data, size_t length) 
     s_pb_state.receiver.should_nack = true;
     goto finally;
   }
-        PBL_ASSERTN(s_pb_state.receiver.buffer &&
+  PBL_ASSERTN(s_pb_state.receiver.buffer &&
               s_pb_state.receiver.pos + length <= PUT_BYTES_PP_BUFFER_SIZE);
 
   memcpy(s_pb_state.receiver.buffer + s_pb_state.receiver.pos, data, length);
@@ -1250,16 +1238,16 @@ void prv_receiver_finish(Receiver *receiver) {
 }
 
 const ReceiverImplementation g_put_bytes_receiver_impl = {
-  .prepare = prv_receiver_prepare,
-  .write = prv_receiver_write,
-  .finish = prv_receiver_finish,
-  .cleanup = prv_receiver_cleanup,
+    .prepare = prv_receiver_prepare,
+    .write = prv_receiver_write,
+    .finish = prv_receiver_finish,
+    .cleanup = prv_receiver_cleanup,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // For Unit Testing
 
-struct pbl_sem * put_bytes_get_semaphore(void) {
+struct pbl_sem *put_bytes_get_semaphore(void) {
   return &s_pb_semaphore;
 }
 

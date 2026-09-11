@@ -48,15 +48,14 @@
 // and the FW is currently "hard-wired" to be slave as a precautionary measure to prevent it from
 // trying to connect as master. See PBL-20368.
 
-void bt_driver_cb_handle_create_bonding(const BleBonding *bonding,
-                                        const BTDeviceAddress *addr) {
+void bt_driver_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr) {
 }
 
-void cc2564A_bad_le_connection_complete_handle(unsigned int stack_id,
-                                             const GAP_LE_Current_Connection_Parameters_t *params) {
+void cc2564A_bad_le_connection_complete_handle(
+    unsigned int stack_id, const GAP_LE_Current_Connection_Parameters_t *params) {
 }
 
-const GAP_LE_Pairing_Capabilities_t* gap_le_pairing_capabilities(void) {
+const GAP_LE_Pairing_Capabilities_t *gap_le_pairing_capabilities(void) {
   return NULL;
 }
 
@@ -66,8 +65,7 @@ void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection)
 void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {
 }
 
-void bt_driver_handle_le_conn_params_update_event(
-    const BleConnectionUpdateCompleteEvent *event) {
+void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
 }
 
 typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
@@ -97,14 +95,14 @@ void bluetooth_analytics_handle_connection_disconnection_event(
 
 static BTDeviceInternal prv_dummy_device(uint8_t octet) {
   BTDeviceAddress address = {
-    .octets = {
-      [0] = octet,
-      [1] = octet,
-      [2] = octet,
-      [3] = octet,
-      [4] = octet,
-      [5] = octet,
-    },
+      .octets = {
+          [0] = octet,
+          [1] = octet,
+          [2] = octet,
+          [3] = octet,
+          [4] = octet,
+          [5] = octet,
+      },
   };
   BTDevice device = bt_device_init_with_address(address, true /* is_random */);
   return *(BTDeviceInternal *)(&device);
@@ -112,14 +110,15 @@ static BTDeviceInternal prv_dummy_device(uint8_t octet) {
 
 static BTBondingID prv_add_bonding_for_fake_resolvable_device(void) {
   BTDeviceInternal identity_device = {};
-  const SMIdentityResolvingKey *irk = (const SMIdentityResolvingKey *) fake_GAPAPI_get_fake_irk();
+  const SMIdentityResolvingKey *irk = (const SMIdentityResolvingKey *)fake_GAPAPI_get_fake_irk();
   BleBonding bonding = {
-    .pairing_info = {
-      .identity = identity_device,
-      .irk = *irk,
-      .is_remote_identity_info_valid = true,
-    },
-    .is_gateway = true,
+      .pairing_info =
+          {
+              .identity = identity_device,
+              .irk = *irk,
+              .is_remote_identity_info_valid = true,
+          },
+      .is_gateway = true,
   };
   bt_driver_handle_host_added_bonding(&bonding);
   return fake_bt_persistent_storage_add(irk, &identity_device, "Dummy", true /* is_gateway */);
@@ -132,23 +131,19 @@ static void prv_assert_no_event(void) {
 
 static void prv_fake_connect(const BTDeviceInternal *device, bool is_master) {
   // Simulate getting a Connection Complete event for the device from Bluetopia:
-  fake_gap_put_connection_event(HCI_ERROR_CODE_SUCCESS,
-                                is_master, device);
+  fake_gap_put_connection_event(HCI_ERROR_CODE_SUCCESS, is_master, device);
   cl_assert_equal_b(gap_le_connection_is_connected(device), true);
 }
 
 static void prv_fake_disconnect(const BTDeviceInternal *device, bool is_master) {
   fake_gap_put_disconnection_event(HCI_ERROR_CODE_SUCCESS,
-                                   HCI_ERROR_CODE_CONNECTION_TERMINATED_BY_LOCAL_HOST,
-                                   is_master,
+                                   HCI_ERROR_CODE_CONNECTION_TERMINATED_BY_LOCAL_HOST, is_master,
                                    device);
   cl_assert_equal_b(gap_le_connection_is_connected(device), false);
 }
 
-static void prv_assert_client_event(const BTDeviceInternal *device,
-                                    bool connected,
-                                    PebbleTaskBitset client_tasks,
-                                    uint8_t hci_reason) {
+static void prv_assert_client_event(const BTDeviceInternal *device, bool connected,
+                                    PebbleTaskBitset client_tasks, uint8_t hci_reason) {
   // Verify the Pebble event:
   PebbleEvent event = fake_event_get_last();
   cl_assert_equal_i(event.type, PEBBLE_BLE_CONNECTION_EVENT);
@@ -156,8 +151,7 @@ static void prv_assert_client_event(const BTDeviceInternal *device,
   cl_assert_equal_i(event.task_mask, (PebbleTaskBitset) ~(client_tasks));
   const PebbleBLEConnectionEvent *conn_event = &event.bluetooth.le.connection;
   const BTDeviceInternal event_device = PebbleEventToBTDeviceInternal(conn_event);
-  const bool is_same_device = bt_device_equal(&event_device.opaque,
-                                              &device->opaque);
+  const bool is_same_device = bt_device_equal(&event_device.opaque, &device->opaque);
   cl_assert_equal_b(is_same_device, true);
   cl_assert_equal_b(conn_event->connected, connected);
   cl_assert_equal_i(conn_event->hci_reason, hci_reason);
@@ -165,8 +159,9 @@ static void prv_assert_client_event(const BTDeviceInternal *device,
 
 // Tests
 ///////////////////////////////////////////////////////////
-extern void gap_le_connect_bluetopia_connection_callback(
-    unsigned int stack_id, GAP_LE_Event_Data_t* event_data, unsigned long CallbackParameter);
+extern void gap_le_connect_bluetopia_connection_callback(unsigned int stack_id,
+                                                         GAP_LE_Event_Data_t *event_data,
+                                                         unsigned long CallbackParameter);
 void test_gap_le_connect__initialize(void) {
   fake_GAPAPI_init();
 
@@ -202,28 +197,23 @@ void test_gap_le_connect__cleanup(void) {
 void test_gap_le_connect__register_max_intents(void) {
   for (int i = 0; i < GAP_LE_CONNECT_MASTER_MAX_CONNECTION_INTENTS + 1; ++i) {
     BTDeviceInternal device = prv_dummy_device(i);
-    BTErrno e = gap_le_connect_connect(&device,
-                                      true /* auto_reconnect */,
-                                      false /* is_pairing_required */,
-                                      GAPLEClientApp);
+    BTErrno e = gap_le_connect_connect(&device, true /* auto_reconnect */,
+                                       false /* is_pairing_required */, GAPLEClientApp);
 
     if (i == GAP_LE_CONNECT_MASTER_MAX_CONNECTION_INTENTS) {
       // When the limit is reached, expect "not enough resources" error:
       cl_assert_equal_i(e, BTErrnoNotEnoughResources);
     } else {
       cl_assert_equal_i(e, BTErrnoOK);
-      const bool registered = gap_le_connect_has_connection_intent(&device,
-                                                                  GAPLEClientApp);
+      const bool registered = gap_le_connect_has_connection_intent(&device, GAPLEClientApp);
       cl_assert_equal_b(registered, true);
     }
   }
 }
 
 void test_gap_le_connect__register_null_device(void) {
-  BTErrno e = gap_le_connect_connect(NULL,
-                                     true /* auto_reconnect */,
-                                     false /* is_pairing_required */,
-                                     GAPLEClientApp);
+  BTErrno e = gap_le_connect_connect(NULL, true /* auto_reconnect */,
+                                     false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoInvalidParameter);
 }
 
@@ -233,18 +223,14 @@ void test_gap_le_connect__unregister_null_device(void) {
 }
 
 void test_gap_le_connect__register_invalid_bonding(void) {
-  BTErrno e = gap_le_connect_connect_by_bonding(BT_BONDING_ID_INVALID,
-                                                true /* auto_reconnect */,
-                                                false /* is_pairing_required */,
-                                                GAPLEClientApp);
+  BTErrno e = gap_le_connect_connect_by_bonding(BT_BONDING_ID_INVALID, true /* auto_reconnect */,
+                                                false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoInvalidParameter);
 }
 
 void test_gap_le_connect__register_non_existing_bonding(void) {
-  BTErrno e = gap_le_connect_connect_by_bonding(~0,
-                                                true /* auto_reconnect */,
-                                                false /* is_pairing_required */,
-                                                GAPLEClientApp);
+  BTErrno e = gap_le_connect_connect_by_bonding(~0, true /* auto_reconnect */,
+                                                false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoInvalidParameter);
 }
 
@@ -264,19 +250,15 @@ void test_gap_le_connect__register_is_already_registered_for_same_client(void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent:
-  e = gap_le_connect_connect(&device,
-                            true /* auto_reconnect */,
-                            false /* is_pairing_required */,
-                            GAPLEClientApp);
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                             GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
   registered = gap_le_connect_has_connection_intent(&device, GAPLEClientApp);
   cl_assert_equal_b(registered, true);
 
   // Try registering the device again as same client:
-  e = gap_le_connect_connect(&device,
-                            true /* auto_reconnect */,
-                            false /* is_pairing_required */,
-                            GAPLEClientApp);
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                             GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoInvalidState);
 
   // Should still be registered from the first call:
@@ -295,19 +277,15 @@ void test_gap_le_connect__register_same_device_and_bonding(void) {
   BTBondingID bonding_id = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent:
-  e = gap_le_connect_connect(&device,
-                             true /* auto_reconnect */,
-                             false /* is_pairing_required */,
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
                              GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
   registered = gap_le_connect_has_connection_intent(&device, GAPLEClientApp);
   cl_assert_equal_b(registered, true);
 
   // Register another connection intent using the bonding:
-  e = gap_le_connect_connect_by_bonding(bonding_id,
-                                        true /* auto_reconnect */,
-                                        false /* is_pairing_required */,
-                                        GAPLEClientApp);
+  e = gap_le_connect_connect_by_bonding(bonding_id, true /* auto_reconnect */,
+                                        false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
   registered = gap_le_connect_has_connection_intent_for_bonding(bonding_id, GAPLEClientApp);
   cl_assert_equal_b(registered, true);
@@ -319,19 +297,15 @@ void test_gap_le_connect__register_two_clients_same_device(void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent:
-  e = gap_le_connect_connect(&device,
-                            true /* auto_reconnect */,
-                            false /* is_pairing_required */,
-                            GAPLEClientApp);
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                             GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
   registered = gap_le_connect_has_connection_intent(&device, GAPLEClientApp);
   cl_assert_equal_b(registered, true);
 
   // Try registering the device again for different client:
-  e = gap_le_connect_connect(&device,
-                            true /* auto_reconnect */,
-                            false /* is_pairing_required */,
-                            GAPLEClientKernel);
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                             GAPLEClientKernel);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Assert registrations:
@@ -355,10 +329,8 @@ void test_gap_le_connect__unregister_unowned_intent(void) {
   BTErrno e;
 
   // Register connection intent owned by kernel:
-  e = gap_le_connect_connect(&device,
-                            true /* auto_reconnect */,
-                            false /* is_pairing_required */,
-                            GAPLEClientKernel);
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                             GAPLEClientKernel);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Unregister connection intent owned by app:
@@ -373,10 +345,8 @@ void __disabled_test_gap_le_connect__connection_event_for_registered_client(void
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent:
-  BTErrno e = gap_le_connect_connect(&device,
-                                    true /* auto_reconnect */,
-                                    false /* is_pairing_required */,
-                                    GAPLEClientApp);
+  BTErrno e = gap_le_connect_connect(&device, true /* auto_reconnect */,
+                                     false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Device isn't connected. Verify no event was caused as a result of the
@@ -399,10 +369,8 @@ void test_gap_le_connect__connection_event_for_registered_client_by_bonding(void
   BTBondingID bonding_id = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent:
-  BTErrno e = gap_le_connect_connect_by_bonding(bonding_id,
-                                                true /* auto_reconnect */,
-                                                false /* is_pairing_required */,
-                                                GAPLEClientApp);
+  BTErrno e = gap_le_connect_connect_by_bonding(bonding_id, true /* auto_reconnect */,
+                                                false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Device isn't connected. Verify no event was caused as a result of the
@@ -425,10 +393,8 @@ void __disabled_test_gap_le_connect__register_for_already_connected_device(void)
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent for kernel:
-  e = gap_le_connect_connect(&device,
-                            true /* auto_reconnect */,
-                            false /* is_pairing_required */,
-                            GAPLEClientKernel);
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                             GAPLEClientKernel);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Simulate getting a Connection Complete event for the device from Bluetopia:
@@ -439,10 +405,8 @@ void __disabled_test_gap_le_connect__register_for_already_connected_device(void)
                           HCI_ERROR_CODE_SUCCESS);
 
   // Register connection intent for app:
-  e = gap_le_connect_connect(&device,
-                            true /* auto_reconnect */,
-                            false /* is_pairing_required */,
-                            GAPLEClientApp);
+  e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                             GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Verify (only) the app task got a (virtual) connection event:
@@ -456,10 +420,8 @@ void test_gap_le_connect__register_for_already_connected_bonding(void) {
   BTBondingID bonding_id = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent for kernel:
-  e = gap_le_connect_connect_by_bonding(bonding_id,
-                                        true /* auto_reconnect */,
-                                        false /* is_pairing_required */,
-                                        GAPLEClientKernel);
+  e = gap_le_connect_connect_by_bonding(bonding_id, true /* auto_reconnect */,
+                                        false /* is_pairing_required */, GAPLEClientKernel);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Simulate getting a Connection Complete event for the device from Bluetopia:
@@ -470,10 +432,8 @@ void test_gap_le_connect__register_for_already_connected_bonding(void) {
                           HCI_ERROR_CODE_SUCCESS);
 
   // Register connection intent for app:
-  e = gap_le_connect_connect_by_bonding(bonding_id,
-                                        true /* auto_reconnect */,
-                                        false /* is_pairing_required */,
-                                        GAPLEClientApp);
+  e = gap_le_connect_connect_by_bonding(bonding_id, true /* auto_reconnect */,
+                                        false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
 
   // Verify (only) the app task got a (virtual) connection event:
@@ -485,10 +445,8 @@ void __disabled_test_gap_le_connect__disconnection_event_upon_airplane_mode(void
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent:
-  BTErrno e = gap_le_connect_connect(&device,
-                                    true /* auto_reconnect */,
-                                    false /* is_pairing_required */,
-                                    GAPLEClientApp);
+  BTErrno e = gap_le_connect_connect(&device, true /* auto_reconnect */,
+                                     false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
 
   prv_fake_connect(&device, true /* is_master*/);
@@ -508,10 +466,8 @@ void __disabled_test_gap_le_connect__single_client_no_autoreconnect(void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent for app:
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
 
   prv_fake_connect(&device, true /* is_master*/);
 
@@ -533,18 +489,14 @@ void __disabled_test_gap_le_connect__two_clients_one_without_autoreconnect(void)
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register auto-reconnecting connection intent for kernel:
-  gap_le_connect_connect(&device,
-                        true /* auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientKernel);
+  gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientKernel);
 
   prv_fake_connect(&device, true /* is_master*/);
 
   // Register one-shot connection intent for app:
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
 
   prv_fake_disconnect(&device, true /* is_master */);
 
@@ -567,10 +519,8 @@ void __disabled_test_gap_le_connect__cancel_connect(void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent for app:
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
 
   BTErrno e = gap_le_connect_cancel(&device, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
@@ -590,10 +540,8 @@ void __disabled_test_gap_le_connect__disconnection_event_upon_cancel_connect(voi
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent for app:
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
 
   prv_fake_connect(&device, false /* is_master*/);
 
@@ -618,10 +566,8 @@ void test_gap_le_connect__slave_cancel_connect_by_bonding(void) {
   BTBondingID bonding_id = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent for app:
-  gap_le_connect_connect_by_bonding(bonding_id,
-                                    false /* no auto_reconnect */,
-                                    false /* is_pairing_required */,
-                                    GAPLEClientApp);
+  gap_le_connect_connect_by_bonding(bonding_id, false /* no auto_reconnect */,
+                                    false /* is_pairing_required */, GAPLEClientApp);
 
   BTErrno e = gap_le_connect_cancel_by_bonding(bonding_id, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
@@ -640,10 +586,8 @@ void test_gap_le_connect__slave_disconnection_event_upon_cancel_connect_by_bondi
   prv_fake_connect(&device, false /* is_master*/);
 
   // Register connection intent for app:
-  gap_le_connect_connect_by_bonding(bonding_id,
-                                    false /* no auto_reconnect */,
-                                    false /* is_pairing_required */,
-                                    GAPLEClientApp);
+  gap_le_connect_connect_by_bonding(bonding_id, false /* no auto_reconnect */,
+                                    false /* is_pairing_required */, GAPLEClientApp);
 
   BTErrno e = gap_le_connect_cancel_by_bonding(bonding_id, GAPLEClientApp);
   cl_assert_equal_i(e, BTErrnoOK);
@@ -655,18 +599,16 @@ void test_gap_le_connect__slave_disconnection_event_upon_cancel_connect_by_bondi
   cl_assert_equal_i(gap_le_connect_connection_intents_count(), 0);
 }
 
-
 // -------------------------------------------------------------------------------------------------
 // Pairing
 
-void __disabled_test_gap_le_connect__one_shot_intent_removed_when_disconnected_before_encrypt(void) {
+void __disabled_test_gap_le_connect__one_shot_intent_removed_when_disconnected_before_encrypt(
+    void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection one-shot intent, with pairing required:
-  gap_le_connect_connect(&device,
-                                false /* no auto_reconnect */,
-                                true /* is_pairing_required */,
-                                GAPLEClientKernel);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, true /* is_pairing_required */,
+                         GAPLEClientKernel);
 
   // Expect intent:
   cl_assert_equal_b(gap_le_connect_has_connection_intent(&device, GAPLEClientKernel), true);
@@ -683,10 +625,8 @@ void test_gap_le_connect__connection_event_only_after_encrypted_if_encryption_re
   BTBondingID bonding_id = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent for app:
-  gap_le_connect_connect_by_bonding(bonding_id,
-                                    true /* no auto_reconnect */,
-                                    true /* is_pairing_required */,
-                                    GAPLEClientApp);
+  gap_le_connect_connect_by_bonding(bonding_id, true /* no auto_reconnect */,
+                                    true /* is_pairing_required */, GAPLEClientApp);
 
   prv_fake_connect(&device, false /* is_master*/);
 
@@ -717,28 +657,24 @@ void test_gap_le_connect__add_intent_requiring_pairing_after_connected_and_encry
   fake_event_clear_last();
 
   const BleAddressAndIRKChange e = {
-    .device = device,
-    .is_address_updated = true,
-    .new_device = device,
-    .is_resolved = true,
-    .irk = *(const SMIdentityResolvingKey *) fake_GAPAPI_get_fake_irk(),
+      .device = device,
+      .is_address_updated = true,
+      .new_device = device,
+      .is_resolved = true,
+      .irk = *(const SMIdentityResolvingKey *)fake_GAPAPI_get_fake_irk(),
   };
   bt_driver_handle_le_connection_handle_update_address_and_irk(&e);
 
   gap_le_connection_by_device(&device);
 
-
   // Register connection intent for app:
-  gap_le_connect_connect_by_bonding(bonding_id,
-                                    true /* no auto_reconnect */,
-                                    true /* is_pairing_required */,
-                                    GAPLEClientApp);
+  gap_le_connect_connect_by_bonding(bonding_id, true /* no auto_reconnect */,
+                                    true /* is_pairing_required */, GAPLEClientApp);
 
   // Verify the app task got a (virtual) connection event:
   prv_assert_client_event(&device, true /* connected */, (1 << PebbleTask_App),
                           HCI_ERROR_CODE_SUCCESS);
 }
-
 
 // -----------------------------------------------------------------------------
 // Handling Bonding Changes
@@ -748,10 +684,8 @@ void test_gap_le_connect__removed_bonding_while_connected(void) {
   BTBondingID bonding_id = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent for app:
-  gap_le_connect_connect_by_bonding(bonding_id,
-                                    false /* no auto_reconnect */,
-                                    false /* is_pairing_required */,
-                                    GAPLEClientApp);
+  gap_le_connect_connect_by_bonding(bonding_id, false /* no auto_reconnect */,
+                                    false /* is_pairing_required */, GAPLEClientApp);
 
   prv_fake_connect(&device, false /* is_master*/);
 
@@ -776,10 +710,8 @@ void __disabled_test_gap_le_connect__whitelist_add_when_disconnected(void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent for app:
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
 
   // Not connected yet, so expect to be added to white-list:
   cl_assert_equal_b(fake_HCIAPI_whitelist_contains(&device), true);
@@ -794,18 +726,14 @@ void __disabled_test_gap_le_connect__whitelist_add_when_connected(void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent for app:
-  gap_le_connect_connect(&device,
-                         false /* no auto_reconnect */,
-                         false /* is_pairing_required */,
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
                          GAPLEClientKernel);
 
   prv_fake_connect(&device, true /* is_master*/);
 
   // Register connection intent for app:
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
 
   // Connected, so expect to be removed from white-list:
   cl_assert_equal_b(fake_HCIAPI_whitelist_contains(&device), false);
@@ -815,10 +743,8 @@ void __disabled_test_gap_le_connect__whitelist_remove_when_connected(void) {
   BTDeviceInternal device = prv_dummy_device(1);
 
   // Register connection intent for app:
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
   prv_fake_connect(&device, true /* is_master*/);
 
   gap_le_connect_cancel(&device, GAPLEClientApp);
@@ -829,10 +755,8 @@ void __disabled_test_gap_le_connect__whitelist_remove_when_connected(void) {
 
 void __disabled_test_gap_le_connect__whitelist_repopulated_on_init(void) {
   BTDeviceInternal device = prv_dummy_device(1);
-  gap_le_connect_connect(&device,
-                        false /* no auto_reconnect */,
-                        false /* is_pairing_required */,
-                        GAPLEClientApp);
+  gap_le_connect_connect(&device, false /* no auto_reconnect */, false /* is_pairing_required */,
+                         GAPLEClientApp);
 
   gap_le_connect_deinit();
 
@@ -848,5 +772,4 @@ void __disabled_test_gap_le_connect__whitelist_repopulated_on_init(void) {
   // Not connected yet, so expect to be added to white-list:
   cl_assert_equal_b(fake_HCIAPI_whitelist_contains(&device), true);
   cl_assert_equal_i(fake_HCIAPI_whitelist_count(), 1);
-
 }

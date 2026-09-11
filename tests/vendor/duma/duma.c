@@ -63,28 +63,28 @@ extern char *strdup(const char *s);
 #include <stdarg.h>
 
 #ifndef WIN32
-  #include <unistd.h>
-  #include <fcntl.h>
-  #include <sys/mman.h>
-  #define __USE_BSD  // necessary for caddr_t on Linux
-  #define __USE_MISC  // necessary for caddr_t on Linux
-  #include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#define __USE_BSD   // necessary for caddr_t on Linux
+#define __USE_MISC  // necessary for caddr_t on Linux
+#include <sys/types.h>
 #else
-  #define WIN32_LEAN_AND_MEAN 1
-  #include <windows.h>
-  #include <winbase.h>
-  #include <io.h>
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
+#include <winbase.h>
+#include <io.h>
 
 #ifndef __CYGWIN__
-  /* already defined in cygwin headers */
-  typedef LPVOID caddr_t;
-  typedef unsigned u_int;
+/* already defined in cygwin headers */
+typedef LPVOID caddr_t;
+typedef unsigned u_int;
 #endif
 
 #endif
 
 #ifdef _MSC_VER
-  #include <crtdbg.h>
+#include <crtdbg.h>
 #endif
 
 #include "duma.h"
@@ -95,55 +95,52 @@ extern char *strdup(const char *s);
 
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
 DUMA_EXTERN_C void StackTraceCleanup();
-DUMA_EXTERN_C void printStackTrace(char* buffer, int bufferSize, char* mapFilename);
+DUMA_EXTERN_C void printStackTrace(char *buffer, int bufferSize, char *mapFilename);
 #endif
 
-static const char  version[] =
-"DUMA 2.5.15 ("
+static const char version[] =
+    "DUMA 2.5.15 ("
 #ifdef DUMA_SO_LIBRARY
-"shared library"
+    "shared library"
 #elif DUMA_DLL_LIBRARY
-"DLL library"
+    "DLL library"
 #elif DUMA_DETOURS
-"detours"
+    "detours"
 #else
-"static library"
+    "static library"
 #endif
 #ifdef DUMA_NO_GLOBAL_MALLOC_FREE
-", NO_GLOBAL_MALLOC_FREE"
+    ", NO_GLOBAL_MALLOC_FREE"
 #endif
 #ifdef DUMA_NO_THREAD_SAFETY
-", NO_THREAD_SAFETY"
+    ", NO_THREAD_SAFETY"
 #endif
 #ifdef DUMA_NO_CPP_SUPPORT
-", NO_CPP_SUPPORT"
+    ", NO_CPP_SUPPORT"
 #endif
 #ifdef DUMA_NO_LEAKDETECTION
-", NO_LEAKDETECTION"
+    ", NO_LEAKDETECTION"
 #endif
 #ifdef DUMA_EXPLICIT_INIT
-", EXPLICIT_INIT"
+    ", EXPLICIT_INIT"
 #endif
 #ifdef DUMA_PREFER_ATEXIT
-", PREFER_ATEXIT"
+    ", PREFER_ATEXIT"
 #endif
 #ifdef DUMA_PREFER_GETENV
-", PREFER_GETENV"
+    ", PREFER_GETENV"
 #endif
-")\n"
-"Copyright (C) 2006 Michael Eddington <meddington@gmail.com>\n"
-"Copyright (C) 2002-2008 Hayati Ayguen <h_ayguen@web.de>, Procitec GmbH\n"
-"Copyright (C) 1987-1999 Bruce Perens <bruce@perens.com>\n\n";
+    ")\n"
+    "Copyright (C) 2006 Michael Eddington <meddington@gmail.com>\n"
+    "Copyright (C) 2002-2008 Hayati Ayguen <h_ayguen@web.de>, Procitec GmbH\n"
+    "Copyright (C) 1987-1999 Bruce Perens <bruce@perens.com>\n\n";
 
-
-static const char unknown_file[] =
-  "UNKNOWN (use #include \"duma.h\")";
-
+static const char unknown_file[] = "UNKNOWN (use #include \"duma.h\")";
 
 #ifndef DUMA_NO_LEAKDETECTION
-#define DUMA_PARAMLIST_FL       , const char * filename, int lineno
-#define DUMA_PARAMS_FL          , filename, lineno
-#define DUMA_PARAMS_UK          , unknown_file, 0
+#define DUMA_PARAMLIST_FL , const char *filename, int lineno
+#define DUMA_PARAMS_FL , filename, lineno
+#define DUMA_PARAMS_UK , unknown_file, 0
 #else
 #define DUMA_PARAMLIST_FL
 #define DUMA_PARAMS_FL
@@ -151,11 +148,10 @@ static const char unknown_file[] =
 #endif
 
 #ifndef DUMA_PREFER_GETENV
-#define DUMA_GETENV     duma_getenv
+#define DUMA_GETENV duma_getenv
 #else
-#define DUMA_GETENV     getenv
+#define DUMA_GETENV getenv
 #endif
-
 
 /* Variable: MEMORY_CREATION_SIZE
  *
@@ -163,130 +159,132 @@ static const char unknown_file[] =
  * system at one time. We'll break that memory down into smaller pieces for
  * malloc buffers. One megabyte is probably a good value.
  */
-#define      MEMORY_CREATION_SIZE  1024 * 1024
+#define MEMORY_CREATION_SIZE 1024 * 1024
 
 /* Enum: _DUMA_SlotState
  *
  * State of slot values (empty, free, etc)
  */
-enum _DUMA_SlotState
-{
-    DUMAST_EMPTY            /* slot not in use */
-  , DUMAST_FREE             /* internal memory reserved, unused by user */
-  , DUMAST_IN_USE           /* memory in use by allocator; see following enum AllocType */
-  , DUMAST_ALL_PROTECTED    /* memory no more used by allocator; memory is not deallocated but protected */
-  , DUMAST_BEGIN_PROTECTED  /* most memory deallocated, but not page covering userAddress:
-                             * slot holds userAddress, userSize and allocator.
-                             */
+enum _DUMA_SlotState {
+  DUMAST_EMPTY /* slot not in use */
+      ,
+  DUMAST_FREE /* internal memory reserved, unused by user */
+      ,
+  DUMAST_IN_USE /* memory in use by allocator; see following enum AllocType */
+      ,
+  DUMAST_ALL_PROTECTED /* memory no more used by allocator; memory is not deallocated but protected
+                        */
+      ,
+  DUMAST_BEGIN_PROTECTED /* most memory deallocated, but not page covering userAddress:
+                          * slot holds userAddress, userSize and allocator.
+                          */
 };
 
-enum _DUMA_Slot_FileSource
-{
-    DUMAFS_EMPTY            /* no filename, lineno */
-  , DUMAFS_ALLOCATION       /* filename, lineno from allocation */
-  , DUMAFS_DEALLOCATION     /* filename, lineno from deallocation */
+enum _DUMA_Slot_FileSource {
+  DUMAFS_EMPTY /* no filename, lineno */
+      ,
+  DUMAFS_ALLOCATION /* filename, lineno from allocation */
+      ,
+  DUMAFS_DEALLOCATION /* filename, lineno from deallocation */
 };
 
-enum _DUMA_InitState
-{
-    DUMAIS_UNINITIALIZED = 0x1611  /* not initialized */
-  , DUMAIS_IN_CONSTRUCTOR   /* in constructor _duma_init() */
-  , DUMAIS_OUT_CONSTRUCTOR  /* construction _duma_init() finished */
-  , DUMAIS_IN_INIT          /* in initializer duma_init() */
-  , DUMAIS_OUT_INIT         /* initialization duma_init() finished */
+enum _DUMA_InitState {
+  DUMAIS_UNINITIALIZED = 0x1611 /* not initialized */
+      ,
+  DUMAIS_IN_CONSTRUCTOR /* in constructor _duma_init() */
+      ,
+  DUMAIS_OUT_CONSTRUCTOR /* construction _duma_init() finished */
+      ,
+  DUMAIS_IN_INIT /* in initializer duma_init() */
+      ,
+  DUMAIS_OUT_INIT /* initialization duma_init() finished */
 };
 
 /*
  * Struct Slot contains all of the information about a malloc buffer except
  * for the contents of its memory.
  */
-struct _DUMA_Slot
-{
-  void            * internalAddress;
-  void            * userAddress;
-  void            * protAddress;
-  size_t            internalSize;
-  size_t            userSize;
+struct _DUMA_Slot {
+  void *internalAddress;
+  void *userAddress;
+  void *protAddress;
+  size_t internalSize;
+  size_t userSize;
 
 #if 0
   /* just for checking compiler warnings / errors */
   enum _DUMA_SlotState        state;
   enum _DUMA_Allocator        allocator;
-  #ifndef DUMA_NO_LEAKDETECTION
+#ifndef DUMA_NO_LEAKDETECTION
   enum _DUMA_Slot_FileSource  fileSource;
-  #endif
+#endif
 #else
   /* save (some) space in production */
-  unsigned short    state       :16;
-  #ifdef DUMA_NO_LEAKDETECTION
-  unsigned short    allocator   :16;
-  #else
-  unsigned short    allocator   :8;
-  unsigned short    fileSource  :8;
-  #endif
+  unsigned short state : 16;
+#ifdef DUMA_NO_LEAKDETECTION
+  unsigned short allocator : 16;
+#else
+  unsigned short allocator : 8;
+  unsigned short fileSource : 8;
+#endif
 #endif
 
 #ifndef DUMA_NO_LEAKDETECTION
-  char            * filename;   /* filename of allocation */
-  int               lineno;     /* linenumber of allocation
-                                 * -1 == memory was allocated before duma_init()
-                                 *  0 == no leak information present
-                                 * >0 == leak information present
-                                 */
+  char *filename; /* filename of allocation */
+  int lineno;     /* linenumber of allocation
+                   * -1 == memory was allocated before duma_init()
+                   *  0 == no leak information present
+                   * >0 == leak information present
+                   */
 #endif
 
 /* Feature currently only works on win32 */
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
-  char            * stacktrace; /* stacktrace of allocation */
+  char *stacktrace; /* stacktrace of allocation */
 #endif
 
 #ifdef DUMA_EXPLICIT_INIT
-  int               slackfill;
+  int slackfill;
 #endif
 };
 
-enum _DUMA_AllocType
-{
-    DUMAAT_INTERNAL
-  , DUMAAT_MALLOC
-  , DUMAAT_NEW_ELEM
-  , DUMAAT_NEW_ARRAY
-  , DUMAAT_MEMBER_NEW_ELEM
-  , DUMAAT_MEMBER_NEW_ARRAY
+enum _DUMA_AllocType {
+  DUMAAT_INTERNAL,
+  DUMAAT_MALLOC,
+  DUMAAT_NEW_ELEM,
+  DUMAAT_NEW_ARRAY,
+  DUMAAT_MEMBER_NEW_ELEM,
+  DUMAAT_MEMBER_NEW_ARRAY
 };
 
-enum _DUMA_AllocStd
-{
-    DUMAAS_C
-  , DUMAAS_CPP
+enum _DUMA_AllocStd {
+  DUMAAS_C,
+  DUMAAS_CPP
 };
 
-static const struct _DUMA_AllocDesc
-{
-  char                * name;
-  enum _DUMA_AllocType  type;
-  enum _DUMA_AllocStd   std;
-}
-_duma_allocDesc[] =
-{
-    { "duma allocate()"       , DUMAAT_INTERNAL        , DUMAAS_C   }
-  , { "duma deallocate()"     , DUMAAT_INTERNAL        , DUMAAS_C   }
-  , { "malloc()"              , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "calloc()"              , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "free()"                , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "memalign()"            , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "posix_memalign()"      , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "realloc()"             , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "valloc()"              , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "strdup()"              , DUMAAT_MALLOC          , DUMAAS_C   }
-  , { "scalar new"            , DUMAAT_NEW_ELEM        , DUMAAS_CPP }
-  , { "scalar delete"         , DUMAAT_NEW_ELEM        , DUMAAS_CPP }
-  , { "vector new[]"          , DUMAAT_NEW_ARRAY       , DUMAAS_CPP }
-  , { "vector delete[]"       , DUMAAT_NEW_ARRAY       , DUMAAS_CPP }
-  , { "member scalar new"     , DUMAAT_MEMBER_NEW_ELEM , DUMAAS_CPP }
-  , { "member scalar delete"  , DUMAAT_MEMBER_NEW_ELEM , DUMAAS_CPP }
-  , { "member vector new[]"   , DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP }
-  , { "member vector delete[]", DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP }
+static const struct _DUMA_AllocDesc {
+  char *name;
+  enum _DUMA_AllocType type;
+  enum _DUMA_AllocStd std;
+} _duma_allocDesc[] = {
+    {"duma allocate()", DUMAAT_INTERNAL, DUMAAS_C},
+    {"duma deallocate()", DUMAAT_INTERNAL, DUMAAS_C},
+    {"malloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"calloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"free()", DUMAAT_MALLOC, DUMAAS_C},
+    {"memalign()", DUMAAT_MALLOC, DUMAAS_C},
+    {"posix_memalign()", DUMAAT_MALLOC, DUMAAS_C},
+    {"realloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"valloc()", DUMAAT_MALLOC, DUMAAS_C},
+    {"strdup()", DUMAAT_MALLOC, DUMAAS_C},
+    {"scalar new", DUMAAT_NEW_ELEM, DUMAAS_CPP},
+    {"scalar delete", DUMAAT_NEW_ELEM, DUMAAS_CPP},
+    {"vector new[]", DUMAAT_NEW_ARRAY, DUMAAS_CPP},
+    {"vector delete[]", DUMAAT_NEW_ARRAY, DUMAAS_CPP},
+    {"member scalar new", DUMAAT_MEMBER_NEW_ELEM, DUMAAS_CPP},
+    {"member scalar delete", DUMAAT_MEMBER_NEW_ELEM, DUMAAS_CPP},
+    {"member vector new[]", DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP},
+    {"member vector delete[]", DUMAAT_MEMBER_NEW_ARRAY, DUMAAS_CPP}
 };
 
 #ifdef DUMA_EXPLICIT_INIT
@@ -295,15 +293,13 @@ _duma_allocDesc[] =
 #define IF__DUMA_INIT_DONE
 #endif
 
-
 /* Collection of all global static non const variables for DUMA */
 
-static struct _DUMA_GlobalStaticVars
-{
+static struct _DUMA_GlobalStaticVars {
   /* Protection Space A */
-  char  acSpaceA[2 * DUMA_PAGE_SIZE];
+  char acSpaceA[2 * DUMA_PAGE_SIZE];
 
-  int   DUMA_IN_DUMA;
+  int DUMA_IN_DUMA;
 
   /* Variable: DUMA_DISABLE_BANNER
    *
@@ -311,15 +307,14 @@ static struct _DUMA_GlobalStaticVars
    * its usual startup message. Default is 0, meaning that the startup message
    * gets printed.
    */
-  int   DISABLE_BANNER;
+  int DISABLE_BANNER;
 
   /* Variable: DUMA_SKIPCOUNT_INIT
    *
    * DUMA_SKIPCOUNT_INIT controls after how many DUMA allocations the full internal
    * initialization is done. Default is 0.
    */
-  int   SKIPCOUNT_INIT;
-
+  int SKIPCOUNT_INIT;
 
   /* Variable: CHECK_FREQ
    *
@@ -330,8 +325,7 @@ static struct _DUMA_GlobalStaticVars
    * get very time consuming.
    * Default is 0.
    */
-  int   CHECK_FREQ;
-
+  int CHECK_FREQ;
 
   /* Variable: DUMA_REPORT_ALL_LEAKS
    *
@@ -339,7 +333,7 @@ static struct _DUMA_GlobalStaticVars
    * all leaks - even without source filename/line number. Default is 0, meaning that
    * only leaks with source information will get reported.
    */
-  int   REPORT_ALL_LEAKS;
+  int REPORT_ALL_LEAKS;
 
   /* Variable: DUMA_SLACKFILL
    *
@@ -348,7 +342,7 @@ static struct _DUMA_GlobalStaticVars
    * default is set to initialise with 0xAA (=binary 10101010)
    * initialisation to 0!
    */
-  int   SLACKFILL;
+  int SLACKFILL;
 
   /* Variable: DUMA_PROTECT_FREE
    *
@@ -365,7 +359,7 @@ static struct _DUMA_GlobalStaticVars
    * If its value is zero, freed memory will be available for reallocation,
    * but will still be inaccessable until it is reallocated.
    */
-  long  PROTECT_FREE;
+  long PROTECT_FREE;
 
   /* Variable: DUMA_MAX_ALLOC
    *
@@ -373,7 +367,7 @@ static struct _DUMA_GlobalStaticVars
    * in total: When the sum of allocated and protected memory would exceed
    * this value in kB, the protected memory is freed/deleted.
    */
-  long  MAX_ALLOC;
+  long MAX_ALLOC;
 
 #if 0
   /* Variable: DUMA_ALLOW_MALLOC_0
@@ -395,7 +389,7 @@ static struct _DUMA_GlobalStaticVars
    * ATTENTION: only 1 and 3 are ANSI conform. But value 1 will break most programs,
    *   cause value 3 is the usual one, the system libraries implement
    */
-  int   MALLOC_0_STRATEGY;
+  int MALLOC_0_STRATEGY;
 
   /* Variable: DUMA_NEW_0_STRATEGY
    *
@@ -406,7 +400,7 @@ static struct _DUMA_GlobalStaticVars
    * ATTENTION: only 3 is standard conform. Value 2 may break some but will
    * work for most programs. With value 2 you may reduce the memory consumption.
    */
-  int   NEW_0_STRATEGY;
+  int NEW_0_STRATEGY;
 
   /* Variable: DUMA_MALLOC_FAILEXIT
    *
@@ -415,7 +409,7 @@ static struct _DUMA_GlobalStaticVars
    * check the return value for errors ... so
    * default to Exit on Fail
    */
-  int   MALLOC_FAILEXIT;
+  int MALLOC_FAILEXIT;
 
   /* Variable: DUMA_FREE_ACCESS
    *
@@ -423,7 +417,7 @@ static struct _DUMA_GlobalStaticVars
    * freeing it. This makes easier using watch expressions in debuggers as the
    * process is interrupted even if the memory is going to be freed.
    */
-  int   FREE_ACCESS;
+  int FREE_ACCESS;
 
   /* Variable: DUMA_SHOW_ALLOC
    *
@@ -432,7 +426,7 @@ static struct _DUMA_GlobalStaticVars
    * of messages, the option can be useful to detect inefficient code
    * containing many allocations / deallocations
    */
-  int   SHOW_ALLOC;
+  int SHOW_ALLOC;
 
   /* Variable: DUMA_SUPPRESS_ATEXIT
    *
@@ -443,21 +437,20 @@ static struct _DUMA_GlobalStaticVars
    * suppressed. One reason for doing so regardless are some buggy environments,
    * where calls to the atexit()-function hang.
    */
-  int   SUPPRESS_ATEXIT;
-
+  int SUPPRESS_ATEXIT;
 
   /* Variable: _duma_allocListSize
    *
    * _duma_allocListSize is the size of the allocation list. This will always
    * be a multiple of the page size.
    */
-  size_t  allocListSize;
+  size_t allocListSize;
 
   /* Variable: slotCount
    *
    * slotCount is the number of Slot structures in allocationList.
    */
-  size_t  slotCount;
+  size_t slotCount;
 
   /* Variable: unUsedSlots
    *
@@ -465,129 +458,158 @@ static struct _DUMA_GlobalStaticVars
    * to represent new malloc buffers. When this number gets too low, we will
    * create new slots.
    */
-  size_t  unUsedSlots;
+  size_t unUsedSlots;
 
   /* Variable: slotsPerPage
    *
    * slotsPerPage is the number of slot structures that fit in a virtual
    * memory page.
    */
-  size_t  slotsPerPage;
+  size_t slotsPerPage;
 
   /* Variable: sumAllocatedMem
    *
    * internal variable: sum of allocated -freed +protected memory in kB
    */
-  long    sumAllocatedMem;
+  long sumAllocatedMem;
 
   /* Variable: sumTotalAllocatedMem
    *
    * internal variable: sum of allocated memory in kB
    */
-  long    sumTotalAllocatedMem;
+  long sumTotalAllocatedMem;
 
   /* Variable: sumProtectedMem
    *
    * internal variable: sum of protected memory in kB
    */
-  long    sumProtectedMem;
+  long sumProtectedMem;
 
   /* Variable: numDeallocs
    *
    * internal variable: number of deallocations processed so far
    */
-  long    numDeallocs;
+  long numDeallocs;
 
   /* Variable: numAllocs
    *
    * internal variable: number of allocations processed so far
    */
-  long    numAllocs;
-
+  long numAllocs;
 
   /* Variable checkFreqCounter
    *
    * number of (de)allocations since last checks
    */
-  int     checkFreqCounter;
+  int checkFreqCounter;
 
   /* Variable: duma_init_state
    *
    * internal variable: state of initialization
    */
-  enum _DUMA_InitState  init_state;
+  enum _DUMA_InitState init_state;
 
   /* memory block for malloc() or new with size 0 */
-  void *  null_block;
+  void *null_block;
 
   /* Protection Space B */
-  char  acSpaceB[2 * DUMA_PAGE_SIZE];
+  char acSpaceB[2 * DUMA_PAGE_SIZE];
 }
 
 _duma_s =
 
-{
-   "Static Protection Space Front"   /* Protection Space A */
+    {
+        "Static Protection Space Front" /* Protection Space A */
 
-  , 0       /* int DUMA_IN_DUMA; */
+        ,
+        0 /* int DUMA_IN_DUMA; */
 
-  , 0       /* Variable: DISABLE_BANNER */
-  , 0       /* Variable: SKIPCOUNT_INIT */
-  , 1       /* Variable: CHECK_FREQ */
-  , 0       /* Variable: REPORT_ALL_LEAKS */
-  , 0xDB    /* Variable: SLACKFILL */
-  , -1L     /* Variable: PROTECT_FREE */
-  , -1L     /* Variable: MAX_ALLOC */
+        ,
+        0 /* Variable: DISABLE_BANNER */
+        ,
+        0 /* Variable: SKIPCOUNT_INIT */
+        ,
+        1 /* Variable: CHECK_FREQ */
+        ,
+        0 /* Variable: REPORT_ALL_LEAKS */
+        ,
+        0xDB /* Variable: SLACKFILL */
+        ,
+        -1L /* Variable: PROTECT_FREE */
+        ,
+        -1L /* Variable: MAX_ALLOC */
 #if 0
   , 1       /* Variable: ALLOW_MALLOC_0 */
 #endif
-  , 3       /* Variable: MALLOC_0_STRATEGY; see above */
-  , 3       /* Variable: NEW_0_STRATEGY; see above */
-  , 1       /* Variable: MALLOC_FAILEXIT */
-  , 0       /* Variable: FREE_ACCESS */
-  , 0       /* Variable: SHOW_ALLOC */
-  , 0       /* Variable: SUPPRESS_ATEXIT */
+        ,
+        3 /* Variable: MALLOC_0_STRATEGY; see above */
+        ,
+        3 /* Variable: NEW_0_STRATEGY; see above */
+        ,
+        1 /* Variable: MALLOC_FAILEXIT */
+        ,
+        0 /* Variable: FREE_ACCESS */
+        ,
+        0 /* Variable: SHOW_ALLOC */
+        ,
+        0 /* Variable: SUPPRESS_ATEXIT */
 
-  , 0       /* Variable: allocListSize */
-  , 0       /* Variable: slotCount */
-  , 0       /* Variable: unUsedSlots */
-  , 0       /* Variable: slotsPerPage */
-  , 0L      /* Variable: sumAllocatedMem */
-  , 0L      /* Variable: sumTotalAllocatedMem */
-  , 0L      /* Variable: sumProtectedMem */
-  , 0L      /* Variable: numDeallocs */
-  , 0L      /* Variable: numAllocs */
-  , 0       /* Variable: checkFreqCounter */
-  , DUMAIS_UNINITIALIZED  /* Variable: duma_init_done */
-  , (void *)0 /* Variable: null_block */
+        ,
+        0 /* Variable: allocListSize */
+        ,
+        0 /* Variable: slotCount */
+        ,
+        0 /* Variable: unUsedSlots */
+        ,
+        0 /* Variable: slotsPerPage */
+        ,
+        0L /* Variable: sumAllocatedMem */
+        ,
+        0L /* Variable: sumTotalAllocatedMem */
+        ,
+        0L /* Variable: sumProtectedMem */
+        ,
+        0L /* Variable: numDeallocs */
+        ,
+        0L /* Variable: numAllocs */
+        ,
+        0 /* Variable: checkFreqCounter */
+        ,
+        DUMAIS_UNINITIALIZED /* Variable: duma_init_done */
+        ,
+        (void *)0 /* Variable: null_block */
 
-  , "Static Protection Space Back"   /* Protection Space B */
+        ,
+        "Static Protection Space Back" /* Protection Space B */
 };
 
+DUMA_GLOBALVARS_T _duma_g = {
+    "Global Protection Space Front" /* Protection Space A */
 
+    ,
+    (void *)0 /* Variable: allocList */
+    ,
+    (void *)0 /* Variable: null_addr */
 
-DUMA_GLOBALVARS_T _duma_g =
-{
-   "Global Protection Space Front"   /* Protection Space A */
-
-  , (void*)0    /* Variable: allocList */
-  , (void*)0    /* Variable: null_addr */
-
-  , {   DUMA_MIN_ALIGNMENT
-      , 0     /* PROTECT_BELOW */
-      , 255   /* FILL */
-      #if !defined(DUMA_NO_CPP_SUPPORT) && !defined(DUMA_NO_LEAKDETECTION)
-        , 0     /* Magic */
-        , 0     /* DelPtr */
-        , { 0 }
-        , { 0 }
-      #endif
+    ,
+    {DUMA_MIN_ALIGNMENT,
+     0 /* PROTECT_BELOW */
+     ,
+     255 /* FILL */
+#if !defined(DUMA_NO_CPP_SUPPORT) && !defined(DUMA_NO_LEAKDETECTION)
+     ,
+     0 /* Magic */
+     ,
+     0 /* DelPtr */
+     ,
+     {0},
+     {0}
+#endif
     }
 
-  , "Global Protection Space Back"   /* Protection Space B */
+    ,
+    "Global Protection Space Back" /* Protection Space B */
 };
-
-
 
 /* Variable: DUMA_OUTPUT_DEBUG
  *
@@ -621,7 +643,7 @@ int DUMA_OUTPUT_STDERR = 1;
  * output is printed to a specified file.  Default is NULL,
  * meaning that output is not by default sent to a file.
  */
-char* DUMA_OUTPUT_FILE = NULL;
+char *DUMA_OUTPUT_FILE = NULL;
 /* char* DUMA_OUTPUT_FILE = "c:\\duma.txt"; */
 
 /* Variable: DUMA_OUTPUT_STACKTRACE
@@ -643,9 +665,7 @@ int DUMA_OUTPUT_STACKTRACE = 0;
  *
  * OS: WIN32 Only
  */
-char* DUMA_OUTPUT_STACKTRACE_MAPFILE = NULL;
-
-
+char *DUMA_OUTPUT_STACKTRACE_MAPFILE = NULL;
 
 /*
  * include helper functions
@@ -657,16 +677,16 @@ char* DUMA_OUTPUT_STACKTRACE_MAPFILE = NULL;
  * declare exit function
  */
 void
-#if ( defined(DUMA_GNU_INIT_ATTR) && !defined(DUMA_PREFER_ATEXIT) )
-__attribute ((destructor))
+#if (defined(DUMA_GNU_INIT_ATTR) && !defined(DUMA_PREFER_ATEXIT))
+    __attribute((destructor))
 #endif
-_duma_exit(void);
+    _duma_exit(void);
 #endif
 
 // Avoid pulling in stubs_passert.h here, causes too many issues
 // define a weak fallback for code that doesn't pull in clar
-__attribute__((__weak__)) void passert_failed(
-    const char* filename, int line_number, const char* message, ...) {
+__attribute__((__weak__)) void passert_failed(const char *filename, int line_number,
+                                              const char *message, ...) {
   va_list ap;
   va_start(ap, message);
   printf("*** ASSERTION FAILED: %s:%u\n", filename, line_number);
@@ -682,8 +702,7 @@ __attribute__((__weak__)) void passert_failed(
  *
  * Print message and halt program execution in crazy way.
  */
-void _duma_assert(const char * exprstr, const char * filename, int lineno)
-{
+void _duma_assert(const char *exprstr, const char *filename, int lineno) {
   passert_failed(filename, lineno, "\nDUMA: DUMA_ASSERT(%s) failed)\n", exprstr);
 }
 
@@ -695,39 +714,33 @@ extern char **environ;
  *
  * replacement for standard C library function
  */
-static
-const char * duma_getenv( const char * varname )
-{
-  const char * ret = NULL;
+static const char *duma_getenv(const char *varname) {
+  const char *ret = NULL;
   int varno = 0;
 
-  if ( !varname )
+  if (!varname)
     return ret;
 
-  if ( varname[0] == '\0' )
+  if (varname[0] == '\0')
     return ret;
 
-  while ( environ[varno] )
-  {
-    const char * v = environ[varno++];
+  while (environ[varno]) {
+    const char *v = environ[varno++];
     int idx = 0;
 
-    while ( varname[idx] != '\0' && v[idx] == varname[idx] )
+    while (varname[idx] != '\0' && v[idx] == varname[idx])
       ++idx;
 
-    if ( idx > 0 && varname[idx] == '\0' && v[idx] == '=' )
-      return v + (idx +1);
+    if (idx > 0 && varname[idx] == '\0' && v[idx] == '=')
+      return v + (idx + 1);
   }
   return ret;
 }
 
 #endif
 
-
-static
-void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
-{
-  const char * string;
+static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
+  const char *string;
 
   /*
    * Import the user's environment specification of the default
@@ -748,8 +761,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * there are other functions that break, too. Some in X Windows, one
    * in Sam Leffler's TIFF library, and doubtless many others.
    */
-  if ( (string = DUMA_GETENV("DUMA_ALIGNMENT")) != 0 )
-  {
+  if ((string = DUMA_GETENV("DUMA_ALIGNMENT")) != 0) {
     duma_tls->ALIGNMENT = (size_t)atoi(string);
     /* we could check for DUMA_MIN_ALIGNMENT. should we do so? */
     if (!duma_tls->ALIGNMENT)
@@ -760,11 +772,11 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * See if the user wants to protect the address space below a buffer,
    * rather than that above a buffer.
    */
-  if ( (string = DUMA_GETENV("DUMA_PROTECT_BELOW")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_PROTECT_BELOW")) != 0)
     duma_tls->PROTECT_BELOW = (atoi(string) != 0);
 
   /* Should we report all leaks? */
-  if ( (string = DUMA_GETENV("DUMA_REPORT_ALL_LEAKS")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_REPORT_ALL_LEAKS")) != 0)
     _duma_s.REPORT_ALL_LEAKS = (atoi(string) != 0);
 
   /*
@@ -774,7 +786,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * =0 do not protect free'd memory
    * =N protect memory up to N kB
    */
-  if ( (string = DUMA_GETENV("DUMA_PROTECT_FREE")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_PROTECT_FREE")) != 0)
     _duma_s.PROTECT_FREE = atol(string);
 
   /*
@@ -784,7 +796,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * =-1 use as much memory as possible
    * =N limit total memory usage to N kB
    */
-  if ( (string = DUMA_GETENV("DUMA_MAX_ALLOC")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_MAX_ALLOC")) != 0)
     _duma_s.MAX_ALLOC = atol(string);
 
 #if 0
@@ -798,62 +810,59 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
   /*
    * See what strategy the user wants for malloc(0).
    */
-  if ( (string = DUMA_GETENV("MALLOC_0_STRATEGY")) != 0 )
-  {
+  if ((string = DUMA_GETENV("MALLOC_0_STRATEGY")) != 0) {
     int tmp = atoi(string);
-    if ( tmp >= 0 && tmp <= 3 )
+    if (tmp >= 0 && tmp <= 3)
       _duma_s.MALLOC_0_STRATEGY = tmp;
   }
 
   /*
    * See what strategy the user wants for C++ operator new with size zero.
    */
-  if ( (string = DUMA_GETENV("NEW_0_STRATEGY")) != 0 )
-  {
+  if ((string = DUMA_GETENV("NEW_0_STRATEGY")) != 0) {
     int tmp = atoi(string);
-    if ( tmp >= 2 && tmp <= 3 )
+    if (tmp >= 2 && tmp <= 3)
       _duma_s.NEW_0_STRATEGY = tmp;
   }
 
   /*
    * See if the user wants to exit on malloc() failure
    */
-  if ( (string = DUMA_GETENV("DUMA_MALLOC_FAILEXIT")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_MALLOC_FAILEXIT")) != 0)
     _duma_s.MALLOC_FAILEXIT = (atoi(string) != 0);
 
   /*
    * See if the user wants to write access freed memory
    */
-  if ( (string = DUMA_GETENV("DUMA_FREE_ACCESS")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_FREE_ACCESS")) != 0)
     _duma_s.FREE_ACCESS = (atoi(string) != 0);
 
   /*
    * Check if we should be filling new memory with a value.
    */
-  if ( (string = DUMA_GETENV("DUMA_FILL")) != 0)
-  {
+  if ((string = DUMA_GETENV("DUMA_FILL")) != 0) {
     duma_tls->FILL = atoi(string);
-    if ( -1 != duma_tls->FILL )
+    if (-1 != duma_tls->FILL)
       duma_tls->FILL &= 255;
   }
 
   /*
    * Check with which value the memories no mans land is filled
    */
-  if ( (string = DUMA_GETENV("DUMA_SLACKFILL")) != 0)
+  if ((string = DUMA_GETENV("DUMA_SLACKFILL")) != 0)
     _duma_s.SLACKFILL = atoi(string);
   _duma_s.SLACKFILL &= 255;
 
   /*
    * See if the user wants to see allocations / frees
    */
-  if ( (string = DUMA_GETENV("DUMA_SHOW_ALLOC")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_SHOW_ALLOC")) != 0)
     _duma_s.SHOW_ALLOC = (atoi(string) != 0);
 
   /*
    * See if the user wants to call atexit()
    */
-  if ( (string = DUMA_GETENV("DUMA_SUPPRESS_ATEXIT")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_SUPPRESS_ATEXIT")) != 0)
     _duma_s.SUPPRESS_ATEXIT = (atoi(string) != 0);
 
   /*
@@ -861,7 +870,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * outputs a stacktrace of the allocation that is not free'd. Default is 0,
    * meaning that this option is disabled.
    */
-  if ( (string = DUMA_GETENV("DUMA_OUTPUT_STACKTRACE")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_STACKTRACE")) != 0)
     DUMA_OUTPUT_STACKTRACE = (atoi(string) != 0);
 
   /*
@@ -869,7 +878,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * outputs a stacktrace of the allocation that is not free'd. Default is 0,
    * meaning that this option is disabled.
    */
-  if ( (string = DUMA_GETENV("DUMA_OUTPUT_STACKTRACE_MAPFILE")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_STACKTRACE_MAPFILE")) != 0)
     DUMA_OUTPUT_STACKTRACE_MAPFILE = strdup(string);
 
   /*
@@ -877,7 +886,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * output is printed to the win32 debugging console.  Default is 0,
    * meaning that output is not by default sent to the debugging console.
    */
-  if ( (string = DUMA_GETENV("DUMA_OUTPUT_DEBUG")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_DEBUG")) != 0)
     DUMA_OUTPUT_DEBUG = (atoi(string) != 0);
 
   /*
@@ -885,7 +894,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * output is printed to STDOUT.  Default is 0,
    * meaning that output is not by default sent to STDOUT.
    */
-  if ( (string = DUMA_GETENV("DUMA_OUTPUT_STDOUT")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_STDOUT")) != 0)
     DUMA_OUTPUT_STDOUT = (atoi(string) != 0);
 
   /*
@@ -893,7 +902,7 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * output is printed to STDERR.  Default is 1,
    * meaning that output is by default sent to STDERR.
    */
-  if ( (string = DUMA_GETENV("DUMA_OUTPUT_STDERR")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_STDERR")) != 0)
     DUMA_OUTPUT_STDERR = (atoi(string) != 0);
 
   /*
@@ -901,26 +910,25 @@ void duma_getenvvars( DUMA_TLSVARS_T * duma_tls )
    * output is printed to a specified file.  Default is NULL,
    * meaning that output is not by default sent to a file.
    */
-  if ( (string = DUMA_GETENV("DUMA_OUTPUT_FILE")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_OUTPUT_FILE")) != 0)
     DUMA_OUTPUT_FILE = strdup(string);
 
   /* Get Value for DUMA_SKIPCOUNT_INIT */
-  if ( (string = DUMA_GETENV("DUMA_SKIPCOUNT_INIT")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_SKIPCOUNT_INIT")) != 0)
     _duma_s.SKIPCOUNT_INIT = (atoi(string) != 0);
 
   /* Get Value for DUMA_CHECK_FREQ */
-  if ( (string = DUMA_GETENV("DUMA_CHECK_FREQ")) != 0 )
-  {
+  if ((string = DUMA_GETENV("DUMA_CHECK_FREQ")) != 0) {
     int tmp = atoi(string);
-    if ( tmp > 0 )
-    _duma_s.CHECK_FREQ = tmp;
+    if (tmp > 0)
+      _duma_s.CHECK_FREQ = tmp;
   }
 
   /* Should we send banner? */
-  if ( (string = DUMA_GETENV("DUMA_DISABLE_BANNER")) != 0 )
+  if ((string = DUMA_GETENV("DUMA_DISABLE_BANNER")) != 0)
     _duma_s.DISABLE_BANNER = (atoi(string) != 0);
 
-  if ( !_duma_s.DISABLE_BANNER )
+  if (!_duma_s.DISABLE_BANNER)
     DUMA_Print(version);
 }
 
@@ -942,17 +950,14 @@ static void sigsegv_handler(int signum) {
 #ifndef DUMA_EXPLICIT_INIT
 static
 #endif
-void duma_init(void)
-{
-  void            * testAlloc;
-  DUMA_TLSVARS_T  * duma_tls;
-
+    void duma_init(void) {
+  void *testAlloc;
+  DUMA_TLSVARS_T *duma_tls;
 
   /* avoid double call, when initialization already in progress */
-  if ( _duma_s.init_state >= DUMAIS_IN_INIT && _duma_s.init_state <= DUMAIS_OUT_INIT )
+  if (_duma_s.init_state >= DUMAIS_IN_INIT && _duma_s.init_state <= DUMAIS_OUT_INIT)
     return;
-  else
-  {
+  else {
 #if DUMA_DETOURS
     _duma_init();
 #endif
@@ -962,8 +967,7 @@ void duma_init(void)
 
   duma_tls = GET_DUMA_TLSVARS();
 
-  duma_getenvvars( duma_tls );
-
+  duma_getenvvars(duma_tls);
 
   // SIGSEGV callback setup
   // So that failed tests show more info
@@ -974,36 +978,40 @@ void duma_init(void)
   sigaction(SIGSEGV, &sa, NULL);
   sigaction(SIGBUS, &sa, NULL);  // required for OSX
 
-#if ( !defined(DUMA_NO_LEAKDETECTION) && ( defined(DUMA_PREFER_ATEXIT) || !defined(DUMA_GNU_INIT_ATTR) ) )
+#if (!defined(DUMA_NO_LEAKDETECTION) && \
+     (defined(DUMA_PREFER_ATEXIT) || !defined(DUMA_GNU_INIT_ATTR)))
   /*
    * Register atexit()
    *  a) when we have Leak Detection and atexit() is preferred over GNU_INIT_ATTR
    *  b) when we have Leak Detection and GNU_INIT_ATTR is not set
    */
 
-  #ifndef DUMA_NO_HANG_MSG
-    if (0 == _duma_s.SUPPRESS_ATEXIT)
-      DUMA_Print("\nDUMA: Registering with atexit().\n"
-    #ifdef WIN32
-                 "DUMA: If this hangs, change the library initialization order with DUMA_EXPLICIT_INIT.\n");
-    #else
-                 "DUMA: If this hangs, change the library load/init order with DUMA_EXPLICIT_INIT or LD_PRELOAD.\n");
-    #endif
-    else
-      DUMA_Print("\nDUMA: Skipping registering with atexit(). Set DUMA_SUPPRESS_ATEXIT to 0 to register.\n");
-  #endif /* DUMA_NO_HANG_MSG */
+#ifndef DUMA_NO_HANG_MSG
+  if (0 == _duma_s.SUPPRESS_ATEXIT)
+    DUMA_Print(
+        "\nDUMA: Registering with atexit().\n"
+#ifdef WIN32
+        "DUMA: If this hangs, change the library initialization order with DUMA_EXPLICIT_INIT.\n");
+#else
+        "DUMA: If this hangs, change the library load/init order with DUMA_EXPLICIT_INIT or "
+        "LD_PRELOAD.\n");
+#endif
+  else
+    DUMA_Print(
+        "\nDUMA: Skipping registering with atexit(). Set DUMA_SUPPRESS_ATEXIT to 0 to register.\n");
+#endif /* DUMA_NO_HANG_MSG */
 
-  if (!_duma_s.SUPPRESS_ATEXIT)
-  {
-    if ( atexit( _duma_exit ) )
+  if (!_duma_s.SUPPRESS_ATEXIT) {
+    if (atexit(_duma_exit))
       DUMA_Abort("Cannot register exit function.\n");
 
-    #ifndef DUMA_NO_HANG_MSG
-      DUMA_Print("DUMA: Registration was successful.\n");
-    #endif /* DUMA_NO_HANG_MSG */
+#ifndef DUMA_NO_HANG_MSG
+    DUMA_Print("DUMA: Registration was successful.\n");
+#endif /* DUMA_NO_HANG_MSG */
   }
 
-#endif /* ( !defined(DUMA_NO_LEAKDETECTION) && ( defined(DUMA_PREFER_ATEXIT) || !defined(DUMA_GNU_INIT_ATTR) ) ) */
+#endif /* ( !defined(DUMA_NO_LEAKDETECTION) && ( defined(DUMA_PREFER_ATEXIT) || \
+          !defined(DUMA_GNU_INIT_ATTR) ) ) */
 
   /* initialize semaphoring */
   DUMA_INIT_SEMAPHORE();
@@ -1014,17 +1022,20 @@ void duma_init(void)
    */
   testAlloc = malloc(123);
   if (_duma_s.numAllocs == 0)
-    DUMA_Abort("malloc() is not bound to duma.\nDUMA Aborting: Preload lib with 'LD_PRELOAD=libduma.so <prog>'.\n");
+    DUMA_Abort(
+        "malloc() is not bound to duma.\nDUMA Aborting: Preload lib with 'LD_PRELOAD=libduma.so "
+        "<prog>'.\n");
 
   free(testAlloc);
   if (_duma_s.numDeallocs == 0)
-    DUMA_Abort("free() is not bound to duma.\nDUMA Aborting: Preload lib with 'LD_PRELOAD=libduma.so <prog>'.\n");
+    DUMA_Abort(
+        "free() is not bound to duma.\nDUMA Aborting: Preload lib with 'LD_PRELOAD=libduma.so "
+        "<prog>'.\n");
 #endif
 
   /* initialization finished */
   _duma_s.init_state = DUMAIS_OUT_INIT;
 }
-
 
 /* Function: _duma_init
  *
@@ -1036,43 +1047,41 @@ void duma_init(void)
  */
 void
 #ifdef DUMA_GNU_INIT_ATTR
-__attribute ((constructor))
+    __attribute((constructor))
 #endif
-_duma_init(void)
-{
+    _duma_init(void) {
   size_t size = MEMORY_CREATION_SIZE;
-  struct _DUMA_Slot * slot;
-  int               inRecursion = (_duma_s.init_state >= DUMAIS_IN_CONSTRUCTOR && _duma_s.init_state <= DUMAIS_OUT_INIT);
+  struct _DUMA_Slot *slot;
+  int inRecursion =
+      (_duma_s.init_state >= DUMAIS_IN_CONSTRUCTOR && _duma_s.init_state <= DUMAIS_OUT_INIT);
 
   /* constuction already done? this should not happen! */
-  if (_duma_s.init_state >= DUMAIS_OUT_CONSTRUCTOR && _duma_s.init_state <= DUMAIS_OUT_INIT)
-  {
+  if (_duma_s.init_state >= DUMAIS_OUT_CONSTRUCTOR && _duma_s.init_state <= DUMAIS_OUT_INIT) {
 #ifndef DUMA_EXPLICIT_INIT
     goto duma_constructor_callinit;
 #else
     return;
 #endif
-  }
-  else
+  } else
     _duma_s.init_state = DUMAIS_IN_CONSTRUCTOR;
 
-  if ( DUMA_PAGE_SIZE != Page_Size() )
+  if (DUMA_PAGE_SIZE != Page_Size())
     DUMA_Abort("DUMA_PAGE_SIZE is not correct. Run createconf and save results as duma_config.h");
 
-  if(!inRecursion)
+  if (!inRecursion)
     DUMA_GET_SEMAPHORE();
 
   /* call of DUMA_GET_SEMAPHORE() may already have done the construction recursively! */
-  if ( _duma_s.init_state >= DUMAIS_OUT_CONSTRUCTOR )
+  if (_duma_s.init_state >= DUMAIS_OUT_CONSTRUCTOR)
     goto duma_constructor_relsem;
 
   /*
    * Allocate special memory for malloc() or C++ operator new, when size is 0
    */
-  _duma_s.null_block = Page_Create(2*DUMA_PAGE_SIZE, 1/*=exitonfail*/, 1/*=printerror*/);
+  _duma_s.null_block = Page_Create(2 * DUMA_PAGE_SIZE, 1 /*=exitonfail*/, 1 /*=printerror*/);
 
-  Page_DenyAccess(_duma_s.null_block, 2*DUMA_PAGE_SIZE);
-    _duma_g.null_addr  = (void*)( (DUMA_ADDR)_duma_s.null_block + DUMA_PAGE_SIZE );
+  Page_DenyAccess(_duma_s.null_block, 2 * DUMA_PAGE_SIZE);
+  _duma_g.null_addr = (void *)((DUMA_ADDR)_duma_s.null_block + DUMA_PAGE_SIZE);
 
   /*
    * Figure out how many Slot structures to allocate at one time.
@@ -1080,59 +1089,57 @@ _duma_init(void)
   _duma_s.slotCount = _duma_s.slotsPerPage = DUMA_PAGE_SIZE / sizeof(struct _DUMA_Slot);
   _duma_s.allocListSize = DUMA_PAGE_SIZE;
 
-  if ( size < _duma_s.allocListSize )
+  if (size < _duma_s.allocListSize)
     size = _duma_s.allocListSize;
 
-  size = ( size + DUMA_PAGE_SIZE -1 ) & ~( DUMA_PAGE_SIZE -1 );
+  size = (size + DUMA_PAGE_SIZE - 1) & ~(DUMA_PAGE_SIZE - 1);
 
   /*
    * Allocate memory, and break it up into two malloc buffers. The
    * first buffer will be used for Slot structures, the second will
    * be marked free.
    */
-  slot = _duma_g.allocList = (struct _DUMA_Slot *)Page_Create(size, 0/*=exitonfail*/, 0/*=printerror*/);
-  if ( 0 == _duma_g.allocList  &&  0L != _duma_s.PROTECT_FREE )
-  {
+  slot = _duma_g.allocList =
+      (struct _DUMA_Slot *)Page_Create(size, 0 /*=exitonfail*/, 0 /*=printerror*/);
+  if (0 == _duma_g.allocList && 0L != _duma_s.PROTECT_FREE) {
     int reduce_more;
-    do
-    {
+    do {
       /* reduce as much protected memory as we need - or at least try so */
-      reduce_more = reduceProtectedMemory( (size+1023) >>10 );
+      reduce_more = reduceProtectedMemory((size + 1023) >> 10);
       /* simply try again */
-      slot = _duma_g.allocList = (struct _DUMA_Slot *)Page_Create( size, 0/*=exitonfail*/, 0/*= printerror*/ );
-    }
-    while ( reduce_more && 0 == _duma_g.allocList );
+      slot = _duma_g.allocList =
+          (struct _DUMA_Slot *)Page_Create(size, 0 /*=exitonfail*/, 0 /*= printerror*/);
+    } while (reduce_more && 0 == _duma_g.allocList);
 
-    if ( 0 == _duma_g.allocList )
-      slot = _duma_g.allocList = (struct _DUMA_Slot *)Page_Create( size, 1/*=exitonfail*/, 1/*= printerror*/ );
+    if (0 == _duma_g.allocList)
+      slot = _duma_g.allocList =
+          (struct _DUMA_Slot *)Page_Create(size, 1 /*=exitonfail*/, 1 /*= printerror*/);
   }
 
   memset((char *)_duma_g.allocList, 0, _duma_s.allocListSize);
 
   /* enter _duma_g.allocList as slot to allow call to free() when doing allocateMoreSlots() */
-  slot[0].internalAddress   = slot[0].userAddress = _duma_g.allocList;
-  slot[0].internalSize      = slot[0].userSize    = _duma_s.allocListSize;
-  slot[0].state             = DUMAST_IN_USE;
-  slot[0].allocator         = EFA_INT_ALLOC;
+  slot[0].internalAddress = slot[0].userAddress = _duma_g.allocList;
+  slot[0].internalSize = slot[0].userSize = _duma_s.allocListSize;
+  slot[0].state = DUMAST_IN_USE;
+  slot[0].allocator = EFA_INT_ALLOC;
 #ifndef DUMA_NO_LEAKDETECTION
-  slot[0].fileSource        = DUMAFS_ALLOCATION;
-  slot[0].filename          = __FILE__;
-  slot[0].lineno            = __LINE__;
+  slot[0].fileSource = DUMAFS_ALLOCATION;
+  slot[0].filename = __FILE__;
+  slot[0].lineno = __LINE__;
 #endif
 
-  if ( size > _duma_s.allocListSize )
-  {
-    slot[1].internalAddress = slot[1].userAddress
-        = ((char *)slot[0].internalAddress) + slot[0].internalSize;
-    slot[1].internalSize    = slot[1].userSize
-        =   size - slot[0].internalSize;
-    slot[1].state           = DUMAST_FREE;
-    slot[1].allocator       = EFA_INT_ALLOC;
-  #ifndef DUMA_NO_LEAKDETECTION
-    slot[1].fileSource      = DUMAFS_ALLOCATION;
-    slot[1].filename        = __FILE__;
-    slot[1].lineno          = __LINE__;
-  #endif
+  if (size > _duma_s.allocListSize) {
+    slot[1].internalAddress = slot[1].userAddress =
+        ((char *)slot[0].internalAddress) + slot[0].internalSize;
+    slot[1].internalSize = slot[1].userSize = size - slot[0].internalSize;
+    slot[1].state = DUMAST_FREE;
+    slot[1].allocator = EFA_INT_ALLOC;
+#ifndef DUMA_NO_LEAKDETECTION
+    slot[1].fileSource = DUMAFS_ALLOCATION;
+    slot[1].filename = __FILE__;
+    slot[1].lineno = __LINE__;
+#endif
   }
 
   /*
@@ -1147,19 +1154,19 @@ _duma_init(void)
   _duma_s.unUsedSlots = _duma_s.slotCount - 2;
 
   /* construction done */
-  if ( _duma_s.init_state < DUMAIS_OUT_CONSTRUCTOR )
+  if (_duma_s.init_state < DUMAIS_OUT_CONSTRUCTOR)
     _duma_s.init_state = DUMAIS_OUT_CONSTRUCTOR;
 
-  duma_constructor_relsem:
+duma_constructor_relsem:
   /***********************/
 
-  if ( !inRecursion )
+  if (!inRecursion)
     DUMA_RELEASE_SEMAPHORE(0);
 
 #ifndef DUMA_EXPLICIT_INIT
-  duma_constructor_callinit:
+duma_constructor_callinit:
   /*************************/
-  if ( _duma_s.init_state < DUMAIS_OUT_INIT )
+  if (_duma_s.init_state < DUMAIS_OUT_INIT)
     duma_init();
 #elif 0
   /* this output produces other problems !!! */
@@ -1168,7 +1175,6 @@ _duma_init(void)
 #endif
 }
 
-
 /* Function: allocateMoreSlots
  *
  * allocateMoreSlots is called when there are only enough slot structures
@@ -1176,34 +1182,34 @@ _duma_init(void)
  *
  * See Also: <_duma_allocate>
  */
-static void allocateMoreSlots(void)
-{
-  size_t  newSize = _duma_s.allocListSize + DUMA_PAGE_SIZE;
-  void *  newAllocation;
-  void *  oldAllocation = _duma_g.allocList;
+static void allocateMoreSlots(void) {
+  size_t newSize = _duma_s.allocListSize + DUMA_PAGE_SIZE;
+  void *newAllocation;
+  void *oldAllocation = _duma_g.allocList;
 
-  #ifndef DUMA_NO_LEAKDETECTION
-    newAllocation = _duma_allocate( 1 /*=alignment*/
-                                  , newSize
-                                  , 0 /*=protectBelow*/
-                                  , -1 /*=fillByte*/
-                                  , 0 /*=protectAllocList*/
-                                  , EFA_INT_ALLOC
-                                  , DUMA_FAIL_NULL
-                                  , __FILE__, __LINE__
-                                  );
-  #else
-    newAllocation = _duma_allocate( 1 /*=alignment*/
-                                  , newSize
-                                  , 0 /*=protectBelow*/
-                                  , -1 /*=fillByte*/
-                                  , 0 /*=protectAllocList*/
-                                  , EFA_INT_ALLOC
-                                  , DUMA_FAIL_NULL
-                                  );
-  #endif
+#ifndef DUMA_NO_LEAKDETECTION
+  newAllocation = _duma_allocate(1 /*=alignment*/
+                                 ,
+                                 newSize, 0 /*=protectBelow*/
+                                 ,
+                                 -1 /*=fillByte*/
+                                 ,
+                                 0 /*=protectAllocList*/
+                                 ,
+                                 EFA_INT_ALLOC, DUMA_FAIL_NULL, __FILE__, __LINE__);
+#else
+  newAllocation = _duma_allocate(1 /*=alignment*/
+                                 ,
+                                 newSize, 0 /*=protectBelow*/
+                                 ,
+                                 -1 /*=fillByte*/
+                                 ,
+                                 0 /*=protectAllocList*/
+                                 ,
+                                 EFA_INT_ALLOC, DUMA_FAIL_NULL);
+#endif
 
-  if ( ! newAllocation )
+  if (!newAllocation)
     return;
 
   memcpy(newAllocation, _duma_g.allocList, _duma_s.allocListSize);
@@ -1211,26 +1217,23 @@ static void allocateMoreSlots(void)
 
   _duma_g.allocList = (struct _DUMA_Slot *)newAllocation;
   _duma_s.allocListSize = newSize;
-  _duma_s.slotCount   += _duma_s.slotsPerPage;
+  _duma_s.slotCount += _duma_s.slotsPerPage;
   _duma_s.unUsedSlots += _duma_s.slotsPerPage;
 
-  #ifndef DUMA_NO_LEAKDETECTION
-    _duma_deallocate( oldAllocation, 0 /*=protectAllocList*/, EFA_INT_DEALLOC, __FILE__, __LINE__ );
-  #else
-    _duma_deallocate( oldAllocation, 0 /*=protectAllocList*/, EFA_INT_DEALLOC);
-  #endif
+#ifndef DUMA_NO_LEAKDETECTION
+  _duma_deallocate(oldAllocation, 0 /*=protectAllocList*/, EFA_INT_DEALLOC, __FILE__, __LINE__);
+#else
+  _duma_deallocate(oldAllocation, 0 /*=protectAllocList*/, EFA_INT_DEALLOC);
+#endif
 }
-
 
 /* Function: duma_alloc_return
  *
  * set your conditional breakpoint here to catch a specific allocation
  */
-void * duma_alloc_return( void * address )
-{
+void *duma_alloc_return(void *address) {
   return address;
 }
-
 
 /* Function: _duma_allocate
  *
@@ -1255,24 +1258,24 @@ void * duma_alloc_return( void * address )
  *
  * See Also: <_duma_deallocate>
  */
-void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int fillByte, int protectAllocList, enum _DUMA_Allocator allocator, enum _DUMA_FailReturn fail  DUMA_PARAMLIST_FL)
-{
-  size_t            count;
-  struct _DUMA_Slot * slot;
-  struct _DUMA_Slot * fullSlot;
-  struct _DUMA_Slot * emptySlots[2];
-  DUMA_ADDR           intAddr, userAddr, protAddr, endAddr;
-  size_t              internalSize;
-  int                 allocationStrategy;
+void *_duma_allocate(size_t alignment, size_t userSize, int protectBelow, int fillByte,
+                     int protectAllocList, enum _DUMA_Allocator allocator,
+                     enum _DUMA_FailReturn fail DUMA_PARAMLIST_FL) {
+  size_t count;
+  struct _DUMA_Slot *slot;
+  struct _DUMA_Slot *fullSlot;
+  struct _DUMA_Slot *emptySlots[2];
+  DUMA_ADDR intAddr, userAddr, protAddr, endAddr;
+  size_t internalSize;
+  int allocationStrategy;
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
-  char        stacktrace[601];
-  char*       ptrStacktrace;
+  char stacktrace[601];
+  char *ptrStacktrace;
 #endif
-  DUMA_TLSVARS_T    * duma_tls = GET_DUMA_TLSVARS();
+  DUMA_TLSVARS_T *duma_tls = GET_DUMA_TLSVARS();
 
   /* check allocation strategy to use */
-  switch ( _duma_allocDesc[allocator].std )
-  {
+  switch (_duma_allocDesc[allocator].std) {
     default:
     case DUMAAS_C:
       allocationStrategy = _duma_s.MALLOC_0_STRATEGY;
@@ -1282,7 +1285,7 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
       break;
   }
 
-  DUMA_ASSERT( 0 != _duma_g.allocList );
+  DUMA_ASSERT(0 != _duma_g.allocList);
 
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
   /* When getting the stack trace memory will be allocated
@@ -1291,13 +1294,12 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
    * to the new empty slot.  For this reason please leave
    * this code at the top of this function.
    */
-  if(!_duma_s.DUMA_IN_DUMA && _duma_s.init_state && DUMA_OUTPUT_STACKTRACE)
-  {
+  if (!_duma_s.DUMA_IN_DUMA && _duma_s.init_state && DUMA_OUTPUT_STACKTRACE) {
     _duma_s.DUMA_IN_DUMA = 1;
 
     printStackTrace(stacktrace, sizeof(stacktrace), DUMA_OUTPUT_STACKTRACE_MAPFILE);
     internalSize = strlen(stacktrace) * sizeof(char) + 1;
-    ptrStacktrace = (char*) LocalAlloc(NULL, internalSize);
+    ptrStacktrace = (char *)LocalAlloc(NULL, internalSize);
     strcpy(ptrStacktrace, stacktrace);
     memset(stacktrace, 0, 600);
 
@@ -1305,34 +1307,31 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
   }
 #endif
 
-
   /* initialize return value */
   userAddr = 0;
 
   /* count and show allocation, if requested */
   _duma_s.numAllocs++;
-  if (_duma_s.SHOW_ALLOC)
-  {
-    #ifndef DUMA_NO_LEAKDETECTION
-      DUMA_Print("\nDUMA: Allocating %d bytes at %s(%i).", (DUMA_SIZE)userSize, filename, lineno);
-    #else
-      DUMA_Print("\nDUMA: Allocating %d bytes.", (DUMA_SIZE)userSize);
-    #endif
-    if ( 0 == userSize )
+  if (_duma_s.SHOW_ALLOC) {
+#ifndef DUMA_NO_LEAKDETECTION
+    DUMA_Print("\nDUMA: Allocating %d bytes at %s(%i).", (DUMA_SIZE)userSize, filename, lineno);
+#else
+    DUMA_Print("\nDUMA: Allocating %d bytes.", (DUMA_SIZE)userSize);
+#endif
+    if (0 == userSize)
       DUMA_Print(" This is ANSI conform but probably a bug. See DUMA_ALLOW_MALLOC_0.");
   }
 
   /* check userSize */
-  if ( 0 == userSize )
-  {
+  if (0 == userSize) {
 #if 0
     if ( !_duma_s.ALLOW_MALLOC_0 )
     {
-      #ifndef DUMA_NO_LEAKDETECTION
+#ifndef DUMA_NO_LEAKDETECTION
         DUMA_Abort("Allocating 0 bytes, probably a bug at %s(%i). See DUMA_ALLOW_MALLOC_0.", filename, lineno);
-      #else
+#else
         DUMA_Abort("Allocating 0 bytes, probably a bug. See DUMA_ALLOW_MALLOC_0.");
-      #endif
+#endif
     }
     else
     {
@@ -1341,23 +1340,23 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
       return (void*)userAddr;
     }
 #else
-    switch ( allocationStrategy )
-    {
+    switch (allocationStrategy) {
       case 0: /* like having former ALLOW_MALLOC_0 = 0  ==> abort program with segfault */
-        #ifndef DUMA_NO_LEAKDETECTION
-          DUMA_Abort("Allocating 0 bytes, probably a bug at %s(%i). See DUMA_ALLOW_MALLOC_0.", filename, lineno);
-        #else
-          DUMA_Abort("Allocating 0 bytes, probably a bug. See DUMA_ALLOW_MALLOC_0.");
-        #endif
-        return (void*)userAddr;
+#ifndef DUMA_NO_LEAKDETECTION
+        DUMA_Abort("Allocating 0 bytes, probably a bug at %s(%i). See DUMA_ALLOW_MALLOC_0.",
+                   filename, lineno);
+#else
+        DUMA_Abort("Allocating 0 bytes, probably a bug. See DUMA_ALLOW_MALLOC_0.");
+#endif
+        return (void *)userAddr;
         break;
       case 1: /* return NULL pointer */
-        return (void*)userAddr;
+        return (void *)userAddr;
         break;
       case 2: /* return always the same pointer to some protected page */
       default:
         userAddr = (DUMA_ADDR)_duma_g.null_addr;
-        return (void*)userAddr;
+        return (void *)userAddr;
         break;
       case 3: /* return unique protected page */
         /* continue allocation! */
@@ -1367,31 +1366,29 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
     /* only case 3 */
     internalSize = DUMA_PAGE_SIZE;
 #endif
-  }
-  else /* if ( userSize ) */
+  } else /* if ( userSize ) */
   {
     /* check alignment */
-    if ( ! alignment )
-    {
+    if (!alignment) {
       DUMA_SIZE a = (DUMA_SIZE)duma_tls->ALIGNMENT;
       DUMA_SIZE s = (DUMA_SIZE)userSize;
 
-      if ( s < a )
-      {
+      if (s < a) {
         /* to next lower power of 2 */
-        for (a = s; a & (a-1); a &= a-1)  ;
+        for (a = s; a & (a - 1); a &= a - 1)
+          ;
       }
 
       alignment = (size_t)a; /* this is new alignment */
     }
 
-    if ( (int)alignment != ((int)alignment & -(int)alignment) )
-    {
-      #ifndef DUMA_NO_LEAKDETECTION
-        DUMA_Abort("Alignment (=%d) is not a power of 2 requested from %s(%i)", (DUMA_SIZE)alignment, filename, lineno);
-      #else
-        DUMA_Abort("Alignment (=%d) is not a power of 2", (DUMA_SIZE)alignment);
-      #endif
+    if ((int)alignment != ((int)alignment & -(int)alignment)) {
+#ifndef DUMA_NO_LEAKDETECTION
+      DUMA_Abort("Alignment (=%d) is not a power of 2 requested from %s(%i)", (DUMA_SIZE)alignment,
+                 filename, lineno);
+#else
+      DUMA_Abort("Alignment (=%d) is not a power of 2", (DUMA_SIZE)alignment);
+#endif
     }
 
     /*
@@ -1402,9 +1399,9 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
      * boundary, and then we add another page's worth of memory for the dead page.
      */
     /* a bit tricky but no modulo and no if () */
-    internalSize = ( (userSize + DUMA_PAGE_SIZE -1) & ~(DUMA_PAGE_SIZE -1) ) + DUMA_PAGE_SIZE;
+    internalSize = ((userSize + DUMA_PAGE_SIZE - 1) & ~(DUMA_PAGE_SIZE - 1)) + DUMA_PAGE_SIZE;
 
-    if ( alignment > DUMA_PAGE_SIZE )
+    if (alignment > DUMA_PAGE_SIZE)
       internalSize += alignment - DUMA_PAGE_SIZE;
   } /* end if ( userSize ) */
 
@@ -1421,18 +1418,15 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
    * allocator's arena. I'll un-protect it here so that I can make
    * a new allocation. I'll re-protect it before I return.
    */
-  if ( protectAllocList )
-  {
+  if (protectAllocList) {
     IF__DUMA_INIT_DONE
-      DUMA_GET_SEMAPHORE();
+    DUMA_GET_SEMAPHORE();
 
     Page_AllowAccess(_duma_g.allocList, _duma_s.allocListSize);
   }
 
-  if ( _duma_s.CHECK_FREQ > 0 )
-  {
-    if ( (++ _duma_s.checkFreqCounter) == _duma_s.CHECK_FREQ )
-    {
+  if (_duma_s.CHECK_FREQ > 0) {
+    if ((++_duma_s.checkFreqCounter) == _duma_s.CHECK_FREQ) {
       _duma_check_all_slacks();
       _duma_s.checkFreqCounter = 0;
     }
@@ -1442,7 +1436,7 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
    * If I'm running out of empty slots, create some more before
    * I don't have enough slots left to make an allocation.
    */
-  if ( DUMAAT_INTERNAL != _duma_allocDesc[allocator].type  &&  _duma_s.unUsedSlots < 7 )
+  if (DUMAAT_INTERNAL != _duma_allocDesc[allocator].type && _duma_s.unUsedSlots < 7)
     allocateMoreSlots();
 
   /*
@@ -1454,127 +1448,114 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
    * we have to create new memory and mark it as free.
    *
    */
-  for ( slot = _duma_g.allocList, count = _duma_s.slotCount ; count > 0; --count, ++slot )
-  {
+  for (slot = _duma_g.allocList, count = _duma_s.slotCount; count > 0; --count, ++slot) {
     /*
      * Windows needs special treatment, cause Page_Delete() needs exactly
      * the same memory region as Page_Create()!
      * Thus as a quick hack no memory management is done by DUMA.
      */
 #if !defined(WIN32)
-    if ( DUMAST_FREE == slot->state  &&  slot->internalSize >= internalSize )
-    {
-      if ( !fullSlot || slot->internalSize < fullSlot->internalSize )
-      {
+    if (DUMAST_FREE == slot->state && slot->internalSize >= internalSize) {
+      if (!fullSlot || slot->internalSize < fullSlot->internalSize) {
         fullSlot = slot;
-        if ( slot->internalSize == internalSize )
-          break;  /* All done; no empty slot needed in this case */
+        if (slot->internalSize == internalSize)
+          break; /* All done; no empty slot needed in this case */
       }
-    }
-    else
+    } else
 #endif
-      if ( DUMAST_EMPTY == slot->state )
-      {
-        if(!emptySlots[0])
-          emptySlots[0] = slot;
-        else if ( !emptySlots[1] )
-          emptySlots[1] = slot;
+        if (DUMAST_EMPTY == slot->state) {
+      if (!emptySlots[0])
+        emptySlots[0] = slot;
+      else if (!emptySlots[1])
+        emptySlots[1] = slot;
 
-        #if defined(WIN32)
-          break;
-        #endif
-      }
+#if defined(WIN32)
+      break;
+#endif
+    }
   }
 
-  if ( !fullSlot )
-  {
+  if (!fullSlot) {
     /*
-      * I get here if I haven't been able to find a free buffer
-      * with all of the memory I need. I'll have to create more
-      * memory. I'll mark it all as free, and then split it into
-      * free and allocated portions later.
-      */
-    size_t  chunkSize;
-    long    chunkSizekB;
+     * I get here if I haven't been able to find a free buffer
+     * with all of the memory I need. I'll have to create more
+     * memory. I'll mark it all as free, and then split it into
+     * free and allocated portions later.
+     */
+    size_t chunkSize;
+    long chunkSizekB;
 
-    #if defined(WIN32)
+#if defined(WIN32)
+    chunkSize = internalSize;
+#else
+    chunkSize = MEMORY_CREATION_SIZE;
+
+    if (chunkSize < internalSize)
       chunkSize = internalSize;
-    #else
-      chunkSize = MEMORY_CREATION_SIZE;
 
-      if ( chunkSize < internalSize )
-        chunkSize = internalSize;
+    chunkSize = (chunkSize + DUMA_PAGE_SIZE - 1) & ~(DUMA_PAGE_SIZE - 1);
+#endif
 
-      chunkSize = ( chunkSize + DUMA_PAGE_SIZE -1 ) & ~( DUMA_PAGE_SIZE -1 );
-    #endif
-
-    chunkSizekB = (long)( (chunkSize+1023) >>10 );
-
+    chunkSizekB = (long)((chunkSize + 1023) >> 10);
 
     /* Use up one of the empty slots to make the full slot. */
-    if ( !emptySlots[0] )
+    if (!emptySlots[0])
       DUMA_Abort("Internal error in allocator: No empty slot 0.\n");
 
-    #if !defined(WIN32)
-      if ( !emptySlots[1] )
-        DUMA_Abort("Internal error in allocator: No empty slot 1.\n");
-    #endif
+#if !defined(WIN32)
+    if (!emptySlots[1])
+      DUMA_Abort("Internal error in allocator: No empty slot 1.\n");
+#endif
 
-    fullSlot      = emptySlots[0];
+    fullSlot = emptySlots[0];
     emptySlots[0] = emptySlots[1];
 
     /* reduce protected memory when we would exceed _duma_s.MAX_ALLOC */
-    if ( _duma_s.MAX_ALLOC > 0L  &&  _duma_s.sumAllocatedMem + chunkSizekB > _duma_s.MAX_ALLOC )
-      reduceProtectedMemory( chunkSizekB );
+    if (_duma_s.MAX_ALLOC > 0L && _duma_s.sumAllocatedMem + chunkSizekB > _duma_s.MAX_ALLOC)
+      reduceProtectedMemory(chunkSizekB);
 
-    fullSlot->internalAddress = Page_Create( chunkSize, 0/*= exitonfail*/, 0/*= printerror*/ );
+    fullSlot->internalAddress = Page_Create(chunkSize, 0 /*= exitonfail*/, 0 /*= printerror*/);
 
-    if ( 0 == fullSlot->internalAddress  &&  0L != _duma_s.PROTECT_FREE )
-    {
+    if (0 == fullSlot->internalAddress && 0L != _duma_s.PROTECT_FREE) {
       int reduce_more;
-      do
-      {
+      do {
         /* reduce as much protected memory as we need - or at least try so */
-        reduce_more = reduceProtectedMemory( (chunkSize+1023) >>10 );
+        reduce_more = reduceProtectedMemory((chunkSize + 1023) >> 10);
         /* simply try again */
-        fullSlot->internalAddress = Page_Create( chunkSize, 0/*= exitonfail*/, 0/*= printerror*/ );
-      }
-      while ( reduce_more && 0 == fullSlot->internalAddress );
+        fullSlot->internalAddress = Page_Create(chunkSize, 0 /*= exitonfail*/, 0 /*= printerror*/);
+      } while (reduce_more && 0 == fullSlot->internalAddress);
 
-      if ( 0 == fullSlot->internalAddress  &&  DUMA_FAIL_ENV == fail )
-        fullSlot->internalAddress = Page_Create( chunkSize, _duma_s.MALLOC_FAILEXIT, 1/*= printerror*/ );
+      if (0 == fullSlot->internalAddress && DUMA_FAIL_ENV == fail)
+        fullSlot->internalAddress =
+            Page_Create(chunkSize, _duma_s.MALLOC_FAILEXIT, 1 /*= printerror*/);
     }
 
-    if ( fullSlot->internalAddress )
-    {
-      _duma_s.sumAllocatedMem       += ( (chunkSize +1023) >>10 );
-      _duma_s.sumTotalAllocatedMem  += ( (chunkSize +1023) >>10 );
-      fullSlot->internalSize  = chunkSize;
-      fullSlot->state         = DUMAST_FREE;
+    if (fullSlot->internalAddress) {
+      _duma_s.sumAllocatedMem += ((chunkSize + 1023) >> 10);
+      _duma_s.sumTotalAllocatedMem += ((chunkSize + 1023) >> 10);
+      fullSlot->internalSize = chunkSize;
+      fullSlot->state = DUMAST_FREE;
       --_duma_s.unUsedSlots;
     }
   } /* end if ( !fullSlot ) */
 
-  if ( fullSlot->internalSize )
-  {
-
+  if (fullSlot->internalSize) {
 #if !defined(WIN32)
     /*
      * If the buffer I've found is larger than I need, split it into
      * an allocated buffer with the exact amount of memory I need, and
      * a free buffer containing the surplus memory.
      */
-    if ( fullSlot->internalSize > internalSize )
-    {
+    if (fullSlot->internalSize > internalSize) {
       /* copy and adjust contents for free slot */
-      *emptySlots[0]                 = *fullSlot;
+      *emptySlots[0] = *fullSlot;
       emptySlots[0]->internalAddress = (char *)emptySlots[0]->internalAddress + internalSize;
-      emptySlots[0]->internalSize   -= internalSize;
-      emptySlots[0]->userAddress     = emptySlots[0]->internalAddress;
-      emptySlots[0]->userSize        = emptySlots[0]->internalSize;
+      emptySlots[0]->internalSize -= internalSize;
+      emptySlots[0]->userAddress = emptySlots[0]->internalAddress;
+      emptySlots[0]->userSize = emptySlots[0]->internalSize;
 
       /* adjust size of fullSlot */
-      fullSlot->internalSize         = internalSize;
+      fullSlot->internalSize = internalSize;
 
       --_duma_s.unUsedSlots;
     }
@@ -1582,8 +1563,7 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
 
 #if 0
 #else
-    if ( 0 == userSize )
-    {
+    if (0 == userSize) {
       /*
        * we need just a single page
        * may deny any access to it
@@ -1591,18 +1571,16 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
        */
 
       /* Figure out what address to give the user: mid of protected page */
-      intAddr  = (DUMA_ADDR)fullSlot->internalAddress;
-      endAddr  = intAddr + internalSize;
-      userAddr = intAddr  + (DUMA_PAGE_SIZE >> 1);
+      intAddr = (DUMA_ADDR)fullSlot->internalAddress;
+      endAddr = intAddr + internalSize;
+      userAddr = intAddr + (DUMA_PAGE_SIZE >> 1);
       protAddr = intAddr;
 
       /* Set up the "dead" page(s). */
-      Page_DenyAccess( (char*)protAddr, endAddr - protAddr );
-    }
-    else
+      Page_DenyAccess((char *)protAddr, endAddr - protAddr);
+    } else
 #endif
-    if ( !protectBelow )
-    {
+        if (!protectBelow) {
       /*
        * Arrange the buffer so that it is followed by an inaccessable
        * memory page. A buffer overrun that touches that page will
@@ -1611,19 +1589,18 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
        */
 
       /* Figure out what address to give the user. */
-      intAddr  = (DUMA_ADDR)fullSlot->internalAddress;
-      endAddr  = intAddr + internalSize;
-      userAddr = ( intAddr  + internalSize - DUMA_PAGE_SIZE - userSize ) & ~(alignment -1);
-      protAddr = ( userAddr + userSize     + DUMA_PAGE_SIZE -1)     & ~(DUMA_PAGE_SIZE -1);
+      intAddr = (DUMA_ADDR)fullSlot->internalAddress;
+      endAddr = intAddr + internalSize;
+      userAddr = (intAddr + internalSize - DUMA_PAGE_SIZE - userSize) & ~(alignment - 1);
+      protAddr = (userAddr + userSize + DUMA_PAGE_SIZE - 1) & ~(DUMA_PAGE_SIZE - 1);
 
       /* DUMA_ASSERT(intAddr <= userAddr && intAddr < protAddr ); */
 
       /* Set up the "live" page(s). */
-      Page_AllowAccess( (char*)intAddr, protAddr - intAddr );
+      Page_AllowAccess((char *)intAddr, protAddr - intAddr);
       /* Set up the "dead" page(s). */
-      Page_DenyAccess( (char*)protAddr, endAddr - protAddr );
-    }
-    else /* if (protectBelow) */
+      Page_DenyAccess((char *)protAddr, endAddr - protAddr);
+    } else /* if (protectBelow) */
     {
       /*
        * Arrange the buffer so that it is preceded by an inaccessable
@@ -1631,58 +1608,56 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
        * cause a segmentation fault.
        */
       /* Figure out what address to give the user. */
-      intAddr  = (DUMA_ADDR)fullSlot->internalAddress;
-      endAddr  = intAddr + internalSize;
-      userAddr = ( intAddr + DUMA_PAGE_SIZE + alignment -1) & ~(alignment -1);
-      protAddr = ( userAddr & ~(DUMA_PAGE_SIZE -1) ) - DUMA_PAGE_SIZE;
+      intAddr = (DUMA_ADDR)fullSlot->internalAddress;
+      endAddr = intAddr + internalSize;
+      userAddr = (intAddr + DUMA_PAGE_SIZE + alignment - 1) & ~(alignment - 1);
+      protAddr = (userAddr & ~(DUMA_PAGE_SIZE - 1)) - DUMA_PAGE_SIZE;
 
       /* DUMA_ASSERT(intAddr < userAddr && intAddr <= protAddr ); */
 
       /* Set up the "live" page(s). userAddr == protAddr + DUMA_PAGE_SIZE ! */
-      Page_AllowAccess( (char*)userAddr, internalSize - (userAddr - protAddr) );
+      Page_AllowAccess((char *)userAddr, internalSize - (userAddr - protAddr));
       /* Set up the "dead" page(s). */
-      Page_DenyAccess( (char*)intAddr, userAddr - intAddr );
+      Page_DenyAccess((char *)intAddr, userAddr - intAddr);
     }
 
     /* => userAddress = internalAddress + DUMA_PAGE_SIZE */
-    fullSlot->userAddress = (char*)userAddr;
-    fullSlot->protAddress = (char*)protAddr;
-    fullSlot->userSize    = userSize;
-    fullSlot->state       = DUMAST_IN_USE;
-    fullSlot->allocator   = allocator;
+    fullSlot->userAddress = (char *)userAddr;
+    fullSlot->protAddress = (char *)protAddr;
+    fullSlot->userSize = userSize;
+    fullSlot->state = DUMAST_IN_USE;
+    fullSlot->allocator = allocator;
 
-    #ifndef DUMA_NO_LEAKDETECTION
-      fullSlot->fileSource  = DUMAFS_ALLOCATION;
-      fullSlot->filename    = (char*)filename;
-      #ifdef DUMA_EXPLICIT_INIT
+#ifndef DUMA_NO_LEAKDETECTION
+    fullSlot->fileSource = DUMAFS_ALLOCATION;
+    fullSlot->filename = (char *)filename;
+#ifdef DUMA_EXPLICIT_INIT
 
-        /* mark allocations from standard libraries
-         * before duma_init() is finished with lineno = -1
-         * to allow special treatment in leak_checking
-         */
-        fullSlot->lineno    = (DUMAIS_OUT_INIT == _duma_s.init_state) ? lineno : -1;
-      #else
-        fullSlot->lineno    = lineno;
-      #endif
-    #endif
+    /* mark allocations from standard libraries
+     * before duma_init() is finished with lineno = -1
+     * to allow special treatment in leak_checking
+     */
+    fullSlot->lineno = (DUMAIS_OUT_INIT == _duma_s.init_state) ? lineno : -1;
+#else
+    fullSlot->lineno = lineno;
+#endif
+#endif
 
     /* initialise no mans land of slot */
-    _duma_init_slack( fullSlot );
+    _duma_init_slack(fullSlot);
 
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
-    if(!_duma_s.DUMA_IN_DUMA && _duma_s.init_state && DUMA_OUTPUT_STACKTRACE)
-    {
+    if (!_duma_s.DUMA_IN_DUMA && _duma_s.init_state && DUMA_OUTPUT_STACKTRACE) {
       _duma_s.DUMA_IN_DUMA = 1;
 
       /* Get stacktrace */
-      if(fullSlot->stacktrace)
+      if (fullSlot->stacktrace)
         LocalFree(fullSlot->stacktrace);
 
       fullSlot->stacktrace = ptrStacktrace;
 
       _duma_s.DUMA_IN_DUMA = 0;
-    }
-    else
+    } else
       fullSlot->stacktrace = 0;
 #endif
 
@@ -1692,21 +1667,19 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
    * Make the pool's internal memory inaccessable, so that the program
    * being debugged can't stomp on it.
    */
-  if ( protectAllocList )
-  {
+  if (protectAllocList) {
     Page_DenyAccess(_duma_g.allocList, _duma_s.allocListSize);
 
     IF__DUMA_INIT_DONE
-      DUMA_RELEASE_SEMAPHORE(0);
+    DUMA_RELEASE_SEMAPHORE(0);
   }
 
   /* Fill the memory if it was specified to do so. */
-  if ( ((char*)userAddr) && fillByte != -1 && userSize )
-    memset( (char*)userAddr, fillByte, userSize);
+  if (((char *)userAddr) && fillByte != -1 && userSize)
+    memset((char *)userAddr, fillByte, userSize);
 
-  return duma_alloc_return( (char*)userAddr );
+  return duma_alloc_return((char *)userAddr);
 }
-
 
 /* Function: _duma_deallocate
  *
@@ -1715,13 +1688,12 @@ void * _duma_allocate(size_t alignment, size_t userSize, int protectBelow, int f
  *
  * See Also: <Page_Delete> <_duma_allocate>
  */
-void _duma_deallocate(void * address, int protectAllocList, enum _DUMA_Allocator allocator  DUMA_PARAMLIST_FL)
-{
-  struct _DUMA_Slot   * slot;
-  long                internalSizekB;
+void _duma_deallocate(void *address, int protectAllocList,
+                      enum _DUMA_Allocator allocator DUMA_PARAMLIST_FL) {
+  struct _DUMA_Slot *slot;
+  long internalSizekB;
 
-  if ( 0 == _duma_g.allocList )
-  {
+  if (0 == _duma_g.allocList) {
 #ifdef DUMA_DETOURS
     /* Odd things happen with detours sometimes... */
     DUMA_Print("DUMA_Warning: free() called before first malloc().");
@@ -1731,47 +1703,46 @@ void _duma_deallocate(void * address, int protectAllocList, enum _DUMA_Allocator
 #endif
   }
 
-  if ( 0 == address || _duma_g.null_addr == address )
+  if (0 == address || _duma_g.null_addr == address)
     return;
 
-  if ( protectAllocList )
-  {
+  if (protectAllocList) {
     IF__DUMA_INIT_DONE
-      DUMA_GET_SEMAPHORE();
+    DUMA_GET_SEMAPHORE();
 
     Page_AllowAccess(_duma_g.allocList, _duma_s.allocListSize);
   }
 
-  if ( _duma_s.CHECK_FREQ > 0 )
-  {
-    if ( (++ _duma_s.checkFreqCounter) == _duma_s.CHECK_FREQ )
-    {
+  if (_duma_s.CHECK_FREQ > 0) {
+    if ((++_duma_s.checkFreqCounter) == _duma_s.CHECK_FREQ) {
       _duma_check_all_slacks();
       _duma_s.checkFreqCounter = 0;
     }
   }
 
-  if ( !(slot = slotForUserAddress(address)) )
-  {
-    if ( (slot = nearestSlotForUserAddress(address)) )
-    {
+  if (!(slot = slotForUserAddress(address))) {
+    if ((slot = nearestSlotForUserAddress(address))) {
 #ifndef DUMA_NO_LEAKDETECTION
-      if ( DUMAFS_ALLOCATION == slot->fileSource )
-        DUMA_Abort("free(%a): address not from DUMA or already freed. Address may be corrupted from %a allocated from %s(%i)",
-          (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
-      else if ( DUMAFS_DEALLOCATION == slot->fileSource )
-        DUMA_Abort("free(%a): address not from DUMA or already freed. Address may be corrupted from %a deallocated at %s(%i)",
-          (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
+      if (DUMAFS_ALLOCATION == slot->fileSource)
+        DUMA_Abort(
+            "free(%a): address not from DUMA or already freed. Address may be corrupted from %a "
+            "allocated from %s(%i)",
+            (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
+      else if (DUMAFS_DEALLOCATION == slot->fileSource)
+        DUMA_Abort(
+            "free(%a): address not from DUMA or already freed. Address may be corrupted from %a "
+            "deallocated at %s(%i)",
+            (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
       else
 #endif
-        DUMA_Abort("free(%a): address not from DUMA or already freed. Address may be corrupted from %a.",
-          (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress);
-    }
-    else
-    {
+        DUMA_Abort(
+            "free(%a): address not from DUMA or already freed. Address may be corrupted from %a.",
+            (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress);
+    } else {
 #if DUMA_DETOURS
       /* For Detours we need to not dump out, we get one extra free up front for some reason. */
-      DUMA_Print("DUMA_Warning: free(%a): address not from DUMA or already freed.", (DUMA_ADDR)address);
+      DUMA_Print("DUMA_Warning: free(%a): address not from DUMA or already freed.",
+                 (DUMA_ADDR)address);
       return;
 #else
       DUMA_Abort("free(%a): address not from DUMA or already freed.", (DUMA_ADDR)address);
@@ -1779,36 +1750,36 @@ void _duma_deallocate(void * address, int protectAllocList, enum _DUMA_Allocator
     }
   }
 
-  if ( DUMAST_ALL_PROTECTED == slot->state || DUMAST_BEGIN_PROTECTED == slot->state )
-  {
+  if (DUMAST_ALL_PROTECTED == slot->state || DUMAST_BEGIN_PROTECTED == slot->state) {
 #ifndef DUMA_NO_LEAKDETECTION
-    if ( DUMAFS_ALLOCATION == slot->fileSource )
-      DUMA_Abort("free(%a): memory already freed. allocated from %s(%i)",
-        (DUMA_ADDR)address, slot->filename, slot->lineno);
-    else if ( DUMAFS_DEALLOCATION == slot->fileSource )
-      DUMA_Abort("free(%a): memory already freed at %s(%i)",
-        (DUMA_ADDR)address, slot->filename, slot->lineno);
+    if (DUMAFS_ALLOCATION == slot->fileSource)
+      DUMA_Abort("free(%a): memory already freed. allocated from %s(%i)", (DUMA_ADDR)address,
+                 slot->filename, slot->lineno);
+    else if (DUMAFS_DEALLOCATION == slot->fileSource)
+      DUMA_Abort("free(%a): memory already freed at %s(%i)", (DUMA_ADDR)address, slot->filename,
+                 slot->lineno);
     else
 #endif
       DUMA_Abort("free(%a): memory already freed.", (DUMA_ADDR)address);
-  }
-  else if ( _duma_allocDesc[slot->allocator].type != _duma_allocDesc[allocator].type )
-  {
+  } else if (_duma_allocDesc[slot->allocator].type != _duma_allocDesc[allocator].type) {
 #ifndef DUMA_NO_LEAKDETECTION
-    if ( DUMAFS_ALLOCATION == slot->fileSource )
-      /*                                    1            2  3                        4             5  6 */
-      DUMA_Abort("Free mismatch: allocator '%s' used  at %s(%i)\n  but  deallocator '%s' called at %s(%i)!",
-        _duma_allocDesc[slot->allocator].name, slot->filename, slot->lineno,
-        _duma_allocDesc[allocator].name, filename, lineno );
-    else if ( DUMAFS_DEALLOCATION == slot->fileSource )
+    if (DUMAFS_ALLOCATION == slot->fileSource)
+      /*                                    1            2  3                        4             5
+       * 6 */
+      DUMA_Abort(
+          "Free mismatch: allocator '%s' used  at %s(%i)\n  but  deallocator '%s' called at "
+          "%s(%i)!",
+          _duma_allocDesc[slot->allocator].name, slot->filename, slot->lineno,
+          _duma_allocDesc[allocator].name, filename, lineno);
+    else if (DUMAFS_DEALLOCATION == slot->fileSource)
       /*                                    1                           2             3  4 */
       DUMA_Abort("Free mismatch: allocator '%s' used \nbut deallocator '%s' called at %s(%i)!",
-        _duma_allocDesc[slot->allocator].name,
-        _duma_allocDesc[allocator].name, filename, lineno );
+                 _duma_allocDesc[slot->allocator].name, _duma_allocDesc[allocator].name, filename,
+                 lineno);
     else
 #endif
       DUMA_Abort("Free mismatch: allocator '%s' used  but  deallocator '%s' called!",
-        _duma_allocDesc[slot->allocator].name, _duma_allocDesc[allocator].name );
+                 _duma_allocDesc[slot->allocator].name, _duma_allocDesc[allocator].name);
   }
 
   /* count and show deallocation, if requested */
@@ -1816,164 +1787,148 @@ void _duma_deallocate(void * address, int protectAllocList, enum _DUMA_Allocator
   if (_duma_s.SHOW_ALLOC)
 #ifndef DUMA_NO_LEAKDETECTION
     DUMA_Print("\nDUMA: Freeing %d bytes at %s(%i) (Allocated from %s(%i)).",
-      (DUMA_SIZE)slot->userSize, filename, lineno, slot->filename, slot->lineno);
+               (DUMA_SIZE)slot->userSize, filename, lineno, slot->filename, slot->lineno);
 #else
     DUMA_Print("\nDUMA: Freeing %d bytes.", (DUMA_SIZE)slot->userSize);
 #endif
 
   /* CHECK INTEGRITY OF NO MANS LAND */
-  _duma_check_slack( slot );
+  _duma_check_slack(slot);
 
-  if ( _duma_s.FREE_ACCESS )
-  {
+  if (_duma_s.FREE_ACCESS) {
     volatile char *start = slot->userAddress;
     volatile char *cur;
 
-    for (cur = (char*)slot->userAddress+slot->userSize; --cur >= start; )
-    {
+    for (cur = (char *)slot->userAddress + slot->userSize; --cur >= start;) {
       char c = *cur;
-      *cur = c-1;
+      *cur = c - 1;
       *cur = c;
     }
   }
 
-  internalSizekB = (slot->internalSize+1023) >>10;
+  internalSizekB = (slot->internalSize + 1023) >> 10;
 
   /* protect memory, that nobody can access it */
   /* Free as much protected memory, that we can protect this one */
   /* is there need? and is there a way to free such much? */
-  if ( _duma_s.PROTECT_FREE > 0L
-    && _duma_s.sumProtectedMem  + internalSizekB >  _duma_s.PROTECT_FREE
-    &&                            internalSizekB <  _duma_s.PROTECT_FREE
-    && _duma_s.sumProtectedMem >= internalSizekB)
-  {
-    reduceProtectedMemory( internalSizekB );
+  if (_duma_s.PROTECT_FREE > 0L &&
+      _duma_s.sumProtectedMem + internalSizekB > _duma_s.PROTECT_FREE &&
+      internalSizekB < _duma_s.PROTECT_FREE && _duma_s.sumProtectedMem >= internalSizekB) {
+    reduceProtectedMemory(internalSizekB);
   }
 
-  if (( EFA_INT_ALLOC != slot->allocator )
-    && ( _duma_s.PROTECT_FREE < 0L
-    || ( _duma_s.PROTECT_FREE > 0L
-    && _duma_s.sumProtectedMem + internalSizekB <= _duma_s.PROTECT_FREE
-    )   )
-    )
-  {
+  if ((EFA_INT_ALLOC != slot->allocator) &&
+      (_duma_s.PROTECT_FREE < 0L ||
+       (_duma_s.PROTECT_FREE > 0L &&
+        _duma_s.sumProtectedMem + internalSizekB <= _duma_s.PROTECT_FREE))) {
     slot->state = DUMAST_ALL_PROTECTED;
     Page_DenyAccess(slot->internalAddress, slot->internalSize);
     _duma_s.sumProtectedMem += internalSizekB;
 
 #ifndef DUMA_NO_LEAKDETECTION
-    if ( lineno )
-    {
-      slot->fileSource  = DUMAFS_DEALLOCATION;
-      slot->filename    = (char*)filename;
-      slot->lineno      = lineno;
+    if (lineno) {
+      slot->fileSource = DUMAFS_DEALLOCATION;
+      slot->filename = (char *)filename;
+      slot->lineno = lineno;
     }
 #endif
-  }
-  else
-  {
+  } else {
     /* free all the memory */
     Page_Delete(slot->internalAddress, slot->internalSize);
     _duma_s.sumAllocatedMem -= internalSizekB;
 
     /* free slot and userAddr */
     slot->internalAddress = slot->userAddress = 0;
-    slot->internalSize    = slot->userSize    = 0;
-    slot->state           = DUMAST_EMPTY;
-    slot->allocator       = EFA_INT_ALLOC;
+    slot->internalSize = slot->userSize = 0;
+    slot->state = DUMAST_EMPTY;
+    slot->allocator = EFA_INT_ALLOC;
 #ifndef DUMA_NO_LEAKDETECTION
-    slot->fileSource      = DUMAFS_EMPTY;
-    slot->filename      = 0;
-    slot->lineno        = 0;
+    slot->fileSource = DUMAFS_EMPTY;
+    slot->filename = 0;
+    slot->lineno = 0;
 #endif
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
-    if(slot->stacktrace)
-    {
+    if (slot->stacktrace) {
       slot->stacktrace = 0;
       LocalFree(slot->stacktrace);
     }
 #endif
   }
 
-  if ( protectAllocList )
-  {
+  if (protectAllocList) {
     Page_DenyAccess(_duma_g.allocList, _duma_s.allocListSize);
     IF__DUMA_INIT_DONE
-      DUMA_RELEASE_SEMAPHORE(0);
+    DUMA_RELEASE_SEMAPHORE(0);
   }
 }
-
 
 /* Function: duma_check
  *
  * Check No Mans Land of a memory block.
  *
  */
-void duma_check(void * address)
-{
-  struct _DUMA_Slot   * slot;
+void duma_check(void *address) {
+  struct _DUMA_Slot *slot;
 
-  if ( 0 == address )
+  if (0 == address)
     return;
 
   IF__DUMA_INIT_DONE
-    DUMA_GET_SEMAPHORE();
+  DUMA_GET_SEMAPHORE();
 
   Page_AllowAccess(_duma_g.allocList, _duma_s.allocListSize);
 
-  if ( !(slot = slotForUserAddress(address)) )
-  {
-    if ( (slot = nearestSlotForUserAddress(address)) )
-    {
+  if (!(slot = slotForUserAddress(address))) {
+    if ((slot = nearestSlotForUserAddress(address))) {
 #ifndef DUMA_NO_LEAKDETECTION
-      if ( DUMAFS_ALLOCATION == slot->fileSource )
-        DUMA_Abort("check(%a): address not from DUMA or already freed. Address may be corrupted from %a allocated from %s(%i)",
-          (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
-      else if ( DUMAFS_DEALLOCATION == slot->fileSource )
-        DUMA_Abort("check(%a): address not from DUMA or already freed. Address may be corrupted from %a deallocated at %s(%i)",
-          (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
+      if (DUMAFS_ALLOCATION == slot->fileSource)
+        DUMA_Abort(
+            "check(%a): address not from DUMA or already freed. Address may be corrupted from %a "
+            "allocated from %s(%i)",
+            (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
+      else if (DUMAFS_DEALLOCATION == slot->fileSource)
+        DUMA_Abort(
+            "check(%a): address not from DUMA or already freed. Address may be corrupted from %a "
+            "deallocated at %s(%i)",
+            (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress, slot->filename, slot->lineno);
       else
 #endif
-        DUMA_Abort("check(%a): address not from DUMA or already freed. Address may be corrupted from %a.",
-          (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress);
-    }
-    else
+        DUMA_Abort(
+            "check(%a): address not from DUMA or already freed. Address may be corrupted from %a.",
+            (DUMA_ADDR)address, (DUMA_ADDR)slot->userAddress);
+    } else
       DUMA_Abort("check(%a): address not from DUMA or already freed.", (DUMA_ADDR)address);
   }
 
-  if ( DUMAST_ALL_PROTECTED == slot->state || DUMAST_BEGIN_PROTECTED == slot->state )
-  {
+  if (DUMAST_ALL_PROTECTED == slot->state || DUMAST_BEGIN_PROTECTED == slot->state) {
 #ifndef DUMA_NO_LEAKDETECTION
-    if ( DUMAFS_ALLOCATION == slot->fileSource )
-      DUMA_Abort("check(%a): memory already freed. allocated from %s(%i)",
-        (DUMA_ADDR)address, slot->filename, slot->lineno);
-    else if ( DUMAFS_DEALLOCATION == slot->fileSource )
-      DUMA_Abort("check(%a): memory already freed at %s(%i)",
-        (DUMA_ADDR)address, slot->filename, slot->lineno);
+    if (DUMAFS_ALLOCATION == slot->fileSource)
+      DUMA_Abort("check(%a): memory already freed. allocated from %s(%i)", (DUMA_ADDR)address,
+                 slot->filename, slot->lineno);
+    else if (DUMAFS_DEALLOCATION == slot->fileSource)
+      DUMA_Abort("check(%a): memory already freed at %s(%i)", (DUMA_ADDR)address, slot->filename,
+                 slot->lineno);
     else
 #endif
       DUMA_Abort("check(%a): memory already freed.", (DUMA_ADDR)address);
   }
 
   /* CHECK INTEGRITY OF NO MANS LAND */
-  _duma_check_slack( slot );
-
+  _duma_check_slack(slot);
 
   Page_DenyAccess(_duma_g.allocList, _duma_s.allocListSize);
   IF__DUMA_INIT_DONE
-    DUMA_RELEASE_SEMAPHORE(0);
+  DUMA_RELEASE_SEMAPHORE(0);
 }
-
 
 /* Function: duma_checkAll
  *
  * Check No Mans Land of all memory blocks.
  *
  */
-void duma_checkAll()
-{
+void duma_checkAll() {
   IF__DUMA_INIT_DONE
-    DUMA_GET_SEMAPHORE();
+  DUMA_GET_SEMAPHORE();
 
   Page_AllowAccess(_duma_g.allocList, _duma_s.allocListSize);
 
@@ -1981,9 +1936,8 @@ void duma_checkAll()
 
   Page_DenyAccess(_duma_g.allocList, _duma_s.allocListSize);
   IF__DUMA_INIT_DONE
-    DUMA_RELEASE_SEMAPHORE(0);
+  DUMA_RELEASE_SEMAPHORE(0);
 }
-
 
 /*********************************************************/
 
@@ -1991,119 +1945,101 @@ void duma_checkAll()
  *
  * A version of malloc.
  */
-void * _duma_malloc(size_t size  DUMA_PARAMLIST_FL)
-{
-  DUMA_TLSVARS_T  * duma_tls;
+void *_duma_malloc(size_t size DUMA_PARAMLIST_FL) {
+  DUMA_TLSVARS_T *duma_tls;
 
-  if ( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
   duma_tls = GET_DUMA_TLSVARS();
 
-  return _duma_allocate(0, size, duma_tls->PROTECT_BELOW,
-    duma_tls->FILL, 1 /*=protectAllocList*/, EFA_MALLOC,
-    DUMA_FAIL_ENV  DUMA_PARAMS_FL);
+  return _duma_allocate(0, size, duma_tls->PROTECT_BELOW, duma_tls->FILL, 1 /*=protectAllocList*/,
+                        EFA_MALLOC, DUMA_FAIL_ENV DUMA_PARAMS_FL);
 }
-
 
 /* Function: _duma_calloc
  *
  * A version of calloc.
  */
-void * _duma_calloc(size_t nelem, size_t elsize  DUMA_PARAMLIST_FL)
-{
-  DUMA_TLSVARS_T  * duma_tls;
+void *_duma_calloc(size_t nelem, size_t elsize DUMA_PARAMLIST_FL) {
+  DUMA_TLSVARS_T *duma_tls;
 
-  if ( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
   duma_tls = GET_DUMA_TLSVARS();
 
-  return _duma_allocate(0, nelem * elsize,
-    duma_tls->PROTECT_BELOW, 0 /*=fillByte*/,
-    1 /*=protectAllocList*/, EFA_CALLOC,
-    DUMA_FAIL_ENV  DUMA_PARAMS_FL);
+  return _duma_allocate(0, nelem * elsize, duma_tls->PROTECT_BELOW, 0 /*=fillByte*/,
+                        1 /*=protectAllocList*/, EFA_CALLOC, DUMA_FAIL_ENV DUMA_PARAMS_FL);
 }
-
 
 /* Function: _duma_free
  *
  * A version of free.
  */
-void   _duma_free(void * baseAdr  DUMA_PARAMLIST_FL)
-{
-  if ( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+void _duma_free(void *baseAdr DUMA_PARAMLIST_FL) {
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
-  _duma_deallocate(baseAdr, 1 /*=protectAllocList*/, EFA_FREE  DUMA_PARAMS_FL);
+  _duma_deallocate(baseAdr, 1 /*=protectAllocList*/, EFA_FREE DUMA_PARAMS_FL);
 }
-
 
 /* Function: _duma_memalign
  *
  * A version of memalign.
  */
-void * _duma_memalign(size_t alignment, size_t size  DUMA_PARAMLIST_FL)
-{
-  DUMA_TLSVARS_T  * duma_tls;
+void *_duma_memalign(size_t alignment, size_t size DUMA_PARAMLIST_FL) {
+  DUMA_TLSVARS_T *duma_tls;
 
-  if ( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
   duma_tls = GET_DUMA_TLSVARS();
 
-  return _duma_allocate(alignment, size, duma_tls->PROTECT_BELOW,
-    duma_tls->FILL, 1 /*=protectAllocList*/, EFA_MEMALIGN,
-    DUMA_FAIL_ENV  DUMA_PARAMS_FL);
+  return _duma_allocate(alignment, size, duma_tls->PROTECT_BELOW, duma_tls->FILL,
+                        1 /*=protectAllocList*/, EFA_MEMALIGN, DUMA_FAIL_ENV DUMA_PARAMS_FL);
 }
-
 
 /* Function: _duma_posix_memalign
  *
  * A version of posix_memalign.
  */
-int    _duma_posix_memalign(void **memptr, size_t alignment, size_t size  DUMA_PARAMLIST_FL)
-{
-  DUMA_TLSVARS_T  * duma_tls;
-  void * retptr;
+int _duma_posix_memalign(void **memptr, size_t alignment, size_t size DUMA_PARAMLIST_FL) {
+  DUMA_TLSVARS_T *duma_tls;
+  void *retptr;
 
-  if ( (alignment & (alignment -1)) || alignment < sizeof(void *) )
+  if ((alignment & (alignment - 1)) || alignment < sizeof(void *))
     return EINVAL;
 
-  if ( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
   duma_tls = GET_DUMA_TLSVARS();
 
-  retptr = _duma_allocate(alignment, size, duma_tls->PROTECT_BELOW,
-    duma_tls->FILL, 1 /*=protectAllocList*/, EFA_POSIX_MEMALIGN,
-    DUMA_FAIL_ENV  DUMA_PARAMS_FL);
+  retptr =
+      _duma_allocate(alignment, size, duma_tls->PROTECT_BELOW, duma_tls->FILL,
+                     1 /*=protectAllocList*/, EFA_POSIX_MEMALIGN, DUMA_FAIL_ENV DUMA_PARAMS_FL);
 
-  if ( retptr )
-  {
-    (*(char**)memptr) = (char*)retptr;
+  if (retptr) {
+    (*(char **)memptr) = (char *)retptr;
     return 0;
-  }
-  else
-  {
-    (*(char**)memptr) = NULL;
+  } else {
+    (*(char **)memptr) = NULL;
     return ENOMEM;
   }
 }
-
 
 /* Function: _duma_realloc
  *
  * A version of realloc that provides extra checks based on
  * information we know about HEAP.
  */
-void * _duma_realloc(void * oldBuffer, size_t newSize  DUMA_PARAMLIST_FL)
-{
-  void * ptr;
-  DUMA_TLSVARS_T  * duma_tls;
+void *_duma_realloc(void *oldBuffer, size_t newSize DUMA_PARAMLIST_FL) {
+  void *ptr;
+  DUMA_TLSVARS_T *duma_tls;
 
-  if( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
   duma_tls = GET_DUMA_TLSVARS();
 
@@ -2112,27 +2048,23 @@ void * _duma_realloc(void * oldBuffer, size_t newSize  DUMA_PARAMLIST_FL)
 
   Page_AllowAccess(_duma_g.allocList, _duma_s.allocListSize);
 
-  ptr = _duma_allocate(0, newSize, duma_tls->PROTECT_BELOW,
-    -1 /*=fillByte*/, 0 /*=protectAllocList*/, EFA_REALLOC,
-    DUMA_FAIL_ENV  DUMA_PARAMS_FL);
+  ptr = _duma_allocate(0, newSize, duma_tls->PROTECT_BELOW, -1 /*=fillByte*/,
+                       0 /*=protectAllocList*/, EFA_REALLOC, DUMA_FAIL_ENV DUMA_PARAMS_FL);
 
-  if( ptr && oldBuffer )
-  {
-    struct _DUMA_Slot * slot = slotForUserAddress(oldBuffer);
+  if (ptr && oldBuffer) {
+    struct _DUMA_Slot *slot = slotForUserAddress(oldBuffer);
 
-    if ( slot == 0 )
-      DUMA_Abort("realloc(%a, %d): address not from malloc().",
-      (DUMA_ADDR)oldBuffer, (DUMA_SIZE)newSize);
+    if (slot == 0)
+      DUMA_Abort("realloc(%a, %d): address not from malloc().", (DUMA_ADDR)oldBuffer,
+                 (DUMA_SIZE)newSize);
 
-    if ( newSize > slot->userSize )
-    {
-      memcpy( ptr, oldBuffer, slot->userSize );
-      memset( (char*)ptr + slot->userSize, 0, newSize - slot->userSize );
-    }
-    else if ( newSize > 0 )
+    if (newSize > slot->userSize) {
+      memcpy(ptr, oldBuffer, slot->userSize);
+      memset((char *)ptr + slot->userSize, 0, newSize - slot->userSize);
+    } else if (newSize > 0)
       memcpy(ptr, oldBuffer, newSize);
 
-    _duma_deallocate(oldBuffer, 0 /*=protectAllocList*/, EFA_REALLOC  DUMA_PARAMS_FL);
+    _duma_deallocate(oldBuffer, 0 /*=protectAllocList*/, EFA_REALLOC DUMA_PARAMS_FL);
   }
 
   Page_DenyAccess(_duma_g.allocList, _duma_s.allocListSize);
@@ -2143,39 +2075,34 @@ void * _duma_realloc(void * oldBuffer, size_t newSize  DUMA_PARAMLIST_FL)
   return ptr;
 }
 
-
 /* Function: _duma_valloc
  *
  * A version of valloc.
  */
-void * _duma_valloc(size_t size  DUMA_PARAMLIST_FL)
-{
-  DUMA_TLSVARS_T  * duma_tls;
+void *_duma_valloc(size_t size DUMA_PARAMLIST_FL) {
+  DUMA_TLSVARS_T *duma_tls;
 
-  if ( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
   duma_tls = GET_DUMA_TLSVARS();
 
-  return _duma_allocate(DUMA_PAGE_SIZE, size, duma_tls->PROTECT_BELOW,
-    duma_tls->FILL, 1 /*=protectAllocList*/, EFA_VALLOC,
-    DUMA_FAIL_ENV  DUMA_PARAMS_FL);
+  return _duma_allocate(DUMA_PAGE_SIZE, size, duma_tls->PROTECT_BELOW, duma_tls->FILL,
+                        1 /*=protectAllocList*/, EFA_VALLOC, DUMA_FAIL_ENV DUMA_PARAMS_FL);
 }
-
 
 /* Function: _duma_strdup
  *
  * A version of strdup.
  */
-char * _duma_strdup(const char * str  DUMA_PARAMLIST_FL)
-{
+char *_duma_strdup(const char *str DUMA_PARAMLIST_FL) {
   size_t size;
-  char * dup;
-  DUMA_TLSVARS_T  * duma_tls;
+  char *dup;
+  DUMA_TLSVARS_T *duma_tls;
   unsigned i;
 
-  if ( _duma_g.allocList == 0 )
-    _duma_init();  /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
+  if (_duma_g.allocList == 0)
+    _duma_init(); /* This sets DUMA_ALIGNMENT, DUMA_PROTECT_BELOW, DUMA_FILL, ... */
 
   duma_tls = GET_DUMA_TLSVARS();
 
@@ -2183,17 +2110,15 @@ char * _duma_strdup(const char * str  DUMA_PARAMLIST_FL)
   while (str[size])
     ++size;
 
-  dup = _duma_allocate(0, size +1, duma_tls->PROTECT_BELOW,
-    -1 /*=fillByte*/, 1 /*=protectAllocList*/, EFA_STRDUP,
-    DUMA_FAIL_ENV  DUMA_PARAMS_FL);
+  dup = _duma_allocate(0, size + 1, duma_tls->PROTECT_BELOW, -1 /*=fillByte*/,
+                       1 /*=protectAllocList*/, EFA_STRDUP, DUMA_FAIL_ENV DUMA_PARAMS_FL);
 
-  if (dup)                    /* if successful */
-    for (i=0; i<=size; ++i)   /* copy string */
+  if (dup)                      /* if successful */
+    for (i = 0; i <= size; ++i) /* copy string */
       dup[i] = str[i];
 
   return dup;
 }
-
 
 /* Function: _duma_memcpy
  *
@@ -2204,42 +2129,37 @@ char * _duma_strdup(const char * str  DUMA_PARAMLIST_FL)
  * regions.  This should be expanded to include checking size
  * of dest to verify assumptions.
  */
-void * _duma_memcpy(void *dest, const void *src, size_t size  DUMA_PARAMLIST_FL)
-{
-  char       * d = (char *)dest;
-  const char * s = (const char *)src;
+void *_duma_memcpy(void *dest, const void *src, size_t size DUMA_PARAMLIST_FL) {
+  char *d = (char *)dest;
+  const char *s = (const char *)src;
   unsigned i;
 
-  if ( (s < d  &&  d < s + size) || (d < s  &&  s < d + size) )
-  {
+  if ((s < d && d < s + size) || (d < s && s < d + size)) {
 #ifndef DUMA_NO_LEAKDETECTION
-    DUMA_Abort("memcpy(%a, %a, %d): memory regions overlap at %s(%i)."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, (DUMA_SIZE)size, filename, lineno );
+    DUMA_Abort("memcpy(%a, %a, %d): memory regions overlap at %s(%i).", (DUMA_ADDR)dest,
+               (DUMA_ADDR)src, (DUMA_SIZE)size, filename, lineno);
 #else
-    DUMA_Abort("memcpy(%a, %a, %d): memory regions overlap."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, (DUMA_SIZE)size );
+    DUMA_Abort("memcpy(%a, %a, %d): memory regions overlap.", (DUMA_ADDR)dest, (DUMA_ADDR)src,
+               (DUMA_SIZE)size);
 #endif
   }
 
-  for (i=0; i<size; ++i)
+  for (i = 0; i < size; ++i)
     d[i] = s[i];
 
   return dest;
 }
 
-
 /* Function: _duma_strnlen
  *
  * like strlen() but maximum return value is size
  */
-size_t _duma_strnlen(const char *src, size_t size)
-{
+size_t _duma_strnlen(const char *src, size_t size) {
   size_t len;
-  for ( len =0; len < size && src[len]; ++len )
+  for (len = 0; len < size && src[len]; ++len)
     ;
   return len;
 }
-
 
 /* Function: _duma_strcpy
  *
@@ -2250,28 +2170,24 @@ size_t _duma_strnlen(const char *src, size_t size)
  * regions.  This should be expanded to include checking size
  * of dest to verify assumptions.
  */
-char * _duma_strcpy(char *dest, const char *src  DUMA_PARAMLIST_FL)
-{
+char *_duma_strcpy(char *dest, const char *src DUMA_PARAMLIST_FL) {
   size_t i;
-  size_t size = strlen(src) +1;
+  size_t size = strlen(src) + 1;
 
-  if ( src < dest  &&  dest < src + size )
-  {
+  if (src < dest && dest < src + size) {
 #ifndef DUMA_NO_LEAKDETECTION
-    DUMA_Abort("strcpy(%a, %a): memory regions overlap at %s(%i)."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, filename, lineno );
+    DUMA_Abort("strcpy(%a, %a): memory regions overlap at %s(%i).", (DUMA_ADDR)dest, (DUMA_ADDR)src,
+               filename, lineno);
 #else
-    DUMA_Abort("strcpy(%a, %a): memory regions overlap."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src );
+    DUMA_Abort("strcpy(%a, %a): memory regions overlap.", (DUMA_ADDR)dest, (DUMA_ADDR)src);
 #endif
   }
 
-  for (i=0; i<size; ++i)
+  for (i = 0; i < size; ++i)
     dest[i] = src[i];
 
   return dest;
 }
-
 
 /* Function: _duma_strncpy
  *
@@ -2282,39 +2198,33 @@ char * _duma_strcpy(char *dest, const char *src  DUMA_PARAMLIST_FL)
  * regions.  This should be expanded to include checking size
  * of dest to verify assumptions.
  */
-char * _duma_strncpy(char *dest, const char *src, size_t size  DUMA_PARAMLIST_FL)
-{
+char *_duma_strncpy(char *dest, const char *src, size_t size DUMA_PARAMLIST_FL) {
   size_t i, srclen;
 
-  srclen  = _duma_strnlen(src, size);
+  srclen = _duma_strnlen(src, size);
 
-  if ( size > 0  &&
-      (  ( src < dest  &&  dest < src  + srclen )
-       ||( dest < src  &&  src  < dest + size   )
-     ))
-  {
+  if (size > 0 && ((src < dest && dest < src + srclen) || (dest < src && src < dest + size))) {
 #ifndef DUMA_NO_LEAKDETECTION
-    DUMA_Abort("strncpy(%a, %a, %d): memory regions overlap at %s(%i)."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, (DUMA_SIZE)size, filename, lineno );
+    DUMA_Abort("strncpy(%a, %a, %d): memory regions overlap at %s(%i).", (DUMA_ADDR)dest,
+               (DUMA_ADDR)src, (DUMA_SIZE)size, filename, lineno);
 #else
-    DUMA_Abort("strncpy(%a, %a, %d): memory regions overlap."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, (DUMA_SIZE)size );
+    DUMA_Abort("strncpy(%a, %a, %d): memory regions overlap.", (DUMA_ADDR)dest, (DUMA_ADDR)src,
+               (DUMA_SIZE)size);
 #endif
   }
 
   /* copy src to dest - up to size or zero terminator
    *   whatever happens first
    */
-  for (i =0; i < size && src[i]; ++i)
+  for (i = 0; i < size && src[i]; ++i)
     dest[i] = src[i];
 
   /* fill rest with '\0' character */
-  for ( ; i<size; ++i)
+  for (; i < size; ++i)
     dest[i] = 0;
 
   return dest;
 }
-
 
 /* Function: _duma_strcat
  *
@@ -2325,29 +2235,25 @@ char * _duma_strncpy(char *dest, const char *src, size_t size  DUMA_PARAMLIST_FL
  * regions.  This should be expanded to include checking size
  * of dest to verify assumptions.
  */
-char * _duma_strcat(char *dest, const char *src  DUMA_PARAMLIST_FL)
-{
+char *_duma_strcat(char *dest, const char *src DUMA_PARAMLIST_FL) {
   unsigned i;
   size_t destlen = strlen(dest);
   size_t srcsize = strlen(src) + 1;
 
-  if ( src < dest +destlen  &&  dest + destlen < src + srcsize )
-  {
+  if (src < dest + destlen && dest + destlen < src + srcsize) {
 #ifndef DUMA_NO_LEAKDETECTION
-    DUMA_Abort("strcat(%a, %a): memory regions overlap at %s(%i)."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, filename, lineno );
+    DUMA_Abort("strcat(%a, %a): memory regions overlap at %s(%i).", (DUMA_ADDR)dest, (DUMA_ADDR)src,
+               filename, lineno);
 #else
-    DUMA_Abort("strcat(%a, %a): memory regions overlap."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src );
+    DUMA_Abort("strcat(%a, %a): memory regions overlap.", (DUMA_ADDR)dest, (DUMA_ADDR)src);
 #endif
   }
 
-  for (i=0; i<srcsize; ++i)
-    dest[destlen+i] = src[i];
+  for (i = 0; i < srcsize; ++i)
+    dest[destlen + i] = src[i];
 
   return dest;
 }
-
 
 /* Function: _duma_strncat
  *
@@ -2358,44 +2264,40 @@ char * _duma_strcat(char *dest, const char *src  DUMA_PARAMLIST_FL)
  * regions.  This should be expanded to include checking size
  * of dest to verify assumptions (like is size right).
  */
-char * _duma_strncat(char *dest, const char *src, size_t size  DUMA_PARAMLIST_FL)
-{
+char *_duma_strncat(char *dest, const char *src, size_t size DUMA_PARAMLIST_FL) {
   unsigned i;
   size_t destlen, srclen;
 
   /* do nothing, when size not > 0 */
-  if ( size <= 0 )
+  if (size <= 0)
     return dest;
 
   /* calculate number of characters to copy from src to dest */
   destlen = strlen(dest);
-  srclen  = _duma_strnlen(src, size);
+  srclen = _duma_strnlen(src, size);
 
   /* CHECK: Verify memory regions do not overlap */
-  if ( src < (dest + destlen) && (dest + destlen) < (src + srclen + 1) )
-  {
+  if (src < (dest + destlen) && (dest + destlen) < (src + srclen + 1)) {
 #ifndef DUMA_NO_LEAKDETECTION
-    DUMA_Abort("strncat(%a, %a, %d): memory regions overlap at %s(%i)."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, (DUMA_SIZE)size, filename, lineno );
+    DUMA_Abort("strncat(%a, %a, %d): memory regions overlap at %s(%i).", (DUMA_ADDR)dest,
+               (DUMA_ADDR)src, (DUMA_SIZE)size, filename, lineno);
 #else
-    DUMA_Abort("strncat(%a, %a, %d): memory regions overlap."
-      , (DUMA_ADDR)dest, (DUMA_ADDR)src, (DUMA_SIZE)size );
+    DUMA_Abort("strncat(%a, %a, %d): memory regions overlap.", (DUMA_ADDR)dest, (DUMA_ADDR)src,
+               (DUMA_SIZE)size);
 #endif
   }
 
   /* copy up to size characters from src to dest */
-  for (i=0; i<srclen; ++i)
-    dest[destlen+i] = src[i];
+  for (i = 0; i < srclen; ++i)
+    dest[destlen + i] = src[i];
 
   /* append single '\0' character */
-  dest[destlen+srclen] = 0;
+  dest[destlen + srclen] = 0;
 
   return dest;
 }
 
-
 /*********************************************************/
-
 
 #ifndef DUMA_NO_GLOBAL_MALLOC_FREE
 
@@ -2405,99 +2307,69 @@ char * _duma_strncat(char *dest, const char *src, size_t size  DUMA_PARAMLIST_FL
 
 #ifdef _MSC_VER
 /* define these functions as non-intrinsic */
-#pragma function( memcpy, strcpy, strcat )
+#pragma function(memcpy, strcpy, strcat)
 #endif
 
-
-void * malloc(size_t size)
-{
-  return _duma_malloc(size  DUMA_PARAMS_UK);
+void *malloc(size_t size) {
+  return _duma_malloc(size DUMA_PARAMS_UK);
 }
 
-
-void * calloc(size_t nelem, size_t elsize)
-{
-  return _duma_calloc(nelem, elsize  DUMA_PARAMS_UK);
+void *calloc(size_t nelem, size_t elsize) {
+  return _duma_calloc(nelem, elsize DUMA_PARAMS_UK);
 }
 
-
-void   free(void * address)
-{
-  _duma_free(address  DUMA_PARAMS_UK);
+void free(void *address) {
+  _duma_free(address DUMA_PARAMS_UK);
 }
 
-
-void * memalign(size_t alignment, size_t size)
-{
-  return _duma_memalign(alignment, size  DUMA_PARAMS_UK);
+void *memalign(size_t alignment, size_t size) {
+  return _duma_memalign(alignment, size DUMA_PARAMS_UK);
 }
 
-
-int    posix_memalign(void **memptr, size_t alignment, size_t size)
-{
-  return _duma_posix_memalign(memptr, alignment, size  DUMA_PARAMS_UK);
+int posix_memalign(void **memptr, size_t alignment, size_t size) {
+  return _duma_posix_memalign(memptr, alignment, size DUMA_PARAMS_UK);
 }
 
-
-void * realloc(void * oldBuffer, size_t newSize)
-{
-  return _duma_realloc(oldBuffer, newSize  DUMA_PARAMS_UK);
+void *realloc(void *oldBuffer, size_t newSize) {
+  return _duma_realloc(oldBuffer, newSize DUMA_PARAMS_UK);
 }
 
-
-void * valloc(size_t size)
-{
-  return _duma_valloc(size  DUMA_PARAMS_UK);
+void *valloc(size_t size) {
+  return _duma_valloc(size DUMA_PARAMS_UK);
 }
 
-
-char * strdup(const char * str)
-{
-  return _duma_strdup(str  DUMA_PARAMS_UK);
+char *strdup(const char *str) {
+  return _duma_strdup(str DUMA_PARAMS_UK);
 }
 
-
-void * memcpy(void *dest, const void *src, size_t size)
-{
-  return _duma_memcpy(dest, src, size  DUMA_PARAMS_UK);
+void *memcpy(void *dest, const void *src, size_t size) {
+  return _duma_memcpy(dest, src, size DUMA_PARAMS_UK);
 }
 
-
-char * strcpy(char *dest, const char *src)
-{
-  return _duma_strcpy(dest, src  DUMA_PARAMS_UK);
+char *strcpy(char *dest, const char *src) {
+  return _duma_strcpy(dest, src DUMA_PARAMS_UK);
 }
 
-
-char * strncpy(char *dest, const char *src, size_t size)
-{
-  return _duma_strncpy(dest, src, size  DUMA_PARAMS_UK);
+char *strncpy(char *dest, const char *src, size_t size) {
+  return _duma_strncpy(dest, src, size DUMA_PARAMS_UK);
 }
 
-
-char * strcat(char *dest, const char *src)
-{
-  return _duma_strcat(dest, src  DUMA_PARAMS_UK);
+char *strcat(char *dest, const char *src) {
+  return _duma_strcat(dest, src DUMA_PARAMS_UK);
 }
 
-
-char * strncat(char *dest, const char *src, size_t size)
-{
-  return _duma_strncat(dest, src, size  DUMA_PARAMS_UK);
+char *strncat(char *dest, const char *src, size_t size) {
+  return _duma_strncat(dest, src, size DUMA_PARAMS_UK);
 }
-
 
 #endif /* DUMA_NO_GLOBAL_MALLOC_FREE */
-
 
 #ifndef DUMA_NO_LEAKDETECTION
 
 /* Function DUMA_newFrame
  */
-void  DUMA_newFrame(void)
-{
+void DUMA_newFrame(void) {
 }
-
 
 /* Function DUMA_delFrame
  *
@@ -2505,47 +2377,37 @@ void  DUMA_newFrame(void)
  * This method is called to when all memory should have been free'd by
  * the application to locate memory leaks.
  */
-void  DUMA_delFrame(void)
-{
-  struct _DUMA_Slot * slot  = _duma_g.allocList;
-  size_t        count     = _duma_s.slotCount;
-  int    nonFreedTotal    = 0;
-  int    nonFreedReported = 0;
-  int    iExtraLeaks;
+void DUMA_delFrame(void) {
+  struct _DUMA_Slot *slot = _duma_g.allocList;
+  size_t count = _duma_s.slotCount;
+  int nonFreedTotal = 0;
+  int nonFreedReported = 0;
+  int iExtraLeaks;
 
   IF__DUMA_INIT_DONE
-    DUMA_GET_SEMAPHORE();
+  DUMA_GET_SEMAPHORE();
 
   Page_AllowAccess(_duma_g.allocList, _duma_s.allocListSize);
 
-  for ( ; count > 0; --count, ++slot )
-  {
-    if ( DUMAST_IN_USE  == slot->state
-      && EFA_INT_ALLOC  != slot->allocator
+  for (; count > 0; --count, ++slot) {
+    if (DUMAST_IN_USE == slot->state && EFA_INT_ALLOC != slot->allocator
 #ifdef DUMA_EXPLICIT_INIT
-      && -1 !=  slot->lineno
+        && -1 != slot->lineno
 #endif
-       )
-    {
+    ) {
 
-      if ( _duma_s.REPORT_ALL_LEAKS || slot->lineno > 0 )
-      {
-
+      if (_duma_s.REPORT_ALL_LEAKS || slot->lineno > 0) {
 #if defined(DUMA_DLL_LIBRARY) || defined(DUMA_SO_LIBRARY) || defined(DUMA_DETOURS)
-      DUMA_Print("\nDUMA: ptr=0x%a size=%d type='%s' not freed\n"
-                , (DUMA_ADDR)slot->userAddress, (DUMA_SIZE)slot->userSize
-                , _duma_allocDesc[slot->allocator].name
-                );
+        DUMA_Print("\nDUMA: ptr=0x%a size=%d type='%s' not freed\n", (DUMA_ADDR)slot->userAddress,
+                   (DUMA_SIZE)slot->userSize, _duma_allocDesc[slot->allocator].name);
 #else
-      DUMA_Print("\nDUMA: ptr=0x%a size=%d type='%s' alloced from %s(%i) not freed\n"
-                , (DUMA_ADDR)slot->userAddress, (DUMA_SIZE)slot->userSize
-                , _duma_allocDesc[slot->allocator].name
-                , slot->filename, slot->lineno
-                );
+        DUMA_Print("\nDUMA: ptr=0x%a size=%d type='%s' alloced from %s(%i) not freed\n",
+                   (DUMA_ADDR)slot->userAddress, (DUMA_SIZE)slot->userSize,
+                   _duma_allocDesc[slot->allocator].name, slot->filename, slot->lineno);
 #endif
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
-      if(DUMA_OUTPUT_STACKTRACE)
-        DUMA_Print("Stacktrace of allocation:\n%s\n", slot->stacktrace);
+        if (DUMA_OUTPUT_STACKTRACE)
+          DUMA_Print("Stacktrace of allocation:\n%s\n", slot->stacktrace);
 #endif
 
         ++nonFreedReported;
@@ -2557,15 +2419,12 @@ void  DUMA_delFrame(void)
 
   iExtraLeaks = nonFreedTotal - nonFreedReported;
 
-  if ( nonFreedReported )
-    DUMA_Abort("DUMA: Reported %i leaks. There are %i extra leaks without allocation information\n"
-              , nonFreedReported, iExtraLeaks
-              );
-  else if ( nonFreedReported < nonFreedTotal )
-    DUMA_Print("DUMA: Reported %i leaks. There are %i extra leaks without allocation information\n"
-              , nonFreedReported, iExtraLeaks
-              );
-
+  if (nonFreedReported)
+    DUMA_Abort("DUMA: Reported %i leaks. There are %i extra leaks without allocation information\n",
+               nonFreedReported, iExtraLeaks);
+  else if (nonFreedReported < nonFreedTotal)
+    DUMA_Print("DUMA: Reported %i leaks. There are %i extra leaks without allocation information\n",
+               nonFreedReported, iExtraLeaks);
 
   Page_DenyAccess(_duma_g.allocList, _duma_s.allocListSize);
 
@@ -2573,9 +2432,9 @@ void  DUMA_delFrame(void)
   DUMA_RELEASE_SEMAPHORE(0);
 
   if (_duma_s.SHOW_ALLOC)
-    DUMA_Print("\nDUMA: Processed %l allocations and %l deallocations in total.\n", _duma_s.numAllocs, _duma_s.numDeallocs);
+    DUMA_Print("\nDUMA: Processed %l allocations and %l deallocations in total.\n",
+               _duma_s.numAllocs, _duma_s.numDeallocs);
 }
-
 
 /* Function: _duma_exit
  *
@@ -2584,11 +2443,10 @@ void  DUMA_delFrame(void)
  * the user.
  */
 void
-#if ( defined(DUMA_GNU_INIT_ATTR) && !defined(DUMA_PREFER_ATEXIT) )
-__attribute ((destructor))
+#if (defined(DUMA_GNU_INIT_ATTR) && !defined(DUMA_PREFER_ATEXIT))
+    __attribute((destructor))
 #endif
-_duma_exit(void)
-{
+    _duma_exit(void) {
 #if defined(WIN32) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__MINGW64__)
   /* Cleanup memory owned by the stack library */
   /* wouldn't do to leak memory :) */
@@ -2598,8 +2456,6 @@ _duma_exit(void)
   DUMA_delFrame();
 }
 
-
 #endif /* end ifndef DUMA_NO_LEAKDETECTION */
 
 #endif /* ifndef DUMA_NO_DUMA */
-

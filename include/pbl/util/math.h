@@ -6,16 +6,16 @@
 #include <stdint.h>
 
 #ifndef MIN
-#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifndef MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
 #define ABS(a) (((a) > 0) ? (a) : -1 * (a))
-#define CLIP(n, min, max) ((n)<(min)?(min):((n)>(max)?(max):(n)))
-#define ROUND(num, denom) (((num) + ((denom) / 2))/(denom))
+#define CLIP(n, min, max) ((n) < (min) ? (min) : ((n) > (max) ? (max) : (n)))
+#define ROUND(num, denom) (((num) + ((denom) / 2)) / (denom))
 #define WITHIN(n, min, max) ((n) >= (min) && (n) <= (max))
 #define RANGE_WITHIN(n_min, n_max, min, max) ((n_min) >= (min) && (n_max) <= (max))
 
@@ -27,15 +27,13 @@
 // Round value up to the next increment of modulus
 // ex. val = 152 mod = 32 : returns 160
 // val = -32 mod = 90 : returns -90
-#define ROUND_TO_MOD_CEIL(val, mod) \
-  (((val) >= 0) ? \
-  ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)) : \
-  -((((-val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)))
+#define ROUND_TO_MOD_CEIL(val, mod)                                     \
+  (((val) >= 0) ? ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)) \
+                : -((((-val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)))
 
 // Round unsigned value up to the next increment of modulus
 // ex. val = 152 mod = 32 : returns 160
-#define ROUND_TO_MOD_CEIL_U(val, mod) \
-  ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod))
+#define ROUND_TO_MOD_CEIL_U(val, mod) ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod))
 
 int32_t sign_extend(uint32_t a, int bits);
 
@@ -63,21 +61,22 @@ int32_t integer_sqrt(int64_t x);
 //! Determine whether a variable is signed or not.
 //! @param var The variable to evaluate.
 //! @return true if the variable is signed.
-#define IS_SIGNED(var) (__builtin_choose_expr( \
-  __builtin_types_compatible_p(__typeof__(var), unsigned char), false, \
-  __builtin_choose_expr( \
-  __builtin_types_compatible_p(__typeof__(var), unsigned short), false, \
-  __builtin_choose_expr( \
-  __builtin_types_compatible_p(__typeof__(var), unsigned int), false, \
-  __builtin_choose_expr( \
-  __builtin_types_compatible_p(__typeof__(var), unsigned long), false, \
-  __builtin_choose_expr( \
-  __builtin_types_compatible_p(__typeof__(var), unsigned long long), false, true))))) \
-)
+#define IS_SIGNED(var)                                                                          \
+  (__builtin_choose_expr(                                                                       \
+      __builtin_types_compatible_p(__typeof__(var), unsigned char), false,                      \
+      __builtin_choose_expr(                                                                    \
+          __builtin_types_compatible_p(__typeof__(var), unsigned short), false,                 \
+          __builtin_choose_expr(                                                                \
+              __builtin_types_compatible_p(__typeof__(var), unsigned int), false,               \
+              __builtin_choose_expr(                                                            \
+                  __builtin_types_compatible_p(__typeof__(var), unsigned long), false,          \
+                  __builtin_choose_expr(                                                        \
+                      __builtin_types_compatible_p(__typeof__(var), unsigned long long), false, \
+                      true))))))
 
 // http://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
 static inline int positive_modulo(int i, int n) {
-    return (i % n + n) % n;
+  return (i % n + n) % n;
 }
 
 // https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles
@@ -90,8 +89,10 @@ static inline int distance_to_mod_boundary(int32_t i, uint16_t n) {
 /**
  * Compute the next backoff interval using a bounded binary exponential backoff formula.
  *
- * @param[in,out] attempt The number of retries performed so far. This count will be incremented by the function.
- * @param[in] initial_value The inital backoff interval. Subsequent backoff attempts will be this number multiplied by a power of 2.
+ * @param[in,out] attempt The number of retries performed so far. This count will be incremented by
+ * the function.
+ * @param[in] initial_value The inital backoff interval. Subsequent backoff attempts will be this
+ * number multiplied by a power of 2.
  * @param[in] max_value The maximum backoff interval that returned by the function.
  * @return The next backoff interval.
  */

@@ -61,22 +61,23 @@ static void select_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf
 }
 
 static void click_config_provider(NumberWindow *nf) {
-  window_single_repeating_click_subscribe(BUTTON_ID_UP, 50, (ClickHandler) up_click_handler);
-  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 50, (ClickHandler) down_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_UP, 50, (ClickHandler)up_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 50, (ClickHandler)down_click_handler);
 
   // Work-around: by using a multi-click setup for the select button,
   // the handler will get fired with a very short delay, so the inverted segment of
   // the action bar is visible for a short period of time as to give visual
   // feedback of the button press.
-  window_multi_click_subscribe(BUTTON_ID_SELECT, 1, 2, 25, true, (ClickHandler)select_click_handler);
+  window_multi_click_subscribe(BUTTON_ID_SELECT, 1, 2, 25, true,
+                               (ClickHandler)select_click_handler);
 }
 
 static GRect prv_get_text_frame(Layer *window_layer) {
   const int16_t x_margin = 5;
   const int16_t label_y_offset = PBL_IF_ROUND_ELSE(40, 16);
-  const GEdgeInsets insets = PBL_IF_ROUND_ELSE(GEdgeInsets(ACTION_BAR_WIDTH + x_margin),
-                                               GEdgeInsets(0, ACTION_BAR_WIDTH + x_margin, 0,
-                                                           x_margin));
+  const GEdgeInsets insets =
+      PBL_IF_ROUND_ELSE(GEdgeInsets(ACTION_BAR_WIDTH + x_margin),
+                        GEdgeInsets(0, ACTION_BAR_WIDTH + x_margin, 0, x_margin));
   GRect frame = grect_inset(window_layer->bounds, insets);
   frame.origin.y = label_y_offset;
   return frame;
@@ -84,7 +85,7 @@ static GRect prv_get_text_frame(Layer *window_layer) {
 
 //! Drawing function for our Window's base Layer. Draws the background, the label, and the value,
 //! which is everything on screen with the exception of the child ActionBarLayer
-void prv_update_proc(Layer *layer, GContext* ctx) {
+void prv_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &layer->bounds);
 
@@ -92,7 +93,7 @@ void prv_update_proc(Layer *layer, GContext* ctx) {
   // NumberWindow.
   _Static_assert(offsetof(Window, layer) == 0, "");
   _Static_assert(offsetof(NumberWindow, window) == 0, "");
-  NumberWindow *nw = (NumberWindow*) layer;
+  NumberWindow *nw = (NumberWindow *)layer;
 
   graphics_context_set_text_color(ctx, GColorBlack);
 
@@ -100,12 +101,12 @@ void prv_update_proc(Layer *layer, GContext* ctx) {
   frame.size.h = 54;
 
   TextLayoutExtended cached_label_layout = {};
-  graphics_draw_text(ctx, nw->label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-                     frame, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
-                     (TextLayout*) &cached_label_layout);
+  graphics_draw_text(ctx, nw->label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), frame,
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
+                     (TextLayout *)&cached_label_layout);
 
   char value_output_buffer[12];
-  snprintf(value_output_buffer, ARRAY_LENGTH(value_output_buffer), "%"PRId32, nw->value);
+  snprintf(value_output_buffer, ARRAY_LENGTH(value_output_buffer), "%" PRId32, nw->value);
 
   frame.origin.y += cached_label_layout.max_used_size.h;
 #if PBL_RECT
@@ -114,8 +115,7 @@ void prv_update_proc(Layer *layer, GContext* ctx) {
 #endif
   frame.size.h = 48;
 
-  graphics_draw_text(ctx, value_output_buffer,
-                     fonts_get_system_font(NUMBER_FONT_KEY), frame,
+  graphics_draw_text(ctx, value_output_buffer, fonts_get_system_font(NUMBER_FONT_KEY), frame,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
@@ -172,32 +172,35 @@ static void number_window_load(NumberWindow *nw) {
   action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, &s_bar_icon_down_bitmap);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, &s_bar_icon_check_bitmap);
   action_bar_layer_add_to_window(action_bar, &nw->window);
-  action_bar_layer_set_click_config_provider(action_bar, (ClickConfigProvider) click_config_provider);
+  action_bar_layer_set_click_config_provider(action_bar,
+                                             (ClickConfigProvider)click_config_provider);
 }
 
-void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbacks callbacks, void *callback_context) {
-  *nw = (NumberWindow) {
-    .label = label,
-    .value = 0,
-    .max_val = INT_MAX,
-    .min_val = INT_MIN,
-    .step_size = 1,
-    .callbacks = callbacks,
-    .callback_context = callback_context
+void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbacks callbacks,
+                        void *callback_context) {
+  *nw = (NumberWindow){
+      .label = label,
+      .value = 0,
+      .max_val = INT_MAX,
+      .min_val = INT_MIN,
+      .step_size = 1,
+      .callbacks = callbacks,
+      .callback_context = callback_context
   };
 
   window_init(&nw->window, WINDOW_NAME(label));
-  window_set_window_handlers(&nw->window, &(WindowHandlers) {
-    .load = (WindowHandler) number_window_load,
-  });
+  window_set_window_handlers(&nw->window, &(WindowHandlers){
+                                              .load = (WindowHandler)number_window_load,
+                                          });
   layer_set_update_proc(&nw->window.layer, prv_update_proc);
 
   ActionBarLayer *action_bar = &nw->action_bar;
   action_bar_layer_init(action_bar);
 }
 
-NumberWindow* number_window_create(const char *label, NumberWindowCallbacks callbacks, void *callback_context) {
-  NumberWindow* window = applib_type_malloc(NumberWindow);
+NumberWindow *number_window_create(const char *label, NumberWindowCallbacks callbacks,
+                                   void *callback_context) {
+  NumberWindow *window = applib_type_malloc(NumberWindow);
   if (window) {
     number_window_init(window, label, callbacks, callback_context);
   }

@@ -29,7 +29,7 @@ void WEAK process_manager_put_kill_process_event(PebbleTask task, bool gracefull
   return;
 }
 
-const void* WEAK process_manager_get_current_process_args(void) {
+const void *WEAK process_manager_get_current_process_args(void) {
   return NULL;
 }
 
@@ -38,8 +38,6 @@ bool WEAK process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e)
 }
 
 void WEAK process_manager_send_callback_event_to_process(PebbleTask task,
-                                                         void (*callback)(void *data),
-                                                         void *data) {
+                                                         void (*callback)(void *data), void *data) {
   callback(data);
 }
-

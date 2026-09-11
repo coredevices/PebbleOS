@@ -7,5 +7,4 @@
 
 void kernel_heap_init(void);
 
-Heap* kernel_heap_get(void);
-
+Heap *kernel_heap_get(void);

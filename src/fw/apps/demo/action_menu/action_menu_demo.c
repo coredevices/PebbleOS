@@ -49,77 +49,53 @@ static void prv_result_window_unload(Window *window) {
 ///////////////////////
 // Action Menu Window
 
-static void prv_action_menu_did_close_cb(ActionMenu *action_menu,
-                                         const ActionMenuItem *item,
+static void prv_action_menu_did_close_cb(ActionMenu *action_menu, const ActionMenuItem *item,
                                          void *context) {
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   action_menu_hierarchy_destroy(root_level, NULL, NULL);
 }
 
-static void prv_action_callback(ActionMenu *action_menu,
-                                const ActionMenuItem *action,
+static void prv_action_callback(ActionMenu *action_menu, const ActionMenuItem *action,
                                 void *context) {
   s_app_data->result_window = window_create();
-  window_set_window_handlers(s_app_data->result_window, &(WindowHandlers) {
-    .load = prv_result_window_load,
-    .unload = prv_result_window_unload,
-  });
+  window_set_window_handlers(s_app_data->result_window, &(WindowHandlers){
+                                                            .load = prv_result_window_load,
+                                                            .unload = prv_result_window_unload,
+                                                        });
   action_menu_set_result_window(action_menu, s_app_data->result_window);
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   // First Level
   ActionMenuLevel *first_level = action_menu_level_create(10);
-  action_menu_level_add_action(first_level,
-                               "First!",
-                               prv_action_callback,
-                               NULL);
-  action_menu_level_add_action(first_level,
-                               "Second!",
-                               prv_action_callback,
-                               NULL);
+  action_menu_level_add_action(first_level, "First!", prv_action_callback, NULL);
+  action_menu_level_add_action(first_level, "Second!", prv_action_callback, NULL);
 
   // More Levels
   ActionMenuLevel *more_level = action_menu_level_create(1);
-  action_menu_level_add_action(more_level,
-                               "That's it, folks!",
-                               prv_action_callback,
-                               NULL);
-  action_menu_level_add_child(first_level,
-                              more_level,
-                              "More...");
+  action_menu_level_add_action(more_level, "That's it, folks!", prv_action_callback, NULL);
+  action_menu_level_add_child(first_level, more_level, "More...");
 
   // Levels with multiple lines of text
   ActionMenuLevel *multiline_level = action_menu_level_create(5);
-  action_menu_level_add_action(multiline_level,
-                               "Sorry, I can't talk right now.",
-                               prv_action_callback,
-                               NULL);
+  action_menu_level_add_action(multiline_level, "Sorry, I can't talk right now.",
+                               prv_action_callback, NULL);
   action_menu_level_add_action(multiline_level,
                                "I can't talk just now, please text me if this is an emergency.",
-                               prv_action_callback,
-                               NULL);
+                               prv_action_callback, NULL);
   action_menu_level_add_action(multiline_level,
                                "In a meeting, I will call you back when the meeting is over.",
-                               prv_action_callback,
-                               NULL);
-  action_menu_level_add_action(multiline_level,
-                               "On my way, I will text you when I'm nearby.",
-                               prv_action_callback,
-                               NULL);
-  action_menu_level_add_action(multiline_level,
-                               "I am busy.",
-                               prv_action_callback,
-                               NULL);
-  action_menu_level_add_child(first_level,
-                              multiline_level,
-                              "Canned Responses");
+                               prv_action_callback, NULL);
+  action_menu_level_add_action(multiline_level, "On my way, I will text you when I'm nearby.",
+                               prv_action_callback, NULL);
+  action_menu_level_add_action(multiline_level, "I am busy.", prv_action_callback, NULL);
+  action_menu_level_add_child(first_level, multiline_level, "Canned Responses");
 
   // Level with multi-column values of various row lengths
   ActionMenuLevel *multicolumn_select = action_menu_level_create(3);
 
-  static const char* thin_values[] = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
-                                       "M", "🍺" };
+  static const char *thin_values[] = {"A", "B", "C", "D", "E", "F", "G",
+                                      "H", "I", "J", "K", "L", "M", "🍺"};
   ActionMenuLevel *multicolumn_one = action_menu_level_create(2);
   action_menu_level_set_display_mode(multicolumn_one, ActionMenuLevelDisplayModeThin);
   for (size_t i = 0; i < 2; i++) {
@@ -147,11 +123,11 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
   first_level->separator_index = first_level->num_items - 1;
 
   ActionMenuConfig config = {
-    .root_level = first_level,
-    .context = NULL,
-    .colors.background = GColorOxfordBlue,
-    .colors.foreground = GColorOrange,
-    .did_close = prv_action_menu_did_close_cb,
+      .root_level = first_level,
+      .context = NULL,
+      .colors.background = GColorOxfordBlue,
+      .colors.foreground = GColorOrange,
+      .did_close = prv_action_menu_did_close_cb,
   };
 
   s_app_data->action_menu = app_action_menu_open(&config);
@@ -180,9 +156,9 @@ static void prv_init(void) {
   s_app_data = app_zalloc_check(sizeof(*s_app_data));
 
   s_app_data->main_window = window_create();
-  window_set_window_handlers(s_app_data->main_window, &(WindowHandlers) {
-    .load = prv_main_window_load,
-  });
+  window_set_window_handlers(s_app_data->main_window, &(WindowHandlers){
+                                                          .load = prv_main_window_load,
+                                                      });
   window_set_click_config_provider(s_app_data->main_window, prv_main_window_click_config_provider);
 
   app_window_stack_push(s_app_data->main_window, true /* animated */);
@@ -194,15 +170,17 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* action_menu_demo_get_app_info() {
+const PebbleProcessMd *action_menu_demo_get_app_info() {
   static const PebbleProcessMdSystem s_app_data = {
-    .common = {
-      .main_func = s_main,
-      // UUID: 101a32d95-ef69-46d4-a0b9-854cc62f97f9
-      .uuid = {0x99, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4,
-               0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f, 0x97, 0xf9},
-    },
-    .name = "Action Menu Demo",
+      .common =
+          {
+              .main_func = s_main,
+              // UUID: 101a32d95-ef69-46d4-a0b9-854cc62f97f9
+              .uuid =
+                  {0x99, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6,
+                   0x2f, 0x97, 0xf9},
+          },
+      .name = "Action Menu Demo",
   };
-  return (const PebbleProcessMd*) &s_app_data;
+  return (const PebbleProcessMd *)&s_app_data;
 }

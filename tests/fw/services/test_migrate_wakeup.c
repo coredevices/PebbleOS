@@ -40,11 +40,11 @@
 #include "stubs_compiled_with_legacy2_sdk.h"
 #include "stubs_memory_layout.h"
 
-#define SETTINGS_FILE_NAME  "wakeup"
-#define SETTINGS_FILE_SIZE  2048
+#define SETTINGS_FILE_NAME "wakeup"
+#define SETTINGS_FILE_SIZE 2048
 
-#define WAKEUP_REASON       0x1337
-#define TIMESTAMP           1337
+#define WAKEUP_REASON 0x1337
+#define TIMESTAMP 1337
 
 // Structures
 ////////////////////////////////////
@@ -70,18 +70,14 @@ typedef struct PACKED {
 // Globals
 ////////////////////////////////////
 
-static const Uuid app_uuid = (Uuid) {
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5
-};
+static const Uuid app_uuid = (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5};
 
 static PebbleProcessMd s_test_app_md = {
-  .uuid = (Uuid) {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5
-  }
+    .uuid = (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5}
 };
 
 static AppInstallEntry s_app_install_entry = {
-  .install_id = 1,
+    .install_id = 1,
 };
 
 static WakeupEntryV1 w_entry;
@@ -89,7 +85,7 @@ static WakeupEntryV1 w_entry;
 // Local Stubs
 ////////////////////////////////////
 void event_service_init(PebbleEventType type, EventServiceAddSubscriberCallback start_cb,
-    EventServiceRemoveSubscriberCallback stop_cb) {
+                        EventServiceRemoveSubscriberCallback stop_cb) {
   return;
 }
 
@@ -130,18 +126,18 @@ void test_migrate_wakeup__initialize(void) {
   const int32_t timestamp = TIMESTAMP;
 
   // Create the Migration Entry
-  w_entry = (WakeupEntryV1) {
-    .uuid = app_uuid,
-    .reason = WAKEUP_REASON,
-    .repeating = false,
-    .repeat_hours_missed = 0,
-    .notify_if_missed = true
+  w_entry = (WakeupEntryV1){
+      .uuid = app_uuid,
+      .reason = WAKEUP_REASON,
+      .repeating = false,
+      .repeat_hours_missed = 0,
+      .notify_if_missed = true
   };
 
   open_settings_file(&file);
 
-  cl_must_pass(settings_file_set(&file, (uint8_t*)&timestamp, sizeof(timestamp),
-      (uint8_t*)&w_entry, sizeof(w_entry)));
+  cl_must_pass(settings_file_set(&file, (uint8_t *)&timestamp, sizeof(timestamp),
+                                 (uint8_t *)&w_entry, sizeof(w_entry)));
 
   close_settings_file(&file);
 }
@@ -153,8 +149,8 @@ void test_migrate_wakeup__test_migration_of_wakeup_entries(void) {
 
   open_settings_file(&file);
 
-  cl_must_pass(settings_file_get(&file, (uint8_t*)&wakeup_id, sizeof(wakeup_id),
-      (uint8_t*)&wakeup_entry_v1, sizeof(wakeup_entry_v1)));
+  cl_must_pass(settings_file_get(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id),
+                                 (uint8_t *)&wakeup_entry_v1, sizeof(wakeup_entry_v1)));
   cl_assert_equal_i(wakeup_entry_v1.reason, WAKEUP_REASON);
   cl_assert_equal_i(wakeup_entry_v1.repeat_hours_missed, 0);
   cl_assert(!wakeup_entry_v1.repeating);
@@ -171,11 +167,11 @@ void test_migrate_wakeup__test_migration_of_wakeup_entries(void) {
 
   open_settings_file(&file);
 
-  cl_must_pass(settings_file_exists(&file, (uint8_t*)&wakeup_id, sizeof(wakeup_id)));
-  cl_assert_equal_i(settings_file_get_len(&file, (uint8_t*)&wakeup_id, sizeof(wakeup_id)),
-      sizeof(WakeupEntryV2));
-  cl_must_pass(settings_file_get(&file, (uint8_t*)&wakeup_id, sizeof(wakeup_id),
-      (uint8_t*)&wakeup_entry_v2, sizeof(wakeup_entry_v2)));
+  cl_must_pass(settings_file_exists(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id)));
+  cl_assert_equal_i(settings_file_get_len(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id)),
+                    sizeof(WakeupEntryV2));
+  cl_must_pass(settings_file_get(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id),
+                                 (uint8_t *)&wakeup_entry_v2, sizeof(wakeup_entry_v2)));
 
   cl_assert_equal_i(wakeup_entry_v2.reason, wakeup_entry_v1.reason);
   cl_assert_equal_i(wakeup_entry_v2.repeat_hours_missed, wakeup_entry_v1.repeat_hours_missed);

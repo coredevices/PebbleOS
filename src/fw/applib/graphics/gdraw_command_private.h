@@ -26,19 +26,19 @@
 #define PDCI_DATA_OFFSET (PDCI_SIZE_OFFSET + sizeof(uint32_t))
 
 struct __attribute__((__packed__)) GDrawCommand {
-  GDrawCommandType type:8;
+  GDrawCommandType type : 8;
   struct {
-    uint8_t hidden:1;
-    uint8_t reserved:7;
+    uint8_t hidden : 1;
+    uint8_t reserved : 7;
   };
   GColor stroke_color;
-  uint8_t  stroke_width;
+  uint8_t stroke_width;
   GColor fill_color;
   union {
-    struct { // path
+    struct {  // path
       bool path_open;
     };
-    struct { // circle
+    struct {  // circle
       uint16_t radius;
     };
   };

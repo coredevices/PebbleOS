@@ -25,8 +25,7 @@ uint32_t flash_logging_log_start(uint8_t msg_length);
 //! Performs a log message write
 //!
 //! @return True if the message write was successful, false otherwise
-bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr,
-    uint32_t data_length);
+bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr, uint32_t data_length);
 
 //! Allows a user to disable/enable flash logging after flash_logging_init()
 //! has been called.

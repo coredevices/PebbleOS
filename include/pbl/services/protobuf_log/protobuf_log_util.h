@@ -20,25 +20,24 @@ typedef struct PLogBufferEncoderArg {
 
 // -----------------------------------------------------------------------------------------
 // Callback used to stuff in the uuid
-bool protobuf_log_util_encode_uuid(pb_ostream_t *stream, const pb_field_t *field,
-                                  void * const *arg);
+bool protobuf_log_util_encode_uuid(pb_ostream_t *stream, const pb_field_t *field, void *const *arg);
 
 // -----------------------------------------------------------------------------------------
 // Callback used to stuff in a string
 bool protobuf_log_util_encode_string(pb_ostream_t *stream, const pb_field_t *field,
-                                    void * const *arg);
+                                     void *const *arg);
 
 // -----------------------------------------------------------------------------------------
 // Callback used to stuff in a packed array of varints
 bool protobuf_log_util_encode_packed_varints(pb_ostream_t *stream, const pb_field_t *field,
-                                            void * const *arg);
+                                             void *const *arg);
 
 // -----------------------------------------------------------------------------------------
 // Callback used to stuff in the array of types
 bool protobuf_log_util_encode_measurement_types(pb_ostream_t *stream, const pb_field_t *field,
-                                               void * const *arg);
+                                                void *const *arg);
 
 // -----------------------------------------------------------------------------------------
 // Callback used to stuff in a data buffer. Useful for MeasurementSets or Events
 bool protobuf_log_util_encode_buffer(pb_ostream_t *stream, const pb_field_t *field,
-                                    void * const *arg);
+                                     void *const *arg);

@@ -38,7 +38,6 @@ typedef struct {
   } lookup;
 } ScaleSegmentedData;
 
-
 typedef struct {
   GPoint target;
 } DistanceLookupData;
@@ -65,8 +64,8 @@ static void prv_apply_transform(GDrawCommandList *list, GSize size, const GRect 
   ScaleSegmentedData *data = context;
 
   GDelayCreatorContext delay_ctx = {
-    .list = list,
-    .size = size,
+      .list = list,
+      .size = size,
   };
   if (!data->lookup.creator) {
     return;
@@ -82,11 +81,11 @@ static void prv_apply_transform(GDrawCommandList *list, GSize size, const GRect 
     intermediate = grect_scalar_expand(*to, data->expand);
     gpoint_add_eq(&intermediate.origin, data->bounce);
 
-    const AnimationProgress first_normalized = animation_timing_segmented(
-        normalized, 0, 2, data->effect_duration);
-    gdraw_command_list_scale_segmented_to(
-        list, size, *from, intermediate, first_normalized, data->interpolate, index_lookup,
-        data->point_duration, false);
+    const AnimationProgress first_normalized =
+        animation_timing_segmented(normalized, 0, 2, data->effect_duration);
+    gdraw_command_list_scale_segmented_to(list, size, *from, intermediate, first_normalized,
+                                          data->interpolate, index_lookup, data->point_duration,
+                                          false);
 
     size = intermediate.size;
     second_normalized = animation_timing_segmented(normalized, 1, 2, data->effect_duration);
@@ -95,16 +94,16 @@ static void prv_apply_transform(GDrawCommandList *list, GSize size, const GRect 
     second_normalized = normalized;
   }
 
-  gdraw_command_list_scale_segmented_to(
-      list, size, intermediate, *to, second_normalized, data->interpolate, index_lookup,
-      data->point_duration, two_stage);
+  gdraw_command_list_scale_segmented_to(list, size, intermediate, *to, second_normalized,
+                                        data->interpolate, index_lookup, data->point_duration,
+                                        two_stage);
 
-  const AnimationProgress stroke_width_progress = data->stroke_width.curve ?
-      data->stroke_width.curve(normalized) :
-      animation_timing_curve(normalized, AnimationCurveEaseInOut);
-  gdraw_command_list_scale_stroke_width(
-      list, data->stroke_width.from, data->stroke_width.to,
-      data->stroke_width.from_op, data->stroke_width.to_op, stroke_width_progress);
+  const AnimationProgress stroke_width_progress =
+      data->stroke_width.curve ? data->stroke_width.curve(normalized)
+                               : animation_timing_curve(normalized, AnimationCurveEaseInOut);
+  gdraw_command_list_scale_stroke_width(list, data->stroke_width.from, data->stroke_width.to,
+                                        data->stroke_width.from_op, data->stroke_width.to_op,
+                                        stroke_width_progress);
 
   if (delay_ctx.owns_lookup) {
     applib_free(index_lookup);
@@ -132,8 +131,8 @@ static GPoint prv_calc_bounce_offset(GRect from, GRect to, int16_t bounce) {
 }
 
 static const TransformImpl SCALE_SEGMENTED_TRANSFORM_IMPL = {
-  .destructor = prv_destructor,
-  .apply = prv_apply_transform,
+    .destructor = prv_destructor,
+    .apply = prv_apply_transform,
 };
 
 KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_ownership,
@@ -143,15 +142,15 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
     return NULL;
   }
 
-  *data = (ScaleSegmentedData) {
-    .point_duration = SCALE_SEGMENTED_DEFAULT_POINT_DURATION,
-    .effect_duration = SCALE_SEGMENTED_DEFAULT_EFFECT_DURATION,
-    .stroke_width = {
-      .from = FIXED_S16_3_ONE,
-      .to = FIXED_S16_3_ONE,
-      .from_op = GStrokeWidthOpMultiply,
-      .to_op = GStrokeWidthOpMultiply,
-    },
+  *data = (ScaleSegmentedData){
+      .point_duration = SCALE_SEGMENTED_DEFAULT_POINT_DURATION,
+      .effect_duration = SCALE_SEGMENTED_DEFAULT_EFFECT_DURATION,
+      .stroke_width = {
+          .from = FIXED_S16_3_ONE,
+          .to = FIXED_S16_3_ONE,
+          .from_op = GStrokeWidthOpMultiply,
+          .to_op = GStrokeWidthOpMultiply,
+      },
   };
 
   KinoReel *reel = kino_reel_transform_create(&SCALE_SEGMENTED_TRANSFORM_IMPL, data);
@@ -167,8 +166,9 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
   return reel;
 }
 
-void kino_reel_scale_segmented_set_delay_lookup_creator(
-    KinoReel *reel, GPointIndexLookupCreator creator, void *userdata, bool take_ownership) {
+void kino_reel_scale_segmented_set_delay_lookup_creator(KinoReel *reel,
+                                                        GPointIndexLookupCreator creator,
+                                                        void *userdata, bool take_ownership) {
   ScaleSegmentedData *data = kino_reel_transform_get_context(reel);
   if (!data) {
     return;
@@ -195,7 +195,7 @@ bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint targ
   if (!lookup_data) {
     return false;
   }
-  *lookup_data = (DistanceLookupData) { .target = target };
+  *lookup_data = (DistanceLookupData){.target = target};
   const bool take_ownership = true;
   kino_reel_scale_segmented_set_delay_lookup_creator(reel, prv_create_lookup_by_distance,
                                                      lookup_data, take_ownership);
@@ -267,14 +267,15 @@ void kino_reel_scale_segmented_set_stroke_width_curve(KinoReel *reel,
 }
 
 static AnimationProgress prv_ease_in_out_last_half(AnimationProgress progress) {
-  return animation_timing_curve(animation_timing_clip(2 * (progress - ANIMATION_NORMALIZED_MAX / 2))
-      , AnimationCurveEaseInOut);
+  return animation_timing_curve(
+      animation_timing_clip(2 * (progress - ANIMATION_NORMALIZED_MAX / 2)),
+      AnimationCurveEaseInOut);
 }
 
 void kino_reel_scale_segmented_set_end_as_dot(KinoReel *reel, int16_t radius) {
   GRect frame = kino_reel_transform_get_to_frame(reel);
-  kino_reel_transform_set_to_frame(
-      reel, (GRect) { grect_center_point(&frame), SCALE_SEGMENTED_DOT_SIZE });
+  kino_reel_transform_set_to_frame(reel,
+                                   (GRect){grect_center_point(&frame), SCALE_SEGMENTED_DOT_SIZE});
 
   const Fixed_S16_3 to = Fixed_S16_3((2 * radius) << FIXED_S16_3_PRECISION);
   kino_reel_scale_segmented_set_to_stroke_width(reel, to, GStrokeWidthOpSet);

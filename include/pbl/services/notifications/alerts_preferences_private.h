@@ -92,4 +92,3 @@ void alerts_preferences_unlock(void);
 //! new value that was placed into the backing store.
 //! @param[in] event pointer to the blob DB event
 void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event);
-

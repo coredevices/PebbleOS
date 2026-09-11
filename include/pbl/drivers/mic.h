@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define MIC_SAMPLE_RATE     (16000) //!< Microphone audio data sample rate
-#define MIC_DEFAULT_VOLUME  (-1)
+#define MIC_SAMPLE_RATE (16000)  //!< Microphone audio data sample rate
+#define MIC_DEFAULT_VOLUME (-1)
 
 typedef const struct MicDevice MicDevice;
 
@@ -25,8 +25,8 @@ void mic_set_volume(MicDevice *this, uint16_t volume);
 //! each time it calls the audio data handler callback. audio_buffer_len should be specified as the
 //! length of the buffer (number of 16-bit samples it can hold)
 //! @return true if mic was started, false if mic was already running
-bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context,
-               int16_t *audio_buffer, size_t audio_buffer_len);
+bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, int16_t *audio_buffer,
+               size_t audio_buffer_len);
 
 //! Stop the microphone. If buffer is not full, the remaining samples will be abandoned. No more
 //! callbacks will be executed nor data copied into the buffer after this returns

@@ -16,7 +16,6 @@
 #define LAUNCHER_MENU_LAYER_SUBTITLE_FONT (FONT_KEY_GOTHIC_14)
 #endif
 
-
 typedef struct LauncherMenuLayer {
   Layer container_layer;
   MenuLayer menu_layer;

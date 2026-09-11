@@ -6,7 +6,7 @@
 #include "pbl/services/timeline/health_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer * WEAK health_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *WEAK health_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 

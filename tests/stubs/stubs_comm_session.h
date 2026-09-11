@@ -6,5 +6,5 @@
 #include "pbl/services/comm_session/app_session_capabilities.h"
 #include "pbl/util/attributes.h"
 
-void WEAK comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {}
-
+void WEAK comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {
+}

@@ -95,18 +95,18 @@ struct pbl_kernel_debug_layout {
 };
 
 const struct pbl_kernel_debug_layout pbl_kernel_debug_layout __attribute__((used)) = {
-  .version = 1,
-  .thread_sp = offsetof(struct pbl_thread, backend.sp),
-  .thread_all_next = offsetof(struct pbl_thread, backend.all_next),
-  .thread_state = offsetof(struct pbl_thread, backend.state),
-  .thread_id = offsetof(struct pbl_thread, id),
-  .thread_name = offsetof(struct pbl_thread, name),
-  .thread_name_len = PBL_THREAD_NAME_LEN,
-  .ctx_control = offsetof(struct saved_context, control),
-  .ctx_r4 = offsetof(struct saved_context, r4_r11),
-  .ctx_exc_return = offsetof(struct saved_context, exc_return),
-  .ctx_hw = offsetof(struct saved_context, r0),
-  .ctx_fp_extra = NUM_EXTRA_FP_REGS * sizeof(uint32_t),
+    .version = 1,
+    .thread_sp = offsetof(struct pbl_thread, backend.sp),
+    .thread_all_next = offsetof(struct pbl_thread, backend.all_next),
+    .thread_state = offsetof(struct pbl_thread, backend.state),
+    .thread_id = offsetof(struct pbl_thread, id),
+    .thread_name = offsetof(struct pbl_thread, name),
+    .thread_name_len = PBL_THREAD_NAME_LEN,
+    .ctx_control = offsetof(struct saved_context, control),
+    .ctx_r4 = offsetof(struct saved_context, r4_r11),
+    .ctx_exc_return = offsetof(struct saved_context, exc_return),
+    .ctx_hw = offsetof(struct saved_context, r0),
+    .ctx_fp_extra = NUM_EXTRA_FP_REGS * sizeof(uint32_t),
 };
 
 _Static_assert(offsetof(struct pbl_thread, backend.sp) == 0, "saved SP must be first");
@@ -119,7 +119,9 @@ static inline bool prv_fp_active(uint32_t exc_return) {
 
 // ---- threads ----------------------------------------------------------------
 
-static void prv_thread_return(void) { pbl_thread_abort(NULL); }
+static void prv_thread_return(void) {
+  pbl_thread_abort(NULL);
+}
 
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   uintptr_t top = ((uintptr_t)t->stack + t->stack_size) & ~7u;
@@ -164,7 +166,9 @@ void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regio
 #endif
 }
 
-void arch_thread_aborted(struct pbl_thread *t) { (void)t; }
+void arch_thread_aborted(struct pbl_thread *t) {
+  (void)t;
+}
 
 void arch_thread_exit(void) {
   // The switch requested by the abort takes over as soon as we get here.
@@ -175,7 +179,9 @@ void arch_thread_exit(void) {
 
 // ---- interrupts -------------------------------------------------------------
 
-bool arch_in_isr(void) { return mcu_state_is_isr(); }
+bool arch_in_isr(void) {
+  return mcu_state_is_isr();
+}
 
 void arch_irq_disable(void) {
   __set_BASEPRI(PBL_IRQ_PRIO_MAX_SYSCALL);
@@ -183,7 +189,9 @@ void arch_irq_disable(void) {
   __ISB();
 }
 
-void arch_irq_enable(void) { __set_BASEPRI(0); }
+void arch_irq_enable(void) {
+  __set_BASEPRI(0);
+}
 
 void arch_switch_request(void) {
   SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
@@ -213,7 +221,7 @@ void arch_switch_request(void) {
 #endif
 
 // r1 -> thread's MPU words; clobbers r2, r4-r11.
-#define RESTORE_MPU                                                          \
+#define RESTORE_MPU \
   "  ldr r2, =0xe000ed98 \n"            /* MPU_RNR */                      \
   "  mov r4, #" STR(FIRST_MPU_REGION) " \n"                                  \
   "  str r4, [r2] \n"                                                        \
@@ -226,45 +234,38 @@ __attribute__((naked)) void PendSV_Handler(void) {
       "  mrs r0, psp \n"
       "  isb \n"
       "  ldr r3, =pbl_cur \n"
-      "  ldr r2, [r3] \n"
-      SAVE_FP
-      SAVE_REGS
-      "  str r0, [r2] \n"              /* pbl_cur->backend.sp */
+      "  ldr r2, [r3] \n" SAVE_FP SAVE_REGS
+      "  str r0, [r2] \n" /* pbl_cur->backend.sp */
       "  stmdb sp!, {r3, r14} \n"
       "  mov r0, %0 \n"
       "  msr basepri, r0 \n"
       "  dsb \n"
       "  isb \n"
-      "  bl sched_switch_in \n"        /* returns the next thread */
+      "  bl sched_switch_in \n" /* returns the next thread */
       "  mov r4, r0 \n"
       "  mov r0, #0 \n"
       "  msr basepri, r0 \n"
       "  ldmia sp!, {r3, r14} \n"
-      "  ldr r0, [r4] \n"              /* next->backend.sp */
-      "  add r1, r4, #4 \n"            /* next->backend.arch.mpu */
-      RESTORE_MPU
-      RESTORE_REGS
-      RESTORE_FP
+      "  ldr r0, [r4] \n"   /* next->backend.sp */
+      "  add r1, r4, #4 \n" /* next->backend.arch.mpu */
+      RESTORE_MPU RESTORE_REGS RESTORE_FP
       "  msr psp, r0 \n"
       "  isb \n"
       "  bx r14 \n"
-      "  .ltorg \n"
-      ::"i"(PBL_IRQ_PRIO_MAX_SYSCALL));
+      "  .ltorg \n" ::"i"(PBL_IRQ_PRIO_MAX_SYSCALL));
 }
 
 // Loads the first thread's context. MSP is reset to the top of the ISR stack.
 __attribute__((naked)) static void prv_restore_first_thread(void) {
   __asm volatile(
-      "  ldr r0, =0xE000ED08 \n"       /* VTOR: initial MSP is the first vector */
+      "  ldr r0, =0xE000ED08 \n" /* VTOR: initial MSP is the first vector */
       "  ldr r0, [r0] \n"
       "  ldr r0, [r0] \n"
       "  msr msp, r0 \n"
       "  ldr r3, =pbl_cur \n"
       "  ldr r4, [r3] \n"
       "  ldr r0, [r4] \n"
-      "  add r1, r4, #4 \n"
-      RESTORE_MPU
-      RESTORE_REGS
+      "  add r1, r4, #4 \n" RESTORE_MPU RESTORE_REGS
       "  msr psp, r0 \n"
       "  mov r0, #0 \n"
       "  msr basepri, r0 \n"
@@ -367,7 +368,8 @@ __attribute__((naked)) void SVC_Handler(void) {
 
 // ---- start and tick ---------------------------------------------------------
 
-void arch_init(void) {}
+void arch_init(void) {
+}
 
 void arch_start(void) {
   // PendSV and SysTick at the lowest priority; SVC follows once started.
@@ -392,7 +394,9 @@ void arch_start(void) {
 }
 
 #ifndef CONFIG_SOC_SF32LB52
-void SysTick_Handler(void) { pbl_kernel_tick_isr(); }
+void SysTick_Handler(void) {
+  pbl_kernel_tick_isr();
+}
 #endif
 
 void arch_idle(pbl_tick_t max_ticks) {
@@ -408,8 +412,8 @@ void arch_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_
   if (t == pbl_cur && arch_in_isr()) {
     // The running thread's registers are live on its stack, not saved.
     const uint32_t *frame = (const uint32_t *)__get_PSP();
-    *regs = (struct pbl_thread_saved_regs){
-      .pc = frame[6], .lr = frame[5], .control = __get_CONTROL() };
+    *regs =
+        (struct pbl_thread_saved_regs){.pc = frame[6], .lr = frame[5], .control = __get_CONTROL()};
     return;
   }
   const struct saved_context *ctx = t->backend.sp;
@@ -417,7 +421,7 @@ void arch_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_
   if (prv_fp_active(ctx->exc_return)) {
     hw += NUM_EXTRA_FP_REGS;
   }
-  *regs = (struct pbl_thread_saved_regs){ .pc = hw[6], .lr = hw[5], .control = ctx->control };
+  *regs = (struct pbl_thread_saved_regs){.pc = hw[6], .lr = hw[5], .control = ctx->control};
 }
 
 void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_REG_COUNT]) {

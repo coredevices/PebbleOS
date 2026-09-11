@@ -19,11 +19,11 @@ void worker_manager_handle_remove_current_worker(void);
 
 void worker_manager_close_current_worker(bool gracefully);
 
-const PebbleProcessMd* worker_manager_get_current_worker_md(void);
+const PebbleProcessMd *worker_manager_get_current_worker_md(void);
 
 AppInstallId worker_manager_get_current_worker_id(void);
 
-ProcessContext* worker_manager_get_task_context(void);
+ProcessContext *worker_manager_get_task_context(void);
 
 //! Exit the worker. Do some cleanup to make sure things close nicely.
 //! Called from the worker task

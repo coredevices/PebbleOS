@@ -39,7 +39,7 @@ void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {
     f->dirty_rect = grect_union(&f->dirty_rect, &rect);
   }
 
-  const GRect clip_rect = (GRect) { GPointZero, f->size };
+  const GRect clip_rect = (GRect){GPointZero, f->size};
   grect_clip(&f->dirty_rect, &clip_rect);
 
   f->is_dirty = true;

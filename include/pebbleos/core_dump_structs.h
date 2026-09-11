@@ -17,23 +17,23 @@
 #define CORE_DUMP_NUM_REGISTERS 17
 
 // Structure of thread info stored within a CORE_DUMP_CHUNK_KEY_THREAD chunk in the core dump
-#define CORE_DUMP_THREAD_NAME_SIZE  16
+#define CORE_DUMP_THREAD_NAME_SIZE 16
 typedef struct PACKED {
-  int8_t    name[CORE_DUMP_THREAD_NAME_SIZE];       // Name, includes null termination
-  uint32_t  id;             // thread id
-  uint8_t   running;        // true if this thread is running
-  uint32_t  registers[CORE_DUMP_NUM_REGISTERS];  // registers [r0-r12, sp, lr, pc, xpsr]
+  int8_t name[CORE_DUMP_THREAD_NAME_SIZE];      // Name, includes null termination
+  uint32_t id;                                  // thread id
+  uint8_t running;                              // true if this thread is running
+  uint32_t registers[CORE_DUMP_NUM_REGISTERS];  // registers [r0-r12, sp, lr, pc, xpsr]
 } CoreDumpThreadInfo;
 
 // Structure of extra registers stored within a CORE_DUMP_CHUNK_KEY_EXTRA_REG chunk in the
 // core dump
 typedef struct PACKED {
-  uint32_t  msp;
-  uint32_t  psp;
-  uint8_t   primask;
-  uint8_t   basepri;
-  uint8_t   faultmask;
-  uint8_t   control;
+  uint32_t msp;
+  uint32_t psp;
+  uint8_t primask;
+  uint8_t basepri;
+  uint8_t faultmask;
+  uint8_t control;
 } CoreDumpExtraRegInfo;
 
 // We save all the important registers on entry to core_dump_reset() in a structure of this type

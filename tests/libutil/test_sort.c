@@ -86,19 +86,19 @@ static int prv_MyStruct_cmp(const void *a, const void *b) {
 
 void test_sort__sort_structs(void) {
   MyStruct array[] = {
-    {.number = 6 },
-    {.number = -1 },
-    {.number = 8 },
-    {.number = -123 },
+      {.number = 6},
+      {.number = -1},
+      {.number = 8},
+      {.number = -123},
   };
 
   sort_bubble(array, ARRAY_LENGTH(array), sizeof(MyStruct), prv_MyStruct_cmp);
 
   MyStruct sorted[] = {
-    {.number = -123 },
-    {.number = -1 },
-    {.number = 6 },
-    {.number = 8 },
+      {.number = -123},
+      {.number = -1},
+      {.number = 6},
+      {.number = 8},
   };
   cl_assert_equal_m(array, sorted, sizeof(array));
 }

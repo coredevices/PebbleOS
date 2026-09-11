@@ -16,22 +16,23 @@ typedef struct BatteryCriticalAppData {
   GBitmap bitmap;
 } BatteryCriticalAppData;
 
-static void update_proc(Layer* layer, GContext* ctx) {
+static void update_proc(Layer *layer, GContext *ctx) {
   BatteryCriticalAppData *app_data = app_state_get_user_data();
 
   GRect low_battery_bounds = {
-    .origin = {
-      .x = (DISP_COLS - app_data->bitmap.bounds.size.w) / 2,
-      .y = (DISP_ROWS - app_data->bitmap.bounds.size.h),
-    },
-    .size = app_data->bitmap.bounds.size,
+      .origin =
+          {
+              .x = (DISP_COLS - app_data->bitmap.bounds.size.w) / 2,
+              .y = (DISP_ROWS - app_data->bitmap.bounds.size.h),
+          },
+      .size = app_data->bitmap.bounds.size,
   };
 
   graphics_draw_bitmap_in_rect(ctx, &app_data->bitmap, &low_battery_bounds);
 }
 
 static void handle_init(void) {
-  BatteryCriticalAppData* data = app_malloc_check(sizeof(BatteryCriticalAppData));
+  BatteryCriticalAppData *data = app_malloc_check(sizeof(BatteryCriticalAppData));
 
   gbitmap_init_with_resource(&data->bitmap, RESOURCE_ID_BATTERY_ICON_CHARGE);
 
@@ -51,7 +52,7 @@ static void handle_init(void) {
 }
 
 static void handle_deinit(void) {
-  BatteryCriticalAppData* app_data = app_state_get_user_data();
+  BatteryCriticalAppData *app_data = app_state_get_user_data();
   gbitmap_deinit(&app_data->bitmap);
   app_free(app_data);
 }
@@ -64,17 +65,19 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* battery_critical_get_app_info() {
+const PebbleProcessMd *battery_critical_get_app_info() {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = s_main,
-      .visibility = ProcessVisibilityHidden,
-      // UUID: 4a71eb65-238d-4faa-b2a0-112aa910d7b4
-      .uuid = {0x4a, 0x71, 0xeb, 0x65, 0x23, 0x8d, 0x4f, 0xaa, 0xb2, 0xa0, 0x11, 0x2a, 0xa9, 0x10, 0xd7, 0xb4},
-    },
-    .name = "Battery Critical",
-    .run_level = ProcessAppRunLevelCritical,
+      .common =
+          {
+              .main_func = s_main,
+              .visibility = ProcessVisibilityHidden,
+              // UUID: 4a71eb65-238d-4faa-b2a0-112aa910d7b4
+              .uuid =
+                  {0x4a, 0x71, 0xeb, 0x65, 0x23, 0x8d, 0x4f, 0xaa, 0xb2, 0xa0, 0x11, 0x2a, 0xa9,
+                   0x10, 0xd7, 0xb4},
+          },
+      .name = "Battery Critical",
+      .run_level = ProcessAppRunLevelCritical,
   };
-  return (const PebbleProcessMd*) &s_app_md;
+  return (const PebbleProcessMd *)&s_app_md;
 }
-

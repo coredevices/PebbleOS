@@ -27,7 +27,6 @@
 #include "stubs_vibe_score_info.h"
 #include "fake_rtc.h"
 
-
 // Overrides
 /////////////////////////////////
 void do_not_disturb_init(void) {
@@ -54,7 +53,7 @@ bool do_not_disturb_is_active(void) {
   return s_dnd_active;
 }
 
-#define NOTIFICATION_VIBE_HOLDOFF_TICKS 3073024 // Just above 3 seconds
+#define NOTIFICATION_VIBE_HOLDOFF_TICKS 3073024  // Just above 3 seconds
 // Setup
 /////////////////////////////////
 

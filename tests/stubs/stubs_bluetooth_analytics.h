@@ -23,8 +23,8 @@ void bluetooth_analytics_handle_param_update_failed(void) {
 void bluetooth_analytics_handle_connection_params_update(const BleConnectionParams *params) {
 }
 
-void bluetooth_analytics_handle_connect(
-    const BTDeviceInternal *peer_addr, const BleConnectionParams *conn_params) {
+void bluetooth_analytics_handle_connect(const BTDeviceInternal *peer_addr,
+                                        const BleConnectionParams *conn_params) {
 }
 
 void bluetooth_analytics_handle_disconnect(bool local_is_master) {

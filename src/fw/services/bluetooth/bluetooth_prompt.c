@@ -20,7 +20,6 @@ void command_bt_print_mac(void) {
   prompt_send_response(addr_hex_str);
 }
 
-
 //! @param bt_name A custom Bluetooth device name.
 void command_bt_set_name(const char *bt_name) {
   bt_local_id_set_device_name(bt_name);
@@ -49,8 +48,7 @@ void command_bt_status(void) {
   const char *prefix = "BT Chip Info: ";
   size_t prefix_length = strlen(prefix);
   strncpy(buffer, prefix, sizeof(buffer));
-  bt_driver_id_copy_chip_info_string(buffer + prefix_length,
-                                     sizeof(buffer) - prefix_length);
+  bt_driver_id_copy_chip_info_string(buffer + prefix_length, sizeof(buffer) - prefix_length);
   prompt_send_response(buffer);
 
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
@@ -70,4 +68,4 @@ void command_bt_status(void) {
     prompt_send_response_fmt(buffer, sizeof(buffer), "Device: %s", name);
   }
 }
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW

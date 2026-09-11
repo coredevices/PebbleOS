@@ -13,12 +13,12 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // External flash controller MMIO register offsets
-#define FLASH_CMD         0x00
-#define FLASH_ADDR        0x04
-#define FLASH_STATUS      0x08
-#define FLASH_INT_CTRL    0x0C
-#define FLASH_INT_STATUS  0x10
-#define FLASH_SIZE        0x14
+#define FLASH_CMD 0x00
+#define FLASH_ADDR 0x04
+#define FLASH_STATUS 0x08
+#define FLASH_INT_CTRL 0x0C
+#define FLASH_INT_STATUS 0x10
+#define FLASH_SIZE 0x14
 // Range-based persistence handshake with the QEMU pebble-extflash device.
 // The device used to auto-flush its in-RAM XIP storage on SIGTERM, but that
 // captured torn writes (flash_logging journal mid-update, PFS OVERWRITE_STARTED
@@ -29,22 +29,22 @@
 // QEMU then blk_pwrite()s just that range to the backing file.  Erases are
 // auto-flushed in QEMU (the geometry is implicit in FLASH_ADDR + CMD), so we
 // don't need to SYNC them from here.
-#define FLASH_SYNC_LEN    0x18
-#define FLASH_SYNC        0x1C
+#define FLASH_SYNC_LEN 0x18
+#define FLASH_SYNC 0x1C
 
 // CMD values
-#define CMD_ERASE_SUBSECTOR  1
-#define CMD_ERASE_SECTOR     2
-#define CMD_WRITE_ENABLE     3
+#define CMD_ERASE_SUBSECTOR 1
+#define CMD_ERASE_SECTOR 2
+#define CMD_WRITE_ENABLE 3
 
 // STATUS bits
-#define STATUS_BUSY      (1 << 0)
-#define STATUS_COMPLETE  (1 << 1)
+#define STATUS_BUSY (1 << 0)
+#define STATUS_COMPLETE (1 << 1)
 
 // Standard flash geometry
-#define QEMU_SECTOR_SIZE     0x10000   // 64 KB
-#define QEMU_SUBSECTOR_SIZE  0x1000    // 4 KB
-#define QEMU_PAGE_SIZE       256
+#define QEMU_SECTOR_SIZE 0x10000    // 64 KB
+#define QEMU_SUBSECTOR_SIZE 0x1000  // 4 KB
+#define QEMU_PAGE_SIZE 256
 
 static bool s_initialized;
 
@@ -255,9 +255,9 @@ status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
 }
 
 static const FlashSecurityRegisters s_security_regs = {
-  .sec_regs = NULL,
-  .num_sec_regs = 0,
-  .sec_reg_size = 0,
+    .sec_regs = NULL,
+    .num_sec_regs = 0,
+    .sec_reg_size = 0,
 };
 
 const FlashSecurityRegisters *flash_impl_security_registers_info(void) {

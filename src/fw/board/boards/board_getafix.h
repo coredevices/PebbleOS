@@ -13,18 +13,18 @@
 #define BT_VENDOR_ID 0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"
 
-extern UARTDevice * const DBG_UART;
+extern UARTDevice *const DBG_UART;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern UARTDevice * const HCI_TRACE_UART;
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern QSPIPort * const QSPI;
-extern QSPIFlash * const QSPI_FLASH;
+extern UARTDevice *const HCI_TRACE_UART;
+#endif  // NIMBLE_HCI_SF32LB52_TRACE_BINARY
+extern QSPIPort *const QSPI;
+extern QSPIFlash *const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
 extern I2CBus *const I2C3_BUS;
 extern const LIS2DW12Config *const LIS2DW12;
-extern I2CSlavePort * const I2C_MMC5603NJ;
-extern I2CSlavePort * const I2C_NPM1300;
+extern I2CSlavePort *const I2C_MMC5603NJ;
+extern I2CSlavePort *const I2C_NPM1300;
 extern I2CSlavePort *const I2C_W1160;
 #ifdef CONFIG_BOARD_GETAFIX_DVT2
 extern I2CSlavePort *const I2C_AW86225;
@@ -37,24 +37,24 @@ extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
-extern const MicDevice* MIC;
+extern const MicDevice *MIC;
 extern const TouchSensor *CST816;
 extern const LedControllerAW9364E AW9364E;
 
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 55U, // Medium
+    .default_motion_sensitivity = 55U,  // Medium
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
-  // TODO(GETAFIX): Review if correct
-  .mag_config = {
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = false,
-    .axes_inverts[AXIS_Y] = true,
-    .axes_inverts[AXIS_Z] = false,
-  },
+    // TODO(GETAFIX): Review if correct
+    .mag_config = {
+        .axes_offsets[AXIS_X] = 1,
+        .axes_offsets[AXIS_Y] = 0,
+        .axes_offsets[AXIS_Z] = 2,
+        .axes_inverts[AXIS_X] = false,
+        .axes_inverts[AXIS_Y] = true,
+        .axes_inverts[AXIS_Z] = false,
+    },
 };

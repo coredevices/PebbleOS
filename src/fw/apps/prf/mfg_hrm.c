@@ -44,11 +44,11 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
     snprintf(app_data->status_string, STATUS_STRING_LEN, "Sampling...");
 
     if (e->hrm.event_type == HRMEvent_BPM) {
-      snprintf(app_data->bpm_string, BPM_STRING_LEN,
-              "HR:%d (quality:%d)", e->hrm.bpm.bpm, e->hrm.bpm.quality);
+      snprintf(app_data->bpm_string, BPM_STRING_LEN, "HR:%d (quality:%d)", e->hrm.bpm.bpm,
+               e->hrm.bpm.quality);
     } else if (e->hrm.event_type == HRMEvent_SpO2) {
-      snprintf(app_data->spo2_string, SPO2_STRING_LEN,
-              "SpO2:%d (quality:%d)", e->hrm.spo2.percent, e->hrm.spo2.quality);
+      snprintf(app_data->spo2_string, SPO2_STRING_LEN, "SpO2:%d (quality:%d)", e->hrm.spo2.percent,
+               e->hrm.spo2.quality);
     }
 
     layer_mark_dirty(&app_data->window.layer);
@@ -92,23 +92,23 @@ static void prv_handle_init(void) {
   layer_add_child(&window->layer, &bpm->layer);
 
   TextLayer *spo2 = &data->spo2_text_layer;
-  text_layer_init(spo2,
-                  &GRect(5, 120, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 120));
+  text_layer_init(
+      spo2, &GRect(5, 120, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 120));
   text_layer_set_font(spo2, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(spo2, GTextAlignmentCenter);
   text_layer_set_text(spo2, data->spo2_string);
   layer_add_child(&window->layer, &spo2->layer);
 
   data->hrm_event_info = (EventServiceInfo){
-    .type = PEBBLE_HRM_EVENT,
-    .handler = prv_handle_hrm_data,
+      .type = PEBBLE_HRM_EVENT,
+      .handler = prv_handle_hrm_data,
   };
   event_service_client_subscribe(&data->hrm_event_info);
 
   // Use app data as session ref
-  AppInstallId  app_id = 1;
-  data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
-                                                    HRMFeature_BPM | HRMFeature_SpO2);
+  AppInstallId app_id = 1;
+  data->hrm_session =
+      sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR, HRMFeature_BPM | HRMFeature_SpO2);
 
   app_window_stack_push(window, true);
 }
@@ -130,12 +130,12 @@ static void prv_main(void) {
   prv_handle_deinit();
 }
 
-const PebbleProcessMd* mfg_hrm_app_get_info(void) {
+const PebbleProcessMd *mfg_hrm_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &prv_main,
-    .name = "MfgHRM",
+      .common.main_func = &prv_main,
+      .name = "MfgHRM",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }
 
-#endif // CONFIG_HRM
+#endif  // CONFIG_HRM

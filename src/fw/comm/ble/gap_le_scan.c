@@ -40,14 +40,13 @@ bool gap_le_start_scan(void) {
     if (!s_is_scanning) {
       s_dropped_reports = 0;
 
-      success = bt_driver_start_le_scan(
-          true /* active_scan */, false /* use_white_list_filter */,
-          true /* filter_dups */, 10240, 10240);
+      success = bt_driver_start_le_scan(true /* active_scan */, false /* use_white_list_filter */,
+                                        true /* filter_dups */, 10240, 10240);
 
       if (success) {
         // Allocate report buffers if advertising started successfully
         const size_t buffer_size = GAP_LE_SCAN_REPORTS_BUFFER_SIZE;
-        s_reports_buffer = (uint8_t *) kernel_malloc_check(buffer_size);
+        s_reports_buffer = (uint8_t *)kernel_malloc_check(buffer_size);
         circular_buffer_init(&s_circular_buffer, s_reports_buffer, buffer_size);
         s_is_scanning = true;
       }
@@ -63,7 +62,6 @@ bool gap_le_stop_scan(void) {
   bt_lock();
   {
     if (s_is_scanning) {
-
       success = bt_driver_stop_le_scan();
       kernel_free(s_reports_buffer);
       s_reports_buffer = NULL;
@@ -87,14 +85,13 @@ bool gap_le_is_scanning(void) {
 //! "slot". In case there is no space left, the pending report will be dropped.
 //! and a counter will be incremented
 void bt_driver_cb_le_scan_handle_report(const GAPLERawAdReport *report_buffer, int length) {
-  const bool written = circular_buffer_write(
-      &s_circular_buffer, (uint8_t *)report_buffer, length);
+  const bool written = circular_buffer_write(&s_circular_buffer, (uint8_t *)report_buffer, length);
 
   if (!written) {
     ++s_dropped_reports;
-  } else { // notify clients there's a new event available
+  } else {  // notify clients there's a new event available
     PebbleEvent e = {
-      .type = PEBBLE_BLE_SCAN_EVENT,
+        .type = PEBBLE_BLE_SCAN_EVENT,
     };
     event_put(&e);
   }
@@ -125,13 +122,12 @@ bool gap_le_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out) {
     while (read_space && write_space >= sizeof(GAPLERawAdReport)) {
       // First copy the header. We know for sure this will fit into buffer,
       // because it was tested in the while() condition:
-      circular_buffer_copy(&s_circular_buffer,
-                           buffer, sizeof(GAPLERawAdReport));
-      const GAPLERawAdReport *report = (const GAPLERawAdReport *) buffer;
+      circular_buffer_copy(&s_circular_buffer, buffer, sizeof(GAPLERawAdReport));
+      const GAPLERawAdReport *report = (const GAPLERawAdReport *)buffer;
 
       // Now use the copied header to figure out how big the report actually is:
-      const uint32_t payload_len = report->payload.ad_data_length +
-                                   report->payload.scan_resp_data_length;
+      const uint32_t payload_len =
+          report->payload.ad_data_length + report->payload.scan_resp_data_length;
       const uint32_t report_len = sizeof(GAPLERawAdReport) + payload_len;
 
       // There should always be at least enough bytes to read in the circular
@@ -172,7 +168,6 @@ void gap_le_scan_init(void) {
   s_is_scanning = false;
   bt_unlock();
 }
-
 
 // -----------------------------------------------------------------------------
 void gap_le_scan_deinit(void) {

@@ -13,7 +13,7 @@
 //! Prefs Sync using BlobDB
 //!
 //! Settings are now synced via BlobDB with database ID 0x0F (BlobDBIdSettings).
-//! 
+//!
 //! The whitelist filtering and sync logic are implemented in:
 //!   services/blob_db/settings_blob_db.c
 //!
@@ -65,16 +65,16 @@ void prefs_sync_init(void) {
   }
 
   // Subscribe to connection events
-  s_connection_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
-    .handler = prv_connection_handler,
+  s_connection_event_info = (EventServiceInfo){
+      .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+      .handler = prv_connection_handler,
   };
   event_service_client_subscribe(&s_connection_event_info);
 
   // Subscribe to capabilities changed events - this fires when phone sends version response
-  s_capabilities_event_info = (EventServiceInfo) {
-    .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
-    .handler = prv_capabilities_handler,
+  s_capabilities_event_info = (EventServiceInfo){
+      .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
+      .handler = prv_capabilities_handler,
   };
   event_service_client_subscribe(&s_capabilities_event_info);
 
@@ -102,19 +102,19 @@ void prefs_sync_trigger(void) {
     PBL_LOG_WRN("Prefs sync not initialized");
     return;
   }
-  
+
   if (!s_is_connected) {
     PBL_LOG_WRN("Not connected to phone, cannot sync");
     return;
   }
-  
+
   // Check if the phone supports settings sync
   if (!settings_blob_db_phone_supports_sync()) {
     PBL_LOG_WRN("Phone doesn't support settings sync");
     return;
   }
-  
+
   PBL_LOG_DBG("Manually triggering settings sync via BlobDB");
-  
+
   blob_db_sync_db(BlobDBIdSettings);
 }

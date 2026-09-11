@@ -16,7 +16,7 @@ void launcher_panic(uint32_t error_code) {
 
   s_current_error = error_code;
 
-  PBL_LOG_ERR("!!!SAD WATCH 0x%"PRIX32" SAD WATCH!!!", error_code);
+  PBL_LOG_ERR("!!!SAD WATCH 0x%" PRIX32 " SAD WATCH!!!", error_code);
 
   if (modal_manager_get_top_window()) {
     modal_manager_pop_all();
@@ -31,12 +31,12 @@ uint32_t launcher_panic_get_current_error(void) {
   return s_current_error;
 }
 
-void command_sim_panic_cb(void* data) {
+void command_sim_panic_cb(void *data) {
   PebbleEvent event = {
-    .type = PEBBLE_PANIC_EVENT,
-    .panic = {
-      .error_code = (uint32_t)data,
-    },
+      .type = PEBBLE_PANIC_EVENT,
+      .panic = {
+          .error_code = (uint32_t)data,
+      },
   };
   event_put(&event);
 }
@@ -44,5 +44,5 @@ void command_sim_panic_cb(void* data) {
 extern void command_sim_panic(const char *error_code_str) {
   uint32_t error_code = atoi(error_code_str);
 
-  launcher_task_add_callback(command_sim_panic_cb, (void*) error_code);
+  launcher_task_add_callback(command_sim_panic_cb, (void *)error_code);
 }

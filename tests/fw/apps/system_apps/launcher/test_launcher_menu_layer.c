@@ -48,64 +48,136 @@ typedef struct LauncherMenuLayerTestAppNode {
 
 static bool s_use_pdc_icons;
 
-static const LauncherMenuLayerTestAppNode s_fake_app_nodes[LauncherMenuLayerTestAppCount] = {
-  [LauncherMenuLayerTestApp_Watchfaces] = {
-    .node = {
-      .name = "Watchfaces",
-      .uuid = (Uuid) {0xc3, 0xcf, 0xda, 0xa9, 0x76, 0x1f, 0x49, 0x89,
-                      0x99, 0x4c, 0x30, 0x13, 0xcd, 0xc3, 0xef, 0xb9},
-    },
-    .bitmap_icon_resource_id = RESOURCE_ID_MENU_LAYER_GENERIC_WATCHFACE_ICON,
-    .pdc_icon_resource_id = RESOURCE_ID_ALARM_CLOCK_TINY,
-    .bitmap_slice_icon_resource_id = TIMELINE_RESOURCE_TEST_FAKE_PNG,
-    .pdc_slice_icon_resource_id = TIMELINE_RESOURCE_BASKETBALL,
-  },
-  [LauncherMenuLayerTestApp_LongTitle] = {
-    .node = {
-      .name = "Really really long title",
-      .uuid = (Uuid) {0xd4, 0x17, 0x61, 0x3c, 0x43, 0x31, 0x44, 0x90,
-                      0xa1, 0x68, 0xf2, 0x46, 0x53, 0xd3, 0x76, 0x3a},
-    },
-    // these icons are too big and will be replaced with the generic app icon
-    .bitmap_icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH,
-    .pdc_icon_resource_id = RESOURCE_ID_AMERICAN_FOOTBALL_SMALL,
-    .bitmap_slice_icon_resource_id = TIMELINE_RESOURCE_TEST_FAKE_PNG,
-    .pdc_slice_icon_resource_id = TIMELINE_RESOURCE_BASKETBALL,
-  },
-  [LauncherMenuLayerTestApp_InteriorApp] = {
-    .node = {
-      .name = "Interior App",
-      .uuid = (Uuid) {0x11, 0xcf, 0xac, 0x66, 0x29, 0x9c, 0x4a, 0xa6,
-                      0x94, 0x5d, 0xf0, 0x53, 0x6e, 0xd1, 0x4e, 0xe8},
-    },
-    // these icons are too big and will be replaced with the generic app icon
-    .bitmap_icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH_ALT,
-    .pdc_icon_resource_id = RESOURCE_ID_BASEBALL_GAME_SMALL,
-    .bitmap_slice_icon_resource_id = TIMELINE_RESOURCE_TEST_FAKE_PNG,
-    .pdc_slice_icon_resource_id = TIMELINE_RESOURCE_BASKETBALL,
-  },
-  [LauncherMenuLayerTestApp_Travel] = {
-    .node = {
-      .name = "Travel",
-      .uuid = (Uuid) {0x27, 0x53, 0xd0, 0xc, 0x65, 0xbb, 0x41, 0x83,
-                      0x9c, 0xf1, 0x17, 0x3e, 0x6, 0xdf, 0xda, 0xde},
-    },
-    .bitmap_icon_resource_id = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
-    .pdc_icon_resource_id = RESOURCE_ID_SCHEDULED_FLIGHT_TINY,
-    .bitmap_slice_icon_resource_id = TIMELINE_RESOURCE_TEST_FAKE_PNG,
-    .pdc_slice_icon_resource_id = TIMELINE_RESOURCE_BASKETBALL,
-  },
-  [LauncherMenuLayerTestApp_NoIcon] = {
-    .node = {
-      .name = "No Icon",
-      .uuid = (Uuid) {0x7f, 0x4f, 0xc1, 0x32, 0x32, 0x78, 0x47, 0xec,
-                      0x91, 0x64, 0xf1, 0x76, 0xf9, 0xea, 0x1f, 0xc2},
-    },
-  }
-};
+static const LauncherMenuLayerTestAppNode s_fake_app_nodes[LauncherMenuLayerTestAppCount] = {[LauncherMenuLayerTestApp_Watchfaces] =
+                                                                                                 {
+                                                                                                     .node =
+                                                                                                         {
+                                                                                                             .name = "Watchfaces",
+                                                                                                             .uuid = (Uuid){0xc3,
+                                                                                                                            0xcf,
+                                                                                                                            0xda,
+                                                                                                                            0xa9,
+                                                                                                                            0x76,
+                                                                                                                            0x1f,
+                                                                                                                            0x49,
+                                                                                                                            0x89, 0x99, 0x4c, 0x30, 0x13, 0xcd, 0xc3, 0xef, 0xb9},
+                                                                                                         },
+                                                                                                     .bitmap_icon_resource_id =
+                                                                                                         RESOURCE_ID_MENU_LAYER_GENERIC_WATCHFACE_ICON,
+                                                                                                     .pdc_icon_resource_id =
+                                                                                                         RESOURCE_ID_ALARM_CLOCK_TINY,
+                                                                                                     .bitmap_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_TEST_FAKE_PNG,
+                                                                                                     .pdc_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_BASKETBALL,
+                                                                                                 },
+                                                                                             [LauncherMenuLayerTestApp_LongTitle] =
+                                                                                                 {
+                                                                                                     .node =
+                                                                                                         {
+                                                                                                             .name = "Really really long title",
+                                                                                                             .uuid = (Uuid){0xd4,
+                                                                                                                            0x17,
+                                                                                                                            0x61,
+                                                                                                                            0x3c,
+                                                                                                                            0x43,
+                                                                                                                            0x31,
+                                                                                                                            0x44,
+                                                                                                                            0x90, 0xa1, 0x68, 0xf2, 0x46, 0x53, 0xd3, 0x76, 0x3a},
+                                                                                                         },
+                                                                                                     // these icons are too big and will be replaced with the generic app icon
+                                                                                                     .bitmap_icon_resource_id = RESOURCE_ID_SETTINGS_ICON_BLUETOOTH,
+                                                                                                     .pdc_icon_resource_id =
+                                                                                                         RESOURCE_ID_AMERICAN_FOOTBALL_SMALL,
+                                                                                                     .bitmap_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_TEST_FAKE_PNG,
+                                                                                                     .pdc_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_BASKETBALL,
+                                                                                                 },
+                                                                                             [LauncherMenuLayerTestApp_InteriorApp] =
+                                                                                                 {
+                                                                                                     .node =
+                                                                                                         {
+                                                                                                             .name = "Interior App",
+                                                                                                             .uuid = (Uuid){0x11,
+                                                                                                                            0xcf,
+                                                                                                                            0xac,
+                                                                                                                            0x66,
+                                                                                                                            0x29,
+                                                                                                                            0x9c,
+                                                                                                                            0x4a,
+                                                                                                                            0xa6,
+                                                                                                                            0x94,
+                                                                                                                            0x5d,
+                                                                                                                            0xf0,
+                                                                                                                            0x53,
+                                                                                                                            0x6e,
+                                                                                                                            0xd1,
+                                                                                                                            0x4e,
+                                                                                                                            0xe8},
+                                                                                                         },
+                                                                                                     // these icons are too big and will be replaced with the generic app icon
+                                                                                                     .bitmap_icon_resource_id =
+                                                                                                         RESOURCE_ID_SETTINGS_ICON_BLUETOOTH_ALT,
+                                                                                                     .pdc_icon_resource_id =
+                                                                                                         RESOURCE_ID_BASEBALL_GAME_SMALL,
+                                                                                                     .bitmap_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_TEST_FAKE_PNG,
+                                                                                                     .pdc_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_BASKETBALL,
+                                                                                                 },
+                                                                                             [LauncherMenuLayerTestApp_Travel] =
+                                                                                                 {
+                                                                                                     .node =
+                                                                                                         {
+                                                                                                             .name = "Travel",
+                                                                                                             .uuid = (Uuid){0x27,
+                                                                                                                            0x53,
+                                                                                                                            0xd0,
+                                                                                                                            0xc, 0x65, 0xbb,
+                                                                                                                            0x41,
+                                                                                                                            0x83,
+                                                                                                                            0x9c,
+                                                                                                                            0xf1,
+                                                                                                                            0x17,
+                                                                                                                            0x3e,
+                                                                                                                            0x6, 0xdf, 0xda,
+                                                                                                                            0xde},
+                                                                                                         },
+                                                                                                     .bitmap_icon_resource_id =
+                                                                                                         RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
+                                                                                                     .pdc_icon_resource_id =
+                                                                                                         RESOURCE_ID_SCHEDULED_FLIGHT_TINY,
+                                                                                                     .bitmap_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_TEST_FAKE_PNG,
+                                                                                                     .pdc_slice_icon_resource_id =
+                                                                                                         TIMELINE_RESOURCE_BASKETBALL,
+                                                                                                 },
+                                                                                             [LauncherMenuLayerTestApp_NoIcon] =
+                                                                                                 {
+                                                                                                     .node =
+                                                                                                         {
+                                                                                                             .name = "No Icon",
+                                                                                                             .uuid = (Uuid){0x7f,
+                                                                                                                            0x4f,
+                                                                                                                            0xc1,
+                                                                                                                            0x32,
+                                                                                                                            0x32,
+                                                                                                                            0x78,
+                                                                                                                            0x47,
+                                                                                                                            0xec,
+                                                                                                                            0x91,
+                                                                                                                            0x64,
+                                                                                                                            0xf1,
+                                                                                                                            0x76,
+                                                                                                                            0xf9,
+                                                                                                                            0xea,
+                                                                                                                            0x1f,
+                                                                                                                            0xc2},
+                                                                                                         },
+                                                                                                 }};
 
-AppMenuNode* app_menu_data_source_get_node_at_index(AppMenuDataSource *source,
-                                                    uint16_t row_index) {
+AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source, uint16_t row_index) {
   cl_assert(source);
   cl_assert(row_index < ARRAY_LENGTH(s_fake_app_nodes));
   const LauncherMenuLayerTestAppNode *test_node = &s_fake_app_nodes[row_index];
@@ -238,11 +310,13 @@ PreferredContentSize system_theme_get_content_size(void) {
   return PreferredContentSizeDefault;
 }
 
-void vibes_enqueue_custom_pattern(VibePattern pattern) {}
+void vibes_enqueue_custom_pattern(VibePattern pattern) {
+}
 
 // We can't include stubs_process_manager.h because it conflicts with the two helper includes below
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *),
-                                                    void *data) {}
+                                                    void *data) {
+}
 
 // Helper Functions
 /////////////////////
@@ -262,7 +336,7 @@ GContext *graphics_context_get_current_context(void) {
 void test_launcher_menu_layer__initialize(void) {
   // Setup framebuffer and graphics context
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   test_graphics_context_init(&s_ctx, fb);
   graphics_context_set_antialiased(&s_ctx, true);
 
@@ -319,8 +393,8 @@ void prv_render_launcher_menu_layer(uint16_t selected_index) {
   // If we used MenuRowAlignCenter on rect then the test images would show the top and bottom
   // rows being clipped by the edge of the screen
   const MenuRowAlign row_align = PBL_IF_RECT_ELSE(MenuRowAlignTop, MenuRowAlignCenter);
-  prv_launcher_menu_layer_set_selection_index(&launcher_menu_layer, selected_index,
-                                              row_align, animated);
+  prv_launcher_menu_layer_set_selection_index(&launcher_menu_layer, selected_index, row_align,
+                                              animated);
 
   layer_render_tree(launcher_menu_layer_get_layer(&launcher_menu_layer), &s_ctx);
 
@@ -348,21 +422,22 @@ void test_launcher_menu_layer__interior_app(void) {
 
 void test_launcher_menu_layer__no_icon_app_with_glance(void) {
   // Insert a glance with a slice for the app that doesn't have a default icon
-  const AppGlance glance = (AppGlance) {
+  const AppGlance glance = (AppGlance){
       .num_slices = 1,
       .slices = {
-        {
-          .expiration_time = 1464734484, // (Tue, 31 May 2016 22:41:24 GMT)
-          .type = AppGlanceSliceType_IconAndSubtitle,
-          .icon_and_subtitle = {
-            .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
-            .template_string = "Glances baby!",
+          {
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
+                  .template_string = "Glances baby!",
+              },
           },
-        },
       },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(
-      &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance), S_SUCCESS);
+                        &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance),
+                    S_SUCCESS);
 
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_NoIcon);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -375,24 +450,25 @@ static void prv_insert_glances_for_app_selected_and_apps_above_and_below_with_gl
   for (LauncherMenuLayerTestApp i = LauncherMenuLayerTestApp_InteriorApp - 1;
        i <= LauncherMenuLayerTestApp_InteriorApp + 1; i++) {
     const LauncherMenuLayerTestAppNode *test_node = &s_fake_app_nodes[i];
-    const uint32_t icon_resource_id = s_use_pdc_icons ? test_node->pdc_slice_icon_resource_id :
-                                                        test_node->bitmap_slice_icon_resource_id;
-    AppGlance glance = (AppGlance) {
-      .num_slices = 1,
-      .slices = {
-        {
-          .expiration_time = 1464734484, // (Tue, 31 May 2016 22:41:24 GMT)
-          .type = AppGlanceSliceType_IconAndSubtitle,
-          .icon_and_subtitle = {
-            // Just continue using their default icon, we care more about the subtitle in this test
-            .icon_resource_id = icon_resource_id,
-          },
+    const uint32_t icon_resource_id = s_use_pdc_icons ? test_node->pdc_slice_icon_resource_id
+                                                      : test_node->bitmap_slice_icon_resource_id;
+    AppGlance glance = (AppGlance){
+        .num_slices = 1,
+        .slices = {
+            {
+                .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+                .type = AppGlanceSliceType_IconAndSubtitle,
+                .icon_and_subtitle = {
+                    // Just continue using their default icon, we care more about the
+                    // subtitle in this test
+                    .icon_resource_id = icon_resource_id,
+                },
+            },
         },
-      },
     };
     snprintf(glance.slices[0].icon_and_subtitle.template_string,
-             sizeof(glance.slices[0].icon_and_subtitle.template_string),
-             "%s glance", s_fake_app_nodes[i].node.name);
+             sizeof(glance.slices[0].icon_and_subtitle.template_string), "%s glance",
+             s_fake_app_nodes[i].node.name);
     cl_assert_equal_i(app_glance_db_insert_glance(&s_fake_app_nodes[i].node.uuid, &glance),
                       S_SUCCESS);
   }
@@ -425,21 +501,22 @@ void test_launcher_menu_layer__interior_app_pdc(void) {
 void test_launcher_menu_layer__no_icon_app_with_glance_pdc(void) {
   s_use_pdc_icons = true;
   // Insert a glance with a slice for the app that doesn't have a default icon
-  const AppGlance glance = (AppGlance) {
-    .num_slices = 1,
-    .slices = {
-      {
-        .expiration_time = 1464734484, // (Tue, 31 May 2016 22:41:24 GMT)
-        .type = AppGlanceSliceType_IconAndSubtitle,
-        .icon_and_subtitle = {
-          .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
-          .template_string = "Glances baby!",
-        },
+  const AppGlance glance = (AppGlance){
+      .num_slices = 1,
+      .slices = {
+          {
+              .expiration_time = 1464734484,  // (Tue, 31 May 2016 22:41:24 GMT)
+              .type = AppGlanceSliceType_IconAndSubtitle,
+              .icon_and_subtitle = {
+                  .icon_resource_id = TIMELINE_RESOURCE_SCHEDULED_FLIGHT,
+                  .template_string = "Glances baby!",
+              },
+          },
       },
-    },
   };
   cl_assert_equal_i(app_glance_db_insert_glance(
-      &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance), S_SUCCESS);
+                        &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance),
+                    S_SUCCESS);
 
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_NoIcon);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));

@@ -27,52 +27,47 @@ PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 #define ECOMPASS_CALIBRATION_FAST_MINUTES 2
 #endif
 
-#define VALID_CORR_MARKER            0x5644
-#define BITS_PER_CORRECTION_VAL      16
-#define CORRECTION_VAL_MASK          ((1 << BITS_PER_CORRECTION_VAL) - 1)
-
+#define VALID_CORR_MARKER 0x5644
+#define BITS_PER_CORRECTION_VAL 16
+#define CORRECTION_VAL_MASK ((1 << BITS_PER_CORRECTION_VAL) - 1)
 
 static CompassStatus s_current_cal_status = CompassStatusDataInvalid;
-static int16_t s_active_corr[3] = { 0 };
+static int16_t s_active_corr[3] = {0};
 
 static bool s_service_init = false;
 static bool s_saved_corr_present = false;
-static int16_t s_saved_corr[3] = { 0 };
+static int16_t s_saved_corr[3] = {0};
 
-static int32_t s_last_heading = -1; // the last heading we found
+static int32_t s_last_heading = -1;  // the last heading we found
 #ifdef CONFIG_RECOVERY_FW
-static MagData s_last_mag_sample = { 0 };
+static MagData s_last_mag_sample = {0};
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////
 // Calibration state variables
-static void prv_calibration_time_expired_cb(void* data);
+static void prv_calibration_time_expired_cb(void *data);
 
 static bool s_high_freq_calib_active = false;
 static bool s_calib_run = false;
-static RegularTimerInfo s_cb_info = { .cb = prv_calibration_time_expired_cb };
-
+static RegularTimerInfo s_cb_info = {.cb = prv_calibration_time_expired_cb};
 
 //////////////////////////////////////////////////////////////////////////////////
 // Compass subscription state variables
 
 static uint8_t s_compass_subscribers_count = 0;
-static bool s_compass_subscribers[NumPebbleTask] = { 0 };
-
+static bool s_compass_subscribers[NumPebbleTask] = {0};
 
 //////////////////////////////////////////////////////////////////////////////////
 // Accel service state variables
 
 static AccelServiceState *s_accel_session = NULL;
 static bool s_charger_plugged = false;
-static AccelRawData s_accel_data = { 0 };
-
+static AccelRawData s_accel_data = {0};
 
 //////////////////////////////////////////////////////////////////////////////////
 // Private calibration handlers
 
-static void prv_get_roll_and_pitch(AccelRawData *d, int32_t *rollp,
-    int32_t *pitchp) {
+static void prv_get_roll_and_pitch(AccelRawData *d, int32_t *rollp, int32_t *pitchp) {
   if ((d->x == 0) && (d->y == 0) && (d->z == 0)) {
     *rollp = *pitchp = 0;
     return;
@@ -85,11 +80,11 @@ static void prv_get_roll_and_pitch(AccelRawData *d, int32_t *rollp,
     roll = roll - TRIG_MAX_ANGLE;
   }
 
-  int32_t pitch = atan2_lookup(-d->x,
-      (d->y * sin_lookup(roll) + d->z * cos_lookup(roll)) / TRIG_MAX_RATIO);
+  int32_t pitch =
+      atan2_lookup(-d->x, (d->y * sin_lookup(roll) + d->z * cos_lookup(roll)) / TRIG_MAX_RATIO);
 
   // solution repeats every 180 degrees
-  if (pitch > (TRIG_MAX_ANGLE / 4)) { // > 90 degrees
+  if (pitch > (TRIG_MAX_ANGLE / 4)) {  // > 90 degrees
     if (pitch < ((270 * TRIG_MAX_ANGLE) / 360)) {
       pitch -= (TRIG_MAX_ANGLE / 2);
     } else {
@@ -101,8 +96,8 @@ static void prv_get_roll_and_pitch(AccelRawData *d, int32_t *rollp,
   *pitchp = pitch;
 }
 
-static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data,
-    MagData *mag_data, int32_t roll, int32_t pitch) {
+static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data, MagData *mag_data,
+                                              int32_t roll, int32_t pitch) {
   int32_t mx = mag_data->x - s_active_corr[0];
   int32_t my = mag_data->y - s_active_corr[1];
   int32_t mz = mag_data->z - s_active_corr[2];
@@ -123,10 +118,8 @@ static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data,
   }
 
   mx_rot = (mx * cos_lookup(pitch)) / TRIG_MAX_RATIO;
-  mx_rot += (((my * sin_lookup(pitch)) / TRIG_MAX_RATIO) * sin_lookup(roll)) /
-      TRIG_MAX_RATIO;
-  mx_rot += (((mz * sin_lookup(pitch)) / TRIG_MAX_RATIO) * cos_lookup(roll)) /
-      TRIG_MAX_RATIO;
+  mx_rot += (((my * sin_lookup(pitch)) / TRIG_MAX_RATIO) * sin_lookup(roll)) / TRIG_MAX_RATIO;
+  mx_rot += (((mz * sin_lookup(pitch)) / TRIG_MAX_RATIO) * cos_lookup(roll)) / TRIG_MAX_RATIO;
 
   my_rot = mz * sin_lookup(roll) - my * cos_lookup(roll);
   my_rot /= TRIG_MAX_RATIO;
@@ -135,13 +128,13 @@ static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data,
   return (heading);
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////
 // Private handlers for compass service
 
-static void prv_calibration_time_expired_cb(void* data) {
-  PBL_LOG_DBG("Calibration time expired, complete, or app exit, "
-          "dropping back to low frequency");
+static void prv_calibration_time_expired_cb(void *data) {
+  PBL_LOG_DBG(
+      "Calibration time expired, complete, or app exit, "
+      "dropping back to low frequency");
 
   if (!mag_change_sample_rate(MagSampleRate5Hz)) {
     PBL_LOG_WRN("Forcing reset to enter low freq mode");
@@ -154,7 +147,7 @@ static void prv_calibration_time_expired_cb(void* data) {
 }
 
 static void prv_accel_for_compass_handler(AccelRawData *d, uint32_t num_samples,
-    uint64_t timestamp) {
+                                          uint64_t timestamp) {
   int32_t x = 0, y = 0, z = 0;
 
   // 1st order butterworth filter with a cutoff freq of 0.02Fs
@@ -165,7 +158,9 @@ static void prv_accel_for_compass_handler(AccelRawData *d, uint32_t num_samples,
     xr = (305 * d[i].x + 305 * xp + 9391 * xr) / 10000;
     yr = (305 * d[i].y + 305 * yp + 9391 * yr) / 10000;
     zr = (305 * d[i].z + 305 * zp + 9391 * zr) / 10000;
-    xp = d[i].x;    yp = d[i].y;    zp = d[i].z;
+    xp = d[i].x;
+    yp = d[i].y;
+    zp = d[i].z;
     x += xr;
     y += yr;
     z += zr;
@@ -199,7 +194,7 @@ static void prv_compass_data_service_stop(PebbleTask task) {
       mag_release();
     }
   }
-  PBL_LOG_DBG("subscribers %"PRIu8, s_compass_subscribers_count);
+  PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
 }
 
 static void prv_compass_data_service_start(PebbleTask task) {
@@ -215,7 +210,7 @@ static void prv_compass_data_service_start(PebbleTask task) {
 
     mag_start_sampling();
   }
-  PBL_LOG_DBG("subscribers %"PRIu8, s_compass_subscribers_count);
+  PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +225,7 @@ void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_st
   } else if (s_charger_plugged) {
     // we have unplugged the charger, initiate recalibration
     s_charger_plugged = false;
-    s_calib_run = false; // trigger a rerun of fast compass calibration
+    s_calib_run = false;  // trigger a rerun of fast compass calibration
     PBL_LOG_DBG("Restarting calibration after charge event");
   }
 }
@@ -239,7 +234,7 @@ void ecompass_service_init(void) {
   s_service_init = true;
 
   event_service_init(PEBBLE_COMPASS_DATA_EVENT, &prv_compass_data_service_start,
-     &prv_compass_data_service_stop);
+                     &prv_compass_data_service_stop);
 }
 
 void ecompass_service_handle(void) {
@@ -252,8 +247,10 @@ void ecompass_service_handle(void) {
     if (rv == MagReadCommunicationFail) {
       // heavy hammer fix for now
       // FIXME: move the restart logic to driver
-      PBL_LOG_WRN("Read after %d samples failed, "
-              "restarting compass", samples_collected);
+      PBL_LOG_WRN(
+          "Read after %d samples failed, "
+          "restarting compass",
+          samples_collected);
       mag_release();
       mag_start_sampling();
     }
@@ -285,25 +282,24 @@ void ecompass_service_handle(void) {
       s_calib_run = true;
       s_high_freq_calib_active = true;
       samples_collected = 0;
-      return; // if we are switching to high freq mode, don't use 1st sample
+      return;  // if we are switching to high freq mode, don't use 1st sample
     }
 
     if (samples_collected < 5) {
-      return; // wait a few samples for ramp up error to stabilize
+      return;  // wait a few samples for ramp up error to stabilize
     }
 
     int16_t new_corr[3];
-    MagCalStatus cal_status = ecomp_corr_add_raw_mag_sample((int16_t *)&mag_data,
-        (s_saved_corr_present) ? s_saved_corr : NULL, new_corr);
+    MagCalStatus cal_status = ecomp_corr_add_raw_mag_sample(
+        (int16_t *)&mag_data, (s_saved_corr_present) ? s_saved_corr : NULL, new_corr);
 
     if (cal_status != MagCalStatusNoSolution) {
-      PBL_LOG_INFO("%s : %d %d %d (type = %d)", "Mag Corr",
-          (int)new_corr[0], (int)new_corr[1], (int)new_corr[2], (int)cal_status);
+      PBL_LOG_INFO("%s : %d %d %d (type = %d)", "Mag Corr", (int)new_corr[0], (int)new_corr[1],
+                   (int)new_corr[2], (int)cal_status);
     }
 
     bool locked_sol = (cal_status == MagCalStatusNewLockedSolutionAvail);
-    if (locked_sol || ((cal_status == MagCalStatusNewSolutionAvail) &&
-        !s_saved_corr_present)) {
+    if (locked_sol || ((cal_status == MagCalStatusNewSolutionAvail) && !s_saved_corr_present)) {
       s_current_cal_status = CompassStatusCalibrating;
       for (int i = 0; i < 3; i++) {
         if ((s_active_corr[i] == 0) || locked_sol) {
@@ -312,7 +308,7 @@ void ecompass_service_handle(void) {
         }
 
         // smooth out noise from solutions while we wait for a locked set
-        const int alpha = 30; // greater alpha leads to less smoothing
+        const int alpha = 30;  // greater alpha leads to less smoothing
         new_corr[i] = ((new_corr[i] - s_active_corr[i]) * alpha) / 100;
         s_active_corr[i] += new_corr[i];
       }
@@ -320,7 +316,7 @@ void ecompass_service_handle(void) {
 
     if (s_high_freq_calib_active && (cal_status == MagCalStatusNoSolution) &&
         ((samples_collected % 4) != 0)) {
-      return; // only bubble up every 4th sample to app land with high samp rate
+      return;  // only bubble up every 4th sample to app land with high samp rate
     }
 
     if ((cal_status == MagCalStatusNewLockedSolutionAvail) ||
@@ -329,7 +325,7 @@ void ecompass_service_handle(void) {
         prv_calibration_time_expired_cb(NULL);
       }
       s_current_cal_status = CompassStatusCalibrated;
-      for (int i = 0; i < 3; i++) { 
+      for (int i = 0; i < 3; i++) {
         s_active_corr[i] = new_corr[i];
       }
       s_saved_corr_present = true;
@@ -342,12 +338,11 @@ void ecompass_service_handle(void) {
   prv_get_roll_and_pitch(&accel_data, &roll, &pitch);
 
   PebbleEvent e = {
-    .type = PEBBLE_COMPASS_DATA_EVENT,
-    .compass_data = {
-      .magnetic_heading = prv_correct_for_roll_and_pitch(&accel_data, &mag_data,
-          roll, pitch),
-      .calib_status = s_current_cal_status
-    }
+      .type = PEBBLE_COMPASS_DATA_EVENT,
+      .compass_data = {
+          .magnetic_heading = prv_correct_for_roll_and_pitch(&accel_data, &mag_data, roll, pitch),
+          .calib_status = s_current_cal_status
+      }
   };
 
   s_last_heading = e.compass_data.magnetic_heading;
@@ -367,11 +362,11 @@ DEFINE_SYSCALL(void, sys_ecompass_get_last_heading, CompassHeadingData *data) {
     syscall_assert_userspace_buffer(data, sizeof(*data));
   }
 
-  *data = (CompassHeadingData) {
-    .magnetic_heading = s_last_heading,
-    .true_heading = s_last_heading,
-    .compass_status = s_current_cal_status,
-    .is_declination_valid = false
+  *data = (CompassHeadingData){
+      .magnetic_heading = s_last_heading,
+      .true_heading = s_last_heading,
+      .compass_status = s_current_cal_status,
+      .is_declination_valid = false
   };
 }
 
@@ -399,19 +394,19 @@ void command_compass_peek(void) {
   launcher_task_add_callback(prv_ecompass_start_callback, NULL);
 
   // wait for last heading to be updated
-  int retries = 50; // 5 seconds should be ample time
+  int retries = 50;  // 5 seconds should be ample time
   while ((prev_heading == s_last_heading) && retries-- > 0) {
     psleep(100);
   }
 
   launcher_task_add_callback(prv_ecompass_stop_callback, NULL);
-  psleep(5); // give the compass some time to stop
+  psleep(5);  // give the compass some time to stop
 
   char buffer[40];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%"PRId32" degrees",
-           (s_last_heading * 360) / TRIG_MAX_ANGLE);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRId32 " degrees",
+                           (s_last_heading * 360) / TRIG_MAX_ANGLE);
 
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Mx=%d, My=%d, Mz=%d",
-      s_last_mag_sample.x, s_last_mag_sample.y, s_last_mag_sample.z);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "Mx=%d, My=%d, Mz=%d", s_last_mag_sample.x,
+                           s_last_mag_sample.y, s_last_mag_sample.z);
 }
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW

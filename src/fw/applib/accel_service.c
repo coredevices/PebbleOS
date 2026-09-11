@@ -28,7 +28,7 @@ static void prv_assert_session_task(void) {
 // --------------------------------------------------------------------------------------------
 // Return the session ref for the given task. This should ONLY be used by 3rd party tasks
 // (app or worker).
-AccelServiceState * accel_service_private_get_session(PebbleTask task) {
+AccelServiceState *accel_service_private_get_session(PebbleTask task) {
   if (task == PebbleTask_Unknown) {
     task = pebble_task_get_current();
   }
@@ -85,12 +85,12 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
       (state->prev_timestamp_ms != 0) ? timestamp_ms - state->prev_timestamp_ms : 0;
   state->prev_timestamp_ms = timestamp_ms;
 
-  PBL_LOG_VERBOSE("got %d samples for task %d at %ld (%lu ms delta)",
-                  (int)num_samples, (int)pebble_task_get_current(), (uint32_t)timestamp_ms,
-                  time_since_last_sample);
+  PBL_LOG_VERBOSE("got %d samples for task %d at %ld (%lu ms delta)", (int)num_samples,
+                  (int)pebble_task_get_current(), (uint32_t)timestamp_ms, time_since_last_sample);
 
-  for (unsigned int i=0; i<num_samples; i++) {
-    PBL_LOG_VERBOSE("  => x:%d, y:%d, z:%d", state->raw_data[i].x, state->raw_data[i].y, state->raw_data[i].z);
+  for (unsigned int i = 0; i < num_samples; i++) {
+    PBL_LOG_VERBOSE("  => x:%d, y:%d, z:%d", state->raw_data[i].x, state->raw_data[i].y,
+                    state->raw_data[i].z);
   }
 
   if (state->raw_data_handler_deprecated) {
@@ -102,12 +102,12 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
   } else {
     AccelData data[num_samples];
     for (uint32_t i = 0; i < num_samples; i++) {
-      data[i] = (AccelData) {
-        .x = state->raw_data[i].x,
-        .y = state->raw_data[i].y,
-        .z = state->raw_data[i].z,
-        .timestamp = timestamp_ms,
-        .did_vibrate = sys_vibe_history_was_vibrating(timestamp_ms)
+      data[i] = (AccelData){
+          .x = state->raw_data[i].x,
+          .y = state->raw_data[i].y,
+          .z = state->raw_data[i].z,
+          .timestamp = timestamp_ms,
+          .did_vibrate = sys_vibe_history_was_vibrating(timestamp_ms)
       };
       timestamp_ms += time_interval_ms;
     }
@@ -134,8 +134,8 @@ static void prv_do_data_handle(void *context) {
     return;
   }
 
-  PBL_ASSERTN(state->data_handler != NULL || state->raw_data_handler != NULL
-              || state->raw_data_handler_deprecated != NULL);
+  PBL_ASSERTN(state->data_handler != NULL || state->raw_data_handler != NULL ||
+              state->raw_data_handler_deprecated != NULL);
 
   uint16_t time_interval_ms = 1000 / state->sampling_rate;
 
@@ -144,45 +144,45 @@ static void prv_do_data_handle(void *context) {
   do {
     num_processed = prv_do_data_handle_chunk(state, time_interval_ms);
   } while (num_processed);
-
 }
 
 // -----------------------------------------------------------------------------------------------
 int accel_service_set_sampling_rate(AccelSamplingRate rate) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   return accel_session_set_sampling_rate(session, rate);
 }
 
 // ----------------------------------------------------------------------------------------------
 int accel_service_set_samples_per_update(uint32_t samples_per_update) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   return accel_session_set_samples_per_update(session, samples_per_update);
 }
 
 // ----------------------------------------------------------------------------------------------
 static void prv_shared_subscribe(AccelServiceState *state, AccelSamplingRate sampling_rate,
                                  uint32_t samples_per_update, PebbleTask handler_task) {
-  state->manager_state = sys_accel_manager_data_subscribe(
-      sampling_rate, prv_do_data_handle, state, handler_task);
+  state->manager_state =
+      sys_accel_manager_data_subscribe(sampling_rate, prv_do_data_handle, state, handler_task);
 
   accel_session_set_samples_per_update((AccelServiceState *)state, samples_per_update);
 }
 
 // ----------------------------------------------------------------------------------------------
 void accel_data_service_subscribe(uint32_t samples_per_update, AccelDataHandler handler) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_data_subscribe(session, samples_per_update, handler);
 }
 
 // ----------------------------------------------------------------------------------------------
 void accel_raw_data_service_subscribe(uint32_t samples_per_update, AccelRawDataHandler handler) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, samples_per_update, handler);
 }
 
 // ----------------------------------------------------------------------------------------------
-void accel_data_service_subscribe__deprecated(uint32_t samples_per_update, AccelRawDataHandler__deprecated handler) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+void accel_data_service_subscribe__deprecated(uint32_t samples_per_update,
+                                              AccelRawDataHandler__deprecated handler) {
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   AccelServiceState *state = (AccelServiceState *)session;
 
   state->raw_data_handler_deprecated = handler;
@@ -194,31 +194,31 @@ void accel_data_service_subscribe__deprecated(uint32_t samples_per_update, Accel
 
 // ----------------------------------------------------------------------------------------------
 void accel_data_service_unsubscribe(void) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_data_unsubscribe(session);
 }
 
 // ----------------------------------------------------------------------------------------------
 void accel_tap_service_subscribe(AccelTapHandler handler) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_shake_subscribe(session, handler);
 }
 
 // ----------------------------------------------------------------------------------------------
 void accel_tap_service_unsubscribe(void) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_shake_unsubscribe(session);
 }
 
 // ----------------------------------------------------------------------------------------------
 void accel_double_tap_service_subscribe(AccelTapHandler handler) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_double_tap_subscribe(session, handler);
 }
 
 // ----------------------------------------------------------------------------------------------
 void accel_double_tap_service_unsubscribe(void) {
-  AccelServiceState * session = accel_service_private_get_session(PebbleTask_Unknown);
+  AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
   accel_session_double_tap_unsubscribe(session);
 }
 
@@ -240,16 +240,17 @@ int accel_service_peek(AccelData *accel_data) {
 
 // ----------------------------------------------------------------------------------------------
 void accel_service_state_init(AccelServiceState *state) {
-  *state = (AccelServiceState) {
-    .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
-    .accel_shake_info = {
-        .type = PEBBLE_ACCEL_SHAKE_EVENT,
-        .handler = &prv_do_shake_handle,
-    },
-    .accel_double_tap_info = {
-        .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
-        .handler = &prv_do_double_tap_handle,
-    }
+  *state = (AccelServiceState){
+      .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
+      .accel_shake_info =
+          {
+              .type = PEBBLE_ACCEL_SHAKE_EVENT,
+              .handler = &prv_do_shake_handle,
+          },
+      .accel_double_tap_info = {
+          .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
+          .handler = &prv_do_double_tap_handle,
+      }
   };
 }
 
@@ -272,28 +273,29 @@ static void prv_session_do_double_tap_handle(PebbleEvent *e, void *context) {
 }
 
 // -----------------------------------------------------------------------------------------------
-AccelServiceState * accel_session_create(void) {
+AccelServiceState *accel_session_create(void) {
   prv_assert_session_task();
   AccelServiceState *state = kernel_malloc_check(sizeof(AccelServiceState));
 
-  *state = (AccelServiceState) {
-    .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
-    .accel_shake_info = {
-        .type = PEBBLE_ACCEL_SHAKE_EVENT,
-        .handler = &prv_session_do_shake_handle,
-        .context = state,
-    },
-    .accel_double_tap_info = {
-        .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
-        .handler = &prv_session_do_double_tap_handle,
-        .context = state,
-    },
+  *state = (AccelServiceState){
+      .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
+      .accel_shake_info =
+          {
+              .type = PEBBLE_ACCEL_SHAKE_EVENT,
+              .handler = &prv_session_do_shake_handle,
+              .context = state,
+          },
+      .accel_double_tap_info = {
+          .type = PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
+          .handler = &prv_session_do_double_tap_handle,
+          .context = state,
+      },
   };
   return state;
 }
 
 // -----------------------------------------------------------------------------------------------
-void accel_session_delete(AccelServiceState * session) {
+void accel_session_delete(AccelServiceState *session) {
   prv_assert_session_task();
 
   // we better have unsubscribed at this point
@@ -307,7 +309,7 @@ void accel_session_delete(AccelServiceState * session) {
 }
 
 // ----------------------------------------------------------------------------------------------
-void accel_session_shake_subscribe(AccelServiceState * session, AccelTapHandler handler) {
+void accel_session_shake_subscribe(AccelServiceState *session, AccelTapHandler handler) {
   AccelServiceState *state = (AccelServiceState *)session;
   state->shake_handler = handler;
   event_service_client_subscribe(&state->accel_shake_info);
@@ -342,9 +344,8 @@ void accel_session_data_subscribe(AccelServiceState *state, uint32_t samples_per
 }
 
 // -----------------------------------------------------------------------------------------------
-void accel_session_raw_data_subscribe(
-    AccelServiceState *state, AccelSamplingRate sampling_rate, uint32_t samples_per_update,
-    AccelRawDataHandler handler) {
+void accel_session_raw_data_subscribe(AccelServiceState *state, AccelSamplingRate sampling_rate,
+                                      uint32_t samples_per_update, AccelRawDataHandler handler) {
   state->raw_data_handler = handler;
   state->raw_data_handler_deprecated = NULL;
   state->data_handler = NULL;
@@ -373,8 +374,8 @@ void accel_session_data_unsubscribe(AccelServiceState *state) {
 
 // -----------------------------------------------------------------------------------------------
 int accel_session_set_sampling_rate(AccelServiceState *state, AccelSamplingRate rate) {
-  if (!state->manager_state || (!state->data_handler && !state->raw_data_handler
-      && !state->raw_data_handler_deprecated)) {
+  if (!state->manager_state ||
+      (!state->data_handler && !state->raw_data_handler && !state->raw_data_handler_deprecated)) {
     return -1;
   }
   state->sampling_rate = rate;
@@ -383,16 +384,14 @@ int accel_session_set_sampling_rate(AccelServiceState *state, AccelSamplingRate 
 
 // -----------------------------------------------------------------------------------------------
 int accel_session_set_samples_per_update(AccelServiceState *state, uint32_t samples_per_update) {
-
   uint32_t max_samples_per_update = sys_accel_manager_get_max_samples_per_update();
   if (samples_per_update > max_samples_per_update) {
     APP_LOG(LOG_LEVEL_WARNING, "%d samples per update requested, max is %d",
             (int)samples_per_update, (int)max_samples_per_update);
     samples_per_update = max_samples_per_update;
   }
-  if (!state->manager_state
-      || (samples_per_update > 0 && !state->data_handler && !state->raw_data_handler
-          && !state->raw_data_handler_deprecated)) {
+  if (!state->manager_state || (samples_per_update > 0 && !state->data_handler &&
+                                !state->raw_data_handler && !state->raw_data_handler_deprecated)) {
     return -1;
   }
   AccelRawData *old_buf = state->raw_data;

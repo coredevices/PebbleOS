@@ -17,10 +17,8 @@ FrameBuffer *fake_graphics_context_get_framebuffer(void);
 
 void fake_graphics_context_init(void);
 
-#define FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP(name) ({ \
-  cl_check(gbitmap_pbi_eq(&fake_graphics_context_get_context()->dest_bitmap, name)); \
-})
+#define FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP(name) \
+  ({ cl_check(gbitmap_pbi_eq(&fake_graphics_context_get_context()->dest_bitmap, name)); })
 
-#define FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE() ({ \
-  cl_check(gbitmap_pbi_eq(&fake_graphics_context_get_context()->dest_bitmap, TEST_PBI_FILE)); \
-})
+#define FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE() \
+  ({ cl_check(gbitmap_pbi_eq(&fake_graphics_context_get_context()->dest_bitmap, TEST_PBI_FILE)); })

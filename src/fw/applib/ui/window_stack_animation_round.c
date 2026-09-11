@@ -75,7 +75,7 @@ static GPoint prv_displacement_from(CompositorTransitionDirection direction) {
 }
 
 static CompositorTransitionDirection prv_direction_from_context(
-  const WindowTransitioningContext *context) {
+    const WindowTransitioningContext *context) {
   return ((WindowTransitionRoundImplementation *)context->implementation)->transition_direction;
 }
 
@@ -116,8 +116,8 @@ static void prv_window_transition_animation_update(Animation *animation,
 
 static Animation *prv_window_transition_create_animation(WindowTransitioningContext *context) {
   static AnimationImplementation const impl = {
-    .setup = prv_window_transition_animation_setup,
-    .update = prv_window_transition_animation_update,
+      .setup = prv_window_transition_animation_setup,
+      .update = prv_window_transition_animation_update,
   };
 
   Animation *animation = animation_create();
@@ -130,17 +130,19 @@ static Animation *prv_window_transition_create_animation(WindowTransitioningCont
 }
 
 const WindowTransitionRoundImplementation g_window_transition_default_push_implementation_round = {
-  .implementation =  {
-    .create_animation = prv_window_transition_create_animation,
-    .render = prv_window_transition_render,
-  },
-  .transition_direction = CompositorTransitionDirectionLeft,
+    .implementation =
+        {
+            .create_animation = prv_window_transition_create_animation,
+            .render = prv_window_transition_render,
+        },
+    .transition_direction = CompositorTransitionDirectionLeft,
 };
 
 const WindowTransitionRoundImplementation g_window_transition_default_pop_implementation_round = {
-  .implementation =  {
-    .create_animation = prv_window_transition_create_animation,
-    .render = prv_window_transition_render,
-  },
-  .transition_direction = CompositorTransitionDirectionRight,
+    .implementation =
+        {
+            .create_animation = prv_window_transition_create_animation,
+            .render = prv_window_transition_render,
+        },
+    .transition_direction = CompositorTransitionDirectionRight,
 };

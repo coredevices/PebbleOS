@@ -28,7 +28,7 @@ static FrameBuffer *fb = NULL;
 
 void test_framebuffer_legacy__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) { LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS });
+  framebuffer_init(fb, &(GSize){LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS});
 }
 
 void test_framebuffer_legacy__cleanup(void) {

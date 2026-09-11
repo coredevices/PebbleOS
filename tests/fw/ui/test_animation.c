@@ -44,9 +44,10 @@
 
 #define DEBUG_TEST
 #ifdef DEBUG_TEST
-#define DPRINTF(fmt, ...)                                       \
-    do { printf("%s: " fmt , __func__, ## __VA_ARGS__); \
-    } while (0)
+#define DPRINTF(fmt, ...)                        \
+  do {                                           \
+    printf("%s: " fmt, __func__, ##__VA_ARGS__); \
+  } while (0)
 #else
 #define DPRINTF(fmt, ...)
 #endif
@@ -54,14 +55,14 @@
 // Use our own macro instead of the abs function to avoid issues with non-int values.
 #define ABSOLUTE_VALUE(x) (((x) > 0) ? (x) : -(x))
 
-#define MIN_FRAME_INTERVAL_MS  33
+#define MIN_FRAME_INTERVAL_MS 33
 
 #define TEST_ANIMATION_NORMALIZED_HIGH 50000
-#define TEST_ANIMATION_NORMALIZED_LOW  5000
+#define TEST_ANIMATION_NORMALIZED_LOW 5000
 
 static PebbleEvent s_last_event;
 
-bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e) {
+bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   s_last_event = *e;
   return true;
 }
@@ -71,7 +72,7 @@ bool process_manager_compiled_with_legacy2_sdk(void) {
 }
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
-  return (GDrawState) { };
+  return (GDrawState){};
 }
 
 bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
@@ -86,13 +87,11 @@ void window_schedule_render(struct Window *window) {
 
 TimerID animation_service_test_get_timer_id(void);
 
-
 // --------------------------------------------------------------------------------------
 static void cl_assert_equal_point(const GPoint a, const GPoint b) {
   cl_assert_equal_i(a.x, b.x);
   cl_assert_equal_i(a.y, b.y);
 }
-
 
 // --------------------------------------------------------------------------------------
 static void cl_assert_equal_rect(const GRect a, const GRect b) {
@@ -100,7 +99,6 @@ static void cl_assert_equal_rect(const GRect a, const GRect b) {
   cl_assert_equal_i(a.size.w, b.size.w);
   cl_assert_equal_i(a.size.h, b.size.h);
 }
-
 
 // --------------------------------------------------------------------------------------
 static void cl_assert_equal_gtransform(const GTransform a, const GTransform b) {
@@ -121,7 +119,6 @@ static void cl_assert_close_gtransform(const GTransform a, const GTransform b) {
   cl_assert(abs(a.ty.integer - b.ty.integer) < 10);
 }
 
-
 // --------------------------------------------------------------------------------------
 static void cl_assert_equal_fixed_s32_16(const Fixed_S32_16 a, const Fixed_S32_16 b) {
   cl_assert_equal_i(a.raw_value, b.raw_value);
@@ -130,7 +127,6 @@ static void cl_assert_equal_fixed_s32_16(const Fixed_S32_16 a, const Fixed_S32_1
 static void cl_assert_close_fixed_s32_16(const Fixed_S32_16 a, const Fixed_S32_16 b) {
   cl_assert(abs(a.integer - b.integer) < 10);
 }
-
 
 // --------------------------------------------------------------------------------------
 // Get current time in ms.
@@ -147,7 +143,7 @@ static void prv_advance_by_ms_no_timers(uint64_t ms_delta) {
   uint64_t target_ms = prv_now_ms() + ms_delta;
 
   // Compensate for rounding errors
-  uint64_t new_ticks = rtc_get_ticks() + (ms_delta * RTC_TICKS_HZ + 500 ) / 1000;
+  uint64_t new_ticks = rtc_get_ticks() + (ms_delta * RTC_TICKS_HZ + 500) / 1000;
   uint64_t new_ms = (new_ticks * 1000 + RTC_TICKS_HZ / 2) / RTC_TICKS_HZ;
   if (new_ms == target_ms - 1) {
     new_ticks++;
@@ -158,7 +154,6 @@ static void prv_advance_by_ms_no_timers(uint64_t ms_delta) {
   cl_assert(new_ms == target_ms);
   fake_rtc_set_ticks(new_ticks);
 }
-
 
 // --------------------------------------------------------------------------------------
 // Fire the timer used by the animation service. Before doing so, advance the time to when
@@ -187,11 +182,10 @@ static void prv_fire_animation_timer(void) {
   evt.callback.callback(evt.callback.data);
 }
 
-
 // --------------------------------------------------------------------------------------
 // Advance to the given time, firing all timers that are scheduled along the way
 static void prv_advance_to_ms_with_timers(uint64_t dst_time) {
-  uint64_t  now = prv_now_ms();
+  uint64_t now = prv_now_ms();
 
   while (now < dst_time) {
     TimerID sys_timer_id = animation_service_test_get_timer_id();
@@ -220,20 +214,19 @@ static void prv_advance_to_ms_with_timers(uint64_t dst_time) {
   }
 }
 
-
 // =============================================================================================
 // Started. stopped, setup, and teardown handler call histories. Every time a handler runs, we
 // append the time animation handle and timestamp to the history list.
 typedef struct {
-  uint64_t  fired_time_ms;
+  uint64_t fired_time_ms;
   uint32_t fire_order;
-  bool finished;        // only applicable for stopped handlers
-  void *context;        // For update handler, this is the distance arg
-  Animation *animation; // which animation
+  bool finished;         // only applicable for stopped handlers
+  void *context;         // For update handler, this is the distance arg
+  Animation *animation;  // which animation
 } AnimTestHandlerEntry;
-#define MAX_HANDLER_CALLS   500
+#define MAX_HANDLER_CALLS 500
 typedef struct {
-  uint32_t  num_calls;
+  uint32_t num_calls;
   AnimTestHandlerEntry entries[MAX_HANDLER_CALLS];
 } AnimTestHandlerHistory;
 
@@ -259,19 +252,19 @@ static void prv_clear_handler_histories(void) {
 static void prv_add_handler_entry(AnimTestHandlerHistory *history, Animation *animation,
                                   bool finished, void *context) {
   cl_assert(history->num_calls < MAX_HANDLER_CALLS);
-  history->entries[history->num_calls++] = (AnimTestHandlerEntry) {
-    .fired_time_ms = prv_now_ms(),
-    .fire_order = s_fire_order_index++,
-    .finished = finished,
-    .context = context,
-    .animation = animation
+  history->entries[history->num_calls++] = (AnimTestHandlerEntry){
+      .fired_time_ms = prv_now_ms(),
+      .fire_order = s_fire_order_index++,
+      .finished = finished,
+      .context = context,
+      .animation = animation
   };
 }
 
 // -------------------------------------------------------------------------
 // Count how many entries were entered for the given animation
 static uint32_t prv_count_handler_entries(AnimTestHandlerHistory *history, Animation *animation) {
-  uint32_t  count = 0;
+  uint32_t count = 0;
 
   for (int i = 0; i < history->num_calls; i++) {
     if (!animation || history->entries[i].animation == animation) {
@@ -284,8 +277,8 @@ static uint32_t prv_count_handler_entries(AnimTestHandlerHistory *history, Anima
 // -------------------------------------------------------------------------
 // Get the last entry for the given handle
 static AnimTestHandlerEntry *prv_last_handler_entry(AnimTestHandlerHistory *history,
-          Animation *animation) {
-  int last_entry=-1;
+                                                    Animation *animation) {
+  int last_entry = -1;
   for (int i = 0; i < history->num_calls; i++) {
     if (!animation || history->entries[i].animation == animation) {
       last_entry = i;
@@ -309,7 +302,6 @@ static uint32_t prv_last_update_distance(Animation *animation) {
   }
 }
 
-
 // =============================================================================================
 // Handlers
 
@@ -317,21 +309,21 @@ static uint32_t prv_last_update_distance(Animation *animation) {
 // Started handler
 static void prv_started_handler(Animation *animation, void *context) {
   prv_add_handler_entry(&s_started_handler_calls, animation, false, context);
-  DPRINTF("%"PRIu64" ms: Executing started handler for %d\n", prv_now_ms(), (int)animation);
+  DPRINTF("%" PRIu64 " ms: Executing started handler for %d\n", prv_now_ms(), (int)animation);
 }
 
 // --------------------------------------------------------------------------------------
 // Stopped handler
 static void prv_stopped_handler(Animation *animation, bool finished, void *context) {
   prv_add_handler_entry(&s_stopped_handler_calls, animation, finished, context);
-  DPRINTF("%"PRIu64" ms: Executing stopped handler for %d\n", prv_now_ms(), (int)animation);
+  DPRINTF("%" PRIu64 " ms: Executing stopped handler for %d\n", prv_now_ms(), (int)animation);
 }
 
 // --------------------------------------------------------------------------------------
 // Stopped handler with check for finish
 static void prv_stopped_handler_check_finished(Animation *animation, bool finished, void *context) {
   prv_add_handler_entry(&s_stopped_handler_calls, animation, finished, context);
-  DPRINTF("%"PRIu64" ms: Executing stopped handler for %d\n", prv_now_ms(), (int)animation);
+  DPRINTF("%" PRIu64 " ms: Executing stopped handler for %d\n", prv_now_ms(), (int)animation);
   cl_assert(finished);
   AnimationPrivate *animation_private = animation_private_animation_find(animation);
   if (animation_private) {
@@ -346,28 +338,27 @@ static void prv_stopped_handler_reschedule(Animation *animation, bool finished, 
   prv_add_handler_entry(&s_stopped_handler_calls, animation, finished, context);
 
   if (s_stopped_handler_calls.num_calls == 1) {
-    DPRINTF("%"PRIu64" ms: Rescheduling from stopped handler for %d\n", prv_now_ms(),
+    DPRINTF("%" PRIu64 " ms: Rescheduling from stopped handler for %d\n", prv_now_ms(),
             (int)animation);
     animation_schedule(animation);
   } else {
-    DPRINTF("%"PRIu64" ms: NOT rescheduling from stopped handler for %d\n", prv_now_ms(),
+    DPRINTF("%" PRIu64 " ms: NOT rescheduling from stopped handler for %d\n", prv_now_ms(),
             (int)animation);
   }
-
 }
 
 // --------------------------------------------------------------------------------------
 // setup handler
 void prv_setup_handler(Animation *animation) {
   prv_add_handler_entry(&s_setup_handler_calls, animation, false, NULL);
-  DPRINTF("%"PRIu64" ms: Executing setup handler for %d\n", prv_now_ms(), (int)animation);
+  DPRINTF("%" PRIu64 " ms: Executing setup handler for %d\n", prv_now_ms(), (int)animation);
 }
 
 // --------------------------------------------------------------------------------------
 // teardown handler
 void prv_teardown_handler(Animation *animation) {
   prv_add_handler_entry(&s_teardown_handler_calls, animation, false, NULL);
-  DPRINTF("%"PRIu64" ms: Executing teardown handler for %d\n", prv_now_ms(), (int)animation);
+  DPRINTF("%" PRIu64 " ms: Executing teardown handler for %d\n", prv_now_ms(), (int)animation);
 }
 
 // --------------------------------------------------------------------------------------
@@ -382,10 +373,9 @@ void prv_update_handler(Animation *animation, const AnimationProgress distance) 
 
   prv_add_handler_entry(&s_update_handler_calls, animation, false,
                         (void *)(uintptr_t)distance /*context*/);
-  DPRINTF("%"PRIu64" ms: Executing update handler for %d, distance: %d\n", prv_now_ms(),
+  DPRINTF("%" PRIu64 " ms: Executing update handler for %d, distance: %d\n", prv_now_ms(),
           (int)animation, (int)distance);
 }
-
 
 // --------------------------------------------------------------------------------------
 static int s_custom_curve_call_count;
@@ -395,7 +385,6 @@ static AnimationProgress prv_custom_curve(AnimationProgress distance) {
   s_custom_curve_call_count++;
   return distance;
 }
-
 
 // --------------------------------------------------------------------------------------
 // Count how many animations have been allocated
@@ -429,7 +418,6 @@ static GPoint prv_gpoint_getter(GPoint *p) {
   return *p;
 }
 
-
 // --------------------------------------------------------------------------------------
 static void prv_gtransform_setter(GTransform *p, GTransform value) {
   *p = value;
@@ -439,7 +427,6 @@ static GTransform prv_gtransform_getter(GTransform *p) {
   return *p;
 }
 
-
 // --------------------------------------------------------------------------------------
 static void prv_gcolor8_setter(GColor8 *p, GColor8 value) {
   *p = value;
@@ -448,7 +435,6 @@ static void prv_gcolor8_setter(GColor8 *p, GColor8 value) {
 static GColor8 prv_gcolor8_getter(GColor8 *p) {
   return *p;
 }
-
 
 // --------------------------------------------------------------------------------------
 static void prv_fixed_s32_16_setter(Fixed_S32_16 *p, Fixed_S32_16 value) {
@@ -468,22 +454,20 @@ static uint32_t prv_uint32_getter(uint32_t *p) {
   return *p;
 }
 
-
-
 // --------------------------------------------------------------------------------------
 // Helper function for creating a int16 property animation
 static Animation *prv_create_test_animation(void) {
   Animation *h;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   static const AnimationImplementation implementation = {
-    .setup = prv_setup_handler,
-    .update = prv_update_handler,
-    .teardown = prv_teardown_handler
+      .setup = prv_setup_handler,
+      .update = prv_update_handler,
+      .teardown = prv_teardown_handler
   };
 
   h = animation_create();
@@ -493,13 +477,12 @@ static Animation *prv_create_test_animation(void) {
   animation_set_implementation(h, &implementation);
 
   return h;
-} 
-
+}
 
 // --------------------------------------------------------------------------------------
 // Setup. Called before each of the tests execute
 void test_animation__initialize(void) {
-  fake_rtc_init(1024*200 /*ticks */, 200 /*seconds */);
+  fake_rtc_init(1024 * 200 /*ticks */, 200 /*seconds */);
 
   AnimationState *state = kernel_applib_get_animation_state();
   animation_private_state_init(state);
@@ -512,15 +495,12 @@ void test_animation__initialize(void) {
   prv_clear_handler_histories();
 }
 
-
 // -------------------------------------------------------------------------------------
 // Cleanup, called after each test executes
 void test_animation__cleanup(void) {
   // Make sure no animations were left over
   cl_assert_equal_i(prv_count_animations(), 0);
 }
-
-
 
 // --------------------------------------------------------------------------------------
 // Test a basic layer_frame property animation
@@ -536,20 +516,19 @@ void test_animation__property_layer_frame(void) {
   void *subject;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   memset(&layer, 0, sizeof(layer));
-  from_r = GRect(0, 0, 100, 200);     // x, y, width, height
-  to_r = GRect(1000, 2000, 100, 200); // x, y, width, height
+  from_r = GRect(0, 0, 100, 200);      // x, y, width, height
+  to_r = GRect(1000, 2000, 100, 200);  // x, y, width, height
   prop_h = property_animation_create_layer_frame(&layer, &from_r, &to_r);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &layer;
   animation_set_handlers(h, handlers, context);
   animation_set_duration(h, duration);
   animation_set_auto_destroy(h, false);
-
 
   // Clone it and make sure the clone is correct
   PropertyAnimation *clone_h = (PropertyAnimation *)animation_clone((Animation *)prop_h);
@@ -561,19 +540,17 @@ void test_animation__property_layer_frame(void) {
   cl_assert(subject == &layer);
   property_animation_destroy(clone_h);
 
-
   prv_clear_handler_histories();
 
   animation_schedule(h);
   int max_loops = 20;
-  uint64_t  start_ms = prv_now_ms();
-  uint64_t  time_ms;
+  uint64_t start_ms = prv_now_ms();
+  uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls == 0) {
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
-    DPRINTF("%"PRIu64": frame at: %d, %d, %d %d\n", time_ms - start_ms,
-            layer.frame.origin.x, layer.frame.origin.y,
-            layer.frame.size.w, layer.frame.size.h);
+    DPRINTF("%" PRIu64 ": frame at: %d, %d, %d %d\n", time_ms - start_ms, layer.frame.origin.x,
+            layer.frame.origin.y, layer.frame.size.w, layer.frame.size.h);
 
     cl_assert(max_loops > 0);
     max_loops--;
@@ -583,15 +560,16 @@ void test_animation__property_layer_frame(void) {
   cl_assert_equal_point(layer.frame.origin, to_r.origin);
 
   // Make sure our started and stopped handlers got called
-  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_started_handler_calls.entries[0].fired_time_ms - start_ms <= 1);
   cl_assert(s_started_handler_calls.entries[0].context == context);
 
-  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_stopped_handler_calls.entries[0].fired_time_ms - start_ms >= duration);
   cl_assert(s_stopped_handler_calls.entries[0].context == context);
   cl_assert(s_stopped_handler_calls.entries[0].finished);
-
 
   // -------------------------------------------------------------------------------------------
   // Test the accessor functions
@@ -603,7 +581,6 @@ void test_animation__property_layer_frame(void) {
 
   property_animation_get_subject(prop_h, &subject);
   cl_assert(subject == &layer);
-
 
   GRect set_r = GRect(1, 2, 3, 4);
   property_animation_set_from_grect(prop_h, &set_r);
@@ -623,12 +600,10 @@ void test_animation__property_layer_frame(void) {
   property_animation_get_subject(prop_h, &subject);
   cl_assert(subject == (void *)0x11223344);
 
-
   // Destroy it
   animation_destroy(h);
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a basic int16 property animation
@@ -646,20 +621,22 @@ void test_animation__property_int16(void) {
   const int delay = 25;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .setup = prv_setup_handler,
-      .update = (AnimationUpdateImplementation) property_animation_update_int16,
-      .teardown = prv_teardown_handler
-    },
-    .accessors = {
-      .setter = { .int16 = (const Int16Setter) prv_int16_setter, },
-      .getter = { .int16 = (const Int16Getter) prv_int16_getter },
-    },
+      .base =
+          {.setup = prv_setup_handler,
+           .update = (AnimationUpdateImplementation)property_animation_update_int16,
+           .teardown = prv_teardown_handler},
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_int16_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_int16_getter},
+      },
   };
 
   prop_h = property_animation_create(&implementation, &value, &start_value, &end_value);
@@ -678,13 +655,13 @@ void test_animation__property_int16(void) {
 
   int max_loops = 20;
   int num_loops = 0;
-  uint64_t  start_ms = prv_now_ms();
-  uint64_t  time_ms;
+  uint64_t start_ms = prv_now_ms();
+  uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls == 0) {
     num_loops++;
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
-    DPRINTF("%"PRIu64": value at: %d\n", time_ms - start_ms, value);
+    DPRINTF("%" PRIu64 ": value at: %d\n", time_ms - start_ms, value);
 
     cl_assert(max_loops > 0);
     max_loops--;
@@ -694,22 +671,26 @@ void test_animation__property_int16(void) {
   cl_assert_equal_i(value, 100);
 
   // Make sure our started and stopped handlers got called
-  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);;
-  cl_assert(ABSOLUTE_VALUE(s_started_handler_calls.entries[0].fired_time_ms - start_ms - delay) <= 1);
+  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);
+  ;
+  cl_assert(ABSOLUTE_VALUE(s_started_handler_calls.entries[0].fired_time_ms - start_ms - delay) <=
+            1);
 
-  cl_assert_equal_i(s_setup_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_setup_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_setup_handler_calls.entries[0].fired_time_ms - start_ms <= 1);
 
-  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_stopped_handler_calls.entries[0].fired_time_ms - start_ms >= duration);
   cl_assert(s_stopped_handler_calls.entries[0].finished);
 
-  cl_assert_equal_i(s_teardown_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_teardown_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_teardown_handler_calls.entries[0].fired_time_ms - start_ms >= duration);
 
   // Make sure the custom curve function got called
   cl_assert_equal_i(num_loops, s_custom_curve_call_count);
-
 
   // -------------------------------------------------------------------------------------------
   // Test the int16 accessor functions
@@ -719,7 +700,6 @@ void test_animation__property_int16(void) {
 
   property_animation_get_to_int16(prop_h, &test_value);
   cl_assert_equal_i(test_value, end_value);
-
 
   int16_t set_value;
   set_value = 42;
@@ -737,7 +717,6 @@ void test_animation__property_int16(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test a basic gpoint property animation
 void test_animation__property_gpoint(void) {
@@ -749,18 +728,22 @@ void test_animation__property_gpoint(void) {
   const int delay = 25;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .update = (AnimationUpdateImplementation) property_animation_update_gpoint,
-    },
-    .accessors = {
-      .setter = { .gpoint = (const GPointSetter) prv_gpoint_setter, },
-      .getter = { .gpoint = (const GPointGetter) prv_gpoint_getter },
-    },
+      .base =
+          {
+              .update = (AnimationUpdateImplementation)property_animation_update_gpoint,
+          },
+      .accessors = {
+          .setter =
+              {
+                  .gpoint = (const GPointSetter)prv_gpoint_setter,
+              },
+          .getter = {.gpoint = (const GPointGetter)prv_gpoint_getter},
+      },
   };
 
   start_value = GPoint(0, 0);
@@ -779,13 +762,13 @@ void test_animation__property_gpoint(void) {
 
   int max_loops = 20;
   int num_loops = 0;
-  uint64_t  start_ms = prv_now_ms();
-  uint64_t  time_ms;
+  uint64_t start_ms = prv_now_ms();
+  uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls == 0) {
     num_loops++;
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
-    DPRINTF("%"PRIu64": value at: (%d, %d)\n", time_ms - start_ms, value.x, value.y);
+    DPRINTF("%" PRIu64 ": value at: (%d, %d)\n", time_ms - start_ms, value.x, value.y);
 
     cl_assert(max_loops > 0);
     max_loops--;
@@ -793,7 +776,6 @@ void test_animation__property_gpoint(void) {
 
   // Make sure the frame reached the "to" state
   cl_assert_equal_point(value, end_value);
-
 
   // -------------------------------------------------------------------------------------------
   // Test the GPoint accessor functions
@@ -820,8 +802,6 @@ void test_animation__property_gpoint(void) {
 #endif
 }
 
-
-
 // --------------------------------------------------------------------------------------
 // Test a basic gtransform property animation
 void test_animation__property_gtransform(void) {
@@ -832,20 +812,24 @@ void test_animation__property_gtransform(void) {
   const int duration = 1000;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .update = (AnimationUpdateImplementation) property_animation_update_gtransform,
-    },
-    .accessors = {
-      .setter = { .int16 = (const Int16Setter) prv_gtransform_setter, },
-      .getter = { .int16 = (const Int16Getter) prv_gtransform_getter },
-    },
+      .base =
+          {
+              .update = (AnimationUpdateImplementation)property_animation_update_gtransform,
+          },
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_gtransform_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_gtransform_getter},
+      },
   };
 
   start_value = GTransformFromNumbers(1, 2, 3, 4, 5, 6);
@@ -859,9 +843,8 @@ void test_animation__property_gtransform(void) {
   animation_set_duration(h, duration);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(h);
-
 
   // Test the accessor functions
   GTransform test_value;
@@ -878,22 +861,20 @@ void test_animation__property_gtransform(void) {
   cl_assert_equal_gtransform(test_value, GTransformIdentity());
   property_animation_set_from_gtransform(prop_h, &start_value);
 
-
   // Start, we should start at the start values
   prv_advance_to_ms_with_timers(start_ms + 1);
   cl_assert_equal_gtransform(value, start_value);
 
   // Halfway through
-  prv_advance_to_ms_with_timers(start_ms + duration/2);
+  prv_advance_to_ms_with_timers(start_ms + duration / 2);
   cl_assert_close_gtransform(value, mid_value);
 
   // End
-  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS*2);
+  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS * 2);
   cl_assert_equal_gtransform(value, end_value);
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a basic Fixed_S32_16 property animation
@@ -905,25 +886,26 @@ void test_animation__property_fixed_s32_16(void) {
   const int duration = 1000;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .update = (AnimationUpdateImplementation) property_animation_update_fixed_s32_16,
-    },
-    .accessors = {
-      .setter = { .int16 = (const Int16Setter) prv_fixed_s32_16_setter },
-      .getter = { .int16 = (const Int16Getter) prv_fixed_s32_16_getter },
-    },
+      .base =
+          {
+              .update = (AnimationUpdateImplementation)property_animation_update_fixed_s32_16,
+          },
+      .accessors = {
+          .setter = {.int16 = (const Int16Setter)prv_fixed_s32_16_setter},
+          .getter = {.int16 = (const Int16Getter)prv_fixed_s32_16_getter},
+      },
   };
 
-  start_value = ((Fixed_S32_16){ .integer = 1, .fraction = 0 });
-  end_value = ((Fixed_S32_16){ .integer = 100, .fraction = 0 });
-  mid_value = ((Fixed_S32_16){ .integer = 50, .fraction = 0 });
+  start_value = ((Fixed_S32_16){.integer = 1, .fraction = 0});
+  end_value = ((Fixed_S32_16){.integer = 100, .fraction = 0});
+  mid_value = ((Fixed_S32_16){.integer = 50, .fraction = 0});
   value = end_value;
   prop_h = property_animation_create(&implementation, &value, &start_value, NULL);
   Animation *h = property_animation_get_animation(prop_h);
@@ -932,9 +914,8 @@ void test_animation__property_fixed_s32_16(void) {
   animation_set_duration(h, duration);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(h);
-
 
   // Test the accessor functions
   Fixed_S32_16 test_value;
@@ -951,22 +932,20 @@ void test_animation__property_fixed_s32_16(void) {
   cl_assert_equal_fixed_s32_16(test_value, FIXED_S32_16_ONE);
   property_animation_set_from_fixed_s32_16(prop_h, &start_value);
 
-
   // Start, we should start at the start values
   prv_advance_to_ms_with_timers(start_ms + 1);
   cl_assert_equal_fixed_s32_16(value, start_value);
 
   // Halfway through
-  prv_advance_to_ms_with_timers(start_ms + duration/2);
+  prv_advance_to_ms_with_timers(start_ms + duration / 2);
   cl_assert_close_fixed_s32_16(value, mid_value);
 
   // End
-  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS*2);
+  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS * 2);
   cl_assert_equal_fixed_s32_16(value, end_value);
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a basic uint32_t property animation
@@ -978,20 +957,21 @@ void test_animation__property_uint32(void) {
   const int duration = 1000;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .update = (AnimationUpdateImplementation) property_animation_update_uint32,
-    },
-    .accessors = {
-      .setter = { .uint32 = (const UInt32Setter) prv_uint32_setter },
-      .getter = { .uint32 = (const UInt32Getter) prv_uint32_getter },
-    },
+      .base =
+          {
+              .update = (AnimationUpdateImplementation)property_animation_update_uint32,
+          },
+      .accessors = {
+          .setter = {.uint32 = (const UInt32Setter)prv_uint32_setter},
+          .getter = {.uint32 = (const UInt32Getter)prv_uint32_getter},
+      },
   };
 
   start_value = 1;
@@ -1005,9 +985,8 @@ void test_animation__property_uint32(void) {
   animation_set_duration(h, duration);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(h);
-
 
   // Test the accessor functions
   uint32_t test_value;
@@ -1023,22 +1002,20 @@ void test_animation__property_uint32(void) {
   cl_assert_equal_i(test_value, 1);
   property_animation_set_from_uint32(prop_h, &start_value);
 
-
   // Start, we should start at the start values
   prv_advance_to_ms_with_timers(start_ms + 1);
   cl_assert_equal_i(value, start_value);
 
   // Halfway through
-  prv_advance_to_ms_with_timers(start_ms + duration/2);
+  prv_advance_to_ms_with_timers(start_ms + duration / 2);
   cl_assert(abs((int32_t)value - (int32_t)mid_value) < 10);
 
   // End
-  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS*2);
+  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS * 2);
   cl_assert_equal_i(value, end_value);
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a basic gcolor8 property animation
@@ -1050,23 +1027,27 @@ void test_animation__property_gcolor8(void) {
   const int duration = 1000;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .update = (AnimationUpdateImplementation) property_animation_update_gcolor8,
-    },
-    .accessors = {
-      .setter = { .gcolor8 = (const GColor8Setter) prv_gcolor8_setter, },
-      .getter = { .gcolor8 = (const GColor8Getter) prv_gcolor8_getter },
-    },
+      .base =
+          {
+              .update = (AnimationUpdateImplementation)property_animation_update_gcolor8,
+          },
+      .accessors = {
+          .setter =
+              {
+                  .gcolor8 = (const GColor8Setter)prv_gcolor8_setter,
+              },
+          .getter = {.gcolor8 = (const GColor8Getter)prv_gcolor8_getter},
+      },
   };
 
-  start_value = (GColor8) {.a=0, .r=0, .g=0, .b=0};
-  end_value = (GColor8) {.a=3, .r=3, .g=3, .b=3};
-  mid_value = (GColor8) {.a=1, .r=1, .g=1, .b=1};
+  start_value = (GColor8){.a = 0, .r = 0, .g = 0, .b = 0};
+  end_value = (GColor8){.a = 3, .r = 3, .g = 3, .b = 3};
+  mid_value = (GColor8){.a = 1, .r = 1, .g = 1, .b = 1};
   value = end_value;
   prop_h = property_animation_create(&implementation, &value, &start_value, NULL);
   Animation *h = property_animation_get_animation(prop_h);
@@ -1075,9 +1056,8 @@ void test_animation__property_gcolor8(void) {
   animation_set_duration(h, duration);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(h);
-
 
   // Test the accessor functions
   GColor8 test_value;
@@ -1088,28 +1068,25 @@ void test_animation__property_gcolor8(void) {
   cl_assert(gcolor_equal(test_value, end_value));
 
   GColor8 set_value;
-  set_value = (GColor8) {.a=0, .r=1, .g=2, .b=3};
+  set_value = (GColor8){.a = 0, .r = 1, .g = 2, .b = 3};
   property_animation_set_from_gcolor8(prop_h, &set_value);
   property_animation_get_from_gcolor8(prop_h, &test_value);
   cl_assert(gcolor_equal(test_value, set_value));
   property_animation_set_from_gcolor8(prop_h, &start_value);
-
 
   // Start, we should start at the start values
   prv_advance_to_ms_with_timers(start_ms + 1);
   cl_assert(gcolor_equal(value, start_value));
 
   // Halfway through
-  prv_advance_to_ms_with_timers(start_ms + duration/2);
+  prv_advance_to_ms_with_timers(start_ms + duration / 2);
   cl_assert(gcolor_equal(value, mid_value));
 
   // End
-  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS*2);
+  prv_advance_to_ms_with_timers(start_ms + duration + MIN_FRAME_INTERVAL_MS * 2);
   cl_assert(gcolor_equal(value, end_value));
 #endif
 }
-
-
 
 // --------------------------------------------------------------------------------------
 // Test that the schedule/unschedule calls work correctly.
@@ -1124,13 +1101,13 @@ void test_animation__unschedule(void) {
   const int duration = 500;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   memset(&layer, 0, sizeof(layer));
-  from_r = GRect(0, 0, 100, 200);     // x, y, width, height
-  to_r = GRect(1000, 2000, 100, 200); // x, y, width, height
+  from_r = GRect(0, 0, 100, 200);      // x, y, width, height
+  to_r = GRect(1000, 2000, 100, 200);  // x, y, width, height
   prop_h = property_animation_create_layer_frame(&layer, &from_r, &to_r);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &layer;
@@ -1141,22 +1118,21 @@ void test_animation__unschedule(void) {
   prv_clear_handler_histories();
 
   animation_schedule(h);
-  uint64_t  start_ms = prv_now_ms();
-  uint64_t  unschedule_time = 0;
-  uint64_t  time_ms;
+  uint64_t start_ms = prv_now_ms();
+  uint64_t unschedule_time = 0;
+  uint64_t time_ms;
   for (int num_loops = 0; num_loops < 10; num_loops++) {
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
-    DPRINTF("%"PRIu64": frame at: %d, %d, %d %d\n", time_ms - start_ms,
-            layer.frame.origin.x, layer.frame.origin.y,
-            layer.frame.size.w, layer.frame.size.h);
+    DPRINTF("%" PRIu64 ": frame at: %d, %d, %d %d\n", time_ms - start_ms, layer.frame.origin.x,
+            layer.frame.origin.y, layer.frame.size.w, layer.frame.size.h);
 
     // Unschedule after 2 iterations
     if (num_loops == 2) {
-        DPRINTF("%"PRIu64": Unscheduling now\n", prv_now_ms());
-        animation_unschedule(h);
-        stopped_at_r = layer.frame;
-        unschedule_time = prv_now_ms();
+      DPRINTF("%" PRIu64 ": Unscheduling now\n", prv_now_ms());
+      animation_unschedule(h);
+      stopped_at_r = layer.frame;
+      unschedule_time = prv_now_ms();
     }
   }
 
@@ -1164,11 +1140,13 @@ void test_animation__unschedule(void) {
   cl_assert_equal_point(layer.frame.origin, stopped_at_r.origin);
 
   // Make sure our started and stopped handlers got called at
-  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_started_handler_calls.entries[0].fired_time_ms - start_ms <= 1);
   cl_assert(s_started_handler_calls.entries[0].context == context);
 
-  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_stopped_handler_calls.entries[0].fired_time_ms - start_ms < duration);
   cl_assert(ABSOLUTE_VALUE(s_stopped_handler_calls.entries[0].fired_time_ms - unschedule_time) < 1);
   cl_assert(!s_stopped_handler_calls.entries[0].finished);
@@ -1177,7 +1155,6 @@ void test_animation__unschedule(void) {
   animation_destroy(h);
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test that we can reschedule an animation after it completes and have it run again
@@ -1190,13 +1167,13 @@ void test_animation__reschedule(void) {
   const int duration = 100;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   memset(&layer, 0, sizeof(layer));
-  from_r = GRect(0, 0, 100, 200);     // x, y, width, height
-  to_r = GRect(1000, 2000, 100, 200); // x, y, width, height
+  from_r = GRect(0, 0, 100, 200);      // x, y, width, height
+  to_r = GRect(1000, 2000, 100, 200);  // x, y, width, height
   prop_h = property_animation_create_layer_frame(&layer, &from_r, &to_r);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &layer;
@@ -1208,14 +1185,13 @@ void test_animation__reschedule(void) {
 
   animation_schedule(h);
   int max_loops = 20;
-  uint64_t  start_ms = prv_now_ms();
-  uint64_t  time_ms;
+  uint64_t start_ms = prv_now_ms();
+  uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls == 0) {
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
-    DPRINTF("%"PRIu64": frame at: %d, %d, %d %d\n", time_ms - start_ms,
-            layer.frame.origin.x, layer.frame.origin.y,
-            layer.frame.size.w, layer.frame.size.h);
+    DPRINTF("%" PRIu64 ": frame at: %d, %d, %d %d\n", time_ms - start_ms, layer.frame.origin.x,
+            layer.frame.origin.y, layer.frame.size.w, layer.frame.size.h);
 
     cl_assert(max_loops > 0);
     max_loops--;
@@ -1235,20 +1211,20 @@ void test_animation__reschedule(void) {
   while (s_stopped_handler_calls.num_calls == 0) {
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
-    DPRINTF("%"PRIu64": frame at: %d, %d, %d %d\n", time_ms - start_ms,
-            layer.frame.origin.x, layer.frame.origin.y,
-            layer.frame.size.w, layer.frame.size.h);
+    DPRINTF("%" PRIu64 ": frame at: %d, %d, %d %d\n", time_ms - start_ms, layer.frame.origin.x,
+            layer.frame.origin.y, layer.frame.size.w, layer.frame.size.h);
 
     cl_assert(max_loops > 0);
     max_loops--;
   }
 
-
   // Make sure our started and stopped handlers got called
-  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_started_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_started_handler_calls.entries[0].fired_time_ms - start_ms <= 1);
 
-  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);;
+  cl_assert_equal_i(s_stopped_handler_calls.num_calls, 1);
+  ;
   cl_assert(s_stopped_handler_calls.entries[0].fired_time_ms - start_ms >= duration);
   cl_assert(s_stopped_handler_calls.entries[0].finished);
 
@@ -1256,7 +1232,6 @@ void test_animation__reschedule(void) {
   animation_destroy(h);
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test that we can reschedule an animation from the stopped handler
@@ -1269,13 +1244,13 @@ void test_animation__reschedule_from_stopped_handler(void) {
   const int duration = 100;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler_reschedule
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler_reschedule
   };
 
   memset(&layer, 0, sizeof(layer));
-  from_r = GRect(0, 0, 100, 200);     // x, y, width, height
-  to_r = GRect(1000, 2000, 100, 200); // x, y, width, height
+  from_r = GRect(0, 0, 100, 200);      // x, y, width, height
+  to_r = GRect(1000, 2000, 100, 200);  // x, y, width, height
   prop_h = property_animation_create_layer_frame(&layer, &from_r, &to_r);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &layer;
@@ -1286,23 +1261,22 @@ void test_animation__reschedule_from_stopped_handler(void) {
 
   animation_schedule(h);
   int max_loops = 20;
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   bool detected_reset_of_elapsed = false;
   bool reached_end_elapsed = false;
-  uint64_t  time_ms;
+  uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls < 2) {
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
     DPRINTF("rescheduled count: %d\n", s_stopped_handler_calls.num_calls);
-    DPRINTF("%"PRIu64": frame at: %d, %d, %d %d\n", time_ms - start_ms,
-            layer.frame.origin.x, layer.frame.origin.y,
-            layer.frame.size.w, layer.frame.size.h);
+    DPRINTF("%" PRIu64 ": frame at: %d, %d, %d %d\n", time_ms - start_ms, layer.frame.origin.x,
+            layer.frame.origin.y, layer.frame.size.w, layer.frame.size.h);
 
     if (layer.frame.origin.x == to_r.origin.x && layer.frame.origin.y == to_r.origin.y) {
       reached_end_elapsed = true;
     }
-    if (reached_end_elapsed && s_stopped_handler_calls.num_calls == 1
-        && layer.frame.origin.x < to_r.origin.x) {
+    if (reached_end_elapsed && s_stopped_handler_calls.num_calls == 1 &&
+        layer.frame.origin.x < to_r.origin.x) {
       detected_reset_of_elapsed = true;
     }
 
@@ -1320,7 +1294,6 @@ void test_animation__reschedule_from_stopped_handler(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test that auto-destroy works correctly
 void test_animation__auto_destroy(void) {
@@ -1332,13 +1305,13 @@ void test_animation__auto_destroy(void) {
   const int duration = 100;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   memset(&layer, 0, sizeof(layer));
-  from_r = GRect(0, 0, 100, 200);     // x, y, width, height
-  to_r = GRect(1000, 2000, 100, 200); // x, y, width, height
+  from_r = GRect(0, 0, 100, 200);      // x, y, width, height
+  to_r = GRect(1000, 2000, 100, 200);  // x, y, width, height
   prop_h = property_animation_create_layer_frame(&layer, &from_r, &to_r);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &layer;
@@ -1352,14 +1325,13 @@ void test_animation__auto_destroy(void) {
 
   animation_schedule(h);
   int max_loops = 20;
-  uint64_t  start_ms = prv_now_ms();
-  uint64_t  time_ms;
+  uint64_t start_ms = prv_now_ms();
+  uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls == 0) {
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
-    DPRINTF("%"PRIu64": frame at: %d, %d, %d %d\n", time_ms - start_ms,
-            layer.frame.origin.x, layer.frame.origin.y,
-            layer.frame.size.w, layer.frame.size.h);
+    DPRINTF("%" PRIu64 ": frame at: %d, %d, %d %d\n", time_ms - start_ms, layer.frame.origin.x,
+            layer.frame.origin.y, layer.frame.size.w, layer.frame.size.h);
 
     cl_assert(max_loops > 0);
     max_loops--;
@@ -1373,7 +1345,6 @@ void test_animation__auto_destroy(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test that we can reschedule an animation from the stopped handler that has auto-destroy on
 void test_animation__auto_destroy_reschedule(void) {
@@ -1385,13 +1356,13 @@ void test_animation__auto_destroy_reschedule(void) {
   const int duration = 100;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler_reschedule
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler_reschedule
   };
 
   memset(&layer, 0, sizeof(layer));
-  from_r = GRect(0, 0, 100, 200);     // x, y, width, height
-  to_r = GRect(1000, 2000, 100, 200); // x, y, width, height
+  from_r = GRect(0, 0, 100, 200);      // x, y, width, height
+  to_r = GRect(1000, 2000, 100, 200);  // x, y, width, height
   prop_h = property_animation_create_layer_frame(&layer, &from_r, &to_r);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &layer;
@@ -1402,23 +1373,22 @@ void test_animation__auto_destroy_reschedule(void) {
 
   animation_schedule(h);
   int max_loops = 20;
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   bool detected_reset_of_elapsed = false;
   bool reached_end_elapsed = false;
-  uint64_t  time_ms;
+  uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls < 2) {
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
     DPRINTF("rescheduled count: %d\n", s_stopped_handler_calls.num_calls);
-    DPRINTF("%"PRIu64": frame at: %d, %d, %d %d\n", time_ms - start_ms,
-            layer.frame.origin.x, layer.frame.origin.y,
-            layer.frame.size.w, layer.frame.size.h);
+    DPRINTF("%" PRIu64 ": frame at: %d, %d, %d %d\n", time_ms - start_ms, layer.frame.origin.x,
+            layer.frame.origin.y, layer.frame.size.w, layer.frame.size.h);
 
     if (layer.frame.origin.x == to_r.origin.x && layer.frame.origin.y == to_r.origin.y) {
       reached_end_elapsed = true;
     }
-    if (reached_end_elapsed && s_stopped_handler_calls.num_calls == 1
-        && layer.frame.origin.x < to_r.origin.x) {
+    if (reached_end_elapsed && s_stopped_handler_calls.num_calls == 1 &&
+        layer.frame.origin.x < to_r.origin.x) {
       detected_reset_of_elapsed = true;
     }
 
@@ -1441,14 +1411,12 @@ void test_animation__auto_destroy_reschedule(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Stopped handler that calls destroy
 static void prv_stopped_handler_destroy(Animation *animation, bool finished, void *context) {
   prv_add_handler_entry(&s_stopped_handler_calls, animation, finished, context);
   animation_destroy(animation);
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test that animation_destroy can be called from the stopped handler
@@ -1457,14 +1425,14 @@ static void prv_test_destroy_from_stopped_handler(bool auto_destroy) {
   const int duration = 100;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler_destroy
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler_destroy
   };
 
   static const AnimationImplementation implementation = {
-    .setup = prv_setup_handler,
-    .update = prv_update_handler,
-    .teardown = prv_teardown_handler
+      .setup = prv_setup_handler,
+      .update = prv_update_handler,
+      .teardown = prv_teardown_handler
   };
 
   h = animation_create();
@@ -1478,7 +1446,7 @@ static void prv_test_destroy_from_stopped_handler(bool auto_destroy) {
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(h);
   prv_advance_to_ms_with_timers(start_ms + duration + 2 * MIN_FRAME_INTERVAL_MS);
 
@@ -1497,7 +1465,6 @@ static void prv_test_destroy_from_stopped_handler(bool auto_destroy) {
   cl_assert_equal_i(prv_count_animations(), 0);
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test that animation_destroy can be called from the stopped handler
 void test_animation__destroy_from_stopped_handler_with_auto_destroy(void) {
@@ -1505,7 +1472,6 @@ void test_animation__destroy_from_stopped_handler_with_auto_destroy(void) {
   prv_test_destroy_from_stopped_handler(true);
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test that animation_destroy can be called from the stopped handler
@@ -1515,14 +1481,12 @@ void test_animation__destroy_from_stopped_handler_without_auto_destroy(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Stopped handler that calls unschedule
 static void prv_stopped_handler_unschedule(Animation *animation, bool finished, void *context) {
   prv_add_handler_entry(&s_stopped_handler_calls, animation, finished, context);
   animation_unschedule(animation);
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test that animation_unschedule can be called from the stopped handler
@@ -1531,8 +1495,8 @@ void test_animation__unschedule_from_stopped_handler(void) {
   const int duration = 100;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler_unschedule
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler_unschedule
   };
 
   Animation *a = prv_create_test_animation();
@@ -1540,7 +1504,7 @@ void test_animation__unschedule_from_stopped_handler(void) {
   animation_set_handlers(a, handlers, a);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(a);
   prv_advance_to_ms_with_timers(start_ms + duration + 2 * MIN_FRAME_INTERVAL_MS);
 
@@ -1550,8 +1514,6 @@ void test_animation__unschedule_from_stopped_handler(void) {
   // Make sure no animations exist
   cl_assert_equal_i(prv_count_animations(), 0);
 }
-
-
 
 // --------------------------------------------------------------------------------------
 // Test setting a play count of 0
@@ -1566,7 +1528,7 @@ void test_animation__basic_play_count_0(void) {
   prv_clear_handler_histories();
   animation_schedule(a);
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   prv_advance_to_ms_with_timers(start_ms + duration_a + 2 * MIN_FRAME_INTERVAL_MS);
 
   // Should not have run at all
@@ -1582,7 +1544,6 @@ void test_animation__basic_play_count_0(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test setting a duration of infinite duration
 void test_animation__basic_infinite_duration(void) {
@@ -1596,15 +1557,15 @@ void test_animation__basic_infinite_duration(void) {
   prv_clear_handler_histories();
   animation_schedule(a);
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   prv_advance_to_ms_with_timers(start_ms + test_duration);
 
   // Should still be running
   cl_assert_equal_i(prv_count_handler_entries(&s_setup_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 0);
-  cl_assert(prv_count_handler_entries(&s_update_handler_calls, a)
-            >= test_duration/MIN_FRAME_INTERVAL_MS);
+  cl_assert(prv_count_handler_entries(&s_update_handler_calls, a) >=
+            test_duration / MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_teardown_handler_calls, a), 0);
 
   // The distance should always be at 0
@@ -1615,7 +1576,6 @@ void test_animation__basic_infinite_duration(void) {
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a simple sequence animation
@@ -1640,14 +1600,14 @@ void test_animation__simple_sequence(void) {
 
   // Setup started/stopped handlers for the sequence
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
   animation_set_handlers(seq, handlers, seq);
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
 
   // Start A
@@ -1662,7 +1622,6 @@ void test_animation__simple_sequence(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, seq), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 0);
 
-
   // Just before A completes
   prv_advance_to_ms_with_timers(start_ms + duration_a - 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
@@ -1674,7 +1633,6 @@ void test_animation__simple_sequence(void) {
 
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, seq), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 0);
-
 
   // Complete A and start B
   prv_advance_to_ms_with_timers(start_ms + duration_a + 2 * MIN_FRAME_INTERVAL_MS + 1);
@@ -1689,9 +1647,8 @@ void test_animation__simple_sequence(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 0);
 
   // The stopped handler for A should fire before the started handler for B
-  cl_assert(prv_last_handler_entry(&s_stopped_handler_calls, a)->fire_order
-            < prv_last_handler_entry(&s_started_handler_calls, b)->fire_order);
-
+  cl_assert(prv_last_handler_entry(&s_stopped_handler_calls, a)->fire_order <
+            prv_last_handler_entry(&s_started_handler_calls, b)->fire_order);
 
   // Just before B completes the 2nd play
   prv_advance_to_ms_with_timers(start_ms + duration_total - 1);
@@ -1703,7 +1660,6 @@ void test_animation__simple_sequence(void) {
 
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, seq), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 0);
-
 
   // Complete B
   prv_advance_to_ms_with_timers(start_ms + duration_total + 5 * MIN_FRAME_INTERVAL_MS + 1);
@@ -1723,10 +1679,9 @@ void test_animation__simple_sequence(void) {
 #endif
 }
 
-
 static Animation *s_parent_for_sequence_unschedule_from_child;
 static void prv_unschedule_parent(Animation *animation, bool finished, void *context) {
-  DPRINTF("%"PRIu64" ms: Executing prv_unschedule_parent handler for %d\n", prv_now_ms(),
+  DPRINTF("%" PRIu64 " ms: Executing prv_unschedule_parent handler for %d\n", prv_now_ms(),
           (int)animation);
   animation_unschedule(s_parent_for_sequence_unschedule_from_child);
 }
@@ -1745,10 +1700,7 @@ void test_animation__sequence_unschedule_from_child(void) {
   animation_set_duration(a, duration_a);
 
   // Setup stopped handler for the first child that unschedules the parent
-  const AnimationHandlers special_handlers = {
-    .started = NULL,
-    .stopped = prv_unschedule_parent
-  };
+  const AnimationHandlers special_handlers = {.started = NULL, .stopped = prv_unschedule_parent};
   animation_set_handlers(a, special_handlers, NULL);
 
   Animation *b = prv_create_test_animation();
@@ -1758,16 +1710,15 @@ void test_animation__sequence_unschedule_from_child(void) {
   // Create a sequence
   Animation *seq = animation_sequence_create(a, b, NULL);
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
   animation_set_handlers(seq, handlers, seq);
   s_parent_for_sequence_unschedule_from_child = seq;
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
-
 
   // Complete A and start B. This should unschedule the parent
   prv_advance_to_ms_with_timers(start_ms + duration_a + 2 * MIN_FRAME_INTERVAL_MS + 1);
@@ -1777,13 +1728,11 @@ void test_animation__sequence_unschedule_from_child(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, seq), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 1);
 
-
   // Everything should have been freed
   cl_assert_equal_i(prv_count_animations(), 0);
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a seeking in a basic sequence animation
@@ -1796,10 +1745,9 @@ void test_animation__simple_sequence_set_elapsed(void) {
   int duration_total = duration_a + play_count_b * duration_b;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
-
 
   // Create 2 property animations
   Animation *a = prv_create_test_animation();
@@ -1813,7 +1761,6 @@ void test_animation__simple_sequence_set_elapsed(void) {
   Animation *seq = animation_sequence_create(a, b, NULL);
   cl_assert(seq != NULL);
 
-
   // Create a shorter animation to play in parallel
   Animation *c = prv_create_test_animation();
   cl_assert(c != NULL);
@@ -1824,7 +1771,7 @@ void test_animation__simple_sequence_set_elapsed(void) {
   animation_set_handlers(complex, handlers, complex);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(complex);
 
   // -------------------------------------------------------------------------------------
@@ -1838,10 +1785,9 @@ void test_animation__simple_sequence_set_elapsed(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, c), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, c), 0);
 
-
   // -------------------------------------------------------------------------------------
   // Execute about half of A
-  prv_advance_to_ms_with_timers(start_ms + duration_a/2);
+  prv_advance_to_ms_with_timers(start_ms + duration_a / 2);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 0);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, b), 0);
@@ -1850,11 +1796,10 @@ void test_animation__simple_sequence_set_elapsed(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, c), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, c), 0);
 
-
   // -------------------------------------------------------------------------------------
   // Seek to about the middle of B
   // Save the current update elapsed
-  animation_set_elapsed(complex, duration_a + duration_b/2);
+  animation_set_elapsed(complex, duration_a + duration_b / 2);
 
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 1);
@@ -1869,12 +1814,11 @@ void test_animation__simple_sequence_set_elapsed(void) {
 
   // B should be in the middle
   int32_t update_b_after = prv_last_update_distance(b);
-  cl_assert(abs(update_b_after - ANIMATION_NORMALIZED_MAX/2) < 5000);
+  cl_assert(abs(update_b_after - ANIMATION_NORMALIZED_MAX / 2) < 5000);
 
   // C should be at the end
   int32_t update_c_after = prv_last_update_distance(c);
   cl_assert_equal_i(update_c_after, ANIMATION_NORMALIZED_MAX);
-
 
   // -------------------------------------------------------------------------------------
   // Seek to just before the end of the second B
@@ -1888,13 +1832,11 @@ void test_animation__simple_sequence_set_elapsed(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, c), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, c), 1);
 
-
   // -------------------------------------------------------------------------------------
   // animation a has completed, but it shouldn't be deleted yet until the top-level
   // animation is done.
   uint32_t duration = animation_get_duration(a, false, false);
   cl_assert_equal_i(duration, duration_a);
-
 
   // -------------------------------------------------------------------------------------
   // Advance to the end
@@ -1919,10 +1861,9 @@ void test_animation__simple_sequence_set_elapsed(void) {
   AnimTestHandlerEntry *entry;
   entry = prv_last_handler_entry(&s_update_handler_calls, c);
   cl_assert_equal_i((uint32_t)entry->context, ANIMATION_NORMALIZED_MAX);
-  
+
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test unscheduling a complex animation
@@ -1956,7 +1897,7 @@ void test_animation__sequence_unschedule(void) {
   animation_set_play_count(seq, repeat_count);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
 
   // Start A
@@ -1972,7 +1913,6 @@ void test_animation__sequence_unschedule(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, c), 0);
   cl_assert_equal_i(prv_count_handler_entries(&s_update_handler_calls, c), 0);
 
-
   // Execute to the start of B and C
   prv_advance_to_ms_with_timers(start_ms + duration_a + 2 * MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
@@ -1984,7 +1924,6 @@ void test_animation__sequence_unschedule(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, c), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, c), 0);
 
-
   // Execute to the end of B & C
   prv_advance_to_ms_with_timers(start_ms + duration_total + 1 * MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
@@ -1995,7 +1934,6 @@ void test_animation__sequence_unschedule(void) {
 
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, c), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, c), 1);
-
 
   // If we keep going, we should repeat the whole sequence
   prv_advance_to_ms_with_timers(start_ms + 2 * (duration_total + 4 * MIN_FRAME_INTERVAL_MS));
@@ -2010,7 +1948,6 @@ void test_animation__sequence_unschedule(void) {
 
   // Unschedule the top-level
   animation_unschedule(seq);
-
 
   // Keep going, nothing new should happen except the stop handler for a (which we started)
   prv_advance_to_ms_with_timers(start_ms + 5 * (duration_total + 3 * MIN_FRAME_INTERVAL_MS));
@@ -2030,7 +1967,6 @@ void test_animation__sequence_unschedule(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_teardown_handler_calls, c), 1);
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test using clone and reverse in a complex animation
@@ -2053,7 +1989,7 @@ void test_animation__complex_reverse(void) {
   animation_set_play_count(seq, repeat_count);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
 
   // Start A
@@ -2068,7 +2004,6 @@ void test_animation__complex_reverse(void) {
   // A should start out low
   distance = prv_last_update_distance(a);
   cl_assert(distance < TEST_ANIMATION_NORMALIZED_LOW);
-
 
   // Execute to the start of B
   prv_advance_to_ms_with_timers(start_ms + duration_a + 2 * MIN_FRAME_INTERVAL_MS);
@@ -2086,7 +2021,6 @@ void test_animation__complex_reverse(void) {
   distance = prv_last_update_distance(b);
   cl_assert(distance > TEST_ANIMATION_NORMALIZED_HIGH);
 
-
   // Execute to the end of B
   prv_advance_to_ms_with_timers(start_ms + duration_total + 1 * MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
@@ -2098,7 +2032,6 @@ void test_animation__complex_reverse(void) {
   // B should end low
   distance = prv_last_update_distance(b);
   cl_assert(distance < TEST_ANIMATION_NORMALIZED_LOW);
-
 
   // If we keep going, we should repeat the whole sequence
   prv_advance_to_ms_with_timers(start_ms + 2 * (duration_total + 10 * MIN_FRAME_INTERVAL_MS));
@@ -2123,7 +2056,6 @@ void test_animation__complex_reverse(void) {
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test cloning complex animation
@@ -2154,7 +2086,6 @@ void test_animation__complex_clone(void) {
   Animation *seq = animation_sequence_create(a, spawn, NULL);
   animation_set_play_count(seq, repeat_count);
 
-
   // Now, clone it
   Animation *clone = animation_clone(seq);
 
@@ -2162,7 +2093,7 @@ void test_animation__complex_clone(void) {
   animation_destroy(seq);
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(clone);
 
   // Start A
@@ -2188,14 +2119,12 @@ void test_animation__complex_clone(void) {
   // Unschedule the top-level
   animation_unschedule(clone);
 
-
   // Keep going, nothing new should happen except stop handlers for each component
   prv_advance_to_ms_with_timers(start_ms + 5 * (duration_total + 3 * MIN_FRAME_INTERVAL_MS));
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, NULL), 7);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, NULL), 7);
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test scheduling a sequence of 2 spawns. Insure that ALL of the primitives in the first spawn,
@@ -2205,8 +2134,8 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
   const int duration_total = 2 * duration_a;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   // Simulate some delay incurred on every call to rtc_get_ticks()
@@ -2216,8 +2145,8 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
   Animation *b0, *b1, *b2, *b3;
   Animation *spawn_a, *spawn_b;
 
-  for (int i=0; i<4; i++) {
-    switch(create_order[i]) {
+  for (int i = 0; i < 4; i++) {
+    switch (create_order[i]) {
       case 0:
         a0 = prv_create_test_animation();
         animation_set_duration(a0, duration_a);
@@ -2251,7 +2180,7 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
 
   // Schedule it
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
 
   fake_rtc_auto_increment_ticks(0);
@@ -2273,7 +2202,6 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b2), 0);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b3), 0);
 
-
   // Let it finish completely
   prv_advance_to_ms_with_timers(start_ms + duration_total + 5 * MIN_FRAME_INTERVAL_MS);
 
@@ -2282,30 +2210,25 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b2), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b3), 1);
 
-
   // Make sure the all the spawn a stopped handlers got called before any of the spawn b
   // started handlers
   uint32_t last_fire_a = 0;
-  last_fire_a = MAX(last_fire_a,
-                    prv_last_handler_entry(&s_stopped_handler_calls, a0)->fire_order);
-  last_fire_a = MAX(last_fire_a,
-                    prv_last_handler_entry(&s_stopped_handler_calls, a1)->fire_order);
-  last_fire_a = MAX(last_fire_a,
-                    prv_last_handler_entry(&s_stopped_handler_calls, a2)->fire_order);
-  last_fire_a = MAX(last_fire_a,
-                    prv_last_handler_entry(&s_stopped_handler_calls, a3)->fire_order);
-  last_fire_a = MAX(last_fire_a,
-                    prv_last_handler_entry(&s_stopped_handler_calls, spawn_a)->fire_order);
+  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a0)->fire_order);
+  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a1)->fire_order);
+  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a2)->fire_order);
+  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a3)->fire_order);
+  last_fire_a =
+      MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, spawn_a)->fire_order);
 
   uint32_t first_fire_b = prv_last_handler_entry(&s_started_handler_calls, b0)->fire_order;
-  first_fire_b = MIN(first_fire_b,
-                    prv_last_handler_entry(&s_started_handler_calls, b1)->fire_order);
-  first_fire_b = MIN(first_fire_b,
-                    prv_last_handler_entry(&s_started_handler_calls, b2)->fire_order);
-  first_fire_b = MIN(first_fire_b,
-                    prv_last_handler_entry(&s_started_handler_calls, b3)->fire_order);
-  first_fire_b = MIN(first_fire_b,
-                    prv_last_handler_entry(&s_started_handler_calls, spawn_b)->fire_order);
+  first_fire_b =
+      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b1)->fire_order);
+  first_fire_b =
+      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b2)->fire_order);
+  first_fire_b =
+      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b3)->fire_order);
+  first_fire_b =
+      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, spawn_b)->fire_order);
 
   cl_assert(last_fire_a < first_fire_b);
 
@@ -2328,7 +2251,6 @@ void test_animation__sequence_of_spawns(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test delays in sequence animation
 void test_animation__sequence_delay(void) {
@@ -2339,7 +2261,6 @@ void test_animation__sequence_delay(void) {
   const int delay_b = 200;
   const int delay_seq = 150;
   int duration_total = duration_a + duration_b + delay_a + delay_b + delay_seq;
-
 
   // Create 2 test animations
   Animation *a = prv_create_test_animation();
@@ -2357,9 +2278,8 @@ void test_animation__sequence_delay(void) {
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
-
 
   // Test the elapsed
   int32_t elapsed_ms;
@@ -2397,8 +2317,8 @@ void test_animation__sequence_delay(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_update_handler_calls, b), 0);
 
   // Complete A and start B
-  prv_advance_to_ms_with_timers(start_ms + duration_a + delay_seq + delay_a + delay_b
-                                 + 2 * MIN_FRAME_INTERVAL_MS + 1);
+  prv_advance_to_ms_with_timers(start_ms + duration_a + delay_seq + delay_a + delay_b +
+                                2 * MIN_FRAME_INTERVAL_MS + 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, b), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 1);
@@ -2416,7 +2336,6 @@ void test_animation__sequence_delay(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test delays in spawn animation
 void test_animation__spawn_delay(void) {
@@ -2427,7 +2346,6 @@ void test_animation__spawn_delay(void) {
   const int delay_b = 200;
   const int delay_spawn = 150;
   int duration_total = MAX(duration_a + delay_a, duration_b + delay_b) + delay_spawn;
-
 
   // Create 2 test animations
   Animation *a = prv_create_test_animation();
@@ -2445,9 +2363,8 @@ void test_animation__spawn_delay(void) {
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(spawn);
-
 
   // Test the elapsed
   int32_t elapsed_ms;
@@ -2477,16 +2394,16 @@ void test_animation__spawn_delay(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b), 0);
 
   // Start B
-  prv_advance_to_ms_with_timers(start_ms + delay_spawn + MAX(delay_a, delay_b)
-                                + 2 * MIN_FRAME_INTERVAL_MS);
+  prv_advance_to_ms_with_timers(start_ms + delay_spawn + MAX(delay_a, delay_b) +
+                                2 * MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 0);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, b), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b), 0);
 
   // Complete A and start B
-  prv_advance_to_ms_with_timers(start_ms + delay_spawn + duration_a + delay_a
-                                + 2 * MIN_FRAME_INTERVAL_MS + 1);
+  prv_advance_to_ms_with_timers(start_ms + delay_spawn + duration_a + delay_a +
+                                2 * MIN_FRAME_INTERVAL_MS + 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, b), 1);
@@ -2503,7 +2420,6 @@ void test_animation__spawn_delay(void) {
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a sequence animation with a component that has a play count of 0
@@ -2532,7 +2448,7 @@ void test_animation__sequence_with_0_component(void) {
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
 
   // Start A
@@ -2575,7 +2491,6 @@ void test_animation__sequence_with_0_component(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test a spawn animation with a component that has a play count of 0
 void test_animation__spawn_with_0_component(void) {
@@ -2603,7 +2518,7 @@ void test_animation__spawn_with_0_component(void) {
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(spawn);
 
   // Start A
@@ -2646,7 +2561,6 @@ void test_animation__spawn_with_0_component(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test a sequence animation with a play count of 0
 void test_animation__sequence_with_0_play_count(void) {
@@ -2672,7 +2586,7 @@ void test_animation__sequence_with_0_play_count(void) {
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
 
   // Start
@@ -2701,7 +2615,6 @@ void test_animation__sequence_with_0_play_count(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test a sequence within a sequence where the imbedded one has a play count of 0
 void test_animation__nested_sequence_with_0_play_count(void) {
@@ -2713,8 +2626,8 @@ void test_animation__nested_sequence_with_0_play_count(void) {
   const int total_duration = duration_c + duration_d;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   // Create the inner sequence with a play count of 0
@@ -2738,10 +2651,9 @@ void test_animation__nested_sequence_with_0_play_count(void) {
   Animation *seq = animation_sequence_create(inner_seq, c, d, NULL);
   animation_set_handlers(seq, handlers, seq);
 
-
   // Play it
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(seq);
 
   prv_advance_to_ms_with_timers(start_ms + total_duration + 5 * MIN_FRAME_INTERVAL_MS);
@@ -2770,7 +2682,6 @@ void test_animation__nested_sequence_with_0_play_count(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_setup_handler_calls, b), 0);
   cl_assert_equal_i(prv_count_handler_entries(&s_teardown_handler_calls, b), 0);
 
-
   // Make sure seq, c, and d completed
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, seq), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 1);
@@ -2786,7 +2697,6 @@ void test_animation__nested_sequence_with_0_play_count(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_teardown_handler_calls, d), 1);
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test a spawn animation with a play count of 0
@@ -2813,7 +2723,7 @@ void test_animation__spawn_with_0_play_count(void) {
 
   prv_clear_handler_histories();
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(spawn);
 
   // Start
@@ -2842,7 +2752,6 @@ void test_animation__spawn_with_0_play_count(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test the get_duration call on a sequence animation
 void test_animation__sequence_get_duration(void) {
@@ -2862,7 +2771,6 @@ void test_animation__sequence_get_duration(void) {
 
   int duration_total = play_count_seq * (total_duration_a + total_duration_b + delay_seq);
 
-
   // Create 2 test animations
   Animation *a = prv_create_test_animation();
   animation_set_duration(a, duration_a);
@@ -2879,7 +2787,6 @@ void test_animation__sequence_get_duration(void) {
   cl_assert(seq != NULL);
   animation_set_delay(seq, delay_seq);
   animation_set_play_count(seq, play_count_seq);
-
 
   // Check durations
   cl_assert_equal_i(animation_get_duration(a, false, false), duration_a);
@@ -2904,7 +2811,6 @@ void test_animation__sequence_get_duration(void) {
 #endif
 }
 
-
 // --------------------------------------------------------------------------------------
 // Test the get_duration call on a spawn animation
 void test_animation__spawn_get_duration(void) {
@@ -2924,7 +2830,6 @@ void test_animation__spawn_get_duration(void) {
 
   int duration_total = play_count_spawn * (MAX(total_duration_a, total_duration_b) + delay_spawn);
 
-
   // Create 2 test animations
   Animation *a = prv_create_test_animation();
   animation_set_duration(a, duration_a);
@@ -2941,7 +2846,6 @@ void test_animation__spawn_get_duration(void) {
   cl_assert(spawn != NULL);
   animation_set_delay(spawn, delay_spawn);
   animation_set_play_count(spawn, play_count_spawn);
-
 
   // Check durations
   cl_assert_equal_i(animation_get_duration(a, false, false), duration_a);
@@ -2966,7 +2870,6 @@ void test_animation__spawn_get_duration(void) {
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test unschedule all when we have multiple animations, some complex
@@ -3002,7 +2905,6 @@ void test_animation__unschedule_all(void) {
   animation_unschedule_all();
   cl_assert_equal_i(prv_count_scheduled_animations(), 0);
 
-
   // Make sure just the setup and teardown handlers were called
   cl_assert_equal_i(prv_count_handler_entries(&s_setup_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 0);
@@ -3011,7 +2913,6 @@ void test_animation__unschedule_all(void) {
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test that we fail if we try and put a component in more than 1 complex animation
@@ -3052,20 +2953,22 @@ void test_animation__accessors(void) {
   const int delay = 25;
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .setup = prv_setup_handler,
-      .update = (AnimationUpdateImplementation) property_animation_update_int16,
-      .teardown = prv_teardown_handler
-    },
-    .accessors = {
-      .setter = { .int16 = (const Int16Setter) prv_int16_setter, },
-      .getter = { .int16 = (const Int16Getter) prv_int16_getter },
-    },
+      .base =
+          {.setup = prv_setup_handler,
+           .update = (AnimationUpdateImplementation)property_animation_update_int16,
+           .teardown = prv_teardown_handler},
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_int16_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_int16_getter},
+      },
   };
 
   prop_h = property_animation_create(&implementation, &value, &start_value, &end_value);
@@ -3083,7 +2986,7 @@ void test_animation__accessors(void) {
   cl_assert(animation_get_context(h) == context);
 
   // Duration
-  cl_assert(animation_get_duration(h, true, true) == 250); // default value
+  cl_assert(animation_get_duration(h, true, true) == 250);  // default value
   animation_set_duration(h, duration);
   cl_assert(animation_get_duration(h, true, true) == duration);
 
@@ -3097,23 +3000,25 @@ void test_animation__accessors(void) {
   cl_assert_equal_i(animation_get_play_count(h), 1);
   animation_set_play_count(h, 2);
   cl_assert_equal_i(animation_get_play_count(h), 2);
-  cl_assert(animation_get_duration(h, true, true) == 2*(duration + delay));
+  cl_assert(animation_get_duration(h, true, true) == 2 * (duration + delay));
 
   // Curve
   cl_assert(animation_get_curve(h) == AnimationCurveDefault);
   animation_set_curve(h, AnimationCurveEaseOut);
   cl_assert(animation_get_curve(h) == AnimationCurveEaseOut);
-  
+
   static const PropertyAnimationImplementation implementation2 = {
-    .base = {
-      .setup = prv_setup_handler,
-      .update = (AnimationUpdateImplementation) property_animation_update_gpoint,
-      .teardown = prv_teardown_handler
-    },
-    .accessors = {
-      .setter = { .int16 = (const Int16Setter) prv_gpoint_setter, },
-      .getter = { .int16 = (const Int16Getter) prv_gpoint_getter },
-    },
+      .base =
+          {.setup = prv_setup_handler,
+           .update = (AnimationUpdateImplementation)property_animation_update_gpoint,
+           .teardown = prv_teardown_handler},
+      .accessors = {
+          .setter =
+              {
+                  .int16 = (const Int16Setter)prv_gpoint_setter,
+              },
+          .getter = {.int16 = (const Int16Getter)prv_gpoint_getter},
+      },
   };
 
   // Implementation
@@ -3126,7 +3031,7 @@ void test_animation__accessors(void) {
   cl_assert(animation_get_custom_curve(h) != prv_custom_curve);
   animation_set_custom_curve(h, prv_custom_curve);
   cl_assert(animation_get_custom_curve(h) == prv_custom_curve);
-  
+
   // Reverse
   cl_assert(animation_get_reverse(h) == false);
   animation_set_reverse(h, true);
@@ -3149,8 +3054,7 @@ void test_animation__accessors(void) {
   cl_must_pass(animation_get_elapsed(h, &elapsed_ms));
   cl_assert_equal_i(elapsed_ms, duration / 2);
   cl_must_pass(animation_get_progress(h, &progress));
-  cl_assert_equal_i(progress, 32768); // Rounding occurs within, this is close to MAX / 2
-
+  cl_assert_equal_i(progress, 32768);  // Rounding occurs within, this is close to MAX / 2
 
   animation_destroy(h);
 #endif
@@ -3164,8 +3068,8 @@ void test_animation__completed(void) {
   Animation *a = prv_create_test_animation();
 
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler_check_finished
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler_check_finished
   };
   animation_set_handlers(a, handlers, animation_get_context(a));
   animation_set_duration(a, duration_a);
@@ -3178,8 +3082,6 @@ void test_animation__completed(void) {
   prv_advance_to_ms_with_timers(start_ms + duration_a + 2 * MIN_FRAME_INTERVAL_MS);
 #endif
 }
-
-
 
 // --------------------------------------------------------------------------------------
 // Test creating a sequence where the first argument is already scheduled and started
@@ -3205,14 +3107,13 @@ void test_animation__sequence_of_already_scheduled_started(void) {
   const int leftover_seq = 40;
   const int delay_seq = 30;
 
-
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
 
   // Create a property animation and advance it
   Animation *a = prv_create_test_animation();
@@ -3230,7 +3131,6 @@ void test_animation__sequence_of_already_scheduled_started(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 0);
 
-
   // -------------------------------------------------------------------------------------
   // Build up a sequence out of the leftover a + b
   Animation *b = prv_create_test_animation();
@@ -3242,7 +3142,7 @@ void test_animation__sequence_of_already_scheduled_started(void) {
   cl_assert(seq == NULL);
 
   seq = animation_sequence_create(a, b, NULL);
-  animation_set_delay(seq, delay_seq); // This delay not applicable since a was already scheduled
+  animation_set_delay(seq, delay_seq);  // This delay not applicable since a was already scheduled
   animation_set_handlers(seq, handlers, seq);
   animation_schedule(seq);
 
@@ -3258,9 +3158,8 @@ void test_animation__sequence_of_already_scheduled_started(void) {
 
   // Now, advance sequence to almost the end of seq. Positions don't include the delay, so
   // pass false for 'include_delay'
-  animation_set_elapsed(seq, animation_get_duration(seq, false /*delay*/, true /*play_count*/)
-                              - leftover_seq);
-
+  animation_set_elapsed(
+      seq, animation_get_duration(seq, false /*delay*/, true /*play_count*/) - leftover_seq);
 
   // Verify that a finished and that a's stop handler got called before B's start handler
   cl_assert_equal_i(prv_last_update_distance(a), ANIMATION_NORMALIZED_MAX);
@@ -3273,8 +3172,8 @@ void test_animation__sequence_of_already_scheduled_started(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, seq), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 0);
 
-  cl_assert(prv_last_handler_entry(&s_stopped_handler_calls, a)->fire_order
-            < prv_last_handler_entry(&s_started_handler_calls, b)->fire_order);
+  cl_assert(prv_last_handler_entry(&s_stopped_handler_calls, a)->fire_order <
+            prv_last_handler_entry(&s_started_handler_calls, b)->fire_order);
 
   // Finish the sequence
   prv_advance_to_ms_with_timers(prv_now_ms() + leftover_seq + 2 * MIN_FRAME_INTERVAL_MS);
@@ -3284,7 +3183,6 @@ void test_animation__sequence_of_already_scheduled_started(void) {
 
 #endif
 }
-
 
 // --------------------------------------------------------------------------------------
 // Test creating a sequence where the first argument is already scheduled, but not started
@@ -3308,10 +3206,9 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
   const int delay_b = 20;
   const int leftover_seq = 50;
 
-
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   prv_clear_handler_histories();
@@ -3321,7 +3218,7 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
   animation_set_duration(a, duration_a);
   animation_set_delay(a, delay_a);
 
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
   animation_schedule(a);
 
   // -------------------------------------------------------------------------------------
@@ -3329,7 +3226,6 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
   prv_advance_to_ms_with_timers(start_ms + 100);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 0);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 0);
-
 
   // -------------------------------------------------------------------------------------
   // Build up a sequence out of the leftover a + b
@@ -3353,9 +3249,8 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
 
   // Now, advance sequence to almost the end of seq. Positions don't include the delay, so
   // pass false for 'include_delay'
-  animation_set_elapsed(seq, animation_get_duration(seq, false /*delay*/, true /*play_count*/)
-                              - leftover_seq);
-
+  animation_set_elapsed(
+      seq, animation_get_duration(seq, false /*delay*/, true /*play_count*/) - leftover_seq);
 
   // Verify that a finished and that a's stop handler got called before B's start handler
   cl_assert_equal_i(prv_last_update_distance(a), ANIMATION_NORMALIZED_MAX);
@@ -3368,8 +3263,8 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, seq), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, seq), 0);
 
-  cl_assert(prv_last_handler_entry(&s_stopped_handler_calls, a)->fire_order
-            < prv_last_handler_entry(&s_started_handler_calls, b)->fire_order);
+  cl_assert(prv_last_handler_entry(&s_stopped_handler_calls, a)->fire_order <
+            prv_last_handler_entry(&s_started_handler_calls, b)->fire_order);
 
   // Finish the sequence
   prv_advance_to_ms_with_timers(prv_now_ms() + leftover_seq + 2 * MIN_FRAME_INTERVAL_MS);
@@ -3379,8 +3274,6 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
 
 #endif
 }
-
-
 
 // --------------------------------------------------------------------------------------
 // Test creating a sequence where the first argument is already completed.
@@ -3396,14 +3289,13 @@ void test_animation__sequence_of_already_completed(void) {
 
   const int delay_seq = 30;
 
-
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
 
   // Create a property animation and play it to the end
   Animation *a = prv_create_test_animation();
@@ -3417,7 +3309,6 @@ void test_animation__sequence_of_already_completed(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 1);
   cl_assert_equal_i(prv_last_update_distance(a), ANIMATION_NORMALIZED_MAX);
-
 
   // -------------------------------------------------------------------------------------
   // Build up a sequence out of a + b
@@ -3440,8 +3331,8 @@ void test_animation__sequence_of_already_completed(void) {
   cl_assert_equal_i(position, -delay_seq);
 
   // Finish the sequence
-  prv_advance_to_ms_with_timers(prv_now_ms() + delay_b + duration_b + delay_seq
-                                +  2 * MIN_FRAME_INTERVAL_MS);
+  prv_advance_to_ms_with_timers(prv_now_ms() + delay_b + duration_b + delay_seq +
+                                2 * MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, b), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b), 1);
   cl_assert_equal_i(prv_last_update_distance(b), ANIMATION_NORMALIZED_MAX);
@@ -3449,8 +3340,6 @@ void test_animation__sequence_of_already_completed(void) {
 
 #endif
 }
-
-
 
 // --------------------------------------------------------------------------------------
 // Test creating a spawn where where some children are already scheduled and some have
@@ -3469,28 +3358,27 @@ void test_animation__sequence_of_already_completed(void) {
 //                                           | spawn scheduled here
 void test_animation__spawn_of_already_scheduled(void) {
 #ifdef TEST_INCLUDE_COMPLEX
-  const int duration_a = 300;   // This one will complete
+  const int duration_a = 300;  // This one will complete
   const int delay_a = 10;
 
-  const int duration_b = 400;   // This one will have 50 ms left on it
+  const int duration_b = 400;  // This one will have 50 ms left on it
   const int delay_b = 20;
 
-  const int duration_c = 350;   
+  const int duration_c = 350;
   const int delay_c = 230;
 
-  const int duration_d = 220;   // This one won't be scheduled yet
+  const int duration_d = 220;  // This one won't be scheduled yet
   const int delay_d = 230;
 
   const int delay_spawn = 170;
 
-
   const AnimationHandlers handlers = {
-    .started = prv_started_handler,
-    .stopped = prv_stopped_handler
+      .started = prv_started_handler,
+      .stopped = prv_stopped_handler
   };
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
 
   // Create the animations
   Animation *a = prv_create_test_animation();
@@ -3508,7 +3396,6 @@ void test_animation__spawn_of_already_scheduled(void) {
   Animation *d = prv_create_test_animation();
   animation_set_duration(d, duration_d);
   animation_set_delay(d, delay_d);
-
 
   // -------------------------------------------------------------------------------------
   // Run A to completion
@@ -3534,7 +3421,6 @@ void test_animation__spawn_of_already_scheduled(void) {
   animation_set_handlers(spawn, handlers, spawn);
   animation_schedule(spawn);
 
-
   // Check the duration and position of the spawn
   uint32_t duration = animation_get_duration(spawn, true /*delay*/, true /*play_count*/);
   cl_assert_equal_i(duration, 1300 - 310);
@@ -3543,13 +3429,11 @@ void test_animation__spawn_of_already_scheduled(void) {
   animation_get_elapsed(spawn, &position);
   cl_assert_equal_i(position, (680 - 310));
 
-
   // Run to the completion of B, start of C
   prv_advance_to_ms_with_timers(start_ms + 730 + 2 * MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, c), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, spawn), 1);
-
 
   // Run to the completion of C, start of D
   prv_advance_to_ms_with_timers(start_ms + 1080 + 2 * MIN_FRAME_INTERVAL_MS);
@@ -3567,7 +3451,7 @@ void test_animation__spawn_of_already_scheduled(void) {
 void prv_update_unschedule_all_handler(Animation *animation, const AnimationProgress distance) {
   prv_add_handler_entry(&s_update_handler_calls, animation, false,
                         (void *)(uintptr_t)distance /*context*/);
-  DPRINTF("%"PRIu64" ms: Executing update handler for %d, distance: %d\n", prv_now_ms(),
+  DPRINTF("%" PRIu64 " ms: Executing update handler for %d, distance: %d\n", prv_now_ms(),
           (int)animation, (int)distance);
   if (distance > ANIMATION_NORMALIZED_MAX / 2) {
     animation_unschedule_all();
@@ -3577,16 +3461,16 @@ void prv_update_unschedule_all_handler(Animation *animation, const AnimationProg
 // --------------------------------------------------------------------------------------
 // Test unscheduling animations arbitrarily in an update handler.
 static void prv_unschedule_all_in_update_handler(bool auto_destroy) {
-  const int duration_a = 300;   // This one will complete
+  const int duration_a = 300;  // This one will complete
   const int delay_a = 10;
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
 
   static const AnimationImplementation implementation = {
-    .setup = prv_setup_handler,
-    .update = prv_update_unschedule_all_handler,
-    .teardown = prv_teardown_handler
+      .setup = prv_setup_handler,
+      .update = prv_update_unschedule_all_handler,
+      .teardown = prv_teardown_handler
   };
 
   Animation *a = prv_create_test_animation();
@@ -3629,21 +3513,21 @@ void test_animation__unschedule_all_in_update_handler_without_auto_destroy(void)
 
 static void prv_stopped_unschedule_all_handler(Animation *animation, bool finished, void *context) {
   prv_add_handler_entry(&s_stopped_handler_calls, animation, finished, context);
-  DPRINTF("%"PRIu64" ms: Executing stopped handler for %d\n", prv_now_ms(), (int)animation);
+  DPRINTF("%" PRIu64 " ms: Executing stopped handler for %d\n", prv_now_ms(), (int)animation);
   animation_unschedule_all();
 }
 
 // --------------------------------------------------------------------------------------
 // Test unscheduling animations arbitrarily in a stopped handler with/without auto destroy.
 void prv_test_unschedule_all_in_stopped_handler(bool auto_destroy) {
-  const int duration_a = 300;   // This one will complete
+  const int duration_a = 300;  // This one will complete
   const int delay_a = 10;
 
   prv_clear_handler_histories();
-  uint64_t  start_ms = prv_now_ms();
+  uint64_t start_ms = prv_now_ms();
 
   const AnimationHandlers handlers = {
-    .stopped = prv_stopped_unschedule_all_handler,
+      .stopped = prv_stopped_unschedule_all_handler,
   };
 
   void *context = NULL;
@@ -3690,8 +3574,8 @@ void test_animation__unschedule_all_in_stopped_handler_without_auto_destroy(void
 
 void test_animation__custom_functions(void) {
   // just some pointer to compare against
-  AnimationCurveFunction curve = (void*)1;
-  InterpolateInt64Function interpolation = (void*)2;
+  AnimationCurveFunction curve = (void *)1;
+  InterpolateInt64Function interpolation = (void *)2;
 
   Animation *a = prv_create_test_animation();
   cl_assert_equal_p(animation_get_custom_curve(a), NULL);
@@ -3718,8 +3602,8 @@ void test_animation__custom_functions(void) {
 
 void test_animation__current_interpolate_override(void) {
   // just some pointer to compare against
-  AnimationCurveFunction curve = (void*)1;
-  InterpolateInt64Function interpolation = (void*)2;
+  AnimationCurveFunction curve = (void *)1;
+  InterpolateInt64Function interpolation = (void *)2;
 
   AnimationState *state = kernel_applib_get_animation_state();
   cl_assert_equal_p(state->aux->current_animation, NULL);

@@ -34,7 +34,7 @@ uint32_t kino_reel_get_duration(KinoReel *reel) {
 }
 
 GSize kino_reel_get_size(KinoReel *reel) {
-  return (GSize) {};
+  return (GSize){};
 }
 
 GDrawCommandImage *kino_reel_get_gdraw_command_image(KinoReel *reel) {

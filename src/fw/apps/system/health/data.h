@@ -64,7 +64,6 @@ void health_data_update_current_bpm(HealthData *health_data);
 //! @param health_data A pointer to the health data to use
 void health_data_update_hr_zone_minutes(HealthData *health_data);
 
-
 //! Get the current step count
 //! @param health_data A pointer to the health data to use
 //! @return the current step count

@@ -14,7 +14,7 @@
 static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   if (!event_try_put_from_process(task, event)) {
     PBL_LOG_WRN("%s: From app queue is full! Dropped %p! Killing App",
-        (task == PebbleTask_App ? "App" : "Worker"), event);
+                (task == PebbleTask_App ? "App" : "Worker"), event);
     syscall_failed();
   }
 }
@@ -36,7 +36,7 @@ static bool prv_event_type_allowed_from_user(PebbleEventType type) {
   }
 }
 
-DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent* event) {
+DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent *event) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(event, sizeof(*event));
     if (!prv_event_type_allowed_from_user(event->type)) {
@@ -53,16 +53,16 @@ DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent* event) {
   }
 }
 
-DEFINE_SYSCALL(void, sys_current_process_schedule_callback,
-               CallbackEventCallback async_cb, void *ctx) {
+DEFINE_SYSCALL(void, sys_current_process_schedule_callback, CallbackEventCallback async_cb,
+               void *ctx) {
   // No userspace buffer assertion for ctx needed, because it won't be accessed by the kernel.
 
   PebbleEvent event = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback = {
-      .callback = async_cb,
-      .data = ctx,
-    },
+      .type = PEBBLE_CALLBACK_EVENT,
+      .callback = {
+          .callback = async_cb,
+          .data = ctx,
+      },
   };
   const PebbleTask task = pebble_task_get_current();
   PBL_ASSERTN(task == PebbleTask_App || task == PebbleTask_Worker);
@@ -121,13 +121,13 @@ DEFINE_SYSCALL(void, sys_event_service_client_subscribe, EventServiceInfo *handl
 
   // Subscribe to the service!
   PebbleEvent event = {
-    .type = PEBBLE_SUBSCRIPTION_EVENT,
-    .subscription = {
-      .subscribe = true,
-      .task = task,
-      .event_queue = event_queue,
-      .event_type = handler->type,
-    },
+      .type = PEBBLE_SUBSCRIPTION_EVENT,
+      .subscription = {
+          .subscribe = true,
+          .task = task,
+          .event_queue = event_queue,
+          .event_type = handler->type,
+      },
   };
   if (task == PebbleTask_KernelMain) {
     // The client is also KernelMain, just subscribe immediately without putting an event
@@ -138,7 +138,7 @@ DEFINE_SYSCALL(void, sys_event_service_client_subscribe, EventServiceInfo *handl
 }
 
 DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *state,
-                                                           EventServiceInfo *handler) {
+               EventServiceInfo *handler) {
   PebbleTask task = pebble_task_get_current();
 
   if (PRIVILEGE_WAS_ELEVATED) {
@@ -159,18 +159,18 @@ DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *sta
   // Remove from handlers list
   list_remove(&handler->list_node, NULL, NULL);
 
-  if (list_find(&state->list_node, event_service_filter, (void *) handler->type)) {
+  if (list_find(&state->list_node, event_service_filter, (void *)handler->type)) {
     // there are other handlers for this task, don't unsubscribe it
     return;
   }
   // Unsubscribe from the service!
   PebbleEvent event = {
-    .type = PEBBLE_SUBSCRIPTION_EVENT,
-    .subscription = {
-      .subscribe = false,
-      .task = task,
-      .event_type = handler->type,
-    },
+      .type = PEBBLE_SUBSCRIPTION_EVENT,
+      .subscription = {
+          .subscribe = false,
+          .task = task,
+          .event_type = handler->type,
+      },
   };
   prv_put_event_from_process(task, &event);
 }

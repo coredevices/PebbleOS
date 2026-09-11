@@ -72,7 +72,7 @@
   PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, ACTION_BAR_WIDTH + RIGHTSIDE_PADDING - TEXT_MARGIN_WIDTH)
 #define ICON_WIDTH 80
 // Center icon horizontally in content area (display width minus action bar)
-#define ICON_POSITION_X \
+#define ICON_POSITION_X                                               \
   PBL_IF_RECT_ELSE(((DISP_COLS - ACTION_BAR_WIDTH - ICON_WIDTH) / 2), \
                    DISP_ROWS - (ACTION_BAR_WIDTH + RIGHTSIDE_PADDING) - ICON_WIDTH)
 
@@ -195,29 +195,29 @@ typedef struct {
 #define PHONE_STATUS_POS_Y_LARGE PBL_IF_RECT_ELSE((138 + PHONE_EXTRA_HEIGHT * 3 / 4), 144)
 
 static const PhoneStyle s_phone_style_default = {
-  .icon_size = TimelineResourceSizeLarge,
-  .icon_pos = { ICON_POSITION_X, PHONE_ICON_POS_Y_DEFAULT },
-  .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_DEFAULT,
-  .caller_id_height = 50,
-  .status_pos_y = PHONE_STATUS_POS_Y_DEFAULT,
-  .status_height = 20,
+    .icon_size = TimelineResourceSizeLarge,
+    .icon_pos = {ICON_POSITION_X, PHONE_ICON_POS_Y_DEFAULT},
+    .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_DEFAULT,
+    .caller_id_height = 50,
+    .status_pos_y = PHONE_STATUS_POS_Y_DEFAULT,
+    .status_height = 20,
 };
 
 static const PhoneStyle s_phone_style_large = {
-  .icon_size = TimelineResourceSizeLarge,
-  .icon_pos = { ICON_POSITION_X, PHONE_ICON_POS_Y_LARGE },
-  .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_LARGE,
-  .caller_id_height = 60,
-  .status_pos_y = PHONE_STATUS_POS_Y_LARGE,
-  .status_height = 20,
-  .large_caller_id = true,
+    .icon_size = TimelineResourceSizeLarge,
+    .icon_pos = {ICON_POSITION_X, PHONE_ICON_POS_Y_LARGE},
+    .caller_id_pos_y = PHONE_CALLER_ID_POS_Y_LARGE,
+    .caller_id_height = 60,
+    .status_pos_y = PHONE_STATUS_POS_Y_LARGE,
+    .status_height = 20,
+    .large_caller_id = true,
 };
 
 static const PhoneStyle *s_phone_styles[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_phone_style_default,
-  [PreferredContentSizeMedium] = &s_phone_style_default,
-  [PreferredContentSizeLarge] = &s_phone_style_large,
-  [PreferredContentSizeExtraLarge] = &s_phone_style_large,
+    [PreferredContentSizeSmall] = &s_phone_style_default,
+    [PreferredContentSizeMedium] = &s_phone_style_default,
+    [PreferredContentSizeLarge] = &s_phone_style_large,
+    [PreferredContentSizeExtraLarge] = &s_phone_style_large,
 };
 
 static PhoneUIData *s_phone_ui_data;
@@ -238,7 +238,7 @@ static void prv_set_reply_window(void) {
 // The final icon set must still be destroyed alongside the reel.
 static void prv_set_icon_resource(TimelineResourceId timeline_res_id) {
   TimelineResourceInfo timeline_res = {
-    .res_id = timeline_res_id,
+      .res_id = timeline_res_id,
   };
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, s_phone_ui_data->style->icon_size, &icon_res_info);
@@ -267,7 +267,7 @@ static void prv_set_icon_resource(TimelineResourceId timeline_res_id) {
 // coordinate scheme being offset.
 static void prv_unfold_icon_resource(TimelineResourceId timeline_res_id) {
   TimelineResourceInfo timeline_res = {
-    .res_id = timeline_res_id,
+      .res_id = timeline_res_id,
   };
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, s_phone_ui_data->style->icon_size, &icon_res_info);
@@ -279,16 +279,15 @@ static void prv_unfold_icon_resource(TimelineResourceId timeline_res_id) {
   GRect icon_from = {
       .origin.x = layer_frame.origin.x + (layer_frame.size.w - DOT_SIZE) / 2,
       .origin.y = layer_frame.origin.y + (layer_frame.size.h - DOT_SIZE) / 2,
-      .size = { DOT_SIZE, DOT_SIZE },
+      .size = {DOT_SIZE, DOT_SIZE},
   };
   GRect icon_to = {
       .origin.x = layer_frame.origin.x + (layer_frame.size.w - size.w) / 2,
       .origin.y = layer_frame.origin.y + (layer_frame.size.h - size.h) / 2,
       .size = size,
   };
-  KinoReel *kino_reel = kino_reel_unfold_create(image, false, layer_frame, 0,
-                                                UNFOLD_DEFAULT_NUM_DELAY_GROUPS,
-                                                UNFOLD_DEFAULT_GROUP_DELAY);
+  KinoReel *kino_reel = kino_reel_unfold_create(
+      image, false, layer_frame, 0, UNFOLD_DEFAULT_NUM_DELAY_GROUPS, UNFOLD_DEFAULT_GROUP_DELAY);
   kino_reel_transform_set_from_frame(kino_reel, icon_from);
   kino_reel_transform_set_to_frame(kino_reel, icon_to);
   kino_reel_transform_set_transform_duration(kino_reel, UNFOLD_DURATION);
@@ -309,12 +308,15 @@ static int16_t prv_get_color_boundary(void *subject) {
 }
 
 static const PropertyAnimationImplementation s_color_slide_animation_impl = {
-    .base = {
-        .update = (AnimationUpdateImplementation)property_animation_update_int16,
-    },
+    .base =
+        {
+            .update = (AnimationUpdateImplementation)property_animation_update_int16,
+        },
     .accessors = {
-        .getter = { .int16 = (const Int16Getter)prv_get_color_boundary },
-        .setter = { .int16 = (const Int16Setter)prv_update_color_boundary, },
+        .getter = {.int16 = (const Int16Getter)prv_get_color_boundary},
+        .setter = {
+            .int16 = (const Int16Setter)prv_update_color_boundary,
+        },
     },
 };
 
@@ -361,8 +363,8 @@ static bool prv_is_string_a_phone_number(const char *name) {
 
   for (size_t i = 0; i < length; ++i) {
     unsigned char chr = name[i];
-    if ((chr != '(') && (chr != ')') && (chr != '+') && (chr != ' ') && (chr != '-') && (chr != '.')
-        && !isdigit(chr)) {
+    if ((chr != '(') && (chr != ')') && (chr != '+') && (chr != ' ') && (chr != '-') &&
+        (chr != '.') && !isdigit(chr)) {
       return false;
     }
   }
@@ -374,17 +376,14 @@ static bool prv_has_long_name(GFont font) {
   // (i.e. one that won't fit a single line at the default font size).
   const int16_t fudge_some_pixels = 30;
   const bool line_contains_newline = (strchr(s_phone_ui_data->caller_id_text_buf, '\n') != NULL);
-  int16_t test_width = s_phone_ui_data->caller_id_text_layer.layer.bounds.size.w
-                        + fudge_some_pixels;
+  int16_t test_width =
+      s_phone_ui_data->caller_id_text_layer.layer.bounds.size.w + fudge_some_pixels;
   GSize text_size = graphics_text_layout_get_max_used_size(
-      kernel_ui_get_graphics_context(),
-      s_phone_ui_data->caller_id_text_buf,
-      font,
+      kernel_ui_get_graphics_context(), s_phone_ui_data->caller_id_text_buf, font,
       GRect(0, 0, test_width, SINGLE_LINE_BOUND_HEIGHT),
-      s_phone_ui_data->caller_id_text_layer.overflow_mode,
-      GTextAlignmentLeft, NULL);
+      s_phone_ui_data->caller_id_text_layer.overflow_mode, GTextAlignmentLeft, NULL);
   return (text_size.w > s_phone_ui_data->caller_id_text_layer.layer.bounds.size.w) ||
-          line_contains_newline;
+         line_contains_newline;
 }
 
 //! Text setters
@@ -467,8 +466,8 @@ static void prv_ring(void *unused) {
 
 static void prv_start_ringing(void) {
   alerts_incoming_alert_analytics();
-  s_phone_ui_data->ring_timer = (const RegularTimerInfo) {
-    .cb = prv_ring,
+  s_phone_ui_data->ring_timer = (const RegularTimerInfo){
+      .cb = prv_ring,
   };
   s_phone_ui_data->ring_start_time = rtc_get_time();
   unsigned int vibe_repeat_interval_sec;
@@ -477,7 +476,7 @@ static void prv_start_ringing(void) {
     return;
   }
   unsigned int vibe_interval_ms = vibe_score_get_duration_ms(s_phone_ui_data->vibe_score) +
-      vibe_score_get_repeat_delay_ms(s_phone_ui_data->vibe_score);
+                                  vibe_score_get_repeat_delay_ms(s_phone_ui_data->vibe_score);
   vibe_repeat_interval_sec = DIVIDE_CEIL(vibe_interval_ms, MS_PER_SECOND);
   prv_ring(NULL);
   regular_timer_add_multisecond_callback(&s_phone_ui_data->ring_timer, vibe_repeat_interval_sec);
@@ -492,22 +491,19 @@ static void prv_stop_ringing(void) {
   vibes_cancel();
 }
 
-
 //! Call duration related functions
 static void prv_show_call_status(void) {
   layer_set_hidden(&s_phone_ui_data->call_status_text_layer.layer, false);
   s_phone_ui_data->call_status_text_layer.layer.bounds.origin.y = DURATION_ANIMATION_START_OFFSET;
-  Animation *upward = property_animation_get_animation(
-      property_animation_create_bounds_origin(&s_phone_ui_data->call_status_text_layer.layer,
-                                              &GPoint(0, DURATION_ANIMATION_START_OFFSET),
-                                              &GPoint(0, -BOUNCEBACK_DISTANCE)));
+  Animation *upward = property_animation_get_animation(property_animation_create_bounds_origin(
+      &s_phone_ui_data->call_status_text_layer.layer, &GPoint(0, DURATION_ANIMATION_START_OFFSET),
+      &GPoint(0, -BOUNCEBACK_DISTANCE)));
   animation_set_curve(upward, AnimationCurveEaseIn);
   animation_set_duration(upward, DURATION_APPEAR_ANIMATION_FRAMES * ANIMATION_FRAME_MS);
 
   Animation *bounceback = property_animation_get_animation(
       property_animation_create_bounds_origin(&s_phone_ui_data->call_status_text_layer.layer,
-                                              &GPoint(0, -BOUNCEBACK_DISTANCE),
-                                              &GPointZero));
+                                              &GPoint(0, -BOUNCEBACK_DISTANCE), &GPointZero));
   animation_set_curve(bounceback, AnimationCurveEaseOut);
   animation_set_duration(bounceback, BOUNCEBACK_ANIMATION_FRAMES * ANIMATION_FRAME_MS);
 
@@ -533,11 +529,11 @@ static void prv_update_call_time(void *unused) {
   if (minutes >= MINUTES_PER_HOUR) {
     const int hours = minutes / MINUTES_PER_HOUR;
     minutes = minutes % MINUTES_PER_HOUR;
-    sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH,
-        "%u:%02u:%02u", hours, minutes, seconds);
+    sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "%u:%02u:%02u",
+              hours, minutes, seconds);
   } else {
-    sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH,
-        "%u:%02u", minutes, seconds);
+    sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "%u:%02u", minutes,
+              seconds);
   }
   text_layer_set_text(&s_phone_ui_data->call_status_text_layer,
                       s_phone_ui_data->call_status_text_buf);
@@ -548,8 +544,8 @@ static void prv_start_call_duration_timer(void) {
     s_phone_ui_data->call_start_time = rtc_get_time();
   }
 
-  s_phone_ui_data->call_duration_timer = evented_timer_register(
-      1000, true /* repeating */, prv_update_call_time, NULL);
+  s_phone_ui_data->call_duration_timer =
+      evented_timer_register(1000, true /* repeating */, prv_update_call_time, NULL);
 
   // Update call time immediately
   prv_update_call_time(NULL);
@@ -614,11 +610,10 @@ static void prv_open_reply_action_menu(void *unused) {
 
   switch (reply_action->type) {
     case TimelineItemActionTypeResponse:
-      timeline_actions_push_response_menu(item, reply_action, SMS_REPLY_COLOR,
-                                          prv_action_menu_did_close,
-                                          modal_manager_get_window_stack(ModalPriorityNotification),
-                                          TimelineItemActionSourcePhoneUi,
-                                          true /* standalone_reply */);
+      timeline_actions_push_response_menu(
+          item, reply_action, SMS_REPLY_COLOR, prv_action_menu_did_close,
+          modal_manager_get_window_stack(ModalPriorityNotification),
+          TimelineItemActionSourcePhoneUi, true /* standalone_reply */);
       break;
     case TimelineItemActionTypeAncsResponse:
       // Mark this window so we know to pop it when we get a response
@@ -687,8 +682,8 @@ static void prv_sms_reply_click_handler(ClickRecognizerRef recognizer, void *unu
     case TimelineItemActionTypeAncsResponse:
       // On iOS, show the "Call Declined" animation and send the AncsResponse message shortly after
       // We hold the phone UI up until timeline_actions responds or another call comes in
-      s_phone_ui_data->window_pop_timer = evented_timer_register(SMS_REPLY_IOS_DELAY_MS,
-          false /* repeating */, prv_open_reply_action_menu, NULL);
+      s_phone_ui_data->window_pop_timer = evented_timer_register(
+          SMS_REPLY_IOS_DELAY_MS, false /* repeating */, prv_open_reply_action_menu, NULL);
       break;
     default:
       break;
@@ -708,23 +703,22 @@ static void prv_hide_action_bar(void) {
   s_phone_ui_data->hid_action_bar = true;
 
   const GRect window_bounds = s_phone_ui_data->window.layer.bounds;
-  GRect offscreen = GRect(window_bounds.size.w, 0, PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 0),
-                          window_bounds.size.h);
+  GRect offscreen =
+      GRect(window_bounds.size.w, 0, PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 0), window_bounds.size.h);
   Animation *action_bar_animation = property_animation_get_animation(
       property_animation_create_layer_frame(&s_phone_ui_data->action_bar.layer, NULL, &offscreen));
-  animation_set_duration(action_bar_animation, ACTION_BAR_DISAPPEAR_ANIMATION_FRAMES
-                                               * ANIMATION_FRAME_MS);
+  animation_set_duration(action_bar_animation,
+                         ACTION_BAR_DISAPPEAR_ANIMATION_FRAMES * ANIMATION_FRAME_MS);
   animation_set_curve(action_bar_animation, AnimationCurveEaseIn);
   GPoint overshoot = GPoint(PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH / 2, 0) + BOUNCEBACK_DISTANCE, 0);
-  Animation *ui_movement = property_animation_get_animation(
-      property_animation_create_bounds_origin(&s_phone_ui_data->core_ui_container, NULL,
-                                              &overshoot));
+  Animation *ui_movement = property_animation_get_animation(property_animation_create_bounds_origin(
+      &s_phone_ui_data->core_ui_container, NULL, &overshoot));
   animation_set_curve(ui_movement, AnimationCurveEaseIn);
   animation_set_duration(ui_movement, 3 * ANIMATION_FRAME_MS);
-  Animation *ui_bounceback = property_animation_get_animation(
-      property_animation_create_bounds_origin(
-        &s_phone_ui_data->core_ui_container, &overshoot,
-        &GPoint(PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH / 2, 0), 0)));
+  Animation *ui_bounceback =
+      property_animation_get_animation(property_animation_create_bounds_origin(
+          &s_phone_ui_data->core_ui_container, &overshoot,
+          &GPoint(PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH / 2, 0), 0)));
   animation_set_curve(ui_bounceback, AnimationCurveEaseOut);
   animation_set_duration(ui_bounceback, 2 * ANIMATION_FRAME_MS);
   Animation *ui_animation = animation_sequence_create(ui_movement, ui_bounceback, NULL);
@@ -798,10 +792,8 @@ static bool prv_load_sms_reply_action(const char *number, PhoneCallSource source
   attribute_list_add_cstring(&attributes, AttributeIdSender, number);
   attribute_list_add_cstring(&attributes, AttributeIdiOSAppIdentifier, app_id);
 
-  TimelineItem *item = timeline_item_create_with_attributes(0, 0, TimelineItemTypeNotification,
-                                                            LayoutIdUnknown,
-                                                            &attributes,
-                                                            &notif_prefs->action_group);
+  TimelineItem *item = timeline_item_create_with_attributes(
+      0, 0, TimelineItemTypeNotification, LayoutIdUnknown, &attributes, &notif_prefs->action_group);
   bool rv = false;
 
   // Make sure we have a reply action (this properly handles NULL items)
@@ -939,8 +931,8 @@ static void prv_handle_window_unload(Window *window) {
 static void prv_window_pop(void) {
   if (s_phone_ui_data == NULL) {
     // Check to make sure we didn't get popped already.
-    // There could possibly be 2 of these callback in the queue at time if this is called right after
-    // a prv_pop_with_delay
+    // There could possibly be 2 of these callback in the queue at time if this is called right
+    // after a prv_pop_with_delay
     return;
   }
 
@@ -963,8 +955,8 @@ static void prv_window_pop_cb(void *unused) {
 }
 
 static void prv_window_pop_with_delay(uint32_t delay_ms) {
-  s_phone_ui_data->window_pop_timer = evented_timer_register(
-      delay_ms, false /* repeating */, prv_window_pop_cb, NULL);
+  s_phone_ui_data->window_pop_timer =
+      evented_timer_register(delay_ms, false /* repeating */, prv_window_pop_cb, NULL);
 }
 
 //! Window setup
@@ -981,18 +973,17 @@ static void prv_phone_ui_init(void) {
   s_phone_ui_data->name_font = system_theme_get_font(TextStyleFont_Title);
   s_phone_ui_data->long_name_font =
       system_theme_get_font(PBL_IF_RECT_ELSE(TextStyleFont_Header, TextStyleFont_Title));
-  s_phone_ui_data->status_font =
-      PBL_IF_RECT_ELSE(system_theme_get_font(TextStyleFont_Header),
-                       fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  s_phone_ui_data->status_font = PBL_IF_RECT_ELSE(system_theme_get_font(TextStyleFont_Header),
+                                                  fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 
   Window *window = &s_phone_ui_data->window;
 
   window_init(window, WINDOW_NAME("Phone"));
-  window_set_status_bar_icon(window, (GBitmap*)&s_status_icon_phone_bitmap);
+  window_set_status_bar_icon(window, (GBitmap *)&s_status_icon_phone_bitmap);
   layer_set_update_proc(&window->layer, prv_window_update_proc);
-  window_set_window_handlers(&s_phone_ui_data->window, &(WindowHandlers) {
-    .unload = prv_handle_window_unload,
-  });
+  window_set_window_handlers(&s_phone_ui_data->window, &(WindowHandlers){
+                                                           .unload = prv_handle_window_unload,
+                                                       });
   window_set_overrides_back_button(window, true);
   s_phone_ui_data->bg_color.left = DEFAULT_COLOR;
   s_phone_ui_data->bg_color.right = DEFAULT_COLOR;
@@ -1010,22 +1001,20 @@ static void prv_phone_ui_init(void) {
                   &GRect(0, 0, window->layer.bounds.size.w - PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 0),
                          STATUS_BAR_LAYER_HEIGHT));
   status_bar_layer_set_colors(&s_phone_ui_data->status_bar,
-                              PBL_IF_COLOR_ELSE(GColorClear, GColorWhite),
-                              GColorBlack);
+                              PBL_IF_COLOR_ELSE(GColorClear, GColorWhite), GColorBlack);
   layer_add_child(&s_phone_ui_data->core_ui_container, &s_phone_ui_data->status_bar.layer);
 
   // Icon
   kino_layer_init(&s_phone_ui_data->icon_layer,
-                  &(GRect){ style->icon_pos, { ICON_WIDTH, ICON_WIDTH } });
+                  &(GRect){style->icon_pos, {ICON_WIDTH, ICON_WIDTH}});
   kino_layer_set_alignment(&s_phone_ui_data->icon_layer, GAlignCenter);
   layer_add_child(&s_phone_ui_data->core_ui_container, &s_phone_ui_data->icon_layer.layer);
 
   // Caller ID text
-  const GRect caller_id_text_rect = GRect(TEXT_MARGIN_WIDTH, style->caller_id_pos_y,
-                                          width, style->caller_id_height);
-  text_layer_init_with_parameters(&s_phone_ui_data->caller_id_text_layer,
-                                  &caller_id_text_rect, NULL, NULL,
-                                  GColorBlack,
+  const GRect caller_id_text_rect =
+      GRect(TEXT_MARGIN_WIDTH, style->caller_id_pos_y, width, style->caller_id_height);
+  text_layer_init_with_parameters(&s_phone_ui_data->caller_id_text_layer, &caller_id_text_rect,
+                                  NULL, NULL, GColorBlack,
                                   PBL_IF_COLOR_ELSE(GColorClear, GColorWhite),
                                   PBL_IF_RECT_ELSE(GTextAlignmentCenter, GTextAlignmentRight),
                                   GTextOverflowModeTrailingEllipsis);
@@ -1035,11 +1024,10 @@ static void prv_phone_ui_init(void) {
   s_phone_ui_data->caller_id_text_layer.layer.bounds.size.w = width - TEXT_RIGHTSIDE_PADDING;
 
   // Status text
-  const GRect call_status_text_rect = GRect(TEXT_MARGIN_WIDTH, style->status_pos_y,
-                                            width, style->status_height);
-  text_layer_init_with_parameters(&s_phone_ui_data->call_status_text_layer,
-                                  &call_status_text_rect, NULL, s_phone_ui_data->status_font,
-                                  GColorBlack,
+  const GRect call_status_text_rect =
+      GRect(TEXT_MARGIN_WIDTH, style->status_pos_y, width, style->status_height);
+  text_layer_init_with_parameters(&s_phone_ui_data->call_status_text_layer, &call_status_text_rect,
+                                  NULL, s_phone_ui_data->status_font, GColorBlack,
                                   PBL_IF_COLOR_ELSE(GColorClear, GColorWhite),
                                   PBL_IF_RECT_ELSE(GTextAlignmentCenter, GTextAlignmentRight),
                                   GTextOverflowModeTrailingEllipsis);
@@ -1149,8 +1137,8 @@ void phone_ui_handle_call_start(bool can_decline) {
   prv_set_icon_resource(TIMELINE_RESOURCE_DURING_PHONE_CALL);
 #else
   // action bar requires right-aligned icon, otherwise centered icon
-  prv_set_icon_resource((can_decline) ? TIMELINE_RESOURCE_DURING_PHONE_CALL :
-                        TIMELINE_RESOURCE_DURING_PHONE_CALL_CENTERED);
+  prv_set_icon_resource((can_decline) ? TIMELINE_RESOURCE_DURING_PHONE_CALL
+                                      : TIMELINE_RESOURCE_DURING_PHONE_CALL_CENTERED);
 #endif
 
   prv_set_window_color(ACCEPT_COLOR, false);

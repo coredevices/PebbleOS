@@ -28,8 +28,7 @@ typedef void (*TransportReset)(Transport *transport);
 
 //! Pointer to function which calls the appropriate connection speed API
 //! exported by bt_conn_mgr
-typedef void (*TransportSetConnectionResponsiveness)(Transport *transport,
-                                                     BtConsumer consumer,
+typedef void (*TransportSetConnectionResponsiveness)(Transport *transport, BtConsumer consumer,
                                                      ResponseTimeState state,
                                                      uint16_t max_period_secs,
                                                      ResponsivenessGrantedHandler granted_handler);
@@ -93,8 +92,8 @@ typedef enum TransportDestination {
 //! party app, or both (see \ref TransportDestination).
 //! @return True if the session was opened successfully, false if not
 //! bt_lock() is expected to be taken by the caller!
-CommSession * comm_session_open(Transport *transport, const TransportImplementation *implementation,
-                       TransportDestination destination);
+CommSession *comm_session_open(Transport *transport, const TransportImplementation *implementation,
+                               TransportDestination destination);
 
 //! Called by the transport to indicate that the session associated with the given transport needs
 //! to be closed and cleaned up.
@@ -108,8 +107,7 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason);
 
 //! Called by the transport to copy received data from a given buffer into the receive buffer.
 //! @note bt_lock() is expected to be taken by the caller!
-void comm_session_receive_router_write(CommSession *session,
-                                       const uint8_t *data, size_t data_size);
+void comm_session_receive_router_write(CommSession *session, const uint8_t *data, size_t data_size);
 
 // -------------------------------------------------------------------------------------------------
 // Sending
@@ -128,8 +126,8 @@ size_t comm_session_send_queue_get_length(const CommSession *session);
 //! @note The caller must ensure there is enough data available, for example by getting the length
 //! by calling comm_session_send_queue_get_length().
 //! @note bt_lock() is expected to be taken by the caller!
-size_t comm_session_send_queue_copy(CommSession *session, uint32_t start_offset,
-                                    size_t length, uint8_t *data_out);
+size_t comm_session_send_queue_copy(CommSession *session, uint32_t start_offset, size_t length,
+                                    uint8_t *data_out);
 
 //! Gets a read pointer and the number of bytes that can be read from the read pointer.
 //! @note Internally, a non-contiguous buffer is used, so it is possible that there is more data

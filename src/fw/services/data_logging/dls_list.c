@@ -19,7 +19,6 @@ PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEV
 static DataLoggingSession *s_logging_sessions;
 static PBL_MUTEX_DEFINE(s_list_mutex);
 
-
 // ---------------------------------------------------------------------------------------
 // Assert that the current task owns the list mutex
 void dls_assert_own_list_mutex(void) {
@@ -57,14 +56,12 @@ bool dls_lock_session(DataLoggingSession *session) {
   return true;
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Callback used to free a storage buffer from unprivileged mode.
 static void prv_free_storage_buffer_cb(void *p) {
   PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Freeing buffer storage ptr: %p", p);
   task_free(p);
 }
-
 
 // ---------------------------------------------------------------------------------------
 static void prv_free_storage_buffer(DataLoggingSession *session) {
@@ -81,17 +78,13 @@ static void prv_free_storage_buffer(DataLoggingSession *session) {
     // watch. We will post a callback event to the process's event handler which is executed
     // in unprivileged mode.
     PebbleEvent e = {
-      .type = PEBBLE_CALLBACK_EVENT,
-      .callback = {
-        .callback = prv_free_storage_buffer_cb,
-        .data = session->data->buffer_storage
-      }
+        .type = PEBBLE_CALLBACK_EVENT,
+        .callback = {.callback = prv_free_storage_buffer_cb, .data = session->data->buffer_storage}
     };
     PebbleTask task = pebble_task_get_current();
     process_manager_send_event_to_process(task, &e);
   }
 }
-
 
 // ---------------------------------------------------------------------------------------
 // Unlock a session previous locked by dls_lock_session(). If inactive is true, this also marks
@@ -130,7 +123,6 @@ DataLoggingStatus dls_get_session_status(DataLoggingSession *session) {
   return status;
 }
 
-
 DataLoggingSession *dls_list_find_by_session_id(uint8_t session_id) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
@@ -153,8 +145,8 @@ DataLoggingSession *dls_list_find_active_session(uint32_t tag, const Uuid *app_u
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
   while (iter != NULL) {
-    if (iter->tag == tag && uuid_equal(&(iter->app_uuid), app_uuid)
-        && iter->status == DataLoggingStatusActive) {
+    if (iter->tag == tag && uuid_equal(&(iter->app_uuid), app_uuid) &&
+        iter->status == DataLoggingStatusActive) {
       pbl_mutex_unlock(&s_list_mutex);
       return (iter);
     }
@@ -167,8 +159,7 @@ DataLoggingSession *dls_list_find_active_session(uint32_t tag, const Uuid *app_u
 
 void dls_list_remove_session(DataLoggingSession *logging_session) {
   if (uuid_is_system(&logging_session->app_uuid)) {
-    PBL_LOG_WRN("Deleting the system data logging session with tag %"PRIu32,
-            logging_session->tag);
+    PBL_LOG_WRN("Deleting the system data logging session with tag %" PRIu32, logging_session->tag);
   }
 
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
@@ -228,8 +219,8 @@ void dls_list_insert_session(DataLoggingSession *logging_session) {
   logging_session->next = *iter;
   *iter = logging_session;
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Created session: %p id %"PRIu8
-      " tag %"PRIu32, logging_session, logging_session->comm.session_id, logging_session->tag);
+  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Created session: %p id %" PRIu8 " tag %" PRIu32,
+                logging_session, logging_session->comm.session_id, logging_session->tag);
 
   pbl_mutex_unlock(&s_list_mutex);
 }
@@ -257,7 +248,7 @@ uint8_t dls_list_add_new_session(DataLoggingSession *logging_session) {
 }
 
 static bool count_session_cb(DataLoggingSession *session, void *data) {
-  uint32_t *counter = (uint32_t *) data;
+  uint32_t *counter = (uint32_t *)data;
   ++(*counter);
   return true;
 }
@@ -269,8 +260,8 @@ static uint32_t prv_get_num_sessions(void) {
 }
 
 DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType type, uint16_t size,
-    const Uuid *app_uuid, time_t timestamp, DataLoggingStatus status) {
-
+                                            const Uuid *app_uuid, time_t timestamp,
+                                            DataLoggingStatus status) {
   uint32_t num_sessions = prv_get_num_sessions();
   if (num_sessions >= DLS_MAX_NUM_SESSIONS) {
     PBL_LOG_WRN("Could not allocate additional DataLoggingSession objects");
@@ -280,14 +271,14 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
   DataLoggingSession *logging_session = kernel_malloc_check(sizeof(DataLoggingSession));
 
   *logging_session = (DataLoggingSession){
-    .status = status,
-    .app_uuid = *app_uuid,
-    .tag = tag,
-    .task = pebble_task_get_current(),
-    .item_type = type,
-    .item_size = size,
-    .session_created_timestamp = timestamp,
-    .storage.fd = DLS_INVALID_FILE
+      .status = status,
+      .app_uuid = *app_uuid,
+      .tag = tag,
+      .task = pebble_task_get_current(),
+      .item_type = type,
+      .item_size = size,
+      .session_created_timestamp = timestamp,
+      .storage.fd = DLS_INVALID_FILE
   };
 
   if (status == DataLoggingStatusActive) {
@@ -321,7 +312,7 @@ void dls_list_unlock(void) {
   pbl_mutex_unlock(&s_list_mutex);
 }
 
-bool dls_list_for_each_session(bool (callback(DataLoggingSession*, void*)), void *data) {
+bool dls_list_for_each_session(bool(callback(DataLoggingSession *, void *)), void *data) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *logging_session = s_logging_sessions;
 
@@ -359,4 +350,3 @@ bool dls_list_is_session_valid(DataLoggingSession *logging_session) {
 
   return false;
 }
-

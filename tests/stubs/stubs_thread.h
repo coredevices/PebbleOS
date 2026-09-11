@@ -50,11 +50,11 @@ void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *region
 }
 
 void pbl_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs) {
-  *regs = (struct pbl_thread_saved_regs) { .control = s_app_task_control_reg };
+  *regs = (struct pbl_thread_saved_regs){.control = s_app_task_control_reg};
 }
 
 void pbl_thread_stack_info(const struct pbl_thread *t, struct pbl_thread_stack_info *info) {
-  *info = (struct pbl_thread_stack_info) { 0 };
+  *info = (struct pbl_thread_stack_info){0};
 }
 
 // Stubs

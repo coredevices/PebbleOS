@@ -50,11 +50,11 @@ static bool prv_cancel_selection_animation(MenuLayer *menu_layer);
 //////////////////////
 // Menu Layer
 //
-// NOTES: The MenuLayer is built on top of ScrollLayer. It uses ScrollLayer's scrolling and clipping features.
-// Since it easily becomes to costly in terms of RAM to hold a layer for each row in the menu in memory,
-// the MenuLayer does not use layers for its rows and headers. When a row is about to be displayed,
-// it will call out to the client using a callback to get that row drawn.
-// Inside the MenuLayer's update_proc (Layer drawing callback), it will call out to its client for each row
+// NOTES: The MenuLayer is built on top of ScrollLayer. It uses ScrollLayer's scrolling and clipping
+// features. Since it easily becomes to costly in terms of RAM to hold a layer for each row in the
+// menu in memory, the MenuLayer does not use layers for its rows and headers. When a row is about
+// to be displayed, it will call out to the client using a callback to get that row drawn. Inside
+// the MenuLayer's update_proc (Layer drawing callback), it will call out to its client for each row
 // that needs to be drawn, until all visible rows have been drawn.
 
 //! How long the scrollbar overlay stays visible after the last touch scroll movement.
@@ -93,8 +93,8 @@ static void prv_scrollbar_kick(MenuLayer *menu_layer) {
   if (!menu_layer->scrollbar_hide_timer ||
       !app_timer_reschedule(menu_layer->scrollbar_hide_timer,
                             MENU_LAYER_SCROLLBAR_HIDE_TIMEOUT_MS)) {
-    menu_layer->scrollbar_hide_timer = app_timer_register(
-        MENU_LAYER_SCROLLBAR_HIDE_TIMEOUT_MS, prv_scrollbar_hide_timer_cb, menu_layer);
+    menu_layer->scrollbar_hide_timer = app_timer_register(MENU_LAYER_SCROLLBAR_HIDE_TIMEOUT_MS,
+                                                          prv_scrollbar_hide_timer_cb, menu_layer);
   }
 }
 #endif  // CONFIG_TOUCH
@@ -129,14 +129,14 @@ T_STATIC bool prv_scrollbar_thumb_angles(MenuLayer *menu_layer, int16_t content_
 static void prv_scrollbar_fill_capped_arc(GContext *ctx, GPoint center, uint16_t radius_outer,
                                           uint16_t thickness, int32_t angle_start,
                                           int32_t angle_end) {
-  graphics_fill_radial_internal(ctx, center, radius_outer - thickness, radius_outer,
-                                angle_start, angle_end);
+  graphics_fill_radial_internal(ctx, center, radius_outer - thickness, radius_outer, angle_start,
+                                angle_end);
   const int32_t radius_mid = radius_outer - (thickness / 2);
-  const int32_t angles[2] = { angle_start, angle_end };
+  const int32_t angles[2] = {angle_start, angle_end};
   for (size_t i = 0; i < ARRAY_LENGTH(angles); i++) {
-    const GPoint cap = GPoint(
-        center.x + (int16_t)((radius_mid * sin_lookup(angles[i])) / TRIG_MAX_RATIO),
-        center.y - (int16_t)((radius_mid * cos_lookup(angles[i])) / TRIG_MAX_RATIO));
+    const GPoint cap =
+        GPoint(center.x + (int16_t)((radius_mid * sin_lookup(angles[i])) / TRIG_MAX_RATIO),
+               center.y - (int16_t)((radius_mid * cos_lookup(angles[i])) / TRIG_MAX_RATIO));
     graphics_fill_circle(ctx, cap, thickness / 2);
   }
 }
@@ -167,11 +167,11 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
   // provides the contrast backing for the thumb, so no halo is needed.
   const int32_t track_start = DEG_TO_TRIGANGLE(90) - (MENU_LAYER_SCROLLBAR_TRACK_SWEEP / 2);
   graphics_context_set_fill_color(ctx, prv_scrollbar_track_color(menu_layer));
-  prv_scrollbar_fill_capped_arc(ctx, center, radius_outer, MENU_LAYER_SCROLLBAR_WIDTH,
-                                track_start, track_start + MENU_LAYER_SCROLLBAR_TRACK_SWEEP);
+  prv_scrollbar_fill_capped_arc(ctx, center, radius_outer, MENU_LAYER_SCROLLBAR_WIDTH, track_start,
+                                track_start + MENU_LAYER_SCROLLBAR_TRACK_SWEEP);
   graphics_context_set_fill_color(ctx, menu_layer->normal_colors[MenuLayerColorForeground]);
-  prv_scrollbar_fill_capped_arc(ctx, center, radius_outer, MENU_LAYER_SCROLLBAR_WIDTH,
-                                angle_start, angle_end);
+  prv_scrollbar_fill_capped_arc(ctx, center, radius_outer, MENU_LAYER_SCROLLBAR_WIDTH, angle_start,
+                                angle_end);
 }
 #else
 //! Scrollbar thumb rect in content-space coordinates (the space menu_layer_update_proc draws in).
@@ -187,8 +187,8 @@ T_STATIC GRect prv_scrollbar_thumb_rect(MenuLayer *menu_layer, int16_t content_t
                                MENU_LAYER_SCROLLBAR_MIN_THUMB_HEIGHT, track_h);
   // Center-focused menus over-scroll past the ends (offset clipping disabled); clamp to the track.
   const int16_t progress_y = CLIP(content_top_y, 0, scrollable_h);
-  const int16_t thumb_y = MENU_LAYER_SCROLLBAR_MARGIN +
-      (((int32_t)(track_h - thumb_h) * progress_y) / scrollable_h);
+  const int16_t thumb_y =
+      MENU_LAYER_SCROLLBAR_MARGIN + (((int32_t)(track_h - thumb_h) * progress_y) / scrollable_h);
   return GRect(frame_size.w - MENU_LAYER_SCROLLBAR_MARGIN - MENU_LAYER_SCROLLBAR_WIDTH,
                content_top_y + thumb_y, MENU_LAYER_SCROLLBAR_WIDTH, thumb_h);
 }
@@ -255,10 +255,10 @@ static void prv_menu_select_click_handler(ClickRecognizerRef recognizer, MenuLay
 }
 
 static void prv_menu_select_long_click_handler(ClickRecognizerRef recognizer,
-    MenuLayer *menu_layer) {
+                                               MenuLayer *menu_layer) {
   if (menu_layer->callbacks.select_long_click) {
     menu_layer->callbacks.select_long_click(menu_layer, &menu_layer->selection.index,
-        menu_layer->callback_context);
+                                            menu_layer->callback_context);
   }
 }
 
@@ -280,10 +280,10 @@ static bool prv_menu_index_is_last_index(MenuLayer *menu_layer, const MenuIndex 
 }
 
 static void prv_vibe_pulse(void) {
-  uint32_t const segments[] = { 50 };
+  uint32_t const segments[] = {50};
   VibePattern pat = {
-    .durations = segments,
-    .num_segments = ARRAY_LENGTH(segments),
+      .durations = segments,
+      .num_segments = ARRAY_LENGTH(segments),
   };
   vibes_enqueue_custom_pattern(pat);
 }
@@ -293,8 +293,10 @@ static void prv_vibe_pulse(void) {
 //! @param recognizer reference to the ClickRecognizer struct
 //! @param scrolling_up `true` if scrolling up, `false` if scrolling down
 //! @return `true` if a wrap around has been applied
-static bool prv_menu_scroll_handle_wrap_around(MenuLayer *menu_layer, ClickRecognizerRef recognizer, bool scrolling_up) {
-  const uint8_t current_scroll_action = scrolling_up ? MenuLayerRepeatScrollingUp : MenuLayerRepeatScrollingDown;
+static bool prv_menu_scroll_handle_wrap_around(MenuLayer *menu_layer, ClickRecognizerRef recognizer,
+                                               bool scrolling_up) {
+  const uint8_t current_scroll_action =
+      scrolling_up ? MenuLayerRepeatScrollingUp : MenuLayerRepeatScrollingDown;
   const bool is_repeating = click_recognizer_is_repeating(recognizer);
 
   if (is_repeating) {
@@ -321,8 +323,7 @@ static bool prv_menu_scroll_handle_wrap_around(MenuLayer *menu_layer, ClickRecog
 
   // Honor selection_will_change, like normal scrolling does, so the wrap
   // destination can be redirected away from non-selectable rows.
-  MenuLayerSelectionWillChangeCallback will_change_cb =
-      menu_layer->callbacks.selection_will_change;
+  MenuLayerSelectionWillChangeCallback will_change_cb = menu_layer->callbacks.selection_will_change;
   if (will_change_cb) {
     MenuIndex new_index = *wraparound_dest_index;
     will_change_cb(menu_layer, &new_index, current_index, menu_layer->callback_context);
@@ -343,27 +344,29 @@ static bool prv_menu_scroll_handle_wrap_around(MenuLayer *menu_layer, ClickRecog
 
 #ifdef CONFIG_TOUCH
 // After a free pixel scroll (touch), the logical selection can drift off-screen while the visible
-// content is elsewhere. Stepping UP/DOWN from that off-screen selection teleports it across the list.
-// If the selection is not visible in the viewport, reselect the row nearest the viewport centre first
-// (no activation, MenuRowAlignNone leaves a free-scrolled list where it is; center_focused menus keep
-// their centre invariant regardless); the caller then steps from there.
-// When the selection is already visible, this is a no-op so on-screen menus behave exactly as before.
+// content is elsewhere. Stepping UP/DOWN from that off-screen selection teleports it across the
+// list. If the selection is not visible in the viewport, reselect the row nearest the viewport
+// centre first (no activation, MenuRowAlignNone leaves a free-scrolled list where it is;
+// center_focused menus keep their centre invariant regardless); the caller then steps from there.
+// When the selection is already visible, this is a no-op so on-screen menus behave exactly as
+// before.
 static void prv_menu_reconcile_selection_before_step(MenuLayer *menu_layer) {
-  // Only a free pixel scroll (pan) leaves the selection off-screen with a SETTLED offset. A button or
-  // programmatic step animates the SCROLL offset toward the selection; while that scroll animation is
-  // in flight the offset legitimately lags the selection, and pulling to centre would fight the
-  // settling step. Gate on the scroll animation specifically, not the highlight animation: a pan
-  // leaves the scroll offset settled even while a just-tapped row's highlight animation is still
-  // running, and that case must still reconcile. animation_is_scheduled() is NULL-safe (false).
-  Animation *scroll_animation = (Animation *) menu_layer->scroll_layer.animation;
+  // Only a free pixel scroll (pan) leaves the selection off-screen with a SETTLED offset. A button
+  // or programmatic step animates the SCROLL offset toward the selection; while that scroll
+  // animation is in flight the offset legitimately lags the selection, and pulling to centre would
+  // fight the settling step. Gate on the scroll animation specifically, not the highlight
+  // animation: a pan leaves the scroll offset settled even while a just-tapped row's highlight
+  // animation is still running, and that case must still reconcile. animation_is_scheduled() is
+  // NULL-safe (false).
+  Animation *scroll_animation = (Animation *)menu_layer->scroll_layer.animation;
   if (animation_is_scheduled(scroll_animation)) {
     return;
   }
   const int16_t offset_y = scroll_layer_get_content_offset(&menu_layer->scroll_layer).y;
   const int16_t frame_h = menu_layer->scroll_layer.layer.frame.size.h;
 
-  // A content point content_y appears at frame_y = content_y + offset_y; the selected row is visible
-  // iff its frame-y range overlaps [0, frame_h].
+  // A content point content_y appears at frame_y = content_y + offset_y; the selected row is
+  // visible iff its frame-y range overlaps [0, frame_h].
   const bool selection_visible =
       (menu_layer->selection.y + offset_y + menu_layer->selection.h > 0) &&
       (menu_layer->selection.y + offset_y < frame_h);
@@ -382,7 +385,8 @@ static void prv_menu_reconcile_selection_before_step(MenuLayer *menu_layer) {
 
 void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer) {
   const bool up = true;
-  if (menu_layer->scroll_wrap_around && prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
+  if (menu_layer->scroll_wrap_around &&
+      prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
     return;
   }
 #ifdef CONFIG_TOUCH
@@ -394,15 +398,16 @@ void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer)
   menu_layer_set_selected_next(menu_layer, up, MenuRowAlignCenter, animated);
   MenuIndex current_index = menu_layer->selection.index;
   if ((menu_layer->scroll_vibe_on_blocked) &&
-    (menu_index_compare(&current_index, &prev_index) == 0) &&
-    (prv_menu_index_is_first_index(menu_layer, &current_index))) {
-      prv_vibe_pulse();
+      (menu_index_compare(&current_index, &prev_index) == 0) &&
+      (prv_menu_index_is_first_index(menu_layer, &current_index))) {
+    prv_vibe_pulse();
   }
 }
 
 void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer) {
   const bool up = false;
-  if (menu_layer->scroll_wrap_around && prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
+  if (menu_layer->scroll_wrap_around &&
+      prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
     return;
   }
 #ifdef CONFIG_TOUCH
@@ -414,9 +419,9 @@ void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_laye
   menu_layer_set_selected_next(menu_layer, up, MenuRowAlignCenter, animated);
   MenuIndex current_index = menu_layer->selection.index;
   if ((menu_layer->scroll_vibe_on_blocked) &&
-    (menu_index_compare(&current_index, &prev_index) == 0) &&
-    (prv_menu_index_is_last_index(menu_layer, &current_index))) {
-      prv_vibe_pulse();
+      (menu_index_compare(&current_index, &prev_index) == 0) &&
+      (prv_menu_index_is_last_index(menu_layer, &current_index))) {
+    prv_vibe_pulse();
   }
 }
 
@@ -424,23 +429,23 @@ static void prv_menu_click_config_provider(MenuLayer *menu_layer) {
   // The config that gets passed in, has already the UP and DOWN buttons configured
   // we're overriding the default behavior here:
   window_single_repeating_click_subscribe(BUTTON_ID_UP, 100 /*ms*/,
-      (ClickHandler)menu_up_click_handler);
+                                          (ClickHandler)menu_up_click_handler);
   if (menu_layer->callbacks.select_click) {
     window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)prv_menu_select_click_handler);
   }
   if (menu_layer->callbacks.select_long_click) {
     window_long_click_subscribe(BUTTON_ID_SELECT, 0,
-        (ClickHandler)prv_menu_select_long_click_handler, NULL);
+                                (ClickHandler)prv_menu_select_long_click_handler, NULL);
   }
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100 /*ms*/,
-      (ClickHandler)menu_down_click_handler);
+                                          (ClickHandler)menu_down_click_handler);
 }
 
 static inline uint16_t prv_menu_layer_get_num_sections(MenuLayer *menu_layer) {
   if (menu_layer->callbacks.get_num_sections) {
     return menu_layer->callbacks.get_num_sections(menu_layer, menu_layer->callback_context);
   } else {
-    return 1; // default
+    return 1;  // default
   }
 }
 
@@ -451,16 +456,17 @@ static inline uint16_t prv_menu_layer_get_num_rows(MenuLayer *menu_layer, uint16
 
   if (menu_layer->callbacks.get_num_rows) {
     return menu_layer->callbacks.get_num_rows(menu_layer, section_index,
-        menu_layer->callback_context);
+                                              menu_layer->callback_context);
   } else {
     return 1;  // default
   }
 }
 
 static inline int16_t prv_menu_layer_get_separator_height(MenuLayer *menu_layer,
-    MenuIndex *cell_index) {
+                                                          MenuIndex *cell_index) {
   if (menu_layer->callbacks.get_separator_height) {
-    return menu_layer->callbacks.get_separator_height(menu_layer, cell_index, menu_layer->callback_context);
+    return menu_layer->callbacks.get_separator_height(menu_layer, cell_index,
+                                                      menu_layer->callback_context);
   } else if (process_manager_compiled_with_legacy2_sdk()) {
     return MENU_CELL_LEGACY2_BASIC_SEPARATOR_HEIGHT;
   } else {
@@ -469,23 +475,24 @@ static inline int16_t prv_menu_layer_get_separator_height(MenuLayer *menu_layer,
 }
 
 static inline int16_t prv_menu_layer_get_header_height(MenuLayer *menu_layer,
-    uint16_t section_index) {
+                                                       uint16_t section_index) {
   if (menu_layer->callbacks.get_header_height) {
-    return menu_layer->callbacks.get_header_height(menu_layer, section_index, menu_layer->callback_context);
+    return menu_layer->callbacks.get_header_height(menu_layer, section_index,
+                                                   menu_layer->callback_context);
   } else {
-    return 0; // default
+    return 0;  // default
   }
 }
 
-static inline int16_t prv_menu_layer_get_cell_height(MenuLayer *menu_layer, MenuIndex
-    *cell_index, bool provide_correct_selection_index) {
+static inline int16_t prv_menu_layer_get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index,
+                                                     bool provide_correct_selection_index) {
   if (menu_layer->callbacks.get_cell_height) {
     const MenuIndex prev_selection_index = menu_layer->selection.index;
     if (!provide_correct_selection_index) {
       menu_layer->selection.index.section = MENU_INDEX_NOT_FOUND;
     }
-    const int16_t result = menu_layer->callbacks.get_cell_height(menu_layer, cell_index,
-                                                                 menu_layer->callback_context);
+    const int16_t result =
+        menu_layer->callbacks.get_cell_height(menu_layer, cell_index, menu_layer->callback_context);
 
     menu_layer->selection.index = prev_selection_index;
     return result;
@@ -495,7 +502,7 @@ static inline int16_t prv_menu_layer_get_cell_height(MenuLayer *menu_layer, Menu
 }
 
 static inline void prv_menu_layer_draw_separator(MenuLayer *menu_layer, Layer *cell_layer,
-    MenuCellSpan *cursor, GContext* ctx) {
+                                                 MenuCellSpan *cursor, GContext *ctx) {
   const int16_t y = cursor->y - cursor->sep;
   if (menu_layer->callbacks.draw_separator) {
     // Save current drawing state:
@@ -512,7 +519,8 @@ static inline void prv_menu_layer_draw_separator(MenuLayer *menu_layer, Layer *c
     layer_set_bounds(cell_layer, &new_bounds);
 
     // Call the client, to ask to draw the separator:
-    menu_layer->callbacks.draw_separator(ctx, cell_layer, &cursor->index, menu_layer->callback_context);
+    menu_layer->callbacks.draw_separator(ctx, cell_layer, &cursor->index,
+                                         menu_layer->callback_context);
 
     // Restore current drawing state:
     graphics_context_set_drawing_state(ctx, prev_state);
@@ -520,13 +528,13 @@ static inline void prv_menu_layer_draw_separator(MenuLayer *menu_layer, Layer *c
     // Restore the layer bounds:
     layer_set_bounds(cell_layer, &prev_bounds);
   } else {
-    graphics_fill_rect(
-        ctx, &GRect(0, y, menu_layer->scroll_layer.layer.bounds.size.w, cursor->sep));
+    graphics_fill_rect(ctx,
+                       &GRect(0, y, menu_layer->scroll_layer.layer.bounds.size.w, cursor->sep));
   }
 }
 
-static void prv_prepare_row(GContext *ctx, MenuLayer *menu_layer,
-                            Layer *cell_layer, bool highlight) {
+static void prv_prepare_row(GContext *ctx, MenuLayer *menu_layer, Layer *cell_layer,
+                            bool highlight) {
   if (!process_manager_compiled_with_legacy2_sdk()) {
     GColor *colors = (highlight) ? menu_layer->highlight_colors : menu_layer->normal_colors;
     ctx->draw_state.fill_color = colors[MenuLayerColorBackground];
@@ -539,8 +547,8 @@ static void prv_prepare_row(GContext *ctx, MenuLayer *menu_layer,
   cell_layer->is_highlighted = highlight;
 }
 
-static void prv_prepare_and_draw_row(GContext *ctx, MenuLayer *menu_layer,
-                                     Layer *cell_layer, MenuCellSpan *cursor, bool highlight) {
+static void prv_prepare_and_draw_row(GContext *ctx, MenuLayer *menu_layer, Layer *cell_layer,
+                                     MenuCellSpan *cursor, bool highlight) {
   prv_prepare_row(ctx, menu_layer, cell_layer, highlight);
   const GRect prev_bounds = cell_layer->bounds;
 
@@ -557,7 +565,7 @@ static void prv_prepare_and_draw_row(GContext *ctx, MenuLayer *menu_layer,
 }
 
 static inline void prv_menu_layer_draw_row(MenuLayer *menu_layer, Layer *cell_layer,
-    MenuCellSpan *cursor, GContext* ctx) {
+                                           MenuCellSpan *cursor, GContext *ctx) {
   if (cursor->h == 0) {
     // cell has height 0, no need to draw anything.
     return;
@@ -602,7 +610,7 @@ static inline void prv_menu_layer_draw_row(MenuLayer *menu_layer, Layer *cell_la
 }
 
 static inline void prv_menu_layer_draw_section_header(MenuLayer *menu_layer, Layer *cell_layer,
-    MenuCellSpan *cursor, GContext* ctx) {
+                                                      MenuCellSpan *cursor, GContext *ctx) {
   cell_layer->bounds.size.h = cursor->h;
   cell_layer->frame.size.h = cursor->h;
   cell_layer->frame.origin.y = cursor->y;
@@ -622,16 +630,18 @@ static inline void prv_menu_layer_draw_section_header(MenuLayer *menu_layer, Lay
   prv_prepare_row(ctx, menu_layer, cell_layer, false);
 
   // Call the client, to ask to draw the section:
-  menu_layer->callbacks.draw_header(ctx, cell_layer, cursor->index.section, menu_layer->callback_context);
+  menu_layer->callbacks.draw_header(ctx, cell_layer, cursor->index.section,
+                                    menu_layer->callback_context);
 
   // Restore current drawing state:
   graphics_context_set_drawing_state(ctx, prev_state);
 }
 
 static void prv_menu_layer_render_section_from_iterator(MenuIterator *iterator) {
-  MenuRenderIterator *it = (MenuRenderIterator*)iterator;
+  MenuRenderIterator *it = (MenuRenderIterator *)iterator;
   const int16_t top_diff = it->it.cursor.y - it->content_top_y;
-  const bool is_header_in_frame = (top_diff >= 0 && it->it.cursor.y <= it->content_bottom_y) ||
+  const bool is_header_in_frame =
+      (top_diff >= 0 && it->it.cursor.y <= it->content_bottom_y) ||
       (it->it.cell_bottom_y >= it->content_top_y && it->it.cell_bottom_y <= it->content_bottom_y);
   if (is_header_in_frame) {
     // Draw section header:
@@ -644,11 +654,12 @@ static void prv_menu_layer_render_section_from_iterator(MenuIterator *iterator) 
 }
 
 static void prv_menu_layer_render_row_from_iterator(MenuIterator *iterator) {
-  MenuRenderIterator *it = (MenuRenderIterator*)iterator;
+  MenuRenderIterator *it = (MenuRenderIterator *)iterator;
   const int16_t iter_y = it->it.cursor.y;
 
   const int16_t top_diff = it->it.cursor.y - it->content_top_y;
-  const bool is_row_in_frame = (top_diff >= 0 && it->it.cursor.y <= it->content_bottom_y) ||
+  const bool is_row_in_frame =
+      (top_diff >= 0 && it->it.cursor.y <= it->content_bottom_y) ||
       (it->it.cell_bottom_y >= it->content_top_y && it->it.cell_bottom_y <= it->content_bottom_y);
   if (is_row_in_frame) {
     it->cursor_in_frame = true;
@@ -684,10 +695,10 @@ static void prv_menu_layer_render_row_from_iterator(MenuIterator *iterator) {
 static void prv_menu_layer_walk_downward_from_iterator(MenuIterator *it) {
   const uint16_t num_sections = prv_menu_layer_get_num_sections(it->menu_layer);
   it->should_continue = true;
-  for (;;) { // sections
-    const uint16_t num_rows_in_section = prv_menu_layer_get_num_rows(it->menu_layer,
-        it->cursor.index.section);
-    for (;;) { // rows
+  for (;;) {  // sections
+    const uint16_t num_rows_in_section =
+        prv_menu_layer_get_num_rows(it->menu_layer, it->cursor.index.section);
+    for (;;) {  // rows
       if (it->cursor.index.row >= num_rows_in_section) {
         // Reached last row
         break;
@@ -710,16 +721,18 @@ static void prv_menu_layer_walk_downward_from_iterator(MenuIterator *it) {
 
       // Next row:
       it->cursor.sep = prv_menu_layer_get_separator_height(it->menu_layer, &it->cursor.index);
-      it->cursor.y = it->cell_bottom_y; // Bottom of previous cell is y of the next cell
+      it->cursor.y = it->cell_bottom_y;  // Bottom of previous cell is y of the next cell
 
       // Don't leave space for the separator for the (non-existent) row after the last row.
-      // This doesn't impact cell drawing in this loop (this condition will only trip on the last run).
-      // But, other parts of the system rely on the cursor being set properly at the end of this iteration.
-      if (it->cursor.index.row < num_rows_in_section - 1 || it->cursor.index.section < num_sections - 1) {
+      // This doesn't impact cell drawing in this loop (this condition will only trip on the last
+      // run). But, other parts of the system rely on the cursor being set properly at the end of
+      // this iteration.
+      if (it->cursor.index.row < num_rows_in_section - 1 ||
+          it->cursor.index.section < num_sections - 1) {
         it->cursor.y += it->cursor.sep;
       }
       ++(it->cursor.index.row);
-    } // for() rows
+    }  // for() rows
 
     // Next section:
     ++(it->cursor.index.section);
@@ -742,13 +755,13 @@ static void prv_menu_layer_walk_downward_from_iterator(MenuIterator *it) {
       return;
     }
 
-  } // for() sections
+  }  // for() sections
 }
 
 static void prv_menu_layer_walk_upward_from_iterator(MenuIterator *it) {
   it->should_continue = true;
-  for (;;) { // sections
-    for (;;) { // rows
+  for (;;) {    // sections
+    for (;;) {  // rows
       // Previous row
       if (it->cursor.index.row == 0) {
         // Reached top-most row in current section
@@ -778,7 +791,7 @@ static void prv_menu_layer_walk_upward_from_iterator(MenuIterator *it) {
       if (it->should_continue == false) {
         break;
       }
-    } // for() rows
+    }  // for() rows
 
     if (it->cursor.index.row == 0) {
       // If top-most row, layout the section header
@@ -814,14 +827,14 @@ static void prv_menu_layer_walk_upward_from_iterator(MenuIterator *it) {
     }
     --(it->cursor.index.section);
     // -1 will happen when entering for() rows
-    it->cursor.index.row = it->menu_layer->callbacks.get_num_rows(it->menu_layer,
-        it->cursor.index.section, it->menu_layer->callback_context);
+    it->cursor.index.row = it->menu_layer->callbacks.get_num_rows(
+        it->menu_layer, it->cursor.index.section, it->menu_layer->callback_context);
 
-  } // for() sections
+  }  // for() sections
 }
 
-static void NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ctx,
-                                Layer *bg_layer, bool highlight) {
+static void NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ctx, Layer *bg_layer,
+                                         bool highlight) {
   GDrawState prev_state = graphics_context_get_drawing_state(ctx);
 
   const GRect *bounds = &bg_layer->bounds;
@@ -842,9 +855,9 @@ static void NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ctx,
   graphics_context_set_drawing_state(ctx, prev_state);
 }
 
-void menu_layer_update_proc(Layer *scroll_content_layer, GContext* ctx) {
-  MenuLayer *menu_layer = (MenuLayer*)(((uint8_t*)scroll_content_layer) -
-      offsetof(MenuLayer, scroll_layer.content_sublayer));
+void menu_layer_update_proc(Layer *scroll_content_layer, GContext *ctx) {
+  MenuLayer *menu_layer = (MenuLayer *)(((uint8_t *)scroll_content_layer) -
+                                        offsetof(MenuLayer, scroll_layer.content_sublayer));
   const GSize frame_size = menu_layer->scroll_layer.layer.frame.size;
   const int16_t content_top_y = -scroll_layer_get_content_offset(&menu_layer->scroll_layer).y;
   const int16_t content_bottom_y = content_top_y + frame_size.h;
@@ -868,30 +881,33 @@ void menu_layer_update_proc(Layer *scroll_content_layer, GContext* ctx) {
     menu_layer->cache.cursor = menu_layer->selection;
   }
 
-  *render_iter = (MenuRenderIterator) {
-    .it = {
-      .menu_layer = menu_layer,
-      .cursor = menu_layer->cache.cursor,
-      .row_callback_after_geometry = prv_menu_layer_render_row_from_iterator,
-      .section_callback = prv_menu_layer_render_section_from_iterator,
-    },
-    .ctx = ctx,
-    .content_top_y = content_top_y,
-    .content_bottom_y = content_bottom_y,
-    .cache_set = false,
-    .cursor_in_frame = false,
-    .cell_layer = {
-      .bounds = {
-        .size = {
-          .w = frame_size.w,
-        },
+  *render_iter = (MenuRenderIterator){
+      .it =
+          {
+              .menu_layer = menu_layer,
+              .cursor = menu_layer->cache.cursor,
+              .row_callback_after_geometry = prv_menu_layer_render_row_from_iterator,
+              .section_callback = prv_menu_layer_render_section_from_iterator,
+          },
+      .ctx = ctx,
+      .content_top_y = content_top_y,
+      .content_bottom_y = content_bottom_y,
+      .cache_set = false,
+      .cursor_in_frame = false,
+      .cell_layer = {
+          .bounds =
+              {
+                  .size =
+                      {
+                          .w = frame_size.w,
+                      },
+              },
+          .frame = {
+              .size = {
+                  .w = frame_size.w,
+              },
+          },
       },
-      .frame = {
-        .size = {
-          .w = frame_size.w,
-        },
-      },
-    },
   };
   layer_add_child(&menu_layer->scroll_layer.content_sublayer, &render_iter->cell_layer);
 
@@ -926,10 +942,13 @@ void menu_layer_update_proc(Layer *scroll_content_layer, GContext* ctx) {
 
 void menu_layer_init_scroll_layer_callbacks(MenuLayer *menu_layer) {
   ScrollLayer *scroll_layer = &menu_layer->scroll_layer;
-  scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks) {
-    .click_config_provider = (ClickConfigProvider)prv_menu_click_config_provider,
-    .content_offset_changed_handler = (ScrollLayerCallback)prv_menu_scroll_offset_changed_handler,
-  });
+  scroll_layer_set_callbacks(
+      scroll_layer,
+      (ScrollLayerCallbacks){
+          .click_config_provider = (ClickConfigProvider)prv_menu_click_config_provider,
+          .content_offset_changed_handler =
+              (ScrollLayerCallback)prv_menu_scroll_offset_changed_handler,
+      });
   scroll_layer->content_sublayer.update_proc = (LayerUpdateProc)menu_layer_update_proc;
 }
 
@@ -939,8 +958,8 @@ static void prv_set_center_focused(MenuLayer *menu_layer, bool center_focused) {
 }
 
 void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
-  *menu_layer = (MenuLayer) {
-    .pad_bottom = true,
+  *menu_layer = (MenuLayer){
+      .pad_bottom = true,
   };
 
   ScrollLayer *scroll_layer = &menu_layer->scroll_layer;
@@ -974,7 +993,7 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
 #endif
 }
 
-MenuLayer* menu_layer_create(GRect frame) {
+MenuLayer *menu_layer_create(GRect frame) {
   MenuLayer *layer = applib_type_malloc(MenuLayer);
   if (layer) {
     menu_layer_init(layer, &frame);
@@ -998,7 +1017,7 @@ void menu_layer_deinit(MenuLayer *menu_layer) {
   scroll_layer_deinit(&menu_layer->scroll_layer);
 }
 
-void menu_layer_destroy(MenuLayer* menu_layer) {
+void menu_layer_destroy(MenuLayer *menu_layer) {
   if (menu_layer == NULL) {
     return;
   }
@@ -1006,11 +1025,11 @@ void menu_layer_destroy(MenuLayer* menu_layer) {
   applib_free(menu_layer);
 }
 
-Layer* menu_layer_get_layer(const MenuLayer *menu_layer) {
+Layer *menu_layer_get_layer(const MenuLayer *menu_layer) {
   return &((MenuLayer *)menu_layer)->scroll_layer.layer;
 }
 
-ScrollLayer* menu_layer_get_scroll_layer(const MenuLayer *menu_layer) {
+ScrollLayer *menu_layer_get_scroll_layer(const MenuLayer *menu_layer) {
   return &((MenuLayer *)menu_layer)->scroll_layer;
 }
 
@@ -1024,7 +1043,7 @@ static void prv_menu_layer_iterator_noop_callback(MenuIterator *it) {
 }
 
 static void prv_menu_layer_iterator_prime_cache_callback(MenuIterator *iterator) {
-  MenuPrimeCacheIterator *it = (MenuPrimeCacheIterator*)iterator;
+  MenuPrimeCacheIterator *it = (MenuPrimeCacheIterator *)iterator;
   if (false == it->cache_set) {
     // Prime the cursor cache:
     it->it.menu_layer->cache.cursor = it->it.cursor;
@@ -1041,18 +1060,20 @@ void menu_layer_update_caches(MenuLayer *menu_layer) {
   // Save the currently selected cell index.
   MenuIndex selected_index = menu_layer_get_selected_index(menu_layer);
   MenuPrimeCacheIterator it = {
-    .it = {
-      .menu_layer = menu_layer,
-      .row_callback_after_geometry = prv_menu_layer_iterator_prime_cache_callback,
-      .section_callback = prv_menu_layer_iterator_noop_callback,
-      .should_continue = true,
-      .cursor = {
-        // Section header of current section (0) is not part of the walk down, set it "manually"
-        .y = prv_menu_layer_get_header_height(menu_layer, 0),
-        .sep = prv_menu_layer_get_separator_height(menu_layer, 0)
-      },
-    },
-    .cache_set = false,
+      .it =
+          {
+              .menu_layer = menu_layer,
+              .row_callback_after_geometry = prv_menu_layer_iterator_prime_cache_callback,
+              .section_callback = prv_menu_layer_iterator_noop_callback,
+              .should_continue = true,
+              .cursor =
+                  {// Section header of current section (0) is not part of the walk down, set it
+                   // "manually"
+                   .y = prv_menu_layer_get_header_height(menu_layer, 0),
+                   .sep = prv_menu_layer_get_separator_height(menu_layer, 0)
+                  },
+          },
+      .cache_set = false,
   };
 
   if (prv_menu_layer_get_header_height(menu_layer, 0) != 0) {
@@ -1085,7 +1106,7 @@ void menu_layer_update_caches(MenuLayer *menu_layer) {
 }
 
 void menu_layer_set_callbacks(MenuLayer *menu_layer, void *callback_context,
-                            const MenuLayerCallbacks *callbacks) {
+                              const MenuLayerCallbacks *callbacks) {
   if (callbacks) {
     menu_layer->callbacks = *callbacks;
     PBL_ASSERTN(menu_layer->callbacks.draw_row);
@@ -1122,7 +1143,7 @@ int16_t menu_index_compare(const MenuIndex *a, const MenuIndex *b) {
 }
 
 static void prv_selection_complete(Animation *animation, bool finished, void *context) {
-  MenuLayer *menu_layer = (MenuLayer *) context;
+  MenuLayer *menu_layer = (MenuLayer *)context;
   menu_layer->animation.animation = NULL;
 }
 
@@ -1135,7 +1156,7 @@ static bool prv_cancel_selection_animation(MenuLayer *menu_layer) {
   return result;
 }
 
-#define TOP_DOWN_PX  7
+#define TOP_DOWN_PX 7
 #define BOTTOM_DOWN_PX 10
 static void prv_setup_selection_animation(MenuLayer *menu_layer, bool up) {
   // Move selection inverter layer:
@@ -1150,19 +1171,20 @@ static void prv_setup_selection_animation(MenuLayer *menu_layer, bool up) {
   } else {
     from = menu_layer->inverter.layer.frame;
   }
-  GRect target = (GRect) {
-    .origin = {
-      .x = 0,
-      .y = from.origin.y + ((up) ? 0 : TOP_DOWN_PX),
-    },
-    .size = {
-      .w = size.w,
-      .h = size.h - TOP_DOWN_PX,
-    }
+  GRect target = (GRect){
+      .origin =
+          {
+              .x = 0,
+              .y = from.origin.y + ((up) ? 0 : TOP_DOWN_PX),
+          },
+      .size = {
+          .w = size.w,
+          .h = size.h - TOP_DOWN_PX,
+      }
   };
 
-  Animation *a1 = (Animation *) property_animation_create_layer_frame(&menu_layer->inverter.layer,
-                                                                      &from, &target);
+  Animation *a1 = (Animation *)property_animation_create_layer_frame(&menu_layer->inverter.layer,
+                                                                     &from, &target);
   animation_set_duration(a1, 100);
   animation_set_curve(a1, AnimationCurveEaseOut);
   animation_set_auto_destroy(a1, true);
@@ -1176,25 +1198,23 @@ static void prv_setup_selection_animation(MenuLayer *menu_layer, bool up) {
   target.origin.y = menu_layer->selection.y;
   target.size = size;
 
-  Animation *a2 = (Animation *) property_animation_create_layer_frame(&menu_layer->inverter.layer,
-                                                                      &from, &target);
+  Animation *a2 = (Animation *)property_animation_create_layer_frame(&menu_layer->inverter.layer,
+                                                                     &from, &target);
   animation_set_duration(a2, 250);
   animation_set_curve(a2, AnimationCurveEaseOut);
   animation_set_auto_destroy(a2, true);
 
   Animation *a = animation_sequence_create(a1, a2, NULL);
 
-  animation_set_auto_destroy(a, true); // [MJ] false?
-  animation_set_handlers(a, (AnimationHandlers) { .stopped = prv_selection_complete }, menu_layer);
+  animation_set_auto_destroy(a, true);  // [MJ] false?
+  animation_set_handlers(a, (AnimationHandlers){.stopped = prv_selection_complete}, menu_layer);
 
   menu_layer->animation.animation = a;
   menu_layer->animation.target = target;
   animation_schedule(a);
 }
 
-
-static void prv_menu_layer_update_selection_highlight(MenuLayer *menu_layer, bool up,
-                                                      bool animated,
+static void prv_menu_layer_update_selection_highlight(MenuLayer *menu_layer, bool up, bool animated,
                                                       bool change_ongoing_animation) {
   if (menu_layer->center_focused || menu_layer->selection_animation_disabled) {
     // animation on center_focused will not happen by moving the selection
@@ -1202,7 +1222,7 @@ static void prv_menu_layer_update_selection_highlight(MenuLayer *menu_layer, boo
     animated = false;
   }
 
-  Animation *scroll_animation = (Animation *) menu_layer->scroll_layer.animation;
+  Animation *scroll_animation = (Animation *)menu_layer->scroll_layer.animation;
   if (change_ongoing_animation && animation_is_scheduled(scroll_animation)) {
     animation_unschedule(scroll_animation);
   }
@@ -1215,16 +1235,17 @@ static void prv_menu_layer_update_selection_highlight(MenuLayer *menu_layer, boo
     // Move selection inverter layer:
     const int16_t w = menu_layer->scroll_layer.layer.frame.size.w;
     const GSize size = GSize(w, menu_layer->selection.h);
-    menu_layer->inverter.layer.bounds = (GRect) {
-      .origin = { 0, 0 },
-      .size = size,
+    menu_layer->inverter.layer.bounds = (GRect){
+        .origin = {0, 0},
+        .size = size,
     };
-    menu_layer->inverter.layer.frame = (GRect) {
-      .origin = {
-        .x = 0,
-        .y = menu_layer->selection.y,
-      },
-      .size = size,
+    menu_layer->inverter.layer.frame = (GRect){
+        .origin =
+            {
+                .x = 0,
+                .y = menu_layer->selection.y,
+            },
+        .size = size,
     };
     layer_mark_dirty(&menu_layer->inverter.layer);
   }
@@ -1248,7 +1269,7 @@ static void prv_menu_layer_update_selection_scroll_position(MenuLayer *menu_laye
     // Scroll to the right position:
     switch (scroll_align) {
       case MenuRowAlignTop:
-        y = - menu_layer->selection.y;
+        y = -menu_layer->selection.y;
         break;
 
       case MenuRowAlignBottom:
@@ -1274,11 +1295,11 @@ static void prv_menu_layer_update_selection_scroll_position(MenuLayer *menu_laye
 typedef struct MenuSelectIndexIterator {
   MenuIterator it;
   MenuCellSpan selection;
-  bool did_change_selection:1;
+  bool did_change_selection : 1;
 } MenuSelectIndexIterator;
 
 static void prv_menu_layer_iterator_selection_index_callback(MenuIterator *iterator) {
-  MenuSelectIndexIterator *it = (MenuSelectIndexIterator*)iterator;
+  MenuSelectIndexIterator *it = (MenuSelectIndexIterator *)iterator;
   if (!menu_index_compare(&it->it.cursor.index, &it->selection.index)) {
     it->it.menu_layer->selection = it->it.cursor;
     it->it.should_continue = false;
@@ -1346,26 +1367,26 @@ static void prv_announce_selection_changed(MenuLayer *menu_layer, MenuIndex prev
     return;
   }
 
-  menu_layer->callbacks.selection_changed(menu_layer, menu_layer->selection.index,
-                                          prev_index, menu_layer->callback_context);
+  menu_layer->callbacks.selection_changed(menu_layer, menu_layer->selection.index, prev_index,
+                                          menu_layer->callback_context);
 }
 
-void prv_center_focus_animation_update_impl(Animation *animation,
-                                            bool second_half,
+void prv_center_focus_animation_update_impl(Animation *animation, bool second_half,
                                             AnimationProgress adjusted_progress) {
   CenterFocusSelectionAnimationState state = prv_center_focus_animation_state(animation);
 
   // values as seen in the design videos
   const int16_t move_in_dist = 16;
   const int16_t move_out_dist = 4;
-  const int16_t abs_content_offset = second_half ?
-                                     interpolate_int16(adjusted_progress, move_out_dist, 0) :
-                                     interpolate_int16(adjusted_progress, 0, move_in_dist);
+  const int16_t abs_content_offset = second_half
+                                         ? interpolate_int16(adjusted_progress, move_out_dist, 0)
+                                         : interpolate_int16(adjusted_progress, 0, move_in_dist);
   const int16_t content_offset = (state.up ? abs_content_offset : -abs_content_offset) / 2;
   state.menu_layer->animation.cell_content_origin_offset_y = content_offset;
 
-  const bool reached_second_half_before = menu_index_compare(
-      &state.menu_layer->selection.index, &state.menu_layer->animation.new_selection.index) == 0;
+  const bool reached_second_half_before =
+      menu_index_compare(&state.menu_layer->selection.index,
+                         &state.menu_layer->animation.new_selection.index) == 0;
 
   if (second_half) {
     if (!reached_second_half_before) {
@@ -1393,9 +1414,9 @@ void prv_center_focus_animation_update_in_and_out(Animation *animation,
                                                   const AnimationProgress progress) {
   const AnimationProgress half_progress = ANIMATION_NORMALIZED_MAX / 2;
   const bool second_half = progress >= half_progress;
-  const AnimationProgress adjusted_progress = second_half ?
-      animation_timing_scaled(progress, half_progress, ANIMATION_NORMALIZED_MAX) :
-      animation_timing_scaled(progress, 0, half_progress);
+  const AnimationProgress adjusted_progress =
+      second_half ? animation_timing_scaled(progress, half_progress, ANIMATION_NORMALIZED_MAX)
+                  : animation_timing_scaled(progress, 0, half_progress);
   prv_center_focus_animation_update_impl(animation, second_half, adjusted_progress);
 }
 
@@ -1427,23 +1448,23 @@ static void prv_schedule_center_focus_animation(MenuLayer *menu_layer, bool up,
   prv_menu_layer_update_selection_scroll_position(menu_layer, MenuRowAlignNone, selection_animated);
 
   static const PropertyAnimationImplementation s_center_focus_selection_animation_in_out_impl = {
-    .base = {
-      .setup = prv_center_focus_animation_setup,
-      .update = prv_center_focus_animation_update_in_and_out,
-      .teardown = prv_center_focus_animation_teardown,
-    }
+      .base = {
+          .setup = prv_center_focus_animation_setup,
+          .update = prv_center_focus_animation_update_in_and_out,
+          .teardown = prv_center_focus_animation_teardown,
+      }
   };
   static const PropertyAnimationImplementation s_center_focus_selection_animation_out_only_impl = {
-    .base = {
-      .setup = prv_center_focus_animation_setup,
-      .update = prv_center_focus_animation_update_out_only,
-      .teardown = prv_center_focus_animation_teardown,
-    }
+      .base = {
+          .setup = prv_center_focus_animation_setup,
+          .update = prv_center_focus_animation_update_out_only,
+          .teardown = prv_center_focus_animation_teardown,
+      }
   };
   // when we were animating already, use the implementation that's only showing the bounce back
-  const PropertyAnimationImplementation *impl = was_animating ?
-                                                &s_center_focus_selection_animation_out_only_impl :
-                                                &s_center_focus_selection_animation_in_out_impl;
+  const PropertyAnimationImplementation *impl =
+      was_animating ? &s_center_focus_selection_animation_out_only_impl
+                    : &s_center_focus_selection_animation_in_out_impl;
   PropertyAnimation *const prop_anim = property_animation_create(impl, menu_layer, NULL, NULL);
   // we're (ab)using the .to value to store the direction, see prv_center_focus_animation_state()
   property_animation_to(prop_anim, &up, sizeof(up), true);
@@ -1503,16 +1524,16 @@ static MenuLayerBeforeSelectionChangeState prv_capture_state_and_cancel_center_f
     MenuLayer *menu_layer) {
   // it's critical to cancel the animation for center focus here so that any potential in-between
   // selection state will be cleaned up
-  const bool was_animating = menu_layer->center_focused ?
-                             prv_cancel_selection_animation(menu_layer) :
-                             false;
-  return (MenuLayerBeforeSelectionChangeState) {
-    .was_animating = was_animating,
-    .prev_selection = menu_layer->selection,
+  const bool was_animating =
+      menu_layer->center_focused ? prv_cancel_selection_animation(menu_layer) : false;
+  return (MenuLayerBeforeSelectionChangeState){
+      .was_animating = was_animating,
+      .prev_selection = menu_layer->selection,
   };
 }
 
-void menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex index, MenuRowAlign scroll_align, bool animated) {
+void menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex index,
+                                   MenuRowAlign scroll_align, bool animated) {
   const MenuLayerBeforeSelectionChangeState before_state =
       prv_capture_state_and_cancel_center_focus_animation(menu_layer);
 
@@ -1527,7 +1548,8 @@ void menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex index, MenuR
     return;
   }
 
-  const uint16_t num_rows = menu_layer->callbacks.get_num_rows(menu_layer, index.section, menu_layer->callback_context);
+  const uint16_t num_rows =
+      menu_layer->callbacks.get_num_rows(menu_layer, index.section, menu_layer->callback_context);
   if (index.row >= num_rows) {
     index.row = num_rows - 1;
   }
@@ -1536,20 +1558,22 @@ void menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex index, MenuR
   // selection.index.section could be MENU_INDEX_NOT_FOUND (a very large value)
   // in this case, walk forward from {0, 0| to avoid a very long loop run
   const bool is_invalid_section = menu_layer->selection.index.section == MENU_INDEX_NOT_FOUND;
-  const int16_t comp = is_invalid_section ? 1 :
-                       menu_index_compare(&index, &menu_layer->selection.index);
+  const int16_t comp =
+      is_invalid_section ? 1 : menu_index_compare(&index, &menu_layer->selection.index);
   MenuSelectIndexIterator it = {
-    .it = {
-      .menu_layer = menu_layer,
-      .row_callback_after_geometry = prv_menu_layer_iterator_selection_index_callback,
-      .section_callback = prv_menu_layer_iterator_noop_callback,
-      .should_continue = true,
-      .cursor = is_invalid_section ? (MenuCellSpan){} : menu_layer->selection,
-    },
-    .selection = {
-      .index = index,
-    },
-    .did_change_selection = false,
+      .it =
+          {
+              .menu_layer = menu_layer,
+              .row_callback_after_geometry = prv_menu_layer_iterator_selection_index_callback,
+              .section_callback = prv_menu_layer_iterator_noop_callback,
+              .should_continue = true,
+              .cursor = is_invalid_section ? (MenuCellSpan){} : menu_layer->selection,
+          },
+      .selection =
+          {
+              .index = index,
+          },
+      .did_change_selection = false,
   };
 
   prv_walk_with_iterator((int8_t)comp, &it.it);
@@ -1562,11 +1586,11 @@ void menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex index, MenuR
 typedef struct MenuSelectNextIterator {
   MenuIterator it;
   uint8_t count;
-  bool did_change_selection:1;
+  bool did_change_selection : 1;
 } MenuSelectNextIterator;
 
 static void prv_menu_layer_iterator_selection_next_callback(MenuIterator *iterator) {
-  MenuSelectNextIterator *it = (MenuSelectNextIterator*)iterator;
+  MenuSelectNextIterator *it = (MenuSelectNextIterator *)iterator;
   MenuLayer *menu_layer = it->it.menu_layer;
   if (it->count == 1) {
     MenuLayerSelectionWillChangeCallback cb = menu_layer->callbacks.selection_will_change;
@@ -1598,21 +1622,22 @@ static void prv_menu_layer_iterator_selection_next_callback(MenuIterator *iterat
   }
 }
 
-void menu_layer_set_selected_next(MenuLayer *menu_layer, bool up,
-                                  MenuRowAlign scroll_align, bool animated) {
+void menu_layer_set_selected_next(MenuLayer *menu_layer, bool up, MenuRowAlign scroll_align,
+                                  bool animated) {
   const MenuLayerBeforeSelectionChangeState before_state =
       prv_capture_state_and_cancel_center_focus_animation(menu_layer);
 
   MenuSelectNextIterator it = {
-    .it = {
-      .menu_layer = menu_layer,
-      .row_callback_after_geometry = prv_menu_layer_iterator_selection_next_callback,
-      .section_callback = prv_menu_layer_iterator_noop_callback,
-      .should_continue = true,
-      .cursor = menu_layer->selection,
-    },
-    .count = up ? 1 : 0, // see asymmetry note with menu_layer_walk_downward_from_iterator()
-    .did_change_selection = false,
+      .it =
+          {
+              .menu_layer = menu_layer,
+              .row_callback_after_geometry = prv_menu_layer_iterator_selection_next_callback,
+              .section_callback = prv_menu_layer_iterator_noop_callback,
+              .should_continue = true,
+              .cursor = menu_layer->selection,
+          },
+      .count = up ? 1 : 0,  // see asymmetry note with menu_layer_walk_downward_from_iterator()
+      .did_change_selection = false,
   };
 
   prv_walk_with_iterator((int8_t)(up ? -1 : 1), &it.it);
@@ -1721,7 +1746,7 @@ void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vi
   if (!menu_layer) {
     return;
   }
-  
+
   if (scroll_vibe_on_blocked) {
     menu_layer->scroll_vibe_on_wrap_around = false;
   }
@@ -1795,11 +1820,11 @@ static void prv_menu_touch_offset_bounds(MenuLayer *menu_layer, int16_t *min_y, 
   if (menu_layer->center_focused) {
     const int16_t sel_rest_y = (int16_t)((frame_h - menu_layer->selection.h) / 2);
     *max_y = prv_menu_index_is_first_index(menu_layer, &menu_layer->selection.index)
-        ? sel_rest_y
-        : (int16_t)(frame_h / 2);
+                 ? sel_rest_y
+                 : (int16_t)(frame_h / 2);
     *min_y = prv_menu_index_is_last_index(menu_layer, &menu_layer->selection.index)
-        ? (int16_t)(sel_rest_y - menu_layer->selection.y)
-        : (int16_t)(*min_y - (frame_h / 2));
+                 ? (int16_t)(sel_rest_y - menu_layer->selection.y)
+                 : (int16_t)(*min_y - (frame_h / 2));
   }
 }
 
@@ -1816,9 +1841,9 @@ static int16_t prv_menu_touch_clamp_offset_y(MenuLayer *menu_layer, int16_t y) {
 //! moved away with the content). Purely offset-derived, so the live pan, the release
 //! spring-back, and a cancelled gesture all keep it in sync for free.
 static void prv_menu_update_overscroll_stretch(MenuLayer *menu_layer) {
-  GRect frame = (GRect) {
-    .origin = { 0, menu_layer->selection.y },
-    .size = { menu_layer->scroll_layer.layer.frame.size.w, menu_layer->selection.h },
+  GRect frame = (GRect){
+      .origin = {0, menu_layer->selection.y},
+      .size = {menu_layer->scroll_layer.layer.frame.size.w, menu_layer->selection.h},
   };
   bool stretched = false;
   if (!menu_layer->center_focused && !menu_layer->selection_animation_disabled &&
@@ -1883,15 +1908,16 @@ bool menu_layer_touch_find_row_at_content_y(MenuLayer *menu_layer, int16_t conte
   // section-header/separator geometry is honoured. The downward walk includes the anchor row; the
   // upward walk covers everything above it.
   MenuHitTestIterator it = {
-    .it = {
-      .menu_layer = menu_layer,
-      .cursor = menu_layer->cache.cursor,
-      .row_callback_after_geometry = prv_menu_hit_test_row_callback,
-      .section_callback = prv_menu_hit_test_section_callback,
-      .should_continue = true,
-    },
-    .target_y = content_y,
-    .found = false,
+      .it =
+          {
+              .menu_layer = menu_layer,
+              .cursor = menu_layer->cache.cursor,
+              .row_callback_after_geometry = prv_menu_hit_test_row_callback,
+              .section_callback = prv_menu_hit_test_section_callback,
+              .should_continue = true,
+          },
+      .target_y = content_y,
+      .found = false,
   };
   prv_menu_layer_walk_downward_from_iterator(&it.it);
   if (!it.found) {
@@ -1953,17 +1979,19 @@ static void prv_menu_touch_reselect_row(MenuLayer *menu_layer, MenuIndex index) 
     return;
   }
   MenuSelectIndexIterator it = {
-    .it = {
-      .menu_layer = menu_layer,
-      .row_callback_after_geometry = prv_menu_layer_iterator_selection_index_callback,
-      .section_callback = prv_menu_layer_iterator_noop_callback,
-      .should_continue = true,
-      .cursor = menu_layer->selection,
-    },
-    .selection = {
-      .index = index,
-    },
-    .did_change_selection = false,
+      .it =
+          {
+              .menu_layer = menu_layer,
+              .row_callback_after_geometry = prv_menu_layer_iterator_selection_index_callback,
+              .section_callback = prv_menu_layer_iterator_noop_callback,
+              .should_continue = true,
+              .cursor = menu_layer->selection,
+          },
+      .selection =
+          {
+              .index = index,
+          },
+      .did_change_selection = false,
   };
   prv_walk_with_iterator((int8_t)comp, &it.it);
   if (!it.did_change_selection) {
@@ -2005,8 +2033,7 @@ static void prv_menu_touch_track_center_row(MenuLayer *menu_layer) {
 // here because it forces animated=false on center-focused menus.
 static void prv_menu_touch_settle_to_center(MenuLayer *menu_layer, bool animated) {
   const int16_t frame_h = menu_layer->scroll_layer.layer.frame.size.h;
-  const int16_t y =
-      (int16_t)(frame_h / 2 - menu_layer->selection.y - menu_layer->selection.h / 2);
+  const int16_t y = (int16_t)(frame_h / 2 - menu_layer->selection.y - menu_layer->selection.h / 2);
   scroll_layer_set_content_offset(&menu_layer->scroll_layer, GPoint(0, y), animated);
 }
 
@@ -2035,9 +2062,9 @@ static void prv_menu_touch_update_center_pin(MenuLayer *menu_layer) {
        prv_menu_index_is_last_index(menu_layer, &menu_layer->selection.index))) {
     pinned_y = menu_layer->selection.y;
   }
-  const GRect pinned = (GRect) {
-    .origin = { 0, pinned_y },
-    .size = { frame_size.w, menu_layer->selection.h },
+  const GRect pinned = (GRect){
+      .origin = {0, pinned_y},
+      .size = {frame_size.w, menu_layer->selection.h},
   };
   if (pinned.origin.y == menu_layer->selection.y) {
     // At rest: the selected row is centred, so the pinned frame and the natural frame are one.
@@ -2073,7 +2100,7 @@ void menu_layer_touch_handle_touchdown(MenuLayer *menu_layer) {
   if (anim && animation_is_scheduled(anim)) {
     animation_unschedule(anim);
   }
-  menu_layer->touch_fling_active = false;   // a coast caught pre-first-frame skips its handler
+  menu_layer->touch_fling_active = false;  // a coast caught pre-first-frame skips its handler
   scroll_layer_touch_fling_cleanup(&menu_layer->scroll_layer);
   if (menu_layer->center_focused) {
     // A dead stop could freeze the carousel off-grid forever on a catch-and-hold (a >300 ms hold
@@ -2094,8 +2121,8 @@ void menu_layer_touch_handle_pan_update(MenuLayer *menu_layer, GPoint base,
   // that fits the frame keeps the hard clamp (nothing to scroll, nothing to bounce).
   const bool scrollable = scroll_layer_get_content_size(&menu_layer->scroll_layer).h > frame_h;
   const int16_t new_y = scrollable
-      ? scroll_layer_touch_overscroll_damp(raw_y, min_y, max_y, frame_h)
-      : (int16_t)CLIP(raw_y, min_y, max_y);
+                            ? scroll_layer_touch_overscroll_damp(raw_y, min_y, max_y, frame_h)
+                            : (int16_t)CLIP(raw_y, min_y, max_y);
   prv_scrollbar_kick(menu_layer);
   scroll_layer_touch_set_content_offset_overscrolled(&menu_layer->scroll_layer, new_y);
   if (menu_layer->center_focused) {
@@ -2105,8 +2132,7 @@ void menu_layer_touch_handle_pan_update(MenuLayer *menu_layer, GPoint base,
   // Plain menus: selection intentionally NOT touched — a pan scrolls, a tap selects.
 }
 
-static void prv_menu_touch_spring_back_stopped(Animation *animation, bool finished,
-                                               void *context) {
+static void prv_menu_touch_spring_back_stopped(Animation *animation, bool finished, void *context) {
   (void)animation;
   (void)finished;
   scroll_layer_touch_fling_cleanup(&((MenuLayer *)context)->scroll_layer);
@@ -2130,8 +2156,8 @@ static void prv_menu_touch_fling_stopped(Animation *animation, bool finished, vo
 // Coast toward the velocity projection, clamped by the menu's own (possibly widened) clamp.
 static void prv_menu_touch_fling(MenuLayer *menu_layer, int16_t released_y, int32_t velocity_y) {
   const int32_t projected_y = released_y + (velocity_y * TOUCH_FLING_TAU_MS) / 1000;
-  const int16_t target_y = prv_menu_touch_clamp_offset_y(
-      menu_layer, (int16_t)CLIP(projected_y, INT16_MIN, INT16_MAX));
+  const int16_t target_y =
+      prv_menu_touch_clamp_offset_y(menu_layer, (int16_t)CLIP(projected_y, INT16_MIN, INT16_MAX));
   if (scroll_layer_touch_fling_start(&menu_layer->scroll_layer, target_y, (int16_t)velocity_y,
                                      prv_menu_touch_fling_stopped, menu_layer)) {
     menu_layer->touch_fling_active = true;
@@ -2152,8 +2178,8 @@ void menu_layer_touch_handle_snap(MenuLayer *menu_layer, GPoint base, GPoint fin
                                               prv_menu_touch_spring_back_stopped, menu_layer);
     return;
   }
-  const int32_t v = CLIP((int32_t)velocity.y, -TOUCH_FLING_MAX_VELOCITY_PX_S,
-                         TOUCH_FLING_MAX_VELOCITY_PX_S);
+  const int32_t v =
+      CLIP((int32_t)velocity.y, -TOUCH_FLING_MAX_VELOCITY_PX_S, TOUCH_FLING_MAX_VELOCITY_PX_S);
   if (ABS(v) >= TOUCH_FLING_MIN_VELOCITY_PX_S) {
     // Fast liftoff: coast toward the projection from the released offset. The coast starts from
     // the current (last throttled) offset, so the unthrottled residual is absorbed into the
@@ -2274,14 +2300,14 @@ void menu_layer_touch_handle_tap(MenuLayer *menu_layer, GPoint point_on_screen) 
   // prv_schedule_center_focus_animation); opening is the second tap (or the double-tap window).
   menu_layer_set_selected_index(menu_layer, final, MenuRowAlignCenter, true);
   // Record the committed (range-clamped) selection, not the raw will_change output: a client that
-  // redirects to an out-of-range index would otherwise be handed that OOB index by a fast double tap
-  // (priority 1), diverging from priority 2 which activates the clamped selection.index. The index
-  // commit is deferred to the half-way point of the jump animation; until then the committed
+  // redirects to an out-of-range index would otherwise be handed that OOB index by a fast double
+  // tap (priority 1), diverging from priority 2 which activates the clamped selection.index. The
+  // index commit is deferred to the half-way point of the jump animation; until then the committed
   // target lives in animation.new_selection (a priority-1 tap during the jump cancels it, which
   // drives the animation to its end state and commits that same target).
   const bool jump_in_flight = animation_is_scheduled(menu_layer->animation.animation);
-  menu_layer->last_selected_index = jump_in_flight ? menu_layer->animation.new_selection.index
-                                                   : menu_layer->selection.index;
+  menu_layer->last_selected_index =
+      jump_in_flight ? menu_layer->animation.new_selection.index : menu_layer->selection.index;
   prv_menu_set_last_select_ticks(menu_layer, now);
   menu_layer->double_tap_armed = true;
 }
@@ -2372,15 +2398,15 @@ static void prv_menu_ops_swipe(void *w, SwipeDirection dir) {
 
 // can_start is NULL: a MenuLayer is always ready to start a pan.
 static const TouchNavWidgetOps s_menu_touch_nav_ops = {
-  .can_start = NULL,
-  .touchdown = prv_menu_ops_touchdown,
-  .pan_started = prv_menu_ops_pan_started,
-  .get_base_offset = prv_menu_ops_get_base_offset,
-  .pan_update = prv_menu_ops_pan_update,
-  .pan_snap = prv_menu_ops_pan_snap,
-  .pan_cancel = prv_menu_ops_pan_cancel,
-  .tap = prv_menu_ops_tap,
-  .swipe = prv_menu_ops_swipe,
+    .can_start = NULL,
+    .touchdown = prv_menu_ops_touchdown,
+    .pan_started = prv_menu_ops_pan_started,
+    .get_base_offset = prv_menu_ops_get_base_offset,
+    .pan_update = prv_menu_ops_pan_update,
+    .pan_snap = prv_menu_ops_pan_snap,
+    .pan_cancel = prv_menu_ops_pan_cancel,
+    .tap = prv_menu_ops_tap,
+    .swipe = prv_menu_ops_swipe,
 };
 
 static void prv_menu_touch_nav_register(MenuLayer *menu_layer) {
@@ -2407,8 +2433,8 @@ static void prv_menu_touch_nav_deregister(MenuLayer *menu_layer) {
   if (!state) {
     return;
   }
-  // If this menu is the live gesture target and is about to be destroyed under a live window, cancel
-  // the gesture with NO client callbacks so a snap cannot reach freed client state.
+  // If this menu is the live gesture target and is about to be destroyed under a live window,
+  // cancel the gesture with NO client callbacks so a snap cannot reach freed client state.
   // touch_nav_registry_remove clears the latched target BEFORE we cancel (its UAF hook), so the
   // resulting Cancelled dispatch finds no target and re-enters nothing.
   const bool was_target = menu_layer_touch_is_gesture_target(menu_layer);

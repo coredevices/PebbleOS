@@ -50,9 +50,8 @@ bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *durat
   return true;
 }
 
-bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s,
-                                              int32_t distance_m, int32_t current_bpm,
-                                              HRZone current_hr_zone) {
+bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s, int32_t distance_m,
+                                              int32_t current_bpm, HRZone current_hr_zone) {
   s_steps = steps;
   s_duration_s = duration_s;
   s_distance_m = distance_m;

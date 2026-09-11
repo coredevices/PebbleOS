@@ -8,17 +8,17 @@
 #define MAX_SHAPE_CODEPOINTS 64
 
 // Connectivity flags for Arabic letters
-#define JOIN_NONE       0x00  // Does not connect (space, punctuation)
+#define JOIN_NONE 0x00        // Does not connect (space, punctuation)
 #define JOIN_RIGHT_ONLY 0x01  // Connects only to the right (non-connecting letters)
-#define JOIN_DUAL       0x03  // Connects both left and right (dual-joining letters)
+#define JOIN_DUAL 0x03        // Connects both left and right (dual-joining letters)
 
 // Shaping table entry - compact representation of Arabic letter forms
 // Each entry maps a basic Arabic letter to its presentation forms
 typedef struct __attribute__((__packed__)) {
   uint16_t base;      // Basic Arabic codepoint (e.g., 0x0628 for Ba)
   uint16_t isolated;  // Presentation form isolated
-  uint8_t  offsets;   // Packed offsets: final(4) | initial(2) | medial(2) from isolated
-  uint8_t  flags;     // Connectivity flags
+  uint8_t offsets;    // Packed offsets: final(4) | initial(2) | medial(2) from isolated
+  uint8_t flags;      // Connectivity flags
 } ArabicShapingEntry;
 
 // Macro to pack offsets: final offset (0-15), initial offset (0-3), medial offset (0-3)
@@ -38,116 +38,116 @@ typedef struct __attribute__((__packed__)) {
 // Sorted by base codepoint for potential binary search optimization
 // Total size: 36 entries * 6 bytes = 216 bytes ROM
 static const ArabicShapingEntry s_shaping_table[] = {
-  // Hamza (standalone, no connection)
-  { 0x0621, 0xFE80, PACK_OFFSETS(0, 0, 0), JOIN_NONE },
+    // Hamza (standalone, no connection)
+    {0x0621, 0xFE80, PACK_OFFSETS(0, 0, 0), JOIN_NONE},
 
-  // Alef with Madda Above
-  { 0x0622, 0xFE81, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Alef with Madda Above
+    {0x0622, 0xFE81, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Alef with Hamza Above
-  { 0x0623, 0xFE83, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Alef with Hamza Above
+    {0x0623, 0xFE83, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Waw with Hamza Above
-  { 0x0624, 0xFE85, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Waw with Hamza Above
+    {0x0624, 0xFE85, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Alef with Hamza Below
-  { 0x0625, 0xFE87, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Alef with Hamza Below
+    {0x0625, 0xFE87, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Yeh with Hamza Above
-  { 0x0626, 0xFE89, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Yeh with Hamza Above
+    {0x0626, 0xFE89, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Alef (non-connecting)
-  { 0x0627, 0xFE8D, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Alef (non-connecting)
+    {0x0627, 0xFE8D, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Beh
-  { 0x0628, 0xFE8F, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Beh
+    {0x0628, 0xFE8F, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Teh Marbuta
-  { 0x0629, 0xFE93, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Teh Marbuta
+    {0x0629, 0xFE93, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Teh
-  { 0x062A, 0xFE95, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Teh
+    {0x062A, 0xFE95, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Theh
-  { 0x062B, 0xFE99, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Theh
+    {0x062B, 0xFE99, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Jeem
-  { 0x062C, 0xFE9D, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Jeem
+    {0x062C, 0xFE9D, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Hah
-  { 0x062D, 0xFEA1, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Hah
+    {0x062D, 0xFEA1, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Khah
-  { 0x062E, 0xFEA5, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Khah
+    {0x062E, 0xFEA5, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Dal (non-connecting)
-  { 0x062F, 0xFEA9, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Dal (non-connecting)
+    {0x062F, 0xFEA9, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Thal (non-connecting)
-  { 0x0630, 0xFEAB, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Thal (non-connecting)
+    {0x0630, 0xFEAB, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Reh (non-connecting)
-  { 0x0631, 0xFEAD, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Reh (non-connecting)
+    {0x0631, 0xFEAD, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Zain (non-connecting)
-  { 0x0632, 0xFEAF, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Zain (non-connecting)
+    {0x0632, 0xFEAF, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Seen
-  { 0x0633, 0xFEB1, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Seen
+    {0x0633, 0xFEB1, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Sheen
-  { 0x0634, 0xFEB5, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Sheen
+    {0x0634, 0xFEB5, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Sad
-  { 0x0635, 0xFEB9, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Sad
+    {0x0635, 0xFEB9, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Dad
-  { 0x0636, 0xFEBD, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Dad
+    {0x0636, 0xFEBD, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Tah
-  { 0x0637, 0xFEC1, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Tah
+    {0x0637, 0xFEC1, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Zah
-  { 0x0638, 0xFEC5, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Zah
+    {0x0638, 0xFEC5, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Ain
-  { 0x0639, 0xFEC9, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Ain
+    {0x0639, 0xFEC9, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Ghain
-  { 0x063A, 0xFECD, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Ghain
+    {0x063A, 0xFECD, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Tatweel (kashida - connector)
-  { 0x0640, 0x0640, PACK_OFFSETS(0, 0, 0), JOIN_DUAL },
+    // Tatweel (kashida - connector)
+    {0x0640, 0x0640, PACK_OFFSETS(0, 0, 0), JOIN_DUAL},
 
-  // Feh
-  { 0x0641, 0xFED1, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Feh
+    {0x0641, 0xFED1, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Qaf
-  { 0x0642, 0xFED5, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Qaf
+    {0x0642, 0xFED5, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Kaf
-  { 0x0643, 0xFED9, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Kaf
+    {0x0643, 0xFED9, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Lam
-  { 0x0644, 0xFEDD, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Lam
+    {0x0644, 0xFEDD, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Meem
-  { 0x0645, 0xFEE1, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Meem
+    {0x0645, 0xFEE1, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Noon
-  { 0x0646, 0xFEE5, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Noon
+    {0x0646, 0xFEE5, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Heh
-  { 0x0647, 0xFEE9, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Heh
+    {0x0647, 0xFEE9, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 
-  // Waw (non-connecting)
-  { 0x0648, 0xFEED, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Waw (non-connecting)
+    {0x0648, 0xFEED, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Alef Maksura
-  { 0x0649, 0xFEEF, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY },
+    // Alef Maksura
+    {0x0649, 0xFEEF, RIGHT_JOIN_OFFSETS, JOIN_RIGHT_ONLY},
 
-  // Yeh
-  { 0x064A, 0xFEF1, DUAL_JOIN_OFFSETS, JOIN_DUAL },
+    // Yeh
+    {0x064A, 0xFEF1, DUAL_JOIN_OFFSETS, JOIN_DUAL},
 };
 
 #define SHAPING_TABLE_SIZE (sizeof(s_shaping_table) / sizeof(s_shaping_table[0]))
@@ -257,10 +257,10 @@ typedef struct {
 } LamAlefLigature;
 
 static const LamAlefLigature s_lam_alef[] = {
-  { 0x0622, 0xFEF5, 0xFEF6 },  // Lam + Alef with Madda
-  { 0x0623, 0xFEF7, 0xFEF8 },  // Lam + Alef with Hamza above
-  { 0x0625, 0xFEF9, 0xFEFA },  // Lam + Alef with Hamza below
-  { 0x0627, 0xFEFB, 0xFEFC },  // Lam + plain Alef
+    {0x0622, 0xFEF5, 0xFEF6},  // Lam + Alef with Madda
+    {0x0623, 0xFEF7, 0xFEF8},  // Lam + Alef with Hamza above
+    {0x0625, 0xFEF9, 0xFEFA},  // Lam + Alef with Hamza below
+    {0x0627, 0xFEFB, 0xFEFC},  // Lam + plain Alef
 };
 
 static const LamAlefLigature *prv_find_lam_alef(Codepoint curr, Codepoint next) {
@@ -292,17 +292,12 @@ Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next
 }
 
 bool arabic_is_transparent(Codepoint cp) {
-  return (cp >= 0x0610 && cp <= 0x061A) ||
-         (cp >= 0x064B && cp <= 0x065F) ||
-         (cp == 0x0670) ||
-         (cp >= 0x06D6 && cp <= 0x06DC) ||
-         (cp >= 0x06DF && cp <= 0x06E4) ||
-         (cp >= 0x06E7 && cp <= 0x06E8) ||
-         (cp >= 0x06EA && cp <= 0x06ED);
+  return (cp >= 0x0610 && cp <= 0x061A) || (cp >= 0x064B && cp <= 0x065F) || (cp == 0x0670) ||
+         (cp >= 0x06D6 && cp <= 0x06DC) || (cp >= 0x06DF && cp <= 0x06E4) ||
+         (cp >= 0x06E7 && cp <= 0x06E8) || (cp >= 0x06EA && cp <= 0x06ED);
 }
 
-size_t arabic_shape_text(const utf8_t *src, size_t src_len,
-                         utf8_t *dest, size_t dest_size) {
+size_t arabic_shape_text(const utf8_t *src, size_t src_len, utf8_t *dest, size_t dest_size) {
   if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
     return 0;
   }

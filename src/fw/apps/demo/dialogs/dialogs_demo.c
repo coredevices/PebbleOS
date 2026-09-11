@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 typedef struct DialogsData {
   Window window;
   MenuLayer menu_layer;
@@ -84,8 +83,7 @@ static void prv_show_confirm_dialog(DialogsData *data) {
   dialog_show_status_bar_layer(dialog, true);
 
   actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarConfirm, NULL);
-  actionable_dialog_set_click_config_provider(actionable_dialog,
-      prv_confirm_config_provider);
+  actionable_dialog_set_click_config_provider(actionable_dialog, prv_confirm_config_provider);
   app_actionable_dialog_push(actionable_dialog);
 }
 
@@ -108,8 +106,7 @@ static void prv_show_decline_dialog(DialogsData *data) {
   dialog_set_icon(dialog, data->resource_id_80);
 
   actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarDecline, NULL);
-  actionable_dialog_set_click_config_provider(actionable_dialog,
-      prv_decline_config_provider);
+  actionable_dialog_set_click_config_provider(actionable_dialog, prv_decline_config_provider);
   app_actionable_dialog_push(actionable_dialog);
 }
 
@@ -137,10 +134,10 @@ static void prv_show_custom_actionable_dialog(DialogsData *data) {
   // TODO destroy action bar / icon in unload callback
   ActionBarLayer *custom_action_bar = action_bar_layer_create();
   action_bar_layer_set_icon(custom_action_bar, BUTTON_ID_UP,
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_CHECK));
+                            gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_CHECK));
   action_bar_layer_set_context(custom_action_bar, dialog);
   action_bar_layer_set_click_config_provider(custom_action_bar,
-      prv_custom_action_bar_config_provider);
+                                             prv_custom_action_bar_config_provider);
 
   actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarCustom,
                                         custom_action_bar);
@@ -165,8 +162,8 @@ static void prv_show_expandable_dialog(DialogsData *data) {
   dialog_set_icon(dialog, data->resource_id_25);
   dialog_show_status_bar_layer(dialog, true);
 
-  expandable_dialog_set_select_action(expandable_dialog,
-      RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_my_select_click_handler);
+  expandable_dialog_set_select_action(expandable_dialog, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
+                                      prv_my_select_click_handler);
   app_expandable_dialog_push(expandable_dialog);
 }
 
@@ -289,19 +286,55 @@ typedef struct DialogNode {
 } DialogNode;
 
 static const DialogNode nodes[] = {
-  { .label = "D1 - Confirm",              .show = prv_show_confirm_dialog,                  },
-  { .label = "D2 - Decline",              .show = prv_show_decline_dialog,                  },
-  { .label = "D3 - Actionable",           .show = prv_show_custom_actionable_dialog,        },
-  { .label = "D4 - Expandable",           .show = prv_show_expandable_dialog,               },
-  { .label = "D4 - Exp with header",      .show = prv_show_expandable_dialog_header,        },
-  { .label = "D4 - Exp with long header", .show = prv_show_expandable_dialog_long_header,   },
-  { .label = "D5 - Simple Timeout",       .show = prv_show_simple_dialog,                   },
-  { .label = "D5 - Simple Vibe",          .show = prv_show_simple_dialog_vibe,              },
-  { .label = "D6 - Exp no action bar",    .show = prv_show_expandable_dialog_no_action_bar, },
-  { .label = "D7 - Exp no icon",          .show = prv_show_expandable_dialog_no_icon,       },
-  { .label = "D8 - Exp no scroll",        .show = prv_show_expandable_dialog_no_scroll,     },
-  { .label = "D9 - Exp header only",      .show = prv_show_expandable_dialog_header_no_icon },
-  { .label = "D10 - Transcription",       .show = prv_show_transcription_dialog,            }
+    {
+        .label = "D1 - Confirm",
+        .show = prv_show_confirm_dialog,
+    },
+    {
+        .label = "D2 - Decline",
+        .show = prv_show_decline_dialog,
+    },
+    {
+        .label = "D3 - Actionable",
+        .show = prv_show_custom_actionable_dialog,
+    },
+    {
+        .label = "D4 - Expandable",
+        .show = prv_show_expandable_dialog,
+    },
+    {
+        .label = "D4 - Exp with header",
+        .show = prv_show_expandable_dialog_header,
+    },
+    {
+        .label = "D4 - Exp with long header",
+        .show = prv_show_expandable_dialog_long_header,
+    },
+    {
+        .label = "D5 - Simple Timeout",
+        .show = prv_show_simple_dialog,
+    },
+    {
+        .label = "D5 - Simple Vibe",
+        .show = prv_show_simple_dialog_vibe,
+    },
+    {
+        .label = "D6 - Exp no action bar",
+        .show = prv_show_expandable_dialog_no_action_bar,
+    },
+    {
+        .label = "D7 - Exp no icon",
+        .show = prv_show_expandable_dialog_no_icon,
+    },
+    {
+        .label = "D8 - Exp no scroll",
+        .show = prv_show_expandable_dialog_no_scroll,
+    },
+    {.label = "D9 - Exp header only", .show = prv_show_expandable_dialog_header_no_icon},
+    {
+        .label = "D10 - Transcription",
+        .show = prv_show_transcription_dialog,
+    }
 };
 
 static const uint16_t NUM_ITEMS = ARRAY_LENGTH(nodes);
@@ -309,13 +342,12 @@ static const uint16_t NUM_ITEMS = ARRAY_LENGTH(nodes);
 //////////////
 // MenuLayer callbacks
 
-static void prv_draw_row_callback(GContext* ctx, Layer *cell_layer, MenuIndex *cell_index,
+static void prv_draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index,
                                   DialogsData *data) {
   menu_cell_basic_draw(ctx, cell_layer, nodes[cell_index->row].label, NULL, NULL);
 }
 
-static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
-                                DialogsData *data) {
+static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, DialogsData *data) {
   nodes[cell_index->row].show(data);
 }
 
@@ -333,21 +365,25 @@ static void prv_window_load(Window *window) {
   MenuLayer *menu_layer = &data->menu_layer;
   menu_layer_init(menu_layer, &window->layer.bounds);
 
-  data->lorem_ipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-                      "tempor incididunt ut labore et dolore magna aliqua. Utem ad happy.";
-  data->long_message = "Don't you see how great this is? You, you are a... Jesse look at me. "
-                       "You... are a blowfish.  A blowfish! Think about it. Small in stature, "
-                       "not swift, not cunning. Easy prey for predators but the blowfish has a "
-                       "secret weapon doesn't he. Doesn't he? What does the blowfish do, Jesse."
-                       " What does the blowfish do? The blowfish puffs up, okay?";
+  data->lorem_ipsum =
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+      "tempor incididunt ut labore et dolore magna aliqua. Utem ad happy.";
+  data->long_message =
+      "Don't you see how great this is? You, you are a... Jesse look at me. "
+      "You... are a blowfish.  A blowfish! Think about it. Small in stature, "
+      "not swift, not cunning. Easy prey for predators but the blowfish has a "
+      "secret weapon doesn't he. Doesn't he? What does the blowfish do, Jesse."
+      " What does the blowfish do? The blowfish puffs up, okay?";
   data->resource_id_80 = RESOURCE_ID_GENERIC_CONFIRMATION_LARGE;
   data->resource_id_25 = RESOURCE_ID_GENERIC_CONFIRMATION_TINY;
 
-  menu_layer_set_callbacks(menu_layer, data, &(MenuLayerCallbacks) {
-    .get_num_rows = (MenuLayerGetNumberOfRowsInSectionsCallback) prv_get_num_rows_callback,
-    .draw_row = (MenuLayerDrawRowCallback) prv_draw_row_callback,
-    .select_click = (MenuLayerSelectCallback) prv_select_callback,
-  });
+  menu_layer_set_callbacks(
+      menu_layer, data,
+      &(MenuLayerCallbacks){
+          .get_num_rows = (MenuLayerGetNumberOfRowsInSectionsCallback)prv_get_num_rows_callback,
+          .draw_row = (MenuLayerDrawRowCallback)prv_draw_row_callback,
+          .select_click = (MenuLayerSelectCallback)prv_select_callback,
+      });
   menu_layer_set_click_config_onto_window(menu_layer, window);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
 }
@@ -360,9 +396,9 @@ static void prv_handle_init(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Dialogs"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -383,15 +419,17 @@ static void s_main(void) {
   prv_handle_deinit();
 }
 
-const PebbleProcessMd* dialogs_demo_get_app_info() {
+const PebbleProcessMd *dialogs_demo_get_app_info() {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = s_main,
-      // UUID: ab470e5f-5ffd-46f2-9aa9-f48352ea5499
-      .uuid = {0xab, 0x47, 0x0e, 0x5f, 0x5f, 0xfd, 0x46, 0xf2,
-               0x9a, 0xa9, 0xf4, 0x83, 0x52, 0xea, 0x54, 0x99},
-    },
-    .name = "Dialogs",
+      .common =
+          {
+              .main_func = s_main,
+              // UUID: ab470e5f-5ffd-46f2-9aa9-f48352ea5499
+              .uuid =
+                  {0xab, 0x47, 0x0e, 0x5f, 0x5f, 0xfd, 0x46, 0xf2, 0x9a, 0xa9, 0xf4, 0x83, 0x52,
+                   0xea, 0x54, 0x99},
+          },
+      .name = "Dialogs",
   };
-  return (const PebbleProcessMd*) &s_app_md;
+  return (const PebbleProcessMd *)&s_app_md;
 }

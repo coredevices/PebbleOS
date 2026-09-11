@@ -21,15 +21,15 @@ static void profile_mutexes(void) {
   PROFILER_INIT;
   PROFILER_START;
 
-  for (int i=0; i < 10000; i++) {
+  for (int i = 0; i < 10000; i++) {
     pbl_mutex_lock(&s_mutex, PBL_FOREVER);
     pbl_mutex_unlock(&s_mutex);
   }
 
-  for (int i=0; i < 10000; i++) {
+  for (int i = 0; i < 10000; i++) {
     pbl_mutex_lock(&s_rmutex, PBL_FOREVER);
   }
-  for (int i=0; i < 10000; i++) {
+  for (int i = 0; i < 10000; i++) {
     pbl_mutex_unlock(&s_rmutex);
   }
 
@@ -46,10 +46,10 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* profile_mutexes_get_app_info(void) {
+const PebbleProcessMd *profile_mutexes_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "Profile Mutexes"
+      .common.main_func = &s_main,
+      .name = "Profile Mutexes"
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

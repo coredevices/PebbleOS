@@ -30,19 +30,19 @@
 //! future, we will add support for handling classic connections as well
 
 typedef struct {
-  ListNode          list_node;
-  uint32_t          timeout; // time to stop this request (in rtc ticks)
+  ListNode list_node;
+  uint32_t timeout;  // time to stop this request (in rtc ticks)
   ResponseTimeState req_state;
-  BtConsumer        consumer;
+  BtConsumer consumer;
   ResponsivenessGrantedHandler granted_handler;
 } ConnectionStateRequest;
 
 typedef struct ConnectionMgrInfo {
   // callback which returns us to a low power state if user of API does not exit
   // a high power state
-  RegularTimerInfo        watchdog_cb_info;
+  RegularTimerInfo watchdog_cb_info;
   // current running state of the connection
-  ResponseTimeState       curr_requested_state;
+  ResponseTimeState curr_requested_state;
   // A list of consumers who have requested changes to latency state != ResponseTimeMax
   ConnectionStateRequest *requests;
 } ConnectionMgrInfo;
@@ -64,25 +64,25 @@ static const char *prv_response_time_state_name(ResponseTimeState state) {
 
 static const char *prv_consumer_name(BtConsumer consumer) {
   static const char *const s_consumer_names[NumBtConsumer] = {
-    [BtConsumerNone] = "None",
-    [BtConsumerApp] = "App",
-    [BtConsumerLePairing] = "LePairing",
-    [BtConsumerLeServiceDiscovery] = "LeServiceDiscovery",
-    [BtConsumerMusicServiceIndefinite] = "MusicServiceIndefinite",
-    [BtConsumerMusicServiceMomentary] = "MusicServiceMomentary",
-    [BtConsumerPpAppFetch] = "PpAppFetch",
-    [BtConsumerPpAppMessage] = "PpAppMessage",
-    [BtConsumerPpAudioEndpoint] = "PpAudioEndpoint",
-    [BtConsumerPpGetBytes] = "PpGetBytes",
-    [BtConsumerPpLogDump] = "PpLogDump",
-    [BtConsumerPpPutBytes] = "PpPutBytes",
-    [BtConsumerPpScreenshot] = "PpScreenshot",
-    [BtConsumerPpVoiceEndpoint] = "PpVoiceEndpoint",
-    [BtConsumerPrompt] = "Prompt",
-    [BtConsumerTimelineActionMenu] = "TimelineActionMenu",
-    [BtConsumerPRF] = "PRF",
-    [BtConsumerPebblePairingServiceRemoteDevice] = "PebblePairingServiceRemoteDevice",
-    [BtConsumerUnitTests] = "UnitTests",
+      [BtConsumerNone] = "None",
+      [BtConsumerApp] = "App",
+      [BtConsumerLePairing] = "LePairing",
+      [BtConsumerLeServiceDiscovery] = "LeServiceDiscovery",
+      [BtConsumerMusicServiceIndefinite] = "MusicServiceIndefinite",
+      [BtConsumerMusicServiceMomentary] = "MusicServiceMomentary",
+      [BtConsumerPpAppFetch] = "PpAppFetch",
+      [BtConsumerPpAppMessage] = "PpAppMessage",
+      [BtConsumerPpAudioEndpoint] = "PpAudioEndpoint",
+      [BtConsumerPpGetBytes] = "PpGetBytes",
+      [BtConsumerPpLogDump] = "PpLogDump",
+      [BtConsumerPpPutBytes] = "PpPutBytes",
+      [BtConsumerPpScreenshot] = "PpScreenshot",
+      [BtConsumerPpVoiceEndpoint] = "PpVoiceEndpoint",
+      [BtConsumerPrompt] = "Prompt",
+      [BtConsumerTimelineActionMenu] = "TimelineActionMenu",
+      [BtConsumerPRF] = "PRF",
+      [BtConsumerPebblePairingServiceRemoteDevice] = "PebblePairingServiceRemoteDevice",
+      [BtConsumerUnitTests] = "UnitTests",
   };
 
   if (consumer >= NumBtConsumer || s_consumer_names[consumer] == NULL) {
@@ -95,8 +95,9 @@ static const char *prv_consumer_name(BtConsumer consumer) {
 //! connection. Also detects the longest amount of time that interval has been
 //! requested. Also gets the consumer that is responsible for the lowest latency + longest timeout
 //! combo. These pieces of information are then returned to the caller.
-static ResponseTimeState prv_determine_latency_for_connection(
-    ConnectionStateRequest *requests, uint16_t *secs_to_wait, BtConsumer *consumer_out) {
+static ResponseTimeState prv_determine_latency_for_connection(ConnectionStateRequest *requests,
+                                                              uint16_t *secs_to_wait,
+                                                              BtConsumer *consumer_out) {
   ResponseTimeState state = ResponseTimeMax;
   uint32_t timeout = 0;
   BtConsumer responsible_consumer = BtConsumerNone;
@@ -152,14 +153,12 @@ static void prv_schedule_granted_handler(ResponsivenessGrantedHandler granted_ha
 }
 
 //! extern'd for gap_le_connect_params.c
-void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
-                                           ResponseTimeState granted_state) {
+void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl, ResponseTimeState granted_state) {
   bt_lock_assert_held(true);
 
   ConnectionStateRequest *curr_request = hdl->conn_mgr_info->requests;
   while (curr_request != NULL) {
-    if (curr_request->granted_handler &&
-        curr_request->req_state <= granted_state) {
+    if (curr_request->granted_handler && curr_request->req_state <= granted_state) {
       prv_schedule_granted_handler(curr_request->granted_handler);
       curr_request->granted_handler = NULL;
     }
@@ -177,15 +176,15 @@ static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
   state = ResponseTimeMin;
   responsible_consumer = 0;
 #else
-  state = prv_determine_latency_for_connection(hdl->conn_mgr_info->requests,
-      &secs_til_max_latency, &responsible_consumer);
+  state = prv_determine_latency_for_connection(hdl->conn_mgr_info->requests, &secs_til_max_latency,
+                                               &responsible_consumer);
 #endif
 
   // actually request the mode if it has changed:
   if (hdl->conn_mgr_info->curr_requested_state != state) {
     PBL_LOG_INFO("LE: Requesting state <%s> for %d secs, due to <%s>",
-            prv_response_time_state_name(state), secs_til_max_latency,
-            prv_consumer_name(responsible_consumer));
+                 prv_response_time_state_name(state), secs_til_max_latency,
+                 prv_consumer_name(responsible_consumer));
     gap_le_connect_params_request(hdl, state);
   }
 
@@ -203,8 +202,7 @@ static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
     // wait an extra second since the multisecond callback will fire somewhere
     // between 0 and 1 seconds from now and we want to make sure the interval
     // we are currently running at actually expires
-    regular_timer_add_multisecond_callback(
-            watchdog_cb_info, secs_til_max_latency + 1);
+    regular_timer_add_multisecond_callback(watchdog_cb_info, secs_til_max_latency + 1);
   }
 
   hdl->conn_mgr_info->curr_requested_state = state;
@@ -264,15 +262,14 @@ static bool prv_find_source(ListNode *found_node, void *data) {
  * Exported APIs
  */
 
-void conn_mgr_set_ble_conn_response_time(
-    GAPLEConnection *hdl, BtConsumer consumer, ResponseTimeState state,
-    uint16_t max_period_secs) {
+void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, BtConsumer consumer,
+                                         ResponseTimeState state, uint16_t max_period_secs) {
   conn_mgr_set_ble_conn_response_time_ext(hdl, consumer, state, max_period_secs, NULL);
 }
 
-void conn_mgr_set_ble_conn_response_time_ext(
-    GAPLEConnection *hdl, BtConsumer consumer, ResponseTimeState state,
-    uint16_t max_period_secs, ResponsivenessGrantedHandler granted_handler) {
+void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, BtConsumer consumer,
+                                             ResponseTimeState state, uint16_t max_period_secs,
+                                             ResponsivenessGrantedHandler granted_handler) {
   ConnectionMgrInfo *conn_mgr_info;
   if (!hdl || !((conn_mgr_info = hdl->conn_mgr_info))) {
     PBL_LOG_ERR("GAP Handle not properly initialized");
@@ -287,9 +284,8 @@ void conn_mgr_set_ble_conn_response_time_ext(
     regular_timer_remove_callback(watchdog_cb_info);
   }
 
-  ConnectionStateRequest *consumer_request =
-      (ConnectionStateRequest *)list_find((ListNode *)conn_mgr_info->requests,
-                                           prv_find_source, (void *)consumer);
+  ConnectionStateRequest *consumer_request = (ConnectionStateRequest *)list_find(
+      (ListNode *)conn_mgr_info->requests, prv_find_source, (void *)consumer);
 
   bool is_already_granted = (gap_le_connect_params_get_actual_state(hdl) >= state);
 
@@ -318,7 +314,7 @@ void conn_mgr_set_ble_conn_response_time_ext(
   }
 
   // populate node with new info. If it was previously set we override it
-  consumer_request->timeout =  rtc_get_ticks() + max_period_secs * RTC_TICKS_HZ;
+  consumer_request->timeout = rtc_get_ticks() + max_period_secs * RTC_TICKS_HZ;
   consumer_request->req_state = state;
   consumer_request->consumer = consumer;
   consumer_request->granted_handler = is_already_granted ? NULL : granted_handler;
@@ -334,10 +330,10 @@ handle_current_state:
 }
 
 //! expects that the bt lock is held
-ConnectionMgrInfo * bt_conn_mgr_info_init(void) {
+ConnectionMgrInfo *bt_conn_mgr_info_init(void) {
   ConnectionMgrInfo *newinfo = kernel_malloc_check(sizeof(ConnectionMgrInfo));
-  *newinfo =  (ConnectionMgrInfo) {
-    .curr_requested_state = ResponseTimeMax,
+  *newinfo = (ConnectionMgrInfo){
+      .curr_requested_state = ResponseTimeMax,
   };
 
   return newinfo;
@@ -368,13 +364,11 @@ void command_change_le_mode(char *mode) {
   GAPLEConnection *conn_hdl = gap_le_connection_any();
   ResponseTimeState state = atoi(mode);
 
-  conn_mgr_set_ble_conn_response_time(
-      conn_hdl, BtConsumerPrompt, state, MAX_PERIOD_RUN_FOREVER);
+  conn_mgr_set_ble_conn_response_time(conn_hdl, BtConsumerPrompt, state, MAX_PERIOD_RUN_FOREVER);
 }
 
-ResponseTimeState conn_mgr_get_latency_for_le_connection(
-    GAPLEConnection *hdl, uint16_t *secs_to_wait) {
+ResponseTimeState conn_mgr_get_latency_for_le_connection(GAPLEConnection *hdl,
+                                                         uint16_t *secs_to_wait) {
   bt_lock_assert_held(true);
-  return prv_determine_latency_for_connection(
-      hdl->conn_mgr_info->requests, secs_to_wait, NULL);
+  return prv_determine_latency_for_connection(hdl->conn_mgr_info->requests, secs_to_wait, NULL);
 }

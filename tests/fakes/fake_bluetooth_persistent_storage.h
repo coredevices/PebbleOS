@@ -8,6 +8,6 @@
 void fake_bt_persistent_storage_reset(void);
 
 BTBondingID fake_bt_persistent_storage_add(const SMIdentityResolvingKey *irk,
-				    const BTDeviceInternal *device,
-				    const char name[BT_DEVICE_NAME_BUFFER_SIZE],
-				    bool is_gateway);
+                                           const BTDeviceInternal *device,
+                                           const char name[BT_DEVICE_NAME_BUFFER_SIZE],
+                                           bool is_gateway);

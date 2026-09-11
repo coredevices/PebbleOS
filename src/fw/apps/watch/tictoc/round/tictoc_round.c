@@ -21,55 +21,63 @@ typedef struct {
   GBitmap *tz_bitmap[NUM_NON_LOCAL_CLOCKS];
 } MultiWatchData;
 
-static GPath* prv_pointed_hand_path(GContext *ctx, ClockHand *hand) {
+static GPath *prv_pointed_hand_path(GContext *ctx, ClockHand *hand) {
   uint32_t num_points = 5;
-  if (hand->backwards_extension > 0) num_points = 9;
+  if (hand->backwards_extension > 0)
+    num_points = 9;
 
-  GPoint *points = (GPoint*)malloc(num_points * sizeof(GPoint));
-  if (!points) return NULL;
+  GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
+  if (!points)
+    return NULL;
 
-  points[0] = GPoint(hand->thickness / -2, hand->thickness); // top left
-  points[1] = GPoint(hand->thickness / -2, -(hand->length - hand->thickness / 2)); // bottom left
-  points[2] = GPoint(0, -(hand->length)); // point
-  points[3] = GPoint(hand->thickness / 2, -(hand->length - hand->thickness / 2)); // bottom right
-  points[4] = GPoint(hand->thickness / 2, hand->thickness); // top right
+  points[0] = GPoint(hand->thickness / -2, hand->thickness);                        // top left
+  points[1] = GPoint(hand->thickness / -2, -(hand->length - hand->thickness / 2));  // bottom left
+  points[2] = GPoint(0, -(hand->length));                                           // point
+  points[3] = GPoint(hand->thickness / 2, -(hand->length - hand->thickness / 2));   // bottom right
+  points[4] = GPoint(hand->thickness / 2, hand->thickness);                         // top right
   if (hand->backwards_extension > 0) {
-    points[5] = GPoint(hand->thickness / 4, hand->thickness); // bottom right
-    points[6] = GPoint(hand->thickness / 4, hand->thickness + hand->backwards_extension); // top right
-    points[7] = GPoint(hand->thickness / -4, hand->thickness + hand->backwards_extension); // top left
-    points[8] = GPoint(hand->thickness / -4, hand->thickness); // bottom left
+    points[5] = GPoint(hand->thickness / 4, hand->thickness);  // bottom right
+    points[6] =
+        GPoint(hand->thickness / 4, hand->thickness + hand->backwards_extension);  // top right
+    points[7] =
+        GPoint(hand->thickness / -4, hand->thickness + hand->backwards_extension);  // top left
+    points[8] = GPoint(hand->thickness / -4, hand->thickness);                      // bottom left
   }
 
   GPathInfo info = {
-    .num_points = num_points,
-    .points = points,
+      .num_points = num_points,
+      .points = points,
   };
 
   GPath *path = gpath_create(&info);
   return path;
 }
 
-static GPath* prv_square_hand_path(GContext *ctx, ClockHand *hand) {
+static GPath *prv_square_hand_path(GContext *ctx, ClockHand *hand) {
   uint32_t num_points = 4;
-  if (hand->backwards_extension > 0) num_points = 8;
+  if (hand->backwards_extension > 0)
+    num_points = 8;
 
-  GPoint *points = (GPoint*)malloc(num_points * sizeof(GPoint));
-  if (!points) return NULL;
+  GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
+  if (!points)
+    return NULL;
 
-  points[0] = GPoint(hand->thickness / -2, hand->thickness); // top left
-  points[1] = GPoint(hand->thickness / -2, -(hand->length)); // bottom left
-  points[2] = GPoint(hand->thickness / 2, -(hand->length)); // bottom right
-  points[3] = GPoint(hand->thickness / 2, hand->thickness); // top right
+  points[0] = GPoint(hand->thickness / -2, hand->thickness);  // top left
+  points[1] = GPoint(hand->thickness / -2, -(hand->length));  // bottom left
+  points[2] = GPoint(hand->thickness / 2, -(hand->length));   // bottom right
+  points[3] = GPoint(hand->thickness / 2, hand->thickness);   // top right
   if (hand->backwards_extension > 0) {
-    points[4] = GPoint(hand->thickness / 4, hand->thickness); // bottom right
-    points[5] = GPoint(hand->thickness / 4, hand->thickness + hand->backwards_extension); // top right
-    points[6] = GPoint(hand->thickness / -4, hand->thickness + hand->backwards_extension); // top left
-    points[7] = GPoint(hand->thickness / -4, hand->thickness); // bottom left
+    points[4] = GPoint(hand->thickness / 4, hand->thickness);  // bottom right
+    points[5] =
+        GPoint(hand->thickness / 4, hand->thickness + hand->backwards_extension);  // top right
+    points[6] =
+        GPoint(hand->thickness / -4, hand->thickness + hand->backwards_extension);  // top left
+    points[7] = GPoint(hand->thickness / -4, hand->thickness);                      // bottom left
   }
 
   GPathInfo info = {
-    .num_points = num_points,
-    .points = points,
+      .num_points = num_points,
+      .points = points,
   };
 
   GPath *path = gpath_create(&info);
@@ -83,7 +91,7 @@ void watch_model_handle_change(ClockModel *model) {
 }
 
 static GPointPrecise prv_gpoint_from_polar(const GPointPrecise *center, uint32_t distance,
-                                                int32_t angle) {
+                                           int32_t angle) {
   return gpoint_from_polar_precise(center, distance << GPOINT_PRECISE_PRECISION, angle);
 }
 
@@ -91,12 +99,12 @@ static void prv_graphics_draw_centered_text(GContext *ctx, const GSize *max_size
                                             const GPoint *center, const GFont font,
                                             const GColor color, const char *text) {
   GSize text_size = app_graphics_text_layout_get_content_size(
-      text, font, (GRect) { .size = *max_size }, GTextOverflowModeFill, GTextAlignmentCenter);
+      text, font, (GRect){.size = *max_size}, GTextOverflowModeFill, GTextAlignmentCenter);
   GPoint text_center = *center;
   text_center.x -= text_size.w / 2 + 1;
   text_center.y -= text_size.h * 2 / 3;
   graphics_context_set_text_color(ctx, color);
-  graphics_draw_text(ctx, text, font, (GRect) { .origin = text_center, .size = text_size },
+  graphics_draw_text(ctx, text, font, (GRect){.origin = text_center, .size = text_size},
                      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
@@ -148,34 +156,34 @@ static GPointPrecise prv_get_clock_center_point(ClockLocation location, const GR
   GPoint imprecise_center_point = {0};
   switch (location) {
     case CLOCK_LOCATION_TOP:
-      imprecise_center_point = (GPoint) {
-        .x = bounds->size.w / 2,
-        .y = bounds->size.h / 4,
+      imprecise_center_point = (GPoint){
+          .x = bounds->size.w / 2,
+          .y = bounds->size.h / 4,
       };
       break;
     case CLOCK_LOCATION_RIGHT:
-      imprecise_center_point = (GPoint) {
-        .x = bounds->size.w * 3 / 4 - 5,
-        .y = bounds->size.h / 2,
+      imprecise_center_point = (GPoint){
+          .x = bounds->size.w * 3 / 4 - 5,
+          .y = bounds->size.h / 2,
       };
       break;
     case CLOCK_LOCATION_BOTTOM:
-      imprecise_center_point = (GPoint) {
-        .x = bounds->size.w / 2,
-        .y = bounds->size.h * 3 / 4 + 6,
+      imprecise_center_point = (GPoint){
+          .x = bounds->size.w / 2,
+          .y = bounds->size.h * 3 / 4 + 6,
       };
       break;
     case CLOCK_LOCATION_LEFT:
-      imprecise_center_point = (GPoint) {
-        .x = bounds->size.w / 4 + 4,
-        .y = bounds->size.h / 2,
+      imprecise_center_point = (GPoint){
+          .x = bounds->size.w / 4 + 4,
+          .y = bounds->size.h / 2,
       };
       break;
     default:
       // aiming for width / 2 - 0.5 to get the true center
-      return (GPointPrecise) {
-        .x = { .integer = bounds->size.w / 2 - 1, .fraction = 3 },
-        .y = { .integer = bounds->size.h / 2 - 1, .fraction = 3 }
+      return (GPointPrecise){
+          .x = {.integer = bounds->size.w / 2 - 1, .fraction = 3},
+          .y = {.integer = bounds->size.h / 2 - 1, .fraction = 3}
       };
   }
   return GPointPreciseFromGPoint(imprecise_center_point);
@@ -184,18 +192,22 @@ static GPointPrecise prv_get_clock_center_point(ClockLocation location, const GR
 static void prv_draw_clock_text(GContext *ctx, ClockText text, GPoint center) {
   MultiWatchData *data = app_state_get_user_data();
   const GRect *bounds = &window_get_root_layer(&data->window)->bounds;
-  switch(text.location) {
+  switch (text.location) {
     case CLOCK_TEXT_LOCATION_LEFT:
-      const GRect box = (GRect) { .origin = GPoint(center.x - text.offset - bounds->size.w, center.y - text.font_size * 2 / 3), .size = bounds->size };
-      graphics_draw_text(ctx, text.buffer, text.font, box,
-                         GTextOverflowModeFill, GTextAlignmentRight, NULL);
+      const GRect box = (GRect){
+          .origin =
+              GPoint(center.x - text.offset - bounds->size.w, center.y - text.font_size * 2 / 3),
+          .size = bounds->size
+      };
+      graphics_draw_text(ctx, text.buffer, text.font, box, GTextOverflowModeFill,
+                         GTextAlignmentRight, NULL);
       break;
     case CLOCK_TEXT_LOCATION_BOTTOM:
     default:
-      const GPoint point = (GPoint) { center.x, center.y + text.offset };
-      prv_graphics_draw_centered_text(ctx, &bounds->size, &point, text.font,
-                                      text.color, text.buffer);
-    break;
+      const GPoint point = (GPoint){center.x, center.y + text.offset};
+      prv_graphics_draw_centered_text(ctx, &bounds->size, &point, text.font, text.color,
+                                      text.buffer);
+      break;
   }
 }
 
@@ -212,12 +224,14 @@ static void prv_draw_clock_face(GContext *ctx, ClockFace *face) {
   prv_draw_watch_hand(ctx, &face->minute_hand, center);
 
   // Draw bob.
-  GRect bob_rect = (GRect) {
-      .origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_radius, GPointFromGPointPrecise(center).y - face->bob_radius),
+  GRect bob_rect = (GRect){
+      .origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_radius,
+                       GPointFromGPointPrecise(center).y - face->bob_radius),
       .size = GSize(face->bob_radius * 2, face->bob_radius * 2)
   };
-  GRect bob_center_rect = (GRect) {
-      .origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_center_radius, GPointFromGPointPrecise(center).y - face->bob_center_radius),
+  GRect bob_center_rect = (GRect){
+      .origin = GPoint(GPointFromGPointPrecise(center).x - face->bob_center_radius,
+                       GPointFromGPointPrecise(center).y - face->bob_center_radius),
       .size = GSize(face->bob_center_radius * 2, face->bob_center_radius * 2)
   };
   graphics_context_set_fill_color(ctx, face->bob_color);
@@ -225,7 +239,6 @@ static void prv_draw_clock_face(GContext *ctx, ClockFace *face) {
   graphics_context_set_fill_color(ctx, face->bob_center_color);
   graphics_fill_oval(ctx, bob_center_rect, GOvalScaleModeFitCircle);
 }
-
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
   MultiWatchData *data = app_state_get_user_data();
@@ -242,7 +255,8 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   for (uint32_t i = 0; i < clock_model->num_non_local_clocks; ++i) {
     // Draw clock background
     GRect bitmap_bounds = gbitmap_get_bounds(data->tz_bitmap[i]);
-    GPointPrecise bitmap_center = prv_get_clock_center_point(clock_model->non_local_clock[i].location, bounds);
+    GPointPrecise bitmap_center =
+        prv_get_clock_center_point(clock_model->non_local_clock[i].location, bounds);
     bitmap_bounds.origin.x = GPointFromGPointPrecise(bitmap_center).x - (bitmap_bounds.size.w / 2);
     bitmap_bounds.origin.y = GPointFromGPointPrecise(bitmap_center).y - (bitmap_bounds.size.h / 2);
     graphics_draw_bitmap_in_rect(ctx, data->tz_bitmap[i], &bitmap_bounds);
@@ -261,7 +275,8 @@ static void prv_window_load(Window *window) {
 
   data->bg_bitmap = gbitmap_create_with_resource(data->clock_model.bg_bitmap_id);
   for (uint32_t i = 0; i < data->clock_model.num_non_local_clocks; ++i) {
-    data->tz_bitmap[i] = gbitmap_create_with_resource(data->clock_model.non_local_clock[i].bg_bitmap_id);
+    data->tz_bitmap[i] =
+        gbitmap_create_with_resource(data->clock_model.non_local_clock[i].bg_bitmap_id);
   }
 }
 
@@ -286,15 +301,15 @@ static void prv_init(void) {
   app_state_set_user_data(data);
 
   window_init(&data->window, "TicToc");
-  window_set_window_handlers(&data->window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(&data->window, &(WindowHandlers){
+                                                .load = prv_window_load,
+                                                .unload = prv_window_unload,
+                                            });
   const bool animated = true;
   app_window_stack_push(&data->window, animated);
 
-  app_focus_service_subscribe_handlers((AppFocusHandlers) {
-    .did_focus = prv_app_did_focus,
+  app_focus_service_subscribe_handlers((AppFocusHandlers){
+      .did_focus = prv_app_did_focus,
   });
 }
 

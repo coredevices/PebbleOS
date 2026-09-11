@@ -10,4 +10,3 @@
 //! @param window_stack Which window stack to push the dialog to
 void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
                            WindowStack *window_stack);
-

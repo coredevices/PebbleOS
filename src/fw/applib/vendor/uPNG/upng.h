@@ -47,33 +47,33 @@
 // PNG files start with [137, 'P', 'N', 'G']
 #define PNG_SIGNATURE MAKE_WORD('\x89', 'P', 'N', 'G')
 
-#define PNG_HEADER_SIZE 33 // Full header == 8 + 25 (PNG_file_signature + IHDR_CHUNK)
-#define CHUNK_META_SIZE 12 // PNG Chunks have 12 bytes of metadata (Length, Type, CRC)
-#define FCTL_CHUNK_SIZE (26 + CHUNK_META_SIZE) // FCTL data_size + META_SIZE
+#define PNG_HEADER_SIZE 33  // Full header == 8 + 25 (PNG_file_signature + IHDR_CHUNK)
+#define CHUNK_META_SIZE 12  // PNG Chunks have 12 bytes of metadata (Length, Type, CRC)
+#define FCTL_CHUNK_SIZE (26 + CHUNK_META_SIZE)  // FCTL data_size + META_SIZE
 
-#define CHUNK_IHDR MAKE_WORD('I', 'H', 'D', 'R') // Image Header Chunk
-#define CHUNK_IDAT MAKE_WORD('I', 'D', 'A', 'T') // Image Data Chunk
-#define CHUNK_PLTE MAKE_WORD('P', 'L', 'T', 'E') // Palette Chunk
-#define CHUNK_IEND MAKE_WORD('I', 'E', 'N', 'D') // Image End Chunk
-#define CHUNK_TRNS MAKE_WORD('t', 'R', 'N', 'S') // Alpha transparency for palettized images
-#define CHUNK_ACTL MAKE_WORD('a', 'c', 'T', 'L') // Animation control (APNG)
-#define CHUNK_ADTL MAKE_WORD('a', 'd', 'T', 'L') // Animation duration (APNG)
-#define CHUNK_FDAT MAKE_WORD('f', 'd', 'A', 'T') // Frame Data (APNG)
-#define CHUNK_FCTL MAKE_WORD('f', 'c', 'T', 'L') // Frame control (APNG)
+#define CHUNK_IHDR MAKE_WORD('I', 'H', 'D', 'R')  // Image Header Chunk
+#define CHUNK_IDAT MAKE_WORD('I', 'D', 'A', 'T')  // Image Data Chunk
+#define CHUNK_PLTE MAKE_WORD('P', 'L', 'T', 'E')  // Palette Chunk
+#define CHUNK_IEND MAKE_WORD('I', 'E', 'N', 'D')  // Image End Chunk
+#define CHUNK_TRNS MAKE_WORD('t', 'R', 'N', 'S')  // Alpha transparency for palettized images
+#define CHUNK_ACTL MAKE_WORD('a', 'c', 'T', 'L')  // Animation control (APNG)
+#define CHUNK_ADTL MAKE_WORD('a', 'd', 'T', 'L')  // Animation duration (APNG)
+#define CHUNK_FDAT MAKE_WORD('f', 'd', 'A', 'T')  // Frame Data (APNG)
+#define CHUNK_FCTL MAKE_WORD('f', 'c', 'T', 'L')  // Frame control (APNG)
 
 #define APNG_DEFAULT_DELAY_UNITS (100)  // APNG default delay units (ie. 1/100 per frame)
 
 typedef enum upng_error {
-  UPNG_EOK   = 0, // success(no error)
-  UPNG_ENOMEM   = 1, // memory allocation failed
-  UPNG_ENOTFOUND  = 2, // resource not found(file missing)
-  UPNG_ENOTPNG  = 3, // image data does not have a PNG header
-  UPNG_EMALFORMED  = 4, // image data is not a valid PNG image
-  UPNG_EUNSUPPORTED = 5, // critical PNG chunk type is not supported
-  UPNG_EUNINTERLACED = 6, // image int32_terlacing is not supported
-  UPNG_EUNFORMAT  = 7, // image color format is not supported
-  UPNG_EPARAM   = 8, // invalid parameter to method call
-  UPNG_EDONE   = 9 // completed decoding all information to end of file (IEND)
+  UPNG_EOK = 0,            // success(no error)
+  UPNG_ENOMEM = 1,         // memory allocation failed
+  UPNG_ENOTFOUND = 2,      // resource not found(file missing)
+  UPNG_ENOTPNG = 3,        // image data does not have a PNG header
+  UPNG_EMALFORMED = 4,     // image data is not a valid PNG image
+  UPNG_EUNSUPPORTED = 5,   // critical PNG chunk type is not supported
+  UPNG_EUNINTERLACED = 6,  // image int32_terlacing is not supported
+  UPNG_EUNFORMAT = 7,      // image color format is not supported
+  UPNG_EPARAM = 8,         // invalid parameter to method call
+  UPNG_EDONE = 9           // completed decoding all information to end of file (IEND)
 } upng_error;
 
 typedef enum upng_format {
@@ -104,26 +104,25 @@ typedef struct PACKED rgb {
   uint8_t b;
 } rgb;
 
+upng_t *upng_create(void);
+void upng_destroy(upng_t *upng, bool free_image_buffer);
 
-upng_t*  upng_create(void);
-void  upng_destroy(upng_t* upng, bool free_image_buffer);
+void upng_load_bytes(upng_t *upng, const uint8_t *source_buffer, uint32_t source_size);
 
-void  upng_load_bytes(upng_t* upng, const uint8_t* source_buffer, uint32_t source_size);
+upng_error upng_decode_metadata(upng_t *upng);
+upng_error upng_decode_image(upng_t *upng);
 
-upng_error upng_decode_metadata(upng_t* upng);
-upng_error upng_decode_image(upng_t* upng);
+upng_error upng_get_error(const upng_t *upng);
+uint32_t upng_get_error_line(const upng_t *upng);
 
-upng_error upng_get_error(const upng_t* upng);
-uint32_t upng_get_error_line(const upng_t* upng);
-
-uint32_t upng_get_width(const upng_t* upng);
-uint32_t upng_get_height(const upng_t* upng);
-uint32_t upng_get_bpp(const upng_t* upng);
-uint32_t upng_get_bitdepth(const upng_t* upng);
-uint32_t upng_get_components(const upng_t* upng);
-uint32_t upng_get_pixelsize(const upng_t* upng);
-upng_format upng_get_format(const upng_t* upng);
-uint32_t upng_get_size(const upng_t* upng);
+uint32_t upng_get_width(const upng_t *upng);
+uint32_t upng_get_height(const upng_t *upng);
+uint32_t upng_get_bpp(const upng_t *upng);
+uint32_t upng_get_bitdepth(const upng_t *upng);
+uint32_t upng_get_components(const upng_t *upng);
+uint32_t upng_get_pixelsize(const upng_t *upng);
+upng_format upng_get_format(const upng_t *upng);
+uint32_t upng_get_size(const upng_t *upng);
 
 // returns palette and count of entries in palette for indexed images
 uint16_t upng_get_palette(const upng_t *upng, rgb **palette);
@@ -131,7 +130,7 @@ uint16_t upng_get_palette(const upng_t *upng, rgb **palette);
 // returns(optional) alpha_palette and count of entries in alpha_palette for indexed images
 uint16_t upng_get_alpha_palette(const upng_t *upng, uint8_t **alpha_palette);
 
-const uint8_t* upng_get_buffer(const upng_t* upng);
+const uint8_t *upng_get_buffer(const upng_t *upng);
 
 typedef enum apng_dispose_ops {
   APNG_DISPOSE_OP_NONE = 0,
@@ -157,15 +156,15 @@ typedef struct PACKED apng_fctl {
 } apng_fctl;
 
 // returns if the png is an apng after the upng_load() function
-bool upng_is_apng(const upng_t* upng);
+bool upng_is_apng(const upng_t *upng);
 
 // retuns the apng num_frames
-uint32_t upng_apng_num_frames(const upng_t* upng);
+uint32_t upng_apng_num_frames(const upng_t *upng);
 
 // retuns the apng num_plays (0 indicates infinite looping)
-uint32_t upng_apng_num_plays(const upng_t* upng);
+uint32_t upng_apng_num_plays(const upng_t *upng);
 
 // Pass in a apng_fctl to get the next frames frame control information
-bool upng_get_apng_fctl(const upng_t* upng, apng_fctl *apng_frame_control);
+bool upng_get_apng_fctl(const upng_t *upng, apng_fctl *apng_frame_control);
 
 #endif /* defined(UPNG_H) */

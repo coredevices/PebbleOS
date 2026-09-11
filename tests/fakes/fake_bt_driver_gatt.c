@@ -226,8 +226,8 @@ void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
   const Uuid service_changed_uuid = bt_uuid_expand_16bit(GATT_SERVICE_CHANGED_CHARACTERISTIC_UUID);
   for (uint8_t c = 0; c < service->num_characteristics; ++c) {
     if (uuid_equal(&service->characteristics[c].uuid, &service_changed_uuid)) {
-      bt_driver_cb_gatt_client_discovery_handle_service_changed(
-          connection, service->characteristics[c].handle);
+      bt_driver_cb_gatt_client_discovery_handle_service_changed(connection,
+                                                                service->characteristics[c].handle);
     }
   }
 }
@@ -252,23 +252,23 @@ static Service s_health_thermometer_service;
 
 const Service *fake_gatt_get_health_thermometer_service(void) {
   s_health_thermometer_service = (const Service){
-    .uuid = bt_uuid_expand_16bit(0x1809),
-    .handle = 0x11,
-    .num_characteristics = 1,
-    .characteristics = {
-      [0] = {
-        .uuid = bt_uuid_expand_16bit(0x2a1c),
-        .properties = 0x02,
-        .handle = 0x13,
-        .num_descriptors = 1,
-        .descriptors = {
+      .uuid = bt_uuid_expand_16bit(0x1809),
+      .handle = 0x11,
+      .num_characteristics = 1,
+      .characteristics = {
           [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = 0x15,
+              .uuid = bt_uuid_expand_16bit(0x2a1c),
+              .properties = 0x02,
+              .handle = 0x13,
+              .num_descriptors = 1,
+              .descriptors = {
+                  [0] = {
+                      .uuid = bt_uuid_expand_16bit(0x2902),
+                      .handle = 0x15,
+                  },
+              },
           },
-        },
       },
-    },
   };
   return &s_health_thermometer_service;
 }
@@ -286,46 +286,52 @@ const Service *fake_gatt_get_blood_pressure_service(void) {
   // Ensure the included Health Thermometer reference is populated.
   fake_gatt_get_health_thermometer_service();
   s_blood_pressure_service = (const Service){
-    .uuid = bt_uuid_expand_16bit(0x1810),
-    .handle = BP_START_ATT_HANDLE,
-    .num_characteristics = 2,
-    .characteristics = {
-      [0] = {
-        .uuid = bt_uuid_expand_16bit(0x2a35),
-        .properties = 0x20,  // Indicatable
-        .handle = 0x3,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = 0x05,
+      .uuid = bt_uuid_expand_16bit(0x1810),
+      .handle = BP_START_ATT_HANDLE,
+      .num_characteristics = 2,
+      .characteristics =
+          {
+              [0] =
+                  {
+                      .uuid = bt_uuid_expand_16bit(0x2a35),
+                      .properties = 0x20,  // Indicatable
+                      .handle = 0x3,
+                      .num_descriptors = 1,
+                      .descriptors =
+                          {
+                              [0] =
+                                  {
+                                      .uuid = bt_uuid_expand_16bit(0x2902),
+                                      .handle = 0x05,
+                                  },
+                          },
+                  },
+              [1] =
+                  {
+                      .uuid = bt_uuid_expand_16bit(0x2a49),
+                      .properties = 0x02,
+                      .handle = 0x7,
+                      .num_descriptors = 1,
+                      .descriptors =
+                          {
+                              [0] =
+                                  {
+                                      .uuid = bt_uuid_expand_16bit(0x2902),
+                                      .handle = BP_END_ATT_HANDLE,
+                                  },
+                          },
+                  },
           },
-        },
+      .num_included_services = 1,
+      .included_services = {
+          [0] = &s_health_thermometer_service,
       },
-      [1] = {
-        .uuid = bt_uuid_expand_16bit(0x2a49),
-        .properties = 0x02,
-        .handle = 0x7,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = BP_END_ATT_HANDLE,
-          },
-        },
-      },
-    },
-    .num_included_services = 1,
-    .included_services = {
-      [0] = &s_health_thermometer_service,
-    },
   };
   return &s_blood_pressure_service;
 }
 
 void fake_gatt_put_discovery_indication_blood_pressure_service(unsigned int connection_id) {
-  fake_gatt_put_discovery_indication_service(connection_id,
-                                             fake_gatt_get_blood_pressure_service());
+  fake_gatt_put_discovery_indication_service(connection_id, fake_gatt_get_blood_pressure_service());
 }
 
 void fake_gatt_get_bp_att_handle_range(uint16_t *start, uint16_t *end) {
@@ -336,42 +342,51 @@ void fake_gatt_get_bp_att_handle_range(uint16_t *start, uint16_t *end) {
 static Service s_random_128bit_service;
 
 const Service *fake_gatt_get_random_128bit_uuid_service(void) {
-  s_random_128bit_service = (const Service){
-    .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63,
-                     0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB0),
-    .handle = 0x17,
-    .num_characteristics = 2,
-    .characteristics = {
-      [0] = {
-        .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63,
-                         0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB1),
-        .properties = 0x02,
-        .handle = 0x19,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63,
-                             0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB2),
-            .handle = 0x21,
-          },
-        },
-      },
-      [1] = {
-        .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63,
-                         0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB3),
-        .properties = 0x02,
-        .handle = 0x23,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63,
-                             0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB4),
-            .handle = 0x25,
-          },
-        },
-      },
-    },
-  };
+  s_random_128bit_service =
+      (const Service){
+          .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97, 0xEE, 0xFD, 0xED,
+                           0xAC, 0x66, 0xF9, 0xB0),
+          .handle = 0x17,
+          .num_characteristics = 2,
+          .characteristics =
+              {
+                  [0] =
+                      {
+                          .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97,
+                                           0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB1),
+                          .properties = 0x02,
+                          .handle = 0x19,
+                          .num_descriptors = 1,
+                          .descriptors =
+                              {
+                                  [0] =
+                                      {
+                                          .uuid = UuidMake(0xF7, 0x68,
+                                                           0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB2),
+                                          .handle = 0x21,
+                                      },
+                              },
+                      },
+                  [1] =
+                      {
+                          .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97,
+                                           0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB3),
+                          .properties = 0x02,
+                          .handle = 0x23,
+                          .num_descriptors = 1,
+                          .descriptors =
+                              {
+                                  [0] =
+                                      {
+                                          .uuid = UuidMake(
+                                              0xF7,
+                                              0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB4),
+                                          .handle = 0x25,
+                                      },
+                              },
+                      },
+              },
+      };
   return &s_random_128bit_service;
 }
 
@@ -385,23 +400,23 @@ static Service s_gatt_profile_service;
 void fake_gatt_put_discovery_indication_gatt_profile_service(
     unsigned int connection_id, bool has_service_changed_characteristic) {
   s_gatt_profile_service = (const Service){
-    .uuid = bt_uuid_expand_16bit(0x1801),
-    .handle = 0x1,
-    .num_characteristics = has_service_changed_characteristic ? 1 : 0,
-    .characteristics = {
-      [0] = {
-        .uuid = bt_uuid_expand_16bit(0x2a05),
-        .properties = 0x20,
-        .handle = 0x3,
-        .num_descriptors = 1,
-        .descriptors = {
+      .uuid = bt_uuid_expand_16bit(0x1801),
+      .handle = 0x1,
+      .num_characteristics = has_service_changed_characteristic ? 1 : 0,
+      .characteristics = {
           [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = 0x05,
+              .uuid = bt_uuid_expand_16bit(0x2a05),
+              .properties = 0x20,
+              .handle = 0x3,
+              .num_descriptors = 1,
+              .descriptors = {
+                  [0] = {
+                      .uuid = bt_uuid_expand_16bit(0x2902),
+                      .handle = 0x05,
+                  },
+              },
           },
-        },
       },
-    },
   };
   fake_gatt_put_discovery_indication_service(connection_id, &s_gatt_profile_service);
 }

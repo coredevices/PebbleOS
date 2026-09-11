@@ -37,15 +37,14 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
   // PBL-24228 Support Circular PBIs
   uint16_t info_flags = bmp->info_flags;
 #if PBL_ROUND
-  if(bmp->info.format == GBitmapFormat8BitCircular) {
+  if (bmp->info.format == GBitmapFormat8BitCircular) {
     // Have to force output format to 8Bit;
-    ((BitmapInfo*)&info_flags)->format = GBitmapFormat8Bit;
+    ((BitmapInfo *)&info_flags)->format = GBitmapFormat8Bit;
   }
 #endif
 
   // use entire bounds to include entire image
-  GRect entire_bounds = GRect(0, 0, 
-                              bmp->bounds.origin.x + bmp->bounds.size.w, 
+  GRect entire_bounds = GRect(0, 0, bmp->bounds.origin.x + bmp->bounds.size.w,
                               bmp->bounds.origin.y + bmp->bounds.size.h);
 
   fwrite(&bmp->row_size_bytes, sizeof(bmp->row_size_bytes), 1, file);
@@ -53,7 +52,7 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
   fwrite(&entire_bounds, sizeof(GRect), 1, file);
 
 #if PBL_ROUND
-  if(bmp->info.format == GBitmapFormat8BitCircular) {
+  if (bmp->info.format == GBitmapFormat8BitCircular) {
     for (int y = 0; y < entire_bounds.size.h; ++y) {
       // 8-Bit circular buffer is centered in padded rows, so just grab row and write DISP_COLS
       const GBitmapDataRowInfo dest_row_info = prv_gbitmap_get_data_row_info(bmp, y);
@@ -95,15 +94,11 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
   int pid = fork();
   if (pid == 0) {
     char *args[] = {
-      "python",
-      (char *)pbi2png_path,
-      (char *)pbi_path,
-      (char *)png_path,
-      NULL,
+        "python", (char *)pbi2png_path, (char *)pbi_path, (char *)png_path, NULL,
     };
     execvp("python", args);
 
-    perror("execv"); // Error internal to execve
+    perror("execv");  // Error internal to execve
     exit(EXIT_FAILURE);
   }
 
@@ -116,4 +111,3 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
   }
   return true;
 }
-

@@ -7,4 +7,3 @@
 
 // Take a protobuf buffer and decode it with the command line tool
 void protobuf_log_test_parse_protoc(uint8_t *msg);
-

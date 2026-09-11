@@ -44,40 +44,40 @@ static void prv_idle_shutdown(void *data);
 // ---------------------------------------------------------------------------
 // DA7212 codec registers used by the driver.
 // ---------------------------------------------------------------------------
-#define DA7212_PLL_STATUS            0x03
-#define DA7212_CIF_CTRL              0x1D
-#define DA7212_DIG_ROUTING_DAI       0x21
-#define DA7212_SR                    0x22
-#define DA7212_REFERENCES            0x23
-#define DA7212_PLL_FRAC_TOP          0x24
-#define DA7212_PLL_FRAC_BOT          0x25
-#define DA7212_PLL_INTEGER           0x26
-#define DA7212_PLL_CTRL              0x27
-#define DA7212_DAI_CLK_MODE          0x28
-#define DA7212_DAI_CTRL              0x29
-#define DA7212_DIG_ROUTING_DAC       0x2A
-#define DA7212_DAC_FILTERS5          0x40
-#define DA7212_DAC_R_GAIN            0x46
-#define DA7212_LINE_GAIN             0x4A
-#define DA7212_MIXOUT_R_SELECT       0x4C
-#define DA7212_SYSTEM_MODES_OUTPUT   0x51
-#define DA7212_DAC_R_CTRL            0x6A
-#define DA7212_LINE_CTRL             0x6D
-#define DA7212_MIXOUT_R_CTRL         0x6F
-#define DA7212_LDO_CTRL              0x90
-#define DA7212_GAIN_RAMP_CTRL        0x92
-#define DA7212_SYSTEM_ACTIVE         0xFD
+#define DA7212_PLL_STATUS 0x03
+#define DA7212_CIF_CTRL 0x1D
+#define DA7212_DIG_ROUTING_DAI 0x21
+#define DA7212_SR 0x22
+#define DA7212_REFERENCES 0x23
+#define DA7212_PLL_FRAC_TOP 0x24
+#define DA7212_PLL_FRAC_BOT 0x25
+#define DA7212_PLL_INTEGER 0x26
+#define DA7212_PLL_CTRL 0x27
+#define DA7212_DAI_CLK_MODE 0x28
+#define DA7212_DAI_CTRL 0x29
+#define DA7212_DIG_ROUTING_DAC 0x2A
+#define DA7212_DAC_FILTERS5 0x40
+#define DA7212_DAC_R_GAIN 0x46
+#define DA7212_LINE_GAIN 0x4A
+#define DA7212_MIXOUT_R_SELECT 0x4C
+#define DA7212_SYSTEM_MODES_OUTPUT 0x51
+#define DA7212_DAC_R_CTRL 0x6A
+#define DA7212_LINE_CTRL 0x6D
+#define DA7212_MIXOUT_R_CTRL 0x6F
+#define DA7212_LDO_CTRL 0x90
+#define DA7212_GAIN_RAMP_CTRL 0x92
+#define DA7212_SYSTEM_ACTIVE 0xFD
 
 // DAC_R_GAIN value corresponding to 0 dB per DA7212 datasheet.
-#define DA7212_DAC_R_GAIN_0DB        0x6f
+#define DA7212_DAC_R_GAIN_0DB 0x6f
 // Attenuation span, in 0.75 dB DAC_R_GAIN steps, that volume 1..100 maps
 // onto (64 steps = 48 dB).
 #define DA7212_DAC_GAIN_VOL_RANGE_STEPS 64
 
-#define I2S_BUF_SAMPLES_STEREO       (NRF5_AUDIO_I2S_BUF_SAMPLES_MONO * 2)
-#define I2S_BUF_SIZE_BYTES           (I2S_BUF_SAMPLES_STEREO * sizeof(int16_t))
+#define I2S_BUF_SAMPLES_STEREO (NRF5_AUDIO_I2S_BUF_SAMPLES_MONO * 2)
+#define I2S_BUF_SIZE_BYTES (I2S_BUF_SAMPLES_STEREO * sizeof(int16_t))
 // nrfx_i2s buffer_size is counted in 32-bit words.
-#define I2S_BUF_SIZE_WORDS           (I2S_BUF_SIZE_BYTES / sizeof(uint32_t))
+#define I2S_BUF_SIZE_WORDS (I2S_BUF_SIZE_BYTES / sizeof(uint32_t))
 
 static void prv_i2s_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t status);
 
@@ -86,7 +86,7 @@ static void prv_i2s_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t 
 // ---------------------------------------------------------------------------
 
 static void prv_codec_write(AudioDevice *dev, uint8_t reg, uint8_t value) {
-  uint8_t data[2] = { reg, value };
+  uint8_t data[2] = {reg, value};
   i2c_use(dev->codec);
   bool ok = i2c_write_block(dev->codec, sizeof(data), data);
   i2c_release(dev->codec);
@@ -157,8 +157,7 @@ static void prv_codec_prepare(AudioDevice *dev) {
   prv_codec_write(dev, 0xF0, 0x00);
   psleep(40);
 
-  PBL_ASSERT(prv_codec_read(dev, DA7212_PLL_STATUS) == 0x07,
-             "DA7212 PLL not locked");
+  PBL_ASSERT(prv_codec_read(dev, DA7212_PLL_STATUS) == 0x07, "DA7212 PLL not locked");
 
   // Gain ramp off: the mfg test uses a multi-second ramp for smooth
   // mic-capture playback, but for the speaker service we want audio as soon
@@ -407,9 +406,9 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   // lock it. HFXO is also needed by the I2S peripheral for MCK generation.
   clocksource_hfxo_request();
 
-  nrfx_i2s_config_t cfg = NRFX_I2S_DEFAULT_CONFIG(
-      audio_device->sck_pin, audio_device->lrck_pin, audio_device->mck_pin,
-      audio_device->sdout_pin, audio_device->sdin_pin);
+  nrfx_i2s_config_t cfg =
+      NRFX_I2S_DEFAULT_CONFIG(audio_device->sck_pin, audio_device->lrck_pin, audio_device->mck_pin,
+                              audio_device->sdout_pin, audio_device->sdin_pin);
   cfg.irq_priority = audio_device->irq_priority;
   cfg.channels = NRF_I2S_CHANNELS_STEREO;
   cfg.sample_width = NRF_I2S_SWIDTH_16BIT;
@@ -425,8 +424,7 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   // for 16-bit stereo (validate_config only enforces this in master mode).
   cfg.ratio = NRF_I2S_RATIO_256X;
 
-  nrfx_err_t err = nrfx_i2s_init(&audio_device->i2s_instance, &cfg,
-                                 prv_i2s_data_handler);
+  nrfx_err_t err = nrfx_i2s_init(&audio_device->i2s_instance, &cfg, prv_i2s_data_handler);
   PBL_ASSERT(err == NRFX_SUCCESS, "nrfx_i2s_init failed: %d", err);
 
   // Prime the first buffer with silence; real samples arrive via audio_write.

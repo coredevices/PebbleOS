@@ -8,7 +8,6 @@
 
 #include "test_timeline_app_includes.h"
 
-
 // Setup and Teardown
 ////////////////////////////////////
 
@@ -22,7 +21,7 @@ void test_timeline_no_events__initialize(void) {
   fake_app_state_init();
   load_system_resources_fixture();
 
-  s_data = (TimelineTestData) {};
+  s_data = (TimelineTestData){};
 }
 
 void test_timeline_no_events__cleanup(void) {

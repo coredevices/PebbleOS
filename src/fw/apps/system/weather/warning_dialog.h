@@ -9,5 +9,5 @@ typedef ExpandableDialog WeatherAppWarningDialog;
 
 typedef void (*WeatherAppWarningDialogDismissedCallback)(void);
 
-WeatherAppWarningDialog *weather_app_warning_dialog_push(const char *localized_string,
-    WeatherAppWarningDialogDismissedCallback dismissed_cb);
+WeatherAppWarningDialog *weather_app_warning_dialog_push(
+    const char *localized_string, WeatherAppWarningDialogDismissedCallback dismissed_cb);

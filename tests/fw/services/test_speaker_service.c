@@ -22,9 +22,15 @@
 #include "fake_pebble_tasks.h"
 
 // Alerts preferences: speaker unmuted, no volume cap
-bool alerts_preferences_get_speaker_muted(void) { return false; }
-uint8_t alerts_preferences_get_speaker_volume(void) { return 100; }
-bool alerts_preferences_dnd_get_mute_speaker(void) { return false; }
+bool alerts_preferences_get_speaker_muted(void) {
+  return false;
+}
+uint8_t alerts_preferences_get_speaker_volume(void) {
+  return 100;
+}
+bool alerts_preferences_dnd_get_mute_speaker(void) {
+  return false;
+}
 
 // ---------------------------------------------------------------------------
 // Fake audio driver. Counts what the service hands to the hardware so the
@@ -37,7 +43,8 @@ static int s_stop_count;
 static uint32_t s_samples_written;
 static uint32_t s_nonzero_samples;
 
-void audio_init(AudioDevice *device) {}
+void audio_init(AudioDevice *device) {
+}
 
 void audio_start(AudioDevice *device, AudioTransCB cb) {
   s_trans_cb = cb;
@@ -56,7 +63,8 @@ uint32_t audio_write(AudioDevice *device, void *buf, uint32_t size) {
   return 0;
 }
 
-void audio_set_volume(AudioDevice *device, int volume) {}
+void audio_set_volume(AudioDevice *device, int volume) {
+}
 
 void audio_stop(AudioDevice *device) {
   s_stop_count++;
@@ -100,8 +108,7 @@ void test_speaker_service__short_tone_drains_pipeline_before_stop(void) {
   const uint16_t duration_ms = 25;
   const uint32_t tone_samples = (SAMPLE_RATE * duration_ms) / 1000;
 
-  cl_assert(speaker_service_play_tone(1000, duration_ms, 0 /* sine */,
-                                      0 /* full velocity */,
+  cl_assert(speaker_service_play_tone(1000, duration_ms, 0 /* sine */, 0 /* full velocity */,
                                       SpeakerPriorityApp, 80));
   cl_assert_equal_i(speaker_service_get_state(), SpeakerStatePlaying);
 

@@ -27,5 +27,4 @@ void path_layer_set_fill_color(PathLayer *path_layer, GColor color);
 //! @return The "root" Layer of the path layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) path_layer`.
-Layer* path_layer_get_layer(const PathLayer *path_layer);
-
+Layer *path_layer_get_layer(const PathLayer *path_layer);

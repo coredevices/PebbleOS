@@ -91,12 +91,12 @@ static size_t prv_build_response(uint8_t *out, uint8_t token, uint8_t flags, uin
                                  uint8_t format, const uint8_t *palette, uint8_t palette_count,
                                  const uint8_t *pixels, size_t pixel_len) {
   ImagingResponseHeader *hdr = (ImagingResponseHeader *)out;
-  *hdr = (ImagingResponseHeader) {
-    .cmd = ImagingCmdIDResponse,
-    .token = token,
-    .flags = flags,
-    .offset = offset,
-    .chunk_len = chunk_len_field,
+  *hdr = (ImagingResponseHeader){
+      .cmd = ImagingCmdIDResponse,
+      .token = token,
+      .flags = flags,
+      .offset = offset,
+      .chunk_len = chunk_len_field,
   };
   uint8_t *cursor = out + sizeof(*hdr);
   if (flags & ImagingResponseFlagFirst) {
@@ -119,14 +119,14 @@ static void prv_receive(const uint8_t *msg, size_t length) {
 }
 
 //! A well-formed 4x2 4-bpp image: row size 2, total 4 pixel bytes, 3 palette entries.
-static const uint8_t s_palette[] = { 0xC0, 0xF0, 0xFF };
-static const uint8_t s_pixels[] = { 0x01, 0x20, 0x12, 0x01 };
+static const uint8_t s_palette[] = {0xC0, 0xF0, 0xFF};
+static const uint8_t s_pixels[] = {0x01, 0x20, 0x12, 0x01};
 
 static void prv_receive_valid_image(uint8_t token) {
   uint8_t buf[64];
   const size_t len = prv_build_response(
-      buf, token, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, sizeof(s_pixels),
-      4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, sizeof(s_pixels));
+      buf, token, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, sizeof(s_pixels), 4, 2,
+      ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, sizeof(s_pixels));
   prv_receive(buf, len);
 }
 
@@ -147,8 +147,8 @@ void test_imaging__initialize(void) {
   s_last_bitmap = NULL;
   // Reset any latched state left over from a previous test
   const PebbleCommSessionEvent closed_event = {
-    .is_open = false,
-    .is_system = true,
+      .is_open = false,
+      .is_system = true,
   };
   imaging_handle_comm_session_event(&closed_event);
 }
@@ -173,13 +173,13 @@ void test_imaging__single_chunk_image(void) {
 
 void test_imaging__multi_chunk_image(void) {
   uint8_t buf[64];
-  size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2,
-                                  4, 2, ImagingFormat4BitPalette,
-                                  s_palette, sizeof(s_palette), s_pixels, 2);
+  size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2, 4, 2,
+                         ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
-  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 2, 2,
-                           0, 0, 0, NULL, 0, s_pixels + 2, 2);
+  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 2, 2, 0, 0, 0, NULL, 0,
+                           s_pixels + 2, 2);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 1);
   cl_assert(s_last_bitmap != NULL);
@@ -188,8 +188,8 @@ void test_imaging__multi_chunk_image(void) {
 
 void test_imaging__no_image(void) {
   uint8_t buf[32];
-  const size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagNoImage, 0, 0,
-                                        0, 0, 0, NULL, 0, NULL, 0);
+  const size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagNoImage, 0, 0, 0, 0, 0,
+                                        NULL, 0, NULL, 0);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 1);
   cl_assert(s_last_bitmap == NULL);
@@ -198,8 +198,8 @@ void test_imaging__no_image(void) {
 void test_imaging__truncated_header_rejected(void) {
   uint8_t buf[64];
   const size_t len = prv_build_response(
-      buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, sizeof(s_pixels),
-      4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, sizeof(s_pixels));
+      buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, sizeof(s_pixels), 4,
+      2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, sizeof(s_pixels));
   // Truncate inside the image header, inside the palette, and inside the response header
   prv_receive(buf, sizeof(ImagingResponseHeader) + 3);
   prv_receive(buf, sizeof(ImagingResponseHeader) + 6 + 1);
@@ -210,33 +210,29 @@ void test_imaging__truncated_header_rejected(void) {
 void test_imaging__bad_dimensions_rejected(void) {
   uint8_t buf[64];
   // Width over the cap
-  size_t len = prv_build_response(buf, TEST_TOKEN,
-                                  ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4,
-                                  301, 2, ImagingFormat4BitPalette,
-                                  s_palette, sizeof(s_palette), s_pixels, 4);
+  size_t len = prv_build_response(
+      buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4, 301, 2,
+      ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 4);
   prv_receive(buf, len);
   // Zero height
-  len = prv_build_response(buf, TEST_TOKEN,
-                           ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4,
-                           4, 0, ImagingFormat4BitPalette,
-                           s_palette, sizeof(s_palette), s_pixels, 4);
+  len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4,
+                         4, 0, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 4);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
 }
 
 void test_imaging__bad_palette_rejected(void) {
-  uint8_t big_palette[17] = { 0 };
+  uint8_t big_palette[17] = {0};
   uint8_t buf[64];
   // More palette entries than a 4-bpp image can have
-  size_t len = prv_build_response(buf, TEST_TOKEN,
-                                  ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4,
-                                  4, 2, ImagingFormat4BitPalette,
-                                  big_palette, sizeof(big_palette), s_pixels, 4);
+  size_t len = prv_build_response(
+      buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4, 4, 2,
+      ImagingFormat4BitPalette, big_palette, sizeof(big_palette), s_pixels, 4);
   prv_receive(buf, len);
   // A palettized format with no palette at all
-  len = prv_build_response(buf, TEST_TOKEN,
-                           ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4,
-                           4, 2, ImagingFormat4BitPalette, NULL, 0, s_pixels, 4);
+  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0,
+                           4, 4, 2, ImagingFormat4BitPalette, NULL, 0, s_pixels, 4);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
 }
@@ -244,40 +240,40 @@ void test_imaging__bad_palette_rejected(void) {
 void test_imaging__oversized_image_rejected(void) {
   uint8_t buf[64];
   // 300x300 8-bit = 90000 bytes, over IMAGING_MAX_BYTES
-  const size_t len = prv_build_response(buf, TEST_TOKEN,
-                                        ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4,
-                                        300, 300, ImagingFormat8BitColor, NULL, 0, s_pixels, 4);
+  const size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 4,
+                         300, 300, ImagingFormat8BitColor, NULL, 0, s_pixels, 4);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
 }
 
 void test_imaging__non_contiguous_chunk_resets(void) {
   uint8_t buf[64];
-  size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2,
-                                  4, 2, ImagingFormat4BitPalette,
-                                  s_palette, sizeof(s_palette), s_pixels, 2);
+  size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2, 4, 2,
+                         ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
   prv_receive(buf, len);
   // Wrong offset: skips a byte
-  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 3, 1,
-                           0, 0, 0, NULL, 0, s_pixels + 3, 1);
+  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 3, 1, 0, 0, 0, NULL, 0,
+                           s_pixels + 3, 1);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
   // The transfer was reset: a well-formed follow-up chunk must also be ignored
-  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 2, 2,
-                           0, 0, 0, NULL, 0, s_pixels + 2, 2);
+  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 2, 2, 0, 0, 0, NULL, 0,
+                           s_pixels + 2, 2);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
 }
 
 void test_imaging__lying_chunk_len_resets(void) {
   uint8_t buf[64];
-  size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2,
-                                  4, 2, ImagingFormat4BitPalette,
-                                  s_palette, sizeof(s_palette), s_pixels, 2);
+  size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2, 4, 2,
+                         ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
   prv_receive(buf, len);
   // chunk_len claims more pixel bytes than the message carries
-  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 2, 60,
-                           0, 0, 0, NULL, 0, s_pixels + 2, 2);
+  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 2, 60, 0, 0, 0, NULL, 0,
+                           s_pixels + 2, 2);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
 }
@@ -285,23 +281,22 @@ void test_imaging__lying_chunk_len_resets(void) {
 void test_imaging__incomplete_transfer_not_delivered(void) {
   uint8_t buf[64];
   // Last chunk arrives before all pixel bytes were received
-  const size_t len = prv_build_response(buf, TEST_TOKEN,
-                                        ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 2,
-                                        4, 2, ImagingFormat4BitPalette,
-                                        s_palette, sizeof(s_palette), s_pixels, 2);
+  const size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, 2,
+                         4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
 }
 
 void test_imaging__token_mismatch_resets(void) {
   uint8_t buf[64];
-  size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2,
-                                  4, 2, ImagingFormat4BitPalette,
-                                  s_palette, sizeof(s_palette), s_pixels, 2);
+  size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2, 4, 2,
+                         ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
   prv_receive(buf, len);
   // Continuation with a different token must not complete the transfer
-  len = prv_build_response(buf, TEST_TOKEN + 1, ImagingResponseFlagLast, 2, 2,
-                           0, 0, 0, NULL, 0, s_pixels + 2, 2);
+  len = prv_build_response(buf, TEST_TOKEN + 1, ImagingResponseFlagLast, 2, 2, 0, 0, 0, NULL, 0,
+                           s_pixels + 2, 2);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 0);
 }
@@ -310,8 +305,8 @@ void test_imaging__unsupported_latches_until_session_close(void) {
   cl_assert(imaging_is_type_supported(ImagingImageTypeAlbumArt));
 
   uint8_t buf[32];
-  const size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagUnsupported, 0, 0,
-                                        0, 0, 0, NULL, 0, NULL, 0);
+  const size_t len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagUnsupported, 0, 0, 0, 0,
+                                        0, NULL, 0, NULL, 0);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 1);
   cl_assert(s_last_bitmap == NULL);
@@ -321,8 +316,8 @@ void test_imaging__unsupported_latches_until_session_close(void) {
 
   // Closing the system session clears the latch
   const PebbleCommSessionEvent closed_event = {
-    .is_open = false,
-    .is_system = true,
+      .is_open = false,
+      .is_system = true,
   };
   imaging_handle_comm_session_event(&closed_event);
   cl_assert(imaging_is_type_supported(ImagingImageTypeAlbumArt));
@@ -332,22 +327,20 @@ void test_imaging__request_payload_format(void) {
   cl_assert(imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Title", "Artist"));
   fake_comm_session_process_send_next();
   const uint8_t expected[] = {
-    0x01, 7, 0x00, 0x02, 166, 0, 166, 0,
-    5, 'T', 'i', 't', 'l', 'e',
-    6, 'A', 'r', 't', 'i', 's', 't',
+      0x01, 7,   0x00, 0x02, 166, 0,   166, 0,   5,   'T', 'i',
+      't',  'l', 'e',  6,    'A', 'r', 't', 'i', 's', 't',
   };
   fake_transport_assert_sent(s_transport, 0, 0x35, expected, sizeof(expected));
 }
 
 void test_imaging__notification_request_payload_format(void) {
-  const Uuid id = UuidMake(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                           0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10);
+  const Uuid id = UuidMake(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
+                           0x0d, 0x0e, 0x0f, 0x10);
   cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 135, &id));
   fake_comm_session_process_send_next();
   const uint8_t expected[] = {
-    0x01, 9, 0x01, 0x02, 180, 0, 135, 0,
-    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-    0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
+      0x01, 9,    0x01, 0x02, 180,  0,    135,  0,    0x01, 0x02, 0x03, 0x04,
+      0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
   };
   fake_transport_assert_sent(s_transport, 0, 0x35, expected, sizeof(expected));
 }
@@ -356,10 +349,9 @@ void test_imaging__response_routed_by_type(void) {
   uint8_t buf[64];
   const size_t len = prv_build_response(
       buf, TEST_TOKEN,
-      prv_typed(ImagingImageTypeNotification,
-                ImagingResponseFlagFirst | ImagingResponseFlagLast),
-      0, sizeof(s_pixels), 4, 2, ImagingFormat4BitPalette,
-      s_palette, sizeof(s_palette), s_pixels, sizeof(s_pixels));
+      prv_typed(ImagingImageTypeNotification, ImagingResponseFlagFirst | ImagingResponseFlagLast),
+      0, sizeof(s_pixels), 4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels,
+      sizeof(s_pixels));
   prv_receive(buf, len);
   cl_assert_equal_i(s_notif_deliveries, 1);
   cl_assert_equal_i(s_deliveries, 0);
@@ -390,8 +382,8 @@ void test_imaging__unsupported_latches_per_type(void) {
 
   uint8_t buf[32];
   const size_t len = prv_build_response(
-      buf, TEST_TOKEN, prv_typed(ImagingImageTypeNotification, ImagingResponseFlagUnsupported),
-      0, 0, 0, 0, 0, NULL, 0, NULL, 0);
+      buf, TEST_TOKEN, prv_typed(ImagingImageTypeNotification, ImagingResponseFlagUnsupported), 0,
+      0, 0, 0, 0, NULL, 0, NULL, 0);
   prv_receive(buf, len);
   cl_assert_equal_i(s_notif_deliveries, 1);
   cl_assert(!imaging_is_type_supported(ImagingImageTypeNotification));

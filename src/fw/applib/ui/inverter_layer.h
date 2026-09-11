@@ -49,12 +49,12 @@ void inverter_layer_init(InverterLayer *inverter, const GRect *frame);
 //! * Hidden: `false`
 //! @return A pointer to the InverterLayer. `NULL` if the InverterLayer could not
 //! be created
-InverterLayer* inverter_layer_create(GRect frame);
+InverterLayer *inverter_layer_create(GRect frame);
 
 void inverter_layer_deinit(InverterLayer *inverter_layer);
 
 //! Destroys an InverterLayer previously created by inverter_layer_create
-void inverter_layer_destroy(InverterLayer* inverter_layer);
+void inverter_layer_destroy(InverterLayer *inverter_layer);
 
 //! Gets the "root" Layer of the inverter layer, which is the parent for the sub-
 //! layers used for its implementation.
@@ -62,7 +62,7 @@ void inverter_layer_destroy(InverterLayer* inverter_layer);
 //! @return The "root" Layer of the inverter layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) inverter_layer`.
-Layer* inverter_layer_get_layer(InverterLayer *inverter_layer);
+Layer *inverter_layer_get_layer(InverterLayer *inverter_layer);
 
 //!     @} // end addtogroup InverterLayer
 //!   @} // end addtogroup Layer

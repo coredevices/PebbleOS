@@ -5,4 +5,4 @@
 #include "kernel/events.h"
 #include "bluetooth.h"
 
-void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemote* stored_remote);
+void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemote *stored_remote);

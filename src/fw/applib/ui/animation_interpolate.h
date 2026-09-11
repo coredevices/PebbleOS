@@ -12,12 +12,12 @@
 //! Routines for interpolating between values and points. Useful for animations.
 
 typedef struct MoookConfig {
-  const int32_t *frames_in; //!< In frame lookup table applied as delta * direction to the `from`
-  size_t num_frames_in; //!< Number of in frames in the frame lookup table
-  const int32_t *frames_out; //!< Out frame lookup table applied as delta * direction to the `to`
-  size_t num_frames_out; //!< Number of out frames in the frame lookup table
-  size_t num_frames_mid; //!< Number of soft mid frames to insert
-  bool no_bounce_back; //!< Whether the direction should be reversed for out frames.
+  const int32_t *frames_in;   //!< In frame lookup table applied as delta * direction to the `from`
+  size_t num_frames_in;       //!< Number of in frames in the frame lookup table
+  const int32_t *frames_out;  //!< Out frame lookup table applied as delta * direction to the `to`
+  size_t num_frames_out;      //!< Number of out frames in the frame lookup table
+  size_t num_frames_mid;      //!< Number of soft mid frames to insert
+  bool no_bounce_back;        //!< Whether the direction should be reversed for out frames.
 } MoookConfig;
 
 #define INTERPOLATE_MOOOK_BOUNCE_BACK 4
@@ -84,8 +84,7 @@ uint32_t interpolate_moook_custom_duration(const MoookConfig *config);
 //! @param to Ending point in space of the animation
 //! @param num_frames_to Remaining number of frames in the animation that do not consist of the
 //! Moook ease in curve.
-int64_t interpolate_moook_in(int32_t normalized, int64_t from, int64_t to,
-                             int32_t num_frames_to);
+int64_t interpolate_moook_in(int32_t normalized, int64_t from, int64_t to, int32_t num_frames_to);
 
 //! Only the Moook ease in curve. Used for animations that only consist of the ease in.
 //! @param normalized Time of the point in the ease curve
@@ -101,8 +100,8 @@ int64_t interpolate_moook_in_only(int32_t normalized, int64_t from, int64_t to);
 //! ease out curve.
 //! @param bounce_back Whether to lead up to the end point from the opposite direction if we were
 //! to lead up from the start point, which a normal Moook curve would do.
-int64_t interpolate_moook_out(int32_t normalized, int64_t from, int64_t to,
-                              int32_t num_frames_from, bool bounce_back);
+int64_t interpolate_moook_out(int32_t normalized, int64_t from, int64_t to, int32_t num_frames_from,
+                              bool bounce_back);
 
 //! Moook curve. This is a ease in and ease out curve with a hard cut between the two easings.
 //! When using this curve, the duration must be set to \ref interpolate_moook_duration()

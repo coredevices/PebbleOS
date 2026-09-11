@@ -13,8 +13,7 @@ void notif_db_init(void) {
 }
 
 status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
-  if (key_len != UUID_SIZE ||
-      val_len < (int)sizeof(SerializedTimelineItemHeader)) {
+  if (key_len != UUID_SIZE || val_len < (int)sizeof(SerializedTimelineItemHeader)) {
     return E_INVALID_ARGUMENT;
   }
 

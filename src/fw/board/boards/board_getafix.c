@@ -7,38 +7,42 @@
 #include "system/passert.h"
 
 static UARTDeviceState s_dbg_uart_state = {
-  .huart = {
-    .Instance = USART1,
-    .Init = {
-      .BaudRate = 1000000,
-      .WordLength = UART_WORDLENGTH_8B,
-      .StopBits = UART_STOPBITS_1,
-      .Parity = UART_PARITY_NONE,
-      .HwFlowCtl = UART_HWCONTROL_NONE,
-      .OverSampling = UART_OVERSAMPLING_16,
+    .huart =
+        {
+            .Instance = USART1,
+            .Init =
+                {
+                    .BaudRate = 1000000,
+                    .WordLength = UART_WORDLENGTH_8B,
+                    .StopBits = UART_STOPBITS_1,
+                    .Parity = UART_PARITY_NONE,
+                    .HwFlowCtl = UART_HWCONTROL_NONE,
+                    .OverSampling = UART_OVERSAMPLING_16,
+                },
+        },
+    .hdma = {
+        .Instance = DMA1_Channel1,
+        .Init = {
+            .Request = DMA_REQUEST_5,
+            .IrqPrio = 5,
+        },
     },
-  },
-  .hdma = {
-    .Instance = DMA1_Channel1,
-    .Init = {
-      .Request = DMA_REQUEST_5,
-      .IrqPrio = 5,
-    },
-  },
 };
 
 static UARTDevice DBG_UART_DEVICE = {
     .state = &s_dbg_uart_state,
-    .tx = {
-        .pad = PAD_PA19,
-        .func = USART1_TXD,
-        .flags = PIN_NOPULL,
-    },
-    .rx = {
-        .pad = PAD_PA18,
-        .func = USART1_RXD,
-        .flags = PIN_PULLUP,
-    },
+    .tx =
+        {
+            .pad = PAD_PA19,
+            .func = USART1_TXD,
+            .flags = PIN_NOPULL,
+        },
+    .rx =
+        {
+            .pad = PAD_PA18,
+            .func = USART1_RXD,
+            .flags = PIN_PULLUP,
+        },
     .irqn = USART1_IRQn,
     .irq_priority = 5,
     .dma_irqn = DMAC1_CH1_IRQn,
@@ -52,16 +56,16 @@ IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {
-  .huart = {
-    .Instance = USART3,
-    .Init = {
-      .WordLength = UART_WORDLENGTH_8B,
-      .StopBits = UART_STOPBITS_1,
-      .Parity = UART_PARITY_NONE,
-      .HwFlowCtl = UART_HWCONTROL_NONE,
-      .OverSampling = UART_OVERSAMPLING_16,
+    .huart = {
+        .Instance = USART3,
+        .Init = {
+            .WordLength = UART_WORDLENGTH_8B,
+            .StopBits = UART_STOPBITS_1,
+            .Parity = UART_PARITY_NONE,
+            .HwFlowCtl = UART_HWCONTROL_NONE,
+            .OverSampling = UART_OVERSAMPLING_16,
+        },
     },
-  },
 };
 
 static UARTDevice HCI_TRACE_UART_DEVICE = {
@@ -73,21 +77,23 @@ static UARTDevice HCI_TRACE_UART_DEVICE = {
     },
 };
 UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
+#endif  // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 static QSPIPortState s_qspi_port_state = {
-    .cfg = {
-      .Instance = FLASH2,
-      .line = HAL_FLASH_QMODE,
-      .base = FLASH2_BASE_ADDR,
-      .msize = 32,
-      .SpiMode = SPI_MODE_NOR,
-    },
-    .dma = {
-      .Instance = DMA1_Channel2,
-      .dma_irq = DMAC1_CH2_IRQn,
-      .request = DMA_REQUEST_1,
-    },
+    .cfg =
+        {
+            .Instance = FLASH2,
+            .line = HAL_FLASH_QMODE,
+            .base = FLASH2_BASE_ADDR,
+            .msize = 32,
+            .SpiMode = SPI_MODE_NOR,
+        },
+    .dma =
+        {
+            .Instance = DMA1_Channel2,
+            .dma_irq = DMAC1_CH2_IRQn,
+            .request = DMA_REQUEST_1,
+        },
     .t_enter_deep_us = 3,
     .t_exit_deep_us = 20,
 };
@@ -113,17 +119,17 @@ static DisplayJDIState s_display_state = {
             .color_mode = LCDC_PIXEL_FORMAT_RGB332,
             .freq = 746268,  // HCK frequency
             .cfg = {
-              .jdi = {
-                .bank_col_head = 0,
-                .valid_columns = PBL_DISPLAY_WIDTH,
-                .bank_col_tail = 8,
-                .bank_row_head = 0,
-                .valid_rows = PBL_DISPLAY_HEIGHT,
-                .bank_row_tail = 4,
-                .enb_start_col = 6,
-                .enb_end_col = 128,
+                .jdi = {
+                    .bank_col_head = 0,
+                    .valid_columns = PBL_DISPLAY_WIDTH,
+                    .bank_col_tail = 8,
+                    .bank_row_head = 0,
+                    .valid_rows = PBL_DISPLAY_HEIGHT,
+                    .bank_row_tail = 4,
+                    .enb_start_col = 6,
+                    .enb_end_col = 128,
+                },
             },
-          },
         },
     },
 };
@@ -132,82 +138,98 @@ static DisplayJDIDevice s_display = {
     .state = &s_display_state,
     .irqn = LCDC1_IRQn,
     .irq_priority = 5,
-    .vcom = {
-        .lptim = hwp_lptim2,
-        .freq_hz = 60U,
-    },
-    .pinmux = {
-        .xrst = {
-            .pad = PAD_PA40,
-            .func = LCDC1_JDI_XRST,
-            .flags = PIN_NOPULL,
-            },
-        .vst = {
-            .pad = PAD_PA08,
-            .func = LCDC1_JDI_VST,
-            .flags = PIN_NOPULL,
-            },
-        .vck = {
-            .pad = PAD_PA39,
-            .func = LCDC1_JDI_VCK,
-            .flags = PIN_NOPULL,
-            },
-        .enb = {
-            .pad = PAD_PA07,
-            .func = LCDC1_JDI_ENB,
-            .flags = PIN_NOPULL,
-            },
-        .hst = {
-            .pad = PAD_PA06,
-            .func = LCDC1_JDI_HST,
-            .flags = PIN_NOPULL,
-            },
-        .hck = {
-            .pad = PAD_PA41,
-            .func = LCDC1_JDI_HCK,
-            .flags = PIN_NOPULL,
-            },
-        .r1 = {
-            .pad = PAD_PA05,
-            .func = LCDC1_JDI_R1,
-            .flags = PIN_NOPULL,
-            },
-        .r2 = {
-            .pad = PAD_PA42,
-            .func = LCDC1_JDI_R2,
-            .flags = PIN_NOPULL,
-            },
-        .g1 = {
-            .pad = PAD_PA04,
-            .func = LCDC1_JDI_G1,
-            .flags = PIN_NOPULL,
-            },
-        .g2 = {
-            .pad = PAD_PA43,
-            .func = LCDC1_JDI_G2,
-            .flags = PIN_NOPULL,
-            },
-        .b1 = {
-            .pad = PAD_PA03,
-            .func = LCDC1_JDI_B1,
-            .flags = PIN_NOPULL,
-            },
-        .b2 = {
-            .pad = PAD_PA02,
-            .func = LCDC1_JDI_B2,
-            .flags = PIN_NOPULL,
-            },
-        .vcom_frp = {
-            .pad = PAD_PA24,
-            .func = PBR_LPTIM2_OUT,
-            .flags = PIN_NOPULL,
+    .vcom =
+        {
+            .lptim = hwp_lptim2,
+            .freq_hz = 60U,
         },
-        .xfrp = {
-            .pad = PAD_PA25,
-            .func = PBR_LPTIM2_INV_OUT,
-            .flags = PIN_NOPULL,
+    .pinmux =
+        {
+            .xrst =
+                {
+                    .pad = PAD_PA40,
+                    .func = LCDC1_JDI_XRST,
+                    .flags = PIN_NOPULL,
+                },
+            .vst =
+                {
+                    .pad = PAD_PA08,
+                    .func = LCDC1_JDI_VST,
+                    .flags = PIN_NOPULL,
+                },
+            .vck =
+                {
+                    .pad = PAD_PA39,
+                    .func = LCDC1_JDI_VCK,
+                    .flags = PIN_NOPULL,
+                },
+            .enb =
+                {
+                    .pad = PAD_PA07,
+                    .func = LCDC1_JDI_ENB,
+                    .flags = PIN_NOPULL,
+                },
+            .hst =
+                {
+                    .pad = PAD_PA06,
+                    .func = LCDC1_JDI_HST,
+                    .flags = PIN_NOPULL,
+                },
+            .hck =
+                {
+                    .pad = PAD_PA41,
+                    .func = LCDC1_JDI_HCK,
+                    .flags = PIN_NOPULL,
+                },
+            .r1 =
+                {
+                    .pad = PAD_PA05,
+                    .func = LCDC1_JDI_R1,
+                    .flags = PIN_NOPULL,
+                },
+            .r2 =
+                {
+                    .pad = PAD_PA42,
+                    .func = LCDC1_JDI_R2,
+                    .flags = PIN_NOPULL,
+                },
+            .g1 =
+                {
+                    .pad = PAD_PA04,
+                    .func = LCDC1_JDI_G1,
+                    .flags = PIN_NOPULL,
+                },
+            .g2 =
+                {
+                    .pad = PAD_PA43,
+                    .func = LCDC1_JDI_G2,
+                    .flags = PIN_NOPULL,
+                },
+            .b1 =
+                {
+                    .pad = PAD_PA03,
+                    .func = LCDC1_JDI_B1,
+                    .flags = PIN_NOPULL,
+                },
+            .b2 =
+                {
+                    .pad = PAD_PA02,
+                    .func = LCDC1_JDI_B2,
+                    .flags = PIN_NOPULL,
+                },
+            .vcom_frp =
+                {
+                    .pad = PAD_PA24,
+                    .func = PBR_LPTIM2_OUT,
+                    .flags = PIN_NOPULL,
+                },
+            .xfrp =
+                {
+                    .pad = PAD_PA25,
+                    .func = PBR_LPTIM2_INV_OUT,
+                    .flags = PIN_NOPULL,
+                },
         },
-    },
     .vddp = {hwp_gpio1, 0, true},
     .vlcd = {hwp_gpio1, 9, true},
     .splash = {
@@ -231,11 +253,12 @@ const LedControllerAW9364E AW9364E = {
 static I2CBusHalState s_i2c_bus_hal_state_1 = {
     .hdl = {
         .Instance = I2C1,
-        .Init = {
-            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-            .ClockSpeed = 400000,
-            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-        },
+        .Init =
+            {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
         .Mode = HAL_I2C_MODE_MASTER,
         .core = CORE_ID_HCPU,
     },
@@ -276,23 +299,27 @@ static LIS2DW12State s_lis2dw12_state;
 
 static const LIS2DW12Config s_lis2dw12_config = {
     .state = &s_lis2dw12_state,
-    .i2c = {
-        .bus = &s_i2c_bus_1,
-        .address = 0x19,
-    },
-    .int1 = {
-      .peripheral = hwp_gpio1,
-      .gpio_pin = 26,
-    },
-    .int1_in = {
-      .gpio = hwp_gpio1,
-      .gpio_pin = 26,
-    },
-    .axis_map = {
-        [AXIS_X] = 0,
-        [AXIS_Y] = 1,
-        [AXIS_Z] = 2,
-    },
+    .i2c =
+        {
+            .bus = &s_i2c_bus_1,
+            .address = 0x19,
+        },
+    .int1 =
+        {
+            .peripheral = hwp_gpio1,
+            .gpio_pin = 26,
+        },
+    .int1_in =
+        {
+            .gpio = hwp_gpio1,
+            .gpio_pin = 26,
+        },
+    .axis_map =
+        {
+            [AXIS_X] = 0,
+            [AXIS_Y] = 1,
+            [AXIS_Z] = 2,
+        },
     .axis_dir = {
         [AXIS_X] = -1,
         [AXIS_Y] = 1,
@@ -312,11 +339,12 @@ I2CSlavePort *const I2C_MMC5603NJ = &s_i2c_mmc5603nj;
 static I2CBusHalState s_i2c_bus_hal_state_2 = {
     .hdl = {
         .Instance = I2C2,
-        .Init = {
-            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-            .ClockSpeed = 400000,
-            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-        },
+        .Init =
+            {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
         .Mode = HAL_I2C_MODE_MASTER,
         .core = CORE_ID_HCPU,
     },
@@ -365,11 +393,12 @@ static const I2CSlavePort s_i2c_cst816_boot = {
 static const TouchSensor s_touch_cst816 = {
     .i2c = &s_i2c_cst816,
     .i2c_boot = &s_i2c_cst816_boot,
-    .int_exti = {
-        .peripheral = hwp_gpio1,
-        .gpio_pin = 38,
-        .pull = GPIO_PuPd_UP,
-    },
+    .int_exti =
+        {
+            .peripheral = hwp_gpio1,
+            .gpio_pin = 38,
+            .pull = GPIO_PuPd_UP,
+        },
     .reset = {
         .gpio = hwp_gpio1,
         .gpio_pin = 28,
@@ -382,11 +411,12 @@ const TouchSensor *CST816 = &s_touch_cst816;
 static I2CBusHalState s_i2c_bus_hal_state_3 = {
     .hdl = {
         .Instance = I2C3,
-        .Init = {
-            .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-            .ClockSpeed = 400000,
-            .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-        },
+        .Init =
+            {
+                .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+                .ClockSpeed = 400000,
+                .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
         .Mode = HAL_I2C_MODE_MASTER,
         .core = CORE_ID_HCPU,
     },
@@ -441,7 +471,7 @@ static const I2CSlavePort s_i2c_aw86225 = {
     .bus = &s_i2c_bus_3,
     .address = 0x58,
 };
-  
+
 I2CSlavePort *const I2C_AW86225 = &s_i2c_aw86225;
 
 static const AW86225Config s_aw86225_config = {
@@ -464,70 +494,70 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
 };
 
 const Npm1300Config NPM1300_CONFIG = {
-  // 70mA = 1C (max limit from datasheet)
-  .chg_current_ma = 70,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
-  .ntc_hot_celsius = 45,
-  .vbus_current_lim0 = 500,
-  .vbus_current_startup = 500,
+    // 70mA = 1C (max limit from datasheet)
+    .chg_current_ma = 70,        .dischg_limit_ma = 200, .term_current_pct = 10,
+    .thermistor_beta = 3380,     .ntc_hot_celsius = 45,  .vbus_current_lim0 = 500,
+    .vbus_current_startup = 500,
 };
 
 const BoardConfigPower BOARD_CONFIG_POWER = {
-  .pmic_int = {
-    .peripheral = hwp_gpio1,
-    .gpio_pin = 44,
-  },
-  .low_power_threshold = 5U,
-  .battery_capacity_hours = 150U,
+    .pmic_int =
+        {
+            .peripheral = hwp_gpio1,
+            .gpio_pin = 44,
+        },
+    .low_power_threshold = 5U,
+    .battery_capacity_hours = 150U,
 };
 
 const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 25,
-  .ambient_light_dark_threshold = 800,
-  .ambient_k_delta_threshold = 100,
-  // Bench-calibrated on 1 DVT2 unit, fit above 4500 lux; readings below
-  // ~4000 lux deviated from the fit on that unit and need a re-measure.
-  .ambient_light_lux_dark_offset = 0,
-  .ambient_light_lux_num = 50,
-  .ambient_light_lux_den = 517,
+    .backlight_on_percent = 25,
+    .ambient_light_dark_threshold = 800,
+    .ambient_k_delta_threshold = 100,
+    // Bench-calibrated on 1 DVT2 unit, fit above 4500 lux; readings below
+    // ~4000 lux deviated from the fit on that unit and need a re-measure.
+    .ambient_light_lux_dark_offset = 0,
+    .ambient_light_lux_num = 50,
+    .ambient_light_lux_den = 517,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
-  .buttons = {
-    [BUTTON_ID_BACK]   = { "Back",   hwp_gpio1, 34, GPIO_PuPd_NOPULL, true },
-    [BUTTON_ID_UP]     = { "Up",     hwp_gpio1, 35, GPIO_PuPd_UP, false},
-    [BUTTON_ID_SELECT] = { "Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
-    [BUTTON_ID_DOWN]   = { "Down",   hwp_gpio1, 37, GPIO_PuPd_UP, false},
-  },
-  .timer = GPTIM2,
-  .timer_irqn = GPTIM2_IRQn,
+    .buttons =
+        {
+            [BUTTON_ID_BACK] = {"Back", hwp_gpio1, 34, GPIO_PuPd_NOPULL, true},
+            [BUTTON_ID_UP] = {"Up", hwp_gpio1, 35, GPIO_PuPd_UP, false},
+            [BUTTON_ID_SELECT] = {"Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
+            [BUTTON_ID_DOWN] = {"Down", hwp_gpio1, 37, GPIO_PuPd_UP, false},
+        },
+    .timer = GPTIM2,
+    .timer_irqn = GPTIM2_IRQn,
 };
 IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
 
 static MicDeviceState mic_state = {
-  .hdma = {
-  .Instance = DMA1_Channel5,
-    .Init = {
-       .Request = DMA_REQUEST_36,
-       .IrqPrio = 5,
+    .hdma = {
+        .Instance = DMA1_Channel5,
+        .Init = {
+            .Request = DMA_REQUEST_36,
+            .IrqPrio = 5,
+        },
     },
-  },
 };
 static const MicDevice mic_device = {
     .state = &mic_state,
     .pdm_instance = hwp_pdm1,
-    .clk_gpio = {
-        .pad = PAD_PA22,
-        .func = PDM1_CLK,
-        .flags = PIN_NOPULL, 
-    },
-    .data_gpio = {
-        .pad = PAD_PA23,
-        .func = PDM1_DATA,
-        .flags = PIN_PULLDOWN,
-    },
+    .clk_gpio =
+        {
+            .pad = PAD_PA22,
+            .func = PDM1_CLK,
+            .flags = PIN_NOPULL,
+        },
+    .data_gpio =
+        {
+            .pad = PAD_PA23,
+            .func = PDM1_DATA,
+            .flags = PIN_PULLDOWN,
+        },
     .pdm_dma_irq = DMAC1_CH5_IRQn,
     .pdm_irq = PDM1_IRQn,
     .pdm_irq_priority = 5,
@@ -540,7 +570,7 @@ static const MicDevice mic_device = {
     .sample_rate = 16000,
     .channel_depth = 16,
 };
-const MicDevice* MIC = &mic_device;
+const MicDevice *MIC = &mic_device;
 IRQ_MAP(PDM1, pdm1_data_handler, MIC);
 IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
 
@@ -549,7 +579,6 @@ uint32_t BSP_GetOtpBase(void) {
 }
 
 void board_early_init(void) {
-
 }
 
 void board_init(void) {

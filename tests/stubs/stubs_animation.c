@@ -31,7 +31,7 @@ bool WEAK animation_set_elapsed(Animation *animation, uint32_t elapsed_ms) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->abs_start_time_ms += elapsed_ms;
+  ((AnimationPrivate *)animation)->abs_start_time_ms += elapsed_ms;
   return true;
 }
 
@@ -40,8 +40,8 @@ bool WEAK animation_get_progress(Animation *animation, AnimationProgress *progre
     return false;
   }
   // For use in this stub, start time is 0, so anything past 0 is elapsed
-  *progress = ((AnimationPrivate*)animation)->duration_ms * ANIMATION_NORMALIZED_MAX /
-      ((AnimationPrivate*)animation)->abs_start_time_ms;
+  *progress = ((AnimationPrivate *)animation)->duration_ms * ANIMATION_NORMALIZED_MAX /
+              ((AnimationPrivate *)animation)->abs_start_time_ms;
   return true;
 }
 
@@ -50,7 +50,7 @@ bool WEAK animation_get_elapsed(Animation *animation, int32_t *elapsed_ms) {
     return false;
   }
   // For use in this stub, start time is 0, so anything past 0 is elapsed
-  *elapsed_ms = ((AnimationPrivate*)animation)->abs_start_time_ms;
+  *elapsed_ms = ((AnimationPrivate *)animation)->abs_start_time_ms;
   return true;
 }
 
@@ -58,7 +58,7 @@ bool WEAK animation_set_delay(Animation *animation, uint32_t delay_ms) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->delay_ms = delay_ms;
+  ((AnimationPrivate *)animation)->delay_ms = delay_ms;
   return true;
 }
 
@@ -66,7 +66,7 @@ bool WEAK animation_set_immutable(Animation *animation) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->immutable = true;
+  ((AnimationPrivate *)animation)->immutable = true;
   return true;
 }
 
@@ -74,14 +74,14 @@ bool WEAK animation_is_immutable(Animation *animation) {
   if (!animation) {
     return false;
   }
-  return ((AnimationPrivate*)animation)->immutable;
+  return ((AnimationPrivate *)animation)->immutable;
 }
 
 bool WEAK animation_set_reverse(Animation *animation, bool reverse) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->reverse = reverse;
+  ((AnimationPrivate *)animation)->reverse = reverse;
   return true;
 }
 
@@ -90,14 +90,14 @@ bool WEAK animation_get_reverse(Animation *animation) {
     return false;
   }
 
-  return ((AnimationPrivate*)animation)->reverse;
+  return ((AnimationPrivate *)animation)->reverse;
 }
 
 bool WEAK animation_set_play_count(Animation *animation, uint32_t play_count) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->play_count = play_count;
+  ((AnimationPrivate *)animation)->play_count = play_count;
   return true;
 }
 
@@ -105,21 +105,23 @@ bool WEAK animation_set_duration(Animation *animation, uint32_t duration_ms) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->duration_ms = duration_ms;
+  ((AnimationPrivate *)animation)->duration_ms = duration_ms;
   return true;
 }
 
-uint32_t WEAK animation_get_duration(Animation *animation, bool include_delay, bool include_play_count) {
+uint32_t WEAK animation_get_duration(Animation *animation, bool include_delay,
+                                     bool include_play_count) {
   if (!animation) {
     return 0;
   }
-  return ((AnimationPrivate*)animation)->duration_ms;
+  return ((AnimationPrivate *)animation)->duration_ms;
 }
 
-bool WEAK animation_set_curve(Animation *animation, AnimationCurve curve) { return true; }
+bool WEAK animation_set_curve(Animation *animation, AnimationCurve curve) {
+  return true;
+}
 
-bool WEAK animation_set_custom_curve(Animation *animation,
-                                     AnimationCurveFunction curve_function) {
+bool WEAK animation_set_custom_curve(Animation *animation, AnimationCurveFunction curve_function) {
   return true;
 }
 
@@ -128,12 +130,11 @@ bool WEAK animation_set_custom_interpolation(Animation *animation_h,
   return true;
 }
 
-bool WEAK animation_set_handlers(Animation *animation, AnimationHandlers callbacks,
-                                 void *context) {
+bool WEAK animation_set_handlers(Animation *animation, AnimationHandlers callbacks, void *context) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->context = context;
+  ((AnimationPrivate *)animation)->context = context;
   return true;
 }
 
@@ -141,15 +142,15 @@ void *WEAK animation_get_context(Animation *animation) {
   if (!animation) {
     return false;
   }
-  return ((AnimationPrivate*)animation)->context;
+  return ((AnimationPrivate *)animation)->context;
 }
 
 bool WEAK animation_schedule(Animation *animation) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->abs_start_time_ms = 0;
-  ((AnimationPrivate*)animation)->scheduled = true;
+  ((AnimationPrivate *)animation)->abs_start_time_ms = 0;
+  ((AnimationPrivate *)animation)->scheduled = true;
   return true;
 }
 
@@ -157,11 +158,12 @@ bool WEAK animation_unschedule(Animation *animation) {
   if (!animation) {
     return false;
   }
-  ((AnimationPrivate*)animation)->scheduled = false;
+  ((AnimationPrivate *)animation)->scheduled = false;
   return true;
 }
 
-void WEAK animation_unschedule_all(void) {}
+void WEAK animation_unschedule_all(void) {
+}
 
 bool WEAK animation_set_implementation(Animation *animation,
                                        const AnimationImplementation *implementation) {
@@ -169,8 +171,7 @@ bool WEAK animation_set_implementation(Animation *animation,
 }
 
 bool WEAK animation_is_scheduled(Animation *animation) {
-
-  return animation ? ((AnimationPrivate*)animation)->scheduled : false;
+  return animation ? ((AnimationPrivate *)animation)->scheduled : false;
 }
 
 Animation *WEAK animation_sequence_create(Animation *animation_a, Animation *animation_b,
@@ -188,8 +189,7 @@ Animation *WEAK animation_spawn_create(Animation *animation_a, Animation *animat
   return animation_create();
 }
 
-Animation *WEAK animation_spawn_create_from_array(Animation **animation_array,
-                                                  uint32_t array_len) {
+Animation *WEAK animation_spawn_create_from_array(Animation **animation_array, uint32_t array_len) {
   return animation_create();
 }
 
@@ -197,21 +197,21 @@ bool WEAK animation_set_auto_destroy(Animation *animation, bool auto_destroy) {
   return false;
 }
 
-PropertyAnimation *WEAK property_animation_create_layer_frame(
-    struct Layer *layer, GRect *from_frame, GRect *to_frame) {
+PropertyAnimation *WEAK property_animation_create_layer_frame(struct Layer *layer,
+                                                              GRect *from_frame, GRect *to_frame) {
   return property_animation_create(NULL, layer, from_frame, to_frame);
 }
 
-PropertyAnimation *WEAK property_animation_create(
-    const PropertyAnimationImplementation *implementation, void *subject, void *from_value,
-    void *to_value) {
+PropertyAnimation *WEAK
+property_animation_create(const PropertyAnimationImplementation *implementation, void *subject,
+                          void *from_value, void *to_value) {
   PropertyAnimationPrivate *animation = malloc(sizeof(PropertyAnimationPrivate));
   property_animation_init((PropertyAnimation *)animation, implementation, subject, from_value,
                           to_value);
   return (PropertyAnimation *)animation;
 }
 
-void WEAK property_animation_destroy(PropertyAnimation* property_animation_h) {
+void WEAK property_animation_destroy(PropertyAnimation *property_animation_h) {
   animation_destroy((Animation *)property_animation_h);
 }
 
@@ -252,13 +252,17 @@ bool WEAK property_animation_to(PropertyAnimation *property_animation, void *to,
 }
 
 void WEAK property_animation_update_gpoint(PropertyAnimation *property_animation,
-                                           const uint32_t distance_normalized) {}
+                                           const uint32_t distance_normalized) {
+}
 
 Animation *WEAK property_animation_get_animation(PropertyAnimation *property_animation) {
   return (Animation *)property_animation;
 }
 
-InterpolateInt64Function WEAK animation_private_current_interpolate_override(void) { return NULL; }
+InterpolateInt64Function WEAK animation_private_current_interpolate_override(void) {
+  return NULL;
+}
 
 void WEAK property_animation_update_int16(PropertyAnimation *property_animation,
-                                          const uint32_t distance_normalized) {}
+                                          const uint32_t distance_normalized) {
+}

@@ -8,5 +8,6 @@
 
 NORETURN sys_exit(void) {
   cl_assert(false);
-  while (true) {}
+  while (true) {
+  }
 }

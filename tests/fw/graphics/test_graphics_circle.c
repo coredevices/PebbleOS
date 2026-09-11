@@ -16,22 +16,27 @@
 #include "stubs_app_state.h"
 #include "stubs_heap.h"
 
-GBitmap* graphics_capture_frame_buffer(GContext* ctx) {
+GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
   return NULL;
 }
-bool graphics_release_frame_buffer(GContext* ctx, GBitmap* buffer) {
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
   return true;
 }
 
-void graphics_draw_pixel(GContext* ctx, GPoint point) {}
-void graphics_fill_rect(GContext* ctx, const GRect *rect) {}
-void graphics_private_draw_horizontal_line(){}
-void graphics_private_draw_vertical_line(){}
-void graphics_private_plot_pixel(){}
-void graphics_private_set_pixel(){}
+void graphics_draw_pixel(GContext *ctx, GPoint point) {
+}
+void graphics_fill_rect(GContext *ctx, const GRect *rect) {
+}
+void graphics_private_draw_horizontal_line() {
+}
+void graphics_private_draw_vertical_line() {
+}
+void graphics_private_plot_pixel() {
+}
+void graphics_private_set_pixel() {
+}
 
 /////////////////////////////
-
 
 static GPointPrecise s_center;
 static Fixed_S16_3 s_radius;
@@ -129,8 +134,8 @@ void test_graphics_circle__grect_centered_from_polar(void) {
 
   // Odd-length width and height for container rect, 180 degree angle
   const GRect container_rect3 = GRect(2, 2, 5, 5);
-  const GRect resulting_rect3 = grect_centered_from_polar(container_rect3, mode,
-                                                          DEG_TO_TRIGANGLE(180), GSize(2, 4));
+  const GRect resulting_rect3 =
+      grect_centered_from_polar(container_rect3, mode, DEG_TO_TRIGANGLE(180), GSize(2, 4));
   cl_assert_equal_grect(resulting_rect3, GRect(3, 4, 2, 4));
 }
 
@@ -190,11 +195,10 @@ void test_graphics_circle__grect_centered_internal(void) {
   cl_assert_equal_i((v).raw_value, (int)((f) * FIXED_S16_3_ONE.raw_value))
 
 #define cl_assert_gpoint_precise(p, px, py) \
-  do { \
-    cl_assert_fixedS16_3(p.x, px); \
-    cl_assert_fixedS16_3(p.y, py); \
-  } while(0)
-
+  do {                                      \
+    cl_assert_fixedS16_3(p.x, px);          \
+    cl_assert_fixedS16_3(p.y, py);          \
+  } while (0)
 
 void test_graphics_circle__grect_polar_calc_values_handles_null(void) {
   GPointPrecise center = {};
@@ -257,7 +261,7 @@ void test_graphics_circle__grect_polar_calc_values_square(void) {
   GPointPrecise center = {};
   Fixed_S16_3 radius = {};
   GRect r = GRect(0, 0, 5, 5);
-  GOvalScaleMode mode = GOvalScaleModeFitCircle; // irrelevant as we deal with squares
+  GOvalScaleMode mode = GOvalScaleModeFitCircle;  // irrelevant as we deal with squares
 
   grect_polar_calc_values(&r, mode, &center, &radius);
   cl_assert_gpoint_precise(center, 2, 2);
@@ -298,8 +302,7 @@ void test_graphics_circle__grect_polar_calc_values_mode(void) {
   cl_assert_fixedS16_3(radius, 168 / 2 - 0.5);
 }
 
-void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrecise center,
-                                        Fixed_S16_3 radius,
+void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrecise center, Fixed_S16_3 radius,
                                         int32_t angle_start, int32_t angle_end) {
   s_center = center;
   s_radius = radius;
@@ -354,7 +357,6 @@ void graphics_fill_radial_precise_internal(GContext *ctx, GPointPrecise center,
   s_angle_start = angle_start;
   s_angle_end = angle_end;
 }
-
 
 void test_graphics_circle__fill_radial(void) {
   GContext *ctx = (GContext *)&ctx;

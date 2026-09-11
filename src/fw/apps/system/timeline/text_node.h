@@ -132,8 +132,8 @@ typedef struct {
   //! value will pin the container's respective non-zero size dimension, allowing the children to
   //! align themselves differently within the container.
   GSize size;
-  size_t num_nodes; //!< Current number of attached nodes
-  size_t max_nodes; //!< Maximum capacity of nodes
+  size_t num_nodes;  //!< Current number of attached nodes
+  size_t max_nodes;  //!< Maximum capacity of nodes
   GTextNode **nodes;
 } GTextNodeContainer;
 
@@ -153,9 +153,9 @@ typedef struct {
   //! to the text layout max used size calculation, limiting that dimension.
   GSize max_size;
   int16_t line_spacing_delta;
-  GColor color; //!< Text color to draw the text with
+  GColor color;  //!< Text color to draw the text with
   GTextOverflowMode overflow;
-  GTextAlignment alignment; //!< Alignment to use within the draw box given to the text node
+  GTextAlignment alignment;  //!< Alignment to use within the draw box given to the text node
 } GTextNodeText;
 
 //! @internal
@@ -164,7 +164,7 @@ typedef struct {
   //! User-defined update function that will be called before every size and render update,
   //! usually to modify the node's text buffer.
   GTextNodeTextDynamicUpdate update;
-  void *user_data; //!< User data that will be passed to the user-defined update function
+  void *user_data;  //!< User data that will be passed to the user-defined update function
   //! Size of the buffer that will be passed to the update callback. If the node was allocated with
   //! \ref graphics_text_node_create_text_dynamic, this is the buffer size that was passed to the
   //! buffer,
@@ -172,7 +172,9 @@ typedef struct {
   size_t buffer_size;
   //! If the node was created with \ref graphics_text_node_create_text_dynamic, this is the buffer
   //! described by `.buffer_size`.
-  union { uint32_t _align; } buffer[];
+  union {
+    uint32_t _align;
+  } buffer[];
 } GTextNodeTextDynamic;
 
 //! @internal
@@ -192,7 +194,7 @@ typedef struct {
   GTextNode node;
   //! User-defined update function that will be called before every size and render update
   GTextNodeDrawCallback callback;
-  void *user_data; //!< User data that will be passed to the user-defined update function
+  void *user_data;  //!< User data that will be passed to the user-defined update function
 } GTextNodeCustom;
 
 //! @internal
@@ -203,8 +205,9 @@ GTextNodeText *graphics_text_node_create_text(size_t buffer_size);
 //! @internal
 //! Allocates a single block of memory that ends with a zero-initialized string buffer.
 //! Initializes `.text` with a pointer to the buffer if buffer_size not 0.
-GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(
-    size_t buffer_size, GTextNodeTextDynamicUpdate update, void *user_data);
+GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(size_t buffer_size,
+                                                             GTextNodeTextDynamicUpdate update,
+                                                             void *user_data);
 
 //! @internal
 //! Allocates a single block of memory that ends with a zero-initialized node pointer buffer.
@@ -217,8 +220,7 @@ GTextNodeHorizontal *graphics_text_node_create_horizontal(size_t max_nodes);
 GTextNodeVertical *graphics_text_node_create_vertical(size_t max_nodes);
 
 //! @internal
-GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback,
-                                                  void *user_data);
+GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback, void *user_data);
 
 //! @internal
 //! Deeply destroys a TextNode and all its children

@@ -17,8 +17,14 @@ void pbl_irq_unlock(void) {
   }
 }
 
-void irq_reset(void) { s_nesting = 0; }
+void irq_reset(void) {
+  s_nesting = 0;
+}
 
-bool pbl_in_isr(void) { return arch_in_isr(); }
+bool pbl_in_isr(void) {
+  return arch_in_isr();
+}
 
-bool pbl_irq_is_locked(void) { return s_nesting > 0; }
+bool pbl_irq_is_locked(void) {
+  return s_nesting > 0;
+}

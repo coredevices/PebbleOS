@@ -57,14 +57,14 @@ void app_idle_timeout_touch_down(void) {
 void app_idle_timeout_touch_up(void) {
 }
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
 void alarm_set_snooze_delay(int delay_ms) {
 }
 
-const void* const g_pbl_system_tbl[] = {};
+const void *const g_pbl_system_tbl[] = {};
 
 const FileResourceData g_file_resource_stores[] = {};
 const uint32_t g_num_file_resource_stores = 0;
@@ -75,7 +75,7 @@ void persist_service_client_open(const Uuid *uuid) {
 void persist_service_client_close(const Uuid *uuid) {
 }
 
-SettingsFile * persist_service_lock_and_get_store(const Uuid *uuid) {
+SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
   return NULL;
 }
 
@@ -133,7 +133,7 @@ bool app_db_exists_install_id(AppInstallId app_id) {
   return false;
 }
 
-void timeline_item_destroy(TimelineItem* item) {
+void timeline_item_destroy(TimelineItem *item) {
 }
 
 AppInstallId worker_preferences_get_default_worker(void) {
@@ -141,15 +141,14 @@ AppInstallId worker_preferences_get_default_worker(void) {
 }
 
 #include "process_management/process_loader.h"
-void * process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
-                         MemorySegment *destination) {
+void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
+                          MemorySegment *destination) {
   return app_md->main_func;
 }
 
 #include "pbl/services/process_management/app_storage.h"
-AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_info,
-                                                        uint8_t *build_id_out,
-                                                        AppInstallId app_id,
+AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
+                                                        uint8_t *build_id_out, AppInstallId app_id,
                                                         PebbleTask task) {
   return GET_APP_INFO_COULD_NOT_READ_FORMAT;
 }
@@ -232,7 +231,6 @@ bool touch_is_globally_enabled(void) {
 void touch_set_globally_enabled(bool enable) {
 }
 
-
 bool touch_navigation_menu_is_enabled(void) {
   return false;
 }
@@ -292,9 +290,11 @@ int16_t timeline_peek_get_obstruction_origin_y(void) {
   return DISP_ROWS;
 }
 
-void timeline_peek_handle_process_start(void) { }
+void timeline_peek_handle_process_start(void) {
+}
 
-void timeline_peek_handle_process_kill(void) { }
+void timeline_peek_handle_process_kill(void) {
+}
 
 void pbl_analytics_external_collect_pfs_stats(void) {
 }

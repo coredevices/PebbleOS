@@ -20,12 +20,12 @@ typedef struct {
 static BLEBondingNode *s_ble_bonding_head;
 
 void bonding_sync_add_bonding(const BleBonding *bonding) {
-  BLEBondingNode *node = (BLEBondingNode *) kernel_malloc_check(sizeof(BLEBondingNode));
-  *node = (BLEBondingNode) {
-    .bonding = *bonding,
+  BLEBondingNode *node = (BLEBondingNode *)kernel_malloc_check(sizeof(BLEBondingNode));
+  *node = (BLEBondingNode){
+      .bonding = *bonding,
   };
-  s_ble_bonding_head = (BLEBondingNode *) list_prepend((ListNode *)s_ble_bonding_head,
-                                                       (ListNode *)node);
+  s_ble_bonding_head =
+      (BLEBondingNode *)list_prepend((ListNode *)s_ble_bonding_head, (ListNode *)node);
 }
 
 void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
@@ -46,8 +46,8 @@ static void prv_remove_node(BLEBondingNode *node) {
 
 bool bonding_sync_contains_pairing_info(const SMPairingInfo *pairing_info, bool is_gateway) {
   BleBonding bonding = {
-    .is_gateway = is_gateway,
-    .pairing_info = *pairing_info,
+      .is_gateway = is_gateway,
+      .pairing_info = *pairing_info,
   };
   BLEBondingNode *found_node = (BLEBondingNode *)list_find((ListNode *)s_ble_bonding_head,
                                                            prv_list_find_cb, (void *)&bonding);

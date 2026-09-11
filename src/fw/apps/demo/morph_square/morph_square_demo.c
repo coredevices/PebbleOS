@@ -67,11 +67,11 @@ static void prv_init(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Morph Square Demo"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .appear = prv_window_appear,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .appear = prv_window_appear,
+                                         .unload = prv_window_unload,
+                                     });
 
   window_set_click_config_provider_with_context(window, prv_click_config_provider, data);
 
@@ -96,14 +96,16 @@ static void s_main(void) {
 
 const PebbleProcessMd *morph_square_demo_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = s_main,
-      // UUID: 6447c83d-52b7-4579-8817-8c7ec5927cbe
-      .uuid = {0x64, 0x47, 0xc8, 0x3d, 0x52, 0xb7, 0x45, 0x79,
-               0x88, 0x17, 0x8c, 0x7e, 0xc5, 0x92, 0x7c, 0xbe},
-    },
-    .name = "Morph Square Demo",
+      .common =
+          {
+              .main_func = s_main,
+              // UUID: 6447c83d-52b7-4579-8817-8c7ec5927cbe
+              .uuid =
+                  {0x64, 0x47, 0xc8, 0x3d, 0x52, 0xb7, 0x45, 0x79, 0x88, 0x17, 0x8c, 0x7e, 0xc5,
+                   0x92, 0x7c, 0xbe},
+          },
+      .name = "Morph Square Demo",
   };
 
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

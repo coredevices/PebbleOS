@@ -18,7 +18,7 @@ static AppTimer *s_app_timer;
 TimerID s_sys_timer = TIMER_INVALID_ID;
 
 static void app_timer_callback(void *data) {
-  for (int i=0; i<40; i++) {
+  for (int i = 0; i < 40; i++) {
     PBL_LOG_INFO("%d Running app timer callback", i);
     vibes_short_pulse();
   }
@@ -43,7 +43,7 @@ static void handle_init(void) {
   s_app_timer = app_timer_register(100 /* milliseconds */, app_timer_callback, NULL);
 
   s_sys_timer = new_timer_create();
-  //new_timer_start(s_sys_timer, 10, sys_timer_callback, NULL, 0);
+  // new_timer_start(s_sys_timer, 10, sys_timer_callback, NULL, 0);
 }
 
 static void handle_deinit(void) {
@@ -57,12 +57,11 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* vibe_and_logs_get_app_info() {
+const PebbleProcessMd *vibe_and_logs_get_app_info() {
   static const PebbleProcessMdSystem s_trigger_alarm = {
-    .common.main_func = s_main,
-    .name = "VibeAndLogs"
+      .common.main_func = s_main,
+      .name = "VibeAndLogs"
   };
 
-  return (const PebbleProcessMd*) &s_trigger_alarm;
+  return (const PebbleProcessMd *)&s_trigger_alarm;
 }
-

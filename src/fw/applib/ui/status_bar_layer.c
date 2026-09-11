@@ -33,40 +33,38 @@ static ALWAYS_INLINE bool prv_mode_is_large_bold(StatusBarLayerMode mode) {
 }
 
 static ALWAYS_INLINE bool prv_mode_is_clock(StatusBarLayerMode mode) {
-  return mode == StatusBarLayerModeClock ||
-         mode == StatusBarLayerModeClockBold ||
+  return mode == StatusBarLayerModeClock || mode == StatusBarLayerModeClockBold ||
          prv_mode_is_large_bold(mode);
 }
 
-static ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(
-    const StatusBarLayerConfig *config) {
+static ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(const StatusBarLayerConfig *config) {
   const PlatformType platform = process_manager_current_platform();
   const StatusBarLayerMode mode = config ? config->mode : StatusBarLayerModeClock;
   const char *font_key;
   if (prv_mode_is_large_bold(mode)) {
     font_key = PBL_PLATFORM_SWITCH(platform,
-        /*aplite*/ FONT_KEY_GOTHIC_18_BOLD,
-        /*basalt*/ FONT_KEY_GOTHIC_18_BOLD,
-        /*chalk*/ FONT_KEY_GOTHIC_18_BOLD,
-        /*diorite*/ FONT_KEY_GOTHIC_18_BOLD,
-        /*emery*/ FONT_KEY_GOTHIC_24_BOLD,
-        /*flint*/ FONT_KEY_GOTHIC_18_BOLD,
-        /*gabbro*/ FONT_KEY_GOTHIC_24_BOLD);
+                                   /*aplite*/ FONT_KEY_GOTHIC_18_BOLD,
+                                   /*basalt*/ FONT_KEY_GOTHIC_18_BOLD,
+                                   /*chalk*/ FONT_KEY_GOTHIC_18_BOLD,
+                                   /*diorite*/ FONT_KEY_GOTHIC_18_BOLD,
+                                   /*emery*/ FONT_KEY_GOTHIC_24_BOLD,
+                                   /*flint*/ FONT_KEY_GOTHIC_18_BOLD,
+                                   /*gabbro*/ FONT_KEY_GOTHIC_24_BOLD);
   } else {
     const bool bold = (mode == StatusBarLayerModeClockBold);
     font_key = PBL_PLATFORM_SWITCH(platform,
-        /*aplite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-        /*basalt*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-        /*chalk*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-        /*diorite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-        /*emery*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18,
-        /*flint*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-        /*gabbro*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18);
+                                   /*aplite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+                                   /*basalt*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+                                   /*chalk*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+                                   /*diorite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+                                   /*emery*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18,
+                                   /*flint*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
+                                   /*gabbro*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18);
   }
-  return (StatusBarTextFormat) {
-    .overflow_mode = GTextOverflowModeTrailingEllipsis,
-    .text_alignment = GTextAlignmentCenter,
-    .font = fonts_get_system_font(font_key),
+  return (StatusBarTextFormat){
+      .overflow_mode = GTextOverflowModeTrailingEllipsis,
+      .text_alignment = GTextAlignmentCenter,
+      .font = fonts_get_system_font(font_key),
   };
 }
 
@@ -113,7 +111,7 @@ static void prv_status_bar_layer_render(Layer *layer, GContext *ctx) {
 void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
   PBL_ASSERTN(status_bar_layer);
   *status_bar_layer = (StatusBarLayer){
-    .previous_min_of_day = -1,
+      .previous_min_of_day = -1,
   };
 
   // The status bar needs to be as wide as the framebuffer we will render it into, which may be less
@@ -122,22 +120,22 @@ void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
   GContext *ctx = graphics_context_get_current_context();
   const GSize current_framebuffer_size = graphics_context_get_framebuffer_size(ctx);
 
-  layer_init(&status_bar_layer->layer,
-             &GRect(0, 0, current_framebuffer_size.w, prv_height(NULL)));
+  layer_init(&status_bar_layer->layer, &GRect(0, 0, current_framebuffer_size.w, prv_height(NULL)));
   status_bar_layer->layer.update_proc = prv_status_bar_layer_render;
   status_bar_layer->layer.property_changed_proc = prv_status_bar_property_changed;
 
   // tick event to callback which checks every second if the time is correct
   status_bar_layer->tick_event = (EventServiceInfo){
-    .type = PEBBLE_TICK_EVENT,
-    .handler = prv_tick_timer_handler_cb,
-    .context = status_bar_layer};
+      .type = PEBBLE_TICK_EVENT,
+      .handler = prv_tick_timer_handler_cb,
+      .context = status_bar_layer
+  };
   event_service_client_subscribe(&(status_bar_layer->tick_event));
 
   status_bar_layer->config = (StatusBarLayerConfig){
-    .foreground_color = GColorWhite,
-    .background_color = GColorBlack,
-    .separator.mode = StatusBarLayerSeparatorModeNone,
+      .foreground_color = GColorWhite,
+      .background_color = GColorBlack,
+      .separator.mode = StatusBarLayerSeparatorModeNone,
   };
 
   status_bar_layer->title_timer_id = TIMER_INVALID_ID;
@@ -196,19 +194,16 @@ GColor status_bar_layer_get_foreground_color(const StatusBarLayer *status_bar_la
   return status_bar_layer->config.foreground_color;
 }
 
-void status_bar_layer_set_title(StatusBarLayer *status_bar_layer,
-                                const char *text,
-                                bool revert,
+void status_bar_layer_set_title(StatusBarLayer *status_bar_layer, const char *text, bool revert,
                                 bool animated) {
   // copies the contents at text into title_text_buffer for display
   strncpy(status_bar_layer->config.title_text_buffer, text, TITLE_TEXT_BUFFER_SIZE);
-  if (revert) { // revert title text back to clock time after STATUS_BAR_LAYER_TITLE_TIMEOUT
+  if (revert) {  // revert title text back to clock time after STATUS_BAR_LAYER_TITLE_TIMEOUT
     if (status_bar_layer->title_timer_id != TIMER_INVALID_ID) {
-        app_timer_cancel(status_bar_layer->title_timer_id);
+      app_timer_cancel(status_bar_layer->title_timer_id);
     }
-    status_bar_layer->title_timer_id = app_timer_register(STATUS_BAR_LAYER_TITLE_TIMEOUT,
-                                                      status_bar_layer_reset_title,
-                                                      status_bar_layer);
+    status_bar_layer->title_timer_id = app_timer_register(
+        STATUS_BAR_LAYER_TITLE_TIMEOUT, status_bar_layer_reset_title, status_bar_layer);
   }
   status_bar_layer->config.mode = StatusBarLayerModeLoading;
   layer_mark_dirty(&(status_bar_layer->layer));
@@ -233,8 +228,7 @@ void status_bar_layer_set_info_text(StatusBarLayer *status_bar_layer, const char
 }
 
 // Sets info text either ot X/Y or percentage if total is larger than MAX_INFO_TOTAL
-void status_bar_layer_set_info_progress(StatusBarLayer *status_bar_layer,
-                                        uint16_t current,
+void status_bar_layer_set_info_progress(StatusBarLayer *status_bar_layer, uint16_t current,
                                         uint16_t total) {
   PBL_ASSERTN(status_bar_layer);
   if (current > total) {
@@ -242,11 +236,11 @@ void status_bar_layer_set_info_progress(StatusBarLayer *status_bar_layer,
     return;
   } else {
     char *str = status_bar_layer->config.info_text_buffer;
-    memset(str, 0 , INFO_TEXT_BUFFER_SIZE);
-    if (total > MAX_INFO_TOTAL) { // total is large; display as a percentage
+    memset(str, 0, INFO_TEXT_BUFFER_SIZE);
+    if (total > MAX_INFO_TOTAL) {  // total is large; display as a percentage
       itoa_int(current * 100 / total, str, 10);
       strcat(str, "%");
-    } else { // display as an X/Y
+    } else {  // display as an X/Y
       itoa_int(current, str, 10);
       strcat(str, "/");
       char buffer[(INFO_TEXT_BUFFER_SIZE - 1) / 2];
@@ -286,7 +280,7 @@ void status_bar_layer_set_mode(StatusBarLayer *status_bar_layer, StatusBarLayerM
 }
 
 void status_bar_layer_set_separator_load_percentage(StatusBarLayer *status_bar_layer,
-                                                int16_t percentage) {
+                                                    int16_t percentage) {
   PBL_ASSERTN(status_bar_layer);
   // TODO: animation related function
   layer_mark_dirty(&(status_bar_layer->layer));
@@ -319,19 +313,15 @@ static void prv_tick_timer_handler_cb(PebbleEvent *e, void *cb_data) {
   sys_localtime_r(&e->clock_tick.tick_time, &currtime);
   const int min_of_day = (currtime.tm_hour * 60) + currtime.tm_min;
   if (status_bar_layer->previous_min_of_day != min_of_day) {
-    prv_status_bar_layer_update_clock(status_bar_layer); // update clock text and mark dirty
+    prv_status_bar_layer_update_clock(status_bar_layer);  // update clock text and mark dirty
     status_bar_layer->previous_min_of_day = min_of_day;
   }
 }
 
 // Calculate position and renders text
-static void prv_status_bar_layer_render_text(GContext *ctx,
-                                             const StatusBarLayerConfig *config,
-                                             int16_t min_x,
-                                             int16_t max_x,
-                                             int16_t min_y,
-                                             int16_t max_y,
-                                             char *data) {
+static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayerConfig *config,
+                                             int16_t min_x, int16_t max_x, int16_t min_y,
+                                             int16_t max_y, char *data) {
   const StatusBarTextFormat text_format = prv_get_text_format(config);
   const GFont font = text_format.font;
   const uint8_t font_height = fonts_get_font_height(font);
@@ -351,13 +341,13 @@ static void prv_status_bar_layer_render_text(GContext *ctx,
     // gabbro's round display needs a few extra px so the time clears the curve.
     const PlatformType platform = process_manager_current_platform();
     const int16_t large_bold_y_nudge = PBL_PLATFORM_SWITCH(platform,
-        /*aplite*/ 0,
-        /*basalt*/ 0,
-        /*chalk*/ 0,
-        /*diorite*/ 0,
-        /*emery*/ 0,
-        /*flint*/ 0,
-        /*gabbro*/ 3);
+                                                           /*aplite*/ 0,
+                                                           /*basalt*/ 0,
+                                                           /*chalk*/ 0,
+                                                           /*diorite*/ 0,
+                                                           /*emery*/ 0,
+                                                           /*flint*/ 0,
+                                                           /*gabbro*/ 3);
     y = min_y + (max_y - min_y - font_height) / 2 - (font_height - 4) / 4 + large_bold_y_nudge;
   } else {
     // Default: bottom-aligned with separator-area padding.
@@ -365,25 +355,22 @@ static void prv_status_bar_layer_render_text(GContext *ctx,
   }
   const GRect text_box = GRect(x_start, y, width, font_height);
   // In the outlined mode, draw a 1px black outline for legibility over busy backgrounds (e.g. album
-  // art): the glyphs are drawn black at the 8 surrounding offsets first, then the foreground on top.
+  // art): the glyphs are drawn black at the 8 surrounding offsets first, then the foreground on
+  // top.
   if (config && config->mode == StatusBarLayerModeClockLargeBoldOutlined) {
     static const GPoint k_outline_offsets[] = {
-      { -1, -1 }, { 0, -1 }, { 1, -1 }, { -1, 0 }, { 1, 0 }, { -1, 1 }, { 0, 1 }, { 1, 1 },
+        {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1},
     };
     graphics_context_set_text_color(ctx, GColorBlack);
     for (unsigned i = 0; i < sizeof(k_outline_offsets) / sizeof(k_outline_offsets[0]); ++i) {
-      const GRect box = GRect(x_start + k_outline_offsets[i].x, y + k_outline_offsets[i].y,
-                              width, font_height);
+      const GRect box =
+          GRect(x_start + k_outline_offsets[i].x, y + k_outline_offsets[i].y, width, font_height);
       graphics_draw_text(ctx, data, font, box, text_format.overflow_mode,
                          text_format.text_alignment, NULL);
     }
     graphics_context_set_text_color(ctx, config->foreground_color);
   }
-  graphics_draw_text(ctx,
-                     data,
-                     font,
-                     text_box,
-                     text_format.overflow_mode,
+  graphics_draw_text(ctx, data, font, text_box, text_format.overflow_mode,
                      text_format.text_alignment, NULL);
 }
 
@@ -412,43 +399,34 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
 
   // update title buffer with time if in a clock mode
   if (prv_mode_is_clock(config->mode)) {
-    clock_copy_time_string(config->title_text_buffer,
-                           sizeof(config->title_text_buffer));
+    clock_copy_time_string(config->title_text_buffer, sizeof(config->title_text_buffer));
   }
 
-  if (config->mode != StatusBarLayerModeCustomText) { // draw center text
+  if (config->mode != StatusBarLayerModeCustomText) {  // draw center text
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
     prv_status_bar_layer_render_text(ctx, config, x_offset_l, x_offset_r, y_offset_top,
                                      y_offset_bottom, config->title_text_buffer);
-  } else { // TODO: here goes center text animations
+  } else {  // TODO: here goes center text animations
   }
 
   // render info text
   GFont info_font = prv_get_text_format(config).font;
   // find width of info text
-  GSize max_used_size = graphics_text_layout_get_max_used_size(ctx, config->info_text_buffer,
-                                         info_font,
-                                         GRect(0, 0, 100, prv_height(config)),
-                                         GTextOverflowModeTrailingEllipsis,
-                                         GTextAlignmentCenter,
-                                         NULL);
+  GSize max_used_size = graphics_text_layout_get_max_used_size(
+      ctx, config->info_text_buffer, info_font, GRect(0, 0, 100, prv_height(config)),
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
   // use the width found to render the info text
-  int16_t info_text_left_offset = (int16_t) (x_offset_r - max_used_size.w -
-                                    STATUS_BAR_LAYER_INFO_PADDING);
-  int16_t info_text_right_offset = (int16_t) (x_offset_r - STATUS_BAR_LAYER_INFO_PADDING);
-  prv_status_bar_layer_render_text(ctx,
-                                   config,
-                                   info_text_left_offset,
-                                   info_text_right_offset,
-                                   y_offset_top,
-                                   y_offset_bottom,
-                                   config->info_text_buffer);
+  int16_t info_text_left_offset =
+      (int16_t)(x_offset_r - max_used_size.w - STATUS_BAR_LAYER_INFO_PADDING);
+  int16_t info_text_right_offset = (int16_t)(x_offset_r - STATUS_BAR_LAYER_INFO_PADDING);
+  prv_status_bar_layer_render_text(ctx, config, info_text_left_offset, info_text_right_offset,
+                                   y_offset_top, y_offset_bottom, config->info_text_buffer);
 
   // draw the separator
   if (config->separator.mode != StatusBarLayerSeparatorModeNone) {
     graphics_context_set_stroke_color(ctx, config->foreground_color);
-    GPoint origin = {x_offset_l, (int16_t) (y_offset_bottom - STATUS_BAR_LAYER_SEPARATOR_Y_OFFSET)};
-    graphics_draw_horizontal_line_dotted(ctx, origin, (uint16_t) x_offset_r);
+    GPoint origin = {x_offset_l, (int16_t)(y_offset_bottom - STATUS_BAR_LAYER_SEPARATOR_Y_OFFSET)};
+    graphics_draw_horizontal_line_dotted(ctx, origin, (uint16_t)x_offset_r);
   }
 }
 
@@ -464,11 +442,8 @@ int16_t status_layer_get_title_text_width(StatusBarLayer *status_bar_layer) {
   char time_text_buffer[TITLE_TEXT_BUFFER_SIZE];
   clock_copy_time_string(time_text_buffer, sizeof(time_text_buffer));
   GContext *ctx = graphics_context_get_current_context();
-  return graphics_text_layout_get_max_used_size(ctx,
-                                                time_text_buffer,
-                                                text_format.font,
-                                                status_bar_layer->layer.bounds,
-                                                text_format.overflow_mode,
-                                                text_format.text_alignment,
-                                                NULL).w;
+  return graphics_text_layout_get_max_used_size(
+             ctx, time_text_buffer, text_format.font, status_bar_layer->layer.bounds,
+             text_format.overflow_mode, text_format.text_alignment, NULL)
+      .w;
 }

@@ -44,17 +44,19 @@ extern void test_app_outbox_sent_handler(AppOutboxStatus status, void *cb_ctx);
 
 //! Constant array defining the allowed handlers and their restrictions:
 static const AppOutboxSenderDef s_app_outbox_sender_defs[] = {
-  [AppOutboxServiceTagAppMessageSender] = {
-    .sent_handler = app_message_outbox_handle_app_outbox_message_sent,
-    .max_length = (sizeof(AppMessageAppOutboxData) + APP_MSG_HDR_OVRHD_SIZE + APP_MSG_8K_DICT_SIZE),
-    .max_pending_messages = 1,
-  },
+    [AppOutboxServiceTagAppMessageSender] =
+        {
+            .sent_handler = app_message_outbox_handle_app_outbox_message_sent,
+            .max_length =
+                (sizeof(AppMessageAppOutboxData) + APP_MSG_HDR_OVRHD_SIZE + APP_MSG_8K_DICT_SIZE),
+            .max_pending_messages = 1,
+        },
 #ifdef UNITTEST
-  [AppOutboxServiceTagUnitTest] = {
-    .sent_handler = test_app_outbox_sent_handler,
-    .max_length = 1,
-    .max_pending_messages = 2,
-  },
+    [AppOutboxServiceTagUnitTest] = {
+        .sent_handler = test_app_outbox_sent_handler,
+        .max_length = 1,
+        .max_pending_messages = 2,
+    },
 #endif
 };
 
@@ -95,8 +97,8 @@ DEFINE_SYSCALL(void, sys_app_outbox_send, const uint8_t *data, size_t length,
 
   const size_t max_length = def->max_length;
   if (length > max_length) {
-    PBL_LOG_ERR("AppOutbox max_length exceeded %"PRIu32" vs %"PRIu32,
-            (uint32_t)length, (uint32_t)max_length);
+    PBL_LOG_ERR("AppOutbox max_length exceeded %" PRIu32 " vs %" PRIu32, (uint32_t)length,
+                (uint32_t)max_length);
     syscall_failed();
   }
   app_outbox_service_send(data, length, sent_handler, cb_ctx);
@@ -126,18 +128,18 @@ static AppOutboxConsumer *prv_consumer_for_tag(AppOutboxServiceTag tag) {
   return consumer;
 }
 
-static void prv_schedule_sent_handler(AppOutboxSentHandler sent_handler,
-                                      void *cb_ctx, AppOutboxStatus status) {
+static void prv_schedule_sent_handler(AppOutboxSentHandler sent_handler, void *cb_ctx,
+                                      AppOutboxStatus status) {
   if (!sent_handler) {
     return;
   }
   PebbleEvent event = {
-    .type = PEBBLE_APP_OUTBOX_SENT_EVENT,
-    .app_outbox_sent = {
-      .sent_handler = sent_handler,
-      .cb_ctx = cb_ctx,
-      .status = status,
-    },
+      .type = PEBBLE_APP_OUTBOX_SENT_EVENT,
+      .app_outbox_sent = {
+          .sent_handler = sent_handler,
+          .cb_ctx = cb_ctx,
+          .status = status,
+      },
   };
   process_manager_send_event_to_process(PebbleTask_App, &event);
 }
@@ -147,11 +149,11 @@ static void prv_schedule_consumer_message_handler(AppOutboxConsumer *consumer,
                                                   AppOutboxMessage *message) {
   void (*callback)(void *) = (__typeof__(callback))consumer->message_handler;
   PebbleEvent event = {
-    .type = PEBBLE_APP_OUTBOX_MSG_EVENT,
-    .app_outbox_msg = {
-      .callback = callback,
-      .data = message,
-    },
+      .type = PEBBLE_APP_OUTBOX_MSG_EVENT,
+      .app_outbox_msg = {
+          .callback = callback,
+          .data = message,
+      },
   };
   sys_send_pebble_event_to_kernel(&event);
 }
@@ -176,11 +178,11 @@ void prv_cleanup_pending_messages(AppOutboxConsumer *consumer, bool should_call_
   while (message) {
     if (should_call_sent_handler) {
       prv_schedule_sent_handler(message->sent_handler, message->cb_ctx,
-                                        AppOutboxStatusConsumerDoesNotExist);
+                                AppOutboxStatusConsumerDoesNotExist);
     }
 
     AppOutboxMessage *next = (AppOutboxMessage *)message->node.next;
-    message->node = (ListNode) {};
+    message->node = (ListNode){};
     // Don't free it, it's the responsibility of the consumer to eventually call
     // app_outbox_service_consume_message(), which will free the message!
     message = next;
@@ -190,10 +192,8 @@ void prv_cleanup_pending_messages(AppOutboxConsumer *consumer, bool should_call_
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Exported functions
 
-void app_outbox_service_register(AppOutboxServiceTag tag,
-                                 AppOutboxMessageHandler message_handler,
-                                 PebbleTask consumer_task,
-                                 size_t consumer_data_length) {
+void app_outbox_service_register(AppOutboxServiceTag tag, AppOutboxMessageHandler message_handler,
+                                 PebbleTask consumer_task, size_t consumer_data_length) {
   prv_lock();
   {
     PBL_ASSERTN(!prv_consumer_for_tag(tag));
@@ -209,7 +209,7 @@ void app_outbox_service_unregister(AppOutboxServiceTag service_tag) {
   prv_lock();
   {
     prv_cleanup_pending_messages(&s_app_outbox_consumer[service_tag],
-                         true /* should_call_sent_handler */);
+                                 true /* should_call_sent_handler */);
     s_app_outbox_consumer[service_tag].message_handler = NULL;
   }
   prv_unlock();
@@ -243,15 +243,15 @@ static void app_outbox_service_send(const uint8_t *data, size_t length,
       goto finally;
     }
 
-    *message = (AppOutboxMessage) {
-      .data = data,
-      .length = length,
-      .sent_handler = sent_handler,
-      .cb_ctx = cb_ctx,
+    *message = (AppOutboxMessage){
+        .data = data,
+        .length = length,
+        .sent_handler = sent_handler,
+        .cb_ctx = cb_ctx,
     };
 
-    consumer->head = (AppOutboxMessage *)list_prepend((ListNode *)consumer->head,
-                                                      (ListNode *)message);
+    consumer->head =
+        (AppOutboxMessage *)list_prepend((ListNode *)consumer->head, (ListNode *)message);
 
     prv_schedule_consumer_message_handler(consumer, message);
   }

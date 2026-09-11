@@ -60,32 +60,30 @@ static void prv_create_reminder(ReminderAppData *data) {
 
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
-    .num_actions = num_actions,
-    .actions = (TimelineItemAction[]) {
-      {
-        .id = 0,
-        .type = TimelineItemActionTypeComplete,
-        .attr_list = completed_attr_list,
+      .num_actions = num_actions,
+      .actions = (TimelineItemAction[]){
+          {
+              .id = 0,
+              .type = TimelineItemActionTypeComplete,
+              .attr_list = completed_attr_list,
+          },
+          {
+              .id = 1,
+              .type = TimelineItemActionTypePostpone,
+              .attr_list = postpone_attr_list,
+          },
+          {
+              .id = 2,
+              .type = TimelineItemActionTypeRemoteRemove,
+              .attr_list = remove_attr_list,
+          }
       },
-      {
-        .id = 1,
-        .type = TimelineItemActionTypePostpone,
-        .attr_list = postpone_attr_list,
-      },
-      {
-        .id = 2,
-        .type = TimelineItemActionTypeRemoteRemove,
-        .attr_list = remove_attr_list,
-      }
-    },
   };
 
   TimelineItem *item = timeline_item_create_with_attributes(data->timestamp,
-                                                            0, // duration
-                                                            TimelineItemTypePin,
-                                                            LayoutIdGeneric,
-                                                            &pin_attr_list,
-                                                            &action_group);
+                                                            0,  // duration
+                                                            TimelineItemTypePin, LayoutIdGeneric,
+                                                            &pin_attr_list, &action_group);
   item->header.from_watch = true;
   item->header.parent_id = (Uuid)UUID_REMINDERS_DATA_SOURCE;
   timeline_add(item);
@@ -126,8 +124,7 @@ static void prv_confirm_cb(void *context) {
 static void prv_push_transcription_dialog(ReminderAppData *data) {
   TranscriptionDialog *transcription_dialog = &data->transcription_dialog;
   transcription_dialog_init(transcription_dialog);
-  transcription_dialog_update_text(transcription_dialog,
-                                   data->dialog_text,
+  transcription_dialog_update_text(transcription_dialog, data->dialog_text,
                                    strlen(data->dialog_text));
   transcription_dialog_set_callback(transcription_dialog, prv_confirm_cb, data);
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
@@ -140,7 +137,7 @@ static void prv_build_transcription_dialog_text(ReminderAppData *data) {
     app_free(data->dialog_text);
   }
   const size_t sentence_len = strlen(data->reminder_str);
-  const size_t date_time_len = 32; // "September 19th 9:05pm", "Yesterday 12:33pm"
+  const size_t date_time_len = 32;  // "September 19th 9:05pm", "Yesterday 12:33pm"
   const size_t required_buf_size = sentence_len + date_time_len + 2 /* \n\n */ + 1 /* \0 */;
   data->dialog_text = app_zalloc_check(required_buf_size);
 
@@ -158,13 +155,13 @@ static void prv_build_transcription_dialog_text(ReminderAppData *data) {
   strncat(data->dialog_text, "\n\n", buf_space_remaining);
   buf_space_remaining = MAX(buf_space_remaining - 2, 0);
 
-
   char tmp[date_time_len];
   clock_get_friendly_date(tmp, date_time_len, data->timestamp);
   strncat(data->dialog_text, tmp, buf_space_remaining);
   buf_space_remaining = MAX(buf_space_remaining - strlen(tmp), 0);
   strncat(data->dialog_text, " ", buf_space_remaining);
-  buf_space_remaining = MAX(buf_space_remaining - 1, 0);;
+  buf_space_remaining = MAX(buf_space_remaining - 1, 0);
+  ;
 
   clock_get_time_number(tmp, date_time_len, data->timestamp);
   strncat(data->dialog_text, tmp, buf_space_remaining);
@@ -245,13 +242,15 @@ static NOINLINE void prv_init(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Reminders"));
 
-  WindowHandlers handlers = { .appear = prv_appear, };
+  WindowHandlers handlers = {
+      .appear = prv_appear,
+  };
   window_set_window_handlers(window, &handlers);
 
-  data->event_service_info = (EventServiceInfo) {
-    .type = PEBBLE_DICTATION_EVENT,
-    .handler = prv_handle_dictation_event,
-    .context = data,
+  data->event_service_info = (EventServiceInfo){
+      .type = PEBBLE_DICTATION_EVENT,
+      .handler = prv_handle_dictation_event,
+      .context = data,
   };
   event_service_client_subscribe(&data->event_service_info);
 
@@ -276,23 +275,25 @@ static void prv_main(void) {
   prv_deinit();
 }
 
-const PebbleProcessMd* reminder_app_get_info(void) {
+const PebbleProcessMd *reminder_app_get_info(void) {
   PebbleProtocolCapabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
   SerializedReminderAppPrefs *prefs = watch_app_prefs_get_reminder();
 
-  const bool is_visible_in_launcher = capabilities.reminders_app_support &&
-                          (prefs ? (prefs->appState == ReminderAppState_Enabled) : false);
+  const bool is_visible_in_launcher =
+      capabilities.reminders_app_support &&
+      (prefs ? (prefs->appState == ReminderAppState_Enabled) : false);
 
   task_free(prefs);
 
   static const PebbleProcessMdSystem s_reminder_app_info = {
-    .common = {
-      .main_func = prv_main,
-      .uuid = UUID_REMINDERS_DATA_SOURCE,
-    },
-    .name = i18n_noop("Reminder"),
-    .icon_resource_id = RESOURCE_ID_GENERIC_REMINDER_TINY,
+      .common =
+          {
+              .main_func = prv_main,
+              .uuid = UUID_REMINDERS_DATA_SOURCE,
+          },
+      .name = i18n_noop("Reminder"),
+      .icon_resource_id = RESOURCE_ID_GENERIC_REMINDER_TINY,
   };
 
   return is_visible_in_launcher ? (const PebbleProcessMd *)&s_reminder_app_info : NULL;

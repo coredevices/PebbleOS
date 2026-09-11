@@ -7,11 +7,11 @@
 
 //! This list is shared by notifications and reminders.
 typedef enum {
-  NotificationInvalid   = 0,
-  NotificationMobile    = (1 << 0),
+  NotificationInvalid = 0,
+  NotificationMobile = (1 << 0),
   NotificationPhoneCall = (1 << 1),
-  NotificationOther     = (1 << 2),
-  NotificationReminder  = (1 << 3)
+  NotificationOther = (1 << 2),
+  NotificationReminder = (1 << 3)
 } NotificationType;
 
 //! Type and Id for the notification or reminder.

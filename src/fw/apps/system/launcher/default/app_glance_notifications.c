@@ -36,8 +36,8 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 
 static void prv_notifications_glance_subtitle_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceNotifications *notifications_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -127,10 +127,10 @@ static void prv_notification_event_handler(PebbleEvent *event, void *context) {
 }
 
 static const LauncherAppGlanceStructuredImpl s_notifications_structured_glance_impl = {
-  .get_icon = prv_get_icon,
-  .get_title = prv_get_title,
-  .create_subtitle_node = prv_create_subtitle_node,
-  .destructor = prv_destructor,
+    .get_icon = prv_get_icon,
+    .get_title = prv_get_title,
+    .create_subtitle_node = prv_create_subtitle_node,
+    .destructor = prv_destructor,
 };
 
 LauncherAppGlance *launcher_app_glance_notifications_create(const AppMenuNode *node) {
@@ -145,8 +145,8 @@ LauncherAppGlance *launcher_app_glance_notifications_create(const AppMenuNode *n
   notifications_glance->title[title_size - 1] = '\0';
 
   // Create the icon for the Notifications app
-  notifications_glance->icon = kino_reel_create_with_resource_system(node->app_num,
-                                                                     node->icon_resource_id);
+  notifications_glance->icon =
+      kino_reel_create_with_resource_system(node->app_num, node->icon_resource_id);
   PBL_ASSERTN(notifications_glance->icon);
 
   const bool should_consider_slices = false;
@@ -159,10 +159,10 @@ LauncherAppGlance *launcher_app_glance_notifications_create(const AppMenuNode *n
   prv_update_glance_for_last_notification_received(notifications_glance);
 
   // Subscribe to notification events for updating the glance
-  notifications_glance->notification_event_info = (EventServiceInfo) {
-    .type = PEBBLE_SYS_NOTIFICATION_EVENT,
-    .handler = prv_notification_event_handler,
-    .context = structured_glance,
+  notifications_glance->notification_event_info = (EventServiceInfo){
+      .type = PEBBLE_SYS_NOTIFICATION_EVENT,
+      .handler = prv_notification_event_handler,
+      .context = structured_glance,
   };
   event_service_client_subscribe(&notifications_glance->notification_event_info);
 

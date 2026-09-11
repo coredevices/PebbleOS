@@ -6,7 +6,8 @@
 #include "shell/normal/quick_launch.h"
 #include "pbl/util/attributes.h"
 
-void WEAK quick_launch_remove_app(const Uuid *uuid) {}
+void WEAK quick_launch_remove_app(const Uuid *uuid) {
+}
 
 AppInstallId WEAK quick_launch_get_app(ButtonId button) {
   return 0;

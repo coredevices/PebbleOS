@@ -28,14 +28,12 @@ void *pulse_push_send_begin(uint16_t app_protocol) {
 }
 
 void pulse_push_send(void *buf, size_t length) {
-  PBL_ASSERT(length <= pulse_link_max_send_size() - sizeof(PushPacket),
-             "Packet to big to send");
+  PBL_ASSERT(length <= pulse_link_max_send_size() - sizeof(PushPacket), "Packet to big to send");
   // We're blindly assuming that buf is the same pointer returned by
   // pulse_push_send_begin. If it isn't, we'll either crash here
   // when trying to dereference it or we'll hit the assert in
   // pulse_link_send.
-  PushPacket *packet = (void *)((char *)buf - offsetof(PushPacket,
-                                                       information));
+  PushPacket *packet = (void *)((char *)buf - offsetof(PushPacket, information));
   size_t packet_size = length + sizeof(PushPacket);
   packet->length = hton16(packet_size);
   pulse_link_send(packet, packet_size);

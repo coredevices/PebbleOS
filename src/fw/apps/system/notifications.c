@@ -73,41 +73,37 @@ static bool prv_notification_list_filter_cb(ListNode *node, void *data) {
 }
 
 static NotificationNode *prv_find_notification(NotificationNode *list, Uuid *id) {
-  return (NotificationNode *)list_find((ListNode *)list,
-                                       prv_notification_list_filter_cb,
-                                       id);
+  return (NotificationNode *)list_find((ListNode *)list, prv_notification_list_filter_cb, id);
 }
 
 static LoadedNotificationNode *prv_find_loaded_notification(LoadedNotificationNode *list,
                                                             Uuid *id) {
   return (LoadedNotificationNode *)list_find((ListNode *)list,
-                                             prv_loaded_notification_list_filter_cb,
-                                             id);
+                                             prv_loaded_notification_list_filter_cb, id);
 }
 
 static NotificationNode *prv_notification_list_add_notification_by_id(
     NotificationNode **notification_list, Uuid *id) {
   NotificationNode *new_node = app_malloc_check(sizeof(NotificationNode));
 
-  list_init((ListNode*) new_node);
+  list_init((ListNode *)new_node);
   new_node->id = *id;
 
-  *notification_list = (NotificationNode*) list_prepend((ListNode*) *notification_list,
-      (ListNode*) new_node);
+  *notification_list =
+      (NotificationNode *)list_prepend((ListNode *)*notification_list, (ListNode *)new_node);
 
   return new_node;
 }
 
-static void prv_notification_list_remove_notification_by_id(
-    NotificationNode **notification_list, Uuid *id) {
-
+static void prv_notification_list_remove_notification_by_id(NotificationNode **notification_list,
+                                                            Uuid *id) {
   NotificationNode *node = prv_find_notification(*notification_list, id);
   list_remove((ListNode *)node, (ListNode **)notification_list, NULL);
 }
 
 static NotificationNode *prv_add_notification(NotificationsData *data, Uuid *id) {
-  NotificationNode *node = prv_notification_list_add_notification_by_id(&data->notification_list,
-                                                                        id);
+  NotificationNode *node =
+      prv_notification_list_add_notification_by_id(&data->notification_list, id);
   return node;
 }
 
@@ -126,7 +122,7 @@ static void prv_load_notification_storage(NotificationsData *data) {
 static void prv_notification_list_deinit(NotificationNode *notification_list) {
   while (notification_list) {
     NotificationNode *node = notification_list;
-    notification_list = (NotificationNode*) list_pop_head((ListNode*) notification_list);
+    notification_list = (NotificationNode *)list_pop_head((ListNode *)notification_list);
     app_free(node);
   }
 }
@@ -149,10 +145,10 @@ static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
   }
 
   // unload old notifications
-  if (list_count((ListNode*) *loaded_list) > MAX_ACTIVE_NOTIFICATIONS) {
-    LoadedNotificationNode *old_node = (LoadedNotificationNode*) list_get_tail(
-        (ListNode*) *loaded_list);
-    list_remove((ListNode*) old_node, (ListNode**) loaded_list, NULL);
+  if (list_count((ListNode *)*loaded_list) > MAX_ACTIVE_NOTIFICATIONS) {
+    LoadedNotificationNode *old_node =
+        (LoadedNotificationNode *)list_get_tail((ListNode *)*loaded_list);
+    list_remove((ListNode *)old_node, (ListNode **)loaded_list, NULL);
     prv_unload_loaded_notification(old_node);
   }
 
@@ -165,12 +161,11 @@ static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
   // track the loaded notification
   loaded_node = app_malloc_check(sizeof(LoadedNotificationNode));
 
-  list_init((ListNode*) loaded_node);
+  list_init((ListNode *)loaded_node);
   loaded_node->notification = notification;
 
-  TimelineResourceId timeline_res_id = attribute_get_uint32(&notification.attr_list,
-                                                            AttributeIdIconTiny,
-                                                            NOTIF_FALLBACK_ICON);
+  TimelineResourceId timeline_res_id =
+      attribute_get_uint32(&notification.attr_list, AttributeIdIconTiny, NOTIF_FALLBACK_ICON);
 
   // Read the associated pin's app id
   TimelineItem pin;
@@ -180,9 +175,9 @@ static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
   }
 
   TimelineResourceInfo timeline_res = {
-    .res_id = timeline_res_id,
-    .app_id = &pin.header.parent_id,
-    .fallback_id = NOTIF_FALLBACK_ICON
+      .res_id = timeline_res_id,
+      .app_id = &pin.header.parent_id,
+      .fallback_id = NOTIF_FALLBACK_ICON
   };
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, TimelineResourceSizeTiny, &icon_res_info);
@@ -191,8 +186,8 @@ static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
   loaded_node->icon_is_default = (timeline_res_id == NOTIF_FALLBACK_ICON) ||
                                  (timeline_res_id == TIMELINE_RESOURCE_NOTIFICATION_GENERIC);
 
-  *loaded_list = (LoadedNotificationNode*) list_prepend((ListNode*) *loaded_list,
-      (ListNode*)loaded_node);
+  *loaded_list =
+      (LoadedNotificationNode *)list_prepend((ListNode *)*loaded_list, (ListNode *)loaded_node);
 
   return loaded_node;
 }
@@ -200,7 +195,7 @@ static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
 static void prv_loaded_notification_list_deinit(LoadedNotificationNode *loaded_list) {
   while (loaded_list) {
     LoadedNotificationNode *node = loaded_list;
-    loaded_list = (LoadedNotificationNode*) list_pop_head((ListNode*) loaded_list);
+    loaded_list = (LoadedNotificationNode *)list_pop_head((ListNode *)loaded_list);
     prv_unload_loaded_notification(node);
   }
 }
@@ -217,10 +212,10 @@ static bool prv_push_notification_window(NotificationsData *data) {
 
   // iterate over visible items as visible (including the groups) in reverse order
   // since notification_window shows each newly added notification first
-  NotificationNode *node = (NotificationNode*)list_get_tail(&data->notification_list->node);
+  NotificationNode *node = (NotificationNode *)list_get_tail(&data->notification_list->node);
   while (node) {
     notification_window_add_notification_by_id(&node->id);
-    node = (NotificationNode*)list_get_prev(&node->node);
+    node = (NotificationNode *)list_get_prev(&node->node);
   }
 
   notification_window_show();
@@ -263,7 +258,6 @@ static void prv_confirmed_handler(ClickRecognizerRef recognizer, void *context) 
   app_simple_dialog_push(confirmation_dialog);
 }
 
-
 static void prv_dialog_click_config(void *context) {
   NotificationsData *data = app_state_get_user_data();
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_confirmed_handler);
@@ -277,15 +271,17 @@ static void prv_settings_clear_history_window_push(NotificationsData *data) {
   Dialog *dialog = actionable_dialog_get_dialog(actionable_dialog);
   dialog_set_text(dialog, i18n_get("Clear history?", data));
   TimelineResourceInfo timeline_res = {
-    .res_id = TIMELINE_RESOURCE_GENERIC_QUESTION,
+      .res_id = TIMELINE_RESOURCE_GENERIC_QUESTION,
   };
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, TimelineResourceSizeLarge, &icon_res_info);
   dialog_set_icon(dialog, icon_res_info.res_id);
   dialog_set_icon_animate_direction(dialog, DialogIconAnimationFromRight);
-  dialog_set_callbacks(dialog, &(DialogCallbacks) {
-    .unload = prv_dialog_unloaded,
-  }, data);
+  dialog_set_callbacks(dialog,
+                       &(DialogCallbacks){
+                           .unload = prv_dialog_unloaded,
+                       },
+                       data);
   app_actionable_dialog_push(actionable_dialog);
   data->actionable_dialog = actionable_dialog;
 }
@@ -300,24 +296,24 @@ static GColor prv_invert_bw_color(GColor color) {
   return color;
 }
 
-static void prv_invert_pdc_colors(GDrawCommandProcessor *processor,
-                                  GDrawCommand *processed_command,
-                                  size_t processed_command_max_size,
-                                  const GDrawCommandList* list,
+static void prv_invert_pdc_colors(GDrawCommandProcessor *processor, GDrawCommand *processed_command,
+                                  size_t processed_command_max_size, const GDrawCommandList *list,
                                   const GDrawCommand *command) {
-  gdraw_command_set_stroke_color(processed_command,
+  gdraw_command_set_stroke_color(
+      processed_command,
       prv_invert_bw_color(gdraw_command_get_stroke_color((GDrawCommand *)command)));
-  gdraw_command_set_fill_color(processed_command,
+  gdraw_command_set_fill_color(
+      processed_command,
       prv_invert_bw_color(gdraw_command_get_fill_color((GDrawCommand *)command)));
 }
 
 static void prv_draw_pdc_bw_inverted(GContext *ctx, GDrawCommandImage *image, GPoint offset) {
   GDrawCommandProcessor processor = {
-    .command = prv_invert_pdc_colors,
+      .command = prv_invert_pdc_colors,
   };
   gdraw_command_image_draw_processed(ctx, image, offset, &processor);
 }
-#endif // PBL_BW
+#endif  // PBL_BW
 
 //////////////
 // MenuLayer callbacks
@@ -342,7 +338,7 @@ static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_lay
     box.origin.x += icon_left_margin;
 
     // Align the icon to the left of the draw box, centered vertically
-    GRect icon_rect = (GRect) { .size = gdraw_command_image_get_bounds_size(icon) };
+    GRect icon_rect = (GRect){.size = gdraw_command_image_get_bounds_size(icon)};
     grect_align(&icon_rect, &box, GAlignLeft, false /* clip */);
 
     draw_func(ctx, icon, icon_rect.origin);
@@ -351,10 +347,9 @@ static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_lay
   // Temporarily inset the cell layer's bounds from the left so the text doesn't draw over any
   // icon on the left
   Layer *mutable_cell_layer = (Layer *)cell_layer;
-  const int text_left_margin =
-      icon_left_margin + MAX(icon_size.w, ATTRIBUTE_ICON_TINY_SIZE_PX);
-  mutable_cell_layer->bounds = grect_inset(cell_layer_bounds,
-                                           GEdgeInsets(0, 5, 0, text_left_margin));
+  const int text_left_margin = icon_left_margin + MAX(icon_size.w, ATTRIBUTE_ICON_TINY_SIZE_PX);
+  mutable_cell_layer->bounds =
+      grect_inset(cell_layer_bounds, GEdgeInsets(0, 5, 0, text_left_margin));
 
   const GFont title_font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellTitle);
   const GFont subtitle_font = system_theme_get_font_for_default_size(TextStyleFont_Caption);
@@ -369,7 +364,7 @@ static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_lay
 
 //! outer_box is passed as a pointer to save stack space
 static int16_t prv_draw_centered_text_line_in(GContext *ctx, GFont font, const GRect *outer_box,
-                                            const char *text, GAlign align) {
+                                              const char *text, GAlign align) {
   if (!text) {
     return 0;
   }
@@ -391,7 +386,6 @@ void prv_draw_notification_cell_round(GContext *ctx, const Layer *cell_layer, GR
                                       GFont const title_font, const char *title,
                                       GFont const subtitle_font, const char *subtitle,
                                       GDrawCommandImage *icon) {
-
   if (icon) {
     GRect icon_rect = (GRect){.size = gdraw_command_image_get_bounds_size(icon)};
 
@@ -412,8 +406,7 @@ void prv_draw_notification_cell_round(GContext *ctx, const Layer *cell_layer, GR
   box->origin.y -= 4;
 
   if (subtitle) {
-    box->size.h -= prv_draw_centered_text_line_in(ctx, subtitle_font, box, subtitle,
-                                                         GAlignBottom);
+    box->size.h -= prv_draw_centered_text_line_in(ctx, subtitle_font, box, subtitle, GAlignBottom);
   }
 
   if (title) {
@@ -460,11 +453,10 @@ static void prv_draw_notification_cell_round_unselected(GContext *ctx, const Lay
 }
 #endif
 
-static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
-                                void *data) {
+static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   NotificationsData *notifications_data = data;
 
-  if ((notifications_data->notification_list) && (cell_index->row == 0))  {
+  if ((notifications_data->notification_list) && (cell_index->row == 0)) {
     // Clear All button selected
     prv_settings_clear_history_window_push(notifications_data);
     return;
@@ -473,8 +465,8 @@ static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
   // shift index since the first one is hard coded to Clear
   int16_t notif_idx = cell_index->row - 1;
 
-  NotificationNode *node = (NotificationNode*) list_get_at(
-      (ListNode*) notifications_data->notification_list, notif_idx);
+  NotificationNode *node =
+      (NotificationNode *)list_get_at((ListNode *)notifications_data->notification_list, notif_idx);
   if (!node) {
     return;
   }
@@ -503,7 +495,7 @@ static uint16_t prv_get_num_rows_callback(struct MenuLayer *menu_layer, uint16_t
 }
 
 static int16_t prv_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell_index,
-                                    void *data) {
+                                   void *data) {
 #if PBL_ROUND
   MenuIndex selected_index = menu_layer_get_selected_index(menu_layer);
   bool is_selected = menu_index_compare(cell_index, &selected_index) == 0;
@@ -517,14 +509,15 @@ static int16_t prv_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell
 #endif
   const PreferredContentSize runtime_platform_content_size =
       system_theme_get_default_content_size_for_runtime_platform();
-  return ((int16_t[NumPreferredContentSizes]) {
-    //! @note this is the same as Medium until Small is designed
-    [PreferredContentSizeSmall] = PBL_IF_RECT_ELSE(46, MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT),
-    [PreferredContentSizeMedium] = PBL_IF_RECT_ELSE(46,
-                                                    MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT),
-    [PreferredContentSizeLarge] = menu_cell_basic_cell_height(),
-    //! @note this is the same as Large until ExtraLarge is designed
-    [PreferredContentSizeExtraLarge] = menu_cell_basic_cell_height(),
+  return ((int16_t[NumPreferredContentSizes]){
+      //! @note this is the same as Medium until Small is designed
+      [PreferredContentSizeSmall] =
+          PBL_IF_RECT_ELSE(46, MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT),
+      [PreferredContentSizeMedium] =
+          PBL_IF_RECT_ELSE(46, MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT),
+      [PreferredContentSizeLarge] = menu_cell_basic_cell_height(),
+      //! @note this is the same as Large until ExtraLarge is designed
+      [PreferredContentSizeExtraLarge] = menu_cell_basic_cell_height(),
   })[runtime_platform_content_size];
 }
 
@@ -533,7 +526,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
   NotificationsData *notifications_data = data;
 
   void (*draw_cell)(GContext *, const Layer *, const char *, const char *, GDrawCommandImage *) =
-    PBL_IF_RECT_ELSE(prv_draw_notification_cell_rect, prv_draw_notification_cell_round_selected);
+      PBL_IF_RECT_ELSE(prv_draw_notification_cell_rect, prv_draw_notification_cell_round_selected);
 #if PBL_ROUND
   // on round: just draw the title for anything but the focused row
   if (!menu_layer_is_index_selected(&s_data->menu_layer, cell_index)) {
@@ -550,7 +543,8 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
 #else
     const GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellTitle);
     GRect box = cell_layer->bounds;
-    box.origin.y += (box.size.h - fonts_get_font_height(font)) / 2 - fonts_get_font_cap_offset(font);
+    box.origin.y +=
+        (box.size.h - fonts_get_font_height(font)) / 2 - fonts_get_font_cap_offset(font);
 
     graphics_draw_text(ctx, i18n_get("Clear All", data), font, box,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
@@ -561,14 +555,14 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
   // shift index since the first one is hard coded to Clear
   const int16_t notif_idx = cell_index->row - 1;
 
-  NotificationNode *node = (NotificationNode*) list_get_at(
-      (ListNode*) notifications_data->notification_list, notif_idx);
+  NotificationNode *node =
+      (NotificationNode *)list_get_at((ListNode *)notifications_data->notification_list, notif_idx);
   if (!node) {
     return;
   }
 
-  LoadedNotificationNode *loaded_node = prv_loaded_notification_list_load_item(
-      &notifications_data->loaded_notification_list, node);
+  LoadedNotificationNode *loaded_node =
+      prv_loaded_notification_list_load_item(&notifications_data->loaded_notification_list, node);
   if (!loaded_node) {
     return;
   }
@@ -594,7 +588,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
     } else {
       // try to show as much content as possible in title + subtitle
       title = body;
-      subtitle = strchr(body, '\n'); // NULL handled gracefully downstream
+      subtitle = strchr(body, '\n');  // NULL handled gracefully downstream
     }
   } else if (IS_EMPTY_STRING(title)) {
     // no title, but yes subtitle.
@@ -616,11 +610,11 @@ static void prv_update_text_layer_visibility(NotificationsData *data) {
 
   // Toggle which layer is visible
   if (node == NULL) {
-    layer_set_hidden((Layer *) &data->menu_layer, true);
-    layer_set_hidden((Layer *) &data->text_layer, false);
+    layer_set_hidden((Layer *)&data->menu_layer, true);
+    layer_set_hidden((Layer *)&data->text_layer, false);
   } else {
-    layer_set_hidden((Layer *) &data->menu_layer, false);
-    layer_set_hidden((Layer *) &data->text_layer, true);
+    layer_set_hidden((Layer *)&data->menu_layer, false);
+    layer_set_hidden((Layer *)&data->text_layer, true);
   }
 }
 
@@ -652,7 +646,7 @@ static void prv_handle_notification_added(Uuid *id) {
 static void prv_handle_notification(PebbleEvent *e, void *context) {
   if (e->type == PEBBLE_SYS_NOTIFICATION_EVENT) {
     Uuid *id = e->sys_notification.notification_id;
-    switch(e->sys_notification.type) {
+    switch (e->sys_notification.type) {
       case NotificationAdded:
         prv_handle_notification_added(id);
         break;
@@ -664,9 +658,8 @@ static void prv_handle_notification(PebbleEvent *e, void *context) {
         break;
       case NotificationActionResult: {
         PebbleSysNotificationActionResult *action_result = e->sys_notification.action_result;
-        if (action_result &&
-            (action_result->type == ActionResultTypeSuccess ||
-             action_result->type == ActionResultTypeSuccessANCSDismiss)) {
+        if (action_result && (action_result->type == ActionResultTypeSuccess ||
+                              action_result->type == ActionResultTypeSuccessANCSDismiss)) {
           prv_remove_notification(s_data, &action_result->id);
           app_notification_window_remove_notification_by_id(&action_result->id);
         }
@@ -703,35 +696,36 @@ static void prv_window_load(Window *window) {
   const GRect menu_layer_frame = PBL_IF_RECT_ELSE(
       window->layer.bounds, grect_inset_internal(window->layer.bounds, 0, STATUS_BAR_LAYER_HEIGHT));
   menu_layer_init(menu_layer, &menu_layer_frame);
-  menu_layer_set_callbacks(menu_layer, data, &(MenuLayerCallbacks) {
-      .get_num_rows = prv_get_num_rows_callback,
-      .draw_row = prv_draw_row_callback,
-      .get_cell_height = prv_get_cell_height,
-      .select_click = prv_select_callback,
-  });
+  menu_layer_set_callbacks(menu_layer, data,
+                           &(MenuLayerCallbacks){
+                               .get_num_rows = prv_get_num_rows_callback,
+                               .draw_row = prv_draw_row_callback,
+                               .get_cell_height = prv_get_cell_height,
+                               .select_click = prv_select_callback,
+                           });
 
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(menu_layer,
-                                  PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, GColorBlack),
-                                  GColorWhite);
+  menu_layer_set_highlight_colors(
+      menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, GColorBlack), GColorWhite);
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
-  menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
-  menu_layer_set_scroll_vibe_on_blocked(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
+  menu_layer_set_scroll_vibe_on_wrap(
+      menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(
+      menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
 
   TextLayer *text_layer = &data->text_layer;
   const int16_t horizontal_margin = 5;
   const GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellTitle);
   // configure text layer to be vertically aligned (15 is hacking around our poor fonts)
-  text_layer_init_with_parameters(text_layer,
-                                  &GRect(horizontal_margin, window->layer.bounds.size.h / 2 - 15,
-                                         window->layer.bounds.size.w - horizontal_margin,
-                                         window->layer.bounds.size.h / 2),
-                                  i18n_get("No notifications", data), font, GColorBlack,
-                                  GColorWhite, GTextAlignmentCenter,
-                                  GTextOverflowModeTrailingEllipsis);
+  text_layer_init_with_parameters(
+      text_layer,
+      &GRect(horizontal_margin, window->layer.bounds.size.h / 2 - 15,
+             window->layer.bounds.size.w - horizontal_margin, window->layer.bounds.size.h / 2),
+      i18n_get("No notifications", data), font, GColorBlack, GColorWhite, GTextAlignmentCenter,
+      GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->layer, text_layer_get_layer(text_layer));
 
 #if PBL_ROUND
@@ -752,11 +746,11 @@ static void prv_push_window(NotificationsData *data) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Notifications"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .appear = prv_window_appear,
-    .disappear = prv_window_disappear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .appear = prv_window_appear,
+                                         .disappear = prv_window_disappear,
+                                     });
 
   const bool animated = true;
   app_window_stack_push(window, animated);
@@ -770,9 +764,9 @@ static void prv_handle_init(void) {
 
   app_state_set_user_data(data);
 
-  data->notification_event_info = (EventServiceInfo) {
-    .type = PEBBLE_SYS_NOTIFICATION_EVENT,
-    .handler = prv_handle_notification,
+  data->notification_event_info = (EventServiceInfo){
+      .type = PEBBLE_SYS_NOTIFICATION_EVENT,
+      .handler = prv_handle_notification,
   };
   event_service_client_subscribe(&data->notification_event_info);
   prv_load_notification_storage(data);
@@ -827,29 +821,31 @@ static void prv_clear_history_main(void) {
   prv_clear_history_handle_deinit();
 }
 
-
-const PebbleProcessMd* notifications_app_get_info() {
+const PebbleProcessMd *notifications_app_get_info() {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = prv_s_main,
-      // UUID: b2cae818-10f8-46df-ad2b-98ad2254a3c1
-      .uuid = {0xb2, 0xca, 0xe8, 0x18, 0x10, 0xf8, 0x46, 0xdf,
-               0xad, 0x2b, 0x98, 0xad, 0x22, 0x54, 0xa3, 0xc1},
-    },
-    .name = i18n_noop("Notifications"),
-    .icon_resource_id = RESOURCE_ID_NOTIFICATIONS_APP_GLANCE,
+      .common =
+          {
+              .main_func = prv_s_main,
+              // UUID: b2cae818-10f8-46df-ad2b-98ad2254a3c1
+              .uuid =
+                  {0xb2, 0xca, 0xe8, 0x18, 0x10, 0xf8, 0x46, 0xdf, 0xad, 0x2b, 0x98, 0xad, 0x22,
+                   0x54, 0xa3, 0xc1},
+          },
+      .name = i18n_noop("Notifications"),
+      .icon_resource_id = RESOURCE_ID_NOTIFICATIONS_APP_GLANCE,
   };
-  return (const PebbleProcessMd*) &s_app_md;
+  return (const PebbleProcessMd *)&s_app_md;
 }
 
 const PebbleProcessMd *notifications_clear_history_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      .main_func = prv_clear_history_main,
-      .uuid = NOTIFICATIONS_CLEAR_HISTORY_UUID,
-      .visibility = ProcessVisibilityQuickLaunch,
-    },
-    .name = i18n_noop("Clear Notification History"),
+      .common =
+          {
+              .main_func = prv_clear_history_main,
+              .uuid = NOTIFICATIONS_CLEAR_HISTORY_UUID,
+              .visibility = ProcessVisibilityQuickLaunch,
+          },
+      .name = i18n_noop("Clear Notification History"),
   };
-  return (const PebbleProcessMd *) &s_app_md;
+  return (const PebbleProcessMd *)&s_app_md;
 }

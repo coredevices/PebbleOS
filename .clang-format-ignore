@@ -1,0 +1,5 @@
+**/*.template.c
+**/*.template.h
+sdk/defaults/lib/lib.c
+sdk/defaults/lib/lib.h
+tools/clar/*

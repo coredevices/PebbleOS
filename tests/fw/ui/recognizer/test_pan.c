@@ -21,7 +21,8 @@
 #include "test_recognizer_impl.h"
 
 // The manager is not under test here; swallow the notification.
-void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {}
+void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
+}
 
 static RecognizerEvent s_last_event;
 
@@ -35,14 +36,15 @@ void test_pan__initialize(void) {
   fake_rtc_init(0, 0);
 }
 
-void test_pan__cleanup(void) {}
+void test_pan__cleanup(void) {
+}
 
 // Helpers
 static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t y) {
   const TouchEvent e = {
-    .type = type,
-    .x = x,
-    .y = y,
+      .type = type,
+      .x = x,
+      .y = y,
   };
   recognizer_handle_touch_event(r, &e);
 }
@@ -91,8 +93,8 @@ void test_pan__dominance_over_ratio_starts(void) {
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Started);
 }
 
-// At the instant Started fires, delta_since_start is exactly (0, 0) (the anti-jump guarantee), while
-// total_delta reflects the full movement from touchdown.
+// At the instant Started fires, delta_since_start is exactly (0, 0) (the anti-jump guarantee),
+// while total_delta reflects the full movement from touchdown.
 void test_pan__delta_since_start_zero_at_start(void) {
   NEW_RECOGNIZER(r) = pan_recognizer_create(prv_event_cb, NULL, PanAxis_Horizontal);
 

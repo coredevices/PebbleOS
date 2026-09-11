@@ -10,7 +10,7 @@
 #include "system/passert.h"
 #include "pbl/util/math.h"
 
-void rot_bitmap_layer_update_proc(RotBitmapLayer *image, GContext* ctx) {
+void rot_bitmap_layer_update_proc(RotBitmapLayer *image, GContext *ctx) {
   const GColor corner_clip_color = image->corner_clip_color;
   if (!(gcolor_is_transparent(corner_clip_color))) {
     graphics_context_set_fill_color(ctx, corner_clip_color);
@@ -41,8 +41,8 @@ void rot_bitmap_layer_init(RotBitmapLayer *image, GBitmap *bitmap) {
   layer_mark_dirty(&(image->layer));
 }
 
-RotBitmapLayer* rot_bitmap_layer_create(GBitmap *bitmap) {
-  RotBitmapLayer* layer = applib_type_malloc(RotBitmapLayer);
+RotBitmapLayer *rot_bitmap_layer_create(GBitmap *bitmap) {
+  RotBitmapLayer *layer = applib_type_malloc(RotBitmapLayer);
   if (layer) {
     rot_bitmap_layer_init(layer, bitmap);
   }
@@ -61,7 +61,7 @@ void rot_bitmap_layer_destroy(RotBitmapLayer *rot_bitmap_layer) {
   applib_free(rot_bitmap_layer);
 }
 
-Layer* rot_bitmap_layer_get_layer(const RotBitmapLayer *rot_bitmap_layer) {
+Layer *rot_bitmap_layer_get_layer(const RotBitmapLayer *rot_bitmap_layer) {
   return &((RotBitmapLayer *)rot_bitmap_layer)->layer;
 }
 
@@ -103,7 +103,7 @@ void rot_bitmap_set_src_ic(RotBitmapLayer *image, GPoint ic) {
   const int32_t vert = MAX(ic.y, bottom);
 
   GRect r = image->layer.frame;
-  const int32_t new_dist = integer_sqrt(horiz*horiz + vert*vert) * 2;
+  const int32_t new_dist = integer_sqrt(horiz * horiz + vert * vert) * 2;
 
   r.size.w = new_dist;
   r.size.h = new_dist;

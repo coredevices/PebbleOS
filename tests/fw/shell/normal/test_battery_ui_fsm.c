@@ -113,12 +113,13 @@ void modal_manager_pop_all_below_priority(ModalPriority priority) {
 void modal_manager_set_min_priority(ModalPriority priority) {
 }
 
-static PreciseBatteryChargeState prv_make_state(uint8_t percent, bool is_charging, bool is_plugged) {
-  PreciseBatteryChargeState state = (PreciseBatteryChargeState) {
-    .charge_percent = ratio32_from_percent(percent),
-    .pct = percent,
-    .is_charging = is_charging,
-    .is_plugged = is_plugged
+static PreciseBatteryChargeState prv_make_state(uint8_t percent, bool is_charging,
+                                                bool is_plugged) {
+  PreciseBatteryChargeState state = (PreciseBatteryChargeState){
+      .charge_percent = ratio32_from_percent(percent),
+      .pct = percent,
+      .is_charging = is_charging,
+      .is_plugged = is_plugged
   };
 
   return state;
@@ -127,7 +128,7 @@ static PreciseBatteryChargeState prv_make_state(uint8_t percent, bool is_chargin
 bool s_is_charging;
 BatteryChargeState battery_get_charge_state(void) {
   // Don't bother setting other fields, they're not used.
-  return (BatteryChargeState) { .is_charging = s_is_charging };
+  return (BatteryChargeState){.is_charging = s_is_charging};
 }
 
 // Setup
@@ -161,12 +162,12 @@ void prv_change_state(PreciseBatteryChargeState new_state) {
 
 static uint8_t prv_warning_percent(BatteryUIWarningLevel level) {
   static const uint8_t configured_percentages[] = {
-    CONFIG_BATTERY_WARNING_FIRST_PERCENT,
-    CONFIG_BATTERY_WARNING_SECOND_PERCENT,
+      CONFIG_BATTERY_WARNING_FIRST_PERCENT,
+      CONFIG_BATTERY_WARNING_SECOND_PERCENT,
   };
-  static const uint8_t default_hours[] = { 18, 12 };
-  return configured_percentages[level] ? configured_percentages[level] :
-                                         battery_curve_get_percent_remaining(default_hours[level]);
+  static const uint8_t default_hours[] = {18, 12};
+  return configured_percentages[level] ? configured_percentages[level]
+                                       : battery_curve_get_percent_remaining(default_hours[level]);
 }
 
 // Tests
@@ -296,10 +297,9 @@ void test_battery_ui_fsm__skip_first_warning_when_next_is_close(void) {
   const uint8_t second_warning_percent = prv_warning_percent(BatteryUIWarningLevel_VeryLow);
   const uint32_t near_second_warning_hours =
       battery_curve_get_hours_remaining(second_warning_percent) + 2;
-  PreciseBatteryChargeState near_second_warning = prv_make_state(
-      battery_curve_get_percent_remaining(near_second_warning_hours), false, false);
-  PreciseBatteryChargeState second_warning =
-      prv_make_state(second_warning_percent, false, false);
+  PreciseBatteryChargeState near_second_warning =
+      prv_make_state(battery_curve_get_percent_remaining(near_second_warning_hours), false, false);
+  PreciseBatteryChargeState second_warning = prv_make_state(second_warning_percent, false, false);
 
   prv_change_state(near_second_warning);
   cl_assert(!s_modal_onscreen);
@@ -315,8 +315,8 @@ void test_battery_ui_fsm__skip_first_warning_when_next_is_close(void) {
 void test_battery_ui_fsm__honor_dnd(void) {
   PreciseBatteryChargeState nop = prv_make_state(50, false, false),
                             charging = prv_make_state(50, true, true),
-                            warning = prv_make_state(
-                                prv_warning_percent(BatteryUIWarningLevel_Low), false, false);
+                            warning = prv_make_state(prv_warning_percent(BatteryUIWarningLevel_Low),
+                                                     false, false);
   s_dnd_on = true;
   prv_change_state(charging);
   cl_assert(s_modal_onscreen && s_modal_charging);

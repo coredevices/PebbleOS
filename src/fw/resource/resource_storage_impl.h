@@ -47,10 +47,9 @@ typedef struct PACKED {
 #define MAX_RESOURCES_FOR_SYSTEM_STORE 768
 #define MANIFEST_SIZE (sizeof(ResourceManifest))
 #define TABLE_ENTRY_SIZE (sizeof(ResTableEntry))
-#define RESOURCE_STORE_METADATA_BYTES \
-    (MANIFEST_SIZE + MAX_RESOURCES_PER_STORE * TABLE_ENTRY_SIZE)
+#define RESOURCE_STORE_METADATA_BYTES (MANIFEST_SIZE + MAX_RESOURCES_PER_STORE * TABLE_ENTRY_SIZE)
 #define SYSTEM_STORE_METADATA_BYTES \
-    (MANIFEST_SIZE + MAX_RESOURCES_FOR_SYSTEM_STORE * TABLE_ENTRY_SIZE)
+  (MANIFEST_SIZE + MAX_RESOURCES_FOR_SYSTEM_STORE * TABLE_ENTRY_SIZE)
 
 void resource_storage_generic_init(void);
 void resource_storage_generic_clear(ResourceStoreEntry *entry);
@@ -65,8 +64,7 @@ uint32_t resource_storage_generic_get_crc(ResourceStoreEntry *entry, uint32_t nu
 uint32_t resource_storage_generic_write(ResourceStoreEntry *entry, uint32_t offset, void *data,
                                         size_t num_bytes);
 ResourceCallbackHandle resource_storage_generic_watch(ResourceStoreEntry *entry,
-                                                      ResourceChangedCallback callback,
-                                                      void* data);
+                                                      ResourceChangedCallback callback, void *data);
 bool resource_storage_generic_unwatch(ResourceCallbackHandle cb_handle);
 
 #define RESOURCE_IMPL(impl) extern const ResourceStoreImplementation impl;

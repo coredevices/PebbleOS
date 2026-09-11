@@ -38,7 +38,7 @@ void test_stringlist__test(void) {
   list->serialized_byte_length = 3;
   list->data[0] = 'a';
   list->data[1] = 'b';
-  list->data[2] = 'c'; // end of data
+  list->data[2] = 'c';  // end of data
   list->data[3] = 'd';
   list->data[4] = '\0';
   cl_assert_equal_i(1, string_list_count(list));
@@ -48,7 +48,7 @@ void test_stringlist__test(void) {
   list->serialized_byte_length = 3;
   list->data[0] = 'a';
   list->data[1] = 'b';
-  list->data[2] = '\0'; // end of data
+  list->data[2] = '\0';  // end of data
   list->data[3] = '\0';
   cl_assert_equal_i(2, string_list_count(list));
   cl_assert_equal_s("ab", string_list_get_at(list, 0));
@@ -59,7 +59,7 @@ void test_stringlist__test(void) {
   list->data[0] = 'a';
   list->data[1] = 'b';
   list->data[2] = '\0';
-  list->data[3] = 'c'; // end of data
+  list->data[3] = 'c';  // end of data
   list->data[4] = '\0';
   cl_assert_equal_i(2, string_list_count(list));
   cl_assert_equal_s("ab", string_list_get_at(list, 0));
@@ -70,7 +70,7 @@ void test_stringlist__test(void) {
   list->data[0] = 'a';
   list->data[1] = 'b';
   list->data[2] = '\0';
-  list->data[3] = '\0'; // end of data
+  list->data[3] = '\0';  // end of data
   list->data[4] = '\0';
   cl_assert_equal_i(3, string_list_count(list));
   cl_assert_equal_s("ab", string_list_get_at(list, 0));
@@ -83,7 +83,7 @@ void test_stringlist__test(void) {
   list->data[0] = '\0';
   list->data[1] = 'b';
   list->data[2] = '\0';
-  list->data[3] = '\0'; // end of data
+  list->data[3] = '\0';  // end of data
   list->data[4] = '\0';
   cl_assert_equal_i(4, string_list_count(list));
   cl_assert_equal_s("", string_list_get_at(list, 0));
@@ -97,7 +97,7 @@ void test_stringlist__test(void) {
   list->serialized_byte_length = 3;
   list->data[0] = 'a';
   list->data[1] = '\0';
-  list->data[2] = 'b'; // end of data
+  list->data[2] = 'b';  // end of data
   list->data[3] = 'c';
   list->data[4] = '\0';
   cl_assert_equal_i(2, string_list_count(list));

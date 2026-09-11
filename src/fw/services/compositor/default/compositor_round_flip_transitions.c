@@ -15,7 +15,7 @@ typedef struct PACKED {
   union {
     struct {
       //! The direction of the animation of the visual elements
-      CompositorTransitionDirection direction:3;
+      CompositorTransitionDirection direction : 3;
     };
     void *data;
   };
@@ -39,12 +39,11 @@ void compositor_round_flip_transitions_flip_animation_update(GContext *ctx,
   if (distance_normalized < flip_distance) {
     const int16_t flip_boundary_from_x = DISP_COLS;
     const int16_t flip_boundary_to_x = display_center.x - (flip_overlap_region_width / 2);
-    const int16_t current_flip_boundary_x = interpolate_int16(distance_normalized,
-                                                              flip_boundary_from_x,
-                                                              flip_boundary_to_x);
+    const int16_t current_flip_boundary_x =
+        interpolate_int16(distance_normalized, flip_boundary_from_x, flip_boundary_to_x);
 
-    const GPoint circle_center = GPoint(current_flip_boundary_x - circle_radius + 1,
-                                        display_center.y);
+    const GPoint circle_center =
+        GPoint(current_flip_boundary_x - circle_radius + 1, display_center.y);
     if (dir == CompositorTransitionDirectionLeft) {
       graphics_fill_radial_internal(ctx, circle_center, circle_radius,
                                     DISP_COLS - circle_center.x + 1, 0, TRIG_MAX_ANGLE);
@@ -54,11 +53,10 @@ void compositor_round_flip_transitions_flip_animation_update(GContext *ctx,
   } else {
     const int16_t flip_boundary_from_x = display_center.x + (flip_overlap_region_width / 2);
     const int16_t flip_boundary_to_x = 0;
-    const int16_t current_flip_boundary_x = interpolate_int16(distance_normalized,
-                                                              flip_boundary_from_x,
-                                                              flip_boundary_to_x);
-    const GPoint circle_center = GPoint(current_flip_boundary_x + circle_radius - 1,
-                                        display_center.y);
+    const int16_t current_flip_boundary_x =
+        interpolate_int16(distance_normalized, flip_boundary_from_x, flip_boundary_to_x);
+    const GPoint circle_center =
+        GPoint(current_flip_boundary_x + circle_radius - 1, display_center.y);
     if (dir == CompositorTransitionDirectionLeft) {
       graphics_fill_circle(ctx, circle_center, circle_radius);
     } else {
@@ -71,9 +69,7 @@ void compositor_round_flip_transitions_flip_animation_update(GContext *ctx,
 static void prv_round_flip_transition_animation_update(GContext *ctx, Animation *animation,
                                                        uint32_t distance_normalized) {
   // Unwrap our animation configuration from the context
-  RoundFlipTransitionAnimationConfiguration config = {
-    .data = animation_get_context(animation)
-  };
+  RoundFlipTransitionAnimationConfiguration config = {.data = animation_get_context(animation)};
 
   // Save a reference to the existing draw implementation
   const GDrawRawImplementation *saved_draw_implementation = ctx->draw_state.draw_implementation;
@@ -83,9 +79,8 @@ static void prv_round_flip_transition_animation_update(GContext *ctx, Animation 
 
   // Note that the flip_lid_color here doesn't matter because we've replaced the draw implementation
   // However, we do have to specify a color that isn't invisible, otherwise nothing will be drawn
-  compositor_round_flip_transitions_flip_animation_update(ctx, distance_normalized,
-                                                          config.direction,
-                                                          GColorBlack /* flip_lid_color */);
+  compositor_round_flip_transitions_flip_animation_update(
+      ctx, distance_normalized, config.direction, GColorBlack /* flip_lid_color */);
 
   // Restore the saved draw implementation
   ctx->draw_state.draw_implementation = saved_draw_implementation;
@@ -95,12 +90,12 @@ static void prv_round_flip_transition_animation_update(GContext *ctx, Animation 
 static void prv_configure_round_flip_transition_animation(Animation *animation,
                                                           CompositorTransitionDirection direction) {
   RoundFlipTransitionAnimationConfiguration config = {
-    .direction = direction,
+      .direction = direction,
   };
 
   animation_set_curve(animation, AnimationCurveLinear);
   animation_set_duration(animation, ROUND_FLIP_ANIMATION_DURATION_MS);
-  animation_set_handlers(animation, (AnimationHandlers) { 0 }, config.data);
+  animation_set_handlers(animation, (AnimationHandlers){0}, config.data);
   // If the visual elements will move to the right, we will just play the left animation backwards
   const bool should_animate_backwards = (direction == CompositorTransitionDirectionRight);
   animation_set_reverse(animation, should_animate_backwards);
@@ -121,14 +116,14 @@ const CompositorTransition *compositor_round_flip_transition_get(bool flip_to_th
 
   if (flip_to_the_right) {
     static const CompositorTransition s_impl = {
-      .init = prv_round_flip_transition_to_launcher_animation_init,
-      .update = prv_round_flip_transition_animation_update,
+        .init = prv_round_flip_transition_to_launcher_animation_init,
+        .update = prv_round_flip_transition_animation_update,
     };
     return &s_impl;
   } else {
     static const CompositorTransition s_impl = {
-      .init = prv_round_flip_transition_from_launcher_animation_init,
-      .update = prv_round_flip_transition_animation_update,
+        .init = prv_round_flip_transition_from_launcher_animation_init,
+        .update = prv_round_flip_transition_animation_update,
     };
     return &s_impl;
   }

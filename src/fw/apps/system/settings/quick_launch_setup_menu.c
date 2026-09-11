@@ -40,12 +40,14 @@ static void prv_handle_quick_launch_confirm(ClickRecognizerRef recognizer, void 
 }
 
 static void prv_push_first_use_dialog(void) {
-  const void *i18n_owner = prv_push_first_use_dialog; // Use this function as the i18n owner
+  const void *i18n_owner = prv_push_first_use_dialog;  // Use this function as the i18n owner
   /// Title for the Quick Launch first use dialog.
   const char *header = i18n_get("Quick Launch", i18n_owner);
   /// Help text for the Quick Launch first use dialog.
-  const char *text = i18n_get("Open favorite apps quickly with a long button press from your "
-                              "watchface.", i18n_owner);
+  const char *text = i18n_get(
+      "Open favorite apps quickly with a long button press from your "
+      "watchface.",
+      i18n_owner);
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
       WINDOW_NAME("Quick Launch First Use"), RESOURCE_ID_SUNNY_DAY_TINY, text, GColorBlack,
       GColorWhite, NULL, RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_handle_quick_launch_confirm);
@@ -73,16 +75,18 @@ static void prv_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* quick_launch_setup_get_app_info(void) {
+const PebbleProcessMd *quick_launch_setup_get_app_info(void) {
   static const PebbleProcessMdSystem s_quick_launch_setup_app = {
-    .common = {
-      .visibility = ProcessVisibilityHidden,
-      .main_func = prv_main,
-      // UUID: 07e0d9cb-8957-4bf7-9d42-aaaaaaaaaaaa
-      .uuid = {0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7,
-               0x9d, 0x42, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa},
-    },
-    .name = "Quick Launch",
+      .common =
+          {
+              .visibility = ProcessVisibilityHidden,
+              .main_func = prv_main,
+              // UUID: 07e0d9cb-8957-4bf7-9d42-aaaaaaaaaaaa
+              .uuid =
+                  {0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7, 0x9d, 0x42, 0xaa, 0xaa, 0xaa,
+                   0xaa, 0xaa, 0xaa},
+          },
+      .name = "Quick Launch",
   };
-  return (const PebbleProcessMd*) &s_quick_launch_setup_app;
+  return (const PebbleProcessMd *)&s_quick_launch_setup_app;
 }

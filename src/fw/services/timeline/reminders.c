@@ -16,9 +16,9 @@
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
 #define INVALID_SNOOZE_DELAY 0
-#define HALF_SNOOZE_END_MARK 30 // Seconds
-#define CONSTANT_SNOOZE_DELAY (10 * SECONDS_PER_MINUTE) // Seconds
-#define CONSTANT_SNOOZE_END_MARK (48 * MINUTES_PER_HOUR * SECONDS_PER_MINUTE) // Seconds
+#define HALF_SNOOZE_END_MARK 30                                                // Seconds
+#define CONSTANT_SNOOZE_DELAY (10 * SECONDS_PER_MINUTE)                        // Seconds
+#define CONSTANT_SNOOZE_END_MARK (48 * MINUTES_PER_HOUR * SECONDS_PER_MINUTE)  // Seconds
 
 static RegularTimerInfo s_reminder_timer;
 static bool s_reminder_armed;
@@ -35,11 +35,11 @@ static void prv_put_reminder_event(ReminderId *reminder_id, ReminderEventType ty
 
   *removed_id = *reminder_id;
   PebbleEvent event = {
-    .type = PEBBLE_REMINDER_EVENT,
-    .reminder = {
-      .type = type,
-      .reminder_id = removed_id,
-    }
+      .type = PEBBLE_REMINDER_EVENT,
+      .reminder = {
+          .type = type,
+          .reminder_id = removed_id,
+      }
   };
   event_put(&event);
 }
@@ -73,8 +73,7 @@ static void prv_timer_callback(void *data) {
   if (s_next_reminder_timestamp > rtc_get_time()) {
     return;
   }
-  if (system_task_add_callback(prv_trigger_reminder_system_task_callback,
-                               &s_next_reminder_id)) {
+  if (system_task_add_callback(prv_trigger_reminder_system_task_callback, &s_next_reminder_id)) {
     s_reminder_armed = false;
   }
 }
@@ -172,8 +171,8 @@ status_t reminders_snooze(Reminder *reminder) {
   }
 
   // Modify reminder timestamp
-  TimelineItem *item = (TimelineItem*) reminder;
-  item->header.timestamp = rtc_get_time() + (time_t) snooze_delay;
+  TimelineItem *item = (TimelineItem *)reminder;
+  item->header.timestamp = rtc_get_time() + (time_t)snooze_delay;
 
   // Unset the reminded status
   item->header.reminded = false;

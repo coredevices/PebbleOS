@@ -15,16 +15,16 @@
 #include "fixtures/load_test_resources.h"
 
 bool property_animation_init(PropertyAnimation *animation,
-                             const PropertyAnimationImplementation *implementation,
-                             void *subject, void *from_value, void *to_value) {
+                             const PropertyAnimationImplementation *implementation, void *subject,
+                             void *from_value, void *to_value) {
   if (!animation) {
     return false;
   }
 
   PropertyAnimationPrivate *animation_private = (PropertyAnimationPrivate *)animation;
   *animation_private = (PropertyAnimationPrivate){
-    .animation.implementation = (const AnimationImplementation *)implementation,
-    .subject = subject,
+      .animation.implementation = (const AnimationImplementation *)implementation,
+      .subject = subject,
   };
 
   if (from_value) {
@@ -108,7 +108,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_timeline_layouts__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);
@@ -141,15 +141,16 @@ static void prv_render_layout(LayoutId layout_id, const AttributeList *attr_list
                               size_t num_down_clicks) {
   PBL_ASSERTN(attr_list);
 
-  TimelineItem item = (TimelineItem) {
-    .header = (CommonTimelineItemHeader) {
-      .layout = layout_id,
-      .type = TimelineItemTypePin,
-    },
-    .attr_list = *attr_list,
+  TimelineItem item = (TimelineItem){
+      .header =
+          (CommonTimelineItemHeader){
+              .layout = layout_id,
+              .type = TimelineItemTypePin,
+          },
+      .attr_list = *attr_list,
   };
 
-  TimelinePinWindow pin_window = (TimelinePinWindow) {};
+  TimelinePinWindow pin_window = (TimelinePinWindow){};
   timeline_pin_window_init(&pin_window, &item, rtc_get_time());
   Window *window = &pin_window.window;
 
@@ -184,7 +185,7 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
     return;
   }
 
-  AttributeList attr_list = (AttributeList) {0};
+  AttributeList attr_list = (AttributeList){0};
   if (config->title) {
     attribute_list_add_cstring(&attr_list, AttributeIdTitle, config->title);
   }
@@ -213,13 +214,13 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
 //////////////////////
 
 void test_timeline_layouts__generic(void) {
-  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig) {
-    .layout_id = LayoutIdGeneric,
-    .title = "Delfina Pizza",
-    .subtitle = "Open Table Reservation",
-    .location_name = "145 Williams\nJohn Ave, Palo Alto",
-    .body = "Body message",
-    .icon_timeline_res_id = TIMELINE_RESOURCE_DINNER_RESERVATION,
+  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig){
+      .layout_id = LayoutIdGeneric,
+      .title = "Delfina Pizza",
+      .subtitle = "Open Table Reservation",
+      .location_name = "145 Williams\nJohn Ave, Palo Alto",
+      .body = "Body message",
+      .icon_timeline_res_id = TIMELINE_RESOURCE_DINNER_RESERVATION,
   };
 
   prv_construct_and_render_layout(&config, 0);
@@ -236,14 +237,14 @@ void test_timeline_layouts__generic(void) {
 }
 
 void test_timeline_layouts__weather(void) {
-  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig) {
-    .layout_id = LayoutIdWeather,
-    .title = "The Greatest Sunrise Ever",
-    .subtitle = "90°/60°",
-    .location_name = "Redwood City",
-    .body = "A clear sky. Low around 60F.",
-    .icon_timeline_res_id = TIMELINE_RESOURCE_PARTLY_CLOUDY,
-    .weather_time_type = WeatherTimeType_Pin,
+  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig){
+      .layout_id = LayoutIdWeather,
+      .title = "The Greatest Sunrise Ever",
+      .subtitle = "90°/60°",
+      .location_name = "Redwood City",
+      .body = "A clear sky. Low around 60F.",
+      .icon_timeline_res_id = TIMELINE_RESOURCE_PARTLY_CLOUDY,
+      .weather_time_type = WeatherTimeType_Pin,
   };
 
   prv_construct_and_render_layout(&config, 0);

@@ -49,15 +49,14 @@ static bool prv_fwd_prepare(AppMessageReceiver *rcv, CommSession *session,
   // Try to set up a forward to the default system receiver that will send a nack back, based
   // on the header of the message:
   static const PebbleProtocolEndpoint kernel_nack_endpoint = {
-    .endpoint_id = APP_MESSAGE_ENDPOINT_ID,
-    .handler = app_message_app_protocol_system_nack_callback,
-    .access_mask = PebbleProtocolAccessAny,
-    .receiver_imp = &g_default_kernel_receiver_implementation,
-    .receiver_opt = NULL,
+      .endpoint_id = APP_MESSAGE_ENDPOINT_ID,
+      .handler = app_message_app_protocol_system_nack_callback,
+      .access_mask = PebbleProtocolAccessAny,
+      .receiver_imp = &g_default_kernel_receiver_implementation,
+      .receiver_opt = NULL,
   };
-  Receiver *kernel_receiver = g_default_kernel_receiver_implementation.prepare(session,
-                                           &kernel_nack_endpoint,
-                                           header_bytes_remaining);
+  Receiver *kernel_receiver = g_default_kernel_receiver_implementation.prepare(
+      session, &kernel_nack_endpoint, header_bytes_remaining);
   if (!kernel_receiver) {
     PBL_LOG_ERR("System receiver wasn't able to prepare");
     return false;
@@ -110,8 +109,8 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
     app_install_mark_prioritized(app_id, true /* can_expire */);
 
     // Write the header, this info is needed for the app to handle the message and reply:
-    const AppMessageReceiverHeader header = (const AppMessageReceiverHeader) {
-      .session = session,
+    const AppMessageReceiverHeader header = (const AppMessageReceiverHeader){
+        .session = session,
     };
     prv_write((const uint8_t *)&header, sizeof(header));
   }
@@ -129,8 +128,8 @@ static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *da
 
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = MIN(rcv->header_bytes_remaining, length);
-    g_default_kernel_receiver_implementation.write(rcv->kernel_receiver,
-                                                   data, header_bytes_to_write);
+    g_default_kernel_receiver_implementation.write(rcv->kernel_receiver, data,
+                                                   header_bytes_to_write);
     rcv->header_bytes_remaining -= header_bytes_to_write;
   }
 
@@ -174,8 +173,8 @@ static void prv_app_message_receiver_cleanup(Receiver *receiver) {
 }
 
 const ReceiverImplementation g_app_message_receiver_implementation = {
-  .prepare = prv_app_message_receiver_prepare,
-  .write = prv_app_message_receiver_write,
-  .finish = prv_app_message_receiver_finish,
-  .cleanup = prv_app_message_receiver_cleanup,
+    .prepare = prv_app_message_receiver_prepare,
+    .write = prv_app_message_receiver_write,
+    .finish = prv_app_message_receiver_finish,
+    .cleanup = prv_app_message_receiver_cleanup,
 };

@@ -41,20 +41,34 @@
 // window/layer collaborators to link.
 
 static bool s_nav_enabled = true;
-bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
-bool sys_touch_app_nav_active(void) { return false; }
+bool sys_touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
+bool sys_touch_app_nav_active(void) {
+  return false;
+}
 
 static TouchNavState s_touch_nav_state;
-struct TouchNavState *app_state_get_touch_nav_state(void) { return &s_touch_nav_state; }
-struct TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_touch_nav_state; }
+struct TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
+struct TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
 
 static Layer s_root_layer;
 static RecognizerManager s_recognizer_manager;
 static RecognizerList s_global_list;
 
-struct Layer *window_get_root_layer(const Window *window) { return &s_root_layer; }
-RecognizerList *window_get_recognizer_list(Window *window) { return NULL; }
-RecognizerManager *window_get_recognizer_manager(Window *window) { return &s_recognizer_manager; }
+struct Layer *window_get_root_layer(const Window *window) {
+  return &s_root_layer;
+}
+RecognizerList *window_get_recognizer_list(Window *window) {
+  return NULL;
+}
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return &s_recognizer_manager;
+}
 
 static TouchNavOps s_bridge_ops;
 
@@ -72,16 +86,27 @@ static void prv_touch_nav_setup(void) {
 ////////////////////////
 
 static GContext s_gcontext;
-GContext *graphics_context_get_current_context(void) { return &s_gcontext; }
+GContext *graphics_context_get_current_context(void) {
+  return &s_gcontext;
+}
 
-GDrawState graphics_context_get_drawing_state(GContext *ctx) { return (GDrawState){}; }
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
-void graphics_context_set_fill_color(GContext *ctx, GColor color) {}
-void graphics_context_set_stroke_color(GContext *ctx, GColor color) {}
-void graphics_context_set_text_color(GContext *ctx, GColor color) {}
-void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {}
-void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {}
-void graphics_draw_horizontal_line_dotted(GContext *ctx, GPoint p, uint16_t length) {}
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
+  return (GDrawState){};
+}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_stroke_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_text_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
+}
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+}
+void graphics_draw_horizontal_line_dotted(GContext *ctx, GPoint p, uint16_t length) {
+}
 
 // Every item lays out as a single stub-font line.
 uint16_t graphics_text_layout_get_text_height(GContext *ctx, const char *text, GFont const font,
@@ -92,8 +117,7 @@ uint16_t graphics_text_layout_get_text_height(GContext *ctx, const char *text, G
 }
 
 GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GFont const font,
-                                             const GRect box,
-                                             const GTextOverflowMode overflow_mode,
+                                             const GRect box, const GTextOverflowMode overflow_mode,
                                              const GTextAlignment alignment,
                                              GTextLayoutCacheRef layout) {
   return GSize(10, FONT_HEIGHT);
@@ -102,30 +126,47 @@ GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GF
 void menu_cell_basic_draw_custom(GContext *ctx, const Layer *cell_layer, GFont const title_font,
                                  const char *title, GFont const value_font, const char *value,
                                  GFont const subtitle_font, const char *subtitle, GBitmap *icon,
-                                 bool icon_on_right, GTextOverflowMode overflow_mode) {}
-int16_t menu_cell_basic_horizontal_inset(void) { return 8; }
-int16_t menu_cell_small_cell_height(void) { return 24; }
-int16_t menu_cell_basic_cell_height(void) { return 44; }
+                                 bool icon_on_right, GTextOverflowMode overflow_mode) {
+}
+int16_t menu_cell_basic_horizontal_inset(void) {
+  return 8;
+}
+int16_t menu_cell_small_cell_height(void) {
+  return 24;
+}
+int16_t menu_cell_basic_cell_height(void) {
+  return 44;
+}
 
 bool gbitmap_init_with_resource_system(GBitmap *bitmap, ResAppNum app_num, uint32_t resource_id) {
   return true;
 }
-void gbitmap_deinit(GBitmap *bitmap) {}
+void gbitmap_deinit(GBitmap *bitmap) {
+}
 
-Layer *inverter_layer_get_layer(InverterLayer *inverter_layer) { return &inverter_layer->layer; }
-void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {}
+Layer *inverter_layer_get_layer(InverterLayer *inverter_layer) {
+  return &inverter_layer->layer;
+}
+void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {
+}
 
 void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
-                                 ClickHandler up_handler) {}
-void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {}
+                                 ClickHandler up_handler) {
+}
+void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {
+}
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
-                                             ClickHandler handler) {}
+                                             ClickHandler handler) {
+}
 void window_set_click_config_provider_with_context(Window *window,
                                                    ClickConfigProvider click_config_provider,
-                                                   void *context) {}
-void window_set_click_context(ButtonId button_id, void *context) {}
+                                                   void *context) {
+}
+void window_set_click_context(ButtonId button_id, void *context) {
+}
 
-void content_indicator_destroy_for_scroll_layer(ScrollLayer *scroll_layer) {}
+void content_indicator_destroy_for_scroll_layer(ScrollLayer *scroll_layer) {
+}
 
 static ContentIndicator s_content_indicator;
 ContentIndicator *content_indicator_get_for_scroll_layer(ScrollLayer *scroll_layer) {
@@ -135,7 +176,8 @@ ContentIndicator *content_indicator_get_or_create_for_scroll_layer(ScrollLayer *
   return &s_content_indicator;
 }
 void content_indicator_set_content_available(ContentIndicator *content_indicator,
-                                             ContentIndicatorDirection direction, bool available) {}
+                                             ContentIndicatorDirection direction, bool available) {
+}
 
 // Observation
 ////////////////////////
@@ -156,17 +198,14 @@ static void prv_record_selection_changed(const ActionMenuItem *item, void *conte
 }
 
 static const ActionMenuItem s_wide_items[] = {
-  { .label = "Dismiss", .is_leaf = 1 },
-  { .label = "Reply", .is_leaf = 1 },
-  { .label = "Mark as Read", .is_leaf = 1 },
+    {.label = "Dismiss", .is_leaf = 1},
+    {.label = "Reply", .is_leaf = 1},
+    {.label = "Mark as Read", .is_leaf = 1},
 };
 
 static const ActionMenuItem s_short_items[] = {
-  { .label = "A", .is_leaf = 1 },
-  { .label = "B", .is_leaf = 1 },
-  { .label = "C", .is_leaf = 1 },
-  { .label = "D", .is_leaf = 1 },
-  { .label = "E", .is_leaf = 1 },
+    {.label = "A", .is_leaf = 1}, {.label = "B", .is_leaf = 1}, {.label = "C", .is_leaf = 1},
+    {.label = "D", .is_leaf = 1}, {.label = "E", .is_leaf = 1},
 };
 
 static ActionMenuLayer s_aml;
@@ -197,10 +236,12 @@ static void prv_init_aml_with_wide_items(void) {
   // action_menu_layer_init expects zeroed memory (the firmware always zallocs an AML).
   s_aml = (ActionMenuLayer){};
   action_menu_layer_init(&s_aml, &GRect(0, 0, 144, 168));
-  action_menu_layer_set_callbacks(&s_aml, (ActionMenuLayerCallbacks){
-    .select = prv_record_select,
-    .selection_changed = prv_record_selection_changed,
-  }, NULL);
+  action_menu_layer_set_callbacks(&s_aml,
+                                  (ActionMenuLayerCallbacks){
+                                      .select = prv_record_select,
+                                      .selection_changed = prv_record_selection_changed,
+                                  },
+                                  NULL);
   action_menu_layer_set_items(&s_aml, s_wide_items, ARRAY_LENGTH(s_wide_items), 0, 0);
   prv_reset_counters();
 }
@@ -255,10 +296,12 @@ void test_action_menu_layer__tap_other_item_selects_and_activates(void) {
 void test_action_menu_layer__tap_short_row_adopts_first_column(void) {
   s_aml = (ActionMenuLayer){};
   action_menu_layer_init(&s_aml, &GRect(0, 0, 144, 168));
-  action_menu_layer_set_callbacks(&s_aml, (ActionMenuLayerCallbacks){
-    .select = prv_record_select,
-    .selection_changed = prv_record_selection_changed,
-  }, NULL);
+  action_menu_layer_set_callbacks(&s_aml,
+                                  (ActionMenuLayerCallbacks){
+                                      .select = prv_record_select,
+                                      .selection_changed = prv_record_selection_changed,
+                                  },
+                                  NULL);
   // 5 items in columns of 3: row 0 = items 0-2, row 1 = items 3-4.
   action_menu_layer_set_short_items(&s_aml, s_short_items, ARRAY_LENGTH(s_short_items), 0);
   prv_reset_counters();

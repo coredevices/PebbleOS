@@ -28,12 +28,13 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
   uint8_t buf2[buf_size];
   attributes_actions_serialize_payload(attr_list, action_group, buf1, buf_size);
   attributes_actions_serialize_payload(s_expected_attributes, s_expected_actions, buf2, buf_size);
-  cl_assert_equal_m(buf1, buf2, attributes_actions_get_serialized_payload_size(s_expected_attributes, s_expected_actions));
+  cl_assert_equal_m(
+      buf1, buf2,
+      attributes_actions_get_serialized_payload_size(s_expected_attributes, s_expected_actions));
 
   s_performed_store = true;
   return S_SUCCESS;
 }
-
 
 static uint32_t s_expected_uid = 0;
 static bool s_performed_dismiss = false;
@@ -71,7 +72,6 @@ void test_nexmo__is_reuath_sms(void) {
   expected_message->length = strlen(valid_message);
   memcpy(expected_message->value, valid_message, strlen(valid_message));
 
-
   uint8_t bad_app_id_buf[128];
   ANCSAttribute *bad_app_id = (ANCSAttribute *)&bad_app_id_buf;
   bad_app_id->length = strlen(IOS_MAIL_APP_ID);
@@ -82,7 +82,6 @@ void test_nexmo__is_reuath_sms(void) {
   ANCSAttribute *bad_message = (ANCSAttribute *)&bad_message_buf;
   bad_message->length = strlen(bad_string);
   memcpy(bad_message->value, bad_string, strlen(bad_string));
-
 
   cl_assert(nexmo_is_reauth_sms(expected_app_id, expected_message));
   cl_assert(!nexmo_is_reauth_sms(bad_app_id, expected_message));
@@ -114,25 +113,25 @@ void test_nexmo__handle_reuath_sms(void) {
 
   // Existing prefs
   iOSNotifPrefs existing_prefs = {
-    .attr_list = {
-      .num_attributes = 3,
-      .attributes = (Attribute[]) {
-        { .id = AttributeIdTitle, .cstring = "Title" },
-        { .id = AttributeIdBody, .cstring = "Body" },
-        { .id = AttributeIdAppName, .cstring = "Awesome" },
+      .attr_list = {
+          .num_attributes = 3,
+          .attributes = (Attribute[]){
+              {.id = AttributeIdTitle, .cstring = "Title"},
+              {.id = AttributeIdBody, .cstring = "Body"},
+              {.id = AttributeIdAppName, .cstring = "Awesome"},
+          },
       },
-    },
   };
 
   // Make sure that the prefs we store are the existing ones + the reauth msg
   AttributeList expected_attr_list = {
-    .num_attributes = 4,
-    .attributes = (Attribute[]) {
-      { .id = AttributeIdTitle, .cstring = "Title" },
-      { .id = AttributeIdBody, .cstring = "Body" },
-      { .id = AttributeIdAppName, .cstring = "Awesome" },
-      { .id = AttributeIdAuthCode, .cstring = valid_message },
-    },
+      .num_attributes = 4,
+      .attributes = (Attribute[]){
+          {.id = AttributeIdTitle, .cstring = "Title"},
+          {.id = AttributeIdBody, .cstring = "Body"},
+          {.id = AttributeIdAppName, .cstring = "Awesome"},
+          {.id = AttributeIdAuthCode, .cstring = valid_message},
+      },
   };
   s_expected_attributes = &expected_attr_list;
 

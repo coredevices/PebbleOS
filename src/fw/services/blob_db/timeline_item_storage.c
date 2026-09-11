@@ -25,20 +25,16 @@ static RtcTicks prv_storage_lock(TimelineItemStorage *storage, const char *op) {
   RtcTicks after = rtc_get_ticks();
   uint32_t wait_ms = (uint32_t)(((after - before) * 1000) / RTC_TICKS_HZ);
   if (wait_ms >= FIRM_1649_MUTEX_WARN_MS) {
-    PBL_LOG_WRN("FIRM-1649: %s waited %"PRIu32"ms for %s mutex",
-                op, wait_ms, storage->name);
+    PBL_LOG_WRN("FIRM-1649: %s waited %" PRIu32 "ms for %s mutex", op, wait_ms, storage->name);
   }
   return after;
 }
 
-static void prv_storage_unlock(TimelineItemStorage *storage, RtcTicks lock_ticks,
-                               const char *op) {
-  uint32_t hold_ms =
-      (uint32_t)(((rtc_get_ticks() - lock_ticks) * 1000) / RTC_TICKS_HZ);
+static void prv_storage_unlock(TimelineItemStorage *storage, RtcTicks lock_ticks, const char *op) {
+  uint32_t hold_ms = (uint32_t)(((rtc_get_ticks() - lock_ticks) * 1000) / RTC_TICKS_HZ);
   pbl_mutex_unlock(&storage->mutex);
   if (hold_ms >= FIRM_1649_MUTEX_WARN_MS) {
-    PBL_LOG_WRN("FIRM-1649: %s held %s mutex for %"PRIu32"ms",
-                op, storage->name, hold_ms);
+    PBL_LOG_WRN("FIRM-1649: %s held %s mutex for %" PRIu32 "ms", op, storage->name, hold_ms);
   }
 }
 
@@ -67,13 +63,11 @@ typedef struct {
 } AnyInfo;
 
 // callback for settings_file_each that finds the first item by timestamp
-static bool prv_each_first_item(SettingsFile *file, SettingsRecordInfo *info,
-  void *context) {
+static bool prv_each_first_item(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) ||
-      info->key_len != UUID_SIZE) { // deleted or malformed values
+      info->key_len != UUID_SIZE) {  // deleted or malformed values
     if (info->key_len != UUID_SIZE) {
-      PBL_LOG_WRN("Found reminder with invalid key size %d; ignoring.",
-        info->key_len);
+      PBL_LOG_WRN("Found reminder with invalid key size %d; ignoring.", info->key_len);
     }
     return true;
   }
@@ -93,34 +87,30 @@ static bool prv_each_first_item(SettingsFile *file, SettingsRecordInfo *info,
     filtered_out = true;
   }
 
-  if (!filtered_out &&
-      (timestamp < next_info->best || !next_info->found) &&
+  if (!filtered_out && (timestamp < next_info->best || !next_info->found) &&
       (timestamp >= (int)(next_info->current - next_info->max_age))) {
     next_info->found = true;
     next_info->best = timestamp;
     info->get_key(file, (uint8_t *)&next_info->id, sizeof(Uuid));
   }
 
-  return true; // continue iterating
+  return true;  // continue iterating
 }
 
 static bool prv_each_any_item(SettingsFile *file, SettingsRecordInfo *info, void *context) {
-  if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) ||
-      info->key_len != UUID_SIZE) {
-    return true; // continue looking
+  if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) || info->key_len != UUID_SIZE) {
+    return true;  // continue looking
   }
 
   AnyInfo *anyinfo = context;
   anyinfo->empty = false;
 
-  return false; // we found a valid entry
+  return false;  // we found a valid entry
 }
 
-static bool prv_each_find_children(SettingsFile *file, SettingsRecordInfo *info,
-  void *context) {
+static bool prv_each_find_children(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   FindChildrenInfo *find_info = (FindChildrenInfo *)context;
-  if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) ||
-      info->key_len != UUID_SIZE) {
+  if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) || info->key_len != UUID_SIZE) {
     // malformed values; deleted values have their lengths set to 0
     if (info->key_len != UUID_SIZE) {
       PBL_LOG_WRN("Found malformed item with invalid key/val sizes; ignoring.");
@@ -150,7 +140,7 @@ bool timeline_item_storage_is_empty(TimelineItemStorage *storage) {
 
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
-  AnyInfo any_info = { .empty = true };
+  AnyInfo any_info = {.empty = true};
   status_t status = settings_file_each(&storage->file, prv_each_any_item, &any_info);
   if (status) {
     goto cleanup;
@@ -164,7 +154,7 @@ cleanup:
 }
 
 status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_out,
-    TimelineItemStorageFilterCallback filter_cb) {
+                                         TimelineItemStorageFilterCallback filter_cb) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   NextInfo next_info = {0};
@@ -190,14 +180,13 @@ cleanup:
   return rv;
 }
 
-
 bool timeline_item_storage_exists_with_parent(TimelineItemStorage *storage, const Uuid *parent_id) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   FindChildrenInfo info = {
-    .parent_id = *parent_id,
-    .num_children = 0,
-    .find_all = false,
+      .parent_id = *parent_id,
+      .num_children = 0,
+      .find_all = false,
   };
   status_t rv = settings_file_each(&storage->file, prv_each_find_children, &info);
   if (rv) {
@@ -216,15 +205,14 @@ cleanup:
 }
 
 status_t timeline_item_storage_delete_with_parent(
-    TimelineItemStorage *storage,
-    const Uuid *parent_id,
+    TimelineItemStorage *storage, const Uuid *parent_id,
     TimelineItemStorageChildDeleteCallback child_delete_cb) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   FindChildrenInfo info = {
-    .parent_id = *parent_id,
-    .num_children = 0,
-    .find_all = true,
+      .parent_id = *parent_id,
+      .num_children = 0,
+      .find_all = true,
   };
   status_t rv = settings_file_each(&storage->file, prv_each_find_children, &info);
   if (rv) {
@@ -251,26 +239,25 @@ cleanup:
 
 //! Caution: CommonTimelineItemHeader .flags & .status are stored inverted and not auto-restored
 status_t timeline_item_storage_each(TimelineItemStorage *storage,
-    TimelineItemStorageEachCallback each, void *data) {
+                                    TimelineItemStorageEachCallback each, void *data) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
   status_t rv = settings_file_each(&storage->file, each, data);
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
-void timeline_item_storage_init(TimelineItemStorage *storage,
-    char *filename, uint32_t max_size, uint32_t max_age) {
+void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, uint32_t max_size,
+                                uint32_t max_age) {
   *storage = (TimelineItemStorage){
-    .name = filename,
-    .max_size = max_size,
-    .max_item_age = max_age,
+      .name = filename,
+      .max_size = max_size,
+      .max_item_age = max_age,
   };
   pbl_mutex_init(&storage->mutex);
-  status_t rv = settings_file_open_growable(&storage->file, storage->name,
-                                            storage->max_size, KiBYTES(8));
+  status_t rv =
+      settings_file_open_growable(&storage->file, storage->name, storage->max_size, KiBYTES(8));
   if (FAILED(rv)) {
-    PBL_LOG_ERR("Unable to create settings file %s, rv = %"PRId32 "!",
-            filename, rv);
+    PBL_LOG_ERR("Unable to create settings file %s, rv = %" PRId32 "!", filename, rv);
   }
 }
 
@@ -285,10 +272,9 @@ status_t timeline_item_storage_compact(TimelineItemStorage *storage) {
   return rv;
 }
 
-status_t timeline_item_storage_insert(TimelineItemStorage *storage,
-    const uint8_t *key, int key_len, const uint8_t *val, int val_len, bool mark_as_synced) {
-  if (key_len != UUID_SIZE ||
-      val_len > SETTINGS_VAL_MAX_LEN ||
+status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_t *key, int key_len,
+                                      const uint8_t *val, int val_len, bool mark_as_synced) {
+  if (key_len != UUID_SIZE || val_len > SETTINGS_VAL_MAX_LEN ||
       val_len < (int)sizeof(SerializedTimelineItemHeader)) {
     return E_INVALID_ARGUMENT;
   }
@@ -305,8 +291,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage,
   time_t timestamp = timeline_item_get_tz_timestamp(&hdr->common);
   time_t end_timestamp = timestamp + hdr->common.duration * SECONDS_PER_MINUTE;
   if (end_timestamp < (int)(now - storage->max_item_age)) {
-    PBL_LOG_WRN("Rejecting stale timeline item %ld seconds old",
-      now - timestamp);
+    PBL_LOG_WRN("Rejecting stale timeline item %ld seconds old", now - timestamp);
     return E_INVALID_OPERATION;
   }
 
@@ -330,8 +315,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage,
   return rv;
 }
 
-int timeline_item_storage_get_len(TimelineItemStorage *storage,
-    const uint8_t *key, int key_len) {
+int timeline_item_storage_get_len(TimelineItemStorage *storage, const uint8_t *key, int key_len) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   status_t rv = settings_file_get_len(&storage->file, key, key_len);
@@ -340,8 +324,8 @@ int timeline_item_storage_get_len(TimelineItemStorage *storage,
   return rv;
 }
 
-status_t timeline_item_storage_read(TimelineItemStorage *storage,
-    const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
+status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t *key, int key_len,
+                                    uint8_t *val_out, int val_len) {
   if (key_len != UUID_SIZE) {
     return E_INVALID_ARGUMENT;
   }
@@ -376,8 +360,8 @@ status_t timeline_item_storage_get_from_settings_record(SettingsFile *file,
   return rv;
 }
 
-status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage,
-    const uint8_t *key, int key_len, uint8_t status) {
+status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage, const uint8_t *key,
+                                               int key_len, uint8_t status) {
   if (key_len != UUID_SIZE) {
     return E_INVALID_ARGUMENT;
   }
@@ -393,8 +377,8 @@ status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage,
   return rv;
 }
 
-status_t timeline_item_storage_delete(TimelineItemStorage *storage,
-  const uint8_t *key, int key_len) {
+status_t timeline_item_storage_delete(TimelineItemStorage *storage, const uint8_t *key,
+                                      int key_len) {
   if (key_len != UUID_SIZE) {
     return E_INVALID_ARGUMENT;
   }
@@ -407,8 +391,8 @@ status_t timeline_item_storage_delete(TimelineItemStorage *storage,
   return rv;
 }
 
-status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage,
-                                           const uint8_t *key, int key_len) {
+status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage, const uint8_t *key,
+                                           int key_len) {
   if (key_len == 0) {
     return E_INVALID_ARGUMENT;
   }
@@ -421,9 +405,7 @@ status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage,
   return rv;
 }
 
-static void prv_flush_rewrite_cb(SettingsFile *old,
-                                 SettingsFile *new,
-                                 SettingsRecordInfo *info,
+static void prv_flush_rewrite_cb(SettingsFile *old, SettingsFile *new, SettingsRecordInfo *info,
                                  void *context) {
   if ((unsigned)info->key_len != sizeof(Uuid) ||
       (unsigned)info->val_len < sizeof(SerializedTimelineItemHeader)) {

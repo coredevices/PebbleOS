@@ -78,8 +78,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   const int read_size = list_length * sizeof(AppInstallId);
   int rd_sz;
   if ((rd_sz = pfs_read(fd, (uint8_t *)storage->id_list, read_size)) != read_size) {
-    PBL_LOG_ERR("Corrupted ordered install_id list (Rd %d of %d bytes)",
-        rd_sz, read_size);
+    PBL_LOG_ERR("Corrupted ordered install_id list (Rd %d of %d bytes)", rd_sz, read_size);
     app_free(storage);
     storage = NULL;
     delete_file = true;
@@ -153,18 +152,17 @@ int prv_uuid_search(const Uuid *find_me, const Uuid *uuid_list, uint8_t count) {
 // if an entry appears in the UUID list, place it's install_id in the correct index of
 // storage->id_list
 bool prv_enumerate_apps(AppInstallEntry *entry, void *data) {
-  UuidTranslateData *my_data = (UuidTranslateData *) data;
+  UuidTranslateData *my_data = (UuidTranslateData *)data;
 
   int idx = prv_uuid_search(&entry->uuid, my_data->uuid_list, my_data->count);
 
   if (idx < 0) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
   my_data->storage->id_list[idx] = entry->install_id;
-  return true; // continue iterating
+  return true;  // continue iterating
 }
-
 
 //! Should be called on system task.
 void write_uuid_list_to_file(const Uuid *uuid_list, uint8_t count) {
@@ -175,9 +173,9 @@ void write_uuid_list_to_file(const Uuid *uuid_list, uint8_t count) {
   memset(storage, 0, storage_size);
 
   UuidTranslateData data = {
-    .uuid_list = uuid_list,
-    .count = count,
-    .storage = storage,
+      .uuid_list = uuid_list,
+      .count = count,
+      .storage = storage,
   };
 
   // go through all install entries

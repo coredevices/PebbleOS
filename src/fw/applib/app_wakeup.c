@@ -48,7 +48,7 @@ void app_wakeup_cancel_all(void) {
 bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie) {
   WakeupInfo wakeup_info;
   sys_process_get_wakeup_info(&wakeup_info);
-  //If the id is invalid, return false
+  // If the id is invalid, return false
   if (wakeup_info.wakeup_id <= 0) {
     return false;
   }

@@ -24,7 +24,8 @@
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
 
-void kernel_free(void *p) {}
+void kernel_free(void *p) {
+}
 
 // Declared in syscall/syscall.h; in the test build DEFINE_SYSCALL is a plain function.
 void sys_touch_set_raw_subscribed(bool subscribed);

@@ -6,17 +6,15 @@
 
 #include <cmsis_core.h>
 
-
 // ------------------------------------------------------------------------------------
 // Find node by ptr
-static bool prv_ptr_list_filter(ListNode* list_node, void* data) {
-  ProfilerNode* node = (ProfilerNode*)list_node;
+static bool prv_ptr_list_filter(ListNode *list_node, void *data) {
+  ProfilerNode *node = (ProfilerNode *)list_node;
   return (node == data);
 }
 
-
 ProfilerNode *prv_find_node(ProfilerNode *find_node) {
-  ListNode* node = list_find(g_profiler.nodes, prv_ptr_list_filter, (void*)find_node);
+  ListNode *node = list_find(g_profiler.nodes, prv_ptr_list_filter, (void *)find_node);
 
   return (ProfilerNode *)node;
 }
@@ -50,7 +48,6 @@ DEFINE_SYSCALL(void, sys_profiler_node_start, ProfilerNode *node) {
 }
 
 DEFINE_SYSCALL(void, sys_profiler_node_stop, ProfilerNode *node) {
-
   // Capture the cycle count as soon as possible, before we validate the node argument
   uint32_t dwt_cyc_cnt = DWT->CYCCNT;
 

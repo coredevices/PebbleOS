@@ -14,8 +14,8 @@
 
 #define SPEAKER_MAX_STREAM_WRITE 8192
 
-DEFINE_SYSCALL(bool, sys_speaker_play_note_seq, const SpeakerNote *notes,
-               uint32_t num_notes, uint8_t priority, uint8_t volume) {
+DEFINE_SYSCALL(bool, sys_speaker_play_note_seq, const SpeakerNote *notes, uint32_t num_notes,
+               uint8_t priority, uint8_t volume) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (num_notes > SPEAKER_MAX_NOTES) {
       syscall_failed();
@@ -31,13 +31,11 @@ DEFINE_SYSCALL(bool, sys_speaker_play_note_seq, const SpeakerNote *notes,
   PebbleTask task = pebble_task_get_current();
   speaker_service_set_owner_task(task);
 
-  return speaker_service_play_note_seq(notes, num_notes,
-                                       (SpeakerPriority)priority, volume);
+  return speaker_service_play_note_seq(notes, num_notes, (SpeakerPriority)priority, volume);
 }
 
-DEFINE_SYSCALL(bool, sys_speaker_play_tone, uint16_t freq_hz,
-               uint16_t duration_ms, uint8_t waveform, uint8_t velocity,
-               uint8_t priority, uint8_t volume) {
+DEFINE_SYSCALL(bool, sys_speaker_play_tone, uint16_t freq_hz, uint16_t duration_ms,
+               uint8_t waveform, uint8_t velocity, uint8_t priority, uint8_t volume) {
   if (priority > SpeakerPriorityCritical) {
     priority = SpeakerPriorityApp;
   }
@@ -57,8 +55,8 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tone, uint16_t freq_hz,
                                    (SpeakerPriority)priority, volume);
 }
 
-DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks,
-               uint32_t num_tracks, uint8_t priority, uint8_t volume) {
+DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks, uint32_t num_tracks,
+               uint8_t priority, uint8_t volume) {
   // We need to defend against TOCTOU: speaker_service_play_tracks() re-reads
   // each track's num_notes and sample->num_bytes from user memory (e.g. as the
   // size argument to kernel_malloc/memcpy that copy the user buffers into
@@ -110,12 +108,10 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks,
   PebbleTask task = pebble_task_get_current();
   speaker_service_set_owner_task(task);
 
-  return speaker_service_play_tracks(tracks_to_play, num_tracks,
-                                     (SpeakerPriority)priority, volume);
+  return speaker_service_play_tracks(tracks_to_play, num_tracks, (SpeakerPriority)priority, volume);
 }
 
-DEFINE_SYSCALL(bool, sys_speaker_stream_open, uint8_t priority, uint8_t volume,
-               uint8_t format) {
+DEFINE_SYSCALL(bool, sys_speaker_stream_open, uint8_t priority, uint8_t volume, uint8_t format) {
   if (priority > SpeakerPriorityCritical) {
     priority = SpeakerPriorityApp;
   }
@@ -127,12 +123,10 @@ DEFINE_SYSCALL(bool, sys_speaker_stream_open, uint8_t priority, uint8_t volume,
   PebbleTask task = pebble_task_get_current();
   speaker_service_set_owner_task(task);
 
-  return speaker_service_stream_open((SpeakerPriority)priority, volume,
-                                     (SpeakerPcmFormat)format);
+  return speaker_service_stream_open((SpeakerPriority)priority, volume, (SpeakerPcmFormat)format);
 }
 
-DEFINE_SYSCALL(uint32_t, sys_speaker_stream_write, const void *data,
-               uint32_t num_bytes) {
+DEFINE_SYSCALL(uint32_t, sys_speaker_stream_write, const void *data, uint32_t num_bytes) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (num_bytes > 8192) {
       syscall_failed();

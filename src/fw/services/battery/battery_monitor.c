@@ -40,11 +40,11 @@ static void prv_enter_standby(void);
 static void prv_exit_critical(void);
 
 static const PowerState power_states[] = {
-  [PowerStateGood] = { 0 },
-  [PowerStateLowPower] = { .enter = prv_enter_lpm, .exit = prv_exit_lpm },
-  [PowerStateCritical] = { .enter = prv_begin_standby_timer, .exit = prv_exit_critical },
-  [PowerStatePluggedIn] = { 0 },
-  [PowerStateStandby] = { .enter = prv_enter_standby }
+    [PowerStateGood] = {0},
+    [PowerStateLowPower] = {.enter = prv_enter_lpm, .exit = prv_exit_lpm},
+    [PowerStateCritical] = {.enter = prv_begin_standby_timer, .exit = prv_exit_critical},
+    [PowerStatePluggedIn] = {0},
+    [PowerStateStandby] = {.enter = prv_enter_standby}
 };
 
 ////////////////////////
@@ -102,7 +102,7 @@ static void prv_exit_lpm(void) {
   }
 }
 
-static void prv_standby_timer_callback(void* data) {
+static void prv_standby_timer_callback(void *data) {
   // FIXME This is so broken: battery_state_force_update schedules a new timer callback to execute
   // immediately, which then pends a background task callback to perform the update, so this will
   // never update before we check the power_state.
@@ -116,12 +116,12 @@ static void prv_standby_timer_callback(void* data) {
 static void prv_begin_standby_timer(void) {
   PBL_LOG_INFO("Battery critical: begin standby timer");
   // If the watch was already running, give them 30s, otherwise just 2s.
-  uint32_t standby_timeout = (s_first_run) ? 2000: 30000;
-  new_timer_start(s_standby_timer_id, standby_timeout,
-      prv_standby_timer_callback, NULL, 0 /*flags*/);
+  uint32_t standby_timeout = (s_first_run) ? 2000 : 30000;
+  new_timer_start(s_standby_timer_id, standby_timeout, prv_standby_timer_callback, NULL,
+                  0 /*flags*/);
 }
 
-static void system_task_handle_battery_critical(void* data) {
+static void system_task_handle_battery_critical(void *data) {
   PBL_LOG_INFO("Battery critical: go to standby mode");
   if (low_power_is_active()) {
     low_power_standby();
@@ -138,27 +138,26 @@ static void prv_log_battery_state(PreciseBatteryChargeState state) {
   const uint16_t k_min_percent_diff = 5;
   const uint16_t percent = ratio32_to_percent(state.charge_percent);
 
-  union LoggingBattState{
+  union LoggingBattState {
     struct {
-      uint16_t is_charging:1;
-      uint16_t is_plugged:1;
-      uint16_t percent:14;
+      uint16_t is_charging : 1;
+      uint16_t is_plugged : 1;
+      uint16_t percent : 14;
     };
     uint16_t all;
   };
   static union LoggingBattState s_prev_batt_state;
 
   union LoggingBattState new_batt_state = {
-    .percent = percent / k_min_percent_diff,
-    .is_charging = state.is_charging,
-    .is_plugged = state.is_plugged,
+      .percent = percent / k_min_percent_diff,
+      .is_charging = state.is_charging,
+      .is_plugged = state.is_plugged,
   };
 
   if ((percent < BOARD_CONFIG_POWER.low_power_threshold) ||
-      (s_prev_batt_state.all != new_batt_state.all) ||
-      s_first_run) {
-        s_prev_batt_state.all = new_batt_state.all;
-      }
+      (s_prev_batt_state.all != new_batt_state.all) || s_first_run) {
+    s_prev_batt_state.all = new_batt_state.all;
+  }
 }
 
 void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) {

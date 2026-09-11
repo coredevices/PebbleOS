@@ -55,7 +55,7 @@ extern "C" {
 
 // Uncomment this line to use the standard MDK way of binding IRQ handlers
 // at linking time.
-//#include <soc/nrfx_irqs.h>
+// #include <soc/nrfx_irqs.h>
 
 //------------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ extern "C" {
  * @param expression Expression to be evaluated.
  */
 #define NRFX_ASSERT(expr) ((expr) ? (void)0 : assert_failed((uint8_t *)__FILE__, __LINE__))
-void assert_failed(uint8_t* file, uint32_t line);
+void assert_failed(uint8_t *file, uint32_t line);
 
 /**
  * @brief Macro for placing a compile time assertion.
@@ -89,7 +89,11 @@ void assert_failed(uint8_t* file, uint32_t line);
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_ENABLE(irq_number) do { NVIC_ClearPendingIRQ(irq_number); NVIC_EnableIRQ(irq_number); } while(0)
+#define NRFX_IRQ_ENABLE(irq_number)   \
+  do {                                \
+    NVIC_ClearPendingIRQ(irq_number); \
+    NVIC_EnableIRQ(irq_number);       \
+  } while (0)
 
 /**
  * @brief Macro for checking if a specific IRQ is enabled.
@@ -99,7 +103,8 @@ void assert_failed(uint8_t* file, uint32_t line);
  * @retval true  If the IRQ is enabled.
  * @retval false Otherwise.
  */
-#define NRFX_IRQ_IS_ENABLED(irq_number) (0 != (NVIC->ISER[(irq_number) / 32] & (1UL << ((irq_number) % 32))))
+#define NRFX_IRQ_IS_ENABLED(irq_number) \
+  (0 != (NVIC->ISER[(irq_number) / 32] & (1UL << ((irq_number) % 32))))
 
 /**
  * @brief Macro for disabling a specific IRQ.
@@ -146,7 +151,7 @@ void assert_failed(uint8_t* file, uint32_t line);
  *        A compilation error is generated if the DWT unit is not present
  *        in the SoC used.
  */
-#define NRFX_DELAY_DWT_BASED    0
+#define NRFX_DELAY_DWT_BASED 0
 
 #include <soc/nrfx_coredep.h>
 
@@ -175,7 +180,8 @@ void assert_failed(uint8_t* file, uint32_t line);
 #define NRFX_ATOMIC_FETCH_STORE(p_data, value) nrfx_atomic_u32_fetch_store(p_data, value)
 
 /**
- * @brief Macro for running a bitwise OR operation on an atomic object and returning its previous value.
+ * @brief Macro for running a bitwise OR operation on an atomic object and returning its previous
+ * value.
  *
  * @param[in] p_data Atomic memory pointer.
  * @param[in] value  Value of the second operand in the OR operation.
@@ -240,7 +246,8 @@ void assert_failed(uint8_t* file, uint32_t line);
  * @retval true  If value was updated.
  * @retval false If value was not updated because location was not equal to @p old_value.
  */
-// #define NRFX_ATOMIC_CAS(p_data, old_value, new_value) nrfx_atomic_u32_cmp_exch(p_data, old_value, new_value)
+// #define NRFX_ATOMIC_CAS(p_data, old_value, new_value) nrfx_atomic_u32_cmp_exch(p_data, old_value,
+// new_value)
 
 /**
  * @brief Macro for counting leading zeros.
@@ -316,26 +323,32 @@ void assert_failed(uint8_t* file, uint32_t line);
 
 //------------------------------------------------------------------------------
 
-/** @brief Bitmask that defines DPPI channels that are reserved for use outside of the nrfx library. */
-#define NRFX_DPPI_CHANNELS_USED   0
+/** @brief Bitmask that defines DPPI channels that are reserved for use outside of the nrfx library.
+ */
+#define NRFX_DPPI_CHANNELS_USED 0
 
-/** @brief Bitmask that defines DPPI groups that are reserved for use outside of the nrfx library. */
-#define NRFX_DPPI_GROUPS_USED     0
+/** @brief Bitmask that defines DPPI groups that are reserved for use outside of the nrfx library.
+ */
+#define NRFX_DPPI_GROUPS_USED 0
 
-/** @brief Bitmask that defines PPI channels that are reserved for use outside of the nrfx library. */
-#define NRFX_PPI_CHANNELS_USED    0
+/** @brief Bitmask that defines PPI channels that are reserved for use outside of the nrfx library.
+ */
+#define NRFX_PPI_CHANNELS_USED 0
 
 /** @brief Bitmask that defines PPI groups that are reserved for use outside of the nrfx library. */
-#define NRFX_PPI_GROUPS_USED      0
+#define NRFX_PPI_GROUPS_USED 0
 
-/** @brief Bitmask that defines GPIOTE channels that are reserved for use outside of the nrfx library. */
+/** @brief Bitmask that defines GPIOTE channels that are reserved for use outside of the nrfx
+ * library. */
 #define NRFX_GPIOTE_CHANNELS_USED 0
 
-/** @brief Bitmask that defines EGU instances that are reserved for use outside of the nrfx library. */
-#define NRFX_EGUS_USED            0
+/** @brief Bitmask that defines EGU instances that are reserved for use outside of the nrfx library.
+ */
+#define NRFX_EGUS_USED 0
 
-/** @brief Bitmask that defines TIMER instances that are reserved for use outside of the nrfx library. */
-#define NRFX_TIMERS_USED          0
+/** @brief Bitmask that defines TIMER instances that are reserved for use outside of the nrfx
+ * library. */
+#define NRFX_TIMERS_USED 0
 
 /** @} */
 
@@ -343,4 +356,4 @@ void assert_failed(uint8_t* file, uint32_t line);
 }
 #endif
 
-#endif // NRFX_GLUE_H__
+#endif  // NRFX_GLUE_H__

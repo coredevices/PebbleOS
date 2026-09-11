@@ -36,18 +36,18 @@
 #define LEAKAGE_STRING_LEN 128
 #define RESULT_DISPLAY_MS 1000
 
-#define PPG_GR_CTR_THS0         (423.0f)
-#define PPG_GR_CTR_THS1         (441.0f)
-#define PPG_IR_CTR_THS0         (339.0f)
-#define PPG_IR_CTR_THS1         (336.0f)
-#define PPG_RED_CTR_THS0        (564.0f)
-#define PPG_RED_CTR_THS1        (597.0f)
-#define PPG_GR_LEAK_THS0        (1.87f)
-#define PPG_GR_LEAK_THS1        (2.4f)
-#define PPG_IR_LEAK_THS0        (10.2f)
-#define PPG_IR_LEAK_THS1        (9.8f)
-#define PPG_RED_LEAK_THS0       (7.0f)
-#define PPG_RED_LEAK_THS1       (9.6f)
+#define PPG_GR_CTR_THS0 (423.0f)
+#define PPG_GR_CTR_THS1 (441.0f)
+#define PPG_IR_CTR_THS0 (339.0f)
+#define PPG_IR_CTR_THS1 (336.0f)
+#define PPG_RED_CTR_THS0 (564.0f)
+#define PPG_RED_CTR_THS1 (597.0f)
+#define PPG_GR_LEAK_THS0 (1.87f)
+#define PPG_GR_LEAK_THS1 (2.4f)
+#define PPG_IR_LEAK_THS0 (10.2f)
+#define PPG_IR_LEAK_THS1 (9.8f)
+#define PPG_RED_LEAK_THS0 (7.0f)
+#define PPG_RED_LEAK_THS1 (9.6f)
 
 typedef enum {
   TestMode_NULL,
@@ -55,7 +55,7 @@ typedef enum {
   TestMode_Leakage,
   TestMode_Algo_HR,
   TestMode_Algo_SPO2,
-}HRMTestMode;
+} HRMTestMode;
 
 typedef struct {
   Window window;
@@ -84,61 +84,66 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
   if (e->type == PEBBLE_HRM_EVENT) {
     if (app_data->test_mode >= TestMode_Algo_HR) {
       if (e->hrm.event_type == HRMEvent_BPM) {
-        snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling... %d", HRM->state->is_wear);
+        snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling... %d",
+                 HRM->state->is_wear);
         memset(app_data->ctr_string, 0, CTR_STRING_LEN);
-        snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d Q:%d", e->hrm.bpm.bpm, e->hrm.bpm.quality);
+        snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d Q:%d", e->hrm.bpm.bpm,
+                 e->hrm.bpm.quality);
         PBL_LOG_DBG("%s", app_data->ctr_string);
       } else if (e->hrm.event_type == HRMEvent_SpO2) {
-        snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling... %d", HRM->state->is_wear);
+        snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling... %d",
+                 HRM->state->is_wear);
         memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
-        snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d Q:%d", e->hrm.spo2.percent, e->hrm.spo2.quality);
+        snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d Q:%d", e->hrm.spo2.percent,
+                 e->hrm.spo2.quality);
         PBL_LOG_DBG("%s", app_data->leak_string);
       }
-    }
-    else {
+    } else {
       if (e->hrm.event_type == HRMEvent_CTR) {
-        bool rst = (e->hrm.ctr->ctr[0] >= PPG_GR_CTR_THS0) && (e->hrm.ctr->ctr[1] >= PPG_GR_CTR_THS1)
-                && (e->hrm.ctr->ctr[2] >= PPG_IR_CTR_THS0) && (e->hrm.ctr->ctr[3] >= PPG_IR_CTR_THS1)
-                && (e->hrm.ctr->ctr[4] >= PPG_RED_CTR_THS0) && (e->hrm.ctr->ctr[5] >= PPG_RED_CTR_THS1);
+        bool rst =
+            (e->hrm.ctr->ctr[0] >= PPG_GR_CTR_THS0) && (e->hrm.ctr->ctr[1] >= PPG_GR_CTR_THS1) &&
+            (e->hrm.ctr->ctr[2] >= PPG_IR_CTR_THS0) && (e->hrm.ctr->ctr[3] >= PPG_IR_CTR_THS1) &&
+            (e->hrm.ctr->ctr[4] >= PPG_RED_CTR_THS0) && (e->hrm.ctr->ctr[5] >= PPG_RED_CTR_THS1);
         app_data->ctr_received = true;
         app_data->ctr_passed = rst;
         memset(app_data->ctr_string, 0, CTR_STRING_LEN);
         snprintf(app_data->ctr_string, CTR_STRING_LEN,
-                "CTR:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d",
-                rst?"PASS":"FAILED",
-                (int)e->hrm.ctr->ctr[0], (int)(e->hrm.ctr->ctr[0]*100)%100,
-                (int)e->hrm.ctr->ctr[2], (int)(e->hrm.ctr->ctr[2]*100)%100,
-                (int)e->hrm.ctr->ctr[4], (int)(e->hrm.ctr->ctr[4]*100)%100,
-                (int)e->hrm.ctr->ctr[1], (int)(e->hrm.ctr->ctr[1]*100)%100,
-                (int)e->hrm.ctr->ctr[3], (int)(e->hrm.ctr->ctr[3]*100)%100,
-                (int)e->hrm.ctr->ctr[5], (int)(e->hrm.ctr->ctr[5]*100)%100);
+                 "CTR:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d",
+                 rst ? "PASS" : "FAILED", (int)e->hrm.ctr->ctr[0],
+                 (int)(e->hrm.ctr->ctr[0] * 100) % 100, (int)e->hrm.ctr->ctr[2],
+                 (int)(e->hrm.ctr->ctr[2] * 100) % 100, (int)e->hrm.ctr->ctr[4],
+                 (int)(e->hrm.ctr->ctr[4] * 100) % 100, (int)e->hrm.ctr->ctr[1],
+                 (int)(e->hrm.ctr->ctr[1] * 100) % 100, (int)e->hrm.ctr->ctr[3],
+                 (int)(e->hrm.ctr->ctr[3] * 100) % 100, (int)e->hrm.ctr->ctr[5],
+                 (int)(e->hrm.ctr->ctr[5] * 100) % 100);
         PBL_LOG_DBG("%s", app_data->ctr_string);
       } else if (e->hrm.event_type == HRMEvent_Leakage) {
-        bool rst = (e->hrm.leakage->leakage[0] <= PPG_GR_LEAK_THS0) && (e->hrm.leakage->leakage[1] <= PPG_GR_LEAK_THS1)
-                && (e->hrm.leakage->leakage[2] <= PPG_IR_LEAK_THS0) && (e->hrm.leakage->leakage[3] <= PPG_IR_LEAK_THS1)
-                && (e->hrm.leakage->leakage[4] <= PPG_RED_LEAK_THS0) && (e->hrm.leakage->leakage[5] <= PPG_RED_LEAK_THS1);
+        bool rst = (e->hrm.leakage->leakage[0] <= PPG_GR_LEAK_THS0) &&
+                   (e->hrm.leakage->leakage[1] <= PPG_GR_LEAK_THS1) &&
+                   (e->hrm.leakage->leakage[2] <= PPG_IR_LEAK_THS0) &&
+                   (e->hrm.leakage->leakage[3] <= PPG_IR_LEAK_THS1) &&
+                   (e->hrm.leakage->leakage[4] <= PPG_RED_LEAK_THS0) &&
+                   (e->hrm.leakage->leakage[5] <= PPG_RED_LEAK_THS1);
         app_data->leak_received = true;
         app_data->leak_passed = rst;
         memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
         snprintf(app_data->leak_string, LEAKAGE_STRING_LEN,
-          "Leak:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d",
-                rst?"PASS":"FAILED",
-                (int)e->hrm.leakage->leakage[0], (int)(e->hrm.leakage->leakage[0]*100)%100,
-                (int)e->hrm.leakage->leakage[2], (int)(e->hrm.leakage->leakage[2]*100)%100,
-                (int)e->hrm.leakage->leakage[4], (int)(e->hrm.leakage->leakage[4]*100)%100,
-                (int)e->hrm.leakage->leakage[1], (int)(e->hrm.leakage->leakage[1]*100)%100,
-                (int)e->hrm.leakage->leakage[3], (int)(e->hrm.leakage->leakage[3]*100)%100,
-                (int)e->hrm.leakage->leakage[5], (int)(e->hrm.leakage->leakage[5]*100)%100);
+                 "Leak:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d",
+                 rst ? "PASS" : "FAILED", (int)e->hrm.leakage->leakage[0],
+                 (int)(e->hrm.leakage->leakage[0] * 100) % 100, (int)e->hrm.leakage->leakage[2],
+                 (int)(e->hrm.leakage->leakage[2] * 100) % 100, (int)e->hrm.leakage->leakage[4],
+                 (int)(e->hrm.leakage->leakage[4] * 100) % 100, (int)e->hrm.leakage->leakage[1],
+                 (int)(e->hrm.leakage->leakage[1] * 100) % 100, (int)e->hrm.leakage->leakage[3],
+                 (int)(e->hrm.leakage->leakage[3] * 100) % 100, (int)e->hrm.leakage->leakage[5],
+                 (int)(e->hrm.leakage->leakage[5] * 100) % 100);
         PBL_LOG_DBG("%s", app_data->leak_string);
       }
 
       // When both CTR and leakage results are in, report and start close timer
-      if (app_data->ctr_received && app_data->leak_received &&
-          app_data->result_start_time == 0) {
+      if (app_data->ctr_received && app_data->leak_received && app_data->result_start_time == 0) {
         bool passed = app_data->ctr_passed && app_data->leak_passed;
         mfg_test_result_report(MfgTestId_HrmCtrLeakage, passed, 0);
-        snprintf(app_data->status_string, STATUS_STRING_LEN,
-                 passed ? "PASS" : "FAIL");
+        snprintf(app_data->status_string, STATUS_STRING_LEN, passed ? "PASS" : "FAIL");
         app_data->result_start_time = rtc_get_ticks();
       }
     }
@@ -161,7 +166,7 @@ static void prv_result_timer_callback(void *cb_data) {
   app_timer_register(100, prv_result_timer_callback, NULL);
 }
 
-static void prv_update_status(void* param) {
+static void prv_update_status(void *param) {
   layer_mark_dirty((Layer *)param);
 }
 
@@ -174,7 +179,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
     snprintf(app_data->status_string, STATUS_STRING_LEN, "CTR Sampling...");
     // Start polling timer for result display timeout
     app_timer_register(100, prv_result_timer_callback, NULL);
-  } else if(app_data->test_mode != TestMode_Leakage){
+  } else if (app_data->test_mode != TestMode_Leakage) {
     gh3x2x_start_ft_leakage();
     app_data->test_mode = TestMode_Leakage;
     snprintf(app_data->status_string, STATUS_STRING_LEN, "Leak Sampling...");
@@ -185,7 +190,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
-  
+
   if (app_data->test_mode != TestMode_Algo_HR) {
     snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling...");
     gh3x2x_set_work_mode(GH3X2X_FUNCTION_HR);
@@ -195,18 +200,18 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
     gh3x2x_set_work_mode(GH3X2X_FUNCTION_SPO2);
     app_data->test_mode = TestMode_Algo_SPO2;
   }
-  
+
   snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR: Q:");
   snprintf(app_data->leak_string, LEAKAGE_STRING_LEN, "SPO2: Q:");
   event_service_client_unsubscribe(&app_data->hrm_event_info);
   sys_hrm_manager_unsubscribe(app_data->hrm_session);
-  //let sensor sleep by waiting 50ms
+  // let sensor sleep by waiting 50ms
   psleep(50);
   event_service_client_subscribe(&app_data->hrm_event_info);
   // Use app data as session ref
-  AppInstallId  app_id = 1;
-  app_data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
-                                                  HRMFeature_BPM | HRMFeature_SpO2);
+  AppInstallId app_id = 1;
+  app_data->hrm_session =
+      sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR, HRMFeature_BPM | HRMFeature_SpO2);
 
   app_timer_register(10, prv_update_status, &app_data->window.layer);
 }
@@ -246,29 +251,29 @@ static void prv_handle_init(void) {
   layer_add_child(&window->layer, &status->layer);
 
   TextLayer *leak = &data->leak_text_layer;
-  text_layer_init(leak,
-                  &GRect(5, 60, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 140));
+  text_layer_init(
+      leak, &GRect(5, 60, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 140));
   text_layer_set_font(leak, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(leak, GTextAlignmentCenter);
   text_layer_set_text(leak, data->leak_string);
   layer_add_child(&window->layer, &leak->layer);
 
   TextLayer *ctr = &data->ctr_text_layer;
-  text_layer_init(ctr,
-                  &GRect(5, 140, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 60));
+  text_layer_init(
+      ctr, &GRect(5, 140, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 60));
   text_layer_set_font(ctr, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(ctr, GTextAlignmentCenter);
   text_layer_set_text(ctr, data->ctr_string);
   layer_add_child(&window->layer, &ctr->layer);
 
   data->hrm_event_info = (EventServiceInfo){
-    .type = PEBBLE_HRM_EVENT,
-    .handler = prv_handle_hrm_data,
+      .type = PEBBLE_HRM_EVENT,
+      .handler = prv_handle_hrm_data,
   };
   event_service_client_subscribe(&data->hrm_event_info);
 
   // Use app data as session ref
-  AppInstallId  app_id = 1;
+  AppInstallId app_id = 1;
   data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
                                                     HRMFeature_CTR | HRMFeature_Leakage);
 
@@ -292,10 +297,10 @@ static void prv_main(void) {
   prv_handle_deinit();
 }
 
-const PebbleProcessMd* mfg_hrm_ctr_leakage_obelix_app_get_info(void) {
+const PebbleProcessMd *mfg_hrm_ctr_leakage_obelix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &prv_main,
-    .name = "MfgHRMCTRLeakageObelix",
+      .common.main_func = &prv_main,
+      .name = "MfgHRMCTRLeakageObelix",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

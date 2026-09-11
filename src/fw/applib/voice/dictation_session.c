@@ -16,7 +16,7 @@
 static void prv_handle_transcription_result(PebbleEvent *e, void *context) {
   PBL_ASSERTN(context);
 
-  PBL_LOG_DBG("Exiting with status code: %"PRId8, e->dictation.result);
+  PBL_LOG_DBG("Exiting with status code: %" PRId8, e->dictation.result);
   DictationSession *session = context;
 
   session->callback(session, e->dictation.result, e->dictation.text, session->context);
@@ -61,9 +61,10 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
   // apps. This will result in apps not being able to use the voice APIs unless the phone has the
   // capability flag set, which is what we want.
   bool from_app = (pebble_task_get_current() == PebbleTask_App) &&
-                   !app_install_id_from_system(sys_process_manager_get_current_process_id());
+                  !app_install_id_from_system(sys_process_manager_get_current_process_id());
   if (from_app && !sys_system_pp_has_capability(CommSessionVoiceApiSupport)) {
-    PBL_LOG_WRN("No phone connected or phone app does not support app-initiated dictation sessions");
+    PBL_LOG_WRN(
+        "No phone connected or phone app does not support app-initiated dictation sessions");
     return NULL;
   }
 
@@ -81,27 +82,27 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
     }
   }
 
-  VoiceWindow *voice_window = voice_window_create(buffer, buffer_size,
-                                                  VoiceEndpointSessionTypeDictation);
+  VoiceWindow *voice_window =
+      voice_window_create(buffer, buffer_size, VoiceEndpointSessionTypeDictation);
   if (!voice_window) {
     applib_free(buffer);
     applib_free(session);
     return NULL;
   }
 
-  *session = (DictationSession) {
-    .callback = callback,
-    .context = context,
-    .voice_window = voice_window,
-    .dictation_result_sub = (EventServiceInfo) {
-      .type = PEBBLE_DICTATION_EVENT,
-      .handler = prv_handle_transcription_result,
-      .context = session
-    }
+  *session = (DictationSession){
+      .callback = callback,
+      .context = context,
+      .voice_window = voice_window,
+      .dictation_result_sub = (EventServiceInfo){
+          .type = PEBBLE_DICTATION_EVENT,
+          .handler = prv_handle_transcription_result,
+          .context = session
+      }
   };
 
   if (pebble_task_get_current() == PebbleTask_App) {
-    session->app_focus_sub = (EventServiceInfo) {
+    session->app_focus_sub = (EventServiceInfo){
         .type = PEBBLE_APP_DID_CHANGE_FOCUS_EVENT,
         .handler = prv_app_focus_handler,
         .context = session

@@ -62,13 +62,13 @@ static void prv_did_change(void *context) {
 /////////////////////
 
 void test_unobstructed_area_service__initialize(void) {
-  s_data = (UnobstructedAreaTestData) {
-    .context = &s_context_target,
-    .last_change_progress = -1,
+  s_data = (UnobstructedAreaTestData){
+      .context = &s_context_target,
+      .last_change_progress = -1,
   };
 
   fake_event_service_init();
-  s_app_state_framebuffer = &(FrameBuffer) { .size = DISP_FRAME.size };
+  s_app_state_framebuffer = &(FrameBuffer){.size = DISP_FRAME.size};
 
   unobstructed_area_service_init(app_state_get_unobstructed_area_state(), DISP_ROWS);
 }
@@ -92,9 +92,9 @@ void test_unobstructed_area_service__subscribe(void) {
 
   // Subscribing should use the event service
   UnobstructedAreaHandlers handlers = {
-    .will_change = prv_will_change,
-    .change = prv_change,
-    .did_change = prv_did_change,
+      .will_change = prv_will_change,
+      .change = prv_change,
+      .did_change = prv_did_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -119,7 +119,7 @@ void test_unobstructed_area_service__subscribe(void) {
 
 void test_unobstructed_area_service__will_change(void) {
   UnobstructedAreaHandlers handlers = {
-    .will_change = prv_will_change,
+      .will_change = prv_will_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -136,7 +136,7 @@ void test_unobstructed_area_service__will_change(void) {
 
 void test_unobstructed_area_service__will_change_twice(void) {
   UnobstructedAreaHandlers handlers = {
-    .will_change = prv_will_change,
+      .will_change = prv_will_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -153,7 +153,7 @@ void test_unobstructed_area_service__will_change_twice(void) {
 
 void test_unobstructed_area_service__change(void) {
   UnobstructedAreaHandlers handlers = {
-    .change = prv_change,
+      .change = prv_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -178,8 +178,8 @@ void test_unobstructed_area_service__change_after_subscribe(void) {
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
 
   UnobstructedAreaHandlers handlers = {
-    .will_change = prv_will_change,
-    .change = prv_change,
+      .will_change = prv_will_change,
+      .change = prv_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -196,8 +196,8 @@ void test_unobstructed_area_service__change_after_subscribe(void) {
 
 void test_unobstructed_area_service__change_no_will(void) {
   UnobstructedAreaHandlers handlers = {
-    .will_change = prv_will_change,
-    .change = prv_change,
+      .will_change = prv_will_change,
+      .change = prv_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -215,7 +215,7 @@ void test_unobstructed_area_service__change_no_will(void) {
 
 void test_unobstructed_area_service__did_change(void) {
   UnobstructedAreaHandlers handlers = {
-    .did_change = prv_did_change,
+      .did_change = prv_did_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -237,8 +237,8 @@ void test_unobstructed_area_service__did_change_after_subscribe(void) {
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
 
   UnobstructedAreaHandlers handlers = {
-    .will_change = prv_will_change,
-    .did_change = prv_did_change,
+      .will_change = prv_will_change,
+      .did_change = prv_did_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -252,8 +252,8 @@ void test_unobstructed_area_service__did_change_after_subscribe(void) {
 
 void test_unobstructed_area_service__did_change_no_will(void) {
   UnobstructedAreaHandlers handlers = {
-    .will_change = prv_will_change,
-    .did_change = prv_did_change,
+      .will_change = prv_will_change,
+      .did_change = prv_did_change,
   };
   app_unobstructed_area_service_subscribe(handlers, s_data.context);
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
@@ -271,7 +271,7 @@ void test_unobstructed_area_service__layer_no_clip(void) {
   cl_assert(!unobstructed_area_service_has_requested_area(app_state_get_unobstructed_area_state()));
 
   Layer root_layer = {
-    .bounds = GRect(100, 100, 200, 200),
+      .bounds = GRect(100, 100, 200, 200),
   };
   GRect unobstructed_bounds;
   layer_get_unobstructed_bounds(&root_layer, &unobstructed_bounds);
@@ -283,7 +283,7 @@ void test_unobstructed_area_service__layer_clip_x_y(void) {
   app_state_get_unobstructed_area_state()->area = GRect(0, 0, 400, 400);
 
   Layer root_layer = {
-    .bounds = GRect(210, 220, 300, 300),
+      .bounds = GRect(210, 220, 300, 300),
   };
   GRect unobstructed_bounds;
   layer_get_unobstructed_bounds(&root_layer, &unobstructed_bounds);
@@ -294,7 +294,7 @@ void test_unobstructed_area_service__layer_clip_nx_ny(void) {
   app_state_get_unobstructed_area_state()->area = GRect(0, 0, 400, 400);
 
   Layer root_layer = {
-    .bounds = GRect(-110, -120, 300, 300),
+      .bounds = GRect(-110, -120, 300, 300),
   };
   GRect unobstructed_bounds;
   layer_get_unobstructed_bounds(&root_layer, &unobstructed_bounds);
@@ -305,10 +305,10 @@ void test_unobstructed_area_service__nested_layer_no_clip(void) {
   app_state_get_unobstructed_area_state()->area = GRect(0, 0, 400, 400);
 
   Layer root_layer = {
-    .bounds = GRect(30, 30, 30, 30),
+      .bounds = GRect(30, 30, 30, 30),
   };
   Layer layer = {
-    .bounds = GRect(20, 20, 20, 20),
+      .bounds = GRect(20, 20, 20, 20),
   };
   layer_add_child(&root_layer, &layer);
   GRect unobstructed_bounds;
@@ -319,10 +319,10 @@ void test_unobstructed_area_service__nested_layer_no_clip(void) {
 void test_unobstructed_area_service__nested_layer_clip_x_y(void) {
   app_state_get_unobstructed_area_state()->area = GRect(0, 0, 400, 400);
   Layer root_layer = {
-    .bounds = GRect(150, 120, 10, 10), // The size of the parent layer has no affect
+      .bounds = GRect(150, 120, 10, 10),  // The size of the parent layer has no affect
   };
   Layer layer = {
-    .bounds = GRect(110, 130, 300, 200),
+      .bounds = GRect(110, 130, 300, 200),
   };
   layer_add_child(&root_layer, &layer);
   GRect unobstructed_bounds;
@@ -333,10 +333,10 @@ void test_unobstructed_area_service__nested_layer_clip_x_y(void) {
 void test_unobstructed_area_service__nested_layer_clip_nx_ny(void) {
   app_state_get_unobstructed_area_state()->area = GRect(0, 0, 400, 400);
   Layer root_layer = {
-    .bounds = GRect(-150, -120, 10, 10), // The size of the parent layer has no affect
+      .bounds = GRect(-150, -120, 10, 10),  // The size of the parent layer has no affect
   };
   Layer layer = {
-    .bounds = GRect(-110, -130, 300, 290),
+      .bounds = GRect(-110, -130, 300, 290),
   };
   layer_add_child(&root_layer, &layer);
   GRect unobstructed_bounds;

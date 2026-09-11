@@ -10,7 +10,6 @@
 
 typedef struct WorkoutActiveWindow WorkoutActiveWindow;
 
-
 WorkoutActiveWindow *workout_active_create_single_layout(WorkoutMetricType metric,
                                                          void *workout_data,
                                                          WorkoutController *workout_controller);

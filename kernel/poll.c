@@ -27,7 +27,8 @@ void pbl_poll_group_add(struct pbl_poll_group *g, struct pbl_msgq *q) {
 // queue cannot starve the others.
 static struct pbl_msgq *prv_ready_member(struct pbl_poll_group *g) {
   struct pbl_msgq *cursor = g->backend.cursor;
-  for (struct pbl_msgq *m = cursor ? cursor->group_next : g->members; m != NULL; m = m->group_next) {
+  for (struct pbl_msgq *m = cursor ? cursor->group_next : g->members; m != NULL;
+       m = m->group_next) {
     if (m->backend.count > 0) {
       g->backend.cursor = m;
       return m;

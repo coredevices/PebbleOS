@@ -10,7 +10,8 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
-void sys_vibe_pattern_trigger_start(void) {}
+void sys_vibe_pattern_trigger_start(void) {
+}
 ResAppNum sys_get_current_resource_num(void) {
   return 0;
 }
@@ -33,7 +34,7 @@ typedef struct VibeStep {
 static VibeStep s_vibe_queue[256];
 static int s_vibe_queue_index;
 bool sys_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
-  s_vibe_queue[s_vibe_queue_index] = (VibeStep){ .duration_ms = duration_ms, .strength = strength };
+  s_vibe_queue[s_vibe_queue_index] = (VibeStep){.duration_ms = duration_ms, .strength = strength};
   s_vibe_queue_index++;
   return true;
 }
@@ -49,10 +50,9 @@ size_t sys_resource_size(ResAppNum app_num, uint32_t id) {
   return s_resource_buffer_size;
 }
 
-//helpers
+// helpers
 
-
-//unit test code
+// unit test code
 void test_vibe_score__initialize(void) {
   s_vibe_queue_index = 0;
 }
@@ -62,21 +62,33 @@ void test_vibe_score__cleanup(void) {
 
 void test_vibe_score__double_pulse(void) {
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      18, 0, // attr_list_size
-      2, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      18,
+      0,  // attr_list_size
+      2,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      8, 0, // GenericAttribute.length
-      15, 0, // VibeNote.vibe_duration_ms
-      9, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
-      100, 0, // VibeNote.vibe_duration_ms
-      0, // VibeNote.brake_duration_ms
-      0, // VibeNote.strength
+      8,
+      0,  // GenericAttribute.length
+      15,
+      0,    // VibeNote.vibe_duration_ms
+      9,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      100,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      3, 0, // GenericAttribute.length
+      3,
+      0,  // GenericAttribute.length
       0,
       1,
       0
@@ -103,27 +115,41 @@ void test_vibe_score__double_pulse(void) {
 
 void test_vibe_score__repeat_delay_is_valid(void) {
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      23, 0, // attr_list_size
-      3, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      23,
+      0,  // attr_list_size
+      3,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      8, 0, // GenericAttribute.length
-      15, 0, // VibeNote.vibe_duration_ms
-      9, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
-      100, 0, // VibeNote.vibe_duration_ms
-      0, // VibeNote.brake_duration_ms
-      0, // VibeNote.strength
+      8,
+      0,  // GenericAttribute.length
+      15,
+      0,    // VibeNote.vibe_duration_ms
+      9,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      100,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      3, 0, // GenericAttribute.length
+      3,
+      0,  // GenericAttribute.length
       0,
       1,
       0,
       VibeAttributeId_RepeatDelay,
-      2, 0, // GenericAttribute.length (2 bytes for a uint16)
-      12, 12 // repeat_delay value
+      2,
+      0,  // GenericAttribute.length (2 bytes for a uint16)
+      12,
+      12  // repeat_delay value
   };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
@@ -135,27 +161,41 @@ void test_vibe_score__repeat_delay_is_valid(void) {
 void test_vibe_score__repeat_delay_lpm_alarm_is_valid(void) {
   // 50s repeat delay, as used by the LPM alarm score
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      23, 0, // attr_list_size
-      3, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      23,
+      0,  // attr_list_size
+      3,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      8, 0, // GenericAttribute.length
-      15, 0, // VibeNote.vibe_duration_ms
-      9, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
-      100, 0, // VibeNote.vibe_duration_ms
-      0, // VibeNote.brake_duration_ms
-      0, // VibeNote.strength
+      8,
+      0,  // GenericAttribute.length
+      15,
+      0,    // VibeNote.vibe_duration_ms
+      9,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      100,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      3, 0, // GenericAttribute.length
+      3,
+      0,  // GenericAttribute.length
       0,
       1,
       0,
       VibeAttributeId_RepeatDelay,
-      2, 0, // GenericAttribute.length (2 bytes for a uint16)
-      0x50, 0xC3 // repeat_delay value (50000)
+      2,
+      0,  // GenericAttribute.length (2 bytes for a uint16)
+      0x50,
+      0xC3  // repeat_delay value (50000)
   };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
@@ -167,27 +207,41 @@ void test_vibe_score__repeat_delay_lpm_alarm_is_valid(void) {
 
 void test_vibe_score__repeat_delay_too_long_is_invalid(void) {
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      23, 0, // attr_list_size
-      3, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      23,
+      0,  // attr_list_size
+      3,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      8, 0, // GenericAttribute.length
-      15, 0, // VibeNote.vibe_duration_ms
-      9, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
-      100, 0, // VibeNote.vibe_duration_ms
-      0, // VibeNote.brake_duration_ms
-      0, // VibeNote.strength
+      8,
+      0,  // GenericAttribute.length
+      15,
+      0,    // VibeNote.vibe_duration_ms
+      9,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      100,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      3, 0, // GenericAttribute.length
+      3,
+      0,  // GenericAttribute.length
       0,
       1,
       0,
       VibeAttributeId_RepeatDelay,
-      2, 0, // GenericAttribute.length (2 bytes for a uint16)
-      0x61, 0xEA // repeat_delay value (60001, above the cap)
+      2,
+      0,  // GenericAttribute.length (2 bytes for a uint16)
+      0x61,
+      0xEA  // repeat_delay value (60001, above the cap)
   };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
@@ -196,21 +250,33 @@ void test_vibe_score__repeat_delay_too_long_is_invalid(void) {
 
 void test_vibe_score__test_get_duration_ms(void) {
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      18, 0, // attr_list_size
-      2, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      18,
+      0,  // attr_list_size
+      2,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      8, 0, // GenericAttribute.length
-      200, 0, // VibeNote.vibe_duration_ms
-      1, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
-      150, 0, // VibeNote.vibe_duration_ms
-      0, // VibeNote.brake_duration_ms
-      0, // VibeNote.strength
+      8,
+      0,  // GenericAttribute.length
+      200,
+      0,    // VibeNote.vibe_duration_ms
+      1,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      150,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      3, 0, // GenericAttribute.length
+      3,
+      0,  // GenericAttribute.length
       0,
       1,
       0
@@ -219,33 +285,47 @@ void test_vibe_score__test_get_duration_ms(void) {
   s_resource_buffer_size = sizeof(buffer);
   VibeScore *score = vibe_score_create_with_resource_system(0, 0);
   cl_assert(score);
-  cl_assert_equal_i(vibe_score_get_duration_ms(score),(201 + 150 + 201));
+  cl_assert_equal_i(vibe_score_get_duration_ms(score), (201 + 150 + 201));
   vibe_score_destroy(score);
 }
 
 void test_vibe_score__test_get_repeat_delay_ms_custom_delay(void) {
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      23, 0, // attr_list_size
-      3, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      23,
+      0,  // attr_list_size
+      3,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      8, 0, // GenericAttribute.length
-      200, 0, // VibeNote.vibe_duration_ms
-      1, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
-      150, 0, // VibeNote.vibe_duration_ms
-      0, // VibeNote.brake_duration_ms
-      0, // VibeNote.strength
+      8,
+      0,  // GenericAttribute.length
+      200,
+      0,    // VibeNote.vibe_duration_ms
+      1,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      150,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      3, 0, // GenericAttribute.length
+      3,
+      0,  // GenericAttribute.length
       0,
       1,
       0,
       VibeAttributeId_RepeatDelay,
-      2, 0, // length, in bytes (2 for a uint16)
-      87, 4 // 1111 ms
+      2,
+      0,  // length, in bytes (2 for a uint16)
+      87,
+      4  // 1111 ms
   };
   s_resource_buffer = buffer;
   s_resource_buffer_size = sizeof(buffer);
@@ -257,21 +337,33 @@ void test_vibe_score__test_get_repeat_delay_ms_custom_delay(void) {
 
 void test_vibe_score__test_get_repeat_delay_ms_default_delay(void) {
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      18, 0, // attr_list_size
-      2, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      18,
+      0,  // attr_list_size
+      2,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      8, 0, // GenericAttribute.length
-      200, 0, // VibeNote.vibe_duration_ms
-      1, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
-      150, 0, // VibeNote.vibe_duration_ms
-      0, // VibeNote.brake_duration_ms
-      0, // VibeNote.strength
+      8,
+      0,  // GenericAttribute.length
+      200,
+      0,    // VibeNote.vibe_duration_ms
+      1,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
+      150,
+      0,  // VibeNote.vibe_duration_ms
+      0,  // VibeNote.brake_duration_ms
+      0,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      3, 0, // GenericAttribute.length
+      3,
+      0,  // GenericAttribute.length
       0,
       1,
       0
@@ -286,18 +378,29 @@ void test_vibe_score__test_get_repeat_delay_ms_default_delay(void) {
 
 void test_vibe_score__test_bad_attr_size(void) {
   uint8_t buffer[] = {
-      'V', 'I', 'B', 'E', // FourCC
-      1, 0, // version
-      0, 0, 0, 0, // reserved bytes
-      11, 0, // attr_list_size (right value is 12)
-      2, // GenericAttributeList.num_attributes
+      'V',
+      'I',
+      'B',
+      'E',  // FourCC
+      1,
+      0,  // version
+      0,
+      0,
+      0,
+      0,  // reserved bytes
+      11,
+      0,  // attr_list_size (right value is 12)
+      2,  // GenericAttributeList.num_attributes
       VibeAttributeId_Notes,
-      4, 0, // GenericAttribute.length
-      1, 0, // VibeNote.vibe_duration_ms
-      1, // VibeNote.brake_duration_ms
-      100, // VibeNote.strength
+      4,
+      0,  // GenericAttribute.length
+      1,
+      0,    // VibeNote.vibe_duration_ms
+      1,    // VibeNote.brake_duration_ms
+      100,  // VibeNote.strength
       VibeAttributeId_Pattern,
-      1, 0, // GenericAttribute.length
+      1,
+      0,  // GenericAttribute.length
       0
   };
   s_resource_buffer = buffer;

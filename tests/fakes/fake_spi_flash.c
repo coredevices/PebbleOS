@@ -20,12 +20,12 @@ typedef struct FakeFlashState {
   uint32_t length;
   uint32_t bytes_left_till_write_failure;
   jmp_buf *jmp_on_failure;
-  uint8_t* storage; //! Allocated buffer of length bytes.
+  uint8_t *storage;  //! Allocated buffer of length bytes.
   uint32_t write_count;
   uint32_t erase_count;
 } FakeFlashState;
 
-static FakeFlashState s_state = { 0 };
+static FakeFlashState s_state = {0};
 
 void fake_spi_flash_erase(void) {
   memset(s_state.storage, 0xff, s_state.length);
@@ -34,7 +34,7 @@ void fake_spi_flash_erase(void) {
 void fake_spi_flash_cleanup(void) {
   free(s_state.storage);
   s_state.storage = NULL;
-  s_state = (FakeFlashState) { 0 };
+  s_state = (FakeFlashState){0};
 }
 
 //! @param offset the offset at which this fake region of flash begins.
@@ -88,15 +88,15 @@ void fake_flash_assert_region_untouched(uint32_t start_addr, uint32_t length) {
 }
 
 int32_t fake_spi_flash_find_next_write(int32_t offset) {
-  if(offset < s_state.offset || offset >= s_state.offset + s_state.length) {
+  if (offset < s_state.offset || offset >= s_state.offset + s_state.length) {
     return E_RANGE;
   }
   do {
-    if(s_state.storage[offset] != 0xff) {
+    if (s_state.storage[offset] != 0xff) {
       return offset;
     }
     offset++;
-  } while(offset < s_state.offset + s_state.length);
+  } while (offset < s_state.offset + s_state.length);
   return E_DOES_NOT_EXIST;
 }
 
@@ -125,14 +125,14 @@ void fake_spi_flash_force_future_failure(int after_n_bytes, jmp_buf *retire_to) 
   s_state.jmp_on_failure = retire_to;
 }
 
-void flash_read_bytes(uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size) {
+void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
   cl_assert(start_addr >= s_state.offset);
   cl_assert(start_addr + buffer_size <= s_state.offset + s_state.length);
 
   memcpy(buffer, s_state.storage + (start_addr - s_state.offset), buffer_size);
 }
 
-void flash_write_bytes(const uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size) {
+void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
   cl_assert(start_addr >= s_state.offset);
   cl_assert(start_addr + buffer_size <= s_state.offset + s_state.length);
 
@@ -163,7 +163,7 @@ static void erase_block(uint32_t block_addr, uint32_t block_size) {
 
   cl_assert(block_start >= s_state.offset);
   if (block_start + block_size > s_state.offset + s_state.length) {
-    printf("-0x%x 0x%x\n", block_start + block_size,  s_state.offset + s_state.length);
+    printf("-0x%x 0x%x\n", block_start + block_size, s_state.offset + s_state.length);
   }
   cl_assert(block_start + block_size <= s_state.offset + s_state.length);
 

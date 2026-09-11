@@ -29,7 +29,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_workout_summary__initialize(void) {
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -53,12 +53,13 @@ void test_workout_summary__cleanup(void) {
 // Helpers
 //////////////////////
 
-static void prv_start_workout_cb(ActivitySessionType type) { }
-static void prv_select_workout_cb(ActivitySessionType type) { }
+static void prv_start_workout_cb(ActivitySessionType type) {
+}
+static void prv_select_workout_cb(ActivitySessionType type) {
+}
 
 static void prv_create_window_and_render(ActivitySessionType activity_type) {
-  Window *window = (Window *)workout_summary_window_create(activity_type,
-                                                           prv_start_workout_cb,
+  Window *window = (Window *)workout_summary_window_create(activity_type, prv_start_workout_cb,
                                                            prv_select_workout_cb);
   window_set_on_screen(window, true, true);
   window_render(window, &s_ctx);

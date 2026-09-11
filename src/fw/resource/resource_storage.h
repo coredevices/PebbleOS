@@ -23,7 +23,7 @@ typedef enum {
 struct ResourceStoreImplementation;
 
 typedef struct {
-  uint32_t id; // Used when the store implementation needs to permute the resource_id
+  uint32_t id;  // Used when the store implementation needs to permute the resource_id
   const struct ResourceStoreImplementation *impl;
   uint32_t offset;
   uint32_t length;
@@ -59,7 +59,7 @@ typedef struct ResourceStoreImplementation {
   const uint8_t *(*readonly_bytes)(ResourceStoreEntry *entry, bool has_privileged_access);
 
   ResourceCallbackHandle (*watch)(ResourceStoreEntry *entry, ResourceChangedCallback callback,
-                                  void* data);
+                                  void *data);
   bool (*unwatch)(ResourceCallbackHandle cb_handle);
 } ResourceStoreImplementation;
 

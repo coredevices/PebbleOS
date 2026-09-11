@@ -6,7 +6,6 @@
 #include "applib/graphics/bitblt_private.h"
 #include "applib/graphics/8_bit/framebuffer.h"
 
-
 #include "clar.h"
 
 #include <string.h>
@@ -24,18 +23,15 @@ static GContext ctx;
 static FrameBuffer framebuffer;
 static uint8_t dest_bitmap_data[FRAMEBUFFER_SIZE_BYTES];
 static GBitmap dest_bitmap = {
-  .addr = dest_bitmap_data,
-  .row_size_bytes = FRAMEBUFFER_BYTES_PER_ROW,
-  .info.is_bitmap_heap_allocated = false,
-  .info.format = GBitmapFormat8Bit,
-  .info.version = GBITMAP_VERSION_CURRENT,
-  .bounds = {
-    .size = {
-      .w = DISP_COLS,
-      .h = DISP_ROWS
+    .addr = dest_bitmap_data,
+    .row_size_bytes = FRAMEBUFFER_BYTES_PER_ROW,
+    .info.is_bitmap_heap_allocated = false,
+    .info.format = GBitmapFormat8Bit,
+    .info.version = GBITMAP_VERSION_CURRENT,
+    .bounds = {
+        .size = {.w = DISP_COLS, .h = DISP_ROWS},
+        .origin = {0, 0},
     },
-    .origin = { 0, 0 },
-  },
 };
 
 // Utilities
@@ -47,21 +43,21 @@ extern GColor get_bitmap_color(GBitmap *bmp, int x, int y);
 // @param color_index the color index (the value) to put into the bitmap at (x, y).
 // @param bpp Bits per pixel.
 // @para line_stride how many bytes per line in the bitmap data.
-void packed_pixel_set(uint8_t *buf, uint8_t color_index, int16_t x, int16_t y,
-                      uint8_t bpp, int16_t line_stride) {
+void packed_pixel_set(uint8_t *buf, uint8_t color_index, int16_t x, int16_t y, uint8_t bpp,
+                      int16_t line_stride) {
   const uint8_t ppb = 8 / bpp;
-  uint8_t idx = y*line_stride + (x/(ppb));
+  uint8_t idx = y * line_stride + (x / (ppb));
   const uint8_t shift = (8 - bpp) - bpp * (x % ppb);
   const uint8_t mask = ~(((1 << bpp) - 1) << shift);
   buf[idx] = buf[idx] & mask;
   buf[idx] |= ((color_index & ((1 << bpp) - 1)) << shift);
 }
 
-static bool prv_check_source_stripe_blit(const uint8_t *data,
-                                         const GBitmap *src_bmp, GColor surround_color) {
+static bool prv_check_source_stripe_blit(const uint8_t *data, const GBitmap *src_bmp,
+                                         GColor surround_color) {
   for (uint8_t y = 0; y < (FRAMEBUFFER_SIZE_BYTES / FRAMEBUFFER_BYTES_PER_ROW); ++y) {
     for (uint8_t x = 0; x < FRAMEBUFFER_BYTES_PER_ROW; ++x) {
-      uint8_t color = data[y*FRAMEBUFFER_BYTES_PER_ROW + x];
+      uint8_t color = data[y * FRAMEBUFFER_BYTES_PER_ROW + x];
       if (y < src_bmp->bounds.size.h && x < src_bmp->bounds.size.w) {
         if (color != src_bmp->palette[x].argb) {
           return false;
@@ -81,7 +77,7 @@ static bool prv_check_source_stripe_blit(const uint8_t *data,
 
 // setup and teardown
 void test_bitblt_palette__initialize(void) {
-  framebuffer_init(&framebuffer, &(GSize) { DISP_COLS, DISP_ROWS });
+  framebuffer_init(&framebuffer, &(GSize){DISP_COLS, DISP_ROWS});
   test_graphics_context_init(&ctx, &framebuffer);
 }
 
@@ -96,17 +92,15 @@ void test_bitblt_palette__1Bit_color(void) {
   const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
-  GColor s_palette[1 << 1] = {
-    GColorMelon, GColorIcterine
-  };
+  GColor s_palette[1 << 1] = {GColorMelon, GColorIcterine};
   cl_assert(sizeof(s_palette) == (1 << BITS_PER_PIXEL));
-  GBitmap s_bmp = (GBitmap) {
-    .addr = s_data,
-    .row_size_bytes = ROW_STRIDE,
-    .info.format = GBitmapFormat1BitPalette,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { .size = { WIDTH, HEIGHT } },
-    .palette = s_palette,
+  GBitmap s_bmp = (GBitmap){
+      .addr = s_data,
+      .row_size_bytes = ROW_STRIDE,
+      .info.format = GBitmapFormat1BitPalette,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {.size = {WIDTH, HEIGHT}},
+      .palette = s_palette,
   };
   memset(s_data, 0, sizeof(s_data));
 
@@ -137,20 +131,20 @@ void test_bitblt_palette__4Bit_assign(void) {
   const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
-  GColor s_palette[1 << 4] = {
-    GColorMelon,         GColorIcterine,   GColorYellow, GColorSunsetOrange,
-    GColorScreaminGreen, GColorMagenta,    GColorOrange, GColorFolly,
-    GColorLimerick,      GColorPictonBlue, GColorPurple, GColorCadetBlue,
-    GColorMalachite,     GColorGreen,      GColorIndigo, GColorVividCerulean
-  };
+  GColor s_palette[1 << 4] = {GColorMelon,        GColorIcterine,      GColorYellow,
+                              GColorSunsetOrange, GColorScreaminGreen, GColorMagenta,
+                              GColorOrange,       GColorFolly,         GColorLimerick,
+                              GColorPictonBlue,   GColorPurple,        GColorCadetBlue,
+                              GColorMalachite,    GColorGreen,         GColorIndigo,
+                              GColorVividCerulean};
   cl_assert(sizeof(s_palette) == (1 << BITS_PER_PIXEL));
-  GBitmap s_bmp = (GBitmap) {
-    .addr = s_data,
-    .row_size_bytes = ROW_STRIDE,
-    .info.format = GBitmapFormat4BitPalette,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { .size = { WIDTH, HEIGHT } },
-    .palette = s_palette,
+  GBitmap s_bmp = (GBitmap){
+      .addr = s_data,
+      .row_size_bytes = ROW_STRIDE,
+      .info.format = GBitmapFormat4BitPalette,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {.size = {WIDTH, HEIGHT}},
+      .palette = s_palette,
   };
   memset(s_data, 0, sizeof(s_data));
 
@@ -185,19 +179,17 @@ static void prv_opaque_2bit_simple(GCompOp compositing_mode) {
   const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
-  GColor s_palette[] = {
-    GColorRed, GColorWhite, GColorBlack, GColorBlue
-  };
+  GColor s_palette[] = {GColorRed, GColorWhite, GColorBlack, GColorBlue};
 
   cl_assert(sizeof(s_palette) == (1 << BITS_PER_PIXEL));
 
-  GBitmap s_bmp = (GBitmap) {
-    .addr = s_data,
-    .row_size_bytes = ROW_STRIDE,
-    .info.format = GBitmapFormat2BitPalette,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { .size = { WIDTH, HEIGHT } },
-    .palette = s_palette,
+  GBitmap s_bmp = (GBitmap){
+      .addr = s_data,
+      .row_size_bytes = ROW_STRIDE,
+      .info.format = GBitmapFormat2BitPalette,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {.size = {WIDTH, HEIGHT}},
+      .palette = s_palette,
   };
 
   memset(s_data, 0, sizeof(s_data));
@@ -249,12 +241,10 @@ static void prv_4bit_simple(GCompOp compositing_mode, GColor color, bool transpa
   const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
-  GColor s_palette[] = {
-    GColorMelon,         GColorIcterine,   GColorYellow, GColorSunsetOrange,
-    GColorScreaminGreen, GColorMagenta,    GColorOrange, GColorFolly,
-    GColorLimerick,      GColorPictonBlue, GColorPurple, GColorCadetBlue,
-    GColorMalachite,     GColorGreen,      GColorIndigo, GColorVividCerulean
-  };
+  GColor s_palette[] = {GColorMelon,         GColorIcterine,   GColorYellow, GColorSunsetOrange,
+                        GColorScreaminGreen, GColorMagenta,    GColorOrange, GColorFolly,
+                        GColorLimerick,      GColorPictonBlue, GColorPurple, GColorCadetBlue,
+                        GColorMalachite,     GColorGreen,      GColorIndigo, GColorVividCerulean};
 
   cl_assert(sizeof(s_palette) == (1 << BITS_PER_PIXEL));
 
@@ -265,13 +255,13 @@ static void prv_4bit_simple(GCompOp compositing_mode, GColor color, bool transpa
     }
   }
 
-  GBitmap s_bmp = (GBitmap) {
-    .addr = s_data,
-    .row_size_bytes = ROW_STRIDE,
-    .info.format = GBitmapFormat4BitPalette,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { .size = { WIDTH, HEIGHT } },
-    .palette = s_palette,
+  GBitmap s_bmp = (GBitmap){
+      .addr = s_data,
+      .row_size_bytes = ROW_STRIDE,
+      .info.format = GBitmapFormat4BitPalette,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {.size = {WIDTH, HEIGHT}},
+      .palette = s_palette,
   };
 
   memset(s_data, 0, sizeof(s_data));

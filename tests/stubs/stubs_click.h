@@ -33,4 +33,5 @@ WEAK bool click_recognizer_is_repeating(ClickRecognizerRef recognizer) {
   return false;
 }
 
-WEAK void app_click_config_setup_with_window(ClickManager *click_manager, Window *window) {}
+WEAK void app_click_config_setup_with_window(ClickManager *click_manager, Window *window) {
+}

@@ -53,7 +53,7 @@
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
@@ -75,15 +75,15 @@ void timeline_pin_window_push_modal(TimelineItem *item) {
 
 CommSession *comm_session_get_system_session(void) {
   // This can't be NULL (in that case we don't try to send the message)
-  return (CommSession *) 1;
+  return (CommSession *)1;
 }
 
-void comm_session_set_responsiveness(
-    CommSession *session, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs) {
+void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
+                                     ResponseTimeState state, uint16_t max_period_secs) {
   return;
 }
 
-void* event_service_claim_buffer(PebbleEvent *e) {
+void *event_service_claim_buffer(PebbleEvent *e) {
   return NULL;
 }
 

@@ -60,7 +60,7 @@ struct SerializeTestResult {
   uint16_t expected_size;
 };
 
-static void serialize_callback(const uint8_t * const data, const uint16_t size, void *context) {
+static void serialize_callback(const uint8_t *const data, const uint16_t size, void *context) {
   struct SerializeTestResult *result = context;
   result->okay = true;
   result->expected_size = size;
@@ -74,16 +74,16 @@ static void serialize_callback(const uint8_t * const data, const uint16_t size, 
 
 void test_dict__tuplets_utils(void) {
   Tuplet tuplets[] = {
-    TupletBytes(SOME_DATA_KEY, SOME_DATA, sizeof(SOME_DATA)),
-    TupletCString(SOME_STRING_KEY, SOME_STRING),
-    TupletInteger(SOME_UINT32_KEY, (uint32_t) 32),
+      TupletBytes(SOME_DATA_KEY, SOME_DATA, sizeof(SOME_DATA)),
+      TupletCString(SOME_STRING_KEY, SOME_STRING),
+      TupletInteger(SOME_UINT32_KEY, (uint32_t)32),
   };
   const uint32_t size = dict_calc_buffer_size_from_tuplets(tuplets, 3);
-  cl_assert(size == sizeof(Dictionary) + (3 * sizeof(Tuple)) + sizeof(SOME_DATA) + strlen(SOME_STRING) + 1 + sizeof(uint32_t));
+  cl_assert(size == sizeof(Dictionary) + (3 * sizeof(Tuple)) + sizeof(SOME_DATA) +
+                        strlen(SOME_STRING) + 1 + sizeof(uint32_t));
 
-  struct SerializeTestResult context = { .okay = false, .expected_size = size };
-  DictionaryResult result = dict_serialize_tuplets(serialize_callback, &context,
-      tuplets, 3);
+  struct SerializeTestResult context = {.okay = false, .expected_size = size};
+  DictionaryResult result = dict_serialize_tuplets(serialize_callback, &context, tuplets, 3);
   cl_assert(result == DICT_OK);
   cl_assert(context.okay == true);
   cl_assert(context.expected_size == size);
@@ -92,18 +92,11 @@ void test_dict__tuplets_utils(void) {
 void test_dict__write_read(void) {
   // Stack allocated buffer:
   const uint8_t key_count = 10;
-  const uint32_t size = dict_calc_buffer_size(key_count,
-                                              sizeof(SOME_DATA),
-                                              strlen(SOME_STRING) + 1,
-                                              sizeof(uint8_t),
-                                              sizeof(uint16_t),
-                                              sizeof(uint32_t),
-                                              sizeof(int8_t),
-                                              sizeof(int16_t),
-                                              sizeof(int32_t),
-                                              0,
-                                              strlen(SOME_EMPTY_STRING) + 1);
-  const uint32_t surplus = 16; // allocate more than needed, see comment with the `final_size` test
+  const uint32_t size =
+      dict_calc_buffer_size(key_count, sizeof(SOME_DATA), strlen(SOME_STRING) + 1, sizeof(uint8_t),
+                            sizeof(uint16_t), sizeof(uint32_t), sizeof(int8_t), sizeof(int16_t),
+                            sizeof(int32_t), 0, strlen(SOME_EMPTY_STRING) + 1);
+  const uint32_t surplus = 16;  // allocate more than needed, see comment with the `final_size` test
   uint8_t buffer[size + surplus];
 
   // Write:
@@ -202,7 +195,8 @@ void test_dict__write_read(void) {
         break;
       case SOME_EMPTY_STRING_KEY:
         cl_assert(tuple->length == strlen(SOME_EMPTY_STRING) + 1);
-        cl_assert(strncmp(tuple->value->cstring, SOME_EMPTY_STRING, strlen(SOME_EMPTY_STRING) + 1) == 0);
+        cl_assert(
+            strncmp(tuple->value->cstring, SOME_EMPTY_STRING, strlen(SOME_EMPTY_STRING) + 1) == 0);
         // Check zero termination:
         cl_assert(tuple->value->cstring[strlen(SOME_EMPTY_STRING)] == 0);
         empty_cstring_found = true;
@@ -253,7 +247,8 @@ static bool should_update_existing_keys_only = false;
 static bool test_not_enough_storage = false;
 static bool is_data_updated = false;
 
-static void update_key_callback(const uint32_t key, const Tuple *new_tuple, const Tuple *old_tuple, void *context) {
+static void update_key_callback(const uint32_t key, const Tuple *new_tuple, const Tuple *old_tuple,
+                                void *context) {
   cl_assert(CONTEXT == context);
   switch (key) {
     case SOME_INT8_KEY:
@@ -288,12 +283,12 @@ static void update_key_callback(const uint32_t key, const Tuple *new_tuple, cons
 
 void test_dict__merge(void) {
   Tuplet dest_tuplets[] = {
-    TupletBytes(SOME_DATA_KEY, SOME_DATA, sizeof(SOME_DATA)), // unchanged value
-    TupletCString(SOME_STRING_KEY, SOME_STRING),
+      TupletBytes(SOME_DATA_KEY, SOME_DATA, sizeof(SOME_DATA)),  // unchanged value
+      TupletCString(SOME_STRING_KEY, SOME_STRING),
   };
   Tuplet source_tuplets[] = {
-    TupletCString(SOME_STRING_KEY, NEW_STRING),
-    TupletInteger(SOME_INT8_KEY, (int8_t) -3),
+      TupletCString(SOME_STRING_KEY, NEW_STRING),
+      TupletInteger(SOME_INT8_KEY, (int8_t)-3),
   };
 
   for (int i = 0; i < 3; ++i) {
@@ -305,25 +300,31 @@ void test_dict__merge(void) {
     should_update_existing_keys_only = (i == 0) || test_not_enough_storage;
 
     uint32_t tmp_size = 0;
-    const uint32_t source_size = dict_calc_buffer_size_from_tuplets(source_tuplets, ARRAY_LENGTH(source_tuplets));
-    const uint32_t min_dest_size = dict_calc_buffer_size_from_tuplets(dest_tuplets, ARRAY_LENGTH(dest_tuplets));
+    const uint32_t source_size =
+        dict_calc_buffer_size_from_tuplets(source_tuplets, ARRAY_LENGTH(source_tuplets));
+    const uint32_t min_dest_size =
+        dict_calc_buffer_size_from_tuplets(dest_tuplets, ARRAY_LENGTH(dest_tuplets));
 
-    const uint32_t dest_size = test_not_enough_storage ? min_dest_size : min_dest_size + source_size;
+    const uint32_t dest_size =
+        test_not_enough_storage ? min_dest_size : min_dest_size + source_size;
 
     uint8_t source_buffer[source_size];
-    tmp_size = source_size; // dict_serialize_tuplets_to_buffer modifies this.
-    dict_serialize_tuplets_to_buffer(source_tuplets, ARRAY_LENGTH(source_tuplets), source_buffer, &tmp_size);
+    tmp_size = source_size;  // dict_serialize_tuplets_to_buffer modifies this.
+    dict_serialize_tuplets_to_buffer(source_tuplets, ARRAY_LENGTH(source_tuplets), source_buffer,
+                                     &tmp_size);
     DictionaryIterator source_iter;
     dict_read_begin_from_buffer(&source_iter, source_buffer, source_size);
 
     uint8_t dest_buffer[dest_size];
-    tmp_size = dest_size; // dict_serialize_tuplets_to_buffer modifies this.
-    dict_serialize_tuplets_to_buffer(dest_tuplets, ARRAY_LENGTH(dest_tuplets), dest_buffer, &tmp_size);
+    tmp_size = dest_size;  // dict_serialize_tuplets_to_buffer modifies this.
+    dict_serialize_tuplets_to_buffer(dest_tuplets, ARRAY_LENGTH(dest_tuplets), dest_buffer,
+                                     &tmp_size);
     DictionaryIterator dest_iter;
     dict_read_begin_from_buffer(&dest_iter, dest_buffer, dest_size);
 
     tmp_size = dest_size;
-    dict_merge(&dest_iter, &tmp_size, &source_iter, should_update_existing_keys_only, update_key_callback, (void *) CONTEXT);
+    dict_merge(&dest_iter, &tmp_size, &source_iter, should_update_existing_keys_only,
+               update_key_callback, (void *)CONTEXT);
     cl_assert(is_int8_updated == !should_update_existing_keys_only);
     cl_assert(is_string_updated == !test_not_enough_storage);
     cl_assert(is_data_updated == !test_not_enough_storage);
@@ -334,7 +335,7 @@ void test_dict__merge(void) {
       DATA_IDX,
       NUM_TUPLES,
     };
-    bool has_tuple[NUM_TUPLES] = { false, false, false };
+    bool has_tuple[NUM_TUPLES] = {false, false, false};
     Tuple *tuple = dict_read_begin_from_buffer(&dest_iter, dest_buffer, tmp_size);
     while (tuple) {
       switch (tuple->key) {

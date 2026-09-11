@@ -8,7 +8,6 @@
 #include "shell/prefs_syscalls.h"
 #include "pbl/util/size.h"
 
-
 // Stubs
 #include "stubs_app_manager.h"
 #include "stubs_logging.h"
@@ -28,8 +27,7 @@ static HealthServiceState s_health_service;
 
 // -----------------------------------
 // T_STATIC functions from health_service.c
-bool prv_calculate_time_range(time_t time_start, time_t time_end,
-                              HealthServiceTimeRange *range);
+bool prv_calculate_time_range(time_t time_start, time_t time_end, HealthServiceTimeRange *range);
 
 void prv_adjust_value_boundaries(HealthValue *values, size_t num_values,
                                  const HealthServiceTimeRange *range);
@@ -41,7 +39,6 @@ int64_t prv_session_compare(const ActivitySession *a, const ActivitySession *b,
                             HealthIterationDirection direction);
 
 void prv_health_event_handler(PebbleEvent *e, void *context);
-
 
 // -----------------------------------
 // Stubs
@@ -62,7 +59,8 @@ HealthServiceState *worker_state_get_health_service_state(void) {
   return NULL;
 }
 
-void sys_send_pebble_event_to_kernel(PebbleEvent* event) {}
+void sys_send_pebble_event_to_kernel(PebbleEvent *event) {
+}
 
 HRMSessionRef sys_hrm_manager_get_app_subscription(AppInstallId app_id) {
   return HRM_INVALID_SESSION_REF;
@@ -78,7 +76,6 @@ bool sys_hrm_manager_get_subscription_info(HRMSessionRef session, AppInstallId *
                                            HRMFeature *features) {
   return false;
 }
-
 
 typedef struct {
   struct {
@@ -113,7 +110,6 @@ static void prv_override_metric(ActivityMetric metric, int32_t value) {
 }
 // End override code
 
-
 static sys_activity_get_metric_values s_sys_activity_get_metric_values;
 
 // mock that simply copies values from static vars and stores args for later inspection
@@ -138,8 +134,10 @@ bool sys_activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_
   return s_sys_activity_get_metric_values.out.result;
 }
 
-void event_service_client_subscribe(EventServiceInfo * service_info) {}
-void event_service_client_unsubscribe(EventServiceInfo * service_info) {}
+void event_service_client_subscribe(EventServiceInfo *service_info) {
+}
+void event_service_client_unsubscribe(EventServiceInfo *service_info) {
+}
 
 static UnitsDistance s_units_distance_result;
 
@@ -163,9 +161,7 @@ bool sys_activity_get_sessions(uint32_t *num_sessions, ActivitySession *sessions
   cl_assert(s_sys_activity_get_sessions_values.out.num_sessions <=
             ARRAY_LENGTH(s_sys_activity_get_sessions_values.out.sessions));
 
-  for (uint32_t i = 0;
-       i < MIN(*num_sessions,
-               s_sys_activity_get_sessions_values.out.num_sessions);
+  for (uint32_t i = 0; i < MIN(*num_sessions, s_sys_activity_get_sessions_values.out.num_sessions);
        i++) {
     sessions[i] = s_sys_activity_get_sessions_values.out.sessions[i];
   }
@@ -173,7 +169,6 @@ bool sys_activity_get_sessions(uint32_t *num_sessions, ActivitySession *sessions
   *num_sessions = s_sys_activity_get_sessions_values.out.num_sessions;
   return s_sys_activity_get_sessions_values.out.result;
 }
-
 
 typedef struct {
   struct {
@@ -214,11 +209,12 @@ static HealthActivityCBData s_prv_activity_cb__args[100];
 static uint32_t s_prv_activity_cb__call_count;
 static uint32_t s_prv_activity_cb__false_at_call_no = UINT32_MAX;
 
-bool prv_activity_cb(HealthActivity activity,
-                     time_t time_start, time_t time_end,
-                     void *context) {
-  s_prv_activity_cb__args[s_prv_activity_cb__call_count] = (HealthActivityCBData) {
-    .activity = activity, .time_start = time_start, .time_end = time_end, .context = context,
+bool prv_activity_cb(HealthActivity activity, time_t time_start, time_t time_end, void *context) {
+  s_prv_activity_cb__args[s_prv_activity_cb__call_count] = (HealthActivityCBData){
+      .activity = activity,
+      .time_start = time_start,
+      .time_end = time_end,
+      .context = context,
   };
   s_prv_activity_cb__call_count++;
 
@@ -247,7 +243,6 @@ typedef struct {
 } sys_activity_get_minute_history_values;
 
 static sys_activity_get_minute_history_values s_sys_activity_get_minute_history_values;
-
 
 bool sys_activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                      time_t *utc_start) {
@@ -283,26 +278,25 @@ bool sys_activity_sessions_is_session_type_ongoing(ActivitySessionType type) {
   return s_activity_sessions_ongoing[type];
 }
 
-
 /////////////////////////////////////////
 
 void test_health__initialize(void) {
   TimezoneInfo tz_info = {
-    .tm_zone = "UTC",
-    .tm_gmtoff = 0,
+      .tm_zone = "UTC",
+      .tm_gmtoff = 0,
   };
   time_util_update_timezone(&tz_info);
 
   s_health_service = (HealthServiceState){};
-  time_t utc_sec = 1451293942; // some constant time for this test
-    // Mon, 28 Dec 2015 09:12:22 GMT
-    // => 22+12*60+9*60*60 = 33142 seconds into this day
-    // =>   24*60*60-33142 = 53258 seconds remaining this day
+  time_t utc_sec = 1451293942;  // some constant time for this test
+                                // Mon, 28 Dec 2015 09:12:22 GMT
+                                // => 22+12*60+9*60*60 = 33142 seconds into this day
+                                // =>   24*60*60-33142 = 53258 seconds remaining this day
   fake_rtc_init(100 /*initial_ticks*/, utc_sec);
 
-  s_sys_activity_get_metric_values = (sys_activity_get_metric_values) {
-    .out.result = true,
-    .in.metric = (ActivityMetric)-1,
+  s_sys_activity_get_metric_values = (sys_activity_get_metric_values){
+      .out.result = true,
+      .in.metric = (ActivityMetric)-1,
   };
 
   memset(s_prv_activity_cb__args, 0, sizeof(s_prv_activity_cb__args));
@@ -310,9 +304,9 @@ void test_health__initialize(void) {
   s_prv_activity_cb__call_count = 0;
   s_prv_activity_cb__false_at_call_no = UINT32_MAX;
 
-  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values) {
-    // as all these values need to be configured in the test, we assert per default
-    .out[0].asserts = true,
+  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
+      // as all these values need to be configured in the test, we assert per default
+      .out[0].asserts = true,
   };
 
   s_activity_prefs_heart_rate_enabled = true;
@@ -334,29 +328,26 @@ void test_health__sum_today(void) {
   cl_assert_equal_i(s_sys_activity_get_metric_values.in.history_len, ACTIVITY_HISTORY_DAYS);
 }
 
-#define cl_assert_equal_range(a, b) \
-  do { \
-    HealthServiceTimeRange r_a = (a); \
-    HealthServiceTimeRange r_b = (b); \
-    bool success = memcmp(&r_a, &r_b, sizeof(r_a)) == 0; \
-    if (!success) { \
-      char error_msg[256] = {0}; \
-      snprintf(error_msg, sizeof(error_msg), \
-          "HealthServiceInternalTimeRange equal\n" \
-          "    a: {last_day_idx:%d, num_days:%d, seconds_first_day:%d, seconds_last_day:%d, " \
-                  "seconds_total_last_day: %d}\n" \
-          "    b: {last_day_idx:%d, num_days:%d, seconds_first_day:%d, seconds_last_day:%d," \
-                  "seconds_total_last_day: %d}\n", \
-              (int)r_a.last_day_idx, (int)r_a.num_days, \
-              (int)r_a.seconds_first_day, (int)r_a.seconds_last_day, \
-              (int)r_a.seconds_total_last_day, \
-              (int)r_b.last_day_idx, (int)r_b.num_days, \
-              (int)r_b.seconds_first_day, (int)r_b.seconds_last_day, \
-              (int)r_b.seconds_total_last_day); \
-      clar__assert(0, __FILE__, __LINE__, "Expression is not true: ", error_msg, 1); \
-    } \
-  } while(0);
-
+#define cl_assert_equal_range(a, b)                                                                \
+  do {                                                                                             \
+    HealthServiceTimeRange r_a = (a);                                                              \
+    HealthServiceTimeRange r_b = (b);                                                              \
+    bool success = memcmp(&r_a, &r_b, sizeof(r_a)) == 0;                                           \
+    if (!success) {                                                                                \
+      char error_msg[256] = {0};                                                                   \
+      snprintf(error_msg, sizeof(error_msg),                                                       \
+               "HealthServiceInternalTimeRange equal\n"                                            \
+               "    a: {last_day_idx:%d, num_days:%d, seconds_first_day:%d, seconds_last_day:%d, " \
+               "seconds_total_last_day: %d}\n"                                                     \
+               "    b: {last_day_idx:%d, num_days:%d, seconds_first_day:%d, seconds_last_day:%d,"  \
+               "seconds_total_last_day: %d}\n",                                                    \
+               (int)r_a.last_day_idx, (int)r_a.num_days, (int)r_a.seconds_first_day,               \
+               (int)r_a.seconds_last_day, (int)r_a.seconds_total_last_day, (int)r_b.last_day_idx,  \
+               (int)r_b.num_days, (int)r_b.seconds_first_day, (int)r_b.seconds_last_day,           \
+               (int)r_b.seconds_total_last_day);                                                   \
+      clar__assert(0, __FILE__, __LINE__, "Expression is not true: ", error_msg, 1);               \
+    }                                                                                              \
+  } while (0);
 
 void test_health__range_to_day_id(void) {
   const time_t now = rtc_get_time();
@@ -368,35 +359,35 @@ void test_health__range_to_day_id(void) {
   result = prv_calculate_time_range(time_util_get_midnight_of(now), now, &range);
   cl_assert(result);
   cl_assert_equal_range(range, ((HealthServiceTimeRange){
-    .last_day_idx = 0,
-    .num_days = 1,
-    .seconds_first_day = 33142,
-    .seconds_last_day = 33142,
-    .seconds_total_last_day = 33142,
-  }));
+                                   .last_day_idx = 0,
+                                   .num_days = 1,
+                                   .seconds_first_day = 33142,
+                                   .seconds_last_day = 33142,
+                                   .seconds_total_last_day = 33142,
+                               }));
 
   // yesterday
-  result = prv_calculate_time_range(
-    time_util_get_midnight_of(now - SECONDS_PER_DAY), time_util_get_midnight_of(now), &range);
+  result = prv_calculate_time_range(time_util_get_midnight_of(now - SECONDS_PER_DAY),
+                                    time_util_get_midnight_of(now), &range);
   cl_assert(result);
   cl_assert_equal_range(range, ((HealthServiceTimeRange){
-    .last_day_idx = 1,
-    .num_days = 1,
-    .seconds_first_day = 86400,
-    .seconds_last_day = 86400,
-    .seconds_total_last_day = 86400,
-  }));
+                                   .last_day_idx = 1,
+                                   .num_days = 1,
+                                   .seconds_first_day = 86400,
+                                   .seconds_last_day = 86400,
+                                   .seconds_total_last_day = 86400,
+                               }));
 
   // some time yesterday + today
   result = prv_calculate_time_range(now - SECONDS_PER_DAY, now, &range);
   cl_assert(result);
   cl_assert_equal_range(range, ((HealthServiceTimeRange){
-    .last_day_idx = 0,
-    .num_days = 2,
-    .seconds_first_day = 53258,
-    .seconds_last_day = 33142,
-    .seconds_total_last_day = 33142,
-  }));
+                                   .last_day_idx = 0,
+                                   .num_days = 2,
+                                   .seconds_first_day = 53258,
+                                   .seconds_last_day = 33142,
+                                   .seconds_total_last_day = 33142,
+                               }));
 }
 
 void test_health__range_to_day_id_respects_local_time(void) {
@@ -409,30 +400,30 @@ void test_health__range_to_day_id_respects_local_time(void) {
   result = prv_calculate_time_range(now - SECONDS_PER_DAY, now, &range);
   cl_assert(result);
   cl_assert_equal_range(range, ((HealthServiceTimeRange){
-    .last_day_idx = 0,
-    .num_days = 2,
-    .seconds_first_day = 53258,
-    .seconds_last_day = 33142,
-    .seconds_total_last_day = 33142,
-  }));
+                                   .last_day_idx = 0,
+                                   .num_days = 2,
+                                   .seconds_first_day = 53258,
+                                   .seconds_last_day = 33142,
+                                   .seconds_total_last_day = 33142,
+                               }));
 
   // shifted one hour
   time_t utc_to_local_delta = SECONDS_PER_HOUR;
   TimezoneInfo tz_info = {
-    .tm_zone = "FOO",
-    .tm_gmtoff = utc_to_local_delta,
+      .tm_zone = "FOO",
+      .tm_gmtoff = utc_to_local_delta,
   };
   time_util_update_timezone(&tz_info);
 
   result = prv_calculate_time_range(now - SECONDS_PER_DAY, now, &range);
   cl_assert(result);
   cl_assert_equal_range(range, ((HealthServiceTimeRange){
-    .last_day_idx = 0,
-    .num_days = 2,
-    .seconds_first_day = 53258 - utc_to_local_delta,
-    .seconds_last_day = 33142 + utc_to_local_delta,
-    .seconds_total_last_day = 33142 + utc_to_local_delta,
-  }));
+                                   .last_day_idx = 0,
+                                   .num_days = 2,
+                                   .seconds_first_day = 53258 - utc_to_local_delta,
+                                   .seconds_last_day = 33142 + utc_to_local_delta,
+                                   .seconds_total_last_day = 33142 + utc_to_local_delta,
+                               }));
 }
 
 void test_health__range_to_day_id_rejects_invalid_values(void) {
@@ -448,11 +439,9 @@ void test_health__range_to_day_id_rejects_invalid_values(void) {
   cl_assert_equal_b(result, false);
 
   // too far in the past
-  result = prv_calculate_time_range(
-    now - (ACTIVITY_HISTORY_DAYS + 10) * SECONDS_PER_DAY,
-    now - (ACTIVITY_HISTORY_DAYS + 2) * SECONDS_PER_DAY, NULL);
+  result = prv_calculate_time_range(now - (ACTIVITY_HISTORY_DAYS + 10) * SECONDS_PER_DAY,
+                                    now - (ACTIVITY_HISTORY_DAYS + 2) * SECONDS_PER_DAY, NULL);
   cl_assert_equal_b(result, false);
-
 
   // start after end
   result = prv_calculate_time_range(now - 100, now - 200, NULL);
@@ -468,26 +457,25 @@ void test_health__range_to_day_id_clamps_values(void) {
   result = prv_calculate_time_range(now - 10, now + 11, &range);
   cl_assert_equal_b(result, true);
   cl_assert_equal_range(range, ((HealthServiceTimeRange){
-    .last_day_idx = 0,
-    .num_days = 1,
-    .seconds_first_day = 10,
-    .seconds_last_day = 10,
-    .seconds_total_last_day = 33142,
-  }));
+                                   .last_day_idx = 0,
+                                   .num_days = 1,
+                                   .seconds_first_day = 10,
+                                   .seconds_last_day = 10,
+                                   .seconds_total_last_day = 33142,
+                               }));
 
   // clamps value that goes into the future
   const time_t first_valid_time =
-    time_util_get_midnight_of(now - (ACTIVITY_HISTORY_DAYS - 1) * SECONDS_PER_DAY);
-  result = prv_calculate_time_range(first_valid_time - 12, first_valid_time + 13,
-                                    &range);
+      time_util_get_midnight_of(now - (ACTIVITY_HISTORY_DAYS - 1) * SECONDS_PER_DAY);
+  result = prv_calculate_time_range(first_valid_time - 12, first_valid_time + 13, &range);
   cl_assert_equal_b(result, true);
   cl_assert_equal_range(range, ((HealthServiceTimeRange){
-    .last_day_idx = ACTIVITY_HISTORY_DAYS - 1,
-    .num_days = 1,
-    .seconds_first_day = 13,
-    .seconds_last_day = 13,
-    .seconds_total_last_day = 86400,
-  }));
+                                   .last_day_idx = ACTIVITY_HISTORY_DAYS - 1,
+                                   .num_days = 1,
+                                   .seconds_first_day = 13,
+                                   .seconds_last_day = 13,
+                                   .seconds_total_last_day = 86400,
+                               }));
 }
 
 void test_health__sum_full_days(void) {
@@ -501,38 +489,33 @@ void test_health__sum_full_days(void) {
   const time_t now = rtc_get_time();
   HealthValue result;
   // today until now
-  result = health_service_sum(HealthMetricStepCount,
-                              time_util_get_midnight_of(now),
-                              now);
+  result = health_service_sum(HealthMetricStepCount, time_util_get_midnight_of(now), now);
   cl_assert_equal_i(result, 1000);
   cl_assert_equal_i(s_sys_activity_get_metric_values.in.history_len, ACTIVITY_HISTORY_DAYS);
 
   // today into future
-  result = health_service_sum(HealthMetricStepCount,
-                              time_util_get_midnight_of(now),
-                              now + 12345);
+  result = health_service_sum(HealthMetricStepCount, time_util_get_midnight_of(now), now + 12345);
   cl_assert_equal_i(result, 1000);
 
   // yesterday
-  result = health_service_sum(HealthMetricStepCount,
-                              time_util_get_midnight_of(now) - SECONDS_PER_DAY,
-                              time_util_get_midnight_of(now));
+  result =
+      health_service_sum(HealthMetricStepCount, time_util_get_midnight_of(now) - SECONDS_PER_DAY,
+                         time_util_get_midnight_of(now));
   cl_assert_equal_i(result, 2000);
 
   // yesterday and today
   result = health_service_sum(HealthMetricStepCount,
-                              time_util_get_midnight_of(now) - SECONDS_PER_DAY,
-                              now);
+                              time_util_get_midnight_of(now) - SECONDS_PER_DAY, now);
   cl_assert_equal_i(result, 1000 + 2000);
 }
 
 void test_health__process_range(void) {
   HealthValue values[4] = {1000, 1000, 1000, 1000};
   HealthServiceTimeRange range = {
-    .num_days = 3,
-    .seconds_first_day = SECONDS_PER_DAY / 10,
-    .seconds_last_day = SECONDS_PER_DAY / 5,
-    .seconds_total_last_day = SECONDS_PER_DAY,
+      .num_days = 3,
+      .seconds_first_day = SECONDS_PER_DAY / 10,
+      .seconds_last_day = SECONDS_PER_DAY / 5,
+      .seconds_total_last_day = SECONDS_PER_DAY,
   };
 
   // make sure we treat first and last day correctly (last == idx 0)
@@ -583,11 +566,11 @@ void test_health__process_range(void) {
 
   // ensure we correctly handle the day index
   range = (HealthServiceTimeRange){
-    .num_days = 3,
-    .last_day_idx = 1,
-    .seconds_first_day = SECONDS_PER_DAY / 10,
-    .seconds_last_day = SECONDS_PER_DAY / 5,
-    .seconds_total_last_day = SECONDS_PER_DAY,
+      .num_days = 3,
+      .last_day_idx = 1,
+      .seconds_first_day = SECONDS_PER_DAY / 10,
+      .seconds_last_day = SECONDS_PER_DAY / 5,
+      .seconds_total_last_day = SECONDS_PER_DAY,
   };
   prv_adjust_value_boundaries(values, ARRAY_LENGTH(values), &range);
   cl_assert_equal_i(values[0], 1000);
@@ -607,15 +590,14 @@ void test_health__sum_fraction_days(void) {
   const time_t now = rtc_get_time();
   HealthValue result;
   // 3/4 of yesterday
-  result = health_service_sum(HealthMetricStepCount,
-                              time_util_get_midnight_of(now) - SECONDS_PER_DAY,
-                              time_util_get_midnight_of(now) - SECONDS_PER_DAY / 4);
+  result =
+      health_service_sum(HealthMetricStepCount, time_util_get_midnight_of(now) - SECONDS_PER_DAY,
+                         time_util_get_midnight_of(now) - SECONDS_PER_DAY / 4);
   cl_assert_equal_i(result, 1500);
   cl_assert_equal_i(s_sys_activity_get_metric_values.in.history_len, ACTIVITY_HISTORY_DAYS);
 
   // 1/2 of today's captured seconds so far
-  result = health_service_sum(HealthMetricStepCount,
-                              time_util_get_midnight_of(now),
+  result = health_service_sum(HealthMetricStepCount, time_util_get_midnight_of(now),
                               (time_util_get_midnight_of(now) + now) / 2);
   cl_assert_equal_i(result, 500);
 }
@@ -657,13 +639,12 @@ void test_health__metric_accessible(void) {
   // if all values are -1, data is not available
   s_sys_activity_get_metric_values.out.history[0] = -1;
   s_sys_activity_get_metric_values.out.history[1] = -1;
-  accessible = health_service_metric_accessible(HealthMetricStepCount,
-                                                now - SECONDS_PER_DAY, now);
+  accessible = health_service_metric_accessible(HealthMetricStepCount, now - SECONDS_PER_DAY, now);
   cl_assert_equal_i(accessible, HealthServiceAccessibilityMaskNotAvailable);
 
   // if some values are >= 0, data is not available (day at idx 2)
-  accessible = health_service_metric_accessible(HealthMetricStepCount,
-                                                now - 2 * SECONDS_PER_DAY, now);
+  accessible =
+      health_service_metric_accessible(HealthMetricStepCount, now - 2 * SECONDS_PER_DAY, now);
   cl_assert_equal_i(accessible, HealthServiceAccessibilityMaskAvailable);
 }
 
@@ -684,8 +665,8 @@ void test_health__metric_hr_accessible(void) {
   cl_assert_equal_i(accessible, HealthServiceAccessibilityMaskAvailable);
 
   // HR has a limit of two hours. Make sure if we are within that range it's available
-  accessible = health_service_metric_accessible(HealthMetricHeartRateBPM,
-                                                now - 2 * SECONDS_PER_HOUR, now);
+  accessible =
+      health_service_metric_accessible(HealthMetricHeartRateBPM, now - 2 * SECONDS_PER_HOUR, now);
   cl_assert_equal_i(accessible, HealthServiceAccessibilityMaskAvailable);
 }
 
@@ -707,46 +688,33 @@ void test_health__metric_hr_averaged_accessible(void) {
   } TestInputOutput;
 
   const TestInputOutput tests[] = {
-    {
-      .desc = "Valid time range with ScopeOnce",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskAvailable }
-    },
-    {
-      .desc = "Valid time range with ScopeWeekly",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeWeekly },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "Valid time range with ScopeDailyWeekdayOrWeekend",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeDailyWeekdayOrWeekend },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "Valid time range with ScopeDaily",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeDaily },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "Invalid future time range with ScopeOnce",
-      .in =  { HealthMetricHeartRateBPM, now + 10, now + 20, HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskNotAvailable }
-    },
-    {
-      .desc = "Time range that goes further back into history than BPM supports",
-      .in =  { HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now, HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "Time range that goes further back into history than BPM supports",
-      .in =  { HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR, HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "HR Disabled. Return NoPermission",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeOnce, true},
-      .out = { HealthServiceAccessibilityMaskNoPermission }
-    },
+      {.desc = "Valid time range with ScopeOnce",
+       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskAvailable}},
+      {.desc = "Valid time range with ScopeWeekly",
+       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeWeekly},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "Valid time range with ScopeDailyWeekdayOrWeekend",
+       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeDailyWeekdayOrWeekend},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "Valid time range with ScopeDaily",
+       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeDaily},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "Invalid future time range with ScopeOnce",
+       .in = {HealthMetricHeartRateBPM, now + 10, now + 20, HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskNotAvailable}},
+      {.desc = "Time range that goes further back into history than BPM supports",
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now, HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "Time range that goes further back into history than BPM supports",
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR,
+            HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "HR Disabled. Return NoPermission",
+       .in = {HealthMetricHeartRateBPM, now - 10, now, HealthServiceTimeScopeOnce, true},
+       .out = {HealthServiceAccessibilityMaskNoPermission}},
   };
 
   // Run all the tests
@@ -754,13 +722,10 @@ void test_health__metric_hr_averaged_accessible(void) {
   for (int i = 0; i < ARRAY_LENGTH(tests); i++) {
     const TestInputOutput *test = &tests[i];
     s_activity_prefs_heart_rate_enabled = !test->in.hr_disabled;
-    accessible = health_service_metric_averaged_accessible(test->in.metric,
-                                                           test->in.time_start,
-                                                           test->in.time_end,
-                                                           test->in.scope);
-    PBL_LOG_DBG("%s\nMetric: %d, start: %d, end: %d, Scope: %d",
-            test->desc, (int)test->in.metric, (int)test->in.time_start,
-            (int)test->in.time_end, (int)test->in.scope);
+    accessible = health_service_metric_averaged_accessible(test->in.metric, test->in.time_start,
+                                                           test->in.time_end, test->in.scope);
+    PBL_LOG_DBG("%s\nMetric: %d, start: %d, end: %d, Scope: %d", test->desc, (int)test->in.metric,
+                (int)test->in.time_start, (int)test->in.time_end, (int)test->in.scope);
     cl_assert_equal_i(accessible, tests[i].out.accessible);
   }
 }
@@ -784,54 +749,46 @@ void test_health__metric_hr_aggregate_averaged_accessible(void) {
   } TestInputOutput;
 
   const TestInputOutput tests[] = {
-    {
-      .desc = "Valid time range with ScopeDaily and Sum. Should be NotSupported",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthAggregationSum,
-               HealthServiceTimeScopeDaily },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "Valid time range with ScopeDaily and Avg. Not available because Daily",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthAggregationAvg,
-               HealthServiceTimeScopeDaily },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "Valid time range with ScopeOnce and Min. Available",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMin,
-               HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskAvailable }
-    },
-    {
-      .desc = "Valid time range with ScopeOnce and Max. Available",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
-               HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskAvailable }
-    },
-    {
-      .desc = "Valid time range with ScopeDaily and Max. NotSupported",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
-               HealthServiceTimeScopeDaily },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "Invalid time range with ScopeOnce and Max. NotSupported",
-      .in =  { HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 2 * SECONDS_PER_HOUR,
-               HealthAggregationMax, HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
-    {
-      .desc = "HR Disabled. Return NoPermission",
-      .in =  { HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
-               HealthServiceTimeScopeOnce, true },
-      .out = { HealthServiceAccessibilityMaskNoPermission }
-    },
-    {
-      .desc = "Time range that goes further back into history than BPM supports",
-      .in =  { HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR,
-               HealthAggregationAvg, HealthServiceTimeScopeOnce },
-      .out = { HealthServiceAccessibilityMaskNotSupported }
-    },
+      {.desc = "Valid time range with ScopeDaily and Sum. Should be NotSupported",
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationSum,
+            HealthServiceTimeScopeDaily},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "Valid time range with ScopeDaily and Avg. Not available because Daily",
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationAvg,
+            HealthServiceTimeScopeDaily},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "Valid time range with ScopeOnce and Min. Available",
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMin,
+            HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskAvailable}},
+      {.desc = "Valid time range with ScopeOnce and Max. Available",
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
+            HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskAvailable}},
+      {.desc = "Valid time range with ScopeDaily and Max. NotSupported",
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
+            HealthServiceTimeScopeDaily},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "Invalid time range with ScopeOnce and Max. NotSupported",
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 2 * SECONDS_PER_HOUR,
+            HealthAggregationMax, HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
+      {.desc = "HR Disabled. Return NoPermission",
+       .in =
+           {HealthMetricHeartRateBPM, now - 10, now, HealthAggregationMax,
+            HealthServiceTimeScopeOnce, true},
+       .out = {HealthServiceAccessibilityMaskNoPermission}},
+      {.desc = "Time range that goes further back into history than BPM supports",
+       .in =
+           {HealthMetricHeartRateBPM, now - 3 * SECONDS_PER_HOUR, now - 1 * SECONDS_PER_HOUR,
+            HealthAggregationAvg, HealthServiceTimeScopeOnce},
+       .out = {HealthServiceAccessibilityMaskNotSupported}},
   };
 
   // Run all the tests
@@ -839,14 +796,12 @@ void test_health__metric_hr_aggregate_averaged_accessible(void) {
   for (int i = 0; i < ARRAY_LENGTH(tests); i++) {
     const TestInputOutput *test = &tests[i];
     s_activity_prefs_heart_rate_enabled = !test->in.hr_disabled;
-    accessible = health_service_metric_aggregate_averaged_accessible(test->in.metric,
-                                                                     test->in.time_start,
-                                                                     test->in.time_end,
-                                                                     test->in.aggregation,
-                                                                     test->in.scope);
-    PBL_LOG_DBG("%s\nMetric: %d, start: %d, end: %d, Aggregation: %d, Scope: %d",
-            test->desc, (int)test->in.metric, (int)test->in.time_start,
-            (int)test->in.time_end, (int)test->in.aggregation, (int)test->in.scope);
+    accessible = health_service_metric_aggregate_averaged_accessible(
+        test->in.metric, test->in.time_start, test->in.time_end, test->in.aggregation,
+        test->in.scope);
+    PBL_LOG_DBG("%s\nMetric: %d, start: %d, end: %d, Aggregation: %d, Scope: %d", test->desc,
+                (int)test->in.metric, (int)test->in.time_start, (int)test->in.time_end,
+                (int)test->in.aggregation, (int)test->in.scope);
     cl_assert_equal_i(accessible, tests[i].out.accessible);
   }
 }
@@ -854,24 +809,23 @@ void test_health__metric_hr_aggregate_averaged_accessible(void) {
 void test_health__sleep_session_matches(void) {
   const time_t now = rtc_get_time();
   ActivitySession session = {
-    .type = ActivitySessionType_Sleep,
-    .start_utc = now - (10 * SECONDS_PER_MINUTE),
-    .length_min = 10,
+      .type = ActivitySessionType_Sleep,
+      .start_utc = now - (10 * SECONDS_PER_MINUTE),
+      .length_min = 10,
   };
   bool (*fun)(const ActivitySession *, HealthActivityMask, time_t, time_t) =
-    prv_activity_session_matches;
+      prv_activity_session_matches;
 
   // mask none matches nothing
-  cl_assert_equal_b(false, fun(&session, HealthActivityNone, now - (10 * SECONDS_PER_MINUTE),
-                               now));
+  cl_assert_equal_b(false, fun(&session, HealthActivityNone, now - (10 * SECONDS_PER_MINUTE), now));
 
   // mask restful doesn't match
-  cl_assert_equal_b(false, fun(&session, HealthActivityRestfulSleep,
-                               now - (10 * SECONDS_PER_MINUTE), now));
+  cl_assert_equal_b(
+      false, fun(&session, HealthActivityRestfulSleep, now - (10 * SECONDS_PER_MINUTE), now));
 
   // exact time range matches
-  cl_assert_equal_b(true, fun(&session, HealthActivityMaskAll, now - (10 * SECONDS_PER_MINUTE),
-                              now));
+  cl_assert_equal_b(true,
+                    fun(&session, HealthActivityMaskAll, now - (10 * SECONDS_PER_MINUTE), now));
 
   // too large time range matches
   cl_assert_equal_b(true, fun(&session, HealthActivityMaskAll, now - (20 * SECONDS_PER_MINUTE),
@@ -882,8 +836,8 @@ void test_health__sleep_session_matches(void) {
                                now - (10 * SECONDS_PER_MINUTE)));
 
   // range after doesn't match, even if it touches
-  cl_assert_equal_b(false, fun(&session, HealthActivityMaskAll, now,
-                               now + (10 * SECONDS_PER_MINUTE)));
+  cl_assert_equal_b(false,
+                    fun(&session, HealthActivityMaskAll, now, now + (10 * SECONDS_PER_MINUTE)));
 
   // range that starts before matches
   cl_assert_equal_b(true, fun(&session, HealthActivityMaskAll, now - (20 * SECONDS_PER_MINUTE),
@@ -908,15 +862,13 @@ void test_health__any_activity_accessible(void) {
   cl_assert_equal_i(accessible, HealthServiceAccessibilityMaskAvailable);
 
   // too far in the past
-  accessible = health_service_any_activity_accessible(HealthActivityMaskAll,
-                                                      now - 10 * SECONDS_PER_DAY,
-                                                      now - 9 * SECONDS_PER_DAY);
+  accessible = health_service_any_activity_accessible(
+      HealthActivityMaskAll, now - 10 * SECONDS_PER_DAY, now - 9 * SECONDS_PER_DAY);
   cl_assert_equal_i(accessible, HealthServiceAccessibilityMaskNotAvailable);
 
   // range far into to past and future
-  accessible = health_service_any_activity_accessible(HealthActivityMaskAll,
-                                                      now - 10 * SECONDS_PER_DAY,
-                                                      now + 10 * SECONDS_PER_DAY);
+  accessible = health_service_any_activity_accessible(
+      HealthActivityMaskAll, now - 10 * SECONDS_PER_DAY, now + 10 * SECONDS_PER_DAY);
   cl_assert_equal_i(accessible, HealthServiceAccessibilityMaskAvailable);
 }
 
@@ -925,39 +877,39 @@ void test_health__activities_iterate(void) {
 
   // start from oldest to most-recent - this is more or less an arbitrary order
   s_sys_activity_get_sessions_values.out.sessions[6] = (ActivitySession){
-    .type = ActivitySessionType_Open,
-    .start_utc = now - (95 * SECONDS_PER_MINUTE),
-    .length_min = 15, // end = -80
+      .type = ActivitySessionType_Open,
+      .start_utc = now - (95 * SECONDS_PER_MINUTE),
+      .length_min = 15,  // end = -80
   };
   s_sys_activity_get_sessions_values.out.sessions[5] = (ActivitySession){
-    .type = ActivitySessionType_Run,
-    .start_utc = now - (80 * SECONDS_PER_MINUTE),
-    .length_min = 15, // end = -65
+      .type = ActivitySessionType_Run,
+      .start_utc = now - (80 * SECONDS_PER_MINUTE),
+      .length_min = 15,  // end = -65
   };
   s_sys_activity_get_sessions_values.out.sessions[4] = (ActivitySession){
-    .type = ActivitySessionType_Walk,
-    .start_utc = now - (65 * SECONDS_PER_MINUTE),
-    .length_min = 15, // end = -50
+      .type = ActivitySessionType_Walk,
+      .start_utc = now - (65 * SECONDS_PER_MINUTE),
+      .length_min = 15,  // end = -50
   };
   s_sys_activity_get_sessions_values.out.sessions[3] = (ActivitySession){
-    .type = ActivitySessionType_Sleep,
-    .start_utc = now - (50 * SECONDS_PER_MINUTE),
-    .length_min = 20, // end = -30
+      .type = ActivitySessionType_Sleep,
+      .start_utc = now - (50 * SECONDS_PER_MINUTE),
+      .length_min = 20,  // end = -30
   };
   s_sys_activity_get_sessions_values.out.sessions[2] = (ActivitySession){
-    .type = ActivitySessionType_RestfulSleep,
-    .start_utc = now - (45 * SECONDS_PER_MINUTE),
-    .length_min = 10, // end = -35
+      .type = ActivitySessionType_RestfulSleep,
+      .start_utc = now - (45 * SECONDS_PER_MINUTE),
+      .length_min = 10,  // end = -35
   };
   s_sys_activity_get_sessions_values.out.sessions[1] = (ActivitySession){
-    .type = ActivitySessionType_Sleep,
-    .start_utc = now - (20 * SECONDS_PER_MINUTE),
-    .length_min = 10, // end = -10
+      .type = ActivitySessionType_Sleep,
+      .start_utc = now - (20 * SECONDS_PER_MINUTE),
+      .length_min = 10,  // end = -10
   };
   s_sys_activity_get_sessions_values.out.sessions[0] = (ActivitySession){
-    .type = ActivitySessionType_RestfulSleep,
-    .start_utc = now - (18 * SECONDS_PER_MINUTE),
-    .length_min = 5, // end = -13
+      .type = ActivitySessionType_RestfulSleep,
+      .start_utc = now - (18 * SECONDS_PER_MINUTE),
+      .length_min = 5,  // end = -13
   };
   // oldest to most-recent (looking at each session's start): 3, 2, 1, 0
   // most-recent to oldest (looking at each session's end): 1, 0, 3, 2
@@ -967,8 +919,8 @@ void test_health__activities_iterate(void) {
   const int num_run_sessions = 1;
   const int num_walk_sessions = 1;
   const int num_open_sessions = 1;
-  const int num_sessions = num_sleep_sessions + num_restfulsleep_sessions +
-                           num_run_sessions + num_walk_sessions + num_open_sessions;
+  const int num_sessions = num_sleep_sessions + num_restfulsleep_sessions + num_run_sessions +
+                           num_walk_sessions + num_open_sessions;
 
   // result from mocked sys_activity_get_sessions_values is still false
   health_service_activities_iterate(HealthActivityMaskAll, now - (100 * SECONDS_PER_MINUTE), now,
@@ -992,10 +944,9 @@ void test_health__activities_iterate(void) {
   // respect mask for Run/Walk
   s_prv_activity_cb__call_count = 0;
   s_sys_activity_get_sessions_values.out.num_sessions = 7;
-  health_service_activities_iterate(HealthActivityRun | HealthActivityWalk |
-                                    HealthActivityOpenWorkout,
-                                    now - (100 * SECONDS_PER_MINUTE),
-                                    now, HealthIterationDirectionPast, prv_activity_cb, NULL);
+  health_service_activities_iterate(
+      HealthActivityRun | HealthActivityWalk | HealthActivityOpenWorkout,
+      now - (100 * SECONDS_PER_MINUTE), now, HealthIterationDirectionPast, prv_activity_cb, NULL);
   cl_assert_equal_i(num_run_sessions + num_walk_sessions + num_open_sessions,
                     s_prv_activity_cb__call_count);
   cl_assert_equal_b(s_prv_activity_cb__args[0].activity, HealthActivityRun);
@@ -1056,40 +1007,44 @@ void test_health__session_compare(void) {
   const time_t now = rtc_get_time();
 
   // both start at the same time
-  cl_assert(0 == prv_session_compare(
-    &(ActivitySession) {.start_utc = now, .length_min = 10},
-    &(ActivitySession) {.start_utc = now, .length_min = 5},
-    HealthIterationDirectionFuture));
+  cl_assert(0 == prv_session_compare(&(ActivitySession){.start_utc = now, .length_min = 10},
+                                     &(ActivitySession){.start_utc = now, .length_min = 5},
+                                     HealthIterationDirectionFuture));
 
   // a starts earlier
-  cl_assert(0 > prv_session_compare(
-    &(ActivitySession) {.start_utc = now, .length_min = 10},
-    &(ActivitySession) {.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
-    HealthIterationDirectionFuture));
+  cl_assert(0 >
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionFuture));
 
   // b starts earlier
-  cl_assert(0 < prv_session_compare(
-    &(ActivitySession) {.start_utc = now, .length_min = 10},
-    &(ActivitySession) {.start_utc = now - (2 * SECONDS_PER_MINUTE), .length_min = 5},
-    HealthIterationDirectionFuture));
+  cl_assert(0 <
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now - (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionFuture));
 
   // both end at the same time
-  cl_assert(0 == prv_session_compare(
-    &(ActivitySession) {.start_utc = now, .length_min = 10},
-    &(ActivitySession) {.start_utc = now + (5 * SECONDS_PER_MINUTE), .length_min = 5},
-    HealthIterationDirectionPast));
+  cl_assert(0 ==
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now + (5 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionPast));
 
   // a ends later
-  cl_assert(0 > prv_session_compare(
-    &(ActivitySession) {.start_utc = now, .length_min = 10},
-    &(ActivitySession) {.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
-    HealthIterationDirectionPast));
+  cl_assert(0 >
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 10},
+                &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionPast));
 
   // b ends later
-  cl_assert(0 < prv_session_compare(
-    &(ActivitySession) {.start_utc = now, .length_min = 5},
-    &(ActivitySession) {.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
-    HealthIterationDirectionPast));
+  cl_assert(0 <
+            prv_session_compare(
+                &(ActivitySession){.start_utc = now, .length_min = 5},
+                &(ActivitySession){.start_utc = now + (2 * SECONDS_PER_MINUTE), .length_min = 5},
+                HealthIterationDirectionPast));
 }
 
 void test_health__get_minute_history_edge_case_args(void) {
@@ -1118,11 +1073,11 @@ void test_health__get_minute_history_edge_case_args(void) {
   cl_assert_equal_i(0, written);
 
   // empty end works just fine
-  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values) {
-    .out[0] = {
-      .num_records = 2,
-      .result = true,
-    },
+  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
+      .out[0] = {
+          .num_records = 2,
+          .result = true,
+      },
   };
   written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, NULL);
   cl_assert_equal_i(2, written);
@@ -1133,17 +1088,17 @@ void test_health__get_minute_history(void) {
 
   HealthMinuteData data[5] = {};
   uint32_t written;
-  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values) {
-    .out[0] = {
-      .num_records = 3,
-      .result = true,
-      .utc_start = now - 10 * SECONDS_PER_MINUTE,
-      .records = {
-        {.is_invalid = false, .steps = 1},
-        {.is_invalid = true, .steps = 2},
-        {.is_invalid = false, .steps = 3},
+  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
+      .out[0] = {
+          .num_records = 3,
+          .result = true,
+          .utc_start = now - 10 * SECONDS_PER_MINUTE,
+          .records = {
+              {.is_invalid = false, .steps = 1},
+              {.is_invalid = true, .steps = 2},
+              {.is_invalid = false, .steps = 3},
+          },
       },
-    },
   };
 
   // pass time that's not exactly on a boundary
@@ -1279,8 +1234,8 @@ void test_health__avg_full_days(void) {
   }
   exp_daily /= count;
 
-  int exp_weekend = (day_totals[Sunday] + day_totals[Saturday])
-                    / (day_counts[Sunday] + day_counts[Saturday]);
+  int exp_weekend =
+      (day_totals[Sunday] + day_totals[Saturday]) / (day_counts[Sunday] + day_counts[Saturday]);
 
   int exp_weekday = 0;
   count = 0;
@@ -1289,7 +1244,6 @@ void test_health__avg_full_days(void) {
     count += day_counts[i];
   }
   exp_weekday /= count;
-
 
   // ----------------------------------------
   // Compute each type of daily average using the API and compare to expected
@@ -1300,33 +1254,28 @@ void test_health__avg_full_days(void) {
   cl_assert_equal_i(result, exp_daily);
 
   // All of our tests set "now" to Mon, 28 Dec 2015 09:12:22 GMT, so yesterday was a Sunday
-  result = health_service_sum_averaged(HealthMetricStepCount,
-                                       time_util_get_midnight_of(now) - SECONDS_PER_DAY,
-                                       time_util_get_midnight_of(now),
-                                       HealthServiceTimeScopeDailyWeekdayOrWeekend);
+  result = health_service_sum_averaged(
+      HealthMetricStepCount, time_util_get_midnight_of(now) - SECONDS_PER_DAY,
+      time_util_get_midnight_of(now), HealthServiceTimeScopeDailyWeekdayOrWeekend);
   cl_assert_equal_i(result, exp_weekend);
 
   // All of our tests set "now" to Mon, 28 Dec 2015 09:12:22 GMT, so today is a weekday
-  result = health_service_sum_averaged(HealthMetricStepCount,
-                                       time_util_get_midnight_of(now),
+  result = health_service_sum_averaged(HealthMetricStepCount, time_util_get_midnight_of(now),
                                        time_util_get_midnight_of(now) + SECONDS_PER_DAY,
                                        HealthServiceTimeScopeDailyWeekdayOrWeekend);
   cl_assert_equal_i(result, exp_weekday);
 
   // Average weekly value
-  result = health_service_sum_averaged(HealthMetricStepCount,
-                                       time_util_get_midnight_of(now),
+  result = health_service_sum_averaged(HealthMetricStepCount, time_util_get_midnight_of(now),
                                        time_util_get_midnight_of(now) + SECONDS_PER_DAY,
                                        HealthServiceTimeScopeWeekly);
   cl_assert_equal_i(result, exp_weekly);
 
   // Average weekly 48hr avg
-  result = health_service_sum_averaged(HealthMetricStepCount,
-                                       time_util_get_midnight_of(now),
+  result = health_service_sum_averaged(HealthMetricStepCount, time_util_get_midnight_of(now),
                                        time_util_get_midnight_of(now) + 2 * SECONDS_PER_DAY,
                                        HealthServiceTimeScopeWeekly);
-  cl_assert_equal_i(result, 2 *exp_weekly);
-
+  cl_assert_equal_i(result, 2 * exp_weekly);
 }
 
 // Return the sum of a bunch of step average chunks that cover the given time range. The time
@@ -1363,10 +1312,10 @@ void test_health__avg_partial_days(void) {
   // ----------------------------------
   // Let's fill in known data for the 15-minute step averages
   s_sys_activity_get_step_averages_values_weekday = (sys_activity_get_step_averages_values){
-    .out.result = true,
+      .out.result = true,
   };
   s_sys_activity_get_step_averages_values_weekend = (sys_activity_get_step_averages_values){
-    .out.result = true,
+      .out.result = true,
   };
 
   for (int i = 0;
@@ -1375,7 +1324,6 @@ void test_health__avg_partial_days(void) {
     s_sys_activity_get_step_averages_values_weekday.out.averages.average[i] = i * 10;
     s_sys_activity_get_step_averages_values_weekend.out.averages.average[i] = i * 5;
   }
-
 
   // Let's fill in daily totals that will be used when 15-minute averages are not available
   // (i.e. for metrics other than step averages)
@@ -1387,15 +1335,14 @@ void test_health__avg_partial_days(void) {
   // ---
   // Compute weekday step average from midnight to 9am. This should use the 15-minute
   // step averages that we stuffed in.
-  uint32_t exp_value = prv_averages_sum(0, 9 * MINUTES_PER_HOUR,
-      &s_sys_activity_get_step_averages_values_weekday.out.averages);
+  uint32_t exp_value = prv_averages_sum(
+      0, 9 * MINUTES_PER_HOUR, &s_sys_activity_get_step_averages_values_weekday.out.averages);
 
   time_t start_of_today = time_start_of_today();
   HealthValue value = health_service_sum_averaged(HealthMetricStepCount, start_of_today,
                                                   start_of_today + (9 * SECONDS_PER_HOUR),
                                                   HealthServiceTimeScopeDailyWeekdayOrWeekend);
   cl_assert_equal_i(value, exp_value);
-
 
   // ---
   // Compute weekday HealthMetricActiveSeconds from midnight to 9am. This should use the daily
@@ -1404,23 +1351,21 @@ void test_health__avg_partial_days(void) {
 
   start_of_today = time_start_of_today();
   value = health_service_sum_averaged(HealthMetricActiveSeconds, start_of_today,
-                                                  start_of_today + (9 * SECONDS_PER_HOUR),
-                                                  HealthServiceTimeScopeDailyWeekdayOrWeekend);
+                                      start_of_today + (9 * SECONDS_PER_HOUR),
+                                      HealthServiceTimeScopeDailyWeekdayOrWeekend);
   cl_assert_equal_i(value, exp_value);
-
 
   // ---
   // Compute weekend step average from 4am to 9am. This should use the 15-minute
   // step averages that we stuffed in.
   exp_value = prv_averages_sum(4 * MINUTES_PER_HOUR, 9 * MINUTES_PER_HOUR,
-                       &s_sys_activity_get_step_averages_values_weekend.out.averages);
+                               &s_sys_activity_get_step_averages_values_weekend.out.averages);
 
   // Since "today" is Monday, going back 24 hours puts us on a weekend
-  time_t start_time = time_start_of_today() - SECONDS_PER_DAY
-                    + (4 * SECONDS_PER_HOUR);
+  time_t start_time = time_start_of_today() - SECONDS_PER_DAY + (4 * SECONDS_PER_HOUR);
   value = health_service_sum_averaged(HealthMetricStepCount, start_time,
-                                                  start_time + (5 * SECONDS_PER_HOUR),
-                                                  HealthServiceTimeScopeDailyWeekdayOrWeekend);
+                                      start_time + (5 * SECONDS_PER_HOUR),
+                                      HealthServiceTimeScopeDailyWeekdayOrWeekend);
   cl_assert_equal_i(value, exp_value);
 
   // ---
@@ -1434,26 +1379,25 @@ void test_health__avg_partial_days(void) {
                                       HealthServiceTimeScopeDailyWeekdayOrWeekend);
   cl_assert_equal_i(value, exp_value);
 
-
   // ---
   // Compute daily step average from midnight to 9am. This should use the 15-minute
   // step averages that we stuffed in.
   exp_value = 5 * prv_averages_sum(0, 9 * MINUTES_PER_HOUR,
-                        &s_sys_activity_get_step_averages_values_weekday.out.averages);
+                                   &s_sys_activity_get_step_averages_values_weekday.out.averages);
   exp_value += 2 * prv_averages_sum(0, 9 * MINUTES_PER_HOUR,
-                        &s_sys_activity_get_step_averages_values_weekend.out.averages);
+                                    &s_sys_activity_get_step_averages_values_weekend.out.averages);
   exp_value /= 7;
 
   start_of_today = time_start_of_today();
   value = health_service_sum_averaged(HealthMetricStepCount, start_of_today,
-                                                  start_of_today + (9 * SECONDS_PER_HOUR),
-                                                  HealthServiceTimeScopeDaily);
+                                      start_of_today + (9 * SECONDS_PER_HOUR),
+                                      HealthServiceTimeScopeDaily);
   cl_assert_equal_i(value, exp_value);
 }
 
 void test_health__get_measurement_system_for_display(void) {
   MeasurementSystem actual =
-    health_service_get_measurement_system_for_display(HealthMetricSleepSeconds);
+      health_service_get_measurement_system_for_display(HealthMetricSleepSeconds);
   cl_assert_equal_i(actual, MeasurementSystemUnknown);
 
   s_units_distance_result = UnitsDistance_Miles;
@@ -1480,21 +1424,18 @@ void test_health__peek_current_value(void) {
   cl_assert_equal_i(s_sys_activity_get_metric_values.in.history_len, 1);
 
   // This is the equivalent to `peek_value` with HeartRateBPM. Make sure it is equal.
-  result = health_service_aggregate_averaged(HealthMetricHeartRateBPM,
-                                             now_utc, now_utc,
+  result = health_service_aggregate_averaged(HealthMetricHeartRateBPM, now_utc, now_utc,
                                              HealthAggregationAvg, HealthServiceTimeScopeOnce);
   cl_assert_equal_i(123, result);
 
   // This is the equivalent to `peek_value` with HeartRateBPM. Make sure it is equal.
-  result = health_service_aggregate_averaged(HealthMetricHeartRateBPM,
-                                             now_utc - 60, now_utc - 60,
+  result = health_service_aggregate_averaged(HealthMetricHeartRateBPM, now_utc - 60, now_utc - 60,
                                              HealthAggregationAvg, HealthServiceTimeScopeOnce);
   cl_assert_equal_i(123, result);
 
   // The function call is the equivalent to `peek_value` with HeartRateBPM except for the
   // time stamps, make sure it returns 0 because we haven't filled in that data)
-  result = health_service_aggregate_averaged(HealthMetricHeartRateBPM,
-                                             now_utc - 61, now_utc - 61,
+  result = health_service_aggregate_averaged(HealthMetricHeartRateBPM, now_utc - 61, now_utc - 61,
                                              HealthAggregationAvg, HealthServiceTimeScopeOnce);
   cl_assert_equal_i(0, result);
 
@@ -1508,7 +1449,6 @@ void test_health__peek_current_value(void) {
   result = health_service_peek_current_value(HealthMetricStepCount);
   cl_assert_equal_i(0, result);
 }
-
 
 static void prv_update_stats(HealthServiceStats *stats, HealthValue value) {
   stats->sum += value;
@@ -1535,32 +1475,32 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
 
   localtime_r(&yesterday_utc, &local_tm);
   DayInWeek yesterday_day_in_week = local_tm.tm_wday;
-  bool yesterday_was_weekend = (yesterday_day_in_week == Sunday)
-                               || (yesterday_day_in_week == Saturday);
+  bool yesterday_was_weekend =
+      (yesterday_day_in_week == Sunday) || (yesterday_day_in_week == Saturday);
 
   PBL_LOG_DBG("yesterday day in week: %d", yesterday_day_in_week);
 
   // ----------------------------------------
   // Let's fill in some known data for the daily totals and accumulate the stats
   HealthServiceStats weekly_stats = {
-    .min = INT32_MAX,
-    .max = INT32_MIN,
+      .min = INT32_MAX,
+      .max = INT32_MIN,
   };
   HealthServiceStats daily_stats = {
-    .min = INT32_MAX,
-    .max = INT32_MIN,
+      .min = INT32_MAX,
+      .max = INT32_MIN,
   };
   HealthServiceStats weekday_stats = {
-    .min = INT32_MAX,
-    .max = INT32_MIN,
+      .min = INT32_MAX,
+      .max = INT32_MIN,
   };
   HealthServiceStats weekend_stats = {
-    .min = INT32_MAX,
-    .max = INT32_MIN,
+      .min = INT32_MAX,
+      .max = INT32_MIN,
   };
   HealthServiceStats yesterday_stats = {
-    .min = INT32_MAX,
-    .max = INT32_MIN,
+      .min = INT32_MAX,
+      .max = INT32_MIN,
   };
 
   DayInWeek day_in_week = todays_day_in_week;
@@ -1569,8 +1509,7 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
     HealthValue value = 1000 + (i * 50);
     s_sys_activity_get_metric_values.out.history[i] = value;
 
-    PBL_LOG_DBG("Day #%d, day_of_week: %d, value: %"PRIi32" ", i, day_in_week,
-             value);
+    PBL_LOG_DBG("Day #%d, day_of_week: %d, value: %" PRIi32 " ", i, day_in_week, value);
     // Day 0 is not included in the stats
     if (i == 0) {
       continue;
@@ -1578,20 +1517,22 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
 
     // Store if this is yesterday
     if (i == 1) {
-      yesterday_stats = (HealthServiceStats) {
-        .max = value,
-        .min = value,
-        .avg = value,
-        .sum = value,
-        .count = 1,
+      yesterday_stats = (HealthServiceStats){
+          .max = value,
+          .min = value,
+          .avg = value,
+          .sum = value,
+          .count = 1,
       };
     }
 
     // Update stats
     if (day_in_week == yesterday_day_in_week) {
       prv_update_stats(&weekly_stats, value);
-      PBL_LOG_DBG("Updating weekly stats with %"PRIi32": sum: %"PRIi32", "
-               "avg: %"PRIi32" ", value, weekly_stats.sum, weekly_stats.avg);
+      PBL_LOG_DBG("Updating weekly stats with %" PRIi32 ": sum: %" PRIi32
+                  ", "
+                  "avg: %" PRIi32 " ",
+                  value, weekly_stats.sum, weekly_stats.avg);
     }
     if (day_in_week == Sunday || day_in_week == Saturday) {
       prv_update_stats(&weekend_stats, value);
@@ -1601,13 +1542,11 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
     prv_update_stats(&daily_stats, value);
   }
 
-
   // ----------------------------------------
   // Compute each combination of agg/stat and compare to expected
   for (HealthAggregation agg = HealthAggregationSum; agg <= HealthAggregationMax; agg++) {
     for (HealthServiceTimeScope scope = HealthServiceTimeScopeOnce;
          scope <= HealthServiceTimeScopeDaily; scope++) {
-
       // Figure out the expected value
       HealthServiceStats *stats = NULL;
       char *scope_str;
@@ -1634,7 +1573,7 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
       char *agg_str;
       switch (agg) {
         case HealthAggregationSum:
-          exp_value = 0;    // error case
+          exp_value = 0;  // error case
           agg_str = "sum";
           break;
         case HealthAggregationAvg:
@@ -1659,16 +1598,18 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
 
       // Heart rate should return error if asked for min/max with scope since we can't
       // compute that.
-      if (scope != HealthServiceTimeScopeOnce
-        && (agg == HealthAggregationMax || agg == HealthAggregationMin)) {
+      if (scope != HealthServiceTimeScopeOnce &&
+          (agg == HealthAggregationMax || agg == HealthAggregationMin)) {
         exp_value = 0;
       }
 
       HealthValue result;
-      result = health_service_aggregate_averaged(HealthMetricHeartRateBPM,
-                                                 time_start, time_end, agg, scope);
-      PBL_LOG_INFO("Testing %-16s %-16s exp_value: %5"PRIi32", act_value: "
-              "%5"PRIi32" " , scope_str, agg_str, exp_value, result);
+      result = health_service_aggregate_averaged(HealthMetricHeartRateBPM, time_start, time_end,
+                                                 agg, scope);
+      PBL_LOG_INFO("Testing %-16s %-16s exp_value: %5" PRIi32
+                   ", act_value: "
+                   "%5" PRIi32 " ",
+                   scope_str, agg_str, exp_value, result);
 
       if (scope != HealthServiceTimeScopeOnce) {
         // Only test scoped results. Non-scoped results for heart rate are computed using
@@ -1692,17 +1633,18 @@ void test_health__heart_rate_scope_once(void) {
   // Put in our minute history
   HealthServiceCache *cache = NULL;
   unsigned num_minutes_per_call = ARRAY_LENGTH(cache->minute_data);
-  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values) {
-    .out[0] = {
-      .num_records = num_minutes_per_call,
-      .result = true,
-      .utc_start = time_start,
-    },
-    .out[1] = {
-      .num_records = num_minutes_per_call,
-      .result = true,
-      .utc_start = time_start,
-    },
+  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
+      .out[0] =
+          {
+              .num_records = num_minutes_per_call,
+              .result = true,
+              .utc_start = time_start,
+          },
+      .out[1] = {
+          .num_records = num_minutes_per_call,
+          .result = true,
+          .utc_start = time_start,
+      },
   };
   int32_t min_value = INT32_MAX;
   int32_t max_value = INT32_MIN;
@@ -1735,14 +1677,12 @@ void test_health__heart_rate_scope_once(void) {
 
   // Test each aggregation
   for (HealthAggregation agg = HealthAggregationAvg; agg <= HealthAggregationMax; agg++) {
-
     s_sys_activity_get_minute_history_values.stage = 0;
     if (agg == HealthAggregationMin) {
       PBL_LOG_DBG("foo");
     }
-    HealthValue result = health_service_aggregate_averaged(HealthMetricHeartRateBPM,
-                                                           time_start, time_end,
-                                                           agg, HealthServiceTimeScopeOnce);
+    HealthValue result = health_service_aggregate_averaged(
+        HealthMetricHeartRateBPM, time_start, time_end, agg, HealthServiceTimeScopeOnce);
 
     cl_assert_equal_i(s_sys_activity_get_minute_history_values.in[0].utc_start, time_start);
     cl_assert_equal_i(s_sys_activity_get_minute_history_values.in[0].num_records,
@@ -1762,9 +1702,7 @@ void test_health__heart_rate_scope_once(void) {
       cl_assert(false);
     }
   }
-
 }
-
 
 // --------------------------------------------------------------------------------------
 int s_metric_alert_count;
@@ -1781,8 +1719,8 @@ void test_health__metric_alert_generation(void) {
   s_sys_activity_get_metric_values.out.result = true;
 
   PebbleEvent event = {
-    .type = PEBBLE_HEALTH_SERVICE_EVENT,
-    .health_event.type = HealthEventHeartRateUpdate,
+      .type = PEBBLE_HEALTH_SERVICE_EVENT,
+      .health_event.type = HealthEventHeartRateUpdate,
   };
 
   // Process some events with various heart rates, should not get an alert
@@ -1793,7 +1731,6 @@ void test_health__metric_alert_generation(void) {
   }
   // Should not get any metric alerts because none registered
   cl_assert_equal_i(s_metric_alert_count, 0);
-
 
   // Create an alert for heart rate 65
   HealthMetricAlert *alert = health_service_register_metric_alert(HealthMetricHeartRateBPM, 65);
@@ -1807,14 +1744,13 @@ void test_health__metric_alert_generation(void) {
   for (int i = 70; i >= 60; i--) {
     s_sys_activity_get_metric_values.out.history[0] = i;
     PebbleEvent event = {
-      .type = PEBBLE_HEALTH_SERVICE_EVENT,
-      .health_event.type = HealthEventHeartRateUpdate,
+        .type = PEBBLE_HEALTH_SERVICE_EVENT,
+        .health_event.type = HealthEventHeartRateUpdate,
     };
     prv_health_event_handler(&event, NULL);
   }
   // One alert on the way down
   cl_assert_equal_i(s_metric_alert_count, 2);
-
 
   // Remove the alert
   s_metric_alert_count = 0;
@@ -1834,7 +1770,7 @@ void test_health__metric_alert_registration(void) {
 
   time_t now = rtc_get_time();
   HealthServiceAccessibilityMask accessible = health_service_metric_aggregate_averaged_accessible(
-    HealthMetricHeartRateBPM, now, now, HealthAggregationAvg, HealthServiceTimeScopeOnce);
+      HealthMetricHeartRateBPM, now, now, HealthAggregationAvg, HealthServiceTimeScopeOnce);
   cl_assert(accessible & HealthServiceAccessibilityMaskAvailable);
 
   // Create an alert for heart rate
@@ -1842,8 +1778,8 @@ void test_health__metric_alert_registration(void) {
   cl_assert(alert != NULL);
 
   // If we try to register another for heart rate, it should fail
-  HealthMetricAlert *fail_alert = health_service_register_metric_alert(HealthMetricHeartRateBPM,
-                                                                       65);
+  HealthMetricAlert *fail_alert =
+      health_service_register_metric_alert(HealthMetricHeartRateBPM, 65);
   cl_assert(fail_alert == NULL);
 
   // Cancel the original
@@ -1853,4 +1789,3 @@ void test_health__metric_alert_registration(void) {
   alert = health_service_register_metric_alert(HealthMetricHeartRateBPM, 65);
   cl_assert(alert != NULL);
 }
-

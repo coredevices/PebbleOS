@@ -50,8 +50,7 @@
 
 #ifdef CONFIG_SPEAKER
 static const int16_t sine_wave_4k[] = {
-  0, 32767, 0, -32768, 0, 32767, 0, -32768,
-  0, 32767, 0, -32768, 0, 32767, 0, -32768,
+    0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768,
 };
 #endif
 
@@ -140,8 +139,7 @@ static void prv_cleanup_component(AppData *data) {
   }
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  if (data->component >= ComponentBacklightWhite &&
-      data->component <= ComponentBacklightBlue) {
+  if (data->component >= ComponentBacklightWhite && data->component <= ComponentBacklightBlue) {
     backlight_set_color(data->saved_backlight_color);
     light_enable(false);
   }
@@ -165,8 +163,7 @@ static void prv_start_component(AppData *data) {
   }
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  if (data->component >= ComponentBacklightWhite &&
-      data->component <= ComponentBacklightBlue) {
+  if (data->component >= ComponentBacklightWhite && data->component <= ComponentBacklightBlue) {
     light_enable(true);
   }
 #else
@@ -242,8 +239,7 @@ static void prv_run_component_display(AppData *data) {
       AccelDriverSample sample;
       accel_peek(&sample);
       comp_name = "Accel";
-      sniprintf(comp_detail, sizeof(comp_detail),
-                "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
+      sniprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
                 sample.x, sample.y, sample.z);
       break;
     }
@@ -252,8 +248,7 @@ static void prv_run_component_display(AppData *data) {
       MagData mag_sample;
       mag_read_data(&mag_sample);
       comp_name = "Mag";
-      sniprintf(comp_detail, sizeof(comp_detail),
-                "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
+      sniprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
                 mag_sample.x, mag_sample.y, mag_sample.z);
       break;
     }
@@ -299,12 +294,12 @@ static void prv_run_component_display(AppData *data) {
     case ComponentVibe: {
       // Only pulse once at the start of the vibe phase
       if (data->component_elapsed_sec <= 1) {
-        static const uint32_t vibe_durations[] = { 250 };
-        static const uint32_t vibe_amplitudes[] = { 50 };
+        static const uint32_t vibe_durations[] = {250};
+        static const uint32_t vibe_amplitudes[] = {50};
         VibePatternWithAmplitudes pat = {
-          .durations = vibe_durations,
-          .amplitudes = vibe_amplitudes,
-          .num_segments = 1,
+            .durations = vibe_durations,
+            .amplitudes = vibe_amplitudes,
+            .num_segments = 1,
         };
         vibes_enqueue_custom_pattern_with_amplitudes(pat);
       }
@@ -329,27 +324,37 @@ static void prv_run_component_display(AppData *data) {
     chg_str = "Idle";
   } else {
     switch (charge_status) {
-      case BatteryChargeStatusComplete: chg_str = "Cmpl"; break;
-      case BatteryChargeStatusTrickle:  chg_str = "Trk";  break;
-      case BatteryChargeStatusCC:       chg_str = "CC";   break;
-      case BatteryChargeStatusCV:       chg_str = "CV";   break;
-      default:                          chg_str = "?";    break;
+      case BatteryChargeStatusComplete:
+        chg_str = "Cmpl";
+        break;
+      case BatteryChargeStatusTrickle:
+        chg_str = "Trk";
+        break;
+      case BatteryChargeStatusCC:
+        chg_str = "CC";
+        break;
+      case BatteryChargeStatusCV:
+        chg_str = "CV";
+        break;
+      default:
+        chg_str = "?";
+        break;
     }
   }
 
   sniprintf(data->status_string, sizeof(data->status_string),
             "CHG+CYC [%s]\n"
-            "Cycle: %" PRIu32 "\n"
+            "Cycle: %" PRIu32
+            "\n"
             "Elapsed: %s\n"
             "Remain: %s\n"
-            "%" PRId32 "mV %" PRIu8 "%% %s\n"
-            "%" PRId8 ".%02" PRIu8 "C\n"
+            "%" PRId32 "mV %" PRIu8
+            "%% %s\n"
+            "%" PRId8 ".%02" PRIu8
+            "C\n"
             "%s",
-            comp_name, data->cycle_count,
-            time_str, rem_str,
-            bc.v_mv, cs.charge_percent, chg_str,
-            temp_c, temp_c_frac,
-            comp_detail);
+            comp_name, data->cycle_count, time_str, rem_str, bc.v_mv, cs.charge_percent, chg_str,
+            temp_c, temp_c_frac, comp_detail);
 }
 
 static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
@@ -368,8 +373,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         data->component_elapsed_sec = 0;
         data->cycle_count = 1;
         prv_start_component(data);
-        sniprintf(data->status_string, sizeof(data->status_string),
-                  "CHG+CYC\nStarting...");
+        sniprintf(data->status_string, sizeof(data->status_string), "CHG+CYC\nStarting...");
       } else {
         sniprintf(data->status_string, sizeof(data->status_string),
                   "PLUG CHARGER\n\nPlug the watch\nto start");
@@ -446,7 +450,8 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         sniprintf(data->status_string, sizeof(data->status_string), "IDLE\nStarting...");
       } else {
         sniprintf(data->status_string, sizeof(data->status_string),
-                  "UNPLUG WATCH\n\nCharged to %" PRIu8 "%%\n"
+                  "UNPLUG WATCH\n\nCharged to %" PRIu8
+                  "%%\n"
                   "Unplug to begin\nidle test",
                   cs.charge_percent);
       }
@@ -474,9 +479,8 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       if (data->phase_elapsed_sec >= IDLE_DURATION_SEC) {
         if (drop > IDLE_MAX_DROP_PERCENT) {
           char reason[64];
-          sniprintf(reason, sizeof(reason),
-                    "Idle drop %" PRId8 "%%\n> %d%%",
-                    drop, IDLE_MAX_DROP_PERCENT);
+          sniprintf(reason, sizeof(reason), "Idle drop %" PRId8 "%%\n> %d%%", drop,
+                    IDLE_MAX_DROP_PERCENT);
           prv_enter_fail(data, reason);
           break;
         }
@@ -496,8 +500,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
       char time_str[16], rem_str[16];
       prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
-      prv_format_time(rem_str, sizeof(rem_str),
-                      IDLE_DURATION_SEC - data->phase_elapsed_sec);
+      prv_format_time(rem_str, sizeof(rem_str), IDLE_DURATION_SEC - data->phase_elapsed_sec);
 
       int8_t temp_c = (int8_t)(bc.t_mc / 1000);
       uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
@@ -506,12 +509,12 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 "IDLE\n"
                 "Elapsed: %s\n"
                 "Remain: %s\n"
-                "%" PRId32 "mV %" PRIu8 "%%\n"
-                "%" PRId8 ".%02" PRIu8 "C\n"
+                "%" PRId32 "mV %" PRIu8
+                "%%\n"
+                "%" PRId8 ".%02" PRIu8
+                "C\n"
                 "Start:%" PRIu8 "%% Drop:%" PRId8 "/%d%%",
-                time_str, rem_str,
-                bc.v_mv, cs.charge_percent,
-                temp_c, temp_c_frac,
+                time_str, rem_str, bc.v_mv, cs.charge_percent, temp_c, temp_c_frac,
                 data->initial_percent, drop, IDLE_MAX_DROP_PERCENT);
       break;
     }
@@ -540,8 +543,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 #endif
         data->state = AgingStatePass;
         sniprintf(data->status_string, sizeof(data->status_string),
-                  "PASS\n\nDischarged to\n%" PRIu8 "%%",
-                  cs.charge_percent);
+                  "PASS\n\nDischarged to\n%" PRIu8 "%%", cs.charge_percent);
         prv_report_result(true);
         tick_timer_service_unsubscribe();
         break;
@@ -555,11 +557,12 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
       sniprintf(data->status_string, sizeof(data->status_string),
                 "DISCHARGING\nTime: %s\n\n"
-                "%" PRId32 "mV %" PRIu8 "%%\n"
-                "%" PRId8 ".%02" PRIu8 "C\n\n"
+                "%" PRId32 "mV %" PRIu8
+                "%%\n"
+                "%" PRId8 ".%02" PRIu8
+                "C\n\n"
                 "Target: %d%%",
-                time_str, bc.v_mv, cs.charge_percent,
-                temp_c, temp_c_frac,
+                time_str, bc.v_mv, cs.charge_percent, temp_c, temp_c_frac,
                 DISCHARGE_TARGET_PERCENT);
       break;
     }
@@ -570,8 +573,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   }
 
   if (data->state == AgingStateFail) {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "FAIL\n\n%s", data->fail_reason);
+    sniprintf(data->status_string, sizeof(data->status_string), "FAIL\n\n%s", data->fail_reason);
   }
 
   text_layer_set_text(&data->status, data->status_string);
@@ -606,9 +608,9 @@ static void prv_config_provider(void *context) {
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
   *data = (AppData){
-    .state = AgingStateWaitPlug,
+      .state = AgingStateWaitPlug,
 #ifdef CONFIG_SPEAKER
-    .audio_playing = false,
+      .audio_playing = false,
 #endif
   };
 
@@ -642,11 +644,11 @@ static void prv_handle_init(void) {
   TextLayer *status = &data->status;
   const int16_t status_y = PBL_IF_ROUND_ELSE(40, 25);
   const int16_t status_x = PBL_IF_ROUND_ELSE(15, 5);
-  text_layer_init(status, &GRect(status_x, status_y, bounds.size.w - (status_x * 2),
-                                 bounds.size.h - status_y));
+  text_layer_init(
+      status, &GRect(status_x, status_y, bounds.size.w - (status_x * 2), bounds.size.h - status_y));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-  text_layer_set_text_alignment(status, PBL_IF_ROUND_ELSE(GTextAlignmentCenter,
-                                                           GTextAlignmentLeft));
+  text_layer_set_text_alignment(status,
+                                PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft));
   layer_add_child(window_layer, &status->layer);
 
   tick_timer_service_subscribe(SECOND_UNIT, prv_handle_tick);
@@ -662,11 +664,12 @@ static void s_main(void) {
 
 const PebbleProcessMd *mfg_test_aging_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: 12345678-ABCD-EF01-2345-6789ABCDEF01
-    .common.uuid = { 0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF, 0x01,
-                     0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01 },
-    .name = "MfgTestAging",
+      .common.main_func = &s_main,
+      // UUID: 12345678-ABCD-EF01-2345-6789ABCDEF01
+      .common.uuid =
+          {0x12, 0x34, 0x56, 0x78, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+           0x01},
+      .name = "MfgTestAging",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

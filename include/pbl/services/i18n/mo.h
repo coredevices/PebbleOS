@@ -83,37 +83,36 @@
  *
  */
 
-#define MO_MAGIC    0x950412de
-#define MO_GET_REV_MAJOR(r)  (((r) >> 16) & 0xFFFF)
-#define MO_GET_REV_MINOR(r)  ((r) & 0xFFFF)
-#define MO_MAKE_REV(maj, min)  (((maj) << 16) | (min))
+#define MO_MAGIC 0x950412de
+#define MO_GET_REV_MAJOR(r) (((r) >> 16) & 0xFFFF)
+#define MO_GET_REV_MINOR(r) ((r) & 0xFFFF)
+#define MO_MAKE_REV(maj, min) (((maj) << 16) | (min))
 
 #define LANG_PROP_NAME "Language: "
 
 /* *.mo file format */
 typedef struct PACKED {
-  uint32_t mo_magic;  /* determines endian */
-  uint32_t mo_revision;  /* file format revision: 0 */
+  uint32_t mo_magic;    /* determines endian */
+  uint32_t mo_revision; /* file format revision: 0 */
   uint32_t mo_nstring;  /* N: number of strings */
-  uint32_t mo_otable;  /* O: original text table offset */
-  uint32_t mo_ttable;  /* T: translated text table offset */
-  uint32_t mo_hsize;  /* S: size of hashing table */
+  uint32_t mo_otable;   /* O: original text table offset */
+  uint32_t mo_ttable;   /* T: translated text table offset */
+  uint32_t mo_hsize;    /* S: size of hashing table */
   uint32_t mo_hoffset;  /* H: offset of hashing table */
 } MoHeader;
 
 typedef struct PACKED {
-  uint32_t len;    /* strlen(str), so region will be len + 1 */
-  uint32_t off;    /* offset of \0-terminated string */
+  uint32_t len; /* strlen(str), so region will be len + 1 */
+  uint32_t off; /* offset of \0-terminated string */
 } MoEntry;
 
 typedef struct {
   MoHeader hdr;
   char *mo_lang;
-  uint32_t *mo_htable;  /* H: hash table */
+  uint32_t *mo_htable; /* H: hash table */
 } Mo;
 
 typedef struct {
   size_t len;
-  Mo mo;    /* endian-flipped mo file header */
+  Mo mo; /* endian-flipped mo file header */
 } MoHandle;
-

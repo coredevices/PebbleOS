@@ -60,7 +60,7 @@ void test_i18n__initialize(void) {
 void test_i18n__cleanup(void) {
 }
 
-extern I18nString *prv_list_find_string(const char *string, void * owner);
+extern I18nString *prv_list_find_string(const char *string, void *owner);
 
 void test_i18n__music(void) {
   const char *first = i18n_get("Music", (void *)0x12345);

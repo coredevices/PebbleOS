@@ -33,10 +33,13 @@
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
 
-void graphics_context_move_draw_box(GContext* ctx, GPoint offset) {}
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
+}
 typedef uint16_t ResourceId;
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
-                                          uint32_t *num_bytes_out) { return NULL; }
+                                          uint32_t *num_bytes_out) {
+  return NULL;
+}
 
 typedef struct TestReelData {
   uint32_t elapsed_ms;
@@ -51,16 +54,16 @@ static void prv_destructor(KinoReel *reel) {
 }
 
 static uint32_t prv_elapsed_getter(KinoReel *reel) {
-  return ((TestReelData*)kino_reel_custom_get_data(reel))->elapsed_ms;
+  return ((TestReelData *)kino_reel_custom_get_data(reel))->elapsed_ms;
 }
 
 static bool prv_elapsed_setter(KinoReel *reel, uint32_t elapsed_ms) {
-  ((TestReelData*)kino_reel_custom_get_data(reel))->elapsed_ms = elapsed_ms;
+  ((TestReelData *)kino_reel_custom_get_data(reel))->elapsed_ms = elapsed_ms;
   return true;
 }
 
 static uint32_t prv_duration_getter(KinoReel *reel) {
-  return ((TestReelData*)kino_reel_custom_get_data(reel))->duration_ms;
+  return ((TestReelData *)kino_reel_custom_get_data(reel))->duration_ms;
 }
 
 static struct TestReelData *test_reel_data;
@@ -76,11 +79,11 @@ void test_kino_player__initialize(void) {
   s_num_destructor_calls = 0;
 
   test_reel_impl = malloc(sizeof(KinoReelImpl));
-  *test_reel_impl = (KinoReelImpl) {
-    .destructor = prv_destructor,
-    .set_elapsed = prv_elapsed_setter,
-    .get_elapsed = prv_elapsed_getter,
-    .get_duration = prv_duration_getter
+  *test_reel_impl = (KinoReelImpl){
+      .destructor = prv_destructor,
+      .set_elapsed = prv_elapsed_setter,
+      .get_elapsed = prv_elapsed_getter,
+      .get_duration = prv_duration_getter
   };
 
   test_reel = kino_reel_custom_create(test_reel_impl, test_reel_data);

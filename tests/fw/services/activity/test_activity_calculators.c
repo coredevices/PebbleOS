@@ -47,18 +47,18 @@ typedef struct HumanPrefs {
   uint16_t height_mm;
 } HumanPrefs;
 
-#define ACTIVITY_DEFAULT_HEIGHT_MM                1620    // 5'3.8"
+#define ACTIVITY_DEFAULT_HEIGHT_MM 1620  // 5'3.8"
 // dag - decagram (10 g)
-#define ACTIVITY_DEFAULT_WEIGHT_DAG               7539    // 166.2 lbs
-#define ACTIVITY_DEFAULT_GENDER                   ActivityGenderFemale
-#define ACTIVITY_DEFAULT_AGE_YEARS                30
+#define ACTIVITY_DEFAULT_WEIGHT_DAG 7539  // 166.2 lbs
+#define ACTIVITY_DEFAULT_GENDER ActivityGenderFemale
+#define ACTIVITY_DEFAULT_AGE_YEARS 30
 
 static void prv_set_user(Human type) {
   const HumanPrefs types[Human_Count] = {
-    [Human_TallMale] =    {30, ActivityGenderMale,   7539, 1900},
-    [Human_ShortMale] =   {30, ActivityGenderMale,   4536, 1620},
-    [Human_TallFemale] =  {30, ActivityGenderFemale, 7539, 1900},
-    [Human_ShortFemale] = {30, ActivityGenderFemale, 4536, 1620},
+      [Human_TallMale] = {30, ActivityGenderMale, 7539, 1900},
+      [Human_ShortMale] = {30, ActivityGenderMale, 4536, 1620},
+      [Human_TallFemale] = {30, ActivityGenderFemale, 7539, 1900},
+      [Human_ShortFemale] = {30, ActivityGenderFemale, 4536, 1620},
   };
 
   s_age_years = types[type].age_years;
@@ -108,7 +108,6 @@ void test_activity_calculators__distance(void) {
   int long_walk_distance_m = activity_private_compute_distance_mm(steps, time_ms) / MM_PER_METER;
   cl_assert_within(long_walk_distance_m, 48000, 52000);
 
-
   // A typical cadence is roughly 165 steps per minute
   const int running_cadence_spm = 165;
 
@@ -155,20 +154,23 @@ void test_activity_calculators__active_calories(void) {
   // Walk 1km in 12 minutes
   distance_mm = 1 * M_PER_KM * MM_PER_METER;
   time_ms = 12 * SECONDS_PER_MINUTE * MS_PER_SECOND;
-  int walk_calories = activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
-  cl_assert_within(walk_calories, 20, 25); // This seems a little low, but not un-reasonable
+  int walk_calories =
+      activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
+  cl_assert_within(walk_calories, 20, 25);  // This seems a little low, but not un-reasonable
 
   // Run 1km in 5 minutes. This should burn more calories than walking
   distance_mm = 1 * M_PER_KM * MM_PER_METER;
   time_ms = 5 * SECONDS_PER_MINUTE * MS_PER_SECOND;
-  int run_calories = activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
-  cl_assert_within(run_calories, 40, 60); // This also seems a little low, but not un-reasonable
+  int run_calories =
+      activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
+  cl_assert_within(run_calories, 40, 60);  // This also seems a little low, but not un-reasonable
   cl_assert_gt(run_calories, walk_calories);
 
   // Run 5km in 25 minutes
   distance_mm = 5 * M_PER_KM * MM_PER_METER;
   time_ms = 25 * SECONDS_PER_MINUTE * MS_PER_SECOND;
-  int five_k_calories = activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
+  int five_k_calories =
+      activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(five_k_calories, 220, 250);
   cl_assert_gt(five_k_calories, run_calories);
 
@@ -176,13 +178,15 @@ void test_activity_calculators__active_calories(void) {
   prv_set_user(Human_TallMale);
   distance_mm = 7 * M_PER_KM * MM_PER_METER;
   time_ms = 30 * SECONDS_PER_MINUTE * MS_PER_SECOND;
-  int quick_run_calories = activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
+  int quick_run_calories =
+      activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(quick_run_calories, 520, 580);
 
   // Run a marathon
   distance_mm = 42 * M_PER_KM * MM_PER_METER;
   time_ms = 3 * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MS_PER_SECOND;
-  int long_run_calories = activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
+  int long_run_calories =
+      activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(long_run_calories, 3000, 3200);
 
   // And finally throw in a specific value so that anyone who touches the function will have to
@@ -201,22 +205,29 @@ void test_activity_calculators__inactive_calories(void) {
 
   prv_set_user(Human_ShortMale);
 
-  cl_assert_equal_i(1321, activity_private_compute_resting_calories(long_time_m) / ACTIVITY_CALORIES_PER_KCAL);
-  cl_assert_equal_i(4, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
+  cl_assert_equal_i(
+      1321, activity_private_compute_resting_calories(long_time_m) / ACTIVITY_CALORIES_PER_KCAL);
+  cl_assert_equal_i(
+      4, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
 
   prv_set_user(Human_TallMale);
 
-  cl_assert_equal_i(1796, activity_private_compute_resting_calories(long_time_m)/ ACTIVITY_CALORIES_PER_KCAL);
-  cl_assert_equal_i(6, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
+  cl_assert_equal_i(
+      1796, activity_private_compute_resting_calories(long_time_m) / ACTIVITY_CALORIES_PER_KCAL);
+  cl_assert_equal_i(
+      6, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
 
   prv_set_user(Human_ShortFemale);
 
-  cl_assert_equal_i(1155, activity_private_compute_resting_calories(long_time_m) / ACTIVITY_CALORIES_PER_KCAL);
-  cl_assert_equal_i(4, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
+  cl_assert_equal_i(
+      1155, activity_private_compute_resting_calories(long_time_m) / ACTIVITY_CALORIES_PER_KCAL);
+  cl_assert_equal_i(
+      4, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
 
   prv_set_user(Human_TallFemale);
 
-  cl_assert_equal_i(1630, activity_private_compute_resting_calories(long_time_m) / ACTIVITY_CALORIES_PER_KCAL);
-  cl_assert_equal_i(5, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
-
+  cl_assert_equal_i(
+      1630, activity_private_compute_resting_calories(long_time_m) / ACTIVITY_CALORIES_PER_KCAL);
+  cl_assert_equal_i(
+      5, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
 }

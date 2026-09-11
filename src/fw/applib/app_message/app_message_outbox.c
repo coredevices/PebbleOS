@@ -29,8 +29,7 @@ static void prv_transition_to_accepting(AppMessageCtxOutbox *outbox) {
   }
 }
 
-static void prv_handle_nack_or_ack_timeout(AppMessageCtxOutbox *outbox,
-                                           AppMessageResult result) {
+static void prv_handle_nack_or_ack_timeout(AppMessageCtxOutbox *outbox, AppMessageResult result) {
   outbox->result = result;
   if (outbox->phase == OUT_AWAITING_REPLY) {
     prv_transition_to_accepting(outbox);
@@ -42,7 +41,7 @@ static void prv_handle_nack_or_ack_timeout(AppMessageCtxOutbox *outbox,
 }
 
 static void prv_handle_outbox_error_cb(void *data) {
-  AppMessageResult result = (AppMessageResult)(uintptr_t) data;
+  AppMessageResult result = (AppMessageResult)(uintptr_t)data;
   _Static_assert(sizeof(result) <= sizeof(data), "AppMessageResult expected to fit in void *");
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
   if (outbox->phase != OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK) {
@@ -69,7 +68,7 @@ AppMessageResult app_message_outbox_open(AppMessageCtxOutbox *outbox, size_t siz
   } else if (size_outbound == size_maximum) {
     APP_LOG(LOG_LEVEL_INFO, "app_message_open() called with app_message_outbox_size_maximum().");
     APP_LOG(LOG_LEVEL_INFO,
-            "This consumes %"PRIu32" bytes of heap memory, potentially more in the future!",
+            "This consumes %" PRIu32 " bytes of heap memory, potentially more in the future!",
             (uint32_t)size_maximum);
   }
   if (size_outbound == 0) {
@@ -95,8 +94,7 @@ AppMessageResult app_message_outbox_open(AppMessageCtxOutbox *outbox, size_t siz
 
 static void prv_outbox_prepare(AppMessageCtxOutbox *outbox) {
   AppMessagePush *push = (AppMessagePush *)outbox->app_outbox_message->payload;
-  dict_write_begin(&outbox->iterator,
-                   (uint8_t *)&push->dictionary,
+  dict_write_begin(&outbox->iterator, (uint8_t *)&push->dictionary,
                    outbox->transmission_size_limit - APP_MSG_HDR_OVRHD_SIZE);
 }
 
@@ -134,14 +132,12 @@ static void prv_throttle(AppMessageCtxOutbox *outbox) {
 }
 
 static bool prv_is_message_pending(AppMessagePhaseOut phase) {
-  return (phase == OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK ||
-          phase == OUT_AWAITING_REPLY ||
+  return (phase == OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK || phase == OUT_AWAITING_REPLY ||
           phase == OUT_AWAITING_OUTBOX_CALLBACK);
 }
 
 static bool prv_is_awaiting_ack(AppMessagePhaseOut phase) {
-  return (phase == OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK ||
-          phase == OUT_AWAITING_REPLY);
+  return (phase == OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK || phase == OUT_AWAITING_REPLY);
 }
 
 AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
@@ -162,7 +158,8 @@ AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
 
     return APP_MSG_BUSY;
   } else if (phase == OUT_WRITING) {
-    PBL_LOG_ERR("Must call app_message_outbox_send() before calling app_message_outbox_begin() again!");
+    PBL_LOG_ERR(
+        "Must call app_message_outbox_send() before calling app_message_outbox_begin() again!");
     return APP_MSG_INVALID_STATE;
   } else if (phase == OUT_CLOSED) {
     PBL_LOG_ERR("Must call app_message_open() before calling app_message_outbox_begin()!");
@@ -196,7 +193,7 @@ void app_message_outbox_handle_app_outbox_message_sent(AppOutboxStatus status, v
   AppMessageSenderError e = (AppMessageSenderError)status;
   if (e != AppMessageSenderErrorSuccess) {
     if (e != AppMessageSenderErrorDisconnected) {
-      PBL_LOG_ERR("App message corrupted outbox? %"PRIu8, (uint8_t)e);
+      PBL_LOG_ERR("App message corrupted outbox? %" PRIu8, (uint8_t)e);
     }
 
     // Sleep a bit to prevent apps that hammer app_message_outbox_begin() when disconnected to
@@ -251,8 +248,7 @@ AppMessageResult app_message_outbox_send(void) {
   app_outbox_message->endpoint_id = APP_MESSAGE_ENDPOINT_ID;
 
   PBL_ASSERTN(!outbox->ack_nack_timer);
-  outbox->ack_nack_timer = app_timer_register(ACK_NACK_TIME_OUT_MS,
-                                              ack_nack_timer_callback, NULL);
+  outbox->ack_nack_timer = app_timer_register(ACK_NACK_TIME_OUT_MS, ack_nack_timer_callback, NULL);
 
   app_outbox_send((const uint8_t *)app_outbox_message,
                   sizeof(AppMessageAppOutboxData) + transmission_size,
@@ -270,8 +266,8 @@ void app_message_out_handle_ack_nack_received(const AppMessageHeader *header) {
   }
 
   if (outbox->transaction_id != header->transaction_id) {
-    PBL_LOG_ERR("Tx ID mismatch: %"PRIu8" != %"PRIu8,
-            outbox->transaction_id, header->transaction_id);
+    PBL_LOG_ERR("Tx ID mismatch: %" PRIu8 " != %" PRIu8, outbox->transaction_id,
+                header->transaction_id);
     return;
   }
 
@@ -297,4 +293,3 @@ AppTimer *app_message_outbox_get_ack_nack_timer(void) {
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
   return outbox ? outbox->ack_nack_timer : NULL;
 }
-

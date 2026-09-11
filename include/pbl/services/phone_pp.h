@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 void pp_answer_call(uint32_t cookie);
 
 void pp_decline_call(uint32_t cookie);

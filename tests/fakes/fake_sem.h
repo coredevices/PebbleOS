@@ -32,7 +32,7 @@ static FakeSem *prv_fake_sem_get(struct pbl_sem *s) {
   FakeSem *fake = (FakeSem *)list_find((ListNode *)s_fake_sem_list, prv_fake_sem_find, s);
   if (fake == NULL) {
     fake = malloc(sizeof(FakeSem));
-    *fake = (FakeSem) { .sem = s, .count = s->initial, .limit = s->limit ? s->limit : 1 };
+    *fake = (FakeSem){.sem = s, .count = s->initial, .limit = s->limit ? s->limit : 1};
     s_fake_sem_list = (FakeSem *)list_prepend((ListNode *)s_fake_sem_list, (ListNode *)fake);
   }
   return fake;

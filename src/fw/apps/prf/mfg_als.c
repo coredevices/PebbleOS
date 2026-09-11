@@ -75,7 +75,7 @@ static void prv_update_display(void *context) {
 
     case ALSStateCountdown:
       snprintf(data->status_text, AMBIENT_READING_STR_LEN, "Place in\nlight box");
-      snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN, "Starting in: %"PRIu32"s",
+      snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN, "Starting in: %" PRIu32 "s",
                (COUNTDOWN_MS - elapsed) / 1000 + 1);
       if (elapsed >= COUNTDOWN_MS) {
         // Start sampling
@@ -95,21 +95,21 @@ static void prv_update_display(void *context) {
 
       snprintf(data->status_text, AMBIENT_READING_STR_LEN, "Sampling...");
       snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN,
-               "Time: %"PRIu32"s\nCurrent: %"PRIu32"\nSamples: %"PRIu32,
+               "Time: %" PRIu32 "s\nCurrent: %" PRIu32 "\nSamples: %" PRIu32,
                (SAMPLE_DURATION_MS - elapsed) / 1000 + 1, level, data->als_sample_count);
 
       if (elapsed >= SAMPLE_DURATION_MS) {
         // Calculate average and determine pass/fail
         data->als_average = (uint32_t)(data->als_sum / data->als_sample_count);
 
-        PBL_LOG_INFO("ALS test complete - Average: %"PRIu32" (samples: %"PRIu32")",
+        PBL_LOG_INFO("ALS test complete - Average: %" PRIu32 " (samples: %" PRIu32 ")",
                      data->als_average, data->als_sample_count);
 
         bool passed = (
 #if ALS_MIN_VALUE > 0
-          data->als_average >= ALS_MIN_VALUE &&
+            data->als_average >= ALS_MIN_VALUE &&
 #endif
-          data->als_average <= ALS_MAX_VALUE);
+            data->als_average <= ALS_MAX_VALUE);
         mfg_test_result_report(MfgTestId_ALS, passed, data->als_average);
 
         if (passed) {
@@ -117,7 +117,7 @@ static void prv_update_display(void *context) {
           PBL_LOG_INFO("ALS test PASSED");
         } else {
           data->test_state = ALSStateFail;
-          PBL_LOG_ERR("ALS test FAILED - Average %"PRIu32" outside range %d-%d",
+          PBL_LOG_ERR("ALS test FAILED - Average %" PRIu32 " outside range %d-%d",
                       data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
         }
         data->state_start_time = rtc_get_ticks();
@@ -133,8 +133,7 @@ static void prv_update_display(void *context) {
       }
       snprintf(data->status_text, AMBIENT_READING_STR_LEN,
                data->test_state == ALSStatePass ? "PASS" : "FAIL");
-      snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN,
-               "Average: %"PRIu32"\nRange: %d-%d",
+      snprintf(data->ambient_reading, AMBIENT_READING_STR_LEN, "Average: %" PRIu32 "\nRange: %d-%d",
                data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
       break;
   }
@@ -142,7 +141,6 @@ static void prv_update_display(void *context) {
   text_layer_set_text(data->status_text_layer, data->status_text);
   text_layer_set_text(data->reading_text_layer, data->ambient_reading);
 }
-
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   AmbientLightAppData *data = app_state_get_user_data();
@@ -204,7 +202,8 @@ static void prv_handle_init(void) {
   app_window_stack_push(data->window, true);
 
   // Register evented timer for 100ms updates
-  s_timer = evented_timer_register(SAMPLE_INTERVAL_MS, true /* repeating */, prv_update_display, data);
+  s_timer =
+      evented_timer_register(SAMPLE_INTERVAL_MS, true /* repeating */, prv_update_display, data);
 
   PBL_LOG_INFO("ALS test initialized - range: %d-%d", ALS_MIN_VALUE, ALS_MAX_VALUE);
 }
@@ -229,10 +228,10 @@ static void prv_main(void) {
   prv_handle_deinit();
 }
 
-const PebbleProcessMd* mfg_als_app_get_info(void) {
+const PebbleProcessMd *mfg_als_app_get_info(void) {
   static const PebbleProcessMdSystem s_ambient_light_info = {
-    .common.main_func = prv_main,
-    .name = "MfgALS"
+      .common.main_func = prv_main,
+      .name = "MfgALS"
   };
-  return (const PebbleProcessMd*) &s_ambient_light_info;
+  return (const PebbleProcessMd *)&s_ambient_light_info;
 }

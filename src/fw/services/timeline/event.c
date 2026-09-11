@@ -26,8 +26,8 @@ typedef struct TimelineEventState {
 } TimelineEventState;
 
 static TimelineEventImplGetter s_services[TimelineEventServiceCount] = {
-  [TimelineEventService_Calendar] = calendar_get_event_service,
-  [TimelineEventService_Peek] = timeline_peek_get_event_service,
+    [TimelineEventService_Calendar] = calendar_get_event_service,
+    [TimelineEventService_Peek] = timeline_peek_get_event_service,
 };
 
 // This mutex protects all state, but is only used for factory resetting synchronously, therefore
@@ -50,7 +50,7 @@ static void prv_update_status_system_task_callback(void *unused) {
 
 static void prv_update_status_async(void) {
   if (__atomic_test_and_set(&s_cb_scheduled, __ATOMIC_RELAXED)) {
-    return; // we already have a cb scheduled
+    return;  // we already have a cb scheduled
   }
 
   system_task_add_callback(prv_update_status_system_task_callback, NULL);
@@ -83,10 +83,10 @@ static void prv_set_timer(unsigned int timeout_ms) {
 
 static bool prv_should_use_item(TimelineEventState *state, SerializedTimelineItemHeader *header) {
   // Use the new item if ...
-  return ((uuid_is_invalid(&state->filter_header->common.id)) || // There is no old item
-          (state->impl->comparator && // Or the comparator chooses the new item
+  return ((uuid_is_invalid(&state->filter_header->common.id)) ||  // There is no old item
+          (state->impl->comparator &&  // Or the comparator chooses the new item
            (state->impl->comparator(header, state->filter_header, &state->context) < 0)) ||
-          (header->common.timestamp < state->filter_header->common.timestamp)); // Or it's earlier
+          (header->common.timestamp < state->filter_header->common.timestamp));  // Or it's earlier
 }
 
 static bool prv_item_header_filter(SerializedTimelineItemHeader *header, void *unused) {
@@ -148,8 +148,7 @@ static void prv_update_status(void) {
     if (has_item) {
       timeline_item_deserialize_header(&item, state->filter_header);
     }
-    const uint32_t other_timeout_ms =
-        state->impl->update(has_item ? &item : NULL, &state->context);
+    const uint32_t other_timeout_ms = state->impl->update(has_item ? &item : NULL, &state->context);
     if (other_timeout_ms) {
       timeout_ms = timeout_ms ? MIN(timeout_ms, other_timeout_ms) : other_timeout_ms;
     }
@@ -207,18 +206,18 @@ void timeline_event_refresh(void) {
 
 bool timeline_event_is_all_day(CommonTimelineItemHeader *common) {
   return (common->all_day ||
-          (common->duration >= MINUTES_PER_DAY)); // Include >= 24 hour events. See PBL-23584
+          (common->duration >= MINUTES_PER_DAY));  // Include >= 24 hour events. See PBL-23584
 }
 
 bool timeline_event_is_ongoing(time_t now, time_t event_start, int event_duration_m) {
   return ((event_start <= now) && ((event_start + (SECONDS_PER_MINUTE * event_duration_m)) > now));
 }
 
-bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now,
-                                  int delta_start_s, int delta_end_s) {
-  return ((common->type == TimelineItemTypePin) && // Ignore non-pins
-          (((delta_start_s == TIMELINE_EVENT_DELTA_INFINITE) || // Any past event or
-            (common->timestamp > (now + delta_start_s))) && // Begins after range start and
-           ((delta_end_s == TIMELINE_EVENT_DELTA_INFINITE) || // Any future event or
-            (common->timestamp < (now + delta_end_s))))); // Begins before range end
+bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now, int delta_start_s,
+                                  int delta_end_s) {
+  return ((common->type == TimelineItemTypePin) &&               // Ignore non-pins
+          (((delta_start_s == TIMELINE_EVENT_DELTA_INFINITE) ||  // Any past event or
+            (common->timestamp > (now + delta_start_s))) &&      // Begins after range start and
+           ((delta_end_s == TIMELINE_EVENT_DELTA_INFINITE) ||    // Any future event or
+            (common->timestamp < (now + delta_end_s)))));        // Begins before range end
 }

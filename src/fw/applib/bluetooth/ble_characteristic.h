@@ -77,10 +77,9 @@ uint8_t ble_characteristic_get_descriptors(BLECharacteristic characteristic,
 // (FUTURE / LATER / NOT SCOPED)
 // Just to see how symmetric the Server APIs would be:
 
-BLECharacteristic ble_characteristic_create(const Uuid *uuid,
-                                            BLEAttributeProperty properties);
+BLECharacteristic ble_characteristic_create(const Uuid *uuid, BLEAttributeProperty properties);
 
 BLECharacteristic ble_characteristic_create_with_descriptors(const Uuid *uuid,
-                                            BLEAttributeProperty properties,
-                                            BLEDescriptor descriptors[],
-                                            uint8_t num_descriptors);
+                                                             BLEAttributeProperty properties,
+                                                             BLEDescriptor descriptors[],
+                                                             uint8_t num_descriptors);

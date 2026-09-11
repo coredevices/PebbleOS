@@ -10,11 +10,11 @@
 
 typedef struct {
   uint8_t *buffer;
-  uint32_t size;       // total capacity in bytes
+  uint32_t size;  // total capacity in bytes
   uint32_t read_pos;
   uint32_t write_pos;
-  uint32_t count;      // number of bytes currently buffered
-  bool closing;        // no more writes expected, drain remaining
+  uint32_t count;  // number of bytes currently buffered
+  bool closing;    // no more writes expected, drain remaining
 } PcmStreamState;
 
 //! Initialize a PCM stream ring buffer.

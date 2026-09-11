@@ -28,7 +28,6 @@ typedef struct TaskTimerManager {
   void *current_cb;
 } TaskTimerManager;
 
-
 //! Initialize a passed in manager object.
 //! @param[in] manager The manager object to initialize
 //! @param[in] semaphore a semaphore the TaskTimerManager should give if the next expiring timer
@@ -45,4 +44,4 @@ pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager);
 //! its stuck on.
 //! @return A pointer to the current callback that's running, NULL if no callback
 //!         is currently running.
-void* task_timer_manager_get_current_cb(const TaskTimerManager *manager);
+void *task_timer_manager_get_current_cb(const TaskTimerManager *manager);

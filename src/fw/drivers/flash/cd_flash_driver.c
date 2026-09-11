@@ -21,9 +21,8 @@ void cd_flash_init(void) {
   flash_impl_init(true /* coredump_mode */);
 
   // Protect the PRF region from writes
-  flash_impl_write_protect(
-      FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-      (FLASH_REGION_SAFE_FIRMWARE_END - SECTOR_SIZE_BYTES));
+  flash_impl_write_protect(FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                           (FLASH_REGION_SAFE_FIRMWARE_END - SECTOR_SIZE_BYTES));
 
   s_active = true;
 }
@@ -40,8 +39,7 @@ void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
     watchdog_feed();
 
     uint32_t erase_size = 0;
-    if (((start_addr & SECTOR_ADDR_MASK) == start_addr) &&
-        (total_bytes >= SECTOR_SIZE_BYTES)) {
+    if (((start_addr & SECTOR_ADDR_MASK) == start_addr) && (total_bytes >= SECTOR_SIZE_BYTES)) {
       erase_size = SECTOR_SIZE_BYTES;
       flash_impl_erase_sector_begin(start_addr);
     } else if ((start_addr & SUBSECTOR_ADDR_MASK) == start_addr &&
@@ -54,7 +52,8 @@ void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
     }
 
     status_t status;
-    while ((status = flash_impl_get_erase_status()) == E_BUSY) delay_us(100);
+    while ((status = flash_impl_get_erase_status()) == E_BUSY)
+      delay_us(100);
     CD_ASSERTN(status == S_SUCCESS);
 
     total_bytes -= erase_size;
@@ -67,7 +66,7 @@ void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
 uint32_t cd_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr,
                               const uint32_t buffer_size) {
   CD_ASSERTN(((start_addr + buffer_size) <= CORE_DUMP_FLASH_END) &&
-      (int)start_addr >= CORE_DUMP_FLASH_START);
+             (int)start_addr >= CORE_DUMP_FLASH_START);
 
   const uint8_t *buffer = buffer_ptr;
   uint32_t remaining = buffer_size;
@@ -87,8 +86,7 @@ uint32_t cd_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr,
   return buffer_size;
 }
 
-void cd_flash_read_bytes(void* buffer_ptr, uint32_t start_addr,
-    uint32_t buffer_size) {
+void cd_flash_read_bytes(void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size) {
   flash_impl_read_sync(buffer_ptr, start_addr, buffer_size);
 }
 

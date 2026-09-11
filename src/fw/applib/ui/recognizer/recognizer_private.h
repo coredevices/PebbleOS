@@ -30,14 +30,14 @@ struct Recognizer {
 
   union {
     struct {
-      bool handling_touch_event:1;
-      bool is_owned:1;
+      bool handling_touch_event : 1;
+      bool is_owned : 1;
     };
     uint32_t flags;
   };
 
   // Kept outside the flags union so that recognizer_reset() never clears it
-  bool is_static:1;
+  bool is_static : 1;
 
   struct Recognizer *fail_after;
   RecognizerSimultaneousWithCb simultaneous_with_cb;

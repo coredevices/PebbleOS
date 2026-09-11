@@ -23,7 +23,7 @@
 
 PBL_LOG_MODULE_DEFINE(driver_display_jdi, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 
-#define POWER_SEQ_DELAY_TIME_US  11000
+#define POWER_SEQ_DELAY_TIME_US 11000
 #define POWER_RESET_CYCLE_DELAY_TIME_US 500000
 
 // Timeout for detecting the SiFli HAL silent-loss bug: the LCDC kicks off a
@@ -75,7 +75,7 @@ typedef struct {
 } DisplayIrqLogEntry;
 
 typedef struct {
-  uint32_t write_count;   // total IRQs logged; newest = (write_count-1) % N
+  uint32_t write_count;  // total IRQs logged; newest = (write_count-1) % N
   DisplayIrqLogEntry entries[DISPLAY_IRQ_LOG_ENTRIES];
 } DisplayIrqLog;
 
@@ -98,10 +98,10 @@ static bool s_rotated_180 = true;
 static bool s_rotated_180 = false;
 #endif
 
-static void prv_power_cycle(void){
+static void prv_power_cycle(void) {
   OutputConfig cfg = {
-    .gpio = hwp_gpio1,
-    .active_high = true,
+      .gpio = hwp_gpio1,
+      .active_high = true,
   };
 
   // This will disable all JDI pull-ups/downs so that VLCD can fully turn off,
@@ -183,9 +183,8 @@ static HAL_StatusTypeDef prv_display_update_start(void) {
 
 static void prv_handle_send_failure(const char *ctx, HAL_StatusTypeDef status) {
   DisplayJDIState *state = DISPLAY->state;
-  PBL_LOG_ERR("display: %s SendLayerData_IT=%d State=%d ErrorCode=0x%08lx",
-              ctx, (int)status, (int)state->hlcdc.State,
-              (unsigned long)state->hlcdc.ErrorCode);
+  PBL_LOG_ERR("display: %s SendLayerData_IT=%d State=%d ErrorCode=0x%08lx", ctx, (int)status,
+              (int)state->hlcdc.State, (unsigned long)state->hlcdc.ErrorCode);
   state->hlcdc.State = HAL_LCDC_STATE_READY;
   state->hlcdc.ErrorCode = HAL_LCDC_ERROR_NONE;
 }
@@ -226,10 +225,8 @@ static void prv_silent_loss_handler(void *data) {
   dcache_align(&snap_addr, &snap_size);
   dcache_flush((const void *)snap_addr, snap_size);
   PBL_CROAK("LCDC silent loss: no EOF in %ums (State=%d Err=0x%lx y=%u..%u)",
-            (unsigned)DISPLAY_SILENT_LOSS_TIMEOUT_MS,
-            (int)state->hlcdc.State,
-            (unsigned long)state->hlcdc.ErrorCode,
-            (unsigned)s_update_y0, (unsigned)s_update_y1);
+            (unsigned)DISPLAY_SILENT_LOSS_TIMEOUT_MS, (int)state->hlcdc.State,
+            (unsigned long)state->hlcdc.ErrorCode, (unsigned)s_update_y0, (unsigned)s_update_y1);
 }
 
 static void prv_display_update_terminate(void *data) {
@@ -239,14 +236,14 @@ static void prv_display_update_terminate(void *data) {
   for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
     uint8_t *row = &s_framebuffer[y * PBL_DISPLAY_WIDTH];
 
-  if (s_rotated_180) {
-    // Undo HMirror before converting back
-    for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
-      uint8_t tmp = row[x];
-      row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
-      row[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+    if (s_rotated_180) {
+      // Undo HMirror before converting back
+      for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
+        uint8_t tmp = row[x];
+        row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
+        row[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
+      }
     }
-  }
 
     // Convert this row in-place from 332 to 222 using word-level bit manipulation
     // 332 format: RR 0G GG BB (bits 7-6 R, 4-3 G, 1-0 B)
@@ -311,17 +308,15 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   if (s_updating) {
     PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
-        .callback =
-            {
-                .callback = prv_display_update_terminate,
-            },
+        .callback = {
+            .callback = prv_display_update_terminate,
+        },
     };
 
     event_put_isr(&e);
   } else {
     pbl_sem_give(&s_sem);
   }
-
 }
 
 void display_init(void) {
@@ -348,7 +343,8 @@ void display_init(void) {
   HAL_PIN_Set(DISPLAY->pinmux.g2.pad, DISPLAY->pinmux.g2.func, DISPLAY->pinmux.g2.flags, 1);
   HAL_PIN_Set(DISPLAY->pinmux.b1.pad, DISPLAY->pinmux.b1.func, DISPLAY->pinmux.b1.flags, 1);
   HAL_PIN_Set(DISPLAY->pinmux.b2.pad, DISPLAY->pinmux.b2.func, DISPLAY->pinmux.b2.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.vcom_frp.pad, DISPLAY->pinmux.vcom_frp.func, DISPLAY->pinmux.vcom_frp.flags, 1);
+  HAL_PIN_Set(DISPLAY->pinmux.vcom_frp.pad, DISPLAY->pinmux.vcom_frp.func,
+              DISPLAY->pinmux.vcom_frp.flags, 1);
   HAL_PIN_Set(DISPLAY->pinmux.xfrp.pad, DISPLAY->pinmux.xfrp.func, DISPLAY->pinmux.xfrp.flags, 1);
 
   HAL_LCDC_Init(&state->hlcdc);
@@ -386,7 +382,6 @@ void display_set_rotated(bool rotated) {
   s_rotated_180 = rotated;
 #endif
   HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_rotated_180);
-
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
@@ -455,8 +450,8 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   // isn't yet armed. prv_display_update_terminate stops it on the normal
   // completion path; the kickoff-failure path below stops it via the same
   // terminate call.
-  new_timer_start(s_silent_loss_timer, DISPLAY_SILENT_LOSS_TIMEOUT_MS,
-                  prv_silent_loss_handler, NULL, 0);
+  new_timer_start(s_silent_loss_timer, DISPLAY_SILENT_LOSS_TIMEOUT_MS, prv_silent_loss_handler,
+                  NULL, 0);
   HAL_StatusTypeDef status = prv_display_update_start();
   if (status != HAL_OK) {
     prv_handle_send_failure("update", status);
@@ -493,7 +488,8 @@ void display_update_boot_frame(uint8_t *framebuffer) {
   soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
-void display_clear(void) {}
+void display_clear(void) {
+}
 
 #ifndef CONFIG_RELEASE
 void display_jdi_test_drop_next_complete(void) {

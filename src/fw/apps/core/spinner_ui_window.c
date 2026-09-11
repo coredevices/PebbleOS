@@ -26,7 +26,6 @@ typedef struct {
   bool should_cancel_animation;
 } SpinnerUIData;
 
-
 ////////////////////////////////////////////////////////////
 // Animation Logic
 
@@ -39,10 +38,10 @@ typedef struct {
 
 static int prv_get_background_circle_radius(const GRect *bounds) {
   const int min_dimension = MIN(bounds->size.w, bounds->size.h);
-  return (min_dimension * 3) / (4 * 2); // 3/4 of min dimension is diameter
+  return (min_dimension * 3) / (4 * 2);  // 3/4 of min dimension is diameter
 }
 
-static void prv_draw_background_circle(Layer *layer, GContext* ctx) {
+static void prv_draw_background_circle(Layer *layer, GContext *ctx) {
   graphics_context_set_antialiased(ctx, false);
   const GPoint center = grect_center_point(&layer->bounds);
   const int radius = prv_get_background_circle_radius(&layer->bounds);
@@ -53,7 +52,7 @@ static void prv_draw_background_circle(Layer *layer, GContext* ctx) {
   graphics_draw_circle(ctx, center, radius);
 }
 
-static void prv_draw_spinner_circles(Layer *layer, GContext* ctx) {
+static void prv_draw_spinner_circles(Layer *layer, GContext *ctx) {
   // Drawing the circles with aa is just too slow and we end up backing up the rest of the system.
   // See PBL-16184
   graphics_context_set_antialiased(ctx, false);
@@ -64,16 +63,17 @@ static void prv_draw_spinner_circles(Layer *layer, GContext* ctx) {
   const unsigned int radius_of_path = bg_radius - SPINNER_CIRCLE_RADIUS;
   const unsigned int radius_of_spinner_circles = SPINNER_CIRCLE_RADIUS;
   const GPoint circle_center_point = grect_center_point(&layer->bounds);
-  const unsigned int angle = (TRIG_MAX_ANGLE * data->cur_distance_normalized *
-                              LOOPS_PER_ANIMATION) / ANIMATION_NORMALIZED_MAX;
+  const unsigned int angle =
+      (TRIG_MAX_ANGLE * data->cur_distance_normalized * LOOPS_PER_ANIMATION) /
+      ANIMATION_NORMALIZED_MAX;
 
   const GPoint circle1_location = {
-    .x = (sin_lookup(angle) * radius_of_path / TRIG_MAX_RATIO) + circle_center_point.x,
-    .y = (-cos_lookup(angle) * radius_of_path / TRIG_MAX_RATIO) + circle_center_point.y,
+      .x = (sin_lookup(angle) * radius_of_path / TRIG_MAX_RATIO) + circle_center_point.x,
+      .y = (-cos_lookup(angle) * radius_of_path / TRIG_MAX_RATIO) + circle_center_point.y,
   };
   const GPoint circle2_location = {
-    .x = (-sin_lookup(angle) * (-radius_of_path) / TRIG_MAX_RATIO) + circle_center_point.x,
-    .y = (-cos_lookup(angle) * (-radius_of_path) / TRIG_MAX_RATIO) + circle_center_point.y,
+      .x = (-sin_lookup(angle) * (-radius_of_path) / TRIG_MAX_RATIO) + circle_center_point.x,
+      .y = (-cos_lookup(angle) * (-radius_of_path) / TRIG_MAX_RATIO) + circle_center_point.y,
   };
 
   graphics_context_set_fill_color(ctx, data->spinner_color);
@@ -86,14 +86,14 @@ static void prv_draw_spinner_circles(Layer *layer, GContext* ctx) {
 
 static void prv_anim_impl(struct Animation *animation,
                           const AnimationProgress distance_normalized) {
-  SpinnerUIData *data = (SpinnerUIData*) animation_get_context(animation);
+  SpinnerUIData *data = (SpinnerUIData *)animation_get_context(animation);
 
   // We need to artificially limit how frequent we attempt to update the screen. If we update
   // it too fast the thing we wanted to do in the background never gets done. This isn't quite
   // ideal, as around 60 steps is when things are actually smooth, but 60 is too fast and does
   // restrict the speed of our core dump. See PBL-16184
   const uint32_t steps_per_loop = 25;
-  const int32_t min_delta = (ANIMATION_NORMALIZED_MAX/LOOPS_PER_ANIMATION) / steps_per_loop;
+  const int32_t min_delta = (ANIMATION_NORMALIZED_MAX / LOOPS_PER_ANIMATION) / steps_per_loop;
   if (data->cur_distance_normalized + min_delta < distance_normalized) {
     data->cur_distance_normalized = distance_normalized;
     layer_mark_dirty(&data->anim_layer);
@@ -101,7 +101,7 @@ static void prv_anim_impl(struct Animation *animation,
 }
 
 static void prv_anim_stopped(Animation *animation, bool finished, void *context) {
-  SpinnerUIData *data = (SpinnerUIData*) animation_get_context(animation);
+  SpinnerUIData *data = (SpinnerUIData *)animation_get_context(animation);
   if (!data->should_cancel_animation) {
     data->cur_distance_normalized = 0;
     animation_schedule(property_animation_get_animation(data->spinner_animation));
@@ -111,7 +111,7 @@ static void prv_anim_stopped(Animation *animation, bool finished, void *context)
 ////////////////////////////////////////////////////////////
 // Window loading, unloading, initializing
 
-static void prv_window_unload_handler(Window* window) {
+static void prv_window_unload_handler(Window *window) {
   SpinnerUIData *data = window_get_user_data(window);
   if (data) {
     data->should_cancel_animation = true;
@@ -120,7 +120,7 @@ static void prv_window_unload_handler(Window* window) {
   }
 }
 
-static void prv_window_load_handler(Window* window) {
+static void prv_window_load_handler(Window *window) {
   SpinnerUIData *data = window_get_user_data(window);
 
   window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
@@ -149,12 +149,12 @@ static void prv_window_load_handler(Window* window) {
     animation_set_auto_destroy(animation, false);
 
     AnimationHandlers anim_handler = {
-      .stopped = prv_anim_stopped,
+        .stopped = prv_anim_stopped,
     };
     animation_set_handlers(animation, anim_handler, data);
 
-    data->spinner_anim_impl = (AnimationImplementation) {
-      .update = prv_anim_impl,
+    data->spinner_anim_impl = (AnimationImplementation){
+        .update = prv_anim_impl,
     };
     animation_set_implementation(animation, &data->spinner_anim_impl);
 
@@ -162,21 +162,21 @@ static void prv_window_load_handler(Window* window) {
   }
 }
 
-Window* spinner_ui_window_get(GColor spinner_color) {
+Window *spinner_ui_window_get(GColor spinner_color) {
   SpinnerUIData *data = kernel_malloc_check(sizeof(SpinnerUIData));
   *data = (SpinnerUIData){};
 
   data->spinner_color = spinner_color;
   data->should_cancel_animation = false;
 
-  Window* window = &data->window;
+  Window *window = &data->window;
   window_init(window, WINDOW_NAME("Spinner UI Window"));
   window_set_user_data(window, data);
   window_set_overrides_back_button(window, true);
   window_set_window_handlers(window, &(WindowHandlers){
-    .load = prv_window_load_handler,
-    .unload = prv_window_unload_handler,
-  });
+                                         .load = prv_window_load_handler,
+                                         .unload = prv_window_unload_handler,
+                                     });
 
   return window;
 }

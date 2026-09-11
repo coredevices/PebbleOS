@@ -28,11 +28,10 @@
  */
 
 //! Helper macro for clearing an MBuf
-#define MBUF_EMPTY ((MBuf){ 0 })
+#define MBUF_EMPTY ((MBuf){0})
 
 //! Flags used by consumers of MBufs (bits 0-23 are allocated for this purpose)
 #define MBUF_FLAG_IS_FRAMING ((uint32_t)(1 << 0))
-
 
 //! Consumers of MBufs which use mbuf_get() should add an enum value and add the maximum number of
 //! MBufs which may be allocated for that pool to the MBUF_POOL_MAX_ALLOCATED array within mbuf.c.

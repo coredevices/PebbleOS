@@ -106,10 +106,9 @@ typedef struct {
 
 AlarmPopupData *s_alarm_popup_data = NULL;
 
-
 static void prv_stop_animation_kernel_main_cb(void *callback_context) {
   if (s_alarm_popup_data) {
-    dialog_set_icon((Dialog *) s_alarm_popup_data->alarm_popup,
+    dialog_set_icon((Dialog *)s_alarm_popup_data->alarm_popup,
                     RESOURCE_ID_ALARM_CLOCK_LARGE_STATIC);
   }
 }
@@ -129,8 +128,7 @@ static void prv_stop_vibes(void) {
 
 #ifdef CONFIG_SPEAKER
 static void prv_play_sound_loop_iteration(void) {
-  speaker_service_play_note_seq(s_alarm_popup_data->sound_notes,
-                                s_alarm_popup_data->sound_count,
+  speaker_service_play_note_seq(s_alarm_popup_data->sound_notes, s_alarm_popup_data->sound_count,
                                 SpeakerPriorityCritical, ALARM_SPEAKER_VOLUME);
 }
 
@@ -166,9 +164,9 @@ static void prv_start_sound(AlarmId id, bool vibe_driving_loop) {
     return;
   }
 
-  s_alarm_popup_data->speaker_event_info = (EventServiceInfo) {
-    .type = PEBBLE_SPEAKER_EVENT,
-    .handler = prv_handle_speaker_event,
+  s_alarm_popup_data->speaker_event_info = (EventServiceInfo){
+      .type = PEBBLE_SPEAKER_EVENT,
+      .handler = prv_handle_speaker_event,
   };
   event_service_client_subscribe(&s_alarm_popup_data->speaker_event_info);
   speaker_service_register_finish(PebbleTask_KernelMain);
@@ -178,9 +176,9 @@ static void prv_start_sound(AlarmId id, bool vibe_driving_loop) {
   // paired_vibe column in s_tones[]). For any other combination the cycle
   // lengths and beats won't line up, so each side loops on its own cadence.
   const VibeScoreId paired = alarm_tones_get_paired_vibe(info.tone);
-  const bool tones_match = vibe_driving_loop &&
-                           paired != VibeScoreId_Invalid &&
-                           paired == alerts_preferences_get_vibe_score_for_client(VibeClient_Alarms);
+  const bool tones_match =
+      vibe_driving_loop && paired != VibeScoreId_Invalid &&
+      paired == alerts_preferences_get_vibe_score_for_client(VibeClient_Alarms);
   s_alarm_popup_data->sound_active = true;
   s_alarm_popup_data->sound_driven_by_vibe_timer = tones_match;
   if (!tones_match) {
@@ -206,7 +204,7 @@ static void prv_stop_sound(void) {
 // ----------------------------------------------------------------------------------------------
 //! Vibe Timer
 #define TINTIN_VIBE_REPEAT_INTERVAL_MS (1000)
-#define TINTIN_MAX_VIBES (10 * 60) // 10 minutes at 1 vibe a second
+#define TINTIN_MAX_VIBES (10 * 60)  // 10 minutes at 1 vibe a second
 #define TINTIN_LPM_VIBES_PER_MINUTE (10)
 #define VIBE_DURATION (10 * SECONDS_PER_MINUTE * MS_PER_SECOND)
 static void prv_vibe_kernel_main_cb(void *callback_context) {
@@ -220,13 +218,11 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
         vibes_long_pulse();
       }
 #ifdef CONFIG_SPEAKER
-      if (s_alarm_popup_data->sound_active &&
-          s_alarm_popup_data->sound_driven_by_vibe_timer) {
+      if (s_alarm_popup_data->sound_active && s_alarm_popup_data->sound_driven_by_vibe_timer) {
         prv_play_sound_loop_iteration();
       }
 #endif
-    }
-    else {
+    } else {
       prv_stop_vibes();
       launcher_task_add_callback(prv_stop_animation_kernel_main_cb, NULL);
       // Auto-dismiss the alarm after the vibration period ends
@@ -252,7 +248,7 @@ static void prv_start_vibes(void) {
   unsigned int vibe_repeat_interval_ms = 0;
   if (s_alarm_popup_data->vibe_score) {
     vibe_repeat_interval_ms = vibe_score_get_duration_ms(s_alarm_popup_data->vibe_score) +
-        vibe_score_get_repeat_delay_ms(s_alarm_popup_data->vibe_score);
+                              vibe_score_get_repeat_delay_ms(s_alarm_popup_data->vibe_score);
   }
   if (vibe_repeat_interval_ms == 0) {
     // Missing (e.g. resource load failure under memory pressure) or empty
@@ -262,15 +258,15 @@ static void prv_start_vibes(void) {
       vibe_score_destroy(s_alarm_popup_data->vibe_score);
       s_alarm_popup_data->vibe_score = NULL;
     }
-    vibe_repeat_interval_ms = low_power_is_active()
-        ? (SECONDS_PER_MINUTE * MS_PER_SECOND / TINTIN_LPM_VIBES_PER_MINUTE)
-        : TINTIN_VIBE_REPEAT_INTERVAL_MS;
+    vibe_repeat_interval_ms =
+        low_power_is_active() ? (SECONDS_PER_MINUTE * MS_PER_SECOND / TINTIN_LPM_VIBES_PER_MINUTE)
+                              : TINTIN_VIBE_REPEAT_INTERVAL_MS;
   }
   s_alarm_popup_data->max_vibes = DIVIDE_CEIL(VIBE_DURATION, vibe_repeat_interval_ms);
   s_alarm_popup_data->vibe_timer = new_timer_create();
   prv_vibe(NULL);
-  new_timer_start(s_alarm_popup_data->vibe_timer, vibe_repeat_interval_ms, prv_vibe,
-                  NULL, TIMER_START_FLAG_REPEATING);
+  new_timer_start(s_alarm_popup_data->vibe_timer, vibe_repeat_interval_ms, prv_vibe, NULL,
+                  TIMER_START_FLAG_REPEATING);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -344,7 +340,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 
   s_alarm_popup_data->alarm_popup = actionable_dialog_create("Alarm Popup");
   actionable_dialog_set_action_bar_type(s_alarm_popup_data->alarm_popup, DialogActionBarCustom,
-      &s_alarm_popup_data->action_bar);
+                                        &s_alarm_popup_data->action_bar);
 
   Dialog *dialog = actionable_dialog_get_dialog(s_alarm_popup_data->alarm_popup);
   char display_time[16];
@@ -359,7 +355,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   dialog_set_icon(dialog, RESOURCE_ID_ALARM_CLOCK_LARGE);
   dialog_set_background_color(dialog, GColorJaegerGreen);
   DialogCallbacks callback = {
-    .unload = prv_cleanup_alarm_popup,
+      .unload = prv_cleanup_alarm_popup,
   };
   dialog_set_callbacks(dialog, &callback, NULL);
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
@@ -370,8 +366,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   // get ALARM_INVALID_ID and skip the per-alarm config lookup.
   const AlarmId alarm_id = alarm_get_most_recent_id();
   AlarmInfo info;
-  const bool have_info = (alarm_id != ALARM_INVALID_ID) &&
-                         alarm_get_info(alarm_id, &info);
+  const bool have_info = (alarm_id != ALARM_INVALID_ID) && alarm_get_info(alarm_id, &info);
   const bool vibe_on = !have_info || info.vibrate_enabled;
   if (vibe_on) {
     prv_start_vibes();

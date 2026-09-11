@@ -13,8 +13,8 @@
 extern void prv_window_load_handler(Window *window);
 extern void prv_window_unload_handler(Window *window);
 extern void prv_set_unobstructed_area_height(int16_t height);
-extern void prv_set_data(KickstartData *data, int32_t current_steps,
-                         int32_t typical_steps, int32_t daily_steps_avg, int32_t current_bpm);
+extern void prv_set_data(KickstartData *data, int32_t current_steps, int32_t typical_steps,
+                         int32_t daily_steps_avg, int32_t current_bpm);
 
 // Fakes
 /////////////////////
@@ -60,9 +60,11 @@ bool clock_is_24h_style(void) {
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 
-void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {}
+void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
+}
 
-void tick_timer_service_unsubscribe(void) {}
+void tick_timer_service_unsubscribe(void) {
+}
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -78,7 +80,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_kickstart__initialize(void) {
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -100,9 +102,9 @@ void test_kickstart__initialize(void) {
   window_init(&s_data.window, WINDOW_NAME("Kickstart"));
   window_set_user_data(&s_data.window, &s_data);
   window_set_window_handlers(&s_data.window, &(WindowHandlers){
-    .load = prv_window_load_handler,
-    .unload = prv_window_unload_handler,
-  });
+                                                 .load = prv_window_load_handler,
+                                                 .unload = prv_window_unload_handler,
+                                             });
 }
 
 void test_kickstart__cleanup(void) {

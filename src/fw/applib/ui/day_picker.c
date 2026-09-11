@@ -14,8 +14,8 @@
 
 #include <string.h>
 
-#define DAY_PICKER_CELL_HEIGHT PBL_IF_RECT_ELSE(menu_cell_small_cell_height(), \
-                                                   menu_cell_basic_cell_height())
+#define DAY_PICKER_CELL_HEIGHT \
+  PBL_IF_RECT_ELSE(menu_cell_small_cell_height(), menu_cell_basic_cell_height())
 
 typedef struct {
   Window window;
@@ -43,11 +43,9 @@ typedef struct {
 } CustomDayPickerData;
 
 static const char *prv_kind_strings[DayPickerKindNumItems] = {
-  [DayPickerKindEveryday] = "Every Day",
-  [DayPickerKindWeekdays] = "Weekdays",
-  [DayPickerKindWeekends] = "Weekends",
-  [DayPickerKindCustom] = "Custom",
-  [DayPickerKindJustOnce] = "Just Once",
+    [DayPickerKindEveryday] = "Every Day", [DayPickerKindWeekdays] = "Weekdays",
+    [DayPickerKindWeekends] = "Weekends",  [DayPickerKindCustom] = "Custom",
+    [DayPickerKindJustOnce] = "Just Once",
 };
 
 const char *day_picker_kind_get_string(DayPickerKind kind) {
@@ -91,25 +89,23 @@ static int prv_kind_to_row(bool allow_once, DayPickerKind kind) {
 //! Day Picker (kind selection)
 
 static uint16_t prv_day_picker_get_num_sections(struct MenuLayer *menu_layer,
-                                                 void *callback_context) {
+                                                void *callback_context) {
   return 1;
 }
 
-static uint16_t prv_day_picker_get_num_rows(struct MenuLayer *menu_layer,
-                                             uint16_t section_index,
-                                             void *callback_context) {
+static uint16_t prv_day_picker_get_num_rows(struct MenuLayer *menu_layer, uint16_t section_index,
+                                            void *callback_context) {
   DayPickerData *data = (DayPickerData *)callback_context;
   return (DayPickerKindNumItems - 1) + (data->allow_once ? 1 : 0);
 }
 
-static int16_t prv_day_picker_get_cell_height(struct MenuLayer *menu_layer,
-                                               MenuIndex *cell_index,
-                                               void *callback_context) {
+static int16_t prv_day_picker_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell_index,
+                                              void *callback_context) {
   return DAY_PICKER_CELL_HEIGHT;
 }
 
-static void prv_day_picker_draw_row(GContext *ctx, const Layer *cell_layer,
-                                    MenuIndex *cell_index, void *callback_context) {
+static void prv_day_picker_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                                    void *callback_context) {
   DayPickerData *data = (DayPickerData *)callback_context;
   DayPickerKind kind = prv_row_to_kind(data->allow_once, cell_index->row);
   const char *cell_text = i18n_get(day_picker_kind_get_string(kind), &data->window);
@@ -121,7 +117,7 @@ static void prv_day_picker_handle_selection(MenuLayer *menu_layer, MenuIndex *ce
   DayPickerData *data = (DayPickerData *)callback_context;
   DayPickerKind kind = prv_row_to_kind(data->allow_once, cell_index->row);
   DayPickerResult result = {
-    .kind = kind,
+      .kind = kind,
   };
   memset(result.custom_days, 0, sizeof(result.custom_days));
 
@@ -131,7 +127,7 @@ static void prv_day_picker_handle_selection(MenuLayer *menu_layer, MenuIndex *ce
       memcpy(initial_days, data->initial.custom_days, sizeof(initial_days));
     }
     custom_day_picker_push(initial_days, data->callback, data->callback_context,
-                          data->highlight_color);
+                           data->highlight_color);
     app_window_stack_remove(&data->window, true);
     return;
   }
@@ -149,15 +145,14 @@ static void prv_day_picker_window_unload(Window *window) {
   task_free(data);
 }
 
-void day_picker_push(DayPickerConfig config, DayPickerCallback callback,
-                     void *context) {
+void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *context) {
   DayPickerData *data = task_malloc_check(sizeof(DayPickerData));
   *data = (DayPickerData){
-    .initial = config.initial,
-    .callback = callback,
-    .callback_context = context,
-    .highlight_color = config.highlight_color,
-    .allow_once = config.allow_once,
+      .initial = config.initial,
+      .callback = callback,
+      .callback_context = context,
+      .highlight_color = config.highlight_color,
+      .allow_once = config.allow_once,
   };
 
   window_init(&data->window, WINDOW_NAME("Day Picker"));
@@ -169,26 +164,26 @@ void day_picker_push(DayPickerConfig config, DayPickerCallback callback,
   bounds = grect_inset_internal(bounds, 0, STATUS_BAR_LAYER_HEIGHT);
 #endif
   menu_layer_init(&data->menu_layer, &bounds);
-  menu_layer_set_callbacks(&data->menu_layer, data, &(MenuLayerCallbacks){
-    .get_num_sections = prv_day_picker_get_num_sections,
-    .get_num_rows = prv_day_picker_get_num_rows,
-    .get_cell_height = prv_day_picker_get_cell_height,
-    .draw_row = prv_day_picker_draw_row,
-    .select_click = prv_day_picker_handle_selection,
-  });
+  menu_layer_set_callbacks(&data->menu_layer, data,
+                           &(MenuLayerCallbacks){
+                               .get_num_sections = prv_day_picker_get_num_sections,
+                               .get_num_rows = prv_day_picker_get_num_rows,
+                               .get_cell_height = prv_day_picker_get_cell_height,
+                               .draw_row = prv_day_picker_draw_row,
+                               .select_click = prv_day_picker_handle_selection,
+                           });
   menu_layer_set_highlight_colors(&data->menu_layer, config.highlight_color, GColorWhite);
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());
-  menu_layer_set_scroll_vibe_on_wrap(&data->menu_layer,
-                                     shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
-  menu_layer_set_scroll_vibe_on_blocked(&data->menu_layer,
-                                        shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
+  menu_layer_set_scroll_vibe_on_wrap(
+      &data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(
+      &data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
   uint16_t selected_row = (uint16_t)prv_kind_to_row(config.allow_once, config.initial.kind);
-  menu_layer_set_selected_index(&data->menu_layer,
-                                (MenuIndex){.row = selected_row},
+  menu_layer_set_selected_index(&data->menu_layer, (MenuIndex){.row = selected_row},
                                 MenuRowAlignCenter, false);
 
   app_window_stack_push(&data->window, true);
@@ -207,23 +202,23 @@ static bool prv_is_custom_day_scheduled(CustomDayPickerData *data) {
 }
 
 static uint16_t prv_custom_day_picker_get_num_sections(struct MenuLayer *menu_layer,
-                                                        void *callback_context) {
+                                                       void *callback_context) {
   return 1;
 }
 
 static uint16_t prv_custom_day_picker_get_num_rows(struct MenuLayer *menu_layer,
-                                                    uint16_t section_index, void *callback_context) {
+                                                   uint16_t section_index, void *callback_context) {
   return DAYS_PER_WEEK + 1;
 }
 
 static int16_t prv_custom_day_picker_get_cell_height(struct MenuLayer *menu_layer,
-                                                      MenuIndex *cell_index,
-                                                      void *callback_context) {
+                                                     MenuIndex *cell_index,
+                                                     void *callback_context) {
   return DAY_PICKER_CELL_HEIGHT;
 }
 
 static void prv_custom_day_picker_draw_row(GContext *ctx, const Layer *cell_layer,
-                                            MenuIndex *cell_index, void *callback_context) {
+                                           MenuIndex *cell_index, void *callback_context) {
   CustomDayPickerData *data = (CustomDayPickerData *)callback_context;
   GBitmap *ptr_bitmap;
 
@@ -237,8 +232,8 @@ static void prv_custom_day_picker_draw_row(GContext *ctx, const Layer *cell_laye
           box.size = GSize(cell_layer->bounds.size.w, DAY_PICKER_CELL_HEIGHT);
           box.origin = GPoint(0, 4);
           graphics_draw_text(ctx, i18n_get("Check something first.", &data->window),
-                             fonts_get_system_font(FONT_KEY_GOTHIC_18), box,
-                             GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+                             fonts_get_system_font(FONT_KEY_GOTHIC_18), box, GTextOverflowModeFill,
+                             GTextAlignmentCenter, NULL);
           return;
         } else {
           new_resource_id = RESOURCE_ID_CHECKMARK_ICON_DOTTED;
@@ -252,8 +247,9 @@ static void prv_custom_day_picker_draw_row(GContext *ctx, const Layer *cell_laye
       gbitmap_init_with_resource(&data->checkmark_icon, data->current_checkmark_icon_resource_id);
     }
 
-    box.origin = GPoint((((cell_layer->bounds.size.w) / 2) - ((data->checkmark_icon.bounds.size.w) / 2)),
-                        (((cell_layer->bounds.size.h) / 2) - ((data->checkmark_icon.bounds.size.h) / 2)));
+    box.origin =
+        GPoint((((cell_layer->bounds.size.w) / 2) - ((data->checkmark_icon.bounds.size.w) / 2)),
+               (((cell_layer->bounds.size.h) / 2) - ((data->checkmark_icon.bounds.size.h) / 2)));
     box.size = data->checkmark_icon.bounds.size;
     graphics_context_set_compositing_mode(ctx, GCompOpTint);
     graphics_draw_bitmap_in_rect(ctx, &data->checkmark_icon, &box);
@@ -274,7 +270,7 @@ static void prv_custom_day_picker_draw_row(GContext *ctx, const Layer *cell_laye
 }
 
 static void prv_custom_day_picker_handle_selection(MenuLayer *menu_layer, MenuIndex *cell_index,
-                                                    void *callback_context) {
+                                                   void *callback_context) {
   CustomDayPickerData *data = (CustomDayPickerData *)callback_context;
 
   if (cell_index->row == 0) {
@@ -284,7 +280,7 @@ static void prv_custom_day_picker_handle_selection(MenuLayer *menu_layer, MenuIn
     } else {
       data->was_completed = true;
       DayPickerResult result = {
-        .kind = DayPickerKindCustom,
+          .kind = DayPickerKindCustom,
       };
       memcpy(result.custom_days, data->scheduled_days, sizeof(result.custom_days));
       if (data->callback) {
@@ -300,7 +296,7 @@ static void prv_custom_day_picker_handle_selection(MenuLayer *menu_layer, MenuIn
 }
 
 static void prv_custom_day_picker_selection_changed(MenuLayer *menu_layer, MenuIndex new_index,
-                                                     MenuIndex old_index, void *callback_context) {
+                                                    MenuIndex old_index, void *callback_context) {
   CustomDayPickerData *data = (CustomDayPickerData *)callback_context;
   if (old_index.row == 0) {
     data->show_check_something_first_text = false;
@@ -317,16 +313,15 @@ static void prv_custom_day_picker_window_unload(Window *window) {
   task_free(data);
 }
 
-void custom_day_picker_push(bool initial_days[DAYS_PER_WEEK],
-                            DayPickerCallback callback, void *context,
-                            GColor highlight_color) {
+void custom_day_picker_push(bool initial_days[DAYS_PER_WEEK], DayPickerCallback callback,
+                            void *context, GColor highlight_color) {
   CustomDayPickerData *data = task_malloc_check(sizeof(CustomDayPickerData));
   *data = (CustomDayPickerData){
-    .callback = callback,
-    .callback_context = context,
-    .highlight_color = highlight_color,
-    .was_completed = false,
-    .show_check_something_first_text = false,
+      .callback = callback,
+      .callback_context = context,
+      .highlight_color = highlight_color,
+      .was_completed = false,
+      .show_check_something_first_text = false,
   };
   memcpy(data->scheduled_days, initial_days, sizeof(data->scheduled_days));
 
@@ -339,22 +334,23 @@ void custom_day_picker_push(bool initial_days[DAYS_PER_WEEK],
   bounds = grect_inset_internal(bounds, 0, STATUS_BAR_LAYER_HEIGHT);
 #endif
   menu_layer_init(&data->menu_layer, &bounds);
-  menu_layer_set_callbacks(&data->menu_layer, data, &(MenuLayerCallbacks){
-    .get_num_sections = prv_custom_day_picker_get_num_sections,
-    .get_num_rows = prv_custom_day_picker_get_num_rows,
-    .get_cell_height = prv_custom_day_picker_get_cell_height,
-    .draw_row = prv_custom_day_picker_draw_row,
-    .select_click = prv_custom_day_picker_handle_selection,
-    .selection_changed = prv_custom_day_picker_selection_changed,
-  });
+  menu_layer_set_callbacks(&data->menu_layer, data,
+                           &(MenuLayerCallbacks){
+                               .get_num_sections = prv_custom_day_picker_get_num_sections,
+                               .get_num_rows = prv_custom_day_picker_get_num_rows,
+                               .get_cell_height = prv_custom_day_picker_get_cell_height,
+                               .draw_row = prv_custom_day_picker_draw_row,
+                               .select_click = prv_custom_day_picker_handle_selection,
+                               .selection_changed = prv_custom_day_picker_selection_changed,
+                           });
   menu_layer_set_highlight_colors(&data->menu_layer, highlight_color, GColorWhite);
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
-                                     shell_prefs_get_menu_scroll_wrap_around_enable());
-  menu_layer_set_scroll_vibe_on_wrap(&data->menu_layer,
-                                      shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
-  menu_layer_set_scroll_vibe_on_blocked(&data->menu_layer,
-                                        shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
+                                    shell_prefs_get_menu_scroll_wrap_around_enable());
+  menu_layer_set_scroll_vibe_on_wrap(
+      &data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(
+      &data->menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
   gbitmap_init_with_resource(&data->selected_icon, RESOURCE_ID_CHECKBOX_ICON_CHECKED);

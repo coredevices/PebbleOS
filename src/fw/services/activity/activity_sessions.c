@@ -19,7 +19,6 @@
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
-
 // ------------------------------------------------------------------------------------
 // Figure out the cutoff times for sleep and step activities for today given the current time
 static void prv_get_earliest_end_times_utc(time_t utc_sec, time_t *sleep_earliest_end_utc,
@@ -29,7 +28,6 @@ static void prv_get_earliest_end_times_utc(time_t utc_sec, time_t *sleep_earlies
   *sleep_earliest_end_utc = start_of_today_utc - (SECONDS_PER_DAY - last_sleep_second_of_day);
   *step_earliest_end_utc = start_of_today_utc;
 }
-
 
 // ------------------------------------------------------------------------------------
 // Remove all activity sessions that are older than "today", those that are invalid because they
@@ -56,8 +54,8 @@ void activity_sessions_prv_remove_out_of_range_activity_sessions(time_t utc_sec,
 
     // See if we should keep this activity
     time_t end_time = sessions[i].start_utc + (sessions[i].length_min * SECONDS_PER_MINUTE);
-    if ((end_time >= end_utc) && (end_time <= utc_sec)
-        && (!remove_ongoing || !sessions[i].ongoing)) {
+    if ((end_time >= end_utc) && (end_time <= utc_sec) &&
+        (!remove_ongoing || !sessions[i].ongoing)) {
       // Keep it
       continue;
     }
@@ -74,7 +72,6 @@ void activity_sessions_prv_remove_out_of_range_activity_sessions(time_t utc_sec,
   // settings, we detect the number of sessions we have by checking for non-zero ones
   memset(&sessions[*session_entries], 0, num_sessions_to_clear * sizeof(ActivitySession));
 }
-
 
 // ------------------------------------------------------------------------------------
 // Return true if the given activity type is a sleep activity
@@ -95,7 +92,6 @@ bool activity_sessions_prv_is_sleep_activity(ActivitySessionType activity_type) 
   }
   WTF;
 }
-
 
 // ------------------------------------------------------------------------------------
 // Return true if this is a valid activity session
@@ -118,7 +114,7 @@ static bool prv_is_valid_activity_session(ActivitySession *session) {
 
   // The length must be reasonable
   if (session->length_min > ACTIVITY_SESSION_MAX_LENGTH_MIN) {
-    PBL_LOG_WRN("Invalid duration: %"PRIu16" ", session->length_min);
+    PBL_LOG_WRN("Invalid duration: %" PRIu16 " ", session->length_min);
     return false;
   }
 
@@ -130,7 +126,6 @@ static bool prv_is_valid_activity_session(ActivitySession *session) {
 
   return true;
 }
-
 
 // ------------------------------------------------------------------------------------
 // Return true if two activity sessions are equal in their type and start time
@@ -153,7 +148,6 @@ static bool prv_activity_sessions_equal(ActivitySession *session_a, ActivitySess
 
   return type_matches && (session_a->start_utc == session_b->start_utc);
 }
-
 
 // ------------------------------------------------------------------------------------
 // Register a new activity. Called by the algorithm code when it detects a new activity.
@@ -187,14 +181,13 @@ void activity_sessions_prv_add_activity_session(ActivitySession *session) {
     }
 
     // Add this activity in
-    PBL_LOG_INFO("Adding activity session %d, start_time: %"PRIu32,
-            (int)session->type, (uint32_t)session->start_utc);
+    PBL_LOG_INFO("Adding activity session %d, start_time: %" PRIu32, (int)session->type,
+                 (uint32_t)session->start_utc);
     state->activity_sessions[state->activity_sessions_count++] = *session;
   }
 unlock:
   pbl_mutex_unlock(&state->mutex);
 }
-
 
 // ------------------------------------------------------------------------------------
 // Delete an ongoing activity. Called by the algorithm code when it decides that an activity
@@ -244,12 +237,12 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
   ActivityState *state = activity_private_state();
   time_t start_local = time_utc_to_local(session->start_utc);
   ActivitySessionDataLoggingRecord dls_record = {
-    .version = ACTIVITY_SESSION_LOGGING_VERSION,
-    .size = sizeof(ActivitySessionDataLoggingRecord),
-    .activity = session->type,
-    .utc_to_local = start_local - session->start_utc,
-    .start_utc = (uint32_t)session->start_utc,
-    .elapsed_sec = session->length_min * SECONDS_PER_MINUTE,
+      .version = ACTIVITY_SESSION_LOGGING_VERSION,
+      .size = sizeof(ActivitySessionDataLoggingRecord),
+      .activity = session->type,
+      .utc_to_local = start_local - session->start_utc,
+      .start_utc = (uint32_t)session->start_utc,
+      .elapsed_sec = session->length_min * SECONDS_PER_MINUTE,
   };
   if (activity_sessions_prv_is_sleep_activity(session->type)) {
     dls_record.sleep_data = session->sleep_data;
@@ -263,9 +256,8 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
     const bool buffered = false;
     const bool resume = false;
     Uuid system_uuid = UUID_SYSTEM;
-    state->activity_dls_session = dls_create(
-        DlsSystemTagActivitySession, DATA_LOGGING_BYTE_ARRAY, sizeof(dls_record),
-        buffered, resume, &system_uuid);
+    state->activity_dls_session = dls_create(DlsSystemTagActivitySession, DATA_LOGGING_BYTE_ARRAY,
+                                             sizeof(dls_record), buffered, resume, &system_uuid);
     if (!state->activity_dls_session) {
       PBL_LOG_WRN("Error creating activity DLS session");
       return;
@@ -275,14 +267,14 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
   // Log the record
   DataLoggingResult result = dls_log(state->activity_dls_session, &dls_record, 1);
   if (result != DATA_LOGGING_SUCCESS) {
-    PBL_LOG_WRN("Error %"PRIi32" while logging activity to DLS", (int32_t)result);
+    PBL_LOG_WRN("Error %" PRIi32 " while logging activity to DLS", (int32_t)result);
   }
-  PBL_LOG_INFO("Logging activity event %d, start_time: %"PRIu32", "
-          "elapsed_min: %"PRIu16", end_time: %"PRIu32" ",
-          (int)session->type, (uint32_t)session->start_utc, session->length_min,
-          (uint32_t)session->start_utc + (session->length_min * SECONDS_PER_MINUTE));
+  PBL_LOG_INFO("Logging activity event %d, start_time: %" PRIu32
+               ", "
+               "elapsed_min: %" PRIu16 ", end_time: %" PRIu32 " ",
+               (int)session->type, (uint32_t)session->start_utc, session->length_min,
+               (uint32_t)session->start_utc + (session->length_min * SECONDS_PER_MINUTE));
 }
-
 
 // This structure holds stats we collected from going through a list of sleep sessions. It is
 // filled in by prv_compute_sleep_stats
@@ -308,7 +300,7 @@ typedef struct {
 static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t max_end_utc,
                                     ActivitySleepStats *stats) {
   ActivityState *state = activity_private_state();
-  *stats = (ActivitySleepStats) { };
+  *stats = (ActivitySleepStats){};
 
   bool rv = false;
 
@@ -325,8 +317,8 @@ static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t m
       continue;
     }
 
-    if ((session->type == ActivitySessionType_Sleep)
-      || (session->type == ActivitySessionType_Nap)) {
+    if ((session->type == ActivitySessionType_Sleep) ||
+        (session->type == ActivitySessionType_Nap)) {
       rv = true;
       // Accumulate sleep container stats
       if (session_exit_utc <= max_end_utc) {
@@ -341,8 +333,8 @@ static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t m
         }
       }
       stats->last_exit_utc = MAX(session_exit_utc, stats->last_exit_utc);
-    } else if ((session->type == ActivitySessionType_RestfulSleep)
-      || (session->type == ActivitySessionType_RestfulNap)) {
+    } else if ((session->type == ActivitySessionType_RestfulSleep) ||
+               (session->type == ActivitySessionType_RestfulNap)) {
       if (session_exit_utc <= max_end_utc) {
         // Accumulate restful sleep stats
         stats->restful_minutes += session->length_min;
@@ -353,7 +345,6 @@ static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t m
 
   return rv;
 }
-
 
 // --------------------------------------------------------------------------------------------
 // Goes through a list of activity sessions and updates our sleep totals in the metrics
@@ -395,16 +386,16 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
 
     // Fill in the rest of the sleep data metrics: the current state, and how long we have been
     // in the current state
-    uint32_t delta_min = abs((int32_t)(last_processed_utc - stats.last_exit_utc))
-                         / SECONDS_PER_MINUTE;
+    uint32_t delta_min =
+        abs((int32_t)(last_processed_utc - stats.last_exit_utc)) / SECONDS_PER_MINUTE;
 
     // Figure out our current state
     if (delta_min > 1) {
       // We are awake
       sleep_data->cur_state = ActivitySleepStateAwake;
       if (stats.last_exit_utc != 0) {
-        sleep_data->cur_state_elapsed_minutes = (now_utc - stats.last_exit_utc)
-                                                / SECONDS_PER_MINUTE;
+        sleep_data->cur_state_elapsed_minutes =
+            (now_utc - stats.last_exit_utc) / SECONDS_PER_MINUTE;
       } else {
         sleep_data->cur_state_elapsed_minutes = MINUTES_PER_DAY;
       }
@@ -415,41 +406,39 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
       } else {
         sleep_data->cur_state = ActivitySleepStateLightSleep;
       }
-      sleep_data->cur_state_elapsed_minutes = (stats.last_session_len_sec + now_utc
-                                               - stats.last_exit_utc) / SECONDS_PER_MINUTE;
+      sleep_data->cur_state_elapsed_minutes =
+          (stats.last_session_len_sec + now_utc - stats.last_exit_utc) / SECONDS_PER_MINUTE;
     }
 
     // If the info that is part of a health sleep event has changed, send out a notification event
-    if ((sleep_data->total_minutes != prev_sleep_data.total_minutes)
-        || (sleep_data->restful_minutes != prev_sleep_data.restful_minutes)) {
+    if ((sleep_data->total_minutes != prev_sleep_data.total_minutes) ||
+        (sleep_data->restful_minutes != prev_sleep_data.restful_minutes)) {
       // Post a sleep changed event
       PebbleEvent e = {
-        .type = PEBBLE_HEALTH_SERVICE_EVENT,
-        .health_event = {
-          .type = HealthEventSleepUpdate,
-          .data.sleep_update = {
-            .total_seconds = sleep_data->total_minutes * SECONDS_PER_MINUTE,
-            .total_restful_seconds = sleep_data->restful_minutes * SECONDS_PER_MINUTE,
+          .type = PEBBLE_HEALTH_SERVICE_EVENT,
+          .health_event = {
+              .type = HealthEventSleepUpdate,
+              .data.sleep_update = {
+                  .total_seconds = sleep_data->total_minutes * SECONDS_PER_MINUTE,
+                  .total_restful_seconds = sleep_data->restful_minutes * SECONDS_PER_MINUTE,
+              },
           },
-        },
       };
       event_put(&e);
     }
 
     if (sleep_data->cur_state != prev_sleep_data.cur_state) {
       // Debug logging
-      ACTIVITY_LOG_DEBUG("total_min: %"PRIu32", deep_min: %"PRIu32", state: %"PRIu32", "
-                         "state_min: %"PRIu32"",
-                         sleep_data->total_minutes,
-                         sleep_data->restful_minutes,
-                         sleep_data->cur_state,
-                         sleep_data->cur_state_elapsed_minutes);
+      ACTIVITY_LOG_DEBUG("total_min: %" PRIu32 ", deep_min: %" PRIu32 ", state: %" PRIu32
+                         ", "
+                         "state_min: %" PRIu32 "",
+                         sleep_data->total_minutes, sleep_data->restful_minutes,
+                         sleep_data->cur_state, sleep_data->cur_state_elapsed_minutes);
     }
   }
 unlock:
   pbl_mutex_unlock(&state->mutex);
 }
-
 
 // --------------------------------------------------------------------------------------------
 time_t activity_sessions_prv_get_sleep_window_start_utc(time_t now_utc) {
@@ -479,7 +468,6 @@ void activity_sessions_prv_get_sleep_bounds_utc(time_t now_utc, time_t *enter_ut
   *exit_utc = stats.today_exit_utc;
 }
 
-
 // --------------------------------------------------------------------------------------------
 // Goes through a list of activity sessions and logs new ones to data logging
 static void prv_log_activities(time_t now_utc) {
@@ -506,14 +494,12 @@ static void prv_log_activities(time_t now_utc) {
   } ActivityClassParams;
 
   ActivityClassParams class_settings[ActivityClassCount] = {
-    {ActivitySettingsKeyLastSleepActivityUTC,
-     &state->logged_sleep_activity_exit_at_utc, false},
+      {ActivitySettingsKeyLastSleepActivityUTC, &state->logged_sleep_activity_exit_at_utc, false},
 
-    {ActivitySettingsKeyLastRestfulSleepActivityUTC,
-     &state->logged_restful_sleep_activity_exit_at_utc, false},
+      {ActivitySettingsKeyLastRestfulSleepActivityUTC,
+       &state->logged_restful_sleep_activity_exit_at_utc, false},
 
-    {ActivitySettingsKeyLastStepActivityUTC,
-     &state->logged_step_activity_exit_at_utc, false},
+      {ActivitySettingsKeyLastStepActivityUTC, &state->logged_step_activity_exit_at_utc, false},
   };
 
   bool logged_event = false;
@@ -587,7 +573,6 @@ static void prv_log_activities(time_t now_utc) {
   }
 }
 
-
 // ------------------------------------------------------------------------------------------------
 // Load in the stored activities from our settings file
 void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
@@ -633,7 +618,7 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
       // Zero out flash so that we don't get into a reboot loop
       memset(state->activity_sessions, 0, sizeof(state->activity_sessions));
       settings_file_set(file, &key, sizeof(key), state->activity_sessions,
-                                          sizeof(state->activity_sessions));
+                        sizeof(state->activity_sessions));
       WTF;
     }
     state->activity_sessions_count++;
@@ -642,10 +627,8 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
   // Remove any activities that don't belong to "today" or that are ongoing
   activity_sessions_prv_remove_out_of_range_activity_sessions(utc_now, true /*remove_ongoing*/);
 
-  PBL_LOG_INFO("Restored %"PRIu16" activities from storage",
-          state->activity_sessions_count);
+  PBL_LOG_INFO("Restored %" PRIu16 " activities from storage", state->activity_sessions_count);
 }
-
 
 // --------------------------------------------------------------------------------------
 void NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
@@ -667,15 +650,13 @@ void NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
   // today. activity_algorithm_get_activity_sessions() insures that we only get sessions
   // that end after ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY the previous day, so we just need to insure
   // that the end BEFORE ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY today.
-  int last_sleep_utc_of_day = time_util_get_midnight_of(utc_sec)
-    + ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * SECONDS_PER_MINUTE;
-  prv_update_sleep_metrics(utc_sec, last_sleep_utc_of_day,
-                                             last_sleep_processed_utc);
+  int last_sleep_utc_of_day =
+      time_util_get_midnight_of(utc_sec) + ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * SECONDS_PER_MINUTE;
+  prv_update_sleep_metrics(utc_sec, last_sleep_utc_of_day, last_sleep_processed_utc);
 
   // Log any new activities we detected to the phone
   prv_log_activities(utc_sec);
 }
-
 
 // ------------------------------------------------------------------------------------------------
 bool activity_sessions_is_session_type_ongoing(ActivitySessionType type) {

@@ -57,5 +57,4 @@ struct pbl_poll_group_backend {
   struct pbl_msgq *cursor;
 };
 
-#define PBL_SEM_BACKEND_INITIALIZER(initial) { .count = (initial) }
-
+#define PBL_SEM_BACKEND_INITIALIZER(initial) {.count = (initial)}

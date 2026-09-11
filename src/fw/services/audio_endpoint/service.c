@@ -16,11 +16,11 @@ PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_
 
 #define AUDIO_ENDPOINT (10000)
 
-#define ACTIVE_MODE_TIMEOUT      (10000)
+#define ACTIVE_MODE_TIMEOUT (10000)
 #define ACTIVE_MODE_START_BUFFER (100)
 
 _Static_assert(ACTIVE_MODE_TIMEOUT > ACTIVE_MODE_START_BUFFER,
-  "ACTIVE_MODE_TIMEOUT must be greater than ACTIVE_MODE_START_BUFFER");
+               "ACTIVE_MODE_TIMEOUT must be greater than ACTIVE_MODE_START_BUFFER");
 
 typedef struct {
   AudioEndpointSessionId id;
@@ -42,8 +42,7 @@ static void prv_session_deinit(bool call_stop_handler) {
     new_timer_delete(s_session.active_mode_trigger);
     s_session.active_mode_trigger = TIMER_INVALID_ID;
     CommSession *comm_session = comm_session_get_system_session();
-    comm_session_set_responsiveness(
-        comm_session, BtConsumerPpAudioEndpoint, ResponseTimeMax, 0);
+    comm_session_set_responsiveness(comm_session, BtConsumerPpAudioEndpoint, ResponseTimeMax, 0);
   }
 
   s_session.id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
@@ -51,11 +50,11 @@ static void prv_session_deinit(bool call_stop_handler) {
   bt_unlock();
 
   if (s_dropped_frames > 0) {
-    PBL_LOG_WRN("Dropped %"PRIu32" frames during audio transfer", s_dropped_frames);
+    PBL_LOG_WRN("Dropped %" PRIu32 " frames during audio transfer", s_dropped_frames);
   }
 }
 
-void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t size) {
+void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t size) {
   MsgId msg_id = data[0];
   if (size >= sizeof(StopTransferMsg) && msg_id == MsgIdStopTransfer) {
     StopTransferMsg *msg = (StopTransferMsg *)data;
@@ -63,8 +62,7 @@ void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* d
     if (msg->session_id == s_session.id) {
       prv_session_deinit(true /* call_stop_handler */);
     } else {
-      PBL_LOG_WRN("Received mismatching session id: %u vs %u",
-              msg->session_id, s_session.id);
+      PBL_LOG_WRN("Received mismatching session id: %u vs %u", msg->session_id, s_session.id);
     }
   }
 }
@@ -82,8 +80,8 @@ static void prv_active_mode_timer_cb(void *data) {
   system_task_add_callback(prv_start_active_mode, NULL);
 }
 
-AudioEndpointSessionId audio_endpoint_setup_transfer(AudioEndpointStopTransferCallback stop_transfer) {
-
+AudioEndpointSessionId audio_endpoint_setup_transfer(
+    AudioEndpointStopTransferCallback stop_transfer) {
   if (s_session.id != AUDIO_ENDPOINT_SESSION_INVALID_ID) {
     return AUDIO_ENDPOINT_SESSION_INVALID_ID;
   }
@@ -97,7 +95,7 @@ AudioEndpointSessionId audio_endpoint_setup_transfer(AudioEndpointStopTransferCa
 
   // restart active mode before it expires, this way it will never be off during the transfer
   new_timer_start(s_session.active_mode_trigger, ACTIVE_MODE_TIMEOUT - ACTIVE_MODE_START_BUFFER,
-      prv_active_mode_timer_cb, NULL, TIMER_START_FLAG_REPEATING);
+                  prv_active_mode_timer_cb, NULL, TIMER_START_FLAG_REPEATING);
 
   bt_unlock();
 
@@ -107,7 +105,7 @@ AudioEndpointSessionId audio_endpoint_setup_transfer(AudioEndpointStopTransferCa
 }
 
 void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
-    uint8_t frame_size) {
+                              uint8_t frame_size) {
   PBL_ASSERTN(session_id != AUDIO_ENDPOINT_SESSION_INVALID_ID);
 
   if (s_session.id != session_id) {
@@ -125,11 +123,11 @@ void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
   }
 
   uint8_t header[sizeof(DataTransferMsg) + sizeof(uint8_t) /* frame_size */];
-  DataTransferMsg *msg = (DataTransferMsg *) header;
-  *msg = (const DataTransferMsg) {
-    .msg_id = MsgIdDataTransfer,
-    .session_id = session_id,
-    .frame_count = 1,
+  DataTransferMsg *msg = (DataTransferMsg *)header;
+  *msg = (const DataTransferMsg){
+      .msg_id = MsgIdDataTransfer,
+      .session_id = session_id,
+      .frame_count = 1,
   };
   msg->frames[0] = frame_size;
 
@@ -155,13 +153,13 @@ void audio_endpoint_stop_transfer(AudioEndpointSessionId session_id) {
     return;
   }
 
-  StopTransferMsg msg = (const StopTransferMsg) {
-    .msg_id = MsgIdStopTransfer,
-    .session_id = session_id,
+  StopTransferMsg msg = (const StopTransferMsg){
+      .msg_id = MsgIdStopTransfer,
+      .session_id = session_id,
   };
 
   prv_session_deinit(false /* call_stop_handler */);
 
-  comm_session_send_data(comm_session_get_system_session(), AUDIO_ENDPOINT, (const uint8_t *) &msg,
+  comm_session_send_data(comm_session_get_system_session(), AUDIO_ENDPOINT, (const uint8_t *)&msg,
                          sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
 }

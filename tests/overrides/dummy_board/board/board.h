@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 typedef struct {
-  const uint8_t backlight_on_percent; // percent of max possible brightness
+  const uint8_t backlight_on_percent;  // percent of max possible brightness
   const uint32_t ambient_light_dark_threshold;
 } BoardConfig;
 
@@ -22,15 +22,14 @@ typedef struct {
 } BoardConfigPower;
 
 static const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 100,
+    .backlight_on_percent = 100,
 };
 
-static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-};
+static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {};
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 5,
-  .battery_capacity_hours = 144,
+    .low_power_threshold = 5,
+    .battery_capacity_hours = 144,
 };
 
 typedef struct {
@@ -38,13 +37,13 @@ typedef struct {
 } BoardConfigAccel;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 0,
+    .default_motion_sensitivity = 0,
 };
 
 typedef const struct MicDevice MicDevice;
-static MicDevice * const MIC = (void *)0;
+static MicDevice *const MIC = (void *)0;
 
 typedef const struct HRMDevice HRMDevice;
-static HRMDevice * const HRM = (void *)0;
+static HRMDevice *const HRM = (void *)0;
 
-static const struct AudioDevice * const AUDIO = (void *)0;
+static const struct AudioDevice *const AUDIO = (void *)0;

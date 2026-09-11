@@ -6,7 +6,7 @@
 #include "pbl/services/timeline/sports_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer * WEAK sports_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *WEAK sports_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 

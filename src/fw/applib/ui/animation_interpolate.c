@@ -32,31 +32,30 @@ uint32_t interpolate_uint32(int32_t normalized, uint32_t from, uint32_t to) {
 
 Fixed_S32_16 interpolate_fixed32(int32_t normalized, Fixed_S32_16 from, Fixed_S32_16 to) {
   const int64_t interpolated = interpolate_int64(normalized, from.raw_value, to.raw_value);
-  const int32_t raw_value =
-      (int32_t) CLIP(interpolated, INT32_MIN, INT32_MAX);
+  const int32_t raw_value = (int32_t)CLIP(interpolated, INT32_MIN, INT32_MAX);
   return Fixed_S32_16(raw_value);
 }
 
 GSize interpolate_gsize(int32_t normalized, GSize from, GSize to) {
-  return (GSize) {
-    .w = interpolate_int16(normalized, from.w, to.w),
-    .h = interpolate_int16(normalized, from.w, to.w),
+  return (GSize){
+      .w = interpolate_int16(normalized, from.w, to.w),
+      .h = interpolate_int16(normalized, from.w, to.w),
   };
 }
 
 GPoint interpolate_gpoint(int32_t normalized, GPoint from, GPoint to) {
-  return (GPoint) {
-    .x = interpolate_int16(normalized, from.x, to.x),
-    .y = interpolate_int16(normalized, from.y, to.y),
+  return (GPoint){
+      .x = interpolate_int16(normalized, from.x, to.x),
+      .y = interpolate_int16(normalized, from.y, to.y),
   };
 }
 
 int16_t scale_int16(int16_t value, int16_t from, int16_t to) {
-  return (int16_t) ((int32_t) value * to / from);
+  return (int16_t)((int32_t)value * to / from);
 }
 
 int32_t scale_int32(int32_t value, int32_t from, int32_t to) {
-  return (int32_t) ((int64_t) value * to / from);
+  return (int32_t)((int64_t)value * to / from);
 }
 
 // -------------------------------------------------------
@@ -90,9 +89,10 @@ uint32_t interpolate_moook_custom_duration(const MoookConfig *config) {
           ANIMATION_TARGET_FRAME_INTERVAL_MS);
 }
 
-static int64_t prv_interpolate_moook(
-    int32_t normalized, int64_t from, int64_t to, const int32_t *frames_in, int32_t num_frames_in,
-    const int32_t *frames_out, int32_t num_frames_out, int32_t num_frames_mid, bool bounce_back) {
+static int64_t prv_interpolate_moook(int32_t normalized, int64_t from, int64_t to,
+                                     const int32_t *frames_in, int32_t num_frames_in,
+                                     const int32_t *frames_out, int32_t num_frames_out,
+                                     int32_t num_frames_mid, bool bounce_back) {
   const int32_t direction = ((from == to) ? 0 : ((from < to) ? 1 : -1));
   if (direction == 0) {
     return from;
@@ -105,7 +105,6 @@ static int64_t prv_interpolate_moook(
        ANIMATION_NORMALIZED_MAX);
   frame_idx = CLIP(frame_idx, 0, (int)num_frames_total - 1);
 
-
   if (normalized == ANIMATION_NORMALIZED_MAX) {
     return to;
   } else if (frame_idx < 0) {
@@ -113,16 +112,17 @@ static int64_t prv_interpolate_moook(
   } else if (frame_idx < num_frames_in) {
     return from + (frames_in ? (direction * frames_in[frame_idx]) : 0);
   } else if ((frame_idx < (num_frames_in + num_frames_mid)) && (num_frames_mid > 0)) {
-    const int64_t shifted_normalized = normalized -
-        (((int64_t) num_frames_in * ANIMATION_NORMALIZED_MAX) / num_frames_total);
-    const int32_t mid_normalized = ((int64_t) num_frames_total * shifted_normalized) /
-        num_frames_mid;
+    const int64_t shifted_normalized =
+        normalized - (((int64_t)num_frames_in * ANIMATION_NORMALIZED_MAX) / num_frames_total);
+    const int32_t mid_normalized =
+        ((int64_t)num_frames_total * shifted_normalized) / num_frames_mid;
     return interpolate_int64_linear(mid_normalized,
                                     from + (direction * frames_in[num_frames_in - 1]),
                                     to + (direction_out * frames_out[0]));
   } else {
-    return to + (frames_out ? (direction_out *
-                               frames_out[frame_idx - (num_frames_in + num_frames_mid)]) : 0);
+    return to + (frames_out
+                     ? (direction_out * frames_out[frame_idx - (num_frames_in + num_frames_mid)])
+                     : 0);
   }
 }
 
@@ -136,31 +136,29 @@ int64_t interpolate_moook_in_only(int32_t normalized, int64_t from, int64_t to) 
                                ARRAY_LENGTH(s_delta_moook_in), NULL, 0, 0, true);
 }
 
-int64_t interpolate_moook_out(int32_t normalized, int64_t from, int64_t to,
-                              int32_t num_frames_from, bool bounce_back) {
+int64_t interpolate_moook_out(int32_t normalized, int64_t from, int64_t to, int32_t num_frames_from,
+                              bool bounce_back) {
   return prv_interpolate_moook(normalized, from, to, NULL, num_frames_from, s_delta_moook_out,
                                ARRAY_LENGTH(s_delta_moook_out), 0, bounce_back);
 }
 
 int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) {
-  return prv_interpolate_moook(normalized, from, to,
-                               s_delta_moook_in, ARRAY_LENGTH(s_delta_moook_in),
-                               s_delta_moook_out, ARRAY_LENGTH(s_delta_moook_out), 0, true);
+  return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
+                               ARRAY_LENGTH(s_delta_moook_in), s_delta_moook_out,
+                               ARRAY_LENGTH(s_delta_moook_out), 0, true);
 }
 
 int64_t interpolate_moook_soft(int32_t normalized, int64_t from, int64_t to,
                                int32_t num_frames_mid) {
-  return prv_interpolate_moook(normalized, from, to,
-                               s_delta_moook_in, ARRAY_LENGTH(s_delta_moook_in),
-                               s_delta_moook_out, ARRAY_LENGTH(s_delta_moook_out),
-                               num_frames_mid, true);
+  return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
+                               ARRAY_LENGTH(s_delta_moook_in), s_delta_moook_out,
+                               ARRAY_LENGTH(s_delta_moook_out), num_frames_mid, true);
 }
 
 int64_t interpolate_moook_custom(int32_t normalized, int64_t from, int64_t to,
                                  const MoookConfig *config) {
   PBL_ASSERTN(config);
-  return prv_interpolate_moook(normalized, from, to,
-                               config->frames_in, config->num_frames_in,
-                               config->frames_out, config->num_frames_out,
-                               config->num_frames_mid, !config->no_bounce_back);
+  return prv_interpolate_moook(normalized, from, to, config->frames_in, config->num_frames_in,
+                               config->frames_out, config->num_frames_out, config->num_frames_mid,
+                               !config->no_bounce_back);
 }

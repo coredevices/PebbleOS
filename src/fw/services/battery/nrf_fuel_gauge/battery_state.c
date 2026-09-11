@@ -154,8 +154,7 @@ static void prv_erase_state(void) {
   SettingsFile file;
   status_t ret;
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME,
-                           FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
   if (ret != S_SUCCESS) {
     return;
   }
@@ -170,21 +169,18 @@ static bool prv_load_state(void *state, size_t size) {
   SettingsFile file;
   status_t ret;
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME,
-                           FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
   if (ret != S_SUCCESS) {
     return false;
   }
 
-  int len = settings_file_get_len(&file, &FUEL_GAUGE_STATE_KEY,
-                                  sizeof(FUEL_GAUGE_STATE_KEY));
+  int len = settings_file_get_len(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
   if (len != (int)size) {
     settings_file_close(&file);
     return false;
   }
 
-  ret = settings_file_get(&file, &FUEL_GAUGE_STATE_KEY,
-                          sizeof(FUEL_GAUGE_STATE_KEY), state, size);
+  ret = settings_file_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size);
   settings_file_close(&file);
 
   if (ret != S_SUCCESS) {
@@ -206,15 +202,14 @@ static void prv_save_state(void) {
     return;
   }
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME,
-                           FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
   if (ret != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open fuel gauge settings file");
     return;
   }
 
-  ret = settings_file_set(&file, &FUEL_GAUGE_STATE_KEY,
-                          sizeof(FUEL_GAUGE_STATE_KEY), buf, sizeof(buf));
+  ret = settings_file_set(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), buf,
+                          sizeof(buf));
   settings_file_close(&file);
 
   if (ret != S_SUCCESS) {
@@ -223,8 +218,8 @@ static void prv_save_state(void) {
     PBL_LOG_DBG("Fuel gauge state saved");
   }
 }
-#endif // CONFIG_MFG
-#endif // FUEL_GAUGE_STATEFUL
+#endif  // CONFIG_MFG
+#endif  // FUEL_GAUGE_STATEFUL
 
 static void prv_schedule_update(uint32_t delay, bool force_update);
 
@@ -292,10 +287,9 @@ static void prv_charge_status_inform(BatteryChargeStatus chg_status) {
 static void prv_battery_state_put_change_event(PreciseBatteryChargeState state) {
   PebbleEvent e = {
       .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
-      .battery_state =
-          {
-              .new_state = state,
-          },
+      .battery_state = {
+          .new_state = state,
+      },
   };
   event_put(&e);
 }
@@ -406,17 +400,19 @@ static void prv_update_state(void *force_update) {
   }
 #endif
 
-  PBL_LOG_VERBOSE("Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td: %lu, soc: %u, tte: %lu, ttf: %lu",
-          constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta,
-          s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
+  PBL_LOG_VERBOSE(
+      "Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td: %lu, soc: %u, tte: %lu, ttf: %lu",
+      constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta,
+      s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
 
   if (update || (((now - s_last_log) / RTC_TICKS_HZ > LOG_MIN_SEC) &&
                  (s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)))) {
-    PBL_LOG_INFO("Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32 " uA, "
-            "T: %" PRId32 " mC, charging: %s, plugged: %s",
-            s_last_battery_charge_state.pct, constants.v_mv, constants.i_ua, constants.t_mc,
-            s_last_battery_charge_state.is_charging ? "yes" : "no",
-            s_last_battery_charge_state.is_plugged ? "yes" : "no");
+    PBL_LOG_INFO("Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32
+                 " uA, "
+                 "T: %" PRId32 " mC, charging: %s, plugged: %s",
+                 s_last_battery_charge_state.pct, constants.v_mv, constants.i_ua, constants.t_mc,
+                 s_last_battery_charge_state.is_charging ? "yes" : "no",
+                 s_last_battery_charge_state.is_plugged ? "yes" : "no");
     prv_battery_state_put_change_event(s_last_battery_charge_state);
     s_last_log = now;
   }
@@ -456,7 +452,9 @@ static void prv_schedule_update(uint32_t delay, bool force_update) {
   PBL_ASSERTN(success);
 }
 
-void battery_state_force_update(void) { prv_schedule_update(0, true); }
+void battery_state_force_update(void) {
+  prv_schedule_update(0, true);
+}
 
 void battery_state_init(void) {
   int ret;
@@ -474,7 +472,8 @@ void battery_state_init(void) {
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
       &(union nrf_fuel_gauge_ext_state_info_data){
-          .charge_current_limit = (float)NPM1300_CONFIG.chg_current_ma / 1000.0f});
+          .charge_current_limit = (float)NPM1300_CONFIG.chg_current_ma / 1000.0f
+      });
   PBL_ASSERTN(ret == 0);
 
   ret = nrf_fuel_gauge_ext_state_update(
@@ -482,7 +481,8 @@ void battery_state_init(void) {
       &(union nrf_fuel_gauge_ext_state_info_data){
           .charge_term_current =
               (float)(NPM1300_CONFIG.chg_current_ma * NPM1300_CONFIG.term_current_pct / 100U) /
-              1000.0f});
+              1000.0f
+      });
   PBL_ASSERTN(ret == 0);
 
   runtime_parameters.a = NAN;
@@ -503,18 +503,18 @@ void battery_state_init(void) {
                                             !(s_last_chg_status == BatteryChargeStatusComplete ||
                                               s_last_chg_status == BatteryChargeStatusUnknown);
 
-  float pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f,
-                                     (float)constants.i_ua / 1000000.0f,
-                                     (float)constants.t_mc / 1000.0f, 0.0f, NULL);
+  float pct =
+      nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f, (float)constants.i_ua / 1000000.0f,
+                             (float)constants.t_mc / 1000.0f, 0.0f, NULL);
 #if FUEL_GAUGE_STATEFUL
   if ((uint8_t)ceilf(pct) == 0 && constants.v_mv >= BATTERY_MIN_VALID_VOLTAGE_MV) {
     PBL_LOG_WRN("Invalid state detected, reloading without state");
     prv_erase_state();
     ret = prv_fuel_gauge_init_common(&constants, false);
     PBL_ASSERTN(ret == 0);
-    pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f,
-                                 (float)constants.i_ua / 1000000.0f,
-                                 (float)constants.t_mc / 1000.0f, 0.0f, NULL);
+    pct =
+        nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f, (float)constants.i_ua / 1000000.0f,
+                               (float)constants.t_mc / 1000.0f, 0.0f, NULL);
   }
 #endif
 
@@ -535,9 +535,7 @@ void battery_state_init(void) {
 
   battery_state_force_update();
 
-  static RegularTimerInfo battery_regular_timer = {
-    .cb = prv_callback_from_regular_timer
-  };
+  static RegularTimerInfo battery_regular_timer = {.cb = prv_callback_from_regular_timer};
   regular_timer_add_multiminute_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_MIN);
 
   s_analytics_last_voltage_mv = s_last_voltage_mv;
@@ -563,11 +561,17 @@ BatteryChargeState battery_get_charge_state(void) {
 }
 
 // For unit tests
-TimerID battery_state_get_periodic_timer_id(void) { return s_periodic_timer_id; }
+TimerID battery_state_get_periodic_timer_id(void) {
+  return s_periodic_timer_id;
+}
 
-uint16_t battery_state_get_voltage(void) { return (uint16_t)s_last_voltage_mv; }
+uint16_t battery_state_get_voltage(void) {
+  return (uint16_t)s_last_voltage_mv;
+}
 
-int32_t battery_state_get_temperature(void) { return s_last_temp_mc; }
+int32_t battery_state_get_temperature(void) {
+  return s_last_temp_mc;
+}
 
 #include "console/prompt.h"
 void command_print_battery_status(void) {
@@ -608,8 +612,7 @@ void pbl_analytics_external_collect_battery(void) {
   PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
   PBL_ANALYTICS_SET_SIGNED(battery_temp_c, s_last_temp_mc);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_min,
-                             s_soc_cpct_min < battery_soc_cpct ? s_soc_cpct_min
-                                                               : battery_soc_cpct);
+                             s_soc_cpct_min < battery_soc_cpct ? s_soc_cpct_min : battery_soc_cpct);
   s_soc_cpct_min = battery_soc_cpct;
   s_analytics_last_voltage_mv = battery_mv;
 

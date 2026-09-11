@@ -8,11 +8,11 @@
 #include "default/compositor_slide_transitions.h"
 #include "default/compositor_shutter_transitions.h"
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
-# include "legacy/compositor_modal_slide_transitions.h"
+#include "legacy/compositor_modal_slide_transitions.h"
 #else
-# include "default/compositor_modal_transitions.h"
-# include "default/compositor_port_hole_transitions.h"
-# include "default/compositor_round_flip_transitions.h"
+#include "default/compositor_modal_transitions.h"
+#include "default/compositor_port_hole_transitions.h"
+#include "default/compositor_round_flip_transitions.h"
 #endif
 #include "default/compositor_peek_transitions.h"
 
@@ -39,10 +39,11 @@ AnimationProgress animation_timing_scaled(AnimationProgress time_normalized,
 //!        (e.g. flip/flop animations need to draw the right color beyond the edges of the app face)
 //! @param inner If true, draw the app frame buffer inside the ring, otherwise outside
 //! @param framebuffer_offset Visual offset of the app frame buffer
-void compositor_transition_pdcs_animation_update(
-    GContext *ctx, GDrawCommandSequence *sequence, uint32_t distance_normalized,
-    GColor chroma_key_color, GColor stroke_color, GColor overdraw_color, bool inner,
-    const GPoint *framebuffer_offset);
+void compositor_transition_pdcs_animation_update(GContext *ctx, GDrawCommandSequence *sequence,
+                                                 uint32_t distance_normalized,
+                                                 GColor chroma_key_color, GColor stroke_color,
+                                                 GColor overdraw_color, bool inner,
+                                                 const GPoint *framebuffer_offset);
 
 //! Draw implementation that can be used to fill lines with the contents of the app framebuffer
 extern const GDrawRawImplementation g_compositor_transitions_app_fb_draw_implementation;

@@ -12,7 +12,6 @@ PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 #define BMP390_CHIP_ID_VALUE 0x60
 #define BMP390_PWR_CTRL 0x1B
 
-
 static bool prv_read_register(I2CSlavePort *i2c, uint8_t register_address, uint8_t *result) {
   i2c_use(i2c);
   bool rv = i2c_write_block(i2c, 1, &register_address);
@@ -24,7 +23,7 @@ static bool prv_read_register(I2CSlavePort *i2c, uint8_t register_address, uint8
 
 static bool prv_write_register(I2CSlavePort *i2c, uint8_t register_address, uint8_t datum) {
   i2c_use(i2c);
-  uint8_t d[2] = { register_address, datum };
+  uint8_t d[2] = {register_address, datum};
   bool rv = i2c_write_block(i2c, 2, d);
   i2c_release(i2c);
   return rv;
@@ -39,6 +38,6 @@ void pressure_init(void) {
     PBL_LOG_DBG("BMP390 probe failed; rv %d, result 0x%02x", rv, result);
   } else {
     PBL_LOG_DBG("found the BMP390, setting to low power");
-    (void) prv_write_register(I2C_BMP390, BMP390_PWR_CTRL, 0);
+    (void)prv_write_register(I2C_BMP390, BMP390_PWR_CTRL, 0);
   }
 }

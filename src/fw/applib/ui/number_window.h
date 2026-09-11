@@ -68,26 +68,31 @@ typedef struct NumberWindow {
 
 //! Initializes the NumberWindow.
 //! @param numberwindow Pointer to the NumberWindow to initialize
-//! @param label The title or prompt to display in the NumberWindow. Must be long-lived and cannot be stack-allocated.
+//! @param label The title or prompt to display in the NumberWindow. Must be long-lived and cannot
+//! be stack-allocated.
 //! @param callbacks The callbacks
 //! @param callback_context Pointer to application specific data that is passed
 //! into the callbacks.
-//! @note The number window is not pushed to the window stack. Use \ref window_stack_push() to do this.
-//! See code fragment here: NumberWindow
-void number_window_init(NumberWindow *numberwindow, const char *label, NumberWindowCallbacks callbacks, void *callback_context);
+//! @note The number window is not pushed to the window stack. Use \ref window_stack_push() to do
+//! this. See code fragment here: NumberWindow
+void number_window_init(NumberWindow *numberwindow, const char *label,
+                        NumberWindowCallbacks callbacks, void *callback_context);
 
 //! Creates a new NumberWindow on the heap and initializes it with the default values.
 //!
-//! @param label The title or prompt to display in the NumberWindow. Must be long-lived and cannot be stack-allocated.
+//! @param label The title or prompt to display in the NumberWindow. Must be long-lived and cannot
+//! be stack-allocated.
 //! @param callbacks The callbacks
 //! @param callback_context Pointer to application specific data that is passed
-//! @note The number window is not pushed to the window stack. Use \ref window_stack_push() to do this.
+//! @note The number window is not pushed to the window stack. Use \ref window_stack_push() to do
+//! this.
 //! @return A pointer to the NumberWindow. `NULL` if the NumberWindow could not
 //! be created
-NumberWindow* number_window_create(const char *label, NumberWindowCallbacks callbacks, void *callback_context);
+NumberWindow *number_window_create(const char *label, NumberWindowCallbacks callbacks,
+                                   void *callback_context);
 
 //! Destroys a NumberWindow previously created by number_window_create.
-void number_window_destroy(NumberWindow* number_window);
+void number_window_destroy(NumberWindow *number_window);
 
 //! Sets the text of the title or prompt label.
 //! @param numberwindow Pointer to the NumberWindow for which to set the label
@@ -134,4 +139,3 @@ Window *number_window_get_window(NumberWindow *numberwindow);
 //!     @} // end addtogroup NumberWindow
 //!   @} // end addtogroup Window
 //! @} // end addtogroup UI
-

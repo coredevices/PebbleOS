@@ -4,7 +4,6 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gbitmap_png.h"
 
-
 #include "clar.h"
 #include "util.h"
 

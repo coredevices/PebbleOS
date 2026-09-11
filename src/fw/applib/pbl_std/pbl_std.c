@@ -86,12 +86,9 @@ time_t pbl_override_time_legacy(time_t *tloc) {
 }
 
 static bool prv_tm_matches_local_time(const struct tm *requested, const struct tm *actual) {
-  return (requested->tm_sec == actual->tm_sec) &&
-         (requested->tm_min == actual->tm_min) &&
-         (requested->tm_hour == actual->tm_hour) &&
-         (requested->tm_mday == actual->tm_mday) &&
-         (requested->tm_mon == actual->tm_mon) &&
-         (requested->tm_year == actual->tm_year);
+  return (requested->tm_sec == actual->tm_sec) && (requested->tm_min == actual->tm_min) &&
+         (requested->tm_hour == actual->tm_hour) && (requested->tm_mday == actual->tm_mday) &&
+         (requested->tm_mon == actual->tm_mon) && (requested->tm_year == actual->tm_year);
 }
 
 static void prv_fill_localtime_result(time_t t, struct tm *tb) {
@@ -162,9 +159,8 @@ uint16_t pbl_override_time_ms_legacy(time_t *tloc, uint16_t *out_ms) {
   return (t_ms);
 }
 
-extern size_t localized_strftime(char* s,
-      size_t maxsize, const char* format, const struct tm* tim_p, const char *locale);
-
+extern size_t localized_strftime(char *s, size_t maxsize, const char *format,
+                                 const struct tm *tim_p, const char *locale);
 
 struct tm *pbl_override_gmtime(const time_t *timep) {
   struct tm *gmtime_tm = NULL;
@@ -193,14 +189,13 @@ struct tm *pbl_override_localtime(const time_t *timep) {
 
   sys_localtime_r(timep, localtime_tm);
   // We have to work around localtime_r resetting tm_zone below
-  sys_copy_timezone_abbr((char*)localtime_zone, *timep);
+  sys_copy_timezone_abbr((char *)localtime_zone, *timep);
   strncpy(localtime_tm->tm_zone, localtime_zone, TZ_LEN);
 
   return localtime_tm;
 }
 
-
-size_t pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm* tim_p) {
+size_t pbl_strftime(char *s, size_t maxsize, const char *format, const struct tm *tim_p) {
   char *locale = app_state_get_locale_info()->app_locale_time;
   return sys_strftime(s, maxsize, format, tim_p, locale);
 }
@@ -209,9 +204,8 @@ size_t pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm
 // — well beyond any reasonable strftime format.
 #define SYS_STRFTIME_FORMAT_MAX 256
 
-DEFINE_SYSCALL(size_t, sys_strftime, char* s, size_t maxsize, const char* format,
-                                  const struct tm* tim_p, char *locale) {
-
+DEFINE_SYSCALL(size_t, sys_strftime, char *s, size_t maxsize, const char *format,
+               const struct tm *tim_p, char *locale) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(s, maxsize);
     // Verify `format` is a null-terminated string entirely within the caller's
@@ -229,7 +223,6 @@ DEFINE_SYSCALL(size_t, sys_strftime, char* s, size_t maxsize, const char* format
   return localized_strftime(s, maxsize, format, tim_p, locale);
 }
 
-
 void *pbl_memcpy(void *destination, const void *source, size_t num) {
   // In releases prior to FW 2.5 we used GCC 4.7 and newlib as our libc implementation. However,
   // in 2.5 we switched to GCC 4.8 and nano-newlib. We actually ran into bad apps that would pass
@@ -237,7 +230,7 @@ void *pbl_memcpy(void *destination, const void *source, size_t num) {
   // newlib-nano didn't handle at all and would interpret size_t as a extremely large unsigned
   // number. Guard against this happening so apps that used to work with the old libc will work
   // with the new libc. See PBL-7873.
-  if (((ptrdiff_t) num) <= 0) {
+  if (((ptrdiff_t)num) <= 0) {
     return destination;
   }
 
@@ -258,20 +251,18 @@ void *pbl_memcpy(void *destination, const void *source, size_t num) {
 // APP_LOG message if we detect an attempt to use floating point. We also
 // return a "floating point not supported" string in the passed in str
 // buffer.
-int pbl_snprintf(char * str, size_t n, const char * format, ...) {
+int pbl_snprintf(char *str, size_t n, const char *format, ...) {
   int ret;
-  const char* fp_msg = "floating point not supported in snprintf";
-
+  const char *fp_msg = "floating point not supported in snprintf";
 
   // Scan string and see if it has any floating point specifiers in it
   bool has_fp = false;
   bool end_spec;
-  bool end_format=false;
-  const char* fmt = format;
+  bool end_format = false;
+  const char *fmt = format;
   char ch;
 
   while (true) {
-
     // Skip to next '%'
     while (*fmt != 0 && *fmt != '%')
       fmt++;
@@ -295,8 +286,16 @@ int pbl_snprintf(char * str, size_t n, const char * format, ...) {
         case ' ':
         case '-':
         case '#':
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
         case '.':
           break;
 
@@ -325,20 +324,22 @@ int pbl_snprintf(char * str, size_t n, const char * format, ...) {
         default:
           end_spec = true;
           break;
-      } // end of switch statement
+      }  // end of switch statement
 
-    } // while (!end_spec);
+    }  // while (!end_spec);
 
     if (end_format || has_fp)
       break;
-  } // while (true)
+  }  // while (true)
 
   // Return error message if we detected floating point
   if (has_fp) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Floating point is not supported by snprintf: "
-        "it was called with format string '%s'", format);
-    strncpy(str, fp_msg, n-1);
-    str[n-1] = 0;
+    APP_LOG(APP_LOG_LEVEL_DEBUG,
+            "Floating point is not supported by snprintf: "
+            "it was called with format string '%s'",
+            format);
+    strncpy(str, fp_msg, n - 1);
+    str[n - 1] = 0;
     return strlen(str);
   }
 

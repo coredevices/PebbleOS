@@ -47,8 +47,8 @@ bool prv_dirty_items_each_cb(RamStorageEntry *entry, void *context) {
     BlobDBDirtyItem *new_item = kernel_zalloc_check(sizeof(BlobDBDirtyItem) + entry->key_len);
     memcpy(new_item->key, entry->key, entry->key_len);
     new_item->key_len = entry->key_len;
-    *dirty_items = (BlobDBDirtyItem *)list_insert_before((ListNode *)*dirty_items,
-                                                         (ListNode *)new_item);
+    *dirty_items =
+        (BlobDBDirtyItem *)list_insert_before((ListNode *)*dirty_items, (ListNode *)new_item);
   }
 
   return true;

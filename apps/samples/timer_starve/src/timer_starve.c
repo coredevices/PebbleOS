@@ -23,10 +23,12 @@ static void init(void) {
   GRect window_bounds = layer_get_bounds(window_layer);
 
   TextLayer *text_layer = text_layer_create(window_bounds);
-  text_layer_set_text(text_layer, "Unplug and plug in the charger. You will see that the system cannot keep up with it.");
+  text_layer_set_text(
+      text_layer,
+      "Unplug and plug in the charger. You will see that the system cannot keep up with it.");
   layer_add_child(window_layer, text_layer_get_layer(text_layer));
 
-  text_layer = text_layer_create((GRect) {{ 0, window_bounds.size.h / 2 }, window_bounds.size} );
+  text_layer = text_layer_create((GRect){{0, window_bounds.size.h / 2}, window_bounds.size});
   static char buffer[80];
   snprintf(buffer, sizeof(buffer), "FPS: %u", FPS);
   text_layer_set_text(text_layer, buffer);
@@ -41,4 +43,3 @@ int main(void) {
   init();
   app_event_loop();
 }
-

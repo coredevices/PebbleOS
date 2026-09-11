@@ -17,4 +17,5 @@ VibeIntensity vibe_intensity_get(void) {
   return VibeIntensity_Stub;
 }
 
-void vibe_intensity_set(VibeIntensity intensity) {}
+void vibe_intensity_set(VibeIntensity intensity) {
+}

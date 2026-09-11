@@ -14,7 +14,7 @@ typedef struct StatusBarDemoWindow {
   StatusBarLayer status_bar;
 } StatusBarDemoWindow;
 
-static Window * prv_window_create(void);
+static Window *prv_window_create(void);
 
 static void prv_handle_click(ClickRecognizerRef ref, void *context) {
   Window *window = prv_window_create();
@@ -43,32 +43,32 @@ static Window *prv_window_create(void) {
   } Description;
 
   static const Description descriptions[] = {
-    {
-        .debug_name = "non-full-screen (legacy status bar)",
-        .window_color = GColorRedARGB8,
-    },
-    {
-        .debug_name = "non-full-screen (legacy status bar)",
-        .window_color = GColorBlueARGB8,
-    },
-    {
-        .debug_name = "full-screen (transparent status bar)",
-        .full_screen = true,
-        .window_color = GColorRedARGB8,
-        .status_bar = true,
-    },
-    {
-        .debug_name = "full-screen (opaque status bar)",
-        .full_screen = true,
-        .window_color = GColorBlueARGB8,
-        .status_bar = true,
-        .status_bar_color = GColorOrangeARGB8,
-    },
-    {
-        .debug_name = "full-screen (no status bar)",
-        .full_screen = true,
-        .window_color = GColorGreenARGB8,
-    },
+      {
+          .debug_name = "non-full-screen (legacy status bar)",
+          .window_color = GColorRedARGB8,
+      },
+      {
+          .debug_name = "non-full-screen (legacy status bar)",
+          .window_color = GColorBlueARGB8,
+      },
+      {
+          .debug_name = "full-screen (transparent status bar)",
+          .full_screen = true,
+          .window_color = GColorRedARGB8,
+          .status_bar = true,
+      },
+      {
+          .debug_name = "full-screen (opaque status bar)",
+          .full_screen = true,
+          .window_color = GColorBlueARGB8,
+          .status_bar = true,
+          .status_bar_color = GColorOrangeARGB8,
+      },
+      {
+          .debug_name = "full-screen (no status bar)",
+          .full_screen = true,
+          .window_color = GColorGreenARGB8,
+      },
   };
 
   Description description = descriptions[app_window_stack_count() % ARRAY_LENGTH(descriptions)];
@@ -96,8 +96,8 @@ static Window *prv_window_create(void) {
   window_set_click_config_provider(result, prv_click_config_provider);
 
   window_set_window_handlers(&window->window, &(WindowHandlers){
-     .unload = prv_window_unload,
-  });
+                                                  .unload = prv_window_unload,
+                                              });
 
   return result;
 }
@@ -112,15 +112,17 @@ static void prv_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* statusbar_demo_get_app_info(void) {
+const PebbleProcessMd *statusbar_demo_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-      .common = {
-          .main_func = prv_main,
-          // UUID: dfcafc64-0af1-4e4a-8e03-1901b54335c5
-          .uuid = {0xdf, 0xca, 0xfc, 0x64, 0xa, 0xf1, 0x4e, 0x4a,
-                   0x8e, 0x3, 0x19, 0x1, 0xb5, 0x43, 0x35, 0xc5},
-      },
+      .common =
+          {
+              .main_func = prv_main,
+              // UUID: dfcafc64-0af1-4e4a-8e03-1901b54335c5
+              .uuid =
+                  {0xdf, 0xca, 0xfc, 0x64, 0xa, 0xf1, 0x4e, 0x4a, 0x8e, 0x3, 0x19, 0x1, 0xb5, 0x43,
+                   0x35, 0xc5},
+          },
       .name = "StatusBar Demo",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

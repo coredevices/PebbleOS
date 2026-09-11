@@ -52,8 +52,8 @@ typedef struct {
 
   // Single tone source (raw frequency, no MIDI quantization)
   uint32_t tone_samples_remaining;
-  uint32_t tone_phase_acc;   // 16.16 fixed-point
-  uint32_t tone_phase_inc;   // per-sample phase increment
+  uint32_t tone_phase_acc;  // 16.16 fixed-point
+  uint32_t tone_phase_inc;  // per-sample phase increment
   uint8_t tone_waveform;
   uint8_t tone_velocity;
 
@@ -106,10 +106,10 @@ static PBL_MUTEX_DEFINE(s_lock);
 static uint8_t s_silence_reasons;
 
 //! Analytics: time-weighted average volume, reset on heartbeat.
-static uint64_t s_volume_time_product_sum;     // Sum of (volume_pct × time_ms)
-static RtcTicks s_last_volume_sample_ticks;    // Timestamp of last sample
-static uint8_t s_last_sampled_volume_pct;      // Last volume percentage sampled
-static uint32_t s_total_speaker_on_time_ms;    // Total speaker on-time tracked
+static uint64_t s_volume_time_product_sum;   // Sum of (volume_pct × time_ms)
+static RtcTicks s_last_volume_sample_ticks;  // Timestamp of last sample
+static uint8_t s_last_sampled_volume_pct;    // Last volume percentage sampled
+static uint32_t s_total_speaker_on_time_ms;  // Total speaker on-time tracked
 
 static void prv_stop_internal(SpeakerFinishReason reason);
 static void prv_audio_trans_cb(uint32_t *free_size);
@@ -154,7 +154,6 @@ static void prv_update_volume_analytics(uint8_t new_volume_pct) {
 }
 
 void speaker_service_init(void) {
-
   memset(&s_state, 0, sizeof(s_state));
   s_state.state = SpeakerStateIdle;
   s_state.source_type = SpeakerSourceNone;
@@ -190,9 +189,9 @@ static void prv_log_silence(uint8_t vol, uint8_t effective_vol) {
   s_silence_reasons = reasons;
 
   if (reasons != 0) {
-    PBL_LOG_INFO("Playing silently: vol=%"PRIu8" cap=%"PRIu8" mute=%d quiet_time_mute=%d", vol,
-                 alerts_preferences_get_speaker_volume(),
-                 (reasons & SPEAKER_SILENT_BY_MUTE) != 0, (reasons & SPEAKER_SILENT_BY_DND) != 0);
+    PBL_LOG_INFO("Playing silently: vol=%" PRIu8 " cap=%" PRIu8 " mute=%d quiet_time_mute=%d", vol,
+                 alerts_preferences_get_speaker_volume(), (reasons & SPEAKER_SILENT_BY_MUTE) != 0,
+                 (reasons & SPEAKER_SILENT_BY_DND) != 0);
   }
 }
 
@@ -237,11 +236,11 @@ static void prv_post_finish_event(SpeakerFinishReason reason) {
     return;
   }
   PebbleEvent e = {
-    .type = PEBBLE_SPEAKER_EVENT,
-    .speaker = {
-      .type = SpeakerEventFinished,
-      .finish_reason = (uint8_t)reason,
-    },
+      .type = PEBBLE_SPEAKER_EVENT,
+      .speaker = {
+          .type = SpeakerEventFinished,
+          .finish_reason = (uint8_t)reason,
+      },
   };
   event_put(&e);
 }
@@ -321,8 +320,10 @@ static inline int16_t prv_cubic_midpoint(int16_t s0, int16_t s1, int16_t s2, int
   int32_t v = -(int32_t)s0 + 9 * (int32_t)s1 + 9 * (int32_t)s2 - (int32_t)s3;
   // Clamp to int16_t range before dividing
   v = (v + 8) >> 4;  // divide by 16 with rounding
-  if (v > 32767) v = 32767;
-  if (v < -32768) v = -32768;
+  if (v > 32767)
+    v = 32767;
+  if (v < -32768)
+    v = -32768;
   return (int16_t)v;
 }
 
@@ -350,8 +351,7 @@ static uint32_t prv_read_and_convert_pcm(int16_t *out, uint32_t max_out_samples)
     input_samples_needed = input_bytes_needed / bytes_per_sample;
   }
 
-  uint32_t bytes_read = pcm_stream_read(&s_state.pcm_stream, s_state.raw_buf,
-                                         input_bytes_needed);
+  uint32_t bytes_read = pcm_stream_read(&s_state.pcm_stream, s_state.raw_buf, input_bytes_needed);
   if (bytes_read == 0) {
     return 0;
   }
@@ -378,15 +378,13 @@ static uint32_t prv_read_and_convert_pcm(int16_t *out, uint32_t max_out_samples)
     // midpoint using 4 surrounding points: s[i-1], s[i], s[i+1], s[i+2]
     // prev_samples[] provides the history across chunk boundaries.
     for (uint32_t i = 0; i < samples_read; i++) {
-      int16_t s_prev = (i >= 1) ? prv_decode_sample(s_state.raw_buf, i - 1, is_16bit)
-                                : s_state.prev_samples[1];
+      int16_t s_prev =
+          (i >= 1) ? prv_decode_sample(s_state.raw_buf, i - 1, is_16bit) : s_state.prev_samples[1];
       int16_t s_curr = prv_decode_sample(s_state.raw_buf, i, is_16bit);
-      int16_t s_next = (i + 1 < samples_read)
-                            ? prv_decode_sample(s_state.raw_buf, i + 1, is_16bit)
-                            : s_curr;
-      int16_t s_next2 = (i + 2 < samples_read)
-                             ? prv_decode_sample(s_state.raw_buf, i + 2, is_16bit)
-                             : s_next;
+      int16_t s_next =
+          (i + 1 < samples_read) ? prv_decode_sample(s_state.raw_buf, i + 1, is_16bit) : s_curr;
+      int16_t s_next2 =
+          (i + 2 < samples_read) ? prv_decode_sample(s_state.raw_buf, i + 2, is_16bit) : s_next;
 
       out[out_pos++] = s_curr;
       out[out_pos++] = prv_cubic_midpoint(s_prev, s_curr, s_next, s_next2);
@@ -394,10 +392,8 @@ static uint32_t prv_read_and_convert_pcm(int16_t *out, uint32_t max_out_samples)
 
     // Save last two decoded samples for next chunk's interpolation
     if (samples_read >= 2) {
-      s_state.prev_samples[0] = prv_decode_sample(s_state.raw_buf, samples_read - 2,
-                                                   is_16bit);
-      s_state.prev_samples[1] = prv_decode_sample(s_state.raw_buf, samples_read - 1,
-                                                   is_16bit);
+      s_state.prev_samples[0] = prv_decode_sample(s_state.raw_buf, samples_read - 2, is_16bit);
+      s_state.prev_samples[1] = prv_decode_sample(s_state.raw_buf, samples_read - 1, is_16bit);
     } else if (samples_read == 1) {
       s_state.prev_samples[0] = s_state.prev_samples[1];
       s_state.prev_samples[1] = prv_decode_sample(s_state.raw_buf, 0, is_16bit);
@@ -417,12 +413,11 @@ static void prv_refill_locked(void) {
   bool source_exhausted = false;
 
   if (s_state.source_type == SpeakerSourceNoteSeq) {
-    samples_generated = note_seq_fill(&s_state.note_seq, s_state.refill_buf,
-                                      SPEAKER_REFILL_SAMPLES);
+    samples_generated =
+        note_seq_fill(&s_state.note_seq, s_state.refill_buf, SPEAKER_REFILL_SAMPLES);
     source_exhausted = (samples_generated == 0);
   } else if (s_state.source_type == SpeakerSourceStream) {
-    samples_generated = prv_read_and_convert_pcm(s_state.refill_buf,
-                                                  SPEAKER_REFILL_SAMPLES);
+    samples_generated = prv_read_and_convert_pcm(s_state.refill_buf, SPEAKER_REFILL_SAMPLES);
     if (samples_generated == 0 && pcm_stream_is_done(&s_state.pcm_stream)) {
       source_exhausted = true;
     } else if (samples_generated == 0) {
@@ -442,10 +437,8 @@ static void prv_refill_locked(void) {
       memset(s_state.refill_buf, 0, to_gen * sizeof(int16_t));
     } else {
       for (uint32_t i = 0; i < to_gen; i++) {
-        s_state.refill_buf[i] = note_synth_sample(s_state.tone_waveform,
-                                                  s_state.tone_phase_acc,
-                                                  s_state.tone_phase_inc,
-                                                  s_state.tone_velocity);
+        s_state.refill_buf[i] = note_synth_sample(s_state.tone_waveform, s_state.tone_phase_acc,
+                                                  s_state.tone_phase_inc, s_state.tone_velocity);
         s_state.tone_phase_acc += s_state.tone_phase_inc;
       }
     }
@@ -455,8 +448,7 @@ static void prv_refill_locked(void) {
     memset(s_state.mix_buf, 0, sizeof(int32_t) * SPEAKER_REFILL_SAMPLES);
     uint32_t max_generated = 0;
     for (uint32_t i = 0; i < s_state.num_tracks; i++) {
-      uint32_t n = track_fill(&s_state.tracks[i], s_state.track_scratch,
-                              SPEAKER_REFILL_SAMPLES);
+      uint32_t n = track_fill(&s_state.tracks[i], s_state.track_scratch, SPEAKER_REFILL_SAMPLES);
       for (uint32_t j = 0; j < n; j++) {
         s_state.mix_buf[j] += s_state.track_scratch[j];
       }
@@ -469,8 +461,10 @@ static void prv_refill_locked(void) {
     }
     for (uint32_t j = 0; j < max_generated; j++) {
       int32_t v = s_state.mix_buf[j];
-      if (v > 32767) v = 32767;
-      else if (v < -32768) v = -32768;
+      if (v > 32767)
+        v = 32767;
+      else if (v < -32768)
+        v = -32768;
       s_state.refill_buf[j] = (int16_t)v;
     }
     samples_generated = max_generated;
@@ -497,8 +491,7 @@ static void prv_refill_locked(void) {
   }
 
   if (samples_generated > 0) {
-    audio_write((AudioDevice *)AUDIO, s_state.refill_buf,
-                samples_generated * sizeof(int16_t));
+    audio_write((AudioDevice *)AUDIO, s_state.refill_buf, samples_generated * sizeof(int16_t));
   }
 }
 
@@ -553,9 +546,8 @@ bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
   return true;
 }
 
-static bool prv_play_tone_internal(uint16_t freq_hz, uint16_t duration_ms,
-                                   uint8_t waveform, uint8_t velocity,
-                                   SpeakerPriority pri, uint8_t vol,
+static bool prv_play_tone_internal(uint16_t freq_hz, uint16_t duration_ms, uint8_t waveform,
+                                   uint8_t velocity, SpeakerPriority pri, uint8_t vol,
                                    bool volume_absolute) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
@@ -573,12 +565,10 @@ static bool prv_play_tone_internal(uint16_t freq_hz, uint16_t duration_ms,
     prv_stop_internal(SpeakerFinishReasonPreempted);
   }
 
-  s_state.tone_samples_remaining =
-      ((uint32_t)duration_ms * SPEAKER_SAMPLE_RATE) / 1000;
+  s_state.tone_samples_remaining = ((uint32_t)duration_ms * SPEAKER_SAMPLE_RATE) / 1000;
   s_state.tone_phase_acc = 0;
   // phase_inc = freq_hz * 65536 / sample_rate (16.16 fixed-point per sample)
-  s_state.tone_phase_inc = (freq_hz != 0)
-      ? ((uint32_t)freq_hz * 65536u) / SPEAKER_SAMPLE_RATE : 0;
+  s_state.tone_phase_inc = (freq_hz != 0) ? ((uint32_t)freq_hz * 65536u) / SPEAKER_SAMPLE_RATE : 0;
   s_state.tone_waveform = waveform;
   s_state.tone_velocity = velocity;
 
@@ -595,9 +585,8 @@ static bool prv_play_tone_internal(uint16_t freq_hz, uint16_t duration_ms,
   return true;
 }
 
-bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms,
-                               uint8_t waveform, uint8_t velocity,
-                               SpeakerPriority pri, uint8_t vol) {
+bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms, uint8_t waveform,
+                               uint8_t velocity, SpeakerPriority pri, uint8_t vol) {
   return prv_play_tone_internal(freq_hz, duration_ms, waveform, velocity, pri, vol,
                                 false /* volume_absolute */);
 }
@@ -607,16 +596,15 @@ bool speaker_service_play_volume_preview(uint8_t vol) {
     vol = 100;
   }
   return prv_play_tone_internal(VOLUME_PREVIEW_FREQ_HZ, VOLUME_PREVIEW_DURATION_MS,
-                                SpeakerWaveformSquare, 0 /* velocity: full */,
-                                SpeakerPriorityApp, vol, true /* volume_absolute */);
+                                SpeakerWaveformSquare, 0 /* velocity: full */, SpeakerPriorityApp,
+                                vol, true /* volume_absolute */);
 }
 
 bool speaker_service_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks,
                                  SpeakerPriority pri, uint8_t vol) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
-  if (!s_state.initialized || !tracks || num_tracks == 0 ||
-      num_tracks > SPEAKER_MAX_TRACKS) {
+  if (!s_state.initialized || !tracks || num_tracks == 0 || num_tracks > SPEAKER_MAX_TRACKS) {
     pbl_mutex_unlock(&s_lock);
     return false;
   }
@@ -754,8 +742,7 @@ bool speaker_service_stream_open(SpeakerPriority pri, uint8_t vol, SpeakerPcmFor
 uint32_t speaker_service_stream_write(const void *data, uint32_t num_bytes) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
-  if (s_state.state == SpeakerStateIdle ||
-      s_state.source_type != SpeakerSourceStream) {
+  if (s_state.state == SpeakerStateIdle || s_state.source_type != SpeakerSourceStream) {
     pbl_mutex_unlock(&s_lock);
     return 0;
   }
@@ -866,18 +853,18 @@ void pbl_analytics_external_collect_speaker_stats(void) {
   pbl_mutex_unlock(&s_lock);
 }
 
-#else // !CONFIG_SPEAKER
+#else  // !CONFIG_SPEAKER
 
-void speaker_service_init(void) {}
+void speaker_service_init(void) {
+}
 
 bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
                                    SpeakerPriority pri, uint8_t vol) {
   return false;
 }
 
-bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms,
-                               uint8_t waveform, uint8_t velocity,
-                               SpeakerPriority pri, uint8_t vol) {
+bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms, uint8_t waveform,
+                               uint8_t velocity, SpeakerPriority pri, uint8_t vol) {
   return false;
 }
 
@@ -898,20 +885,30 @@ uint32_t speaker_service_stream_write(const void *data, uint32_t num_bytes) {
   return 0;
 }
 
-void speaker_service_stream_close(void) {}
-void speaker_service_stop(void) {}
-void speaker_service_set_volume(uint8_t vol) {}
+void speaker_service_stream_close(void) {
+}
+void speaker_service_stop(void) {
+}
+void speaker_service_set_volume(uint8_t vol) {
+}
 
 SpeakerState speaker_service_get_state(void) {
   return SpeakerStateIdle;
 }
 
-void speaker_service_stop_for_task(PebbleTask task) {}
-void speaker_service_set_owner_task(PebbleTask task) {}
-void speaker_service_register_finish(PebbleTask task) {}
-void pbl_analytics_external_collect_speaker_stats(void) {}
+void speaker_service_stop_for_task(PebbleTask task) {
+}
+void speaker_service_set_owner_task(PebbleTask task) {
+}
+void speaker_service_register_finish(PebbleTask task) {
+}
+void pbl_analytics_external_collect_speaker_stats(void) {
+}
 
-bool speaker_service_is_muted(void) { return false; }
-void speaker_service_handle_audio_prefs_changed(void) {}
+bool speaker_service_is_muted(void) {
+  return false;
+}
+void speaker_service_handle_audio_prefs_changed(void) {
+}
 
-#endif // CONFIG_SPEAKER
+#endif  // CONFIG_SPEAKER

@@ -17,7 +17,7 @@ static TextLayer *text_heap_info;
 static Window *window;
 
 static void init(void) {
-  char *start = app_malloc_check(1); // Get a pointer close to where the heap starts
+  char *start = app_malloc_check(1);  // Get a pointer close to where the heap starts
 
   window = window_create();
   app_window_stack_push(window, true /* Animated */);
@@ -30,10 +30,11 @@ static void init(void) {
 
   // Get the size of the heap from the beginning of the first thing allocated
   unsigned long heap_size = 0x20020000 - (unsigned long)start;
-  unsigned long alloc_size = 0.75*heap_size;
+  unsigned long alloc_size = 0.75 * heap_size;
 
   char *buf = app_malloc_check(alloc_size);
-  snprintf(buf, 80, "%luB/%luB\n\nJust allocated %lu%% of the app heap.", alloc_size, heap_size, 100*alloc_size/heap_size);
+  snprintf(buf, 80, "%luB/%luB\n\nJust allocated %lu%% of the app heap.", alloc_size, heap_size,
+           100 * alloc_size / heap_size);
   text_layer_set_text(text_heap_info, buf);
   layer_add_child(window_layer, text_layer_get_layer(text_heap_info));
 }
@@ -48,10 +49,10 @@ static void s_main(void) {
   deinit();
 }
 
-const PebbleProcessMd* app_heap_demo_app_get_info(void) {
+const PebbleProcessMd *app_heap_demo_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_heap_demo_app_info = {
-    .common.main_func = &s_main,
-    .name = "AppHeap"
+      .common.main_func = &s_main,
+      .name = "AppHeap"
   };
-  return (const PebbleProcessMd*) &s_app_heap_demo_app_info;
+  return (const PebbleProcessMd *)&s_app_heap_demo_app_info;
 }

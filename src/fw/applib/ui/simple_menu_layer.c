@@ -7,9 +7,10 @@
 #include "applib/applib_malloc.auto.h"
 #include "process_management/process_manager.h"
 
-static int16_t get_header_height(struct MenuLayer *menu_layer, uint16_t section_index, void *callback_context) {
+static int16_t get_header_height(struct MenuLayer *menu_layer, uint16_t section_index,
+                                 void *callback_context) {
   (void)menu_layer;
-  if (((SimpleMenuLayer*)callback_context)->sections[section_index].title) {
+  if (((SimpleMenuLayer *)callback_context)->sections[section_index].title) {
     return MENU_CELL_BASIC_HEADER_HEIGHT;
   } else {
     return 0;
@@ -18,24 +19,27 @@ static int16_t get_header_height(struct MenuLayer *menu_layer, uint16_t section_
 
 static uint16_t get_num_sections(MenuLayer *menu_layer, void *callback_context) {
   (void)menu_layer;
-  return ((SimpleMenuLayer*)callback_context)->num_sections;
+  return ((SimpleMenuLayer *)callback_context)->num_sections;
 }
 
-static uint16_t get_num_rows(MenuLayer *menu_layer, uint16_t section_index, void *callback_context) {
+static uint16_t get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
+                             void *callback_context) {
   (void)menu_layer;
-  return ((SimpleMenuLayer*)callback_context)->sections[section_index].num_items;
+  return ((SimpleMenuLayer *)callback_context)->sections[section_index].num_items;
 }
 
-static void draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
-  SimpleMenuLayer *simple_menu = (SimpleMenuLayer*)callback_context;
+static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                     void *callback_context) {
+  SimpleMenuLayer *simple_menu = (SimpleMenuLayer *)callback_context;
 
   const SimpleMenuItem *item = &simple_menu->sections[cell_index->section].items[cell_index->row];
 
   menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, item->icon);
 }
 
-static void draw_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *callback_context) {
-  const char *title = ((SimpleMenuLayer*)callback_context)->sections[section_index].title;
+static void draw_header(GContext *ctx, const Layer *cell_layer, uint16_t section_index,
+                        void *callback_context) {
+  const char *title = ((SimpleMenuLayer *)callback_context)->sections[section_index].title;
   if (title == NULL) {
     return;
   }
@@ -44,14 +48,14 @@ static void draw_header(GContext* ctx, const Layer *cell_layer, uint16_t section
 
 static void select_click(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
   (void)menu_layer;
-  SimpleMenuLayer *simple_menu = (SimpleMenuLayer*)callback_context;
+  SimpleMenuLayer *simple_menu = (SimpleMenuLayer *)callback_context;
 
-  SimpleMenuLayerSelectCallback cb = simple_menu->sections[cell_index->section].items[cell_index->row].callback;
+  SimpleMenuLayerSelectCallback cb =
+      simple_menu->sections[cell_index->section].items[cell_index->row].callback;
   if (cb != NULL) {
     cb(cell_index->row, simple_menu->callback_context);
   }
 }
-
 
 void simple_menu_layer_init(SimpleMenuLayer *simple_menu, const GRect *frame, Window *window,
                             const SimpleMenuSection *sections, int num_sections,
@@ -67,19 +71,20 @@ void simple_menu_layer_init(SimpleMenuLayer *simple_menu, const GRect *frame, Wi
   simple_menu->callback_context = callback_context;
 
   // use this SimpleMenuLayer as the callback context
-  menu_layer_set_callbacks(&simple_menu->menu, simple_menu, &(MenuLayerCallbacks) {
-    .get_num_sections = get_num_sections,
-    .get_header_height = get_header_height,
-    .get_num_rows = get_num_rows,
-    .draw_row = draw_row,
-    .select_click = select_click,
-    .draw_header = draw_header,
-  });
+  menu_layer_set_callbacks(&simple_menu->menu, simple_menu,
+                           &(MenuLayerCallbacks){
+                               .get_num_sections = get_num_sections,
+                               .get_header_height = get_header_height,
+                               .get_num_rows = get_num_rows,
+                               .draw_row = draw_row,
+                               .select_click = select_click,
+                               .draw_header = draw_header,
+                           });
 
   menu_layer_set_click_config_onto_window(&simple_menu->menu, window);
 }
 
-SimpleMenuLayer* simple_menu_layer_create(GRect frame, Window *window,
+SimpleMenuLayer *simple_menu_layer_create(GRect frame, Window *window,
                                           const SimpleMenuSection *sections, int32_t num_sections,
                                           void *callback_context) {
   SimpleMenuLayer *layer = applib_type_malloc(SimpleMenuLayer);
@@ -93,7 +98,7 @@ void simple_menu_layer_deinit(SimpleMenuLayer *menu_layer) {
   menu_layer_deinit(&menu_layer->menu);
 }
 
-void simple_menu_layer_destroy(SimpleMenuLayer* menu_layer) {
+void simple_menu_layer_destroy(SimpleMenuLayer *menu_layer) {
   if (menu_layer == NULL) {
     return;
   }
@@ -101,7 +106,7 @@ void simple_menu_layer_destroy(SimpleMenuLayer* menu_layer) {
   applib_free(menu_layer);
 }
 
-Layer* simple_menu_layer_get_layer(const SimpleMenuLayer *simple_menu) {
+Layer *simple_menu_layer_get_layer(const SimpleMenuLayer *simple_menu) {
   return menu_layer_get_layer(&simple_menu->menu);
 }
 
@@ -109,7 +114,8 @@ int simple_menu_layer_get_selected_index(const SimpleMenuLayer *simple_menu) {
   return menu_layer_get_selected_index(&simple_menu->menu).row;
 }
 
-void simple_menu_layer_set_selected_index(SimpleMenuLayer *simple_menu, int32_t index, bool animated) {
+void simple_menu_layer_set_selected_index(SimpleMenuLayer *simple_menu, int32_t index,
+                                          bool animated) {
   MenuIndex menu_index = MenuIndex(simple_menu->menu.selection.index.section, index);
   menu_layer_set_selected_index(&simple_menu->menu, menu_index, MenuRowAlignCenter, animated);
 }

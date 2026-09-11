@@ -44,7 +44,7 @@ struct HealthGraphCard {
   WeeklyStats stats;
   //! Today is 0. Save up to and including last week's day of the same week day
   int32_t day_data[DAYS_PER_WEEK + 1];
-  time_t data_timestamp; //!< Time at which the data applies in UTC seconds
+  time_t data_timestamp;  //!< Time at which the data applies in UTC seconds
   int32_t data_max;
 
   GFont title_font;
@@ -57,7 +57,7 @@ struct HealthGraphCard {
   HealthGraphCardInfoUpdate info_update;
   size_t info_buffer_size;
 
-  uint8_t current_day; //!< Current weekday (weekend inclusive) where Sunday is first at 0
+  uint8_t current_day;  //!< Current weekday (weekend inclusive) where Sunday is first at 0
   HealthGraphIndex selection;
 };
 

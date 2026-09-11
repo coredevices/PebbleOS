@@ -55,7 +55,7 @@ static void prv_factory_reset_non_pfs_data() {
 }
 
 void factory_reset_set_reason_and_reset(void) {
-  RebootReason reason = { RebootReasonCode_FactoryResetReset, 0 };
+  RebootReason reason = {RebootReasonCode_FactoryResetReset, 0};
   reboot_reason_set(&reason);
   system_reset();
 }
@@ -117,7 +117,7 @@ void factory_reset_fast(void *unused) {
 
   prv_factory_reset_post(false /* should_shutdown */);
 }
-#endif // !defined(CONFIG_RECOVERY_FW)
+#endif  // !defined(CONFIG_RECOVERY_FW)
 
 //! Used by the mfg flow to kick us out the MFG firmware and into the consumer PRF that's stored
 //! on the external flash.

@@ -8,7 +8,7 @@
 #include "pbl/util/attributes.h"
 #include "pbl/util/size.h"
 
-#define START_ICON_POINTS { { 0, -2 }, { 9, 4 }, { 0, 10 } }
+#define START_ICON_POINTS {{0, -2}, {9, 4}, {0, 10}}
 
 typedef struct PACKED {
   struct {
@@ -20,7 +20,7 @@ typedef struct PACKED {
 
 extern CalendarStartIcon g_calendar_start_icon;
 
-#define END_ICON_POINTS { { 0, 0 }, { 10, 0 }, { 10, 8 }, { 0, 8 } }
+#define END_ICON_POINTS {{0, 0}, {10, 0}, {10, 8}, {0, 8}}
 
 typedef struct PACKED {
   struct {

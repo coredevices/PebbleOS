@@ -41,7 +41,8 @@ typedef struct LauncherAppGlanceSettingsState {
 
 typedef struct LauncherAppGlanceSettings {
   char title[APP_NAME_SIZE_BYTES];
-  char battery_percent_text[5]; //!< longest string is "100%" (4 characters + 1 for NULL terminator)
+  char
+      battery_percent_text[5];  //!< longest string is "100%" (4 characters + 1 for NULL terminator)
   KinoReel *icon;
   uint32_t icon_resource_id;
   KinoReel *charging_indicator_icon;
@@ -69,16 +70,15 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 }
 
 static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
-                                           PBL_UNUSED const GTextNodeDrawConfig *config, bool render,
-                                           GSize *size_out, void *user_data) {
+                                           PBL_UNUSED const GTextNodeDrawConfig *config,
+                                           bool render, GSize *size_out, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
 
-  KinoReel *charging_indicator_icon = NULL_SAFE_FIELD_ACCESS(settings_glance,
-                                                             charging_indicator_icon, NULL);
+  KinoReel *charging_indicator_icon =
+      NULL_SAFE_FIELD_ACCESS(settings_glance, charging_indicator_icon, NULL);
   PBL_ASSERTN(charging_indicator_icon);
-
 
   if (render && charging_indicator_icon) {
     launcher_app_glance_structured_draw_icon(structured_glance, ctx, charging_indicator_icon,
@@ -86,8 +86,8 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   }
 
   if (size_out) {
-    *size_out = GSize(kino_reel_get_size(charging_indicator_icon).w,
-                      settings_glance->subtitle_font_height);
+    *size_out =
+        GSize(kino_reel_get_size(charging_indicator_icon).w, settings_glance->subtitle_font_height);
   }
 }
 
@@ -98,25 +98,25 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
 
-  const GSize battery_silhouette_icon_size = GSize(BATTERY_SILHOUETTE_ICON_WIDTH,
-                                                   BATTERY_SILHOUETTE_ICON_HEIGHT);
+  const GSize battery_silhouette_icon_size =
+      GSize(BATTERY_SILHOUETTE_ICON_WIDTH, BATTERY_SILHOUETTE_ICON_HEIGHT);
 
   if (render) {
     // This points array is static to help conserve stack usage
     static const GPoint s_battery_silhouette_path_points[] = {
-      {0, 0},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, 0},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, 1},
-      {BATTERY_SILHOUETTE_ICON_WIDTH + 1, 2},
-      {BATTERY_SILHOUETTE_ICON_WIDTH + 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 3},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 3},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 1},
-      {0, BATTERY_SILHOUETTE_ICON_HEIGHT - 1},
+        {0, 0},
+        {BATTERY_SILHOUETTE_ICON_WIDTH - 1, 0},
+        {BATTERY_SILHOUETTE_ICON_WIDTH - 1, 1},
+        {BATTERY_SILHOUETTE_ICON_WIDTH + 1, 2},
+        {BATTERY_SILHOUETTE_ICON_WIDTH + 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 3},
+        {BATTERY_SILHOUETTE_ICON_WIDTH - 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 3},
+        {BATTERY_SILHOUETTE_ICON_WIDTH - 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 1},
+        {0, BATTERY_SILHOUETTE_ICON_HEIGHT - 1},
     };
-    GPath battery_silhouette_path = (GPath) {
-      .num_points = ARRAY_LENGTH(s_battery_silhouette_path_points),
-      .points = (GPoint *)s_battery_silhouette_path_points,
-      .offset = rect->origin,
+    GPath battery_silhouette_path = (GPath){
+        .num_points = ARRAY_LENGTH(s_battery_silhouette_path_points),
+        .points = (GPoint *)s_battery_silhouette_path_points,
+        .offset = rect->origin,
     };
 
     const GColor battery_silhouette_color =
@@ -127,9 +127,9 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
     graphics_context_set_fill_color(ctx, battery_silhouette_color);
 
     // Draw the battery silhouette
-    const GRect battery_silhouette_frame = (GRect) {
-      .origin = rect->origin,
-      .size = battery_silhouette_icon_size,
+    const GRect battery_silhouette_frame = (GRect){
+        .origin = rect->origin,
+        .size = battery_silhouette_icon_size,
     };
     gpath_draw_filled(ctx, &battery_silhouette_path);
 
@@ -158,8 +158,8 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
 
 static void prv_battery_percent_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -194,9 +194,8 @@ static GTextNode *prv_create_subtitle_node(LauncherAppGlanceStructured *structur
   horizontal_container_node->horizontal_alignment = GTextAlignmentLeft;
 
   if (!settings_glance->glance_state.battery_charge_state.is_plugged) {
-    GTextNode *battery_percent_text_node =
-        launcher_app_glance_structured_create_subtitle_text_node(
-            structured_glance, prv_battery_percent_dynamic_text_node_update);
+    GTextNode *battery_percent_text_node = launcher_app_glance_structured_create_subtitle_text_node(
+        structured_glance, prv_battery_percent_dynamic_text_node_update);
     // Achieves the design spec'd 6 px horizontal spacing b/w the percent text and battery icon
     battery_percent_text_node->margin.w = 4;
     GTextNode *vertically_centered_battery_percent_text_node =
@@ -299,7 +298,7 @@ static uint32_t prv_get_resource_id_for_connectivity_status(
 static void prv_refresh_glance_content(LauncherAppGlanceSettings *settings_glance) {
   // Update the battery percent text in the glance
   const size_t battery_percent_text_size = sizeof(settings_glance->battery_percent_text);
-  snprintf(settings_glance->battery_percent_text, battery_percent_text_size, "%"PRIu8"%%",
+  snprintf(settings_glance->battery_percent_text, battery_percent_text_size, "%" PRIu8 "%%",
            settings_glance->glance_state.battery_charge_state.charge_percent);
 
   // Update the icon
@@ -362,20 +361,20 @@ static void prv_subscribe_to_event(EventServiceInfo *event_service_info, PebbleE
                                    LauncherAppGlanceStructured *structured_glance) {
   PBL_ASSERTN(event_service_info);
 
-  *event_service_info = (EventServiceInfo) {
-    .type = type,
-    .handler = prv_event_handler,
-    .context = structured_glance,
+  *event_service_info = (EventServiceInfo){
+      .type = type,
+      .handler = prv_event_handler,
+      .context = structured_glance,
   };
 
   event_service_client_subscribe(event_service_info);
 }
 
 static const LauncherAppGlanceStructuredImpl s_settings_structured_glance_impl = {
-  .get_icon = prv_get_icon,
-  .get_title = prv_get_title,
-  .create_subtitle_node = prv_create_subtitle_node,
-  .destructor = prv_destructor,
+    .get_icon = prv_get_icon,
+    .get_title = prv_get_title,
+    .create_subtitle_node = prv_create_subtitle_node,
+    .destructor = prv_destructor,
 };
 
 LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) {
@@ -397,21 +396,20 @@ LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) 
       fonts_get_font_height(fonts_get_system_font(LAUNCHER_MENU_LAYER_SUBTITLE_FONT));
 
   const bool should_consider_slices = false;
-  LauncherAppGlanceStructured *structured_glance =
-      launcher_app_glance_structured_create(&node->uuid, &s_settings_structured_glance_impl,
-                                            should_consider_slices, settings_glance);
+  LauncherAppGlanceStructured *structured_glance = launcher_app_glance_structured_create(
+      &node->uuid, &s_settings_structured_glance_impl, should_consider_slices, settings_glance);
   PBL_ASSERTN(structured_glance);
   // Disable selection animations for the settings glance
   structured_glance->selection_animation_disabled = true;
 
   // Set the first state of the glance
-  settings_glance->glance_state = (LauncherAppGlanceSettingsState) {
-    .battery_charge_state = battery_state_service_peek(),
-    .is_pebble_app_connected = prv_is_pebble_app_connected(),
-    .is_airplane_mode_enabled = bt_ctl_is_airplane_mode_on(),
-    .is_quiet_time_enabled = do_not_disturb_is_active(),
+  settings_glance->glance_state = (LauncherAppGlanceSettingsState){
+      .battery_charge_state = battery_state_service_peek(),
+      .is_pebble_app_connected = prv_is_pebble_app_connected(),
+      .is_airplane_mode_enabled = bt_ctl_is_airplane_mode_on(),
+      .is_quiet_time_enabled = do_not_disturb_is_active(),
 #ifdef CONFIG_HRM
-    .is_sharing_hrm = ble_hrm_is_sharing(),
+      .is_sharing_hrm = ble_hrm_is_sharing(),
 #endif
   };
 
@@ -429,8 +427,7 @@ LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) 
                          structured_glance);
 #ifdef CONFIG_HRM
   prv_subscribe_to_event(&settings_glance->hrm_sharing_event_info,
-                         PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT,
-                         structured_glance);
+                         PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT, structured_glance);
 #endif
 
   return &structured_glance->glance;

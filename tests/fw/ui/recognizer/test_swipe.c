@@ -21,7 +21,8 @@
 #include "test_recognizer_impl.h"
 
 // The manager is not under test here; swallow the notification.
-void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {}
+void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
+}
 
 #define ALL_DIRECTIONS \
   (SwipeDirection_Up | SwipeDirection_Down | SwipeDirection_Left | SwipeDirection_Right)
@@ -38,14 +39,15 @@ void test_swipe__initialize(void) {
   fake_rtc_init(0, 0);
 }
 
-void test_swipe__cleanup(void) {}
+void test_swipe__cleanup(void) {
+}
 
 // Helpers
 static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t y) {
   const TouchEvent e = {
-    .type = type,
-    .x = x,
-    .y = y,
+      .type = type,
+      .x = x,
+      .y = y,
   };
   recognizer_handle_touch_event(r, &e);
 }

@@ -22,24 +22,24 @@ size_t applib_resource_size(ResHandle h) {
 }
 
 size_t applib_resource_load(ResHandle h, uint8_t *buffer, size_t max_length) {
-  return sys_resource_load_range(sys_get_current_resource_num(),
-                                 (uint32_t)h, 0, buffer, max_length);
+  return sys_resource_load_range(sys_get_current_resource_num(), (uint32_t)h, 0, buffer,
+                                 max_length);
 }
 
-size_t applib_resource_load_byte_range(
-    ResHandle h, uint32_t start_offset, uint8_t *buffer, size_t num_bytes) {
-  return sys_resource_load_range(sys_get_current_resource_num(),
-                                 (uint32_t)h, start_offset, buffer, num_bytes);
+size_t applib_resource_load_byte_range(ResHandle h, uint32_t start_offset, uint8_t *buffer,
+                                       size_t num_bytes) {
+  return sys_resource_load_range(sys_get_current_resource_num(), (uint32_t)h, start_offset, buffer,
+                                 num_bytes);
 }
 
-void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id,
-                                   size_t offset, size_t num_bytes, bool used_aligned) {
+void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id, size_t offset,
+                                   size_t num_bytes, bool used_aligned) {
   if (num_bytes == 0) {
     return NULL;
   }
 
-  const uint8_t *mapped_data = (app_num == SYSTEM_APP) ?
-                               sys_resource_read_only_bytes(SYSTEM_APP, resource_id, NULL) : NULL;
+  const uint8_t *mapped_data =
+      (app_num == SYSTEM_APP) ? sys_resource_read_only_bytes(SYSTEM_APP, resource_id, NULL) : NULL;
 
   uint8_t *result = NULL;
 
@@ -51,8 +51,8 @@ void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id,
     // we are wasting 7 bytes here so that clients of this API have the chance to
     // align the data
     result = applib_malloc(num_bytes + (used_aligned ? 7 : 0));
-    if (!result || sys_resource_load_range(app_num, resource_id, offset,
-                                           result, num_bytes) != num_bytes) {
+    if (!result ||
+        sys_resource_load_range(app_num, resource_id, offset, result, num_bytes) != num_bytes) {
       applib_free(result);
       return NULL;
     }
@@ -66,7 +66,6 @@ void applib_resource_munmap_or_free(void *bytes) {
     applib_free(bytes);
   }
 }
-
 
 // Mmapped resources are direct pointers into never-freed flash: nothing to
 // refcount or release, callers must just not free() them.

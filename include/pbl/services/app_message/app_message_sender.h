@@ -14,7 +14,6 @@
 //! It does not keep any static state inside this module, all the state is stored by the app outbox
 //! service. It's really just a piece of glue code between app_outbox.c and session_send_queue.c
 
-
 //! Enum that "inherits" from AppOutboxStatus and defines app-message-sender-specific status
 //! values in the user range:
 typedef enum {

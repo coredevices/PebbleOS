@@ -40,16 +40,16 @@ static void prv_trace(char c) {
   }
 }
 
-static struct pbl_thread *prv_spawn(int i, const char *name, pbl_prio_t prio,
-                                    void (*entry)(void *), void *arg) {
+static struct pbl_thread *prv_spawn(int i, const char *name, pbl_prio_t prio, void (*entry)(void *),
+                                    void *arg) {
   struct pbl_thread_attr attr = {
-    .name = name,
-    .entry = entry,
-    .arg = arg,
-    .prio = prio,
-    .privileged = true,
-    .stack = s_stacks[i],
-    .stack_size = STACK,
+      .name = name,
+      .entry = entry,
+      .arg = arg,
+      .prio = prio,
+      .privileged = true,
+      .stack = s_stacks[i],
+      .stack_size = STACK,
   };
   cl_assert_equal_i(pbl_thread_create(&s_threads[i], &attr), 0);
   return &s_threads[i];

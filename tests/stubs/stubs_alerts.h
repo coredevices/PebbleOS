@@ -20,9 +20,11 @@ uint32_t WEAK alerts_get_notification_window_timeout_ms(void) {
   return 0;
 }
 
-void WEAK alerts_incoming_alert_analytics() {}
+void WEAK alerts_incoming_alert_analytics() {
+}
 
-void WEAK alerts_set_notification_vibe_timestamp() {}
+void WEAK alerts_set_notification_vibe_timestamp() {
+}
 
 bool WEAK alerts_should_enable_backlight_for_type(AlertType type) {
   return false;

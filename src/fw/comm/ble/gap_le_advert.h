@@ -21,7 +21,7 @@ typedef enum {
 struct GAPLEAdvertisingJob;
 
 //! Opaque reference to an advertising job.
-typedef struct GAPLEAdvertisingJob * GAPLEAdvertisingJobRef;
+typedef struct GAPLEAdvertisingJob *GAPLEAdvertisingJobRef;
 
 // Each GAPLEAdvertisingJob consists of 1 or more term.
 typedef struct GAPLEAdvertisingJobTerm {
@@ -54,17 +54,16 @@ typedef struct GAPLEAdvertisingJobTerm {
 //! unscheduled using gap_le_advert_unschedule() or gap_le_advert_deinit()).
 //! For infinite jobs, the value will always be false when unscheduled.
 //! @param cb_data Pointer to client data as passed into gap_le_advert_schedule
-typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job,
-                                                      bool completed,
+typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job, bool completed,
                                                       void *cb_data);
 
 //! Constant to use with gap_le_advert_schedule to schedule an advertisement job
 //! with infinite duration.
-#define GAPLE_ADVERTISING_DURATION_INFINITE ((uint16_t) ~0)
+#define GAPLE_ADVERTISING_DURATION_INFINITE ((uint16_t)~0)
 
 //! Constant to use with gap_le_advert_schedule to indicate that the job
 //! scheduler should loop back to the first term.
-#define GAPLE_ADVERTISING_DURATION_LOOP_AROUND ((uint16_t) 0)
+#define GAPLE_ADVERTISING_DURATION_LOOP_AROUND ((uint16_t)0)
 
 //! Schedules an advertisement & scan response job.
 //! Based on the given minimum and maximum interval values, an interval is
@@ -93,11 +92,10 @@ typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job
 //! @return Reference to the scheduled job, or NULL if the parameters were not
 //! valid.
 GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
-                            const GAPLEAdvertisingJobTerm *terms,
-                            uint8_t num_terms,
-                            GAPLEAdvertisingJobUnscheduleCallback callback,
-                            void *callback_data,
-                            GAPLEAdvertisingJobTag tag);
+                                              const GAPLEAdvertisingJobTerm *terms,
+                                              uint8_t num_terms,
+                                              GAPLEAdvertisingJobUnscheduleCallback callback,
+                                              void *callback_data, GAPLEAdvertisingJobTag tag);
 
 //! Unschedules an existing advertisement job.
 //! It is safe to call this function with a reference to a non-existing job.
@@ -109,8 +107,7 @@ void gap_le_advert_unschedule(GAPLEAdvertisingJobRef advertisement_job);
 //! removed
 //! @param tag_types an array of tags for the Advertisement Types to remove
 //! @param num_types the length of the 'tag_types' list
-void gap_le_advert_unschedule_job_types(
-    GAPLEAdvertisingJobTag *tag_types, size_t num_types);
+void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types);
 
 //! Convenience function to get the transmission power level in dBm for
 //! advertising channels.

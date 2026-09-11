@@ -35,4 +35,5 @@ ModalProperty WEAK modal_manager_get_properties(void) {
   return ModalPropertyDefault;
 }
 
-void modal_window_push(Window *window, ModalPriority priority, bool animated) { }
+void modal_window_push(Window *window, ModalPriority priority, bool animated) {
+}

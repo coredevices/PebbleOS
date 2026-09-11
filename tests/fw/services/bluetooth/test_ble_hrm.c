@@ -12,7 +12,6 @@
 
 #include <clar.h>
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stubs & Fakes
 
@@ -91,7 +90,7 @@ static HRMSessionRef s_next_session_ref;
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
                                                   HRMSubscriberCallback callback, void *context) {
-  cl_assert_equal_p(NULL, callback); // we're using the event service
+  cl_assert_equal_p(NULL, callback);  // we're using the event service
   cl_assert_equal_i(features, HRMFeature_BPM);
   ++s_hrm_manager_subscribe_with_callback_call_count;
   s_last_session_ref = ++s_next_session_ref;
@@ -194,27 +193,27 @@ void test_ble_hrm__initialize(void) {
   s_ble_hrm_push_reminder_popup_call_count = 0;
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
-  s_last_disconnected = (BTDeviceInternal) {};
+  s_last_disconnected = (BTDeviceInternal){};
   s_last_sharing_request = NULL;
-  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement) {};
+  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement){};
   fake_event_service_init();
 
   // Set up fake devices/connections:
-  s_conn_a = (GAPLEConnection) {
-    .device_name = TEST_DEVICE_NAME,
-    .device = {
-      .address = {
-        .octets = {1, 2, 3, 4, 5, 6},
+  s_conn_a = (GAPLEConnection){
+      .device_name = TEST_DEVICE_NAME,
+      .device = {
+          .address = {
+              .octets = {1, 2, 3, 4, 5, 6},
+          },
       },
-    },
   };
-  s_conn_b = (GAPLEConnection) {
-    .device_name = TEST_DEVICE_NAME,
-    .device = {
-      .address = {
-        .octets = {6, 5, 4, 3, 2, 1},
+  s_conn_b = (GAPLEConnection){
+      .device_name = TEST_DEVICE_NAME,
+      .device = {
+          .address = {
+              .octets = {6, 5, 4, 3, 2, 1},
+          },
       },
-    },
   };
   s_connections[0] = &s_conn_a;
   s_connections[1] = &s_conn_b;
@@ -421,7 +420,7 @@ void test_ble_hrm__sub_after_deinit(void) {
   prv_assert_event_service_subscribed(false);
   cl_assert_equal_i(s_hrm_manager_subscribe_with_callback_call_count, 0);
 
-  ble_hrm_init(); // reinit, __cleanup() will deinit again
+  ble_hrm_init();  // reinit, __cleanup() will deinit again
 }
 
 static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQuality quality,
@@ -429,14 +428,14 @@ static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQ
   int call_count_before = s_bt_driver_hrm_service_handle_measurement_call_count;
 
   PebbleEvent hrm_event = {
-    .type = PEBBLE_HRM_EVENT,
-    .hrm = {
-      .event_type = subtype,
-      .bpm = {
-        .bpm = bpm,
-        .quality = quality,
+      .type = PEBBLE_HRM_EVENT,
+      .hrm = {
+          .event_type = subtype,
+          .bpm = {
+              .bpm = bpm,
+              .quality = quality,
+          },
       },
-    },
   };
   event_put(&hrm_event);
   fake_event_service_handle_last();

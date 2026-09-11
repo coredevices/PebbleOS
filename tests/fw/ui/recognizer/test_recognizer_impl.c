@@ -21,7 +21,7 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
   if (data->handled) {
     *data->handled = true;
   }
-  if(data->new_state && (*data->new_state != RecognizerState_Possible)) {
+  if (data->new_state && (*data->new_state != RecognizerState_Possible)) {
     cl_assert(data->updated);
     cl_assert_equal_p(*data->updated, false);
     *data->updated = true;
@@ -74,16 +74,15 @@ static void prv_sub_event_handler(const Recognizer *recognizer, RecognizerEvent 
 }
 
 Recognizer *test_recognizer_create(TestImplData *test_impl_data, void *user_data) {
-  s_test_impl = (RecognizerImpl) {
-    .handle_touch_event = prv_handle_touch_event,
-    .cancel = prv_cancel,
-    .reset = prv_reset,
-    .on_fail = prv_on_fail
+  s_test_impl = (RecognizerImpl){
+      .handle_touch_event = prv_handle_touch_event,
+      .cancel = prv_cancel,
+      .reset = prv_reset,
+      .on_fail = prv_on_fail
   };
   test_impl_data->test = TEST_PATTERN;
-  return recognizer_create_with_data(&s_test_impl, test_impl_data,
-                                     sizeof(*test_impl_data), prv_sub_event_handler,
-                                     user_data);
+  return recognizer_create_with_data(&s_test_impl, test_impl_data, sizeof(*test_impl_data),
+                                     prv_sub_event_handler, user_data);
 }
 
 void test_recognizer_enable_on_destroy(void) {

@@ -53,13 +53,11 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 }
 
 static uint32_t s_unscheduled_cb_count;
-static void * s_unscheduled_cb_data = "Callback Data";
+static void *s_unscheduled_cb_data = "Callback Data";
 static GAPLEAdvertisingJobRef s_unscheduled_job;
 static bool s_unscheduled_completed;
 
-static void unscheduled_callback(GAPLEAdvertisingJobRef job,
-                                 bool completed,
-                                 void *cb_data) {
+static void unscheduled_callback(GAPLEAdvertisingJobRef job, bool completed, void *cb_data) {
   s_unscheduled_job = job;
   ++s_unscheduled_cb_count;
   s_unscheduled_completed = completed;
@@ -94,35 +92,29 @@ void test_gap_le_advert__cleanup(void) {
 //! Helper to assert whether a piece of ad_data is set to the controller.
 //! For convenience, C strings are used (while in reality it can be arbitrary
 //! binary data).
-#define assert_ad_data(ad_data_cstring) \
-{ \
-  Advertising_Data_t ad_data_out; \
-  const size_t data_length = strlen(ad_data_cstring) + 1; \
-  cl_assert_equal_i(gap_le_get_advertising_data(&ad_data_out), data_length); \
-  cl_assert_equal_s((const char *) &ad_data_out, ad_data_cstring); \
-}
+#define assert_ad_data(ad_data_cstring)                                        \
+  {                                                                            \
+    Advertising_Data_t ad_data_out;                                            \
+    const size_t data_length = strlen(ad_data_cstring) + 1;                    \
+    cl_assert_equal_i(gap_le_get_advertising_data(&ad_data_out), data_length); \
+    cl_assert_equal_s((const char *)&ad_data_out, ad_data_cstring);            \
+  }
 
 //! Helper to create BLEAdData from C strings.
 //! In reality, people will use ble_ad_create() and the ble_ad_set_* functions,
 //! but that's part of another test.
-static BLEAdData *create_ad(const char ad_data[],
-                            const char scan_resp_data[]) {
+static BLEAdData *create_ad(const char ad_data[], const char scan_resp_data[]) {
   const size_t ad_data_length = ad_data ? strlen(ad_data) + 1 : 0;
-  const size_t scan_resp_data_length =
-      scan_resp_data ? strlen(scan_resp_data) + 1 : 0;
+  const size_t scan_resp_data_length = scan_resp_data ? strlen(scan_resp_data) + 1 : 0;
 
-  BLEAdData *ad = (BLEAdData *) malloc(sizeof(BLEAdData) +
-                                       ad_data_length +
-                                       scan_resp_data_length);
+  BLEAdData *ad = (BLEAdData *)malloc(sizeof(BLEAdData) + ad_data_length + scan_resp_data_length);
   ad->ad_data_length = ad_data_length;
   ad->scan_resp_data_length = scan_resp_data_length;
   if (ad_data_length) {
-    strncpy((char *) ad->data,
-            ad_data, ad_data_length);
+    strncpy((char *)ad->data, ad_data, ad_data_length);
   }
   if (scan_resp_data_length) {
-    strncpy((char *) ad->data + ad_data_length,
-           scan_resp_data, scan_resp_data_length);
+    strncpy((char *)ad->data + ad_data_length, scan_resp_data, scan_resp_data_length);
   }
   return ad;
 }
@@ -133,13 +125,12 @@ void test_gap_le_advert__single_job(void) {
   BLEAdData *ad = create_ad(ad_data, scan_resp_data);
 
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = 10,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
-  job = gap_le_advert_schedule(ad,
-                               &advert_term,
-                               sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, &advert_term,
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job);
 
@@ -154,10 +145,8 @@ void test_gap_le_advert__single_job(void) {
   // Check that the scan resp data that is passed to the controller is the same
   // that was given when calling the API:
   Scan_Response_Data_t scan_resp_data_out;
-  cl_assert_equal_i(gap_le_get_scan_response_data(&scan_resp_data_out),
-                    sizeof(scan_resp_data));
-  cl_assert(memcmp(&scan_resp_data_out, scan_resp_data,
-                   sizeof(scan_resp_data)) == 0);
+  cl_assert_equal_i(gap_le_get_scan_response_data(&scan_resp_data_out), sizeof(scan_resp_data));
+  cl_assert(memcmp(&scan_resp_data_out, scan_resp_data, sizeof(scan_resp_data)) == 0);
 
   // Expect one regular timer to be running for advertisements:
   cl_assert_equal_i(regular_timer_seconds_count(), 1);
@@ -182,25 +171,23 @@ void test_gap_le_advert__single_job(void) {
 void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void) {
   BLEAdData *ad = create_ad("yo", NULL);
 
-  GAPLEAdvertisingJobTerm advert_terms[] =
-  {
-    {
-      .interval = GAPLEAdvertisingInterval_Short,
-      .duration_secs = 1,
-    },
-    {
-      .interval = GAPLEAdvertisingInterval_Long,
-      .duration_secs = 1,
-    },
-    {
-      .duration_secs = GAPLE_ADVERTISING_DURATION_LOOP_AROUND,
-      .loop_around_index = 1,
-    },
+  GAPLEAdvertisingJobTerm advert_terms[] = {
+      {
+          .interval = GAPLEAdvertisingInterval_Short,
+          .duration_secs = 1,
+      },
+      {
+          .interval = GAPLEAdvertisingInterval_Long,
+          .duration_secs = 1,
+      },
+      {
+          .duration_secs = GAPLE_ADVERTISING_DURATION_LOOP_AROUND,
+          .loop_around_index = 1,
+      },
   };
   GAPLEAdvertisingJobRef job;
-  job = gap_le_advert_schedule(ad,
-                               advert_terms,
-                               sizeof(advert_terms)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, advert_terms,
+                               sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job);
 
@@ -231,21 +218,19 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
   const char scan_resp_data[] = "scan resp data";
   BLEAdData *ad = create_ad(ad_data, scan_resp_data);
 
-  GAPLEAdvertisingJobTerm advert_terms[2] =
-  {
-    {
-      .interval = GAPLEAdvertisingInterval_Short,
-      .duration_secs = 4,
-    },
-    {
-      .interval = GAPLEAdvertisingInterval_Long,
-      .duration_secs = 4,
-    },
+  GAPLEAdvertisingJobTerm advert_terms[2] = {
+      {
+          .interval = GAPLEAdvertisingInterval_Short,
+          .duration_secs = 4,
+      },
+      {
+          .interval = GAPLEAdvertisingInterval_Long,
+          .duration_secs = 4,
+      },
   };
   GAPLEAdvertisingJobRef job;
-  job = gap_le_advert_schedule(ad,
-                               advert_terms,
-                               sizeof(advert_terms)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, advert_terms,
+                               sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job);
 
@@ -260,10 +245,8 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
   // Check that the scan resp data that is passed to the controller is the same
   // that was given when calling the API:
   Scan_Response_Data_t scan_resp_data_out;
-  cl_assert_equal_i(gap_le_get_scan_response_data(&scan_resp_data_out),
-                    sizeof(scan_resp_data));
-  cl_assert(memcmp(&scan_resp_data_out, scan_resp_data,
-                   sizeof(scan_resp_data)) == 0);
+  cl_assert_equal_i(gap_le_get_scan_response_data(&scan_resp_data_out), sizeof(scan_resp_data));
+  cl_assert(memcmp(&scan_resp_data_out, scan_resp_data, sizeof(scan_resp_data)) == 0);
 
   // Expect one regular timer to be running for adverts:
   cl_assert_equal_i(regular_timer_seconds_count(), 1);
@@ -272,8 +255,8 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
 
   // Make sure all the terms in the job are run:
   GAPLEAdvertisingInterval expected_intervals[] = {
-    GAPLEAdvertisingInterval_Short,
-    GAPLEAdvertisingInterval_Long,
+      GAPLEAdvertisingInterval_Short,
+      GAPLEAdvertisingInterval_Long,
   };
 
   for (int term = 0; term < ARRAY_LENGTH(advert_terms); ++term) {
@@ -297,15 +280,15 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
 
 void test_gap_le_advert__job_round_robin(void) {
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE,
   };
 
   // Schedule infinite job "A":
   BLEAdData *ad_a = create_ad("A", NULL);
   GAPLEAdvertisingJobRef infinite_job_a;
-  infinite_job_a = gap_le_advert_schedule(ad_a,
-                                          &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  infinite_job_a = gap_le_advert_schedule(ad_a, &advert_term,
+                                          sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                           unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(infinite_job_a);
   assert_ad_data("A");
@@ -313,8 +296,8 @@ void test_gap_le_advert__job_round_robin(void) {
   // Schedule infinite job "B":
   BLEAdData *ad_b = create_ad("B", NULL);
   GAPLEAdvertisingJobRef infinite_job_b;
-  infinite_job_b = gap_le_advert_schedule(ad_b,
-                                          &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  infinite_job_b = gap_le_advert_schedule(ad_b, &advert_term,
+                                          sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                           unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(infinite_job_b);
   assert_ad_data("B");
@@ -331,8 +314,8 @@ void test_gap_le_advert__job_round_robin(void) {
   advert_term.duration_secs = 10;
   BLEAdData *ad_c = create_ad("C", NULL);
   GAPLEAdvertisingJobRef infinite_job_c;
-  infinite_job_c = gap_le_advert_schedule(ad_c,
-                                          &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  infinite_job_c = gap_le_advert_schedule(ad_c, &advert_term,
+                                          sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                           unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(infinite_job_c);
   assert_ad_data("C");
@@ -350,8 +333,8 @@ void test_gap_le_advert__job_round_robin(void) {
   // Introduce a second non-infinite job "D" for 10 seconds:
   BLEAdData *ad_d = create_ad("D", NULL);
   GAPLEAdvertisingJobRef infinite_job_d;
-  infinite_job_d = gap_le_advert_schedule(ad_d,
-                                          &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  infinite_job_d = gap_le_advert_schedule(ad_d, &advert_term,
+                                          sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                           unscheduled_callback, s_unscheduled_cb_data, 0);
   // It should get immediate air-time for one cycle:
   cl_assert(infinite_job_d);
@@ -373,11 +356,12 @@ void test_gap_le_advert__job_round_robin(void) {
   BLEAdData *ad_e = create_ad("E", NULL);
   advert_term.duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE;
   GAPLEAdvertisingJobRef infinite_job_e;
-  infinite_job_e = gap_le_advert_schedule(ad_e,
-                                          &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  infinite_job_e = gap_le_advert_schedule(ad_e, &advert_term,
+                                          sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                           unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(infinite_job_e);
-  // Infinite jobs are equal in priority to finite jobs, so it should get immediate air-time for one cycle:
+  // Infinite jobs are equal in priority to finite jobs, so it should get immediate air-time for one
+  // cycle:
   assert_ad_data("E");
 
   // No jobs should been have been unscheduled:
@@ -395,7 +379,6 @@ void test_gap_le_advert__job_round_robin(void) {
 
   // One job ("C") should been have been unscheduled:
   cl_assert_equal_i(s_unscheduled_cb_count, 1);
-
 
   // Round-robin 5 times:
   for (int i = 0; i < 5; ++i) {
@@ -430,25 +413,23 @@ void test_gap_le_advert__job_round_robin(void) {
   free(ad_d);
 }
 
-
 void test_gap_le_advert__job_round_robin_multiple_terms(void) {
-  GAPLEAdvertisingJobTerm advert_terms[2] =
-  {
-    {
-      .interval = GAPLEAdvertisingInterval_Short,
-      .duration_secs = 5,
-    },
-    {
-      .interval = GAPLEAdvertisingInterval_Long,
-      .duration_secs = 5,
-    },
+  GAPLEAdvertisingJobTerm advert_terms[2] = {
+      {
+          .interval = GAPLEAdvertisingInterval_Short,
+          .duration_secs = 5,
+      },
+      {
+          .interval = GAPLEAdvertisingInterval_Long,
+          .duration_secs = 5,
+      },
   };
 
   // Schedule job "A":
   BLEAdData *ad_a = create_ad("A", NULL);
   GAPLEAdvertisingJobRef job_a;
-  job_a = gap_le_advert_schedule(ad_a,
-                                 advert_terms, sizeof(advert_terms)/sizeof(GAPLEAdvertisingJobTerm),
+  job_a = gap_le_advert_schedule(ad_a, advert_terms,
+                                 sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
                                  unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job_a);
   assert_ad_data("A");
@@ -456,8 +437,8 @@ void test_gap_le_advert__job_round_robin_multiple_terms(void) {
   // Schedule job "B":
   BLEAdData *ad_b = create_ad("B", NULL);
   GAPLEAdvertisingJobRef job_b;
-  job_b = gap_le_advert_schedule(ad_b,
-                                 advert_terms, sizeof(advert_terms)/sizeof(GAPLEAdvertisingJobTerm),
+  job_b = gap_le_advert_schedule(ad_b, advert_terms,
+                                 sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
                                  unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job_b);
   assert_ad_data("B");
@@ -495,13 +476,14 @@ void test_gap_le_advert__expiring_job(void) {
   // Test that a job is expired correctly after the set duration:
   uint16_t seconds_left = 5;
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = seconds_left,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = seconds_left,
   };
 
   BLEAdData *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobRef job;
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, &advert_term,
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job);
 
@@ -531,30 +513,31 @@ void test_gap_le_advert__invalid_params(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
 
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = 1,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 1,
   };
 
   // Valid term should succeed:
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, &advert_term,
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job);
 
   // Loop-around in the first term:
   advert_term.duration_secs = GAPLE_ADVERTISING_DURATION_LOOP_AROUND;
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, &advert_term,
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert_equal_p(job, NULL);
 
   // No terms:
-  job = gap_le_advert_schedule(ad, NULL, 0,
-                               unscheduled_callback, s_unscheduled_cb_data, 0);
+  job = gap_le_advert_schedule(ad, NULL, 0, unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert_equal_p(job, NULL);
 
   // No ad data:
   advert_term.duration_secs = 1;
   job = gap_le_advert_schedule(NULL, &advert_term,
-                               sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert_equal_p(job, NULL);
 
@@ -563,7 +546,7 @@ void test_gap_le_advert__invalid_params(void) {
 
 void test_gap_le_advert__unschedule_non_existent(void) {
   // Unscheduling non-existent job should be fine, should not crash:
-  gap_le_advert_unschedule((GAPLEAdvertisingJobRef)(uintptr_t) 0x1234);
+  gap_le_advert_unschedule((GAPLEAdvertisingJobRef)(uintptr_t)0x1234);
 
   // Unschedule callback should not have been called:
   cl_assert_equal_i(s_unscheduled_cb_count, 0);
@@ -573,11 +556,12 @@ void test_gap_le_advert__deinit_unschedules(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
 
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = 10,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, &advert_term,
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job);
   gap_le_advert_deinit();
@@ -592,11 +576,12 @@ void test_gap_le_advert__cant_schedule_after_deinit(void) {
   gap_le_advert_deinit();
   BLEAdData *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = 10,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, &advert_term,
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert_equal_p(job, NULL);
   cl_assert_equal_i(regular_timer_seconds_count(), 0);
@@ -605,11 +590,12 @@ void test_gap_le_advert__cant_schedule_after_deinit(void) {
 void test_gap_le_advert__continue_after_slave_connection(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = 10,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job;
-  job = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
+  job = gap_le_advert_schedule(ad, &advert_term,
+                               sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
 
@@ -644,11 +630,11 @@ void test_gap_le_advert__stack_restart_while_connected_resets_state(void) {
 
   BLEAdData *ad = create_ad("A", NULL);
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = 10,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 10,
   };
-  GAPLEAdvertisingJobRef job = gap_le_advert_schedule(
-      ad, &advert_term, 1, unscheduled_callback, s_unscheduled_cb_data, 0);
+  GAPLEAdvertisingJobRef job =
+      gap_le_advert_schedule(ad, &advert_term, 1, unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert(job != NULL);
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
 
@@ -667,12 +653,13 @@ void test_gap_le_advert__stack_restart_while_connected_resets_state(void) {
 void test_gap_le_advert__unschedule_job_types(void) {
   BLEAdData *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
-    .interval = GAPLEAdvertisingInterval_Short,
-    .duration_secs = 10,
+      .interval = GAPLEAdvertisingInterval_Short,
+      .duration_secs = 10,
   };
   GAPLEAdvertisingJobRef job_a;
-  job_a = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagDiscovery);
+  job_a = gap_le_advert_schedule(
+      ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm), unscheduled_callback,
+      s_unscheduled_cb_data, GAPLEAdvertisingJobTagDiscovery);
 
   GAPLEAdvertisingJobTag tag = GAPLEAdvertisingJobTagDiscovery;
   gap_le_advert_unschedule_job_types(&tag, 1);
@@ -681,19 +668,20 @@ void test_gap_le_advert__unschedule_job_types(void) {
   cl_assert(s_unscheduled_job == job_a);
   cl_assert_equal_i(s_unscheduled_cb_count, 1);
 
-
   // add back the job we just unscheduled
-  job_a = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                                 unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagDiscovery);
+  job_a = gap_le_advert_schedule(
+      ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm), unscheduled_callback,
+      s_unscheduled_cb_data, GAPLEAdvertisingJobTagDiscovery);
 
   GAPLEAdvertisingJobRef job_b;
-  job_b = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
-
+  job_b = gap_le_advert_schedule(
+      ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm), unscheduled_callback,
+      s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
 
   GAPLEAdvertisingJobRef job_c;
-  job_c = gap_le_advert_schedule(ad, &advert_term, sizeof(advert_term)/sizeof(GAPLEAdvertisingJobTerm),
-                               unscheduled_callback, s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
+  job_c = gap_le_advert_schedule(
+      ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm), unscheduled_callback,
+      s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
 
   // run some Ad cycling
   for (int i = 0; i < 3; i++) {

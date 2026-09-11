@@ -22,14 +22,15 @@ bool WEAK activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverag
   return false;
 }
 
-void WEAK activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek day, int32_t value) {}
+void WEAK activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek day, int32_t value) {
+}
 
 bool WEAK activity_prefs_tracking_is_enabled(void) {
   return false;
 }
 
 uint8_t WEAK activity_prefs_get_age_years(void) {
-  return 30; // This is our current default
+  return 30;  // This is our current default
 }
 
 bool WEAK activity_prefs_heart_rate_is_enabled(void) {
@@ -84,7 +85,8 @@ bool WEAK activity_is_initialized(void) {
   return true;
 }
 
-void WEAK activity_set_enabled(bool enabled) {}
+void WEAK activity_set_enabled(bool enabled) {
+}
 
 bool WEAK activity_start_tracking(bool test_mode) {
   return true;

@@ -81,44 +81,74 @@ static RecognizerManager s_app_recognizer_manager;
 // Overrides
 ////////////////////////////////////
 
-void battery_state_service_state_init(BatteryStateServiceState *state) {}
-void connection_service_state_init(ConnectionServiceState *state) {}
-void tick_timer_service_state_init(TickTimerServiceState *state) {}
-void framebuffer_clear(FrameBuffer *f) {}
+void battery_state_service_state_init(BatteryStateServiceState *state) {
+}
+void connection_service_state_init(ConnectionServiceState *state) {
+}
+void tick_timer_service_state_init(TickTimerServiceState *state) {
+}
+void framebuffer_clear(FrameBuffer *f) {
+}
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-void app_idle_timeout_pause(void) { s_app_idle = true; }
-void app_idle_timeout_resume(void) { s_app_idle = false; }
-void app_idle_timeout_refresh(void) {}
+void app_idle_timeout_pause(void) {
+  s_app_idle = true;
+}
+void app_idle_timeout_resume(void) {
+  s_app_idle = false;
+}
+void app_idle_timeout_refresh(void) {
+}
 
-bool app_install_id_from_app_db(AppInstallId id) { return false; }
-void framebuffer_dirty_all(FrameBuffer *f) {}
-void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {}
-bool layer_is_status_bar_layer(Layer *layer) { return false; }
-void status_bar_layer_render(GContext *ctx, const GRect *bounds, void *config) {}
+bool app_install_id_from_app_db(AppInstallId id) {
+  return false;
+}
+void framebuffer_dirty_all(FrameBuffer *f) {
+}
+void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {
+}
+bool layer_is_status_bar_layer(Layer *layer) {
+  return false;
+}
+void status_bar_layer_render(GContext *ctx, const GRect *bounds, void *config) {
+}
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   GDrawState state;
   memset(&state, 0, sizeof(GDrawState));
   return state;
 }
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
-bool compositor_is_animating(void) { return false; }
-void *compositor_modal_transition_to_modal_get(bool dest) { return NULL; }
-void compositor_modal_render_ready(void) {}
-void compositor_transition_cancel(void) {}
-void compositor_transition(const CompositorTransition *type) {}
+bool compositor_is_animating(void) {
+  return false;
+}
+void *compositor_modal_transition_to_modal_get(bool dest) {
+  return NULL;
+}
+void compositor_modal_render_ready(void) {
+}
+void compositor_transition_cancel(void) {
+}
+void compositor_transition(const CompositorTransition *type) {
+}
 
-bool sys_app_is_watchface(void) { return false; }
+bool sys_app_is_watchface(void) {
+  return false;
+}
 
-void click_manager_init(ClickManager *click_manager) {}
-void click_manager_clear(ClickManager *click_manager) {}
-void click_manager_reset(ClickManager *click_manager) {}
-void watchface_reset_click_manager(void) {}
+void click_manager_init(ClickManager *click_manager) {
+}
+void click_manager_clear(ClickManager *click_manager) {
+}
+void click_manager_reset(ClickManager *click_manager) {
+}
+void watchface_reset_click_manager(void) {
+}
 
 Animation *window_transition_default_pop_create_animation(WindowTransitioningContext *context) {
   window_transition_context_disappear(context);
@@ -126,7 +156,7 @@ Animation *window_transition_default_pop_create_animation(WindowTransitioningCon
   return animation_create();
 }
 const WindowTransitionImplementation window_transition_default_pop_implementation = {
-  .create_animation = window_transition_default_pop_create_animation,
+    .create_animation = window_transition_default_pop_create_animation,
 };
 const WindowTransitionImplementation *window_transition_get_default_pop_implementation(void) {
   return &window_transition_default_pop_implementation;
@@ -138,7 +168,7 @@ Animation *window_transition_default_push_create_animation(WindowTransitioningCo
   return animation_create();
 }
 const WindowTransitionImplementation window_transition_default_push_implementation = {
-  .create_animation = window_transition_default_push_create_animation,
+    .create_animation = window_transition_default_push_create_animation,
 };
 const WindowTransitionImplementation *window_transition_get_default_push_implementation(void) {
   return &window_transition_default_push_implementation;
@@ -150,7 +180,7 @@ Animation *window_transition_none_create_animation(WindowTransitioningContext *c
   return animation_create();
 }
 const WindowTransitionImplementation g_window_transition_none_implementation = {
-  .create_animation = window_transition_none_create_animation,
+    .create_animation = window_transition_none_create_animation,
 };
 
 void app_click_config_setup_with_window(ClickManager *click_manager, struct Window *window) {
@@ -158,8 +188,12 @@ void app_click_config_setup_with_window(ClickManager *click_manager, struct Wind
 }
 
 // Touch-nav collaborators for the kernel twin.
-bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
-bool sys_touch_app_nav_active(void) { return false; }
+bool sys_touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
+bool sys_touch_app_nav_active(void) {
+  return false;
+}
 
 void touch_service_set_system_handler(TouchServiceHandler handler, void *context) {
   s_kernel_handler = handler;
@@ -179,7 +213,7 @@ static void prv_unload_destroy(Window *window) {
 
 static Window *prv_make_window(void) {
   Window *window = window_create();
-  window_set_window_handlers(window, &(WindowHandlers){ .unload = prv_unload_destroy });
+  window_set_window_handlers(window, &(WindowHandlers){.unload = prv_unload_destroy});
   return window;
 }
 
@@ -188,10 +222,10 @@ static Window *prv_make_window(void) {
 // the gate lets the dispatcher run, the counter ticks; when it gates out, it does not.
 static void prv_kernel_touchdown(void) {
   const TouchEvent e = {
-    .type = TouchEvent_Touchdown,
-    .x = 50,
-    .y = 90,
-    .non_navigational = true,
+      .type = TouchEvent_Touchdown,
+      .x = 50,
+      .y = 90,
+      .non_navigational = true,
   };
   cl_assert(s_kernel_handler != NULL);
   s_kernel_handler(&e, s_kernel_ctx);
@@ -245,8 +279,7 @@ void test_modal_touch_nav__app_and_modal_managers_are_separate(void) {
   Window *app_window = prv_make_window();
   stub_pebble_tasks_set_current(PebbleTask_App);
   window_stack_push(app_state_get_window_stack(), app_window, false);
-  cl_assert_equal_p(window_get_recognizer_manager(app_window),
-                    app_state_get_recognizer_manager());
+  cl_assert_equal_p(window_get_recognizer_manager(app_window), app_state_get_recognizer_manager());
 
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
   Window *modal_window = prv_make_window();
@@ -298,7 +331,8 @@ void test_modal_touch_nav__migrates_over_modal_and_back(void) {
   cl_assert_equal_p(manager->window, low_window);
 }
 
-static void prv_noop_click_config(void *context) {}
+static void prv_noop_click_config(void *context) {
+}
 
 // Same migration, but with a click config provider on both modals so is_click_configured == 1,
 // matching real modals. The loss/gain focus-transition branches key off that flag, so this variant

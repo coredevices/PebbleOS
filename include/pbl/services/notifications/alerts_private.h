@@ -6,13 +6,12 @@
 #include "pbl/services/notifications/alerts.h"
 
 typedef enum AlertMask {
-  AlertMaskAllOff       = 0,
-  AlertMaskPhoneCalls   = NotificationPhoneCall,
-  AlertMaskOther        = NotificationOther,
-  AlertMaskAllOnLegacy  =
-    NotificationMobile | NotificationPhoneCall | NotificationOther,
-  AlertMaskAllOn        =
-    NotificationMobile | NotificationPhoneCall | NotificationOther | NotificationReminder
+  AlertMaskAllOff = 0,
+  AlertMaskPhoneCalls = NotificationPhoneCall,
+  AlertMaskOther = NotificationOther,
+  AlertMaskAllOnLegacy = NotificationMobile | NotificationPhoneCall | NotificationOther,
+  AlertMaskAllOn =
+      NotificationMobile | NotificationPhoneCall | NotificationOther | NotificationReminder
 } AlertMask;
 
 bool alerts_get_vibrate(void);

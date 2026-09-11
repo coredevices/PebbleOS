@@ -76,21 +76,36 @@ static char *prv_get_quality_string(HRMQuality quality) {
 
 static char *prv_translate_error(AppMessageResult result) {
   switch (result) {
-    case APP_MSG_OK: return "APP_MSG_OK";
-    case APP_MSG_SEND_TIMEOUT: return "APP_MSG_SEND_TIMEOUT";
-    case APP_MSG_SEND_REJECTED: return "APP_MSG_SEND_REJECTED";
-    case APP_MSG_NOT_CONNECTED: return "APP_MSG_NOT_CONNECTED";
-    case APP_MSG_APP_NOT_RUNNING: return "APP_MSG_APP_NOT_RUNNING";
-    case APP_MSG_INVALID_ARGS: return "APP_MSG_INVALID_ARGS";
-    case APP_MSG_BUSY: return "APP_MSG_BUSY";
-    case APP_MSG_BUFFER_OVERFLOW: return "APP_MSG_BUFFER_OVERFLOW";
-    case APP_MSG_ALREADY_RELEASED: return "APP_MSG_ALREADY_RELEASED";
-    case APP_MSG_CALLBACK_ALREADY_REGISTERED: return "APP_MSG_CALLBACK_ALREADY_REGISTERED";
-    case APP_MSG_CALLBACK_NOT_REGISTERED: return "APP_MSG_CALLBACK_NOT_REGISTERED";
-    case APP_MSG_OUT_OF_MEMORY: return "APP_MSG_OUT_OF_MEMORY";
-    case APP_MSG_CLOSED: return "APP_MSG_CLOSED";
-    case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
-    default: return "UNKNOWN ERROR";
+    case APP_MSG_OK:
+      return "APP_MSG_OK";
+    case APP_MSG_SEND_TIMEOUT:
+      return "APP_MSG_SEND_TIMEOUT";
+    case APP_MSG_SEND_REJECTED:
+      return "APP_MSG_SEND_REJECTED";
+    case APP_MSG_NOT_CONNECTED:
+      return "APP_MSG_NOT_CONNECTED";
+    case APP_MSG_APP_NOT_RUNNING:
+      return "APP_MSG_APP_NOT_RUNNING";
+    case APP_MSG_INVALID_ARGS:
+      return "APP_MSG_INVALID_ARGS";
+    case APP_MSG_BUSY:
+      return "APP_MSG_BUSY";
+    case APP_MSG_BUFFER_OVERFLOW:
+      return "APP_MSG_BUFFER_OVERFLOW";
+    case APP_MSG_ALREADY_RELEASED:
+      return "APP_MSG_ALREADY_RELEASED";
+    case APP_MSG_CALLBACK_ALREADY_REGISTERED:
+      return "APP_MSG_CALLBACK_ALREADY_REGISTERED";
+    case APP_MSG_CALLBACK_NOT_REGISTERED:
+      return "APP_MSG_CALLBACK_NOT_REGISTERED";
+    case APP_MSG_OUT_OF_MEMORY:
+      return "APP_MSG_OUT_OF_MEMORY";
+    case APP_MSG_CLOSED:
+      return "APP_MSG_CLOSED";
+    case APP_MSG_INTERNAL_ERROR:
+      return "APP_MSG_INTERNAL_ERROR";
+    default:
+      return "UNKNOWN ERROR";
   }
 }
 
@@ -111,8 +126,7 @@ static void prv_send_status_and_version(void) {
 
   AppMessageResult result = app_message_outbox_begin(&app_data->out_iter);
   if (result != APP_MSG_OK) {
-    PBL_LOG_DBG("Failed to begin outbox - reason %i %s",
-            result, prv_translate_error(result));
+    PBL_LOG_DBG("Failed to begin outbox - reason %i %s", result, prv_translate_error(result));
     return;
   }
 
@@ -120,14 +134,14 @@ static void prv_send_status_and_version(void) {
 
   char serial_number_buffer[MFG_SERIAL_NUMBER_SIZE + 1];
   mfg_info_get_serialnumber(serial_number_buffer, sizeof(serial_number_buffer));
-  dict_write_data(app_data->out_iter, AppMessageKey_SerialNumber,
-                  (uint8_t*) serial_number_buffer, sizeof(serial_number_buffer));
+  dict_write_data(app_data->out_iter, AppMessageKey_SerialNumber, (uint8_t *)serial_number_buffer,
+                  sizeof(serial_number_buffer));
 
 #ifdef CONFIG_IS_BIGBOARD
   WatchInfoColor watch_color = WATCH_INFO_COLOR_UNKNOWN;
 #else
   WatchInfoColor watch_color = mfg_info_get_watch_color();
-#endif // CONFIG_IS_BIGBOARD
+#endif  // CONFIG_IS_BIGBOARD
   dict_write_uint32(app_data->out_iter, AppMessageKey_Model, watch_color);
 
   prv_send_msg();
@@ -140,7 +154,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
     PebbleHRMEvent *hrm = &e->hrm;
 
     if (hrm->event_type == HRMEvent_BPM) {
-      snprintf(app_data->bpm_string, sizeof(app_data->bpm_string), "%"PRIu8" BPM", hrm->bpm.bpm);
+      snprintf(app_data->bpm_string, sizeof(app_data->bpm_string), "%" PRIu8 " BPM", hrm->bpm.bpm);
       text_layer_set_text(&app_data->quality_text_layer, prv_get_quality_string(hrm->bpm.quality));
       layer_mark_dirty(&app_data->window.layer);
     } else if (hrm->event_type == HRMEvent_SubscriptionExpiring) {
@@ -156,17 +170,16 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
 static void prv_enable_hrm(void) {
   AppData *app_data = app_state_get_user_data();
 
-  app_data->hrm_event_info = (EventServiceInfo) {
-    .type = PEBBLE_HRM_EVENT,
-    .handler = prv_handle_hrm_data,
+  app_data->hrm_event_info = (EventServiceInfo){
+      .type = PEBBLE_HRM_EVENT,
+      .handler = prv_handle_hrm_data,
   };
   event_service_client_subscribe(&app_data->hrm_event_info);
 
   // TODO: Let the mobile app control this?
   const uint32_t update_time_s = 1;
-  app_data->session = sys_hrm_manager_app_subscribe(
-      APP_ID_HRM_DEMO, update_time_s, SECONDS_PER_HOUR,
-      HRMFeature_BPM);
+  app_data->session = sys_hrm_manager_app_subscribe(APP_ID_HRM_DEMO, update_time_s,
+                                                    SECONDS_PER_HOUR, HRMFeature_BPM);
 }
 
 static void prv_disable_hrm(void) {
@@ -205,10 +218,9 @@ static void prv_message_sent_cb(DictionaryIterator *iterator, void *context) {
   app_data->ready_to_send = true;
 }
 
-static void prv_message_failed_cb(DictionaryIterator *iterator,
-                               AppMessageResult reason, void *context) {
-  PBL_LOG_DBG("Out message send failed - reason %i %s",
-          reason, prv_translate_error(reason));
+static void prv_message_failed_cb(DictionaryIterator *iterator, AppMessageResult reason,
+                                  void *context) {
+  PBL_LOG_DBG("Out message send failed - reason %i %s", reason, prv_translate_error(reason));
   AppData *app_data = app_state_get_user_data();
   app_data->ready_to_send = true;
 }
@@ -219,9 +231,9 @@ static void prv_remote_notify_timer_cb(void *data) {
 
 static void prv_init(void) {
   AppData *app_data = app_malloc_check(sizeof(*app_data));
-  *app_data = (AppData) {
-    .session = (HRMSessionRef)app_data, // Use app data as session ref
-    .ready_to_send = false,
+  *app_data = (AppData){
+      .session = (HRMSessionRef)app_data,  // Use app data as session ref
+      .ready_to_send = false,
   };
   app_state_set_user_data(app_data);
 
@@ -251,8 +263,7 @@ static void prv_init(void) {
   const uint32_t outbox_size = 256;
   AppMessageResult result = app_message_open(inbox_size, outbox_size);
   if (result != APP_MSG_OK) {
-    PBL_LOG_ERR("Unable to open app message! %i %s",
-            result, prv_translate_error(result));
+    PBL_LOG_ERR("Unable to open app message! %i %s", result, prv_translate_error(result));
   } else {
     PBL_LOG_DBG("Successfully opened app message");
   }
@@ -284,13 +295,14 @@ static void prv_main(void) {
   prv_deinit();
 }
 
-const PebbleProcessMd* hrm_demo_get_app_info(void) {
+const PebbleProcessMd *hrm_demo_get_app_info(void) {
   static const PebbleProcessMdSystem s_hrm_demo_app_info = {
-    .name = "HRM Demo",
-    .common.uuid = { 0xf8, 0x1b, 0x2a, 0xf8, 0x13, 0x0a, 0x11, 0xe6,
-                     0x86, 0x9f, 0xa4, 0x5e, 0x60, 0xb9, 0x77, 0x3d },
-    .common.main_func = &prv_main,
+      .name = "HRM Demo",
+      .common.uuid =
+          {0xf8, 0x1b, 0x2a, 0xf8, 0x13, 0x0a, 0x11, 0xe6, 0x86, 0x9f, 0xa4, 0x5e, 0x60, 0xb9, 0x77,
+           0x3d},
+      .common.main_func = &prv_main,
   };
   // Only show in launcher if HRM is present
-  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd*)&s_hrm_demo_app_info : NULL;
+  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd *)&s_hrm_demo_app_info : NULL;
 }

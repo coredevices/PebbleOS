@@ -14,7 +14,6 @@
 
 extern MBuf *s_free_list;
 
-
 // Setup
 
 void test_mbuf__initialize(void) {
@@ -23,12 +22,11 @@ void test_mbuf__initialize(void) {
 void test_mbuf__cleanup(void) {
 }
 
-
 // Tests
 
 void test_mbuf__length(void) {
   // test the mbuf_get_length()/mbuf_get_chain_length() functions
-  char *data = __FILE_NAME__; // dummy data
+  char *data = __FILE_NAME__;  // dummy data
   char data_length = sizeof(__FILE_NAME__);
   MBuf mbuf1 = MBUF_EMPTY;
   MBuf mbuf2 = MBUF_EMPTY;

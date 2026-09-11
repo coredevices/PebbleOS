@@ -7,7 +7,6 @@
 #include "applib/ui/window_private.h"
 #include "applib/ui/layer.h"
 
-
 #include "clar.h"
 #include "util.h"
 
@@ -18,9 +17,9 @@
 #include "test_graphics.h"
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-  #include "8bit/test_framebuffer.h"
+#include "8bit/test_framebuffer.h"
 #else
-  #include "1bit/test_framebuffer.h"
+#include "1bit/test_framebuffer.h"
 #endif
 
 // Stubs
@@ -33,7 +32,7 @@ static FrameBuffer *fb = NULL;
 // Setup
 void test_graphics_draw_line__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 }
 
 // Teardown
@@ -44,43 +43,43 @@ void test_graphics_draw_line__cleanup(void) {
 // Tests
 ////////////////////////////////////
 
-void inside_layer_update_callback(Layer* me, GContext* ctx) {
+void inside_layer_update_callback(Layer *me, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_antialiased(ctx, false);
   graphics_draw_line(ctx, GPoint(5, 35), GPoint(45, 40));
 }
 
-void white_layer_update_callback(Layer* me, GContext* ctx) {
+void white_layer_update_callback(Layer *me, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_antialiased(ctx, false);
   graphics_draw_line(ctx, GPoint(5, 35), GPoint(45, 40));
 }
 
-void clear_layer_update_callback(Layer* me, GContext* ctx) {
+void clear_layer_update_callback(Layer *me, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorClear);
   graphics_context_set_antialiased(ctx, false);
   graphics_draw_line(ctx, GPoint(5, 35), GPoint(45, 40));
 }
 
-void across_x_layer_update_callback(Layer* me, GContext* ctx) {
+void across_x_layer_update_callback(Layer *me, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_antialiased(ctx, false);
   graphics_draw_line(ctx, GPoint(50, 40), GPoint(70, 35));
 }
 
-void across_nx_layer_update_callback(Layer* me, GContext* ctx) {
+void across_nx_layer_update_callback(Layer *me, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_antialiased(ctx, false);
   graphics_draw_line(ctx, GPoint(-25, 35), GPoint(15, 40));
 }
 
-void across_y_layer_update_callback(Layer* me, GContext* ctx) {
+void across_y_layer_update_callback(Layer *me, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_antialiased(ctx, false);
   graphics_draw_line(ctx, GPoint(40, 50), GPoint(35, 70));
 }
 
-void across_ny_layer_update_callback(Layer* me, GContext* ctx) {
+void across_ny_layer_update_callback(Layer *me, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_antialiased(ctx, false);
   graphics_draw_line(ctx, GPoint(5, -30), GPoint(45, 30));
@@ -93,32 +92,31 @@ void test_graphics_draw_line__origin_layer(void) {
   layer_init(&layer, &GRect(0, 0, 60, 60));
   layer_set_update_proc(&layer, &inside_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_inside_origin_layer")));
+  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_inside_origin_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_x_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_x_origin_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_x_origin_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_nx_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_nx_origin_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_nx_origin_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_y_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_y_origin_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_y_origin_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_ny_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_ny_origin_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_ny_origin_layer")));
 }
 
 void test_graphics_draw_line__offset_layer(void) {
@@ -128,32 +126,31 @@ void test_graphics_draw_line__offset_layer(void) {
   layer_init(&layer, &GRect(10, 10, 60, 60));
   layer_set_update_proc(&layer, &inside_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_inside_offset_layer")));
+  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_inside_offset_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_x_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_x_offset_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_x_offset_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_nx_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_nx_offset_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_nx_offset_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_y_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_y_offset_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_y_offset_layer")));
 
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &across_ny_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_across_ny_offset_layer")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_across_ny_offset_layer")));
 }
 
 void test_graphics_draw_line__clear(void) {
@@ -163,8 +160,7 @@ void test_graphics_draw_line__clear(void) {
   layer_init(&layer, &GRect(0, 0, 60, 60));
   layer_set_update_proc(&layer, &inside_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_inside_origin_layer")));
+  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_inside_origin_layer")));
   layer_set_update_proc(&layer, &white_layer_update_callback);
   layer_render_tree(&layer, &ctx);
   cl_check(framebuffer_is_empty("white_over_black", ctx.parent_framebuffer, GColorWhite));
@@ -172,8 +168,7 @@ void test_graphics_draw_line__clear(void) {
   test_graphics_context_reset(&ctx, fb);
   layer_set_update_proc(&layer, &inside_layer_update_callback);
   layer_render_tree(&layer, &ctx);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_line_inside_origin_layer")));
+  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_line_inside_origin_layer")));
   layer_set_update_proc(&layer, &clear_layer_update_callback);
   layer_render_tree(&layer, &ctx);
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
@@ -186,9 +181,9 @@ void test_graphics_draw_line__clear(void) {
 #define MAX_NUM_ROWS 168
 #define MAX_NUM_COLS 144
 
-#define ORIGIN_RECT_NO_CLIP        GRect(0, 0, MAX_NUM_COLS, MAX_NUM_ROWS)
-#define ORIGIN_RECT_CLIP_EVEN      GRect(10, 10, 60, 60)
-#define ORIGIN_RECT_CLIP_ODD       GRect(11, 11, 61, 61)
+#define ORIGIN_RECT_NO_CLIP GRect(0, 0, MAX_NUM_COLS, MAX_NUM_ROWS)
+#define ORIGIN_RECT_CLIP_EVEN GRect(10, 10, 60, 60)
+#define ORIGIN_RECT_CLIP_ODD GRect(11, 11, 61, 61)
 void test_graphics_draw_line___origin_horizontal_dotted(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
@@ -200,7 +195,7 @@ void test_graphics_draw_line___origin_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(7, 13), 10);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(7, 24), 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_no_clip")));
 
   // Even rows of different lengths
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -218,7 +213,7 @@ void test_graphics_draw_line___origin_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 22), 145);
 
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_even_rows_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_even_rows_no_clip")));
 
   // Odd rows of different lengths
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -235,15 +230,15 @@ void test_graphics_draw_line___origin_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 21), 143);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 23), 145);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_odd_rows_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_odd_rows_no_clip")));
 
   // Test to make sure drawing on all rows creates checkerboard pattern
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
   for (int16_t row = 0; row < MAX_NUM_ROWS; row++) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_checkerboard_no_clip")));
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_checkerboard_no_clip")));
 
   // Clipping on even boundaries - no offset
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_EVEN, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -251,7 +246,7 @@ void test_graphics_draw_line___origin_horizontal_dotted(void) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_even_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_even_clip")));
 
   // Clipping on odd boundaries - no offset
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_ODD, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -259,13 +254,13 @@ void test_graphics_draw_line___origin_horizontal_dotted(void) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_odd_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_origin_odd_clip")));
 }
 
-#define OFFSET_RECT_EVEN           GRect(14, 14, MAX_NUM_COLS, MAX_NUM_ROWS)
-#define OFFSET_RECT_ODD            GRect(15, 15, MAX_NUM_COLS, MAX_NUM_ROWS)
-#define OFFSET_RECT_CLIP_EVEN      GRect(10, 10, 60, 60)
-#define OFFSET_RECT_CLIP_ODD       GRect(11, 11, 61, 61)
+#define OFFSET_RECT_EVEN GRect(14, 14, MAX_NUM_COLS, MAX_NUM_ROWS)
+#define OFFSET_RECT_ODD GRect(15, 15, MAX_NUM_COLS, MAX_NUM_ROWS)
+#define OFFSET_RECT_CLIP_EVEN GRect(10, 10, 60, 60)
+#define OFFSET_RECT_CLIP_ODD GRect(11, 11, 61, 61)
 void test_graphics_draw_line___even_offset_horizontal_dotted(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
@@ -277,7 +272,7 @@ void test_graphics_draw_line___even_offset_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(7, 13), 10);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(7, 24), 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_no_clip")));
 
   // Even rows of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_EVEN, OFFSET_RECT_EVEN, false, 1);
@@ -294,8 +289,9 @@ void test_graphics_draw_line___even_offset_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 20), MAX_NUM_COLS - 1);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 22), MAX_NUM_COLS + 1);
 
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_even_rows_no_clip")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap,
+                     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_even_rows_no_clip")));
 
   // Odd rows of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_EVEN, OFFSET_RECT_EVEN, false, 1);
@@ -311,16 +307,18 @@ void test_graphics_draw_line___even_offset_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 19), 22);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 21), MAX_NUM_COLS - 1);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 23), MAX_NUM_COLS + 1);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_odd_rows_no_clip")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap,
+                     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_odd_rows_no_clip")));
 
   // Test to make sure drawing on all rows creates checkerboard pattern
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_EVEN, OFFSET_RECT_EVEN, false, 1);
   for (int16_t row = 0; row < MAX_NUM_ROWS; row++) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_checkerboard_no_clip")));
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap,
+      TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_checkerboard_no_clip")));
 
   // Clipping on even boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_EVEN, OFFSET_RECT_EVEN, false, 1);
@@ -328,7 +326,7 @@ void test_graphics_draw_line___even_offset_horizontal_dotted(void) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_even_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_even_clip")));
 
   // Clipping on odd boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_ODD, OFFSET_RECT_EVEN, false, 1);
@@ -336,7 +334,7 @@ void test_graphics_draw_line___even_offset_horizontal_dotted(void) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_odd_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_even_offset_odd_clip")));
 }
 
 void test_graphics_draw_line___odd_offset_horizontal_dotted(void) {
@@ -350,7 +348,7 @@ void test_graphics_draw_line___odd_offset_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(7, 13), 10);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(7, 24), 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_no_clip")));
 
   // Even rows of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_ODD, OFFSET_RECT_ODD, false, 1);
@@ -366,8 +364,9 @@ void test_graphics_draw_line___odd_offset_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 18), 22);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 20), MAX_NUM_COLS - 1);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 22), MAX_NUM_COLS + 1);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_even_rows_no_clip")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap,
+                     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_even_rows_no_clip")));
 
   // Odd rows of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_ODD, OFFSET_RECT_ODD, false, 1);
@@ -383,16 +382,17 @@ void test_graphics_draw_line___odd_offset_horizontal_dotted(void) {
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 19), 22);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 21), MAX_NUM_COLS - 1);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, 23), MAX_NUM_COLS + 1);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_odd_rows_no_clip")));
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_odd_rows_no_clip")));
 
   // Test to make sure drawing on all rows creates checkerboard pattern
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_ODD, OFFSET_RECT_ODD, false, 1);
   for (int16_t row = 0; row < MAX_NUM_ROWS; row++) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_checkerboard_no_clip")));
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap,
+      TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_checkerboard_no_clip")));
 
   // Clipping on even boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_EVEN, OFFSET_RECT_ODD, false, 1);
@@ -400,7 +400,7 @@ void test_graphics_draw_line___odd_offset_horizontal_dotted(void) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_even_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_even_clip")));
 
   // Clipping on odd boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_ODD, OFFSET_RECT_ODD, false, 1);
@@ -408,7 +408,7 @@ void test_graphics_draw_line___odd_offset_horizontal_dotted(void) {
     graphics_draw_horizontal_line_dotted(&ctx, GPoint(0, row), MAX_NUM_COLS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_odd_clip")));
+                          TEST_NAMED_PBI_FILE("draw_horiz_dotted_line_odd_offset_odd_clip")));
 }
 
 void test_graphics_draw_line___origin_vertical_dotted(void) {
@@ -422,7 +422,7 @@ void test_graphics_draw_line___origin_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(13, 7), 10);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(24, 7), 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_no_clip")));
 
   // Even cols of different lengths
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -437,10 +437,10 @@ void test_graphics_draw_line___origin_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(16, 0), 21);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(18, 0), 22);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(20, 0), MAX_NUM_ROWS - 1);
-  graphics_draw_vertical_line_dotted(&ctx, GPoint(22, 0), MAX_NUM_ROWS + 1 );
+  graphics_draw_vertical_line_dotted(&ctx, GPoint(22, 0), MAX_NUM_ROWS + 1);
 
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_even_cols_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_even_cols_no_clip")));
 
   // Odd cols of different lengths
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -455,17 +455,17 @@ void test_graphics_draw_line___origin_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(17, 0), 21);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(19, 0), 22);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(21, 0), MAX_NUM_ROWS - 1);
-  graphics_draw_vertical_line_dotted(&ctx, GPoint(23, 0), MAX_NUM_ROWS + 1 );
+  graphics_draw_vertical_line_dotted(&ctx, GPoint(23, 0), MAX_NUM_ROWS + 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_odd_cols_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_odd_cols_no_clip")));
 
   // Test to make sure drawing on all cols creates checkerboard pattern
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
   for (int16_t col = 0; col < MAX_NUM_COLS; col++) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_checkerboard_no_clip")));
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_checkerboard_no_clip")));
 
   // Clipping on even boundaries - no offset
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_EVEN, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -473,7 +473,7 @@ void test_graphics_draw_line___origin_vertical_dotted(void) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_even_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_even_clip")));
 
   // Clipping on odd boundaries - no offset
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_ODD, ORIGIN_RECT_NO_CLIP, false, 1);
@@ -481,7 +481,7 @@ void test_graphics_draw_line___origin_vertical_dotted(void) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_odd_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_origin_odd_clip")));
 }
 
 void test_graphics_draw_line___even_offset_vertical_dotted(void) {
@@ -495,7 +495,7 @@ void test_graphics_draw_line___even_offset_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(13, 7), 10);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(24, 7), 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_no_clip")));
 
   // Even cols of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_EVEN, OFFSET_RECT_EVEN, false, 1);
@@ -510,10 +510,11 @@ void test_graphics_draw_line___even_offset_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(16, 0), 21);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(18, 0), 22);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(20, 0), MAX_NUM_ROWS - 1);
-  graphics_draw_vertical_line_dotted(&ctx, GPoint(22, 0), MAX_NUM_ROWS + 1 );
+  graphics_draw_vertical_line_dotted(&ctx, GPoint(22, 0), MAX_NUM_ROWS + 1);
 
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_even_cols_no_clip")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap,
+                     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_even_cols_no_clip")));
 
   // Odd cols of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_EVEN, OFFSET_RECT_EVEN, false, 1);
@@ -528,17 +529,18 @@ void test_graphics_draw_line___even_offset_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(17, 0), 21);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(19, 0), 22);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(21, 0), MAX_NUM_ROWS - 1);
-  graphics_draw_vertical_line_dotted(&ctx, GPoint(23, 0), MAX_NUM_ROWS + 1 );
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_odd_cols_no_clip")));
+  graphics_draw_vertical_line_dotted(&ctx, GPoint(23, 0), MAX_NUM_ROWS + 1);
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_odd_cols_no_clip")));
 
   // Test to make sure drawing on all cols creates checkerboard pattern
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_EVEN, OFFSET_RECT_EVEN, false, 1);
   for (int16_t col = 0; col < MAX_NUM_COLS; col++) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_checkerboard_no_clip")));
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap,
+      TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_checkerboard_no_clip")));
 
   // Clipping on even boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_EVEN, OFFSET_RECT_EVEN, false, 1);
@@ -546,7 +548,7 @@ void test_graphics_draw_line___even_offset_vertical_dotted(void) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_even_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_even_clip")));
 
   // Clipping on odd boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_ODD, OFFSET_RECT_EVEN, false, 1);
@@ -554,7 +556,7 @@ void test_graphics_draw_line___even_offset_vertical_dotted(void) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_odd_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_even_offset_odd_clip")));
 }
 
 void test_graphics_draw_line___odd_offset_vertical_dotted(void) {
@@ -568,7 +570,7 @@ void test_graphics_draw_line___odd_offset_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(13, 7), 10);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(24, 7), 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_no_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_no_clip")));
 
   // Even cols of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_ODD, OFFSET_RECT_ODD, false, 1);
@@ -583,9 +585,9 @@ void test_graphics_draw_line___odd_offset_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(16, 0), 21);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(18, 0), 22);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(20, 0), MAX_NUM_ROWS - 1);
-  graphics_draw_vertical_line_dotted(&ctx, GPoint(22, 0), MAX_NUM_ROWS + 1 );
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_even_cols_no_clip")));
+  graphics_draw_vertical_line_dotted(&ctx, GPoint(22, 0), MAX_NUM_ROWS + 1);
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_even_cols_no_clip")));
 
   // Odd cols of different lengths
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_ODD, OFFSET_RECT_ODD, false, 1);
@@ -600,17 +602,18 @@ void test_graphics_draw_line___odd_offset_vertical_dotted(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(17, 0), 21);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(19, 0), 22);
   graphics_draw_vertical_line_dotted(&ctx, GPoint(21, 0), MAX_NUM_ROWS - 1);
-  graphics_draw_vertical_line_dotted(&ctx, GPoint(23, 0), MAX_NUM_ROWS + 1 );
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_odd_cols_no_clip")));
+  graphics_draw_vertical_line_dotted(&ctx, GPoint(23, 0), MAX_NUM_ROWS + 1);
+  cl_check(gbitmap_pbi_eq(
+      &ctx.dest_bitmap, TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_odd_cols_no_clip")));
 
   // Test to make sure drawing on all cols creates checkerboard pattern
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_ODD, OFFSET_RECT_ODD, false, 1);
   for (int16_t col = 0; col < MAX_NUM_COLS; col++) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_checkerboard_no_clip")));
+  cl_check(
+      gbitmap_pbi_eq(&ctx.dest_bitmap,
+                     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_checkerboard_no_clip")));
 
   // Clipping on even boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_EVEN, OFFSET_RECT_ODD, false, 1);
@@ -618,7 +621,7 @@ void test_graphics_draw_line___odd_offset_vertical_dotted(void) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_even_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_even_clip")));
 
   // Clipping on odd boundaries - no offset
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_ODD, OFFSET_RECT_ODD, false, 1);
@@ -626,7 +629,7 @@ void test_graphics_draw_line___odd_offset_vertical_dotted(void) {
     graphics_draw_vertical_line_dotted(&ctx, GPoint(col, 0), MAX_NUM_ROWS);
   }
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
-			     TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_odd_clip")));
+                          TEST_NAMED_PBI_FILE("draw_vert_dotted_line_odd_offset_odd_clip")));
 }
 
 void test_graphics_draw_line__dotted_cross(void) {
@@ -667,7 +670,6 @@ void test_graphics_draw_line__dotted_cross(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(101, 33), 5);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(97, 37), 10);
 
-
   // T facing left - lined up
   graphics_draw_vertical_line_dotted(&ctx, GPoint(10, 70), 10);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(5, 76), 5);
@@ -687,7 +689,6 @@ void test_graphics_draw_line__dotted_cross(void) {
   // T facing left - odd vert, even horiz
   graphics_draw_vertical_line_dotted(&ctx, GPoint(131, 71), 10);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(132, 76), 5);
-
 
   // T facing right - lined up
   graphics_draw_vertical_line_dotted(&ctx, GPoint(10, 90), 10);
@@ -751,7 +752,6 @@ void test_graphics_draw_line_8bit__dotted_cross_color(void) {
   graphics_draw_vertical_line_dotted(&ctx, GPoint(101, 33), 5);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(97, 37), 10);
 
-
   // T facing left - lined up
   graphics_draw_vertical_line_dotted(&ctx, GPoint(10, 70), 10);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(5, 76), 5);
@@ -771,7 +771,6 @@ void test_graphics_draw_line_8bit__dotted_cross_color(void) {
   // T facing left - odd vert, even horiz
   graphics_draw_vertical_line_dotted(&ctx, GPoint(131, 71), 10);
   graphics_draw_horizontal_line_dotted(&ctx, GPoint(132, 76), 5);
-
 
   // T facing right - lined up
   graphics_draw_vertical_line_dotted(&ctx, GPoint(10, 90), 10);
@@ -799,43 +798,43 @@ void test_graphics_draw_line_8bit__dotted_cross_color(void) {
 static void draw_lines_same_point(GContext *ctx) {
   graphics_context_set_antialiased(ctx, false);
   graphics_context_set_stroke_width(ctx, 1);
-  graphics_draw_line(ctx, GPoint(10,10), GPoint(10,10));
+  graphics_draw_line(ctx, GPoint(10, 10), GPoint(10, 10));
 
   graphics_context_set_antialiased(ctx, true);
   graphics_context_set_stroke_width(ctx, 1);
-  graphics_draw_line(ctx, GPoint(20,20), GPoint(20,20));
+  graphics_draw_line(ctx, GPoint(20, 20), GPoint(20, 20));
 
   graphics_context_set_antialiased(ctx, false);
   graphics_context_set_stroke_width(ctx, 2);
-  graphics_draw_line(ctx, GPoint(30,30), GPoint(30,30));
+  graphics_draw_line(ctx, GPoint(30, 30), GPoint(30, 30));
 
   graphics_context_set_antialiased(ctx, true);
   graphics_context_set_stroke_width(ctx, 2);
-  graphics_draw_line(ctx, GPoint(40,40), GPoint(40,40));
+  graphics_draw_line(ctx, GPoint(40, 40), GPoint(40, 40));
 
   graphics_context_set_antialiased(ctx, false);
   graphics_context_set_stroke_width(ctx, 3);
-  graphics_draw_line(ctx, GPoint(50,50), GPoint(50,50));
+  graphics_draw_line(ctx, GPoint(50, 50), GPoint(50, 50));
 
   graphics_context_set_antialiased(ctx, true);
   graphics_context_set_stroke_width(ctx, 3);
-  graphics_draw_line(ctx, GPoint(60,60), GPoint(60,60));
+  graphics_draw_line(ctx, GPoint(60, 60), GPoint(60, 60));
 
   graphics_context_set_antialiased(ctx, false);
   graphics_context_set_stroke_width(ctx, 4);
-  graphics_draw_line(ctx, GPoint(70,70), GPoint(70,70));
+  graphics_draw_line(ctx, GPoint(70, 70), GPoint(70, 70));
 
   graphics_context_set_antialiased(ctx, true);
   graphics_context_set_stroke_width(ctx, 4);
-  graphics_draw_line(ctx, GPoint(80,80), GPoint(80,80));
+  graphics_draw_line(ctx, GPoint(80, 80), GPoint(80, 80));
 
   graphics_context_set_antialiased(ctx, false);
   graphics_context_set_stroke_width(ctx, 5);
-  graphics_draw_line(ctx, GPoint(90,90), GPoint(90,90));
+  graphics_draw_line(ctx, GPoint(90, 90), GPoint(90, 90));
 
   graphics_context_set_antialiased(ctx, true);
   graphics_context_set_stroke_width(ctx, 5);
-  graphics_draw_line(ctx, GPoint(100,100), GPoint(100,100));
+  graphics_draw_line(ctx, GPoint(100, 100), GPoint(100, 100));
 }
 
 void test_graphics_draw_line__same_point(void) {
@@ -872,11 +871,11 @@ static void prv_draw_lines(GContext *ctx, uint8_t sw, uint16_t xoffset, uint16_t
   graphics_draw_line(ctx, GPoint(10, -2), GPoint(10, 2));  // top
   graphics_draw_line(ctx, GPoint(15, -2), GPoint(22, 5));  // top right corner
 
-  graphics_draw_line(ctx, GPoint(18, 10), GPoint(22, 10)); // right
-  graphics_draw_line(ctx, GPoint(22, 15), GPoint(15, 22)); // bottom right corner
+  graphics_draw_line(ctx, GPoint(18, 10), GPoint(22, 10));  // right
+  graphics_draw_line(ctx, GPoint(22, 15), GPoint(15, 22));  // bottom right corner
 
   graphics_draw_line(ctx, GPoint(10, 18), GPoint(10, 22));  // bottom
-  graphics_draw_line(ctx, GPoint(5, 22), GPoint(-2, 15));    // bottom left corner
+  graphics_draw_line(ctx, GPoint(5, 22), GPoint(-2, 15));   // bottom left corner
 }
 
 void test_graphics_draw_line__clipping_rect(void) {

@@ -14,16 +14,14 @@ typedef long double max_align_t;
 #endif
 
 static void prv_assert_sane_segment(MemorySegment *segment) {
-  PBL_ASSERT(segment->start <= segment->end,
-             "Segment end points before segment start");
+  PBL_ASSERT(segment->start <= segment->end, "Segment end points before segment start");
 }
 
-static void * prv_align(void *ptr) {
+static void *prv_align(void *ptr) {
   uintptr_t c = (uintptr_t)ptr;
   // Advance the pointer to the next alignment boundary.
   return (void *)((c + alignof(max_align_t) - 1) & ~(alignof(max_align_t) - 1));
 }
-
 
 size_t memory_segment_get_size(MemorySegment *segment) {
   prv_assert_sane_segment(segment);
@@ -35,8 +33,8 @@ void memory_segment_align(MemorySegment *segment) {
   prv_assert_sane_segment(segment);
 }
 
-void * memory_segment_split(MemorySegment * restrict parent,
-                            MemorySegment * restrict child, size_t size) {
+void *memory_segment_split(MemorySegment *restrict parent, MemorySegment *restrict child,
+                           size_t size) {
   prv_assert_sane_segment(parent);
   char *child_start = prv_align(parent->start);
   void *child_end = child_start + size;
@@ -52,9 +50,9 @@ void * memory_segment_split(MemorySegment * restrict parent,
   parent->start = adjusted_parent_start;
 
   if (child) {
-    *child = (MemorySegment) {
-      .start = child_start,
-      .end = child_end,
+    *child = (MemorySegment){
+        .start = child_start,
+        .end = child_end,
     };
   }
   return child_start;

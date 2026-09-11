@@ -10,12 +10,12 @@
 Window *window;
 TextLayer *text_layer;
 
-AppTimer* s_timer;
+AppTimer *s_timer;
 static AccelData s_last_accel_data;
 
 static uint32_t prv_compute_delta_pos(AccelData *cur_pos, AccelData *last_pos) {
   return (abs(last_pos->x - cur_pos->x) + abs(last_pos->y - cur_pos->y) +
-      abs(last_pos->z - cur_pos->z));
+          abs(last_pos->z - cur_pos->z));
 }
 
 static void prv_timer_cb(void *data) {
@@ -33,11 +33,11 @@ static void prv_timer_cb(void *data) {
   int32_t delta = prv_compute_delta_pos(&accel_data, &s_last_accel_data);
   s_last_accel_data = accel_data;
 
-  snprintf(accel_text, sizeof(accel_text), "Accel delta: %"PRIu32, delta);
+  snprintf(accel_text, sizeof(accel_text), "Accel delta: %" PRIu32, delta);
   APP_LOG(APP_LOG_LEVEL_INFO, accel_text);
 #else
-  snprintf(accel_text, sizeof(accel_text), "x:%"PRId16 ", y:%"PRId16 ", z:%"PRId16,
-      accel_data.x, accel_data.y, accel_data.z);
+  snprintf(accel_text, sizeof(accel_text), "x:%" PRId16 ", y:%" PRId16 ", z:%" PRId16, accel_data.x,
+           accel_data.y, accel_data.z);
   APP_LOG(APP_LOG_LEVEL_INFO, accel_text);
 #endif
   text_layer_set_text(text_layer, accel_text);
@@ -50,8 +50,8 @@ void handle_init(void) {
   GRect bounds = layer_get_bounds(window_layer);
   uint32_t text_width = bounds.size.w;
   uint32_t text_height = 28;
-  text_layer = text_layer_create(GRect(0, bounds.size.h/2 - text_height/2,
-        text_width, text_height));
+  text_layer =
+      text_layer_create(GRect(0, bounds.size.h / 2 - text_height / 2, text_width, text_height));
 
   // Set the text, font, and text alignment
   text_layer_set_text(text_layer, "No Accelerometer");

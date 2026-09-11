@@ -34,25 +34,15 @@
 //   num_types * num_measurements values if num_values on entry was large enough
 // @param[out]
 // @return true on success, false on failure
-bool protobuf_log_private_mset_decode(ProtobufLogType *type,
-                                 void *encoded_buf,
-                                 uint32_t encoded_buf_size,
-                                 char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
-                                 char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
-                                 char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES],
-                                 uint32_t *payload_send_time,
-                                 uint32_t *payload_sender_v_major,
-                                 uint32_t *payload_sender_v_minor,
-                                 Uuid *uuid,
-                                 uint32_t *time_utc,
-                                 uint32_t *time_end_utc,
-                                 int32_t *utc_to_local,
-                                 uint32_t *num_types,
-                                 ProtobufLogMeasurementType *types,
-                                 uint32_t *num_samples,
-                                 uint32_t *offset_sec,
-                                 uint32_t *num_values,
-                                 uint32_t *values);
+bool protobuf_log_private_mset_decode(
+    ProtobufLogType *type, void *encoded_buf, uint32_t encoded_buf_size,
+    char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
+    char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
+    char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES], uint32_t *payload_send_time,
+    uint32_t *payload_sender_v_major, uint32_t *payload_sender_v_minor, Uuid *uuid,
+    uint32_t *time_utc, uint32_t *time_end_utc, int32_t *utc_to_local, uint32_t *num_types,
+    ProtobufLogMeasurementType *types, uint32_t *num_samples, uint32_t *offset_sec,
+    uint32_t *num_values, uint32_t *values);
 
 // ---------------------------------------------------------------------------------------------
 // Decode an encoded payload with events. Used for debugging and unit tests.
@@ -75,17 +65,11 @@ bool protobuf_log_private_mset_decode(ProtobufLogType *type,
 //        of type ActivitySession, then it's activity session will be at sessions[2].
 // @param[out]
 // @return true on success, false on failure
-bool protobuf_log_private_events_decode(ProtobufLogType *type,
-                                        void *encoded_buf,
-                                        uint32_t encoded_buf_size,
-                                        char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
-                                        char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
-                                        char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES],
-                                        uint32_t *payload_send_time,
-                                        uint32_t *payload_sender_v_major,
-                                        uint32_t *payload_sender_v_minor,
-                                        uint32_t *num_events,
-                                        pebble_pipeline_Event *events,
-                                        Uuid *event_uuids,
-                                        uint32_t *num_sessions,
-                                        ActivitySession *sessions);
+bool protobuf_log_private_events_decode(
+    ProtobufLogType *type, void *encoded_buf, uint32_t encoded_buf_size,
+    char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
+    char payload_sender_id[PLOG_MAX_SENDER_ID_LEN],
+    char payload_sender_version_patch[FW_METADATA_VERSION_TAG_BYTES], uint32_t *payload_send_time,
+    uint32_t *payload_sender_v_major, uint32_t *payload_sender_v_minor, uint32_t *num_events,
+    pebble_pipeline_Event *events, Uuid *event_uuids, uint32_t *num_sessions,
+    ActivitySession *sessions);

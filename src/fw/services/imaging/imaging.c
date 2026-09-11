@@ -49,7 +49,7 @@ static struct {
 static void prv_rx_reset(void) {
   kernel_free(s_rx.pixels);
   kernel_free(s_rx.palette);
-  s_rx = (__typeof__(s_rx)) { 0 };
+  s_rx = (__typeof__(s_rx)){0};
 }
 
 void imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {
@@ -89,8 +89,7 @@ static bool prv_type_latched_unsupported(CommSession *session, ImagingImageType 
 
 bool imaging_is_type_supported(ImagingImageType image_type) {
   CommSession *session = comm_session_get_system_session();
-  if (!session ||
-      !comm_session_has_capability(session, CommSessionImagingSupport)) {
+  if (!session || !comm_session_has_capability(session, CommSessionImagingSupport)) {
     return false;
   }
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -232,7 +231,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
         return;
       }
       for (uint8_t i = 0; i < palette_count; ++i) {
-        s_rx.palette[i] = (GColor) { .argb = cursor[i] };
+        s_rx.palette[i] = (GColor){.argb = cursor[i]};
       }
       cursor += palette_count;
     }
@@ -277,7 +276,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     bmp->row_size_bytes = s_rx.row_size_bytes;
     bmp->info.format = s_rx.format;
     bmp->info.version = GBITMAP_VERSION_CURRENT;
-    bmp->bounds = (GRect) { { 0, 0 }, { s_rx.width, s_rx.height } };
+    bmp->bounds = (GRect){{0, 0}, {s_rx.width, s_rx.height}};
     bmp->palette = s_rx.palette;
     // Ownership of the pixel and palette buffers moves into the bitmap.
     const uint8_t token = s_rx.token;

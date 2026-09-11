@@ -28,29 +28,30 @@ typedef struct WatchfaceData {
 static WatchfaceData s_watchface_data;
 
 void watchface_launch_default(const CompositorTransition *animation) {
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-    .id = watchface_get_default_install_id(),
-    .common.transition = animation,
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+      .id = watchface_get_default_install_id(),
+      .common.transition = animation,
   });
 }
 
-static void prv_launch_app_via_button(AppLaunchEventConfig *config,
-                                      ClickRecognizerRef recognizer) {
+static void prv_launch_app_via_button(AppLaunchEventConfig *config, ClickRecognizerRef recognizer) {
   config->common.button = click_recognizer_get_button_id(recognizer);
   app_manager_put_launch_app_event(config);
 }
 
 static void prv_launch_launcher(ClickRecognizerRef recognizer, void *data) {
-  static const LauncherMenuArgs s_launcher_args = { .reset_scroll = true };
-  prv_launch_app_via_button(&(AppLaunchEventConfig) {
-    .id = APP_ID_LAUNCHER_MENU,
-    .common.args = &s_launcher_args,
-  }, recognizer);
+  static const LauncherMenuArgs s_launcher_args = {.reset_scroll = true};
+  prv_launch_app_via_button(
+      &(AppLaunchEventConfig){
+          .id = APP_ID_LAUNCHER_MENU,
+          .common.args = &s_launcher_args,
+      },
+      recognizer);
 }
 
 static void prv_launch_timeline(ClickRecognizerRef recognizer, void *data) {
   static TimelineArgs s_timeline_args = {
-    .pin_id = UUID_INVALID_INIT,
+      .pin_id = UUID_INVALID_INIT,
   };
   switch (click_recognizer_get_button_id(recognizer)) {
     case BUTTON_ID_DOWN:
@@ -63,10 +64,12 @@ static void prv_launch_timeline(ClickRecognizerRef recognizer, void *data) {
       WTF;
   }
 
-  prv_launch_app_via_button(&(AppLaunchEventConfig) {
-    .id = APP_ID_TIMELINE,
-    .common.args = &s_timeline_args,
-  }, recognizer);
+  prv_launch_app_via_button(
+      &(AppLaunchEventConfig){
+          .id = APP_ID_TIMELINE,
+          .common.args = &s_timeline_args,
+      },
+      recognizer);
 }
 
 static void prv_configure_click(ButtonId button_id, ClickHandler click_handler) {
@@ -94,15 +97,15 @@ void watchface_handle_button_event(PebbleEvent *e) {
   if (app_manager_get_task_context()->closing_state == ProcessRunState_Running) {
     data->button_pressed = e->button.button_id;
     switch (e->type) {
-    case PEBBLE_BUTTON_DOWN_EVENT:
-      click_recognizer_handle_button_down(&data->click_manager.recognizers[e->button.button_id]);
-      break;
-    case PEBBLE_BUTTON_UP_EVENT:
-      click_recognizer_handle_button_up(&data->click_manager.recognizers[e->button.button_id]);
-      break;
-    default:
-      PBL_CROAK("Invalid event type: %u", e->type);
-      break;
+      case PEBBLE_BUTTON_DOWN_EVENT:
+        click_recognizer_handle_button_down(&data->click_manager.recognizers[e->button.button_id]);
+        break;
+      case PEBBLE_BUTTON_UP_EVENT:
+        click_recognizer_handle_button_up(&data->click_manager.recognizers[e->button.button_id]);
+        break;
+      default:
+        PBL_CROAK("Invalid event type: %u", e->type);
+        break;
     }
   }
 }

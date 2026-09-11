@@ -14,8 +14,8 @@ static bool s_mfg_mode = false;
 static void prv_launch_mfg_app(void *data) {
   // Make sure we can launch our MFG app and subsequent apps.
   app_manager_set_minimum_run_level(ProcessAppRunLevelNormal);
-  app_manager_launch_new_app(&(AppLaunchConfig) {
-    .md = mfg_menu_app_get_info(),
+  app_manager_launch_new_app(&(AppLaunchConfig){
+      .md = mfg_menu_app_get_info(),
   });
 }
 
@@ -41,4 +41,3 @@ bool mfg_is_mfg_mode(void) {
 void command_enter_mfg(void) {
   mfg_enter_mfg_mode_and_launch_app();
 }
-

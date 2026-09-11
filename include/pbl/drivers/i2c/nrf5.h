@@ -10,5 +10,5 @@
 
 typedef struct I2CBusHal {
   nrfx_twim_t twim;
-  nrf_twim_frequency_t frequency; ///< Bus clock speed
+  nrf_twim_frequency_t frequency;  ///< Bus clock speed
 } I2CBusHal;

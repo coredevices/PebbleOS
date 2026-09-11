@@ -83,8 +83,8 @@ bool gpath_builder_line_to_point(GPathBuilder *builder, GPoint to_point);
 //! @param control_point_1 control point for start of the bezier curve
 //! @param control_point_2 control point for end of the bezier curve
 //! @return True if curve was added successfully False if there was no space in GPathBuilder struct
-bool gpath_builder_curve_to_point(GPathBuilder *builder, GPoint to_point,
-                                  GPoint control_point_1, GPoint control_point_2);
+bool gpath_builder_curve_to_point(GPathBuilder *builder, GPoint to_point, GPoint control_point_1,
+                                  GPoint control_point_2);
 
 //! Creates a new GPath on the heap based on a data from GPathBuilder
 //!

@@ -26,15 +26,14 @@ typedef enum {
 typedef struct AppLaunchConfig {
   LaunchConfigCommon common;
   const PebbleProcessMd *md;
-  bool restart; //!< Allows the current app to be restarted
-  bool forcefully; //!< Causes the current app to be forcefully closed
+  bool restart;     //!< Allows the current app to be restarted
+  bool forcefully;  //!< Causes the current app to be forcefully closed
 } AppLaunchConfig;
 
 typedef struct AppLaunchEventConfig {
   LaunchConfigCommon common;
   AppInstallId id;
 } AppLaunchEventConfig;
-
 
 // App management functions
 void app_manager_init(void);
@@ -44,7 +43,6 @@ bool app_manager_is_initialized(void);
 void app_manager_start_first_app(void);
 
 bool app_manager_is_first_app_launched(void);
-
 
 //! Start up a new application with the given metadata. This will kill the currently running app.
 //! May only be called from the KernelMain task
@@ -62,10 +60,10 @@ void app_manager_close_current_app(bool gracefully);
 //! Stop the current app, and bring up the launcher.
 void app_manager_force_quit_to_launcher(void);
 
-//! Sets a minimum run level for app launches that interrupt the current running app. Any app below the specified
-//! will be ignored when trying to launch.
-//! The minimum run level will be reset to the incoming app whenever an app is launched. This function just allows
-//! an app to modify the minimum level between app changes.
+//! Sets a minimum run level for app launches that interrupt the current running app. Any app below
+//! the specified will be ignored when trying to launch. The minimum run level will be reset to the
+//! incoming app whenever an app is launched. This function just allows an app to modify the minimum
+//! level between app changes.
 void app_manager_set_minimum_run_level(ProcessAppRunLevel run_level);
 
 //! Gets the wakeup info from the PebbleEvent sent to app_manager
@@ -84,13 +82,13 @@ void app_manager_put_launch_app_event(const AppLaunchEventConfig *config);
 // Getters For App Management State
 ///////////////////////////////////////////////////////////////////////////////
 
-const PebbleProcessMd* app_manager_get_current_app_md(void);
+const PebbleProcessMd *app_manager_get_current_app_md(void);
 
 AppInstallId app_manager_get_current_app_id(void);
 
-const PebbleProcessMd* app_manager_get_current_worker(void);
+const PebbleProcessMd *app_manager_get_current_worker(void);
 
-ProcessContext* app_manager_get_task_context(void);
+ProcessContext *app_manager_get_task_context(void);
 
 bool app_manager_is_watchface_running(void);
 
@@ -102,8 +100,6 @@ ButtonId app_manager_get_launch_button(void);
 
 void app_manager_get_framebuffer_size(GSize *size);
 
-
 //! Exit the application. Do some cleanup to make sure things close nicely.
 //! Called from the app task
 NORETURN app_task_exit(void);
-

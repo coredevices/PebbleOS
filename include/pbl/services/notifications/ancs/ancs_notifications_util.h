@@ -21,11 +21,11 @@ typedef struct PACKED ANCSAppMetadata {
 #if PBL_COLOR
   uint8_t app_color;
 #endif
-  bool is_blocked:1; //<! Whether the app's notifications should always be ignored
-  bool is_unblockable:1; //<! Whether the app's notifications should never be ignored
+  bool is_blocked : 1;      //<! Whether the app's notifications should always be ignored
+  bool is_unblockable : 1;  //<! Whether the app's notifications should never be ignored
 } ANCSAppMetadata;
 
-const ANCSAppMetadata* ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id);
+const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id);
 
 time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_attr);
 

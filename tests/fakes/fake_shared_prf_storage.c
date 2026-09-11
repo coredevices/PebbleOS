@@ -50,16 +50,13 @@ void shared_prf_storage_set_root_keys(SM128BitKey *keys_in) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Data
 
-bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out,
-                                             char *name_out, bool *requires_address_pinning_out,
-                                             uint8_t *flags) {
+bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out, char *name_out,
+                                             bool *requires_address_pinning_out, uint8_t *flags) {
   return false;
 }
 
-
-void shared_prf_storage_store_ble_pairing_data(const SMPairingInfo *pairing_info,
-                                               char *name, bool requires_address_pinning,
-                                               uint8_t flags) {
+void shared_prf_storage_store_ble_pairing_data(const SMPairingInfo *pairing_info, char *name,
+                                               bool requires_address_pinning, uint8_t flags) {
   s_prf_storage_ble_delete_count++;
   s_prf_storage_ble_store_count++;
 }
@@ -78,8 +75,7 @@ bool shared_prf_storage_get_bt_classic_pairing_data(BTDeviceAddress *addr_out,
   return false;
 }
 
-void shared_prf_storage_store_bt_classic_pairing_data(BTDeviceAddress *addr,
-                                                      char *device_name,
+void shared_prf_storage_store_bt_classic_pairing_data(BTDeviceAddress *addr, char *device_name,
                                                       SM128BitKey *link_key,
                                                       uint8_t platform_bits) {
 }

@@ -83,8 +83,7 @@ const BTDeviceInternal *fake_gatt_get_service_changed_last_device(void);
 ATTHandleRange fake_gatt_get_service_changed_last_range(void);
 
 //! Feeds a single discovered service to the firmware, as the driver would.
-void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
-                                                const Service *service);
+void fake_gatt_put_discovery_indication_service(unsigned int connection_id, const Service *service);
 
 //! Simulates the driver reporting service discovery completion with the given
 //! status (see GATT_SERVICE_DISCOVERY_STATUS_*).

@@ -27,25 +27,32 @@
 
 // Overrides
 //////////////////////////////////////////////////////////
-void sys_get_time_ms(time_t *t, uint16_t *out_ms) {}
+void sys_get_time_ms(time_t *t, uint16_t *out_ms) {
+}
 
 time_t sys_time_utc_to_local(time_t t) {
   return t;
 }
 
-size_t localized_strftime(char* s, size_t maxsize, const char* format,
-    const struct tm* tim_p, char *locale) { return 0; }
+size_t localized_strftime(char *s, size_t maxsize, const char *format, const struct tm *tim_p,
+                          char *locale) {
+  return 0;
+}
 
 const char *get_timezone_abbr(void) {
   static const char s_timezone_abbr[] = "A";
   return s_timezone_abbr;
 }
 
-int32_t time_get_gmtoffset(void) { return 0; }
-int32_t time_get_dstoffset(void) { return 0; }
+int32_t time_get_gmtoffset(void) {
+  return 0;
+}
+int32_t time_get_dstoffset(void) {
+  return 0;
+}
 
-void sys_copy_timezone_abbr(char* timezone_abbr, time_t time) {
-  const char* sys_tz = get_timezone_abbr();
+void sys_copy_timezone_abbr(char *timezone_abbr, time_t time) {
+  const char *sys_tz = get_timezone_abbr();
   strncpy(timezone_abbr, sys_tz, TZ_LEN);
 }
 
@@ -65,10 +72,10 @@ void test_pbl_std__get_id(void) {
   char str[STR_SIZE];
 
   // This is the message we should get back if we try and use floating point
-  const char* fp_msg = "floating point not supported in snprintf";
+  const char *fp_msg = "floating point not supported in snprintf";
 
   //----------------------------------------------------
-  pbl_snprintf(str, STR_SIZE, "%", 1);    // Make sure we don't barf if no type
+  pbl_snprintf(str, STR_SIZE, "%", 1);  // Make sure we don't barf if no type
   cl_assert_equal_s(str, "");
   pbl_snprintf(str, STR_SIZE, "%%", 1);
   cl_assert_equal_s(str, "%");

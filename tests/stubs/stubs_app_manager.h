@@ -45,7 +45,7 @@ bool WEAK app_manager_is_watchface_running(void) {
 }
 
 WakeupInfo WEAK app_manager_get_app_wakeup_state(void) {
-  return (WakeupInfo) {};
+  return (WakeupInfo){};
 }
 
 AppLaunchReason WEAK app_manager_get_launch_reason(void) {
@@ -65,7 +65,8 @@ bool WEAK app_manager_is_app_supported(const PebbleProcessMd *app_md) {
 }
 
 Version sys_get_current_app_sdk_version(void) {
-  return (Version) {PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR};
+  return (Version){PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR};
 }
 
-void WEAK app_manager_get_framebuffer_size(GSize *size) {}
+void WEAK app_manager_get_framebuffer_size(GSize *size) {
+}

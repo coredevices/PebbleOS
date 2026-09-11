@@ -10,7 +10,7 @@
 
 #define MINIMUM_PRECISE_STROKE_WIDTH 2
 
-MOCKABLE void graphics_line_draw_1px_non_aa(GContext* ctx, GPoint p0, GPoint p1) {
+MOCKABLE void graphics_line_draw_1px_non_aa(GContext *ctx, GPoint p0, GPoint p1) {
   p0.x += ctx->draw_state.drawing_box.origin.x;
   p1.x += ctx->draw_state.drawing_box.origin.x;
   p0.y += ctx->draw_state.drawing_box.origin.y;
@@ -54,7 +54,7 @@ MOCKABLE void graphics_line_draw_1px_non_aa(GContext* ctx, GPoint p0, GPoint p1)
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_line_draw_1px_aa(GContext* ctx, GPoint p0, GPoint p1) {
+MOCKABLE void graphics_line_draw_1px_aa(GContext *ctx, GPoint p0, GPoint p1) {
   // Implementation of Wu-Xiang fast anti-aliased line drawing algorithm
 
   // Points over which we're going to iterate adjusted to drawing_box
@@ -79,8 +79,12 @@ MOCKABLE void graphics_line_draw_1px_aa(GContext* ctx, GPoint p0, GPoint p1) {
 
   // Make sure the line runs top to bottom
   if (y1 > y2) {
-    tmp = y1; y1 = y2; y2 = tmp;
-    tmp = x1; x1 = x2; x2 = tmp;
+    tmp = y1;
+    y1 = y2;
+    y2 = tmp;
+    tmp = x1;
+    x1 = x2;
+    x2 = tmp;
   }
 
   // Draw the initial pixel
@@ -106,8 +110,8 @@ MOCKABLE void graphics_line_draw_1px_aa(GContext* ctx, GPoint p0, GPoint p1) {
     }
 
     graphics_private_draw_horizontal_line_prepared(ctx, framebuffer, &ctx->draw_state.clip_box, y1,
-                                                   (Fixed_S16_3) {.integer = start},
-                                                   (Fixed_S16_3) {.integer = end}, stroke_color);
+                                                   (Fixed_S16_3){.integer = start},
+                                                   (Fixed_S16_3){.integer = end}, stroke_color);
   } else if (dx == 0) {
     // Vertical line
     graphics_private_draw_vertical_line_prepared(ctx, framebuffer, &ctx->draw_state.clip_box, x1,
@@ -139,7 +143,7 @@ MOCKABLE void graphics_line_draw_1px_aa(GContext* ctx, GPoint p0, GPoint p1) {
       // Y-major line; calculate 16-bit fixed-point fractional part of a
       // pixel that X advances each time Y advances 1 pixel, truncating the
       // result so that we won't overrun the endpoint along the X axis
-      error_adj = ((uint32_t)(dx) << 16) / (uint32_t) dy;
+      error_adj = ((uint32_t)(dx) << 16) / (uint32_t)dy;
 
       // Draw all pixels other than the first and last
       while (--dy) {
@@ -164,15 +168,15 @@ MOCKABLE void graphics_line_draw_1px_aa(GContext* ctx, GPoint p0, GPoint p1) {
                                   stroke_color);
     } else {
       // It's an X-major line
-      error_adj = ((uint32_t) dy << 16) / (uint32_t) dx;
+      error_adj = ((uint32_t)dy << 16) / (uint32_t)dx;
 
       // Draw all pixels other than the first and last
       while (--dx) {
         error_acc_temp = error_acc;
         error_acc += error_adj;
         if (error_acc <= error_acc_temp) {
-           // The error accumulator turned over, so advance the Y coord
-           y1++;
+          // The error accumulator turned over, so advance the Y coord
+          y1++;
         }
         x1 += xi;
         weighting = error_acc >> intensity_shift;
@@ -190,7 +194,7 @@ MOCKABLE void graphics_line_draw_1px_aa(GContext* ctx, GPoint p0, GPoint p1) {
   // Release the framebuffer after we're done
   graphics_release_frame_buffer(ctx, framebuffer);
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
 static Fixed_S16_3 prv_get_circle_border_precise(int16_t y, uint16_t radius) {
   // This is so we operate in middle of the pixel, not on the edge
@@ -200,7 +204,8 @@ static Fixed_S16_3 prv_get_circle_border_precise(int16_t y, uint16_t radius) {
 }
 
 static void prv_calc_cap_prepared(Fixed_S16_3 cap_center, Fixed_S16_3 cap_center_offset,
-          Fixed_S16_3 cap_radius, Fixed_S16_3 progress, Fixed_S16_3 *min, Fixed_S16_3 *max) {
+                                  Fixed_S16_3 cap_radius, Fixed_S16_3 progress, Fixed_S16_3 *min,
+                                  Fixed_S16_3 *max) {
   if (progress.raw_value >= cap_center.raw_value - cap_radius.raw_value &&
       progress.raw_value <= cap_center.raw_value + cap_radius.raw_value) {
     int16_t circle_min;
@@ -211,15 +216,17 @@ static void prv_calc_cap_prepared(Fixed_S16_3 cap_center, Fixed_S16_3 cap_center
 
     if (progress.raw_value <= cap_center.raw_value) {
       // Top part of the circle
-      Fixed_S16_3 lookup_val = prv_get_circle_border_precise(cap_center.raw_value -
-                    progress.raw_value, cap_radius.raw_value + FIXED_S16_3_ONE.raw_value);
+      Fixed_S16_3 lookup_val =
+          prv_get_circle_border_precise(cap_center.raw_value - progress.raw_value,
+                                        cap_radius.raw_value + FIXED_S16_3_ONE.raw_value);
 
       circle_min = p_offset - r8 + lookup_val.raw_value;
       circle_max = p_offset + r8 - lookup_val.raw_value;
     } else {
       // Bottom part of the circle
-      Fixed_S16_3 lookup_val = prv_get_circle_border_precise(progress.raw_value -
-                    cap_center.raw_value, cap_radius.raw_value + FIXED_S16_3_ONE.raw_value);
+      Fixed_S16_3 lookup_val =
+          prv_get_circle_border_precise(progress.raw_value - cap_center.raw_value,
+                                        cap_radius.raw_value + FIXED_S16_3_ONE.raw_value);
       circle_min = p_offset - r8 + lookup_val.raw_value;
       circle_max = p_offset + r8 - lookup_val.raw_value;
     }
@@ -229,28 +236,28 @@ static void prv_calc_cap_prepared(Fixed_S16_3 cap_center, Fixed_S16_3 cap_center
   }
 }
 
-static void prv_calc_cap_horiz(GPointPrecise *line_end_point, Fixed_S16_3 cap_radius,
-                        int16_t y, Fixed_S16_3 *left_margin, Fixed_S16_3 *right_margin) {
+static void prv_calc_cap_horiz(GPointPrecise *line_end_point, Fixed_S16_3 cap_radius, int16_t y,
+                               Fixed_S16_3 *left_margin, Fixed_S16_3 *right_margin) {
   // This function will calculate edges of the cap for stroked line using horizontal lines
   Fixed_S16_3 progress = (Fixed_S16_3){.integer = y};
 
-  prv_calc_cap_prepared(line_end_point->y, line_end_point->x,
-                        cap_radius, progress, left_margin, right_margin);
+  prv_calc_cap_prepared(line_end_point->y, line_end_point->x, cap_radius, progress, left_margin,
+                        right_margin);
 }
 
-static void prv_calc_cap_vert(GPointPrecise *line_end_point, Fixed_S16_3 cap_radius,
-                       int16_t x, Fixed_S16_3 *top_margin, Fixed_S16_3 *bottom_margin) {
+static void prv_calc_cap_vert(GPointPrecise *line_end_point, Fixed_S16_3 cap_radius, int16_t x,
+                              Fixed_S16_3 *top_margin, Fixed_S16_3 *bottom_margin) {
   // This function will calculate edges of the cap for stroked line using vertical lines
   Fixed_S16_3 progress = (Fixed_S16_3){.integer = x};
 
-  prv_calc_cap_prepared(line_end_point->x, line_end_point->y,
-                        cap_radius, progress, top_margin, bottom_margin);
+  prv_calc_cap_prepared(line_end_point->x, line_end_point->y, cap_radius, progress, top_margin,
+                        bottom_margin);
 }
 
 // Finds edge points of the rectangle and returns true if line is vertically dominant
 static bool prv_calc_far_points(GPointPrecise *p0, GPointPrecise *p1, Fixed_S16_3 radius,
-                     GPointPrecise *far_top, GPointPrecise *far_bottom,
-                     GPointPrecise *far_left, GPointPrecise *far_right) {
+                                GPointPrecise *far_top, GPointPrecise *far_bottom,
+                                GPointPrecise *far_left, GPointPrecise *far_right) {
   // Increase precision for square root function so we wont lose results when p0 and p1
   //   are closer to each other than 1px on screen
   const int64_t fixed_precision = 4;
@@ -346,8 +353,8 @@ static bool prv_calc_far_points(GPointPrecise *p0, GPointPrecise *p1, Fixed_S16_
   return false;
 }
 
-void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecise p1,
-                                    uint8_t width) {
+void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecise p1,
+                                   uint8_t width) {
   // This function will draw thick line on the screen using following technique:
   // - calculate offset points of the line
   // - calculate margin for the round caps at the end of the line
@@ -362,8 +369,8 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
   Fixed_S16_3 radius = (Fixed_S16_3){.raw_value = ((width - 1) * FIXED_S16_3_ONE.raw_value) / 2};
 
   // Check if the line is in fact point and lies exactly on the pixel
-  if (p0.x.raw_value == p1.x.raw_value && p0.y.raw_value == p1.y.raw_value &&
-        p0.x.fraction == 0 && p0.y.fraction == 0) {
+  if (p0.x.raw_value == p1.x.raw_value && p0.y.raw_value == p1.y.raw_value && p0.x.fraction == 0 &&
+      p0.y.fraction == 0) {
     // Color hack
     const GColor temp_color = ctx->draw_state.fill_color;
 
@@ -384,9 +391,8 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
   GPointPrecise far_left;
   GPointPrecise far_right;
 
-  bool vertical = prv_calc_far_points(&p0, &p1, radius,
-                                      &far_top, &far_bottom,
-                                      &far_left, &far_right);
+  bool vertical =
+      prv_calc_far_points(&p0, &p1, radius, &far_top, &far_bottom, &far_left, &far_right);
 
   // To compensate for rounding errors we need to add half of the precision in specific places
   //   - we add on top if line is leaning backward
@@ -397,8 +403,8 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
   bool delta_y_is_positive = ((p1.y.raw_value - p0.y.raw_value) >= 0);
   bool add_on_top = (delta_x_is_positive == delta_y_is_positive);
 
-  uint8_t add_top = (add_on_top)? (FIXED_S16_3_ONE.raw_value / 2) : 0;
-  uint8_t add_bottom = (!add_on_top)? (FIXED_S16_3_ONE.raw_value / 2) : 0;
+  uint8_t add_top = (add_on_top) ? (FIXED_S16_3_ONE.raw_value / 2) : 0;
+  uint8_t add_bottom = (!add_on_top) ? (FIXED_S16_3_ONE.raw_value / 2) : 0;
 
   const int8_t fraction_mask = 0x7;
 
@@ -418,8 +424,8 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
     // Drawing loop: Iterates over horizontal lines
     // As part of optimisation, this algorithm is moving between drawing boundaries,
     // so drawing box has to be subtracted from its clipping extremes
-    const int16_t clip_min_y = ctx->draw_state.clip_box.origin.y
-                               - ctx->draw_state.drawing_box.origin.y;
+    const int16_t clip_min_y =
+        ctx->draw_state.clip_box.origin.y - ctx->draw_state.drawing_box.origin.y;
     const int16_t clip_max_y = clip_min_y + ctx->draw_state.clip_box.size.h;
     const int16_t y_min = CLIP(top_point >> FIXED_S16_3_PRECISION, clip_min_y, clip_max_y);
     const int16_t y_max = CLIP(bottom_point >> FIXED_S16_3_PRECISION, clip_min_y, clip_max_y);
@@ -446,10 +452,11 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
 
       // Find edges for upper cap
       GPointPrecise top_point_tmp = (p0.y.raw_value < p1.y.raw_value) ? p0 : p1;
-      Fixed_S16_3 progress_line = (Fixed_S16_3){.raw_value = (y * FIXED_S16_3_ONE.raw_value +
-                                                              FIXED_S16_3_ONE.raw_value / 2)};
-      prv_calc_cap_prepared(top_point_tmp.y, top_point_tmp.x, radius,
-                            progress_line, &left_margin, &right_margin);
+      Fixed_S16_3 progress_line = (Fixed_S16_3){
+          .raw_value = (y * FIXED_S16_3_ONE.raw_value + FIXED_S16_3_ONE.raw_value / 2)
+      };
+      prv_calc_cap_prepared(top_point_tmp.y, top_point_tmp.x, radius, progress_line, &left_margin,
+                            &right_margin);
 
       // Finally draw line
       if (left_margin.raw_value <= right_margin.raw_value) {
@@ -481,17 +488,21 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
         // TODO: ^^ also possible avoid of following logic to avoid division by zero
         // Main part of the stroked line
         if (lm_p1.y.raw_value != lm_p0.y.raw_value) {
-          left_margin.raw_value = lm_p0.x.raw_value + ((lm_p1.x.raw_value - lm_p0.x.raw_value)
-            * (y - ((lm_p0.y.raw_value + add_top) / FIXED_S16_3_ONE.raw_value)))
-            * FIXED_S16_3_ONE.raw_value / (lm_p1.y.raw_value - lm_p0.y.raw_value);
+          left_margin.raw_value =
+              lm_p0.x.raw_value +
+              ((lm_p1.x.raw_value - lm_p0.x.raw_value) *
+               (y - ((lm_p0.y.raw_value + add_top) / FIXED_S16_3_ONE.raw_value))) *
+                  FIXED_S16_3_ONE.raw_value / (lm_p1.y.raw_value - lm_p0.y.raw_value);
         } else {
           left_margin.raw_value = lm_p0.x.raw_value;
         }
 
         if (rm_p1.y.raw_value != rm_p0.y.raw_value) {
-          right_margin.raw_value = rm_p0.x.raw_value + ((rm_p1.x.raw_value - rm_p0.x.raw_value)
-            * (y - ((rm_p0.y.raw_value + add_bottom) / FIXED_S16_3_ONE.raw_value)))
-            * FIXED_S16_3_ONE.raw_value / (rm_p1.y.raw_value - rm_p0.y.raw_value);
+          right_margin.raw_value =
+              rm_p0.x.raw_value +
+              ((rm_p1.x.raw_value - rm_p0.x.raw_value) *
+               (y - ((rm_p0.y.raw_value + add_bottom) / FIXED_S16_3_ONE.raw_value))) *
+                  FIXED_S16_3_ONE.raw_value / (rm_p1.y.raw_value - rm_p0.y.raw_value);
         } else {
           right_margin.raw_value = rm_p0.x.raw_value;
         }
@@ -517,10 +528,11 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
 
       // Find edges for bottom cap
       GPointPrecise bottom_point_tmp = (p0.y.raw_value > p1.y.raw_value) ? p0 : p1;
-      Fixed_S16_3 progress_line = (Fixed_S16_3){.raw_value = (y * FIXED_S16_3_ONE.raw_value -
-                                                              FIXED_S16_3_ONE.raw_value / 2)};
-      prv_calc_cap_prepared(bottom_point_tmp.y, bottom_point_tmp.x, radius,
-                            progress_line, &left_margin, &right_margin);
+      Fixed_S16_3 progress_line = (Fixed_S16_3){
+          .raw_value = (y * FIXED_S16_3_ONE.raw_value - FIXED_S16_3_ONE.raw_value / 2)
+      };
+      prv_calc_cap_prepared(bottom_point_tmp.y, bottom_point_tmp.x, radius, progress_line,
+                            &left_margin, &right_margin);
 
       // Finally draw line
       if (left_margin.raw_value <= right_margin.raw_value) {
@@ -536,21 +548,23 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
     GPointPrecise bm_p0 = far_left;
     GPointPrecise bm_p1 = far_bottom;
 
-    const int8_t fraction_for_left = (MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value)
-                                      & fraction_mask;
-    const int8_t fraction_for_right = (MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value)
-                                       & fraction_mask;
+    const int8_t fraction_for_left =
+        (MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value) & fraction_mask;
+    const int8_t fraction_for_right =
+        (MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value) & fraction_mask;
 
     // Drawing loop: Iterates over vertical lines from left to right
     // As part of optimisation, this algorithm is moving between drawing boundaries,
     // so drawing box has to be subtracted from its clipping extremes
-    const int16_t clip_min_x = ctx->draw_state.clip_box.origin.x
-                               - ctx->draw_state.drawing_box.origin.x;
+    const int16_t clip_min_x =
+        ctx->draw_state.clip_box.origin.x - ctx->draw_state.drawing_box.origin.x;
     const int16_t clip_max_x = clip_min_x + ctx->draw_state.clip_box.size.w;
-    const int16_t x_min = CLIP((MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value)
-                                >> FIXED_S16_3_PRECISION, clip_min_x, clip_max_x);
-    const int16_t x_max = CLIP((MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value)
-                                >> FIXED_S16_3_PRECISION, clip_min_x, clip_max_x);
+    const int16_t x_min =
+        CLIP((MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value) >> FIXED_S16_3_PRECISION,
+             clip_min_x, clip_max_x);
+    const int16_t x_max =
+        CLIP((MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value) >> FIXED_S16_3_PRECISION,
+             clip_min_x, clip_max_x);
 
     // Blending of first line
     if (fraction_for_left != 0) {
@@ -574,10 +588,11 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
 
       // Find edges for left cap
       GPointPrecise left_point_tmp = (p0.y.raw_value < p1.y.raw_value) ? p0 : p1;
-      Fixed_S16_3 progress_line = (Fixed_S16_3){.raw_value = (x * FIXED_S16_3_ONE.raw_value +
-                                                              FIXED_S16_3_ONE.raw_value / 2)};
-      prv_calc_cap_prepared(left_point_tmp.x, left_point_tmp.y, radius,
-                            progress_line, &top_margin, &bottom_margin);
+      Fixed_S16_3 progress_line = (Fixed_S16_3){
+          .raw_value = (x * FIXED_S16_3_ONE.raw_value + FIXED_S16_3_ONE.raw_value / 2)
+      };
+      prv_calc_cap_prepared(left_point_tmp.x, left_point_tmp.y, radius, progress_line, &top_margin,
+                            &bottom_margin);
 
       // Finally draw line
       if (top_margin.raw_value <= bottom_margin.raw_value) {
@@ -607,18 +622,21 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
       if (x >= far_left.x.integer && x <= far_right.x.integer) {
         // Main part of the stroked line
         if (tm_p1.x.raw_value != tm_p0.x.raw_value) {
-          top_margin.raw_value = tm_p0.y.raw_value + ((tm_p1.y.raw_value - tm_p0.y.raw_value)
-              * (x - ((tm_p0.x.raw_value + add_top) / FIXED_S16_3_ONE.raw_value)))
-              * FIXED_S16_3_ONE.raw_value / (tm_p1.x.raw_value - tm_p0.x.raw_value);
+          top_margin.raw_value =
+              tm_p0.y.raw_value +
+              ((tm_p1.y.raw_value - tm_p0.y.raw_value) *
+               (x - ((tm_p0.x.raw_value + add_top) / FIXED_S16_3_ONE.raw_value))) *
+                  FIXED_S16_3_ONE.raw_value / (tm_p1.x.raw_value - tm_p0.x.raw_value);
         } else {
           top_margin.raw_value = tm_p0.y.raw_value;
         }
 
         if (bm_p1.x.raw_value != bm_p0.x.raw_value) {
           bottom_margin.raw_value =
-            bm_p0.y.raw_value + ((bm_p1.y.raw_value - bm_p0.y.raw_value)
-              * (x - ((bm_p0.x.raw_value + add_bottom) / FIXED_S16_3_ONE.raw_value)))
-              * FIXED_S16_3_ONE.raw_value / (bm_p1.x.raw_value - bm_p0.x.raw_value);
+              bm_p0.y.raw_value +
+              ((bm_p1.y.raw_value - bm_p0.y.raw_value) *
+               (x - ((bm_p0.x.raw_value + add_bottom) / FIXED_S16_3_ONE.raw_value))) *
+                  FIXED_S16_3_ONE.raw_value / (bm_p1.x.raw_value - bm_p0.x.raw_value);
         } else {
           bottom_margin.raw_value = bm_p0.y.raw_value;
         }
@@ -644,10 +662,11 @@ void prv_draw_stroked_line_precise(GContext* ctx, GPointPrecise p0, GPointPrecis
 
       // Find edges for right cap
       GPointPrecise right_point_tmp = (p0.x.raw_value > p1.x.raw_value) ? p0 : p1;
-      Fixed_S16_3 progress_line = (Fixed_S16_3){.raw_value = (x * FIXED_S16_3_ONE.raw_value -
-                                                              FIXED_S16_3_ONE.raw_value / 2)};
-      prv_calc_cap_prepared(right_point_tmp.x, right_point_tmp.y, radius,
-                            progress_line, &top_margin, &bottom_margin);
+      Fixed_S16_3 progress_line = (Fixed_S16_3){
+          .raw_value = (x * FIXED_S16_3_ONE.raw_value - FIXED_S16_3_ONE.raw_value / 2)
+      };
+      prv_calc_cap_prepared(right_point_tmp.x, right_point_tmp.y, radius, progress_line,
+                            &top_margin, &bottom_margin);
 
       // Finally draw line
       if (top_margin.raw_value <= bottom_margin.raw_value) {
@@ -666,7 +685,7 @@ static void prv_adjust_stroked_line_width(uint8_t *width) {
   }
 }
 
-static void prv_draw_stroked_line_override_aa(GContext* ctx, GPointPrecise p0, GPointPrecise p1,
+static void prv_draw_stroked_line_override_aa(GContext *ctx, GPointPrecise p0, GPointPrecise p1,
                                               uint8_t width, bool anti_aliased) {
 #if PBL_COLOR
   // Force antialiasing setting
@@ -684,15 +703,15 @@ static void prv_draw_stroked_line_override_aa(GContext* ctx, GPointPrecise p0, G
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_line_draw_stroked_aa(GContext* ctx, GPoint p0, GPoint p1,
+MOCKABLE void graphics_line_draw_stroked_aa(GContext *ctx, GPoint p0, GPoint p1,
                                             uint8_t stroke_width) {
   prv_adjust_stroked_line_width(&stroke_width);
   prv_draw_stroked_line_override_aa(ctx, GPointPreciseFromGPoint(p0), GPointPreciseFromGPoint(p1),
                                     stroke_width, true);
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
-MOCKABLE void graphics_line_draw_stroked_non_aa(GContext* ctx, GPoint p0, GPoint p1,
+MOCKABLE void graphics_line_draw_stroked_non_aa(GContext *ctx, GPoint p0, GPoint p1,
                                                 uint8_t stroke_width) {
   prv_adjust_stroked_line_width(&stroke_width);
   prv_draw_stroked_line_override_aa(ctx, GPointPreciseFromGPoint(p0), GPointPreciseFromGPoint(p1),
@@ -700,18 +719,18 @@ MOCKABLE void graphics_line_draw_stroked_non_aa(GContext* ctx, GPoint p0, GPoint
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_line_draw_precise_stroked_aa(GContext* ctx, GPointPrecise p0,
+MOCKABLE void graphics_line_draw_precise_stroked_aa(GContext *ctx, GPointPrecise p0,
                                                     GPointPrecise p1, uint8_t stroke_width) {
   prv_draw_stroked_line_override_aa(ctx, p0, p1, stroke_width, true);
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
-MOCKABLE void graphics_line_draw_precise_stroked_non_aa(GContext* ctx, GPointPrecise p0,
+MOCKABLE void graphics_line_draw_precise_stroked_non_aa(GContext *ctx, GPointPrecise p0,
                                                         GPointPrecise p1, uint8_t stroke_width) {
   prv_draw_stroked_line_override_aa(ctx, p0, p1, stroke_width, false);
 }
 
-void graphics_line_draw_precise_stroked(GContext* ctx, GPointPrecise p0, GPointPrecise p1) {
+void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointPrecise p1) {
   if (ctx->draw_state.stroke_width >= MINIMUM_PRECISE_STROKE_WIDTH) {
     prv_draw_stroked_line_precise(ctx, p0, p1, ctx->draw_state.stroke_width);
   } else {
@@ -719,7 +738,7 @@ void graphics_line_draw_precise_stroked(GContext* ctx, GPointPrecise p0, GPointP
   }
 }
 
-void graphics_draw_line(GContext* ctx, GPoint p0, GPoint p1) {
+void graphics_draw_line(GContext *ctx, GPoint p0, GPoint p1) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
@@ -747,7 +766,7 @@ void graphics_draw_line(GContext* ctx, GPoint p0, GPoint p1) {
   }
 }
 
-static void prv_draw_dotted_line(GContext* ctx, GPoint p0, uint16_t length, bool vertical) {
+static void prv_draw_dotted_line(GContext *ctx, GPoint p0, uint16_t length, bool vertical) {
   PBL_ASSERTN(ctx);
   if (ctx->lock || (length == 0)) {
     return;
@@ -779,10 +798,10 @@ static void prv_draw_dotted_line(GContext* ctx, GPoint p0, uint16_t length, bool
   }
 }
 
-void graphics_draw_vertical_line_dotted(GContext* ctx, GPoint p0, uint16_t length) {
+void graphics_draw_vertical_line_dotted(GContext *ctx, GPoint p0, uint16_t length) {
   prv_draw_dotted_line(ctx, p0, length, true);
 }
 
-void graphics_draw_horizontal_line_dotted(GContext* ctx, GPoint p0, uint16_t length) {
+void graphics_draw_horizontal_line_dotted(GContext *ctx, GPoint p0, uint16_t length) {
   prv_draw_dotted_line(ctx, p0, length, false);
 }

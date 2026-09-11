@@ -82,8 +82,8 @@ bool gap_le_is_advertising_enabled(void) {
 // Expected ms values for each interval preset, matching s_interval_ms in
 // gap_le_advert.c.
 static const uint32_t s_expected_interval_ms[] = {
-  [GAPLEAdvertisingInterval_Short] = 20,
-  [GAPLEAdvertisingInterval_Long]  = 1022,
+    [GAPLEAdvertisingInterval_Short] = 20,
+    [GAPLEAdvertisingInterval_Long] = 1022,
 };
 
 void gap_le_assert_advertising_interval(GAPLEAdvertisingInterval expected) {

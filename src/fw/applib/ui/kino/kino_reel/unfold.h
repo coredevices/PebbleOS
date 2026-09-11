@@ -7,11 +7,9 @@
 
 #include "applib/ui/kino/kino_reel.h"
 
-#define UNFOLD_DEFAULT_POINT_DURATION \
-  Fixed_S32_16(FIXED_S32_16_ONE.raw_value / 6)
+#define UNFOLD_DEFAULT_POINT_DURATION Fixed_S32_16(FIXED_S32_16_ONE.raw_value / 6)
 
-#define UNFOLD_DEFAULT_EFFECT_DURATION \
-  Fixed_S32_16(3 * FIXED_S32_16_ONE.raw_value / 4)
+#define UNFOLD_DEFAULT_EFFECT_DURATION Fixed_S32_16(3 * FIXED_S32_16_ONE.raw_value / 4)
 
 #define UNFOLD_DEFAULT_NUM_DELAY_GROUPS 3
 #define UNFOLD_DEFAULT_GROUP_DELAY Fixed_S32_16(FIXED_S32_16_ONE.raw_value * 3 / 2)

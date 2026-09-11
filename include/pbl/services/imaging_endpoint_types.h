@@ -31,9 +31,9 @@ typedef enum {
 
 //! Pixel encoding the watch is asking for (and that the response is packed in).
 typedef enum {
-  ImagingFormat1Bit = 0x00,        //!< 1-bpp black & white.
-  ImagingFormat8BitColor = 0x01,   //!< 8-bpp GColor8.
-  ImagingFormat4BitPalette = 0x02, //!< 4-bpp palettized GColor8 (up to 16 colours).
+  ImagingFormat1Bit = 0x00,         //!< 1-bpp black & white.
+  ImagingFormat8BitColor = 0x01,    //!< 8-bpp GColor8.
+  ImagingFormat4BitPalette = 0x02,  //!< 4-bpp palettized GColor8 (up to 16 colours).
 } ImagingFormat;
 
 //! Watch -> Phone. Fixed head, then type-specific parameters.
@@ -54,12 +54,12 @@ typedef struct PACKED {
 
 //! Flags byte in an ImageResponse chunk.
 typedef enum {
-  ImagingResponseFlagFirst = (1 << 0),   //!< First chunk; the image header precedes the pixels.
-  ImagingResponseFlagLast = (1 << 1),    //!< Last chunk of the transfer.
-  ImagingResponseFlagNoImage = (1 << 2), //!< Phone has no image; no pixels follow.
-  ImagingResponseFlagUnsupported = (1 << 3), //!< Phone can't serve this image type; no pixels
-                                             //!< follow. The watch latches the type off for the
-                                             //!< rest of the connection and stops requesting it.
+  ImagingResponseFlagFirst = (1 << 0),    //!< First chunk; the image header precedes the pixels.
+  ImagingResponseFlagLast = (1 << 1),     //!< Last chunk of the transfer.
+  ImagingResponseFlagNoImage = (1 << 2),  //!< Phone has no image; no pixels follow.
+  ImagingResponseFlagUnsupported = (1 << 3),  //!< Phone can't serve this image type; no pixels
+                                              //!< follow. The watch latches the type off for the
+                                              //!< rest of the connection and stops requesting it.
 } ImagingResponseFlags;
 
 //! Bits 4-7 of a response's `flags` carry the ImagingImageType it answers. Several consumers can

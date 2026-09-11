@@ -101,8 +101,9 @@ void property_animation_legacy2_init_layer_frame(
 //! the layer.
 //! @return A pointer to the property animation. `NULL` if animation could not
 //! be created
-struct PropertyAnimationLegacy2* property_animation_legacy2_create_layer_frame(struct Layer *layer,
-                          GRect *from_frame, GRect *to_frame);
+struct PropertyAnimationLegacy2 *property_animation_legacy2_create_layer_frame(struct Layer *layer,
+                                                                               GRect *from_frame,
+                                                                               GRect *to_frame);
 
 //////////////////////////////////////////
 // Implementing custom Property Animations
@@ -110,9 +111,10 @@ struct PropertyAnimationLegacy2* property_animation_legacy2_create_layer_frame(s
 
 //! @internal
 //! See \ref property_animation_legacy2_create() for a description of the parameter list
-void property_animation_legacy2_init(struct PropertyAnimationLegacy2 *property_animation,
-      const struct PropertyAnimationLegacy2Implementation *implementation, void *subject,
-      void *from_value, void *to_value);
+void property_animation_legacy2_init(
+    struct PropertyAnimationLegacy2 *property_animation,
+    const struct PropertyAnimationLegacy2Implementation *implementation, void *subject,
+    void *from_value, void *to_value);
 
 //! Creates a new PropertyAnimationLegacy2 on the heap and and initializes it with the specified
 //! values. The same defaults are used as with \ref animation_create().
@@ -132,13 +134,13 @@ void property_animation_legacy2_init(struct PropertyAnimationLegacy2 *property_a
 //! and to- values, effectively not doing anything.
 //! @return A pointer to the property animation. `NULL` if animation could not
 //! be created
-struct PropertyAnimationLegacy2* property_animation_legacy2_create(
-      const struct PropertyAnimationLegacy2Implementation *implementation, void *subject,
-      void *from_value, void *to_value);
+struct PropertyAnimationLegacy2 *property_animation_legacy2_create(
+    const struct PropertyAnimationLegacy2Implementation *implementation, void *subject,
+    void *from_value, void *to_value);
 
 //! Free a dynamically allocated property animation
 //! @param property_animation The property animation to be freed.
-void property_animation_legacy2_destroy(struct PropertyAnimationLegacy2* property_animation);
+void property_animation_legacy2_destroy(struct PropertyAnimationLegacy2 *property_animation);
 
 //! Default update callback for a property animations to update a property of type int16_t.
 //! Assign this function to the `.base.update` callback field of your
@@ -153,7 +155,7 @@ void property_animation_legacy2_destroy(struct PropertyAnimationLegacy2* propert
 //! @note This function is not supposed to be called "manually", but will be called automatically
 //! when the animation is being run.
 void property_animation_legacy2_update_int16(struct PropertyAnimationLegacy2 *property_animation,
-      const uint32_t distance_normalized);
+                                             const uint32_t distance_normalized);
 
 //! Default update callback for a property animations to update a property of type GPoint.
 //! Assign this function to the `.base.update` callback field of your
@@ -167,7 +169,7 @@ void property_animation_legacy2_update_int16(struct PropertyAnimationLegacy2 *pr
 //! @note This function is not supposed to be called "manually", but will be called automatically
 //! when the animation is being run.
 void property_animation_legacy2_update_gpoint(struct PropertyAnimationLegacy2 *property_animation,
-      const uint32_t distance_normalized);
+                                              const uint32_t distance_normalized);
 
 //! Default update callback for a property animations to update a property of type GRect.
 //! Assign this function to the `.base.update` callback field of your
@@ -182,7 +184,7 @@ void property_animation_legacy2_update_gpoint(struct PropertyAnimationLegacy2 *p
 //! @note This function is not supposed to be called "manually", but will be called automatically
 //! when the animation is being run.
 void property_animation_legacy2_update_grect(struct PropertyAnimationLegacy2 *property_animation,
-      const uint32_t distance_normalized);
+                                             const uint32_t distance_normalized);
 
 //! Data structure containing a collection of function pointers that form the implementation of the
 //! property animation.
@@ -220,8 +222,8 @@ typedef struct PropertyAnimationLegacy2 {
       //! Valid when the property being animated is of type int16_t
       int16_t int16;
     } from;
-  } values; //!< See detail table
-  void *subject; //!< The subject of the animation of which the property should be animated.
+  } values;       //!< See detail table
+  void *subject;  //!< The subject of the animation of which the property should be animated.
 } PropertyAnimationLegacy2;
 
 //!     @} // group PropertyAnimationLegacy2

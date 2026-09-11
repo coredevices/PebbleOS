@@ -44,7 +44,7 @@ typedef struct PACKED {
 } TimezoneDatabaseFlashHeader;
 #define TZDATA_HEADER_BYTES (sizeof(TimezoneDatabaseFlashHeader))
 
-#define TIMEZONE_CITY_LENGTH 15 // maximum length of the city name in timezone database
+#define TIMEZONE_CITY_LENGTH 15  // maximum length of the city name in timezone database
 #define REGION_BYTES (1 + TIMEZONE_CITY_LENGTH + 2 + 5 + 1)
 
 #define DST_RULE_BYTES (sizeof(TimezoneDSTRule))
@@ -54,46 +54,36 @@ typedef struct PACKED {
 #define LINK_NAME_LENGTH 33
 #define LINK_BYTES (LINK_REGION_LENGTH + LINK_NAME_LENGTH)
 
-
 //! Names for all the continents we support. The timezone database stores continents as indexes
 //! into this constant array.
-const char * const CONTINENT_NAMES[] = { "Africa",
-                                         "America",
-                                         "Antarctica",
-                                         "Asia",
-                                         "Atlantic",
-                                         "Australia",
-                                         "Europe",
-                                         "Indian",
-                                         "Pacific",
-                                         "Etc"};
-
+const char *const CONTINENT_NAMES[] = {"Africa",    "America", "Antarctica", "Asia",    "Atlantic",
+                                       "Australia", "Europe",  "Indian",     "Pacific", "Etc"};
 
 //! Helper function to curry out some common arguments to the resource reads in this file.
 static bool prv_database_read(uint32_t offset, void *data, size_t num_bytes) {
-  return resource_load_byte_range_system(SYSTEM_APP, RESOURCE_ID_TIMEZONE_DATABASE,
-                                         offset, data, num_bytes) == num_bytes;
+  return resource_load_byte_range_system(SYSTEM_APP, RESOURCE_ID_TIMEZONE_DATABASE, offset, data,
+                                         num_bytes) == num_bytes;
 }
 
 //! Note! This count includes rule 0 which isn't actually stored in the database.
 static int prv_get_dst_rule_count(void) {
   uint16_t dst_rule_count;
-  prv_database_read(offsetof(TimezoneDatabaseFlashHeader, dst_rule_count),
-                    &dst_rule_count, sizeof(dst_rule_count));
+  prv_database_read(offsetof(TimezoneDatabaseFlashHeader, dst_rule_count), &dst_rule_count,
+                    sizeof(dst_rule_count));
   return dst_rule_count;
 }
 
 static int prv_get_link_count(void) {
   uint16_t link_count;
-  prv_database_read(offsetof(TimezoneDatabaseFlashHeader, link_count),
-                    &link_count, sizeof(link_count));
+  prv_database_read(offsetof(TimezoneDatabaseFlashHeader, link_count), &link_count,
+                    sizeof(link_count));
   return link_count;
 }
 
 int timezone_database_get_region_count(void) {
   uint16_t region_count;
-  prv_database_read(offsetof(TimezoneDatabaseFlashHeader, region_count),
-                    &region_count, sizeof(region_count));
+  prv_database_read(offsetof(TimezoneDatabaseFlashHeader, region_count), &region_count,
+                    sizeof(region_count));
   return region_count;
 }
 
@@ -106,24 +96,24 @@ bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_inf
 
   //! Struct for reading data from a raw database of timezone information
   struct PACKED {
-    int16_t gmt_offset_minutes;   //!< timezone offset from UTC time (in minutes)
-    char tz_abbr[TZ_LEN - 1];     //!< timezone abbreviation (without terminating nul)
-    int8_t dst_id;                //!< daylight savings time index identifier
+    int16_t gmt_offset_minutes;  //!< timezone offset from UTC time (in minutes)
+    char tz_abbr[TZ_LEN - 1];    //!< timezone abbreviation (without terminating nul)
+    int8_t dst_id;               //!< daylight savings time index identifier
   } tz_data;
 
   // Load the timezone information for the region_id, excluding the country + city_name itself
   if (!prv_database_read(region_offset + 1 + TIMEZONE_CITY_LENGTH, &tz_data, sizeof(tz_data))) {
-    *tz_info = (TimezoneInfo) { .dst_id = 0 };
+    *tz_info = (TimezoneInfo){.dst_id = 0};
     return false;
   }
 
-  *tz_info = (TimezoneInfo) {
-    .dst_id = tz_data.dst_id,
-    .timezone_id = region_id,
-    .tm_gmtoff = tz_data.gmt_offset_minutes * SECONDS_PER_MINUTE,
-    // Leave the dst_start and dst_end timestamps uninitialized
-    .dst_start = 0,
-    .dst_end = 0
+  *tz_info = (TimezoneInfo){
+      .dst_id = tz_data.dst_id,
+      .timezone_id = region_id,
+      .tm_gmtoff = tz_data.gmt_offset_minutes * SECONDS_PER_MINUTE,
+      // Leave the dst_start and dst_end timestamps uninitialized
+      .dst_start = 0,
+      .dst_end = 0
   };
   memcpy(tz_info->tm_zone, tz_data.tz_abbr, sizeof(tz_data.tz_abbr));
 
@@ -182,7 +172,7 @@ bool timezone_database_load_dst_rule(uint8_t dst_id, TimezoneDSTRule *start, Tim
   // First half of the DST rule pair
   if (!prv_database_read(dst_rule_pair_offset, start, DST_RULE_BYTES) ||
       !prv_database_read(dst_rule_pair_offset + DST_RULE_BYTES, end, DST_RULE_BYTES)) {
-    PBL_LOG_WRN("Failed to load timezone for DST ID %"PRIu8, dst_id);
+    PBL_LOG_WRN("Failed to load timezone for DST ID %" PRIu8, dst_id);
     return false;
   }
 
@@ -225,7 +215,7 @@ static int prv_search_links_by_name(const char *region_name, int region_name_len
   for (int i = 0; i < link_count; i++) {
     const int link_offset = link_section_offset + (i * LINK_BYTES);
 
-    char link_name[LINK_NAME_LENGTH + 1]; // + max length + null terminator
+    char link_name[LINK_NAME_LENGTH + 1];  // + max length + null terminator
     prv_database_read(link_offset + LINK_REGION_LENGTH, link_name, LINK_NAME_LENGTH);
     link_name[sizeof(link_name) - 1] = '\0';
 

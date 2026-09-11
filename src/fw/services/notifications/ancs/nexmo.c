@@ -11,7 +11,7 @@
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
-T_STATIC char* NEXMO_REAUTH_STRING = "Pebble check-in code:";
+T_STATIC char *NEXMO_REAUTH_STRING = "Pebble check-in code:";
 
 bool nexmo_is_reauth_sms(const ANCSAttribute *app_id, const ANCSAttribute *message) {
   if (ancs_notifications_util_is_sms(app_id)) {
@@ -23,12 +23,10 @@ bool nexmo_is_reauth_sms(const ANCSAttribute *app_id, const ANCSAttribute *messa
   return false;
 }
 
-void nexmo_handle_reauth_sms(uint32_t uid,
-                             const ANCSAttribute *app_id,
-                             const ANCSAttribute *message,
-                             iOSNotifPrefs *existing_notif_prefs) {
-  const int num_existing_attributes = existing_notif_prefs ?
-                                      existing_notif_prefs->attr_list.num_attributes : 0;
+void nexmo_handle_reauth_sms(uint32_t uid, const ANCSAttribute *app_id,
+                             const ANCSAttribute *message, iOSNotifPrefs *existing_notif_prefs) {
+  const int num_existing_attributes =
+      existing_notif_prefs ? existing_notif_prefs->attr_list.num_attributes : 0;
 
   AttributeList new_attr_list;
   attribute_list_init_list(num_existing_attributes, &new_attr_list);
@@ -46,8 +44,8 @@ void nexmo_handle_reauth_sms(uint32_t uid,
   attribute_list_add_cstring(&new_attr_list, AttributeIdAuthCode, msg_buffer);
 
   // This will trigger a sync sending the auth code to the phone
-  ios_notif_pref_db_store_prefs(app_id->value, app_id->length,
-                                &new_attr_list, &existing_notif_prefs->action_group);
+  ios_notif_pref_db_store_prefs(app_id->value, app_id->length, &new_attr_list,
+                                &existing_notif_prefs->action_group);
 
   // Dismiss the notification so the user is oblivious to this process
   ancs_perform_action(uid, ActionIDNegative);

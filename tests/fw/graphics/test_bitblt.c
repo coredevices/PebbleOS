@@ -42,7 +42,7 @@ static GColor prv_next_color(GColor color) {
 
 // setup and teardown
 void test_bitblt__initialize(void) {
-  framebuffer_init(&framebuffer, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&framebuffer, &(GSize){DISP_COLS, DISP_ROWS});
   test_graphics_context_init(&ctx, &framebuffer);
 }
 
@@ -65,13 +65,13 @@ void test_bitblt__cleanup(void) {
 //   - All white.
 void test_bitblt__8bit_compop(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__8bit_assign.8bit.pbi");
-  uint8_t dest_data[src_bitmap->bounds.size.w*src_bitmap->bounds.size.h];
+  uint8_t dest_data[src_bitmap->bounds.size.w * src_bitmap->bounds.size.h];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = src_bitmap->bounds.size.w,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = src_bitmap->bounds
+      .addr = dest_data,
+      .row_size_bytes = src_bitmap->bounds.size.w,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = src_bitmap->bounds
   };
   // All compositing modes except GCompOpSet should be the same as GCompAssign
   memset(dest_data, GColorGreen.argb, sizeof(dest_data));
@@ -79,7 +79,8 @@ void test_bitblt__8bit_compop(void) {
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__8bit_assign-expect.8bit.pbi"));
 
   memset(dest_data, GColorGreen.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpAssignInverted, GColorWhite);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpAssignInverted,
+                            GColorWhite);
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__8bit_assign-expect.8bit.pbi"));
 
   memset(dest_data, GColorGreen.argb, sizeof(dest_data));
@@ -119,20 +120,20 @@ void test_bitblt__8bit_to_8bit_comptint(void) {
 
   uint8_t dest_data[bounds.size.w * bounds.size.h];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = bounds.size.w,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = src_bitmap->bounds
+      .addr = dest_data,
+      .row_size_bytes = bounds.size.w,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = src_bitmap->bounds
   };
 
   uint8_t expect_bmp_data[bounds.size.w * bounds.size.h];
   GBitmap expect_bmp = {
-    .addr = expect_bmp_data,
-    .row_size_bytes = bounds.size.w,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = src_bitmap->bounds
+      .addr = expect_bmp_data,
+      .row_size_bytes = bounds.size.w,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = src_bitmap->bounds
   };
 
   // Verify that the compositing mode is correctly applied when the source is opaque and
@@ -145,16 +146,19 @@ void test_bitblt__8bit_to_8bit_comptint(void) {
   // Rewrite the destination bitmap to be all black.
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
 
-  // Verify that if the tint color is clear, than the source bitmap should not affect the destination bitmap
+  // Verify that if the tint color is clear, than the source bitmap should not affect the
+  // destination bitmap
   memset(expect_bmp_data, GColorBlack.argb, sizeof(expect_bmp_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpTint, GColorClear);
-  cl_assert(gbitmap_eq(&dest_bitmap, &expect_bmp, "test_bitblt__8bit_comptint_clear-expect.8bit.pbi"));
+  cl_assert(
+      gbitmap_eq(&dest_bitmap, &expect_bmp, "test_bitblt__8bit_comptint_clear-expect.8bit.pbi"));
 
   // Verify that if the source is transparent, it should not affect the destination bitmap
   prv_set_opacity(src_bitmap, 0);
 
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpTint, GColorRed);
-  cl_assert(gbitmap_eq(&dest_bitmap, &expect_bmp, "test_bitblt__8bit_comptint_clear-expect.8bit.pbi"));
+  cl_assert(
+      gbitmap_eq(&dest_bitmap, &expect_bmp, "test_bitblt__8bit_comptint_clear-expect.8bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }
@@ -182,21 +186,21 @@ void test_bitblt__8bit_comptint_blend(void) {
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
 
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = TOTAL_WIDTH,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = (GRect){GPointZero, (GSize){TOTAL_WIDTH, TOTAL_HEIGHT}}
+      .addr = dest_data,
+      .row_size_bytes = TOTAL_WIDTH,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = (GRect){GPointZero, (GSize){TOTAL_WIDTH, TOTAL_HEIGHT}}
   };
 
-  GColor color = (GColor){ .a = 3, .r = 0, .g = 0, .b = 0 };
-  uint8_t src_data[] = { color.argb };
+  GColor color = (GColor){.a = 3, .r = 0, .g = 0, .b = 0};
+  uint8_t src_data[] = {color.argb};
   GBitmap src_bmp = (GBitmap){
-    .addr = src_data,
-    .row_size_bytes = 1,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = GRect(0, 0, 1, 1)
+      .addr = src_data,
+      .row_size_bytes = 1,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = GRect(0, 0, 1, 1)
   };
 
   for (uint8_t offset_y = 0; offset_y < NUM_COLORS; offset_y++) {
@@ -210,41 +214,39 @@ void test_bitblt__8bit_comptint_blend(void) {
     const GRect upper_rect = GRect(x, y_upper, WIDTH, 1);
     const GRect upper_left_legend_rect = GRect(0, y_upper, 3, 1);
     const GRect upper_right_legend_rect = GRect(offset_x, y_upper, 3, 1);
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, upper_rect,
-                                    GPointZero, GCompOpAssign, GColorWhite);
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, upper_left_legend_rect,
-                                    GPointZero, GCompOpAssign, GColorWhite);
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, upper_right_legend_rect,
-                                    GPointZero, GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, upper_rect, GPointZero, GCompOpAssign,
+                                    GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, upper_left_legend_rect, GPointZero,
+                                    GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, upper_right_legend_rect, GPointZero,
+                                    GCompOpAssign, GColorWhite);
 
     const int16_t y_lower = y_upper + LEGEND_HEIGHT + NUM_COLORS + OFFSET;
     const GRect lower_rect = GRect(x, y_lower, WIDTH, 1);
     const GRect lower_left_legend_rect = GRect(0, y_lower, 3, 1);
     const GRect lower_right_legend_rect = GRect(offset_x, y_lower, 3, 1);
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, lower_rect,
-                                    GPointZero, GCompOpAssign, GColorWhite);
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, lower_left_legend_rect,
-                                    GPointZero, GCompOpAssign, GColorWhite);
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, lower_right_legend_rect,
-                                    GPointZero, GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, lower_rect, GPointZero, GCompOpAssign,
+                                    GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, lower_left_legend_rect, GPointZero,
+                                    GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &src_bmp, lower_right_legend_rect, GPointZero,
+                                    GCompOpAssign, GColorWhite);
   }
 
   // RGB value should be discarded later on adding them here might reveal bugs.
   // .a is the important part
   GColor8 test_blend_colors[] = {
-    (GColor8){.a = 0, .r = 3, .g = 2, .b = 1},
-    (GColor8){.a = 1, .r = 0, .g = 3, .b = 2},
-    (GColor8){.a = 2, .r = 1, .g = 0, .b = 3},
-    (GColor8){.a = 3, .r = 2, .g = 1, .b = 0}
+      (GColor8){.a = 0, .r = 3, .g = 2, .b = 1}, (GColor8){.a = 1, .r = 0, .g = 3, .b = 2},
+      (GColor8){.a = 2, .r = 1, .g = 0, .b = 3}, (GColor8){.a = 3, .r = 2, .g = 1, .b = 0}
   };
 
   // Test image with four pixels of all our suported alpha values
   GBitmap test_bmp = (GBitmap){
-    .addr = test_blend_colors,
-    .row_size_bytes = 4,
-    .bounds = GRect(0, 0, 4, 1),
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT
+      .addr = test_blend_colors,
+      .row_size_bytes = 4,
+      .bounds = GRect(0, 0, 4, 1),
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT
   };
 
   for (uint8_t rgb_half = 0; rgb_half < NUM_COLORS / 2; rgb_half++) {
@@ -255,23 +257,29 @@ void test_bitblt__8bit_comptint_blend(void) {
     const GColor upper_tint_color = (GColor){.argb = 0b11000000 | rgb_half};
     const int16_t y_upper = LEGEND_HEIGHT;
     const GRect upper_rect = GRect(x, y_upper, test_bmp.bounds.size.w, NUM_COLORS);
-    const GRect upper_legend_rect = GRect(x, y_upper - LEGEND_HEIGHT, test_bmp.bounds.size.w, legend_height);
-    GColor8 upper_legend[4] = { [0 ... 3] = upper_tint_color };
+    const GRect upper_legend_rect =
+        GRect(x, y_upper - LEGEND_HEIGHT, test_bmp.bounds.size.w, legend_height);
+    GColor8 upper_legend[4] = {[0 ... 3] = upper_tint_color};
     test_bmp.addr = upper_legend;
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, upper_legend_rect, GPointZero, GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, upper_legend_rect, GPointZero,
+                                    GCompOpAssign, GColorWhite);
     test_bmp.addr = test_blend_colors;
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, upper_rect, GPointZero, GCompOpTint, upper_tint_color);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, upper_rect, GPointZero, GCompOpTint,
+                                    upper_tint_color);
 
     // Lower row with destination colors from 31..63
     const int16_t y_lower = y_upper + NUM_COLORS + OFFSET + LEGEND_HEIGHT;
     const GRect lower_rect = GRect(x, y_lower, test_bmp.bounds.size.w, NUM_COLORS);
     const GColor lower_tint_color = (GColor){.argb = 0b11000000 | (rgb_half + (NUM_COLORS / 2))};
-    const GRect lower_legend_rect = GRect(x, y_lower - LEGEND_HEIGHT, test_bmp.bounds.size.w, legend_height);
-    GColor8 lower_legend[4] = { [0 ... 3] = lower_tint_color };
+    const GRect lower_legend_rect =
+        GRect(x, y_lower - LEGEND_HEIGHT, test_bmp.bounds.size.w, legend_height);
+    GColor8 lower_legend[4] = {[0 ... 3] = lower_tint_color};
     test_bmp.addr = lower_legend;
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, lower_legend_rect, GPointZero, GCompOpAssign, GColorWhite);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, lower_legend_rect, GPointZero,
+                                    GCompOpAssign, GColorWhite);
     test_bmp.addr = test_blend_colors;
-    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, lower_rect, GPointZero, GCompOpTint, lower_tint_color);
+    bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, &test_bmp, lower_rect, GPointZero, GCompOpTint,
+                                    lower_tint_color);
   }
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__8bit_comptint_blend-expect.8bit.pbi"));
@@ -286,17 +294,17 @@ void test_bitblt__8bit_comptint_blend(void) {
 //   - White, with 5x10 black box in bottom right corner.
 void test_bitblt__8bit_clipping(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__8bit_clipping.8bit.pbi");
-  uint8_t dest_data[50*50];
+  uint8_t dest_data[50 * 50];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 50,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 50, 50 } }
+      .addr = dest_data,
+      .row_size_bytes = 50,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {50, 50}}
   };
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
 
-  GPoint dest_offset = { dest_bitmap.bounds.size.w-5, dest_bitmap.bounds.size.h-10 };
+  GPoint dest_offset = {dest_bitmap.bounds.size.w - 5, dest_bitmap.bounds.size.h - 10};
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, dest_offset, GCompOpAssign, GColorWhite);
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__8bit_clipping-expect.8bit.pbi"));
@@ -319,21 +327,21 @@ void test_bitblt__8bit_clipping(void) {
 void test_bitblt__8bit_wrap_x(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__8bit_wrap_x.8bit.pbi");
 
-  uint8_t dest_data[50*50];
+  uint8_t dest_data[50 * 50];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 50,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 50, 50 } }
+      .addr = dest_data,
+      .row_size_bytes = 50,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {50, 50}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
 
   // 2 wider than src_bitmap, so 2 columns of red will repeat again.
   GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w + 2, src_bitmap->bounds.size.h);
 
-  bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(
-      &dest_bitmap, src_bitmap, dest_rect, GPointZero, GCompOpAssign, GColorWhite);
+  bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(&dest_bitmap, src_bitmap, dest_rect, GPointZero,
+                                               GCompOpAssign, GColorWhite);
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__8bit_wrap_x-expect.8bit.pbi"));
 
@@ -351,19 +359,19 @@ void test_bitblt__8bit_wrap_x(void) {
 void test_bitblt__8bit_wrap_y(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__8bit_wrap_y.8bit.pbi");
 
-  uint8_t dest_data[50*50];
+  uint8_t dest_data[50 * 50];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 50,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 50, 50 } }
+      .addr = dest_data,
+      .row_size_bytes = 50,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {50, 50}}
   };
   memset(dest_data, GColorGreen.argb, sizeof(dest_data));
-  GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w, src_bitmap->bounds.size.h*2 + 4);
+  GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w, src_bitmap->bounds.size.h * 2 + 4);
 
-  bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(
-      &dest_bitmap, src_bitmap, dest_rect, GPointZero, GCompOpAssign, GColorWhite);
+  bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(&dest_bitmap, src_bitmap, dest_rect, GPointZero,
+                                               GCompOpAssign, GColorWhite);
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__8bit_wrap_y-expect.8bit.pbi"));
 
@@ -382,27 +390,26 @@ void test_bitblt__8bit_wrap_y(void) {
 //   - 50x50 black square at (0,0), rest is blue.
 void test_bitblt__8bit_src_origin_offset_wrap(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__8bit_src_origin_offset_wrap.8bit.pbi");
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w*2, src_bitmap->bounds.size.h*2);
-  GPoint src_origin_offset = { 2, 2 }; // Offset past the 2 red rows
+  GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w * 2, src_bitmap->bounds.size.h * 2);
+  GPoint src_origin_offset = {2, 2};  // Offset past the 2 red rows
 
-  bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(
-      &dest_bitmap, src_bitmap, dest_rect, src_origin_offset, GCompOpAssign, GColorWhite);
+  bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(&dest_bitmap, src_bitmap, dest_rect,
+                                               src_origin_offset, GCompOpAssign, GColorWhite);
 
-  cl_assert(gbitmap_pbi_eq(&dest_bitmap,
-                           "test_bitblt__8bit_src_origin_offset_wrap-expect.8bit.pbi"));
+  cl_assert(
+      gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__8bit_src_origin_offset_wrap-expect.8bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }
-
 
 //
 // Test 1-bit to 8-bit blitting
@@ -417,21 +424,23 @@ void test_bitblt__8bit_src_origin_offset_wrap(void) {
 //   - 25x25 alternating black / white lines in top left corner.
 void test_bitblt__1bit_to_8bit_compop(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_assign.1bit.pbi");
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpAssign, GColorWhite);
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_assign-expect.8bit.pbi"));
 
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpAssignInverted, GColorWhite);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_assigninverted-expect.8bit.pbi"));
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpAssignInverted,
+                            GColorWhite);
+  cl_check(
+      gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_assigninverted-expect.8bit.pbi"));
 
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, GPointZero, GCompOpOr, GColorWhite);
@@ -468,11 +477,11 @@ void test_bitblt__1bit_to_8bit_compor(void) {
 
   uint8_t dest_data[bounds.size.w * bounds.size.h];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = bounds.size.w,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = src_bitmap->bounds
+      .addr = dest_data,
+      .row_size_bytes = bounds.size.w,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = src_bitmap->bounds
   };
 
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
@@ -496,11 +505,11 @@ void test_bitblt__1bit_to_8bit_comptint(void) {
 
   uint8_t dest_data[bounds.size.w * bounds.size.h];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = bounds.size.w,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = src_bitmap->bounds
+      .addr = dest_data,
+      .row_size_bytes = bounds.size.w,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = src_bitmap->bounds
   };
 
   // Image name descriptions
@@ -509,28 +518,40 @@ void test_bitblt__1bit_to_8bit_comptint(void) {
   // Destination White
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_comptint_white_cross_white_corners-expect.8bit.pbi"));
+  cl_check(gbitmap_pbi_eq(
+      &dest_bitmap,
+      "test_bitblt__1bit_to_8bit_comptint_white_cross_white_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_comptint_white_cross_black_corners-expect.8bit.pbi"));
+  cl_check(gbitmap_pbi_eq(
+      &dest_bitmap,
+      "test_bitblt__1bit_to_8bit_comptint_white_cross_black_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorLightGray);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_comptint_white_cross_lightgray_corners-expect.8bit.pbi"));
+  cl_check(gbitmap_pbi_eq(
+      &dest_bitmap,
+      "test_bitblt__1bit_to_8bit_comptint_white_cross_lightgray_corners-expect.8bit.pbi"));
 
   // Destination Black
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_comptint_black_cross_white_corners-expect.8bit.pbi"));
+  cl_check(gbitmap_pbi_eq(
+      &dest_bitmap,
+      "test_bitblt__1bit_to_8bit_comptint_black_cross_white_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_comptint_black_cross_black_corners-expect.8bit.pbi"));
+  cl_check(gbitmap_pbi_eq(
+      &dest_bitmap,
+      "test_bitblt__1bit_to_8bit_comptint_black_cross_black_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorLightGray);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_comptint_black_cross_lightgray_corners-expect.8bit.pbi"));
+  cl_check(gbitmap_pbi_eq(
+      &dest_bitmap,
+      "test_bitblt__1bit_to_8bit_comptint_black_cross_lightgray_corners-expect.8bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }
@@ -545,16 +566,16 @@ void test_bitblt__1bit_to_8bit_comptint(void) {
 void test_bitblt__1bit_to_8bit_clipping(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_clipping.1bit.pbi");
 
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  GPoint dest_offset = { dest_bitmap.bounds.size.w-8, dest_bitmap.bounds.size.h-10 };
+  GPoint dest_offset = {dest_bitmap.bounds.size.w - 8, dest_bitmap.bounds.size.h - 10};
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, dest_offset, GCompOpAssign, GColorWhite);
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_clipping-expect.8bit.pbi"));
@@ -572,19 +593,19 @@ void test_bitblt__1bit_to_8bit_clipping(void) {
 void test_bitblt__1bit_to_8bit_wrap_x(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_wrap_x.1bit.pbi");
 
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w*2, src_bitmap->bounds.size.h);
+  GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w * 2, src_bitmap->bounds.size.h);
 
-  bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(
-      &dest_bitmap, src_bitmap, dest_rect, GPointZero, GCompOpAssign, GColorWhite);
+  bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(&dest_bitmap, src_bitmap, dest_rect, GPointZero,
+                                               GCompOpAssign, GColorWhite);
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_wrap_x-expect.8bit.pbi"));
 
@@ -603,23 +624,23 @@ void test_bitblt__1bit_to_8bit_wrap_x(void) {
 void test_bitblt__1bit_to_8bit_src_origin_offset(void) {
   GBitmap *src_bitmap =
       get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_src_origin_offset.1bit.pbi");
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
   GRect dest_rect = GRect(0, 0, src_bitmap->bounds.size.w - 2, src_bitmap->bounds.size.h - 4);
-  GPoint src_origin_offset = { 2, 4 }; // Offset past the black
+  GPoint src_origin_offset = {2, 4};  // Offset past the black
 
-  bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(
-      &dest_bitmap, src_bitmap, dest_rect, src_origin_offset, GCompOpAssign, GColorWhite);
+  bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(&dest_bitmap, src_bitmap, dest_rect,
+                                               src_origin_offset, GCompOpAssign, GColorWhite);
 
-  cl_assert(gbitmap_pbi_eq(&dest_bitmap,
-                           "test_bitblt__1bit_to_8bit_src_origin_offset-expect.8bit.pbi"));
+  cl_assert(
+      gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_src_origin_offset-expect.8bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }
@@ -635,17 +656,17 @@ void test_bitblt__1bit_to_8bit_dest_origin_offset_clip(void) {
   GBitmap *src_bitmap =
       get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_dest_origin_offset_clip.1bit.pbi");
 
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
   GRect dest_rect = GRect(15, 10, 10, 10);
-  GPoint src_origin_offset = { 0, 0 };
+  GPoint src_origin_offset = {0, 0};
 
   bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, src_bitmap, dest_rect, src_origin_offset,
                                   GCompOpAssign, GColorWhite);
@@ -655,7 +676,6 @@ void test_bitblt__1bit_to_8bit_dest_origin_offset_clip(void) {
 
   gbitmap_destroy(src_bitmap);
 }
-
 
 // Setup:
 //   - Source width is 32 pixels (ie. a word in source)
@@ -668,17 +688,17 @@ void test_bitblt__1bit_to_8bit_src_origin_offset_wrap(void) {
   GBitmap *src_bitmap =
       get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_src_origin_offset_wrap.1bit.pbi");
 
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  GRect dest_rect = GRect(10, 25, src_bitmap->bounds.size.w*2, src_bitmap->bounds.size.h*2);
-  GPoint src_origin_offset = { .x = 4, .y = 2 }; // Offset past the black
+  GRect dest_rect = GRect(10, 25, src_bitmap->bounds.size.w * 2, src_bitmap->bounds.size.h * 2);
+  GPoint src_origin_offset = {.x = 4, .y = 2};  // Offset past the black
 
   bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, src_bitmap, dest_rect, src_origin_offset,
                                   GCompOpAssign, GColorWhite);
@@ -700,17 +720,17 @@ void test_bitblt__1bit_to_8bit_src_origin_offset_wrap2(void) {
   GBitmap *src_bitmap =
       get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_src_origin_offset_wrap2.1bit.pbi");
 
-  uint8_t dest_data[100*100];
+  uint8_t dest_data[100 * 100];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 100,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 100, 100 } }
+      .addr = dest_data,
+      .row_size_bytes = 100,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {100, 100}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  GRect dest_rect = GRect(21, 6, src_bitmap->bounds.size.w*2, src_bitmap->bounds.size.h*2);
-  GPoint src_origin_offset = { .x = 4, .y = 2 }; // Offset past the black
+  GRect dest_rect = GRect(21, 6, src_bitmap->bounds.size.w * 2, src_bitmap->bounds.size.h * 2);
+  GPoint src_origin_offset = {.x = 4, .y = 2};  // Offset past the black
 
   bitblt_bitmap_into_bitmap_tiled(&dest_bitmap, src_bitmap, dest_rect, src_origin_offset,
                                   GCompOpAssign, GColorWhite);
@@ -732,22 +752,22 @@ void test_bitblt__bitmap_into_bitmap_sub_bitmap(void) {
 
   GBitmap cropped_src_bitmap;
   gbitmap_init_as_sub_bitmap(&cropped_src_bitmap, src_bitmap,
-      (GRect) { { 0, 2 }, src_bitmap->bounds.size });
+                             (GRect){{0, 2}, src_bitmap->bounds.size});
 
-  uint8_t dest_data[50*50];
+  uint8_t dest_data[50 * 50];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 50,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 50, 50 } }
+      .addr = dest_data,
+      .row_size_bytes = 50,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {50, 50}}
   };
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, &cropped_src_bitmap, (GPoint) { 0, 2 },
-                            GCompOpAssign, GColorWhite);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, &cropped_src_bitmap, (GPoint){0, 2}, GCompOpAssign,
+                            GColorWhite);
 
-  cl_assert(gbitmap_pbi_eq(&dest_bitmap,
-                           "test_bitblt__bitmap_into_bitmap_sub_bitmap-expect.8bit.pbi"));
+  cl_assert(
+      gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__bitmap_into_bitmap_sub_bitmap-expect.8bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }
@@ -771,15 +791,15 @@ void test_bitblt__bitmap_into_bitmap_sub_bitmap(void) {
 //   - Remainder should be green.
 void test_bitblt__8bit_bounds_and_origin_offset(void) {
   GBitmap *src_bitmap = get_gbitmap_from_pbi("test_bitblt__bounds_and_origin_offset.8bit.pbi");
-  src_bitmap->bounds = (GRect) { { 5, 5}, { 10, 10 } };
+  src_bitmap->bounds = (GRect){{5, 5}, {10, 10}};
 
-  uint8_t dest_data[50*50];
+  uint8_t dest_data[50 * 50];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 50,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 50, 50 } }
+      .addr = dest_data,
+      .row_size_bytes = 50,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {50, 50}}
   };
   memset(dest_data, GColorGreen.argb, sizeof(dest_data));
   const GRect dest_rect = GRect(4, 4, 10, 10);
@@ -804,11 +824,11 @@ void test_bitblt__1bit_to_1bit_comptint(void) {
 
   uint8_t dest_data[bounds.size.w * bounds.size.h];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = src_bitmap->row_size_bytes,
-    .info.format = GBitmapFormat1Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = src_bitmap->bounds
+      .addr = dest_data,
+      .row_size_bytes = src_bitmap->row_size_bytes,
+      .info.format = GBitmapFormat1Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = src_bitmap->bounds
   };
 
   // Image name descriptions
@@ -817,28 +837,34 @@ void test_bitblt__1bit_to_1bit_comptint(void) {
   // Destination White
   memset(dest_data, 0b11111111, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorClear);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_1bit_comptint_white_on_white-expect.1bit.pbi"));
+  cl_check(gbitmap_pbi_eq(&dest_bitmap,
+                          "test_bitblt__1bit_to_1bit_comptint_white_on_white-expect.1bit.pbi"));
 
   memset(dest_data, 0b11111111, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_1bit_comptint_white_on_white-expect.1bit.pbi"));
+  cl_check(gbitmap_pbi_eq(&dest_bitmap,
+                          "test_bitblt__1bit_to_1bit_comptint_white_on_white-expect.1bit.pbi"));
 
   memset(dest_data, 0b11111111, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_1bit_comptint_black_on_white-expect.1bit.pbi"));
+  cl_check(gbitmap_pbi_eq(&dest_bitmap,
+                          "test_bitblt__1bit_to_1bit_comptint_black_on_white-expect.1bit.pbi"));
 
   // Destination Black
   memset(dest_data, 0b00000000, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorClear);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_1bit_comptint_black_on_black-expect.1bit.pbi"));
+  cl_check(gbitmap_pbi_eq(&dest_bitmap,
+                          "test_bitblt__1bit_to_1bit_comptint_black_on_black-expect.1bit.pbi"));
 
   memset(dest_data, 0b00000000, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_1bit_comptint_white_on_black-expect.1bit.pbi"));
+  cl_check(gbitmap_pbi_eq(&dest_bitmap,
+                          "test_bitblt__1bit_to_1bit_comptint_white_on_black-expect.1bit.pbi"));
 
   memset(dest_data, 0b00000000, sizeof(dest_data));
   bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
-  cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_1bit_comptint_black_on_black-expect.1bit.pbi"));
+  cl_check(gbitmap_pbi_eq(&dest_bitmap,
+                          "test_bitblt__1bit_to_1bit_comptint_black_on_black-expect.1bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }
@@ -858,24 +884,24 @@ void DISABLED_test_bitblt__1bit_to_8bit_bounds_and_origin_offset(void) {
   GBitmap *src_bitmap =
       get_gbitmap_from_pbi("test_bitblt__1bit_to_8bit_bounds_and_origin_offset.1bit.pbi");
 
-  uint8_t dest_data[144*168];
+  uint8_t dest_data[144 * 168];
   GBitmap dest_bitmap = {
-    .addr = dest_data,
-    .row_size_bytes = 144,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_CURRENT,
-    .bounds = { { 0, 0 }, { 144, 168 } }
+      .addr = dest_data,
+      .row_size_bytes = 144,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = {{0, 0}, {144, 168}}
   };
   memset(dest_data, GColorGreen.argb, sizeof(dest_data));
   const GRect dest_rect = GRect(4, 4, 140, 55);
   const GPoint src_origin_offset = GPoint(39, 11);
-  src_bitmap->bounds = (GRect) { { 37, 3}, { 63, 23 } };
+  src_bitmap->bounds = (GRect){{37, 3}, {63, 23}};
 
   bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(&dest_bitmap, src_bitmap, dest_rect,
                                                src_origin_offset, GCompOpAssign, GColorWhite);
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap,
-      "test_bitblt__1bit_to_8bit_bounds_and_origin_offset-expect.8bit.pbi"));
+                           "test_bitblt__1bit_to_8bit_bounds_and_origin_offset-expect.8bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }
@@ -896,12 +922,12 @@ void DISABLED__test_bitblt__1bit_to_1bit_bounds_and_origin_offset(void) {
   const GRect dest_rect = GRect(4, 4, 140, 55);
   const GPoint src_origin_offset = GPoint(39, 11);
 
-  src_bitmap->bounds = (GRect) { { 37, 3}, { 63, 23 } };
+  src_bitmap->bounds = (GRect){{37, 3}, {63, 23}};
   bitblt_bitmap_into_bitmap_tiled_1bit_to_1bit(&dest_bitmap, src_bitmap, dest_rect,
                                                src_origin_offset, GCompOpAssign, GColorWhite);
 
   cl_assert(gbitmap_pbi_eq(&dest_bitmap,
-      "test_bitblt__1bit_to_1bit_bounds_and_origin_offset-expect.8bit.pbi"));
+                           "test_bitblt__1bit_to_1bit_bounds_and_origin_offset-expect.8bit.pbi"));
 
   gbitmap_destroy(src_bitmap);
 }

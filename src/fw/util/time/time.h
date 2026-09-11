@@ -5,13 +5,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <sys/types.h> // time_t and size_t
+#include <sys/types.h>  // time_t and size_t
 
-#define TM_YEAR_ORIGIN  1900
-#define EPOCH_YEAR      1970
-#define EPOCH_WDAY      4
+#define TM_YEAR_ORIGIN 1900
+#define EPOCH_YEAR 1970
+#define EPOCH_WDAY 4
 
-#define DAYS_PER_WEEK  7
+#define DAYS_PER_WEEK 7
 #define MONTHS_PER_YEAR 12
 
 #define MS_PER_SECOND (1000)
@@ -44,7 +44,6 @@
 #define DSTID_BRAZIL 6
 #define DSTID_LORDHOWE 20
 
-
 //! @file time.h
 
 //! @addtogroup StandardC Standard C
@@ -59,22 +58,21 @@
 //! https://sourceware.org/newlib/libc.html#Timefns
 //! @{
 
-
 //! structure containing broken-down time for expressing calendar time
 //! (ie. Year, Month, Day of Month, Hour of Day) and timezone information
 struct tm {
-  int tm_sec;     /*!< Seconds. [0-60] (1 leap second) */
-  int tm_min;     /*!< Minutes. [0-59] */
-  int tm_hour;    /*!< Hours.  [0-23] */
-  int tm_mday;    /*!< Day. [1-31] */
-  int tm_mon;     /*!< Month. [0-11] */
-  int tm_year;    /*!< Years since 1900 */
-  int tm_wday;    /*!< Day of week. [0-6] */
-  int tm_yday;    /*!< Days in year.[0-365] */
-  int tm_isdst;   /*!< DST. [-1/0/1] */
+  int tm_sec;   /*!< Seconds. [0-60] (1 leap second) */
+  int tm_min;   /*!< Minutes. [0-59] */
+  int tm_hour;  /*!< Hours.  [0-23] */
+  int tm_mday;  /*!< Day. [1-31] */
+  int tm_mon;   /*!< Month. [0-11] */
+  int tm_year;  /*!< Years since 1900 */
+  int tm_wday;  /*!< Day of week. [0-6] */
+  int tm_yday;  /*!< Days in year.[0-365] */
+  int tm_isdst; /*!< DST. [-1/0/1] */
 
-  int tm_gmtoff;  /*!< Total seconds east of UTC, DST included. tm_isdst is an indicator only --
-                       never add it to this value. */
+  int tm_gmtoff; /*!< Total seconds east of UTC, DST included. tm_isdst is an indicator only --
+                      never add it to this value. */
   char tm_zone[TZ_LEN]; /*!< Timezone abbreviation */
 };
 
@@ -99,7 +97,6 @@ uint16_t time_ms(time_t *tloc, uint16_t *out_ms);
 //!   @} // end addtogroup StandardTime
 //! @} // end addtogroup StandardC
 
-
 // The below standard c time functions are documented for the SDK
 // by their applib pbl_override wrappers in pbl_std.h
 
@@ -117,12 +114,12 @@ struct tm *localtime_r(const time_t *timep, struct tm *result);
 
 //! Minimal struct to store timezone info in RTC registers
 typedef struct TimezoneInfo {
-  char tm_zone[TZ_LEN - 1];   //!< Up to 5 character (no null terminator) timezone abbreviation
-  uint8_t dst_id;         //!< Daylight savings time zone index
-  int16_t timezone_id;    //!< Olson index of timezone
-  int32_t tm_gmtoff;      //!< GMT time offset
-  time_t dst_start;   //!< timestamp of start of daylight savings period (0 if none)
-  time_t dst_end;     //!< timestamp of end of daylight savings period (0 if none)
+  char tm_zone[TZ_LEN - 1];  //!< Up to 5 character (no null terminator) timezone abbreviation
+  uint8_t dst_id;            //!< Daylight savings time zone index
+  int16_t timezone_id;       //!< Olson index of timezone
+  int32_t tm_gmtoff;         //!< GMT time offset
+  time_t dst_start;          //!< timestamp of start of daylight savings period (0 if none)
+  time_t dst_end;            //!< timestamp of end of daylight savings period (0 if none)
 } TimezoneInfo;
 
 //! Provides the timezone abbreviation string for the given time. Uses the utc_time provided
@@ -158,8 +155,8 @@ time_t time_utc_to_local(time_t utc_time);
 //! Convert local time to UTC time
 time_t time_local_to_utc(time_t local_time);
 
-void time_util_split_seconds_into_parts(uint32_t seconds, uint32_t *day_part,
-    uint32_t *hour_part, uint32_t *minute_part, uint32_t *second_part);
+void time_util_split_seconds_into_parts(uint32_t seconds, uint32_t *day_part, uint32_t *hour_part,
+                                        uint32_t *minute_part, uint32_t *second_part);
 
 int time_util_get_num_hours(int hours, bool is24h);
 

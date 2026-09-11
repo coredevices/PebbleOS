@@ -29,14 +29,15 @@ extern AppTimer *app_message_outbox_get_ack_nack_timer(void);
 // Structures and Externs
 ////////////////////////////////////
 typedef struct PACKED {
-  AppMessageCmd command:8;
+  AppMessageCmd command : 8;
   uint8_t transaction_id;
   union PACKED {
     struct PACKED {
       Uuid uuid;
-      Dictionary dictionary; //!< Variable length!
-    } push; //!< valid for CMD_PUSH only
-    struct PACKED {} ack;
+      Dictionary dictionary;  //!< Variable length!
+    } push;                   //!< valid for CMD_PUSH only
+    struct PACKED {
+    } ack;
   } payload[];
 } AppMessage;
 
@@ -54,11 +55,12 @@ static const uint16_t ENDPOINT_ID = 0x30;
 static const uint16_t MAX_SIZE_INBOUND = 32;
 static const uint16_t MAX_SIZE_OUTBOUND = 32;
 
-static const char *TEST_DATA = "01234567890123456789012345678901234567890123456789"
-			       "0123456789012345678901234567890123456789";
+static const char *TEST_DATA =
+    "01234567890123456789012345678901234567890123456789"
+    "0123456789012345678901234567890123456789";
 static const uint32_t TEST_KEY = 0xbeefbabe;
-static const uint8_t TEST_TRANSACTION_ID_1 = 0x11; // msgs with this ID are asserted to be ack'd
-static const uint8_t TEST_TRANSACTION_ID_2 = 0x22; // msgs with this ID are asserted to be nack'd
+static const uint8_t TEST_TRANSACTION_ID_1 = 0x11;  // msgs with this ID are asserted to be ack'd
+static const uint8_t TEST_TRANSACTION_ID_2 = 0x22;  // msgs with this ID are asserted to be nack'd
 static const uint16_t MAX_DATA_SIZE = MAX_SIZE_OUTBOUND - sizeof(Dictionary) - sizeof(Tuple);
 
 static int s_context;
@@ -79,15 +81,15 @@ static AppMessageResult s_dropped_reason = APP_MSG_OK;
 
 static AppMessageCtx s_app_message_ctx;
 
-typedef void (*RemoteReceiveHandler)(uint16_t endpoint_id,
-				     const uint8_t* data, unsigned int length);
+typedef void (*RemoteReceiveHandler)(uint16_t endpoint_id, const uint8_t *data,
+                                     unsigned int length);
 static RemoteReceiveHandler s_remote_receive_handler;
 
 // UUID: 6bf6215b-c97f-409e-8c31-4f55657222b4
-static Uuid simplicity_uuid = (Uuid){ 0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-				      0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4 };
+static Uuid simplicity_uuid = (Uuid){0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
+                                     0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4};
 
-static CommSession *s_fake_app_comm_session = (CommSession *) 0xaabbccdd;
+static CommSession *s_fake_app_comm_session = (CommSession *)0xaabbccdd;
 static bool s_is_connected;
 static bool s_is_app_message_receiver_open;
 static Uuid s_app_uuid;
@@ -137,8 +139,8 @@ static void prv_out_sent_callback(DictionaryIterator *sent, void *context) {
   cl_assert_equal_b(app_message_is_accepting_outbound(), true);
 }
 
-static void prv_out_failed_callback(DictionaryIterator *failed,
-				    AppMessageResult reason, void *context) {
+static void prv_out_failed_callback(DictionaryIterator *failed, AppMessageResult reason,
+                                    void *context) {
   s_out_failed_call_count++;
   cl_assert_equal_p(context, &s_context);
   prv_assert_dict_equal(failed, &s_expected_iter);
@@ -162,57 +164,57 @@ static void prv_in_dropped_callback(AppMessageResult reason, void *context) {
   s_dropped_reason = reason;
 }
 
-static void prv_send_ack_nack(uint16_t endpoint_id, const uint8_t* data,
-			      unsigned int length, bool nack) {
+static void prv_send_ack_nack(uint16_t endpoint_id, const uint8_t *data, unsigned int length,
+                              bool nack) {
   const int o = offsetof(AppMessage, payload[0].push.dictionary);
   cl_assert_equal_i(length, o + dict_calc_buffer_size(1, MAX_DATA_SIZE));
   CommSession *session = s_fake_app_comm_session;
-  AppMessage *message = (AppMessage*)data;
+  AppMessage *message = (AppMessage *)data;
   AppMessage ack = {
-    .command = nack ? CMD_NACK : CMD_ACK,
-    .transaction_id = message->transaction_id,
+      .command = nack ? CMD_NACK : CMD_ACK,
+      .transaction_id = message->transaction_id,
   };
 
   if (endpoint_id == ENDPOINT_ID) {
-    app_message_app_protocol_msg_callback(session, (const uint8_t*)&ack, sizeof(AppMessage), NULL);
+    app_message_app_protocol_msg_callback(session, (const uint8_t *)&ack, sizeof(AppMessage), NULL);
   } else {
     cl_fail("Unhandled endpoint");
   }
 }
 
-static void prv_nack_sent_callback(uint16_t endpoint_id, const uint8_t* data, unsigned int length) {
+static void prv_nack_sent_callback(uint16_t endpoint_id, const uint8_t *data, unsigned int length) {
   s_nack_sent_is_called = true;
   prv_send_ack_nack(endpoint_id, data, length, true);
 }
 
-static void prv_ack_sent_callback(uint16_t endpoint_id, const uint8_t* data, unsigned int length) {
+static void prv_ack_sent_callback(uint16_t endpoint_id, const uint8_t *data, unsigned int length) {
   s_ack_sent_is_called = true;
   prv_send_ack_nack(endpoint_id, data, length, false);
 }
 
 static void prv_receive_test_data(uint8_t transaction_id, const bool oversized) {
   const uint16_t dict_length = dict_calc_buffer_size(1, MAX_DATA_SIZE);
-  const uint16_t message_length = offsetof(AppMessage, payload[0].push.dictionary) +
-    + dict_length + (oversized ? 20 : 0);
+  const uint16_t message_length =
+      offsetof(AppMessage, payload[0].push.dictionary) + +dict_length + (oversized ? 20 : 0);
   uint8_t buffer[message_length];
-  AppMessage *message = (AppMessage*)buffer;
+  AppMessage *message = (AppMessage *)buffer;
 
   message->command = CMD_PUSH;
   message->transaction_id = transaction_id;
   message->payload->push.uuid = s_remote_app_uuid;
   memcpy(&message->payload->push.dictionary, s_expected_buffer, dict_length);
-  PBL_LOG_DBG("message->transaction_id = %"PRIu32, message->transaction_id);
+  PBL_LOG_DBG("message->transaction_id = %" PRIu32, message->transaction_id);
 
   CommSession *session = s_fake_app_comm_session;
   app_message_app_protocol_msg_callback(session, buffer, message_length, NULL);
 }
 
-static void prv_receive_ack_nack_callback(uint16_t endpoint_id,
-					  const uint8_t* data, unsigned int length) {
-  AppMessage *message = (AppMessage*)data;
+static void prv_receive_ack_nack_callback(uint16_t endpoint_id, const uint8_t *data,
+                                          unsigned int length) {
+  AppMessage *message = (AppMessage *)data;
   cl_assert(length == sizeof(AppMessage));
-  PBL_LOG_DBG("message %"PRIu32", id1 %"PRIu32", id2 %"PRIu32, message->transaction_id,
-      TEST_TRANSACTION_ID_1, TEST_TRANSACTION_ID_2);
+  PBL_LOG_DBG("message %" PRIu32 ", id1 %" PRIu32 ", id2 %" PRIu32, message->transaction_id,
+              TEST_TRANSACTION_ID_1, TEST_TRANSACTION_ID_2);
   if (message->transaction_id == TEST_TRANSACTION_ID_1) {
     cl_assert_equal_b(s_ack_received_for_id_1, false);
     s_ack_received_for_id_1 = true;
@@ -226,10 +228,8 @@ static void prv_receive_ack_nack_callback(uint16_t endpoint_id,
   }
 }
 
-static void prv_no_reply_callback(uint16_t endpoint_id,
-				  const uint8_t* data, unsigned int length) {
+static void prv_no_reply_callback(uint16_t endpoint_id, const uint8_t *data, unsigned int length) {
 }
-
 
 // Overrides
 ///////////////////////////////////
@@ -269,14 +269,14 @@ bool sys_get_current_app_is_js_allowed(void) {
 }
 
 Version sys_get_current_app_sdk_version(void) {
-  return (Version) {};
+  return (Version){};
 }
 
 static uint16_t s_sent_endpoint_id;
 static uint8_t *s_sent_data;
 static uint16_t s_sent_data_length;
 
-void prv_send_data(uint16_t endpoint_id, const uint8_t* data, uint16_t length) {
+void prv_send_data(uint16_t endpoint_id, const uint8_t *data, uint16_t length) {
   const size_t header_size =
       (uintptr_t)(((AppMessage *)0)->payload[0].push.dictionary.head[0].value->data);
   const uint16_t max_length = (header_size + MAX_DATA_SIZE);
@@ -294,8 +294,8 @@ void prv_send_data(uint16_t endpoint_id, const uint8_t* data, uint16_t length) {
   s_sent_endpoint_id = endpoint_id;
 }
 
-bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id,
-                          const uint8_t* data, uint16_t length) {
+bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
+                          uint16_t length) {
   if (!s_is_connected) {
     return false;
   }
@@ -311,8 +311,8 @@ static void prv_call_outbox_sent(int status) {
   s_app_outbox_sent_handler(status, s_app_outbox_ctx);
 }
 
-void app_outbox_send(const uint8_t *data, size_t length,
-                     AppOutboxSentHandler sent_handler, void *cb_ctx) {
+void app_outbox_send(const uint8_t *data, size_t length, AppOutboxSentHandler sent_handler,
+                     void *cb_ctx) {
   if (!s_is_connected) {
     sent_handler(AppOutboxStatusConsumerDoesNotExist, cb_ctx);
     return;
@@ -320,8 +320,8 @@ void app_outbox_send(const uint8_t *data, size_t length,
   s_app_outbox_sent_handler = sent_handler;
   s_app_outbox_ctx = cb_ctx;
   AppMessageAppOutboxData *outbox_data = (AppMessageAppOutboxData *)data;
-  prv_send_data(outbox_data->endpoint_id,
-                outbox_data->payload, length - sizeof(AppMessageAppOutboxData));
+  prv_send_data(outbox_data->endpoint_id, outbox_data->payload,
+                length - sizeof(AppMessageAppOutboxData));
 }
 
 static void prv_process_sent_data(void) {
@@ -401,8 +401,8 @@ void test_app_message__initialize(void) {
 
   // Create the dictionary that is used to compare with what has been received:
   dict_write_begin(&s_expected_iter, s_expected_buffer, MAX_SIZE_OUTBOUND);
-  cl_assert_equal_i(DICT_OK, dict_write_data(&s_expected_iter, TEST_KEY,
-					     (const uint8_t*)TEST_DATA, MAX_DATA_SIZE));
+  cl_assert_equal_i(DICT_OK, dict_write_data(&s_expected_iter, TEST_KEY, (const uint8_t *)TEST_DATA,
+                                             MAX_DATA_SIZE));
   dict_write_end(&s_expected_iter);
 }
 
@@ -421,8 +421,8 @@ void test_app_message__cleanup(void) {
 static void prv_send_test_data_expecting_result(AppMessageResult result) {
   DictionaryIterator *iter;
   cl_assert_equal_i(app_message_outbox_begin(&iter), APP_MSG_OK);
-  cl_assert_equal_i(dict_write_data(iter, TEST_KEY, (const uint8_t*)TEST_DATA, MAX_DATA_SIZE),
-		    DICT_OK);
+  cl_assert_equal_i(dict_write_data(iter, TEST_KEY, (const uint8_t *)TEST_DATA, MAX_DATA_SIZE),
+                    DICT_OK);
   cl_assert_equal_i(app_message_outbox_send(), result);
 }
 
@@ -697,7 +697,6 @@ void test_app_message__receive_app_not_running(void) {
   cl_assert_equal_b(s_in_received_is_called, false);
   cl_assert_equal_b(s_in_dropped_is_called, false);
 
-
   cl_assert_equal_b(s_nack_received_for_id_2, true);
 
   // Check that the state is reset
@@ -706,8 +705,8 @@ void test_app_message__receive_app_not_running(void) {
 
 void test_app_message__receive_app_uuid_mismatch(void) {
   // Change the current app uuid
-  prv_set_app_uuid(UuidMake(0xF6, 0x2C, 0xB7, 0xBA, 0x1B, 0x8D, 0x46, 0x10,
-			    0xBE, 0xC5, 0xDE, 0xC6, 0x5A, 0xD3, 0x18, 0x29));
+  prv_set_app_uuid(UuidMake(0xF6, 0x2C, 0xB7, 0xBA, 0x1B, 0x8D, 0x46, 0x10, 0xBE, 0xC5, 0xDE, 0xC6,
+                            0x5A, 0xD3, 0x18, 0x29));
 
   prv_set_remote_receive_handler(prv_receive_ack_nack_callback);
   prv_receive_test_data(TEST_TRANSACTION_ID_2, false);
@@ -773,13 +772,13 @@ void test_app_message__kernel_nack_handler(void) {
   prv_set_remote_receive_handler(prv_receive_ack_nack_callback);
 
   const AppMessagePush push = {
-    .header = {
-      .command = CMD_PUSH,
-      .transaction_id = TEST_TRANSACTION_ID_2,
-    },
+      .header = {
+          .command = CMD_PUSH,
+          .transaction_id = TEST_TRANSACTION_ID_2,
+      },
   };
-  app_message_app_protocol_system_nack_callback(s_fake_app_comm_session,
-                                                (const uint8_t *)&push, sizeof(push));
+  app_message_app_protocol_system_nack_callback(s_fake_app_comm_session, (const uint8_t *)&push,
+                                                sizeof(push));
 
   prv_process_sent_data();
   cl_assert_equal_b(s_nack_received_for_id_2, true);

@@ -15,7 +15,8 @@ size_t resource_size(ResAppNum app_num, uint32_t id) {
   return 0;
 }
 
-size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t id, uint32_t start_offset, uint8_t *data, size_t num_bytes) {
+size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t id, uint32_t start_offset,
+                                       uint8_t *data, size_t num_bytes) {
   return 0;
 }
 

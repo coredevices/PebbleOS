@@ -14,10 +14,10 @@
 #include "shell/system_theme.h"
 #include "system/passert.h"
 
-#define SCROLL_ANIMATION_DURATION  (300)
+#define SCROLL_ANIMATION_DURATION (300)
 #define POP_WINDOW_DELAY (400)
 #define CHARACTER_DELAY (20)
-#define TEXT_OFFSET_VERTICAL  (6)
+#define TEXT_OFFSET_VERTICAL (6)
 
 static void prv_show_next_character(TranscriptionDialog *transcription_dialog, int16_t to_idx) {
   // TODO: at the beginning of a word, check whether it's going to wrap when it's finished
@@ -57,29 +57,29 @@ static void prv_set_char_index(void *subject, int16_t index) {
   prv_show_next_character(transcription_dialog, index);
 
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
-  ScrollLayer *scroll_layer = &((ExpandableDialog *) transcription_dialog)->scroll_layer;
+  ScrollLayer *scroll_layer = &((ExpandableDialog *)transcription_dialog)->scroll_layer;
 
   TextLayer *text_layer = &dialog->text_layer;
-  const GSize size = text_layer_get_content_size(graphics_context_get_current_context(),
-      text_layer);
+  const GSize size =
+      text_layer_get_content_size(graphics_context_get_current_context(), text_layer);
   const uint16_t font_height = fonts_get_font_height(text_layer->font);
 
-  text_layer_set_size(text_layer, (GSize) { text_layer->layer.frame.size.w, size.h + font_height });
+  text_layer_set_size(text_layer, (GSize){text_layer->layer.frame.size.w, size.h + font_height});
 
   const GSize scroll_size = scroll_layer_get_content_size(scroll_layer);
   const int16_t new_height = size.h + TEXT_OFFSET_VERTICAL;
   if (scroll_size.h != new_height) {
     const GRect *bounds = &scroll_layer_get_layer(scroll_layer)->bounds;
-    GPoint offset = { .y = bounds->size.h - new_height };
+    GPoint offset = {.y = bounds->size.h - new_height};
 #if PBL_ROUND
     // do paging on round display
     offset.y = ROUND_TO_MOD_CEIL(offset.y, scroll_layer->layer.frame.size.h);
 #endif
     scroll_layer_set_content_size(scroll_layer,
-                                  (GSize) { scroll_layer->layer.frame.size.w, new_height });
+                                  (GSize){scroll_layer->layer.frame.size.w, new_height});
     scroll_layer_set_content_offset(scroll_layer, offset, true /* animated */);
     animation_set_duration(property_animation_get_animation(scroll_layer->animation),
-        SCROLL_ANIMATION_DURATION);
+                           SCROLL_ANIMATION_DURATION);
   }
 
   layer_mark_dirty((Layer *)text_layer);
@@ -87,12 +87,11 @@ static void prv_set_char_index(void *subject, int16_t index) {
 
 static void prv_start_text_animation(TranscriptionDialog *transcription_dialog) {
   static const PropertyAnimationImplementation animated_text_len = {
-    .base = {
-      .update = (AnimationUpdateImplementation) property_animation_update_int16,
-    },
-    .accessors = {
-      .setter = { .int16 = prv_set_char_index }
-    }
+      .base =
+          {
+              .update = (AnimationUpdateImplementation)property_animation_update_int16,
+          },
+      .accessors = {.setter = {.int16 = prv_set_char_index}}
   };
 
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
@@ -110,8 +109,8 @@ static void prv_start_text_animation(TranscriptionDialog *transcription_dialog) 
     }
   }
 
-  transcription_dialog->animation = property_animation_create(&animated_text_len,
-      transcription_dialog, NULL, NULL);
+  transcription_dialog->animation =
+      property_animation_create(&animated_text_len, transcription_dialog, NULL, NULL);
   if (!transcription_dialog->animation) {
     return;
   }
@@ -183,12 +182,12 @@ static void prv_transcription_dialog_select_handler(ClickRecognizerRef recognize
     }
   }
 
-  transcription_dialog->pop_timer = app_timer_register(POP_WINDOW_DELAY,
-      prv_transcription_dialog_select_cb, transcription_dialog);
+  transcription_dialog->pop_timer = app_timer_register(
+      POP_WINDOW_DELAY, prv_transcription_dialog_select_cb, transcription_dialog);
 }
 
-void transcription_dialog_update_text(TranscriptionDialog *transcription_dialog,
-                                      char *buffer, uint16_t buffer_len) {
+void transcription_dialog_update_text(TranscriptionDialog *transcription_dialog, char *buffer,
+                                      uint16_t buffer_len) {
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
 
   transcription_dialog->buffer_len = buffer_len;
@@ -217,8 +216,8 @@ void transcription_dialog_pop(TranscriptionDialog *transcription_dialog) {
 }
 
 void transcription_dialog_set_callback(TranscriptionDialog *transcription_dialog,
-                                        TranscriptionConfirmationCallback callback,
-                                        void *callback_context) {
+                                       TranscriptionConfirmationCallback callback,
+                                       void *callback_context) {
   PBL_ASSERTN(transcription_dialog);
   transcription_dialog->callback = callback;
   transcription_dialog->callback_context = callback_context;
@@ -247,13 +246,16 @@ void transcription_dialog_init(TranscriptionDialog *transcription_dialog) {
   expandable_dialog_set_body_font((ExpandableDialog *)transcription_dialog,
                                   system_theme_get_font(TextStyleFont_Body));
   expandable_dialog_set_select_action((ExpandableDialog *)transcription_dialog,
-      RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_transcription_dialog_select_handler);
+                                      RESOURCE_ID_ACTION_BAR_ICON_CHECK,
+                                      prv_transcription_dialog_select_handler);
 
   Dialog *dialog = expandable_dialog_get_dialog((ExpandableDialog *)transcription_dialog);
-  dialog_set_callbacks(dialog, &(DialogCallbacks) {
-        .unload = prv_transcription_dialog_unload,
-        .load = prv_transcription_dialog_load
-      }, transcription_dialog);
+  dialog_set_callbacks(dialog,
+                       &(DialogCallbacks){
+                           .unload = prv_transcription_dialog_unload,
+                           .load = prv_transcription_dialog_load
+                       },
+                       transcription_dialog);
   dialog_show_status_bar_layer(dialog, true /* show status bar */);
   dialog_set_timeout(dialog, DIALOG_TIMEOUT_INFINITE);
 

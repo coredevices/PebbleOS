@@ -53,12 +53,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#define RETURN_CRASH_TIMEOUT_TICKS  (60 * RTC_TICKS_HZ)
+#define RETURN_CRASH_TIMEOUT_TICKS (60 * RTC_TICKS_HZ)
 
 //! Behold! The file that manages applications!
 //!
-//! The code in this file applies to all apps, whether they're third party apps (stored in SPI flash) or first
-//! party apps stored inside our firmware.
+//! The code in this file applies to all apps, whether they're third party apps (stored in SPI
+//! flash) or first party apps stored inside our firmware.
 //!
 //! Apps are only started and stopped on the launcher task (aka kernel main).
 
@@ -67,7 +67,7 @@ extern char __APP_RAM_end__[];
 extern char __stack_guard_size__[];
 
 //! Used by the "pebble gdb" command to locate the loaded app in memory.
-void * volatile g_app_load_address;
+void *volatile g_app_load_address;
 
 #define MAX_TO_APP_EVENTS 32
 static PBL_MSGQ_DEFINE(s_to_app_event_queue, sizeof(PebbleEvent), MAX_TO_APP_EVENTS);
@@ -91,7 +91,7 @@ static NextApp s_next_app;
 // ---------------------------------------------------------------------------------------------
 void app_manager_init(void) {
   s_initialized = true;
-  s_app_task_context = (ProcessContext) { 0 };
+  s_app_task_context = (ProcessContext){0};
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ static void prv_app_task_main(void *entry_point) {
 //! have to be locked because they're the sole property of the process and no
 //! other tasks should be touching it. All this function does is verify that
 //! this condition is met before continuing without locking.
-static void prv_heap_lock(void* unused) {
+static void prv_heap_lock(void *unused) {
   PBL_ASSERT_TASK(PebbleTask_App);
 }
 
@@ -220,7 +220,7 @@ static size_t prv_get_app_stack_size(const PebbleProcessMd *app_md) {
 }
 
 T_STATIC MemorySegment prv_get_app_ram_segment(void) {
-  return (MemorySegment) { __APP_RAM__, __APP_RAM_end__ };
+  return (MemorySegment){__APP_RAM__, __APP_RAM_end__};
 }
 
 T_STATIC size_t prv_get_stack_guard_size(void) {
@@ -237,7 +237,7 @@ T_STATIC size_t prv_get_stack_guard_size(void) {
 //!     - The app's task handle or event queue aren't null
 //!     - The app's metadata is null
 static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
-    const AppLaunchReason launch_reason) {
+                          const AppLaunchReason launch_reason) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
   PBL_ASSERTN(app_md);
 
@@ -274,7 +274,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   s_app_task_context.load_end = app_segment.start;
   if (!entry_point) {
     PBL_LOG_WRN("Tried to launch an invalid app in bank %u!",
-        process_metadata_get_code_bank_num(app_md));
+                process_metadata_get_code_bank_num(app_md));
     return false;
   }
 
@@ -283,8 +283,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
     const ResourceVersion res_version = process_metadata_get_res_version(app_md);
     if (!resource_init_app(res_bank_num, &res_version)) {
       // The resources are busted! Abort starting this app.
-      APP_LOG(APP_LOG_LEVEL_ERROR,
-              "Checksum for resources differs.");
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Checksum for resources differs.");
       return false;
     }
   }
@@ -306,12 +305,11 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   // Don't fuzz 3rd party app heaps because likely many of them rely on accessing free'd memory
   bool enable_heap_fuzzing = (sdk_type == ProcessAppSDKType_System);
   Heap *app_heap = app_state_get_heap();
-  PBL_LOG_DBG("App heap init %p %p",
-          app_segment.start, app_segment.end);
+  PBL_LOG_DBG("App heap init %p %p", app_segment.start, app_segment.end);
   heap_init(app_heap, app_segment.start, app_segment.end, enable_heap_fuzzing);
-  heap_set_lock_impl(app_heap, (HeapLockImpl) {
-      .lock_function = prv_heap_lock,
-  });
+  heap_set_lock_impl(app_heap, (HeapLockImpl){
+                                   .lock_function = prv_heap_lock,
+                               });
   process_heap_set_exception_handlers(app_heap, app_md);
 
   // We're now going to start the app. We can't abort the app now without calling prv_app_cleanup.
@@ -322,7 +320,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
     AppInstallEntry entry;
     if (!app_install_get_entry_for_install_id(s_app_task_context.install_id, &entry)) {
       // cant retrieve app install entry for id
-      PBL_LOG_ERR("Failed to get entry for id %"PRId32, s_app_task_context.install_id);
+      PBL_LOG_ERR("Failed to get entry for id %" PRId32, s_app_task_context.install_id);
       return false;
     }
     if (app_install_entry_is_watchface(&entry) && !app_install_entry_is_hidden(&entry)) {
@@ -339,24 +337,25 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   process_manager_process_setup(PebbleTask_App);
 
   char task_name[PBL_THREAD_NAME_LEN];
-  snprintf(task_name, sizeof(task_name), "App <%s>", process_metadata_get_name(s_app_task_context.app_md));
+  snprintf(task_name, sizeof(task_name), "App <%s>",
+           process_metadata_get_name(s_app_task_context.app_md));
 
   struct pbl_thread_attr attr = {
-    .name = task_name,
-    .entry = prv_app_task_main,
-    .arg = entry_point,
-    .prio = APP_TASK_PRIORITY,
-    .privileged = true,
-    .stack = stack,
-    .stack_size = stack_size,
+      .name = task_name,
+      .entry = prv_app_task_main,
+      .arg = entry_point,
+      .prio = APP_TASK_PRIORITY,
+      .privileged = true,
+      .stack = stack,
+      .stack_size = stack_size,
   };
 
   PBL_LOG_DBG("Starting %s", task_name);
 
   // Store slot of launched app for reboot support (flash apps only)
-  reboot_set_slot_of_last_launched_app(
-      (app_md->process_storage == ProcessStorageFlash) ?
-          process_metadata_get_code_bank_num(app_md) : SYSTEM_APP_BANK_ID);
+  reboot_set_slot_of_last_launched_app((app_md->process_storage == ProcessStorageFlash)
+                                           ? process_metadata_get_code_bank_num(app_md)
+                                           : SYSTEM_APP_BANK_ID);
 
   s_app_task_context.task_handle = pebble_task_create(PebbleTask_App, &attr);
 
@@ -439,19 +438,16 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   }
 
 #if !defined(CONFIG_RECOVERY_FW)
-  static AppCrashInfo crash_info = { 0 };
+  static AppCrashInfo crash_info = {0};
   // If the same watchface crashes twice in one minute, then we show a dialog informing
   // the user that the watchface has crashed.  Any button press will dismiss
   // the dialog and show us the default system watch face.
   PBL_ASSERTN(install_id != INSTALL_ID_INVALID);
   if (crash_info.install_id != install_id ||
       (crash_info.crash_ticks + RETURN_CRASH_TIMEOUT_TICKS) < rtc_get_ticks()) {
-    PBL_LOG_ERR("Watchface crashed (id=%"PRId32"); relaunching", install_id);
+    PBL_LOG_ERR("Watchface crashed (id=%" PRId32 "); relaunching", install_id);
     PBL_ANALYTICS_ADD(watchface_crash_count, 1);
-    crash_info = (AppCrashInfo) {
-      .install_id = install_id,
-      .crash_ticks = rtc_get_ticks()
-    };
+    crash_info = (AppCrashInfo){.install_id = install_id, .crash_ticks = rtc_get_ticks()};
     // Re-launch immediately
     watchface_launch_default(NULL);
     return;
@@ -495,15 +491,15 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 
   i18n_free_all(crash_dialog);
 
-  const uint32_t elapsed_ms =
-      (rtc_get_ticks() - crash_info.crash_ticks) * 1000 / RTC_TICKS_HZ;
-  PBL_LOG_WRN("Watchface crashed twice in %"PRIu32"ms (id=%"PRId32"); "
-                  "reverting to default",
-                  elapsed_ms, install_id);
+  const uint32_t elapsed_ms = (rtc_get_ticks() - crash_info.crash_ticks) * 1000 / RTC_TICKS_HZ;
+  PBL_LOG_WRN("Watchface crashed twice in %" PRIu32 "ms (id=%" PRId32
+              "); "
+              "reverting to default",
+              elapsed_ms, install_id);
   PBL_ANALYTICS_ADD(watchface_crash_count, 1);
   PBL_ANALYTICS_ADD(watchface_crash_revert_count, 1);
 
-  crash_info = (AppCrashInfo) { 0 };
+  crash_info = (AppCrashInfo){0};
 
   watchface_set_default_install_id(INSTALL_ID_INVALID);
   watchface_launch_default(NULL);
@@ -511,25 +507,25 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 }
 
 // ---------------------------------------------------------------------------------------------
-//! Switch to the app stored in the s_next_app global. The gracefully flag tells us whether to attempt a graceful
-//! exit or not.
+//! Switch to the app stored in the s_next_app global. The gracefully flag tells us whether to
+//! attempt a graceful exit or not.
 //!
-//! For a graceful exit, if the app has not already finished it's de-init, we post a de_init event to the app, set
-//! a 3 second timer, and return immediately to the caller. If/when the app finally finishes deinit, it will post a
-//! PEBBLE_PROCESS_KILL_EVENT (graceful=true), which results in this method being again with graceful=true. We will then
-//! see that the de_init already finished in that second invocation.
+//! For a graceful exit, if the app has not already finished it's de-init, we post a de_init event
+//! to the app, set a 3 second timer, and return immediately to the caller. If/when the app finally
+//! finishes deinit, it will post a PEBBLE_PROCESS_KILL_EVENT (graceful=true), which results in this
+//! method being again with graceful=true. We will then see that the de_init already finished in
+//! that second invocation.
 //!
-//! If the app has finished its de-init, or graceful is false, we proceed to kill the app task and launch the next
-//! app as stored in the s_next_app global.
+//! If the app has finished its de-init, or graceful is false, we proceed to kill the app task and
+//! launch the next app as stored in the s_next_app global.
 //!
 //! Returns true if new app was just switched in.
 static bool prv_app_switch(bool gracefully) {
   ProcessContext *app_task_ctx = &s_app_task_context;
 
   PBL_LOG_DBG("Switching from '%s' to '%s', graceful=%d...",
-          process_metadata_get_name(app_task_ctx->app_md),
-          process_metadata_get_name(s_next_app.md),
-          (int)gracefully);
+              process_metadata_get_name(app_task_ctx->app_md),
+              process_metadata_get_name(s_next_app.md), (int)gracefully);
 
   // Shouldn't be called from app. Use app_manager_put_kill_app_event() instead.
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
@@ -539,7 +535,8 @@ static bool prv_app_switch(bool gracefully) {
   // to exit, causing the app we land on to be killed when it shouldn't be.
   launcher_cancel_force_quit();
 
-  // Make sure the process is safe to kill. If this method returns false, it will have set a timer to post
+  // Make sure the process is safe to kill. If this method returns false, it will have set a timer
+  // to post
   //  another KILL event in a few seconds, thus giving the process a chance to clean up.
   if (!process_manager_make_process_safe_to_kill(PebbleTask_App, gracefully)) {
     // Maybe next time...
@@ -554,16 +551,16 @@ static bool prv_app_switch(bool gracefully) {
   // If we had to ungracefully kill the current app, switch to the launcher app
   if (!gracefully) {
     app_install_release_md(s_next_app.md);
-    s_next_app = (NextApp) {
-      .md = system_app_state_machine_get_default_app(),
+    s_next_app = (NextApp){
+        .md = system_app_state_machine_get_default_app(),
     };
   } else {
     // Get the next app to launch
     if (!s_next_app.md) {
       // There is no next app to launch? We're starting up, let's launch the startup app.
       app_install_release_md(s_next_app.md);
-      s_next_app = (NextApp) {
-        .md = system_app_state_machine_system_start(),
+      s_next_app = (NextApp){
+          .md = system_app_state_machine_system_start(),
       };
     }
   }
@@ -574,7 +571,7 @@ static bool prv_app_switch(bool gracefully) {
       PBL_CROAK("Failed to start system app <%s>!", process_metadata_get_name(s_next_app.md));
     }
     PBL_LOG_WRN("Failed to start app <%s>! Restarting launcher",
-            process_metadata_get_name(s_next_app.md));
+                process_metadata_get_name(s_next_app.md));
 
     prv_app_start(system_app_state_machine_system_start(), NULL, APP_LAUNCH_SYSTEM);
   }
@@ -587,14 +584,14 @@ static bool prv_app_switch(bool gracefully) {
   }
 
   // Clear for next time.
-  s_next_app = (NextApp) {};
+  s_next_app = (NextApp){};
 
   return true;
 }
 
 // ---------------------------------------------------------------------------------------------
 void app_manager_start_first_app(void) {
-  const PebbleProcessMd* app_md = system_app_state_machine_system_start();
+  const PebbleProcessMd *app_md = system_app_state_machine_system_start();
 #ifdef CONFIG_SHELL_SDK
   // SDK shell's system_start returns the default watchface (a flash app) when one is set.
   // If an install crashed partway through PutBytes, BlobDB has the entry and
@@ -622,8 +619,9 @@ void app_manager_start_first_app(void) {
 
 static const CompositorTransition *prv_get_transition(const LaunchConfigCommon *config,
                                                       AppInstallId new_app_id) {
-  return config->transition ?: shell_get_open_compositor_animation(s_app_task_context.install_id,
-                                                                   new_app_id, config);
+  return config->transition
+             ?: shell_get_open_compositor_animation(s_app_task_context.install_id, new_app_id,
+                                                    config);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -631,17 +629,12 @@ void app_manager_put_launch_app_event(const AppLaunchEventConfig *config) {
   PBL_ASSERTN(config->id != INSTALL_ID_INVALID);
 
   PebbleLaunchAppEventExtended *data = kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
-  *data = (PebbleLaunchAppEventExtended) {
-    .common = config->common
-  };
+  *data = (PebbleLaunchAppEventExtended){.common = config->common};
   data->common.transition = prv_get_transition(&config->common, config->id);
 
   PebbleEvent e = {
-    .type = PEBBLE_APP_LAUNCH_EVENT,
-    .launch_app = {
-      .id = config->id,
-      .data = data
-    },
+      .type = PEBBLE_APP_LAUNCH_EVENT,
+      .launch_app = {.id = config->id, .data = data},
   };
 
   event_put(&e);
@@ -657,7 +650,7 @@ bool app_manager_launch_new_app(const AppLaunchConfig *config) {
 
   if (!config->restart && uuid_equal(&(app_md->uuid), &(s_app_task_context.app_md->uuid))) {
     PBL_LOG_WRN("Ignoring launch for app <%s>, app is already running",
-            process_metadata_get_name(app_md));
+                process_metadata_get_name(app_md));
 
     app_install_release_md(app_md);
     return false;
@@ -665,16 +658,16 @@ bool app_manager_launch_new_app(const AppLaunchConfig *config) {
 
   if (process_metadata_get_run_level(app_md) < s_minimum_run_level) {
     PBL_LOG_WRN("Ignoring launch for app <%s>, minimum run level %d, app run level %d",
-        process_metadata_get_name(app_md), s_minimum_run_level,
-        process_metadata_get_run_level(app_md));
+                process_metadata_get_name(app_md), s_minimum_run_level,
+                process_metadata_get_run_level(app_md));
 
     app_install_release_md(app_md);
     return false;
   }
 
-  s_next_app = (NextApp) {
-    .md = app_md,
-    .common = config->common,
+  s_next_app = (NextApp){
+      .md = app_md,
+      .common = config->common,
   };
   s_next_app.common.transition = prv_get_transition(&config->common, new_app_id);
 
@@ -697,11 +690,11 @@ void app_manager_handle_app_fetch_request_event(const PebbleAppFetchRequestEvent
     return;
   }
   const AppFetchUIArgs *const fetch_args = evt->fetch_args;
-  app_manager_launch_new_app(&(AppLaunchConfig) {
-    .md = app_fetch_ui_get_app_info(),
-    .common.args = fetch_args,
-    .common.transition = fetch_args->common.transition,
-    .forcefully = fetch_args->forcefully,
+  app_manager_launch_new_app(&(AppLaunchConfig){
+      .md = app_fetch_ui_get_app_info(),
+      .common.args = fetch_args,
+      .common.transition = fetch_args->common.transition,
+      .forcefully = fetch_args->forcefully,
   });
 }
 
@@ -749,10 +742,10 @@ void app_manager_close_current_app(bool gracefully) {
   }
 
   app_manager_set_minimum_run_level(ProcessAppRunLevelNormal);
-  process_manager_launch_process(&(ProcessLaunchConfig) {
-    .id = destination_app_id,
-    .common.transition = shell_get_close_compositor_animation(current_app_id, destination_app_id),
-    .forcefully = !gracefully,
+  process_manager_launch_process(&(ProcessLaunchConfig){
+      .id = destination_app_id,
+      .common.transition = shell_get_close_compositor_animation(current_app_id, destination_app_id),
+      .forcefully = !gracefully,
   });
 }
 
@@ -766,15 +759,15 @@ void app_manager_force_quit_to_launcher(void) {
   const PebbleProcessMd *default_process = system_app_state_machine_get_default_app();
   const AppInstallId current_app_id = s_app_task_context.install_id;
   const AppInstallId new_app_id = app_install_get_id_for_uuid(&default_process->uuid);
-  s_next_app = (NextApp) {
-    .md = default_process,
+  s_next_app = (NextApp){
+      .md = default_process,
   };
   s_next_app.common.transition = shell_get_close_compositor_animation(current_app_id, new_app_id);
 
   prv_app_switch(true /*gracefully*/);
 }
 
-const PebbleProcessMd* app_manager_get_current_app_md(void) {
+const PebbleProcessMd *app_manager_get_current_app_md(void) {
   return s_app_task_context.app_md;
 }
 
@@ -782,7 +775,7 @@ AppInstallId app_manager_get_current_app_id(void) {
   return s_app_task_context.install_id;
 }
 
-ProcessContext* app_manager_get_task_context(void) {
+ProcessContext *app_manager_get_task_context(void) {
   return &s_app_task_context;
 }
 
@@ -815,7 +808,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
 
   // Platform matches current platform
   const PlatformType sdk_platform =
-    process_metadata_get_app_sdk_platform(s_app_task_context.app_md);
+      process_metadata_get_app_sdk_platform(s_app_task_context.app_md);
 
   if (sdk_platform == PBL_PLATFORM_TYPE_CURRENT) {
     *size = GSize(DISP_COLS, DISP_ROWS);
@@ -857,7 +850,7 @@ bool app_manager_is_app_supported(const PebbleProcessMd *md) {
 void command_get_active_app_metadata(void) {
   char buffer[32];
 
-  const PebbleProcessMd* app_metadata = app_manager_get_current_app_md();
+  const PebbleProcessMd *app_metadata = app_manager_get_current_app_md();
   if (app_metadata != NULL) {
     prompt_send_response_fmt(buffer, sizeof(buffer), "app name: %s",
                              process_metadata_get_name(app_metadata));
@@ -865,7 +858,7 @@ void command_get_active_app_metadata(void) {
                              (app_metadata->process_type == ProcessTypeWatchface));
     prompt_send_response_fmt(buffer, sizeof(buffer), "visibility: %u", app_metadata->visibility);
     prompt_send_response_fmt(buffer, sizeof(buffer), "bank: %d",
-                             (uint8_t) process_metadata_get_res_bank_num(app_metadata));
+                             (uint8_t)process_metadata_get_res_bank_num(app_metadata));
   } else {
     prompt_send_response("metadata lookup failed: no app running");
   }
@@ -901,7 +894,6 @@ DEFINE_SYSCALL(bool, sys_app_is_watchface, void) {
 }
 
 DEFINE_SYSCALL(ResAppNum, sys_get_current_resource_num, void) {
-
   if (pebble_task_get_current() == PebbleTask_KernelMain) {
     return SYSTEM_APP;
   }

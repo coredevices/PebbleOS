@@ -85,6 +85,5 @@ uint32_t ambient_light_level_to_lux(uint32_t light_level) {
   if (light_level <= offset) {
     return 0;
   }
-  return (uint32_t)(((uint64_t)(light_level - offset) *
-                     BOARD_CONFIG.ambient_light_lux_num) / den);
+  return (uint32_t)(((uint64_t)(light_level - offset) * BOARD_CONFIG.ambient_light_lux_num) / den);
 }

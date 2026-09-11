@@ -37,12 +37,12 @@ bool remote_is_connected(void) {
   return s_default_connection_state;
 }
 
-void event_put(PebbleEvent* event) {
+void event_put(PebbleEvent *event) {
   s_event_count++;
 
-  s_cached_event = (PebbleEvent) {
-    .type = event->type,
-    .bluetooth.comm_session_event = event->bluetooth.comm_session_event
+  s_cached_event = (PebbleEvent){
+      .type = event->type,
+      .bluetooth.comm_session_event = event->bluetooth.comm_session_event
   };
 }
 
@@ -53,7 +53,7 @@ static void init(bool connected) {
     s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
     s_session = fake_transport_set_connected(s_transport, true);
   }
-  
+
   s_default_connection_state = connected;
 
   regular_timer_init();
@@ -83,8 +83,8 @@ static void check_disconnected(void) {
 static void prv_send_connection_event(bool is_connected) {
   //! Get connected event
   PebbleCommSessionEvent event = {
-    .is_open = is_connected,
-    .is_system = true,
+      .is_open = is_connected,
+      .is_system = true,
   };
   debounced_connection_service_handle_event(&event);
 }

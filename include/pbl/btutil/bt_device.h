@@ -22,8 +22,7 @@ BTDeviceAddress bt_device_get_address(BTDevice device);
 //! Compares two Bluetooth device addresses.
 //! @return true if the addresses are equal, false if they are not or if one
 //! or both addresses were NULL.
-bool bt_device_address_equal(const BTDeviceAddress *addr1,
-                             const BTDeviceAddress *addr2);
+bool bt_device_address_equal(const BTDeviceAddress *addr1, const BTDeviceAddress *addr2);
 
 //! Compares the address with an all-zero (invalid) address.
 //! @return true if the address is NULL or all-zeroes.

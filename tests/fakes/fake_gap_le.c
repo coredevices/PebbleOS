@@ -24,8 +24,7 @@ bool gap_le_deinit(uint32_t stack_id) {
   return true;
 }
 
-void gap_le_connect_params_request_low_power(unsigned int stack_id, const BD_ADDR_t* addr) {
-
+void gap_le_connect_params_request_low_power(unsigned int stack_id, const BD_ADDR_t *addr) {
 }
 
 bool fake_gap_le_is_initialized(void) {
@@ -35,6 +34,5 @@ bool fake_gap_le_is_initialized(void) {
 void sm_set_pairable(uint32_t stack_id, bool is_pairable) {
 }
 
-void gap_le_request_power_saving_connection_params(unsigned int stack_id, const BD_ADDR_t* addr) {
+void gap_le_request_power_saving_connection_params(unsigned int stack_id, const BD_ADDR_t *addr) {
 }
-

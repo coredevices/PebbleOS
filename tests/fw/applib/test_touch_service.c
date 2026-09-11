@@ -112,14 +112,14 @@ static void prv_order_raw_handler(const TouchEvent *event, void *context) {
 static void prv_deliver_touch(TouchEventType type, int16_t x, int16_t y) {
   cl_assert(s_subscribed_info != NULL);
   PebbleEvent e = {
-    .type = PEBBLE_TOUCH_EVENT,
-    .touch = {
-      .event = {
-        .type = type,
-        .x = x,
-        .y = y,
+      .type = PEBBLE_TOUCH_EVENT,
+      .touch = {
+          .event = {
+              .type = type,
+              .x = x,
+              .y = y,
+          },
       },
-    },
   };
   s_subscribed_info->handler(&e, s_subscribed_info->context);
 }
@@ -131,8 +131,8 @@ void test_touch_service__initialize(void) {
   s_unsubscribe_count = 0;
   s_subscribed_info = NULL;
   s_touch_reset_count = 0;
-  s_system_rec = (HandlerRecord){ 0 };
-  s_raw_rec = (HandlerRecord){ 0 };
+  s_system_rec = (HandlerRecord){0};
+  s_raw_rec = (HandlerRecord){0};
   touch_service_state_init(&s_state);
 }
 

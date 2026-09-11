@@ -165,8 +165,7 @@ void backlight_refresh(void) {
     return;
   }
 
-  ret = prv_write_register(AW2016_REG_GCR1,
-                           AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+  ret = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
   ret &= prv_configure_registers();
   if (!ret) {
     PBL_LOG_ERR("AW2016 refresh failed (i2c)");

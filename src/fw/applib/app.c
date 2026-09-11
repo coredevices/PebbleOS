@@ -31,7 +31,7 @@ static void prv_render_app(void) {
   *app_state_get_framebuffer_render_pending() = true;
 
   PebbleEvent event = {
-    .type = PEBBLE_RENDER_READY_EVENT,
+      .type = PEBBLE_RENDER_READY_EVENT,
   };
   sys_send_pebble_event_to_kernel(&event);
 }
@@ -65,20 +65,21 @@ void app_request_render(void) {
 
 //! Tasks that have to be done in between each event.
 static NOINLINE void event_loop_upkeep(void) {
-
-  // Check to see if the most recent event caused us to pop our final window. If that's the case, we need to
-  // kill ourselves.
+  // Check to see if the most recent event caused us to pop our final window. If that's the case, we
+  // need to kill ourselves.
   if (app_window_stack_count() == 0) {
     PBL_LOG_DBG("No more windows, killing current app");
 
-    PebbleEvent event = { .type = PEBBLE_PROCESS_KILL_EVENT, .kill = { .gracefully = true, .task=PebbleTask_App } };
+    PebbleEvent event = {
+        .type = PEBBLE_PROCESS_KILL_EVENT,
+        .kill = {.gracefully = true, .task = PebbleTask_App}
+    };
     sys_send_pebble_event_to_kernel(&event);
     return;
   }
 
   // Check to see if handling the previous event requires us to rerender ourselves.
-  if (prv_app_is_render_scheduled() &&
-      !*app_state_get_framebuffer_render_pending()) {
+  if (prv_app_is_render_scheduled() && !*app_state_get_framebuffer_render_pending()) {
     prv_render_app();
   }
 }
@@ -133,8 +134,7 @@ static void prv_legacy2_status_bar_handler(PebbleEvent *e, void *context) {
   // only force render if we're not fullscreen
   if (!window->is_fullscreen) {
     // a little logic to only force update when the minute changes
-    ApplibInternalEventsInfo *events_info =
-        app_state_get_applib_internal_events_info();
+    ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
     struct tm currtime;
     sys_localtime_r(&e->clock_tick.tick_time, &currtime);
     const int minute_of_day = (currtime.tm_hour * 60) + currtime.tm_min;
@@ -148,16 +148,14 @@ static void prv_legacy2_status_bar_handler(PebbleEvent *e, void *context) {
 static void prv_legacy2_status_bar_timer_subscribe(void) {
   // we only need this tick event if we are a legacy2 app
   if (process_manager_compiled_with_legacy2_sdk()) {
-    ApplibInternalEventsInfo *events_info =
-        app_state_get_applib_internal_events_info();
+    ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
     // Initialize the state for the status bar handler.
     events_info->minute_of_last_legacy2_statusbar_change = -1;
-    events_info->legacy2_status_bar_change_event = (EventServiceInfo) {
-      .type = PEBBLE_TICK_EVENT,
-      .handler = prv_legacy2_status_bar_handler,
+    events_info->legacy2_status_bar_change_event = (EventServiceInfo){
+        .type = PEBBLE_TICK_EVENT,
+        .handler = prv_legacy2_status_bar_handler,
     };
-    event_service_client_subscribe(
-        &events_info->legacy2_status_bar_change_event);
+    event_service_client_subscribe(&events_info->legacy2_status_bar_change_event);
   }
   // NOTE: We could be super fancy and register and unregister when the fullscreen
   // status changes, but it's probably not worth it as we'll be waking up once a
@@ -167,10 +165,8 @@ static void prv_legacy2_status_bar_timer_subscribe(void) {
 static void prv_legacy2_status_bar_timer_unsubscribe(void) {
   // we should only unsubscribe if we subscribed in the first place
   if (process_manager_compiled_with_legacy2_sdk()) {
-    ApplibInternalEventsInfo *events_info =
-        app_state_get_applib_internal_events_info();
-    event_service_client_unsubscribe(
-        &events_info->legacy2_status_bar_change_event);
+    ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
+    event_service_client_unsubscribe(&events_info->legacy2_status_bar_change_event);
   }
 }
 
@@ -179,12 +175,11 @@ static void prv_app_callback_handler(PebbleEvent *e) {
 }
 
 static NOINLINE void prv_handle_deinit_event(void) {
-  ApplibInternalEventsInfo *events_info =
-      app_state_get_applib_internal_events_info();
+  ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
   event_service_client_unsubscribe(&events_info->will_focus_event);
   event_service_client_unsubscribe(&events_info->button_down_event);
   event_service_client_unsubscribe(&events_info->button_up_event);
-  prv_legacy2_status_bar_timer_unsubscribe(); // a no-op on sdk3+ applications
+  prv_legacy2_status_bar_timer_unsubscribe();  // a no-op on sdk3+ applications
   WindowStack *app_window_stack = app_state_get_window_stack();
   window_stack_lock_push(app_window_stack);
   window_stack_pop_all(app_window_stack, false);
@@ -213,24 +208,23 @@ void app_event_loop_common(void) {
   // Register our event handlers before we do anything else. Registering for an event requires
   // an event being sent to the kernel and therefore should be done before any other events are
   // generated by us to ensure we don't miss out on anything.
-  ApplibInternalEventsInfo *events_info =
-      app_state_get_applib_internal_events_info();
-  events_info->will_focus_event = (EventServiceInfo) {
-    .type = PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT,
-    .handler = prv_app_will_focus_handler,
+  ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
+  events_info->will_focus_event = (EventServiceInfo){
+      .type = PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT,
+      .handler = prv_app_will_focus_handler,
   };
-  events_info->button_down_event = (EventServiceInfo) {
-    .type = PEBBLE_BUTTON_DOWN_EVENT,
-    .handler = prv_app_button_down_handler,
+  events_info->button_down_event = (EventServiceInfo){
+      .type = PEBBLE_BUTTON_DOWN_EVENT,
+      .handler = prv_app_button_down_handler,
   };
-  events_info->button_up_event = (EventServiceInfo) {
-    .type = PEBBLE_BUTTON_UP_EVENT,
-    .handler = prv_app_button_up_handler,
+  events_info->button_up_event = (EventServiceInfo){
+      .type = PEBBLE_BUTTON_UP_EVENT,
+      .handler = prv_app_button_up_handler,
   };
   event_service_client_subscribe(&events_info->will_focus_event);
   event_service_client_subscribe(&events_info->button_down_event);
   event_service_client_subscribe(&events_info->button_up_event);
-  prv_legacy2_status_bar_timer_subscribe(); // a no-op on sdk3+ applications
+  prv_legacy2_status_bar_timer_subscribe();  // a no-op on sdk3+ applications
 
   event_loop_upkeep();
 

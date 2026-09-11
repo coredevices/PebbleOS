@@ -10,4 +10,3 @@ void idle_set_enabled(bool enable);
 
 //! Check whether we are permitted to go idle.
 bool idle_is_allowed(void);
-

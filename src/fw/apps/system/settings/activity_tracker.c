@@ -29,8 +29,7 @@ typedef struct SettingsActivityTrackerData {
 
 static bool prv_app_filter_callback(struct AppMenuDataSource *const source,
                                     AppInstallEntry *entry) {
-  if (!app_install_entry_is_hidden(entry) &&
-      app_install_entry_has_worker(entry)) {
+  if (!app_install_entry_is_hidden(entry) && app_install_entry_has_worker(entry)) {
     return true;
   }
   return false;
@@ -89,7 +88,7 @@ static void prv_select_cb(OptionMenu *option_menu, int row, void *context) {
     process_manager_put_kill_process_event(PebbleTask_Worker, true /* graceful */);
     worker_manager_set_default_install_id(INSTALL_ID_INVALID);
   } else {
-    const uint16_t app_index = row - 1; // offset because of the "None" selection
+    const uint16_t app_index = row - 1;  // offset because of the "None" selection
     const AppMenuNode *app_node =
         app_menu_data_source_get_node_at_index(data->data_source, app_index);
     if (worker_manager_get_task_context()->install_id == INSTALL_ID_INVALID) {
@@ -127,7 +126,7 @@ static void prv_draw_no_activities_cell_rect(GContext *ctx, const Layer *cell_la
   // we divide the height of the cell by two and subtract half of the text size.
   // However, that just puts the TOP of a line vertically aligned.
   // So we also have to subtract half of a single line's width.
-  box.origin.y = (box.size.h - text_size.h - fonts_get_font_height(font)/2) / 2;
+  box.origin.y = (box.size.h - text_size.h - fonts_get_font_height(font) / 2) / 2;
 
   graphics_draw_text(ctx, no_activities_string, font, box, overflow, alignment, NULL);
 }
@@ -153,9 +152,8 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
   if (prv_num_rows(data) == 0) {
     // Draw "No background apps" box and exit
     const char *no_background_apps_string = i18n_get("No background apps", data);
-    PBL_IF_RECT_ELSE(prv_draw_no_activities_cell_rect,
-                     prv_draw_no_activities_cell_round)
-                     (ctx, cell_layer, no_background_apps_string);
+    PBL_IF_RECT_ELSE(prv_draw_no_activities_cell_rect, prv_draw_no_activities_cell_round)
+    (ctx, cell_layer, no_background_apps_string);
     return;
   }
 
@@ -223,26 +221,29 @@ static Window *prv_init(void) {
   };
 
   data->data_source = app_zalloc_check(sizeof(AppMenuDataSource));
-  app_menu_data_source_init(data->data_source, &(AppMenuDataSourceCallbacks) {
-    .changed = prv_reload_menu_data,
-    .filter = prv_app_filter_callback,
-  }, data);
+  app_menu_data_source_init(data->data_source,
+                            &(AppMenuDataSourceCallbacks){
+                                .changed = prv_reload_menu_data,
+                                .filter = prv_app_filter_callback,
+                            },
+                            data);
 
   option_menu_init(&data->option_menu);
   // Not using option_menu_configure because prv_reload_menu_data already sets
   // icons_enabled and chosen row index
   option_menu_set_status_colors(&data->option_menu, GColorWhite, GColorBlack);
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  option_menu_set_highlight_colors(&data->option_menu, highlight_bg, gcolor_legible_over(highlight_bg));
+  option_menu_set_highlight_colors(&data->option_menu, highlight_bg,
+                                   gcolor_legible_over(highlight_bg));
   option_menu_set_title(&data->option_menu, i18n_get("Background App", data));
   option_menu_set_content_type(&data->option_menu, OptionMenuContentType_SingleLine);
   option_menu_set_callbacks(&data->option_menu, &option_menu_callbacks, data);
   prv_reload_menu_data(data);
 
-  data->worker_launch_info = (EventServiceInfo) {
-    .type = PEBBLE_WORKER_LAUNCH_EVENT,
-    .handler = prv_worker_launch_handler,
-    .context = data
+  data->worker_launch_info = (EventServiceInfo){
+      .type = PEBBLE_WORKER_LAUNCH_EVENT,
+      .handler = prv_worker_launch_handler,
+      .context = data
   };
   event_service_client_subscribe(&data->worker_launch_info);
 
@@ -251,8 +252,8 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_activity_tracker_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Background App"),
-    .init = prv_init,
+      .name = i18n_noop("Background App"),
+      .init = prv_init,
   };
 
   return &s_module_info;

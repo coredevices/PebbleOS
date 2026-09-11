@@ -36,8 +36,10 @@ static size_t prv_reverse(const char *in, Codepoint *cps, size_t max) {
   return count;
 }
 
-void test_rtl_support__initialize(void) {}
-void test_rtl_support__cleanup(void) {}
+void test_rtl_support__initialize(void) {
+}
+void test_rtl_support__cleanup(void) {
+}
 
 ///////////////////////////////////////////////////////////
 // Tests
@@ -89,11 +91,13 @@ void test_rtl_support__digits_in_arabic(void) {
 // the numeric run rather than reversing the groups (٢٠٢٦/٠٦/٢٢, not ٢٢/٠٦/٢٠٢٦).
 void test_rtl_support__date_separators_preserved(void) {
   Codepoint cps[16];
-  size_t n = prv_reverse("\xD9\xA2\xD9\xA0\xD9\xA2\xD9\xA6/\xD9\xA0\xD9\xA6/"
-                         "\xD9\xA2\xD9\xA2", cps, 16);  // ٢٠٢٦/٠٦/٢٢
+  size_t n = prv_reverse(
+      "\xD9\xA2\xD9\xA0\xD9\xA2\xD9\xA6/\xD9\xA0\xD9\xA6/"
+      "\xD9\xA2\xD9\xA2",
+      cps, 16);  // ٢٠٢٦/٠٦/٢٢
   cl_assert_equal_i(n, 10);
   const Codepoint expect[] = {0x0662, 0x0660, 0x0662, 0x0666, '/',
-                              0x0660, 0x0666, '/', 0x0662, 0x0662};
+                              0x0660, 0x0666, '/',    0x0662, 0x0662};
   for (size_t i = 0; i < n; i++) {
     cl_assert_equal_i(cps[i], expect[i]);
   }

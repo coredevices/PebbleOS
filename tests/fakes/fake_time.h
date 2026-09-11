@@ -46,9 +46,9 @@ time_t time_utc_to_local(time_t utc_time) {
 }
 
 time_t time_local_to_utc(time_t local_time) {
-  int32_t dst_offset = ((local_time + s_dst_off) > s_dst_start &&
-                        (local_time + s_dst_off) < s_dst_stop
-                       ) ? s_dst_off : 0;
+  int32_t dst_offset =
+      ((local_time + s_dst_off) > s_dst_start && (local_time + s_dst_off) < s_dst_stop) ? s_dst_off
+                                                                                        : 0;
   return (local_time - s_gmt_off) - dst_offset;
 }
 
@@ -66,5 +66,3 @@ void fake_time_set_dst(int32_t offset, int32_t start, int32_t stop) {
 void fake_time_set_gmtoff(int32_t gmtoff) {
   s_gmt_off = gmtoff;
 }
-
-

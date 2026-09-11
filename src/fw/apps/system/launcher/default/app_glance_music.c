@@ -31,24 +31,21 @@ typedef struct LauncherAppGlanceMusic {
 } LauncherAppGlanceMusic;
 
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
-  LauncherAppGlanceMusic *music_glance =
-      launcher_app_glance_structured_get_data(structured_glance);
+  LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
   return NULL_SAFE_FIELD_ACCESS(music_glance, icon, NULL);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
-  LauncherAppGlanceMusic *music_glance =
-      launcher_app_glance_structured_get_data(structured_glance);
+  LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
   return NULL_SAFE_FIELD_ACCESS(music_glance, title, NULL);
 }
 
 static void prv_music_glance_subtitle_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
-  LauncherAppGlanceMusic *music_glance =
-      launcher_app_glance_structured_get_data(structured_glance);
+  LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
   if (music_glance) {
     strncpy(buffer, music_glance->subtitle, buffer_size);
     buffer[buffer_size - 1] = '\0';
@@ -61,8 +58,7 @@ static GTextNode *prv_create_subtitle_node(LauncherAppGlanceStructured *structur
 }
 
 static void prv_destructor(LauncherAppGlanceStructured *structured_glance) {
-  LauncherAppGlanceMusic *music_glance =
-      launcher_app_glance_structured_get_data(structured_glance);
+  LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
   if (music_glance) {
     event_service_client_unsubscribe(&music_glance->music_event_info);
     kino_reel_destroy(music_glance->icon);
@@ -107,8 +103,7 @@ static bool prv_should_display_music_state(MusicPlayState play_state,
 }
 
 static void prv_update_glance_for_music_state(LauncherAppGlanceStructured *structured_glance) {
-  LauncherAppGlanceMusic *music_glance =
-      launcher_app_glance_structured_get_data(structured_glance);
+  LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
   PBL_ASSERTN(music_glance);
 
   // Zero out the glance's subtitle buffer
@@ -170,10 +165,10 @@ static void prv_music_event_handler(PebbleEvent *event, void *context) {
 }
 
 static const LauncherAppGlanceStructuredImpl s_music_structured_glance_impl = {
-  .get_icon = prv_get_icon,
-  .get_title = prv_get_title,
-  .create_subtitle_node = prv_create_subtitle_node,
-  .destructor = prv_destructor,
+    .get_icon = prv_get_icon,
+    .get_title = prv_get_title,
+    .create_subtitle_node = prv_create_subtitle_node,
+    .destructor = prv_destructor,
 };
 
 LauncherAppGlance *launcher_app_glance_music_create(const AppMenuNode *node) {
@@ -190,19 +185,18 @@ LauncherAppGlance *launcher_app_glance_music_create(const AppMenuNode *node) {
   music_glance->default_icon_resource_id = node->icon_resource_id;
 
   const bool should_consider_slices = false;
-  LauncherAppGlanceStructured *structured_glance =
-      launcher_app_glance_structured_create(&node->uuid, &s_music_structured_glance_impl,
-                                            should_consider_slices, music_glance);
+  LauncherAppGlanceStructured *structured_glance = launcher_app_glance_structured_create(
+      &node->uuid, &s_music_structured_glance_impl, should_consider_slices, music_glance);
   PBL_ASSERTN(structured_glance);
 
   // Get the first state of the glance
   prv_update_glance_for_music_state(structured_glance);
 
   // Subscribe to music events for updating the glance
-  music_glance->music_event_info = (EventServiceInfo) {
-    .type = PEBBLE_MEDIA_EVENT,
-    .handler = prv_music_event_handler,
-    .context = structured_glance,
+  music_glance->music_event_info = (EventServiceInfo){
+      .type = PEBBLE_MEDIA_EVENT,
+      .handler = prv_music_event_handler,
+      .context = structured_glance,
   };
   event_service_client_subscribe(&music_glance->music_event_info);
 

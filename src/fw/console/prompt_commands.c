@@ -59,17 +59,17 @@ void pfs_command_stress(void) {
   system_task_add_callback(prv_pfs_stress_callback, NULL);
 }
 
-extern void command_read_word(const char* address_str) {
+extern void command_read_word(const char *address_str) {
   int32_t address = str_to_address(address_str);
   if (address == -1) {
     prompt_send_response("Invalid address");
     return;
   }
 
-  uint32_t word = *(uint32_t*) address;
+  uint32_t word = *(uint32_t *)address;
 
   char buffer[32];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "0x%"PRIx32" = 0x%"PRIx32, address, word);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "0x%" PRIx32 " = 0x%" PRIx32, address, word);
 }
 
 void command_format_flash(void) {
@@ -90,8 +90,8 @@ void command_erase_flash(const char *address_str, const char *length_str) {
   }
 
   char buffer[128];
-  prompt_send_response_fmt(buffer, 128, "Erasing sectors from 0x%"PRIx32" for %ub",
-                           address, length);
+  prompt_send_response_fmt(buffer, 128, "Erasing sectors from 0x%" PRIx32 " for %ub", address,
+                           length);
 
   const uint32_t end_address = address + length;
   const uint32_t aligned_end_address =
@@ -102,7 +102,7 @@ void command_erase_flash(const char *address_str, const char *length_str) {
   prompt_send_response("OK");
 }
 
-void command_dump_flash(const char* address_str, const char* length_str) {
+void command_dump_flash(const char *address_str, const char *length_str) {
   int32_t address = str_to_address(address_str);
   if (address == -1) {
     prompt_send_response("Invalid address");
@@ -124,7 +124,7 @@ void command_dump_flash(const char* address_str, const char* length_str) {
     uint32_t chunk_size = MIN(length, 128);
     flash_read_bytes(buffer, address, chunk_size);
 
-    PBL_LOG_ALWAYS("Data at address 0x%"PRIx32, address);
+    PBL_LOG_ALWAYS("Data at address 0x%" PRIx32, address);
     hexdump_log(LOG_LEVEL_ALWAYS, buffer, chunk_size);
 
     address += chunk_size;
@@ -135,7 +135,7 @@ void command_dump_flash(const char* address_str, const char* length_str) {
   serial_console_set_state(SERIAL_CONSOLE_STATE_PROMPT);
 }
 
-void command_crc_flash(const char* address_str, const char* length_str) {
+void command_crc_flash(const char *address_str, const char *length_str) {
   int32_t address = str_to_address(address_str);
   if (address == -1) {
     prompt_send_response("Invalid address");
@@ -150,11 +150,11 @@ void command_crc_flash(const char* address_str, const char* length_str) {
 
   uint32_t crc = flash_calculate_legacy_defective_checksum(address, length);
   char buffer[32];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "CRC: %"PRIx32, crc);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "CRC: %" PRIx32, crc);
 }
 
-#define MAX_READ_FLASH_SIZE 1024 // 1KB
-void command_flash_read(const char* address_str, const char* length_str) {
+#define MAX_READ_FLASH_SIZE 1024  // 1KB
+void command_flash_read(const char *address_str, const char *length_str) {
   // Read data from flash and output the data directly to serial port in segmented chunks
 
   int32_t address = str_to_address(address_str);
@@ -170,7 +170,7 @@ void command_flash_read(const char* address_str, const char* length_str) {
   }
 
   // Allocate a 1KB buffer to read data in segments
-  uint8_t *buffer = (uint8_t *) kernel_malloc(MIN(MAX_READ_FLASH_SIZE,length));
+  uint8_t *buffer = (uint8_t *)kernel_malloc(MIN(MAX_READ_FLASH_SIZE, length));
   if (buffer == 0) {
     prompt_send_response("Unable to allocate read buffer");
     return;
@@ -178,7 +178,7 @@ void command_flash_read(const char* address_str, const char* length_str) {
 
   while (length > 0) {
     uint32_t read_length = MAX_READ_FLASH_SIZE;
-    if (length < MAX_READ_FLASH_SIZE){
+    if (length < MAX_READ_FLASH_SIZE) {
       read_length = length;
     }
 
@@ -196,13 +196,13 @@ void command_flash_read(const char* address_str, const char* length_str) {
   kernel_free(buffer);
 }
 
-void command_flash_switch_mode (const char* mode_str) {
+void command_flash_switch_mode(const char *mode_str) {
   int mode = atoi(mode_str);
   flash_switch_mode(mode);
 }
 
 #define WRITE_PAGE_SIZE_BYTES 64
-void command_flash_fill (const char* address_str, const char* length_str, const char* value_str) {
+void command_flash_fill(const char *address_str, const char *length_str, const char *value_str) {
   int32_t address = str_to_address(address_str);
   if (address == -1) {
     prompt_send_response("Invalid address");
@@ -228,8 +228,7 @@ void command_flash_fill (const char* address_str, const char* length_str, const 
   }
 
   uint32_t bytes_remaining = length;
-  while (bytes_remaining > 0)
-  {
+  while (bytes_remaining > 0) {
     uint32_t bytes_to_write = WRITE_PAGE_SIZE_BYTES;
     if (bytes_remaining < WRITE_PAGE_SIZE_BYTES) {
       bytes_to_write = bytes_remaining;
@@ -274,7 +273,7 @@ void command_flash_validate(void) {
     for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
       if (buffer[i] != i) {
         char err_buf[80];
-        prompt_send_response_fmt(err_buf, sizeof(err_buf), "FAIL: Incorrect value at 0x%"PRIx32,
+        prompt_send_response_fmt(err_buf, sizeof(err_buf), "FAIL: Incorrect value at 0x%" PRIx32,
                                  addr + i);
         return;
       }
@@ -283,9 +282,10 @@ void command_flash_validate(void) {
 
   // read it back, albeit awkwardly. We have seen issues that arise when stitching different
   // types of flash ops together (i.e single byte reads followed by memmaps)
-  const uint32_t SHORT_TEST_LENGTH = 1000; // single byte reads are slow so do a shorter test length
-  for (uint32_t offset = 0; offset < SHORT_TEST_LENGTH ; offset++) {
-    uint8_t memmap_buffer[130]; // > 128 bytes, triggers a memmap read for QSPI
+  const uint32_t SHORT_TEST_LENGTH =
+      1000;  // single byte reads are slow so do a shorter test length
+  for (uint32_t offset = 0; offset < SHORT_TEST_LENGTH; offset++) {
+    uint8_t memmap_buffer[130];  // > 128 bytes, triggers a memmap read for QSPI
     memset(memmap_buffer, 0x00, sizeof(memmap_buffer));
 
     const uint32_t pre_addr = TEST_ADDR + offset - MIN(offset, 1);
@@ -329,8 +329,9 @@ static bool prv_is_really_erased(uint32_t addr, bool is_subsector) {
         if (buffer[j] != 0xFF) {
           erased = false;
           prompt_send_response_fmt(buffer, sizeof(buffer),
-              "(Sub)Sector at addr: 0x%"PRIX32" not really erased. is_subsector: %d",
-              addr, is_subsector);
+                                   "(Sub)Sector at addr: 0x%" PRIX32
+                                   " not really erased. is_subsector: %d",
+                                   addr, is_subsector);
           goto done;
         }
       }
@@ -351,13 +352,13 @@ void command_flash_show_erased_sectors(const char *arg) {
   uint32_t addr = 0;
   while (addr < BOARD_NOR_FLASH_SIZE) {
     bool erased = prv_is_really_erased(addr, false);
-    prompt_send_response_fmt(buffer, sizeof(buffer), "SECTOR - 0x%-6"PRIX32" :: %s",
-                             addr, erased ? "true" : "false");
+    prompt_send_response_fmt(buffer, sizeof(buffer), "SECTOR - 0x%-6" PRIX32 " :: %s", addr,
+                             erased ? "true" : "false");
     if (show_subsectors && !erased) {
       for (uint32_t i = 0; i < (SECTOR_SIZE_BYTES / SUBSECTOR_SIZE_BYTES); i++) {
         const uint32_t sub_addr = (addr + (i * SUBSECTOR_SIZE_BYTES));
         bool sub_erased = prv_is_really_erased(sub_addr, true);
-        prompt_send_response_fmt(buffer, sizeof(buffer), "  SUBSECTOR - 0X%-6"PRIx32" :: %s",
+        prompt_send_response_fmt(buffer, sizeof(buffer), "  SUBSECTOR - 0X%-6" PRIx32 " :: %s",
                                  sub_addr, sub_erased ? "true" : "false");
       }
     }
@@ -433,7 +434,8 @@ void command_flash_sec_info(void) {
     return;
   }
 
-  prompt_send_response_fmt(buf, sizeof(buf), "Number of security registers: %d", info->num_sec_regs);
+  prompt_send_response_fmt(buf, sizeof(buf), "Number of security registers: %d",
+                           info->num_sec_regs);
   for (int i = 0; i < info->num_sec_regs; i++) {
     bool locked;
     status_t ret;
@@ -444,8 +446,8 @@ void command_flash_sec_info(void) {
       return;
     }
 
-    prompt_send_response_fmt(buf, sizeof(buf), "Security register %d: 0x%08lx (locked: %u)",
-                             i, info->sec_regs[i], locked);
+    prompt_send_response_fmt(buf, sizeof(buf), "Security register %d: 0x%08lx (locked: %u)", i,
+                             info->sec_regs[i], locked);
   }
 }
 
@@ -459,8 +461,8 @@ void command_flash_sec_lock(const char *address_str, const char *password) {
     prompt_send_response("FAIL: Invalid password");
   }
 }
-#endif // CONFIG_RECOVERY_FW
-#endif // CONFIG_OTP_FLASH
+#endif  // CONFIG_RECOVERY_FW
+#endif  // CONFIG_OTP_FLASH
 
 #include "util/rand.h"
 
@@ -481,7 +483,7 @@ static void prv_flash_stress_callback(void *data) {
     PBL_LOG_ALWAYS("flash stress test complete");
     return;
   }
-  
+
   int bufsz = rand32() % 1024;
   uint8_t *buf = kernel_malloc(bufsz);
   if (!buf) {
@@ -502,8 +504,10 @@ static void prv_flash_stress_callback(void *data) {
   }
 
   int miscompare = 0;
- 
-  uint32_t sector_address = flash_get_sector_base_address(flash_addr + bufsz); // the beginning has already been erased, since we are always smaller than a sector
+
+  uint32_t sector_address = flash_get_sector_base_address(
+      flash_addr +
+      bufsz);  // the beginning has already been erased, since we are always smaller than a sector
   if (sector_address != s_flash_stress_last_sector) {
     PBL_LOG_ALWAYS("flash stress test: erasing flash address %lx", sector_address);
     flash_erase_sector_blocking(sector_address);
@@ -514,7 +518,7 @@ static void prv_flash_stress_callback(void *data) {
       goto bailout;
     }
   }
-  
+
   uint32_t lfsr_cur = lfsr_seed;
   for (int i = 0; i < bufsz; i++) {
     buf[i] = lfsr_cur & 0xFF;
@@ -522,7 +526,7 @@ static void prv_flash_stress_callback(void *data) {
   }
 
   flash_write_bytes((const uint8_t *)buf, flash_addr, bufsz);
-  
+
   for (int j = 0; j < 8; j++) {
     memset(buf, 0, bufsz);
     flash_read_bytes(buf, flash_addr, bufsz);
@@ -531,7 +535,10 @@ static void prv_flash_stress_callback(void *data) {
 
     for (int i = 0; i < bufsz; i++) {
       if (buf[i] != (lfsr_cur & 0xFF)) {
-        PBL_LOG_ALWAYS("flash stress test: readback %d: miscompare at offset %d (%lx): expected 0x%02lx, found 0x%02x", j, i, flash_addr + i, lfsr_cur & 0xFF, buf[i]);
+        PBL_LOG_ALWAYS(
+            "flash stress test: readback %d: miscompare at offset %d (%lx): expected 0x%02lx, "
+            "found 0x%02x",
+            j, i, flash_addr + i, lfsr_cur & 0xFF, buf[i]);
         miscompare++;
       }
       lfsr_cur = prv_xorshift32(lfsr_cur);
@@ -540,13 +547,15 @@ static void prv_flash_stress_callback(void *data) {
       break;
   }
 
-bailout:  
+bailout:
   kernel_free(buf);
 
   if (miscompare) {
-    PBL_LOG_ALWAYS("flash stress test: %d miscompares on %d byte chunk at address %lx!  giving up", miscompare, bufsz, flash_addr);
+    PBL_LOG_ALWAYS("flash stress test: %d miscompares on %d byte chunk at address %lx!  giving up",
+                   miscompare, bufsz, flash_addr);
   } else {
-    PBL_LOG_ALWAYS("flash stress test: %d bytes at address %lx OK; %d to go", bufsz, flash_addr, iters - 1);
+    PBL_LOG_ALWAYS("flash stress test: %d bytes at address %lx OK; %d to go", bufsz, flash_addr,
+                   iters - 1);
     system_task_add_callback(prv_flash_stress_callback, (void *)(iters - 1));
   }
 }
@@ -582,7 +591,7 @@ static void s_flash_benchmark(size_t sz) {
     for (int i = 0; i < iters; i++) {
       flash_read_bytes(buf, flash_addr, sz);
       flash_addr += sz;
-      flash_addr &= ~3; /* keep us aligned */
+      flash_addr &= ~3;                           /* keep us aligned */
       flash_addr &= ~(SUBSECTOR_SIZE_BYTES << 1); /* keep us from wrapping too far */
     }
 
@@ -590,7 +599,9 @@ static void s_flash_benchmark(size_t sz) {
   } while (ticks_elapsed < 300);
 
   uint32_t us_per_tick = ticks_elapsed * 1000000 / (iters * RTC_TICKS_HZ);
-  prompt_send_response_fmt(rbuf, sizeof(rbuf), "  -> %d bytes: %d iters in %lld ticks = %ld us/iter", sz, iters, ticks_elapsed, us_per_tick);
+  prompt_send_response_fmt(rbuf, sizeof(rbuf),
+                           "  -> %d bytes: %d iters in %lld ticks = %ld us/iter", sz, iters,
+                           ticks_elapsed, us_per_tick);
 
   free(buf);
 
@@ -614,7 +625,7 @@ void command_flash_benchmark() {
 void command_reset() {
   prompt_command_finish();
 
-  RebootReason reason = { RebootReasonCode_Serial, 0 };
+  RebootReason reason = {RebootReasonCode_Serial, 0};
   reboot_reason_set(&reason);
   system_reset();
 }
@@ -622,7 +633,7 @@ void command_reset() {
 void command_crash() {
   prompt_command_finish();
 
-  RebootReason reason = { RebootReasonCode_LauncherPanic, 0 };
+  RebootReason reason = {RebootReasonCode_LauncherPanic, 0};
   reboot_reason_set(&reason);
   system_reset();
 }
@@ -630,7 +641,7 @@ void command_crash() {
 void command_hard_crash() {
   prompt_command_finish();
 
-  RebootReason reason = { RebootReasonCode_HardFault, 0 };
+  RebootReason reason = {RebootReasonCode_HardFault, 0};
   reboot_reason_set(&reason);
   boot_bit_set(BOOT_BIT_FW_START_FAIL_STRIKE_TWO);
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
@@ -641,18 +652,20 @@ void command_hard_crash() {
 void command_boot_prf(void) {
   prompt_command_finish();
 
-  RebootReason reason = { RebootReasonCode_Serial, 0 };
+  RebootReason reason = {RebootReasonCode_Serial, 0};
   reboot_reason_set(&reason);
   boot_bit_set(BOOT_BIT_FORCE_PRF);
   system_reset();
 }
 
 void command_infinite_loop(void) {
-  while(1);
+  while (1)
+    ;
 }
 
-void stuck_timer_cb(void* data) {
-  while(1);
+void stuck_timer_cb(void *data) {
+  while (1)
+    ;
 }
 
 #include "pbl/services/new_timer/new_timer.h"
@@ -686,7 +699,7 @@ void command_hardfault(void) {
   kaboom();
 }
 
-void command_boot_bit_set(const char* bit, const char* value) {
+void command_boot_bit_set(const char *bit, const char *value) {
   int len = strlen(bit);
   int bit_number = 0;
 
@@ -714,8 +727,7 @@ void command_boot_bit_set(const char* bit, const char* value) {
 }
 
 static bool prv_convert_and_validate_timeout_value(const char *timeout_string,
-                                                   uint32_t default_value,
-                                                   uint32_t *result) {
+                                                   uint32_t default_value, uint32_t *result) {
   if (!result) {
     return false;
   }
@@ -789,8 +801,8 @@ static void prv_button_press_multiple(const char *button_index, const char *pres
       break;
   }
 
-  error:
-    prompt_send_response("ERROR");
+error:
+  prompt_send_response("ERROR");
 }
 
 // Perform a button press from the serial console.  Three responses are provided
@@ -833,8 +845,8 @@ void command_factory_reset_fast(void) {
   launcher_task_add_callback(factory_reset_fast, NULL);
 }
 
-static bool prv_serial_dump_chunk_callback(uint8_t* msg, uint32_t total_length) {
-  LogBinaryMessage* message = (LogBinaryMessage *)msg;
+static bool prv_serial_dump_chunk_callback(uint8_t *msg, uint32_t total_length) {
+  LogBinaryMessage *message = (LogBinaryMessage *)msg;
 
   char buffer[256];
   char time_buffer[TIME_STRING_BUFFER_SIZE];
@@ -842,9 +854,7 @@ static bool prv_serial_dump_chunk_callback(uint8_t* msg, uint32_t total_length) 
   prompt_send_response_fmt(buffer, sizeof(buffer), "%c %s %s:%d> %s",
                            pbl_log_get_level_char(message->log_level),
                            time_t_to_string(time_buffer, htonl(message->timestamp)),
-                           message->filename,
-                           (int)htons(message->line_number),
-                           message->message);
+                           message->filename, (int)htons(message->line_number), message->message);
   return true;
 }
 
@@ -862,7 +872,7 @@ void command_log_dump_last(void) {
   prompt_command_continues_after_returning();
 }
 
-void command_log_dump_generation(const char* generation_str) {
+void command_log_dump_generation(const char *generation_str) {
   int generation = atoi(generation_str);
   flash_dump_log_file(generation, prv_serial_dump_chunk_callback,
                       prv_serial_dump_completed_callback);
@@ -870,11 +880,11 @@ void command_log_dump_generation(const char* generation_str) {
 }
 
 static void spam_callback(void *data) {
-  uint32_t iteration = (uintptr_t) data;
+  uint32_t iteration = (uintptr_t)data;
   uint8_t buffer[128];
   time_t base = sys_get_time();
   for (int i = 0; i < 16; ++i) {
-    LogBinaryMessage* msg = (LogBinaryMessage*) buffer;
+    LogBinaryMessage *msg = (LogBinaryMessage *)buffer;
     msg->timestamp = htonl(base + iteration * 16 + i);
     msg->log_level = LOG_LEVEL_ERROR;
     msg->message_length = sizeof(buffer) - sizeof(LogBinaryMessage);
@@ -893,7 +903,7 @@ static void spam_callback(void *data) {
 void command_log_dump_spam(void) {
   prompt_send_response("Spam logs!");
   for (int i = 0; i < 16; ++i) {
-    system_task_add_callback(spam_callback, (void *)(uintptr_t) i);
+    system_task_add_callback(spam_callback, (void *)(uintptr_t)i);
   }
 }
 
@@ -908,22 +918,21 @@ void command_log_dump_spam(void) {
 void flash_expect_program_failure(bool expect_failure);
 void command_flash_test_locked_sectors(void) {
   // write 0's to the entire flash
-  static uint8_t buf[2048] = { 0 };
+  static uint8_t buf[2048] = {0};
   char status[80];
 
   __disable_irq();
 
   for (int i = 0; i < 2; i++) {
     for (uint32_t addr = 0; addr < BOARD_NOR_FLASH_SIZE; addr += sizeof(buf)) {
-      if (addr >=  FLASH_REGION_SAFE_FIRMWARE_BEGIN &&
-          addr < FLASH_REGION_SAFE_FIRMWARE_END) {
+      if (addr >= FLASH_REGION_SAFE_FIRMWARE_BEGIN && addr < FLASH_REGION_SAFE_FIRMWARE_END) {
         flash_expect_program_failure(true);
       }
 
       if ((addr % SECTOR_SIZE_BYTES) == 0) {
         prompt_send_response_fmt(status, sizeof(status), "Validated: 0x%lx", addr);
         flash_erase_sector_blocking(addr);
-        flash_erase_sector_blocking(addr); // exercise already erased check
+        flash_erase_sector_blocking(addr);  // exercise already erased check
       }
 
       flash_write_bytes(&buf[0], addr, sizeof(buf));
@@ -944,14 +953,14 @@ struct WasteTimerData {
   uint16_t count;
   uint16_t delay;
 };
-_Static_assert(sizeof(struct WasteTimerData) <= sizeof(uintptr_t),
-               "struct WasteTimerData too big");
+_Static_assert(sizeof(struct WasteTimerData) <= sizeof(uintptr_t), "struct WasteTimerData too big");
 
 static void prv_waste_time_cb(void *context) {
   struct WasteTimerData data;
   memcpy(&data, &context, sizeof data);
 
-  for (int i = 0; i < data.delay; ++i) delay_us(1000);
+  for (int i = 0; i < data.delay; ++i)
+    delay_us(1000);
   if (--data.count > 0) {
     memcpy(&context, &data, sizeof context);
     new_timer_start(s_abusive_timer, 1, prv_waste_time_cb, context, 0);
@@ -967,17 +976,16 @@ void command_waste_time(const char *count_arg, const char *delay_arg) {
     return;
   }
 
-  struct WasteTimerData data = { count, delay };
+  struct WasteTimerData data = {count, delay};
   uintptr_t data_pack;
   memcpy(&data_pack, &data, sizeof data_pack);
 
   if (s_abusive_timer == TIMER_INVALID_ID) {
     s_abusive_timer = new_timer_create();
   }
-  if (new_timer_start(s_abusive_timer, 100, prv_waste_time_cb,
-                      (void *)data_pack, 0)) {
+  if (new_timer_start(s_abusive_timer, 100, prv_waste_time_cb, (void *)data_pack, 0)) {
     prompt_send_response("OK");
-  }  else {
+  } else {
     prompt_send_response("ERROR");
   }
 }
@@ -1002,7 +1010,7 @@ void command_audit_delay_us(void) {
     // the requested time by more than 5%
     bool passed = ((duration_us >= i) && (duration_us <= ((i * 105) / 100)));
     if (!passed) {
-      prompt_send_response_fmt(buf, sizeof(buf), "Audit Failed: Expected %"PRIu32", Got %"PRIu32,
+      prompt_send_response_fmt(buf, sizeof(buf), "Audit Failed: Expected %" PRIu32 ", Got %" PRIu32,
                                i, duration_us);
     }
   }
@@ -1061,35 +1069,30 @@ static GAPLEConnection *prv_get_le_connection_and_print_info(void) {
   return conn;
 }
 
-void command_bt_conn_param_set(
-    char *interval_min_1_25ms, char *interval_max_1_25ms, char *slave_latency_events,
-    char *timeout_10ms) {
-
-    BleConnectionParamsUpdateReq req = {
+void command_bt_conn_param_set(char *interval_min_1_25ms, char *interval_max_1_25ms,
+                               char *slave_latency_events, char *timeout_10ms) {
+  BleConnectionParamsUpdateReq req = {
       .interval_min_1_25ms = atoi(interval_min_1_25ms),
       .interval_max_1_25ms = atoi(interval_max_1_25ms),
       .slave_latency_events = atoi(slave_latency_events),
       .supervision_timeout_10ms = atoi(timeout_10ms),
-    };
+  };
 
-    GAPLEConnection *conn = prv_get_le_connection_and_print_info();
-    BTDeviceInternal addr = {};
-    if (conn) {
-      addr.address = conn->device.address;
-    }
+  GAPLEConnection *conn = prv_get_le_connection_and_print_info();
+  BTDeviceInternal addr = {};
+  if (conn) {
+    addr.address = conn->device.address;
+  }
 
-    bt_driver_le_connection_parameter_update(&addr, &req);
+  bt_driver_le_connection_parameter_update(&addr, &req);
 }
 // Not in a header because it's really only used from within the gatt_service_changed module
-extern void gatt_client_discovery_discover_range(
-    GAPLEConnection *connection, ATTHandleRange *hdl_range);
+extern void gatt_client_discovery_discover_range(GAPLEConnection *connection,
+                                                 ATTHandleRange *hdl_range);
 void command_bt_disc_start(char *start_handle, char *end_handle) {
   bt_lock();
   {
-    ATTHandleRange range = {
-      .start = atoi(start_handle),
-      .end = atoi(end_handle)
-    };
+    ATTHandleRange range = {.start = atoi(start_handle), .end = atoi(end_handle)};
 
     GAPLEConnection *conn = prv_get_le_connection_and_print_info();
     if (conn) {
@@ -1158,7 +1161,7 @@ void command_perftest_line(const char *do_aa, const char *width) {
 
   GContext *ctx = prv_perftest_get_context();
 
-  GColor color = { .argb = (uint8_t)0x33 };
+  GColor color = {.argb = (uint8_t)0x33};
   graphics_context_set_stroke_color(ctx, color);
   bool aa_enable = false;
   if (strcmp(do_aa, "aa") == 0) {
@@ -1175,21 +1178,20 @@ void command_perftest_line(const char *do_aa, const char *width) {
   // 45 degrees
   graphics_draw_line(ctx, GPoint(0, 0), GPoint(DISP_COLS, DISP_ROWS));
   // ~63 degrees
-  graphics_draw_line(ctx, GPoint(DISP_COLS/2, 0), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(DISP_COLS / 2, 0), GPoint(DISP_COLS, DISP_ROWS));
   // ~33 degrees
-  graphics_draw_line(ctx, GPoint(0, DISP_ROWS/3), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(0, DISP_ROWS / 3), GPoint(DISP_COLS, DISP_ROWS));
   // ~53 degrees
-  graphics_draw_line(ctx, GPoint(DISP_COLS/4, 0), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(DISP_COLS / 4, 0), GPoint(DISP_COLS, DISP_ROWS));
   // ~39 degrees
-  graphics_draw_line(ctx, GPoint(0, DISP_ROWS/5), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(0, DISP_ROWS / 5), GPoint(DISP_COLS, DISP_ROWS));
   profiler_stop();
 
   uint32_t total_time = profiler_get_total_duration(false);
   uint32_t us = profiler_get_total_duration(true);
   char buf[80];
-  prompt_send_response_fmt(buf, sizeof(buf),
-                           "%s, %s, %"PRIu32", %"PRIu32,
-                           do_aa, width, us, total_time);
+  prompt_send_response_fmt(buf, sizeof(buf), "%s, %s, %" PRIu32 ", %" PRIu32, do_aa, width, us,
+                           total_time);
 }
 
 void command_perftest_line_all(void) {
@@ -1219,9 +1221,9 @@ typedef struct PerftestTextArguments {
 static volatile PerftestTextArguments s_perftest_text_arguments;
 
 enum {
-  TestString_Best, // The best case
-  TestString_Worst, // Entirely unique characters, in order to miss the font cache every time
-  TestString_Typical, // A very typical notification
+  TestString_Best,     // The best case
+  TestString_Worst,    // Entirely unique characters, in order to miss the font cache every time
+  TestString_Typical,  // A very typical notification
   TestStringCount,
 };
 
@@ -1241,59 +1243,63 @@ typedef struct PerftestTextString {
 } PerftestTextString;
 
 static const PerftestTextString s_perftest_text_strings[TestStringCount] = {
-  [TestString_Best] = {
-    .string = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-              "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-              "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-              "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-              "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-              "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-              "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-    .lengths = {
+    [TestString_Best] =
+        {
+            .string = "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                      "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                      "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                      "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                      "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                      "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                      "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            .lengths =
+                {
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-      [TestStringFont_Gothic18] = 204,
-      [TestStringFont_Gothic24B] = 144,
-      [TestStringFont_Other] = STRING_LENGTH_MAX,
+                    [TestStringFont_Gothic18] = 204,
+                    [TestStringFont_Gothic24B] = 144,
+                    [TestStringFont_Other] = STRING_LENGTH_MAX,
 #endif
-    },
-  },
-  [TestString_Worst] = {
-    .string = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%%^&*()_+QWERTYUIOP{}|A"
-              "SDFGHJKL:\"ZXCVBNM<>?èéêëēėęÿûüùúūîïíī"
-              "įìôöòóœøōõàáâäæãåāßśšłžźżçćčñń∑´®†¥¨ˆπ"
-              "∂ƒ©˙∆˚¬…Ω≈√∫˜µ≤≥÷¡™£¢∞§¶•ªº–≠`“‘"
-              "«ÈÉÊËĒĖĘŸÛÜÙÚŪÎÏÍĪĮÌÔÖÒÓŒØŌÕÀÁÂÄÆÃÅĀŚ"
-              "ŠŁŽŹŻÇĆČÑŃ∑ˇ∏”’»˝¸˛◊ı˜¯˘¿"
-              "あいうえおかきくけこさしすせそたちつてとなに"
-              "ぬねのはひふへほまみむめもやゆよらりるれろわ"
-              "をんアイウエオサシスセソタチツテトナニヌネノ"
-              "ハヒフヘホマミムメモヤユヨラリルレロワヲン",
-    .lengths = {
+                },
+        },
+    [TestString_Worst] =
+        {
+            .string = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%%^&*()_+QWERTYUIOP{}|A"
+                      "SDFGHJKL:\"ZXCVBNM<>?èéêëēėęÿûüùúūîïíī"
+                      "įìôöòóœøōõàáâäæãåāßśšłžźżçćčñń∑´®†¥¨ˆπ"
+                      "∂ƒ©˙∆˚¬…Ω≈√∫˜µ≤≥÷¡™£¢∞§¶•ªº–≠`“‘"
+                      "«ÈÉÊËĒĖĘŸÛÜÙÚŪÎÏÍĪĮÌÔÖÒÓŒØŌÕÀÁÂÄÆÃÅĀŚ"
+                      "ŠŁŽŹŻÇĆČÑŃ∑ˇ∏”’»˝¸˛◊ı˜¯˘¿"
+                      "あいうえおかきくけこさしすせそたちつてとなに"
+                      "ぬねのはひふへほまみむめもやゆよらりるれろわ"
+                      "をんアイウエオサシスセソタチツテトナニヌネノ"
+                      "ハヒフヘホマミムメモヤユヨラリルレロワヲン",
+            .lengths =
+                {
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-      [TestStringFont_Gothic18] = 579,
-      [TestStringFont_Gothic24B] = 291,
-      [TestStringFont_Other] = STRING_LENGTH_MAX,
+                    [TestStringFont_Gothic18] = 579,
+                    [TestStringFont_Gothic24B] = 291,
+                    [TestStringFont_Other] = STRING_LENGTH_MAX,
 #endif
-    },
-  },
-  [TestString_Typical] = {
-    .string = "Brian Gomberg\n"
-              "Re: Robert stand-up 06/06 • "
-              "y: - DDAD (enabling system apps to take advantage of memory mapped "
-              "FLASH access on Robe"
-              "\xe2\x80\xa6",
-    .lengths = {
+                },
+        },
+    [TestString_Typical] = {
+        .string = "Brian Gomberg\n"
+                  "Re: Robert stand-up 06/06 • "
+                  "y: - DDAD (enabling system apps to take advantage of memory mapped "
+                  "FLASH access on Robe"
+                  "\xe2\x80\xa6",
+        .lengths = {
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-      [TestStringFont_Gothic18] = 134,
-      [TestStringFont_Gothic24B] = 134,
-      [TestStringFont_Other] = STRING_LENGTH_MAX,
+            [TestStringFont_Gothic18] = 134,
+            [TestStringFont_Gothic24B] = 134,
+            [TestStringFont_Other] = STRING_LENGTH_MAX,
 #endif
+        },
     },
-  },
 };
 
 #define TEXT_ALIGNMENT (GTextAlignmentCenter)
-#define TEXT_OVERFLOW  (GTextOverflowModeWordWrap)
+#define TEXT_OVERFLOW (GTextOverflowModeWordWrap)
 
 // Enable this to show the actual contents, to check lengths and such.
 #define TEXT_PERFTEST_MODAL 0
@@ -1320,8 +1326,7 @@ static void prv_dialog_load(Window *window) {
 
   TextLayer *text_layer = &dialog->text_layer;
   text_layer_init_with_parameters(text_layer, &GRect(0, 0, DISP_COLS, DISP_ROWS), dialog->buffer,
-                                  font, GColorBlack, GColorClear, TEXT_ALIGNMENT,
-                                  TEXT_OVERFLOW);
+                                  font, GColorBlack, GColorClear, TEXT_ALIGNMENT, TEXT_OVERFLOW);
   layer_add_child(&window->layer, &text_layer->layer);
 
 #if PBL_ROUND
@@ -1338,11 +1343,11 @@ static void prv_display_modal(WindowStack *stack, const char *string) {
   dialog_set_text(new_dialog, string);
 
   Window *window = &new_dialog->window;
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_dialog_load,
-    .unload = prv_dialog_unload,
-    .appear = prv_dialog_appear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_dialog_load,
+                                         .unload = prv_dialog_unload,
+                                         .appear = prv_dialog_appear,
+                                     });
   window_set_user_data(window, new_dialog);
   dialog_push(new_dialog, stack);
 }
@@ -1385,8 +1390,7 @@ static void prv_perftest_test_main(void *data) {
 #endif
 
   length = MIN(length, sizeof(s_text_test_str));
-  strncpy(s_text_test_str, s_perftest_text_strings[text_index].string,
-          length);
+  strncpy(s_text_test_str, s_perftest_text_strings[text_index].string, length);
   s_text_test_str[length] = '\0';
 
 #if TEXT_PERFTEST_MODAL
@@ -1414,8 +1418,7 @@ static void prv_perftest_test_main(void *data) {
     graphics_context_set_text_color(ctx, GColorBlack);
 
     profiler_start();
-    graphics_draw_text(ctx, s_text_test_str, font, bounds,
-                       TEXT_OVERFLOW, TEXT_ALIGNMENT, NULL);
+    graphics_draw_text(ctx, s_text_test_str, font, bounds, TEXT_OVERFLOW, TEXT_ALIGNMENT, NULL);
     profiler_stop();
     avg += profiler_get_total_duration(true);
   }
@@ -1423,11 +1426,9 @@ static void prv_perftest_test_main(void *data) {
   avg /= PERFTEST_TEXT_ITERATIONS;
   char buf[80];
   uint32_t flash_us_avg = PROFILER_NODE_GET_TOTAL_US(text_render_flash) / PERFTEST_TEXT_ITERATIONS;
-  prompt_send_response_fmt(buf, sizeof(buf), "%s, %s, %s, %"PRIu32", %"PRIu32,
-                           s_perftest_text_arguments.font_key,
-                           s_perftest_text_arguments.string_type,
-                           s_perftest_text_arguments.y_offset,
-                           avg, flash_us_avg);
+  prompt_send_response_fmt(
+      buf, sizeof(buf), "%s, %s, %s, %" PRIu32 ", %" PRIu32, s_perftest_text_arguments.font_key,
+      s_perftest_text_arguments.string_type, s_perftest_text_arguments.y_offset, avg, flash_us_avg);
 
   s_perftest_text_arguments.string_type = NULL;
 }
@@ -1446,18 +1447,17 @@ void command_perftest_text(const char *string_type, const char *fontkey, const c
 
 void command_perftest_text_all(void) {
   static const char *fonts[] = {
-    "RESOURCE_ID_GOTHIC_28",
-    "RESOURCE_ID_GOTHIC_24",
-    "RESOURCE_ID_GOTHIC_18",
-    "RESOURCE_ID_GOTHIC_28_BOLD",
-    "RESOURCE_ID_GOTHIC_24_BOLD",
-    "RESOURCE_ID_GOTHIC_18_BOLD",
+      "RESOURCE_ID_GOTHIC_28",      "RESOURCE_ID_GOTHIC_24",      "RESOURCE_ID_GOTHIC_18",
+      "RESOURCE_ID_GOTHIC_28_BOLD", "RESOURCE_ID_GOTHIC_24_BOLD", "RESOURCE_ID_GOTHIC_18_BOLD",
   };
   static const char *types[] = {
-    "best", "worst", "typical",
+      "best",
+      "worst",
+      "typical",
   };
   static const char *offsets[] = {
-    "0", "2000",
+      "0",
+      "2000",
   };
   prompt_send_response("Font, Type, Offset, Total avg us, Flash avg us");
   for (unsigned int type = 0; type < ARRAY_LENGTH(types); type++) {
@@ -1492,8 +1492,8 @@ void command_console_disable_rx(const char *seconds_str) {
   char buf[64];
   prompt_send_response_fmt(buf, sizeof(buf), "Console RX disabled for %d seconds", seconds);
 
-  new_timer_start(s_console_disable_rx_timer, seconds * 1000,
-                  prv_console_disable_rx_timer_cb, NULL, 0 /*flags*/);
+  new_timer_start(s_console_disable_rx_timer, seconds * 1000, prv_console_disable_rx_timer_cb, NULL,
+                  0 /*flags*/);
 }
 
 #ifdef CONFIG_TOUCH
@@ -1520,15 +1520,15 @@ void command_notif_test(void) {
   AttributeList dismiss_attr = {};
   attribute_list_add_cstring(&dismiss_attr, AttributeIdTitle, "Dismiss");
   TimelineItemActionGroup action_group = {
-    .num_actions = 1,
-    .actions = (TimelineItemAction[]){
-      { .id = 0, .type = TimelineItemActionTypeDismiss, .attr_list = dismiss_attr },
-    },
+      .num_actions = 1,
+      .actions = (TimelineItemAction[]){
+          {.id = 0, .type = TimelineItemActionTypeDismiss, .attr_list = dismiss_attr},
+      },
   };
 
-  TimelineItem *item = timeline_item_create_with_attributes(
-      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list,
-      &action_group);
+  TimelineItem *item =
+      timeline_item_create_with_attributes(rtc_get_time(), 0, TimelineItemTypeNotification,
+                                           LayoutIdNotification, &attr_list, &action_group);
   attribute_list_destroy_list(&attr_list);
   attribute_list_destroy_list(&dismiss_attr);
   notifications_add_notification(item);
@@ -1558,8 +1558,7 @@ void command_touch_nav_log(void) {
   const TouchNavState *state = modal_manager_get_touch_nav_state();
   char buf[96];
   prompt_send_response_fmt(
-      buf, sizeof(buf),
-      "started=%u completed=%u failed=%u cancelled=%u dropped=%u gated=%u",
+      buf, sizeof(buf), "started=%u completed=%u failed=%u cancelled=%u dropped=%u gated=%u",
       state->counters.started, state->counters.completed, state->counters.failed,
       state->counters.cancelled, state->counters.dropped, state->counters.gated);
 

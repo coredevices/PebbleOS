@@ -50,11 +50,15 @@ void dbgserial_set_input_enabled(bool enabled) {
 }
 
 #else
-void dbgserial_input_init(void) {}
+void dbgserial_input_init(void) {
+}
 
-void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {}
+void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {
+}
 
-void dbgserial_set_rx_dma_enabled(bool enabled) {}
+void dbgserial_set_rx_dma_enabled(bool enabled) {
+}
 
-void dbgserial_set_input_enabled(bool enabled) {}
+void dbgserial_set_input_enabled(bool enabled) {
+}
 #endif

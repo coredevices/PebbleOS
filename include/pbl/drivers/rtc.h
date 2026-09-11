@@ -41,9 +41,9 @@ void rtc_init_timers(void);
 //! function to adjust a given time into this range by simply clamping the year value back
 //! into range without adjusting any of the other fields.
 //! @return True if a change had to be made
-bool rtc_sanitize_struct_tm(struct tm* t);
+bool rtc_sanitize_struct_tm(struct tm *t);
 //! Wrapper for rtc_sanitize_struct_tmtime
-bool rtc_sanitize_time_t(time_t* t);
+bool rtc_sanitize_time_t(time_t *t);
 
 //! Updates the current time.
 //! We only support times with years between 2000 and 2037. Attempting to set times outside of this
@@ -52,13 +52,13 @@ void rtc_set_time(time_t time);
 time_t rtc_get_time(void);
 
 // Wrappers for the above functions that take struct tm instead of time_t
-void rtc_set_time_tm(struct tm* time_tm);
-void rtc_get_time_tm(struct tm* time_tm);
+void rtc_set_time_tm(struct tm *time_tm);
+void rtc_get_time_tm(struct tm *time_tm);
 
 // FIXME: PBL-41066 this should just return a uint64_t
 //! @param[out] out_seconds The current time in seconds.
 //! @param[out] out_ms Millisecond portion of the current second.
-void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms);
+void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms);
 
 //! Saves the timezone_info to RTC registers
 void rtc_set_timezone(TimezoneInfo *tzinfo);
@@ -75,15 +75,13 @@ bool rtc_is_timezone_set(void);
 #define TIME_STRING_BUFFER_SIZE 26
 
 //! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
-const char* rtc_get_time_string(char* buffer);
-
+const char *rtc_get_time_string(char *buffer);
 
 // RTC ticks
 ///////////////////////////////////////////////////////////////////////////////
 
 //! @return Absolute number of ticks since system start.
 RtcTicks rtc_get_ticks(void);
-
 
 // RTC Alarm
 ///////////////////////////////////////////////////////////////////////////////
@@ -104,13 +102,12 @@ RtcTicks rtc_alarm_get_elapsed_ticks(void);
 //!     us from going into stop mode before we're ready to wake up from it.
 bool rtc_alarm_is_initialized(void);
 
-
 // Utility Functions
 ///////////////////////////////////////////////////////////////////////////////
 
 //! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
 //! @param t The time to convert.
-const char* time_t_to_string(char* buffer, time_t t);
+const char *time_t_to_string(char *buffer, time_t t);
 
 #ifdef CONFIG_SOC_NRF52
 void rtc_irq_handler(void);

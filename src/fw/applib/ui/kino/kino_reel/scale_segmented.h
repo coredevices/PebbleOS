@@ -9,11 +9,9 @@
 // These are KinoReels that use the per-point segmented delayed scaling animation.
 // @see gdraw_command_list_scale_segmented_to.
 
-#define SCALE_SEGMENTED_DEFAULT_POINT_DURATION \
-  Fixed_S32_16(2 * FIXED_S32_16_ONE.raw_value / 3)
+#define SCALE_SEGMENTED_DEFAULT_POINT_DURATION Fixed_S32_16(2 * FIXED_S32_16_ONE.raw_value / 3)
 
-#define SCALE_SEGMENTED_DEFAULT_EFFECT_DURATION \
-  Fixed_S32_16(2 * FIXED_S32_16_ONE.raw_value / 3)
+#define SCALE_SEGMENTED_DEFAULT_EFFECT_DURATION Fixed_S32_16(2 * FIXED_S32_16_ONE.raw_value / 3)
 
 #define SCALE_SEGMENTED_DOT_SIZE_PX 0
 #define SCALE_SEGMENTED_DOT_SIZE GSize(SCALE_SEGMENTED_DOT_SIZE_PX, SCALE_SEGMENTED_DOT_SIZE_PX)
@@ -21,7 +19,7 @@
 //! A GDelayCreatorContext gives the information needed to build a delay index lookup for a given
 //! GDrawCommandList.
 typedef struct {
-  GDrawCommandList * const list;
+  GDrawCommandList *const list;
   const GSize size;
   //! Whether the transform should free the lookup after use.
   //! Specifying false allows the creator to reuse buffers or references existing lookups.
@@ -51,8 +49,9 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
 //! @param creator Creator of a GPointIndexLookup with the assigned delay multiplier for each point
 //! @param context Context to pass to the creator
 //! @param take_ownership true if this KinoReel will free `context` when destroyed
-void kino_reel_scale_segmented_set_delay_lookup_creator(
-    KinoReel *reel, GPointIndexLookupCreator creator, void *context, bool take_ownership);
+void kino_reel_scale_segmented_set_delay_lookup_creator(KinoReel *reel,
+                                                        GPointIndexLookupCreator creator,
+                                                        void *context, bool take_ownership);
 
 //! Sets a GPointIndexLookup based on the distance to a target
 //! @param reel KinoReel to modify
@@ -102,8 +101,7 @@ void kino_reel_scale_segmented_set_to_stroke_width(KinoReel *reel, Fixed_S16_3 t
                                                    GStrokeWidthOp to_op);
 
 //! Set the stroke width curve
-void kino_reel_scale_segmented_set_stroke_width_curve(KinoReel *reel,
-                                                      AnimationCurveFunction curve);
+void kino_reel_scale_segmented_set_stroke_width_curve(KinoReel *reel, AnimationCurveFunction curve);
 
 //! Set the animation to end as a dot. Requires the to frame to be set before use.
 void kino_reel_scale_segmented_set_end_as_dot(KinoReel *reel, int16_t radius);

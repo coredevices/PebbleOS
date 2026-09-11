@@ -65,7 +65,7 @@ void test_alarm_smart__initialize(void) {
 
   // Setup time
   TimezoneInfo tz_info = {
-    .tm_zone = "UTC",
+      .tm_zone = "UTC",
   };
   time_util_update_timezone(&tz_info);
   rtc_set_timezone(&tz_info);
@@ -75,7 +75,7 @@ void test_alarm_smart__initialize(void) {
 
   timeline_item_destroy(s_last_timeline_item_added);
   s_last_timeline_item_added = NULL;
-  s_last_timeline_item_removed_uuid = (Uuid) {};
+  s_last_timeline_item_removed_uuid = (Uuid){};
 
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
@@ -98,7 +98,8 @@ void test_alarm_smart__cleanup(void) {
 
 void test_alarm_smart__trigger_30_min_early_awake(void) {
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
   cl_assert_equal_i(s_num_timeline_adds, 3);
   cl_assert_equal_i(s_num_timeline_removes, 0);
@@ -131,7 +132,8 @@ void test_alarm_smart__trigger_30_min_early_awake(void) {
 
 void test_alarm_smart__trigger_30_min_early_vmc(void) {
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
   cl_assert_equal_i(s_num_timeline_adds, 3);
   cl_assert_equal_i(s_num_timeline_removes, 0);
@@ -147,7 +149,8 @@ void test_alarm_smart__trigger_30_min_early_vmc(void) {
 
 void test_alarm_smart__dont_trigger_30_min_early_deep_sleep(void) {
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
   cl_assert_equal_i(s_num_timeline_adds, 3);
   cl_assert_equal_i(s_num_timeline_removes, 0);
@@ -163,7 +166,8 @@ void test_alarm_smart__dont_trigger_30_min_early_deep_sleep(void) {
 
 void test_alarm_smart__trigger_15_min_early_light_sleep(void) {
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
   cl_assert_equal_i(s_num_timeline_adds, 3);
   cl_assert_equal_i(s_num_timeline_removes, 0);
@@ -204,7 +208,8 @@ void test_alarm_smart__trigger_15_min_early_light_sleep(void) {
 
 void test_alarm_smart__trigger_at_timeout(void) {
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
   cl_assert_equal_i(s_num_timeline_adds, 3);
   cl_assert_equal_i(s_num_timeline_removes, 0);
@@ -248,7 +253,8 @@ void test_alarm_smart__trigger_at_timeout(void) {
 
 void test_alarm_smart__user_snooze_fires_after_delay(void) {
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
 
   // Awake, so the smart alarm fires immediately at T-30min
@@ -279,7 +285,8 @@ void test_alarm_smart__user_snooze_fires_after_delay(void) {
 
 void test_alarm_smart__user_snooze_survives_clock_change(void) {
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
 
   // Stay asleep so the sleep poll runs and drives up the smart snooze counter
@@ -318,7 +325,8 @@ void test_alarm_smart__clock_change_still_force_triggers_sleep_poll(void) {
   // Guards the FIRM-3127 fix: with no user snooze pending, a clock change during the smart
   // window must still force the alarm to fire rather than silently dropping it.
   AlarmId id;
-  id = alarm_create(&(AlarmInfo) { .hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true });
+  id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
   prv_assert_alarm_config(id, 10, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
 
   s_sleep_state = ActivitySleepStateRestfulSleep;
@@ -349,8 +357,13 @@ void test_alarm_smart__across_midnight_boundary(void) {
 
   AlarmId id;
   bool monday_only[7] = {false, true, false, false, false, false, false};
-  id = alarm_create(&(AlarmInfo) { .hour = 0, .minute = 15, .kind = ALARM_KIND_CUSTOM, .is_smart = true,
-                                   .scheduled_days = &monday_only });
+  id = alarm_create(&(AlarmInfo){
+      .hour = 0,
+      .minute = 15,
+      .kind = ALARM_KIND_CUSTOM,
+      .is_smart = true,
+      .scheduled_days = &monday_only
+  });
   prv_assert_alarm_config(id, 0, 15, false, ALARM_KIND_CUSTOM, monday_only);
   cl_assert_equal_i(s_num_timeline_adds, 1);
   cl_assert_equal_i(s_num_timeline_removes, 0);

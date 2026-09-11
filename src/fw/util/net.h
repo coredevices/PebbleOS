@@ -55,7 +55,7 @@ static inline uint16_t ntoh16(net16 net) {
 }
 
 static inline net16 hton16(uint16_t v) {
-  return (net16){ htons(v) };
+  return (net16){htons(v)};
 }
 
 static inline uint32_t ntoh32(net32 net) {
@@ -63,5 +63,5 @@ static inline uint32_t ntoh32(net32 net) {
 }
 
 static inline net32 hton32(uint32_t v) {
-  return (net32){ htonl(v) };
+  return (net32){htonl(v)};
 }

@@ -23,109 +23,115 @@
 #include "stubs_syscalls.h"
 
 // Stubs
-void graphics_context_set_stroke_color(GContext* ctx, GColor color) {}
-void graphics_context_set_fill_color(GContext* ctx, GColor color) {}
-void graphics_context_set_stroke_width(GContext* ctx, uint8_t stroke_width) {}
-void gpath_draw_stroke(GContext* ctx, GPath* path, bool open) {}
-void gpath_draw_filled(GContext* ctx, GPath *path) {}
-void graphics_draw_circle(GContext* ctx, GPoint p, uint16_t radius) {}
-void graphics_fill_circle(GContext* ctx, GPoint p, uint16_t radius) {}
-void graphics_context_move_draw_box(GContext* ctx, GPoint offset) {}
-void graphics_line_draw_precise_stroked(GContext* ctx, GPointPrecise p0, GPointPrecise p1) {}
-void gpath_fill_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points) {}
+void graphics_context_set_stroke_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {
+}
+void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {
+}
+void gpath_draw_filled(GContext *ctx, GPath *path) {
+}
+void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {
+}
+void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {
+}
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
+}
+void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointPrecise p1) {
+}
+void gpath_fill_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points) {
+}
 void gpath_draw_outline_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points,
-                                         bool open) {}
+                                         bool open) {
+}
 typedef uint16_t ResourceId;
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
-					  uint32_t *num_bytes_out) { return NULL; }
-
+                                          uint32_t *num_bytes_out) {
+  return NULL;
+}
 
 // setup and teardown
 void test_gdraw_command_sequence__initialize(void) {
-
 }
 
 void test_gdraw_command_sequence__cleanup(void) {
-
 }
 
 size_t prv_create_test_sequence(GDrawCommandSequence **sequence_ptr) {
   size_t size = sizeof(GDrawCommandSequence) + (sizeof(GDrawCommandFrame) * 2) +
-      (sizeof(GDrawCommand) * 4) + (sizeof(GPoint) * 9);
+                (sizeof(GDrawCommand) * 4) + (sizeof(GPoint) * 9);
 
   GDrawCommandSequence *sequence = calloc(1, size);
   *sequence_ptr = sequence;
 
   *sequence = (GDrawCommandSequence){
-    .version = GDRAW_COMMAND_VERSION,
-    .num_frames = 2,
-    .play_count = 1,
+      .version = GDRAW_COMMAND_VERSION,
+      .num_frames = 2,
+      .play_count = 1,
   };
 
   GDrawCommandFrame *frame;
   frame = &sequence->frames[0];
-  *frame = (GDrawCommandFrame) {
-    .duration = 15,
+  *frame = (GDrawCommandFrame){
+      .duration = 15,
   };
-  frame->command_list = (GDrawCommandList) {
-    .num_commands = 3
-  };
+  frame->command_list = (GDrawCommandList){.num_commands = 3};
   GDrawCommand *command;
   command = gdraw_command_list_get_command(&frame->command_list, 0);
-  GPoint points1[] = { { 3, 97 }, {5, 5} };
-  *command = (GDrawCommand) {
-    .type = GDrawCommandTypePath,
-    .hidden = false,
-    .stroke_color = GColorRed,
-    .stroke_width = 1,
-    .fill_color = GColorBlue,
-    .path_open = false,
-    .num_points = ARRAY_LENGTH(points1),
+  GPoint points1[] = {{3, 97}, {5, 5}};
+  *command = (GDrawCommand){
+      .type = GDrawCommandTypePath,
+      .hidden = false,
+      .stroke_color = GColorRed,
+      .stroke_width = 1,
+      .fill_color = GColorBlue,
+      .path_open = false,
+      .num_points = ARRAY_LENGTH(points1),
   };
   memcpy(command->points, points1, sizeof(points1));
 
   command = gdraw_command_list_get_command(&frame->command_list, 1);
-  *command = (GDrawCommand) {
-    .type = GDrawCommandTypeCircle,
-    .hidden = false,
-    .stroke_color = GColorGreen,
-    .stroke_width = 1,
-    .fill_color = GColorOrange,
-    .radius = 300,
-    .num_points = 1,
+  *command = (GDrawCommand){
+      .type = GDrawCommandTypeCircle,
+      .hidden = false,
+      .stroke_color = GColorGreen,
+      .stroke_width = 1,
+      .fill_color = GColorOrange,
+      .radius = 300,
+      .num_points = 1,
   };
-  command->points[0] = (GPoint) { 1, 2 };
+  command->points[0] = (GPoint){1, 2};
 
   command = gdraw_command_list_get_command(&frame->command_list, 2);
-  GPoint points2[] = { { 6, 7 }, {5, 5}, { 0, 0 } };
-  *command = (GDrawCommand) {
-    .type = GDrawCommandTypePath,
-    .hidden = false,
-    .stroke_color = GColorGreen,
-    .stroke_width = 1,
-    .fill_color = GColorPurple,
-    .path_open = false,
-    .num_points = ARRAY_LENGTH(points2),
+  GPoint points2[] = {{6, 7}, {5, 5}, {0, 0}};
+  *command = (GDrawCommand){
+      .type = GDrawCommandTypePath,
+      .hidden = false,
+      .stroke_color = GColorGreen,
+      .stroke_width = 1,
+      .fill_color = GColorPurple,
+      .path_open = false,
+      .num_points = ARRAY_LENGTH(points2),
   };
   memcpy(command->points, points2, sizeof(points2));
 
   frame = (GDrawCommandFrame *)(command->points + command->num_points);
-  *frame = (GDrawCommandFrame) {
-    .duration = 30,
+  *frame = (GDrawCommandFrame){
+      .duration = 30,
   };
-  frame->command_list = (GDrawCommandList) {
-    .num_commands = 1
-  };
+  frame->command_list = (GDrawCommandList){.num_commands = 1};
   command = gdraw_command_list_get_command(&frame->command_list, 0);
-  points2[0].x++; // increment x value to distinguish draw command from command in previous frame
-  *command = (GDrawCommand) {
-    .type = GDrawCommandTypePath,
-    .hidden = false,
-    .stroke_color = GColorRed,
-    .stroke_width = 5,
-    .fill_color = GColorBlack,
-    .path_open = false,
-    .num_points = ARRAY_LENGTH(points2),
+  points2[0].x++;  // increment x value to distinguish draw command from command in previous frame
+  *command = (GDrawCommand){
+      .type = GDrawCommandTypePath,
+      .hidden = false,
+      .stroke_color = GColorRed,
+      .stroke_width = 5,
+      .fill_color = GColorBlack,
+      .path_open = false,
+      .num_points = ARRAY_LENGTH(points2),
   };
   memcpy(command->points, points2, sizeof(points2));
 
@@ -166,7 +172,8 @@ void test_gdraw_command_sequence__get_frame_by_elapsed(void) {
   cl_assert_equal_p(frame, gdraw_command_sequence_get_frame_by_elapsed(sequence, 14));
 
   frame = gdraw_command_sequence_get_frame_by_elapsed(sequence, 15);
-  cl_assert_equal_p(frame, gdraw_command_sequence_get_frame_by_index(sequence, 1));;
+  cl_assert_equal_p(frame, gdraw_command_sequence_get_frame_by_index(sequence, 1));
+  ;
   cl_assert_equal_p(frame, gdraw_command_sequence_get_frame_by_elapsed(sequence, 44));
   cl_assert_equal_p(frame, gdraw_command_sequence_get_frame_by_elapsed(sequence, 45));
   cl_assert_equal_p(frame, gdraw_command_sequence_get_frame_by_elapsed(sequence, 46));

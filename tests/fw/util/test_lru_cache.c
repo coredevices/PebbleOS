@@ -109,4 +109,3 @@ void test_lru_cache__use_and_evict(void) {
     cl_assert(*output == i);
   }
 }
-

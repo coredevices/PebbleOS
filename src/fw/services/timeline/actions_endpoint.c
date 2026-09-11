@@ -37,9 +37,9 @@ typedef enum {
 } Response;
 
 typedef struct PACKED {
-  Command command:8;
+  Command command : 8;
   Uuid item_id;
-  Response response:8;
+  Response response : 8;
 } ResponseHeader;
 
 typedef struct PACKED {
@@ -56,7 +56,7 @@ typedef struct PACKED {
 } PhoneActionResponseMsg;
 
 typedef struct PACKED {
-  Command command:8;
+  Command command : 8;
   Uuid item_id;
   uint8_t action_id;
   uint8_t num_attributes;
@@ -70,16 +70,14 @@ typedef struct {
 
 T_STATIC const int TIMELINE_ACTION_ENDPOINT = 0x2cb0;
 
-
 static void prv_action_system_task_callback(void *data) {
   InvokeActionMsgCbData *action = data;
 
   comm_session_send_data(comm_session_get_system_session(), TIMELINE_ACTION_ENDPOINT,
-      (uint8_t *)&action->msg, action->length, COMM_SESSION_DEFAULT_TIMEOUT);
+                         (uint8_t *)&action->msg, action->length, COMM_SESSION_DEFAULT_TIMEOUT);
 
   kernel_free(action);
 }
-
 
 static ActionResultType prv_get_action_result_type(ResponseHeader *header) {
   switch (header->response) {
@@ -98,9 +96,8 @@ static ActionResultType prv_get_action_result_type(ResponseHeader *header) {
 }
 
 static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_data(
-    ResponseHeader *header, uint8_t num_attributes, uint8_t num_actions,
-    const uint8_t *data, size_t size) {
-
+    ResponseHeader *header, uint8_t num_attributes, uint8_t num_actions, const uint8_t *data,
+    size_t size) {
   size_t string_alloc_size;
   uint8_t attributes_per_action[num_actions];
   bool r = attributes_actions_parse_serial_data(num_attributes, num_actions, data, size,
@@ -109,9 +106,8 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
     return NULL;
   }
 
-  const size_t alloc_size = attributes_actions_get_required_buffer_size(num_attributes, num_actions,
-                                                                        attributes_per_action,
-                                                                        string_alloc_size);
+  const size_t alloc_size = attributes_actions_get_required_buffer_size(
+      num_attributes, num_actions, attributes_per_action, string_alloc_size);
 
   PebbleSysNotificationActionResult *action_result =
       kernel_zalloc(sizeof(PebbleSysNotificationActionResult) + alloc_size);
@@ -126,8 +122,8 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
   action_result->id = header->item_id;
   action_result->type = prv_get_action_result_type(header);
 
-  attributes_actions_init(&action_result->attr_list, &action_result->action_group,
-                          &buffer, num_attributes, num_actions, attributes_per_action);
+  attributes_actions_init(&action_result->attr_list, &action_result->action_group, &buffer,
+                          num_attributes, num_actions, attributes_per_action);
 
   if (!attributes_actions_deserialize(&action_result->attr_list, &action_result->action_group,
                                       buffer, buf_end, data, size)) {
@@ -158,8 +154,8 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   invoke_action_data->msg.item_id = *id;
   if (attributes != NULL) {
     invoke_action_data->msg.num_attributes = attributes->num_attributes;
-    size_t added_data_size = attribute_list_serialize(attributes, invoke_action_data->msg.data,
-        invoke_action_data->msg.data + attr_data_size);
+    size_t added_data_size = attribute_list_serialize(
+        attributes, invoke_action_data->msg.data, invoke_action_data->msg.data + attr_data_size);
     PBL_ASSERTN(added_data_size == attr_data_size);
   } else {
     invoke_action_data->msg.num_attributes = 0;
@@ -167,8 +163,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
 
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(id, uuid_string);
-  PBL_LOG_INFO("Send action to phone (Item ID: %s; Action ID: %d)",
-      uuid_string, action_id);
+  PBL_LOG_INFO("Send action to phone (Item ID: %s; Action ID: %d)", uuid_string, action_id);
 
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, (uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
 
@@ -176,20 +171,20 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
     system_task_add_callback(prv_action_system_task_callback, invoke_action_data);
   } else {
     comm_session_send_data(comm_session_get_system_session(), TIMELINE_ACTION_ENDPOINT,
-        (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,
-        COMM_SESSION_DEFAULT_TIMEOUT);
+                           (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,
+                           COMM_SESSION_DEFAULT_TIMEOUT);
     kernel_free(invoke_action_data);
   }
 }
 
-void timeline_action_endpoint_protocol_msg_callback(CommSession *session,
-    const uint8_t* data, size_t length) {
+void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
+                                                    size_t length) {
   if (length < sizeof(ResponseHeader)) {
-    PBL_LOG_WRN("Invalid phone response message length %d", (int) length);
+    PBL_LOG_WRN("Invalid phone response message length %d", (int)length);
     return;
   }
 
-  ResponseHeader *header = (ResponseHeader *) data;
+  ResponseHeader *header = (ResponseHeader *)data;
   if (header->command != CommandPhoneResponse && header->command != CommandPhoneActionResponse) {
     PBL_LOG_WRN("Invalid command id");
     return;

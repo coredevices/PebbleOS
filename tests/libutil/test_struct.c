@@ -18,9 +18,9 @@ void test_struct__null_safe_access_field(void) {
   cl_assert_equal_p(NULL_SAFE_FIELD_ACCESS(null_ptr, ptr_field_to_access, NULL), NULL);
 
   int data = 1337;
-  const NullSafeFieldAccessTestStruct test_struct = (NullSafeFieldAccessTestStruct) {
-    .field_to_access = data,
-    .ptr_field_to_access = &data,
+  const NullSafeFieldAccessTestStruct test_struct = (NullSafeFieldAccessTestStruct){
+      .field_to_access = data,
+      .ptr_field_to_access = &data,
   };
 
   // Passing in a valid struct ptr should return the field

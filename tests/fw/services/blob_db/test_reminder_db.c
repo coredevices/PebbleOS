@@ -34,98 +34,112 @@ void reminders_handle_reminder_removed(const Uuid *reminder_id) {
 }
 
 static TimelineItem item1 = {
-  .header = {
-    .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x01},
-    .timestamp = 1,
-    .duration = 0,
-    .type = TimelineItemTypeReminder,
-    .layout = LayoutIdTest,
-    // don't care about the rest
-  }
+    .header = {
+        .id =
+            {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0xb4},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x01},
+        .timestamp = 1,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+        // don't care about the rest
+    }
 };
 
 static TimelineItem item2 = {
-  .header = {
-    .id = {0x55, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87,
-             0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6, 0x76, 0x01},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x01},
-    .timestamp = 3,
-    .duration = 0,
-    .type = TimelineItemTypeReminder,
-    .layout = LayoutIdTest,
-  },
+    .header = {
+        .id =
+            {0x55, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87, 0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6,
+             0x76, 0x01},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x01},
+        .timestamp = 3,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+    },
 };
 
 static TimelineItem item3 = {
-  .header = {
-    .id = {0x7c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x02},
-    .timestamp = 4,
-    .duration = 0,
-    .type = TimelineItemTypeReminder,
-    .layout = LayoutIdTest,
-  }
+    .header = {
+        .id =
+            {0x7c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+             0xe2, 0x05},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x02},
+        .timestamp = 4,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+    }
 };
 
 static TimelineItem item4 = {
-  .header = {
-    .id = {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x03},
-    .timestamp = 4,
-    .duration = 0,
-    .type = TimelineItemTypeReminder,
-    .layout = LayoutIdTest,
-  }
+    .header = {
+        .id =
+            {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+             0xe2, 0x05},
+        .parent_id =
+            {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72,
+             0x22, 0x03},
+        .timestamp = 4,
+        .duration = 0,
+        .type = TimelineItemTypeReminder,
+        .layout = LayoutIdTest,
+    }
 };
 
 static SerializedTimelineItemHeader bad_item = {
-  .common = {
-    .id = {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x42, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-    .timestamp = 3,
-    .duration = 0,
-    .type = TimelineItemTypeReminder,
-    .layout = LayoutIdTest,
-  },
-  .num_attributes = 3,
+    .common =
+        {
+            .id =
+                {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x42, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+                 0xe2, 0x05},
+            .timestamp = 3,
+            .duration = 0,
+            .type = TimelineItemTypeReminder,
+            .layout = LayoutIdTest,
+        },
+    .num_attributes = 3,
 };
 
 static TimelineItem title_item1 = {
-  .header = {
-    .id = {0x9c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-    .timestamp = 1,
-    .duration = 0,
-    .type = TimelineItemTypeReminder,
-    .layout = LayoutIdTest,
-  },
-  .attr_list = (AttributeList) {
-    .num_attributes = 1,
-    .attributes = (Attribute[1]) {{ .id = AttributeIdTitle, .cstring = "test 1" }}
-  }
+    .header =
+        {
+            .id =
+                {0x9c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+                 0xe2, 0x05},
+            .timestamp = 1,
+            .duration = 0,
+            .type = TimelineItemTypeReminder,
+            .layout = LayoutIdTest,
+        },
+    .attr_list = (AttributeList){
+        .num_attributes = 1,
+        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "test 1"}}
+    }
 };
 
 static TimelineItem title_item2 = {
-  .header = {
-    .id = {0xac, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-    .timestamp = 1,
-    .duration = 0,
-    .type = TimelineItemTypeReminder,
-    .layout = LayoutIdTest,
-  },
-  .attr_list = (AttributeList) {
-    .num_attributes = 1,
-    .attributes = (Attribute[1]) {{ .id = AttributeIdTitle, .cstring = "test 2" }}
-  }
+    .header =
+        {
+            .id =
+                {0xac, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d,
+                 0xe2, 0x05},
+            .timestamp = 1,
+            .duration = 0,
+            .type = TimelineItemTypeReminder,
+            .layout = LayoutIdTest,
+        },
+    .attr_list = (AttributeList){
+        .num_attributes = 1,
+        .attributes = (Attribute[1]){{.id = AttributeIdTitle, .cstring = "test 2"}}
+    }
 };
 
 static void prv_insert_default_reminders(void) {
@@ -158,19 +172,19 @@ void test_reminder_db__basic_test(void) {
   prv_insert_default_reminders();
 
   // confirm all three are there
-  cl_assert(reminder_db_get_len((uint8_t*)&item1.header.id, sizeof(Uuid)) > 0);
-  cl_assert(reminder_db_get_len((uint8_t*)&item2.header.id, sizeof(Uuid)) > 0);
-  cl_assert(reminder_db_get_len((uint8_t*)&item3.header.id, sizeof(Uuid)) > 0);
+  cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) > 0);
+  cl_assert(reminder_db_get_len((uint8_t *)&item2.header.id, sizeof(Uuid)) > 0);
+  cl_assert(reminder_db_get_len((uint8_t *)&item3.header.id, sizeof(Uuid)) > 0);
 
   // remove #1 and confirm it's deleted
-  cl_assert(S_SUCCESS == reminder_db_delete((uint8_t*)&item1.header.id, sizeof(Uuid)));
+  cl_assert(S_SUCCESS == reminder_db_delete((uint8_t *)&item1.header.id, sizeof(Uuid)));
   cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) == 0);
 
   // add 1 back so it's clean
   cl_assert(S_SUCCESS == reminder_db_insert_item(&item1));
   TimelineItem temp = {{{0}}};
-  cl_assert(S_SUCCESS == reminder_db_read((uint8_t*)&item1.header.id, sizeof(Uuid), (uint8_t*)&temp,
-      sizeof(CommonTimelineItemHeader)));
+  cl_assert(S_SUCCESS == reminder_db_read((uint8_t *)&item1.header.id, sizeof(Uuid),
+                                          (uint8_t *)&temp, sizeof(CommonTimelineItemHeader)));
 
   // Note: we set things to null because it makes it easier to compare two
   // TimelineItems with memcmp
@@ -200,7 +214,7 @@ void test_reminder_db__basic_test(void) {
     timeline_item_free_allocated_buffer(&temp);
     cl_assert(memcmp(&item3, &temp, sizeof(TimelineItem)) == 0);
     cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
-    cl_assert(reminder_db_get_len((uint8_t *) &item3, sizeof(Uuid)) == 0);
+    cl_assert(reminder_db_get_len((uint8_t *)&item3, sizeof(Uuid)) == 0);
 
     memset(&temp, 0, sizeof(TimelineItem));
     cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
@@ -212,7 +226,7 @@ void test_reminder_db__basic_test(void) {
     temp.attr_list.attributes = NULL;
     cl_assert(memcmp(&item4, &temp, sizeof(TimelineItem)) == 0);
     cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
-    cl_assert(reminder_db_get_len((uint8_t *) &item4, sizeof(Uuid)) == 0);
+    cl_assert(reminder_db_get_len((uint8_t *)&item4, sizeof(Uuid)) == 0);
 
     memset(&temp, 0, sizeof(TimelineItem));
     cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
@@ -228,22 +242,26 @@ void test_reminder_db__basic_test(void) {
 void test_reminder_db__size_test(void) {
   prv_insert_default_reminders();
 
-  cl_assert(sizeof(SerializedTimelineItemHeader) == reminder_db_get_len((uint8_t*) &item1.header.id, sizeof(TimelineItemId)));
+  cl_assert(sizeof(SerializedTimelineItemHeader) ==
+            reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(TimelineItemId)));
 
-  cl_assert(sizeof(SerializedTimelineItemHeader) == reminder_db_get_len((uint8_t*) &item2.header.id, sizeof(TimelineItemId)));
+  cl_assert(sizeof(SerializedTimelineItemHeader) ==
+            reminder_db_get_len((uint8_t *)&item2.header.id, sizeof(TimelineItemId)));
 
-  cl_assert(sizeof(SerializedTimelineItemHeader) == reminder_db_get_len((uint8_t*) &item3.header.id, sizeof(TimelineItemId)));
+  cl_assert(sizeof(SerializedTimelineItemHeader) ==
+            reminder_db_get_len((uint8_t *)&item3.header.id, sizeof(TimelineItemId)));
 }
 
 void test_reminder_db__wrong_type_test(void) {
   TimelineItem not_a_reminder = {
-    .header = {
-      .id = {0x99, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87,
-               0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6, 0x76, 0x01},
-      .timestamp = 0,
-      .duration = 0,
-      .type = TimelineItemTypeNotification
-    }
+      .header = {
+          .id =
+              {0x99, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87, 0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6,
+               0x76, 0x01},
+          .timestamp = 0,
+          .duration = 0,
+          .type = TimelineItemTypeNotification
+      }
   };
 
   cl_assert(E_INVALID_ARGUMENT == reminder_db_insert_item(&not_a_reminder));
@@ -262,12 +280,13 @@ void test_reminder_db__delete_parent(void) {
   cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) == 0);
   cl_assert(reminder_db_get_len((uint8_t *)&item2.header.id, sizeof(Uuid)) == 0);
   // confirm the others are still here
-  cl_assert(reminder_db_get_len((uint8_t*)&item3.header.id, sizeof(Uuid)) > 0);
-  cl_assert(reminder_db_get_len((uint8_t*)&item4.header.id, sizeof(Uuid)) > 0);
+  cl_assert(reminder_db_get_len((uint8_t *)&item3.header.id, sizeof(Uuid)) > 0);
+  cl_assert(reminder_db_get_len((uint8_t *)&item4.header.id, sizeof(Uuid)) > 0);
 }
 
 void test_reminder_db__bad_item(void) {
-  cl_assert(S_SUCCESS != reminder_db_insert((uint8_t *)&bad_item.common.id, UUID_SIZE, (uint8_t *)&bad_item, sizeof(bad_item)));
+  cl_assert(S_SUCCESS != reminder_db_insert((uint8_t *)&bad_item.common.id, UUID_SIZE,
+                                            (uint8_t *)&bad_item, sizeof(bad_item)));
 }
 
 void test_reminder_db__read_nonexistant(void) {
@@ -290,29 +309,33 @@ void test_reminder_db__find_by_timestamp_title(void) {
 
   // Test matching timestamp, but not title
   cl_assert_equal_b(reminder_db_find_by_timestamp_title(title_item1.header.timestamp,
-      "nonexistent title", NULL, &reminder), false);
+                                                        "nonexistent title", NULL, &reminder),
+                    false);
 
   // Test matching title, but not timestamp
-  cl_assert_equal_b(reminder_db_find_by_timestamp_title(0,
-      title_item1.attr_list.attributes[0].cstring, NULL, &reminder), false);
+  cl_assert_equal_b(reminder_db_find_by_timestamp_title(
+                        0, title_item1.attr_list.attributes[0].cstring, NULL, &reminder),
+                    false);
 
   // Confirm proper item is returned for search criteria
   cl_assert_equal_b(reminder_db_find_by_timestamp_title(title_item1.header.timestamp,
-      title_item1.attr_list.attributes[0].cstring, NULL, &reminder), true);
+                                                        title_item1.attr_list.attributes[0].cstring,
+                                                        NULL, &reminder),
+                    true);
   cl_assert(uuid_equal(&reminder.header.id, &title_item1.header.id));
 }
 
 void test_reminder_db__is_dirty_insert_from_phone(void) {
   // Insert a bunch of reminders "from the phone"
   // They should NOT be dirty (the phone is the source of truth)
-  reminder_db_insert((uint8_t *)&item1.header.id, sizeof(TimelineItemId),
-                     (uint8_t *)&item1, sizeof(TimelineItem));
-  reminder_db_insert((uint8_t *)&item2.header.id, sizeof(TimelineItemId),
-                     (uint8_t *)&item2, sizeof(TimelineItem));
-  reminder_db_insert((uint8_t *)&item3.header.id, sizeof(TimelineItemId),
-                     (uint8_t *)&item3, sizeof(TimelineItem));
-  reminder_db_insert((uint8_t *)&item4.header.id, sizeof(TimelineItemId),
-                     (uint8_t *)&item4, sizeof(TimelineItem));
+  reminder_db_insert((uint8_t *)&item1.header.id, sizeof(TimelineItemId), (uint8_t *)&item1,
+                     sizeof(TimelineItem));
+  reminder_db_insert((uint8_t *)&item2.header.id, sizeof(TimelineItemId), (uint8_t *)&item2,
+                     sizeof(TimelineItem));
+  reminder_db_insert((uint8_t *)&item3.header.id, sizeof(TimelineItemId), (uint8_t *)&item3,
+                     sizeof(TimelineItem));
+  reminder_db_insert((uint8_t *)&item4.header.id, sizeof(TimelineItemId), (uint8_t *)&item4,
+                     sizeof(TimelineItem));
 
   bool is_dirty = true;
   cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), S_SUCCESS);

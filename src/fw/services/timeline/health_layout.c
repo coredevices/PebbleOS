@@ -16,9 +16,9 @@
 
 static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   const LayoutNodeExtentConfig s_metrics_config = {
-    .node.type = LayoutNodeType_TimelineMetrics,
-    .offset.y = CARD_MARGIN_TOP,
-    .margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
+      .node.type = LayoutNodeType_TimelineMetrics,
+      .offset.y = CARD_MARGIN_TOP,
+      .margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
   };
   return layout_create_text_node_from_config(&timeline_layout->layout_layer,
                                              &s_metrics_config.node);
@@ -36,14 +36,15 @@ LayoutLayer *health_layout_create(const LayoutLayerConfig *config) {
   HealthLayout *layout = task_zalloc_check(sizeof(HealthLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
-    .attributes = { AttributeIdTitle, AttributeIdSubtitle },
-    .default_colors = { { .argb = GColorBlackARGB8 },
-                        { .argb = GColorWhiteARGB8 },
-                        { .argb = GColorSunsetOrangeARGB8 } },
-    .default_icon = TIMELINE_RESOURCE_ACTIVITY,
-    .card_icon_align = PBL_IF_ROUND_ELSE(GAlignCenter, GAlignLeft),
-    .card_icon_size = TimelineResourceSizeTiny,
-    .card_view_constructor = prv_card_view_constructor,
+      .attributes = {AttributeIdTitle, AttributeIdSubtitle},
+      .default_colors =
+          {{.argb = GColorBlackARGB8},
+           {.argb = GColorWhiteARGB8},
+           {.argb = GColorSunsetOrangeARGB8}},
+      .default_icon = TIMELINE_RESOURCE_ACTIVITY,
+      .card_icon_align = PBL_IF_ROUND_ELSE(GAlignCenter, GAlignLeft),
+      .card_icon_size = TimelineResourceSizeTiny,
+      .card_view_constructor = prv_card_view_constructor,
   };
 
   timeline_layout_init((TimelineLayout *)layout, config, &s_timeline_layout_impl);

@@ -25,7 +25,6 @@
 #error "Unrecognized CONFIG_SCREEN_COLOR_DEPTH_BITS"
 #endif
 
-
 // Stubs
 ////////////////////////////////////
 
@@ -41,7 +40,7 @@ static FrameBuffer *s_fb = NULL;
 
 void test_graphics_draw_bitmap__initialize(void) {
   s_fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   test_graphics_context_init(&s_ctx, s_fb);
   read_pbi("no_litter_crop.png.pbi", &test_image);
 }
@@ -68,9 +67,9 @@ static void prv_layer_test_update_proc(Layer *layer, GContext *ctx) {
 
 static void prv_layer_test(GPoint layer_origin, GPoint image_bounds_offset) {
   Layer layer;
-  const GRect layer_frame = (GRect) {
-    .origin = layer_origin,
-    .size = TEST_LAYER_SIZE,
+  const GRect layer_frame = (GRect){
+      .origin = layer_origin,
+      .size = TEST_LAYER_SIZE,
   };
   layer_init(&layer, &layer_frame);
   layer_set_update_proc(&layer, prv_layer_test_update_proc);
@@ -90,9 +89,9 @@ static void prv_offset_layer_test(GPoint image_bounds_offset) {
 
 static void prv_bitmap_layer_test(GPoint frame_origin, GPoint bounds_origin) {
   BitmapLayer bitmap_layer;
-  const GRect bitmap_layer_frame = (GRect) {
-    .origin = frame_origin,
-    .size = TEST_LAYER_SIZE,
+  const GRect bitmap_layer_frame = (GRect){
+      .origin = frame_origin,
+      .size = TEST_LAYER_SIZE,
   };
   bitmap_layer_init(&bitmap_layer, &bitmap_layer_frame);
   Layer *layer = bitmap_layer_get_layer(&bitmap_layer);
@@ -121,7 +120,7 @@ static GBitmap *prv_create_bitmap_from_png_file(const char *png_filename_without
   GBitmap *result = NULL;
 
   char png_file_path[strlen(CLAR_FIXTURE_PATH) + 1 + strlen(GRAPHICS_FIXTURE_PATH) + 1 +
-    strlen(png_filename_without_extension) + 1];
+                     strlen(png_filename_without_extension) + 1];
   sprintf(png_file_path, "%s/%s/%s.png", CLAR_FIXTURE_PATH, GRAPHICS_FIXTURE_PATH,
           png_filename_without_extension);
 
@@ -154,7 +153,7 @@ static GBitmap *prv_create_bitmap_from_png_file(const char *png_filename_without
     }
   }
 
-  cleanup:
+cleanup:
   fclose(fp);
 
   return result;
@@ -184,31 +183,31 @@ typedef struct CompositeTest {
 } CompositeTest;
 
 static const CompositeTest s_composite_tests[] = {
-  {
-    .test_name = "1bitBW",
-    .expected_test_image_bitmap_format = GBitmapFormat1Bit,
-    .bitmap_create_func = prv_create_bitmap_from_pbi_file,
-    .need_to_destroy_bitmap = false,
-  },
-  {
-    .test_name = "2bitTrns",
-    .expected_test_image_bitmap_format = GBitmapFormat2BitPalette,
-    .bitmap_create_func = prv_create_bitmap_from_png_file,
-    .need_to_destroy_bitmap = true,
-  },
+    {
+        .test_name = "1bitBW",
+        .expected_test_image_bitmap_format = GBitmapFormat1Bit,
+        .bitmap_create_func = prv_create_bitmap_from_pbi_file,
+        .need_to_destroy_bitmap = false,
+    },
+    {
+        .test_name = "2bitTrns",
+        .expected_test_image_bitmap_format = GBitmapFormat2BitPalette,
+        .bitmap_create_func = prv_create_bitmap_from_png_file,
+        .need_to_destroy_bitmap = true,
+    },
 #if PBL_COLOR
-  {
-    .test_name = "4bitTrns",
-    .expected_test_image_bitmap_format = GBitmapFormat4BitPalette,
-    .bitmap_create_func = prv_create_bitmap_from_png_file,
-    .need_to_destroy_bitmap = true,
-  },
-  {
-    .test_name = "8bitTrns",
-    .expected_test_image_bitmap_format = GBitmapFormat8Bit,
-    .bitmap_create_func = prv_create_bitmap_from_png_file,
-    .need_to_destroy_bitmap = true,
-  },
+    {
+        .test_name = "4bitTrns",
+        .expected_test_image_bitmap_format = GBitmapFormat4BitPalette,
+        .bitmap_create_func = prv_create_bitmap_from_png_file,
+        .need_to_destroy_bitmap = true,
+    },
+    {
+        .test_name = "8bitTrns",
+        .expected_test_image_bitmap_format = GBitmapFormat8Bit,
+        .bitmap_create_func = prv_create_bitmap_from_png_file,
+        .need_to_destroy_bitmap = true,
+    },
 #endif
 };
 
@@ -220,10 +219,8 @@ static const CompositeTest s_composite_tests[] = {
 static bool prv_gbitmap_format_and_compositing_mode_combo_is_valid(GBitmapFormat bitmap_format,
                                                                    GCompOp compositing_mode) {
   return !((bitmap_format != GBitmapFormat1Bit) &&
-           ((compositing_mode == GCompOpAssignInverted) ||
-           (compositing_mode == GCompOpOr) ||
-           (compositing_mode == GCompOpAnd) ||
-           (compositing_mode == GCompOpClear)));
+           ((compositing_mode == GCompOpAssignInverted) || (compositing_mode == GCompOpOr) ||
+            (compositing_mode == GCompOpAnd) || (compositing_mode == GCompOpClear)));
 }
 
 static void prv_composite_test_draw_bitmap(GContext *ctx, GBitmap *bitmap, GPoint offset,
@@ -232,8 +229,8 @@ static void prv_composite_test_draw_bitmap(GContext *ctx, GBitmap *bitmap, GPoin
   destination.origin = gpoint_add(destination.origin, offset);
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);
   graphics_draw_bitmap_in_rect(ctx, bitmap, &destination);
-  destination.origin = gpoint_add(destination.origin, GPoint(COMPOSITE_TEST_OFFSET_X,
-                                                             COMPOSITE_TEST_OFFSET_Y));
+  destination.origin =
+      gpoint_add(destination.origin, GPoint(COMPOSITE_TEST_OFFSET_X, COMPOSITE_TEST_OFFSET_Y));
   graphics_context_set_compositing_mode(ctx, compositing_mode);
   graphics_draw_bitmap_in_rect(ctx, bitmap, &destination);
 }
@@ -244,7 +241,7 @@ static void prv_composite_test(const char *unit_test_name, GCompOp compositing_m
 
     // Skip invalid GBitmapFormat and GCompOp combinations
     if (!prv_gbitmap_format_and_compositing_mode_combo_is_valid(
-      test_data->expected_test_image_bitmap_format, compositing_mode)) {
+            test_data->expected_test_image_bitmap_format, compositing_mode)) {
       break;
     }
 
@@ -263,21 +260,20 @@ static void prv_composite_test(const char *unit_test_name, GCompOp compositing_m
 
     // Then redraw the two variations offset so the bottom right edge of the right variation
     // is aligned with the bottom right edge of the framebuffer
-    const GPoint framebuffer_bottom_right_point =
-      GPoint(grect_get_max_x(&s_ctx.dest_bitmap.bounds),
-             grect_get_max_y(&s_ctx.dest_bitmap.bounds));
+    const GPoint framebuffer_bottom_right_point = GPoint(
+        grect_get_max_x(&s_ctx.dest_bitmap.bounds), grect_get_max_y(&s_ctx.dest_bitmap.bounds));
     GPoint offset_point = gpoint_sub(framebuffer_bottom_right_point,
                                      GPoint(bitmap->bounds.size.w, bitmap->bounds.size.h));
-    offset_point = gpoint_sub(offset_point, GPoint(COMPOSITE_TEST_OFFSET_X,
-                                                   COMPOSITE_TEST_OFFSET_Y));
+    offset_point =
+        gpoint_sub(offset_point, GPoint(COMPOSITE_TEST_OFFSET_X, COMPOSITE_TEST_OFFSET_Y));
     prv_composite_test_draw_bitmap(&s_ctx, bitmap, offset_point, compositing_mode);
 
     // Check the result
     char unit_test_result_image_file_base_name[PATH_STRING_LENGTH] = {0};
-    snprintf(unit_test_result_image_file_base_name, PATH_STRING_LENGTH,
-             "%s_%s", unit_test_name, test_data->test_name);
-    cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap,
-               namecat(unit_test_result_image_file_base_name, ".pbi")));
+    snprintf(unit_test_result_image_file_base_name, PATH_STRING_LENGTH, "%s_%s", unit_test_name,
+             test_data->test_name);
+    cl_check(
+        gbitmap_pbi_eq(&s_ctx.dest_bitmap, namecat(unit_test_result_image_file_base_name, ".pbi")));
 
     if (test_data->need_to_destroy_bitmap) {
       gbitmap_destroy(bitmap);

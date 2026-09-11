@@ -12,7 +12,7 @@
 // ## Point setting/blending functions
 
 #if PBL_COLOR
-T_STATIC inline void set_pixel_raw_8bit(GContext* ctx, GPoint point) {
+T_STATIC inline void set_pixel_raw_8bit(GContext *ctx, GPoint point) {
   if (!grect_contains_point(&ctx->dest_bitmap.bounds, &point)) {
     return;
   }
@@ -33,7 +33,7 @@ T_STATIC inline void set_pixel_raw_8bit(GContext* ctx, GPoint point) {
 #endif
 
 #if PBL_BW
-static inline void set_pixel_raw_2bit(GContext* ctx, GPoint point) {
+static inline void set_pixel_raw_2bit(GContext *ctx, GPoint point) {
   if (!grect_contains_point(&ctx->dest_bitmap.bounds, &point)) {
     return;
   }
@@ -44,7 +44,7 @@ static inline void set_pixel_raw_2bit(GContext* ctx, GPoint point) {
 }
 #endif
 
-void graphics_private_set_pixel(GContext* ctx, GPoint point) {
+void graphics_private_set_pixel(GContext *ctx, GPoint point) {
   if (!grect_contains_point(&ctx->draw_state.clip_box, &point)) {
     return;
   }
@@ -55,29 +55,22 @@ void graphics_private_set_pixel(GContext* ctx, GPoint point) {
   set_pixel_raw_8bit(ctx, point);
 #endif
 
-  const GRect dirty_rect = { point, { 1, 1 } };
+  const GRect dirty_rect = {point, {1, 1}};
   graphics_context_mark_dirty_rect(ctx, dirty_rect);
 }
 
 // ## Private blending wrapper functions for non-aa
 
-static const uint16_t grays[14] = {
-  0x0000, 0x0000,
-  0x1111, 0x4444,
-  0x5555, 0xAAAA,
-  0x5555, 0xAAAA,
-  0x5555, 0xAAAA, 
-  0xEEEE, 0xBBBB, 
-  0xFFFF, 0xFFFF
-};
+static const uint16_t grays[14] = {0x0000, 0x0000, 0x1111, 0x4444, 0x5555, 0xAAAA, 0x5555,
+                                   0xAAAA, 0x5555, 0xAAAA, 0xEEEE, 0xBBBB, 0xFFFF, 0xFFFF};
 
 uint32_t graphics_private_get_1bit_grayscale_pattern(GColor color, uint8_t row_number) {
-  uint16_t luma = ((color.r << 1) + color.r + (color.g << 2) + color.b) >> 1;     // 0 to 12
+  uint16_t luma = ((color.r << 1) + color.r + (color.g << 2) + color.b) >> 1;  // 0 to 12
   luma = grays[(luma & ~1) + (row_number & 1)];
   return (luma << 16) | luma;
 }
 
-void prv_assign_line_horizontal_non_aa(GContext* ctx, int16_t y, int16_t x1, int16_t x2) {
+void prv_assign_line_horizontal_non_aa(GContext *ctx, int16_t y, int16_t x1, int16_t x2) {
   y += ctx->draw_state.drawing_box.origin.y;
   x1 += ctx->draw_state.drawing_box.origin.x;
   x2 += ctx->draw_state.drawing_box.origin.x;
@@ -109,7 +102,7 @@ void prv_assign_line_horizontal_non_aa(GContext* ctx, int16_t y, int16_t x1, int
   graphics_release_frame_buffer(ctx, framebuffer);
 }
 
-void prv_assign_line_vertical_non_aa(GContext* ctx, int16_t x, int16_t y1, int16_t y2) {
+void prv_assign_line_vertical_non_aa(GContext *ctx, int16_t x, int16_t y1, int16_t y2) {
   x += ctx->draw_state.drawing_box.origin.x;
   y1 += ctx->draw_state.drawing_box.origin.y;
   y2 += ctx->draw_state.drawing_box.origin.y;
@@ -124,7 +117,7 @@ void prv_assign_line_vertical_non_aa(GContext* ctx, int16_t x, int16_t y1, int16
   const int x_max = grect_get_max_x(&ctx->draw_state.clip_box) - 1;
 
   y1 = MAX(y1, y_min);
-  y2 = MIN(y2, y_max + 1); // Thats because we added one to end of the line
+  y2 = MIN(y2, y_max + 1);  // Thats because we added one to end of the line
   if (!WITHIN(x, x_min, x_max) || y1 > y2) {
     // Outside of drawing bounds..
     return;
@@ -186,8 +179,7 @@ void graphics_private_draw_horizontal_line_integral(GContext *ctx, GBitmap *fram
   const Fixed_S16_3 x1_fixed = Fixed_S16_3(x1 << FIXED_S16_3_PRECISION);
   const Fixed_S16_3 x2_fixed = Fixed_S16_3(x2 << FIXED_S16_3_PRECISION);
 
-  ctx->draw_state.draw_implementation->assign_horizontal_line(ctx, y, x1_fixed, x2_fixed,
-                                                              color);
+  ctx->draw_state.draw_implementation->assign_horizontal_line(ctx, y, x1_fixed, x2_fixed, color);
 }
 
 void graphics_private_draw_vertical_line_prepared(GContext *ctx, GBitmap *framebuffer,
@@ -225,7 +217,7 @@ void graphics_private_draw_vertical_line_prepared(GContext *ctx, GBitmap *frameb
 }
 
 void graphics_private_draw_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_3 x1,
-                                            Fixed_S16_3 x2) {
+                                           Fixed_S16_3 x2) {
 #if PBL_COLOR
   if (ctx->draw_state.antialiased) {
     // apply draw box and clipping
@@ -245,11 +237,11 @@ void graphics_private_draw_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_3
     graphics_release_frame_buffer(ctx, framebuffer);
     return;
   }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
   // since x1 is beginning of the line, rounding should work in favor of flooring the value
   //   therefore we substract one from the rounding addition to produce result similar to x2
   int16_t x1_rounded =
-    (x1.raw_value + (FIXED_S16_3_ONE.raw_value / 2 - 1)) / FIXED_S16_3_ONE.raw_value;
+      (x1.raw_value + (FIXED_S16_3_ONE.raw_value / 2 - 1)) / FIXED_S16_3_ONE.raw_value;
   int16_t x2_rounded = (x2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
 
   if (x1_rounded > x2_rounded) {
@@ -280,11 +272,11 @@ void graphics_private_draw_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 y
     graphics_release_frame_buffer(ctx, framebuffer);
     return;
   }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
   // since y1 is beginning of the line, rounding should work in favor of flooring the value
   //   therefore we substract one from the rounding addition to produce result similar to y2
   int16_t y1_rounded =
-    (y1.raw_value + (FIXED_S16_3_ONE.raw_value / 2 - 1)) / FIXED_S16_3_ONE.raw_value;
+      (y1.raw_value + (FIXED_S16_3_ONE.raw_value / 2 - 1)) / FIXED_S16_3_ONE.raw_value;
   int16_t y2_rounded = (y2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
 
   if (y1_rounded > y2_rounded) {
@@ -321,7 +313,7 @@ void graphics_private_plot_pixel(GBitmap *framebuffer, GRect *clip_box, int x, i
     uint8_t *line = ((uint8_t *)framebuffer->addr) + (framebuffer->row_size_bytes * y);
     bitset8_update(line, x, !black);
   }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 }
 
 void graphics_private_plot_horizontal_line_prepared(GContext *ctx, GBitmap *framebuffer,
@@ -344,7 +336,7 @@ void graphics_private_plot_horizontal_line_prepared(GContext *ctx, GBitmap *fram
     // We're not plotting anything, bail
     return;
   }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
   ctx->draw_state.draw_implementation->blend_horizontal_line(ctx, y, x_min, x_max, color);
 }
@@ -370,7 +362,7 @@ void graphics_private_plot_vertical_line_prepared(GContext *ctx, GBitmap *frameb
     // We're not plotting anything, bail
     return;
   }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
   ctx->draw_state.draw_implementation->blend_vertical_line(ctx, x, y_min, y_max, color);
 }
@@ -405,13 +397,13 @@ void graphics_private_plot_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_3
     graphics_release_frame_buffer(ctx, framebuffer);
     return;
   }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
   if (opacity <= (MAX_PLOT_BRIGHTNESS / 2)) {
-    int16_t x1_rounded = (x1.raw_value + (FIXED_S16_3_ONE.raw_value / 2))
-                          / FIXED_S16_3_ONE.raw_value;
-    int16_t x2_rounded = (x2.raw_value + (FIXED_S16_3_ONE.raw_value / 2))
-                          / FIXED_S16_3_ONE.raw_value;
+    int16_t x1_rounded =
+        (x1.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
+    int16_t x2_rounded =
+        (x2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
 
     prv_assign_line_horizontal_non_aa(ctx, y, x1_rounded, x2_rounded);
   }
@@ -447,13 +439,13 @@ void graphics_private_plot_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 y
     graphics_release_frame_buffer(ctx, framebuffer);
     return;
   }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
   if (opacity <= (MAX_PLOT_BRIGHTNESS / 2)) {
-    int16_t y1_rounded = (y1.raw_value + (FIXED_S16_3_ONE.raw_value / 2))
-                          / FIXED_S16_3_ONE.raw_value;
-    int16_t y2_rounded = (y2.raw_value + (FIXED_S16_3_ONE.raw_value / 2))
-                          / FIXED_S16_3_ONE.raw_value;
+    int16_t y1_rounded =
+        (y1.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
+    int16_t y2_rounded =
+        (y2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
 
     prv_assign_line_vertical_non_aa(ctx, x, y1_rounded, y2_rounded);
   }
@@ -465,13 +457,16 @@ void graphics_private_draw_horizontal_line_delta_prepared(GContext *ctx, GBitmap
                                                           Fixed_S16_3 x1, Fixed_S16_3 x2,
                                                           Fixed_S16_3 delta1, Fixed_S16_3 delta2,
                                                           GColor color) {
-
   // Extended sides AA calculations
-  uint8_t left_aa_offset = (delta1.integer > 1) ?
-        ((delta1.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value) : 1;
+  uint8_t left_aa_offset =
+      (delta1.integer > 1)
+          ? ((delta1.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value)
+          : 1;
 
-  uint8_t right_aa_offset = (delta2.integer > 1) ?
-        ((delta2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value) : 1;
+  uint8_t right_aa_offset =
+      (delta2.integer > 1)
+          ? ((delta2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value)
+          : 1;
 
   x1.integer -= left_aa_offset / 2;
   x2.integer -= right_aa_offset / 2;
@@ -486,10 +481,8 @@ void graphics_private_draw_horizontal_line_delta_prepared(GContext *ctx, GBitmap
 
   // x1/x2 clipping and verification happens in raw drawing function to preserve gradients
 
-  ctx->draw_state.draw_implementation->assign_horizontal_line_delta(ctx, y, x1, x2,
-                                                                    left_aa_offset, right_aa_offset,
-                                                                    min_valid_x, max_valid_x,
-                                                                    color);
+  ctx->draw_state.draw_implementation->assign_horizontal_line_delta(
+      ctx, y, x1, x2, left_aa_offset, right_aa_offset, min_valid_x, max_valid_x, color);
 }
 
 void graphics_private_draw_horizontal_line_delta_aa(GContext *ctx, int16_t y, Fixed_S16_3 x1,
@@ -512,11 +505,11 @@ void graphics_private_draw_horizontal_line_delta_aa(GContext *ctx, int16_t y, Fi
 
   graphics_release_frame_buffer(ctx, framebuffer);
 }
-#endif // PBL_COLOR
+#endif  // PBL_COLOR
 
 void graphics_private_draw_horizontal_line_delta_non_aa(GContext *ctx, int16_t y, Fixed_S16_3 x1,
-                                                    Fixed_S16_3 x2, Fixed_S16_3 delta1,
-                                                    Fixed_S16_3 delta2) {
+                                                        Fixed_S16_3 x2, Fixed_S16_3 delta1,
+                                                        Fixed_S16_3 delta2) {
   int16_t x1_rounded = (x1.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
   int16_t x2_rounded = (x2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value;
 
@@ -531,9 +524,9 @@ void graphics_private_draw_horizontal_line_delta_non_aa(GContext *ctx, int16_t y
 // This function will replicate source column in given area
 T_STATIC void prv_replicate_column_row_raw(GBitmap *framebuffer, int16_t src_x, int16_t dst_x1,
                                            int16_t dst_x2) {
-  const GRect column_to_replicate = (GRect) {
-    .origin = GPoint(src_x, framebuffer->bounds.origin.y),
-    .size = GSize(1, framebuffer->bounds.size.h),
+  const GRect column_to_replicate = (GRect){
+      .origin = GPoint(src_x, framebuffer->bounds.origin.y),
+      .size = GSize(1, framebuffer->bounds.size.h),
   };
   GBitmap column_to_replicate_sub_bitmap;
   gbitmap_init_as_sub_bitmap(&column_to_replicate_sub_bitmap, framebuffer, column_to_replicate);
@@ -545,7 +538,7 @@ T_STATIC void prv_replicate_column_row_raw(GBitmap *framebuffer, int16_t src_x, 
 
 void graphics_patch_trace_of_moving_rect(GContext *ctx, int16_t *prev_x, GRect current) {
   const int16_t new_x = current.origin.x;
-  int16_t src_x = 0; // just so that GCC accepts that src_x is always initialized
+  int16_t src_x = 0;  // just so that GCC accepts that src_x is always initialized
   int16_t dst_x1 = INT16_MAX;
   int16_t dst_x2 = INT16_MIN;
   if (*prev_x == INT16_MAX) {
@@ -637,7 +630,7 @@ void graphics_private_move_pixels_horizontally(GBitmap *bitmap, int16_t delta_x,
             const int rshift = delta_bits;
             const int lshift = 8 - rshift;
             for (int i = 0; i < bytes - 1; i++) {
-              buf[i] = (buf[i] >> rshift) | (buf[i+1] << lshift);
+              buf[i] = (buf[i] >> rshift) | (buf[i + 1] << lshift);
             }
             if (patch_garbage) {
               buf[bytes - 1] >>= rshift;
@@ -652,7 +645,7 @@ void graphics_private_move_pixels_horizontally(GBitmap *bitmap, int16_t delta_x,
             const int lshift = delta_bits;
             const int rshift = 8 - lshift;
             for (int i = bytes - 1; i >= 1; i--) {
-              buf[i] = (buf[i] << lshift) | (buf[i-1] >> rshift);
+              buf[i] = (buf[i] << lshift) | (buf[i - 1] >> rshift);
             }
             if (patch_garbage) {
               buf[0] <<= lshift;
@@ -672,8 +665,7 @@ void graphics_private_move_pixels_horizontally(GBitmap *bitmap, int16_t delta_x,
         if (pixels_to_move <= 0) {
           // on this row, the delta is wider than the available pixels
           if (patch_garbage) {
-            const uint8_t fill_byte = delta_neg ? left_pixel[num_pix_data_row - 1] :
-                                                  left_pixel[0];
+            const uint8_t fill_byte = delta_neg ? left_pixel[num_pix_data_row - 1] : left_pixel[0];
             memset(left_pixel, fill_byte, num_pix_data_row);
           }
           break;
@@ -766,8 +758,8 @@ GColor graphics_private_sample_line_color(const GBitmap *bitmap, GColorSampleEdg
   const int16_t end_y = grect_get_max_y(&bitmap->bounds);
 
   const bool horiz_advance = (edge == GColorSampleEdgeUp) || (edge == GColorSampleEdgeDown);
-  const bool edge_is_max_position = (edge == GColorSampleEdgeDown) ||
-                                    (edge == GColorSampleEdgeRight);
+  const bool edge_is_max_position =
+      (edge == GColorSampleEdgeDown) || (edge == GColorSampleEdgeRight);
 
   const int16_t length = horiz_advance ? (end_x - min_x) : (end_y - min_y);
 

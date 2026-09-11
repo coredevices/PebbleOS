@@ -31,7 +31,7 @@ void simple_dialog_push(SimpleDialog *simple_dialog, WindowStack *window_stack) 
 void app_simple_dialog_push(SimpleDialog *simple_dialog) {
 }
 
-bool simple_dialog_does_text_fit(const char *text, GSize window_size,
-                                 GSize icon_size, bool has_status_bar) {
+bool simple_dialog_does_text_fit(const char *text, GSize window_size, GSize icon_size,
+                                 bool has_status_bar) {
   return true;
 }

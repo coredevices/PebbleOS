@@ -40,7 +40,7 @@ typedef struct WeatherAppLayout {
   GBitmap *tomorrow_weather_icon;
   GDrawCommandImage *fin_pdc;  // real timeline 'fin' flag (END_OF_TIMELINE PDC)
   Layer *fin_layer;
-  Layer *city_layer;   //!< round: the crown city masthead (topmost root child)
+  Layer *city_layer;  //!< round: the crown city masthead (topmost root child)
   Animation *fin_animation;
   const WeatherLocationForecast *forecast;
   const WeatherLocationForecast *next_forecast;
@@ -48,13 +48,13 @@ typedef struct WeatherAppLayout {
   GFont temperature_font;
   GFont high_low_phrase_font;
   GFont metrics_font;
-  GFont metrics_value_font;   // bold metric VALUES (Timeline label/value texture)
+  GFont metrics_value_font;  // bold metric VALUES (Timeline label/value texture)
   GFont tomorrow_font;
   Layer *down_arrow_layer;
   Layer *location_bar_layer;
   char location_name[32];
   bool fin_allowed;
-  GPoint content_layer_origin;   // screen-absolute origin of content_layer
+  GPoint content_layer_origin;  // screen-absolute origin of content_layer
   GRect today_icon_rest_frame;
   GRect tomorrow_icon_rest_frame;
   Animation *icon_animation;
@@ -67,12 +67,12 @@ typedef struct WeatherAppLayout {
     // incoming always ends at ICON_ARC_TODAY_REST
     WeatherType outgoing_weather_type;
     WeatherType incoming_weather_type;
-    WeatherType tomorrow_exit_weather_type; // weather type of tomorrow icon while it exits/enters
+    WeatherType tomorrow_exit_weather_type;  // weather type of tomorrow icon while it exits/enters
     bool animate_down;
     bool tomorrow_reparented;  // true when tomorrow_layer lives in root_layer during animation
     bool tomorrow_incoming;    // true when tomorrow_layer is animating IN during DOWN animation
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
-    bool current_root_overlay; // Gabbro-only: current icon exits above content clipping
+    bool current_root_overlay;  // Gabbro-only: current icon exits above content clipping
 #endif
   } anim_params;
   struct {
@@ -80,13 +80,14 @@ typedef struct WeatherAppLayout {
     GRect to;
   } fin_anim;
   struct {
-    // Pre-formatted strings snapshot of the OUTGOING text (captured before forecast pointer updates)
+    // Pre-formatted strings snapshot of the OUTGOING text (captured before forecast pointer
+    // updates)
     char top_label[24];
     char top_temp[15];
     char top_highlow[15];
-    char top_uv[12];       // UV bar numeral
-    char top_phrase[32];   // condition line
-    char top_desc[128];    // forecast description (warning/wind/precip)
+    char top_uv[12];      // UV bar numeral
+    char top_phrase[32];  // condition line
+    char top_desc[128];   // forecast description (warning/wind/precip)
     char bot_label[24];
     char bot_highlow[15];
     bool bot_valid;
@@ -103,20 +104,19 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
                                  const WeatherLocationForecast *next_forecast);
 
 #define weather_app_layout_set_down_arrow_visible(layout, is_down_visible) \
-  do { (void)(layout); (void)(is_down_visible); } while (0)
+  do {                                                                     \
+    (void)(layout);                                                        \
+    (void)(is_down_visible);                                               \
+  } while (0)
 
-void weather_app_layout_set_fin_allowed(WeatherAppLayout *layout,
-                                        bool fin_allowed);
+void weather_app_layout_set_fin_allowed(WeatherAppLayout *layout, bool fin_allowed);
 
 void weather_app_layout_set_location(WeatherAppLayout *layout, const char *name);
 
 void weather_app_layout_deinit(WeatherAppLayout *layout);
 
-void weather_app_layout_animate(WeatherAppLayout *layout,
-                                const WeatherLocationForecast *new_today,
-                                const WeatherLocationForecast *new_next,
-                                bool animate_down);
-
+void weather_app_layout_animate(WeatherAppLayout *layout, const WeatherLocationForecast *new_today,
+                                const WeatherLocationForecast *new_next, bool animate_down);
 
 #if PBL_ROUND
 // The weather report's UV bar, as a reusable component: glass-concentric arc ends, sun glyph,
@@ -142,9 +142,8 @@ typedef enum {
 
 // `label` is the caption drawn beside the sun glyph — the report says "UV INDEX", the
 // sunset card says "CURRENT UV" (its value is the current hour's, not the day's).
-void weather_app_layout_draw_uv_bar(GContext *ctx, GPoint gc, int by,
-                                    int uv_value, const char *uv_text, WeatherUvBarSize size,
-                                    const char *label);
+void weather_app_layout_draw_uv_bar(GContext *ctx, GPoint gc, int by, int uv_value,
+                                    const char *uv_text, WeatherUvBarSize size, const char *label);
 
 // Height in rows of each bar size, so callers can budget vertical space without guessing.
 int weather_app_layout_uv_bar_height(WeatherUvBarSize size);

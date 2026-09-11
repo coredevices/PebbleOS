@@ -36,8 +36,8 @@ static void prv_apply_transform(GDrawCommandList *list, const GSize size, const 
 }
 
 static const TransformImpl MORPH_SQUARE_TRANSFORM_IMPL = {
-  .destructor = prv_destructor,
-  .apply = prv_apply_transform,
+    .destructor = prv_destructor,
+    .apply = prv_apply_transform,
 };
 
 KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership) {
@@ -46,7 +46,7 @@ KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership
     return NULL;
   }
 
-  GRect frame = { GPointZero, kino_reel_get_size(from_reel) };
+  GRect frame = {GPointZero, kino_reel_get_size(from_reel)};
 
   KinoReel *reel = kino_reel_transform_create(&MORPH_SQUARE_TRANSFORM_IMPL, data);
   if (reel) {

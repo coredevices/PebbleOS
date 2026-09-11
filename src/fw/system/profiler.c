@@ -21,13 +21,13 @@
 #endif
 
 #ifdef CONFIG_PULSE_EVERYWHERE
-#define PROF_LOG(buf, sz, fmt, ...) \
-  do {                                        \
-    snprintf(buf, sz, fmt, ## __VA_ARGS__); \
-    PBL_LOG_DBG("%s", buf);      \
+#define PROF_LOG(buf, sz, fmt, ...)        \
+  do {                                     \
+    snprintf(buf, sz, fmt, ##__VA_ARGS__); \
+    PBL_LOG_DBG("%s", buf);                \
   } while (0)
 #else
-#define PROF_LOG(buf, sz, fmt, ...) dbgserial_putstr_fmt(buf, sz, fmt, ## __VA_ARGS__)
+#define PROF_LOG(buf, sz, fmt, ...) dbgserial_putstr_fmt(buf, sz, fmt, ##__VA_ARGS__)
 #endif
 
 Profiler g_profiler;
@@ -37,7 +37,7 @@ Profiler g_profiler;
 #include "profiler_list.h"
 #undef PROFILER_NODE
 #ifdef CONFIG_PROFILE_INTERRUPTS
-#define IRQ_DEF(idx, irq) ProfilerNode g_profiler_node_##irq##_IRQ = {.module_name = #irq"_IRQ"};
+#define IRQ_DEF(idx, irq) ProfilerNode g_profiler_node_##irq##_IRQ = {.module_name = #irq "_IRQ"};
 #if defined(CONFIG_QEMU)
 #include "irq_qemu.def"
 #elif defined(CONFIG_SOC_NRF52)
@@ -70,11 +70,11 @@ static ProfilerNode *s_profiler_nodes[] = {
 };
 
 static void prv_profiler_node_add(ProfilerNode *node) {
-  g_profiler.nodes = list_append(g_profiler.nodes, (ListNode *) node);
+  g_profiler.nodes = list_append(g_profiler.nodes, (ListNode *)node);
 }
 
 static int prv_node_compare(void *a, void *b) {
-  return ((ProfilerNode *) b)->total - ((ProfilerNode *) a)->total;
+  return ((ProfilerNode *)b)->total - ((ProfilerNode *)a)->total;
 }
 
 void prv_node_reset(ProfilerNode *node) {
@@ -173,53 +173,53 @@ uint32_t profiler_get_total_duration(bool in_us) {
 }
 
 void profiler_print_stats(void) {
-  PROFILER_STOP; // Make sure the profiler has been stopped.
+  PROFILER_STOP;  // Make sure the profiler has been stopped.
   uint32_t total = profiler_get_total_duration(false);
 
 #if defined(CONFIG_SOC_NRF52)
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
   char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
+  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
 #elif defined(CONFIG_SOC_SF32LB52)
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
   char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
+  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
 #elif defined(CONFIG_QEMU)
   uint32_t mhz = SystemCoreClock / 1000000;
   char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"MHz", mhz);
+  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
 #else
   RCC_ClocksTypeDef clocks;
   RCC_GetClocksFreq(&clocks);
   uint32_t mhz = clocks.HCLK_Frequency / 1000000;
 
   char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %"PRIu32"Hz", clocks.HCLK_Frequency);
+  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "Hz", clocks.HCLK_Frequency);
 #endif
   PROF_LOG(buf, sizeof(buf),
-      "Profiler ran for %"PRIu32" ticks (%"PRIu32" us) (start: %"PRIu32"; stop:%"PRIu32")",
-      total, total / mhz, g_profiler.start, g_profiler.end);
+           "Profiler ran for %" PRIu32 " ticks (%" PRIu32 " us) (start: %" PRIu32 "; stop:%" PRIu32
+           ")",
+           total, total / mhz, g_profiler.start, g_profiler.end);
 
   ListNode *sorted = NULL;
   ListNode *tail = list_get_tail(g_profiler.nodes);
   while (tail != NULL) {
-    ListNode * new_tail = list_pop_tail(tail);
+    ListNode *new_tail = list_pop_tail(tail);
     sorted = list_sorted_add(sorted, tail, &prv_node_compare, false);
     tail = new_tail;
   }
 
   if (sorted != NULL) {
-    PROF_LOG(buf, sizeof(buf),
-            "%-24s %-8s %-11s %-15s %-8s %-7s",
-            "Name", "Count", "Cycles", "Time (us)", "Avg (us)", "% CPU");
+    PROF_LOG(buf, sizeof(buf), "%-24s %-8s %-11s %-15s %-8s %-7s", "Name", "Count", "Cycles",
+             "Time (us)", "Avg (us)", "% CPU");
     while (sorted != NULL) {
       ProfilerNode *node = (ProfilerNode *)sorted;
       uint32_t percent = (((int64_t)node->total) * 100) / total;
 
       PROF_LOG(buf, sizeof(buf),
-          "%-24s %-8"PRIu32" %-11"PRIu32" %-15"PRIu32" %-8"PRIu32 " %-7"PRIu32,
-          node->module_name, node->count, node->total, node->total / mhz,
-          (node->total/node->count)/mhz, percent);
+               "%-24s %-8" PRIu32 " %-11" PRIu32 " %-15" PRIu32 " %-8" PRIu32 " %-7" PRIu32,
+               node->module_name, node->count, node->total, node->total / mhz,
+               (node->total / node->count) / mhz, percent);
 
       sorted = sorted->next;
     }

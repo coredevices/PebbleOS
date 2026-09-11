@@ -70,18 +70,15 @@ static void prv_on_lcp_down(PPPControlProtocol *this) {
 #undef ON_LINK_STATE_CHANGE
 }
 
-static void prv_on_code_reject(PPPControlProtocol *this,
-                               struct LCPPacket *packet) {
+static void prv_on_code_reject(PPPControlProtocol *this, struct LCPPacket *packet) {
   // TODO
 }
 
-static void prv_on_protocol_reject(PPPControlProtocol *this,
-                                   struct LCPPacket *packet) {
+static void prv_on_protocol_reject(PPPControlProtocol *this, struct LCPPacket *packet) {
   // TODO
 }
 
-static void prv_on_echo_request(PPPControlProtocol *this,
-                                struct LCPPacket *packet) {
+static void prv_on_echo_request(PPPControlProtocol *this, struct LCPPacket *packet) {
   if (this->state->link_state == LinkState_Opened) {
     struct LCPPacket *reply = pulse_link_send_begin(this->protocol_number);
     memcpy(reply, packet, ntoh16(packet->length));
@@ -90,13 +87,11 @@ static void prv_on_echo_request(PPPControlProtocol *this,
   }
 }
 
-static void prv_on_echo_reply(PPPControlProtocol *this,
-                              struct LCPPacket *packet) {
+static void prv_on_echo_reply(PPPControlProtocol *this, struct LCPPacket *packet) {
   // TODO
 }
 
-static bool prv_handle_extended_lcp_codes(PPPControlProtocol *this,
-                                          LCPPacket *packet) {
+static bool prv_handle_extended_lcp_codes(PPPControlProtocol *this, LCPPacket *packet) {
   switch (packet->code) {
     case ControlCode_ProtocolReject:
       prv_on_protocol_reject(this, packet);
@@ -117,18 +112,17 @@ static bool prv_handle_extended_lcp_codes(PPPControlProtocol *this,
 static PPPControlProtocolState s_lcp_state = {};
 
 static PPPControlProtocol s_lcp_protocol = {
-  .protocol_number = LCP_PROTOCOL_NUMBER,
-  .state = &s_lcp_state,
-  .on_this_layer_up = prv_on_lcp_up,
-  .on_this_layer_down = prv_on_lcp_down,
-  .on_receive_code_reject = prv_on_code_reject,
-  .on_receive_unrecognized_code = prv_handle_extended_lcp_codes,
+    .protocol_number = LCP_PROTOCOL_NUMBER,
+    .state = &s_lcp_state,
+    .on_this_layer_up = prv_on_lcp_up,
+    .on_this_layer_down = prv_on_lcp_down,
+    .on_receive_code_reject = prv_on_code_reject,
+    .on_receive_unrecognized_code = prv_handle_extended_lcp_codes,
 };
 
-PPPControlProtocol * const PULSE2_LCP = &s_lcp_protocol;
+PPPControlProtocol *const PULSE2_LCP = &s_lcp_protocol;
 
-static void prv_lcp_handle_unknown_protocol(uint16_t protocol, void *body,
-                                            size_t body_len) {
+static void prv_lcp_handle_unknown_protocol(uint16_t protocol, void *body, size_t body_len) {
   // TODO: send Protocol-Reject
 }
 
@@ -155,8 +149,8 @@ static volatile bool s_pulse_task_idle = true;
 static uint8_t s_current_rx_frame[RX_MAX_FRAME_SIZE];
 
 static PBL_MUTEX_DEFINE(s_tx_buffer_mutex);
-static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(
-        FRAME_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH) + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)];
+static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(FRAME_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH) +
+                        COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)];
 
 // Lock for exclusive access to the reliable timer state.
 static PBL_MUTEX_DEFINE(s_reliable_timer_state_lock);
@@ -182,9 +176,9 @@ static void prv_process_received_frame(size_t frame_length) {
         prv_lcp_on_packet(body, body_len);
         break;
 #define ON_PACKET(NUMBER, HANDLER) \
-      case NUMBER: \
-        HANDLER(body, body_len); \
-        break;
+  case NUMBER:                     \
+    HANDLER(body, body_len);       \
+    break;
 #define ON_INIT(...)
 #define ON_LINK_STATE_CHANGE(...)
 #include "console/pulse2_transport_registry.def"
@@ -197,8 +191,7 @@ static void prv_process_received_frame(size_t frame_length) {
   }
 }
 
-void pulse2_reliable_retransmit_timer_start(unsigned int timeout_ms,
-                                            uint8_t sequence_number) {
+void pulse2_reliable_retransmit_timer_start(unsigned int timeout_ms, uint8_t sequence_number) {
   pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
   RtcTicks timeout_ticks = timeout_ms * RTC_TICKS_HZ / 1000;
   s_reliable_timer_expiry_time_tick = rtc_get_ticks() + timeout_ticks;
@@ -251,7 +244,7 @@ static void prv_pulse_task_feed_watchdog(void) {
   task_watchdog_bit_set(PebbleTask_PULSE);
 }
 
-static void prv_pulse_task_idle_timer_callback(void* data) {
+static void prv_pulse_task_idle_timer_callback(void *data) {
   if (s_pulse_task_idle && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
     prv_pulse_task_feed_watchdog();
   }
@@ -260,14 +253,11 @@ static void prv_pulse_task_idle_timer_callback(void* data) {
 static void prv_pulse_task_main(void *unused) {
   task_watchdog_mask_set(PebbleTask_PULSE);
 
-  static RegularTimerInfo idle_watchdog_timer = {
-    .cb = prv_pulse_task_idle_timer_callback
-  };
+  static RegularTimerInfo idle_watchdog_timer = {.cb = prv_pulse_task_idle_timer_callback};
   regular_timer_add_seconds_callback(&idle_watchdog_timer);
 
   CobsDecodeContext frame_decode_ctx;
-  cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame,
-                              RX_MAX_FRAME_SIZE);
+  cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame, RX_MAX_FRAME_SIZE);
 
   while (true) {
     uint8_t timer_sequence_number;
@@ -290,8 +280,7 @@ static void prv_pulse_task_main(void *unused) {
       if (UNLIKELY(c == FRAME_DELIMITER)) {
         size_t decoded_length = cobs_streaming_decode_finish(&frame_decode_ctx);
         prv_process_received_frame(decoded_length);
-        cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame,
-                                    RX_MAX_FRAME_SIZE);
+        cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame, RX_MAX_FRAME_SIZE);
         // Break out after processing one complete frame so that we handle
         // the timer and kick the watchdog within a reasonable amount of
         // time, even if the queue is filling as fast as we can drain it.
@@ -318,10 +307,10 @@ static void prv_forge_terminate_ack(void) {
   // API since we need to send these packets from precarious situations
   // when the OS and PULSE may not have been initialized yet.
   uint8_t *packet = pulse_link_send_begin(LCP_PROTOCOL_NUMBER);
-  packet[0] = 6;  // Code: Terminate-Ack
+  packet[0] = 6;    // Code: Terminate-Ack
   packet[1] = 255;  // Identifier
-  packet[2] = 0;  // Length MSB
-  packet[3] = 4;  // Length LSB
+  packet[2] = 0;    // Length MSB
+  packet[3] = 4;    // Length LSB
   pulse_link_send(packet, 4);
 }
 
@@ -336,12 +325,12 @@ void pulse_init(void) {
 
 void pulse_start(void) {
   struct pbl_thread_attr attr = {
-    .name = "PULSE",
-    .entry = prv_pulse_task_main,
-    .prio = PBL_PRIO_IDLE + 3,
-    .privileged = true,
-    .stack = s_pulse_task_stack,
-    .stack_size = sizeof(s_pulse_task_stack),
+      .name = "PULSE",
+      .entry = prv_pulse_task_main,
+      .prio = PBL_PRIO_IDLE + 3,
+      .privileged = true,
+      .stack = s_pulse_task_stack,
+      .stack_size = sizeof(s_pulse_task_stack),
   };
 
   s_pulse_task_handle = pebble_task_create(PebbleTask_PULSE, &attr);
@@ -384,8 +373,7 @@ void pulse_handle_character(char c, bool *should_context_switch) {
 }
 
 static bool prv_safe_to_touch_mutex(void) {
-  return !(pbl_irq_is_locked() || mcu_state_is_isr() ||
-           !pbl_kernel_is_running());
+  return !(pbl_irq_is_locked() || mcu_state_is_isr() || !pbl_kernel_is_running());
 }
 
 void *pulse_link_send_begin(const uint16_t protocol) {
@@ -394,8 +382,7 @@ void *pulse_link_send_begin(const uint16_t protocol) {
   }
 
   net16 header = hton16(protocol);
-  memcpy(s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE),
-         &header, sizeof(header));
+  memcpy(s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE), &header, sizeof(header));
   return s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) + sizeof(header);
 }
 
@@ -404,10 +391,9 @@ void pulse_link_send(void *buf, const size_t payload_length) {
   PBL_ASSERT(payload_length <= FRAME_MAX_SEND_SIZE, "PULSE frame payload too long");
 
   // Rewind the pointer to the beginning of the buffer
-  char *frame = ((char *) buf) - COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) - LINK_HEADER_LEN;
+  char *frame = ((char *)buf) - COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) - LINK_HEADER_LEN;
   size_t length = LINK_HEADER_LEN + payload_length;
-  uint32_t fcs = crc32(CRC32_INIT, frame + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE),
-                       length);
+  uint32_t fcs = crc32(CRC32_INIT, frame + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE), length);
 
   memcpy(&frame[length + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)], &fcs, sizeof(fcs));
   length += sizeof(fcs);

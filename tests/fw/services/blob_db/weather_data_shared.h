@@ -7,7 +7,7 @@
 
 #define WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES (5)
 #define WEATHER_DATA_SHARED_NUM_VALID_TIMESTAMP_ENTRIES \
-    (WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES - 1)
+  (WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES - 1)
 
 #define TEST_WEATHER_DB_LOCATION_PALO_ALTO "Palo Alto"
 #define TEST_WEATHER_DB_LOCATION_KITCHENER "Kitchener"
@@ -44,4 +44,3 @@ void weather_shared_data_assert_entries_equal(const WeatherDBKey *key, WeatherDB
 bool weather_shared_data_get_key_exists(WeatherDBKey *key);
 
 size_t weather_shared_data_insert_stale_entry(WeatherDBKey *key);
-

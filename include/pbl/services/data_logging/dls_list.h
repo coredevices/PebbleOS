@@ -41,7 +41,7 @@ void dls_list_rebuild_from_storage(void);
 //! Call callback for each session we have. Pass the data param through to the callback each time.
 //! If the callback returns false, stop iterating immediately and return false. Returns true
 //! otherwise.
-typedef bool (*DlsListCallback)(DataLoggingSession*, void*);
+typedef bool (*DlsListCallback)(DataLoggingSession *, void *);
 bool dls_list_for_each_session(DlsListCallback cb, void *data);
 
 void dls_list_init(void);

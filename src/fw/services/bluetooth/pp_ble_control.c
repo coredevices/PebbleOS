@@ -25,14 +25,14 @@ typedef struct PACKED {
 static void prv_handle_set_discoverable_pairable(
     BLEControlCommandSetDiscoverablePairable *cmd_data) {
   bt_pairability_use_ble_for_period(cmd_data->duration);
-  PBL_LOG_DBG("Set Discoverable Pairable: %u, %u",
-          cmd_data->discoverable_pairable, cmd_data->duration);
+  PBL_LOG_DBG("Set Discoverable Pairable: %u, %u", cmd_data->discoverable_pairable,
+              cmd_data->duration);
 }
 
 // -----------------------------------------------------------------------------
 //! Pebble protocol handler for the BLE control endpoint
-void pp_ble_control_protocol_msg_callback(
-    CommSession* session, const uint8_t *data, unsigned int length) {
+void pp_ble_control_protocol_msg_callback(CommSession *session, const uint8_t *data,
+                                          unsigned int length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
   if (length < sizeof(BLEControlCommandSetDiscoverablePairable)) {
@@ -40,7 +40,7 @@ void pp_ble_control_protocol_msg_callback(
     return;
   }
 
-  const uint8_t opcode = *(const uint8_t *) data;
+  const uint8_t opcode = *(const uint8_t *)data;
   switch (opcode) {
     case 0 ... 3:
       PBL_LOG_WRN("Deprecated & unsupported opcode: %u", opcode);

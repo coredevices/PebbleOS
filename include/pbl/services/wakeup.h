@@ -11,7 +11,7 @@
 //! @internal
 //! Event window is (in seconds) a reserved amount of time each wakeup_event receives
 //! in which other wakeup events cannot be scheduled
-#define WAKEUP_EVENT_WINDOW 60 
+#define WAKEUP_EVENT_WINDOW 60
 //! @internal
 //! Number of wakeup events allowed per application (UUID)
 #define MAX_WAKEUP_EVENTS_PER_APP 8
@@ -31,9 +31,9 @@ typedef struct {
 } WakeupInfo;
 
 //! @internal
-//! This function initializes the wakeup service.  
-//! Triggers a popup notification for any apps that missed a 
-//! wakeup_event while the Pebble was off and specified 
+//! This function initializes the wakeup service.
+//! Triggers a popup notification for any apps that missed a
+//! wakeup_event while the Pebble was off and specified
 //! notify_if_missed while scheduling the event.
 //! Deletes all expired wakeup_events from "wakeup" settings_file and
 //! schedules the next wakeup_event using a new_timer

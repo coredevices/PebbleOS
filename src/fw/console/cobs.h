@@ -27,19 +27,18 @@ typedef struct CobsDecodeContext {
 } CobsDecodeContext;
 
 //! Initialize the COBS decoding context.
-void cobs_streaming_decode_start(CobsDecodeContext * restrict ctx,
-                                 void * restrict output_buffer,
+void cobs_streaming_decode_start(CobsDecodeContext *restrict ctx, void *restrict output_buffer,
                                  size_t length);
 
 //! Decode a byte in the COBS stream.
 //!
 //! @return false if decoding has failed.
-bool cobs_streaming_decode(CobsDecodeContext * restrict ctx, char in);
+bool cobs_streaming_decode(CobsDecodeContext *restrict ctx, char in);
 
 //! Complete a COBS stream.
 //!
 //! @return length of decoded stream, or SIZE_MAX if decoding has failed.
-size_t cobs_streaming_decode_finish(CobsDecodeContext * restrict ctx);
+size_t cobs_streaming_decode_finish(CobsDecodeContext *restrict ctx);
 
 //! COBS-encode a buffer out to another buffer.
 //!
@@ -47,5 +46,4 @@ size_t cobs_streaming_decode_finish(CobsDecodeContext * restrict ctx);
 //!                 MAX_SIZE_AFTER_COBS_ENCODING(length) bytes long.
 //! @param [in] src source buffer
 //! @param      length length of src
-size_t cobs_encode(void * restrict dst, const void * restrict src,
-                   size_t length);
+size_t cobs_encode(void *restrict dst, const void *restrict src, size_t length);

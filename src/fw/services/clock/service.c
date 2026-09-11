@@ -59,15 +59,14 @@ static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
 
   // Update the RTC registers with the latest timezone info
   rtc_set_timezone(tz_info);
-
 }
 
 typedef struct PACKED {
-// This struct is packed because it mirrors the endpoint definition:
-// https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=491698#PebbleProtocol(BluetoothSerial)-0xb(11)-Time/Clock(bigendian)
-  time_t utc_time;                           // UTC timestamp
-  int16_t utc_offset_min;                    // local timestamp - UTC timestamp in mins
-  int8_t region_name_len;                    // timezone name length
+  // This struct is packed because it mirrors the endpoint definition:
+  // https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=491698#PebbleProtocol(BluetoothSerial)-0xb(11)-Time/Clock(bigendian)
+  time_t utc_time;                         // UTC timestamp
+  int16_t utc_offset_min;                  // local timestamp - UTC timestamp in mins
+  int8_t region_name_len;                  // timezone name length
   char region_name[TIMEZONE_NAME_LENGTH];  // timezone name string
 } TimezoneCBData;
 
@@ -76,17 +75,16 @@ _Static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint defin
 #endif
 
 #if !defined(CONFIG_RECOVERY_FW)
-static time_t prv_clock_dstrule_to_timestamp(
-    bool is_end, const TimezoneInfo *tz_info, const TimezoneDSTRule *rule, int year) {
-
+static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz_info,
+                                             const TimezoneDSTRule *rule, int year) {
   struct tm time_tm = {
-    .tm_min = rule->minute,
-    .tm_hour = rule->hour,
-    .tm_mday = rule->mday,
-    .tm_mon = rule->month,
-    .tm_year = year,
-    .tm_gmtoff = 0,
-    .tm_isdst = 0,
+      .tm_min = rule->minute,
+      .tm_hour = rule->hour,
+      .tm_mday = rule->mday,
+      .tm_mon = rule->month,
+      .tm_year = year,
+      .tm_gmtoff = 0,
+      .tm_isdst = 0,
   };
   // A few countries actually have their DST rule on the midnight AFTER a day
   // This is subtly different from the midnight OF a day.
@@ -100,7 +98,7 @@ static time_t prv_clock_dstrule_to_timestamp(
   time_t uxtime = mktime(&time_tm);
   gmtime_r(&uxtime, &time_tm);
 
-  for (int i = 0; i < DAYS_PER_WEEK; i++) { // max is DAYS_PER_WEEK to find a day_of_week
+  for (int i = 0; i < DAYS_PER_WEEK; i++) {  // max is DAYS_PER_WEEK to find a day_of_week
     // we also have to check month here, as leap-year case puts us 1 day past feb
 #define DSTRULE_WDAY_ANY (255)
     if ((time_tm.tm_wday == rule->wday || rule->wday == DSTRULE_WDAY_ANY) &&
@@ -118,13 +116,13 @@ static time_t prv_clock_dstrule_to_timestamp(
     gmtime_r(&uxtime, &time_tm);
   }
 
-  if (rule->flag & TIMEZONE_FLAG_STANDARD_TIME) { // Standard time (not wall time)
+  if (rule->flag & TIMEZONE_FLAG_STANDARD_TIME) {  // Standard time (not wall time)
     time_tm.tm_gmtoff = tz_info->tm_gmtoff;
     time_tm.tm_isdst = 0;
-  } else if (rule->flag & TIMEZONE_FLAG_UTC_TIME) { // UTC
+  } else if (rule->flag & TIMEZONE_FLAG_UTC_TIME) {  // UTC
     time_tm.tm_gmtoff = 0;
     time_tm.tm_isdst = 0;
-  } else { // Wall time
+  } else {  // Wall time
     time_tm.tm_gmtoff = tz_info->tm_gmtoff;
     time_tm.tm_isdst = is_end;
   }
@@ -137,7 +135,7 @@ static time_t prv_clock_dstrule_to_timestamp(
   uxtime -= time_tm.tm_gmtoff;
   return uxtime;
 }
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW
 
 T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info, time_t utc_time) {
   if (tz_info->dst_id == 0) {
@@ -175,10 +173,8 @@ T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info,
   for (int i = 0; i < DST_YEARS_RANGE; i++) {
     const int year = current_tm.tm_year + (i - DST_YEARS_OFFSET);
 
-    dst_start_stamps[i] =
-        prv_clock_dstrule_to_timestamp(false, tz_info, &dst_rule_begin, year);
-    dst_end_stamps[i] =
-        prv_clock_dstrule_to_timestamp(true, tz_info, &dst_rule_end, year);
+    dst_start_stamps[i] = prv_clock_dstrule_to_timestamp(false, tz_info, &dst_rule_begin, year);
+    dst_end_stamps[i] = prv_clock_dstrule_to_timestamp(true, tz_info, &dst_rule_end, year);
   }
 
   //  Figure out which timestamps are relevant to us
@@ -198,14 +194,13 @@ T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info,
   tz_info->dst_start = dst_start_stamps[start_idx];
   tz_info->dst_end = dst_end_stamps[end_idx];
 
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW
 }
 
-static void prv_clock_get_timezone_info_from_region_id(
-    int16_t region_id, time_t utc_time, TimezoneInfo *tz_info) {
-
+static void prv_clock_get_timezone_info_from_region_id(int16_t region_id, time_t utc_time,
+                                                       TimezoneInfo *tz_info) {
 #ifdef CONFIG_RECOVERY_FW
-  *tz_info = (TimezoneInfo) { .dst_id = 0 };
+  *tz_info = (TimezoneInfo){.dst_id = 0};
 #else
   timezone_database_load_region_info(region_id, tz_info);
   prv_update_dstrule_timestamps_by_dstzone_id(tz_info, utc_time);
@@ -216,8 +211,8 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
   int region_id = -1;
 
   if (tz_data->region_name_len) {
-    region_id = timezone_database_find_region_by_name(tz_data->region_name,
-                                                      tz_data->region_name_len);
+    region_id =
+        timezone_database_find_region_by_name(tz_data->region_name, tz_data->region_name_len);
   }
 
   if (region_id != -1) {
@@ -230,18 +225,18 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
   // Else, we couldn't find find the specified timezone.
 #ifndef CONFIG_RECOVERY_FW
   TimezoneInfo tz_info = {
-    .dst_id = 0,
-    .timezone_id = UNKNOWN_TIMEZONE_ID,
-    .tm_gmtoff = tz_data->utc_offset_min * SECONDS_PER_MINUTE,
-    .dst_start = 0,
-    .dst_end = 0,
+      .dst_id = 0,
+      .timezone_id = UNKNOWN_TIMEZONE_ID,
+      .tm_gmtoff = tz_data->utc_offset_min * SECONDS_PER_MINUTE,
+      .dst_start = 0,
+      .dst_end = 0,
   };
 
   // I was hoping to fill the name with something like UTC-10 or UTC+4.25 but we only get 5 chars
   strncpy(tz_info.tm_zone, "N/A", TZ_LEN - 1);
   return tz_info;
 #else
-  return (TimezoneInfo) {};
+  return (TimezoneInfo){};
 #endif
 }
 
@@ -253,7 +248,7 @@ T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *t
   time_t orig_utc_time = rtc_get_time();
   TimezoneInfo tz_adjust_info = {{0}};
 
-  if (clock_is_timezone_set()) { // We'll need to update timezone stamps.
+  if (clock_is_timezone_set()) {  // We'll need to update timezone stamps.
     time_t tz_adjust_time;
     // Get the time that we need to adjust for.
     if (t) {
@@ -261,13 +256,13 @@ T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *t
     } else {
       tz_adjust_time = orig_utc_time;
     }
-    if (tz_info) { // Adjust the DST rule timestamps of the provided tz_info
+    if (tz_info) {  // Adjust the DST rule timestamps of the provided tz_info
       prv_update_dstrule_timestamps_by_dstzone_id(tz_info, tz_adjust_time);
     } else if (clock_get_timezone_region_id() != UNKNOWN_TIMEZONE_ID) {
       // If we have a timezone _actually_ set, update our own.
       int region_id = clock_get_timezone_region_id();
       prv_clock_get_timezone_info_from_region_id(region_id, tz_adjust_time, &tz_adjust_info);
-      tz_info = &tz_adjust_info; // We need to set timezone info so point to the new info.
+      tz_info = &tz_adjust_info;  // We need to set timezone info so point to the new info.
     }
   }
 
@@ -290,12 +285,12 @@ T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *t
   PBL_ANALYTICS_SET_SIGNED(utc_offset_s, new_gmt_offset);
 
   PebbleEvent e = {
-    .type = PEBBLE_SET_TIME_EVENT,
-    .set_time_info = {
-      .utc_time_delta = new_utc_time - orig_utc_time,
-      .gmt_offset_delta = new_gmt_offset - orig_gmt_offset,
-      .dst_changed = false,
-    }
+      .type = PEBBLE_SET_TIME_EVENT,
+      .set_time_info = {
+          .utc_time_delta = new_utc_time - orig_utc_time,
+          .gmt_offset_delta = new_gmt_offset - orig_gmt_offset,
+          .dst_changed = false,
+      }
   };
   event_put(&e);
 }
@@ -318,8 +313,7 @@ static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
 }
 
 static void prv_handle_set_time_msg(time_t new_time) {
-  PBL_LOG_WRN("Mobile app calling deprecated API, time = %d",
-          (int)new_time);
+  PBL_LOG_WRN("Mobile app calling deprecated API, time = %d", (int)new_time);
   if (clock_time_source_is_manual()) {
     // Manual time mode: ignore time set from phone
     return;
@@ -331,7 +325,7 @@ static void prv_handle_set_time_msg(time_t new_time) {
   prv_update_time_info_and_generate_event(&new_time, NULL);
 }
 
-void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsigned int length) {
+void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsigned int length) {
   char sub_command = *data++;
 
   switch (sub_command) {
@@ -345,17 +339,17 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
 
       response_buffer[0] = 0x01;
 
-      *(uint32_t*)(response_buffer + 1) = htonl(t);
+      *(uint32_t *)(response_buffer + 1) = htonl(t);
 
       comm_session_send_data(session, protocol_time_endpoint_id, response_buffer,
                              response_buffer_length, COMM_SESSION_DEFAULT_TIMEOUT);
-      PBL_LOG_VERBOSE("protocol_time_callback called, responding with current time: %"PRIu32,
+      PBL_LOG_VERBOSE("protocol_time_callback called, responding with current time: %" PRIu32,
                       (uint32_t)t);
       break;
     }
     // Set time:
     case 0x02: {
-      time_t new_time = ntohl(*(uint32_t*)data);
+      time_t new_time = ntohl(*(uint32_t *)data);
       prv_handle_set_time_msg(new_time);
       break;
     }
@@ -388,7 +382,7 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t* data, unsi
 //! Runs once a minute from the regular_timer minutes list. DST transitions and
 //! the top of the hour both land on minute boundaries, so minute granularity
 //! detects them at the same instant the old per-second poll did.
-T_STATIC void prv_watch_dst(void* user) {
+T_STATIC void prv_watch_dst(void *user) {
   const bool was_dst = (bool)user;
   const bool is_dst = time_get_isdst(rtc_get_time());
 
@@ -408,20 +402,20 @@ T_STATIC void prv_watch_dst(void* user) {
 
   if (is_dst != was_dst) {
     PebbleEvent e = {
-      .type = PEBBLE_SET_TIME_EVENT,
-      .set_time_info = {
-        .utc_time_delta = 0,
-        .gmt_offset_delta = 0,
-        .dst_changed = true,
-      }
+        .type = PEBBLE_SET_TIME_EVENT,
+        .set_time_info = {
+            .utc_time_delta = 0,
+            .gmt_offset_delta = 0,
+            .dst_changed = true,
+        }
     };
     event_put(&e);
-    s_dst_checker.cb_data = (void*)is_dst;
+    s_dst_checker.cb_data = (void *)is_dst;
   }
 }
 
 // Minimum valid time: January 1, 2010 00:00:00 UTC
-// On RTC loss, Asterix boots to 1970 and Obelix to 2000 
+// On RTC loss, Asterix boots to 1970 and Obelix to 2000
 // Snap forward so time isnt *that* off
 #define MIN_VALID_BOOT_TIMESTAMP 1262304000
 
@@ -436,9 +430,9 @@ void clock_init(void) {
     time_util_update_timezone(&tz_info);
   }
   // TODO: Using a regular timer is pretty gross...
-  s_dst_checker = (RegularTimerInfo) {
-    .cb = prv_watch_dst,
-    .cb_data = (void*)time_get_isdst(rtc_get_time()),
+  s_dst_checker = (RegularTimerInfo){
+      .cb = prv_watch_dst,
+      .cb_data = (void *)time_get_isdst(rtc_get_time()),
   };
 #ifndef CONFIG_RECOVERY_FW
   s_hourly_chime_armed = false;
@@ -452,7 +446,7 @@ void clock_hourly_chime_arm(void) {
 }
 #endif
 
-void clock_get_time_tm(struct tm* time_tm) {
+void clock_get_time_tm(struct tm *time_tm) {
   rtc_get_time_tm(time_tm);
 }
 
@@ -508,8 +502,7 @@ size_t clock_get_time_number(char *number_buffer, size_t number_buffer_size, tim
       prv_format_time(number_buffer, number_buffer_size,
                       (clock_is_24h_style() ? i18n_noop("%R") : i18n_noop("%l:%M")), timestamp);
   const char *number_buffer_ptr = string_strip_leading_whitespace(number_buffer);
-  memmove(number_buffer,
-          number_buffer_ptr,
+  memmove(number_buffer, number_buffer_ptr,
           number_buffer_size - (number_buffer_ptr - number_buffer));
   return written - (number_buffer_ptr - number_buffer);
 }
@@ -524,7 +517,8 @@ size_t clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp) {
 }
 
 static void prv_copy_time_string_timestamp(char *number_buffer, uint8_t number_buffer_size,
-    char *word_buffer, uint8_t word_buffer_size, time_t timestamp) {
+                                           char *word_buffer, uint8_t word_buffer_size,
+                                           time_t timestamp) {
   clock_get_time_number(number_buffer, number_buffer_size, timestamp);
   clock_get_time_word(word_buffer, word_buffer_size, timestamp);
 }
@@ -539,11 +533,12 @@ static void prv_get_relative_all_day_string(char *buffer, int buffer_size, time_
 }
 
 static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_buffer_size,
-    char *word_buffer, uint8_t word_buffer_size, time_t timestamp, time_t end_time) {
+                                          char *word_buffer, uint8_t word_buffer_size,
+                                          time_t timestamp, time_t end_time) {
   time_t now = rtc_get_time();
   // average without overflows since time_t might be signed and now ~1.4 billion, so 2*now > INT_MAX
   time_t midtime = timestamp / 2 + end_time / 2;
-  if (midtime > now) { // future
+  if (midtime > now) {  // future
     time_t difference = timestamp - now;
     if (timestamp < now || difference < SECONDS_PER_MINUTE) {
       i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
@@ -551,18 +546,18 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
     } else if (difference <= SECONDS_PER_HOUR) {
       snprintf(number_buffer, number_buffer_size, "%ld", difference / SECONDS_PER_MINUTE);
       i18n_get_with_buffer(" MIN. TO", word_buffer, word_buffer_size);
-    }  else {
+    } else {
       prv_copy_time_string_timestamp(number_buffer, number_buffer_size, word_buffer,
-        word_buffer_size, timestamp);
+                                     word_buffer_size, timestamp);
     }
-  } else { // past
+  } else {  // past
     time_t difference = now - timestamp;
     if (now < timestamp || difference < SECONDS_PER_MINUTE) {
       i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
       strncpy(number_buffer, "", number_buffer_size);
     } else {
       prv_copy_time_string_timestamp(number_buffer, number_buffer_size, word_buffer,
-        word_buffer_size, timestamp);
+                                     word_buffer_size, timestamp);
     }
   }
 }
@@ -570,8 +565,8 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
 // number: 10
 // word: min to
 void clock_get_event_relative_time_string(char *number_buffer, int number_buffer_size,
-    char *word_buffer, int word_buffer_size, time_t timestamp, uint16_t duration,
-    time_t current_day, bool all_day) {
+                                          char *word_buffer, int word_buffer_size, time_t timestamp,
+                                          uint16_t duration, time_t current_day, bool all_day) {
   time_t end_time = timestamp + duration * SECONDS_PER_MINUTE;
   if (all_day) {
     // all day event, multiday or single day
@@ -579,12 +574,12 @@ void clock_get_event_relative_time_string(char *number_buffer, int number_buffer
     strncpy(number_buffer, "", number_buffer_size);
   } else if (time_util_get_midnight_of(timestamp) == current_day) {
     // first day of multiday event or only day
-    prv_copy_relative_time_string(number_buffer, number_buffer_size, word_buffer,
-        word_buffer_size, timestamp, end_time);
+    prv_copy_relative_time_string(number_buffer, number_buffer_size, word_buffer, word_buffer_size,
+                                  timestamp, end_time);
   } else if (time_util_get_midnight_of(end_time) == current_day) {
     // last day of multiday event
-    prv_copy_relative_time_string(number_buffer, number_buffer_size, word_buffer,
-        word_buffer_size, end_time, end_time);
+    prv_copy_relative_time_string(number_buffer, number_buffer_size, word_buffer, word_buffer_size,
+                                  end_time, end_time);
   } else {
     // middle day of non-all day multiday event
     prv_get_relative_all_day_string(word_buffer, word_buffer_size, current_day);
@@ -629,9 +624,9 @@ void clock_request_time_from_phone(void) {
 
   // Send sub-command 0x04 (request time) to the phone.
   // The phone should respond with a 0x03 (set UTC + timezone) message.
-  const uint8_t request[] = { 0x04 };
-  comm_session_send_data(session, protocol_time_endpoint_id, request,
-                         sizeof(request), COMM_SESSION_DEFAULT_TIMEOUT);
+  const uint8_t request[] = {0x04};
+  comm_session_send_data(session, protocol_time_endpoint_id, request, sizeof(request),
+                         COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
 DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
@@ -644,10 +639,10 @@ DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
     day -= 1;  // cal_wday is 0-6
     int day_offset = (day > cal.tm_wday) ? (day - cal.tm_wday) : (day - cal.tm_wday + 7);
     cal.tm_mday += day_offset;  // normalized by mktime
-  } else if ((hour < cal.tm_hour) || (hour == cal.tm_hour && minute <= cal.tm_min)){
+  } else if ((hour < cal.tm_hour) || (hour == cal.tm_hour && minute <= cal.tm_min)) {
     // Always return a future timestamp, so if day was today, and
     // minutes and hours already occurred, just make it tomorrow
-    cal.tm_mday++; // normalized by mktime
+    cal.tm_mday++;  // normalized by mktime
   }
 
   cal.tm_hour = hour;
@@ -691,7 +686,7 @@ void command_set_time(const char *arg) {
   prompt_send_response_fmt(buffer, 80, "Time is now <%s>", rtc_get_time_string(time_buffer));
 }
 
-void clock_get_timezone_region(char* region_name, const size_t buffer_size) {
+void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
   if (!region_name) {
     return;
   }
@@ -893,8 +888,7 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
     prv_clock_get_full_relative_time(buffer, buf_size, timestamp, capitalized, with_fulltime);
 
   } else if (difference >= SECONDS_PER_HOUR) {
-    const int num_hrs =
-        prv_round(difference, SECONDS_PER_HOUR, RoundTypeHalfUp) / SECONDS_PER_HOUR;
+    const int num_hrs = prv_round(difference, SECONDS_PER_HOUR, RoundTypeHalfUp) / SECONDS_PER_HOUR;
 
     const char *str_fmt;
     if (capitalized) {
@@ -998,8 +992,7 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
                                      true);
 }
 
-void clock_get_until_time(char *buffer, int buf_size, time_t timestamp,
-                          int max_relative_hrs) {
+void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs) {
   prv_clock_get_relative_time_string(buffer, buf_size, timestamp, false, max_relative_hrs, true);
 }
 
@@ -1022,21 +1015,21 @@ DEFINE_SYSCALL(void, sys_clock_get_timezone, char *timezone, const size_t buffer
 
 typedef struct daypart_message {
   const uint32_t hour_offset;  // hours from 12am of current day
-  const char* const message;  // text containing daypart
+  const char *const message;   // text containing daypart
 } daypart_message;
 
 static const daypart_message daypart_messages[] = {
-  {0,  i18n_noop("this morning")},  // anything before 12pm of the current day
-  {12, i18n_noop("this afternoon")},  // 12pm today
-  {18, i18n_noop("this evening")},  // 6pm today
-  {21, i18n_noop("tonight")}, // 9pm today
-  {33, i18n_noop("tomorrow morning")},  // 9am tomorrow
-  {36, i18n_noop("tomorrow afternoon")},  // 12pm tomorrow
-  {42, i18n_noop("tomorrow evening")},  // 6pm tomorrow
-  {45, i18n_noop("tomorrow night")},  // 9pm tomorrow
-  {57, i18n_noop("the day after tomorrow")}, // starting 9am 2 days from now
-  {72, i18n_noop("the day after tomorrow")}, // ends midnight 2 days from now
-  {73, i18n_noop("the foreseeable future")},  // Catchall for beyond 3 days
+    {0, i18n_noop("this morning")},             // anything before 12pm of the current day
+    {12, i18n_noop("this afternoon")},          // 12pm today
+    {18, i18n_noop("this evening")},            // 6pm today
+    {21, i18n_noop("tonight")},                 // 9pm today
+    {33, i18n_noop("tomorrow morning")},        // 9am tomorrow
+    {36, i18n_noop("tomorrow afternoon")},      // 12pm tomorrow
+    {42, i18n_noop("tomorrow evening")},        // 6pm tomorrow
+    {45, i18n_noop("tomorrow night")},          // 9pm tomorrow
+    {57, i18n_noop("the day after tomorrow")},  // starting 9am 2 days from now
+    {72, i18n_noop("the day after tomorrow")},  // ends midnight 2 days from now
+    {73, i18n_noop("the foreseeable future")},  // Catchall for beyond 3 days
 };
 
 //! Daypart string is used internally for battery popups
@@ -1058,8 +1051,8 @@ const char *clock_get_relative_daypart_string(time_t current_timestamp,
 }
 
 void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {
-  const int new_minutes = positive_modulo(*hour * MINUTES_PER_HOUR + *minute + delta_minutes,
-                                          MINUTES_PER_DAY);
+  const int new_minutes =
+      positive_modulo(*hour * MINUTES_PER_HOUR + *minute + delta_minutes, MINUTES_PER_DAY);
   *hour = new_minutes / MINUTES_PER_HOUR;
   *minute = new_minutes % MINUTES_PER_HOUR;
 }

@@ -19,7 +19,7 @@ void notification_storage_lock(void);
 void notification_storage_unlock(void);
 
 //! Store a notification to flash
-void notification_storage_store(TimelineItem* notification);
+void notification_storage_store(TimelineItem *notification);
 
 //! Check if a notification exists in storage
 bool notification_storage_notification_exists(const Uuid *id);
@@ -47,21 +47,24 @@ bool notification_storage_find_ancs_notification_id(uint32_t ancs_uid, Uuid *uui
 //! @param notification Notification to match with
 //! @param header_out Header of matching notification
 //! @return true if matching notification found, else false
-bool notification_storage_find_ancs_notification_by_timestamp(
-    TimelineItem *notification, CommonTimelineItemHeader *header_out);
+bool notification_storage_find_ancs_notification_by_timestamp(TimelineItem *notification,
+                                                              CommonTimelineItemHeader *header_out);
 
 //! Iterates over all of the notifications in the storage, calling the iterator callback with
 //! the header ID of each one
 //! NOTE: Do NOT call into other notification storage functions from the iterator callback. It will
 //! cause corruption of notification storage
 void notification_storage_iterate(bool (*iter_callback)(void *data,
-    SerializedTimelineItemHeader *header_id), void *data);
+                                                        SerializedTimelineItemHeader *header_id),
+                                  void *data);
 
 //! Iterates over all the notifications calling the callback with the passed data.
 //! Overwrites the notifications and rewrites them to disk.
 //! This is essentially a noop if the callback doesn't alter the data.
 void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notification,
-    SerializedTimelineItemHeader *header, void *data), void *data);
+                                                        SerializedTimelineItemHeader *header,
+                                                        void *data),
+                                  void *data);
 
 //! Clear out all notifications and reset all state immediately.
 void notification_storage_reset_and_init(void);

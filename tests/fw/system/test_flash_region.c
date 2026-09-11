@@ -14,8 +14,10 @@
 #include "stubs_sleep.h"
 #include "stubs_task_watchdog.h"
 
-void flash_read_bytes(uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size) {}
-void flash_write_bytes(const uint8_t* buffer, uint32_t start_addr, uint32_t buffer_size) {}
+void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
+}
+void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
+}
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -34,11 +36,13 @@ static EraseCommand s_command_list[32];
 static int s_command_list_index = 0;
 
 void flash_erase_subsector_blocking(uint32_t subsector_addr) {
-  s_command_list[s_command_list_index++] = (EraseCommand) { .addr = subsector_addr, .type = SubsectorEraseCommand };
+  s_command_list[s_command_list_index++] =
+      (EraseCommand){.addr = subsector_addr, .type = SubsectorEraseCommand};
 }
 
 void flash_erase_sector_blocking(uint32_t subsector_addr) {
-  s_command_list[s_command_list_index++] = (EraseCommand) { .addr = subsector_addr, .type = SectorEraseCommand };
+  s_command_list[s_command_list_index++] =
+      (EraseCommand){.addr = subsector_addr, .type = SectorEraseCommand};
 }
 
 // Tests
@@ -110,7 +114,8 @@ void test_flash_region__erase_optimal_range_subsectors(void) {
   s_command_list_index = 0;
 
   // Offer a more than a full sector range, needs subsectors on both sides
-  flash_region_erase_optimal_range(60 * 1024, 60 * 1024, ((2 * 64) + 4) * 1024, ((2 * 64) + 8) * 1024);
+  flash_region_erase_optimal_range(60 * 1024, 60 * 1024, ((2 * 64) + 4) * 1024,
+                                   ((2 * 64) + 8) * 1024);
 
   cl_assert_equal_i(s_command_list_index, 3);
   cl_assert_equal_i(s_command_list[0].addr, 60 * 1024);
@@ -205,7 +210,6 @@ void test_flash_region__erase_optimal_range_96k_app_banks(void) {
   cl_assert_equal_i(s_command_list[8].type, SectorEraseCommand);
 
   s_command_list_index = 0;
-
 }
 
 void test_flash_region__erase_optimal_range_watch_and_learn(void) {
@@ -224,4 +228,3 @@ void test_flash_region__erase_optimal_range_watch_and_learn(void) {
   cl_assert_equal_i(s_command_list[2].addr, 0x331000);
   cl_assert_equal_i(s_command_list[2].type, SubsectorEraseCommand);
 }
-

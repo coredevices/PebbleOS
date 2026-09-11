@@ -130,8 +130,11 @@ void test_clar__equal_gsize(void) {
 // Uuid
 /////////////////////////
 
-#define EX_UUID ((Uuid) { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, \
-                          0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff })
+#define EX_UUID                                                                                 \
+  ((Uuid){                                                                                      \
+      0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, \
+      0xff                                                                                      \
+  })
 
 static Uuid prv_get_uuid(void) {
   return EX_UUID;
@@ -150,17 +153,15 @@ void test_clar__equal_uuid(void) {
 // EllipsisDrawConfig
 /////////////////////////
 
-#define EX_QDC ((EllipsisDrawConfig) { \
-                 .start_quadrant = { \
-                     .angle = 1000, \
-                     .quadrant = 1 \
-                 }, \
-                 .full_quadrants = GCornersAll, \
-                 .end_quadrant = { \
-                     .angle = 3000, \
-                     .quadrant = 2, \
-                 } \
-               })
+#define EX_QDC                                          \
+  ((EllipsisDrawConfig){                                \
+      .start_quadrant = {.angle = 1000, .quadrant = 1}, \
+      .full_quadrants = GCornersAll,                    \
+      .end_quadrant = {                                 \
+          .angle = 3000,                                \
+          .quadrant = 2,                                \
+      }                                                 \
+  })
 
 static EllipsisDrawConfig prv_get_edc(void) {
   return EX_QDC;
@@ -174,5 +175,4 @@ void test_clar__equal_qdc(void) {
 
   // test with reference
   cl_assert_equal_edc(prv_get_edc(), prv_get_edc());
-
 }

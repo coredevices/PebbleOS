@@ -15,7 +15,8 @@ typedef enum AlertType {
   AlertType_AlarmsLPM = 1 << 3,
   AlertType_Hourly = 1 << 4,
   AlertType_OnDisconnect = 1 << 5,
-  AlertType_All = AlertType_Notifications | AlertType_Calls | AlertType_Alarms | AlertType_Hourly | AlertType_OnDisconnect,
+  AlertType_All = AlertType_Notifications | AlertType_Calls | AlertType_Alarms | AlertType_Hourly |
+                  AlertType_OnDisconnect,
 } AlertType;
 
 typedef struct {
@@ -25,11 +26,8 @@ typedef struct {
   const uint32_t resource_id;
 } VibeScoreInfo;
 
-#define VIBE_DEF(identifier, enum_name, name_str, alert_types_arg, res_id)\
-  { .id = identifier, \
-    .name = name_str, \
-    .alert_types = alert_types_arg, \
-    .resource_id = res_id },
+#define VIBE_DEF(identifier, enum_name, name_str, alert_types_arg, res_id) \
+  {.id = identifier, .name = name_str, .alert_types = alert_types_arg, .resource_id = res_id},
 
 static const VibeScoreInfo S_VIBE_MAP[] = {
 #include "vibes.def"
@@ -109,7 +107,6 @@ VibeScoreId vibe_score_info_cycle_next(VibeClient client, VibeScoreId curr_id) {
 
 bool vibe_score_info_is_valid(VibeScoreId id) {
   const VibeScoreInfo *info = prv_vibe_score_find_info(id);
-  return (id != VibeScoreId_Invalid) &&
-         info &&
+  return (id != VibeScoreId_Invalid) && info &&
          ((id == VibeScoreId_Disabled) || (info->resource_id != RESOURCE_ID_INVALID));
 }

@@ -30,7 +30,7 @@ typedef enum {
 } ClickHandlerOffset;
 
 static ClickHandler prv_get_handler(ClickRecognizer *recognizer, ClickHandlerOffset offset) {
-  return *((ClickHandler*)(((uint8_t*)&recognizer->config) + offset));
+  return *((ClickHandler *)(((uint8_t *)&recognizer->config) + offset));
 }
 
 static void prv_cancel_timer(AppTimer **timer) {
@@ -56,7 +56,8 @@ static bool prv_dispatch_event(ClickRecognizer *recognizer, ClickHandlerOffset h
     ClickHandler handler = prv_get_handler(recognizer, handler_offset);
     if (handler) {
       void *context;
-      if ((handler_offset == ClickHandlerOffsetRawUp || handler_offset == ClickHandlerOffsetRawDown) &&
+      if ((handler_offset == ClickHandlerOffsetRawUp ||
+           handler_offset == ClickHandlerOffsetRawDown) &&
           recognizer->config.raw.context != NULL) {
         // The context for raw click events is overridable:
         context = recognizer->config.raw.context;
@@ -86,7 +87,8 @@ inline static bool prv_is_multi_click_enabled(ClickRecognizer *recognizer) {
 }
 
 inline static bool prv_is_long_click_enabled(ClickRecognizer *recognizer) {
-  return (recognizer->config.long_click.handler != NULL || recognizer->config.long_click.release_handler != NULL);
+  return (recognizer->config.long_click.handler != NULL ||
+          recognizer->config.long_click.release_handler != NULL);
 }
 
 static void prv_auto_repeat_single_click(ClickRecognizer *recognizer) {
@@ -98,8 +100,9 @@ static void prv_auto_repeat_single_click(ClickRecognizer *recognizer) {
   // Start the repetition timer:
   // Note: We're not using the timer_register_repeating() here, so we have the possibility
   //       of changing the interval in the handler.
-  recognizer->hold_timer = app_timer_register(recognizer->config.click.repeat_interval_ms,
-      (AppTimerCallback)prv_auto_repeat_single_click, recognizer);
+  recognizer->hold_timer =
+      app_timer_register(recognizer->config.click.repeat_interval_ms,
+                         (AppTimerCallback)prv_auto_repeat_single_click, recognizer);
   recognizer->is_repeating = true;
 
   // Fire right once:
@@ -108,7 +111,7 @@ static void prv_auto_repeat_single_click(ClickRecognizer *recognizer) {
 }
 
 static void prv_repetition_delay_callback(void *data) {
-  ClickRecognizer *recognizer = (ClickRecognizer *) data;
+  ClickRecognizer *recognizer = (ClickRecognizer *)data;
 
   // User has been holding the button down for more than the repetition delay.
   prv_auto_repeat_single_click(recognizer);
@@ -162,17 +165,17 @@ inline static bool prv_can_more_clicks_follow(ClickRecognizer *recognizer) {
 }
 
 uint8_t click_number_of_clicks_counted(ClickRecognizerRef recognizer_ref) {
-  ClickRecognizer *recognizer = (ClickRecognizer*)recognizer_ref;
+  ClickRecognizer *recognizer = (ClickRecognizer *)recognizer_ref;
   return recognizer->number_of_clicks_counted;
 }
 
 ButtonId click_recognizer_get_button_id(ClickRecognizerRef recognizer_ref) {
-  ClickRecognizer *recognizer = (ClickRecognizer*)recognizer_ref;
+  ClickRecognizer *recognizer = (ClickRecognizer *)recognizer_ref;
   return recognizer->button;
 }
 
 bool click_recognizer_is_repeating(ClickRecognizerRef recognizer_ref) {
-  ClickRecognizer *recognizer = (ClickRecognizer*)recognizer_ref;
+  ClickRecognizer *recognizer = (ClickRecognizer *)recognizer_ref;
   return recognizer->is_repeating;
 }
 
@@ -181,12 +184,12 @@ bool click_recognizer_is_held_down(ClickRecognizerRef recognizer_ref) {
 }
 
 ClickConfig *click_recognizer_get_config(ClickRecognizerRef recognizer_ref) {
-  ClickRecognizer *recognizer = (ClickRecognizer*)recognizer_ref;
+  ClickRecognizer *recognizer = (ClickRecognizer *)recognizer_ref;
   return &recognizer->config;
 }
 
 static void prv_long_click_callback(void *data) {
-  ClickRecognizer *recognizer = (ClickRecognizer *) data;
+  ClickRecognizer *recognizer = (ClickRecognizer *)data;
 
   recognizer->hold_timer = NULL;
   const bool needs_reset = false;
@@ -199,7 +202,7 @@ static void prv_click_pattern_done(ClickRecognizer *recognizer) {
   // a "single click" after the multi-click timeout passed and this callback is called:
   if (recognizer->number_of_clicks_counted >= 1 && recognizer->is_repeating == false) {
     int clicks_over = recognizer->number_of_clicks_counted;
-    for(int i = 0; i < clicks_over; i++) {
+    for (int i = 0; i < clicks_over; i++) {
       prv_dispatch_event(recognizer, ClickHandlerOffsetSingle, false);
     }
   }
@@ -207,7 +210,7 @@ static void prv_click_pattern_done(ClickRecognizer *recognizer) {
 }
 
 static void prv_multi_click_timeout_callback(void *data) {
-  ClickRecognizer *recognizer = (ClickRecognizer *) data;
+  ClickRecognizer *recognizer = (ClickRecognizer *)data;
 
   recognizer->multi_click_timer = NULL;
   if (recognizer->config.multi_click.last_click_only &&
@@ -220,16 +223,16 @@ static void prv_multi_click_timeout_callback(void *data) {
   }
 }
 
-void command_put_button_event(const char* button_index, const char* click_type) {
+void command_put_button_event(const char *button_index, const char *click_type) {
   int button = atoi(button_index);
   const bool needs_reset = false;
   ClickHandlerOffset offset;
 
-  if ((button < 0  || button > NUM_BUTTONS)) {
+  if ((button < 0 || button > NUM_BUTTONS)) {
     return;
   }
 
-  switch(*click_type) {
+  switch (*click_type) {
     case 's':
       offset = ClickHandlerOffsetSingle;
       break;
@@ -265,14 +268,14 @@ void click_recognizer_handle_button_down(ClickRecognizer *recognizer) {
 
   if (prv_is_long_click_enabled(recognizer)) {
     const uint32_t long_click_delay = prv_long_click_get_delay(recognizer);
-    recognizer->hold_timer = app_timer_register(
-        long_click_delay, prv_long_click_callback, recognizer);
+    recognizer->hold_timer =
+        app_timer_register(long_click_delay, prv_long_click_callback, recognizer);
   } else {
     const bool local_is_hold_to_repeat_enabled = prv_is_hold_to_repeat_enabled(recognizer);
     if (local_is_hold_to_repeat_enabled) {
       // If there's a repeat interval configured, start the repetition delay timer:
-      recognizer->hold_timer = app_timer_register(
-          CLICK_REPETITION_DELAY_MS, prv_repetition_delay_callback, recognizer);
+      recognizer->hold_timer =
+          app_timer_register(CLICK_REPETITION_DELAY_MS, prv_repetition_delay_callback, recognizer);
     }
     if (false == prv_is_multi_click_enabled(recognizer)) {
       // No long click nor multi click, fire handler immediately on button down:
@@ -296,10 +299,9 @@ void click_recognizer_handle_button_up(ClickRecognizer *recognizer) {
 
   const bool local_is_long_click_enabled = prv_is_long_click_enabled(recognizer);
   const bool local_is_multi_click_enabled = prv_is_multi_click_enabled(recognizer);
-  //const bool local_is_hold_to_repeat_enabled = is_hold_to_repeat_enabled(recognizer);
+  // const bool local_is_hold_to_repeat_enabled = is_hold_to_repeat_enabled(recognizer);
 
-  if (false == local_is_long_click_enabled &&
-      false == local_is_multi_click_enabled) {
+  if (false == local_is_long_click_enabled && false == local_is_multi_click_enabled) {
     // Handler already fired in button down.
     prv_click_reset(recognizer);
     return;
@@ -307,7 +309,8 @@ void click_recognizer_handle_button_up(ClickRecognizer *recognizer) {
 
   ++(recognizer->number_of_clicks_counted);
 
-  const bool has_long_click_been_fired = (local_is_long_click_enabled && recognizer->hold_timer == NULL);
+  const bool has_long_click_been_fired =
+      (local_is_long_click_enabled && recognizer->hold_timer == NULL);
   if (has_long_click_been_fired) {
     const bool needs_reset = true;
     prv_dispatch_event(recognizer, ClickHandlerOffsetLongRelease, needs_reset);
@@ -318,7 +321,8 @@ void click_recognizer_handle_button_up(ClickRecognizer *recognizer) {
 
   if (local_is_multi_click_enabled && false == recognizer->is_repeating) {
     const bool local_can_more_clicks_follow = prv_can_more_clicks_follow(recognizer);
-    bool should_fire_multi_click_handler = ((recognizer->config.multi_click.last_click_only && local_can_more_clicks_follow) == false);
+    bool should_fire_multi_click_handler =
+        ((recognizer->config.multi_click.last_click_only && local_can_more_clicks_follow) == false);
     bool reset_using_event = false;
 
     if (should_fire_multi_click_handler) {
@@ -331,8 +335,8 @@ void click_recognizer_handle_button_up(ClickRecognizer *recognizer) {
 
     if (prv_can_more_clicks_follow(recognizer)) {
       const uint32_t timeout = prv_multi_click_get_timeout(recognizer);
-      recognizer->multi_click_timer = app_timer_register(
-          timeout, prv_multi_click_timeout_callback, recognizer);
+      recognizer->multi_click_timer =
+          app_timer_register(timeout, prv_multi_click_timeout_callback, recognizer);
       return;
     } else {
       if (reset_using_event) {
@@ -346,26 +350,25 @@ void click_recognizer_handle_button_up(ClickRecognizer *recognizer) {
   prv_click_pattern_done(recognizer);
 }
 
-void click_manager_init(ClickManager* click_manager) {
-  for (unsigned int button_id = 0;
-       button_id < ARRAY_LENGTH(click_manager->recognizers); ++button_id) {
+void click_manager_init(ClickManager *click_manager) {
+  for (unsigned int button_id = 0; button_id < ARRAY_LENGTH(click_manager->recognizers);
+       ++button_id) {
     ClickRecognizer *recognizer = &click_manager->recognizers[button_id];
     recognizer->button = button_id;
     prv_click_reset(recognizer);
   }
 }
 
-void click_manager_clear(ClickManager* click_manager) {
-  for (unsigned int button_id = 0;
-       button_id < ARRAY_LENGTH(click_manager->recognizers); ++button_id) {
+void click_manager_clear(ClickManager *click_manager) {
+  for (unsigned int button_id = 0; button_id < ARRAY_LENGTH(click_manager->recognizers);
+       ++button_id) {
     prv_click_reset(&click_manager->recognizers[button_id]);
     click_manager->recognizers[button_id].config = (ClickConfig){};
   }
 }
 
 static void prv_fire_long_release_if_held(ClickRecognizer *recognizer) {
-  if (recognizer->is_button_down &&
-      recognizer->hold_timer == NULL &&
+  if (recognizer->is_button_down && recognizer->hold_timer == NULL &&
       recognizer->config.long_click.release_handler != NULL) {
     prv_dispatch_event(recognizer, ClickHandlerOffsetLongRelease, false /* needs_reset */);
   }
@@ -376,10 +379,9 @@ void click_recognizer_reset(ClickRecognizer *recognizer) {
   prv_click_reset(recognizer);
 }
 
-void click_manager_reset(ClickManager* click_manager) {
+void click_manager_reset(ClickManager *click_manager) {
   for (unsigned int button_id = 0; button_id < NUM_BUTTONS; button_id++) {
     prv_fire_long_release_if_held(&click_manager->recognizers[button_id]);
     prv_click_reset(&click_manager->recognizers[button_id]);
   }
 }
-

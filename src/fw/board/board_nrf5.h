@@ -12,7 +12,7 @@
 #include <stdbool.h>
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable" 
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #include <hal/nrf_gpio.h>
 #include <nrfx_spim.h>
 #include <nrfx_gpiote.h>
@@ -30,24 +30,24 @@
 enum {
 #define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
 #if defined(CONFIG_SOC_NRF52)
-#  include "irq_nrf52.def"
+#include "irq_nrf52.def"
 #else
-#  error need IRQ table for new micro family
+#error need IRQ table for new micro family
 #endif
 #undef IRQ_DEF
 };
 
 //! Creates a trampoline to the interrupt handler defined within the driver
 #define IRQ_MAP(irq, handler, device) \
-  void irq##_IRQHandler(void) { \
-    handler(device); \
-  } \
+  void irq##_IRQHandler(void) {       \
+    handler(device);                  \
+  }                                   \
   _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
 
 #define IRQ_MAP_NRFX(irq, handler) \
-  void irq##_IRQHandler(void) { \
-    handler(); \
-  } \
+  void irq##_IRQHandler(void) {    \
+    handler();                     \
+  }                                \
   _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
 
 /*
@@ -59,38 +59,38 @@ enum {
 typedef struct {
   nrfx_gpiote_t peripheral;
   uint8_t channel;
-  uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
+  uint32_t gpio_pin;  ///< The result of NRF_GPIO_PIN_MAP(port, pin).
 } GpioteConfig;
 
 typedef GpioteConfig ExtiConfig; /* compatibility */
 
 typedef struct {
-  const char* const name; ///< Name for debugging purposes.
+  const char *const name;  ///< Name for debugging purposes.
   GpioteConfig gpiote;
   nrf_gpio_pin_pull_t pull;
 } ButtonConfig;
 
 typedef struct {
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
+  const uint32_t gpio_pin;  ///< The result of NRF_GPIO_PIN_MAP(port, pin).
 } ButtonComConfig;
 
 #define NRF5_GPIO_RESOURCE_EXISTS ((void *)1)
 typedef struct {
-  void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
+  void *gpio;  ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
+  const uint32_t gpio_pin;  ///< The result of NRF_GPIO_PIN_MAP(port, pin).
 } InputConfig;
 
 typedef struct {
-  void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
-  bool active_high; ///< Pin is active high or active low
+  void *gpio;  ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
+  const uint32_t gpio_pin;  ///< The result of NRF_GPIO_PIN_MAP(port, pin).
+  bool active_high;         ///< Pin is active high or active low
 } OutputConfig;
 
 //! Alternate function pin configuration
 //! Used to configure a pin for use by a peripheral
 typedef struct {
-  void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
+  void *gpio;  ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
+  const uint32_t gpio_pin;  ///< The result of NRF_GPIO_PIN_MAP(port, pin).
 } AfConfig;
 
 typedef struct {
@@ -136,7 +136,7 @@ typedef struct {
   const OutputConfig photo_en;
   const bool als_always_on;
 
-  const uint8_t backlight_on_percent; // percent of max possible brightness
+  const uint8_t backlight_on_percent;  // percent of max possible brightness
 } BoardConfig;
 
 // Button Configuration

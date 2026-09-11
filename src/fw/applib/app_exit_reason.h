@@ -21,10 +21,10 @@
 //! New exit reasons may be added in the future. As a best practice, it is recommended to only
 //! handle the cases needed, rather than trying to handle all possible exit reasons.
 typedef enum AppExitReason {
-  APP_EXIT_NOT_SPECIFIED = 0,                    //!< Exit reason not specified
-  APP_EXIT_ACTION_PERFORMED_SUCCESSFULLY,        //!< Application performed an action when it exited
+  APP_EXIT_NOT_SPECIFIED = 0,              //!< Exit reason not specified
+  APP_EXIT_ACTION_PERFORMED_SUCCESSFULLY,  //!< Application performed an action when it exited
 
-  NUM_EXIT_REASONS                               //!< Number of AppExitReason options
+  NUM_EXIT_REASONS  //!< Number of AppExitReason options
 } AppExitReason;
 
 //! Returns the current app exit reason.

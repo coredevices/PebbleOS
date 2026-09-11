@@ -1,7 +1,7 @@
 name: Compliance checks
 
 on:
-  pull_request: {}
+  pull_request:
 
 jobs:
   lint:
@@ -101,3 +101,14 @@ jobs:
             echo "  /* SPDX-License-Identifier: Apache-2.0 */"
             exit 1
           fi
+
+  clang-format:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Run clang-format
+        uses: jidicula/clang-format-action@v4.18.0

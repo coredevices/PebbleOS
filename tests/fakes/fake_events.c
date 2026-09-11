@@ -4,7 +4,6 @@
 #include "fake_events.h"
 #include "kernel/pbl_malloc.h"
 
-
 static PebbleEvent s_last_pebble_event;
 static uint32_t s_fake_event_count = 0;
 static FakeEventCallback s_fake_event_cb = NULL;
@@ -18,12 +17,12 @@ WEAK void **fake_event_get_buffer(PebbleEvent *event) {
       break;
 
     default:
-      break; // Nothing to do!
+      break;  // Nothing to do!
   }
   return NULL;
 }
 
-void event_put(PebbleEvent* event) {
+void event_put(PebbleEvent *event) {
   fake_event_clear_last();
   s_last_pebble_event = *event;
   ++s_fake_event_count;
@@ -32,7 +31,7 @@ void event_put(PebbleEvent* event) {
   }
 }
 
-bool event_put_isr(PebbleEvent* event) {
+bool event_put_isr(PebbleEvent *event) {
   return false;
 }
 
@@ -59,7 +58,7 @@ void fake_event_clear_last(void) {
     *buf = NULL;
   }
 
-  s_last_pebble_event = (PebbleEvent) {};
+  s_last_pebble_event = (PebbleEvent){};
 }
 
 void fake_event_reset_count(void) {

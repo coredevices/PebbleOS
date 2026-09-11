@@ -24,14 +24,13 @@ NORETURN syscall_failed(void) {
   PBL_ASSERTN(false);
 }
 
-#define assert_syscall_failed() \
-  cl_assert_equal_b(true, s_syscall_did_fail);
+#define assert_syscall_failed() cl_assert_equal_b(true, s_syscall_did_fail);
 
 bool syscall_made_from_userspace(void) {
   return true;
 }
 
-void syscall_assert_userspace_buffer(const void* buf, size_t num_bytes) {
+void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
   if (!buf) {
     syscall_failed();
   }
@@ -47,5 +46,3 @@ void syscall_redirect_syscall_exit(PebbleTask task, void (*func)(void)) {
 
 void syscall_reset(PebbleTask task) {
 }
-
-

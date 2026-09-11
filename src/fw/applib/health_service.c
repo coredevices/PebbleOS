@@ -21,7 +21,6 @@
 #include "pbl/util/size.h"
 #include "util/stats.h"
 
-
 // Fetching minute history can take a while, so we limit the amount of data we will ever access
 // in one call to this
 #define HS_MAX_MINUTE_DATA_SEC (2 * SECONDS_PER_HOUR)
@@ -39,9 +38,7 @@ static bool prv_is_heart_rate_metric(HealthMetric metric) {
 // Checks whether the interval between start and end are specifying a time within the past minute.
 static bool prv_interval_within_last_minute(time_t now_utc, time_t start, time_t end) {
   const time_t last_minute = (now_utc - SECONDS_PER_MINUTE);
-  const bool within_last_minute = ((start <= end) &&
-                                   (start >= last_minute) &&
-                                   (end <= now_utc));
+  const bool within_last_minute = ((start <= end) && (start >= last_minute) && (end <= now_utc));
   return within_last_minute;
 }
 
@@ -64,7 +61,7 @@ static HealthAggregation prv_default_aggregation(HealthMetric metric) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static HealthServiceState* prv_get_state(bool ensure_cache_initialized) {
+static HealthServiceState *prv_get_state(bool ensure_cache_initialized) {
   PebbleTask task = pebble_task_get_current();
 
   HealthServiceState *result = NULL;
@@ -164,8 +161,7 @@ static bool prv_metric_aggregation_implemented(HealthMetric metric, time_t time_
       switch (agg) {
         case HealthAggregationSum:
           return false;
-        case HealthAggregationAvg:
-        {
+        case HealthAggregationAvg: {
           // We used to unconditionally return true here which was a bug
           // Fixing this bug broke some apps / watchfaces
           Version legacy_version = {.major = 0x5, .minor = 0x54};
@@ -179,8 +175,8 @@ static bool prv_metric_aggregation_implemented(HealthMetric metric, time_t time_
         case HealthAggregationMin: {
           // Only supported using minute data (short time range, no scope) because
           // we only store a few hours of HR minute data.
-          return (scope == HealthServiceTimeScopeOnce)
-                 && ((now_utc - time_start) <= HS_MAX_MINUTE_DATA_SEC);
+          return (scope == HealthServiceTimeScopeOnce) &&
+                 ((now_utc - time_start) <= HS_MAX_MINUTE_DATA_SEC);
         }
       }
       break;
@@ -203,8 +199,8 @@ static bool prv_get_metric_daily_history(HealthServiceState *state, HealthMetric
   }
 
   // Read in the metric history
-  if (!sys_activity_get_metric(prv_get_activity_metric(metric),
-                               ARRAY_LENGTH(daily->totals), daily->totals)) {
+  if (!sys_activity_get_metric(prv_get_activity_metric(metric), ARRAY_LENGTH(daily->totals),
+                               daily->totals)) {
     PBL_LOG_ERR("Error fetching metric data");
     return false;
   }
@@ -236,9 +232,9 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   struct tm *local_tm = pbl_override_localtime(&now_utc);
 
   // Compute weekly, weekday, and daily stats
-  *stats = (HealthServiceMetricStats) {};
-  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Count
-    | StatsBasicOp_Min | StatsBasicOp_Max);
+  *stats = (HealthServiceMetricStats){};
+  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Count |
+                           StatsBasicOp_Min | StatsBasicOp_Max);
   stats_calculate_basic(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
                         health_service_private_weekday_filter, (void *)(uintptr_t)local_tm->tm_wday,
                         &stats->weekday.sum);
@@ -257,24 +253,23 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   // If the average is 0 (this can happen if we don't have any history), set the averages based
   // on today's total so far
   time_t seconds_today = now_utc - sys_time_start_of_today();
-  HealthValue per_day_default = (daily_totals.totals[0] * SECONDS_PER_DAY)
-    / MAX(1, seconds_today);
+  HealthValue per_day_default = (daily_totals.totals[0] * SECONDS_PER_DAY) / MAX(1, seconds_today);
   if (stats->weekday.sum == 0) {
-    stats->weekday = (HealthServiceStats) {
-      .sum = per_day_default,
-      .avg = per_day_default,
-      .min = per_day_default,
-      .max = per_day_default,
-      .count = 1,
+    stats->weekday = (HealthServiceStats){
+        .sum = per_day_default,
+        .avg = per_day_default,
+        .min = per_day_default,
+        .max = per_day_default,
+        .count = 1,
     };
   }
   if (stats->weekend.sum == 0) {
-    stats->weekend = (HealthServiceStats) {
-      .sum = per_day_default,
-      .avg = per_day_default,
-      .min = per_day_default,
-      .max = per_day_default,
-      .count = 1,
+    stats->weekend = (HealthServiceStats){
+        .sum = per_day_default,
+        .avg = per_day_default,
+        .min = per_day_default,
+        .max = per_day_default,
+        .count = 1,
     };
   }
 
@@ -291,11 +286,10 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
 // ----------------------------------------------------------------------------------------------
 // Return intra-day averages for the given metric
 static bool prv_get_intraday_averages(HealthServiceState *state, HealthMetric metric,
-                                      ActivityMetricAverages *averages,
-                                      DayInWeek day_in_week) {
+                                      ActivityMetricAverages *averages, DayInWeek day_in_week) {
   // If the cache is valid, return cached data.
-  if (state->cache && (metric == HealthMetricStepCount)
-    && state->cache->step_averages_valid && (day_in_week == state->cache->step_averages_day)) {
+  if (state->cache && (metric == HealthMetricStepCount) && state->cache->step_averages_valid &&
+      (day_in_week == state->cache->step_averages_day)) {
     memcpy(averages, &state->cache->step_averages, sizeof(*averages));
     return true;
   }
@@ -365,8 +359,8 @@ static HealthValue prv_sum_intraday_averages(ActivityMetricAverages *averages, t
   // Add up the metric averages for the passed in time range
   time_t chunk_start_time = time_start;
   const int k_seconds_per_step_avg = SECONDS_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
-  unsigned int second_idx = local_tm->tm_hour * SECONDS_PER_HOUR
-    + local_tm->tm_min * SECONDS_PER_MINUTE + local_tm->tm_sec;
+  unsigned int second_idx = local_tm->tm_hour * SECONDS_PER_HOUR +
+                            local_tm->tm_min * SECONDS_PER_MINUTE + local_tm->tm_sec;
   unsigned int chunk_idx = second_idx / k_seconds_per_step_avg;
 
   HealthValue result = 0;
@@ -420,8 +414,7 @@ T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
   // never work with values in the future
   time_end = MIN(time_end, now);
   // never work with values older than the supported history of data
-  time_start = MAX(time_start,
-                   midnight_after_now - (SECONDS_PER_DAY * ACTIVITY_HISTORY_DAYS));
+  time_start = MAX(time_start, midnight_after_now - (SECONDS_PER_DAY * ACTIVITY_HISTORY_DAYS));
   if (time_end < time_start) {
     return false;
   }
@@ -430,9 +423,9 @@ T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
     const time_t midnight_before_start = prv_get_midnight_of_local_time(time_start);
     const time_t midnight_before_end = prv_get_midnight_of_local_time(time_end);
     // we treat time_end as exclusive, if one passes exactly midnight, we don't count that day
-    const time_t midnight_after_end = (midnight_before_end == time_end) ?
-                                      midnight_before_end :
-                                      (midnight_before_end + SECONDS_PER_DAY);
+    const time_t midnight_after_end = (midnight_before_end == time_end)
+                                          ? midnight_before_end
+                                          : (midnight_before_end + SECONDS_PER_DAY);
 
     // no additional range changes (e.g. < 0 or >= ACTIVITY_HISTORY_DAYS needed due to checks above)
     range->last_day_idx = (midnight_after_now - midnight_after_end) / SECONDS_PER_DAY;
@@ -445,14 +438,14 @@ T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
     // if there's only one day, we return the number of seconds in the total range for both values
     const uint32_t seconds_first_day = SECONDS_PER_DAY - (time_start - midnight_before_start);
     // compensate for cases where time_end is on a day boundary
-    const uint32_t seconds_last_day = (time_end == midnight_before_end) ?
-                                      SECONDS_PER_DAY : (time_end - midnight_before_end);
+    const uint32_t seconds_last_day =
+        (time_end == midnight_before_end) ? SECONDS_PER_DAY : (time_end - midnight_before_end);
     const uint32_t total_seconds = time_end - time_start;
 
     range->seconds_first_day = (range->num_days == 1) ? total_seconds : seconds_first_day;
     range->seconds_last_day = (range->num_days == 1) ? total_seconds : seconds_last_day;
     range->seconds_total_last_day =
-      (range->last_day_idx == 0) ? (now - midnight_before_end) : SECONDS_PER_DAY;
+        (range->last_day_idx == 0) ? (now - midnight_before_end) : SECONDS_PER_DAY;
   }
 
   return true;
@@ -462,8 +455,8 @@ T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
 // Fill in the time_range and daily_history structures for this metric and time range.
 // Returns HealthServiceAccessibilityMaskAvailable if this time span and metric are accessible.
 static HealthServiceAccessibilityMask prv_get_range_and_daily_history(
-  HealthServiceState *state, HealthMetric metric, time_t time_start, time_t time_end,
-  HealthServiceTimeRange *time_range, HealthServiceDailyHistory *daily_history) {
+    HealthServiceState *state, HealthMetric metric, time_t time_start, time_t time_end,
+    HealthServiceTimeRange *time_range, HealthServiceDailyHistory *daily_history) {
   PBL_ASSERTN((time_range != NULL) && (daily_history != NULL));
 
   // TODO: PBL-31628 permission system to reply with HealthServiceAccessibilityMaskNoPermission
@@ -497,27 +490,27 @@ T_STATIC void prv_adjust_value_boundaries(HealthValue *values, size_t num_values
 
   // last day might not be complete, yet (as it can be today)
   values[0] =
-    (HealthValue)(((int64_t)values[0] * range->seconds_last_day) / range->seconds_total_last_day);
+      (HealthValue)(((int64_t)values[0] * range->seconds_last_day) / range->seconds_total_last_day);
 
   // only process first day if its in range and does not overlap with the last day
   if ((range->num_days > 1) && (num_values >= range->num_days)) {
     const uint32_t oldest_day_idx = range->num_days - 1;
     values[oldest_day_idx] =
-      (HealthValue)(((int64_t)values[oldest_day_idx] * range->seconds_first_day) / SECONDS_PER_DAY);
+        (HealthValue)(((int64_t)values[oldest_day_idx] * range->seconds_first_day) /
+                      SECONDS_PER_DAY);
   }
 }
 
-
 // ----------------------------------------------------------------------------------------------
-static HealthValue prv_compute_aggregate_using_daily_totals(
-  HealthServiceState *state, HealthMetric metric, time_t time_start, time_t time_end,
-  HealthAggregation aggregation) {
+static HealthValue prv_compute_aggregate_using_daily_totals(HealthServiceState *state,
+                                                            HealthMetric metric, time_t time_start,
+                                                            time_t time_end,
+                                                            HealthAggregation aggregation) {
   HealthServiceTimeRange time_range = {};
   HealthServiceDailyHistory daily_history = {};
 
-  const HealthServiceAccessibilityMask accessible =
-    prv_get_range_and_daily_history(state, metric, time_start, time_end, &time_range,
-                                    &daily_history);
+  const HealthServiceAccessibilityMask accessible = prv_get_range_and_daily_history(
+      state, metric, time_start, time_end, &time_range, &daily_history);
   if (accessible != HealthServiceAccessibilityMaskAvailable) {
     return 0;
   }
@@ -558,13 +551,12 @@ static HealthValue prv_compute_aggregate_using_daily_totals(
   return result;
 }
 
-
 // ----------------------------------------------------------------------------------------------
 // Compute the value of the given metric using aggregation and averaging based on daily history
 // values.
 static HealthValue prv_compute_aggregate_averaged_using_daily_totals(
-  HealthServiceState *state, HealthMetric metric, time_t time_start, time_t time_end,
-  HealthAggregation aggregation, HealthServiceTimeScope scope) {
+    HealthServiceState *state, HealthMetric metric, time_t time_start, time_t time_end,
+    HealthAggregation aggregation, HealthServiceTimeScope scope) {
   PBL_ASSERTN(scope != HealthServiceTimeScopeOnce);
 
   // What day of the week is the scope for? For now, we will use the day of the week that
@@ -593,7 +585,7 @@ static HealthValue prv_compute_aggregate_averaged_using_daily_totals(
   } else if (scope == HealthServiceTimeScopeWeekly) {
     which_stats = &stats.weekly;
   } else {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Unsupported scope: %d", (int) scope);
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Unsupported scope: %d", (int)scope);
     result = 0;
   }
 
@@ -624,9 +616,10 @@ static HealthValue prv_compute_aggregate_averaged_using_daily_totals(
 
 // ----------------------------------------------------------------------------------------------
 // Compute the aggregated value of the given metric using values from minute history
-static HealthValue prv_compute_aggregate_using_minute_history(
-  HealthServiceState *state, HealthMetric metric, time_t time_start, time_t time_end,
-  HealthAggregation aggregation) {
+static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState *state,
+                                                              HealthMetric metric,
+                                                              time_t time_start, time_t time_end,
+                                                              HealthAggregation aggregation) {
   // Currently only implemented for heart rate BPM
   PBL_ASSERTN(metric == HealthMetricHeartRateBPM);
 
@@ -640,7 +633,7 @@ static HealthValue prv_compute_aggregate_using_minute_history(
   uint32_t num_samples = 0;
   switch (aggregation) {
     case HealthAggregationSum:
-      WTF;    // Not supported
+      WTF;  // Not supported
       break;
     case HealthAggregationAvg:
       value = 0;
@@ -668,15 +661,14 @@ static HealthValue prv_compute_aggregate_using_minute_history(
   bool more_data = true;
   while (more_data && (time_start < time_end)) {
     uint32_t num_records = ARRAY_LENGTH(state->cache->minute_data);
-    PBL_LOG_DBG("Fetching %"PRIu32" minute records for %d to %d...", num_records,
-            (int)time_start, (int)time_end);
+    PBL_LOG_DBG("Fetching %" PRIu32 " minute records for %d to %d...", num_records, (int)time_start,
+                (int)time_end);
     bool success = sys_activity_get_minute_history(minute_data, &num_records, &time_start);
     if (!success) {
       APP_LOG(APP_LOG_LEVEL_WARNING, "Error fetching minute history");
       break;
     }
-    PBL_LOG_DBG("   Got %"PRIu32" minute records for %d", num_records,
-            (int)time_start);
+    PBL_LOG_DBG("   Got %" PRIu32 " minute records for %d", num_records, (int)time_start);
     if (num_records == 0) {
       // No more data available
       more_data = false;
@@ -795,7 +787,7 @@ T_STATIC void prv_health_event_handler(PebbleEvent *e, void *context) {
     prv_check_and_generate_metric_alert(state, HealthMetricHeartRateBPM,
                                         &state->cache->alert_threshold_heart_rate);
   }
-#endif // !defined(CONFIG_RECOVERY_FW)
+#endif  // !defined(CONFIG_RECOVERY_FW)
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -804,20 +796,22 @@ T_STATIC bool prv_activity_session_matches(const ActivitySession *session, Healt
   PBL_ASSERTN(session);
 
   const bool type_matches =
-       (session->type == ActivitySessionType_Sleep && ((mask & HealthActivitySleep) > 0))
-    || (session->type == ActivitySessionType_Nap && ((mask & HealthActivitySleep) > 0))
-    || (session->type == ActivitySessionType_RestfulSleep && ((mask & HealthActivityRestfulSleep) > 0))
-    || (session->type == ActivitySessionType_RestfulNap && ((mask & HealthActivityRestfulSleep) > 0))
-    || (session->type == ActivitySessionType_Walk && ((mask & HealthActivityWalk) > 0))
-    || (session->type == ActivitySessionType_Run && ((mask & HealthActivityRun) > 0))
-    || (session->type == ActivitySessionType_Open && ((mask & HealthActivityOpenWorkout) > 0));
+      (session->type == ActivitySessionType_Sleep && ((mask & HealthActivitySleep) > 0)) ||
+      (session->type == ActivitySessionType_Nap && ((mask & HealthActivitySleep) > 0)) ||
+      (session->type == ActivitySessionType_RestfulSleep &&
+       ((mask & HealthActivityRestfulSleep) > 0)) ||
+      (session->type == ActivitySessionType_RestfulNap &&
+       ((mask & HealthActivityRestfulSleep) > 0)) ||
+      (session->type == ActivitySessionType_Walk && ((mask & HealthActivityWalk) > 0)) ||
+      (session->type == ActivitySessionType_Run && ((mask & HealthActivityRun) > 0)) ||
+      (session->type == ActivitySessionType_Open && ((mask & HealthActivityOpenWorkout) > 0));
   if (!type_matches) {
     return false;
   }
 
   unsigned int length_sec = session->length_min * SECONDS_PER_MINUTE;
-  const bool time_matches = session->start_utc < time_end &&
-    (time_t)(session->start_utc + length_sec) > time_start;
+  const bool time_matches =
+      session->start_utc < time_end && (time_t)(session->start_utc + length_sec) > time_start;
   return time_matches;
 }
 
@@ -829,8 +823,8 @@ T_STATIC int64_t prv_session_compare(const ActivitySession *a, const ActivitySes
   switch (direction) {
     case HealthIterationDirectionPast:
       // sessions that end later come first
-      return (b->start_utc + (b->length_min * SECONDS_PER_MINUTE))
-        - (a->start_utc + (a->length_min * SECONDS_PER_MINUTE));
+      return (b->start_utc + (b->length_min * SECONDS_PER_MINUTE)) -
+             (a->start_utc + (a->length_min * SECONDS_PER_MINUTE));
     case HealthIterationDirectionFuture:
       // sessions that start earlier come first
       return a->start_utc - b->start_utc;
@@ -867,7 +861,6 @@ static MeasurementSystem prv_get_shell_prefs_metric_for_distance(void) {
   }
 }
 
-
 // ----------------------------------------------------------------------------------------------
 // Filter callbacks used by stats_calculate_basic()
 bool health_service_private_non_zero_filter(int index, int32_t value, void *context) {
@@ -877,22 +870,20 @@ bool health_service_private_non_zero_filter(int index, int32_t value, void *cont
 bool health_service_private_weekday_filter(int index, int32_t value, void *tm_weekday_ref) {
   const int tm_weekday = (int)(uintptr_t)tm_weekday_ref;
   return (health_service_private_non_zero_filter(index, value, NULL) &&
-    IS_WEEKDAY(positive_modulo(tm_weekday - index, DAYS_PER_WEEK)));
+          IS_WEEKDAY(positive_modulo(tm_weekday - index, DAYS_PER_WEEK)));
 }
 
 bool health_service_private_weekend_filter(int index, int32_t value, void *tm_weekday_ref) {
   const int tm_weekday = (int)(uintptr_t)tm_weekday_ref;
   return (health_service_private_non_zero_filter(index, value, NULL) &&
-    IS_WEEKEND(positive_modulo(tm_weekday - index, DAYS_PER_WEEK)));
+          IS_WEEKEND(positive_modulo(tm_weekday - index, DAYS_PER_WEEK)));
 }
 
 bool health_service_private_weekly_filter(int index, int32_t value, void *tm_weekday_ref) {
   const int tm_weekday = (int)(uintptr_t)tm_weekday_ref;
   return (health_service_private_non_zero_filter(index, value, NULL) &&
-    (positive_modulo(tm_weekday - index, DAYS_PER_WEEK) == 0));
+          (positive_modulo(tm_weekday - index, DAYS_PER_WEEK) == 0));
 }
-
-
 
 // ----------------------------------------------------------------------------------------------
 bool health_service_private_get_metric_history(HealthMetric metric, uint32_t history_len,
@@ -905,31 +896,30 @@ bool health_service_private_get_metric_history(HealthMetric metric, uint32_t his
 }
 
 // ----------------------------------------------------------------------------------------------
-HealthServiceAccessibilityMask health_service_metric_accessible(
-  HealthMetric metric, time_t time_start, time_t time_end) {
+HealthServiceAccessibilityMask health_service_metric_accessible(HealthMetric metric,
+                                                                time_t time_start,
+                                                                time_t time_end) {
   if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
-  return health_service_metric_aggregate_averaged_accessible(metric, time_start, time_end,
-                                                             prv_default_aggregation(metric),
-                                                             HealthServiceTimeScopeOnce);
+  return health_service_metric_aggregate_averaged_accessible(
+      metric, time_start, time_end, prv_default_aggregation(metric), HealthServiceTimeScopeOnce);
 }
 
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
-  HealthMetric metric, time_t time_start, time_t time_end, HealthServiceTimeScope scope) {
+    HealthMetric metric, time_t time_start, time_t time_end, HealthServiceTimeScope scope) {
   if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
-  return health_service_metric_aggregate_averaged_accessible(metric, time_start, time_end,
-                                                             prv_default_aggregation(metric),
-                                                             scope);
+  return health_service_metric_aggregate_averaged_accessible(
+      metric, time_start, time_end, prv_default_aggregation(metric), scope);
 }
 
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessible(
-  HealthMetric metric, time_t time_start, time_t time_end, HealthAggregation aggregation,
-  HealthServiceTimeScope scope) {
+    HealthMetric metric, time_t time_start, time_t time_end, HealthAggregation aggregation,
+    HealthServiceTimeScope scope) {
   if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
@@ -947,9 +937,8 @@ HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessib
   HealthServiceTimeRange time_range = {};
   HealthServiceDailyHistory daily_history = {};
 
-  const HealthServiceAccessibilityMask accessible =
-    prv_get_range_and_daily_history(state, metric, time_start, time_end, &time_range,
-                                    &daily_history);
+  const HealthServiceAccessibilityMask accessible = prv_get_range_and_daily_history(
+      state, metric, time_start, time_end, &time_range, &daily_history);
   if (accessible != HealthServiceAccessibilityMaskAvailable) {
     return accessible;
   }
@@ -963,7 +952,6 @@ HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessib
   return HealthServiceAccessibilityMaskNotAvailable;
 }
 
-
 // ----------------------------------------------------------------------------------------------
 HealthValue health_service_sum_today(HealthMetric metric) {
   if (!sys_activity_is_initialized()) {
@@ -973,7 +961,6 @@ HealthValue health_service_sum_today(HealthMetric metric) {
   const time_t tomorrow_midnight = today_midnight + SECONDS_PER_DAY;
   return health_service_sum(metric, today_midnight, tomorrow_midnight);
 }
-
 
 // ----------------------------------------------------------------------------------------------
 HealthValue health_service_sum(HealthMetric metric, time_t time_start, time_t time_end) {
@@ -1004,7 +991,6 @@ HealthValue health_service_peek_current_value(HealthMetric metric) {
   return health_service_aggregate_averaged(metric, now_utc, now_utc, HealthAggregationAvg,
                                            HealthServiceTimeScopeOnce);
 }
-
 
 static HealthValue prv_hr_aggregate_averaged(HealthServiceState *state, HealthMetric metric,
                                              time_t time_start, time_t time_end,
@@ -1069,8 +1055,8 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
 
   // --------
   // If asked for an averaged sum over less than a day, we can use the intraday averages
-  if ((scope != HealthServiceTimeScopeOnce) && (aggregation == HealthAggregationSum)
-    && ((time_end - time_start) < SECONDS_PER_DAY)) {
+  if ((scope != HealthServiceTimeScopeOnce) && (aggregation == HealthAggregationSum) &&
+      ((time_end - time_start) < SECONDS_PER_DAY)) {
     // For now, we will use the day of the week that time_start falls on. In the future, we could
     // be better about blending weekday with weekend if the time range spans both
     struct tm *local_tm = pbl_override_localtime(&time_start);
@@ -1085,8 +1071,8 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
         num_sums++;
       }
 
-    } else if ((scope == HealthServiceTimeScopeDaily)
-      || (scope == HealthServiceTimeScopeDailyWeekdayOrWeekend)) {
+    } else if ((scope == HealthServiceTimeScopeDaily) ||
+               (scope == HealthServiceTimeScopeDailyWeekdayOrWeekend)) {
       for (DayInWeek day = Sunday; day <= Saturday; day++) {
         if (scope == HealthServiceTimeScopeDailyWeekdayOrWeekend) {
           if (is_weekend != prv_is_weekend(day)) {
@@ -1100,7 +1086,7 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
       }
 
     } else {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Unsupported scope: %d", (int) scope);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Unsupported scope: %d", (int)scope);
       result = 0;
     }
     if (num_sums > 0) {
@@ -1118,7 +1104,6 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
     return prv_compute_aggregate_averaged_using_daily_totals(state, metric, time_start, time_end,
                                                              aggregation, scope);
   }
-
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1133,13 +1118,13 @@ bool health_service_events_subscribe(HealthEventHandler handler, void *context) 
 
   // Post a "significant update" event
   PebbleEvent event = {
-    .type = PEBBLE_HEALTH_SERVICE_EVENT,
-    .health_event = {
-      .type = HealthEventSignificantUpdate,
-      .data.significant_update = {
-        .day_id = 0,
+      .type = PEBBLE_HEALTH_SERVICE_EVENT,
+      .health_event = {
+          .type = HealthEventSignificantUpdate,
+          .data.significant_update = {
+              .day_id = 0,
+          },
       },
-    },
   };
   sys_send_pebble_event_to_kernel(&event);
 
@@ -1197,7 +1182,7 @@ bool health_service_cancel_metric_alert(HealthMetricAlert *alert) {
 
   switch (metric) {
     case HealthMetricHeartRateBPM:
-      state->cache->alert_threshold_heart_rate = (HealthServiceMetricAlertInfo) {};
+      state->cache->alert_threshold_heart_rate = (HealthServiceMetricAlertInfo){};
       return true;
     default:
       return false;
@@ -1236,8 +1221,8 @@ static bool prv_update_hrm_subscription(HealthServiceState *state) {
     interval_sec = (hr_sec != 0) ? hr_sec : hrv_sec;
   }
 
-  HRMSessionRef hrm_session = sys_hrm_manager_app_subscribe(app_id, interval_sec, 0 /*expire_sec*/,
-                                                            features);
+  HRMSessionRef hrm_session =
+      sys_hrm_manager_app_subscribe(app_id, interval_sec, 0 /*expire_sec*/, features);
   if (hrm_session == HRM_INVALID_SESSION_REF) {
     PBL_LOG_ERR("Error subscribing");
     return false;
@@ -1295,7 +1280,7 @@ uint16_t health_service_get_heart_rate_sample_period_expiration_sec(void) {
   }
 
   // Get the app id
-  AppInstallId  app_id = app_get_app_id();
+  AppInstallId app_id = app_get_app_id();
   if (app_id == INSTALL_ID_INVALID) {
     return 0;
   }
@@ -1330,7 +1315,7 @@ uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32
     const time_t lower_bounded_start = (*time_start / SECONDS_PER_MINUTE) * SECONDS_PER_MINUTE;
     const time_t upper_bounded_end = *time_end + SECONDS_PER_MINUTE - 1;
     const uint32_t needed_partial_minutes =
-      (upper_bounded_end - lower_bounded_start) / SECONDS_PER_MINUTE;
+        (upper_bounded_end - lower_bounded_start) / SECONDS_PER_MINUTE;
     num_records = MIN(num_records, needed_partial_minutes);
   }
 
@@ -1344,7 +1329,6 @@ uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32
   }
   return num_records;
 }
-
 
 // ----------------------------------------------------------------------------------------------
 HealthActivityMask health_service_peek_current_activities(void) {
@@ -1387,9 +1371,8 @@ HealthActivityMask health_service_peek_current_activities(void) {
 // to miss sessions.
 #define NUM_EVALUATED_SLEEP_SESSIONS 16
 
-void health_service_activities_iterate(HealthActivityMask activity_mask,
-                                       time_t time_start, time_t time_end,
-                                       HealthIterationDirection direction,
+void health_service_activities_iterate(HealthActivityMask activity_mask, time_t time_start,
+                                       time_t time_end, HealthIterationDirection direction,
                                        HealthActivityIteratorCB callback, void *context) {
   if (!sys_activity_is_initialized()) {
     return;
@@ -1413,8 +1396,7 @@ void health_service_activities_iterate(HealthActivityMask activity_mask,
 
   for (uint32_t idx = 0; idx < actual_num_sessions; idx++) {
     const ActivitySession *const session = &state->cache->sessions[idx];
-    if (prv_activity_session_matches(session, activity_mask,
-                                     time_start, time_end)) {
+    if (prv_activity_session_matches(session, activity_mask, time_start, time_end)) {
       HealthActivity session_activity = HealthActivityNone;
       switch (session->type) {
         case ActivitySessionType_Sleep:
@@ -1440,8 +1422,7 @@ void health_service_activities_iterate(HealthActivityMask activity_mask,
           break;
       }
       if (!callback(session_activity, session->start_utc,
-                    session->start_utc + (session->length_min * SECONDS_PER_MINUTE),
-                    context)) {
+                    session->start_utc + (session->length_min * SECONDS_PER_MINUTE), context)) {
         // clients can interrupt the iteration at any time
         break;
       }
@@ -1452,17 +1433,13 @@ void health_service_activities_iterate(HealthActivityMask activity_mask,
 // ----------------------------------------------------------------------------------------------
 bool health_service_private_get_yesterdays_sleep_activity(HealthValue *enter_sec,
                                                           HealthValue *exit_sec) {
-  return
-    sys_activity_get_metric(ActivityMetricSleepEnterAtSeconds, 1, enter_sec) &
-      sys_activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, exit_sec);
+  return sys_activity_get_metric(ActivityMetricSleepEnterAtSeconds, 1, enter_sec) &
+         sys_activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, exit_sec);
 }
-
-
 
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_any_activity_accessible(
-  HealthActivityMask activity_mask,
-  time_t start_time, time_t end_time) {
+    HealthActivityMask activity_mask, time_t start_time, time_t end_time) {
   // TODO: PBL-31628 permission system to reply with HealthServiceAccessibilityMaskNoPermission
 
   if (activity_mask == HealthActivityNone) {
@@ -1495,11 +1472,11 @@ MeasurementSystem health_service_get_measurement_system_for_display(HealthMetric
 
 // ----------------------------------------------------------------------------------------------
 void health_service_state_init(HealthServiceState *state) {
-  *state = (HealthServiceState) {
-    .health_event_service_info = {
-      .type = PEBBLE_HEALTH_SERVICE_EVENT,
-      .handler = &prv_health_event_handler,
-    },
+  *state = (HealthServiceState){
+      .health_event_service_info = {
+          .type = PEBBLE_HEALTH_SERVICE_EVENT,
+          .handler = &prv_health_event_handler,
+      },
   };
 }
 

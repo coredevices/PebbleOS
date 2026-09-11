@@ -50,44 +50,42 @@ typedef struct {
 
 FakeBitmapData s_fake_bitmap_data;
 
-size_t sys_resource_load_range(
-    ResAppNum app_num, uint32_t id, uint32_t start_offset, uint8_t *data, size_t num_bytes) {
-
-  BitmapData *bitmap = (BitmapData*) data;
-  *bitmap = (BitmapData) {
-    .row_size_bytes = s_fake_bitmap_data.row_size_bytes,
-    .info_flags = s_fake_bitmap_data.info_flags,
-    .width = s_fake_bitmap_data.width,
-    .height = s_fake_bitmap_data.height
+size_t sys_resource_load_range(ResAppNum app_num, uint32_t id, uint32_t start_offset, uint8_t *data,
+                               size_t num_bytes) {
+  BitmapData *bitmap = (BitmapData *)data;
+  *bitmap = (BitmapData){
+      .row_size_bytes = s_fake_bitmap_data.row_size_bytes,
+      .info_flags = s_fake_bitmap_data.info_flags,
+      .width = s_fake_bitmap_data.width,
+      .height = s_fake_bitmap_data.height
   };
 
   return num_bytes;
 }
-
 
 // Tests
 ///////////////////////
 
 void test_gbitmap_resource_validation__initialize(void) {
   s_resource_size = 0;
-  s_fake_bitmap_data = (FakeBitmapData) { 0 };
+  s_fake_bitmap_data = (FakeBitmapData){0};
 }
 
 static uint32_t prv_calculate_size(FakeBitmapData *bitmap) {
   const uint32_t required_size_bytes =
-      offsetof(BitmapData, data) + // header size
-      (bitmap->row_size_bytes * bitmap->height) + // pixel data
-      gbitmap_get_palette_size(bitmap->info.format); // palette data
+      offsetof(BitmapData, data) +                    // header size
+      (bitmap->row_size_bytes * bitmap->height) +     // pixel data
+      gbitmap_get_palette_size(bitmap->info.format);  // palette data
   return required_size_bytes;
 }
 
 void test_gbitmap_resource_validation__total_size(void) {
-  s_fake_bitmap_data = (FakeBitmapData) {
-    .row_size_bytes = 8,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_1,
-    .width = 8,
-    .height = 1
+  s_fake_bitmap_data = (FakeBitmapData){
+      .row_size_bytes = 8,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_1,
+      .width = 8,
+      .height = 1
   };
 
   // Set the resource size to be valid.
@@ -119,12 +117,12 @@ void test_gbitmap_resource_validation__total_size(void) {
 }
 
 void test_gbitmap_resource_validation__row_size(void) {
-  s_fake_bitmap_data = (FakeBitmapData) {
-    .row_size_bytes = 8,
-    .info.format = GBitmapFormat8Bit,
-    .info.version = GBITMAP_VERSION_1,
-    .width = 8,
-    .height = 1
+  s_fake_bitmap_data = (FakeBitmapData){
+      .row_size_bytes = 8,
+      .info.format = GBitmapFormat8Bit,
+      .info.version = GBITMAP_VERSION_1,
+      .width = 8,
+      .height = 1
   };
 
   // Set the resource size to be valid.
@@ -135,12 +133,10 @@ void test_gbitmap_resource_validation__row_size(void) {
   cl_assert(gbitmap_init_with_resource_system(&bitmap, 0, 0));
 
   // Vary the width without changing the height to be too large
-  s_fake_bitmap_data.width = 10,
-  cl_assert(!gbitmap_init_with_resource_system(&bitmap, 0, 0));
+  s_fake_bitmap_data.width = 10, cl_assert(!gbitmap_init_with_resource_system(&bitmap, 0, 0));
 
   // Too small is fine though
-  s_fake_bitmap_data.width = 6,
-  cl_assert(gbitmap_init_with_resource_system(&bitmap, 0, 0));
+  s_fake_bitmap_data.width = 6, cl_assert(gbitmap_init_with_resource_system(&bitmap, 0, 0));
 
   // Test with an uneven number of bits and make sure we're rounding correctly
   s_fake_bitmap_data.info.format = GBitmapFormat1Bit;

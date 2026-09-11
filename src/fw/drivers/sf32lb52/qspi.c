@@ -165,7 +165,7 @@ end:
   return res;
 }
 
-bool qspi_flash_check_whoami(QSPIFlash *dev) { 
+bool qspi_flash_check_whoami(QSPIFlash *dev) {
   QSPI_FLASH_CTX_T *ctx = &dev->qspi->state->ctx;
   uint32_t id = ctx->dev_id;
 
@@ -173,17 +173,22 @@ bool qspi_flash_check_whoami(QSPIFlash *dev) {
     PBL_LOG_DBG("Flash is %s", dev->state->part->name);
     return true;
   } else {
-    PBL_LOG_ERR("Flash isn't expected %s (whoami: 0x%" PRIx32 ")",
-            dev->state->part->name, id);
+    PBL_LOG_ERR("Flash isn't expected %s (whoami: 0x%" PRIx32 ")", dev->state->part->name, id);
     return false;
   }
 }
 
-status_t qspi_flash_write_protection_enable(QSPIFlash *dev) { return S_NO_ACTION_REQUIRED; }
+status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
+  return S_NO_ACTION_REQUIRED;
+}
 
-status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) { return S_SUCCESS; }
+status_t qspi_flash_lock_sector(QSPIFlash *dev, uint32_t addr) {
+  return S_SUCCESS;
+}
 
-status_t qspi_flash_unlock_all(QSPIFlash *dev) { return S_SUCCESS; }
+status_t qspi_flash_unlock_all(QSPIFlash *dev) {
+  return S_SUCCESS;
+}
 
 void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   HAL_StatusTypeDef res;
@@ -201,9 +206,8 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   dev->state->part = part;
   dev->qspi->state->ctx.dual_mode = 1;
 
-  res = HAL_FLASH_Init(&dev->qspi->state->ctx, &dev->qspi->state->cfg,
-                       &dev->qspi->state->hdma, &dev->qspi->state->dma,
-                       dev->qspi->clk_div);
+  res = HAL_FLASH_Init(&dev->qspi->state->ctx, &dev->qspi->state->cfg, &dev->qspi->state->hdma,
+                       &dev->qspi->state->dma, dev->qspi->clk_div);
 
   PBL_ASSERT(res == HAL_OK, "HAL_FLASH_Init failed");
 
@@ -271,7 +275,7 @@ status_t prv_qspi_security_register_check(QSPIFlash *dev, uint32_t addr) {
   for (uint8_t i = 0U; i < dev->state->part->sec_registers.num_sec_regs; ++i) {
     if (addr >= dev->state->part->sec_registers.sec_regs[i] &&
         addr < dev->state->part->sec_registers.sec_regs[i] +
-               dev->state->part->sec_registers.sec_reg_size) {
+                   dev->state->part->sec_registers.sec_reg_size) {
       addr_valid = true;
       break;
     }
@@ -398,4 +402,4 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
 
   return S_SUCCESS;
 }
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW

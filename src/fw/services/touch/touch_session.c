@@ -48,8 +48,7 @@ bool touch_session_is_active(void) {
   }
   // A focused modal just demanded attention (notification, alarm): the
   // immediate touch response is intentional.
-  if (modal_manager_get_enabled() &&
-      !(modal_manager_get_properties() & ModalProperty_Unfocused)) {
+  if (modal_manager_get_enabled() && !(modal_manager_get_properties() & ModalProperty_Unfocused)) {
     return true;
   }
   // A lit backlight means something (button, shake, wake gesture) already

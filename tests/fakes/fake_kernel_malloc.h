@@ -33,32 +33,32 @@ typedef struct {
 
 Allocation *s_head;
 
-void* kernel_malloc(size_t bytes) {
+void *kernel_malloc(size_t bytes) {
   if (bytes > s_largest_free_block_bytes) {
     return NULL;
   }
 
-  char* memory = malloc(bytes + 12);
+  char *memory = malloc(bytes + 12);
 
   memcpy(memory, &bytes, 4);
   memcpy(memory + 4, &s_malloc_canary, 4);
   memcpy(memory + bytes + 8, &s_malloc_canary, 4);
 
-  void* ptr = memory + 8;
+  void *ptr = memory + 8;
 
   if (s_stats_enabled) {
-    Allocation *a = (Allocation *) malloc(sizeof(Allocation));
-    *a = (const Allocation) {
-      .size = bytes,
-      .ptr = ptr,
+    Allocation *a = (Allocation *)malloc(sizeof(Allocation));
+    *a = (const Allocation){
+        .size = bytes,
+        .ptr = ptr,
     };
-    s_head = (Allocation *) list_prepend((ListNode *) s_head, &a->node);
+    s_head = (Allocation *)list_prepend((ListNode *)s_head, &a->node);
   }
 
   return ptr;
 }
 
-void* kernel_zalloc(size_t bytes) {
+void *kernel_zalloc(size_t bytes) {
   void *ptr = kernel_malloc(bytes);
   if (ptr) {
     memset(ptr, 0, bytes);
@@ -66,15 +66,15 @@ void* kernel_zalloc(size_t bytes) {
   return ptr;
 }
 
-void* kernel_zalloc_check(size_t bytes) {
+void *kernel_zalloc_check(size_t bytes) {
   return kernel_zalloc(bytes);
 }
 
-void* kernel_malloc_check(size_t bytes) {
+void *kernel_malloc_check(size_t bytes) {
   return kernel_malloc(bytes);
 }
 
-char* kernel_strdup(const char* s) {
+char *kernel_strdup(const char *s) {
   char *r = kernel_malloc_check(strlen(s) + 1);
   if (!r) {
     return NULL;
@@ -83,12 +83,12 @@ char* kernel_strdup(const char* s) {
   return r;
 }
 
-char* kernel_strdup_check(const char* s) {
+char *kernel_strdup_check(const char *s) {
   return kernel_strdup(s);
 }
 
 static bool prv_find_allocation_filter_cb(ListNode *found_node, void *data) {
-  Allocation *a = (Allocation *) found_node;
+  Allocation *a = (Allocation *)found_node;
   return (a->ptr == data);
 }
 
@@ -98,20 +98,19 @@ static void prv_double_free_assert(Allocation *a) {
   cl_assert_(a != NULL, "Couldn't find allocation! Double free?");
 }
 
-void kernel_free(void* ptr) {
+void kernel_free(void *ptr) {
   if (ptr == NULL) {
     return;
   }
 
   if (s_stats_enabled) {
-    Allocation *a = (Allocation *) list_find((ListNode *) s_head,
-                                             prv_find_allocation_filter_cb, ptr);
+    Allocation *a = (Allocation *)list_find((ListNode *)s_head, prv_find_allocation_filter_cb, ptr);
     prv_double_free_assert(a);
-    list_remove(&a->node, (ListNode **) &s_head, NULL);
+    list_remove(&a->node, (ListNode **)&s_head, NULL);
     free(a);
   }
 
-  char* memory = (char*)ptr - 8;
+  char *memory = (char *)ptr - 8;
 
   uint32_t canary_start = -1;
   uint32_t canary_end = -1;
@@ -140,7 +139,7 @@ uint64_t fake_kernel_malloc_get_total_bytes_allocated(void) {
   Allocation *a = s_head;
   while (a) {
     bytes_allocated += a->size;
-    a = (Allocation *) a->node.next;
+    a = (Allocation *)a->node.next;
   }
   return bytes_allocated;
 }
@@ -171,7 +170,7 @@ void fake_kernel_malloc_init(void) {
 void fake_kernel_malloc_deinit(void) {
   Allocation *a = s_head;
   while (a) {
-    Allocation *next = (Allocation *) a->node.next;
+    Allocation *next = (Allocation *)a->node.next;
     free(a);
     a = next;
   }

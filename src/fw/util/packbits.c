@@ -5,10 +5,10 @@
 
 #include <string.h>
 
-void packbits_unpack(const char* src, int src_length, uint8_t* dest) {
+void packbits_unpack(const char *src, int src_length, uint8_t *dest) {
   int length = 0;
   while (length < src_length) {
-    int8_t header = *((int8_t*) src++);
+    int8_t header = *((int8_t *)src++);
     length++;
 
     if (header >= 0) {

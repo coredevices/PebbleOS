@@ -26,7 +26,7 @@ void system_resource_init(void) {
 #if defined(CONFIG_IS_BIGBOARD)
     static const uint32_t ERROR_BAD_RESOURCES = 0xfe504505;
     pbl_log(LOG_LEVEL_ERROR, __FILE_NAME__, __LINE__,
-        "System resources are missing or corrupt, time to sad watch");
+            "System resources are missing or corrupt, time to sad watch");
     launcher_panic(ERROR_BAD_RESOURCES);
 #else
     PBL_LOG_ERR("System resources are missing or corrupt! Going to PRF");
@@ -50,20 +50,20 @@ static GFont prv_load_system_font(const char *font_key) {
     // load fallback font
     if (!s_system_fonts_info_table[NUM_SYSTEM_FONTS].loaded) {
       PBL_ASSERTN(text_resources_init_font(SYSTEM_APP, RESOURCE_ID_FONT_FALLBACK_INTERNAL, 0,
-          &s_system_fonts_info_table[NUM_SYSTEM_FONTS]));
+                                           &s_system_fonts_info_table[NUM_SYSTEM_FONTS]));
     }
     return &s_system_fonts_info_table[NUM_SYSTEM_FONTS];
   }
 
-  for (int i = 0; i < (int) NUM_SYSTEM_FONTS; ++i) {
+  for (int i = 0; i < (int)NUM_SYSTEM_FONTS; ++i) {
     if (0 == strcmp(font_key, s_font_resource_keys[i].key_name)) {
       FontInfo *fontinfo = &s_system_fonts_info_table[i];
       uint32_t resource = s_font_resource_keys[i].resource_id;
       uint32_t extension = s_font_resource_keys[i].extension_id;
       // if the font has not been initialized yet
       if (!fontinfo->loaded) {
-        if (!text_resources_init_font(SYSTEM_APP,
-            resource, extension, &s_system_fonts_info_table[i])) {
+        if (!text_resources_init_font(SYSTEM_APP, resource, extension,
+                                      &s_system_fonts_info_table[i])) {
           // Can't initialize the font for some reason
           return NULL;
         }
@@ -103,6 +103,5 @@ DEFINE_SYSCALL(void, sys_font_reload_font, FontInfo *fontinfo) {
   }
 
   text_resources_init_font(fontinfo->base.app_num, fontinfo->base.resource_id,
-      fontinfo->extension.resource_id, fontinfo);
+                           fontinfo->extension.resource_id, fontinfo);
 }
-

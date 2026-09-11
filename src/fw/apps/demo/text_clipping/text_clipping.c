@@ -27,15 +27,15 @@ typedef struct AppState {
   TextLayer direction_layer;
   TextLayer word_wrap_layer;
   SelectIndex select_index;
-  bool up_down_direction; // True = move up or down; False = move left or right
-  bool word_wrap;         // True = word wrap; False = don't word wrap
+  bool up_down_direction;  // True = move up or down; False = move left or right
+  bool word_wrap;          // True = word wrap; False = don't word wrap
 } AppState;
 
-static const char* text_buffer = "Text Clipping";
+static const char *text_buffer = "Text Clipping";
 
 static void init_text_layer(AppState *data, GRect frame) {
-  text_layer_init(&data->text_layer, &GRect(frame.origin.x, frame.origin.y,
-                                            frame.size.w, frame.size.h));
+  text_layer_init(&data->text_layer,
+                  &GRect(frame.origin.x, frame.origin.y, frame.size.w, frame.size.h));
   text_layer_set_background_color(&data->text_layer, GColorWhite);
   text_layer_set_text_color(&data->text_layer, GColorBlack);
   text_layer_set_text(&data->text_layer, text_buffer);
@@ -181,30 +181,29 @@ static void prv_window_load(Window *window) {
 }
 
 static void push_window(struct AppState *data) {
-  Window* window = &data->window;
+  Window *window = &data->window;
   window_init(window, WINDOW_NAME("Text Clipping"));
   window_set_user_data(window, data);
-  window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_click_config_provider(window, (ClickConfigProvider)config_provider);
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
-
 
 ////////////////////
 // App boilerplate
 
 static void handle_init(void) {
-  struct AppState* data = app_malloc_check(sizeof(struct AppState));
+  struct AppState *data = app_malloc_check(sizeof(struct AppState));
 
   app_state_set_user_data(data);
   push_window(data);
 }
 
 static void handle_deinit(void) {
-  struct AppState* data = app_state_get_user_data();
+  struct AppState *data = app_state_get_user_data();
   app_free(data);
 }
 
@@ -216,10 +215,10 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* text_clipping_app_get_info() {
+const PebbleProcessMd *text_clipping_app_get_info() {
   static const PebbleProcessMdSystem text_spacing_info = {
-    .common.main_func = &s_main,
-    .name = "Text Clipping"
+      .common.main_func = &s_main,
+      .name = "Text Clipping"
   };
-  return (const PebbleProcessMd*) &text_spacing_info;
+  return (const PebbleProcessMd *)&text_spacing_info;
 }

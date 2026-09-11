@@ -40,11 +40,11 @@ void task_free(void *ptr) {
   free(ptr);
 }
 
-void* task_calloc(size_t count, size_t size) {
+void *task_calloc(size_t count, size_t size) {
   return calloc(count, size);
 }
 
-void* task_calloc_check(size_t count, size_t size) {
+void *task_calloc_check(size_t count, size_t size) {
   return task_calloc(count, size);
 }
 
@@ -114,15 +114,15 @@ void kernel_free(void *ptr) {
   free(ptr);
 }
 
-void* kernel_calloc(size_t count, size_t size) {
+void *kernel_calloc(size_t count, size_t size) {
   return calloc(count, size);
 }
 
-void* kernel_calloc_check(size_t count, size_t size) {
+void *kernel_calloc_check(size_t count, size_t size) {
   return kernel_calloc(count, size);
 }
 
-char* kernel_strdup(const char* s) {
+char *kernel_strdup(const char *s) {
   if (s_kernel_malloc_should_fail) {
     return NULL;
   }
@@ -136,11 +136,11 @@ char* kernel_strdup(const char* s) {
   return r;
 }
 
-char* kernel_strdup_check(const char* s) {
+char *kernel_strdup_check(const char *s) {
   return kernel_strdup(s);
 }
 
-char* task_strdup(const char* s) {
+char *task_strdup(const char *s) {
   return kernel_strdup(s);
 }
 

@@ -34,13 +34,13 @@ PBL_LOG_MODULE_DEFINE(service_vibe_pattern, CONFIG_SERVICE_VIBE_PATTERN_LOG_LEVE
 // Vibe Log Info debugging toggle is on so field captures include them.
 #if !defined(CONFIG_RECOVERY_FW)
 extern bool shell_prefs_get_vibe_log_info_enabled(void);
-#define VIBE_PATTERN_LOG(fmt, ...)                    \
-  do {                                                \
-    if (shell_prefs_get_vibe_log_info_enabled()) {    \
-      PBL_LOG_INFO(fmt, ##__VA_ARGS__);               \
-    } else {                                          \
-      PBL_LOG_DBG(fmt, ##__VA_ARGS__);                \
-    }                                                 \
+#define VIBE_PATTERN_LOG(fmt, ...)                 \
+  do {                                             \
+    if (shell_prefs_get_vibe_log_info_enabled()) { \
+      PBL_LOG_INFO(fmt, ##__VA_ARGS__);            \
+    } else {                                       \
+      PBL_LOG_DBG(fmt, ##__VA_ARGS__);             \
+    }                                              \
   } while (0)
 #else
 #define VIBE_PATTERN_LOG(fmt, ...) PBL_LOG_DBG(fmt, ##__VA_ARGS__)
@@ -77,7 +77,7 @@ DEFINE_SYSCALL(bool, sys_vibe_history_was_vibrating, uint64_t time_search) {
       rc = true;
       break;
     }
-    node = (VibeHistory*)list_get_next((ListNode*)node);
+    node = (VibeHistory *)list_get_next((ListNode *)node);
   }
   pbl_mutex_unlock(&s_vibe_history_mutex);
   return rc;
@@ -91,7 +91,7 @@ static void prv_vibe_history_clear(uint64_t cutoff) {
     if (cutoff != HISTORY_CLEAR_ALL && vibe->time_end >= cutoff) {
       break;
     }
-    s_vibe_history = (VibeHistory*)list_get_next((ListNode*)vibe);
+    s_vibe_history = (VibeHistory *)list_get_next((ListNode *)vibe);
     kernel_free(vibe);
   }
 }
@@ -116,7 +116,7 @@ static void prv_vibe_history_start_event(void) {
     s_vibe_history_enabled = false;
     return;
   }
-  list_init((ListNode*)vibe);
+  list_init((ListNode *)vibe);
   time_t s;
   uint16_t ms;
   rtc_get_time_ms(&s, &ms);
@@ -127,7 +127,7 @@ static void prv_vibe_history_start_event(void) {
   if (s_vibe_history == NULL) {
     s_vibe_history = vibe;
   } else {
-    list_append((ListNode*)s_vibe_history, (ListNode*)vibe);
+    list_append((ListNode *)s_vibe_history, (ListNode *)vibe);
   }
   prv_vibe_history_clear(vibe->time_start - MAX_HISTORY_MS);
   pbl_mutex_unlock(&s_vibe_history_mutex);
@@ -148,7 +148,7 @@ static void prv_vibe_history_end_event(void) {
   rtc_get_time_ms(&s, &ms);
 
   pbl_mutex_lock(&s_vibe_history_mutex, PBL_FOREVER);
-  VibeHistory *vibe = (VibeHistory*)list_get_tail((ListNode*)s_vibe_history);
+  VibeHistory *vibe = (VibeHistory *)list_get_tail((ListNode *)s_vibe_history);
   if (vibe->time_end == END_NOT_SET) {
     vibe->time_end = ((uint64_t)s) * 1000 + ms;
   }
@@ -158,7 +158,7 @@ static void prv_vibe_history_end_event(void) {
 typedef struct {
   ListNode list_node;
   uint32_t duration_ms;
-  int32_t  strength;
+  int32_t strength;
 } VibePatternStep;
 
 static const uint32_t MAX_VIBE_DURATION_MS = 10000;
@@ -191,10 +191,10 @@ static PBL_MUTEX_DEFINE(s_vibe_pattern_mutex);
 static VibePatternStep *s_vibe_queue_head = NULL;
 
 //! Analytics: Track time-weighted average strength
-static uint64_t s_strength_time_product_sum; // Sum of (strength_pct × time_ms)
-static RtcTicks s_last_strength_sample_ticks; // Timestamp of last sample
-static uint8_t s_last_sampled_strength_pct; // Last strength percentage sampled
-static uint32_t s_total_vibe_on_time_ms; // Total vibe on time tracked internally
+static uint64_t s_strength_time_product_sum;   // Sum of (strength_pct × time_ms)
+static RtcTicks s_last_strength_sample_ticks;  // Timestamp of last sample
+static uint8_t s_last_sampled_strength_pct;    // Last strength percentage sampled
+static uint32_t s_total_vibe_on_time_ms;       // Total vibe on time tracked internally
 
 void vibes_init() {
   s_pattern_in_progress = false;
@@ -295,7 +295,7 @@ static uint32_t prv_next_timeout_ms(uint32_t step_duration_ms) {
   return (uint32_t)(s_pattern_deadline_ms - elapsed_ms);
 }
 
-static void prv_timer_callback(void* data) {
+static void prv_timer_callback(void *data) {
   if (s_vibe_queue_head == NULL) {
     PBL_LOG_ERR("Tried to handle a vibe event with a null vibe queue");
     return;
@@ -305,15 +305,14 @@ static void prv_timer_callback(void* data) {
 
   // remove the event I've finished
   VibePatternStep *removed_node = s_vibe_queue_head;
-  s_vibe_queue_head = (VibePatternStep*)list_pop_head((ListNode*)s_vibe_queue_head);
+  s_vibe_queue_head = (VibePatternStep *)list_pop_head((ListNode *)s_vibe_queue_head);
   kernel_free(removed_node);
 
   if (s_vibe_queue_head != NULL) {
     // move to the next step
     prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
     const uint32_t next_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
-    bool success = new_timer_start(s_pattern_timer, next_ms,
-                                   prv_timer_callback, NULL, 0 /*flags*/);
+    bool success = new_timer_start(s_pattern_timer, next_ms, prv_timer_callback, NULL, 0 /*flags*/);
     PBL_ASSERTN(success);
   } else {
     // I'm done with the active pattern
@@ -368,7 +367,7 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
     return false;
   }
 
-  list_init((ListNode*)step);
+  list_init((ListNode *)step);
   step->duration_ms = MIN(duration_ms, MAX_VIBE_DURATION_MS);
   step->strength = strength;
 
@@ -377,13 +376,13 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
     if (s_pending_owner != VibePatternOwner_Other) {
       s_pattern_owner = s_pending_owner;
     } else {
-      s_pattern_owner = (pebble_task_get_current() == PebbleTask_App)
-                            ? VibePatternOwner_App : VibePatternOwner_Other;
+      s_pattern_owner = (pebble_task_get_current() == PebbleTask_App) ? VibePatternOwner_App
+                                                                      : VibePatternOwner_Other;
     }
     s_pending_owner = VibePatternOwner_Other;
     s_vibe_queue_head = step;
   } else {
-    list_append((ListNode*)s_vibe_queue_head, (ListNode*)step);
+    list_append((ListNode *)s_vibe_queue_head, (ListNode *)step);
   }
 
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
@@ -396,8 +395,8 @@ DEFINE_SYSCALL(bool, sys_vibe_pattern_enqueue_step_raw, uint32_t duration_ms, in
 }
 
 DEFINE_SYSCALL(bool, sys_vibe_pattern_enqueue_step, uint32_t duration_ms, bool on) {
-  return prv_vibe_pattern_enqueue_step_raw(duration_ms, on ? s_vibe_strength_default
-                                                           : VIBE_STRENGTH_OFF);
+  return prv_vibe_pattern_enqueue_step_raw(duration_ms,
+                                           on ? s_vibe_strength_default : VIBE_STRENGTH_OFF);
 }
 
 DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
@@ -429,8 +428,7 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
   prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
   s_pattern_in_progress = true;
   const uint32_t first_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
-  bool success = new_timer_start(s_pattern_timer, first_ms,
-                                 prv_timer_callback, NULL, 0 /*flags*/);
+  bool success = new_timer_start(s_pattern_timer, first_ms, prv_timer_callback, NULL, 0 /*flags*/);
   PBL_ASSERTN(success);
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
 }
@@ -442,14 +440,13 @@ static void prv_clear_pattern_locked(void) {
   unsigned int dropped_steps = 0;
   while (s_vibe_queue_head) {
     VibePatternStep *removed_node = s_vibe_queue_head;
-    s_vibe_queue_head = (VibePatternStep*)list_pop_head((ListNode*)s_vibe_queue_head);
+    s_vibe_queue_head = (VibePatternStep *)list_pop_head((ListNode *)s_vibe_queue_head);
     kernel_free(removed_node);
     dropped_steps++;
   }
   // Log whether a pattern was still live and whether the motor was on: a
   // clear that finds the motor on with no active pattern is a wedged vibe.
-  VIBE_PATTERN_LOG("vibe_pattern: clear, in_progress=%d, strength=%" PRId32
-                   ", %u steps dropped",
+  VIBE_PATTERN_LOG("vibe_pattern: clear, in_progress=%d, strength=%" PRId32 ", %u steps dropped",
                    s_pattern_in_progress, s_vibe_strength, dropped_steps);
   prv_vibes_set_vibe_strength(VIBE_STRENGTH_OFF);
   s_pattern_in_progress = false;

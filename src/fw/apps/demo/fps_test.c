@@ -83,8 +83,8 @@ static void prv_pop_all_windows_cb(void *cb_data) {
 
   PBL_LOG_INFO("## %d frames rendered", (int)data->rendered_frames);
   if (time_rendered) {
-    int frame_period = time_rendered/(int64_t)data->rendered_frames;
-    int fps = (int64_t)data->rendered_frames*1000/time_rendered;
+    int frame_period = time_rendered / (int64_t)data->rendered_frames;
+    int fps = (int64_t)data->rendered_frames * 1000 / time_rendered;
     PBL_LOG_INFO("## at %d FPS (%d ms/frame)", fps, frame_period);
   }
 
@@ -92,21 +92,16 @@ static void prv_pop_all_windows_cb(void *cb_data) {
 }
 
 static const char *prv_row_texts[] = {
-    "Row 1",
-    "Row 2",
-    "Row 3",
-    "Row 4",
-    "Row 5",
-    "Row 6",
+    "Row 1", "Row 2", "Row 3", "Row 4", "Row 5", "Row 6",
 };
 
 static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer, uint16_t section_index,
-    void *callback_context) {
+                                 void *callback_context) {
   return ARRAY_LENGTH(prv_row_texts);
 }
 
-static void prv_draw_row(GContext* ctx, const Layer *cell_layer, char const *title,
-    int16_t offset) {
+static void prv_draw_row(GContext *ctx, const Layer *cell_layer, char const *title,
+                         int16_t offset) {
   // mostly copied from menu_cell_basic_draw_with_value
   // (that unfortunately doesn't respect bounds.origin.x)
   const int16_t title_height = 24;
@@ -119,25 +114,25 @@ static void prv_draw_row(GContext* ctx, const Layer *cell_layer, char const *tit
   const GFont title_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   if (title) {
     graphics_context_set_text_color_2bit(ctx, GColor2White);
-    graphics_draw_text(ctx, title, title_font, box,
-        GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, title, title_font, box, GTextOverflowModeFill, GTextAlignmentLeft,
+                       NULL);
   }
 }
 
-void prv_draw_row_1(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index,
-    void *callback_context) {
+void prv_draw_row_1(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                    void *callback_context) {
   const char *title = prv_row_texts[cell_index->row];
-  prv_draw_row(ctx, cell_layer, title, -cell_layer->frame.origin.y/4);
+  prv_draw_row(ctx, cell_layer, title, -cell_layer->frame.origin.y / 4);
 }
 
-static void prv_draw_row_2(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index,
-    void *callback_context) {
+static void prv_draw_row_2(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                           void *callback_context) {
   const char *title = prv_row_texts[cell_index->row];
-  prv_draw_row(ctx, cell_layer, title, -cell_layer->frame.origin.y/4 + cell_layer->bounds.size.w);
+  prv_draw_row(ctx, cell_layer, title, -cell_layer->frame.origin.y / 4 + cell_layer->bounds.size.w);
 }
 
 static int16_t prv_get_separator_height(struct MenuLayer *menu_layer, MenuIndex *cell_index,
-    void *callback_context) {
+                                        void *callback_context) {
   return 0;
 }
 
@@ -194,22 +189,24 @@ static void prv_window_load(Window *window) {
   const GRect menu_layer_rect =
       GRect(navbar_width, 0, full_rect->size.w - navbar_width, full_rect->size.h);
   menu_layer_init(&data->action_list1, &menu_layer_rect);
-  menu_layer_set_callbacks(&data->action_list1, NULL, &(MenuLayerCallbacks){
-      .get_num_rows = prv_get_num_rows,
-      .draw_row = prv_draw_row_1,
-      .get_separator_height = prv_get_separator_height,
-  });
+  menu_layer_set_callbacks(&data->action_list1, NULL,
+                           &(MenuLayerCallbacks){
+                               .get_num_rows = prv_get_num_rows,
+                               .draw_row = prv_draw_row_1,
+                               .get_separator_height = prv_get_separator_height,
+                           });
   layer_set_hidden(&data->action_list1.inverter.layer, true);
 
   scroll_layer_set_shadow_hidden(&data->action_list1.scroll_layer, true);
   layer_add_child(&window->layer, menu_layer_get_layer(&data->action_list1));
 
   menu_layer_init(&data->action_list2, &menu_layer_rect);
-  menu_layer_set_callbacks(&data->action_list2, NULL, &(MenuLayerCallbacks){
-      .get_num_rows = prv_get_num_rows,
-      .draw_row = prv_draw_row_2,
-      .get_separator_height = prv_get_separator_height,
-  });
+  menu_layer_set_callbacks(&data->action_list2, NULL,
+                           &(MenuLayerCallbacks){
+                               .get_num_rows = prv_get_num_rows,
+                               .draw_row = prv_draw_row_2,
+                               .get_separator_height = prv_get_separator_height,
+                           });
   scroll_layer_set_shadow_hidden(&data->action_list2.scroll_layer, true);
   data->prv_orig_content_offset_changed =
       data->action_list2.scroll_layer.callbacks.content_offset_changed_handler;
@@ -240,11 +237,11 @@ static void s_main(void) {
   window_set_user_data(window, data);
   window_set_fullscreen(window, true);
   layer_set_update_proc(&window->layer, prv_window_update_proc);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-    .disappear = prv_window_disappear,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .unload = prv_window_unload,
+                                         .disappear = prv_window_disappear,
+                                     });
 
   app_window_stack_push(window, true);
 
@@ -253,10 +250,7 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* fps_test_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = s_main,
-    .name = "FPS Test"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *fps_test_get_app_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = s_main, .name = "FPS Test"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

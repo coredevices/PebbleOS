@@ -16,18 +16,20 @@
 //! The navigation model of Pebble centers on the concept of a vertical “stack” of windows, similar
 //! to mobile app interactions.
 //!
-//! In working with the Window Stack API, the basic operations include push and pop. When an app wants to
-//! display a new window, it pushes a new window onto the stack. This appears like a window sliding in
-//! from the right. As an app is closed, the window is popped off the stack and disappears.
+//! In working with the Window Stack API, the basic operations include push and pop. When an app
+//! wants to display a new window, it pushes a new window onto the stack. This appears like a window
+//! sliding in from the right. As an app is closed, the window is popped off the stack and
+//! disappears.
 //!
-//! For more complicated operations, involving multiple windows, you can determine which windows reside
-//! on the stack, using window_stack_contains_window() and remove any specific window, using window_stack_remove().
+//! For more complicated operations, involving multiple windows, you can determine which windows
+//! reside on the stack, using window_stack_contains_window() and remove any specific window, using
+//! window_stack_remove().
 //!
 //! Refer to the \htmlinclude UiFramework.html (chapter "Window Stack") for a conceptual overview
 //! of the window stack and relevant code examples.
 //!
-//! Also see the \ref WindowHandlers of a \ref Window for the callbacks that can be added to a window
-//! in order to act upon window stack transitions.
+//! Also see the \ref WindowHandlers of a \ref Window for the callbacks that can be added to a
+//! window in order to act upon window stack transitions.
 //!
 //!   @{
 
@@ -48,7 +50,7 @@ void app_window_stack_insert_next(Window *window);
 //! Pops the topmost window on the navigation stack
 //! @param animated See \ref window_stack_remove()
 //! @return The window that is popped, or NULL if there are no windows to pop.
-Window* app_window_stack_pop(bool animated);
+Window *app_window_stack_pop(bool animated);
 
 //! Pops all windows.
 //! See \ref window_stack_remove() for a description of the `animated` parameter and notes.
@@ -71,7 +73,7 @@ bool app_window_stack_remove(Window *window, bool animated);
 //! Gets the topmost window on the stack that belongs to the app.
 //! @return The topmost window on the stack that belongs to the app or
 //! NULL if no app window could be found.
-Window* app_window_stack_get_top_window(void);
+Window *app_window_stack_get_top_window(void);
 
 //! Checks if the window is on the window stack
 //! @param window The window to look for on the window stack

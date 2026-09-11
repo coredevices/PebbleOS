@@ -33,8 +33,8 @@
 
 // Scroll animation speed
 // Same as the normal moook duration, but one frame shorter
-#define SCROLL_MS PBL_IF_RECT_ELSE(200, interpolate_moook_duration() - \
-                                   ANIMATION_TARGET_FRAME_INTERVAL_MS)
+#define SCROLL_MS \
+  PBL_IF_RECT_ELSE(200, interpolate_moook_duration() - ANIMATION_TARGET_FRAME_INTERVAL_MS)
 
 // Swap animation speed
 // Adding ANIMATION_TARGET_FRAME_INTERVAL_MS doesn't actually add a frame, because plain moook
@@ -64,8 +64,12 @@ typedef enum {
 typedef struct {
   ScrollAnimationCurveKind swap_curve_kind;
   union {
-    struct { InterpolateInt64Function interpolator; };
-    struct { AnimationCurve curve; };
+    struct {
+      InterpolateInt64Function interpolator;
+    };
+    struct {
+      AnimationCurve curve;
+    };
   };
 } ScrollAnimationCurve;
 
@@ -105,8 +109,8 @@ static void prv_remove_old_layout(SwapLayer *swap_layer, LayoutLayer *layout) {
 //! current index (which is stored and kept track of by the client)
 static LayoutLayer *prv_fetch_next_layout(SwapLayer *swap_layer, int8_t rel_change) {
   if (swap_layer->callbacks.get_layout_handler) {
-    LayoutLayer *layout = swap_layer->callbacks.get_layout_handler(swap_layer, rel_change,
-                                                                   swap_layer->context);
+    LayoutLayer *layout =
+        swap_layer->callbacks.get_layout_handler(swap_layer, rel_change, swap_layer->context);
     // if there is no layout, we return NULL
     if (!layout) {
       return NULL;
@@ -114,10 +118,10 @@ static LayoutLayer *prv_fetch_next_layout(SwapLayer *swap_layer, int8_t rel_chan
 
     // Calculate the size of the layout we were given and set the frame.
     GSize size = layout_get_size(graphics_context_get_current_context(), layout);
-    prv_layout_set_frame(layout, &(GRect) {
-      .size.w = MAX(swap_layer->layer.frame.size.w, size.w),
-      .size.h = MAX(swap_layer->layer.frame.size.h, size.h),
-    });
+    prv_layout_set_frame(layout, &(GRect){
+                                     .size.w = MAX(swap_layer->layer.frame.size.w, size.w),
+                                     .size.h = MAX(swap_layer->layer.frame.size.h, size.h),
+                                 });
     return layout;
   }
   return NULL;
@@ -136,12 +140,11 @@ static void prv_announce_layout_did_appear(SwapLayer *swap_layer, LayoutLayer *l
   swap_layer->swap_in_progress = false;
   if (swap_layer->callbacks.layout_did_appear_handler) {
     swap_layer->callbacks.layout_did_appear_handler(swap_layer, layout, rel_change,
-                                                   swap_layer->context);
+                                                    swap_layer->context);
   }
 }
 
-static void prv_update_colors(SwapLayer *swap_layer, GColor bg_color,
-                              bool status_bar_filled) {
+static void prv_update_colors(SwapLayer *swap_layer, GColor bg_color, bool status_bar_filled) {
   if (swap_layer->callbacks.update_colors_handler) {
     swap_layer->callbacks.update_colors_handler(swap_layer, bg_color, status_bar_filled,
                                                 swap_layer->context);
@@ -186,7 +189,7 @@ static void prv_update_status_bar_color(SwapLayer *swap_layer) {
     const GRect *cur_frame = &swap_layer->current->layer.frame;
 #if PBL_RECT
     // PBL-23115 status_bar can be off, so detect within range, updated a frame later.
-    color_status_bar = WITHIN(cur_frame->origin.y, -(3 * LAYOUT_BANNER_HEIGHT_RECT/ 2) - 1,
+    color_status_bar = WITHIN(cur_frame->origin.y, -(3 * LAYOUT_BANNER_HEIGHT_RECT / 2) - 1,
                               LAYOUT_BANNER_HEIGHT_RECT / 2 - 1);
 #else
     color_status_bar = WITHIN(cur_frame->origin.y, -96, 66) || swap_layer->swap_in_progress;
@@ -237,7 +240,7 @@ static void prv_update_arrow(SwapLayer *swap_layer) {
   layer_set_hidden(&swap_layer->arrow_layer.layer, hide_it);
 }
 
-static void prv_arrow_layer_update_proc(Layer *layer, GContext* ctx) {
+static void prv_arrow_layer_update_proc(Layer *layer, GContext *ctx) {
   ArrowLayer *arrow_layer = (ArrowLayer *)layer;
 
   const GRect *layer_bounds = &layer->bounds;
@@ -277,7 +280,7 @@ static void prv_arrow_layer_update_proc(Layer *layer, GContext* ctx) {
 static int16_t prv_get_current_notification_offset(SwapLayer *swap_layer) {
   Layer *current = (Layer *)swap_layer->current;
   // produce positive representation of the offset of the layer from the top of the frame.
-  int16_t offset = - current->frame.origin.y;
+  int16_t offset = -current->frame.origin.y;
   return offset;
 }
 
@@ -301,11 +304,12 @@ static Animation *prv_create_anim_frame_scroll(Layer *layer, uint32_t duration, 
 
   GRect to_origin = layer->frame;
   to_origin.origin.y += dy;
-  Animation *result = (Animation *) property_animation_create_layer_frame(
-      layer, NULL, &to_origin);
-  animation_set_handlers(result, (AnimationHandlers) {
-    .stopped = prv_frame_scroll_complete,
-  }, layer);
+  Animation *result = (Animation *)property_animation_create_layer_frame(layer, NULL, &to_origin);
+  animation_set_handlers(result,
+                         (AnimationHandlers){
+                             .stopped = prv_frame_scroll_complete,
+                         },
+                         layer);
   animation_set_duration(result, duration);
 #if PBL_ROUND
   if (curve) {
@@ -328,7 +332,7 @@ static void prv_swap_up_start(Animation *animation, void *context) {
 }
 
 static void prv_swap_up_complete(Animation *animation, bool finished, void *context) {
-  SwapLayer *swap_layer = (SwapLayer *) context;
+  SwapLayer *swap_layer = (SwapLayer *)context;
   if (swap_layer->is_deiniting) {
     return;
   }
@@ -360,12 +364,11 @@ static Animation *prv_create_swap_up_animation(SwapLayer *swap_layer, bool full_
     dy = swap_layer->layer.frame.size.h - PEEK_PX;
   }
 
-  Animation *prev_down = prv_create_anim_frame_scroll((Layer *)swap_layer->previous, SWAP_MS, dy,
-                                                      NULL);
-  Animation *current_down = prv_create_anim_frame_scroll((Layer *)swap_layer->current, SWAP_MS, dy,
-                                                         NULL);
-  Animation *next_down = prv_create_anim_frame_scroll((Layer *)swap_layer->next, SWAP_MS, dy,
-                                                      NULL);
+  Animation *prev_down =
+      prv_create_anim_frame_scroll((Layer *)swap_layer->previous, SWAP_MS, dy, NULL);
+  Animation *current_down =
+      prv_create_anim_frame_scroll((Layer *)swap_layer->current, SWAP_MS, dy, NULL);
+  Animation *next_down = prv_create_anim_frame_scroll((Layer *)swap_layer->next, SWAP_MS, dy, NULL);
   return animation_spawn_create(prev_down, current_down, next_down, NULL);
 }
 
@@ -397,7 +400,7 @@ static void prv_swap_down_start(Animation *animation, void *context) {
 }
 
 static void prv_swap_down_complete(Animation *animation, bool finished, void *context) {
-  SwapLayer *swap_layer = (SwapLayer *) context;
+  SwapLayer *swap_layer = (SwapLayer *)context;
   if (swap_layer->is_deiniting) {
     return;
   }
@@ -418,7 +421,7 @@ static Animation *prv_create_swap_down_animation(SwapLayer *swap_layer) {
   const GRect *prev_frame = &swap_layer->previous->layer.frame;
 
   int16_t dy = -(prev_frame->origin.y + prev_frame->size.h);
-  ScrollAnimationCurve swap_down_scroll_curve = (ScrollAnimationCurve) {
+  ScrollAnimationCurve swap_down_scroll_curve = (ScrollAnimationCurve){
       .swap_curve_kind = ScrollAnimationCurveKind_Curve,
       .curve = AnimationCurveEaseOut
   };
@@ -428,8 +431,8 @@ static Animation *prv_create_swap_down_animation(SwapLayer *swap_layer) {
                                                        &swap_down_scroll_curve);
   // next might return NULL if there is no next. That's OK since animation_spawn CAN take two NULL's
   // and perform the creation correctly.
-  Animation *next_up = prv_create_anim_frame_scroll((Layer *)swap_layer->next, SWAP_MS, dy,
-                                                    &swap_down_scroll_curve);
+  Animation *next_up =
+      prv_create_anim_frame_scroll((Layer *)swap_layer->next, SWAP_MS, dy, &swap_down_scroll_curve);
   return animation_spawn_create(prev_up, current_up, next_up, NULL);
 }
 
@@ -452,7 +455,7 @@ static void prv_scroll(SwapLayer *swap_layer, int16_t dy, AnimationCurve curve) 
   if (dy == 0) {
     return;
   }
-  ScrollAnimationCurve moook_scroll_curve = (ScrollAnimationCurve) {
+  ScrollAnimationCurve moook_scroll_curve = (ScrollAnimationCurve){
       .swap_curve_kind = ScrollAnimationCurveKind_Interpolator,
       .interpolator = interpolate_moook
   };
@@ -516,10 +519,14 @@ static bool prv_attempt_swap(SwapLayer *swap_layer, ScrollDirection direction, b
     animation = prv_create_swap_up_animation(swap_layer, full_swap);
   }
 
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .started = (direction == ScrollDirectionDown) ? prv_swap_down_start    : prv_swap_up_start,
-    .stopped = (direction == ScrollDirectionDown) ? prv_swap_down_complete : prv_swap_up_complete,
-  }, swap_layer);
+  animation_set_handlers(
+      animation,
+      (AnimationHandlers){
+          .started = (direction == ScrollDirectionDown) ? prv_swap_down_start : prv_swap_up_start,
+          .stopped =
+              (direction == ScrollDirectionDown) ? prv_swap_down_complete : prv_swap_up_complete,
+      },
+      swap_layer);
   swap_layer->animation = animation;
   animation_schedule(animation);
 #if PBL_ROUND
@@ -577,8 +584,7 @@ T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection directio
 
   // check if we are going to go off screen, if so get a new layer and set it up, then animate.
   switch (direction) {
-    case ScrollDirectionUp:
-    {
+    case ScrollDirectionUp: {
       if (offset == 0) {
         // we are at the topmost part of the notification, swap up
         prv_handle_swap_attempt(swap_layer, direction, is_repeating);
@@ -592,8 +598,7 @@ T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection directio
       }
       break;
     }
-    case ScrollDirectionDown:
-    {
+    case ScrollDirectionDown: {
 #if PBL_RECT
       if (max_dy == offset) {
         // if we have already scrolled our maximum amount for this notification, we should swap
@@ -608,9 +613,7 @@ T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection directio
 #endif
 
       // pause at the top of a notification
-      if ((offset == 0) &&
-          (is_repeating) &&
-          (swap_layer->swap_delay_remaining > 0)) {
+      if ((offset == 0) && (is_repeating) && (swap_layer->swap_delay_remaining > 0)) {
         swap_layer->swap_delay_remaining--;
         return;
       }
@@ -701,8 +704,7 @@ static void prv_raw_click_handler(ClickRecognizerRef recognizer, void *context) 
 static void prv_swap_layer_click_config_provider(void *context) {
   // Use raw clicks to avoid single click delay which results from having multi-click enabled
   window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_click_handler, NULL, context);
-  window_single_repeating_click_subscribe(BUTTON_ID_UP, SCROLL_REPEAT_MS,
-                                          prv_single_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_UP, SCROLL_REPEAT_MS, prv_single_click_handler);
   window_multi_click_subscribe(BUTTON_ID_UP, 2, 2, 100, false, prv_up_multi_click_handler);
 
   // Use raw clicks to avoid single click delay which results from having multi-click enabled
@@ -713,9 +715,9 @@ static void prv_swap_layer_click_config_provider(void *context) {
 
   SwapLayer *swap_layer = context;
 #ifdef CONFIG_TOUCH
-  // Re-registering here (idempotent) makes the click-config-provider the re-show hook: after a higher
-  // modal that released touch is dismissed and this window regains input focus, the swap layer is
-  // re-subscribed as the sole Tier-1 touch handler.
+  // Re-registering here (idempotent) makes the click-config-provider the re-show hook: after a
+  // higher modal that released touch is dismissed and this window regains input focus, the swap
+  // layer is re-subscribed as the sole Tier-1 touch handler.
   swap_layer_touch_register(swap_layer);
 #endif
   if (swap_layer->callbacks.click_config_provider) {
@@ -727,7 +729,7 @@ static void prv_swap_layer_click_config_provider(void *context) {
 // MISC FUNCTIONS
 ///////////////////////
 
-static void prv_swap_layer_update_proc(Layer *layer, GContext* ctx) {
+static void prv_swap_layer_update_proc(Layer *layer, GContext *ctx) {
   SwapLayer *swap_layer = (SwapLayer *)layer;
   prv_update_arrow(swap_layer);
   prv_update_status_bar_color(swap_layer);
@@ -755,7 +757,7 @@ void swap_layer_reload_data(SwapLayer *swap_layer) {
   }
 
   GRect current_frame = current->layer.frame;
-  current_frame.origin = (GPoint) {0, 0};
+  current_frame.origin = (GPoint){0, 0};
   prv_layout_set_frame(current, &current_frame);
   layer_add_child(&swap_layer->layer, (Layer *)current);
   layer_insert_below_sibling((Layer *)current, &swap_layer->arrow_layer.layer);
@@ -786,11 +788,11 @@ bool swap_layer_attempt_layer_swap(SwapLayer *swap_layer, ScrollDirection direct
 //
 // A SwapLayer registers itself as a Tier-1 touch widget in swap_layer_init() / the
 // click-config-provider and deregisters in swap_layer_deinit() (and, while covered by a higher
-// modal, in swap_layer_touch_release()). The recognizers and gesture state are not owned per-widget:
-// the unified widget (tap, pan, swipe) set, owned by TouchNavState, drives whichever migrated widget
-// the finger lands on through a per-node apply vtable. A SwapLayer supplies that vtable
-// (s_swap_touch_nav_ops) at registration; the apply functions below stay the per-swap gesture
-// surface (and the unit-test entry points).
+// modal, in swap_layer_touch_release()). The recognizers and gesture state are not owned
+// per-widget: the unified widget (tap, pan, swipe) set, owned by TouchNavState, drives whichever
+// migrated widget the finger lands on through a per-node apply vtable. A SwapLayer supplies that
+// vtable (s_swap_touch_nav_ops) at registration; the apply functions below stay the per-swap
+// gesture surface (and the unit-test entry points).
 //
 // A pan drives the content offset live and 1:1 (base captured at pan Start, throttled by the core),
 // clamped to [0, max_scroll]. On liftoff a pull past the clamped edge by more than SWAP_OVERPULL_PX
@@ -858,7 +860,8 @@ void swap_layer_touch_scroll_by(SwapLayer *swap_layer, int16_t dy) {
     prv_layout_set_frame(swap_layer->next, &next_frame);
   }
 
-  // Refresh the auto-close timer: without this a long notification closes under the finger mid-read.
+  // Refresh the auto-close timer: without this a long notification closes under the finger
+  // mid-read.
   prv_announce_interaction(swap_layer);
 }
 
@@ -871,7 +874,8 @@ SwapTouchLiftoffAction swap_layer_touch_liftoff_action(int16_t base_offset, int1
   // Content-scroll convention: finger up (delta_y < 0) scrolls into the content (offset increases).
   const int16_t requested_offset = base_offset - delta_y;
   if (requested_offset < -SWAP_OVERPULL_PX) {
-    return SwapTouchLiftoff_SwapPrev;  // over-pull at the top (finger down) -> previous notification
+    return SwapTouchLiftoff_SwapPrev;  // over-pull at the top (finger down) -> previous
+                                       // notification
   }
   if (requested_offset > max_dy + SWAP_OVERPULL_PX) {
     return SwapTouchLiftoff_SwapNext;  // over-pull at the bottom (finger up) -> next notification
@@ -896,7 +900,8 @@ int16_t swap_layer_touch_settle_offset(int16_t base_offset, int16_t delta_y, int
 // notification does not creep on a tap.
 static void prv_swap_touch_apply_drag(SwapLayer *swap_layer, int16_t base_offset, int16_t delta_y) {
   if (!swap_layer->current || ABS(delta_y) < DRAG_THRESHOLD_PX) {
-    // No notification loaded yet (registration can happen before the layout loads), or sub-threshold.
+    // No notification loaded yet (registration can happen before the layout loads), or
+    // sub-threshold.
     return;
   }
   const int16_t requested_offset = base_offset - delta_y;
@@ -949,9 +954,9 @@ static void prv_swap_touch_emit(SwapLayer *swap_layer, ButtonId button) {
   if (ops->is_animating && ops->is_animating(ops->ctx)) {
     return;
   }
-  if (button == BUTTON_ID_BACK &&
-      !(ops->top_overrides_back && ops->top_overrides_back(ops->ctx))) {
-    // BACK on a window with no back handler pops the stack rather than feeding the click recognizer.
+  if (button == BUTTON_ID_BACK && !(ops->top_overrides_back && ops->top_overrides_back(ops->ctx))) {
+    // BACK on a window with no back handler pops the stack rather than feeding the click
+    // recognizer.
     if (ops->pop_top) {
       ops->pop_top(ops->ctx);
     }
@@ -965,8 +970,8 @@ static void prv_swap_touch_emit(SwapLayer *swap_layer, ButtonId button) {
 // Unified widget-set ops
 //
 // Thin void*->SwapLayer* wrappers over the apply functions above. The unified widget set (owned by
-// TouchNavState) drives the swap layer through these; direct assignment of the apply functions would
-// not compile because their first parameter is SwapLayer*, not void*. Swap's content axis is
+// TouchNavState) drives the swap layer through these; direct assignment of the apply functions
+// would not compile because their first parameter is SwapLayer*, not void*. Swap's content axis is
 // vertical, so the GPoint base/delta carried by the vtable use only the .y component.
 
 // The notification body may not be loaded yet (registration can happen before the layout loads) and
@@ -978,9 +983,9 @@ static bool prv_swap_ops_can_start(void *w) {
 
 static void prv_swap_ops_pan_started(void *w) {
   SwapLayer *swap_layer = w;
-  // Stop any running swap/scroll animation so the finger takes over, and refresh the auto-close timer
-  // so a long notification cannot close under the finger while it is being dragged. The base offset
-  // is latched by the core via get_base_offset next.
+  // Stop any running swap/scroll animation so the finger takes over, and refresh the auto-close
+  // timer so a long notification cannot close under the finger while it is being dragged. The base
+  // offset is latched by the core via get_base_offset next.
   prv_finish_animation(swap_layer);
   prv_announce_interaction(swap_layer);
 }
@@ -1003,8 +1008,9 @@ static void prv_swap_ops_pan_snap(void *w, GPoint base, GPoint final_delta, GPoi
 
 static void prv_swap_ops_pan_cancel(void *w) {
   // Settle to the clamped offset with no swap (the live drag already left it clamped). Per the pan
-  // engine this does not fire on pre-emption (the pan recognizer never emits Cancelled there), which
-  // preserves the pre-refactor behaviour; it is reached only on an explicit mid-gesture cancel.
+  // engine this does not fire on pre-emption (the pan recognizer never emits Cancelled there),
+  // which preserves the pre-refactor behaviour; it is reached only on an explicit mid-gesture
+  // cancel.
   SwapLayer *swap_layer = w;
   if (!swap_layer->current) {
     return;
@@ -1012,8 +1018,8 @@ static void prv_swap_ops_pan_cancel(void *w) {
   const int16_t cur = prv_get_current_notification_offset(swap_layer);
   const int16_t max_dy = prv_get_max_scroll_dy(swap_layer);
   // Same page alignment as the liftoff settle: a cancelled pan must not rest off-grid on round.
-  const int16_t target = swap_layer_touch_settle_offset(cur, 0, max_dy,
-                                                        PBL_IF_RECT_ELSE(0, LAYOUT_HEIGHT));
+  const int16_t target =
+      swap_layer_touch_settle_offset(cur, 0, max_dy, PBL_IF_RECT_ELSE(0, LAYOUT_HEIGHT));
   prv_scroll(swap_layer, cur - target, AnimationCurveEaseOut);
 }
 
@@ -1042,14 +1048,14 @@ static void prv_swap_ops_swipe(void *w, SwipeDirection dir) {
 }
 
 static const TouchNavWidgetOps s_swap_touch_nav_ops = {
-  .can_start = prv_swap_ops_can_start,
-  .pan_started = prv_swap_ops_pan_started,
-  .get_base_offset = prv_swap_ops_get_base_offset,
-  .pan_update = prv_swap_ops_pan_update,
-  .pan_snap = prv_swap_ops_pan_snap,
-  .pan_cancel = prv_swap_ops_pan_cancel,
-  .tap = prv_swap_ops_tap,
-  .swipe = prv_swap_ops_swipe,
+    .can_start = prv_swap_ops_can_start,
+    .pan_started = prv_swap_ops_pan_started,
+    .get_base_offset = prv_swap_ops_get_base_offset,
+    .pan_update = prv_swap_ops_pan_update,
+    .pan_snap = prv_swap_ops_pan_snap,
+    .pan_cancel = prv_swap_ops_pan_cancel,
+    .tap = prv_swap_ops_tap,
+    .swipe = prv_swap_ops_swipe,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -1123,11 +1129,11 @@ void swap_layer_set_callbacks(SwapLayer *swap_layer, void *callback_context,
   swap_layer_reload_data(swap_layer);
 }
 
-Layer* swap_layer_get_layer(const SwapLayer *swap_layer) {
+Layer *swap_layer_get_layer(const SwapLayer *swap_layer) {
   return &((SwapLayer *)swap_layer)->layer;
 }
 
-LayoutLayer* swap_layer_get_current_layout(const SwapLayer *swap_layer) {
+LayoutLayer *swap_layer_get_current_layout(const SwapLayer *swap_layer) {
   return swap_layer->current;
 }
 
@@ -1144,8 +1150,8 @@ void swap_layer_init(SwapLayer *swap_layer, const GRect *frame) {
 
   gbitmap_init_with_resource(&swap_layer->arrow_layer.arrow_bitmap, RESOURCE_ID_ARROW_DOWN);
 
-  const GRect arrow_frame = GRect(
-      0, frame->size.h - LAYOUT_ARROW_HEIGHT, frame->size.w, LAYOUT_ARROW_HEIGHT);
+  const GRect arrow_frame =
+      GRect(0, frame->size.h - LAYOUT_ARROW_HEIGHT, frame->size.w, LAYOUT_ARROW_HEIGHT);
   layer_init(&swap_layer->arrow_layer.layer, &arrow_frame);
   layer_set_update_proc(&swap_layer->arrow_layer.layer, prv_arrow_layer_update_proc);
   layer_add_child(layer, &swap_layer->arrow_layer.layer);
@@ -1169,7 +1175,7 @@ void swap_layer_deinit(SwapLayer *swap_layer) {
   layer_deinit(&swap_layer->layer);
 }
 
-SwapLayer* swap_layer_create(GRect frame) {
+SwapLayer *swap_layer_create(GRect frame) {
   // Note: Not yet exported for 3rd party apps so no padding is necessary
   SwapLayer *layer = applib_malloc(sizeof(SwapLayer));
   if (layer) {

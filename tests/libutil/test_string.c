@@ -96,30 +96,30 @@ void test_string__test_itoa_int(void) {
 }
 
 void test_string__test_byte_stream_to_hex_string(void) {
-  char result_buf[256]; // arbitrarily large
+  char result_buf[256];  // arbitrarily large
 
   const uint8_t byte_stream[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   const char *expected_result_fwd = "00010203040506070809";
   const char *expected_result_bkwd = "09080706050403020100";
 
   // check that fwd decoding byte streams work
-  byte_stream_to_hex_string(&result_buf[0], sizeof(result_buf),
-      byte_stream, sizeof(byte_stream), false);
+  byte_stream_to_hex_string(&result_buf[0], sizeof(result_buf), byte_stream, sizeof(byte_stream),
+                            false);
   int res = strcmp(&result_buf[0], expected_result_fwd);
   cl_assert(res == 0);
 
   // check that bkwd decoding bytes streams work
-  byte_stream_to_hex_string(&result_buf[0], sizeof(result_buf),
-      byte_stream, sizeof(byte_stream), true);
+  byte_stream_to_hex_string(&result_buf[0], sizeof(result_buf), byte_stream, sizeof(byte_stream),
+                            true);
   res = strcmp(&result_buf[0], expected_result_bkwd);
   cl_assert(res == 0);
 
   // check that we truncate correctly if result buffer is too small
   // in this case lets make it so there is not enough space for the '\0' byte
   size_t truncated_size = sizeof(byte_stream) * 2;
-  memset(result_buf, 0x00, sizeof(result_buf)); // reset buffer
-  byte_stream_to_hex_string(&result_buf[0], truncated_size, byte_stream,
-      sizeof(byte_stream), false);
+  memset(result_buf, 0x00, sizeof(result_buf));  // reset buffer
+  byte_stream_to_hex_string(&result_buf[0], truncated_size, byte_stream, sizeof(byte_stream),
+                            false);
   res = memcmp(&result_buf[0], expected_result_fwd, strlen(expected_result_fwd) - 2);
   cl_assert(res == 0 && result_buf[truncated_size - 1] == '\0');
 }

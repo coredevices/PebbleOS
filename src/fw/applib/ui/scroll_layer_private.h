@@ -76,9 +76,8 @@ void scroll_layer_touch_overscroll_spring_back(ScrollLayer *scroll_layer, int16_
 //! caller). \a stopped runs when the coast ends (finished or unscheduled) and MUST call
 //! scroll_layer_touch_fling_cleanup() so the shared animation's defaults are restored.
 //! @return false (and moves nothing) when the remaining distance is below the fling minimum.
-bool scroll_layer_touch_fling_start(ScrollLayer *scroll_layer, int16_t target_y,
-                                    int16_t velocity_y, AnimationStoppedHandler stopped,
-                                    void *stopped_context);
+bool scroll_layer_touch_fling_start(ScrollLayer *scroll_layer, int16_t target_y, int16_t velocity_y,
+                                    AnimationStoppedHandler stopped, void *stopped_context);
 
 //! @internal
 //! Restore the shared scroll animation's defaults after a fling (duration, curve, handlers).

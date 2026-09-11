@@ -8,7 +8,8 @@
 #include "pbl/util/attributes.h"
 
 void WEAK timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,
-                                 const AttributeList *attributes) {}
+                                 const AttributeList *attributes) {
+}
 
 bool WEAK timeline_add_missed_call_pin(TimelineItem *pin, uint32_t uid) {
   return true;
@@ -27,9 +28,10 @@ bool WEAK timeline_exists(Uuid *id) {
 }
 
 void WEAK timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t action_id,
-                                                 AttributeList *attributes) {}
+                                                 AttributeList *attributes) {
+}
 
-Animation * WEAK timeline_animate_back_from_card(void) {
+Animation *WEAK timeline_animate_back_from_card(void) {
   return NULL;
 }
 

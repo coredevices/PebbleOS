@@ -8,4 +8,3 @@
 void launcher_panic(uint32_t error_code);
 
 uint32_t launcher_panic_get_current_error(void);
-

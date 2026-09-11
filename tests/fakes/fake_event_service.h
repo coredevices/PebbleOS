@@ -16,7 +16,7 @@ void event_service_client_subscribe(EventServiceInfo *service_info) {
 }
 
 void event_service_client_unsubscribe(EventServiceInfo *service_info) {
-  s_event_handler[service_info->type] = (EventServiceInfo) {};
+  s_event_handler[service_info->type] = (EventServiceInfo){};
 }
 
 void fake_event_service_init(void) {
@@ -33,4 +33,3 @@ void fake_event_service_handle_last(void) {
 EventServiceInfo *fake_event_service_get_info(PebbleEventType type) {
   return &s_event_handler[type];
 }
-

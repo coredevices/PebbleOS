@@ -18,8 +18,9 @@ PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 #define MAX_LENGTH_ANCS_ACTION (1)
 #define MAX_LENGTH_CANNED_RESPONSES (512)
 
-static const uint16_t MAX_ATTRIBUTE_LENGTHS[] =
-    {MAX_LENGTH_TITLE, MAX_LENGTH_SUBTITLE, MAX_LENGTH_BODY};
+static const uint16_t MAX_ATTRIBUTE_LENGTHS[] = {
+    MAX_LENGTH_TITLE, MAX_LENGTH_SUBTITLE, MAX_LENGTH_BODY
+};
 
 typedef enum {
   AttributeTypeUnknown,
@@ -138,20 +139,20 @@ static bool prv_deserialize_attribute(char **buffer, char *const buf_end, const 
       if (attribute->length != sizeof(uint32_t)) {
         return false;
       }
-      notif_attr->uint32 = *(uint32_t*)*cursor;
+      notif_attr->uint32 = *(uint32_t *)*cursor;
       break;
     case AttributeTypeResourceId:
       if (attribute->length != sizeof(uint32_t)) {
         return false;
       }
-      notif_attr->uint32 = *(uint32_t*)*cursor;
+      notif_attr->uint32 = *(uint32_t *)*cursor;
       break;
     case AttributeTypeStringList: {
       notif_attr->string_list = (StringList *)*buffer;
-      notif_attr->string_list->serialized_byte_length = MIN((uint16_t)MAX_LENGTH_CANNED_RESPONSES,
-          attribute->length);
+      notif_attr->string_list->serialized_byte_length =
+          MIN((uint16_t)MAX_LENGTH_CANNED_RESPONSES, attribute->length);
       uint16_t data_length = notif_attr->string_list->serialized_byte_length +
-          (uint16_t)sizeof(char); // terminator after last string
+                             (uint16_t)sizeof(char);  // terminator after last string
       *buffer += sizeof(StringList) + data_length;
       PBL_ASSERTN(*buffer <= buf_end);
       memcpy(notif_attr->string_list->data, *cursor, data_length - 1);
@@ -175,7 +176,7 @@ static bool prv_deserialize_attribute(char **buffer, char *const buf_end, const 
 }
 
 static int32_t prv_get_buffer_size_for_serialized_attribute(const uint8_t **cursor,
-    const uint8_t *end) {
+                                                            const uint8_t *end) {
   SerializedAttributeHeader *attribute = (SerializedAttributeHeader *)*cursor;
   *cursor += sizeof(SerializedAttributeHeader);
   if ((*cursor + attribute->length) > end) {
@@ -185,8 +186,7 @@ static int32_t prv_get_buffer_size_for_serialized_attribute(const uint8_t **curs
   switch (prv_attribute_type(attribute->id)) {
     case AttributeTypeString:
       if (attribute->id <= AttributeIdBody) {
-      string_alloc_size +=
-          MIN(MAX_ATTRIBUTE_LENGTHS[attribute->id - 1], attribute->length) + 1;
+        string_alloc_size += MIN(MAX_ATTRIBUTE_LENGTHS[attribute->id - 1], attribute->length) + 1;
       } else if (attribute->id == AttributeIdSubtitleTemplateString) {
         string_alloc_size += MIN(ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN, attribute->length) + 1;
       } else {
@@ -194,8 +194,8 @@ static int32_t prv_get_buffer_size_for_serialized_attribute(const uint8_t **curs
       }
       break;
     case AttributeTypeStringList:
-      string_alloc_size += sizeof(StringList)
-          + MIN(MAX_LENGTH_CANNED_RESPONSES, attribute->length) + 1;
+      string_alloc_size +=
+          sizeof(StringList) + MIN(MAX_LENGTH_CANNED_RESPONSES, attribute->length) + 1;
       break;
     case AttributeTypeUint32List:
       string_alloc_size += attribute->length;
@@ -222,7 +222,8 @@ Attribute *prv_add_attribute(AttributeList *list, AttributeId id) {
 }
 
 int32_t attribute_get_buffer_size_for_serialized_attributes(uint8_t num_attributes,
-    const uint8_t **cursor, const uint8_t *end) {
+                                                            const uint8_t **cursor,
+                                                            const uint8_t *end) {
   int32_t size = 0;
   for (unsigned int i = 0; i < num_attributes; i++) {
     int32_t result = prv_get_buffer_size_for_serialized_attribute(cursor, end);
@@ -243,31 +244,30 @@ size_t attribute_list_get_serialized_size(const AttributeList *attr_list) {
   size += (attr_list->num_attributes * sizeof(SerializedAttributeHeader));
   for (int i = 0; i < attr_list->num_attributes; i++) {
     switch (prv_attribute_type(attr_list->attributes[i].id)) {
-        case AttributeTypeString:
-          size += strlen(attr_list->attributes[i].cstring);
-          break;
-        case AttributeTypeResourceId:
-        case AttributeTypeUint32:
-          size += sizeof(attr_list->attributes[i].uint32);
-          break;
-        case AttributeTypeUint8:
-          size += sizeof(attr_list->attributes[i].uint8);
-          break;
-        case AttributeTypeStringList:
-          size += attr_list->attributes[i].string_list->serialized_byte_length;
-          break;
-        case AttributeTypeUint32List:
-          size += Uint32ListSize(attr_list->attributes[i].uint32_list->num_values);
-          break;
-        default:
-          break;
+      case AttributeTypeString:
+        size += strlen(attr_list->attributes[i].cstring);
+        break;
+      case AttributeTypeResourceId:
+      case AttributeTypeUint32:
+        size += sizeof(attr_list->attributes[i].uint32);
+        break;
+      case AttributeTypeUint8:
+        size += sizeof(attr_list->attributes[i].uint8);
+        break;
+      case AttributeTypeStringList:
+        size += attr_list->attributes[i].string_list->serialized_byte_length;
+        break;
+      case AttributeTypeUint32List:
+        size += Uint32ListSize(attr_list->attributes[i].uint32_list->num_values);
+        break;
+      default:
+        break;
     }
   }
   return size;
 }
 
 size_t attribute_list_serialize(const AttributeList *attr_list, uint8_t *buffer, uint8_t *buf_end) {
-
   PBL_ASSERTN(attr_list != NULL);
   PBL_ASSERTN(buffer != NULL);
   PBL_ASSERTN(buf_end != NULL);
@@ -280,31 +280,31 @@ size_t attribute_list_serialize(const AttributeList *attr_list, uint8_t *buffer,
     PBL_ASSERTN(buffer <= buf_end);
     attribute->id = attr_list->attributes[i].id;
     switch (prv_attribute_type(attr_list->attributes[i].id)) {
-        case AttributeTypeString:
-          attribute->length = strlen(attr_list->attributes[i].cstring);
-          memcpy(buffer, attr_list->attributes[i].cstring, attribute->length);
-          break;
-        case AttributeTypeUint32:
-        case AttributeTypeResourceId:
-          attribute->length = sizeof(uint32_t);
-          memcpy(buffer, &attr_list->attributes[i].uint32, attribute->length);
-          break;
-        case AttributeTypeUint8:
-          attribute->length = sizeof(uint8_t);
-          memcpy(buffer, &attr_list->attributes[i].uint8, attribute->length);
-          break;
+      case AttributeTypeString:
+        attribute->length = strlen(attr_list->attributes[i].cstring);
+        memcpy(buffer, attr_list->attributes[i].cstring, attribute->length);
+        break;
+      case AttributeTypeUint32:
+      case AttributeTypeResourceId:
+        attribute->length = sizeof(uint32_t);
+        memcpy(buffer, &attr_list->attributes[i].uint32, attribute->length);
+        break;
+      case AttributeTypeUint8:
+        attribute->length = sizeof(uint8_t);
+        memcpy(buffer, &attr_list->attributes[i].uint8, attribute->length);
+        break;
 
-        case AttributeTypeStringList:
-          attribute->length = attr_list->attributes[i].string_list->serialized_byte_length;
-          memcpy(buffer, attr_list->attributes[i].string_list->data, attribute->length);
-          break;
-        case AttributeTypeUint32List:
-          attribute->length = Uint32ListSize(attr_list->attributes[i].uint32_list->num_values);
-          memcpy(buffer, attr_list->attributes[i].uint32_list, attribute->length);
-          break;
-        default:
-          attribute->length = 0;
-          break;
+      case AttributeTypeStringList:
+        attribute->length = attr_list->attributes[i].string_list->serialized_byte_length;
+        memcpy(buffer, attr_list->attributes[i].string_list->data, attribute->length);
+        break;
+      case AttributeTypeUint32List:
+        attribute->length = Uint32ListSize(attr_list->attributes[i].uint32_list->num_values);
+        memcpy(buffer, attr_list->attributes[i].uint32_list, attribute->length);
+        break;
+      default:
+        attribute->length = 0;
+        break;
     }
     buffer += attribute->length;
     PBL_ASSERTN(buffer <= buf_end);
@@ -312,9 +312,8 @@ size_t attribute_list_serialize(const AttributeList *attr_list, uint8_t *buffer,
   return buffer - buf_start;
 }
 
-bool attribute_deserialize_list(char **buffer, char *const buf_end,
-    const uint8_t **cursor, const uint8_t *payload_end, AttributeList attr_list) {
-
+bool attribute_deserialize_list(char **buffer, char *const buf_end, const uint8_t **cursor,
+                                const uint8_t *payload_end, AttributeList attr_list) {
   for (int i = 0; i < attr_list.num_attributes; i++) {
     if (!prv_deserialize_attribute(buffer, buf_end, cursor, payload_end,
                                    &attr_list.attributes[i])) {
@@ -328,9 +327,10 @@ bool attribute_deserialize_list(char **buffer, char *const buf_end,
 static size_t prv_get_attribute_length(const Attribute *attr) {
   switch (prv_attribute_type(attr->id)) {
     case AttributeTypeString:
-      return strlen(attr->cstring) + 1; // +1 for null char
+      return strlen(attr->cstring) + 1;  // +1 for null char
     case AttributeTypeStringList:
-      return sizeof(StringList) + attr->string_list->serialized_byte_length + 1; // +1 for null char
+      return sizeof(StringList) + attr->string_list->serialized_byte_length +
+             1;  // +1 for null char
     case AttributeTypeUint32List:
       return Uint32ListSize(attr->uint32_list->num_values);
     default:
@@ -399,8 +399,8 @@ bool attribute_list_copy(AttributeList *out, const AttributeList *in, uint8_t *b
   }
 
   for (int i = 0; i < in->num_attributes; i++) {
-    bool r = prv_deep_copy_attribute(&out->attributes[i], &in->attributes[i],
-                                     &write_ptr, buffer_end);
+    bool r =
+        prv_deep_copy_attribute(&out->attributes[i], &in->attributes[i], &write_ptr, buffer_end);
     if (!r) {
       return false;
     }
@@ -425,7 +425,7 @@ void attribute_list_add_cstring(AttributeList *list, AttributeId id, const char 
   if (prv_attribute_type(id) != AttributeTypeString) {
     PBL_LOG_WRN("Adding attribute with type cstring for non-cstring attribute");
   }
-  prv_add_attribute(list, id)->cstring = (char*) cstring;
+  prv_add_attribute(list, id)->cstring = (char *)cstring;
 }
 
 void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uint32) {
@@ -435,11 +435,11 @@ void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uin
   prv_add_attribute(list, id)->uint32 = uint32;
 }
 
-void attribute_list_add_resource_id(AttributeList *list, AttributeId id,
-                                    uint32_t resource_id) {
+void attribute_list_add_resource_id(AttributeList *list, AttributeId id, uint32_t resource_id) {
   if (prv_attribute_type(id) != AttributeTypeResourceId) {
-    PBL_LOG_WRN("Adding attribute with type ResourceId for non-ResourceId " \
-            "attribute");
+    PBL_LOG_WRN(
+        "Adding attribute with type ResourceId for non-ResourceId "
+        "attribute");
   }
   prv_add_attribute(list, id)->uint32 = resource_id;
 }
@@ -467,9 +467,9 @@ void attribute_list_add_attribute(AttributeList *list, const Attribute *new_attr
 }
 
 void attribute_list_init_list(uint8_t num_attributes, AttributeList *list_out) {
-  *list_out = (AttributeList) {
-    .num_attributes = num_attributes,
-    .attributes = kernel_zalloc_check(num_attributes * sizeof(Attribute))
+  *list_out = (AttributeList){
+      .num_attributes = num_attributes,
+      .attributes = kernel_zalloc_check(num_attributes * sizeof(Attribute))
   };
 }
 
@@ -479,7 +479,7 @@ void attribute_list_destroy_list(AttributeList *list) {
 }
 
 bool attribute_check_serialized_list(const uint8_t *cursor, const uint8_t *val_end,
-    uint8_t num_attributes, bool has_attribute[]) {
+                                     uint8_t num_attributes, bool has_attribute[]) {
   for (int i = 0; i < num_attributes; i++) {
     SerializedAttributeHeader *attrib_hdr = (SerializedAttributeHeader *)cursor;
     cursor += sizeof(SerializedAttributeHeader);
@@ -551,30 +551,26 @@ const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
   return attribute ? attribute->cstring : default_value;
 }
 
-StringList *attribute_get_string_list(
-    const AttributeList *attr_list, AttributeId id) {
+StringList *attribute_get_string_list(const AttributeList *attr_list, AttributeId id) {
   PBL_ASSERTN(attr_list != NULL);
 
   Attribute *attribute = attribute_find(attr_list, id);
   return attribute ? attribute->string_list : NULL;
 }
 
-uint8_t attribute_get_uint8(const AttributeList *attr_list,
-    AttributeId id, uint8_t default_value) {
-
+uint8_t attribute_get_uint8(const AttributeList *attr_list, AttributeId id, uint8_t default_value) {
   PBL_ASSERTN(attr_list != NULL);
 
-//  HB TODO: test the type of id!
+  //  HB TODO: test the type of id!
   Attribute *attribute = attribute_find(attr_list, id);
   return attribute ? attribute->uint8 : default_value;
 }
 
-uint32_t attribute_get_uint32(const AttributeList *attr_list,
-    AttributeId id, uint32_t default_value) {
-
+uint32_t attribute_get_uint32(const AttributeList *attr_list, AttributeId id,
+                              uint32_t default_value) {
   PBL_ASSERTN(attr_list != NULL);
 
-//  HB TODO: test the type of id!
+  //  HB TODO: test the type of id!
   Attribute *attribute = attribute_find(attr_list, id);
   return attribute ? attribute->uint32 : default_value;
 }

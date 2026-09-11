@@ -22,8 +22,7 @@ static void prv_hexlify(char *str, uint32_t value, uint8_t num_bytes) {
   }
 }
 
-void ihex_encode(uint8_t *out, uint8_t type, uint16_t address,
-                 const void *data, uint8_t data_len) {
+void ihex_encode(uint8_t *out, uint8_t type, uint16_t address, const void *data, uint8_t data_len) {
   IHEXRecord *record = (IHEXRecord *)out;
   uint8_t checksum = data_len + (address >> 8) + (address & 0xff) + type;
   record->start = ':';
@@ -33,7 +32,7 @@ void ihex_encode(uint8_t *out, uint8_t type, uint16_t address,
   for (uint16_t i = 0; i < data_len; ++i) {
     uint8_t data_byte = ((uint8_t *)data)[i];
     checksum += data_byte;
-    prv_hexlify(&record->data[i*2], data_byte, sizeof(data_byte));
+    prv_hexlify(&record->data[i * 2], data_byte, sizeof(data_byte));
   }
-  prv_hexlify(&record->data[data_len*2], ~checksum + 1, sizeof(checksum));
+  prv_hexlify(&record->data[data_len * 2], ~checksum + 1, sizeof(checksum));
 }

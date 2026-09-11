@@ -24,7 +24,7 @@ PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 //! @note Only one underlying backend is supported at a time. If a second backend tries to "connect"
 //! it is ignored.
 
-#define MUSIC_NORMAL_PLAYBACK_RATE_PERCENT ((int32_t) 100)
+#define MUSIC_NORMAL_PLAYBACK_RATE_PERCENT ((int32_t)100)
 
 //! Cache of the most recently received now playing data. Note that this is read and written from
 //! multiple threads, so access is protected by the mutex member.
@@ -133,10 +133,7 @@ static void prv_free_album_art_locked(void) {
 }
 
 static void prv_put_now_playing_changed_event(void) {
-  PebbleEvent e = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media.type = PebbleMediaEventTypeNowPlayingChanged
-  };
+  PebbleEvent e = {.type = PEBBLE_MEDIA_EVENT, .media.type = PebbleMediaEventTypeNowPlayingChanged};
   event_put(&e);
 }
 
@@ -156,7 +153,7 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
       PBL_LOG_INFO("Music server connected: %s", implementation->debug_name);
     } else {
       PBL_LOG_ERR("Server <0x%p> connected, but another <0x%p> is already registered",
-              implementation, s_music_ctx.implementation);
+                  implementation, s_music_ctx.implementation);
     }
 
   } else {
@@ -183,18 +180,18 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
     music_update_now_playing(NULL, 0, NULL, 0, NULL, 0);
     music_update_track_duration(0);
     const MusicPlayerStateUpdate state = {
-      .playback_state = MusicPlayStateUnknown,
-      .playback_rate_percent = 0,
-      .elapsed_time_ms = 0,
+        .playback_state = MusicPlayStateUnknown,
+        .playback_rate_percent = 0,
+        .elapsed_time_ms = 0,
     };
     music_update_player_playback_state(&state);
 
     PebbleEvent event = {
-      .type = PEBBLE_MEDIA_EVENT,
-      .media = {
-        .type = (change_type == Connected) ? PebbleMediaEventTypeServerConnected :
-                                             PebbleMediaEventTypeServerDisconnected,
-      },
+        .type = PEBBLE_MEDIA_EVENT,
+        .media = {
+            .type = (change_type == Connected) ? PebbleMediaEventTypeServerConnected
+                                               : PebbleMediaEventTypeServerDisconnected,
+        },
     };
     event_put(&event);
   }
@@ -204,7 +201,7 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
   return (change_type != None);
 }
 
-const char * music_get_connected_server_debug_name(void) {
+const char *music_get_connected_server_debug_name(void) {
   const char *debug_name = NULL;
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   if (s_music_ctx.implementation) {
@@ -214,9 +211,8 @@ const char * music_get_connected_server_debug_name(void) {
   return debug_name;
 }
 
-void music_update_now_playing(const char *title, size_t title_length,
-                              const char *artist, size_t artist_length,
-                              const char *album, size_t album_length) {
+void music_update_now_playing(const char *title, size_t title_length, const char *artist,
+                              size_t artist_length, const char *album, size_t album_length) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
 
   // A change to the title, artist or album means we're on a different track, so any album art we're
@@ -246,7 +242,7 @@ void music_update_now_playing(const char *title, size_t title_length,
 
 static void prv_update_string_and_put_event(const char *value, size_t value_length, off_t offset) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
-  char *buffer = ((char *) &s_music_ctx) + offset;
+  char *buffer = ((char *)&s_music_ctx) + offset;
   copy_and_truncate(buffer, value, value_length);
   pbl_mutex_unlock(&s_music_ctx.mutex);
   prv_put_now_playing_changed_event();
@@ -275,8 +271,8 @@ void music_update_track_album(const char *album, size_t album_length) {
 
 static void prv_put_pos_changed_event(void) {
   PebbleEvent e = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media.type = PebbleMediaEventTypeTrackPosChanged,
+      .type = PEBBLE_MEDIA_EVENT,
+      .media.type = PebbleMediaEventTypeTrackPosChanged,
   };
   event_put(&e);
 }
@@ -335,8 +331,7 @@ bool music_get_player_name(char *player_name_out) {
 bool music_has_now_playing(void) {
   bool has_now_playing = false;
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
-  if (s_music_ctx.title[0] != 0 ||
-      s_music_ctx.artist[0] != 0) {
+  if (s_music_ctx.title[0] != 0 || s_music_ctx.artist[0] != 0) {
     has_now_playing = true;
   }
   pbl_mutex_unlock(&s_music_ctx.mutex);
@@ -382,11 +377,11 @@ uint8_t music_get_volume_percent(void) {
 
 static void prv_put_state_changed_event(MusicPlayState playback_state) {
   PebbleEvent event = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media = {
-      .type = PebbleMediaEventTypePlaybackStateChanged,
-      .playback_state = playback_state,
-    },
+      .type = PEBBLE_MEDIA_EVENT,
+      .media = {
+          .type = PebbleMediaEventTypePlaybackStateChanged,
+          .playback_state = playback_state,
+      },
   };
   event_put(&event);
 }
@@ -410,11 +405,11 @@ void music_update_player_volume_percent(uint8_t volume_percent) {
   pbl_mutex_unlock(&s_music_ctx.mutex);
 
   PebbleEvent event = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media = {
-      .type = PebbleMediaEventTypeVolumeChanged,
-      .volume_percent = volume_percent,
-    },
+      .type = PEBBLE_MEDIA_EVENT,
+      .media = {
+          .type = PebbleMediaEventTypeVolumeChanged,
+          .volume_percent = volume_percent,
+      },
   };
   event_put(&event);
 }
@@ -430,12 +425,12 @@ MusicPlayState music_get_playback_state(void) {
   return result;
 }
 
-static void * prv_implementation_function_for_offset(off_t offset) {
+static void *prv_implementation_function_for_offset(off_t offset) {
   typedef void (*FuncPtr)(void);
   FuncPtr func_ptr = NULL;
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   if (s_music_ctx.implementation) {
-    func_ptr = *(FuncPtr *) (((const uint8_t *)s_music_ctx.implementation) + offset);
+    func_ptr = *(FuncPtr *)(((const uint8_t *)s_music_ctx.implementation) + offset);
   }
   pbl_mutex_unlock(&s_music_ctx.mutex);
   return func_ptr;
@@ -473,8 +468,7 @@ bool music_skip_seeks_within_track(void) {
 }
 
 bool music_is_command_supported(MusicCommand command) {
-  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation),
-                           is_command_supported);
+  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), is_command_supported);
   bool (*func_ptr)(MusicCommand) = prv_implementation_function_for_offset(o);
   if (!func_ptr) {
     return false;
@@ -491,8 +485,8 @@ static bool prv_call_implementation_bool_return_void_args(off_t offset) {
 }
 
 bool music_needs_user_to_start_playback_on_phone(void) {
-  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation),
-                           needs_user_to_start_playback_on_phone);
+  const off_t o =
+      offsetof(__typeof__(*s_music_ctx.implementation), needs_user_to_start_playback_on_phone);
   return prv_call_implementation_bool_return_void_args(o);
 }
 
@@ -531,8 +525,8 @@ uint8_t music_get_now_playing_generation(void) {
 
 static void prv_put_album_art_updated_event(void) {
   PebbleEvent e = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media.type = PebbleMediaEventTypeAlbumArtUpdated,
+      .type = PEBBLE_MEDIA_EVENT,
+      .media.type = PebbleMediaEventTypeAlbumArtUpdated,
   };
   event_put(&e);
 }
@@ -590,4 +584,3 @@ void command_print_now_playing(void) {
   char buffer[128];
   dbgserial_putstr_fmt(buffer, 128, "title=%s; artist=%s; album=%s", title, artist, album);
 }
-

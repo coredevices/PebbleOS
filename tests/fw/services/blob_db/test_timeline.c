@@ -22,7 +22,7 @@
 #include "fake_settings_file.h"
 
 static TimezoneInfo tz = {
-  .tm_gmtoff = -8 * 60 * 60, // PST
+    .tm_gmtoff = -8 * 60 * 60,  // PST
 };
 
 // Stubs
@@ -74,8 +74,8 @@ status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
   return S_SUCCESS;
 }
 
-void timeline_action_endpoint_invoke_action(const Uuid *id,
-    uint8_t action_id, AttributeList *attributes) {
+void timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t action_id,
+                                            AttributeList *attributes) {
 }
 
 const PebbleProcessMd *timeline_get_app_info(void) {
@@ -88,7 +88,7 @@ void launcher_task_add_callback(void *data) {
 void timeline_pin_window_push_modal(TimelineItem *item) {
 }
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
@@ -112,284 +112,326 @@ void notifications_handle_notification_removed(Uuid *notification_id) {
 
 // Data
 /////////////////////////
-static TimelineItem s_items[] = {
-  {
-    .header = { // [0]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb1},
-        .parent_id = {0},
-        .timestamp =  1421178061, // Tue Jan 13 11:41:01 2015 PST
-        .duration = 1,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [1]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb2},
-        .parent_id = {0},
-        .timestamp =  1421183642, // Tue Jan 13 13:14:02 2015 PST
-        .duration = 10,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [2]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb3},
-        .parent_id = {0},
-        .timestamp =  1421183642, // Tue Jan 13 13:14:02 2015 PST
-        .duration = 2,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [3]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4},
-        .parent_id = {0},
-        .timestamp =  1421183642, // Tue Jan 13 13:14:02 2015 PST
-        .duration = 30,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [4]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb5},
-        .parent_id = {0},
-        .timestamp =  1421178061, // Tue Jan 13 11:41:01 2015 PST
-        .duration = 5,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = { // [5]
-        .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-                 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb6},
-        .parent_id = {0},
-        .timestamp =  1421183462, // Tue Jan 13 13:11:02 PST 2015
-        .duration = 4,
-        .type = TimelineItemTypePin,
-        .flags = 0,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }
+static TimelineItem
+    s_items[] =
+        {
+            {
+                .header =
+                    {
+                        // [0]
+                        .id =
+                            {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55,
+                             0x65, 0x72, 0x22, 0xb1},
+                        .parent_id = {0},
+                        .timestamp = 1421178061,  // Tue Jan 13 11:41:01 2015 PST
+                        .duration = 1,
+                        .type = TimelineItemTypePin,
+                        .flags = 0,
+                        .layout = LayoutIdTest,
+                    },
+                .attr_list =
+                    {
+                        .num_attributes = 0,
+                        .attributes = NULL,
+                    },
+                .action_group =
+                    {
+                        .num_actions = 0,
+                        .actions = NULL,
+                    },
+                .allocated_buffer = NULL,
+            },
+            {
+                .header =
+                    {
+                        // [1]
+                        .id =
+                            {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55,
+                             0x65, 0x72, 0x22, 0xb2},
+                        .parent_id = {0},
+                        .timestamp = 1421183642,  // Tue Jan 13 13:14:02 2015 PST
+                        .duration = 10,
+                        .type = TimelineItemTypePin,
+                        .flags = 0,
+                        .layout = LayoutIdTest,
+                    },
+                .attr_list =
+                    {
+                        .num_attributes = 0,
+                        .attributes = NULL,
+                    },
+                .action_group =
+                    {
+                        .num_actions = 0,
+                        .actions = NULL,
+                    },
+                .allocated_buffer = NULL,
+            },
+            {
+                .header =
+                    {
+                        // [2]
+                        .id =
+                            {0x6b,
+                             0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb3},
+                        .parent_id = {0},
+                        .timestamp = 1421183642,  // Tue Jan 13 13:14:02 2015 PST
+                        .duration = 2,
+                        .type = TimelineItemTypePin,
+                        .flags = 0,
+                        .layout = LayoutIdTest,
+                    },
+                .attr_list =
+                    {
+                        .num_attributes = 0,
+                        .attributes = NULL,
+                    },
+                .action_group =
+                    {
+                        .num_actions = 0,
+                        .actions = NULL,
+                    },
+                .allocated_buffer = NULL,
+            },
+            {
+                .header =
+                    {
+                        // [3]
+                        .id =
+                            {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55,
+                             0x65, 0x72, 0x22, 0xb4},
+                        .parent_id = {0},
+                        .timestamp = 1421183642,  // Tue Jan 13 13:14:02 2015 PST
+                        .duration = 30,
+                        .type = TimelineItemTypePin,
+                        .flags = 0,
+                        .layout = LayoutIdTest,
+                    },
+                .attr_list =
+                    {
+                        .num_attributes = 0,
+                        .attributes = NULL,
+                    },
+                .action_group =
+                    {
+                        .num_actions = 0,
+                        .actions = NULL,
+                    },
+                .allocated_buffer = NULL,
+            },
+            {
+                .header =
+                    {
+                        // [4]
+                        .id =
+                            {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55,
+                             0x65, 0x72, 0x22, 0xb5},
+                        .parent_id = {0},
+                        .timestamp = 1421178061,  // Tue Jan 13 11:41:01 2015 PST
+                        .duration = 5,
+                        .type = TimelineItemTypePin,
+                        .flags = 0,
+                        .layout = LayoutIdTest,
+                    },
+                .attr_list =
+                    {
+                        .num_attributes = 0,
+                        .attributes = NULL,
+                    },
+                .action_group =
+                    {
+                        .num_actions = 0,
+                        .actions = NULL,
+                    },
+                .allocated_buffer = NULL,
+            },
+            {
+                .header =
+                    {
+                        // [5]
+                        .id =
+                            {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55,
+                             0x65, 0x72, 0x22, 0xb6},
+                        .parent_id = {0},
+                        .timestamp = 1421183462,  // Tue Jan 13 13:11:02 PST 2015
+                        .duration = 4,
+                        .type = TimelineItemTypePin,
+                        .flags = 0,
+                        .layout = LayoutIdTest,
+                    },
+                .attr_list =
+                    {
+                        .num_attributes = 0,
+                        .attributes = NULL,
+                    },
+                .action_group =
+                    {
+                        .num_actions = 0,
+                        .actions = NULL,
+                    },
+                .allocated_buffer = NULL,
+            }
 };
 
 // items with long duration
 static TimelineItem s_long_items[] = {
-  {
-    .header = {
-      .id = {0xaa},
-      .timestamp = 10000,
-      .duration = 30,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
-  },
-  {
-    .header = {
-      .id = {0xbb},
-      .timestamp = 12000,
-      .duration = 30,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
-  },
-  {
-    .header = {
-      .id = {0xcc},
-      .timestamp = 14000,
-      .duration = 30,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
-  },
-  {
-    .header = {
-      .id = {0xdd},
-      .timestamp = 16000,
-      .duration = 30,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
-  },
-  {
-    .header = {
-      .id = {0xee},
-      .timestamp = 18000,
-      .duration = 30,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
-  }
+    {.header =
+         {
+             .id = {0xaa},
+             .timestamp = 10000,
+             .duration = 30,
+             .type = TimelineItemTypePin,
+             .flags = 0,
+             .layout = LayoutIdTest,
+         }},
+    {.header =
+         {
+             .id = {0xbb},
+             .timestamp = 12000,
+             .duration = 30,
+             .type = TimelineItemTypePin,
+             .flags = 0,
+             .layout = LayoutIdTest,
+         }},
+    {.header =
+         {
+             .id = {0xcc},
+             .timestamp = 14000,
+             .duration = 30,
+             .type = TimelineItemTypePin,
+             .flags = 0,
+             .layout = LayoutIdTest,
+         }},
+    {.header =
+         {
+             .id = {0xdd},
+             .timestamp = 16000,
+             .duration = 30,
+             .type = TimelineItemTypePin,
+             .flags = 0,
+             .layout = LayoutIdTest,
+         }},
+    {.header = {
+         .id = {0xee},
+         .timestamp = 18000,
+         .duration = 30,
+         .type = TimelineItemTypePin,
+         .flags = 0,
+         .layout = LayoutIdTest,
+     }}
 };
 
 // all day item
 static TimelineItem s_all_day_items[] = {
-  {
-    .header = {
-        .id = {0x01},
-        .parent_id = {0},
-        .timestamp =  1421020800, // midnight jan 12, 2015 UTC
-        .duration = MINUTES_PER_DAY,
-        .type = TimelineItemTypePin,
-        .all_day = 1,
-        .layout = LayoutIdTest,
+    {
+        .header =
+            {
+                .id = {0x01},
+                .parent_id = {0},
+                .timestamp = 1421020800,  // midnight jan 12, 2015 UTC
+                .duration = MINUTES_PER_DAY,
+                .type = TimelineItemTypePin,
+                .all_day = 1,
+                .layout = LayoutIdTest,
+            },
+        .attr_list =
+            {
+                .num_attributes = 0,
+                .attributes = NULL,
+            },
+        .action_group =
+            {
+                .num_actions = 0,
+                .actions = NULL,
+            },
+        .allocated_buffer = NULL,
     },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
+    {
+        .header =
+            {
+                .id = {0x02},
+                .parent_id = {0},
+                .timestamp = 1421107200,  // Tue Jan 13 midnight 2015 UTC
+                .duration = MINUTES_PER_DAY,
+                .type = TimelineItemTypePin,
+                .all_day = 1,
+                .layout = LayoutIdTest,
+            },
+        .attr_list =
+            {
+                .num_attributes = 0,
+                .attributes = NULL,
+            },
+        .action_group =
+            {
+                .num_actions = 0,
+                .actions = NULL,
+            },
+        .allocated_buffer = NULL,
     },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = {
-        .id = {0x02},
-        .parent_id = {0},
-        .timestamp =  1421107200, // Tue Jan 13 midnight 2015 UTC
-        .duration = MINUTES_PER_DAY,
-        .type = TimelineItemTypePin,
-        .all_day = 1,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }, {
-    .header = {
-        .id = {0x03},
-        .parent_id = {0},
-        .timestamp =  1421107200, // Tue Jan 13 midnight 2015 UTC
-        .duration = MINUTES_PER_DAY,
-        .type = TimelineItemTypePin,
-        .all_day = 1,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
-  }
+    {
+        .header =
+            {
+                .id = {0x03},
+                .parent_id = {0},
+                .timestamp = 1421107200,  // Tue Jan 13 midnight 2015 UTC
+                .duration = MINUTES_PER_DAY,
+                .type = TimelineItemTypePin,
+                .all_day = 1,
+                .layout = LayoutIdTest,
+            },
+        .attr_list =
+            {
+                .num_attributes = 0,
+                .attributes = NULL,
+            },
+        .action_group =
+            {
+                .num_actions = 0,
+                .actions = NULL,
+            },
+        .allocated_buffer = NULL,
+    }
 };
 
-static const int s_feb_5_midnight = 1423123200; // 2015 PST
-static const int s_feb_5_midnight_utc = 1423094400; // 2015 UTC
+static const int s_feb_5_midnight = 1423123200;      // 2015 PST
+static const int s_feb_5_midnight_utc = 1423094400;  // 2015 UTC
 
 // extra case -- one all day event, one event from 8:00 to 10:00, and one from 8:15-8:16
 // should cover most edge cases since it deals with all day events and skipping events
 // that have past by endtime
 static TimelineItem s_extra_case_items[] = {
-  {
-    .header = {
-      .id = {0xbb},
-      .parent_id = {0},
-      .timestamp = s_feb_5_midnight_utc,
-      .duration = MINUTES_PER_DAY,
-      .type = TimelineItemTypePin,
-      .all_day = 1,
-      .layout = LayoutIdTest,
+    {
+        .header =
+            {
+                .id = {0xbb},
+                .parent_id = {0},
+                .timestamp = s_feb_5_midnight_utc,
+                .duration = MINUTES_PER_DAY,
+                .type = TimelineItemTypePin,
+                .all_day = 1,
+                .layout = LayoutIdTest,
+            },
     },
-  }, {
-    .header = {
-      .id = {0xcc},
-      .parent_id = {0},
-      .timestamp = s_feb_5_midnight + 8 * 60 * 60, // 8:00-10:00 am
-      .duration = 120,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
-  }, {
-    .header = {
-      .id = {0xdd},
-      .parent_id = {0},
-      .timestamp = s_feb_5_midnight + 8 * 60 * 60 + 15 * 60, // 8:15-8:16 am
-      .duration = 1,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
-  }
+    {.header =
+         {
+             .id = {0xcc},
+             .parent_id = {0},
+             .timestamp = s_feb_5_midnight + 8 * 60 * 60,  // 8:00-10:00 am
+             .duration = 120,
+             .type = TimelineItemTypePin,
+             .flags = 0,
+             .layout = LayoutIdTest,
+         }},
+    {.header = {
+         .id = {0xdd},
+         .parent_id = {0},
+         .timestamp = s_feb_5_midnight + 8 * 60 * 60 + 15 * 60,  // 8:15-8:16 am
+         .duration = 1,
+         .type = TimelineItemTypePin,
+         .flags = 0,
+         .layout = LayoutIdTest,
+     }}
 };
 
 // Setup
@@ -421,8 +463,8 @@ void test_timeline__all_forwards(void) {
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
   // check first
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-   1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_items[0].header.id));
   // check second
   cl_assert(iter_next(&iterator));
@@ -460,8 +502,8 @@ void test_timeline__forward_and_back(void) {
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
   // check first
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-   1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_items[0].header.id));
   // check second
   cl_assert(iter_next(&iterator));
@@ -480,8 +522,8 @@ void test_timeline__none_forwards(void) {
   TimelineIterState state = {0};
   TimelineNode *head = NULL;
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    1421188000), 2);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421188000), 2);
 }
 
 void test_timeline__all_backwards(void) {
@@ -491,8 +533,8 @@ void test_timeline__all_backwards(void) {
   // Note: 1421188000 == Tue Jan 13 14:26:40 PST 2015
   // check first
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    1421188000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421188000), 0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_items[3].header.id));
   // check second
   cl_assert(iter_next(&iterator));
@@ -520,8 +562,8 @@ void test_timeline__none_backwards(void) {
   TimelineIterState state = {0};
   TimelineNode *head = NULL;
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    1421178000), 2);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421178000), 2);
 }
 
 void test_timeline__middle_forwards(void) {
@@ -530,8 +572,8 @@ void test_timeline__middle_forwards(void) {
   TimelineNode *head = NULL;
   // check first
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    1421183640), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421183640), 0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_items[5].header.id));
   cl_assert(iter_next(&iterator));
   // check second
@@ -556,8 +598,8 @@ void test_timeline__middle_backwards(void) {
   TimelineNode *head = NULL;
   // check first
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    1421183640), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421183640), 0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_items[4].header.id));
   // check second
   cl_assert(iter_next(&iterator));
@@ -581,9 +623,9 @@ void test_timeline__long_middle_past(void) {
   TimelineNode *head = NULL;
   // initialize it to be 11 min after item cc has started
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    14700), 0);
- 
+  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 14700),
+                    0);
+
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[1].header.id));
 
   cl_assert(iter_next(&iterator));
@@ -603,13 +645,13 @@ void test_timeline__long_middle_future(void) {
   TimelineNode *head = NULL;
   // initialize it to be 11 min after item cc has started
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    14700), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 14700), 0);
 
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[2].header.id));
 
   cl_assert(iter_next(&iterator));
-  
+
   cl_assert(uuid_equal(&state.pin.header.id, &s_long_items[3].header.id));
 
   cl_assert(iter_next(&iterator));
@@ -643,8 +685,8 @@ void test_timeline__gc_past(void) {
   fake_pbl_malloc_clear_tracking();
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
   cl_assert_equal_i(prv_num_items(iterator), 6);
 
   // Thursday Jan 16 00:00:00 PST 2015
@@ -652,9 +694,9 @@ void test_timeline__gc_past(void) {
   rtc_set_time(1421395200);
   head = NULL;
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-                                       1421395200),
-                    S_NO_MORE_ITEMS);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421395200),
+      S_NO_MORE_ITEMS);
 
   fake_pbl_malloc_clear_tracking();
   // Thursday Jan 16 14:00:00 PST 2015
@@ -662,10 +704,9 @@ void test_timeline__gc_past(void) {
   rtc_set_time(1421445600);
   head = NULL;
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-                                       1421445600),
-                    S_NO_MORE_ITEMS);
-
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421445600),
+      S_NO_MORE_ITEMS);
 
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
@@ -685,11 +726,11 @@ void test_timeline__all_day_future(void) {
 
   // start 11:40 AM, earlier than all timed events for that day
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
   Uuid first_all_day_event = state.pin.header.id;
   cl_assert(uuid_equal(&state.pin.header.id, &s_all_day_items[1].header.id) ||
-    uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
+            uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
   cl_assert(state.node->all_day);
   // check that the item we see is timestamped at local midnight rather than utc midnight
   // 1421136000 is midnight Jan 13, PST
@@ -698,7 +739,7 @@ void test_timeline__all_day_future(void) {
   // second all day event
   cl_assert(iter_next(&iterator));
   cl_assert(uuid_equal(&state.pin.header.id, &s_all_day_items[1].header.id) ||
-    uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
+            uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
   cl_assert(!uuid_equal(&first_all_day_event, &state.pin.header.id));
   cl_assert(state.node->all_day);
   cl_assert_equal_i(state.pin.header.timestamp, 1421136000);
@@ -721,11 +762,11 @@ void test_timeline__all_day_future_with_others(void) {
 
   // start 11:40 AM, earlier than all timed events for that day
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
   Uuid first_all_day_event = state.pin.header.id;
   cl_assert(uuid_equal(&state.pin.header.id, &s_all_day_items[1].header.id) ||
-    uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
+            uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
   cl_assert(state.node->all_day);
   // check that the item we see is timestamped at local midnight rather than utc midnight
   // 1421136000 is midnight Jan 13, PST
@@ -734,7 +775,7 @@ void test_timeline__all_day_future_with_others(void) {
   // second all day event
   cl_assert(iter_next(&iterator));
   cl_assert(uuid_equal(&state.pin.header.id, &s_all_day_items[1].header.id) ||
-    uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
+            uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
   cl_assert(!uuid_equal(&first_all_day_event, &state.pin.header.id));
   cl_assert(state.node->all_day);
 
@@ -775,23 +816,23 @@ void test_timeline__all_day_past(void) {
   TimelineIterState state = {0};
   TimelineNode *head = NULL;
   TimelineItem earlier_item = {
-    .header = {
-      .id = {0x04},
-      .parent_id = {0},
-      .timestamp = 1421049600 + 9 * 60 * 60, // 9am on Jan 12, 2015
-      .duration = 20,
-      .type = TimelineItemTypePin,
-      .flags = 0,
-      .layout = LayoutIdTest,
-    }
+      .header = {
+          .id = {0x04},
+          .parent_id = {0},
+          .timestamp = 1421049600 + 9 * 60 * 60,  // 9am on Jan 12, 2015
+          .duration = 20,
+          .type = TimelineItemTypePin,
+          .flags = 0,
+          .layout = LayoutIdTest,
+      }
   };
 
   cl_assert_equal_i(pin_db_insert_item(&earlier_item), 0);
 
   // start 11:40 AM, earlier than all timed events for that day
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421178000), 0);
   cl_assert(uuid_equal(&state.pin.header.id, &earlier_item.header.id));
   cl_assert(!state.node->all_day);
 
@@ -814,8 +855,8 @@ void test_timeline__all_day_middle_past(void) {
   TimelineNode *head = NULL;
 
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    1421183640), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421183640), 0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_items[4].header.id));
   cl_assert(iter_next(&iterator));
   cl_assert(uuid_equal(&state.pin.header.id, &s_items[0].header.id));
@@ -823,12 +864,12 @@ void test_timeline__all_day_middle_past(void) {
   cl_assert(iter_next(&iterator));
   Uuid first_all_day_event = state.pin.header.id;
   cl_assert(uuid_equal(&state.pin.header.id, &s_all_day_items[1].header.id) ||
-    uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
+            uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
   cl_assert(state.node->all_day);
 
   cl_assert(iter_next(&iterator));
   cl_assert(uuid_equal(&state.pin.header.id, &s_all_day_items[1].header.id) ||
-    uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
+            uuid_equal(&state.pin.header.id, &s_all_day_items[2].header.id));
   cl_assert(!uuid_equal(&first_all_day_event, &state.pin.header.id));
   cl_assert(state.node->all_day);
 
@@ -856,7 +897,8 @@ void test_timeline__extra_case_forwards(void) {
 
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    s_feb_5_midnight + 5 * 60 * 60), 0);
+                                       s_feb_5_midnight + 5 * 60 * 60),
+                    0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[0].header.id));
 
   // check next
@@ -879,7 +921,8 @@ void test_timeline__extra_case_none_backwards(void) {
 
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    s_feb_5_midnight + 5 * 60 * 60), 2);
+                                       s_feb_5_midnight + 5 * 60 * 60),
+                    2);
 }
 
 // 8:16 am. 8:15 event is in future but not 8:00 event
@@ -891,8 +934,10 @@ void test_timeline__extra_case_middle_future(void) {
   TimelineNode *head = NULL;
 
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    s_feb_5_midnight + 8 * SECONDS_PER_HOUR + 16 * SECONDS_PER_MINUTE), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
+                         s_feb_5_midnight + 8 * SECONDS_PER_HOUR + 16 * SECONDS_PER_MINUTE),
+      0);
 
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[1].header.id));
 
@@ -913,7 +958,8 @@ void test_timeline__extra_case_middle_past(void) {
 
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    s_feb_5_midnight + 8 * 60 * 60 + 16 * 60), 0);
+                                       s_feb_5_midnight + 8 * 60 * 60 + 16 * 60),
+                    0);
 
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[0].header.id));
 
@@ -930,7 +976,8 @@ void test_timeline__extra_case_backwards(void) {
 
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
-    s_feb_5_midnight + 11 * 60 * 60), 0);
+                                       s_feb_5_midnight + 11 * 60 * 60),
+                    0);
   cl_assert(uuid_equal(&state.pin.header.id, &s_extra_case_items[2].header.id));
 
   cl_assert(iter_next(&iterator));
@@ -952,7 +999,8 @@ void test_timeline__extra_case_none_forwards(void) {
 
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-    s_feb_5_midnight + 11 * 60 * 60), 2);
+                                       s_feb_5_midnight + 11 * 60 * 60),
+                    2);
 }
 
 void test_timeline__two_iterators(void) {
@@ -965,18 +1013,16 @@ void test_timeline__two_iterators(void) {
 
   // first iterator should alloc all the memory for all items
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator1, &state1, &head, TimelineIterDirectionFuture,
-    1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator1, &state1, &head, TimelineIterDirectionFuture, 1421178000), 0);
   // should have one alloc for each node in list, + 1 for the current timelineitem
-  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(),
-                    init_net_allocs + ARRAY_LENGTH(s_items) + 1);
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), init_net_allocs + ARRAY_LENGTH(s_items) + 1);
 
   // second iterator should not alloc any more memory
-  cl_assert_equal_i(timeline_iter_init(&iterator2, &state2, &head, TimelineIterDirectionFuture,
-    1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator2, &state2, &head, TimelineIterDirectionFuture, 1421178000), 0);
   // should have one alloc for each node in list, + 1 for the current timelineitem
-  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(),
-                    init_net_allocs + ARRAY_LENGTH(s_items) + 2);
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), init_net_allocs + ARRAY_LENGTH(s_items) + 2);
 
   // deinit should free all the memory
   timeline_iter_deinit(&iterator1, &state1, &head);
@@ -990,7 +1036,8 @@ void test_timeline__delete_on_iterator(void) {
   TimelineNode *head = NULL;
 
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
   // s_items[0] is the earliest pin, followed by s_items[4]
   cl_assert_equal_i(pin_db_delete((uint8_t *)&s_items[0].header.id, sizeof(Uuid)), 0);
 
@@ -1008,7 +1055,8 @@ void test_timeline__skip_deleted_item(void) {
   TimelineNode *head = NULL;
 
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
 
   cl_assert_equal_i(pin_db_delete((uint8_t *)&s_items[4].header.id, sizeof(Uuid)), 0);
 
@@ -1028,7 +1076,8 @@ void test_timeline__delete_last_items(void) {
   TimelineNode *head = NULL;
 
   timeline_init(&head);
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421178000), 0);
 
   // delete item 2, iterate to the end, check that everything still works
   cl_assert_equal_i(pin_db_delete((uint8_t *)&s_items[2].header.id, sizeof(Uuid)), 0);
@@ -1063,24 +1112,29 @@ void test_timeline__delete_last_items(void) {
 
 void test_timeline__multiday(void) {
   TimelineItem multiday_item = {
-    .header = {
-        .id = {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf,
-          0x6f, 0x3, 0x64, 0xd0, 0x5b, 0x9b, 0xc2},
-        .parent_id = {0},
-        .timestamp =  1425312000, // 8:00 AM March 2 2015 PST
-        .duration = (16 + (2 * 24) + 13) * MINUTES_PER_HOUR, // lasts until March 5 1pm (4 days total)
-        .type = TimelineItemTypePin,
-        .layout = LayoutIdTest,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
+      .header =
+          {
+              .id =
+                  {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x3, 0x64, 0xd0, 0x5b,
+                   0x9b, 0xc2},
+              .parent_id = {0},
+              .timestamp = 1425312000,  // 8:00 AM March 2 2015 PST
+              .duration = (16 + (2 * 24) + 13) *
+                          MINUTES_PER_HOUR,  // lasts until March 5 1pm (4 days total)
+              .type = TimelineItemTypePin,
+              .layout = LayoutIdTest,
+          },
+      .attr_list =
+          {
+              .num_attributes = 0,
+              .attributes = NULL,
+          },
+      .action_group =
+          {
+              .num_actions = 0,
+              .actions = NULL,
+          },
+      .allocated_buffer = NULL,
   };
 
   cl_assert(timeline_add(&multiday_item));
@@ -1091,8 +1145,9 @@ void test_timeline__multiday(void) {
 
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   // 1425272400 is 21:00 March 1 2015 PST
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400),
-    S_SUCCESS);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400),
+      S_SUCCESS);
   time_t midnight_march_2_pst = 1425283200;
 
   // day 1
@@ -1126,15 +1181,16 @@ void test_timeline__multiday(void) {
 void test_timeline__all_day_single_day(void) {
   const time_t midnight_march_3_utc = 1425340800;
   TimelineItem all_day_item = {
-    .header = {
-      .id = { 0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31,
-              0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b, 0x9b, 0xc2 },
-      .timestamp = midnight_march_3_utc,
-      .duration = MINUTES_PER_DAY,
-      .type = TimelineItemTypePin,
-      .layout = LayoutIdTest,
-      .all_day = 1,
-    },
+      .header = {
+          .id =
+              {0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b,
+               0x9b, 0xc2},
+          .timestamp = midnight_march_3_utc,
+          .duration = MINUTES_PER_DAY,
+          .type = TimelineItemTypePin,
+          .layout = LayoutIdTest,
+          .all_day = 1,
+      },
   };
 
   cl_assert(timeline_add(&all_day_item));
@@ -1146,7 +1202,8 @@ void test_timeline__all_day_single_day(void) {
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-                                       time_21_00_march_1_pst), S_SUCCESS);
+                                       time_21_00_march_1_pst),
+                    S_SUCCESS);
   const time_t midnight_march_3_pst = 1425369600;
 
   // day 1
@@ -1168,15 +1225,16 @@ void test_timeline__all_day_single_day(void) {
 void test_timeline__24h_non_all_day_starting_mid_day(void) {
   const time_t midnight_march_3_utc = 1425340800;
   TimelineItem all_day_item = {
-    .header = {
-      .id = { 0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31,
-              0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b, 0x9b, 0xc2 },
-      .timestamp = midnight_march_3_utc,
-      .duration = MINUTES_PER_DAY,
-      .type = TimelineItemTypePin,
-      .layout = LayoutIdTest,
-      .all_day = 0, // this is a non-all-day event spanning 24h
-    },
+      .header = {
+          .id =
+              {0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b,
+               0x9b, 0xc2},
+          .timestamp = midnight_march_3_utc,
+          .duration = MINUTES_PER_DAY,
+          .type = TimelineItemTypePin,
+          .layout = LayoutIdTest,
+          .all_day = 0,  // this is a non-all-day event spanning 24h
+      },
   };
 
   cl_assert(timeline_add(&all_day_item));
@@ -1188,7 +1246,8 @@ void test_timeline__24h_non_all_day_starting_mid_day(void) {
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-                                       time_21_00_march_1_pst), S_SUCCESS);
+                                       time_21_00_march_1_pst),
+                    S_SUCCESS);
   const time_t midnight_march_2_pst = 1425283200;
 
   // day 1
@@ -1220,15 +1279,16 @@ void test_timeline__24h_non_all_day_starting_mid_day(void) {
 void test_timeline__24h_non_all_day_starting_midnight(void) {
   const time_t midnight_march_2_pst = 1425283200;
   TimelineItem all_day_item = {
-    .header = {
-      .id = { 0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31,
-              0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b, 0x9b, 0xc2 },
-      .timestamp = midnight_march_2_pst,
-      .duration = MINUTES_PER_DAY,
-      .type = TimelineItemTypePin,
-      .layout = LayoutIdTest,
-      .all_day = 0, // this is a non-all-day event spanning 24h
-    },
+      .header = {
+          .id =
+              {0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b,
+               0x9b, 0xc2},
+          .timestamp = midnight_march_2_pst,
+          .duration = MINUTES_PER_DAY,
+          .type = TimelineItemTypePin,
+          .layout = LayoutIdTest,
+          .all_day = 0,  // this is a non-all-day event spanning 24h
+      },
   };
 
   cl_assert(timeline_add(&all_day_item));
@@ -1240,7 +1300,8 @@ void test_timeline__24h_non_all_day_starting_midnight(void) {
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-                                       time_21_00_march_1_pst), S_SUCCESS);
+                                       time_21_00_march_1_pst),
+                    S_SUCCESS);
 
   // day 1
   cl_assert(uuid_equal(&state.pin.header.id, &all_day_item.header.id));
@@ -1260,25 +1321,29 @@ void test_timeline__24h_non_all_day_starting_midnight(void) {
 
 void test_timeline__all_day_multiday(void) {
   TimelineItem multiday_item = {
-    .header = {
-        .id = {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf,
-          0x6f, 0x3, 0x64, 0xd0, 0x5b, 0x9b, 0xc2},
-        .parent_id = {0},
-        .timestamp =  1425254400, // midnight March 2 2015 UTC
-        .duration = 4 * MINUTES_PER_DAY,
-        .type = TimelineItemTypePin,
-        .layout = LayoutIdTest,
-        .all_day = 1,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
+      .header =
+          {
+              .id =
+                  {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x3, 0x64, 0xd0, 0x5b,
+                   0x9b, 0xc2},
+              .parent_id = {0},
+              .timestamp = 1425254400,  // midnight March 2 2015 UTC
+              .duration = 4 * MINUTES_PER_DAY,
+              .type = TimelineItemTypePin,
+              .layout = LayoutIdTest,
+              .all_day = 1,
+          },
+      .attr_list =
+          {
+              .num_attributes = 0,
+              .attributes = NULL,
+          },
+      .action_group =
+          {
+              .num_actions = 0,
+              .actions = NULL,
+          },
+      .allocated_buffer = NULL,
   };
 
   cl_assert(timeline_add(&multiday_item));
@@ -1289,8 +1354,9 @@ void test_timeline__all_day_multiday(void) {
 
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   // 1425272400 is 21:00 March 1 2015 PST
-  cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400),
-    S_SUCCESS);
+  cl_assert_equal_i(
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400),
+      S_SUCCESS);
   time_t midnight_march_2_pst = 1425283200;
 
   // day 1
@@ -1323,25 +1389,29 @@ void test_timeline__all_day_multiday(void) {
 
 void test_timeline__all_day_ios_bug(void) {
   TimelineItem item = {
-    .header = {
-        .id = {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf,
-          0x6f, 0x3, 0x64, 0xd0, 0x5b, 0x9b, 0xc2},
-        .parent_id = {0},
-        .timestamp =  1430236800, // 9am Apr 28, 2015 PDT
-        .duration = MINUTES_PER_DAY,
-        .type = TimelineItemTypePin,
-        .layout = LayoutIdTest,
-        .all_day = 1,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
+      .header =
+          {
+              .id =
+                  {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x3, 0x64, 0xd0, 0x5b,
+                   0x9b, 0xc2},
+              .parent_id = {0},
+              .timestamp = 1430236800,  // 9am Apr 28, 2015 PDT
+              .duration = MINUTES_PER_DAY,
+              .type = TimelineItemTypePin,
+              .layout = LayoutIdTest,
+              .all_day = 1,
+          },
+      .attr_list =
+          {
+              .num_attributes = 0,
+              .attributes = NULL,
+          },
+      .action_group =
+          {
+              .num_actions = 0,
+              .actions = NULL,
+          },
+      .allocated_buffer = NULL,
   };
 
   cl_assert_equal_i(pin_db_flush(), 0);
@@ -1353,7 +1423,8 @@ void test_timeline__all_day_ios_bug(void) {
 
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-      1430236800 - 60 * 60), S_SUCCESS);
+                                       1430236800 - 60 * 60),
+                    S_SUCCESS);
   const time_t midnight_apr_28_pst = 1430208000;
 
   cl_assert_equal_i(state.node->timestamp, midnight_apr_28_pst);
@@ -1361,29 +1432,33 @@ void test_timeline__all_day_ios_bug(void) {
 
 void test_timeline__all_day_ios_bug_2(void) {
   TimelineItem item = {
-    .header = {
-        .id = {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf,
-          0x6f, 0x3, 0x64, 0xd0, 0x5b, 0x9b, 0xc2},
-        .parent_id = {0},
-        .timestamp =  1430200800, // 9am Apr 28, 2015 MSK
-        .duration = MINUTES_PER_DAY,
-        .type = TimelineItemTypePin,
-        .layout = LayoutIdTest,
-        .all_day = 1,
-    },
-    .attr_list = {
-        .num_attributes = 0,
-        .attributes = NULL,
-    },
-    .action_group = {
-        .num_actions = 0,
-        .actions = NULL,
-    },
-    .allocated_buffer = NULL,
+      .header =
+          {
+              .id =
+                  {0x29, 0xac, 0xd8, 0xb5, 0x9, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x3, 0x64, 0xd0, 0x5b,
+                   0x9b, 0xc2},
+              .parent_id = {0},
+              .timestamp = 1430200800,  // 9am Apr 28, 2015 MSK
+              .duration = MINUTES_PER_DAY,
+              .type = TimelineItemTypePin,
+              .layout = LayoutIdTest,
+              .all_day = 1,
+          },
+      .attr_list =
+          {
+              .num_attributes = 0,
+              .attributes = NULL,
+          },
+      .action_group =
+          {
+              .num_actions = 0,
+              .actions = NULL,
+          },
+      .allocated_buffer = NULL,
   };
 
   TimezoneInfo moscow_tz = {
-    .tm_gmtoff = 3 * 60 * 60, // MSK
+      .tm_gmtoff = 3 * 60 * 60,  // MSK
   };
 
   time_util_update_timezone(&moscow_tz);
@@ -1396,7 +1471,8 @@ void test_timeline__all_day_ios_bug_2(void) {
 
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-      1430200800 - 60 * 60), S_SUCCESS);
+                                       1430200800 - 60 * 60),
+                    S_SUCCESS);
   const time_t midnight_apr_28_msk = 1430168400;
 
   cl_assert_equal_i(state.node->timestamp, midnight_apr_28_msk);
@@ -1405,15 +1481,16 @@ void test_timeline__all_day_ios_bug_2(void) {
 void test_timeline__0_duration_all_day(void) {
   const time_t midnight_march_3_utc = 1425340800;
   TimelineItem all_day_item = {
-    .header = {
-      .id = { 0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31,
-              0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b, 0x9b, 0xc2 },
-      .timestamp = midnight_march_3_utc,
-      .duration = 0,
-      .type = TimelineItemTypePin,
-      .layout = LayoutIdTest,
-      .all_day = 1,
-    },
+      .header = {
+          .id =
+              {0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b,
+               0x9b, 0xc2},
+          .timestamp = midnight_march_3_utc,
+          .duration = 0,
+          .type = TimelineItemTypePin,
+          .layout = LayoutIdTest,
+          .all_day = 1,
+      },
   };
 
   cl_assert(timeline_add(&all_day_item));
@@ -1425,7 +1502,8 @@ void test_timeline__0_duration_all_day(void) {
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-                                       time_21_00_march_1_pst), S_SUCCESS);
+                                       time_21_00_march_1_pst),
+                    S_SUCCESS);
   const time_t midnight_march_3_pst = 1425369600;
 
   // day 1
@@ -1447,15 +1525,16 @@ void test_timeline__0_duration_all_day(void) {
 void test_timeline__0_duration(void) {
   const time_t midnight_march_3_utc = 1425340800;
   TimelineItem all_day_item = {
-    .header = {
-      .id = { 0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31,
-              0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b, 0x9b, 0xc2 },
-      .timestamp = midnight_march_3_utc,
-      .duration = 0,
-      .type = TimelineItemTypePin,
-      .layout = LayoutIdTest,
-      .all_day = 0,
-    },
+      .header = {
+          .id =
+              {0x29, 0xac, 0xd8, 0xb5, 0x09, 0xc7, 0x4c, 0x31, 0xbf, 0x6f, 0x03, 0x64, 0xd0, 0x5b,
+               0x9b, 0xc2},
+          .timestamp = midnight_march_3_utc,
+          .duration = 0,
+          .type = TimelineItemTypePin,
+          .layout = LayoutIdTest,
+          .all_day = 0,
+      },
   };
 
   cl_assert(timeline_add(&all_day_item));
@@ -1467,7 +1546,8 @@ void test_timeline__0_duration(void) {
   cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
-                                       time_21_00_march_1_pst), S_SUCCESS);
+                                       time_21_00_march_1_pst),
+                    S_SUCCESS);
   const time_t midnight_march_2_pst = 1425283200;
 
   // day 1

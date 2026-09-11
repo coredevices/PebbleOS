@@ -18,7 +18,7 @@ extern bool comm_session_is_valid(const CommSession *session);
 void comm_session_send_queue_cleanup(CommSession *session) {
   SessionSendQueueJob *job = session->send_queue_head;
   while (job) {
-    SessionSendQueueJob *next = (SessionSendQueueJob *) job->node.next;
+    SessionSendQueueJob *next = (SessionSendQueueJob *)job->node.next;
     job->impl->free(job);
     job = next;
   }
@@ -65,8 +65,8 @@ size_t comm_session_send_queue_get_length(const CommSession *session) {
   return length;
 }
 
-size_t comm_session_send_queue_copy(CommSession *session, uint32_t start_offset,
-                                    size_t length, uint8_t *data_out) {
+size_t comm_session_send_queue_copy(CommSession *session, uint32_t start_offset, size_t length,
+                                    uint8_t *data_out) {
   size_t remaining_length = length;
   const SessionSendQueueJob *job = session->send_queue_head;
   while (job && remaining_length) {

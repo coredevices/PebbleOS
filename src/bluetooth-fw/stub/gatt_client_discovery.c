@@ -9,8 +9,8 @@
 // -------------------------------------------------------------------------------------------------
 // Gatt Client Discovery API calls
 
-BTErrno bt_driver_gatt_start_discovery_range(
-    const GAPLEConnection *connection, const ATTHandleRange *data) {
+BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
+                                             const ATTHandleRange *data) {
   return 0;
 }
 

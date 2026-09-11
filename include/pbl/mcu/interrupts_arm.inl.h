@@ -8,7 +8,7 @@ static inline bool mcu_state_is_isr(void) {
 }
 
 static inline uint32_t mcu_state_get_isr_priority(void) {
-  uint32_t exc_number  = __get_IPSR();
+  uint32_t exc_number = __get_IPSR();
   if (exc_number == 0) {
     return ~0;
   }

@@ -49,17 +49,17 @@
 static bool s_flash_logging_enabled = false;
 
 typedef struct PACKED {
-  uint32_t  magic;
-  uint8_t   version;
-  uint8_t   build_id[BUILD_ID_EXPECTED_LEN];
-  uint8_t   log_file_id;
-  uint8_t   log_chunk_id; // For a given log file, the id of the page
-  uint8_t   log_flags; // this should be the last header field written
+  uint32_t magic;
+  uint8_t version;
+  uint8_t build_id[BUILD_ID_EXPECTED_LEN];
+  uint8_t log_file_id;
+  uint8_t log_chunk_id;  // For a given log file, the id of the page
+  uint8_t log_flags;     // this should be the last header field written
 } FlashLoggingHeader;
 
 // indicates the region is erased and no logs are stored in it
 #define LOG_MAGIC_PAGE_FREE 0xffffffff
-#define LOG_MAGIC   0x21474F4C /* LOG! */
+#define LOG_MAGIC 0x21474F4C /* LOG! */
 #define LOG_VERSION 0x1
 
 typedef struct PACKED {
@@ -70,40 +70,40 @@ typedef struct PACKED {
 #define LOG_FLAGS_VALID (0x1 << 0)
 
 typedef struct {
-  uint32_t page_start_addr; // absolute start addr of the page we are logging to
-  uint32_t offset_in_log_page; // the offset we writing to in a given page
-  uint32_t log_start_addr; // the starting address of the curr log being written
-  uint8_t  bytes_remaining; // the bytes left to write for the current log
-  uint8_t  log_chunk_id;  // the id of the current page being logged to
-  uint8_t  log_file_id; // the id of the current log generation
+  uint32_t page_start_addr;     // absolute start addr of the page we are logging to
+  uint32_t offset_in_log_page;  // the offset we writing to in a given page
+  uint32_t log_start_addr;      // the starting address of the curr log being written
+  uint8_t bytes_remaining;      // the bytes left to write for the current log
+  uint8_t log_chunk_id;         // the id of the current page being logged to
+  uint8_t log_file_id;          // the id of the current log generation
 } CurrentLoggingState;
 
 static CurrentLoggingState s_curr_state;
 
 #define CHUNK_ID_BITWIDTH (sizeof(((FlashLoggingHeader *)0)->log_chunk_id) * 8)
-#define LOG_ID_BITWIDTH   (sizeof(((FlashLoggingHeader *)0)->log_file_id) * 8)
-#define MAX_LOG_FILE_ID   (0x1UL << LOG_ID_BITWIDTH)
+#define LOG_ID_BITWIDTH (sizeof(((FlashLoggingHeader *)0)->log_file_id) * 8)
+#define MAX_LOG_FILE_ID (0x1UL << LOG_ID_BITWIDTH)
 #define MAX_PAGE_CHUNK_ID (0x1UL << CHUNK_ID_BITWIDTH)
 
 // we use 0xff... to indicate an unpopulated msg so define max msg len to be 1
 // less than that
-#define MAX_MSG_LEN  ((0x1UL << sizeof(((LogRecordHeader *)0)->length) * 8) - 2)
+#define MAX_MSG_LEN ((0x1UL << sizeof(((LogRecordHeader *)0)->length) * 8) - 2)
 
 // This is the state used while performing flash_log_file(). Each log message gets handled
 // by a separate system task callback
 typedef struct {
-  uint8_t   page_index;               // which page we are currently dumping
-  uint8_t   num_pages;                // number of pages to dump
-  uint8_t   retry_count;              // How many retries we have performed at this offset
-  bool      sent_build_id;            // True after we've sent the build ID
-  uint16_t  page_offset;              // current offset within the page
-  uint32_t  log_start_addr;           // start address of the log file we are dumping
-  DumpLineCallback  line_cb;          // Called to send each line
-  DumpCompletedCallback completed_cb; // Called when completed
-  uint8_t   msg_buf[MAX_MSG_LEN];     // Message buffer
+  uint8_t page_index;                  // which page we are currently dumping
+  uint8_t num_pages;                   // number of pages to dump
+  uint8_t retry_count;                 // How many retries we have performed at this offset
+  bool sent_build_id;                  // True after we've sent the build ID
+  uint16_t page_offset;                // current offset within the page
+  uint32_t log_start_addr;             // start address of the log file we are dumping
+  DumpLineCallback line_cb;            // Called to send each line
+  DumpCompletedCallback completed_cb;  // Called when completed
+  uint8_t msg_buf[MAX_MSG_LEN];        // Message buffer
 } DumpLogState;
 
-#define DUMP_LOG_MAX_RETRIES          3
+#define DUMP_LOG_MAX_RETRIES 3
 
 typedef enum {
   DumpStatus_DoneFailure,
@@ -111,33 +111,29 @@ typedef enum {
   DumpStatus_DoneSuccess,
 } DumpStatus;
 
-
 // Static asserts to make sure user has configured flash logging correctly for
 // the platform of interest
 
-_Static_assert((MAX_POSSIBLE_LOG_GENS >= 4) &&
-    (MAX_POSSIBLE_LOG_GENS < MAX_LOG_FILE_ID),
-    "Invalid number of log generation numbers");
+_Static_assert((MAX_POSSIBLE_LOG_GENS >= 4) && (MAX_POSSIBLE_LOG_GENS < MAX_LOG_FILE_ID),
+               "Invalid number of log generation numbers");
 _Static_assert(MAX_POSSIBLE_LOG_GENS < MAX_PAGE_CHUNK_ID,
-    "Invalid number of chunk ids for serial distance to work");
+               "Invalid number of chunk ids for serial distance to work");
 _Static_assert((LOG_REGION_SIZE / ERASE_UNIT_SIZE) >= 2,
-    "Need to have at least 2 eraseable units for flash logging to work");
+               "Need to have at least 2 eraseable units for flash logging to work");
 _Static_assert((LOG_REGION_SIZE % LOG_PAGE_SIZE) == 0,
-    "The log page size must be divisible by the log region size");
+               "The log page size must be divisible by the log region size");
 _Static_assert(((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0) &&
-    ((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0),
-    "Space for flash logging must be aligned on an erase region boundary");
-_Static_assert(LOG_PAGE_SIZE <= ERASE_UNIT_SIZE,
-     "Log pages must fit within an erase unit");
+                   ((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0),
+               "Space for flash logging must be aligned on an erase region boundary");
+_Static_assert(LOG_PAGE_SIZE <= ERASE_UNIT_SIZE, "Log pages must fit within an erase unit");
 _Static_assert((ERASE_UNIT_SIZE % LOG_PAGE_SIZE) == 0,
-     "The log page size must be divisible by the erase unit size");
+               "The log page size must be divisible by the erase unit size");
 
 //! Given the current address and amount to increment it by, handles wrapping
 //! and computes the valid flash address
 static uint32_t prv_get_page_addr(uint32_t curr_page_addr, uint32_t incr_by) {
   uint32_t new_offset =
-      ((curr_page_addr - FLASH_REGION_DEBUG_DB_BEGIN) + incr_by) %
-      LOG_REGION_SIZE;
+      ((curr_page_addr - FLASH_REGION_DEBUG_DB_BEGIN) + incr_by) % LOG_REGION_SIZE;
   return (new_offset + FLASH_REGION_DEBUG_DB_BEGIN);
 }
 
@@ -151,7 +147,9 @@ static uint8_t prv_get_next_log_file_id(uint8_t file_id) {
 }
 
 static uint32_t prv_get_unit_base_address(uint32_t addr) {
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
+#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||     \
+    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || \
+    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
   return flash_get_subsector_base_address(addr);
 #else
 #error "Invalid platform!"
@@ -159,7 +157,9 @@ static uint32_t prv_get_unit_base_address(uint32_t addr) {
 }
 
 static void prv_erase_unit(uint32_t addr) {
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
+#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||     \
+    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || \
+    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
   flash_erase_subsector_blocking(addr);
 #else
 #error "Invalid platform!"
@@ -168,8 +168,8 @@ static void prv_erase_unit(uint32_t addr) {
 
 static void prv_format_flash_logging_region(void) {
   uint32_t sector_addr;
-  for (sector_addr = FLASH_REGION_DEBUG_DB_BEGIN;
-       sector_addr < FLASH_REGION_DEBUG_DB_END; sector_addr += ERASE_UNIT_SIZE) {
+  for (sector_addr = FLASH_REGION_DEBUG_DB_BEGIN; sector_addr < FLASH_REGION_DEBUG_DB_END;
+       sector_addr += ERASE_UNIT_SIZE) {
     prv_erase_unit(sector_addr);
   }
 }
@@ -198,13 +198,13 @@ static uint32_t prv_validate_flash_log_region(uint8_t *first_log_file_id) {
     FlashLoggingHeader hdr;
     flash_read_bytes((uint8_t *)&hdr, flash_addr, sizeof(hdr));
 
-    if (!prv_flash_log_valid(&hdr)) { // is the region erased ?
+    if (!prv_flash_log_valid(&hdr)) {  // is the region erased ?
       FlashLoggingHeader erased_hdr;
       memset(&erased_hdr, 0xff, sizeof(erased_hdr));
       bool region_erased = (memcmp(&erased_hdr, &hdr, sizeof(hdr)) == 0);
-      if (!region_erased) { // unrecognized format, erase everything
+      if (!region_erased) {  // unrecognized format, erase everything
         prv_format_flash_logging_region();
-        return (UINT32_MAX); // no region in use after formatting
+        return (UINT32_MAX);  // no region in use after formatting
       }
     } else if (first_used_region == UINT32_MAX) {
       first_used_region = offset;
@@ -218,8 +218,7 @@ static uint32_t prv_validate_flash_log_region(uint8_t *first_log_file_id) {
 //! @param[out] start_page_addr - the address of the page the log starts on
 //! @return the number of pages in the log file requested or 0 if no
 //!   file is found
-static int prv_get_start_of_log_file(uint8_t log_file_id,
-    uint32_t *start_page_addr) {
+static int prv_get_start_of_log_file(uint8_t log_file_id, uint32_t *start_page_addr) {
   uint8_t num_log_pages = 0;
   uint8_t prev_chunk_id = 0;
   uint32_t log_start_addr = FLASH_LOG_INVALID_ADDR;
@@ -240,18 +239,17 @@ static int prv_get_start_of_log_file(uint8_t log_file_id,
 
     num_log_pages++;
 
-    int32_t dist = serial_distance(prev_chunk_id, hdr.log_chunk_id,
-        LOG_ID_BITWIDTH);
+    int32_t dist = serial_distance(prev_chunk_id, hdr.log_chunk_id, LOG_ID_BITWIDTH);
 
     if (log_start_addr == FLASH_LOG_INVALID_ADDR) {
       // this is the first page we've found
       log_start_addr = flash_addr;
-      dist = 0; // nothing else to compare against yet
+      dist = 0;  // nothing else to compare against yet
     }
 
     if ((dist == 0) || (dist == 1)) {
       prev_chunk_id = hdr.log_chunk_id;
-      continue; // keep looking
+      continue;  // keep looking
     }
 
     // we have found a gap in the number sequence which means we have found
@@ -294,7 +292,7 @@ void flash_logging_init(void) {
   uint8_t prev_log_id = 0;
   uint32_t first_used_region = prv_validate_flash_log_region(&prev_log_id);
 
-  if (first_used_region == UINT32_MAX) { // no logs exist so start at region 0
+  if (first_used_region == UINT32_MAX) {  // no logs exist so start at region 0
     s_curr_state.page_start_addr = FLASH_REGION_DEBUG_DB_BEGIN;
     goto done;
   }
@@ -311,13 +309,12 @@ void flash_logging_init(void) {
 
     if (prv_flash_log_valid(&hdr)) {
       // we use serial distance to find the gap in the numbering
-      int32_t dist = serial_distance(prev_log_id, hdr.log_file_id,
-        LOG_ID_BITWIDTH);
+      int32_t dist = serial_distance(prev_log_id, hdr.log_file_id, LOG_ID_BITWIDTH);
 
       if ((dist == 0) || (dist == 1)) {
         prev_log_id = hdr.log_file_id;
         multiple_gens_found |= (dist != 0 && offset != 0);
-        continue; // keep looking
+        continue;  // keep looking
       }
 
       // we have found a page to use, but we need to erase the contents first
@@ -333,8 +330,8 @@ void flash_logging_init(void) {
   // everything was in increasing order or there was only one log generation
   // if there was only one log generation, we must find the oldest part of it
   if (!new_log_region_found) {
-    if (multiple_gens_found || (prv_get_start_of_log_file(prev_log_id,
-        &s_curr_state.page_start_addr) == 0)) {
+    if (multiple_gens_found ||
+        (prv_get_start_of_log_file(prev_log_id, &s_curr_state.page_start_addr) == 0)) {
       s_curr_state.page_start_addr = FLASH_REGION_DEBUG_DB_BEGIN;
     }
 
@@ -344,7 +341,7 @@ void flash_logging_init(void) {
     s_curr_state.log_file_id = prv_get_next_log_file_id(prev_log_id);
   }
 
-done: // we have allocated a region to be used
+done:  // we have allocated a region to be used
   prv_allocate_page_for_use();
   flash_logging_set_enabled(true);
 }
@@ -365,8 +362,7 @@ static void prv_write_flash_log_record_header(uint8_t msg_length) {
 }
 
 uint32_t flash_logging_log_start(uint8_t msg_length) {
-  if ((msg_length == 0) || (msg_length > MAX_MSG_LEN) ||
-      !s_flash_logging_enabled) {
+  if ((msg_length == 0) || (msg_length > MAX_MSG_LEN) || !s_flash_logging_enabled) {
     return FLASH_LOG_INVALID_ADDR;
   }
 
@@ -376,16 +372,15 @@ uint32_t flash_logging_log_start(uint8_t msg_length) {
 
   uint32_t payload_size = sizeof(LogRecordHeader) + msg_length;
   if ((s_curr_state.offset_in_log_page + payload_size) <= LOG_PAGE_SIZE) {
-    goto done; // there is enough space in the current page
+    goto done;  // there is enough space in the current page
   }
 
   // out of space, mark end of page
-  uint32_t new_flash_addr = prv_get_page_addr(s_curr_state.page_start_addr,
-      LOG_PAGE_SIZE);
+  uint32_t new_flash_addr = prv_get_page_addr(s_curr_state.page_start_addr, LOG_PAGE_SIZE);
 
   uint32_t curr_sector = s_curr_state.page_start_addr / ERASE_UNIT_SIZE;
   uint32_t new_sector = new_flash_addr / ERASE_UNIT_SIZE;
-  if (curr_sector != new_sector) { // have we crossed into a new erase region ?
+  if (curr_sector != new_sector) {  // have we crossed into a new erase region ?
     prv_erase_unit(prv_get_unit_base_address(new_flash_addr));
   }
 
@@ -393,17 +388,14 @@ uint32_t flash_logging_log_start(uint8_t msg_length) {
   prv_allocate_page_for_use();
 
 done:
-  s_curr_state.log_start_addr = s_curr_state.offset_in_log_page +
-      s_curr_state.page_start_addr;
+  s_curr_state.log_start_addr = s_curr_state.offset_in_log_page + s_curr_state.page_start_addr;
   s_curr_state.bytes_remaining = msg_length;
 
   prv_write_flash_log_record_header(msg_length);
   return (s_curr_state.log_start_addr);
 }
 
-bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr,
-     uint32_t read_length) {
-
+bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr, uint32_t read_length) {
   if ((s_curr_state.bytes_remaining < read_length) || !s_flash_logging_enabled) {
     return (false);
   }
@@ -417,8 +409,7 @@ bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr,
   if (s_curr_state.bytes_remaining == 0) {
     // we are done with the current log record, mark it valid
     uint8_t flags = ~(LOG_FLAGS_VALID);
-    flash_write_bytes((uint8_t *)&flags, s_curr_state.log_start_addr,
-        sizeof(flags));
+    flash_write_bytes((uint8_t *)&flags, s_curr_state.log_start_addr, sizeof(flags));
   }
 
   return (true);
@@ -438,8 +429,8 @@ static void prv_dump_log_system_cb(void *context) {
 
     // use the read buffer to also hold build id str. Each byte of the build ID requires 2
     // characters.
-    const int off = MEMBER_SIZE(DumpLogState, msg_buf)
-                    - 2 * MEMBER_SIZE(FlashLoggingHeader, build_id) - 1;
+    const int off =
+        MEMBER_SIZE(DumpLogState, msg_buf) - 2 * MEMBER_SIZE(FlashLoggingHeader, build_id) - 1;
     uint8_t build_id[MEMBER_SIZE(FlashLoggingHeader, build_id)];
     uint32_t build_id_addr = flash_addr + offsetof(FlashLoggingHeader, build_id);
 
@@ -490,7 +481,6 @@ static void prv_dump_log_system_cb(void *context) {
     state->page_offset += rec.length + sizeof(rec);
   }
 
-
   // If we're done with this page, onto the next
   if (page_done || state->page_offset + sizeof(LogRecordHeader) >= LOG_PAGE_SIZE) {
     state->page_index++;
@@ -499,7 +489,7 @@ static void prv_dump_log_system_cb(void *context) {
       status = DumpStatus_DoneSuccess;
     } else {
       status = DumpStatus_InProgress;
-      PBL_LOG_DBG("Dumping page %d of %d", state->page_index, state->num_pages-1);
+      PBL_LOG_DBG("Dumping page %d of %d", state->page_index, state->num_pages - 1);
     }
   }
 
@@ -513,7 +503,6 @@ exit:
   }
 }
 
-
 bool flash_dump_log_file(int generation, DumpLineCallback line_cb,
                          DumpCompletedCallback completed_cb) {
   uint8_t log_file_id = generation_to_log_file_id(generation);
@@ -524,19 +513,19 @@ bool flash_dump_log_file(int generation, DumpLineCallback line_cb,
 
   if (num_log_pages == 0) {
     completed_cb(false);
-    return (false); // no match found
+    return (false);  // no match found
   }
 
   DumpLogState *state = kernel_malloc_check(sizeof(DumpLogState));
 
   // Init our state
-  *state = (DumpLogState) {
-    .log_start_addr = log_start_addr,
-    .page_index = 0,
-    .num_pages = num_log_pages,
-    .page_offset = sizeof(FlashLoggingHeader),
-    .line_cb = line_cb,
-    .completed_cb = completed_cb,
+  *state = (DumpLogState){
+      .log_start_addr = log_start_addr,
+      .page_index = 0,
+      .num_pages = num_log_pages,
+      .page_offset = sizeof(FlashLoggingHeader),
+      .line_cb = line_cb,
+      .completed_cb = completed_cb,
   };
 
   // Kick it off
@@ -546,7 +535,7 @@ bool flash_dump_log_file(int generation, DumpLineCallback line_cb,
 
 //! For unit tests
 void test_flash_logging_get_info(uint32_t *tot_size, uint32_t *erase_unit_size,
-    uint32_t *chunk_size, uint32_t *page_hdr_size) {
+                                 uint32_t *chunk_size, uint32_t *page_hdr_size) {
   *tot_size = LOG_REGION_SIZE;
   *erase_unit_size = ERASE_UNIT_SIZE;
   *chunk_size = LOG_PAGE_SIZE;

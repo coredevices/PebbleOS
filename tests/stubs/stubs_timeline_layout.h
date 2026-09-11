@@ -7,12 +7,13 @@
 #include "pbl/util/attributes.h"
 
 void WEAK timeline_layout_init(TimelineLayout *layout, const LayoutLayerConfig *config,
-                               const TimelineLayoutImpl *timeline_layout_impl) {}
+                               const TimelineLayoutImpl *timeline_layout_impl) {
+}
 
 void WEAK timeline_layout_time_text_update(const LayoutLayer *layout,
-                                           const LayoutNodeTextDynamicConfig *config,
-                                           char *buffer, bool render) {}
-
+                                           const LayoutNodeTextDynamicConfig *config, char *buffer,
+                                           bool render) {
+}
 
 LayoutLayer *WEAK alarm_layout_create(const LayoutLayerConfig *config) {
   return NULL;

@@ -18,7 +18,8 @@ extern uint8_t __ramfunc_end[];
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __FLASH_size__[];
 
-void SystemCoreClockUpdate(void) {}
+void SystemCoreClockUpdate(void) {
+}
 
 enum {
   ATTR_CODE_IDX,
@@ -112,7 +113,9 @@ int mpu_icache_invalidate(void *data, uint32_t size) {
   return r;
 }
 
-pm_power_on_mode_t SystemPowerOnModeGet(void) { return PM_COLD_BOOT; }
+pm_power_on_mode_t SystemPowerOnModeGet(void) {
+  return PM_COLD_BOOT;
+}
 
 void SystemInit(void) {
 #if defined(__VTOR_PRESENT) && (__VTOR_PRESENT == 1U)
@@ -123,8 +126,8 @@ void SystemInit(void) {
   SCB->CPACR |= (3U << (0U * 2U)) | (3U << (1U * 2U)) | (3U << (2U * 2U));
 
 #if defined(__FPU_USED) && (__FPU_USED == 1U)
-  SCB->CPACR |= ((3U << 10U * 2U) | // enable CP10 Full Access
-                 (3U << 11U * 2U)); // enable CP11 Full Access
+  SCB->CPACR |= ((3U << 10U * 2U) |  // enable CP10 Full Access
+                 (3U << 11U * 2U));  // enable CP11 Full Access
 #endif
 
   prv_mpu_config();

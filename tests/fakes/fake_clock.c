@@ -17,8 +17,7 @@
 WEAK const char *string_strip_leading_whitespace(const char *string) {
   const char *result_string = string;
   while (*result_string != '\0') {
-    if (*result_string != ' ' &&
-        *result_string != '\n') {
+    if (*result_string != ' ' && *result_string != '\n') {
       break;
     }
     result_string++;
@@ -48,8 +47,7 @@ size_t clock_get_time_number(char *number_buffer, size_t number_buffer_size, tim
       prv_format_time(number_buffer, number_buffer_size,
                       (clock_is_24h_style() ? i18n_noop("%R") : i18n_noop("%l:%M")), timestamp);
   const char *number_buffer_ptr = string_strip_leading_whitespace(number_buffer);
-  memmove(number_buffer,
-          number_buffer_ptr,
+  memmove(number_buffer, number_buffer_ptr,
           number_buffer_size - (number_buffer_ptr - number_buffer));
   return written - (number_buffer_ptr - number_buffer);
 }
@@ -106,8 +104,8 @@ size_t clock_get_day_date(char *buffer, int buf_size, time_t timestamp) {
 }
 
 void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {
-  const int new_minutes = positive_modulo(*hour * MINUTES_PER_HOUR + *minute + delta_minutes,
-                                          MINUTES_PER_DAY);
+  const int new_minutes =
+      positive_modulo(*hour * MINUTES_PER_HOUR + *minute + delta_minutes, MINUTES_PER_DAY);
   *hour = new_minutes / MINUTES_PER_HOUR;
   *minute = new_minutes % MINUTES_PER_HOUR;
 }

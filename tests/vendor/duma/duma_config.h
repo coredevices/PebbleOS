@@ -182,7 +182,6 @@
 
 #endif
 
-
 /*
  * Number of bytes per virtual-memory page, as returned by Page_Size().
  */

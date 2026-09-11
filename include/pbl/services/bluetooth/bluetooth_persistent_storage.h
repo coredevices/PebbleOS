@@ -27,13 +27,12 @@ typedef enum {
   BtPersistBondingNumTypes
 } BtPersistBondingType;
 
-
 //! Signature of function that handles changes in the pairing database
 typedef void (*BtPersistBondingChangeHandler)(BTBondingID affected_bonding,
                                               BtPersistBondingOp operation);
 
 typedef void (*BtPersistBondingDBEachBLE)(BTDeviceInternal *device, SMIdentityResolvingKey *irk,
-                                    const char *name, BTBondingID *id, void *context);
+                                          const char *name, BTBondingID *id, void *context);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info
@@ -46,8 +45,7 @@ bool bt_persistent_storage_get_ble_pinned_address(BTDeviceAddress *address_out);
 
 BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *pairing_info,
                                                     bool is_gateway, const char *device_name,
-                                                    bool requires_address_pinning,
-                                                    uint8_t flags);
+                                                    bool requires_address_pinning, uint8_t flags);
 
 bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const char *device_name);
 
@@ -57,8 +55,7 @@ void bt_persistent_storage_delete_ble_pairing_by_addr(const BTDeviceInternal *de
 
 bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
                                                  SMIdentityResolvingKey *IRK_out,
-                                                 BTDeviceInternal *device_out,
-                                                 char *name_out);
+                                                 BTDeviceInternal *device_out, char *name_out);
 
 bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *device,
                                                    SMIdentityResolvingKey *IRK_out,
@@ -160,5 +157,5 @@ void bt_persistent_storage_delete_all_pairings(void);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Unit testing
-int bt_persistent_storage_get_raw_data(const void *key, size_t key_len,
-                                       void *data_out, size_t buf_len);
+int bt_persistent_storage_get_raw_data(const void *key, size_t key_len, void *data_out,
+                                       size_t buf_len);

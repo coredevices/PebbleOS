@@ -19,24 +19,21 @@ _Static_assert(RECOGNIZER_INSTANCE_SIZE >= sizeof(Recognizer),
 static void prv_set_state(Recognizer *recognizer, RecognizerState new_state) {
   switch (recognizer->state) {
     case RecognizerState_Possible:
-      PBL_ASSERTN((new_state == RecognizerState_Failed) ||
-                  (new_state == RecognizerState_Possible) ||
-                  (new_state == RecognizerState_Completed) ||
-                  (new_state == RecognizerState_Started));
+      PBL_ASSERTN(
+          (new_state == RecognizerState_Failed) || (new_state == RecognizerState_Possible) ||
+          (new_state == RecognizerState_Completed) || (new_state == RecognizerState_Started));
       break;
 
     case RecognizerState_Started:
-      PBL_ASSERTN((new_state == RecognizerState_Possible) ||
-                  (new_state == RecognizerState_Cancelled) ||
-                  (new_state == RecognizerState_Completed) ||
-                  (new_state == RecognizerState_Updated));
+      PBL_ASSERTN(
+          (new_state == RecognizerState_Possible) || (new_state == RecognizerState_Cancelled) ||
+          (new_state == RecognizerState_Completed) || (new_state == RecognizerState_Updated));
       break;
 
     case RecognizerState_Updated:
-      PBL_ASSERTN((new_state == RecognizerState_Possible) ||
-                  (new_state == RecognizerState_Cancelled) ||
-                  (new_state == RecognizerState_Completed) ||
-                  (new_state == RecognizerState_Updated));
+      PBL_ASSERTN(
+          (new_state == RecognizerState_Possible) || (new_state == RecognizerState_Cancelled) ||
+          (new_state == RecognizerState_Completed) || (new_state == RecognizerState_Updated));
       break;
 
     case RecognizerState_Cancelled:
@@ -97,13 +94,13 @@ static void prv_send_subscriber_event(Recognizer *recognizer) {
 static void prv_init_recognizer(Recognizer *recognizer, const RecognizerImpl *impl,
                                 const void *data, size_t data_size, RecognizerEventCb event_cb,
                                 void *user_data) {
-  *recognizer = (Recognizer) {
-    .state = RecognizerState_Possible,
-    .impl = impl,
-    .subscriber = {
-      .event = event_cb,
-      .data = user_data,
-    }
+  *recognizer = (Recognizer){
+      .state = RecognizerState_Possible,
+      .impl = impl,
+      .subscriber = {
+          .event = event_cb,
+          .data = user_data,
+      }
   };
   memcpy(recognizer->impl_data, data, data_size);
 }
@@ -111,7 +108,6 @@ static void prv_init_recognizer(Recognizer *recognizer, const RecognizerImpl *im
 Recognizer *recognizer_create_with_data(const RecognizerImpl *impl, const void *data,
                                         size_t data_size, RecognizerEventCb event_cb,
                                         void *user_data) {
-
   // These are passed from the implementation interface, so they must be valid
   PBL_ASSERTN(impl);
   PBL_ASSERTN(impl->handle_touch_event && impl->cancel && impl->reset);

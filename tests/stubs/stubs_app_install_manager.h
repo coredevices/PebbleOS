@@ -59,4 +59,3 @@ const WEAK PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
 ResAppNum WEAK app_install_get_app_icon_bank(const AppInstallEntry *entry) {
   return SYSTEM_APP;
 }
-

@@ -17,17 +17,17 @@ typedef bool (*StatsBasicFilter)(int index, int32_t value, void *context);
 //! StatsBasicOp is a bitfield that specifies which operations \ref stats_calculate_basic should
 //! perform. The ops will operate only on the filtered values when a filter is present.
 typedef enum {
-  StatsBasicOp_Sum         = (1 << 0), //!< Calculate the sum
-  StatsBasicOp_Average     = (1 << 1), //!< Calculate the average
+  StatsBasicOp_Sum = (1 << 0),      //!< Calculate the sum
+  StatsBasicOp_Average = (1 << 1),  //!< Calculate the average
   //! Find the minimum value. If there is no data, or if no values match the filter, the minimum
   //! will default to INT32_MAX.
-  StatsBasicOp_Min         = (1 << 2),
+  StatsBasicOp_Min = (1 << 2),
   //! Find the maximum value. If there is no data, or if no values match the filter, the maximum
   //! will default to INT32_MIN.
-  StatsBasicOp_Max         = (1 << 3),
+  StatsBasicOp_Max = (1 << 3),
   //! Count the number of filtered values included in calculation.
   //! Equivalent to the number of data points when no filter is applied.
-  StatsBasicOp_Count       = (1 << 4),
+  StatsBasicOp_Count = (1 << 4),
   //! Find the maximum streak of consecutive filtered values included in calculation.
   //! Equivalent to the number of data points when no filter is applied.
   StatsBasicOp_Consecutive = (1 << 5),
@@ -52,7 +52,6 @@ typedef enum {
 //! @param[out] basic_out address to an int32_t or int32_t array to write results to
 void stats_calculate_basic(StatsBasicOp op, const int32_t *data, size_t num_data,
                            StatsBasicFilter filter, void *context, int32_t *basic_out);
-
 
 int32_t stats_calculate_weighted_median(const int32_t *vals, const int32_t *weights_x100,
                                         size_t num_data);

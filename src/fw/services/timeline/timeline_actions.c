@@ -56,13 +56,13 @@ typedef struct {
 typedef struct ActionResultData {
   EventServiceInfo event_service_info;
   ActionMenu *action_menu;
-  ProgressWindow *progress_window; //!< For showing progress of long requests
+  ProgressWindow *progress_window;  //!< For showing progress of long requests
   VoiceResponseData *voice_data;
-  bool standalone_action; //!< This action was performed without a previous action menu
+  bool standalone_action;  //!< This action was performed without a previous action menu
 
   struct {
-    EventedTimerID timer; //!< For timing out requests
-    Attribute attribute; //!< used to persist the response value while waiting for result
+    EventedTimerID timer;  //!< For timing out requests
+    Attribute attribute;   //!< used to persist the response value while waiting for result
     bool ignore_failures;
   } response;
 
@@ -95,19 +95,19 @@ static void prv_subscribe_to_action_results_and_timeouts(ActionResultData *data,
 
 static void prv_request_responsive_session(void) {
   // In anticipation of having to communicate with the phone, request the minimum latency for 10s:
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerTimelineActionMenu, ResponseTimeMin,
+  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerTimelineActionMenu,
+                                  ResponseTimeMin,
                                   MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS);
 }
 
 static void prv_reset_session_responsiveness(void) {
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerTimelineActionMenu, ResponseTimeMax, 0);
+  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerTimelineActionMenu,
+                                  ResponseTimeMax, 0);
 }
 
 static WindowStack *prv_get_window_stack(ActionResultData *data) {
-  return window_manager_get_window_stack(data->voice_data ? ModalPriorityVoice :
-                                                            ModalPriorityNotification);
+  return window_manager_get_window_stack(data->voice_data ? ModalPriorityVoice
+                                                          : ModalPriorityNotification);
 }
 
 static void prv_cleanup_voice_data(VoiceResponseData *data) {
@@ -132,8 +132,7 @@ static void prv_cleanup_action_result(ActionResultData *data, bool succeeded) {
   }
 
   // report to analytics the result of the action
-  if (data->response.attribute.id == AttributeIdTitle &&
-      data->response.attribute.cstring) {
+  if (data->response.attribute.id == AttributeIdTitle && data->response.attribute.cstring) {
   }
 
   if (data->action_complete.callback) {
@@ -175,9 +174,8 @@ static void prv_show_result_window(ActionResultData *data, const TimelineResourc
                                    const char *msg, bool succeeded) {
   const GSize simple_dialog_icon_size = timeline_resources_get_gsize(TimelineResourceSizeLarge);
   const bool use_status_bar = true;
-  const bool use_simple_dialog = simple_dialog_does_text_fit(msg, DISP_FRAME.size,
-                                                             simple_dialog_icon_size,
-                                                             use_status_bar);
+  const bool use_simple_dialog =
+      simple_dialog_does_text_fit(msg, DISP_FRAME.size, simple_dialog_icon_size, use_status_bar);
 
   SimpleDialog *simple_dialog = NULL;
   ExpandableDialog *expandable_dialog = NULL;
@@ -198,11 +196,10 @@ static void prv_show_result_window(ActionResultData *data, const TimelineResourc
     dialog = expandable_dialog_get_dialog(expandable_dialog);
   }
 
-  const TimelineResourceSize icon_format = use_simple_dialog ?
-                                           TimelineResourceSizeLarge :
-                                           TimelineResourceSizeTiny;
+  const TimelineResourceSize icon_format =
+      use_simple_dialog ? TimelineResourceSizeLarge : TimelineResourceSizeTiny;
   TimelineResourceInfo timeline_res = {
-    .res_id = timeline_res_id,
+      .res_id = timeline_res_id,
   };
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, icon_format, &icon_res_info);
@@ -212,8 +209,8 @@ static void prv_show_result_window(ActionResultData *data, const TimelineResourc
   i18n_free(msg, dialog);
   dialog_set_icon(dialog, icon_res_info.res_id);
   dialog_set_icon_animate_direction(dialog, DialogIconAnimationFromLeft);
-  const uint32_t dialog_timeout_ms = use_simple_dialog ? DIALOG_TIMEOUT_DEFAULT :
-                                                         DIALOG_TIMEOUT_INFINITE;
+  const uint32_t dialog_timeout_ms =
+      use_simple_dialog ? DIALOG_TIMEOUT_DEFAULT : DIALOG_TIMEOUT_INFINITE;
   dialog_set_timeout(dialog, dialog_timeout_ms);
 
   if (data->action_menu) {
@@ -250,8 +247,7 @@ static bool prv_show_result_window_with_progress(ActionResultData *data,
       progress_window_set_result_success(data->progress_window);
     } else {
       const uint32_t delay_ms = 100;
-      progress_window_set_result_failure(data->progress_window, timeline_res_id, message,
-                                         delay_ms);
+      progress_window_set_result_failure(data->progress_window, timeline_res_id, message, delay_ms);
     }
   } else {
     prv_show_result_window(data, timeline_res_id, message, success);
@@ -288,27 +284,26 @@ static void prv_show_progress_window(void *data_ptr) {
   progress_window_init(data->progress_window);
   const int16_t max_fake_percent = 80;
   progress_window_set_max_fake_progress(data->progress_window, max_fake_percent);
-  progress_window_set_callbacks(data->progress_window, (ProgressWindowCallbacks) {
-    .finished = prv_progress_window_finished,
-  }, data);
+  progress_window_set_callbacks(data->progress_window,
+                                (ProgressWindowCallbacks){
+                                    .finished = prv_progress_window_finished,
+                                },
+                                data);
   progress_window_set_back_disabled(data->progress_window, true);
   progress_window_push(data->progress_window, prv_get_window_stack(data));
 
   const unsigned action_result_timeout_ms = 5 * MS_PER_SECOND;
-  data->response.timer = evented_timer_register(action_result_timeout_ms,
-                                                false,
-                                                prv_timeout_handler,
-                                                data);
+  data->response.timer =
+      evented_timer_register(action_result_timeout_ms, false, prv_timeout_handler, data);
 }
 
-static void prv_handle_success_fail_response(ActionResultData *data,
-                                             AttributeList *attr_list,
+static void prv_handle_success_fail_response(ActionResultData *data, AttributeList *attr_list,
                                              bool success) {
-  const char *msg = attribute_get_string(attr_list, AttributeIdSubtitle,
-                                         success ? "Success" : "Failed");
-  const uint32_t icon = attribute_get_uint32(attr_list, AttributeIdIconLarge,
-                                             success ? TIMELINE_RESOURCE_RESULT_SENT
-                                                     : TIMELINE_RESOURCE_GENERIC_WARNING);
+  const char *msg =
+      attribute_get_string(attr_list, AttributeIdSubtitle, success ? "Success" : "Failed");
+  const uint32_t icon = attribute_get_uint32(
+      attr_list, AttributeIdIconLarge,
+      success ? TIMELINE_RESOURCE_RESULT_SENT : TIMELINE_RESOURCE_GENERIC_WARNING);
   if (!prv_show_result_window_with_progress(data, icon, msg, success)) {
     prv_cleanup_action_result(data, success);
   }
@@ -327,8 +322,8 @@ static void prv_cleanup_chaining_action_menu(void *context) {
   applib_free(data);
 }
 
-static void prv_invoke_chaining_action(Window *chaining_window,
-                                       TimelineItemAction *action, void *context) {
+static void prv_invoke_chaining_action(Window *chaining_window, TimelineItemAction *action,
+                                       void *context) {
   ChainingWindowCBData *cb_data = context;
 
   ActionResultData *data = applib_zalloc(sizeof(ActionResultData));
@@ -361,12 +356,12 @@ static void prv_handle_chaining_response(ActionResultData *data, PebbleEvent *ev
     prv_cleanup_action_result(data, false /* succeeded */);
     return;
   }
-  *cb_data = (ChainingWindowCBData) {
-    .item = item,
-    // Claim the buffer so it doesn't get automatically free'd.
-    // The action group needs to stick around
-    .event_ref = event_service_claim_buffer(event),
-    .standalone_action = data->standalone_action,
+  *cb_data = (ChainingWindowCBData){
+      .item = item,
+      // Claim the buffer so it doesn't get automatically free'd.
+      // The action group needs to stick around
+      .event_ref = event_service_claim_buffer(event),
+      .standalone_action = data->standalone_action,
   };
 
   Attribute *title_attr = attribute_find(&action_result->attr_list, AttributeIdTitle);
@@ -393,23 +388,23 @@ static void prv_handle_do_response_response(ActionResultData *data) {
     return;
   }
 
-  TimelineItemAction *reply_action = timeline_item_find_action_by_type(
-      item, TimelineItemActionTypeAncsResponse);
+  TimelineItemAction *reply_action =
+      timeline_item_find_action_by_type(item, TimelineItemActionTypeAncsResponse);
   // Update the type of the action to be of type TimelineItemActionTypeResponse. This will cause
   // us to send a slightly different message to the phone so it can tell the difference between
   // the start reply action and the send reply action.
   // This is okay because we are just modifying a copy of the original notification
   reply_action->type = TimelineItemActionTypeResponse;
 
-  GColor color = (GColor) attribute_get_uint8(&item->attr_list, AttributeIdBgColor,
-                                              SMS_REPLY_COLOR.argb);
+  GColor color =
+      (GColor)attribute_get_uint8(&item->attr_list, AttributeIdBgColor, SMS_REPLY_COLOR.argb);
 
   // Lack of an action menu means this was a standalone action, so adjust reply menu accordingly
   const TimelineItemActionSource current_item_source =
       kernel_ui_get_current_timeline_item_action_source();
-  timeline_actions_push_response_menu(item, reply_action, color,
-                                      prv_cleanup_do_response_menu, prv_get_window_stack(data),
-                                      current_item_source, data->standalone_action);
+  timeline_actions_push_response_menu(item, reply_action, color, prv_cleanup_do_response_menu,
+                                      prv_get_window_stack(data), current_item_source,
+                                      data->standalone_action);
 
   prv_cleanup_action_result(data, true /* succeeded */);
 }
@@ -433,8 +428,8 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
 
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&action_result->id, uuid_string);
-  PBL_LOG_INFO("Received action result: Item ID - %s; type - %"
-          PRIu8, uuid_string, (uint8_t)action_result->type);
+  PBL_LOG_INFO("Received action result: Item ID - %s; type - %" PRIu8, uuid_string,
+               (uint8_t)action_result->type);
 
   // Each action result can only service one response event
   event_service_client_unsubscribe(&data->event_service_info);
@@ -445,8 +440,7 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
       prv_handle_success_fail_response(data, &action_result->attr_list,
                                        (action_result->type == ActionResultTypeSuccess));
       break;
-    case ActionResultTypeSuccessANCSDismiss:
-    {
+    case ActionResultTypeSuccessANCSDismiss: {
       bool should_perform_dismiss = false;
       uint32_t ancs_uid = data->chaining_data.notif->header.ancs_uid;
 
@@ -486,19 +480,17 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
 
 static void prv_subscribe_to_action_results_and_timeouts(ActionResultData *data,
                                                          bool ignore_failures) {
-  data->event_service_info = (EventServiceInfo) {
-    .type = PEBBLE_SYS_NOTIFICATION_EVENT,
-    .handler = prv_action_handle_response,
-    .context = data,
+  data->event_service_info = (EventServiceInfo){
+      .type = PEBBLE_SYS_NOTIFICATION_EVENT,
+      .handler = prv_action_handle_response,
+      .context = data,
   };
   event_service_client_subscribe(&data->event_service_info);
 
   data->response.ignore_failures = ignore_failures;
   const unsigned show_progress_timeout_ms = 1 * MS_PER_SECOND;
-  data->response.timer = evented_timer_register(show_progress_timeout_ms,
-                                                false,
-                                                prv_show_progress_window,
-                                                data);
+  data->response.timer =
+      evented_timer_register(show_progress_timeout_ms, false, prv_show_progress_window, data);
 }
 
 static void prv_set_action_result(TimelineActionMenu *timeline_action_menu,
@@ -510,8 +502,7 @@ static void prv_set_action_result(TimelineActionMenu *timeline_action_menu,
 // invoke actions that require a response from a connected remote
 static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
                                                   const TimelineItemAction *action,
-                                                  const TimelineItem *pin,
-                                                  void *context) {
+                                                  const TimelineItem *pin, void *context) {
   ActionResultData *data = applib_zalloc(sizeof(ActionResultData));
   if (!data) {
     return NULL;
@@ -542,17 +533,17 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
       const int num_extra_attributes = 1;
       const int num_attributes = pin->attr_list.num_attributes + num_extra_attributes;
 
-      AttributeList response_attributes = (AttributeList) {
-        .num_attributes = num_attributes,
-        .attributes = kernel_zalloc_check(sizeof(Attribute) * num_attributes),
+      AttributeList response_attributes = (AttributeList){
+          .num_attributes = num_attributes,
+          .attributes = kernel_zalloc_check(sizeof(Attribute) * num_attributes),
       };
       memcpy(response_attributes.attributes, pin->attr_list.attributes,
              sizeof(Attribute) * pin->attr_list.num_attributes);
 
       int cur_attribute = pin->attr_list.num_attributes;
-      response_attributes.attributes[cur_attribute++] = (Attribute) {
-        .id = AttributeIdTimestamp,
-        .uint32 = pin->header.timestamp,
+      response_attributes.attributes[cur_attribute++] = (Attribute){
+          .id = AttributeIdTimestamp,
+          .uint32 = pin->header.timestamp,
       };
 
       timeline_invoke_action(pin, action, &response_attributes);
@@ -560,9 +551,9 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
       break;
     }
     case TimelineItemActionTypeResponse: {
-      data->response.attribute = (Attribute) {
-        .id = AttributeIdTitle,
-        .cstring = (char *)context,
+      data->response.attribute = (Attribute){
+          .id = AttributeIdTitle,
+          .cstring = (char *)context,
       };
       Attribute *sender_attr = attribute_find(&pin->attr_list, AttributeIdSender);
       const int16_t num_attributes = (sender_attr) ? 2 : 1;
@@ -574,21 +565,21 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
         attributes[1] = *sender_attr;
       }
       AttributeList response_attributes = {
-        .num_attributes = num_attributes,
-        .attributes = attributes,
+          .num_attributes = num_attributes,
+          .attributes = attributes,
       };
       timeline_invoke_action(pin, action, &response_attributes);
       break;
     }
     case TimelineItemActionTypePostpone: {
       Attribute timestamp_attr = {
-        .id = AttributeIdTimestamp,
-        .uint32 = (uint32_t)(uintptr_t)context,
+          .id = AttributeIdTimestamp,
+          .uint32 = (uint32_t)(uintptr_t)context,
       };
 
       AttributeList response_attributes = {
-        .num_attributes = 1,
-        .attributes = &timestamp_attr,
+          .num_attributes = 1,
+          .attributes = &timestamp_attr,
       };
       timeline_invoke_action(pin, action, &response_attributes);
       break;
@@ -649,8 +640,7 @@ static void prv_invoke_ble_hrm_stop_sharing_action(ActionMenu *action_menu,
 
 T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
                                              const TimelineItemAction *action,
-                                             const TimelineItem *pin,
-                                             const char *label) {
+                                             const TimelineItem *pin, const char *label) {
   switch (action->type) {
     case TimelineItemActionTypeOpenPin:
     case TimelineItemActionTypeOpenWatchApp:
@@ -715,9 +705,11 @@ static void prv_push_dismiss_first_use_dialog(ActionMenu *action_menu) {
     return;
   }
 
-  const char* tutorial_msg = i18n_get("Quickly dismiss all notifications by holding the " \
-                                      "Select button for 2 seconds from any incoming " \
-                                      "notification.", action_menu);
+  const char *tutorial_msg = i18n_get(
+      "Quickly dismiss all notifications by holding the "
+      "Select button for 2 seconds from any incoming "
+      "notification.",
+      action_menu);
 
   ExpandableDialog *first_use_dialog = expandable_dialog_create_with_params(
       "Dismiss First Use", RESOURCE_ID_QUICK_DISMISS, tutorial_msg,
@@ -743,8 +735,7 @@ static void prv_action_menu_cb(ActionMenu *action_menu, const ActionMenuItem *it
     case TimelineItemTypeUnknown:
     case TimelineItemTypeOutOfRange:
     default:
-      PBL_LOG_ERR("Performing action on invalid TimelineItem with type: %d",
-              pin->header.type);
+      PBL_LOG_ERR("Performing action on invalid TimelineItem with type: %d", pin->header.type);
       action_menu_close(action_menu, true);
       return;
   }
@@ -763,16 +754,14 @@ static void prv_invoke_voice_response(VoiceResponseData *voice_data, char *trans
   // This is a bit of a hack, but we need all the behaviour of timeline_actions_invoke_action and
   // this allows voice responses to be used for other types of responses (i.e. ANCS in the future)
   ActionMenuItem item = {
-    .label = transcription,
-    .action_data = voice_data->action_data,
+      .label = transcription,
+      .action_data = voice_data->action_data,
   };
 
   prv_do_action_analytics(voice_data->context, &item);
 
-  ActionResultData *action_result = prv_invoke_remote_action(voice_data->action_menu,
-                                                             voice_data->action_data,
-                                                             voice_data->context,
-                                                             transcription);
+  ActionResultData *action_result = prv_invoke_remote_action(
+      voice_data->action_menu, voice_data->action_data, voice_data->context, transcription);
   if (action_result) {
     action_result->voice_data = voice_data;
   } else {
@@ -791,10 +780,8 @@ static ActionMenuLevel *prv_create_template_level_from_action(ActionMenuLevel *p
                                                               TimelineItemAction *action,
                                                               void *i18n_owner) {
   StringList *responses_list =
-     attribute_get_string_list(&action->attr_list,
-          AttributeIdCannedResponses);
-  uint16_t canned_responses_count = responses_list ?
-      string_list_count(responses_list) : 0;
+      attribute_get_string_list(&action->attr_list, AttributeIdCannedResponses);
+  uint16_t canned_responses_count = responses_list ? string_list_count(responses_list) : 0;
 
   ActionMenuLevel *template_level;
   if (canned_responses_count) {
@@ -807,11 +794,11 @@ static ActionMenuLevel *prv_create_template_level_from_action(ActionMenuLevel *p
   } else {
     // hard-wired default responses in case the phone app doesn't provide any
     static char *strings[] = {
-      i18n_noop("Ok"),
-      i18n_noop("Yes"),
-      i18n_noop("No"),
-      i18n_noop("Call me"),
-      i18n_noop("Call you later"),
+        i18n_noop("Ok"),
+        i18n_noop("Yes"),
+        i18n_noop("No"),
+        i18n_noop("Call me"),
+        i18n_noop("Call you later"),
     };
     template_level = prv_create_level(ARRAY_LENGTH(strings), parent_level);
     for (size_t i = 0; i < (int)ARRAY_LENGTH(strings); i++) {
@@ -826,18 +813,16 @@ static ActionMenuLevel *prv_create_template_level_from_action(ActionMenuLevel *p
 static ActionMenuLevel *prv_create_emoji_level_from_action(ActionMenuLevel *parent_level,
                                                            TimelineItemAction *action,
                                                            void *i18n_owner) {
-  static const char *short_strings[] = {
-    "😃", "😉", "😂", "😍", "😘", "\xe2\x9d\xa4",
-    "😇", "😎", "😛", "😟", "😩", "😭", "😴", "😐",
-    "😯", "👍", "👎", "👌", "💩", "🎉", "🍺"};
+  static const char *short_strings[] = {"😃", "😉", "😂", "😍", "😘", "\xe2\x9d\xa4", "😇",
+                                        "😎", "😛", "😟", "😩", "😭", "😴",           "😐",
+                                        "😯", "👍", "👎", "👌", "💩", "🎉",           "🍺"};
   const uint16_t num_items = ARRAY_LENGTH(short_strings);
 
   ActionMenuLevel *emoji_level = prv_create_level(num_items, parent_level);
   emoji_level->display_mode = ActionMenuLevelDisplayModeThin;
 
   for (size_t i = 0; i < num_items; i++) {
-    action_menu_level_add_action(emoji_level, short_strings[i], prv_action_menu_cb,
-                                 action);
+    action_menu_level_add_action(emoji_level, short_strings[i], prv_action_menu_cb, action);
   }
 
   return emoji_level;
@@ -860,8 +845,7 @@ static void prv_handle_voice_transcription_result(PebbleEvent *e, void *context)
 #endif
 
 #ifdef CONFIG_MIC
-static void prv_start_voice_reply(ActionMenu *action_menu,
-                                  const ActionMenuItem *item,
+static void prv_start_voice_reply(ActionMenu *action_menu, const ActionMenuItem *item,
                                   void *context) {
   TimelineActionMenu *timeline_action_menu = context;
   action_menu_freeze(action_menu);
@@ -872,18 +856,18 @@ static void prv_start_voice_reply(ActionMenu *action_menu,
   PBL_ASSERTN(item_copy);
 
   VoiceResponseData *data = applib_malloc(sizeof(VoiceResponseData));
-  *data = (VoiceResponseData) {
-    .action_data = item->action_data,
-    .context = item_copy,
-    .action_menu = action_menu,
-    .voice_window = voice_window_create(NULL, 0, VoiceEndpointSessionTypeDictation),
+  *data = (VoiceResponseData){
+      .action_data = item->action_data,
+      .context = item_copy,
+      .action_menu = action_menu,
+      .voice_window = voice_window_create(NULL, 0, VoiceEndpointSessionTypeDictation),
   };
   PBL_ASSERTN(data->voice_window);
 
-  data->event_service_info = (EventServiceInfo) {
-    .type = PEBBLE_DICTATION_EVENT,
-    .handler = prv_handle_voice_transcription_result,
-    .context = data,
+  data->event_service_info = (EventServiceInfo){
+      .type = PEBBLE_DICTATION_EVENT,
+      .handler = prv_handle_voice_transcription_result,
+      .context = data,
   };
   event_service_client_subscribe(&data->event_service_info);
 
@@ -920,8 +904,7 @@ static bool prv_is_reply_option_supported(ReplyOption option, TimelineItemAction
 }
 
 static ActionMenuLevel *prv_create_responses_level(TimelineItemAction *action,
-                                                   ActionMenuLevel *root_level,
-                                                   bool reply_prefix) {
+                                                   ActionMenuLevel *root_level, bool reply_prefix) {
   uint16_t num_items = 0;
   for (ReplyOption reply = 0; reply < ReplyOptionCount; reply++) {
     if (prv_is_reply_option_supported(reply, action)) {
@@ -938,31 +921,31 @@ static ActionMenuLevel *prv_create_responses_level(TimelineItemAction *action,
 
   ActionMenuItem reply_options[ReplyOptionCount] = {
 #ifdef CONFIG_MIC
-    {
-      .label = (reply_prefix ? i18n_get("Reply with Voice", root_level) :
-                               i18n_get("Voice", root_level)),
-      .perform_action = prv_start_voice_reply,
-      .action_data = action,
-    },
+      {
+          .label = (reply_prefix ? i18n_get("Reply with Voice", root_level)
+                                 : i18n_get("Voice", root_level)),
+          .perform_action = prv_start_voice_reply,
+          .action_data = action,
+      },
 #else
-    {
-      // This should never get used because prv_is_reply_option_supported() will return false
-    },
+      {
+          // This should never get used because prv_is_reply_option_supported() will return false
+      },
 #endif
-    {
-      .label = i18n_get("Canned messages", root_level),
-      .is_leaf = 0,
-    },
-    {
-      .label = i18n_get("Emoji", root_level),
-      .is_leaf = 0,
-    },
+      {
+          .label = i18n_get("Canned messages", root_level),
+          .is_leaf = 0,
+      },
+      {
+          .label = i18n_get("Emoji", root_level),
+          .is_leaf = 0,
+      },
   };
-  ActionMenuLevel *(*level_getters[ReplyOptionCount])
-      (ActionMenuLevel *, TimelineItemAction *, void *) = {
-    NULL,
-    prv_create_template_level_from_action,
-    prv_create_emoji_level_from_action,
+  ActionMenuLevel *(*level_getters[ReplyOptionCount])(ActionMenuLevel *, TimelineItemAction *,
+                                                      void *) = {
+      NULL,
+      prv_create_template_level_from_action,
+      prv_create_emoji_level_from_action,
   };
 
   unsigned int item = 0;
@@ -982,8 +965,7 @@ static ActionMenuLevel *prv_create_responses_level(TimelineItemAction *action,
   return responses_level;
 }
 
-static void prv_postpone_15_minutes(ActionMenu *action_menu,
-                                    const ActionMenuItem *action_menu_item,
+static void prv_postpone_15_minutes(ActionMenu *action_menu, const ActionMenuItem *action_menu_item,
                                     void *context) {
   TimelineActionMenu *timeline_action_menu = context;
   const TimelineItem *pin = timeline_action_menu->item;
@@ -994,8 +976,7 @@ static void prv_postpone_15_minutes(ActionMenu *action_menu,
 }
 
 static void prv_postpone_later_today(ActionMenu *action_menu,
-                                     const ActionMenuItem *action_menu_item,
-                                     void *context) {
+                                     const ActionMenuItem *action_menu_item, void *context) {
   TimelineActionMenu *timeline_action_menu = context;
   const TimelineItem *pin = timeline_action_menu->item;
   const TimelineItemAction *action = action_menu_item->action_data;
@@ -1026,8 +1007,7 @@ static void prv_postpone_later_today(ActionMenu *action_menu,
   prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
 }
 
-static void prv_postpone_tomorrow(ActionMenu *action_menu,
-                                  const ActionMenuItem *action_menu_item,
+static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem *action_menu_item,
                                   void *context) {
   TimelineActionMenu *timeline_action_menu = context;
   const TimelineItem *pin = timeline_action_menu->item;
@@ -1061,23 +1041,16 @@ static ActionMenuLevel *prv_create_postpone_level(TimelineItemAction *action,
     root_level = postpone_level;
   }
 
-
-  action_menu_level_add_action(postpone_level,
-                               i18n_get("In 15 minutes", root_level),
-                               prv_postpone_15_minutes,
-                               action);
+  action_menu_level_add_action(postpone_level, i18n_get("In 15 minutes", root_level),
+                               prv_postpone_15_minutes, action);
 
   if (show_later_today) {
-    action_menu_level_add_action(postpone_level,
-                                 i18n_get("Later today", root_level),
-                                 prv_postpone_later_today,
-                                 action);
+    action_menu_level_add_action(postpone_level, i18n_get("Later today", root_level),
+                                 prv_postpone_later_today, action);
   }
 
-  action_menu_level_add_action(postpone_level,
-                               i18n_get("Tomorrow", root_level),
-                               prv_postpone_tomorrow,
-                               action);
+  action_menu_level_add_action(postpone_level, i18n_get("Tomorrow", root_level),
+                               prv_postpone_tomorrow, action);
 
   return postpone_level;
 }
@@ -1086,8 +1059,8 @@ void timeline_actions_add_action_to_root_level(TimelineItemAction *action,
                                                ActionMenuLevel *root_level) {
   const char *label = attribute_get_string(&action->attr_list, AttributeIdTitle, "[Action]");
   if (action->type == TimelineItemActionTypeResponse) {
-    ActionMenuLevel *responses_level = prv_create_responses_level(action, root_level,
-                                                                  false /* reply_prefix */);
+    ActionMenuLevel *responses_level =
+        prv_create_responses_level(action, root_level, false /* reply_prefix */);
     action_menu_level_add_child(root_level, responses_level, label);
   } else if (action->type == TimelineItemActionTypePostpone) {
     ActionMenuLevel *responses_level = prv_create_postpone_level(action, root_level);
@@ -1152,17 +1125,19 @@ ActionMenu *timeline_actions_push_action_menu(ActionMenuConfig *base_config,
   return timeline_action_menu->action_menu;
 }
 
-ActionMenu *timeline_actions_push_response_menu(
-    TimelineItem *item, TimelineItemAction *reply_action, GColor bg_color,
-    ActionMenuDidCloseCb did_close_cb, WindowStack *window_stack, TimelineItemActionSource source,
-    bool standalone_reply) {
+ActionMenu *timeline_actions_push_response_menu(TimelineItem *item,
+                                                TimelineItemAction *reply_action, GColor bg_color,
+                                                ActionMenuDidCloseCb did_close_cb,
+                                                WindowStack *window_stack,
+                                                TimelineItemActionSource source,
+                                                bool standalone_reply) {
   kernel_ui_set_current_timeline_item_action_source(source);
   prv_request_responsive_session();
   ActionMenuConfig config = {
-    .context = item,
-    .colors.background = bg_color,
-    .did_close = did_close_cb,
-    .root_level = prv_create_responses_level(reply_action, NULL, standalone_reply),
+      .context = item,
+      .colors.background = bg_color,
+      .did_close = did_close_cb,
+      .root_level = prv_create_responses_level(reply_action, NULL, standalone_reply),
   };
   return timeline_actions_push_action_menu(&config, window_stack);
 }

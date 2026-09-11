@@ -47,7 +47,7 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name) {
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return NULL;
 }
 
@@ -67,10 +67,8 @@ bool shell_prefs_get_language_english(void) {
 }
 
 static bool s_block_event_callback = false;
-EventedTimerID evented_timer_register(uint32_t timeout_ms,
-                                      bool repeating,
-                                      EventedTimerCallback callback,
-                                      void* callback_data) {
+EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
+                                      EventedTimerCallback callback, void *callback_data) {
   if (!s_block_event_callback) {
     callback(callback_data);
   }
@@ -85,7 +83,7 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms,
 const uint32_t s_invalid_param_uid = 0x12;
 const uint32_t s_get_wrong_data_uid = 0xee;
 
-static BLECharacteristic s_characteristics[NumANCSCharacteristic] = { 1, 2, 3 };
+static BLECharacteristic s_characteristics[NumANCSCharacteristic] = {1, 2, 3};
 
 // Helper Functions
 ///////////////////////////////////////////////////////////
@@ -98,28 +96,28 @@ static bool s_gatt_client_op_write_should_fail_once = false;
 
 static void prv_fake_receiving_ds_notification(size_t value_length, uint8_t *value) {
   BLECharacteristic characteristic = s_characteristics[ANCSCharacteristicData];
-  ancs_handle_read_or_notification(characteristic, (const uint8_t *) value, value_length, 0);
+  ancs_handle_read_or_notification(characteristic, (const uint8_t *)value, value_length, 0);
 }
 
 static void prv_fake_receiving_ns_notification(size_t value_length, uint8_t *value) {
   BLECharacteristic characteristic = s_characteristics[ANCSCharacteristicNotification];
-  ancs_handle_read_or_notification(characteristic, (const uint8_t *) value, value_length, 0);
+  ancs_handle_read_or_notification(characteristic, (const uint8_t *)value, value_length, 0);
 }
 
 static void prv_send_notification_with_event_flags(const uint8_t *ancs_notification_dict,
                                                    int event_flags) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
-    .event_flags = event_flags,
-    .category_id = CategoryIDSocial,
-    .category_count = 1,
-    .uid = 1,
+      .event_id = EventIDNotificationAdded,
+      .event_flags = event_flags,
+      .category_id = CategoryIDSocial,
+      .category_count = 1,
+      .uid = 1,
   };
 
   const uint32_t ancs_notification_dict_uid =
       ((GetNotificationAttributesMsg *)ancs_notification_dict)->notification_uid;
   ns_notification.uid = ancs_notification_dict_uid;
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
 }
 
 static void prv_send_notification(const uint8_t *ancs_notification_dict) {
@@ -157,11 +155,8 @@ void prv_cmp_last_received_notification(TimelineItem *item) {
 
 // Called from inside prv_write_control_point_request.
 // If this function is called we have requested a ds_notification
-BTErrno gatt_client_op_write(BLECharacteristic characteristic,
-                             const uint8_t *buffer,
-                             size_t length,
+BTErrno gatt_client_op_write(BLECharacteristic characteristic, const uint8_t *buffer, size_t length,
                              GAPLEClient client) {
-
   cl_assert_equal_i(characteristic, s_characteristics[ANCSCharacteristicControl]);
 
   if (s_gatt_client_op_write_should_fail_once) {
@@ -173,21 +168,37 @@ BTErrno gatt_client_op_write(BLECharacteristic characteristic,
     return BTErrnoInvalidParameter;
   }
 
-  const uint32_t complete_dict_uid = ((GetNotificationAttributesMsg*)s_complete_dict)->notification_uid;
-  const uint32_t chunked_dict_uid = ((GetNotificationAttributesMsg*)s_chunked_dict_part_one)->notification_uid;
-  const uint32_t message_size_attr_dict_uid = ((GetNotificationAttributesMsg*)s_message_size_attr_dict)->notification_uid;
-  const uint32_t invalid_dict_uid = ((GetNotificationAttributesMsg*)s_invalid_attribute_length)->notification_uid;
-  const uint32_t attribute_at_end_uid = ((GetNotificationAttributesMsg*)memory_with_attribute_id_at_end.attribute_data)->notification_uid;
-  const uint32_t loading_uid = ((GetNotificationAttributesMsg*)s_loading_response)->notification_uid;
-  const uint32_t no_content_uid = ((GetNotificationAttributesMsg*)s_this_message_has_no_content_response)->notification_uid;
-  const uint32_t multiple_complete_dict_uid = ((GetNotificationAttributesMsg*)s_multiple_complete_dicts)->notification_uid;
-  const uint32_t split_timestamp_uid = ((GetNotificationAttributesMsg*)s_split_timestamp_dict_part_one)->notification_uid;
-  const uint32_t message_dict_uid = ((GetNotificationAttributesMsg*)s_message_dict)->notification_uid;
-  const uint32_t app_name_title_dict_uid = ((GetNotificationAttributesMsg*)s_app_name_title_dict)->notification_uid;
-  const uint32_t unknown_app_message_dict_uid = ((GetNotificationAttributesMsg*)s_unknown_app_dict)->notification_uid;
-  const uint32_t unknown_app_unique_title_dict_uid = ((GetNotificationAttributesMsg*)s_unknown_app_unique_title_dict)->notification_uid;
-  const uint32_t mms_no_caption_dict_uid = ((GetNotificationAttributesMsg*)s_mms_no_caption_dict)->notification_uid;
-  const uint32_t mms_with_caption_dict_uid = ((GetNotificationAttributesMsg*)s_mms_with_caption_dict)->notification_uid;
+  const uint32_t complete_dict_uid =
+      ((GetNotificationAttributesMsg *)s_complete_dict)->notification_uid;
+  const uint32_t chunked_dict_uid =
+      ((GetNotificationAttributesMsg *)s_chunked_dict_part_one)->notification_uid;
+  const uint32_t message_size_attr_dict_uid =
+      ((GetNotificationAttributesMsg *)s_message_size_attr_dict)->notification_uid;
+  const uint32_t invalid_dict_uid =
+      ((GetNotificationAttributesMsg *)s_invalid_attribute_length)->notification_uid;
+  const uint32_t attribute_at_end_uid =
+      ((GetNotificationAttributesMsg *)memory_with_attribute_id_at_end.attribute_data)
+          ->notification_uid;
+  const uint32_t loading_uid =
+      ((GetNotificationAttributesMsg *)s_loading_response)->notification_uid;
+  const uint32_t no_content_uid =
+      ((GetNotificationAttributesMsg *)s_this_message_has_no_content_response)->notification_uid;
+  const uint32_t multiple_complete_dict_uid =
+      ((GetNotificationAttributesMsg *)s_multiple_complete_dicts)->notification_uid;
+  const uint32_t split_timestamp_uid =
+      ((GetNotificationAttributesMsg *)s_split_timestamp_dict_part_one)->notification_uid;
+  const uint32_t message_dict_uid =
+      ((GetNotificationAttributesMsg *)s_message_dict)->notification_uid;
+  const uint32_t app_name_title_dict_uid =
+      ((GetNotificationAttributesMsg *)s_app_name_title_dict)->notification_uid;
+  const uint32_t unknown_app_message_dict_uid =
+      ((GetNotificationAttributesMsg *)s_unknown_app_dict)->notification_uid;
+  const uint32_t unknown_app_unique_title_dict_uid =
+      ((GetNotificationAttributesMsg *)s_unknown_app_unique_title_dict)->notification_uid;
+  const uint32_t mms_no_caption_dict_uid =
+      ((GetNotificationAttributesMsg *)s_mms_no_caption_dict)->notification_uid;
+  const uint32_t mms_with_caption_dict_uid =
+      ((GetNotificationAttributesMsg *)s_mms_with_caption_dict)->notification_uid;
 
   const CPDSMessage *cmd_header = (const CPDSMessage *)buffer;
   if (cmd_header->command_id == CommandIDGetAppAttributes) {
@@ -208,75 +219,87 @@ BTErrno gatt_client_op_write(BLECharacteristic characteristic,
   s_num_requested_notif_attributes++;
 
   if (uid == complete_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_complete_dict), (uint8_t*) s_complete_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_complete_dict), (uint8_t *)s_complete_dict);
     s_num_ds_notifications_received++;
   } else if (uid == chunked_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_chunked_dict_part_one), (uint8_t*) s_chunked_dict_part_one);
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_chunked_dict_part_two), (uint8_t*) s_chunked_dict_part_two);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_chunked_dict_part_one),
+                                       (uint8_t *)s_chunked_dict_part_one);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_chunked_dict_part_two),
+                                       (uint8_t *)s_chunked_dict_part_two);
     s_num_ds_notifications_received += 2;
   } else if (uid == message_size_attr_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_size_attr_dict), (uint8_t*) s_message_size_attr_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_size_attr_dict),
+                                       (uint8_t *)s_message_size_attr_dict);
     s_num_ds_notifications_received++;
   } else if (uid == attribute_at_end_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(memory_with_attribute_id_at_end.attribute_data), (uint8_t*) memory_with_attribute_id_at_end.attribute_data);
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(memory_with_attribute_id_at_end_p2), (uint8_t*) memory_with_attribute_id_at_end_p2);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(memory_with_attribute_id_at_end.attribute_data),
+                                       (uint8_t *)memory_with_attribute_id_at_end.attribute_data);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(memory_with_attribute_id_at_end_p2),
+                                       (uint8_t *)memory_with_attribute_id_at_end_p2);
     s_num_ds_notifications_received += 2;
   } else if (uid == invalid_dict_uid) {
-      prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_invalid_attribute_length), (uint8_t*) s_invalid_attribute_length);
-      s_num_ds_notifications_received++;
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_invalid_attribute_length),
+                                       (uint8_t *)s_invalid_attribute_length);
+    s_num_ds_notifications_received++;
   } else if (uid == loading_uid) {
     prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_loading_response),
-                            (uint8_t*) s_loading_response);
+                                       (uint8_t *)s_loading_response);
     s_num_ds_notifications_received++;
   } else if (uid == no_content_uid) {
     prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_this_message_has_no_content_response),
-                            (uint8_t*) s_this_message_has_no_content_response);
+                                       (uint8_t *)s_this_message_has_no_content_response);
     s_num_ds_notifications_received++;
   } else if (uid == s_invalid_param_uid) {
     ancs_handle_write_response(0, 0xA2);
     s_num_ds_notifications_received++;
-  } else if (uid ==  multiple_complete_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_multiple_complete_dicts), (uint8_t*) s_multiple_complete_dicts);
+  } else if (uid == multiple_complete_dict_uid) {
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_multiple_complete_dicts),
+                                       (uint8_t *)s_multiple_complete_dicts);
     s_num_ds_notifications_received += 3;
   } else if (uid == split_timestamp_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_split_timestamp_dict_part_one), (uint8_t*) s_split_timestamp_dict_part_one);
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_split_timestamp_dict_part_two), (uint8_t*) s_split_timestamp_dict_part_two);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_split_timestamp_dict_part_one),
+                                       (uint8_t *)s_split_timestamp_dict_part_one);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_split_timestamp_dict_part_two),
+                                       (uint8_t *)s_split_timestamp_dict_part_two);
     s_num_ds_notifications_received += 2;
   } else if (uid == message_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_dict), (uint8_t*) s_message_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_dict), (uint8_t *)s_message_dict);
     s_num_ds_notifications_received++;
   } else if (uid == app_name_title_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_app_name_title_dict), (uint8_t *)s_app_name_title_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_app_name_title_dict),
+                                       (uint8_t *)s_app_name_title_dict);
     s_num_ds_notifications_received++;
   } else if (uid == unknown_app_message_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_unknown_app_dict), (uint8_t *)s_unknown_app_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_unknown_app_dict),
+                                       (uint8_t *)s_unknown_app_dict);
     s_num_ds_notifications_received++;
   } else if (uid == unknown_app_unique_title_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_unknown_app_unique_title_dict), (uint8_t *)s_unknown_app_unique_title_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_unknown_app_unique_title_dict),
+                                       (uint8_t *)s_unknown_app_unique_title_dict);
     s_num_ds_notifications_received++;
   } else if (uid == mms_no_caption_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_mms_no_caption_dict), (uint8_t *)s_mms_no_caption_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_mms_no_caption_dict),
+                                       (uint8_t *)s_mms_no_caption_dict);
     s_num_ds_notifications_received++;
   } else if (uid == mms_with_caption_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_mms_with_caption_dict), (uint8_t *)s_mms_with_caption_dict);
+    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_mms_with_caption_dict),
+                                       (uint8_t *)s_mms_with_caption_dict);
     s_num_ds_notifications_received++;
   } else if (uid == s_get_wrong_data_uid) {
     // We wanted a notification attributes message, but got a app attributes message...
     prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_app_info_dict),
-                                         (uint8_t *)s_message_app_info_dict);
+                                       (uint8_t *)s_message_app_info_dict);
     s_num_ds_notifications_received++;
   }
 
   return BTErrnoOK;
 }
 
-
 // Tests
 ///////////////////////////////////////////////////////////
 
 #define TEST_START FILESYSTEM_FILE_TEST_SPACE_BEGIN
-#define TEST_SIZE (FILESYSTEM_FILE_TEST_SPACE_END - \
-  FILESYSTEM_FILE_TEST_SPACE_BEGIN)
+#define TEST_SIZE (FILESYSTEM_FILE_TEST_SPACE_END - FILESYSTEM_FILE_TEST_SPACE_BEGIN)
 
 void test_ancs__initialize(void) {
   s_block_event_callback = false;
@@ -334,7 +357,7 @@ void test_ancs__should_handle_small_and_large_messages(void) {
   prv_send_notification((uint8_t *)&s_chunked_dict_part_one);
   prv_send_notification((uint8_t *)&s_chunked_dict_part_one);
   cl_assert_equal_i(s_num_requested_notif_attributes, 4 + 4);
-  cl_assert_equal_i(s_num_ds_notifications_received, 4 + 2*4);
+  cl_assert_equal_i(s_num_ds_notifications_received, 4 + 2 * 4);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 4 + 4);
 
   // Some alternating complete / 2-part notifications
@@ -409,10 +432,9 @@ void test_ancs__should_handle_split_timestamp_messages(void) {
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
 }
 
-
 void test_ancs__attribute_at_end(void) {
   prv_send_notification((uint8_t *)&memory_with_attribute_id_at_end.attribute_data);
-  cl_assert_equal_i(s_num_requested_notif_attributes, 1 );
+  cl_assert_equal_i(s_num_requested_notif_attributes, 1);
   cl_assert_equal_i(s_num_ds_notifications_received, 2);
 }
 
@@ -426,51 +448,48 @@ void test_ancs__app_name_cache(void) {
   cl_assert_equal_i(s_num_ds_notifications_received, 2);
 }
 
-
-
 void test_ancs__ancs_invalid_param(void) {
-
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
-    .event_flags = 0,
-    .category_id = CategoryIDSocial,
-    .category_count = 1,
-    .uid = 0,
+      .event_id = EventIDNotificationAdded,
+      .event_flags = 0,
+      .category_id = CategoryIDSocial,
+      .category_count = 1,
+      .uid = 0,
   };
 
-  const uint32_t complete_dict_uid = ((GetNotificationAttributesMsg*)s_complete_dict)->notification_uid;
+  const uint32_t complete_dict_uid =
+      ((GetNotificationAttributesMsg *)s_complete_dict)->notification_uid;
 
   ns_notification.uid = s_invalid_param_uid;
   // This will return with an error ANCS_INVALID_PARAM
   // Should not get re-requested
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
-  cl_assert_equal_i(s_num_requested_notif_attributes, 1 );
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
+  cl_assert_equal_i(s_num_requested_notif_attributes, 1);
   cl_assert_equal_i(s_num_ds_notifications_received, 1);
 
   ns_notification.uid = complete_dict_uid;
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(s_num_requested_notif_attributes, 2);
   cl_assert_equal_i(s_num_ds_notifications_received, 2);
 
   ns_notification.uid = s_invalid_param_uid;
   // This will return with an error ANCS_INVALID_PARAM
   // Should not get re-requested
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(s_num_requested_notif_attributes, 3);
   cl_assert_equal_i(s_num_ds_notifications_received, 3);
 
   ns_notification.uid = s_invalid_param_uid;
   // This will return with an error ANCS_INVALID_PARAM
   // Should not get re-requested
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(s_num_requested_notif_attributes, 4);
   cl_assert_equal_i(s_num_ds_notifications_received, 4);
 
   ns_notification.uid = complete_dict_uid;
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(s_num_requested_notif_attributes, 5);
   cl_assert_equal_i(s_num_ds_notifications_received, 5);
-
 }
 
 extern ANCSClientState prv_get_state(void);
@@ -482,13 +501,13 @@ extern void prv_is_ancs_alive_launcher_task_cb(void *data);
 // Send a notification whose uid the fake never answers, so the head wedges.
 static void prv_send_unanswered_notification(uint32_t uid) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
-    .event_flags = 0,
-    .category_id = CategoryIDSocial,
-    .category_count = 1,
-    .uid = uid,
+      .event_id = EventIDNotificationAdded,
+      .event_flags = 0,
+      .category_id = CategoryIDSocial,
+      .category_count = 1,
+      .uid = uid,
   };
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
 }
 
 void test_ancs__alive_check_disconnection(void) {
@@ -510,19 +529,19 @@ void test_ancs__alive_check_disconnection(void) {
 
 void test_ancs__notification_dismissal(void) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationRemoved,
-    .event_flags = 0,
-    .category_id = CategoryIDSocial,
-    .category_count = 1,
+      .event_id = EventIDNotificationRemoved,
+      .event_flags = 0,
+      .category_id = CategoryIDSocial,
+      .category_count = 1,
   };
 
   // Notification removal without DIS service - notification shouldn't be acted upon
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(fake_kernel_services_notifications_acted_upon_count(), 0);
 
   // DIS service / iOS 9+ detected - enabling notification dismissal
   ancs_handle_ios9_or_newer_detected();
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(fake_kernel_services_notifications_acted_upon_count(), 1);
 }
 
@@ -558,7 +577,8 @@ void test_ancs__notification_parsing(void) {
   prv_cmp_last_received_notification(&s_mms_with_caption_parsed_item);
 
   // Test a third party notification with the MultiMedia EventFlag
-  prv_send_notification_with_event_flags((uint8_t *)&s_unknown_app_unique_title_dict, EventFlagMultiMedia);
+  prv_send_notification_with_event_flags((uint8_t *)&s_unknown_app_unique_title_dict,
+                                         EventFlagMultiMedia);
   prv_cmp_last_received_notification(&s_unknown_app_unique_title_parsed_item);
 }
 
@@ -585,7 +605,7 @@ void test_ancs__disconnection(void) {
 }
 
 void test_ancs__unrequested_notifications(void) {
-  prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_complete_dict), (uint8_t*) s_complete_dict);
+  prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_complete_dict), (uint8_t *)s_complete_dict);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_app_info_dict),
@@ -595,13 +615,13 @@ void test_ancs__unrequested_notifications(void) {
 
 void test_ancs__handle_unexpected_notifications(void) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
-    .event_flags = 0,
-    .category_id = CategoryIDSocial,
-    .category_count = 1,
-    .uid = s_get_wrong_data_uid,
+      .event_id = EventIDNotificationAdded,
+      .event_flags = 0,
+      .category_id = CategoryIDSocial,
+      .category_count = 1,
+      .uid = s_get_wrong_data_uid,
   };
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   // And make sure we get to a state where we can handle more messages
@@ -704,7 +724,7 @@ void test_ancs__alive_check_escalates_when_wedged(void) {
 }
 
 // No Longer Supported
-//void test_ancs__should_handle_response_with_multiple_notifications(void) {
+// void test_ancs__should_handle_response_with_multiple_notifications(void) {
 //
 //  NSNotification ns_notification = {
 //    .event_id = EventIDNotificationAdded,
@@ -714,7 +734,8 @@ void test_ancs__alive_check_escalates_when_wedged(void) {
 //    .uid = 0,
 //  };
 //
-//  const uint32_t multiple_complete_dict_uid = ((GetNotificationAttributesMsg*)s_multiple_complete_dicts)->notification_uid;
+//  const uint32_t multiple_complete_dict_uid =
+//  ((GetNotificationAttributesMsg*)s_multiple_complete_dicts)->notification_uid;
 //  ns_notification.uid = multiple_complete_dict_uid;
 //  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t*) &ns_notification);
 //  cl_assert_equal_i(s_num_requested_notif_attributes, 1);
@@ -723,4 +744,3 @@ void test_ancs__alive_check_escalates_when_wedged(void) {
 //  // The last one was a phone notification but I changed it so it no longer is
 //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
 //}
-

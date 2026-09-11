@@ -25,8 +25,8 @@ void bt_local_addr_pause_cycling(void) {
   bt_lock();
   {
     if (s_pra_cycling_pause_count == 0) {
-      PBL_LOG_INFO("Pausing address cycling (pinned_addr="BT_DEVICE_ADDRESS_FMT")",
-              BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
+      PBL_LOG_INFO("Pausing address cycling (pinned_addr=" BT_DEVICE_ADDRESS_FMT ")",
+                   BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
       prv_allow_cycling(false);
     }
     ++s_pra_cycling_pause_count;
@@ -40,8 +40,8 @@ void bt_local_addr_resume_cycling(void) {
     PBL_ASSERTN(s_pra_cycling_pause_count);
     --s_pra_cycling_pause_count;
     if (s_pra_cycling_pause_count == 0) {
-      PBL_LOG_INFO("Resuming address cycling (pinned_addr="BT_DEVICE_ADDRESS_FMT")",
-              BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
+      PBL_LOG_INFO("Resuming address cycling (pinned_addr=" BT_DEVICE_ADDRESS_FMT ")",
+                   BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
       prv_allow_cycling(true);
     }
   }
@@ -68,8 +68,8 @@ void bt_local_addr_pin(const BTDeviceAddress *addr) {
   bool addresses_match = bt_device_address_equal(addr, &s_pinned_addr);
   bt_unlock();
 
-  PBL_LOG_INFO("Requested to pin address to "BT_DEVICE_ADDRESS_FMT " match=%u",
-          BT_DEVICE_ADDRESS_XPLODE_PTR(addr), addresses_match);
+  PBL_LOG_INFO("Requested to pin address to " BT_DEVICE_ADDRESS_FMT " match=%u",
+               BT_DEVICE_ADDRESS_XPLODE_PTR(addr), addresses_match);
 }
 
 void bt_local_addr_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
@@ -96,8 +96,7 @@ void bt_local_addr_init(void) {
       PBL_LOG_ERR("Failed to generate PRA... :(");
     }
   }
-  PBL_LOG_INFO("Pinned address: " BT_DEVICE_ADDRESS_FMT,
-          BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
+  PBL_LOG_INFO("Pinned address: " BT_DEVICE_ADDRESS_FMT, BT_DEVICE_ADDRESS_XPLODE(s_pinned_addr));
 
   if (bt_persistent_storage_has_pinned_ble_pairings()) {
     PBL_LOG_INFO("Bonding that requires address pinning exists, applying pinned addr!");

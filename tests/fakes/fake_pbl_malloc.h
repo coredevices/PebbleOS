@@ -59,7 +59,7 @@ Heap *task_heap_get_for_current_task(void) {
 }
 
 static void *malloc_and_track(size_t bytes, void *lr) {
-  if (bytes >= s_max_size_allowed)  {
+  if (bytes >= s_max_size_allowed) {
     return NULL;
   }
   void *rt = malloc(bytes);
@@ -68,7 +68,7 @@ static void *malloc_and_track(size_t bytes, void *lr) {
 }
 
 static void *calloc_and_track(int n, size_t bytes, void *lr) {
-  if ((bytes * n) >= s_max_size_allowed)  {
+  if ((bytes * n) >= s_max_size_allowed) {
     return NULL;
   }
 
@@ -91,7 +91,7 @@ void *realloc_and_track(void *ptr, size_t bytes, void *lr) {
   if (new_ptr && ptr) {
     ListNode *node = list_find((ListNode *)s_pointer_list, prv_pointer_list_filter, ptr);
     cl_assert(node);
-    memcpy(new_ptr, ptr, MIN(((PointerListNode*)node)->bytes, bytes));
+    memcpy(new_ptr, ptr, MIN(((PointerListNode *)node)->bytes, bytes));
     free_and_track(ptr);
   }
   return new_ptr;
@@ -106,8 +106,8 @@ void fake_pbl_malloc_check_net_allocs(void) {
     ListNode *node = (ListNode *)s_pointer_list;
     while (node) {
       PointerListNode *ptr_node = (PointerListNode *)node;
-      printf("Still allocated: %p (%zu bytes, lr %p)\n",
-             ptr_node->ptr, ptr_node->bytes, ptr_node->lr);
+      printf("Still allocated: %p (%zu bytes, lr %p)\n", ptr_node->ptr, ptr_node->bytes,
+             ptr_node->lr);
       node = list_get_next(node);
     }
   }
@@ -205,11 +205,11 @@ void kernel_free(void *ptr) {
   free_and_track(ptr);
 }
 
-void* kernel_calloc(size_t count, size_t size) {
+void *kernel_calloc(size_t count, size_t size) {
   return calloc_and_track(count, size, __builtin_return_address(0));
 }
 
-char* kernel_strdup(const char* s) {
+char *kernel_strdup(const char *s) {
   char *r = malloc_and_track(strlen(s) + 1, __builtin_return_address(0));
   if (!r) {
     return NULL;
@@ -219,11 +219,11 @@ char* kernel_strdup(const char* s) {
   return r;
 }
 
-char* kernel_strdup_check(const char* s) {
+char *kernel_strdup_check(const char *s) {
   return kernel_strdup(s);
 }
 
-char* task_strdup(const char* s) {
+char *task_strdup(const char *s) {
   return kernel_strdup(s);
 }
 

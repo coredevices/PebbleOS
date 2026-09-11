@@ -22,15 +22,16 @@
 static const uint16_t ENDPOINT_ID = 0x12;
 
 void system_message_send(SystemMessageType type) {
-  uint8_t buffer[2] = { 0x00, type };
+  uint8_t buffer[2] = {0x00, type};
   CommSession *system_session = comm_session_get_system_session();
-  comm_session_send_data(system_session, ENDPOINT_ID, buffer, sizeof(buffer), COMM_SESSION_DEFAULT_TIMEOUT);
+  comm_session_send_data(system_session, ENDPOINT_ID, buffer, sizeof(buffer),
+                         COMM_SESSION_DEFAULT_TIMEOUT);
   PBL_LOG_DBG("Sending sysmsg: %u", type);
 }
 
 static void prv_reset_kernel_bg_cb(void *unused) {
   PBL_LOG_ALWAYS("Rebooting to install firmware...");
-  RebootReason reason = { RebootReasonCode_SoftwareUpdate, 0 };
+  RebootReason reason = {RebootReasonCode_SoftwareUpdate, 0};
   reboot_reason_set(&reason);
   system_reset();
 }
@@ -54,18 +55,18 @@ static void prv_handle_firmware_complete_msg(void) {
 extern bool pb_storage_get_status(PutBytesObjectType obj_type, PbInstallStatus *status);
 static void prv_handle_firmware_status_request(CommSession *session) {
   struct PACKED {
-    uint8_t  deprecated;
-    uint8_t  type;
-    uint8_t  rsvd[2];
+    uint8_t deprecated;
+    uint8_t type;
+    uint8_t rsvd[2];
     uint32_t resource_bytes_written;
     uint32_t resource_crc;
     uint32_t firmware_bytes_written;
     uint32_t firmware_crc;
   } fw_status_resp = {
-    .type = SysMsgFirmwareStatusResponse,
+      .type = SysMsgFirmwareStatusResponse,
   };
 
-  PbInstallStatus status = { };
+  PbInstallStatus status = {};
   if (pb_storage_get_status(ObjectFirmware, &status)) {
     fw_status_resp.firmware_bytes_written = status.num_bytes_written;
     fw_status_resp.firmware_crc = status.crc_of_bytes;
@@ -76,15 +77,15 @@ static void prv_handle_firmware_status_request(CommSession *session) {
     fw_status_resp.resource_crc = status.crc_of_bytes;
   }
 
-  PBL_LOG_DBG("FW Status Resp: res %"PRIu32" : 0x%x fw %"PRIu32" : 0x%x",
-          fw_status_resp.resource_bytes_written, (int)fw_status_resp.resource_crc,
-          fw_status_resp.firmware_bytes_written, (int)fw_status_resp.firmware_crc);
+  PBL_LOG_DBG("FW Status Resp: res %" PRIu32 " : 0x%x fw %" PRIu32 " : 0x%x",
+              fw_status_resp.resource_bytes_written, (int)fw_status_resp.resource_crc,
+              fw_status_resp.firmware_bytes_written, (int)fw_status_resp.firmware_crc);
 
   comm_session_send_data(session, ENDPOINT_ID, (uint8_t *)&fw_status_resp, sizeof(fw_status_resp),
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
+void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
   SystemMessageType t = data[1];
@@ -92,80 +93,80 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t* data, si
   PBL_LOG_DBG("Received sysmsg: %u", t);
 
   switch (t) {
-  case SysMsgFirmwareAvailable_Deprecated: {
-    PBL_LOG_DBG("Deprecated available message received.");
-    break;
-  }
-
-  case SysMsgFirmwareStart: {
-    PBL_LOG_VERBOSE("About to receive new firmware!");
-
-    uint32_t bytes_transferred = 0;
-    uint32_t total_size = 0;
-
-    bool smooth_progress_supported =
-        comm_session_has_capability(session, CommSessionSmoothFwInstallProgressSupport) &&
-        (length >= sizeof(SysMsgSmoothFirmwareStartPayload));
-
-    if (smooth_progress_supported) {
-      SysMsgSmoothFirmwareStartPayload *payload = (SysMsgSmoothFirmwareStartPayload *)data;
-      bytes_transferred = payload->bytes_already_transferred;
-      total_size = bytes_transferred + payload->bytes_to_transfer;
-      PBL_LOG_INFO("Starting FW update, %"PRIu32" of %"PRIu32" bytes already transferred",
-                   bytes_transferred, total_size);
+    case SysMsgFirmwareAvailable_Deprecated: {
+      PBL_LOG_DBG("Deprecated available message received.");
+      break;
     }
 
-    PebbleEvent e = {
-      .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
-      .firmware_update = {
-        .type = smooth_progress_supported ?
-            PebbleSystemMessageFirmwareUpdateStart : PebbleSystemMessageFirmwareUpdateStartLegacy,
-        .bytes_transferred = bytes_transferred,
-        .total_transfer_size = total_size,
+    case SysMsgFirmwareStart: {
+      PBL_LOG_VERBOSE("About to receive new firmware!");
+
+      uint32_t bytes_transferred = 0;
+      uint32_t total_size = 0;
+
+      bool smooth_progress_supported =
+          comm_session_has_capability(session, CommSessionSmoothFwInstallProgressSupport) &&
+          (length >= sizeof(SysMsgSmoothFirmwareStartPayload));
+
+      if (smooth_progress_supported) {
+        SysMsgSmoothFirmwareStartPayload *payload = (SysMsgSmoothFirmwareStartPayload *)data;
+        bytes_transferred = payload->bytes_already_transferred;
+        total_size = bytes_transferred + payload->bytes_to_transfer;
+        PBL_LOG_INFO("Starting FW update, %" PRIu32 " of %" PRIu32 " bytes already transferred",
+                     bytes_transferred, total_size);
       }
-    };
-    event_put(&e);
-    break;
-  }
 
-  case SysMsgFirmwareStatus:
-    prv_handle_firmware_status_request(session);
-    break;
+      PebbleEvent e = {
+          .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
+          .firmware_update = {
+              .type = smooth_progress_supported ? PebbleSystemMessageFirmwareUpdateStart
+                                                : PebbleSystemMessageFirmwareUpdateStartLegacy,
+              .bytes_transferred = bytes_transferred,
+              .total_transfer_size = total_size,
+          }
+      };
+      event_put(&e);
+      break;
+    }
 
-  case SysMsgFirmwareComplete: {
-    PBL_LOG_VERBOSE("Firmware transfer succeeded, okay to restart!");
-    PebbleEvent e = {
-      .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
-      .firmware_update.type = PebbleSystemMessageFirmwareUpdateComplete,
-    };
-    event_put(&e);
-    prv_handle_firmware_complete_msg();
-    break;
-  }
+    case SysMsgFirmwareStatus:
+      prv_handle_firmware_status_request(session);
+      break;
 
-  case SysMsgFirmwareFail: {
-    PBL_LOG_VERBOSE("Firmware transfer failed, time to clean up!");
-    PebbleEvent e = {
-      .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
-      .firmware_update.type = PebbleSystemMessageFirmwareUpdateFailed,
-    };
-    event_put(&e);
-    break;
-  }
+    case SysMsgFirmwareComplete: {
+      PBL_LOG_VERBOSE("Firmware transfer succeeded, okay to restart!");
+      PebbleEvent e = {
+          .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
+          .firmware_update.type = PebbleSystemMessageFirmwareUpdateComplete,
+      };
+      event_put(&e);
+      prv_handle_firmware_complete_msg();
+      break;
+    }
 
-  case SysMsgFirmwareUpToDate: {
-    PBL_LOG_VERBOSE("Firmware is up to date!");
-    PebbleEvent e = {
-      .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
-      .firmware_update.type = PebbleSystemMessageFirmwareUpToDate,
-    };
-    event_put(&e);
-    break;
-  }
+    case SysMsgFirmwareFail: {
+      PBL_LOG_VERBOSE("Firmware transfer failed, time to clean up!");
+      PebbleEvent e = {
+          .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
+          .firmware_update.type = PebbleSystemMessageFirmwareUpdateFailed,
+      };
+      event_put(&e);
+      break;
+    }
 
-  default:
-    PBL_LOG_ERR("Invalid message received, type is %u", data[1]);
-    break;
+    case SysMsgFirmwareUpToDate: {
+      PBL_LOG_VERBOSE("Firmware is up to date!");
+      PebbleEvent e = {
+          .type = PEBBLE_SYSTEM_MESSAGE_EVENT,
+          .firmware_update.type = PebbleSystemMessageFirmwareUpToDate,
+      };
+      event_put(&e);
+      break;
+    }
+
+    default:
+      PBL_LOG_ERR("Invalid message received, type is %u", data[1]);
+      break;
   }
 }
 
@@ -174,12 +175,9 @@ void system_message_send_firmware_start_response(FirmwareUpdateStatus status) {
     uint8_t zero;
     uint8_t type;
     uint8_t status;
-  } msg = {
-    .zero = 0x00,
-    .type = SysMsgFirmwareStartResponse,
-    .status = status
-  };
+  } msg = {.zero = 0x00, .type = SysMsgFirmwareStartResponse, .status = status};
 
   CommSession *session = comm_session_get_system_session();
-  comm_session_send_data(session, ENDPOINT_ID, (const uint8_t*) &msg, sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
+  comm_session_send_data(session, ENDPOINT_ID, (const uint8_t *)&msg, sizeof(msg),
+                         COMM_SESSION_DEFAULT_TIMEOUT);
 }

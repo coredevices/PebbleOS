@@ -57,28 +57,23 @@ static bool s_initialized;
 static PBL_MUTEX_DEFINE(s_accel_mutex);
 
 static uint32_t s_sampling_interval_ms = 0;
-static const AccelRawData s_default_sample = {
-  .x = 0,
-  .y = 0,
-  .z = -1000
-};
+static const AccelRawData s_default_sample = {.x = 0, .y = 0, .z = -1000};
 
 // We copy accel data received over the QEMU serial connection into this buffer.
 // This data gets moved into s_latest_reading when the s_timer_id timer callback
 // executes.
 #define QEMU_ACCEL_RCV_BUFFER_SAMPLES 256
 static AccelRawData s_rcv_buffer[QEMU_ACCEL_RCV_BUFFER_SAMPLES];
-static uint16_t     s_num_rcv_samples;
-static uint16_t     s_current_rcv_sample;
+static uint16_t s_num_rcv_samples;
+static uint16_t s_current_rcv_sample;
 
 static AccelRawData s_latest_reading;
-static uint32_t     s_num_fifo_samples;           // # of samples in the fifo
+static uint32_t s_num_fifo_samples;  // # of samples in the fifo
 
 // This timer is used to feed the FIFO
-static bool         s_timer_running;
-static TimerID      s_timer_id;               // timer used to copy data from s_rcv_samples into
-                                              // s_latest_reading.
-
+static bool s_timer_running;
+static TimerID s_timer_id;  // timer used to copy data from s_rcv_samples into
+                            // s_latest_reading.
 
 static void prv_construct_driver_sample(AccelDriverSample *sample) {
   time_t time_s;
@@ -86,20 +81,18 @@ static void prv_construct_driver_sample(AccelDriverSample *sample) {
   rtc_get_time_ms(&time_s, &time_ms);
   uint64_t timestamp_ms = ((uint64_t)time_s) * 1000 + time_ms;
 
-  *sample = (AccelDriverSample) {
-    .timestamp_us = timestamp_ms * 1000,
-    .x = s_latest_reading.x,
-    .y = s_latest_reading.y,
-    .z = s_latest_reading.z,
+  *sample = (AccelDriverSample){
+      .timestamp_us = timestamp_ms * 1000,
+      .x = s_latest_reading.x,
+      .y = s_latest_reading.y,
+      .z = s_latest_reading.z,
   };
 }
-
 
 static void prv_stop_timer(void) {
   new_timer_stop(s_timer_id);
   s_timer_running = false;
 }
-
 
 // This timer runs as long as we have samples in our s_rcv_buffer or there is
 // any subscription to the accel that expects samples to arrive at a given
@@ -127,17 +120,14 @@ static void prv_timer_cb(void *data) {
   pbl_mutex_unlock(&s_accel_mutex);
 }
 
-
 // Start/reschedule the timer that feeds the FIFO/s_latest_reading out of the
 // samples received from the host
 static void prv_reschedule_timer(void) {
-  bool success = new_timer_start(s_timer_id, s_sampling_interval_ms,
-                                 prv_timer_cb, NULL,
+  bool success = new_timer_start(s_timer_id, s_sampling_interval_ms, prv_timer_cb, NULL,
                                  TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
   s_timer_running = true;
 }
-
 
 // Called by the qemu_serial driver when we receive an accel packet from the
 // remote side. This copies the received data into our s_rcv_buffer buffer. It
@@ -155,20 +145,19 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
 
   // Copy the received samples into the s_rcv_buffer
 #if QEMU_ACCEL_RCV_BUFFER_SAMPLES < 256
-  s_num_rcv_samples = MIN(hdr->num_samples,
-                          QEMU_ACCEL_RCV_BUFFER_SAMPLES);
+  s_num_rcv_samples = MIN(hdr->num_samples, QEMU_ACCEL_RCV_BUFFER_SAMPLES);
 #else
   s_num_rcv_samples = hdr->num_samples;
 #endif
   s_current_rcv_sample = 0;
   pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
   {
-    for (uint32_t i=0; i < s_num_rcv_samples; ++i) {
+    for (uint32_t i = 0; i < s_num_rcv_samples; ++i) {
       s_rcv_buffer[i].x = ntohs(hdr->samples[i].x);
       s_rcv_buffer[i].y = ntohs(hdr->samples[i].y);
       s_rcv_buffer[i].z = ntohs(hdr->samples[i].z);
-      PBL_LOG_VERBOSE("  x,y,z from host: %d, %d, %d", s_rcv_buffer[i].x,
-                      s_rcv_buffer[i].y, s_rcv_buffer[i].z);
+      PBL_LOG_VERBOSE("  x,y,z from host: %d, %d, %d", s_rcv_buffer[i].x, s_rcv_buffer[i].y,
+                      s_rcv_buffer[i].z);
     }
 
     // If we have any samples at all, make sure the timer is running. This is
@@ -185,7 +174,6 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
   };
   qemu_serial_send(QemuProtocol_Accel, (uint8_t *)&resp, sizeof(resp));
 }
-
 
 void accel_init(void) {
   PBL_ASSERTN(!s_initialized);
@@ -212,11 +200,9 @@ uint32_t accel_get_sampling_interval(void) {
   return s_sampling_interval_ms * 1000;
 }
 
-
 uint32_t accel_get_max_num_samples(void) {
   return QEMU_ACCEL_RCV_BUFFER_SAMPLES;
 }
-
 
 void accel_set_num_samples(uint32_t num_samples) {
   pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
@@ -235,34 +221,27 @@ void accel_set_num_samples(uint32_t num_samples) {
   pbl_mutex_unlock(&s_accel_mutex);
 }
 
-
 int accel_peek(AccelDriverSample *data) {
   prv_construct_driver_sample(data);
   return 0;
 }
 
-
 void accel_enable_shake_detection(bool on) {
 }
-
 
 bool accel_get_shake_detection_enabled(void) {
   return false;
 }
 
-
 void accel_enable_double_tap_detection(bool on) {
 }
-
 
 bool accel_get_double_tap_detection_enabled(void) {
   return false;
 }
 
-
 void accel_set_shake_sensitivity_high(bool sensitivity_high) {
 }
-
 
 void accel_set_shake_sensitivity_percent(uint8_t percent) {
   (void)percent;

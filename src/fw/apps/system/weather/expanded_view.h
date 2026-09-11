@@ -17,13 +17,15 @@
 // icon, tighter rows, and the two dials become a single meters text line.
 #define EV_SMALL_RECT (!PBL_ROUND && PBL_DISPLAY_HEIGHT < 200)
 #define EV_ICON_SIZE (EV_SMALL_RECT ? 56 : 74)
-#define EV_ICON_Y    PBL_IF_ROUND_ELSE(38, (EV_SMALL_RECT ? 24 : 26))
+#define EV_ICON_Y PBL_IF_ROUND_ELSE(38, (EV_SMALL_RECT ? 24 : 26))
 
 // How the card animates in when pushed.
 typedef enum {
-  ExpandedViewEntranceStatic = 0,     // no entrance — the forecast's hero icon-fly already placed it
-  ExpandedViewEntranceTextFromLeft,   // the glance text slides in from the left (arriving from globe DOWN)
-  ExpandedViewEntranceCardFromLeft,   // the whole card slides in from the left (arriving from globe BACK)
+  ExpandedViewEntranceStatic = 0,    // no entrance — the forecast's hero icon-fly already placed it
+  ExpandedViewEntranceTextFromLeft,  // the glance text slides in from the left (arriving from globe
+                                     // DOWN)
+  ExpandedViewEntranceCardFromLeft,  // the whole card slides in from the left (arriving from globe
+                                     // BACK)
 } ExpandedViewEntrance;
 
 // Full-screen "expanded weather" card for TODAY — a standalone recreation of the
@@ -52,18 +54,17 @@ typedef enum {
 //! run never reaches unload, so the next launch would read stale pointers).
 void expanded_view_reset(void);
 
-void expanded_view_push(const WeatherLocationForecast *today,
-                        int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min,
-                        ExpandedViewEntrance entrance,
-                        void (*on_down)(void *ctx), void *on_down_ctx,
-                        void (*on_select)(void *ctx), void *on_select_ctx);
+void expanded_view_push(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
+                        int16_t utc_off_min, ExpandedViewEntrance entrance,
+                        void (*on_down)(void *ctx), void *on_down_ctx, void (*on_select)(void *ctx),
+                        void *on_select_ctx);
 
 // Format the glance strings (sunset title, "high/low°", location) exactly as the card renders them.
 // Used by the forecast to animate the identical text in during the hero icon-fly.
-void expanded_view_format_glance(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
-                                 int16_t utc_off_min,
-                                 char *sunset, size_t sunset_sz, char *temp, size_t temp_sz,
-                                 char *loc, size_t loc_sz);
+void expanded_view_format_glance(const WeatherLocationForecast *today, int16_t lat_e2,
+                                 int16_t lon_e2, int16_t utc_off_min, char *sunset,
+                                 size_t sunset_sz, char *temp, size_t temp_sz, char *loc,
+                                 size_t loc_sz);
 
 // Draw the whole card body EXCEPT the icon (status bar, sunset title, high/low°, UV + RAIN meters),
 // every element shifted right by `tdx`. `status` is the status-bar text (the time, or "Last updated
@@ -83,5 +84,5 @@ bool expanded_view_is_showing(void);
 
 // Refresh the displayed data when a new record arrives while the card is up.
 // No-op if the card is not currently showing.
-void expanded_view_update_data(const WeatherLocationForecast *today,
-                               int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min);
+void expanded_view_update_data(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
+                               int16_t utc_off_min);

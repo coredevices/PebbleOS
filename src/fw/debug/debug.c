@@ -41,11 +41,11 @@ BluetoothDumpLineCallbackData s_bt_dump_chunk_callback_data;
 
 static void prv_put_status_event(DebugInfoEventState state) {
   PebbleEvent event = {
-    .type = PEBBLE_GATHER_DEBUG_INFO_EVENT,
-    .debug_info = {
-      .source = DebugInfoSourceFWLogs,
-      .state = state,
-    },
+      .type = PEBBLE_GATHER_DEBUG_INFO_EVENT,
+      .debug_info = {
+          .source = DebugInfoSourceFWLogs,
+          .state = state,
+      },
   };
   event_put(&event);
 }
@@ -54,8 +54,8 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
   CommSession *session = s_bt_dump_chunk_callback_data.comm_session;
 
   // keep us sending data quickly
-  comm_session_set_responsiveness(
-      s_bt_dump_chunk_callback_data.comm_session, BtConsumerPpLogDump, ResponseTimeMin, 5);
+  comm_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session, BtConsumerPpLogDump,
+                                  ResponseTimeMin, 5);
 
   const uint16_t required_length = total_length + 1 + 4;
   SendBuffer *sb = comm_session_send_buffer_begin_write(session, ENDPOINT_ID, required_length,
@@ -66,10 +66,10 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
   }
 
   BluetoothHeader header = {
-    .command = 0x80,
-    .cookie = s_bt_dump_chunk_callback_data.cookie,
+      .command = 0x80,
+      .cookie = s_bt_dump_chunk_callback_data.cookie,
   };
-  comm_session_send_buffer_write(sb, (const uint8_t *) &header, sizeof(header));
+  comm_session_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
   comm_session_send_buffer_write(sb, message, total_length);
   comm_session_send_buffer_end_write(sb);
   return true;
@@ -77,34 +77,31 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
 
 // Called by flash_dump_log_file() when the log has been completely dumped
 static void prv_bt_log_dump_completed_cb(bool success) {
-  BluetoothHeader header = {
-    .cookie = s_bt_dump_chunk_callback_data.cookie
-  };
+  BluetoothHeader header = {.cookie = s_bt_dump_chunk_callback_data.cookie};
   // Send a "no logs" message if the generation did not exist and the remote supports
   // "infinite log dumping"
   CommSession *session = s_bt_dump_chunk_callback_data.comm_session;
   if (!success && comm_session_has_capability(session, CommSessionInfiniteLogDumping)) {
     header.command = 0x82;
     comm_session_send_data(s_bt_dump_chunk_callback_data.comm_session, ENDPOINT_ID,
-                           (uint8_t *) &header, sizeof(header),
-                           COMM_SESSION_DEFAULT_TIMEOUT);
+                           (uint8_t *)&header, sizeof(header), COMM_SESSION_DEFAULT_TIMEOUT);
   } else {
     // Otherwise, just send a "done" message
     header.command = 0x81;
     comm_session_send_data(s_bt_dump_chunk_callback_data.comm_session, ENDPOINT_ID,
-                           (uint8_t *) &header, sizeof(header), COMM_SESSION_DEFAULT_TIMEOUT);
+                           (uint8_t *)&header, sizeof(header), COMM_SESSION_DEFAULT_TIMEOUT);
   }
 
   s_bt_dump_chunk_callback_data.in_progress = false;
 
   // Ok to enter a lower power less responsive state
-  comm_session_set_responsiveness(
-      s_bt_dump_chunk_callback_data.comm_session, BtConsumerPpLogDump, ResponseTimeMax, 0);
+  comm_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session, BtConsumerPpLogDump,
+                                  ResponseTimeMax, 0);
   prv_put_status_event(DebugInfoStateFinished);
 }
 
-static void prv_flash_logging_bluetooth_dump(
-    CommSession *session, int generation, uint32_t cookie) {
+static void prv_flash_logging_bluetooth_dump(CommSession *session, int generation,
+                                             uint32_t cookie) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
   if (s_bt_dump_chunk_callback_data.in_progress) {
     PBL_LOG_ERR("Already in the middle of dumping logs");
@@ -126,7 +123,7 @@ static void prv_flash_logging_bluetooth_dump(
   flash_logging_set_enabled(true);
 }
 
-void dump_log_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
+void dump_log_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   uint32_t cookie;
   int generation = 0;
   if (data[0] == 0x10 || data[0] == 0x11) {
@@ -136,30 +133,30 @@ void dump_log_protocol_msg_callback(CommSession *session, const uint8_t* data, s
     }
 
     generation = data[1];
-    cookie = *((uint32_t*) (data + 2));
+    cookie = *((uint32_t *)(data + 2));
   } else {
     if (length != 5) {
       PBL_LOG_ERR("Invalid dump log message received -- length %u", length);
       return;
     }
 
-    cookie = *((uint32_t*) (data + 1));
+    cookie = *((uint32_t *)(data + 1));
   }
 
   switch (*data) {
-  case 0x00:
-    prv_flash_logging_bluetooth_dump(session, 0, cookie);
-    break;
-  case 0x01:
-    prv_flash_logging_bluetooth_dump(session, 1, cookie);
-    break;
-  case 0x10:
-    prv_flash_logging_bluetooth_dump(session, generation, cookie);
-    break;
-  case 0x02:
-  case 0x03:
-  case 0x11:
-    break;
+    case 0x00:
+      prv_flash_logging_bluetooth_dump(session, 0, cookie);
+      break;
+    case 0x01:
+      prv_flash_logging_bluetooth_dump(session, 1, cookie);
+      break;
+    case 0x10:
+      prv_flash_logging_bluetooth_dump(session, generation, cookie);
+      break;
+    case 0x02:
+    case 0x03:
+    case 0x11:
+      break;
   }
 }
 
@@ -168,9 +165,7 @@ void debug_init(McuRebootReason mcu_reboot_reason) {
 
   // Log the firmware version in the first flash log line:
   PBL_LOG_ALWAYS("Firmware version: %s", TINTIN_METADATA.version_tag);
-  PBL_LOG_ALWAYS("Platform: %u, hw: %s, sn: %s",
-                 TINTIN_METADATA.hw_platform,
-                 mfg_get_hw_version(),
+  PBL_LOG_ALWAYS("Platform: %u, hw: %s, sn: %s", TINTIN_METADATA.hw_platform, mfg_get_hw_version(),
                  mfg_get_serial_number());
 
   // Log the firmware build id to flash:
@@ -196,10 +191,8 @@ void debug_print_last_launched_app(void) {
   } else if ((last_launched_app_slot != (uint32_t)INVALID_BANK_ID)) {
     PebbleProcessInfo last_launched_app;
     uint8_t build_id[BUILD_ID_EXPECTED_LEN];
-    AppStorageGetAppInfoResult result = app_storage_get_process_info(&last_launched_app,
-                                                                     build_id,
-                                                                     (AppInstallId)last_launched_app_slot,
-                                                                     PebbleTask_App);
+    AppStorageGetAppInfoResult result = app_storage_get_process_info(
+        &last_launched_app, build_id, (AppInstallId)last_launched_app_slot, PebbleTask_App);
 
     if (result == GET_APP_INFO_SUCCESS) {
       PBL_LOG_INFO("Last launched app: %s", last_launched_app.name);

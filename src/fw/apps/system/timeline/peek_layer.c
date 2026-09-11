@@ -15,14 +15,14 @@
 #include "pbl/util/math.h"
 
 //! Title text vertically centered position
-#define TEXT_OFFSET_Y ((DISP_ROWS / 2) + PBL_IF_RECT_ELSE(46,  42))
+#define TEXT_OFFSET_Y ((DISP_ROWS / 2) + PBL_IF_RECT_ELSE(46, 42))
 
 //! Number text vertically bottom-aligned with Title text
 #define NUMBER_OFFSET_Y (TEXT_OFFSET_Y + 2)
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
   PeekLayer *peek_layer = (PeekLayer *)layer;
-  const GRect layer_bounds = { .size = layer->bounds.size };
+  const GRect layer_bounds = {.size = layer->bounds.size};
 
   if (peek_layer->bg_color.a != 0) {
     graphics_context_set_fill_color(ctx, peek_layer->bg_color);
@@ -32,9 +32,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 #if PBL_ROUND
     // Use a radius equal to that of the notification banner to make the transition seamless
     const int32_t peek_circle_diameter = BANNER_CIRCLE_RADIUS * 2;
-    GRect peek_circle_frame = (GRect) {
-      .size = GSize(peek_circle_diameter, peek_circle_diameter)
-    };
+    GRect peek_circle_frame = (GRect){.size = GSize(peek_circle_diameter, peek_circle_diameter)};
     grect_align(&peek_circle_frame, &layer_bounds, GAlignBottom, false /* clips */);
     graphics_fill_oval(ctx, peek_circle_frame, GOvalScaleModeFitCircle);
 #else
@@ -44,7 +42,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
   if (peek_layer->show_dot) {
     graphics_context_set_fill_color(ctx, GColorBlack);
-    GRect dot_rect = { .size = { peek_layer->dot_diameter, peek_layer->dot_diameter } };
+    GRect dot_rect = {.size = {peek_layer->dot_diameter, peek_layer->dot_diameter}};
     grect_align(&dot_rect, &peek_layer->layer.bounds, GAlignCenter, false /* clip */);
     graphics_fill_radial(ctx, dot_rect, GOvalScaleModeFitCircle, peek_layer->dot_diameter, 0,
                          TRIG_MAX_ANGLE);
@@ -52,7 +50,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 }
 
 static void prv_layout_text(PeekLayer *peek_layer) {
-  const GRect layer_bounds = (GRect) { .size = peek_layer->layer.bounds.size };
+  const GRect layer_bounds = (GRect){.size = peek_layer->layer.bounds.size};
   GContext *ctx = graphics_context_get_current_context();
   text_layer_set_size(&peek_layer->title.text_layer, layer_bounds.size);
   text_layer_set_size(&peek_layer->subtitle.text_layer, layer_bounds.size);
@@ -62,20 +60,26 @@ static void prv_layout_text(PeekLayer *peek_layer) {
   const GSize title_size = text_layer_get_content_size(ctx, &peek_layer->title.text_layer);
   const GSize subtitle_size = text_layer_get_content_size(ctx, &peek_layer->subtitle.text_layer);
 
-  GPoint cursor = { (layer_bounds.size.w - subtitle_size.w) / 2,
-                    -(subtitle_size.h + MAX(number_size.h, title_size.h)) / 2 };
-  const int font_height_fuzz = 5; // Replace with font descenders
+  GPoint cursor = {
+      (layer_bounds.size.w - subtitle_size.w) / 2,
+      -(subtitle_size.h + MAX(number_size.h, title_size.h)) / 2
+  };
+  const int font_height_fuzz = 5;  // Replace with font descenders
   layer_set_frame((Layer *)&peek_layer->subtitle.text_layer,
-                  &(GRect) { { cursor.x, cursor.y + TEXT_OFFSET_Y },
-                             { subtitle_size.w, subtitle_size.h + font_height_fuzz } });
+                  &(GRect){
+                      {cursor.x, cursor.y + TEXT_OFFSET_Y},
+                      {subtitle_size.w, subtitle_size.h + font_height_fuzz}
+                  });
   cursor.x = (layer_bounds.size.w - (title_size.w + number_size.w)) / 2;
   cursor.y += subtitle_size.h ? (subtitle_size.h + peek_layer->subtitle_margin) : 0;
   layer_set_frame((Layer *)&peek_layer->number.text_layer,
-                  &(GRect) { { cursor.x, cursor.y + NUMBER_OFFSET_Y }, number_size });
+                  &(GRect){{cursor.x, cursor.y + NUMBER_OFFSET_Y}, number_size});
   cursor.x += number_size.w;
   layer_set_frame((Layer *)&peek_layer->title.text_layer,
-                  &(GRect) { { cursor.x, cursor.y + TEXT_OFFSET_Y },
-                             { title_size.w, title_size.h + font_height_fuzz } });
+                  &(GRect){
+                      {cursor.x, cursor.y + TEXT_OFFSET_Y},
+                      {title_size.w, title_size.h + font_height_fuzz}
+                  });
 }
 
 //////////////////////
@@ -100,18 +104,17 @@ void peek_layer_destroy(PeekLayer *peek_layer) {
 }
 
 void peek_layer_init(PeekLayer *peek_layer, const GRect *frame) {
-  *peek_layer = (PeekLayer) {
-    .icon_offset_y = PEEK_LAYER_ICON_OFFSET_Y,
-    .subtitle_margin = PEEK_LAYER_SUBTITLE_MARGIN,
-    .dot_diameter = 9,
+  *peek_layer = (PeekLayer){
+      .icon_offset_y = PEEK_LAYER_ICON_OFFSET_Y,
+      .subtitle_margin = PEEK_LAYER_SUBTITLE_MARGIN,
+      .dot_diameter = 9,
   };
   // peek layer
   layer_init(&peek_layer->layer, frame);
   layer_set_clips(&peek_layer->layer, false);
   layer_set_update_proc(&peek_layer->layer, prv_update_proc);
   // kino layer
-  kino_layer_init(&peek_layer->kino_layer,
-                  &(GRect){ { 0, peek_layer->icon_offset_y }, frame->size });
+  kino_layer_init(&peek_layer->kino_layer, &(GRect){{0, peek_layer->icon_offset_y}, frame->size});
   kino_layer_set_alignment(&peek_layer->kino_layer, GAlignCenter);
   layer_set_clips((Layer *)&peek_layer->kino_layer, false);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->kino_layer);
@@ -119,26 +122,21 @@ void peek_layer_init(PeekLayer *peek_layer, const GRect *frame) {
   const GTextAlignment text_alignment = GTextAlignmentCenter;
   GRect text_rect = GRect(0, NUMBER_OFFSET_Y, frame->size.w, 40);
   // number layer
-  text_layer_init_with_parameters(&peek_layer->number.text_layer,
-                                  &text_rect,
-                                  NULL, fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
+  text_layer_init_with_parameters(&peek_layer->number.text_layer, &text_rect, NULL,
+                                  fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
                                   GColorBlack, GColorClear, text_alignment,
                                   GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->number.text_layer);
   // title layer
   text_rect.origin.y = TEXT_OFFSET_Y;
-  text_layer_init_with_parameters(&peek_layer->title.text_layer,
-                                  &text_rect,
-                                  NULL, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
-                                  GColorBlack, GColorClear, text_alignment,
-                                  GTextOverflowModeTrailingEllipsis);
+  text_layer_init_with_parameters(&peek_layer->title.text_layer, &text_rect, NULL,
+                                  fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GColorBlack,
+                                  GColorClear, text_alignment, GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->title.text_layer);
   // subtitle layer
-  text_layer_init_with_parameters(&peek_layer->subtitle.text_layer,
-                                  &text_rect,
-                                  NULL, fonts_get_system_font(FONT_KEY_GOTHIC_18),
-                                  GColorBlack, GColorClear, text_alignment,
-                                  GTextOverflowModeTrailingEllipsis);
+  text_layer_init_with_parameters(&peek_layer->subtitle.text_layer, &text_rect, NULL,
+                                  fonts_get_system_font(FONT_KEY_GOTHIC_18), GColorBlack,
+                                  GColorClear, text_alignment, GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->subtitle.text_layer);
 
   // initialize labels with empty strings
@@ -158,7 +156,7 @@ void peek_layer_deinit(PeekLayer *peek_layer) {
 void peek_layer_set_frame(PeekLayer *peek_layer, const GRect *frame) {
   layer_set_frame(&peek_layer->layer, frame);
   layer_set_frame((Layer *)&peek_layer->kino_layer,
-                  &(GRect) { { 0, peek_layer->icon_offset_y }, frame->size });
+                  &(GRect){{0, peek_layer->icon_offset_y}, frame->size});
 }
 
 void peek_layer_set_background_color(PeekLayer *peek_layer, GColor color) {
@@ -178,8 +176,8 @@ void peek_layer_set_icon_with_size_invert(PeekLayer *peek_layer,
 
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(timeline_res, res_size, &icon_res_info);
-  KinoReel *from_reel = kino_reel_create_with_resource_system(icon_res_info.res_app_num,
-                                                              icon_res_info.res_id);
+  KinoReel *from_reel =
+      kino_reel_create_with_resource_system(icon_res_info.res_app_num, icon_res_info.res_id);
   if (!from_reel) {
     return;
   }
@@ -189,24 +187,24 @@ void peek_layer_set_icon_with_size_invert(PeekLayer *peek_layer,
   GRect layer_frame;
   layer_get_global_frame((Layer *)&peek_layer->kino_layer, &layer_frame);
   if (grect_equal(&icon_from, &GRectZero)) {
-    icon_from = (GRect) {
-      .origin.x = layer_frame.origin.x + (layer_frame.size.w - UNFOLD_DOT_SIZE_PX) / 2,
-      .origin.y = layer_frame.origin.y + (layer_frame.size.h - UNFOLD_DOT_SIZE_PX) / 2,
-      .size = UNFOLD_DOT_SIZE,
+    icon_from = (GRect){
+        .origin.x = layer_frame.origin.x + (layer_frame.size.w - UNFOLD_DOT_SIZE_PX) / 2,
+        .origin.y = layer_frame.origin.y + (layer_frame.size.h - UNFOLD_DOT_SIZE_PX) / 2,
+        .size = UNFOLD_DOT_SIZE,
     };
   }
 
   GSize size = kino_reel_get_size(from_reel);
   GRect icon_to = {
-    .origin.x = layer_frame.origin.x + (layer_frame.size.w - size.w) / 2,
-    .origin.y = layer_frame.origin.y + (layer_frame.size.h - size.h) / 2,
-    .size = size,
+      .origin.x = layer_frame.origin.x + (layer_frame.size.w - size.w) / 2,
+      .origin.y = layer_frame.origin.y + (layer_frame.size.h - size.h) / 2,
+      .size = size,
   };
 
   const bool take_ownership = true;
-  KinoReel *kino_reel = kino_reel_unfold_create(
-      from_reel, take_ownership, layer_frame, 0,
-      UNFOLD_DEFAULT_NUM_DELAY_GROUPS, UNFOLD_DEFAULT_GROUP_DELAY);
+  KinoReel *kino_reel =
+      kino_reel_unfold_create(from_reel, take_ownership, layer_frame, 0,
+                              UNFOLD_DEFAULT_NUM_DELAY_GROUPS, UNFOLD_DEFAULT_GROUP_DELAY);
   kino_reel_transform_set_from_frame(kino_reel, icon_from);
   kino_reel_transform_set_to_frame(kino_reel, icon_to);
   kino_reel_transform_set_transform_duration(kino_reel, PEEK_LAYER_UNFOLD_DURATION);
@@ -240,13 +238,12 @@ void peek_layer_set_icon_with_invert(PeekLayer *peek_layer,
 //! This is called after both the scale to and the PDCS is complete
 static void prv_scale_to_did_stop(KinoLayer *kino_layer, bool finished, void *context) {
   PeekLayer *peek_layer = context;
-  GRect icon_to = kino_reel_transform_get_to_frame(
-      kino_layer_get_reel(&peek_layer->kino_layer));
+  GRect icon_to = kino_reel_transform_get_to_frame(kino_layer_get_reel(&peek_layer->kino_layer));
   // A visible kino layer keeps rendering its end-as-dot frame at the screen center; drawing the
   // static dot too shows a second dot when the layer origin is offset (e.g. peek_offset_y)
-  peek_layer->show_dot = prv_is_dot_size(icon_to.size) &&
-                         layer_get_hidden((Layer *)&peek_layer->kino_layer);
-  kino_layer_set_callbacks(kino_layer, (KinoLayerCallbacks) { 0 }, NULL);
+  peek_layer->show_dot =
+      prv_is_dot_size(icon_to.size) && layer_get_hidden((Layer *)&peek_layer->kino_layer);
+  kino_layer_set_callbacks(kino_layer, (KinoLayerCallbacks){0}, NULL);
 }
 
 //! This is called after the scale to is complete
@@ -277,8 +274,7 @@ void peek_layer_set_scale_to_image(PeekLayer *peek_layer, const TimelineResource
   if (timeline_res) {
     AppResourceInfo res_info;
     timeline_resources_get_id(timeline_res, res_size, &res_info);
-    to_reel = kino_reel_create_with_resource_system(res_info.res_app_num,
-                                                    res_info.res_id);
+    to_reel = kino_reel_create_with_resource_system(res_info.res_app_num, res_info.res_id);
   }
 
   GSize size;
@@ -291,15 +287,15 @@ void peek_layer_set_scale_to_image(PeekLayer *peek_layer, const TimelineResource
   GRect layer_frame;
   layer_get_global_frame((Layer *)&peek_layer->kino_layer, &layer_frame);
   if (grect_equal(&icon_from, &GRectZero)) {
-    icon_from = (GRect) {
-      .origin.x = layer_frame.origin.x + (layer_frame.size.w - size.w) / 2,
-      .origin.y = layer_frame.origin.y + (layer_frame.size.h - size.h) / 2,
-      .size = size,
+    icon_from = (GRect){
+        .origin.x = layer_frame.origin.x + (layer_frame.size.w - size.w) / 2,
+        .origin.y = layer_frame.origin.y + (layer_frame.size.h - size.h) / 2,
+        .size = size,
     };
   }
 
   if (to_reel && align_in_frame) {
-    GRect rect_to_align = { icon_to.origin, kino_reel_get_size(to_reel) };
+    GRect rect_to_align = {icon_to.origin, kino_reel_get_size(to_reel)};
     grect_align(&rect_to_align, &icon_to, GAlignCenter, false);
     icon_to = rect_to_align;
   }
@@ -327,14 +323,14 @@ void peek_layer_set_scale_to_image(PeekLayer *peek_layer, const TimelineResource
   }
 
   kino_layer_set_reel(&peek_layer->kino_layer, kino_reel, true);
-  kino_layer_set_callbacks(&peek_layer->kino_layer, (KinoLayerCallbacks) {
-    .did_stop = prv_scale_to_did_stop,
-  }, peek_layer);
+  kino_layer_set_callbacks(&peek_layer->kino_layer,
+                           (KinoLayerCallbacks){
+                               .did_stop = prv_scale_to_did_stop,
+                           },
+                           peek_layer);
 
-  peek_layer->hidden_fields_timer = evented_timer_register(PEEK_LAYER_SCALE_DURATION,
-                                                           false,
-                                                           prv_scale_to_timer_callback,
-                                                           peek_layer);
+  peek_layer->hidden_fields_timer = evented_timer_register(PEEK_LAYER_SCALE_DURATION, false,
+                                                           prv_scale_to_timer_callback, peek_layer);
 }
 
 void peek_layer_set_scale_to(PeekLayer *peek_layer, GRect icon_to) {
@@ -344,8 +340,8 @@ void peek_layer_set_scale_to(PeekLayer *peek_layer, GRect icon_to) {
 }
 
 void peek_layer_set_duration(PeekLayer *peek_layer, uint32_t duration) {
-  kino_reel_transform_set_transform_duration(
-      kino_layer_get_reel(&peek_layer->kino_layer), duration);
+  kino_reel_transform_set_transform_duration(kino_layer_get_reel(&peek_layer->kino_layer),
+                                             duration);
 }
 
 static void prv_set_visible(PeekLayer *peek_layer) {

@@ -50,7 +50,7 @@ typedef void (*CompositorTransitionInitFunc)(Animation *animation);
 // TODO: PBL-31460 Change compositor transitions to use AnimationProgress
 // This would enable time-based bounce back transitions
 typedef void (*CompositorTransitionUpdateFunc)(GContext *ctx, Animation *animation,
-                                              uint32_t distance_normalized);
+                                               uint32_t distance_normalized);
 
 typedef void (*CompositorTransitionTeardownFunc)(Animation *animation);
 
@@ -98,7 +98,7 @@ void compositor_modal_render_ready(void);
 //! The app needs to copy its framebuffer to the display.
 void compositor_app_render_ready(void);
 
-FrameBuffer* compositor_get_framebuffer(void);
+FrameBuffer *compositor_get_framebuffer(void);
 
 GBitmap compositor_get_framebuffer_as_bitmap(void);
 
@@ -125,10 +125,13 @@ void compositor_unfreeze(void);
 
 //! Copy app FB into the given region of the system framebuffer, scaling or centering the app
 //! framebuffer content in the destination as needed based on user preference.
-//! If the update_rect points off the edge of the screen, the region updated will be clipped as needed.
-//! If copy_relative_to_origin is false, update_rect will be copied/filled starting from the origin of the
-//! app framebuffer. If true, it is relative to the region being updated will be copied/filled.
+//! If the update_rect points off the edge of the screen, the region updated will be clipped as
+//! needed. If copy_relative_to_origin is false, update_rect will be copied/filled starting from the
+//! origin of the app framebuffer. If true, it is relative to the region being updated will be
+//! copied/filled.
 void compositor_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin);
 
-//! Extended version of compositor_scaled_app_fb_copy which allows an Y offset for the source to be specified.
-void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin, int16_t offset_y);
+//! Extended version of compositor_scaled_app_fb_copy which allows an Y offset for the source to be
+//! specified.
+void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_relative_to_origin,
+                                          int16_t offset_y);

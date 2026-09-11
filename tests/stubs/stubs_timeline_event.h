@@ -6,4 +6,5 @@
 #include "pbl/services/timeline/event.h"
 #include "pbl/util/attributes.h"
 
-void WEAK timeline_event_refresh(void) {}
+void WEAK timeline_event_refresh(void) {
+}

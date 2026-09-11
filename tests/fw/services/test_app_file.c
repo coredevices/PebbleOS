@@ -11,10 +11,9 @@
 
 #include "stubs_passert.h"
 
-static void assert_file_name(const char *vector,
-                             AppInstallId app_id, const char *suffix) {
+static void assert_file_name(const char *vector, AppInstallId app_id, const char *suffix) {
   char buf[42];
-  sprintf(buf, "@%08"PRIx32"/%s", (uint32_t)app_id, suffix);
+  sprintf(buf, "@%08" PRIx32 "/%s", (uint32_t)app_id, suffix);
   cl_assert_equal_s(vector, buf);
 }
 
@@ -49,11 +48,13 @@ void test_app_file__name_make_negative(void) {
 }
 
 void test_app_file__name_make_pseudo_directory(void) {
-  assert_app_file_name_make(76, "not/really/a/path");;
+  assert_app_file_name_make(76, "not/really/a/path");
+  ;
 }
 
 void test_app_file__name_make_no_suffix(void) {
-  assert_app_file_name_make(54321, "");;
+  assert_app_file_name_make(54321, "");
+  ;
 }
 
 void test_app_file__name_make_buf_just_big_enough(void) {

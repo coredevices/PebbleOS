@@ -16,31 +16,31 @@
 #include "system/passert.h"
 
 static const LayoutLayerConstructor s_layout_constructors[NumLayoutIds] = {
-  [LayoutIdGeneric] = generic_layout_create,
-  [LayoutIdCalendar] = calendar_layout_create,
-  [LayoutIdReminder] = notification_layout_create,
-  [LayoutIdNotification] = notification_layout_create,
-  [LayoutIdWeather] = weather_layout_create,
-  [LayoutIdSports] = sports_layout_create,
-  [LayoutIdAlarm] = alarm_layout_create,
-  [LayoutIdHealth] = health_layout_create,
+    [LayoutIdGeneric] = generic_layout_create,
+    [LayoutIdCalendar] = calendar_layout_create,
+    [LayoutIdReminder] = notification_layout_create,
+    [LayoutIdNotification] = notification_layout_create,
+    [LayoutIdWeather] = weather_layout_create,
+    [LayoutIdSports] = sports_layout_create,
+    [LayoutIdAlarm] = alarm_layout_create,
+    [LayoutIdHealth] = health_layout_create,
 };
 
 static const LayoutVerifier s_layout_verifiers[NumLayoutIds] = {
-  [LayoutIdGeneric] = generic_layout_verify,
-  [LayoutIdCalendar] = calendar_layout_verify,
-  [LayoutIdReminder] = notification_layout_verify,
-  [LayoutIdNotification] = notification_layout_verify,
-  [LayoutIdWeather] = weather_layout_verify,
-  [LayoutIdSports] = sports_layout_verify,
-  [LayoutIdAlarm] = alarm_layout_verify,
-  [LayoutIdHealth] = health_layout_verify,
+    [LayoutIdGeneric] = generic_layout_verify,
+    [LayoutIdCalendar] = calendar_layout_verify,
+    [LayoutIdReminder] = notification_layout_verify,
+    [LayoutIdNotification] = notification_layout_verify,
+    [LayoutIdWeather] = weather_layout_verify,
+    [LayoutIdSports] = sports_layout_verify,
+    [LayoutIdAlarm] = alarm_layout_verify,
+    [LayoutIdHealth] = health_layout_verify,
 };
 
 static const LayoutColors s_default_colors = {
-  .primary_color = { .argb = GColorBlackARGB8 },
-  .secondary_color = { .argb = GColorBlackARGB8 },
-  .bg_color = { .argb = PBL_IF_COLOR_ELSE(GColorLightGrayARGB8, GColorWhiteARGB8) },
+    .primary_color = {.argb = GColorBlackARGB8},
+    .secondary_color = {.argb = GColorBlackARGB8},
+    .bg_color = {.argb = PBL_IF_COLOR_ELSE(GColorLightGrayARGB8, GColorWhiteARGB8)},
 };
 
 #if !PBL_COLOR
@@ -70,9 +70,9 @@ bool layout_verify(bool existing_attributes[], LayoutId id) {
   if (id == LayoutIdTest) {
     return true;
   } else if (id == LayoutIdUnknown || id >= NumLayoutIds) {
-    return false; // out of range
+    return false;  // out of range
   } else if (id == LayoutIdCommNotification) {
-    return false; // NYI
+    return false;  // NYI
   } else {
     return s_layout_verifiers[id](existing_attributes);
   }
@@ -96,7 +96,8 @@ const LayoutColors *layout_get_notification_colors(const LayoutLayer *layout) {
   return layout_get_colors(layout);
 #else
   const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
-  return use_alternative_design ? &s_default_notification_colors_alternative : &s_default_notification_colors_standard;
+  return use_alternative_design ? &s_default_notification_colors_alternative
+                                : &s_default_notification_colors_standard;
 #endif
 }
 
