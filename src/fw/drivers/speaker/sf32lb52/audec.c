@@ -4,6 +4,7 @@
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/mcu/cache.h"
+#include "pbl/kernel/irq.h"
 #include "system/passert.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/misc.h"
@@ -403,16 +404,21 @@ void audec_start(AudioDevice* audio_device, AudioTransCB cb) {
 
 uint32_t audec_write(AudioDevice* audio_device, void *writeBuf, uint32_t size) {
     AudioDeviceState* state = audio_device->state;
+    uint32_t free_size = 0;
+
+    // Keep DMA from reading a partially copied block or racing the buffer indices.
+    pbl_irq_lock();
     if (state->circ_buffer_storage) {
-        uint32_t free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
+        free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
         uint16_t to_write = (size > free_size) ? (uint16_t)free_size : (uint16_t)size;
         if (to_write > 0) {
             circular_buffer_write(&state->circ_buffer, writeBuf, to_write);
         }
-        return circular_buffer_get_write_space_remaining(&state->circ_buffer);
+        free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
     }
+    pbl_irq_unlock();
 
-    return 0;
+    return free_size;
 }
 
 void audec_set_vol(AudioDevice* audio_device, int volume) {
