@@ -128,6 +128,7 @@ typedef struct {
 typedef struct {
   uint16_t vmc;
   uint8_t orientation;
+  uint8_t steps;
   bool definitely_not_worn;
 } KAlgSleepMinute;
 
@@ -1684,9 +1685,10 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
 // Collect minute data and update the statistics we need for a sleep update. This gets
 // called at the beginning of prv_sleep_activity_update().
 // @return true if we have enough data to compute the score for this minute
-static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
-                                            uint8_t orientation, bool definitely_not_worn,
-                                            uint32_t *score_ret, time_t *sample_utc_ret,
+static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now, uint16_t steps,
+                                            uint16_t vmc, uint8_t orientation,
+                                            bool definitely_not_worn, uint32_t *score_ret,
+                                            time_t *sample_utc_ret, uint8_t *sample_steps_ret,
                                             bool *is_sleep_minute_ret) {
   // Handy access to some variables
   const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
@@ -1702,6 +1704,7 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
   state->minute_history[state->num_history_entries++] = (KAlgSleepMinute) {
     .vmc = vmc,
     .orientation = orientation,
+    .steps = MIN(steps, UINT8_MAX),
     .definitely_not_worn = definitely_not_worn,
   };
 
@@ -1741,6 +1744,7 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
   // Return results
   *score_ret = score;
   *sample_utc_ret = sample_utc;
+  *sample_steps_ret = state->minute_history[KALG_SLEEP_HALF_WIDTH].steps;
   *is_sleep_minute_ret = is_sleep_minute;
   return true;
 }
@@ -1749,8 +1753,8 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
 // ------------------------------------------------------------------------------------------
 // See if we should start a new sleep session or end the current one
 static void prv_sleep_activity_update_session_state(
-    KAlgState *alg_state, time_t sample_utc, uint16_t vmc, uint32_t score, bool is_sleep_minute,
-    unsigned minutes_since_sleep_started, bool shutting_down,
+    KAlgState *alg_state, time_t sample_utc, uint16_t vmc, uint8_t steps, uint32_t score,
+    bool is_sleep_minute, unsigned minutes_since_sleep_started, bool shutting_down,
     KAlgActivitySessionCallback sessions_cb, void *context,
     time_t *sleep_end_time, bool *reject_session) {
   // Handy access to some variables
@@ -1844,9 +1848,9 @@ static void prv_sleep_activity_update_session_state(
   }
 
   // Print state
-  KALG_LOG_DEBUG("%s: score:%5"PRIu32", is_sleep_min:%"PRIi8", cons_sleep_min:%"PRIi16", "
-    "cons_awake_min: %"PRIi16", pct_non_zero: %u, avg_vmc: %"PRIu16" ",
-                 prv_log_time(alg_state, sample_utc), score, (int8_t)is_sleep_minute,
+  KALG_LOG_DEBUG("%s: score:%5"PRIu32", steps:%"PRIu8", is_sleep_min:%"PRIi8", "
+    "cons_sleep_min:%"PRIi16", cons_awake_min: %"PRIi16", pct_non_zero: %u, avg_vmc: %"PRIu16" ",
+                 prv_log_time(alg_state, sample_utc), score, steps, (int8_t)is_sleep_minute,
                  state->current_stats.consecutive_sleep_minutes,
                  state->current_stats.consecutive_awake_minutes, pct_non_zero, avg_vmc);
 }
@@ -1854,17 +1858,20 @@ static void prv_sleep_activity_update_session_state(
 
 // ------------------------------------------------------------------------------------------
 // Process the minute data for sleep detection
-static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
-                                      uint8_t orientation, bool definitely_not_worn,
-                                      bool shutting_down,
+static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint16_t steps,
+                                      uint16_t vmc, uint8_t orientation,
+                                      bool definitely_not_worn, bool shutting_down,
                                       KAlgActivitySessionCallback sessions_cb, void *context) {
   // Handy access to some variables
   const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
   KAlgSleepActivityState *state = &alg_state->sleep_state;
 
-  // Update stats that we keep in our state variables and compute the score for this minute
+  // Update stats that we keep in our state variables and compute the score for this minute.
+  // Note that the minute being scored trails utc_now by KALG_SLEEP_HALF_WIDTH + 1 minutes, so
+  // sample_steps belongs to that minute rather than to the one just passed in.
   uint32_t score = 0;
   time_t sample_utc = 0;
+  uint8_t sample_steps = 0;
   bool is_sleep_minute = false;
   if (shutting_down) {
     // Grab the most recent sample_utc we have and run the algorithm again with the added
@@ -1872,9 +1879,9 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
     // because the sleep algorithm can only be run when we accumulated enough minutes. We
     // essentially run it with old data, but with the added constraint that we are shutting down.
     sample_utc = alg_state->sleep_state.last_sample_utc;
-  } else if (!prv_sleep_activity_update_stats(alg_state, utc_now, vmc, orientation,
+  } else if (!prv_sleep_activity_update_stats(alg_state, utc_now, steps, vmc, orientation,
                                               definitely_not_worn, &score, &sample_utc,
-                                              &is_sleep_minute)) {
+                                              &sample_steps, &is_sleep_minute)) {
     return;
   }
 
@@ -1890,9 +1897,10 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
   bool reject_session;
   // ... Set non-zero if we detected the end of the current sleep session
   time_t sleep_end_time;
-  prv_sleep_activity_update_session_state(alg_state, sample_utc, vmc, score, is_sleep_minute,
-                                          minutes_since_sleep_started, shutting_down, sessions_cb,
-                                          context, &sleep_end_time, &reject_session);
+  prv_sleep_activity_update_session_state(alg_state, sample_utc, vmc, sample_steps, score,
+                                          is_sleep_minute, minutes_since_sleep_started,
+                                          shutting_down, sessions_cb, context, &sleep_end_time,
+                                          &reject_session);
 
 
   // -------------------------------------------------------------------------------
@@ -2144,7 +2152,7 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
                              KAlgActivityType_Run);
 
     // Pass onto the sleep detector
-    prv_sleep_activity_update(state, utc_now, vmc, orientation, definitely_not_worn,
+    prv_sleep_activity_update(state, utc_now, steps, vmc, orientation, definitely_not_worn,
                               shutting_down, sessions_cb, context);
   }
 }
