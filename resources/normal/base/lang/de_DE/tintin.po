@@ -699,7 +699,7 @@ msgstr "%d min."
 #: src/fw/services/activity/activity_insights.c:1638
 #: src/fw/apps/system/workout/utils.c:97
 msgid "Run"
-msgstr "Lauf"
+msgstr "Laufen"
 
 #. #-#-#-#-#  apps.pot (PACKAGE VERSION)  #-#-#-#-#
 #. / Walk Label
@@ -866,7 +866,7 @@ msgstr "ANDERS"
 #. / days. Respect capitalization!
 #: src/fw/services/alarms/alarm.c:1383 src/fw/apps/system/settings/display.c:40
 msgid "Custom"
-msgstr "Anders"
+msgstr "Benutzerdefiniert"
 
 #: src/fw/services/alarms/alarm.c:1396 src/fw/applib/pbl_std/timelocal.c:48
 msgid "Sun"
