@@ -13,6 +13,7 @@
 #include "applib/tick_timer_service.h"
 #include "console/console_internal.h"
 #include "drivers/battery.h"
+#include "drivers/touch/touch_sensor.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "services/common/bluetooth/bluetooth_ctl.h"
@@ -236,6 +237,9 @@ static void prv_render(AppData *data) {
 static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
   serial_console_set_rx_enabled(true);
   bt_ctl_set_enabled(true);
+#if CAPABILITY_HAS_TOUCHSCREEN
+  touch_sensor_set_enabled(true);
+#endif
 
   app_window_stack_pop(true);
 }
@@ -275,6 +279,9 @@ static void app_init(void) {
   // Disable sources of power consumption to minimize impact on discharge test results
   serial_console_set_rx_enabled(false);
   bt_ctl_set_enabled(false);
+#if CAPABILITY_HAS_TOUCHSCREEN
+  touch_sensor_set_enabled(false);
+#endif
 
   *data = (AppData){
       .test_state = DischargeStateChargeTo100,
