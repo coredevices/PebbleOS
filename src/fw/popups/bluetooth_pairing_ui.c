@@ -260,12 +260,12 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
 #if PBL_DISPLAY_HEIGHT >= 200
       // On large round displays center the icon on the full window width
       alignment = PBL_IF_RECT_ELSE(GAlignTopLeft, GAlignTop);
-      x_offset = PBL_IF_RECT_ELSE(39, 0);
+      x_offset = PBL_IF_RECT_ELSE(action_bar_layer_get_content_origin_x() + 39, 0);
       y_offset = 85;
       width = PBL_IF_RECT_ELSE(config_width, window_width);
 #else
       alignment = GAlignTopLeft;
-      x_offset = PBL_IF_RECT_ELSE(10, 31);
+      x_offset = PBL_IF_RECT_ELSE(action_bar_layer_get_content_origin_x() + 10, 31);
       y_offset = PBL_IF_RECT_ELSE(44, 46);
       width = config_width;
 #endif
