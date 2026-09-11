@@ -86,6 +86,7 @@ static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
 static RtcTicks s_last_log;
 static bool s_charger_enabled;
+static uint16_t s_informed_chg_current_ma;
 
 #if FUEL_GAUGE_STATEFUL
 #define FUEL_GAUGE_SAVE_INTERVAL_S 300
@@ -289,6 +290,25 @@ static void prv_charge_status_inform(BatteryChargeStatus chg_status) {
   PBL_ASSERTN(ret == 0);
 }
 
+static void prv_charge_current_inform(uint16_t chg_current_ma) {
+  int ret;
+
+  ret = nrf_fuel_gauge_ext_state_update(
+      NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
+      &(union nrf_fuel_gauge_ext_state_info_data){
+          .charge_current_limit = (float)chg_current_ma / 1000.0f});
+  PBL_ASSERTN(ret == 0);
+
+  ret = nrf_fuel_gauge_ext_state_update(
+      NRF_FUEL_GAUGE_EXT_STATE_INFO_TERM_CURRENT,
+      &(union nrf_fuel_gauge_ext_state_info_data){
+          .charge_term_current =
+              (float)(chg_current_ma * NPM1300_CONFIG.term_current_pct / 100U) / 1000.0f});
+  PBL_ASSERTN(ret == 0);
+
+  s_informed_chg_current_ma = chg_current_ma;
+}
+
 static void prv_battery_state_put_change_event(PreciseBatteryChargeState state) {
   PebbleEvent e = {
       .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
@@ -335,6 +355,11 @@ static void prv_update_state(void *force_update) {
       PBL_ANALYTICS_TIMER_START(battery_discharge_duration_ms);
     }
     update = true;
+  }
+
+  const uint16_t chg_current_ma = pmic_get_charge_current_ma();
+  if (chg_current_ma != s_informed_chg_current_ma) {
+    prv_charge_current_inform(chg_current_ma);
   }
 
   ret = battery_charge_status_get(&chg_status);
@@ -471,19 +496,7 @@ void battery_state_init(void) {
   ret = prv_fuel_gauge_init_common(&constants, true);
   PBL_ASSERTN(ret == 0);
 
-  ret = nrf_fuel_gauge_ext_state_update(
-      NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
-      &(union nrf_fuel_gauge_ext_state_info_data){
-          .charge_current_limit = (float)NPM1300_CONFIG.chg_current_ma / 1000.0f});
-  PBL_ASSERTN(ret == 0);
-
-  ret = nrf_fuel_gauge_ext_state_update(
-      NRF_FUEL_GAUGE_EXT_STATE_INFO_TERM_CURRENT,
-      &(union nrf_fuel_gauge_ext_state_info_data){
-          .charge_term_current =
-              (float)(NPM1300_CONFIG.chg_current_ma * NPM1300_CONFIG.term_current_pct / 100U) /
-              1000.0f});
-  PBL_ASSERTN(ret == 0);
+  prv_charge_current_inform(pmic_get_charge_current_ma());
 
   runtime_parameters.a = NAN;
   runtime_parameters.b = NAN;

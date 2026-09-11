@@ -119,6 +119,11 @@ static const char *s_syncable_settings[] = {
   "musicShowVolumeControls",
   "musicShowProgressBar",
   "musicShowAlbumArt",
+
+#ifdef CONFIG_FAST_CHARGE_SETTING
+  // Charger preferences
+  "fastCharge",
+#endif
 };
 
 static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);
