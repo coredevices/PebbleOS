@@ -23,17 +23,26 @@
 
 #define CHARGE_TARGET_PERCENT 99
 #define DRAIN_TARGET_PERCENT 70
+#define SETTLE_DURATION_S (2 * SECONDS_PER_HOUR)
+#define MAX_DURATION_S (10 * SECONDS_PER_HOUR)
+#define MAX_PERCENT_DROP 3
 
 typedef enum {
   DischargeStateChargeTo100 = 0,
   DischargeStateDrainTo70,
+  DischargeStateSettling,
   DischargeStateDischarging,
+  DischargeStatePass,
+  DischargeStateFail,
 } DischargeTestState;
 
 static const char *status_text[] = {
     [DischargeStateChargeTo100] = "Charge to 100%",
     [DischargeStateDrainTo70] = "Drain to 70%",
+    [DischargeStateSettling] = "Settling",
     [DischargeStateDischarging] = "Discharging",
+    [DischargeStatePass] = "PASS",
+    [DischargeStateFail] = "FAIL",
 };
 
 typedef struct {
@@ -47,7 +56,7 @@ typedef struct {
 
   DischargeTestState test_state;
 
-  // Battery state at start of discharge phase
+  // Battery state at end of settling phase
   int32_t initial_voltage_mv;
   uint8_t initial_percent;
 
@@ -64,21 +73,57 @@ static void prv_handle_battery_state(BatteryChargeState charge) {
   prv_render(app_state_get_user_data());
 }
 
-static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
-  if ((units_changed & MINUTE_UNIT) != 0) {
-    AppData *data = app_state_get_user_data();
-    data->elapsed_seconds += SECONDS_PER_MINUTE;
-    prv_render(data);
-  }
-}
-
-static void prv_start_discharge_phase(AppData *data) {
+static void prv_finish_test(AppData *data) {
   BatteryConstants battery_const;
   BatteryChargeState charge_state;
 
   battery_get_constants(&battery_const);
   charge_state = battery_get_charge_state();
 
+  tick_timer_service_unsubscribe();
+
+  int32_t voltage_drop = data->initial_voltage_mv - battery_const.v_mv;
+  int8_t percent_drop = (int8_t)data->initial_percent - (int8_t)charge_state.charge_percent;
+  bool passed = percent_drop <= MAX_PERCENT_DROP;
+
+  data->test_state = passed ? DischargeStatePass : DischargeStateFail;
+  PBL_LOG_INFO("Discharge test %s - V:%" PRId32 "mV pct:%" PRIu8 " dV:%" PRId32 "mV dpct:%" PRId8,
+               passed ? "PASS" : "FAIL", battery_const.v_mv, charge_state.charge_percent,
+               voltage_drop, percent_drop);
+  prv_render(data);
+}
+
+static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
+  if ((units_changed & MINUTE_UNIT) == 0) {
+    return;
+  }
+
+  AppData *data = app_state_get_user_data();
+  data->elapsed_seconds += SECONDS_PER_MINUTE;
+
+  if (data->test_state == DischargeStateSettling &&
+      data->elapsed_seconds >= SETTLE_DURATION_S) {
+    // The fuel gauge keeps converging for a while after the high-current
+    // drain phase, so the baseline is only taken once that has settled
+    BatteryConstants battery_const;
+    BatteryChargeState charge_state;
+
+    battery_get_constants(&battery_const);
+    charge_state = battery_get_charge_state();
+
+    data->test_state = DischargeStateDischarging;
+    data->initial_voltage_mv = battery_const.v_mv;
+    data->initial_percent = charge_state.charge_percent;
+  } else if (data->test_state == DischargeStateDischarging &&
+             data->elapsed_seconds >= MAX_DURATION_S) {
+    prv_finish_test(data);
+    return;
+  }
+
+  prv_render(data);
+}
+
+static void prv_start_discharge_phase(AppData *data) {
   light_enable(false);
 
   // Discharge phase: drive updates from a once-a-minute tick rather than
@@ -86,10 +131,8 @@ static void prv_start_discharge_phase(AppData *data) {
   battery_state_service_unsubscribe();
   tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
 
-  data->test_state = DischargeStateDischarging;
+  data->test_state = DischargeStateSettling;
   data->elapsed_seconds = 0;
-  data->initial_voltage_mv = battery_const.v_mv;
-  data->initial_percent = charge_state.charge_percent;
   prv_render(data);
 }
 
@@ -139,6 +182,17 @@ static void prv_render(AppData *data) {
       }
       break;
 
+    case DischargeStateSettling: {
+      int hours = data->elapsed_seconds / 3600;
+      int mins = (data->elapsed_seconds % 3600) / 60;
+
+      sniprintf(data->details_string, sizeof(data->details_string),
+                "Elapsed: %02d:%02d\n\n"
+                "Current:\n"
+                "%" PRId32 "mV %" PRIu8 "%%",
+                hours, mins, battery_const.v_mv, charge_state.charge_percent);
+    } break;
+
     case DischargeStateDischarging: {
       int hours = data->elapsed_seconds / 3600;
       int mins = (data->elapsed_seconds % 3600) / 60;
@@ -155,6 +209,20 @@ static void prv_render(AppData *data) {
                 hours, mins,
                 battery_const.v_mv, charge_state.charge_percent,
                 voltage_delta, percent_delta);
+    } break;
+
+    case DischargeStatePass:
+    case DischargeStateFail: {
+      int32_t voltage_drop = data->initial_voltage_mv - battery_const.v_mv;
+      int8_t percent_drop = (int8_t)data->initial_percent - (int8_t)charge_state.charge_percent;
+
+      sniprintf(data->details_string, sizeof(data->details_string),
+                "Final:\n"
+                "%" PRId32 "mV %" PRIu8 "%%\n"
+                "Drop:\n"
+                "%" PRId32 "mV  %" PRId8 "%%",
+                battery_const.v_mv, charge_state.charge_percent,
+                voltage_drop, percent_drop);
     } break;
   }
 
