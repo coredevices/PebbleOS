@@ -291,8 +291,9 @@ static void prv_exti_cb(bool *should_context_switch) {
 }
 
 void touch_sensor_set_enabled(bool enabled) {
+  cst816_hw_reset();
+
   if (enabled) {
-    cst816_hw_reset();
     exti_enable(CST816->int_exti);
   } else {
     uint8_t data = CST816_POWER_MODE_SLEEP;
