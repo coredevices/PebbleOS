@@ -171,6 +171,12 @@ pbl_clar_test(test_battery_monitor
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_battery_charge_limit
+  SOURCES
+    src/fw/services/battery/battery_charge_limit.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_alerts
   SOURCES
     src/fw/flash_region/flash_region.c
