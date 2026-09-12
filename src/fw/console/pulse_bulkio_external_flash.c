@@ -25,13 +25,13 @@ typedef struct ExternalFlashEraseState {
 
 static int external_flash_domain_read(uint8_t *buf, uint32_t address, uint32_t length,
                                       void *context) {
-  flash_read_bytes(buf, address, length);
+  pbl_flash_read(FLASH, address, buf, length);
   return length;
 }
 
 static int external_flash_domain_write(uint8_t *buf, uint32_t address, uint32_t length,
                                       void *context) {
-  flash_write_bytes(buf, address, length);
+  pbl_flash_write(FLASH, address, buf, length);
   return length;
 }
 
@@ -39,20 +39,20 @@ static int external_flash_domain_stat(uint8_t *resp, size_t resp_max_len, void *
   return E_INVALID_OPERATION;
 }
 
-static void prv_erase_sector(void *context, status_t result) {
+static void prv_erase_sector(void *context, int result) {
   ExternalFlashEraseState *state = context;
 
   const unsigned int sectors_to_erase = (
       state->length + SECTOR_SIZE_BYTES - 1) / SECTOR_SIZE_BYTES;
 
-  if (FAILED(result)) {
+  if (result != 0) {
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, result, state->cookie);
     kernel_free(state);
   } else if (state->next_sector < sectors_to_erase) {
     unsigned int sector_addr = state->address + state->next_sector * SECTOR_SIZE_BYTES;
     state->next_sector += 1;
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, S_TRUE, state->cookie);
-    flash_erase_sector(sector_addr, prv_erase_sector, state);
+    pbl_flash_erase_async(FLASH, sector_addr, SECTOR_SIZE_BYTES, prv_erase_sector, state);
   } else {
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, S_SUCCESS, state->cookie);
     kernel_free(state);

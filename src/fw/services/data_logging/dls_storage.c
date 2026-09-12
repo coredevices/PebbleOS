@@ -6,6 +6,8 @@
 #include "pbl/services/data_logging/dls_list.h"
 
 #include <pbl/drivers/flash.h>
+#include <string.h>
+#include "system/status_codes.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "kernel/util/sleep.h"

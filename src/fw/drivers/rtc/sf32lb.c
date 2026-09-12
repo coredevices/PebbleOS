@@ -7,6 +7,7 @@
 
 #include "board/board.h"
 #include <pbl/drivers/flash.h>
+#include <string.h>
 #include <pbl/drivers/rtc.h>
 #include "flash_region/flash_region.h"
 #include "kernel/events.h"
@@ -414,14 +415,15 @@ void rtc_set_timezone(TimezoneInfo* tzinfo) {
   };
   memcpy(storage.tm_zone, tzinfo->tm_zone, TZ_LEN - 1);
 
-  flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
-  flash_write_bytes((const uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+  pbl_flash_erase(FLASH, FLASH_REGION_TZINFO_BEGIN, SUBSECTOR_SIZE_BYTES);
+  pbl_flash_write(FLASH, FLASH_REGION_TZINFO_BEGIN, (const uint8_t*)&storage,
+                  sizeof(TzinfoFlashStorage));
 }
 
 void rtc_get_timezone(TimezoneInfo* tzinfo) {
   TzinfoFlashStorage storage;
 
-  flash_read_bytes((uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+  pbl_flash_read(FLASH, FLASH_REGION_TZINFO_BEGIN, (uint8_t*)&storage, sizeof(TzinfoFlashStorage));
 
   if (storage.version != TZINFO_VERSION) {
     // Future versions can handle migrations here
@@ -439,7 +441,7 @@ void rtc_get_timezone(TimezoneInfo* tzinfo) {
 }
 
 void rtc_timezone_clear(void) {
-  flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
+  pbl_flash_erase(FLASH, FLASH_REGION_TZINFO_BEGIN, SUBSECTOR_SIZE_BYTES);
 }
 
 uint16_t rtc_get_timezone_id(void) {
@@ -453,7 +455,7 @@ uint16_t rtc_get_timezone_id(void) {
 bool rtc_is_timezone_set(void) {
   uint8_t version;
 
-  flash_read_bytes((uint8_t*)&version, FLASH_REGION_TZINFO_BEGIN, sizeof(version));
+  pbl_flash_read(FLASH, FLASH_REGION_TZINFO_BEGIN, (uint8_t*)&version, sizeof(version));
 
   return version == TZINFO_VERSION;
 }

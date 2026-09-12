@@ -11,6 +11,7 @@
 
 #include "console/prompt.h"
 #include <pbl/drivers/flash.h>
+#include "system/status_codes.h"
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/task_watchdog.h>
 #include "flash_region/filesystem_regions.h"

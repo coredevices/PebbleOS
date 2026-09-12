@@ -80,7 +80,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *st
     size_t bytes_to_read = MIN(bytes_left, read_buffer_size);
     curr_read_address -= bytes_to_read;
 
-    flash_read_bytes(read_buffer, curr_read_address, bytes_to_read);
+    pbl_flash_read(FLASH, curr_read_address, read_buffer, bytes_to_read);
     for (int i = (bytes_to_read - 1); i >= 0; i--) {
       if (read_buffer[i] != 0xff) {
         uint32_t data_at = curr_read_address + i;
@@ -97,7 +97,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *st
 
         // TODO: We are perpetuating the defective crc here. Maybe this is as good an excuse as any
         // for the mobile apps to implement flash_crc32
-        uint32_t crc = flash_calculate_legacy_defective_checksum(stop_read_address, bytes_written);
+        uint32_t crc = pbl_flash_legacy_checksum(FLASH, stop_read_address, bytes_written);
 
         *status = (PbInstallStatus) {
           .num_bytes_written = bytes_written,
@@ -139,8 +139,7 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
 
     // By erasing the entire region we make it more likely for 'pb_storage_raw_get_status' to
     // recover the correct location.
-    flash_region_erase_optimal_range(layout->start_address, layout->start_address,
-        layout->end_address, layout->end_address);
+    pbl_flash_erase(FLASH, layout->start_address, layout->end_address - layout->start_address);
 
     // Restore the fast interval so the init ACK isn't delayed by the slow connection parameters.
     comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes,
@@ -167,7 +166,7 @@ void pb_storage_raw_write(PutBytesStorage *storage, uint32_t offset, const uint8
   const MemoryLayout *layout = storage->impl_data;
 
   const uint32_t flash_address = layout->start_address + offset;
-  flash_write_bytes(buffer, flash_address, length);
+  pbl_flash_write(FLASH, flash_address, buffer, length);
 }
 
 uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType crc_type) {
@@ -176,10 +175,10 @@ uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType 
   const unsigned int start_address = layout->start_address + layout->start_offset;
   const unsigned int length = storage->current_offset - layout->start_offset;
   if (crc_type == PutBytesCrcType_Legacy) {
-    return flash_calculate_legacy_defective_checksum(start_address, length);
+    return pbl_flash_legacy_checksum(FLASH, start_address, length);
   }
 
-  return flash_crc32(start_address, length);
+  return pbl_flash_crc32(FLASH, start_address, length);
 }
 
 void pb_storage_raw_deinit(PutBytesStorage *storage, bool is_success) {

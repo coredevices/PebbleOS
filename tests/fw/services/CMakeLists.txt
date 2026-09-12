@@ -20,7 +20,6 @@ pbl_clar_test(test_pfs
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
     src/fw/system/hexdump.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     tests/fakes/fake_spi_flash.c
     src/fw/util/crc8.c
@@ -58,7 +57,6 @@ pbl_clar_test(test_contacts
   SOURCES
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/contacts/attributes_address.c
     src/fw/services/contacts/contacts.c
@@ -157,7 +155,6 @@ pbl_clar_test(test_timeline_item
 pbl_clar_test(test_clock
   SOURCES
     src/fw/services/i18n/i18n.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
@@ -192,7 +189,6 @@ pbl_clar_test(test_timezone_database
 
 pbl_clar_test(test_wakeup
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -223,7 +219,6 @@ pbl_clar_test(test_migrate_wakeup
   SOURCES
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/process_management/pebble_process_info.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
@@ -289,7 +284,6 @@ pbl_clar_test(test_voice_endpoint
 
 pbl_clar_test(test_app_cache
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/filesystem/app_file.c
     src/fw/services/filesystem/flash_translation.c
@@ -307,7 +301,6 @@ pbl_clar_test(test_app_cache
 
 pbl_clar_test(test_app_install_manager
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
@@ -345,7 +338,6 @@ pbl_clar_test(test_app_menu_data_source
     src/fw/applib/graphics/gtypes.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/process_management/app_install_manager.c
     src/fw/process_management/app_menu_data_source.c
     src/fw/process_management/pebble_process_info.c
@@ -397,7 +389,6 @@ pbl_clar_test(test_accel_manager
 pbl_clar_test(test_shared_prf_storage_v3
   SOURCES
     src/fw/services/shared_prf_storage/shared_prf_storage.c
-    tests/fakes/fake_flash_region.c
     tests/fakes/fake_spi_flash.c
   PLATFORMS obelix
   OVERRIDES shared_prf_storage_v3
@@ -410,7 +401,6 @@ pbl_clar_test(test_app_file
 
 pbl_clar_test(test_do_not_disturb
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
@@ -434,7 +424,6 @@ pbl_clar_test(test_weather_service
     src/fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/settings/settings_file.c
     src/fw/services/settings/settings_raw_iter.c

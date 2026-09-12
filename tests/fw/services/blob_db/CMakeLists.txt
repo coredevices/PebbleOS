@@ -74,7 +74,6 @@ pbl_clar_test(test_app_db
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/settings/settings_file.c
     src/fw/services/settings/settings_raw_iter.c
@@ -103,7 +102,6 @@ pbl_clar_test(test_contacts_db
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/settings/settings_file.c
     src/fw/services/settings/settings_raw_iter.c
@@ -121,7 +119,6 @@ pbl_clar_test(test_watch_app_prefs_db
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/settings/settings_file.c
     src/fw/services/settings/settings_raw_iter.c
@@ -159,7 +156,6 @@ pbl_clar_test(test_notif_db
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/util/time/time.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
@@ -180,7 +176,6 @@ pbl_clar_test(test_weather_db
     src/fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/settings/settings_file.c
     src/fw/services/settings/settings_raw_iter.c
@@ -197,7 +192,6 @@ pbl_clar_test(test_prefs_db
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     src/fw/util/time/time.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
     src/fw/services/settings/settings_file.c

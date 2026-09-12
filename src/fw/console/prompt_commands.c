@@ -12,6 +12,8 @@
 #include "dbgserial.h"
 #include "debug/flash_logging.h"
 #include <pbl/drivers/flash.h>
+#include <string.h>
+#include "system/status_codes.h"
 #include <pbl/drivers/task_watchdog.h>
 #include "flash_region/flash_region.h"
 #include "kernel/event_loop.h"
@@ -72,10 +74,6 @@ extern void command_read_word(const char* address_str) {
   prompt_send_response_fmt(buffer, sizeof(buffer), "0x%"PRIx32" = 0x%"PRIx32, address, word);
 }
 
-void command_format_flash(void) {
-  flash_erase_bulk();
-}
-
 void command_erase_flash(const char *address_str, const char *length_str) {
   int32_t address = str_to_address(address_str);
   if (address < 0) {
@@ -93,11 +91,7 @@ void command_erase_flash(const char *address_str, const char *length_str) {
   prompt_send_response_fmt(buffer, 128, "Erasing sectors from 0x%"PRIx32" for %ub",
                            address, length);
 
-  const uint32_t end_address = address + length;
-  const uint32_t aligned_end_address =
-      (end_address + (SUBSECTOR_SIZE_BYTES - 1)) & SUBSECTOR_ADDR_MASK;
-
-  flash_region_erase_optimal_range_no_watchdog(address, address, end_address, aligned_end_address);
+  pbl_flash_erase(FLASH, address, length);
 
   prompt_send_response("OK");
 }
@@ -122,7 +116,7 @@ void command_dump_flash(const char* address_str, const char* length_str) {
 
   while (length) {
     uint32_t chunk_size = MIN(length, 128);
-    flash_read_bytes(buffer, address, chunk_size);
+    pbl_flash_read(FLASH, address, buffer, chunk_size);
 
     PBL_LOG_ALWAYS("Data at address 0x%"PRIx32, address);
     hexdump_log(LOG_LEVEL_ALWAYS, buffer, chunk_size);
@@ -148,7 +142,7 @@ void command_crc_flash(const char* address_str, const char* length_str) {
     return;
   }
 
-  uint32_t crc = flash_calculate_legacy_defective_checksum(address, length);
+  uint32_t crc = pbl_flash_legacy_checksum(FLASH, address, length);
   char buffer[32];
   prompt_send_response_fmt(buffer, sizeof(buffer), "CRC: %"PRIx32, crc);
 }
@@ -182,7 +176,7 @@ void command_flash_read(const char* address_str, const char* length_str) {
       read_length = length;
     }
 
-    flash_read_bytes(buffer, address, read_length);
+    pbl_flash_read(FLASH, address, buffer, read_length);
 
     // Output to serial
     for (uint32_t i = 0; i < read_length; i++) {
@@ -194,11 +188,6 @@ void command_flash_read(const char* address_str, const char* length_str) {
   }
 
   kernel_free(buffer);
-}
-
-void command_flash_switch_mode (const char* mode_str) {
-  int mode = atoi(mode_str);
-  flash_switch_mode(mode);
 }
 
 #define WRITE_PAGE_SIZE_BYTES 64
@@ -235,10 +224,15 @@ void command_flash_fill (const char* address_str, const char* length_str, const 
       bytes_to_write = bytes_remaining;
     }
 
-    flash_write_bytes(page, address, bytes_to_write);
+    pbl_flash_write(FLASH, address, page, bytes_to_write);
     bytes_remaining -= bytes_to_write;
     address += bytes_to_write;
   }
+}
+
+void command_flash_unprotect(void) {
+  pbl_flash_unprotect(FLASH);
+  prompt_send_response("OK");
 }
 
 void command_flash_validate(void) {
@@ -249,8 +243,8 @@ void command_flash_validate(void) {
   PBL_ASSERTN((TEST_ADDR + TEST_LENGTH) <= FLASH_REGION_FIRMWARE_DEST_END);
 
   // erase a sector
-  flash_erase_sector_blocking(TEST_ADDR);
-  if (!flash_sector_is_erased(TEST_ADDR)) {
+  pbl_flash_erase(FLASH, TEST_ADDR, SECTOR_SIZE_BYTES);
+  if (!pbl_flash_is_erased(FLASH, TEST_ADDR, SECTOR_SIZE_BYTES)) {
     prompt_send_response("FAIL: sector not erased");
     return;
   }
@@ -263,14 +257,14 @@ void command_flash_validate(void) {
   }
   for (uint32_t offset = 0; offset < TEST_LENGTH; offset += BUFFER_SIZE) {
     const uint32_t addr = TEST_ADDR + offset;
-    flash_write_bytes(buffer, addr, BUFFER_SIZE);
+    pbl_flash_write(FLASH, addr, buffer, BUFFER_SIZE);
   }
 
   // read it back
   for (uint32_t offset = 0; offset < TEST_LENGTH; offset += BUFFER_SIZE) {
     memset(buffer, 0, BUFFER_SIZE);
     const uint32_t addr = TEST_ADDR + offset;
-    flash_read_bytes(buffer, addr, BUFFER_SIZE);
+    pbl_flash_read(FLASH, addr, buffer, BUFFER_SIZE);
     for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
       if (buffer[i] != i) {
         char err_buf[80];
@@ -290,11 +284,11 @@ void command_flash_validate(void) {
 
     const uint32_t pre_addr = TEST_ADDR + offset - MIN(offset, 1);
     uint8_t pre_byte;
-    flash_read_bytes(&pre_byte, pre_addr, sizeof(pre_byte));
+    pbl_flash_read(FLASH, pre_addr, &pre_byte, sizeof(pre_byte));
 
     const uint32_t addr = TEST_ADDR + offset;
     size_t read_size = MIN(sizeof(memmap_buffer), SHORT_TEST_LENGTH - offset);
-    flash_read_bytes(&memmap_buffer[0], addr, read_size);
+    pbl_flash_read(FLASH, addr, &memmap_buffer[0], read_size);
     for (size_t i = 0; i < read_size; i++) {
       uint8_t want = (offset + i) & 0xff;
       if (memmap_buffer[i] != want) {
@@ -307,8 +301,8 @@ void command_flash_validate(void) {
   }
 
   // clean up
-  flash_erase_sector_blocking(TEST_ADDR);
-  if (!flash_sector_is_erased(TEST_ADDR)) {
+  pbl_flash_erase(FLASH, TEST_ADDR, SECTOR_SIZE_BYTES);
+  if (!pbl_flash_is_erased(FLASH, TEST_ADDR, SECTOR_SIZE_BYTES)) {
     prompt_send_response("FAIL: sector not erased");
     return;
   }
@@ -319,12 +313,13 @@ void command_flash_validate(void) {
 //! Some flash chips have an accelerated method of checking for erased sectors. This is a sanity
 //! check against that method. It reads the bytes in raw form and makes sure it is really erased.
 static bool prv_is_really_erased(uint32_t addr, bool is_subsector) {
-  bool erased = (is_subsector) ? flash_subsector_is_erased(addr) : flash_sector_is_erased(addr);
+  bool erased = (is_subsector) ? pbl_flash_is_erased(FLASH, addr, SUBSECTOR_SIZE_BYTES)
+                               : pbl_flash_is_erased(FLASH, addr, SECTOR_SIZE_BYTES);
   if (erased) {
     char buffer[64];
     uint32_t end_addr = addr + (is_subsector ? SUBSECTOR_SIZE_BYTES : SECTOR_SIZE_BYTES);
     for (uint32_t i_addr = addr; i_addr < end_addr; i_addr += sizeof(buffer)) {
-      flash_read_bytes((uint8_t *)buffer, i_addr, sizeof(buffer));
+      pbl_flash_read(FLASH, i_addr, (uint8_t *)buffer, sizeof(buffer));
       for (uint32_t j = 0; j < sizeof(buffer); j++) {
         if (buffer[j] != 0xFF) {
           erased = false;
@@ -373,8 +368,8 @@ void command_flash_sec_read(const char *address_str) {
   status_t ret;
   char buf[64];
 
-  ret = flash_read_security_register(address, &val);
-  if (ret != S_SUCCESS) {
+  ret = pbl_flash_sec_reg_read(FLASH, address, &val);
+  if (ret != 0) {
     prompt_send_response("FAIL: Unable to read security register");
     return;
   }
@@ -387,8 +382,8 @@ void command_flash_sec_write(const char *address_str, const char *value_str) {
   uint8_t value = (uint8_t)strtoul(value_str, NULL, 0);
   status_t ret;
 
-  ret = flash_write_security_register(address, value);
-  if (ret != S_SUCCESS) {
+  ret = pbl_flash_sec_reg_write(FLASH, address, value);
+  if (ret != 0) {
     prompt_send_response("FAIL: Unable to write security register");
     return;
   }
@@ -400,8 +395,8 @@ void command_flash_sec_erase(const char *address_str) {
   uint32_t address = strtoul(address_str, NULL, 0);
   status_t ret;
 
-  ret = flash_erase_security_register(address);
-  if (ret != S_SUCCESS) {
+  ret = pbl_flash_sec_reg_erase(FLASH, address);
+  if (ret != 0) {
     prompt_send_response("FAIL: Unable to erase security register");
     return;
   }
@@ -410,12 +405,12 @@ void command_flash_sec_erase(const char *address_str) {
 }
 
 void command_flash_sec_wipe(void) {
-  const FlashSecurityRegisters *info = flash_security_registers_info();
+  const struct pbl_flash_sec_regs *info = FLASH->sec_regs;
   status_t ret;
 
-  for (uint8_t i = 0U; i < info->num_sec_regs; i++) {
-    ret = flash_erase_security_register(info->sec_regs[i]);
-    if (ret != S_SUCCESS) {
+  for (uint8_t i = 0U; info != NULL && i < info->count; i++) {
+    ret = pbl_flash_sec_reg_erase(FLASH, info->addrs[i]);
+    if (ret != 0) {
       prompt_send_response("FAIL: Unable to erase security register");
       return;
     }
@@ -425,27 +420,27 @@ void command_flash_sec_wipe(void) {
 }
 
 void command_flash_sec_info(void) {
-  const FlashSecurityRegisters *info = flash_security_registers_info();
+  const struct pbl_flash_sec_regs *info = FLASH->sec_regs;
   char buf[64];
 
-  if (info->sec_regs == NULL) {
+  if (info == NULL) {
     prompt_send_response("No security registers");
     return;
   }
 
-  prompt_send_response_fmt(buf, sizeof(buf), "Number of security registers: %d", info->num_sec_regs);
-  for (int i = 0; i < info->num_sec_regs; i++) {
+  prompt_send_response_fmt(buf, sizeof(buf), "Number of security registers: %d", info->count);
+  for (int i = 0; i < info->count; i++) {
     bool locked;
     status_t ret;
 
-    ret = flash_security_register_is_locked(info->sec_regs[i], &locked);
-    if (ret != S_SUCCESS) {
+    ret = pbl_flash_sec_reg_is_locked(FLASH, info->addrs[i], &locked);
+    if (ret != 0) {
       prompt_send_response("FAIL: Unable to check security register lock status");
       return;
     }
 
     prompt_send_response_fmt(buf, sizeof(buf), "Security register %d: 0x%08lx (locked: %u)",
-                             i, info->sec_regs[i], locked);
+                             i, info->addrs[i], locked);
   }
 }
 
@@ -453,7 +448,7 @@ void command_flash_sec_info(void) {
 void command_flash_sec_lock(const char *address_str, const char *password) {
   if (strcmp(password, "l0ckm3f0r3v3r") == 0) {
     uint32_t address = strtoul(address_str, NULL, 0);
-    flash_lock_security_register(address);
+    pbl_flash_sec_reg_lock(FLASH, address);
     prompt_send_response("OK");
   } else {
     prompt_send_response("FAIL: Invalid password");
@@ -502,11 +497,12 @@ static void prv_flash_stress_callback(void *data) {
   }
 
   int miscompare = 0;
- 
-  uint32_t sector_address = flash_get_sector_base_address(flash_addr + bufsz); // the beginning has already been erased, since we are always smaller than a sector
+
+  // the beginning has already been erased, since we are always smaller than a sector
+  uint32_t sector_address = (flash_addr + bufsz) & SECTOR_ADDR_MASK;
   if (sector_address != s_flash_stress_last_sector) {
     PBL_LOG_ALWAYS("flash stress test: erasing flash address %lx", sector_address);
-    flash_erase_sector_blocking(sector_address);
+    pbl_flash_erase(FLASH, sector_address, SECTOR_SIZE_BYTES);
     s_flash_stress_last_sector = sector_address;
     if (!prv_is_really_erased(sector_address, 0)) {
       PBL_LOG_ALWAYS("flash stress test: flash address %lx erase failed!", sector_address);
@@ -521,11 +517,11 @@ static void prv_flash_stress_callback(void *data) {
     lfsr_cur = prv_xorshift32(lfsr_cur);
   }
 
-  flash_write_bytes((const uint8_t *)buf, flash_addr, bufsz);
+  pbl_flash_write(FLASH, flash_addr, (const uint8_t *)buf, bufsz);
   
   for (int j = 0; j < 8; j++) {
     memset(buf, 0, bufsz);
-    flash_read_bytes(buf, flash_addr, bufsz);
+    pbl_flash_read(FLASH, flash_addr, buf, bufsz);
 
     lfsr_cur = lfsr_seed;
 
@@ -580,7 +576,7 @@ static void s_flash_benchmark(size_t sz) {
 
     iters *= 2;
     for (int i = 0; i < iters; i++) {
-      flash_read_bytes(buf, flash_addr, sz);
+      pbl_flash_read(FLASH, flash_addr, buf, sz);
       flash_addr += sz;
       flash_addr &= ~3; /* keep us aligned */
       flash_addr &= ~(SUBSECTOR_SIZE_BYTES << 1); /* keep us from wrapping too far */
@@ -922,11 +918,11 @@ void command_flash_test_locked_sectors(void) {
 
       if ((addr % SECTOR_SIZE_BYTES) == 0) {
         prompt_send_response_fmt(status, sizeof(status), "Validated: 0x%lx", addr);
-        flash_erase_sector_blocking(addr);
-        flash_erase_sector_blocking(addr); // exercise already erased check
+        pbl_flash_erase(FLASH, addr, SECTOR_SIZE_BYTES);
+        pbl_flash_erase(FLASH, addr, SECTOR_SIZE_BYTES); // exercise already erased check
       }
 
-      flash_write_bytes(&buf[0], addr, sizeof(buf));
+      pbl_flash_write(FLASH, addr, &buf[0], sizeof(buf));
 
       flash_expect_program_failure(false);
       watchdog_feed();

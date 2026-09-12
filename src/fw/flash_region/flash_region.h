@@ -42,17 +42,3 @@
 
 #define FLASH_REGION_FIRMWARE_DEST_START (FLASH_REGION_FIRMWARE_DEST_BEGIN + FIRMWARE_OFFSET)
 #define FLASH_REGION_SAFE_FIRMWARE_START (FLASH_REGION_SAFE_FIRMWARE_BEGIN + FIRMWARE_OFFSET)
-
-// NOTE: The following functions are deprecated! New code should use the
-// asynchronous version, flash_erase_optimal_range, in flash.h.
-
-//! Erase at least (max_start, min_end) but no more than (min_start, max_end) using as few erase
-//! operations as possible. (min_start, max_end) must be both 4kb aligned, as that's the smallest
-//! unit that we can erase.
-void flash_region_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
-                                      uint32_t max_end);
-
-//! The same as flash_region_erase_optimal_range but first disables the task watchdog for the
-//! current task.
-void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,
-                                                  uint32_t min_end, uint32_t max_end);

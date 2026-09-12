@@ -102,8 +102,7 @@ void ftl_add_region(uint32_t region_start, uint32_t region_end, bool erase_new_r
 
   // erase if asked to
   if (erase_new_region) {
-    flash_region_erase_optimal_range_no_watchdog(region_start, region_start,
-                                                 region_end, region_end);
+    pbl_flash_erase(FLASH, region_start, region_end - region_start);
   }
 
   s_ftl_size += (region_end - region_start);
@@ -149,19 +148,19 @@ static void prv_ftl_operation(uint8_t *buffer, uint32_t size, uint32_t offset,
       uint32_t bytes = MIN(curr_virt_offset_end - offset, size);
 
       if (operation == FTLRead) {
-        flash_read_bytes(
-            buffer, s_region_list[idx].start + offset - curr_virt_offset_begin, bytes);
+        pbl_flash_read(FLASH, s_region_list[idx].start + offset - curr_virt_offset_begin, buffer,
+                       bytes);
       } else if (operation == FTLWrite ) {
-        flash_write_bytes(
-            buffer, s_region_list[idx].start + offset - curr_virt_offset_begin, bytes);
+        pbl_flash_write(FLASH, s_region_list[idx].start + offset - curr_virt_offset_begin, buffer,
+                        bytes);
       } else if (operation == FTLEraseSubsector) {
         PBL_ASSERTN(size == SUBSECTOR_SIZE_BYTES);
-        flash_erase_subsector_blocking(
-            s_region_list[idx].start + offset - curr_virt_offset_begin);
+        pbl_flash_erase(FLASH, s_region_list[idx].start + offset - curr_virt_offset_begin,
+                        SUBSECTOR_SIZE_BYTES);
       } else if (operation == FTLEraseSector) {
         PBL_ASSERTN(size == SECTOR_SIZE_BYTES);
-        flash_erase_sector_blocking(
-            s_region_list[idx].start + offset - curr_virt_offset_begin);
+        pbl_flash_erase(FLASH, s_region_list[idx].start + offset - curr_virt_offset_begin,
+                        SECTOR_SIZE_BYTES);
       }
 
       size -= bytes;

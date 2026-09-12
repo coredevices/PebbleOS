@@ -1,16 +1,16 @@
 Flash Memory Drivers
 --------------------
 
-Flash memory access is exposed through two separate APIs. The main API, defined
-in `flash.h` and implemented in `flash_api.c`, is used almost everywhere. There
-is also an alternate API used exclusively for performing core dumps, implemented
-in `cd_flash_driver.c`. The alternate API is carefully implemented to be usable
-regardless of how messed up the system state is in by not relying on any OS
-services.
+`include/pbl/drivers/flash.h` is the only flash API. It operates on a
+`struct pbl_flash_device`; the generic layer (`flash.c`) owns locking, write
+protection, blank checks and the erase engine, while drivers implement
+`struct pbl_flash_ops` for a controller.
 
-The flash APIs are written to be agnostic to the specific type of flash used.
-They are written against the generic low-level driver interface defined in
-`flash_impl.h`. Each low-level driver is specific to a combination of
-flash memory part and microcontroller interface. The low-level drivers make no
-use of OS services so that they can be used for both the main and core dump
-driver APIs.
+Devices are instantiated by the drivers themselves, not by boards: each
+driver defines its device from Kconfig (`FLASH_NRF5_QSPI_*`,
+`FLASH_SF32LB52_MPI_*`, `FLASH_QEMU_*`) and the selected NOR part
+(`FLASH_NOR_PART` choice, whose command sets and geometry live in
+`nor_part.h`), and exports it as `FLASH`.
+
+After `pbl_flash_coredump_init()` the same API works without locks, timers or
+sleeping so that core dumps can be written from a fault handler.

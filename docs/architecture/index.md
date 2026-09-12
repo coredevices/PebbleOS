@@ -104,8 +104,10 @@ alongside the allocator in `pfs.c`.
   between the dumb low-level driver and the accel service that owns
   buffering, clients and subsampling, so the same service code runs on any
   accel part.
-- **Flash** — `src/fw/drivers/flash/README.md` documents the two flash APIs:
-  the main one, and a coredump-only path that must work without OS services.
+- **Flash** — `include/pbl/drivers/flash.h` is the single flash API: a
+  `struct pbl_flash_device` with driver `ops`, a generic layer that owns
+  locking and the erase engine, and a coredump mode that works without OS
+  services. See `src/fw/drivers/flash/README.md`.
 
 ## Coredumps
 

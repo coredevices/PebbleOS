@@ -17,7 +17,6 @@ pbl_clar_test(test_bluetooth_persistent_storage_prf
   SOURCES
     src/fw/services/bluetooth/bluetooth_persistent_storage_prf.c
     src/fw/services/shared_prf_storage/shared_prf_storage.c
-    tests/fakes/fake_flash_region.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_events.c
   PLATFORMS obelix
@@ -31,7 +30,6 @@ pbl_clar_test(test_bluetooth_persistent_storage
     src/fw/services/settings/settings_raw_iter.c
     src/fw/services/filesystem/pfs.c
     src/fw/services/filesystem/flash_translation.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/util/crc8.c
     src/fw/util/legacy_checksum.c

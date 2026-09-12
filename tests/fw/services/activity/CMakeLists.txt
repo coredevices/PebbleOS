@@ -4,7 +4,6 @@
 pbl_clar_test(test_activity
   SOURCES
     src/fw/applib/health_service.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/util/base64.c
     src/fw/util/stats.c
@@ -67,7 +66,6 @@ pbl_clar_test(test_kraepelin_algorithm
 
 pbl_clar_test(test_activity_algorithm_kraepelin
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/util/base64.c
     src/fw/util/crc8.c

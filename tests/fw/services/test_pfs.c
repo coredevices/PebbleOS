@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <pbl/drivers/flash.h>
+#include "system/status_codes.h"
 #include "flash_region/flash_region.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/filesystem/flash_translation.h"

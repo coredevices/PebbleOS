@@ -3,6 +3,7 @@
 
 #include "pbl/services/get_bytes/get_bytes_storage.h"
 #include <pbl/drivers/flash.h>
+#include <string.h>
 #include "kernel/pbl_malloc.h"
 #include "flash_region/flash_region.h"
 
@@ -25,7 +26,7 @@ GetBytesInfoErrorCode gb_storage_flash_get_size(GetBytesStorage *storage, uint32
 
 bool gb_storage_flash_read_next_chunk(GetBytesStorage *storage, uint8_t *buffer, uint32_t len) {
   uint32_t start_offset =  ((GetBytesStorageInfo *)storage->impl_data)->flash_start_addr;
-  flash_read_bytes(buffer, storage->current_offset + start_offset, len);
+  pbl_flash_read(FLASH, storage->current_offset + start_offset, buffer, len);
   storage->current_offset += len;
   return true;
 }

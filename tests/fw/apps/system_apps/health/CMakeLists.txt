@@ -45,7 +45,6 @@ pbl_clar_test(test_health_card_view
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c
@@ -152,7 +151,6 @@ pbl_clar_test(test_health_activity_summary_card
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c
@@ -254,7 +252,6 @@ pbl_clar_test(test_health_sleep_summary_card
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c
@@ -356,7 +353,6 @@ pbl_clar_test(test_health_hr_summary_card
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c
@@ -458,7 +454,6 @@ pbl_clar_test(test_health_activity_detail_card
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c
@@ -559,7 +554,6 @@ pbl_clar_test(test_health_sleep_detail_card
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c
@@ -660,7 +654,6 @@ pbl_clar_test(test_health_hr_detail_card
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c
@@ -761,7 +754,6 @@ pbl_clar_test(test_health_detail_card
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c

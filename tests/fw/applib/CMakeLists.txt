@@ -37,7 +37,6 @@ pbl_clar_test(test_cpu_cache
 pbl_clar_test(test_persist
   SOURCES
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/util/dict.c
     src/fw/applib/persist.c
     src/fw/util/rand/rand.c
@@ -58,7 +57,6 @@ pbl_clar_test(test_persist
 
 pbl_clar_test(test_pbl_std
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/applib/pbl_std/pbl_std.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -67,7 +65,6 @@ pbl_clar_test(test_pbl_std
 
 pbl_clar_test(test_strftime
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/applib/pbl_std/pbl_std.c
     src/fw/applib/pbl_std/strftime.c
     src/fw/applib/pbl_std/timelocal.c
@@ -89,7 +86,6 @@ pbl_clar_test(test_text_render
 
 pbl_clar_test(test_text_resources
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/system/hexdump.c
     src/fw/applib/fonts/codepoint.c

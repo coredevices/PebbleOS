@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
+#include "system/status_codes.h"
 #include "process_management/pebble_process_info.h"
 #include "resource/resource_storage.h"
 #include "pbl/services/filesystem/pfs.h"

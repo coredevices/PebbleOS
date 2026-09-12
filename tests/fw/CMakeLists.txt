@@ -17,7 +17,6 @@ pbl_clar_test(test_utf8
 pbl_clar_test(test_i18n
   SOURCES
     src/fw/services/i18n/i18n.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
@@ -110,7 +109,6 @@ pbl_clar_test(test_alarm
   SOURCES
     src/fw/services/alarms/alarm.c
     src/fw/services/alarms/alarm_pin.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/util/time/time.c
     src/fw/util/time/mktime.c
@@ -137,7 +135,6 @@ pbl_clar_test(test_alarm_smart
   SOURCES
     src/fw/services/alarms/alarm.c
     src/fw/services/alarms/alarm_pin.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/util/time/time.c
     src/fw/util/time/mktime.c
@@ -173,7 +170,6 @@ pbl_clar_test(test_battery_monitor
 
 pbl_clar_test(test_alerts
   SOURCES
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
@@ -199,7 +195,6 @@ pbl_clar_test(test_heap
 pbl_clar_test(test_flash_logging
   SOURCES
     src/fw/debug/flash_logging.c
-    src/fw/flash_region/flash_region.c
     tests/fakes/fake_spi_flash.c
   PLATFORMS asterix
   DEFINES DUMA_DISABLED PLATFORM_ASTERIX
@@ -218,7 +213,6 @@ pbl_clar_test(test_data_logging
     tests/fakes/fake_spi_flash.c
     src/fw/util/crc8.c
     src/fw/util/legacy_checksum.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/filesystem/pfs.c
     src/fw/services/filesystem/flash_translation.c
@@ -278,7 +272,6 @@ pbl_clar_test(test_phone_formatting
 pbl_clar_test(test_timeline_api
   SOURCES
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/services/blob_db/pin_db.c
     src/fw/services/blob_db/timeline_item_storage.c
     src/fw/services/filesystem/flash_translation.c

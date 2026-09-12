@@ -13,6 +13,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/flash.h>
+#include "flash_region/flash_region.h"
 #include <pbl/drivers/debounced_button.h>
 
 #include <pbl/drivers/accel.h>
@@ -173,10 +174,9 @@ static void init_drivers(void) {
   pmic_init();
 #endif
 
-  flash_init();
-  flash_sleep_when_idle(true);
-  flash_enable_write_protection();
-  flash_prf_set_protection(true);
+  pbl_flash_init(FLASH);
+  pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                    FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
 
   uint8_t vibe_cali = mfg_info_get_vibe_cali();
   if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {

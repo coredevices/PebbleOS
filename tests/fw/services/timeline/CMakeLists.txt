@@ -7,7 +7,6 @@ pbl_clar_test(test_reminders
     tests/fakes/fake_spi_flash.c
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/flash_region/flash_region.c
     src/fw/util/time/time.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/services/blob_db/timeline_item_storage.c
@@ -78,7 +77,6 @@ pbl_clar_test(test_timeline_model
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/services/blob_db/timeline_item_storage.c
     src/fw/services/settings/settings_file.c
     src/fw/services/settings/settings_raw_iter.c
@@ -172,7 +170,6 @@ pbl_clar_test(test_timeline_layouts
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c

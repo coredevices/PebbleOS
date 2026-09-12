@@ -11,13 +11,6 @@ pbl_clar_test(test_qemu_serial
 
 pbl_clar_test(test_flash_api
   SOURCES
-    src/fw/drivers/flash/flash_api.c
-  OVERRIDES dummy_board
-)
-
-pbl_clar_test(test_flash_erase
-  SOURCES
-    src/fw/drivers/flash/flash_erase.c
-  PLATFORMS obelix
+    src/fw/drivers/flash/flash.c
   OVERRIDES dummy_board
 )

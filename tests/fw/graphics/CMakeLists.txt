@@ -77,7 +77,6 @@ set(graphics_draw_text_sources
   src/fw/applib/graphics/arabic_shaping.c
   src/fw/applib/graphics/perimeter.c
   src/fw/applib/graphics/text_resources.c
-  src/fw/flash_region/flash_region.c
   src/fw/flash_region/filesystem_regions.c
   src/fw/system/hexdump.c
   src/fw/applib/fonts/codepoint.c
@@ -160,7 +159,6 @@ pbl_clar_test(test_graphics_draw_text_flow
     src/fw/applib/graphics/arabic_shaping.c
     src/fw/applib/graphics/perimeter.c
     src/fw/applib/graphics/text_resources.c
-    src/fw/flash_region/flash_region.c
     src/fw/flash_region/filesystem_regions.c
     src/fw/system/hexdump.c
     src/fw/applib/fonts/codepoint.c

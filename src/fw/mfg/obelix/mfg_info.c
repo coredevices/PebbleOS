@@ -3,6 +3,7 @@
 
 #include "mfg/mfg_info.h"
 #include <pbl/drivers/flash.h>
+#include <string.h>
 #include "flash_region/flash_region.h"
 
 #define CURRENT_DATA_VERSION 0
@@ -16,14 +17,14 @@ typedef struct {
 } MfgData;
 
 static void prv_update_struct(const MfgData *data) {
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_INFO_BEGIN);
-  flash_write_bytes((const uint8_t*) data, FLASH_REGION_MFG_INFO_BEGIN, sizeof(*data));
+  pbl_flash_erase(FLASH, FLASH_REGION_MFG_INFO_BEGIN, SUBSECTOR_SIZE_BYTES);
+  pbl_flash_write(FLASH, FLASH_REGION_MFG_INFO_BEGIN, (const uint8_t*) data, sizeof(*data));
 }
 
 static MfgData prv_fetch_struct(void) {
   MfgData result;
 
-  flash_read_bytes((uint8_t*) &result, FLASH_REGION_MFG_INFO_BEGIN, sizeof(result));
+  pbl_flash_read(FLASH, FLASH_REGION_MFG_INFO_BEGIN, (uint8_t*) &result, sizeof(result));
 
   // Fallback data if not available
   if (result.data_version != CURRENT_DATA_VERSION) {

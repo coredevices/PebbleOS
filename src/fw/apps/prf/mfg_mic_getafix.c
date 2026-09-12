@@ -170,7 +170,7 @@ static void prv_analyze_dual_mic(AppData *data) {
 
   while (data->flash_addr - FLASH_START < BLOCK_SIZE) {
     // Read first portion of data from flash for FFT analysis
-    flash_read_bytes((uint8_t *)fft_buffer, data->flash_addr, FFT_SIZE * 2 * sizeof(int16_t));
+    pbl_flash_read(FLASH, data->flash_addr, (uint8_t *)fft_buffer, FFT_SIZE * 2 * sizeof(int16_t));
     data->flash_addr += FFT_SIZE * 2 * sizeof(int16_t);
     if (num_channels == 2) {
       // Convert interleaved stereo to non-interleaved format
@@ -249,7 +249,7 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
   }
 
   // Write to flash
-  flash_write_bytes((uint8_t *)samples, data->flash_addr, sample_count * sizeof(int16_t));
+  pbl_flash_write(FLASH, data->flash_addr, (uint8_t *)samples, sample_count * sizeof(int16_t));
   data->flash_addr += sample_count * sizeof(int16_t);
 
   // Update progress
@@ -266,7 +266,7 @@ static void prv_start_test(void) {
   data->flash_addr = FLASH_START;
 
   // Erase flash region for recording
-  flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
+  pbl_flash_erase(FLASH, FLASH_START, FLASH_END - FLASH_START);
 
   uint32_t num_channels = mic_get_channels(MIC);
 
