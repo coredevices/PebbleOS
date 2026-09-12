@@ -10,6 +10,25 @@ static int32_t s_duration_s;
 static int32_t s_distance_m;
 static int32_t s_current_bpm;
 static int32_t s_current_hr_zone;
+static int32_t s_active_kcal;
+static int32_t s_avg_bpm;
+
+void workout_service_set_avg_hr(int32_t bpm) {
+  s_avg_bpm = bpm;
+}
+
+bool workout_service_get_avg_hr(int32_t *bpm) {
+  *bpm = s_avg_bpm;
+  return true;
+}
+
+void workout_service_set_active_kcalories(int32_t active) {
+  s_active_kcal = active;
+}
+
+void workout_service_get_active_kcalories(int32_t *active) {
+  *active = s_active_kcal;
+}
 
 bool workout_service_is_workout_ongoing(void) {
   return s_is_ongoing;
@@ -50,9 +69,8 @@ bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *durat
   return true;
 }
 
-bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s,
-                                              int32_t distance_m, int32_t current_bpm,
-                                              HRZone current_hr_zone) {
+bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s, int32_t distance_m,
+                                              int32_t current_bpm, HRZone current_hr_zone) {
   s_steps = steps;
   s_duration_s = duration_s;
   s_distance_m = distance_m;

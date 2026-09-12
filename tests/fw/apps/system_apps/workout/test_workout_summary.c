@@ -5,6 +5,7 @@
 #include "apps/system/workout/utils.h"
 
 #include "test_workout_app_includes.h"
+#include "stubs_light.h"
 
 // Fakes
 /////////////////////
@@ -29,7 +30,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_workout_summary__initialize(void) {
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -47,18 +48,20 @@ void test_workout_summary__initialize(void) {
   content_indicator_init_buffer(buffer);
 }
 
-void test_workout_summary__cleanup(void) {
-}
+void test_workout_summary__cleanup(void) {}
 
 // Helpers
 //////////////////////
 
-static void prv_start_workout_cb(ActivitySessionType type) { }
-static void prv_select_workout_cb(ActivitySessionType type) { }
+static void prv_start_workout_cb(ActivitySessionType type) {}
+static ActivitySessionType s_selected_type;
+static void prv_select_workout_cb(ActivitySessionType type) {
+  s_selected_type = type;
+}
+extern void prv_cycle_activity(WorkoutSummaryWindow *window, int direction);
 
 static void prv_create_window_and_render(ActivitySessionType activity_type) {
-  Window *window = (Window *)workout_summary_window_create(activity_type,
-                                                           prv_start_workout_cb,
+  Window *window = (Window *)workout_summary_window_create(activity_type, prv_start_workout_cb,
                                                            prv_select_workout_cb);
   window_set_on_screen(window, true, true);
   window_render(window, &s_ctx);
@@ -80,4 +83,19 @@ void test_workout_summary__render_walk(void) {
 void test_workout_summary__render_run(void) {
   prv_create_window_and_render(ActivitySessionType_Run);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_summary__cycle_activity_in_both_directions(void) {
+  WorkoutSummaryWindow *window = workout_summary_window_create(
+      ActivitySessionType_Run, prv_start_workout_cb, prv_select_workout_cb);
+  prv_cycle_activity(window, 1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Walk);
+  prv_cycle_activity(window, 1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Open);
+  prv_cycle_activity(window, 1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Run);
+  prv_cycle_activity(window, -1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Open);
+  prv_cycle_activity(window, -1);
+  cl_assert_equal_i(s_selected_type, ActivitySessionType_Walk);
 }

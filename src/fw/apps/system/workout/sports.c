@@ -243,6 +243,10 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
     // Not supported by the sports API
     case WorkoutMetricType_Steps:
     case WorkoutMetricType_AvgPace:
+    case WorkoutMetricType_AvgSpeed:
+    case WorkoutMetricType_AvgCadence:
+    case WorkoutMetricType_ActiveCalories:
+    case WorkoutMetricType_AvgHr:
     case WorkoutMetricType_None:
     case WorkoutMetricTypeCount:
       break;
