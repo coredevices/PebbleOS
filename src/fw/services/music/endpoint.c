@@ -11,6 +11,8 @@
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 
+#include <string.h>
+
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
 static const uint16_t MUSIC_CTRL_ENDPOINT = 0x20;
@@ -18,14 +20,18 @@ static const uint16_t MUSIC_CTRL_ENDPOINT = 0x20;
 static bool s_connected;
 static bool s_progress_reporting_supported = true;
 
-static void prv_send_music_command_to_handset(MusicEndpointCmdID cmd) {
+static void prv_send_music_data_to_handset(const uint8_t *data, size_t length) {
   CommSession *session = comm_session_get_system_session();
   if (!session) {
     PBL_LOG_ERR("No system session");
     return;
   }
-  comm_session_send_data(session, MUSIC_CTRL_ENDPOINT,
-                         (const uint8_t *)&cmd, 1, COMM_SESSION_DEFAULT_TIMEOUT);
+  comm_session_send_data(session, MUSIC_CTRL_ENDPOINT, data, length, COMM_SESSION_DEFAULT_TIMEOUT);
+}
+
+static void prv_send_music_command_to_handset(MusicEndpointCmdID cmd) {
+  const uint8_t command = cmd;
+  prv_send_music_data_to_handset(&command, sizeof(command));
 }
 
 static const uint8_t* prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
@@ -167,13 +173,54 @@ static void prv_update_player_info(CommSession *session, const uint8_t* msg, siz
   music_update_player_name(player_name_ptr, player_name_length);
 }
 
-void music_protocol_msg_callback(CommSession *session, const uint8_t* msg, size_t length) {
-  if (!s_connected) {
+static void prv_update_output_routes(const uint8_t *msg, size_t length) {
+  if (length < 3 || msg[0] > MusicEndpointOutputRouteStatusError) {
     return;
   }
+
+  const MusicOutputRouteStatus status = (MusicOutputRouteStatus)msg[0];
+  const uint8_t generation = msg[1];
+  const uint8_t route_count = msg[2];
+  if (status != MusicOutputRouteStatusAvailable) {
+    music_update_output_routes(status, generation, NULL, 0);
+    return;
+  }
+  if (route_count > MUSIC_OUTPUT_ROUTE_MAX_COUNT) {
+    return;
+  }
+
+  MusicOutputRoute routes[MUSIC_OUTPUT_ROUTE_MAX_COUNT] = {};
+  const uint8_t *iter = msg + 3;
+  const uint8_t *end = msg + length;
+  for (uint8_t i = 0; i < route_count; i++) {
+    if ((size_t)(end - iter) < 3) {
+      return;
+    }
+    routes[i].id = *iter++;
+    routes[i].selected = (*iter++ & MusicEndpointOutputRouteSelected);
+    const uint8_t name_length = *iter++;
+    if ((size_t)(end - iter) < name_length) {
+      return;
+    }
+    size_t copy_length = MIN(name_length, MUSIC_BUFFER_LENGTH - 1);
+    while (copy_length > 0 && copy_length < name_length && (iter[copy_length] & 0xc0) == 0x80) {
+      copy_length--;
+    }
+    memcpy(routes[i].name, iter, copy_length);
+    routes[i].name[copy_length] = '\0';
+    iter += name_length;
+  }
+  music_update_output_routes(status, generation, routes, route_count);
+}
+
+void music_protocol_msg_callback(CommSession *session, const uint8_t* msg, size_t length) {
+  if (!s_connected || length < 1) {
+    return;
+  }
+  const MusicEndpointCmdID command = *msg++;
   --length;
 
-  switch (*(msg++)) {
+  switch (command) {
     case MusicEndpointCmdIDNowPlayingInfoResponse:
       prv_update_now_playing_info(session, msg, length);
       break;
@@ -186,8 +233,11 @@ void music_protocol_msg_callback(CommSession *session, const uint8_t* msg, size_
     case MusicEndpointCmdIDPlayerInfoResponse:
       prv_update_player_info(session, msg, length);
       break;
+    case MusicEndpointCmdIDOutputRoutesResponse:
+      prv_update_output_routes(msg, length);
+      break;
     default:
-      PBL_LOG_DBG("Invalid command 0x%"PRIx8, msg[0]);
+      PBL_LOG_DBG("Invalid command 0x%"PRIx8, command);
   }
 }
 
@@ -234,18 +284,23 @@ static void prv_music_command_send(MusicCommand command) {
 }
 
 static MusicServerCapability prv_music_get_capability_bitset(void) {
+  MusicServerCapability capabilities = MusicServerCapabilityNone;
   if (comm_session_has_capability(comm_session_get_system_session(),
                                   CommSessionExtendedMusicService)) {
     if (s_progress_reporting_supported) {
-      return (MusicServerCapabilityPlaybackStateReporting |
-              MusicServerCapabilityProgressReporting |
-              MusicServerCapabilityVolumeReporting);
+      capabilities |= (MusicServerCapabilityPlaybackStateReporting |
+                       MusicServerCapabilityProgressReporting |
+                       MusicServerCapabilityVolumeReporting);
     } else {
-      return (MusicServerCapabilityPlaybackStateReporting | MusicServerCapabilityVolumeReporting);
+      capabilities |= (MusicServerCapabilityPlaybackStateReporting |
+                       MusicServerCapabilityVolumeReporting);
     }
-  } else {
-    return MusicServerCapabilityNone;
   }
+  if (comm_session_has_capability(comm_session_get_system_session(),
+                                  CommSessionMusicOutputRoutingSupport)) {
+    capabilities |= MusicServerCapabilityOutputRouting;
+  }
+  return capabilities;
 }
 
 static bool prv_music_needs_user_to_start_playback_on_phone(void) {
@@ -266,6 +321,19 @@ static void prv_music_request_low_latency_for_period(uint32_t period_ms) {
                                   period_ms / MS_PER_SECOND);
 }
 
+static void prv_music_request_output_routes(void) {
+  prv_send_music_command_to_handset(MusicEndpointCmdIDGetOutputRoutes);
+}
+
+static void prv_music_select_output_route(uint8_t generation, uint8_t route_id) {
+  const uint8_t msg[] = {
+    MusicEndpointCmdIDSelectOutputRoute,
+    generation,
+    route_id,
+  };
+  prv_send_music_data_to_handset(msg, sizeof(msg));
+}
+
 static const MusicServerImplementation s_pp_music_implementation = {
   .debug_name = "PP",
   .is_command_supported = &prv_music_is_command_supported,
@@ -274,6 +342,8 @@ static const MusicServerImplementation s_pp_music_implementation = {
   .get_capability_bitset = prv_music_get_capability_bitset,
   .request_reduced_latency = prv_music_request_reduced_latency,
   .request_low_latency_for_period = prv_music_request_low_latency_for_period,
+  .request_output_routes = prv_music_request_output_routes,
+  .select_output_route = prv_music_select_output_route,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

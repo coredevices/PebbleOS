@@ -39,6 +39,7 @@ typedef struct PACKED {
       bool blob_db_version_support: 1;
       bool settings_sync_support: 1;  // Phone supports Settings BlobDB sync
       bool weather_db_v4_support: 1;  // Phone writes the v4 weather BlobDB record (rich forecast)
+      bool music_output_routing_support: 1;
     };
     uint64_t flags;
   };

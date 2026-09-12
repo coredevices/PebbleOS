@@ -87,6 +87,26 @@ bool music_is_progress_reporting_supported(void) {
   return s_music_progress_supported;
 }
 
+bool music_is_output_routing_supported(void) {
+  return false;
+}
+
+MusicOutputRouteStatus music_get_output_route_status(void) {
+  return MusicOutputRouteStatusUnsupported;
+}
+
+uint8_t music_get_output_route_count(void) {
+  return 0;
+}
+
+bool music_get_output_route(uint8_t index, MusicOutputRoute *route_out) {
+  return false;
+}
+
+void music_request_output_routes(void) {}
+
+void music_select_output_route(uint8_t route_id) {}
+
 bool music_needs_user_to_start_playback_on_phone(void) {
   return s_music_needs_user_to_start_playback;
 }
@@ -182,10 +202,36 @@ bool shell_prefs_get_music_show_album_art(void) {
   return s_prefs_music_show_album_art;
 }
 
+GColor shell_prefs_get_theme_highlight_color(void) {
+  return GColorWhite;
+}
+
 // Misc stubs
 /////////////////////
 
 void app_event_loop(void) {}
+
+void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {}
+
+void menu_layer_deinit(MenuLayer *menu_layer) {}
+
+Layer *menu_layer_get_layer(const MenuLayer *menu_layer) {
+  return (Layer *)menu_layer;
+}
+
+void menu_layer_set_callbacks(MenuLayer *menu_layer, void *callback_context,
+                              const MenuLayerCallbacks *callbacks) {}
+
+void menu_layer_set_click_config_onto_window(MenuLayer *menu_layer, Window *window) {}
+
+void menu_layer_reload_data(MenuLayer *menu_layer) {}
+
+void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {}
+
+void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {}
+
+void menu_cell_basic_draw(GContext *ctx, const Layer *cell_layer, const char *title,
+                          const char *subtitle, GBitmap *icon) {}
 
 void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {}
 
@@ -280,7 +326,7 @@ void test_music__initialize(void) {
   s_prefs_music_show_progress_bar = true;
   s_prefs_music_show_album_art = false;
 
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -352,8 +398,7 @@ void test_music__playing(void) {
 }
 
 void test_music__playing_long_text(void) {
-  prv_set_now_playing("It Could Be The First Day Of Springtime",
-                      "Godspeed You! Black Emperor");
+  prv_set_now_playing("It Could Be The First Day Of Springtime", "Godspeed You! Black Emperor");
   s_music_play_state = MusicPlayStatePlaying;
   s_music_track_pos_ms = 754 * 1000;
   s_music_track_length_ms = 3945 * 1000;
@@ -463,14 +508,14 @@ void test_music__album_art_shown_when_received(void) {
 
   prv_receive_album_art();
   PebbleEvent event = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media = { .type = PebbleMediaEventTypeAlbumArtUpdated },
+      .type = PEBBLE_MEDIA_EVENT,
+      .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
   };
   prv_music_event_handler(&event, NULL);
 
   prv_render();
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap,
-                          TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
+  cl_check(
+      gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
 #endif
 }
 
@@ -492,11 +537,12 @@ void test_music__album_art_pref_toggled_off(void) {
 
   s_prefs_music_show_album_art = false;
   PebbleEvent event = {
-    .type = PEBBLE_PREF_CHANGE_EVENT,
-    .pref_change = {
-      .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
-      .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
-    },
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .pref_change =
+          {
+              .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
+              .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
+          },
   };
   prv_pref_change_handler(&event, NULL);
 

@@ -19,6 +19,7 @@ typedef enum {
   MusicServerCapabilityPlaybackStateReporting = (1 << 0),
   MusicServerCapabilityProgressReporting = (1 << 1),
   MusicServerCapabilityVolumeReporting = (1 << 2),
+  MusicServerCapabilityOutputRouting = (1 << 3),
 } MusicServerCapability;
 
 //! Pointers to server-specific implementations of the music backend server
@@ -30,6 +31,8 @@ typedef struct {
   MusicServerCapability (*get_capability_bitset)(void);
   void (*request_reduced_latency)(bool reduced_latency);
   void (*request_low_latency_for_period)(uint32_t period_ms);
+  void (*request_output_routes)(void);
+  void (*select_output_route)(uint8_t generation, uint8_t route_id);
 } MusicServerImplementation;
 
 //! Informs the music service when the server got (dis)connected.
@@ -47,6 +50,9 @@ void music_update_now_playing(const char *title, size_t title_length,
 //! Update the name of the player that's currently playing.
 //! The string doesn't need to be null terminated.
 void music_update_player_name(const char *player_name, size_t player_name_length);
+
+void music_update_output_routes(MusicOutputRouteStatus status, uint8_t generation,
+                                const MusicOutputRoute *routes, uint8_t route_count);
 
 //! Data structure to update playback state info.
 //! @see music_update_player_playback_state
