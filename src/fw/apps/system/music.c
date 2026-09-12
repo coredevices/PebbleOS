@@ -234,6 +234,7 @@ static const uint32_t VOLUME_REPEAT_INTERVAL_MS = 400;
 static const uint32_t ACTION_BAR_TIMEOUT_MS = 2000;
 static const uint32_t VOLUME_ICON_TIMEOUT_MS = 2000;
 
+typedef struct MusicOutputWindow MusicOutputWindow;
 
 typedef struct {
   Window window;
@@ -275,6 +276,7 @@ typedef struct {
   GBitmap icon_play_pause;
   GBitmap icon_volume_up;
   GBitmap icon_volume_down;
+  GBitmap icon_output_device;
   GBitmap image_cassette;
   GBitmap image_pause;
   GBitmap image_volume_up;
@@ -319,11 +321,19 @@ typedef struct {
   bool volume_is_up;
 
   MusicNoMusicWindow *no_music_window;
+  MusicOutputWindow *output_window;
 
   VibeScore *score;
   bool temporarily_show_progress;
   AppTimer *temporarily_show_progress_timer;
 } MusicAppData;
+
+struct MusicOutputWindow {
+  Window window;
+  StatusBarLayer status_layer;
+  MenuLayer menu_layer;
+  MusicAppData *music_data;
+};
 
 //! True when the screen uses the media layout (backdrop + centred stack) rather than the stock
 //! layout. Always on for the unified round layout; on rect only while art is showing.
@@ -622,6 +632,118 @@ static void prv_update_ui_state_skipping(MusicAppData *data, bool animated) {
   }
 }
 
+static uint16_t prv_output_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
+                                        void *context) {
+  const uint8_t count = music_get_output_route_count();
+  return music_get_output_route_status() == MusicOutputRouteStatusAvailable && count ? count : 1;
+}
+
+static void prv_output_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                                void *context) {
+  MusicOutputWindow *output_window = context;
+  MusicOutputRoute route;
+  if (music_get_output_route_status() == MusicOutputRouteStatusAvailable &&
+      music_get_output_route(cell_index->row, &route)) {
+    const char *subtitle = route.selected ? i18n_get("Current", output_window) : NULL;
+    menu_cell_basic_draw(ctx, cell_layer, route.name, subtitle, NULL);
+    return;
+  }
+
+  const char *title;
+  const char *subtitle = NULL;
+  switch (music_get_output_route_status()) {
+    case MusicOutputRouteStatusLoading:
+      title = "Loading...";
+      break;
+    case MusicOutputRouteStatusPermissionRequired:
+      title = "Permission required";
+      subtitle = "Enable in Pebble app";
+      break;
+    case MusicOutputRouteStatusNoPlayer:
+      title = "No active player";
+      subtitle = "Start playback on phone";
+      break;
+    case MusicOutputRouteStatusAvailable:
+      title = "No devices found";
+      break;
+    default:
+      title = "Unavailable";
+      break;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, output_window),
+                       subtitle ? i18n_get(subtitle, output_window) : NULL, NULL);
+}
+
+static void prv_output_select(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
+  MusicOutputRoute route;
+  if (music_get_output_route_status() == MusicOutputRouteStatusAvailable &&
+      music_get_output_route(cell_index->row, &route)) {
+    music_select_output_route(route.id);
+    app_window_stack_pop(true);
+  } else {
+    music_request_output_routes();
+  }
+}
+
+static void prv_output_window_unload(Window *window) {
+  MusicOutputWindow *output_window = window_get_user_data(window);
+  if (output_window->music_data->output_window == output_window) {
+    output_window->music_data->output_window = NULL;
+  }
+  menu_layer_deinit(&output_window->menu_layer);
+  status_bar_layer_deinit(&output_window->status_layer);
+  window_deinit(&output_window->window);
+  i18n_free_all(output_window);
+  app_free(output_window);
+}
+
+static void prv_push_output_window(MusicAppData *data) {
+  if (data->output_window || !music_is_output_routing_supported()) {
+    return;
+  }
+
+  MusicOutputWindow *output_window = app_zalloc_check(sizeof(*output_window));
+  data->output_window = output_window;
+  output_window->music_data = data;
+
+  Window *window = &output_window->window;
+  window_init(window, WINDOW_NAME("Music Output"));
+  window_set_user_data(window, output_window);
+  window_set_window_handlers(window, &(WindowHandlers) {
+    .unload = prv_output_window_unload,
+  });
+
+  status_bar_layer_init(&output_window->status_layer);
+  status_bar_layer_set_title(&output_window->status_layer,
+                             i18n_get("Output device", output_window), false, false);
+  status_bar_layer_set_colors(&output_window->status_layer, GColorWhite, GColorBlack);
+  status_bar_layer_set_separator_mode(&output_window->status_layer,
+                                      StatusBarLayerSeparatorModeDotted);
+  layer_add_child(&window->layer, status_bar_layer_get_layer(&output_window->status_layer));
+
+  const GRect bounds = grect_inset(window->layer.bounds, GEdgeInsets(
+      STATUS_BAR_LAYER_HEIGHT, 0, PBL_IF_ROUND_ELSE(STATUS_BAR_LAYER_HEIGHT, 0), 0));
+  menu_layer_init(&output_window->menu_layer, &bounds);
+  menu_layer_set_callbacks(&output_window->menu_layer, output_window, &(MenuLayerCallbacks) {
+    .get_num_rows = prv_output_get_num_rows,
+    .draw_row = prv_output_draw_row,
+    .select_click = prv_output_select,
+  });
+  menu_layer_set_normal_colors(&output_window->menu_layer, GColorWhite, GColorBlack);
+  const GColor highlight = shell_prefs_get_theme_highlight_color();
+  menu_layer_set_highlight_colors(&output_window->menu_layer, highlight,
+                                  gcolor_legible_over(highlight));
+  menu_layer_set_click_config_onto_window(&output_window->menu_layer, window);
+  layer_add_child(&window->layer, menu_layer_get_layer(&output_window->menu_layer));
+
+  app_window_stack_push(window, true);
+  music_request_output_routes();
+}
+
+static void prv_output_click_handler(ClickRecognizerRef recognizer, void *context) {
+  prv_push_output_window(context);
+}
+
 static void prv_update_ui_state_volume(MusicAppData *data, bool animated) {
   if (data->action_bar_state == ActionBarStateVolume) {
     action_bar_layer_set_click_config_provider(&data->action_bar,
@@ -631,11 +753,13 @@ static void prv_update_ui_state_volume(MusicAppData *data, bool animated) {
                                      animated);
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_ID_DOWN, &data->icon_volume_down,
                                      animated);
-  GBitmap const *select_bitmap;
-  switch (music_get_playback_state()) {
-    case MusicPlayStatePlaying: select_bitmap = &data->icon_pause; break;
-    case MusicPlayStatePaused: select_bitmap = &data->icon_play; break;
-    default: select_bitmap = &data->icon_play_pause; break;
+  GBitmap const *select_bitmap = &data->icon_output_device;
+  if (!music_is_output_routing_supported()) {
+    switch (music_get_playback_state()) {
+      case MusicPlayStatePlaying: select_bitmap = &data->icon_pause; break;
+      case MusicPlayStatePaused: select_bitmap = &data->icon_play; break;
+      default: select_bitmap = &data->icon_play_pause; break;
+    }
   }
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_ID_SELECT, select_bitmap, animated);
 }
@@ -783,7 +907,9 @@ static void prv_volume_click_config_provider(void *context) {
                                           prv_volume_click_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, VOLUME_REPEAT_INTERVAL_MS,
                                           prv_volume_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, prv_play_pause_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT,
+                                music_is_output_routing_supported() ?
+                                    prv_output_click_handler : prv_play_pause_click_handler);
 }
 
 static void prv_update_layout(MusicAppData *data) {
@@ -1573,6 +1699,11 @@ static void prv_music_event_handler(PebbleEvent *event, void *context) {
     case PebbleMediaEventTypeAlbumArtUpdated:
       prv_apply_art_appearance(data);
       return;
+    case PebbleMediaEventTypeOutputRoutesChanged:
+      if (data->output_window) {
+        menu_layer_reload_data(&data->output_window->menu_layer);
+      }
+      return;
     case PebbleMediaEventTypeVolumeChanged:
     case PebbleMediaEventTypeServerConnected:
     case PebbleMediaEventTypeServerDisconnected:
@@ -1618,6 +1749,7 @@ static void prv_handle_init(void) {
   gbitmap_init_with_resource(&data->icon_play_pause, RESOURCE_ID_MUSIC_ICON_PLAY_PAUSE);
   gbitmap_init_with_resource(&data->icon_volume_up, RESOURCE_ID_MUSIC_ICON_VOLUME_UP);
   gbitmap_init_with_resource(&data->icon_volume_down, RESOURCE_ID_MUSIC_ICON_VOLUME_DOWN);
+  gbitmap_init_with_resource(&data->icon_output_device, RESOURCE_ID_SETTINGS_MENU_ICON_BLUETOOTH);
   gbitmap_init_with_resource(&data->image_cassette, RESOURCE_ID_MUSIC_LARGE_CASSETTE);
   gbitmap_init_with_resource(&data->image_pause, RESOURCE_ID_MUSIC_LARGE_PAUSED);
   gbitmap_init_with_resource(&data->image_volume_up, RESOURCE_ID_MUSIC_LARGE_VOLUME_UP);

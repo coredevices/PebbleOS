@@ -38,6 +38,10 @@ struct MusicServiceContext {
   uint8_t player_volume_percent;
 
   char player_name[MUSIC_BUFFER_LENGTH];
+  MusicOutputRouteStatus output_route_status;
+  uint8_t output_route_generation;
+  uint8_t output_route_count;
+  MusicOutputRoute output_routes[MUSIC_OUTPUT_ROUTE_MAX_COUNT];
 
   char title[MUSIC_BUFFER_LENGTH];
   char artist[MUSIC_BUFFER_LENGTH];
@@ -91,6 +95,7 @@ static void prv_imaging_album_art_received(uint8_t token, GBitmap *bitmap) {
 
 void music_init(void) {
   pbl_mutex_init(&s_music_ctx.mutex);
+  s_music_ctx.output_route_status = MusicOutputRouteStatusUnsupported;
   imaging_register_handler(ImagingImageTypeAlbumArt, prv_imaging_album_art_received);
 }
 
@@ -177,6 +182,7 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
     // Taking short-cut here, music_update_now_playing already puts NowPlayingChanged event, no
     // need to put it again by calling music_update_player_name:
     s_music_ctx.player_name[0] = 0;
+    music_update_output_routes(MusicOutputRouteStatusUnsupported, 0, NULL, 0);
     // now_playing no longer drops art on a track change (see music_update_now_playing), so clear it
     // explicitly here: a connect/disconnect must not leave the previous session's art on screen.
     prv_free_album_art_locked();
@@ -256,6 +262,58 @@ void music_update_player_name(const char *player_name, size_t player_name_length
   // TODO: actually do something with this
   off_t o = offsetof(__typeof__(s_music_ctx), player_name);
   prv_update_string_and_put_event(player_name, player_name_length, o);
+}
+
+static void prv_put_output_routes_changed_event(void) {
+  PebbleEvent event = {
+    .type = PEBBLE_MEDIA_EVENT,
+    .media.type = PebbleMediaEventTypeOutputRoutesChanged,
+  };
+  event_put(&event);
+}
+
+void music_update_output_routes(MusicOutputRouteStatus status, uint8_t generation,
+                                const MusicOutputRoute *routes, uint8_t route_count) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  s_music_ctx.output_route_status = status;
+  s_music_ctx.output_route_generation = generation;
+  s_music_ctx.output_route_count = MIN(route_count, MUSIC_OUTPUT_ROUTE_MAX_COUNT);
+  if (!routes) {
+    s_music_ctx.output_route_count = 0;
+  }
+  for (uint8_t i = 0; i < s_music_ctx.output_route_count; i++) {
+    s_music_ctx.output_routes[i] = routes[i];
+    s_music_ctx.output_routes[i].name[MUSIC_BUFFER_LENGTH - 1] = '\0';
+  }
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+  prv_put_output_routes_changed_event();
+}
+
+MusicOutputRouteStatus music_get_output_route_status(void) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  const MusicOutputRouteStatus status = s_music_ctx.output_route_status;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+  return status;
+}
+
+uint8_t music_get_output_route_count(void) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  const uint8_t count = s_music_ctx.output_route_count;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+  return count;
+}
+
+bool music_get_output_route(uint8_t index, MusicOutputRoute *route_out) {
+  if (!route_out) {
+    return false;
+  }
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  const bool valid = index < s_music_ctx.output_route_count;
+  if (valid) {
+    *route_out = s_music_ctx.output_routes[index];
+  }
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+  return valid;
 }
 
 void music_update_track_title(const char *title, size_t title_length) {
@@ -465,6 +523,31 @@ void music_request_low_latency_for_period(uint32_t period_ms) {
   }
 }
 
+void music_request_output_routes(void) {
+  if (!music_is_output_routing_supported()) {
+    return;
+  }
+  music_update_output_routes(MusicOutputRouteStatusLoading, 0, NULL, 0);
+  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), request_output_routes);
+  void (*request_output_routes)(void) = prv_implementation_function_for_offset(o);
+  if (request_output_routes) {
+    request_output_routes();
+  }
+}
+
+void music_select_output_route(uint8_t route_id) {
+  uint8_t generation;
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  generation = s_music_ctx.output_route_generation;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+
+  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), select_output_route);
+  void (*select_output_route)(uint8_t, uint8_t) = prv_implementation_function_for_offset(o);
+  if (select_output_route) {
+    select_output_route(generation, route_id);
+  }
+}
+
 bool music_skip_seeks_within_track(void) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   const bool seeks = s_music_ctx.skip_seeks_within_track;
@@ -520,6 +603,10 @@ bool music_is_progress_reporting_supported(void) {
 
 bool music_is_volume_reporting_supported(void) {
   return prv_is_capability_supported(MusicServerCapabilityVolumeReporting);
+}
+
+bool music_is_output_routing_supported(void) {
+  return prv_is_capability_supported(MusicServerCapabilityOutputRouting);
 }
 
 uint8_t music_get_now_playing_generation(void) {

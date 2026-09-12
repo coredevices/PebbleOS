@@ -8,6 +8,22 @@
 #include <string.h>
 
 #define MUSIC_BUFFER_LENGTH 64
+#define MUSIC_OUTPUT_ROUTE_MAX_COUNT 8
+
+typedef enum {
+  MusicOutputRouteStatusAvailable = 0,
+  MusicOutputRouteStatusUnsupported = 1,
+  MusicOutputRouteStatusPermissionRequired = 2,
+  MusicOutputRouteStatusNoPlayer = 3,
+  MusicOutputRouteStatusError = 4,
+  MusicOutputRouteStatusLoading = 5,
+} MusicOutputRouteStatus;
+
+typedef struct {
+  uint8_t id;
+  bool selected;
+  char name[MUSIC_BUFFER_LENGTH];
+} MusicOutputRoute;
 
 typedef enum {
   MusicPlayStateUnknown,
@@ -78,6 +94,18 @@ bool music_is_progress_reporting_supported(void);
 //! @return True if the service supports reporting of the current volume.
 //! @see music_get_volume_percent
 bool music_is_volume_reporting_supported(void);
+
+bool music_is_output_routing_supported(void);
+
+MusicOutputRouteStatus music_get_output_route_status(void);
+
+uint8_t music_get_output_route_count(void);
+
+bool music_get_output_route(uint8_t index, MusicOutputRoute *route_out);
+
+void music_request_output_routes(void);
+
+void music_select_output_route(uint8_t route_id);
 
 //! Sends the command to the server. Commands are "unreliable", they are sent at "best effort".
 //! @param command The command to send.

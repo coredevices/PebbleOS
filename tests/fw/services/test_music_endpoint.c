@@ -297,6 +297,13 @@ void test_music_endpoint__ignore_unknown_message(void) {
   cl_assert_equal_i(e.type, PEBBLE_NULL_EVENT);
 }
 
+void test_music_endpoint__ignore_empty_message(void) {
+  prv_receive_app_info_event(true /* is_android */);
+  prv_receive_pp_data(NULL, 0);
+  PebbleEvent e = fake_event_get_last();
+  cl_assert_equal_i(e.type, PEBBLE_NULL_EVENT);
+}
+
 void test_music_endpoint__receive_zero_length_now_playing(void) {
   // Android app connects:
   prv_receive_app_info_event(true /* is_android */);
@@ -349,6 +356,7 @@ void test_music_endpoint__supported_capabilities(void) {
   cl_assert_equal_b(music_is_playback_state_reporting_supported(), true);
   cl_assert_equal_b(music_is_progress_reporting_supported(), true);
   cl_assert_equal_b(music_is_volume_reporting_supported(), true);
+  cl_assert_equal_b(music_is_output_routing_supported(), true);
   cl_assert_equal_b(music_needs_user_to_start_playback_on_phone(), false);
   for (MusicCommand cmd = 0; cmd < NumMusicCommand; ++cmd) {
     bool expect_supported = true;
@@ -363,6 +371,55 @@ void test_music_endpoint__supported_capabilities(void) {
     }
     cl_assert_equal_b(music_is_command_supported(cmd), expect_supported);
   }
+}
+
+void test_music_endpoint__receive_output_routes(void) {
+  prv_receive_app_info_event(true /* is_android */);
+  const uint8_t msg[] = {
+    MusicEndpointCmdIDOutputRoutesResponse,
+    MusicEndpointOutputRouteStatusAvailable, 7, 2,
+    0, MusicEndpointOutputRouteSelected, 5, 'P', 'h', 'o', 'n', 'e',
+    3, 0, 7, 'S', 'p', 'e', 'a', 'k', 'e', 'r',
+  };
+  prv_receive_pp_data(msg, sizeof(msg));
+
+  PebbleEvent event = fake_event_get_last();
+  cl_assert_equal_i(event.type, PEBBLE_MEDIA_EVENT);
+  cl_assert_equal_i(event.media.type, PebbleMediaEventTypeOutputRoutesChanged);
+  cl_assert_equal_i(music_get_output_route_status(), MusicOutputRouteStatusAvailable);
+  cl_assert_equal_i(music_get_output_route_count(), 2);
+
+  MusicOutputRoute route;
+  cl_assert(music_get_output_route(0, &route));
+  cl_assert_equal_i(route.id, 0);
+  cl_assert_equal_b(route.selected, true);
+  cl_assert_equal_s(route.name, "Phone");
+  cl_assert(music_get_output_route(1, &route));
+  cl_assert_equal_i(route.id, 3);
+  cl_assert_equal_b(route.selected, false);
+  cl_assert_equal_s(route.name, "Speaker");
+}
+
+void test_music_endpoint__request_and_select_output_route(void) {
+  prv_receive_app_info_event(true /* is_android */);
+  fake_comm_session_process_send_next();
+
+  music_request_output_routes();
+  fake_comm_session_process_send_next();
+  const uint8_t request[] = { MusicEndpointCmdIDGetOutputRoutes };
+  fake_transport_assert_sent(s_transport, 0, 0x20, request, sizeof(request));
+
+  const uint8_t response[] = {
+    MusicEndpointCmdIDOutputRoutesResponse,
+    MusicEndpointOutputRouteStatusAvailable, 9, 1,
+    4, 0, 5, 'P', 'h', 'o', 'n', 'e',
+  };
+  prv_receive_pp_data(response, sizeof(response));
+  music_select_output_route(4);
+  fake_comm_session_process_send_next();
+
+  const uint8_t select[] = { MusicEndpointCmdIDSelectOutputRoute, 9, 4 };
+  fake_transport_assert_sent(s_transport, 0, 0x20, select, sizeof(select));
 }
 
 void test_music_endpoint__skip_seeks_within_track(void) {
