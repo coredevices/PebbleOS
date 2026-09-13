@@ -75,6 +75,12 @@ enum ActionBarState {
   ActionBarStateLongPress,
 };
 
+enum SelectLongPressAction {
+  SelectLongPressActionNone,
+  SelectLongPressActionPlayPause,
+  SelectLongPressActionOutput,
+};
+
 typedef struct MusicAppSizeConfig {
   const char *music_time_font_key;
   const char *no_music_font_key;
@@ -276,7 +282,6 @@ typedef struct {
   GBitmap icon_play_pause;
   GBitmap icon_volume_up;
   GBitmap icon_volume_down;
-  GBitmap icon_output_device;
   GBitmap image_cassette;
   GBitmap image_pause;
   GBitmap image_volume_up;
@@ -333,6 +338,10 @@ struct MusicOutputWindow {
   StatusBarLayer status_layer;
   MenuLayer menu_layer;
   MusicAppData *music_data;
+  MusicOutputRouteStatus status;
+  MusicOutputRoute routes[MUSIC_OUTPUT_ROUTE_MAX_COUNT];
+  uint8_t route_count;
+  bool has_available_snapshot;
 };
 
 //! True when the screen uses the media layout (backdrop + centred stack) rather than the stock
@@ -632,42 +641,60 @@ static void prv_update_ui_state_skipping(MusicAppData *data, bool animated) {
   }
 }
 
+static bool prv_output_update_snapshot(MusicOutputWindow *output_window) {
+  if (output_window->has_available_snapshot) {
+    return false;
+  }
+  output_window->route_count = music_get_output_routes(
+      &output_window->status, output_window->routes, MUSIC_OUTPUT_ROUTE_MAX_COUNT);
+  output_window->has_available_snapshot = output_window->status == MusicOutputRouteStatusAvailable;
+  return true;
+}
+
+static void prv_output_request_routes(MusicOutputWindow *output_window) {
+  output_window->has_available_snapshot = false;
+  music_request_output_routes();
+  prv_output_update_snapshot(output_window);
+}
+
 static uint16_t prv_output_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
                                         void *context) {
-  const uint8_t count = music_get_output_route_count();
-  return music_get_output_route_status() == MusicOutputRouteStatusAvailable && count ? count : 1;
+  const MusicOutputWindow *output_window = context;
+  return output_window->status == MusicOutputRouteStatusAvailable && output_window->route_count
+             ? output_window->route_count
+             : 1;
 }
 
 static void prv_output_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
                                 void *context) {
   MusicOutputWindow *output_window = context;
-  MusicOutputRoute route;
-  if (music_get_output_route_status() == MusicOutputRouteStatusAvailable &&
-      music_get_output_route(cell_index->row, &route)) {
-    const char *subtitle = route.selected ? i18n_get("Current", output_window) : NULL;
-    menu_cell_basic_draw(ctx, cell_layer, route.name, subtitle, NULL);
+  if (output_window->status == MusicOutputRouteStatusAvailable &&
+      cell_index->row < output_window->route_count) {
+    const MusicOutputRoute *route = &output_window->routes[cell_index->row];
+    const char *subtitle = route->selected ? i18n_get("Current", output_window) : NULL;
+    menu_cell_basic_draw(ctx, cell_layer, route->name, subtitle, NULL);
     return;
   }
 
   const char *title;
   const char *subtitle = NULL;
-  switch (music_get_output_route_status()) {
+  switch (output_window->status) {
     case MusicOutputRouteStatusLoading:
-      title = "Loading...";
+      title = i18n_noop("Loading...");
       break;
     case MusicOutputRouteStatusPermissionRequired:
-      title = "Permission required";
-      subtitle = "Enable in Pebble app";
+      title = i18n_noop("Permission required");
+      subtitle = i18n_noop("Enable in Pebble app");
       break;
     case MusicOutputRouteStatusNoPlayer:
-      title = "No active player";
-      subtitle = "Start playback on phone";
+      title = i18n_noop("No active player");
+      subtitle = i18n_noop("Start playback on phone");
       break;
     case MusicOutputRouteStatusAvailable:
-      title = "No devices found";
+      title = i18n_noop("No devices found");
       break;
     default:
-      title = "Unavailable";
+      title = i18n_noop("Unavailable");
       break;
   }
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, output_window),
@@ -675,13 +702,15 @@ static void prv_output_draw_row(GContext *ctx, const Layer *cell_layer, MenuInde
 }
 
 static void prv_output_select(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
-  MusicOutputRoute route;
-  if (music_get_output_route_status() == MusicOutputRouteStatusAvailable &&
-      music_get_output_route(cell_index->row, &route)) {
-    music_select_output_route(route.id);
+  MusicOutputWindow *output_window = context;
+  if (output_window->status == MusicOutputRouteStatusAvailable &&
+      cell_index->row < output_window->route_count) {
+    const MusicOutputRoute *route = &output_window->routes[cell_index->row];
+    music_select_output_route(route->generation, route->id);
     app_window_stack_pop(true);
   } else {
-    music_request_output_routes();
+    prv_output_request_routes(output_window);
+    menu_layer_reload_data(&output_window->menu_layer);
   }
 }
 
@@ -736,8 +765,8 @@ static void prv_push_output_window(MusicAppData *data) {
   menu_layer_set_click_config_onto_window(&output_window->menu_layer, window);
   layer_add_child(&window->layer, menu_layer_get_layer(&output_window->menu_layer));
 
+  prv_output_request_routes(output_window);
   app_window_stack_push(window, true);
-  music_request_output_routes();
 }
 
 static void prv_output_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -753,13 +782,17 @@ static void prv_update_ui_state_volume(MusicAppData *data, bool animated) {
                                      animated);
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_ID_DOWN, &data->icon_volume_down,
                                      animated);
-  GBitmap const *select_bitmap = &data->icon_output_device;
-  if (!music_is_output_routing_supported()) {
-    switch (music_get_playback_state()) {
-      case MusicPlayStatePlaying: select_bitmap = &data->icon_pause; break;
-      case MusicPlayStatePaused: select_bitmap = &data->icon_play; break;
-      default: select_bitmap = &data->icon_play_pause; break;
-    }
+  GBitmap const *select_bitmap;
+  switch (music_get_playback_state()) {
+    case MusicPlayStatePlaying:
+      select_bitmap = &data->icon_pause;
+      break;
+    case MusicPlayStatePaused:
+      select_bitmap = &data->icon_play;
+      break;
+    default:
+      select_bitmap = &data->icon_play_pause;
+      break;
   }
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_ID_SELECT, select_bitmap, animated);
 }
@@ -881,6 +914,27 @@ static void prv_play_pause_long_click_end_handler(ClickRecognizerRef recognizer,
   prv_set_action_bar_state(context, ActionBarStateSkip);
 }
 
+static enum SelectLongPressAction prv_select_long_press_action(bool play_pause_fallback) {
+  if (music_is_output_routing_supported()) {
+    return SelectLongPressActionOutput;
+  }
+  return play_pause_fallback ? SelectLongPressActionPlayPause : SelectLongPressActionNone;
+}
+
+static void prv_subscribe_select_long_press(bool play_pause_fallback) {
+  switch (prv_select_long_press_action(play_pause_fallback)) {
+    case SelectLongPressActionOutput:
+      window_long_click_subscribe(BUTTON_ID_SELECT, 0, prv_output_click_handler, NULL);
+      break;
+    case SelectLongPressActionPlayPause:
+      window_long_click_subscribe(BUTTON_ID_SELECT, 0, prv_play_pause_long_click_start_handler,
+                                  prv_play_pause_long_click_end_handler);
+      break;
+    case SelectLongPressActionNone:
+      break;
+  }
+}
+
 static void prv_skipping_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, prv_skip_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_skip_click_handler);
@@ -897,9 +951,8 @@ static void prv_skipping_click_config_provider(void *context) {
                                 prv_volume_long_click_end_handler);
     window_long_click_subscribe(BUTTON_ID_DOWN, 0, prv_volume_long_click_start_handler,
                                 prv_volume_long_click_end_handler);
-    window_long_click_subscribe(BUTTON_ID_SELECT, 0, prv_play_pause_long_click_start_handler,
-                                prv_play_pause_long_click_end_handler);
   }
+  prv_subscribe_select_long_press(show_volume_controls);
 }
 
 static void prv_volume_click_config_provider(void *context) {
@@ -907,9 +960,8 @@ static void prv_volume_click_config_provider(void *context) {
                                           prv_volume_click_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, VOLUME_REPEAT_INTERVAL_MS,
                                           prv_volume_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT,
-                                music_is_output_routing_supported() ?
-                                    prv_output_click_handler : prv_play_pause_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_play_pause_click_handler);
+  prv_subscribe_select_long_press(false);
 }
 
 static void prv_update_layout(MusicAppData *data) {
@@ -1700,7 +1752,7 @@ static void prv_music_event_handler(PebbleEvent *event, void *context) {
       prv_apply_art_appearance(data);
       return;
     case PebbleMediaEventTypeOutputRoutesChanged:
-      if (data->output_window) {
+      if (data->output_window && prv_output_update_snapshot(data->output_window)) {
         menu_layer_reload_data(&data->output_window->menu_layer);
       }
       return;
@@ -1749,7 +1801,6 @@ static void prv_handle_init(void) {
   gbitmap_init_with_resource(&data->icon_play_pause, RESOURCE_ID_MUSIC_ICON_PLAY_PAUSE);
   gbitmap_init_with_resource(&data->icon_volume_up, RESOURCE_ID_MUSIC_ICON_VOLUME_UP);
   gbitmap_init_with_resource(&data->icon_volume_down, RESOURCE_ID_MUSIC_ICON_VOLUME_DOWN);
-  gbitmap_init_with_resource(&data->icon_output_device, RESOURCE_ID_SETTINGS_MENU_ICON_BLUETOOTH);
   gbitmap_init_with_resource(&data->image_cassette, RESOURCE_ID_MUSIC_LARGE_CASSETTE);
   gbitmap_init_with_resource(&data->image_pause, RESOURCE_ID_MUSIC_LARGE_PAUSED);
   gbitmap_init_with_resource(&data->image_volume_up, RESOURCE_ID_MUSIC_LARGE_VOLUME_UP);
