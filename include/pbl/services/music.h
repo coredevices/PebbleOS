@@ -21,6 +21,7 @@ typedef enum {
 
 typedef struct {
   uint8_t id;
+  uint8_t generation;
   bool selected;
   char name[MUSIC_BUFFER_LENGTH];
 } MusicOutputRoute;
@@ -95,17 +96,36 @@ bool music_is_progress_reporting_supported(void);
 //! @see music_get_volume_percent
 bool music_is_volume_reporting_supported(void);
 
+//! @return True if the connected server supports selecting a music output route.
 bool music_is_output_routing_supported(void);
 
+//! @return The status of the latest output route request.
 MusicOutputRouteStatus music_get_output_route_status(void);
 
+//! @return The number of cached output routes.
 uint8_t music_get_output_route_count(void);
 
+//! Copies a consistent snapshot of the output route status and routes.
+//! @param status_out Destination for the current status.
+//! @param routes_out Destination for up to max_count routes.
+//! @param max_count Capacity of routes_out.
+//! @return The number of copied routes.
+uint8_t music_get_output_routes(MusicOutputRouteStatus *status_out, MusicOutputRoute *routes_out,
+                                uint8_t max_count);
+
+//! Copies the output route at index into route_out.
+//! @param index Index in the latest output route response.
+//! @param route_out Destination for the copied route.
+//! @return True if the route was copied.
 bool music_get_output_route(uint8_t index, MusicOutputRoute *route_out);
 
+//! Requests updated music output routes from the connected server.
 void music_request_output_routes(void);
 
-void music_select_output_route(uint8_t route_id);
+//! Selects a route from a previously returned output route request.
+//! @param generation Generation returned with the route.
+//! @param route_id ID returned with the route.
+void music_select_output_route(uint8_t generation, uint8_t route_id);
 
 //! Sends the command to the server. Commands are "unreliable", they are sent at "best effort".
 //! @param command The command to send.

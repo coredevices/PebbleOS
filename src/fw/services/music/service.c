@@ -283,6 +283,7 @@ void music_update_output_routes(MusicOutputRouteStatus status, uint8_t generatio
   }
   for (uint8_t i = 0; i < s_music_ctx.output_route_count; i++) {
     s_music_ctx.output_routes[i] = routes[i];
+    s_music_ctx.output_routes[i].generation = generation;
     s_music_ctx.output_routes[i].name[MUSIC_BUFFER_LENGTH - 1] = '\0';
   }
   pbl_mutex_unlock(&s_music_ctx.mutex);
@@ -299,6 +300,22 @@ MusicOutputRouteStatus music_get_output_route_status(void) {
 uint8_t music_get_output_route_count(void) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   const uint8_t count = s_music_ctx.output_route_count;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+  return count;
+}
+
+uint8_t music_get_output_routes(MusicOutputRouteStatus *status_out, MusicOutputRoute *routes_out,
+                                uint8_t max_count) {
+  if (!status_out || (max_count && !routes_out)) {
+    return 0;
+  }
+
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  *status_out = s_music_ctx.output_route_status;
+  const uint8_t count = MIN(s_music_ctx.output_route_count, max_count);
+  if (count) {
+    memcpy(routes_out, s_music_ctx.output_routes, count * sizeof(*routes_out));
+  }
   pbl_mutex_unlock(&s_music_ctx.mutex);
   return count;
 }
@@ -535,12 +552,7 @@ void music_request_output_routes(void) {
   }
 }
 
-void music_select_output_route(uint8_t route_id) {
-  uint8_t generation;
-  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
-  generation = s_music_ctx.output_route_generation;
-  pbl_mutex_unlock(&s_music_ctx.mutex);
-
+void music_select_output_route(uint8_t generation, uint8_t route_id) {
   const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), select_output_route);
   void (*select_output_route)(uint8_t, uint8_t) = prv_implementation_function_for_offset(o);
   if (select_output_route) {

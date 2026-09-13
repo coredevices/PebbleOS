@@ -174,18 +174,20 @@ static void prv_update_player_info(CommSession *session, const uint8_t* msg, siz
 }
 
 static void prv_update_output_routes(const uint8_t *msg, size_t length) {
+  const uint8_t generation = length > 1 ? msg[1] : 0;
   if (length < 3 || msg[0] > MusicEndpointOutputRouteStatusError) {
+    music_update_output_routes(MusicOutputRouteStatusError, generation, NULL, 0);
     return;
   }
 
   const MusicOutputRouteStatus status = (MusicOutputRouteStatus)msg[0];
-  const uint8_t generation = msg[1];
   const uint8_t route_count = msg[2];
   if (status != MusicOutputRouteStatusAvailable) {
     music_update_output_routes(status, generation, NULL, 0);
     return;
   }
   if (route_count > MUSIC_OUTPUT_ROUTE_MAX_COUNT) {
+    music_update_output_routes(MusicOutputRouteStatusError, generation, NULL, 0);
     return;
   }
 
@@ -194,12 +196,14 @@ static void prv_update_output_routes(const uint8_t *msg, size_t length) {
   const uint8_t *end = msg + length;
   for (uint8_t i = 0; i < route_count; i++) {
     if ((size_t)(end - iter) < 3) {
+      music_update_output_routes(MusicOutputRouteStatusError, generation, NULL, 0);
       return;
     }
     routes[i].id = *iter++;
     routes[i].selected = (*iter++ & MusicEndpointOutputRouteSelected);
     const uint8_t name_length = *iter++;
     if ((size_t)(end - iter) < name_length) {
+      music_update_output_routes(MusicOutputRouteStatusError, generation, NULL, 0);
       return;
     }
     size_t copy_length = MIN(name_length, MUSIC_BUFFER_LENGTH - 1);
