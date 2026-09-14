@@ -643,7 +643,15 @@ static void prv_update_ui_state_skipping(MusicAppData *data, bool animated) {
 
 static bool prv_output_update_snapshot(MusicOutputWindow *output_window) {
   if (output_window->has_available_snapshot) {
-    return false;
+    MusicOutputRouteStatus status;
+    music_get_output_routes(&status, NULL, 0);
+    if (status == MusicOutputRouteStatusAvailable) {
+      return false;
+    }
+    output_window->status = status;
+    output_window->route_count = 0;
+    output_window->has_available_snapshot = false;
+    return true;
   }
   output_window->route_count = music_get_output_routes(
       &output_window->status, output_window->routes, MUSIC_OUTPUT_ROUTE_MAX_COUNT);
