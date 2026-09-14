@@ -5,6 +5,7 @@
 #include "logging/logging_private.h"
 #include "pbl/services/evented_timer.h"
 #include "syscall/syscall_internal.h"
+#include "syscall/syscall.h"
 #include "applib/app_logging.h"
 #include "applib/moddable/moddable.h"
 #include "applib/ui/dialogs/expandable_dialog.h"
@@ -17,6 +18,29 @@
 #include "xsHosts.h"
 #include "moddableAppState.h"
 #include "kernel/pbl_malloc.h"
+#include "kernel/event_loop.h"
+#include "kernel/ui/modals/modal_manager.h"
+#include "shell/normal/watchface.h"
+
+static ExpandableDialog *prv_create_fatal_dialog(const char *message) {
+	ExpandableDialog *dialog = expandable_dialog_create("");
+	Dialog *base_dialog = expandable_dialog_get_dialog(dialog);
+	expandable_dialog_set_header(dialog, "Alloy: Fatal Error");
+	dialog_set_text(base_dialog, message);
+	dialog_set_icon(base_dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
+	dialog_set_fullscreen(base_dialog, true);
+	expandable_dialog_show_action_bar(dialog, false);
+	return dialog;
+}
+
+static void prv_watchface_fatal_error(void *data) {
+	ExpandableDialog *dialog = prv_create_fatal_dialog(data);
+	kernel_free(data);
+	// Keep the warning above the safe watchface until it is dismissed.
+	expandable_dialog_push(dialog, modal_manager_get_window_stack(ModalPriorityAlert));
+	watchface_set_default_install_id(INSTALL_ID_INVALID);
+	watchface_launch_default(NULL);
+}
 
 void moddable_cleanup(void)
 {
@@ -145,18 +169,19 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr)
 	moddable_cleanup();
 
 	if ((xsNormalExit != exitStatus) && (xsDebuggerExit != exitStatus)) {
-		ExpandableDialog *dialog = expandable_dialog_create("");
-		Dialog *base_dialog = expandable_dialog_get_dialog(dialog);
-
-		expandable_dialog_set_header(dialog, "Alloy: Fatal Error");
-		char *msg = (char *)fxAbortString(exitStatus);
-		dialog_set_text(base_dialog, abortReason ? abortReason : msg);
-		if (abortReason) {
-		    c_free(abortReason);
+		const char *message = abortReason ? abortReason : fxAbortString(exitStatus);
+		if (sys_app_is_watchface()) {
+			char *warning = kernel_strdup_check(message);
+			if (abortReason)
+				c_free(abortReason);
+			launcher_task_add_callback(prv_watchface_fatal_error, warning);
+			app_event_loop();
+			return;
 		}
-		dialog_set_icon(base_dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
-		dialog_set_fullscreen(base_dialog, true);
-		expandable_dialog_show_action_bar(dialog, false);
+
+		ExpandableDialog *dialog = prv_create_fatal_dialog(message);
+		if (abortReason)
+			c_free(abortReason);
 
 		app_expandable_dialog_push(dialog);
 
