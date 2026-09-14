@@ -373,6 +373,17 @@ void test_music_endpoint__supported_capabilities(void) {
   }
 }
 
+void test_music_endpoint__output_routing_requires_capability(void) {
+  prv_receive_app_info_event(true /* is_android */);
+
+  fake_comm_session_set_capabilities(CommSessionExtendedMusicService);
+  cl_assert_equal_b(music_is_output_routing_supported(), false);
+
+  fake_comm_session_set_capabilities(CommSessionExtendedMusicService |
+                                     CommSessionMusicOutputRoutingSupport);
+  cl_assert_equal_b(music_is_output_routing_supported(), true);
+}
+
 void test_music_endpoint__receive_output_routes(void) {
   prv_receive_app_info_event(true /* is_android */);
   const uint8_t msg[] = {
