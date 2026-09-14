@@ -1846,31 +1846,6 @@ ShellLanguage shell_prefs_get_language(void) {
 }
 
 uint32_t shell_prefs_get_language_resource_id(void) {
-  switch (shell_prefs_get_language()) {
-#ifdef CONFIG_SERVICE_I18N_BUILTIN_LANGUAGES
-    case ShellLanguageCatalan:
-      return RESOURCE_ID_STRINGS_CA_ES;
-    case ShellLanguageGerman:
-      return RESOURCE_ID_STRINGS_DE_DE;
-    case ShellLanguageSpanish:
-      return RESOURCE_ID_STRINGS_ES_ES;
-    case ShellLanguageFrench:
-      return RESOURCE_ID_STRINGS_FR_FR;
-    case ShellLanguageItalian:
-      return RESOURCE_ID_STRINGS_IT_IT;
-    case ShellLanguageDutch:
-      return RESOURCE_ID_STRINGS_NL_NL;
-    case ShellLanguagePortuguese:
-      return RESOURCE_ID_STRINGS_PT_PT;
-    case ShellLanguagePolish:
-      return RESOURCE_ID_STRINGS_PL_PL;
-#endif
-    case ShellLanguageEnglish:
-    case ShellLanguageInstalledPack:
-    case ShellLanguageCount:
-      return RESOURCE_ID_STRINGS;
-  }
-
   return RESOURCE_ID_STRINGS;
 }
 
