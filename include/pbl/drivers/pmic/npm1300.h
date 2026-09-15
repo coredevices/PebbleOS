@@ -7,6 +7,8 @@
 typedef struct {
   //! Charge current (32-800mA, 2mA steps)
   uint16_t chg_current_ma;
+  //! Charge current while fast charging is off (same range, 0 if unsupported)
+  uint16_t chg_current_normal_ma;
   //! Discharge limit (200mA or 1000mA)
   uint16_t dischg_limit_ma;
   //! Termination current (% of charge current, 10 or 20%)

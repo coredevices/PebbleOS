@@ -23,6 +23,9 @@
   PREFS_MACRO(PREF_KEY_BACKLIGHT_PRESET, s_backlight_preset)
   PREFS_MACRO(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, s_backlight_ambient_threshold)
   PREFS_MACRO(PREF_KEY_STATIONARY, s_stationary_mode_enabled)
+#ifdef CONFIG_FAST_CHARGE_SETTING
+  PREFS_MACRO(PREF_KEY_FAST_CHARGE, s_fast_charge_enabled)
+#endif
   PREFS_MACRO(PREF_KEY_DEFAULT_WORKER, s_default_worker)
   PREFS_MACRO(PREF_KEY_TEXT_STYLE, s_text_style)
   PREFS_MACRO(PREF_KEY_LANG_ENGLISH, s_language_english)

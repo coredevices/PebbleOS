@@ -27,6 +27,8 @@ PBL_LOG_MODULE_DEFINE(driver_pmic_npm1300, CONFIG_DRIVER_PMIC_LOG_LEVEL);
 #define ADC_POLL_TIMEOUT_MS 100   // Max time to wait for ADC measurement
 static TimerID s_debounce_charger_timer = TIMER_INVALID_ID;
 static uint32_t s_dischg_limit_ma;
+static uint16_t s_chg_current_ma;
+static bool s_charger_enabled;
 
 typedef enum {
   PmicRegisters_MAIN_EVENTSADCCLR = 0x0003,
@@ -268,14 +270,28 @@ static void prv_configure_interrupts(void) {
   exti_enable(BOARD_CONFIG_POWER.pmic_int);
 }
 
+static bool prv_chg_current_ma_valid(uint16_t chg_current_ma) {
+  return (chg_current_ma >= 32U) && (chg_current_ma <= 800U) && (chg_current_ma % 2U == 0U);
+}
+
+static bool prv_chg_current_ma_set(uint16_t chg_current_ma) {
+  bool ok = prv_write_register(PmicRegisters_BCHARGER_BCHGISETMSB, (uint8_t)(chg_current_ma / 4U));
+  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETLSB, (chg_current_ma / 2U) % 2U);
+  if (ok) {
+    s_chg_current_ma = chg_current_ma;
+  }
+  return ok;
+}
+
 bool pmic_init(void) {
   bool ok = true;
-  uint8_t val;
 
   s_debounce_charger_timer = new_timer_create();
 
   // TODO(NPM1300): This needs to be configurable at board level
 #ifdef CONFIG_BOARD_ASTERIX
+  uint8_t val;
+
   // Anomaly 27: set BUCK1/BUCK2 to SW control with workaround
   ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT,
                               PmicRegisters_BUCK_BUCK1VOUTSTATUS,
@@ -328,9 +344,14 @@ bool pmic_init(void) {
   // automatic IBAT measurement after VBAT
   ok &= prv_write_register(PmicRegisters_ADC_ADCIBATMEASEN, 1);
 
-  if ((NPM1300_CONFIG.chg_current_ma < 32U) || (NPM1300_CONFIG.chg_current_ma > 800U) ||
-      (NPM1300_CONFIG.chg_current_ma % 2U != 0U)) {
+  if (!prv_chg_current_ma_valid(NPM1300_CONFIG.chg_current_ma)) {
     PBL_LOG_ERR("Invalid charge current: %d mA", NPM1300_CONFIG.chg_current_ma);
+    return false;
+  }
+
+  if ((NPM1300_CONFIG.chg_current_normal_ma != 0U) &&
+      !prv_chg_current_ma_valid(NPM1300_CONFIG.chg_current_normal_ma)) {
+    PBL_LOG_ERR("Invalid normal charge current: %d mA", NPM1300_CONFIG.chg_current_normal_ma);
     return false;
   }
 
@@ -375,10 +396,7 @@ bool pmic_init(void) {
   ok &= prv_write_register(PmicRegisters_LDSW_TASKLDSW2CLR, 1);
 #endif
 
-  val = (uint8_t)(NPM1300_CONFIG.chg_current_ma / 4U);
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETMSB, val);
-  val = (NPM1300_CONFIG.chg_current_ma / 2U) % 2U;
-  ok &= prv_write_register(PmicRegisters_BCHARGER_BCHGISETLSB, val);
+  ok &= prv_chg_current_ma_set(NPM1300_CONFIG.chg_current_ma);
 
   ok &= dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
 
@@ -533,7 +551,7 @@ int battery_get_constants(BatteryConstants *constants) {
   if ((ibat_status & PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_MASK) ==
       PmicRegisters_ADC_ADCIBATMEASSTATUS__BCHARGERMODE_CHRG) {
     full_scale_ua =
-        ((int32_t)NPM1300_CONFIG.chg_current_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
+        ((int32_t)s_chg_current_ma * 1000 * NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
         NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
   } else {
     full_scale_ua =
@@ -655,7 +673,16 @@ int battery_get_constants(BatteryConstants *constants) {
 }
 
 bool pmic_set_charger_state(bool enable) {
-  return prv_write_register(enable ? PmicRegisters_BCHARGER_BCHGENABLESET : PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
+  const bool ok = prv_write_register(
+      enable ? PmicRegisters_BCHARGER_BCHGENABLESET : PmicRegisters_BCHARGER_BCHGENABLECLR, 1);
+  if (ok) {
+    s_charger_enabled = enable;
+  }
+  return ok;
+}
+
+uint16_t pmic_get_charge_current_ma(void) {
+  return s_chg_current_ma;
 }
 
 void battery_set_charge_enable(bool charging_enabled) {
@@ -663,7 +690,26 @@ void battery_set_charge_enable(bool charging_enabled) {
 }
 
 void battery_set_fast_charge(bool fast_charge_enabled) {
-  /* the PMIC handles this for us */
+  uint16_t chg_current_ma = NPM1300_CONFIG.chg_current_ma;
+  if (!fast_charge_enabled && (NPM1300_CONFIG.chg_current_normal_ma != 0U)) {
+    chg_current_ma = NPM1300_CONFIG.chg_current_normal_ma;
+  }
+  if (chg_current_ma == s_chg_current_ma) {
+    return;
+  }
+
+  const bool charger_was_enabled = s_charger_enabled;
+  if (!pmic_set_charger_state(false)) {
+    PBL_LOG_WRN("Could not disable the charger to change the charge current");
+    return;
+  }
+  if (!prv_chg_current_ma_set(chg_current_ma)) {
+    PBL_LOG_WRN("Could not set the charge current to %d mA", chg_current_ma);
+  }
+  if (charger_was_enabled) {
+    pmic_set_charger_state(true);
+  }
+  PBL_LOG_DBG("Charge current: %d mA", s_chg_current_ma);
 }
 
 bool pmic_is_charging(void) {
