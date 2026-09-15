@@ -8,21 +8,148 @@ menuconfig FLASH
 
 if FLASH
 
+choice FLASH_NOR_PART
+    prompt "NOR flash part"
+    optional
+    help
+      The SPI NOR part the board is fitted with. Selects the command set
+      used by the flash driver and the flash region layout.
+
 config FLASH_GD25LQ255E
     bool "GigaDevice GD25LQ255E"
-    help
-      Support for the GigaDevice GD25LQ255E NOR flash.
 
 config FLASH_GD25Q256E
     bool "GigaDevice GD25Q256E"
+
+endchoice
+
+config FLASH_NRF5_QSPI
+    bool "nRF5 QSPI NOR flash"
+    depends on SOC_NRF52
+    default y
     help
-      Support for the GigaDevice GD25Q256E NOR flash.
+      SPI NOR flash attached to the nRF5 QSPI peripheral.
+
+if FLASH_NRF5_QSPI
+
+config FLASH_NRF5_QSPI_CLK_FREQ_HZ
+    int "QSPI clock frequency (Hz)"
+    default 8000000
+    help
+      Frequencies above 8 MHz are exposed to nRF52 anomaly 244.
+
+config FLASH_NRF5_QSPI_SCK_PIN
+    int "SCK pin"
+    default 0
+
+config FLASH_NRF5_QSPI_CSN_PIN
+    int "CSN pin"
+    default 0
+
+config FLASH_NRF5_QSPI_IO0_PIN
+    int "IO0 pin"
+    default 0
+
+config FLASH_NRF5_QSPI_IO1_PIN
+    int "IO1 pin"
+    default 0
+
+config FLASH_NRF5_QSPI_IO2_PIN
+    int "IO2 pin"
+    default 0
+
+config FLASH_NRF5_QSPI_IO3_PIN
+    int "IO3 pin"
+    default 0
+
+choice FLASH_NRF5_QSPI_READ_MODE
+    prompt "Read command"
+    default FLASH_NRF5_QSPI_READ_READ4IO
+
+config FLASH_NRF5_QSPI_READ_FASTREAD
+    bool "Fast read (single line)"
+
+config FLASH_NRF5_QSPI_READ_READ2O
+    bool "Dual output"
+
+config FLASH_NRF5_QSPI_READ_READ2IO
+    bool "Dual I/O"
+
+config FLASH_NRF5_QSPI_READ_READ4O
+    bool "Quad output"
+
+config FLASH_NRF5_QSPI_READ_READ4IO
+    bool "Quad I/O"
+
+endchoice
+
+choice FLASH_NRF5_QSPI_WRITE_MODE
+    prompt "Program command"
+    default FLASH_NRF5_QSPI_WRITE_PP4O
+
+config FLASH_NRF5_QSPI_WRITE_PP
+    bool "Page program (single line)"
+
+config FLASH_NRF5_QSPI_WRITE_PP2O
+    bool "Dual output"
+
+config FLASH_NRF5_QSPI_WRITE_PP4O
+    bool "Quad output"
+
+config FLASH_NRF5_QSPI_WRITE_PP4IO
+    bool "Quad I/O"
+
+endchoice
+
+endif # FLASH_NRF5_QSPI
+
+config FLASH_SF32LB52_MPI
+    bool "SF32LB52 MPI NOR flash"
+    depends on SOC_SF32LB52
+    default y
+    help
+      SPI NOR flash attached to an SF32LB52 MPI controller.
+
+if FLASH_SF32LB52_MPI
+
+config FLASH_SF32LB52_MPI_INSTANCE
+    int "MPI controller instance"
+    range 1 2
+    default 2
+
+config FLASH_SF32LB52_MPI_MSIZE
+    int "Memory window size (MB)"
+    default 32
+
+config FLASH_SF32LB52_MPI_CLK_DIV
+    int "Clock divider"
+    default 0
+
+config FLASH_SF32LB52_MPI_DMA_CHANNEL
+    int "DMAC1 channel"
+    range 1 8
+    default 2
+
+config FLASH_SF32LB52_MPI_DMA_REQUEST
+    int "DMA request"
+    default 1
+
+endif # FLASH_SF32LB52_MPI
 
 config FLASH_QEMU
     bool "QEMU External Flash"
-    default y if SOC_QEMU
+    depends on SOC_QEMU
+    default y
     help
       Support for the QEMU external flash peripheral.
+
+if FLASH_QEMU
+
+config FLASH_QEMU_SIZE
+    hex "Flash size"
+    default 0x2000000
+
+endif # FLASH_QEMU
 
 module = DRIVER_FLASH
 module-str = Flash

@@ -74,7 +74,7 @@ static bool check_region_erased(struct Region region) {
   bool success = true;
   for (uint32_t i = region.begin; i < region.end; i += sizeof(uint32_t)) {
     uint32_t read = 0;
-    flash_read_bytes((uint8_t *)&read, i, sizeof(read));
+    pbl_flash_read(FLASH, i, (uint8_t *)&read, sizeof(read));
     if (read != 0xffffffff) {
       PBL_LOG_SYNC_INFO(">>>> Address 0x%lx failed to erase: 0x%lx", i, read);
       success = false;
@@ -100,9 +100,9 @@ static bool check_region_write(struct Region region, bool use_rand,
     uint32_t write = write_rand;
     uint32_t read = 0xffff;
     if (perform_writes) {
-      flash_write_bytes((uint8_t *)&write, i, sizeof(write));
+      pbl_flash_write(FLASH, i, (uint8_t *)&write, sizeof(write));
     }
-    flash_read_bytes((uint8_t *)&read, i, sizeof(read));
+    pbl_flash_read(FLASH, i, (uint8_t *)&read, sizeof(read));
     if (read != write) {
       PBL_LOG_SYNC_INFO(">>>> Address 0x%lx failed to write: 0x%lx 0x%lx",
           i, read, write);
@@ -147,7 +147,7 @@ static bool check_subsector_bitflip(struct Region region) {
       uint32_t erase = subsec + i;
       PBL_ASSERTN((erase % (4 * 1024)) == 0);
       PBL_LOG_SYNC_INFO("Subsector Erase of 0x%lx", erase);
-      flash_erase_subsector_blocking(erase);
+      pbl_flash_erase(FLASH, erase, SUBSECTOR_SIZE_BYTES);
     }
 
     if (!check_region_write(write_region, false, false)) {
@@ -163,7 +163,7 @@ static bool check_subsector_bitflip(struct Region region) {
 static void menu_select_callback(int index, void *data) {
   struct Region region = s_flash_regions[index];
   PBL_LOG_INFO(">>>> Erase %s", region.name);
-  flash_region_erase_optimal_range(region.begin, region.begin, region.end, region.end);
+  pbl_flash_erase(FLASH, region.begin, region.end - region.begin);
   PBL_LOG_INFO(">>>> Checking '%s' is erased", region.name);
   check_region_erased(region);
   PBL_LOG_INFO(">>>> Checking '%s' can write", region.name);
@@ -187,7 +187,7 @@ static void app_timer_cb(void *data) {
   PBL_LOG_INFO(">>>> %s %d", "Test Loop", stress_data.stress_iteration);
 
   PBL_LOG_INFO("Erasing 0x%lx to 0x%lx", region.begin, region.end);
-  flash_region_erase_optimal_range(region.begin, region.begin, region.end, region.end);
+  pbl_flash_erase(FLASH, region.begin, region.end - region.begin);
 
   bool failed = true;
   if (stress_data.stress_index == FILE_WRITE_STRESS) {
@@ -204,7 +204,7 @@ static void app_timer_cb(void *data) {
     if (!failed && (stress_data.stress_iteration < num_stress_iters)) {
       app_timer_register(1000, app_timer_cb, NULL); // allow for animation to complete
     } else { // clean up state
-      flash_region_erase_optimal_range(region.begin, region.begin, region.end, region.end);
+      pbl_flash_erase(FLASH, region.begin, region.end - region.begin);
     }
   }
 }

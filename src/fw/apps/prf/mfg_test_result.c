@@ -44,15 +44,15 @@ static void prv_write_record(uint32_t index, MfgTestId test, uint8_t mode_index,
     .rsvd = 0,
     .value = value,
   };
-  flash_write_bytes((const uint8_t *)&rec,
-                    FLASH_REGION_MFG_RESULTS_BEGIN + index * sizeof(rec), sizeof(rec));
+  pbl_flash_write(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN + index * sizeof(rec),
+                  (const uint8_t *)&rec, sizeof(rec));
 }
 
 static void prv_load(void) {
   for (uint32_t i = 0; i < MFG_RESULTS_MAX_RECORDS; i++) {
     MfgResultRecord rec;
-    flash_read_bytes((uint8_t *)&rec, FLASH_REGION_MFG_RESULTS_BEGIN + i * sizeof(rec),
-                     sizeof(rec));
+    pbl_flash_read(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN + i * sizeof(rec), (uint8_t *)&rec,
+                   sizeof(rec));
     if (rec.test_id == MFG_RESULT_EMPTY) {
       break;
     }
@@ -78,7 +78,7 @@ static void prv_ensure_loaded(void) {
 static void prv_append(MfgTestId test, uint8_t mode_index, bool passed, uint32_t value) {
   if (s_record_count >= MFG_RESULTS_MAX_RECORDS) {
     // Log full: erase and rewrite the current state as a compacted log.
-    flash_erase_subsector_blocking(FLASH_REGION_MFG_RESULTS_BEGIN);
+    pbl_flash_erase(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN, SUBSECTOR_SIZE_BYTES);
     s_record_count = 0;
     for (uint8_t m = 0; m < NUM_MODES; m++) {
       for (uint8_t t = 0; t < MfgTestIdCount; t++) {
@@ -140,8 +140,8 @@ void mfg_test_result_reset(void) {
   s_result_reported = false;
 
 #ifdef CONFIG_MFG
-  if (!flash_subsector_is_erased(FLASH_REGION_MFG_RESULTS_BEGIN)) {
-    flash_erase_subsector_blocking(FLASH_REGION_MFG_RESULTS_BEGIN);
+  if (!pbl_flash_is_erased(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN, SUBSECTOR_SIZE_BYTES)) {
+    pbl_flash_erase(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN, SUBSECTOR_SIZE_BYTES);
   }
   s_record_count = 0;
   s_loaded = true;

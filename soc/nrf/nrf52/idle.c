@@ -48,7 +48,7 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
       const RtcTicks sleep_ticks = max_ticks - EARLY_WAKEUP_TICKS;
       RtcTicks elapsed_ticks;
 
-      flash_power_down_for_stop_mode();
+      pbl_flash_power_down(FLASH);
 
       rtc_alarm_set(sleep_ticks);
       rtc_systick_pause();
@@ -65,7 +65,7 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
       elapsed_ticks = rtc_alarm_get_elapsed_ticks();
       pbl_idle_slept(elapsed_ticks);
 
-      flash_power_up_after_stop_mode();
+      pbl_flash_power_up(FLASH);
       task_watchdog_step_elapsed_time_ms((elapsed_ticks * 1000) / RTC_TICKS_HZ);
 
       s_analytics_full_sleep_ticks += elapsed_ticks;

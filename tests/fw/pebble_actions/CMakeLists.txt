@@ -5,7 +5,6 @@ pbl_clar_test(test_ancs_pebble_actions
   SOURCES
     src/fw/comm/ble/kernel_le_client/ancs/ancs_util.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/services/blob_db/ios_notif_pref_db.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c

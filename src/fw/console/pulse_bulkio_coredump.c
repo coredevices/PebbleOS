@@ -25,7 +25,7 @@ static int coredump_domain_read(uint8_t *buf, uint32_t address, uint32_t length,
                                      void *context) {
   uint32_t index = (uintptr_t)context;
   uint32_t core_base_addr = core_dump_get_slot_address(index) + sizeof(CoreDumpFlashRegionHeader);
-  flash_read_bytes(buf, core_base_addr + address, length);
+  pbl_flash_read(FLASH, core_base_addr + address, buf, length);
   return length;
 }
 

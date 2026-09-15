@@ -20,7 +20,7 @@
 
 void system_reset_prepare(void) {
   fw_prepare_for_reset();
-  flash_stop();
+  pbl_flash_stop(FLASH);
 }
 
 NORETURN system_reset(void) {

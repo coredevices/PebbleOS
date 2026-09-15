@@ -4,6 +4,7 @@
 #include "process_management/process_loader.h"
 
 #include <pbl/drivers/flash.h>
+#include "system/status_codes.h"
 #include "kernel/util/segment.h"
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/filesystem/pfs.h"

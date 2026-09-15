@@ -5,6 +5,7 @@
 #include "pbl/services/shared_prf_storage/v3_sprf/shared_prf_storage_private.h"
 
 #include <pbl/drivers/flash.h>
+#include <string.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include <pbl/logging/logging.h>
@@ -75,7 +76,7 @@ static uint32_t prv_current_page_flash_addr(void) {
 
 static SprfMagic prv_get_magic_for_page(uint32_t page) {
   SprfMagic magic;
-  flash_read_bytes((uint8_t *)&magic, SPRF_PAGE_FLASH_ADDR(page), sizeof(magic));
+  pbl_flash_read(FLASH, SPRF_PAGE_FLASH_ADDR(page), (uint8_t *)&magic, sizeof(magic));
   return magic;
 }
 
@@ -132,15 +133,13 @@ static void prv_write_to_current_page(SharedPRFData *data, bool write_metadata) 
       data->magic = SprfMagic_ValidEntry;
       data->version = SPRF_CUR_VERSION;
     }
-    flash_write_bytes((uint8_t *)data, prv_current_page_flash_addr(), sizeof(*data));
+    pbl_flash_write(FLASH, prv_current_page_flash_addr(), (uint8_t *)data, sizeof(*data));
   }
 }
 
 static void prv_erase_region_and_save(SharedPRFData *data) {
-  flash_region_erase_optimal_range_no_watchdog(FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
-                                               FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
-                                               FLASH_REGION_SHARED_PRF_STORAGE_END,
-                                               FLASH_REGION_SHARED_PRF_STORAGE_END);
+  pbl_flash_erase(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
+                  FLASH_REGION_SHARED_PRF_STORAGE_END - FLASH_REGION_SHARED_PRF_STORAGE_BEGIN);
   s_valid_page_idx = 0;
   prv_write_to_current_page(data, false);
 }
@@ -156,7 +155,7 @@ static void prv_invalidate_current_page(void) {
 
   // Invalidate current page
   SprfMagic new_magic = SprfMagic_InvalidatedEntry;
-  flash_write_bytes((uint8_t *)&new_magic, prv_current_page_flash_addr(), sizeof(SprfMagic));
+  pbl_flash_write(FLASH, prv_current_page_flash_addr(), (uint8_t *)&new_magic, sizeof(SprfMagic));
   s_valid_page_idx++;
 
   // Sanity check to make sure that the page we are moving to is actually empty.
@@ -181,7 +180,7 @@ static void prv_invalidate_current_page(void) {
 //
 
 static void prv_fetch_struct(SharedPRFData *data_out) {
-  flash_read_bytes((uint8_t *)data_out, prv_current_page_flash_addr(), sizeof(*data_out));
+  pbl_flash_read(FLASH, prv_current_page_flash_addr(), (uint8_t *)data_out, sizeof(*data_out));
 
   if (!prv_valid_struct(data_out)) {
     PBL_LOG_WRN("Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
@@ -234,7 +233,7 @@ static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, 
   // not 0xFFFFFFFF instead of comparing all bytes.
 
   *(uint32_t *)field = new_crc;
-  flash_write_bytes(field, prv_current_page_flash_addr() + offset, field_size);
+  pbl_flash_write(FLASH, prv_current_page_flash_addr() + offset, field, field_size);
 
 cleanup:
   prv_dealloc_struct(data);
@@ -249,7 +248,7 @@ static void prv_erase_field(size_t offset, size_t field_size) {
 }
 
 static bool prv_fetch_field(uint8_t *field_out, size_t offset, size_t field_size) {
-  flash_read_bytes(field_out, prv_current_page_flash_addr() + offset, field_size);
+  pbl_flash_read(FLASH, prv_current_page_flash_addr() + offset, field_out, field_size);
   if (!prv_field_valid(field_out, field_size)) {
     // If corrupted field, delete entire page
     PBL_LOG_WRN("Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
@@ -295,7 +294,7 @@ void shared_prf_storage_init(void) {
       page_magic = prv_get_magic_for_page(i);
       // Check the magic to see if we need to investigate further and read the entire contents.
       if (page_magic == SprfMagic_ValidEntry || page_magic == SprfMagic_UnpopulatedEntry) {
-        flash_read_bytes((uint8_t *) &data, SPRF_PAGE_FLASH_ADDR(i), sizeof(data));
+        pbl_flash_read(FLASH, SPRF_PAGE_FLASH_ADDR(i), (uint8_t *) &data, sizeof(data));
         if (prv_valid_struct(&data)) {
           s_valid_page_idx = i;
           break;

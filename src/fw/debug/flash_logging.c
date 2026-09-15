@@ -4,6 +4,7 @@
 #include "debug/flash_logging.h"
 
 #include <pbl/drivers/flash.h>
+#include <string.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/system_task.h"
@@ -152,7 +153,7 @@ static uint8_t prv_get_next_log_file_id(uint8_t file_id) {
 
 static uint32_t prv_get_unit_base_address(uint32_t addr) {
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
-  return flash_get_subsector_base_address(addr);
+  return (addr & SUBSECTOR_ADDR_MASK);
 #else
 #error "Invalid platform!"
 #endif
@@ -160,7 +161,7 @@ static uint32_t prv_get_unit_base_address(uint32_t addr) {
 
 static void prv_erase_unit(uint32_t addr) {
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
-  flash_erase_subsector_blocking(addr);
+  pbl_flash_erase(FLASH, addr, SUBSECTOR_SIZE_BYTES);
 #else
 #error "Invalid platform!"
 #endif
@@ -196,7 +197,7 @@ static uint32_t prv_validate_flash_log_region(uint8_t *first_log_file_id) {
     uint32_t flash_addr = FLASH_REGION_DEBUG_DB_BEGIN + offset;
 
     FlashLoggingHeader hdr;
-    flash_read_bytes((uint8_t *)&hdr, flash_addr, sizeof(hdr));
+    pbl_flash_read(FLASH, flash_addr, (uint8_t *)&hdr, sizeof(hdr));
 
     if (!prv_flash_log_valid(&hdr)) { // is the region erased ?
       FlashLoggingHeader erased_hdr;
@@ -228,7 +229,7 @@ static int prv_get_start_of_log_file(uint8_t log_file_id,
     uint32_t flash_addr = FLASH_REGION_DEBUG_DB_BEGIN + offset;
 
     FlashLoggingHeader hdr;
-    flash_read_bytes((uint8_t *)&hdr, flash_addr, sizeof(hdr));
+    pbl_flash_read(FLASH, flash_addr, (uint8_t *)&hdr, sizeof(hdr));
 
     bool in_use_and_valid = prv_flash_log_valid(&hdr);
 
@@ -280,7 +281,7 @@ static void prv_allocate_page_for_use(void) {
   const uint8_t *build_id = version_get_build_id(&len);
   memcpy(hdr.build_id, build_id, sizeof(hdr.build_id));
 
-  flash_write_bytes((uint8_t *)&hdr, s_curr_state.page_start_addr, sizeof(hdr));
+  pbl_flash_write(FLASH, s_curr_state.page_start_addr, (uint8_t *)&hdr, sizeof(hdr));
   s_curr_state.offset_in_log_page = sizeof(hdr);
 }
 
@@ -307,7 +308,7 @@ void flash_logging_init(void) {
         prv_get_page_addr(FLASH_REGION_DEBUG_DB_BEGIN + first_used_region, offset);
 
     FlashLoggingHeader hdr;
-    flash_read_bytes((uint8_t *)&hdr, flash_addr, sizeof(hdr));
+    pbl_flash_read(FLASH, flash_addr, (uint8_t *)&hdr, sizeof(hdr));
 
     if (prv_flash_log_valid(&hdr)) {
       // we use serial distance to find the gap in the numbering
@@ -360,7 +361,7 @@ static void prv_write_flash_log_record_header(uint8_t msg_length) {
   record_hdr.length = msg_length;
 
   uint32_t addr = s_curr_state.page_start_addr + s_curr_state.offset_in_log_page;
-  flash_write_bytes((uint8_t *)&record_hdr, addr, sizeof(record_hdr));
+  pbl_flash_write(FLASH, addr, (uint8_t *)&record_hdr, sizeof(record_hdr));
   s_curr_state.offset_in_log_page += sizeof(record_hdr);
 }
 
@@ -409,7 +410,7 @@ bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr,
   }
 
   uint32_t addr = s_curr_state.page_start_addr + s_curr_state.offset_in_log_page;
-  flash_write_bytes(data_to_write, addr, read_length);
+  pbl_flash_write(FLASH, addr, data_to_write, read_length);
 
   s_curr_state.offset_in_log_page += read_length;
   s_curr_state.bytes_remaining -= read_length;
@@ -417,8 +418,7 @@ bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr,
   if (s_curr_state.bytes_remaining == 0) {
     // we are done with the current log record, mark it valid
     uint8_t flags = ~(LOG_FLAGS_VALID);
-    flash_write_bytes((uint8_t *)&flags, s_curr_state.log_start_addr,
-        sizeof(flags));
+    pbl_flash_write(FLASH, s_curr_state.log_start_addr, (uint8_t *)&flags, sizeof(flags));
   }
 
   return (true);
@@ -443,7 +443,7 @@ static void prv_dump_log_system_cb(void *context) {
     uint8_t build_id[MEMBER_SIZE(FlashLoggingHeader, build_id)];
     uint32_t build_id_addr = flash_addr + offsetof(FlashLoggingHeader, build_id);
 
-    flash_read_bytes((uint8_t *)build_id, build_id_addr, sizeof(build_id));
+    pbl_flash_read(FLASH, build_id_addr, (uint8_t *)build_id, sizeof(build_id));
     byte_stream_to_hex_string((char *)&state->msg_buf[off], MAX_MSG_LEN - off, (uint8_t *)build_id,
                               sizeof(build_id), false);
     int len = pbl_log_get_bin_format((char *)state->msg_buf, MAX_MSG_LEN, LOG_LEVEL_INFO, "", 0,
@@ -466,7 +466,7 @@ static void prv_dump_log_system_cb(void *context) {
 
   // Read next log message and send it out
   LogRecordHeader rec;
-  flash_read_bytes((uint8_t *)&rec, flash_addr + state->page_offset, sizeof(rec));
+  pbl_flash_read(FLASH, flash_addr + state->page_offset, (uint8_t *)&rec, sizeof(rec));
   bool page_done = false;
   if ((rec.length > MAX_MSG_LEN) || (rec.length == 0)) {
     // The record contents indicate the end of a page
@@ -476,7 +476,8 @@ static void prv_dump_log_system_cb(void *context) {
     // This record has data, read it out
     if ((~rec.flags & LOG_FLAGS_VALID) != 0) {
       // read data and execute callback to dump data
-      flash_read_bytes(state->msg_buf, flash_addr + state->page_offset + sizeof(rec), rec.length);
+      pbl_flash_read(FLASH, flash_addr + state->page_offset + sizeof(rec), state->msg_buf,
+                     rec.length);
       if (!state->line_cb(state->msg_buf, rec.length)) {
         if (++state->retry_count >= DUMP_LOG_MAX_RETRIES) {
           goto exit;

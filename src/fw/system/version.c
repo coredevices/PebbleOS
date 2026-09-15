@@ -81,7 +81,7 @@ static bool prv_version_copy_flash_fw_metadata(FirmwareMetadata *out_metadata,
   // The FirmwareMetadata is stored at the end of the binary
   const uint32_t metadata_offset = flash_address + FIRMWARE_OFFSET + fw_len - sizeof(FirmwareMetadata);
 
-  flash_read_bytes((uint8_t*)out_metadata, metadata_offset, sizeof(FirmwareMetadata));
+  pbl_flash_read(FLASH, metadata_offset, (uint8_t*)out_metadata, sizeof(FirmwareMetadata));
 
   return true;
 }

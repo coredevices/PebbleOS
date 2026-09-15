@@ -139,8 +139,6 @@ typedef struct {
   const MagConfig mag_config;
 } BoardConfigMag;
 
-#include <pbl/drivers/flash/qspi_flash_definitions.h>
-#include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
@@ -151,8 +149,6 @@ typedef const struct I2CBus I2CBus;
 typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
-typedef const struct QSPIPort QSPIPort;
-typedef const struct QSPIFlash QSPIFlash;
 typedef const struct DisplayJDIDevice DisplayJDIDevice;
 typedef const struct AudioDevice AudioDevice;
 

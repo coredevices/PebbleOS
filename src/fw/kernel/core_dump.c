@@ -27,6 +27,7 @@ extern char *itoa(int value, char *str, int base);
 #include "logging/pulse_logging.h"
 
 #include <pbl/drivers/flash.h>
+#include "system/status_codes.h"
 #include <pbl/drivers/mpu.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/drivers/rtc.h>
@@ -70,11 +71,6 @@ extern const ElfExternalNote TINTIN_BUILD_ID;
 extern const uint32_t __CCM_RAM_size__[];
 extern const uint32_t __DTCM_RAM_size__[];
 
-void cd_flash_init(void);
-uint32_t cd_flash_write_bytes(const void* buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
-void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes);
-void cd_flash_read_bytes(void* buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
-
 // ----------------------------------------------------------------------------------------
 // Private globals
 
@@ -117,35 +113,20 @@ static const MemoryRegion LCPU_MEMORY_REGION = {
 };
 #endif
 
-// -------------------------------------------------------------------------------------------------
-// Flash driver dual-API.
-static bool s_use_cd_flash_driver = true;
-
 static uint32_t prv_flash_write_bytes(const void* buffer_ptr,
                                       uint32_t start_addr, uint32_t buffer_size) {
-  if (s_use_cd_flash_driver) {
-    return cd_flash_write_bytes(buffer_ptr, start_addr, buffer_size);
-  } else {
-    flash_write_bytes(buffer_ptr, start_addr, buffer_size);
-    return buffer_size;
-  }
+  CD_ASSERTN(((start_addr + buffer_size) <= CORE_DUMP_FLASH_END) &&
+             (int)start_addr >= CORE_DUMP_FLASH_START);
+  CD_ASSERTN(pbl_flash_write(FLASH, start_addr, buffer_ptr, buffer_size) == 0);
+  return buffer_size;
 }
 
 static void prv_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
-  if (s_use_cd_flash_driver) {
-    cd_flash_erase_region(start_addr, total_bytes);
-  } else {
-    uint32_t end = start_addr + total_bytes;
-    flash_region_erase_optimal_range_no_watchdog(start_addr, start_addr, end, end);
-  }
+  CD_ASSERTN(pbl_flash_erase(FLASH, start_addr, total_bytes) == 0);
 }
 
 static void prv_flash_read_bytes(void* buffer_ptr, uint32_t start_addr, uint32_t buffer_size) {
-  if (s_use_cd_flash_driver) {
-    cd_flash_read_bytes(buffer_ptr, start_addr, buffer_size);
-  } else {
-    flash_read_bytes(buffer_ptr, start_addr, buffer_size);
-  }
+  CD_ASSERTN(pbl_flash_read(FLASH, start_addr, buffer_ptr, buffer_size) == 0);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -577,9 +558,8 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // Feed the watchdog so that we don't get watchdog reset in the middle of dumping the core
   watchdog_feed();
 
-  // Init the flash and SPI bus
-  s_use_cd_flash_driver = true;
-  cd_flash_init();
+  // Reset the flash driver into a state usable without the OS
+  pbl_flash_coredump_init(FLASH);
 
   // If there is a fairly recent unread core image already present, don't replace it. Once it is read through
   // the get_bytes_protocol_msg_callback(), the unread flag gets cleared out.
@@ -701,7 +681,8 @@ status_t core_dump_size(uint32_t flash_base, uint32_t *size) {
   uint32_t current_offset = sizeof(CoreDumpImageHeader);
 
   while (true) {
-    flash_read_bytes((uint8_t *)&chunk_hdr, core_dump_base + current_offset, sizeof(chunk_hdr));
+    pbl_flash_read(FLASH, core_dump_base + current_offset, (uint8_t *)&chunk_hdr,
+                   sizeof(chunk_hdr));
     if (chunk_hdr.key == CORE_DUMP_CHUNK_KEY_TERMINATOR) {
       current_offset += sizeof(chunk_hdr);
       break;
@@ -726,18 +707,18 @@ status_t core_dump_size(uint32_t flash_base, uint32_t *size) {
 
 void core_dump_mark_read(uint32_t flash_base) {
   CoreDumpFlashRegionHeader region_hdr;
-  flash_read_bytes((uint8_t *)&region_hdr, flash_base, sizeof(region_hdr));
+  pbl_flash_read(FLASH, flash_base, (uint8_t *)&region_hdr, sizeof(region_hdr));
   region_hdr.unread = 0;
-  flash_write_bytes((uint8_t *)&region_hdr, flash_base, sizeof(region_hdr));
+  pbl_flash_write(FLASH, flash_base, (uint8_t *)&region_hdr, sizeof(region_hdr));
 }
 
 bool core_dump_is_unread_available(uint32_t flash_base) {
   if (flash_base != CORE_DUMP_FLASH_INVALID_ADDR) { // a coredump is on flash
     CoreDumpFlashRegionHeader region_hdr;
     CoreDumpImageHeader image_hdr;
-    flash_read_bytes((uint8_t *)&region_hdr, flash_base, sizeof(region_hdr));
-    flash_read_bytes((uint8_t *)&image_hdr, flash_base + sizeof(region_hdr),
-                     sizeof(image_hdr));
+    pbl_flash_read(FLASH, flash_base, (uint8_t *)&region_hdr, sizeof(region_hdr));
+    pbl_flash_read(FLASH, flash_base + sizeof(region_hdr), (uint8_t *)&image_hdr,
+                   sizeof(image_hdr));
     return ((image_hdr.magic == CORE_DUMP_MAGIC) && (region_hdr.unread != 0));
   }
 
@@ -754,9 +735,6 @@ bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
   bool status = true;
   uint32_t flash_addr, flash_addr_base;
 
-  // Use the standard flash driver
-  s_use_cd_flash_driver = false;
-
   flash_addr_base = prv_flash_start_address(true /*new*/);
   if (flash_addr_base == CORE_DUMP_FLASH_INVALID_ADDR) {
     status = false;
@@ -770,7 +748,6 @@ bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
   *max_size = CORE_DUMP_MAX_SIZE - (flash_addr - flash_addr_base);
 
 cleanup:
-  s_use_cd_flash_driver = true;
   return status;
 }
 

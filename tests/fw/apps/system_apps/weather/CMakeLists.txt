@@ -43,7 +43,6 @@ pbl_clar_test(test_weather_app_layout
     src/fw/board/displays/display_getafix.c
     src/fw/drivers/flash/flash_crc.c
     src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
     src/fw/resource/resource.c
     src/fw/resource/resource_storage.c
     src/fw/resource/resource_storage_builtin.c

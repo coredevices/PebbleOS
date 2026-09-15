@@ -75,35 +75,6 @@ static UARTDevice HCI_TRACE_UART_DEVICE = {
 UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
-static QSPIPortState s_qspi_port_state = {
-    .cfg = {
-      .Instance = FLASH2,
-      .line = HAL_FLASH_QMODE,
-      .base = FLASH2_BASE_ADDR,
-      .msize = 32,
-      .SpiMode = SPI_MODE_NOR,
-    },
-    .dma = {
-      .Instance = DMA1_Channel2,
-      .dma_irq = DMAC1_CH2_IRQn,
-      .request = DMA_REQUEST_1,
-    },
-    .t_enter_deep_us = 3,
-    .t_exit_deep_us = 20,
-};
-
-static QSPIPort QSPI_PORT = {
-    .state = &s_qspi_port_state,
-    .clk_div = 0U,
-};
-QSPIPort *const QSPI = &QSPI_PORT;
-
-static QSPIFlashState s_qspi_flash_state;
-static QSPIFlash QSPI_FLASH_DEVICE = {
-    .state = &s_qspi_flash_state,
-    .qspi = &QSPI_PORT,
-};
-QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
 static DisplayJDIState s_display_state = {
     .hlcdc = {

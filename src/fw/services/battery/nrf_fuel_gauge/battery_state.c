@@ -23,6 +23,8 @@
 
 #ifdef CONFIG_MFG
 #include <pbl/drivers/flash.h>
+#include <string.h>
+#include "system/status_codes.h"
 #include "flash_region/flash_region.h"
 #endif
 
@@ -95,7 +97,7 @@ static uint32_t s_save_counter;
 #ifdef CONFIG_MFG
 // In manufacturing firmware, use dedicated MFG_BATTERY_STATE flash region
 static void prv_erase_state(void) {
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
+  pbl_flash_erase(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, SUBSECTOR_SIZE_BYTES);
   PBL_LOG_DBG("Fuel gauge state erased");
 }
 
@@ -104,7 +106,7 @@ static bool prv_load_state(void *state, size_t size) {
     return false;
   }
 
-  flash_read_bytes(state, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, size);
+  pbl_flash_read(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, state, size);
 
   // Check if the flash region contains valid data (not all 0xFF)
   uint8_t *bytes = (uint8_t *)state;
@@ -138,8 +140,8 @@ static void prv_save_state(void) {
     return;
   }
 
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
-  flash_write_bytes(buf, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, sizeof(buf));
+  pbl_flash_erase(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, SUBSECTOR_SIZE_BYTES);
+  pbl_flash_write(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, buf, sizeof(buf));
 
   PBL_LOG_DBG("Fuel gauge state saved");
 }

@@ -110,7 +110,7 @@ static void prv_fill_flash_random_data(void) {
   uint8_t *buf = kernel_malloc_check(SPRF_REGION_SIZE);
   fake_spi_flash_erase();
   memset(buf, 0x17, SPRF_REGION_SIZE);
-  flash_write_bytes(buf, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, SPRF_REGION_SIZE);
+  pbl_flash_write(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, buf, SPRF_REGION_SIZE);
   kernel_free(buf);
 }
 
@@ -133,7 +133,7 @@ void test_shared_prf_storage_v3__cleanup(void) {
 
 void test_shared_prf_storage_v3__init_all_zeros(void) {
   uint8_t *flash_buf = kernel_zalloc(SPRF_REGION_SIZE);
-  flash_write_bytes(flash_buf, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, SPRF_REGION_SIZE);
+  pbl_flash_write(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, flash_buf, SPRF_REGION_SIZE);
   shared_prf_storage_init();
   shared_prf_storage_set_getting_started_complete(true);
   cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), true);
@@ -152,13 +152,13 @@ void test_shared_prf_storage_v3__find_first_valid_sector(void) {
     // Invalidate all entries before it to simulate logging style
     for (uint32_t j = 0; j < page_idx[i]; j++) {
       SprfMagic inv_magic = SprfMagic_InvalidatedEntry;
-      flash_write_bytes((uint8_t *) &inv_magic, SPRF_PAGE_FLASH_OFFSET(j), sizeof(inv_magic));
+      pbl_flash_write(FLASH, SPRF_PAGE_FLASH_OFFSET(j), (uint8_t *) &inv_magic, sizeof(inv_magic));
     }
 
     // Write the valid page
-    flash_read_bytes((uint8_t *) &data, SPRF_PAGE_FLASH_OFFSET(page_idx[i]), sizeof(data));
+    pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(page_idx[i]), (uint8_t *) &data, sizeof(data));
     data.magic = SprfMagic_ValidEntry;
-    flash_write_bytes((uint8_t *) &data, SPRF_PAGE_FLASH_OFFSET(page_idx[i]), sizeof(data));
+    pbl_flash_write(FLASH, SPRF_PAGE_FLASH_OFFSET(page_idx[i]), (uint8_t *) &data, sizeof(data));
 
     // Call init and see if it found the valid page
     shared_prf_storage_init();
@@ -417,22 +417,19 @@ void test_shared_prf_storage_v3__handle_corrupt_field_same(void) {
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
 
   SharedPRFData data;
-  flash_read_bytes((uint8_t *)&data,
-                   SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
-                   sizeof(data));
+  pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
+                 (uint8_t *)&data, sizeof(data));
   cl_assert(data.getting_started.crc != 0xFFFFFFFF);
 
   uint32_t new_crc = 0;
-  flash_write_bytes((uint8_t *)&new_crc,
-                    SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number())
-                                           + offsetof(SharedPRFData, getting_started)
-                                           + offsetof(SprfGettingStarted, crc),
-                    sizeof(new_crc));
+  pbl_flash_write(FLASH,
+                  SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()) +
+                      offsetof(SharedPRFData, getting_started) + offsetof(SprfGettingStarted, crc),
+                  (uint8_t *)&new_crc, sizeof(new_crc));
 
   // Confirm new CRC was written
-  flash_read_bytes((uint8_t *)&data,
-                   SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
-                   sizeof(data));
+  pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
+                 (uint8_t *)&data, sizeof(data));
   cl_assert_equal_i(data.getting_started.crc, new_crc);
 
   // Should be corrupt, so it should return false
@@ -444,11 +441,10 @@ void test_shared_prf_storage_v3__handle_corrupt_field_same(void) {
   fake_spi_flash_erase();
   shared_prf_storage_set_valid_page_number(SPRF_NUM_PAGES - 1);
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
-  flash_write_bytes((uint8_t *)&new_crc,
-                    SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number())
-                                           + offsetof(SharedPRFData, getting_started)
-                                           + offsetof(SprfGettingStarted, crc),
-                    sizeof(new_crc));
+  pbl_flash_write(FLASH,
+                  SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()) +
+                      offsetof(SharedPRFData, getting_started) + offsetof(SprfGettingStarted, crc),
+                  (uint8_t *)&new_crc, sizeof(new_crc));
   // Should be corrupt, so it should return false
   cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), false);
   // Should have moved to the next page, which is ZERO since we had to wrap around.
@@ -463,22 +459,18 @@ void test_shared_prf_storage_v3__handle_corrupt_field_during_setting(void) {
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
 
   SharedPRFData data;
-  flash_read_bytes((uint8_t *)&data,
-                   SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
-                   sizeof(data));
+  pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
+                 (uint8_t *)&data, sizeof(data));
   cl_assert(data.getting_started.crc != 0xFFFFFFFF);
 
   uint32_t new_crc = 0;
-  flash_write_bytes((uint8_t *)&new_crc,
-                    SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number())
+  pbl_flash_write(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number())
                     + offsetof(SharedPRFData, ble_pairing_data)
-                    + offsetof(SprfBlePairingData, crc),
-                    sizeof(new_crc));
+                    + offsetof(SprfBlePairingData, crc), (uint8_t *)&new_crc, sizeof(new_crc));
 
   // Confirm new CRC was written
-  flash_read_bytes((uint8_t *)&data,
-                   SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
-                   sizeof(data));
+  pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
+                 (uint8_t *)&data, sizeof(data));
   cl_assert_equal_i(data.ble_pairing_data.crc, new_crc);
 
   // Should be corrupt, so after a 'set', the page number should increment even though we are

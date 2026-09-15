@@ -5,7 +5,6 @@
 
 #include "board/board.h"
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/mic.h>
@@ -14,41 +13,14 @@
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/rtc.h>
-#include "flash_region/flash_region.h"
 
-// QSPI
 #include <hal/nrf_clock.h>
 #include <hal/nrf_gpio.h>
 #include <nrfx_gpiote.h>
 #include <nrfx_twim.h>
 #include <nrfx_pdm.h>
 
-static QSPIPortState s_qspi_port_state;
-static QSPIPort QSPI_PORT = {
-    .state = &s_qspi_port_state,
-    .clk_freq_hz = 8000000UL,
-    .cs_gpio = NRF_GPIO_PIN_MAP(0, 17),
-    .clk_gpio = NRF_GPIO_PIN_MAP(0, 19),
-    .data_gpio =
-        {
-            NRF_GPIO_PIN_MAP(0, 20),
-            NRF_GPIO_PIN_MAP(0, 21),
-            NRF_GPIO_PIN_MAP(0, 22),
-            NRF_GPIO_PIN_MAP(0, 23),
-        },
-};
-QSPIPort *const QSPI = &QSPI_PORT;
-
-static QSPIFlashState s_qspi_flash_state;
-static QSPIFlash QSPI_FLASH_DEVICE = {
-    .state = &s_qspi_flash_state,
-    .qspi = &QSPI_PORT,
-    .read_mode = QSPI_FLASH_READ_READ4IO,
-    .write_mode = QSPI_FLASH_WRITE_PP4O,
-};
-QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 /* PERIPHERAL ID 43 */
 
 static UARTDeviceState s_dbg_uart_state;

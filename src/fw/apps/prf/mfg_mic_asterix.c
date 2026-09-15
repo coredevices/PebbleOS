@@ -238,7 +238,7 @@ static void prv_mic_capture(void) {
   err = nrfx_pdm_init(&s_pdm, &s_pdm_cfg, prv_pdm_evt_handler);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-  flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
+  pbl_flash_erase(FLASH, FLASH_START, FLASH_END - FLASH_START);
 
   err = nrfx_pdm_start(&s_pdm);
   PBL_ASSERTN(err == NRFX_SUCCESS);
@@ -247,7 +247,7 @@ static void prv_mic_capture(void) {
   for (unsigned int i = 0U; i < RECORDING_MS / CAPTURE_MS; i++) {
     pbl_sem_take(&s_data_ready, PBL_FOREVER);
 
-    flash_write_bytes((uint8_t *)s_buf_rd, flash_addr, BLOCK_SIZE);
+    pbl_flash_write(FLASH, flash_addr, (uint8_t *)s_buf_rd, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
   }
 
@@ -262,7 +262,7 @@ static void prv_mic_capture(void) {
   flash_addr = FLASH_START;
   dbgserial_putstr("S");
   for (unsigned int i = 0U; i < RECORDING_MS / CAPTURE_MS; i++) {
-    flash_read_bytes((uint8_t *)s_buf_rd, flash_addr, BLOCK_SIZE);
+    pbl_flash_read(FLASH, flash_addr, (uint8_t *)s_buf_rd, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
 
     for (unsigned int j = 0U; j < N_SAMPLES; j++) {
@@ -291,7 +291,7 @@ static void prv_playback(void) {
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   flash_addr = FLASH_START;
-  flash_read_bytes((uint8_t *)s_buf[0], flash_addr, BLOCK_SIZE);
+  pbl_flash_read(FLASH, flash_addr, (uint8_t *)s_buf[0], BLOCK_SIZE);
   flash_addr += BLOCK_SIZE;
 
   s_buf_idx = 1U;
@@ -305,7 +305,7 @@ static void prv_playback(void) {
   prv_codec_setup();
 
   for (unsigned int i = 0U; i < (RECORDING_MS / CAPTURE_MS) - 1U; i++) {
-    flash_read_bytes((uint8_t *)s_buf_wr, flash_addr, BLOCK_SIZE);
+    pbl_flash_read(FLASH, flash_addr, (uint8_t *)s_buf_wr, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
 
     pbl_sem_take(&s_need_data, PBL_FOREVER);
@@ -320,7 +320,7 @@ static void prv_playback(void) {
 
   pbl_sem_deinit(&s_need_data);
 
-  flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
+  pbl_flash_erase(FLASH, FLASH_START, FLASH_END - FLASH_START);
 }
 #else
 static void prv_playback(void) {

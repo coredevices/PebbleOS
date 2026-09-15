@@ -12,9 +12,3 @@
 #define FLASH_REGION_SHARED_PRF_STORAGE_BEGIN 0x0
 #define FLASH_REGION_SHARED_PRF_STORAGE_END 0x1000
 
-
-void flash_region_erase_optimal_range(uint32_t min_start, uint32_t max_start,
-                                      uint32_t min_end, uint32_t max_end);
-
-void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,
-                                                  uint32_t min_end, uint32_t max_end);

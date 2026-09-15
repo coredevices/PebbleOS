@@ -76,10 +76,8 @@ extern void command_accel_softreset(void);
 
 extern void command_dump_flash(const char*, const char*);
 extern void command_crc_flash(const char*, const char*);
-extern void command_format_flash(void);
 extern void command_erase_flash(const char*, const char*);
 extern void command_flash_read(const char*, const char*);
-extern void command_flash_switch_mode(const char*);
 extern void command_flash_fill(const char*, const char*, const char*);
 extern void command_flash_test_locked_sectors(void);
 extern void command_flash_stress(const char *);
@@ -407,7 +405,6 @@ static const Command s_prompt_commands[] = {
   { "als read", command_als_read, 0},
 
   { "flash read", command_flash_read, 2},
-  { "flash switchmode", command_flash_switch_mode, 1},
   { "flash fill", command_flash_fill, 3},
   { "flash validate", command_flash_validate, 0},
   { "flash erased_sectors", command_flash_show_erased_sectors, 1},
@@ -519,7 +516,6 @@ static const Command s_prompt_commands[] = {
 
   // Flash manipulation commands
   { "dump flash", command_dump_flash, 2 },
-  // { "format flash", command_format_flash, 0 },
 
   { "flash unprotect", command_flash_unprotect, 0 },
 
