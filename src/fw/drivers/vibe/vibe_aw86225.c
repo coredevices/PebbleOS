@@ -6,7 +6,6 @@
 #include "console/prompt.h"
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/vibe/vibe_aw86225.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include "system/passert.h"
@@ -53,7 +52,7 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW862XX_CONTCFG1_EN_F0_DET                      (1<<3)
 #define AW862XX_CONTCFG2_CONF_F0                        (24000U / s_drive_frequency_hz)
 #define AW862XX_CONTCFG3_DRV_WIDTH                      (24000U / s_drive_frequency_hz - 8U - 8U - 15U)
-#define AW862XX_CONTCFG3_F0_DET_DRV_WIDTH               (24000U / AW86225->lra_frequency_hz - 8U - 8U - 15U)
+#define AW862XX_CONTCFG3_F0_DET_DRV_WIDTH               (24000U / CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ - 8U - 8U - 15U)
 #define AW862XX_CONTCFG7_FULL_SCALE                     (0x7FL)
 #define AW862XX_CONT_LVL_FULL_SCALE_MV                  (5000U)
 #define AW862XX_CONT_HALF_CYCLES_PER_CYCLE              (2U)
@@ -289,10 +288,8 @@ static int prv_f0_detection(void)
 }
 
 void vibe_init(void) {
-  PBL_ASSERTN(AW86225->lra_frequency_hz > 0);
-  PBL_ASSERTN(AW86225->lra_frequency_tolerance_hz > 0);
   if (s_drive_frequency_hz == 0) {
-    s_drive_frequency_hz = AW86225->lra_frequency_hz;
+    s_drive_frequency_hz = CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ;
   }
 
   gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
@@ -405,16 +402,16 @@ status_t vibe_calibrate(void) {
    *
    * Below code calibrate the f0 to match f0_pre as possible.
    */
-  f0_cali_min = AW86225->lra_frequency_hz - AW86225->lra_frequency_tolerance_hz;
-  f0_cali_max = AW86225->lra_frequency_hz + AW86225->lra_frequency_tolerance_hz;
+  f0_cali_min = CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ - CONFIG_VIBE_AW86225_LRA_FREQUENCY_TOLERANCE_HZ;
+  f0_cali_max = CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ + CONFIG_VIBE_AW86225_LRA_FREQUENCY_TOLERANCE_HZ;
   if (f0 < f0_cali_min || f0 > f0_cali_max) {
     PBL_LOG_ERR("AW86225: F0 out of range (measured %d Hz, expected %d +/- %d Hz)", f0,
-                AW86225->lra_frequency_hz, AW86225->lra_frequency_tolerance_hz);
+                CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ, CONFIG_VIBE_AW86225_LRA_FREQUENCY_TOLERANCE_HZ);
     return E_ERROR;
   }
 
-  f0_cali_step = 100000 * ((int)f0 - (int)AW86225->lra_frequency_hz) /
-                 ((int)AW86225->lra_frequency_hz * AW862XX_F0_CALI_LSB_PERMYRIAD);
+  f0_cali_step = 100000 * ((int)f0 - (int)CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ) /
+                 ((int)CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ * AW862XX_F0_CALI_LSB_PERMYRIAD);
   if (f0_cali_step >= 0) {
     if (f0_cali_step % 10 >= 5) {
       f0_cali_step = 32 + (f0_cali_step / 10 + 1);
