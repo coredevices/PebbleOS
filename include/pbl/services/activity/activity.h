@@ -117,6 +117,8 @@ typedef enum {
                                                    // seconds after midnight.
   ActivityMetricSleepExitAtSeconds,                // What time the user woke up. Measured in
                                                    // seconds after midnight
+  ActivityMetricSleepAwakeSeconds,                 // Time spent awake during interruptions
+  ActivityMetricSleepNapSeconds,                   // Subset of SleepTotalSeconds spent in naps
   ActivityMetricSleepState,                        // returns an ActivitySleepState enum value
   ActivityMetricSleepStateSeconds,                 // how many seconds we've been in the
                                                    // ActivityMetricSleepState state

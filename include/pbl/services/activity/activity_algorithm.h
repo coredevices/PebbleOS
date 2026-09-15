@@ -185,6 +185,17 @@ bool activity_algorithm_get_step_rate(uint16_t *steps, uint32_t *elapsed_ms, tim
 //! @return true if success
 bool activity_algorithm_metrics_changed_notification(void);
 
+//! Reset the sleep awake minutes for a new day. Separate from
+//! activity_algorithm_metrics_changed_notification(), which also fires on every metric write and
+//! would clear the total mid-night.
+//! @return true if success
+bool activity_algorithm_reset_sleep_awake_minutes(void);
+
+//! Get the minutes spent up and moving during sleep interruptions since the last midnight reset
+//! @param[out] awake_minutes the minutes spent moving during those interruptions
+//! @return true if success
+bool activity_algorithm_get_sleep_awake_minutes(uint16_t *awake_minutes);
+
 //! Set the algorithm steps to the given value. Used when first starting up the algorithm after
 //! a watch reboot.
 //! @param[in] steps set the number of steps to this

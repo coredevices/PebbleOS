@@ -311,6 +311,16 @@ void kalg_get_sleep_stats(KAlgState *alg_state, KAlgOngoingSleepStats *stats) {
   }
 }
 
+static uint16_t s_kalg_awake_minutes;
+
+uint16_t kalg_get_sleep_awake_minutes(KAlgState *alg_state) {
+  return s_kalg_awake_minutes;
+}
+
+void kalg_reset_sleep_awake_minutes(KAlgState *alg_state) {
+  s_kalg_awake_minutes = 0;
+}
+
 
 // --------------------------------------------------------------------------------------------
 // Create sample data for testing sleep and data logging

@@ -165,6 +165,8 @@ typedef enum {
   ActivitySettingsKeyHeartRateZone1Minutes,
   ActivitySettingsKeyHeartRateZone2Minutes,
   ActivitySettingsKeyHeartRateZone3Minutes,
+  ActivitySettingsKeySleepAwakeMinutesHistory,    // ActivitySettingsValueHistory
+  ActivitySettingsKeySleepNapMinutesHistory,      // ActivitySettingsValueHistory
 } ActivitySettingsKey;
 
 
@@ -189,6 +191,8 @@ typedef struct {
   ActivityScalarStore exit_at_minute;             // minutes after midnight
   ActivityScalarStore cur_state;                  // HealthActivity
   ActivityScalarStore cur_state_elapsed_minutes;
+  ActivityScalarStore awake_minutes;
+  ActivityScalarStore nap_minutes;
 } ActivitySleepData;
 
 // IMPORTANT: activity_metrics_prv_get_metric_info() assumes that elements of
@@ -379,6 +383,11 @@ typedef struct {
 
   // Set to true when a new sleep session is registered
   bool sleep_sessions_modified;
+
+  // The algorithm's awake minutes that are already part of sleep_data. That total lives in RAM
+  // and restarts from zero on a reboot, while the metric is restored from the settings file, so
+  // only the growth since the last update may be folded in.
+  uint16_t folded_awake_minutes;
 
   // Exit time for the last sleep/step activities we logged. Used to prevent logging the same event
   // more than once.
