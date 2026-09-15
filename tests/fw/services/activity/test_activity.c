@@ -39,6 +39,7 @@
 #include "stubs_analytics.h"
 #include "stubs_app_install_manager.h"
 #include "stubs_battery.h"
+#include "stubs_battery_charge_limit.h"
 #include "stubs_event_loop.h"
 #include "stubs_irq.h"
 #include "stubs_health_db.h"
