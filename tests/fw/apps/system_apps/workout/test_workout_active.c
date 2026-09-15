@@ -131,6 +131,7 @@ GContext *graphics_context_get_current_context(void) {
 }
 
 void test_workout_active__initialize(void) {
+  display_orientation_set_left(false);
   s_hrm_is_present = true;
 
   s_workout_data = (WorkoutData) {};
@@ -579,4 +580,20 @@ void test_workout_active__sports_custom_hanging_label(void) {
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_active__left_hand_metrics_use_parent_coordinates(void) {
+#if PBL_RECT
+  display_orientation_set_left(true);
+  WorkoutActiveWindow *active_window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  Window *window = (Window *)active_window;
+  Layer *base = window->layer.first_child;
+  cl_assert_equal_i(base->frame.origin.x, ACTION_BAR_WIDTH);
+  cl_assert(base->first_child != NULL);
+  for (Layer *metric = base->first_child; metric; metric = metric->next_sibling) {
+    cl_assert_equal_i(metric->frame.origin.x, 0);
+    cl_assert_equal_i(metric->frame.size.w, base->bounds.size.w);
+  }
+#endif
 }
