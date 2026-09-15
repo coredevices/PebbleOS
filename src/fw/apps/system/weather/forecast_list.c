@@ -2054,7 +2054,8 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     if (now >= s_list->date_cache_expiry || s_list->today_header_dirty) {
       struct tm *lt = localtime(&now);
       if (lt) {
-        strftime(s_list->daydate_cache, sizeof(s_list->daydate_cache), "%a, %b %d",
+        strftime(s_list->daydate_cache, sizeof(s_list->daydate_cache),
+                 /* xgettext:no-c-format */ i18n_get("%a, %b %d", s_list),
                  lt);  // title-case "Thu, Jun 25"
         // Cap the expiry at an hour: DST-transition days aren't 86400s long and backward
         // clock/timezone changes would otherwise leave stale strings up for hours. One extra
