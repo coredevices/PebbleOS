@@ -17,12 +17,15 @@ typedef enum {
   MusicEndpointCmdIDVolumeUp = 0x6,
   MusicEndpointCmdIDVolumeDown = 0x7,
   MusicEndpointCmdIDGetAllInfo = 0x8,
+  MusicEndpointCmdIDGetOutputRoutes = 0x9,
+  MusicEndpointCmdIDSelectOutputRoute = 0xa,
 
   // Phone -> Watch
   MusicEndpointCmdIDNowPlayingInfoResponse = 0x10,
   MusicEndpointCmdIDPlayStateInfoResponse = 0x11,
   MusicEndpointCmdIDVolumeInfoResponse = 0x12,
   MusicEndpointCmdIDPlayerInfoResponse = 0x13,
+  MusicEndpointCmdIDOutputRoutesResponse = 0x14,
 
   MusicEndpointCmdIDInvalid = 0xff,
 } MusicEndpointCmdID;
@@ -53,6 +56,18 @@ typedef enum {
 typedef enum {
   MusicEndpointSkipSeeksWithinTrack = (1 << 0),
 } MusicEndpointSkipSeeksFlag;
+
+typedef enum {
+  MusicEndpointOutputRouteStatusAvailable = 0,
+  MusicEndpointOutputRouteStatusUnsupported = 1,
+  MusicEndpointOutputRouteStatusPermissionRequired = 2,
+  MusicEndpointOutputRouteStatusNoPlayer = 3,
+  MusicEndpointOutputRouteStatusError = 4,
+} MusicEndpointOutputRouteStatus;
+
+typedef enum {
+  MusicEndpointOutputRouteSelected = (1 << 0),
+} MusicEndpointOutputRouteFlag;
 
 typedef struct PACKED {
   uint8_t play_state;
