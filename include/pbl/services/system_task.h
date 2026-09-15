@@ -47,10 +47,8 @@ uint32_t system_task_get_available_space(void);
 //! Debug! Return the callback we're currently executing.
 void* system_task_get_current_callback(void);
 
-//! @param is_raised When true, priority of the KernelBG task is raised to a higher priority. When
-//! false, the priority is set to the normal priority.
-//! @note WARNING: if you want to use this, implement ref counting internally. Currently only
-//! comm/session.c uses this hence we can get away without ref counting.
+//! Acquires or releases a reference that keeps KernelBG at a higher priority.
+//! @param is_raised True to acquire a reference, false to release one. Calls must be balanced.
 void system_task_enable_raised_priority(bool is_raised);
 
 //! @return True if the KernelBG task is ready to run (i.e. not blocked by mutex / queue)
