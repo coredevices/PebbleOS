@@ -248,6 +248,27 @@ static GTextNode *prv_construct_if_recurring(
   return NULL;
 }
 
+#if PBL_ROUND
+#define CARD_GLANCE_TITLE_LINES                                        \
+    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,         \
+      /* small */ 1, /* medium */ 1, /* large */ 3, /* extralarge */ 3)
+#define CARD_GLANCE_TITLE_LINES_WITH_DETAILS                           \
+    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,         \
+      /* small */ 1, /* medium */ 1, /* large */ 2, /* extralarge */ 2)
+
+static GTextNode *prv_construct_glance_title(
+    const LayoutLayer *layout, const LayoutNodeConstructorConfig *config) {
+  LayoutNodeTextAttributeConfig title_config =
+      *(const LayoutNodeTextAttributeConfig *)config->context;
+  const bool has_details =
+      !IS_EMPTY_STRING(attribute_get_string(layout->attributes, AttributeIdLocationName, "")) ||
+      prv_should_draw_recurring((const TimelineLayout *)layout);
+  title_config.text.fixed_lines =
+      has_details ? CARD_GLANCE_TITLE_LINES_WITH_DETAILS : CARD_GLANCE_TITLE_LINES;
+  return layout_create_text_node_from_config(layout, &title_config.text.extent.node);
+}
+#endif
+
 static void prv_not_recurring_spacer_callback(GContext *ctx, const GRect *box,
                                               const GTextNodeDrawConfig *config, bool render,
                                               GSize *size_out, void *user_data) {
@@ -371,10 +392,17 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .attr_id = AttributeIdTitle,
     .text.style = LayoutContentSizeDefault,
     .text.style_font = TextStyleFont_Title,
-    .text.fixed_lines = PBL_IF_RECT_ELSE(2, 1), // glance title fixed lines
+    .text.fixed_lines = 2, // glance title fixed lines
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = PBL_IF_RECT_ELSE(6, 4), // glance title margin height
   };
+#if PBL_ROUND
+  static const LayoutNodeConstructorConfig s_glance_title_round_config = {
+    .extent.node.type = LayoutNodeType_Constructor,
+    .constructor = prv_construct_glance_title,
+    .context = (void *)&s_glance_title_config,
+  };
+#endif
   static const LayoutNodeTextAttributeConfig s_glance_location_config = {
     .attr_id = AttributeIdLocationName,
     .text.style = LayoutContentSizeDefault,
@@ -481,7 +509,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
 #else
     &s_icon_config.extent.node,
     &s_glance_start_time_or_all_day_config.extent.node,
-    &s_glance_title_config.text.extent.node,
+    &s_glance_title_round_config.extent.node,
     &s_glance_location_config.text.extent.node,
     &s_if_recurring_config.extent.node,
     &s_digit_config.extent.node,
