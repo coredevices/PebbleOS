@@ -38,8 +38,7 @@ name:
 `pbl` holds no facts about the checkout of its own:
 
 - The **workspace** is wherever `pbl.yml` is, found by walking up from the
-  current directory. That file also names the build, test and language
-  directories.
+  current directory. That file also names the build and test directories.
 - The **build** is read back from its own byproducts: `.config` for every
   `CONFIG_` symbol, `CMakeCache.txt` for the board, the variant and the
   project name the artifacts are named after. Configuring is therefore the

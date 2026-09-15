@@ -21,7 +21,7 @@ from pbl.errors import CommandContextError, CommandError
 __all__ = ["CommandContextError", "CommandError", "PblCommand", "global_options"]
 
 # Command groups, in the order the top-level help lists them.
-GROUPS = ("build", "device", "emulator", "i18n", "other")
+GROUPS = ("build", "device", "emulator", "other")
 
 
 def global_options():

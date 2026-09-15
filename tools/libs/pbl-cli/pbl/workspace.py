@@ -111,10 +111,6 @@ class Workspace:
     def test_dir(self):
         return self._dir("build", "test-dir", "PBL_TEST_DIR", "build-test")
 
-    @property
-    def lang_dir(self):
-        return self._dir("lang", "dir", "PBL_LANG_DIR", "resources/normal/base/lang")
-
     # --- extensions -------------------------------------------------------
 
     def extensions(self):

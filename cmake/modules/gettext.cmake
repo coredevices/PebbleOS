@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Translatable string extraction. Every firmware area contributes a .pot
-# file; they are merged into the firmware's catalog, which `pbl make_lang`
-# turns into per-language catalogs.
+# file; they are merged into the source catalog consumed by the translation
+# service and the tools in pebbleos-translations.
 
 find_program(XGETTEXT xgettext REQUIRED)
 find_program(MSGCAT msgcat REQUIRED)

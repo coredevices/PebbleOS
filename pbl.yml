@@ -9,9 +9,6 @@ build:
   dir: build
   test-dir: build-test
 
-lang:
-  dir: resources/normal/base/lang
-
 # Commands living outside the CLI package. Each entry names a Python file
 # and the PblCommand subclasses in it; they are only imported when one of
 # them is the command being run.
