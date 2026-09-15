@@ -849,6 +849,31 @@ msgstr ""
 msgid "Mon"
 msgstr ""
 
+
+#: ../src/fw/apps/system/settings/notifications.c:54
+msgid "Newest first"
+msgstr "Newest firs"
+
+#: ../src/fw/apps/system/settings/notifications.c:54
+msgid "Oldest first"
+msgstr "Oldest first"
+
+#: ../src/fw/apps/system/settings/notifications.c:54
+msgid "Alphabetical"
+msgstr "Alphabetical"
+
+#: ../src/fw/apps/system/settings/notifications.c:64
+#: ../src/fw/apps/system/settings/notifications.c:309
+msgid "Sort Order"
+msgstr "Sort Order"
+
+#: ../src/fw/apps/system/settings/notifications.c:313
+msgid "Group Notifications"
+msgstr "Group Notifications"
+
+
+#: ../src/fw/applib/voice/voice_window.c:200
+msgid "Dictation is not available."
 #: src/fw/services/alarms/alarm.c:1398 src/fw/applib/pbl_std/timelocal.c:48
 msgid "Tue"
 msgstr ""

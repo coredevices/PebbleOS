@@ -778,6 +778,34 @@ msgstr "Calories actives"
 msgid "Avg HR"
 msgstr "FC mitjana"
 
+13 conflicting files
+tintin.po
+...rces/normal/base/lang/ca_ES/tintin.po
+tintin.po
+...rces/normal/base/lang/de_DE/tintin.po
+tintin.po
+...rces/normal/base/lang/en_TW/tintin.po
+tintin.po
+...rces/normal/base/lang/es_ES/tintin.po
+tintin.po
+...rces/normal/base/lang/fr_FR/tintin.po
+tintin.po
+...rces/normal/base/lang/it_IT/tintin.po
+tintin.po
+...rces/normal/base/lang/ja_JP/tintin.po
+tintin.po
+...rces/normal/base/lang/nl_NL/tintin.po
+tintin.po
+...rces/normal/base/lang/pl_PL/tintin.po
+tintin.po
+...rces/normal/base/lang/pt_PT/tintin.po
+tintin.po
+...rces/normal/base/lang/ru_RU/tintin.po
+tintin.pot
+resources/normal/base/lang/tintin.pot
+tintin.po
+...rces/normal/base/lang/uk-UA/tintin.po
+
 #: src/fw/services/activity/activity_insights.c:1724
 #: src/fw/apps/system/health/hr_detail_card.c:65
 msgid "Fat Burn"
@@ -1225,6 +1253,31 @@ msgstr "Vols iniciar el mode silenci?"
 msgid "End Quiet Time?"
 msgstr "Vols acabar el mode silenci?"
 
+#: ../src/fw/apps/system/settings/notifications.c:54
+msgid "Newest first"
+msgstr "Més recents primer"
+
+#: ../src/fw/apps/system/settings/notifications.c:54
+msgid "Oldest first"
+msgstr "Més antics primer"
+
+#: ../src/fw/apps/system/settings/notifications.c:54
+msgid "Alphabetical"
+msgstr "Alfabètic"
+
+#: ../src/fw/apps/system/settings/notifications.c:64
+#: ../src/fw/apps/system/settings/notifications.c:309
+msgid "Sort Order"
+msgstr "Ordre de classificació"
+
+#: ../src/fw/apps/system/settings/notifications.c:313
+msgid "Group Notifications"
+msgstr "Agrupa les notificacions"
+
+
+#: ../src/fw/apps/system/settings/display.c:461
+msgid "Ambient Sensor"
+msgstr "Sensor ambiental"
 #: src/fw/services/notifications/do_not_disturb_toggle.c:31
 msgid ""
 "Quiet Time\n"
@@ -1427,7 +1480,7 @@ msgid "Jun"
 msgstr "Juny"
 
 #: src/fw/applib/pbl_std/timelocal.c:39
-msgid "Jul"
+msgid "Jul"msgid "Alphabetical"
 msgstr "Jul"
 
 #: src/fw/applib/pbl_std/timelocal.c:39
