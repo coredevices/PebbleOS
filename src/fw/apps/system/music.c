@@ -936,7 +936,7 @@ static void prv_update_track_progress(MusicAppData *data) {
   } else {
     unsigned int percent = 0;
     if (data->track_length > 0) {
-      percent = MIN((data->track_pos * 100) / data->track_length, 100);
+      percent = MIN((unsigned int)(((uint64_t)data->track_pos * 100) / data->track_length), 100);
     }
     progress_layer_set_progress(&data->track_pos_bar, percent);
     prv_copy_time_period(data->position_buffer, sizeof(data->position_buffer),
