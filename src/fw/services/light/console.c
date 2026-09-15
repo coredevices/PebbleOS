@@ -80,6 +80,11 @@ void command_als_lux(void) {
 
 // Set by prv_als_flush_cb on KernelMain once the panel update is kicked.
 static volatile bool s_als_flush_done;
+static volatile bool s_als_frozen;
+
+static void prv_als_frozen_cb(void *unused) {
+  s_als_frozen = true;
+}
 
 // Runs on KernelMain (the compositor's task): push the staged system framebuffer
 // to the panel, the same way the PULSE framebuffer domain does.
@@ -134,8 +139,9 @@ void command_als_curve(void) {
   };
 
   animation_private_pause();
-  compositor_freeze();
-  while (compositor_display_update_in_progress()) {
+  s_als_frozen = false;
+  compositor_freeze(prv_als_frozen_cb, NULL);
+  while (!s_als_frozen) {
     psleep(2);
   }
 

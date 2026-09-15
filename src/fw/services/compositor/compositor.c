@@ -77,6 +77,8 @@ static DeferredRender s_deferred_render;
 static CompositorTransitionState s_animation_state;
 
 static bool s_framebuffer_frozen;
+static CompositorFrozenCallback s_frozen_callback;
+static void *s_frozen_callback_data;
 
 //! Animation .update function for the AnimationImplementation we use to drive our transitions.
 //! Wraps the .update function of the current CompositorTransition.
@@ -101,6 +103,8 @@ void compositor_init(void) {
   s_animation_state = (CompositorTransitionState) { 0 };
 
   s_framebuffer_frozen = false;
+  s_frozen_callback = NULL;
+  s_frozen_callback_data = NULL;
 }
 
 // Helper functions to make implementing transitions easier
@@ -173,6 +177,15 @@ void compositor_render_modal(void) {
 // Compositor implementation
 ///////////////////////////////////////////////////////////
 
+static void prv_notify_frozen(void) {
+  if (!s_frozen_callback || compositor_display_update_in_progress()) {
+    return;
+  }
+  CompositorFrozenCallback callback = s_frozen_callback;
+  s_frozen_callback = NULL;
+  callback(s_frozen_callback_data);
+}
+
 T_STATIC void prv_handle_display_update_complete(void) {
   if (s_deferred_render.transition_complete.pending) {
     s_deferred_render.transition_complete.pending = false;
@@ -193,6 +206,7 @@ T_STATIC void prv_handle_display_update_complete(void) {
     s_deferred_render.app.pending = false;
     compositor_app_render_ready();
   }
+  prv_notify_frozen();
 }
 
 static void prv_compositor_flush(void) {
@@ -481,8 +495,16 @@ void compositor_transition_cancel(void) {
   }
 }
 
-void compositor_freeze(void) {
+static void prv_compositor_freeze_cb(void *ignored) {
   s_framebuffer_frozen = true;
+  prv_notify_frozen();
+}
+
+void compositor_freeze(CompositorFrozenCallback callback, void *data) {
+  s_frozen_callback = callback;
+  s_frozen_callback_data = data;
+
+  launcher_task_add_callback(prv_compositor_freeze_cb, NULL);
 }
 
 static void prv_compositor_unfreeze_cb(void *ignored) {

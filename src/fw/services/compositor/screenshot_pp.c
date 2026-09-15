@@ -196,6 +196,10 @@ void screenshot_send_next_chunk(void* raw_state) {
   system_task_add_callback(screenshot_send_next_chunk, state);
 }
 
+static void prv_frozen_cb(void *data) {
+  system_task_add_callback(screenshot_send_next_chunk, data);
+}
+
 void screenshot_protocol_msg_callback(CommSession *session, const uint8_t* msg_data, unsigned int msg_len) {
   uint8_t sub_command = msg_data[0];
   if (sub_command != 0x00) {
@@ -215,8 +219,6 @@ void screenshot_protocol_msg_callback(CommSession *session, const uint8_t* msg_d
 
   prv_request_fast_connection(session);
 
-  compositor_freeze();
-
   s_screenshot_state = (ScreenshotState) {
     .session = session,
     .framebuffer =  (FrameBufferState) {
@@ -229,5 +231,5 @@ void screenshot_protocol_msg_callback(CommSession *session, const uint8_t* msg_d
     .sent_header = false,
   };
 
-  screenshot_send_next_chunk(&s_screenshot_state);
+  compositor_freeze(prv_frozen_cb, &s_screenshot_state);
 }

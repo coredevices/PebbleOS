@@ -196,7 +196,24 @@ static const CompositorTransition s_transition_b = {
   .update = prv_compositor_update_func_b
 };
 
+static void (*s_launcher_callback)(void *data);
+static void *s_launcher_callback_data;
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  s_launcher_callback = callback;
+  s_launcher_callback_data = data;
+}
+
+static void prv_run_launcher_callback(void) {
+  void (*callback)(void *data) = s_launcher_callback;
+  s_launcher_callback = NULL;
+  callback(s_launcher_callback_data);
+}
+
+static int s_count_frozen = 0;
+static void *s_frozen_data;
+static void prv_frozen_cb(void *data) {
+  ++s_count_frozen;
+  s_frozen_data = data;
 }
 
 
@@ -225,6 +242,11 @@ void test_compositor__initialize(void) {
   s_display_update_in_progress = false;
 
   s_render_pending = false;
+
+  s_launcher_callback = NULL;
+  s_launcher_callback_data = NULL;
+  s_count_frozen = 0;
+  s_frozen_data = NULL;
 
   compositor_init();
 }
@@ -442,4 +464,50 @@ void test_compositor__cancel_modal_to_app_with_another_modal(void) {
   s_animation_implementation->teardown((Animation*) (uintptr_t) s_count_animation_create);
   // App should be free to render again
   cl_assert_equal_i(s_render_pending, false);
+}
+
+void test_compositor__freeze_idle_display(void) {
+  int data;
+  compositor_freeze(prv_frozen_cb, &data);
+  // Nothing happens until the freeze runs on KernelMain
+  cl_assert_equal_i(s_count_frozen, 0);
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_display_update, 1);
+
+  // No display update in flight: the callback fires as soon as the freeze takes effect
+  prv_run_launcher_callback();
+  cl_assert_equal_i(s_count_frozen, 1);
+  cl_assert_equal_p(s_frozen_data, &data);
+
+  // Frames are held back while frozen
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_display_update, 1);
+
+  // ... and flushed once unfrozen
+  compositor_unfreeze();
+  prv_run_launcher_callback();
+  cl_assert_equal_i(s_count_display_update, 2);
+  cl_assert_equal_i(s_count_frozen, 1);
+}
+
+void test_compositor__freeze_waits_for_display_update(void) {
+  s_display_update_in_progress = true;
+  compositor_freeze(prv_frozen_cb, NULL);
+  prv_run_launcher_callback();
+  // The framebuffer is still being pushed to the display, so it isn't stable yet
+  cl_assert_equal_i(s_count_frozen, 0);
+
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_display_update, 0);
+
+  // The update completes: the deferred frame stays held back and the callback fires
+  s_display_update_in_progress = false;
+  prv_handle_display_update_complete();
+  cl_assert_equal_i(s_count_display_update, 0);
+  cl_assert_equal_i(s_count_frozen, 1);
+
+  compositor_unfreeze();
+  prv_run_launcher_callback();
+  cl_assert_equal_i(s_count_display_update, 1);
+  cl_assert_equal_i(s_count_frozen, 1);
 }
