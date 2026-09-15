@@ -109,6 +109,9 @@ pbl feed weather Tokyo Sydney --seed 3   # a subset; the first is the current lo
 pbl feed weather --clear                 # remove every location
 pbl feed music                           # a player and playlist; keeps serving until Ctrl-C
 pbl feed music --title "Demo" --paused   # a single track of your own
+pbl feed calendar                       # a day of events around now
+pbl feed calendar --title "Dentist" --start 15 --location "Downtown"
+pbl feed calendar --clear               # remove every pin
 ```
 
 `pbl feed --help` lists the feeds and `pbl feed <feed> --help` their options.
