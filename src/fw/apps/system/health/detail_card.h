@@ -11,7 +11,12 @@
 #include "applib/ui/content_indicator_private.h"
 #include "applib/ui/ui.h"
 
+// A third heading would push the weekly graph off the shortest display
+#if PBL_DISPLAY_HEIGHT >= 200
+#define MAX_NUM_HEADINGS (3)
+#else
 #define MAX_NUM_HEADINGS (2)
+#endif
 #define MAX_NUM_SUBTITLES (2)
 #define MAX_NUM_ZONES (7)
 

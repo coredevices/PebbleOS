@@ -85,6 +85,18 @@ void test_health_sleep_detail_card__render_sleep_session_same_start_end_time(voi
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
+void test_health_sleep_detail_card__render_awake_and_naps(void) {
+  HealthData health_data = {
+    .sleep_data = {(8 * SECONDS_PER_HOUR) + (10 * SECONDS_PER_MINUTE)},
+    .deep_sleep = (3 * SECONDS_PER_HOUR) + (23 * SECONDS_PER_MINUTE),
+    .sleep_awake = 22 * SECONDS_PER_MINUTE,
+    .sleep_naps = (1 * SECONDS_PER_HOUR) + (5 * SECONDS_PER_MINUTE),
+  };
+
+  prv_create_card_and_render(&health_data);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
 void test_health_sleep_detail_card__render_30_day_avg(void) {
   HealthData health_data = {
     .monthly_sleep_average = (8 * SECONDS_PER_HOUR) + (17 * SECONDS_PER_MINUTE),
