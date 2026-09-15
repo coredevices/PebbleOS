@@ -552,8 +552,24 @@ uint8_t vibe_get_calibration(void) {
   return s_trim_lra;
 }
 
+//! TRIM_LRA is a 6-bit two's complement step count shifting the clock by
+//! AW862XX_F0_CALI_LSB_PERMYRIAD per step; reject stored values outside the
+//! LRA's F0 tolerance so a bad calibration cannot detune the drive.
+static bool prv_trim_in_range(uint8_t trim) {
+  int steps = (trim < 32) ? (int)trim : (int)trim - 64;
+  int offset_hz = (int)CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ * steps * AW862XX_F0_CALI_LSB_PERMYRIAD / 10000;
+  return (offset_hz >= -(int)CONFIG_VIBE_AW86225_LRA_FREQUENCY_TOLERANCE_HZ) &&
+         (offset_hz <= (int)CONFIG_VIBE_AW86225_LRA_FREQUENCY_TOLERANCE_HZ);
+}
+
 void vibe_apply_calibration(uint8_t cali) {
   if (!s_initialized) {
+    return;
+  }
+
+  if (!prv_trim_in_range(cali & 0x3F)) {
+    PBL_LOG_WRN("AW86225: ignoring stored calibration trim=0x%02x (out of F0 tolerance)",
+                cali & 0x3F);
     return;
   }
 
