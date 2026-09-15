@@ -610,7 +610,7 @@ pbl_clar_test(test_health_sleep_detail_card
     tests/fixtures/resources/timeline_resource_table.auto.c
     src/fw/apps/system/health/detail_card.c
     src/fw/apps/system/health/sleep_detail_card.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES

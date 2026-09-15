@@ -9,6 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
+#include "util/math.h"
 #include "util/time/time.h"
 
 
@@ -103,6 +104,14 @@ void health_data_update(HealthData *health_data) {
   int32_t deep_sleep_history[2];
   activity_get_metric(ActivityMetricSleepRestfulSeconds, 2, deep_sleep_history);
   health_data->deep_sleep = deep_sleep_history[day_offset];
+
+  int32_t awake_history[2];
+  activity_get_metric(ActivityMetricSleepAwakeSeconds, 2, awake_history);
+  health_data->sleep_awake = awake_history[day_offset];
+
+  int32_t nap_history[2];
+  activity_get_metric(ActivityMetricSleepNapSeconds, 2, nap_history);
+  health_data->sleep_naps = nap_history[day_offset];
 
   int32_t sleep_start_history[2];
   activity_get_metric(ActivityMetricSleepEnterAtSeconds, 2, sleep_start_history);
@@ -260,6 +269,19 @@ int32_t health_data_sleep_get_cur_wday_average(HealthData *health_data) {
 
 int32_t health_data_current_deep_sleep_get(HealthData *health_data) {
   return health_data->deep_sleep;
+}
+
+int32_t health_data_sleep_awake_get(HealthData *health_data) {
+  return health_data->sleep_awake;
+}
+
+int32_t health_data_sleep_naps_get(HealthData *health_data) {
+  return health_data->sleep_naps;
+}
+
+int32_t health_data_sleep_night_adjusted_get(HealthData *health_data) {
+  const int32_t night = health_data_current_sleep_get(health_data) - health_data->sleep_naps;
+  return MAX(night - health_data->sleep_awake, 0);
 }
 
 int32_t health_data_sleep_get_monthly_average(HealthData *health_data) {

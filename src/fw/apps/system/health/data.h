@@ -124,6 +124,21 @@ int32_t health_data_sleep_get_cur_wday_average(HealthData *health_data);
 //! @return the current deep sleep length
 int32_t health_data_current_deep_sleep_get(HealthData *health_data);
 
+//! Get the time spent awake during last night's interruptions
+//! @param health_data A pointer to the HealthData
+//! @return awake time in seconds
+int32_t health_data_sleep_awake_get(HealthData *health_data);
+
+//! Get the portion of the sleep total that was spent in naps
+//! @param health_data A pointer to the HealthData
+//! @return nap time in seconds
+int32_t health_data_sleep_naps_get(HealthData *health_data);
+
+//! Get the night sleep with naps and detected awake time excluded
+//! @param health_data A pointer to the HealthData
+//! @return night sleep in seconds
+int32_t health_data_sleep_night_adjusted_get(HealthData *health_data);
+
 //! Get the sleep average over the past month
 //! @param health_data A pointer to the health data to use
 //! @return The average daily sleep over the past month
