@@ -141,6 +141,7 @@ typedef struct {
   ExpectedValue cur_state_elapsed;
   ExpectedValue in_sleep;
   ExpectedValue in_deep_sleep;
+  ExpectedValue awake_min;
 
   float weight;               // Weight percent error by this factor
   int test_idx;
@@ -155,6 +156,7 @@ typedef struct {
   ActualValue cur_state_elapsed;
   ActualValue in_sleep;
   ActualValue in_deep_sleep;
+  ActualValue awake_min;
 
   float weighted_err;
   bool all_passed;
@@ -648,6 +650,7 @@ static bool prv_parse_sleep_samples_file(SleepSampleDiscoveryState *state) {
     .cur_state_elapsed = {-1, -1, -1},
     .in_sleep = {-1, -1, -1},
     .in_deep_sleep = {-1, -1, -1},
+    .awake_min = {-1, -1, -1},
     .weight = 1.0,
     .force_shut_down_at = -1,
   };
@@ -745,6 +748,13 @@ static bool prv_parse_sleep_samples_file(SleepSampleDiscoveryState *state) {
         sscanf(token + strlen(token) + 1, "%d", &state->test_entry.in_deep_sleep.min);
       } else if (strcmp(token, "TEST_IN_DEEP_SLEEP_MAX") == 0) {
         sscanf(token + strlen(token) + 1, "%d", &state->test_entry.in_deep_sleep.max);
+
+      } else if (strcmp(token, "TEST_AWAKE_MIN") == 0) {
+        sscanf(token + strlen(token) + 1, "%d", &state->test_entry.awake_min.value);
+      } else if (strcmp(token, "TEST_AWAKE_MIN_MIN") == 0) {
+        sscanf(token + strlen(token) + 1, "%d", &state->test_entry.awake_min.min);
+      } else if (strcmp(token, "TEST_AWAKE_MIN_MAX") == 0) {
+        sscanf(token + strlen(token) + 1, "%d", &state->test_entry.awake_min.max);
 
       } else if (strcmp(token, "TEST_FORCE_SHUT_DOWN_AT") == 0) {
         sscanf(token + strlen(token) + 1, "%d", &state->test_entry.force_shut_down_at);
@@ -1454,6 +1464,8 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
                                   time_t test_end_utc, time_t last_processed_utc) {
   *results = (SleepTestResults) { };
 
+  results->awake_min.value = kalg_get_sleep_awake_minutes(s_kalg_state);
+
   // Iterate through the sleep sessions
   KAlgTestSleepSession *session = s_captured_sleep_sessions;
   time_t enter_utc = 0;
@@ -1590,7 +1602,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
   // List of metrics we measure for each test
   // IMPORTANT: This order must match the order in the SleepTestEntry and the SleepTestResults
   const char *metrics[] = {"total", "deep", "start", "end", "elapsed", "insleep",
-                           "indeep"};
+                           "indeep", "awakemin"};
 
   SleepFileTestEntry test_entry[k_max_tests];
   memset(test_entry, 0, sizeof(test_entry));

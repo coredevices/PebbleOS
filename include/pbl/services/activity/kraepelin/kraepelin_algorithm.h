@@ -153,6 +153,13 @@ time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType acti
 // @param[out] stats this structure is filled in with the sleep stats
 void kalg_get_sleep_stats(KAlgState *state, KAlgOngoingSleepStats *stats);
 
+// Get the minutes the user was up and moving during interruptions of the accepted sleep
+// sessions. Sessions that end up rejected contribute nothing.
+uint16_t kalg_get_sleep_awake_minutes(KAlgState *state);
+
+// Clear the accumulated awake minutes, called when the day rolls over
+void kalg_reset_sleep_awake_minutes(KAlgState *state);
+
 //! Tells the algorithm whether or not it should automatically track activities
 //! @param kalg_state the state structure passed into kalg_init
 //! @param enable true to start tracking, false to stop tracking

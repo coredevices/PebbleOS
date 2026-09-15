@@ -139,6 +139,14 @@ typedef struct {
   uint32_t vmc_sum;
   uint16_t consecutive_sleep_minutes;
   uint16_t consecutive_awake_minutes;
+
+  // Evidence gathered about the awake run we are currently in, used to tell a real wake-up
+  // apart from restless movement once the run ends
+  uint8_t awake_run_max_steps;
+  uint16_t awake_run_moving_minutes;
+
+  // Minutes the user was up and moving within this session
+  uint16_t awake_minutes;
 } KAlgSleepActivityStats;
 
 typedef struct {
@@ -149,6 +157,7 @@ typedef struct {
 
   KAlgSleepActivityStats current_stats;
   KAlgOngoingSleepStats summary_stats;
+  uint16_t awake_minutes;              // total over the sessions we accepted
   time_t last_sample_utc;
 } KAlgSleepActivityState;
 
@@ -171,6 +180,16 @@ typedef struct {
   uint16_t max_wake_minute_early_offset;  // before this duration, it is "early" in the sleep
   uint16_t max_wake_minutes_early;        // early in the session
   uint16_t max_wake_minutes_late;         // later in the session
+
+  // A shorter run of "wake minutes" that does not end the session is counted as a wake-up if
+  // the user walked (steps in a single minute reaching wakeup_min_steps) or if the run lasted
+  // at least wakeup_min_run_minutes without any walking. Because the filter smears a single
+  // active minute across several scores, the run length overstates how long the user was
+  // actually up, so only minutes whose own VMC reaches wakeup_min_movement_vmc are counted
+  // towards the awake time we report.
+  uint8_t wakeup_min_steps;
+  uint16_t wakeup_min_run_minutes;
+  uint16_t wakeup_min_movement_vmc;
 
   // Minimum sleep cycle length
   uint16_t min_sleep_cycle_len_minutes;
@@ -206,6 +225,10 @@ static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .max_wake_minutes_early = 14,
   .max_wake_minutes_late = 11,
 
+  .wakeup_min_steps = 15,
+  .wakeup_min_run_minutes = 8,
+  .wakeup_min_movement_vmc = 600,  // Scaled with the higher asterix sleep score threshold
+
   .min_sleep_cycle_len_minutes = 60,
   .min_valid_vmc = 30,  // Increased significantly for asterix
   .max_active_minutes_pct = 89,
@@ -223,6 +246,10 @@ static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .max_wake_minute_early_offset = 60,
   .max_wake_minutes_early = 14,
   .max_wake_minutes_late = 11,
+
+  .wakeup_min_steps = 15,
+  .wakeup_min_run_minutes = 8,
+  .wakeup_min_movement_vmc = 400,
 
   .min_sleep_cycle_len_minutes = 60,
   .min_valid_vmc = 20,
@@ -1682,6 +1709,29 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
 
 
 // ------------------------------------------------------------------------------------------
+// Classify the awake run that just ended. A run that does not end the session counts as a
+// wake-up if the user walked during it, or if it lasted long enough to rule out the restless
+// movement that normally punctuates sleep.
+static void prv_sleep_close_awake_run(KAlgState *alg_state) {
+  const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
+  KAlgSleepActivityStats *stats = &alg_state->sleep_state.current_stats;
+
+  const bool walked = (stats->awake_run_max_steps >= params->wakeup_min_steps);
+  const bool prolonged = (stats->consecutive_awake_minutes >= params->wakeup_min_run_minutes);
+
+  if ((stats->start_time != KALG_START_TIME_NONE) && (walked || prolonged)) {
+    stats->awake_minutes += MAX(stats->awake_run_moving_minutes, 1);
+    KALG_LOG_DEBUG("Counted wake-up: run_m:%"PRIu16", max_steps:%"PRIu8", moving_m:%"PRIu16"",
+                   stats->consecutive_awake_minutes, stats->awake_run_max_steps,
+                   stats->awake_run_moving_minutes);
+  }
+
+  stats->awake_run_max_steps = 0;
+  stats->awake_run_moving_minutes = 0;
+}
+
+
+// ------------------------------------------------------------------------------------------
 // Collect minute data and update the statistics we need for a sleep update. This gets
 // called at the beginning of prv_sleep_activity_update().
 // @return true if we have enough data to compute the score for this minute
@@ -1724,12 +1774,22 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
 
   // ----------------------------------------------------------------------------------
   // Update stats
+  const uint8_t sample_steps = state->minute_history[KALG_SLEEP_HALF_WIDTH].steps;
+  const uint16_t sample_vmc = state->minute_history[KALG_SLEEP_HALF_WIDTH].vmc;
   if (is_sleep_minute) {
     state->current_stats.consecutive_sleep_minutes++;
+    if (state->current_stats.consecutive_awake_minutes > 0) {
+      prv_sleep_close_awake_run(alg_state);
+    }
     state->current_stats.consecutive_awake_minutes = 0;
   } else {
     state->current_stats.consecutive_sleep_minutes = 0;
     state->current_stats.consecutive_awake_minutes++;
+    state->current_stats.awake_run_max_steps = MAX(state->current_stats.awake_run_max_steps,
+                                                   sample_steps);
+    if (sample_vmc >= params->wakeup_min_movement_vmc) {
+      state->current_stats.awake_run_moving_minutes++;
+    }
   }
   if (score > params->min_valid_vmc) {
     // If there is any movement at all, increment the "non-zero" minutes count.
@@ -1744,7 +1804,7 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
   // Return results
   *score_ret = score;
   *sample_utc_ret = sample_utc;
-  *sample_steps_ret = state->minute_history[KALG_SLEEP_HALF_WIDTH].steps;
+  *sample_steps_ret = sample_steps;
   *is_sleep_minute_ret = is_sleep_minute;
   return true;
 }
@@ -1944,6 +2004,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
         .uncertain_start_utc = 0,
         .sleep_len_m = session_len_m,
       };
+      state->awake_minutes += state->current_stats.awake_minutes;
 
     } else {
       KALG_LOG_DEBUG("Cycle rejected");
@@ -2181,6 +2242,16 @@ time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType acti
 void kalg_get_sleep_stats(KAlgState *alg_state, KAlgOngoingSleepStats *stats) {
   KAlgSleepActivityState *state = &alg_state->sleep_state;
   *stats = state->summary_stats;
+}
+
+// ---------------------------------------------------------------------------------------
+uint16_t kalg_get_sleep_awake_minutes(KAlgState *alg_state) {
+  return alg_state->sleep_state.awake_minutes;
+}
+
+// ---------------------------------------------------------------------------------------
+void kalg_reset_sleep_awake_minutes(KAlgState *alg_state) {
+  alg_state->sleep_state.awake_minutes = 0;
 }
 
 // ---------------------------------------------------------------------------------------

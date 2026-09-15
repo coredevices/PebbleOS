@@ -3733,6 +3733,9 @@ AlgDlsMinuteData *activity_sample_sleep_watch_on_table(int *len) {
   //> TEST_TOTAL 0
   //> TEST_TOTAL_MIN 0
   //> TEST_TOTAL_MAX 0
+  //> TEST_AWAKE_MIN 0
+  //> TEST_AWAKE_MIN_MIN 0
+  //> TEST_AWAKE_MIN_MAX 0
   //> TEST_DEEP 0
   //> TEST_DEEP_MIN 0
   //> TEST_DEEP_MAX 0
@@ -5878,6 +5881,9 @@ AlgDlsMinuteData *activity_sample_sleep_watch_on_table_2(int *len) {
   //> TEST_TOTAL 0
   //> TEST_TOTAL_MIN 0
   //> TEST_TOTAL_MAX 0
+  //> TEST_AWAKE_MIN 0
+  //> TEST_AWAKE_MIN_MIN 0
+  //> TEST_AWAKE_MIN_MAX 0
   //> TEST_DEEP 0
   //> TEST_DEEP_MIN 0
   //> TEST_DEEP_MAX 0
