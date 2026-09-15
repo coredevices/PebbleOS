@@ -102,7 +102,7 @@ static uint8_t s_motion_sensitivity = 55; // Default to Medium
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_MODE "lightDynamicMode"
-static uint8_t s_backlight_dynamic_mode = BacklightDynamicMode_Standard;
+static uint8_t s_backlight_dynamic_mode; // default set in shell_prefs_init()
 
 // Removed prefs; the key defines survive only so migration can convert/scrub
 // stored values.
@@ -111,7 +111,12 @@ static uint8_t s_backlight_dynamic_mode = BacklightDynamicMode_Standard;
 #endif
 
 #define PREF_KEY_BACKLIGHT_PRESET "lightPreset"
-static uint8_t s_backlight_preset = BacklightPreset_Standard;
+#ifdef CONFIG_BOARD_GETAFIX
+#define BACKLIGHT_PRESET_DEFAULT BacklightPreset_BatterySaver
+#else
+#define BACKLIGHT_PRESET_DEFAULT BacklightPreset_Standard
+#endif
+static uint8_t s_backlight_preset = BACKLIGHT_PRESET_DEFAULT;
 
 // The settings each preset applies; Advanced has no entry since it leaves
 // the underlying settings untouched.
@@ -972,11 +977,14 @@ static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
 static void prv_pref_set(const char* key, const void *value, size_t val_len);
 
 void shell_prefs_init(void) {
+#ifdef CONFIG_DYNAMIC_BACKLIGHT
+  s_backlight_dynamic_mode = s_backlight_preset_settings[BACKLIGHT_PRESET_DEFAULT].dynamic_mode;
+#endif
 #ifdef CONFIG_QEMU
   s_backlight_intensity = BACKLIGHT_INTENSITY_MAX; // Blinding
 #else
-  // Match the Standard preset so fresh devices report Mode: Standard.
-  s_backlight_intensity = s_backlight_preset_settings[BacklightPreset_Standard].intensity;
+  // Match the default preset so fresh devices report the selected mode.
+  s_backlight_intensity = s_backlight_preset_settings[BACKLIGHT_PRESET_DEFAULT].intensity;
 #endif
   s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
