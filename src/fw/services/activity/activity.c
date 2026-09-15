@@ -488,6 +488,7 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
       s_activity_state.active_calories = 0;
       s_activity_state.resting_calories = 0;
       activity_algorithm_metrics_changed_notification();
+      activity_algorithm_reset_sleep_awake_minutes();
       s_activity_state.cur_day_index = cur_day_index;
 
       // Remove sessions that belong to the prior day

@@ -83,6 +83,18 @@ void activity_metrics_prv_get_metric_info(ActivityMetric metric, ActivityMetricI
       info->has_history = true;
       info->converter = prv_convert_minutes_to_seconds;
       break;
+    case ActivityMetricSleepAwakeSeconds:
+      info->value_p = &state->sleep_data.awake_minutes;
+      info->settings_key = ActivitySettingsKeySleepAwakeMinutesHistory;
+      info->has_history = true;
+      info->converter = prv_convert_minutes_to_seconds;
+      break;
+    case ActivityMetricSleepNapSeconds:
+      info->value_p = &state->sleep_data.nap_minutes;
+      info->settings_key = ActivitySettingsKeySleepNapMinutesHistory;
+      info->has_history = true;
+      info->converter = prv_convert_minutes_to_seconds;
+      break;
     case ActivityMetricSleepEnterAtSeconds:
       info->value_p = &state->sleep_data.enter_at_minute;
       info->settings_key = ActivitySettingsKeySleepEnterAtHistory;
@@ -161,6 +173,8 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
     case ActivityMetricActiveSeconds:
     case ActivityMetricSleepTotalSeconds:
     case ActivityMetricSleepRestfulSeconds:
+    case ActivityMetricSleepAwakeSeconds:
+    case ActivityMetricSleepNapSeconds:
     case ActivityMetricSleepEnterAtSeconds:
     case ActivityMetricSleepExitAtSeconds:
       // We only store minutes for these metrics. Convert before saving

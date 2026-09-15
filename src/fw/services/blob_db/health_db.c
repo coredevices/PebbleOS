@@ -231,6 +231,8 @@ bool health_db_get_typical_value(ActivityMetric metric,
     case ActivityMetricSleepExitAtSeconds:
       *value_out = data.typical_wakeup_time;
       break;
+    case ActivityMetricSleepAwakeSeconds:
+    case ActivityMetricSleepNapSeconds:
     case ActivityMetricStepCount:
     case ActivityMetricActiveSeconds:
     case ActivityMetricRestingKCalories:

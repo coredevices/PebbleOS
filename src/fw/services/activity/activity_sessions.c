@@ -289,6 +289,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
 typedef struct {
   ActivityScalarStore total_minutes;
   ActivityScalarStore restful_minutes;
+  ActivityScalarStore nap_minutes;      // subset of total_minutes spent in naps
   time_t enter_utc;           // When we entered sleep
   time_t today_exit_utc;      // last exit time for today, for regular sleep only
   time_t last_exit_utc;       // last exit time (sleep or nap, ignoring "today" boundary)
@@ -331,6 +332,9 @@ static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t m
       // Accumulate sleep container stats
       if (session_exit_utc <= max_end_utc) {
         stats->total_minutes += session->length_min;
+        if (session->type == ActivitySessionType_Nap) {
+          stats->nap_minutes += session->length_min;
+        }
       }
       // Only regular sleep (not naps) should affect the enter and exit times
       if (session->type == ActivitySessionType_Sleep) {
@@ -386,6 +390,19 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
     // Update our sleep metrics
     sleep_data->total_minutes = stats.total_minutes;
     sleep_data->restful_minutes = stats.restful_minutes;
+    sleep_data->nap_minutes = stats.nap_minutes;
+
+    uint16_t awake_minutes;
+    if (activity_algorithm_get_sleep_awake_minutes(&awake_minutes)) {
+      if (awake_minutes < state->folded_awake_minutes) {
+        // The algorithm started over, either at the day rollover or after a reboot
+        state->folded_awake_minutes = 0;
+      }
+      sleep_data->awake_minutes = MIN(sleep_data->awake_minutes + awake_minutes
+                                      - state->folded_awake_minutes,
+                                      stats.total_minutes - stats.nap_minutes);
+      state->folded_awake_minutes = awake_minutes;
+    }
 
     // Fill in the enter and exit minute
     uint16_t enter_minute = time_util_get_minute_of_day(stats.enter_utc);

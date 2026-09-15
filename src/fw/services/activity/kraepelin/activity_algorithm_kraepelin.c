@@ -1051,6 +1051,26 @@ bool activity_algorithm_metrics_changed_notification(void) {
 }
 
 // ------------------------------------------------------------------------------------
+bool activity_algorithm_reset_sleep_awake_minutes(void) {
+  if (!prv_lock()) {
+    return false;
+  }
+  kalg_reset_sleep_awake_minutes(s_alg_state->k_state);
+  prv_unlock();
+  return true;
+}
+
+// ------------------------------------------------------------------------------------
+bool activity_algorithm_get_sleep_awake_minutes(uint16_t *awake_minutes) {
+  if (!prv_lock()) {
+    return false;
+  }
+  *awake_minutes = kalg_get_sleep_awake_minutes(s_alg_state->k_state);
+  prv_unlock();
+  return true;
+}
+
+// ------------------------------------------------------------------------------------
 void activity_algorithm_enable_activity_tracking(bool enable) {
   if (!activity_tracking_on()) {
     return;
