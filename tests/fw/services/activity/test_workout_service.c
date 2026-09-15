@@ -24,9 +24,7 @@
 extern void prv_abandon_workout_timer_callback(void *data);
 extern void prv_abandoned_notification_timer_callback(void *data);
 extern void prv_workout_timer_cb(void *data);
-extern bool workout_service_get_avg_hr(int32_t *avg_hr_out);
 extern bool workout_service_get_current_workout_hr_zone_time(int32_t *hr_zone_time_s_out);
-extern void workout_service_get_active_kcalories(int32_t *active);
 extern void workout_service_reset(void);
 
 // Stubs
@@ -829,4 +827,15 @@ void test_workout_service__abandon_workout(void) {
   prv_inc_time(5 * SECONDS_PER_MINUTE);
   prv_abandon_workout_timer_callback(NULL);
   cl_assert_equal_b(workout_service_is_workout_ongoing(), false);
+}
+
+void test_workout_service__calories_without_a_workout(void) {
+  int32_t kcal = 123;
+  workout_service_get_active_kcalories(&kcal);
+  cl_assert_equal_i(0, kcal);
+  workout_service_get_active_kcalories(NULL);
+  int32_t avg_bpm = 123;
+  cl_assert(!workout_service_get_avg_hr(&avg_bpm));
+  cl_assert_equal_i(0, avg_bpm);
+  cl_assert(!workout_service_get_avg_hr(NULL));
 }

@@ -617,16 +617,29 @@ bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *durat
   return rv;
 }
 
-#if UNITTEST
-bool workout_service_get_avg_hr(int32_t *avg_hr_out) {
-  if (!avg_hr_out || !workout_service_is_workout_ongoing()) {
-    return false;
+void workout_service_get_active_kcalories(int32_t *active) {
+  if (!active) {
+    return;
   }
-
-  *avg_hr_out = prv_get_avg_hr();
-  return true;
+  prv_lock();
+  *active = workout_service_is_workout_ongoing()
+                ? ROUND(s_workout_data.current_workout->active_calories, ACTIVITY_CALORIES_PER_KCAL)
+                : 0;
+  prv_unlock();
 }
 
+bool workout_service_get_avg_hr(int32_t *avg_hr_out) {
+  if (!avg_hr_out) {
+    return false;
+  }
+  prv_lock();
+  const bool ongoing = workout_service_is_workout_ongoing();
+  *avg_hr_out = ongoing ? prv_get_avg_hr() : 0;
+  prv_unlock();
+  return ongoing;
+}
+
+#if UNITTEST
 bool workout_service_get_current_workout_hr_zone_time(int32_t *hr_zone_time_s_out) {
   if (!hr_zone_time_s_out || !workout_service_is_workout_ongoing()) {
     return false;
@@ -641,12 +654,6 @@ bool workout_service_get_current_workout_hr_zone_time(int32_t *hr_zone_time_s_ou
   }
   prv_unlock();
   return true;
-}
-
-void workout_service_get_active_kcalories(int32_t *active) {
-  if (workout_service_is_workout_ongoing()) {
-    *active = ROUND(s_workout_data.current_workout->active_calories, ACTIVITY_CALORIES_PER_KCAL);
-  }
 }
 
 void workout_service_reset(void) {

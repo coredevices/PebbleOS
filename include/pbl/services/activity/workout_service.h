@@ -66,3 +66,9 @@ bool workout_service_get_current_workout_type(ActivitySessionType *type_out);
 bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *duration_s_out,
                                               int32_t *distance_m_out, int32_t *current_bpm_out,
                                               HRZone *current_hr_zone_out);
+
+//! Estimated active kilocalories for the current workout, or zero if none is active.
+void workout_service_get_active_kcalories(int32_t *active);
+
+//! Average of the current workout's valid heart-rate samples.
+bool workout_service_get_avg_hr(int32_t *avg_hr_out);

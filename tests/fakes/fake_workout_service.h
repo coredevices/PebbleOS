@@ -19,12 +19,17 @@ bool workout_service_stop_workout(void);
 
 bool workout_service_is_paused(void);
 
+void workout_service_set_active_kcalories(int32_t active);
+
+void workout_service_set_avg_hr(int32_t bpm);
+
+void workout_service_get_active_kcalories(int32_t *active);
+
 bool workout_service_get_current_workout_type(ActivitySessionType *type_out);
 
 bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *duration_s_out,
                                               int32_t *distance_m_out, int32_t *current_bpm_out,
                                               HRZone *current_hr_zone_out);
 
-bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s,
-                                              int32_t distance_m, int32_t current_bpm,
-                                              HRZone current_hr_zone);
+bool workout_service_set_current_workout_info(int32_t steps, int32_t duration_s, int32_t distance_m,
+                                              int32_t current_bpm, HRZone current_hr_zone);

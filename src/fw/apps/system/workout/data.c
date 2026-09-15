@@ -17,10 +17,13 @@ void workout_data_update(void *data) {
   workout_service_get_current_workout_info(&workout_data->steps, &workout_data->duration_s,
                                            &workout_data->distance_m, &workout_data->bpm,
                                            &workout_data->hr_zone);
+  workout_service_get_active_kcalories(&workout_data->active_kcal);
+  workout_service_get_avg_hr(&workout_data->avg_bpm);
 
+  workout_data->avg_pace = 0;
   if (workout_data->duration_s && workout_data->distance_m) {
-    workout_data->avg_pace = health_util_get_pace(workout_data->duration_s,
-                                                  workout_data->distance_m);
+    workout_data->avg_pace =
+        health_util_get_pace(workout_data->duration_s, workout_data->distance_m);
   }
 }
 
@@ -30,28 +33,27 @@ void workout_data_fill_metric_value(WorkoutMetricType type, char *buffer, size_t
 
   switch (type) {
     case WorkoutMetricType_Hr:
+    case WorkoutMetricType_AvgHr:
     case WorkoutMetricType_Steps:
-    {
-      snprintf(buffer, buffer_size, "%"PRId32, metric_value);
+    case WorkoutMetricType_AvgCadence:
+    case WorkoutMetricType_ActiveCalories: {
+      snprintf(buffer, buffer_size, "%" PRId32, metric_value);
       break;
     }
     case WorkoutMetricType_Distance:
-    {
+    case WorkoutMetricType_AvgSpeed: {
       const int conversion_factor = health_util_get_distance_factor();
       health_util_format_whole_and_decimal(buffer, buffer_size, metric_value, conversion_factor);
       break;
     }
-    case WorkoutMetricType_Duration:
-    {
-      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value,
-                                               true, i18n_owner);
+    case WorkoutMetricType_Duration: {
+      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value, true, i18n_owner);
       break;
     }
     case WorkoutMetricType_Pace:
-    case WorkoutMetricType_AvgPace:
-    {
-      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value,
-                                               false, i18n_owner);
+    case WorkoutMetricType_AvgPace: {
+      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value, false,
+                                               i18n_owner);
       break;
     }
     case WorkoutMetricType_Speed:
@@ -70,6 +72,8 @@ int32_t workout_data_get_metric_value(WorkoutMetricType type, void *data) {
   switch (type) {
     case WorkoutMetricType_Hr:
       return workout_data->bpm;
+    case WorkoutMetricType_AvgHr:
+      return workout_data->avg_bpm;
     case WorkoutMetricType_Duration:
       return workout_data->duration_s;
     case WorkoutMetricType_AvgPace:
@@ -78,6 +82,18 @@ int32_t workout_data_get_metric_value(WorkoutMetricType type, void *data) {
       return workout_data->distance_m;
     case WorkoutMetricType_Steps:
       return workout_data->steps;
+    case WorkoutMetricType_ActiveCalories:
+      return workout_data->active_kcal;
+    case WorkoutMetricType_AvgSpeed:
+      // Meters per hour; formatting applies the user's distance units.
+      return workout_data->duration_s > 0
+                 ? (int64_t)workout_data->distance_m * SECONDS_PER_HOUR / workout_data->duration_s
+                 : -1;
+    case WorkoutMetricType_AvgCadence:
+      return workout_data->duration_s > 0 ? ((int64_t)workout_data->steps * SECONDS_PER_MINUTE +
+                                             workout_data->duration_s / 2) /
+                                                workout_data->duration_s
+                                          : -1;
     default:
       return 0;
   }

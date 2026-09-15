@@ -19,3 +19,5 @@ void workout_summary_window_push(WorkoutSummaryWindow *window);
 
 void workout_summary_update_activity_type(WorkoutSummaryWindow *summary_window,
                                           ActivitySessionType activity_type);
+
+void workout_summary_window_remove(WorkoutSummaryWindow *summary_window);
