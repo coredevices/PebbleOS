@@ -239,3 +239,21 @@ pbl_clar_test(test_health_db
     src/fw/services/blob_db/health_db.c
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_settings_blob_db
+  SOURCES
+    src/fw/util/crc8.c
+    src/fw/util/legacy_checksum.c
+    src/fw/util/rand/rand.c
+    third_party/tinymt/TinyMT/tinymt/tinymt32.c
+    tests/fakes/fake_spi_flash.c
+    tests/fakes/fake_rtc.c
+    src/fw/flash_region/flash_region.c
+    src/fw/flash_region/filesystem_regions.c
+    src/fw/services/filesystem/flash_translation.c
+    src/fw/services/filesystem/pfs.c
+    src/fw/services/settings/settings_file.c
+    src/fw/services/settings/settings_raw_iter.c
+    src/fw/services/blob_db/settings_blob_db.c
+  OVERRIDES dummy_board
+)
