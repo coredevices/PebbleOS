@@ -12,7 +12,6 @@
 
 #include <stdbool.h>
 
-
 // -----------------------------------------------------------------------------------------
 // Convert ActivitySessionType to the internal protobuf representation.
 static ActivitySessionType prv_proto_type_to_activity_type(ProtobufLogActivityType type) {
@@ -84,10 +83,7 @@ static bool prv_encode_intervals(pb_ostream_t *stream, const pb_field_t *field, 
 */
 
 ProtobufLogRef protobuf_log_activity_sessions_create(void) {
-  ProtobufLogConfig log_config = {
-    .type = ProtobufLogType_Events,
-    .events = {}
-  };
+  ProtobufLogConfig log_config = {.type = ProtobufLogType_Events, .events = {}};
 
   return protobuf_log_create(&log_config, NULL /*transport*/, 0 /*max_encoded_msg_size*/);
 }
@@ -127,11 +123,11 @@ bool protobuf_log_activity_sessions_decode(pebble_pipeline_Event *event_in,
                                            ActivitySession *session_out) {
   pebble_pipeline_ActivitySession *activity = &event_in->activity_session;
 
-  *session_out = (ActivitySession) {
-    .start_utc = event_in->time_utc,
-    .type = prv_proto_type_to_activity_type(activity->type.type.internal_type),
-    .length_min = event_in->duration,
-    .manual = (activity->start_reason == pebble_pipeline_ActivitySession_StartReason_Manual),
+  *session_out = (ActivitySession){
+      .start_utc = event_in->time_utc,
+      .type = prv_proto_type_to_activity_type(activity->type.type.internal_type),
+      .length_min = event_in->duration,
+      .manual = (activity->start_reason == pebble_pipeline_ActivitySession_StartReason_Manual),
   };
 
   return true;

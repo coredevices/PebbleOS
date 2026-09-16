@@ -66,9 +66,7 @@ static void handle_init(void) {
 
   // subscribe to the accelerometer event stream
   accel_tap_service_subscribe(&handle_tap);
-  ConnectionHandlers conn_handlers = {
-    .pebble_app_connection_handler = handle_bt_connection
-  };
+  ConnectionHandlers conn_handlers = {.pebble_app_connection_handler = handle_bt_connection};
 
   connection_service_subscribe(conn_handlers);
 }
@@ -81,10 +79,10 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* event_service_app_get_info() {
+const PebbleProcessMd *event_service_app_get_info() {
   static const PebbleProcessMdSystem event_service_app_info = {
-    .common.main_func = &s_main,
-    .name = "Event Service App",
+      .common.main_func = &s_main,
+      .name = "Event Service App",
   };
-  return (const PebbleProcessMd*) &event_service_app_info;
+  return (const PebbleProcessMd *)&event_service_app_info;
 }

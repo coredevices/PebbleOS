@@ -17,9 +17,9 @@
 
 //! @return The last written final assembly serial number or "XXXXXXXXXXXX" if
 //! no serial number has been written.
-const char* mfg_get_serial_number(void);
-const char* mfg_get_hw_version(void);
-const char* mfg_get_pcba_serial_number(void);
+const char *mfg_get_serial_number(void);
+const char *mfg_get_hw_version(void);
+const char *mfg_get_pcba_serial_number(void);
 
 typedef enum MfgSerialsResult {
   MfgSerialsResultSuccess = OtpWriteSuccess,
@@ -40,7 +40,8 @@ typedef enum MfgSerialsResult {
 //! @return OtpWriteSuccess if the write was successful or
 //! MfgSerialsResultFailNoMoreSpace if all 3 slots were taken already, or
 //! MfgSerialsResultFailIncorrectLength if the serial_size was not 13.
-MfgSerialsResult mfg_write_serial_number(const char* serial, size_t serial_size, uint8_t *out_index);
+MfgSerialsResult mfg_write_serial_number(const char *serial, size_t serial_size,
+                                         uint8_t *out_index);
 
 #if defined(CONFIG_IS_BIGBOARD)
 //! Writes a fake serial number based on the unique identifier of the MCU

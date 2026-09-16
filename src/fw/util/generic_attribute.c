@@ -28,9 +28,9 @@ GenericAttribute *generic_attribute_find_attribute(GenericAttributeList *attr_li
 
 GenericAttribute *generic_attribute_add_attribute(GenericAttribute *attr, uint8_t id, void *data,
                                                   size_t size) {
-  *attr = (GenericAttribute) {
-    .id = id,
-    .length = size,
+  *attr = (GenericAttribute){
+      .id = id,
+      .length = size,
   };
   memcpy(attr->data, data, size);
 

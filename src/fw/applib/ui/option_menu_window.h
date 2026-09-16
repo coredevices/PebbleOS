@@ -7,8 +7,8 @@
 
 #define OPTION_MENU_CHOICE_NONE (-1)
 
-#define OPTION_MENU_STATUS_SEPARATOR_MODE PBL_IF_RECT_ELSE(StatusBarLayerSeparatorModeDotted, \
-                                                           StatusBarLayerSeparatorModeNone)
+#define OPTION_MENU_STATUS_SEPARATOR_MODE \
+  PBL_IF_RECT_ELSE(StatusBarLayerSeparatorModeDotted, StatusBarLayerSeparatorModeNone)
 
 typedef struct OptionMenu OptionMenu;
 
@@ -22,14 +22,11 @@ typedef uint16_t (*OptionMenuGetCellHeightCallback)(OptionMenu *option_menu, uin
                                                     bool selected, void *context);
 
 typedef uint16_t (*OptionMenuSelectionChangedCallback)(OptionMenu *option_menu, uint16_t row,
-                                                    bool selected, void *context);
+                                                       bool selected, void *context);
 
-typedef void (*OptionMenuSelectionWillChangeCallback)(OptionMenu *option_menu,
-                                                     uint16_t new_row,
-                                                     uint16_t old_row,
-                                                     void *context);
+typedef void (*OptionMenuSelectionWillChangeCallback)(OptionMenu *option_menu, uint16_t new_row,
+                                                      uint16_t old_row, void *context);
 
-                                                    
 typedef struct OptionMenuCallbacks {
   OptionMenuSelectCallback select;
   OptionMenuSelectionWillChangeCallback selection_will_change;

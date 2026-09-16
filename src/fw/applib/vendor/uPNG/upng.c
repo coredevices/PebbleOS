@@ -66,13 +66,17 @@
 #define DEFLATE_CODE_BITLEN 15
 #define DISTANCE_BITLEN 15
 #define CODE_LENGTH_BITLEN 7
-#define MAX_BIT_LENGTH 15 // bug? 15 /* largest bitlen used by any tree type */
+#define MAX_BIT_LENGTH 15  // bug? 15 /* largest bitlen used by any tree type */
 
 #define DEFLATE_CODE_BUFFER_SIZE (NUM_DEFLATE_CODE_SYMBOLS * 2)
 #define DISTANCE_BUFFER_SIZE (NUM_DISTANCE_SYMBOLS * 2)
 #define CODE_LENGTH_BUFFER_SIZE (NUM_DISTANCE_SYMBOLS * 2)
 
-#define SET_ERROR(upng, code) do {(upng)->error = (code); (upng)->error_line = __LINE__;} while (0)
+#define SET_ERROR(upng, code)      \
+  do {                             \
+    (upng)->error = (code);        \
+    (upng)->error_line = __LINE__; \
+  } while (0)
 
 #define upng_chunk_data_length(chunk) MAKE_WORD_PTR(chunk)
 #define upng_chunk_type(chunk) MAKE_WORD_PTR((chunk) + 4)
@@ -81,30 +85,30 @@
 #define upng_chunk_type_critical(chunk_type) (((chunk_type) & 0x20000000) == 0)
 
 typedef enum upng_state {
-  UPNG_ERROR   = -1,
+  UPNG_ERROR = -1,
   UPNG_DECODED = 0,
-  UPNG_LOADED  = 1, // Global data loaded (Palette) (APNG control data)
-  UPNG_HEADER  = 2,
-  UPNG_NEW     = 3
+  UPNG_LOADED = 1,  // Global data loaded (Palette) (APNG control data)
+  UPNG_HEADER = 2,
+  UPNG_NEW = 3
 } upng_state;
 
 typedef enum upng_color {
-  UPNG_LUM  = 0,
-  UPNG_RGB  = 2,
-  UPNG_PLT  = 3,
+  UPNG_LUM = 0,
+  UPNG_RGB = 2,
+  UPNG_PLT = 3,
   UPNG_LUMA = 4,
   UPNG_RGBA = 6
 } upng_color;
 
 typedef struct upng_source {
-  const uint8_t* buffer;
-  uint32_t   size;
-  char     owning;
+  const uint8_t *buffer;
+  uint32_t size;
+  char owning;
 } upng_source;
 
 struct upng_t {
-  uint32_t  width;
-  uint32_t  height;
+  uint32_t width;
+  uint32_t height;
 
   rgb *palette;
   uint16_t palette_entries;
@@ -112,37 +116,36 @@ struct upng_t {
   uint8_t *alpha_palette;
   uint16_t alpha_palette_entries;
 
-  upng_color  color_type;
-  uint32_t  color_depth;
-  upng_format  format;
+  upng_color color_type;
+  uint32_t color_depth;
+  upng_format format;
 
-  const uint8_t* cursor; // data cursor for parsing linearly
-  uint8_t* buffer;
+  const uint8_t *cursor;  // data cursor for parsing linearly
+  uint8_t *buffer;
   uint32_t size;
 
   // APNG information for image at current frame
   bool is_apng;
-  apng_fctl* apng_frame_control;
+  apng_fctl *apng_frame_control;
   uint32_t apng_num_frames;
   uint32_t apng_num_plays;  // 0 indicates infinite looping
   uint32_t apng_duration_ms;
 
-  upng_error  error;
-  uint32_t  error_line;
+  upng_error error;
+  uint32_t error_line;
 
-  upng_state  state;
-  upng_source  source;
+  upng_state state;
+  upng_source source;
 };
 
 static uint8_t read_bit(uint32_t *bitpointer, const uint8_t *bitstream) {
-  uint8_t result =
-    (uint8_t)((bitstream[(*bitpointer) >> 3] >> ((*bitpointer) & 0x7)) & 1);
+  uint8_t result = (uint8_t)((bitstream[(*bitpointer) >> 3] >> ((*bitpointer) & 0x7)) & 1);
   (*bitpointer)++;
   return result;
 }
 
-static void inflate_uncompressed(upng_t* upng, uint8_t* out, uint32_t outsize,
-    const uint8_t *in, uint32_t *bp, uint32_t *pos, uint32_t inlength) {
+static void inflate_uncompressed(upng_t *upng, uint8_t *out, uint32_t outsize, const uint8_t *in,
+                                 uint32_t *bp, uint32_t *pos, uint32_t inlength) {
   uint32_t p;
   uint16_t len, nlen, n;
 
@@ -150,7 +153,7 @@ static void inflate_uncompressed(upng_t* upng, uint8_t* out, uint32_t outsize,
   while (((*bp) & 0x7) != 0) {
     (*bp)++;
   }
-  p = (*bp) / 8;  /*byte position */
+  p = (*bp) / 8; /*byte position */
 
   /* read len (2 bytes) and nlen (2 bytes) */
   if (p >= inlength - 4) {
@@ -188,8 +191,8 @@ static void inflate_uncompressed(upng_t* upng, uint8_t* out, uint32_t outsize,
 }
 
 /*inflate the deflated data (cfr. deflate spec); return value is the error*/
-static upng_error uz_inflate_data(upng_t* upng, uint8_t* out, uint32_t outsize,
-    const uint8_t *in, uint32_t insize, uint32_t inpos) {
+static upng_error uz_inflate_data(upng_t *upng, uint8_t *out, uint32_t outsize, const uint8_t *in,
+                                  uint32_t insize, uint32_t inpos) {
   /*bit pointer in the "in" data, current byte is bp >> 3,
    * current bit is bp & 0x7 (from lsb to msb of the byte) */
   uint32_t bp = 0;
@@ -235,8 +238,8 @@ static upng_error uz_inflate_data(upng_t* upng, uint8_t* out, uint32_t outsize,
   return upng->error;
 }
 
-static upng_error uz_inflate(upng_t* upng, uint8_t *out, uint32_t outsize,
-    const uint8_t *in, uint32_t insize) {
+static upng_error uz_inflate(upng_t *upng, uint8_t *out, uint32_t outsize, const uint8_t *in,
+                             uint32_t insize) {
   /* we require two bytes for the zlib data header */
   if (insize < 2) {
     SET_ERROR(upng, UPNG_EMALFORMED);
@@ -285,9 +288,9 @@ static int32_t paeth_predictor(int32_t a, int32_t b, int32_t c) {
     return c;
 }
 
-static void unfilter_scanline(upng_t* upng, uint8_t *recon, const uint8_t *scanline,
-    const uint8_t *precon, uint32_t bytewidth, uint8_t filterType,
-    uint32_t length) {
+static void unfilter_scanline(upng_t *upng, uint8_t *recon, const uint8_t *scanline,
+                              const uint8_t *precon, uint32_t bytewidth, uint8_t filterType,
+                              uint32_t length) {
   /*
      For PNG filter method 0
      unfilter a PNG image scanline by scanline.
@@ -336,8 +339,8 @@ static void unfilter_scanline(upng_t* upng, uint8_t *recon, const uint8_t *scanl
         for (i = 0; i < bytewidth; i++)
           recon[i] = (uint8_t)(scanline[i] + paeth_predictor(0, precon[i], 0));
         for (i = bytewidth; i < length; i++)
-          recon[i] = (uint8_t)(scanline[i] + paeth_predictor(recon[i - bytewidth],
-                precon[i], precon[i - bytewidth]));
+          recon[i] = (uint8_t)(scanline[i] + paeth_predictor(recon[i - bytewidth], precon[i],
+                                                             precon[i - bytewidth]));
       } else {
         for (i = 0; i < bytewidth; i++)
           recon[i] = scanline[i];
@@ -351,8 +354,8 @@ static void unfilter_scanline(upng_t* upng, uint8_t *recon, const uint8_t *scanl
   }
 }
 
-static void unfilter(upng_t* upng, uint8_t *out, const uint8_t *in,
-    uint32_t w, uint32_t h, uint32_t bpp) {
+static void unfilter(upng_t *upng, uint8_t *out, const uint8_t *in, uint32_t w, uint32_t h,
+                     uint32_t bpp) {
   /*
      For PNG filter method 0
      this function unfilters a single image
@@ -376,7 +379,7 @@ static void unfilter(upng_t* upng, uint8_t *out, const uint8_t *in,
     uint8_t filterType = in[inindex];
 
     unfilter_scanline(upng, &out[outindex], &in[inindex + 1], prevline, bytewidth, filterType,
-        linebytes);
+                      linebytes);
     if (upng->error != UPNG_EOK) {
       return;
     }
@@ -385,8 +388,8 @@ static void unfilter(upng_t* upng, uint8_t *out, const uint8_t *in,
   }
 }
 
-static void remove_padding_bits(uint8_t *out, const uint8_t *in,
-    uint32_t olinebits, uint32_t ilinebits, uint32_t h) {
+static void remove_padding_bits(uint8_t *out, const uint8_t *in, uint32_t olinebits,
+                                uint32_t ilinebits, uint32_t h) {
   /*
      After filtering there are still padding bpp if scanlines have non multiple of 8 bit amounts.
      They need to be removed (except at last scanline of (Adam7-reduced) image)
@@ -420,8 +423,8 @@ static void remove_padding_bits(uint8_t *out, const uint8_t *in,
 
 /*out must be buffer big enough to contain full image,
  * and in must contain the full decompressed data from the IDAT chunks*/
-static void post_process_scanlines(upng_t* upng, uint8_t *out, uint8_t *in,
-    uint32_t bpp, uint32_t w, uint32_t h) {
+static void post_process_scanlines(upng_t *upng, uint8_t *out, uint8_t *in, uint32_t bpp,
+                                   uint32_t w, uint32_t h) {
   if (bpp == 0) {
     SET_ERROR(upng, UPNG_EMALFORMED);
     return;
@@ -442,7 +445,7 @@ static void post_process_scanlines(upng_t* upng, uint8_t *out, uint8_t *in,
   }
 }
 
-static upng_format determine_format(upng_t* upng) {
+static upng_format determine_format(upng_t *upng) {
   switch (upng->color_type) {
     case UPNG_PLT:
       switch (upng->color_depth) {
@@ -506,13 +509,13 @@ static upng_format determine_format(upng_t* upng) {
   }
 }
 
-static void upng_free_source(upng_t* upng) {
+static void upng_free_source(upng_t *upng) {
   if (!upng) {
     return;
   }
 
   if (upng->source.owning != 0) {
-    task_free((void*)upng->source.buffer);
+    task_free((void *)upng->source.buffer);
   }
 
   upng->source.buffer = NULL;
@@ -521,7 +524,7 @@ static void upng_free_source(upng_t* upng) {
 }
 
 /*read the information from the header and store it in the upng_Info. return value is error*/
-upng_error upng_header(upng_t* upng) {
+upng_error upng_header(upng_t *upng) {
   /* if we have an error state, bail now */
   if (upng->error != UPNG_EOK) {
     return upng->error;
@@ -586,8 +589,7 @@ upng_error upng_header(upng_t* upng) {
   return upng->error;
 }
 
-
-upng_error upng_decode_metadata(upng_t* upng) {
+upng_error upng_decode_metadata(upng_t *upng) {
   /* if we have an error state, bail now */
   if (upng->error != UPNG_EOK) {
     return upng->error;
@@ -622,7 +624,7 @@ upng_error upng_decode_metadata(upng_t* upng) {
     switch (chunk_type) {
       case CHUNK_PLTE:
         task_free(upng->palette);
-        upng->palette_entries = data_length / 3; // 3 bytes per color entry
+        upng->palette_entries = data_length / 3;  // 3 bytes per color entry
         upng->palette = task_malloc(data_length);
         if (upng->palette == NULL) {
           SET_ERROR(upng, UPNG_ENOMEM);
@@ -632,7 +634,7 @@ upng_error upng_decode_metadata(upng_t* upng) {
         break;
       case CHUNK_TRNS:
         task_free(upng->alpha_palette);
-        upng->alpha_palette_entries = data_length; // 1 byte per color entry
+        upng->alpha_palette_entries = data_length;  // 1 byte per color entry
         // protect against tools that create a tRNS chunk with 0 entries
         if (data_length) {
           upng->alpha_palette = task_malloc(data_length);
@@ -693,12 +695,12 @@ upng_error upng_decode_metadata(upng_t* upng) {
       default:
         if (upng_chunk_type_critical(chunk_type)) {
           SET_ERROR(upng, UPNG_EUNSUPPORTED);
-          upng->cursor += data_length + CHUNK_META_SIZE; // forward cursor to next chunk
+          upng->cursor += data_length + CHUNK_META_SIZE;  // forward cursor to next chunk
           return upng->error;
         }
         break;
     }
-    upng->cursor += data_length + CHUNK_META_SIZE; // forward cursor to next chunk
+    upng->cursor += data_length + CHUNK_META_SIZE;  // forward cursor to next chunk
   }
 
   upng->state = UPNG_LOADED;
@@ -706,9 +708,9 @@ upng_error upng_decode_metadata(upng_t* upng) {
 }
 
 /*read a PNG, the result will be in the same color type as the PNG (hence "generic")*/
-upng_error upng_decode_image(upng_t* upng) {
-  uint8_t* compressed = NULL;
-  uint8_t* inflated = NULL;
+upng_error upng_decode_image(upng_t *upng) {
+  uint8_t *compressed = NULL;
+  uint8_t *inflated = NULL;
   uint32_t compressed_size = 0;
   uint32_t inflated_size = 0;
   bool cursor_at_next_frame = false;
@@ -726,14 +728,12 @@ upng_error upng_decode_image(upng_t* upng) {
     }
   }
 
-
   /* release old result, if any */
   if (upng->buffer) {
     task_free(upng->buffer);
     upng->buffer = NULL;
     upng->size = 0;
   }
-
 
   /* scan through the chunks, finding the size of all IDAT chunks, and also
    * verify general well-formed-ness */
@@ -786,32 +786,31 @@ upng_error upng_decode_image(upng_t* upng) {
       case CHUNK_FDAT:
         /* first 4 bytes in fdAT is sequence number, so skip 4 bytes */
         // TODO : fix for multiple consecutive fdAT chunks (PBL-14294)
-        compressed = (uint8_t*)(data + 4);
+        compressed = (uint8_t *)(data + 4);
         compressed_size = (data_length - 4);
-        cursor_at_next_frame = true; // stop processing chunks at the IDAT/fdAT chunks
+        cursor_at_next_frame = true;  // stop processing chunks at the IDAT/fdAT chunks
         break;
       case CHUNK_IDAT:
         // TODO : fix for multiple consecutive IDAT chunks (PBL-14294)
-        compressed = (uint8_t*)(data);
+        compressed = (uint8_t *)(data);
         compressed_size = data_length;
-        cursor_at_next_frame = true; // stop processing chunks at the IDAT/fdAT chunks
+        cursor_at_next_frame = true;  // stop processing chunks at the IDAT/fdAT chunks
         break;
       case CHUNK_IEND:
         SET_ERROR(upng, UPNG_EDONE);
-        upng->state = UPNG_ERROR; // force future calls to fail
+        upng->state = UPNG_ERROR;  // force future calls to fail
         return upng->error;
         break;
       default:
         if (upng_chunk_type_critical(chunk_type)) {
           SET_ERROR(upng, UPNG_EUNSUPPORTED);
-          upng->cursor += data_length + CHUNK_META_SIZE; // forward cursor to next chunk
+          upng->cursor += data_length + CHUNK_META_SIZE;  // forward cursor to next chunk
           return upng->error;
         }
         break;
     }
-    upng->cursor += data_length + CHUNK_META_SIZE; // forward cursor to next chunk
+    upng->cursor += data_length + CHUNK_META_SIZE;  // forward cursor to next chunk
   }
-
 
   uint32_t width = upng->width;
   uint32_t height = upng->height;
@@ -822,8 +821,8 @@ upng_error upng_decode_image(upng_t* upng) {
 
   /* allocate space to store inflated (but still filtered) data */
   int32_t width_aligned_bytes = (width * upng_get_bpp(upng) + 7) / 8;
-  inflated_size = (width_aligned_bytes * height) + height; // pad byte
-  inflated = (uint8_t*)task_malloc(inflated_size);
+  inflated_size = (width_aligned_bytes * height) + height;  // pad byte
+  inflated = (uint8_t *)task_malloc(inflated_size);
   if (inflated == NULL) {
     SET_ERROR(upng, UPNG_ENOMEM);
     return upng->error;
@@ -851,8 +850,8 @@ upng_error upng_decode_image(upng_t* upng) {
   return upng->error;
 }
 
-upng_t* upng_create(void) {
-  upng_t* upng = (upng_t*)task_malloc(sizeof(upng_t));
+upng_t *upng_create(void) {
+  upng_t *upng = (upng_t *)task_malloc(sizeof(upng_t));
   if (upng == NULL) {
     return NULL;
   }
@@ -868,7 +867,6 @@ upng_t* upng_create(void) {
   return upng;
 }
 
-
 void upng_load_bytes(upng_t *upng, const uint8_t *buffer, uint32_t size) {
   upng->cursor = buffer;
   upng->source.buffer = buffer;
@@ -876,8 +874,7 @@ void upng_load_bytes(upng_t *upng, const uint8_t *buffer, uint32_t size) {
   upng->source.owning = 0;
 }
 
-
-void upng_destroy(upng_t* upng, bool free_image_buffer) {
+void upng_destroy(upng_t *upng, bool free_image_buffer) {
   if (!upng) {
     return;
   }
@@ -892,7 +889,7 @@ void upng_destroy(upng_t* upng, bool free_image_buffer) {
 
   /* deallocate alpha_palette buffer */
   task_free(upng->alpha_palette);
-  
+
   /* deallocate apng_frame_control struct */
   task_free(upng->apng_frame_control);
 
@@ -903,41 +900,41 @@ void upng_destroy(upng_t* upng, bool free_image_buffer) {
   task_free(upng);
 }
 
-upng_error upng_get_error(const upng_t* upng) {
+upng_error upng_get_error(const upng_t *upng) {
   return upng->error;
 }
 
-uint32_t upng_get_error_line(const upng_t* upng) {
+uint32_t upng_get_error_line(const upng_t *upng) {
   return upng->error_line;
 }
 
-uint32_t upng_get_width(const upng_t* upng) {
+uint32_t upng_get_width(const upng_t *upng) {
   return upng->width;
 }
 
-uint32_t upng_get_height(const upng_t* upng) {
+uint32_t upng_get_height(const upng_t *upng) {
   return upng->height;
 }
 
-uint16_t upng_get_palette(const upng_t* upng, rgb **palette) {
+uint16_t upng_get_palette(const upng_t *upng, rgb **palette) {
   if (palette) {
     *palette = upng->palette;
   }
   return upng->palette_entries;
 }
 
-uint16_t upng_get_alpha_palette(const upng_t* upng, uint8_t **alpha_palette) {
+uint16_t upng_get_alpha_palette(const upng_t *upng, uint8_t **alpha_palette) {
   if (alpha_palette) {
     *alpha_palette = upng->alpha_palette;
   }
   return upng->alpha_palette_entries;
 }
 
-uint32_t upng_get_bpp(const upng_t* upng) {
+uint32_t upng_get_bpp(const upng_t *upng) {
   return upng_get_bitdepth(upng) * upng_get_components(upng);
 }
 
-uint32_t upng_get_components(const upng_t* upng) {
+uint32_t upng_get_components(const upng_t *upng) {
   switch (upng->color_type) {
     case UPNG_PLT:
       return 1;
@@ -954,34 +951,34 @@ uint32_t upng_get_components(const upng_t* upng) {
   }
 }
 
-uint32_t upng_get_bitdepth(const upng_t* upng) {
+uint32_t upng_get_bitdepth(const upng_t *upng) {
   return upng->color_depth;
 }
 
-uint32_t upng_get_pixelsize(const upng_t* upng) {
+uint32_t upng_get_pixelsize(const upng_t *upng) {
   return (upng_get_bitdepth(upng) * upng_get_components(upng));
 }
 
-upng_format upng_get_format(const upng_t* upng) {
+upng_format upng_get_format(const upng_t *upng) {
   return upng->format;
 }
 
-const uint8_t* upng_get_buffer(const upng_t* upng) {
+const uint8_t *upng_get_buffer(const upng_t *upng) {
   return upng->buffer;
 }
 
-uint32_t upng_get_size(const upng_t* upng) {
+uint32_t upng_get_size(const upng_t *upng) {
   return upng->size;
 }
 
 // returns if the png is an apng after the upng_load() function
-bool upng_is_apng(const upng_t* upng) {
+bool upng_is_apng(const upng_t *upng) {
   return upng->is_apng;
 }
 
 // retuns the apng num_frames
-uint32_t upng_apng_num_frames(const upng_t* upng) {
-  uint32_t num_frames = 1;  //default to 1 frame for png images used as apng
+uint32_t upng_apng_num_frames(const upng_t *upng) {
+  uint32_t num_frames = 1;  // default to 1 frame for png images used as apng
   if (upng->is_apng) {
     num_frames = upng->apng_num_frames;
   }
@@ -989,7 +986,7 @@ uint32_t upng_apng_num_frames(const upng_t* upng) {
 }
 
 // retuns the apng num_plays
-uint32_t upng_apng_num_plays(const upng_t* upng) {
+uint32_t upng_apng_num_plays(const upng_t *upng) {
   uint32_t num_plays = 1;  // default to 1 play for png images used as apng
   if (upng->is_apng) {
     num_plays = upng->apng_num_plays;
@@ -998,7 +995,7 @@ uint32_t upng_apng_num_plays(const upng_t* upng) {
 }
 
 // Pass in a apng_fctl to get the next frames frame control information
-bool upng_get_apng_fctl(const upng_t* upng, apng_fctl *apng_frame_control) {
+bool upng_get_apng_fctl(const upng_t *upng, apng_fctl *apng_frame_control) {
   bool retval = false;
   if (upng->is_apng && apng_frame_control != NULL) {
     *apng_frame_control = *upng->apng_frame_control;

@@ -19,7 +19,6 @@
 //! Using animation_legacy2_set_implementation(), you can implement a custom animation.
 //!
 
-
 //!   @{
 
 ///////////////////
@@ -29,7 +28,6 @@
 struct AnimationLegacy2;
 struct AnimationLegacy2Implementation;
 struct AnimationLegacy2Handlers;
-
 
 //! Creates a new AnimationLegacy2 on the heap and initializes it with the default values.
 //!
@@ -74,7 +72,7 @@ void animation_legacy2_set_curve(struct AnimationLegacy2 *animation, AnimationCu
 //! @param curve_function The custom animation curve function.
 //! @see AnimationCurveFunction
 void animation_legacy2_set_custom_curve(struct AnimationLegacy2 *animation,
-        AnimationCurveFunction curve_function);
+                                        AnimationCurveFunction curve_function);
 
 //! Gets the custom animation curve function.
 //! @param animation The animation for which to get the curve.
@@ -100,7 +98,7 @@ typedef void (*AnimationLegacy2StartedHandler)(struct AnimationLegacy2 *animatio
 //! \ref animation_legacy2_set_handlers()
 //! @see animation_legacy2_set_handlers
 typedef void (*AnimationLegacy2StoppedHandler)(struct AnimationLegacy2 *animation, bool finished,
-              void *context);
+                                               void *context);
 
 //! The handlers that will get called when an animation starts and stops.
 //! See documentation with the function pointer types for more information.
@@ -121,7 +119,7 @@ typedef struct AnimationLegacy2Handlers {
 //! @param context A pointer to application specific data, that will be passed as an argument by
 //! the animation subsystem when a callback is called.
 void animation_legacy2_set_handlers(struct AnimationLegacy2 *animation,
-              AnimationLegacy2Handlers callbacks, void *context);
+                                    AnimationLegacy2Handlers callbacks, void *context);
 
 //! Gets the application-specific callback context of the animation.
 //! This `void` pointer is passed as an argument when the animation system calls AnimationHandlers
@@ -174,15 +172,15 @@ typedef struct AnimationLegacy2 {
   uint32_t abs_start_time_ms;
   uint32_t delay_ms;
   uint32_t duration_ms;
-  AnimationCurve curve:3;
-  bool is_completed:1;
+  AnimationCurve curve : 3;
+  bool is_completed : 1;
   //! Pointer to a custom curve. Unfortunately, due to backward-compatibility
   //! constraints, it must fit into 28 bits.
   //! It is only valid when curve == AnimationCurveCustomFunction.
   //! The mapping from 28-bit field to pointer is unpublished. Call
   //! animation_legacy2_set_custom_curve() to ensure your app continues to run
   //! after future Pebble updates.
-  uintptr_t custom_curve_function:28;
+  uintptr_t custom_curve_function : 28;
 } AnimationLegacy2;
 
 ///////////////////////////////////////
@@ -221,7 +219,7 @@ typedef void (*AnimationLegacy2SetupImplementation)(struct AnimationLegacy2 *ani
 //! @internal
 //! @see animation_legacy2_timing.h
 typedef void (*AnimationLegacy2UpdateImplementation)(struct AnimationLegacy2 *animation,
-                const uint32_t distance_normalized);
+                                                     const uint32_t distance_normalized);
 
 //! Pointer to function that (optionally) cleans up the animation.
 //! This callback is called when the animation is removed from the scheduler.
@@ -260,13 +258,14 @@ typedef struct AnimationLegacy2Implementation {
 } AnimationLegacy2Implementation;
 
 //! Sets the implementation of the custom animation.
-//! When implementing custom animations, use this function to specify what functions need to be called to
-//! for the setup, frame update and teardown of the animation.
+//! When implementing custom animations, use this function to specify what functions need to be
+//! called to for the setup, frame update and teardown of the animation.
 //! @param animation The animation for which to set the implementation.
-//! @param implementation The structure with function pointers to the implementation of the setup, update and teardown functions.
+//! @param implementation The structure with function pointers to the implementation of the setup,
+//! update and teardown functions.
 //! @see AnimationImplementation
 void animation_legacy2_set_implementation(struct AnimationLegacy2 *animation,
-      const AnimationLegacy2Implementation *implementation);
+                                          const AnimationLegacy2Implementation *implementation);
 
 //!   @} // group AnimationLegacy2
 //! @} // group UI

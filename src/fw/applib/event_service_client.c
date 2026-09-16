@@ -14,7 +14,6 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-
 static EventServiceInfo *prv_get_state(void) {
   PebbleTask task = pebble_task_get_current();
   if (task == PebbleTask_App) {
@@ -70,10 +69,10 @@ void event_service_client_handle_event(PebbleEvent *e) {
   EventServiceInfo *state = prv_get_state();
   const uintptr_t type = e->type;
   // find the first callback
-  ListNode *handler = list_find(&state->list_node, event_service_filter, (void *) type);
+  ListNode *handler = list_find(&state->list_node, event_service_filter, (void *)type);
   while (handler) {
     // find the next callback before we call the current one, because the CB may alter the list
-    ListNode *next_handler = list_find_next(handler, event_service_filter, false, (void *) type);
+    ListNode *next_handler = list_find_next(handler, event_service_filter, false, (void *)type);
     do_handle((EventServiceInfo *)handler, e);
     handler = next_handler;
   }

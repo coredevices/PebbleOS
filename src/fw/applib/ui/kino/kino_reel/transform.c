@@ -136,8 +136,8 @@ static bool prv_elapsed_setter(KinoReel *reel, uint32_t elapsed) {
     changed = true;
   }
 
-  const int32_t normalized = animation_timing_clip(
-      scale_int32(elapsed, data->duration, ANIMATION_NORMALIZED_MAX));
+  const int32_t normalized =
+      animation_timing_clip(scale_int32(elapsed, data->duration, ANIMATION_NORMALIZED_MAX));
   if (data->normalized == normalized) {
     return changed;
   }
@@ -146,8 +146,7 @@ static bool prv_elapsed_setter(KinoReel *reel, uint32_t elapsed) {
 
   // No position setter is shorthand for always triggering a transform on any position setting
   bool transform_changed = true;
-  if (data->impl->position_setter &&
-      !data->impl->position_setter(normalized, data->context)) {
+  if (data->impl->position_setter && !data->impl->position_setter(normalized, data->context)) {
     transform_changed = false;
   }
 
@@ -171,8 +170,7 @@ static void prv_transform_list(KinoReelTransformData *data) {
   if (!list) {
     return;
   }
-  if (!gdraw_command_list_copy(list, gdraw_command_list_get_data_size(source_list),
-                                source_list)) {
+  if (!gdraw_command_list_copy(list, gdraw_command_list_get_data_size(source_list), source_list)) {
     return;
   }
   if (data->impl->apply) {
@@ -185,15 +183,14 @@ static void prv_draw_command_list_processed(GContext *ctx, GDrawCommandList *lis
                                             KinoReelProcessor *processor) {
   GPoint draw_box_origin = ctx->draw_state.drawing_box.origin;
   graphics_context_move_draw_box(ctx, offset);
-  gdraw_command_list_draw_processed(ctx, list, NULL_SAFE_FIELD_ACCESS(processor,
-                                                                      draw_command_processor,
-                                                                      NULL));
+  gdraw_command_list_draw_processed(
+      ctx, list, NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, NULL));
   ctx->draw_state.drawing_box.origin = draw_box_origin;
 }
 
-static void prv_draw_reel_or_command_list_processed(
-    GContext *ctx, KinoReel *reel, GDrawCommandList *list, GPoint offset,
-    KinoReelProcessor *processor) {
+static void prv_draw_reel_or_command_list_processed(GContext *ctx, KinoReel *reel,
+                                                    GDrawCommandList *list, GPoint offset,
+                                                    KinoReelProcessor *processor) {
   if (list) {
     prv_draw_command_list_processed(ctx, list, offset, processor);
   } else {
@@ -275,13 +272,13 @@ static GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
 }
 
 static const KinoReelImpl s_kino_reel_impl_transform = {
-  .destructor = prv_destructor,
-  .get_elapsed = prv_elapsed_getter,
-  .set_elapsed = prv_elapsed_setter,
-  .get_duration = prv_duration_getter,
-  .get_size = prv_size_getter,
-  .draw_processed = prv_draw_processed_func,
-  .get_gdraw_command_list = prv_get_gdraw_command_list,
+    .destructor = prv_destructor,
+    .get_elapsed = prv_elapsed_getter,
+    .set_elapsed = prv_elapsed_setter,
+    .get_duration = prv_duration_getter,
+    .get_size = prv_size_getter,
+    .draw_processed = prv_draw_processed_func,
+    .get_gdraw_command_list = prv_get_gdraw_command_list,
 };
 
 KinoReel *kino_reel_transform_create(const TransformImpl *impl, void *context) {
@@ -290,10 +287,10 @@ KinoReel *kino_reel_transform_create(const TransformImpl *impl, void *context) {
     return NULL;
   }
 
-  *data = (KinoReelTransformData) {
-    .impl = impl,
-    .context = context,
-    .duration = ANIMATION_DEFAULT_DURATION_MS,
+  *data = (KinoReelTransformData){
+      .impl = impl,
+      .context = context,
+      .duration = ANIMATION_DEFAULT_DURATION_MS,
   };
 
   KinoReel *reel = kino_reel_custom_create(&s_kino_reel_impl_transform, data);
@@ -311,8 +308,7 @@ void *kino_reel_transform_get_context(KinoReel *reel) {
   return NULL;
 }
 
-void kino_reel_transform_set_from_reel(KinoReel *reel, KinoReel *from_reel,
-                                            bool take_ownership) {
+void kino_reel_transform_set_from_reel(KinoReel *reel, KinoReel *from_reel, bool take_ownership) {
   KinoReelTransformData *data = kino_reel_custom_get_data(reel);
   if (!data) {
     return;
@@ -333,8 +329,7 @@ KinoReel *kino_reel_transform_get_from_reel(KinoReel *reel) {
   return NULL;
 }
 
-void kino_reel_transform_set_to_reel(KinoReel *reel, KinoReel *to_reel,
-                                          bool take_ownership) {
+void kino_reel_transform_set_to_reel(KinoReel *reel, KinoReel *to_reel, bool take_ownership) {
   KinoReelTransformData *data = kino_reel_custom_get_data(reel);
   if (!data) {
     return;

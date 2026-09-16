@@ -23,10 +23,10 @@
 PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
 
 typedef enum {
-  LIGHT_STATE_ON = 1,           // backlight on, no timeouts
-  LIGHT_STATE_ON_TIMED = 2,     // backlight on, will start fading after a period
-  LIGHT_STATE_ON_FADING = 3,    // backlight in the process of fading out
-  LIGHT_STATE_OFF = 4,          // backlight off; idle state
+  LIGHT_STATE_ON = 1,         // backlight on, no timeouts
+  LIGHT_STATE_ON_TIMED = 2,   // backlight on, will start fading after a period
+  LIGHT_STATE_ON_FADING = 3,  // backlight in the process of fading out
+  LIGHT_STATE_OFF = 4,        // backlight off; idle state
 } BacklightState;
 
 // the time duration of a fade out from full intensity
@@ -102,21 +102,21 @@ static uint8_t s_fade_level_idx = 0;
 //! LIGHT_FADE_TIME_MS
 static uint32_t s_fade_step_ms = 0;
 
-//! Mutex to guard all the above state. We have a pattern of taking the lock in the public functions and assuming
-//! it's already taken in the prv_ functions.
+//! Mutex to guard all the above state. We have a pattern of taking the lock in the public functions
+//! and assuming it's already taken in the prv_ functions.
 static PBL_MUTEX_DEFINE(s_mutex);
 
 //! Analytics: Track time-weighted average intensity
-static uint64_t s_intensity_time_product_sum; // Sum of (intensity_pct × time_ms)
-static RtcTicks s_last_intensity_sample_ticks; // Timestamp of last sample
-static uint8_t s_last_sampled_intensity_pct; // Last intensity percentage sampled
-static uint32_t s_total_on_time_ms; // Total backlight on time tracked internally
+static uint64_t s_intensity_time_product_sum;   // Sum of (intensity_pct × time_ms)
+static RtcTicks s_last_intensity_sample_ticks;  // Timestamp of last sample
+static uint8_t s_last_sampled_intensity_pct;    // Last intensity percentage sampled
+static uint32_t s_total_on_time_ms;             // Total backlight on time tracked internally
 
 //! Short-lived cache so back-to-back ALS consumers in the same wake path
 //! (prv_light_allowed → prv_backlight_get_intensity, plus a button release
 //! that follows the press within the TTL) skip the ~200 ms I2C poll.
 static uint32_t s_als_cached_level;
-static RtcTicks s_als_cached_ticks;  // 0 = invalid
+static RtcTicks s_als_cached_ticks;         // 0 = invalid
 #define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ)  // 1 second
 
 //! Event-gated continuous ALS:
@@ -235,11 +235,11 @@ static void light_timer_callback(void *data) {
 static uint8_t prv_backlight_get_intensity(void) {
   // low_power_mode backlight intensity (25% of max brightness)
   const uint8_t backlight_low_power_intensity = 25;
-  
+
   if (low_power_is_active()) {
     return backlight_low_power_intensity;
   }
-  
+
 #if defined(CONFIG_DYNAMIC_BACKLIGHT) && !defined(CONFIG_RECOVERY_FW)
   // Dynamic backlight: linear ramp from the mode's floor intensity at 0 lux up
   // to 100% at the mode's full-brightness lux level, then clamped to user_max.
@@ -266,7 +266,7 @@ static uint8_t prv_backlight_get_intensity(void) {
     return (ramped > user_max) ? user_max : (uint8_t)ramped;
   }
 #endif
-  
+
   return backlight_get_intensity();
 }
 
@@ -297,9 +297,8 @@ static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
 //! user's stored backlight-color preference, defaulting to BACKLIGHT_COLOR_WARM_WHITE.
 static void prv_apply_rgb_color(void) {
   const bool preempted = (s_color_preempt_refcount > 0);
-  const uint32_t color = (preempted || !s_app_rgb_override_valid)
-                             ? backlight_get_default_color()
-                             : s_app_rgb_override;
+  const uint32_t color =
+      (preempted || !s_app_rgb_override_valid) ? backlight_get_default_color() : s_app_rgb_override;
   backlight_set_color(color);
 }
 #endif
@@ -389,8 +388,8 @@ static void prv_change_state(BacklightState new_state) {
       new_brightness = prv_backlight_get_intensity();
 
       // Schedule the timer to move us from the ON_TIMED state to the ON_FADING state
-      new_timer_start(s_timer_id, backlight_get_timeout_ms(),
-                      light_timer_callback, NULL, 0 /* flags */);
+      new_timer_start(s_timer_id, backlight_get_timeout_ms(), light_timer_callback, NULL,
+                      0 /* flags */);
       break;
     case LIGHT_STATE_ON_FADING:
       // Build the fade ladder only when we first enter fading state. Pacing
@@ -434,10 +433,10 @@ static void prv_change_state(BacklightState new_state) {
   const bool is_on = (s_light_state != LIGHT_STATE_OFF);
   if (was_on != is_on) {
     PebbleEvent event = {
-      .type = PEBBLE_BACKLIGHT_EVENT,
-      .backlight = {
-        .is_on = is_on,
-      },
+        .type = PEBBLE_BACKLIGHT_EVENT,
+        .backlight = {
+            .is_on = is_on,
+        },
     };
     event_put(&event);
   }
@@ -447,7 +446,7 @@ static bool prv_light_allowed(void) {
   if (!s_backlight_allowed) {
     return false;
   }
-  
+
   if (backlight_is_enabled()) {
     if (backlight_is_ambient_sensor_enabled()) {
       // If the light is off and it's bright outside, don't allow the light to turn on
@@ -517,9 +516,7 @@ void light_button_released(void) {
     s_num_buttons_down = 0;
   }
 
-  if (s_num_buttons_down == 0 &&
-      s_light_state == LIGHT_STATE_ON &&
-      !s_user_controlled_state) {
+  if (s_num_buttons_down == 0 && s_light_state == LIGHT_STATE_ON && !s_user_controlled_state) {
     // no more buttons pressed: wait for a bit and then start the fade-out timer
     prv_change_state(LIGHT_STATE_ON_TIMED);
   }
@@ -547,7 +544,7 @@ void light_touch_up(void) {
 void light_enable_interaction(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  //if some buttons are held or light_enable is asserted, do nothing
+  // if some buttons are held or light_enable is asserted, do nothing
   if (s_num_buttons_down > 0 || s_light_state == LIGHT_STATE_ON) {
     pbl_mutex_unlock(&s_mutex);
     return;

@@ -91,4 +91,4 @@ const FlashSecurityRegisters *qspi_flash_security_registers_info(QSPIFlash *dev)
 //! Lock security registers
 //! @warning This is a one time operation and will permanently lock the security registers.
 status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t address);
-#endif // CONFIG_RECOVERY_FW
+#endif  // CONFIG_RECOVERY_FW

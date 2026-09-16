@@ -51,7 +51,6 @@ void battery_set_charge_enable(bool charging_enabled) {
 void battery_set_fast_charge(bool fast_charge_enabled) {
 }
 
-
 uint8_t qemu_battery_get_percent(void) {
   return s_percent;
 }
@@ -63,8 +62,8 @@ void qemu_battery_msg_callback(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  PBL_LOG_DBG("Got battery msg: pct: %d, charger_connected:%d",
-        hdr->battery_pct, hdr->charger_connected);
+  PBL_LOG_DBG("Got battery msg: pct: %d, charger_connected:%d", hdr->battery_pct,
+              hdr->charger_connected);
 
   s_percent = MIN(100, hdr->battery_pct);
   s_usb_connected = hdr->charger_connected;
@@ -76,5 +75,3 @@ void qemu_battery_msg_callback(const uint8_t *data, uint32_t len) {
   // Force a state machine update
   battery_state_handle_connection_event(s_usb_connected);
 }
-
-

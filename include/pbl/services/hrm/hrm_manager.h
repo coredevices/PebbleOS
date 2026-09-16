@@ -32,12 +32,12 @@ typedef enum {
 } HRMFeatureShift;
 
 typedef enum {
-  HRMFeature_BPM = (1 << HRMFeatureShift_BPM), //!< Collect heartrate BPM.
-  HRMFeature_HRV = (1 << HRMFeatureShift_HRV), //!< Collect heartrate variability.
-  HRMFeature_SpO2 = (1 << HRMFeatureShift_SpO2), //!< Collect blood oxygen saturation.
+  HRMFeature_BPM = (1 << HRMFeatureShift_BPM),    //!< Collect heartrate BPM.
+  HRMFeature_HRV = (1 << HRMFeatureShift_HRV),    //!< Collect heartrate variability.
+  HRMFeature_SpO2 = (1 << HRMFeatureShift_SpO2),  //!< Collect blood oxygen saturation.
 #ifdef CONFIG_MFG
-  HRMFeature_CTR = (1 << HRMFeatureShift_CTR), //!< Collect ppg CTR test data.
-  HRMFeature_Leakage = (1 << HRMFeatureShift_Leakage), //!< Collect ppg leakage test data.
+  HRMFeature_CTR = (1 << HRMFeatureShift_CTR),          //!< Collect ppg CTR test data.
+  HRMFeature_Leakage = (1 << HRMFeatureShift_Leakage),  //!< Collect ppg leakage test data.
 #endif
   HRMFeatureMax
 } HRMFeature;
@@ -47,7 +47,7 @@ typedef enum {
 #define HRM_MANAGER_MAX_ACCEL_SAMPLES ((2 * HRM_MANAGER_ACCEL_RATE_MILLIHZ) / 1000)
 
 // When an app exits, we change its subscription (if any) to expire in this many seconds
-#define HRM_MANAGER_APP_EXIT_EXPIRATION_SEC  SECONDS_PER_HOUR
+#define HRM_MANAGER_APP_EXIT_EXPIRATION_SEC SECONDS_PER_HOUR
 
 typedef struct {
   AccelRawData data[HRM_MANAGER_MAX_ACCEL_SAMPLES];
@@ -56,7 +56,7 @@ typedef struct {
 
 //! Grab the buffer containing accel data for the last 1 second period.
 //! This locks the accel sample buffer that lives in the hrm manager.
-HRMAccelData * hrm_manager_get_accel_data(void);
+HRMAccelData *hrm_manager_get_accel_data(void);
 
 //! Unlock the accel sample buffer.
 void hrm_manager_release_accel_data(void);
@@ -145,7 +145,7 @@ typedef struct {
 
   uint16_t hrv_ppi_ms;
   HRMQuality hrv_quality;
- 
+
   uint8_t spo2_percent;
   HRMQuality spo2_quality;
 

@@ -11,11 +11,11 @@
 #define LOCALE_NAME_LENGTH 30
 
 typedef struct {
-  ListNode node;              //!< Linked list node
-  const void *owner;          //!< pointer to owner object
-  uint32_t original_hash;     //!< hashed original string
-  char *original_string;      //!< original string. Stored following translated_string below
-  char translated_string[];   //!< i18n'ed string. Storage for original string comes after this
+  ListNode node;             //!< Linked list node
+  const void *owner;         //!< pointer to owner object
+  uint32_t original_hash;    //!< hashed original string
+  char *original_string;     //!< original string. Stored following translated_string below
+  char translated_string[];  //!< i18n'ed string. Storage for original string comes after this
 } I18nString;
 
 //! macro used to tag strings for extractions. Needed when we
@@ -40,7 +40,7 @@ const char *i18n_get(const char *string, const void *owner);
 void i18n_get_with_buffer(const char *string, char *buffer, size_t length);
 
 #define i18n_ctx_get_with_buffer(ctx, string, buffer, length) \
-            i18n_get_with_buffer(i18n_ctx_noop(ctx, string), buffer, length)
+  i18n_get_with_buffer(i18n_ctx_noop(ctx, string), buffer, length)
 
 //! Look up an i18n'ed string and return the length of it.
 size_t i18n_get_length(const char *string);

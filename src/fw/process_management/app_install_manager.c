@@ -99,8 +99,8 @@ AppInstallId app_get_install_id_for_uuid_from_registry(const Uuid *uuid) {
       if (md && uuid_equal(&md->uuid, uuid)) {
         return reg_entry->id;
       }
-    } else if ((reg_entry->type == AppInstallStorageResources)
-        && uuid_equal(&reg_entry->uuid, uuid)) {
+    } else if ((reg_entry->type == AppInstallStorageResources) &&
+               uuid_equal(&reg_entry->uuid, uuid)) {
       return reg_entry->id;
     }
   }
@@ -160,9 +160,9 @@ void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
       app->can_expire = can_expire;
     } else {
       RecentApp app = {
-        .id = install_id,
-        .last_activity = cur_time,
-        .can_expire = can_expire,
+          .id = install_id,
+          .last_activity = cur_time,
+          .can_expire = can_expire,
       };
       circular_cache_push(&s_recent_apps.cache, &app);
     }
@@ -223,29 +223,29 @@ void app_install_register_callback(struct AppInstallCallbackNode *callback_node)
 }
 
 void app_install_deregister_callback(struct AppInstallCallbackNode *callback_node) {
-  PBL_ASSERTN(callback_node->node.next != NULL
-              || callback_node->node.prev != NULL
-              || s_head_callback_node_list == &callback_node->node);
+  PBL_ASSERTN(callback_node->node.next != NULL || callback_node->node.prev != NULL ||
+              s_head_callback_node_list == &callback_node->node);
   list_remove(&callback_node->node, &(s_head_callback_node_list), NULL);
 }
 
 void app_install_cleanup_registered_app_callbacks(void) {
-  struct AppInstallCallbackNode *iter = (struct AppInstallCallbackNode *) s_head_callback_node_list;
+  struct AppInstallCallbackNode *iter = (struct AppInstallCallbackNode *)s_head_callback_node_list;
   while (iter) {
     if (iter->registered_by == PebbleTask_App) {
       list_remove((ListNode *)&iter->node, &s_head_callback_node_list, NULL);
     }
-    iter = (struct AppInstallCallbackNode *) list_get_next(&iter->node);
+    iter = (struct AppInstallCallbackNode *)list_get_next(&iter->node);
   }
 }
 
 static void app_install_invoke_callbacks(InstallEventType event_type, AppInstallId install_id) {
-  struct AppInstallCallbackNode *callback_node = (struct AppInstallCallbackNode *) s_head_callback_node_list;
+  struct AppInstallCallbackNode *callback_node =
+      (struct AppInstallCallbackNode *)s_head_callback_node_list;
   while (callback_node) {
     if (callback_node->callbacks[event_type]) {
       callback_node->callbacks[event_type](install_id, callback_node->data);
     }
-    callback_node = (struct AppInstallCallbackNode *) list_get_next(&callback_node->node);
+    callback_node = (struct AppInstallCallbackNode *)list_get_next(&callback_node->node);
   }
 }
 
@@ -256,7 +256,7 @@ typedef struct {
 } EnumerateData;
 
 static void prv_app_install_enumerate_app_db(AppInstallId install_id, AppDBEntry *db_entry,
-    void *data) {
+                                             void *data) {
   EnumerateData *cb_data = (EnumerateData *)data;
 
   prv_app_install_entry_from_app_db_entry(install_id, db_entry, cb_data->entry_buf);
@@ -280,9 +280,9 @@ void app_install_enumerate_entries(AppInstallEnumerateCb cb, void *data) {
 
   // Iterate over AppDB applications
   EnumerateData cb_data = {
-    .cb = cb,
-    .data = data,
-    .entry_buf = entry,
+      .cb = cb,
+      .data = data,
+      .entry_buf = entry,
   };
   app_db_enumerate_entries(prv_app_install_enumerate_app_db, &cb_data);
 
@@ -320,7 +320,7 @@ static void prv_app_install_delete(AppInstallId id, Uuid *uuid, bool app_upgrade
   if (delete_cache) {
     // only log when we actually delete the cache entry. This is so we don't print out 100 logs
     // during an app cache clear
-    PBL_LOG_DBG("Deleting app with id %"PRId32"", id);
+    PBL_LOG_DBG("Deleting app with id %" PRId32 "", id);
     app_cache_remove_entry(id);
   }
 }
@@ -344,8 +344,8 @@ typedef struct InstallCallbackData {
   //! if this is false.
   bool callback_in_progress;
 
-  //! We may have to pause doing callbacks to wait for the app or worker to close. If so, this is set to
-  //! true.
+  //! We may have to pause doing callbacks to wait for the app or worker to close. If so, this is
+  //! set to true.
   bool callback_paused_for_app;
   bool callback_paused_for_worker;
 
@@ -357,7 +357,7 @@ typedef struct InstallCallbackData {
   //! Callback to call when we're doing issuing this callback.
   InstallCallbackDoneCallback done_callback;
 
-  void* callback_data;
+  void *callback_data;
 } InstallCallbackData;
 
 InstallCallbackData s_install_callback_data;
@@ -374,7 +374,6 @@ static void app_install_launcher_task_callback(void *context) {
     if (s_install_callback_data.install_type == APP_UPGRADED ||
         s_install_callback_data.install_type == APP_REMOVED ||
         s_install_callback_data.install_type == APP_DB_CLEARED) {
-
       const AppInstallId to_kill = s_install_callback_data.install_id;
 
       // Close the current app if it is the one we are trying to remove/upgrade
@@ -383,8 +382,8 @@ static void app_install_launcher_task_callback(void *context) {
       // also clear it.
       const AppInstallId cur_app_id = app_manager_get_current_app_id();
       if (prv_ids_equal(cur_app_id, to_kill) ||
-            ((s_install_callback_data.install_type == APP_DB_CLEARED) &&
-             (app_install_id_from_app_db(cur_app_id)))) {
+          ((s_install_callback_data.install_type == APP_DB_CLEARED) &&
+           (app_install_id_from_app_db(cur_app_id)))) {
         PBL_LOG_DBG("close and delay callbacks for app closing");
 
         s_install_callback_data.callback_paused_for_app = true;
@@ -429,7 +428,7 @@ static void app_install_launcher_task_callback(void *context) {
       /* fallthrough */
     case APP_REMOVED:
       prv_app_install_delete(s_install_callback_data.install_id, s_install_callback_data.uuid,
-          app_upgrade, true /* delete cache entry */);
+                             app_upgrade, true /* delete cache entry */);
       // Only delete the app's persist file when the user explicitly removes the
       // app, not during an AppDB clear.
       if (!app_upgrade) {
@@ -454,25 +453,23 @@ static void app_install_launcher_task_callback(void *context) {
     kernel_free(s_install_callback_data.uuid);
   }
 
-  s_install_callback_data = (InstallCallbackData) {
-    .callback_in_progress = false
-  };
+  s_install_callback_data = (InstallCallbackData){.callback_in_progress = false};
 }
 
-bool app_install_do_callbacks(InstallEventType event_type, AppInstallId install_id,
-    Uuid *uuid, InstallCallbackDoneCallback done_callback, void* callback_data) {
+bool app_install_do_callbacks(InstallEventType event_type, AppInstallId install_id, Uuid *uuid,
+                              InstallCallbackDoneCallback done_callback, void *callback_data) {
   if (s_install_callback_data.callback_in_progress) {
     PBL_LOG_ERR("Failed to do app callbacks, already in progress");
     return false;
   }
 
-  s_install_callback_data = (InstallCallbackData) {
-    .callback_in_progress = true,
-    .install_id = install_id,
-    .uuid = uuid,
-    .install_type = event_type,
-    .done_callback = done_callback,
-    .callback_data = callback_data
+  s_install_callback_data = (InstallCallbackData){
+      .callback_in_progress = true,
+      .install_id = install_id,
+      .uuid = uuid,
+      .install_type = event_type,
+      .done_callback = done_callback,
+      .callback_data = callback_data
   };
 
   launcher_task_add_callback(app_install_launcher_task_callback, NULL);
@@ -514,7 +511,7 @@ void app_install_notify_app_closed(void) {
   // If we've previously paused doing app callbacks to wait for the app to close, resume them
   // now if the worker is also done
   if (s_install_callback_data.callback_paused_for_app) {
-    if (!s_install_callback_data.callback_paused_for_worker)  {
+    if (!s_install_callback_data.callback_paused_for_worker) {
       app_install_launcher_task_callback(NULL);
     } else {
       s_install_callback_data.callback_paused_for_app = false;
@@ -527,7 +524,7 @@ void app_install_notify_worker_closed(void) {
   // If we've previously paused doing app callbacks to wait for the app to close, resume them
   // now if the worker is also done
   if (s_install_callback_data.callback_paused_for_worker) {
-    if (!s_install_callback_data.callback_paused_for_app)  {
+    if (!s_install_callback_data.callback_paused_for_app) {
       app_install_launcher_task_callback(NULL);
     } else {
       s_install_callback_data.callback_paused_for_worker = false;
@@ -568,9 +565,9 @@ void app_install_manager_init(void) {
 
   // PBL-31769: This should be moved to send_text.c
 #if defined(APP_ID_SEND_TEXT)
-  s_capabilities_event_info = (EventServiceInfo) {
-    .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
-    .handler = prv_capabilities_changed_event_handler,
+  s_capabilities_event_info = (EventServiceInfo){
+      .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
+      .handler = prv_capabilities_changed_event_handler,
   };
   event_service_client_subscribe(&s_capabilities_event_info);
 #endif
@@ -585,7 +582,6 @@ bool app_install_id_from_app_db(AppInstallId id) {
 }
 
 static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
-
   // Remove this from Recovery FW for code size savings.
 #if !defined(CONFIG_RECOVERY_FW)
 
@@ -597,7 +593,7 @@ static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
   } ColorMapping;
 
   static const ColorMapping mappings[] = {
-    #include "app_install_manager_known_apps.h"
+#include "app_install_manager_known_apps.h"
   };
 
   for (size_t i = 0; i < ARRAY_LENGTH(mappings); i++) {
@@ -610,7 +606,6 @@ static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
 
   return GColorClear;
 }
-
 
 static GColor prv_valid_color_from_uuid(GColor color, Uuid *uuid) {
 #ifdef CONFIG_BOARD_ASTERIX
@@ -628,8 +623,10 @@ static GColor prv_valid_color_from_uuid(GColor color, Uuid *uuid) {
   }
 
   // if color isn't provided, build hash over uuid and pick from selected fall-back colors
-  GColor fall_back_colors[] = {GColorFromHEX(0x0000aa), GColorFromHEX(0x005500),
-    GColorFromHEX(0x550055), GColorFromHEX(0xff0055), GColorFromHEX(0xaa0000)};
+  GColor fall_back_colors[] = {
+      GColorFromHEX(0x0000aa), GColorFromHEX(0x005500), GColorFromHEX(0x550055),
+      GColorFromHEX(0xff0055), GColorFromHEX(0xaa0000)
+  };
   uint8_t uuid_byte_sum = 0;
   for (uint8_t *b = &uuid->byte0; b <= &uuid->byte15; b++) {
     uuid_byte_sum += *b;
@@ -639,19 +636,18 @@ static GColor prv_valid_color_from_uuid(GColor color, Uuid *uuid) {
 
 static bool prv_app_install_entry_from_app_db_entry(AppInstallId id, AppDBEntry *db_entry,
                                                     AppInstallEntry *entry) {
-
-  *entry = (AppInstallEntry) {
-    .install_id = id,
-    .type = AppInstallStorageFlash,
-    .visibility = process_metadata_flags_visibility(db_entry->info_flags),
-    // PebbleTask_App because the flag parsing function needs it, and we can assume all
-    // applications registered with the manager are applications, not workers.
-    .process_type = process_metadata_flags_process_type(db_entry->info_flags, PebbleTask_App),
-    .has_worker = process_metadata_flags_has_worker(db_entry->info_flags),
-    .icon_resource_id = db_entry->icon_resource_id,
-    .uuid = db_entry->uuid,
-    .color = prv_valid_color_from_uuid(db_entry->app_face_bg_color, (Uuid *)&db_entry->uuid),
-    .sdk_version = db_entry->sdk_version,
+  *entry = (AppInstallEntry){
+      .install_id = id,
+      .type = AppInstallStorageFlash,
+      .visibility = process_metadata_flags_visibility(db_entry->info_flags),
+      // PebbleTask_App because the flag parsing function needs it, and we can assume all
+      // applications registered with the manager are applications, not workers.
+      .process_type = process_metadata_flags_process_type(db_entry->info_flags, PebbleTask_App),
+      .has_worker = process_metadata_flags_has_worker(db_entry->info_flags),
+      .icon_resource_id = db_entry->icon_resource_id,
+      .uuid = db_entry->uuid,
+      .color = prv_valid_color_from_uuid(db_entry->app_face_bg_color, (Uuid *)&db_entry->uuid),
+      .sdk_version = db_entry->sdk_version,
   };
 
   strncpy(entry->name, db_entry->name, APP_NAME_SIZE_BYTES);
@@ -659,28 +655,29 @@ static bool prv_app_install_entry_from_app_db_entry(AppInstallId id, AppDBEntry 
 }
 
 static bool prv_app_install_entry_from_resource_registry_entry(const AppRegistryEntry *reg_entry,
-    AppInstallEntry *entry) {
+                                                               AppInstallEntry *entry) {
   PebbleProcessInfo *app_header = kernel_malloc_check(sizeof(PebbleProcessInfo));
   bool rv = false;
 
   if (resource_load_byte_range_system(SYSTEM_APP, reg_entry->bin_resource_id, 0,
-        (uint8_t *)app_header, sizeof(*app_header)) != sizeof(*app_header)) {
+                                      (uint8_t *)app_header,
+                                      sizeof(*app_header)) != sizeof(*app_header)) {
     PBL_LOG_WRN("Stored app with resource id %d not found in resources",
-            reg_entry->bin_resource_id);
+                reg_entry->bin_resource_id);
     goto done;
   }
-  *entry = (AppInstallEntry) {
-    .install_id = reg_entry->id,
-    .type = AppInstallStorageResources,
-    .visibility = process_metadata_flags_visibility(app_header->flags),
-    // PebbleTask_App because the flag parsing function needs it, and we can assume all
-    // applications registered with the manager are applications, not workers.
-    .process_type = process_metadata_flags_process_type(app_header->flags, PebbleTask_App),
-    .has_worker = process_metadata_flags_has_worker(app_header->flags),
-    .icon_resource_id = reg_entry->icon_resource_id,
-    .uuid = reg_entry->uuid,
-    .color = prv_valid_color_from_uuid(reg_entry->color, (Uuid *) &reg_entry->uuid),
-    .sdk_version = app_header->sdk_version,
+  *entry = (AppInstallEntry){
+      .install_id = reg_entry->id,
+      .type = AppInstallStorageResources,
+      .visibility = process_metadata_flags_visibility(app_header->flags),
+      // PebbleTask_App because the flag parsing function needs it, and we can assume all
+      // applications registered with the manager are applications, not workers.
+      .process_type = process_metadata_flags_process_type(app_header->flags, PebbleTask_App),
+      .has_worker = process_metadata_flags_has_worker(app_header->flags),
+      .icon_resource_id = reg_entry->icon_resource_id,
+      .uuid = reg_entry->uuid,
+      .color = prv_valid_color_from_uuid(reg_entry->color, (Uuid *)&reg_entry->uuid),
+      .sdk_version = app_header->sdk_version,
   };
 
   i18n_get_with_buffer(reg_entry->name, entry->name, APP_NAME_SIZE_BYTES);
@@ -691,24 +688,23 @@ done:
 }
 
 bool prv_app_install_entry_from_fw_registry_entry(const AppRegistryEntry *reg_entry,
-    AppInstallEntry *entry) {
-
-  const PebbleProcessMdSystem *md = (PebbleProcessMdSystem *) reg_entry->md_fn();
+                                                  AppInstallEntry *entry) {
+  const PebbleProcessMdSystem *md = (PebbleProcessMdSystem *)reg_entry->md_fn();
 
   if (!md) {
     return false;
   }
 
-  *entry = (AppInstallEntry) {
-    .install_id = reg_entry->id,
-    .type = AppInstallStorageFw,
-    .visibility = md->common.visibility,
-    .process_type = md->common.process_type,
-    .has_worker = md->common.has_worker,
-    .icon_resource_id = md->icon_resource_id,
-    .uuid = md->common.uuid,
-    .color = prv_valid_color_from_uuid(reg_entry->color, (Uuid *) &md->common.uuid),
-    .sdk_version = process_metadata_get_sdk_version((PebbleProcessMd *)md),
+  *entry = (AppInstallEntry){
+      .install_id = reg_entry->id,
+      .type = AppInstallStorageFw,
+      .visibility = md->common.visibility,
+      .process_type = md->common.process_type,
+      .has_worker = md->common.has_worker,
+      .icon_resource_id = md->icon_resource_id,
+      .uuid = md->common.uuid,
+      .color = prv_valid_color_from_uuid(reg_entry->color, (Uuid *)&md->common.uuid),
+      .sdk_version = process_metadata_get_sdk_version((PebbleProcessMd *)md),
   };
 
   i18n_get_with_buffer(md->name, entry->name, APP_NAME_SIZE_BYTES);
@@ -751,7 +747,7 @@ bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEnt
     return rv;
   }
 
-  PBL_LOG_ERR("Failed to get entry for id %"PRId32, install_id);
+  PBL_LOG_ERR("Failed to get entry for id %" PRId32, install_id);
   return false;
 }
 
@@ -784,9 +780,10 @@ static const PebbleProcessMd *prv_get_md_for_reg_entry(const AppRegistryEntry *r
       // If its a RESOURCE app, we much read from the resource pack and populate an Md
       PebbleProcessInfo app_header;
       if (resource_load_byte_range_system(SYSTEM_APP, reg_entry->bin_resource_id, 0,
-            (uint8_t *)&app_header, sizeof(app_header)) != sizeof(app_header)) {
+                                          (uint8_t *)&app_header,
+                                          sizeof(app_header)) != sizeof(app_header)) {
         PBL_LOG_WRN("Stored app with resource id %d not found in resources",
-                reg_entry->bin_resource_id);
+                    reg_entry->bin_resource_id);
         return NULL;
       }
 
@@ -795,7 +792,7 @@ static const PebbleProcessMd *prv_get_md_for_reg_entry(const AppRegistryEntry *r
       // freed in process_manager.c
       PebbleProcessMdResource *md = kernel_malloc_check(sizeof(PebbleProcessMdResource));
       process_metadata_init_with_resource_header(md, &app_header, reg_entry->bin_resource_id,
-          PebbleTask_App);
+                                                 PebbleTask_App);
       const PebbleProcessMd *const_md = (PebbleProcessMd *)md;
       return const_md;
     }
@@ -814,7 +811,7 @@ static const PebbleProcessMd *prv_get_md_for_flash_id(AppInstallId id, bool work
   const PebbleTask task = worker ? PebbleTask_Worker : PebbleTask_App;
   if (GET_APP_INFO_SUCCESS !=
       app_storage_get_process_info(&app_header, build_id_buffer, id, task)) {
-    PBL_LOG_WRN("Failed to get app from flash with id %"PRIu32, id);
+    PBL_LOG_WRN("Failed to get app from flash with id %" PRIu32, id);
     return NULL;
   }
 
@@ -824,7 +821,6 @@ static const PebbleProcessMd *prv_get_md_for_flash_id(AppInstallId id, bool work
   const PebbleProcessMd *const_md = (PebbleProcessMd *)md;
   return const_md;
 }
-
 
 // PebbleProcessMd is freed in process_manager.c when the application quits
 const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
@@ -836,7 +832,7 @@ const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
   }
 
   // Not a registered app, fail.
-  PBL_LOG_ERR("Can't get PebbleProcessMd for app id %"PRId32, id);
+  PBL_LOG_ERR("Can't get PebbleProcessMd for app id %" PRId32, id);
   return NULL;
 }
 
@@ -846,16 +842,15 @@ void app_install_release_md(const PebbleProcessMd *md) {
   }
 
   switch (md->process_storage) {
-  case ProcessStorageBuiltin:
-    break;
-  case ProcessStorageFlash:
-  case ProcessStorageResource:
-    kernel_free((PebbleProcessMd*) md);
+    case ProcessStorageBuiltin:
+      break;
+    case ProcessStorageFlash:
+    case ProcessStorageResource:
+      kernel_free((PebbleProcessMd *)md);
   }
 }
 
-static void prv_enumerate_app_db_delete(AppInstallId install_id, AppDBEntry *db_entry,
-    void *data) {
+static void prv_enumerate_app_db_delete(AppInstallId install_id, AppDBEntry *db_entry, void *data) {
   PBL_ASSERTN(app_install_id_from_app_db(install_id));
   task_watchdog_bit_set(pebble_task_get_current());
 

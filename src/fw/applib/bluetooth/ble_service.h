@@ -17,9 +17,8 @@
 //! to services, characteristics and descriptors are guaranteed to remain valid
 //! *until the BLEClientServiceChangeHandler is called again* or until
 //! application is terminated.
-uint8_t ble_service_get_characteristics(BLEService service,
-                                       BLECharacteristic characteristics_out[],
-                                       uint8_t num_characteristics);
+uint8_t ble_service_get_characteristics(BLEService service, BLECharacteristic characteristics_out[],
+                                        uint8_t num_characteristics);
 
 //! Gets the Service UUID of a service.
 //! @param service The service for which to get the Service UUID.
@@ -52,10 +51,8 @@ BTDevice ble_service_get_device(BLEService service);
 //! to services, characteristics and descriptors are guaranteed to remain valid
 //! *until the BLEClientServiceChangeHandler is called again* or until
 //! application is terminated.
-uint8_t ble_service_get_included_services(BLEService service,
-                                          BLEService included_services_out[],
+uint8_t ble_service_get_included_services(BLEService service, BLEService included_services_out[],
                                           uint8_t num_services);
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // (FUTURE / LATER / NOT SCOPED)
@@ -63,12 +60,10 @@ uint8_t ble_service_get_included_services(BLEService service,
 
 // creates + adds to GATT DB (?)
 // Services aren't supposed to change. Pass everything into the 'create' call:
-BLEService ble_service_create(const Uuid *service_uuid,
-                              BLECharacteristic characteristics[],
+BLEService ble_service_create(const Uuid *service_uuid, BLECharacteristic characteristics[],
                               uint8_t num_characteristics);
 
-void ble_service_set_included_services(BLEService service,
-                                       BLEService included_services[],
+void ble_service_set_included_services(BLEService service, BLEService included_services[],
                                        uint8_t num_included_services);
 
 // removes from GATT DB (?) + destroys

@@ -5,17 +5,19 @@
 
 #include "resource/resource_ids.auto.h"
 
-const PebbleProcessMd* tictoc_get_app_info(void) {
+const PebbleProcessMd *tictoc_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      // UUID: 8f3c8686-31a1-4f5f-91f5-01600c9bdc59
-      .uuid = { 0x8f, 0x3c, 0x86, 0x86, 0x31, 0xa1, 0x4f, 0x5f,
-                0x91, 0xf5, 0x01, 0x60, 0x0c, 0x9b, 0xdc, 0x59 },
-      .main_func = tictoc_main,
-      .process_type = ProcessTypeWatchface,
-    },
-    .icon_resource_id = RESOURCE_ID_MENU_ICON_TICTOC_WATCH,
-    .name = "TicToc",
+      .common =
+          {
+              // UUID: 8f3c8686-31a1-4f5f-91f5-01600c9bdc59
+              .uuid =
+                  {0x8f, 0x3c, 0x86, 0x86, 0x31, 0xa1, 0x4f, 0x5f, 0x91, 0xf5, 0x01, 0x60, 0x0c,
+                   0x9b, 0xdc, 0x59},
+              .main_func = tictoc_main,
+              .process_type = ProcessTypeWatchface,
+          },
+      .icon_resource_id = RESOURCE_ID_MENU_ICON_TICTOC_WATCH,
+      .name = "TicToc",
   };
-  return (const PebbleProcessMd*) &s_app_md;
+  return (const PebbleProcessMd *)&s_app_md;
 }

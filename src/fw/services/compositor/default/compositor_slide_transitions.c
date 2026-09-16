@@ -32,9 +32,9 @@ static void prv_copy_framebuffer_rows(GBitmap *dest_bitmap, GBitmap *src_bitmap,
                                       int16_t end_row, int16_t dupe_row, int16_t shift_amount) {
   const int16_t delta = start_row > end_row ? -1 : 1;
   for (int16_t dest_row = start_row; dest_row != end_row; dest_row += delta) {
-    src_bitmap->bounds = (GRect) {
-      .origin.y = (dupe_row >= 0 ? dupe_row : dest_row) - shift_amount,
-      .size = { DISP_COLS, 1 },
+    src_bitmap->bounds = (GRect){
+        .origin.y = (dupe_row >= 0 ? dupe_row : dest_row) - shift_amount,
+        .size = {DISP_COLS, 1},
     };
     bitblt_bitmap_into_bitmap(dest_bitmap, src_bitmap, GPoint(0, dest_row), GCompOpAssign,
                               GColorWhite);
@@ -52,7 +52,8 @@ static void prv_duplicate_framebuffer_row(GBitmap *dest_bitmap, int16_t start_ro
   const int16_t delta = start_row > end_row ? -1 : 1;
   for (int16_t dest_row = start_row; dest_row != end_row; dest_row += delta) {
     int16_t offset_y = (dupe_row >= 0 ? dupe_row : dest_row) - dest_row;
-    compositor_scaled_app_fb_copy_offset(GRect(0, dest_row, DISP_COLS, 1), false /* copy_relative_to_origin */, offset_y);
+    compositor_scaled_app_fb_copy_offset(GRect(0, dest_row, DISP_COLS, 1),
+                                         false /* copy_relative_to_origin */, offset_y);
   }
 }
 
@@ -112,14 +113,15 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
       const int content_width = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
       graphics_fill_rect(ctx, &GRect(0, fill_offset_y, content_width, fill_height));
       graphics_context_set_fill_color(ctx, s_data.fill_color);
-      graphics_fill_rect(ctx, &GRect(content_width, fill_offset_y, TIMELINE_PEEK_ICON_BOX_WIDTH,
-                                    fill_height));
+      graphics_fill_rect(
+          ctx, &GRect(content_width, fill_offset_y, TIMELINE_PEEK_ICON_BOX_WIDTH, fill_height));
     } else {
       graphics_context_set_fill_color(ctx, s_data.fill_color);
       graphics_fill_rect(ctx, &GRect(0, fill_offset_y, DISP_COLS, fill_height));
     }
   } else {
-    compositor_scaled_app_fb_copy(GRect(0, app_offset_y, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
+    compositor_scaled_app_fb_copy(GRect(0, app_offset_y, DISP_COLS, DISP_ROWS),
+                                  false /* copy_relative_to_origin */);
     if (app_should_dupe) {
       GBitmap app_bitmap = compositor_get_app_framebuffer_as_bitmap();
       prv_duplicate_framebuffer_row(&dest_bitmap, app_dupe_row, app_offset_y + app_dupe_row,
@@ -134,8 +136,8 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
 
 static void prv_slide_transition_animation_init(Animation *animation) {
   // Give a regular moook more time to stretch the anticipation
-  const uint32_t duration = s_data.timeline_is_destination ? interpolate_moook_in_duration() :
-                                                             interpolate_moook_duration();
+  const uint32_t duration = s_data.timeline_is_destination ? interpolate_moook_in_duration()
+                                                           : interpolate_moook_duration();
   const InterpolateInt64Function interpolation =
       s_data.timeline_is_destination ? interpolate_moook_in_only : interpolate_moook;
   animation_set_duration(animation, duration);
@@ -144,19 +146,20 @@ static void prv_slide_transition_animation_init(Animation *animation) {
 
 const CompositorTransition *prv_slide_transition_get(void) {
   static const CompositorTransition s_impl = {
-    .init = prv_slide_transition_animation_init,
-    .update = prv_slide_transition_animation_update,
+      .init = prv_slide_transition_animation_init,
+      .update = prv_slide_transition_animation_update,
   };
   return &s_impl;
 }
 
-const CompositorTransition *compositor_slide_transition_timeline_get(
-    bool timeline_is_future, bool timeline_is_destination, bool timeline_is_empty) {
-  s_data = (CompositorSlideTransitionData) {
-    .slide_up = timeline_is_future ^ !timeline_is_destination,
-    .fill_color = timeline_is_future ? TIMELINE_FUTURE_COLOR : TIMELINE_PAST_COLOR,
-    .timeline_is_destination = timeline_is_destination,
-    .timeline_is_empty = timeline_is_empty,
+const CompositorTransition *compositor_slide_transition_timeline_get(bool timeline_is_future,
+                                                                     bool timeline_is_destination,
+                                                                     bool timeline_is_empty) {
+  s_data = (CompositorSlideTransitionData){
+      .slide_up = timeline_is_future ^ !timeline_is_destination,
+      .fill_color = timeline_is_future ? TIMELINE_FUTURE_COLOR : TIMELINE_PAST_COLOR,
+      .timeline_is_destination = timeline_is_destination,
+      .timeline_is_empty = timeline_is_empty,
   };
   return prv_slide_transition_get();
 }
@@ -164,8 +167,8 @@ const CompositorTransition *compositor_slide_transition_timeline_get(
 const CompositorTransition *compositor_slide_transition_app_get(bool slide_up) {
   // timeline_is_destination unset: the incoming app framebuffer is drawn sliding in,
   // pushing the current framebuffer out.
-  s_data = (CompositorSlideTransitionData) {
-    .slide_up = slide_up,
+  s_data = (CompositorSlideTransitionData){
+      .slide_up = slide_up,
   };
   return prv_slide_transition_get();
 }

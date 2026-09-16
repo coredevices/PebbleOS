@@ -42,21 +42,21 @@ typedef enum {
   PowerSystemMcuGpioC,
   PowerSystemMcuGpioD,
   PowerSystemMcuGpioH,
-  PowerSystemMcuCrc,       // Flash
-  PowerSystemMcuPwr,       // Everything
-  PowerSystemMcuDma1,      // Display
-  PowerSystemMcuDma2,      // BT
-  PowerSystemMcuTim1,      // Future use for the vibe PWM
-  PowerSystemMcuTim3,      // Used for the backlight PWM
-  PowerSystemMcuTim4,      // Used for the button debouncer
-  PowerSystemMcuUsart1,    // Used for BT
-  PowerSystemMcuUsart3,    // dbgserial
-  PowerSystemMcuI2C1,      // Main I2C
-  PowerSystemMcuI2C2,      // 2V5 I2C
-  PowerSystemMcuSpi1,      // FLASH
-  PowerSystemMcuSpi6,      // LCD
-  PowerSystemMcuAdc1,      // Voltage monitoring & ambient light sensing
-  PowerSystemMcuAdc2,      // Voltage monitoring & ambient light sensing
+  PowerSystemMcuCrc,     // Flash
+  PowerSystemMcuPwr,     // Everything
+  PowerSystemMcuDma1,    // Display
+  PowerSystemMcuDma2,    // BT
+  PowerSystemMcuTim1,    // Future use for the vibe PWM
+  PowerSystemMcuTim3,    // Used for the backlight PWM
+  PowerSystemMcuTim4,    // Used for the button debouncer
+  PowerSystemMcuUsart1,  // Used for BT
+  PowerSystemMcuUsart3,  // dbgserial
+  PowerSystemMcuI2C1,    // Main I2C
+  PowerSystemMcuI2C2,    // 2V5 I2C
+  PowerSystemMcuSpi1,    // FLASH
+  PowerSystemMcuSpi6,    // LCD
+  PowerSystemMcuAdc1,    // Voltage monitoring & ambient light sensing
+  PowerSystemMcuAdc2,    // Voltage monitoring & ambient light sensing
   PowerSystemFlashRead,
   PowerSystemFlashWrite,
   PowerSystemFlashErase,
@@ -67,8 +67,8 @@ typedef enum {
   PowerSystemBtShutdown,
   PowerSystemBtDeepSleep,
   PowerSystemBtActive,
-  PowerSystemAmbient,       
-  PowerSystemProfiling,     // So that we can diminish the effects that dumping the profile logs has
+  PowerSystemAmbient,
+  PowerSystemProfiling,  // So that we can diminish the effects that dumping the profile logs has
 
   num_power_systems,
 } PowerSystem;
@@ -78,20 +78,21 @@ void power_tracking_start(PowerSystem system);
 void power_tracking_stop(PowerSystem system);
 
 #if defined(SW_POWER_TRACKING)
-  #define PWR_TRACK(system, state_fmt, args...) \
-      { \
-        power_tracking_start(PowerSystemProfiling); \
-        char buffer[64]; \
-        dbgserial_putstr_fmt(buffer, sizeof(buffer), ">>>PWR:%"PRIu64",%s,"state_fmt"<", rtc_get_ticks(), system, ## args); \
-        power_tracking_stop(PowerSystemProfiling); \
-      }
+#define PWR_TRACK(system, state_fmt, args...)                                            \
+  {                                                                                      \
+    power_tracking_start(PowerSystemProfiling);                                          \
+    char buffer[64];                                                                     \
+    dbgserial_putstr_fmt(buffer, sizeof(buffer), ">>>PWR:%" PRIu64 ",%s," state_fmt "<", \
+                         rtc_get_ticks(), system, ##args);                               \
+    power_tracking_stop(PowerSystemProfiling);                                           \
+  }
 #else
-  #define PWR_TRACK(system, state_fmt, args...)
+#define PWR_TRACK(system, state_fmt, args...)
 #endif
 
-
-#define PWR_TRACK_BATT(chg_state, voltage)        PWR_TRACK("Battery", "%s,%u", chg_state, voltage)
-#define PWR_TRACK_ACCEL(state, frequency)         PWR_TRACK("Accel", "%s,%u", state, frequency)
-#define PWR_TRACK_MAG(state, adc_rate)            PWR_TRACK("Mag", "%s,%u", state, adc_rate)
-#define PWR_TRACK_VIBE(state, freq, duty)         PWR_TRACK("Vibe", "%s,%u,%u", state, freq, duty)
-#define PWR_TRACK_BACKLIGHT(state, freq, duty)    PWR_TRACK("Backlight", "%s,%"PRIu32",%u", state, freq, duty)
+#define PWR_TRACK_BATT(chg_state, voltage) PWR_TRACK("Battery", "%s,%u", chg_state, voltage)
+#define PWR_TRACK_ACCEL(state, frequency) PWR_TRACK("Accel", "%s,%u", state, frequency)
+#define PWR_TRACK_MAG(state, adc_rate) PWR_TRACK("Mag", "%s,%u", state, adc_rate)
+#define PWR_TRACK_VIBE(state, freq, duty) PWR_TRACK("Vibe", "%s,%u,%u", state, freq, duty)
+#define PWR_TRACK_BACKLIGHT(state, freq, duty) \
+  PWR_TRACK("Backlight", "%s,%" PRIu32 ",%u", state, freq, duty)

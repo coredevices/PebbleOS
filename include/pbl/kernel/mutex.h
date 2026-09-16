@@ -13,7 +13,7 @@ struct pbl_mutex {
   struct pbl_mutex_backend backend;
 };
 
-#define PBL_MUTEX_INITIALIZER { .owner = NULL, .count = 0, .lock_lr = 0 }
+#define PBL_MUTEX_INITIALIZER {.owner = NULL, .count = 0, .lock_lr = 0}
 
 #define PBL_MUTEX_DEFINE(name) struct pbl_mutex name = PBL_MUTEX_INITIALIZER
 

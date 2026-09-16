@@ -21,9 +21,8 @@ GDrawCommandImage *gdraw_command_image_create_with_resource_system(ResAppNum app
     return NULL;
   }
 
-  GDrawCommandImage *draw_command_image = applib_resource_mmap_or_load(app_num, resource_id,
-                                                                       PDCI_DATA_OFFSET, data_size,
-                                                                       false);
+  GDrawCommandImage *draw_command_image =
+      applib_resource_mmap_or_load(app_num, resource_id, PDCI_DATA_OFFSET, data_size, false);
 
   // Validate the loaded command image
   if (!gdraw_command_image_validate(draw_command_image, data_size)) {
@@ -64,11 +63,9 @@ void gdraw_command_image_destroy(GDrawCommandImage *image) {
 }
 
 bool gdraw_command_image_validate(GDrawCommandImage *image, size_t size) {
-  if (!image ||
-      (size < sizeof(GDrawCommandImage)) ||
-      (image->version > GDRAW_COMMAND_VERSION) ||
-      !gdraw_command_list_validate(&image->command_list, size - (sizeof(GDrawCommandImage) -
-          sizeof(GDrawCommandList)))) {
+  if (!image || (size < sizeof(GDrawCommandImage)) || (image->version > GDRAW_COMMAND_VERSION) ||
+      !gdraw_command_list_validate(&image->command_list,
+                                   size - (sizeof(GDrawCommandImage) - sizeof(GDrawCommandList)))) {
     return false;
   }
   uint8_t *end = (uint8_t *)image + size;
@@ -100,8 +97,8 @@ size_t gdraw_command_image_get_data_size(GDrawCommandImage *image) {
     return 0;
   }
 
-  return sizeof(GDrawCommandImage) - sizeof(GDrawCommandList)
-      + gdraw_command_list_get_data_size(&image->command_list);
+  return sizeof(GDrawCommandImage) - sizeof(GDrawCommandList) +
+         gdraw_command_list_get_data_size(&image->command_list);
 }
 
 GSize gdraw_command_image_get_bounds_size(GDrawCommandImage *image) {

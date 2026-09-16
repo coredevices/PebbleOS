@@ -11,7 +11,7 @@
 
 static PBL_MUTEX_DEFINE(s_log_state_mutex);
 static bool s_log_state_mutex_ready;
-static bool s_log_state_task_entered[NumPebbleTask];   // which tasks have entered
+static bool s_log_state_task_entered[NumPebbleTask];  // which tasks have entered
 
 // ---------------------------------------------------------------------------------------------
 CompassServiceConfig **kernel_applib_get_compass_config(void) {
@@ -20,7 +20,7 @@ CompassServiceConfig **kernel_applib_get_compass_config(void) {
 }
 
 // --------------------------------------------------------------------------------------------
-AnimationState* kernel_applib_get_animation_state(void) {
+AnimationState *kernel_applib_get_animation_state(void) {
   static AnimationState s_kernel_animation_state;
   return &s_kernel_animation_state;
 }
@@ -46,7 +46,7 @@ LogState *kernel_applib_get_log_state(void) {
   // trying to grab the s_log_state_mutex mutex below and tried to log an error.
   PebbleTask task = prv_get_current_task();
   if (s_log_state_task_entered[task]) {
-      return NULL;
+    return NULL;
   }
   s_log_state_task_entered[task] = true;
 
@@ -59,8 +59,8 @@ LogState *kernel_applib_get_log_state(void) {
   //  possibly multiple tasks using logging without mutex support
   // In phase 3, we log after locking the mutex only.
   // Note, if we are in an ISR or critical section in any of these phases, we cannot use a mutex
-  if ((pebble_task_get_thread(PebbleTask_KernelMain) == NULL) || mcu_state_is_isr()
-        || pbl_irq_is_locked() || (!pbl_kernel_is_running())) {
+  if ((pebble_task_get_thread(PebbleTask_KernelMain) == NULL) || mcu_state_is_isr() ||
+      pbl_irq_is_locked() || (!pbl_kernel_is_running())) {
     // phase 1 || in an ISR || in a critical section
     use_mutex = false;
   } else if (!s_log_state_mutex_ready) {
@@ -106,8 +106,7 @@ void kernel_applib_release_log_state(LogState *state) {
   state->in_progress = false;
 
   // For phase 1 & when in an ISR, there is no mutex available
-  if (!pbl_irq_is_locked() && !mcu_state_is_isr()  &&
-      (pbl_kernel_is_running()) &&
+  if (!pbl_irq_is_locked() && !mcu_state_is_isr() && (pbl_kernel_is_running()) &&
       s_log_state_mutex_ready) {
     pbl_mutex_unlock(&s_log_state_mutex);
   }
@@ -118,37 +117,37 @@ void kernel_applib_release_log_state(LogState *state) {
 }
 
 // ---------------------------------------------------------------------------------------------
-EventServiceInfo* kernel_applib_get_event_service_state(void) {
+EventServiceInfo *kernel_applib_get_event_service_state(void) {
   static EventServiceInfo s_event_service_state;
   return &s_event_service_state;
 }
 
 // --------------------------------------------------------------------------------------------
-TickTimerServiceState* kernel_applib_get_tick_timer_service_state(void) {
+TickTimerServiceState *kernel_applib_get_tick_timer_service_state(void) {
   static TickTimerServiceState s_tick_timer_service_state;
   return &s_tick_timer_service_state;
 }
 
 // --------------------------------------------------------------------------------------------
-TouchServiceState* kernel_applib_get_touch_service_state(void) {
+TouchServiceState *kernel_applib_get_touch_service_state(void) {
   static TouchServiceState s_touch_service_state;
   return &s_touch_service_state;
 }
 
 // -----------------------------------------------------------------------------------------------------------
-ConnectionServiceState* kernel_applib_get_connection_service_state(void) {
+ConnectionServiceState *kernel_applib_get_connection_service_state(void) {
   static ConnectionServiceState s_connection_service_state;
   return &s_connection_service_state;
 }
 
 // -----------------------------------------------------------------------------------------------------------
-BatteryStateServiceState* kernel_applib_get_battery_state_service_state(void) {
+BatteryStateServiceState *kernel_applib_get_battery_state_service_state(void) {
   static BatteryStateServiceState s_battery_state_service_state;
   return &s_battery_state_service_state;
 }
 
-Layer** kernel_applib_get_layer_tree_stack(void) {
-  static Layer* layer_tree_stack[LAYER_TREE_STACK_SIZE];
+Layer **kernel_applib_get_layer_tree_stack(void) {
+  static Layer *layer_tree_stack[LAYER_TREE_STACK_SIZE];
   return layer_tree_stack;
 }
 
@@ -158,4 +157,3 @@ void kernel_applib_init(void) {
   connection_service_state_init(kernel_applib_get_connection_service_state());
   battery_state_service_state_init(kernel_applib_get_battery_state_service_state());
 }
-

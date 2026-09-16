@@ -10,33 +10,39 @@
 // but when gpath filled is fixed to correctly match its coordinates, these MUST be updated.
 
 CalendarStartIcon g_calendar_start_icon = {
-  .image = {
-    .version = 1,
-    .size = { 9, 9 },
-    .command_list = {
-      .num_commands = 1,
-    },
-  },
-  .command = {
-    .type = GDrawCommandTypePath,
-    .fill_color = { .argb = GColorBlackARGB8 },
-    .num_points = STATIC_ARRAY_LENGTH(GPoint, START_ICON_POINTS),
-  },
-  .points = START_ICON_POINTS,
+    .image =
+        {
+            .version = 1,
+            .size = {9, 9},
+            .command_list =
+                {
+                    .num_commands = 1,
+                },
+        },
+    .command =
+        {
+            .type = GDrawCommandTypePath,
+            .fill_color = {.argb = GColorBlackARGB8},
+            .num_points = STATIC_ARRAY_LENGTH(GPoint, START_ICON_POINTS),
+        },
+    .points = START_ICON_POINTS,
 };
 
 CalendarEndIcon g_calendar_end_icon = {
-  .image = {
-    .version = 1,
-    .size = { 9, 9 },
-    .command_list = {
-      .num_commands = 1,
-    },
-  },
-  .command = {
-    .type = GDrawCommandTypePath,
-    .fill_color = { .argb = GColorBlackARGB8 },
-    .num_points = STATIC_ARRAY_LENGTH(GPoint, END_ICON_POINTS),
-  },
-  .points = END_ICON_POINTS,
+    .image =
+        {
+            .version = 1,
+            .size = {9, 9},
+            .command_list =
+                {
+                    .num_commands = 1,
+                },
+        },
+    .command =
+        {
+            .type = GDrawCommandTypePath,
+            .fill_color = {.argb = GColorBlackARGB8},
+            .num_points = STATIC_ARRAY_LENGTH(GPoint, END_ICON_POINTS),
+        },
+    .points = END_ICON_POINTS,
 };

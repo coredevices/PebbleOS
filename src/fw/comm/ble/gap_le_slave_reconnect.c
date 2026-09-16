@@ -26,9 +26,9 @@ static bool s_is_basic_reconnection_enabled;
 static bool s_is_hrm_reconnection_enabled;
 
 typedef enum {
-  ReconnectType_None,  // Not advertising for reconnection
-  ReconnectType_Plain, // Advertising for reconnection with empty payload
-  ReconnectType_BleHrm // Advertising for reconnection with HRM payload
+  ReconnectType_None,   // Not advertising for reconnection
+  ReconnectType_Plain,  // Advertising for reconnection with empty payload
+  ReconnectType_BleHrm  // Advertising for reconnection with HRM payload
 } ReconnectType;
 
 //! When the master reconnects and drops repeatedly (e.g. supervision timeouts
@@ -55,8 +55,7 @@ static bool prv_should_skip_short_interval(void) {
 
 // -----------------------------------------------------------------------------
 //! Static, internal helper functions
-static void prv_advert_job_unscheduled_callback(GAPLEAdvertisingJobRef job,
-                                                bool completed,
+static void prv_advert_job_unscheduled_callback(GAPLEAdvertisingJobRef job, bool completed,
                                                 void *data) {
   // bt_lock() is still held for us by gap_le_advert
   s_reconnect_advert_job = NULL;
@@ -106,8 +105,8 @@ static void prv_evaluate(ReconnectType prev_type) {
       // fitness apps to be able to reconnect to Pebble as BLE HRM.
       ad = ble_ad_create();
       // BLE-only watch: advertise "BR/EDR Not Supported" so dual-mode hosts use LE.
-      ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK |
-                           GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
+      ble_ad_set_flags(
+          ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK | GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
       Uuid service_uuid = bt_uuid_expand_16bit(0x180D);
       ble_ad_set_service_uuids(ad, &service_uuid, 1);
     } else {
@@ -128,8 +127,8 @@ static void prv_evaluate(ReconnectType prev_type) {
       // still leave out the flags.
 
       static BLEAdData payload = {
-        .ad_data_length = 0,
-        .scan_resp_data_length = 0,
+          .ad_data_length = 0,
+          .scan_resp_data_length = 0,
       };
       ad = &payload;
     }
@@ -155,9 +154,9 @@ static void prv_evaluate(ReconnectType prev_type) {
       num_terms = 1;
     }
 
-    s_reconnect_advert_job = gap_le_advert_schedule(
-        ad, terms, num_terms,
-        prv_advert_job_unscheduled_callback, NULL, GAPLEAdvertisingJobTagReconnection);
+    s_reconnect_advert_job =
+        gap_le_advert_schedule(ad, terms, num_terms, prv_advert_job_unscheduled_callback, NULL,
+                               GAPLEAdvertisingJobTagReconnection);
 
     if (use_hrm_payload) {
       ble_ad_destroy(ad);
@@ -185,7 +184,7 @@ void gap_le_slave_reconnect_stop(void) {
 // -----------------------------------------------------------------------------
 void gap_le_slave_reconnect_start(void) {
 #ifdef CONFIG_RECOVERY_FW
-  return; // Only use discoverable packet for PRF
+  return;  // Only use discoverable packet for PRF
 #endif
   bt_lock();
   {
@@ -233,8 +232,8 @@ void gap_le_slave_reconnect_hrm_restart(void) {
 
     // Always restart the timer:
     if (!regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
-      s_hrm_reconnect_timer = (RegularTimerInfo) {
-        .cb = prv_hrm_reconnect_timeout_timer_callback,
+      s_hrm_reconnect_timer = (RegularTimerInfo){
+          .cb = prv_hrm_reconnect_timeout_timer_callback,
       };
       regular_timer_add_multisecond_callback(&s_hrm_reconnect_timer, RECONNECT_HRM_TIMEOUT_SECS);
     }

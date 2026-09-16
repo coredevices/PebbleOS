@@ -29,11 +29,11 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 //! for some safety margin and easy future expansion, and thus use 80KB for the settings file size.
 #define SETTINGS_FILE_SIZE (KiBYTES(80))
 
-#define APP_GLANCE_DB_GLANCE_MAX_SIZE \
-    (sizeof(SerializedAppGlanceHeader) + \
-        (APP_GLANCE_DB_SLICE_MAX_SIZE * APP_GLANCE_DB_MAX_SLICES_PER_GLANCE))
+#define APP_GLANCE_DB_GLANCE_MAX_SIZE  \
+  (sizeof(SerializedAppGlanceHeader) + \
+   (APP_GLANCE_DB_SLICE_MAX_SIZE * APP_GLANCE_DB_MAX_SLICES_PER_GLANCE))
 #define APP_GLANCE_DB_MAX_USED_SIZE \
-    (APP_GLANCE_DB_GLANCE_MAX_SIZE * APP_GLANCE_DB_MAX_NUM_APP_GLANCES)
+  (APP_GLANCE_DB_GLANCE_MAX_SIZE * APP_GLANCE_DB_MAX_NUM_APP_GLANCES)
 
 _Static_assert(APP_GLANCE_DB_MAX_USED_SIZE <= SETTINGS_FILE_SIZE, "AppGlanceDB is too small!");
 
@@ -79,9 +79,8 @@ static bool prv_is_icon_and_subtitle_slice_attribute_list_valid(const AttributeL
 
 static void prv_init_icon_and_subtitle_slice_from_attr_list(const AttributeList *attr_list,
                                                             AppGlanceSliceInternal *slice_out) {
-  slice_out->icon_and_subtitle.icon_resource_id = attribute_get_uint32(attr_list,
-                                                                       AttributeIdIcon,
-                                                                       INVALID_RESOURCE);
+  slice_out->icon_and_subtitle.icon_resource_id =
+      attribute_get_uint32(attr_list, AttributeIdIcon, INVALID_RESOURCE);
   strncpy(slice_out->icon_and_subtitle.template_string,
           attribute_get_string(attr_list, AttributeIdSubtitleTemplateString, NULL),
           ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN + 1);
@@ -101,11 +100,11 @@ static void prv_init_attribute_list_from_icon_and_subtitle_slice(
 
 //! Add new entries to this array as we introduce new slice types
 static const SliceTypeImplementation s_slice_type_impls[AppGlanceSliceTypeCount] = {
-  [AppGlanceSliceType_IconAndSubtitle] = {
-    .is_attr_list_valid = prv_is_icon_and_subtitle_slice_attribute_list_valid,
-    .init_slice_from_attr_list = prv_init_icon_and_subtitle_slice_from_attr_list,
-    .init_attr_list_from_slice = prv_init_attribute_list_from_icon_and_subtitle_slice,
-  },
+    [AppGlanceSliceType_IconAndSubtitle] = {
+        .is_attr_list_valid = prv_is_icon_and_subtitle_slice_attribute_list_valid,
+        .init_slice_from_attr_list = prv_init_icon_and_subtitle_slice_from_attr_list,
+        .init_attr_list_from_slice = prv_init_attribute_list_from_icon_and_subtitle_slice,
+    },
 };
 
 //////////////////////////////////
@@ -196,23 +195,23 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
   // If there aren't any attributes, set `attr_list_out` to be an empty AttributeList and return
   // true because technically we did successfully deserialize the AttributeList
   if (!num_attributes) {
-    *attr_list_out = (AttributeList) {};
+    *attr_list_out = (AttributeList){};
     *attr_list_data_buffer_out = NULL;
     return true;
   }
 
-  const uint8_t * const serialized_attr_list_start = serialized_slice->data;
-  const uint8_t * const serialized_attr_list_end =
+  const uint8_t *const serialized_attr_list_start = serialized_slice->data;
+  const uint8_t *const serialized_attr_list_end =
       serialized_attr_list_start + serialized_slice->total_size;
 
   // Get the buffer size needed for the attributes we're going to deserialize
   const uint8_t *buffer_size_cursor = serialized_attr_list_start;
-  const int32_t buffer_size =
-      attribute_get_buffer_size_for_serialized_attributes(num_attributes, &buffer_size_cursor,
-                                                          serialized_attr_list_end);
+  const int32_t buffer_size = attribute_get_buffer_size_for_serialized_attributes(
+      num_attributes, &buffer_size_cursor, serialized_attr_list_end);
   if (buffer_size < 0) {
-    PBL_LOG_WRN("Failed to measure the buffer size required for deserializing an AttributeList from a "
-            "serialized slice");
+    PBL_LOG_WRN(
+        "Failed to measure the buffer size required for deserializing an AttributeList from a "
+        "serialized slice");
     return false;
   }
 
@@ -220,8 +219,9 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
     // Allocate buffer for the data attached to the attributes
     *attr_list_data_buffer_out = kernel_zalloc(buffer_size);
     if (!*attr_list_data_buffer_out) {
-      PBL_LOG_ERR("Failed to alloc memory for the Attributes' data buffer while deserializing an "
-              "AttributeList from a serialized slice");
+      PBL_LOG_ERR(
+          "Failed to alloc memory for the Attributes' data buffer while deserializing an "
+          "AttributeList from a serialized slice");
       return false;
     }
   } else {
@@ -235,8 +235,9 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
   // client calling `attribute_list_destroy_list()` on `attr_list_out`
   Attribute *attribute_buffer = kernel_zalloc(num_attributes * sizeof(*attribute_buffer));
   if (!attribute_buffer) {
-    PBL_LOG_ERR("Failed to alloc memory for the buffer of Attribute's while deserializing an "
-            "AttributeList from a serialized slice");
+    PBL_LOG_ERR(
+        "Failed to alloc memory for the buffer of Attribute's while deserializing an "
+        "AttributeList from a serialized slice");
     // Free the `*attr_list_data_buffer_out` we might have allocated above
     kernel_free(*attr_list_data_buffer_out);
     return false;
@@ -244,19 +245,17 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
 
   // Setup the arguments for `attribute_deserialize_list()`
   char *attribute_data_buffer_pointer = *attr_list_data_buffer_out;
-  char * const attribute_data_buffer_end = attribute_data_buffer_pointer + buffer_size;
-  *attr_list_out = (AttributeList) {
-    .num_attributes = num_attributes,
-    .attributes = attribute_buffer,
+  char *const attribute_data_buffer_end = attribute_data_buffer_pointer + buffer_size;
+  *attr_list_out = (AttributeList){
+      .num_attributes = num_attributes,
+      .attributes = attribute_buffer,
   };
   const uint8_t *deserialization_cursor = serialized_attr_list_start;
 
   // Try to deserialize the AttributeList
-  const bool was_attr_list_deserialized = attribute_deserialize_list(&attribute_data_buffer_pointer,
-                                                                     attribute_data_buffer_end,
-                                                                     &deserialization_cursor,
-                                                                     serialized_attr_list_end,
-                                                                     *attr_list_out);
+  const bool was_attr_list_deserialized =
+      attribute_deserialize_list(&attribute_data_buffer_pointer, attribute_data_buffer_end,
+                                 &deserialization_cursor, serialized_attr_list_end, *attr_list_out);
   if (!was_attr_list_deserialized) {
     kernel_free(attribute_buffer);
     kernel_free(*attr_list_data_buffer_out);
@@ -293,10 +292,10 @@ static bool prv_deserialize_slice(SerializedAppGlanceSliceHeader *serialized_sli
   const unsigned int current_slice_index = glance_out->num_slices;
   AppGlanceSliceInternal *current_slice_out = &glance_out->slices[current_slice_index];
   // Note that we default the expiration time to "never expire" if one was not provided
-  *current_slice_out = (AppGlanceSliceInternal) {
-    .expiration_time = attribute_get_uint32(&attr_list, AttributeIdTimestamp,
-                                            APP_GLANCE_SLICE_NO_EXPIRATION),
-    .type = (AppGlanceSliceType)serialized_slice->type,
+  *current_slice_out = (AppGlanceSliceInternal){
+      .expiration_time =
+          attribute_get_uint32(&attr_list, AttributeIdTimestamp, APP_GLANCE_SLICE_NO_EXPIRATION),
+      .type = (AppGlanceSliceType)serialized_slice->type,
   };
   // Copy type-specific fields from the serialized slice to the output glance's slice
   s_slice_type_impls[serialized_slice->type].init_slice_from_attr_list(&attr_list,
@@ -319,14 +318,14 @@ static status_t prv_deserialize_glance(SerializedAppGlanceHeader *serialized_gla
   }
 
   // Zero out the output glance
-  *glance_out = (AppGlance) {};
+  *glance_out = (AppGlance){};
 
   // Iterate over the slices to deserialize them
-  SliceDeserializationIteratorContext context = (SliceDeserializationIteratorContext) {
-    .glance_out = glance_out,
+  SliceDeserializationIteratorContext context = (SliceDeserializationIteratorContext){
+      .glance_out = glance_out,
   };
-  if (!prv_slice_for_each(serialized_glance, serialized_glance_size,
-                          prv_deserialize_slice, &context) ||
+  if (!prv_slice_for_each(serialized_glance, serialized_glance_size, prv_deserialize_slice,
+                          &context) ||
       context.deserialization_failed) {
     return E_ERROR;
   }
@@ -377,7 +376,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
     // Check the slice's type, fail the entire serialization if it's invalid
     if (!prv_is_slice_type_valid(current_slice->type)) {
       PBL_LOG_WRN("Tried to serialize a glance containing a slice with invalid type: %d",
-              current_slice->type);
+                  current_slice->type);
       rv = E_INVALID_ARGUMENT;
       goto cleanup;
     }
@@ -404,9 +403,9 @@ static status_t prv_serialize_glance(const AppGlance *glance,
   }
 
   // Populate the header of the serialized glance
-  *serialized_glance = (SerializedAppGlanceHeader) {
-    .version = APP_GLANCE_DB_CURRENT_VERSION,
-    .creation_time = (uint32_t)rtc_get_time(),
+  *serialized_glance = (SerializedAppGlanceHeader){
+      .version = APP_GLANCE_DB_CURRENT_VERSION,
+      .creation_time = (uint32_t)rtc_get_time(),
   };
 
   uint8_t *glance_buffer_start = (uint8_t *)serialized_glance;
@@ -429,10 +428,10 @@ static status_t prv_serialize_glance(const AppGlance *glance,
     // Populate the serialized slice header
     SerializedAppGlanceSliceHeader *serialized_slice_header =
         (SerializedAppGlanceSliceHeader *)glance_buffer_cursor;
-    *serialized_slice_header = (SerializedAppGlanceSliceHeader) {
-      .type = current_slice->type,
-      .total_size = serialized_slice_total_size,
-      .num_attributes = attr_list->num_attributes,
+    *serialized_slice_header = (SerializedAppGlanceSliceHeader){
+        .type = current_slice->type,
+        .total_size = serialized_slice_total_size,
+        .num_attributes = attr_list->num_attributes,
     };
 
     // Serialize the slice's attribute list
@@ -467,8 +466,7 @@ cleanup:
 //////////////////////////////////
 
 static bool prv_is_serialized_slice_valid(const SerializedAppGlanceSliceHeader *serialized_slice) {
-  if (!serialized_slice ||
-      !prv_is_slice_type_valid(serialized_slice->type) ||
+  if (!serialized_slice || !prv_is_slice_type_valid(serialized_slice->type) ||
       !WITHIN(serialized_slice->total_size, APP_GLANCE_DB_SLICE_MIN_SIZE,
               APP_GLANCE_DB_SLICE_MAX_SIZE)) {
     return false;
@@ -483,8 +481,8 @@ static bool prv_is_serialized_slice_valid(const SerializedAppGlanceSliceHeader *
   }
 
   // Check if the AttributeList has the attributes required for the slice
-  const bool is_attr_list_valid = prv_is_slice_attribute_list_valid(serialized_slice->type,
-                                                                    &attr_list);
+  const bool is_attr_list_valid =
+      prv_is_slice_attribute_list_valid(serialized_slice->type, &attr_list);
   if (!is_attr_list_valid) {
     PBL_LOG_WRN("Serialized slice AttributeList is invalid");
   }
@@ -510,9 +508,9 @@ static bool prv_validate_slice(SerializedAppGlanceSliceHeader *serialized_slice,
   PBL_ASSERTN(validation_context);
 
   if (!prv_is_serialized_slice_valid(serialized_slice)) {
-    *validation_context = (SliceValidationIteratorContext) {
-      .is_at_least_one_slice_invalid = true,
-      .validated_size = 0,
+    *validation_context = (SliceValidationIteratorContext){
+        .is_at_least_one_slice_invalid = true,
+        .validated_size = 0,
     };
     return false;
   }
@@ -583,9 +581,9 @@ status_t app_glance_db_read_creation_time(const Uuid *uuid, time_t *time_out) {
   }
 
   SerializedAppGlanceHeader serialized_glance_header = {};
-  const status_t rv = app_glance_db_read((uint8_t *)uuid, UUID_SIZE,
-                                         (uint8_t *)&serialized_glance_header,
-                                         sizeof(serialized_glance_header));
+  const status_t rv =
+      app_glance_db_read((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&serialized_glance_header,
+                         sizeof(serialized_glance_header));
   if (rv == S_SUCCESS) {
     *time_out = serialized_glance_header.creation_time;
   }
@@ -604,9 +602,8 @@ status_t app_glance_db_delete_glance(const Uuid *uuid) {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
-  const status_t rv = settings_file_open_growable(&s_app_glance_db.settings_file,
-                                                  SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE,
-                                                  KiBYTES(4));
+  const status_t rv = settings_file_open_growable(
+      &s_app_glance_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_glance_db.mutex);
   }
@@ -645,13 +642,15 @@ status_t app_glance_db_compact(void) {
 }
 
 static status_t prv_validate_glance(const Uuid *app_uuid,
-                             const SerializedAppGlanceHeader *serialized_glance, size_t *len) {
+                                    const SerializedAppGlanceHeader *serialized_glance,
+                                    size_t *len) {
   // Change this block if we support multiple app glance versions in the future
   // For now report an error if the glance's version isn't the current database version
   if (serialized_glance->version != APP_GLANCE_DB_CURRENT_VERSION) {
-    PBL_LOG_WRN("Tried to insert AppGlanceDB entry with invalid version!"
-            " Entry version: %"PRIu8", AppGlanceDB version: %u",
-            serialized_glance->version, APP_GLANCE_DB_CURRENT_VERSION);
+    PBL_LOG_WRN(
+        "Tried to insert AppGlanceDB entry with invalid version!"
+        " Entry version: %" PRIu8 ", AppGlanceDB version: %u",
+        serialized_glance->version, APP_GLANCE_DB_CURRENT_VERSION);
     return E_INVALID_ARGUMENT;
   }
 
@@ -660,23 +659,25 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
   status_t rv = app_glance_db_read((uint8_t *)app_uuid, UUID_SIZE, (uint8_t *)&existing_glance,
                                    sizeof(existing_glance));
   if ((rv == S_SUCCESS) && (serialized_glance->creation_time <= existing_glance.creation_time)) {
-    PBL_LOG_WRN("Tried to insert AppGlanceDB entry with older creation_time (%"PRIu32")"
-            " than existing entry (%"PRIu32")", serialized_glance->creation_time,
-            existing_glance.creation_time);
+    PBL_LOG_WRN("Tried to insert AppGlanceDB entry with older creation_time (%" PRIu32
+                ")"
+                " than existing entry (%" PRIu32 ")",
+                serialized_glance->creation_time, existing_glance.creation_time);
     return E_INVALID_ARGUMENT;
   }
 
   // Validate the slices (which also records a `validated_size` we'll use to trim excess slices)
   SliceValidationIteratorContext validation_context = {
-    // Start by taking into account the header of the serialized glance
-    .validated_size = sizeof(SerializedAppGlanceHeader),
+      // Start by taking into account the header of the serialized glance
+      .validated_size = sizeof(SerializedAppGlanceHeader),
   };
   // Iteration will fail if the slices report `total_size` values that
   const bool iteration_succeeded =
-      prv_slice_for_each((SerializedAppGlanceHeader *)serialized_glance, *len,
-                         prv_validate_slice, &validation_context);
+      prv_slice_for_each((SerializedAppGlanceHeader *)serialized_glance, *len, prv_validate_slice,
+                         &validation_context);
   if (!iteration_succeeded) {
-    PBL_LOG_WRN("Tried to insert AppGlanceDB entry but failed to iterate over the serialized slices");
+    PBL_LOG_WRN(
+        "Tried to insert AppGlanceDB entry but failed to iterate over the serialized slices");
     return E_INVALID_ARGUMENT;
   } else if (validation_context.is_at_least_one_slice_invalid) {
     PBL_LOG_WRN("Tried to insert AppGlanceDB entry with at least one invalid slice");
@@ -720,15 +721,15 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
     } else {
       // The app isn't cached. Fetch it!
       PebbleEvent e = {
-        .type = PEBBLE_APP_FETCH_REQUEST_EVENT,
-        .app_fetch_request = {
-          .id = app_id,
-          .with_ui = false,
-          .fetch_args = NULL,
-        },
+          .type = PEBBLE_APP_FETCH_REQUEST_EVENT,
+          .app_fetch_request = {
+              .id = app_id,
+              .with_ui = false,
+              .fetch_args = NULL,
+          },
       };
       event_put(&e);
-     }
+    }
   } else if (!app_install_id_from_system(app_id)) {
     // App is not installed (not in app db and not a system app). Do not insert the glance
 
@@ -736,7 +737,7 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
     char *app_uuid_string = kernel_malloc_check(UUID_STRING_BUFFER_LENGTH);
     uuid_to_string(app_uuid, app_uuid_string);
     PBL_LOG_WRN("Attempted app glance insert for an app that's not installed. UUID: %s",
-            app_uuid_string);
+                app_uuid_string);
     kernel_free(app_uuid_string);
     return E_DOES_NOT_EXIST;
   }
@@ -815,7 +816,6 @@ status_t app_glance_db_delete(const uint8_t *key, int key_len) {
   } else {
     rv = S_SUCCESS;
   }
-
 
   prv_close_file_and_unlock_mutex();
 

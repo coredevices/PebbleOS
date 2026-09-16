@@ -124,9 +124,9 @@ static Animation *prv_create_prev_rel_bar_animation(TimelineLayer *layer, uint32
   int16_t prev_from_rel_bar_value = 0;
   int16_t prev_to_rel_bar_value = 0;
   static const PropertyAnimationImplementation prev_implementation = {
-    .base.update = (AnimationUpdateImplementation) property_animation_update_int16,
-    .accessors.setter.int16 = prv_prev_rel_bar_setter,
-    .accessors.getter.int16 = prv_prev_rel_bar_getter,
+      .base.update = (AnimationUpdateImplementation)property_animation_update_int16,
+      .accessors.setter.int16 = prv_prev_rel_bar_setter,
+      .accessors.getter.int16 = prv_prev_rel_bar_getter,
   };
 
   if (layer->relbar_layer.prev_rel_bar.rel_bar_type == RelationshipBarTypeOverlap) {
@@ -165,9 +165,9 @@ static Animation *prv_create_curr_rel_bar_animation(TimelineLayer *layer, uint32
   int16_t curr_to_rel_bar_value = 0;
 
   static const PropertyAnimationImplementation curr_implementation = {
-    .base.update = (AnimationUpdateImplementation) property_animation_update_int16,
-    .accessors.setter.int16 = prv_curr_rel_bar_setter,
-    .accessors.getter.int16 = prv_curr_rel_bar_getter,
+      .base.update = (AnimationUpdateImplementation)property_animation_update_int16,
+      .accessors.setter.int16 = prv_curr_rel_bar_setter,
+      .accessors.getter.int16 = prv_curr_rel_bar_getter,
   };
 
   if (layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeOverlap) {
@@ -185,8 +185,8 @@ static Animation *prv_create_curr_rel_bar_animation(TimelineLayer *layer, uint32
 
   if (curr_rel_bar_anim) {
     // Delay to avoid overlapping moving icon with bars
-    animation_set_delay(curr_rel_bar_anim,  REL_BAR_CURR_ANIM_DELAY(duration));
-    animation_set_duration(curr_rel_bar_anim,  REL_BAR_CURR_ANIM_DURATION(duration));
+    animation_set_delay(curr_rel_bar_anim, REL_BAR_CURR_ANIM_DELAY(duration));
+    animation_set_duration(curr_rel_bar_anim, REL_BAR_CURR_ANIM_DURATION(duration));
     animation_set_custom_interpolation(curr_rel_bar_anim, interpolate);
   }
 
@@ -197,18 +197,18 @@ static Animation *prv_create_curr_rel_bar_animation(TimelineLayer *layer, uint32
 #define REL_BAR_LINE_WIDTH 2
 #define REL_BAR_LINE_HORIZ_OFFSET ((SIDEBAR_WIDTH / 2) + (REL_BAR_LINE_WIDTH / 2))
 #define REL_BAR_LINE_NOTCH_HORIZ_OFFSET ((REL_BAR_LINE_CHECK_LENGTH / 2) + (REL_BAR_LINE_WIDTH / 2))
-static void prv_draw_rel_bar_line(TimelineLayer *timeline_layer, GContext* ctx,
-                                  bool current, int16_t anim_offset) {
-  int16_t prev_offset = 0; // Used to animate the previous animation offset
+static void prv_draw_rel_bar_line(TimelineLayer *timeline_layer, GContext *ctx, bool current,
+                                  int16_t anim_offset) {
+  int16_t prev_offset = 0;  // Used to animate the previous animation offset
   if (!current) {
     prev_offset = REL_BAR_PREV_ANIM_OFFSET - anim_offset;
     prev_offset = (timeline_layer->move_delta > 0) ? prev_offset : -prev_offset;
   }
 
-  int16_t curr_offset = anim_offset; // Used to animate the previous animation offset
+  int16_t curr_offset = anim_offset;  // Used to animate the previous animation offset
   if ((current && (curr_offset <= 0)) ||
-      ((!current) && ((prev_offset >= REL_BAR_PREV_ANIM_OFFSET) ||
-                      (prev_offset <= -REL_BAR_PREV_ANIM_OFFSET)))) {
+      ((!current) &&
+       ((prev_offset >= REL_BAR_PREV_ANIM_OFFSET) || (prev_offset <= -REL_BAR_PREV_ANIM_OFFSET)))) {
     return;
   }
 
@@ -222,8 +222,10 @@ static void prv_draw_rel_bar_line(TimelineLayer *timeline_layer, GContext* ctx,
 
   GRect first_icon_frame;
   GRect second_icon_frame;
-  const int line_length = (prv_get_line_length(timeline_layer, &first_icon_frame,
-                                               &second_icon_frame) - REL_BAR_LINE_WIDTH) / 2;
+  const int line_length =
+      (prv_get_line_length(timeline_layer, &first_icon_frame, &second_icon_frame) -
+       REL_BAR_LINE_WIDTH) /
+      2;
 
   // Draw two lines that are centered in the side bar
   // Bar 1
@@ -266,21 +268,20 @@ static void prv_draw_rel_bar_line(TimelineLayer *timeline_layer, GContext* ctx,
 }
 
 #define REL_BAR_DOT_SIZE 2
-static void prv_draw_rel_bar_dotted(TimelineLayer *timeline_layer, GContext* ctx,
-                                    bool current, int16_t rel_bar_value) {
-  int16_t prev_offset = 0; // Used to animate the previous animation offset
+static void prv_draw_rel_bar_dotted(TimelineLayer *timeline_layer, GContext *ctx, bool current,
+                                    int16_t rel_bar_value) {
+  int16_t prev_offset = 0;  // Used to animate the previous animation offset
   if (!current) {
     prev_offset = REL_BAR_PREV_ANIM_OFFSET - rel_bar_value;
     prev_offset = (timeline_layer->move_delta > 0) ? prev_offset : -prev_offset;
   }
 
-  int16_t curr_offset = rel_bar_value; // Used to animate the current animation offset
+  int16_t curr_offset = rel_bar_value;  // Used to animate the current animation offset
   if ((current && (curr_offset <= 0)) ||
-      ((!current) && ((prev_offset >= REL_BAR_PREV_ANIM_OFFSET) ||
-                      (prev_offset <= -REL_BAR_PREV_ANIM_OFFSET)))) {
+      ((!current) &&
+       ((prev_offset >= REL_BAR_PREV_ANIM_OFFSET) || (prev_offset <= -REL_BAR_PREV_ANIM_OFFSET)))) {
     return;
   }
-
 
   // Choose which offset to use based on current or previous animation
   if (!current) {
@@ -305,8 +306,8 @@ static void prv_draw_rel_bar_dotted(TimelineLayer *timeline_layer, GContext* ctx
   GRect line;
   line.origin.x = layer_bounds.origin.x + layer_bounds.size.w - REL_BAR_LINE_HORIZ_OFFSET;
   // Account for the size of the icon when positioning vertically
-  line.origin.y = grect_get_max_y(&first_icon_frame) +
-                  REL_BAR_VERT_MARGIN - curr_offset - prev_offset;
+  line.origin.y =
+      grect_get_max_y(&first_icon_frame) + REL_BAR_VERT_MARGIN - curr_offset - prev_offset;
   line.size.w = REL_BAR_LINE_WIDTH;
   line.size.h = solid_line_length + curr_offset;
   graphics_fill_rect(ctx, &line);
@@ -320,8 +321,7 @@ static void prv_draw_rel_bar_dotted(TimelineLayer *timeline_layer, GContext* ctx
   notch.size.h = REL_BAR_LINE_WIDTH;
   graphics_fill_rect(ctx, &notch);
 
-  const int dot_origin_y_max =
-      grect_get_max_y(&line) + dot_line_length + curr_offset - prev_offset;
+  const int dot_origin_y_max = grect_get_max_y(&line) + dot_line_length + curr_offset - prev_offset;
   // Dots in between two bars
   GRect dot = GRect(line.origin.x, grect_get_max_y(&line) + REL_BAR_LINE_WIDTH + dot_padding,
                     REL_BAR_DOT_SIZE, REL_BAR_DOT_SIZE);
@@ -352,8 +352,8 @@ static void prv_draw_rel_bar_dotted(TimelineLayer *timeline_layer, GContext* ctx
 #define REL_BAR_OVERLAP_SIDE_MARGIN 2
 #define REL_BAR_OVERLAP_NUDGE_X 1
 #define REL_BAR_OVERLAP_LINE2_HORIZ_OFFSET ((2 * REL_BAR_OVERLAP_SIDE_MARGIN) + 1)
-static void prv_draw_rel_bar_overlap(TimelineLayer *timeline_layer, GContext* ctx,
-                                     bool current, int16_t rel_bar_value) {
+static void prv_draw_rel_bar_overlap(TimelineLayer *timeline_layer, GContext *ctx, bool current,
+                                     int16_t rel_bar_value) {
   GRect first_icon_frame;
   GRect second_icon_frame;
   const int full_line_length =
@@ -363,13 +363,14 @@ static void prv_draw_rel_bar_overlap(TimelineLayer *timeline_layer, GContext* ct
   int16_t y_offset = 0;
   if (!current) {
     line_length = full_line_length;
-    y_offset = (((full_line_length - rel_bar_value) * REL_BAR_PREV_ANIM_OFFSET) /
-               full_line_length) * timeline_layer->move_delta;
+    y_offset =
+        (((full_line_length - rel_bar_value) * REL_BAR_PREV_ANIM_OFFSET) / full_line_length) *
+        timeline_layer->move_delta;
   }
 
   if (((line_length <= 0) && current) ||
-      ((!current) && ((y_offset >= REL_BAR_PREV_ANIM_OFFSET) ||
-                      (y_offset <= -REL_BAR_PREV_ANIM_OFFSET)))) {
+      ((!current) &&
+       ((y_offset >= REL_BAR_PREV_ANIM_OFFSET) || (y_offset <= -REL_BAR_PREV_ANIM_OFFSET)))) {
     return;
   }
 
@@ -382,11 +383,11 @@ static void prv_draw_rel_bar_overlap(TimelineLayer *timeline_layer, GContext* ct
   // Draw down
   line1_start.x = layer_bounds.origin.x + layer_bounds.size.w - (SIDEBAR_WIDTH / 2) -
                   REL_BAR_OVERLAP_NUDGE_X - REL_BAR_OVERLAP_SIDE_MARGIN;
-  line1_start.y = grect_get_max_y(&first_icon_frame) + REL_BAR_VERT_MARGIN -
-                  y_offset + REL_BAR_LINE_WIDTH;
+  line1_start.y =
+      grect_get_max_y(&first_icon_frame) + REL_BAR_VERT_MARGIN - y_offset + REL_BAR_LINE_WIDTH;
 
-  graphics_fill_rect(ctx, &GRect(line1_start.x, line1_start.y,
-                                 REL_BAR_OVERLAP_STROKE_WIDTH, line_length));
+  graphics_fill_rect(
+      ctx, &GRect(line1_start.x, line1_start.y, REL_BAR_OVERLAP_STROKE_WIDTH, line_length));
   GRect notch = GRectZero;
   notch.origin.x = line1_start.x - REL_BAR_LINE_NOTCH_HORIZ_OFFSET + 1;
   notch.origin.y = line1_start.y - REL_BAR_LINE_WIDTH;
@@ -396,10 +397,9 @@ static void prv_draw_rel_bar_overlap(TimelineLayer *timeline_layer, GContext* ct
 
   // Draw up
   line2_start.x = line1_start.x + REL_BAR_OVERLAP_LINE2_HORIZ_OFFSET;
-  line2_start.y = second_icon_frame.origin.y - REL_BAR_VERT_MARGIN - y_offset -
-                  REL_BAR_LINE_WIDTH;
-  graphics_fill_rect(ctx, &GRect(line2_start.x, line2_start.y,
-                                 REL_BAR_OVERLAP_STROKE_WIDTH, -line_length));
+  line2_start.y = second_icon_frame.origin.y - REL_BAR_VERT_MARGIN - y_offset - REL_BAR_LINE_WIDTH;
+  graphics_fill_rect(
+      ctx, &GRect(line2_start.x, line2_start.y, REL_BAR_OVERLAP_STROKE_WIDTH, -line_length));
   notch.origin.x = line2_start.x - REL_BAR_LINE_NOTCH_HORIZ_OFFSET + 1;
   notch.origin.y = line2_start.y;
   notch.size.w = REL_BAR_LINE_CHECK_LENGTH + REL_BAR_LINE_WIDTH;
@@ -421,11 +421,10 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
   for (int index = 0; index < NUM_REL_BAR_ANIMATIONS; index++) {
     bool current = (index == CURRENT_REL_BAR_PIN_INDEX);
-    RelationshipBarType rel_bar = current ?
-                                  timeline_layer->relbar_layer.curr_rel_bar.rel_bar_type :
-                                  timeline_layer->relbar_layer.prev_rel_bar.rel_bar_type;
-    int16_t rel_bar_value = current ? timeline_layer->relbar_layer.curr_rel_bar.anim_offset :
-                                      timeline_layer->relbar_layer.prev_rel_bar.anim_offset;
+    RelationshipBarType rel_bar = current ? timeline_layer->relbar_layer.curr_rel_bar.rel_bar_type
+                                          : timeline_layer->relbar_layer.prev_rel_bar.rel_bar_type;
+    int16_t rel_bar_value = current ? timeline_layer->relbar_layer.curr_rel_bar.anim_offset
+                                    : timeline_layer->relbar_layer.prev_rel_bar.anim_offset;
     switch (rel_bar) {
       case RelationshipBarTypeFreeTime:
         // Draw dotted line
@@ -462,9 +461,8 @@ void prv_rel_bar_show(void *context) {
     layer->relbar_layer.curr_rel_bar.anim_offset = REL_BAR_BACK_TO_BACK_OFFSET;
   }
 
-  layer_mark_dirty((Layer*) layer);
+  layer_mark_dirty((Layer *)layer);
 }
-
 
 #define TIMELINE_NUM_REL_BARS (TIMELINE_NUM_VISIBLE_ITEMS + 1)
 static void prv_update_rel_bars(TimelineLayer *layer) {
@@ -475,21 +473,21 @@ static void prv_update_rel_bars(TimelineLayer *layer) {
 
   for (int index = 0; index < TIMELINE_NUM_REL_BARS; index++) {
     if (layer->layouts_info[index]) {
-      rel_bar_types[index] = prv_get_pin_relationship(layer->layouts_info[index],
-                                                      layer->layouts_info[index + 1]);
+      rel_bar_types[index] =
+          prv_get_pin_relationship(layer->layouts_info[index], layer->layouts_info[index + 1]);
     }
   }
   layer->relbar_layer.curr_rel_bar.rel_bar_type = rel_bar_types[1];
   if (layer->layouts_info[1]) {
-    PBL_LOG_DBG("Current rel bar %d, duration %"PRIu32, rel_bar_types[1],
-            layer->layouts_info[1]->duration_s);
+    PBL_LOG_DBG("Current rel bar %d, duration %" PRIu32, rel_bar_types[1],
+                layer->layouts_info[1]->duration_s);
   }
 }
 
 /////////////////////////////////////////
 // Public functions
 /////////////////////////////////////////
-#define REL_BAR_TIMER_DELAY(delay) (delay / 3) // delay of timer is based on the duration
+#define REL_BAR_TIMER_DELAY(delay) (delay / 3)  // delay of timer is based on the duration
 Animation *timeline_relbar_layer_create_animation(TimelineLayer *layer, uint32_t duration,
                                                   InterpolateInt64Function interpolate) {
   bool force_rel_bar_anim = false;
@@ -507,7 +505,7 @@ Animation *timeline_relbar_layer_create_animation(TimelineLayer *layer, uint32_t
       // Setup a timer to display bars after a fraction of the input duration (i.e. if the user
       // has stopped scrolling fast)
       layer->relbar_layer.rel_bar_timer =
-        evented_timer_register(REL_BAR_TIMER_DELAY(duration), false, prv_rel_bar_show, layer);
+          evented_timer_register(REL_BAR_TIMER_DELAY(duration), false, prv_rel_bar_show, layer);
 
       // Don't schedule animation
       return NULL;
@@ -559,9 +557,11 @@ Animation *timeline_relbar_layer_create_animation(TimelineLayer *layer, uint32_t
   }
 
   if (rel_bar_anim) {
-    animation_set_handlers(rel_bar_anim, (AnimationHandlers) {
-      .stopped = prv_rel_bar_stopped,
-    }, layer);
+    animation_set_handlers(rel_bar_anim,
+                           (AnimationHandlers){
+                               .stopped = prv_rel_bar_stopped,
+                           },
+                           layer);
   }
 
   return rel_bar_anim;
@@ -583,7 +583,7 @@ void timeline_relbar_layer_init(TimelineLayer *timeline_layer) {
   // init layer
   layer_init(&relbar_layer->layer, &timeline_layer->layer.frame);
   layer_set_update_proc(&relbar_layer->layer, prv_update_proc);
-  layer_add_child((Layer*)timeline_layer, (Layer *)&timeline_layer->relbar_layer);
+  layer_add_child((Layer *)timeline_layer, (Layer *)&timeline_layer->relbar_layer);
   relbar_layer->timeline_layer = timeline_layer;
 }
 

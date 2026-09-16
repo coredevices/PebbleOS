@@ -51,8 +51,7 @@ bool unobstructed_area_service_has_requested_area(UnobstructedAreaState *state);
 //! @param handlers The handlers that should be called when the unobstructed area changes.
 //! @param context A user-provided context that will be passed to the callback handlers.
 void unobstructed_area_service_subscribe(UnobstructedAreaState *state,
-                                         const UnobstructedAreaHandlers *handlers,
-                                         void *context);
+                                         const UnobstructedAreaHandlers *handlers, void *context);
 
 //! @internal
 //! @param state Unobstructed area state belonging to the consuming task

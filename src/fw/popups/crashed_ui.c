@@ -43,8 +43,8 @@ static void prv_worker_crash_button_up_handler(ClickRecognizerRef recognizer, vo
   WorkerCrashDialogData *data = context;
 
   // Push an event to launch the app for the worker that crashed
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-    .id = data->app_install_id,
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+      .id = data->app_install_id,
   });
 
   // Pop the worker crash dialog
@@ -90,17 +90,14 @@ static char *prv_create_worker_crash_reason_string(AppInstallId app_install_id) 
   const uint8_t CRASH_REASON_BUFFER_SIZE = 7 + 1 + MAX_APP_NAME_STRING_LENGTH + 32 + 1;
   char *crash_reason = kernel_zalloc_check(CRASH_REASON_BUFFER_SIZE);
   const char *crash_str = i18n_noop("%s%.*s is not responding.\n\nOpen app?");
-  sniprintf(crash_reason, CRASH_REASON_BUFFER_SIZE,
-            i18n_get(crash_str, crash_reason),
-            app_found ? " " : "",
-            MAX_APP_NAME_STRING_LENGTH,
-            app_found ? entry.name : "");
+  sniprintf(crash_reason, CRASH_REASON_BUFFER_SIZE, i18n_get(crash_str, crash_reason),
+            app_found ? " " : "", MAX_APP_NAME_STRING_LENGTH, app_found ? entry.name : "");
   i18n_free(crash_str, crash_reason);
   return crash_reason;
 }
 
 static void prv_push_worker_crash_dialog(void *context) {
-  const AppInstallId app_install_id = (AppInstallId) context;
+  const AppInstallId app_install_id = (AppInstallId)context;
 
   WorkerCrashDialogData *data = kernel_zalloc_check(sizeof(WorkerCrashDialogData));
   data->app_install_id = app_install_id;
@@ -131,12 +128,8 @@ static void prv_push_worker_crash_dialog(void *context) {
   Dialog *dialog = actionable_dialog_get_dialog(data->actionable_dialog);
   prv_configure_crash_dialog(dialog, crash_reason);
   kernel_free(crash_reason);
-  actionable_dialog_set_action_bar_type(data->actionable_dialog,
-                                        DialogActionBarCustom,
-                                        action_bar);
-  DialogCallbacks callbacks = (DialogCallbacks) {
-    .unload = prv_worker_crash_dialog_unload
-  };
+  actionable_dialog_set_action_bar_type(data->actionable_dialog, DialogActionBarCustom, action_bar);
+  DialogCallbacks callbacks = (DialogCallbacks){.unload = prv_worker_crash_dialog_unload};
   dialog_set_callbacks(dialog, &callbacks, data);
 
   // Push the worker crash actionable dialog
@@ -146,13 +139,14 @@ static void prv_push_worker_crash_dialog(void *context) {
 }
 
 void crashed_ui_show_worker_crash(const AppInstallId install_id) {
-  launcher_task_add_callback(prv_push_worker_crash_dialog, (void *) install_id);
+  launcher_task_add_callback(prv_push_worker_crash_dialog, (void *)install_id);
 }
 
 // ---------------------------------------------------------------------------
-#define CORE_DUMP_COMPLETE \
-  i18n_noop("A bug report has been captured. " \
-            "Please finish uploading the bug report using the Pebble phone app.")
+#define CORE_DUMP_COMPLETE               \
+  i18n_noop(                             \
+      "A bug report has been captured. " \
+      "Please finish uploading the bug report using the Pebble phone app.")
 
 //! Display a dialog for watch reset or bluetooth being stuck.
 static void prv_push_reset_dialog(void *context) {

@@ -38,7 +38,7 @@ extern char __WORKER_RAM_end__[];
 extern char __stack_guard_size__[];
 
 //! Used by the "pebble gdb" command to locate the loaded worker in memory.
-void * volatile g_worker_load_address;
+void *volatile g_worker_load_address;
 
 typedef struct NextWorker {
   const PebbleProcessMd *md;
@@ -58,8 +58,8 @@ void worker_manager_init(void) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// This is the wrapper function for the worker. It's not allowed to return as it's the top frame on the stack
-// created for the application.
+// This is the wrapper function for the worker. It's not allowed to return as it's the top frame on
+// the stack created for the application.
 static void prv_worker_task_main(void *entry_point) {
   // Init worker state variables
   worker_state_init();
@@ -90,7 +90,7 @@ static void prv_worker_task_main(void *entry_point) {
 //! have to be locked because they're the sole property of the process and no
 //! other tasks should be touching it. All this function does is verify that
 //! this condition is met before continuing without locking.
-static void prv_heap_lock(void* unused) {
+static void prv_heap_lock(void *unused) {
   PBL_ASSERT_TASK(PebbleTask_Worker);
 }
 
@@ -121,19 +121,19 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   // if we are trying to start another worker, then we want to enable relaunches on crashes.
   s_worker_crash_relaunches_disabled = false;
 
-  // If there is a different worker currently running, tell it to quit first. When it sees s_next_worker
-  // set, it will call us again once it finishes closing the current worker
-  if (s_worker_task_context.app_md != NULL &&  s_worker_task_context.app_md != app_md) {
-    s_next_worker = (NextWorker) {
-      .md = app_md,
-      .args = args,
+  // If there is a different worker currently running, tell it to quit first. When it sees
+  // s_next_worker set, it will call us again once it finishes closing the current worker
+  if (s_worker_task_context.app_md != NULL && s_worker_task_context.app_md != app_md) {
+    s_next_worker = (NextWorker){
+        .md = app_md,
+        .args = args,
     };
     worker_manager_close_current_worker(true /*graceful*/);
     return true;
   }
 
   // Clear the next worker settings
-  s_next_worker = (NextWorker) {};
+  s_next_worker = (NextWorker){};
 
   // Error if a worker already launched
   if (pebble_task_get_thread(PebbleTask_Worker) != NULL) {
@@ -149,16 +149,14 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   // The stack guard is counted as part of the app segment size...
   const size_t stack_guard_size = (uintptr_t)__stack_guard_size__;
   // ...and is carved out of the stack.
-  const size_t stack_size =
-      prv_get_worker_stack_size(app_md) - stack_guard_size;
+  const size_t stack_size = prv_get_worker_stack_size(app_md) - stack_guard_size;
 
-  MemorySegment worker_ram = { __WORKER_RAM__, __WORKER_RAM_end__ };
+  MemorySegment worker_ram = {__WORKER_RAM__, __WORKER_RAM_end__};
   memset((char *)worker_ram.start + stack_guard_size, 0,
          memory_segment_get_size(&worker_ram) - stack_guard_size);
 
   MemorySegment worker_segment;
-  PBL_ASSERTN(memory_segment_split(&worker_ram, &worker_segment,
-                                   worker_segment_size));
+  PBL_ASSERTN(memory_segment_split(&worker_ram, &worker_segment, worker_segment_size));
   PBL_ASSERTN(memory_segment_split(&worker_segment, NULL, stack_guard_size));
   // No (accessible) memory segments can be placed between the top of WORKER_RAM
   // and the end of stack. Stacks always grow towards lower memory addresses, so
@@ -170,12 +168,11 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   PBL_ASSERTN(stack);
   s_worker_task_context.load_start = worker_segment.start;
   g_worker_load_address = worker_segment.start;
-  void *entry_point = process_loader_load(app_md, PebbleTask_Worker,
-                                          &worker_segment);
+  void *entry_point = process_loader_load(app_md, PebbleTask_Worker, &worker_segment);
   s_worker_task_context.load_end = worker_segment.start;
   if (!entry_point) {
     PBL_LOG_WRN("Tried to launch an invalid worker in bank %u!",
-            process_metadata_get_code_bank_num(app_md));
+                process_metadata_get_code_bank_num(app_md));
     return false;
   }
 
@@ -188,29 +185,29 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   // heap. Worker state needs to be configured before initializing the
   // heap as the WorkerState struct holds the worker heap's Heap object.
   Heap *worker_heap = worker_state_get_heap();
-  PBL_LOG_DBG("Worker heap init %p %p",
-          worker_segment.start, worker_segment.end);
+  PBL_LOG_DBG("Worker heap init %p %p", worker_segment.start, worker_segment.end);
   heap_init(worker_heap, worker_segment.start, worker_segment.end,
             /* enable_heap_fuzzing */ false);
-  heap_set_lock_impl(worker_heap, (HeapLockImpl) {
-      .lock_function = prv_heap_lock,
-  });
+  heap_set_lock_impl(worker_heap, (HeapLockImpl){
+                                      .lock_function = prv_heap_lock,
+                                  });
   process_heap_set_exception_handlers(worker_heap, app_md);
 
   // Init services required for this process before it starts to execute
   process_manager_process_setup(PebbleTask_Worker);
 
   char task_name[PBL_THREAD_NAME_LEN];
-  snprintf(task_name, sizeof(task_name), "Worker <%s>", process_metadata_get_name(s_worker_task_context.app_md));
+  snprintf(task_name, sizeof(task_name), "Worker <%s>",
+           process_metadata_get_name(s_worker_task_context.app_md));
 
   struct pbl_thread_attr attr = {
-    .name = task_name,
-    .entry = prv_worker_task_main,
-    .arg = entry_point,
-    .prio = PBL_PRIO_IDLE + 1,
-    .privileged = true,
-    .stack = stack,
-    .stack_size = stack_size,
+      .name = task_name,
+      .entry = prv_worker_task_main,
+      .arg = entry_point,
+      .prio = PBL_PRIO_IDLE + 1,
+      .privileged = true,
+      .stack = stack,
+      .stack_size = stack_size,
   };
 
   PBL_LOG_DBG("Starting %s", task_name);
@@ -255,7 +252,6 @@ void worker_manager_handle_remove_current_worker(void) {
 }
 // ------------------------------------------------------------------------------------------------
 void worker_manager_close_current_worker(bool gracefully) {
-
   // This method can be called as a result of receiving a PEBBLE_PROCESS_KILL_EVENT notification
   // from an app, telling us that it just finished it's deinit.
 
@@ -319,7 +315,7 @@ void worker_manager_close_current_worker(bool gracefully) {
 }
 
 // ------------------------------------------------------------------------------------------------
-const PebbleProcessMd* worker_manager_get_current_worker_md(void) {
+const PebbleProcessMd *worker_manager_get_current_worker_md(void) {
   return s_worker_task_context.app_md;
 }
 
@@ -329,7 +325,7 @@ AppInstallId worker_manager_get_current_worker_id(void) {
 }
 
 // ------------------------------------------------------------------------------------------------
-ProcessContext* worker_manager_get_task_context(void) {
+ProcessContext *worker_manager_get_task_context(void) {
   return &s_worker_task_context;
 }
 
@@ -338,10 +334,10 @@ void worker_manager_put_launch_worker_event(AppInstallId id) {
   PBL_ASSERTN(id != INSTALL_ID_INVALID);
 
   PebbleEvent e = {
-    .type = PEBBLE_WORKER_LAUNCH_EVENT,
-    .launch_app = {
-      .id = id,
-    },
+      .type = PEBBLE_WORKER_LAUNCH_EVENT,
+      .launch_app = {
+          .id = id,
+      },
   };
 
   event_put(&e);
@@ -385,4 +381,3 @@ void command_worker_kill(void) {
 DEFINE_SYSCALL(AppInstallId, sys_worker_manager_get_current_worker_id, void) {
   return worker_manager_get_current_worker_id();
 }
-

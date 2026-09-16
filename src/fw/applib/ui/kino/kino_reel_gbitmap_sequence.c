@@ -39,9 +39,8 @@ static bool prv_elapsed_setter(KinoReel *reel, uint32_t elapsed_ms) {
     gbitmap_sequence_restart(sequence_reel->sequence);
   }
 
-  return gbitmap_sequence_update_bitmap_by_elapsed(sequence_reel->sequence,
-                                                   sequence_reel->render_bitmap,
-                                                   sequence_reel->elapsed_ms);
+  return gbitmap_sequence_update_bitmap_by_elapsed(
+      sequence_reel->sequence, sequence_reel->render_bitmap, sequence_reel->elapsed_ms);
 }
 
 static uint32_t prv_duration_getter(KinoReel *reel) {
@@ -77,28 +76,28 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
 static GBitmap *prv_get_gbitmap(KinoReel *reel) {
   if (reel) {
-    return ((KinoReelImplGBitmapSequence*)reel)->render_bitmap;
+    return ((KinoReelImplGBitmapSequence *)reel)->render_bitmap;
   }
   return NULL;
 }
 
 static GBitmapSequence *prv_get_gbitmap_sequence(KinoReel *reel) {
   if (reel) {
-    return ((KinoReelImplGBitmapSequence*)reel)->sequence;
+    return ((KinoReelImplGBitmapSequence *)reel)->sequence;
   }
   return NULL;
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_GBITMAPSEQUENCE = {
-  .reel_type = KinoReelTypeGBitmapSequence,
-  .destructor = prv_destructor,
-  .get_elapsed = prv_elapsed_getter,
-  .set_elapsed = prv_elapsed_setter,
-  .get_duration = prv_duration_getter,
-  .get_size = prv_size_getter,
-  .draw_processed = prv_draw_processed_func,
-  .get_gbitmap = prv_get_gbitmap,
-  .get_gbitmap_sequence = prv_get_gbitmap_sequence,
+    .reel_type = KinoReelTypeGBitmapSequence,
+    .destructor = prv_destructor,
+    .get_elapsed = prv_elapsed_getter,
+    .set_elapsed = prv_elapsed_setter,
+    .get_duration = prv_duration_getter,
+    .get_size = prv_size_getter,
+    .draw_processed = prv_draw_processed_func,
+    .get_gbitmap = prv_get_gbitmap,
+    .get_gbitmap_sequence = prv_get_gbitmap_sequence,
 };
 
 KinoReel *kino_reel_gbitmap_sequence_create(GBitmapSequence *sequence, bool take_ownership) {
@@ -109,8 +108,8 @@ KinoReel *kino_reel_gbitmap_sequence_create(GBitmapSequence *sequence, bool take
     reel->elapsed_ms = 0;
     reel->base.impl = &KINO_REEL_IMPL_GBITMAPSEQUENCE;
     // init render bitmap
-    reel->render_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(sequence),
-                                               GBitmapFormat8Bit);
+    reel->render_bitmap =
+        gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(sequence), GBitmapFormat8Bit);
     // Render initial frame upon load
     prv_elapsed_setter((KinoReel *)reel, 0);
   }

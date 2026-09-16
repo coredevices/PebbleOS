@@ -15,7 +15,7 @@ typedef enum TouchEventType {
 
 //! Touch event data, carried directly in PebbleTouchEvent
 typedef struct TouchEvent {
-  TouchEventType type:8;
+  TouchEventType type : 8;
   //! true when the touch must not drive navigation: the interaction session
   //! was inactive at Touchdown (unarmed contact on the idle watchface).
   //! Latched on Touchdown and carried across the whole gesture.

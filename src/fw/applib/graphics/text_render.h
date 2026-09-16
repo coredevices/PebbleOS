@@ -12,9 +12,9 @@
 typedef struct GContext GContext;
 
 typedef void (*SpecialCodepointHandlerCb)(GContext *ctx, Codepoint codepoint, GRect cursor,
-              void *context);
+                                          void *context);
 
-void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const font,
+void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const font,
                   const GRect cursor);
 
 // This function sets a handler callback for handling special codepoints encountered during text

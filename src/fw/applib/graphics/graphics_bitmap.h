@@ -20,8 +20,8 @@
 //! @see GContext
 //! @internal
 //! @see app_get_current_graphics_context
-void graphics_draw_bitmap_in_rect_processed(GContext *ctx, const GBitmap *bitmap,
-                                            const GRect *rect, GBitmapProcessor *processor);
+void graphics_draw_bitmap_in_rect_processed(GContext *ctx, const GBitmap *bitmap, const GRect *rect,
+                                            GBitmapProcessor *processor);
 
 //! Draws a bitmap into the graphics context, inside the specified rectangle
 //! @param ctx The destination graphics context in which to draw the bitmap
@@ -50,5 +50,5 @@ void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GR
 //! and TRIG_MAX_ANGLE (360 degree rotation). Use \ref DEG_TO_TRIGANGLE to easily convert degrees
 //! to the appropriate value.
 //! @param dest_ic Where to draw the instance center of the rotated bitmap in the context.
-void graphics_draw_rotated_bitmap(GContext* ctx, GBitmap *src, GPoint src_ic, int rotation,
+void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, int rotation,
                                   GPoint dest_ic);

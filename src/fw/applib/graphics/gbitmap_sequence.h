@@ -12,8 +12,8 @@
 
 typedef struct GBitmapSequencePNGDecoderData {
   upng_t *upng;
-  size_t read_cursor; // relative to file start, advanced to the control chunk of the next frame
-  GColor8 *palette;   // required for palettized images (rgba)
+  size_t read_cursor;  // relative to file start, advanced to the control chunk of the next frame
+  GColor8 *palette;    // required for palettized images (rgba)
   uint8_t palette_entries;
   apng_dispose_ops last_dispose_op;
   uint32_t previous_xoffset;
@@ -31,14 +31,14 @@ typedef struct {
       bool data_is_loaded_from_flash : 1;
     };
   };
-  GSize bitmap_size; // Width & Height
-  uint32_t play_count;  // Total number of times to play the sequence
-  uint32_t play_index;  // Current number of times sequence was played
-  uint32_t total_duration_ms; // Duration of the animation in ms
-  uint32_t total_frames;  // Total number of frames for the sequence
-  uint32_t current_frame;  // Current frame in the sequence
+  GSize bitmap_size;                // Width & Height
+  uint32_t play_count;              // Total number of times to play the sequence
+  uint32_t play_index;              // Current number of times sequence was played
+  uint32_t total_duration_ms;       // Duration of the animation in ms
+  uint32_t total_frames;            // Total number of frames for the sequence
+  uint32_t current_frame;           // Current frame in the sequence
   uint32_t current_frame_delay_ms;  // Amount of time to display the current frame
-  uint32_t elapsed_ms;  // Total elapsed time for the sequence
+  uint32_t elapsed_ms;              // Total elapsed time for the sequence
 
   // Stores internal decoder data
   union {
@@ -75,8 +75,8 @@ bool gbitmap_sequence_restart(GBitmapSequence *bitmap_sequence);
 //! (includes out of memory errors).
 //! @note GBitmap must be large enough to accommodate the bitmap_sequence image
 //! \ref gbitmap_sequence_get_bitmap_size
-bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
-    GBitmap *bitmap, uint32_t *delay_ms);
+bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence, GBitmap *bitmap,
+                                               uint32_t *delay_ms);
 
 //! Updates the contents of the bitmap sequence to the frame at elapsed in the sequence.
 //! For looping animations this accounts for the loop, for example an animation of 1 second that
@@ -92,8 +92,8 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
 //! @note GBitmap must be large enough to accommodate the bitmap_sequence image
 //! \ref gbitmap_sequence_get_bitmap_size
 //! @note This function is disabled for play_count 0
-bool gbitmap_sequence_update_bitmap_by_elapsed(GBitmapSequence *bitmap_sequence,
-    GBitmap *bitmap, uint32_t elapsed_ms);
+bool gbitmap_sequence_update_bitmap_by_elapsed(GBitmapSequence *bitmap_sequence, GBitmap *bitmap,
+                                               uint32_t elapsed_ms);
 
 //! This function gets the current frame number for the bitmap sequence
 //! @param bitmap_sequence Pointer to loaded bitmap sequence

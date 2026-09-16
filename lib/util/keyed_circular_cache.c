@@ -14,11 +14,11 @@ void keyed_circular_cache_init(KeyedCircularCache *c, KeyedCircularCacheKey *key
   UTIL_ASSERT(data_buffer);
   UTIL_ASSERT(item_size);
 
-  *c = (KeyedCircularCache) {
-    .cache_keys = key_buffer,
-    .cache_data = (uint8_t *)data_buffer,
-    .item_size = item_size,
-    .total_items = total_items,
+  *c = (KeyedCircularCache){
+      .cache_keys = key_buffer,
+      .cache_data = (uint8_t *)data_buffer,
+      .item_size = item_size,
+      .total_items = total_items,
   };
 }
 

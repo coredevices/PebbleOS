@@ -38,14 +38,14 @@ static uint32_t s_record_count;
 static void prv_write_record(uint32_t index, MfgTestId test, uint8_t mode_index, bool passed,
                              uint32_t value) {
   MfgResultRecord rec = {
-    .test_id = test,
-    .mode_index = mode_index,
-    .passed = passed,
-    .rsvd = 0,
-    .value = value,
+      .test_id = test,
+      .mode_index = mode_index,
+      .passed = passed,
+      .rsvd = 0,
+      .value = value,
   };
-  flash_write_bytes((const uint8_t *)&rec,
-                    FLASH_REGION_MFG_RESULTS_BEGIN + index * sizeof(rec), sizeof(rec));
+  flash_write_bytes((const uint8_t *)&rec, FLASH_REGION_MFG_RESULTS_BEGIN + index * sizeof(rec),
+                    sizeof(rec));
 }
 
 static void prv_load(void) {
@@ -58,10 +58,10 @@ static void prv_load(void) {
     }
     s_record_count = i + 1;
     if (rec.test_id < MfgTestIdCount && rec.mode_index < NUM_MODES) {
-      s_results[rec.mode_index][rec.test_id] = (MfgTestResult) {
-        .ran = true,
-        .passed = (rec.passed != 0),
-        .value = rec.value,
+      s_results[rec.mode_index][rec.test_id] = (MfgTestResult){
+          .ran = true,
+          .passed = (rec.passed != 0),
+          .value = rec.value,
       };
     }
   }
@@ -83,8 +83,7 @@ static void prv_append(MfgTestId test, uint8_t mode_index, bool passed, uint32_t
     for (uint8_t m = 0; m < NUM_MODES; m++) {
       for (uint8_t t = 0; t < MfgTestIdCount; t++) {
         if (s_results[m][t].ran) {
-          prv_write_record(s_record_count++, t, m, s_results[m][t].passed,
-                           s_results[m][t].value);
+          prv_write_record(s_record_count++, t, m, s_results[m][t].passed, s_results[m][t].value);
         }
       }
     }
@@ -109,10 +108,10 @@ void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value) {
   prv_append(test, s_mode_index, passed, value);
 #endif
 
-  s_results[s_mode_index][test] = (MfgTestResult) {
-    .ran = true,
-    .passed = passed,
-    .value = value,
+  s_results[s_mode_index][test] = (MfgTestResult){
+      .ran = true,
+      .passed = passed,
+      .value = value,
   };
   s_result_reported = true;
 }

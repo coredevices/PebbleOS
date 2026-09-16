@@ -7,29 +7,28 @@ static Window *window;
 static TextLayer *result_layer;
 
 static struct tm good_data = {
-  .tm_sec = 49,
-  .tm_min = 4,
-  .tm_hour = 11,
-  .tm_mday = 5,
-  .tm_mon = 4,
-  .tm_year = 115,
-  .tm_wday = 2,
-  .tm_yday = 124,
-  .tm_isdst = 1
+    .tm_sec = 49,
+    .tm_min = 4,
+    .tm_hour = 11,
+    .tm_mday = 5,
+    .tm_mon = 4,
+    .tm_year = 115,
+    .tm_wday = 2,
+    .tm_yday = 124,
+    .tm_isdst = 1
 };
 
 static struct tm bad_data = {
-  .tm_sec = 49756567,
-  .tm_min = 49756567,
-  .tm_hour = 49756567,
-  .tm_mday = 49756567,
-  .tm_mon = 49756567,
-  .tm_year = 49756567,
-  .tm_wday = 49756567,
-  .tm_yday = 49756567,
-  .tm_isdst = 49756567
+    .tm_sec = 49756567,
+    .tm_min = 49756567,
+    .tm_hour = 49756567,
+    .tm_mday = 49756567,
+    .tm_mon = 49756567,
+    .tm_year = 49756567,
+    .tm_wday = 49756567,
+    .tm_yday = 49756567,
+    .tm_isdst = 49756567
 };
-
 
 static void prv_test_valid_data(void) {
   const int buf_size = 64;
@@ -280,7 +279,6 @@ static void window_load(Window *window) {
   prv_test_valid_data();
   prv_test_invalid_data();
 
-
   Layer *window_layer = window_get_root_layer(window);
   result_layer = text_layer_create(GRect(0, 0, 144, 168));
   text_layer_set_text(result_layer, "strftime() test. Check the app logs for details");
@@ -294,10 +292,10 @@ static void window_unload(Window *window) {
 
 static void init(void) {
   window = window_create();
-  window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload,
-  });
+  window_set_window_handlers(window, (WindowHandlers){
+                                         .load = window_load,
+                                         .unload = window_unload,
+                                     });
   const bool animated = true;
   window_stack_push(window, animated);
 }

@@ -24,11 +24,11 @@
 // unprivileged (only that process dies) instead of rebooting the system.
 // Enabled on ARMv8-M (needs PSPLIM); ARMv7-M keeps the old behaviour.
 #if !defined(SYSCALL_PRIVILEGED_STACK)
-#  if defined(CONFIG_MPU_TYPE_ARMV8M)
-#    define SYSCALL_PRIVILEGED_STACK 1
-#  else
-#    define SYSCALL_PRIVILEGED_STACK 0
-#  endif
+#if defined(CONFIG_MPU_TYPE_ARMV8M)
+#define SYSCALL_PRIVILEGED_STACK 1
+#else
+#define SYSCALL_PRIVILEGED_STACK 0
+#endif
 #endif
 
 // Per-thread slots for the syscall return address and pre-syscall stack pointer
@@ -78,9 +78,8 @@ static McuUnprivilegedCallContext *prv_unprivileged_call_ctx_for_current_task(vo
   return &s_unprivileged_call_ctx[task];
 }
 
-static USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx,
-                                             uintptr_t caller_lr, uintptr_t entry_sp,
-                                             const uint32_t *saved_regs) {
+static USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, uintptr_t caller_lr,
+                                             uintptr_t entry_sp, const uint32_t *saved_regs) {
   (void)ctx;
 
   PBL_ASSERTN(mcu_state_is_thread_privileged());
@@ -93,18 +92,18 @@ static USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx,
   if (state->active && state->thread_id != thread_id) {
     // Slots are indexed by PebbleTask. If a task died mid-callback and a new
     // thread reused the PebbleTask, discard the old call state first.
-    *state = (McuUnprivilegedCallContext) { 0 };
+    *state = (McuUnprivilegedCallContext){0};
   }
 
   PBL_ASSERTN(!state->active);
 
-  *state = (McuUnprivilegedCallContext) {
-    .active = true,
-    .thread_id = thread_id,
-    .caller_lr = caller_lr,
-    .entry_sp = entry_sp,
-    .outer_syscall_lr = get_syscall_lr(),
-    .outer_syscall_sp = prv_get_syscall_sp(),
+  *state = (McuUnprivilegedCallContext){
+      .active = true,
+      .thread_id = thread_id,
+      .caller_lr = caller_lr,
+      .entry_sp = entry_sp,
+      .outer_syscall_lr = get_syscall_lr(),
+      .outer_syscall_sp = prv_get_syscall_sp(),
   };
 
   for (size_t i = 0; i < ARRAY_LENGTH(state->saved_r4_r11); ++i) {
@@ -123,8 +122,7 @@ static uintptr_t prv_mcu_call_unprivileged_reentry_return_pc(void) {
 
 static McuUnprivilegedCallContext *prv_active_unprivileged_call_ctx_for_current_task(void) {
   McuUnprivilegedCallContext *state = prv_unprivileged_call_ctx_for_current_task();
-  if (state == NULL || !state->active ||
-      state->thread_id != pbl_thread_id(pbl_thread_current())) {
+  if (state == NULL || !state->active || state->thread_id != pbl_thread_id(pbl_thread_current())) {
     return NULL;
   }
   return state;
@@ -183,63 +181,59 @@ bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr) {
 //! The re-entry SVC is deliberately outside .syscall_text. It is only accepted
 //! while this call is active for the current task, and the SVC handler resumes
 //! through saved kernel state instead of the callback's stack.
-EXTERNALLY_VISIBLE NAKED_FUNC USED
-void mcu_call_unprivileged(void (*fn)(void *), void *ctx) {
-  __asm volatile (
-    // Keep fn/ctx across the setup call. Copy r4-r11 too; native app code is
-    // not trusted to preserve the privileged caller's callee-saved registers.
-    "  push {r4-r11}                    \n"
-    "  push {r0, r1}                    \n"
-    "  mov r2, lr                       \n" // r2 = privileged caller LR
-    // These offsets are tied to the two pushes above:
-    //   push {r4-r11} = 32 bytes, push {r0,r1} = 8 bytes.
-    "  add r3, sp, #40                  \n" // r3 = entry SP before pushes
-    "  add r12, sp, #8                  \n" // r12 = saved r4-r11 pointer
-    "  sub sp, sp, #8                   \n" // keep stack 8-byte aligned for C call
-    "  str r12, [sp]                    \n" // 5th arg: saved_regs pointer
-    "  bl mcu_call_unprivileged_enter   \n"
-    "  add sp, sp, #8                   \n" // discard 5th arg + alignment pad
-    "  pop {r2, r3}                     \n" // r2 = fn, r3 = ctx
-    "  add sp, sp, #32                  \n" // saved r4-r11 copied to kernel state
+EXTERNALLY_VISIBLE NAKED_FUNC USED void mcu_call_unprivileged(void (*fn)(void *), void *ctx) {
+  __asm volatile(
+      // Keep fn/ctx across the setup call. Copy r4-r11 too; native app code is
+      // not trusted to preserve the privileged caller's callee-saved registers.
+      "  push {r4-r11}                    \n"
+      "  push {r0, r1}                    \n"
+      "  mov r2, lr                       \n"  // r2 = privileged caller LR
+      // These offsets are tied to the two pushes above:
+      //   push {r4-r11} = 32 bytes, push {r0,r1} = 8 bytes.
+      "  add r3, sp, #40                  \n"  // r3 = entry SP before pushes
+      "  add r12, sp, #8                  \n"  // r12 = saved r4-r11 pointer
+      "  sub sp, sp, #8                   \n"  // keep stack 8-byte aligned for C call
+      "  str r12, [sp]                    \n"  // 5th arg: saved_regs pointer
+      "  bl mcu_call_unprivileged_enter   \n"
+      "  add sp, sp, #8                   \n"  // discard 5th arg + alignment pad
+      "  pop {r2, r3}                     \n"  // r2 = fn, r3 = ctx
+      "  add sp, sp, #32                  \n"  // saved r4-r11 copied to kernel state
 
-    // Drop privilege inline (CONTROL.nPRIV = 1). Calling the C helper would
-    // clobber the app callback registers we just restored.
-    "  mrs r0, control                  \n"
-    "  orr r0, r0, #1                   \n"
-    "  msr control, r0                  \n"
-    "  isb                              \n"
+      // Drop privilege inline (CONTROL.nPRIV = 1). Calling the C helper would
+      // clobber the app callback registers we just restored.
+      "  mrs r0, control                  \n"
+      "  orr r0, r0, #1                   \n"
+      "  msr control, r0                  \n"
+      "  isb                              \n"
 
-    // Invoke fn(ctx) unprivileged. MPU-violating accesses fault here.
-    "  mov r0, r3                       \n"
-    "  blx r2                           \n"
+      // Invoke fn(ctx) unprivileged. MPU-violating accesses fault here.
+      "  mov r0, r3                       \n"
+      "  blx r2                           \n"
 
-    // Re-enter privileged mode. The handler accepts this exact callsite only
-    // while this mcu_call_unprivileged() call is active for the current task.
-    "  .global __mcu_call_unprivileged_svc \n"
-    "__mcu_call_unprivileged_svc:       \n"
-    "  svc 2                            \n"
-    // Deliberate fail-closed trap. If the SVC was denied or not rewritten, do
-    // not keep executing in the callback's control flow.
-    "  udf #0                           \n"
-  );
+      // Re-enter privileged mode. The handler accepts this exact callsite only
+      // while this mcu_call_unprivileged() call is active for the current task.
+      "  .global __mcu_call_unprivileged_svc \n"
+      "__mcu_call_unprivileged_svc:       \n"
+      "  svc 2                            \n"
+      // Deliberate fail-closed trap. If the SVC was denied or not rewritten, do
+      // not keep executing in the callback's control flow.
+      "  udf #0                           \n");
 }
 
-EXTERNALLY_VISIBLE NAKED_FUNC USED
-void mcu_call_unprivileged_resume(void) {
-  __asm volatile (
-    // r0 is the state pointer stamped into the frame by Handler mode. Restore
-    // SP before any stack use.
-    "  ldr r12, [r0, #%c[caller_lr_off]] \n"
-    "  ldr r1, [r0, #%c[entry_sp_off]]  \n"
-    "  mov sp, r1                       \n"
-    "  adds r0, r0, #%c[regs_off]       \n"
-    "  ldmia r0, {r4-r11}               \n"
-    "  bx r12                           \n"
-    :
-    : [caller_lr_off] "i" (offsetof(McuUnprivilegedCallContext, caller_lr)),
-      [entry_sp_off] "i" (offsetof(McuUnprivilegedCallContext, entry_sp)),
-      [regs_off] "i" (offsetof(McuUnprivilegedCallContext, saved_r4_r11))
-  );
+EXTERNALLY_VISIBLE NAKED_FUNC USED void mcu_call_unprivileged_resume(void) {
+  __asm volatile(
+      // r0 is the state pointer stamped into the frame by Handler mode. Restore
+      // SP before any stack use.
+      "  ldr r12, [r0, #%c[caller_lr_off]] \n"
+      "  ldr r1, [r0, #%c[entry_sp_off]]  \n"
+      "  mov sp, r1                       \n"
+      "  adds r0, r0, #%c[regs_off]       \n"
+      "  ldmia r0, {r4-r11}               \n"
+      "  bx r12                           \n"
+      :
+      : [caller_lr_off] "i"(offsetof(McuUnprivilegedCallContext, caller_lr)),
+        [entry_sp_off] "i"(offsetof(McuUnprivilegedCallContext, entry_sp)),
+        [regs_off] "i"(offsetof(McuUnprivilegedCallContext, saved_r4_r11)));
 }
 
 NORETURN syscall_failed(void) {
@@ -253,21 +247,22 @@ NORETURN syscall_failed(void) {
   sys_app_fault(saved_lr);
 
   // sys_die is no return, but it's a syscall so I don't want to mark it with that attribute
-  while(1) { }
+  while (1) {
+  }
 }
 
-void syscall_assert_userspace_buffer(const void* buf, size_t num_bytes) {
+void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
   PebbleTask task = pebble_task_get_current();
 
   void *user_stack_end = (void *)prv_get_syscall_sp();
 
-  if (process_manager_is_address_in_region(task, buf, user_stack_end)
-      && process_manager_is_address_in_region(
-          task, (uint8_t *)buf + num_bytes -1, user_stack_end)) {
+  if (process_manager_is_address_in_region(task, buf, user_stack_end) &&
+      process_manager_is_address_in_region(task, (uint8_t *)buf + num_bytes - 1, user_stack_end)) {
     return;
   }
 
-  APP_LOG(APP_LOG_LEVEL_ERROR, "syscall failure! %p..%p is not in app space.", buf, (char *)buf + num_bytes);
+  APP_LOG(APP_LOG_LEVEL_ERROR, "syscall failure! %p..%p is not in app space.", buf,
+          (char *)buf + num_bytes);
   PBL_LOG_ERR("syscall failure! %p..%p is not in app space.", buf, (char *)buf + num_bytes);
   syscall_failed();
 }
@@ -288,12 +283,12 @@ uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
   switch (pebble_task_get_current()) {
     case PebbleTask_App:
 #ifdef CONFIG_MODDABLE_XS
-      {
-        const PebbleProcessMd *md = app_manager_get_current_app_md();
-        if (md != NULL && md->is_moddable_app) {
-          return NULL;
-        }
+    {
+      const PebbleProcessMd *md = app_manager_get_current_app_md();
+      if (md != NULL && md->is_moddable_app) {
+        return NULL;
       }
+    }
 #endif
       stack = s_app_syscall_stack;
       break;
@@ -347,52 +342,56 @@ uint16_t syscall_worker_stack_free_bytes(void) {
 // Drop privilege and return to the task. If the syscall ran on a dedicated
 // stack, restore PSP/PSPLIM to the task stack first (while still privileged).
 EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
-  __asm volatile (
-    " push {r0, r1} \n"                       // save syscall return value
-    " bl process_manager_handle_syscall_exit \n"
-    " bl get_syscall_lr \n"                    // r0 = real return address
-    " push {r0, r1} \n"                        // save real LR (r1 = pad; keeps 8-byte align)
-    " bl syscall_stack_restore_target \n"      // r0 = restore SP (0 = none), r1 = restore PSPLIM
-    " mov r2, r0 \n"                           // r2 = restore SP
-    " mov r3, r1 \n"                           // r3 = restore PSPLIM
-    " pop {r0, r1} \n"                         // r0 = real LR
-    " mov r12, r0 \n"                          // r12 = real LR (caller-saved; no bl follows)
-    " pop {r0, r1} \n"                         // r0,r1 = syscall return value
-    " cbz r2, 1f \n"                           // skip stack switch if not relocated
-    " msr psp, r2 \n"                          // back to the app stack (higher addr; safe vs low limit)
-    " msr psplim, r3 \n"                       // restore the app stack limit
-    " isb \n"
-    "1: \n"
-    " mrs r2, control \n"                      // drop privilege: CONTROL.nPRIV = 1
-    " orr r2, r2, #1 \n"
-    " msr control, r2 \n"
-    " isb \n"
-    " bx r12 \n"                               // return into the app
+  __asm volatile(
+      " push {r0, r1} \n"  // save syscall return value
+      " bl process_manager_handle_syscall_exit \n"
+      " bl get_syscall_lr \n"                // r0 = real return address
+      " push {r0, r1} \n"                    // save real LR (r1 = pad; keeps 8-byte align)
+      " bl syscall_stack_restore_target \n"  // r0 = restore SP (0 = none), r1 = restore PSPLIM
+      " mov r2, r0 \n"                       // r2 = restore SP
+      " mov r3, r1 \n"                       // r3 = restore PSPLIM
+      " pop {r0, r1} \n"                     // r0 = real LR
+      " mov r12, r0 \n"                      // r12 = real LR (caller-saved; no bl follows)
+      " pop {r0, r1} \n"                     // r0,r1 = syscall return value
+      " cbz r2, 1f \n"                       // skip stack switch if not relocated
+      " msr psp, r2 \n"     // back to the app stack (higher addr; safe vs low limit)
+      " msr psplim, r3 \n"  // restore the app stack limit
+      " isb \n"
+      "1: \n"
+      " mrs r2, control \n"  // drop privilege: CONTROL.nPRIV = 1
+      " orr r2, r2, #1 \n"
+      " msr control, r2 \n"
+      " isb \n"
+      " bx r12 \n"  // return into the app
   );
 }
 #else
-uint16_t syscall_app_stack_free_bytes(void) { return 0xFFFF; }
-uint16_t syscall_worker_stack_free_bytes(void) { return 0xFFFF; }
+uint16_t syscall_app_stack_free_bytes(void) {
+  return 0xFFFF;
+}
+uint16_t syscall_worker_stack_free_bytes(void) {
+  return 0xFFFF;
+}
 
 // Drop privileges and return to the address stored in thread local storage
 // Has to preserve r0 and r1 so the syscall's return value is passed through
 EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
-  __asm volatile (
-    " push {r0, r1} \n"
-    " bl process_manager_handle_syscall_exit \n"
-    " bl get_syscall_lr \n"
-    " push { r0 } \n" // push the correct lr onto the stack
+  __asm volatile(
+      " push {r0, r1} \n"
+      " bl process_manager_handle_syscall_exit \n"
+      " bl get_syscall_lr \n"
+      " push { r0 } \n"  // push the correct lr onto the stack
 
-    " mov r0, #0 \n" // mcu_state_set_thread_privilege(false)
-    " bl mcu_state_set_thread_privilege \n"
+      " mov r0, #0 \n"  // mcu_state_set_thread_privilege(false)
+      " bl mcu_state_set_thread_privilege \n"
 
-    " pop {lr} \n" // Pop correct return address
-    " pop {r0, r1} \n" // Restore the return values of the syscall
+      " pop {lr} \n"      // Pop correct return address
+      " pop {r0, r1} \n"  // Restore the return values of the syscall
 
-    " bx lr \n" // Leave the syscall
+      " bx lr \n"  // Leave the syscall
   );
 }
-#endif // SYSCALL_PRIVILEGED_STACK
+#endif  // SYSCALL_PRIVILEGED_STACK
 
 // Just jump straight into the drop privilege code
 EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege_wrapper(void) {
@@ -406,48 +405,48 @@ EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege_wrapper(void) {
 // called elevating privileges. If the caller was already privileged, this function
 // returns past the svc 2 instruction so privileges are not elevated.
 void NAKED_FUNC USED syscall_internal_maybe_skip_privilege(void) {
-  __asm volatile (
-    // Save argument registers
-    " push {r0-r3, lr} \n"
-    " bl mcu_state_is_privileged \n"
-    " cmp r0, #1 \n" // Were we privileged?
+  __asm volatile(
+      // Save argument registers
+      " push {r0-r3, lr} \n"
+      " bl mcu_state_is_privileged \n"
+      " cmp r0, #1 \n"  // Were we privileged?
 
-    " pop {r0-r3, lr} \n" // Restore state
+      " pop {r0-r3, lr} \n"  // Restore state
 
-    " it eq \n" // If we were privileged, return past the svc function
-    " addeq lr, #2 \n" // svc 2 is 2 bytes long
+      " it eq \n"         // If we were privileged, return past the svc function
+      " addeq lr, #2 \n"  // svc 2 is 2 bytes long
 
-    // Store our return address in ip, which isn't caller or callee saved
-    // since the linker can modify it
-    " mov ip, lr \n"
+      // Store our return address in ip, which isn't caller or callee saved
+      // since the linker can modify it
+      " mov ip, lr \n"
 
-    // Set lr to the wrapper's return address. This saves code space so the
-    // wrapper doesn't have to do this itself. Also we need to check this value
-    // here.
-    " pop {lr} \n"
+      // Set lr to the wrapper's return address. This saves code space so the
+      // wrapper doesn't have to do this itself. Also we need to check this value
+      // here.
+      " pop {lr} \n"
 
-    " push {ip} \n" // Save the wrapper address on the stack
+      " push {ip} \n"  // Save the wrapper address on the stack
 
-    // The following can occur with nested syscalls, when the 2nd syscall is at
-    // the end of the first. Since PRIVILEGE_WAS_ELEVATED depends on the return
-    // address of the function being equal to syscall_internal_drop_privilege,
-    // changing to the wrapper prevents a false positive in the nested syscall
+      // The following can occur with nested syscalls, when the 2nd syscall is at
+      // the end of the first. Since PRIVILEGE_WAS_ELEVATED depends on the return
+      // address of the function being equal to syscall_internal_drop_privilege,
+      // changing to the wrapper prevents a false positive in the nested syscall
 
-    // if lr == syscall_internal_drop_privilege,
-    // lr = syscall_internal_drop_privilege_wrapper
-    " ldr ip, =prv_drop_privilege \n"
-    " cmp lr, ip \n"
-    " it eq \n"
-    " ldreq lr, =prv_drop_privilege_wrapper \n"
+      // if lr == syscall_internal_drop_privilege,
+      // lr = syscall_internal_drop_privilege_wrapper
+      " ldr ip, =prv_drop_privilege \n"
+      " cmp lr, ip \n"
+      " it eq \n"
+      " ldreq lr, =prv_drop_privilege_wrapper \n"
 
-    " pop {pc} \n" // Return to the wrapper
+      " pop {pc} \n"  // Return to the wrapper
   );
 }
 
 // This is more space efficient than inlining the equality
 // expression into every syscall since the address literal
 // only needs to be stored at the end of this one function
-bool syscall_internal_check_return_address(void * ret_addr) {
+bool syscall_internal_check_return_address(void *ret_addr) {
   return ret_addr == &prv_drop_privilege;
 }
 
@@ -496,7 +495,7 @@ bool pbl_kernel_privilege_raise_allowed(uint32_t caller_pc) {
   // See WHT-114 and PBL-34044.
   extern const uint32_t __syscall_text_start__[];
   extern const uint32_t __syscall_text_end__[];
-  const uint32_t priv_code_start = (uint32_t) __syscall_text_start__;
-  const uint32_t priv_code_end = (uint32_t) __syscall_text_end__;
+  const uint32_t priv_code_start = (uint32_t)__syscall_text_start__;
+  const uint32_t priv_code_end = (uint32_t)__syscall_text_end__;
   return (caller_pc >= priv_code_start && caller_pc < priv_code_end);
 }

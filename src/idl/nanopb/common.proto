@@ -10,7 +10,7 @@ syntax = "proto2";
 
 package pebble.pipeline;
 
-option java_package="com.getpebble.pipeline";
+option java_package = "com.getpebble.pipeline";
 
 message Version {
   required uint32 major = 4;
@@ -34,7 +34,9 @@ such as watches and phones
 */
 message Tier {
   required string type = 1;
-  required string id = 2; /// ID string for the device or system, which may or may not conform to a true UUID. eg serial_number for a pebble watch
+  required string id =
+      2;  /// ID string for the device or system, which may or may not conform
+          /// to a true UUID. eg serial_number for a pebble watch
   optional LocationInfo location = 3;
   optional string comment = 4;
   optional Version version = 5;

@@ -55,7 +55,7 @@ bool pstring_equal_cstring(const PascalString16 *pstr, const char *cstr);
 
 SerializedArray *pstring_create_serialized_array(uint16_t data_size);
 
-void pstring_destroy_serialized_array(SerializedArray* serialized_array);
+void pstring_destroy_serialized_array(SerializedArray *serialized_array);
 
 // Projects a list on a serialized array so that pstring operations may be performed on it.
 void pstring_project_list_on_serialized_array(PascalString16List *pstring16_list,
@@ -63,14 +63,14 @@ void pstring_project_list_on_serialized_array(PascalString16List *pstring16_list
 
 // Adds a PascalString16 to the end of the list.
 // Returns true if the PascalString16 was successfully added, false if there was no room.
-bool pstring_add_pstring16_to_list(PascalString16List *pstring16_list, PascalString16* pstring);
+bool pstring_add_pstring16_to_list(PascalString16List *pstring16_list, PascalString16 *pstring);
 
 // Retrieves the number of PascalString16s in the list.
 uint16_t pstring_get_number_of_pstring16s_in_list(PascalString16List *pstring16_list);
 
 // Returns a pointer to a PascalString16 of the passed index within the list.
 // If the given index is not valid or the list is empty, returns NULL.
-PascalString16* pstring_get_pstring16_from_list(PascalString16List *pstring16_list, uint16_t index);
+PascalString16 *pstring_get_pstring16_from_list(PascalString16List *pstring16_list, uint16_t index);
 
 void pstring_print_pstring(PascalString16 *pstring);
 

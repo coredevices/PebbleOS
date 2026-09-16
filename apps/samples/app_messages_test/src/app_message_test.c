@@ -6,7 +6,6 @@
 static Window *s_window;
 static TextLayer *s_text_layer;
 
-
 enum {
   DICT_KEY_TEST_0 = 0x0,
 };
@@ -31,7 +30,7 @@ static int send_app_msg(void) {
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   int result;
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending messages");
-  for (int i=0; i<10; i++) {
+  for (int i = 0; i < 10; i++) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "app sending outbox");
     do {
       result = send_app_msg();
@@ -42,7 +41,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   text_layer_set_text(s_text_layer, "Up");
-  for (int i=0; i<10; i++) {
+  for (int i = 0; i < 10; i++) {
     APP_LOG(APP_LOG_LEVEL_INFO, "sending BT log message");
   }
 }
@@ -82,7 +81,7 @@ static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  s_text_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 20 } });
+  s_text_layer = text_layer_create((GRect){.origin = {0, 72}, .size = {bounds.size.w, 20}});
   text_layer_set_text(s_text_layer, "Press a button");
   text_layer_set_text_alignment(s_text_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
@@ -95,10 +94,10 @@ static void init(void) {
   s_window = window_create();
   app_message_init();
   window_set_click_config_provider(s_window, click_config_provider);
-  window_set_window_handlers(s_window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload,
-  });
+  window_set_window_handlers(s_window, (WindowHandlers){
+                                           .load = window_load,
+                                           .unload = window_unload,
+                                       });
   const bool animated = true;
   window_stack_push(s_window, animated);
 }

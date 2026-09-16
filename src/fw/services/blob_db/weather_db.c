@@ -34,10 +34,8 @@ typedef struct WeatherDBIteratorData {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
-  status_t rv = settings_file_open_growable(&s_weather_db.settings_file,
-                                            SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE,
-                                            KiBYTES(4));
+  status_t rv = settings_file_open_growable(&s_weather_db.settings_file, SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_weather_db.mutex);
   }
@@ -54,8 +52,7 @@ static void prv_close_file_and_unlock_mutex(void) {
 // SerializedArray header, its data_size, and every pstring16 a reader can be
 // handed. The walk mirrors pstring.c (traversal advances by the LOW byte of a
 // pstring's length; the full uint16 length is what gets read back out).
-static bool prv_strings_block_is_valid(const uint8_t *val, size_t val_len,
-                                       size_t strings_offset) {
+static bool prv_strings_block_is_valid(const uint8_t *val, size_t val_len, size_t strings_offset) {
   if (strings_offset + sizeof(SerializedArray) > val_len) {
     return false;
   }
@@ -109,14 +106,9 @@ status_t weather_db_for_each(WeatherDBIteratorCallback callback, void *context) 
     return rv;
   }
 
-  WeatherDBIteratorData data = (WeatherDBIteratorData) {
-    .cb = callback,
-    .cb_ctx = context
-  };
+  WeatherDBIteratorData data = (WeatherDBIteratorData){.cb = callback, .cb_ctx = context};
 
-  settings_file_each(&s_weather_db.settings_file,
-                     prv_weather_db_for_each_cb,
-                     &data);
+  settings_file_each(&s_weather_db.settings_file, prv_weather_db_for_each_cb, &data);
 
   prv_close_file_and_unlock_mutex();
   return S_SUCCESS;
@@ -159,9 +151,8 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
   if (!weather_service_supported_by_phone()) {
     return E_RANGE;
   }
-  if (key_len != sizeof(WeatherDBKey) ||
-      val_len < (int) MIN_ENTRY_SIZE ||
-      val_len > (int) MAX_ENTRY_SIZE) {
+  if (key_len != sizeof(WeatherDBKey) || val_len < (int)MIN_ENTRY_SIZE ||
+      val_len > (int)MAX_ENTRY_SIZE) {
     return E_INVALID_ARGUMENT;
   }
 
@@ -174,12 +165,11 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
   // "the newest": demanding the current minor's size rejects every record from a
   // phone that has not shipped the latest block yet), and the trailing string block
   // must lie fully inside val_len.
-  const uint8_t minor =
-      (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
+  const uint8_t minor = (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
   const size_t strings_offset = weather_db_entry_strings_offset(entry->version, minor);
   if (!prv_strings_block_is_valid(val, (size_t)val_len, strings_offset)) {
-    PBL_LOG_WRN("Malformed v%" PRIu8 ".%" PRIu8 " weather record (len %d)",
-                entry->version, minor, val_len);
+    PBL_LOG_WRN("Malformed v%" PRIu8 ".%" PRIu8 " weather record (len %d)", entry->version, minor,
+                val_len);
     return E_INVALID_ARGUMENT;
   }
 
@@ -287,8 +277,8 @@ status_t weather_db_get_num_keys(uint16_t *val_out) {
   }
 
   SettingsFileEachKeyHelper key_helper = {
-    .key_count = 0,
-    .keys = NULL,
+      .key_count = 0,
+      .keys = NULL,
   };
   settings_file_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
   *val_out = key_helper.key_count;
@@ -304,8 +294,8 @@ status_t weather_db_get_keys(WeatherDBKey *keys) {
   }
 
   SettingsFileEachKeyHelper key_helper = {
-    .key_count = 0,
-    .keys = keys,
+      .key_count = 0,
+      .keys = keys,
   };
   settings_file_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
 

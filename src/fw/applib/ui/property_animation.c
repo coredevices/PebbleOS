@@ -18,30 +18,41 @@
 //
 
 static const PropertyAnimationImplementation s_frame_layer_implementation = {
-  .base = {
-    .update = (AnimationUpdateImplementation) property_animation_update_grect,
-  },
-  .accessors = {
-    .setter = { .grect = (const GRectSetter) layer_set_frame_by_value, },
-    .getter = { .grect = (const GRectGetter) layer_get_frame_by_value, },
-  },
+    .base =
+        {
+            .update = (AnimationUpdateImplementation)property_animation_update_grect,
+        },
+    .accessors = {
+        .setter =
+            {
+                .grect = (const GRectSetter)layer_set_frame_by_value,
+            },
+        .getter = {
+            .grect = (const GRectGetter)layer_get_frame_by_value,
+        },
+    },
 };
 
 static const PropertyAnimationImplementation s_bounds_layer_implementation = {
-  .base = {
-    .update = (AnimationUpdateImplementation) property_animation_update_grect,
-  },
-  .accessors = {
-    .setter = { .grect = (const GRectSetter) layer_set_bounds_by_value, },
-    .getter = { .grect = (const GRectGetter) layer_get_bounds_by_value, },
-  },
+    .base =
+        {
+            .update = (AnimationUpdateImplementation)property_animation_update_grect,
+        },
+    .accessors = {
+        .setter =
+            {
+                .grect = (const GRectSetter)layer_set_bounds_by_value,
+            },
+        .getter = {
+            .grect = (const GRectGetter)layer_get_bounds_by_value,
+        },
+    },
 };
 
 // -----------------------------------------------------------------------------------------
 static inline PropertyAnimationPrivate *prv_find_property_animation(PropertyAnimation *handle) {
   return (PropertyAnimationPrivate *)animation_private_animation_find((Animation *)handle);
 }
-
 
 // -----------------------------------------------------------------------------------------
 void property_animation_update_int16(PropertyAnimation *property_animation_h,
@@ -50,7 +61,7 @@ void property_animation_update_int16(PropertyAnimation *property_animation_h,
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_update_int16((PropertyAnimationLegacy2 *)property_animation_h,
-                                              distance_normalized);
+                                            distance_normalized);
     return;
   }
 
@@ -59,18 +70,15 @@ void property_animation_update_int16(PropertyAnimation *property_animation_h,
     return;
   }
 
-  int16_t result = interpolate_int16(distance_normalized,
-                                     property_animation->values.from.int16,
+  int16_t result = interpolate_int16(distance_normalized, property_animation->values.from.int16,
                                      property_animation->values.to.int16);
-  ((PropertyAnimationImplementation*)
-   property_animation->animation.implementation)
-    ->accessors.setter.int16(property_animation->subject, result);
+  ((PropertyAnimationImplementation *)property_animation->animation.implementation)
+      ->accessors.setter.int16(property_animation->subject, result);
 }
-
 
 // -----------------------------------------------------------------------------------------
 void property_animation_update_uint32(PropertyAnimation *property_animation_h,
-                                     const uint32_t distance_normalized) {
+                                      const uint32_t distance_normalized) {
   PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
 
   PropertyAnimationPrivate *property_animation = prv_find_property_animation(property_animation_h);
@@ -78,14 +86,11 @@ void property_animation_update_uint32(PropertyAnimation *property_animation_h,
     return;
   }
 
-  uint32_t result = interpolate_uint32(distance_normalized,
-                                       property_animation->values.from.uint32,
+  uint32_t result = interpolate_uint32(distance_normalized, property_animation->values.from.uint32,
                                        property_animation->values.to.uint32);
-  ((PropertyAnimationImplementation*)
-    property_animation->animation.implementation)
+  ((PropertyAnimationImplementation *)property_animation->animation.implementation)
       ->accessors.setter.uint32(property_animation->subject, result);
 }
-
 
 // -----------------------------------------------------------------------------------------
 void property_animation_update_gpoint(PropertyAnimation *property_animation_h,
@@ -94,7 +99,7 @@ void property_animation_update_gpoint(PropertyAnimation *property_animation_h,
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_update_gpoint((PropertyAnimationLegacy2 *)property_animation_h,
-                                              distance_normalized);
+                                             distance_normalized);
     return;
   }
 
@@ -104,17 +109,13 @@ void property_animation_update_gpoint(PropertyAnimation *property_animation_h,
   }
 
   GPoint result;
-  result.x = interpolate_int16(distance_normalized,
-                               property_animation->values.from.gpoint.x,
+  result.x = interpolate_int16(distance_normalized, property_animation->values.from.gpoint.x,
                                property_animation->values.to.gpoint.x);
-  result.y = interpolate_int16(distance_normalized,
-                               property_animation->values.from.gpoint.y,
+  result.y = interpolate_int16(distance_normalized, property_animation->values.from.gpoint.y,
                                property_animation->values.to.gpoint.y);
-  ((PropertyAnimationImplementation*)
-    property_animation->animation.implementation)
+  ((PropertyAnimationImplementation *)property_animation->animation.implementation)
       ->accessors.setter.gpoint(property_animation->subject, result);
 }
-
 
 // -----------------------------------------------------------------------------------------
 void property_animation_update_grect(PropertyAnimation *property_animation_h,
@@ -123,7 +124,7 @@ void property_animation_update_grect(PropertyAnimation *property_animation_h,
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_update_grect((PropertyAnimationLegacy2 *)property_animation_h,
-                                              distance_normalized);
+                                            distance_normalized);
     return;
   }
 
@@ -133,27 +134,21 @@ void property_animation_update_grect(PropertyAnimation *property_animation_h,
   }
 
   GRect result;
-  result.origin.x = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.grect.origin.x,
-      property_animation->values.to.grect.origin.x);
-  result.origin.y = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.grect.origin.y,
-      property_animation->values.to.grect.origin.y);
-  result.size.w = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.grect.size.w,
-      property_animation->values.to.grect.size.w);
-  result.size.h = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.grect.size.h,
-      property_animation->values.to.grect.size.h);
-  ((PropertyAnimationImplementation*)
-    property_animation->animation.implementation)
+  result.origin.x =
+      interpolate_int16(distance_normalized, property_animation->values.from.grect.origin.x,
+                        property_animation->values.to.grect.origin.x);
+  result.origin.y =
+      interpolate_int16(distance_normalized, property_animation->values.from.grect.origin.y,
+                        property_animation->values.to.grect.origin.y);
+  result.size.w =
+      interpolate_int16(distance_normalized, property_animation->values.from.grect.size.w,
+                        property_animation->values.to.grect.size.w);
+  result.size.h =
+      interpolate_int16(distance_normalized, property_animation->values.from.grect.size.h,
+                        property_animation->values.to.grect.size.h);
+  ((PropertyAnimationImplementation *)property_animation->animation.implementation)
       ->accessors.setter.grect(property_animation->subject, result);
 }
-
 
 // -----------------------------------------------------------------------------------------
 void property_animation_update_gtransform(PropertyAnimation *property_animation_h,
@@ -166,40 +161,30 @@ void property_animation_update_gtransform(PropertyAnimation *property_animation_
   }
 
   GTransform result;
-  result.a = interpolate_fixed32(
-      distance_normalized,
-      property_animation->values.from.gtransform.a,
-      property_animation->values.to.gtransform.a);
-  result.b = interpolate_fixed32(
-      distance_normalized,
-      property_animation->values.from.gtransform.b,
-      property_animation->values.to.gtransform.b);
-  result.c = interpolate_fixed32(
-      distance_normalized,
-      property_animation->values.from.gtransform.c,
-      property_animation->values.to.gtransform.c);
-  result.d = interpolate_fixed32(
-      distance_normalized,
-      property_animation->values.from.gtransform.d,
-      property_animation->values.to.gtransform.d);
-  result.tx = interpolate_fixed32(
-      distance_normalized,
-      property_animation->values.from.gtransform.tx,
-      property_animation->values.to.gtransform.tx);
-  result.ty = interpolate_fixed32(
-      distance_normalized,
-      property_animation->values.from.gtransform.ty,
-      property_animation->values.to.gtransform.ty);
+  result.a = interpolate_fixed32(distance_normalized, property_animation->values.from.gtransform.a,
+                                 property_animation->values.to.gtransform.a);
+  result.b = interpolate_fixed32(distance_normalized, property_animation->values.from.gtransform.b,
+                                 property_animation->values.to.gtransform.b);
+  result.c = interpolate_fixed32(distance_normalized, property_animation->values.from.gtransform.c,
+                                 property_animation->values.to.gtransform.c);
+  result.d = interpolate_fixed32(distance_normalized, property_animation->values.from.gtransform.d,
+                                 property_animation->values.to.gtransform.d);
+  result.tx =
+      interpolate_fixed32(distance_normalized, property_animation->values.from.gtransform.tx,
+                          property_animation->values.to.gtransform.tx);
+  result.ty =
+      interpolate_fixed32(distance_normalized, property_animation->values.from.gtransform.ty,
+                          property_animation->values.to.gtransform.ty);
 
   // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
   // must be typecast
-  GTransformSetter setter = (GTransformSetter)(void *)((PropertyAnimationImplementation*)
-                              property_animation->animation.implementation)
-                                ->accessors.setter.int16;
+  GTransformSetter setter =
+      (GTransformSetter)(void *)((PropertyAnimationImplementation *)
+                                     property_animation->animation.implementation)
+          ->accessors.setter.int16;
 
   setter(property_animation->subject, result);
 }
-
 
 // -----------------------------------------------------------------------------------------
 void property_animation_update_gcolor8(PropertyAnimation *property_animation_h,
@@ -212,28 +197,18 @@ void property_animation_update_gcolor8(PropertyAnimation *property_animation_h,
   }
 
   GColor8 result;
-  result.a = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.gcolor8.a,
-      property_animation->values.to.gcolor8.a);
-  result.r = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.gcolor8.r,
-      property_animation->values.to.gcolor8.r);
-  result.g = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.gcolor8.g,
-      property_animation->values.to.gcolor8.g);
-  result.b = interpolate_int16(
-      distance_normalized,
-      property_animation->values.from.gcolor8.b,
-      property_animation->values.to.gcolor8.b);
+  result.a = interpolate_int16(distance_normalized, property_animation->values.from.gcolor8.a,
+                               property_animation->values.to.gcolor8.a);
+  result.r = interpolate_int16(distance_normalized, property_animation->values.from.gcolor8.r,
+                               property_animation->values.to.gcolor8.r);
+  result.g = interpolate_int16(distance_normalized, property_animation->values.from.gcolor8.g,
+                               property_animation->values.to.gcolor8.g);
+  result.b = interpolate_int16(distance_normalized, property_animation->values.from.gcolor8.b,
+                               property_animation->values.to.gcolor8.b);
 
-  ((PropertyAnimationImplementation*)
-    property_animation->animation.implementation)
+  ((PropertyAnimationImplementation *)property_animation->animation.implementation)
       ->accessors.setter.gcolor8(property_animation->subject, result);
 }
-
 
 // -----------------------------------------------------------------------------------------
 void property_animation_update_fixed_s32_16(PropertyAnimation *property_animation_h,
@@ -245,96 +220,96 @@ void property_animation_update_fixed_s32_16(PropertyAnimation *property_animatio
     return;
   }
 
-  Fixed_S32_16 result = interpolate_fixed32(distance_normalized,
-                                                property_animation->values.from.fixed_s32_16,
-                                                property_animation->values.to.fixed_s32_16);
+  Fixed_S32_16 result =
+      interpolate_fixed32(distance_normalized, property_animation->values.from.fixed_s32_16,
+                          property_animation->values.to.fixed_s32_16);
 
   // NOTE: We are not exposing the Fixed_S32_16 in the public SDK, so the setter and getter
   // must be typecast
-  Fixed_S32_16Setter setter = (Fixed_S32_16Setter)(void *)((PropertyAnimationImplementation*)
-                              property_animation->animation.implementation)
-                                ->accessors.setter.int16;
+  Fixed_S32_16Setter setter =
+      (Fixed_S32_16Setter)(void *)((PropertyAnimationImplementation *)
+                                       property_animation->animation.implementation)
+          ->accessors.setter.int16;
 
   setter(property_animation->subject, result);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_init(PropertyAnimationPrivate *property_animation,
-                           const PropertyAnimationImplementation *implementation,
-                           void *subject, void *from_value, void *to_value) {
+                     const PropertyAnimationImplementation *implementation, void *subject,
+                     void *from_value, void *to_value) {
   property_animation->animation.is_property_animation = true;
   memset(&property_animation->values, 0xff, sizeof(property_animation->values));
-  property_animation->animation.implementation = (AnimationImplementation*) implementation;
+  property_animation->animation.implementation = (AnimationImplementation *)implementation;
   property_animation->subject = subject;
   if (implementation->accessors.getter.int16) {
-    if (property_animation->animation.implementation->update
-        == (AnimationUpdateImplementation) property_animation_update_int16) {
-      property_animation->values.to.int16 = to_value ? *((int16_t *)to_value)
-                                          : implementation->accessors.getter.int16(subject);
-      property_animation->values.from.int16 = from_value ? *((int16_t*)from_value)
-                                            : implementation->accessors.getter.int16(subject);
+    if (property_animation->animation.implementation->update ==
+        (AnimationUpdateImplementation)property_animation_update_int16) {
+      property_animation->values.to.int16 =
+          to_value ? *((int16_t *)to_value) : implementation->accessors.getter.int16(subject);
+      property_animation->values.from.int16 =
+          from_value ? *((int16_t *)from_value) : implementation->accessors.getter.int16(subject);
 
-    } else if (property_animation->animation.implementation->update
-                        == (AnimationUpdateImplementation) property_animation_update_uint32) {
-      property_animation->values.to.uint32 = to_value ? *((uint32_t *)to_value)
-                                           : implementation->accessors.getter.uint32(subject);
-      property_animation->values.from.uint32 = from_value ? *((uint32_t *)from_value)
-                                             : implementation->accessors.getter.uint32(subject);
+    } else if (property_animation->animation.implementation->update ==
+               (AnimationUpdateImplementation)property_animation_update_uint32) {
+      property_animation->values.to.uint32 =
+          to_value ? *((uint32_t *)to_value) : implementation->accessors.getter.uint32(subject);
+      property_animation->values.from.uint32 =
+          from_value ? *((uint32_t *)from_value) : implementation->accessors.getter.uint32(subject);
 
-    } else if (property_animation->animation.implementation->update
-                        == (AnimationUpdateImplementation) property_animation_update_gpoint) {
-      property_animation->values.to.gpoint = to_value ? *((GPoint*)to_value)
-                                           : implementation->accessors.getter.gpoint(subject);
-      property_animation->values.from.gpoint = from_value ? *((GPoint*)from_value)
-                                             : implementation->accessors.getter.gpoint(subject);
+    } else if (property_animation->animation.implementation->update ==
+               (AnimationUpdateImplementation)property_animation_update_gpoint) {
+      property_animation->values.to.gpoint =
+          to_value ? *((GPoint *)to_value) : implementation->accessors.getter.gpoint(subject);
+      property_animation->values.from.gpoint =
+          from_value ? *((GPoint *)from_value) : implementation->accessors.getter.gpoint(subject);
 
-    } else if (property_animation->animation.implementation->update
-               == (AnimationUpdateImplementation)property_animation_update_grect) {
-      property_animation->values.to.grect = to_value ? *((GRect*)to_value)
-                                          : implementation->accessors.getter.grect(subject);
-      property_animation->values.from.grect = from_value ? *((GRect*)from_value)
-                                            : implementation->accessors.getter.grect(subject);
+    } else if (property_animation->animation.implementation->update ==
+               (AnimationUpdateImplementation)property_animation_update_grect) {
+      property_animation->values.to.grect =
+          to_value ? *((GRect *)to_value) : implementation->accessors.getter.grect(subject);
+      property_animation->values.from.grect =
+          from_value ? *((GRect *)from_value) : implementation->accessors.getter.grect(subject);
 
-    } else if (property_animation->animation.implementation->update
-               == (AnimationUpdateImplementation)property_animation_update_gtransform) {
+    } else if (property_animation->animation.implementation->update ==
+               (AnimationUpdateImplementation)property_animation_update_gtransform) {
       // NOTE: We are not exposing the GTransform in the public SDK, so the setter and getter
       // must be typecast
-      GTransformGetter getter = (GTransformGetter)(void *)((PropertyAnimationImplementation*)
-                                  property_animation->animation.implementation)
-                                    ->accessors.getter.int16;
-      property_animation->values.to.gtransform = to_value ? *((GTransform*)to_value)
-                                          : getter(subject);
-      property_animation->values.from.gtransform = from_value ? *((GTransform*)from_value)
-                                            : getter(subject);
+      GTransformGetter getter =
+          (GTransformGetter)(void *)((PropertyAnimationImplementation *)
+                                         property_animation->animation.implementation)
+              ->accessors.getter.int16;
+      property_animation->values.to.gtransform =
+          to_value ? *((GTransform *)to_value) : getter(subject);
+      property_animation->values.from.gtransform =
+          from_value ? *((GTransform *)from_value) : getter(subject);
 
-    } else if (property_animation->animation.implementation->update
-               == (AnimationUpdateImplementation)property_animation_update_gcolor8) {
-      property_animation->values.to.gcolor8 = to_value ? *((GColor8*)to_value)
-                                          : implementation->accessors.getter.gcolor8(subject);
-      property_animation->values.from.gcolor8 = from_value ? *((GColor8*)from_value)
-                                            : implementation->accessors.getter.gcolor8(subject);
+    } else if (property_animation->animation.implementation->update ==
+               (AnimationUpdateImplementation)property_animation_update_gcolor8) {
+      property_animation->values.to.gcolor8 =
+          to_value ? *((GColor8 *)to_value) : implementation->accessors.getter.gcolor8(subject);
+      property_animation->values.from.gcolor8 =
+          from_value ? *((GColor8 *)from_value) : implementation->accessors.getter.gcolor8(subject);
 
-    } else if (property_animation->animation.implementation->update
-               == (AnimationUpdateImplementation)property_animation_update_fixed_s32_16) {
+    } else if (property_animation->animation.implementation->update ==
+               (AnimationUpdateImplementation)property_animation_update_fixed_s32_16) {
       // NOTE: We are not exposing the Fixed_S32_16 in the public SDK, so the setter and getter
       // must be typecast
-      Fixed_S32_16Getter getter = (Fixed_S32_16Getter)(void *)((PropertyAnimationImplementation*)
-                                  property_animation->animation.implementation)
-                                    ->accessors.getter.int16;
-      property_animation->values.to.fixed_s32_16 = to_value ? *((Fixed_S32_16*)to_value)
-                                          : getter(subject);
-      property_animation->values.from.fixed_s32_16 = from_value ? *((Fixed_S32_16*)from_value)
-                                          : getter(subject);
+      Fixed_S32_16Getter getter =
+          (Fixed_S32_16Getter)(void *)((PropertyAnimationImplementation *)
+                                           property_animation->animation.implementation)
+              ->accessors.getter.int16;
+      property_animation->values.to.fixed_s32_16 =
+          to_value ? *((Fixed_S32_16 *)to_value) : getter(subject);
+      property_animation->values.from.fixed_s32_16 =
+          from_value ? *((Fixed_S32_16 *)from_value) : getter(subject);
     }
   }
 }
 
-
 // -----------------------------------------------------------------------------------------
-PropertyAnimation *property_animation_create(
-                            const PropertyAnimationImplementation *implementation,
-                            void *subject, void *from_value, void *to_value) {
+PropertyAnimation *property_animation_create(const PropertyAnimationImplementation *implementation,
+                                             void *subject, void *from_value, void *to_value) {
   if (animation_private_using_legacy_2(NULL)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
@@ -342,7 +317,7 @@ PropertyAnimation *property_animation_create(
         (PropertyAnimationLegacy2Implementation *)implementation, subject, from_value, to_value);
   }
 
-  PropertyAnimationPrivate* property_animation = applib_type_malloc(PropertyAnimationPrivate);
+  PropertyAnimationPrivate *property_animation = applib_type_malloc(PropertyAnimationPrivate);
   if (!property_animation) {
     return NULL;
   }
@@ -352,30 +327,28 @@ PropertyAnimation *property_animation_create(
   return (PropertyAnimation *)handle;
 }
 
-
 // -----------------------------------------------------------------------------------------
 // Create a new property animation structure, copying just the property animation unique fields
 PropertyAnimationPrivate *property_animation_private_clone(PropertyAnimationPrivate *from) {
   PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
 
-  PropertyAnimationPrivate* property_animation = applib_type_malloc(PropertyAnimationPrivate);
+  PropertyAnimationPrivate *property_animation = applib_type_malloc(PropertyAnimationPrivate);
   if (!property_animation) {
     return NULL;
   }
   memset(property_animation, 0, sizeof(*property_animation));
   uint8_t *dst = (uint8_t *)property_animation;
   uint8_t *src = (uint8_t *)from;
-  uint32_t offset = sizeof(AnimationPrivate);       // Skip the base class fields
+  uint32_t offset = sizeof(AnimationPrivate);  // Skip the base class fields
   uint32_t size = sizeof(PropertyAnimationPrivate) - offset;
   memcpy(dst + offset, src + offset, size);
   return property_animation;
 }
 
-
 // -----------------------------------------------------------------------------------------
 bool property_animation_init(PropertyAnimation *animation_h,
-                            const PropertyAnimationImplementation *implementation,
-                            void *subject, void *from_value, void *to_value) {
+                             const PropertyAnimationImplementation *implementation, void *subject,
+                             void *from_value, void *to_value) {
   if (animation_private_using_legacy_2(NULL)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
@@ -397,28 +370,28 @@ bool property_animation_init(PropertyAnimation *animation_h,
 }
 
 // -----------------------------------------------------------------------------------------
-PropertyAnimation* property_animation_create_layer_frame(struct Layer *layer, GRect *from_frame,
+PropertyAnimation *property_animation_create_layer_frame(struct Layer *layer, GRect *from_frame,
                                                          GRect *to_frame) {
   if (animation_private_using_legacy_2(NULL)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
-    return (PropertyAnimation *)property_animation_legacy2_create_layer_frame(layer,
-                from_frame, to_frame);
+    return (PropertyAnimation *)property_animation_legacy2_create_layer_frame(layer, from_frame,
+                                                                              to_frame);
   }
 
   return property_animation_create(&s_frame_layer_implementation, layer, from_frame, to_frame);
 }
 
 // -----------------------------------------------------------------------------------------
-PropertyAnimation* property_animation_create_layer_bounds(struct Layer *layer, GRect *from_bounds,
+PropertyAnimation *property_animation_create_layer_bounds(struct Layer *layer, GRect *from_bounds,
                                                           GRect *to_bounds) {
   // no legacy2 support as this was never exposed on 2.x
   return property_animation_create(&s_bounds_layer_implementation, layer, from_bounds, to_bounds);
 }
 
 // -----------------------------------------------------------------------------------------
-bool property_animation_init_layer_frame(PropertyAnimation *animation_h,
-                            struct Layer *layer, GRect *from_frame, GRect *to_frame) {
+bool property_animation_init_layer_frame(PropertyAnimation *animation_h, struct Layer *layer,
+                                         GRect *from_frame, GRect *to_frame) {
   if (animation_private_using_legacy_2(NULL)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
@@ -427,7 +400,7 @@ bool property_animation_init_layer_frame(PropertyAnimation *animation_h,
     return true;
   }
   return property_animation_init(animation_h, &s_frame_layer_implementation, layer, from_frame,
-                                  to_frame);
+                                 to_frame);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -435,8 +408,8 @@ bool property_animation_init_layer_frame(PropertyAnimation *animation_h,
 PropertyAnimation *property_animation_create_bounds_origin(Layer *layer, GPoint *from, GPoint *to) {
   // no legacy2 support as this was never exposed on 2.x
 
-  PropertyAnimation *result = property_animation_create(&s_bounds_layer_implementation,
-      layer, NULL, NULL);
+  PropertyAnimation *result =
+      property_animation_create(&s_bounds_layer_implementation, layer, NULL, NULL);
 
   GRect value = layer->bounds;
   if (from) {
@@ -453,14 +426,13 @@ PropertyAnimation *property_animation_create_bounds_origin(Layer *layer, GPoint 
   return result;
 }
 
-
 // -----------------------------------------------------------------------------------------
 
-static void property_animation_update_mark_dirty(Animation* animation,
+static void property_animation_update_mark_dirty(Animation *animation,
                                                  const AnimationProgress normalized) {
   PropertyAnimation *prop_anim = (PropertyAnimation *)animation;
   Layer *subject;
-  if (property_animation_get_subject(prop_anim, (void**)&subject) && subject) {
+  if (property_animation_get_subject(prop_anim, (void **)&subject) && subject) {
     layer_mark_dirty(subject);
   }
 }
@@ -473,14 +445,14 @@ static const PropertyAnimationImplementation s_dirty_layer_implementation = {
 
 PropertyAnimation *property_animation_create_mark_dirty(struct Layer *layer) {
   // no legacy2 support as this was never exposed on 2.x
-  PropertyAnimation *result = property_animation_create(&s_dirty_layer_implementation,
-                                                        layer, NULL, NULL);
+  PropertyAnimation *result =
+      property_animation_create(&s_dirty_layer_implementation, layer, NULL, NULL);
 
   return result;
 }
 
 // -----------------------------------------------------------------------------------------
-void property_animation_destroy(PropertyAnimation* property_animation_h) {
+void property_animation_destroy(PropertyAnimation *property_animation_h) {
   if (animation_private_using_legacy_2(NULL)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
@@ -489,7 +461,6 @@ void property_animation_destroy(PropertyAnimation* property_animation_h) {
   }
   animation_destroy((Animation *)property_animation_h);
 }
-
 
 // -----------------------------------------------------------------------------------------
 Animation *property_animation_get_animation(PropertyAnimation *property_animation) {
@@ -524,7 +495,6 @@ bool property_animation_subject(PropertyAnimation *property_animation_h, void **
   }
   return true;
 }
-
 
 // -----------------------------------------------------------------------------------------
 bool property_animation_from(PropertyAnimation *property_animation_h, void *value, size_t size,
@@ -564,7 +534,7 @@ bool property_animation_from(PropertyAnimation *property_animation_h, void *valu
 
 // -----------------------------------------------------------------------------------------
 bool property_animation_to(PropertyAnimation *property_animation_h, void *value, size_t size,
-                             bool set) {
+                           bool set) {
   if (!value) {
     return false;
   }

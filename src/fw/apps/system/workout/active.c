@@ -87,14 +87,13 @@ static void prv_draw_hr_measuring_node_callback(GContext *ctx, const GRect *box,
 //! Helpers
 
 static void prv_add_scrollable_metrics(WorkoutActiveWindow *active_window,
-                                       int num_scrollable_metrics,
-                                       WorkoutMetricType *metrics) {
+                                       int num_scrollable_metrics, WorkoutMetricType *metrics) {
   for (int i = 0; i < num_scrollable_metrics; i++) {
     active_window->scrollable_metrics[active_window->num_scrollable_metrics++] = metrics[i];
   }
 }
 
-static const char* prv_get_label_for_hr_metric(int bpm) {
+static const char *prv_get_label_for_hr_metric(int bpm) {
   switch (hr_util_get_hr_zone(bpm)) {
     case HRZone_Zone1:
       /// Zone 1 HR Label
@@ -111,11 +110,10 @@ static const char* prv_get_label_for_hr_metric(int bpm) {
   }
 }
 
-static const char* prv_get_label_for_metric(WorkoutMetricType metric_type,
+static const char *prv_get_label_for_metric(WorkoutMetricType metric_type,
                                             WorkoutActiveWindow *active_window) {
   switch (metric_type) {
-    case WorkoutMetricType_Hr:
-    {
+    case WorkoutMetricType_Hr: {
       int bpm = active_window->workout_controller->get_metric_value(WorkoutMetricType_Hr,
                                                                     active_window->workout_data);
       return prv_get_label_for_hr_metric(bpm);
@@ -171,8 +169,7 @@ static const char* prv_get_label_for_metric(WorkoutMetricType metric_type,
 }
 
 static GColor prv_get_bg_color_for_metric(WorkoutMetricType metric_type,
-                                          WorkoutActiveWindow *active_window,
-                                          bool is_scrollable) {
+                                          WorkoutActiveWindow *active_window, bool is_scrollable) {
 #if PBL_BW
   return GColorWhite;
 #else
@@ -217,9 +214,8 @@ static GFont prv_get_duration_font(void) {
 #endif
 }
 
-static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
-                                       WorkoutMetricType metric_type,
-                                       bool prefer_larger_font,
+static GTextNode *prv_create_text_node(WorkoutActiveWindow *active_window,
+                                       WorkoutMetricType metric_type, bool prefer_larger_font,
                                        void *i18n_owner) {
   GTextNodeHorizontal *horiz_container = graphics_text_node_create_horizontal(MAX_TEXT_NODES);
   GTextNodeContainer *container = &horiz_container->container;
@@ -234,24 +230,22 @@ static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
     case WorkoutMetricType_Hr: {
       GPoint heart_node_offset = GPoint(2, prefer_larger_font ? 5 : 0);
       GTextNodeCustom *heart_node;
-      if (active_window->workout_controller->get_metric_value(
-          metric_type, active_window->workout_data) > 0) {
+      if (active_window->workout_controller->get_metric_value(metric_type,
+                                                              active_window->workout_data) > 0) {
         const size_t buffer_size = sizeof("000");
-        GTextNodeText *number_text_node = health_util_create_text_node(buffer_size, number_font,
-                                                                       TEXT_COLOR, container);
-        active_window->workout_controller->metric_to_string(metric_type,
-                                                            (char *) number_text_node->text,
-                                                            buffer_size, i18n_owner,
-                                                            active_window->workout_data);
+        GTextNodeText *number_text_node =
+            health_util_create_text_node(buffer_size, number_font, TEXT_COLOR, container);
+        active_window->workout_controller->metric_to_string(
+            metric_type, (char *)number_text_node->text, buffer_size, i18n_owner,
+            active_window->workout_data);
         heart_node_offset.y += fonts_get_font_cap_offset(number_font);
-        heart_node = graphics_text_node_create_custom(prv_draw_heart_node_callback,
-                                                      active_window);
+        heart_node = graphics_text_node_create_custom(prv_draw_heart_node_callback, active_window);
       } else {
         // if metric value is 0, we draw another icon that needs different offset
         heart_node_offset.x += 2;
         heart_node_offset.y += 7;
-        heart_node = graphics_text_node_create_custom(prv_draw_hr_measuring_node_callback,
-                                                      active_window);
+        heart_node =
+            graphics_text_node_create_custom(prv_draw_hr_measuring_node_callback, active_window);
       }
       heart_node->node.offset = heart_node_offset;
       graphics_text_node_container_add_child(container, &heart_node->node);
@@ -259,55 +253,50 @@ static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
     }
     case WorkoutMetricType_Steps: {
       const size_t buffer_size = sizeof("000000");
-      GTextNodeText *number_text_node = health_util_create_text_node(buffer_size, number_font,
-                                                                     TEXT_COLOR, container);
-      active_window->workout_controller->metric_to_string(metric_type,
-                                                          (char *) number_text_node->text,
-                                                          buffer_size, i18n_owner,
-                                                          active_window->workout_data);
+      GTextNodeText *number_text_node =
+          health_util_create_text_node(buffer_size, number_font, TEXT_COLOR, container);
+      active_window->workout_controller->metric_to_string(
+          metric_type, (char *)number_text_node->text, buffer_size, i18n_owner,
+          active_window->workout_data);
       break;
     }
     case WorkoutMetricType_Distance: {
       GTextNodeText *number_text_node = health_util_create_text_node(
           HEALTH_WHOLE_AND_DECIMAL_LENGTH, number_font, TEXT_COLOR, container);
-      active_window->workout_controller->metric_to_string(metric_type,
-                                                          (char *) number_text_node->text,
-                                                          HEALTH_WHOLE_AND_DECIMAL_LENGTH,
-                                                          i18n_owner,
-                                                          active_window->workout_data);
+      active_window->workout_controller->metric_to_string(
+          metric_type, (char *)number_text_node->text, HEALTH_WHOLE_AND_DECIMAL_LENGTH, i18n_owner,
+          active_window->workout_data);
 
 #if PBL_RECT
       /// MI/KM units string
-      const char *units_string = active_window->workout_controller->get_distance_string(
-          i18n_noop("MI"), i18n_noop("KM"));
+      const char *units_string =
+          active_window->workout_controller->get_distance_string(i18n_noop("MI"), i18n_noop("KM"));
       GTextNodeText *units_text_node = health_util_create_text_node_with_text(
           i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
       units_text_node->node.offset.y = units_offset_y;
 #endif
       break;
     }
-    case WorkoutMetricType_Custom:
-    {
+    case WorkoutMetricType_Custom: {
       const size_t buffer_size = 20;
-      GTextNodeText *number_text_node = health_util_create_text_node(buffer_size, number_font,
-                                                                     TEXT_COLOR, container);
+      GTextNodeText *number_text_node =
+          health_util_create_text_node(buffer_size, number_font, TEXT_COLOR, container);
       number_text_node->overflow = GTextOverflowModeTrailingEllipsis;
-      active_window->workout_controller->metric_to_string(metric_type,
-                                                          (char *) number_text_node->text,
-                                                          buffer_size, i18n_owner,
-                                                          active_window->workout_data);
+      active_window->workout_controller->metric_to_string(
+          metric_type, (char *)number_text_node->text, buffer_size, i18n_owner,
+          active_window->workout_data);
       if (strlen(number_text_node->text) > 5) {
         number_text_node->font = prv_get_number_font(false);
       }
       break;
     }
-    case WorkoutMetricType_Duration:
-    {
+    case WorkoutMetricType_Duration: {
       const size_t buffer_size = sizeof("00:00:00");
-      GTextNodeText *number_text_node = health_util_create_text_node(buffer_size, number_font,
-                                                                     TEXT_COLOR, container);
-      active_window->workout_controller->metric_to_string(metric_type,
-          (char *)number_text_node->text, buffer_size, i18n_owner, active_window->workout_data);
+      GTextNodeText *number_text_node =
+          health_util_create_text_node(buffer_size, number_font, TEXT_COLOR, container);
+      active_window->workout_controller->metric_to_string(
+          metric_type, (char *)number_text_node->text, buffer_size, i18n_owner,
+          active_window->workout_data);
 
       if (strlen(number_text_node->text) > 5) {
         // text is long (includes hours) so use a font that fits the seconds
@@ -316,30 +305,29 @@ static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
       break;
     }
     case WorkoutMetricType_Pace:
-    case WorkoutMetricType_AvgPace:
-    {
+    case WorkoutMetricType_AvgPace: {
       if (active_window->workout_controller->get_metric_value(
-          metric_type, active_window->workout_data) >= SECONDS_PER_HOUR) {
-         GTextNodeText *text_node =
+              metric_type, active_window->workout_data) >= SECONDS_PER_HOUR) {
+        GTextNodeText *text_node =
             health_util_create_text_node_with_text(EM_DASH, units_font, TEXT_COLOR, container);
-            text_node->node.offset.x += 1;
-            text_node->node.offset.y = units_offset_y;
-       } else {
+        text_node->node.offset.x += 1;
+        text_node->node.offset.y = units_offset_y;
+      } else {
         const size_t buffer_size = sizeof("00:00:00");
-        GTextNodeText *number_text_node = health_util_create_text_node(buffer_size, number_font,
-                                                                       TEXT_COLOR, container);
-        active_window->workout_controller->metric_to_string(metric_type,
-            (char *)number_text_node->text, buffer_size, i18n_owner, active_window->workout_data);
+        GTextNodeText *number_text_node =
+            health_util_create_text_node(buffer_size, number_font, TEXT_COLOR, container);
+        active_window->workout_controller->metric_to_string(
+            metric_type, (char *)number_text_node->text, buffer_size, i18n_owner,
+            active_window->workout_data);
 
 #if PBL_RECT
-        GTextNodeText *divider_text_node = health_util_create_text_node_with_text(
-            "/", units_font, TEXT_COLOR, container);
+        GTextNodeText *divider_text_node =
+            health_util_create_text_node_with_text("/", units_font, TEXT_COLOR, container);
         divider_text_node->node.offset.y = units_offset_y;
 
         /// MI/KM units string
-        const char *units_string =
-            active_window->workout_controller->get_distance_string(i18n_noop("MI"),
-                                                                   i18n_noop("KM"));
+        const char *units_string = active_window->workout_controller->get_distance_string(
+            i18n_noop("MI"), i18n_noop("KM"));
         GTextNodeText *units_text_node = health_util_create_text_node_with_text(
             i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
         units_text_node->node.offset.y = units_offset_y;
@@ -347,19 +335,18 @@ static GTextNode* prv_create_text_node(WorkoutActiveWindow *active_window,
       }
       break;
     }
-    case WorkoutMetricType_Speed:
-    {
+    case WorkoutMetricType_Speed: {
       const size_t buffer_size = sizeof("00:00:00");
-      GTextNodeText *number_text_node = health_util_create_text_node(buffer_size, number_font,
-                                                                     TEXT_COLOR, container);
-      active_window->workout_controller->metric_to_string(metric_type,
-          (char *)number_text_node->text, buffer_size, i18n_owner, active_window->workout_data);
+      GTextNodeText *number_text_node =
+          health_util_create_text_node(buffer_size, number_font, TEXT_COLOR, container);
+      active_window->workout_controller->metric_to_string(
+          metric_type, (char *)number_text_node->text, buffer_size, i18n_owner,
+          active_window->workout_data);
 
 #if PBL_RECT
       /// MI/KM units string
-      const char *units_string =
-          active_window->workout_controller->get_distance_string(i18n_noop("MPH"),
-                                                                 i18n_noop("KM/H"));
+      const char *units_string = active_window->workout_controller->get_distance_string(
+          i18n_noop("MPH"), i18n_noop("KM/H"));
       GTextNodeText *units_text_node = health_util_create_text_node_with_text(
           i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
       units_text_node->node.offset.y = units_offset_y;
@@ -413,13 +400,13 @@ static void prv_update_ui(WorkoutActiveWindow *active_window) {
 static void prv_hr_measuring_timer_callback(void *data) {
   WorkoutActiveWindow *active_window = data;
 
-  active_window->cur_hr_measuring_width_idx = (active_window->cur_hr_measuring_width_idx + 1)
-                                              % ARRAY_LENGTH(s_hr_measuring_widths);
+  active_window->cur_hr_measuring_width_idx =
+      (active_window->cur_hr_measuring_width_idx + 1) % ARRAY_LENGTH(s_hr_measuring_widths);
 
   prv_update_ui(active_window);
 
-  if (active_window->workout_controller->get_metric_value(
-      WorkoutMetricType_Hr, active_window->workout_data) == 0) {
+  if (active_window->workout_controller->get_metric_value(WorkoutMetricType_Hr,
+                                                          active_window->workout_data) == 0) {
     int timeout_ms = (active_window->cur_hr_measuring_width_idx == 0) ? 800 : 200;
     active_window->hr_measuring_timer =
         app_timer_register(timeout_ms, prv_hr_measuring_timer_callback, active_window);
@@ -438,8 +425,8 @@ static void prv_update_timer_callback(void *data) {
   prv_update_ui(active_window);
   active_window->update_timer = app_timer_register(1000, prv_update_timer_callback, active_window);
 
-  const int bpm = active_window->workout_controller->get_metric_value(
-      WorkoutMetricType_Hr, active_window->workout_data);
+  const int bpm = active_window->workout_controller->get_metric_value(WorkoutMetricType_Hr,
+                                                                      active_window->workout_data);
   if (bpm == 0 && !active_window->hr_measuring_timer) {
     active_window->cur_hr_measuring_width_idx = 0;
     prv_hr_measuring_timer_callback(active_window);
@@ -449,8 +436,8 @@ static void prv_update_timer_callback(void *data) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //! Drawing
 
-static void prv_draw_heart_icon(GContext *ctx, GBitmap *icon, const GRect *rect,
-                                bool render, GSize *size_out) {
+static void prv_draw_heart_icon(GContext *ctx, GBitmap *icon, const GRect *rect, bool render,
+                                GSize *size_out) {
   if (render) {
     graphics_context_set_compositing_mode(ctx, GCompOpSet);
     graphics_draw_bitmap_in_rect(ctx, icon, rect);
@@ -503,15 +490,11 @@ static void prv_render_metric_label(GContext *ctx, GRect *box, WorkoutMetricType
     overflow_mode = GTextOverflowModeTrailingEllipsis;
   }
 
-
   graphics_context_set_text_color(ctx, TEXT_COLOR);
   graphics_draw_text(ctx,
                      i18n_get(prv_get_label_for_metric(metric_type, active_window), i18n_owner),
-                     fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
-                     label_box,
-                     overflow_mode,
-                     TEXT_ALIGNMENT,
-                     NULL);
+                     fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), label_box, overflow_mode,
+                     TEXT_ALIGNMENT, NULL);
 }
 
 static void prv_render_hr_zones(GContext *ctx, GRect *box, WorkoutActiveWindow *active_window) {
@@ -529,7 +512,7 @@ static void prv_render_hr_zones(GContext *ctx, GRect *box, WorkoutActiveWindow *
 
   for (HRZone i = HRZone_Zone1; i < HRZoneCount; i++) {
     if (i <= hr_util_get_hr_zone(active_window->workout_controller->get_metric_value(
-        WorkoutMetricType_Hr, active_window->workout_data))) {
+                 WorkoutMetricType_Hr, active_window->workout_data))) {
       graphics_fill_rect(ctx, &zone_rect);
     } else {
       // drawing it twice to draw a 2px border
@@ -558,8 +541,8 @@ static void prv_render_metric(GContext *ctx, WorkoutMetricType metric_type, Laye
   } else if (active_window->layout == WorkoutLayout_StaticAndScrollable) {
     rect.origin.y = prefer_larger_font ? PBL_IF_RECT_ELSE(2, 13) : PBL_IF_RECT_ELSE(5, 1);
   } else if (active_window->layout == WorkoutLayout_TwoStaticAndScrollable) {
-    rect.origin.y = (&active_window->scrollable_metric_layer == layer) ?
-        PBL_IF_RECT_ELSE(-2, 0) : PBL_IF_RECT_ELSE(-4, -2);
+    rect.origin.y = (&active_window->scrollable_metric_layer == layer) ? PBL_IF_RECT_ELSE(-2, 0)
+                                                                       : PBL_IF_RECT_ELSE(-4, -2);
   }
 
   // set the rect height so we don't wrap text to the next line
@@ -592,8 +575,8 @@ static void prv_render_metric(GContext *ctx, WorkoutMetricType metric_type, Laye
   rect.origin.x -= PBL_IF_RECT_ELSE(1, 46);
   rect.size.w += (rl_margin * 2);
 
-  GTextNode *text_node = prv_create_text_node(active_window, metric_type,
-                                              prefer_larger_font, layer);
+  GTextNode *text_node =
+      prv_create_text_node(active_window, metric_type, prefer_larger_font, layer);
   graphics_text_node_draw(text_node, ctx, &rect, NULL, NULL);
   graphics_text_node_destroy(text_node);
 }
@@ -708,7 +691,7 @@ static void prv_handle_pause_button(WorkoutActiveWindow *active_window) {
   }
 
   if (active_window->workout_controller) {
-     active_window->workout_controller->pause(!is_paused);
+    active_window->workout_controller->pause(!is_paused);
   }
 
   prv_update_ui(active_window);
@@ -800,8 +783,7 @@ static void prv_window_unload_handler(Window *window) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //! Common Setup
-static void prv_create_window_common(WorkoutActiveWindow *active_window,
-                                     void *workout_data,
+static void prv_create_window_common(WorkoutActiveWindow *active_window, void *workout_data,
                                      WorkoutController *workout_controller) {
   active_window->workout_data = workout_data;
   active_window->workout_controller = workout_controller;
@@ -811,8 +793,8 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
   window_set_user_data(window, active_window);
   window_set_background_color(window, BACKGROUND_COLOR);
   window_set_window_handlers(window, &(WindowHandlers){
-    .unload = prv_window_unload_handler,
-  });
+                                         .unload = prv_window_unload_handler,
+                                     });
 
   GRect base_layer_bounds = window->layer.bounds;
 #if PBL_RECT
@@ -844,8 +826,8 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
 
     GRect scrollable_metric_bounds = top_metric_bounds;
     scrollable_metric_bounds.origin.y = scrollable_metric_bounds.size.h;
-    scrollable_metric_bounds.size.h = window->layer.bounds.size.h -
-                                      scrollable_metric_bounds.origin.y;
+    scrollable_metric_bounds.size.h =
+        window->layer.bounds.size.h - scrollable_metric_bounds.origin.y;
     layer_init(&active_window->scrollable_metric_layer, &scrollable_metric_bounds);
     layer_set_update_proc(&active_window->scrollable_metric_layer,
                           prv_scrollable_layer_update_proc);
@@ -900,23 +882,17 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window,
   active_window->hr_measuring_icon =
       gbitmap_create_with_resource(RESOURCE_ID_WORKOUT_APP_MEASURING_HR),
 
-  active_window->action_bar_start =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_START);
-  active_window->action_bar_pause =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_PAUSE);
-  active_window->action_bar_stop =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_STOP);
-  active_window->action_bar_more =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_MORE);
-  active_window->action_bar_next =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_TOGGLE);
+  active_window->action_bar_start = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_START);
+  active_window->action_bar_pause = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_PAUSE);
+  active_window->action_bar_stop = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_STOP);
+  active_window->action_bar_more = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_MORE);
+  active_window->action_bar_next = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_TOGGLE);
 
   prv_set_pause_button(active_window);
   prv_set_action_bar_icons(active_window);
 
   active_window->update_timer = app_timer_register(1000, prv_update_timer_callback, active_window);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //! Public API
@@ -984,71 +960,58 @@ WorkoutActiveWindow *workout_active_create_triple_layout(WorkoutMetricType top_m
   return active_window;
 }
 
-WorkoutActiveWindow *workout_active_create_for_activity_type(ActivitySessionType type,
-    void *workout_data, WorkoutController *workout_controller) {
+WorkoutActiveWindow *workout_active_create_for_activity_type(
+    ActivitySessionType type, void *workout_data, WorkoutController *workout_controller) {
   const bool hrm_is_available = activity_is_hrm_present() && activity_prefs_heart_rate_is_enabled();
 
   switch (type) {
-    case ActivitySessionType_Open:
-    {
+    case ActivitySessionType_Open: {
       if (hrm_is_available) {
         WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Duration};
-        return workout_active_create_double_layout(WorkoutMetricType_Hr,
-                                                   ARRAY_LENGTH(scrollable_metrics),
-                                                   scrollable_metrics,
-                                                   workout_data,
-                                                   workout_controller);
+        return workout_active_create_double_layout(
+            WorkoutMetricType_Hr, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+            workout_data, workout_controller);
       } else {
-        return workout_active_create_single_layout(WorkoutMetricType_Duration,
-                                                   workout_data,
+        return workout_active_create_single_layout(WorkoutMetricType_Duration, workout_data,
                                                    workout_controller);
       }
     }
-    case ActivitySessionType_Walk:
-    {
+    case ActivitySessionType_Walk: {
       if (hrm_is_available) {
         WorkoutMetricType top_metric = WorkoutMetricType_Hr;
-        WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Duration,
-                                                  WorkoutMetricType_Distance,
-                                                  WorkoutMetricType_AvgPace,
-                                                  WorkoutMetricType_Steps};
-        return workout_active_create_double_layout(top_metric,
-                                                   ARRAY_LENGTH(scrollable_metrics),
-                                                   scrollable_metrics,
-                                                   workout_data,
+        WorkoutMetricType scrollable_metrics[] = {
+            WorkoutMetricType_Duration, WorkoutMetricType_Distance, WorkoutMetricType_AvgPace,
+            WorkoutMetricType_Steps
+        };
+        return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
+                                                   scrollable_metrics, workout_data,
                                                    workout_controller);
       } else {
         WorkoutMetricType top_metric = WorkoutMetricType_Duration;
-        WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Distance,
-                                                  WorkoutMetricType_AvgPace,
-                                                  WorkoutMetricType_Steps};
-        return workout_active_create_double_layout(top_metric,
-                                                   ARRAY_LENGTH(scrollable_metrics),
-                                                   scrollable_metrics,
-                                                   workout_data,
+        WorkoutMetricType scrollable_metrics[] = {
+            WorkoutMetricType_Distance, WorkoutMetricType_AvgPace, WorkoutMetricType_Steps
+        };
+        return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
+                                                   scrollable_metrics, workout_data,
                                                    workout_controller);
       }
     }
-    case ActivitySessionType_Run:
-    {
+    case ActivitySessionType_Run: {
       if (hrm_is_available) {
         WorkoutMetricType top_metric = WorkoutMetricType_Hr;
-        WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Duration,
-                                                  WorkoutMetricType_AvgPace,
-                                                  WorkoutMetricType_Distance};
-        return workout_active_create_double_layout(top_metric,
-                                                   ARRAY_LENGTH(scrollable_metrics),
-                                                   scrollable_metrics,
-                                                   workout_data,
+        WorkoutMetricType scrollable_metrics[] = {
+            WorkoutMetricType_Duration, WorkoutMetricType_AvgPace, WorkoutMetricType_Distance
+        };
+        return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
+                                                   scrollable_metrics, workout_data,
                                                    workout_controller);
       } else {
         WorkoutMetricType top_metric = WorkoutMetricType_Duration;
-        WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_AvgPace,
-                                                  WorkoutMetricType_Distance};
-        return workout_active_create_double_layout(top_metric,
-                                                   ARRAY_LENGTH(scrollable_metrics),
-                                                   scrollable_metrics,
-                                                   workout_data,
+        WorkoutMetricType scrollable_metrics[] = {
+            WorkoutMetricType_AvgPace, WorkoutMetricType_Distance
+        };
+        return workout_active_create_double_layout(top_metric, ARRAY_LENGTH(scrollable_metrics),
+                                                   scrollable_metrics, workout_data,
                                                    workout_controller);
       }
     }

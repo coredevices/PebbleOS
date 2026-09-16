@@ -25,18 +25,16 @@ typedef struct MemoryLayout {
   uint32_t start_offset;
 } MemoryLayout;
 
-static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_type) {
+static const MemoryLayout *prv_get_layout_for_type(PutBytesObjectType object_type) {
   static const MemoryLayout layouts[] = {
 #ifndef CONFIG_PBLBOOT
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription) },
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription) },
+      {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END,
+       sizeof(FirmwareDescription)},
+      {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END,
+       sizeof(FirmwareDescription)},
 #else
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, 0U },
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, 0U },
+      {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, 0U},
+      {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, 0U},
 #endif
   };
   static MemoryLayout resource_layout;
@@ -44,7 +42,7 @@ static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_typ
   // Our PutBytesObjectType values are 1 indexed instead of zero indexed and the first three
   // are the only raw ones, so we can get away with just subtracting 1.
   if (object_type == ObjectSysResources) {
-    resource_layout = (MemoryLayout) {
+    resource_layout = (MemoryLayout){
         resource_storage_flash_get_unused_bank()->begin,
         resource_storage_flash_get_unused_bank()->end,
         0,
@@ -55,8 +53,8 @@ static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_typ
   }
 }
 
-bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *status) {
-  const MemoryLayout *layout  = prv_get_layout_for_type(obj_type);
+bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *status) {
+  const MemoryLayout *layout = prv_get_layout_for_type(obj_type);
 
   const size_t read_buffer_size = 2048;
   uint8_t *read_buffer = kernel_zalloc(read_buffer_size);
@@ -99,10 +97,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *st
         // for the mobile apps to implement flash_crc32
         uint32_t crc = flash_calculate_legacy_defective_checksum(stop_read_address, bytes_written);
 
-        *status = (PbInstallStatus) {
-          .num_bytes_written = bytes_written,
-          .crc_of_bytes = crc
-        };
+        *status = (PbInstallStatus){.num_bytes_written = bytes_written, .crc_of_bytes = crc};
 
         success = true;
         goto cleanup;
@@ -118,7 +113,7 @@ cleanup:
 bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_type,
                          uint32_t total_size, PutBytesStorageInfo *info, uint32_t append_offset) {
   const MemoryLayout *layout = prv_get_layout_for_type(object_type);
-  storage->impl_data = (void*) layout;
+  storage->impl_data = (void *)layout;
 
   storage->current_offset = layout->start_offset;
 
@@ -140,7 +135,7 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
     // By erasing the entire region we make it more likely for 'pb_storage_raw_get_status' to
     // recover the correct location.
     flash_region_erase_optimal_range(layout->start_address, layout->start_address,
-        layout->end_address, layout->end_address);
+                                     layout->end_address, layout->end_address);
 
     // Restore the fast interval so the init ACK isn't delayed by the slow connection parameters.
     comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes,
@@ -184,7 +179,6 @@ uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType 
 
 void pb_storage_raw_deinit(PutBytesStorage *storage, bool is_success) {
   // Restore normal BLE responsiveness that was reduced in pb_storage_raw_init
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerPpPutBytes, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes,
+                                  ResponseTimeMin, MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
 }

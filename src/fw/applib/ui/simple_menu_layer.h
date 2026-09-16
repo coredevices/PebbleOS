@@ -98,13 +98,14 @@ void simple_menu_layer_init(SimpleMenuLayer *simple_menu, const GRect *frame, Wi
 //! @note This function does not add the menu's layer to the window.
 //! @return A pointer to the SimpleMenuLayer. `NULL` if the SimpleMenuLayer could not
 //! be created
-SimpleMenuLayer* simple_menu_layer_create(GRect frame, Window *window,
-    const SimpleMenuSection *sections, int32_t num_sections, void *callback_context);
+SimpleMenuLayer *simple_menu_layer_create(GRect frame, Window *window,
+                                          const SimpleMenuSection *sections, int32_t num_sections,
+                                          void *callback_context);
 
 void simple_menu_layer_deinit(SimpleMenuLayer *menu_layer);
 
 //! Destroys a SimpleMenuLayer previously created by simple_menu_layer_create.
-void simple_menu_layer_destroy(SimpleMenuLayer* menu_layer);
+void simple_menu_layer_destroy(SimpleMenuLayer *menu_layer);
 
 //! Gets the "root" Layer of the simple menu layer, which is the parent for the
 //! sub-layers used for its implementation.
@@ -113,7 +114,7 @@ void simple_menu_layer_destroy(SimpleMenuLayer* menu_layer);
 //! @return The "root" Layer of the menu layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) simple_menu`.
-Layer* simple_menu_layer_get_layer(const SimpleMenuLayer *simple_menu);
+Layer *simple_menu_layer_get_layer(const SimpleMenuLayer *simple_menu);
 
 //! Gets the row index of the currently selection menu item.
 //! @param simple_menu The SimpleMenuLayer for which to get the current
@@ -125,7 +126,8 @@ int simple_menu_layer_get_selected_index(const SimpleMenuLayer *simple_menu);
 //! @param index The row index of the item to select
 //! @param animated Supply `true` to animate changing the selection, or `false`
 //! to change the selection instantly.
-void simple_menu_layer_set_selected_index(SimpleMenuLayer *simple_menu, int32_t index, bool animated);
+void simple_menu_layer_set_selected_index(SimpleMenuLayer *simple_menu, int32_t index,
+                                          bool animated);
 
 //! @param simple_menu The \ref SimpleMenuLayer to get the \ref MenuLayer from.
 //! @return The \ref MenuLayer.

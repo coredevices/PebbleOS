@@ -21,17 +21,17 @@ bool compositor_transition_app_to_app_should_be_skipped(void) {
 typedef struct {
   GDrawCommandProcessor draw_command_processor;
   GContext *ctx;
-  GColor stroke_color; // replace red to this
-  GColor key_color; // replace this color with overdraw_color
-  GColor overdraw_color; // replace key_color with this
-  GColor app_fb_key_color; // replace with app framebuffer, use GColorClear to skip
-  GPoint framebuffer_offset; // displacement for the app framebuffer when drawing
+  GColor stroke_color;        // replace red to this
+  GColor key_color;           // replace this color with overdraw_color
+  GColor overdraw_color;      // replace key_color with this
+  GColor app_fb_key_color;    // replace with app framebuffer, use GColorClear to skip
+  GPoint framebuffer_offset;  // displacement for the app framebuffer when drawing
 } CompositorColorReplacementProcessor;
 
 static void prv_compositor_replace_colors_processor(GDrawCommandProcessor *processor,
                                                     GDrawCommand *processed_command,
                                                     size_t processed_command_max_size,
-                                                    const GDrawCommandList* list,
+                                                    const GDrawCommandList *list,
                                                     const GDrawCommand *command) {
   CompositorColorReplacementProcessor *p = (CompositorColorReplacementProcessor *)processor;
   const GColor8 key_stroke_color = GColorRed;
@@ -42,12 +42,8 @@ static void prv_compositor_replace_colors_processor(GDrawCommandProcessor *proce
     const uint16_t num_points = gdraw_command_get_num_points(processed_command);
     GPoint points[num_points];
     if (sizeof(points) == gdraw_command_copy_points(processed_command, points, sizeof(points))) {
-      GPath path = {
-        .num_points = num_points,
-        .points = points
-      };
-      gpath_draw_filled_with_cb(p->ctx, &path,
-                                compositor_app_framebuffer_fill_callback,
+      GPath path = {.num_points = num_points, .points = points};
+      gpath_draw_filled_with_cb(p->ctx, &path, compositor_app_framebuffer_fill_callback,
                                 &p->framebuffer_offset);
     }
 
@@ -62,10 +58,11 @@ static void prv_compositor_replace_colors_processor(GDrawCommandProcessor *proce
   }
 }
 
-void compositor_transition_pdcs_animation_update(
-    GContext *ctx, GDrawCommandSequence *sequence, uint32_t distance_normalized,
-    GColor chroma_key_color, GColor stroke_color, GColor overdraw_color, bool inner,
-    const GPoint *framebuffer_offset) {
+void compositor_transition_pdcs_animation_update(GContext *ctx, GDrawCommandSequence *sequence,
+                                                 uint32_t distance_normalized,
+                                                 GColor chroma_key_color, GColor stroke_color,
+                                                 GColor overdraw_color, bool inner,
+                                                 const GPoint *framebuffer_offset) {
   if (!sequence) {
     return;
   }
@@ -84,12 +81,12 @@ void compositor_transition_pdcs_animation_update(
   // it's a bit weird but just they way how these SVGs have been designed
   const GColor8 key_color = inner ? GColorIslamicGreen : GColorGreen;
   CompositorColorReplacementProcessor processor = {
-    .draw_command_processor.command = prv_compositor_replace_colors_processor,
-    .ctx = ctx,
-    .stroke_color = stroke_color,
-    .key_color = key_color,
-    .overdraw_color = overdraw_color,
-    .app_fb_key_color = inner ? chroma_key_color : GColorClear,
+      .draw_command_processor.command = prv_compositor_replace_colors_processor,
+      .ctx = ctx,
+      .stroke_color = stroke_color,
+      .key_color = key_color,
+      .overdraw_color = overdraw_color,
+      .app_fb_key_color = inner ? chroma_key_color : GColorClear,
   };
 
   gdraw_command_frame_draw_processed(ctx, sequence, frame, GPointZero,
@@ -136,7 +133,7 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
 
   // First pixel with blending if fraction is different than 0
   const uint16_t data_row_offset =
-    (uint16_t)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
+      (uint16_t)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
   if (x1.fraction != 0) {
     graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, *input, x1.integer,
                                             (uint8_t)(FIXED_S16_3_ONE.raw_value - x1.fraction));
@@ -162,8 +159,8 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
 
 //! Copy vertical lines from the app framebuffer to the provided framebuffer
 //! This is basically duplicated from prv_assign_vertical_line_raw() in graphics_private_raw.c
-void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 y1,
-                                          Fixed_S16_3 y2, GColor color) {
+void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 y1, Fixed_S16_3 y2,
+                                          GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
@@ -192,7 +189,7 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
 
   // first pixel with blending
   const uint16_t data_row_offset =
-    (uint16_t)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
+      (uint16_t)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
   if (y1.fraction != 0) {
     // Only draw the pixel if its within the bitmap data row range
     if (WITHIN(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
@@ -230,8 +227,8 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
 }
 
 const GDrawRawImplementation g_compositor_transitions_app_fb_draw_implementation = {
-  .assign_horizontal_line = prv_app_fb_fill_assign_horizontal_line,
-  .assign_vertical_line = prv_app_fb_fill_assign_vertical_line,
-  // If you ever experience a crash during compositor transitions (e.g. in an integration tests)
-  // then it's likely that you need to provide additional draw handlers here
+    .assign_horizontal_line = prv_app_fb_fill_assign_horizontal_line,
+    .assign_vertical_line = prv_app_fb_fill_assign_vertical_line,
+    // If you ever experience a crash during compositor transitions (e.g. in an integration tests)
+    // then it's likely that you need to provide additional draw handlers here
 };

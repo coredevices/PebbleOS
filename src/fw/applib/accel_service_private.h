@@ -12,9 +12,9 @@ typedef struct AccelServiceState {
   // Configuration for our data callback subscription to the accel manager
   AccelManagerState *manager_state;
   AccelSamplingRate sampling_rate;
-  bool              deferred_free;
-  uint16_t          samples_per_update;
-  AccelRawData      *raw_data;   // of size samples_per_update
+  bool deferred_free;
+  uint16_t samples_per_update;
+  AccelRawData *raw_data;  // of size samples_per_update
 
   // User-provided callbacks for various events
   AccelDataHandler data_handler;
@@ -33,7 +33,7 @@ typedef struct AccelServiceState {
 //! Initialize an existing state object
 void accel_service_state_init(AccelServiceState *state);
 
-AccelServiceState* accel_service_private_get_session(PebbleTask task);
+AccelServiceState *accel_service_private_get_session(PebbleTask task);
 
 void accel_service_cleanup_task_session(PebbleTask task);
 
@@ -44,7 +44,7 @@ void accel_service_cleanup_task_session(PebbleTask task);
 //! AccelServiceState given the current task_id (app or worker) and then called into the respective
 //! accel_session_.* call.
 //! @return A non-zero session upon success, NULL if error
-AccelServiceState* accel_session_create(void);
+AccelServiceState *accel_session_create(void);
 
 //! Delete an accel session created by accel_session_create. Used by kernel clients only.
 //! @param session An Accel session created by accel_session_create()
@@ -87,9 +87,8 @@ void accel_session_data_subscribe(AccelServiceState *session, uint32_t samples_p
 //! @param samples_per_update the number of samples to buffer, between 0 and 25.
 //! @param handler A callback to be executed on accelerometer data events. The callback will
 //!                execute on the current task calling this function.
-void accel_session_raw_data_subscribe(
-    AccelServiceState *session, AccelSamplingRate sampling_rate, uint32_t samples_per_update,
-    AccelRawDataHandler handler);
+void accel_session_raw_data_subscribe(AccelServiceState *session, AccelSamplingRate sampling_rate,
+                                      uint32_t samples_per_update, AccelRawDataHandler handler);
 
 //! Unsubscribe from the accelerometer data event service. Used by kernel clients
 //! only.

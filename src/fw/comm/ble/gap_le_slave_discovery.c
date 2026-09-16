@@ -32,9 +32,7 @@ static GAPLEAdvertisingJobRef s_discovery_advert_job;
 
 // -----------------------------------------------------------------------------
 //! Handles unscheduling of the discovery advertisement job.
-static void prv_job_unschedule_callback(GAPLEAdvertisingJobRef job,
-                                        bool completed,
-                                        void *cb_data) {
+static void prv_job_unschedule_callback(GAPLEAdvertisingJobRef job, bool completed, void *cb_data) {
   // Cleanup:
   s_discovery_advert_job = NULL;
 }
@@ -55,8 +53,8 @@ static void prv_schedule_ad_job(void) {
   // Advertise "BR/EDR Not Supported" alongside General Discoverable: these are
   // BLE-only watches, so dual-mode hosts must connect over LE instead of attempting
   // a classic page (which would time out).
-  ble_ad_set_flags(ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK |
-                       GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
+  ble_ad_set_flags(
+      ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK | GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
 
   // *DO NOT* use pebble_bt_uuid_expand() here!
   // ble_ad_set_service_uuids() will be "smart" and include only the 16-bit UUID, but only if the
@@ -99,30 +97,27 @@ static void prv_schedule_ad_job(void) {
     union {
       uint8_t flags;
       struct {
-        bool is_running_recovery_firmware:1;
-        bool is_first_use:1;
+        bool is_running_recovery_firmware : 1;
+        bool is_first_use : 1;
       };
     };
   } mfg_data = {
-    .payload_type = 0 /* For future proofing. Only one type for now.*/,
-    .hw_platform = TINTIN_METADATA.hw_platform,
-    .color = mfg_info_get_watch_color(),
-    .fw_version = {
-      .major = GIT_MAJOR_VERSION,
-      .minor = GIT_MINOR_VERSION,
-      .patch = GIT_PATCH_VERSION,
-    },
-    .is_running_recovery_firmware = TINTIN_METADATA.is_recovery_firmware,
-    .is_first_use = false, // !getting_started_is_complete(), // TODO
+      .payload_type = 0 /* For future proofing. Only one type for now.*/,
+      .hw_platform = TINTIN_METADATA.hw_platform,
+      .color = mfg_info_get_watch_color(),
+      .fw_version =
+          {
+              .major = GIT_MAJOR_VERSION,
+              .minor = GIT_MINOR_VERSION,
+              .patch = GIT_PATCH_VERSION,
+          },
+      .is_running_recovery_firmware = TINTIN_METADATA.is_recovery_firmware,
+      .is_first_use = false,  // !getting_started_is_complete(), // TODO
   };
-  memcpy(&mfg_data.serial_number,
-         mfg_get_serial_number(),
-         MFG_SERIAL_NUMBER_SIZE);
+  memcpy(&mfg_data.serial_number, mfg_get_serial_number(), MFG_SERIAL_NUMBER_SIZE);
 
-  ble_ad_set_manufacturer_specific_data(ad,
-                                       BT_VENDOR_ID,
-                                       (const uint8_t *) &mfg_data,
-                                       sizeof(struct ManufacturerSpecificData));
+  ble_ad_set_manufacturer_specific_data(ad, BT_VENDOR_ID, (const uint8_t *)&mfg_data,
+                                        sizeof(struct ManufacturerSpecificData));
 
   // Values chosen according to Apple Accessory Design Guidelines.
   const GAPLEAdvertisingJobTerm advert_terms[] = {

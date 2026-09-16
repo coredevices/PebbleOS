@@ -22,9 +22,9 @@ static void click_config_provider(void *context) {
 static void push_window(void) {
   Window *window = window_create();
   window_set_fullscreen(window, s_next_window_fullscreen);
-  window_set_window_handlers(window, (WindowHandlers) {
-    .unload = unload_handler,
-  });
+  window_set_window_handlers(window, (WindowHandlers){
+                                         .unload = unload_handler,
+                                     });
   window_set_click_config_provider(window, click_config_provider);
 
   s_next_window_fullscreen = !s_next_window_fullscreen;

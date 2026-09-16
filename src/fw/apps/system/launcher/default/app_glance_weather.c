@@ -45,8 +45,8 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 
 static void prv_weather_glance_subtitle_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceWeather *weather_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -73,9 +73,8 @@ static void prv_destructor(LauncherAppGlanceStructured *structured_glance) {
 
 static uint32_t prv_get_weather_icon_resource_id_for_type(WeatherType type) {
   AppResourceInfo res_info;
-  const bool lookup_success =
-      timeline_resources_get_id_system(weather_type_get_timeline_resource_id(type),
-                                       TimelineResourceSizeTiny, SYSTEM_APP, &res_info);
+  const bool lookup_success = timeline_resources_get_id_system(
+      weather_type_get_timeline_resource_id(type), TimelineResourceSizeTiny, SYSTEM_APP, &res_info);
   return lookup_success ? res_info.res_id : (uint32_t)RESOURCE_ID_INVALID;
 }
 
@@ -88,8 +87,8 @@ static void prv_weather_event_handler(PBL_UNUSED PebbleEvent *event, void *conte
   WeatherLocationForecast *forecast = weather_service_create_default_forecast();
 
   // Update the icon for the forecast's weather type
-  const WeatherType weather_type = NULL_SAFE_FIELD_ACCESS(forecast, current_weather_type,
-                                                          WeatherType_Unknown);
+  const WeatherType weather_type =
+      NULL_SAFE_FIELD_ACCESS(forecast, current_weather_type, WeatherType_Unknown);
   const uint32_t new_weather_icon_resource_id =
       prv_get_weather_icon_resource_id_for_type(weather_type);
   if (weather_glance->icon_resource_id != new_weather_icon_resource_id) {
@@ -102,8 +101,8 @@ static void prv_weather_event_handler(PBL_UNUSED PebbleEvent *event, void *conte
   const size_t weather_glance_title_size = sizeof(weather_glance->title);
   memset(weather_glance->title, 0, weather_glance_title_size);
   // Choose the title we should display based on whether or not we have a forecast
-  const char *title = NULL_SAFE_FIELD_ACCESS(forecast, location_name,
-                                             weather_glance->fallback_title);
+  const char *title =
+      NULL_SAFE_FIELD_ACCESS(forecast, location_name, weather_glance->fallback_title);
   // Subtract 1 from the size as a shortcut for null terminating the title since we zero it out
   // above
   strncpy(weather_glance->title, title, weather_glance_title_size - 1);
@@ -125,8 +124,8 @@ static void prv_weather_event_handler(PBL_UNUSED PebbleEvent *event, void *conte
       /// Today's current temperature (e.g. "68°")
       const char *temp_only_formatter = i18n_get("%i°", weather_glance);
       const char *localized_phrase = i18n_get(forecast->current_weather_phrase, weather_glance);
-      const char *formatter_string = strlen(localized_phrase) ? temp_and_phrase_formatter :
-                                     temp_only_formatter;
+      const char *formatter_string =
+          strlen(localized_phrase) ? temp_and_phrase_formatter : temp_only_formatter;
       // It's safe to pass more arguments to snprintf() than might be used by formatter_string
       snprintf(weather_glance->subtitle, weather_glance_subtitle_size, formatter_string,
                forecast->current_temp, localized_phrase);
@@ -142,10 +141,10 @@ static void prv_weather_event_handler(PBL_UNUSED PebbleEvent *event, void *conte
 }
 
 static const LauncherAppGlanceStructuredImpl s_weather_structured_glance_impl = {
-  .get_icon = prv_get_icon,
-  .get_title = prv_get_title,
-  .create_subtitle_node = prv_create_subtitle_node,
-  .destructor = prv_destructor,
+    .get_icon = prv_get_icon,
+    .get_title = prv_get_title,
+    .create_subtitle_node = prv_create_subtitle_node,
+    .destructor = prv_destructor,
 };
 
 LauncherAppGlance *launcher_app_glance_weather_create(const AppMenuNode *node) {
@@ -160,17 +159,16 @@ LauncherAppGlance *launcher_app_glance_weather_create(const AppMenuNode *node) {
   weather_glance->fallback_title[fallback_title_size - 1] = '\0';
 
   const bool should_consider_slices = false;
-  LauncherAppGlanceStructured *structured_glance =
-      launcher_app_glance_structured_create(&node->uuid, &s_weather_structured_glance_impl,
-                                            should_consider_slices, weather_glance);
+  LauncherAppGlanceStructured *structured_glance = launcher_app_glance_structured_create(
+      &node->uuid, &s_weather_structured_glance_impl, should_consider_slices, weather_glance);
   PBL_ASSERTN(structured_glance);
 
   prv_weather_event_handler(NULL, structured_glance);
 
-  weather_glance->weather_event_info = (EventServiceInfo) {
-    .type = PEBBLE_WEATHER_EVENT,
-    .handler = prv_weather_event_handler,
-    .context = structured_glance,
+  weather_glance->weather_event_info = (EventServiceInfo){
+      .type = PEBBLE_WEATHER_EVENT,
+      .handler = prv_weather_event_handler,
+      .context = structured_glance,
   };
   event_service_client_subscribe(&weather_glance->weather_event_info);
 

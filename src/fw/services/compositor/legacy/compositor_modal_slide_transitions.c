@@ -24,15 +24,14 @@ static CompositorModalSlideTransitionData s_data;
 static const int32_t DISP_ROWS_LAST_INDEX = DISP_ROWS - 1;
 
 static void prv_modal_transition_push_update(GContext *ctx, uint32_t distance_normalized) {
-  const int16_t new_modal_offset_y = interpolate_int16(distance_normalized,
-                                                       DISP_ROWS_LAST_INDEX,
-                                                       0);
+  const int16_t new_modal_offset_y =
+      interpolate_int16(distance_normalized, DISP_ROWS_LAST_INDEX, 0);
 
   // The modal overshoots its destination by a few pixels. When this happens, fill in the pixels
   // at the bottom of the screen with black.
   if (new_modal_offset_y < 0) {
-    graphics_fill_rect(
-        ctx, &GRect(0, DISP_ROWS + new_modal_offset_y, DISP_COLS, -new_modal_offset_y));
+    graphics_fill_rect(ctx,
+                       &GRect(0, DISP_ROWS + new_modal_offset_y, DISP_COLS, -new_modal_offset_y));
   }
 
   gpoint_add_eq(&ctx->draw_state.drawing_box.origin, GPoint(0, new_modal_offset_y));
@@ -45,10 +44,8 @@ static void prv_modal_transition_pop_update(GContext *ctx, uint32_t distance_nor
   // This is the offset where the modal is to be drawn after the operations below.
   // NOTE: It has to be clipped since our moook interpolate function goes past the destination
   //       and would cause us to write into an invalid memory address in the framebuffer.
-  const int32_t new_modal_offset_y = MIN(DISP_ROWS_LAST_INDEX,
-                                         interpolate_int16(distance_normalized,
-                                                           0,
-                                                           DISP_ROWS_LAST_INDEX));
+  const int32_t new_modal_offset_y =
+      MIN(DISP_ROWS_LAST_INDEX, interpolate_int16(distance_normalized, 0, DISP_ROWS_LAST_INDEX));
   // This is the delta between the new offset and the previous offset.
   const int32_t modal_offset_delta_y = new_modal_offset_y - s_data.cur_modal_offset_y;
 
@@ -111,16 +108,16 @@ static void prv_transition_animation_init(Animation *animation) {
   animation_set_duration(animation, interpolate_moook_soft_duration(NUM_MOOOK_FRAMES_MID));
 }
 
-const CompositorTransition* compositor_modal_transition_to_modal_get(bool modal_is_destination) {
+const CompositorTransition *compositor_modal_transition_to_modal_get(bool modal_is_destination) {
   // Performs different operations on whether the modal is being pushed or popped.
-  s_data = (CompositorModalSlideTransitionData) {
-    .modal_is_destination = modal_is_destination,
+  s_data = (CompositorModalSlideTransitionData){
+      .modal_is_destination = modal_is_destination,
   };
 
   static const CompositorTransition s_impl = {
-    .init = prv_transition_animation_init,
-    .update = prv_transition_animation_update,
-    .skip_modal_render_after_update = true, // This transition renders the modal itself
+      .init = prv_transition_animation_init,
+      .update = prv_transition_animation_update,
+      .skip_modal_render_after_update = true,  // This transition renders the modal itself
   };
 
   return &s_impl;

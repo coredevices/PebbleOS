@@ -29,9 +29,8 @@
 #include "stubs_task_watchdog.h"
 #include "fake_spi_flash.h"
 
-void flash_region_erase_optimal_range_no_watchdog(
-    uint32_t min_start, uint32_t max_start,
-    uint32_t min_end, uint32_t max_end) {
+void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,
+                                                  uint32_t min_end, uint32_t max_end) {
 }
 
 static int prv_prebake_pfs(const char *filename) {
@@ -41,7 +40,7 @@ static int prv_prebake_pfs(const char *filename) {
   }
 
   fake_spi_flash_init(0, st.st_size);
-  fake_spi_flash_populate_from_file((char*)filename, 0);
+  fake_spi_flash_populate_from_file((char *)filename, 0);
   pfs_init(true);
 
   int fd = open(filename, O_RDWR);
@@ -56,10 +55,11 @@ static int prv_prebake_pfs(const char *filename) {
   return 0;
 }
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[]) {
   // SPI image file path always passed in as first argument
   if (argc == 1) {
-    printf("No file specified. Pass a path to a QEMU SPI image. "
+    printf(
+        "No file specified. Pass a path to a QEMU SPI image. "
         "(e.g. qemu_spi_cooker <spi_flash_img>)\n");
     return 1;
   }

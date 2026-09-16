@@ -11,15 +11,15 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // RTC MMIO register offsets (must match QEMU pebble-rtc device)
-#define RTC_TIME_LO    0x00  // Unix timestamp low 32 bits (r/w)
-#define RTC_TIME_HI    0x04  // Unix timestamp high 32 bits (r)
-#define RTC_ALARM      0x08
-#define RTC_CTRL       0x0C
-#define RTC_TICKS_REG  0x10  // Monotonic 1000Hz tick counter (r)
+#define RTC_TIME_LO 0x00  // Unix timestamp low 32 bits (r/w)
+#define RTC_TIME_HI 0x04  // Unix timestamp high 32 bits (r)
+#define RTC_ALARM 0x08
+#define RTC_CTRL 0x0C
+#define RTC_TICKS_REG 0x10  // Monotonic 1000Hz tick counter (r)
 #define RTC_BACKUP_BASE 0x40
 
 // CTRL bits
-#define CTRL_ALARM_IE  (1 << 0)
+#define CTRL_ALARM_IE (1 << 0)
 
 // STATUS bits
 #define STATUS_ALARM_PENDING (1 << 0)
@@ -136,7 +136,7 @@ bool rtc_alarm_is_initialized(void) {
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
   _Static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t),
-      "RTC Set Timezone invalid data size");
+                 "RTC Set Timezone invalid data size");
 
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 0, raw[0]);
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 1, raw[1]);

@@ -26,16 +26,14 @@
 #include <time.h>
 
 #ifndef PBL_LOG_LEVEL
-  #define PBL_LOG_LEVEL LOG_LEVEL_DEBUG
+#define PBL_LOG_LEVEL LOG_LEVEL_DEBUG
 #endif
 
 int g_pbl_log_level = PBL_LOG_LEVEL;
 bool g_pbl_log_enabled = true;
 
 static bool prv_check_serial_log_enabled(int level) {
-  return (g_pbl_log_enabled) &&
-         (level == LOG_LEVEL_ALWAYS ||
-           (level <= g_pbl_log_level));
+  return (g_pbl_log_enabled) && (level == LOG_LEVEL_ALWAYS || (level <= g_pbl_log_level));
 }
 
 #ifndef CONFIG_PULSE_EVERYWHERE
@@ -57,14 +55,14 @@ static void prv_log_timestamp(void) {
   struct tm time_seconds_calendar;
   gmtime_r(&time_seconds, &time_seconds_calendar);
 
-  sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ",
-      time_seconds_calendar.tm_hour, time_seconds_calendar.tm_min, time_seconds_calendar.tm_sec, time_ms);
+  sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", time_seconds_calendar.tm_hour,
+            time_seconds_calendar.tm_min, time_seconds_calendar.tm_sec, time_ms);
 
   serial_console_write_log_message(buffer);
 }
 
-static void prv_log_serial(
-    uint8_t log_level, const char* src_filename, int src_line_number, const char* message) {
+static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_line_number,
+                           const char *message) {
   if (!serial_console_is_logging_enabled() && log_level != LOG_LEVEL_ALWAYS) {
     return;
   }
@@ -80,7 +78,7 @@ static void prv_log_serial(
     unsigned char task_char = '-';
 #endif
 
-    char buffer[] = { pbl_log_get_level_char(log_level), ' ', task_char, ' ', 0 };
+    char buffer[] = {pbl_log_get_level_char(log_level), ' ', task_char, ' ', 0};
     serial_console_write_log_message(buffer);
   }
 
@@ -106,7 +104,7 @@ static void prv_log_serial(
   // Append our newlines and our trailing null
   serial_console_write_log_message("\r\n");
 }
-#endif // CONFIG_PULSE_EVERYWHERE
+#endif  // CONFIG_PULSE_EVERYWHERE
 
 void kernel_pbl_log_serial(LogBinaryMessage *log_message, bool async) {
   if (!prv_check_serial_log_enabled(log_message->log_level)) {
@@ -118,13 +116,12 @@ void kernel_pbl_log_serial(LogBinaryMessage *log_message, bool async) {
     pulse_logging_log(log_message->log_level, log_message->filename,
                       htons(log_message->line_number), log_message->message);
   } else {
-    pulse_logging_log_sync(
-        log_message->log_level, log_message->filename,
-        htons(log_message->line_number), log_message->message);
+    pulse_logging_log_sync(log_message->log_level, log_message->filename,
+                           htons(log_message->line_number), log_message->message);
   }
 #else
-  prv_log_serial(log_message->log_level, log_message->filename,
-                 htons(log_message->line_number), log_message->message);
+  prv_log_serial(log_message->log_level, log_message->filename, htons(log_message->line_number),
+                 log_message->message);
 #endif
 }
 
@@ -132,35 +129,32 @@ void kernel_pbl_log_flash(LogBinaryMessage *log_message, bool async) {
   int length = sizeof(*log_message) + log_message->message_length;
 
   if (g_pbl_log_enabled &&
-      (log_message->log_level == LOG_LEVEL_ALWAYS ||
-       (log_message->log_level <= FLASH_LOG_LEVEL))) {
-    pbl_log_advanced((const char*) log_message, length, async);
+      (log_message->log_level == LOG_LEVEL_ALWAYS || (log_message->log_level <= FLASH_LOG_LEVEL))) {
+    pbl_log_advanced((const char *)log_message, length, async);
   }
 }
 
-void kernel_pbl_log(LogBinaryMessage* log_message, bool async) {
+void kernel_pbl_log(LogBinaryMessage *log_message, bool async) {
   kernel_pbl_log_serial(log_message, async);
 
-  if (!pbl_irq_is_locked() && !mcu_state_is_isr() &&
-      !pbl_sched_is_locked()) {
+  if (!pbl_irq_is_locked() && !mcu_state_is_isr() && !pbl_sched_is_locked()) {
     kernel_pbl_log_flash(log_message, async);
   }
 }
 
-void kernel_pbl_log_from_fault_handler(
-    const char *src_filename, uint16_t src_line_number, const char *message) {
+void kernel_pbl_log_from_fault_handler(const char *src_filename, uint16_t src_line_number,
+                                       const char *message) {
 #ifdef CONFIG_PULSE_EVERYWHERE
-  pulse_logging_log_sync(LOG_LEVEL_ALWAYS, src_filename,
-                         src_line_number, message);
+  pulse_logging_log_sync(LOG_LEVEL_ALWAYS, src_filename, src_line_number, message);
 #else
   serial_console_write_log_message(message);
   serial_console_write_log_message("\r\n");
 #endif
 }
 
-void kernel_pbl_log_from_fault_handler_fmt(
-    const char *src_filename, uint16_t src_line_number, char *buffer,
-    unsigned int buffer_size, const char *fmt, ...) {
+void kernel_pbl_log_from_fault_handler_fmt(const char *src_filename, uint16_t src_line_number,
+                                           char *buffer, unsigned int buffer_size, const char *fmt,
+                                           ...) {
   va_list ap;
   va_start(ap, fmt);
   vsniprintf(buffer, buffer_size, fmt, ap);
@@ -171,7 +165,7 @@ void kernel_pbl_log_from_fault_handler_fmt(
 
 // Serial Commands
 ///////////////////////////////////////////////////////////
-void command_log_level_set(const char* level) {
+void command_log_level_set(const char *level) {
   char buffer[32];
   g_pbl_log_level = atoi(level);
   prompt_send_response_fmt(buffer, 32, "Log level set to: %i", g_pbl_log_level);
@@ -181,4 +175,3 @@ void command_log_level_get(void) {
   char buffer[32];
   prompt_send_response_fmt(buffer, 32, "Log level: %i", g_pbl_log_level);
 }
-

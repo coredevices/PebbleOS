@@ -104,7 +104,8 @@ struct TouchNavState *modal_manager_get_touch_nav_state(void);
 //! Subscribe the kernel touch slot to the nav dispatcher. Runs on KernelMain.
 void modal_touch_nav_subscribe(void);
 
-//! Unsubscribe the kernel nav dispatcher and cancel any in-flight modal gesture. Runs on KernelMain.
+//! Unsubscribe the kernel nav dispatcher and cancel any in-flight modal gesture. Runs on
+//! KernelMain.
 void modal_touch_nav_unsubscribe(void);
 #endif
 

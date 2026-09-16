@@ -23,9 +23,9 @@ typedef struct {
 static GPointIndexLookup *prv_create_lookup_by_angle(GDelayCreatorContext *ctx, void *userdata) {
   AngleLookupContext *data = userdata;
 
-  GPoint origin = { ctx->size.w / 2, ctx->size.h / 2 };
-  GPointIndexLookup *lookup = gdraw_command_list_create_index_lookup_by_angle(ctx->list, origin,
-                                                                              data->angle);
+  GPoint origin = {ctx->size.w / 2, ctx->size.h / 2};
+  GPointIndexLookup *lookup =
+      gdraw_command_list_create_index_lookup_by_angle(ctx->list, origin, data->angle);
   gpoint_index_lookup_set_groups(lookup, data->num_delay_groups, data->group_delay);
 
   ctx->owns_lookup = true;
@@ -43,10 +43,10 @@ KinoReel *kino_reel_unfold_create(KinoReel *from_reel, bool take_ownership, GRec
   if (!ctx) {
     return NULL;
   }
-  *ctx = (AngleLookupContext) {
-    .angle = angle,
-    .num_delay_groups = num_delay_groups,
-    .group_delay = group_delay,
+  *ctx = (AngleLookupContext){
+      .angle = angle,
+      .num_delay_groups = num_delay_groups,
+      .group_delay = group_delay,
   };
   if (!ctx->angle) {
     ctx->angle = rand() % TRIG_MAX_ANGLE;
@@ -65,8 +65,7 @@ KinoReel *kino_reel_unfold_create(KinoReel *from_reel, bool take_ownership, GRec
 
 void kino_reel_unfold_set_start_as_dot(KinoReel *reel, int16_t radius) {
   GRect frame = kino_reel_transform_get_from_frame(reel);
-  kino_reel_transform_set_from_frame(
-      reel, (GRect) { grect_center_point(&frame), UNFOLD_DOT_SIZE });
+  kino_reel_transform_set_from_frame(reel, (GRect){grect_center_point(&frame), UNFOLD_DOT_SIZE});
 
   const Fixed_S16_3 from = Fixed_S16_3((2 * radius) << FIXED_S16_3_PRECISION);
   kino_reel_scale_segmented_set_from_stroke_width(reel, from, GStrokeWidthOpSet);

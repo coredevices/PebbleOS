@@ -36,14 +36,14 @@
 //! \endcode
 typedef struct TextLayerLegacy2 {
   Layer layer;
-  const char* text;
+  const char *text;
   GFont font;
   GTextLayoutCacheRef layout_cache;
-  GColor2 text_color:2;
-  GColor2 background_color:2;
-  GTextOverflowMode overflow_mode:2;
-  GTextAlignment text_alignment:2;
-  bool should_cache_layout:1;
+  GColor2 text_color : 2;
+  GColor2 background_color : 2;
+  GTextOverflowMode overflow_mode : 2;
+  GTextAlignment text_alignment : 2;
+  bool should_cache_layout : 1;
 } TextLayerLegacy2;
 
 //! Initializes the TextLayerLegacy2 with given frame
@@ -75,10 +75,10 @@ void text_layer_legacy2_init(TextLayerLegacy2 *text_layer, const GRect *frame);
 //! @param frame The frame with which to initialize the TextLayerLegacy2
 //! @return A pointer to the TextLayerLegacy2. `NULL` if the TextLayerLegacy2 could not
 //! be created
-TextLayerLegacy2* text_layer_legacy2_create(GRect frame);
+TextLayerLegacy2 *text_layer_legacy2_create(GRect frame);
 
 //! Destroys a TextLayerLegacy2 previously created by text_layer_legacy2_create.
-void text_layer_legacy2_destroy(TextLayerLegacy2* text_layer);
+void text_layer_legacy2_destroy(TextLayerLegacy2 *text_layer);
 
 //! Deinitializes the TextLayerLegacy2 and frees any caches.
 //! @param text_layer The TextLayerLegacy2 to deinitialize
@@ -93,7 +93,7 @@ void text_layer_legacy2_deinit(TextLayerLegacy2 *text_layer);
 //! @return The "root" Layer of the text layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) text_layer`.
-Layer* text_layer_legacy2_get_layer(TextLayerLegacy2 *text_layer);
+Layer *text_layer_legacy2_get_layer(TextLayerLegacy2 *text_layer);
 
 //! Sets the pointer to the string where the TextLayerLegacy2 is supposed to find the text
 //! at a later point in time, when it needs to draw itself.
@@ -109,7 +109,7 @@ void text_layer_legacy2_set_text(TextLayerLegacy2 *text_layer, const char *text)
 //! Gets the pointer to the string that the TextLayerLegacy2 is using.
 //! @param text_layer The TextLayerLegacy2 for which to get the text
 //! @see text_layer_legacy2_set_text
-const char* text_layer_legacy2_get_text(TextLayerLegacy2 *text_layer);
+const char *text_layer_legacy2_get_text(TextLayerLegacy2 *text_layer);
 
 //! Sets the background color of bounding box that will be drawn behind the text
 //! @param text_layer The TextLayerLegacy2 of which to set the background color
@@ -162,7 +162,7 @@ void text_layer_legacy2_set_should_cache_layout(TextLayerLegacy2 *text_layer,
 //! context, even though this function does not draw anything.
 //! @internal
 //! @see \ref app_get_current_graphics_context()
-GSize text_layer_legacy2_get_content_size(GContext* ctx, TextLayerLegacy2 *text_layer);
+GSize text_layer_legacy2_get_content_size(GContext *ctx, TextLayerLegacy2 *text_layer);
 
 //! Calculates the size occupied by the current text of the TextLayerLegacy2
 //! @param text_layer the TextLayerLegacy2 for which to calculate the text's size
@@ -175,7 +175,7 @@ GSize app_text_layer_legacy2_get_content_size(TextLayerLegacy2 *text_layer);
 //! @param max_size The new size for the TextLayerLegacy2
 void text_layer_legacy2_set_size(TextLayerLegacy2 *text_layer, const GSize max_size);
 
-GSize text_layer_legacy2_get_size(TextLayerLegacy2* text_layer);
+GSize text_layer_legacy2_get_size(TextLayerLegacy2 *text_layer);
 
 //!     @} // end addtogroup TextLayerLegacy2
 //!   @} // end addtogroup Layer

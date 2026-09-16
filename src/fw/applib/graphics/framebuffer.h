@@ -24,19 +24,19 @@ size_t framebuffer_get_size_bytes(FrameBuffer *f);
 
 //! Clears the screen buffer.
 //! Will not be visible on the display until graphics_flush_frame_buffer is called.
-void framebuffer_clear(FrameBuffer* f);
+void framebuffer_clear(FrameBuffer *f);
 
 //! Mark the given rect of pixels as dirty
-void framebuffer_mark_dirty_rect(FrameBuffer* f, GRect rect);
+void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect);
 
 //! Mark the entire framebuffer as dirty
-void framebuffer_dirty_all(FrameBuffer* f);
+void framebuffer_dirty_all(FrameBuffer *f);
 
 //! Clear the dirty status for this framebuffer
-void framebuffer_reset_dirty(FrameBuffer* f);
+void framebuffer_reset_dirty(FrameBuffer *f);
 
 //! Query the dirty status for this framebuffer
-bool framebuffer_is_dirty(FrameBuffer* f);
+bool framebuffer_is_dirty(FrameBuffer *f);
 
 //! Creates a GBitmap struct that points to the framebuffer. Useful for using the framebuffer data
 //! with graphics routines. Note that updating this bitmap won't mark the appropriate lines as

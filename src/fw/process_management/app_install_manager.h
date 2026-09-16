@@ -63,8 +63,8 @@
 //! 2. Call app_install_get_entry_for_install_id and get the entry data structure
 //! 3. Use the getter functions for the entry to retrieve individual fields within the struct.
 
-
-#define TIMESTAMP_INVALID ((RtcTicks)0) //!< for most_recent_communication_timestamp in AppInstallEntry
+#define TIMESTAMP_INVALID \
+  ((RtcTicks)0)  //!< for most_recent_communication_timestamp in AppInstallEntry
 
 //! Max number of bytes for an application.
 #define APP_NAME_SIZE_BYTES 96
@@ -78,29 +78,29 @@ typedef enum {
 
 typedef struct {
   AppInstallId install_id;
-  AppInstallStorage type:2; // SYSTEM/RESOURCE/FLASH
+  AppInstallStorage type : 2;  // SYSTEM/RESOURCE/FLASH
   ProcessVisibility visibility;
-  ProcessType process_type; // WATCHFACE/APP
+  ProcessType process_type;  // WATCHFACE/APP
   bool has_worker;
   Uuid uuid;
   GColor color;
   char name[APP_NAME_SIZE_BYTES];
   int icon_resource_id;
   Version sdk_version;
-  unsigned int record_order; //!< 0 means not in the app registry
+  unsigned int record_order;  //!< 0 means not in the app registry
 } AppInstallEntry;
 
 typedef enum {
-  APP_AVAILABLE = 0, //< occurs on app installation
-  APP_REMOVED = 1, //< occurs on app removal
-  APP_ICON_NAME_UPDATED = 2, //< occurs when app (metadata) has been updated
-  APP_UPGRADED = 3, //< occurs when app is getting removed prior to upgrade
-  APP_DB_CLEARED = 4, //< occurs when app is getting removed prior to upgrade
+  APP_AVAILABLE = 0,          //< occurs on app installation
+  APP_REMOVED = 1,            //< occurs on app removal
+  APP_ICON_NAME_UPDATED = 2,  //< occurs when app (metadata) has been updated
+  APP_UPGRADED = 3,           //< occurs when app is getting removed prior to upgrade
+  APP_DB_CLEARED = 4,         //< occurs when app is getting removed prior to upgrade
   NUM_INSTALL_EVENT_TYPES,
 } InstallEventType;
 
 //! Used for the static application entries in the app registry
-typedef const PebbleProcessMd* (*MdFunc) (void);
+typedef const PebbleProcessMd *(*MdFunc)(void);
 
 //! Used for apps listed in the system app registry
 typedef struct {
@@ -197,7 +197,7 @@ bool app_install_entry_is_quick_launch_visible_only(const AppInstallEntry *entry
 //! @param entry AppInstallEntry to check the parameters of
 bool app_install_entry_is_SDK_compatible(const AppInstallEntry *entry);
 
-typedef bool(*AppInstallEnumerateCb)(AppInstallEntry *entry, void *data);
+typedef bool (*AppInstallEnumerateCb)(AppInstallEntry *entry, void *data);
 
 //! Enumerates all active install ids for non-hidden apps and calls the given function for each
 //! install id.

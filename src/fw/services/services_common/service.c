@@ -64,35 +64,33 @@ void services_common_init(void) {
 }
 
 static struct ServiceRunLevelSetting s_runlevel_settings[] = {
-  {
-    .set_enable_fn = accel_manager_enable,
-    .enable_mask = R_Stationary | R_FirmwareUpdate | R_Normal,
-  },
-  {
-    .set_enable_fn = light_allow,
-    .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal,
-  },
-  {
-    .set_enable_fn = vibe_service_set_enabled,
-    .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal
-  },
-  {
-    .set_enable_fn = bt_ctl_set_enabled,
-    .enable_mask = R_FirmwareUpdate | R_Normal,
-  },
+    {
+        .set_enable_fn = accel_manager_enable,
+        .enable_mask = R_Stationary | R_FirmwareUpdate | R_Normal,
+    },
+    {
+        .set_enable_fn = light_allow,
+        .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal,
+    },
+    {.set_enable_fn = vibe_service_set_enabled,
+     .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal},
+    {
+        .set_enable_fn = bt_ctl_set_enabled,
+        .enable_mask = R_FirmwareUpdate | R_Normal,
+    },
 #if defined(CONFIG_TOUCH) && defined(CONFIG_RECOVERY_FW)
-  // Only keep touch enabled on recovery (and so manufacturing as well)
-  // Once supported in main firmware, this should be removed.
-  {
-    .set_enable_fn = touch_sensor_set_enabled,
-    .enable_mask = R_Normal,
-  },
+    // Only keep touch enabled on recovery (and so manufacturing as well)
+    // Once supported in main firmware, this should be removed.
+    {
+        .set_enable_fn = touch_sensor_set_enabled,
+        .enable_mask = R_Normal,
+    },
 #endif
 #ifdef CONFIG_HRM
-  {
-    .set_enable_fn = hrm_manager_enable,
-    .enable_mask = R_Normal,
-  },
+    {
+        .set_enable_fn = hrm_manager_enable,
+        .enable_mask = R_Normal,
+    },
 #endif
 };
 
@@ -102,4 +100,3 @@ void services_common_set_runlevel(RunLevel runlevel) {
     service->set_enable_fn(((1 << runlevel) & service->enable_mask) != 0);
   }
 }
-

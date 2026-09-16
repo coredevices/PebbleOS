@@ -31,23 +31,23 @@ T_STATIC uint32_t prv_hr_quality_int(HRMQuality quality) {
     case HRMQuality_Excellent:
       return pebble_pipeline_MeasurementSet_HeartRateQuality_Excellent;
   }
-  WTF;    // Should never get here
+  WTF;  // Should never get here
   return 0;
 }
 
 ProtobufLogRef protobuf_log_hr_create(ProtobufLogTransportCB transport) {
   // Create a measure log session, which we use to send heart rate readings to the phone
   ProtobufLogMeasurementType measure_types[] = {
-    ProtobufLogMeasurementType_BPM,
-    ProtobufLogMeasurementType_HRQuality,
+      ProtobufLogMeasurementType_BPM,
+      ProtobufLogMeasurementType_HRQuality,
   };
 
   ProtobufLogConfig log_config = {
-    .type = ProtobufLogType_Measurements,
-    .measurements = {
-      .types = measure_types,
-      .num_types = ARRAY_LENGTH(measure_types),
-    },
+      .type = ProtobufLogType_Measurements,
+      .measurements = {
+          .types = measure_types,
+          .num_types = ARRAY_LENGTH(measure_types),
+      },
   };
 
   return protobuf_log_create(&log_config, transport, 0 /*max_encoded_msg_size*/);

@@ -17,9 +17,8 @@ void crc8_calculate_bytes_streaming(const uint8_t *data, uint32_t data_len, uint
   // standard CRC-8 polynomial is not particularly good.
 
   // nibble lookup table for (x^8 + x^5 + x^3 + x^2 + x + 1)
-  static const uint8_t lookup_table[] =
-      { 0, 47, 94, 113, 188, 147, 226, 205, 87, 120, 9, 38, 235, 196,
-        181, 154 };
+  static const uint8_t lookup_table[] = {0,  47,  94, 113, 188, 147, 226, 205,
+                                         87, 120, 9,  38,  235, 196, 181, 154};
 
   for (uint32_t i = 0; i < data_len * 2; i++) {
     uint8_t nibble;

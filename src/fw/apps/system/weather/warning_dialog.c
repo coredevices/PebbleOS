@@ -24,8 +24,8 @@ static void prv_warning_dialog_select_handler(ClickRecognizerRef recognizer, voi
   expandable_dialog_pop(expandable_dialog);
 }
 
-WeatherAppWarningDialog *weather_app_warning_dialog_push(const char *localized_string,
-    WeatherAppWarningDialogDismissedCallback dismissed_cb) {
+WeatherAppWarningDialog *weather_app_warning_dialog_push(
+    const char *localized_string, WeatherAppWarningDialogDismissedCallback dismissed_cb) {
   WeatherAppWarningDialogData *data = task_zalloc_check(sizeof(WeatherAppWarningDialogData));
   ExpandableDialog *expandable_dialog = expandable_dialog_create("Weather - warning dialog");
 
@@ -34,7 +34,7 @@ WeatherAppWarningDialog *weather_app_warning_dialog_push(const char *localized_s
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_TINY);
   dialog_set_text(dialog, localized_string);
   const DialogCallbacks callbacks = {
-    .unload = prv_warning_dialog_unload,
+      .unload = prv_warning_dialog_unload,
   };
   dialog_set_callbacks(dialog, &callbacks, data);
 

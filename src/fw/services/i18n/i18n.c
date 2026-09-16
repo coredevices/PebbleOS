@@ -102,8 +102,8 @@ static uint32_t prv_next_index(uint32_t curidx, uint32_t hashsize, uint32_t step
 //! @param[out] rstring Can be NULL. If non-null this buffer will be populated with the translated
 //!                     string. This buffer will be null-terminated.
 //! @param rstring_len The length of the rstring buffer.
-static void prv_lookup(const char *msgid, struct DomainBinding *db,
-                       size_t *rlen, char *rstring, size_t rstring_len) {
+static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen, char *rstring,
+                       size_t rstring_len) {
   MoHandle *mohandle = &db->mohandle;
   *rlen = 0;
 
@@ -122,15 +122,16 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db,
       return;
     }
     MoEntry oentry;
-    if (resource_load_byte_range_system(0, db->resource_id, mohandle->mo.hdr.mo_otable
-            + sizeof(MoEntry) * strno, (uint8_t *)&oentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
+    if (resource_load_byte_range_system(0, db->resource_id,
+                                        mohandle->mo.hdr.mo_otable + sizeof(MoEntry) * strno,
+                                        (uint8_t *)&oentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
       return;
     }
     if (len == oentry.len) {
       // Length of original matches, compare the contents
       char key[oentry.len + 1];
       if (resource_load_byte_range_system(0, db->resource_id, oentry.off, (uint8_t *)key,
-            oentry.len) != oentry.len) {
+                                          oentry.len) != oentry.len) {
         return;
       }
       key[oentry.len] = '\0';
@@ -138,23 +139,24 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db,
       if (!strcmp(msgid, key)) {
         // Contents of original string matches, get the translated string
         MoEntry tentry;
-        if (resource_load_byte_range_system(0, db->resource_id, mohandle->mo.hdr.mo_ttable
-            + sizeof(MoEntry) * strno, (uint8_t *)&tentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
+        if (resource_load_byte_range_system(
+                0, db->resource_id, mohandle->mo.hdr.mo_ttable + sizeof(MoEntry) * strno,
+                (uint8_t *)&tentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
           return;
         }
-        if (rstring) { // If we want the translated string, copy it out.
+        if (rstring) {  // If we want the translated string, copy it out.
           // Make sure we don't read out more than the length of the buffer we're reading into.
           // Leave space for the null-terminator as well.
           const size_t read_length = MIN(tentry.len, rstring_len - 1);
 
-          if (resource_load_byte_range_system(0, db->resource_id, tentry.off,
-                                              (uint8_t *)rstring, read_length) != read_length) {
+          if (resource_load_byte_range_system(0, db->resource_id, tentry.off, (uint8_t *)rstring,
+                                              read_length) != read_length) {
             return;
           }
 
           rstring[read_length] = '\0';
         }
-        if (rlen) { // If we want the translated string length, copy it out.
+        if (rlen) {  // If we want the translated string length, copy it out.
           *rlen = tentry.len;
         }
         return;
@@ -170,14 +172,14 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db,
 static bool prv_get_property(const char *header, const char *name, char *buffer, size_t size) {
   // Isolate the language name
   char *str = strstr(header, name);
-  if (str == NULL) { // strstr failed
+  if (str == NULL) {  // strstr failed
     return false;
   }
   str += strlen(name);
 
   char *end = strchr(str, '\n');
   unsigned int length = end - str;
-  if (end == NULL || length > size) { // strchr failed
+  if (end == NULL || length > size) {  // strchr failed
     return false;
   }
 
@@ -269,8 +271,8 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   }
 
   MoHandle *mohandle = &db->mohandle;
-  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, 0,
-      (uint8_t *)&mohandle->mo.hdr, sizeof(MoHeader)) == 0) {
+  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, 0, (uint8_t *)&mohandle->mo.hdr,
+                                      sizeof(MoHeader)) == 0) {
     goto fail;
   }
   if (mohandle->mo.hdr.mo_magic != MO_MAGIC) {
@@ -278,7 +280,7 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   }
 
   mohandle->len = size;
-    /* validate htable */
+  /* validate htable */
   if (mohandle->mo.hdr.mo_hsize < 2) {
     goto fail;
   }
@@ -287,7 +289,7 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   uint32_t *htable = kernel_malloc_check(htable_size);
   mohandle->mo.mo_htable = htable;
   if (resource_load_byte_range_system(SYSTEM_APP, resource_id, mohandle->mo.hdr.mo_hoffset,
-      (uint8_t *)htable, htable_size) == 0) {
+                                      (uint8_t *)htable, htable_size) == 0) {
     prv_unmapit(db);
     goto fail;
   }
@@ -301,8 +303,8 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   }
 
   if (!prv_get_metadata(db)) {
-      prv_unmapit(db);
-      goto fail;
+    prv_unmapit(db);
+    goto fail;
   }
 
   return true;
@@ -327,8 +329,7 @@ void prv_list_flush(void) {
 static bool prv_list_string_filter_callback(ListNode *found_node, void *data) {
   I18nString *i18n_string = (I18nString *)found_node;
   StringLookupInfo *lookup_info = data;
-  if (i18n_string->original_hash == lookup_info->hash &&
-      lookup_info->owner == i18n_string->owner &&
+  if (i18n_string->original_hash == lookup_info->hash && lookup_info->owner == i18n_string->owner &&
       strcmp(i18n_string->original_string, lookup_info->string) == 0) {
     return true;
   } else {
@@ -348,14 +349,13 @@ static bool prv_list_owner_filter_callback(ListNode *found_node, void *owner) {
 // Not static because we call this from unit test code
 I18nString *prv_list_find_string(const char *string, const void *owner) {
   StringLookupInfo lookup_info = {
-    .string = string,
-    .hash = prv_gettext_hash(string),
-    .owner = owner
+      .string = string,
+      .hash = prv_gettext_hash(string),
+      .owner = owner
   };
   return (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
-      prv_list_string_filter_callback, (void *)&lookup_info);
+                                 prv_list_string_filter_callback, (void *)&lookup_info);
 }
-
 
 static const char *prv_list_add_string(const char *original_string, const char *translated_string,
                                        const void *owner) {
@@ -363,8 +363,8 @@ static const char *prv_list_add_string(const char *original_string, const char *
 
   // Allocate enough space to hold the original and translated strings. The translated string
   // is stored at i18n_string->translated and the original string immediately after that.
-  I18nString *i18n_string = kernel_malloc_check(sizeof(I18nString) + translated_len + 1
-              + strlen(original_string) + 1);
+  I18nString *i18n_string =
+      kernel_malloc_check(sizeof(I18nString) + translated_len + 1 + strlen(original_string) + 1);
 
   list_init(&i18n_string->node);
   i18n_string->owner = owner;
@@ -372,7 +372,7 @@ static const char *prv_list_add_string(const char *original_string, const char *
   strcpy(i18n_string->translated_string, translated_string);
 
   i18n_string->original_hash = prv_gettext_hash(original_string);
-  // Store the original string immediately after the translated one in memory. 
+  // Store the original string immediately after the translated one in memory.
   i18n_string->original_string = &i18n_string->translated_string[translated_len + 1];
   strcpy(i18n_string->original_string, original_string);
 
@@ -498,7 +498,7 @@ size_t i18n_get_length(const char *msgid) {
 
   size_t len = 0;
   prv_lookup(msgid, db, &len, NULL, 0);
-  if (len) { // String was found
+  if (len) {  // String was found
     return len;
   }
 
@@ -518,10 +518,10 @@ void i18n_free(const char *original, const void *owner) {
 
 void i18n_free_all(const void *owner) {
   I18nString *cur_string = (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
-      prv_list_owner_filter_callback, (void*)owner);
+                                                   prv_list_owner_filter_callback, (void *)owner);
   while (cur_string) {
-    I18nString *next_string = (I18nString *)list_find_next(&cur_string->node,
-        prv_list_owner_filter_callback, false, (void*)owner);
+    I18nString *next_string = (I18nString *)list_find_next(
+        &cur_string->node, prv_list_owner_filter_callback, false, (void *)owner);
     prv_list_remove_string(cur_string);
     cur_string = next_string;
   }
@@ -560,8 +560,8 @@ void i18n_set_resource(uint32_t resource_id) {
   }
 
   s_system_domain.resource_id = resource_id;
-  s_system_domain.watch_handle = resource_watch(SYSTEM_APP, resource_id,
-                                                prv_resource_changed_callback, &s_system_domain);
+  s_system_domain.watch_handle =
+      resource_watch(SYSTEM_APP, resource_id, prv_resource_changed_callback, &s_system_domain);
 
   if (shell_prefs_get_language_english()) {
     prv_unset();
@@ -599,4 +599,3 @@ void command_i18n_resource(const char *arg) {
   uint32_t resource_id = atoi(arg);
   i18n_set_resource(resource_id);
 }
-

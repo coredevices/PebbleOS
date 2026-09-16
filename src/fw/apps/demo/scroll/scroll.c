@@ -36,8 +36,8 @@ static void click_config_provider(ScrollAppData *data) {
   // to scroll up and down. It's possible to override that here, if needed.
 
   // Configure how the SELECT button should behave:
-  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) select_click_handler);
-  window_long_click_subscribe(BUTTON_ID_SELECT, 0, (ClickHandler) select_click_handler, NULL);
+  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)select_click_handler);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 0, (ClickHandler)select_click_handler, NULL);
 }
 
 static void prv_window_load(Window *window) {
@@ -46,23 +46,33 @@ static void prv_window_load(Window *window) {
   ScrollLayer *scroll_layer = &data->scroll_layer;
   scroll_layer_init(scroll_layer, &window->layer.bounds);
   scroll_layer_set_click_config_onto_window(scroll_layer, window);
-  scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks) {
-    .click_config_provider = (ClickConfigProvider) click_config_provider,
-  });
+  scroll_layer_set_callbacks(
+      scroll_layer, (ScrollLayerCallbacks){
+                        .click_config_provider = (ClickConfigProvider)click_config_provider,
+                    });
   scroll_layer_set_context(scroll_layer, data);
   scroll_layer_set_content_size(scroll_layer, GSize(window->layer.bounds.size.w, 500));
 
   const GRect max_text_bounds = GRect(0, 0, window->layer.bounds.size.w, 500);
   TextLayer *text = &data->text;
   text_layer_init(text, &max_text_bounds);
-  text_layer_set_text(text, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam quam tellus, fermentum quis vulputate quis, vestibulum interdum sapien. Vestibulum lobortis pellentesque pretium. Quisque ultricies purus eu orci convallis lacinia. Cras a urna mi. Donec convallis ante id dui dapibus nec ullamcorper erat egestas. Aenean a mauris a sapien commodo lacinia. Sed posuere mi vel risus congue ornare. Curabitur leo nisi, euismod ut pellentesque sed, suscipit sit amet lorem. Aliquam eget sem vitae sem aliquam ornare. In sem sapien, imperdiet eget pharetra a, lacinia ac justo. Suspendisse at ante nec felis facilisis eleifend.");
+  text_layer_set_text(
+      text,
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam quam tellus, fermentum quis "
+      "vulputate quis, vestibulum interdum sapien. Vestibulum lobortis pellentesque pretium. "
+      "Quisque ultricies purus eu orci convallis lacinia. Cras a urna mi. Donec convallis ante id "
+      "dui dapibus nec ullamcorper erat egestas. Aenean a mauris a sapien commodo lacinia. Sed "
+      "posuere mi vel risus congue ornare. Curabitur leo nisi, euismod ut pellentesque sed, "
+      "suscipit sit amet lorem. Aliquam eget sem vitae sem aliquam ornare. In sem sapien, "
+      "imperdiet eget pharetra a, lacinia ac justo. Suspendisse at ante nec felis facilisis "
+      "eleifend.");
 
   // Trim text layer and scroll content to fit text box
   GSize max_size = text_layer_get_content_size(app_state_get_graphics_context(), text);
   text_layer_set_size(text, max_size);
   static const int vert_scroll_padding = 4;
-  scroll_layer_set_content_size(scroll_layer, GSize(window->layer.bounds.size.w,
-                                                    max_size.h + vert_scroll_padding));
+  scroll_layer_set_content_size(
+      scroll_layer, GSize(window->layer.bounds.size.w, max_size.h + vert_scroll_padding));
 
   scroll_layer_add_child(scroll_layer, &text->layer);
 
@@ -77,9 +87,9 @@ static void push_window(ScrollAppData *data) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Scroll Demo"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                     });
   const bool animated = true;
   app_window_stack_push(window, animated);
 }
@@ -107,11 +117,10 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* scroll_app_get_info() {
+const PebbleProcessMd *scroll_app_get_info() {
   static const PebbleProcessMdSystem s_scroll_app_info = {
-    .common.main_func = &s_main,
-    .name = "Scroller"
+      .common.main_func = &s_main,
+      .name = "Scroller"
   };
-  return (const PebbleProcessMd*) &s_scroll_app_info;
+  return (const PebbleProcessMd *)&s_scroll_app_info;
 }
-

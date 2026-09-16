@@ -63,8 +63,8 @@ static void prv_update_slice_expiration_timer_if_necessary(LauncherAppGlanceServ
   const time_t next_slice_expiration_time = service->next_slice_expiration_time;
   const bool is_new_slice_expire_time_earlier_than_existing_earliest =
       (new_slice_expire_time != APP_GLANCE_SLICE_NO_EXPIRATION) &&
-       ((next_slice_expiration_time == APP_GLANCE_SLICE_NO_EXPIRATION) ||
-        (new_slice_expire_time < next_slice_expiration_time));
+      ((next_slice_expiration_time == APP_GLANCE_SLICE_NO_EXPIRATION) ||
+       (new_slice_expire_time < next_slice_expiration_time));
   if (!is_new_slice_expire_time_earlier_than_existing_earliest) {
     return;
   }
@@ -86,9 +86,8 @@ static void prv_update_slice_expiration_timer_if_necessary(LauncherAppGlanceServ
 
   prv_reset_slice_expiration_timer(service);
 
-  service->slice_expiration_timer =
-      app_timer_register((uint32_t)time_until_slice_expires_ms, prv_slice_expiration_timer_cb,
-                         service);
+  service->slice_expiration_timer = app_timer_register((uint32_t)time_until_slice_expires_ms,
+                                                       prv_slice_expiration_timer_cb, service);
   service->next_slice_expiration_time = new_slice_expire_time;
 }
 
@@ -182,8 +181,8 @@ static void prv_glance_cache_put(LauncherAppGlanceService *service, const Uuid *
 
   // Initialize a new cache entry, add it to the head of the cache list, and return it
   LauncherAppGlanceCacheEntry *new_cache_entry = app_zalloc_check(sizeof(*new_cache_entry));
-  *new_cache_entry = (LauncherAppGlanceCacheEntry) {
-    .glance = glance,
+  *new_cache_entry = (LauncherAppGlanceCacheEntry){
+      .glance = glance,
   };
   service->glance_cache = list_insert_before(service->glance_cache, &new_cache_entry->node);
 }
@@ -198,46 +197,59 @@ static LauncherAppGlance *prv_load_glance_for_node(const AppMenuNode *node,
                                                    LauncherAppGlanceService *service) {
   typedef struct {
     Uuid uuid;
-    LauncherAppGlance* (*constructor)(const AppMenuNode *);
+    LauncherAppGlance *(*constructor)(const AppMenuNode *);
   } SystemAppGlanceFactory;
 
   static const SystemAppGlanceFactory s_system_glance_factories[] = {
-    { // Settings
-      .uuid = {0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7,
-               0x9d, 0x42, 0x35, 0xbf, 0x47, 0xca, 0xad, 0xfe},
-      .constructor = launcher_app_glance_settings_create,
-    },
-    { // Music
-      .uuid = {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28,
-               0xb9, 0x60, 0xf2, 0xb0, 0x2a, 0x6d, 0xd7, 0x57},
-      .constructor = launcher_app_glance_music_create,
-    },
-    { // Weather
-      .uuid = {0x61, 0xb2, 0x2b, 0xc8, 0x1e, 0x29, 0x46, 0xd,
-               0xa2, 0x36, 0x3f, 0xe4, 0x9, 0xa4, 0x39, 0xff},
-      .constructor = launcher_app_glance_weather_create,
-    },
-    { // Notifications
-      .uuid = {0xb2, 0xca, 0xe8, 0x18, 0x10, 0xf8, 0x46, 0xdf,
-               0xad, 0x2b, 0x98, 0xad, 0x22, 0x54, 0xa3, 0xc1},
-      .constructor = launcher_app_glance_notifications_create,
-    },
-    { // Alarms
-      .uuid = {0x67, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4,
-               0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f, 0x97, 0xf9},
-      .constructor = launcher_app_glance_alarms_create,
-    },
-    { // Watchfaces
-      .uuid = {0x18, 0xe4, 0x43, 0xce, 0x38, 0xfd, 0x47, 0xc8,
-               0x84, 0xd5, 0x6d, 0x0c, 0x77, 0x5f, 0xbe, 0x55},
-      .constructor = launcher_app_glance_watchfaces_create,
-    },
-    {
-      // Workout
-      .uuid = {0xfe, 0xf8, 0x2c, 0x82, 0x71, 0x76, 0x4e, 0x22,
-               0x88, 0xde, 0x35, 0xa3, 0xfc, 0x18, 0xd4, 0x3f},
-      .constructor = launcher_app_glance_workout_create,
-    },
+      {
+          // Settings
+          .uuid =
+              {0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7, 0x9d, 0x42, 0x35, 0xbf, 0x47, 0xca,
+               0xad, 0xfe},
+          .constructor = launcher_app_glance_settings_create,
+      },
+      {
+          // Music
+          .uuid =
+              {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28, 0xb9, 0x60, 0xf2, 0xb0, 0x2a, 0x6d,
+               0xd7, 0x57},
+          .constructor = launcher_app_glance_music_create,
+      },
+      {
+          // Weather
+          .uuid =
+              {0x61, 0xb2, 0x2b, 0xc8, 0x1e, 0x29, 0x46, 0xd, 0xa2, 0x36, 0x3f, 0xe4, 0x9, 0xa4,
+               0x39, 0xff},
+          .constructor = launcher_app_glance_weather_create,
+      },
+      {
+          // Notifications
+          .uuid =
+              {0xb2, 0xca, 0xe8, 0x18, 0x10, 0xf8, 0x46, 0xdf, 0xad, 0x2b, 0x98, 0xad, 0x22, 0x54,
+               0xa3, 0xc1},
+          .constructor = launcher_app_glance_notifications_create,
+      },
+      {
+          // Alarms
+          .uuid =
+              {0x67, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f,
+               0x97, 0xf9},
+          .constructor = launcher_app_glance_alarms_create,
+      },
+      {
+          // Watchfaces
+          .uuid =
+              {0x18, 0xe4, 0x43, 0xce, 0x38, 0xfd, 0x47, 0xc8, 0x84, 0xd5, 0x6d, 0x0c, 0x77, 0x5f,
+               0xbe, 0x55},
+          .constructor = launcher_app_glance_watchfaces_create,
+      },
+      {
+          // Workout
+          .uuid =
+              {0xfe, 0xf8, 0x2c, 0x82, 0x71, 0x76, 0x4e, 0x22, 0x88, 0xde, 0x35, 0xa3, 0xfc, 0x18,
+               0xd4, 0x3f},
+          .constructor = launcher_app_glance_workout_create,
+      },
   };
 
   LauncherAppGlance *glance = NULL;
@@ -266,7 +278,7 @@ static LauncherAppGlance *prv_load_glance_for_node(const AppMenuNode *node,
 }
 
 static LauncherAppGlanceCacheEntry *prv_find_glance_entry_in_cache(
-  LauncherAppGlanceService *service, Uuid *uuid) {
+    LauncherAppGlanceService *service, Uuid *uuid) {
   return (LauncherAppGlanceCacheEntry *)list_find(service->glance_cache,
                                                   prv_glance_cache_entry_find_cb, uuid);
 }
@@ -278,8 +290,8 @@ static LauncherAppGlance *prv_find_glance_in_cache(LauncherAppGlanceService *ser
 
 //! Request a glance for an icon ID from an "MRU linked list" (list sorted by accesses so that
 //! most recent accesses are at the head of the list)
-static LauncherAppGlance *prv_fetch_from_cache_or_load_glance_for_node(AppMenuNode *node,
-    LauncherAppGlanceService *service) {
+static LauncherAppGlance *prv_fetch_from_cache_or_load_glance_for_node(
+    AppMenuNode *node, LauncherAppGlanceService *service) {
   if (!service || !node) {
     return NULL;
   }
@@ -329,8 +341,8 @@ static void prv_handle_glance_event(PebbleEvent *event, void *context) {
   PBL_ASSERTN(service);
 
   // Update the current slice of the glance that was changed if the glance is in the cache
-  LauncherAppGlance *glance_in_cache = prv_find_glance_in_cache(service,
-                                                                event->app_glance.app_uuid);
+  LauncherAppGlance *glance_in_cache =
+      prv_find_glance_in_cache(service, event->app_glance.app_uuid);
   if (glance_in_cache) {
     launcher_app_glance_update_current_slice(glance_in_cache);
 
@@ -350,9 +362,9 @@ void launcher_app_glance_service_draw_glance_for_app_node(LauncherAppGlanceServi
                                                           AppMenuNode *node) {
   const bool use_glance_cache = prv_should_use_glance_cache_for_app_with_uuid(&node->uuid);
 
-  LauncherAppGlance *glance =
-      use_glance_cache ? prv_fetch_from_cache_or_load_glance_for_node(node, service) :
-                         prv_load_glance_for_node(node, service);
+  LauncherAppGlance *glance = use_glance_cache
+                                  ? prv_fetch_from_cache_or_load_glance_for_node(node, service)
+                                  : prv_load_glance_for_node(node, service);
 
   // Set the screen Y position for arc effect on round displays
   if (glance) {
@@ -425,14 +437,14 @@ void launcher_app_glance_service_init(LauncherAppGlanceService *service,
     return;
   }
 
-  *service = (LauncherAppGlanceService) {};
+  *service = (LauncherAppGlanceService){};
 
   prv_reset_slice_expiration_timer(service);
 
-  service->glance_event_info = (EventServiceInfo) {
-    .type = PEBBLE_APP_GLANCE_EVENT,
-    .handler = prv_handle_glance_event,
-    .context = service,
+  service->glance_event_info = (EventServiceInfo){
+      .type = PEBBLE_APP_GLANCE_EVENT,
+      .handler = prv_handle_glance_event,
+      .context = service,
   };
   event_service_client_subscribe(&service->glance_event_info);
 
@@ -440,8 +452,8 @@ void launcher_app_glance_service_init(LauncherAppGlanceService *service,
   PBL_ASSERTN(service->generic_glance_icon);
   service->generic_glance_icon_resource_id = generic_glance_icon_resource_id;
 
-  const KinoPlayerCallbacks glance_reel_player_callbacks = (KinoPlayerCallbacks) {
-    .frame_did_change = prv_glance_reel_player_frame_did_change_cb,
+  const KinoPlayerCallbacks glance_reel_player_callbacks = (KinoPlayerCallbacks){
+      .frame_did_change = prv_glance_reel_player_frame_did_change_cb,
   };
   kino_player_set_callbacks(&service->glance_reel_player, glance_reel_player_callbacks, service);
 }
@@ -452,7 +464,7 @@ void launcher_app_glance_service_set_handlers(LauncherAppGlanceService *service,
   if (!service) {
     return;
   } else if (!handlers) {
-    service->handlers = (LauncherAppGlanceServiceHandlers) {};
+    service->handlers = (LauncherAppGlanceServiceHandlers){};
   } else {
     service->handlers = *handlers;
   }

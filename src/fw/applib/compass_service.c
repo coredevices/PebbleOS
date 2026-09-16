@@ -19,7 +19,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 
-#define PEEK_TIMEOUT_MS      11 * 1000
+#define PEEK_TIMEOUT_MS 11 * 1000
 
 static CompassServiceConfig **prv_get_config(PebbleTask task) {
   CompassServiceConfig **config = NULL;
@@ -52,10 +52,10 @@ static void prv_do_data_handle(PebbleEvent *e, void *context) {
   PebbleCompassDataEvent *m = &e->compass_data;
 
   CompassHeadingData data = {
-    .is_declination_valid = false,
-    .compass_status = m->calib_status,
-    .magnetic_heading = m->magnetic_heading,
-    .true_heading = m->magnetic_heading
+      .is_declination_valid = false,
+      .compass_status = m->calib_status,
+      .magnetic_heading = m->magnetic_heading,
+      .true_heading = m->magnetic_heading
   };
 
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
@@ -87,8 +87,7 @@ int compass_service_peek(CompassHeadingData *data) {
 
   // 11 second timer to turn off compass, reset timeout every peek
   if (config->peek_timer == NULL) {
-    config->peek_timer = app_timer_register(PEEK_TIMEOUT_MS,
-        prv_peek_timeout_callback, NULL);
+    config->peek_timer = app_timer_register(PEEK_TIMEOUT_MS, prv_peek_timeout_callback, NULL);
   } else {
     app_timer_reschedule(config->peek_timer, PEEK_TIMEOUT_MS);
   }
@@ -109,13 +108,11 @@ int compass_service_set_heading_filter(CompassHeading filter) {
 void compass_service_subscribe(CompassHeadingHandler handler) {
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
 
-  *config = (const CompassServiceConfig){ 0 };
+  *config = (const CompassServiceConfig){0};
   config->compass_cb = handler;
 
-  config->info = (EventServiceInfo) {
-    .type = PEBBLE_COMPASS_DATA_EVENT,
-    .handler = &prv_do_data_handle
-  };
+  config->info =
+      (EventServiceInfo){.type = PEBBLE_COMPASS_DATA_EVENT, .handler = &prv_do_data_handle};
 
   event_service_client_subscribe(&config->info);
 }

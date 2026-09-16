@@ -26,8 +26,8 @@ static bool prv_gbitmap_sequence_restart(GBitmapSequence *bitmap_sequence, bool 
   }
 
   // can start seeking after SIG + IHDR
-  int32_t metadata_bytes = png_seek_chunk_in_resource(bitmap_sequence->resource_id,
-                                                      PNG_HEADER_SIZE, false, NULL);
+  int32_t metadata_bytes =
+      png_seek_chunk_in_resource(bitmap_sequence->resource_id, PNG_HEADER_SIZE, false, NULL);
 
   if (metadata_bytes <= 0) {
     return false;
@@ -48,10 +48,10 @@ static bool prv_gbitmap_sequence_restart(GBitmapSequence *bitmap_sequence, bool 
 //! dst = src * (alpha_normalized) + dst * (1 - alpha_normalized)
 static ALWAYS_INLINE void prv_gbitmap_sequence_blend_over(GColor8 src_color, GColor8 *dst) {
   if (src_color.a == 3) {
-// Fast path: 100% opacity
+    // Fast path: 100% opacity
     *dst = src_color;
   } else if (src_color.a == 0) {
-// Fast path: 0% opacity, no-op!
+    // Fast path: 0% opacity, no-op!
   } else {
     const GColor8 dest_color = *dst;
     const uint8_t f_src = src_color.a;
@@ -75,7 +75,7 @@ GBitmapSequence *gbitmap_sequence_create_with_resource_system(ResAppNum app_num,
   uint8_t *frame_data_buffer = NULL;
 
   // Allocate gbitmap
-  GBitmapSequence* bitmap_sequence = applib_type_zalloc(GBitmapSequence);
+  GBitmapSequence *bitmap_sequence = applib_type_zalloc(GBitmapSequence);
   if (bitmap_sequence == NULL) {
     goto cleanup;
   }
@@ -93,8 +93,8 @@ GBitmapSequence *gbitmap_sequence_create_with_resource_system(ResAppNum app_num,
     goto cleanup;
   }
 
-  const size_t bytes_read = sys_resource_load_range(app_num, resource_id,
-                                                    0, frame_data_buffer, frame_bytes);
+  const size_t bytes_read =
+      sys_resource_load_range(app_num, resource_id, 0, frame_data_buffer, frame_bytes);
   if (bytes_read != (size_t)frame_bytes) {
     goto cleanup;
   }
@@ -166,34 +166,33 @@ void gbitmap_sequence_destroy(GBitmapSequence *bitmap_sequence) {
   }
 }
 
-static ALWAYS_INLINE GColor8 *prv_target_pixel_addr(GBitmap *bitmap, apng_fctl *fctl,
-                                                    uint32_t x, uint32_t y) {
+static ALWAYS_INLINE GColor8 *prv_target_pixel_addr(GBitmap *bitmap, apng_fctl *fctl, uint32_t x,
+                                                    uint32_t y) {
   uint32_t offset = (fctl->y_offset + y + bitmap->bounds.origin.y) * bitmap->row_size_bytes +
-      (fctl->x_offset + x + bitmap->bounds.origin.x);
+                    (fctl->x_offset + x + bitmap->bounds.origin.x);
   GColor8 *pixel_data = bitmap->addr;
   return &pixel_data[offset];
 }
 
-static void prv_set_pixel_in_row(uint8_t *row_data, GBitmapFormat bitmap_format,
-                                 uint32_t x, GColor8 color) {
+static void prv_set_pixel_in_row(uint8_t *row_data, GBitmapFormat bitmap_format, uint32_t x,
+                                 GColor8 color) {
   if (bitmap_format == GBitmapFormat1Bit) {
     if (!gcolor_is_invisible(color)) {
       const bool pixel_is_white = !gcolor_equal(color, GColorBlack);
       bitset8_update(row_data, x, pixel_is_white);
     }
-  } else if ((bitmap_format == GBitmapFormat8Bit) ||
-             (bitmap_format == GBitmapFormat8BitCircular)) {
+  } else if ((bitmap_format == GBitmapFormat8Bit) || (bitmap_format == GBitmapFormat8BitCircular)) {
     GColor8 *const destination_pixel = (GColor8 *)(row_data + x);
     *destination_pixel = color;
   } else {
-    WTF; // Unsupported destination type
+    WTF;  // Unsupported destination type
   }
 }
 
-bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
-                                               GBitmap *bitmap, uint32_t *delay_ms) {
+bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence, GBitmap *bitmap,
+                                               uint32_t *delay_ms) {
   bool retval = false;
-  uint8_t* buffer = NULL;
+  uint8_t *buffer = NULL;
 
   // Disabled if play count is 0 and not the very first frame
   if (!bitmap_sequence ||
@@ -205,17 +204,15 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
   upng_t *upng = png_decoder_data->upng;
 
   // Check bitmap_sequence metadata is loaded, bitmap_sequence size, type & memory constraints
-  const GBitmapFormat bitmap_format = gbitmap_get_format(bitmap); // call is NULL-safe
+  const GBitmapFormat bitmap_format = gbitmap_get_format(bitmap);  // call is NULL-safe
   if (!bitmap_sequence->header_loaded || bitmap == NULL || bitmap->addr == NULL ||
       bitmap_sequence->bitmap_size.w > (bitmap->bounds.size.w) ||
       bitmap_sequence->bitmap_size.h > (bitmap->bounds.size.h)) {
     goto cleanup;
   }
 
-  if (!((bitmap_format == GBitmapFormat1Bit) ||
-        (bitmap_format == GBitmapFormat8Bit) ||
+  if (!((bitmap_format == GBitmapFormat1Bit) || (bitmap_format == GBitmapFormat8Bit) ||
         (bitmap_format == GBitmapFormat8BitCircular))) {
-
     APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid destination bitmap format for APNG");
     goto cleanup;
   }
@@ -233,9 +230,8 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
     }
   }
 
-  const int32_t metadata_bytes =
-     png_seek_chunk_in_resource(bitmap_sequence->resource_id,
-                                png_decoder_data->read_cursor, true, NULL);
+  const int32_t metadata_bytes = png_seek_chunk_in_resource(
+      bitmap_sequence->resource_id, png_decoder_data->read_cursor, true, NULL);
 
   if (metadata_bytes <= 0) {
     goto cleanup;
@@ -248,8 +244,7 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
 
   ResAppNum app_num = sys_get_current_resource_num();
   const size_t bytes_read = sys_resource_load_range(
-      app_num, bitmap_sequence->resource_id,
-      png_decoder_data->read_cursor, buffer, metadata_bytes);
+      app_num, bitmap_sequence->resource_id, png_decoder_data->read_cursor, buffer, metadata_bytes);
 
   if (bytes_read != (size_t)metadata_bytes) {
     goto cleanup;
@@ -282,8 +277,8 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
       const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, y);
       const uint32_t x_origin = bitmap->bounds.origin.x + png_decoder_data->previous_xoffset;
       const int16_t min_x = MAX((uint32_t)row_info.min_x, x_origin);
-      const int16_t max_x = MIN((uint32_t)row_info.max_x,
-                                (x_origin + png_decoder_data->previous_width - 1));
+      const int16_t max_x =
+          MIN((uint32_t)row_info.max_x, (x_origin + png_decoder_data->previous_width - 1));
 
       const int16_t num_bytes = max_x - min_x + 1;
       if (num_bytes > 0) {
@@ -292,7 +287,7 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
     }
   }
 
-  apng_fctl fctl = {0}; // Defaults work for IDAT frame without fctl data
+  apng_fctl fctl = {0};  // Defaults work for IDAT frame without fctl data
 
   // If this frame doesn't have fctl, use the full width & height
   if (!upng_get_apng_fctl(upng, &fctl)) {
@@ -320,10 +315,10 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
 
   uint32_t bpp = upng_get_bpp(upng);
   upng_format png_format = upng_get_format(upng);
-  uint8_t *upng_buffer = (uint8_t*)upng_get_buffer(upng);
+  uint8_t *upng_buffer = (uint8_t *)upng_get_buffer(upng);
 
   // Byte aligned rows for image at bpp
-  uint16_t row_stride_bytes = (fctl.width *  bpp + 7) / 8;
+  uint16_t row_stride_bytes = (fctl.width * bpp + 7) / 8;
 
   if (png_format >= UPNG_INDEXED1 && png_format <= UPNG_INDEXED8) {
     const GColor8 *palette = png_decoder_data->palette;
@@ -333,11 +328,10 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
       const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, corrected_dst_y);
       int16_t delta_x = fctl.x_offset + bitmap->bounds.origin.x;
       for (int32_t x = MAX(0, row_info.min_x - delta_x);
-           x < MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1);
-           x++) {
+           x < MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1); x++) {
         const uint32_t corrected_dst_x = x + delta_x;
-        const uint8_t palette_index = raw_image_get_value_for_bitdepth(upng_buffer, x, y,
-            row_stride_bytes, bpp);
+        const uint8_t palette_index =
+            raw_image_get_value_for_bitdepth(upng_buffer, x, y, row_stride_bytes, bpp);
 
         const GColor8 src = palette[palette_index];
         GColor8 *const dst = (GColor8 *)(row_info.data + corrected_dst_x);
@@ -360,12 +354,10 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
 
       // for each pixel in this frame, clipping to the bitmap geometry
       for (int32_t x = MAX(0, row_info.min_x - delta_x);
-           x < MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1);
-           x++) {
-
+           x < MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1); x++) {
         const uint32_t corrected_dst_x = x + delta_x;
-        uint8_t channel = raw_image_get_value_for_bitdepth(upng_buffer, x, y,
-                                                           row_stride_bytes, bpp);
+        uint8_t channel =
+            raw_image_get_value_for_bitdepth(upng_buffer, x, y, row_stride_bytes, bpp);
         if (transparent_gray >= 0 && channel == transparent_gray) {
           // Grayscale only has fully transparent, so only modify pixels
           // during OP_SOURCE to make the area transparent
@@ -395,8 +387,8 @@ cleanup:
 }
 
 // total elapsed from start of animation
-bool gbitmap_sequence_update_bitmap_by_elapsed(GBitmapSequence *bitmap_sequence,
-                                               GBitmap *bitmap, uint32_t elapsed_ms) {
+bool gbitmap_sequence_update_bitmap_by_elapsed(GBitmapSequence *bitmap_sequence, GBitmap *bitmap,
+                                               uint32_t elapsed_ms) {
   if (!bitmap_sequence) {
     return false;
   }

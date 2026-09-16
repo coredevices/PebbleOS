@@ -21,20 +21,20 @@
 #include "system/passert.h"
 
 static const SettingsModuleGetMetadata s_submodule_registry[] = {
-  [SettingsMenuItemBluetooth]     = settings_bluetooth_get_info,
-  [SettingsMenuItemNotifications] = settings_notifications_get_info,
-  [SettingsMenuItemVibrations]    = settings_vibe_patterns_get_info,
-  [SettingsMenuItemQuietTime]     = settings_quiet_time_get_info,
-  [SettingsMenuItemTimeline]      = settings_timeline_get_info,
-  [SettingsMenuItemHealth]        = settings_health_get_info,
-  [SettingsMenuItemActivity]      = settings_activity_tracker_get_info,
-  [SettingsMenuItemQuickLaunch]   = settings_quick_launch_get_info,
-  [SettingsMenuItemDateTime]      = settings_time_get_info,
-  [SettingsMenuItemDisplay]       = settings_display_get_info,
+    [SettingsMenuItemBluetooth] = settings_bluetooth_get_info,
+    [SettingsMenuItemNotifications] = settings_notifications_get_info,
+    [SettingsMenuItemVibrations] = settings_vibe_patterns_get_info,
+    [SettingsMenuItemQuietTime] = settings_quiet_time_get_info,
+    [SettingsMenuItemTimeline] = settings_timeline_get_info,
+    [SettingsMenuItemHealth] = settings_health_get_info,
+    [SettingsMenuItemActivity] = settings_activity_tracker_get_info,
+    [SettingsMenuItemQuickLaunch] = settings_quick_launch_get_info,
+    [SettingsMenuItemDateTime] = settings_time_get_info,
+    [SettingsMenuItemDisplay] = settings_display_get_info,
 #ifdef CONFIG_THEMING
-  [SettingsMenuItemThemes]        = settings_themes_get_info,
+    [SettingsMenuItemThemes] = settings_themes_get_info,
 #endif
-  [SettingsMenuItemSystem]        = settings_system_get_info,
+    [SettingsMenuItemSystem] = settings_system_get_info,
 };
 
 const SettingsModuleMetadata *settings_menu_get_submodule_info(SettingsMenuItem category) {

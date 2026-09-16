@@ -8,15 +8,15 @@
 
 #include <string.h>
 
-static uint16_t get_write_length_available(CircularBuffer* buffer) {
+static uint16_t get_write_length_available(CircularBuffer *buffer) {
   return buffer->buffer_size - buffer->data_length;
 }
 
-static uint16_t get_write_index(CircularBuffer* buffer) {
+static uint16_t get_write_index(CircularBuffer *buffer) {
   return (buffer->read_index + buffer->data_length) % buffer->buffer_size;
 }
 
-void circular_buffer_init(CircularBuffer* buffer, uint8_t* storage, uint16_t storage_size) {
+void circular_buffer_init(CircularBuffer *buffer, uint8_t *storage, uint16_t storage_size) {
   buffer->buffer = storage;
   buffer->buffer_size = storage_size;
   buffer->read_index = 0;
@@ -25,13 +25,13 @@ void circular_buffer_init(CircularBuffer* buffer, uint8_t* storage, uint16_t sto
   buffer->auto_reset = true;
 }
 
-void circular_buffer_init_ex(CircularBuffer* buffer, uint8_t* storage, uint16_t storage_size,
+void circular_buffer_init_ex(CircularBuffer *buffer, uint8_t *storage, uint16_t storage_size,
                              bool auto_reset) {
   circular_buffer_init(buffer, storage, storage_size);
   buffer->auto_reset = auto_reset;
 }
 
-bool circular_buffer_write(CircularBuffer* buffer, const void* data, uint16_t length) {
+bool circular_buffer_write(CircularBuffer *buffer, const void *data, uint16_t length) {
   if (get_write_length_available(buffer) < length) {
     return false;
   }
@@ -49,7 +49,7 @@ bool circular_buffer_write(CircularBuffer* buffer, const void* data, uint16_t le
     memcpy(&buffer->buffer[write_index], data, remaining_length);
 
     write_index = 0;
-    data = ((uint8_t*) data) + remaining_length;
+    data = ((uint8_t *)data) + remaining_length;
     length -= remaining_length;
   }
 
@@ -79,7 +79,8 @@ void circular_buffer_write_finish(CircularBuffer *buffer, uint16_t written_lengt
   buffer->write_in_progress = false;
 }
 
-bool circular_buffer_read(const CircularBuffer* buffer, uint16_t length, const uint8_t** data_out, uint16_t* length_out) {
+bool circular_buffer_read(const CircularBuffer *buffer, uint16_t length, const uint8_t **data_out,
+                          uint16_t *length_out) {
   if (buffer->data_length < length) {
     return false;
   }
@@ -92,13 +93,12 @@ bool circular_buffer_read(const CircularBuffer* buffer, uint16_t length, const u
   return true;
 }
 
-uint16_t circular_buffer_copy(const CircularBuffer* buffer,
-                                      void *data_out,
-                                      uint16_t length_to_copy) {
+uint16_t circular_buffer_copy(const CircularBuffer *buffer, void *data_out,
+                              uint16_t length_to_copy) {
   return circular_buffer_copy_offset(buffer, 0, data_out, length_to_copy);
 }
 
-uint16_t circular_buffer_copy_offset(const CircularBuffer* buffer, uint16_t start_offset,
+uint16_t circular_buffer_copy_offset(const CircularBuffer *buffer, uint16_t start_offset,
                                      uint8_t *data_out, uint16_t length_to_copy) {
   if (buffer->data_length <= start_offset) {
     return 0;
@@ -124,7 +124,7 @@ uint16_t circular_buffer_copy_offset(const CircularBuffer* buffer, uint16_t star
   return length_to_copy;
 }
 
-bool circular_buffer_read_or_copy(const CircularBuffer* buffer, uint8_t **data_out, size_t length,
+bool circular_buffer_read_or_copy(const CircularBuffer *buffer, uint8_t **data_out, size_t length,
                                   void *(*malloc_imp)(size_t), bool *caller_should_free) {
   UTIL_ASSERT(buffer && malloc_imp && data_out && caller_should_free);
   if (buffer->data_length < length) {
@@ -134,7 +134,7 @@ bool circular_buffer_read_or_copy(const CircularBuffer* buffer, uint8_t **data_o
   const bool should_malloc_and_copy = (length > contiguous_length);
   *caller_should_free = should_malloc_and_copy;
   if (should_malloc_and_copy) {
-    *data_out = (uint8_t *) malloc_imp(length);
+    *data_out = (uint8_t *)malloc_imp(length);
     if (*data_out) {
       circular_buffer_copy(buffer, *data_out, length);
     } else {
@@ -148,7 +148,7 @@ bool circular_buffer_read_or_copy(const CircularBuffer* buffer, uint8_t **data_o
   return true;
 }
 
-bool circular_buffer_consume(CircularBuffer* buffer, uint16_t length) {
+bool circular_buffer_consume(CircularBuffer *buffer, uint16_t length) {
   if (buffer->data_length < length) {
     return false;
   }
@@ -164,10 +164,10 @@ bool circular_buffer_consume(CircularBuffer* buffer, uint16_t length) {
   return true;
 }
 
-uint16_t circular_buffer_get_write_space_remaining(const CircularBuffer* buffer) {
+uint16_t circular_buffer_get_write_space_remaining(const CircularBuffer *buffer) {
   return buffer->buffer_size - buffer->data_length;
 }
 
-uint16_t circular_buffer_get_read_space_remaining(const CircularBuffer* buffer) {
+uint16_t circular_buffer_get_read_space_remaining(const CircularBuffer *buffer) {
   return buffer->data_length;
 }

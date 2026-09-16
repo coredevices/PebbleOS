@@ -66,8 +66,7 @@
 #endif
 
 // The art-mode title font; the round media layout sizes it up for the wide centre band.
-#define TITLE_SCROLL_FONT_KEY \
-    PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_28_BOLD)
+#define TITLE_SCROLL_FONT_KEY PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_28_BOLD)
 
 enum ActionBarState {
   ActionBarStateSkip,
@@ -100,80 +99,88 @@ typedef struct MusicAppSizeConfig {
 
 #define CONTENT_VERTICAL_OFFSET PBL_IF_RECT_ELSE(0, 5)
 static const MusicAppSizeConfig s_music_size_config_medium = {
-  .music_time_font_key = FONT_KEY_GOTHIC_14,
-  .no_music_font_key = FONT_KEY_GOTHIC_18_BOLD,
-  .horizontal_margin = PBL_IF_RECT_ELSE(12, 25),
+    .music_time_font_key = FONT_KEY_GOTHIC_14,
+    .no_music_font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .horizontal_margin = PBL_IF_RECT_ELSE(12, 25),
 
-  .artist_field = {
-    .origin_y = 31 + CONTENT_VERTICAL_OFFSET,
-    .size_h = 21,
-  },
-  .title_field = {
-    .origin_y = 53 + CONTENT_VERTICAL_OFFSET,
-    .size_h = 44,
-  },
-  .time_field = {
-    .origin_y = 106 + CONTENT_VERTICAL_OFFSET,
-    .size_h = 14,
-  },
+    .artist_field =
+        {
+            .origin_y = 31 + CONTENT_VERTICAL_OFFSET,
+            .size_h = 21,
+        },
+    .title_field =
+        {
+            .origin_y = 53 + CONTENT_VERTICAL_OFFSET,
+            .size_h = 44,
+        },
+    .time_field =
+        {
+            .origin_y = 106 + CONTENT_VERTICAL_OFFSET,
+            .size_h = 14,
+        },
 
-  .cassette_rect = {{0, -1 + CONTENT_VERTICAL_OFFSET}, {43, 28}},
-  .cassette_animation_x = 60,
-  .cassette_animation_time = 1 * ANIMATION_FRAME_MS,
+    .cassette_rect = {{0, -1 + CONTENT_VERTICAL_OFFSET}, {43, 28}},
+    .cassette_animation_x = 60,
+    .cassette_animation_time = 1 * ANIMATION_FRAME_MS,
 
-  .track_field = {
-    .origin_y = 120 + CONTENT_VERTICAL_OFFSET,
-    .size_h = 4,
-  },
-  .track_corner_radius = 1,
+    .track_field =
+        {
+            .origin_y = 120 + CONTENT_VERTICAL_OFFSET,
+            .size_h = 4,
+        },
+    .track_corner_radius = 1,
 
-  .no_music_img_pos = {PBL_IF_RECT_ELSE(29, 53), PBL_IF_RECT_ELSE(25, 26)},
-  .no_music_text_field = {
-    .origin_y = PBL_IF_RECT_ELSE(107, 104),
-    .size_h = 58,
-  },
+    .no_music_img_pos = {PBL_IF_RECT_ELSE(29, 53), PBL_IF_RECT_ELSE(25, 26)},
+    .no_music_text_field = {
+        .origin_y = PBL_IF_RECT_ELSE(107, 104),
+        .size_h = 58,
+    },
 };
 
 static const MusicAppSizeConfig s_music_size_config_large = {
-  .music_time_font_key = FONT_KEY_GOTHIC_18_BOLD,
-  .no_music_font_key = FONT_KEY_GOTHIC_28,
-  .horizontal_margin = PBL_IF_RECT_ELSE(10, 30),
+    .music_time_font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .no_music_font_key = FONT_KEY_GOTHIC_28,
+    .horizontal_margin = PBL_IF_RECT_ELSE(10, 30),
 
-  .artist_field = {
-    .origin_y = PBL_IF_RECT_ELSE(30, 48),
-    .size_h = 21,
-  },
-  .title_field = {
-    .origin_y = PBL_IF_RECT_ELSE(60, 72),
-    .size_h = 80,
-  },
-  .time_field = {
-    .origin_y = PBL_IF_RECT_ELSE(146, 158),
-    .size_h = 20,
-  },
+    .artist_field =
+        {
+            .origin_y = PBL_IF_RECT_ELSE(30, 48),
+            .size_h = 21,
+        },
+    .title_field =
+        {
+            .origin_y = PBL_IF_RECT_ELSE(60, 72),
+            .size_h = 80,
+        },
+    .time_field =
+        {
+            .origin_y = PBL_IF_RECT_ELSE(146, 158),
+            .size_h = 20,
+        },
 
-  .cassette_rect = {{0, -8}, {43, 28}},
-  .cassette_animation_x = 140,
-  .cassette_animation_time = 3 * ANIMATION_FRAME_MS,
+    .cassette_rect = {{0, -8}, {43, 28}},
+    .cassette_animation_x = 140,
+    .cassette_animation_time = 3 * ANIMATION_FRAME_MS,
 
-  .track_field = {
-    .origin_y = PBL_IF_RECT_ELSE(168, 182),
-    .size_h = 10,
-  },
-  .track_corner_radius = 4,
+    .track_field =
+        {
+            .origin_y = PBL_IF_RECT_ELSE(168, 182),
+            .size_h = 10,
+        },
+    .track_corner_radius = 4,
 
-  .no_music_img_pos = {PBL_IF_RECT_ELSE(57, 72), PBL_IF_RECT_ELSE(46, 58)},
-  .no_music_text_field = {
-    .origin_y = PBL_IF_RECT_ELSE(131, 143),
-    .size_h = 58,
-  },
+    .no_music_img_pos = {PBL_IF_RECT_ELSE(57, 72), PBL_IF_RECT_ELSE(46, 58)},
+    .no_music_text_field = {
+        .origin_y = PBL_IF_RECT_ELSE(131, 143),
+        .size_h = 58,
+    },
 };
 
-static const MusicAppSizeConfig * const s_music_size_configs[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_music_size_config_medium,
-  [PreferredContentSizeMedium] = &s_music_size_config_medium,
-  [PreferredContentSizeLarge] = &s_music_size_config_large,
-  [PreferredContentSizeExtraLarge] = &s_music_size_config_large,
+static const MusicAppSizeConfig *const s_music_size_configs[NumPreferredContentSizes] = {
+    [PreferredContentSizeSmall] = &s_music_size_config_medium,
+    [PreferredContentSizeMedium] = &s_music_size_config_medium,
+    [PreferredContentSizeLarge] = &s_music_size_config_large,
+    [PreferredContentSizeExtraLarge] = &s_music_size_config_large,
 };
 
 static const MusicAppSizeConfig *prv_config(void) {
@@ -190,34 +197,35 @@ static int prv_text_layer_width(void) {
 
 static GRect prv_artist_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->artist_field.origin_y,
-               prv_text_layer_width(), config->artist_field.size_h);
+  return GRect(config->horizontal_margin, config->artist_field.origin_y, prv_text_layer_width(),
+               config->artist_field.size_h);
 }
 
 static GRect prv_title_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->title_field.origin_y,
-               prv_text_layer_width(), config->title_field.size_h);
+  return GRect(config->horizontal_margin, config->title_field.origin_y, prv_text_layer_width(),
+               config->title_field.size_h);
 }
 
 static GRect prv_time_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->time_field.origin_y,
-               prv_content_width(), config->time_field.size_h);
+  return GRect(config->horizontal_margin, config->time_field.origin_y, prv_content_width(),
+               config->time_field.size_h);
 }
 
 static GRect prv_cassette_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  const int16_t cassette_x = config->horizontal_margin +
+  const int16_t cassette_x =
+      config->horizontal_margin +
       PBL_IF_RECT_ELSE(0, prv_content_width() - config->cassette_rect.size.w);
-  return GRect(cassette_x, config->cassette_rect.origin.y,
-               config->cassette_rect.size.w, config->cassette_rect.size.h);
+  return GRect(cassette_x, config->cassette_rect.origin.y, config->cassette_rect.size.w,
+               config->cassette_rect.size.h);
 }
 
 static GRect prv_track_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->track_field.origin_y,
-               prv_content_width(), config->track_field.size_h);
+  return GRect(config->horizontal_margin, config->track_field.origin_y, prv_content_width(),
+               config->track_field.size_h);
 }
 
 static const ButtonId BUTTON_FORWARD = BUTTON_ID_DOWN;
@@ -233,7 +241,6 @@ static const int16_t TIME_BOUNDS_OFFSET = 2;
 static const uint32_t VOLUME_REPEAT_INTERVAL_MS = 400;
 static const uint32_t ACTION_BAR_TIMEOUT_MS = 2000;
 static const uint32_t VOLUME_ICON_TIMEOUT_MS = 2000;
-
 
 typedef struct {
   Window window;
@@ -255,7 +262,7 @@ typedef struct {
   StatusBarLayer status_layer;
 
   TextLayer position_text_layer;
-  char position_buffer[9]; // 9 will fit "00:00:00"
+  char position_buffer[9];  // 9 will fit "00:00:00"
 
   TextLayer length_text_layer;
   char length_buffer[9];
@@ -297,10 +304,10 @@ typedef struct {
   // One-way "digital sign" scroll for the title beside the tape (album-art mode). Runs for a couple
   // of cycles after a track change then rests at the start; only scrolls when the title overflows.
   AppTimer *title_marquee_timer;
-  int16_t title_marquee_offset;  // px scrolled left (0..span)
-  int16_t title_marquee_span;    // px of overflow to reveal; 0 => fits, no scroll
+  int16_t title_marquee_offset;       // px scrolled left (0..span)
+  int16_t title_marquee_span;         // px of overflow to reveal; 0 => fits, no scroll
   uint32_t title_marquee_elapsed_ms;  // position within the scroll cycle
-  bool title_marquee_on;         // art-mode title/artist layout applied (transition guard)
+  bool title_marquee_on;              // art-mode title/artist layout applied (transition guard)
   // Stock TextLayer render, used for the artist/title layers off album art; over art we draw them
   // ourselves (outlined artist, scrolling title).
   LayerUpdateProc orig_text_update_proc;
@@ -341,13 +348,11 @@ static void prv_set_action_bar_state(MusicAppData *data, enum ActionBarState sta
 static void prv_trigger_cassette_icon_switch(GBitmap *bitmap, bool animated);
 static void prv_update_cassette_icon(MusicAppData *data, bool animated);
 
-
 // Add these two:
 static void prv_update_layout(MusicAppData *data);
 static void prv_set_pos_update_timer(MusicAppData *data, MusicPlayState playstate);
 static void prv_apply_art_appearance(MusicAppData *data);
 static void prv_maybe_request_album_art(void);
-
 
 static void prv_do_haptic_feedback_vibe(MusicAppData *data) {
   vibe_score_do_vibe(data->score);
@@ -364,8 +369,8 @@ static void prv_show_volume_image(GBitmap *bitmap) {
   if (data->volume_icon_timer) {
     app_timer_reschedule(data->volume_icon_timer, VOLUME_ICON_TIMEOUT_MS);
   } else {
-    data->volume_icon_timer = app_timer_register(VOLUME_ICON_TIMEOUT_MS,
-                                                 prv_handle_volume_icon_timer, data);
+    data->volume_icon_timer =
+        app_timer_register(VOLUME_ICON_TIMEOUT_MS, prv_handle_volume_icon_timer, data);
   }
   prv_trigger_cassette_icon_switch(bitmap, true);
 }
@@ -381,7 +386,7 @@ static void prv_change_volume(bool volume_is_up) {
   music_command_send(volume_is_up ? MusicCommandVolumeUp : MusicCommandVolumeDown);
 }
 
-static Animation* prv_create_layer_upwards_animation(Layer *layer, int16_t offset) {
+static Animation *prv_create_layer_upwards_animation(Layer *layer, int16_t offset) {
   GPoint target = GPoint(0, -layer->bounds.size.h - offset);
   GPoint origin = GPoint(0, -offset);
   Animation *animation = property_animation_get_animation(
@@ -391,22 +396,27 @@ static Animation* prv_create_layer_upwards_animation(Layer *layer, int16_t offse
   return animation;
 }
 
-static Animation* prv_create_upwards_animation(MusicAppData *data) {
+static Animation *prv_create_upwards_animation(MusicAppData *data) {
   return animation_spawn_create(
       prv_create_layer_upwards_animation(&data->artist_text_layer.layer, ARTIST_BOUNDS_OFFSET),
       prv_create_layer_upwards_animation(&data->title_text_layer.layer, TITLE_BOUNDS_OFFSET),
       prv_create_layer_upwards_animation(&data->position_text_layer.layer, TIME_BOUNDS_OFFSET),
-      prv_create_layer_upwards_animation(&data->length_text_layer.layer, TIME_BOUNDS_OFFSET),
-      NULL);
+      prv_create_layer_upwards_animation(&data->length_text_layer.layer, TIME_BOUNDS_OFFSET), NULL);
 }
 
 static const PropertyAnimationImplementation s_frame_layer_implementation = {
-    .base = {
-        .update = (AnimationUpdateImplementation) property_animation_update_grect,
-    },
+    .base =
+        {
+            .update = (AnimationUpdateImplementation)property_animation_update_grect,
+        },
     .accessors = {
-        .setter = { .grect = (const GRectSetter) layer_set_frame_by_value, },
-        .getter = { .grect = (const GRectGetter) layer_get_frame_by_value, },
+        .setter =
+            {
+                .grect = (const GRectSetter)layer_set_frame_by_value,
+            },
+        .getter = {
+            .grect = (const GRectGetter)layer_get_frame_by_value,
+        },
     },
 };
 
@@ -426,8 +436,7 @@ static Animation *prv_create_bounceback_animation(MusicAppData *data) {
       prv_create_layer_bounceback_animation(&data->artist_text_layer.layer, prv_artist_rect()),
       prv_create_layer_bounceback_animation(&data->title_text_layer.layer, prv_title_rect()),
       prv_create_layer_bounceback_animation(&data->position_text_layer.layer, time_rect),
-      prv_create_layer_bounceback_animation(&data->length_text_layer.layer, time_rect),
-      NULL);
+      prv_create_layer_bounceback_animation(&data->length_text_layer.layer, time_rect), NULL);
 }
 
 static void prv_update_track_progress(MusicAppData *data);
@@ -453,23 +462,23 @@ static Animation *prv_create_cassette_animation(MusicAppData *data) {
   const MusicAppSizeConfig *config = prv_config();
   const GRect cassette_rect = prv_cassette_rect();
   GPoint left_target = GPoint(-cassette_rect.size.w - cassette_rect.origin.x, 0);
-  Animation *cassette_left = property_animation_get_animation(
-      property_animation_create_bounds_origin(&data->cassette_container, &GPointZero,
-                                              &left_target));
-  Animation *cassette_right = property_animation_get_animation(
-      property_animation_create_bounds_origin(&data->cassette_container,
-          &GPoint(config->cassette_animation_x, 0), &GPoint(-4, 0)));
-  Animation *cassette_bounceback = property_animation_get_animation(
-      property_animation_create_bounds_origin(&data->cassette_container, &GPoint(-4, 0),
-                                              &GPointZero));
+  Animation *cassette_left =
+      property_animation_get_animation(property_animation_create_bounds_origin(
+          &data->cassette_container, &GPointZero, &left_target));
+  Animation *cassette_right =
+      property_animation_get_animation(property_animation_create_bounds_origin(
+          &data->cassette_container, &GPoint(config->cassette_animation_x, 0), &GPoint(-4, 0)));
+  Animation *cassette_bounceback =
+      property_animation_get_animation(property_animation_create_bounds_origin(
+          &data->cassette_container, &GPoint(-4, 0), &GPointZero));
   animation_set_duration(cassette_left, 4 * ANIMATION_FRAME_MS);
   animation_set_curve(cassette_left, AnimationCurveEaseIn);
   animation_set_duration(cassette_right, config->cassette_animation_time);
   animation_set_curve(cassette_left, AnimationCurveLinear);
   animation_set_duration(cassette_bounceback, 4 * ANIMATION_FRAME_MS);
   animation_set_curve(cassette_bounceback, AnimationCurveEaseOut);
-  Animation *sequence = animation_sequence_create(cassette_left, cassette_right,
-                                                  cassette_bounceback, NULL);
+  Animation *sequence =
+      animation_sequence_create(cassette_left, cassette_right, cassette_bounceback, NULL);
   if (!prv_should_animate_cassette()) {
     animation_set_play_count(sequence, 0);
   }
@@ -506,15 +515,19 @@ static void prv_trigger_track_change_animation(MusicAppData *data) {
   data->pause_track_pos_updates = true;
   Animation *scroll_up = prv_create_upwards_animation(data);
   Animation *bounceback = prv_create_bounceback_animation(data);
-  animation_set_handlers(scroll_up, (AnimationHandlers) {
-      .stopped = prv_flip_animated_text,
-  }, data);
+  animation_set_handlers(scroll_up,
+                         (AnimationHandlers){
+                             .stopped = prv_flip_animated_text,
+                         },
+                         data);
 
   Animation *complete;
   complete = animation_sequence_create(scroll_up, bounceback, NULL);
-  animation_set_handlers(complete, (AnimationHandlers) {
-      .stopped = prv_transition_stopped,
-  }, data);
+  animation_set_handlers(complete,
+                         (AnimationHandlers){
+                             .stopped = prv_transition_stopped,
+                         },
+                         data);
   data->transition = complete;
   animation_schedule(complete);
 }
@@ -542,24 +555,25 @@ static void prv_trigger_cassette_icon_switch(GBitmap *new_bitmap, bool animated)
   }
 
   GRect cassette_rect = prv_cassette_rect();
-  Animation *disappear_animation = property_animation_get_animation(
-      property_animation_create_bounds_origin(&data->cassette_layer.layer, &GPointZero,
-                                              &GPoint(0, -cassette_rect.size.h)));
+  Animation *disappear_animation =
+      property_animation_get_animation(property_animation_create_bounds_origin(
+          &data->cassette_layer.layer, &GPointZero, &GPoint(0, -cassette_rect.size.h)));
   animation_set_duration(disappear_animation, 3 * ANIMATION_FRAME_MS);
   animation_set_curve(disappear_animation, AnimationCurveEaseIn);
 
   GRect origin = cassette_rect;
   origin.origin.y -= BOUNCEBACK_OFFSET;
 
-  Animation *bounceback_animation = property_animation_get_animation(
-      property_animation_create(&s_frame_layer_implementation, &data->cassette_layer.layer,
-                                &origin, &cassette_rect));
+  Animation *bounceback_animation = property_animation_get_animation(property_animation_create(
+      &s_frame_layer_implementation, &data->cassette_layer.layer, &origin, &cassette_rect));
   animation_set_duration(bounceback_animation, 4 * ANIMATION_FRAME_MS);
   animation_set_curve(bounceback_animation, AnimationCurveEaseOut);
 
-  animation_set_handlers(disappear_animation, (AnimationHandlers) {
-      .stopped = prv_update_icon,
-  }, new_bitmap);
+  animation_set_handlers(disappear_animation,
+                         (AnimationHandlers){
+                             .stopped = prv_update_icon,
+                         },
+                         new_bitmap);
 
   Animation *sequence = animation_sequence_create(disappear_animation, bounceback_animation, NULL);
 
@@ -600,8 +614,7 @@ static void prv_update_cassette_icon(MusicAppData *data, bool animated) {
 }
 
 static void prv_update_ui_state_skipping(MusicAppData *data, bool animated) {
-  action_bar_layer_set_click_config_provider(&data->action_bar,
-                                             prv_skipping_click_config_provider);
+  action_bar_layer_set_click_config_provider(&data->action_bar, prv_skipping_click_config_provider);
   const bool seeks = music_skip_seeks_within_track();
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_FORWARD,
                                      seeks ? &data->icon_fast_forward : &data->icon_skip_forward,
@@ -624,8 +637,7 @@ static void prv_update_ui_state_skipping(MusicAppData *data, bool animated) {
 
 static void prv_update_ui_state_volume(MusicAppData *data, bool animated) {
   if (data->action_bar_state == ActionBarStateVolume) {
-    action_bar_layer_set_click_config_provider(&data->action_bar,
-                                               prv_volume_click_config_provider);
+    action_bar_layer_set_click_config_provider(&data->action_bar, prv_volume_click_config_provider);
   }
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_ID_UP, &data->icon_volume_up,
                                      animated);
@@ -633,9 +645,15 @@ static void prv_update_ui_state_volume(MusicAppData *data, bool animated) {
                                      animated);
   GBitmap const *select_bitmap;
   switch (music_get_playback_state()) {
-    case MusicPlayStatePlaying: select_bitmap = &data->icon_pause; break;
-    case MusicPlayStatePaused: select_bitmap = &data->icon_play; break;
-    default: select_bitmap = &data->icon_play_pause; break;
+    case MusicPlayStatePlaying:
+      select_bitmap = &data->icon_pause;
+      break;
+    case MusicPlayStatePaused:
+      select_bitmap = &data->icon_play;
+      break;
+    default:
+      select_bitmap = &data->icon_play_pause;
+      break;
   }
   action_bar_layer_set_icon_animated(&data->action_bar, BUTTON_ID_SELECT, select_bitmap, animated);
 }
@@ -700,8 +718,8 @@ static void prv_ellipsis_click_handler(ClickRecognizerRef recognizer, void *cont
   }
 
   MusicAppData *data = context;
-  data->action_bar_revert_timer = app_timer_register(ACTION_BAR_TIMEOUT_MS, prv_action_bar_revert,
-                                                     data);
+  data->action_bar_revert_timer =
+      app_timer_register(ACTION_BAR_TIMEOUT_MS, prv_action_bar_revert, data);
   prv_set_action_bar_state(data, ActionBarStateVolume);
 }
 
@@ -719,8 +737,8 @@ static void prv_handle_volume_repeat(void *context) {
   if (!data->volume_repeat_timer) {
     return;
   }
-  data->volume_repeat_timer = app_timer_register(VOLUME_REPEAT_INTERVAL_MS,
-                                                 prv_handle_volume_repeat, data);
+  data->volume_repeat_timer =
+      app_timer_register(VOLUME_REPEAT_INTERVAL_MS, prv_handle_volume_repeat, data);
   prv_change_volume(data->volume_is_up);
   prv_do_haptic_feedback_vibe(context);
 }
@@ -731,8 +749,8 @@ static void prv_volume_long_click_start_handler(ClickRecognizerRef recognizer, v
   prv_set_action_bar_state(context, ActionBarStateLongPress);
   MusicAppData *data = context;
   data->volume_is_up = volume_is_up;
-  data->volume_repeat_timer = app_timer_register(VOLUME_REPEAT_INTERVAL_MS,
-                                                 prv_handle_volume_repeat, data);
+  data->volume_repeat_timer =
+      app_timer_register(VOLUME_REPEAT_INTERVAL_MS, prv_handle_volume_repeat, data);
   prv_do_haptic_feedback_vibe(data);
 }
 
@@ -787,7 +805,8 @@ static void prv_volume_click_config_provider(void *context) {
 }
 
 static void prv_update_layout(MusicAppData *data) {
-  const bool show_progress_bar = shell_prefs_get_music_show_progress_bar() || data->temporarily_show_progress;
+  const bool show_progress_bar =
+      shell_prefs_get_music_show_progress_bar() || data->temporarily_show_progress;
   bool hide_layer = !show_progress_bar || !music_is_progress_reporting_supported();
 #if MUSIC_ROUND_MEDIA_LAYOUT
   // The unified round layout draws its own bezel arc and times on the backdrop; the stock bar and
@@ -820,30 +839,26 @@ static MusicNoMusicWindow *prv_create_no_music_window(void) {
   MusicNoMusicWindow *window = app_malloc_check(sizeof(MusicNoMusicWindow));
   window_init(&window->window, WINDOW_NAME("NoMusicWindow"));
   window_set_background_color(&window->window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
-  window_set_window_handlers(&window->window, &(WindowHandlers) {
-      .unload = prv_unload_no_music_window
-  });
+  window_set_window_handlers(&window->window,
+                             &(WindowHandlers){.unload = prv_unload_no_music_window});
 
   const MusicAppSizeConfig *config = prv_config();
 
   gbitmap_init_with_resource(&window->bitmap, RESOURCE_ID_MUSIC_IMAGE_NO_MUSIC);
   const GSize NO_MUSIC_IMAGE_SIZE = window->bitmap.bounds.size;
-  const GRect NO_MUSIC_IMAGE_RECT = GRect(config->no_music_img_pos.x,
-                                          config->no_music_img_pos.y,
+  const GRect NO_MUSIC_IMAGE_RECT = GRect(config->no_music_img_pos.x, config->no_music_img_pos.y,
                                           NO_MUSIC_IMAGE_SIZE.w, NO_MUSIC_IMAGE_SIZE.h);
   bitmap_layer_init(&window->bitmap_layer, &NO_MUSIC_IMAGE_RECT);
   bitmap_layer_set_bitmap(&window->bitmap_layer, &window->bitmap);
   bitmap_layer_set_compositing_mode(&window->bitmap_layer, GCompOpSet);
 
-  const GRect NO_MUSIC_TEXT_RECT = GRect(0, config->no_music_text_field.origin_y,
-                                         DISP_COLS, config->no_music_text_field.size_h);
+  const GRect NO_MUSIC_TEXT_RECT =
+      GRect(0, config->no_music_text_field.origin_y, DISP_COLS, config->no_music_text_field.size_h);
 
-  text_layer_init_with_parameters(&window->text_layer,
-                                  &NO_MUSIC_TEXT_RECT,
-                                  i18n_get("START PLAYBACK\nON YOUR PHONE", window),
-                                  fonts_get_system_font(config->no_music_font_key),
-                                  GColorBlack, GColorClear, GTextAlignmentCenter,
-                                  GTextOverflowModeTrailingEllipsis);
+  text_layer_init_with_parameters(
+      &window->text_layer, &NO_MUSIC_TEXT_RECT, i18n_get("START PLAYBACK\nON YOUR PHONE", window),
+      fonts_get_system_font(config->no_music_font_key), GColorBlack, GColorClear,
+      GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->window.layer, &window->bitmap_layer.layer);
   layer_add_child(&window->window.layer, &window->text_layer.layer);
   window_set_click_config_provider(&window->window, prv_no_music_window_click_config);
@@ -889,8 +904,7 @@ static void prv_update_now_playing(MusicAppData *data) {
     // The slide animation bounces the artist/title layers back to their stock positions, which
     // fights the media layout, so there just swap the text. Also skip it when there's nothing
     // to animate from.
-    if (prv_use_media_layout(data) ||
-        (data->artist_buffer[0] == 0 && data->title_buffer[0] == 0)) {
+    if (prv_use_media_layout(data) || (data->artist_buffer[0] == 0 && data->title_buffer[0] == 0)) {
       strncpy(data->artist_buffer, artist_buffer, MUSIC_BUFFER_LENGTH);
       strncpy(data->title_buffer, title_buffer, MUSIC_BUFFER_LENGTH);
       // It is sufficient to mark one layer as dirty.
@@ -916,9 +930,9 @@ static void prv_copy_time_period(char *buffer, size_t n, uint32_t period_s) {
   uint32_t seconds = period_s % SECONDS_PER_MINUTE;
 #pragma GCC diagnostic ignored "-Wformat-truncation"
   if (hours > 0) {
-    snprintf(buffer, n, "%"PRIu32":%02"PRIu32":%02"PRIu32, hours, minutes, seconds);
+    snprintf(buffer, n, "%" PRIu32 ":%02" PRIu32 ":%02" PRIu32, hours, minutes, seconds);
   } else {
-    snprintf(buffer, n, "%"PRIu32":%02"PRIu32, minutes, seconds);
+    snprintf(buffer, n, "%" PRIu32 ":%02" PRIu32, minutes, seconds);
   }
 }
 
@@ -927,7 +941,7 @@ static void prv_update_track_progress(MusicAppData *data) {
     return;
   }
 
-  if (!data->temporarily_show_progress && !shell_prefs_get_music_show_progress_bar()){
+  if (!data->temporarily_show_progress && !shell_prefs_get_music_show_progress_bar()) {
     return;
   }
 
@@ -962,8 +976,9 @@ static void prv_handle_tick_time(struct tm *time, TimeUnits units_changed) {
   }
 }
 
-static void prv_set_pos_update_timer(MusicAppData* data, MusicPlayState playstate) {
-  if (!music_is_progress_reporting_supported() || (!shell_prefs_get_music_show_progress_bar() && !data->temporarily_show_progress)) {
+static void prv_set_pos_update_timer(MusicAppData *data, MusicPlayState playstate) {
+  if (!music_is_progress_reporting_supported() ||
+      (!shell_prefs_get_music_show_progress_bar() && !data->temporarily_show_progress)) {
     tick_timer_service_unsubscribe();
     return;
   }
@@ -978,13 +993,12 @@ static void prv_set_pos_update_timer(MusicAppData* data, MusicPlayState playstat
   }
 }
 
-static void prv_configure_music_text_layer(
-    TextLayer *text_layer, char* text_buffer, const GRect *rect, int16_t y_offset,
-    GTextAlignment align, GFont font) {
-  text_layer_init_with_parameters(text_layer, rect, text_buffer, font,
-                                  GColorBlack, GColorClear, align, GTextOverflowModeFill);
-  layer_set_bounds(&text_layer->layer, &GRect(0, -y_offset,
-                                              rect->size.w, rect->size.h + y_offset));
+static void prv_configure_music_text_layer(TextLayer *text_layer, char *text_buffer,
+                                           const GRect *rect, int16_t y_offset,
+                                           GTextAlignment align, GFont font) {
+  text_layer_init_with_parameters(text_layer, rect, text_buffer, font, GColorBlack, GColorClear,
+                                  align, GTextOverflowModeFill);
+  layer_set_bounds(&text_layer->layer, &GRect(0, -y_offset, rect->size.w, rect->size.h + y_offset));
 }
 
 // The album-art square fills the width from the top down to just above the times row. On rect
@@ -1023,8 +1037,7 @@ static GRect prv_art_title_rect(void) {
   const int16_t y = ART_ROUND_TITLE_Y;
   const int16_t radius = DISP_COLS / 2;
   const int32_t dy = (y + h - 2) - radius;
-  const int16_t half_chord =
-      integer_sqrt((int64_t)radius * radius - (int64_t)dy * dy);
+  const int16_t half_chord = integer_sqrt((int64_t)radius * radius - (int64_t)dy * dy);
   const int16_t x = MAX(radius - half_chord + 4, ART_ROUND_TEXT_MARGIN);
   const int16_t right = DISP_COLS - x;
 #endif
@@ -1039,8 +1052,8 @@ static GRect prv_art_artist_rect(void) {
   const int16_t art_bottom = prv_config()->time_field.origin_y - 2;
   return GRect(0, art_bottom - 26, content_w, 26);
 #else
-  return GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_ARTIST_Y,
-               DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 24);
+  return GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_ARTIST_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN,
+               24);
 #endif
 }
 
@@ -1048,7 +1061,7 @@ static GRect prv_art_artist_rect(void) {
 static void prv_draw_outlined_text(GContext *ctx, const char *text, GFont font, GRect box,
                                    GTextOverflowMode overflow, GTextAlignment align) {
   static const GPoint k_off[] = {
-    {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1},
+      {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1},
   };
   graphics_context_set_text_color(ctx, GColorBlack);
   for (unsigned i = 0; i < sizeof(k_off) / sizeof(k_off[0]); ++i) {
@@ -1151,7 +1164,8 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
   prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, ART_ROUND_ARC_END_DEG);
   if (data->track_length > 0) {
     const int32_t sweep = ART_ROUND_ARC_END_DEG - ART_ROUND_ARC_START_DEG;
-    const int32_t end = ART_ROUND_ARC_START_DEG +
+    const int32_t end =
+        ART_ROUND_ARC_START_DEG +
         MIN((int32_t)(((int64_t)sweep * data->track_pos) / data->track_length), sweep);
     graphics_context_set_fill_color(ctx, GColorRed);
     prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, end);
@@ -1159,15 +1173,14 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
   if (data->position_buffer[0] && data->length_buffer[0]) {
     char times[24];
     snprintf(times, sizeof(times), "%s / %s", data->position_buffer, data->length_buffer);
-    const GRect box = GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y,
-                            DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 22);
+    const GRect box =
+        GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 22);
     GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
     if (data->has_album_art) {
       prv_draw_outlined_text(ctx, times, font, box, GTextOverflowModeFill, GTextAlignmentCenter);
     } else {
       graphics_context_set_text_color(ctx, GColorBlack);
-      graphics_draw_text(ctx, times, font, box, GTextOverflowModeFill, GTextAlignmentCenter,
-                         NULL);
+      graphics_draw_text(ctx, times, font, box, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
     }
   }
 }
@@ -1198,8 +1211,8 @@ static void prv_album_art_update_proc(Layer *layer, GContext *ctx) {
 static void prv_maybe_request_album_art(void) {
 #if MUSIC_ALBUM_ART_SUPPORTED
   if (!shell_prefs_get_music_show_album_art() ||
-      !imaging_is_type_supported(ImagingImageTypeAlbumArt) ||
-      !music_has_now_playing() || music_album_art_is_current()) {
+      !imaging_is_type_supported(ImagingImageTypeAlbumArt) || !music_has_now_playing() ||
+      music_album_art_is_current()) {
     return;
   }
   // The watch picks the size (its art-square width) and asks for the current track by name, so the
@@ -1208,17 +1221,17 @@ static void prv_maybe_request_album_art(void) {
   char title[MUSIC_BUFFER_LENGTH];
   char artist[MUSIC_BUFFER_LENGTH];
   music_get_now_playing(title, artist, NULL);
-  imaging_request_album_art(music_get_now_playing_generation(), ImagingFormat4BitPalette,
-                            side, side, title, artist);
+  imaging_request_album_art(music_get_now_playing_generation(), ImagingFormat4BitPalette, side,
+                            side, title, artist);
 #endif
 }
 
 // Launcher-glance-style title scroll (same motion as the app-glance subtitles, whose pacing was
 // design-tuned): pause at the start, scroll just far enough to reveal the end at a moderate pace,
 // pause there, rewind rapidly. Runs a few cycles per track, then rests showing the start.
-#define TITLE_SCROLL_TICK_MS 33            // frame interval while the text is moving
-#define TITLE_SCROLL_MS_PER_PX 20          // forward pace
-#define TITLE_SCROLL_REWIND_MS_PER_PX 2    // rewind pace
+#define TITLE_SCROLL_TICK_MS 33          // frame interval while the text is moving
+#define TITLE_SCROLL_MS_PER_PX 20        // forward pace
+#define TITLE_SCROLL_REWIND_MS_PER_PX 2  // rewind pace
 #define TITLE_SCROLL_PAUSE_START_MS 600
 #define TITLE_SCROLL_PAUSE_END_MS 750
 #define TITLE_SCROLL_CYCLES 3
@@ -1323,9 +1336,8 @@ static void prv_title_restore(MusicAppData *data) {
   text_layer_set_text_alignment(&data->title_text_layer,
                                 PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight));
   layer_set_frame(&data->title_text_layer.layer, &title_rect);
-  layer_set_bounds(&data->title_text_layer.layer,
-                   &GRect(0, -TITLE_BOUNDS_OFFSET, title_rect.size.w,
-                          title_rect.size.h + TITLE_BOUNDS_OFFSET));
+  layer_set_bounds(&data->title_text_layer.layer, &GRect(0, -TITLE_BOUNDS_OFFSET, title_rect.size.w,
+                                                         title_rect.size.h + TITLE_BOUNDS_OFFSET));
 }
 
 // Place the artist as a centred, outlined single line over the bottom of the cover.
@@ -1387,10 +1399,9 @@ static void prv_apply_art_appearance(MusicAppData *data) {
   // The state icons (tape / pause / volume) differ in size. In the media layout, centre them in
   // the tape frame so a state swap keeps the same visual centre; the stock layout keeps its
   // original corner pinning.
-  bitmap_layer_set_alignment(&data->cassette_layer,
-                             prv_use_media_layout(data)
-                                 ? GAlignCenter
-                                 : PBL_IF_RECT_ELSE(GAlignTopLeft, GAlignTopRight));
+  bitmap_layer_set_alignment(
+      &data->cassette_layer,
+      prv_use_media_layout(data) ? GAlignCenter : PBL_IF_RECT_ELSE(GAlignTopLeft, GAlignTopRight));
 #if MUSIC_ROUND_MEDIA_LAYOUT
   // The bezel arc + drawn times replace the stock bar and time labels permanently on round.
   prv_update_layout(data);
@@ -1419,8 +1430,8 @@ static void prv_init_ui(Window *window) {
 
   const GSize WINDOW_SIZE = window->layer.bounds.size;
 
-  const GTextAlignment ARTIST_TITLE_TEXT_ALIGNMENT = PBL_IF_RECT_ELSE(GTextAlignmentLeft,
-                                                                      GTextAlignmentRight);
+  const GTextAlignment ARTIST_TITLE_TEXT_ALIGNMENT =
+      PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight);
 
   const MusicAppSizeConfig *config = prv_config();
 
@@ -1437,9 +1448,8 @@ static void prv_init_ui(Window *window) {
   layer_set_hidden(&data->album_art_layer, true);
   layer_add_child(&data->window.layer, &data->album_art_layer);
 
-  prv_configure_music_text_layer(&data->artist_text_layer, data->artist_buffer,
-                                 &artist_rect, ARTIST_BOUNDS_OFFSET,
-                                 ARTIST_TITLE_TEXT_ALIGNMENT,
+  prv_configure_music_text_layer(&data->artist_text_layer, data->artist_buffer, &artist_rect,
+                                 ARTIST_BOUNDS_OFFSET, ARTIST_TITLE_TEXT_ALIGNMENT,
                                  system_theme_get_font_for_default_size(TextStyleFont_Header));
   layer_add_child(&data->window.layer, &data->artist_text_layer.layer);
 
@@ -1488,8 +1498,8 @@ static void prv_init_ui(Window *window) {
   layer_set_frame(&data->title_text_layer.layer, &round_title_rect);
   text_layer_set_font(&data->title_text_layer, fonts_get_system_font(TITLE_SCROLL_FONT_KEY));
   text_layer_set_text_alignment(&data->title_text_layer, GTextAlignmentCenter);
-  GRect tape_frame = GRect(0, WINDOW_SIZE.h - horizontal_margin - 24,
-                           WINDOW_SIZE.w - ACTION_BAR_WIDTH, 24);
+  GRect tape_frame =
+      GRect(0, WINDOW_SIZE.h - horizontal_margin - 24, WINDOW_SIZE.w - ACTION_BAR_WIDTH, 24);
   tape_frame.origin.x += DISP_COLS / 2 - (cassette_rect.origin.x + cassette_rect.size.w / 2);
   tape_frame.origin.y = ART_ROUND_ICON_CENTER_Y - cassette_rect.origin.y - cassette_rect.size.h / 2;
   layer_set_frame(&data->cassette_container, &tape_frame);
@@ -1513,8 +1523,8 @@ static void prv_init_ui(Window *window) {
   StatusBarLayer *status_layer = &data->status_layer;
   status_bar_layer_init(status_layer);
   GRect status_layer_frame = status_layer->layer.frame;
-  const int16_t STATUS_BAR_LAYER_WIDTH = PBL_IF_RECT_ELSE(WINDOW_SIZE.w - ACTION_BAR_WIDTH,
-                                                          WINDOW_SIZE.w);
+  const int16_t STATUS_BAR_LAYER_WIDTH =
+      PBL_IF_RECT_ELSE(WINDOW_SIZE.w - ACTION_BAR_WIDTH, WINDOW_SIZE.w);
   status_layer_frame.size.w = STATUS_BAR_LAYER_WIDTH;
   layer_set_frame(&status_layer->layer, &status_layer_frame);
   status_bar_layer_set_colors(&data->status_layer, GColorClear, GColorBlack);
@@ -1534,7 +1544,7 @@ static void prv_push_window(MusicAppData *data) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Music"));
   window_set_user_data(window, data);
-  window_set_status_bar_icon(window, (GBitmap*)&s_status_icon_music_bitmap);
+  window_set_status_bar_icon(window, (GBitmap *)&s_status_icon_music_bitmap);
   // Play/pause is too easy to hit by accident: only taps on the action-bar icons count here, so a
   // stray touch on the album art / track info does not toggle playback. Swipe nav still works.
   window_set_touch_tap_requires_action_bar(window, true);
@@ -1581,7 +1591,8 @@ static void prv_music_event_handler(PebbleEvent *event, void *context) {
       prv_update_track_progress(data);
       prv_update_layout(data);
       return;
-    default: return;
+    default:
+      return;
   }
 }
 
@@ -1594,13 +1605,13 @@ static void prv_handle_init(void) {
   app_state_set_user_data(data);
 
   data->event_info = (EventServiceInfo){
-    .type = PEBBLE_MEDIA_EVENT,
-    .handler = prv_music_event_handler,
+      .type = PEBBLE_MEDIA_EVENT,
+      .handler = prv_music_event_handler,
   };
 
   data->pref_change_event_info = (EventServiceInfo){
-    .type = PEBBLE_PREF_CHANGE_EVENT,
-    .handler = prv_pref_change_handler,
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .handler = prv_pref_change_handler,
   };
   event_service_client_subscribe(&data->pref_change_event_info);
 
@@ -1662,18 +1673,19 @@ static void prv_main(void) {
   prv_handle_deinit();
 }
 
-const PebbleProcessMd* music_app_get_info(void) {
+const PebbleProcessMd *music_app_get_info(void) {
   // [INTL] The app name should come from a standard app resource, so it's localizable.
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      // UUID: 1f03293d-47af-4f28-b960-f2b02a6dd757
-      .uuid = {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28,
-               0xb9, 0x60, 0xf2, 0xb0, 0x2a, 0x6d, 0xd7, 0x57},
-    },
-    .name = i18n_noop("Music"),
-    .icon_resource_id = RESOURCE_ID_AUDIO_CASSETTE_TINY,
+      .common =
+          {
+              .main_func = &prv_main,
+              // UUID: 1f03293d-47af-4f28-b960-f2b02a6dd757
+              .uuid =
+                  {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28, 0xb9, 0x60, 0xf2, 0xb0, 0x2a,
+                   0x6d, 0xd7, 0x57},
+          },
+      .name = i18n_noop("Music"),
+      .icon_resource_id = RESOURCE_ID_AUDIO_CASSETTE_TINY,
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }
-

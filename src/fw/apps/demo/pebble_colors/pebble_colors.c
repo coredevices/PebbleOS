@@ -16,9 +16,9 @@
 
 #include <stdio.h>
 
-#define ALPHA_0   0x00
-#define ALPHA_33  0x40
-#define ALPHA_66  0x80
+#define ALPHA_0 0x00
+#define ALPHA_33 0x40
+#define ALPHA_66 0x80
 #define ALPHA_100 0xC0
 
 static Window *s_window;
@@ -28,138 +28,18 @@ static uint8_t *s_color_table = NULL;
 
 // Sorted by Hue, Value, Saturation
 static uint8_t color_table_hvs[] = {
-  0x00,
-  0x15,
-  0x10,
-  0x2a,
-  0x25,
-  0x20,
-  0x3f,
-  0x3a,
-  0x35,
-  0x30,
-  0x34,
-  0x24,
-  0x39,
-  0x38,
-  0x14,
-  0x29,
-  0x28,
-  0x3e,
-  0x3d,
-  0x3c,
-  0x2c,
-  0x18,
-  0x2d,
-  0x1c,
-  0x04,
-  0x19,
-  0x08,
-  0x2e,
-  0x1d,
-  0x0c,
-  0x0d,
-  0x09,
-  0x1e,
-  0x0e,
-  0x05,
-  0x1a,
-  0x0a,
-  0x2f,
-  0x1f,
-  0x0f,
-  0x0b,
-  0x06,
-  0x1b,
-  0x07,
-  0x01,
-  0x16,
-  0x02,
-  0x2b,
-  0x17,
-  0x03,
-  0x13,
-  0x12,
-  0x27,
-  0x23,
-  0x11,
-  0x26,
-  0x22,
-  0x3b,
-  0x37,
-  0x33,
-  0x32,
-  0x21,
-  0x36,
-  0x31,
+    0x00, 0x15, 0x10, 0x2a, 0x25, 0x20, 0x3f, 0x3a, 0x35, 0x30, 0x34, 0x24, 0x39, 0x38, 0x14, 0x29,
+    0x28, 0x3e, 0x3d, 0x3c, 0x2c, 0x18, 0x2d, 0x1c, 0x04, 0x19, 0x08, 0x2e, 0x1d, 0x0c, 0x0d, 0x09,
+    0x1e, 0x0e, 0x05, 0x1a, 0x0a, 0x2f, 0x1f, 0x0f, 0x0b, 0x06, 0x1b, 0x07, 0x01, 0x16, 0x02, 0x2b,
+    0x17, 0x03, 0x13, 0x12, 0x27, 0x23, 0x11, 0x26, 0x22, 0x3b, 0x37, 0x33, 0x32, 0x21, 0x36, 0x31,
 };
 
 // Sorted by Hue, Saturation, Value
 static uint8_t color_table_hsv[] = {
-  0x00,
-  0x15,
-  0x2a,
-  0x3f,
-  0x3a,
-  0x25,
-  0x35,
-  0x10,
-  0x20,
-  0x30,
-  0x34,
-  0x39,
-  0x24,
-  0x38,
-  0x3e,
-  0x29,
-  0x3d,
-  0x14,
-  0x28,
-  0x3c,
-  0x2c,
-  0x2d,
-  0x18,
-  0x1c,
-  0x2e,
-  0x19,
-  0x1d,
-  0x04,
-  0x08,
-  0x0c,
-  0x0d,
-  0x1e,
-  0x09,
-  0x0e,
-  0x2f,
-  0x1a,
-  0x1f,
-  0x05,
-  0x0a,
-  0x0f,
-  0x0b,
-  0x1b,
-  0x06,
-  0x07,
-  0x2b,
-  0x16,
-  0x17,
-  0x01,
-  0x02,
-  0x03,
-  0x13,
-  0x27,
-  0x12,
-  0x23,
-  0x3b,
-  0x26,
-  0x37,
-  0x11,
-  0x22,
-  0x33,
-  0x32,
-  0x36,
-  0x21,
-  0x31,
+    0x00, 0x15, 0x2a, 0x3f, 0x3a, 0x25, 0x35, 0x10, 0x20, 0x30, 0x34, 0x39, 0x24, 0x38, 0x3e, 0x29,
+    0x3d, 0x14, 0x28, 0x3c, 0x2c, 0x2d, 0x18, 0x1c, 0x2e, 0x19, 0x1d, 0x04, 0x08, 0x0c, 0x0d, 0x1e,
+    0x09, 0x0e, 0x2f, 0x1a, 0x1f, 0x05, 0x0a, 0x0f, 0x0b, 0x1b, 0x06, 0x07, 0x2b, 0x16, 0x17, 0x01,
+    0x02, 0x03, 0x13, 0x27, 0x12, 0x23, 0x3b, 0x26, 0x37, 0x11, 0x22, 0x33, 0x32, 0x36, 0x21, 0x31,
 };
 
 typedef enum {
@@ -169,7 +49,7 @@ typedef enum {
 
   // Add more above here
   PROPERTY_MAX,
-  PROPERTY_COLOR_TABLE, // Currently don't allow to switch the color table order
+  PROPERTY_COLOR_TABLE,  // Currently don't allow to switch the color table order
 } ColorProperties;
 
 typedef struct AppData {
@@ -213,9 +93,9 @@ static void set_text_layers(AppData *data) {
   if (data->alpha == ALPHA_100) {
     alpha_percent = 100;
   } else if (data->alpha == ALPHA_66) {
-    alpha_percent = 50; // FIXME: Currently don't support 66
+    alpha_percent = 50;  // FIXME: Currently don't support 66
   } else if (data->alpha == ALPHA_33) {
-    alpha_percent = 25; // FIXME: Currently don't support 33
+    alpha_percent = 25;  // FIXME: Currently don't support 33
   } else if (data->alpha == ALPHA_0) {
     alpha_percent = 0;
   }
@@ -265,9 +145,9 @@ static void set_text_layers(AppData *data) {
   layer_mark_dirty(text_layer_get_layer(data->bg_text));
 }
 
-static void draw_color_point(GContext* ctx, AppData *data, GPoint point) {
-  GColor fg_color = (GColor){ .argb = (data->fg_color.argb | ALPHA_100) };
-  GColor bg_color = (GColor){ .argb = (data->bg_color.argb | ALPHA_100) };
+static void draw_color_point(GContext *ctx, AppData *data, GPoint point) {
+  GColor fg_color = (GColor){.argb = (data->fg_color.argb | ALPHA_100)};
+  GColor bg_color = (GColor){.argb = (data->bg_color.argb | ALPHA_100)};
   uint8_t alpha = data->alpha;
 
   if (alpha == ALPHA_100) {
@@ -299,7 +179,7 @@ static void draw_color_point(GContext* ctx, AppData *data, GPoint point) {
   }
 }
 
-static void draw_color_rect(GContext* ctx, AppData *data, GRect rect) {
+static void draw_color_rect(GContext *ctx, AppData *data, GRect rect) {
   uint16_t width = rect.size.w;
   uint16_t height = rect.size.h;
 
@@ -311,14 +191,14 @@ static void draw_color_rect(GContext* ctx, AppData *data, GRect rect) {
   }
 }
 
-static void draw_boxes(GContext* ctx, AppData *data) {
+static void draw_boxes(GContext *ctx, AppData *data) {
   // Draw border
   if (gcolor_equal(data->fg_color, GColorBlack)) {
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_round_rect(ctx, &GRect(35, 1, 32, 22), 4, GCornersAll);
   }
   // Draw foreground color
-  GColor fg_color = (GColor){ .argb = (data->fg_color.argb | ALPHA_100) };
+  GColor fg_color = (GColor){.argb = (data->fg_color.argb | ALPHA_100)};
   graphics_context_set_fill_color(ctx, fg_color);
   graphics_fill_round_rect(ctx, &GRect(36, 2, 30, 20), 4, GCornersAll);
 
@@ -328,7 +208,7 @@ static void draw_boxes(GContext* ctx, AppData *data) {
     graphics_fill_round_rect(ctx, &GRect(35, 47, 32, 22), 4, GCornersAll);
   }
   // Draw background color
-  GColor bg_color = (GColor){ .argb = (data->bg_color.argb | ALPHA_100) };
+  GColor bg_color = (GColor){.argb = (data->bg_color.argb | ALPHA_100)};
   graphics_context_set_fill_color(ctx, bg_color);
   graphics_fill_round_rect(ctx, &GRect(36, 48, 30, 20), 4, GCornersAll);
 }
@@ -336,7 +216,7 @@ static void draw_boxes(GContext* ctx, AppData *data) {
 #define COLOR_BAR_WIDTH 4
 #define COLOR_BAR_HEIGHT 24
 #define ROW_LENGTH 32
-static void draw_color_wheel_box(GContext* ctx, AppData *data) {
+static void draw_color_wheel_box(GContext *ctx, AppData *data) {
   GPoint origin = GPoint(8, 114);
   GColor compare_color = GColorClear;
   uint8_t color_index_match = 0;
@@ -353,7 +233,7 @@ static void draw_color_wheel_box(GContext* ctx, AppData *data) {
 
   for (uint8_t row = 0; row < 2; row++) {
     for (uint8_t color_index = row * ROW_LENGTH; color_index < (row + 1) * ROW_LENGTH;
-          color_index++) {
+         color_index++) {
       GColor color = (GColor){.argb = (s_color_table[color_index] | ALPHA_100)};
 
       if (compare && gcolor_equal(color, compare_color)) {
@@ -361,9 +241,9 @@ static void draw_color_wheel_box(GContext* ctx, AppData *data) {
         height_offset = row * (COLOR_BAR_HEIGHT + 4);
       }
 
-      GRect box = GRect(origin.x + (4 * (color_index - (row * ROW_LENGTH))),
-                        origin.y + (row * (COLOR_BAR_HEIGHT + 4)),
-                        COLOR_BAR_WIDTH, COLOR_BAR_HEIGHT);
+      GRect box =
+          GRect(origin.x + (4 * (color_index - (row * ROW_LENGTH))),
+                origin.y + (row * (COLOR_BAR_HEIGHT + 4)), COLOR_BAR_WIDTH, COLOR_BAR_HEIGHT);
       graphics_context_set_fill_color(ctx, color);
       graphics_fill_rect(ctx, &box);
     }
@@ -371,7 +251,7 @@ static void draw_color_wheel_box(GContext* ctx, AppData *data) {
 
   // Draw border
   if (compare) {
-    const GRect box = GRect(origin.x + 4*color_index_match - 1, origin.y - 1 + height_offset,
+    const GRect box = GRect(origin.x + 4 * color_index_match - 1, origin.y - 1 + height_offset,
                             COLOR_BAR_WIDTH + 2, COLOR_BAR_HEIGHT + 2);
     graphics_context_set_stroke_color(ctx, GColorWhite);
     graphics_draw_rect(ctx, &box);
@@ -432,7 +312,7 @@ static void click_config_provider(void *context) {
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100, down_handler);
 }
 
-static void layer_update_proc(Layer *layer, GContext* ctx) {
+static void layer_update_proc(Layer *layer, GContext *ctx) {
   AppData *data = window_get_user_data(s_window);
 
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -442,30 +322,29 @@ static void layer_update_proc(Layer *layer, GContext* ctx) {
 
   GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
   graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_draw_rect(ctx, &GRect(71, 0, 73, 111));      // Border around BG
+  graphics_draw_rect(ctx, &GRect(71, 0, 73, 111));  // Border around BG
   graphics_context_set_fill_color(ctx, data->bg_color);
   graphics_fill_rect(ctx, &GRect(72, 0, 72, 110));
   graphics_context_set_text_color(ctx, GColorWhite);
-  graphics_draw_text(ctx, "BG", font, GRect(72, 110 - 16, 20, 16),
-                     GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, "BG", font, GRect(72, 110 - 16, 20, 16), GTextOverflowModeFill,
+                     GTextAlignmentLeft, NULL);
 
   draw_color_rect(ctx, data, GRect(92, 0, 62, 90));
   graphics_context_set_text_color(ctx, GColorWhite);
   if (data->alpha < ALPHA_100) {
-    graphics_draw_text(ctx, "FG+BG", font, GRect(92, 90 - 16, 62, 16),
-                       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-  }
-  else {
-    graphics_draw_text(ctx, "FG", font, GRect(92, 90 - 16, 62, 16),
-                       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, "FG+BG", font, GRect(92, 90 - 16, 62, 16), GTextOverflowModeFill,
+                       GTextAlignmentLeft, NULL);
+  } else {
+    graphics_draw_text(ctx, "FG", font, GRect(92, 90 - 16, 62, 16), GTextOverflowModeFill,
+                       GTextAlignmentLeft, NULL);
   }
 
   if (data->alpha < ALPHA_100) {
     graphics_context_set_fill_color(ctx, data->fg_color);
     graphics_fill_rect(ctx, &GRect(124, 0, 20, 40));
     graphics_context_set_text_color(ctx, GColorWhite);
-    graphics_draw_text(ctx, "FG", font, GRect(124, 40 - 16, 20, 16),
-                       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, "FG", font, GRect(124, 40 - 16, 20, 16), GTextOverflowModeFill,
+                       GTextAlignmentLeft, NULL);
   }
 
   draw_color_wheel_box(ctx, data);
@@ -482,7 +361,6 @@ static void main_window_load(Window *window) {
 
   // Set the update_proc
   layer_set_update_proc(s_canvas_layer, layer_update_proc);
-
 
   data->fg_text = text_layer_create(GRect(2, 2, 28, 20));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(data->fg_text));
@@ -526,10 +404,10 @@ static void init(void) {
   s_window = window_create();
   window_set_user_data(s_window, data);
   window_set_fullscreen(s_window, true);
-  window_set_window_handlers(s_window, &(WindowHandlers) {
-    .load = main_window_load,
-    .unload = main_window_unload,
-  });
+  window_set_window_handlers(s_window, &(WindowHandlers){
+                                           .load = main_window_load,
+                                           .unload = main_window_unload,
+                                       });
 
   window_set_click_config_provider(s_window, click_config_provider);
 
@@ -551,10 +429,10 @@ static void s_main(void) {
   deinit();
 }
 
-const PebbleProcessMd* pebble_colors_get_app_info(void) {
+const PebbleProcessMd *pebble_colors_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = s_main,
-    .name = "Pebble Colors"
+      .common.main_func = s_main,
+      .name = "Pebble Colors"
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

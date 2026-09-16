@@ -43,7 +43,7 @@ static void prv_get_until_time(const LayoutLayer *layout, char *buffer, int buff
   size_t starts_len = 0;
   if (difference <= SECONDS_PER_HOUR * max_relative_hrs &&
       time_util_get_midnight_of(now) == time_util_get_midnight_of(timestamp)) {
-    const char *starts = i18n_get("STARTS ", layout); // Freed by `timeline_layout_deinit`
+    const char *starts = i18n_get("STARTS ", layout);  // Freed by `timeline_layout_deinit`
     starts_len = strlen(starts);
     strncpy(buffer, starts, buffer_size);
   }
@@ -58,28 +58,28 @@ static void prv_time_until_update(const LayoutLayer *layout_ref,
   prv_get_until_time(layout_ref, buffer, config->buffer_size, layout->info->timestamp);
 }
 
-static GTextNode *prv_subtitle_constructor(
-    const LayoutLayer *layout_ref, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_subtitle_constructor(const LayoutLayer *layout_ref,
+                                           const LayoutNodeConstructorConfig *config) {
   const SportsLayout *layout = (const SportsLayout *)layout_ref;
   static const LayoutNodeTextDynamicConfig s_time_until_config = {
-    .text.extent.node.type = LayoutNodeType_TextDynamic,
-    .update = prv_time_until_update,
-    .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
-    .text.fixed_lines = 1,
-    .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = -1,
+      .text.extent.node.type = LayoutNodeType_TextDynamic,
+      .update = prv_time_until_update,
+      .buffer_size = TIME_STRING_REQUIRED_LENGTH,
+      .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+      .text.fixed_lines = 1,
+      .text.alignment = LayoutTextAlignment_Center,
+      .text.extent.margin.h = -1,
   };
   static const LayoutNodeTextAttributeConfig s_term_config = {
-    .attr_id = AttributeIdSubtitle,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
-    .text.fixed_lines = 1,
-    .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = 1,
+      .attr_id = AttributeIdSubtitle,
+      .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+      .text.fixed_lines = 1,
+      .text.alignment = LayoutTextAlignment_Center,
+      .text.extent.margin.h = 1,
   };
   return layout_create_text_node_from_config(
-      layout_ref, (layout->state == GameStatePreGame ? &s_time_until_config.text.extent.node :
-                                                       &s_term_config.text.extent.node));
+      layout_ref, (layout->state == GameStatePreGame ? &s_time_until_config.text.extent.node
+                                                     : &s_term_config.text.extent.node));
 }
 
 static void prv_game_line_node_callback(GContext *ctx, const GRect *box,
@@ -96,11 +96,11 @@ static void prv_game_line_node_callback(GContext *ctx, const GRect *box,
   *size_out = GSizeZero;
 }
 
-static GTextNode *prv_game_constructor(
-    const LayoutLayer *layout_ref, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_game_constructor(const LayoutLayer *layout_ref,
+                                       const LayoutNodeConstructorConfig *config) {
   const SportsLayout *layout = (SportsLayout *)layout_ref;
   const int num_teams = 2;
-  const int num_nodes = num_teams + 1; // two team nodes and one line node
+  const int num_nodes = num_teams + 1;  // two team nodes and one line node
   GTextNodeHorizontal *game_node = graphics_text_node_create_horizontal(num_nodes);
   graphics_text_node_container_add_child(
       &game_node->container,
@@ -112,22 +112,22 @@ static GTextNode *prv_game_constructor(
   return &game_node->container.node;
 }
 
-static GTextNode *prv_broadcaster_header_constructor(
-    const LayoutLayer *layout_ref, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_broadcaster_header_constructor(const LayoutLayer *layout_ref,
+                                                     const LayoutNodeConstructorConfig *config) {
   const char *broadcaster =
       attribute_get_string(layout_ref->attributes, AttributeIdBroadcaster, "");
   if (IS_EMPTY_STRING(broadcaster)) {
     return NULL;
   }
   static const LayoutNodeTextBufferConfig s_broadcaster_header_config = {
-    .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("Broadcaster"),
-    .use_i18n = true,
-    .text.font_key = FONT_KEY_GOTHIC_14,
-    .text.line_spacing_delta = CARD_LINE_DELTA,
+      .text.extent.node.type = LayoutNodeType_TextBuffer,
+      .str = i18n_noop("Broadcaster"),
+      .use_i18n = true,
+      .text.font_key = FONT_KEY_GOTHIC_14,
+      .text.line_spacing_delta = CARD_LINE_DELTA,
   };
-  return layout_create_text_node_from_config(
-      layout_ref, &s_broadcaster_header_config.text.extent.node);
+  return layout_create_text_node_from_config(layout_ref,
+                                             &s_broadcaster_header_config.text.extent.node);
 }
 
 static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
@@ -136,52 +136,52 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   layout->state = attribute_get_uint8(attributes, AttributeIdSportsGameState, GameStatePreGame);
 
   static const LayoutNodeConstructorConfig s_subtitle_config = {
-    .extent.node.type = LayoutNodeType_Constructor,
-    .constructor = prv_subtitle_constructor,
+      .extent.node.type = LayoutNodeType_Constructor,
+      .constructor = prv_subtitle_constructor,
   };
   static const LayoutNodeConstructorConfig s_game_config = {
-    .extent.node.type = LayoutNodeType_Constructor,
-    .constructor = prv_game_constructor,
+      .extent.node.type = LayoutNodeType_Constructor,
+      .constructor = prv_game_constructor,
   };
   static const LayoutNodeExtentConfig s_icon_config = {
-    .node.type = LayoutNodeType_TimelineIcon,
-    .offset.y = PBL_IF_RECT_ELSE(5, 11), // icon offset y
-    .margin.h = PBL_IF_RECT_ELSE(5, 11), // icon margin height
+      .node.type = LayoutNodeType_TimelineIcon,
+      .offset.y = PBL_IF_RECT_ELSE(5, 11),  // icon offset y
+      .margin.h = PBL_IF_RECT_ELSE(5, 11),  // icon margin height
   };
   static const LayoutNodeConfig s_page_break_config = {
-    .type = LayoutNodeType_TimelinePageBreak,
+      .type = LayoutNodeType_TimelinePageBreak,
   };
   static const LayoutNodeTextAttributeConfig s_body_config = {
-    .attr_id = AttributeIdBody,
-    .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
-    .text.line_spacing_delta = CARD_LINE_DELTA,
-    .text.extent.margin.h = 14, // body margin height
+      .attr_id = AttributeIdBody,
+      .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
+      .text.line_spacing_delta = CARD_LINE_DELTA,
+      .text.extent.margin.h = 14,  // body margin height
   };
-  static const LayoutNodeConstructorConfig  s_broadcaster_header_config = {
-    .extent.node.type = LayoutNodeType_Constructor,
-    .constructor = prv_broadcaster_header_constructor,
+  static const LayoutNodeConstructorConfig s_broadcaster_header_config = {
+      .extent.node.type = LayoutNodeType_Constructor,
+      .constructor = prv_broadcaster_header_constructor,
   };
   static const LayoutNodeTextAttributeConfig s_broadcaster_config = {
-    .attr_id = AttributeIdBroadcaster,
-    .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
-    .text.line_spacing_delta = CARD_LINE_DELTA,
-    .text.extent.margin.h = 8, // broadcaster margin height
+      .attr_id = AttributeIdBroadcaster,
+      .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
+      .text.line_spacing_delta = CARD_LINE_DELTA,
+      .text.extent.margin.h = 8,  // broadcaster margin height
   };
-  static const LayoutNodeConfig * const s_vertical_config_nodes[] = {
-    &s_subtitle_config.extent.node,
-    &s_game_config.extent.node,
-    &s_icon_config.node,
-    &s_page_break_config,
-    &s_body_config.text.extent.node,
-    &s_broadcaster_header_config.extent.node,
-    &s_broadcaster_config.text.extent.node,
+  static const LayoutNodeConfig *const s_vertical_config_nodes[] = {
+      &s_subtitle_config.extent.node,
+      &s_game_config.extent.node,
+      &s_icon_config.node,
+      &s_page_break_config,
+      &s_body_config.text.extent.node,
+      &s_broadcaster_header_config.extent.node,
+      &s_broadcaster_config.text.extent.node,
   };
   static const LayoutNodeVerticalConfig s_vertical_config = {
-    .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(s_vertical_config_nodes),
-    .container.nodes = (LayoutNodeConfig **)&s_vertical_config_nodes,
-    .container.extent.offset.y = CARD_MARGIN_TOP,
-    .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
+      .container.extent.node.type = LayoutNodeType_Vertical,
+      .container.num_nodes = ARRAY_LENGTH(s_vertical_config_nodes),
+      .container.nodes = (LayoutNodeConfig **)&s_vertical_config_nodes,
+      .container.extent.offset.y = CARD_MARGIN_TOP,
+      .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
   };
 
   return timeline_layout_create_card_view_from_config(timeline_layout,
@@ -195,49 +195,47 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout_ref, int team_o
   const bool is_pregame = (layout->state == GameStatePreGame);
   const bool has_record = (attribute_find(attributes, AttributeIdRecordAway + team_offset) != NULL);
 
-  const AttributeId large_attr = !is_pregame ? AttributeIdScoreAway :
-                                               AttributeIdNameAway;
-  const AttributeId small_attr = !is_pregame ? AttributeIdNameAway :
-                                 has_record  ? AttributeIdRecordAway :
-                                               AttributeIdRankAway;
-  const char *large_font = is_pregame ? FONT_KEY_GOTHIC_28_BOLD :
-                                        FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM;
+  const AttributeId large_attr = !is_pregame ? AttributeIdScoreAway : AttributeIdNameAway;
+  const AttributeId small_attr = !is_pregame  ? AttributeIdNameAway
+                                 : has_record ? AttributeIdRecordAway
+                                              : AttributeIdRankAway;
+  const char *large_font =
+      is_pregame ? FONT_KEY_GOTHIC_28_BOLD : FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM;
   const char *small_font = FONT_KEY_GOTHIC_18_BOLD;
 
   const LayoutNodeTextAttributeConfig large_config = {
-    .attr_id = large_attr + team_offset,
-    .text.font_key = large_font,
+      .attr_id = large_attr + team_offset,
+      .text.font_key = large_font,
 #if PBL_COLOR
-    .text.color = LayoutColor_Secondary,
+      .text.color = LayoutColor_Secondary,
 #endif
-    .text.fixed_lines = 1, // large fixed lines
-    .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = -2, // large margin height
+      .text.fixed_lines = 1,  // large fixed lines
+      .text.alignment = LayoutTextAlignment_Center,
+      .text.extent.margin.h = -2,  // large margin height
   };
   const LayoutNodeTextAttributeConfig small_config = {
-    .attr_id = small_attr + team_offset,
-    .text.font_key = small_font,
+      .attr_id = small_attr + team_offset,
+      .text.font_key = small_font,
 #if PBL_COLOR
-    .text.color = LayoutColor_Secondary,
+      .text.color = LayoutColor_Secondary,
 #endif
-    .text.fixed_lines = 1, // small fixed lines
-    .text.alignment = LayoutTextAlignment_Center,
+      .text.fixed_lines = 1,  // small fixed lines
+      .text.alignment = LayoutTextAlignment_Center,
   };
-  const LayoutNodeConfig * const vertical_config_nodes[] = {
-    &large_config.text.extent.node,
-    &small_config.text.extent.node,
+  const LayoutNodeConfig *const vertical_config_nodes[] = {
+      &large_config.text.extent.node,
+      &small_config.text.extent.node,
   };
   const LayoutNodeVerticalConfig vertical_config = {
-    .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(vertical_config_nodes),
-    .container.nodes = (LayoutNodeConfig **)&vertical_config_nodes,
-    .container.extent.offset.y = CARD_MARGIN_TOP,
-    .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
+      .container.extent.node.type = LayoutNodeType_Vertical,
+      .container.num_nodes = ARRAY_LENGTH(vertical_config_nodes),
+      .container.nodes = (LayoutNodeConfig **)&vertical_config_nodes,
+      .container.extent.offset.y = CARD_MARGIN_TOP,
+      .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
   };
 
-  GTextNodeVertical *vertical_node =
-      (GTextNodeVertical *)layout_create_text_node_from_config(
-          layout_ref, &vertical_config.container.extent.node);
+  GTextNodeVertical *vertical_node = (GTextNodeVertical *)layout_create_text_node_from_config(
+      layout_ref, &vertical_config.container.extent.node);
   const GRect *bounds = &((Layer *)layout)->bounds;
   const int16_t midwidth = bounds->size.w / 2 - TIMELINE_CARD_MARGIN;
   vertical_node->container.size.w = midwidth;
@@ -256,14 +254,15 @@ LayoutLayer *sports_layout_create(const LayoutLayerConfig *config) {
   SportsLayout *layout = task_zalloc_check(sizeof(SportsLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
-    .attributes = { AttributeIdTitle, AttributeIdSubtitle },
-    .default_colors = { { .argb = GColorBlackARGB8 },
-                        { .argb = GColorWhiteARGB8 },
-                        { .argb = GColorVividCeruleanARGB8 } },
-    .default_icon = TIMELINE_RESOURCE_TIMELINE_SPORTS,
-    .card_icon_align = GAlignCenter,
-    .card_icon_size = TimelineResourceSizeSmall,
-    .card_view_constructor = prv_card_view_constructor,
+      .attributes = {AttributeIdTitle, AttributeIdSubtitle},
+      .default_colors =
+          {{.argb = GColorBlackARGB8},
+           {.argb = GColorWhiteARGB8},
+           {.argb = GColorVividCeruleanARGB8}},
+      .default_icon = TIMELINE_RESOURCE_TIMELINE_SPORTS,
+      .card_icon_align = GAlignCenter,
+      .card_icon_size = TimelineResourceSizeSmall,
+      .card_view_constructor = prv_card_view_constructor,
   };
 
   timeline_layout_init((TimelineLayout *)layout, config, &s_timeline_layout_impl);

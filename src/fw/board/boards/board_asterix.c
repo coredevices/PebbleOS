@@ -31,13 +31,12 @@ static QSPIPort QSPI_PORT = {
     .clk_freq_hz = 8000000UL,
     .cs_gpio = NRF_GPIO_PIN_MAP(0, 17),
     .clk_gpio = NRF_GPIO_PIN_MAP(0, 19),
-    .data_gpio =
-        {
-            NRF_GPIO_PIN_MAP(0, 20),
-            NRF_GPIO_PIN_MAP(0, 21),
-            NRF_GPIO_PIN_MAP(0, 22),
-            NRF_GPIO_PIN_MAP(0, 23),
-        },
+    .data_gpio = {
+        NRF_GPIO_PIN_MAP(0, 20),
+        NRF_GPIO_PIN_MAP(0, 21),
+        NRF_GPIO_PIN_MAP(0, 22),
+        NRF_GPIO_PIN_MAP(0, 23),
+    },
 };
 QSPIPort *const QSPI = &QSPI_PORT;
 
@@ -175,24 +174,28 @@ static LSM6DSOState s_lsm6dso_state;
 
 static const LSM6DSOConfig s_lsm6dso_config = {
     .state = &s_lsm6dso_state,
-    .i2c = {
-        .bus = &I2C_IIC2_BUS,
-        .address = 0x6A << 1,
-    },
-    .int1 = {
-        .peripheral = NRFX_GPIOTE_INSTANCE(0),
-        .channel = 7,
-        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
-    },
-    .int1_in = {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
-    },
-    .axis_map = {
-        [AXIS_X] = 1,
-        [AXIS_Y] = 0,
-        [AXIS_Z] = 2,
-    },
+    .i2c =
+        {
+            .bus = &I2C_IIC2_BUS,
+            .address = 0x6A << 1,
+        },
+    .int1 =
+        {
+            .peripheral = NRFX_GPIOTE_INSTANCE(0),
+            .channel = 7,
+            .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
+        },
+    .int1_in =
+        {
+            .gpio = NRF5_GPIO_RESOURCE_EXISTS,
+            .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
+        },
+    .axis_map =
+        {
+            [AXIS_X] = 1,
+            [AXIS_Y] = 0,
+            [AXIS_Z] = 2,
+        },
     .axis_dir = {
         [AXIS_X] = 1,
         [AXIS_Y] = 1,
@@ -211,13 +214,13 @@ IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
 /* Microphone */
 static MicDeviceState s_mic_state_storage;
 static MicDevice s_mic_device = {
-  .state = &s_mic_state_storage,
-  .pdm_instance = NRFX_PDM_INSTANCE(0),
-  .clk_pin = NRF_GPIO_PIN_MAP(1, 0),   // P1.00 - PDM CLK
-  .data_pin = NRF_GPIO_PIN_MAP(0, 24), // P0.24 - PDM DATA
-  .channels = 1,
+    .state = &s_mic_state_storage,
+    .pdm_instance = NRFX_PDM_INSTANCE(0),
+    .clk_pin = NRF_GPIO_PIN_MAP(1, 0),    // P1.00 - PDM CLK
+    .data_pin = NRF_GPIO_PIN_MAP(0, 24),  // P0.24 - PDM DATA
+    .channels = 1,
 };
-MicDevice * const MIC = &s_mic_device;
+MicDevice *const MIC = &s_mic_device;
 
 /* Speaker / audio output (DA7212 codec over I2S) */
 static AudioDeviceState s_audio_state_storage;
@@ -228,23 +231,23 @@ static void prv_audio_power_down(void) {
   NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
 }
 static const BoardPowerOps s_audio_power_ops = {
-  .power_up = prv_audio_power_up,
-  .power_down = prv_audio_power_down,
+    .power_up = prv_audio_power_up,
+    .power_down = prv_audio_power_down,
 };
 static const AudioDevice s_audio_device = {
-  .state = &s_audio_state_storage,
-  .i2s_instance = NRFX_I2S_INSTANCE(0),
-  .sck_pin = NRF_GPIO_PIN_MAP(0, 12),   // P0.12 - I2S SCK  -> DA7212 BCLK
-  .lrck_pin = NRF_GPIO_PIN_MAP(0, 7),   // P0.07 - I2S LRCK -> DA7212 WCLK
-  .mck_pin = NRF_GPIO_PIN_MAP(1, 9),    // P1.09 - I2S MCK  -> DA7212 MCLK
-  .sdout_pin = NRF_GPIO_PIN_MAP(0, 13), // P0.13 - I2S SDOUT -> DA7212 DATA_IN
-  .sdin_pin = NRF_I2S_PIN_NOT_CONNECTED, // codec DATA_OUT unused for playback
-  .irq_priority = 5,
-  .codec = &I2C_SLAVE_DA7212,
-  .power_ops = &s_audio_power_ops,
-  .samplerate = 16000,
+    .state = &s_audio_state_storage,
+    .i2s_instance = NRFX_I2S_INSTANCE(0),
+    .sck_pin = NRF_GPIO_PIN_MAP(0, 12),     // P0.12 - I2S SCK  -> DA7212 BCLK
+    .lrck_pin = NRF_GPIO_PIN_MAP(0, 7),     // P0.07 - I2S LRCK -> DA7212 WCLK
+    .mck_pin = NRF_GPIO_PIN_MAP(1, 9),      // P1.09 - I2S MCK  -> DA7212 MCLK
+    .sdout_pin = NRF_GPIO_PIN_MAP(0, 13),   // P0.13 - I2S SDOUT -> DA7212 DATA_IN
+    .sdin_pin = NRF_I2S_PIN_NOT_CONNECTED,  // codec DATA_OUT unused for playback
+    .irq_priority = 5,
+    .codec = &I2C_SLAVE_DA7212,
+    .power_ops = &s_audio_power_ops,
+    .samplerate = 16000,
 };
-AudioDevice * const AUDIO = (AudioDevice *)&s_audio_device;
+AudioDevice *const AUDIO = (AudioDevice *)&s_audio_device;
 
 /* sensor SPI bus */
 
@@ -256,12 +259,9 @@ IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
 
 const Npm1300Config NPM1300_CONFIG = {
-  // 128mA = ~1C (rapid charge)
-  .chg_current_ma = 128,
-  .dischg_limit_ma = 200,
-  .term_current_pct = 10,
-  .thermistor_beta = 3380,
-  .ntc_hot_celsius = 45,
+    // 128mA = ~1C (rapid charge)
+    .chg_current_ma = 128,   .dischg_limit_ma = 200, .term_current_pct = 10,
+    .thermistor_beta = 3380, .ntc_hot_celsius = 45,
 };
 
 void board_early_init(void) {
@@ -285,7 +285,7 @@ void board_init(void) {
   i2c_init(&I2C_NPMC_IIC1_BUS);
   i2c_init(&I2C_IIC2_BUS);
 
-  uint8_t da7212_powerdown[] = { 0xFD /* SYSTEM_ACTIVE */, 0 };
+  uint8_t da7212_powerdown[] = {0xFD /* SYSTEM_ACTIVE */, 0};
   i2c_use(I2C_DA7212);
   i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
   i2c_release(I2C_DA7212);

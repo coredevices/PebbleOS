@@ -57,8 +57,8 @@ static void prv_show_peek_layer(ProgressWindow *data) {
     layer_add_child(root_layer, (Layer *)peek_layer);
 
     const int standing_ms = 1 * MS_PER_SECOND;
-    data->peek_layer_timer = evented_timer_register(PEEK_LAYER_UNFOLD_DURATION + standing_ms,
-                                                    false, prv_finished_failure_callback, data);
+    data->peek_layer_timer = evented_timer_register(PEEK_LAYER_UNFOLD_DURATION + standing_ms, false,
+                                                    prv_finished_failure_callback, data);
   } else {
     prv_finished_failure_callback(data);
   }
@@ -76,18 +76,18 @@ static void prv_schedule_progress_success_animation(ProgressWindow *data) {
 
   // Morph from progress_layer to a large transition dot to the compositor dot
   // by changing the bounds of the progress_layer using 2 animations
-  layer_set_clips((Layer *)&data->progress_layer, false); // Extending bounds to grow the dot
+  layer_set_clips((Layer *)&data->progress_layer, false);  // Extending bounds to grow the dot
   progress_layer_set_corner_radius(&data->progress_layer, DOT_TRANSITION_RADIUS);
 
   mid.size.w = DOT_TRANSITION_RADIUS * 2;
   mid.size.h = DOT_TRANSITION_RADIUS * 2;
   mid.origin.x = DOT_OFFSET - DOT_TRANSITION_RADIUS + 2;
-  mid.origin.y = BAR_HEIGHT - DOT_TRANSITION_RADIUS + 1; // shift to accommodate growing radius
+  mid.origin.y = BAR_HEIGHT - DOT_TRANSITION_RADIUS + 1;  // shift to accommodate growing radius
 
   end.size.w = DOT_COMPOSITOR_RADIUS * 2;
   end.size.h = DOT_COMPOSITOR_RADIUS * 2;
   end.origin.x = DOT_OFFSET - DOT_COMPOSITOR_RADIUS - 1;
-  end.origin.y = BAR_HEIGHT - DOT_COMPOSITOR_RADIUS - 2; // shift to accommodate growing radius
+  end.origin.y = BAR_HEIGHT - DOT_COMPOSITOR_RADIUS - 2;  // shift to accommodate growing radius
 
   PropertyAnimation *prop_anim =
       property_animation_create_layer_bounds((Layer *)&data->progress_layer, &beg, &mid);
@@ -101,9 +101,11 @@ static void prv_schedule_progress_success_animation(ProgressWindow *data) {
   Animation *animation2 = property_animation_get_animation(prop_anim);
   animation_set_duration(animation2, TRANS_TO_DOT_MS);
   animation_set_curve(animation2, AnimationCurveLinear);
-  animation_set_handlers(animation2, (AnimationHandlers) {
-    .stopped = prv_animation_stopped_success,
-  }, data);
+  animation_set_handlers(animation2,
+                         (AnimationHandlers){
+                             .stopped = prv_animation_stopped_success,
+                         },
+                         data);
 
   Animation *animation = animation_sequence_create(animation1, animation2, NULL);
 
@@ -121,7 +123,7 @@ static void prv_schedule_progress_failure_animation(ProgressWindow *data, uint32
     peek_layer_set_title_font(peek_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 
     TimelineResourceInfo timeline_res = {
-      .res_id = timeline_res_id,
+        .res_id = timeline_res_id,
     };
     peek_layer_set_icon(peek_layer, &timeline_res);
     peek_layer_set_title(peek_layer, message);
@@ -143,9 +145,11 @@ static void prv_schedule_progress_failure_animation(ProgressWindow *data, uint32
   animation_set_delay(animation, delay);
   animation_set_duration(animation, SCROLL_OUT_MS);
   animation_set_curve(animation, AnimationCurveEaseOut);
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = prv_animation_stopped_failure,
-  }, data);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .stopped = prv_animation_stopped_failure,
+                         },
+                         data);
 
   data->result_animation = animation;
   animation_schedule(animation);
@@ -258,9 +262,9 @@ void progress_window_init(ProgressWindow *data) {
 
   const GRect *bounds = &window->layer.bounds;
   GPoint center = grect_center_point(bounds);
-  const GRect progress_bounds = (GRect) {
-    .origin = { center.x - (BAR_WIDTH / 2), center.y - (BAR_HEIGHT / 2) },
-    .size = { BAR_WIDTH, BAR_HEIGHT },
+  const GRect progress_bounds = (GRect){
+      .origin = {center.x - (BAR_WIDTH / 2), center.y - (BAR_HEIGHT / 2)},
+      .size = {BAR_WIDTH, BAR_HEIGHT},
   };
 
   ProgressLayer *progress_layer = &data->progress_layer;
@@ -276,8 +280,8 @@ void progress_window_init(ProgressWindow *data) {
   data->state = ProgressWindowState_FakeProgress;
   data->is_peek_layer_used = false;
 
-  data->fake_progress_timer = evented_timer_register(FAKE_PROGRESS_UPDATE_INTERVAL, false,
-                                                     prv_fake_update_progress, data);
+  data->fake_progress_timer =
+      evented_timer_register(FAKE_PROGRESS_UPDATE_INTERVAL, false, prv_fake_update_progress, data);
   prv_set_progress(data, INITIAL_PERCENT);
 }
 

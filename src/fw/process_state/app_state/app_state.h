@@ -53,12 +53,10 @@ typedef struct TextRenderState {
   void *special_codepoint_handler_context;
 } TextRenderState;
 
-
 typedef struct AppStateInitParams {
   ProcessAppSDKType sdk_type;
   int16_t obstruction_origin_y;
 } AppStateInitParams;
-
 
 typedef struct MemorySegment MemorySegment;
 
@@ -67,8 +65,7 @@ typedef struct JsMemoryAPIContext JsMemoryAPIContext;
 
 //! Allocate memory in the process' address space for AppState data and
 //! perform initial configuration.
-bool app_state_configure(MemorySegment *app_state_ram,
-                         ProcessAppSDKType sdk_type,
+bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_type,
                          int16_t obstruction_origin_y);
 
 //! Finish initializing AppState from within the running app task.
@@ -77,7 +74,7 @@ void app_state_init(void);
 //! Clean up after ourselves nicely. Note that this may not be called if the app crashes.
 void app_state_deinit(void);
 
-Heap* app_state_get_heap(void);
+Heap *app_state_get_heap(void);
 
 AppInbox **app_state_get_app_message_inbox(void);
 
@@ -85,23 +82,23 @@ EventServiceInfo *app_state_get_app_outbox_subscription_info(void);
 
 ApplibInternalEventsInfo *app_state_get_applib_internal_events_info(void);
 
-AnimationState* app_state_get_animation_state(void);
+AnimationState *app_state_get_animation_state(void);
 
 AppMessageCtx *app_state_get_app_message_ctx(void);
 
-BLEAppState* app_state_get_ble_app_state(void);
+BLEAppState *app_state_get_ble_app_state(void);
 
-ClickManager* app_state_get_click_manager(void);
+ClickManager *app_state_get_click_manager(void);
 
-WindowStack* app_state_get_window_stack(void);
+WindowStack *app_state_get_window_stack(void);
 
-FrameBuffer* app_state_get_framebuffer(void);
+FrameBuffer *app_state_get_framebuffer(void);
 
-GContext* app_state_get_graphics_context(void);
+GContext *app_state_get_graphics_context(void);
 
-EventServiceInfo* app_state_get_event_service_state(void);
+EventServiceInfo *app_state_get_event_service_state(void);
 
-AccelServiceState* app_state_get_accel_state(void);
+AccelServiceState *app_state_get_accel_state(void);
 
 CompassServiceConfig **app_state_get_compass_config(void);
 
@@ -135,7 +132,8 @@ struct TouchNavState *app_state_get_touch_nav_state(void);
 //! master nav pref is on). Runs on the app task.
 void app_touch_nav_subscribe(void);
 
-//! Unsubscribe the app task's nav dispatcher and cancel any in-flight gesture. Runs on the app task.
+//! Unsubscribe the app task's nav dispatcher and cancel any in-flight gesture. Runs on the app
+//! task.
 void app_touch_nav_unsubscribe(void);
 
 //! Re-evaluate the app twin's gate for the running app after a pref flip and install or remove the
@@ -154,7 +152,7 @@ JsRuntimeContext *app_state_get_js_runtime_context(void);
 uint8_t *app_state_get_js_runtime_context_buffer(void);
 
 void app_state_set_js_runtime_context(uint8_t *unaligned_buffer,
-                                         JsRuntimeContext *js_runtime_context);
+                                      JsRuntimeContext *js_runtime_context);
 
 JsMemoryAPIContext *app_state_get_js_memory_api_context(void);
 
@@ -163,7 +161,7 @@ void app_state_set_js_memory_api_context(JsMemoryAPIContext *context);
 bool *app_state_get_framebuffer_render_pending();
 
 void app_state_set_user_data(void *data);
-void* app_state_get_user_data(void);
+void *app_state_get_user_data(void);
 
 AppFocusState *app_state_get_app_focus_state(void);
 
@@ -174,7 +172,7 @@ AppGlance *app_state_get_glance(void);
 struct Layer;
 typedef struct Layer Layer;
 
-Layer** app_state_get_layer_tree_stack(void);
+Layer **app_state_get_layer_tree_stack(void);
 
 WakeupHandler app_state_get_wakeup_handler(void);
 void app_state_set_wakeup_handler(WakeupHandler handler);
@@ -189,7 +187,7 @@ EventServiceInfo *app_state_get_speaker_finish_event_info(void);
 
 //! Retrieve a preallocated full screen 2bit framebuffer for use with 2.x apps that want to use the
 //! capture_frame_buffer API. Note this memory is only valid when used with 2.x apps.
-GBitmap* app_state_legacy2_get_2bit_framebuffer(void);
+GBitmap *app_state_legacy2_get_2bit_framebuffer(void);
 
 struct tm *app_state_get_gmtime_tm(void);
 struct tm *app_state_get_localtime_tm(void);

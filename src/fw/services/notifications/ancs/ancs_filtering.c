@@ -103,8 +103,8 @@ static bool prv_match_rule(uint8_t match_type, uint8_t match_field, bool case_se
   // both attributes.
   return ((match_title &&
            (prv_match_contains(title, title_len, pattern, pattern_len, case_sensitive) ||
-            prv_match_contains(subtitle, subtitle_len, pattern, pattern_len, case_sensitive)))
-      || (match_body && prv_match_contains(body, body_len, pattern, pattern_len, case_sensitive)));
+            prv_match_contains(subtitle, subtitle_len, pattern, pattern_len, case_sensitive))) ||
+          (match_body && prv_match_contains(body, body_len, pattern, pattern_len, case_sensitive)));
 }
 
 bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
@@ -115,8 +115,8 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
     return false;
   }
 
-  StringList *rules = attribute_get_string_list(&app_notif_prefs->attr_list,
-                                                AttributeIdNotificationFilteringRules);
+  StringList *rules =
+      attribute_get_string_list(&app_notif_prefs->attr_list, AttributeIdNotificationFilteringRules);
   if (!rules || (rules->serialized_byte_length == 0)) {
     return false;
   }
@@ -154,9 +154,9 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
     }
 
     const size_t pattern_len = (size_t)(terminator - pattern);
-    matched = prv_match_rule(rule->match_type, rule->match_field, (rule->case_sensitive != 0),
-                             pattern, pattern_len, title, title_len, subtitle, subtitle_len,
-                             body, body_len);
+    matched =
+        prv_match_rule(rule->match_type, rule->match_field, (rule->case_sensitive != 0), pattern,
+                       pattern_len, title, title_len, subtitle, subtitle_len, body, body_len);
 
     cursor = (const uint8_t *)(terminator + 1);
     remaining -= (pattern_len + 1);
@@ -172,10 +172,8 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
   return matched;
 }
 
-void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
-                               const ANCSAttribute *app_id,
-                               const ANCSAttribute *display_name,
-                               const ANCSAttribute *title) {
+void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute *app_id,
+                               const ANCSAttribute *display_name, const ANCSAttribute *title) {
   // When we receive a notification, information about the app that sent us the notification
   // is recorded in the notif_pref_db. We sync this DB with the phone which allows us to
   // do things like add non ANCS actions, or filter notifications by app
@@ -185,8 +183,8 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
   // stored.
 
   iOSNotifPrefs *app_notif_prefs = *notif_prefs;
-  const int num_existing_attributes = app_notif_prefs ? app_notif_prefs->attr_list.num_attributes :
-                                                        0;
+  const int num_existing_attributes =
+      app_notif_prefs ? app_notif_prefs->attr_list.num_attributes : 0;
 
   AttributeList new_attr_list;
   attribute_list_init_list(num_existing_attributes, &new_attr_list);
@@ -239,7 +237,8 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
   if (!attribute_find(&new_attr_list, AttributeIdMuteExpiration)) {
     uint32_t expiration_value = 0;
     if (app_notif_prefs) {
-      expiration_value = attribute_get_uint32(&app_notif_prefs->attr_list, AttributeIdMuteExpiration, 0);
+      expiration_value =
+          attribute_get_uint32(&app_notif_prefs->attr_list, AttributeIdMuteExpiration, 0);
     }
     attribute_list_add_uint32(&new_attr_list, AttributeIdMuteExpiration, expiration_value);
     list_dirty = true;
@@ -254,7 +253,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
   if (!rules_attr) {
     default_rules = kernel_zalloc_check(sizeof(StringList) + sizeof(uint8_t));
     default_rules->serialized_byte_length = sizeof(uint8_t);
-    default_rules->data[0] = 0; // zero filtering rules by default
+    default_rules->data[0] = 0;  // zero filtering rules by default
     attribute_list_add_string_list(&new_attr_list, AttributeIdNotificationFilteringRules,
                                    default_rules);
     list_dirty = true;
@@ -267,8 +266,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
   }
   uint32_t now = rtc_get_time();
   // Only perform an update if there is no timestamp or the current timestamp is more than a day old
-  if (!last_updated ||
-      (last_updated && now > (last_updated->uint32 + SECONDS_PER_DAY))) {
+  if (!last_updated || (last_updated && now > (last_updated->uint32 + SECONDS_PER_DAY))) {
     attribute_list_add_uint32(&new_attr_list, AttributeIdLastUpdated, now);
     list_dirty = true;
     PBL_LOG_INFO("Updating / adding timestamp to app prefs");
@@ -281,19 +279,17 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
       new_action_group = &app_notif_prefs->action_group;
     }
 
-    ios_notif_pref_db_store_prefs(app_id->value, app_id->length,
-                                  &new_attr_list, new_action_group);
+    ios_notif_pref_db_store_prefs(app_id->value, app_id->length, &new_attr_list, new_action_group);
 
     // Update our copy of the prefs with the new data
     const size_t buf_size = attributes_actions_get_buffer_size(&new_attr_list, new_action_group);
     *notif_prefs = kernel_zalloc_check(sizeof(iOSNotifPrefs) + buf_size);
-    uint8_t *buffer = (uint8_t*)*notif_prefs + sizeof(iOSNotifPrefs);
+    uint8_t *buffer = (uint8_t *)*notif_prefs + sizeof(iOSNotifPrefs);
 
     attributes_actions_deep_copy(&new_attr_list, &(*notif_prefs)->attr_list, new_action_group,
                                  &(*notif_prefs)->action_group, buffer, buffer + buf_size);
     ios_notif_pref_db_free_prefs(app_notif_prefs);
   }
-
 
   kernel_free(app_name_buff);
   kernel_free(default_rules);
@@ -302,8 +298,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs,
 
 uint8_t ancs_filtering_get_mute_type(const iOSNotifPrefs *app_notif_prefs) {
   if (app_notif_prefs) {
-    return attribute_get_uint8(&app_notif_prefs->attr_list,
-                               AttributeIdMuteDayOfWeek,
+    return attribute_get_uint8(&app_notif_prefs->attr_list, AttributeIdMuteDayOfWeek,
                                MuteBitfield_None);
   }
 
@@ -312,8 +307,7 @@ uint8_t ancs_filtering_get_mute_type(const iOSNotifPrefs *app_notif_prefs) {
 
 uint32_t ancs_filtering_get_mute_expiration(const iOSNotifPrefs *app_notif_prefs) {
   if (app_notif_prefs) {
-    return attribute_get_uint32(&app_notif_prefs->attr_list,
-                                 AttributeIdMuteExpiration, 0);
+    return attribute_get_uint32(&app_notif_prefs->attr_list, AttributeIdMuteExpiration, 0);
   }
 
   return 0;

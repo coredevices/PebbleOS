@@ -67,22 +67,20 @@ static void prv_update_display(void *context) {
   int ret = accel_peek(&sample);
 
   if (ret != 0) {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "ACCEL ERROR:\n%d", ret);
+    sniprintf(data->status_string, sizeof(data->status_string), "ACCEL ERROR:\n%d", ret);
     text_layer_set_text(&data->status, data->status_string);
     return;
   }
 
-  PBL_LOG_DBG("Accel (mG): X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
-              sample.x, sample.y, sample.z);
+  PBL_LOG_DBG("Accel (mG): X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16, sample.x, sample.y, sample.z);
 
   uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->state_start_time);
 
   switch (data->state) {
     case STATE_IDLE: {
       sniprintf(data->status_string, sizeof(data->status_string),
-                "X: %" PRIi16 " mG\nY: %" PRIi16 " mG\nZ: %" PRIi16 " mG\n\nPress SEL",
-                sample.x, sample.y, sample.z);
+                "X: %" PRIi16 " mG\nY: %" PRIi16 " mG\nZ: %" PRIi16 " mG\n\nPress SEL", sample.x,
+                sample.y, sample.z);
       break;
     }
 
@@ -93,12 +91,18 @@ static void prv_update_display(void *context) {
         data->min_y = data->max_y = sample.y;
         data->min_z = data->max_z = sample.z;
       } else {
-        if (sample.x < data->min_x) data->min_x = sample.x;
-        if (sample.x > data->max_x) data->max_x = sample.x;
-        if (sample.y < data->min_y) data->min_y = sample.y;
-        if (sample.y > data->max_y) data->max_y = sample.y;
-        if (sample.z < data->min_z) data->min_z = sample.z;
-        if (sample.z > data->max_z) data->max_z = sample.z;
+        if (sample.x < data->min_x)
+          data->min_x = sample.x;
+        if (sample.x > data->max_x)
+          data->max_x = sample.x;
+        if (sample.y < data->min_y)
+          data->min_y = sample.y;
+        if (sample.y > data->max_y)
+          data->max_y = sample.y;
+        if (sample.z < data->min_z)
+          data->min_z = sample.z;
+        if (sample.z > data->max_z)
+          data->max_z = sample.z;
       }
       data->sample_count++;
 
@@ -108,10 +112,9 @@ static void prv_update_display(void *context) {
       int16_t curr_var_z = data->max_z - data->min_z;
 
       sniprintf(data->status_string, sizeof(data->status_string),
-                "Testing...\nRotate device\n\nX: %" PRId16 " mG\nY: %" PRId16
-                " mG\nZ: %" PRId16 " mG\n\n%" PRIu32 " sec remaining",
-                curr_var_x, curr_var_y, curr_var_z,
-                (TEST_DURATION_MS - elapsed) / 1000 + 1);
+                "Testing...\nRotate device\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16
+                " mG\n\n%" PRIu32 " sec remaining",
+                curr_var_x, curr_var_y, curr_var_z, (TEST_DURATION_MS - elapsed) / 1000 + 1);
 
       if (elapsed >= TEST_DURATION_MS) {
         // Store final variations
@@ -121,8 +124,7 @@ static void prv_update_display(void *context) {
 
         // Test passes if all axes vary by at least the minimum threshold
         data->test_passed =
-            (data->variation_x >= MIN_VARIATION_MG &&
-             data->variation_y >= MIN_VARIATION_MG &&
+            (data->variation_x >= MIN_VARIATION_MG && data->variation_y >= MIN_VARIATION_MG &&
              data->variation_z >= MIN_VARIATION_MG);
 
         mfg_test_result_report(MfgTestId_Accel, data->test_passed, 0);
@@ -139,10 +141,9 @@ static void prv_update_display(void *context) {
         return;
       }
       sniprintf(data->status_string, sizeof(data->status_string),
-                "ACCEL: %s\n\nX: %" PRId16 " mG\nY: %" PRId16
-                " mG\nZ: %" PRId16 " mG",
-                data->test_passed ? "PASS" : "FAIL",
-                data->variation_x, data->variation_y, data->variation_z);
+                "ACCEL: %s\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16 " mG",
+                data->test_passed ? "PASS" : "FAIL", data->variation_x, data->variation_y,
+                data->variation_z);
       break;
     }
   }
@@ -172,7 +173,7 @@ static void prv_click_config_provider(void *context) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData) {};
+  *data = (AppData){};
 
   app_state_set_user_data(data);
 
@@ -189,8 +190,7 @@ static void prv_handle_init(void) {
 
   TextLayer *status = &data->status;
   text_layer_init(status,
-                  &GRect(5, 40,
-                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 40));
+                  &GRect(5, 40, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 40));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
   layer_add_child(&window->layer, &status->layer);
@@ -202,7 +202,8 @@ static void prv_handle_init(void) {
 
   app_window_stack_push(window, true /* Animated */);
 
-  s_timer = evented_timer_register(SAMPLE_INTERVAL_MS, true /* repeating */, prv_update_display, data);
+  s_timer =
+      evented_timer_register(SAMPLE_INTERVAL_MS, true /* repeating */, prv_update_display, data);
 }
 
 static void s_main(void) {
@@ -213,14 +214,30 @@ static void s_main(void) {
   evented_timer_cancel(s_timer);
 }
 
-const PebbleProcessMd* mfg_accel_app_get_info(void) {
+const PebbleProcessMd *mfg_accel_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: ED2E214A-D4B5-4360-B5EC-612B9E49FB95
-    .common.uuid = { 0xED, 0x2E, 0x21, 0x4A, 0xD4, 0xB5, 0x43, 0x60,
-                     0xB5, 0xEC, 0x61, 0x2B, 0x9E, 0x49, 0xFB, 0x95,
-    },
-    .name = "MfgAccel",
+      .common.main_func = &s_main,
+      // UUID: ED2E214A-D4B5-4360-B5EC-612B9E49FB95
+      .common.uuid =
+          {
+              0xED,
+              0x2E,
+              0x21,
+              0x4A,
+              0xD4,
+              0xB5,
+              0x43,
+              0x60,
+              0xB5,
+              0xEC,
+              0x61,
+              0x2B,
+              0x9E,
+              0x49,
+              0xFB,
+              0x95,
+          },
+      .name = "MfgAccel",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }

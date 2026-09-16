@@ -83,8 +83,7 @@ static int16_t prv_gen_sample_mode(TrackState *s) {
   }
 
   bool is_16bit = (s->sample->format & 2);
-  int16_t raw_sample = prv_decode_sample_at((const uint8_t *)s->sample->data,
-                                             idx, is_16bit);
+  int16_t raw_sample = prv_decode_sample_at((const uint8_t *)s->sample->data, idx, is_16bit);
 
   s->sample_pos_q32 += s->sample_stride_q32;
 
@@ -99,8 +98,8 @@ static int16_t prv_gen_waveform_mode(TrackState *s) {
   if (s->phase_inc == 0) {
     return 0;
   }
-  int16_t v = note_synth_sample(s->current_waveform, s->phase_acc, s->phase_inc,
-                                s->current_velocity);
+  int16_t v =
+      note_synth_sample(s->current_waveform, s->phase_acc, s->phase_inc, s->current_velocity);
   s->phase_acc += s->phase_inc;
   return v;
 }

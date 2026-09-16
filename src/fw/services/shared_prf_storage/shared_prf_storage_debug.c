@@ -9,7 +9,6 @@
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage_debug.h"
 
-
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
 #include <pbl/btutil/sm_util.h>
@@ -25,8 +24,7 @@ void shared_prf_storage_dump_contents(void) {
   if (shared_prf_storage_get_ble_pairing_data(&pairing_info, name, &requires_address_pinning,
                                               &flags)) {
     bluetooth_persistent_storage_debug_dump_ble_pairing_info(&buf[0], &pairing_info);
-    prompt_send_response_fmt(buf, sizeof(buf),
-                             "Req addr pin: %u, flags: %x, BLE Dev Name: %s",
+    prompt_send_response_fmt(buf, sizeof(buf), "Req addr pin: %u, flags: %x, BLE Dev Name: %s",
                              requires_address_pinning, flags, name);
   } else {
     prompt_send_response("No BLE Data");
@@ -44,7 +42,7 @@ void shared_prf_storage_dump_contents(void) {
   BTDeviceAddress addr;
 
   if (shared_prf_storage_get_ble_pinned_address(&addr)) {
-    prompt_send_response_fmt(buf, DISPLAY_BUF_LEN, "\nPinned address: "BT_DEVICE_ADDRESS_FMT,
+    prompt_send_response_fmt(buf, DISPLAY_BUF_LEN, "\nPinned address: " BT_DEVICE_ADDRESS_FMT,
                              BT_DEVICE_ADDRESS_XPLODE_PTR(&addr));
   }
 
@@ -55,5 +53,5 @@ void shared_prf_storage_dump_contents(void) {
   }
 
   prompt_send_response_fmt(buf, BT_DEVICE_NAME_BUFFER_SIZE, "Started Complete: %s",
-                       bool_to_str(shared_prf_storage_get_getting_started_complete()));
+                           bool_to_str(shared_prf_storage_get_getting_started_complete()));
 }

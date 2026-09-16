@@ -40,8 +40,7 @@ typedef enum {
 //! The number of services will be zero upon a disconnection.
 typedef void (*BLEClientServiceChangeHandler)(BTDevice device,
                                               BLEClientServiceChangeUpdate update_type,
-                                              const BLEService services[],
-                                              uint8_t num_services,
+                                              const BLEService services[], uint8_t num_services,
                                               BTErrno status);
 
 //! Registers the callback that handles service changes. After the call to
@@ -60,8 +59,7 @@ BTErrno ble_client_set_service_change_handler(BLEClientServiceChangeHandler hand
 //! when NULL is passed for the service_uuids argument.
 //! @return BTErrnoOK if the filter was set up successfully,
 //! or TODO....
-BTErrno ble_client_set_service_filter(const Uuid service_uuids[],
-                                      uint8_t num_uuids);
+BTErrno ble_client_set_service_filter(const Uuid service_uuids[], uint8_t num_uuids);
 
 //! Starts a discovery of services and characteristics on a remote device.
 //! The discovered services will be delivered to the application through the
@@ -99,10 +97,8 @@ typedef enum {
 //! @param error The error or status as returned by the remote server. If the
 //! read was successful, this remote server is supposed to send
 //! BLEGATTErrorSuccess.
-typedef void (*BLEClientReadHandler)(BLECharacteristic characteristic,
-                                     const uint8_t *value,
-                                     size_t value_length,
-                                     uint16_t value_offset,
+typedef void (*BLEClientReadHandler)(BLECharacteristic characteristic, const uint8_t *value,
+                                     size_t value_length, uint16_t value_offset,
                                      BLEGATTError error);
 
 //! Callback to handle the response to a written characteristic, resulting from
@@ -111,8 +107,7 @@ typedef void (*BLEClientReadHandler)(BLECharacteristic characteristic,
 //! @param error The error or status as returned by the remote server. If the
 //! write was successful, this remote server is supposed to send
 //! BLEGATTErrorSuccess.
-typedef void (*BLEClientWriteHandler)(BLECharacteristic characteristic,
-                                      BLEGATTError error);
+typedef void (*BLEClientWriteHandler)(BLECharacteristic characteristic, BLEGATTError error);
 
 //! Callback to handle the confirmation of a subscription or unsubscription to
 //! characteristic value changes (notifications or indications).
@@ -124,8 +119,7 @@ typedef void (*BLEClientWriteHandler)(BLECharacteristic characteristic,
 //! (un)subscription was successful, this remote server is supposed to send
 //! BLEGATTErrorSuccess.
 typedef void (*BLEClientSubscribeHandler)(BLECharacteristic characteristic,
-                                          BLESubscription subscription_type,
-                                          BLEGATTError error);
+                                          BLESubscription subscription_type, BLEGATTError error);
 
 //! Callback to handle the event that the buffer for outbound data is empty.
 typedef void (*BLEClientBufferEmptyHandler)(void);
@@ -179,8 +173,7 @@ BTErrno ble_client_read(BLECharacteristic characteristic);
 //! @param value_length Number of bytes to write
 //! @note Values must not be longer than ble_client_get_maximum_value_length().
 //! @return BTErrnoOK if the operation was successfully started, or ... TODO
-BTErrno ble_client_write(BLECharacteristic characteristic,
-                         const uint8_t *value,
+BTErrno ble_client_write(BLECharacteristic characteristic, const uint8_t *value,
                          size_t value_length);
 
 //! Write the value of a characterstic without response.
@@ -192,8 +185,7 @@ BTErrno ble_client_write(BLECharacteristic characteristic,
 //! If the buffer for outbound data was full, BTErrnoNotEnoughResources will
 //! be returned. When the buffer is emptied, the handler that is registered
 //! using ble_client_set_buffer_empty_handler() will be called.
-BTErrno ble_client_write_without_response(BLECharacteristic characteristic,
-                                          const uint8_t *value,
+BTErrno ble_client_write_without_response(BLECharacteristic characteristic, const uint8_t *value,
                                           size_t value_length);
 
 //! Subscribe to be notified or indicated of value changes of a characteristic.
@@ -223,9 +215,7 @@ BTErrno ble_client_write_without_response(BLECharacteristic characteristic,
 //! bit.
 //! @return BTErrnoOK if the subscription request was sent successfully, or
 //! TODO...
-BTErrno ble_client_subscribe(BLECharacteristic characteristic,
-                             BLESubscription subscription_type);
-
+BTErrno ble_client_subscribe(BLECharacteristic characteristic, BLESubscription subscription_type);
 
 //! Callback to receive the descriptor value, resulting from a call to
 //! ble_client_read_descriptor().
@@ -237,10 +227,8 @@ BTErrno ble_client_subscribe(BLECharacteristic characteristic,
 //! @param error The error or status as returned by the remote server. If the
 //! read was successful, this remote server is supposed to send
 //! BLEGATTErrorSuccess.
-typedef void (*BLEClientReadDescriptorHandler)(BLEDescriptor descriptor,
-                                               const uint8_t *value,
-                                               size_t value_length,
-                                               uint16_t value_offset,
+typedef void (*BLEClientReadDescriptorHandler)(BLEDescriptor descriptor, const uint8_t *value,
+                                               size_t value_length, uint16_t value_offset,
                                                BLEGATTError error);
 
 //! Callback to handle the response to a written descriptor, resulting from
@@ -249,8 +237,7 @@ typedef void (*BLEClientReadDescriptorHandler)(BLEDescriptor descriptor,
 //! @param error The error or status as returned by the remote server. If the
 //! write was successful, this remote server is supposed to send
 //! BLEGATTErrorSuccess.
-typedef void (*BLEClientWriteDescriptorHandler)(BLEDescriptor descriptor,
-                                                BLEGATTError error);
+typedef void (*BLEClientWriteDescriptorHandler)(BLEDescriptor descriptor, BLEGATTError error);
 
 //! Registers the handlers for descriptor value write operations.
 //! @param write_handler Pointer to the function that will handle callbacks
@@ -275,8 +262,7 @@ BTErrno ble_client_set_descriptor_read_handler(BLEClientReadDescriptorHandler re
 //! @param value_length Number of bytes to write
 //! @note Values must not be longer than ble_client_get_maximum_value_length().
 //! @return BTErrnoOK if the operation was successfully started, or ... TODO
-BTErrno ble_client_write_descriptor(BLEDescriptor descriptor,
-                                    const uint8_t *value,
+BTErrno ble_client_write_descriptor(BLEDescriptor descriptor, const uint8_t *value,
                                     size_t value_length);
 
 //! Read the value of a descriptor.
@@ -291,28 +277,22 @@ BTErrno ble_client_read_descriptor(BLEDescriptor descriptor);
 // (FUTURE / LATER / NOT SCOPED)
 // Just to see how symmetric the Server APIs would be:
 
-
 //! Opaque ATT request context
-typedef void * BLERequest;
+typedef void *BLERequest;
 
-typedef void (*BLEServerWriteHandler)(BLERequest request,
-                                      BLECharacteristic characteristic,
-                                      BTDevice remote_device,
-                                      const uint8_t *value,
-                                      size_t value_length,
-                                      uint16_t value_offset);
+typedef void (*BLEServerWriteHandler)(BLERequest request, BLECharacteristic characteristic,
+                                      BTDevice remote_device, const uint8_t *value,
+                                      size_t value_length, uint16_t value_offset);
 
-typedef void (*BLEServerReadHandler)(BLECharacteristic characteristic,
-                                     BTDevice remote_device,
+typedef void (*BLEServerReadHandler)(BLECharacteristic characteristic, BTDevice remote_device,
                                      uint16_t value_offset);
 
-typedef void (*BLEServerSubscribeHandler)(BLECharacteristic characteristic,
-                                          BTDevice remote_device,
+typedef void (*BLEServerSubscribeHandler)(BLECharacteristic characteristic, BTDevice remote_device,
                                           BLESubscription subscription_type);
 
 BTErrno ble_server_set_handlers(BLEServerReadHandler read_handler,
-                            BLEServerWriteHandler write_handler,
-                            BLEServerSubscribeHandler subscription_handler);
+                                BLEServerWriteHandler write_handler,
+                                BLEServerSubscribeHandler subscription_handler);
 
 BTErrno ble_server_start_service(BLEService service);
 
@@ -320,13 +300,12 @@ BTErrno ble_server_stop_service(BLEService service);
 
 BTErrno ble_server_respond_to_write(BLERequest request, BLEGATTError error);
 
-BTErrno ble_server_respond_to_read(BLERequest request, BLEGATTError error,
-                                   const uint8_t *value, size_t value_length,
-                                   uint16_t value_offset);
+BTErrno ble_server_respond_to_read(BLERequest request, BLEGATTError error, const uint8_t *value,
+                                   size_t value_length, uint16_t value_offset);
 
-BTErrno ble_server_send_update(BLECharacteristic characteristic,
-                               const uint8_t *value, size_t value_length);
+BTErrno ble_server_send_update(BLECharacteristic characteristic, const uint8_t *value,
+                               size_t value_length);
 
-BTErrno ble_server_send_update_selectively(BLECharacteristic characteristic,
-                                 const uint8_t *value, size_t value_length,
-                                 const BTDevice *devices, uint8_t num_devices);
+BTErrno ble_server_send_update_selectively(BLECharacteristic characteristic, const uint8_t *value,
+                                           size_t value_length, const BTDevice *devices,
+                                           uint8_t num_devices);

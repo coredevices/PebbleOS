@@ -11,7 +11,7 @@
 
 static Heap s_kernel_heap;
 static bool s_interrupts_disabled_by_heap;
-static uint32_t s_pri_mask; // cache basepri mask we restore to in heap_unlock
+static uint32_t s_pri_mask;  // cache basepri mask we restore to in heap_unlock
 
 // Locking callbacks for our kernel heap.
 // FIXME: Note that we use __set_BASEPRI() instead of a mutex because our heap
@@ -39,10 +39,9 @@ void kernel_heap_init(void) {
   extern int _heap_end;
 
   heap_init(&s_kernel_heap, &_heap_start, &_heap_end, true);
-  heap_set_lock_impl(&s_kernel_heap, (HeapLockImpl) {
-    .lock_function = prv_heap_lock,
-    .unlock_function = prv_heap_unlock
-  });
+  heap_set_lock_impl(
+      &s_kernel_heap,
+      (HeapLockImpl){.lock_function = prv_heap_lock, .unlock_function = prv_heap_unlock});
 }
 
 void pbl_analytics_external_collect_kernel_heap_stats(void) {
@@ -63,7 +62,7 @@ void pbl_analytics_external_collect_kernel_heap_stats(void) {
   s_kernel_heap.high_water_mark = s_kernel_heap.current_size;
 }
 
-Heap* kernel_heap_get(void) {
+Heap *kernel_heap_get(void) {
   return &s_kernel_heap;
 }
 

@@ -38,18 +38,17 @@
 /*
  * ChkAdd evaluates to TRUE if dest = src1 + src2 has overflowed
  */
-#define ChkAdd(dest, src1, src2)   ( ((src1 >= 0L) && (src2 >= 0L) \
-    && (dest < 0L)) || ((src1 < 0L) && (src2 < 0L) && (dest >= 0L)) )
+#define ChkAdd(dest, src1, src2) \
+  (((src1 >= 0L) && (src2 >= 0L) && (dest < 0L)) || ((src1 < 0L) && (src2 < 0L) && (dest >= 0L)))
 
 /*
  * ChkMul evaluates to TRUE if dest = src1 * src2 has overflowed
  */
-#define ChkMul(dest, src1, src2)   ( src1 ? (dest/src1 != src2) : 0 )
+#define ChkMul(dest, src1, src2) (src1 ? (dest / src1 != src2) : 0)
 
-#define   _BASE_YEAR   70L
-#define   _LEAP_YEAR_ADJUST   17L // leap years between 1900 and 1970
-#define   _MAX_YEAR   138L
-
+#define _BASE_YEAR 70L
+#define _LEAP_YEAR_ADJUST 17L  // leap years between 1900 and 1970
+#define _MAX_YEAR 138L
 
 time_t mktime(struct tm *tb) {
   const int16_t _days[] = {-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333, 364};
@@ -62,14 +61,12 @@ time_t mktime(struct tm *tb) {
   if (((tmptm1 = tb->tm_year) < _BASE_YEAR - 1) || (tmptm1 > _MAX_YEAR + 1))
     goto err_mktime;
 
-
   /*
    * Adjust month value so it is in the range 0 - 11.  This is because
    * we don't know how many days are in months 12, 13, 14, etc.
    */
 
   if ((tb->tm_mon < 0) || (tb->tm_mon > 11)) {
-
     /*
      * no danger of overflow because the range check above.
      */
@@ -105,8 +102,7 @@ time_t mktime(struct tm *tb) {
    * each elapsed leap year. no danger of overflow because of the range
    * check (above) on tmptm1.
    */
-  tmptm3 = (tmptm1 - _BASE_YEAR) * 365L + ((tmptm1 - 1L) >> 2)
-  - _LEAP_YEAR_ADJUST;
+  tmptm3 = (tmptm1 - _BASE_YEAR) * 365L + ((tmptm1 - 1L) >> 2) - _LEAP_YEAR_ADJUST;
 
   /*
    * elapsed days to current month (still no possible overflow)
@@ -116,7 +112,7 @@ time_t mktime(struct tm *tb) {
   /*
    * elapsed days to current date. overflow is now possible.
    */
-  tmptm1 = tmptm3 + (tmptm2 = (int32_t) (tb->tm_mday));
+  tmptm1 = tmptm3 + (tmptm2 = (int32_t)(tb->tm_mday));
   if (ChkAdd(tmptm1, tmptm3, tmptm2))
     goto err_mktime;
 
@@ -129,7 +125,7 @@ time_t mktime(struct tm *tb) {
   if (ChkMul(tmptm2, tmptm1, 24L))
     goto err_mktime;
 
-  tmptm1 = tmptm2 + (tmptm3 = (int32_t) tb->tm_hour);
+  tmptm1 = tmptm2 + (tmptm3 = (int32_t)tb->tm_hour);
   if (ChkAdd(tmptm1, tmptm2, tmptm3))
     goto err_mktime;
 
@@ -143,7 +139,7 @@ time_t mktime(struct tm *tb) {
   if (ChkMul(tmptm2, tmptm1, 60L))
     goto err_mktime;
 
-  tmptm1 = tmptm2 + (tmptm3 = (int32_t) tb->tm_min);
+  tmptm1 = tmptm2 + (tmptm3 = (int32_t)tb->tm_min);
   if (ChkAdd(tmptm1, tmptm2, tmptm3))
     goto err_mktime;
 
@@ -157,16 +153,16 @@ time_t mktime(struct tm *tb) {
   if (ChkMul(tmptm2, tmptm1, 60L))
     goto err_mktime;
 
-  tmptm1 = tmptm2 + (tmptm3 = (int32_t) tb->tm_sec);
+  tmptm1 = tmptm2 + (tmptm3 = (int32_t)tb->tm_sec);
   if (ChkAdd(tmptm1, tmptm2, tmptm3))
     goto err_mktime;
 
   /***** HERE: tmptm1 holds number of elapsed seconds *****/
 
-     /*
-         * Adjust for timezone. No need to check for overflow since
-         * localtime() will check its arg value
-         */
+  /*
+   * Adjust for timezone. No need to check for overflow since
+   * localtime() will check its arg value
+   */
 
   tmptm1 -= tb->tm_gmtoff;
 
@@ -175,19 +171,18 @@ time_t mktime(struct tm *tb) {
    * If localtime returns NULL, return an error.
    */
   struct tm tm;
-  if ((tbtemp = gmtime_r((time_t*)&tmptm1, &tm)) == NULL)
+  if ((tbtemp = gmtime_r((time_t *)&tmptm1, &tm)) == NULL)
     goto err_mktime;
-
 
   /***** HERE: tmptm1 holds number of elapsed seconds, adjusted *****/
   /*****       for local time if requested                      *****/
 
   *tb = *tbtemp;
-  return (time_t) tmptm1;
+  return (time_t)tmptm1;
 
-  err_mktime:
+err_mktime:
   /*
    * All errors come to here
    */
-  return (time_t) (-1);
+  return (time_t)(-1);
 }

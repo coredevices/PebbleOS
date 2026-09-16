@@ -18,7 +18,6 @@ void weather_report_reset(void);
 
 void weather_report_push(const WeatherLocationForecast *days, size_t num_days, int start_day_index);
 
-
 // Arm a hard-cut entrance for the NEXT push (no system slide, no slide-in) — used when a
 // transition scene (the unfold) has already delivered the entrance. Rect only.
 void weather_report_arm_static_in(void);

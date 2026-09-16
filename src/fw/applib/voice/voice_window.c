@@ -30,7 +30,7 @@
 #include "applib/ui/kino/kino_reel/unfold.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/scroll_layer.h"
-#if (0) // https://pebbletechnology.atlassian.net/browse/PBL-20406
+#if (0)  // https://pebbletechnology.atlassian.net/browse/PBL-20406
 #include "applib/ui/vibes.h"
 #endif
 #include "kernel/ui/kernel_ui.h"
@@ -49,22 +49,22 @@
 #include <string.h>
 
 // TODO:
-// mic hot before showing screen - needs robust beginning-of-speech detection - https://pebbletechnology.atlassian.net/browse/PBL-16474
-// animated microphone icon - https://pebbletechnology.atlassian.net/browse/PBL-16481
-// handle line wrapping - https://pebbletechnology.atlassian.net/browse/PBL-16475
-// Brief vibration just before microphone is turned on https://pebbletechnology.atlassian.net/browse/PBL-20406
+// mic hot before showing screen - needs robust beginning-of-speech detection -
+// https://pebbletechnology.atlassian.net/browse/PBL-16474 animated microphone icon -
+// https://pebbletechnology.atlassian.net/browse/PBL-16481 handle line wrapping -
+// https://pebbletechnology.atlassian.net/browse/PBL-16475 Brief vibration just before microphone is
+// turned on https://pebbletechnology.atlassian.net/browse/PBL-20406
 
-
-#define DICTATION_TIMEOUT (15 * 1000)     // 15s timeout for each dictation
+#define DICTATION_TIMEOUT (15 * 1000)  // 15s timeout for each dictation
 #define SPEECH_DETECTION_TIMEOUT (3 * 1000)
 
 // Session must last at least 600ms before reporting an error to the user
 #define MIN_ELAPSED_DURATION (600)
 
 #define TEXT_PADDING (4)
-#define MIC_DOT_MAX_RADIUS  (9)
+#define MIC_DOT_MAX_RADIUS (9)
 #define MIC_DOT_LAYER_RADIUS (MIC_DOT_MAX_RADIUS + 1)
-#define MIC_DOT_LAYER_SIZE ((GSize){ .w = MIC_DOT_LAYER_RADIUS * 2, .h = MIC_DOT_LAYER_RADIUS * 2})
+#define MIC_DOT_LAYER_SIZE ((GSize){.w = MIC_DOT_LAYER_RADIUS * 2, .h = MIC_DOT_LAYER_RADIUS * 2})
 
 #define MAX_MESSAGE_LEN (500)
 
@@ -78,8 +78,7 @@ static void prv_start_dictation(VoiceUiData *data);
 static void prv_stop_dictation(VoiceUiData *data);
 static void prv_cancel_dictation(VoiceUiData *data);
 static void prv_set_mic_window_state(VoiceUiData *data, VoiceUiState state);
-static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to,
-                                                     uint32_t duration,
+static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to, uint32_t duration,
                                                      const PropertyAnimationImplementation *impl,
                                                      void *subject);
 static void prv_handle_stop_transition(VoiceUiData *data);
@@ -87,15 +86,12 @@ static void prv_voice_window_push(VoiceUiData *data);
 char *sys_voice_get_transcription_from_event(PebbleVoiceServiceEvent *e, char *buffer,
                                              size_t buffer_size, size_t *sentence_len);
 
-
-
 static WindowStack *prv_get_window_stack(void) {
   if (pebble_task_get_current() == PebbleTask_App) {
     return app_state_get_window_stack();
   }
   return modal_manager_get_window_stack(ModalPriorityVoice);
 }
-
 
 static void prv_window_push(Window *window) {
   window_stack_push(prv_get_window_stack(), window, true /* animated */);
@@ -124,12 +120,12 @@ static void prv_exit_and_send_result_event(VoiceUiData *data, DictationSessionSt
   PBL_LOG_DBG("Send result");
 
   PebbleEvent event = {
-    .type = PEBBLE_DICTATION_EVENT,
-    .dictation = {
-      .result = result,
-      .text = (result == DictationSessionStatusSuccess) ? data->message : NULL,
-      .timestamp = (result == DictationSessionStatusSuccess) ? data->timestamp : 0,
-    }
+      .type = PEBBLE_DICTATION_EVENT,
+      .dictation = {
+          .result = result,
+          .text = (result == DictationSessionStatusSuccess) ? data->message : NULL,
+          .timestamp = (result == DictationSessionStatusSuccess) ? data->timestamp : 0,
+      }
   };
   sys_send_pebble_event_to_kernel(&event);
 
@@ -154,10 +150,12 @@ static void prv_error_dialog_unload(void *context) {
 }
 
 static void prv_init_dialog(VoiceUiData *data, Dialog *dialog, const char *text,
-    uint32_t resource_id, bool has_timeout, GColor color) {
-  dialog_set_callbacks(dialog, &(DialogCallbacks) {
-    .unload = prv_error_dialog_unload,
-  }, data);
+                            uint32_t resource_id, bool has_timeout, GColor color) {
+  dialog_set_callbacks(dialog,
+                       &(DialogCallbacks){
+                           .unload = prv_error_dialog_unload,
+                       },
+                       data);
   sys_i18n_get_with_buffer(text, data->error_text_buffer, sizeof(data->error_text_buffer));
   dialog_set_text(dialog, data->error_text_buffer);
   dialog_set_icon(dialog, resource_id);
@@ -167,7 +165,7 @@ static void prv_init_dialog(VoiceUiData *data, Dialog *dialog, const char *text,
 }
 
 static void prv_push_error_dialog(VoiceUiData *data, const char *text, uint32_t resource_id,
-    GColor color) {
+                                  GColor color) {
   prv_set_mic_window_state(data, StateError);
 
   SimpleDialog *simple_dialog = &data->short_error_dialog;
@@ -177,8 +175,8 @@ static void prv_push_error_dialog(VoiceUiData *data, const char *text, uint32_t 
   simple_dialog_push(simple_dialog, prv_get_window_stack());
 }
 
-static void prv_push_long_error_dialog(VoiceUiData *data, const char* header, const char *text,
-    uint32_t resource_id) {
+static void prv_push_long_error_dialog(VoiceUiData *data, const char *header, const char *text,
+                                       uint32_t resource_id) {
   prv_set_mic_window_state(data, StateError);
 
   ExpandableDialog *long_error_dialog = &data->long_error_dialog;
@@ -200,8 +198,7 @@ static void prv_show_error_dialog(VoiceUiData *data, const char *msg) {
     if (data->error_count == MAX_ERROR_COUNT) {
       data->error_exit_status = DictationSessionStatusFailureSystemAborted;
       prv_push_final_error_dialog(data);
-    }
-    else {
+    } else {
       const GColor dialog_bg_color = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
       prv_push_error_dialog(data, msg, RESOURCE_ID_GENERIC_WARNING_LARGE, dialog_bg_color);
     }
@@ -215,7 +212,7 @@ static void prv_show_generic_error_dialog(VoiceUiData *data) {
 }
 
 static void prv_show_connectivity_error_and_exit(VoiceUiData *data) {
-  data->error_count = MAX_ERROR_COUNT;   // exit UI after the dialog is shown
+  data->error_count = MAX_ERROR_COUNT;  // exit UI after the dialog is shown
   if (data->show_error_dialog) {
     const GColor dialog_bg_color = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
     prv_push_error_dialog(data, i18n_noop("No internet connection"),
@@ -293,8 +290,8 @@ static void prv_handle_ready_event(VoiceUiData *data, PebbleVoiceServiceEvent *e
       PBL_LOG_DBG("Session setup successfully");
       data->start_ms = prv_get_time_ms();
       data->speech_detected = false;
-      data->dictation_timeout = app_timer_register(DICTATION_TIMEOUT, prv_dictation_timeout_cb,
-          data);
+      data->dictation_timeout =
+          app_timer_register(DICTATION_TIMEOUT, prv_dictation_timeout_cb, data);
 
       // Update UI
       prv_set_mic_window_state(data, StateRecording);
@@ -309,10 +306,11 @@ static void prv_handle_ready_event(VoiceUiData *data, PebbleVoiceServiceEvent *e
     case VoiceStatusErrorDisabled:
       // This should happen before loading the window, but we currently do not have a mechanism to
       // tell the watch whether or not voice reply is enabled
-      data->error_count = MAX_ERROR_COUNT;   // exit UI after the dialog is shown
+      data->error_count = MAX_ERROR_COUNT;  // exit UI after the dialog is shown
       if (data->show_error_dialog) {
-        prv_push_long_error_dialog(data, NULL, i18n_noop("Enable voice in the settings page of the Pebble app."),
-                                   RESOURCE_ID_GENERIC_WARNING_TINY);
+        prv_push_long_error_dialog(
+            data, NULL, i18n_noop("Enable voice in the settings page of the Pebble app."),
+            RESOURCE_ID_GENERIC_WARNING_TINY);
         data->error_exit_status = DictationSessionStatusFailureDisabled;
       } else {
         prv_exit_and_send_result_event(data, DictationSessionStatusFailureDisabled);
@@ -339,7 +337,7 @@ static bool prv_handle_dictation_success(VoiceUiData *data, PebbleVoiceServiceEv
     data->message = NULL;
   }
   data->message = sys_voice_get_transcription_from_event(event, data->message, data->buffer_size,
-      &data->message_len);
+                                                         &data->message_len);
   if (data->session_type == VoiceEndpointSessionTypeNLP) {
     data->timestamp = event->data->timestamp;
   }
@@ -400,7 +398,7 @@ static void prv_handle_dictation_result(VoiceUiData *data, PebbleVoiceServiceEve
       break;
 
     case VoiceStatusErrorGeneric:
-      PBL_LOG_DBG("Result: error %"PRId8, event->status);
+      PBL_LOG_DBG("Result: error %" PRId8, event->status);
       prv_handle_dictation_error(data, event->status);
       break;
 
@@ -434,31 +432,32 @@ static void prv_handle_dictation_result(VoiceUiData *data, PebbleVoiceServiceEve
 // Only use stable state for determining how to handle input events and voice service events
 static VoiceUiState prv_get_simple_state(VoiceUiState state) {
   static const VoiceUiState state_map[] = {
-    StateStart,
-    StateWaitForReady,      // StateStartWaitForReady
-    StateWaitForReady,
-    StateRecording,
-    StateWaitForResponse,   // StateStopRecording
-    StateWaitForResponse,
-    StateTransitionToText,  // StateStopWaitForResponse
-    StateTransitionToText,
-    StateError,
-    StateFinished,
-    StateExiting,
+      StateStart,
+      StateWaitForReady,  // StateStartWaitForReady
+      StateWaitForReady,
+      StateRecording,
+      StateWaitForResponse,  // StateStopRecording
+      StateWaitForResponse,
+      StateTransitionToText,  // StateStopWaitForResponse
+      StateTransitionToText,
+      StateError,
+      StateFinished,
+      StateExiting,
   };
-  _Static_assert(StateExiting < ARRAY_LENGTH(state_map), "The number of states has grown, but state"
-      "the simple state mapping has not been updated");
+  _Static_assert(StateExiting < ARRAY_LENGTH(state_map),
+                 "The number of states has grown, but state"
+                 "the simple state mapping has not been updated");
   PBL_ASSERTN(state < ARRAY_LENGTH(state_map));
 
   return state_map[state];
 }
 
 static void prv_voice_event_handler(PebbleEvent *e, void *context) {
-  PebbleVoiceServiceEvent *event = (PebbleVoiceServiceEvent *) e;
+  PebbleVoiceServiceEvent *event = (PebbleVoiceServiceEvent *)e;
   VoiceUiData *data = context;
 
   VoiceUiState simple_state = prv_get_simple_state(data->state);
-  PBL_LOG_DBG("Event received: %"PRIu8"; state:%"PRIu8, event->type, simple_state);
+  PBL_LOG_DBG("Event received: %" PRIu8 "; state:%" PRIu8, event->type, simple_state);
   switch (simple_state) {
     case StateWaitForReady:
       if (event->type == VoiceEventTypeSessionSetup) {
@@ -540,12 +539,12 @@ static void prv_cancel_dictation(VoiceUiData *data) {
 // Microphone Window
 ///////////////////////////////////////////////////////////////////////////
 
-#if (0) // https://pebbletechnology.atlassian.net/browse/PBL-20406
+#if (0)  // https://pebbletechnology.atlassian.net/browse/PBL-20406
 static void prv_short_vibe(void) {
-  static const uint32_t VIBE_DURATIONS[] = { 50 };
+  static const uint32_t VIBE_DURATIONS[] = {50};
   VibePattern pattern = {
-    .durations = VIBE_DURATIONS,
-    .num_segments = ARRAY_LENGTH(VIBE_DURATIONS),
+      .durations = VIBE_DURATIONS,
+      .num_segments = ARRAY_LENGTH(VIBE_DURATIONS),
   };
   vibes_enqueue_custom_pattern(pattern);
 }
@@ -565,11 +564,9 @@ static void prv_set_dot_width(void *subject, int16_t radius) {
   layer_mark_dirty(&data->mic_window.mic_dot_layer);
 }
 
-static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to,
-                                                     uint32_t duration,
+static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to, uint32_t duration,
                                                      const PropertyAnimationImplementation *impl,
                                                      void *subject) {
-
   PropertyAnimation *anim = property_animation_create(impl, subject, NULL, NULL);
   if (!anim) {
     return NULL;
@@ -577,26 +574,27 @@ static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to,
   property_animation_set_from_int16(anim, &from);
   property_animation_set_to_int16(anim, &to);
 
-  animation_set_duration((Animation *) anim, duration);
-  animation_set_curve((Animation *) anim, AnimationCurveEaseInOut);
+  animation_set_duration((Animation *)anim, duration);
+  animation_set_curve((Animation *)anim, AnimationCurveEaseInOut);
 
   return anim;
 }
 
-
 static const PropertyAnimationImplementation s_animated_dot_impl = {
-    .base = {
-        .update = (AnimationUpdateImplementation) property_animation_update_int16,
-    },
+    .base =
+        {
+            .update = (AnimationUpdateImplementation)property_animation_update_int16,
+        },
     .accessors = {
-        .setter = { .int16 = prv_set_dot_width, },
+        .setter = {
+            .int16 = prv_set_dot_width,
+        },
     },
-  };
+};
 
 static Animation *prv_create_pulse_dot_anim(VoiceUiData *data, int16_t min, int16_t max,
                                             int16_t overshoot, uint32_t delay_duration,
                                             uint32_t pulse_duration) {
-
   uint32_t stage_duration = (pulse_duration / 3);
 
   // Declare these here so that if we goto cleanup, then the variables are initialized
@@ -605,28 +603,28 @@ static Animation *prv_create_pulse_dot_anim(VoiceUiData *data, int16_t min, int1
   PropertyAnimation *revert = NULL;
 
   // Do the overshoot animation first
-  expand = prv_create_int16_prop_anim(max, overshoot + max, stage_duration, &s_animated_dot_impl,
-      data);
+  expand =
+      prv_create_int16_prop_anim(max, overshoot + max, stage_duration, &s_animated_dot_impl, data);
   if (!expand) {
     goto cleanup;
   }
-  animation_set_delay((Animation *) expand, delay_duration);
+  animation_set_delay((Animation *)expand, delay_duration);
 
   // If overshoot > 0 shrink to min size, otherwise shrink from max to min
   int16_t current_size = (overshoot != 0) ? overshoot + max : max;
-  shrink = prv_create_int16_prop_anim(current_size, min, stage_duration, &s_animated_dot_impl,
-      data);
+  shrink =
+      prv_create_int16_prop_anim(current_size, min, stage_duration, &s_animated_dot_impl, data);
   if (!shrink) {
     goto cleanup;
   }
 
-  revert =  prv_create_int16_prop_anim(min, max, stage_duration, &s_animated_dot_impl, data);
+  revert = prv_create_int16_prop_anim(min, max, stage_duration, &s_animated_dot_impl, data);
   if (!revert) {
     goto cleanup;
   }
 
-  Animation *sequence  = animation_sequence_create((Animation *)expand, (Animation *)shrink,
-        (Animation *) revert, NULL);
+  Animation *sequence = animation_sequence_create((Animation *)expand, (Animation *)shrink,
+                                                  (Animation *)revert, NULL);
 
   if (!sequence) {
     goto cleanup;
@@ -671,7 +669,7 @@ static void prv_show_unfold_animation(VoiceUiData *data, bool is_reversed) {
   if (!reel) {
     return;
   }
-  layer_set_hidden((Layer *) &data->mic_window.icon_layer, false);
+  layer_set_hidden((Layer *)&data->mic_window.icon_layer, false);
   kino_layer_rewind(&data->mic_window.icon_layer);
 
   GRect from = kino_reel_transform_get_from_frame(reel);
@@ -699,7 +697,7 @@ static void prv_show_unfold_animation(VoiceUiData *data, bool is_reversed) {
 
 static void prv_hide_unfold_animation(VoiceUiData *data) {
   kino_layer_pause(&data->mic_window.icon_layer);
-  layer_set_hidden((Layer *) &data->mic_window.icon_layer, true);
+  layer_set_hidden((Layer *)&data->mic_window.icon_layer, true);
 }
 
 static void prv_show_mic_dot_pulse(VoiceUiData *data) {
@@ -723,8 +721,8 @@ static void prv_show_mic_dot_pulse(VoiceUiData *data) {
   layer_mark_dirty(&data->mic_window.mic_dot_layer);
   data->mic_window.mic_dot_radius = MIC_DOT_MAX_RADIUS;
 
-  data->mic_window.mic_dot_anim = prv_create_pulse_dot_anim(data, MIN_RADIUS,
-      MIC_DOT_MAX_RADIUS, OVERSHOOT, DELAY_DURATION, ANIMATION_DURATION);
+  data->mic_window.mic_dot_anim = prv_create_pulse_dot_anim(
+      data, MIN_RADIUS, MIC_DOT_MAX_RADIUS, OVERSHOOT, DELAY_DURATION, ANIMATION_DURATION);
 
   animation_schedule(data->mic_window.mic_dot_anim);
   animation_set_elapsed(data->mic_window.mic_dot_anim, START_ELAPSED);
@@ -781,9 +779,11 @@ static void prv_fly_dot(VoiceUiData *data, bool fly_in) {
 
   animation_set_custom_interpolation((Animation *)anim, prv_interpolate_moook_soft);
   animation_set_duration((Animation *)anim, interpolate_moook_soft_duration(NUM_MOOOK_FRAMES_MID));
-  animation_set_handlers((Animation *)anim, (AnimationHandlers) {
-    .stopped = prv_handle_animation_stop,
-  }, data);
+  animation_set_handlers((Animation *)anim,
+                         (AnimationHandlers){
+                             .stopped = prv_handle_animation_stop,
+                         },
+                         data);
 
   data->mic_window.fly_anim = anim;
   animation_schedule((Animation *)anim);
@@ -805,12 +805,15 @@ static void prv_set_percent(void *subject, int16_t percent) {
 }
 
 static const PropertyAnimationImplementation s_progress_bar_impl = {
-  .base = {
-    .update = (AnimationUpdateImplementation) property_animation_update_int16,
-  },
-  .accessors = {
-    .setter = { .int16 = prv_set_percent, },
-  },
+    .base =
+        {
+            .update = (AnimationUpdateImplementation)property_animation_update_int16,
+        },
+    .accessors = {
+        .setter = {
+            .int16 = prv_set_percent,
+        },
+    },
 };
 
 // animate the progress bar in by growing it from the left (or just show it if animated == false)
@@ -825,15 +828,14 @@ static void prv_show_progress_bar(VoiceUiData *data, bool animated) {
   progress_layer_set_progress((ProgressLayer *)&data->mic_window.progress_bar, 0);
 
   animation_unschedule((Animation *)data->mic_window.progress_anim);
-  data->mic_window.progress_anim = prv_create_int16_prop_anim(0, MAX_PROGRESS_FUDGE_AMOUNT,
-      PROGRESS_FUDGE_DURATION, &s_progress_bar_impl, data);
+  data->mic_window.progress_anim = prv_create_int16_prop_anim(
+      0, MAX_PROGRESS_FUDGE_AMOUNT, PROGRESS_FUDGE_DURATION, &s_progress_bar_impl, data);
 
   if (data->mic_window.progress_anim) {
     animation_schedule((Animation *)data->mic_window.progress_anim);
   }
   layer_set_hidden((Layer *)&data->mic_window.progress_bar, false);
-  loading_layer_grow(&data->mic_window.progress_bar, 0,
-      (animated ? ANIMATE_IN_DURATION : 0));
+  loading_layer_grow(&data->mic_window.progress_bar, 0, (animated ? ANIMATE_IN_DURATION : 0));
 }
 
 static void prv_progress_stop(Animation *animation, bool finished, void *context) {
@@ -844,7 +846,7 @@ static void prv_progress_stop(Animation *animation, bool finished, void *context
   static const uint32_t SHRINK_DURATION = 200;
   VoiceUiData *data = context;
   loading_layer_shrink(&data->mic_window.progress_bar, SHRINK_DELAY, SHRINK_DURATION,
-      prv_handle_animation_stop, data);
+                       prv_handle_animation_stop, data);
 }
 
 // shrink the progress bar from the left after animating the progress % to 100%
@@ -855,11 +857,13 @@ static void prv_shrink_progress_bar(VoiceUiData *data) {
   uint32_t duration = MAX_PROGRESS_PERCENT - progress;
 
   data->mic_window.progress_anim = prv_create_int16_prop_anim(progress, MAX_PROGRESS_PERCENT,
-      duration, &s_progress_bar_impl, data);
+                                                              duration, &s_progress_bar_impl, data);
   // use a stopped handler instead of a sequence animation because we need to be able to stop
-  animation_set_handlers((Animation *)data->mic_window.progress_anim, (AnimationHandlers) {
-    .stopped = prv_progress_stop,
-  }, data);
+  animation_set_handlers((Animation *)data->mic_window.progress_anim,
+                         (AnimationHandlers){
+                             .stopped = prv_progress_stop,
+                         },
+                         data);
 
   animation_schedule((Animation *)data->mic_window.progress_anim);
 }
@@ -895,12 +899,12 @@ static void prv_back_click_config_provider(void *context) {
 
 static void prv_enable_select_click(VoiceUiData *data) {
   window_set_click_config_provider_with_context(&data->mic_window.window,
-      prv_back_select_click_config_provider, data);
+                                                prv_back_select_click_config_provider, data);
 }
 
 static void prv_disable_select_click(VoiceUiData *data) {
   window_set_click_config_provider_with_context(&data->mic_window.window,
-      prv_back_click_config_provider, data);
+                                                prv_back_click_config_provider, data);
 }
 
 static void prv_hide_progress_bar(VoiceUiData *data) {
@@ -969,10 +973,9 @@ static VoiceUiState prv_get_next_state(VoiceUiState current_state, VoiceUiState 
     return next_state;
   }
 
-  PBL_ASSERT(current_state != next_state, "Trying to transition to the same state %d",
-             next_state);
+  PBL_ASSERT(current_state != next_state, "Trying to transition to the same state %d", next_state);
 
-  PBL_ASSERTN(next_state != StateStart); // Cannot transition to start state
+  PBL_ASSERTN(next_state != StateStart);  // Cannot transition to start state
 
   PBL_LOG_DBG("Transition: Current state: %d; new state: %d", current_state, next_state);
 
@@ -980,9 +983,7 @@ static VoiceUiState prv_get_next_state(VoiceUiState current_state, VoiceUiState 
   *defer_transition = false;
 
   // These transitions are always valid
-  if ((next_state == StateFinished) ||
-      (next_state == StateExiting) ||
-      (next_state == StateError)) {
+  if ((next_state == StateFinished) || (next_state == StateExiting) || (next_state == StateError)) {
     return next_state;
   }
 
@@ -1063,8 +1064,8 @@ static VoiceUiState prv_get_next_state(VoiceUiState current_state, VoiceUiState 
 
   // No valid transition found!
 
-  PBL_CROAK("Cannot transition from state %"PRIu16" to state %"PRIu16,
-            current_state, next_state);
+  PBL_CROAK("Cannot transition from state %" PRIu16 " to state %" PRIu16, current_state,
+            next_state);
 }
 
 // This handles all the microphone UI transitions
@@ -1088,7 +1089,7 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
     case StateRecording:
       // vibe briefly, enable clicking to end the transcription, unfold the mic from a dot
       // and show text
-#if (0) // https://pebbletechnology.atlassian.net/browse/PBL-20406
+#if (0)  // https://pebbletechnology.atlassian.net/browse/PBL-20406
       prv_short_vibe();
 #endif
       prv_enable_select_click(data);
@@ -1179,17 +1180,16 @@ static void prv_mic_window_load(Window *window) {
   static const int16_t TEXT_LAYER_Y_OFFSET = 50;
 
   TextLayer *text_layer = &data->mic_window.text_layer;
-  text_layer_init_with_parameters(text_layer,
-                                  &GRect(0, dot_frame.origin.y + TEXT_LAYER_Y_OFFSET,
-                                         root_frame->size.w, font_height * 2),
-                                  NULL, font,
-                                  GColorBlack, window_bg_color, GTextAlignmentCenter,
-                                  GTextOverflowModeTrailingEllipsis);
+  text_layer_init_with_parameters(
+      text_layer,
+      &GRect(0, dot_frame.origin.y + TEXT_LAYER_Y_OFFSET, root_frame->size.w, font_height * 2),
+      NULL, font, GColorBlack, window_bg_color, GTextAlignmentCenter,
+      GTextOverflowModeTrailingEllipsis);
   layer_add_child(root_layer, (Layer *)text_layer);
   layer_set_hidden((Layer *)text_layer, true);
 
   static const int16_t LOADING_FRAME_OFFSET_Y = 27;
-  GRect loading_frame = (GRect) { .size = LOADING_LAYER_DEFAULT_SIZE };
+  GRect loading_frame = (GRect){.size = LOADING_LAYER_DEFAULT_SIZE};
   grect_align(&loading_frame, root_frame, GAlignCenter, false);
   loading_frame.origin.y += LOADING_FRAME_OFFSET_Y;
 
@@ -1206,18 +1206,15 @@ static void prv_mic_window_load(Window *window) {
   status_bar_layer_init(status_bar);
   const GColor status_bg_color = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
   status_bar_layer_set_colors(status_bar, status_bg_color, GColorBlack);
-  layer_add_child(root_layer, (Layer *) status_bar);
+  layer_add_child(root_layer, (Layer *)status_bar);
 
-  KinoReel *image = kino_reel_create_with_resource_system(SYSTEM_APP,
-                                                          RESOURCE_ID_VOICE_MICROPHONE_LARGE);
+  KinoReel *image =
+      kino_reel_create_with_resource_system(SYSTEM_APP, RESOURCE_ID_VOICE_MICROPHONE_LARGE);
   PBL_ASSERTN(image);
 
   GSize icon_size = kino_reel_get_size(image);
   // Center the icon resting position in the window
-  GRect icon_frame = (GRect) {
-    .size.w = icon_size.w,
-    .size.h = icon_size.h
-  };
+  GRect icon_frame = (GRect){.size.w = icon_size.w, .size.h = icon_size.h};
   grect_align(&icon_frame, root_frame, GAlignCenter, false);
 
   static const int16_t UNFOLD_BOUNCE_AMOUNT = 10;
@@ -1225,13 +1222,14 @@ static void prv_mic_window_load(Window *window) {
   int16_t dot_size = data->mic_window.mic_dot_radius * 2;
 
   GRect icon_from = {
-    .size = { dot_size, dot_size },
+      .size = {dot_size, dot_size},
   };
   grect_align(&icon_from, &icon_frame, GAlignCenter, false);
 
   const bool take_ownership = true;
-  KinoReel *icon_reel = kino_reel_unfold_create(image, take_ownership, icon_frame, 0,
-    UNFOLD_DEFAULT_NUM_DELAY_GROUPS, UNFOLD_DEFAULT_GROUP_DELAY);
+  KinoReel *icon_reel =
+      kino_reel_unfold_create(image, take_ownership, icon_frame, 0, UNFOLD_DEFAULT_NUM_DELAY_GROUPS,
+                              UNFOLD_DEFAULT_GROUP_DELAY);
 
   if (icon_reel) {
     kino_reel_transform_set_from_frame(icon_reel, icon_from);
@@ -1243,19 +1241,21 @@ static void prv_mic_window_load(Window *window) {
     // do not clip bounds of window - animated icon will be hidden when it's not within the
     // visible bounds
     kino_layer_set_reel(&data->mic_window.icon_layer, icon_reel, true);
-    kino_layer_set_callbacks(&data->mic_window.icon_layer, (KinoLayerCallbacks) {
-      .did_stop = prv_kino_reel_stopped_handler,
-    }, data);
+    kino_layer_set_callbacks(&data->mic_window.icon_layer,
+                             (KinoLayerCallbacks){
+                                 .did_stop = prv_kino_reel_stopped_handler,
+                             },
+                             data);
     layer_add_child(root_layer, (Layer *)&data->mic_window.icon_layer);
     layer_set_hidden((Layer *)&data->mic_window.icon_layer, true);
   } else {
     kino_reel_destroy(image);
   }
 
-  data->voice_event_sub = (EventServiceInfo) {
-    .type = PEBBLE_VOICE_SERVICE_EVENT,
-    .handler = prv_voice_event_handler,
-    .context = data
+  data->voice_event_sub = (EventServiceInfo){
+      .type = PEBBLE_VOICE_SERVICE_EVENT,
+      .handler = prv_voice_event_handler,
+      .context = data
   };
   event_service_client_subscribe(&data->voice_event_sub);
 
@@ -1299,12 +1299,12 @@ static void prv_mic_window_appear(Window *window) {
 static void prv_voice_window_push(VoiceUiData *data) {
   Window *window = &data->mic_window.window;
   window_init(window, WINDOW_NAME("Voice Window"));
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_mic_window_load,
-    .unload = prv_mic_window_unload,
-    .appear = prv_mic_window_appear,
-    .disappear = prv_mic_window_disappear
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_mic_window_load,
+                                         .unload = prv_mic_window_unload,
+                                         .appear = prv_mic_window_appear,
+                                         .disappear = prv_mic_window_disappear
+                                     });
   window_set_user_data(window, data);
 
   prv_window_push(window);
@@ -1322,13 +1322,13 @@ VoiceWindow *voice_window_create(char *buffer, size_t buffer_size,
   if (!data) {
     return NULL;
   }
-  *data = (VoiceUiData) {
-    .state = StateStart,
-    .show_confirmation_dialog = true,
-    .show_error_dialog = true,
-    .message = buffer,
-    .buffer_size = buffer_size,
-    .session_type = session_type,
+  *data = (VoiceUiData){
+      .state = StateStart,
+      .show_confirmation_dialog = true,
+      .show_error_dialog = true,
+      .message = buffer,
+      .buffer_size = buffer_size,
+      .session_type = session_type,
   };
 
   return data;
@@ -1422,7 +1422,6 @@ void voice_window_reset(VoiceWindow *voice_window) {
 
 DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServiceEvent *e,
                char *buffer, size_t buffer_size, size_t *sentence_len) {
-
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(e, sizeof(*e));
     if (buffer && (buffer_size > 0)) {
@@ -1463,10 +1462,9 @@ DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServic
   }
 
   memcpy(sentence, e->data->sentence, len);
-  sentence[len] = '\0'; // Ensure that string is NULL-terminated
+  sentence[len] = '\0';  // Ensure that string is NULL-terminated
 
   *sentence_len = len;
 
   return sentence;
 }
-

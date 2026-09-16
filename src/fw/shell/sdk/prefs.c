@@ -31,7 +31,7 @@ _Static_assert(sizeof(PreferredContentSize) == sizeof(s_content_size),
 
 #ifdef CONFIG_APP_SCALING
 #define PREF_KEY_LEGACY_APP_RENDER_MODE "legacyAppRenderMode"
-static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
+static uint8_t s_legacy_app_render_mode = 1;  // Default to scaled mode
 #endif
 
 void shell_prefs_init(void) {
@@ -40,8 +40,8 @@ void shell_prefs_init(void) {
   if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
     goto cleanup;
   }
-  if (settings_file_get(&file, PREF_KEY_CLOCK_24H, sizeof(PREF_KEY_CLOCK_24H),
-                        &s_is_24h_style, sizeof(s_is_24h_style)) != S_SUCCESS) {
+  if (settings_file_get(&file, PREF_KEY_CLOCK_24H, sizeof(PREF_KEY_CLOCK_24H), &s_is_24h_style,
+                        sizeof(s_is_24h_style)) != S_SUCCESS) {
     // The setting likely doesn't exist yet so set it to the default (true)
     s_is_24h_style = true;
   }
@@ -106,7 +106,6 @@ int16_t shell_prefs_get_automatic_timezone_id(void) {
 void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
 }
 
-
 void prefs_private_lock(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 }
@@ -118,17 +117,15 @@ void prefs_private_unlock(void) {
 // Exported function used by blob_db API to set the backing store for a specific key.
 // Not used by the SDK shell
 bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void *value,
-                               int value_len) {
+                                 int value_len) {
   return false;
 }
-
 
 // Exported function used by blob_db API to get the length of a value in our backing store
 // Not used by the SDK shell
 int prefs_private_get_backing_len(const uint8_t *key, size_t key_len) {
   return 0;
 }
-
 
 // Exported function used by blob_db API to read our backing store
 // Not used by the SDK shell
@@ -147,9 +144,8 @@ void watchface_set_default_install_id(AppInstallId app_id) {
 }
 
 static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *entry, void *data) {
-  if (!app_install_entry_is_watchface(entry) ||
-      app_install_entry_is_hidden(entry)) {
-    return true; // continue search
+  if (!app_install_entry_is_watchface(entry) || app_install_entry_is_hidden(entry)) {
+    return true;  // continue search
   }
 
   watchface_set_default_install_id(entry->install_id);
@@ -159,8 +155,7 @@ static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *en
 AppInstallId watchface_get_default_install_id(void) {
   AppInstallId app_id = app_install_get_id_for_uuid(&s_default_watchface);
   AppInstallEntry entry;
-  if ((app_id == INSTALL_ID_INVALID) ||
-      !app_install_get_entry_for_install_id(app_id, &entry) ||
+  if ((app_id == INSTALL_ID_INVALID) || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
     app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
@@ -172,8 +167,7 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   const uint8_t content_size_uint = content_size;
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
-            content_size);
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d", content_size);
   } else if (prv_pref_set(PREF_KEY_CONTENT_SIZE, &content_size_uint, sizeof(content_size_uint))) {
     s_content_size = content_size;
   }
@@ -259,7 +253,7 @@ void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
 #endif
 
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
-  static ActivityInsightSettings s_settings = { 0 };
+  static ActivityInsightSettings s_settings = {0};
   return &s_settings;
 }
 
@@ -311,7 +305,6 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 // Exported function used by blob_db API to handle settings events
 // Not used by the SDK shell
 void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
-
 }
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {

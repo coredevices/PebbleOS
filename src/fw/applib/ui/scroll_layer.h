@@ -56,7 +56,6 @@ typedef void (*ScrollLayerCallback)(struct ScrollLayer *scroll_layer, void *cont
 //! @note The context parameter can be set using scroll_layer_set_context() and
 //! gets passed in as context with all of these callbacks.
 typedef struct ScrollLayerCallbacks {
-
   //! Provider function to set up the SELECT button handlers. This will be
   //! called after the scroll layer has configured the click configurations for
   //! the up/down buttons, so it can also be used to modify the default up/down
@@ -105,8 +104,8 @@ typedef struct ScrollLayer {
         uint8_t flags;
         struct {
           // Do not move these bit-fields!
-          bool paging_disabled:1;  // mutually exclusive of shadow clips
-          bool shadow_hidden:1;  // shadow_hidden in same position as layer hidden
+          bool paging_disabled : 1;  // mutually exclusive of shadow clips
+          bool shadow_hidden : 1;    // shadow_hidden in same position as layer hidden
         };
       };
     } paging;
@@ -129,11 +128,12 @@ typedef struct ScrollLayer {
   //! @internal
   //! Intrusive Tier-1 touch-navigation registry node (layout-compatible with
   //! \ref TouchNavWidgetNode: four pointers — \c next, \c layer, \c ops, \c widget). Embedding it
-  //! here lets a bare ScrollLayer be registered as a Tier-1 touch widget so a finger pan scrolls its
-  //! content 1:1. Declared unconditionally (not under \c CONFIG_TOUCH) so the struct layout — and
-  //! therefore \c sizeof(ScrollLayer) — is identical on every board and the applib-malloc budget is
-  //! board-independent. It sits at the pointer-aligned tail, introducing no alignment padding of its
-  //! own. A build-time assert in scroll_layer.c keeps this node's layout in sync with
+  //! here lets a bare ScrollLayer be registered as a Tier-1 touch widget so a finger pan scrolls
+  //! its content 1:1. Declared unconditionally (not under \c CONFIG_TOUCH) so the struct layout —
+  //! and therefore \c sizeof(ScrollLayer) — is identical on every board and the applib-malloc
+  //! budget is board-independent. It sits at the pointer-aligned tail, introducing no alignment
+  //! padding of its own. A build-time assert in scroll_layer.c keeps this node's layout in sync
+  //! with
   //! \ref TouchNavWidgetNode; the applib_malloc size check pins the (grown) \c sizeof(ScrollLayer).
   struct {
     void *next;
@@ -171,7 +171,7 @@ void scroll_layer_init(ScrollLayer *scroll_layer, const GRect *frame);
 //! * Callback context: `NULL`
 //! @return A pointer to the ScrollLayer. `NULL` if the ScrollLayer could not
 //! be created
-ScrollLayer* scroll_layer_create(GRect frame);
+ScrollLayer *scroll_layer_create(GRect frame);
 
 void scroll_layer_deinit(ScrollLayer *scroll_layer);
 
@@ -184,7 +184,7 @@ void scroll_layer_destroy(ScrollLayer *scroll_layer);
 //! @return The "root" Layer of the scroll layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) scroll_layer`.
-Layer* scroll_layer_get_layer(const ScrollLayer *scroll_layer);
+Layer *scroll_layer_get_layer(const ScrollLayer *scroll_layer);
 
 //! Adds the child layer to the content sub-layer of the ScrollLayer.
 //! This will make the child layer part of the scrollable contents.

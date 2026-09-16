@@ -13,17 +13,17 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,32 +35,382 @@
 static const unsigned int VALID_UTF8 = 0;
 
 static const uint8_t utf8d[] = {
-  // The first part of the table maps bytes to character classes that
-  // to reduce the size of the transition table and create bitmasks.
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,  9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
-  7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,  7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-  8,8,2,2,2,2,2,2,2,2,2,2,2,2,2,2,  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  10,3,3,3,3,3,3,3,3,3,3,3,3,4,3,3, 11,6,6,6,5,8,8,8,8,8,8,8,8,8,8,8,
-  
-  // The second part is a transition table that maps a combination
-  // of a state of the automaton and a character class to a state.
-  0,12,24,36,60,96,84,12,12,12,48,72, 12,12,12,12,12,12,12,12,12,12,12,12,
-  12, 0,12,12,12,12,12, 0,12, 0,12,12, 12,24,12,12,12,12,12,24,12,24,12,12,
-  12,12,12,12,12,12,12,24,12,12,12,12, 12,24,12,12,12,12,12,12,12,24,12,12,
-  12,12,12,12,12,12,12,36,12,36,12,12, 12,36,12,12,12,12,12,36,12,36,12,12,
-  12,36,12,12,12,12,12,12,12,12,12,12, 
+    // The first part of the table maps bytes to character classes that
+    // to reduce the size of the transition table and create bitmasks.
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    9,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    8,
+    8,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    10,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    4,
+    3,
+    3,
+    11,
+    6,
+    6,
+    6,
+    5,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+    8,
+
+    // The second part is a transition table that maps a combination
+    // of a state of the automaton and a character class to a state.
+    0,
+    12,
+    24,
+    36,
+    60,
+    96,
+    84,
+    12,
+    12,
+    12,
+    48,
+    72,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    0,
+    12,
+    12,
+    12,
+    12,
+    12,
+    0,
+    12,
+    0,
+    12,
+    12,
+    12,
+    24,
+    12,
+    12,
+    12,
+    12,
+    12,
+    24,
+    12,
+    24,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    24,
+    12,
+    12,
+    12,
+    12,
+    12,
+    24,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    24,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    36,
+    12,
+    36,
+    12,
+    12,
+    12,
+    36,
+    12,
+    12,
+    12,
+    12,
+    12,
+    36,
+    12,
+    36,
+    12,
+    12,
+    12,
+    36,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
 };
 
 static uint32_t utf8_decode(uint8_t *state, uint32_t *codepoint, uint32_t byte) {
   uint32_t type = utf8d[byte];
 
-  *codepoint = (*state != VALID_UTF8) ?
-    (byte & 0x3fu) | (*codepoint << 6) :
-    (0xff >> type) & (byte);
+  *codepoint =
+      (*state != VALID_UTF8) ? (byte & 0x3fu) | (*codepoint << 6) : (0xff >> type) & (byte);
 
   *state = utf8d[256 + *state + type];
   return *state;
@@ -74,7 +424,7 @@ void utf8_print_code_points(utf8_t *s) {
 
   for (; *s; ++s) {
     if (!utf8_decode(&state, &codepoint, *s)) {
-      PBL_LOG_ALWAYS("U+%04"PRIX32, codepoint);
+      PBL_LOG_ALWAYS("U+%04" PRIX32, codepoint);
     }
   }
 
@@ -82,9 +432,6 @@ void utf8_print_code_points(utf8_t *s) {
     PBL_LOG_ALWAYS("String is not well-formed");
   }
 }
-
-
-
 
 ////////////////////////////////////////////////////////////
 // Private API
@@ -153,10 +500,10 @@ utf8_t *utf8_get_previous(utf8_t *start, utf8_t *stream) {
 //! Return NULL if not successful in decoding text
 utf8_t *utf8_get_end(const char *text) {
   if (text == NULL) {
-    return (utf8_t *) text;
+    return (utf8_t *)text;
   }
 
-  uint8_t *stream = (uint8_t *) text;
+  uint8_t *stream = (uint8_t *)text;
   uint32_t codepoint = 0;
   uint8_t state = 0;
 
@@ -170,17 +517,16 @@ utf8_t *utf8_get_end(const char *text) {
     return NULL;
   }
 
-  return (utf8_t *) stream;
+  return (utf8_t *)stream;
 }
-
 
 bool utf8_is_valid_string(const char *char_stream) {
   return (utf8_get_end(char_stream) != NULL);
 }
 
-Utf8Bounds utf8_get_bounds(bool *const success, char const  *text) {
+Utf8Bounds utf8_get_bounds(bool *const success, char const *text) {
   Utf8Bounds bounds;
-  bounds.start = (utf8_t *) text;
+  bounds.start = (utf8_t *)text;
   bounds.end = bounds.start;
 
   utf8_t *end = utf8_get_end(text);
@@ -196,7 +542,7 @@ Utf8Bounds utf8_get_bounds(bool *const success, char const  *text) {
 }
 
 bool utf8_bounds_init(Utf8Bounds *bounds, const char *text) {
-  bounds->start = (utf8_t *) text;
+  bounds->start = (utf8_t *)text;
   bounds->end = bounds->start;
 
   utf8_t *end = utf8_get_end(text);
@@ -210,10 +556,10 @@ bool utf8_bounds_init(Utf8Bounds *bounds, const char *text) {
 }
 
 bool utf8_iter_next(IteratorState state) {
-  Utf8IterState *utf8_iter_state = (Utf8IterState *) state;
+  Utf8IterState *utf8_iter_state = (Utf8IterState *)state;
   PBL_ASSERTN(utf8_iter_state);
 
-  utf8_iter_state->codepoint = 0; // Invalidate the cached codepoint
+  utf8_iter_state->codepoint = 0;  // Invalidate the cached codepoint
 
   if (utf8_iter_state->current >= utf8_iter_state->bounds->end) {
     return false;
@@ -229,12 +575,13 @@ bool utf8_iter_next(IteratorState state) {
     return false;
   }
 
-  utf8_iter_state->codepoint = utf8_peek_codepoint(utf8_iter_state->current, &utf8_iter_state->next);
+  utf8_iter_state->codepoint =
+      utf8_peek_codepoint(utf8_iter_state->current, &utf8_iter_state->next);
   return true;
 }
 
 bool utf8_iter_prev(IteratorState state) {
-  Utf8IterState *utf8_iter_state = (Utf8IterState *) state;
+  Utf8IterState *utf8_iter_state = (Utf8IterState *)state;
   PBL_ASSERTN(utf8_iter_state);
 
   utf8_iter_state->codepoint = 0;
@@ -243,14 +590,15 @@ bool utf8_iter_prev(IteratorState state) {
     return false;
   }
 
-  utf8_iter_state->current = utf8_get_previous(utf8_iter_state->bounds->start,
-      utf8_iter_state->current);
-  utf8_iter_state->codepoint = utf8_peek_codepoint(utf8_iter_state->current, &utf8_iter_state->next);
+  utf8_iter_state->current =
+      utf8_get_previous(utf8_iter_state->bounds->start, utf8_iter_state->current);
+  utf8_iter_state->codepoint =
+      utf8_peek_codepoint(utf8_iter_state->current, &utf8_iter_state->next);
   return true;
-
 }
 
-void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bounds const *bounds, utf8_t *start) {
+void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bounds const *bounds,
+                    utf8_t *start) {
   PBL_ASSERTN(utf8_iter_state);
   PBL_ASSERTN(bounds);
 
@@ -260,7 +608,8 @@ void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bou
   utf8_iter_state->current = start;
   utf8_iter_state->codepoint = utf8_peek_codepoint(start, &utf8_iter_state->next);
 
-  iter_init(utf8_iter, (IteratorCallback) utf8_iter_next, utf8_iter_prev, (IteratorState) utf8_iter_state);
+  iter_init(utf8_iter, (IteratorCallback)utf8_iter_next, utf8_iter_prev,
+            (IteratorState)utf8_iter_state);
 }
 
 size_t utf8_encode_codepoint(Codepoint codepoint, utf8_t *dest) {
@@ -283,7 +632,7 @@ size_t utf8_encode_codepoint(Codepoint codepoint, utf8_t *dest) {
     dest[3] = (utf8_t)(0x80 | (codepoint & 0x3F));
     return 4;
   }
-  return 0; // Invalid codepoint
+  return 0;  // Invalid codepoint
 }
 
 size_t utf8_copy_character(utf8_t *dest, utf8_t *origin, size_t length) {
@@ -359,8 +708,8 @@ bool utf8_each_codepoint(const char *str, Utf8EachCodepoint callback, void *cont
   utf8_iter_init(&utf8_iter, &utf8_iter_state, &utf8_bounds, utf8_bounds.start);
 
   int i = 0;
-  while (utf8_iter_state.codepoint &&
-         callback(i++, utf8_iter_state.codepoint, context) &&
-         iter_next(&utf8_iter)) {}
+  while (utf8_iter_state.codepoint && callback(i++, utf8_iter_state.codepoint, context) &&
+         iter_next(&utf8_iter)) {
+  }
   return true;
 }

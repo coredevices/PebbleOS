@@ -14,22 +14,22 @@
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
 
-#define DA7212_CIF_CTRL              0x1D
-#define DA7212_DAI_CLK_MODE          0x28
-#define DA7212_DAI_CTRL              0x29
-#define DA7212_DIG_ROUTING_DAC       0x2A
-#define DA7212_DAC_FILTERS5          0x40
-#define DA7212_DAC_R_GAIN            0x46
-#define DA7212_LINE_GAIN             0x4A
-#define DA7212_MIXOUT_R_SELECT       0x4C
-#define DA7212_SYSTEM_MODES_OUTPUT   0x51
-#define DA7212_DAC_R_CTRL            0x6A
-#define DA7212_LINE_CTRL             0x6D
-#define DA7212_MIXOUT_R_CTRL         0x6F
-#define DA7212_TONE_GEN_CFG1         0xB4
-#define DA7212_TONE_GEN_CYCLES       0xB6
-#define DA7212_TONE_GEN_ON_PER       0xBB
-#define DA7212_SYSTEM_ACTIVE         0xFD
+#define DA7212_CIF_CTRL 0x1D
+#define DA7212_DAI_CLK_MODE 0x28
+#define DA7212_DAI_CTRL 0x29
+#define DA7212_DIG_ROUTING_DAC 0x2A
+#define DA7212_DAC_FILTERS5 0x40
+#define DA7212_DAC_R_GAIN 0x46
+#define DA7212_LINE_GAIN 0x4A
+#define DA7212_MIXOUT_R_SELECT 0x4C
+#define DA7212_SYSTEM_MODES_OUTPUT 0x51
+#define DA7212_DAC_R_CTRL 0x6A
+#define DA7212_LINE_CTRL 0x6D
+#define DA7212_MIXOUT_R_CTRL 0x6F
+#define DA7212_TONE_GEN_CFG1 0xB4
+#define DA7212_TONE_GEN_CYCLES 0xB6
+#define DA7212_TONE_GEN_ON_PER 0xBB
+#define DA7212_SYSTEM_ACTIVE 0xFD
 
 typedef struct {
   Window window;
@@ -53,7 +53,7 @@ static void da7212_register_write(uint8_t reg, uint8_t value) {
 static void prv_da7212_play_tone(void) {
   // CIF_CTRL: soft reset
   da7212_register_write(DA7212_CIF_CTRL, 0x80);
-  
+
   psleep(10);
 
   // SYSTEM_ACTIVE: wake-up
@@ -170,8 +170,9 @@ const PebbleProcessMd *mfg_speaker_asterix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
       .common.main_func = &s_main,
       // UUID: 27047635-68f1-4ece-9ca7-52dd8e22d1dd
-      .common.uuid = {0x27, 0x04, 0x76, 0x35, 0x68, 0xf1, 0x4e, 0xce, 0x9c, 0xa7, 0x52, 0xdd, 0x8e,
-                      0x22, 0xd1, 0xdd},
+      .common.uuid =
+          {0x27, 0x04, 0x76, 0x35, 0x68, 0xf1, 0x4e, 0xce, 0x9c, 0xa7, 0x52, 0xdd, 0x8e, 0x22, 0xd1,
+           0xdd},
       .name = "MfgSpeakerAsterix",
   };
   return (const PebbleProcessMd *)&s_app_info;

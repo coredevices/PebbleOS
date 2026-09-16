@@ -30,16 +30,16 @@ typedef enum PhoneCallState {
 } PhoneCallState;
 
 enum PhoneCmd {
-  PhoneCmdAnswer           = 0x01,
-  PhoneCmdHangup           = 0x02,
-  PhoneCmdGetStateRequest  = 0x03,
+  PhoneCmdAnswer = 0x01,
+  PhoneCmdHangup = 0x02,
+  PhoneCmdGetStateRequest = 0x03,
   PhoneCmdGetStateResponse = 0x83,
-  PhoneCmdIncoming         = 0x04,
-  PhoneCmdOutgoing         = 0x05,
-  PhoneCmdMissed           = 0x06,
-  PhoneCmdRing             = 0x07,
-  PhoneCmdStart            = 0x08,
-  PhoneCmdEnd              = 0x09
+  PhoneCmdIncoming = 0x04,
+  PhoneCmdOutgoing = 0x05,
+  PhoneCmdMissed = 0x06,
+  PhoneCmdRing = 0x07,
+  PhoneCmdStart = 0x08,
+  PhoneCmdEnd = 0x09
 };
 
 typedef struct {
@@ -48,23 +48,19 @@ typedef struct {
   char caller_name[CALLER_BUFFER_LENGTH];
 } PebbleCallInfo;
 
-
-static bool get_call_info_from_msg(const uint8_t* msg, unsigned int length,
-    PebbleCallInfo* info) {
+static bool get_call_info_from_msg(const uint8_t *msg, unsigned int length, PebbleCallInfo *info) {
   unsigned int msg_length = 0;
-  info->cookie = *((uint32_t*) msg);
+  info->cookie = *((uint32_t *)msg);
   msg += 4;
   msg_length += 4;
 
   uint8_t caller_number_size = *msg++;
-  memcpy(&info->caller_number, msg,
-      MIN(caller_number_size, sizeof(info->caller_number)));
+  memcpy(&info->caller_number, msg, MIN(caller_number_size, sizeof(info->caller_number)));
   msg += caller_number_size;
   msg_length += caller_number_size + 1;
 
   uint8_t caller_name_size = *msg++;
-  memcpy(&info->caller_name, msg,
-      MIN(caller_name_size, sizeof(info->caller_name)));
+  memcpy(&info->caller_name, msg, MIN(caller_name_size, sizeof(info->caller_name)));
   msg_length += caller_name_size + 1;
 
   // Ensure that we haven't run off the end of our buffer
@@ -79,28 +75,27 @@ static bool get_call_info_from_msg(const uint8_t* msg, unsigned int length,
 
 static void prv_put_call_disconnect_event(void) {
   PebbleEvent e = {
-    .type = PEBBLE_PHONE_EVENT,
-    .phone = {
-      .type = PhoneEventType_Disconnect,
-      .source = PhoneCallSource_PP,
-      .call_identifier = 0, // Cookie is not yet implemented / used
-    }
+      .type = PEBBLE_PHONE_EVENT,
+      .phone = {
+          .type = PhoneEventType_Disconnect,
+          .source = PhoneCallSource_PP,
+          .call_identifier = 0,  // Cookie is not yet implemented / used
+      }
   };
   event_put(&e);
 }
 
 static void prv_put_call_end_event(void) {
   PebbleEvent e = {
-    .type = PEBBLE_PHONE_EVENT,
-    .phone = {
-      .type = PhoneEventType_End,
-      .source = PhoneCallSource_PP,
-      .call_identifier = 0, // Cookie is not yet implemented / used
-    }
+      .type = PEBBLE_PHONE_EVENT,
+      .phone = {
+          .type = PhoneEventType_End,
+          .source = PhoneCallSource_PP,
+          .call_identifier = 0,  // Cookie is not yet implemented / used
+      }
   };
   event_put(&e);
 }
-
 
 static void prv_send_phone_command_to_handset(uint8_t cmd, uint8_t *data, unsigned length) {
   static uint8_t buffer[5];
@@ -116,17 +111,17 @@ static void prv_send_phone_command_to_handset(uint8_t cmd, uint8_t *data, unsign
     PBL_LOG_ERR("No CommSession for phone command, ending call");
     prv_put_call_disconnect_event();
   } else {
-    comm_session_send_data(session, PHONE_CTRL_ENDPOINT, buffer,
-        length + sizeof(cmd), COMM_SESSION_DEFAULT_TIMEOUT);
+    comm_session_send_data(session, PHONE_CTRL_ENDPOINT, buffer, length + sizeof(cmd),
+                           COMM_SESSION_DEFAULT_TIMEOUT);
   }
 }
 
 void pp_answer_call(uint32_t cookie) {
-  prv_send_phone_command_to_handset(PhoneCmdAnswer, (uint8_t*)&cookie, sizeof(cookie));
+  prv_send_phone_command_to_handset(PhoneCmdAnswer, (uint8_t *)&cookie, sizeof(cookie));
 }
 
 void pp_decline_call(uint32_t cookie) {
-  prv_send_phone_command_to_handset(PhoneCmdHangup, (uint8_t*)&cookie, sizeof(cookie));
+  prv_send_phone_command_to_handset(PhoneCmdHangup, (uint8_t *)&cookie, sizeof(cookie));
 }
 
 void pp_get_phone_state(void) {
@@ -137,8 +132,8 @@ void pp_get_phone_state_set_enabled(bool enabled) {
   s_get_phone_state_enabled = enabled;
 }
 
-static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length,
-                                   PebbleEvent *event_out, bool is_state_response) {
+static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length, PebbleEvent *event_out,
+                                   bool is_state_response) {
   uint8_t msg_type = *iter++;
   --length;
 
@@ -171,14 +166,14 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length,
 
     case PhoneCmdStart: {
       type = PhoneEventType_Start;
-      call_info.cookie = *((uint32_t*) iter);
+      call_info.cookie = *((uint32_t *)iter);
       did_parse = true;
       break;
     }
 
     case PhoneCmdEnd: {
       type = PhoneEventType_End;
-      call_info.cookie = *((uint32_t*) iter);
+      call_info.cookie = *((uint32_t *)iter);
       did_parse = true;
       break;
     }
@@ -199,14 +194,14 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length,
   }
 
   if (did_parse) {
-    *event_out = (const PebbleEvent) {
-      .type = PEBBLE_PHONE_EVENT,
-      .phone = {
-        .type = type,
-        .source = PhoneCallSource_PP,
-        .call_identifier = call_info.cookie,
-        .caller = caller,
-      }
+    *event_out = (const PebbleEvent){
+        .type = PEBBLE_PHONE_EVENT,
+        .phone = {
+            .type = type,
+            .source = PhoneCallSource_PP,
+            .call_identifier = call_info.cookie,
+            .caller = caller,
+        }
     };
   } else {
     // Try to catch potentially malformed messages.
@@ -225,7 +220,7 @@ static void prv_parse_msg_and_emit_event(const uint8_t *msg, size_t length,
   }
 }
 
-void phone_protocol_msg_callback(CommSession *session, const uint8_t* iter, size_t length) {
+void phone_protocol_msg_callback(CommSession *session, const uint8_t *iter, size_t length) {
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, iter, length);
 
   // Get State Response is basically a list representing the state of current calls. It's

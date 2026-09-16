@@ -14,23 +14,26 @@
 #define PNG_LOAD_ERROR "Failed to load PNG"
 
 static GBitmapFormat prv_get_format_for_bpp(uint8_t bits_per_pixel) {
-  if (bits_per_pixel == 1)  return GBitmapFormat1BitPalette;
-  if (bits_per_pixel == 2)  return GBitmapFormat2BitPalette;
-  if (bits_per_pixel == 4)  return GBitmapFormat4BitPalette;
+  if (bits_per_pixel == 1)
+    return GBitmapFormat1BitPalette;
+  if (bits_per_pixel == 2)
+    return GBitmapFormat2BitPalette;
+  if (bits_per_pixel == 4)
+    return GBitmapFormat4BitPalette;
   return GBitmapFormat8Bit;
 }
 
 bool gbitmap_png_data_is_png(const uint8_t *data, size_t data_size) {
   if (data_size >= sizeof(PNG_SIGNATURE)) {
     // PNG files start with [137, 'P', 'N', 'G']
-    return (ntohl(*(uint32_t*)data) == PNG_SIGNATURE);
+    return (ntohl(*(uint32_t *)data) == PNG_SIGNATURE);
   }
   return false;
 }
 
 // ! Distance from current resource cursor to next IDAT/fdAT chunk including that chunks data
-int32_t png_seek_chunk_in_resource(uint32_t resource_id, uint32_t offset,
-                                   bool seek_framedata, bool *found_actl) {
+int32_t png_seek_chunk_in_resource(uint32_t resource_id, uint32_t offset, bool seek_framedata,
+                                   bool *found_actl) {
   ResAppNum app_num = sys_get_current_resource_num();
   return png_seek_chunk_in_resource_system(app_num, resource_id, offset, seek_framedata,
                                            found_actl);
@@ -52,7 +55,7 @@ int32_t png_seek_chunk_in_resource_system(ResAppNum app_num, uint32_t resource_i
 
   while (current_offset + sizeof(marker) < max_size) {
     if (sizeof(marker) != sys_resource_load_range(app_num, resource_id, current_offset,
-                            (uint8_t*)&marker, sizeof(marker))) {
+                                                  (uint8_t *)&marker, sizeof(marker))) {
       return -1;
     }
 
@@ -83,10 +86,10 @@ int32_t png_seek_chunk_in_resource_system(ResAppNum app_num, uint32_t resource_i
     }
     current_offset += CHUNK_META_SIZE + marker.length;
   }
-  return -1; // Error
+  return -1;  // Error
 }
 
-GBitmap* gbitmap_create_from_png_data(const uint8_t *png_data, size_t png_data_size) {
+GBitmap *gbitmap_create_from_png_data(const uint8_t *png_data, size_t png_data_size) {
   GBitmap *bitmap = applib_type_malloc(GBitmap);
   if (bitmap) {
     memset(bitmap, 0, sizeof(GBitmap));
@@ -113,7 +116,7 @@ bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t dat
   // Use UPNG to decode image and get data
   uint32_t width = upng_get_width(upng);
   uint32_t height = upng_get_height(upng);
-  uint8_t *upng_buffer = (uint8_t*)upng_get_buffer(upng);
+  uint8_t *upng_buffer = (uint8_t *)upng_get_buffer(upng);
   uint32_t bpp = upng_get_bpp(upng);
   uint16_t palette_size = 0;
 
@@ -142,8 +145,8 @@ bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t dat
   }
 
   // Set the image or pixel data
-  gbitmap_set_data(bitmap, upng_buffer, format,
-      gbitmap_format_get_row_size_bytes(width, format), true);
+  gbitmap_set_data(bitmap, upng_buffer, format, gbitmap_format_get_row_size_bytes(width, format),
+                   true);
   gbitmap_set_bounds(bitmap, (GRect){.origin = {0, 0}, .size = {width, height}});
   bitmap->info.version = GBITMAP_VERSION_CURRENT;
 
@@ -178,32 +181,32 @@ static uint16_t prv_gbitmap_png_create_palette_for_grayscale(upng_t *upng, GColo
 
   // Palette will be size required to hold count of shades of gray
   palette_entries = 0x1 << bpp;
-  GColor8 *palette = (GColor8*)applib_malloc(palette_entries * sizeof(GColor8));
+  GColor8 *palette = (GColor8 *)applib_malloc(palette_entries * sizeof(GColor8));
   if (!palette) {
     return 0;
   }
   memset(palette, 0, palette_entries * sizeof(GColor8));
 
-  for (uint16_t i = 0; i < palette_entries; i ++) {
+  for (uint16_t i = 0; i < palette_entries; i++) {
     // If the color value matches transparent_gray, color is transparent
     if (transparent_gray >= 0 && i == transparent_gray) {
       palette[i] = GColorClear;
     } else {
       // Only have 2 bits per channel, but attempt to make grayscale 4-bit work
-        // which occurs with black, white, gray1, gray2 and a transparent color
-        uint8_t luminance = 0;
-        if (bpp > 2) {
-          luminance = (i >> (bpp - 2));
-        } else if (bpp == 2) {
-          // For bitdepth 2, use bits directly
-          luminance = i;
-        } else if (bpp == 1) {
-          // For bitdepth 1, need max and minimal values
-          luminance = i ? 0x3 : 0x0;
-        }
-        palette[i] = (GColor8){.a = 0x3, .r = luminance, .g = luminance, .b = luminance};
+      // which occurs with black, white, gray1, gray2 and a transparent color
+      uint8_t luminance = 0;
+      if (bpp > 2) {
+        luminance = (i >> (bpp - 2));
+      } else if (bpp == 2) {
+        // For bitdepth 2, use bits directly
+        luminance = i;
+      } else if (bpp == 1) {
+        // For bitdepth 1, need max and minimal values
+        luminance = i ? 0x3 : 0x0;
       }
+      palette[i] = (GColor8){.a = 0x3, .r = luminance, .g = luminance, .b = luminance};
     }
+  }
 
   // Return the converted palette and number of entries
   *palette_out = palette;
@@ -224,7 +227,7 @@ static uint16_t prv_gbitmap_png_create_palette_for_color(upng_t *upng, GColor8 *
   // To make palette entries consistent with PBI, pad to the bitdepth number of colors
   uint32_t padded_palette_size = (1 << upng_get_bpp(upng));
 
-  GColor8 *palette = (GColor8*)applib_malloc(padded_palette_size * sizeof(GColor8));
+  GColor8 *palette = (GColor8 *)applib_malloc(padded_palette_size * sizeof(GColor8));
   if (palette == NULL) {
     return 0;
   }
@@ -233,8 +236,8 @@ static uint16_t prv_gbitmap_png_create_palette_for_color(upng_t *upng, GColor8 *
   // Convert rgb + alpha palette to GColor8 palette
   for (int i = 0; i < palette_entries; i++) {
     (palette)[i] = GColorFromRGBA(
-        rgb_palette[i].r, rgb_palette[i].g, rgb_palette[i].b,  // RGB
-        (i < alpha_palette_entries) ? alpha_palette[i] : UINT8_MAX); // Conditional A value
+        rgb_palette[i].r, rgb_palette[i].g, rgb_palette[i].b,         // RGB
+        (i < alpha_palette_entries) ? alpha_palette[i] : UINT8_MAX);  // Conditional A value
   }
 
   // Return the converted palette and number of entries
@@ -266,14 +269,13 @@ bool gbitmap_png_is_format_supported(upng_t *upng) {
   return false;
 }
 
-
 int32_t gbitmap_png_get_transparent_gray_value(upng_t *upng) {
   int32_t transparent_gray = -1;  // default to invalid value
   // Handle grayscale transparency value (1 single transparent gray)
   uint8_t *alpha_palette = NULL;
   uint16_t alpha_palette_entries = upng_get_alpha_palette(upng, &alpha_palette);
   if (alpha_palette_entries == 2) {
-    transparent_gray = ntohs(*(uint16_t*)alpha_palette);
+    transparent_gray = ntohs(*(uint16_t *)alpha_palette);
   }
   return transparent_gray;
 }

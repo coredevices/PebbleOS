@@ -19,8 +19,8 @@ static const uint16_t GET_BYTES_ENDPOINT_ID = 9000;
 
 // A protocol request/response header
 typedef struct PACKED {
-  uint8_t  cmd_id;               // A value from GetBytesCmd
-  uint8_t  transaction_id;
+  uint8_t cmd_id;  // A value from GetBytesCmd
+  uint8_t transaction_id;
 } GetBytesHeader;
 
 // The GET_BYTES_CMD_GET_COREDUMP request consists of only a GetBytesHeader
@@ -28,8 +28,8 @@ typedef struct PACKED {
 // The GET_BYTES_CMD_GET_FILE request consists of a GetBytesFileHeader
 typedef struct PACKED {
   GetBytesHeader hdr;
-  uint8_t  filename_len;
-  char     filename[];
+  uint8_t filename_len;
+  char filename[];
 } GetBytesFileHeader;
 
 typedef struct PACKED {
@@ -59,14 +59,14 @@ typedef enum {
 // The GET_BYTES_CMD_OBJECT_INFO response has this format
 typedef struct PACKED {
   GetBytesHeader hdr;
-  uint8_t   error_code;  // 0 = no error and multiple GET_BYTES_CMD_OBJECT_DATA response will follow
-  uint32_t  num_bytes;   // total size of core dump image (will be 0 if error_code != 0).
+  uint8_t error_code;  // 0 = no error and multiple GET_BYTES_CMD_OBJECT_DATA response will follow
+  uint32_t num_bytes;  // total size of core dump image (will be 0 if error_code != 0).
 } GetBytesRspObjectInfo;
 
 // The GET_BYTES_CMD_OBJECT_DATA response has this format
 typedef struct PACKED {
   GetBytesHeader hdr;
-  uint32_t  byte_offset;         // starting byte offset of this data chunk
+  uint32_t byte_offset;  // starting byte offset of this data chunk
   uint8_t data[];
 } GetBytesRspObjectData;
 

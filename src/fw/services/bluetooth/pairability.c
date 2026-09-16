@@ -23,7 +23,7 @@ static int s_allow_ble_pairing_refcount = 0;
 static bool s_last_ble_discoverable_state = false;
 
 static RegularTimerInfo s_pairability_timer_info = {
-  .cb = prv_pairability_timer_cb,
+    .cb = prv_pairability_timer_cb,
 };
 
 static void evaluate_pairing_refcount(void *data) {

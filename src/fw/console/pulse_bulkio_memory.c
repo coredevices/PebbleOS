@@ -14,14 +14,12 @@ typedef struct PACKED MemoryEraseOptions {
   uint32_t length;
 } MemoryEraseOptions;
 
-static int memory_domain_read(uint8_t *buf, uint32_t address, uint32_t length,
-                                    void *context) {
+static int memory_domain_read(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
   memcpy(buf, (void *)address, length);
   return length;
 }
 
-static int memory_domain_write(uint8_t *buf, uint32_t address, uint32_t length,
-                                    void *context) {
+static int memory_domain_write(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
   memcpy(buf, (void *)address, length);
   return length;
 }
@@ -35,7 +33,7 @@ static status_t memory_domain_erase(uint8_t *packet_data, size_t length, uint8_t
     return E_INVALID_ARGUMENT;
   }
 
-  MemoryEraseOptions *options = (MemoryEraseOptions*)packet_data;
+  MemoryEraseOptions *options = (MemoryEraseOptions *)packet_data;
 
   memset((void *)options->address, 0x0, length);
   return S_SUCCESS;
@@ -50,11 +48,11 @@ static status_t memory_domain_close(void *context) {
 }
 
 PulseBulkIODomainHandler pulse_bulkio_domain_memory = {
-  .id = PulseBulkIODomainType_Memory,
-  .open_proc = memory_domain_open,
-  .close_proc = memory_domain_close,
-  .read_proc = memory_domain_read,
-  .write_proc = memory_domain_write,
-  .stat_proc = memory_domain_stat,
-  .erase_proc = memory_domain_erase
+    .id = PulseBulkIODomainType_Memory,
+    .open_proc = memory_domain_open,
+    .close_proc = memory_domain_close,
+    .read_proc = memory_domain_read,
+    .write_proc = memory_domain_write,
+    .stat_proc = memory_domain_stat,
+    .erase_proc = memory_domain_erase
 };

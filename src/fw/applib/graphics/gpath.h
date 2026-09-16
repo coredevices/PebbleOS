@@ -79,17 +79,17 @@ void gpath_init(GPath *path, const GPathInfo *init);
 //! * `offset`: (0, 0)
 //! @return A pointer to the GPath. `NULL` if the GPath could not
 //! be created
-GPath* gpath_create(const GPathInfo *init);
+GPath *gpath_create(const GPathInfo *init);
 
 //! Free a dynamically allocated gpath created with \ref gpath_create()
-void gpath_destroy(GPath* gpath);
+void gpath_destroy(GPath *gpath);
 
 //! Draws the fill of a path into a graphics context, using the current fill color,
 //! relative to the drawing area as set up by the layering system.
 //! @param ctx The graphics context to draw into
 //! @param path The path to fill
 //! @see \ref graphics_context_set_fill_color()
-void gpath_draw_filled(GContext* ctx, GPath *path);
+void gpath_draw_filled(GContext *ctx, GPath *path);
 
 //! Draws the outline of a path into a graphics context, using the current stroke color and
 //! width, relative to the drawing area as set up by the layering system. The first and last points
@@ -98,7 +98,7 @@ void gpath_draw_filled(GContext* ctx, GPath *path);
 //! @param path The path to draw
 //! @see \ref graphics_context_set_stroke_color()
 //! @see \ref gpath_draw_outline_open()
-void gpath_draw_outline(GContext* ctx, GPath *path);
+void gpath_draw_outline(GContext *ctx, GPath *path);
 
 //! Draws an open outline of a path into a graphics context, using the current stroke color and
 //! width, relative to the drawing area as set up by the layering system. The first and last points
@@ -107,7 +107,7 @@ void gpath_draw_outline(GContext* ctx, GPath *path);
 //! @param path The path to draw
 //! @see \ref graphics_context_set_stroke_color()
 //! @see \ref gpath_draw_outline()
-void gpath_draw_outline_open(GContext* ctx, GPath* path);
+void gpath_draw_outline_open(GContext *ctx, GPath *path);
 
 //! @internal
 //! Draws a stroke following a path into a graphics context, using the current stroke color and
@@ -116,7 +116,7 @@ void gpath_draw_outline_open(GContext* ctx, GPath* path);
 //! @param path The path to draw
 //! @param open true if path must be left open (not closed between first and last points)
 //! @see \ref graphics_context_set_stroke_color()
-void gpath_draw_stroke(GContext* ctx, GPath *path, bool open);
+void gpath_draw_stroke(GContext *ctx, GPath *path, bool open);
 
 //! Sets the absolute rotation of the path.
 //! The current rotation will be replaced by the specified angle.
@@ -169,9 +169,9 @@ GRect gpath_outer_rect(GPath *path);
 //! @param delta_begin Delta of the line crossing x_range_begin - negative if no AA
 //! @param delta_end Delta of the line crossing x_range_end - negative if no AA
 //! @param user_data User data for extra data the callback may require
-typedef void (*GPathDrawFilledCallback)(
-    GContext *ctx, int16_t y, Fixed_S16_3 x_range_begin, Fixed_S16_3 x_range_end,
-    Fixed_S16_3 delta_begin, Fixed_S16_3 delta_end, void *user_data);
+typedef void (*GPathDrawFilledCallback)(GContext *ctx, int16_t y, Fixed_S16_3 x_range_begin,
+                                        Fixed_S16_3 x_range_end, Fixed_S16_3 delta_begin,
+                                        Fixed_S16_3 delta_end, void *user_data);
 
 //! @internal
 //! Allows for customized drawing of a GContext's drawing_box with a GPath defining "inside" and

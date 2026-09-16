@@ -40,10 +40,10 @@ void phone_format_caller_name(const char *full_name, char *destination, size_t l
 
     destination[pos++] = ' ';
     size_t initial_size = utf8_copy_character((utf8_t *)&destination[pos], (utf8_t *)space,
-                                              length - pos - 2); // 2 = ".\0"
+                                              length - pos - 2);  // 2 = ".\0"
     // If we couldn't fit anything, stop here.
     if (initial_size == 0) {
-      pos--; // the space we previously added should be omitted from our string.
+      pos--;  // the space we previously added should be omitted from our string.
       break;
     }
     pos += initial_size;
@@ -82,8 +82,8 @@ void phone_format_phone_number(const char *phone_number, char *formatted_phone_n
           (phone_number[region_length - 1] == ' ')) {
         region_length--;
       }
-      snprintf(formatted_phone_number, length, "%.*s\n%.*s",
-               region_length, phone_number, local_number_length, local_number);
+      snprintf(formatted_phone_number, length, "%.*s\n%.*s", region_length, phone_number,
+               local_number_length, local_number);
       return;
     }
   }

@@ -45,7 +45,6 @@ typedef struct {
   bool show_dot;
 } PeekLayer;
 
-
 //! Create a peek layer with a frame.
 PeekLayer *peek_layer_create(GRect frame);
 

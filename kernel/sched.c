@@ -25,7 +25,9 @@ static uint32_t s_next_number;
 static struct pbl_thread s_idle_thread;
 PBL_THREAD_STACK_DEFINE(s_idle_stack, CONFIG_KERNEL_IDLE_STACK_SIZE);
 
-static inline bool prv_before(pbl_tick_t a, pbl_tick_t b) { return (int32_t)(a - b) < 0; }
+static inline bool prv_before(pbl_tick_t a, pbl_tick_t b) {
+  return (int32_t)(a - b) < 0;
+}
 
 // ---- ready lists ------------------------------------------------------------
 
@@ -344,7 +346,9 @@ void sched_idle_slept(pbl_tick_t elapsed) {
   sched_request_switch();
 }
 
-struct pbl_thread *sched_idle_thread(void) { return &s_idle_thread; }
+struct pbl_thread *sched_idle_thread(void) {
+  return &s_idle_thread;
+}
 
 static void prv_idle_entry(void *arg) {
   (void)arg;
@@ -366,12 +370,12 @@ void sched_start_prepare(void) {
   arch_init();
 
   struct pbl_thread_attr attr = {
-    .name = "IDLE",
-    .entry = prv_idle_entry,
-    .prio = PBL_PRIO_IDLE,
-    .privileged = true,
-    .stack = s_idle_stack,
-    .stack_size = sizeof(s_idle_stack),
+      .name = "IDLE",
+      .entry = prv_idle_entry,
+      .prio = PBL_PRIO_IDLE,
+      .privileged = true,
+      .stack = s_idle_stack,
+      .stack_size = sizeof(s_idle_stack),
   };
   int rc = pbl_thread_create(&s_idle_thread, &attr);
   KERNEL_ASSERT(rc == 0);
@@ -388,9 +392,13 @@ void pbl_kernel_start(void) {
   arch_start();
 }
 
-bool pbl_kernel_is_started(void) { return s_started; }
+bool pbl_kernel_is_started(void) {
+  return s_started;
+}
 
-bool pbl_kernel_is_running(void) { return s_started && s_sched_lock == 0; }
+bool pbl_kernel_is_running(void) {
+  return s_started && s_sched_lock == 0;
+}
 
 void pbl_sched_lock(void) {
   pbl_irq_lock();
@@ -408,9 +416,13 @@ void pbl_sched_unlock(void) {
   pbl_irq_unlock();
 }
 
-bool pbl_sched_is_locked(void) { return s_sched_lock > 0; }
+bool pbl_sched_is_locked(void) {
+  return s_sched_lock > 0;
+}
 
-pbl_tick_t pbl_uptime_ticks(void) { return s_ticks; }
+pbl_tick_t pbl_uptime_ticks(void) {
+  return s_ticks;
+}
 
 void pbl_thread_yield(void) {
   pbl_irq_lock();
@@ -430,7 +442,9 @@ void pbl_thread_sleep(pbl_timeout_t timeout) {
 
 // ---- idle interface ---------------------------------------------------------
 
-bool pbl_idle_confirm(void) { return sched_idle_confirm(); }
+bool pbl_idle_confirm(void) {
+  return sched_idle_confirm();
+}
 
 void pbl_idle_slept(pbl_tick_t elapsed) {
   pbl_irq_lock();

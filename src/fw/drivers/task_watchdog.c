@@ -31,10 +31,11 @@
 
 #define APP_THROTTLE_TIME_MS 300
 
-// These bits get set by calls to task_watchdog_bit_set and checked and cleared periodically by our watchdog feed
+// These bits get set by calls to task_watchdog_bit_set and checked and cleared periodically by our
+// watchdog feed
 static PebbleTaskBitset s_watchdog_bits = 0;
 
-#define DEFAULT_TASK_WATCHDOG_MASK ( 1 << PebbleTask_NewTimers )
+#define DEFAULT_TASK_WATCHDOG_MASK (1 << PebbleTask_NewTimers)
 static PebbleTaskBitset s_watchdog_mask = DEFAULT_TASK_WATCHDOG_MASK;
 
 _Static_assert(sizeof(s_watchdog_bits) == sizeof(s_watchdog_mask),
@@ -45,7 +46,7 @@ _Static_assert(sizeof(s_watchdog_bits) == sizeof(s_watchdog_mask),
 static TimerID s_throttle_timer_id = TIMER_INVALID_ID;
 
 // How often we want the interrupt to fire
-#define TIMER_INTERRUPT_HZ  (1000 / TASK_WATCHDOG_FEED_PERIOD_MS)
+#define TIMER_INTERRUPT_HZ (1000 / TASK_WATCHDOG_FEED_PERIOD_MS)
 
 // How many ticks have elapsed since we fed the HW watchdog
 static uint8_t s_ticks_since_successful_feed = 0;
@@ -55,23 +56,23 @@ static uint32_t s_pause_ticks_remaining = 0;
 
 // We use this interrupt vector for our lower priority interrupts
 #ifdef CONFIG_SOC_NRF52
-#define WATCHDOG_FREERTOS_IRQn        QDEC_IRQn
-#define WATCHDOG_FREERTOS_IRQHandler  QDEC_IRQHandler
+#define WATCHDOG_FREERTOS_IRQn QDEC_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler QDEC_IRQHandler
 #elif defined(CONFIG_SOC_SF32LB52)
-#define WATCHDOG_FREERTOS_IRQn        USART5_IRQn
-#define WATCHDOG_FREERTOS_IRQHandler  USART5_IRQHandler
+#define WATCHDOG_FREERTOS_IRQn USART5_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler USART5_IRQHandler
 #elif defined(CONFIG_QEMU)
-#define WATCHDOG_FREERTOS_IRQn        WATCHDOG_IRQn
-#define WATCHDOG_FREERTOS_IRQHandler  WATCHDOG_IRQHandler
+#define WATCHDOG_FREERTOS_IRQn WATCHDOG_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler WATCHDOG_IRQHandler
 #else
-#define WATCHDOG_FREERTOS_IRQn        CAN2_SCE_IRQn
-#define WATCHDOG_FREERTOS_IRQHandler  CAN2_SCE_IRQHandler
+#define WATCHDOG_FREERTOS_IRQn CAN2_SCE_IRQn
+#define WATCHDOG_FREERTOS_IRQHandler CAN2_SCE_IRQHandler
 #endif
 
 static void prv_task_watchdog_feed(void);
 
 static void prv_log_stuck_timer_task(RebootReason *reboot_reason) {
-  void* current_cb = new_timer_debug_get_current_callback();
+  void *current_cb = new_timer_debug_get_current_callback();
 
   if (!current_cb) {
     PBL_LOG_SYNC_WRN("No timer in progress.");
@@ -95,7 +96,7 @@ static void prv_log_stuck_system_task(RebootReason *reboot_reason) {
 }
 
 static void prv_log_stuck_task(RebootReason *reboot_reason, PebbleTask task) {
-  struct pbl_thread_saved_regs regs = { 0 };
+  struct pbl_thread_saved_regs regs = {0};
   struct pbl_thread *thread = pebble_task_get_thread(task);
   if (thread) {
     pbl_thread_saved_regs(thread, &regs);
@@ -103,7 +104,8 @@ static void prv_log_stuck_task(RebootReason *reboot_reason, PebbleTask task) {
   void *current_lr = (void *)regs.lr;
   void *current_pc = (void *)regs.pc;
 
-  PBL_LOG_SYNC_WRN("Task <%s> stuck: LR: %p PC: %p", pebble_task_get_name(task), current_lr, current_pc);
+  PBL_LOG_SYNC_WRN("Task <%s> stuck: LR: %p PC: %p", pebble_task_get_name(task), current_lr,
+                   current_pc);
   reboot_reason->watchdog.stuck_task_pc = (uint32_t)current_pc;
   reboot_reason->watchdog.stuck_task_lr = (uint32_t)current_lr;
 }
@@ -113,10 +115,7 @@ static void prv_log_stuck_task(RebootReason *reboot_reason, PebbleTask task) {
 // so it's safe from above PBL_IRQ_PRIO_MAX_SYSCALL.
 static void prv_capture_stuck_task_info(RebootReason *reboot_reason) {
   const PebbleTask tasks_in_reverse_priority[] = {
-    PebbleTask_KernelBackground,
-    PebbleTask_KernelMain,
-    PebbleTask_PULSE,
-    PebbleTask_NewTimers
+      PebbleTask_KernelBackground, PebbleTask_KernelMain, PebbleTask_PULSE, PebbleTask_NewTimers
   };
 
   for (unsigned int i = 0; i < ARRAY_LENGTH(tasks_in_reverse_priority); ++i) {
@@ -136,20 +135,19 @@ static void prv_capture_stuck_task_info(RebootReason *reboot_reason) {
 #endif
 
 static void prv_log_failed_message(RebootReason *reboot_reason) {
-  PBL_LOG_SYNC_WRN("Watchdog feed failed, last feed %dms ago, current status 0x%"PRIx16" mask 0x%"PRIx16,
-      (s_ticks_since_successful_feed * 1000) / TIMER_INTERRUPT_HZ,
-      s_watchdog_bits, s_watchdog_mask);
+  PBL_LOG_SYNC_WRN("Watchdog feed failed, last feed %dms ago, current status 0x%" PRIx16
+                   " mask 0x%" PRIx16,
+                   (s_ticks_since_successful_feed * 1000) / TIMER_INTERRUPT_HZ, s_watchdog_bits,
+                   s_watchdog_mask);
 
-  // Log about the tasks in reverse priority order. If we have multiple tasks stuck, this might just be because the
-  // highest priority of the stuck tasks is preventing the other tasks from getting scheduled. This way, the most
-  // suspicious task will get logged about last and will have it's values stored in the RTC backup registers.
-  // We'll have to remember to update this list whenever we add additional tasks to the mask. For now this is all
-  // the ones that the task_watchdog service watches over.
+  // Log about the tasks in reverse priority order. If we have multiple tasks stuck, this might just
+  // be because the highest priority of the stuck tasks is preventing the other tasks from getting
+  // scheduled. This way, the most suspicious task will get logged about last and will have it's
+  // values stored in the RTC backup registers. We'll have to remember to update this list whenever
+  // we add additional tasks to the mask. For now this is all the ones that the task_watchdog
+  // service watches over.
   const PebbleTask tasks_in_reverse_priority[] = {
-    PebbleTask_KernelBackground,
-    PebbleTask_KernelMain,
-    PebbleTask_PULSE,
-    PebbleTask_NewTimers
+      PebbleTask_KernelBackground, PebbleTask_KernelMain, PebbleTask_PULSE, PebbleTask_NewTimers
   };
 
   for (unsigned int i = 0; i < ARRAY_LENGTH(tasks_in_reverse_priority); ++i) {
@@ -212,16 +210,15 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
   reboot_reason_get(&reason);
   if (reason.code == RebootReasonCode_Watchdog) {
     // Check if system task is the one triggering the watchdog
-    PebbleTaskBitset new_mask =
-        s_watchdog_mask & ~(1 << PebbleTask_KernelBackground);
+    PebbleTaskBitset new_mask = s_watchdog_mask & ~(1 << PebbleTask_KernelBackground);
     if ((new_mask & s_watchdog_bits) == new_mask) {
       // Put system task callback using from ISR variant
       PebbleEvent event = {
-        .type = PEBBLE_CALLBACK_EVENT,
-        .callback = {
-          .callback = prv_system_task_starved_callback,
-          .data = NULL,
-        },
+          .type = PEBBLE_CALLBACK_EVENT,
+          .callback = {
+              .callback = prv_system_task_starved_callback,
+              .data = NULL,
+          },
       };
       event_put_isr(&event);
     }
@@ -248,12 +245,13 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
 // Public functions
 
 // -------------------------------------------------------------------------------------------------
-// Setup a very high priority interrupt to fire periodically. This ISR will call task_watchdog_feed()
-// which resets the watchdog timer if it detects that none of our watchable tasks are stuck.
+// Setup a very high priority interrupt to fire periodically. This ISR will call
+// task_watchdog_feed() which resets the watchdog timer if it detects that none of our watchable
+// tasks are stuck.
 void task_watchdog_init(void) {
-  // Setup another unused interrupt vector to handle our low priority interrupts. When we need to do higher
-  // level functions (like PBL_LOG), we trigger this lower-priority interrupt to fire. Since it runs at
-  // PBL_IRQ_PRIO_MAX_SYSCALL or lower, it can at least call FreeRTOS ISR functions.
+  // Setup another unused interrupt vector to handle our low priority interrupts. When we need to do
+  // higher level functions (like PBL_LOG), we trigger this lower-priority interrupt to fire. Since
+  // it runs at PBL_IRQ_PRIO_MAX_SYSCALL or lower, it can at least call FreeRTOS ISR functions.
   NVIC_SetPriority(WATCHDOG_FREERTOS_IRQn, PBL_IRQ_PRIO_MAX_SYSCALL);
   NVIC_EnableIRQ(WATCHDOG_FREERTOS_IRQn);
 
@@ -321,21 +319,22 @@ void task_watchdog_step_elapsed_time_ms(uint32_t elapsed_ms) {
   prv_task_watchdog_feed();
 }
 
-#define WATCHDOG_WARN_TICK_CNT      (5 * TIMER_INTERRUPT_HZ)         /* 5s */
-#define WATCHDOG_COREDUMP_TICK_CNT  ((65 * TIMER_INTERRUPT_HZ) / 10) /* 6.5 s */
+#define WATCHDOG_WARN_TICK_CNT (5 * TIMER_INTERRUPT_HZ)             /* 5s */
+#define WATCHDOG_COREDUMP_TICK_CNT ((65 * TIMER_INTERRUPT_HZ) / 10) /* 6.5 s */
 
 //! Test to see if all the bits are set. If so, feed the hardware watchdog.
 //! Note: Should only ever be called upon exit from stop mode and from our
 //! high priority software watchdog timer. To actually prevent a particular
 //! task from triggering a watchdog you can call task_watchdog_bit_set to feed it
 static void prv_task_watchdog_feed(void) {
-  // NOTE! This function runs from a timer interrupt setup by the watchdog_feed_timer driver that is at a priority
-  // higher than PBL_IRQ_PRIO_MAX_SYSCALL. This means you can't call ANY FreeRTOS functions.
-  // Careful what you put here.
+  // NOTE! This function runs from a timer interrupt setup by the watchdog_feed_timer driver that is
+  // at a priority higher than PBL_IRQ_PRIO_MAX_SYSCALL. This means you can't call ANY FreeRTOS
+  // functions. Careful what you put here.
 
-  // We do want to log watchdog actions, since it's really important for debugging watchdog stalls either on
-  // bigboards through serial or using flash logging. To accomplish this trigger a lower priority interrupt to fire,
-  // which is at or below PBL_IRQ_PRIO_MAX_SYSCALL and make our logging calls from there.
+  // We do want to log watchdog actions, since it's really important for debugging watchdog stalls
+  // either on bigboards through serial or using flash logging. To accomplish this trigger a lower
+  // priority interrupt to fire, which is at or below PBL_IRQ_PRIO_MAX_SYSCALL and make our logging
+  // calls from there.
 
   // Handle pause state
   if (s_pause_ticks_remaining > 0) {
@@ -345,7 +344,7 @@ static void prv_task_watchdog_feed(void) {
     return;
   }
 
-  static int s_last_warning_message_tick_time = 0; //!< Used to rate limit the warning message
+  static int s_last_warning_message_tick_time = 0;  //!< Used to rate limit the warning message
   if ((s_watchdog_bits & s_watchdog_mask) == s_watchdog_mask) {
     // All tasks have checked in, feed the actual watchdog and clear any state.
 
@@ -357,7 +356,8 @@ static void prv_task_watchdog_feed(void) {
       // We logged a warning message, clear this state as we apparently recovered.
 
       reboot_reason_clear();
-      // Trigger our lower priority interrupt to fire. If it fires when reboot reason is not RebootReasonCode_Watchdog,
+      // Trigger our lower priority interrupt to fire. If it fires when reboot reason is not
+      // RebootReasonCode_Watchdog,
       //  it simply logs a message that the we recovered from a watchdog stall
       NVIC_SetPendingIRQ(WATCHDOG_FREERTOS_IRQn);
 
@@ -371,12 +371,11 @@ static void prv_task_watchdog_feed(void) {
 
   if (s_ticks_since_successful_feed >= WATCHDOG_WARN_TICK_CNT &&
       ((s_ticks_since_successful_feed - s_last_warning_message_tick_time) > 0)) {
-
     // FIXME PBL-39328: Truncate s_watchdog_bits and s_watchdog mask
     // to eight bits each.
     RebootReason reboot_reason = {
-      .code = RebootReasonCode_Watchdog,
-      .data8 = { (uint8_t)s_watchdog_bits, (uint8_t)s_watchdog_mask }
+        .code = RebootReasonCode_Watchdog,
+        .data8 = {(uint8_t)s_watchdog_bits, (uint8_t)s_watchdog_mask}
     };
     reboot_reason_set(&reboot_reason);
 

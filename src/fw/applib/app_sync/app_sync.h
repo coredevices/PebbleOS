@@ -98,10 +98,9 @@ typedef void (*AppSyncErrorCallback)(DictionaryResult dict_error,
 //! accepted by AppSync, updates for other keys that might come in will just be
 //! ignored.
 void app_sync_init(struct AppSync *s, uint8_t *buffer, const uint16_t buffer_size,
-                   const Tuplet * const keys_and_initial_values, const uint8_t count,
+                   const Tuplet *const keys_and_initial_values, const uint8_t count,
                    AppSyncTupleChangedCallback tuple_changed_callback,
                    AppSyncErrorCallback error_callback, void *context);
-
 
 //! Cleans up an AppSync system.
 //! It frees the buffer allocated by an \ref app_sync_init() call and
@@ -122,7 +121,7 @@ void app_sync_deinit(struct AppSync *s);
 //! @param count The number of Tuplets in the `keys_and_values_to_update` array.
 //! @return The result code from the \ref AppMessage subsystem.
 //! Can be \ref APP_MSG_OK, \ref APP_MSG_BUSY or \ref APP_MSG_INVALID_ARGS
-AppMessageResult app_sync_set(struct AppSync *s, const Tuplet * const keys_and_values_to_update,
+AppMessageResult app_sync_set(struct AppSync *s, const Tuplet *const keys_and_values_to_update,
                               const uint8_t count);
 
 //! Finds and gets a tuple in the "current" dictionary.
@@ -130,8 +129,7 @@ AppMessageResult app_sync_set(struct AppSync *s, const Tuplet * const keys_and_v
 //! @param key The key for which to find a Tuple
 //! @return Pointer to a found Tuple, or NULL if there was no Tuple with the
 //! specified key.
-const Tuple * app_sync_get(const struct AppSync *s, const uint32_t key);
-
+const Tuple *app_sync_get(const struct AppSync *s, const uint32_t key);
 
 //!   @} // end addtogroup AppSync
 //! @} // end addtogroup Foundation

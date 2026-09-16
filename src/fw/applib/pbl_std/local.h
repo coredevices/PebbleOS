@@ -3,8 +3,8 @@
 
 #include <time.h>
 
-#define EPOCH_YEAR      1970
-#define EPOCH_WDAY      4
+#define EPOCH_YEAR 1970
+#define EPOCH_WDAY 4
 #define EPOCH_YEARS_SINCE_LEAP 2
 #define EPOCH_YEARS_SINCE_CENTURY 70
 #define EPOCH_YEARS_SINCE_LEAP_CENTURY 370

@@ -10,12 +10,12 @@
 MetricGroup *metric_group_create(int max_num_items, size_t max_item_string_size) {
   const size_t max_list_size = StringListSize(max_num_items, max_item_string_size);
   MetricGroup *metric = task_zalloc_check(sizeof(MetricGroup));
-  *metric = (MetricGroup) {
-    .names = task_zalloc_check(max_list_size),
-    .values = task_zalloc_check(max_list_size),
-    .icons = task_zalloc_check(Uint32ListSize(max_num_items)),
-    .max_num_items = max_num_items,
-    .max_item_string_size = max_item_string_size,
+  *metric = (MetricGroup){
+      .names = task_zalloc_check(max_list_size),
+      .values = task_zalloc_check(max_list_size),
+      .icons = task_zalloc_check(Uint32ListSize(max_num_items)),
+      .max_num_items = max_num_items,
+      .max_item_string_size = max_item_string_size,
   };
   return metric;
 }
@@ -35,8 +35,8 @@ bool metric_group_add_item(MetricGroup *metric_group, const char *name_i18n, con
   if (metric_group->num_items >= metric_group->max_num_items) {
     return false;
   }
-  const size_t max_list_size = StringListSize(metric_group->max_num_items,
-                                              metric_group->max_item_string_size);
+  const size_t max_list_size =
+      StringListSize(metric_group->max_num_items, metric_group->max_item_string_size);
   string_list_add_string(metric_group->names, max_list_size, i18n_get(name_i18n, i18n_owner),
                          metric_group->max_item_string_size);
   string_list_add_string(metric_group->values, max_list_size, value,

@@ -25,7 +25,7 @@ void hexdump_using_pbllog(int level, const char *src_filename, int src_line_numb
   pbl_log_sync(level, src_filename, src_line_number, "%s", line_buffer);
 }
 
-void hexdump_log_src(const char *src_filename, int src_line_number, int level,
-                     const uint8_t *data, size_t length, HexdumpLineCallback cb) {
+void hexdump_log_src(const char *src_filename, int src_line_number, int level, const uint8_t *data,
+                     size_t length, HexdumpLineCallback cb) {
   hexdump(src_filename, src_line_number, level, data, length, cb);
 }

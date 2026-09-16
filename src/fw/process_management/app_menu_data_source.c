@@ -16,15 +16,15 @@
 
 static void add_app_with_install_id(const AppInstallEntry *entry, AppMenuDataSource *source);
 static bool remove_app_with_install_id(const AppInstallId install_id, AppMenuDataSource *source);
-static AppMenuNode * prv_find_node_with_install_id(const AppInstallId install_id,
-                                               const AppMenuDataSource * const source);
+static AppMenuNode *prv_find_node_with_install_id(const AppInstallId install_id,
+                                                  const AppMenuDataSource *const source);
 static void prv_unload_node(const AppMenuDataSource *source, AppMenuNode *node);
 
 ////////////////////////////////
 // List helper functions
 ////////////////////////////////
 
-static bool prv_is_app_filtered_out(AppInstallEntry *entry, AppMenuDataSource * const source) {
+static bool prv_is_app_filtered_out(AppInstallEntry *entry, AppMenuDataSource *const source) {
   return (source->callbacks.filter && (source->callbacks.filter(source, entry) == false));
 }
 
@@ -40,12 +40,12 @@ static const struct {
   AppInstallId install_id;
   bool move_on_activity;
 } s_override_table[] = {
-  { APP_ID_SPORTS, false },
-  { APP_ID_GOLF, false },
+    {APP_ID_SPORTS, false},
+    {APP_ID_GOLF, false},
 #ifdef APP_ID_WORKOUT
-  { APP_ID_WORKOUT, true },
+    {APP_ID_WORKOUT, true},
 #endif
-  { APP_ID_MUSIC, true },
+    {APP_ID_MUSIC, true},
 };
 
 // Returns 0 if not in table. Otherwise, returns the rank in `s_override_table`. Rank is
@@ -55,8 +55,8 @@ static int prv_override_index(AppInstallId app_id) {
   for (uint32_t i = 0; i < num_overrides; i++) {
     AppInstallId cur_id = s_override_table[i].install_id;
     if (cur_id == app_id) {
-      const bool should_move = (!s_override_table[i].move_on_activity ||
-                                app_install_is_prioritized(cur_id));
+      const bool should_move =
+          (!s_override_table[i].move_on_activity || app_install_is_prioritized(cur_id));
       return (should_move) ? (num_overrides - i + 1) : 0;
     }
   }
@@ -68,8 +68,8 @@ static int prv_app_override_comparator(AppInstallId app_id, AppInstallId new_id)
 }
 
 static int prv_comparator_ascending_zero_last(unsigned int a, unsigned int b) {
-  return ((a != 0) && (b != 0)) ? (b - a) : // Sort in ascending order
-                                  (a - b);  // 0 should be sorted last so invert the sort
+  return ((a != 0) && (b != 0)) ? (b - a) :  // Sort in ascending order
+             (a - b);                        // 0 should be sorted last so invert the sort
 }
 
 T_STATIC int prv_app_node_comparator(void *app_node_ref, void *new_node_ref) {
@@ -78,8 +78,8 @@ T_STATIC int prv_app_node_comparator(void *app_node_ref, void *new_node_ref) {
 
   const bool is_app_quick_launch = (app_node->visibility == ProcessVisibilityQuickLaunch);
   const bool is_new_quick_launch = (new_node->visibility == ProcessVisibilityQuickLaunch);
-  const int override_cmp_rv = prv_app_override_comparator(app_node->install_id,
-                                                          new_node->install_id);
+  const int override_cmp_rv =
+      prv_app_override_comparator(app_node->install_id, new_node->install_id);
   if (is_app_quick_launch != is_new_quick_launch) {
     // Quick Launch only apps are first
     return (is_app_quick_launch ? 1 : 0) - (is_new_quick_launch ? 1 : 0);
@@ -201,13 +201,12 @@ void prv_handle_app_event(void *data) {
 void prv_send_callback_to_app(AppMenuDataSource *data_source, AppInstallId install_id,
                               InstallEventType event_type) {
   InstallData *install_data = kernel_malloc_check(sizeof(InstallData));
-  *install_data = (InstallData) {
-    .id = install_id,
-    .source = data_source,
-    .event_type = event_type,
+  *install_data = (InstallData){
+      .id = install_id,
+      .source = data_source,
+      .event_type = event_type,
   };
-  process_manager_send_callback_event_to_process(PebbleTask_App,
-                                                 prv_handle_app_event,
+  process_manager_send_callback_event_to_process(PebbleTask_App, prv_handle_app_event,
                                                  install_data);
 }
 
@@ -296,10 +295,10 @@ static void prv_app_db_cleared_callback(const AppInstallId install_id, void *dat
 
 static bool prv_app_enumerate_callback(AppInstallEntry *entry, void *data) {
   if (prv_is_app_filtered_out(entry, (AppMenuDataSource *)data)) {
-    return true; // continue
+    return true;  // continue
   }
   add_app_with_install_id(entry, data);
-  return true; // continue
+  return true;  // continue
 }
 
 ////////////////////
@@ -355,7 +354,7 @@ static void prv_load_list_if_needed(AppMenuDataSource *source) {
 
 static void prv_unload_node(const AppMenuDataSource *source, AppMenuNode *node) {
   prv_unload_list_item_icon(source, node);
-  list_remove((ListNode*)node, (ListNode**)&source->list, NULL);
+  list_remove((ListNode *)node, (ListNode **)&source->list, NULL);
   app_free(node->name);
   app_free(node);
 }
@@ -366,15 +365,15 @@ static void add_app_with_install_id(const AppInstallEntry *entry, AppMenuDataSou
   }
 
   AppMenuNode *node = app_malloc_check(sizeof(AppMenuNode));
-  *node = (AppMenuNode) {
-    .install_id = entry->install_id,
-    .app_num = app_install_get_app_icon_bank(entry),
-    .icon_resource_id = app_install_entry_get_icon_resource_id(entry),
-    .uuid = entry->uuid,
-    .color = entry->color,
-    .visibility = entry->visibility,
-    .sdk_version = entry->sdk_version,
-    .record_order = entry->record_order,
+  *node = (AppMenuNode){
+      .install_id = entry->install_id,
+      .app_num = app_install_get_app_icon_bank(entry),
+      .icon_resource_id = app_install_entry_get_icon_resource_id(entry),
+      .uuid = entry->uuid,
+      .color = entry->color,
+      .visibility = entry->visibility,
+      .sdk_version = entry->sdk_version,
+      .record_order = entry->record_order,
   };
 
   uint8_t len;
@@ -390,14 +389,14 @@ static void add_app_with_install_id(const AppInstallEntry *entry, AppMenuDataSou
   prv_sorted_add(source, node);
 }
 
-static AppMenuNode * prv_find_node_with_install_id(const AppInstallId install_id,
-                                               const AppMenuDataSource * const source) {
+static AppMenuNode *prv_find_node_with_install_id(const AppInstallId install_id,
+                                                  const AppMenuDataSource *const source) {
   AppMenuNode *node = source->list;
   while (node != NULL) {
     if (node->install_id == install_id) {
       return node;
     } else {
-      node = (AppMenuNode*)list_get_next((ListNode*)node);
+      node = (AppMenuNode *)list_get_next((ListNode *)node);
     }
   }
   return NULL;
@@ -425,8 +424,8 @@ void app_menu_data_source_init(AppMenuDataSource *source,
                                const AppMenuDataSourceCallbacks *callbacks,
                                void *callback_context) {
   PBL_ASSERTN(source != NULL);
-  *source = (AppMenuDataSource) {
-    .callback_context = callback_context,
+  *source = (AppMenuDataSource){
+      .callback_context = callback_context,
   };
   if (callbacks) {
     source->callbacks = *callbacks;
@@ -434,15 +433,15 @@ void app_menu_data_source_init(AppMenuDataSource *source,
 
   // Register callbacks for app_install_manager updates:
   static const AppInstallCallback s_app_install_callbacks[NUM_INSTALL_EVENT_TYPES] = {
-    [APP_AVAILABLE] = prv_app_added_callback,
-    [APP_REMOVED] = prv_app_removed_callback,
-    [APP_UPGRADED] = prv_app_removed_callback,
-    [APP_ICON_NAME_UPDATED] = prv_app_icon_name_updated_callback,
-    [APP_DB_CLEARED] = prv_app_db_cleared_callback,
+      [APP_AVAILABLE] = prv_app_added_callback,
+      [APP_REMOVED] = prv_app_removed_callback,
+      [APP_UPGRADED] = prv_app_removed_callback,
+      [APP_ICON_NAME_UPDATED] = prv_app_icon_name_updated_callback,
+      [APP_DB_CLEARED] = prv_app_db_cleared_callback,
   };
-  source->app_install_callback_node = (struct AppInstallCallbackNode) {
-    .data = source,
-    .callbacks = s_app_install_callbacks,
+  source->app_install_callback_node = (struct AppInstallCallbackNode){
+      .data = source,
+      .callbacks = s_app_install_callbacks,
   };
   app_install_register_callback(&source->app_install_callback_node);
 }
@@ -452,7 +451,7 @@ void app_menu_data_source_deinit(AppMenuDataSource *source) {
   // Free the AppMenuNodes:
   AppMenuNode *node = source->list;
   while (node != NULL) {
-    AppMenuNode * const next = (AppMenuNode*)list_get_next((ListNode*)node);
+    AppMenuNode *const next = (AppMenuNode *)list_get_next((ListNode *)node);
     prv_unload_node(source, node);
     node = next;
   }
@@ -482,15 +481,15 @@ static uint16_t prv_transform_index(AppMenuDataSource *source, uint16_t index) {
   return index;
 }
 
-AppMenuNode* app_menu_data_source_get_node_at_index(AppMenuDataSource *source, uint16_t row_index) {
+AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source, uint16_t row_index) {
   prv_load_list_if_needed(source);
-  return (AppMenuNode*)list_get_at((ListNode*)source->list,
-                                   prv_transform_index(source, row_index));
+  return (AppMenuNode *)list_get_at((ListNode *)source->list,
+                                    prv_transform_index(source, row_index));
 }
 
 uint16_t app_menu_data_source_get_count(AppMenuDataSource *source) {
   prv_load_list_if_needed(source);
-  return list_count((ListNode*)source->list);
+  return list_count((ListNode *)source->list);
 }
 
 uint16_t app_menu_data_source_get_index_of_app_with_install_id(AppMenuDataSource *source,
@@ -502,7 +501,7 @@ uint16_t app_menu_data_source_get_index_of_app_with_install_id(AppMenuDataSource
     if (node->install_id == install_id) {
       return prv_transform_index(source, index);
     }
-    node = (AppMenuNode*)list_get_next((ListNode*)node);
+    node = (AppMenuNode *)list_get_next((ListNode *)node);
     ++index;
   }
   return MENU_INDEX_NOT_FOUND;

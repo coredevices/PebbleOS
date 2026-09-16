@@ -12,13 +12,14 @@
 typedef struct NotificationWindowData {
   Window window;
 
-  RegularTimerInfo reminder_watchdog_timer_id; // Clear stale reminders once a minute
+  RegularTimerInfo reminder_watchdog_timer_id;  // Clear stale reminders once a minute
 
-  EventedTimerID pop_timer_id; //!< Timer that automatically pops us in case of inactivity.
-  bool pop_timer_is_final; // true, if pop_timer_id cannot be rescheduled anymore
+  EventedTimerID pop_timer_id;  //!< Timer that automatically pops us in case of inactivity.
+  bool pop_timer_is_final;      // true, if pop_timer_id cannot be rescheduled anymore
 
   bool is_modal;
-  bool window_frozen; // Don't pop when performing an action via a hotkey until the action completes
+  bool
+      window_frozen;  // Don't pop when performing an action via a hotkey until the action completes
   bool first_notif_loaded;
 
   // Used to keep track of when a notification is modified from a different (event)
@@ -28,7 +29,7 @@ typedef struct NotificationWindowData {
   // nothing but rendering the action button
   Layer action_button_layer;
 
-  Uuid notification_app_id; //!< app id for loading custom notification icons
+  Uuid notification_app_id;  //!< app id for loading custom notification icons
 
   PeekLayer *peek_layer;
   TimelineResourceInfo peek_icon_info;

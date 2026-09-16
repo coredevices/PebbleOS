@@ -13,10 +13,8 @@ static int32_t angle_start;
 static int32_t angle_end;
 
 static void prv_setup_data(GRect bounds) {
-  center = GPoint(bounds.origin.x + (bounds.size.w / 2),
-                  bounds.origin.y + (bounds.size.h / 2));
-  rect = GRect(center.x - (outer_size / 2), center.y - (outer_size / 2),
-               outer_size, outer_size);
+  center = GPoint(bounds.origin.x + (bounds.size.w / 2), bounds.origin.y + (bounds.size.h / 2));
+  rect = GRect(center.x - (outer_size / 2), center.y - (outer_size / 2), outer_size, outer_size);
   inset = outer_size - inner_size;
   scale_mode = GOvalScaleModeFitCircle;
 }
@@ -125,94 +123,94 @@ static void prv_setup_odd_full(Window *window) {
   prv_setup_data(bounds);
 }
 
-static void prv_test_radial(Layer *layer, GContext* ctx) {
-  GColor color = { .argb = (uint8_t) rand() };
+static void prv_test_radial(Layer *layer, GContext *ctx) {
+  GColor color = {.argb = (uint8_t)rand()};
   graphics_context_set_fill_color(ctx, color);
   graphics_fill_radial(ctx, rect, GOvalScaleModeFillCircle, inset, angle_start, angle_end);
 }
 
-static void prv_test_circle(Layer *layer, GContext* ctx) {
-  GColor color = { .argb = (uint8_t) rand() };
+static void prv_test_circle(Layer *layer, GContext *ctx) {
+  GColor color = {.argb = (uint8_t)rand()};
   graphics_context_set_fill_color(ctx, color);
   graphics_fill_circle(ctx, center, (outer_size / 2));
 }
 
 GfxTest g_gfx_test_annulus_even_fill_angles = {
-  .name = "Annulus Even Angles",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_even_angles_inner,
+    .name = "Annulus Even Angles",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_even_angles_inner,
 };
 
 GfxTest g_gfx_test_annulus_odd_fill_angles = {
-  .name = "Annulus Odd Angles",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_odd_angles_inner,
+    .name = "Annulus Odd Angles",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_odd_angles_inner,
 };
 
 GfxTest g_gfx_test_annulus_even_fill = {
-  .name = "Annulus Even",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_even_inner,
+    .name = "Annulus Even",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_even_inner,
 };
 
 GfxTest g_gfx_test_annulus_odd_fill = {
-  .name = "Annulus Odd",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_odd_inner,
+    .name = "Annulus Odd",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_odd_inner,
 };
 
 GfxTest g_gfx_test_radial_even_fill_angles = {
-  .name = "Radial Even Angles",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_even_angles_full,
+    .name = "Radial Even Angles",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_even_angles_full,
 };
 
 GfxTest g_gfx_test_radial_odd_fill_angles = {
-  .name = "Radial Odd Angles",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_odd_angles_full,
+    .name = "Radial Odd Angles",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_odd_angles_full,
 };
 
 GfxTest g_gfx_test_radial_even_fill = {
-  .name = "Radial Even",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_even_full,
+    .name = "Radial Even",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_even_full,
 };
 
 GfxTest g_gfx_test_radial_odd_fill = {
-  .name = "Radial Odd",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_radial,
-  .setup = prv_setup_odd_full,
+    .name = "Radial Odd",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_radial,
+    .setup = prv_setup_odd_full,
 };
 
 GfxTest g_gfx_test_circle_even = {
-  .name = "Circle Even",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_circle,
-  .setup = prv_setup_even_full,
+    .name = "Circle Even",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_circle,
+    .setup = prv_setup_even_full,
 };
 
 GfxTest g_gfx_test_circle_odd = {
-  .name = "Circle Odd",
-  .duration = 1,
-  .unit_multiple = 1,
-  .test_proc = prv_test_circle,
-  .setup = prv_setup_odd_full,
+    .name = "Circle Odd",
+    .duration = 1,
+    .unit_multiple = 1,
+    .test_proc = prv_test_circle,
+    .setup = prv_setup_odd_full,
 };

@@ -34,9 +34,9 @@
 
 extern void shell_prefs_init(void);
 
-// Force-compact every growable settings DB on first boot after upgrade. 
-// Pre-growable-files devices keep their original full-size settings file allocation forever otherwise, 
-// which on devices with many installed apps shows up as launcher scroll lag.
+// Force-compact every growable settings DB on first boot after upgrade.
+// Pre-growable-files devices keep their original full-size settings file allocation forever
+// otherwise, which on devices with many installed apps shows up as launcher scroll lag.
 static void prv_settings_dbs_compaction_migration_cb(void *data) {
   blob_db_compact_growable_dbs();
   shell_prefs_set_settings_dbs_compacted_v1(true);
@@ -112,8 +112,7 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
       timeline_peek_handle_peek_event(&e->timeline_peek);
       return;
 
-    case PEBBLE_BLOBDB_EVENT:
-    {
+    case PEBBLE_BLOBDB_EVENT: {
       // Calendar should only handle pin_db events
       PebbleBlobDBEvent *blobdb_event = &e->blob_db;
       if (blobdb_event->db_id == BlobDBIdPins) {
@@ -173,7 +172,6 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
       return;
     }
     default:
-      break; // don't care
+      break;  // don't care
   }
 }
-

@@ -44,30 +44,30 @@ int sys_test(int arg);
 time_t sys_get_time(void);
 void sys_get_time_ms(time_t *t, uint16_t *out_ms);
 RtcTicks sys_get_ticks(void);
-struct tm* sys_gmtime_r(const time_t *timep, struct tm *result);
-struct tm* sys_localtime_r(const time_t *timep, struct tm *result);
-void sys_copy_timezone_abbr(char* timezone_abbr, time_t time);
+struct tm *sys_gmtime_r(const time_t *timep, struct tm *result);
+struct tm *sys_localtime_r(const time_t *timep, struct tm *result);
+void sys_copy_timezone_abbr(char *timezone_abbr, time_t time);
 time_t sys_time_start_of_today(void);
 
+void sys_evented_timer_consume(TimerID timer_id, EventedTimerCallback *out_cb, void **out_cb_data);
 
-void sys_evented_timer_consume(TimerID timer_id, EventedTimerCallback* out_cb, void** out_cb_data);
-
-void sys_send_pebble_event_to_kernel(PebbleEvent* event);
+void sys_send_pebble_event_to_kernel(PebbleEvent *event);
 void sys_current_process_schedule_callback(CallbackEventCallback async_cb, void *ctx);
 uint32_t sys_process_events_waiting(PebbleTask task);
-void sys_get_pebble_event(PebbleEvent* event);
+void sys_get_pebble_event(PebbleEvent *event);
 
-void sys_pbl_log(LogBinaryMessage* log_message, bool async);
+void sys_pbl_log(LogBinaryMessage *log_message, bool async);
 
 NORETURN sys_app_fault(uint32_t stashed_lr);
 
 bool sys_resource_is_valid(ResAppNum app_num, uint32_t resource_id);
 size_t sys_resource_size(ResAppNum app_num, uint32_t handle);
-size_t sys_resource_load_range(ResAppNum app_num, uint32_t h, uint32_t start_bytes, uint8_t *buffer, size_t num_bytes);
+size_t sys_resource_load_range(ResAppNum app_num, uint32_t h, uint32_t start_bytes, uint8_t *buffer,
+                               size_t num_bytes);
 
 bool sys_resource_bytes_are_readonly(void *bytes);
-const uint8_t * sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
-                                             size_t *num_bytes_out);
+const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
+                                            size_t *num_bytes_out);
 
 uint32_t sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id);
 
@@ -88,13 +88,12 @@ int32_t sys_vibe_get_vibe_strength(void);
 // Speaker syscalls
 #include "pbl/services/speaker/note_sequence.h"
 #include "pbl/services/speaker/track.h"
-bool sys_speaker_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
-                               uint8_t priority, uint8_t volume);
-bool sys_speaker_play_tone(uint16_t freq_hz, uint16_t duration_ms,
-                           uint8_t waveform, uint8_t velocity,
-                           uint8_t priority, uint8_t volume);
-bool sys_speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks,
-                             uint8_t priority, uint8_t volume);
+bool sys_speaker_play_note_seq(const SpeakerNote *notes, uint32_t num_notes, uint8_t priority,
+                               uint8_t volume);
+bool sys_speaker_play_tone(uint16_t freq_hz, uint16_t duration_ms, uint8_t waveform,
+                           uint8_t velocity, uint8_t priority, uint8_t volume);
+bool sys_speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_t priority,
+                             uint8_t volume);
 bool sys_speaker_stream_open(uint8_t priority, uint8_t volume, uint8_t format);
 uint32_t sys_speaker_stream_write(const void *data, uint32_t num_bytes);
 void sys_speaker_stream_close(void);
@@ -133,28 +132,22 @@ BTErrno sys_ble_central_connect(BTDevice device, bool auto_reconnect, bool is_pa
 BTErrno sys_ble_central_cancel_connect(BTDevice device);
 
 BTErrno sys_ble_client_discover_services_and_characteristics(BTDevice device);
-uint8_t sys_ble_client_copy_services(BTDeviceInternal device,
-                                     BLEService services[], uint8_t num_services);
+uint8_t sys_ble_client_copy_services(BTDeviceInternal device, BLEService services[],
+                                     uint8_t num_services);
 uint16_t sys_ble_client_get_maximum_value_length(BTDevice device);
 BTErrno sys_ble_client_read(BLECharacteristic characteristic);
 bool sys_ble_client_get_notification_value_length(uint16_t *value_length_out);
-void sys_ble_client_consume_read(uintptr_t object_ref,
-                                 uint8_t value_out[],
+void sys_ble_client_consume_read(uintptr_t object_ref, uint8_t value_out[],
                                  uint16_t *value_length_in_out);
-bool sys_ble_client_consume_notification(uintptr_t *object_ref_out,
-                                         uint8_t value_out[],
-                                         uint16_t *value_length_in_out,
-                                         bool *has_more_out);
-BTErrno sys_ble_client_write(BLECharacteristic characteristic,
-                             const uint8_t *value,
+bool sys_ble_client_consume_notification(uintptr_t *object_ref_out, uint8_t value_out[],
+                                         uint16_t *value_length_in_out, bool *has_more_out);
+BTErrno sys_ble_client_write(BLECharacteristic characteristic, const uint8_t *value,
                              size_t value_length);
 BTErrno sys_ble_client_write_without_response(BLECharacteristic characteristic,
-                                              const uint8_t *value,
-                                              size_t value_length);
+                                              const uint8_t *value, size_t value_length);
 BTErrno sys_ble_client_subscribe(BLECharacteristic characteristic,
                                  BLESubscription subscription_type);
-BTErrno sys_ble_client_write_descriptor(BLEDescriptor descriptor,
-                                        const uint8_t *value,
+BTErrno sys_ble_client_write_descriptor(BLEDescriptor descriptor, const uint8_t *value,
                                         size_t value_length);
 BTErrno sys_ble_client_read_descriptor(BLEDescriptor descriptor);
 
@@ -178,15 +171,17 @@ uint8_t sys_ble_characteristic_get_descriptors(BLECharacteristic characteristic,
 void sys_ble_descriptor_get_uuid(Uuid *uuid, BLEDescriptor descriptor);
 BLECharacteristic sys_ble_descriptor_get_characteristic(BLEDescriptor descriptor);
 
-int16_t sys_event_service_get_plugin_service_index(const Uuid * uuid);
+int16_t sys_event_service_get_plugin_service_index(const Uuid *uuid);
 
 DataLoggingSessionRef sys_data_logging_create(uint32_t tag, DataLoggingItemType type,
                                               uint16_t item_size, void *buffer, bool resume);
 void sys_data_logging_finish(DataLoggingSessionRef logging_session);
-DataLoggingResult sys_data_logging_log(DataLoggingSessionRef logging_session, const void *data, uint32_t num_items);
+DataLoggingResult sys_data_logging_log(DataLoggingSessionRef logging_session, const void *data,
+                                       uint32_t num_items);
 
 bool sys_clock_is_24h_style(void);
-size_t sys_strftime(char* s, size_t maxsize, const char* format, const struct tm* tim_p, char *locale);
+size_t sys_strftime(char *s, size_t maxsize, const char *format, const struct tm *tim_p,
+                    char *locale);
 
 BatteryChargeState sys_battery_get_charge_state(void);
 
@@ -240,20 +235,19 @@ void sys_touch_set_action_bar(const GRect *frame, uint8_t icon_mask);
 //! app_touch_navigation_enable() SDK call). Only acts on the app task.
 void sys_app_touch_navigation_enable(bool enable);
 
-
 bool sys_app_inbox_service_register(uint8_t *storage, size_t storage_size,
                                     AppInboxMessageHandler message_handler,
                                     AppInboxDroppedHandler dropped_handler);
 uint32_t sys_app_inbox_service_unregister(uint8_t *storage);
 void sys_app_inbox_service_consume(AppInboxConsumerInfo *consumer_info);
 
-void sys_app_outbox_send(const uint8_t *data, size_t length,
-                         AppOutboxSentHandler sent_handler, void *cb_ctx);
+void sys_app_outbox_send(const uint8_t *data, size_t length, AppOutboxSentHandler sent_handler,
+                         void *cb_ctx);
 
-bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id,
-                          const uint8_t* data, uint16_t length);
+bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
+                          uint16_t length);
 
-CommSession * sys_app_pp_get_comm_session(void);
+CommSession *sys_app_pp_get_comm_session(void);
 
 bool sys_app_pp_has_capability(CommSessionCapability capability);
 
@@ -284,7 +278,7 @@ void sys_process_set_exit_reason(AppExitReason exit_reason);
 void sys_process_get_wakeup_info(WakeupInfo *info);
 
 //! Get the meta-data for the current process
-const PebbleProcessMd* sys_process_manager_get_current_process_md(void);
+const PebbleProcessMd *sys_process_manager_get_current_process_md(void);
 
 //! Copy UUID for the current process.
 //! @return True if the UUID was successfully copied.

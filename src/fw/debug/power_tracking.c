@@ -16,62 +16,62 @@ void power_tracking_init(void) {
 
 void power_tracking_start(PowerSystem system) {
   // sanitize all uses of this function when you implement it
-  (void) system;
+  (void)system;
 }
 
 void power_tracking_stop(PowerSystem system) {
   // sanitize all uses of this function when you implement it
-  (void) system;
+  (void)system;
 }
 
-#else // SW_POWER_TRACKING
+#else  // SW_POWER_TRACKING
 
 static bool s_initialized = false;
 
 typedef struct {
-  const char* const name;
+  const char *const name;
   RtcTicks start_ticks;
   RtcTicks total_ticks;
   bool dirty;
 } DiscreteSystemProfile;
 
 static DiscreteSystemProfile s_discrete_consumer_profiles[num_power_systems] = {
-  [PowerSystem2v5Reg] =           { "2v5Reg", 0, 0, false},
-  [PowerSystem5vReg] =            { "5vReg", 0, 0, false},
-  [PowerSystemMcuCoreSleep] =     { "McuCoreSleep", 0, 0, false},
-  [PowerSystemMcuCoreRun] =       { "McuCoreRun", 0, 0, false},
-  [PowerSystemMcuGpioA] =         { "McuGpioA", 0, 0, false},
-  [PowerSystemMcuGpioB] =         { "McuGpioB", 0, 0, false},
-  [PowerSystemMcuGpioC] =         { "McuGpioC", 0, 0, false},
-  [PowerSystemMcuGpioD] =         { "McuGpioD", 0, 0, false},
-  [PowerSystemMcuGpioH] =         { "McuGpioH", 0, 0, false},
-  [PowerSystemMcuCrc] =           { "McuCrc", 0, 0, false},
-  [PowerSystemMcuPwr] =           { "McuPwr", 0, 0, false},
-  [PowerSystemMcuDma1] =          { "McuDma1", 0, 0, false},
-  [PowerSystemMcuDma2] =          { "McuDma2", 0, 0, false},
-  [PowerSystemMcuTim1] =          { "McuTim1", 0, 0, false},
-  [PowerSystemMcuTim3] =          { "McuTim3", 0, 0, false},
-  [PowerSystemMcuTim4] =          { "McuTim4", 0, 0, false},
-  [PowerSystemMcuUsart1] =        { "McuUsart1", 0, 0, false},
-  [PowerSystemMcuUsart3] =        { "McuUsart3", 0, 0, false},
-  [PowerSystemMcuI2C1] =          { "McuI2C1", 0, 0, false},
-  [PowerSystemMcuI2C2] =          { "McuI2C2", 0, 0, false},
-  [PowerSystemMcuSpi1] =          { "McuSpi1", 0, 0, false},
-  [PowerSystemMcuSpi6] =          { "McuSpi6", 0, 0, false},
-  [PowerSystemMcuAdc1] =          { "McuAdc1", 0, 0, false},
-  [PowerSystemMcuAdc2] =          { "McuAdc2", 0, 0, false},
-  [PowerSystemFlashRead] =        { "FlashRead", 0, 0, false},
-  [PowerSystemFlashWrite] =       { "FlashWrite", 0, 0, false},
-  [PowerSystemFlashErase] =       { "FlashErase", 0, 0, false},
-  [PowerSystemAccelLowPower] =    { "AccelLowPower", 0, 0, false},
-  [PowerSystemAccelNormal] =      { "AccelNormal", 0, 0, false},
-  [PowerSystemMfi] =              { "Mfi", 0, 0, false},
-  [PowerSystemMag] =              { "Mag", 0, 0, false},
-  [PowerSystemBtShutdown] =       { "BtShutdown", 0, 0, false},
-  [PowerSystemBtDeepSleep] =      { "BtDeepSleep", 0, 0, false},
-  [PowerSystemBtActive] =         { "BtActive", 0, 0, false},
-  [PowerSystemAmbient] =          { "Ambient", 0, 0, false},
-  [PowerSystemProfiling] =        { "Profiling", 0, 0, false},
+    [PowerSystem2v5Reg] = {"2v5Reg", 0, 0, false},
+    [PowerSystem5vReg] = {"5vReg", 0, 0, false},
+    [PowerSystemMcuCoreSleep] = {"McuCoreSleep", 0, 0, false},
+    [PowerSystemMcuCoreRun] = {"McuCoreRun", 0, 0, false},
+    [PowerSystemMcuGpioA] = {"McuGpioA", 0, 0, false},
+    [PowerSystemMcuGpioB] = {"McuGpioB", 0, 0, false},
+    [PowerSystemMcuGpioC] = {"McuGpioC", 0, 0, false},
+    [PowerSystemMcuGpioD] = {"McuGpioD", 0, 0, false},
+    [PowerSystemMcuGpioH] = {"McuGpioH", 0, 0, false},
+    [PowerSystemMcuCrc] = {"McuCrc", 0, 0, false},
+    [PowerSystemMcuPwr] = {"McuPwr", 0, 0, false},
+    [PowerSystemMcuDma1] = {"McuDma1", 0, 0, false},
+    [PowerSystemMcuDma2] = {"McuDma2", 0, 0, false},
+    [PowerSystemMcuTim1] = {"McuTim1", 0, 0, false},
+    [PowerSystemMcuTim3] = {"McuTim3", 0, 0, false},
+    [PowerSystemMcuTim4] = {"McuTim4", 0, 0, false},
+    [PowerSystemMcuUsart1] = {"McuUsart1", 0, 0, false},
+    [PowerSystemMcuUsart3] = {"McuUsart3", 0, 0, false},
+    [PowerSystemMcuI2C1] = {"McuI2C1", 0, 0, false},
+    [PowerSystemMcuI2C2] = {"McuI2C2", 0, 0, false},
+    [PowerSystemMcuSpi1] = {"McuSpi1", 0, 0, false},
+    [PowerSystemMcuSpi6] = {"McuSpi6", 0, 0, false},
+    [PowerSystemMcuAdc1] = {"McuAdc1", 0, 0, false},
+    [PowerSystemMcuAdc2] = {"McuAdc2", 0, 0, false},
+    [PowerSystemFlashRead] = {"FlashRead", 0, 0, false},
+    [PowerSystemFlashWrite] = {"FlashWrite", 0, 0, false},
+    [PowerSystemFlashErase] = {"FlashErase", 0, 0, false},
+    [PowerSystemAccelLowPower] = {"AccelLowPower", 0, 0, false},
+    [PowerSystemAccelNormal] = {"AccelNormal", 0, 0, false},
+    [PowerSystemMfi] = {"Mfi", 0, 0, false},
+    [PowerSystemMag] = {"Mag", 0, 0, false},
+    [PowerSystemBtShutdown] = {"BtShutdown", 0, 0, false},
+    [PowerSystemBtDeepSleep] = {"BtDeepSleep", 0, 0, false},
+    [PowerSystemBtActive] = {"BtActive", 0, 0, false},
+    [PowerSystemAmbient] = {"Ambient", 0, 0, false},
+    [PowerSystemProfiling] = {"Profiling", 0, 0, false},
 };
 
 static const uint16_t power_tracking_integration_period_s = 1;
@@ -79,8 +79,8 @@ static const uint16_t power_tracking_integration_period_s = 1;
 static void power_tracking_flush(void *);
 
 static RegularTimerInfo s_power_profile_timer = {
-  .list_node = { 0, 0 },
-  .cb = power_tracking_flush,
+    .list_node = {0, 0},
+    .cb = power_tracking_flush,
 };
 
 static void power_tracking_flush(void *null) {
@@ -89,7 +89,7 @@ static void power_tracking_flush(void *null) {
   RtcTicks log_record_time = rtc_get_ticks();
   char buffer[32];
 
-  for (int i = 0; i<num_power_systems; ++i) {
+  for (int i = 0; i < num_power_systems; ++i) {
     DiscreteSystemProfile *current_profile = &s_discrete_consumer_profiles[i];
 
     if (current_profile->dirty) {
@@ -108,7 +108,8 @@ static void power_tracking_flush(void *null) {
 
       if (total_ticks != 0) {
         // dump the current ticks
-        dbgserial_putstr_fmt(buffer, sizeof(buffer), ">>>PWR:%"PRIu64",%s,%"PRIu64"<", log_record_time, current_profile->name, total_ticks);
+        dbgserial_putstr_fmt(buffer, sizeof(buffer), ">>>PWR:%" PRIu64 ",%s,%" PRIu64 "<",
+                             log_record_time, current_profile->name, total_ticks);
       }
     }
   }
@@ -116,9 +117,11 @@ static void power_tracking_flush(void *null) {
 }
 
 void power_tracking_init(void) {
-  regular_timer_add_multisecond_callback(&s_power_profile_timer, power_tracking_integration_period_s);
+  regular_timer_add_multisecond_callback(&s_power_profile_timer,
+                                         power_tracking_integration_period_s);
   char buffer[32];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), ">>>PWR:%"PRIu64",START,%"PRIu16, rtc_get_ticks(), power_tracking_integration_period_s);
+  dbgserial_putstr_fmt(buffer, sizeof(buffer), ">>>PWR:%" PRIu64 ",START,%" PRIu16, rtc_get_ticks(),
+                       power_tracking_integration_period_s);
   s_initialized = true;
 }
 
@@ -152,7 +155,8 @@ void power_tracking_stop(PowerSystem system) {
   DiscreteSystemProfile *current_profile = &s_discrete_consumer_profiles[system];
 
   if (current_profile->start_ticks == 0) {
-    PBL_LOG_WRN("Stop ticks before start called: probably losing profile accuracy in %s", current_profile->name);
+    PBL_LOG_WRN("Stop ticks before start called: probably losing profile accuracy in %s",
+                current_profile->name);
     // Someone was careless: two cases:
     // 1) someone forgot to call start
     // 2) someone re-entered a function that called stop already, so it is called twice.
@@ -164,5 +168,4 @@ void power_tracking_stop(PowerSystem system) {
   current_profile->start_ticks = 0;
 }
 
-
-#endif // SW_POWER_TRACKING
+#endif  // SW_POWER_TRACKING

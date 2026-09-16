@@ -26,7 +26,8 @@ size_t sys_resource_load_range(ResAppNum app, uint32_t id, uint32_t offset, uint
                                size_t size) {
   const uint8_t *bytes = id == 2 ? extension_bytes : font_bytes;
   size_t length = id == 2 ? extension_size : font_size;
-  if (!bytes || offset > length || size > length - offset) return 0;
+  if (!bytes || offset > length || size > length - offset)
+    return 0;
   memcpy(buffer, bytes + offset, size);
   return size;
 }
@@ -59,7 +60,8 @@ uint8_t *render(const char *text, const uint8_t *font, size_t length, const uint
   extension_bytes = extension;
   extension_size = extension_length;
   FontInfo info = {0};
-  if (!text_resources_init_font(0, 1, extension_length ? 2 : 0, &info)) return NULL;
+  if (!text_resources_init_font(0, 1, extension_length ? 2 : 0, &info))
+    return NULL;
   framebuffer_init(&framebuffer, &(GSize){144, 168});
   graphics_context_init(&context, &framebuffer, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &context;

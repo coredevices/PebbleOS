@@ -28,7 +28,7 @@ static uint8_t s_weather_type_text_colors[] = {
 
 static TimelineResourceId s_weather_type_timeline_resource_ids[] = {
 #define WEATHER_TYPE_TUPLE(id, numeric_id, bg_color, text_color, timeline_resource_id) \
-    timeline_resource_id,
+  timeline_resource_id,
 #include "pbl/services/weather/weather_type_tuples.def"
 };
 
@@ -46,11 +46,11 @@ GColor weather_type_get_bg_color(WeatherType weather_type) {
 #if PBL_COLOR
   const size_t index = prv_get_array_index_of_type(weather_type);
 #endif
-  return PBL_IF_COLOR_ELSE((GColor) {.argb = s_weather_type_bg_colors[index]}, GColorClear);
+  return PBL_IF_COLOR_ELSE((GColor){.argb = s_weather_type_bg_colors[index]}, GColorClear);
 };
 
 GColor weather_type_get_text_color(WeatherType weather_type) {
-  return (GColor) {.argb = s_weather_type_text_colors[prv_get_array_index_of_type(weather_type)]};
+  return (GColor){.argb = s_weather_type_text_colors[prv_get_array_index_of_type(weather_type)]};
 };
 
 TimelineResourceId weather_type_get_timeline_resource_id(WeatherType weather_type) {

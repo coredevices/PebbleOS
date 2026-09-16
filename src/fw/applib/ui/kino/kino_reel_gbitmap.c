@@ -26,9 +26,7 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
   // Save compositing mode
   GCompOp prev_compositing_mode = ctx->draw_state.compositing_mode;
 
-  GCompOp op = (bitmap_reel->bitmap->info.format == GBitmapFormat1Bit)
-               ? GCompOpAssign
-               : GCompOpSet;
+  GCompOp op = (bitmap_reel->bitmap->info.format == GBitmapFormat1Bit) ? GCompOpAssign : GCompOpSet;
 
   graphics_context_set_compositing_mode(ctx, op);
 
@@ -71,26 +69,23 @@ static size_t prv_get_data_size(const KinoReel *reel) {
 
 static GBitmap *prv_get_gbitmap(KinoReel *reel) {
   if (reel) {
-    return ((KinoReelImplGBitmap*)reel)->bitmap;
+    return ((KinoReelImplGBitmap *)reel)->bitmap;
   }
   return NULL;
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_GBITMAP = {
-  .reel_type = KinoReelTypeGBitmap,
-  .destructor = prv_destructor,
-  .get_size = prv_get_size,
-  .get_data_size = prv_get_data_size,
-  .draw_processed = prv_draw_processed_func,
-  .get_gbitmap = prv_get_gbitmap,
+    .reel_type = KinoReelTypeGBitmap,
+    .destructor = prv_destructor,
+    .get_size = prv_get_size,
+    .get_data_size = prv_get_data_size,
+    .draw_processed = prv_draw_processed_func,
+    .get_gbitmap = prv_get_gbitmap,
 };
 
 void kino_reel_gbitmap_init(KinoReelImplGBitmap *bitmap_reel, GBitmap *bitmap) {
   if (bitmap_reel) {
-    *bitmap_reel = (KinoReelImplGBitmap) {
-      .bitmap = bitmap,
-      .base.impl = &KINO_REEL_IMPL_GBITMAP
-    };
+    *bitmap_reel = (KinoReelImplGBitmap){.bitmap = bitmap, .base.impl = &KINO_REEL_IMPL_GBITMAP};
   }
 }
 

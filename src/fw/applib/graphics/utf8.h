@@ -71,19 +71,20 @@ size_t utf8_truncate_with_ellipsis(const char *in_string, char *out_buffer, size
 
 typedef struct {
   utf8_t *start;
-  utf8_t *end; //<! Points to first un-decodable codepoint
+  utf8_t *end;  //<! Points to first un-decodable codepoint
 } Utf8Bounds;
 
 typedef struct {
-  Utf8Bounds const  *bounds;
-  utf8_t *current; //<! Must be within bounds, inclusive; advancing past trips assert
+  Utf8Bounds const *bounds;
+  utf8_t *current;  //<! Must be within bounds, inclusive; advancing past trips assert
   utf8_t *next;
-  uint32_t codepoint; //! Cached current codepoint
+  uint32_t codepoint;  //! Cached current codepoint
 } Utf8IterState;
 
 Utf8Bounds utf8_get_bounds(bool *const success, char const *text);
 
-void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bounds const  *bounds, utf8_t *start);
+void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bounds const *bounds,
+                    utf8_t *start);
 
 bool utf8_iter_next(IteratorState state);
 

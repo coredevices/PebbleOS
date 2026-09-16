@@ -11,9 +11,9 @@
 
 // -- Gatt Device/Server Events
 
-#define GATT_SERVICE_UUID ((uint16_t) 0x1801)
-#define GATT_SERVICE_CHANGED_CHARACTERISTIC_UUID ((uint16_t) 0x2A05)
-#define GATT_CCCD_UUID ((uint16_t) 0x2902)
+#define GATT_SERVICE_UUID ((uint16_t)0x1801)
+#define GATT_SERVICE_CHANGED_CHARACTERISTIC_UUID ((uint16_t)0x2A05)
+#define GATT_CCCD_UUID ((uint16_t)0x2902)
 
 //! Using BTDeviceAddress instead of BTDeviceInternal, with all these events, because Bluetopia's
 //! events doesn't contain the address type.
@@ -99,21 +99,13 @@ void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t 
 void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
                                             const ATTHandleRange *data);
 
+BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
+                                              size_t value_length, uint16_t att_handle);
 
-BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection,
-                                              const uint8_t *value,
-                                              size_t value_length,
-                                              uint16_t att_handle);
+BTErrno bt_driver_gatt_write(GAPLEConnection *connection, const uint8_t *value, size_t value_length,
+                             uint16_t att_handle, void *context);
 
-BTErrno bt_driver_gatt_write(GAPLEConnection *connection,
-                             const uint8_t *value,
-                             size_t value_length,
-                             uint16_t att_handle,
-                             void *context);
-
-BTErrno bt_driver_gatt_read(GAPLEConnection *connection,
-                                   uint16_t att_handle,
-                                   void *context);
+BTErrno bt_driver_gatt_read(GAPLEConnection *connection, uint16_t att_handle, void *context);
 
 //! The following are callbacks that the bt_driver implementation will call when handling events.
 

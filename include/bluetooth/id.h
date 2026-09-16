@@ -15,8 +15,7 @@ void bt_driver_id_copy_local_identity_address(BTDeviceAddress *addr_out);
 //! @param allow_cycling True if the controller is allowed to cycle the address (implies address
 //! pinning is *not* used!)
 //! @param pinned_address The address to use, or NULL for "don't care".
-void bt_driver_set_local_address(bool allow_cycling,
-                                 const BTDeviceAddress *pinned_address);
+void bt_driver_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_address);
 
 //! Copies a human-readable string of freeform info that uniquely identifies the Bluetooth chip.
 //! Used by MFG for part tracking purposes.

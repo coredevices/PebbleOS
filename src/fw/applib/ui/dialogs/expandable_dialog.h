@@ -79,16 +79,14 @@ Dialog *expandable_dialog_get_dialog(ExpandableDialog *expandable_dialog);
 //! Sets whether or not the expandable dialog should should show its action bar.
 //! @param expandable_dialog Pointer to the \ref ExpandableDialog to set on
 //! @param show_action_bar Boolean indicating whether to show the action bar
-void expandable_dialog_show_action_bar(ExpandableDialog *expandable_dialog,
-                                       bool show_action_bar);
+void expandable_dialog_show_action_bar(ExpandableDialog *expandable_dialog, bool show_action_bar);
 
 //! Sets whether to animate the action bar items.
 //! @param expandable_dialog Pointer to the \ref ExpandableDialog to set on
 //! @param animated Boolean indicating whether or not to animate the icons
 //! @note Unless \ref expandable_dialog_show_action_bar is called with true, this function
 //!     will not have any noticeable change on the \ref ExpandableDialog
-void expandable_dialog_set_action_icon_animated(ExpandableDialog *expandable_dialog,
-                                                bool animated);
+void expandable_dialog_set_action_icon_animated(ExpandableDialog *expandable_dialog, bool animated);
 
 //! Sets the action bar background color
 //! @param expandable_dialog Pointer to the \ref ExpandableDialog for which to set
@@ -121,8 +119,7 @@ void expandable_dialog_set_body_font(ExpandableDialog *expandable_dialog, GFont 
 //!     Expandable Dialog's action bar layer.
 //! @note Passing @c RESOURCE_ID_INVALID as the resource_id to the function will allow you
 //!     to set an action with no icon appearing in the \ref ActionBarLayer
-void expandable_dialog_set_select_action(ExpandableDialog *expandable_dialog,
-                                         uint32_t resource_id,
+void expandable_dialog_set_select_action(ExpandableDialog *expandable_dialog, uint32_t resource_id,
                                          ClickHandler select_click_handler);
 
 //! Pushes the dialog onto the window stack.

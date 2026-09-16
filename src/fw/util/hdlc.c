@@ -5,7 +5,6 @@
 
 #include "system/passert.h"
 
-
 void hdlc_streaming_decode_reset(HdlcStreamingContext *ctx) {
   ctx->escape = false;
 }

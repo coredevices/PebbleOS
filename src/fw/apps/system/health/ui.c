@@ -22,12 +22,12 @@ void health_ui_draw_text_in_box(GContext *ctx, const char *text, const GRect dra
   const GTextOverflowMode overflow_mode = GTextOverflowModeFill;
   const GTextAlignment alignment = GTextAlignmentCenter;
 
-  const GRect text_box = GRect(drawing_bounds.origin.x, y_offset,
-                               drawing_bounds.size.w, text_height);
+  const GRect text_box =
+      GRect(drawing_bounds.origin.x, y_offset, drawing_bounds.size.w, text_height);
 
   GRect text_fill_box = text_box;
-  text_fill_box.size = app_graphics_text_layout_get_content_size(
-      text, small_font, text_box, overflow_mode, alignment);
+  text_fill_box.size = app_graphics_text_layout_get_content_size(text, small_font, text_box,
+                                                                 overflow_mode, alignment);
   text_fill_box.origin.x += ((drawing_bounds.size.w - text_fill_box.size.w) / 2);
 
   // add a 3 px border (get content size already adds 1 px)
@@ -69,8 +69,8 @@ static GRect prv_render_typical_pill(GContext *ctx, Layer *layer, int pill_heigh
   // flint), a few px on taller displays (obelix, getafix). Applies to both
   // activity and sleep cards on those taller displays; the extra breathing
   // room reads better on both.
-  const int y = PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(122, 120), 125) + HEALTH_Y_OFFSET
-                + HEALTH_Y_OFFSET / 3;
+  const int y =
+      PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(122, 120), 125) + HEALTH_Y_OFFSET + HEALTH_Y_OFFSET / 3;
   GRect rect = GRect(0, y, layer->bounds.size.w, pill_height);
 #if PBL_RECT
   rect = grect_inset(rect, GEdgeInsets(0, HEALTH_INSET));
@@ -92,8 +92,8 @@ static GRect prv_render_typical_pill(GContext *ctx, Layer *layer, int pill_heigh
   // Row 1: TYPICAL <day>, full width.
   GRect header_rect = rect;
   header_rect.size.h = 16;
-  graphics_draw_text(ctx, typical_text, font, header_rect,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, typical_text, font, header_rect, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
 
   return rect;
 }
@@ -107,13 +107,13 @@ void health_ui_render_typical_text_box(GContext *ctx, Layer *layer, const char *
   GRect value_rect = rect;
   value_rect.size.h = 16;
   value_rect.origin.y += 16;
-  graphics_draw_text(ctx, value_text, font, value_rect,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, value_text, font, value_rect, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
 }
 
-void health_ui_render_split_typical_text_box(GContext *ctx, Layer *layer,
-                                             const char *left_value, const char *left_label,
-                                             const char *right_value, const char *right_label) {
+void health_ui_render_split_typical_text_box(GContext *ctx, Layer *layer, const char *left_value,
+                                             const char *left_label, const char *right_value,
+                                             const char *right_label) {
   GRect rect = prv_render_typical_pill(ctx, layer, 53);
 
   const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
@@ -125,14 +125,13 @@ void health_ui_render_split_typical_text_box(GContext *ctx, Layer *layer,
   const int16_t col_w = (rect.size.w - 2 * col_band_inset) / 2;
 
   // Row 2: values, numbers on top.
-  GRect val_left = GRect(rect.origin.x + col_band_inset, rect.origin.y + 18,
-                         col_w, 16);
+  GRect val_left = GRect(rect.origin.x + col_band_inset, rect.origin.y + 18, col_w, 16);
   GRect val_right = val_left;
   val_right.origin.x += val_left.size.w;
-  graphics_draw_text(ctx, left_value, font, val_left,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-  graphics_draw_text(ctx, right_value, font, val_right,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, left_value, font, val_left, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, right_value, font, val_right, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
 
   // Row 3: labels below the numbers, in black.
   const GColor label_color = GColorArmyGreen;
@@ -142,10 +141,10 @@ void health_ui_render_split_typical_text_box(GContext *ctx, Layer *layer,
   GRect sub_right = sub_left;
   sub_right.origin.x += sub_left.size.w;
   graphics_context_set_text_color(ctx, label_color);
-  graphics_draw_text(ctx, left_label, small_font, sub_left,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-  graphics_draw_text(ctx, right_label, small_font, sub_right,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, left_label, small_font, sub_left, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, right_label, small_font, sub_right, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
 
   // Vertical divider between the two columns, 1px wide black.
   graphics_context_set_stroke_color(ctx, label_color);

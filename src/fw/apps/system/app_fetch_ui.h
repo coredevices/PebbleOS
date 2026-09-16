@@ -15,7 +15,7 @@ typedef struct AppFetchUIArgs {
   LaunchConfigCommon common;
   WakeupInfo wakeup_info;
   AppInstallId app_id;
-  bool forcefully; //! whether to launch forcefully or not
+  bool forcefully;  //! whether to launch forcefully or not
 } AppFetchUIArgs;
 
 //! Used to launch the app_fetch_ui application

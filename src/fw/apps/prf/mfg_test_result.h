@@ -9,8 +9,8 @@
 
 // Test mode bitmask
 #define MFG_TEST_MODE_SEMI_FINISHED (1 << 0)
-#define MFG_TEST_MODE_FINISHED      (1 << 1)
-#define MFG_TEST_MODE_ALL           (MFG_TEST_MODE_SEMI_FINISHED | MFG_TEST_MODE_FINISHED)
+#define MFG_TEST_MODE_FINISHED (1 << 1)
+#define MFG_TEST_MODE_ALL (MFG_TEST_MODE_SEMI_FINISHED | MFG_TEST_MODE_FINISHED)
 
 typedef enum {
   MfgTestId_Buttons,

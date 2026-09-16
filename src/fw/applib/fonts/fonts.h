@@ -23,7 +23,7 @@
 //! @see \ref fonts_load_custom_font()
 //! @see \ref text_layer_set_font()
 //! @see \ref graphics_draw_text()
-typedef FontInfo* GFont;
+typedef FontInfo *GFont;
 
 //! @internal
 //! Gets the fallback system font (14pt Raster Gothic)

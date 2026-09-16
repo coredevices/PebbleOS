@@ -22,7 +22,7 @@ static RtcTicks s_notification_vibe_tick_timestamp = 0;
 static int64_t prv_get_ms_since_last_notification_vibe(void) {
   RtcTicks current_ticks = rtc_get_ticks();
   int64_t millis_since_last_vibe =
-      (current_ticks - s_notification_vibe_tick_timestamp) * 1000 / RTC_TICKS_HZ; // x1000 for ms
+      (current_ticks - s_notification_vibe_tick_timestamp) * 1000 / RTC_TICKS_HZ;  // x1000 for ms
   return millis_since_last_vibe;
 }
 

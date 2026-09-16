@@ -11,7 +11,7 @@ void array_remove_nulls(void **array, size_t *num) {
   while (i < *num) {
     if (array[i] == NULL) {
       for (size_t j = i + 1; j < *num; j++) {
-        array[j-1] = array[j];
+        array[j - 1] = array[j];
       }
       (*num)--;
     } else {

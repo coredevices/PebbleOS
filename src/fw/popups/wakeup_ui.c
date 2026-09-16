@@ -48,9 +48,9 @@ typedef struct {
 static void prv_show_dialog(void *context) {
   WakeupUICbData *data = context;
 
-  const char* missed_text_raw =
+  const char *missed_text_raw =
       i18n_noop("While your Pebble was off wakeup events occurred for:\n");
-  const char* missed_text = i18n_get(missed_text_raw, data);
+  const char *missed_text = i18n_get(missed_text_raw, data);
 
   // Find the size of all of the missed_apps names (no max length defined)
   int16_t missed_app_titles_len = 0;
@@ -70,7 +70,7 @@ static void prv_show_dialog(void *context) {
   kernel_free(data->app_ids);
   kernel_free(data);
 
-  ExpandableDialog * ex_dialog = expandable_dialog_create(NULL);
+  ExpandableDialog *ex_dialog = expandable_dialog_create(NULL);
   Dialog *dialog = expandable_dialog_get_dialog(ex_dialog);
   dialog_set_text_buffer(dialog, missed_message, true);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_TINY);
@@ -83,9 +83,9 @@ static void prv_show_dialog(void *context) {
 void wakeup_popup_window(uint8_t missed_apps_count, AppInstallId *missed_app_ids) {
   WakeupUICbData *data = kernel_malloc(sizeof(WakeupUICbData));
   if (data) {
-    *data = (WakeupUICbData) {
-      .count = missed_apps_count,
-      .app_ids = missed_app_ids,
+    *data = (WakeupUICbData){
+        .count = missed_apps_count,
+        .app_ids = missed_app_ids,
     };
     launcher_task_add_callback(prv_show_dialog, data);
   }

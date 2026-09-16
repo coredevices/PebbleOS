@@ -12,7 +12,7 @@
 
 void app_message_init(void) {
   AppMessageCtx *app_message_ctx = app_state_get_app_message_ctx();
-  *app_message_ctx = (const AppMessageCtx) {};
+  *app_message_ctx = (const AppMessageCtx){};
 }
 
 // -------- Pebble Protocol Handlers ------------------------------------------------------------ //
@@ -28,19 +28,17 @@ static bool prv_has_invalid_header_length(size_t length) {
 //! The new implementation uses up to 72 bytes more stack space than the previous implementation.
 //! Might need to do some extra work to get a "thinner" stack, if this causes issues.
 //! Executes on App task.
-void app_message_app_protocol_msg_callback(CommSession *session,
-                                           const uint8_t* data, size_t length,
+void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length,
                                            AppInboxConsumerInfo *consumer_info) {
   if (prv_has_invalid_header_length(length)) {
     return;
   }
 
-  AppMessageHeader *message = (AppMessageHeader *) data;
+  AppMessageHeader *message = (AppMessageHeader *)data;
   switch (message->command) {
-
     case CMD_PUSH:
       // Incoming message:
-      app_message_inbox_receive(session, (AppMessagePush *) message, length, consumer_info);
+      app_message_inbox_receive(session, (AppMessagePush *)message, length, consumer_info);
       return;
 
     case CMD_REQUEST:
@@ -63,12 +61,12 @@ void app_message_app_protocol_msg_callback(CommSession *session,
 //! Executes on KernelBG, sends back NACK on behalf of the app if it is not able to do so.
 //! Note that app_message_receiver_dropped_handler will also get called on the App task,
 //! to report the number of missed messages.
-void app_message_app_protocol_system_nack_callback(CommSession *session,
-                                                   const uint8_t* data, size_t length) {
+void app_message_app_protocol_system_nack_callback(CommSession *session, const uint8_t *data,
+                                                   size_t length) {
   if (prv_has_invalid_header_length(length)) {
     return;
   }
-  AppMessageHeader *message = (AppMessageHeader *) data;
+  AppMessageHeader *message = (AppMessageHeader *)data;
   if (message->command != CMD_PUSH) {
     return;
   }
@@ -132,7 +130,7 @@ static bool prv_supports_8k(void) {
     return false;
   }
   const Version app_sdk_version = sys_get_current_app_sdk_version();
-  const Version sdk_version_8k_messages_enabled = (const Version) { 0x05, 0x3f };
+  const Version sdk_version_8k_messages_enabled = (const Version){0x05, 0x3f};
   return (version_compare(sdk_version_8k_messages_enabled, app_sdk_version) <= 0);
 }
 
@@ -168,9 +166,8 @@ AppMessageResult app_message_open(const uint32_t size_inbound, const uint32_t si
 #endif
 
   AppMessageCtx *app_message_ctx = app_state_get_app_message_ctx();
-  if (app_message_ctx->outbox.phase != OUT_CLOSED ||
-      app_message_ctx->inbox.is_open) {
-    return APP_MSG_INVALID_STATE; // Already open
+  if (app_message_ctx->outbox.phase != OUT_CLOSED || app_message_ctx->inbox.is_open) {
+    return APP_MSG_INVALID_STATE;  // Already open
   }
 
   AppMessageResult result = app_message_outbox_open(&app_message_ctx->outbox, size_outbound);

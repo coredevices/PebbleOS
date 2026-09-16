@@ -17,17 +17,17 @@ typedef struct {
   const SpeakerSample *sample;
 
   uint32_t current_note;
-  uint32_t samples_remaining;   // at output sample rate
+  uint32_t samples_remaining;  // at output sample rate
 
   // Waveform-mode state (used when sample == NULL)
-  uint32_t phase_acc;           // 16.16
-  uint32_t phase_inc;           // 16.16
+  uint32_t phase_acc;  // 16.16
+  uint32_t phase_inc;  // 16.16
 
   // Sample-mode state (used when sample != NULL)
-  uint64_t sample_pos_q32;      // 32.32 position within the PCM source
-  uint64_t sample_stride_q32;   // advance per output sample (32.32)
-  uint32_t sample_num_input;    // total input samples in sample->data
-  bool     sample_exhausted;    // reached end and loop=false
+  uint64_t sample_pos_q32;     // 32.32 position within the PCM source
+  uint64_t sample_stride_q32;  // advance per output sample (32.32)
+  uint32_t sample_num_input;   // total input samples in sample->data
+  bool sample_exhausted;       // reached end and loop=false
 
   uint8_t current_waveform;
   uint8_t current_velocity;

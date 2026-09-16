@@ -9,17 +9,17 @@
 #include <stdint.h>
 
 // QEMU audio device register offsets (must match pebble-audio QEMU device)
-#define AUDIO_CTRL       0x00
-#define AUDIO_STATUS     0x04
+#define AUDIO_CTRL 0x00
+#define AUDIO_STATUS 0x04
 #define AUDIO_SAMPLERATE 0x08
-#define AUDIO_DATA       0x0C
-#define AUDIO_INTCTRL    0x10
-#define AUDIO_INTSTAT    0x14
-#define AUDIO_BUFAVAIL   0x18
-#define AUDIO_VOLUME     0x1C
+#define AUDIO_DATA 0x0C
+#define AUDIO_INTCTRL 0x10
+#define AUDIO_INTSTAT 0x14
+#define AUDIO_BUFAVAIL 0x18
+#define AUDIO_VOLUME 0x1C
 
 // Interrupt bits
-#define INT_BUFAVAIL     (1 << 0)
+#define INT_BUFAVAIL (1 << 0)
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
@@ -47,9 +47,9 @@ void audio_start(AudioDevice *dev, AudioTransCB cb) {
 
   // Set sample rate and enable the device
   REG32(dev->base_addr + AUDIO_SAMPLERATE) = 16000;
-  REG32(dev->base_addr + AUDIO_INTSTAT) = INT_BUFAVAIL; // clear pending
-  REG32(dev->base_addr + AUDIO_INTCTRL) = INT_BUFAVAIL; // enable IRQ
-  REG32(dev->base_addr + AUDIO_CTRL) = 1; // enable
+  REG32(dev->base_addr + AUDIO_INTSTAT) = INT_BUFAVAIL;  // clear pending
+  REG32(dev->base_addr + AUDIO_INTCTRL) = INT_BUFAVAIL;  // enable IRQ
+  REG32(dev->base_addr + AUDIO_CTRL) = 1;                // enable
 
   // Enable NVIC IRQ
   NVIC_SetPriority(dev->irqn, 5);
@@ -89,8 +89,7 @@ void qemu_audio_irq_handler(AudioDevice *dev) {
   // Schedule callback on system task; a drop is retried on the next interrupt
   if (dev->state->trans_cb) {
     bool should_context_switch = false;
-    system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb,
-                                                (void *)dev->state,
+    system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb, (void *)dev->state,
                                                 &should_context_switch);
   }
 }

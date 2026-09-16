@@ -23,18 +23,15 @@ PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGE
 // though there isn't enough memory for load more than 24k in practice on tintin.
 static const uint32_t APP_MAX_SIZE = 0x10000;
 
-bool app_storage_get_process_load_size(const PebbleProcessInfo *info,
-                                       size_t *load_size_out) {
+bool app_storage_get_process_load_size(const PebbleProcessInfo *info, size_t *load_size_out) {
   if (info->num_reloc_entries > (SIZE_MAX / sizeof(uint32_t))) {
-    PBL_LOG_WRN("App relocation table size overflows: entries=%"PRIu32,
-                info->num_reloc_entries);
+    PBL_LOG_WRN("App relocation table size overflows: entries=%" PRIu32, info->num_reloc_entries);
     return false;
   }
 
   const size_t reloc_size = info->num_reloc_entries * sizeof(uint32_t);
   if (info->load_size > (SIZE_MAX - reloc_size)) {
-    PBL_LOG_WRN("App load size overflows: load=%"PRIu16" reloc=%zu",
-                info->load_size, reloc_size);
+    PBL_LOG_WRN("App load size overflows: load=%" PRIu16 " reloc=%zu", info->load_size, reloc_size);
     return false;
   }
 
@@ -42,9 +39,9 @@ bool app_storage_get_process_load_size(const PebbleProcessInfo *info,
   return true;
 }
 
-AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_info,
-  uint8_t *build_id_out, AppInstallId app_id, PebbleTask task_type) {
-
+AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
+                                                        uint8_t *build_id_out, AppInstallId app_id,
+                                                        PebbleTask task_type) {
   char process_name[APP_FILENAME_MAX_LENGTH];
   app_storage_get_file_name(process_name, sizeof(process_name), app_id, task_type);
   int fd;
@@ -59,10 +56,9 @@ AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_i
     const uint8_t padding_size = sizeof(PebbleProcessInfo) % 4;
     // The note.gnu.build-id section seems to have a hard-coded word-alignment requirement...
     uint8_t note_buffer[BUILD_ID_TOTAL_EXPECTED_LEN + padding_size];
-    const ElfExternalNote *note = (const ElfExternalNote *) (note_buffer + padding_size);
+    const ElfExternalNote *note = (const ElfExternalNote *)(note_buffer + padding_size);
     int result = pfs_read(fd, note_buffer, sizeof(note_buffer));
-    if ((result == (int) sizeof(note_buffer)) &&
-        build_id_contains_gnu_build_id(note)) {
+    if ((result == (int)sizeof(note_buffer)) && build_id_contains_gnu_build_id(note)) {
       memcpy(build_id_out, note->data + note->name_length, BUILD_ID_EXPECTED_LEN);
     } else {
       memset(build_id_out, 0, BUILD_ID_EXPECTED_LEN);
@@ -81,8 +77,8 @@ AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_i
 
   if (is_sdk_compatible == false) {
     PBL_LOG_WRN("App requires support for SDK version (%u.%u), we only support version (%u.%u).",
-            app_info->sdk_version.major, app_info->sdk_version.minor,
-            PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
+                app_info->sdk_version.major, app_info->sdk_version.minor,
+                PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
 
     // The app's is built with an SDK that is incompatible with the running fw
     return GET_APP_INFO_INCOMPATIBLE_SDK;
@@ -129,10 +125,8 @@ bool app_storage_app_exists(AppInstallId id) {
 
 void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_id,
                                PebbleTask task) {
-  const char *task_str = (task == PebbleTask_App) ? APP_FILE_NAME_SUFFIX
-                                                  : WORKER_FILE_NAME_SUFFIX;
+  const char *task_str = (task == PebbleTask_App) ? APP_FILE_NAME_SUFFIX : WORKER_FILE_NAME_SUFFIX;
   size_t task_str_len =
-      (task == PebbleTask_App) ? strlen(APP_FILE_NAME_SUFFIX)
-                               : strlen(WORKER_FILE_NAME_SUFFIX);
+      (task == PebbleTask_App) ? strlen(APP_FILE_NAME_SUFFIX) : strlen(WORKER_FILE_NAME_SUFFIX);
   app_file_name_make(name, buf_length, app_id, task_str, task_str_len);
 }

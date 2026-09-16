@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* kill_bt_app_get_info();
+const PebbleProcessMd *kill_bt_app_get_info();

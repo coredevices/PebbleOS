@@ -13,7 +13,6 @@
 
 #include "syscall/syscall.h"
 
-
 void ble_scan_handle_event(PebbleEvent *e) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   if (!ble_app_state->scan_handler) {
@@ -21,7 +20,7 @@ void ble_scan_handle_event(PebbleEvent *e) {
   }
 
   // Use the same buffer size as the kernel itself:
-  uint8_t *buffer = (uint8_t *) applib_malloc(GAP_LE_SCAN_REPORTS_BUFFER_SIZE);
+  uint8_t *buffer = (uint8_t *)applib_malloc(GAP_LE_SCAN_REPORTS_BUFFER_SIZE);
   if (!buffer) {
     APP_LOG(LOG_LEVEL_ERROR, "Need %u bytes of heap for ble_scan_start()",
             GAP_LE_SCAN_REPORTS_BUFFER_SIZE);
@@ -39,18 +38,17 @@ void ble_scan_handle_event(PebbleEvent *e) {
   while (cursor < buffer + size) {
     const GAPLERawAdReport *report = (GAPLERawAdReport *)cursor;
 
-    const BTDeviceInternal device = (const BTDeviceInternal) {
-      .address = report->address.address,
-      .is_classic = false,
-      .is_random_address = report->is_random_address,
+    const BTDeviceInternal device = (const BTDeviceInternal){
+        .address = report->address.address,
+        .is_classic = false,
+        .is_random_address = report->is_random_address,
     };
 
     // Call the scan handler for each report:
     ble_app_state->scan_handler(device.opaque, report->rssi, &report->payload);
 
-    const size_t report_length = sizeof(GAPLERawAdReport) +
-                                    report->payload.ad_data_length +
-                                    report->payload.scan_resp_data_length;
+    const size_t report_length = sizeof(GAPLERawAdReport) + report->payload.ad_data_length +
+                                 report->payload.scan_resp_data_length;
     cursor += report_length;
   }
 

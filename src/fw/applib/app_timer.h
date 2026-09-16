@@ -16,16 +16,17 @@
 struct AppTimer;
 typedef struct AppTimer AppTimer;
 
-//! The type of function which can be called when a timer fires.  The argument will be the @p callback_data passed to
+//! The type of function which can be called when a timer fires.  The argument will be the @p
+//! callback_data passed to
 //! @ref app_timer_register().
-typedef void (*AppTimerCallback)(void* data);
+typedef void (*AppTimerCallback)(void *data);
 
 //! Registers a timer that ends up in callback being called some specified time in the future.
 //! @param timeout_ms The expiry time in milliseconds from the current time
 //! @param callback The callback that gets called at expiry time
 //! @param callback_data The data that will be passed to callback
 //! @return A pointer to an `AppTimer` that can be used to later reschedule or cancel this timer
-AppTimer* app_timer_register(uint32_t timeout_ms, AppTimerCallback callback, void* callback_data);
+AppTimer *app_timer_register(uint32_t timeout_ms, AppTimerCallback callback, void *callback_data);
 
 //! @internal
 //! Registers a timer that ends up in callback being called repeatedly at a specified interval
@@ -33,10 +34,8 @@ AppTimer* app_timer_register(uint32_t timeout_ms, AppTimerCallback callback, voi
 //! @param callback The callback that gets called at every interval
 //! @param callback_data The data that will be passed to callback
 //! @return A pointer to an `AppTimer` that can be used to later reschedule or cancel this timer
-AppTimer* app_timer_register_repeatable(uint32_t timeout_ms,
-                                        AppTimerCallback callback,
-                                        void* callback_data,
-                                        bool repeating);
+AppTimer *app_timer_register_repeatable(uint32_t timeout_ms, AppTimerCallback callback,
+                                        void *callback_data, bool repeating);
 
 //! @internal
 //! Get the data passed to the app timer
@@ -56,4 +55,3 @@ void app_timer_cancel(AppTimer *timer_handle);
 
 //!   @} // group Timer
 //! @} // group Foundation
-

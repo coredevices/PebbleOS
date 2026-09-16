@@ -12,12 +12,12 @@
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 
-const ANCSAppMetadata* ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id) {
+const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id) {
   static const ANCSAppMetadata s_generic_app = {
 #if PBL_COLOR
-    .app_color = GColorClearARGB8,
+      .app_color = GColorClearARGB8,
 #endif
-    .icon_id = TIMELINE_RESOURCE_NOTIFICATION_GENERIC,
+      .icon_id = TIMELINE_RESOURCE_NOTIFICATION_GENERIC,
   };
 
   static const struct ANCSAppMetadata map[] = {
@@ -64,7 +64,7 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
     return 0;
   }
 
-  struct tm time_tm = { 0 };
+  struct tm time_tm = {0};
   time_tm.tm_sec = atoi(timestamp.second);
   timestamp.second[0] = '\0';
   time_tm.tm_min = atoi(timestamp.minute);

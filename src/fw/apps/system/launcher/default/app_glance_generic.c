@@ -70,8 +70,7 @@ static KinoReel *prv_create_glance_icon(const AppResourceInfo *res_info,
   // Not const to deal with horrifying GCC bug
   GSize max_size = legacy_icon_size_limit ? LAUNCHER_APP_GLANCE_STRUCTURED_ICON_LEGACY_MAX_SIZE
                                           : LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE;
-  if ((size.w > max_size.w) ||
-      (size.h > max_size.h)) {
+  if ((size.w > max_size.w) || (size.h > max_size.h)) {
     // The icon is too big
     kino_reel_destroy(icon);
     return NULL;
@@ -93,8 +92,8 @@ static void prv_generic_glance_set_icon(LauncherAppGlanceGeneric *generic_glance
 
   const bool is_requested_resource_the_default_icon =
       ((res_info->res_app_num == generic_glance->default_icon_resource_info.res_app_num) &&
-        ((res_info->res_id == APP_GLANCE_SLICE_DEFAULT_ICON) ||
-         (res_info->res_id == generic_glance->default_icon_resource_info.res_id)));
+       ((res_info->res_id == APP_GLANCE_SLICE_DEFAULT_ICON) ||
+        (res_info->res_id == generic_glance->default_icon_resource_info.res_id)));
   const bool does_default_icon_need_to_be_loaded =
       (is_requested_resource_the_default_icon &&
        !prv_app_resource_info_equal(&generic_glance->displayed_icon_resource_info,
@@ -102,9 +101,7 @@ static void prv_generic_glance_set_icon(LauncherAppGlanceGeneric *generic_glance
   const bool is_icon_stale =
       (!prv_app_resource_info_equal(&generic_glance->displayed_icon_resource_info, res_info));
 
-  if (generic_glance->displayed_icon &&
-      !does_default_icon_need_to_be_loaded &&
-      !is_icon_stale) {
+  if (generic_glance->displayed_icon && !does_default_icon_need_to_be_loaded && !is_icon_stale) {
     // Nothing to do, bail out
     return;
   }
@@ -121,25 +118,25 @@ static void prv_generic_glance_set_icon(LauncherAppGlanceGeneric *generic_glance
 
   const bool legacy_icon_size_limit = generic_glance->use_legacy_28x28_icon_size_limit;
   // Try loading the requested icon
-  generic_glance->displayed_icon = prv_create_glance_icon(&res_info_to_load,
-                                                          legacy_icon_size_limit);
+  generic_glance->displayed_icon =
+      prv_create_glance_icon(&res_info_to_load, legacy_icon_size_limit);
 
   if (!generic_glance->displayed_icon) {
     // Try again with the app's default icon if we didn't just try it
     if (!prv_app_resource_info_equal(&res_info_to_load,
                                      &generic_glance->default_icon_resource_info)) {
       res_info_to_load = generic_glance->default_icon_resource_info;
-      generic_glance->displayed_icon = prv_create_glance_icon(&res_info_to_load,
-                                                              legacy_icon_size_limit);
+      generic_glance->displayed_icon =
+          prv_create_glance_icon(&res_info_to_load, legacy_icon_size_limit);
     }
 
     // If we don't have a valid icon at this point, use the fallback icon (casting to non-const so
     // we can use it)
     if (!generic_glance->displayed_icon && generic_glance->fallback_icon) {
       // Note that this (reasonably) assumes that the system fallback icon is a system icon
-      res_info_to_load = (AppResourceInfo) {
-        .res_app_num = SYSTEM_APP,
-        .res_id = generic_glance->fallback_icon_resource_id,
+      res_info_to_load = (AppResourceInfo){
+          .res_app_num = SYSTEM_APP,
+          .res_id = generic_glance->fallback_icon_resource_id,
       };
       generic_glance->displayed_icon = (KinoReel *)generic_glance->fallback_icon;
     }
@@ -180,7 +177,6 @@ static void prv_subtitle_reeval_timer_cb(void *data) {
   launcher_app_glance_structured_notify_service_glance_changed(structured_glance);
 }
 
-
 static void prv_update_subtitle_template_string_reeval_timer_if_necessary(
     LauncherAppGlanceStructured *structured_glance, time_t new_reeval_time) {
   LauncherAppGlanceGeneric *generic_glance =
@@ -210,9 +206,8 @@ static void prv_update_subtitle_template_string_reeval_timer_if_necessary(
 
   prv_cancel_subtitle_reeval_timer(generic_glance);
 
-  generic_glance->slice_subtitle_template_string_reeval_timer =
-    app_timer_register((uint32_t)time_until_next_reeval_ms, prv_subtitle_reeval_timer_cb,
-                       structured_glance);
+  generic_glance->slice_subtitle_template_string_reeval_timer = app_timer_register(
+      (uint32_t)time_until_next_reeval_ms, prv_subtitle_reeval_timer_cb, structured_glance);
   generic_glance->next_slice_subtitle_template_string_reeval_time = new_reeval_time;
 }
 
@@ -239,10 +234,10 @@ static void prv_current_slice_updated(LauncherAppGlance *glance) {
     // an SDK that supports app glances (which is newer than the first SDK that supported published
     // resources as proved by the following asserts)
     _Static_assert((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR >
-                        TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) ||
-                   ((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR ==
+                    TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) ||
+                       ((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR ==
                          TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) &&
-                    (APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR >=
+                        (APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR >=
                          TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR)),
                    "App glance min supported SDK version must be equal to or newer than first "
                    "timeline/published resource PBW supported SDK version");
@@ -261,22 +256,20 @@ static void prv_current_slice_updated(LauncherAppGlance *glance) {
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceGeneric *generic_glance =
-    launcher_app_glance_structured_get_data(structured_glance);
+      launcher_app_glance_structured_get_data(structured_glance);
   return NULL_SAFE_FIELD_ACCESS(generic_glance, title_buffer, NULL);
 }
 
-static void prv_generic_glance_dynamic_text_node_update(PBL_UNUSED GContext *ctx,
-                                                        PBL_UNUSED GTextNode *node,
-                                                        PBL_UNUSED const GRect *box,
-                                                        PBL_UNUSED const GTextNodeDrawConfig *config,
-                                                        PBL_UNUSED bool render, char *buffer,
-                                                        size_t buffer_size, void *user_data) {
+static void prv_generic_glance_dynamic_text_node_update(
+    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   if (!structured_glance) {
     return;
   } else if (structured_glance->glance.current_slice.type != AppGlanceSliceType_IconAndSubtitle) {
     PBL_LOG_WRN("Generic glance doesn't know how to handle slice type %d",
-            structured_glance->glance.current_slice.type);
+                structured_glance->glance.current_slice.type);
     return;
   }
 
@@ -284,8 +277,8 @@ static void prv_generic_glance_dynamic_text_node_update(PBL_UNUSED GContext *ctx
   const char *subtitle_template_string =
       structured_glance->glance.current_slice.icon_and_subtitle.template_string;
   TemplateStringEvalConditions template_string_reeval_conditions = {0};
-  const TemplateStringVars template_string_vars = (TemplateStringVars) {
-    .current_time = rtc_get_time(),
+  const TemplateStringVars template_string_vars = (TemplateStringVars){
+      .current_time = rtc_get_time(),
   };
   TemplateStringError template_string_error = {0};
   template_string_evaluate(subtitle_template_string, buffer, buffer_size,
@@ -296,7 +289,7 @@ static void prv_generic_glance_dynamic_text_node_update(PBL_UNUSED GContext *ctx
     // Zero out the buffer and return
     buffer[0] = '\0';
     PBL_LOG_WRN("Error at index %zu in evaluating template string: %s",
-            template_string_error.index_in_string, subtitle_template_string);
+                template_string_error.index_in_string, subtitle_template_string);
     return;
   }
 
@@ -319,11 +312,11 @@ static void prv_destructor(LauncherAppGlanceStructured *structured_glance) {
 }
 
 static const LauncherAppGlanceStructuredImpl s_generic_structured_glance_impl = {
-  .base_handlers.current_slice_updated = prv_current_slice_updated,
-  .get_icon = prv_get_icon,
-  .get_title = prv_get_title,
-  .create_subtitle_node = prv_create_subtitle_node,
-  .destructor = prv_destructor,
+    .base_handlers.current_slice_updated = prv_current_slice_updated,
+    .get_icon = prv_get_icon,
+    .get_title = prv_get_title,
+    .create_subtitle_node = prv_create_subtitle_node,
+    .destructor = prv_destructor,
 };
 
 LauncherAppGlance *launcher_app_glance_generic_create(const AppMenuNode *node,
@@ -337,16 +330,16 @@ LauncherAppGlance *launcher_app_glance_generic_create(const AppMenuNode *node,
   const size_t title_buffer_size = sizeof(generic_glance->title_buffer);
   strncpy(generic_glance->title_buffer, node->name, title_buffer_size);
   generic_glance->title_buffer[title_buffer_size - 1] = '\0';
-  generic_glance->default_icon_resource_info = (AppResourceInfo) {
-    .res_app_num = node->app_num,
-    .res_id = node->icon_resource_id,
+  generic_glance->default_icon_resource_info = (AppResourceInfo){
+      .res_app_num = node->app_num,
+      .res_id = node->icon_resource_id,
   };
   generic_glance->fallback_icon = fallback_icon;
   generic_glance->fallback_icon_resource_id = fallback_icon_resource_id;
 
-  const Version app_glance_min_supported_sdk_version = (Version) {
-    .major = APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR,
-    .minor = APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR,
+  const Version app_glance_min_supported_sdk_version = (Version){
+      .major = APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR,
+      .minor = APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR,
   };
 
   const bool app_glances_supported =
@@ -358,21 +351,19 @@ LauncherAppGlance *launcher_app_glance_generic_create(const AppMenuNode *node,
   // the != SYSTEM_APP condition can't be satisfied easily, so just skip this part for unit tests
 #if !UNITTEST
   // Only consider slices for non-system apps that were compiled with an SDK that supports glances
-  const bool should_consider_slices = (node->app_num != SYSTEM_APP) &&
-                                      app_glances_supported;
+  const bool should_consider_slices = (node->app_num != SYSTEM_APP) && app_glances_supported;
 #else
   const bool should_consider_slices = true;
 #endif
 
   prv_generic_glance_set_icon(generic_glance, &generic_glance->default_icon_resource_info);
 
-  LauncherAppGlanceStructured *structured_glance =
-      launcher_app_glance_structured_create(&node->uuid, &s_generic_structured_glance_impl,
-                                            should_consider_slices, generic_glance);
+  LauncherAppGlanceStructured *structured_glance = launcher_app_glance_structured_create(
+      &node->uuid, &s_generic_structured_glance_impl, should_consider_slices, generic_glance);
   if (structured_glance) {
     if (generic_glance->use_legacy_28x28_icon_size_limit) {
-      launcher_app_glance_structured_set_icon_max_size(structured_glance,
-          LAUNCHER_APP_GLANCE_STRUCTURED_ICON_LEGACY_MAX_SIZE);
+      launcher_app_glance_structured_set_icon_max_size(
+          structured_glance, LAUNCHER_APP_GLANCE_STRUCTURED_ICON_LEGACY_MAX_SIZE);
     }
     return &structured_glance->glance;
   } else {

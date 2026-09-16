@@ -67,7 +67,6 @@ typedef int32_t HealthValue;
 struct HealthMetricAlert;
 typedef struct HealthMetricAlert HealthMetricAlert;
 
-
 //! Return the sum of a \ref HealthMetric's values over a time range.
 //! The `time_start` and `time_end` parameters define the range of time you want the sum for.
 //! @note The value returned will be based on daily totals, weighted for the length of the
@@ -138,7 +137,6 @@ typedef enum {
 HealthValue health_service_sum_averaged(HealthMetric metric, time_t time_start, time_t time_end,
                                         HealthServiceTimeScope scope);
 
-
 //! Used by \ref health_service_aggregate_averaged() to specify what type of aggregation to perform.
 //! This aggregation is applied to the metric before the average is computed.
 typedef enum {
@@ -156,7 +154,6 @@ typedef enum {
   //! instantaneous values, like HealthMetricHeartRateBPM
   HealthAggregationMax
 } HealthAggregation;
-
 
 //! Return the value of an aggregated metric over a given time range. This call is more
 //! flexible than health_service_sum_averaged because it lets you specify which aggregation function
@@ -205,7 +202,6 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
                                               time_t time_end, HealthAggregation aggregation,
                                               HealthServiceTimeScope scope);
 
-
 //! Health-related activities that can be accessed using
 // \ref health_service_peek_current_activities() and \ref health_service_activities_iterate().
 typedef enum {
@@ -232,7 +228,7 @@ typedef uint32_t HealthActivityMask;
 //! Return a \ref HealthActivityMask containing a set of bits, one set for each
 //! activity that is currently active.
 //! @return A bitmask with zero or more \ref HealthActivityMask bits set as appropriate.
-HealthActivityMask   health_service_peek_current_activities(void);
+HealthActivityMask health_service_peek_current_activities(void);
 
 //! Callback used by \ref health_service_activities_iterate().
 //! @param activity Which activity the caller is being informed about.
@@ -299,8 +295,8 @@ typedef enum {
 //! @param time_end Latest UTC time you are interested in.
 //! @return A \ref HealthServiceAccessibilityMask representing the accessible metrics
 //! in this time range.
-HealthServiceAccessibilityMask health_service_metric_accessible(
-    HealthMetric metric, time_t time_start, time_t time_end);
+HealthServiceAccessibilityMask health_service_metric_accessible(HealthMetric metric,
+                                                                time_t time_start, time_t time_end);
 
 //! Check if a certain combination of metric, time span, and scope is accessible for calculating
 //! summed, averaged data by returning a value of \ref HealthServiceAccessibilityMask. Developers
@@ -315,7 +311,8 @@ HealthServiceAccessibilityMask health_service_metric_accessible(
 //! @param time_start Earliest UTC time you are interested in.
 //! @param time_end Latest UTC time you are interested in.
 //! @param scope \ref HealthServiceTimeScope value describing how the average should be computed.
-//! @return A \ref HealthServiceAccessibilityMask value describing whether averaged data is available.
+//! @return A \ref HealthServiceAccessibilityMask value describing whether averaged data is
+//! available.
 HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
     HealthMetric metric, time_t time_start, time_t time_end, HealthServiceTimeScope scope);
 
@@ -329,7 +326,8 @@ HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
 //! @param time_end Latest UTC time you are interested in.
 //! @param aggregation The aggregation to perform
 //! @param scope \ref HealthServiceTimeScope value describing how the average should be computed.
-//! @return A \ref HealthServiceAccessibilityMask value describing whether averaged data is available.
+//! @return A \ref HealthServiceAccessibilityMask value describing whether averaged data is
+//! available.
 HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessible(
     HealthMetric metric, time_t time_start, time_t time_end, HealthAggregation aggregation,
     HealthServiceTimeScope scope);
@@ -470,15 +468,15 @@ bool health_service_cancel_metric_alert(HealthMetricAlert *alert);
 //! The `vmc` value is a measure of the total amount of movement seen by the watch. More vigorous
 //! movement yields higher VMC values.
 typedef struct {
-  uint8_t steps;              //!< Number of steps taken in this minute.
-  uint8_t orientation;        //!< Quantized average orientation.
-  uint16_t vmc;               //!< Vector Magnitude Counts (vmc).
-  bool is_invalid: 1;         //!< `true` if the item doesn't represents actual data
-                              //!< and should be ignored.
-  AmbientLightLevel light: 3; //!< Instantaneous light level during this minute.
-  uint8_t padding: 4;
-  uint8_t heart_rate_bpm;     //!< heart rate in beats per minute
-  uint8_t reserved[6];        //!< Reserved for future use.
+  uint8_t steps;                //!< Number of steps taken in this minute.
+  uint8_t orientation;          //!< Quantized average orientation.
+  uint16_t vmc;                 //!< Vector Magnitude Counts (vmc).
+  bool is_invalid : 1;          //!< `true` if the item doesn't represents actual data
+                                //!< and should be ignored.
+  AmbientLightLevel light : 3;  //!< Instantaneous light level during this minute.
+  uint8_t padding : 4;
+  uint8_t heart_rate_bpm;  //!< heart rate in beats per minute
+  uint8_t reserved[6];     //!< Reserved for future use.
 } HealthMinuteData;
 
 //! Return historical minute data records. This fills in the `minute_data` array parameter with
@@ -527,36 +525,36 @@ MeasurementSystem health_service_get_measurement_system_for_display(HealthMetric
 //! @internal
 // Auxiliary data passed into HealthEventHandler along with the health event type.
 typedef struct {
-  uint32_t steps;                           //!< Total number of steps for today
+  uint32_t steps;  //!< Total number of steps for today
 } HealthEventMovementUpdateData;
 
 //! @internal
 typedef struct {
-  uint32_t total_seconds;                   //!< Total number of seconds of sleep for today
-  uint32_t total_restful_seconds;           //!< Total number of restful seconds
+  uint32_t total_seconds;          //!< Total number of seconds of sleep for today
+  uint32_t total_restful_seconds;  //!< Total number of restful seconds
 } HealthEventSleepUpdateData;
 
 //! @internal
 typedef struct {
-  uint16_t day_id;                          //!< The new day_id for today
+  uint16_t day_id;  //!< The new day_id for today
 } HealthEventSignificantUpdateData;
 
 //! @internal
 typedef struct {
   uint8_t current_bpm;
   uint8_t resting_bpm;
-  HRMQuality quality:8;
+  HRMQuality quality : 8;
   bool is_filtered;
 } HealthEventHeartRateUpdateData;
 
 //! @internal
 typedef struct {
   uint16_t ppi_ms;
-  HRMQuality quality:8;
+  HRMQuality quality : 8;
 } HealthEventHRVUpdateData;
 
 //! @internal
-typedef struct  {
+typedef struct {
   union {
     HealthEventMovementUpdateData movement_update;
     HealthEventSleepUpdateData sleep_update;

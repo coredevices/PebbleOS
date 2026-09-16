@@ -16,14 +16,13 @@ static void selected_pwm_percentage(NumberWindow *nw, void *ctx) {
 }
 
 static void handle_init(void) {
-  NumberWindow *light_num_window = number_window_create("Light Config",
-      (NumberWindowCallbacks) { .selected = selected_pwm_percentage },
-      NULL);
+  NumberWindow *light_num_window = number_window_create(
+      "Light Config", (NumberWindowCallbacks){.selected = selected_pwm_percentage}, NULL);
   app_state_set_user_data(light_num_window);
 
-  uint8_t scale_granularity = 5; // 5 percent at a time
-  uint8_t curr_percent = scale_granularity * ((backlight_get_intensity() +
-      scale_granularity - 1) / scale_granularity);
+  uint8_t scale_granularity = 5;  // 5 percent at a time
+  uint8_t curr_percent =
+      scale_granularity * ((backlight_get_intensity() + scale_granularity - 1) / scale_granularity);
 
   number_window_set_value(light_num_window, curr_percent);
   number_window_set_max(light_num_window, 100);
@@ -44,10 +43,10 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* light_config_get_info() {
+const PebbleProcessMd *light_config_get_info() {
   static const PebbleProcessMdSystem s_accel_config_info = {
-    .common.main_func = s_main,
-    .name = "Light Config"
+      .common.main_func = s_main,
+      .name = "Light Config"
   };
-  return (const PebbleProcessMd*) &s_accel_config_info;
+  return (const PebbleProcessMd *)&s_accel_config_info;
 }

@@ -18,24 +18,23 @@
 
 #include <stdio.h>
 
-
 enum {
-  SPORTS_TIME_KEY           = 0x0, // TUPLE_CSTRING
-  SPORTS_DISTANCE_KEY       = 0x1, // TUPLE_CSTRING
-  SPORTS_DATA_KEY           = 0x2, // TUPLE_CSTRING
-  SPORTS_UNITS_KEY          = 0x3, // TUPLE_UINT(8)
-  SPORTS_ACTIVITY_STATE_KEY = 0x4, // TUPLE_UINT(8)
-  SPORTS_LABEL_KEY          = 0x5, // TUPLE_UINT(8)
-  SPORTS_HRM_KEY            = 0x6, // TUPLE_UINT(8)
-  SPORTS_CUSTOM_LABEL_KEY   = 0x7, // TUPLE_CSTRING
-  SPORTS_CUSTOM_VALUE_KEY   = 0x8, // TUPLE_CSTRING
+  SPORTS_TIME_KEY = 0x0,            // TUPLE_CSTRING
+  SPORTS_DISTANCE_KEY = 0x1,        // TUPLE_CSTRING
+  SPORTS_DATA_KEY = 0x2,            // TUPLE_CSTRING
+  SPORTS_UNITS_KEY = 0x3,           // TUPLE_UINT(8)
+  SPORTS_ACTIVITY_STATE_KEY = 0x4,  // TUPLE_UINT(8)
+  SPORTS_LABEL_KEY = 0x5,           // TUPLE_UINT(8)
+  SPORTS_HRM_KEY = 0x6,             // TUPLE_UINT(8)
+  SPORTS_CUSTOM_LABEL_KEY = 0x7,    // TUPLE_CSTRING
+  SPORTS_CUSTOM_VALUE_KEY = 0x8,    // TUPLE_CSTRING
 };
 
 enum {
-  STATE_INIT_VALUE    = 0x00,
+  STATE_INIT_VALUE = 0x00,
   STATE_RUNNING_VALUE = 0x01,
-  STATE_PAUSED_VALUE  = 0x02,
-  STATE_END_VALUE     = 0x03,
+  STATE_PAUSED_VALUE = 0x02,
+  STATE_END_VALUE = 0x03,
 };
 
 typedef struct {
@@ -68,14 +67,14 @@ typedef struct {
 static void prv_health_service_event_handler(HealthEventType event, void *context) {
   SportsAppData *sports_app_data = context;
   if (event == HealthEventHeartRateUpdate) {
-    sports_app_data->current_bpm = health_service_peek_current_value(HealthMetricHeartRateBPM);;
+    sports_app_data->current_bpm = health_service_peek_current_value(HealthMetricHeartRateBPM);
+    ;
   }
 }
 
 static void prv_sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error,
-                                void *context) {
-  PBL_LOG_DBG("Sports error! dict: %u, app msg: %u", dict_error,
-          app_message_error);
+                                    void *context) {
+  PBL_LOG_DBG("Sports error! dict: %u, app msg: %u", dict_error, app_message_error);
 }
 
 static void prv_update_scrollable_metrics(SportsAppData *data) {
@@ -89,14 +88,13 @@ static void prv_update_scrollable_metrics(SportsAppData *data) {
     scrollable_metrics[num_scrollable_metrics++] = WorkoutMetricType_Hr;
   }
 
-  const bool has_custom_metric = data->custom_label_string[0] != '\0' &&
-                                 data->custom_value_string[0] != '\0';
+  const bool has_custom_metric =
+      data->custom_label_string[0] != '\0' && data->custom_value_string[0] != '\0';
   if (has_custom_metric) {
     scrollable_metrics[num_scrollable_metrics++] = WorkoutMetricType_Custom;
   }
 
-  workout_active_update_scrollable_metrics(data->active_window,
-                                           num_scrollable_metrics,
+  workout_active_update_scrollable_metrics(data->active_window, num_scrollable_metrics,
                                            scrollable_metrics);
 }
 
@@ -114,8 +112,7 @@ static void prv_sync_tuple_changed_callback(uint32_t key, const Tuple *new_tuple
     case SPORTS_TIME_KEY:
       strncpy(data->duration_string, new_tuple->value->cstring, sizeof(data->duration_string));
       break;
-    case SPORTS_LABEL_KEY:
-    {
+    case SPORTS_LABEL_KEY: {
       const bool is_pace = MIN(new_tuple->value->uint8, 1);
       WorkoutMetricType metric_type = is_pace ? WorkoutMetricType_Pace : WorkoutMetricType_Speed;
       if (metric_type != data->pace_speed_metric) {
@@ -126,8 +123,7 @@ static void prv_sync_tuple_changed_callback(uint32_t key, const Tuple *new_tuple
     }
     case SPORTS_UNITS_KEY:
       break;
-    case SPORTS_HRM_KEY:
-    {
+    case SPORTS_HRM_KEY: {
       // This returns if the SPORTS_HRM_KEY value has not changed from the default 0 value
       if (new_tuple->value->uint8 == 0) {
         return;
@@ -140,25 +136,19 @@ static void prv_sync_tuple_changed_callback(uint32_t key, const Tuple *new_tuple
       data->current_bpm = new_tuple->value->uint8;
       break;
     }
-    case SPORTS_CUSTOM_LABEL_KEY:
-    {
-      if (strncmp(new_tuple->value->cstring,
-                  data->custom_label_string,
+    case SPORTS_CUSTOM_LABEL_KEY: {
+      if (strncmp(new_tuple->value->cstring, data->custom_label_string,
                   sizeof(data->custom_label_string)) != 0) {
-        strncpy(data->custom_label_string,
-                new_tuple->value->cstring,
+        strncpy(data->custom_label_string, new_tuple->value->cstring,
                 sizeof(data->custom_label_string));
         prv_update_scrollable_metrics(data);
       }
       break;
     }
-    case SPORTS_CUSTOM_VALUE_KEY:
-    {
-      if (strncmp(new_tuple->value->cstring,
-                  data->custom_value_string,
+    case SPORTS_CUSTOM_VALUE_KEY: {
+      if (strncmp(new_tuple->value->cstring, data->custom_value_string,
                   sizeof(data->custom_value_string)) != 0) {
-        strncpy(data->custom_value_string,
-                new_tuple->value->cstring,
+        strncpy(data->custom_value_string, new_tuple->value->cstring,
                 sizeof(data->custom_value_string));
         prv_update_scrollable_metrics(data);
       }
@@ -196,7 +186,7 @@ static bool prv_pause(bool should_be_paused) {
   }
 
   Tuplet values[] = {
-    TupletInteger(SPORTS_ACTIVITY_STATE_KEY, new_state),
+      TupletInteger(SPORTS_ACTIVITY_STATE_KEY, new_state),
   };
   app_sync_set(s, values, 1);
 
@@ -212,31 +202,25 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
   SportsAppData *data = app_state_get_user_data();
 
   switch (type) {
-    case WorkoutMetricType_Hr:
-    {
+    case WorkoutMetricType_Hr: {
       snprintf(buffer, buffer_size, "%d", data->current_bpm);
       break;
     }
     case WorkoutMetricType_Speed:
-    case WorkoutMetricType_Pace:
-    {
+    case WorkoutMetricType_Pace: {
       strncpy(buffer, data->pace_string, MIN(buffer_size, sizeof(data->pace_string)));
       break;
     }
-    case WorkoutMetricType_Distance:
-    {
+    case WorkoutMetricType_Distance: {
       strncpy(buffer, data->distance_string, MIN(buffer_size, sizeof(data->distance_string)));
       break;
     }
-    case WorkoutMetricType_Duration:
-    {
+    case WorkoutMetricType_Duration: {
       strncpy(buffer, data->duration_string, MIN(buffer_size, sizeof(data->duration_string)));
       break;
     }
-    case WorkoutMetricType_Custom:
-    {
-      strncpy(buffer,
-              data->custom_value_string,
+    case WorkoutMetricType_Custom: {
+      strncpy(buffer, data->custom_value_string,
               MIN(buffer_size, sizeof(data->custom_value_string)));
       break;
     }
@@ -288,42 +272,34 @@ static void prv_init(void) {
   app_message_open(114, 16);
 
   // Sync setup:
-  const uint8_t is_metric = (uint8_t) false;
-  const uint8_t is_pace = (uint8_t) true;
+  const uint8_t is_metric = (uint8_t)false;
+  const uint8_t is_pace = (uint8_t)true;
   const uint8_t state = STATE_INIT_VALUE;
   Tuplet initial_values[] = {
-    TupletCString(SPORTS_DATA_KEY, "0:00"),
-    TupletCString(SPORTS_DISTANCE_KEY, "0.0"),
-    TupletCString(SPORTS_TIME_KEY, "00:00"),
-    TupletInteger(SPORTS_UNITS_KEY, is_metric),
-    TupletInteger(SPORTS_LABEL_KEY, is_pace),
-    TupletInteger(SPORTS_ACTIVITY_STATE_KEY, state),
-    TupletInteger(SPORTS_HRM_KEY, 0),
-    TupletCString(SPORTS_CUSTOM_LABEL_KEY, ""),
-    TupletCString(SPORTS_CUSTOM_VALUE_KEY, "")
+      TupletCString(SPORTS_DATA_KEY, "0:00"),    TupletCString(SPORTS_DISTANCE_KEY, "0.0"),
+      TupletCString(SPORTS_TIME_KEY, "00:00"),   TupletInteger(SPORTS_UNITS_KEY, is_metric),
+      TupletInteger(SPORTS_LABEL_KEY, is_pace),  TupletInteger(SPORTS_ACTIVITY_STATE_KEY, state),
+      TupletInteger(SPORTS_HRM_KEY, 0),          TupletCString(SPORTS_CUSTOM_LABEL_KEY, ""),
+      TupletCString(SPORTS_CUSTOM_VALUE_KEY, "")
   };
   app_sync_init(&data->sync, data->sync_buffer, sizeof(data->sync_buffer), initial_values,
                 ARRAY_LENGTH(initial_values), prv_sync_tuple_changed_callback,
                 prv_sync_error_callback, data);
 
-
-  data->workout_controller = (WorkoutController) {
-    .is_paused = prv_is_paused,
-    .pause = prv_pause,
-    .stop = NULL,
-    .update_data = prv_update_data,
-    .metric_to_string = prv_metric_to_string,
-    .get_metric_value = prv_get_metric_value,
-    .get_distance_string = prv_get_distance_string,
-    .get_custom_metric_label_string = prv_get_custom_metric_label_string,
+  data->workout_controller = (WorkoutController){
+      .is_paused = prv_is_paused,
+      .pause = prv_pause,
+      .stop = NULL,
+      .update_data = prv_update_data,
+      .metric_to_string = prv_metric_to_string,
+      .get_metric_value = prv_get_metric_value,
+      .get_distance_string = prv_get_distance_string,
+      .get_custom_metric_label_string = prv_get_custom_metric_label_string,
   };
 
-  data->active_window = workout_active_create_triple_layout(WorkoutMetricType_Duration,
-                                                            WorkoutMetricType_Distance,
-                                                            0,
-                                                            NULL,
-                                                            NULL,
-                                                            &data->workout_controller);
+  data->active_window =
+      workout_active_create_triple_layout(WorkoutMetricType_Duration, WorkoutMetricType_Distance, 0,
+                                          NULL, NULL, &data->workout_controller);
   data->pace_speed_metric = DEFAULT_PACE_SPEED_METRIC;
   prv_update_scrollable_metrics(data);
   workout_active_window_push(data->active_window);
@@ -357,13 +333,15 @@ static void prv_main(void) {
 
 const PebbleProcessMd *sports_app_get_info(void) {
   static const PebbleProcessMdSystem s_sports_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      .visibility = ProcessVisibilityShownOnCommunication,
-      .uuid = {0x4d, 0xab, 0x81, 0xa6, 0xd2, 0xfc, 0x45, 0x8a,
-               0x99, 0x2c, 0x7a, 0x1f, 0x3b, 0x96, 0xa9, 0x70},
-    },
-    .name = i18n_noop("Sports"),
+      .common =
+          {
+              .main_func = &prv_main,
+              .visibility = ProcessVisibilityShownOnCommunication,
+              .uuid =
+                  {0x4d, 0xab, 0x81, 0xa6, 0xd2, 0xfc, 0x45, 0x8a, 0x99, 0x2c, 0x7a, 0x1f, 0x3b,
+                   0x96, 0xa9, 0x70},
+          },
+      .name = i18n_noop("Sports"),
   };
-  return (const PebbleProcessMd*) &s_sports_app_info;
+  return (const PebbleProcessMd *)&s_sports_app_info;
 }

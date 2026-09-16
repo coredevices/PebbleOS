@@ -11,26 +11,26 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // Display MMIO register offsets (must match QEMU pebble-display device)
-#define DISP_CTRL        0x000
-#define DISP_STATUS      0x004
-#define DISP_WIDTH       0x008
-#define DISP_HEIGHT      0x00C
-#define DISP_FORMAT      0x010
-#define DISP_FLAGS       0x014
-#define DISP_BRIGHTNESS  0x018
-#define DISP_INT_STATUS  0x01C
-#define DISP_INT_CTRL    0x020
+#define DISP_CTRL 0x000
+#define DISP_STATUS 0x004
+#define DISP_WIDTH 0x008
+#define DISP_HEIGHT 0x00C
+#define DISP_FORMAT 0x010
+#define DISP_FLAGS 0x014
+#define DISP_BRIGHTNESS 0x018
+#define DISP_INT_STATUS 0x01C
+#define DISP_INT_CTRL 0x020
 
 // CTRL register bits
-#define CTRL_ENABLE          (1 << 0)
-#define CTRL_UPDATE_REQUEST  (1 << 1)
+#define CTRL_ENABLE (1 << 0)
+#define CTRL_UPDATE_REQUEST (1 << 1)
 
 // STATUS register bits
-#define STATUS_BUSY          (1 << 0)
-#define STATUS_UPDATE_DONE   (1 << 1)
+#define STATUS_BUSY (1 << 0)
+#define STATUS_UPDATE_DONE (1 << 1)
 
 // INT bits
-#define INT_UPDATE_DONE_IE      (1 << 0)
+#define INT_UPDATE_DONE_IE (1 << 0)
 #define INT_UPDATE_DONE_PENDING (1 << 0)
 
 static bool s_enabled;

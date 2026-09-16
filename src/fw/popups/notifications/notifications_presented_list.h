@@ -10,7 +10,7 @@
 //!
 //! \brief File that manages a list of presented notifications.
 
-typedef struct  {
+typedef struct {
   ListNode list_node;
   NotificationInfo notif;
 } NotifList;
@@ -41,8 +41,8 @@ void notifications_presented_list_add(Uuid *id, NotificationType type);
 
 //! Add the given notification to the presented list
 //! The comparator will have to compare two NotifList*
-void notifications_presented_list_add_sorted(Uuid *id, NotificationType type,
-                                             Comparator comparator, bool ascending);
+void notifications_presented_list_add_sorted(Uuid *id, NotificationType type, Comparator comparator,
+                                             bool ascending);
 
 //! Get the type of the given notification
 NotificationType notifications_presented_list_get_type(Uuid *id);

@@ -15,8 +15,8 @@ void timeline_pin_window_set_item(TimelinePinWindow *pin_window, TimelineItem *i
   timeline_item_layer_set_item(&pin_window->item_detail_layer, item, &pin_window->info);
 }
 
-static Animation *prv_create_bounds_origin_animation(
-    TimelinePinWindow *pin_window, GPoint *from_origin, GPoint *to_origin) {
+static Animation *prv_create_bounds_origin_animation(TimelinePinWindow *pin_window,
+                                                     GPoint *from_origin, GPoint *to_origin) {
   Animation *animation = property_animation_get_animation(
       property_animation_create_bounds_origin(&pin_window->layer, from_origin, to_origin));
   animation_set_duration(animation, TIMELINE_CARD_TRANSITION_MS / 2);
@@ -49,7 +49,7 @@ static void prv_pin_window_load(Window *window) {
   window_set_background_color(window, colors->bg_color);
 
   // bounce back from the right
-  GPoint from_origin = { -TIMELINE_CARD_MARGIN, 0 };
+  GPoint from_origin = {-TIMELINE_CARD_MARGIN, 0};
   Animation *animation = prv_create_bounds_origin_animation(pin_window, &from_origin, NULL);
   animation_schedule(animation);
 }
@@ -71,7 +71,7 @@ void timeline_pin_window_pop(TimelinePinWindow *pin_window) {
   Window *window = &pin_window->window;
 
   // delay window unload until the end of the animation
-  window_set_window_handlers(window, &(WindowHandlers) {});
+  window_set_window_handlers(window, &(WindowHandlers){});
   window_stack_remove(window, false);
 
   // animate the pop by using the new top most window
@@ -79,12 +79,14 @@ void timeline_pin_window_pop(TimelinePinWindow *pin_window) {
   layer_add_child(&other_window->layer, &pin_window->layer);
 
   // animate the card layout to the right
-  GPoint to_origin = { pin_window->layer.bounds.size.w, 0 };
+  GPoint to_origin = {pin_window->layer.bounds.size.w, 0};
   Animation *animation = prv_create_bounds_origin_animation(pin_window, NULL, &to_origin);
   animation_set_custom_interpolation(animation, interpolate_moook);
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = prv_pop_animation_stopped,
-  }, pin_window);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .stopped = prv_pop_animation_stopped,
+                         },
+                         pin_window);
   animation_schedule(animation);
 
   pin_window->pop_animation = animation;
@@ -99,10 +101,10 @@ void timeline_pin_window_init(TimelinePinWindow *pin_window, TimelineItem *item,
   Window *window = &pin_window->window;
   window_init(window, WINDOW_NAME("Pin"));
   window_set_user_data(window, pin_window);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_pin_window_load,
-    .unload = prv_pin_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_pin_window_load,
+                                         .unload = prv_pin_window_unload,
+                                     });
 
   TimelineItemLayer *layer = &pin_window->item_detail_layer;
   GRect frame = window->layer.bounds;
@@ -144,16 +146,16 @@ static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
 void timeline_pin_window_push_modal(TimelineItem *item) {
   TimelinePinWindow *pin_window = kernel_zalloc_check(sizeof(TimelinePinWindow));
   timeline_pin_window_init(pin_window, item, time_util_get_midnight_of(rtc_get_time()));
-  window_set_window_handlers((Window *)pin_window, &(WindowHandlers) {
-    .load = prv_pin_window_load,
-    .unload = prv_pin_window_unload_modal,
-  });
+  window_set_window_handlers((Window *)pin_window, &(WindowHandlers){
+                                                       .load = prv_pin_window_load,
+                                                       .unload = prv_pin_window_unload_modal,
+                                                   });
 
   // Subscribe to pin removal events (handled by timeline app when not modal)
-  pin_window->blobdb_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BLOBDB_EVENT,
-    .handler = prv_blobdb_event_handler,
-    .context = pin_window,
+  pin_window->blobdb_event_info = (EventServiceInfo){
+      .type = PEBBLE_BLOBDB_EVENT,
+      .handler = prv_blobdb_event_handler,
+      .context = pin_window,
   };
   event_service_client_subscribe(&pin_window->blobdb_event_info);
 

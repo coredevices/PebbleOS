@@ -25,31 +25,28 @@ typedef struct GetBytesStorageImplementation {
 #include "pbl/services/get_bytes/get_bytes_storage_flash.h"
 
 static const GetBytesStorageImplementation s_get_bytes_impls[] = {
-  {
-    // Coredump Storage
-    .type = GetBytesStorageTypeCoredump,
-    .setup = gb_storage_coredump_setup,
-    .get_size = gb_storage_coredump_get_size,
-    .read_next_chunk = gb_storage_coredump_read_next_chunk,
-    .cleanup = gb_storage_coredump_cleanup
-  },
+    {// Coredump Storage
+     .type = GetBytesStorageTypeCoredump,
+     .setup = gb_storage_coredump_setup,
+     .get_size = gb_storage_coredump_get_size,
+     .read_next_chunk = gb_storage_coredump_read_next_chunk,
+     .cleanup = gb_storage_coredump_cleanup
+    },
 #if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_RELEASE)
-  {
-    // Filesystem File Storage
-    .type = GetBytesStorageTypeFile,
-    .setup = gb_storage_file_setup,
-    .get_size = gb_storage_file_get_size,
-    .read_next_chunk = gb_storage_file_read_next_chunk,
-    .cleanup = gb_storage_file_cleanup
-  },
-  {
-    // Flash Storage
-    .type = GetBytesStorageTypeFlash,
-    .setup = gb_storage_flash_setup,
-    .get_size = gb_storage_flash_get_size,
-    .read_next_chunk = gb_storage_flash_read_next_chunk,
-    .cleanup = gb_storage_flash_cleanup
-  },
+    {// Filesystem File Storage
+     .type = GetBytesStorageTypeFile,
+     .setup = gb_storage_file_setup,
+     .get_size = gb_storage_file_get_size,
+     .read_next_chunk = gb_storage_file_read_next_chunk,
+     .cleanup = gb_storage_file_cleanup
+    },
+    {// Flash Storage
+     .type = GetBytesStorageTypeFlash,
+     .setup = gb_storage_flash_setup,
+     .get_size = gb_storage_flash_get_size,
+     .read_next_chunk = gb_storage_flash_read_next_chunk,
+     .cleanup = gb_storage_flash_cleanup
+    },
 #endif /* !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_RELEASE) */
 };
 
@@ -69,7 +66,7 @@ GetBytesStorageType prv_get_storage_type_for_object(GetBytesObjectType object_ty
 }
 
 bool gb_storage_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
-                     GetBytesStorageInfo *info) {
+                      GetBytesStorageInfo *info) {
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_get_bytes_impls); i++) {
     if (s_get_bytes_impls[i].type == prv_get_storage_type_for_object(object_type)) {
       storage->impl = &s_get_bytes_impls[i];

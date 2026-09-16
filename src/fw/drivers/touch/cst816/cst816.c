@@ -21,50 +21,50 @@
 
 PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 
-#define CST816_RESET_CYCLE_TIME       10  /* ms */
-#define CST816_POR_DELAY_TIME         110 /* ms */
-#define CST816_REG_WR_DELAY_TIME      2   /* ms */ 
-#define CST816_FW_CHECKSUM_CAL_TIME   500 /* ms */ 
+#define CST816_RESET_CYCLE_TIME 10      /* ms */
+#define CST816_POR_DELAY_TIME 110       /* ms */
+#define CST816_REG_WR_DELAY_TIME 2      /* ms */
+#define CST816_FW_CHECKSUM_CAL_TIME 500 /* ms */
 
-#define CST816_POWER_MODE_REG         0xE5
-#define CST816_POWER_MODE_SLEEP       0x03
-#define CST816_CHIP_ID_REG            0xA7
-#define CST816_FW_VERSION_REG         0xA9
-#define CST816_TOUCH_DATA_REG         0x02
-#define CST816_TOUCH_DATA_SIZE        5
-#define CST816_GESTURE_ID             0x01
-#define CST816_GESTURE_NONE           0x00
-#define CST816_GESTURE_RIGHT          0x01
-#define CST816_GESTURE_LEFT           0x02
-#define CST816_GESTURE_DOWN           0x03
-#define CST816_GESTURE_UP             0x04
-#define CST816_GESTURE_CLICK          0x05
-#define CST816_GESTURE_DOUBLE_CLICK   0x0B
-#define CST816_GESTURE_LONG_PRESS     0x0C
+#define CST816_POWER_MODE_REG 0xE5
+#define CST816_POWER_MODE_SLEEP 0x03
+#define CST816_CHIP_ID_REG 0xA7
+#define CST816_FW_VERSION_REG 0xA9
+#define CST816_TOUCH_DATA_REG 0x02
+#define CST816_TOUCH_DATA_SIZE 5
+#define CST816_GESTURE_ID 0x01
+#define CST816_GESTURE_NONE 0x00
+#define CST816_GESTURE_RIGHT 0x01
+#define CST816_GESTURE_LEFT 0x02
+#define CST816_GESTURE_DOWN 0x03
+#define CST816_GESTURE_UP 0x04
+#define CST816_GESTURE_CLICK 0x05
+#define CST816_GESTURE_DOUBLE_CLICK 0x0B
+#define CST816_GESTURE_LONG_PRESS 0x0C
 
-#define CST816_BOOT_MODE_REG          0xA001
-#define CST816_BOOT_MODE_CMD          0xAB
-#define CST816_BOOT_FLAG_REG          0xA003
-#define CST816_BOOT_FLAG_VAL          0xC1
-#define CST816_FW_START_ADDR_REG      0xA014
-#define CST816_FW_PAGE_REG            0xA018
-#define CST816_FW_PAGE_SIZE           512
-#define CST816_FW_PAGE_DONE           0xA004
-#define CST816_FW_PAGE_STATE          0xA005
-#define CST816_BOOT_EXIT_REG          0xA006
-#define CST816_BOOT_EXIT_VAL          0xEE
-#define CST816_FW_PAGE_READY          0x55
-#define CST816_FW_WR_TIME             100 /* ms */
-#define CST816_FW_CHECKSUM_REG        0xA008
-#define CST816_FW_VER_INFO_INDEX      (-11)
+#define CST816_BOOT_MODE_REG 0xA001
+#define CST816_BOOT_MODE_CMD 0xAB
+#define CST816_BOOT_FLAG_REG 0xA003
+#define CST816_BOOT_FLAG_VAL 0xC1
+#define CST816_FW_START_ADDR_REG 0xA014
+#define CST816_FW_PAGE_REG 0xA018
+#define CST816_FW_PAGE_SIZE 512
+#define CST816_FW_PAGE_DONE 0xA004
+#define CST816_FW_PAGE_STATE 0xA005
+#define CST816_BOOT_EXIT_REG 0xA006
+#define CST816_BOOT_EXIT_VAL 0xEE
+#define CST816_FW_PAGE_READY 0x55
+#define CST816_FW_WR_TIME 100 /* ms */
+#define CST816_FW_CHECKSUM_REG 0xA008
+#define CST816_FW_VER_INFO_INDEX (-11)
 
 /* Workaround: the CST816 occasionally wedges and stops asserting its INT line.
  * If no touch activity is seen between two watchdog checks, hard-reset it. */
-#define CST816_WATCHDOG_PERIOD_MIN    30
+#define CST816_WATCHDOG_PERIOD_MIN 30
 
 /* The chip stays awake for 2s after a wake; an interrupt seen >=2s after the
  * previous one therefore marks a fresh sleep->awake transition. */
-#define CST816_WAKE_SPACING_MS        2000
+#define CST816_WAKE_SPACING_MS 2000
 
 static bool s_callback_scheduled = false;
 static bool s_enabled = false;
@@ -78,20 +78,21 @@ static void cst816_hw_reset(void);
 static void prv_watchdog_cb(void *data);
 
 static RegularTimerInfo s_watchdog_timer = {
-  .cb = prv_watchdog_cb,
+    .cb = prv_watchdog_cb,
 };
 
-static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t size, bool is_work_mode) {
+static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t size,
+                          bool is_work_mode) {
   pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
-  I2CSlavePort* port = CST816->i2c;
+  I2CSlavePort *port = CST816->i2c;
   uint8_t addr_size = 1;
-  if(!is_work_mode) {
+  if (!is_work_mode) {
     port = CST816->i2c_boot;
     addr_size = 2;
   }
   i2c_use(port);
-  uint8_t regad[2] = { register_address >> 8, register_address & 0xFF };
-  bool rv = i2c_write_block(port, addr_size, is_work_mode?regad+1:regad);
+  uint8_t regad[2] = {register_address >> 8, register_address & 0xFF};
+  bool rv = i2c_write_block(port, addr_size, is_work_mode ? regad + 1 : regad);
   if (rv) {
     rv = i2c_read_block(port, size, result);
   }
@@ -100,11 +101,12 @@ static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t s
   return rv;
 }
 
-static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint16_t size, bool is_work_mode) {
+static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint16_t size,
+                           bool is_work_mode) {
   pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
-  I2CSlavePort* port = CST816->i2c;
+  I2CSlavePort *port = CST816->i2c;
   uint8_t addr_size = 1;
-  if(!is_work_mode) {
+  if (!is_work_mode) {
     port = CST816->i2c_boot;
     addr_size = 2;
   }
@@ -112,8 +114,8 @@ static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint
   uint8_t data[size + sizeof(register_address)];
   data[0] = register_address >> 8;
   data[1] = register_address & 0xFF;
-  memcpy(data+sizeof(register_address), datum, size);
-  bool rv = i2c_write_block(port, size+addr_size, is_work_mode?data+1:data);
+  memcpy(data + sizeof(register_address), datum, size);
+  bool rv = i2c_write_block(port, size + addr_size, is_work_mode ? data + 1 : data);
   i2c_release(port);
   pbl_mutex_unlock(&s_i2c_lock);
   return rv;
@@ -148,8 +150,7 @@ static bool cst816_enter_bootmode(void) {
   return false;
 }
 
-static uint16_t cst816_read_checksum(void)
-{
+static uint16_t cst816_read_checksum(void) {
   uint8_t cmd = 0;
   bool rv = prv_write_data(CST816_BOOT_FLAG_REG, &cmd, 1, 0);
   psleep(CST816_FW_CHECKSUM_CAL_TIME);
@@ -168,14 +169,14 @@ static bool cst816_fw_update(void) {
     uint16_t length = (((uint16_t)(app_bin[3] & 0xFF)) << 8) | app_bin[2];
     uint16_t checksum = (((uint16_t)(app_bin[5] & 0xFF)) << 8) | app_bin[4];
     uint16_t fw_offset = 6;
-    
+
     while (length) {
       PBL_LOG_DBG("fw start_addr:%d length:%d", start_addr, length);
-      uint8_t addr[2] = {start_addr&0xff, start_addr>>8};
+      uint8_t addr[2] = {start_addr & 0xff, start_addr >> 8};
       bool rv = prv_write_data(CST816_FW_START_ADDR_REG, addr, 2, 0);
       psleep(CST816_REG_WR_DELAY_TIME);
-      if(!prv_write_data(CST816_FW_PAGE_REG, app_bin+fw_offset,
-                        length>=CST816_FW_PAGE_SIZE?CST816_FW_PAGE_SIZE:length , 0)) {
+      if (!prv_write_data(CST816_FW_PAGE_REG, app_bin + fw_offset,
+                          length >= CST816_FW_PAGE_SIZE ? CST816_FW_PAGE_SIZE : length, 0)) {
         PBL_LOG_ERR("cst816 update fw error by iic");
         return false;
       }
@@ -183,8 +184,8 @@ static bool cst816_fw_update(void) {
       uint8_t cmd = 0xEE;
       rv = prv_write_data(CST816_FW_PAGE_DONE, &cmd, 1, 0);
       psleep(CST816_FW_WR_TIME);
-      for (int t=0;; t++) {
-        if(t > 50) {
+      for (int t = 0;; t++) {
+        if (t > 50) {
           PBL_LOG_ERR("cst816 update fw error by writing timeout");
           return false;
         }
@@ -197,7 +198,7 @@ static bool cst816_fw_update(void) {
       }
       fw_offset += CST816_FW_PAGE_SIZE;
       start_addr += CST816_FW_PAGE_SIZE;
-      length -= length>=CST816_FW_PAGE_SIZE?CST816_FW_PAGE_SIZE:length;
+      length -= length >= CST816_FW_PAGE_SIZE ? CST816_FW_PAGE_SIZE : length;
     }
 
     uint16_t checksum_read = cst816_read_checksum();
@@ -242,7 +243,6 @@ void touch_sensor_init(void) {
   uint8_t fw_version;
   bool rv;
 
-
 #ifndef RESET_PIN_CTRLBY_NPM1300
   gpio_output_init(&CST816->reset, GPIO_OType_PP);
 #endif
@@ -283,7 +283,7 @@ void touch_sensor_init(void) {
   touch_sensor_set_enabled(false);
 }
 
-static void prv_process_pending_messages(void* context) {
+static void prv_process_pending_messages(void *context) {
   bool rv;
   s_callback_scheduled = false;
 
@@ -319,8 +319,8 @@ static void prv_process_pending_messages(void* context) {
 
   uint8_t press = data[0] & 0x0F;
   GPoint point = {
-    .x = (((uint16_t)(data[1] & 0x0F)) << 8) | data[2],
-    .y = (((uint16_t)(data[3] & 0X0F)) << 8) | data[4],
+      .x = (((uint16_t)(data[1] & 0x0F)) << 8) | data[2],
+      .y = (((uint16_t)(data[3] & 0X0F)) << 8) | data[4],
   };
 
   if (CST816->invert_x_axis) {

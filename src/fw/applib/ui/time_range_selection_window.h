@@ -28,8 +28,9 @@ typedef struct TimeRangeSelectionWindowData {
   char buf[3];
 } TimeRangeSelectionWindowData;
 
-
 void time_range_selection_window_init(TimeRangeSelectionWindowData *time_range_selection_window,
-    GColor color, TimeRangeSelectionCompleteCallback complete_callback, void *callback_context);
+                                      GColor color,
+                                      TimeRangeSelectionCompleteCallback complete_callback,
+                                      void *callback_context);
 
 void time_range_selection_window_deinit(TimeRangeSelectionWindowData *time_range_selection_window);

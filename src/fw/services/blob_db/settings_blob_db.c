@@ -38,113 +38,113 @@ static bool s_sync_callback_pending = false;
 //! Only these settings will be synced via BlobDB.
 //! This prevents sensitive data (Bluetooth pairing, debug flags, etc.) from syncing.
 static const char *s_syncable_settings[] = {
-  // Clock preferences
-  "clock24h",
-  "timezoneSource",
-  "automaticTimezoneID",
+    // Clock preferences
+    "clock24h",
+    "timezoneSource",
+    "automaticTimezoneID",
 
-  // Display preferences
-  "unitsDistance",
-  "unitsWind",
-  "textStyle",
-  "stationaryMode",
+    // Display preferences
+    "unitsDistance",
+    "unitsWind",
+    "textStyle",
+    "stationaryMode",
 #ifdef CONFIG_ORIENTATION_MANAGER
-  "displayOrientationLeftHanded",
+    "displayOrientationLeftHanded",
 #endif
 
-  // Motion preferences
+// Motion preferences
 #ifdef CONFIG_ACCEL_SENSITIVITY
-  "motionSensitivity",
+    "motionSensitivity",
 #endif
 
-  // Backlight preferences
-  "lightEnabled",
-  "lightAmbientSensorEnabled",
-  "lightTimeoutMs",
-  "lightIntensity",
-  "lightMotion",
-  "lightTouch",
-  "lightAmbientThreshold",
+    // Backlight preferences
+    "lightEnabled",
+    "lightAmbientSensorEnabled",
+    "lightTimeoutMs",
+    "lightIntensity",
+    "lightMotion",
+    "lightTouch",
+    "lightAmbientThreshold",
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-  "lightDynamicMode",
+    "lightDynamicMode",
 #endif
-  "lightPreset",
+    "lightPreset",
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  "lightColor",
+    "lightColor",
 #endif
 
-  // Language preferences
-  "langEnglish",
-  "language",
+    // Language preferences
+    "langEnglish",
+    "language",
 
-  // App preferences
-  "qlUp",
-  "qlDown",
-  "qlSelect",
-  "qlBack",
-  "qlSetupOpened",
-  "qlSingleClickUp",
-  "qlSingleClickDown",
-  "qlComboBackUp",
-  "qlComboUpDown",
+    // App preferences
+    "qlUp",
+    "qlDown",
+    "qlSelect",
+    "qlBack",
+    "qlSetupOpened",
+    "qlSingleClickUp",
+    "qlSingleClickDown",
+    "qlComboBackUp",
+    "qlComboUpDown",
 
-  // UI theming
-  "settingsMenuHighlightColor",
-  "appsMenuHighlightColor",
+    // UI theming
+    "settingsMenuHighlightColor",
+    "appsMenuHighlightColor",
 
-  // Timeline preferences
-  "timelineQuickViewEnabled",
-  "timelineQuickViewBeforeTimeMin",
+    // Timeline preferences
+    "timelineQuickViewEnabled",
+    "timelineQuickViewBeforeTimeMin",
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
-  "timelineQuickViewWatchfaceFit",
+    "timelineQuickViewWatchfaceFit",
 #endif
-  "timelineSettingsOpened",
+    "timelineSettingsOpened",
 
-  // Activity preferences
-  "activityPreferences",
-  "activityHealthAppOpened",
-  "activityWorkoutAppOpened",
-  "alarmsAppOpened",
-  "hrmPreferences",
-  "heartRatePreferences",
+    // Activity preferences
+    "activityPreferences",
+    "activityHealthAppOpened",
+    "activityWorkoutAppOpened",
+    "alarmsAppOpened",
+    "hrmPreferences",
+    "heartRatePreferences",
 
-  // Menu wrap around preferences
-  "menuScrollWrapAround",
-  "menuScrollVibeBehavior",
+    // Menu wrap around preferences
+    "menuScrollWrapAround",
+    "menuScrollVibeBehavior",
 
-  // Worker preferences
-  "workerId",
+    // Worker preferences
+    "workerId",
 
-  // Music preferences
-  "musicShowVolumeControls",
-  "musicShowProgressBar",
-  "musicShowAlbumArt",
+    // Music preferences
+    "musicShowVolumeControls",
+    "musicShowProgressBar",
+    "musicShowAlbumArt",
 };
 
 static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);
 
 //! Notification preferences from notifpref file that should be synced
 static const char *s_syncable_notif_prefs[] = {
-  "mask",
-  "dndInterruptionsMask",
-  "dndShowNotifications",
-  "vibeIntensity",
-  "vibeScoreNotifications",
-  "vibeScoreIncomingCalls",
-  "vibeScoreAlarms",
-  "dndManuallyEnabled",
-  "dndSmartEnabled",
-  "dndWeekdaySchedule",
-  "dndWeekdayScheduleEnabled",
-  "dndWeekendSchedule",
-  "dndWeekendScheduleEnabled",
-  "notifWindowTimeout",
-  "notifDesignStyle",
-  "notifVibeDelay",
-  "notifBacklight",
-  "dndMotionBacklight",
-  "dndTouchBacklight",
-  "dndAutoDismiss",
+    "mask",
+    "dndInterruptionsMask",
+    "dndShowNotifications",
+    "vibeIntensity",
+    "vibeScoreNotifications",
+    "vibeScoreIncomingCalls",
+    "vibeScoreAlarms",
+    "dndManuallyEnabled",
+    "dndSmartEnabled",
+    "dndWeekdaySchedule",
+    "dndWeekdayScheduleEnabled",
+    "dndWeekendSchedule",
+    "dndWeekendScheduleEnabled",
+    "notifWindowTimeout",
+    "notifDesignStyle",
+    "notifVibeDelay",
+    "notifBacklight",
+    "dndMotionBacklight",
+    "dndTouchBacklight",
+    "dndAutoDismiss",
 };
 
 static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
@@ -161,8 +161,8 @@ bool settings_blob_db_phone_supports_sync(void) {
 
 //! Find a key's canonical whitelist entry, or NULL if it isn't in the list.
 //! Handles both key_len with null terminator (strlen+1) and without (strlen)
-static const char *prv_find_in_list(const uint8_t *key, int key_len,
-                                    const char **list, size_t list_len) {
+static const char *prv_find_in_list(const uint8_t *key, int key_len, const char **list,
+                                    size_t list_len) {
   for (size_t i = 0; i < list_len; i++) {
     const char *list_key = list[i];
     size_t list_key_strlen = strlen(list_key);
@@ -176,8 +176,8 @@ static const char *prv_find_in_list(const uint8_t *key, int key_len,
 }
 
 //! Check if a key matches an entry in a given list
-static bool prv_is_key_in_list(const uint8_t *key, int key_len,
-                               const char **list, size_t list_len) {
+static bool prv_is_key_in_list(const uint8_t *key, int key_len, const char **list,
+                               size_t list_len) {
   return prv_find_in_list(key, key_len, list, list_len) != NULL;
 }
 
@@ -188,8 +188,8 @@ static bool prv_is_key_in_list(const uint8_t *key, int key_len,
 //! setting silently fails to apply. Points the caller at the whitelist's own string so the null
 //! byte is guaranteed to be present. Returns false if the key isn't a whitelisted shell pref.
 static bool prv_canonical_shell_key(const uint8_t **key, int *key_len) {
-  const char *canonical = prv_find_in_list(*key, *key_len, s_syncable_settings,
-                                           s_num_syncable_settings);
+  const char *canonical =
+      prv_find_in_list(*key, *key_len, s_syncable_settings, s_num_syncable_settings);
   if (!canonical) {
     return false;
   }
@@ -308,11 +308,10 @@ void settings_blob_db_init(void) {
 
   s_initialized = true;
   PBL_LOG_DBG("Settings BlobDB initialized (%u whitelisted settings)",
-          (unsigned int) s_num_syncable_settings);
+              (unsigned int)s_num_syncable_settings);
 }
 
-status_t settings_blob_db_insert(const uint8_t *key, int key_len,
-                                 const uint8_t *val, int val_len) {
+status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!s_initialized) {
     return E_INTERNAL;
   }
@@ -331,8 +330,8 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
     file_len = SHELL_PREFS_FILE_LEN;
   } else {
     char key_str[128];
-    size_t copy_len = (key_len > 0 && (size_t)key_len < sizeof(key_str)) ?
-                      (size_t)key_len : sizeof(key_str) - 1;
+    size_t copy_len =
+        (key_len > 0 && (size_t)key_len < sizeof(key_str)) ? (size_t)key_len : sizeof(key_str) - 1;
     memcpy(key_str, key, copy_len);
     key_str[copy_len] = '\0';
     PBL_LOG_WRN("Rejecting non-whitelisted setting: %s", key_str);
@@ -366,10 +365,10 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
   // Update the in-memory prefs state after successful write
   if (PASSED(status)) {
     PebbleBlobDBEvent event = {
-      .db_id = BlobDBIdSettings,
-      .type = BlobDBEventTypeInsert,
-      .key = (uint8_t *)key,
-      .key_len = key_len,
+        .db_id = BlobDBIdSettings,
+        .type = BlobDBEventTypeInsert,
+        .key = (uint8_t *)key,
+        .key_len = key_len,
     };
     if (is_notif_pref) {
       alerts_preferences_handle_blob_db_event(&event);
@@ -417,8 +416,7 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   return len;
 }
 
-status_t settings_blob_db_read(const uint8_t *key, int key_len,
-                               uint8_t *val_out, int val_len) {
+status_t settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
   if (!s_initialized) {
     return E_INTERNAL;
   }
@@ -497,8 +495,7 @@ typedef struct {
   BlobDBDirtyItem *dirty_list_tail;
 } BuildDirtyListContext;
 
-static bool prv_build_dirty_list_callback(SettingsFile *file,
-                                          SettingsRecordInfo *info,
+static bool prv_build_dirty_list_callback(SettingsFile *file, SettingsRecordInfo *info,
                                           void *context) {
   BuildDirtyListContext *ctx = (BuildDirtyListContext *)context;
 
@@ -513,7 +510,7 @@ static bool prv_build_dirty_list_callback(SettingsFile *file,
 
   // Only include whitelisted settings
   if (!prv_is_syncable(key_buf, info->key_len)) {
-    return true; // Skip, continue iteration
+    return true;  // Skip, continue iteration
   }
 
   // Allocate dirty item
@@ -528,11 +525,11 @@ static bool prv_build_dirty_list_callback(SettingsFile *file,
     ctx->dirty_list = item;
     ctx->dirty_list_tail = item;
   } else {
-    ctx->dirty_list_tail = (BlobDBDirtyItem *)list_append(
-        (ListNode *)ctx->dirty_list_tail, (ListNode *)item);
+    ctx->dirty_list_tail =
+        (BlobDBDirtyItem *)list_append((ListNode *)ctx->dirty_list_tail, (ListNode *)item);
   }
 
-  return true; // Continue iteration
+  return true;  // Continue iteration
 }
 
 BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
@@ -540,7 +537,7 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
     return NULL;
   }
 
-  BuildDirtyListContext ctx = { .dirty_list = NULL, .dirty_list_tail = NULL };
+  BuildDirtyListContext ctx = {.dirty_list = NULL, .dirty_list_tail = NULL};
 
   // Iterate shell prefs file
   prefs_private_lock();
@@ -607,11 +604,11 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     bool found_dirty;
   } IsDirtyContext;
 
-  bool is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+  bool is_dirty_callback(SettingsFile * file, SettingsRecordInfo * info, void *context) {
     IsDirtyContext *ctx = (IsDirtyContext *)context;
 
     if (!info->dirty) {
-      return true; // Continue
+      return true;  // Continue
     }
 
     // Check if whitelisted
@@ -620,13 +617,13 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
 
     if (prv_is_syncable(key_buf, info->key_len)) {
       ctx->found_dirty = true;
-      return false; // Stop iteration
+      return false;  // Stop iteration
     }
 
-    return true; // Continue
+    return true;  // Continue
   }
 
-  IsDirtyContext ctx = { .found_dirty = false };
+  IsDirtyContext ctx = {.found_dirty = false};
 
   // Check shell prefs file
   prefs_private_lock();
@@ -715,7 +712,7 @@ static bool prv_get_timestamp_callback(SettingsFile *file, SettingsRecordInfo *i
   GetTimestampContext *ctx = (GetTimestampContext *)context;
 
   if (info->key_len != ctx->search_key_len) {
-    return true; // Continue
+    return true;  // Continue
   }
 
   uint8_t key_buf[SETTINGS_KEY_MAX_LEN];
@@ -724,15 +721,14 @@ static bool prv_get_timestamp_callback(SettingsFile *file, SettingsRecordInfo *i
   if (memcmp(key_buf, ctx->search_key, info->key_len) == 0) {
     ctx->last_modified = (time_t)info->last_modified;
     ctx->found = true;
-    return false; // Stop iteration
+    return false;  // Stop iteration
   }
 
-  return true; // Continue
+  return true;  // Continue
 }
 
-status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
-                                                const uint8_t *val, int val_len,
-                                                time_t timestamp) {
+status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len, const uint8_t *val,
+                                                int val_len, time_t timestamp) {
   if (!s_initialized) {
     return E_INTERNAL;
   }
@@ -764,10 +760,10 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
 
   // Check if existing value has a newer timestamp
   GetTimestampContext ctx = {
-    .search_key = key,
-    .search_key_len = key_len,
-    .last_modified = 0,
-    .found = false,
+      .search_key = key,
+      .search_key_len = key_len,
+      .last_modified = 0,
+      .found = false,
   };
   settings_file_each(&file, prv_get_timestamp_callback, &ctx);
 
@@ -775,8 +771,8 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     // Watch data is newer - reject the insert
     settings_file_close(&file);
     prv_unlock_for_file(is_notif_pref);
-    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu",
-            (unsigned long)ctx.last_modified, (unsigned long)timestamp);
+    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu", (unsigned long)ctx.last_modified,
+                (unsigned long)timestamp);
     return E_INVALID_OPERATION;
   }
 
@@ -799,10 +795,10 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   // Update the in-memory prefs state after successful write
   if (PASSED(status)) {
     PebbleBlobDBEvent event = {
-      .db_id = BlobDBIdSettings,
-      .type = BlobDBEventTypeInsert,
-      .key = (uint8_t *)key,
-      .key_len = key_len,
+        .db_id = BlobDBIdSettings,
+        .type = BlobDBEventTypeInsert,
+        .key = (uint8_t *)key,
+        .key_len = key_len,
     };
     if (is_notif_pref) {
       alerts_preferences_handle_blob_db_event(&event);

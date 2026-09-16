@@ -36,58 +36,58 @@ typedef struct {
 
 const ColorTable s_color_table[] = {
 #ifdef CONFIG_BOARD_ASTERIX
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
-    .name = "BLACK",
-    .short_name = "BK",
-  },
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE,
-    .name = "WHITE",
-    .short_name = "WH",
-  }
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK,
+        .name = "BLACK",
+        .short_name = "BK",
+    },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE,
+        .name = "WHITE",
+        .short_name = "WH",
+    }
 #elif defined(CONFIG_BOARD_OBELIX)
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
-    .name = "BLACK/GREY",
-    .short_name = "BG",
-  },
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED,
-    .name = "BLACK/RED",
-    .short_name = "BR",
-  },
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE,
-    .name = "SILVER/BLUE",
-    .short_name = "SB",
-  },
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY,
-    .name = "SILVER/GREY",
-    .short_name = "SG",
-  },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
+        .name = "BLACK/GREY",
+        .short_name = "BG",
+    },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED,
+        .name = "BLACK/RED",
+        .short_name = "BR",
+    },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE,
+        .name = "SILVER/BLUE",
+        .short_name = "SB",
+    },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY,
+        .name = "SILVER/GREY",
+        .short_name = "SG",
+    },
 #elif defined(CONFIG_BOARD_GETAFIX)
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20,
-    .name = "BLACK-20MM",
-    .short_name = "BK20",
-  },
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14,
-    .name = "SILVER-14MM",
-    .short_name = "SV14",
-  },
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20,
-    .name = "SILVER-20MM",
-    .short_name = "SV20",
-  },
-  {
-    .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14,
-    .name = "GOLD-14MM",
-    .short_name = "GD14",
-  },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20,
+        .name = "BLACK-20MM",
+        .short_name = "BK20",
+    },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14,
+        .name = "SILVER-14MM",
+        .short_name = "SV14",
+    },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20,
+        .name = "SILVER-20MM",
+        .short_name = "SV20",
+    },
+    {
+        .color = WATCH_INFO_COLOR_COREDEVICES_PR2_GOLD_14,
+        .name = "GOLD-14MM",
+        .short_name = "GD14",
+    },
 #endif
 };
 
@@ -193,16 +193,14 @@ static void prv_color_preview_update_proc(Layer *layer, GContext *ctx) {
     // Top triangle (color1)
     graphics_context_set_fill_color(ctx, color1);
     for (int y = 0; y < bounds.size.h; y++) {
-      GRect top_rect = GRect(bounds.origin.x, bounds.origin.y + y,
-                             bounds.size.w - y, 1);
+      GRect top_rect = GRect(bounds.origin.x, bounds.origin.y + y, bounds.size.w - y, 1);
       graphics_fill_rect(ctx, &top_rect);
     }
 
     // Bottom triangle (color2)
     graphics_context_set_fill_color(ctx, color2);
     for (int y = 0; y < bounds.size.h; y++) {
-      GRect bottom_rect = GRect(bounds.origin.x + bounds.size.w - y,
-                                bounds.origin.y + y, y, 1);
+      GRect bottom_rect = GRect(bounds.origin.x + bounds.size.w - y, bounds.origin.y + y, y, 1);
       graphics_fill_rect(ctx, &bottom_rect);
     }
   }
@@ -267,8 +265,8 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
     return;
   }
 
-  snprintf(model, sizeof(model), "%s-%s",
-           s_model, s_color_table[app_data->selected_color_index].short_name);
+  snprintf(model, sizeof(model), "%s-%s", s_model,
+           s_color_table[app_data->selected_color_index].short_name);
 
   mfg_info_set_model(model);
   mfg_info_set_watch_color(s_color_table[app_data->selected_color_index].color);
@@ -287,8 +285,8 @@ static void prv_config_provider(void *data) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData) {
-    .selected_color_index = -1,
+  *data = (AppData){
+      .selected_color_index = -1,
   };
 
   app_state_set_user_data(data);
@@ -308,38 +306,34 @@ static void prv_handle_init(void) {
   // Create up arrow (pointing up)
   static GPoint UP_ARROW_POINTS[] = {{0, 10}, {7, 0}, {14, 10}};
   static const GPathInfo UP_ARROW_PATH_INFO = {
-    .num_points = ARRAY_LENGTH(UP_ARROW_POINTS),
-    .points = UP_ARROW_POINTS
+      .num_points = ARRAY_LENGTH(UP_ARROW_POINTS),
+      .points = UP_ARROW_POINTS
   };
   PathLayer *up_arrow = &data->up_arrow;
   path_layer_init(up_arrow, &UP_ARROW_PATH_INFO);
   path_layer_set_fill_color(up_arrow, GColorBlack);
   path_layer_set_stroke_color(up_arrow, GColorBlack);
-  layer_set_frame(&up_arrow->layer,
-                  &GRect((window->layer.bounds.size.w / 2) - 7, 40, 14, 10));
+  layer_set_frame(&up_arrow->layer, &GRect((window->layer.bounds.size.w / 2) - 7, 40, 14, 10));
   layer_add_child(&window->layer, &up_arrow->layer);
 
 #ifdef PBL_COLOR
   // Create color preview square above the color text
   Layer *color_preview = &data->color_preview;
   const int preview_size = 40;
-  layer_init(color_preview,
-             &GRect((window->layer.bounds.size.w / 2) - (preview_size / 2), 55,
-                    preview_size, preview_size));
+  layer_init(color_preview, &GRect((window->layer.bounds.size.w / 2) - (preview_size / 2), 55,
+                                   preview_size, preview_size));
   layer_set_update_proc(color_preview, prv_color_preview_update_proc);
   layer_add_child(&window->layer, color_preview);
 #endif
 
   TextLayer *color = &data->color;
-  text_layer_init(color,
-                  &GRect(5, 100,
-                         window->layer.bounds.size.w - 10, 28));
+  text_layer_init(color, &GRect(5, 100, window->layer.bounds.size.w - 10, 28));
   text_layer_set_font(color, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(color, GTextAlignmentCenter);
   if (ARRAY_LENGTH(s_color_table) > 0) {
     data->selected_color_index = 0;
-    snprintf(data->color_text, sizeof(data->color_text), "%s (%s)",
-             s_color_table[0].name, s_color_table[0].short_name);
+    snprintf(data->color_text, sizeof(data->color_text), "%s (%s)", s_color_table[0].name,
+             s_color_table[0].short_name);
     text_layer_set_text(color, data->color_text);
   } else {
     text_layer_set_text(color, "NO COLORS AVAILABLE");
@@ -349,21 +343,19 @@ static void prv_handle_init(void) {
   // Create down arrow (pointing down)
   static GPoint DOWN_ARROW_POINTS[] = {{0, 0}, {7, 10}, {14, 0}};
   static const GPathInfo DOWN_ARROW_PATH_INFO = {
-    .num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS),
-    .points = DOWN_ARROW_POINTS
+      .num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS),
+      .points = DOWN_ARROW_POINTS
   };
   PathLayer *down_arrow = &data->down_arrow;
   path_layer_init(down_arrow, &DOWN_ARROW_PATH_INFO);
   path_layer_set_fill_color(down_arrow, GColorBlack);
   path_layer_set_stroke_color(down_arrow, GColorBlack);
-  layer_set_frame(&down_arrow->layer,
-                  &GRect((window->layer.bounds.size.w / 2) - 7, 133, 14, 10));
+  layer_set_frame(&down_arrow->layer, &GRect((window->layer.bounds.size.w / 2) - 7, 133, 14, 10));
   layer_add_child(&window->layer, &down_arrow->layer);
 
   TextLayer *status = &data->status;
-  text_layer_init(status,
-                  &GRect(5, 148,
-                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 148));
+  text_layer_init(
+      status, &GRect(5, 148, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 148));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
   layer_add_child(&window->layer, &status->layer);
@@ -377,14 +369,14 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_program_color_app_get_info(void) {
+const PebbleProcessMd *mfg_program_color_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: d5f0a47d-e570-499d-bcaa-fc6d56230038
-    .common.uuid = { 0xd5, 0xf0, 0xa4, 0x7d, 0xe5, 0x70, 0x49, 0x9d,
-                     0xbc, 0xaa, 0xfc, 0x6d, 0x56, 0x23, 0x00, 0x38 },
-    .name = "MfgProgramColor",
+      .common.main_func = &s_main,
+      // UUID: d5f0a47d-e570-499d-bcaa-fc6d56230038
+      .common.uuid =
+          {0xd5, 0xf0, 0xa4, 0x7d, 0xe5, 0x70, 0x49, 0x9d, 0xbc, 0xaa, 0xfc, 0x6d, 0x56, 0x23, 0x00,
+           0x38},
+      .name = "MfgProgramColor",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }
-

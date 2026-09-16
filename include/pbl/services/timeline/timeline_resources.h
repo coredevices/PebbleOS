@@ -31,9 +31,9 @@ typedef struct {
 } AppResourceInfo;
 
 typedef enum {
-  TimelineResourceSizeTiny, // 25x25
-  TimelineResourceSizeSmall, // 50x50
-  TimelineResourceSizeLarge, // 80x80
+  TimelineResourceSizeTiny,   // 25x25
+  TimelineResourceSizeSmall,  // 50x50
+  TimelineResourceSizeLarge,  // 80x80
   TimelineResourceSizeCount
 } TimelineResourceSize;
 
@@ -58,10 +58,14 @@ typedef struct {
 
 static inline GSize timeline_resources_get_gsize(TimelineResourceSize size) {
   switch (size) {
-    case TimelineResourceSizeTiny: return TIMELINE_TINY_RESOURCE_SIZE;
-    case TimelineResourceSizeSmall: return TIMELINE_SMALL_RESOURCE_SIZE;
-    case TimelineResourceSizeLarge: return TIMELINE_LARGE_RESOURCE_SIZE;
-    default: return GSizeZero;
+    case TimelineResourceSizeTiny:
+      return TIMELINE_TINY_RESOURCE_SIZE;
+    case TimelineResourceSizeSmall:
+      return TIMELINE_SMALL_RESOURCE_SIZE;
+    case TimelineResourceSizeLarge:
+      return TIMELINE_LARGE_RESOURCE_SIZE;
+    default:
+      return GSizeZero;
   }
 }
 

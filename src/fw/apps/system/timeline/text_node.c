@@ -38,21 +38,21 @@ typedef enum {
   GAxisAlign_Max,
 } GAxisAlign;
 
-_Static_assert((((int)GAxisAlign_Min    == GTextAlignmentLeft) &&
+_Static_assert((((int)GAxisAlign_Min == GTextAlignmentLeft) &&
                 ((int)GAxisAlign_Center == GTextAlignmentCenter) &&
-                ((int)GAxisAlign_Max    == GTextAlignmentRight)),
+                ((int)GAxisAlign_Max == GTextAlignmentRight)),
                "TextNode requires GTextAlignment == the ordered set (0, 1, 2), left to right");
-_Static_assert((((int)GAxisAlign_Min    == GVerticalAlignmentTop) &&
+_Static_assert((((int)GAxisAlign_Min == GVerticalAlignmentTop) &&
                 ((int)GAxisAlign_Center == GVerticalAlignmentCenter) &&
-                ((int)GAxisAlign_Max    == GVerticalAlignmentBottom)),
+                ((int)GAxisAlign_Max == GVerticalAlignmentBottom)),
                "TextNode requires GVerticalAlignment == the ordered set (0, 1, 2), top to bottom");
 
 typedef struct {
-  const GTextNodeDrawConfig *config; //!< Draw configuration passed by the user
-  GTextNode *node; //!< GTextNode the context belongs to
-  GContext *gcontext; //!< Graphics context to draw with
-  const GRect *draw_box; //!< Drawing box in local coordinates passed by the user
-  GSize *size_out; //!< GSize pointer to write the calculated size to
+  const GTextNodeDrawConfig *config;  //!< Draw configuration passed by the user
+  GTextNode *node;                    //!< GTextNode the context belongs to
+  GContext *gcontext;                 //!< Graphics context to draw with
+  const GRect *draw_box;              //!< Drawing box in local coordinates passed by the user
+  GSize *size_out;                    //!< GSize pointer to write the calculated size to
   //! GRect representing the drawing cursor. For leaf nodes, this is simply the draw_box offset by
   //! the node's offset. For containers, this is passed as the drawing box to its children, and
   //! shrinks along the container's axis after drawing each child.
@@ -63,7 +63,7 @@ typedef struct {
   //! GSize representing the size of the container. Used by containers only. This size starts at
   //! GSizeZero and grows after drawing each child.
   GSize size;
-  bool render; //!< true if this context should render, otherwise false only calculating size
+  bool render;  //!< true if this context should render, otherwise false only calculating size
   //! true if this context should neither render nor calculate size, otherwise false. size_out will
   //! instead be derived from the node's cached size, and the render box will similarly be advanced
   //! by a size derived from the node's cached size.
@@ -129,26 +129,27 @@ static GAxis prv_get_opposite_axis(GAxis axis) {
 GTextNodeText *graphics_text_node_create_text(size_t buffer_size) {
   GTextNodeText *text_node = task_zalloc(sizeof(GTextNodeText) + buffer_size);
   if (text_node) {
-    *text_node = (GTextNodeText) {
-      .node.type = GTextNodeType_Text,
-      .node.free_on_destroy = true,
-      .text = buffer_size ? (char *)(text_node + 1) : NULL,
+    *text_node = (GTextNodeText){
+        .node.type = GTextNodeType_Text,
+        .node.free_on_destroy = true,
+        .text = buffer_size ? (char *)(text_node + 1) : NULL,
     };
   }
   return text_node;
 }
 
-GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(
-    size_t buffer_size, GTextNodeTextDynamicUpdate update, void *user_data) {
+GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(size_t buffer_size,
+                                                             GTextNodeTextDynamicUpdate update,
+                                                             void *user_data) {
   GTextNodeTextDynamic *text_node = task_zalloc(sizeof(GTextNodeTextDynamic) + buffer_size);
   if (text_node) {
-    *text_node = (GTextNodeTextDynamic) {
-      .text.node.type = GTextNodeType_TextDynamic,
-      .text.node.free_on_destroy = true,
-      .text.text = buffer_size ? (char *)text_node->buffer : NULL,
-      .update = update,
-      .user_data = user_data,
-      .buffer_size = buffer_size,
+    *text_node = (GTextNodeTextDynamic){
+        .text.node.type = GTextNodeType_TextDynamic,
+        .text.node.free_on_destroy = true,
+        .text.text = buffer_size ? (char *)text_node->buffer : NULL,
+        .update = update,
+        .user_data = user_data,
+        .buffer_size = buffer_size,
     };
   }
   return text_node;
@@ -157,11 +158,11 @@ GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(
 static GTextNodeContainer *prv_create_container(GTextNodeType type, size_t size, size_t max_nodes) {
   GTextNodeContainer *container_node = task_zalloc(size + max_nodes * sizeof(GTextNode *));
   if (container_node) {
-    *container_node = (GTextNodeContainer) {
-      .node.type = type,
-      .node.free_on_destroy = true,
-      .max_nodes = max_nodes,
-      .nodes = max_nodes ? (GTextNode **)((uint8_t *)container_node + size) : NULL,
+    *container_node = (GTextNodeContainer){
+        .node.type = type,
+        .node.free_on_destroy = true,
+        .max_nodes = max_nodes,
+        .nodes = max_nodes ? (GTextNode **)((uint8_t *)container_node + size) : NULL,
     };
   }
   return container_node;
@@ -177,15 +178,14 @@ GTextNodeVertical *graphics_text_node_create_vertical(size_t max_nodes) {
                                                    sizeof(GTextNodeVertical), max_nodes);
 }
 
-GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback,
-                                                  void *user_data) {
+GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback, void *user_data) {
   GTextNodeCustom *custom_node = task_malloc(sizeof(GTextNodeCustom));
   if (custom_node) {
-    *custom_node = (GTextNodeCustom) {
-      .node.type = GTextNodeType_Custom,
-      .node.free_on_destroy = true,
-      .callback = callback,
-      .user_data = user_data,
+    *custom_node = (GTextNodeCustom){
+        .node.type = GTextNodeType_Custom,
+        .node.free_on_destroy = true,
+        .callback = callback,
+        .user_data = user_data,
     };
   }
   return custom_node;
@@ -257,7 +257,7 @@ static void prv_draw_text_node_text(GTextNodeDrawContext *ctx) {
   GTextNodeText *text_node = (GTextNodeText *)ctx->node;
   prv_clip_size(&ctx->box.size, &text_node->max_size);
   TextLayoutExtended layout = {
-    .line_spacing_delta = text_node->line_spacing_delta,
+      .line_spacing_delta = text_node->line_spacing_delta,
   };
   const GTextNodeDrawConfig *config = ctx->config;
   if (config) {
@@ -336,8 +336,7 @@ static void prv_did_draw_container(GTextNodeDrawContext *ctx) {
 static bool prv_will_draw_container_child(GTextNodeDrawContext *ctx, GTextNode *child_node) {
   GTextNode *parent_node = ctx->node;
   parent_node->cached_size = ctx->box.size;
-  if (parent_node->type == GTextNodeType_Horizontal &&
-      child_node->type == GTextNodeType_Vertical) {
+  if (parent_node->type == GTextNodeType_Horizontal && child_node->type == GTextNodeType_Vertical) {
     prv_clip_width(&ctx->box.size, &child_node->cached_size);
   } else if (parent_node->type == GTextNodeType_Vertical &&
              child_node->type == GTextNodeType_Horizontal) {
@@ -364,61 +363,62 @@ static void prv_draw_text_node_custom(GTextNodeDrawContext *ctx) {
                         custom_node->user_data);
 }
 
-static void prv_draw_noop(GTextNodeDrawContext *ctx) { }
+static void prv_draw_noop(GTextNodeDrawContext *ctx) {
+}
 
 static const GTextNodeBaseImpl s_text_impl = {
-  .destructor = prv_destroy_text_node_base,
-  .will_draw = prv_draw_noop,
-  .did_draw = prv_draw_noop,
-  .draw = prv_draw_text_node_text,
+    .destructor = prv_destroy_text_node_base,
+    .will_draw = prv_draw_noop,
+    .did_draw = prv_draw_noop,
+    .draw = prv_draw_text_node_text,
 };
 
 static const GTextNodeBaseImpl s_text_dynamic_impl = {
-  .destructor = prv_destroy_text_node_base,
-  .will_draw = prv_draw_noop,
-  .did_draw = prv_draw_noop,
-  .draw = prv_draw_text_node_text_dynamic,
+    .destructor = prv_destroy_text_node_base,
+    .will_draw = prv_draw_noop,
+    .did_draw = prv_draw_noop,
+    .draw = prv_draw_text_node_text_dynamic,
 };
 
 static const GTextNodeBaseImpl s_custom_impl = {
-  .destructor = prv_destroy_text_node_base,
-  .will_draw = prv_draw_noop,
-  .did_draw = prv_draw_noop,
-  .draw = prv_draw_text_node_custom,
+    .destructor = prv_destroy_text_node_base,
+    .will_draw = prv_draw_noop,
+    .did_draw = prv_draw_noop,
+    .draw = prv_draw_text_node_custom,
 };
 
 static const GTextNodeContainerImpl s_horizontal_impl = {
-  .base.is_container = true,
-  .base.destructor = prv_destroy_text_node_container,
-  .base.draw = prv_draw_noop,
-  .base.will_draw = prv_will_draw_container,
-  .base.did_draw = prv_did_draw_container,
-  .axis = GAxis_X,
-  .get_axis_align = prv_get_axis_align_horizontal,
-  .add_child = prv_container_add_child,
-  .will_draw_child = prv_will_draw_container_child,
-  .did_draw_child = prv_did_draw_container_child,
+    .base.is_container = true,
+    .base.destructor = prv_destroy_text_node_container,
+    .base.draw = prv_draw_noop,
+    .base.will_draw = prv_will_draw_container,
+    .base.did_draw = prv_did_draw_container,
+    .axis = GAxis_X,
+    .get_axis_align = prv_get_axis_align_horizontal,
+    .add_child = prv_container_add_child,
+    .will_draw_child = prv_will_draw_container_child,
+    .did_draw_child = prv_did_draw_container_child,
 };
 
 static const GTextNodeContainerImpl s_vertical_impl = {
-  .base.is_container = true,
-  .base.destructor = prv_destroy_text_node_container,
-  .base.draw = prv_draw_noop,
-  .base.will_draw = prv_will_draw_container,
-  .base.did_draw = prv_did_draw_container,
-  .axis = GAxis_Y,
-  .get_axis_align = prv_get_axis_align_vertical,
-  .add_child = prv_container_add_child,
-  .will_draw_child = prv_will_draw_container_child,
-  .did_draw_child = prv_did_draw_container_child,
+    .base.is_container = true,
+    .base.destructor = prv_destroy_text_node_container,
+    .base.draw = prv_draw_noop,
+    .base.will_draw = prv_will_draw_container,
+    .base.did_draw = prv_did_draw_container,
+    .axis = GAxis_Y,
+    .get_axis_align = prv_get_axis_align_vertical,
+    .add_child = prv_container_add_child,
+    .will_draw_child = prv_will_draw_container_child,
+    .did_draw_child = prv_did_draw_container_child,
 };
 
 static const GTextNodeBaseImpl *s_impl_table[GTextNodeTypeCount] = {
-  [GTextNodeType_Text] = &s_text_impl,
-  [GTextNodeType_TextDynamic] = &s_text_dynamic_impl,
-  [GTextNodeType_Horizontal] = &s_horizontal_impl.base,
-  [GTextNodeType_Vertical] = &s_vertical_impl.base,
-  [GTextNodeType_Custom] = &s_custom_impl,
+    [GTextNodeType_Text] = &s_text_impl,
+    [GTextNodeType_TextDynamic] = &s_text_dynamic_impl,
+    [GTextNodeType_Horizontal] = &s_horizontal_impl.base,
+    [GTextNodeType_Vertical] = &s_vertical_impl.base,
+    [GTextNodeType_Custom] = &s_custom_impl,
 };
 
 static const GTextNodeBaseImpl *prv_base(GTextNode *node) {
@@ -445,14 +445,14 @@ bool graphics_text_node_container_add_child(GTextNodeContainer *parent, GTextNod
 static void NOINLINE prv_init_draw_context(GTextNodeDrawContext *ctx, GTextNode *node,
                                            GContext *gcontext, const GRect *box,
                                            const GTextNodeDrawConfig *config, bool render) {
-  *ctx = (GTextNodeDrawContext) {
-    .config = config,
-    .gcontext = gcontext,
-    .node = node,
-    .draw_box = box,
-    .box = { gpoint_add(box->origin, node->offset), box->size },
-    .render = render,
-    .size_out = &node->cached_size,
+  *ctx = (GTextNodeDrawContext){
+      .config = config,
+      .gcontext = gcontext,
+      .node = node,
+      .draw_box = box,
+      .box = {gpoint_add(box->origin, node->offset), box->size},
+      .render = render,
+      .size_out = &node->cached_size,
   };
 }
 
@@ -462,7 +462,7 @@ static bool prv_should_draw_text_node(GTextNode *node, GContext *ctx, const GRec
     return false;
   }
   if (render && node->cached_size.h) {
-    GRect global_box = grect_to_global_coordinates((GRect) { box->origin, node->cached_size }, ctx);
+    GRect global_box = grect_to_global_coordinates((GRect){box->origin, node->cached_size}, ctx);
     grect_clip(&global_box, &ctx->draw_state.clip_box);
     if (!global_box.size.h) {
       return false;
@@ -486,8 +486,8 @@ static void prv_iter_will_draw(GTextNodeDrawContext *ctx, GTextNodeDrawContext *
   if (!ctx->cached && node->clip) {
     ctx->cached_clip_box = ctx->gcontext->draw_state.clip_box;
     const GRect draw_box = {
-      .origin = gpoint_add(ctx->draw_box->origin, ctx->gcontext->draw_state.drawing_box.origin),
-      .size = ctx->draw_box->size,
+        .origin = gpoint_add(ctx->draw_box->origin, ctx->gcontext->draw_state.drawing_box.origin),
+        .size = ctx->draw_box->size,
     };
     grect_clip(&ctx->gcontext->draw_state.clip_box, &draw_box);
   }

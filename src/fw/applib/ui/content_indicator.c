@@ -20,8 +20,7 @@
 //! @param output_context An output context.
 //! @return `true` if iteration should continue, `false` otherwise.
 typedef bool (*ContentIndicatorIteratorCb)(ContentIndicator *content_indicator,
-                                           size_t buffer_offset_bytes,
-                                           void *input_context,
+                                           size_t buffer_offset_bytes, void *input_context,
                                            void *output_context);
 
 bool prv_content_indicator_init(ContentIndicator *content_indicator) {
@@ -34,9 +33,8 @@ bool prv_content_indicator_init(ContentIndicator *content_indicator) {
   // Add the content indicator to the appropriate buffer
   ContentIndicatorsBuffer *content_indicators_buffer = content_indicator_get_current_buffer();
   Buffer *buffer = &content_indicators_buffer->buffer;
-  size_t bytes_written = buffer_add(buffer,
-                                    (uint8_t *)&content_indicator,
-                                    sizeof(ContentIndicator *));
+  size_t bytes_written =
+      buffer_add(buffer, (uint8_t *)&content_indicator, sizeof(ContentIndicator *));
   // Return whether or not the content indicator was successfully written to the buffer
   return (bytes_written == sizeof(ContentIndicator *));
 }
@@ -48,8 +46,7 @@ void content_indicator_init(ContentIndicator *content_indicator) {
 
 //! Returns `true` if `iterator_cb` signaled iteration to end, `false` otherwise.
 static bool prv_content_indicator_iterate(ContentIndicatorIteratorCb iterator_cb,
-                                          void *input_context,
-                                          void *output_context) {
+                                          void *input_context, void *output_context) {
   if (!iterator_cb) {
     return false;
   }
@@ -98,8 +95,7 @@ ContentIndicator *content_indicator_get_for_scroll_layer(ScrollLayer *scroll_lay
   }
 
   ContentIndicator *content_indicator = NULL;
-  prv_content_indicator_iterate(prv_content_indicator_find_for_scroll_layer_cb,
-                                scroll_layer,
+  prv_content_indicator_iterate(prv_content_indicator_find_for_scroll_layer_cb, scroll_layer,
                                 &content_indicator);
   return content_indicator;
 }
@@ -160,8 +156,7 @@ void content_indicator_deinit(ContentIndicator *content_indicator) {
   // Find the offset of the content indicator in the buffer
   size_t buffer_offset_bytes;
   if (!prv_content_indicator_iterate(prv_content_indicator_find_buffer_offset_bytes_cb,
-                                     content_indicator,
-                                     &buffer_offset_bytes)) {
+                                     content_indicator, &buffer_offset_bytes)) {
     return;
   }
 
@@ -186,8 +181,7 @@ void content_indicator_destroy_for_scroll_layer(ScrollLayer *scroll_layer) {
   }
 
   ContentIndicator *content_indicator;
-  if (prv_content_indicator_iterate(prv_content_indicator_find_for_scroll_layer_cb,
-                                    scroll_layer,
+  if (prv_content_indicator_iterate(prv_content_indicator_find_for_scroll_layer_cb, scroll_layer,
                                     &content_indicator)) {
     content_indicator_destroy(content_indicator);
   }
@@ -226,9 +220,9 @@ bool content_indicator_configure_direction(ContentIndicator *content_indicator,
   ContentIndicatorDirectionData *direction_data = &content_indicator->direction_data[direction];
   prv_content_indicator_reset_direction(direction_data);
   *direction_data = (ContentIndicatorDirectionData){
-    .direction = direction,
-    .config = *config,
-    .original_update_proc = config->layer->update_proc,
+      .direction = direction,
+      .config = *config,
+      .original_update_proc = config->layer->update_proc,
   };
 
   return true;
@@ -249,12 +243,9 @@ static bool prv_content_indicator_find_direction_data_cb(ContentIndicator *conte
   return true;
 }
 
-void content_indicator_draw_arrow(GContext *ctx,
-                                  const GRect *frame,
-                                  ContentIndicatorDirection direction,
-                                  GColor fg_color,
-                                  GColor bg_color,
-                                  GAlign alignment) {
+void content_indicator_draw_arrow(GContext *ctx, const GRect *frame,
+                                  ContentIndicatorDirection direction, GColor fg_color,
+                                  GColor bg_color, GAlign alignment) {
   // Fill the background color
   graphics_context_set_fill_color(ctx, bg_color);
   graphics_fill_rect(ctx, frame);
@@ -262,14 +253,17 @@ void content_indicator_draw_arrow(GContext *ctx,
   // Pick the arrow to draw
   const int16_t arrow_height = 6;
   const GPathInfo arrow_up_path_info = {
-    .num_points = 3,
-    .points = (GPoint[]) {{0, arrow_height}, {(arrow_height + 1), 0},
-                          {((arrow_height * 2) + 1), arrow_height}}
+      .num_points = 3,
+      .points = (GPoint[]){
+          {0, arrow_height},
+          {(arrow_height + 1), 0},
+          {((arrow_height * 2) + 1), arrow_height}
+      }
   };
   const GPathInfo arrow_down_path_info = {
-    .num_points = 3,
-    .points = (GPoint[]) {{0, 0}, {(arrow_height + 1), arrow_height},
-                          {((arrow_height * 2) + 1), 0}}
+      .num_points = 3,
+      .points =
+          (GPoint[]){{0, 0}, {(arrow_height + 1), arrow_height}, {((arrow_height * 2) + 1), 0}}
   };
   const GPathInfo *arrow_path_info;
   switch (direction) {
@@ -301,18 +295,14 @@ void content_indicator_draw_arrow(GContext *ctx,
 T_STATIC void prv_content_indicator_update_proc(Layer *layer, GContext *ctx) {
   // Find the direction data corresponding to the layer that should be updated
   ContentIndicatorDirectionData *direction_data;
-  if (!prv_content_indicator_iterate(prv_content_indicator_find_direction_data_cb,
-                                     layer,
+  if (!prv_content_indicator_iterate(prv_content_indicator_find_direction_data_cb, layer,
                                      &direction_data)) {
     return;
   }
 
   ContentIndicatorConfig *config = &direction_data->config;
-  content_indicator_draw_arrow(ctx,
-                               &layer->bounds,
-                               direction_data->direction,
-                               config->colors.foreground,
-                               config->colors.background,
+  content_indicator_draw_arrow(ctx, &layer->bounds, direction_data->direction,
+                               config->colors.foreground, config->colors.background,
                                config->alignment);
 }
 
@@ -326,10 +316,8 @@ bool content_indicator_get_content_available(ContentIndicator *content_indicator
   return direction_data->content_available;
 }
 
-
 void content_indicator_set_content_available(ContentIndicator *content_indicator,
-                                             ContentIndicatorDirection direction,
-                                             bool available) {
+                                             ContentIndicatorDirection direction, bool available) {
   if (!content_indicator) {
     return;
   }
@@ -353,9 +341,8 @@ void content_indicator_set_content_available(ContentIndicator *content_indicator
     // If the arrow should time out and a timer isn't already scheduled, register a timeout timer
     if (config->times_out && !direction_data->timeout_timer) {
       direction_data->timeout_timer = app_timer_register(
-        CONTENT_INDICATOR_TIMEOUT_MS,
-        (AppTimerCallback)prv_content_indicator_reset_direction,
-        direction_data);
+          CONTENT_INDICATOR_TIMEOUT_MS, (AppTimerCallback)prv_content_indicator_reset_direction,
+          direction_data);
     }
   }
 }

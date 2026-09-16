@@ -11,15 +11,15 @@
 #include "pbl/util/math.h"
 
 #if !defined(__clang__)
-#pragma GCC optimize ("O2")
+#pragma GCC optimize("O2")
 #endif
 
-static GRect get_glyph_rect(const GlyphData* glyph) {
+static GRect get_glyph_rect(const GlyphData *glyph) {
   GRect r = {
-    .size.w = glyph->header.width_px,
-    .size.h = glyph->header.height_px,
-    .origin.x = glyph->header.left_offset_px,
-    .origin.y = glyph->header.top_offset_px
+      .size.w = glyph->header.width_px,
+      .size.h = glyph->header.height_px,
+      .origin.x = glyph->header.left_offset_px,
+      .origin.y = glyph->header.top_offset_px
   };
 
   return r;
@@ -48,20 +48,20 @@ T_STATIC int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint32_t 
 #endif
 
 // PRO TIP: if you have to modify this function, expect to waste the rest of your day on it
-void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const font,
+void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const font,
                   const GRect cursor) {
   if (codepoint_is_special(codepoint)) {
     TextRenderState *state = app_state_get_text_render_state();
     if (state->special_codepoint_handler_cb) {
       state->special_codepoint_handler_cb(ctx, codepoint, cursor,
-          state->special_codepoint_handler_context);
+                                          state->special_codepoint_handler_context);
     }
     return;
   }
 
   int16_t baseline_adjust = 0;
-  const GlyphData* glyph = text_resources_get_glyph(&ctx->font_cache, codepoint, font,
-                                                    &baseline_adjust);
+  const GlyphData *glyph =
+      text_resources_get_glyph(&ctx->font_cache, codepoint, font, &baseline_adjust);
 
   PBL_ASSERTN(glyph);
   // Bitfiddle the metrics data:
@@ -72,15 +72,14 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
 
   // Calculate the box that we intend to draw to the screen, in screen coordinates
   GRect glyph_target = {
-    .origin = { .x = cursor.origin.x + glyph_metrics.origin.x,
-                .y = cursor.origin.y + glyph_metrics.origin.y },
-    .size = { .w = glyph_metrics.size.w,
-              .h = glyph_metrics.size.h }
+      .origin =
+          {.x = cursor.origin.x + glyph_metrics.origin.x,
+           .y = cursor.origin.y + glyph_metrics.origin.y},
+      .size = {.w = glyph_metrics.size.w, .h = glyph_metrics.size.h}
   };
 
-
   // The destination bitmap's x-coordinate and row advance. Used in the loop below.
-  GBitmap* dest_bitmap = graphics_context_get_bitmap(ctx);
+  GBitmap *dest_bitmap = graphics_context_get_bitmap(ctx);
   const int32_t x = (int32_t)((int16_t)cursor.origin.x + (int16_t)glyph_metrics.origin.x);
 
   // Now clip that box against the screen/other UI elements. This rect will be the rect that we
@@ -96,14 +95,13 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // Set base address to 0 for 8-bit as this will be later translated to the destination bitmap
   // address - so do all calculations so everything is offset from 0
-  uint32_t * base_addr = 0;
+  uint32_t *base_addr = 0;
 #else
-  uint32_t * base_addr = ((uint32_t*)dest_bitmap->addr);
+  uint32_t *base_addr = ((uint32_t *)dest_bitmap->addr);
 #endif
 
-  const uint32_t * const dest_block_x_begin = base_addr +
-                                              (left_clip ?
-                                               MAX(0, (((x + left_clip + 31)/ 32) - 1)) : (x / 32));
+  const uint32_t *const dest_block_x_begin =
+      base_addr + (left_clip ? MAX(0, (((x + left_clip + 31) / 32) - 1)) : (x / 32));
 
   if (clipped_glyph_target.size.h == 0 || clipped_glyph_target.size.w == 0) {
     return;
@@ -112,11 +110,11 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // NOTE: Since all calculations are based on 1-bit calculation - use the row size from
   // the 1-bit frame buffer
-  const int row_size_bytes = 4 * ((dest_bitmap->bounds.size.w / 32) +
-                                  ((dest_bitmap->bounds.size.w % 32) ? 1 : 0));
+  const int row_size_bytes =
+      4 * ((dest_bitmap->bounds.size.w / 32) + ((dest_bitmap->bounds.size.w % 32) ? 1 : 0));
 #else
   const int row_size_bytes = dest_bitmap->row_size_bytes;
-#endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+#endif  // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 
   // Number of blocks (i.e. 32-bit chunks)
   const int dest_row_length = row_size_bytes / 4;
@@ -126,14 +124,12 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
   // is the number of bits to the right of the next 32-bit boundary to the left.
   // For example, if x is -5 we want this shift to be 27, since -32 (the nearest
   // boundary) + 27 = -5
-  const uint8_t dest_shift_at_line_begin = (x >= 0) ?
-      x % 32 :
-      (x - ((x / 32) * 32));
+  const uint8_t dest_shift_at_line_begin = (x >= 0) ? x % 32 : (x - ((x / 32) * 32));
 
   uint8_t dest_shift = dest_shift_at_line_begin;
 
   // The glyph bitmap starts the block after the metrics data:
-  uint32_t const* glyph_block = glyph->data;
+  uint32_t const *glyph_block = glyph->data;
 
   // Set up the first piece of source glyph bitmap:
   int8_t glyph_block_bits_left = 32;
@@ -144,27 +140,36 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
   // the bits that wrapped around for the next dest_block
   rotl32(src, dest_shift);
   int8_t src_rotated = dest_shift;
-  // how many 32-bit blocks do we need to bitblt on each row. If we're not word aligned we'll need to
-  // modify an extra partial word, as we'll have an incomplete word on either side of the line segment
-  // we're modifying.
-  // For 1-bit, each pixel goes into one bit in dest bitmap - so 32 pixels per block
-  const uint8_t num_dest_blocks_per_row = (clipped_glyph_target.size.w / 32) +
-                                          (((dest_shift + left_clip) % 32) ? 1 : 0);
+  // how many 32-bit blocks do we need to bitblt on each row. If we're not word aligned we'll need
+  // to modify an extra partial word, as we'll have an incomplete word on either side of the line
+  // segment we're modifying. For 1-bit, each pixel goes into one bit in dest bitmap - so 32 pixels
+  // per block
+  const uint8_t num_dest_blocks_per_row =
+      (clipped_glyph_target.size.w / 32) + (((dest_shift + left_clip) % 32) ? 1 : 0);
 
-  // Handle clipping at the top of the character. We need to skip a number of bits in our source data.
-  const unsigned int bits_to_skip = glyph_metrics.size.w * (clipped_glyph_target.origin.y - glyph_target.origin.y);
+  // Handle clipping at the top of the character. We need to skip a number of bits in our source
+  // data.
+  const unsigned int bits_to_skip =
+      glyph_metrics.size.w * (clipped_glyph_target.origin.y - glyph_target.origin.y);
   if (bits_to_skip) {
     glyph_block += bits_to_skip / 32;
     src = *glyph_block;
 
     // Simulate the rotate that happens at the bottom of the bitblt loop so our source value is set
     // up just as if we actually rendered those first few lines.
-    rotl32(src, (dest_shift_at_line_begin + ((0 - ((uint8_t)glyph_metrics.size.w)) % 32) * (clipped_glyph_target.origin.y - glyph_target.origin.y)) % 32);
-    src_rotated = (dest_shift_at_line_begin + ((0 - ((uint8_t)glyph_metrics.size.w)) % 32) * (clipped_glyph_target.origin.y - glyph_target.origin.y)) % 32;
+    rotl32(src, (dest_shift_at_line_begin +
+                 ((0 - ((uint8_t)glyph_metrics.size.w)) % 32) *
+                     (clipped_glyph_target.origin.y - glyph_target.origin.y)) %
+                    32);
+    src_rotated =
+        (dest_shift_at_line_begin + ((0 - ((uint8_t)glyph_metrics.size.w)) % 32) *
+                                        (clipped_glyph_target.origin.y - glyph_target.origin.y)) %
+        32;
     glyph_block_bits_left -= bits_to_skip % 32;
   }
 
-  for (int dest_y = clipped_glyph_target.origin.y; dest_y != clipped_glyph_target.origin.y + clipped_glyph_target.size.h; ++dest_y) {
+  for (int dest_y = clipped_glyph_target.origin.y;
+       dest_y != clipped_glyph_target.origin.y + clipped_glyph_target.size.h; ++dest_y) {
     dest_shift = dest_shift_at_line_begin;
 
     // Number of bits to render on this line.
@@ -195,19 +200,21 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
 
     while (dest_block != dest_block_end && glyph_line_bits_left) {
       PBL_ASSERT(dest_block < dest_block_end, "DB=<%p> DBE=<%p>", dest_block, dest_block_end);
-      PBL_ASSERTN(dest_block >= (uint32_t*) base_addr);
-      PBL_ASSERTN(dest_block < (uint32_t*) base_addr + row_size_bytes *
-                  (dest_bitmap->bounds.origin.y + dest_bitmap->bounds.size.h));
+      PBL_ASSERTN(dest_block >= (uint32_t *)base_addr);
+      PBL_ASSERTN(dest_block <
+                  (uint32_t *)base_addr +
+                      row_size_bytes * (dest_bitmap->bounds.origin.y + dest_bitmap->bounds.size.h));
 
       // bitblt part of glyph_block:
-      const uint8_t number_of_bits = MIN(32 - dest_shift, MIN(glyph_line_bits_left, glyph_block_bits_left));
+      const uint8_t number_of_bits =
+          MIN(32 - dest_shift, MIN(glyph_line_bits_left, glyph_block_bits_left));
       const uint32_t mask = (((1 << number_of_bits) - 1) << dest_shift);
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
       // dest_block points to the block if the dest image was a 1-bit buffer
       // translate this to an x coordinate in the 8-bit buffer
-      const int32_t block_start_x = prv_convert_1bit_addr_to_8bit_x(dest_bitmap, dest_block,
-                                                                    dest_y);
+      const int32_t block_start_x =
+          prv_convert_1bit_addr_to_8bit_x(dest_bitmap, dest_block, dest_y);
       const GBitmapDataRowInfo data_row = gbitmap_get_data_row_info(dest_bitmap, dest_y);
       // Only enter the loop if the current block is within the valid data row range
       if (block_start_x + 31 >= data_row.min_x && block_start_x <= data_row.max_x) {
@@ -231,7 +238,7 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
             if (ctx->draw_state.compositing_mode == GCompOpSet) {
               // Blend (i.e. for transparency) if GCompOpSet
               dest_color = gcolor_alpha_blend(ctx->draw_state.text_color,
-                                              (GColor) {.argb = dest_addr[bitindex]});
+                                              (GColor){.argb = dest_addr[bitindex]});
             } else {
               dest_color = ctx->draw_state.text_color;
               dest_color.a = 3;
@@ -279,7 +286,6 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
     }
     glyph_block_bits_left -= right_clip;
 
-
     // Rotate the bits into the right position for the next row:
     dest_shift = dest_shift_at_line_begin - dest_shift;
     rotl32(src, dest_shift % 32);
@@ -288,7 +294,6 @@ void render_glyph(GContext* const ctx, const uint32_t codepoint, FontInfo* const
 
   graphics_context_mark_dirty_rect(ctx, clipped_glyph_target);
 }
-
 
 void text_render_set_special_codepoint_cb(SpecialCodepointHandlerCb handler, void *context) {
   TextRenderState *state = app_state_get_text_render_state();

@@ -10,9 +10,8 @@
 #include "pbl/util/uuid.h"
 
 #define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE \
-    (GSize(ATTRIBUTE_ICON_TINY_SIZE_PX, ATTRIBUTE_ICON_TINY_SIZE_PX))
-#define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_LEGACY_MAX_SIZE \
-    (GSize(28, 28))
+  (GSize(ATTRIBUTE_ICON_TINY_SIZE_PX, ATTRIBUTE_ICON_TINY_SIZE_PX))
+#define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_LEGACY_MAX_SIZE (GSize(28, 28))
 
 //! Forward declaration
 typedef struct LauncherAppGlanceStructured LauncherAppGlanceStructured;
@@ -20,26 +19,26 @@ typedef struct LauncherAppGlanceStructured LauncherAppGlanceStructured;
 //! Function used to get the title to display in the structured launcher app glance.
 //! @param structured_glance The structured glance for which to get the title
 //! @return The title to display in the structured glance; will be copied so can be short-lived
-typedef const char *(*LauncherAppGlanceStructuredTitleGetter)
-    (LauncherAppGlanceStructured *structured_glance);
+typedef const char *(*LauncherAppGlanceStructuredTitleGetter)(
+    LauncherAppGlanceStructured *structured_glance);
 
 //! Function used to create subtitle text nodes for the structured launcher app glance.
 //! @param structured_glance The structured glance for which to create a text node
 //! @return The text node the structured glance should use
-typedef GTextNode *(*LauncherAppGlanceStructuredTextNodeConstructor)
-    (LauncherAppGlanceStructured *structured_glance);
+typedef GTextNode *(*LauncherAppGlanceStructuredTextNodeConstructor)(
+    LauncherAppGlanceStructured *structured_glance);
 
 //! Function called when the structured launcher app glance is being destroyed.
 //! @param structured_glance The structured glance that is being destroyed
 //! @note This function should NOT free the structured glance; only deinit impl-specific things
-typedef void (*LauncherAppGlanceStructuredDestructor)
-    (LauncherAppGlanceStructured *structured_glance);
+typedef void (*LauncherAppGlanceStructuredDestructor)(
+    LauncherAppGlanceStructured *structured_glance);
 
 //! Function called to request the icon that should be drawn in the structured glance.
 //! @param structured_glance The structured glance requesting the icon to draw
 //! @return The icon to draw in the structured glance
-typedef KinoReel *(*LauncherAppGlanceStructuredIconGetter)
-    (LauncherAppGlanceStructured *structured_glance);
+typedef KinoReel *(*LauncherAppGlanceStructuredIconGetter)(
+    LauncherAppGlanceStructured *structured_glance);
 
 typedef struct LauncherAppGlanceStructuredImpl {
   //! Base handlers for the underlying LauncherAppGlance of the structured glance

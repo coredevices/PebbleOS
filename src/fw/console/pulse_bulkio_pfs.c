@@ -30,7 +30,7 @@ static int prv_open_file(void *packet_data, size_t length) {
 
   size_t filename_length = MIN(FILE_MAX_NAME_LEN, length - sizeof(*options));
 
-  char filename[filename_length+1];
+  char filename[filename_length + 1];
   strncpy(filename, options->filename, filename_length);
   filename[filename_length] = '\0';
 
@@ -57,18 +57,15 @@ static int pfs_domain_write(uint8_t *buf, uint32_t address, uint32_t length, voi
 static int pfs_domain_stat(uint8_t *resp, size_t resp_max_len, void *context) {
   int fd = prv_fd_from_context(context);
 
-  PFSStatResp *stat_resp = (PFSStatResp*)resp;
-  *stat_resp = (PFSStatResp) {
-    .flags = 0,
-    .size = (uint32_t)pfs_get_file_size(fd)
-  };
+  PFSStatResp *stat_resp = (PFSStatResp *)resp;
+  *stat_resp = (PFSStatResp){.flags = 0, .size = (uint32_t)pfs_get_file_size(fd)};
 
   return sizeof(PFSStatResp);
 }
 
 static status_t pfs_domain_erase(uint8_t *packet_data, size_t length, uint8_t cookie) {
   char filename[FILE_MAX_NAME_LEN + 1];
-  strncpy(filename, (char*)packet_data, FILE_MAX_NAME_LEN);
+  strncpy(filename, (char *)packet_data, FILE_MAX_NAME_LEN);
 
   length = MIN(FILE_MAX_NAME_LEN, length);
   filename[length] = '\0';
@@ -82,7 +79,7 @@ static status_t pfs_domain_open(uint8_t *packet_data, size_t length, void **resp
     return fd;
   }
 
-  *resp = (void*)(uintptr_t)fd;
+  *resp = (void *)(uintptr_t)fd;
   return S_SUCCESS;
 }
 
@@ -92,12 +89,12 @@ static status_t pfs_domain_close(void *context) {
 }
 
 PulseBulkIODomainHandler pulse_bulkio_domain_pfs = {
-  .id = PulseBulkIODomainType_PFS,
-  .open_proc = pfs_domain_open,
-  .read_proc = pfs_domain_read,
-  .write_proc = pfs_domain_write,
-  .close_proc = pfs_domain_close,
-  .stat_proc = pfs_domain_stat,
-  .erase_proc = pfs_domain_erase
+    .id = PulseBulkIODomainType_PFS,
+    .open_proc = pfs_domain_open,
+    .read_proc = pfs_domain_read,
+    .write_proc = pfs_domain_write,
+    .close_proc = pfs_domain_close,
+    .stat_proc = pfs_domain_stat,
+    .erase_proc = pfs_domain_erase
 };
 #endif

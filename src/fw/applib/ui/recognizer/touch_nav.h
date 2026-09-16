@@ -58,8 +58,9 @@ typedef enum TouchNavWidgetType {
 //! vtable, so the touch-nav core (in applib/ui/recognizer/) never casts to a concrete widget type
 //! and never depends on services/. `w` is the opaque widget pointer stored in the node.
 typedef struct TouchNavWidgetOps {
-  //! Optional readiness gate consulted before a pan Starts. NULL means always ready. When it returns
-  //! false the gesture is declined for its whole lifetime (no pan_started/get_base_offset is called).
+  //! Optional readiness gate consulted before a pan Starts. NULL means always ready. When it
+  //! returns false the gesture is declined for its whole lifetime (no pan_started/get_base_offset
+  //! is called).
   bool (*can_start)(void *w);
   //! Optional. Called once when a navigational Touchdown latches this widget as the Tier-1 target,
   //! before any recognizer triggers. Lets the widget stop a coasting fling at finger-down instead
@@ -68,8 +69,8 @@ typedef struct TouchNavWidgetOps {
   //! Pan Started: cancel any of the widget's own running animation so the finger takes over.
   void (*pan_started)(void *w);
   //! @return the widget's content offset at pan Start, latched as the base for the whole gesture.
-  //! Uses \ref GPointReturn (a plain alias for GPoint) so the `GPoint (*` here does not collide with
-  //! the function-like \c GPoint(x, y) constructor macro.
+  //! Uses \ref GPointReturn (a plain alias for GPoint) so the `GPoint (*` here does not collide
+  //! with the function-like \c GPoint(x, y) constructor macro.
   GPointReturn (*get_base_offset)(void *w);
   //! Live pan: apply `base + delta` to the widget's content offset (throttled by the core).
   void (*pan_update)(void *w, GPoint base, GPoint delta);
@@ -85,9 +86,10 @@ typedef struct TouchNavWidgetOps {
 } TouchNavWidgetOps;
 
 //! Intrusive registry node embedded by value in a Tier-1 widget. `layer` identifies the widget for
-//! the parent-walk match; `next` links the registry list. A migrated widget also supplies `ops` (its
-//! apply-vtable) and `widget` (its opaque self pointer) so the unified widget set can drive it; an
-//! un-migrated widget leaves `ops`/`widget` NULL and is driven by its own recognizer set instead.
+//! the parent-walk match; `next` links the registry list. A migrated widget also supplies `ops`
+//! (its apply-vtable) and `widget` (its opaque self pointer) so the unified widget set can drive
+//! it; an un-migrated widget leaves `ops`/`widget` NULL and is driven by its own recognizer set
+//! instead.
 typedef struct TouchNavWidgetNode {
   struct TouchNavWidgetNode *next;
   struct Layer *layer;
@@ -131,10 +133,10 @@ typedef struct TouchNavOps {
 
 //! Kinds of ring-buffer log entries.
 typedef enum TouchNavLogKind {
-  TouchNavLog_Route,      //!< A route was latched (detail = TouchNavRoute).
-  TouchNavLog_Emit,       //!< A button was emulated (detail = ButtonId).
-  TouchNavLog_Dropped,    //!< A completion was dropped mid-animation (detail = ButtonId).
-  TouchNavLog_Gated,      //!< A gated Touchdown (detail: 0 = dropped, 1 = wake, pans allowed).
+  TouchNavLog_Route,    //!< A route was latched (detail = TouchNavRoute).
+  TouchNavLog_Emit,     //!< A button was emulated (detail = ButtonId).
+  TouchNavLog_Dropped,  //!< A completion was dropped mid-animation (detail = ButtonId).
+  TouchNavLog_Gated,    //!< A gated Touchdown (detail: 0 = dropped, 1 = wake, pans allowed).
 } TouchNavLogKind;
 
 typedef struct TouchNavLogEntry {
@@ -156,8 +158,8 @@ typedef struct TouchNavState {
   Recognizer *swipe;
 
   //! The unified widget (tap, pan, swipe) recognizer set, by value. One set per twin drives every
-  //! migrated Tier-1 widget through its \ref TouchNavWidgetOps vtable; the set is scoped by a filter
-  //! that only matches a Touchdown resolving to a migrated (ops-bearing) widget.
+  //! migrated Tier-1 widget through its \ref TouchNavWidgetOps vtable; the set is scoped by a
+  //! filter that only matches a Touchdown resolving to a migrated (ops-bearing) widget.
   _Alignas(void *) uint8_t widget_tap_storage[TAP_RECOGNIZER_STATIC_SIZE];
   _Alignas(void *) uint8_t widget_pan_storage[PAN_RECOGNIZER_STATIC_SIZE];
   _Alignas(void *) uint8_t widget_swipe_storage[SWIPE_RECOGNIZER_STATIC_SIZE];
@@ -172,9 +174,9 @@ typedef struct TouchNavState {
 
   //! Per-gesture state for the unified widget set. `latched_target` is the migrated widget node the
   //! gesture is bound to (resolved on Touchdown, re-validated as a weak ref on every later event);
-  //! `gesture_base` is the widget content offset latched on pan Start; `last_update_ticks` throttles
-  //! live pan updates; `declined` is set when `can_start` refused the gesture, gating every later
-  //! vtable call until the gesture ends.
+  //! `gesture_base` is the widget content offset latched on pan Start; `last_update_ticks`
+  //! throttles live pan updates; `declined` is set when `can_start` refused the gesture, gating
+  //! every later vtable call until the gesture ends.
   TouchNavWidgetNode *latched_target;
   GPoint gesture_base;
   RtcTicks last_update_ticks;
@@ -280,8 +282,8 @@ void touch_nav_transaction_apply(const TouchNavTxnOps *ops, bool enable);
 //! navigation off does not turn off an app's own gestures. A third-party app that never opted in
 //! stays inert under every pref combination. Factored here (out of app_state.c) so the gate is
 //! unit-testable without the kernel app-state singleton.
-bool touch_nav_app_twin_active(bool system_nav_enabled, bool master_nav_enabled,
-                               bool participating, bool opted_in);
+bool touch_nav_app_twin_active(bool system_nav_enabled, bool master_nav_enabled, bool participating,
+                               bool opted_in);
 
 //! Gate for the app-task Tier-2 bridge (feeds the \ref TouchNavOps top_bridge_disabled op). Reports
 //! the bridge as disabled -- routing the gesture to \ref TouchNavRoute_None so NO button is

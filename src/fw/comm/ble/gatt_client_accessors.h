@@ -16,13 +16,12 @@ typedef struct GATTServiceNode {
   GATTService *service;
 } GATTServiceNode;
 
-#define GATTHandleInvalid ((uint16_t) 0)
+#define GATTHandleInvalid ((uint16_t)0)
 
 //! Copies the BLEService references for the gatt_remote_services associated
 //! with the device.
 //! @see prv_handle_service_change in ble_client.c
-uint8_t gatt_client_copy_service_refs(const BTDeviceInternal *device,
-                                      BLEService services_out[],
+uint8_t gatt_client_copy_service_refs(const BTDeviceInternal *device, BLEService services_out[],
                                       uint8_t num_services);
 
 // TODO: add public API to applib
@@ -30,8 +29,7 @@ uint8_t gatt_client_copy_service_refs(const BTDeviceInternal *device,
 //! with the device, that match a given Service UUID.
 //! @note It is possible to have multiple service instances with the same Service UUID.
 uint8_t gatt_client_copy_service_refs_matching_uuid(const BTDeviceInternal *device,
-                                                    BLEService services_out[],
-                                                    uint8_t num_services,
+                                                    BLEService services_out[], uint8_t num_services,
                                                     const Uuid *matching_service_uuid);
 
 //! Copies the BLECharacteristic references associated with the service.
@@ -58,10 +56,9 @@ uint8_t gatt_client_service_get_characteristics(BLEService service_ref,
 //! If there were multiple characteristics with the same Uuid, the first one to be found will be
 //! copied.
 //! @see ble_service_get_characteristics
-uint8_t gatt_client_service_get_characteristics_matching_uuids(BLEService service_ref,
-                                                         BLECharacteristic characteristics_out[],
-                                                         const Uuid matching_characteristic_uuids[],
-                                                         uint8_t num_characteristics);
+uint8_t gatt_client_service_get_characteristics_matching_uuids(
+    BLEService service_ref, BLECharacteristic characteristics_out[],
+    const Uuid matching_characteristic_uuids[], uint8_t num_characteristics);
 
 //! Gets the Service UUID associated with the service
 //! @see ble_service_get_uuid
@@ -73,8 +70,7 @@ BTDeviceInternal gatt_client_service_get_device(BLEService service_ref);
 
 //! Gets the included services associated with the service
 //! @see ble_service_get_included_services
-uint8_t gatt_client_service_get_included_services(BLEService service_ref,
-                                                  BLEService services_out[],
+uint8_t gatt_client_service_get_included_services(BLEService service_ref, BLEService services_out[],
                                                   uint8_t num_services_out);
 //! Gets the UUID of the characteristic
 //! @see ble_characteristic_get_uuid
@@ -91,8 +87,8 @@ BTDeviceInternal gatt_client_characteristic_get_device(BLECharacteristic charact
 
 //! @see ble_characteristic_get_descriptors
 uint8_t gatt_client_characteristic_get_descriptors(BLECharacteristic characteristic,
-                                                  BLEDescriptor descriptors_out[],
-                                                  uint8_t num_descriptors);
+                                                   BLEDescriptor descriptors_out[],
+                                                   uint8_t num_descriptors);
 
 //! @see ble_descriptor_get_uuid
 Uuid gatt_client_descriptor_get_uuid(BLEDescriptor descriptor);

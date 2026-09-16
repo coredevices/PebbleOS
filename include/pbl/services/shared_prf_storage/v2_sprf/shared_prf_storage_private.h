@@ -35,17 +35,17 @@ typedef struct PACKED {
   SM128BitKey csrk;
 
   //! True if local_div and local_ediv are valid
-  bool is_local_encryption_info_valid:1;
+  bool is_local_encryption_info_valid : 1;
 
   //! True if ltk, rand and ediv are valid
-  bool is_remote_encryption_info_valid:1;
+  bool is_remote_encryption_info_valid : 1;
 
   //! True if irk and identity are valid
-  bool is_remote_identity_info_valid:1;
+  bool is_remote_identity_info_valid : 1;
 
   //! True if csrk is valid
   //! @note Since iOS 9, CSRK is no longer exchanged.
-  bool is_remote_signing_info_valid:1;
+  bool is_remote_signing_info_valid : 1;
 } BLEPairingData;
 
 typedef struct PACKED {

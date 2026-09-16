@@ -3,7 +3,6 @@
 
 #pragma once
 
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -16,25 +15,25 @@
 //!   \brief Allows applications to schedule to be launched even if they are not running.
 //!   @{
 
-
-//! The type of function which can be called when a wakeup event occurs.  
-//! The arguments will be the id of the wakeup event that occurred, 
+//! The type of function which can be called when a wakeup event occurs.
+//! The arguments will be the id of the wakeup event that occurred,
 //! as well as the scheduled cookie provided to @c wakeup_schedule.
 typedef void (*WakeupHandler)(WakeupId wakeup_id, int32_t cookie);
 
 //! Registers a WakeupHandler to be called when wakeup events occur.
 //! @note The handler is only called for wakeup events which occur while the app is already running;
-//!       use @c launch_reason() === \ref APP_LAUNCH_WAKEUP to detect when the app was launched by a wakeup event.
+//!       use @c launch_reason() === \ref APP_LAUNCH_WAKEUP to detect when the app was launched by a
+//!       wakeup event.
 //! @param handler The callback that gets called when the wakeup event occurs
 void app_wakeup_service_subscribe(WakeupHandler handler);
 
 //! Registers a wakeup event that triggers a callback at the specified time.
 //! Applications may only schedule up to 8 wakeup events.
-//! Wakeup events are given a 1 minute duration window, in that no application may schedule a 
+//! Wakeup events are given a 1 minute duration window, in that no application may schedule a
 //! wakeup event with 1 minute of a currently scheduled wakeup event.
 //! @param timestamp The requested time (UTC) for the wakeup event to occur
 //! @param cookie The application specific reason for the wakeup event
-//! @param notify_if_missed On powering on Pebble, will alert user when 
+//! @param notify_if_missed On powering on Pebble, will alert user when
 //! notifications were missed due to Pebble being off.
 //! @return negative values indicate errors (StatusCode)
 //! E_RANGE if the event cannot be scheduled due to another event in that period.
@@ -71,4 +70,3 @@ bool app_wakeup_query(WakeupId wakeup_id, time_t *timestamp);
 
 //!   @} // group Wakeup
 //! @} // group Foundation
-

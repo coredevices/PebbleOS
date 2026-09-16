@@ -58,7 +58,7 @@
 //! launcher stack?
 static bool s_rooted_in_watchface = false;
 
-const PebbleProcessMd* system_app_state_machine_system_start(void) {
+const PebbleProcessMd *system_app_state_machine_system_start(void) {
   // start critical battery app when necessary
   if (battery_monitor_critical_lockout()) {
     return battery_critical_get_app_info();
@@ -83,15 +83,15 @@ static bool prv_current_app_is_watchface(void) {
 AppInstallId system_app_state_machine_get_last_registered_app(void) {
   // If we're rooted in the watchface but we're not the watchface itself, or the launcher
   // is closing, we should launch the watchface.
-  if ((s_rooted_in_watchface && !prv_current_app_is_watchface())
-      || (app_manager_get_current_app_md() == launcher_menu_app_get_app_info())) {
+  if ((s_rooted_in_watchface && !prv_current_app_is_watchface()) ||
+      (app_manager_get_current_app_md() == launcher_menu_app_get_app_info())) {
     return watchface_get_default_install_id();
   }
 
   return APP_ID_LAUNCHER_MENU;
 }
 
-const PebbleProcessMd* system_app_state_machine_get_default_app(void) {
+const PebbleProcessMd *system_app_state_machine_get_default_app(void) {
   return launcher_menu_app_get_app_info();
 }
 
@@ -107,12 +107,11 @@ void system_app_state_machine_register_app_launch(AppInstallId app_id) {
 
 void system_app_state_machine_panic(void) {
   if (app_manager_is_initialized()) {
-    app_manager_launch_new_app(&(AppLaunchConfig) {
-      .md = panic_app_get_app_info(),
+    app_manager_launch_new_app(&(AppLaunchConfig){
+        .md = panic_app_get_app_info(),
     });
   }
 
   // Else, just wait for the app_manager to initialize to show the panic app using
   // system_app_state_machine_system_start().
 }
-

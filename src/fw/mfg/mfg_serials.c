@@ -9,23 +9,20 @@
 #include "pbl/util/size.h"
 
 static const uint8_t OTP_SERIAL_SLOT_INDICES[] = {
-  OTP_SERIAL,
+    OTP_SERIAL,
 };
-static const uint8_t OTP_PCBA_SLOT_INDICES[] = {
-  OTP_PCBA_SERIAL
-};
-static const uint8_t OTP_HWVER_SLOT_INDICES[] = {
-  OTP_HWVER
-};
+static const uint8_t OTP_PCBA_SLOT_INDICES[] = {OTP_PCBA_SERIAL};
+static const uint8_t OTP_HWVER_SLOT_INDICES[] = {OTP_HWVER};
 
 static const char DUMMY_SERIAL[MFG_SERIAL_NUMBER_SIZE + 1] = "XXXXXXXXXXXX";
 // FIXME: shouldn't the dummy HWVER be 9 X's?
 static const char DUMMY_HWVER[MFG_HW_VERSION_SIZE + 1] = "XXXXXXXX";
 static const char DUMMY_PCBA_SERIAL[MFG_PCBA_SERIAL_NUMBER_SIZE + 1] = "XXXXXXXXXXXX";
 
-static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t index, const char *value, const char *name);
+static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t index,
+                               const char *value, const char *name);
 
-const char* mfg_get_serial_number(void) {
+const char *mfg_get_serial_number(void) {
   // Trying from "most recent" slot to "least recent":
   for (int i = ARRAY_LENGTH(OTP_SERIAL_SLOT_INDICES) - 1; i >= 0; --i) {
     const uint8_t index = OTP_SERIAL_SLOT_INDICES[i];
@@ -36,7 +33,7 @@ const char* mfg_get_serial_number(void) {
   return DUMMY_SERIAL;
 }
 
-const char* mfg_get_hw_version(void) {
+const char *mfg_get_hw_version(void) {
   // Trying from "most recent" slot to "least recent":
   for (int i = ARRAY_LENGTH(OTP_HWVER_SLOT_INDICES) - 1; i >= 0; --i) {
     const uint8_t index = OTP_HWVER_SLOT_INDICES[i];
@@ -47,7 +44,7 @@ const char* mfg_get_hw_version(void) {
   return DUMMY_HWVER;
 }
 
-const char* mfg_get_pcba_serial_number(void) {
+const char *mfg_get_pcba_serial_number(void) {
   // Trying from "most recent" slot to "least recent":
   for (int i = ARRAY_LENGTH(OTP_PCBA_SLOT_INDICES) - 1; i >= 0; --i) {
     const uint8_t index = OTP_PCBA_SLOT_INDICES[i];
@@ -75,9 +72,8 @@ static MfgSerialsResult prv_mfg_write_data_to_slot(const uint8_t *slot_indices, 
   return MfgSerialsResultFailNoMoreSpace;
 }
 
-MfgSerialsResult mfg_write_serial_number(const char* serial, size_t serial_size,
+MfgSerialsResult mfg_write_serial_number(const char *serial, size_t serial_size,
                                          uint8_t *out_index) {
-
   if ((serial_size != (MFG_SERIAL_NUMBER_SIZE)) || (serial[serial_size] != '\0')) {
     return MfgSerialsResultFailIncorrectLength;
   }
@@ -86,9 +82,8 @@ MfgSerialsResult mfg_write_serial_number(const char* serial, size_t serial_size,
                                     serial, serial_size, out_index);
 }
 
-MfgSerialsResult mfg_write_pcba_serial_number(const char* serial, size_t serial_size,
+MfgSerialsResult mfg_write_pcba_serial_number(const char *serial, size_t serial_size,
                                               uint8_t *out_index) {
-
   if ((serial_size > MFG_PCBA_SERIAL_NUMBER_SIZE) || (serial[serial_size] != '\0')) {
     return MfgSerialsResultFailIncorrectLength;
   }
@@ -97,7 +92,7 @@ MfgSerialsResult mfg_write_pcba_serial_number(const char* serial, size_t serial_
                                     serial, serial_size, out_index);
 }
 
-static MfgSerialsResult prv_mfg_write_hw_version(const char* hwver, size_t hwver_size,
+static MfgSerialsResult prv_mfg_write_hw_version(const char *hwver, size_t hwver_size,
                                                  uint8_t *out_index) {
   if ((hwver_size > MFG_HW_VERSION_SIZE) || hwver[hwver_size] != '\0') {
     return MfgSerialsResultFailIncorrectLength;
@@ -165,7 +160,7 @@ static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t inde
   switch (result) {
     case MfgSerialsResultAlreadyWritten: {
       char buffer[48];
-      const char * const field = otp_get_slot(index);
+      const char *const field = otp_get_slot(index);
       prompt_send_response_fmt(buffer, sizeof(buffer), "%s already present! %s", name, field);
       break;
     }
@@ -199,7 +194,7 @@ static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t inde
 #ifndef CONFIG_SOC_NRF52
 static void prv_get_not_so_unique_serial(char *serial_number) {
   // Contains 96 bits (12 bytes) that uniquely identify the STM32F2/F4 MCUs:
-  const uint8_t *DEVICE_ID_REGISTER = (const uint8_t *) 0x1FFF7A10;
+  const uint8_t *DEVICE_ID_REGISTER = (const uint8_t *)0x1FFF7A10;
   // BBs used the first bytes of the ID registers, which happened to be not very unique...
   for (int i = 2, r = 7; i < MFG_SERIAL_NUMBER_SIZE; i += 2, ++r) {
     sniprintf(&serial_number[i], 3 /* 2 hex digits + zero terminator */, "%02X",
@@ -229,9 +224,8 @@ void mfg_write_bigboard_serial_number(void) {
   prv_get_not_so_unique_serial(serial_number);
 #endif
   const char *current_serial_number = mfg_get_serial_number();
-  
-  if (strcmp(current_serial_number, serial_number) &&
-      strcmp(current_serial_number, DUMMY_SERIAL)) {
+
+  if (strcmp(current_serial_number, serial_number) && strcmp(current_serial_number, DUMMY_SERIAL)) {
     return;
   }
 
@@ -241,4 +235,3 @@ void mfg_write_bigboard_serial_number(void) {
   }
 }
 #endif
-

@@ -18,57 +18,50 @@
 // in the gap bonding db and shared PRF.
 //
 
-void bluetooth_persistent_storage_debug_dump_ble_pairing_info(
-    char *display_buf, const SMPairingInfo *info) {
+void bluetooth_persistent_storage_debug_dump_ble_pairing_info(char *display_buf,
+                                                              const SMPairingInfo *info) {
   prompt_send_response(" Local Encryption Info: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG,
-                       (uint8_t *)&info->local_encryption_info,
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->local_encryption_info,
                        sizeof(info->local_encryption_info));
 
   prompt_send_response(" Remote Encryption Info: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG,
-                       (uint8_t *)&info->remote_encryption_info,
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->remote_encryption_info,
                        sizeof(info->remote_encryption_info));
 
   prompt_send_response(" SMIdentityResolvingKey: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG,
-                       (uint8_t *)&info->irk,
-                       sizeof(info->irk));
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->irk, sizeof(info->irk));
 
   prompt_send_response(" BTDeviceInternal: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG,
-                       (uint8_t *)&info->identity,
-                       sizeof(BTDeviceInternal));
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->identity, sizeof(BTDeviceInternal));
 
   prompt_send_response(" SMConnectionSignatureResolvingKey: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG,
-                       (uint8_t *)&info->csrk,
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->csrk,
                        sizeof(SMConnectionSignatureResolvingKey));
 
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN,
-                       " local encryption valid:  %s\n"
-                       " remote encryption valid: %s\n"
-                       " remote identity valid:   %s\n"
-                       " remote signature valid:  %s\n",
-                       bool_to_str(info->is_local_encryption_info_valid),
-                       bool_to_str(info->is_remote_encryption_info_valid),
-                       bool_to_str(info->is_remote_encryption_info_valid),
-                       bool_to_str(info->is_remote_signing_info_valid));
+                           " local encryption valid:  %s\n"
+                           " remote encryption valid: %s\n"
+                           " remote identity valid:   %s\n"
+                           " remote signature valid:  %s\n",
+                           bool_to_str(info->is_local_encryption_info_valid),
+                           bool_to_str(info->is_remote_encryption_info_valid),
+                           bool_to_str(info->is_remote_encryption_info_valid),
+                           bool_to_str(info->is_remote_signing_info_valid));
 }
 
-void bluetooth_persistent_storage_debug_dump_classic_pairing_info(
-    char *display_buf, BTDeviceAddress *addr, char *device_name, SM128BitKey *link_key,
-    uint8_t platform_bits) {
+void bluetooth_persistent_storage_debug_dump_classic_pairing_info(char *display_buf,
+                                                                  BTDeviceAddress *addr,
+                                                                  char *device_name,
+                                                                  SM128BitKey *link_key,
+                                                                  uint8_t platform_bits) {
   prompt_send_response(" Link Key:");
   PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)link_key, sizeof(SM128BitKey));
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " BT ADDR: " BD_ADDR_FMT,
-                       BT_DEVICE_ADDRESS_XPLODE(*addr));
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Name: %s",
-                       device_name);
+                           BT_DEVICE_ADDRESS_XPLODE(*addr));
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Name: %s", device_name);
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Platform Bits: 0x%x",
-                       (int)platform_bits);
+                           (int)platform_bits);
 }
-
 
 void bluetooth_persistent_storage_debug_dump_root_keys(SM128BitKey *irk, SM128BitKey *erk) {
   prompt_send_response("Root Key hexdumps:");

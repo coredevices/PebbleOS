@@ -25,10 +25,10 @@ static CompositorLauncherAppTransitionData s_data;
 static const int32_t s_custom_moook_frames_in[] = {0, 1, 2, 4, 12, 24, 48};
 static const int32_t s_custom_moook_frames_out[] = {12, 6, 3, 2, 1, 0};
 static const MoookConfig s_custom_moook_config = {
-  .frames_in = s_custom_moook_frames_in,
-  .num_frames_in = ARRAY_LENGTH(s_custom_moook_frames_in),
-  .frames_out = s_custom_moook_frames_out,
-  .num_frames_out = ARRAY_LENGTH(s_custom_moook_frames_out),
+    .frames_in = s_custom_moook_frames_in,
+    .num_frames_in = ARRAY_LENGTH(s_custom_moook_frames_in),
+    .frames_out = s_custom_moook_frames_out,
+    .num_frames_out = ARRAY_LENGTH(s_custom_moook_frames_out),
 };
 
 static void prv_move_region_of_bitmap_horizontally(GBitmap *bitmap, const GRect *region,
@@ -41,12 +41,13 @@ static void prv_move_region_of_bitmap_horizontally(GBitmap *bitmap, const GRect 
   graphics_private_move_pixels_horizontally(&region_sub_bitmap, delta_x, true /* patch_garbage */);
 }
 
-static void prv_duplicate_framebuffer_cols(GBitmap *bitmap, int16_t start_col, int16_t end_col, int16_t dupe_col) {
+static void prv_duplicate_framebuffer_cols(GBitmap *bitmap, int16_t start_col, int16_t end_col,
+                                           int16_t dupe_col) {
   const int16_t delta = start_col > end_col ? -1 : 1;
   for (int16_t dest_col = start_col; dest_col != end_col; dest_col += delta) {
-    bitmap->bounds = (GRect) {
-      .origin.x = (dupe_col >= 0 ? dupe_col : dest_col),
-      .size = { 1, DISP_ROWS },
+    bitmap->bounds = (GRect){
+        .origin.x = (dupe_col >= 0 ? dupe_col : dest_col),
+        .size = {1, DISP_ROWS},
     };
     bitblt_bitmap_into_bitmap(bitmap, bitmap, GPoint(dest_col, 0), GCompOpAssign, GColorWhite);
   }
@@ -55,7 +56,8 @@ static void prv_duplicate_framebuffer_cols(GBitmap *bitmap, int16_t start_col, i
 static void prv_copy_app_fb_patching_garbage(int16_t dest_origin_x) {
   GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
 
-  compositor_scaled_app_fb_copy(GRect(dest_origin_x, 0, DISP_COLS - dest_origin_x, DISP_ROWS), false /* copy_relative_to_origin */);
+  compositor_scaled_app_fb_copy(GRect(dest_origin_x, 0, DISP_COLS - dest_origin_x, DISP_ROWS),
+                                false /* copy_relative_to_origin */);
 
   // Patch garbage pixels using the first/last column, if necessary
   if (dest_origin_x != 0) {
@@ -85,8 +87,8 @@ static void prv_manipulate_launcher_in_system_framebuffer(GContext *ctx,
   // color up
   const int16_t area_above_selection_rect_height = selection_rect->origin.y;
   if (area_above_selection_rect_height > 0) {
-    const GRect area_above_selection_rect = GRect(-selection_rect->origin.x, 0, DISP_COLS,
-                                                  area_above_selection_rect_height);
+    const GRect area_above_selection_rect =
+        GRect(-selection_rect->origin.x, 0, DISP_COLS, area_above_selection_rect_height);
     prv_move_region_of_bitmap_horizontally(&ctx->dest_bitmap, &area_above_selection_rect, -delta);
 
     const GRect stretch_rect_above_selection_rect =
@@ -101,19 +103,20 @@ static void prv_manipulate_launcher_in_system_framebuffer(GContext *ctx,
   const int16_t area_below_selection_rect_height =
       (int16_t)DISP_ROWS - row_below_selection_rect_bottom;
   if (area_below_selection_rect_height > 0) {
-    const GRect area_below_selection_rect = GRect(-selection_rect->origin.x,
-                                                  row_below_selection_rect_bottom, DISP_COLS,
-                                                  area_below_selection_rect_height);
+    const GRect area_below_selection_rect =
+        GRect(-selection_rect->origin.x, row_below_selection_rect_bottom, DISP_COLS,
+              area_below_selection_rect_height);
     prv_move_region_of_bitmap_horizontally(&ctx->dest_bitmap, &area_below_selection_rect, -delta);
 
-    const GRect stretch_rect_below_selection_rect = GRect(0, row_below_selection_rect_bottom,
-                                                          DISP_COLS, abs_delta);
+    const GRect stretch_rect_below_selection_rect =
+        GRect(0, row_below_selection_rect_bottom, DISP_COLS, abs_delta);
     graphics_context_set_fill_color(ctx, selection_color);
     graphics_fill_rect(ctx, &stretch_rect_below_selection_rect);
   }
 }
 
-static void prv_launcher_app_transition_animation_update(GContext *ctx, Animation *PBL_UNUSED animation,
+static void prv_launcher_app_transition_animation_update(GContext *ctx,
+                                                         Animation *PBL_UNUSED animation,
                                                          uint32_t distance_normalized) {
   const bool is_right = s_data.app_is_destination;
   const GRangeVertical selection_vertical_range =
@@ -127,9 +130,9 @@ static void prv_launcher_app_transition_animation_update(GContext *ctx, Animatio
   const int16_t delta_x_after_cut = interpolate_int16(distance_normalized, -end, start);
 
   // This rect specifies where the launcher's selected row currently is in the system framebuffer
-  const GRect selection_rect = GRect((is_right ? s_data.prev_delta_x_before_cut : start),
-                                     selection_vertical_range.origin_y, DISP_COLS,
-                                     selection_vertical_range.size_h);
+  const GRect selection_rect =
+      GRect((is_right ? s_data.prev_delta_x_before_cut : start), selection_vertical_range.origin_y,
+            DISP_COLS, selection_vertical_range.size_h);
 
   // We know we're before the moook cut if our delta for after the cut hasn't "moooked" beyond
   // where we will finish the animation
@@ -191,13 +194,13 @@ const CompositorTransition *compositor_launcher_app_transition_get(bool app_is_d
     return NULL;
   }
 
-  s_data = (CompositorLauncherAppTransitionData) {
-    .app_is_destination = app_is_destination,
+  s_data = (CompositorLauncherAppTransitionData){
+      .app_is_destination = app_is_destination,
   };
 
   static const CompositorTransition s_impl = {
-    .init = prv_launcher_app_transition_animation_init,
-    .update = prv_launcher_app_transition_animation_update,
+      .init = prv_launcher_app_transition_animation_init,
+      .update = prv_launcher_app_transition_animation_update,
   };
   return &s_impl;
 }

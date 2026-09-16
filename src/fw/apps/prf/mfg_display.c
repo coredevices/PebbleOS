@@ -64,10 +64,10 @@ static void prv_draw_round_border(Layer *layer, GContext *ctx, uint8_t radial_pa
     graphics_draw_pixel(ctx, GPoint(layer->bounds.size.w - mask - 1, offset));
     graphics_draw_pixel(ctx, GPoint(offset, layer->bounds.size.h - mask - 1));
     // Bottom-right quadrant
-    graphics_draw_pixel(ctx, GPoint(layer->bounds.size.w - mask - 1,
-                                    layer->bounds.size.h - offset - 1));
-    graphics_draw_pixel(ctx, GPoint(layer->bounds.size.w - offset - 1,
-                                    layer->bounds.size.h - mask - 1));
+    graphics_draw_pixel(ctx,
+                        GPoint(layer->bounds.size.w - mask - 1, layer->bounds.size.h - offset - 1));
+    graphics_draw_pixel(ctx,
+                        GPoint(layer->bounds.size.w - offset - 1, layer->bounds.size.h - mask - 1));
   }
 }
 
@@ -111,36 +111,36 @@ static void prv_draw_crosshair_screen(Layer *layer, GContext *ctx, uint8_t radia
   prv_draw_border(layer, ctx, radial_padding_size);
 }
 
-static void prv_update_proc(struct Layer *layer, GContext* ctx) {
+static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   AppData *app_data = app_state_get_user_data();
 
   switch (app_data->test_pattern) {
-  case TestPattern_Crosshair:
-    prv_draw_crosshair_screen(layer, ctx, 0);
-    break;
-  case TestPattern_Black:
-    prv_draw_solid(layer, ctx, GColorBlack);
-    break;
-  case TestPattern_White:
-    prv_draw_solid(layer, ctx, GColorWhite);
-    break;
+    case TestPattern_Crosshair:
+      prv_draw_crosshair_screen(layer, ctx, 0);
+      break;
+    case TestPattern_Black:
+      prv_draw_solid(layer, ctx, GColorBlack);
+      break;
+    case TestPattern_White:
+      prv_draw_solid(layer, ctx, GColorWhite);
+      break;
 #if PBL_COLOR
-  case TestPattern_Red:
-    prv_draw_solid(layer, ctx, GColorRed);
-    break;
-  case TestPattern_Green:
-    prv_draw_solid(layer, ctx, GColorGreen);
-    break;
-  case TestPattern_Blue:
-    prv_draw_solid(layer, ctx, GColorBlue);
-    break;
+    case TestPattern_Red:
+      prv_draw_solid(layer, ctx, GColorRed);
+      break;
+    case TestPattern_Green:
+      prv_draw_solid(layer, ctx, GColorGreen);
+      break;
+    case TestPattern_Blue:
+      prv_draw_solid(layer, ctx, GColorBlue);
+      break;
 #else
-  case TestPattern_Gray:
-    prv_draw_solid(layer, ctx, GColorDarkGray);
-    break;
+    case TestPattern_Gray:
+      prv_draw_solid(layer, ctx, GColorDarkGray);
+      break;
 #endif
-  default:
-    break;
+    default:
+      break;
   }
 }
 
@@ -189,7 +189,7 @@ static void prv_button_click_handler(ClickRecognizerRef recognizer, void *data) 
 static void prv_change_pattern(void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  app_data->test_pattern = (TestPattern) data;
+  app_data->test_pattern = (TestPattern)data;
 
   layer_mark_dirty(&app_data->window.layer);
 }
@@ -200,9 +200,7 @@ static void prv_config_provider(void *data) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData) {
-    .test_pattern = (TestPattern) app_manager_get_task_context()->args
-  };
+  *data = (AppData){.test_pattern = (TestPattern)app_manager_get_task_context()->args};
 
   app_state_set_user_data(data);
 
@@ -223,17 +221,17 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_display_app_get_info(void) {
+const PebbleProcessMd *mfg_display_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: df582042-5beb-410f-9fed-76eccd31821e
-    .common.uuid = { 0xdf, 0x58, 0x20, 0x42, 0x5b, 0xeb, 0x41, 0x0f,
-                     0x9f, 0xed, 0x76, 0xec, 0xcd, 0x31, 0x82, 0x1e },
-    .name = "MfgDisplay",
+      .common.main_func = &s_main,
+      // UUID: df582042-5beb-410f-9fed-76eccd31821e
+      .common.uuid =
+          {0xdf, 0x58, 0x20, 0x42, 0x5b, 0xeb, 0x41, 0x0f, 0x9f, 0xed, 0x76, 0xec, 0xcd, 0x31, 0x82,
+           0x1e},
+      .name = "MfgDisplay",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }
-
 
 // Prompt Commands
 ///////////////////////////////////////////////////////////////////////////////
@@ -242,24 +240,24 @@ static void prv_launch_app_cb(void *data) {
   if (app_manager_get_current_app_md() == mfg_display_app_get_info()) {
     process_manager_send_callback_event_to_process(PebbleTask_App, prv_change_pattern, data);
   } else {
-    app_manager_launch_new_app(&(AppLaunchConfig) {
-      .md = mfg_display_app_get_info(),
-      .common.args = data,
+    app_manager_launch_new_app(&(AppLaunchConfig){
+        .md = mfg_display_app_get_info(),
+        .common.args = data,
     });
   }
 }
 
 void command_display_set(const char *color) {
-  const char * const ARGS[] = {
-    [TestPattern_Crosshair] = "crosshair",
-    [TestPattern_Black] = "black",
-    [TestPattern_White] = "white",
+  const char *const ARGS[] = {
+      [TestPattern_Crosshair] = "crosshair",
+      [TestPattern_Black] = "black",
+      [TestPattern_White] = "white",
 #if PBL_COLOR
-    [TestPattern_Red] = "red",
-    [TestPattern_Green] = "green",
-    [TestPattern_Blue] = "blue",
+      [TestPattern_Red] = "red",
+      [TestPattern_Green] = "green",
+      [TestPattern_Blue] = "blue",
 #else
-    [TestPattern_Gray] = "gray",
+      [TestPattern_Gray] = "gray",
 #endif
   };
 
@@ -272,7 +270,7 @@ void command_display_set(const char *color) {
         mfg_enter_mfg_mode_and_launch_app();
       }
 
-      launcher_task_add_callback(prv_launch_app_cb, (void*) i);
+      launcher_task_add_callback(prv_launch_app_cb, (void *)i);
       prompt_send_response("OK");
       return;
     }

@@ -39,22 +39,22 @@ typedef struct SelectionSizeConfig {
 } SelectionSizeConfig;
 
 static const SelectionSizeConfig s_selection_config_medium = {
-  .font_key = FONT_KEY_GOTHIC_28_BOLD,
+    .font_key = FONT_KEY_GOTHIC_28_BOLD,
 
-  .default_cell_height = PBL_IF_RECT_ELSE(34, 40),
+    .default_cell_height = PBL_IF_RECT_ELSE(34, 40),
 };
 
 static const SelectionSizeConfig s_selection_config_large = {
-  .font_key = FONT_KEY_GOTHIC_36_BOLD,
+    .font_key = FONT_KEY_GOTHIC_36_BOLD,
 
-  .default_cell_height = 54,
+    .default_cell_height = 54,
 };
 
 static const SelectionSizeConfig *s_selection_configs[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_selection_config_medium,
-  [PreferredContentSizeMedium] = &s_selection_config_medium,
-  [PreferredContentSizeLarge] = &s_selection_config_large,
-  [PreferredContentSizeExtraLarge] = &s_selection_config_large,
+    [PreferredContentSizeSmall] = &s_selection_config_medium,
+    [PreferredContentSizeMedium] = &s_selection_config_medium,
+    [PreferredContentSizeLarge] = &s_selection_config_large,
+    [PreferredContentSizeExtraLarge] = &s_selection_config_large,
 };
 
 static const SelectionSizeConfig *prv_selection_config(void) {
@@ -113,9 +113,9 @@ typedef struct {
 } CellCornerInfo;
 
 static CellCornerInfo prv_get_cell_corner_info(int16_t cell_height) {
-  return (CellCornerInfo) {
-    .corner_mask = PBL_IF_RECT_ELSE(GCornerNone, GCornersAll),
-    .corner_radius = PBL_IF_RECT_ELSE(1, (cell_height / 2) - 1),
+  return (CellCornerInfo){
+      .corner_mask = PBL_IF_RECT_ELSE(GCornerNone, GCornersAll),
+      .corner_radius = PBL_IF_RECT_ELSE(1, (cell_height / 2) - 1),
   };
 }
 
@@ -207,7 +207,6 @@ static void prv_draw_slider_slide(SelectionLayer *selection_layer, GContext *ctx
   // Finally our current x-offset is our starting offset plus our current distance
   int current_x_offset = starting_x_offset + current_slide_distance;
 
-
   // As the cell slides the width of the cell also changes...
   // It starts as the width of the current active cell.
   int cur_cell_width = selection_layer->cell_widths[selection_layer->selected_cell_idx];
@@ -219,7 +218,7 @@ static void prv_draw_slider_slide(SelectionLayer *selection_layer, GContext *ctx
 
   // The current width change depends on how far we are through the animation
   int current_cell_width_change =
-      (total_cell_width_change * (int) selection_layer->slide_amin_progress) / 100;
+      (total_cell_width_change * (int)selection_layer->slide_amin_progress) / 100;
 
   // And finally our current width is the starting width plus any change
   int current_cell_width = cur_cell_width + current_cell_width_change;
@@ -250,7 +249,7 @@ static void prv_draw_slider_settle(SelectionLayer *selection_layer, GContext *ct
   // We need to increase the cell's width by the receding padding
   int original_width = selection_layer->cell_widths[selection_layer->selected_cell_idx];
   int receding_padding =
-    (selection_layer->cell_padding * selection_layer->slide_settle_anim_progress) / 100;
+      (selection_layer->cell_padding * selection_layer->slide_settle_anim_progress) / 100;
   int adjusted_width = original_width + receding_padding;
 
   const GRect rect =
@@ -291,7 +290,8 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
         // y offset with our progress
         if (selection_layer->selected_cell_idx == i) {
           int delta = (selection_layer->bump_text_anim_progress *
-              prv_get_font_top_padding(selection_layer->font)) / 100;
+                       prv_get_font_top_padding(selection_layer->font)) /
+                      100;
           if (selection_layer->bump_is_upwards) {
             delta *= -1;
           }
@@ -299,8 +299,8 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
         }
 
         GRect rect = GRect(current_x_offset, y_offset, selection_layer->cell_widths[i], height);
-        graphics_draw_text(ctx, text, selection_layer->font,
-            rect, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+        graphics_draw_text(ctx, text, selection_layer->font, rect, GTextOverflowModeFill,
+                           GTextAlignmentCenter, NULL);
       }
     }
     // Update the x-offset so we are ready for the next cell
@@ -341,7 +341,7 @@ static void prv_draw_selection_layer(SelectionLayer *selection_layer, GContext *
 
 static void prv_bump_text_impl(struct Animation *animation,
                                const AnimationProgress distance_normalized) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
 
   // Update the completion percent of the animation
   selection_layer->bump_text_anim_progress = (100 * distance_normalized) / ANIMATION_NORMALIZED_MAX;
@@ -360,7 +360,7 @@ static void prv_update_cell_value(SelectionLayer *selection_layer, bool incremen
 }
 
 static void prv_bump_text_stopped(Animation *animation, bool finished, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
   selection_layer->bump_text_anim_progress = 0;
 
   prv_update_cell_value(selection_layer, selection_layer->bump_is_upwards);
@@ -368,7 +368,7 @@ static void prv_bump_text_stopped(Animation *animation, bool finished, void *con
 
 static void prv_bump_settle_impl(struct Animation *animation,
                                  const AnimationProgress distance_normalized) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
 
   // Update the completion percent of the animation
   selection_layer->bump_settle_anim_progress =
@@ -377,38 +377,38 @@ static void prv_bump_settle_impl(struct Animation *animation,
 }
 
 static void prv_bump_settle_stopped(Animation *animation, bool finished, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
   selection_layer->bump_settle_anim_progress = 0;
 }
 
-static Animation* prv_create_bump_text_animation(SelectionLayer *selection_layer) {
+static Animation *prv_create_bump_text_animation(SelectionLayer *selection_layer) {
   Animation *animation = animation_create();
   animation_set_curve(animation, AnimationCurveEaseIn);
   animation_set_duration(animation, BUMP_TEXT_DURATION_MS);
   AnimationHandlers anim_handler = {
-    .stopped = prv_bump_text_stopped,
+      .stopped = prv_bump_text_stopped,
   };
   animation_set_handlers(animation, anim_handler, selection_layer);
 
-  selection_layer->bump_text_impl = (AnimationImplementation) {
-    .update = prv_bump_text_impl,
+  selection_layer->bump_text_impl = (AnimationImplementation){
+      .update = prv_bump_text_impl,
   };
   animation_set_implementation(animation, &selection_layer->bump_text_impl);
 
   return animation;
 }
 
-static Animation* prv_create_bump_settle_animation(SelectionLayer *selection_layer) {
+static Animation *prv_create_bump_settle_animation(SelectionLayer *selection_layer) {
   Animation *animation = animation_create();
   animation_set_curve(animation, AnimationCurveEaseOut);
   animation_set_duration(animation, BUMP_SETTLE_DURATION_MS);
   AnimationHandlers anim_handler = {
-    .stopped = prv_bump_settle_stopped,
+      .stopped = prv_bump_settle_stopped,
   };
   animation_set_handlers(animation, anim_handler, selection_layer);
 
-  selection_layer->bump_settle_anim_impl = (AnimationImplementation) {
-    .update = prv_bump_settle_impl,
+  selection_layer->bump_settle_anim_impl = (AnimationImplementation){
+      .update = prv_bump_settle_impl,
   };
   animation_set_implementation(animation, &selection_layer->bump_settle_anim_impl);
 
@@ -439,7 +439,7 @@ static void prv_run_value_change_animation(SelectionLayer *selection_layer) {
 
 static void prv_slide_impl(struct Animation *animation,
                            const AnimationProgress distance_normalized) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
 
   // Update the completion percent of the animation
   selection_layer->slide_amin_progress = (100 * distance_normalized) / ANIMATION_NORMALIZED_MAX;
@@ -447,14 +447,14 @@ static void prv_slide_impl(struct Animation *animation,
 }
 
 static void prv_slide_stopped(Animation *animation, bool finished, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
   selection_layer->slide_amin_progress = 0;
   selection_layer->selected_cell_idx++;
 }
 
 static void prv_slide_settle_impl(struct Animation *animation,
                                   const AnimationProgress distance_normalized) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
 
   // Update the completion percent of the animation. This is a reverse animation. It starts
   // fully drawn, then the amount drawn decreases
@@ -464,38 +464,38 @@ static void prv_slide_settle_impl(struct Animation *animation,
 }
 
 static void prv_slide_settle_stopped(Animation *animation, bool finished, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer*) animation_get_context(animation);
+  SelectionLayer *selection_layer = (SelectionLayer *)animation_get_context(animation);
   selection_layer->slide_settle_anim_progress = 0;
 }
 
-static Animation* prv_create_slide_animation(SelectionLayer *selection_layer) {
+static Animation *prv_create_slide_animation(SelectionLayer *selection_layer) {
   Animation *animation = animation_create();
   animation_set_curve(animation, AnimationCurveEaseIn);
   animation_set_duration(animation, SLIDE_DURATION_MS);
   AnimationHandlers anim_handler = {
-    .stopped = prv_slide_stopped,
+      .stopped = prv_slide_stopped,
   };
   animation_set_handlers(animation, anim_handler, selection_layer);
 
-  selection_layer->slide_amin_impl = (AnimationImplementation) {
-    .update = prv_slide_impl,
+  selection_layer->slide_amin_impl = (AnimationImplementation){
+      .update = prv_slide_impl,
   };
   animation_set_implementation(animation, &selection_layer->slide_amin_impl);
 
   return animation;
 }
 
-static Animation* prv_create_slide_settle_animation(SelectionLayer *selection_layer) {
+static Animation *prv_create_slide_settle_animation(SelectionLayer *selection_layer) {
   Animation *animation = animation_create();
   animation_set_curve(animation, AnimationCurveEaseOut);
   animation_set_duration(animation, SLIDE_SETTLE_DURATION_MS);
   AnimationHandlers anim_handler = {
-    .stopped = prv_slide_settle_stopped,
+      .stopped = prv_slide_settle_stopped,
   };
   animation_set_handlers(animation, anim_handler, selection_layer);
 
-  selection_layer->slide_settle_anim_impl = (AnimationImplementation) {
-    .update = prv_slide_settle_impl,
+  selection_layer->slide_settle_anim_impl = (AnimationImplementation){
+      .update = prv_slide_settle_impl,
   };
   animation_set_implementation(animation, &selection_layer->slide_settle_anim_impl);
 
@@ -514,15 +514,14 @@ static void prv_run_slide_animation(SelectionLayer *selection_layer) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Click handlers
 void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer*) context;
+  SelectionLayer *selection_layer = (SelectionLayer *)context;
   bool is_up = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
 
   if (selection_layer->is_active) {
     if (click_recognizer_is_repeating(recognizer)) {
       // Don't animate if the button is being held down. Just update the text
-      SelectionLayerIncrementCallback func = (is_up)
-                                              ? selection_layer->callbacks.increment
-                                              : selection_layer->callbacks.decrement;
+      SelectionLayerIncrementCallback func =
+          (is_up) ? selection_layer->callbacks.increment : selection_layer->callbacks.decrement;
       if (func) {
         func(selection_layer->selected_cell_idx, selection_layer->callback_context);
       }
@@ -536,7 +535,7 @@ void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer*) context;
+  SelectionLayer *selection_layer = (SelectionLayer *)context;
   if (selection_layer->is_active) {
     animation_unschedule(selection_layer->next_cell_animation);
     if (selection_layer->selected_cell_idx == selection_layer->num_cells - 1) {
@@ -554,32 +553,29 @@ static void prv_click_config_provider(SelectionLayer *selection_layer) {
   window_set_click_context(BUTTON_ID_DOWN, selection_layer);
   window_set_click_context(BUTTON_ID_SELECT, selection_layer);
 
-  window_single_repeating_click_subscribe(BUTTON_ID_UP,
-                                          BUTTON_HOLD_REPEAT_MS,
+  window_single_repeating_click_subscribe(BUTTON_ID_UP, BUTTON_HOLD_REPEAT_MS,
                                           prv_up_down_click_handler);
-  window_single_repeating_click_subscribe(BUTTON_ID_DOWN,
-                                          BUTTON_HOLD_REPEAT_MS,
+  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, BUTTON_HOLD_REPEAT_MS,
                                           prv_up_down_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! API
-void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame,
-                          unsigned num_cells) {
+void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, unsigned num_cells) {
   if (num_cells > MAX_SELECTION_LAYER_CELLS) {
     num_cells = MAX_SELECTION_LAYER_CELLS;
   }
 
   // Set layer defaults
-  *selection_layer = (SelectionLayer) {
-    .num_cells = num_cells,
-    .cell_padding = DEFAULT_CELL_PADDING,
-    .selected_cell_idx = DEFAULT_SELECTED_INDEX,
-    .font = fonts_get_system_font(prv_selection_config()->font_key),
-    .active_background_color = DEFAULT_ACTIVE_COLOR,
-    .inactive_background_color = DEFAULT_INACTIVE_COLOR,
-    .is_active = true,
+  *selection_layer = (SelectionLayer){
+      .num_cells = num_cells,
+      .cell_padding = DEFAULT_CELL_PADDING,
+      .selected_cell_idx = DEFAULT_SELECTED_INDEX,
+      .font = fonts_get_system_font(prv_selection_config()->font_key),
+      .active_background_color = DEFAULT_ACTIVE_COLOR,
+      .inactive_background_color = DEFAULT_INACTIVE_COLOR,
+      .is_active = true,
   };
   for (unsigned i = 0; i < num_cells; i++) {
     selection_layer->cell_widths[i] = 0;
@@ -588,10 +584,10 @@ void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame,
   layer_create_with_data(*frame, sizeof(selection_layer));
   layer_set_frame(&selection_layer->layer, frame);
   layer_set_clips(&selection_layer->layer, false);
-  layer_set_update_proc(&selection_layer->layer, (LayerUpdateProc) prv_draw_selection_layer);
+  layer_set_update_proc(&selection_layer->layer, (LayerUpdateProc)prv_draw_selection_layer);
 }
 
-SelectionLayer* selection_layer_create(GRect frame, unsigned num_cells) {
+SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells) {
   // Note: Not yet exported to 3rd party apps so no padding needed
   SelectionLayer *selection_layer = applib_malloc(sizeof(SelectionLayer));
   if (selection_layer) {
@@ -600,12 +596,12 @@ SelectionLayer* selection_layer_create(GRect frame, unsigned num_cells) {
   return selection_layer;
 }
 
-void selection_layer_deinit(SelectionLayer* selection_layer) {
+void selection_layer_deinit(SelectionLayer *selection_layer) {
   animation_unschedule(selection_layer->next_cell_animation);
   animation_unschedule(selection_layer->value_change_animation);
 }
 
-void selection_layer_destroy(SelectionLayer* selection_layer) {
+void selection_layer_destroy(SelectionLayer *selection_layer) {
   if (selection_layer) {
     selection_layer_deinit(selection_layer);
     applib_free(selection_layer);
@@ -646,7 +642,8 @@ void selection_layer_set_active(SelectionLayer *selection_layer, bool is_active)
   if (selection_layer) {
     if (is_active && !selection_layer->is_active) {
       selection_layer->selected_cell_idx = 0;
-    } if (!is_active && selection_layer->is_active) {
+    }
+    if (!is_active && selection_layer->is_active) {
       selection_layer->selected_cell_idx = MAX_SELECTION_LAYER_CELLS + 1;
     }
     selection_layer->is_active = is_active;
@@ -657,8 +654,8 @@ void selection_layer_set_active(SelectionLayer *selection_layer, bool is_active)
 void selection_layer_set_click_config_onto_window(SelectionLayer *selection_layer,
                                                   struct Window *window) {
   if (selection_layer && window) {
-    window_set_click_config_provider_with_context(window,
-        (ClickConfigProvider) prv_click_config_provider, selection_layer);
+    window_set_click_config_provider_with_context(
+        window, (ClickConfigProvider)prv_click_config_provider, selection_layer);
   }
 }
 

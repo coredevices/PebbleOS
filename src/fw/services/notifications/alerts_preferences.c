@@ -83,16 +83,20 @@ static uint32_t s_first_use_complete = 0;
 static uint32_t s_notif_window_timeout_ms = NOTIF_WINDOW_TIMEOUT_DEFAULT;
 
 #define PREF_KEY_NOTIF_DESIGN_STYLE "notifDesignStyle"
-static bool s_notification_alternative_design = false;  // true = alternative (black banner), false = standard (default)
+static bool s_notification_alternative_design =
+    false;  // true = alternative (black banner), false = standard (default)
 
 #define PREF_KEY_NOTIF_VIBE_DELAY "notifVibeDelay"
-static bool s_notification_vibe_delay = true;  // true = vibe at end of animation (default), false = vibe immediately
+static bool s_notification_vibe_delay =
+    true;  // true = vibe at end of animation (default), false = vibe immediately
 
 #define PREF_KEY_NOTIF_BACKLIGHT "notifBacklight"
-static bool s_notification_backlight = true;  // true = enable backlight (default), false = disable backlight
+static bool s_notification_backlight =
+    true;  // true = enable backlight (default), false = disable backlight
 
 #define PREF_KEY_NOTIF_STATUS_BAR_STYLE "notifStatusBarStyle"
-static NotificationStatusBarStyle s_notification_status_bar_style = NotificationStatusBarStyle_Default;
+static NotificationStatusBarStyle s_notification_status_bar_style =
+    NotificationStatusBarStyle_Default;
 
 ///////////////////////////////////
 //! Legacy preference keys
@@ -100,8 +104,8 @@ static NotificationStatusBarStyle s_notification_status_bar_style = Notification
 
 #define PREF_KEY_LEGACY_DND_SCHEDULE "dndSchedule"
 static DoNotDisturbSchedule s_legacy_dnd_schedule = {
-  .from_hour = 0,
-  .to_hour = 6,
+    .from_hour = 0,
+    .to_hour = 6,
 };
 
 #define PREF_KEY_LEGACY_DND_SCHEDULE_ENABLED "dndEnabled"
@@ -127,23 +131,24 @@ typedef struct DoNotDisturbScheduleConfigKeys {
 static DoNotDisturbScheduleConfig s_dnd_schedule[NumDNDSchedules];
 
 static const DoNotDisturbScheduleConfigKeys s_dnd_schedule_keys[NumDNDSchedules] = {
-  [WeekdaySchedule] = {
-    .schedule_pref_key = "dndWeekdaySchedule",
-    .enabled_pref_key = "dndWeekdayScheduleEnabled",
-  },
-  [WeekendSchedule] = {
-    .schedule_pref_key = "dndWeekendSchedule",
-    .enabled_pref_key = "dndWeekendScheduleEnabled",
-  }
+    [WeekdaySchedule] =
+        {
+            .schedule_pref_key = "dndWeekdaySchedule",
+            .enabled_pref_key = "dndWeekdayScheduleEnabled",
+        },
+    [WeekendSchedule] = {
+        .schedule_pref_key = "dndWeekendSchedule",
+        .enabled_pref_key = "dndWeekendScheduleEnabled",
+    }
 };
 
 static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
   // If Weekday schedule does not exist, assume that the other 3 settings files are missing as well
   // Set the new schedules to the legacy schedule and delete the legacy schedule
   if (!settings_file_exists(file, s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
-                           strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key))) {
+                            strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key))) {
 #define SET_PREF_ALREADY_OPEN(key, value) \
-    settings_file_set(file, key, strlen(key), value, sizeof(value));
+  settings_file_set(file, key, strlen(key), value, sizeof(value));
 
     s_dnd_schedule[WeekdaySchedule].schedule = s_legacy_dnd_schedule;
     SET_PREF_ALREADY_OPEN(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
@@ -159,12 +164,12 @@ static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
                           &s_dnd_schedule[WeekendSchedule].enabled);
 #undef SET_PREF_ALREADY_OPEN
 
-#define DELETE_PREF(key) \
-    do { \
-      if (settings_file_exists(file, key, strlen(key))) { \
-        settings_file_delete(file, key, strlen(key)); \
-      } \
-    } while (0)
+#define DELETE_PREF(key)                                \
+  do {                                                  \
+    if (settings_file_exists(file, key, strlen(key))) { \
+      settings_file_delete(file, key, strlen(key));     \
+    }                                                   \
+  } while (0)
 
     DELETE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE);
     DELETE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE_ENABLED);
@@ -178,11 +183,11 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
   bool smart_dnd_first_use_complete;
 
   // Migrate the old first use dialog prefs
-#define RESTORE_AND_DELETE_PREF(key, var) \
-  do { \
+#define RESTORE_AND_DELETE_PREF(key, var)                                            \
+  do {                                                                               \
     if (settings_file_get(file, key, strlen(key), &var, sizeof(var)) == S_SUCCESS) { \
-      settings_file_delete(file, key, strlen(key)); \
-    } \
+      settings_file_delete(file, key, strlen(key));                                  \
+    }                                                                                \
   } while (0)
 
   RESTORE_AND_DELETE_PREF(PREF_KEY_LEGACY_DND_MANUAL_FIRST_USE, manual_dnd_first_use_complete);
@@ -199,17 +204,15 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
 // which would otherwise make the watch win every sync conflict against the
 // phone and leave settings_blob_db's INSERT_WITH_TIMESTAMP path permanently
 // rejecting the user's chosen value.
-static void prv_save_changed_vibe_scores_to_file(SettingsFile *file,
-                                                 VibeScoreId orig_notifications,
+static void prv_save_changed_vibe_scores_to_file(SettingsFile *file, VibeScoreId orig_notifications,
                                                  VibeScoreId orig_incoming_calls,
-                                                 VibeScoreId orig_alarms,
-                                                 VibeScoreId orig_hourly,
+                                                 VibeScoreId orig_alarms, VibeScoreId orig_hourly,
                                                  VibeScoreId orig_on_disconnect) {
-#define SET_PREF_IF_CHANGED(key, value, orig) \
-  do { \
-    if ((value) != (orig)) { \
+#define SET_PREF_IF_CHANGED(key, value, orig)                             \
+  do {                                                                    \
+    if ((value) != (orig)) {                                              \
       settings_file_set(file, key, strlen(key), &(value), sizeof(value)); \
-    } \
+    }                                                                     \
   } while (0)
 
   SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications,
@@ -218,7 +221,7 @@ static void prv_save_changed_vibe_scores_to_file(SettingsFile *file,
                       orig_incoming_calls);
   SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms, orig_alarms);
   SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_HOURLY, s_vibe_score_hourly, orig_hourly);
-  SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_ON_DISCONNECT, s_vibe_score_on_disconnect, 
+  SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_ON_DISCONNECT, s_vibe_score_on_disconnect,
                       orig_on_disconnect);
 #undef SET_PREF_IF_CHANGED
 }
@@ -229,16 +232,16 @@ static VibeScoreId prv_return_default_if_invalid(VibeScoreId id, VibeScoreId def
 
 // Uses the default vibe pattern id if the given score isn't valid
 static void prv_ensure_valid_vibe_scores(void) {
-  s_vibe_score_notifications = prv_return_default_if_invalid(s_vibe_score_notifications,
-                                                             DEFAULT_VIBE_SCORE_NOTIFS);
-  s_vibe_score_incoming_calls = prv_return_default_if_invalid(s_vibe_score_incoming_calls,
-                                                              DEFAULT_VIBE_SCORE_INCOMING_CALLS);
-  s_vibe_score_alarms = prv_return_default_if_invalid(s_vibe_score_alarms,
-                                                      DEFAULT_VIBE_SCORE_ALARMS);
-  s_vibe_score_hourly = prv_return_default_if_invalid(s_vibe_score_hourly,
-                                                      DEFAULT_VIBE_SCORE_HOURLY);
-  s_vibe_score_on_disconnect = prv_return_default_if_invalid(s_vibe_score_on_disconnect,
-                                                            DEFAULT_VIBE_SCORE_ON_DISCONNECT);
+  s_vibe_score_notifications =
+      prv_return_default_if_invalid(s_vibe_score_notifications, DEFAULT_VIBE_SCORE_NOTIFS);
+  s_vibe_score_incoming_calls =
+      prv_return_default_if_invalid(s_vibe_score_incoming_calls, DEFAULT_VIBE_SCORE_INCOMING_CALLS);
+  s_vibe_score_alarms =
+      prv_return_default_if_invalid(s_vibe_score_alarms, DEFAULT_VIBE_SCORE_ALARMS);
+  s_vibe_score_hourly =
+      prv_return_default_if_invalid(s_vibe_score_hourly, DEFAULT_VIBE_SCORE_HOURLY);
+  s_vibe_score_on_disconnect =
+      prv_return_default_if_invalid(s_vibe_score_on_disconnect, DEFAULT_VIBE_SCORE_ON_DISCONNECT);
 }
 
 static void prv_set_vibe_scores_based_on_legacy_intensity(VibeIntensity intensity) {
@@ -256,9 +259,8 @@ static void prv_set_vibe_scores_based_on_legacy_intensity(VibeIntensity intensit
 static void prv_migrate_vibe_intensity_to_vibe_scores(SettingsFile *file) {
   // We use the existence of the notifications vibe score pref as a shallow measurement of whether
   // or not the user has migrated to vibe scores
-  const bool user_has_migrated_to_vibe_scores =
-    settings_file_exists(file, PREF_KEY_VIBE_SCORE_NOTIFICATIONS,
-                         strlen(PREF_KEY_VIBE_SCORE_NOTIFICATIONS));
+  const bool user_has_migrated_to_vibe_scores = settings_file_exists(
+      file, PREF_KEY_VIBE_SCORE_NOTIFICATIONS, strlen(PREF_KEY_VIBE_SCORE_NOTIFICATIONS));
 
   if (!user_has_migrated_to_vibe_scores) {
     // If the user previously set a vibration intensity, set the vibe scores based on that intensity
@@ -286,7 +288,6 @@ static void prv_migrate_vibe_intensity_to_vibe_scores(SettingsFile *file) {
 }
 
 void alerts_preferences_init(void) {
-
   SettingsFile file = {{0}};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
     return;
@@ -297,15 +298,13 @@ void alerts_preferences_init(void) {
   // canonicalised the key length). Settings file lookups match key_len exactly,
   // so probe both lengths to remain backwards compatible with records written
   // by older firmware.
-#define RESTORE_PREF(key, var) \
-  do { \
-    __typeof__(var) _tmp; \
-    if (settings_file_get( \
-            &file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS || \
-        settings_file_get( \
-            &file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
-      var = _tmp; \
-    } \
+#define RESTORE_PREF(key, var)                                                              \
+  do {                                                                                      \
+    __typeof__(var) _tmp;                                                                   \
+    if (settings_file_get(&file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS ||     \
+        settings_file_get(&file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
+      var = _tmp;                                                                           \
+    }                                                                                       \
   } while (0)
 
   RESTORE_PREF(PREF_KEY_MASK, s_mask);
@@ -361,19 +360,15 @@ void alerts_preferences_init(void) {
     s_speaker_volume = 100;
   }
   prv_save_changed_vibe_scores_to_file(&file, orig_vibe_score_notifications,
-                                       orig_vibe_score_incoming_calls,
-                                       orig_vibe_score_alarms,
-                                       orig_vibe_score_hourly,
-                                       orig_vibe_score_on_disconnect);
+                                       orig_vibe_score_incoming_calls, orig_vibe_score_alarms,
+                                       orig_vibe_score_hourly, orig_vibe_score_on_disconnect);
 
   settings_file_close(&file);
 }
 
 // Convenience macro for setting a string key to a non-pointer value.
-#define SET_PREF(key, value) \
-  prv_set_pref(key, strlen(key), &value, sizeof(value))
-static void prv_set_pref(const void *key, size_t key_len, const void *value,
-                         size_t value_len) {
+#define SET_PREF(key, value) prv_set_pref(key, strlen(key), &value, sizeof(value))
+static void prv_set_pref(const void *key, size_t key_len, const void *value, size_t value_len) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   SettingsFile file = {{0}};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
@@ -687,18 +682,18 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   // key_len may or may not include the null terminator depending on BlobDB protocol
   // IMPORTANT: settings_file_get uses exact key_len matching, so we must use the same
   // key_len that was used when writing the record (i.e., key_len from the event)
-#define RELOAD_IF_MATCH(pref_key, var) \
-  do { \
-    size_t _pref_strlen = strlen(pref_key); \
-    if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) && \
-        memcmp(key, pref_key, _pref_strlen) == 0) { \
-      __typeof__(var) _tmp; \
+#define RELOAD_IF_MATCH(pref_key, var)                                                \
+  do {                                                                                \
+    size_t _pref_strlen = strlen(pref_key);                                           \
+    if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) &&       \
+        memcmp(key, pref_key, _pref_strlen) == 0) {                                   \
+      __typeof__(var) _tmp;                                                           \
       if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
-        var = _tmp; \
-        matched_key = pref_key; \
-      } \
-      goto done; \
-    } \
+        var = _tmp;                                                                   \
+        matched_key = pref_key;                                                       \
+      }                                                                               \
+      goto done;                                                                      \
+    }                                                                                 \
   } while (0)
 
   RELOAD_IF_MATCH(PREF_KEY_MASK, s_mask);
@@ -743,11 +738,11 @@ done:
       do_not_disturb_handle_pref_synced();
     }
     PebbleEvent pref_event = {
-      .type = PEBBLE_PREF_CHANGE_EVENT,
-      .pref_change = {
-        .key = matched_key,
-        .key_len = strlen(matched_key) + 1,
-      },
+        .type = PEBBLE_PREF_CHANGE_EVENT,
+        .pref_change = {
+            .key = matched_key,
+            .key_len = strlen(matched_key) + 1,
+        },
     };
     event_put(&pref_event);
   }

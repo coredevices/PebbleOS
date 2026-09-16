@@ -15,9 +15,8 @@ AppMessageResult app_message_inbox_open(AppMessageCtxInbox *inbox, size_t size_i
   } else if (size_inbound == size_maximum) {
     APP_LOG(LOG_LEVEL_INFO, "app_message_open() called with app_message_inbox_size_maximum().");
     APP_LOG(LOG_LEVEL_INFO,
-            "This consumes %"PRIu32" bytes of heap memory, potentially more in the future!",
+            "This consumes %" PRIu32 " bytes of heap memory, potentially more in the future!",
             (uint32_t)size_maximum);
-
   }
   if (size_inbound == 0) {
     return APP_MSG_OK;
@@ -38,18 +37,18 @@ void app_message_inbox_close(AppMessageCtxInbox *inbox) {
 
 void app_message_inbox_send_ack_nack_reply(CommSession *session, const uint8_t transaction_id,
                                            AppMessageCmd cmd) {
-  const AppMessageAck nack_message = (const AppMessageAck) {
-    .header = {
-      .command = cmd,
-      .transaction_id = transaction_id,
-    },
+  const AppMessageAck nack_message = (const AppMessageAck){
+      .header = {
+          .command = cmd,
+          .transaction_id = transaction_id,
+      },
   };
   // Just use a syscall to enqueue the message using kernel heap.
   // We could use app_outbox, but then we'd need to allocate the message on the app heap and I'm
   // afraid this might break apps, especially if the mobile app is misbehaving and avalanching the
   // app with messages that need to be (n)ack'd.
-  sys_app_pp_send_data(session, APP_MESSAGE_ENDPOINT_ID,
-                       (const uint8_t *) &nack_message, sizeof(nack_message));
+  sys_app_pp_send_data(session, APP_MESSAGE_ENDPOINT_ID, (const uint8_t *)&nack_message,
+                       sizeof(nack_message));
 }
 
 void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
@@ -92,7 +91,7 @@ void app_message_inbox_receive(CommSession *session, AppMessagePush *push_messag
   DictionaryIterator iterator;
   const uint16_t dict_size = (length - APP_MSG_HDR_OVRHD_SIZE);
   // TODO PBL-1639: Maybe do some sanity checking on the dict structure?
-  dict_read_begin_from_buffer(&iterator, (const uint8_t *) &push_message->dictionary, dict_size);
+  dict_read_begin_from_buffer(&iterator, (const uint8_t *)&push_message->dictionary, dict_size);
 
   if (inbox->received_callback) {
     inbox->received_callback(&iterator, inbox->user_context);

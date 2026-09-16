@@ -46,12 +46,12 @@ static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
   ActionMenuLayer *aml = callback_context;
   return (uint16_t)(aml->num_items +
-      (aml->num_short_items + SHORT_COL_COUNT - 1) / SHORT_COL_COUNT);
+                    (aml->num_short_items + SHORT_COL_COUNT - 1) / SHORT_COL_COUNT);
 }
 
 static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
-                                 ActionMenuLayer *aml, ActionMenuItem *items,
-                                 int num_items, int sel_idx) {
+                                 ActionMenuLayer *aml, ActionMenuItem *items, int num_items,
+                                 int sel_idx) {
   const GFont font = aml->layout_cache.font;
   const int16_t font_height = fonts_get_font_height(font);
   const GRect *layer_bounds = &cell_layer->bounds;
@@ -94,12 +94,12 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
     }
 
     graphics_draw_text(ctx, items[i].label, font, r, GTextOverflowModeTrailingEllipsis,
-        GTextAlignmentCenter, NULL);
+                       GTextAlignmentCenter, NULL);
     r.origin.x += r.size.w;
   }
 }
 
-static const ActionMenuItem  *prv_get_item_for_index(ActionMenuLayer *aml, int idx) {
+static const ActionMenuItem *prv_get_item_for_index(ActionMenuLayer *aml, int idx) {
   if (!aml->num_items && !aml->num_short_items) {
     return NULL;
   }
@@ -133,15 +133,14 @@ static int16_t prv_get_item_line_height(ActionMenuLayer *aml, int idx) {
 #if PBL_RECT
   const int nudge = menu_cell_basic_horizontal_inset();
   if (!item->is_leaf) {
-    const GSize indicator_size = graphics_text_layout_get_max_used_size(ctx, INDICATOR,
-                                                                        font, box,
-                                                                        GTextOverflowModeWordWrap,
-                                                                        GTextAlignmentRight, NULL);
+    const GSize indicator_size = graphics_text_layout_get_max_used_size(
+        ctx, INDICATOR, font, box, GTextOverflowModeWordWrap, GTextAlignmentRight, NULL);
     box.size.w -= (indicator_size.w + nudge);
   }
 #endif
-  return graphics_text_layout_get_text_height(ctx, item->label, font, box.size.w,
-      GTextOverflowModeWordWrap, PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft));
+  return graphics_text_layout_get_text_height(
+      ctx, item->label, font, box.size.w, GTextOverflowModeWordWrap,
+      PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft));
 }
 
 // Item Scroll Animation
@@ -166,13 +165,10 @@ static void prv_cell_animation_stopped_handler(Animation *animation, bool finish
 }
 
 static const PropertyAnimationImplementation s_item_animation_implementation = {
-  .base = {
-    .update = (AnimationUpdateImplementation)property_animation_update_int16
-  },
-  .accessors = {
-    .setter = { .int16 = prv_set_cell_offset },
-    .getter = { .int16 = prv_get_cell_offset }
-  }
+    .base = {.update = (AnimationUpdateImplementation)property_animation_update_int16},
+    .accessors = {
+        .setter = {.int16 = prv_set_cell_offset}, .getter = {.int16 = prv_get_cell_offset}
+    }
 };
 
 static void prv_unschedule_item_animation(ActionMenuLayer *aml) {
@@ -193,8 +189,8 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
 #endif
   // On rect displays, calculate the visible item height based on a desired number of visible lines
   // On round displays, use the height of the provided box since it might be inset for the indicator
-  const int16_t max_visible_item_height = PBL_IF_RECT_ELSE(MAX_NUM_VISIBLE_LINES * line_height,
-                                                           label_text_frame->size.h);
+  const int16_t max_visible_item_height =
+      PBL_IF_RECT_ELSE(MAX_NUM_VISIBLE_LINES * line_height, label_text_frame->size.h);
   if (item_height > max_visible_item_height) {
     // Compute the limit at which we should bounce back to the top of the layer.  Since
     // there are at most MAX_NUM_VISIBLE_LINES shown at a given time, we want to stop
@@ -212,34 +208,36 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
       item_animation->current_offset_y = 0;
 
       // Create the animation that will scroll us up in the cell
-      PropertyAnimation *animation = property_animation_create(&s_item_animation_implementation,
-          (void *)aml, NULL, &item_animation->top_offset_y);
+      PropertyAnimation *animation = property_animation_create(
+          &s_item_animation_implementation, (void *)aml, NULL, &item_animation->top_offset_y);
 
       animation_set_duration((Animation *)animation, DELAY_PER_LINE * (item_height / line_height));
       animation_set_curve((Animation *)animation, AnimationCurveLinear);
       animation_set_handlers((Animation *)animation, (AnimationHandlers){0}, aml);
 
       // Create the animation that stalls when we have auto-scrolled up completely
-      PropertyAnimation *s_animation = property_animation_create(&s_item_animation_implementation,
-          (void *)aml, &item_animation->top_offset_y, &item_animation->top_offset_y);
+      PropertyAnimation *s_animation =
+          property_animation_create(&s_item_animation_implementation, (void *)aml,
+                                    &item_animation->top_offset_y, &item_animation->top_offset_y);
 
       animation_set_duration((Animation *)s_animation, DELAY_PER_LINE /* ms to wait */);
       animation_set_handlers((Animation *)s_animation, (AnimationHandlers){0}, aml);
 
       // Create the reverse animation that takes us from the scrolled up position back down
-      PropertyAnimation *r_animation = property_animation_create(&s_item_animation_implementation,
-          (void *)aml, &item_animation->top_offset_y, &item_animation->bottom_offset_y);
+      PropertyAnimation *r_animation = property_animation_create(
+          &s_item_animation_implementation, (void *)aml, &item_animation->top_offset_y,
+          &item_animation->bottom_offset_y);
 
       animation_set_duration((Animation *)r_animation,
-          (DELAY_PER_LINE / 4) * (item_height / line_height));
+                             (DELAY_PER_LINE / 4) * (item_height / line_height));
       animation_set_curve((Animation *)r_animation, AnimationCurveEaseInOut);
       animation_set_handlers((Animation *)r_animation, (AnimationHandlers){0}, aml);
 
-      item_animation->animation = animation_sequence_create((Animation *)animation,
-          (Animation *)s_animation, (Animation *)r_animation);
+      item_animation->animation = animation_sequence_create(
+          (Animation *)animation, (Animation *)s_animation, (Animation *)r_animation);
 
       animation_set_handlers(item_animation->animation,
-                             (AnimationHandlers){ .stopped = prv_cell_animation_stopped_handler },
+                             (AnimationHandlers){.stopped = prv_cell_animation_stopped_handler},
                              aml);
       animation_set_play_count(item_animation->animation, PLAY_COUNT_INFINITE);
       animation_set_delay(item_animation->animation, DELAY_PER_LINE /* ms */);
@@ -325,19 +323,18 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
 static void prv_cell_item_content_draw_round(GContext *ctx, const Layer *cell_layer,
                                              const ActionMenuLayer *aml, const ActionMenuItem *item,
                                              bool selected, GRect *content_box) {
-  const int16_t horizontal_inset = selected ? MENU_CELL_ROUND_FOCUSED_HORIZONTAL_INSET :
-                                              MENU_CELL_ROUND_UNFOCUSED_HORIZONTAL_INSET;
+  const int16_t horizontal_inset = selected ? MENU_CELL_ROUND_FOCUSED_HORIZONTAL_INSET
+                                            : MENU_CELL_ROUND_UNFOCUSED_HORIZONTAL_INSET;
   *content_box = grect_inset(*content_box, GEdgeInsets(0, horizontal_inset));
 
   // Use a smaller font for the unfocused cells to achieve a fish-eye effect
   const GFont font = selected ? aml->layout_cache.font : prv_get_unfocused_item_font();
-  const GTextOverflowMode overflow_mode = selected ? GTextOverflowModeWordWrap :
-                                                     GTextOverflowModeTrailingEllipsis;
+  const GTextOverflowMode overflow_mode =
+      selected ? GTextOverflowModeWordWrap : GTextOverflowModeTrailingEllipsis;
   const GTextAlignment text_alignment = GTextAlignmentCenter;
-  const GSize text_size = graphics_text_layout_get_max_used_size(ctx, item->label, font,
-                                                                 *content_box, overflow_mode,
-                                                                 text_alignment, NULL);
-  GRect text_box = (GRect) { .size = text_size };
+  const GSize text_size = graphics_text_layout_get_max_used_size(
+      ctx, item->label, font, *content_box, overflow_mode, text_alignment, NULL);
+  GRect text_box = (GRect){.size = text_size};
   const GAlign item_label_text_alignment = GAlignCenter;
   grect_align(&text_box, content_box, item_label_text_alignment, true /* clip */);
   text_box.origin.y -= fonts_get_font_cap_offset(font);
@@ -357,12 +354,8 @@ static void prv_draw_indicator_round(GContext *ctx, const ActionMenuLayer *aml,
   const int text_height = aml->layout_cache.item_heights[aml->selected_index];
   const int content_height = MIN(label_text_container->size.h, text_height + indicator_height);
 
-  GRect content_frame = (GRect) {
-    .size = GSize(label_text_container->size.w, content_height)
-  };
-  GRect indicator_frame = (GRect) {
-    .size = GSize(label_text_container->size.w, indicator_height)
-  };
+  GRect content_frame = (GRect){.size = GSize(label_text_container->size.w, content_height)};
+  GRect indicator_frame = (GRect){.size = GSize(label_text_container->size.w, indicator_height)};
 
   grect_align(&content_frame, label_text_container, GAlignCenter, true);
   grect_align(&indicator_frame, &content_frame, GAlignBottom, true);
@@ -372,9 +365,8 @@ static void prv_draw_indicator_round(GContext *ctx, const ActionMenuLayer *aml,
 }
 #endif
 
-static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
-                               ActionMenuLayer *aml, const ActionMenuItem *item,
-                               bool selected) {
+static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer, ActionMenuLayer *aml,
+                               const ActionMenuItem *item, bool selected) {
   GRect label_text_container = cell_layer->bounds;
   // bottom_inset won't be used on black and white, using PBL_UNUSED here quiets the linter
   PBL_UNUSED int16_t bottom_inset = 0;
@@ -421,9 +413,8 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
     graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   }
 
-  PBL_IF_RECT_ELSE(prv_cell_item_content_draw_rect,
-                   prv_cell_item_content_draw_round)(ctx, cell_layer, aml, item, selected,
-                                                     &label_text_frame);
+  PBL_IF_RECT_ELSE(prv_cell_item_content_draw_rect, prv_cell_item_content_draw_round)(
+      ctx, cell_layer, aml, item, selected, &label_text_frame);
 
 #if !defined(CONFIG_RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   const int16_t fade_height = 10;
@@ -438,14 +429,14 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer,
   if (draw_bottom_shading) {
     GRect bottom_bounds = label_text_container;
     bottom_bounds.size.h = fade_height;
-    bottom_bounds.origin.y = grect_get_max_y(&label_text_container) -
-                             (fade_height + VERTICAL_PADDING);
+    bottom_bounds.origin.y =
+        grect_get_max_y(&label_text_container) - (fade_height + VERTICAL_PADDING);
     graphics_draw_bitmap_in_rect(ctx, &aml->item_animation.fade_bottom, &bottom_bounds);
   }
 #endif
 }
 
-static void prv_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index,
+static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
                          void *callback_context) {
   ActionMenuLayer *aml = callback_context;
 
@@ -540,14 +531,13 @@ static int16_t prv_get_cell_padding(ActionMenuLayer *aml) {
   return default_sep_height;
 #else
   const int16_t line_height = fonts_get_font_height(aml->layout_cache.font);
-  const int16_t sep_height = MAX(menu_cell_small_cell_height() - line_height,
-                                 default_sep_height) + 1;
+  const int16_t sep_height =
+      MAX(menu_cell_small_cell_height() - line_height, default_sep_height) + 1;
   return sep_height;
 #endif
 }
 
-static int16_t prv_get_cell_height_cb(struct MenuLayer *menu_layer,
-                                      MenuIndex *cell_index,
+static int16_t prv_get_cell_height_cb(struct MenuLayer *menu_layer, MenuIndex *cell_index,
                                       void *context) {
   ActionMenuLayer *aml = (ActionMenuLayer *)context;
   const int16_t line_height = fonts_get_font_height(aml->layout_cache.font);
@@ -557,9 +547,9 @@ static int16_t prv_get_cell_height_cb(struct MenuLayer *menu_layer,
   }
 
 #if PBL_ROUND
-  return menu_layer_is_index_selected(menu_layer, cell_index) ?
-            MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT :
-            MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT;
+  return menu_layer_is_index_selected(menu_layer, cell_index)
+             ? MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT
+             : MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT;
 #else
   const int16_t max_visible_height = line_height * MAX_NUM_VISIBLE_LINES;
   const int16_t actual_height = aml->layout_cache.item_heights[cell_index->row];
@@ -580,22 +570,25 @@ typedef struct ActionMenuSeparatorConfig {
 } ActionMenuSeparatorConfig;
 
 static const ActionMenuSeparatorConfig s_separator_configs[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = {
-    .separator = {100, 1},
-  },
-  [PreferredContentSizeMedium] = {
-    .separator = {100, 1},
-  },
-  [PreferredContentSizeLarge] = {
-    .separator = {162, 2},
-  },
-  [PreferredContentSizeExtraLarge] = {
-    .separator = {162, 2},
-  },
+    [PreferredContentSizeSmall] =
+        {
+            .separator = {100, 1},
+        },
+    [PreferredContentSizeMedium] =
+        {
+            .separator = {100, 1},
+        },
+    [PreferredContentSizeLarge] =
+        {
+            .separator = {162, 2},
+        },
+    [PreferredContentSizeExtraLarge] = {
+        .separator = {162, 2},
+    },
 };
 
-static void prv_draw_separator_cb(GContext *ctx, const Layer *cell_layer,
-                                  MenuIndex *cell_index, void *callback_context) {
+static void prv_draw_separator_cb(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                                  void *callback_context) {
   ActionMenuLayer *aml = callback_context;
   if (aml->separator_index && cell_index->row == aml->separator_index) {
     const PreferredContentSize runtime_platform_default_size =
@@ -611,8 +604,8 @@ static void prv_draw_separator_cb(GContext *ctx, const Layer *cell_layer,
     const int16_t offset_x = PBL_IF_RECT_ELSE(menu_cell_basic_horizontal_inset() + 1,
                                               (cell_layer->bounds.size.w - separator_width) / 2);
     const int16_t offset_y = (cell_layer_bounds->size.h / 2) + nudge_down;
-    GPoint separator_start_point = gpoint_add(cell_layer_bounds->origin,
-                                              GPoint(offset_x, offset_y));
+    GPoint separator_start_point =
+        gpoint_add(cell_layer_bounds->origin, GPoint(offset_x, offset_y));
     graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
 
     separator_start_point.y += config->separator.h;
@@ -682,10 +675,10 @@ static void prv_changed_proc(Layer *layer) {
     // clip the menu layer to show exactly SHORT_ITEM_MAX_ROWS_SPALDING lines at a time
     const int16_t font_height = fonts_get_font_height(aml->layout_cache.font);
     const int16_t cell_padding = prv_get_cell_padding(aml);
-    const int num_visible_rows = MIN(prv_get_num_rows(&aml->menu_layer, 0, aml),
-                                     SHORT_ITEM_MAX_ROWS_SPALDING);
-    menu_layer_frame.size.h = (font_height * num_visible_rows) +
-                              (cell_padding * (num_visible_rows - 1));
+    const int num_visible_rows =
+        MIN(prv_get_num_rows(&aml->menu_layer, 0, aml), SHORT_ITEM_MAX_ROWS_SPALDING);
+    menu_layer_frame.size.h =
+        (font_height * num_visible_rows) + (cell_padding * (num_visible_rows - 1));
     grect_align(&menu_layer_frame, aml_bounds, GAlignCenter, true /* clip */);
   }
 #endif
@@ -706,7 +699,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
     const GColor bg_color = GColorBlack;
     const GColor fg_color = PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite);
 
-    GRect arrow_rect = (GRect) { .size = GSize(aml_bounds->size.w, arrow_layer_height) };
+    GRect arrow_rect = (GRect){.size = GSize(aml_bounds->size.w, arrow_layer_height)};
     if (row >= SHORT_ITEM_MAX_ROWS_SPALDING - 1) {
       grect_align(&arrow_rect, aml_bounds, GAlignTop, true /* clip */);
       content_indicator_draw_arrow(ctx, &arrow_rect, ContentIndicatorDirectionUp, fg_color,
@@ -764,17 +757,15 @@ void action_menu_layer_click_config_provider(ActionMenuLayer *aml) {
   window_set_click_context(BUTTON_ID_SELECT, aml);
 }
 
-void action_menu_layer_set_callback(ActionMenuLayer *aml,
-                                    ActionMenuLayerCallback cb,
+void action_menu_layer_set_callback(ActionMenuLayer *aml, ActionMenuLayerCallback cb,
                                     void *context) {
-  aml->callbacks = (ActionMenuLayerCallbacks) {
-    .select = cb,
+  aml->callbacks = (ActionMenuLayerCallbacks){
+      .select = cb,
   };
   aml->context = context;
 }
 
-void action_menu_layer_set_callbacks(ActionMenuLayer *aml,
-                                     ActionMenuLayerCallbacks callbacks,
+void action_menu_layer_set_callbacks(ActionMenuLayer *aml, ActionMenuLayerCallbacks callbacks,
                                      void *context) {
   aml->callbacks = callbacks;
   aml->context = context;
@@ -790,9 +781,7 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
   // Since menu_layer_set_callbacks() will call the menu functions, we need to initialize
   // the ActionMenuLayer attributes before setting the callbacks onto the menu.
   aml->item_animation = (ActionMenuItemAnimation){};
-  aml->layout_cache = (ActionMenuLayoutCache){
-    .font = prv_get_item_font()
-  };
+  aml->layout_cache = (ActionMenuLayoutCache){.font = prv_get_item_font()};
   aml->callbacks = (ActionMenuLayerCallbacks){};
   aml->layer.property_changed_proc = prv_changed_proc;
   aml->layer.update_proc = prv_update_proc;
@@ -803,17 +792,18 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
 #if PBL_ROUND
   menu_layer_pad_bottom_enable(&aml->menu_layer, false);
 #endif
-  menu_layer_set_callbacks(&aml->menu_layer, aml, &(MenuLayerCallbacks){
-      .get_num_rows = prv_get_num_rows,
-      .draw_row = prv_draw_row,
-      .get_cell_height = prv_get_cell_height_cb,
-      .get_separator_height = prv_get_separator_height_cb,
-      .draw_separator = prv_draw_separator_cb,
-      .get_header_height = prv_get_header_height_cb,
-      .draw_header = prv_draw_header_cb,
-      .selection_changed = prv_selection_changed_cb,
-      .select_click = prv_select_click_cb,
-  });
+  menu_layer_set_callbacks(&aml->menu_layer, aml,
+                           &(MenuLayerCallbacks){
+                               .get_num_rows = prv_get_num_rows,
+                               .draw_row = prv_draw_row,
+                               .get_cell_height = prv_get_cell_height_cb,
+                               .get_separator_height = prv_get_separator_height_cb,
+                               .draw_separator = prv_draw_separator_cb,
+                               .get_header_height = prv_get_header_height_cb,
+                               .draw_header = prv_draw_header_cb,
+                               .selection_changed = prv_selection_changed_cb,
+                               .select_click = prv_select_click_cb,
+                           });
 
 #if !defined(CONFIG_RECOVERY_FW)
   gbitmap_init_with_resource_system(&aml->item_animation.fade_top, SYSTEM_APP,
@@ -868,7 +858,7 @@ void action_menu_layer_set_align(ActionMenuLayer *aml, ActionMenuAlign align) {
   aml->layout_cache.align = align;
 }
 
-void action_menu_layer_set_items(ActionMenuLayer *aml, const ActionMenuItem* items, int num_items,
+void action_menu_layer_set_items(ActionMenuLayer *aml, const ActionMenuItem *items, int num_items,
                                  unsigned default_selected_item, unsigned separator_index) {
   aml->items = items;
   aml->num_items = num_items;
@@ -876,7 +866,7 @@ void action_menu_layer_set_items(ActionMenuLayer *aml, const ActionMenuItem* ite
   prv_update_aml_cache(aml, default_selected_item);
 }
 
-void action_menu_layer_set_short_items(ActionMenuLayer *aml, const ActionMenuItem* items,
+void action_menu_layer_set_short_items(ActionMenuLayer *aml, const ActionMenuItem *items,
                                        int num_items, unsigned default_selected_item) {
   aml->short_items = items;
   aml->separator_index = 0;

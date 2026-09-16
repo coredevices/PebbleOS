@@ -66,13 +66,13 @@ typedef enum {
 
 //! Enumerated values describing the possible outcomes of data logging operations
 typedef enum {
-  DATA_LOGGING_SUCCESS = 0, //!< Successful operation
-  DATA_LOGGING_BUSY, //!< Someone else is writing to this logging session
-  DATA_LOGGING_FULL, //!< No more space to save data
-  DATA_LOGGING_NOT_FOUND, //!< The logging session does not exist
-  DATA_LOGGING_CLOSED, //!< The logging session was made inactive
-  DATA_LOGGING_INVALID_PARAMS, //!< An invalid parameter was passed to one of the functions
-  DATA_LOGGING_INTERNAL_ERR //!< An internal error occurred
+  DATA_LOGGING_SUCCESS = 0,     //!< Successful operation
+  DATA_LOGGING_BUSY,            //!< Someone else is writing to this logging session
+  DATA_LOGGING_FULL,            //!< No more space to save data
+  DATA_LOGGING_NOT_FOUND,       //!< The logging session does not exist
+  DATA_LOGGING_CLOSED,          //!< The logging session was made inactive
+  DATA_LOGGING_INVALID_PARAMS,  //!< An invalid parameter was passed to one of the functions
+  DATA_LOGGING_INTERNAL_ERR     //!< An internal error occurred
 } DataLoggingResult;
 
 typedef void *DataLoggingSessionRef;
@@ -124,4 +124,3 @@ DataLoggingResult data_logging_log(DataLoggingSessionRef logging_session, const 
 
 //!   @} // end addtogroup DataLogging
 //! @} // end addtogroup Foundation
-

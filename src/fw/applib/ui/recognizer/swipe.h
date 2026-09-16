@@ -30,10 +30,10 @@ typedef struct SwipeRecognizerData SwipeRecognizerData;
 //! Swipe direction, also used as a bitmask when configuring which directions a swipe recognizer
 //! accepts. Screen coordinates grow downward, so a positive y delta is a downward swipe.
 typedef enum SwipeDirection {
-  SwipeDirection_None  = 0,
-  SwipeDirection_Up    = 1 << 0,
-  SwipeDirection_Down  = 1 << 1,
-  SwipeDirection_Left  = 1 << 2,
+  SwipeDirection_None = 0,
+  SwipeDirection_Up = 1 << 0,
+  SwipeDirection_Down = 1 << 1,
+  SwipeDirection_Left = 1 << 2,
   SwipeDirection_Right = 1 << 3,
 } SwipeDirection;
 

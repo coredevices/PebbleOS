@@ -3,7 +3,7 @@
 
 #include "bluetooth/responsiveness.h"
 
-bool bt_driver_le_connection_parameter_update(
-    const BTDeviceInternal *addr, const BleConnectionParamsUpdateReq *req) {
+bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
+                                              const BleConnectionParamsUpdateReq *req) {
   return true;
 }

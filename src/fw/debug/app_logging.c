@@ -42,7 +42,8 @@ DEFINE_SYSCALL(void, sys_app_log, size_t length, void *log_buffer) {
   if (stack_space > MIN_STACK_FOR_SEND_DATA) {
     CommSession *session = comm_session_get_system_session();
     if (session) {
-      comm_session_send_data(session, APP_LOGGING_ENDPOINT, (uint8_t*)log_buffer, length, COMM_SESSION_DEFAULT_TIMEOUT);
+      comm_session_send_data(session, APP_LOGGING_ENDPOINT, (uint8_t *)log_buffer, length,
+                             COMM_SESSION_DEFAULT_TIMEOUT);
     }
   }
 }
@@ -58,15 +59,14 @@ void app_log_protocol_msg_callback(CommSession *session, const uint8_t *data, co
   };
 
   AppLogCommand *command = (AppLogCommand *)data;
-  switch(command->commandType) {
-  case APP_LOG_COMMAND_ENABLE_LOGGING:
-    s_app_logging_mode = AppLoggingEnabled;
-    break;
-  case APP_LOG_COMMAND_DISABLE_LOGGING:
-    s_app_logging_mode = AppLoggingDisabled;
-    break;
-  default:
-    PBL_LOG_WRN("Invalid app log command 0x%x", command->commandType);
+  switch (command->commandType) {
+    case APP_LOG_COMMAND_ENABLE_LOGGING:
+      s_app_logging_mode = AppLoggingEnabled;
+      break;
+    case APP_LOG_COMMAND_DISABLE_LOGGING:
+      s_app_logging_mode = AppLoggingDisabled;
+      break;
+    default:
+      PBL_LOG_WRN("Invalid app log command 0x%x", command->commandType);
   }
 }
-

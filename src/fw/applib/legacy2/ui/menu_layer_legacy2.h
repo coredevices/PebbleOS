@@ -6,7 +6,7 @@
 #include "applib/ui/menu_layer.h"
 #include "applib/graphics/gtypes.h"
 
-#define MENU_CELL_LEGACY2_BASIC_SEPARATOR_HEIGHT ((const int16_t) 1)
+#define MENU_CELL_LEGACY2_BASIC_SEPARATOR_HEIGHT ((const int16_t)1)
 
 //! Data structure containing all the callbacks of a MenuLayer.
 typedef struct MenuLayerCallbacksLegacy2 {
@@ -135,12 +135,10 @@ typedef struct MenuLayerCallbacksLegacy2__deprecated {
 
 void menu_layer_legacy2_init(MenuLayer *menu_layer, const GRect *frame);
 
-MenuLayer* menu_layer_legacy2_create(GRect frame);
+MenuLayer *menu_layer_legacy2_create(GRect frame);
 
-void menu_layer_legacy2_set_callbacks(MenuLayer *menu_layer,
-                                      void *callback_context,
+void menu_layer_legacy2_set_callbacks(MenuLayer *menu_layer, void *callback_context,
                                       MenuLayerCallbacksLegacy2 callbacks);
 
-void menu_layer_legacy2_set_callbacks__deprecated(MenuLayer *menu_layer,
-                                                  void *callback_context,
+void menu_layer_legacy2_set_callbacks__deprecated(MenuLayer *menu_layer, void *callback_context,
                                                   MenuLayerCallbacksLegacy2__deprecated callbacks);

@@ -23,8 +23,6 @@ BLECharacteristic ble_descriptor_get_characteristic(BLEDescriptor descriptor);
 // (FUTURE / LATER / NOT SCOPED)
 // Just to see how symmetric the Server APIs would be:
 
-
-BLEDescriptor ble_descriptor_create(const Uuid *uuid,
-                                    BLEAttributeProperty properties);
+BLEDescriptor ble_descriptor_create(const Uuid *uuid, BLEAttributeProperty properties);
 
 BTErrno ble_descriptor_destroy(BLEDescriptor descriptor);

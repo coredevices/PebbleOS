@@ -64,10 +64,10 @@ void qr_code_init(QRCode *qr_code, const GRect *frame);
 //!
 //! @param frame The frame with which to initialize the QRCode
 //! @return A pointer to the QRCode. `NULL` if the QRCode could not be created
-QRCode* qr_code_create(GRect frame);
+QRCode *qr_code_create(GRect frame);
 
 //! Destroys a QRCode previously created by qr_code_create.
-void qr_code_destroy(QRCode* qr_code);
+void qr_code_destroy(QRCode *qr_code);
 
 //! Sets the pointer to the data where the QRCode is supposed to find the data
 //! at a later point in time, when it needs to draw itself.

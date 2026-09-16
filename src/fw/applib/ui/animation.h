@@ -22,7 +22,6 @@
 //! Refer to the \htmlinclude UiFramework.html (chapter "Animation") for a conceptual overview
 //! of the animation framework and on how to write custom animations.
 
-
 //!   @{
 
 ///////////////////
@@ -89,7 +88,6 @@ typedef struct ImmutableAnimation ImmutableAnimation;
 #define ANIMATION_RENDER_FRAME_INTERVAL_MS ANIMATION_TARGET_FRAME_INTERVAL_MS
 #endif
 
-
 //! The type used to represent how far an animation has progressed. This is passed to the
 //! animation's update handler
 typedef int32_t AnimationProgress;
@@ -115,7 +113,6 @@ typedef enum {
   AnimationCurve_Reserved2 = 7,
 } AnimationCurve;
 
-
 //! Creates a new Animation on the heap and initializes it with the default values.
 //!
 //! * Duration: 250ms,
@@ -127,7 +124,7 @@ typedef enum {
 //! * Scheduled: no
 //! @return A pointer to the animation. `NULL` if the animation could not
 //! be created
-Animation * animation_create(void);
+Animation *animation_create(void);
 
 //! Destroys an Animation previously created by animation_create.
 //! @return true if successful, false on failure
@@ -136,7 +133,6 @@ bool animation_destroy(Animation *animation);
 // Clone an existing animation. Especially useful when it will be used in 2 or more other
 // sequence or spawn animations.
 Animation *animation_clone(Animation *from);
-
 
 //! Create a new sequence animation from a list of 2 or more other animations. The returned
 //! animation owns the animations that were provided as arguments and no further write operations
@@ -476,7 +472,7 @@ typedef void (*AnimationSetupImplementation)(Animation *animation);
 //! @internal
 //! @see animation_timing.h
 typedef void (*AnimationUpdateImplementation)(Animation *animation,
-              const AnimationProgress progress);
+                                              const AnimationProgress progress);
 
 //! Pointer to function that (optionally) cleans up the animation.
 //! This callback is called when the animation is removed from the scheduler.
@@ -518,7 +514,7 @@ typedef struct AnimationImplementation {
 //! @param animation The animation for which to get the implementation.
 //! @see AnimationImplementation
 //! @return NULL if animation implementation has not been setup.
-const AnimationImplementation* animation_get_implementation(Animation *animation);
+const AnimationImplementation *animation_get_implementation(Animation *animation);
 
 //! Sets the implementation of the custom animation.
 //! When implementing custom animations, use this function to specify what functions need to be

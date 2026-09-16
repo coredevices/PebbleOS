@@ -37,7 +37,7 @@ static void prv_low_power_launcher_task_callback(void *unused) {
   s_prev_low_power_active = s_low_power_active;
 }
 
-static void prv_low_power_toggle_timer_callback(void* data) {
+static void prv_low_power_toggle_timer_callback(void *data) {
   launcher_task_add_callback(prv_low_power_launcher_task_callback, data);
 }
 
@@ -50,14 +50,13 @@ static void prv_low_power_transition(bool active) {
   // will cause repeated low power on/off requests. Require that a few seconds
   // elapse without further transitions before acting upon it to give us some
   // time to settle on one state or the other.
-  new_timer_start(s_toggle_timer, 3000, prv_low_power_toggle_timer_callback,
-                  NULL, 0 /*flags*/);
+  new_timer_start(s_toggle_timer, 3000, prv_low_power_toggle_timer_callback, NULL, 0 /*flags*/);
 
   // FIXME PBL-XXXXX: This should be in a shell/prf/battery_ui_fsm.c
 #ifdef CONFIG_RECOVERY_FW
   if (active) {
-    app_manager_launch_new_app(&(AppLaunchConfig) {
-      .md = prf_low_power_app_get_info(),
+    app_manager_launch_new_app(&(AppLaunchConfig){
+        .md = prf_low_power_app_get_info(),
     });
   } else {
     // In MFG mode, disable low power mode above but don't close the app.

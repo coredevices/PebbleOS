@@ -15,12 +15,13 @@ static void prv_main(void) {
 
 const PebbleProcessMd *quiet_time_toggle_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      .uuid = QUIET_TIME_TOGGLE_UUID,
-      .visibility = ProcessVisibilityQuickLaunch,
-    },
-    .name = i18n_noop("Quiet Time"),
+      .common =
+          {
+              .main_func = &prv_main,
+              .uuid = QUIET_TIME_TOGGLE_UUID,
+              .visibility = ProcessVisibilityQuickLaunch,
+          },
+      .name = i18n_noop("Quiet Time"),
   };
   return &s_app_info.common;
 }

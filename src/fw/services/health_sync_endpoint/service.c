@@ -30,14 +30,12 @@ typedef struct PACKED HealthSyncEndpointAckMsg {
 
 static void prv_send_ack_nack(bool ok) {
   const HealthSyncEndpointAckMsg msg = {
-    .cmd = HealthSyncEndpointCmd_Ack,
-    .ack_nack = ok ? ACK : NACK,
+      .cmd = HealthSyncEndpointCmd_Ack,
+      .ack_nack = ok ? ACK : NACK,
   };
 
-  comm_session_send_data(comm_session_get_system_session(),
-                         HEALTH_SYNC_ENDPOINT_ID,
-                         (uint8_t*)&msg,
-                         sizeof(HealthSyncEndpointAckMsg),
+  comm_session_send_data(comm_session_get_system_session(), HEALTH_SYNC_ENDPOINT_ID,
+                         (uint8_t *)&msg, sizeof(HealthSyncEndpointAckMsg),
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 

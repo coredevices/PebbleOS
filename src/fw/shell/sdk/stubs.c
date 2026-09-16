@@ -80,7 +80,6 @@ bool touch_is_globally_enabled(void) {
 void touch_set_globally_enabled(bool enable) {
 }
 
-
 bool touch_navigation_menu_is_enabled(void) {
   return false;
 }
@@ -96,21 +95,21 @@ AppInstallId worker_preferences_get_default_worker(void) {
   return INSTALL_ID_INVALID;
 }
 
-
 // Used by the alarm service to add alarm pins to the timeline
-const PebbleProcessMd* alarms_app_get_info(void) {
+const PebbleProcessMd *alarms_app_get_info(void) {
   static const PebbleProcessMdSystem s_alarms_app_info = {
-    .common = {
-      .main_func = NULL,
-      // UUID: 67a32d95-ef69-46d4-a0b9-854cc62f97f9
-      .uuid = {0x67, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4,
-               0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f, 0x97, 0xf9},
-    },
-    .name = "Alarms",
+      .common =
+          {
+              .main_func = NULL,
+              // UUID: 67a32d95-ef69-46d4-a0b9-854cc62f97f9
+              .uuid =
+                  {0x67, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6,
+                   0x2f, 0x97, 0xf9},
+          },
+      .name = "Alarms",
   };
-  return (const PebbleProcessMd*) &s_alarms_app_info;
+  return (const PebbleProcessMd *)&s_alarms_app_info;
 }
-
 
 bool shell_prefs_get_stationary_enabled(void) {
   return false;
@@ -135,16 +134,19 @@ void shell_prefs_set_language(ShellLanguage language) {
 void language_ui_display_changed(const char *lang_name) {
 }
 
-void timeline_peek_prefs_set_enabled(bool enabled) {}
+void timeline_peek_prefs_set_enabled(bool enabled) {
+}
 bool timeline_peek_prefs_get_enabled(void) {
   return true;
 }
-void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {}
+void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {
+}
 uint16_t timeline_peek_prefs_get_before_time(void) {
   return (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
 }
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
-void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode) {}
+void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode) {
+}
 TimelinePeekUnsupportedFaceMode timeline_peek_prefs_get_unsupported_face_mode(void) {
   return TimelinePeekUnsupportedFaceMode_None;
 }

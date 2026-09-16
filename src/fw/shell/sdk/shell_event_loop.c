@@ -48,6 +48,6 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
       return;
 
     default:
-      break; // don't care
+      break;  // don't care
   }
 }

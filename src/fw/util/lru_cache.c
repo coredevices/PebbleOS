@@ -7,12 +7,12 @@
 
 #include <string.h>
 
-void lru_cache_init(LRUCache* c, size_t item_size, uint8_t *buffer, size_t buffer_size) {
-  *c = (LRUCache) {
-    .buffer = buffer,
-    .item_size = item_size,
-    .max_items = buffer_size / (item_size + sizeof(CacheEntry)),
-    .least_recent = NULL
+void lru_cache_init(LRUCache *c, size_t item_size, uint8_t *buffer, size_t buffer_size) {
+  *c = (LRUCache){
+      .buffer = buffer,
+      .item_size = item_size,
+      .max_items = buffer_size / (item_size + sizeof(CacheEntry)),
+      .least_recent = NULL
   };
 }
 
@@ -24,7 +24,7 @@ void lru_cache_flush(LRUCache *c) {
   c->least_recent = NULL;
 }
 
-void *lru_cache_get(LRUCache* c, uint32_t key) {
+void *lru_cache_get(LRUCache *c, uint32_t key) {
   // cur_ptr is a pointer-to-pointer to the more_recent
   // field in the parent of the current entry
   CacheEntry **cur_ptr = &c->least_recent;
@@ -57,7 +57,7 @@ void *lru_cache_get(LRUCache* c, uint32_t key) {
   }
 }
 
-void lru_cache_put(LRUCache* c, uint32_t key, void* item) {
+void lru_cache_put(LRUCache *c, uint32_t key, void *item) {
   // cur_ptr is a pointer-to-pointer to the more_recent
   // field in the parent of the current entry
   CacheEntry **cur_ptr = &c->least_recent;
@@ -94,4 +94,3 @@ void lru_cache_put(LRUCache* c, uint32_t key, void* item) {
   memcpy(new->data, item, c->item_size);
   *cur_ptr = new;
 }
-

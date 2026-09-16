@@ -45,7 +45,8 @@
 //!   a GColor.argb value.
 //!   There is no restriction on row_size_bytes / stride.
 //!
-//! - \ref GBitmapFormat1BitPalette, \ref GBitmapFormat2BitPalette, \ref GBitmapFormat4BitPalette "GBitmapFormat4BitPalette":
+//! - \ref GBitmapFormat1BitPalette, \ref GBitmapFormat2BitPalette, \ref GBitmapFormat4BitPalette
+//! "GBitmapFormat4BitPalette":
 //!   Each pixel in the bitmap is represented by the number of bits the format specifies. Pixels
 //!   must be packed.
 //!   For example, in GBitmapFormat2BitPalette, each pixel uses 2 bits. This means 4 pixels / byte.

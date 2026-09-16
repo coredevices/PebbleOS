@@ -26,7 +26,6 @@
 //! @param charge the state of the battery \ref BatteryChargeState
 typedef void (*BatteryStateHandler)(BatteryChargeState charge);
 
-
 //! Subscribe to the battery state event service. Once subscribed, the handler gets called
 //! on every battery state change
 //! @param handler A callback to be executed on battery state change event
@@ -43,5 +42,3 @@ BatteryChargeState battery_state_service_peek(void);
 //!     @} // end addtogroup PEBBLE_BATTERY_STATE_CHANGE_EVENT
 //!   @} // end addtogroup EventService
 //! @} // end addtogroup Foundation
-
-

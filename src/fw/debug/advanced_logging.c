@@ -16,10 +16,11 @@ static SharedCircularBufferClient s_buffer_client;
 // bytes long with the longest being about 80 bytes, so this is enough for 15-40
 // or so messages.
 static uint8_t s_buffer_storage[1200];
-static PBL_MUTEX_DEFINE(s_buffer_mutex); //!< Protects s_buffer
-static PBL_MUTEX_DEFINE(s_flash_write_mutex); //!< Protects log line consistency
+static PBL_MUTEX_DEFINE(s_buffer_mutex);       //!< Protects s_buffer
+static PBL_MUTEX_DEFINE(s_flash_write_mutex);  //!< Protects log line consistency
 static bool s_initialized;
-static bool s_is_flash_write_scheduled; //!< true if handle_buffer_sync KernelBG callback is scheduled
+static bool
+    s_is_flash_write_scheduled;  //!< true if handle_buffer_sync KernelBG callback is scheduled
 
 static void write_message(void) {
   // Note that we should enter this function with the buffer mutex held.
@@ -28,13 +29,16 @@ static void write_message(void) {
   uint16_t read_length;
 
   // Read the header part
-  bool result = shared_circular_buffer_read(&s_buffer, &s_buffer_client, sizeof(uint8_t), &data_read, &read_length);
+  bool result = shared_circular_buffer_read(&s_buffer, &s_buffer_client, sizeof(uint8_t),
+                                            &data_read, &read_length);
   PBL_ASSERTN(result);
-  PBL_ASSERT(read_length == sizeof(uint8_t), "read_length %u sizeof(uint8_t) %u", read_length, sizeof(uint8_t));
+  PBL_ASSERT(read_length == sizeof(uint8_t), "read_length %u sizeof(uint8_t) %u", read_length,
+             sizeof(uint8_t));
   uint8_t msg_length = *data_read;
 
-  if (shared_circular_buffer_get_read_space_remaining(&s_buffer, &s_buffer_client) < msg_length + sizeof(uint8_t)) {
-    return; // Not ready yet, consume nothing.
+  if (shared_circular_buffer_get_read_space_remaining(&s_buffer, &s_buffer_client) <
+      msg_length + sizeof(uint8_t)) {
+    return;  // Not ready yet, consume nothing.
   }
 
   // Flash_logging_log_start can trigger a flash erase. Release the buffer mutex
@@ -53,7 +57,8 @@ static void write_message(void) {
 
     // Note that this buffer read really should be done with the buffer mutex held.
     // This works only because writes to the buffer do not advance slackers.
-    result = shared_circular_buffer_read(&s_buffer, &s_buffer_client, msg_length, &data_read, &read_length);
+    result = shared_circular_buffer_read(&s_buffer, &s_buffer_client, msg_length, &data_read,
+                                         &read_length);
     PBL_ASSERTN(result);
     msg_length -= read_length;
 
@@ -68,7 +73,7 @@ static void write_message(void) {
 }
 
 static void handle_buffer_sync(void *data) {
-  const bool is_async = (uintptr_t) data;
+  const bool is_async = (uintptr_t)data;
 
   pbl_mutex_lock(&s_flash_write_mutex, PBL_FOREVER);
   pbl_mutex_lock(&s_buffer_mutex, PBL_FOREVER);
@@ -107,7 +112,6 @@ static void handle_buffer_sync(void *data) {
   pbl_mutex_unlock(&s_flash_write_mutex);
 }
 
-
 void advanced_logging_init(void) {
   flash_logging_init();
 
@@ -118,19 +122,21 @@ void advanced_logging_init(void) {
 }
 
 // Return true on success
-static bool write_buffer_locking(char* buffer, int length, bool async) {
+static bool write_buffer_locking(char *buffer, int length, bool async) {
   bool success = false;
 
   do {
     pbl_mutex_lock(&s_buffer_mutex, PBL_FOREVER);
     if (shared_circular_buffer_get_write_space_remaining(&s_buffer) >= length + 1) {
-      // Ideally we could figure out a way to skip out on this copy but then you'd potentially need to sniprintf
-      // into a non-contiguous buffer... whatever, we have CPU to burn.
+      // Ideally we could figure out a way to skip out on this copy but then you'd potentially need
+      // to sniprintf into a non-contiguous buffer... whatever, we have CPU to burn.
       uint8_t msg_length = length;
 
       // Do not advance slackers. Data loss and/or corruption will occur! See write_message()
-      shared_circular_buffer_write(&s_buffer, &msg_length, sizeof(uint8_t), false /*advance_slackers*/);
-      shared_circular_buffer_write(&s_buffer, (const uint8_t*) buffer, length, false /*advance_slackers*/);
+      shared_circular_buffer_write(&s_buffer, &msg_length, sizeof(uint8_t),
+                                   false /*advance_slackers*/);
+      shared_circular_buffer_write(&s_buffer, (const uint8_t *)buffer, length,
+                                   false /*advance_slackers*/);
 
       success = true;
     }
@@ -139,19 +145,19 @@ static bool write_buffer_locking(char* buffer, int length, bool async) {
     // If we failed to buffer this message, flush the buffer to cache to make room.
     // Otherwise, if this is a sync message, flush this message to flash.
     if (!success || !async) {
-      handle_buffer_sync((void *)(uintptr_t) false /* !is_async */);
+      handle_buffer_sync((void *)(uintptr_t)false /* !is_async */);
     }
-  } while (!success); // Loop until the buffer copy succeeds. If sync, also wait until this message
-                      // is written to flash.
-                      // It's highly unlikely that another task will win the race and completely
-                      // fill the buffer between the flash write and the next buffer write attempt.
-                      // If so, there are bigger issues.
+  } while (!success);  // Loop until the buffer copy succeeds. If sync, also wait until this message
+                       // is written to flash.
+                       // It's highly unlikely that another task will win the race and completely
+                       // fill the buffer between the flash write and the next buffer write attempt.
+                       // If so, there are bigger issues.
 
   if (async) {
     pbl_mutex_lock(&s_buffer_mutex, PBL_FOREVER);
     if (!s_is_flash_write_scheduled) {
       s_is_flash_write_scheduled = true;
-      system_task_add_callback(handle_buffer_sync, (void *)(uintptr_t) true /* is_async */);
+      system_task_add_callback(handle_buffer_sync, (void *)(uintptr_t)true /* is_async */);
     }
     pbl_mutex_unlock(&s_buffer_mutex);
   }
@@ -159,7 +165,7 @@ static bool write_buffer_locking(char* buffer, int length, bool async) {
   return success;
 }
 
-void pbl_log_advanced(char* buffer, int length, bool async) {
+void pbl_log_advanced(char *buffer, int length, bool async) {
   if (!s_initialized) {
     return;
   }
@@ -168,20 +174,19 @@ void pbl_log_advanced(char* buffer, int length, bool async) {
 
 char pbl_log_get_level_char(const uint8_t log_level) {
   switch (log_level) {
-  case LOG_LEVEL_ALWAYS:
-    return '*';
-  case LOG_LEVEL_ERROR:
-    return 'E';
-  case LOG_LEVEL_WARNING:
-    return 'W';
-  case LOG_LEVEL_INFO:
-    return 'I';
-  case LOG_LEVEL_DEBUG:
-    return 'D';
-  case LOG_LEVEL_DEBUG_VERBOSE:
-    return 'V';
-  default:
-    return '?';
+    case LOG_LEVEL_ALWAYS:
+      return '*';
+    case LOG_LEVEL_ERROR:
+      return 'E';
+    case LOG_LEVEL_WARNING:
+      return 'W';
+    case LOG_LEVEL_INFO:
+      return 'I';
+    case LOG_LEVEL_DEBUG:
+      return 'D';
+    case LOG_LEVEL_DEBUG_VERBOSE:
+      return 'V';
+    default:
+      return '?';
   }
 }
-

@@ -52,11 +52,11 @@ enum {
 
 typedef struct {
   //! Name of the GATT profile that will be used in debug logs
-  const char * const debug_name;
+  const char *const debug_name;
   //! The Service UUID of the remote GATT service
-  const Uuid * const service_uuid;
+  const Uuid *const service_uuid;
   //! Array of Characteristic UUIDs that are expected to be part of the remote GATT service
-  const Uuid * const characteristic_uuids;
+  const Uuid *const characteristic_uuids;
   //! The number of elements in the `characteristic_uuids` array
   const uint8_t num_characteristics;
   //! Callback executed every time a BT LE service matching 'service_uuid' is discovered
@@ -89,102 +89,105 @@ typedef struct {
 
 static const KernelLEClient s_clients[KernelLEClientNum] = {
 #if UNITTEST
-  [KernelLEClientUnitTest] = {
-    .debug_name = "TEST",
-    .service_uuid = &s_test_service_uuid,
-    .characteristic_uuids = s_test_characteristic_uuids,
-    .num_characteristics = TestCharacteristicCount,
-    .handle_service_discovered = test_client_handle_service_discovered,
-    .handle_service_removed = test_client_handle_service_removed,
-    .invalidate_all_references = test_client_invalidate_all_references,
-    .can_handle_characteristic = test_client_can_handle_characteristic,
-    .handle_write_response = test_client_handle_write_response,
-    .handle_subscribe = test_client_handle_subscribe,
-    .handle_read_or_notification = test_client_handle_read_or_notification,
-  },
+    [KernelLEClientUnitTest] = {
+        .debug_name = "TEST",
+        .service_uuid = &s_test_service_uuid,
+        .characteristic_uuids = s_test_characteristic_uuids,
+        .num_characteristics = TestCharacteristicCount,
+        .handle_service_discovered = test_client_handle_service_discovered,
+        .handle_service_removed = test_client_handle_service_removed,
+        .invalidate_all_references = test_client_invalidate_all_references,
+        .can_handle_characteristic = test_client_can_handle_characteristic,
+        .handle_write_response = test_client_handle_write_response,
+        .handle_subscribe = test_client_handle_subscribe,
+        .handle_read_or_notification = test_client_handle_read_or_notification,
+    },
 #else
-  [KernelLEClientPPoGATT] = {
-    .debug_name = "PPoG",
-    .service_uuid = &s_ppogatt_service_uuid,
-    .characteristic_uuids = s_ppogatt_characteristic_uuids,
-    .num_characteristics = PPoGATTCharacteristicNum,
-    .handle_service_discovered = ppogatt_handle_service_discovered,
-    .handle_service_removed = ppogatt_handle_service_removed,
-    .invalidate_all_references = ppogatt_invalidate_all_references,
-    .can_handle_characteristic = ppogatt_can_handle_characteristic,
-    .handle_write_response = NULL,
-    .handle_subscribe = ppogatt_handle_subscribe,
-    .handle_read_or_notification = ppogatt_handle_read_or_notification,
-  },
+    [KernelLEClientPPoGATT] =
+        {
+            .debug_name = "PPoG",
+            .service_uuid = &s_ppogatt_service_uuid,
+            .characteristic_uuids = s_ppogatt_characteristic_uuids,
+            .num_characteristics = PPoGATTCharacteristicNum,
+            .handle_service_discovered = ppogatt_handle_service_discovered,
+            .handle_service_removed = ppogatt_handle_service_removed,
+            .invalidate_all_references = ppogatt_invalidate_all_references,
+            .can_handle_characteristic = ppogatt_can_handle_characteristic,
+            .handle_write_response = NULL,
+            .handle_subscribe = ppogatt_handle_subscribe,
+            .handle_read_or_notification = ppogatt_handle_read_or_notification,
+        },
 #if defined(CONFIG_BT_ANCS_CLIENT)
-  [KernelLEClientANCS] = {
-    .debug_name = "ANCS",
-    .service_uuid = &s_ancs_service_uuid,
-    .characteristic_uuids = s_ancs_characteristic_uuids,
-    .num_characteristics = NumANCSCharacteristic,
-    .handle_service_discovered = ancs_handle_service_discovered,
-    .handle_service_removed = ancs_handle_service_removed,
-    .invalidate_all_references = ancs_invalidate_all_references,
-    .can_handle_characteristic = ancs_can_handle_characteristic,
-    .handle_write_response = ancs_handle_write_response,
-    .handle_subscribe = ancs_handle_subscribe,
-    .handle_read_or_notification = ancs_handle_read_or_notification,
-  },
+    [KernelLEClientANCS] =
+        {
+            .debug_name = "ANCS",
+            .service_uuid = &s_ancs_service_uuid,
+            .characteristic_uuids = s_ancs_characteristic_uuids,
+            .num_characteristics = NumANCSCharacteristic,
+            .handle_service_discovered = ancs_handle_service_discovered,
+            .handle_service_removed = ancs_handle_service_removed,
+            .invalidate_all_references = ancs_invalidate_all_references,
+            .can_handle_characteristic = ancs_can_handle_characteristic,
+            .handle_write_response = ancs_handle_write_response,
+            .handle_subscribe = ancs_handle_subscribe,
+            .handle_read_or_notification = ancs_handle_read_or_notification,
+        },
 #endif
 #if defined(CONFIG_BT_AMS_CLIENT)
-  [KernelLEClientAMS] = {
-    .debug_name = "AMS",
-    .service_uuid = &s_ams_service_uuid,
-    .characteristic_uuids = s_ams_characteristic_uuids,
-    .num_characteristics = NumAMSCharacteristic,
-    .handle_service_discovered = ams_handle_service_discovered,
-    .handle_service_removed = ams_handle_service_removed,
-    .invalidate_all_references = ams_invalidate_all_references,
-    .can_handle_characteristic = ams_can_handle_characteristic,
-    .handle_write_response = ams_handle_write_response,
-    .handle_subscribe = ams_handle_subscribe,
-    .handle_read_or_notification = ams_handle_read_or_notification,
-  },
+    [KernelLEClientAMS] =
+        {
+            .debug_name = "AMS",
+            .service_uuid = &s_ams_service_uuid,
+            .characteristic_uuids = s_ams_characteristic_uuids,
+            .num_characteristics = NumAMSCharacteristic,
+            .handle_service_discovered = ams_handle_service_discovered,
+            .handle_service_removed = ams_handle_service_removed,
+            .invalidate_all_references = ams_invalidate_all_references,
+            .can_handle_characteristic = ams_can_handle_characteristic,
+            .handle_write_response = ams_handle_write_response,
+            .handle_subscribe = ams_handle_subscribe,
+            .handle_read_or_notification = ams_handle_read_or_notification,
+        },
 #endif
-  [KernelLEClientAppLaunch] = {
-    .debug_name = "Lnch",
-    .service_uuid = &s_app_launch_service_uuid,
-    .characteristic_uuids = s_app_launch_characteristic_uuids,
-    .num_characteristics = AppLaunchCharacteristicNum,
-    .handle_service_discovered = app_launch_handle_service_discovered,
-    .handle_service_removed = app_launch_handle_service_removed,
-    .invalidate_all_references = app_launch_invalidate_all_references,
-    .can_handle_characteristic = app_launch_can_handle_characteristic,
-    .handle_read_or_notification = NULL,
-  },
-  [KernelLEClientDIS] = {
-    .debug_name = "DIS",
-    .service_uuid = &s_dis_service_uuid,
-    .characteristic_uuids = s_dis_characteristic_uuids,
-    .num_characteristics = NumDISCharacteristic,
-    .handle_service_discovered = dis_handle_service_discovered,
-    .handle_service_removed = dis_handle_service_removed,
-    .invalidate_all_references = dis_invalidate_all_references,
-    .can_handle_characteristic = NULL,
-    .handle_read_or_notification = NULL,
-  },
-#endif // UNITTEST
+    [KernelLEClientAppLaunch] =
+        {
+            .debug_name = "Lnch",
+            .service_uuid = &s_app_launch_service_uuid,
+            .characteristic_uuids = s_app_launch_characteristic_uuids,
+            .num_characteristics = AppLaunchCharacteristicNum,
+            .handle_service_discovered = app_launch_handle_service_discovered,
+            .handle_service_removed = app_launch_handle_service_removed,
+            .invalidate_all_references = app_launch_invalidate_all_references,
+            .can_handle_characteristic = app_launch_can_handle_characteristic,
+            .handle_read_or_notification = NULL,
+        },
+    [KernelLEClientDIS] = {
+        .debug_name = "DIS",
+        .service_uuid = &s_dis_service_uuid,
+        .characteristic_uuids = s_dis_characteristic_uuids,
+        .num_characteristics = NumDISCharacteristic,
+        .handle_service_discovered = dis_handle_service_discovered,
+        .handle_service_removed = dis_handle_service_removed,
+        .invalidate_all_references = dis_invalidate_all_references,
+        .can_handle_characteristic = NULL,
+        .handle_read_or_notification = NULL,
+    },
+#endif  // UNITTEST
 };
 
 static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *services_removed) {
   PebbleBLEGATTClientServiceHandles *service_remove_info = &services_removed->handles[0];
   for (int s = 0; s < services_removed->num_services_removed; s++) {
     for (int c = 0; c < KernelLEClientNum; c++) {
-      const KernelLEClient * const client = &s_clients[c];
+      const KernelLEClient *const client = &s_clients[c];
       if (uuid_equal(&service_remove_info->uuid, client->service_uuid)) {
         client->handle_service_removed(
             (BLECharacteristic *)&service_remove_info->char_and_desc_handles[0],
-                                       service_remove_info->num_characteristics);
+            service_remove_info->num_characteristics);
       }
     }
 
-    int num_hdls = service_remove_info->num_descriptors +
-        service_remove_info->num_characteristics;
+    int num_hdls = service_remove_info->num_descriptors + service_remove_info->num_characteristics;
     service_remove_info =
         (PebbleBLEGATTClientServiceHandles *)&service_remove_info->char_and_desc_handles[num_hdls];
   }
@@ -192,13 +195,13 @@ static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *serv
 
 static void prv_handle_all_services_invalidated(void) {
   for (int c = 0; c < KernelLEClientNum; c++) {
-    const KernelLEClient * const client = &s_clients[c];
+    const KernelLEClient *const client = &s_clients[c];
     client->invalidate_all_references();
   }
 }
 
-static void prv_handle_services_added(
-    PebbleBLEGATTClientServicesAdded *added_services, BTDeviceInternal *device) {
+static void prv_handle_services_added(PebbleBLEGATTClientServicesAdded *added_services,
+                                      BTDeviceInternal *device) {
   // loop through the new services
   for (int s = 0; s < added_services->num_services_added; s++) {
     // get the uuid for the service
@@ -206,7 +209,7 @@ static void prv_handle_services_added(
 
     // are any clients looking for this uuid?
     for (int c = 0; c < KernelLEClientNum; c++) {
-      const KernelLEClient * const client = &s_clients[c];
+      const KernelLEClient *const client = &s_clients[c];
 
       if (!uuid_equal(&service_uuid, (const Uuid *)client->service_uuid)) {
         continue;
@@ -215,14 +218,13 @@ static void prv_handle_services_added(
       // We have found a service that a client is looking for. Make sure the
       // characteristics we want are present and if so notify the interested client about it
       BLECharacteristic characteristics[client->num_characteristics];
-      const uint8_t num_characteristics =
-          gatt_client_service_get_characteristics_matching_uuids(
-              added_services->services[s], &characteristics[0], client->characteristic_uuids,
-              client->num_characteristics);
+      const uint8_t num_characteristics = gatt_client_service_get_characteristics_matching_uuids(
+          added_services->services[s], &characteristics[0], client->characteristic_uuids,
+          client->num_characteristics);
 
       if (num_characteristics != client->num_characteristics) {
-        PBL_LOG_ERR("Found %s, but only %u characteristics...",
-                client->debug_name, num_characteristics);
+        PBL_LOG_ERR("Found %s, but only %u characteristics...", client->debug_name,
+                    num_characteristics);
         continue;
       }
 
@@ -246,8 +248,8 @@ static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientSer
 
   if (event_info->type != PebbleServicesRemoved) {
     // For removals, we log info in the handler routine
-    PBL_LOG_INFO("Service changed Indication: type: %d status: %d",
-            event_info->type, event_info->status);
+    PBL_LOG_INFO("Service changed Indication: type: %d status: %d", event_info->type,
+                 event_info->status);
   }
 
   switch (event_info->type) {
@@ -265,9 +267,9 @@ static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientSer
   }
 }
 
-static const KernelLEClient * prv_client_for_characteristic(BLECharacteristic characteristic) {
+static const KernelLEClient *prv_client_for_characteristic(BLECharacteristic characteristic) {
   for (int c = 0; c < KernelLEClientNum; ++c) {
-    const KernelLEClient * const client = &s_clients[c];
+    const KernelLEClient *const client = &s_clients[c];
     if (client->can_handle_characteristic && client->can_handle_characteristic(characteristic)) {
       return client;
     }
@@ -275,8 +277,8 @@ static const KernelLEClient * prv_client_for_characteristic(BLECharacteristic ch
   return NULL;
 }
 
-typedef void (*ConsumeFuncPtr)(BLECharacteristic characteristic_ref,
-                            uint8_t *value_out, uint16_t value_length, GAPLEClient client);
+typedef void (*ConsumeFuncPtr)(BLECharacteristic characteristic_ref, uint8_t *value_out,
+                               uint16_t value_length, GAPLEClient client);
 
 typedef void (*ReadNotifyHandler)(BLECharacteristic characteristic, const uint8_t *value,
                                   size_t value_length, BLEGATTError error);
@@ -289,18 +291,16 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
   if (value_length) {
     // This is ugly and causes double-copying the data...
     // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
-    buffer = (uint8_t *) kernel_malloc(value_length);
+    buffer = (uint8_t *)kernel_malloc(value_length);
     if (UNLIKELY(!buffer)) {
       PBL_LOG_ERR("OOM for GATT read response - %d bytes", (int)value_length);
       return;
     }
-    gatt_client_consume_read_response(event->object_ref,
-                                      buffer, value_length, GAPLEClientKernel);
+    gatt_client_consume_read_response(event->object_ref, buffer, value_length, GAPLEClientKernel);
   }
 
   if (client->handle_read_or_notification) {
-    client->handle_read_or_notification(event->object_ref, buffer,
-                                        value_length, event->gatt_error);
+    client->handle_read_or_notification(event->object_ref, buffer, value_length, event->gatt_error);
   }
   kernel_free(buffer);
 }
@@ -324,24 +324,22 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
 
     // This is ugly and causes double-copying the data...
     // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
-    uint8_t *buffer = (uint8_t *) kernel_malloc(header.value_length);
+    uint8_t *buffer = (uint8_t *)kernel_malloc(header.value_length);
     if (UNLIKELY(header.value_length && !buffer)) {
       PBL_LOG_ERR("OOM for GATT notification");
       return;
     }
 
-    const uint16_t next_value_length =
-            gatt_client_subscriptions_consume_notification(&header.characteristic,
-                                                           buffer, &header.value_length,
-                                                           GAPLEClientKernel, &has_more);
+    const uint16_t next_value_length = gatt_client_subscriptions_consume_notification(
+        &header.characteristic, buffer, &header.value_length, GAPLEClientKernel, &has_more);
 
-    const KernelLEClient * const client = prv_client_for_characteristic(header.characteristic);
+    const KernelLEClient *const client = prv_client_for_characteristic(header.characteristic);
     if (client->handle_read_or_notification) {
       client->handle_read_or_notification(header.characteristic, buffer, header.value_length,
                                           BLEGATTErrorSuccess);
     } else {
       PBL_LOG_DBG("No client to handle GATT notification from characteristic %p",
-              (void*) header.characteristic);
+                  (void *)header.characteristic);
     }
     kernel_free(buffer);
     header.value_length = next_value_length;
@@ -358,12 +356,12 @@ static void prv_handle_gatt_event(const PebbleBLEGATTClientEvent *event) {
     return;
   }
 
-  const KernelLEClient * const client = prv_client_for_characteristic(event->object_ref);
+  const KernelLEClient *const client = prv_client_for_characteristic(event->object_ref);
   if (!client) {
     // Read responses still need to be consumed, even if the client has disappeared:
     if (event->subtype == PebbleBLEGATTClientEventTypeCharacteristicRead && event->value_length) {
-      gatt_client_consume_read_response(event->object_ref,
-                                        NULL, event->value_length, GAPLEClientKernel);
+      gatt_client_consume_read_response(event->object_ref, NULL, event->value_length,
+                                        GAPLEClientKernel);
     }
     goto log_error;
   }
@@ -395,17 +393,14 @@ static void prv_handle_gatt_event(const PebbleBLEGATTClientEvent *event) {
   }
 
 log_error:
-  PBL_LOG_ERR("Unhandled GATT event:%u ref:%"PRIu32" err:%"PRIu16" len:%"PRIu16" cl:%p",
-          event->subtype,
-          (uint32_t)event->object_ref,
-          (uint16_t)event->gatt_error,
-          (uint16_t)event->value_length,
-          client);
+  PBL_LOG_ERR("Unhandled GATT event:%u ref:%" PRIu32 " err:%" PRIu16 " len:%" PRIu16 " cl:%p",
+              event->subtype, (uint32_t)event->object_ref, (uint16_t)event->gatt_error,
+              (uint16_t)event->value_length, client);
 }
 
 static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
-  PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u, bond=%u",
-          event->hci_reason, event->connected, event->bonding_id);
+  PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u, bond=%u", event->hci_reason,
+              event->connected, event->bonding_id);
 
   const bool connected = event->connected;
   // FIXME: When PPoGATT is supported add a check for active gateway
@@ -474,7 +469,7 @@ void kernel_le_client_handle_event(const PebbleEvent *e) {
 static void prv_connect_gateway_bonding(BTBondingID gateway_bonding) {
   gap_le_slave_reconnect_start();
   gap_le_connect_connect_by_bonding(gateway_bonding, true /* auto_reconnect */,
-                                 true /* is_pairing_required */, GAPLEClientKernel);
+                                    true /* is_pairing_required */, GAPLEClientKernel);
 }
 
 // -------------------------------------------------------------------------------------------------

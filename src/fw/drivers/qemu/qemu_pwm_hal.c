@@ -8,12 +8,12 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // Display brightness register offset (must match QEMU pebble-display)
-#define DISP_BRIGHTNESS  0x018
-#define DISP_CTRL        0x000
-#define CTRL_UPDATE      (1 << 1)
+#define DISP_BRIGHTNESS 0x018
+#define DISP_CTRL 0x000
+#define CTRL_UPDATE (1 << 1)
 
 // Minimum brightness when backlight is "off" - simulates ambient visibility
-#define BACKLIGHT_OFF_BRIGHTNESS  40
+#define BACKLIGHT_OFF_BRIGHTNESS 40
 
 static uint32_t s_resolution = 1024;
 

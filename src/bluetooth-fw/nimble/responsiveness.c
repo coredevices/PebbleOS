@@ -26,10 +26,11 @@ bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
 
   pebble_conn_update_to_nimble(req, &params);
 
-  PBL_LOG_DBG("Request connection parameters: "
-          "interval=(%u, %u) ms, latency=%u, spvn timeout=%u ms",
-          params.itvl_min * BLE_HCI_CONN_ITVL / 1000, params.itvl_max * BLE_HCI_CONN_ITVL / 1000,
-          params.latency, params.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
+  PBL_LOG_DBG(
+      "Request connection parameters: "
+      "interval=(%u, %u) ms, latency=%u, spvn timeout=%u ms",
+      params.itvl_min * BLE_HCI_CONN_ITVL / 1000, params.itvl_max * BLE_HCI_CONN_ITVL / 1000,
+      params.latency, params.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
 
   rc = ble_gap_update_params(desc.conn_handle, &params);
   if (rc != 0) {

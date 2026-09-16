@@ -140,8 +140,8 @@ void stats_calculate_basic(StatsBasicOp op, const int32_t *data, size_t num_data
     basic_out[out_index++] = consecutive_first;
   }
   if (op & StatsBasicOp_Median) {
-    basic_out[out_index++] = prv_calculate_median(data, num_data, min, max, num_values, filter,
-                                                  context);
+    basic_out[out_index++] =
+        prv_calculate_median(data, num_data, min, max, num_values, filter, context);
   }
 }
 
@@ -190,9 +190,9 @@ int32_t stats_calculate_weighted_median(const int32_t *vals, const int32_t *weig
 
   // Copy the values and sort them in ascending order
   for (size_t i = 0; i < num_data; i++) {
-    values[i] = (WeightedValue) {
-      .value = vals[i],
-      .weight_x100 = weights_x100[i],
+    values[i] = (WeightedValue){
+        .value = vals[i],
+        .weight_x100 = weights_x100[i],
     };
   }
   sort_bubble(values, num_data, sizeof(*values), prv_cmp_weighted_value);

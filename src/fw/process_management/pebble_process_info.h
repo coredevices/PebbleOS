@@ -33,21 +33,21 @@ typedef enum {
   PROCESS_INFO_ROCKY_APP = 1 << 5,
 
   //! Bitmask, to store compile time platform
-  PROCESS_INFO_PLATFORM_MASK    = 0xf << 6,
-  
+  PROCESS_INFO_PLATFORM_MASK = 0xf << 6,
+
   //! True, if process uses Moddable XS APIs
   PROCESS_INFO_MODDABLE_APP = 1 << 10,
   //! SDK older than 4.2 doesn't store any value
   PROCESS_INFO_PLATFORM_UNKNOWN = 0x0 << 6,
-  PROCESS_INFO_PLATFORM_APLITE  = 0x1 << 6,
+  PROCESS_INFO_PLATFORM_APLITE = 0x1 << 6,
   //! Values that are actually added by SDK 4.2+
-  PROCESS_INFO_PLATFORM_BASALT  = 0x2 << 6,
-  PROCESS_INFO_PLATFORM_CHALK   = 0x3 << 6,
+  PROCESS_INFO_PLATFORM_BASALT = 0x2 << 6,
+  PROCESS_INFO_PLATFORM_CHALK = 0x3 << 6,
   PROCESS_INFO_PLATFORM_DIORITE = 0x4 << 6,
-  PROCESS_INFO_PLATFORM_EMERY   = 0x5 << 6,
+  PROCESS_INFO_PLATFORM_EMERY = 0x5 << 6,
   //! Values that are actually added by SDK 4.9+
-  PROCESS_INFO_PLATFORM_FLINT   = 0x6 << 6,
-  PROCESS_INFO_PLATFORM_GABBRO  = 0x7 << 6,
+  PROCESS_INFO_PLATFORM_FLINT = 0x6 << 6,
+  PROCESS_INFO_PLATFORM_GABBRO = 0x7 << 6,
 } PebbleProcessInfoFlags;
 
 //!   @} // group App
@@ -57,8 +57,8 @@ typedef enum {
 // ================================
 // struct_version (little endian):
 // 0x0800 -- sdk_version and process_version uint16_t fields added (Grand Slam / 1.7)
-// .major:0x08 .minor:0x01 -- all version fields split up into minor/major; uuid field appended (Junior Whopper / 2.0?)
-// .major:0x08 .minor:0x02 -- 2.0, added resource crc and resource timestamp
+// .major:0x08 .minor:0x01 -- all version fields split up into minor/major; uuid field appended
+// (Junior Whopper / 2.0?) .major:0x08 .minor:0x02 -- 2.0, added resource crc and resource timestamp
 // .major:0x09 .minor:0x00 -- 2.0, no more reloc_list_start
 // .major:0x10 .minor:0x00 -- 2.0, added virtual_size
 #define PROCESS_INFO_CURRENT_STRUCT_VERSION_MAJOR 0x10
@@ -73,11 +73,11 @@ typedef enum {
 // SDK change log
 // ================================
 // sdk.major:0x4 .minor:0x0  -- Bump the SDK version to make 1.x and 2.x apps distinguishable
-// sdk.major:0x5 .minor:0x0  -- Bump the SDK version for breaking AppMessage changes b/t 2.x alpha and beta releases
-// sdk.major:0x5 .minor:0x1  -- Added additional API functions (MenuLayer callbacks)
-// sdk.major:0x5 .minor:0x2  -- Changed app heap double free behaviour.
-// sdk.major:0x5 .minor:0x3  -- Added number_window_get_window (API v2.0 revision 12)
-// sdk.major:0x5 .minor:0x4  -- Added gbitmap_create_blank (API v2.0 revision 13) and click_recognizer_is_repeating (rev 14)
+// sdk.major:0x5 .minor:0x0  -- Bump the SDK version for breaking AppMessage changes b/t 2.x alpha
+// and beta releases sdk.major:0x5 .minor:0x1  -- Added additional API functions (MenuLayer
+// callbacks) sdk.major:0x5 .minor:0x2  -- Changed app heap double free behaviour. sdk.major:0x5
+// .minor:0x3  -- Added number_window_get_window (API v2.0 revision 12) sdk.major:0x5 .minor:0x4  --
+// Added gbitmap_create_blank (API v2.0 revision 13) and click_recognizer_is_repeating (rev 14)
 // sdk.major:0x5 .minor:0x5  -- Added accel_raw_data_service_subscribe and related types (rev 15)
 // sdk.major:0x5 .minor:0x6  -- Added background worker APIs (rev 16)
 // sdk.major:0x5 .minor:0x7  -- Added heap_bytes_free / heap_bytes_used (rev 17)
@@ -88,37 +88,34 @@ typedef enum {
 // sdk.major:0x5 .minor:0xc  -- Added API for model, color and firmware version of watch (rev 22)
 // sdk.major:0x5 .minor:0xd  -- Added direct access to frame buffer (rev 23)
 // sdk.major:0x5 .minor:0xe  -- Added wakeup API, app_launch_reason (rev 24)
-// sdk.major:0x5 .minor:0xf  -- Added clock_is_timezone_set in preparation for timezone support (rev 25)
-// sdk.major:0x5 .minor:0x10 -- Added the first i18n API: get_locale (rev 26)
-// sdk.major:0x5 .minor:0x11 -- Added second i18n API: setlocale (rev 27)
-// sdk.major:0x5 .minor:0x13 -- Export mktime (rev 29)
-// sdk.major:0x5 .minor:0x14 -- Rev 30 was a move of several color APIs as to not conflict with release 2.9 sdk. Several of these functions were removed after rev 55 for 3.0-beta10
-// sdk.major:0x5 .minor:0x15 -- Added timezone APIs (rev 31)
-// sdk.major:0x5 .minor:0x16 -- Added 3.0 animation API (rev 32)
-// sdk.major:0x5 .minor:0x17 -- Export new gbitmap accessors (rev 33)
-// sdk.major:0x5 .minor:0x18 -- Export gbitmap_sequence API (rev 34)
+// sdk.major:0x5 .minor:0xf  -- Added clock_is_timezone_set in preparation for timezone support (rev
+// 25) sdk.major:0x5 .minor:0x10 -- Added the first i18n API: get_locale (rev 26) sdk.major:0x5
+// .minor:0x11 -- Added second i18n API: setlocale (rev 27) sdk.major:0x5 .minor:0x13 -- Export
+// mktime (rev 29) sdk.major:0x5 .minor:0x14 -- Rev 30 was a move of several color APIs as to not
+// conflict with release 2.9 sdk. Several of these functions were removed after rev 55
+// for 3.0-beta10 sdk.major:0x5 .minor:0x15 -- Added timezone APIs (rev 31) sdk.major:0x5
+// .minor:0x16 -- Added 3.0 animation API (rev 32) sdk.major:0x5 .minor:0x17 -- Export new gbitmap
+// accessors (rev 33) sdk.major:0x5 .minor:0x18 -- Export gbitmap_sequence API (rev 34)
 // sdk.major:0x5 .minor:0x19 -- Export gbitmap_create_from_png_data API (rev 35)
 // sdk.major:0x5 .minor:0x20 -- Export new complex animations API (rev 36)
 // sdk.major:0x5 .minor:0x21 -- Export missing accessors animations APIs (rev 37)
 // sdk.major:0x5 .minor:0x22 -- Export launch_get_args() API (rev 38)
-// sdk.major:0x5 .minor:0x23 -- Export 3.0 menu_layer_create() and menu_layer_shadow_enable() (rev 39)
-// sdk.major:0x5 .minor:0x24 -- Added additional calls to gbitmap_sequence (rev 40)
+// sdk.major:0x5 .minor:0x23 -- Export 3.0 menu_layer_create() and menu_layer_shadow_enable() (rev
+// 39) sdk.major:0x5 .minor:0x24 -- Added additional calls to gbitmap_sequence (rev 40)
 // sdk.major:0x5 .minor:0x25 -- Export antialiased flag and stroke width in GContext (rev 41)
 // sdk.major:0x5 .minor:0x26 -- Added 3.0 ActionBar (rev 42)
 // sdk.major:0x5 .minor:0x27 -- Added gbitmap_sequence_update_bitmap_by_elapsed (rev 43)
-// sdk.major:0x5 .minor:0x28 -- Export menu_layer_cell_is_highlighted() and gbitmap_create_palettized_from_1bit() (rev 44)
-// sdk.major:0x5 .minor:0x29 -- Export graphics_draw_rotated_bitmap() API (rev 45)
-// sdk.major:0x5 .minor:0x2a -- Added action_bar_layer_set_icon_press_animation (rev 46)
-// sdk.major:0x5 .minor:0x2b -- Created TextLayerLegacy2 (rev 47)
-// sdk.major:0x5 .minor:0x2c -- Added GDrawCommand (rev 48)
-// sdk.major:0x5 .minor:0x2d -- Added property_animation_update_uint32 (rev 49)
-// sdk.major:0x5 .minor:0x2e -- Added gpath_draw_outline_open (rev 50)
-// sdk.major:0x5 .minor:0x2f -- Fixed legacy time() support (rev 51)
-// sdk.major:0x5 .minor:0x30 -- Deprecate inverter layer (rev 52)
-// sdk.major:0x5 .minor:0x31 -- Added default menu layer colors (rev 53)
-// sdk.major:0x5 .minor:0x32 -- Added menu_layer_set_callbacks (rev 54)
-// sdk.major:0x5 .minor:0x33 -- API cleanup, loop_count --> play_count (rev 55)
-// sdk.major:0x5 .minor:0x34 -- Added menu_layer_pad_bottom_enable (rev 56)
+// sdk.major:0x5 .minor:0x28 -- Export menu_layer_cell_is_highlighted() and
+// gbitmap_create_palettized_from_1bit() (rev 44) sdk.major:0x5 .minor:0x29 -- Export
+// graphics_draw_rotated_bitmap() API (rev 45) sdk.major:0x5 .minor:0x2a -- Added
+// action_bar_layer_set_icon_press_animation (rev 46) sdk.major:0x5 .minor:0x2b -- Created
+// TextLayerLegacy2 (rev 47) sdk.major:0x5 .minor:0x2c -- Added GDrawCommand (rev 48) sdk.major:0x5
+// .minor:0x2d -- Added property_animation_update_uint32 (rev 49) sdk.major:0x5 .minor:0x2e -- Added
+// gpath_draw_outline_open (rev 50) sdk.major:0x5 .minor:0x2f -- Fixed legacy time() support (rev
+// 51) sdk.major:0x5 .minor:0x30 -- Deprecate inverter layer (rev 52) sdk.major:0x5 .minor:0x31 --
+// Added default menu layer colors (rev 53) sdk.major:0x5 .minor:0x32 -- Added
+// menu_layer_set_callbacks (rev 54) sdk.major:0x5 .minor:0x33 -- API cleanup, loop_count -->
+// play_count (rev 55) sdk.major:0x5 .minor:0x34 -- Added menu_layer_pad_bottom_enable (rev 56)
 // sdk.major:0x5 .minor:0x35 -- Export initial version of StatusBarLayer (rev 57)
 // sdk.major:0x5 .minor:0x36 -- Export difftime (rev 58)
 // sdk.major:0x5 .minor:0x37 -- Fixed legacy time_ms() support (rev 59)
@@ -137,41 +134,40 @@ typedef enum {
 // sdk.major:0x5 .minor:0x45 -- Export grect_inset (rev 73)
 // sdk.major:0x5 .minor:0x46 -- Export fill_radial, draw_arc, etc. (rev 74)
 // sdk.major:0x5 .minor:0x47 -- Text flow and scroll layer pagination (rev 75)
-// sdk.major:0x5 .minor:0x48 -- Export menu_layer_is_index_selected and round menu layer cell heights (rev 76)
-// sdk.major:0x5 .minor:0x49 -- Added font v3 (no API changes) (rev 76)
+// sdk.major:0x5 .minor:0x48 -- Export menu_layer_is_index_selected and round menu layer cell
+// heights (rev 76) sdk.major:0x5 .minor:0x49 -- Added font v3 (no API changes) (rev 76)
 // sdk.major:0x5 .minor:0x4a -- HealthAPI (rev 77)
 // sdk.major:0x5 .minor:0x4b -- More time utility functions (rev 78)
 // sdk.major:0x5 .minor:0x4c -- More Health service API calls (rev 79)
 // sdk.major:0x5 .minor:0x4d -- Add health_service_get_measurement_system_for_display() (rev 80)
 // sdk.major:0x5 .minor:0x4e -- Export gdraw_command_frame_get_command_list() (rev 81)
 // sdk.major:0x5 .minor:0x4f -- Add new version of gcolor_equal() and deprecate old version (rev 82)
-// sdk.major:0x5 .minor:0x50 -- 4.0: Add health service expansion, UnobstructedArea, AppGlance, AppExitReason, result duration (rev 83)
-// sdk.major:0x5 .minor:0x51 -- Add memory_cache_flush() (rev 84)
-// sdk.major:0x5 .minor:0x52 -- rocky_event_loop_with_resource (rev. 85)
-// sdk.major:0x5 .minor:0x53 -- Add health_service heart rate sampling period support (rev 86)
-// sdk.major:0x5 .minor:0x54 -- Add PlatformType enum and defines (rev 87)
-// sdk.major:0x5 .minor:0x55 -- Preferred Content Size (rev 88)
-// sdk.major:0x5 .minor:0x56 -- Add PlatformType enum and defines (rev 89)
+// sdk.major:0x5 .minor:0x50 -- 4.0: Add health service expansion, UnobstructedArea, AppGlance,
+// AppExitReason, result duration (rev 83) sdk.major:0x5 .minor:0x51 -- Add memory_cache_flush()
+// (rev 84) sdk.major:0x5 .minor:0x52 -- rocky_event_loop_with_resource (rev. 85) sdk.major:0x5
+// .minor:0x53 -- Add health_service heart rate sampling period support (rev 86) sdk.major:0x5
+// .minor:0x54 -- Add PlatformType enum and defines (rev 87) sdk.major:0x5 .minor:0x55 -- Preferred
+// Content Size (rev 88) sdk.major:0x5 .minor:0x56 -- Add PlatformType enum and defines (rev 89)
 // sdk.major:0x5 .minor:0x57 -- Add moddable_createMachine (rev 90)
 // sdk.major:0x5 .minor:0x58 -- Add size 60 LECO font (rev 91)
 // sdk.major:0x5 .minor:0x59 -- Add flags to ModdableCreationRecord (rev 92)
 // sdk.major:0x5 .minor:0x5a -- Add rot_bitmap_layer_get_layer() and AppGlanceSliceLayout (rev 93)
 // sdk.major:0x5 .minor:0x5b -- Add app_light_set_color() and app_light_set_system_color() (rev 94)
-// sdk.major:0x5 .minor:0x5c -- Add light_is_on() and expose touch_service_subscribe/unsubscribe to apps (rev 95)
-// sdk.major:0x5 .minor:0x5d -- Add app_light_set_color_rgb888() for 8-bit-per-channel backlight tint (rev 96)
-// sdk.major:0x5 .minor:0x5e -- Add Speaker API (rev 97)
-// sdk.major:0x5 .minor:0x5f -- speaker_play_tone() now plays the exact frequency (rev 98)
-// sdk.major:0x5 .minor:0x60 -- Add persist_get_max_size() for runtime persist storage capacity (rev 99)
+// sdk.major:0x5 .minor:0x5c -- Add light_is_on() and expose touch_service_subscribe/unsubscribe to
+// apps (rev 95) sdk.major:0x5 .minor:0x5d -- Add app_light_set_color_rgb888() for 8-bit-per-channel
+// backlight tint (rev 96) sdk.major:0x5 .minor:0x5e -- Add Speaker API (rev 97) sdk.major:0x5
+// .minor:0x5f -- speaker_play_tone() now plays the exact frequency (rev 98) sdk.major:0x5
+// .minor:0x60 -- Add persist_get_max_size() for runtime persist storage capacity (rev 99)
 // sdk.major:0x5 .minor:0x61 -- Add speaker_is_muted() for system-wide speaker mute query (rev 100)
-// sdk.major:0x5 .minor:0x62 -- Add backlight_service_subscribe/unsubscribe for backlight on/off events (rev 101)
-// sdk.major:0x5 .minor:0x63 -- Export launch_button() (rev 102)
-// sdk.major:0x5 .minor:0x64 -- Add kModdableCreationFlagDebug (rev 103)
-// sdk.major:0x5 .minor:0x65 -- Expose speaker playback limits (rev 104)
-// sdk.major:0x5 .minor:0x66 -- Expose alarm service (alarm_service_peek_next) to apps (rev 105)
-// sdk.major:0x5 .minor:0x67 -- Explicit Resource Management in Moddable (rev 106)
-// sdk.major:0x5 .minor:0x68 -- Expose gesture recognizer API (tap/pan/swipe + window attach/detach) to apps (rev 107)
-// sdk.major:0x5 .minor:0x69 -- Add app_touch_navigation_enable() opt-in for third-party touch nav (rev 108)
-// sdk.major:0x5 .minor:0x6a -- Add HRV sampling API (health_service_set_hrv_sample_period) (rev 109)
+// sdk.major:0x5 .minor:0x62 -- Add backlight_service_subscribe/unsubscribe for backlight on/off
+// events (rev 101) sdk.major:0x5 .minor:0x63 -- Export launch_button() (rev 102) sdk.major:0x5
+// .minor:0x64 -- Add kModdableCreationFlagDebug (rev 103) sdk.major:0x5 .minor:0x65 -- Expose
+// speaker playback limits (rev 104) sdk.major:0x5 .minor:0x66 -- Expose alarm service
+// (alarm_service_peek_next) to apps (rev 105) sdk.major:0x5 .minor:0x67 -- Explicit Resource
+// Management in Moddable (rev 106) sdk.major:0x5 .minor:0x68 -- Expose gesture recognizer API
+// (tap/pan/swipe + window attach/detach) to apps (rev 107) sdk.major:0x5 .minor:0x69 -- Add
+// app_touch_navigation_enable() opt-in for third-party touch nav (rev 108) sdk.major:0x5
+// .minor:0x6a -- Add HRV sampling API (health_service_set_hrv_sample_period) (rev 109)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6a
@@ -196,11 +192,12 @@ typedef enum {
 #define COMPANY_NAME_BYTES 32
 
 //! @internal
-//! Version data structure with minor & major versions: When making non-backwards-compatible changes,
-//! the major version should get bumped. When making a change (e.g. to the PebbleProcessInfo struct) that is backwards
-//! compatible (e.g. adding a field at the end), you should only bump the minor version.
+//! Version data structure with minor & major versions: When making non-backwards-compatible
+//! changes, the major version should get bumped. When making a change (e.g. to the
+//! PebbleProcessInfo struct) that is backwards compatible (e.g. adding a field at the end), you
+//! should only bump the minor version.
 typedef struct __attribute__((__packed__)) {
-  uint8_t major; //!< "compatibility" version number
+  uint8_t major;  //!< "compatibility" version number
   uint8_t minor;
 } Version;
 
@@ -212,19 +209,22 @@ int version_compare(Version a, Version b);
 // - tintin/waftools/inject_metadata.py
 // - iOS/PebblePrivateKit/PebblePrivateKit/PBBundle.m
 typedef struct __attribute__((__packed__)) {
-  char header[8];                   //!< Sentinal value, should always be 'PBLAPP'
-  Version struct_version;           //!< version of this structure's format
-  Version sdk_version;              //!< version of the SDK used to build this process
-  Version process_version;          //!< version of the process. Note this omits any semver "patch" version.
-  uint16_t load_size;               //!< size of the binary in flash, including this metadata but not the reloc table
-  uint32_t offset;                  //!< The entry point of this executable
-  uint32_t crc;                     //!< CRC of the data only, ie, not including this struct or the reloc table at the end
-  char name[PROCESS_NAME_BYTES];    //!< Name to display on the menu
-  char company[COMPANY_NAME_BYTES]; //!< Name of the maker of this process
-  uint32_t icon_resource_id;        //!< Resource ID within this bank to use as a 32x32 icon
-  uint32_t sym_table_addr;          //!< The system will poke the sdk's symbol table address into this field on load
-  uint32_t flags;                   //!< Bitwise OR of PebbleProcessInfoFlags
-  uint32_t num_reloc_entries;       //!< The number of entries in the address relocation list
+  char header[8];           //!< Sentinal value, should always be 'PBLAPP'
+  Version struct_version;   //!< version of this structure's format
+  Version sdk_version;      //!< version of the SDK used to build this process
+  Version process_version;  //!< version of the process. Note this omits any semver "patch" version.
+  uint16_t
+      load_size;  //!< size of the binary in flash, including this metadata but not the reloc table
+  uint32_t offset;  //!< The entry point of this executable
+  uint32_t
+      crc;  //!< CRC of the data only, ie, not including this struct or the reloc table at the end
+  char name[PROCESS_NAME_BYTES];     //!< Name to display on the menu
+  char company[COMPANY_NAME_BYTES];  //!< Name of the maker of this process
+  uint32_t icon_resource_id;         //!< Resource ID within this bank to use as a 32x32 icon
+  uint32_t sym_table_addr;  //!< The system will poke the sdk's symbol table address into this field
+                            //!< on load
+  uint32_t flags;           //!< Bitwise OR of PebbleProcessInfoFlags
+  uint32_t num_reloc_entries;  //!< The number of entries in the address relocation list
   struct __attribute__((__packed__)) {
     uint8_t byte0;
     uint8_t byte1;
@@ -242,28 +242,31 @@ typedef struct __attribute__((__packed__)) {
     uint8_t byte13;
     uint8_t byte14;
     uint8_t byte15;
-  } uuid;                           //!< The process's UUID
-  uint32_t resource_crc;            //!< CRC of the resource data only
-  uint32_t resource_timestamp;      //!< timestamp of the resource data
-  uint16_t virtual_size;            //!< The total amount of memory used by the process (.text + .data + .bss)
+  } uuid;                       //!< The process's UUID
+  uint32_t resource_crc;        //!< CRC of the resource data only
+  uint32_t resource_timestamp;  //!< timestamp of the resource data
+  uint16_t virtual_size;  //!< The total amount of memory used by the process (.text + .data + .bss)
 } PebbleProcessInfo;
 
 //! @internal
 typedef struct __attribute__((__packed__)) {
-  char header[8];                   //!< Sentinal value, should always be 'PBLAPP'
-  Version struct_version;           //!< version of this structure's format
-  Version sdk_version;              //!< version of the SDK used to build this process
-  Version process_version;          //!< version of the process
-  uint16_t load_size;               //!< size of the binary in flash, including this metadata but not the reloc table
-  uint32_t offset;                  //!< The entry point of this executable
-  uint32_t crc;                     //!< CRC of the data only, ie, not including this struct or the reloc table at the end
-  char name[PROCESS_NAME_BYTES];    //!< Name to display on the menu
-  char company[COMPANY_NAME_BYTES]; //!< Name of the maker of this process
-  uint32_t icon_resource_id;        //!< Resource ID within this process's bank to use as a 32x32 icon
-  uint32_t sym_table_addr;          //!< The system will poke the sdk's symbol table address into this field on load
-  uint32_t flags;                   //!< Bitwise OR of PebbleProcessInfoFlags
-  uint32_t reloc_list_start;        //!< The offset of the address relocation list
-  uint32_t num_reloc_entries;       //!< The number of entries in the address relocation list
+  char header[8];           //!< Sentinal value, should always be 'PBLAPP'
+  Version struct_version;   //!< version of this structure's format
+  Version sdk_version;      //!< version of the SDK used to build this process
+  Version process_version;  //!< version of the process
+  uint16_t
+      load_size;  //!< size of the binary in flash, including this metadata but not the reloc table
+  uint32_t offset;  //!< The entry point of this executable
+  uint32_t
+      crc;  //!< CRC of the data only, ie, not including this struct or the reloc table at the end
+  char name[PROCESS_NAME_BYTES];     //!< Name to display on the menu
+  char company[COMPANY_NAME_BYTES];  //!< Name of the maker of this process
+  uint32_t icon_resource_id;  //!< Resource ID within this process's bank to use as a 32x32 icon
+  uint32_t sym_table_addr;  //!< The system will poke the sdk's symbol table address into this field
+                            //!< on load
+  uint32_t flags;           //!< Bitwise OR of PebbleProcessInfoFlags
+  uint32_t reloc_list_start;   //!< The offset of the address relocation list
+  uint32_t num_reloc_entries;  //!< The number of entries in the address relocation list
   struct __attribute__((__packed__)) {
     uint8_t byte0;
     uint8_t byte1;
@@ -281,7 +284,5 @@ typedef struct __attribute__((__packed__)) {
     uint8_t byte13;
     uint8_t byte14;
     uint8_t byte15;
-  } uuid;                           //!< The process's UUID
+  } uuid;  //!< The process's UUID
 } LegacyPebbleAppInfo;
-
-

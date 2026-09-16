@@ -177,9 +177,8 @@ static void prv_run_test(TestKind kind) {
 }
 
 static void prv_redraw_selection(AppData *data) {
-  snprintf(data->selection_buffer, sizeof(data->selection_buffer),
-           "[%d/%d]\n%s", data->selected_index + 1, TestKindCount,
-           s_test_titles[data->selected_index]);
+  snprintf(data->selection_buffer, sizeof(data->selection_buffer), "[%d/%d]\n%s",
+           data->selected_index + 1, TestKindCount, s_test_titles[data->selected_index]);
   text_layer_set_text(&data->selection_text, data->selection_buffer);
   layer_mark_dirty(text_layer_get_layer(&data->selection_text));
 }
@@ -202,8 +201,7 @@ static void prv_up_click(ClickRecognizerRef rec, void *ctx) {
   if (data->test_running) {
     return;
   }
-  data->selected_index =
-      (data->selected_index + TestKindCount - 1) % TestKindCount;
+  data->selected_index = (data->selected_index + TestKindCount - 1) % TestKindCount;
   prv_redraw_selection(data);
 }
 
@@ -246,35 +244,29 @@ static void prv_window_load(Window *window) {
   GRect header_frame = bounds;
   header_frame.size.h = 24;
   text_layer_init(&data->header_text, &header_frame);
-  text_layer_set_font(&data->header_text,
-                      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_font(&data->header_text, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(&data->header_text, GTextAlignmentCenter);
   text_layer_set_text(&data->header_text, "MPU violation");
-  layer_add_child(window_get_root_layer(window),
-                  text_layer_get_layer(&data->header_text));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(&data->header_text));
 
   // Selection display in the middle.
   GRect selection_frame = bounds;
   selection_frame.origin.y = 32;
   selection_frame.size.h = bounds.size.h - 64;
   text_layer_init(&data->selection_text, &selection_frame);
-  text_layer_set_font(&data->selection_text,
-                      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_font(&data->selection_text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(&data->selection_text, GTextAlignmentCenter);
-  layer_add_child(window_get_root_layer(window),
-                  text_layer_get_layer(&data->selection_text));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(&data->selection_text));
 
   // Hint at the bottom: button mapping.
   GRect hint_frame = bounds;
   hint_frame.origin.y = bounds.size.h - 24;
   hint_frame.size.h = 24;
   text_layer_init(&data->hint_text, &hint_frame);
-  text_layer_set_font(&data->hint_text,
-                      fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_font(&data->hint_text, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   text_layer_set_text_alignment(&data->hint_text, GTextAlignmentCenter);
   text_layer_set_text(&data->hint_text, "Up/Dn cycle, Sel run");
-  layer_add_child(window_get_root_layer(window),
-                  text_layer_get_layer(&data->hint_text));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(&data->hint_text));
 
   prv_redraw_selection(data);
 }
@@ -287,13 +279,12 @@ static void prv_handle_init(void) {
 
   window_init(&app_data->window, WINDOW_NAME("test_mpu_violation"));
   window_set_user_data(&app_data->window, app_data);
-  window_set_window_handlers(&app_data->window, &(WindowHandlers) {
-      .load = prv_window_load,
-  });
+  window_set_window_handlers(&app_data->window, &(WindowHandlers){
+                                                    .load = prv_window_load,
+                                                });
   // Pass app_data as the click context so handlers don't have to reach
   // for a static (which would live in kernel BSS and fault on write).
-  window_set_click_config_provider_with_context(&app_data->window,
-                                                prv_click_config, app_data);
+  window_set_click_config_provider_with_context(&app_data->window, prv_click_config, app_data);
 
   app_window_stack_push(&app_data->window, true /* animated */);
 }
@@ -303,13 +294,13 @@ static void prv_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* test_mpu_violation_get_info(void) {
+const PebbleProcessMd *test_mpu_violation_get_info(void) {
   static const PebbleProcessMdSystem s_info = {
-    .common.main_func = prv_main,
-    // System apps default to privileged; this one must run unprivileged
-    // for the MPU to actually evaluate access against the App task regions.
-    .common.is_unprivileged = true,
-    .name = "MPU violation",
+      .common.main_func = prv_main,
+      // System apps default to privileged; this one must run unprivileged
+      // for the MPU to actually evaluate access against the App task regions.
+      .common.is_unprivileged = true,
+      .name = "MPU violation",
   };
   return (const PebbleProcessMd *)&s_info;
 }

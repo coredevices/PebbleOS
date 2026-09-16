@@ -30,8 +30,7 @@ bool utf8_contains_arabic(const utf8_t *start, const utf8_t *end);
 //! @param dest Destination buffer for reversed string
 //! @param dest_size Size of destination buffer in bytes
 //! @return Number of bytes written to dest (excluding null terminator), or 0 on failure
-size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len,
-                            utf8_t *dest, size_t dest_size);
+size_t utf8_reverse_for_rtl(const utf8_t *src, size_t src_len, utf8_t *dest, size_t dest_size);
 
 //! Find the end of a bidi segment's content, i.e. the position just past its
 //! last non-space codepoint (the start of any trailing spaces), or `start` if

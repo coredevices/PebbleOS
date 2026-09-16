@@ -15,7 +15,7 @@ typedef struct {
 } AppData;
 
 static void selected(NumberWindow *nw, void *ctx) {
-  PBL_LOG_DBG("selected: %"PRId32, number_window_get_value(nw));
+  PBL_LOG_DBG("selected: %" PRId32, number_window_get_value(nw));
 
   const bool animated = true;
   app_window_stack_pop(animated);
@@ -28,9 +28,8 @@ static void handle_init(void) {
 
   app_state_set_user_data(data);
 
-  number_window_init(&data->num, "Some Number",
-                    (NumberWindowCallbacks) { .selected = selected },
-                    data);
+  number_window_init(&data->num, "Some Number", (NumberWindowCallbacks){.selected = selected},
+                     data);
 
   number_window_set_min(&data->num, 10);
   number_window_set_max(&data->num, 100);
@@ -53,11 +52,10 @@ static void s_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* number_field_app_get_info() {
+const PebbleProcessMd *number_field_app_get_info() {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "NumberField Demo"
+      .common.main_func = &s_main,
+      .name = "NumberField Demo"
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }
-

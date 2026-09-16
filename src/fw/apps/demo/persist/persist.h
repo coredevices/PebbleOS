@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* persist_app_get_info();
+const PebbleProcessMd *persist_app_get_info();

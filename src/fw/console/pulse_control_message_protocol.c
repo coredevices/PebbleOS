@@ -24,8 +24,8 @@ enum PCMPCode {
   PCMPCode_UnknownCode = 130,
 };
 
-void pulse_control_message_protocol_on_packet(
-    PulseControlMessageProtocol *this, void *raw_packet, size_t packet_length) {
+void pulse_control_message_protocol_on_packet(PulseControlMessageProtocol *this, void *raw_packet,
+                                              size_t packet_length) {
   if (packet_length < sizeof(PCMPPacket)) {
     // Malformed packet; silently discard.
     return;
@@ -57,8 +57,8 @@ void pulse_control_message_protocol_on_packet(
   }
 }
 
-void pulse_control_message_protocol_send_port_closed_message(
-    PulseControlMessageProtocol *this, net16 port) {
+void pulse_control_message_protocol_send_port_closed_message(PulseControlMessageProtocol *this,
+                                                             net16 port) {
   PCMPPacket *message = this->send_begin_fn(PULSE_CONTROL_MESSAGE_PROTOCOL);
   message->code = PCMPCode_PortClosed;
   memcpy(message->information, &port, sizeof(port));

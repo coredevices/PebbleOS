@@ -8,4 +8,3 @@
 void debug_init(McuRebootReason reason);
 
 void debug_print_last_launched_app(void);
-

@@ -111,7 +111,8 @@ typedef enum {
   AttributeIdSubtitleTemplateString = 47,
   //! Generic icon.
   AttributeIdIcon = 48,
-  //! (Uint32List) Custom vibration pattern for a notification, used with vibes_enqueue_custom_pattern
+  //! (Uint32List) Custom vibration pattern for a notification, used with
+  //! vibes_enqueue_custom_pattern
   AttributeIdVibrationPattern = 49,
   //! (uint32_t) Timestamp when the mute should expire.
   AttributeIdMuteExpiration = 50,
@@ -208,8 +209,7 @@ void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uin
 //! @param list pointer to the attribute list
 //! @param id AttributeID of the attribute to add
 //! @param resource_id value to store as the content of the attribute
-void attribute_list_add_resource_id(AttributeList *list, AttributeId id,
-                                    uint32_t resource_id);
+void attribute_list_add_resource_id(AttributeList *list, AttributeId id, uint32_t resource_id);
 
 //! Append an attribute or replace an existing one in an attribute list.
 //! @param list pointer to the attribute list
@@ -263,8 +263,8 @@ Attribute *attribute_find(const AttributeList *attr_list, AttributeId id);
 //! @param id the attribute id of the desired attribute
 //! @param default_value the value to return if not found
 //! @return a pointer to the string, default_value if not found
-const char *attribute_get_string(const AttributeList *attr_list,
-    AttributeId id, char *default_value);
+const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
+                                 char *default_value);
 
 //! Find a string list attribute in an attribute list by attribute ID
 //! @param attr_list a pointer to an attribute list
@@ -277,16 +277,15 @@ StringList *attribute_get_string_list(const AttributeList *attr_list, AttributeI
 //! @param id the attribute id of the desired attribute
 //! @param default_value the value to return if not found
 //! @return the uint8 attribute value, default_value if not found
-uint8_t attribute_get_uint8(const AttributeList *attr_list,
-    AttributeId id, uint8_t default_value);
+uint8_t attribute_get_uint8(const AttributeList *attr_list, AttributeId id, uint8_t default_value);
 
 //! Find a uint32 attribute in a list by attribute ID
 //! @param attr_list a pointer to an attribute list
 //! @param id the attribute id of the desired attribute
 //! @param default_value the value to return if not found
 //! @return the uint32 attribute value, default_value if not found
-uint32_t attribute_get_uint32(const AttributeList *attr_list,
-    AttributeId id, uint32_t default_value);
+uint32_t attribute_get_uint32(const AttributeList *attr_list, AttributeId id,
+                              uint32_t default_value);
 
 //! Find a Uint32List attribute in a list by attribute id
 //! @param attr_list a pointer to an attribute list
@@ -306,12 +305,13 @@ size_t attribute_list_get_serialized_size(const AttributeList *attr_list);
 
 //! Check whether a serialized list is well-formed and output which attributes it contains
 bool attribute_check_serialized_list(const uint8_t *cursor, const uint8_t *val_end,
-    uint8_t num_attributes, bool has_attribute[]);
+                                     uint8_t num_attributes, bool has_attribute[]);
 
 //! number of required bytes for in-memory representation of a list of a serialized attributes
 int32_t attribute_get_buffer_size_for_serialized_attributes(uint8_t num_attributes,
-    const uint8_t **cursor, const uint8_t *end);
+                                                            const uint8_t **cursor,
+                                                            const uint8_t *end);
 
 //! true, if successfully transforms a serialized attribute into in-memory representation
-bool attribute_deserialize_list(char **buffer, char *const buf_end,
-    const uint8_t **cursor, const uint8_t *payload_end, AttributeList attr_list);
+bool attribute_deserialize_list(char **buffer, char *const buf_end, const uint8_t **cursor,
+                                const uint8_t *payload_end, AttributeList attr_list);

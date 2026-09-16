@@ -35,10 +35,10 @@ typedef enum {
   RebootReasonCode_StackOverflow,
   RebootReasonCode_HardFault,
   RebootReasonCode_LauncherPanic,
-  RebootReasonCode_ClockFailure, // Not used on 3.x
-  RebootReasonCode_AppHardFault, // Not used on 3.x
+  RebootReasonCode_ClockFailure,  // Not used on 3.x
+  RebootReasonCode_AppHardFault,  // Not used on 3.x
   RebootReasonCode_EventQueueFull,
-  RebootReasonCode_WorkerHardFault, // Off by default, compile in with WORKER_CRASH_CAUSES_RESET
+  RebootReasonCode_WorkerHardFault,  // Off by default, compile in with WORKER_CRASH_CAUSES_RESET
   RebootReasonCode_OutOfMemory,
   RebootReasonCode_BtCoredump,
   RebootReasonCode_CoreDump,  // Core dump initiated without a more specific reason set
@@ -46,9 +46,9 @@ typedef enum {
 } RebootReasonCode;
 
 typedef struct PACKED {
-  RebootReasonCode code:8;
-  bool restarted_safely:1;
-  uint8_t padding:7;
+  RebootReasonCode code : 8;
+  bool restarted_safely : 1;
+  uint8_t padding : 7;
   union {
     uint16_t data16;
     uint8_t data8[2];
@@ -61,16 +61,16 @@ typedef struct PACKED {
       uint32_t stuck_task_pc;
       uint32_t stuck_task_lr;
       uint32_t stuck_task_callback;
-    } watchdog; //!< Valid if code == RebootReasonCode_Watchdog
+    } watchdog;  //!< Valid if code == RebootReasonCode_Watchdog
     struct {
       uint32_t push_lr;
       uint32_t current_event;
       uint32_t dropped_event;
-    } event_queue; //!< Valid if code == RebootReasonCode_EventQueueFull
+    } event_queue;  //!< Valid if code == RebootReasonCode_EventQueueFull
     struct {
       uint32_t heap_alloc_lr;
       uint32_t heap_ptr;
-    } heap_data; //!< Valid if code == RebootReasonCode_OutOfMemory
+    } heap_data;  //!< Valid if code == RebootReasonCode_OutOfMemory
   };
 } RebootReason;
 

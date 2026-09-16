@@ -17,7 +17,7 @@ typedef struct HealthTrackingUIData {
   bool show_action_bar;
 } HealthTrackingUIData;
 
-static AppInstallId  s_last_app_id;
+static AppInstallId s_last_app_id;
 
 // ---------------------------------------------------------------------------
 static WindowStack *prv_get_window_stack(void) {
@@ -60,9 +60,9 @@ static void prv_push_enable_in_mobile_dialog(void *context) {
 void health_tracking_ui_show_message(uint32_t res_id, const char *text, bool show_action_bar) {
   HealthTrackingUIData *data = kernel_malloc(sizeof(HealthTrackingUIData));
   *data = (HealthTrackingUIData){
-    .res_id = res_id,
-    .text = text,
-    .show_action_bar = show_action_bar,
+      .res_id = res_id,
+      .text = text,
+      .show_action_bar = show_action_bar,
   };
 
   launcher_task_add_callback(prv_push_enable_in_mobile_dialog, data);
@@ -71,9 +71,9 @@ void health_tracking_ui_show_message(uint32_t res_id, const char *text, bool sho
 // ---------------------------------------------------------------------------
 void health_tracking_ui_feature_show_disabled(void) {
   /// Feature requires health dialog
-  static const char *msg =
-      i18n_noop("This feature requires Pebble Health to work. Enable Health in the Pebble"
-                " mobile app to continue.");
+  static const char *msg = i18n_noop(
+      "This feature requires Pebble Health to work. Enable Health in the Pebble"
+      " mobile app to continue.");
 
   health_tracking_ui_show_message(RESOURCE_ID_GENERIC_WARNING_TINY, msg, false);
 }

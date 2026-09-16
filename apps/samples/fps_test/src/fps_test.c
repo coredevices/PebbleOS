@@ -77,8 +77,8 @@ static void prv_pop_all_windows_cb(void *cb_data) {
 
   APP_LOG(APP_LOG_LEVEL_INFO, "## %d frames rendered", (int)data->rendered_frames);
   if (time_rendered) {
-    int frame_period = time_rendered/(int64_t)data->rendered_frames;
-    int fps = (int64_t)data->rendered_frames*1000/time_rendered;
+    int frame_period = time_rendered / (int64_t)data->rendered_frames;
+    int fps = (int64_t)data->rendered_frames * 1000 / time_rendered;
     APP_LOG(APP_LOG_LEVEL_INFO, "## at %d FPS (%d ms/frame)", fps, frame_period);
   }
 
@@ -86,21 +86,16 @@ static void prv_pop_all_windows_cb(void *cb_data) {
 }
 
 static const char *prv_row_texts[] = {
-    "Row 1",
-    "Row 2",
-    "Row 3",
-    "Row 4",
-    "Row 5",
-    "Row 6",
+    "Row 1", "Row 2", "Row 3", "Row 4", "Row 5", "Row 6",
 };
 
 static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer, uint16_t section_index,
-    void *callback_context) {
+                                 void *callback_context) {
   return ARRAY_LENGTH(prv_row_texts);
 }
 
-static void prv_draw_row(GContext* ctx, const Layer *cell_layer, char const *title,
-    int16_t offset) {
+static void prv_draw_row(GContext *ctx, const Layer *cell_layer, char const *title,
+                         int16_t offset) {
   // mostly copied from menu_cell_basic_draw_with_value
   // (that unfortunately doesn't respect bounds.origin.x)
   const int16_t title_height = 24;
@@ -113,28 +108,28 @@ static void prv_draw_row(GContext* ctx, const Layer *cell_layer, char const *tit
   const GFont title_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   if (title) {
     graphics_context_set_text_color(ctx, GColorWhite);
-    graphics_draw_text(ctx, title, title_font, box,
-        GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, title, title_font, box, GTextOverflowModeFill, GTextAlignmentLeft,
+                       NULL);
   }
 }
 
-void prv_draw_row_1(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index,
-    void *callback_context) {
+void prv_draw_row_1(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                    void *callback_context) {
   const char *title = prv_row_texts[cell_index->row];
   GRect frame = layer_get_frame(cell_layer);
-  prv_draw_row(ctx, cell_layer, title, -frame.origin.y/4);
+  prv_draw_row(ctx, cell_layer, title, -frame.origin.y / 4);
 }
 
-static void prv_draw_row_2(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index,
-    void *callback_context) {
+static void prv_draw_row_2(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                           void *callback_context) {
   const char *title = prv_row_texts[cell_index->row];
   GRect frame = layer_get_frame(cell_layer);
   GRect bounds = layer_get_bounds(cell_layer);
-  prv_draw_row(ctx, cell_layer, title, -frame.origin.y/4 + bounds.size.w);
+  prv_draw_row(ctx, cell_layer, title, -frame.origin.y / 4 + bounds.size.w);
 }
 
 static int16_t prv_get_separator_height(struct MenuLayer *menu_layer, MenuIndex *cell_index,
-    void *callback_context) {
+                                        void *callback_context) {
   return 0;
 }
 
@@ -149,8 +144,8 @@ static void prv_window_update_proc(struct Layer *layer, GContext *ctx) {
   data->rendered_frames++;
 }
 
-void prv_syncing_selection_changed(MenuLayer *menu_layer, MenuIndex old_index,
-    MenuIndex new_index, void *context) {
+void prv_syncing_selection_changed(MenuLayer *menu_layer, MenuIndex old_index, MenuIndex new_index,
+                                   void *context) {
   ScrollLayer *scroll_layer = (ScrollLayer *)menu_layer;
   AppData *data = context;
 
@@ -190,23 +185,25 @@ static void prv_window_load(Window *window) {
   const GRect menu_layer_rect =
       GRect(navbar_width, 0, full_rect.size.w - navbar_width, full_rect.size.h);
   data->action_list1 = menu_layer_create(menu_layer_rect);
-  menu_layer_set_callbacks(data->action_list1, data, (MenuLayerCallbacks){
-      .get_num_rows = prv_get_num_rows,
-      .draw_row = prv_draw_row_1,
-      .get_separator_height = prv_get_separator_height,
-  });
+  menu_layer_set_callbacks(data->action_list1, data,
+                           (MenuLayerCallbacks){
+                               .get_num_rows = prv_get_num_rows,
+                               .draw_row = prv_draw_row_1,
+                               .get_separator_height = prv_get_separator_height,
+                           });
   // FIXME layer_set_hidden(&data->action_list1.inverter.layer, true);
 
   scroll_layer_set_shadow_hidden((ScrollLayer *)data->action_list1, true);
   layer_add_child(root_layer, menu_layer_get_layer(data->action_list1));
 
   data->action_list2 = menu_layer_create(menu_layer_rect);
-  menu_layer_set_callbacks(data->action_list2, data, (MenuLayerCallbacks){
-      .get_num_rows = prv_get_num_rows,
-      .draw_row = prv_draw_row_2,
-      .get_separator_height = prv_get_separator_height,
-      .selection_changed = prv_syncing_selection_changed,
-  });
+  menu_layer_set_callbacks(data->action_list2, data,
+                           (MenuLayerCallbacks){
+                               .get_num_rows = prv_get_num_rows,
+                               .draw_row = prv_draw_row_2,
+                               .get_separator_height = prv_get_separator_height,
+                               .selection_changed = prv_syncing_selection_changed,
+                           });
   scroll_layer_set_shadow_hidden((ScrollLayer *)data->action_list2, true);
   menu_layer_set_click_config_onto_window(data->action_list2, window);
   layer_add_child(root_layer, menu_layer_get_layer(data->action_list2));
@@ -237,8 +234,8 @@ int main(void) {
   Layer *root_layer = window_get_root_layer(window);
   layer_set_update_proc(root_layer, prv_window_update_proc);
   window_set_window_handlers(window, (WindowHandlers){
-      .load = prv_window_load,
-  });
+                                         .load = prv_window_load,
+                                     });
 
   window_stack_push(window, true);
 

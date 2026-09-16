@@ -36,8 +36,8 @@ void app_launch_invalidate_all_references(void) {
   s_app_launch_characteristic = BLE_CHARACTERISTIC_INVALID;
 }
 
-void app_launch_handle_service_removed(
-    BLECharacteristic *characteristics, uint8_t num_characteristics) {
+void app_launch_handle_service_removed(BLECharacteristic *characteristics,
+                                       uint8_t num_characteristics) {
   app_launch_invalidate_all_references();
 }
 

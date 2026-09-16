@@ -33,7 +33,9 @@ static bool s_comm_state_change_eval_is_scheduled;
 static BtCtlModeOverride s_comm_override = BtCtlModeOverrideNone;
 static PBL_MUTEX_DEFINE(s_comm_state_change_mutex);
 
-bool bt_ctl_is_airplane_mode_on(void) { return s_comm_airplane_mode_on; }
+bool bt_ctl_is_airplane_mode_on(void) {
+  return s_comm_airplane_mode_on;
+}
 
 bool bt_ctl_is_bluetooth_active(void) {
   if (s_comm_enabled) {
@@ -46,14 +48,18 @@ bool bt_ctl_is_bluetooth_active(void) {
   return false;
 }
 
-bool bt_ctl_is_bluetooth_running(void) { return s_comm_is_running; }
+bool bt_ctl_is_bluetooth_running(void) {
+  return s_comm_is_running;
+}
 
 static void prv_put_disconnection_event(void) {
-  PebbleEvent event = (PebbleEvent){.type = PEBBLE_BT_CONNECTION_EVENT,
-                                    .bluetooth.connection = {
-                                        .is_ble = true,
-                                        .state = PebbleBluetoothConnectionEventStateDisconnected,
-                                    }};
+  PebbleEvent event = (PebbleEvent){
+      .type = PEBBLE_BT_CONNECTION_EVENT,
+      .bluetooth.connection = {
+          .is_ble = true,
+          .state = PebbleBluetoothConnectionEventStateDisconnected,
+      }
+  };
   PBL_LOG_DBG("New BT Conn change event, We are now disconnected");
   event_put(&event);
 }
@@ -67,8 +73,7 @@ static void prv_comm_start(void) {
   dis_get_info(&config->dis_info);
 #if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
-  PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u",
-          config->is_hrm_supported_and_enabled);
+  PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u", config->is_hrm_supported_and_enabled);
 #endif
   // Register existing bondings before bringing the connection up: NimBLE
   // restores them before the link is established. The other backends use
@@ -115,15 +120,13 @@ static void prv_send_state_change_event(void) {
   PBL_LOG_DBG("----> Sending a BT state event");
   PebbleEvent event = {
       .type = PEBBLE_BT_STATE_EVENT,
-      .bluetooth =
-          {
-              .state =
-                  {
-                      .airplane = s_comm_airplane_mode_on,
-                      .enabled = s_comm_enabled,
-                      .override = s_comm_override,
-                  },
+      .bluetooth = {
+          .state = {
+              .airplane = s_comm_airplane_mode_on,
+              .enabled = s_comm_enabled,
+              .override = s_comm_override,
           },
+      },
   };
   event_put(&event);
   if (s_comm_airplane_mode_on) {
@@ -213,7 +216,6 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 }
 
 void bt_ctl_init(void) {
-
   s_comm_airplane_mode_on = bt_persistent_storage_get_airplane_mode_enabled();
   s_comm_initialized = true;
 

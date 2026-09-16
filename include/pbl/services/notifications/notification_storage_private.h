@@ -10,4 +10,3 @@
 //! The higher the value, the less often we need to compress,
 //! but we will lose more notifications
 #define NOTIFICATION_STORAGE_MINIMUM_INCREMENT_SIZE (NOTIFICATION_STORAGE_FILE_SIZE / 4)
-

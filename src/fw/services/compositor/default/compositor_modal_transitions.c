@@ -14,7 +14,6 @@
 #include "kernel/ui/kernel_ui.h"
 #include "resource/resource_ids.auto.h"
 
-
 // No animations will be shown on the following platforms
 #if defined(CONFIG_RECOVERY_FW)
 #define MODAL_CONTRACT_TO_MODAL_ANIMATION (RESOURCE_ID_INVALID)
@@ -42,14 +41,13 @@ static void prv_modal_transition_animation_init_sequence(const uint32_t resource
   s_data.animation_sequence = gdraw_command_sequence_create_with_resource(resource_id);
 }
 
-static void prv_modal_transition_fill_update(GContext *ctx,
-                                             uint32_t distance_normalized,
+static void prv_modal_transition_fill_update(GContext *ctx, uint32_t distance_normalized,
                                              bool inner) {
   const GColor replace_color = GColorGreen;
   const GColor stroke_color = TIMELINE_DOT_COLOR;
-  compositor_transition_pdcs_animation_update(
-      ctx, s_data.animation_sequence, distance_normalized, replace_color, stroke_color,
-      s_data.outer_color /* overdraw color */, inner, NULL);
+  compositor_transition_pdcs_animation_update(ctx, s_data.animation_sequence, distance_normalized,
+                                              replace_color, stroke_color,
+                                              s_data.outer_color /* overdraw color */, inner, NULL);
 }
 
 void prv_render_modal_if_necessary(void) {
@@ -81,9 +79,7 @@ static NOINLINE void prv_render_transition_rect(GContext *ctx, Animation *animat
       prv_modal_transition_animation_init_sequence(MODAL_CONTRACT_FROM_MODAL_ANIMATION);
       s_data.expanding = false;
     }
-    distance_normalized = animation_timing_scaled(distance_normalized,
-                                                  0,
-                                                  contract_to_dot_distance);
+    distance_normalized = animation_timing_scaled(distance_normalized, 0, contract_to_dot_distance);
     prv_modal_transition_fill_update(ctx, distance_normalized, false /* fill outer */);
   } else {
     // For the second half of the animation where the app is the destination, draw the "expand to
@@ -93,8 +89,7 @@ static NOINLINE void prv_render_transition_rect(GContext *ctx, Animation *animat
       prv_modal_transition_animation_init_sequence(MODAL_EXPAND_TO_APP_ANIMATION);
       s_data.expanding = true;
     }
-    distance_normalized = animation_timing_scaled(distance_normalized,
-                                                  contract_to_dot_distance,
+    distance_normalized = animation_timing_scaled(distance_normalized, contract_to_dot_distance,
                                                   ANIMATION_NORMALIZED_MAX);
     prv_modal_transition_fill_update(ctx, distance_normalized, true /* fill inner */);
   }
@@ -115,9 +110,8 @@ static NOINLINE void prv_render_transition_round(GContext *ctx, Animation *anima
   // Calculate the inner/outer radii for the colored radial and the dot radial
   const int16_t dot_ring_outer_radius_from = (display_bounds.size.w / 2) + (dot_radius * 2);
   const int16_t dot_ring_outer_radius_to = dot_radius;
-  const int16_t interpolated_dot_ring_outer_radius = interpolate_int16(distance_normalized,
-                                                                       dot_ring_outer_radius_from,
-                                                                       dot_ring_outer_radius_to);
+  const int16_t interpolated_dot_ring_outer_radius =
+      interpolate_int16(distance_normalized, dot_ring_outer_radius_from, dot_ring_outer_radius_to);
   const int16_t dot_ring_inner_radius = interpolated_dot_ring_outer_radius - dot_radius;
 
   // Draw the dot ring
@@ -145,9 +139,8 @@ static void prv_modal_push_transition_animation_update_round(GContext *ctx, Anim
 }
 
 static void prv_modal_transition_animation_init_rect(Animation *animation) {
-  const uint32_t resource_id = s_data.modal_is_destination ?
-                                  MODAL_CONTRACT_TO_MODAL_ANIMATION :
-                                  MODAL_CONTRACT_FROM_MODAL_ANIMATION;
+  const uint32_t resource_id = s_data.modal_is_destination ? MODAL_CONTRACT_TO_MODAL_ANIMATION
+                                                           : MODAL_CONTRACT_FROM_MODAL_ANIMATION;
   prv_modal_transition_animation_init_sequence(resource_id);
 
   // Tweaked from observations by the design team
@@ -173,43 +166,43 @@ static void prv_modal_transition_animation_teardown_rect(Animation *animation) {
 
 const CompositorTransition *prv_modal_transition_get_rect(bool modal_is_destination) {
   // NOTE: This initialization will set .expanding to false so we default to contracting to a dot
-  s_data = (CompositorModalTransitionData) {
-    .modal_is_destination = modal_is_destination,
-    // TODO: PBL-19849
-    // Decide on the logistics of the background color of the modal pop animation, including
-    // providing a setter for it that apps can use
-    .outer_color = GColorLightGray,
+  s_data = (CompositorModalTransitionData){
+      .modal_is_destination = modal_is_destination,
+      // TODO: PBL-19849
+      // Decide on the logistics of the background color of the modal pop animation, including
+      // providing a setter for it that apps can use
+      .outer_color = GColorLightGray,
   };
 
   static const CompositorTransition s_impl = {
-    .init = prv_modal_transition_animation_init_rect,
-    .update = prv_modal_transition_animation_update_rect,
-    .teardown = prv_modal_transition_animation_teardown_rect,
-    .skip_modal_render_after_update = true, // This transition renders the modal itself
+      .init = prv_modal_transition_animation_init_rect,
+      .update = prv_modal_transition_animation_update_rect,
+      .teardown = prv_modal_transition_animation_teardown_rect,
+      .skip_modal_render_after_update = true,  // This transition renders the modal itself
   };
 
   return &s_impl;
 }
 
 const CompositorTransition *prv_modal_transition_get_round(bool modal_is_destination) {
-  s_data = (CompositorModalTransitionData) {
-    .modal_is_destination = modal_is_destination,
+  s_data = (CompositorModalTransitionData){
+      .modal_is_destination = modal_is_destination,
   };
 
   if (!modal_is_destination) {
     return compositor_round_flip_transition_get(false /* flip_to_the_right */);
   } else {
     static const CompositorTransition s_impl = {
-      .init = prv_modal_push_transition_animation_init_round,
-      .update = prv_modal_push_transition_animation_update_round,
-      .skip_modal_render_after_update = true, // This transition renders the modal itself
+        .init = prv_modal_push_transition_animation_init_round,
+        .update = prv_modal_push_transition_animation_update_round,
+        .skip_modal_render_after_update = true,  // This transition renders the modal itself
     };
 
     return &s_impl;
   }
 }
 
-const CompositorTransition* compositor_modal_transition_to_modal_get(bool modal_is_destination) {
+const CompositorTransition *compositor_modal_transition_to_modal_get(bool modal_is_destination) {
   return PBL_IF_RECT_ELSE(prv_modal_transition_get_rect,
                           prv_modal_transition_get_round)(modal_is_destination);
 }

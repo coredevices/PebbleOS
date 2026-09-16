@@ -19,7 +19,7 @@ static PBL_MUTEX_DEFINE(s_list_mutex);
 // List of jobs sorted from soonest to farthest.
 static ListNode *s_scheduled_jobs;
 
-static void prv_timer_callback(void* data);
+static void prv_timer_callback(void *data);
 
 //! One-shot timer armed for the next job's execute time. Re-armed after every
 //! list mutation and every firing; stopped when no jobs are scheduled. Capped
@@ -54,17 +54,17 @@ static bool prv_is_scheduled(CronJob *job) {
 }
 
 static int prv_sort(void *a, void *b) {
-  CronJob *job_a = (CronJob*)a;
-  CronJob *job_b = (CronJob*)b;
+  CronJob *job_a = (CronJob *)a;
+  CronJob *job_b = (CronJob *)b;
   return job_b->cached_execute_time - job_a->cached_execute_time;
 }
 
 // -------------------------------------------------------------------------------------------
-static void prv_timer_callback(void* data) {
+static void prv_timer_callback(void *data) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   while (s_scheduled_jobs != NULL &&
-         ((CronJob*)s_scheduled_jobs)->cached_execute_time <= rtc_get_time()) {
-    CronJob *job = (CronJob*)s_scheduled_jobs;
+         ((CronJob *)s_scheduled_jobs)->cached_execute_time <= rtc_get_time()) {
+    CronJob *job = (CronJob *)s_scheduled_jobs;
     // Remove the job from the list, it's done.
     s_scheduled_jobs = list_pop_head(s_scheduled_jobs);
 
@@ -87,7 +87,7 @@ void cron_service_handle_clock_change(PebbleSetTimeEvent *set_time_info) {
   // Need to re-build the list somewhere else
   ListNode *newlist = NULL;
   while (s_scheduled_jobs != NULL) {
-    CronJob* job = (CronJob*)s_scheduled_jobs;
+    CronJob *job = (CronJob *)s_scheduled_jobs;
     s_scheduled_jobs = list_pop_head(s_scheduled_jobs);
     // Re-calculate the execute time.
     // See the notes in the API header on how this works.
@@ -128,7 +128,7 @@ time_t cron_job_schedule(CronJob *job) {
     s_scheduled_jobs = list_sorted_add(s_scheduled_jobs, &job->list_node, prv_sort, true);
   }
   PBL_LOG_DBG("Cron job scheduled for %ld (%+ld)", job->cached_execute_time,
-          (job->cached_execute_time - now));
+              (job->cached_execute_time - now));
 
   prv_arm_wakeup();
   pbl_mutex_unlock(&s_list_mutex);
@@ -186,7 +186,6 @@ bool cron_job_unschedule(CronJob *job) {
   return removed;
 }
 
-
 // ---------------------------------------------------------------------------------------
 // For Testing:
 
@@ -194,8 +193,8 @@ void cron_clear_all_jobs(void) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
 
   // Iterate over all the jobs to remove them all.
-  for (ListNode* iter = s_scheduled_jobs; iter != NULL; ) {
-    CronJob* job = (CronJob*)iter;
+  for (ListNode *iter = s_scheduled_jobs; iter != NULL;) {
+    CronJob *job = (CronJob *)iter;
     iter = list_get_next(iter);
     // Remove the job from the list.
     list_remove(&job->list_node, NULL, NULL);
@@ -227,8 +226,8 @@ void cron_service_wakeup(void) {
 // ---------------------------------------------------------------------------------------
 // The brains.
 typedef enum {
-  CronAssignMode_LocalEpoch, // 'any' uses local epoch's value
-  CronAssignMode_Zero, // 'any' uses 0
+  CronAssignMode_LocalEpoch,  // 'any' uses local epoch's value
+  CronAssignMode_Zero,        // 'any' uses 0
 } CronAssignMode;
 
 // Indices for the access arrays
@@ -272,7 +271,7 @@ static bool prv_adjust_for_wday_spec(const CronJob *cron, struct tm *cron_tm) {
   bool adjusted = false;
 
   // We need to update cron_tm's tm_wday for proper checking.
-  cron_tm->tm_mday += 1; // Adjustment because struct tm has mday 1-indexed for whatever reason
+  cron_tm->tm_mday += 1;  // Adjustment because struct tm has mday 1-indexed for whatever reason
   mktime(cron_tm);
   cron_tm->tm_mday -= 1;
   // We have 1 week to find a fitting date
@@ -310,50 +309,42 @@ static time_t prv_get_execute_time_from_epoch(const CronJob *job, time_t local_e
 
   // Access everything as arrays because it's way easier that way.
   int *dest_arr[CRON_INDEX_COUNT] = {
-    &cron_tm.tm_year,
-    &cron_tm.tm_mon,
-    &cron_tm.tm_mday,
-    &cron_tm.tm_hour,
-    &cron_tm.tm_min,
-    &cron_tm.tm_sec,
+      &cron_tm.tm_year, &cron_tm.tm_mon, &cron_tm.tm_mday,
+      &cron_tm.tm_hour, &cron_tm.tm_min, &cron_tm.tm_sec,
   };
   const int curr_arr[CRON_INDEX_COUNT] = {
-    current_tm.tm_year,
-    current_tm.tm_mon,
-    current_tm.tm_mday,
-    current_tm.tm_hour,
-    current_tm.tm_min,
-    current_tm.tm_sec,
+      current_tm.tm_year, current_tm.tm_mon, current_tm.tm_mday,
+      current_tm.tm_hour, current_tm.tm_min, current_tm.tm_sec,
   };
   const int spec_arr[CRON_INDEX_COUNT] = {
-    CRON_YEAR_ANY, // year should always default
-    job->month,
-    job->mday,
-    job->hour,
-    job->minute,
-    // If can be instant, second should default.
-    // If it can't, use 0 because it's less than 1.
-    job->may_be_instant ? CRON_SECOND_ANY : 0,
+      CRON_YEAR_ANY,  // year should always default
+      job->month,
+      job->mday,
+      job->hour,
+      job->minute,
+      // If can be instant, second should default.
+      // If it can't, use 0 because it's less than 1.
+      job->may_be_instant ? CRON_SECOND_ANY : 0,
   };
 
-/*
-This is where the actual date finding is done. Essentially, we start with setting the result to
-the local epoch, and modify from there.
+  /*
+  This is where the actual date finding is done. Essentially, we start with setting the result to
+  the local epoch, and modify from there.
 
-We iterate over the fields from most significant to least significant. The reasoning for this is
-that we will only know how to properly adjust a less significant field based on the value of the
-more significant fields.
+  We iterate over the fields from most significant to least significant. The reasoning for this is
+  that we will only know how to properly adjust a less significant field based on the value of the
+  more significant fields.
 
-When a field in the spec is marked as ANY (-1), we need to decide what to put in the result:
- - If all values so far are still the same as the local epoch, we will use the local epoch's
-   value.
- - Otherwise, the value stored will be 0, because the result is in the future, so a value of 0
-   will definitely be the soonest time that matches.
+  When a field in the spec is marked as ANY (-1), we need to decide what to put in the result:
+   - If all values so far are still the same as the local epoch, we will use the local epoch's
+     value.
+   - Otherwise, the value stored will be 0, because the result is in the future, so a value of 0
+     will definitely be the soonest time that matches.
 
-Now, if the result is behind the local epoch, we step through higher order fields for a field
-that was not specified. When we find one, we increase the value by 1. Since this is a higher
-order field, this is guaranteed to put the result ahead of the local epoch.
-*/
+  Now, if the result is behind the local epoch, we step through higher order fields for a field
+  that was not specified. When we find one, we increase the value by 1. Since this is a higher
+  order field, this is guaranteed to put the result ahead of the local epoch.
+  */
 
   // 'any' assignment defaults to using the local epoch's values.
   CronAssignMode assign_mode = CronAssignMode_LocalEpoch;
@@ -370,7 +361,7 @@ order field, this is guaranteed to put the result ahead of the local epoch.
           *(dest_arr[i]) = 0;
           break;
       }
-    } else { // Otherwise, use the spec's value.
+    } else {  // Otherwise, use the spec's value.
       *(dest_arr[i]) = spec_arr[i];
     }
 
@@ -416,7 +407,7 @@ order field, this is guaranteed to put the result ahead of the local epoch.
 
   // Decide the DSTny (Adjust for DST transitions)
   cron_tm.tm_gmtoff = time_get_gmtoffset();
-  cron_tm.tm_isdst = 0; // We'll do the DST adjust ourselves
+  cron_tm.tm_isdst = 0;  // We'll do the DST adjust ourselves
   time_t t = mktime(&cron_tm);
 
   // Apply offset seconds
@@ -465,7 +456,6 @@ time_t cron_job_get_execute_time_from_epoch(const CronJob *job, time_t local_epo
 
   return t;
 }
-
 
 time_t cron_job_get_execute_time(const CronJob *job) {
   return cron_job_get_execute_time_from_epoch(job, rtc_get_time());

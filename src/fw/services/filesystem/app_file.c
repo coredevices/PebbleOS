@@ -8,9 +8,8 @@
 #include "system/passert.h"
 #include "resource/resource_storage.h"
 
-void app_file_name_make(char * restrict buffer, size_t buffer_len,
-                        AppInstallId app_id, const char * restrict suffix,
-                        size_t suffix_len) {
+void app_file_name_make(char *restrict buffer, size_t buffer_len, AppInstallId app_id,
+                        const char *restrict suffix, size_t suffix_len) {
   PBL_ASSERTN(buffer_len > APP_FILE_NAME_PREFIX_LENGTH + suffix_len);
 
   buffer[0] = '@';
@@ -53,7 +52,7 @@ bool is_app_resource_file_name(const char *filename) {
 //! Parses an app-file name to get the AppInstallId.
 //! Assumes the file is indeed an app-file
 AppInstallId app_file_parse_app_id(const char *filename) {
-  return (AppInstallId)strtol(filename + 1, NULL, 16); // + 1 to skip the initial '@'
+  return (AppInstallId)strtol(filename + 1, NULL, 16);  // + 1 to skip the initial '@'
 }
 
 //! Parses an app-file name to get the AppInstallId.

@@ -26,8 +26,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 
   if (error->status != 0) {
     if (error->status != BLE_HS_EDONE) {
-      PBL_LOG_ERR("prv_device_name_read_event_cb error=%d",
-                error->status);
+      PBL_LOG_ERR("prv_device_name_read_event_cb error=%d", error->status);
     }
     // Frees arg (the op context); must be the last use of it
     nimble_gattc_op_queue_complete();
@@ -36,8 +35,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 
   const uint16_t name_len = OS_MBUF_PKTLEN(attr->om);
 
-  PBL_LOG_DBG("Device name read cb: conn=%u handle=%u len=%u", conn_handle, attr->handle,
-              name_len);
+  PBL_LOG_DBG("Device name read cb: conn=%u handle=%u len=%u", conn_handle, attr->handle, name_len);
 
   char *device_name = kernel_zalloc_check(name_len + 1);
   if (ble_hs_mbuf_to_flat(attr->om, device_name, name_len, NULL) != 0) {

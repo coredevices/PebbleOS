@@ -6,7 +6,6 @@
 #include "pbl/kernel/sem.h"
 #include "board/board.h"
 
-
 #include <stdbool.h>
 #include <stdint.h>
 

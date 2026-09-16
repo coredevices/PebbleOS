@@ -61,55 +61,55 @@ typedef struct TimelineLayerStyle {
 #define MARGIN_MEDIUM PBL_IF_RECT_ELSE(4, 13)
 
 static const TimelineLayerStyle s_style_medium = {
-  .sidebar_arrow_size.w = PBL_IF_RECT_ELSE(10, 7),
-  .sidebar_arrow_size.h = PBL_IF_RECT_ELSE(20, 28),
-  .sidebar_width = PBL_IF_RECT_ELSE(30, 48),
-  .past_fin_offset_y = PBL_IF_ROUND_ELSE(-12, 0),
-  .future_fin_offset_y = PBL_IF_ROUND_ELSE(-20, 0),
-  .past_top_margin = PBL_IF_RECT_ELSE(10, 18),
-  .future_top_margin = PBL_IF_RECT_ELSE(10, 39),
-  .left_margin = MARGIN_MEDIUM,
-  .right_margin = MARGIN_MEDIUM,
-  .icon_right_margin = MARGIN_MEDIUM,
-  .fat_pin_height = 110,
-  // PBL-42540: This property is dependent on the screen size. The thin pin height is the
-  // remainder of the screen space after the fat pin.
-  .thin_pin_height = PBL_IF_RECT_ELSE(66, 43),
-  .day_sep_dot_diameter = 9,
-  .day_sep_offset.x = PBL_IF_ROUND_ELSE(12, 0),
-  .day_sep_offset.y = -12,
-  .day_sep_subtitle_margin = PEEK_LAYER_SUBTITLE_MARGIN,
-  .past_day_sep_dot_offset_y = PBL_IF_ROUND_ELSE(-17, 0),
-  .future_day_sep_dot_offset_y = PBL_IF_ROUND_ELSE(-13, 0),
+    .sidebar_arrow_size.w = PBL_IF_RECT_ELSE(10, 7),
+    .sidebar_arrow_size.h = PBL_IF_RECT_ELSE(20, 28),
+    .sidebar_width = PBL_IF_RECT_ELSE(30, 48),
+    .past_fin_offset_y = PBL_IF_ROUND_ELSE(-12, 0),
+    .future_fin_offset_y = PBL_IF_ROUND_ELSE(-20, 0),
+    .past_top_margin = PBL_IF_RECT_ELSE(10, 18),
+    .future_top_margin = PBL_IF_RECT_ELSE(10, 39),
+    .left_margin = MARGIN_MEDIUM,
+    .right_margin = MARGIN_MEDIUM,
+    .icon_right_margin = MARGIN_MEDIUM,
+    .fat_pin_height = 110,
+    // PBL-42540: This property is dependent on the screen size. The thin pin height is the
+    // remainder of the screen space after the fat pin.
+    .thin_pin_height = PBL_IF_RECT_ELSE(66, 43),
+    .day_sep_dot_diameter = 9,
+    .day_sep_offset.x = PBL_IF_ROUND_ELSE(12, 0),
+    .day_sep_offset.y = -12,
+    .day_sep_subtitle_margin = PEEK_LAYER_SUBTITLE_MARGIN,
+    .past_day_sep_dot_offset_y = PBL_IF_ROUND_ELSE(-17, 0),
+    .future_day_sep_dot_offset_y = PBL_IF_ROUND_ELSE(-13, 0),
 };
 
 static const TimelineLayerStyle s_style_large = {
-  .sidebar_arrow_size.w = PBL_IF_RECT_ELSE(14, 10),
-  .sidebar_arrow_size.h = PBL_IF_RECT_ELSE(28, 40),
-  .sidebar_width = PBL_IF_RECT_ELSE(34, 51),
-  .fin_offset_x = 4,
-  .future_fin_offset_y = 37,
-  .past_top_margin = PBL_IF_RECT_ELSE(7, 18),
-  .past_thin_pin_margin = 11,
-  .future_top_margin = PBL_IF_RECT_ELSE(7, 39),
-  .left_margin = 9,
-  .right_margin = 14,
-  .icon_offset_y = 3,
-  .icon_right_margin = PBL_IF_RECT_ELSE(6, 12),
-  .fat_pin_height = 131,
-  // PBL-42540: This property is dependent on the screen size.
-  .thin_pin_height = 88,
-  .day_sep_dot_diameter = 12,
-  .day_sep_offset.y = -21,
-  .past_day_sep_dot_offset_y = PBL_IF_RECT_ELSE(-16, -32),
-  .future_day_sep_dot_offset_y = 16,
+    .sidebar_arrow_size.w = PBL_IF_RECT_ELSE(14, 10),
+    .sidebar_arrow_size.h = PBL_IF_RECT_ELSE(28, 40),
+    .sidebar_width = PBL_IF_RECT_ELSE(34, 51),
+    .fin_offset_x = 4,
+    .future_fin_offset_y = 37,
+    .past_top_margin = PBL_IF_RECT_ELSE(7, 18),
+    .past_thin_pin_margin = 11,
+    .future_top_margin = PBL_IF_RECT_ELSE(7, 39),
+    .left_margin = 9,
+    .right_margin = 14,
+    .icon_offset_y = 3,
+    .icon_right_margin = PBL_IF_RECT_ELSE(6, 12),
+    .fat_pin_height = 131,
+    // PBL-42540: This property is dependent on the screen size.
+    .thin_pin_height = 88,
+    .day_sep_dot_diameter = 12,
+    .day_sep_offset.y = -21,
+    .past_day_sep_dot_offset_y = PBL_IF_RECT_ELSE(-16, -32),
+    .future_day_sep_dot_offset_y = 16,
 };
 
-static const TimelineLayerStyle * const s_styles[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_style_medium,
-  [PreferredContentSizeMedium] = &s_style_medium,
-  [PreferredContentSizeLarge] = &s_style_large,
-  [PreferredContentSizeExtraLarge] = &s_style_large,
+static const TimelineLayerStyle *const s_styles[NumPreferredContentSizes] = {
+    [PreferredContentSizeSmall] = &s_style_medium,
+    [PreferredContentSizeMedium] = &s_style_medium,
+    [PreferredContentSizeLarge] = &s_style_large,
+    [PreferredContentSizeExtraLarge] = &s_style_large,
 };
 
 static int16_t s_height_offsets[TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER];
@@ -201,17 +201,16 @@ static void prv_get_icon_frame_centered(TimelineLayer *layer, int index, GRect *
 #endif
 
 void timeline_layer_get_icon_frame(TimelineLayer *layer, int index, GRect *icon_frame) {
-  return PBL_IF_RECT_ELSE(prv_get_icon_frame_exact,
-                          prv_get_icon_frame_centered)(layer, index, icon_frame);
+  return PBL_IF_RECT_ELSE(prv_get_icon_frame_exact, prv_get_icon_frame_centered)(layer, index,
+                                                                                 icon_frame);
 }
 
 static void prv_get_end_of_timeline_frame(TimelineLayer *layer, int index, GRect *frame) {
   prv_get_frame(layer, index, frame);
   const bool is_future = (layer->scroll_direction == TimelineScrollDirectionDown);
   const TimelineLayerStyle *style = prv_get_style();
-  gpoint_add_eq(&frame->origin,
-                GPoint(style->fin_offset_x,
-                       is_future ? style->future_fin_offset_y : style->past_fin_offset_y));
+  gpoint_add_eq(&frame->origin, GPoint(style->fin_offset_x, is_future ? style->future_fin_offset_y
+                                                                      : style->past_fin_offset_y));
   frame->size.w -= PBL_IF_RECT_ELSE(style->sidebar_width, 0);
 }
 
@@ -219,21 +218,21 @@ static void prv_get_day_sep_frame(TimelineLayer *layer, int index, GRect *frame)
   prv_get_frame(layer, index, frame);
   const bool is_future = (layer->scroll_direction == TimelineScrollDirectionDown);
   const TimelineLayerStyle *style = prv_get_style();
-  frame->origin.y += is_future ? style->future_day_sep_dot_offset_y :
-                                 style->past_day_sep_dot_offset_y;
+  frame->origin.y +=
+      is_future ? style->future_day_sep_dot_offset_y : style->past_day_sep_dot_offset_y;
   // Remove the built-in margins and subtract the sidebar
   frame->origin.x -= style->left_margin;
-  frame->size.w += ((style->left_margin + style->right_margin) -
-                    PBL_IF_RECT_ELSE(style->sidebar_width, 0));
+  frame->size.w +=
+      ((style->left_margin + style->right_margin) - PBL_IF_RECT_ELSE(style->sidebar_width, 0));
 }
 
 static void prv_get_day_sep_show_frame(TimelineLayer *layer, GRect *frame) {
   const GRect *bounds = &((Layer *)layer)->bounds;
   const TimelineLayerStyle *style = prv_get_style();
-  *frame = (GRect) {
-    .origin = gpoint_add(bounds->origin, style->day_sep_offset),
-    .size.w = bounds->size.w - style->sidebar_width,
-    .size.h = bounds->size.h,
+  *frame = (GRect){
+      .origin = gpoint_add(bounds->origin, style->day_sep_offset),
+      .size.w = bounds->size.w - style->sidebar_width,
+      .size.h = bounds->size.h,
   };
 }
 
@@ -247,11 +246,11 @@ static void prv_create_layout(TimelineLayer *layer, TimelineIterState *state, in
   GRect rect;
   prv_get_frame(layer, index, &rect);
   const LayoutLayerConfig config = {
-    .frame = &rect,
-    .attributes = &item->attr_list,
-    .mode = prv_get_mode(index),
-    .app_id = &item->header.parent_id,
-    .context = info,
+      .frame = &rect,
+      .attributes = &item->attr_list,
+      .mode = prv_get_mode(index),
+      .app_id = &item->header.parent_id,
+      .context = info,
   };
   TimelineLayout *layout = (TimelineLayout *)layout_create(item->header.layout, &config);
   layer_add_child(&layer->layouts_layer, (Layer *)layout);
@@ -337,9 +336,10 @@ static void prv_update_pins_mode(TimelineLayer *layer) {
 ///////////////////////////////////////////////////////////
 
 // An animation that moves a layer from an initial position to its final position
-static Animation *prv_create_layout_up_down_animation(
-    TimelineLayout *timeline_layout, int to_index, TimelineLayer *timeline_layer,
-    uint32_t duration, InterpolateInt64Function interpolate) {
+static Animation *prv_create_layout_up_down_animation(TimelineLayout *timeline_layout, int to_index,
+                                                      TimelineLayer *timeline_layer,
+                                                      uint32_t duration,
+                                                      InterpolateInt64Function interpolate) {
   const int from_index = to_index + prv_get_index_delta(timeline_layer);
   GRect from, to, icon_from, icon_to;
   prv_get_frame(timeline_layer, from_index, &from);
@@ -351,8 +351,9 @@ static Animation *prv_create_layout_up_down_animation(
                                                   duration, interpolate);
 }
 
-static Animation *prv_create_end_of_timeline_animation(
-    TimelineLayer *layer, int to_index, uint32_t duration, InterpolateInt64Function interpolate) {
+static Animation *prv_create_end_of_timeline_animation(TimelineLayer *layer, int to_index,
+                                                       uint32_t duration,
+                                                       InterpolateInt64Function interpolate) {
   const int from_index = to_index + prv_get_index_delta(layer);
   GRect from_frame, to_frame;
   prv_get_end_of_timeline_frame(layer, from_index, &from_frame);
@@ -362,9 +363,11 @@ static Animation *prv_create_end_of_timeline_animation(
   Animation *animation = property_animation_get_animation(prop_animation);
   animation_set_duration(animation, duration);
   animation_set_custom_interpolation(animation, interpolate);
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = timeline_animation_layer_stopped_cut_to_end,
-  }, prop_animation);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .stopped = timeline_animation_layer_stopped_cut_to_end,
+                         },
+                         prop_animation);
   return animation;
 }
 
@@ -376,13 +379,13 @@ Animation *timeline_layer_create_day_sep_hide(TimelineLayer *timeline_layer) {
       frame.size.h + 2 * (style->left_margin + style->right_margin);
   // move way off screen: 2x height * (1/2 - move_delta) in integer logic
   const int16_t TARGET_Y = (2 * expanded_layer_height * (1 - 2 * timeline_layer->move_delta)) / 2;
-  const GRect scale_to = GRect(frame.origin.x + frame.size.w / 2, // go to the center
+  const GRect scale_to = GRect(frame.origin.x + frame.size.w / 2,  // go to the center
                                TARGET_Y, 0, 0);
   peek_layer_set_scale_to(&timeline_layer->day_separator, scale_to);
 
   // out anim
   GRect to = timeline_layer->day_separator.layer.frame;
-  to.origin = GPoint(0, frame.size.h * timeline_layer->move_delta); // all the way off screen
+  to.origin = GPoint(0, frame.size.h * timeline_layer->move_delta);  // all the way off screen
   PropertyAnimation *prop_anim =
       property_animation_create_layer_frame((Layer *)&timeline_layer->day_separator, NULL, &to);
   Animation *anim = property_animation_get_animation(prop_anim);
@@ -411,11 +414,11 @@ static void prv_show_day_sep(TimelineLayer *timeline_layer, bool slide) {
 
   GRect frame;
   layer_get_global_frame((Layer *)&timeline_layer->day_separator, &frame);
-  const GRect icon_from = { grect_center_point(&frame), GSizeZero };
+  const GRect icon_from = {grect_center_point(&frame), GSizeZero};
   prv_get_day_sep_show_frame(timeline_layer, &frame);
   peek_layer_set_frame(&timeline_layer->day_separator, &frame);
   TimelineResourceInfo timeline_res = {
-    .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
+      .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
   };
   peek_layer_set_icon_with_size(&timeline_layer->day_separator, &timeline_res,
                                 TimelineResourceSizeLarge, icon_from);
@@ -461,9 +464,11 @@ Animation *timeline_layer_create_day_sep_show(TimelineLayer *timeline_layer) {
   PropertyAnimation *prop_anim =
       property_animation_create_layer_frame((Layer *)&timeline_layer->day_separator, from, &to);
   Animation *anim = property_animation_get_animation(prop_anim);
-  animation_set_handlers(anim, (AnimationHandlers) {
-    .stopped = prv_day_sep_anim_stopped,
-  }, timeline_layer);
+  animation_set_handlers(anim,
+                         (AnimationHandlers){
+                             .stopped = prv_day_sep_anim_stopped,
+                         },
+                         timeline_layer);
   animation_set_duration(anim, TIMELINE_UP_DOWN_ANIMATION_DURATION_MS);
   animation_set_custom_interpolation(anim, timeline_animation_interpolate_moook_soft);
   return anim;
@@ -479,9 +484,8 @@ static Animation *prv_create_up_down_animation(TimelineLayer *layer, uint32_t du
     if (layer->layouts[i]) {
       animations[num_animations++] =
           prv_create_layout_up_down_animation(layer->layouts[i], i, layer, duration, interpolate);
-      animations[num_animations++] =
-          (Animation *)kino_layer_create_play_section_animation(
-              &layer->layouts[i]->icon_layer, 0, TIMELINE_UP_DOWN_ANIMATION_DURATION_MS);
+      animations[num_animations++] = (Animation *)kino_layer_create_play_section_animation(
+          &layer->layouts[i]->icon_layer, 0, TIMELINE_UP_DOWN_ANIMATION_DURATION_MS);
     } else if (i == 2 || i == 3) {
       animations[num_animations++] =
           prv_create_end_of_timeline_animation(layer, i, duration, interpolate);
@@ -492,7 +496,7 @@ static Animation *prv_create_up_down_animation(TimelineLayer *layer, uint32_t du
 // TODO: PBL-21982: Only support rectangular screen for now
 #if PBL_RECT
   Animation *relbar_animation =
-    timeline_relbar_layer_create_animation(layer, duration, interpolate);
+      timeline_relbar_layer_create_animation(layer, duration, interpolate);
   if (relbar_animation) {
     animations[num_animations++] = relbar_animation;
   }
@@ -527,8 +531,8 @@ static void prv_place_day_separator(TimelineLayer *layer) {
 
 static void prv_place_end_of_timeline(TimelineLayer *timeline_layer) {
   const bool was_hidden = layer_get_hidden((Layer *)&timeline_layer->end_of_timeline);
-  const bool is_hidden = (timeline_layer_should_animate_day_separator(timeline_layer) ||
-                          timeline_layer->layouts[2]);
+  const bool is_hidden =
+      (timeline_layer_should_animate_day_separator(timeline_layer) || timeline_layer->layouts[2]);
   layer_set_hidden((Layer *)&timeline_layer->end_of_timeline, is_hidden);
   GRect frame;
   prv_get_end_of_timeline_frame(timeline_layer, is_hidden ? 3 : 2, &frame);
@@ -562,17 +566,19 @@ Animation *timeline_layer_create_up_down_animation(TimelineLayer *layer, uint32_
                                                    InterpolateInt64Function interpolate) {
   Animation *animation = prv_create_up_down_animation(layer, duration, interpolate);
 
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = prv_up_down_stopped,
-  }, layer);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .stopped = prv_up_down_stopped,
+                         },
+                         layer);
 
   static const AnimationImplementation s_mode_change_impl = {
-    .update = prv_mode_change_update,
+      .update = prv_mode_change_update,
   };
 
   Animation *mode_change = animation_create();
   animation_set_implementation(mode_change, &s_mode_change_impl);
-  animation_set_handlers(mode_change, (AnimationHandlers){ 0 }, layer);
+  animation_set_handlers(mode_change, (AnimationHandlers){0}, layer);
 
   return animation_spawn_create(animation, mode_change, NULL);
 }
@@ -598,31 +604,31 @@ static void prv_draw_round_flip(GContext *ctx, const GRect *layer_bounds, const 
     const TimelineLayerStyle *style = prv_get_style();
     circle_radius += style->sidebar_width / 2;
     graphics_fill_radial_internal(ctx, circle_center, circle_radius,
-                                  layer_bounds->size.w - circle_center.x,
-                                  0, TRIG_MAX_ANGLE);
+                                  layer_bounds->size.w - circle_center.x, 0, TRIG_MAX_ANGLE);
   }
 }
 #endif
 
-static void prv_update_proc(struct Layer *layer, GContext* ctx) {
+static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   TimelineLayer *timeline_layer = (TimelineLayer *)layer;
   const GRect *bounds = &layer->bounds;
 
   graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_fill_rect(ctx, &(GRect) { .size = bounds->size });
+  graphics_fill_rect(ctx, &(GRect){.size = bounds->size});
 
   AnimationProgress progress;
   if (timeline_layer->animating_intro_or_exit &&
       animation_get_progress(timeline_layer->animation, &progress)) {
-    const GPoint offset = { PEEK_ANIMATIONS_SPEED_LINES_OFFSET_X,
-                            interpolate_int64_linear(progress, 0, -DISP_ROWS) };
+    const GPoint offset = {
+        PEEK_ANIMATIONS_SPEED_LINES_OFFSET_X, interpolate_int64_linear(progress, 0, -DISP_ROWS)
+    };
     graphics_context_set_fill_color(ctx, GColorBlack);
     peek_animations_draw_timeline_speed_lines(ctx, offset);
   }
 
   const int16_t sidebar_width = timeline_layer->sidebar_width;
-  const GRect sidebar_rect = GRect(bounds->size.w - sidebar_width, 0, sidebar_width,
-                                   bounds->size.h);
+  const GRect sidebar_rect =
+      GRect(bounds->size.w - sidebar_width, 0, sidebar_width, bounds->size.h);
   graphics_context_set_fill_color(ctx, timeline_layer->sidebar_color);
 
   // On round displays, draw the round flip effect if we're animating the intro or exit and then
@@ -645,17 +651,20 @@ static void prv_update_proc(struct Layer *layer, GContext* ctx) {
   const int16_t arrow_base_center_y = PBL_IF_RECT_ELSE(16, bounds->size.h / 2);
   const int16_t arrow_point_x_offset = PBL_IF_RECT_ELSE(-arrow_size.w, arrow_size.w);
   GPath arrow_path = {
-    .num_points = 3,
-    .points = (GPoint[]) { { arrow_base_x, arrow_base_center_y  - (arrow_size.h / 2) },
-                           { arrow_base_x + arrow_point_x_offset, arrow_base_center_y },
-                           { arrow_base_x, arrow_base_center_y  + (arrow_size.h / 2) } }
+      .num_points = 3,
+      .points = (GPoint[]){
+          {arrow_base_x, arrow_base_center_y - (arrow_size.h / 2)},
+          {arrow_base_x + arrow_point_x_offset, arrow_base_center_y},
+          {arrow_base_x, arrow_base_center_y + (arrow_size.h / 2)}
+      }
   };
 
   if (timeline_layer->scroll_direction == TimelineScrollDirectionUp) {
     // arrow is in a different position for past & future, but only on rectangular displays
-    gpath_move_to(&arrow_path,
-                  PBL_IF_RECT_ELSE(GPoint(0, (style->thin_pin_height +
-                                              style->past_thin_pin_margin)), GPointZero));
+    gpath_move_to(
+        &arrow_path,
+        PBL_IF_RECT_ELSE(GPoint(0, (style->thin_pin_height + style->past_thin_pin_margin)),
+                         GPointZero));
   }
 
   graphics_context_set_antialiased(ctx, true);
@@ -753,7 +762,7 @@ void timeline_layer_reset(TimelineLayer *layer) {
   layer_set_hidden((Layer *)&layer->day_separator, true);
 
   TimelineResourceInfo timeline_res = {
-    .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
+      .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
   };
   peek_layer_set_icon(&layer->day_separator, &timeline_res);
 
@@ -800,9 +809,9 @@ static int16_t prv_sidebar_getter(void *context) {
 Animation *timeline_layer_create_sidebar_animation(TimelineLayer *timeline_layer,
                                                    int16_t to_sidebar_width) {
   static const PropertyAnimationImplementation s_implementation = {
-    .base.update = (AnimationUpdateImplementation) property_animation_update_int16,
-    .accessors.setter.int16 = prv_sidebar_setter,
-    .accessors.getter.int16 = prv_sidebar_getter,
+      .base.update = (AnimationUpdateImplementation)property_animation_update_int16,
+      .accessors.setter.int16 = prv_sidebar_setter,
+      .accessors.getter.int16 = prv_sidebar_getter,
   };
   Animation *animation = (Animation *)property_animation_create(
       &s_implementation, timeline_layer, &timeline_layer->sidebar_width, &to_sidebar_width);
@@ -811,11 +820,12 @@ Animation *timeline_layer_create_sidebar_animation(TimelineLayer *timeline_layer
   return animation;
 }
 
-static void prv_speed_lines_update(Animation *animation, AnimationProgress progress) {}
+static void prv_speed_lines_update(Animation *animation, AnimationProgress progress) {
+}
 
 Animation *timeline_layer_create_speed_lines_animation(TimelineLayer *timeline_layer) {
   static const AnimationImplementation s_speed_lines_impl = {
-    .update =  prv_speed_lines_update,
+      .update = prv_speed_lines_update,
   };
   Animation *animation = animation_create();
   animation_set_implementation(animation, &s_speed_lines_impl);
@@ -835,9 +845,11 @@ static Animation *prv_create_bounce_back_animation(Layer *layer, const GRect *to
   Animation *animation = (Animation *)property_animation_create_layer_frame(layer, &from, &to);
   animation_set_curve(animation, AnimationCurveEaseOut);
   animation_set_duration(animation, TIMELINE_LAYER_SLIDE_MS);
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = timeline_animation_layer_stopped_cut_to_end,
-  }, animation);
+  animation_set_handlers(animation,
+                         (AnimationHandlers){
+                             .stopped = timeline_animation_layer_stopped_cut_to_end,
+                         },
+                         animation);
   return animation;
 }
 
@@ -850,18 +862,18 @@ Animation *timeline_layer_create_bounce_back_animation(TimelineLayer *layer, GPo
     if (layout) {
       GRect frame;
       prv_get_frame(layer, i + 1, &frame);
-      animations[num_animations++] = prv_create_bounce_back_animation((Layer *)layout, &frame,
-                                                                      direction);
+      animations[num_animations++] =
+          prv_create_bounce_back_animation((Layer *)layout, &frame, direction);
     }
   }
 
   const GRect *day_sep_from = &((Layer *)&layer->day_separator)->frame;
-  animations[num_animations++] = prv_create_bounce_back_animation((Layer *)&layer->day_separator,
-                                                                  day_sep_from, direction);
+  animations[num_animations++] =
+      prv_create_bounce_back_animation((Layer *)&layer->day_separator, day_sep_from, direction);
 
   const GRect *fin_from = &layer->end_of_timeline.layer.frame;
-  animations[num_animations++] = prv_create_bounce_back_animation(
-      &layer->end_of_timeline.layer, fin_from, direction);
+  animations[num_animations++] =
+      prv_create_bounce_back_animation(&layer->end_of_timeline.layer, fin_from, direction);
 
   Animation *animation = animation_spawn_create_from_array(animations, num_animations);
   return animation;
@@ -880,7 +892,7 @@ void timeline_layer_set_layouts_hidden(TimelineLayer *layer, bool hidden) {
 
 void timeline_layer_init(TimelineLayer *layer, const GRect *frame_ref,
                          TimelineScrollDirection scroll_direction) {
-  *layer = (TimelineLayer) {};
+  *layer = (TimelineLayer){};
   // timeline layer
   layer_init(&layer->layer, frame_ref);
   layer_set_clips(&layer->layer, false);
@@ -894,21 +906,21 @@ void timeline_layer_init(TimelineLayer *layer, const GRect *frame_ref,
   layer->scroll_direction = scroll_direction;
   layer->move_delta = prv_get_scroll_delta(layer);
   if (scroll_direction == TimelineScrollDirectionUp) {
-    s_height_offsets[0] = (PAST_TOP_MARGIN_EXTRA + style->thin_pin_height +
-                           (2 * style->fat_pin_height));
-    s_height_offsets[1] = (style->past_top_margin + style->thin_pin_height +
-                           style->past_thin_pin_margin);
+    s_height_offsets[0] =
+        (PAST_TOP_MARGIN_EXTRA + style->thin_pin_height + (2 * style->fat_pin_height));
+    s_height_offsets[1] =
+        (style->past_top_margin + style->thin_pin_height + style->past_thin_pin_margin);
     s_height_offsets[2] = style->past_top_margin;
     s_height_offsets[3] = style->past_top_margin - 2 * style->fat_pin_height;
   } else {
     s_height_offsets[0] = FUTURE_TOP_MARGIN_EXTRA - 2 * style->fat_pin_height;
     s_height_offsets[1] = style->future_top_margin;
     s_height_offsets[2] = style->future_top_margin + style->fat_pin_height;
-    s_height_offsets[3] = (style->future_top_margin + style->fat_pin_height +
-                           (2 * style->fat_pin_height));
+    s_height_offsets[3] =
+        (style->future_top_margin + style->fat_pin_height + (2 * style->fat_pin_height));
   }
   // layouts layer - contains all the pin
-  layer_init(&layer->layouts_layer, &(GRect) { .size = frame_ref->size });
+  layer_init(&layer->layouts_layer, &(GRect){.size = frame_ref->size});
   layer_set_clips(&layer->layouts_layer, false);
   layer_add_child((Layer *)layer, (Layer *)&layer->layouts_layer);
 
@@ -925,7 +937,7 @@ void timeline_layer_init(TimelineLayer *layer, const GRect *frame_ref,
                                style->day_sep_subtitle_margin);
 
   TimelineResourceInfo timeline_res = {
-    .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
+      .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
   };
   peek_layer_set_icon(&layer->day_separator, &timeline_res);
   peek_layer_set_background_color(&layer->day_separator, GColorClear);

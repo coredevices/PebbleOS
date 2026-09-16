@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* double_tap_test_get_info();
+const PebbleProcessMd *double_tap_test_get_info();

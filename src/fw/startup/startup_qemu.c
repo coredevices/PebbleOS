@@ -28,18 +28,18 @@ NORETURN prv_startup(void) {
 
   main();
 
-  while (1) {}
+  while (1) {
+  }
 }
 
 NAKED_FUNC NORETURN Reset_Handler(void) {
   __asm volatile(
-    // Set MSPLIM to protect the ISR stack (Cortex-M33)
-    "ldr r0, =__isr_stack_start__ \n"
-    "msr msplim, r0               \n"
-    // Clear PSPLIM - set per-task by FreeRTOS
-    "mov r0, #0                   \n"
-    "msr psplim, r0               \n"
-    // Jump to C startup
-    "b prv_startup                \n"
-  );
+      // Set MSPLIM to protect the ISR stack (Cortex-M33)
+      "ldr r0, =__isr_stack_start__ \n"
+      "msr msplim, r0               \n"
+      // Clear PSPLIM - set per-task by FreeRTOS
+      "mov r0, #0                   \n"
+      "msr psplim, r0               \n"
+      // Jump to C startup
+      "b prv_startup                \n");
 }

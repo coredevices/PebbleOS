@@ -6,7 +6,7 @@
 #include <bf0_hal_efuse.h>
 
 #define EFUSE_UID_OFFSET 0
-#define EFUSE_UID_SIZE   16
+#define EFUSE_UID_SIZE 16
 
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
   if (*buf_sz < EFUSE_UID_SIZE) {

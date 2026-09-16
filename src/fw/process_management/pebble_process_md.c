@@ -10,36 +10,36 @@
 // Md Field Accessors
 //////////////////////
 
-const char* process_metadata_get_name(const PebbleProcessMd *md) {
+const char *process_metadata_get_name(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->name;
+    return ((const PebbleProcessMdFlash *)md)->name;
   } else if (md->process_storage == ProcessStorageResource) {
-    return ((const PebbleProcessMdResource*) md)->name;
+    return ((const PebbleProcessMdResource *)md)->name;
   }
-  return ((const PebbleProcessMdSystem*) md)->name;
+  return ((const PebbleProcessMdSystem *)md)->name;
 }
 
 uint32_t process_metadata_get_size_bytes(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->size_bytes;
+    return ((const PebbleProcessMdFlash *)md)->size_bytes;
   } else if (md->process_storage == ProcessStorageResource) {
-    return ((const PebbleProcessMdResource*) md)->size_bytes;
+    return ((const PebbleProcessMdResource *)md)->size_bytes;
   }
   return 0;
 }
 
 Version process_metadata_get_process_version(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->process_version;
+    return ((const PebbleProcessMdFlash *)md)->process_version;
   }
-  return (Version) { 0, 0 };
+  return (Version){0, 0};
 }
 
 Version process_metadata_get_sdk_version(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->sdk_version;
+    return ((const PebbleProcessMdFlash *)md)->sdk_version;
   }
-  return (Version) { PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR };
+  return (Version){PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR};
 }
 
 ProcessAppRunLevel process_metadata_get_run_level(const PebbleProcessMd *md) {
@@ -48,33 +48,33 @@ ProcessAppRunLevel process_metadata_get_run_level(const PebbleProcessMd *md) {
   } else if (md->process_storage == ProcessStorageResource) {
     return ProcessAppRunLevelNormal;
   }
-  return ((const PebbleProcessMdSystem*) md)->run_level;
+  return ((const PebbleProcessMdSystem *)md)->run_level;
 }
 
 int process_metadata_get_code_bank_num(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->code_bank_num;
+    return ((const PebbleProcessMdFlash *)md)->code_bank_num;
   }
   return 0;
 }
 
 int process_metadata_get_res_bank_num(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->res_bank_num;
+    return ((const PebbleProcessMdFlash *)md)->res_bank_num;
   }
   return 0;
 }
 
 ResourceVersion process_metadata_get_res_version(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->res_version;
+    return ((const PebbleProcessMdFlash *)md)->res_version;
   }
-  return (ResourceVersion) { 0, 0 } ;
+  return (ResourceVersion){0, 0};
 }
 
 const uint8_t *process_metadata_get_build_id(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
-    return ((const PebbleProcessMdFlash*) md)->build_id;
+    return ((const PebbleProcessMdFlash *)md)->build_id;
   }
   return NULL;
 }
@@ -84,8 +84,7 @@ const uint8_t *process_metadata_get_build_id(const PebbleProcessMd *md) {
 //////////////////////
 
 static void prv_init_from_info_common(PebbleProcessMd *common, const PebbleProcessInfo *info,
-      PebbleTask task, ProcessStorage process_storage) {
-
+                                      PebbleTask task, ProcessStorage process_storage) {
   memcpy(&common->uuid, &info->uuid, sizeof(Uuid));
   common->process_storage = process_storage;
 
@@ -109,10 +108,9 @@ static void prv_init_from_info_common(PebbleProcessMd *common, const PebbleProce
   common->main_func = (void *)(uintptr_t)info->offset;
 }
 
-
-void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md, 
-  const PebbleProcessInfo *info, int code_bank_num, PebbleTask task, uint8_t *build_id_buffer) {
-
+void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
+                                             const PebbleProcessInfo *info, int code_bank_num,
+                                             PebbleTask task, uint8_t *build_id_buffer) {
   *md = (PebbleProcessMdFlash){};
   prv_init_from_info_common(&md->common, info, task, ProcessStorageFlash);
 
@@ -128,10 +126,8 @@ void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
   md->code_bank_num = code_bank_num;
   md->res_bank_num = code_bank_num;
 
-  md->res_version = (ResourceVersion) {
-    .crc = info->resource_crc,
-    .timestamp = info->resource_timestamp
-  };
+  md->res_version =
+      (ResourceVersion){.crc = info->resource_crc, .timestamp = info->resource_timestamp};
 
   if (build_id_buffer) {
     memcpy(md->build_id, build_id_buffer, BUILD_ID_EXPECTED_LEN);
@@ -139,8 +135,8 @@ void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
 }
 
 void process_metadata_init_with_resource_header(PebbleProcessMdResource *md,
-    const PebbleProcessInfo *info, int bin_resource_id, PebbleTask task) {
-
+                                                const PebbleProcessInfo *info, int bin_resource_id,
+                                                PebbleTask task) {
   *md = (PebbleProcessMdResource){};
   prv_init_from_info_common(&md->common, info, task, ProcessStorageResource);
 
@@ -201,18 +197,17 @@ uint16_t process_metadata_flags_stored_sdk_platform(PebbleProcessInfoFlags flags
 }
 
 static const Version first_3x_version = {
-  PROCESS_INFO_FIRST_3X_SDK_VERSION_MAJOR,
-  PROCESS_INFO_FIRST_3X_SDK_VERSION_MINOR,
+    PROCESS_INFO_FIRST_3X_SDK_VERSION_MAJOR,
+    PROCESS_INFO_FIRST_3X_SDK_VERSION_MINOR,
 };
 static const Version first_4x_version = {
-  PROCESS_INFO_FIRST_4X_SDK_VERSION_MAJOR,
-  PROCESS_INFO_FIRST_4X_SDK_VERSION_MINOR,
+    PROCESS_INFO_FIRST_4X_SDK_VERSION_MAJOR,
+    PROCESS_INFO_FIRST_4X_SDK_VERSION_MINOR,
 };
 static const Version first_4_2_version = {
-  PROCESS_INFO_FIRST_4_2_X_SDK_VERSION_MAJOR,
-  PROCESS_INFO_FIRST_4_2_X_SDK_VERSION_MINOR,
+    PROCESS_INFO_FIRST_4_2_X_SDK_VERSION_MAJOR,
+    PROCESS_INFO_FIRST_4_2_X_SDK_VERSION_MINOR,
 };
-
 
 PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
   if (!md->is_unprivileged) {
@@ -228,25 +223,27 @@ PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
   }
   // 3.0 <= SDK < 4.0
   if (version_compare(app_sdk_version, first_4x_version) < 0) {
-    return PBL_PLATFORM_SWITCH(PBL_PLATFORM_TYPE_CURRENT,
-         /* aplite */  PlatformTypeAplite, // unreachable, since we don't build for Tintin anymore
-         /* basalt */  PlatformTypeBasalt,
-         /* chalk */   PlatformTypeChalk,
-         /* diorite */ PlatformTypeAplite, // there's was no Diorite SDK prior to 4.0
-         /* emery */   PlatformTypeBasalt,
-         /* flint */   PlatformTypeAplite,
-         /* gabbro */  PlatformTypeChalk);
+    return PBL_PLATFORM_SWITCH(
+        PBL_PLATFORM_TYPE_CURRENT,
+        /* aplite */ PlatformTypeAplite,  // unreachable, since we don't build for Tintin anymore
+        /* basalt */ PlatformTypeBasalt,
+        /* chalk */ PlatformTypeChalk,
+        /* diorite */ PlatformTypeAplite,  // there's was no Diorite SDK prior to 4.0
+        /* emery */ PlatformTypeBasalt,
+        /* flint */ PlatformTypeAplite,
+        /* gabbro */ PlatformTypeChalk);
   }
   // 4.0 <= SDK < 4.2
   if (version_compare(app_sdk_version, first_4_2_version) < 0) {
-    return PBL_PLATFORM_SWITCH(PBL_PLATFORM_TYPE_CURRENT,
-        /* aplite */  PlatformTypeAplite, // unreachable, since we don't build for Tintin anymore
-        /* basalt */  PlatformTypeBasalt,
-        /* chalk */   PlatformTypeChalk,
-        /* diorite */ PlatformTypeDiorite, // there's was no Aplite SDK after 4.0
-        /* emery */   PlatformTypeBasalt,
-        /* flint */   PlatformTypeDiorite,
-        /* gabbro */  PlatformTypeChalk);
+    return PBL_PLATFORM_SWITCH(
+        PBL_PLATFORM_TYPE_CURRENT,
+        /* aplite */ PlatformTypeAplite,  // unreachable, since we don't build for Tintin anymore
+        /* basalt */ PlatformTypeBasalt,
+        /* chalk */ PlatformTypeChalk,
+        /* diorite */ PlatformTypeDiorite,  // there's was no Aplite SDK after 4.0
+        /* emery */ PlatformTypeBasalt,
+        /* flint */ PlatformTypeDiorite,
+        /* gabbro */ PlatformTypeChalk);
   }
 
   // 4.2 <= SDK --> the flags should be filled correctly.

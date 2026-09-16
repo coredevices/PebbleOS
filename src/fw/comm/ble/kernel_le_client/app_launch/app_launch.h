@@ -14,8 +14,8 @@ void app_launch_handle_service_discovered(BLECharacteristic *characteristics);
 
 void app_launch_invalidate_all_references(void);
 
-void app_launch_handle_service_removed(
-    BLECharacteristic *characteristics, uint8_t num_characteristics);
+void app_launch_handle_service_removed(BLECharacteristic *characteristics,
+                                       uint8_t num_characteristics);
 
 bool app_launch_can_handle_characteristic(BLECharacteristic characteristic);
 

@@ -30,9 +30,9 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 #ifdef UNITTEST
 // Let the unittest define this using a header override:
-#  include "pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
 #else
-#  include "pbl/services/bluetooth/bluetooth_persistent_storage_v2_impl.h"
+#include "pbl/services/bluetooth/bluetooth_persistent_storage_v2_impl.h"
 #endif
 
 //! The BtPersistBonding*Data structs can never shrink, only grow
@@ -48,16 +48,16 @@ typedef struct PACKED {
 
 //! Stores data about a remote BLE device
 typedef struct PACKED {
-  bool supports_ancs:1;
-  bool is_gateway:1;
-  bool requires_address_pinning:1;
-  uint8_t flags:5;
+  bool supports_ancs : 1;
+  bool is_gateway : 1;
+  bool requires_address_pinning : 1;
+  uint8_t flags : 5;
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
   BtPersistLEPairingInfo pairing_info;
 } BtPersistBondingBLEData;
 
 typedef struct PACKED {
-  BtPersistBondingType type:8;
+  BtPersistBondingType type : 8;
 
   union PACKED {
     BtPersistBondingBTClassicData bt_classic_data;
@@ -69,7 +69,7 @@ typedef struct PACKED {
   BTDeviceInternal peer;
   uint16_t chr_val_handle;
   uint16_t flags;
-  unsigned value_changed:1;
+  unsigned value_changed : 1;
 } BtPersistCCCDData;
 
 typedef struct PACKED {
@@ -121,9 +121,11 @@ static void prv_unlock(void) {
   pbl_mutex_unlock(&s_db_mutex);
 }
 
-static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(
-    BTBondingID bonding, SMPairingInfo *info_out, char *name_out, bool *requires_address_pinning,
-    uint8_t *flags);
+static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(BTBondingID bonding,
+                                                                  SMPairingInfo *info_out,
+                                                                  char *name_out,
+                                                                  bool *requires_address_pinning,
+                                                                  uint8_t *flags);
 
 static void prv_update_bondings(BTBondingID id, BtPersistBondingType type) {
   if (id == BT_BONDING_ID_INVALID) {
@@ -132,16 +134,15 @@ static void prv_update_bondings(BTBondingID id, BtPersistBondingType type) {
 
   if (type == BtPersistBondingTypeBLE) {
     SMPairingInfo pairing_info;
-    char ble_name[BT_DEVICE_NAME_BUFFER_SIZE] = { };
+    char ble_name[BT_DEVICE_NAME_BUFFER_SIZE] = {};
     bool requires_address_pinning = false;
     uint8_t flags = 0;
-    if (prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(
-            id, &pairing_info, ble_name, &requires_address_pinning,
-            &flags)) {
+    if (prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(id, &pairing_info, ble_name,
+                                                              &requires_address_pinning, &flags)) {
       // only send the ble_name if we have a name to send!
       char *ble_name_ptr = (strlen(ble_name) == 0) ? NULL : &ble_name[0];
-      shared_prf_storage_store_ble_pairing_data(
-          &pairing_info, ble_name_ptr, requires_address_pinning, flags);
+      shared_prf_storage_store_ble_pairing_data(&pairing_info, ble_name_ptr,
+                                                requires_address_pinning, flags);
     }
   }
 }
@@ -155,8 +156,8 @@ static int prv_file_get(const void *key, size_t key_len, void *data_out, size_t 
   prv_lock();
   {
     SettingsFile fd;
-    status_t rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
-                                     BT_PERSISTENT_STORAGE_FILE_SIZE);
+    status_t rv =
+        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
     if (rv != S_SUCCESS) {
       goto cleanup;
     }
@@ -179,9 +180,8 @@ cleanup:
 //! or if the stored data has been corrupted.
 static bool prv_file_get_bool(const void *key, size_t key_len, bool default_value) {
   uint8_t bool_data;
-  int read_size = prv_file_get(key, key_len, (void*)&bool_data, sizeof(bool_data));
-  if (!read_size ||
-      ((bool_data != (uint8_t)true) && (bool_data != (uint8_t)false))) {
+  int read_size = prv_file_get(key, key_len, (void *)&bool_data, sizeof(bool_data));
+  if (!read_size || ((bool_data != (uint8_t)true) && (bool_data != (uint8_t)false))) {
     return default_value;
   }
   // Default to false in the case of data corruption (anything other than 0x1 or 0x0).
@@ -195,8 +195,8 @@ typedef enum {
   GapBondingFileSetNoUpdateNeeded,
 } GapBondingFileSetStatus;
 
-static GapBondingFileSetStatus prv_file_set(
-    const void *key, size_t key_len, const void *data_in, size_t data_len) {
+static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, const void *data_in,
+                                            size_t data_len) {
   status_t rv;
   bool do_perform_update = true;
   prv_lock();
@@ -226,7 +226,7 @@ static GapBondingFileSetStatus prv_file_set(
         PBL_LOG_D_DBG(LOG_DOMAIN_BT_PAIRING_INFO, "Updating GAP Bonding DB Value <key, val>!");
         PBL_HEXDUMP_D(LOG_DOMAIN_BT_PAIRING_INFO, LOG_LEVEL_DEBUG, (uint8_t *)key, key_len);
         PBL_HEXDUMP_D(LOG_DOMAIN_BT_PAIRING_INFO, LOG_LEVEL_DEBUG, (uint8_t *)data_in, data_len);
-        rv = settings_file_set(&fd, key, key_len, (uint8_t*) data_in, data_len);
+        rv = settings_file_set(&fd, key, key_len, (uint8_t *)data_in, data_len);
       }
     } else {
       rv = settings_file_delete(&fd, key, key_len);
@@ -236,7 +236,7 @@ static GapBondingFileSetStatus prv_file_set(
 cleanup:
   prv_unlock();
   if (rv != S_SUCCESS) {
-    PBL_LOG_ERR("Failed to update gap bonding db, rv = %"PRId32, rv);
+    PBL_LOG_ERR("Failed to update gap bonding db, rv = %" PRId32, rv);
     return GapBondingFileSetFail;
   }
 
@@ -262,7 +262,6 @@ cleanup:
   return (rv == S_SUCCESS);
 }
 
-
 //! Get the next available BondingID
 //! This function re-uses bonding ids as they are freed. This could be a problem with 3rd party
 //! apps. https://pebbletechnology.atlassian.net/browse/PBL-8391
@@ -271,22 +270,21 @@ static BTBondingID prv_get_free_key() {
 
   prv_lock();
   {
-  SettingsFile fd;
-  status_t rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
-                                   BT_PERSISTENT_STORAGE_FILE_SIZE);
-  if (rv) {
-    goto cleanup;
-  }
-
-  for (BTBondingID id = 0; id < BT_BONDING_ID_INVALID; id++) {
-    if (!settings_file_exists(&fd, &id, sizeof(id))) {
-      free_key = id;
-      break;
+    SettingsFile fd;
+    status_t rv =
+        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    if (rv) {
+      goto cleanup;
     }
-  }
 
-  settings_file_close(&fd);
+    for (BTBondingID id = 0; id < BT_BONDING_ID_INVALID; id++) {
+      if (!settings_file_exists(&fd, &id, sizeof(id))) {
+        free_key = id;
+        break;
+      }
+    }
 
+    settings_file_close(&fd);
   }
 cleanup:
   prv_unlock();
@@ -299,30 +297,28 @@ static BTCCCDID prv_get_free_cccd() {
 
   prv_lock();
   {
-  SettingsFile fd;
-  status_t rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
-                                   BT_PERSISTENT_STORAGE_FILE_SIZE);
-  if (rv) {
-    goto cleanup;
-  }
-
-  for (BTCCCDID id = 0U; id < BT_CCCD_ID_INVALID; id++) {
-    if (!settings_file_exists(&fd, &id, sizeof(id))) {
-      free_cccd = id;
-      break;
+    SettingsFile fd;
+    status_t rv =
+        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    if (rv) {
+      goto cleanup;
     }
-  }
 
-  settings_file_close(&fd);
+    for (BTCCCDID id = 0U; id < BT_CCCD_ID_INVALID; id++) {
+      if (!settings_file_exists(&fd, &id, sizeof(id))) {
+        free_cccd = id;
+        break;
+      }
+    }
 
+    settings_file_close(&fd);
   }
 cleanup:
   prv_unlock();
   return free_cccd;
 }
 
-static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file,
-                                            SettingsRecordInfo *info,
+static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file, SettingsRecordInfo *info,
                                             void *context) {
   if (info->key_len != sizeof(BTBondingID)) {
     return true;
@@ -332,7 +328,7 @@ static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file,
   }
 
   BTBondingID key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData data = {};
   info->get_val(file, &data, MIN((unsigned)info->val_len, sizeof(data)));
@@ -350,7 +346,6 @@ bool bt_persistent_storage_has_pinned_ble_pairings(void) {
   prv_file_each(prv_any_pinned_ble_pairings_itr, &has_pinned_ble_pairings);
   return has_pinned_ble_pairings;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Shared PRF Storage
@@ -381,7 +376,7 @@ static void prv_load_local_data_from_prf(void) {
       shared_prf_storage_get_root_key(SMRootKeyTypeIdentity, &keys[SMRootKeyTypeIdentity])) {
 #if !defined(CONFIG_RELEASE)
     PBL_LOG_INFO("Loading Root Keys from PRF storage:");
-    PBL_HEXDUMP(LOG_LEVEL_INFO, (const uint8_t *) keys, sizeof(keys));
+    PBL_HEXDUMP(LOG_LEVEL_INFO, (const uint8_t *)keys, sizeof(keys));
 #endif
     bt_persistent_storage_set_root_keys(keys);
     return;
@@ -411,8 +406,7 @@ static void prv_load_ble_pairing_from_prf(void) {
   bool requires_address_pinning;
   uint8_t flags;
   if (!shared_prf_storage_get_ble_pairing_data(&prf_pairing_info, device_name,
-                                               &requires_address_pinning,
-                                               &flags)) {
+                                               &requires_address_pinning, &flags)) {
     // No pairing available, check to see if we have a pairing in the gapDB
     prv_push_ble_persist_to_shared_prf();
     return;
@@ -489,7 +483,6 @@ static void prv_call_common_bonding_change_handlers(BTBondingID bonding, BtPersi
   bt_pairability_update_due_to_bonding_change();
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info
 void gap_le_connection_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op);
@@ -498,8 +491,7 @@ typedef struct {
   BtPersistBondingOp op;
 } BleBondingChangeContext;
 
-static void prv_call_ble_bonding_change_handlers_impl(BTBondingID bonding,
-                                                      BtPersistBondingOp op) {
+static void prv_call_ble_bonding_change_handlers_impl(BTBondingID bonding, BtPersistBondingOp op) {
   prv_update_active_gateway_if_needed(bonding, op);
 
   if (!bt_ctl_is_bluetooth_running()) {
@@ -518,8 +510,7 @@ static void prv_call_ble_bonding_change_handlers_cb(void *data) {
   kernel_free(context);
 }
 
-static void prv_call_ble_bonding_change_handlers(BTBondingID bonding,
-                                                 BtPersistBondingOp op) {
+static void prv_call_ble_bonding_change_handlers(BTBondingID bonding, BtPersistBondingOp op) {
   if (launcher_task_is_current_task()) {
     prv_call_ble_bonding_change_handlers_impl(bonding, op);
     return;
@@ -527,9 +518,9 @@ static void prv_call_ble_bonding_change_handlers(BTBondingID bonding,
 
   BleBondingChangeContext *context = kernel_malloc_check(sizeof(*context));
 
-  *context = (BleBondingChangeContext) {
-    .bonding = bonding,
-    .op = op,
+  *context = (BleBondingChangeContext){
+      .bonding = bonding,
+      .op = op,
   };
   launcher_task_add_callback(prv_call_ble_bonding_change_handlers_cb, context);
 }
@@ -541,32 +532,31 @@ typedef struct {
 
 static bool prv_is_pairing_info_equal_identity(const BtPersistLEPairingInfo *a,
                                                const SMPairingInfo *b) {
-  return (a->is_remote_identity_info_valid &&
-          b->is_remote_identity_info_valid &&
+  return (a->is_remote_identity_info_valid && b->is_remote_identity_info_valid &&
           bt_device_equal(&a->identity.opaque, &b->identity.opaque) &&
           memcmp(&a->irk, &b->irk, sizeof(SMIdentityResolvingKey)) == 0);
 }
 
-static bool prv_get_key_for_sm_pairing_info_itr(SettingsFile *file,
-                                                SettingsRecordInfo *info, void *context) {
+static bool prv_get_key_for_sm_pairing_info_itr(SettingsFile *file, SettingsRecordInfo *info,
+                                                void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
-  KeyForSMPairingItrData *itr_data = (KeyForSMPairingItrData*) context;
+  KeyForSMPairingItrData *itr_data = (KeyForSMPairingItrData *)context;
 
   BTBondingID key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE &&
       prv_is_pairing_info_equal_identity(&stored_data.ble_data.pairing_info,
                                          &itr_data->pairing_info)) {
     itr_data->key_out = key;
-    return false; // stop iterating
+    return false;  // stop iterating
   }
 
   return true;
@@ -574,8 +564,8 @@ static bool prv_get_key_for_sm_pairing_info_itr(SettingsFile *file,
 
 static BTBondingID prv_get_key_for_sm_pairing_info(const SMPairingInfo *pairing_info) {
   KeyForSMPairingItrData itr_data = {
-    .pairing_info = *pairing_info,
-    .key_out = BT_BONDING_ID_INVALID,
+      .pairing_info = *pairing_info,
+      .key_out = BT_BONDING_ID_INVALID,
   };
   prv_file_each(prv_get_key_for_sm_pairing_info_itr, &itr_data);
 
@@ -629,8 +619,8 @@ static bool prv_collect_other_ble_bondings_itr(SettingsFile *file, SettingsRecor
 //! entry is the one that should remain reflected in PRF storage.
 static void prv_delete_other_ble_bondings(BTBondingID keep_id) {
   CollectOtherBleItrData itr_data = {
-    .keep_id = keep_id,
-    .count = 0,
+      .keep_id = keep_id,
+      .count = 0,
   };
   prv_file_each(prv_collect_other_ble_bondings_itr, &itr_data);
 
@@ -677,9 +667,9 @@ static bool prv_find_most_recent_ble_bonding_itr(SettingsFile *file, SettingsRec
 //! recently modified entry and drop the rest.
 static void prv_prune_stale_ble_bondings(void) {
   MostRecentBleItrData itr_data = {
-    .key_out = BT_BONDING_ID_INVALID,
-    .last_modified_out = 0,
-    .ble_count = 0,
+      .key_out = BT_BONDING_ID_INVALID,
+      .last_modified_out = 0,
+      .ble_count = 0,
   };
   prv_file_each(prv_find_most_recent_ble_bonding_itr, &itr_data);
 
@@ -687,14 +677,14 @@ static void prv_prune_stale_ble_bondings(void) {
     return;
   }
 
-  PBL_LOG_INFO("Found %u BLE bondings at boot, keeping most recent (id %d)",
-               itr_data.ble_count, itr_data.key_out);
+  PBL_LOG_INFO("Found %u BLE bondings at boot, keeping most recent (id %d)", itr_data.ble_count,
+               itr_data.key_out);
   prv_delete_other_ble_bondings(itr_data.key_out);
 }
 
 //! For unit testing
-int bt_persistent_storage_get_raw_data(const void *key, size_t key_len,
-                                       void *data_out, size_t buf_len) {
+int bt_persistent_storage_get_raw_data(const void *key, size_t key_len, void *data_out,
+                                       size_t buf_len) {
   return prv_file_get(key, key_len, data_out, buf_len);
 }
 
@@ -712,8 +702,7 @@ bool bt_persistent_storage_set_ble_pinned_address(const BTDeviceAddress *addr) {
 
 BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *new_pairing_info,
                                                     bool is_gateway, const char *device_name,
-                                                    bool requires_address_pinning,
-                                                    uint8_t flags) {
+                                                    bool requires_address_pinning, uint8_t flags) {
   if (!new_pairing_info || sm_is_pairing_info_empty(new_pairing_info)) {
     return BT_BONDING_ID_INVALID;
   }
@@ -735,17 +724,17 @@ BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *new_pai
   }
 
   BtPersistBondingData new_data;
-  new_data = (BtPersistBondingData) {
-    .type = BtPersistBondingTypeBLE,
-    .ble_data.is_gateway = is_gateway,
-    .ble_data.flags = flags,
-    // This is defaulting to "is_gateway" for now because it is currently being used as the flag
-    // for the pairing that we want to reconnect/connect to. If this isn't set then
-    // we don't register an intent for the device and thus don't connect.
-    // Currently only 1 ble pairing is really supported so this works for now
-    // FIXME: https://pebbletechnology.atlassian.net/browse/PBL-15277
-    .ble_data.supports_ancs = is_gateway,
-    .ble_data.requires_address_pinning = requires_address_pinning,
+  new_data = (BtPersistBondingData){
+      .type = BtPersistBondingTypeBLE,
+      .ble_data.is_gateway = is_gateway,
+      .ble_data.flags = flags,
+      // This is defaulting to "is_gateway" for now because it is currently being used as the flag
+      // for the pairing that we want to reconnect/connect to. If this isn't set then
+      // we don't register an intent for the device and thus don't connect.
+      // Currently only 1 ble pairing is really supported so this works for now
+      // FIXME: https://pebbletechnology.atlassian.net/browse/PBL-15277
+      .ble_data.supports_ancs = is_gateway,
+      .ble_data.requires_address_pinning = requires_address_pinning,
   };
   bt_persistent_storage_assign_persist_pairing_info(&new_data.ble_data.pairing_info,
                                                     new_pairing_info);
@@ -829,42 +818,40 @@ status_t prv_delete_all_cccd_for_addr(const BTDeviceInternal *dev) {
 
   prv_lock();
   {
-  SettingsFile fd;
-  rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
-                          BT_PERSISTENT_STORAGE_FILE_SIZE);
-  if (rv) {
-    goto cleanup;
-  }
+    SettingsFile fd;
+    rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    if (rv) {
+      goto cleanup;
+    }
 
-  for (BTCCCDID id = 0U; id < BT_CCCD_ID_INVALID; id++) {
-    if (settings_file_exists(&fd, &id, sizeof(id))) {
-      BtPersistCCCDData stored_data;
+    for (BTCCCDID id = 0U; id < BT_CCCD_ID_INVALID; id++) {
+      if (settings_file_exists(&fd, &id, sizeof(id))) {
+        BtPersistCCCDData stored_data;
 
-      rv = settings_file_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data));
-      if (rv) {
-        goto cleanup;
-      }
-
-      if (bt_device_internal_equal(dev, &stored_data.peer)) {
-        BleCCCD cccd_to_delete = {
-          .peer = *dev,
-          .chr_val_handle = stored_data.chr_val_handle,
-          .flags = stored_data.flags,
-          .value_changed = stored_data.value_changed,
-        };
-
-        bt_driver_handle_host_removed_cccd(&cccd_to_delete);
-
-        rv = settings_file_delete(&fd, &id, sizeof(id));
+        rv = settings_file_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data));
         if (rv) {
           goto cleanup;
         }
+
+        if (bt_device_internal_equal(dev, &stored_data.peer)) {
+          BleCCCD cccd_to_delete = {
+              .peer = *dev,
+              .chr_val_handle = stored_data.chr_val_handle,
+              .flags = stored_data.flags,
+              .value_changed = stored_data.value_changed,
+          };
+
+          bt_driver_handle_host_removed_cccd(&cccd_to_delete);
+
+          rv = settings_file_delete(&fd, &id, sizeof(id));
+          if (rv) {
+            goto cleanup;
+          }
+        }
       }
     }
-  }
 
-  settings_file_close(&fd);
-
+    settings_file_close(&fd);
   }
 cleanup:
   prv_unlock();
@@ -903,20 +890,19 @@ typedef struct {
   bool found;
 } FindByAddrItrData;
 
-static bool prv_find_by_addr_itr(SettingsFile *file,
-                                 SettingsRecordInfo *info, void *context) {
+static bool prv_find_by_addr_itr(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
-  FindByAddrItrData *itr_data = (FindByAddrItrData *) context;
+  FindByAddrItrData *itr_data = (FindByAddrItrData *)context;
 
   BTBondingID key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE &&
       bt_device_equal(&itr_data->device.opaque,
@@ -925,16 +911,16 @@ static bool prv_find_by_addr_itr(SettingsFile *file,
     strncpy(itr_data->name_out, stored_data.ble_data.name, BT_DEVICE_NAME_BUFFER_SIZE);
     itr_data->id_out = key;
     itr_data->found = true;
-    return false; // stop iterating
+    return false;  // stop iterating
   }
 
-  return true; // continue iterating
+  return true;  // continue iterating
 }
 
 void bt_persistent_storage_delete_ble_pairing_by_addr(const BTDeviceInternal *device) {
   FindByAddrItrData itr_data = {
-    .device = *device,
-    .found = false,
+      .device = *device,
+      .found = false,
   };
   prv_file_each(prv_find_by_addr_itr, &itr_data);
 
@@ -945,12 +931,9 @@ void bt_persistent_storage_delete_ble_pairing_by_addr(const BTDeviceInternal *de
   bt_persistent_storage_delete_ble_pairing_by_id(itr_data.id_out);
 }
 
-static void prv_fill_ble_data(SMIdentityResolvingKey *irk_in,
-                              BTDeviceInternal *device_in,
-                              char *name_in,
-                              SMIdentityResolvingKey *irk_out,
-                              BTDeviceInternal *device_out,
-                              char *name_out) {
+static void prv_fill_ble_data(SMIdentityResolvingKey *irk_in, BTDeviceInternal *device_in,
+                              char *name_in, SMIdentityResolvingKey *irk_out,
+                              BTDeviceInternal *device_out, char *name_out) {
   if (irk_out && irk_in) {
     *irk_out = *irk_in;
   }
@@ -965,9 +948,8 @@ static void prv_fill_ble_data(SMIdentityResolvingKey *irk_in,
 }
 
 bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
-                                          SMIdentityResolvingKey *irk_out,
-                                          BTDeviceInternal *device_out,
-                                          char *name_out) {
+                                                 SMIdentityResolvingKey *irk_out,
+                                                 BTDeviceInternal *device_out, char *name_out) {
   BtPersistBondingData data;
   if (!prv_file_get(&bonding, sizeof(bonding), &data, sizeof(data))) {
     return false;
@@ -984,9 +966,11 @@ bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
   return true;
 }
 
-static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(
-    BTBondingID bonding, SMPairingInfo *info_out, char *name_out, bool *requires_address_pinning,
-    uint8_t *flags) {
+static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(BTBondingID bonding,
+                                                                  SMPairingInfo *info_out,
+                                                                  char *name_out,
+                                                                  bool *requires_address_pinning,
+                                                                  uint8_t *flags) {
   BtPersistBondingData data;
   if (!prv_file_get(&bonding, sizeof(bonding), &data, sizeof(data))) {
     return false;
@@ -1004,8 +988,7 @@ static bool prv_bt_persistent_storage_get_ble_smpairinginfo_by_id(
   *requires_address_pinning = data.ble_data.requires_address_pinning;
   *flags = data.ble_data.flags;
 
-  prv_fill_ble_data(
-      NULL, NULL, data.ble_data.name, NULL, NULL, name_out);
+  prv_fill_ble_data(NULL, NULL, data.ble_data.name, NULL, NULL, name_out);
   return true;
 }
 
@@ -1013,8 +996,8 @@ bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *devic
                                                    SMIdentityResolvingKey *irk_out,
                                                    char name_out[BT_DEVICE_NAME_BUFFER_SIZE]) {
   FindByAddrItrData itr_data = {
-    .device = *device,
-    .found = false,
+      .device = *device,
+      .found = false,
   };
   prv_file_each(prv_find_by_addr_itr, &itr_data);
 
@@ -1022,16 +1005,15 @@ bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *devic
     return false;
   }
 
-  prv_fill_ble_data(&itr_data.irk_out, NULL, itr_data.name_out,
-                    irk_out, NULL, name_out);
+  prv_fill_ble_data(&itr_data.irk_out, NULL, itr_data.name_out, irk_out, NULL, name_out);
 
   return true;
 }
 
 bool bt_persistent_storage_get_ble_pinned_address(BTDeviceAddress *address_out) {
   BTDeviceAddress address;
-  int read_size = prv_file_get(&BLE_PINNED_ADDRESS_KEY, sizeof(BLE_PINNED_ADDRESS_KEY),
-                               &address, sizeof(address));
+  int read_size = prv_file_get(&BLE_PINNED_ADDRESS_KEY, sizeof(BLE_PINNED_ADDRESS_KEY), &address,
+                               sizeof(address));
   if (!read_size) {
     return false;
   }
@@ -1041,24 +1023,24 @@ bool bt_persistent_storage_get_ble_pinned_address(BTDeviceAddress *address_out) 
   return true;
 }
 
-static bool prv_get_first_ancs_bonding_itr(SettingsFile *file,
-                                           SettingsRecordInfo *info, void *context) {
+static bool prv_get_first_ancs_bonding_itr(SettingsFile *file, SettingsRecordInfo *info,
+                                           void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
-  BTBondingID *first_ancs_supported_bonding_found = (BTBondingID *) context;
+  BTBondingID *first_ancs_supported_bonding_found = (BTBondingID *)context;
 
   BTBondingID key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE && stored_data.ble_data.supports_ancs) {
     *first_ancs_supported_bonding_found = key;
-    return false; // stop iterating
+    return false;  // stop iterating
   }
 
   return true;
@@ -1097,8 +1079,8 @@ typedef struct {
   void *cb_data;
 } ForEachBLEPairingInternalData;
 
-typedef void (*BtPersistCCCDDBEachBLEInternal)(BTCCCDID key,
-                                               BtPersistCCCDData *stored_data, void *ctx);
+typedef void (*BtPersistCCCDDBEachBLEInternal)(BTCCCDID key, BtPersistCCCDData *stored_data,
+                                               void *ctx);
 
 typedef struct {
   BtPersistCCCDDBEachBLEInternal cb;
@@ -1110,28 +1092,28 @@ typedef struct {
   void *cb_data;
 } ForEachBLEPairingData;
 
-static void prv_public_for_each_ble_cb(BTBondingID key,
-                                       BtPersistBondingData *stored_data, void *context) {
+static void prv_public_for_each_ble_cb(BTBondingID key, BtPersistBondingData *stored_data,
+                                       void *context) {
   ForEachBLEPairingData *itr_data = (ForEachBLEPairingData *)context;
   itr_data->cb(&stored_data->ble_data.pairing_info.identity,
-               &stored_data->ble_data.pairing_info.irk,
-               stored_data->ble_data.name, &key, itr_data->cb_data);
+               &stored_data->ble_data.pairing_info.irk, stored_data->ble_data.name, &key,
+               itr_data->cb_data);
 }
 
-static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file,
-                                                  SettingsRecordInfo *info, void *context) {
+static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file, SettingsRecordInfo *info,
+                                                  void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(BTBondingID)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
-  ForEachBLEPairingInternalData *internal_itr_data = (ForEachBLEPairingInternalData*) context;
+  ForEachBLEPairingInternalData *internal_itr_data = (ForEachBLEPairingInternalData *)context;
 
   BTBondingID key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE) {
     internal_itr_data->cb(key, &stored_data, internal_itr_data->cb_data);
@@ -1140,20 +1122,20 @@ static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file,
   return true;
 }
 
-static bool prv_ble_cccd_internal_for_each_itr(SettingsFile *file,
-                                               SettingsRecordInfo *info, void *context) {
+static bool prv_ble_cccd_internal_for_each_itr(SettingsFile *file, SettingsRecordInfo *info,
+                                               void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(BTCCCDID)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
-  ForEachBLECCCDInternalData *internal_itr_data = (ForEachBLECCCDInternalData*) context;
+  ForEachBLECCCDInternalData *internal_itr_data = (ForEachBLECCCDInternalData *)context;
 
   BTCCCDID key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistCCCDData stored_data;
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   internal_itr_data->cb(key, &stored_data, internal_itr_data->cb_data);
 
@@ -1162,12 +1144,12 @@ static bool prv_ble_cccd_internal_for_each_itr(SettingsFile *file,
 
 void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, void *context) {
   ForEachBLEPairingData itr_data = {
-    .cb = cb,
-    .cb_data = context,
+      .cb = cb,
+      .cb_data = context,
   };
   ForEachBLEPairingInternalData internal_itr_data = {
-    .cb = prv_public_for_each_ble_cb,
-    .cb_data = &itr_data,
+      .cb = prv_public_for_each_ble_cb,
+      .cb_data = &itr_data,
   };
   prv_file_each(prv_ble_pairing_internal_for_each_itr, &internal_itr_data);
 }
@@ -1182,14 +1164,13 @@ static void prv_register_bondings_for_each_ble_cb(BTBondingID key,
   bt_driver_handle_host_added_bonding(&bonding);
 }
 
-static void prv_register_cccd_for_each_ble_cb(BTCCCDID key,
-                                              BtPersistCCCDData *stored_data,
+static void prv_register_cccd_for_each_ble_cb(BTCCCDID key, BtPersistCCCDData *stored_data,
                                               void *context) {
   BleCCCD cccd = {
-    .peer = stored_data->peer,
-    .chr_val_handle = stored_data->chr_val_handle,
-    .flags = stored_data->flags,
-    .value_changed = stored_data->value_changed,
+      .peer = stored_data->peer,
+      .chr_val_handle = stored_data->chr_val_handle,
+      .flags = stored_data->flags,
+      .value_changed = stored_data->value_changed,
   };
 
   bt_driver_handle_host_added_cccd(&cccd);
@@ -1197,12 +1178,12 @@ static void prv_register_cccd_for_each_ble_cb(BTCCCDID key,
 
 void bt_persistent_storage_register_existing_ble_bondings(void) {
   ForEachBLEPairingInternalData internal_itr_data_bonding = {
-    .cb = prv_register_bondings_for_each_ble_cb,
+      .cb = prv_register_bondings_for_each_ble_cb,
   };
   prv_file_each(prv_ble_pairing_internal_for_each_itr, &internal_itr_data_bonding);
 
   ForEachBLECCCDInternalData internal_itr_data_cccd = {
-    .cb = prv_register_cccd_for_each_ble_cb,
+      .cb = prv_register_cccd_for_each_ble_cb,
   };
   prv_file_each(prv_ble_cccd_internal_for_each_itr, &internal_itr_data_cccd);
 }
@@ -1213,24 +1194,23 @@ typedef struct {
   BTCCCDID id;
 } FindCCCDItrData;
 
-static bool prv_find_cccd_itr(SettingsFile *file,
-                              SettingsRecordInfo *info, void *context) {
+static bool prv_find_cccd_itr(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   if (info->val_len == 0 || info->key_len != sizeof(BTCCCDID)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
-  FindCCCDItrData *itr_data = (FindCCCDItrData *) context;
+  FindCCCDItrData *itr_data = (FindCCCDItrData *)context;
 
   BTCCCDID key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistCCCDData stored_data;
-  info->get_val(file, (uint8_t*) &stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
-  if (bt_device_internal_equal(itr_data->peer, &stored_data.peer) && 
+  if (bt_device_internal_equal(itr_data->peer, &stored_data.peer) &&
       stored_data.chr_val_handle == itr_data->chr_val_handle) {
     itr_data->id = key;
-    return false; // stop iterating
+    return false;  // stop iterating
   }
 
   return true;
@@ -1240,9 +1220,9 @@ BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd) {
   PBL_ASSERTN(cccd != NULL);
 
   FindCCCDItrData itr_data = {
-    .peer = &cccd->peer,
-    .chr_val_handle = cccd->chr_val_handle,
-    .id = BT_CCCD_ID_INVALID,
+      .peer = &cccd->peer,
+      .chr_val_handle = cccd->chr_val_handle,
+      .id = BT_CCCD_ID_INVALID,
   };
   prv_file_each(prv_find_cccd_itr, &itr_data);
 
@@ -1250,20 +1230,20 @@ BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd) {
   if (cccd_id == BT_CCCD_ID_INVALID) {
     cccd_id = prv_get_free_cccd();
     if (cccd_id == BT_CCCD_ID_INVALID) {
-        return BT_CCCD_ID_INVALID;
+      return BT_CCCD_ID_INVALID;
     }
   }
 
   BtPersistCCCDData stored_data = {
-    .peer = cccd->peer,
-    .chr_val_handle = cccd->chr_val_handle,
-    .flags = cccd->flags,
-    .value_changed = cccd->value_changed,
+      .peer = cccd->peer,
+      .chr_val_handle = cccd->chr_val_handle,
+      .flags = cccd->flags,
+      .value_changed = cccd->value_changed,
   };
 
   BtPersistCCCD stored_cccd = {
-    .id = cccd_id,
-    .data = stored_data,
+      .id = cccd_id,
+      .data = stored_data,
   };
 
   GapBondingFileSetStatus status = prv_file_set(&stored_cccd.id, sizeof(stored_cccd.id),
@@ -1279,9 +1259,9 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
   BTCCCDID cccd_id;
 
   FindCCCDItrData itr_data = {
-    .peer = peer,
-    .chr_val_handle = chr_val_handle,
-    .id = BT_CCCD_ID_INVALID
+      .peer = peer,
+      .chr_val_handle = chr_val_handle,
+      .id = BT_CCCD_ID_INVALID
   };
   prv_file_each(prv_find_cccd_itr, &itr_data);
 
@@ -1302,8 +1282,8 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
 
 void bt_persistent_storage_set_active_gateway(BTBondingID bonding) {
   BTBondingID old_active_gateway;
-  int read_size = prv_file_get(&ACTIVE_GATEWAY_KEY, sizeof(ACTIVE_GATEWAY_KEY),
-                               &old_active_gateway, sizeof(old_active_gateway));
+  int read_size = prv_file_get(&ACTIVE_GATEWAY_KEY, sizeof(ACTIVE_GATEWAY_KEY), &old_active_gateway,
+                               sizeof(old_active_gateway));
 
   if (!read_size || old_active_gateway != bonding) {
     prv_file_set(&ACTIVE_GATEWAY_KEY, sizeof(ACTIVE_GATEWAY_KEY), &bonding, sizeof(bonding));
@@ -1315,8 +1295,8 @@ void bt_persistent_storage_set_active_gateway(BTBondingID bonding) {
 bool bt_persistent_storage_get_active_gateway(BTBondingID *bonding_out,
                                               BtPersistBondingType *type_out) {
   BTBondingID active_gateway;
-  int read_size = prv_file_get(&ACTIVE_GATEWAY_KEY, sizeof(ACTIVE_GATEWAY_KEY),
-                               &active_gateway, sizeof(active_gateway));
+  int read_size = prv_file_get(&ACTIVE_GATEWAY_KEY, sizeof(ACTIVE_GATEWAY_KEY), &active_gateway,
+                               sizeof(active_gateway));
 
   if (!read_size || active_gateway == BT_BONDING_ID_INVALID) {
     return false;
@@ -1338,14 +1318,13 @@ bool bt_persistent_storage_is_unfaithful(void) {
 
 void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
   PBL_LOG_INFO("Marking the watch as %s", is_unfaithful ? "unfaithful" : "faithful");
-  prv_file_set(&IS_UNFAITHFUL_KEY, sizeof(IS_UNFAITHFUL_KEY),
-               &is_unfaithful, sizeof(is_unfaithful));
+  prv_file_set(&IS_UNFAITHFUL_KEY, sizeof(IS_UNFAITHFUL_KEY), &is_unfaithful,
+               sizeof(is_unfaithful));
 }
 
 bool bt_persistent_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key_out) {
   SM128BitKey keys[SMRootKeyTypeNum];
-  int read_size = prv_file_get(&ROOT_KEYS_KEY, sizeof(ROOT_KEYS_KEY),
-                               &keys, sizeof(keys));
+  int read_size = prv_file_get(&ROOT_KEYS_KEY, sizeof(ROOT_KEYS_KEY), &keys, sizeof(keys));
   if (!read_size) {
     return false;
   }
@@ -1367,13 +1346,13 @@ void bt_persistent_storage_set_root_keys(SM128BitKey *keys_in) {
   }
   shared_prf_storage_set_root_keys(keys_in);
 
-  prv_file_set(&ROOT_KEYS_KEY, sizeof(ROOT_KEYS_KEY),
-               keys_in, SMRootKeyTypeNum * sizeof(SM128BitKey));
+  prv_file_set(&ROOT_KEYS_KEY, sizeof(ROOT_KEYS_KEY), keys_in,
+               SMRootKeyTypeNum * sizeof(SM128BitKey));
 }
 
 bool bt_persistent_storage_get_local_device_name(char *local_device_name_out, size_t max_size) {
-  int read_size = prv_file_get(&DEVICE_NAME_KEY, sizeof(DEVICE_NAME_KEY),
-                               local_device_name_out, max_size);
+  int read_size =
+      prv_file_get(&DEVICE_NAME_KEY, sizeof(DEVICE_NAME_KEY), local_device_name_out, max_size);
   if (!read_size) {
     return false;
   }
@@ -1386,8 +1365,7 @@ void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t
   }
   shared_prf_storage_set_local_device_name(local_device_name);
 
-  prv_file_set(&DEVICE_NAME_KEY, sizeof(DEVICE_NAME_KEY),
-                               local_device_name, size);
+  prv_file_set(&DEVICE_NAME_KEY, sizeof(DEVICE_NAME_KEY), local_device_name, size);
 }
 
 bool bt_persistent_storage_get_airplane_mode_enabled(void) {
@@ -1395,8 +1373,7 @@ bool bt_persistent_storage_get_airplane_mode_enabled(void) {
 }
 
 void bt_persistent_storage_set_airplane_mode_enabled(bool new_state) {
-  prv_file_set(&AIRPLANE_MODE_KEY, sizeof(AIRPLANE_MODE_KEY),
-               &new_state, sizeof(bool));
+  prv_file_set(&AIRPLANE_MODE_KEY, sizeof(AIRPLANE_MODE_KEY), &new_state, sizeof(bool));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1411,7 +1388,7 @@ static void prv_load_cached_system_capabilities(PebbleProtocolCapabilities *capa
                                      capabilities_out, sizeof(PebbleProtocolCapabilities));
   // Default to zero capabilities if no entry found
   if (!read_size) {
-    *capabilities_out = (PebbleProtocolCapabilities) {};
+    *capabilities_out = (PebbleProtocolCapabilities){};
   }
 }
 
@@ -1440,19 +1417,19 @@ void bt_persistent_storage_set_cached_system_capabilities(
       s_cached_system_capabilities = *capabilities;
     } else {
       diff.flags = s_cached_system_capabilities.flags;
-      s_cached_system_capabilities = (PebbleProtocolCapabilities) {};
+      s_cached_system_capabilities = (PebbleProtocolCapabilities){};
     }
   }
   prv_unlock();
 
   // Only update the cache if the capability flags changed
   if (diff.flags) {
-    prv_file_set(&SYSTEM_CAPABILITIES_KEY, sizeof(SYSTEM_CAPABILITIES_KEY),
-                 capabilities, sizeof(PebbleProtocolCapabilities));
+    prv_file_set(&SYSTEM_CAPABILITIES_KEY, sizeof(SYSTEM_CAPABILITIES_KEY), capabilities,
+                 sizeof(PebbleProtocolCapabilities));
 
     PebbleEvent event = {
-      .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
-      .capabilities.flags_diff = diff,
+        .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
+        .capabilities.flags_diff = diff,
     };
     event_put(&event);
   }
@@ -1486,7 +1463,7 @@ static void prv_delete_all_pairings_itr(SettingsFile *old_file, SettingsFile *ne
   void *key = kernel_zalloc_check(info->key_len);
   info->get_key(old_file, key, info->key_len);
 
-  void *data =  kernel_malloc_check(info->val_len);
+  void *data = kernel_malloc_check(info->val_len);
   info->get_val(old_file, data, info->val_len);
 
   settings_file_set(new_file, key, info->key_len, &data, info->val_len);
@@ -1499,8 +1476,8 @@ void bt_persistent_storage_delete_all_pairings(void) {
   prv_lock();
   {
     SettingsFile fd;
-    status_t rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME,
-                                     BT_PERSISTENT_STORAGE_FILE_SIZE);
+    status_t rv =
+        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
     if (rv) {
       return;
     }
@@ -1513,24 +1490,20 @@ void bt_persistent_storage_delete_all_pairings(void) {
   shared_prf_storage_erase_ble_pairing_data();
 }
 
-static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN],
-                                     BTBondingID bond_id, BtPersistBondingData *data) {
+static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN], BTBondingID bond_id,
+                                     BtPersistBondingData *data) {
   bool matches_prf;
 
   if (data->type == BtPersistBondingTypeBTClassic) {
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "Classic Key %d (legacy)",
-                         (int)bond_id);
+    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "Classic Key %d (legacy)", (int)bond_id);
   } else if (data->type == BtPersistBondingTypeBLE) {
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "LE Key %d",
-                         (int)bond_id);
+    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "LE Key %d", (int)bond_id);
 
     prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " ANCS: %d Gateway: %d Req Pin: %d",
-                         (int)data->ble_data.supports_ancs,
-                         (int)data->ble_data.is_gateway,
-                         (int)data->ble_data.requires_address_pinning);
+                             (int)data->ble_data.supports_ancs, (int)data->ble_data.is_gateway,
+                             (int)data->ble_data.requires_address_pinning);
 
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Name: %s",
-                         data->ble_data.name);
+    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Name: %s", data->ble_data.name);
 
     SMPairingInfo info = {};
     bt_persistent_storage_assign_sm_pairing_info(&info, &data->ble_data.pairing_info);
@@ -1540,13 +1513,11 @@ static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN],
     SMPairingInfo sprf_info = {};
     bool requires_address_pinning;
     uint8_t flags;
-    shared_prf_storage_get_ble_pairing_data(&sprf_info, NULL, &requires_address_pinning,
-                                            &flags);
+    shared_prf_storage_get_ble_pairing_data(&sprf_info, NULL, &requires_address_pinning, &flags);
     matches_prf = (memcmp(&sprf_info, &info, sizeof(sprf_info)) == 0);
     matches_prf &= (requires_address_pinning == data->ble_data.requires_address_pinning);
     matches_prf &= (flags == data->ble_data.flags);
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN,
-                             " SMPairingInfo matches Shared PRF: %s",
+    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " SMPairingInfo matches Shared PRF: %s",
                              bool_to_str(matches_prf));
   } else {
     prompt_send_response("Unhandled type of GapBondingDB Data!");
@@ -1554,21 +1525,21 @@ static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN],
   }
 }
 
-static void prv_dump_cccd_db_data(char display_buf[DISPLAY_BUF_LEN],
-                                  BTCCCDID cccd_id, BtPersistCCCDData *data) {
+static void prv_dump_cccd_db_data(char display_buf[DISPLAY_BUF_LEN], BTCCCDID cccd_id,
+                                  BtPersistCCCDData *data) {
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "CCCD Key %d", (int)cccd_id);
 
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Peer Address: "BT_DEVICE_ADDRESS_FMT,
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Peer Address: " BT_DEVICE_ADDRESS_FMT,
                            BT_DEVICE_ADDRESS_XPLODE_PTR(&data->peer.address));
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Handle: 0x%" PRIx16, 
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Handle: 0x%" PRIx16,
                            data->chr_val_handle);
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Flags: 0x%" PRIx16, data->flags);
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Value Changed: %s",
                            bool_to_str(data->value_changed));
 }
 
-static bool prv_dump_bt_persistent_storage_contents(
-    SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_dump_bt_persistent_storage_contents(SettingsFile *file, SettingsRecordInfo *info,
+                                                    void *context) {
   if (info->key_len == 0 || info->val_len == 0) {
     prompt_send_response("key or val of 0 length");
     return true;
@@ -1592,15 +1563,14 @@ static bool prv_dump_bt_persistent_storage_contents(
     PBL_ASSERTN(info->val_len == sizeof(BTBondingID));
     BTBondingID id;
     memcpy(&id, val, sizeof(BTBondingID));
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "%s : %d",
-                         ACTIVE_GATEWAY_KEY, (int)id);
+    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "%s : %d", ACTIVE_GATEWAY_KEY, (int)id);
 
   } else if (memcmp(key, IS_UNFAITHFUL_KEY, info->key_len) == 0) {
     PBL_ASSERTN(info->val_len == sizeof(bool));
     bool is_unfaithful;
     memcpy(&is_unfaithful, val, sizeof(bool));
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "%s  : %d",
-                         IS_UNFAITHFUL_KEY, (int)is_unfaithful);
+    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "%s  : %d", IS_UNFAITHFUL_KEY,
+                             (int)is_unfaithful);
 
   } else if (memcmp(key, ROOT_KEYS_KEY, info->key_len) == 0) {
     SM128BitKey root_keys[SMRootKeyTypeNum], sprf_root_keys[SMRootKeyTypeNum];
@@ -1610,26 +1580,24 @@ static bool prv_dump_bt_persistent_storage_contents(
     bluetooth_persistent_storage_debug_dump_root_keys(&root_keys[SMRootKeyTypeEncryption],
                                                       &root_keys[SMRootKeyTypeIdentity]);
 
-    if (shared_prf_storage_get_root_key(
-        SMRootKeyTypeEncryption, &sprf_root_keys[SMRootKeyTypeEncryption]) &&
-        shared_prf_storage_get_root_key(
-          SMRootKeyTypeIdentity,  &sprf_root_keys[SMRootKeyTypeIdentity])) {
+    if (shared_prf_storage_get_root_key(SMRootKeyTypeEncryption,
+                                        &sprf_root_keys[SMRootKeyTypeEncryption]) &&
+        shared_prf_storage_get_root_key(SMRootKeyTypeIdentity,
+                                        &sprf_root_keys[SMRootKeyTypeIdentity])) {
       bool root_keys_match =
-        memcmp(&root_keys, &sprf_root_keys, sizeof(SM128BitKey) * SMRootKeyTypeNum) == 0;
-      prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN,
-                           " Root keys match shared prf: %s",
-                           bool_to_str(root_keys_match));
+          memcmp(&root_keys, &sprf_root_keys, sizeof(SM128BitKey) * SMRootKeyTypeNum) == 0;
+      prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Root keys match shared prf: %s",
+                               bool_to_str(root_keys_match));
     }
   } else if (memcmp(key, DEVICE_NAME_KEY, info->key_len) == 0) {
     char dev_name[info->val_len + 1];
     memcpy(&dev_name, val, info->val_len);
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "Device Name: %s",
-                         dev_name);
+    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "Device Name: %s", dev_name);
   } else if (memcmp(key, BLE_PINNED_ADDRESS_KEY, info->key_len) == 0) {
     if (info->val_len == sizeof(BTDeviceAddress)) {
       const BTDeviceAddress *address = (const BTDeviceAddress *)val;
       prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN,
-                               "Pinned address: "BT_DEVICE_ADDRESS_FMT,
+                               "Pinned address: " BT_DEVICE_ADDRESS_FMT,
                                BT_DEVICE_ADDRESS_XPLODE_PTR(address));
     }
   } else if (info->key_len == sizeof(BTBondingID)) {

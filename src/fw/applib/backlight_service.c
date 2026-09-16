@@ -42,10 +42,10 @@ void backlight_service_unsubscribe(void) {
 }
 
 void backlight_service_state_init(BacklightServiceState *state) {
-  *state = (BacklightServiceState) {
-    .bls_info = {
-      .type = PEBBLE_BACKLIGHT_EVENT,
-      .handler = prv_do_handle,
-    },
+  *state = (BacklightServiceState){
+      .bls_info = {
+          .type = PEBBLE_BACKLIGHT_EVENT,
+          .handler = prv_do_handle,
+      },
   };
 }

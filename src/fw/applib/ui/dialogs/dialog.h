@@ -125,8 +125,7 @@ void dialog_set_timeout(Dialog *dialog, uint32_t timeout);
 // dialog. This callback will be called from the dialog's own unload function and can be used
 // to clean up resources used by the dialog such as icons. If the unload context is NULL, the
 // parent dialog object will be passed instead.
-void dialog_set_callbacks(Dialog *dialog, const DialogCallbacks *callbacks,
-                          void *callback_context);
+void dialog_set_callbacks(Dialog *dialog, const DialogCallbacks *callbacks, void *callback_context);
 
 // Enable or disable automatically destroying the dialog when it's popped.
 void dialog_set_destroy_on_pop(Dialog *dialog, bool destroy_on_pop);

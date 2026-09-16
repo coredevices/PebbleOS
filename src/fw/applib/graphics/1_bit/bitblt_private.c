@@ -33,11 +33,9 @@ T_STATIC void prv_apply_tint_color(GColor *color, GColor tint_color) {
   }
 }
 
-T_STATIC void prv_calc_two_row_look_ups(TwoRowLookUp *look_up,
-                                       GCompOp compositing_mode,
-                                       const GColor8 *palette,
-                                       uint8_t num_entries,
-                                       GColor tint_color) {
+T_STATIC void prv_calc_two_row_look_ups(TwoRowLookUp *look_up, GCompOp compositing_mode,
+                                        const GColor8 *palette, uint8_t num_entries,
+                                        GColor tint_color) {
   for (unsigned int palette_index = 0; palette_index < num_entries; palette_index++) {
     GColor color = palette[palette_index];
     // gcolor_get_grayscale will convert any color with an alpha less than 2 to clear
@@ -52,23 +50,22 @@ T_STATIC void prv_calc_two_row_look_ups(TwoRowLookUp *look_up,
     color = gcolor_get_grayscale(color);
     for (unsigned int row_number = 0; row_number < ARRAY_LENGTH(*look_up); row_number++) {
       (*look_up)[row_number].palette_pattern[palette_index] =
-        graphics_private_get_1bit_grayscale_pattern(color, row_number);
+          graphics_private_get_1bit_grayscale_pattern(color, row_number);
       (*look_up)[row_number].transparent_mask[palette_index] =
-        gcolor_is_transparent(color) ? false : true;
+          gcolor_is_transparent(color) ? false : true;
     }
   }
 }
 
-void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap* dest_bitmap,
-                                                     const GBitmap* src_bitmap, GRect dest_rect,
+void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap *dest_bitmap,
+                                                     const GBitmap *src_bitmap, GRect dest_rect,
                                                      GPoint src_origin_offset,
-                                                     GCompOp compositing_mode,
-                                                     GColor tint_color) {
+                                                     GCompOp compositing_mode, GColor tint_color) {
   if (!src_bitmap->palette) {
     return;
   }
   const int8_t dest_begin_x = (dest_rect.origin.x / 32);
-  const uint32_t * const dest_block_x_begin = ((uint32_t *)dest_bitmap->addr) + dest_begin_x;
+  const uint32_t *const dest_block_x_begin = ((uint32_t *)dest_bitmap->addr) + dest_begin_x;
   const int dest_row_length_words = (dest_bitmap->row_size_bytes / 4);
   // The number of bits between the beginning of dest_block and
   // the beginning of the nearest 32-bit block:
@@ -84,8 +81,8 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap* dest_bitmap,
   // how many 32-bit blocks do we need to bitblt on this row:
   const int16_t dest_end_x = grect_get_max_x(&dest_rect);
   const int16_t dest_y_end = grect_get_max_y(&dest_rect);
-  const uint8_t num_dest_blocks_per_row = (dest_end_x / 32) +
-    ((dest_end_x % 32) ? 1 : 0) - dest_begin_x;
+  const uint8_t num_dest_blocks_per_row =
+      (dest_end_x / 32) + ((dest_end_x % 32) ? 1 : 0) - dest_begin_x;
 
   const GColor *palette = src_bitmap->palette;
   const uint8_t *src = src_bitmap->addr;
@@ -116,7 +113,7 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap* dest_bitmap,
     while (dest_block != dest_block_end) {
       uint8_t dest_x = dest_shift;
       while (dest_x < 32 && row_bits_left > 0) {
-        if (src_x >= src_end_x) { // Wrap horizontally
+        if (src_x >= src_end_x) {  // Wrap horizontally
           src_x = src_begin_x;
         }
         uint8_t cindex = raw_image_get_value_for_bitdepth(src, src_x, src_y,
@@ -149,7 +146,7 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap* dest_bitmap,
   }
 }
 
-void bitblt_bitmap_into_bitmap_tiled(GBitmap* dest_bitmap, const GBitmap* src_bitmap,
+void bitblt_bitmap_into_bitmap_tiled(GBitmap *dest_bitmap, const GBitmap *src_bitmap,
                                      GRect dest_rect, GPoint src_origin_offset,
                                      GCompOp compositing_mode, GColor8 tint_color) {
   if (bitblt_compositing_mode_is_noop(compositing_mode, tint_color)) {
@@ -169,9 +166,8 @@ void bitblt_bitmap_into_bitmap_tiled(GBitmap* dest_bitmap, const GBitmap* src_bi
       break;
     case GBitmapFormat1BitPalette:
     case GBitmapFormat2BitPalette:
-      bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(dest_bitmap, src_bitmap, dest_rect,
-                                                      src_origin_offset, compositing_mode,
-                                                      tint_color);
+      bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(
+          dest_bitmap, src_bitmap, dest_rect, src_origin_offset, compositing_mode, tint_color);
       break;
     default:
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Only 1 and 2 bit palettized images can be displayed.");

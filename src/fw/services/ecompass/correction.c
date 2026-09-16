@@ -11,8 +11,8 @@
 
 PBL_LOG_MODULE_DECLARE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 
-#define N_SAMPS    4 // four points define a unique sphere
-#define N_AXIS     3
+#define N_SAMPS 4  // four points define a unique sphere
+#define N_AXIS 3
 static int16_t s_samples[N_SAMPS][N_AXIS];
 
 //
@@ -82,7 +82,7 @@ static int32_t sphere_determinant4x4(int32_t **m, int32_t down_samp) {
     if ((skip_row % 2) == 0) {
       res += det;
     } else {
-      res -=det;
+      res -= det;
     }
   }
 
@@ -99,7 +99,7 @@ static bool sphere_fit(int16_t *solution) {
 
   // determine average value of x, y, & z coordinates
   // and shift by this factor to prevent overflow.
-  int32_t shift_factor[N_AXIS] = { 0 };
+  int32_t shift_factor[N_AXIS] = {0};
   for (int j = 0; j < N_AXIS; j++) {
     for (int i = 0; i < N_SAMPS; i++) {
       shift_factor[j] += s_samples[i][j];
@@ -117,9 +117,8 @@ static bool sphere_fit(int16_t *solution) {
 
   int32_t r[N_SAMPS];
   for (int i = 0; i < N_SAMPS; i++) {
-    r[i] = raw_data[i][0] * raw_data[i][0] +
-        raw_data[i][1] * raw_data[i][1] +
-        raw_data[i][2] * raw_data[i][2];
+    r[i] = raw_data[i][0] * raw_data[i][0] + raw_data[i][1] * raw_data[i][1] +
+           raw_data[i][2] * raw_data[i][2];
   }
 
   // We now find the origin by solving the linear equation discussed above
@@ -136,19 +135,19 @@ static bool sphere_fit(int16_t *solution) {
 
   // compute cofactor01 to solve for x0
   for (int i = 0; i < N_SAMPS; i++) {
-    matrix[i][0] = r[i]; // m[i][1] = y, m[i][2] = z
+    matrix[i][0] = r[i];  // m[i][1] = y, m[i][2] = z
   }
   solution[0] = shift_factor[0] + sphere_determinant4x4(matrix, c00 * 2);
 
   // compute cofactor02 to solve for y0
   for (int i = 0; i < N_SAMPS; i++) {
-    matrix[i][1] = raw_data[i][0]; // m[i][0] = r^2, m[i][2] = z
+    matrix[i][1] = raw_data[i][0];  // m[i][0] = r^2, m[i][2] = z
   }
   solution[1] = shift_factor[1] - sphere_determinant4x4(matrix, c00 * 2);
 
   // compute cofactor03 to solve for z0
   for (int i = 0; i < N_SAMPS; i++) {
-    matrix[i][2] = raw_data[i][1]; // m[i][0] = r^2, m[i][1] = x
+    matrix[i][2] = raw_data[i][1];  // m[i][0] = r^2, m[i][1] = x
   }
   solution[2] = shift_factor[2] + sphere_determinant4x4(matrix, c00 * 2);
 
@@ -199,52 +198,47 @@ cleanup:
 
 static bool pt_to_pt_dist_under_thresh(int idx_a, int idx_b, int32_t thresh) {
   int32_t v_ab[3] = {
-    s_samples[idx_b][0] - s_samples[idx_a][0],
-    s_samples[idx_b][1] - s_samples[idx_a][1],
-    s_samples[idx_b][2] - s_samples[idx_a][2]
+      s_samples[idx_b][0] - s_samples[idx_a][0], s_samples[idx_b][1] - s_samples[idx_a][1],
+      s_samples[idx_b][2] - s_samples[idx_a][2]
   };
 
-  int32_t dist_sq = v_ab[0] * v_ab[0] + v_ab[1] * v_ab[1] +
-      v_ab[2] * v_ab[2];
+  int32_t dist_sq = v_ab[0] * v_ab[0] + v_ab[1] * v_ab[1] + v_ab[2] * v_ab[2];
 
   return (dist_sq > (thresh * thresh));
 }
 
-static bool pt_to_line_dist_under_thresh(int idx_line_a, int idx_line_b,
-    int idx_pt, int32_t thresh) {
-
+static bool pt_to_line_dist_under_thresh(int idx_line_a, int idx_line_b, int idx_pt,
+                                         int32_t thresh) {
   int32_t s[3] = {
-    s_samples[idx_line_b][0] - s_samples[idx_line_a][0],
-    s_samples[idx_line_b][1] - s_samples[idx_line_a][1],
-    s_samples[idx_line_b][2] - s_samples[idx_line_a][2]
+      s_samples[idx_line_b][0] - s_samples[idx_line_a][0],
+      s_samples[idx_line_b][1] - s_samples[idx_line_a][1],
+      s_samples[idx_line_b][2] - s_samples[idx_line_a][2]
   };
 
   int32_t m1[3] = {
-    s_samples[idx_line_a][0] - s_samples[idx_pt][0],
-    s_samples[idx_line_a][1] - s_samples[idx_pt][1],
-    s_samples[idx_line_a][2] - s_samples[idx_pt][2]
+      s_samples[idx_line_a][0] - s_samples[idx_pt][0],
+      s_samples[idx_line_a][1] - s_samples[idx_pt][1],
+      s_samples[idx_line_a][2] - s_samples[idx_pt][2]
   };
 
   int32_t m1xs[3] = {
-    m1[1] * s[2] - m1[2] *s[1],
-    -(m1[0] * s[2] - m1[2] * s[0]),
-    m1[0]*s[1] - m1[1] * s[0]
+      m1[1] * s[2] - m1[2] * s[1], -(m1[0] * s[2] - m1[2] * s[0]), m1[0] * s[1] - m1[1] * s[0]
   };
 
-  int64_t dist_sq = ((int64_t)m1xs[0]*m1xs[0] + (int64_t)m1xs[1]*m1xs[1] +
-      (int64_t)m1xs[2]*m1xs[2]) / (s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
+  int64_t dist_sq =
+      ((int64_t)m1xs[0] * m1xs[0] + (int64_t)m1xs[1] * m1xs[1] + (int64_t)m1xs[2] * m1xs[2]) /
+      (s[0] * s[0] + s[1] * s[1] + s[2] * s[2]);
 
   return (dist_sq > (thresh * thresh));
 }
 
-static bool pt_to_plane_dist_under_thresh(int idx_pln_a, int idx_pln_b,
-    int idx_pln_c, int idx_pt, int32_t thresh) {
-
+static bool pt_to_plane_dist_under_thresh(int idx_pln_a, int idx_pln_b, int idx_pln_c, int idx_pt,
+                                          int32_t thresh) {
   int32_t v_ab[3];
   int32_t v_ac[3];
   for (int i = 0; i < 3; i++) {
-      v_ab[i] = s_samples[idx_pln_b][i] - s_samples[idx_pln_a][i];
-      v_ac[i] = s_samples[idx_pln_c][i] - s_samples[idx_pln_a][i];
+    v_ab[i] = s_samples[idx_pln_b][i] - s_samples[idx_pln_a][i];
+    v_ac[i] = s_samples[idx_pln_c][i] - s_samples[idx_pln_a][i];
   }
 
   int64_t plane_eq[4];
@@ -253,16 +247,14 @@ static bool pt_to_plane_dist_under_thresh(int idx_pln_a, int idx_pln_b,
   plane_eq[2] = v_ab[0] * v_ac[1] - v_ab[1] * v_ac[0];
 
   // solve for d
-  plane_eq[3] = -(plane_eq[0] * s_samples[0][0] +
-      plane_eq[1] * s_samples[0][1] + plane_eq[2] * s_samples[0][2]);
+  plane_eq[3] = -(plane_eq[0] * s_samples[0][0] + plane_eq[1] * s_samples[0][1] +
+                  plane_eq[2] * s_samples[0][2]);
 
   // Distance^2 = (a * xo + b * yo + c * zo + d) / (a^2 + b^2 + c^2)
-  int64_t distance = ABS((plane_eq[0] * s_samples[idx_pt][0] +
-      plane_eq[1] * s_samples[idx_pt][1] + plane_eq[2] * s_samples[idx_pt][2] +
-      plane_eq[3]));
-  int32_t r = integer_sqrt(plane_eq[0] * plane_eq[0] + plane_eq[1] * plane_eq[1]
-      + plane_eq[2] * plane_eq[2]);
-
+  int64_t distance = ABS((plane_eq[0] * s_samples[idx_pt][0] + plane_eq[1] * s_samples[idx_pt][1] +
+                          plane_eq[2] * s_samples[idx_pt][2] + plane_eq[3]));
+  int32_t r = integer_sqrt(plane_eq[0] * plane_eq[0] + plane_eq[1] * plane_eq[1] +
+                           plane_eq[2] * plane_eq[2]);
 
   return ((distance / r) > thresh);
 }
@@ -290,8 +282,7 @@ static int16_t s_calib_idx = 0;
 static int16_t s_calib_val[N_AXIS][N_COMP_SAMPS];
 static int s_saved_sample_match = 0;
 
-static MagCalStatus check_correction_value(int16_t *solution,
-    int16_t *saved_solution) {
+static MagCalStatus check_correction_value(int16_t *solution, int16_t *saved_solution) {
   const int max_delta_thresh = 50;
 
   s_calib_val[0][s_calib_idx % 3] = solution[0];
@@ -313,7 +304,7 @@ static MagCalStatus check_correction_value(int16_t *solution,
         s_saved_sample_match = 0;
         s_calib_idx = 0;
         PBL_LOG_DBG("Persisting previous values!");
-        return (MagCalStatusSavedSampleMatch); // locked
+        return (MagCalStatusSavedSampleMatch);  // locked
       }
     }
   }
@@ -325,7 +316,7 @@ static MagCalStatus check_correction_value(int16_t *solution,
     z_delta = min_max_diff(s_calib_val[2], 3);
     if ((x_delta < max_delta_thresh) && (y_delta < max_delta_thresh) &&
         (z_delta < max_delta_thresh)) {
-      int corrs[N_AXIS] = { 0 };
+      int corrs[N_AXIS] = {0};
       for (int i = 0; i < N_AXIS; i++) {
         for (int j = 0; j < N_COMP_SAMPS; j++) {
           corrs[i] += s_calib_val[i][j];
@@ -345,15 +336,15 @@ static int s_samples_collected_for_fit = 0;
 static int32_t s_thresh = THRESH_MAX;
 
 void ecomp_corr_reset(void) {
-    s_samples_collected_for_fit = 0;
-    s_sample_idx = 0;
-    s_thresh = THRESH_MAX;
-    s_calib_idx = 0;
-    s_saved_sample_match = 0;
+  s_samples_collected_for_fit = 0;
+  s_sample_idx = 0;
+  s_thresh = THRESH_MAX;
+  s_calib_idx = 0;
+  s_saved_sample_match = 0;
 }
 
-MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample,
-    int16_t *saved_corr, int16_t *solution) {
+MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample, int16_t *saved_corr,
+                                           int16_t *solution) {
   s_samples_collected_for_fit++;
 
   // no complete point set in 15s @ 20Hz (60s @ 5Hz): relax the gates so
@@ -361,8 +352,7 @@ MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample,
   if (s_samples_collected_for_fit > 300) {
     if (s_thresh > THRESH_MIN) {
       s_thresh = MAX(s_thresh - THRESH_STEP, THRESH_MIN);
-      PBL_LOG_DBG("Lowering magnetometer distance threshold to %d",
-          (int)s_thresh);
+      PBL_LOG_DBG("Lowering magnetometer distance threshold to %d", (int)s_thresh);
     }
 
     s_samples_collected_for_fit = 0;
@@ -388,12 +378,12 @@ MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample,
   }
 
   // the sample has passed its distance threshold check so add it
-  PBL_LOG_DBG("---> [%d] Adding %d %d %d \n",
-      s_sample_idx, (int)sample[0], (int)sample[1], (int)sample[2]);
+  PBL_LOG_DBG("---> [%d] Adding %d %d %d \n", s_sample_idx, (int)sample[0], (int)sample[1],
+              (int)sample[2]);
   s_sample_idx++;
 
   if (s_sample_idx != 4) {
-    return (MagCalStatusNoSolution); // we need 4 pts before we can do a fit
+    return (MagCalStatusNoSolution);  // we need 4 pts before we can do a fit
   }
 
   // reset vars for next potential sphere fit

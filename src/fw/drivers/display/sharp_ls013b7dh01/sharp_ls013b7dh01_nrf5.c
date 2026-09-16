@@ -116,17 +116,15 @@ static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
   if (s_updating) {
     PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
-        .callback =
-            {
-                .callback = prv_terminate_transfer,
-            },
+        .callback = {
+            .callback = prv_terminate_transfer,
+        },
     };
 
     event_put_isr(&e);
   } else {
     pbl_sem_give(&s_sem);
   }
-
 }
 
 void display_init(void) {
@@ -146,7 +144,6 @@ void display_init(void) {
   gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, true);
 
   prv_extcomin_init();
-
 }
 
 void display_clear(void) {
@@ -220,4 +217,5 @@ bool display_update_in_progress(void) {
 
 /* stubs */
 
-void display_update_boot_frame(uint8_t *framebuffer) {}
+void display_update_boot_frame(uint8_t *framebuffer) {
+}

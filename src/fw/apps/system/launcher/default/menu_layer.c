@@ -22,10 +22,10 @@
 
 static void prv_launch_app_cb(void *data) {
   const AppInstallId app_install_id_to_launch = (AppInstallId)data;
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
-    .id = app_install_id_to_launch,
-    .common.reason = APP_LAUNCH_USER,
-    .common.button = BUTTON_ID_SELECT,
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+      .id = app_install_id_to_launch,
+      .common.reason = APP_LAUNCH_USER,
+      .common.button = BUTTON_ID_SELECT,
   });
 }
 
@@ -83,7 +83,7 @@ static uint16_t prv_menu_layer_get_num_rows(PBL_UNUSED MenuLayer *menu_layer,
   return data_source ? app_menu_data_source_get_count(data_source) : (uint16_t)0;
 }
 
-static void prv_menu_layer_draw_row(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index,
+static void prv_menu_layer_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
                                     void *context) {
   LauncherMenuLayer *launcher_menu_layer = context;
   AppMenuDataSource *data_source = launcher_menu_layer->data_source;
@@ -100,11 +100,13 @@ static void prv_menu_layer_draw_row(GContext* ctx, const Layer *cell_layer, Menu
   // Include the animation offset for smooth animation during center-focused scroll
   GRect global_frame;
   layer_get_global_frame((Layer *)cell_layer, &global_frame);
-  const int16_t animation_offset = launcher_menu_layer->menu_layer.animation.cell_content_origin_offset_y;
-  const int16_t screen_center_y = global_frame.origin.y + animation_offset + (global_frame.size.h / 2);
+  const int16_t animation_offset =
+      launcher_menu_layer->menu_layer.animation.cell_content_origin_offset_y;
+  const int16_t screen_center_y =
+      global_frame.origin.y + animation_offset + (global_frame.size.h / 2);
 
-  launcher_app_glance_service_draw_glance_for_app_node(&launcher_menu_layer->glance_service,
-                                                       ctx, cell_layer_bounds, is_highlighted,
+  launcher_app_glance_service_draw_glance_for_app_node(&launcher_menu_layer->glance_service, ctx,
+                                                       cell_layer_bounds, is_highlighted,
                                                        screen_center_y, node);
 
   // If we should launch an app after this render, push a callback to do that on the app task
@@ -120,13 +122,14 @@ static void prv_menu_layer_draw_row(GContext* ctx, const Layer *cell_layer, Menu
 }
 
 static int16_t prv_menu_layer_get_cell_height(PBL_UNUSED MenuLayer *menu_layer,
-                                              PBL_UNUSED MenuIndex *cell_index, PBL_UNUSED void *context) {
+                                              PBL_UNUSED MenuIndex *cell_index,
+                                              PBL_UNUSED void *context) {
 #if PBL_RECT
   return LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT;
 #elif PBL_ROUND
-  return menu_layer_is_index_selected(menu_layer, cell_index) ?
-      LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT :
-      LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT;
+  return menu_layer_is_index_selected(menu_layer, cell_index)
+             ? LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT
+             : LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT;
 #else
 #error "Unknown display shape type"
 #endif
@@ -145,7 +148,8 @@ static void prv_play_glance_for_row(LauncherMenuLayer *launcher_menu_layer, uint
   launcher_app_glance_service_play_glance_for_app_node(&launcher_menu_layer->glance_service, node);
 }
 
-static void prv_menu_layer_selection_will_change(MenuLayer *PBL_UNUSED menu_layer, MenuIndex *new_index,
+static void prv_menu_layer_selection_will_change(MenuLayer *PBL_UNUSED menu_layer,
+                                                 MenuIndex *new_index,
                                                  MenuIndex PBL_UNUSED old_index, void *context) {
   LauncherMenuLayer *launcher_menu_layer = context;
   prv_play_glance_for_row(launcher_menu_layer, new_index->row);
@@ -187,10 +191,10 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
   GRect menu_layer_frame = frame;
 #if PBL_ROUND
-  const int top_bottom_inset =
-      (frame.size.h - LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT -
-          (2 * LAUNCHER_MENU_LAYER_NUM_UNFOCUSED_ROWS_PER_SIDE *
-           LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT)) / 2;
+  const int top_bottom_inset = (frame.size.h - LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT -
+                                (2 * LAUNCHER_MENU_LAYER_NUM_UNFOCUSED_ROWS_PER_SIDE *
+                                 LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT)) /
+                               2;
   const GEdgeInsets menu_layer_frame_insets = GEdgeInsets(top_bottom_inset, 0);
   menu_layer_frame = grect_inset(menu_layer_frame, menu_layer_frame_insets);
 #endif
@@ -198,27 +202,28 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
   MenuLayer *menu_layer = &launcher_menu_layer->menu_layer;
   menu_layer_init(menu_layer, &menu_layer_frame);
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer,
-                                  highlight_bg,
-                                  gcolor_legible_over(highlight_bg));
+  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_pad_bottom_enable(menu_layer, false);
-  menu_layer_set_callbacks(menu_layer, launcher_menu_layer, &(MenuLayerCallbacks) {
-    .get_num_rows = prv_menu_layer_get_num_rows,
-    .draw_row = prv_menu_layer_draw_row,
-    .select_click = prv_menu_layer_select,
-    .get_cell_height = prv_menu_layer_get_cell_height,
-    .selection_will_change = prv_menu_layer_selection_will_change,
-  });
+  menu_layer_set_callbacks(menu_layer, launcher_menu_layer,
+                           &(MenuLayerCallbacks){
+                               .get_num_rows = prv_menu_layer_get_num_rows,
+                               .draw_row = prv_menu_layer_draw_row,
+                               .select_click = prv_menu_layer_select,
+                               .get_cell_height = prv_menu_layer_get_cell_height,
+                               .selection_will_change = prv_menu_layer_selection_will_change,
+                           });
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
-  menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
-  menu_layer_set_scroll_vibe_on_blocked(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
+  menu_layer_set_scroll_vibe_on_wrap(
+      menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(
+      menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
 
   // Only setup the content indicator on round
 #if PBL_ROUND
-  const GSize arrow_layer_frame_size = GSize(frame.size.w,
-                                             LAUNCHER_MENU_LAYER_CONTENT_INDICATOR_LAYER_HEIGHT);
-  const GRect up_arrow_layer_frame = (GRect) {
-    .size = arrow_layer_frame_size,
+  const GSize arrow_layer_frame_size =
+      GSize(frame.size.w, LAUNCHER_MENU_LAYER_CONTENT_INDICATOR_LAYER_HEIGHT);
+  const GRect up_arrow_layer_frame = (GRect){
+      .size = arrow_layer_frame_size,
   };
   Layer *up_arrow_layer = &launcher_menu_layer->up_arrow_layer;
   layer_init(up_arrow_layer, &up_arrow_layer_frame);
@@ -235,10 +240,10 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
   ContentIndicator *content_indicator =
       scroll_layer_get_content_indicator(&menu_layer->scroll_layer);
-  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig) {
-    .layer = up_arrow_layer,
-    .colors.background = GColorWhite,
-    .colors.foreground = GColorDarkGray,
+  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
+      .layer = up_arrow_layer,
+      .colors.background = GColorWhite,
+      .colors.foreground = GColorDarkGray,
   };
   content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionUp,
                                         &content_indicator_config);
@@ -254,11 +259,11 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
   launcher_app_glance_service_init(&launcher_menu_layer->glance_service,
                                    LAUNCHER_MENU_LAYER_GENERIC_APP_ICON);
-  const LauncherAppGlanceServiceHandlers glance_handlers = (LauncherAppGlanceServiceHandlers) {
-    .glance_changed = prv_glance_changed,
+  const LauncherAppGlanceServiceHandlers glance_handlers = (LauncherAppGlanceServiceHandlers){
+      .glance_changed = prv_glance_changed,
   };
-  launcher_app_glance_service_set_handlers(&launcher_menu_layer->glance_service,
-                                           &glance_handlers, launcher_menu_layer);
+  launcher_app_glance_service_set_handlers(&launcher_menu_layer->glance_service, &glance_handlers,
+                                           launcher_menu_layer);
 
   // Select the visually first item from the top
   const uint16_t first_index = 0;
@@ -317,9 +322,9 @@ void launcher_menu_layer_get_selection_vertical_range(const LauncherMenuLayer *l
   GRect selection_global_rect;
   layer_get_global_frame(&launcher_menu_layer->menu_layer.inverter.layer, &selection_global_rect);
 
-  *vertical_range_out = (GRangeVertical) {
-    .origin_y = selection_global_rect.origin.y,
-    .size_h = selection_global_rect.size.h,
+  *vertical_range_out = (GRangeVertical){
+      .origin_y = selection_global_rect.origin.y,
+      .size_h = selection_global_rect.size.h,
   };
 }
 
@@ -332,10 +337,10 @@ void launcher_menu_layer_get_selection_state(const LauncherMenuLayer *launcher_m
   const MenuLayer *menu_layer = &launcher_menu_layer->menu_layer;
   const ScrollLayer *scroll_layer = &menu_layer->scroll_layer;
 
-  *state_out = (LauncherMenuLayerSelectionState) {
-    .row_index = menu_layer_get_selected_index(menu_layer).row,
-    // This cast is required because this ScrollLayer function's argument isn't const
-    .scroll_offset_y = scroll_layer_get_content_offset((ScrollLayer *)scroll_layer).y,
+  *state_out = (LauncherMenuLayerSelectionState){
+      .row_index = menu_layer_get_selected_index(menu_layer).row,
+      // This cast is required because this ScrollLayer function's argument isn't const
+      .scroll_offset_y = scroll_layer_get_content_offset((ScrollLayer *)scroll_layer).y,
   };
 }
 

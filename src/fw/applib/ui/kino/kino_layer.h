@@ -63,8 +63,9 @@ void kino_layer_play_section(KinoLayer *kino_layer, uint32_t from_position, uint
 
 ImmutableAnimation *kino_layer_create_play_animation(KinoLayer *kino_layer);
 
-ImmutableAnimation *kino_layer_create_play_section_animation(
-    KinoLayer *kino_layer, uint32_t from_position, uint32_t to_position);
+ImmutableAnimation *kino_layer_create_play_section_animation(KinoLayer *kino_layer,
+                                                             uint32_t from_position,
+                                                             uint32_t to_position);
 
 void kino_layer_pause(KinoLayer *kino_layer);
 

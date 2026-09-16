@@ -19,10 +19,10 @@ typedef enum {
   //! These keys (with accompanying UUID values self FETCH) can be pushed from the phone to
   //! the watch to launch/kill an app on the watch or query which application is running.
   //! Backwards compatible for support of deprecated 0x31
-  APP_RUN_STATE_INVALID_COMMAND = 0x00, // Invalid state key, used as a default value
-  APP_RUN_STATE_RUN_COMMAND = 0x01,   // Watch -> Phone: App is running, Phone -> Watch: Start app
-  APP_RUN_STATE_STOP_COMMAND = 0x02,  // Watch -> Phone: App is stopped, Phone -> Watch: Stop app
-  APP_RUN_STATE_STATUS_COMMAND = 0x03 // Phone -> Watch: Request current app UUID
+  APP_RUN_STATE_INVALID_COMMAND = 0x00,  // Invalid state key, used as a default value
+  APP_RUN_STATE_RUN_COMMAND = 0x01,    // Watch -> Phone: App is running, Phone -> Watch: Start app
+  APP_RUN_STATE_STOP_COMMAND = 0x02,   // Watch -> Phone: App is stopped, Phone -> Watch: Stop app
+  APP_RUN_STATE_STATUS_COMMAND = 0x03  // Phone -> Watch: Request current app UUID
 } AppRunStateCommand;
 
 void app_run_state_send_update(const Uuid *uuid, AppState app_state);

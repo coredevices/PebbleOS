@@ -63,8 +63,8 @@ static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed
     }
     data->seconds_remaining = WINDOW_POP_TIME_S;
   } else {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "TIME REMAINING: %"PRIu32"s", data->seconds_remaining);
+    sniprintf(data->status_string, sizeof(data->status_string), "TIME REMAINING: %" PRIu32 "s",
+              data->seconds_remaining);
     data->seconds_remaining--;
   }
 
@@ -76,7 +76,7 @@ static void prv_button_click_handler(ClickRecognizerRef recognizer, void *data) 
 
   ButtonId button_id_pressed = click_recognizer_get_button_id(recognizer);
   bitset32_set(&app_data->buttons_pressed, button_id_pressed);
-  layer_set_hidden((struct Layer*)&app_data->arrows[button_id_pressed], true);
+  layer_set_hidden((struct Layer *)&app_data->arrows[button_id_pressed], true);
 
   if (app_data->test_complete) {
     app_window_stack_remove(&app_data->window, false /* Animated */);
@@ -91,12 +91,12 @@ static void prv_config_provider(void *data) {
 }
 
 static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
-  static GPoint ARROW_PATH_POINTS[] =
-      {{0,  7}, {14,  7}, {14, 0}, {26, 12}, {14, 24}, {14, 17}, {0, 17}};
+  static GPoint ARROW_PATH_POINTS[] = {{0, 7},   {14, 7},  {14, 0}, {26, 12},
+                                       {14, 24}, {14, 17}, {0, 17}};
 
   static const GPathInfo ARROW_PATH_INFO = {
-    .num_points = ARRAY_LENGTH(ARROW_PATH_POINTS),
-    .points = ARROW_PATH_POINTS
+      .num_points = ARRAY_LENGTH(ARROW_PATH_POINTS),
+      .points = ARROW_PATH_POINTS
   };
 
 // Original arrow dimensions
@@ -129,14 +129,14 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
   // Select button: center right = 0 deg
   // Down button: bottom-right, 30 deg from horizontal = -30 deg
   const int32_t BUTTON_ANGLES[] = {
-    // BACK: left side, pointing left
-    DEG_TO_TRIGANGLE(180),
-    // UP: top-right, 30 deg
-    DEG_TO_TRIGANGLE(30),
-    // SELECT: center right, 0 deg
-    DEG_TO_TRIGANGLE(0),
-    // DOWN: bottom-right, -30 deg
-    DEG_TO_TRIGANGLE(-30),
+      // BACK: left side, pointing left
+      DEG_TO_TRIGANGLE(180),
+      // UP: top-right, 30 deg
+      DEG_TO_TRIGANGLE(30),
+      // SELECT: center right, 0 deg
+      DEG_TO_TRIGANGLE(0),
+      // DOWN: bottom-right, -30 deg
+      DEG_TO_TRIGANGLE(-30),
   };
 
   int32_t angle = BUTTON_ANGLES[id];
@@ -164,14 +164,14 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
 #define ARROW_LR_MARGIN 5
 #define ARROW_TB_MARGIN 30
   const GRect ARROW_RECTS[] = {
-    // BACK
-    {{ARROW_LR_MARGIN,                       ARROW_TB_MARGIN}, ARROW_SIZE},
-    // UP
-    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, ARROW_TB_MARGIN}, ARROW_SIZE},
-    // SELECT
-    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, (DISP_ROWS - ARROW_H) / 2}, ARROW_SIZE},
-    // DOWN
-    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, DISP_ROWS - ARROW_TB_MARGIN - ARROW_H }, ARROW_SIZE},
+      // BACK
+      {{ARROW_LR_MARGIN, ARROW_TB_MARGIN}, ARROW_SIZE},
+      // UP
+      {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, ARROW_TB_MARGIN}, ARROW_SIZE},
+      // SELECT
+      {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, (DISP_ROWS - ARROW_H) / 2}, ARROW_SIZE},
+      // DOWN
+      {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, DISP_ROWS - ARROW_TB_MARGIN - ARROW_H}, ARROW_SIZE},
   };
 
   layer_set_frame(&arrow->layer, &ARROW_RECTS[id]);
@@ -187,10 +187,10 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData) {
-    .seconds_remaining = 10,
-    .buttons_pressed = 0,
-    .test_complete = false,
+  *data = (AppData){
+      .seconds_remaining = 10,
+      .buttons_pressed = 0,
+      .test_complete = false,
   };
 
   app_state_set_user_data(data);
@@ -209,9 +209,8 @@ static void prv_handle_init(void) {
   layer_add_child(&window->layer, &title->layer);
 
   TextLayer *status = &data->status;
-  text_layer_init(status,
-                  &GRect(5, 110,
-                         window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 110));
+  text_layer_init(
+      status, &GRect(5, 110, window->layer.bounds.size.w - 5, window->layer.bounds.size.h - 110));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
   layer_add_child(&window->layer, &status->layer);
@@ -231,14 +230,14 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* mfg_button_app_get_info(void) {
+const PebbleProcessMd *mfg_button_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    // UUID: eed03647-fa9e-4bae-9254-608aa297e4e4
-    .common.uuid = { 0xee, 0xd0, 0x36, 0x47, 0xfa, 0x9e, 0x4b, 0xae,
-                     0x92, 0x54, 0x60, 0x8a, 0xa2, 0x97, 0xe4, 0xe4},
-    .name = "MfgButton",
+      .common.main_func = &s_main,
+      // UUID: eed03647-fa9e-4bae-9254-608aa297e4e4
+      .common.uuid =
+          {0xee, 0xd0, 0x36, 0x47, 0xfa, 0x9e, 0x4b, 0xae, 0x92, 0x54, 0x60, 0x8a, 0xa2, 0x97, 0xe4,
+           0xe4},
+      .name = "MfgButton",
   };
-  return (const PebbleProcessMd*) &s_app_info;
+  return (const PebbleProcessMd *)&s_app_info;
 }
-

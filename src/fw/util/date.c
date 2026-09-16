@@ -11,21 +11,20 @@ int date_util_get_max_days_in_month(int month, bool is_leap_year) {
   int days;
 
   switch (month) {
-    case 4: //April
-    case 6: //June
-    case 9: //September
-    case 11: //November
+    case 4:   // April
+    case 6:   // June
+    case 9:   // September
+    case 11:  // November
     {
       days = 30;
       break;
     }
-    case 2: // February
+    case 2:  // February
     {
       days = is_leap_year ? 29 : 28;
       break;
     }
-    default:
-    {
+    default: {
       // Jan, March, May, July, August, October, December
       days = 31;
       break;

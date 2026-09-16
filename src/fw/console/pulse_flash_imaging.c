@@ -56,14 +56,12 @@ typedef union Command {
   } region;
 } Command;
 
-
 static void prv_handle_erase(Command *cmd, size_t length);
 static void prv_handle_write(Command *cmd, size_t length);
 static void prv_handle_crc(Command *cmd, size_t length);
 static void prv_handle_query_region(Command *cmd, size_t length);
 static void prv_handle_finalize_region(Command *cmd, size_t length);
-static void prv_respond_malformed_command(Command *cmd, size_t length,
-                                          const char *message);
+static void prv_respond_malformed_command(Command *cmd, size_t length, const char *message);
 
 void pulse_flash_imaging_handler(void *packet, size_t length) {
   Command *command = packet;
@@ -115,13 +113,12 @@ static void prv_handle_erase(Command *cmd, size_t length) {
   }
 
   if (s_erase_in_progress) {
-    EraseAndWriteAck *ack = pulse_best_effort_send_begin(
-        PULSE_PROTOCOL_FLASH_IMAGING);
-    *ack = (EraseAndWriteAck) {
-      .opcode = IMAGING_RESP_ACK_ERASE,
-      .address = s_erase_start_address,
-      .length = s_erase_length,
-      .complete = 0
+    EraseAndWriteAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+    *ack = (EraseAndWriteAck){
+        .opcode = IMAGING_RESP_ACK_ERASE,
+        .address = s_erase_start_address,
+        .length = s_erase_length,
+        .complete = 0
     };
     pulse_best_effort_send(ack, sizeof(EraseAndWriteAck));
   } else {
@@ -129,32 +126,29 @@ static void prv_handle_erase(Command *cmd, size_t length) {
     s_erase_start_address = cmd->erase.address;
     s_erase_length = cmd->erase.length;
 
-    EraseAndWriteAck *message = pulse_best_effort_send_begin(
-        PULSE_PROTOCOL_FLASH_IMAGING);
-    *message = (EraseAndWriteAck) {
-      .opcode = IMAGING_RESP_ACK_ERASE,
-      .address = s_erase_start_address,
-      .length = s_erase_length,
-      .complete = 0
+    EraseAndWriteAck *message = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+    *message = (EraseAndWriteAck){
+        .opcode = IMAGING_RESP_ACK_ERASE,
+        .address = s_erase_start_address,
+        .length = s_erase_length,
+        .complete = 0
     };
     pulse_best_effort_send(message, sizeof(EraseAndWriteAck));
 
     uint32_t end_address = cmd->erase.address + cmd->erase.length;
-    flash_erase_optimal_range(
-        cmd->erase.address, cmd->erase.address, end_address,
-        (end_address + SECTOR_SIZE_BYTES - 1) & SECTOR_ADDR_MASK,
-        prv_erase_complete, NULL);
+    flash_erase_optimal_range(cmd->erase.address, cmd->erase.address, end_address,
+                              (end_address + SECTOR_SIZE_BYTES - 1) & SECTOR_ADDR_MASK,
+                              prv_erase_complete, NULL);
   }
 }
 
 static void prv_erase_complete(void *ignored, status_t result) {
-  EraseAndWriteAck *message = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
-  *message = (EraseAndWriteAck) {
-    .opcode = IMAGING_RESP_ACK_ERASE,
-    .address = s_erase_start_address,
-    .length = s_erase_length,
-    .complete = 1
+  EraseAndWriteAck *message = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+  *message = (EraseAndWriteAck){
+      .opcode = IMAGING_RESP_ACK_ERASE,
+      .address = s_erase_start_address,
+      .length = s_erase_length,
+      .complete = 1
   };
 
   if (FAILED(result)) {
@@ -176,13 +170,12 @@ static void prv_handle_write(Command *cmd, size_t command_length) {
   size_t write_length = command_length - sizeof(cmd->write);
   flash_write_bytes(&cmd->write.data[0], cmd->write.address, write_length);
 
-  EraseAndWriteAck *ack = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
-  *ack = (EraseAndWriteAck) {
-    .opcode = IMAGING_RESP_ACK_WRITE,
-    .address = cmd->write.address,
-    .length = write_length,
-    .complete = 1
+  EraseAndWriteAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+  *ack = (EraseAndWriteAck){
+      .opcode = IMAGING_RESP_ACK_WRITE,
+      .address = cmd->write.address,
+      .length = write_length,
+      .complete = 1
   };
   pulse_best_effort_send(ack, sizeof(EraseAndWriteAck));
 
@@ -209,11 +202,11 @@ static void prv_handle_crc(Command *cmd, size_t length) {
   uint32_t crc = flash_calculate_legacy_defective_checksum(cmd->crc.address, cmd->crc.length);
 
   CrcAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
-  *ack = (CrcAck) {
-    .opcode = IMAGING_RESP_CRC,
-    .address = cmd->crc.address,
-    .length = cmd->crc.length,
-    .crc = crc
+  *ack = (CrcAck){
+      .opcode = IMAGING_RESP_CRC,
+      .address = cmd->crc.address,
+      .length = cmd->crc.length,
+      .crc = crc
   };
   pulse_best_effort_send(ack, sizeof(CrcAck));
 }
@@ -230,8 +223,7 @@ static void prv_handle_query_region(Command *cmd, size_t length) {
       // assume a query of the region means we are going to write to it
       flash_prf_set_protection(false);
       region_base = FLASH_REGION_SAFE_FIRMWARE_BEGIN;
-      region_length = FLASH_REGION_SAFE_FIRMWARE_END -
-          FLASH_REGION_SAFE_FIRMWARE_BEGIN;
+      region_length = FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN;
       break;
     case FLASH_REGION_SYSTEM_RESOURCES: {
       const SystemResourceBank *bank = resource_storage_flash_get_unused_bank();
@@ -252,13 +244,12 @@ static void prv_handle_query_region(Command *cmd, size_t length) {
     uint32_t length;
   } RegionGeometry;
 
-  RegionGeometry *resp = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
-  *resp = (RegionGeometry) {
-    .opcode = IMAGING_RESP_REGION_GEOMETRY,
-    .region = cmd->region.region,
-    .address = region_base,
-    .length = region_length
+  RegionGeometry *resp = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+  *resp = (RegionGeometry){
+      .opcode = IMAGING_RESP_REGION_GEOMETRY,
+      .region = cmd->region.region,
+      .address = region_base,
+      .length = region_length
   };
 
   pulse_best_effort_send(resp, sizeof(RegionGeometry));
@@ -290,16 +281,14 @@ static void prv_handle_finalize_region(Command *cmd, size_t length) {
   pulse_best_effort_send(resp, sizeof(resp->region));
 }
 
-static void prv_respond_malformed_command(Command *cmd, size_t length,
-                                          const char *message) {
+static void prv_respond_malformed_command(Command *cmd, size_t length, const char *message) {
   typedef struct PACKED MalformedCommandResponse {
     uint8_t opcode;
     uint8_t bad_command[9];
     char error_message[40];
   } MalformedCommandResponse;
 
-  MalformedCommandResponse *resp = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
+  MalformedCommandResponse *resp = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
   resp->opcode = IMAGING_RESP_MALFORMED_CMD;
 
   memcpy(resp->bad_command, cmd, MIN(length, sizeof(resp->bad_command)));

@@ -16,8 +16,7 @@
 #include "pbl/kernel/sem.h"
 
 void app_window_stack_push(Window *window, bool animated) {
-  PBL_LOG_DBG("Pushing window %p onto app window stack %p",
-      window, app_state_get_window_stack());
+  PBL_LOG_DBG("Pushing window %p onto app window stack %p", window, app_state_get_window_stack());
   window_stack_push(app_state_get_window_stack(), window, animated);
 }
 
@@ -70,7 +69,7 @@ static void prv_window_stack_info_cb(void *ctx) {
 }
 
 void command_window_stack_info(void) {
-  struct WindowStackInfoContext info = { 0 };
+  struct WindowStackInfoContext info = {0};
   pbl_sem_init(&info.interlock, 0, 1);
   // FIXME: Dumping the app window stack from another task without a
   // lock exposes us to the possibility of catching the window stack in
@@ -87,12 +86,11 @@ void command_window_stack_info(void) {
   }
 
   char buffer[128];
-  prompt_send_response_fmt(
-      buffer, sizeof(buffer),
-      "Window Stack, top to bottom: (%zu)", info.count);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "Window Stack, top to bottom: (%zu)",
+                           info.count);
   for (size_t i = 0; i < info.count; ++i) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "window %p <%s>",
-                             info.dump[i].addr, info.dump[i].name);
+    prompt_send_response_fmt(buffer, sizeof(buffer), "window %p <%s>", info.dump[i].addr,
+                             info.dump[i].name);
   }
 cleanup:
   kernel_free(info.dump);

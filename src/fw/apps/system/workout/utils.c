@@ -13,8 +13,9 @@
 #include "system/passert.h"
 
 static TimelineItem *prv_create_abandoned_workout_notification(void) {
-  const char *msg = i18n_noop("Still sweating? Your workout is active and will be ended soon. "
-                              "Open the workout to keep it going.");
+  const char *msg = i18n_noop(
+      "Still sweating? Your workout is active and will be ended soon. "
+      "Open the workout to keep it going.");
 
   AttributeList notif_attr_list = {0};
   attribute_list_add_uint32(&notif_attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_ACTIVITY);
@@ -38,33 +39,32 @@ static TimelineItem *prv_create_abandoned_workout_notification(void) {
 
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
-    .num_actions = num_actions,
-    .actions = (TimelineItemAction[]) {
-      {
-        .id = 0,
-        .type = TimelineItemActionTypeDismiss,
-        .attr_list = dismiss_attr_list,
+      .num_actions = num_actions,
+      .actions = (TimelineItemAction[]){
+          {
+              .id = 0,
+              .type = TimelineItemActionTypeDismiss,
+              .attr_list = dismiss_attr_list,
+          },
+          {
+              .id = 1,
+              .type = TimelineItemActionTypeOpenWatchApp,
+              .attr_list = end_workout_attr_list,
+          },
+          {
+              .id = 2,
+              .type = TimelineItemActionTypeOpenWatchApp,
+              .attr_list = open_workout_attr_list,
+          },
       },
-      {
-        .id = 1,
-        .type = TimelineItemActionTypeOpenWatchApp,
-        .attr_list = end_workout_attr_list,
-      },
-      {
-        .id = 2,
-        .type = TimelineItemActionTypeOpenWatchApp,
-        .attr_list = open_workout_attr_list,
-      },
-    },
   };
 
   const time_t now_utc = rtc_get_time();
 
   // Note: it's fine if this returns null, since the parent functions will check for a null pointer
-  TimelineItem *item = timeline_item_create_with_attributes(now_utc, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification, &notif_attr_list,
-                                                            &action_group);
+  TimelineItem *item =
+      timeline_item_create_with_attributes(now_utc, 0, TimelineItemTypeNotification,
+                                           LayoutIdNotification, &notif_attr_list, &action_group);
 
   i18n_free_all(&notif_attr_list);
   attribute_list_destroy_list(&notif_attr_list);
@@ -84,7 +84,7 @@ void workout_utils_send_abandoned_workout_notification(void) {
   }
 }
 
-const char* workout_utils_get_name_for_activity(ActivitySessionType type) {
+const char *workout_utils_get_name_for_activity(ActivitySessionType type) {
   switch (type) {
     case ActivitySessionType_Open:
       /// Workout Label
@@ -108,7 +108,7 @@ const char* workout_utils_get_name_for_activity(ActivitySessionType type) {
   WTF;
 }
 
-const char* workout_utils_get_detection_text_for_activity(ActivitySessionType type) {
+const char *workout_utils_get_detection_text_for_activity(ActivitySessionType type) {
   switch (type) {
     case ActivitySessionType_Open:
       /// Workout automatically detected dialog text
@@ -136,8 +136,8 @@ bool workout_utils_find_ongoing_activity_session(ActivitySession *session_out) {
   bool found_session = false;
 
   uint32_t num_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
-  ActivitySession *sessions = app_zalloc_check(sizeof(ActivitySession) *
-                                               ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
+  ActivitySession *sessions =
+      app_zalloc_check(sizeof(ActivitySession) * ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
   activity_get_sessions(&num_sessions, sessions);
 
   for (int i = num_sessions; i >= 0; i--) {

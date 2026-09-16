@@ -35,19 +35,20 @@ typedef struct HRMSubscriberState {
   HRMSubscriberCallback callback_handler;  // only used for KernelBG subscribers
   void *callback_context;                  // only used for KernelBG subscribers
 
-  uint32_t update_interval_s; // How often to send updates to this subscriber
-  time_t expire_utc;          // This subscription will expire at this time
-  bool sent_expiration_event; // true after we've sent a HRMEvent_SubscriptionExpiring event
-  HRMFeature features;        // what features the subscriber is interested in
+  uint32_t update_interval_s;  // How often to send updates to this subscriber
+  time_t expire_utc;           // This subscription will expire at this time
+  bool sent_expiration_event;  // true after we've sent a HRMEvent_SubscriptionExpiring event
+  HRMFeature features;         // what features the subscriber is interested in
 
-  RtcTicks last_valid_bpm_ticks; // tick count the last time this subscriber received valid HR reading
+  RtcTicks
+      last_valid_bpm_ticks;  // tick count the last time this subscriber received valid HR reading
 } HRMSubscriberState;
 
 // HRM manager expects to be update at 1Hz. To the system task, we can currently
 // expect up to 2 events / second. 8 items in the queue allows for up to a 4s stall if subscribed
 // to both BPM and LEDCurrent.
 #define NUM_EVENTS_TO_QUEUE (8)
-#define EVENT_STORAGE_SIZE  (sizeof(PebbleHRMEvent) * NUM_EVENTS_TO_QUEUE)
+#define EVENT_STORAGE_SIZE (sizeof(PebbleHRMEvent) * NUM_EVENTS_TO_QUEUE)
 
 #define HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE 4
 
@@ -69,7 +70,7 @@ struct HRMManagerState {
   ListNode *subscribers;
 
   CircularBuffer system_task_event_buffer;
-  uint32_t dropped_events; //!< Count of how many events for the system task have been dropped
+  uint32_t dropped_events;  //!< Count of how many events for the system task have been dropped
   HRMSessionRef next_session_ref;
   uint8_t system_task_event_storage[EVENT_STORAGE_SIZE];
 
@@ -83,18 +84,17 @@ struct HRMManagerState {
 
   TimerID update_enable_timer_id;  // used for re-enabling the HRM sensor
 
-  uint8_t check_disable_counter;   // increments to HRM_CHECK_SENSOR_DISABLE_COUNT
-  uint8_t enable_failure_count;    // counts consecutive hrm_enable failures, stops retrying after max
+  uint8_t check_disable_counter;  // increments to HRM_CHECK_SENSOR_DISABLE_COUNT
+  uint8_t enable_failure_count;  // counts consecutive hrm_enable failures, stops retrying after max
 
-  HRMFeature enabled_features;     // feature union the sensor was last enabled with
+  HRMFeature enabled_features;  // feature union the sensor was last enabled with
 
   RtcTicks sensor_on_since_ticks;  // tick count when the sensor was last turned on; 0 while off
   bool unserved_timeout_logged;    // limits the unserved-timeout warning to once per on-stretch
 
-  bool enabled_run_level;          // True if the current run_level (LowPower, Stationary,
-                                   // Normal, etc.) allows the sensor to be turned on
-  bool enabled_charging_state;     // Ture if we aren't plugged in / charging
-
+  bool enabled_run_level;       // True if the current run_level (LowPower, Stationary,
+                                // Normal, etc.) allows the sensor to be turned on
+  bool enabled_charging_state;  // Ture if we aren't plugged in / charging
 };
 
 //! Subscription for KernelBG or KernelMain clients.

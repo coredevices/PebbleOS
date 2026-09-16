@@ -19,20 +19,20 @@
 typedef struct BinLogMessage_Version {
   union {
     struct {
-      uint8_t reserved:4;
-      uint8_t unhashed_msg:1;
-      uint8_t parameterized:1;
-      uint8_t tick_count:1;
-      uint8_t time_date:1;
+      uint8_t reserved : 4;
+      uint8_t unhashed_msg : 1;
+      uint8_t parameterized : 1;
+      uint8_t tick_count : 1;
+      uint8_t time_date : 1;
     };
     uint8_t version;
   };
 } BinLogMessage_Version;
 
-#define BINLOGMSG_VERSION_UNHASHED_MSG  (1 << 3)
+#define BINLOGMSG_VERSION_UNHASHED_MSG (1 << 3)
 #define BINLOGMSG_VERSION_PARAMETERIZED (1 << 2)
-#define BINLOGMSG_VERSION_TICK_COUNT    (1 << 1)
-#define BINLOGMSG_VERSION_TIME_DATE     (1 << 0)
+#define BINLOGMSG_VERSION_TICK_COUNT (1 << 1)
+#define BINLOGMSG_VERSION_TIME_DATE (1 << 0)
 
 _Static_assert(sizeof(BinLogMessage_Version) == 1, "BinLogMessage_Version size != 1");
 
@@ -40,11 +40,11 @@ _Static_assert(sizeof(BinLogMessage_Version) == 1, "BinLogMessage_Version size !
 // The times are in UTC. All values are 0 based (i.e., hour is [0,23], minute is [0,59],
 // second is [0,59], millisecond is [0,999]).
 typedef struct Time_Full {
-  uint32_t reserved:5;
-  uint32_t hour:5;
-  uint32_t minute:6;
-  uint32_t second:6;
-  uint32_t millisecond:10;
+  uint32_t reserved : 5;
+  uint32_t hour : 5;
+  uint32_t minute : 6;
+  uint32_t second : 6;
+  uint32_t millisecond : 10;
 } Time_Full;
 
 // Time_Tick
@@ -61,21 +61,21 @@ typedef struct Time_Tick {
 // An invalid/unknown date is identified by (year, month, day) = (0, 0, 0). Thus, Date = 0 is an
 // invalid date, not the start of the epoch, which would be (0, 1, 1).
 typedef struct Date {
-  uint16_t year:7;
-  uint16_t month:4;
-  uint16_t day:5;
+  uint16_t year : 7;
+  uint16_t month : 4;
+  uint16_t day : 5;
 } Date;
 
 // MessageID
 typedef struct MessageID {
   union {
     struct {
-      uint32_t msg_number:19; // LSB
-      uint32_t task_id:4;
-      uint32_t str_index_1:3;
-      uint32_t str_index_2:3;
-      uint32_t reserved:1;
-      uint32_t core_number:2; // MSB
+      uint32_t msg_number : 19;  // LSB
+      uint32_t task_id : 4;
+      uint32_t str_index_1 : 3;
+      uint32_t str_index_2 : 3;
+      uint32_t reserved : 1;
+      uint32_t core_number : 2;  // MSB
     };
     uint32_t msg_id;
   };
@@ -122,12 +122,12 @@ typedef struct BinLogMessage_Header_v3 {
 
 typedef struct BinLogMessage_ParamBody {
   MessageID msgid;
-  uint32_t  payload[0];
+  uint32_t payload[0];
 } BinLogMessage_ParamBody;
 
 typedef struct BinLogMessage_StringParam {
   uint8_t length;
-  uint8_t string[0]; // string[length]
+  uint8_t string[0];  // string[length]
   // uint8_t padding[((length + sizeof(length) + 3) % 4)]
 } BinLogMessage_StringParam;
 
@@ -136,15 +136,14 @@ typedef uint32_t BinLogMessage_IntParam;
 typedef struct BinLogMessage_UnhashedBody {
   uint16_t line_number;
   uint8_t filename[16];
-  uint8_t reserved:2;
-  uint8_t core_number:2;
-  uint8_t task_id:4;
+  uint8_t reserved : 2;
+  uint8_t core_number : 2;
+  uint8_t task_id : 4;
   uint8_t level;
   uint8_t length;
-  uint8_t string[0]; // string[length];
+  uint8_t string[0];  // string[length];
   // uint8_t padding[];
 } BinLogMessage_UnhashedBody;
-
 
 /*
 int len = MAX(strlen(log_string), 255 - sizeof(BinLogMessage_Header_vX))
@@ -153,7 +152,6 @@ typedef struct BinLogMessage_SimpleBody {
   uint8_t padding[((sizeof(BinLogMessage_Header_vX) + len + 3) % 4)];
 } BinLogMessage_SimpleBody;
 */
-
 
 typedef struct BinLogMessage_Param_v0 {
   BinLogMessage_Header_v0 header;

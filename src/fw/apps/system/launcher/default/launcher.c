@@ -81,11 +81,13 @@ static void prv_window_load(Window *window) {
   Layer *window_root_layer = window_get_root_layer(window);
 
   AppMenuDataSource *data_source = &data->app_menu_data_source;
-  app_menu_data_source_init(data_source, &(AppMenuDataSourceCallbacks) {
-    .changed = prv_data_changed,
-    .filter = prv_app_filter_callback,
-    .transform_index = prv_transform_index,
-  }, data);
+  app_menu_data_source_init(data_source,
+                            &(AppMenuDataSourceCallbacks){
+                                .changed = prv_data_changed,
+                                .filter = prv_app_filter_callback,
+                                .transform_index = prv_transform_index,
+                            },
+                            data);
 
   LauncherMenuLayer *launcher_menu_layer = &data->launcher_menu_layer;
   launcher_menu_layer_init(launcher_menu_layer, data_source);
@@ -98,9 +100,9 @@ static void prv_window_load(Window *window) {
                                             &s_launcher_app_persisted_data.selection_state);
   }
 
-  app_focus_service_subscribe_handlers((AppFocusHandlers) {
-    .did_focus = prv_did_focus,
-    .will_focus = prv_will_focus,
+  app_focus_service_subscribe_handlers((AppFocusHandlers){
+      .did_focus = prv_did_focus,
+      .will_focus = prv_will_focus,
   });
 }
 
@@ -113,11 +115,11 @@ static void prv_window_unload(Window *window) {
                                                    &launcher_selection_vertical_range);
 
   // Save the current state of the launcher so we can know its draw state and restore it later
-  s_launcher_app_persisted_data = (LauncherAppPersistedData) {
-    .valid = true,
-    .leave_time = rtc_get_ticks(),
-    .draw_state.selection_vertical_range = launcher_selection_vertical_range,
-    .draw_state.selection_background_color = shell_prefs_get_theme_highlight_color(),
+  s_launcher_app_persisted_data = (LauncherAppPersistedData){
+      .valid = true,
+      .leave_time = rtc_get_ticks(),
+      .draw_state.selection_vertical_range = launcher_selection_vertical_range,
+      .draw_state.selection_background_color = shell_prefs_get_theme_highlight_color(),
   };
   launcher_menu_layer_get_selection_state(&data->launcher_menu_layer,
                                           &s_launcher_app_persisted_data.selection_state);
@@ -137,10 +139,10 @@ static void prv_launcher_menu_window_push(void) {
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Launcher Menu"));
   window_set_user_data(window, data);
-  window_set_window_handlers(window, &(WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+  window_set_window_handlers(window, &(WindowHandlers){
+                                         .load = prv_window_load,
+                                         .unload = prv_window_unload,
+                                     });
 
   const bool animated = false;
   app_window_stack_push(window, animated);
@@ -165,14 +167,14 @@ static void prv_main(void) {
 
 const PebbleProcessMd *launcher_menu_app_get_app_info(void) {
   static const PebbleProcessMdSystem s_launcher_menu_app_info = {
-    .common = {
-      .main_func = prv_main,
-      // UUID: dec0424c-0625-4878-b1f2-147e57e83688
-      .uuid = {0xde, 0xc0, 0x42, 0x4c, 0x06, 0x25, 0x48, 0x78,
-               0xb1, 0xf2, 0x14, 0x7e, 0x57, 0xe8, 0x36, 0x88},
-      .visibility = ProcessVisibilityHidden
-    },
-    .name = "Launcher",
+      .common =
+          {.main_func = prv_main,
+           // UUID: dec0424c-0625-4878-b1f2-147e57e83688
+           .uuid =
+               {0xde, 0xc0, 0x42, 0x4c, 0x06, 0x25, 0x48, 0x78, 0xb1, 0xf2, 0x14, 0x7e, 0x57, 0xe8,
+                0x36, 0x88},
+           .visibility = ProcessVisibilityHidden},
+      .name = "Launcher",
   };
   return (const PebbleProcessMd *)&s_launcher_menu_app_info;
 }

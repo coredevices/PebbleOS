@@ -91,12 +91,18 @@ static void prv_update_display(void *context) {
         data->min_y = data->max_y = sample.y;
         data->min_z = data->max_z = sample.z;
       } else {
-        if (sample.x < data->min_x) data->min_x = sample.x;
-        if (sample.x > data->max_x) data->max_x = sample.x;
-        if (sample.y < data->min_y) data->min_y = sample.y;
-        if (sample.y > data->max_y) data->max_y = sample.y;
-        if (sample.z < data->min_z) data->min_z = sample.z;
-        if (sample.z > data->max_z) data->max_z = sample.z;
+        if (sample.x < data->min_x)
+          data->min_x = sample.x;
+        if (sample.x > data->max_x)
+          data->max_x = sample.x;
+        if (sample.y < data->min_y)
+          data->min_y = sample.y;
+        if (sample.y > data->max_y)
+          data->max_y = sample.y;
+        if (sample.z < data->min_z)
+          data->min_z = sample.z;
+        if (sample.z > data->max_z)
+          data->max_z = sample.z;
       }
       data->sample_count++;
 

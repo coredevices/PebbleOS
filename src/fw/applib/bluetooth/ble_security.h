@@ -8,7 +8,6 @@
 //------------------------------------------------------------------------------
 // Out-Of-Band additions
 
-
 //! "Out-of-Band" (OOB) is one of the mechanisms to exchange a shared secret
 //! during a pairing procedure between two devices. "PIN" and "Just Works" are
 //! the two other exchange mechanisms that the Bluetooth 4.0 Specification
@@ -41,7 +40,6 @@
 //! JavaScript APIs to fetch the data from the web service and transfer the
 //! data to the application on the watch using the AppMessage APIs.
 
-
 //! Pointer to a function that can provide Out-Of-Band keys.
 //! @see ble_security_set_oob_handler() and ble_security_enable_oob()
 //! @param device The device for which the OOB key needs to be provided
@@ -51,8 +49,7 @@
 //! keys of 128-bit (16 byte) size are supported.
 //! @return true if the OOB key was written or false if no OOB data could be
 //! provided for the device.
-typedef bool (*BLESecurityOOBHandler)(BTDevice device,
-                                      uint8_t *oob_key_buffer_out,
+typedef bool (*BLESecurityOOBHandler)(BTDevice device, uint8_t *oob_key_buffer_out,
                                       size_t oob_key_buffer_size);
 
 //! Registers a permanent callback function that is responsible for providing

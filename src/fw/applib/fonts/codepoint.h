@@ -64,8 +64,7 @@ bool codepoint_is_regional_indicator(const Codepoint codepoint);
 // for curr_cp and sets *consumed_next when next_cp is folded into it; returns
 // curr_cp unchanged otherwise. Callers must give a consumed codepoint zero
 // width and must not draw it.
-Codepoint emoji_shape_pair(const Codepoint curr_cp, const Codepoint next_cp,
-                           bool *consumed_next);
+Codepoint emoji_shape_pair(const Codepoint curr_cp, const Codepoint next_cp, bool *consumed_next);
 
 // This is a least dirty hack to enable special rendering when a special codepoint is hit in the
 // text being rendered

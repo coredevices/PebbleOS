@@ -15,7 +15,7 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-#define TRIGGER_PAIRING_NO_SEC_REQ    (1U << 1U)
+#define TRIGGER_PAIRING_NO_SEC_REQ (1U << 1U)
 #define TRIGGER_PAIRING_FORCE_SEC_REQ (1U << 2U)
 
 static int pebble_pairing_service_get_connectivity_status(
@@ -30,7 +30,7 @@ static int pebble_pairing_service_get_connectivity_status(
   }
 
   struct ble_store_key_sec key_sec = {
-    .peer_addr = desc.peer_id_addr,
+      .peer_addr = desc.peer_id_addr,
   };
   struct ble_store_value_sec value_sec;
   bool is_bonded = (ble_store_read_peer_sec(&key_sec, &value_sec) == 0);
@@ -69,7 +69,8 @@ int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_hand
 
 static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
                                         struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR) return 0;
+  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR)
+    return 0;
 
   PebblePairingServiceConnectivityStatus status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);

@@ -85,22 +85,22 @@ bool resource_storage_builtin_check(ResAppNum app_num, uint32_t resource_id,
 }
 
 const ResourceStoreImplementation g_builtin_impl = {
-  .type = ResourceStoreTypeBuiltIn,
+    .type = ResourceStoreTypeBuiltIn,
 
-  .init = resource_storage_generic_init,
-  .clear = resource_storage_generic_clear,
-  .check = resource_storage_builtin_check,
+    .init = resource_storage_generic_init,
+    .clear = resource_storage_generic_clear,
+    .check = resource_storage_builtin_check,
 
-  .metadata_size = resource_storage_generic_metadata_size,
-  .find_resource = resource_storage_builtin_find_resource,
-  .get_resource = resource_storage_builtin_get_resource,
+    .metadata_size = resource_storage_generic_metadata_size,
+    .find_resource = resource_storage_builtin_find_resource,
+    .get_resource = resource_storage_builtin_get_resource,
 
-  .get_length = resource_storage_generic_get_length,
-  .get_crc = resource_storage_generic_get_crc,
-  .write = resource_storage_generic_write,
-  .read = resource_storage_builtin_read,
-  .readonly_bytes = resource_storage_builtin_readonly_bytes,
+    .get_length = resource_storage_generic_get_length,
+    .get_crc = resource_storage_generic_get_crc,
+    .write = resource_storage_generic_write,
+    .read = resource_storage_builtin_read,
+    .readonly_bytes = resource_storage_builtin_readonly_bytes,
 
-  .watch = resource_storage_generic_watch,
-  .unwatch = resource_storage_generic_unwatch,
+    .watch = resource_storage_generic_watch,
+    .unwatch = resource_storage_generic_unwatch,
 };

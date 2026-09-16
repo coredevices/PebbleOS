@@ -41,8 +41,8 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 
 static void prv_alarms_glance_subtitle_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceAlarms *alarms_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -143,10 +143,10 @@ static void prv_alarm_clock_event_handler(PBL_UNUSED PebbleEvent *event, void *c
 }
 
 static const LauncherAppGlanceStructuredImpl s_alarms_structured_glance_impl = {
-  .get_icon = prv_get_icon,
-  .get_title = prv_get_title,
-  .create_subtitle_node = prv_create_subtitle_node,
-  .destructor = prv_destructor,
+    .get_icon = prv_get_icon,
+    .get_title = prv_get_title,
+    .create_subtitle_node = prv_create_subtitle_node,
+    .destructor = prv_destructor,
 };
 
 LauncherAppGlance *launcher_app_glance_alarms_create(const AppMenuNode *node) {
@@ -163,19 +163,18 @@ LauncherAppGlance *launcher_app_glance_alarms_create(const AppMenuNode *node) {
   alarms_glance->default_icon_resource_id = node->icon_resource_id;
 
   const bool should_consider_slices = false;
-  LauncherAppGlanceStructured *structured_glance =
-      launcher_app_glance_structured_create(&node->uuid, &s_alarms_structured_glance_impl,
-                                            should_consider_slices, alarms_glance);
+  LauncherAppGlanceStructured *structured_glance = launcher_app_glance_structured_create(
+      &node->uuid, &s_alarms_structured_glance_impl, should_consider_slices, alarms_glance);
   PBL_ASSERTN(structured_glance);
 
   // Get the first state of the glance
   prv_update_glance_for_next_alarm(alarms_glance);
 
   // Subscribe to alarm clock events for updating the glance
-  alarms_glance->alarm_clock_event_info = (EventServiceInfo) {
-    .type = PEBBLE_ALARM_CLOCK_EVENT,
-    .handler = prv_alarm_clock_event_handler,
-    .context = structured_glance,
+  alarms_glance->alarm_clock_event_info = (EventServiceInfo){
+      .type = PEBBLE_ALARM_CLOCK_EVENT,
+      .handler = prv_alarm_clock_event_handler,
+      .context = structured_glance,
   };
   event_service_client_subscribe(&alarms_glance->alarm_clock_event_info);
 

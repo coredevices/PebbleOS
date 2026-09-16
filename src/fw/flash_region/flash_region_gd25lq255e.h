@@ -16,20 +16,20 @@
 
 #define FLASH_REGION_DEF(MACRO, arg)                                                      \
   /* Protectable region (1M, lower 1/32) BP4-0=10101 */                                   \
-  MACRO(SAFE_FIRMWARE,           0x0080000 /*   512K */, arg) /* 0x0000000 - 0x007FFFF */ \
-  MACRO(RSVD1,                   0x007F000 /*   508K */, arg) /* 0x0080000 - 0x00FEFFF */ \
-  MACRO(MFG_INFO,                0x0001000 /*     4K */, arg) /* 0x00FF000 - 0x00FFFFF */ \
+  MACRO(SAFE_FIRMWARE, 0x0080000 /*   512K */, arg) /* 0x0000000 - 0x007FFFF */           \
+  MACRO(RSVD1, 0x007F000 /*   508K */, arg)         /* 0x0080000 - 0x00FEFFF */           \
+  MACRO(MFG_INFO, 0x0001000 /*     4K */, arg)      /* 0x00FF000 - 0x00FFFFF */           \
   /* Non-protectable region (31MB) */                                                     \
-  MACRO(FIRMWARE_SLOT_1,         0x0100000 /*  1024K */, arg) /* 0x0100000 - 0x01FFFFF */ \
+  MACRO(FIRMWARE_SLOT_1, 0x0100000 /*  1024K */, arg)         /* 0x0100000 - 0x01FFFFF */ \
   MACRO(SYSTEM_RESOURCES_BANK_0, 0x0100000 /*  1024K */, arg) /* 0x0200000 - 0x02FFFFF */ \
   MACRO(SYSTEM_RESOURCES_BANK_1, 0x0100000 /*  1024K */, arg) /* 0x0300000 - 0x03FFFFF */ \
-  MACRO(FILESYSTEM,              0x19D0000 /* 26432K */, arg) /* 0x0400000 - 0x1DCFFFF */ \
-  MACRO(RSVD2,                   0x0200000 /*  2048K */, arg) /* 0x1DD0000 - 0x1FCFFFF */ \
-  MACRO(DEBUG_DB,                0x0020000 /*   128K */, arg) /* 0x1FD0000 - 0x1FEFFFF */ \
-  MACRO(RSVD3,                   0x000D000 /*    52K */, arg) /* 0x1FF0000 - 0x1FFCFFF */ \
-  MACRO(MFG_RESULTS,             0x0001000 /*     4K */, arg) /* 0x1FFD000 - 0x1FFDFFF */ \
-  MACRO(MFG_BATTERY_STATE,       0x0001000 /*     4K */, arg) /* 0x1FFE000 - 0x1FFEFFF */ \
-  MACRO(SHARED_PRF_STORAGE,      0x0001000 /*     4K */, arg) /* 0x1FFF000 - 0x1FFFFFF */
+  MACRO(FILESYSTEM, 0x19D0000 /* 26432K */, arg)              /* 0x0400000 - 0x1DCFFFF */ \
+  MACRO(RSVD2, 0x0200000 /*  2048K */, arg)                   /* 0x1DD0000 - 0x1FCFFFF */ \
+  MACRO(DEBUG_DB, 0x0020000 /*   128K */, arg)                /* 0x1FD0000 - 0x1FEFFFF */ \
+  MACRO(RSVD3, 0x000D000 /*    52K */, arg)                   /* 0x1FF0000 - 0x1FFCFFF */ \
+  MACRO(MFG_RESULTS, 0x0001000 /*     4K */, arg)             /* 0x1FFD000 - 0x1FFDFFF */ \
+  MACRO(MFG_BATTERY_STATE, 0x0001000 /*     4K */, arg)       /* 0x1FFE000 - 0x1FFEFFF */ \
+  MACRO(SHARED_PRF_STORAGE, 0x0001000 /*     4K */, arg)      /* 0x1FFF000 - 0x1FFFFFF */
 
 #include "flash_region_def_helper.h"
 

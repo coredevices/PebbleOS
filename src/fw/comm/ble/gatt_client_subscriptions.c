@@ -53,14 +53,11 @@ static bool s_is_notification_event_pending[GAPLEClientNum];
 // The call below requires the caller to own the bt_lock while calling the
 // function and for as long as the result is being used / accessed.
 extern BLEDescriptor gatt_client_accessors_find_cccd_with_characteristic(
-                                                            BLECharacteristic characteristic_ref,
-                                                            uint8_t *characteristic_properties_out,
-                                                            uint16_t *characteristic_att_handle_out,
-                                                            GAPLEConnection **connection_out);
+    BLECharacteristic characteristic_ref, uint8_t *characteristic_properties_out,
+    uint16_t *characteristic_att_handle_out, GAPLEConnection **connection_out);
 
 extern BLECharacteristic gatt_client_descriptor_get_characteristic_and_connection(
-                                                                  BLEDescriptor descriptor_ref,
-                                                                  GAPLEConnection **connection_out);
+    BLEDescriptor descriptor_ref, GAPLEConnection **connection_out);
 
 // -------------------------------------------------------------------------------------------------
 // Function implemented by the gatt_client_operations module to write the CCCD (to alter the remote
@@ -73,9 +70,8 @@ extern BTErrno gatt_client_op_write_descriptor_cccd(BLEDescriptor cccd_ref,
 // -------------------------------------------------------------------------------------------------
 // Static function prototypes
 
-static GATTClientSubscriptionNode * prv_find_subscription_for_characteristic(
-                                                               BLECharacteristic characteristic_ref,
-                                                                       GAPLEConnection *connection);
+static GATTClientSubscriptionNode *prv_find_subscription_for_characteristic(
+    BLECharacteristic characteristic_ref, GAPLEConnection *connection);
 
 static BLESubscription prv_prevailing_subscription_type(GATTClientSubscriptionNode *subscription);
 
@@ -97,16 +93,16 @@ static void prv_unlock(void) {
 
 static void prv_send_notification_event(PebbleTaskBitset task_mask) {
   PebbleEvent e = {
-    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-    .task_mask = task_mask,
-    .bluetooth = {
-      .le = {
-        .gatt_client = {
-          .subtype = PebbleBLEGATTClientEventTypeNotification,
-          .gatt_error = BLEGATTErrorSuccess,
-        },
+      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+      .task_mask = task_mask,
+      .bluetooth = {
+          .le = {
+              .gatt_client = {
+                  .subtype = PebbleBLEGATTClientEventTypeNotification,
+                  .gatt_error = BLEGATTErrorSuccess,
+              },
+          },
       },
-    },
   };
   event_put(&e);
 }
@@ -115,25 +111,25 @@ static void prv_send_subscription_event(BLECharacteristic characteristic_ref,
                                         PebbleTaskBitset task_mask, BLESubscription type,
                                         BLEGATTError gatt_error) {
   PebbleEvent e = {
-    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-    .task_mask = task_mask,
-    .bluetooth = {
-      .le = {
-        .gatt_client = {
-          .subtype = PebbleBLEGATTClientEventTypeCharacteristicSubscribe,
-          .object_ref = characteristic_ref,
-          .subscription_type = type,
-          .gatt_error = gatt_error,
-        },
+      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+      .task_mask = task_mask,
+      .bluetooth = {
+          .le = {
+              .gatt_client = {
+                  .subtype = PebbleBLEGATTClientEventTypeCharacteristicSubscribe,
+                  .object_ref = characteristic_ref,
+                  .subscription_type = type,
+                  .gatt_error = gatt_error,
+              },
+          },
       },
-    },
   };
   event_put(&e);
 }
 
 static bool prv_find_subscription_by_att_handle(ListNode *node, void *data) {
-  const GATTClientSubscriptionNode *subscription = (const GATTClientSubscriptionNode *) node;
-  const uint16_t att_handle = (const uint16_t)(uintptr_t) data;
+  const GATTClientSubscriptionNode *subscription = (const GATTClientSubscriptionNode *)node;
+  const uint16_t att_handle = (const uint16_t)(uintptr_t)data;
   return (subscription->att_handle == att_handle);
 }
 
@@ -153,7 +149,7 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
     if (LIKELY(write_space >= required_length)) {
       if (UNLIKELY(did_stall)) {
         PBL_LOG_DBG("GATT notification stalled for %d ms...",
-                (int)(timeout_ms - pbl_ticks_to_ms(timeout_end_ticks - rtc_get_ticks())));
+                    (int)(timeout_ms - pbl_ticks_to_ms(timeout_end_ticks - rtc_get_ticks())));
       }
       return true;
     }
@@ -180,15 +176,13 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
 //! @note bt_lock may be held by the caller. If the bt_lock is not held we will block for a little
 //! if the subscription buffer is full
 void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *connection,
-                                                          uint16_t att_handle,
-                                                          const uint8_t *value,
+                                                          uint16_t att_handle, const uint8_t *value,
                                                           uint16_t length) {
   bt_lock();
 
-  ListNode *head = (ListNode *) connection->gatt_subscriptions;
-  const GATTClientSubscriptionNode *subscription =
-          (const GATTClientSubscriptionNode *) list_find(head, prv_find_subscription_by_att_handle,
-                                                         (void *)(uintptr_t) att_handle);
+  ListNode *head = (ListNode *)connection->gatt_subscriptions;
+  const GATTClientSubscriptionNode *subscription = (const GATTClientSubscriptionNode *)list_find(
+      head, prv_find_subscription_by_att_handle, (void *)(uintptr_t)att_handle);
   if (UNLIKELY(!subscription)) {
     // MT: I suspect this can be hit when the remote remembers the CCCD subscription state across
     // disconnections (while we don't remember it across disconnections).
@@ -214,8 +208,8 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
     }
     // Write the header first, then write the payload:
     GATTBufferedNotificationHeader header = {
-      .characteristic = subscription->characteristic,
-      .value_length = length,
+        .characteristic = subscription->characteristic,
+        .value_length = length,
     };
     CircularBuffer *buffer = s_circular_buffer[c];
     bt_unlock();
@@ -223,18 +217,19 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
     // If we do not hold the bt_lock() at this point it's safe to block for a little bit waiting
     // for notifications to be consumed
     uint32_t write_timeout = bt_lock_is_held() ? 0 : CONFIG_BLE_GATT_NOTIF_WRITE_TIMEOUT_MS;
-    bool consumed = prv_wait_until_write_space_available(buffer, (sizeof(header) + length),
-                                                         write_timeout);
+    bool consumed =
+        prv_wait_until_write_space_available(buffer, (sizeof(header) + length), write_timeout);
 
     bt_lock();
     if (!consumed) {
-      PBL_LOG_ERR("Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
-              length, bt_lock_is_held() ? "yes" : "no");
+      PBL_LOG_ERR(
+          "Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
+          length, bt_lock_is_held() ? "yes" : "no");
       continue;
     }
     prv_lock();
     {
-      circular_buffer_write(buffer, (const uint8_t *) &header, sizeof(header));
+      circular_buffer_write(buffer, (const uint8_t *)&header, sizeof(header));
       circular_buffer_write(buffer, value, length);
       if (UNLIKELY(!s_is_notification_event_pending[c])) {
         task_mask &= ~gap_le_pebble_task_bit_for_client(c);
@@ -253,12 +248,10 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
-static GATTClientSubscriptionNode * prv_find_subscription_and_connection_for_cccd(
-                                                                 BLEDescriptor cccd_ref,
-                                                                 GAPLEConnection **connection_out) {
+static GATTClientSubscriptionNode *prv_find_subscription_and_connection_for_cccd(
+    BLEDescriptor cccd_ref, GAPLEConnection **connection_out) {
   BLECharacteristic characteristic_ref =
-                    gatt_client_descriptor_get_characteristic_and_connection(cccd_ref,
-                                                                             connection_out);
+      gatt_client_descriptor_get_characteristic_and_connection(cccd_ref, connection_out);
   if (!*connection_out) {
     return NULL;
   }
@@ -272,7 +265,7 @@ static GATTClientSubscriptionNode * prv_find_subscription_and_connection_for_ccc
 void gatt_client_subscriptions_handle_write_cccd_response(BLEDescriptor cccd, BLEGATTError error) {
   GAPLEConnection *connection;
   GATTClientSubscriptionNode *subscription =
-                                   prv_find_subscription_and_connection_for_cccd(cccd, &connection);
+      prv_find_subscription_and_connection_for_cccd(cccd, &connection);
   if (!subscription || !connection) {
     // FIXME: When unsubscribing, the GATTClientSubscriptionNode is already removed at this point
     PBL_LOG_DBG("No subscription and/or connection found for CCCD write response (%u)", error);
@@ -284,8 +277,8 @@ void gatt_client_subscriptions_handle_write_cccd_response(BLEDescriptor cccd, BL
 
   PebbleTaskBitset task_mask = task_mask_none;
   const bool has_error = (error != BLEGATTErrorSuccess);
-  const BLESubscription type = has_error ?
-                               BLESubscriptionNone : prv_prevailing_subscription_type(subscription);
+  const BLESubscription type =
+      has_error ? BLESubscriptionNone : prv_prevailing_subscription_type(subscription);
   for (GAPLEClient c = 0; c < GAPLEClientNum; ++c) {
     if (subscription->pending_confirmation[c]) {
       subscription->pending_confirmation[c] = false;
@@ -328,9 +321,8 @@ bool prv_get_next_notification_header(GAPLEClient client,
                                       GATTBufferedNotificationHeader *header_out) {
   bool has_notification = false;
   GATTBufferedNotificationHeader header;
-  const uint16_t copied_length = circular_buffer_copy(s_circular_buffer[client],
-                                                      (uint8_t *) &header,
-                                                      sizeof(header));
+  const uint16_t copied_length =
+      circular_buffer_copy(s_circular_buffer[client], (uint8_t *)&header, sizeof(header));
   if (copied_length == sizeof(header)) {
     has_notification = true;
     if (header_out) {
@@ -373,7 +365,7 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
   prv_lock();
   {
     if (!prv_check_buffer(client)) {
-      has_more = false; // the client went away
+      has_more = false;  // the client went away
       goto unlock;
     }
 
@@ -382,41 +374,37 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
     if (LIKELY(has_notification)) {
       if (LIKELY(*value_length_in_out >= header.value_length)) {
         const uint16_t copied_length =
-              circular_buffer_copy_offset(s_circular_buffer[client],
-                                          sizeof(header), /* skip header */
-                                          value_out,
-                                          header.value_length);
+            circular_buffer_copy_offset(s_circular_buffer[client], sizeof(header), /* skip header */
+                                        value_out, header.value_length);
         if (UNLIKELY(copied_length != header.value_length)) {
-          PBL_LOG_ERR("Couldn't copy the number of requested byes (%u vs %u)",
-                  header.value_length, copied_length);
+          PBL_LOG_ERR("Couldn't copy the number of requested byes (%u vs %u)", header.value_length,
+                      copied_length);
         }
         *characteristic_ref_out = header.characteristic;
         *value_length_in_out = copied_length;
       } else {
         PBL_LOG_ERR("Client didn't provide buffer that was big enough (%u vs %u)",
-                *value_length_in_out, header.value_length);
+                    *value_length_in_out, header.value_length);
         *characteristic_ref_out = BLE_CHARACTERISTIC_INVALID;
         *value_length_in_out = 0;
       }
       // Always eat the notification:
-      circular_buffer_consume(s_circular_buffer[client],
-                              sizeof(header) + header.value_length);
+      circular_buffer_consume(s_circular_buffer[client], sizeof(header) + header.value_length);
     } else {
       PBL_LOG_WRN("Consume called while no notifications in buffer");
       *characteristic_ref_out = BLE_CHARACTERISTIC_INVALID;
       *value_length_in_out = 0;
     }
 
-    has_more = has_notification &&
-                          prv_get_next_notification_header(client, &next_header);
+    has_more = has_notification && prv_get_next_notification_header(client, &next_header);
   }
 unlock:
-    if (!has_more) {
-      s_is_notification_event_pending[client] = false;
-    }
-    if (has_more_out) {
-      *has_more_out = has_more;
-    }
+  if (!has_more) {
+    s_is_notification_event_pending[client] = false;
+  }
+  if (has_more_out) {
+    *has_more_out = has_more;
+  }
 
   prv_unlock();
 
@@ -469,13 +457,13 @@ static bool prv_retain_buffer(GAPLEClient client) {
       const size_t size = sizeof(CircularBuffer) + GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE;
       // TODO: Use app_malloc for the storage when client is app
       // https://pebbletechnology.atlassian.net/browse/PBL-14151
-      uint8_t *buffer = (uint8_t *) kernel_zalloc(size);
+      uint8_t *buffer = (uint8_t *)kernel_zalloc(size);
       if (!buffer) {
         rv = false;
         goto unlock;
       }
-      CircularBuffer *circular_buffer = (CircularBuffer *) buffer;
-      circular_buffer_init(circular_buffer, (uint8_t *) (circular_buffer + 1),
+      CircularBuffer *circular_buffer = (CircularBuffer *)buffer;
+      circular_buffer_init(circular_buffer, (uint8_t *)(circular_buffer + 1),
                            GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE);
       s_circular_buffer[client] = circular_buffer;
     }
@@ -489,17 +477,16 @@ unlock:
 // -------------------------------------------------------------------------------------------------
 
 static bool prv_find_subscription_cb(ListNode *node, void *data) {
-  const GATTClientSubscriptionNode *subscription = (const GATTClientSubscriptionNode *) node;
-  const BLECharacteristic characteristic_ref = (BLECharacteristic) data;
+  const GATTClientSubscriptionNode *subscription = (const GATTClientSubscriptionNode *)node;
+  const BLECharacteristic characteristic_ref = (BLECharacteristic)data;
   return (subscription->characteristic == characteristic_ref);
 }
 
-static GATTClientSubscriptionNode * prv_find_subscription_for_characteristic(
-                                                               BLECharacteristic characteristic_ref,
-                                                               GAPLEConnection *connection) {
-  ListNode *head = (ListNode *) connection->gatt_subscriptions;
-  return (GATTClientSubscriptionNode *) list_find(head, prv_find_subscription_cb,
-                                                  (void *) characteristic_ref);
+static GATTClientSubscriptionNode *prv_find_subscription_for_characteristic(
+    BLECharacteristic characteristic_ref, GAPLEConnection *connection) {
+  ListNode *head = (ListNode *)connection->gatt_subscriptions;
+  return (GATTClientSubscriptionNode *)list_find(head, prv_find_subscription_cb,
+                                                 (void *)characteristic_ref);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -514,8 +501,8 @@ static bool prv_has_pending_cccd_write(GATTClientSubscriptionNode *subscription)
 }
 
 static BLESubscription prv_prevailing_subscription_type(GATTClientSubscriptionNode *subscription) {
-  const BLESubscription orred = subscription->subscriptions[GAPLEClientApp] |
-                                subscription->subscriptions[GAPLEClientKernel];
+  const BLESubscription orred =
+      subscription->subscriptions[GAPLEClientApp] | subscription->subscriptions[GAPLEClientKernel];
   // Notifications wins over None and Indications:
   if (orred & BLESubscriptionNotifications) {
     return BLESubscriptionNotifications;
@@ -549,23 +536,21 @@ static bool prv_sanitize_subscription_type(BLESubscription *subscription_type,
 
 static void prv_remove_subscription(GAPLEConnection *connection,
                                     GATTClientSubscriptionNode *subscription) {
-  list_remove(&subscription->node,
-              (ListNode **) &connection->gatt_subscriptions, NULL);
+  list_remove(&subscription->node, (ListNode **)&connection->gatt_subscriptions, NULL);
   kernel_free(subscription);
 }
 
 // -------------------------------------------------------------------------------------------------
 
 static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
-                      BLESubscription subscription_type,
-                      GAPLEClient client, bool is_cleaning_up) {
+                             BLESubscription subscription_type, GAPLEClient client,
+                             bool is_cleaning_up) {
   BLESubscription previous_prevailing_type = BLESubscriptionNone;
   GAPLEConnection *connection;
   uint8_t supported_properties;
   uint16_t att_handle;
-  BLEDescriptor cccd_ref =
-      gatt_client_accessors_find_cccd_with_characteristic(characteristic_ref, &supported_properties,
-                                                          &att_handle, &connection);
+  BLEDescriptor cccd_ref = gatt_client_accessors_find_cccd_with_characteristic(
+      characteristic_ref, &supported_properties, &att_handle, &connection);
   if (cccd_ref == BLE_DESCRIPTOR_INVALID || !connection) {
     // Invalid characteristic or characteristic does not have a CCCD
     return BTErrnoInvalidParameter;
@@ -578,7 +563,7 @@ static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
 
   // Try to find existing subscription
   GATTClientSubscriptionNode *subscription =
-                           prv_find_subscription_for_characteristic(characteristic_ref, connection);
+      prv_find_subscription_for_characteristic(characteristic_ref, connection);
   bool did_create_new_subscription = false;
   if (subscription) {
     if (subscription->subscriptions[client] == subscription_type) {
@@ -596,20 +581,20 @@ static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
       return BTErrnoInvalidState;
     }
     // No subscriptions for the characteristic yet, go create one:
-    subscription = (GATTClientSubscriptionNode *) kernel_malloc(sizeof(GATTClientSubscriptionNode));
+    subscription = (GATTClientSubscriptionNode *)kernel_malloc(sizeof(GATTClientSubscriptionNode));
     if (!subscription) {
       // OOM
       return BTErrnoNotEnoughResources;
     }
     // Initialize it:
-    *subscription = (const GATTClientSubscriptionNode) {
-      .characteristic = characteristic_ref,
-      .att_handle = att_handle,
+    *subscription = (const GATTClientSubscriptionNode){
+        .characteristic = characteristic_ref,
+        .att_handle = att_handle,
     };
     // Prepend to the list of subscriptions of the connection:
     ListNode *head = &connection->gatt_subscriptions->node;
     connection->gatt_subscriptions =
-                             (GATTClientSubscriptionNode *) list_prepend(head, &subscription->node);
+        (GATTClientSubscriptionNode *)list_prepend(head, &subscription->node);
 
     PBL_LOG_DBG("Added BLE subscription for handle 0x%x", att_handle);
     did_create_new_subscription = true;
@@ -696,11 +681,10 @@ static BTErrno prv_subscribe(BLECharacteristic characteristic_ref,
 }
 
 BTErrno gatt_client_subscriptions_subscribe(BLECharacteristic characteristic_ref,
-                                            BLESubscription subscription_type,
-                                            GAPLEClient client) {
+                                            BLESubscription subscription_type, GAPLEClient client) {
   bt_lock();
-  BTErrno ret_val = prv_subscribe(characteristic_ref, subscription_type, client,
-                                  false /* is_cleaning_up */);
+  BTErrno ret_val =
+      prv_subscribe(characteristic_ref, subscription_type, client, false /* is_cleaning_up */);
   bt_unlock();
   return ret_val;
 }
@@ -708,11 +692,11 @@ BTErrno gatt_client_subscriptions_subscribe(BLECharacteristic characteristic_ref
 // -------------------------------------------------------------------------------------------------
 
 bool prv_cleanup_subscriptions_for_client(GAPLEConnection *connection, void *data) {
-  const GAPLEClient client = (const GAPLEClient)(uintptr_t) data;
+  const GAPLEClient client = (const GAPLEClient)(uintptr_t)data;
   GATTClientSubscriptionNode *subscription = connection->gatt_subscriptions;
   while (subscription) {
     GATTClientSubscriptionNode *next_subscription =
-                                             (GATTClientSubscriptionNode *) subscription->node.next;
+        (GATTClientSubscriptionNode *)subscription->node.next;
     // If subscribed, unsubscribe:
     if (subscription->subscriptions[client] != BLESubscriptionNone) {
       prv_subscribe(subscription->characteristic, BLESubscriptionNone, client,
@@ -727,7 +711,7 @@ void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {
   bt_lock();
   {
     // Walk all the connections to find subscriptions to unsubscribe:
-    gap_le_connection_find(prv_cleanup_subscriptions_for_client, (void *)(uintptr_t) client);
+    gap_le_connection_find(prv_cleanup_subscriptions_for_client, (void *)(uintptr_t)client);
   }
   bt_unlock();
 }
@@ -740,15 +724,14 @@ void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *con
   {
     GATTClientSubscriptionNode *node = connection->gatt_subscriptions;
     while (node) {
-      GATTClientSubscriptionNode *next = (GATTClientSubscriptionNode *) node->node.next;
+      GATTClientSubscriptionNode *next = (GATTClientSubscriptionNode *)node->node.next;
       // Decrement circular buffer retain count:
       for (GAPLEClient c = 0; c < GAPLEClientNum; ++c) {
         if (node->subscriptions[c] != BLESubscriptionNone) {
           if (should_unsubscribe) {
             // The connection is not gone, so unsubscribe for this client, this will also
             // free the GATTClientSubscriptionNode when both clients are unsubscribed:
-            prv_subscribe(node->characteristic, BLESubscriptionNone, c,
-                          true /* is_cleaning_up */);
+            prv_subscribe(node->characteristic, BLESubscriptionNone, c, true /* is_cleaning_up */);
           } else {
             // Just release the buffer on behalf of the subscription
             prv_release_buffer(c);
@@ -767,20 +750,18 @@ void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *con
   bt_unlock();
 }
 
-void gatt_client_subscription_cleanup_by_att_handle_range(
-    struct GAPLEConnection *connection, ATTHandleRange *range) {
-
+void gatt_client_subscription_cleanup_by_att_handle_range(struct GAPLEConnection *connection,
+                                                          ATTHandleRange *range) {
   bt_lock();
   {
     GATTClientSubscriptionNode *node = connection->gatt_subscriptions;
 
     while (node) {
-      GATTClientSubscriptionNode *next = (GATTClientSubscriptionNode *) node->node.next;
+      GATTClientSubscriptionNode *next = (GATTClientSubscriptionNode *)node->node.next;
 
       if (node->att_handle >= range->start && node->att_handle <= range->end) {
         for (GAPLEClient c = 0; c < GAPLEClientNum; ++c) {
-          prv_subscribe(node->characteristic, BLESubscriptionNone, c,
-                      true);
+          prv_subscribe(node->characteristic, BLESubscriptionNone, c, true);
         }
       }
       node = next;
@@ -800,7 +781,7 @@ T_STATIC bool gatt_client_get_event_pending_state(GAPLEClient client) {
 #endif
 
 //! Only for unit tests
-struct pbl_sem * gatt_client_subscription_get_semaphore(void) {
+struct pbl_sem *gatt_client_subscription_get_semaphore(void) {
   return &s_gatt_client_subscriptions_semphr;
 }
 

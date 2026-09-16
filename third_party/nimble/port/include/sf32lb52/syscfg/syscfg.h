@@ -12,9 +12,8 @@
  * attempt to use these macros without including this header will result in a
  * compiler error.
  */
-#define MYNEWT_VAL(_name)                       MYNEWT_VAL_ ## _name
-#define MYNEWT_VAL_CHOICE(_name, _val)          MYNEWT_VAL_ ## _name ## __ ## _val
-
+#define MYNEWT_VAL(_name) MYNEWT_VAL_##_name
+#define MYNEWT_VAL_CHOICE(_name, _val) MYNEWT_VAL_##_name##__##_val
 
 /*** Repository @apache-mynewt-core info */
 #ifndef MYNEWT_VAL_REPO_HASH_APACHE_MYNEWT_CORE
@@ -51,8 +50,6 @@
 #ifndef MYNEWT_VAL_REPO_VERSION_SYSCFG
 #define MYNEWT_VAL_REPO_VERSION_SYSCFG "0.0.0"
 #endif
-
-
 
 /*** @apache-mynewt-core/crypto/mbedtls */
 #ifndef MYNEWT_VAL_MBEDTLS_AES_ALT
@@ -127,7 +124,8 @@
 #define MYNEWT_VAL_MBEDTLS_CIPHER_MODE_XTS (0)
 #endif
 
-/* Overridden by @apache-mynewt-nimble/nimble/host (defined by @apache-mynewt-core/crypto/mbedtls) */
+/* Overridden by @apache-mynewt-nimble/nimble/host (defined by @apache-mynewt-core/crypto/mbedtls)
+ */
 #ifndef MYNEWT_VAL_MBEDTLS_CMAC_C
 #define MYNEWT_VAL_MBEDTLS_CMAC_C (1)
 #endif
@@ -861,7 +859,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_ATT_SVR_NOTIFY_MULTI
-#define MYNEWT_VAL_BLE_ATT_SVR_NOTIFY_MULTI (MYNEWT_VAL_BLE_ATT_SVR_NOTIFY && (MYNEWT_VAL_BLE_VERSION >= 52))
+#define MYNEWT_VAL_BLE_ATT_SVR_NOTIFY_MULTI \
+  (MYNEWT_VAL_BLE_ATT_SVR_NOTIFY && (MYNEWT_VAL_BLE_VERSION >= 52))
 #endif
 
 #ifndef MYNEWT_VAL_BLE_ATT_SVR_QUEUED_WRITE
@@ -986,7 +985,8 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_GATT_READ_MULT_VAR
-#define MYNEWT_VAL_BLE_GATT_READ_MULT_VAR (MYNEWT_VAL_BLE_ROLE_CENTRAL && (MYNEWT_VAL_BLE_VERSION >= 52))
+#define MYNEWT_VAL_BLE_GATT_READ_MULT_VAR \
+  (MYNEWT_VAL_BLE_ROLE_CENTRAL && (MYNEWT_VAL_BLE_VERSION >= 52))
 #endif
 
 #ifndef MYNEWT_VAL_BLE_GATT_READ_UUID
@@ -1099,7 +1099,7 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_COC_MPS
-#define MYNEWT_VAL_BLE_L2CAP_COC_MPS (MYNEWT_VAL_MSYS_1_BLOCK_SIZE-8)
+#define MYNEWT_VAL_BLE_L2CAP_COC_MPS (MYNEWT_VAL_MSYS_1_BLOCK_SIZE - 8)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_COC_SDU_BUFF_COUNT
@@ -1115,7 +1115,7 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_MAX_CHANS
-#define MYNEWT_VAL_BLE_L2CAP_MAX_CHANS (3*MYNEWT_VAL_BLE_MAX_CONNECTIONS)
+#define MYNEWT_VAL_BLE_L2CAP_MAX_CHANS (3 * MYNEWT_VAL_BLE_MAX_CONNECTIONS)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_L2CAP_RX_FRAG_TIMEOUT

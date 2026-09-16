@@ -55,5 +55,4 @@ KinoReel *dialog_create_icon(Dialog *dialog);
 //! @param animated `True` if animated, otherwise `False`
 //! @return `True` if successfully initialized the dialog's \ref KinoLayer, otherwise
 //!     `False`
-bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image,
-                            GPoint icon_origin, bool animated);
+bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image, GPoint icon_origin, bool animated);

@@ -66,14 +66,14 @@ void click_recognizer_handle_button_down(ClickRecognizer *recognizer);
 //! Reset the state of a single recognizer, including timers.
 void click_recognizer_reset(ClickRecognizer *recognizer);
 
-//! Initialize a click manager for use. This only needs to be called once to initialize the structure, and then the
-//! same struct can be reconfigured multiple times by using click_manager_clear.
-void click_manager_init(ClickManager* click_manager);
+//! Initialize a click manager for use. This only needs to be called once to initialize the
+//! structure, and then the same struct can be reconfigured multiple times by using
+//! click_manager_clear.
+void click_manager_init(ClickManager *click_manager);
 
-//! Clear out any state from the click manager, including configuration. This ClickManager can be reconfigured at any
-//! time.
-void click_manager_clear(ClickManager* click_manager);
+//! Clear out any state from the click manager, including configuration. This ClickManager can be
+//! reconfigured at any time.
+void click_manager_clear(ClickManager *click_manager);
 
 //! Reset the state from the click manager, including timers.
-void click_manager_reset(ClickManager* click_manager);
-
+void click_manager_reset(ClickManager *click_manager);

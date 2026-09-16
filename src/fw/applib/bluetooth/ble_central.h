@@ -12,8 +12,7 @@
 //! BTErrnoRemotelyTerminated, BTErrnoLocallyTerminatedBySystem or
 //! BTErrnoLocallyTerminatedByApp.
 //! @note See additional notes with ble_central_set_connection_handler()
-typedef void (*BLEConnectionHandler)(BTDevice device,
-                                     BTErrno connection_status);
+typedef void (*BLEConnectionHandler)(BTDevice device, BTErrno connection_status);
 
 //! Registers the connection event handler of the application.
 //! This event handler will be called when connections and disconnection occur,
@@ -60,9 +59,7 @@ BTErrno ble_central_set_connection_handler(BLEConnectionHandler handler);
 //! application did not require this.
 //! @return BTErrnoOK if the intent to connect was processed successfully, or
 //! ... TODO
-BTErrno ble_central_connect(BTDevice device,
-                            bool auto_reconnect,
-                            bool is_pairing_required);
+BTErrno ble_central_connect(BTDevice device, bool auto_reconnect, bool is_pairing_required);
 
 //! Attempts to cancel the connection, as initiated by ble_central_connect().
 //! The underlying Bluetooth connection might not be disconnected if the

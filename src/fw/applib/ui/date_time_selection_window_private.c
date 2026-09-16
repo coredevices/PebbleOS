@@ -52,7 +52,7 @@ int date_time_selection_truncate_date(int year, int month, int day) {
 int date_time_selection_step_year(int year, int delta) {
   year += delta;
   return CLIP(year, MIN_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET,
-      MAX_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET);
+              MAX_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET);
 }
 
 char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *buf) {
@@ -71,7 +71,7 @@ char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *b
     case TimeInputIndexMinute:
       snprintf(buf, 3, "%02u", data->minute);
       return buf;
-    case TimeInputIndexAMPM: // We should only get this in 12h style
+    case TimeInputIndexAMPM:  // We should only get this in 12h style
       if (data->hour < 12) {
         i18n_get_with_buffer("AM", buf, 3);
       } else {
@@ -91,7 +91,7 @@ void date_time_handle_time_change(TimeData *data, TimeInputIndex index, int delt
     case TimeInputIndexMinute:
       data->minute = date_time_selection_step_minute(data->minute, delta);
       break;
-    case TimeInputIndexAMPM: // We should only get this in 12h style
+    case TimeInputIndexAMPM:  // We should only get this in 12h style
       data->hour = date_time_selection_step_hour(data->hour, 12 * delta);
       break;
   }

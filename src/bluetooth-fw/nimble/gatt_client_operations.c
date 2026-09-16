@@ -28,8 +28,8 @@ static BLEGATTError prv_gatt_error_code(uint16_t status) {
 static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                    struct ble_gatt_attr *attr, void *arg) {
   if (error->status != 0U) {
-    PBL_LOG_ERR("GATT write failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
-              error->att_handle, error->status);
+    PBL_LOG_ERR("GATT write failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16, error->att_handle,
+                error->status);
   }
 
   GattClientOpWriteResponse resp = {
@@ -37,7 +37,8 @@ static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_e
           .type = GattClientOpResponseWrite,
           .error_code = prv_gatt_error_code(error->status),
           .context = arg,
-      }};
+      }
+  };
   bt_driver_cb_gatt_client_operations_handle_response(&resp.hdr);
   return 0;
 }
@@ -45,8 +46,8 @@ static int prv_gatt_write_event_cb(uint16_t conn_handle, const struct ble_gatt_e
 static int prv_gatt_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                   struct ble_gatt_attr *attr, void *arg) {
   if (error->status != 0U) {
-    PBL_LOG_ERR("GATT read failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16,
-              error->att_handle, error->status);
+    PBL_LOG_ERR("GATT read failed (hdl: 0x%" PRIx16 "): 0x%" PRIx16, error->att_handle,
+                error->status);
   }
 
   GattClientOpReadResponse resp = {
@@ -65,8 +66,7 @@ static int prv_gatt_read_event_cb(uint16_t conn_handle, const struct ble_gatt_er
 
 BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
                                               size_t value_length, uint16_t att_handle) {
-  PBL_LOG_VERBOSE("bt_driver_gatt_write_without_response: %d",
-            att_handle);
+  PBL_LOG_VERBOSE("bt_driver_gatt_write_without_response: %d", att_handle);
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
     return BTErrnoInvalidState;

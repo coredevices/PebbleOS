@@ -41,13 +41,13 @@ static PBL_MUTEX_DEFINE(s_mutex);
 //! repeating and repeat_hours_offset were included for future use
 //! and use in repeat support for alarms
 typedef struct PACKED {
-  Uuid uuid; //!< UUID of app that scheduled the wakeup event
-  int32_t reason; //!< App provided value to differentiate wakeup event
-  bool repeating; //!< Enable event repetition
-  uint16_t repeat_hours_offset; //!< repeat hour interval
-  bool notify_if_missed; //!< Notify user if wakeup event has been missed
-  time_t timestamp; //!< The time at which this entry will wake up at
-  bool utc; //!< If timezone has been set, the this is UTC time
+  Uuid uuid;                     //!< UUID of app that scheduled the wakeup event
+  int32_t reason;                //!< App provided value to differentiate wakeup event
+  bool repeating;                //!< Enable event repetition
+  uint16_t repeat_hours_offset;  //!< repeat hour interval
+  bool notify_if_missed;         //!< Notify user if wakeup event has been missed
+  time_t timestamp;              //!< The time at which this entry will wake up at
+  bool utc;                      //!< If timezone has been set, the this is UTC time
 } WakeupEntry;
 
 typedef struct PACKED {
@@ -62,8 +62,8 @@ struct prv_missed_events_s {
 };
 
 struct prv_check_app_and_wakeup_event_s {
-  time_t wakeup_timestamp; //!< Timestamp of the WakeupEntry
-  int wakeup_count; //!< wakeup event count for app, negative for error (StatusCode)
+  time_t wakeup_timestamp;  //!< Timestamp of the WakeupEntry
+  int wakeup_count;         //!< wakeup event count for app, negative for error (StatusCode)
 };
 
 // Local prototypes
@@ -73,12 +73,12 @@ static StatusCode prv_wakeup_settings_add_entry(WakeupId wakeup_id, WakeupEntry 
 static void prv_wakeup_timer_next_pending(void);
 
 static bool s_wakeup_enabled = false;
-static TimerID s_current_timer_id = TIMER_INVALID_ID; // single timer reused for each event
+static TimerID s_current_timer_id = TIMER_INVALID_ID;  // single timer reused for each event
 // single structure containing the global wakeup state
-static WakeupState s_wakeup_state = { -1, -1, 0 };
-static bool s_catchup_enabled = false; // enables catching up with missed events
+static WakeupState s_wakeup_state = {-1, -1, 0};
+static bool s_catchup_enabled = false;  // enables catching up with missed events
 
-void wakeup_dispatcher_system_task(void *data){
+void wakeup_dispatcher_system_task(void *data) {
   WakeupId wakeup_id = (WakeupId)data;
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
@@ -91,21 +91,18 @@ void wakeup_dispatcher_system_task(void *data){
   if (!(app_manager_get_current_app_id() == app_id)) {
     // Lookup app, and if installed, launch
     if (app_id != INSTALL_ID_INVALID) {
-      PebbleLaunchAppEventExtended* data =
+      PebbleLaunchAppEventExtended *data =
           kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
-      *data = (PebbleLaunchAppEventExtended) {
-        .common.reason = APP_LAUNCH_WAKEUP,
-        .wakeup.wakeup_id = wakeup_id,
-        .wakeup.wakeup_reason = entry.reason,
+      *data = (PebbleLaunchAppEventExtended){
+          .common.reason = APP_LAUNCH_WAKEUP,
+          .wakeup.wakeup_id = wakeup_id,
+          .wakeup.wakeup_reason = entry.reason,
       };
       data->common.args = &data->wakeup;
 
       PebbleEvent event = {
-        .type = PEBBLE_APP_LAUNCH_EVENT,
-        .launch_app = {
-          .id = app_id,
-          .data = data
-        }
+          .type = PEBBLE_APP_LAUNCH_EVENT,
+          .launch_app = {.id = app_id, .data = data}
       };
 
       event_put(&event);
@@ -113,13 +110,8 @@ void wakeup_dispatcher_system_task(void *data){
   } else {
     // If app running, send event
     PebbleEvent event = {
-      .type = PEBBLE_WAKEUP_EVENT,
-      .wakeup = {
-        .wakeup_info = {
-          .wakeup_id = wakeup_id,
-          .wakeup_reason = entry.reason
-        }
-      }
+        .type = PEBBLE_WAKEUP_EVENT,
+        .wakeup = {.wakeup_info = {.wakeup_id = wakeup_id, .wakeup_reason = entry.reason}}
     };
     event_put(&event);
   }
@@ -135,30 +127,29 @@ static void prv_wakeup_dispatcher(void *data) {
   system_task_add_callback(wakeup_dispatcher_system_task, data);
 }
 
-static bool prv_find_next_wakeup_id_callback(SettingsFile *file,
-    SettingsRecordInfo *info, void *context) {
+static bool prv_find_next_wakeup_id_callback(SettingsFile *file, SettingsRecordInfo *info,
+                                             void *context) {
   // Check if valid entry
   if (info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
   WakeupId wakeup_id;
-  info->get_key(file, (uint8_t*)&wakeup_id, sizeof(WakeupId));
+  info->get_key(file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(file, (uint8_t*)&entry, sizeof(WakeupEntry));
+  info->get_val(file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // If the wakeup_id is valid, and the timestamp of the entry is closer than
   // the timestamp of our global wakeup state, then set the next close wakeup event
-  if (wakeup_id > 0 && (s_wakeup_state.current_wakeup_id == -1 ||
-        entry.timestamp < s_wakeup_state.timestamp)) {
+  if (wakeup_id > 0 &&
+      (s_wakeup_state.current_wakeup_id == -1 || entry.timestamp < s_wakeup_state.timestamp)) {
     s_wakeup_state.timestamp = entry.timestamp;
     s_wakeup_state.current_wakeup_id = wakeup_id;
   }
 
-  return true; // continue iterating
+  return true;  // continue iterating
 }
-
 
 // Checks for the next pending wakeup event and sets up a timer for the event
 static void prv_wakeup_timer_next_pending(void) {
@@ -209,26 +200,25 @@ static void prv_wakeup_timer_next_pending(void) {
     // timers are in milliseconds, set main callback dispatch for wakeup
     // WakeupId is used to save/restore/lookup wakeup events
     new_timer_start(s_current_timer_id, (time_difference * 1000), prv_wakeup_dispatcher,
-        (void*)((intptr_t)s_wakeup_state.current_wakeup_id), 0);
+                    (void *)((intptr_t)s_wakeup_state.current_wakeup_id), 0);
   }
 }
 
-
 static void prv_migrate_events_callback(SettingsFile *old_file, SettingsFile *new_file,
-    SettingsRecordInfo *info, void *utc_diff) {
+                                        SettingsRecordInfo *info, void *utc_diff) {
   if (!utc_diff || info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
     return;
   }
 
   WakeupId wakeup_id;
-  info->get_val(old_file, (uint8_t*)&wakeup_id, sizeof(WakeupId));
+  info->get_val(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(old_file, (uint8_t*)&entry, sizeof(WakeupEntry));
+  info->get_val(old_file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // Migrate the entries to the new timezone
   if (entry.utc == false) {
-    entry.timestamp -= *((int*)utc_diff);
+    entry.timestamp -= *((int *)utc_diff);
     entry.utc = true;
     if (wakeup_id == s_wakeup_state.current_wakeup_id) {
       s_wakeup_state.timestamp = entry.timestamp;
@@ -237,18 +227,18 @@ static void prv_migrate_events_callback(SettingsFile *old_file, SettingsFile *ne
 
   // Write the new entry to the settings file.  We always write as there's no
   // chance of it being invalid.
-  settings_file_set(new_file, (uint8_t*)&wakeup_id, sizeof(WakeupId),
-      (uint8_t*)&entry, sizeof(WakeupEntry));
+  settings_file_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
+                    sizeof(WakeupEntry));
 }
 
 static bool prv_check_for_events(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   bool *event_found = (bool *)context;
   *event_found = true;
-  return false; // stop iterating
+  return false;  // stop iterating
 }
 
 static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new_file,
-    SettingsRecordInfo *info, void *context) {
+                                       SettingsRecordInfo *info, void *context) {
   // Check if valid entry
   if (!context || info->key_len != sizeof(WakeupId)) {
     return;
@@ -260,16 +250,16 @@ static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new
     return;
   }
 
-  struct prv_missed_events_s *missed_events = (struct prv_missed_events_s*)context;
+  struct prv_missed_events_s *missed_events = (struct prv_missed_events_s *)context;
 
   WakeupId wakeup_id;
-  info->get_key(old_file, (uint8_t*)&wakeup_id, sizeof(WakeupId));
+  info->get_key(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(old_file, (uint8_t*)&entry, info->val_len);
+  info->get_val(old_file, (uint8_t *)&entry, info->val_len);
   if (struct_migration) {
-    entry.timestamp = wakeup_id; // WakeupId (key) is a timestamp
-    entry.utc = false; // If we're migrating, this has not been utc
+    entry.timestamp = wakeup_id;  // WakeupId (key) is a timestamp
+    entry.utc = false;            // If we're migrating, this has not been utc
   }
 
   int32_t timestamp = entry.timestamp;
@@ -285,8 +275,8 @@ static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new
   // schedule non-expired events
   if (time_difference > 0) {
     // Using settings_file_rewrite, need to write to keep key/value
-    settings_file_set(new_file, (uint8_t*)&wakeup_id, sizeof(WakeupId),
-        (uint8_t*)&entry, sizeof(WakeupEntry));
+    settings_file_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
+                      sizeof(WakeupEntry));
   } else {
     if (entry.notify_if_missed) {
       if (missed_events->missed_app_ids == NULL) {
@@ -309,8 +299,7 @@ static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new
 }
 
 void wakeup_init(void) {
-  struct prv_missed_events_s missed_events = { 0, NULL };
-
+  struct prv_missed_events_s missed_events = {0, NULL};
 
   event_service_init(PEBBLE_WAKEUP_EVENT, NULL, NULL);
 
@@ -345,16 +334,14 @@ void wakeup_init(void) {
   }
 }
 
-
 static bool prv_compiled_without_utc_support(void) {
   static const Version first_utc_version = {
-    // See list of changes in pebble_process_info.h. Apps compiled prior to this version will
-    // get local time returned from the time() call.
-    0x5,
-    0x2f
+      // See list of changes in pebble_process_info.h. Apps compiled prior to this version will
+      // get local time returned from the time() call.
+      0x5, 0x2f
   };
-  Version app_sdk_version = process_metadata_get_sdk_version(
-                                            sys_process_manager_get_current_process_md());
+  Version app_sdk_version =
+      process_metadata_get_sdk_version(sys_process_manager_get_current_process_md());
 
   if (version_compare(app_sdk_version, first_utc_version) < 0) {
     return true;
@@ -362,10 +349,8 @@ static bool prv_compiled_without_utc_support(void) {
   return false;
 }
 
-
 DEFINE_SYSCALL(WakeupId, sys_wakeup_schedule, time_t timestamp, int32_t reason,
-                                              bool notify_if_missed) {
-
+               bool notify_if_missed) {
   if (prv_compiled_without_utc_support()) {
     // Legacy apps get local time returned from the time() call.
     timestamp = time_local_to_utc(timestamp);
@@ -383,11 +368,11 @@ DEFINE_SYSCALL(WakeupId, sys_wakeup_schedule, time_t timestamp, int32_t reason,
   Uuid uuid = app_manager_get_current_app_md()->uuid;
 
   WakeupEntry entry = {
-    .uuid = uuid,
-    .reason = reason,
-    .notify_if_missed = notify_if_missed,
-    .timestamp = timestamp,
-    .utc = clock_is_timezone_set()
+      .uuid = uuid,
+      .reason = reason,
+      .notify_if_missed = notify_if_missed,
+      .timestamp = timestamp,
+      .utc = clock_is_timezone_set()
   };
 
   // Add to settings file
@@ -404,13 +389,12 @@ DEFINE_SYSCALL(WakeupId, sys_wakeup_schedule, time_t timestamp, int32_t reason,
   return wakeup_id;
 }
 
-
 static void prv_wakeup_settings_delete_entry(WakeupId wakeup_id) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     SettingsFile wakeup_settings;
     if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
-      settings_file_delete(&wakeup_settings, (uint8_t*)&wakeup_id, sizeof(WakeupId));
+      settings_file_delete(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId));
       settings_file_close(&wakeup_settings);
     }
   }
@@ -424,8 +408,8 @@ static WakeupEntry prv_wakeup_settings_get_entry(WakeupId wakeup_id) {
   {
     SettingsFile wakeup_settings;
     if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
-      settings_file_get(&wakeup_settings, (uint8_t*)&wakeup_id, sizeof(WakeupId),
-                        (uint8_t*)&entry, sizeof(WakeupEntry));
+      settings_file_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
+                        (uint8_t *)&entry, sizeof(WakeupEntry));
       settings_file_close(&wakeup_settings);
     }
   }
@@ -434,7 +418,6 @@ static WakeupEntry prv_wakeup_settings_get_entry(WakeupId wakeup_id) {
 }
 
 DEFINE_SYSCALL(void, sys_wakeup_delete, WakeupId wakeup_id) {
-
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
   // Only allow owner to delete its own wakeup events
@@ -448,24 +431,25 @@ DEFINE_SYSCALL(void, sys_wakeup_delete, WakeupId wakeup_id) {
   }
 }
 
-static bool prv_check_count_and_availability_callback(SettingsFile *file,
-    SettingsRecordInfo *info, void *context) {
+static bool prv_check_count_and_availability_callback(SettingsFile *file, SettingsRecordInfo *info,
+                                                      void *context) {
   // Check if valid entry
   if (!context || info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
-  struct prv_check_app_and_wakeup_event_s *check = (struct prv_check_app_and_wakeup_event_s*)context;
+  struct prv_check_app_and_wakeup_event_s *check =
+      (struct prv_check_app_and_wakeup_event_s *)context;
 
   WakeupId wakeup_id;
-  info->get_key(file, (uint8_t*)&wakeup_id, sizeof(WakeupId));
+  info->get_key(file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(file, (uint8_t*)&entry, sizeof(WakeupEntry));
+  info->get_val(file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
-  //If we have already flagged an error, just skip the rest
+  // If we have already flagged an error, just skip the rest
   if (check->wakeup_count < S_SUCCESS) {
-    return true; // continue iterating
+    return true;  // continue iterating
   }
 
   if (uuid_equal(&app_manager_get_current_app_md()->uuid, &entry.uuid)) {
@@ -477,9 +461,8 @@ static bool prv_check_count_and_availability_callback(SettingsFile *file,
     check->wakeup_count = E_RANGE;
   }
 
-  return true; // continue iterating
+  return true;  // continue iterating
 }
-
 
 static StatusCode prv_wakeup_settings_add_entry(WakeupId wakeup_id, WakeupEntry entry) {
   status_t status = S_SUCCESS;
@@ -491,8 +474,8 @@ static StatusCode prv_wakeup_settings_add_entry(WakeupId wakeup_id, WakeupEntry 
       // Check if current app already has MAX_WAKEUP_EVENTS_PER_APP scheduled
       // or if the minute event window is already occupied
       struct prv_check_app_and_wakeup_event_s check = {
-        .wakeup_count = 0,
-        .wakeup_timestamp = entry.timestamp
+          .wakeup_count = 0,
+          .wakeup_timestamp = entry.timestamp
       };
       settings_file_each(&wakeup_settings, prv_check_count_and_availability_callback, &check);
 
@@ -501,8 +484,8 @@ static StatusCode prv_wakeup_settings_add_entry(WakeupId wakeup_id, WakeupEntry 
       } else if (check.wakeup_count >= MAX_WAKEUP_EVENTS_PER_APP) {
         status = E_OUT_OF_RESOURCES;
       } else {
-        settings_file_set(&wakeup_settings, (uint8_t*)&wakeup_id, sizeof(WakeupId),
-                          (uint8_t*)&entry, sizeof(WakeupEntry));
+        settings_file_set(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
+                          (uint8_t *)&entry, sizeof(WakeupEntry));
       }
       settings_file_close(&wakeup_settings);
     } else {
@@ -515,17 +498,17 @@ static StatusCode prv_wakeup_settings_add_entry(WakeupId wakeup_id, WakeupEntry 
 }
 
 static void prv_delete_events_by_uuid_callback(SettingsFile *old_file, SettingsFile *new_file,
-    SettingsRecordInfo *info, void *context) {
+                                               SettingsRecordInfo *info, void *context) {
   // Check if valid entry
   if (info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
     return;
   }
 
   WakeupId wakeup_id;
-  info->get_key(old_file, (uint8_t*)&wakeup_id, sizeof(WakeupId));
+  info->get_key(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(old_file, (uint8_t*)&entry, sizeof(WakeupEntry));
+  info->get_val(old_file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // If the UUID is equal, delete the entry
   if (uuid_equal(&app_manager_get_current_app_md()->uuid, &entry.uuid)) {
@@ -535,13 +518,12 @@ static void prv_delete_events_by_uuid_callback(SettingsFile *old_file, SettingsF
       new_timer_stop(s_current_timer_id);
     }
     // Deletes the entry automatically if not written
-  } else { // Keep the entry
+  } else {  // Keep the entry
     // Using settings_file_rewrite, need to write to keep key/value
-    settings_file_set(new_file, (uint8_t*)&wakeup_id, sizeof(WakeupId),
-        (uint8_t*)&entry, sizeof(WakeupEntry));
+    settings_file_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
+                      sizeof(WakeupEntry));
   }
 }
-
 
 DEFINE_SYSCALL(void, sys_wakeup_cancel_all_for_app, void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
@@ -572,8 +554,8 @@ DEFINE_SYSCALL(time_t, sys_wakeup_query, WakeupId wakeup_id) {
     SettingsFile wakeup_settings;
     if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
       // Check if the wakeup id is valid by seeing if it is in the wakeup settings_file
-      status = settings_file_get(&wakeup_settings, (uint8_t*)&wakeup_id, sizeof(WakeupId),
-                                 (uint8_t*)&entry, sizeof(WakeupEntry));
+      status = settings_file_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
+                                 (uint8_t *)&entry, sizeof(WakeupEntry));
       settings_file_close(&wakeup_settings);
     } else {
       status = E_INTERNAL;
@@ -603,8 +585,7 @@ void wakeup_enable(bool enable) {
   s_wakeup_enabled = enable;
   if (enable && !was_enabled) {
     prv_wakeup_timer_next_pending();
-  } else if (!enable && s_current_timer_id &&
-             new_timer_scheduled(s_current_timer_id, NULL)) {
+  } else if (!enable && s_current_timer_id && new_timer_scheduled(s_current_timer_id, NULL)) {
     new_timer_stop(s_current_timer_id);
   }
 }
@@ -622,7 +603,7 @@ void wakeup_migrate_timezone(int utc_diff) {
   {
     SettingsFile wakeup_settings;
     if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
-      settings_file_rewrite(&wakeup_settings, prv_migrate_events_callback, (void*)&utc_diff);
+      settings_file_rewrite(&wakeup_settings, prv_migrate_events_callback, (void *)&utc_diff);
       settings_file_close(&wakeup_settings);
     } else {
       PBL_LOG_ERR("Error: could not open wakeup settings");
@@ -633,7 +614,7 @@ void wakeup_migrate_timezone(int utc_diff) {
 
 static void prv_wakeup_rewrite_kernel_bg_cb(void *data) {
   // Update each wakeup entry via prv_update_events_callback and record any missed events
-  struct prv_missed_events_s missed_events = { 0, NULL };
+  struct prv_missed_events_s missed_events = {0, NULL};
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {

@@ -17,12 +17,12 @@ static bool s_initialized = false;
 
 #define OPT3001_RESULT 0x00
 #define OPT3001_RESULT_EXPONENT_SHIFT 12
-#define OPT3001_RESULT_MANTISSA_MASK  0x0FFF
+#define OPT3001_RESULT_MANTISSA_MASK 0x0FFF
 #define OPT3001_CONFIG 0x01
-#define OPT3001_CONFIG_RANGE_AUTO       0xC000
+#define OPT3001_CONFIG_RANGE_AUTO 0xC000
 #define OPT3001_CONFIG_CONVTIME_100MSEC 0x0000
-#define OPT3001_CONFIG_MODE_CONTINUOUS  0x0600
-#define OPT3001_CONFIG_MODE_SINGLESHOT  0x0200
+#define OPT3001_CONFIG_MODE_CONTINUOUS 0x0600
+#define OPT3001_CONFIG_MODE_SINGLESHOT 0x0200
 #define OPT3001_MFGID 0x7E
 #define OPT3001_MFGID_VAL 0x5449 /* "TI" */
 #define OPT3001_DEVID 0x7F
@@ -39,7 +39,7 @@ static bool prv_read_register(uint8_t register_address, uint16_t *result) {
 
 static bool prv_write_register(uint8_t register_address, uint16_t datum) {
   i2c_use(I2C_OPT3001);
-  uint8_t block[3] = { register_address, datum >> 8, datum & 0xFF };
+  uint8_t block[3] = {register_address, datum >> 8, datum & 0xFF};
   bool rv = i2c_write_block(I2C_OPT3001, 3, block);
   i2c_release(I2C_OPT3001);
   return rv;
@@ -66,7 +66,8 @@ void ambient_light_init(void) {
   }
 
   if (BOARD_CONFIG.als_always_on) {
-    prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC | OPT3001_CONFIG_MODE_CONTINUOUS);
+    prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC |
+                                           OPT3001_CONFIG_MODE_CONTINUOUS);
   }
 
   ambient_light_common_init();
@@ -83,9 +84,10 @@ uint32_t ambient_light_get_light_level(void) {
   if (!s_initialized) {
     return BOARD_CONFIG.ambient_light_dark_threshold;
   }
-  
+
   if (!BOARD_CONFIG.als_always_on) {
-    prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC | OPT3001_CONFIG_MODE_SINGLESHOT);
+    prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC |
+                                           OPT3001_CONFIG_MODE_SINGLESHOT);
   }
 
   uint16_t result;
@@ -100,7 +102,7 @@ uint32_t ambient_light_get_light_level(void) {
 
 void command_als_read(void) {
   char buffer[16];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%"PRIu32"", ambient_light_get_light_level());
+  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRIu32 "", ambient_light_get_light_level());
 }
 
 uint32_t ambient_light_get_dark_threshold(void) {

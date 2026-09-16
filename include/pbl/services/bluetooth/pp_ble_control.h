@@ -5,6 +5,5 @@
 
 #include "pbl/services/comm_session/session.h"
 
-void pp_ble_control_protocol_msg_callback(CommSession* session,
-                                          const uint8_t *data,
+void pp_ble_control_protocol_msg_callback(CommSession *session, const uint8_t *data,
                                           unsigned int length);

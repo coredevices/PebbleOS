@@ -12,11 +12,12 @@ extern void __profiler_stop(void);
 #define ITERATIONS 100
 
 static Window *window;
-static const char *TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing "\
-                          "elit, sed do eiusmod tempor incididunt ut labore "\
-                          "et dolore magna aliqua. Ut enim ad minim veniam, "\
-                          "quis nostrud exercitation ullamco laboris nisi ut "\
-                          "aliquip ex ea commodo consequat.";
+static const char *TEXT =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing "
+    "elit, sed do eiusmod tempor incididunt ut labore "
+    "et dolore magna aliqua. Ut enim ad minim veniam, "
+    "quis nostrud exercitation ullamco laboris nisi ut "
+    "aliquip ex ea commodo consequat.";
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
@@ -24,9 +25,8 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
   __profiler_start();
   for (int i = 0; i < ITERATIONS; ++i) {
-    graphics_draw_text(ctx, TEXT, fonts_get_system_font(FONT_KEY_GOTHIC_14),
-                       bounds, GTextOverflowModeWordWrap, GTextAlignmentLeft,
-                       NULL);
+    graphics_draw_text(ctx, TEXT, fonts_get_system_font(FONT_KEY_GOTHIC_14), bounds,
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
   }
   __profiler_stop();
   APP_LOG(APP_LOG_LEVEL_INFO, "Draw Text");
@@ -41,9 +41,9 @@ static void window_load(Window *window) {
 static void init(void) {
   __profiler_init();
   window = window_create();
-  window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
-  });
+  window_set_window_handlers(window, (WindowHandlers){
+                                         .load = window_load,
+                                     });
   window_stack_push(window, true);
 }
 

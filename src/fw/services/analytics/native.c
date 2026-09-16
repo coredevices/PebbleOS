@@ -44,9 +44,8 @@ struct PACKED native_heartbeat_record {
 };
 
 /* The record is logged as a raw byte blob, so it must have no padding. */
-_Static_assert(
-    sizeof(struct native_heartbeat_record) ==
-        sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
+_Static_assert(sizeof(struct native_heartbeat_record) ==
+                   sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
 #define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) +sizeof(uint32_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) +sizeof(int32_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) +sizeof(uint32_t) + sizeof(uint16_t)
@@ -60,8 +59,8 @@ _Static_assert(
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
-    ,
-    "native_heartbeat_record must be packed (no padding)");
+               ,
+               "native_heartbeat_record must be packed (no padding)");
 
 /* Type-specific internal index enums (dense, no gaps) */
 

@@ -25,7 +25,7 @@ void kernel_ui_init(void) {
   s_kernel_current_timeline_item_action_source = TimelineItemActionSourceModalNotification;
 }
 
-GContext* kernel_ui_get_graphics_context(void) {
+GContext *kernel_ui_get_graphics_context(void) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
   return &s_kernel_graphics_context;

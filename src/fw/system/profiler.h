@@ -70,34 +70,25 @@ extern Profiler g_profiler;
 
 #define PROFILER_STOP profiler_stop()
 
-#define PROFILER_NODE_START(node) \
-  g_profiler_node_##node.start = DWT->CYCCNT
+#define PROFILER_NODE_START(node) g_profiler_node_##node.start = DWT->CYCCNT
 
-#define PROFILER_NODE_STOP(node) \
-  profiler_node_stop(&g_profiler_node_##node, DWT->CYCCNT)
+#define PROFILER_NODE_STOP(node) profiler_node_stop(&g_profiler_node_##node, DWT->CYCCNT)
 
-#define SYS_PROFILER_NODE_START(node) \
-  sys_profiler_node_start(&g_profiler_node_##node)
+#define SYS_PROFILER_NODE_START(node) sys_profiler_node_start(&g_profiler_node_##node)
 
-#define SYS_PROFILER_NODE_STOP(node) \
-  sys_profiler_node_stop(&g_profiler_node_##node)
+#define SYS_PROFILER_NODE_STOP(node) sys_profiler_node_stop(&g_profiler_node_##node)
 
-#define PROFILER_PRINT_STATS \
-  profiler_print_stats()
+#define PROFILER_PRINT_STATS profiler_print_stats()
 
-#define PROFILER_NODE_GET_TOTAL_US(node) \
-  profiler_node_get_total_us(&g_profiler_node_##node)
+#define PROFILER_NODE_GET_TOTAL_US(node) profiler_node_get_total_us(&g_profiler_node_##node)
 
-#define PROFILER_NODE_GET_LAST_CYCLES(node) \
-  profiler_node_get_last_cycles(&g_profiler_node_##node)
+#define PROFILER_NODE_GET_LAST_CYCLES(node) profiler_node_get_last_cycles(&g_profiler_node_##node)
 
-#define PROFILER_NODE_GET_TOTAL_CYCLES(node) \
-  g_profiler_node_##node.total
+#define PROFILER_NODE_GET_TOTAL_CYCLES(node) g_profiler_node_##node.total
 
-#define PROFILER_NODE_GET_COUNT(node) \
-  profiler_node_get_count(&g_profiler_node_##node)
+#define PROFILER_NODE_GET_COUNT(node) profiler_node_get_count(&g_profiler_node_##node)
 
-#endif // CONFIG_PROFILER
+#endif  // CONFIG_PROFILER
 
 void profiler_init(void);
 void profiler_print_stats(void);

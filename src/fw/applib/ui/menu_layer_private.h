@@ -10,22 +10,22 @@ struct MenuIterator;
 typedef void (*MenuIteratorCallback)(struct MenuIterator *it);
 
 typedef struct MenuIterator {
-  MenuLayer * menu_layer;
+  MenuLayer *menu_layer;
   MenuCellSpan cursor;
   int16_t cell_bottom_y;
   MenuIteratorCallback row_callback_before_geometry;
   MenuIteratorCallback row_callback_after_geometry;
   MenuIteratorCallback section_callback;
-  bool should_continue; // callback can set this to false if the row-loop should be exited.
+  bool should_continue;  // callback can set this to false if the row-loop should be exited.
 } MenuIterator;
 
 typedef struct MenuRenderIterator {
   MenuIterator it;
-  GContext* ctx;
+  GContext *ctx;
   int16_t content_top_y;
   int16_t content_bottom_y;
-  bool cache_set:1;
-  bool cursor_in_frame:1;
+  bool cache_set : 1;
+  bool cursor_in_frame : 1;
   MenuCellSpan new_cache;
   Layer cell_layer;
 } MenuRenderIterator;
@@ -40,8 +40,10 @@ typedef struct MenuRenderIterator {
 //! the live content offset. See menu_layer.c for the wiring into the per-task recognizer set.
 
 //! Locate the selectable row whose cell spans \a content_y (content-space y). Section headers and
-//! separators are not selectable and are skipped. Walks downward then upward from the render anchor.
-//! @return true and fills \a index_out if a row is hit; false if \a content_y lands on a header/gap.
+//! separators are not selectable and are skipped. Walks downward then upward from the render
+//! anchor.
+//! @return true and fills \a index_out if a row is hit; false if \a content_y lands on a
+//! header/gap.
 bool menu_layer_touch_find_row_at_content_y(MenuLayer *menu_layer, int16_t content_y,
                                             MenuIndex *index_out);
 
@@ -55,7 +57,8 @@ void menu_layer_touch_handle_touchdown(MenuLayer *menu_layer);
 //! On a plain menu the selection index is intentionally left unchanged. On a center-focused menu
 //! the focus stays pinned at the viewport centre: the row crossing the centre becomes the
 //! selection live, through the full selection_will_change contract (veto/redirect honoured).
-void menu_layer_touch_handle_pan_update(MenuLayer *menu_layer, GPoint base, GPoint delta_since_start);
+void menu_layer_touch_handle_pan_update(MenuLayer *menu_layer, GPoint base,
+                                        GPoint delta_since_start);
 
 //! Liftoff. Applies the last (unthrottled) pan delta. A plain menu only settles the offset — the
 //! selection never moves on a pan. A center-focused menu re-tracks the row under the centre and

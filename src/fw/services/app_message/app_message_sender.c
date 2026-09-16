@@ -24,7 +24,7 @@ static void prv_request_fast_connection(CommSession *session) {
 }
 
 static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(
-      AppMessageSendJob *app_message_send_job) {
+    AppMessageSendJob *app_message_send_job) {
   const size_t offset = offsetof(AppOutboxMessage, consumer_data);
   return (AppOutboxMessage *)(((uint8_t *)app_message_send_job) - offset);
 }
@@ -32,7 +32,6 @@ static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(
 static AppOutboxMessage *prv_outbox_message_from_send_job(SessionSendQueueJob *send_job) {
   return prv_outbox_message_from_app_message_send_job((AppMessageSendJob *)send_job);
 }
-
 
 // -------------------------------------------------------------------------------------------------
 // Interfaces towards Send Queue:
@@ -48,8 +47,8 @@ static bool prv_is_header_consumed_for_offset(uint32_t offset) {
   return (offset >= sizeof(PebbleProtocolHeader));
 }
 
-static size_t prv_get_read_pointer(AppMessageSendJob *app_message_send_job,
-                                   uint32_t offset, const uint8_t **data_out) {
+static size_t prv_get_read_pointer(AppMessageSendJob *app_message_send_job, uint32_t offset,
+                                   const uint8_t **data_out) {
   const uint8_t *read_pointer;
   size_t num_bytes_available;
   if (prv_is_header_consumed_for_offset(offset)) {
@@ -87,7 +86,7 @@ static size_t prv_send_job_impl_get_length(const SessionSendQueueJob *send_job) 
 }
 
 static size_t prv_send_job_impl_copy(const SessionSendQueueJob *send_job, int start_offset,
-                              size_t length, uint8_t *data_out) {
+                                     size_t length, uint8_t *data_out) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
   prv_request_fast_connection(app_message_send_job->session);
 
@@ -99,10 +98,9 @@ static size_t prv_send_job_impl_copy(const SessionSendQueueJob *send_job, int st
   while (length_remaining) {
     const uint8_t *part_data;
     uint32_t data_out_pos = (length_to_copy - length_remaining);
-    size_t part_length =
-        prv_get_read_pointer(app_message_send_job,
-                             app_message_send_job->consumed_length + start_offset + data_out_pos,
-                             &part_data);
+    size_t part_length = prv_get_read_pointer(
+        app_message_send_job, app_message_send_job->consumed_length + start_offset + data_out_pos,
+        &part_data);
     part_length = MIN(part_length, length_remaining);
     memcpy(data_out + data_out_pos, part_data, part_length);
     length_remaining -= part_length;
@@ -116,8 +114,8 @@ static size_t prv_send_job_impl_get_read_pointer(const SessionSendQueueJob *send
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
   prv_request_fast_connection(app_message_send_job->session);
 
-  return prv_get_read_pointer(app_message_send_job,
-                              app_message_send_job->consumed_length, data_out);
+  return prv_get_read_pointer(app_message_send_job, app_message_send_job->consumed_length,
+                              data_out);
 }
 
 static void prv_send_job_impl_consume(const SessionSendQueueJob *send_job, size_t length) {
@@ -135,20 +133,18 @@ static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
     PBL_ANALYTICS_ADD(app_message_sent_count, 1);
   }
   // The outbox_message is owned by app_outbox_service, calling consume will free it as well:
-  const AppOutboxStatus status =
-      (const AppOutboxStatus) (is_completed ? AppMessageSenderErrorSuccess :
-                                              AppMessageSenderErrorDisconnected);
+  const AppOutboxStatus status = (const AppOutboxStatus)(
+      is_completed ? AppMessageSenderErrorSuccess : AppMessageSenderErrorDisconnected);
   app_outbox_service_consume_message(outbox_message, status);
 }
 
 T_STATIC const SessionSendJobImpl s_app_message_send_job_impl = {
-  .get_length = prv_send_job_impl_get_length,
-  .copy = prv_send_job_impl_copy,
-  .get_read_pointer = prv_send_job_impl_get_read_pointer,
-  .consume = prv_send_job_impl_consume,
-  .free = prv_send_job_impl_free,
+    .get_length = prv_send_job_impl_get_length,
+    .copy = prv_send_job_impl_copy,
+    .get_read_pointer = prv_send_job_impl_get_read_pointer,
+    .consume = prv_send_job_impl_consume,
+    .free = prv_send_job_impl_free,
 };
-
 
 // -------------------------------------------------------------------------------------------------
 // Interfaces towards App Outbox service:
@@ -171,9 +167,9 @@ static AppMessageSenderError prv_sanity_check_msg_and_fill_header(const AppOutbo
 
   const size_t pp_payload_length = (message->length - offsetof(AppMessageAppOutboxData, payload));
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)message->consumer_data;
-  app_message_send_job->header = (const PebbleProtocolHeader) {
-    .endpoint_id = htons(endpoint_id),
-    .length = htons(pp_payload_length),
+  app_message_send_job->header = (const PebbleProtocolHeader){
+      .endpoint_id = htons(endpoint_id),
+      .length = htons(pp_payload_length),
   };
 
   return AppMessageSenderErrorSuccess;
@@ -181,11 +177,12 @@ static AppMessageSenderError prv_sanity_check_msg_and_fill_header(const AppOutbo
 
 static void prv_handle_outbox_message(AppOutboxMessage *message) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)message->consumer_data;
-  *app_message_send_job = (const AppMessageSendJob) {
-    .send_queue_job = {
-      .impl = &s_app_message_send_job_impl,
-    },
-    .consumed_length = 0,
+  *app_message_send_job = (const AppMessageSendJob){
+      .send_queue_job =
+          {
+              .impl = &s_app_message_send_job_impl,
+          },
+      .consumed_length = 0,
   };
 
   const AppMessageSenderError err = prv_sanity_check_msg_and_fill_header(message);
@@ -195,8 +192,7 @@ static void prv_handle_outbox_message(AppOutboxMessage *message) {
     return;
   }
 
-  const AppMessageAppOutboxData *outbox_data =
-      (const AppMessageAppOutboxData *)message->data;
+  const AppMessageAppOutboxData *outbox_data = (const AppMessageAppOutboxData *)message->data;
 
   app_message_send_job->session = outbox_data->session;
   comm_session_sanitize_app_session(&app_message_send_job->session);
@@ -216,6 +212,6 @@ static void prv_handle_outbox_message(AppOutboxMessage *message) {
 void app_message_sender_init(void) {
   const size_t consumer_data_size = sizeof(AppMessageSendJob);
   // Make prv_handle_outbox_message() execute on KernelMain:
-  app_outbox_service_register(AppOutboxServiceTagAppMessageSender,
-                              prv_handle_outbox_message, PebbleTask_KernelMain, consumer_data_size);
+  app_outbox_service_register(AppOutboxServiceTagAppMessageSender, prv_handle_outbox_message,
+                              PebbleTask_KernelMain, consumer_data_size);
 }

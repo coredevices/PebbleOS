@@ -114,7 +114,7 @@ typedef struct {
 typedef struct {
   ClockTextType type;
   ClockTextLocation location;
-  char buffer[10]; // FIXME magic number
+  char buffer[10];  // FIXME magic number
   GColor color;
   uint16_t offset;
   GFont font;

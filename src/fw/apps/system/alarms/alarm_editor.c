@@ -94,28 +94,28 @@ static void prv_day_picker_callback(DayPickerResult result, void *context) {
   if (data->creating_alarm) {
     if (data->alarm_kind == ALARM_KIND_CUSTOM) {
       const AlarmInfo info = {
-        .hour = data->alarm_hour,
-        .minute = data->alarm_minute,
-        .kind = ALARM_KIND_CUSTOM,
-        .scheduled_days = &result.custom_days,
-        .is_smart = (data->alarm_type == AlarmType_Smart),
-        .vibrate_enabled = true,
+          .hour = data->alarm_hour,
+          .minute = data->alarm_minute,
+          .kind = ALARM_KIND_CUSTOM,
+          .scheduled_days = &result.custom_days,
+          .is_smart = (data->alarm_type == AlarmType_Smart),
+          .vibrate_enabled = true,
 #ifdef CONFIG_SPEAKER
-        .sound_enabled = false,
-        .tone = AlarmTone_Reveille,
+          .sound_enabled = false,
+          .tone = AlarmTone_Reveille,
 #endif
       };
       data->alarm_id = alarm_create(&info);
     } else {
       const AlarmInfo info = {
-        .hour = data->alarm_hour,
-        .minute = data->alarm_minute,
-        .kind = data->alarm_kind,
-        .is_smart = (data->alarm_type == AlarmType_Smart),
-        .vibrate_enabled = true,
+          .hour = data->alarm_hour,
+          .minute = data->alarm_minute,
+          .kind = data->alarm_kind,
+          .is_smart = (data->alarm_type == AlarmType_Smart),
+          .vibrate_enabled = true,
 #ifdef CONFIG_SPEAKER
-        .sound_enabled = false,
-        .tone = AlarmTone_Reveille,
+          .sound_enabled = false,
+          .tone = AlarmTone_Reveille,
 #endif
       };
       data->alarm_id = alarm_create(&info);
@@ -158,38 +158,39 @@ static void prv_time_picker_window_unload(Window *window) {
 static void prv_time_picker_window_appear(Window *window) {
   AlarmEditorData *data = (AlarmEditorData *)window_get_user_data(window);
   const bool is_smart = (data->alarm_type == AlarmType_Smart);
-  const char *label = (!data->creating_alarm ? i18n_noop("Change Time") :
-                       is_smart ? i18n_noop("New Smart Alarm") : i18n_noop("New Alarm"));
-  const char *range_text = PBL_IF_RECT_ELSE(i18n_noop("Wake up between"),
-                                             i18n_noop("Wake up interval"));
+  const char *label = (!data->creating_alarm ? i18n_noop("Change Time")
+                       : is_smart            ? i18n_noop("New Smart Alarm")
+                                             : i18n_noop("New Alarm"));
+  const char *range_text =
+      PBL_IF_RECT_ELSE(i18n_noop("Wake up between"), i18n_noop("Wake up interval"));
   const TimeSelectionWindowConfig config = {
-    .label = i18n_get(label, data),
-    .range = {
-      .update = true,
-      .text = is_smart ? i18n_get(range_text, data) : NULL,
-      .duration_m = SMART_ALARM_RANGE_S / SECONDS_PER_MINUTE,
-      .enabled = is_smart,
-    },
+      .label = i18n_get(label, data),
+      .range = {
+          .update = true,
+          .text = is_smart ? i18n_get(range_text, data) : NULL,
+          .duration_m = SMART_ALARM_RANGE_S / SECONDS_PER_MINUTE,
+          .enabled = is_smart,
+      },
   };
   time_selection_window_configure(&data->time_picker_window, &config);
   data->time_picker_window.selection_layer.selected_cell_idx = 0;
 }
 
 static void prv_time_picker_complete(TimeSelectionWindowData *time_picker_window, void *cb_data) {
-  AlarmEditorData *data = (AlarmEditorData *) cb_data;
+  AlarmEditorData *data = (AlarmEditorData *)cb_data;
   data->time_picker_was_completed = true;
   data->alarm_hour = time_picker_window->time_data.hour;
   data->alarm_minute = time_picker_window->time_data.minute;
 
   if (data->creating_alarm) {
     DayPickerResult initial = {
-      .kind = DayPickerKindJustOnce,
+        .kind = DayPickerKindJustOnce,
     };
     memset(initial.custom_days, 0, sizeof(initial.custom_days));
     DayPickerConfig config = {
-      .initial = initial,
-      .highlight_color = ALARMS_APP_HIGHLIGHT_COLOR,
-      .allow_once = true,
+        .initial = initial,
+        .highlight_color = ALARMS_APP_HIGHLIGHT_COLOR,
+        .allow_once = true,
     };
     day_picker_push(config, prv_day_picker_callback, data);
   } else {
@@ -200,12 +201,12 @@ static void prv_time_picker_complete(TimeSelectionWindowData *time_picker_window
 
 static void prv_setup_time_picker_window(AlarmEditorData *data) {
   const TimeSelectionWindowConfig config = {
-    .color = ALARMS_APP_HIGHLIGHT_COLOR,
-    .callback = {
-      .update = true,
-      .complete = prv_time_picker_complete,
-      .context = data,
-    },
+      .color = ALARMS_APP_HIGHLIGHT_COLOR,
+      .callback = {
+          .update = true,
+          .complete = prv_time_picker_complete,
+          .context = data,
+      },
   };
   time_selection_window_init(&data->time_picker_window, &config);
   window_set_user_data(&data->time_picker_window.window, data);
@@ -250,12 +251,12 @@ static void prv_type_menu_select(OptionMenu *option_menu, int selection, void *c
 
 static void prv_setup_type_menu_window(AlarmEditorData *data) {
   const OptionMenuCallbacks callbacks = {
-    .select = prv_type_menu_select,
-    .unload = prv_type_menu_unload,
+      .select = prv_type_menu_select,
+      .unload = prv_type_menu_unload,
   };
   static const char *s_type_labels[AlarmTypeCount] = {
-    [AlarmType_Basic] = i18n_noop("Basic Alarm"),
-    [AlarmType_Smart] = i18n_noop("Smart Alarm"),
+      [AlarmType_Basic] = i18n_noop("Basic Alarm"),
+      [AlarmType_Smart] = i18n_noop("Smart Alarm"),
   };
   const char *title = i18n_get("New Alarm", data);
   OptionMenu *option_menu = settings_option_menu_create(
@@ -269,14 +270,14 @@ static void prv_setup_type_menu_window(AlarmEditorData *data) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Public API
 
-Window* alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callback,
+Window *alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callback,
                                       void *callback_context) {
-  AlarmEditorData* data = task_malloc_check(sizeof(AlarmEditorData));
-  *data = (AlarmEditorData) {
-    .alarm_id = ALARM_INVALID_ID,
-    .complete_callback = complete_callback,
-    .callback_context = callback_context,
-    .creating_alarm = true,
+  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  *data = (AlarmEditorData){
+      .alarm_id = ALARM_INVALID_ID,
+      .complete_callback = complete_callback,
+      .callback_context = callback_context,
+      .creating_alarm = true,
   };
 
   prv_setup_time_picker_window(data);
@@ -287,12 +288,12 @@ Window* alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callb
 void alarm_editor_update_alarm_time(AlarmId alarm_id, AlarmType alarm_type,
                                     AlarmEditorCompleteCallback complete_callback,
                                     void *callback_context) {
-  AlarmEditorData* data = task_malloc_check(sizeof(AlarmEditorData));
-  *data = (AlarmEditorData) {
-    .alarm_id = alarm_id,
-    .alarm_type = alarm_type,
-    .complete_callback = complete_callback,
-    .callback_context = callback_context,
+  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  *data = (AlarmEditorData){
+      .alarm_id = alarm_id,
+      .alarm_type = alarm_type,
+      .complete_callback = complete_callback,
+      .callback_context = callback_context,
   };
 
   prv_setup_time_picker_window(data);
@@ -302,11 +303,11 @@ void alarm_editor_update_alarm_time(AlarmId alarm_id, AlarmType alarm_type,
 
 void alarm_editor_update_alarm_days(AlarmId alarm_id, AlarmEditorCompleteCallback complete_callback,
                                     void *callback_context) {
-  AlarmEditorData* data = task_malloc_check(sizeof(AlarmEditorData));
-  *data = (AlarmEditorData) {
-    .alarm_id = alarm_id,
-    .complete_callback = complete_callback,
-    .callback_context = callback_context,
+  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  *data = (AlarmEditorData){
+      .alarm_id = alarm_id,
+      .complete_callback = complete_callback,
+      .callback_context = callback_context,
   };
   alarm_get_kind(alarm_id, &data->alarm_kind);
 
@@ -319,9 +320,9 @@ void alarm_editor_update_alarm_days(AlarmId alarm_id, AlarmEditorCompleteCallbac
   }
 
   DayPickerConfig config = {
-    .initial = initial,
-    .highlight_color = ALARMS_APP_HIGHLIGHT_COLOR,
-    .allow_once = true,
+      .initial = initial,
+      .highlight_color = ALARMS_APP_HIGHLIGHT_COLOR,
+      .allow_once = true,
   };
   day_picker_push(config, prv_day_picker_callback, data);
 }

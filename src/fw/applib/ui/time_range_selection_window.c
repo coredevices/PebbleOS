@@ -19,28 +19,28 @@ typedef struct TimeSelectionSizeConfig {
 } TimeSelectionSizeConfig;
 
 static const TimeSelectionSizeConfig s_time_selection_config_medium = {
-  .cell_width = 40,
-  .cell_padding = 4,
+    .cell_width = 40,
+    .cell_padding = 4,
 
-  .top_origin = 10,
-  .start_end_y_offset = 69,
-  .selection_y_offset = 32,
+    .top_origin = 10,
+    .start_end_y_offset = 69,
+    .selection_y_offset = 32,
 };
 
 static const TimeSelectionSizeConfig s_time_selection_config_large = {
-  .cell_width = 56,
-  .cell_padding = 6,
+    .cell_width = 56,
+    .cell_padding = 6,
 
-  .top_origin = 11,
-  .start_end_y_offset = 105,
-  .selection_y_offset = 37,
+    .top_origin = 11,
+    .start_end_y_offset = 105,
+    .selection_y_offset = 37,
 };
 
 static const TimeSelectionSizeConfig *s_time_selection_configs[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_time_selection_config_medium,
-  [PreferredContentSizeMedium] = &s_time_selection_config_medium,
-  [PreferredContentSizeLarge] = &s_time_selection_config_large,
-  [PreferredContentSizeExtraLarge] = &s_time_selection_config_large,
+    [PreferredContentSizeSmall] = &s_time_selection_config_medium,
+    [PreferredContentSizeMedium] = &s_time_selection_config_medium,
+    [PreferredContentSizeLarge] = &s_time_selection_config_large,
+    [PreferredContentSizeExtraLarge] = &s_time_selection_config_large,
 };
 
 static const TimeSelectionSizeConfig *prv_selection_config(void) {
@@ -50,7 +50,7 @@ static const TimeSelectionSizeConfig *prv_selection_config(void) {
 }
 
 // FROM selection layer callbacks
-static char* prv_handle_from_get_text(unsigned index, void *context) {
+static char *prv_handle_from_get_text(unsigned index, void *context) {
   TimeRangeSelectionWindowData *data = context;
   return date_time_selection_get_text(&data->from, index, data->buf);
 }
@@ -73,7 +73,7 @@ static void prv_handle_from_dec(unsigned index, void *context) {
 }
 
 // TO selection layer callbacks
-static char* prv_handle_to_get_text(unsigned index, void *context) {
+static char *prv_handle_to_get_text(unsigned index, void *context) {
   TimeRangeSelectionWindowData *data = context;
   return date_time_selection_get_text(&data->to, index, data->buf);
 }
@@ -97,26 +97,28 @@ static void prv_handle_to_dec(unsigned index, void *context) {
 static void prv_text_layer_init(Window *window, TextLayer *text_layer, GRect *rect,
                                 const char *i18n_str) {
   const GFont subtitle_font = system_theme_get_font_for_default_size(TextStyleFont_Subtitle);
-  text_layer_init_with_parameters(text_layer, rect, i18n_get(i18n_str, window),
-                                  subtitle_font, GColorBlack, GColorClear, GTextAlignmentCenter,
+  text_layer_init_with_parameters(text_layer, rect, i18n_get(i18n_str, window), subtitle_font,
+                                  GColorBlack, GColorClear, GTextAlignmentCenter,
                                   GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->layer, &text_layer->layer);
 }
 
 // Window Setup
 void time_range_selection_window_init(TimeRangeSelectionWindowData *time_range_selection_window,
-    GColor color, TimeRangeSelectionCompleteCallback complete_callback, void *callback_context) {
+                                      GColor color,
+                                      TimeRangeSelectionCompleteCallback complete_callback,
+                                      void *callback_context) {
   // General window setup
-  *time_range_selection_window = (TimeRangeSelectionWindowData) {
-    .complete_callback = complete_callback,
-    .callback_context = callback_context,
+  *time_range_selection_window = (TimeRangeSelectionWindowData){
+      .complete_callback = complete_callback,
+      .callback_context = callback_context,
   };
 
   Window *window = &time_range_selection_window->window;
   window_init(window, WINDOW_NAME("Time Range Selection Window"));
   window_set_user_data(window, time_range_selection_window);
 
-  const TimeSelectionSizeConfig * const config = prv_selection_config();
+  const TimeSelectionSizeConfig *const config = prv_selection_config();
 
   // Selection layer variables
   const int cell_width = config->cell_width;
@@ -138,12 +140,12 @@ void time_range_selection_window_init(TimeRangeSelectionWindowData *time_range_s
   selection_layer_set_active_bg_color(from_selection_layer, color);
   selection_layer_set_inactive_bg_color(from_selection_layer, GColorDarkGray);
   selection_layer_set_callbacks(from_selection_layer, time_range_selection_window,
-      (SelectionLayerCallbacks) {
-    .get_cell_text = prv_handle_from_get_text,
-    .complete = prv_handle_from_complete,
-    .increment = prv_handle_from_inc,
-    .decrement = prv_handle_from_dec,
-  });
+                                (SelectionLayerCallbacks){
+                                    .get_cell_text = prv_handle_from_get_text,
+                                    .complete = prv_handle_from_complete,
+                                    .increment = prv_handle_from_inc,
+                                    .decrement = prv_handle_from_dec,
+                                });
 
   // TO selection layer setup
   SelectionLayer *to_selection_layer = &time_range_selection_window->to_selection_layer;
@@ -156,12 +158,12 @@ void time_range_selection_window_init(TimeRangeSelectionWindowData *time_range_s
   selection_layer_set_active_bg_color(to_selection_layer, color);
   selection_layer_set_inactive_bg_color(to_selection_layer, GColorDarkGray);
   selection_layer_set_callbacks(to_selection_layer, time_range_selection_window,
-      (SelectionLayerCallbacks) {
-    .get_cell_text = prv_handle_to_get_text,
-    .complete = prv_handle_to_complete,
-    .increment = prv_handle_to_inc,
-    .decrement = prv_handle_to_dec,
-  });
+                                (SelectionLayerCallbacks){
+                                    .get_cell_text = prv_handle_to_get_text,
+                                    .complete = prv_handle_to_complete,
+                                    .increment = prv_handle_to_inc,
+                                    .decrement = prv_handle_to_dec,
+                                });
 
   selection_layer_set_click_config_onto_window(from_selection_layer, window);
   selection_layer_set_active(to_selection_layer, false);

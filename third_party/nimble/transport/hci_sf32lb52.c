@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-  #include <board/board.h>
-  #include <drivers/uart.h>
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
+#include <board/board.h>
+#include <drivers/uart.h>
+#endif  // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 #include <bf0_hal.h>
 #include <kernel/pebble_tasks.h>
@@ -92,8 +92,8 @@ static void *prv_alloc_evt(int discardable) {
 }
 
 static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
-  .acl = prv_alloc_acl_from_ll,
-  .evt = prv_alloc_evt,
+    .acl = prv_alloc_acl_from_ll,
+    .evt = prv_alloc_evt,
 };
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
@@ -114,25 +114,25 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   const char *type_str;
 
   switch (type) {
-  case HCI_H4_CMD:
-    type_str = "CMD";
-    break;
-  case HCI_H4_ACL:
-    type_str = "ACL";
-    break;
-  case HCI_H4_EVT:
-    type_str = "EVT";
-    break;
-  case HCI_H4_ISO:
-    type_str = "ISO";
-    break;
-  default:
-    type_str = "UKN";
-    break;
+    case HCI_H4_CMD:
+      type_str = "CMD";
+      break;
+    case HCI_H4_ACL:
+      type_str = "ACL";
+      break;
+    case HCI_H4_EVT:
+      type_str = "EVT";
+      break;
+    case HCI_H4_ISO:
+      type_str = "ISO";
+      break;
+    default:
+      type_str = "UKN";
+      break;
   }
 
   PBL_LOG_D_DBG(LOG_DOMAIN_BT_STACK, "%s, %s %" PRIu16, type_str,
-            (h4tl_packet == H4TL_PACKET_HOST) ? "TX" : "RX", len);
+                (h4tl_packet == H4TL_PACKET_HOST) ? "TX" : "RX", len);
   PBL_HEXDUMP_D(LOG_DOMAIN_BT_STACK, LOG_LEVEL_DEBUG, data, len);
 }
 #elif defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
@@ -172,7 +172,7 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
 #endif
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY) || defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
-void prv_hci_trace_mbuf(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet)  {
+void prv_hci_trace_mbuf(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet) {
   PBL_ASSERTN(os_mbuf_len(om) < MAX_HCI_PKT_SIZE);
   os_mbuf_copydata(om, 0, os_mbuf_len(om), s_hci_buf);
   prv_hci_trace(type, s_hci_buf, os_mbuf_len(om), h4tl_packet);
@@ -180,7 +180,6 @@ void prv_hci_trace_mbuf(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet)  
 #else
 #define prv_hci_trace_mbuf(type, om, h4tl_packet)
 #endif
-
 
 static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size) {
   pbl_sem_give(&s_ipc_data_ready);
@@ -234,29 +233,29 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   struct ble_hci_ev_command_complete *cmd_complete;
 
   switch (pkt_type) {
-  case HCI_H4_EVT:
-    ev = data;
-    cmd_complete = (void *)ev->data;
+    case HCI_H4_EVT:
+      ev = data;
+      cmd_complete = (void *)ev->data;
 
-    if (ev->opcode == BLE_HCI_EVCODE_COMMAND_COMPLETE) {
-      PBL_LOG_D_DBG(LOG_DOMAIN_BT_STACK, "CMD complete %x", cmd_complete->opcode);
-      // NOTE: do not confuse NimBLE with SF32LB52 vendor specific command
-      if (cmd_complete->opcode == BLE_HCI_EXT_SF32LB52_BLE_READY) {
-        break;
+      if (ev->opcode == BLE_HCI_EVCODE_COMMAND_COMPLETE) {
+        PBL_LOG_D_DBG(LOG_DOMAIN_BT_STACK, "CMD complete %x", cmd_complete->opcode);
+        // NOTE: do not confuse NimBLE with SF32LB52 vendor specific command
+        if (cmd_complete->opcode == BLE_HCI_EXT_SF32LB52_BLE_READY) {
+          break;
+        }
       }
-    }
 
-    prv_hci_trace(pkt_type, data, ev->length + sizeof(*ev), H4TL_PACKET_CTRL);
+      prv_hci_trace(pkt_type, data, ev->length + sizeof(*ev), H4TL_PACKET_CTRL);
 
-    return ble_transport_to_hs_evt(data);
-  case HCI_H4_ACL:
-    prv_hci_trace(pkt_type, OS_MBUF_DATA((struct os_mbuf *)data, uint8_t *),
-                  OS_MBUF_PKTLEN((struct os_mbuf *)data), H4TL_PACKET_CTRL);
+      return ble_transport_to_hs_evt(data);
+    case HCI_H4_ACL:
+      prv_hci_trace(pkt_type, OS_MBUF_DATA((struct os_mbuf *)data, uint8_t *),
+                    OS_MBUF_PKTLEN((struct os_mbuf *)data), H4TL_PACKET_CTRL);
 
-    return ble_transport_to_hs_acl(data);
-  default:
-    WTF;
-    break;
+      return ble_transport_to_hs_acl(data);
+    default:
+      WTF;
+      break;
   }
 
   return -1;
@@ -319,12 +318,12 @@ void ble_transport_ll_init(void) {
   ble_transport_register_put_acl_from_ll_cb(prv_acl_put_signal);
 
   struct pbl_thread_attr attr = {
-    .name = "NimbleHCI",
-    .entry = prv_hci_task_main,
-    .prio = PBL_PRIO_IDLE + 3,
-    .privileged = true,
-    .stack = s_hci_task_stack,
-    .stack_size = sizeof(s_hci_task_stack),
+      .name = "NimbleHCI",
+      .entry = prv_hci_task_main,
+      .prio = PBL_PRIO_IDLE + 3,
+      .privileged = true,
+      .stack = s_hci_task_stack,
+      .stack_size = sizeof(s_hci_task_stack),
   };
 
   s_hci_task_handle = pebble_task_create(PebbleTask_BTHCI, &attr);
@@ -360,8 +359,7 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
     goto exit;
   }
 
-  written = ipc_queue_write(s_ipc_port, cmd, sizeof(*cmd) + cmd->length,
-                            IPC_TIMEOUT_TICKS);
+  written = ipc_queue_write(s_ipc_port, cmd, sizeof(*cmd) + cmd->length, IPC_TIMEOUT_TICKS);
   if (written != sizeof(*cmd) + cmd->length) {
     PBL_LOG_ERR("Failed to write HCI CMD data");
     err = BLE_ERR_MEM_CAPACITY;
@@ -439,4 +437,3 @@ exit:
 
   return err;
 }
-

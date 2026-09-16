@@ -45,7 +45,7 @@ AppInstallId system_app_state_machine_get_last_registered_app(void) {
   return APP_ID_LAUNCHER_MENU;
 }
 
-const PebbleProcessMd* system_app_state_machine_get_default_app(void) {
+const PebbleProcessMd *system_app_state_machine_get_default_app(void) {
   return launcher_menu_app_get_app_info();
 }
 
@@ -64,8 +64,8 @@ void system_app_state_machine_register_app_launch(AppInstallId app_id) {
 
 void system_app_state_machine_panic(void) {
   if (app_manager_is_initialized()) {
-    app_manager_launch_new_app(&(AppLaunchConfig) {
-      .md = panic_app_get_app_info(),
+    app_manager_launch_new_app(&(AppLaunchConfig){
+        .md = panic_app_get_app_info(),
     });
   }
 }

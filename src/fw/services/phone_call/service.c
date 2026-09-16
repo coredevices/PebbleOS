@@ -30,7 +30,6 @@ PBL_LOG_MODULE_DEFINE(service_phone_call, CONFIG_SERVICE_PHONE_CALL_LOG_LEVEL);
 //!   call ends, which consumes a lot of battery especially for longer calls. On iOS 9, we only
 //!   know when the phone stops ringing, we don't know what happens after the user accepts/rejects
 
-
 static bool s_call_in_progress = false;
 static PhoneCallSource s_call_source;
 
@@ -44,7 +43,6 @@ static bool s_mobile_app_is_connected;
 // We can't expect iOS to reliably send us phone call events, so we must poll for the current
 // status of the phone call
 static TimerID s_call_watchdog = TIMER_INVALID_ID;
-
 
 static void prv_handle_call_end(bool disconnected);
 
@@ -69,8 +67,8 @@ static void prv_schedule_call_watchdog(int poll_interval_ms) {
   // iOS 9 since we can rely on ANCS to tell us when the phone stops ringing
   if (s_call_source == PhoneCallSource_ANCS_Legacy) {
     // Schedule/reschedule the watchdog
-    if (!new_timer_start(s_call_watchdog, poll_interval_ms, prv_timer_callback,
-                         NULL, TIMER_START_FLAG_REPEATING)) {
+    if (!new_timer_start(s_call_watchdog, poll_interval_ms, prv_timer_callback, NULL,
+                         TIMER_START_FLAG_REPEATING)) {
       PBL_LOG_ERR("Could not start the phone call watchdog timer");
       prv_handle_call_end(true /* Treat this as a disconnection */);
     } else {
@@ -78,8 +76,7 @@ static void prv_schedule_call_watchdog(int poll_interval_ms) {
       pp_get_phone_state_set_enabled(true);
     }
   } else {
-    PBL_LOG_DBG("Not starting phone call watchdog, this isn't iOS 8: %d",
-            s_call_source);
+    PBL_LOG_DBG("Not starting phone call watchdog, this isn't iOS 8: %d", s_call_source);
   }
 }
 
@@ -123,7 +120,7 @@ static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
   // the phone has stopped ringing
   if ((event->source != PhoneCallSource_ANCS) && !s_mobile_app_is_connected) {
     PBL_LOG_DBG("Ignoring incoming call. Mobile app is not connected. Call source: %d ",
-            event->source);
+                event->source);
     return;
   }
 
@@ -133,8 +130,7 @@ static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
 
   prv_schedule_call_watchdog(600);
 
-  phone_ui_handle_incoming_call(event->caller, prv_should_show_ongoing_call_ui(),
-                                s_call_source);
+  phone_ui_handle_incoming_call(event->caller, prv_should_show_ongoing_call_ui(), s_call_source);
   PBL_ANALYTICS_ADD(phone_call_incoming_count, 1);
   PBL_ANALYTICS_TIMER_START(phone_call_time_ms);
 }
@@ -181,8 +177,8 @@ static void prv_handle_call_hide(PebblePhoneEvent *event) {
 
   // Make sure this wasn't caused due to an unrelated ANCS removal
   if (prv_call_is_ancs() && (s_call_identifier != event->call_identifier)) {
-    PBL_LOG_DBG("Ignoring hide call. Call identifier %"PRIu32" doesn't match %"PRIu32,
-            s_call_identifier, event->call_identifier);
+    PBL_LOG_DBG("Ignoring hide call. Call identifier %" PRIu32 " doesn't match %" PRIu32,
+                s_call_identifier, event->call_identifier);
     return;
   }
 
@@ -208,7 +204,7 @@ static void prv_handle_caller_id(PebblePhoneEvent *event) {
 }
 
 T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
-  PebblePhoneEvent event = (PebblePhoneEvent) e->phone;
+  PebblePhoneEvent event = (PebblePhoneEvent)e->phone;
 
   if (!alerts_should_notify_for_type(AlertPhoneCall)) {
     prv_handle_call_end(true /* disconnected */);
@@ -218,8 +214,8 @@ T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
 
   if (!(event.type == PhoneEventType_Incoming && new_timer_scheduled(s_call_watchdog, NULL))) {
     // Be careful not to spam the logs with the new iOS polling implementation
-    PBL_LOG_DBG("PebblePhoneEvent: %d, Call in progress: %s, Connected: %s",
-      event.type, s_call_in_progress ? "T": "F", s_mobile_app_is_connected ? "T": "F");
+    PBL_LOG_DBG("PebblePhoneEvent: %d, Call in progress: %s, Connected: %s", event.type,
+                s_call_in_progress ? "T" : "F", s_mobile_app_is_connected ? "T" : "F");
   }
 
   switch (event.type) {
@@ -279,23 +275,23 @@ T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void *context) 
 //!
 void phone_call_service_init() {
   static EventServiceInfo phone_event_info;
-  phone_event_info = (EventServiceInfo) {
-    .type = PEBBLE_PHONE_EVENT,
-    .handler = prv_handle_phone_event,
+  phone_event_info = (EventServiceInfo){
+      .type = PEBBLE_PHONE_EVENT,
+      .handler = prv_handle_phone_event,
   };
   event_service_client_subscribe(&phone_event_info);
 
   static EventServiceInfo mobile_app_event_info;
-  mobile_app_event_info = (EventServiceInfo) {
-    .type = PEBBLE_COMM_SESSION_EVENT,
-    .handler = prv_handle_mobile_app_event,
+  mobile_app_event_info = (EventServiceInfo){
+      .type = PEBBLE_COMM_SESSION_EVENT,
+      .handler = prv_handle_mobile_app_event,
   };
   event_service_client_subscribe(&mobile_app_event_info);
 
   static EventServiceInfo ancs_disconnected_event_info;
-  ancs_disconnected_event_info = (EventServiceInfo) {
-    .type = PEBBLE_ANCS_DISCONNECTED_EVENT,
-    .handler = prv_handle_ancs_disconnected_event,
+  ancs_disconnected_event_info = (EventServiceInfo){
+      .type = PEBBLE_ANCS_DISCONNECTED_EVENT,
+      .handler = prv_handle_ancs_disconnected_event,
   };
   event_service_client_subscribe(&ancs_disconnected_event_info);
 

@@ -103,7 +103,7 @@ GBitmap *prv_get_gbitmap(KinoReel *reel) {
   return NULL;
 }
 
-GBitmapSequence* prv_get_gbitmap_sequence(KinoReel *reel) {
+GBitmapSequence *prv_get_gbitmap_sequence(KinoReel *reel) {
   KinoReelImplCustom *custom_reel = (KinoReelImplCustom *)reel;
   if (custom_reel->impl->get_gbitmap_sequence) {
     return custom_reel->impl->get_gbitmap_sequence(reel);
@@ -113,18 +113,18 @@ GBitmapSequence* prv_get_gbitmap_sequence(KinoReel *reel) {
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_CUSTOM = {
-  .reel_type = KinoReelTypeCustom,
-  .destructor = prv_destructor,
-  .get_elapsed = prv_elapsed_getter,
-  .set_elapsed = prv_elapsed_setter,
-  .get_duration = prv_duration_getter,
-  .get_size = prv_size_getter,
-  .draw_processed = prv_draw_processed_func,
-  .get_gdraw_command_image = prv_get_gdraw_command_image,
-  .get_gdraw_command_list = prv_get_gdraw_command_list,
-  .get_gdraw_command_sequence = prv_get_gdraw_command_sequence,
-  .get_gbitmap = prv_get_gbitmap,
-  .get_gbitmap_sequence = prv_get_gbitmap_sequence,
+    .reel_type = KinoReelTypeCustom,
+    .destructor = prv_destructor,
+    .get_elapsed = prv_elapsed_getter,
+    .set_elapsed = prv_elapsed_setter,
+    .get_duration = prv_duration_getter,
+    .get_size = prv_size_getter,
+    .draw_processed = prv_draw_processed_func,
+    .get_gdraw_command_image = prv_get_gdraw_command_image,
+    .get_gdraw_command_list = prv_get_gdraw_command_list,
+    .get_gdraw_command_sequence = prv_get_gdraw_command_sequence,
+    .get_gbitmap = prv_get_gbitmap,
+    .get_gbitmap_sequence = prv_get_gbitmap_sequence,
 };
 
 KinoReel *kino_reel_custom_create(const KinoReelImpl *custom_impl, void *data) {

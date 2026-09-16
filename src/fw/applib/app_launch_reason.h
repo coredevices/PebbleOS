@@ -23,14 +23,14 @@
 //! is recommended to only handle the cases that the app needs to know about,
 //! rather than trying to handle all possible launch reasons.
 typedef enum {
-  APP_LAUNCH_SYSTEM = 0,  //!< App launched by the system
-  APP_LAUNCH_USER,        //!< App launched by user selection in launcher menu
-  APP_LAUNCH_PHONE,       //!< App launched by mobile or companion app
-  APP_LAUNCH_WAKEUP,      //!< App launched by wakeup event
-  APP_LAUNCH_WORKER,      //!< App launched by worker calling worker_launch_app()
-  APP_LAUNCH_QUICK_LAUNCH, //!< App launched by user using quick launch
+  APP_LAUNCH_SYSTEM = 0,       //!< App launched by the system
+  APP_LAUNCH_USER,             //!< App launched by user selection in launcher menu
+  APP_LAUNCH_PHONE,            //!< App launched by mobile or companion app
+  APP_LAUNCH_WAKEUP,           //!< App launched by wakeup event
+  APP_LAUNCH_WORKER,           //!< App launched by worker calling worker_launch_app()
+  APP_LAUNCH_QUICK_LAUNCH,     //!< App launched by user using quick launch
   APP_LAUNCH_TIMELINE_ACTION,  //!< App launched by user opening it from a pin
-  APP_LAUNCH_SMARTSTRAP,  //!< App launched by a smartstrap
+  APP_LAUNCH_SMARTSTRAP,       //!< App launched by a smartstrap
 } AppLaunchReason;
 
 //! Provides the method used to launch the current application.
@@ -40,10 +40,10 @@ AppLaunchReason app_launch_reason(void);
 //! Details about how an app was quick launched.
 //! Returned by \ref app_launch_get_quick_launch_action.
 typedef enum {
-  APP_QUICK_LAUNCH_ACTION_NONE = 0,   //!< App was not launched via Quick Launch
-  APP_QUICK_LAUNCH_ACTION_HOLD,       //!< User held a single button
-  APP_QUICK_LAUNCH_ACTION_TAP,        //!< User tapped a button (single click)
-  APP_QUICK_LAUNCH_ACTION_COMBO,      //!< User held a button combination
+  APP_QUICK_LAUNCH_ACTION_NONE = 0,  //!< App was not launched via Quick Launch
+  APP_QUICK_LAUNCH_ACTION_HOLD,      //!< User held a single button
+  APP_QUICK_LAUNCH_ACTION_TAP,       //!< User tapped a button (single click)
+  APP_QUICK_LAUNCH_ACTION_COMBO,     //!< User held a button combination
 } AppQuickLaunchAction;
 
 //! Get the argument passed to the app when it was launched.
@@ -59,4 +59,3 @@ AppQuickLaunchAction app_launch_get_quick_launch_action(void);
 
 //!   @} // group Launch_Reason
 //! @} // group Foundation
-

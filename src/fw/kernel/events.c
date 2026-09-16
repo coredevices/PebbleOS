@@ -26,16 +26,19 @@ static PBL_MSGQ_DEFINE(s_kernel_event_queue, sizeof(PebbleEvent), MAX_KERNEL_EVE
 static PBL_MSGQ_DEFINE(s_from_app_event_queue, sizeof(PebbleEvent), MAX_FROM_APP_EVENTS);
 static PBL_MSGQ_DEFINE(s_from_worker_event_queue, sizeof(PebbleEvent), MAX_FROM_WORKER_EVENTS);
 
-// The following conventions insure that the s_from_kernel_event_queue queue will always have sufficient space and that
-// KernelMain will never deadlock trying to send an event to itself:
-// 1.) KernelMain must never enqueue more than MAX_FROM_KERNEL_MAIN_EVENTS events to itself while processing another
+// The following conventions insure that the s_from_kernel_event_queue queue will always have
+// sufficient space and that KernelMain will never deadlock trying to send an event to itself: 1.)
+// KernelMain must never enqueue more than MAX_FROM_KERNEL_MAIN_EVENTS events to itself while
+// processing another
 //     event.
 // 2.) The ONLY task that posts events to s_from_kernel_event_queue is the KernelMain task.
 // 3.) Whenever KernelMain wants to post an event to itself, it MUST use this queue.
-// 4.) The KernelMain task will always service this queue first, before servicing the kernel or from_app queues.
+// 4.) The KernelMain task will always service this queue first, before servicing the kernel or
+// from_app queues.
 static PBL_MSGQ_DEFINE(s_from_kernel_event_queue, sizeof(PebbleEvent), MAX_FROM_KERNEL_MAIN_EVENTS);
 
-// This queue set contains the s_kernel_event_queue, s_from_app_event_queue, and s_from_worker_event_queue queues
+// This queue set contains the s_kernel_event_queue, s_from_app_event_queue, and
+// s_from_worker_event_queue queues
 static PBL_POLL_GROUP_DEFINE(s_system_event_queue_set);
 
 uint32_t s_current_event;
@@ -88,14 +91,16 @@ static void prv_queue_dump(struct pbl_msgq *queue) {
   while (pbl_msgq_get(queue, &event, PBL_NO_WAIT) == 0) {
     PBL_LOG_DBG("Event type: %u", event.type);
   }
-  for(;;);
+  for (;;)
+    ;
 }
 #endif
 
 void events_init(void) {
-  // This assert is to make sure we don't accidentally bloat our PebbleEvent unnecessarily. If you hit this
-  // assert and you have a good reason for making the event bigger, feel free to relax the restriction.
-  //PBL_LOG_DBG("PebbleEvent size is %u", sizeof(PebbleEvent));
+  // This assert is to make sure we don't accidentally bloat our PebbleEvent unnecessarily. If you
+  // hit this assert and you have a good reason for making the event bigger, feel free to relax the
+  // restriction.
+  // PBL_LOG_DBG("PebbleEvent size is %u", sizeof(PebbleEvent));
   // FIXME:
   _Static_assert(sizeof(PebbleEvent) <= 12,
                  "You made the PebbleEvent bigger! It should be no more than 12");
@@ -121,11 +126,10 @@ struct pbl_msgq *event_get_to_kernel_queue(PebbleTask task) {
   }
 }
 
-
 //! Decode a bit more information out about an event and pack it into a uint32_t
 static uint32_t prv_get_fancy_type_from_event(const PebbleEvent *event) {
   if (event->type == PEBBLE_CALLBACK_EVENT) {
-    return (uint32_t) event->callback.callback;
+    return (uint32_t)event->callback.callback;
   }
   return event->type;
 }
@@ -139,30 +143,32 @@ static void prv_log_kernel_queue_contents(void) {
   }
 }
 
-static void prv_log_event_put_failure(const char *queue_name, uintptr_t saved_lr, const PebbleEvent *event) {
+static void prv_log_event_put_failure(const char *queue_name, uintptr_t saved_lr,
+                                      const PebbleEvent *event) {
   PBL_LOG_ERR("Error, %s queue full. Type %u", queue_name, event->type);
   prv_log_kernel_queue_contents();
 
   RebootReason reason = {
-    .code = RebootReasonCode_EventQueueFull,
-    .event_queue = {
-      .push_lr = saved_lr,
-      .current_event = s_current_event,
-      .dropped_event = prv_get_fancy_type_from_event(event)
-    }
+      .code = RebootReasonCode_EventQueueFull,
+      .event_queue = {
+          .push_lr = saved_lr,
+          .current_event = s_current_event,
+          .dropped_event = prv_get_fancy_type_from_event(event)
+      }
   };
   reboot_reason_set(&reason);
 }
 
-static bool prv_event_put_isr(struct pbl_msgq *queue, const char* queue_type, uintptr_t saved_lr,
-                                  PebbleEvent* event) {
+static bool prv_event_put_isr(struct pbl_msgq *queue, const char *queue_type, uintptr_t saved_lr,
+                              PebbleEvent *event) {
   PBL_ASSERTN(queue);
 
   if (pbl_msgq_put(queue, event, PBL_NO_WAIT) != 0) {
     prv_log_event_put_failure(queue_type, saved_lr, event);
 
 #ifdef CONFIG_NO_WATCHDOG
-    while (1);
+    while (1)
+      ;
 #endif
 
     reset_due_to_software_failure();
@@ -184,17 +190,15 @@ static bool prv_try_event_put(struct pbl_msgq *queue, PebbleEvent *event) {
   return success;
 }
 
-static void prv_event_put(struct pbl_msgq *queue,
-                          const char* queue_type,
-                          uintptr_t saved_lr,
-                          PebbleEvent* event) {
+static void prv_event_put(struct pbl_msgq *queue, const char *queue_type, uintptr_t saved_lr,
+                          PebbleEvent *event) {
   PBL_ASSERTN(queue);
 
   if (pbl_msgq_put(queue, event, PBL_MSEC(3000)) != 0) {
-    // We waited a reasonable amount of time here before failing. We don't want to wait too long because
-    // if the queue really is stuck we'll just get a watchdog reset, which will be harder to debug than
-    // just dieing here. However, we want to wait a non-zero amount of time to provide for a little bit
-    // of backup to occur before killing ourselves.
+    // We waited a reasonable amount of time here before failing. We don't want to wait too long
+    // because if the queue really is stuck we'll just get a watchdog reset, which will be harder to
+    // debug than just dieing here. However, we want to wait a non-zero amount of time to provide
+    // for a little bit of backup to occur before killing ourselves.
 
     prv_log_event_put_failure(queue_type, saved_lr, event);
 
@@ -210,7 +214,7 @@ static void prv_event_put(struct pbl_msgq *queue,
   }
 }
 
-void event_deinit(PebbleEvent* event) {
+void event_deinit(PebbleEvent *event) {
   void **buffer = event_get_buffer(event);
   if (buffer && *buffer) {
     kernel_free(*buffer);
@@ -218,11 +222,11 @@ void event_deinit(PebbleEvent* event) {
   }
 }
 
-void event_put(PebbleEvent* event) {
+void event_put(PebbleEvent *event) {
   // Caller LR; more reliable than reading lr register from a deeper helper.
   uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
-  // If we are posting from the KernelMain task, use the dedicated s_from_kernel_event_queue queue for that
-  // See comments above where s_from_kernel_event_queue is declared.
+  // If we are posting from the KernelMain task, use the dedicated s_from_kernel_event_queue queue
+  // for that See comments above where s_from_kernel_event_queue is declared.
   if (pebble_task_get_current() == PebbleTask_KernelMain) {
     return prv_event_put(&s_from_kernel_event_queue, "from_kernel", saved_lr, event);
   } else {
@@ -230,29 +234,30 @@ void event_put(PebbleEvent* event) {
   }
 }
 
-bool event_put_isr(PebbleEvent* event) {
+bool event_put_isr(PebbleEvent *event) {
   uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
 
   return prv_event_put_isr(&s_kernel_event_queue, "kernel", saved_lr, event);
 }
 
-void event_put_from_process(PebbleTask task, PebbleEvent* event) {
+void event_put_from_process(PebbleTask task, PebbleEvent *event) {
   uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
 
   struct pbl_msgq *queue = event_get_to_kernel_queue(task);
   prv_event_put(queue, "from app", saved_lr, event);
 }
 
-bool event_try_put_from_process(PebbleTask task, PebbleEvent* event) {
+bool event_try_put_from_process(PebbleTask task, PebbleEvent *event) {
   struct pbl_msgq *queue = event_get_to_kernel_queue(task);
   return prv_try_event_put(queue, event);
 }
 
-bool event_take_timeout(PebbleEvent* event, int timeout_ms) {
+bool event_take_timeout(PebbleEvent *event, int timeout_ms) {
   s_current_event = 0;
 
-  // We must prioritize the from_kernel queue and always empty that first in order to avoid deadlocks in
-  // KernelMain. See comments at top of file where s_from_kernel_event_queue is declared.
+  // We must prioritize the from_kernel queue and always empty that first in order to avoid
+  // deadlocks in KernelMain. See comments at top of file where s_from_kernel_event_queue is
+  // declared.
 
   // Check the from_kernel queue first to see if we posted any events to ourself.
   bool result = (pbl_msgq_get(&s_from_kernel_event_queue, event, PBL_NO_WAIT) == 0);
@@ -262,23 +267,25 @@ bool event_take_timeout(PebbleEvent* event, int timeout_ms) {
   }
 
   // Wait for either the from_app, from_worker, or kernel queue to be ready.
-  struct pbl_msgq *activated_queue = pbl_poll_group_wait(&s_system_event_queue_set,
-                                                         PBL_MSEC(timeout_ms));
+  struct pbl_msgq *activated_queue =
+      pbl_poll_group_wait(&s_system_event_queue_set, PBL_MSEC(timeout_ms));
   if (!activated_queue) {
     return false;
   }
 
   // Always service the kernel queue first. This prevents a misbehaving app from starving us.
-  // If we're a little lazy servicing the app, the app will just block itself when the queue gets full.
+  // If we're a little lazy servicing the app, the app will just block itself when the queue gets
+  // full.
   if (pbl_msgq_get(&s_kernel_event_queue, event, PBL_NO_WAIT) == 0) {
     if (event->type == PEBBLE_CALLBACK_EVENT) {
       prv_callback_tracker_pop((uintptr_t)event->callback.callback);
     }
   } else {
-    // Process the activated queue. This insures that events are handled in FIFO order from the app and worker
-    // tasks. Note that sometimes the activated_queue can be the s_kernel_event_queue, even though
-    // the above receive returned no event
-    if (activated_queue == &s_from_app_event_queue || activated_queue == &s_from_worker_event_queue) {
+    // Process the activated queue. This insures that events are handled in FIFO order from the app
+    // and worker tasks. Note that sometimes the activated_queue can be the s_kernel_event_queue,
+    // even though the above receive returned no event
+    if (activated_queue == &s_from_app_event_queue ||
+        activated_queue == &s_from_worker_event_queue) {
       result = (pbl_msgq_get(activated_queue, event, PBL_NO_WAIT) == 0);
     }
     if (!result) {
@@ -288,7 +295,8 @@ bool event_take_timeout(PebbleEvent* event, int timeout_ms) {
       result = (pbl_msgq_get(&s_from_worker_event_queue, event, PBL_NO_WAIT) == 0);
     }
 
-    // If there was nothing in the queue, return false. We are misusing the poll group by pulling events out
+    // If there was nothing in the queue, return false. We are misusing the poll group by pulling
+    // events out
     //  from the s_kernel_event_queue queue before it's activated so likely, the activated queue was
     //  s_kernel_event_queue.
     if (!result) {
@@ -316,8 +324,7 @@ void **event_get_buffer(PebbleEvent *event) {
       return (void **)&event->blob_db.key;
 
     case PEBBLE_BT_PAIRING_EVENT:
-      if (event->bluetooth.pair.type ==
-          PebbleBluetoothPairEventTypePairingUserConfirmation) {
+      if (event->bluetooth.pair.type == PebbleBluetoothPairEventTypePairingUserConfirmation) {
         return (void **)&event->bluetooth.pair.confirmation_info;
       }
       break;
@@ -352,13 +359,13 @@ void **event_get_buffer(PebbleEvent *event) {
       return (void **)&event->timeline_peek.item_id;
 
     default:
-      break; // Nothing to do!
+      break;  // Nothing to do!
   }
 
   return NULL;
 }
 
-void event_cleanup(PebbleEvent* event) {
+void event_cleanup(PebbleEvent *event) {
   event_deinit(event);
 
 #ifndef CONFIG_RELEASE

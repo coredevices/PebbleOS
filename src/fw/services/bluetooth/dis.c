@@ -13,10 +13,10 @@
 #include "mfg/mfg_serials.h"
 #include "system/version.h"
 
-_Static_assert(MODEL_NUMBER_LEN  >= MFG_HW_VERSION_SIZE + 1, "Size mismatch");
-_Static_assert(MANUFACTURER_LEN  >= sizeof(BT_VENDOR_NAME), "Size mismatch");
+_Static_assert(MODEL_NUMBER_LEN >= MFG_HW_VERSION_SIZE + 1, "Size mismatch");
+_Static_assert(MANUFACTURER_LEN >= sizeof(BT_VENDOR_NAME), "Size mismatch");
 _Static_assert(SERIAL_NUMBER_LEN >= MFG_SERIAL_NUMBER_SIZE + 1, "Size mismatch");
-_Static_assert(FW_REVISION_LEN   >= sizeof(TINTIN_METADATA.version_tag), "Size mismatch");
+_Static_assert(FW_REVISION_LEN >= sizeof(TINTIN_METADATA.version_tag), "Size mismatch");
 
 static void prv_set_model_number(DisInfo *info) {
   mfg_info_get_hw_version(info->model_number, MODEL_NUMBER_LEN);
@@ -31,14 +31,13 @@ static void prv_set_serial_number(DisInfo *info) {
 }
 
 static void prv_set_firmware_revision(DisInfo *info) {
-  strncpy(info->fw_revision, (char*)TINTIN_METADATA.version_tag, FW_REVISION_LEN);
+  strncpy(info->fw_revision, (char *)TINTIN_METADATA.version_tag, FW_REVISION_LEN);
 }
 
 static void prv_set_software_revision(DisInfo *info) {
   // Fmt: xx.xx\0
   char sdk_version[SW_REVISION_LEN];
-  sniprintf(sdk_version, SW_REVISION_LEN, "%2u.%02u",
-            PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
+  sniprintf(sdk_version, SW_REVISION_LEN, "%2u.%02u", PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR,
             PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
   strncpy(info->sw_revision, sdk_version, SW_REVISION_LEN);
 }

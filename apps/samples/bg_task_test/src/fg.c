@@ -4,7 +4,6 @@
 #include "pebble.h"
 #include <inttypes.h>
 
-
 Window *window;
 TextLayer *text_layer;
 Layer *line_layer;
@@ -18,20 +17,21 @@ static uint64_t prv_ms(void) {
   return ((uint64_t)cur_sec * 1000) + cur_ms;
 }
 
-
 static void steps_event_handler(uint16_t type, AppWorkerMessage *data) {
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Received new worker event. type: %d, data: %d, %d, %d", (int)type, (int)data->data0,
-  //        (int)data->data1, (int)data->data2);
+  // APP_LOG(APP_LOG_LEVEL_DEBUG, "Received new worker event. type: %d, data: %d, %d, %d",
+  // (int)type, (int)data->data0,
+  //         (int)data->data1, (int)data->data2);
 
   if (type == 0) {
-    snprintf(g_text, sizeof(g_text), "%5d %5d %5d", (int)data->data0, (int)data->data1, (int)data->data2);
+    snprintf(g_text, sizeof(g_text), "%5d %5d %5d", (int)data->data0, (int)data->data1,
+             (int)data->data2);
     text_layer_set_text(text_layer, g_text);
   } else if (type == 1) {
-    snprintf(g_text, sizeof(g_text), "BAT: %d, %d, %d", (int)data->data0, (int)data->data1, (int)data->data2);
+    snprintf(g_text, sizeof(g_text), "BAT: %d, %d, %d", (int)data->data0, (int)data->data1,
+             (int)data->data2);
     text_layer_set_text(text_layer, g_text);
   }
 }
-
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   AppWorkerResult result = app_worker_launch();
@@ -57,11 +57,10 @@ static void click_config_provider(void *context) {
 
 static uint32_t s_seconds_count;
 void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-
   bool running = app_worker_is_running();
 
   if (false) {
-    const char* status = "not";
+    const char *status = "not";
     if (running) {
       status = "is";
     }
@@ -77,12 +76,11 @@ void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void health_event_handler(HealthEventType event, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "app: Got health event update. event_id: %"PRIu32"",
-          (uint32_t) event);
+  APP_LOG(APP_LOG_LEVEL_INFO, "app: Got health event update. event_id: %" PRIu32 "",
+          (uint32_t)event);
   if (event == HealthEventMovementUpdate) {
     HealthValue steps = health_service_sum_today(HealthMetricStepCount);
-    APP_LOG(APP_LOG_LEVEL_INFO, "app: movement event, steps: %"PRIu32"",
-            (uint32_t)steps);
+    APP_LOG(APP_LOG_LEVEL_INFO, "app: movement event, steps: %" PRIu32 "", (uint32_t)steps);
 
     // Test getting historical steps
     time_t day_start = time_start_of_today();
@@ -102,7 +100,6 @@ static void health_event_handler(HealthEventType event, void *context) {
     steps = health_service_sum(HealthMetricStepCount, day_start - (SECONDS_PER_DAY / 2), day_start);
     APP_LOG(APP_LOG_LEVEL_INFO, "steps 2nd half of yesterday: %d", (int)steps);
 
-
     // Test the get_minute_history call
 
     const int minute_data_len = 10;
@@ -116,20 +113,23 @@ static void health_event_handler(HealthEventType event, void *context) {
     uint64_t elapsed_ms = prv_ms() - start_ms;
 
     int num_records_returned = (utc_end - utc_start) / SECONDS_PER_MINUTE;
-    APP_LOG(APP_LOG_LEVEL_INFO, "app: Retrieved %d minute records in %"PRIu32" ms:",
-            num_records_returned, (uint32_t)elapsed_ms);
+    APP_LOG(APP_LOG_LEVEL_INFO,
+            "app: Retrieved %d minute records in %" PRIu32 " ms:", num_records_returned,
+            (uint32_t)elapsed_ms);
     for (int i = 0; i < num_records_returned; i++) {
-      APP_LOG(APP_LOG_LEVEL_INFO, "  steps: %"PRIu8", orient: 0x%"PRIx8", vmc: %"PRIu16", "
-              "light: %d, valid: %d", minute_data[i].steps, minute_data[i].orientation,
-              minute_data[i].vmc, (int)minute_data[i].light, (int)(!minute_data[i].is_invalid));
+      APP_LOG(APP_LOG_LEVEL_INFO,
+              "  steps: %" PRIu8 ", orient: 0x%" PRIx8 ", vmc: %" PRIu16
+              ", "
+              "light: %d, valid: %d",
+              minute_data[i].steps, minute_data[i].orientation, minute_data[i].vmc,
+              (int)minute_data[i].light, (int)(!minute_data[i].is_invalid));
     }
-
 
   } else if (event == HealthEventSleepUpdate) {
     HealthValue total_sleep = health_service_sum_today(HealthMetricSleepSeconds);
     HealthValue restful_sleep = health_service_sum_today(HealthMetricSleepRestfulSeconds);
-    APP_LOG(APP_LOG_LEVEL_INFO, "app: New sleep event: total: %"PRIu32", restful: %"PRIu32" ",
-            total_sleep / SECONDS_PER_MINUTE,  restful_sleep / SECONDS_PER_MINUTE);
+    APP_LOG(APP_LOG_LEVEL_INFO, "app: New sleep event: total: %" PRIu32 ", restful: %" PRIu32 " ",
+            total_sleep / SECONDS_PER_MINUTE, restful_sleep / SECONDS_PER_MINUTE);
   }
 }
 
@@ -147,7 +147,7 @@ void handle_init(void) {
 
   Layer *window_layer = window_get_root_layer(window);
 
-  text_layer = text_layer_create(GRect(7, 40, 144-7, 168-40));
+  text_layer = text_layer_create(GRect(7, 40, 144 - 7, 168 - 40));
   text_layer_set_text_color(text_layer, GColorWhite);
   text_layer_set_background_color(text_layer, GColorClear);
   text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
@@ -170,11 +170,10 @@ void handle_init(void) {
   health_service_events_subscribe(health_event_handler, NULL);
 }
 
-
 int main(void) {
   handle_init();
 
   app_event_loop();
-  
+
   handle_deinit();
 }

@@ -27,8 +27,8 @@ KinoReel *kino_reel_create_with_resource_system(ResAppNum app_num, uint32_t reso
 
   // The first 4 bytes for media data files contains the type signature (except legacy PBI)
   uint32_t data_signature;
-  if (sys_resource_load_range(app_num, resource_id, 0, (uint8_t*)&data_signature,
-        sizeof(data_signature)) != sizeof(data_signature)) {
+  if (sys_resource_load_range(app_num, resource_id, 0, (uint8_t *)&data_signature,
+                              sizeof(data_signature)) != sizeof(data_signature)) {
     return NULL;
   }
 
@@ -37,17 +37,16 @@ KinoReel *kino_reel_create_with_resource_system(ResAppNum app_num, uint32_t reso
       return kino_reel_pdcs_create_with_resource_system(app_num, resource_id);
     case PDCI_SIGNATURE:
       return kino_reel_pdci_create_with_resource_system(app_num, resource_id);
-    case PNG_SIGNATURE:
-      {
-        bool is_apng = false;
-        // Check if the PNG is an APNG by seeking for the actl chunk
-        png_seek_chunk_in_resource_system(app_num, resource_id, PNG_HEADER_SIZE, true, &is_apng);
-        if (is_apng) {
-          return kino_reel_gbitmap_sequence_create_with_resource_system(app_num, resource_id);
-        } else {
-          return kino_reel_gbitmap_create_with_resource_system(app_num, resource_id);
-        }
+    case PNG_SIGNATURE: {
+      bool is_apng = false;
+      // Check if the PNG is an APNG by seeking for the actl chunk
+      png_seek_chunk_in_resource_system(app_num, resource_id, PNG_HEADER_SIZE, true, &is_apng);
+      if (is_apng) {
+        return kino_reel_gbitmap_sequence_create_with_resource_system(app_num, resource_id);
+      } else {
+        return kino_reel_gbitmap_create_with_resource_system(app_num, resource_id);
       }
+    }
     default:
       // We don't have any good way to validate that something
       // is indeed a gbitmap. We use it as our fallback.
@@ -146,7 +145,7 @@ GBitmap *kino_reel_get_gbitmap(KinoReel *reel) {
   return NULL;
 }
 
-GBitmapSequence* kino_reel_get_gbitmap_sequence(KinoReel *reel) {
+GBitmapSequence *kino_reel_get_gbitmap_sequence(KinoReel *reel) {
   if (reel && reel->impl->get_gbitmap_sequence) {
     return reel->impl->get_gbitmap_sequence(reel);
   }

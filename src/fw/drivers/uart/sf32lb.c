@@ -49,13 +49,21 @@ static void prv_init(UARTDevice *dev, uint32_t mode) {
   }
 }
 
-void uart_init(UARTDevice *dev) { prv_init(dev, UART_MODE_TX_RX); }
+void uart_init(UARTDevice *dev) {
+  prv_init(dev, UART_MODE_TX_RX);
+}
 
-void uart_init_open_drain(UARTDevice *dev) { WTF; }
+void uart_init_open_drain(UARTDevice *dev) {
+  WTF;
+}
 
-void uart_init_tx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_TX); }
+void uart_init_tx_only(UARTDevice *dev) {
+  prv_init(dev, UART_MODE_TX);
+}
 
-void uart_init_rx_only(UARTDevice *dev) { prv_init(dev, UART_MODE_RX); }
+void uart_init_rx_only(UARTDevice *dev) {
+  prv_init(dev, UART_MODE_RX);
+}
 
 void uart_deinit(UARTDevice *dev) {
   HAL_UART_DeInit(&dev->state->huart);
@@ -105,7 +113,8 @@ bool uart_is_tx_complete(UARTDevice *dev) {
 }
 
 void uart_wait_for_tx_complete(UARTDevice *dev) {
-  while (!uart_is_tx_complete(dev)) continue;
+  while (!uart_is_tx_complete(dev))
+    continue;
 }
 
 // Interrupts
@@ -171,7 +180,8 @@ void uart_irq_handler(UARTDevice *dev) {
         .framing_error = uart_has_rx_framing_error(dev),
     };
     // DMA
-    if (dev->state->rx_dma_buffer && (__HAL_UART_GET_FLAG(&dev->state->huart, UART_FLAG_IDLE) != RESET) &&
+    if (dev->state->rx_dma_buffer &&
+        (__HAL_UART_GET_FLAG(&dev->state->huart, UART_FLAG_IDLE) != RESET) &&
         (__HAL_UART_GET_IT_SOURCE(&dev->state->huart, UART_IT_IDLE) != RESET)) {
       // process bytes from the DMA buffer
       const uint32_t dma_length = dev->state->rx_dma_length;
@@ -243,7 +253,7 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
   else
     recv_len = recv_total_index - state->rx_dma_index;
 
-  idx = state->rx_dma_index;    
+  idx = state->rx_dma_index;
   state->rx_dma_index = recv_total_index;
   if (recv_len) {
     for (size_t i = 0; i < recv_len; i++) {
@@ -252,7 +262,7 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
       state->rx_irq_handler(dev, data, NULL);
       idx++;
       if (idx >= state->rx_dma_length) {
-          idx = 0;
+        idx = 0;
       }
     }
   }

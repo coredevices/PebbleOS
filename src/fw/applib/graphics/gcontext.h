@@ -19,7 +19,7 @@ typedef struct GContext {
 
   //! Which framebuffer dest_bitmap points into. This may be null if the
   //! bitmap doesn't point into a framebuffer.
-  FrameBuffer* parent_framebuffer;
+  FrameBuffer *parent_framebuffer;
 
   //! Number of rows between the top of the dest_bitmap and the top of it's
   //! parent framebuffer. This value is invalid if parent_framebuffer is null.
@@ -106,7 +106,6 @@ typedef struct GDrawMask {
 //! @see \ref TextDrawing
 //!   @{
 
-
 //! @internal
 void graphics_context_init(GContext *ctx, FrameBuffer *framebuffer,
                            GContextInitializationMode init_mode);
@@ -117,33 +116,33 @@ void graphics_context_set_default_drawing_state(GContext *ctx,
 
 //! @internal
 //! Gets the current drawing state (fill/stroke/text colors, compositing mode, ...)
-GDrawState graphics_context_get_drawing_state(GContext* ctx);
+GDrawState graphics_context_get_drawing_state(GContext *ctx);
 
 //! @internal
 //! Sets the current drawing state (fill/stroke/text colors, compositing mode, ...)
-void graphics_context_set_drawing_state(GContext* ctx, GDrawState draw_state);
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state);
 
 //! @internal
 //! Move the drawing box origin by the translation offset specified
-void graphics_context_move_draw_box(GContext* ctx, GPoint offset);
+void graphics_context_move_draw_box(GContext *ctx, GPoint offset);
 
 //! Sets the current stroke color of the graphics context.
 //! @param ctx The graphics context onto which to set the stroke color
 //! @param color The new stroke color
-void graphics_context_set_stroke_color(GContext* ctx, GColor color);
-void graphics_context_set_stroke_color_2bit(GContext* ctx, GColor2 color);
+void graphics_context_set_stroke_color(GContext *ctx, GColor color);
+void graphics_context_set_stroke_color_2bit(GContext *ctx, GColor2 color);
 
 //! Sets the current fill color of the graphics context.
 //! @param ctx The graphics context onto which to set the fill color
 //! @param color The new fill color
-void graphics_context_set_fill_color(GContext* ctx, GColor color);
-void graphics_context_set_fill_color_2bit(GContext* ctx, GColor2 color);
+void graphics_context_set_fill_color(GContext *ctx, GColor color);
+void graphics_context_set_fill_color_2bit(GContext *ctx, GColor2 color);
 
 //! Sets the current text color of the graphics context.
 //! @param ctx The graphics context onto which to set the text color
 //! @param color The new text color
-void graphics_context_set_text_color(GContext* ctx, GColor color);
-void graphics_context_set_text_color_2bit(GContext* ctx, GColor2 color);
+void graphics_context_set_text_color(GContext *ctx, GColor color);
+void graphics_context_set_text_color_2bit(GContext *ctx, GColor2 color);
 
 //! Sets the tint color of the graphics context.  This is used when drawing under
 //! the GCompOpOr compositing mode.
@@ -161,13 +160,13 @@ void graphics_context_set_tint_color(GContext *ctx, GColor color);
 //! -- \ref graphics_draw_bitmap_in_rect(), \ref graphics_draw_rotated_bitmap, and
 //! anything that uses those APIs --, but it currently does not affect the filling or stroking
 //! operations.
-void graphics_context_set_compositing_mode(GContext* ctx, GCompOp mode);
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode);
 
 //! Sets whether antialiasing is applied to stroke drawing
 //! @param ctx The graphics context onto which to set the antialiasing
 //! @param enable True = antialiasing enabled, False = antialiasing disabled
 //! @note Default value is true.
-void graphics_context_set_antialiased(GContext* ctx, bool enable);
+void graphics_context_set_antialiased(GContext *ctx, bool enable);
 
 //! @internal
 //! Gets whether antialiasing is applied to stroke drawing
@@ -182,7 +181,7 @@ bool graphics_context_get_antialiased(GContext *ctx);
 //! stored in GContext. Currently, only odd stroke_width values are supported. If an even value
 //! is passed in, the value will be stored as is, but the drawing routines will round down to the
 //! previous integral value when drawing. Default value is 1.
-void graphics_context_set_stroke_width(GContext* ctx, uint8_t stroke_width);
+void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width);
 
 //! Instantiates and initializes a mask.
 //! @param ctx The graphics context to use to initialize the new mask
@@ -220,12 +219,12 @@ GSize graphics_context_get_framebuffer_size(GContext *ctx);
 //! @internal
 //! Retrieves the destination bitmap for the graphics context.
 //! @param ctx The graphics context to retrieve the bitmap for.
-GBitmap* graphics_context_get_bitmap(GContext* ctx);
+GBitmap *graphics_context_get_bitmap(GContext *ctx);
 
 //! @internal
 //! Updates the parent framebuffers dirty state based on a change to the
 //! graphic context's bitmap.
-void graphics_context_mark_dirty_rect(GContext* ctx, GRect rect);
+void graphics_context_mark_dirty_rect(GContext *ctx, GRect rect);
 
 //!   @} // end addtogroup GraphicsContext
 //! @} // end addtogroup Graphics

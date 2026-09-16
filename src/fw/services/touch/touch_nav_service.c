@@ -123,13 +123,13 @@ static void prv_release_system_hold(void *ctx) {
 }
 
 static const TouchNavTxnOps s_txn_ops = {
-  .persist = prv_persist,
-  .kernel_subscribe = prv_kernel_subscribe,
-  .take_system_hold = prv_take_system_hold,
-  .synthesize_liftoff = prv_synthesize_liftoff,
-  .kernel_cancel_reset_unsub = prv_kernel_cancel_reset_unsub,
-  .app_unsubscribe = prv_app_unsubscribe,
-  .release_system_hold = prv_release_system_hold,
+    .persist = prv_persist,
+    .kernel_subscribe = prv_kernel_subscribe,
+    .take_system_hold = prv_take_system_hold,
+    .synthesize_liftoff = prv_synthesize_liftoff,
+    .kernel_cancel_reset_unsub = prv_kernel_cancel_reset_unsub,
+    .app_unsubscribe = prv_app_unsubscribe,
+    .release_system_hold = prv_release_system_hold,
 };
 
 void touch_nav_set_enabled(bool enable) {

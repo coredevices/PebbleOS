@@ -46,5 +46,6 @@ NORETURN Reset_Handler(void) {
   main();
 
   // Main shouldn't return
-  while (true) {}
+  while (true) {
+  }
 }

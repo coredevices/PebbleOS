@@ -11,9 +11,9 @@
 #include "pbl/util/size.h"
 
 static const uint32_t prv_sec_regs[] = {
-  0x00001000,
-  0x00002000,
-  0x00003000,
+    0x00001000,
+    0x00002000,
+    0x00003000,
 };
 
 static QSPIFlashPart QSPI_FLASH_PART = {
@@ -60,11 +60,12 @@ static QSPIFlashPart QSPI_FLASH_PART = {
         {
             .fast_read = 4,
         },
-    .sec_registers = {
-        .sec_regs = prv_sec_regs,
-        .num_sec_regs = ARRAY_LENGTH(prv_sec_regs),
-        .sec_reg_size = 1024,
-    },
+    .sec_registers =
+        {
+            .sec_regs = prv_sec_regs,
+            .num_sec_regs = ARRAY_LENGTH(prv_sec_regs),
+            .sec_reg_size = 1024,
+        },
     .supports_block_lock = false,
     .reset_latency_ms = 12,
     .suspend_to_read_latency_us = 20,
@@ -85,7 +86,8 @@ FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   return (addr & SUBSECTOR_ADDR_MASK);
 }
 
-void flash_impl_enable_write_protection(void) {}
+void flash_impl_enable_write_protection(void) {
+}
 
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
   return S_SUCCESS;
@@ -100,7 +102,9 @@ status_t flash_impl_init(bool coredump_mode) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_get_erase_status(void) { return qspi_flash_is_erase_complete(QSPI_FLASH); }
+status_t flash_impl_get_erase_status(void) {
+  return qspi_flash_is_erase_complete(QSPI_FLASH);
+}
 
 status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
   return qspi_flash_erase_begin(QSPI_FLASH, subsector_addr, true /* is_subsector */);
@@ -128,7 +132,9 @@ int flash_impl_write_page_begin(const void *buffer, const FlashAddress start_add
   return qspi_flash_write_page_begin(QSPI_FLASH, buffer, start_addr, len);
 }
 
-status_t flash_impl_get_write_status(void) { return qspi_flash_get_write_status(QSPI_FLASH); }
+status_t flash_impl_get_write_status(void) {
+  return qspi_flash_get_write_status(QSPI_FLASH);
+}
 
 status_t flash_impl_enter_low_power_mode(void) {
   qspi_flash_set_lower_power_mode(QSPI_FLASH, true);
@@ -151,9 +157,13 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr) {
   return qspi_flash_blank_check(QSPI_FLASH, addr, true /* is_subsector */);
 }
 
-uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) { return 150; }
+uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) {
+  return 150;
+}
 
-uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) { return 50; }
+uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) {
+  return 50;
+}
 
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
   return qspi_flash_read_security_register(QSPI_FLASH, addr, val);

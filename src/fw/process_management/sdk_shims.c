@@ -3,7 +3,6 @@
 
 #include "process_state/app_state/app_state.h"
 
-GContext* app_get_current_graphics_context(void) {
+GContext *app_get_current_graphics_context(void) {
   return app_state_get_graphics_context();
 }
-

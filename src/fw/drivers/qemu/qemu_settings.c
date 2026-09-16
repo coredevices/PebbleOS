@@ -14,9 +14,9 @@
 
 // QEMU backup registers and bit indices. These are also defined in the qemu project in
 // hw/arm/pebble.c
-#define QEMU_REG_0_FIRST_BOOT_LOGIC_ENABLE   0x00000001
-#define QEMU_REG_0_DEFAULT_CONNECTED         0x00000002
-#define QEMU_REG_0_DEFAULT_PLUGGED_IN        0x00000004
+#define QEMU_REG_0_FIRST_BOOT_LOGIC_ENABLE 0x00000001
+#define QEMU_REG_0_DEFAULT_CONNECTED 0x00000002
+#define QEMU_REG_0_DEFAULT_PLUGGED_IN 0x00000004
 
 // -------------------------------------------------------------------------------------
 // Read a QEMU specific register from the RTC backup register area
@@ -27,7 +27,7 @@ static uint32_t prv_rtc_read_qemu_register(uint32_t qemu_register) {
   __IO uint32_t tmp = 0;
 
   // The first qemu_register (0) starts 1 past the implemented registers in the STM
-  uint32_t  backup_reg = RTC_BKP_DR19 + 1 + qemu_register;
+  uint32_t backup_reg = RTC_BKP_DR19 + 1 + qemu_register;
 
   tmp = RTC_BASE + 0x50;
   tmp += (backup_reg * 4);
@@ -36,7 +36,6 @@ static uint32_t prv_rtc_read_qemu_register(uint32_t qemu_register) {
   return (*(__IO uint32_t *)tmp);
 #endif
 }
-
 
 // -------------------------------------------------------------------------------------
 // Return the value of a QEMU setting. QEMU communicates these by setting values into an

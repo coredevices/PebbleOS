@@ -17,29 +17,29 @@
 // Platform-specific colors: PebbleOS uses ARGB2222 (GColor8), not raw RGB332
 #ifdef CONFIG_QEMU
 // QEMU display natively renders ARGB2222
-#define SPLASH_COLOR_WHITE  0xFF  // A=3, R=3, G=3, B=3
-#define SPLASH_COLOR_BLACK  0xC0  // A=3, R=0, G=0, B=0
-#define SPLASH_COLOR_LGRAY  0xEA  // A=3, R=2, G=2, B=2
+#define SPLASH_COLOR_WHITE 0xFF  // A=3, R=3, G=3, B=3
+#define SPLASH_COLOR_BLACK 0xC0  // A=3, R=0, G=0, B=0
+#define SPLASH_COLOR_LGRAY 0xEA  // A=3, R=2, G=2, B=2
 // QEMU boot splash always uses 8bpp framebuffer regardless of platform bit depth
 #define BOOT_SPLASH_FB_BYTES (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT)
 #else
 // Hardware displays: the compositor handles GColor8 → native conversion,
 // but boot_splash writes raw pixels before the compositor is initialized.
 // On obelix/getafix the LCDC accepts RGB332 directly.
-#define SPLASH_COLOR_WHITE  0xFF
-#define SPLASH_COLOR_BLACK  0x00
-#define SPLASH_COLOR_LGRAY  0xB6
+#define SPLASH_COLOR_WHITE 0xFF
+#define SPLASH_COLOR_BLACK 0x00
+#define SPLASH_COLOR_LGRAY 0xB6
 #define BOOT_SPLASH_FB_BYTES DISPLAY_FRAMEBUFFER_BYTES
 #endif
 
 // Progress bar configuration
-#define PROGRESS_BAR_WIDTH      80
-#define PROGRESS_BAR_HEIGHT     4
+#define PROGRESS_BAR_WIDTH 80
+#define PROGRESS_BAR_HEIGHT 4
 #define PROGRESS_INDICATOR_WIDTH 20
 #define PROGRESS_FRAME_DELAY_MS 100
-#define PROGRESS_TOTAL_FRAMES   20
+#define PROGRESS_TOTAL_FRAMES 20
 #define BOOT_SPLASH_TASK_STACK_SIZE 2048
-#define BOOT_SPLASH_TASK_PRIORITY   (PBL_PRIO_MAX - 1)
+#define BOOT_SPLASH_TASK_PRIORITY (PBL_PRIO_MAX - 1)
 
 // Boot splash state
 static struct pbl_thread s_boot_splash_thread;
@@ -49,8 +49,8 @@ static volatile bool s_boot_splash_running;
 static uint8_t *s_boot_splash_fb;
 
 // Draw a filled rectangle
-static void prv_draw_filled_rect(uint8_t *fb, int16_t x0, int16_t y0,
-                                 int16_t width, int16_t height, uint8_t color) {
+static void prv_draw_filled_rect(uint8_t *fb, int16_t x0, int16_t y0, int16_t width, int16_t height,
+                                 uint8_t color) {
   for (int16_t y = y0; y < y0 + height; y++) {
     for (int16_t x = x0; x < x0 + width; x++) {
       if (x >= 0 && x < PBL_DISPLAY_WIDTH && y >= 0 && y < PBL_DISPLAY_HEIGHT) {
@@ -61,8 +61,7 @@ static void prv_draw_filled_rect(uint8_t *fb, int16_t x0, int16_t y0,
 }
 
 // Draw progress bar with animated indicator
-static void prv_draw_progress_bar(uint8_t *fb, int16_t center_x, int16_t center_y,
-                                  uint16_t frame) {
+static void prv_draw_progress_bar(uint8_t *fb, int16_t center_x, int16_t center_y, uint16_t frame) {
   const uint8_t COLOR_TRACK = SPLASH_COLOR_LGRAY;
   const uint8_t COLOR_INDICATOR = SPLASH_COLOR_BLACK;
 
@@ -87,8 +86,8 @@ static void prv_draw_progress_bar(uint8_t *fb, int16_t center_x, int16_t center_
   }
 
   // Draw indicator
-  prv_draw_filled_rect(fb, bar_x0 + indicator_offset, bar_y0,
-                       PROGRESS_INDICATOR_WIDTH, PROGRESS_BAR_HEIGHT, COLOR_INDICATOR);
+  prv_draw_filled_rect(fb, bar_x0 + indicator_offset, bar_y0, PROGRESS_INDICATOR_WIDTH,
+                       PROGRESS_BAR_HEIGHT, COLOR_INDICATOR);
 }
 
 // Boot splash task - runs until stopped
@@ -157,12 +156,12 @@ void boot_splash_start(void) {
   // Start the boot splash task
   s_boot_splash_running = true;
   struct pbl_thread_attr attr = {
-    .name = "BootSplash",
-    .entry = prv_boot_splash_task,
-    .prio = BOOT_SPLASH_TASK_PRIORITY,
-    .privileged = true,
-    .stack = s_boot_splash_stack,
-    .stack_size = sizeof(s_boot_splash_stack),
+      .name = "BootSplash",
+      .entry = prv_boot_splash_task,
+      .prio = BOOT_SPLASH_TASK_PRIORITY,
+      .privileged = true,
+      .stack = s_boot_splash_stack,
+      .stack_size = sizeof(s_boot_splash_stack),
   };
   if (pbl_thread_create(&s_boot_splash_thread, &attr) == 0) {
     s_boot_splash_task = &s_boot_splash_thread;
@@ -206,7 +205,7 @@ void boot_splash_stop(void) {
   }
 }
 
-#else // Everything else
+#else  // Everything else
 
 void boot_splash_start(void) {
   // No-op on platforms where the bootloader handles the splash

@@ -35,4 +35,4 @@ typedef struct KickstartData {
   char steps_buffer[8];
 } KickstartData;
 
-const PebbleProcessMd* kickstart_get_app_info();
+const PebbleProcessMd *kickstart_get_app_info();

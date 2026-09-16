@@ -28,9 +28,9 @@ typedef enum ProcessRunState {
 } ProcessRunState;
 
 typedef struct ProcessContext {
-  //! The app metadata structure if this process represents a running application (NULL otherwise). Describes the
-  //! static information about the currently running app.
-  const PebbleProcessMd* app_md;
+  //! The app metadata structure if this process represents a running application (NULL otherwise).
+  //! Describes the static information about the currently running app.
+  const PebbleProcessMd *app_md;
 
   //! The app install id for this process if it represents an application.
   AppInstallId install_id;
@@ -71,14 +71,14 @@ typedef struct ProcessContext {
 
   //! Arguments passed to the process'. This is a pointer to a struct
   //! that is defined by the application.
-  const void* args;
+  const void *args;
 
   //! Pointer to a piece of data that we hold on behalf of the process. This makes it so
   //! our first party apps don't have to keep declaring their own statics to hold a pointer
   //! to a struct to represent their app data. Third party apps don't have this issue as their
   //! globals are loaded and unloaded when they start and stop, where the globals for our first
   //! party apps are always present. See app_state_get_user_data/app_state_set_user_data
-  void* user_data;
+  void *user_data;
 } ProcessContext;
 
 typedef struct ProcessLaunchConfig {
@@ -90,13 +90,12 @@ typedef struct ProcessLaunchConfig {
   bool forcefully;
 } ProcessLaunchConfig;
 
-
 //! Init the process manager
 void process_manager_init(void);
 
 //! Init the context variables
-void process_manager_init_context(ProcessContext* context,
-                                  const PebbleProcessMd *app_md, const void *args);
+void process_manager_init_context(ProcessContext *context, const PebbleProcessMd *app_md,
+                                  const void *args);
 
 //! Checks if the app referred to by the given AppInstallId is SDK compatible
 //! Returns true if it is compatible, false otherwise
@@ -108,38 +107,40 @@ bool process_manager_check_SDK_compatible(const AppInstallId id);
 //! be cached
 void process_manager_launch_process(const ProcessLaunchConfig *config);
 
-//! Close the given process. This is the highest level call which transfers control to the manager of that type of
-//! task. That manager will in turn call process_manager_make_process_safe_to_kill/process_manager_process_cleanup
-//! If it's an app, this will cause the next app in the system app state machine to automatically get launched.
-//! May only be called from the KernelMain task
+//! Close the given process. This is the highest level call which transfers control to the manager
+//! of that type of task. That manager will in turn call
+//! process_manager_make_process_safe_to_kill/process_manager_process_cleanup If it's an app, this
+//! will cause the next app in the system app state machine to automatically get launched. May only
+//! be called from the KernelMain task
 void process_manager_close_process(PebbleTask task, bool gracefully);
 
 //! Called from the task itself, as it exits and reenters privileged mode
 NORETURN process_manager_task_exit(void);
 
-//! Prod the given process into exiting. Returns true if it is safe to kill that task and clean it up using
+//! Prod the given process into exiting. Returns true if it is safe to kill that task and clean it
+//! up using
 //!  process_manager_process_cleanup
 bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully);
-
 
 //! Setup some required state for processes
 void process_manager_process_setup(PebbleTask task);
 
-//! Kills the task and cleans it up. Must only be called if process_manager_make_process_safe_to_kill() returns
-//! true.
+//! Kills the task and cleans it up. Must only be called if
+//! process_manager_make_process_safe_to_kill() returns true.
 void process_manager_process_cleanup(PebbleTask task);
 
 //! Get the args for the current process
-const void* process_manager_get_current_process_args(void);
+const void *process_manager_get_current_process_args(void);
 
 //! Send an event to the process' event loop
-bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent* e);
+bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e);
 
 //! Get the number of messages currently waiting to be processed by the process
 uint32_t process_manager_process_events_waiting(PebbleTask task);
 
 //! Wrapper for \ref process_manager_send_event_to_process to send callback events to the app
-void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *), void *data);
+void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *),
+                                                    void *data);
 
 //! Send a kill event for the given process to KernelMain
 void process_manager_put_kill_process_event(PebbleTask task, bool gracefully);

@@ -25,8 +25,8 @@ GFont fonts_get_fallback_font(void) {
 GFont fonts_get_system_font(const char *font_key) {
   static const char bitham_alias[] = "RESOURCE_ID_GOTHAM";
   static const char bitham_prefix[] = "RESOURCE_ID_BITHAM";
-  static const size_t bitham_alias_len = sizeof(bitham_alias)-1;
-  static const size_t bitham_prefix_len = sizeof(bitham_prefix)-1;
+  static const size_t bitham_alias_len = sizeof(bitham_alias) - 1;
+  static const size_t bitham_prefix_len = sizeof(bitham_prefix) - 1;
 
   GFont res = sys_font_get_system_font(font_key);
 
@@ -37,7 +37,7 @@ GFont fonts_get_system_font(const char *font_key) {
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
     strncpy(new_font_key, bitham_prefix, bitham_prefix_len);
 #pragma GCC diagnostic pop
-    strcpy(new_font_key+bitham_prefix_len, font_key+bitham_alias_len);
+    strcpy(new_font_key + bitham_prefix_len, font_key + bitham_alias_len);
     // let's try again
     res = sys_font_get_system_font(new_font_key);
   }
@@ -72,8 +72,8 @@ GFont fonts_load_custom_font_system(ResAppNum app_num, uint32_t resource_id) {
     return NULL;
   }
 
-  bool result = text_resources_init_font(app_num, resource_id,
-                                         0 /* extended resource */, font_info);
+  bool result =
+      text_resources_init_font(app_num, resource_id, 0 /* extended resource */, font_info);
 
   if (!result) {
     // couldn't init the font
@@ -93,7 +93,7 @@ void fonts_unload_custom_font(GFont font) {
     return;
   }
 
-  FontInfo *font_info = (FontInfo*) font;
+  FontInfo *font_info = (FontInfo *)font;
   applib_free(font_info);
 }
 
@@ -103,10 +103,10 @@ static const struct {
   uint8_t height;
 } s_emoji_fonts[] = {
     // Keep this sorted in descending order: lookup returns the first entry that fits
-  { FONT_KEY_GOTHIC_28_EMOJI, 28 },
-  { FONT_KEY_GOTHIC_24_EMOJI, 24 },
-  { FONT_KEY_GOTHIC_18_EMOJI, 18 },
-  { FONT_KEY_GOTHIC_14_EMOJI, 14 },
+    {FONT_KEY_GOTHIC_28_EMOJI, 28},
+    {FONT_KEY_GOTHIC_24_EMOJI, 24},
+    {FONT_KEY_GOTHIC_18_EMOJI, 18},
+    {FONT_KEY_GOTHIC_14_EMOJI, 14},
 };
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
@@ -125,7 +125,7 @@ FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
 #endif
 
 uint8_t fonts_get_font_height(GFont font) {
-  FontInfo* fontinfo = (FontInfo*) font;
+  FontInfo *fontinfo = (FontInfo *)font;
   return fontinfo->max_height;
 }
 
