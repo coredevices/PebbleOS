@@ -1,0 +1,9 @@
+**/*.template.c
+**/*.template.h
+apps/samples/fps_test/src/test_bitmaps.h
+sdk/defaults/lib/lib.c
+sdk/defaults/lib/lib.h
+src/fw/apps/demo/demo_images/*
+src/fw/apps/demo/fps_test_bitmaps.h
+tools/clar/*
+tests/fixtures/**
