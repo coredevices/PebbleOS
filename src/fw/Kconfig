@@ -43,6 +43,13 @@ config ORIENTATION_MANAGER
       Settings. Independent of CONFIG_SERVICE_ORIENTATION_MANAGER,
       which controls whether the underlying service is built.
 
+config FAST_CHARGE_SETTING
+    bool "Fast charge setting"
+    depends on PMIC_NPM1300
+    help
+      Expose the fastCharge preference, which switches the charger
+      between the board's normal and fast charge currents.
+
 config MODDABLE_XS
     bool "Moddable XS JavaScript engine"
     help

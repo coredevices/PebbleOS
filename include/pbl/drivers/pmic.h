@@ -24,6 +24,9 @@ bool pmic_disable_battery_measure(void);
 //! Enable and disable the charging portion of the PMIC.
 bool pmic_set_charger_state(bool enable);
 
+//! @return the charge current the charger is currently configured for, in mA.
+uint16_t pmic_get_charge_current_ma(void);
+
 //! @return true if the PMIC thinks we're charging (adding additional charge to the battery).
 //! Note that once we hit full charge we'll no longer be charging, which is a different state
 //! that pmic_is_usb_connected.
