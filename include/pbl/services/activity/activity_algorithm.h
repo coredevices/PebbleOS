@@ -13,7 +13,7 @@
 //   5: Added the flags field and the plugged_in bit
 //   5 (3/1/16): Added the active bit to flags
 //   6: Added heart rate bpm
-#define ALG_MINUTE_FILE_RECORD_VERSION  6
+#define ALG_MINUTE_FILE_RECORD_VERSION 6
 
 // Format of each minute in our minute file. In the minute file, which is stored as a settings file
 // on the watch, we store a subset of what we send to data logging since we only need the
@@ -21,17 +21,17 @@
 // the health_service_get_minute_history() API call.
 typedef struct __attribute__((__packed__)) {
   // Base fields, present in versions 4 and 5
-  uint8_t steps;                    // # of steps in this minute
-  uint8_t orientation;              // average orientation of the watch
-  uint16_t vmc;                     // VMC (Vector Magnitude Counts) for this minute
-  uint8_t light;                    // light sensor reading divided by
+  uint8_t steps;        // # of steps in this minute
+  uint8_t orientation;  // average orientation of the watch
+  uint16_t vmc;         // VMC (Vector Magnitude Counts) for this minute
+  uint8_t light;        // light sensor reading divided by
   //  ALG_RAW_LIGHT_SENSOR_DIVIDE_BY
   // New fields added in version 5
   union {
     struct {
-      uint8_t plugged_in:1;
-      uint8_t active:1;              // This is an "active" minute
-      uint8_t reserved:6;
+      uint8_t plugged_in : 1;
+      uint8_t active : 1;  // This is an "active" minute
+      uint8_t reserved : 6;
     };
     uint8_t flags;
   };
@@ -43,7 +43,6 @@ typedef struct __attribute__((__packed__)) {
   // New fields added in version 6
   uint8_t heart_rate_bpm;
 } AlgMinuteFileSample;
-
 
 // Version of our minute data logging records.
 // NOTE: AlgDlsMinuteData and the mobile app will continue to assume it can parse the blob,
@@ -60,12 +59,11 @@ typedef struct __attribute__((__packed__)) {
 //   12: Added total heart rate weight
 //   13: Added heart rate zone
 //   14: ... (NYI, you decide!)
-#define ALG_DLS_MINUTES_RECORD_VERSION  13
+#define ALG_DLS_MINUTES_RECORD_VERSION 13
 
 _Static_assert((ALG_DLS_MINUTES_RECORD_VERSION & (1 << 2)) > 0,
                "Android 3.10-4.0 requires bit 2 to be set");
-_Static_assert(ALG_DLS_MINUTES_RECORD_VERSION <= 225,
-               "iOS requires version less that 255");
+_Static_assert(ALG_DLS_MINUTES_RECORD_VERSION <= 225, "iOS requires version less that 255");
 
 // Format of each minute in our data logging minute records.
 typedef struct __attribute__((__packed__)) {
@@ -74,20 +72,19 @@ typedef struct __attribute__((__packed__)) {
   AlgMinuteFileSampleV5 base;
 
   // New fields added in version 6
-  uint16_t resting_calories;         // number of resting calories burned in this minute
-  uint16_t active_calories;          // number of active calories burned in this minute
-  uint16_t distance_cm;              // distance in centimeters traveled in this minute
+  uint16_t resting_calories;  // number of resting calories burned in this minute
+  uint16_t active_calories;   // number of active calories burned in this minute
+  uint16_t distance_cm;       // distance in centimeters traveled in this minute
 
   // New fields added in version 7
-  uint8_t heart_rate_bpm;            // weighted median hr value in this minute
+  uint8_t heart_rate_bpm;  // weighted median hr value in this minute
 
   // New fields added in version 12
-  uint16_t heart_rate_total_weight_x100; // total weight of all HR values multiplied by 100
+  uint16_t heart_rate_total_weight_x100;  // total weight of all HR values multiplied by 100
 
   // New fields added in version 13
-  uint8_t heart_rate_zone;           // the hr zone for this minute
+  uint8_t heart_rate_zone;  // the hr zone for this minute
 } AlgMinuteDLSSample;
-
 
 // We store minute data in this struct into a circular buffer and then transfer from there to
 // data logging and to the minute file in PFS as we get a batch big enough.
@@ -96,35 +93,32 @@ typedef struct {
   AlgMinuteDLSSample data;
 } AlgMinuteRecord;
 
-
 // Record header. The same header is used for minute file records and minute data logging records
 typedef struct __attribute__((__packed__)) {
-  uint16_t version;                  // Set to ALG_DLS_MINUTES_RECORD_VERSION or
-                                     //   ALG_MINUTE_FILE_RECORD_VERSION
-  uint32_t time_utc;                 // UTC time
-  int8_t time_local_offset_15_min;   // add this many 15 minute intervals to UTC to get local time.
-  uint8_t sample_size;               // size in bytes of each sample
-  uint8_t num_samples;               // # of samples included (ALG_MINUTES_PER_RECORD)
+  uint16_t version;                 // Set to ALG_DLS_MINUTES_RECORD_VERSION or
+                                    //   ALG_MINUTE_FILE_RECORD_VERSION
+  uint32_t time_utc;                // UTC time
+  int8_t time_local_offset_15_min;  // add this many 15 minute intervals to UTC to get local time.
+  uint8_t sample_size;              // size in bytes of each sample
+  uint8_t num_samples;              // # of samples included (ALG_MINUTES_PER_RECORD)
 } AlgMinuteRecordHdr;
 
-
 // Format of each data logging minute data record
-#define ALG_MINUTES_PER_DLS_RECORD    15
+#define ALG_MINUTES_PER_DLS_RECORD 15
 typedef struct __attribute__((__packed__)) {
   AlgMinuteRecordHdr hdr;
   AlgMinuteDLSSample samples[ALG_MINUTES_PER_DLS_RECORD];
 } AlgMinuteDLSRecord;
 
 // Format of each minute file record
-#define ALG_MINUTES_PER_FILE_RECORD    15
+#define ALG_MINUTES_PER_FILE_RECORD 15
 typedef struct __attribute__((__packed__)) {
   AlgMinuteRecordHdr hdr;
   AlgMinuteFileSample samples[ALG_MINUTES_PER_FILE_RECORD];
 } AlgMinuteFileRecord;
 
-
 // Size quota for the minute file
-#define ALG_MINUTE_DATA_FILE_LEN   0x20000
+#define ALG_MINUTE_DATA_FILE_LEN 0x20000
 
 // Max possible number of entries we can fit in our settings file if there was no overhead to
 // the settings file at all. The actual number we can fit is less than this.
@@ -238,4 +232,3 @@ bool activity_algorithm_test_fill_minute_file(void);
 //! Send a fake minute logging record to data logging. Useful for mobile app testing
 //! @return true if success
 bool activity_algorithm_test_send_fake_minute_data_dls_record(void);
-

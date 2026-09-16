@@ -39,23 +39,23 @@
 
 // Unit tests break if variables go in custom sections
 #if !UNITTEST
-# define SECTION(SEC) __attribute__((__section__(SEC)))
+#define SECTION(SEC) __attribute__((__section__(SEC)))
 #else
-# define SECTION(SEC)
+#define SECTION(SEC)
 #endif
 
 // Use this macro to allow overriding of private functions in order to test them within unit tests.
 #if !UNITTEST
-# define T_STATIC static
+#define T_STATIC static
 #else
-# define T_STATIC WEAK
+#define T_STATIC WEAK
 #endif
 
 // Use this macro to allow overriding of non-static (i.e. global) functions in order to test them
 // within unit tests. For lack of a better name, we have named this a MOCKABLE (i.e. can be
 // mocked or overridden in unit tests but not in normal firmware)
 #if !UNITTEST
-# define MOCKABLE
+#define MOCKABLE
 #else
-# define MOCKABLE WEAK
+#define MOCKABLE WEAK
 #endif

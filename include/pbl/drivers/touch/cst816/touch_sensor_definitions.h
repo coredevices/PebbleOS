@@ -5,7 +5,7 @@
 #include "board/board.h"
 
 #ifdef CONFIG_BOARD_OBELIX
-#define RESET_PIN_CTRLBY_NPM1300          1
+#define RESET_PIN_CTRLBY_NPM1300 1
 #endif
 
 typedef struct {

@@ -22,16 +22,16 @@
 
 #define ALARMS_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack)
 
-typedef int AlarmId; //! A unique ID that can be used to refer to each configured alarm.
+typedef int AlarmId;  //! A unique ID that can be used to refer to each configured alarm.
 
 #define ALARM_INVALID_ID (-1)
 
 typedef enum AlarmKind {
-  ALARM_KIND_EVERYDAY = 0, // Alarms of this type will happen each day
-  ALARM_KIND_WEEKENDS,     // Alarms of this type will happen Monday - Friday
-  ALARM_KIND_WEEKDAYS,     // Alarms of this type happen Saturday and Sunday
-  ALARM_KIND_JUST_ONCE,    // Alarms of this type will happen next time the specified time occurs
-  ALARM_KIND_CUSTOM,       // Alarms of this type happen on specified days
+  ALARM_KIND_EVERYDAY = 0,  // Alarms of this type will happen each day
+  ALARM_KIND_WEEKENDS,      // Alarms of this type will happen Monday - Friday
+  ALARM_KIND_WEEKDAYS,      // Alarms of this type happen Saturday and Sunday
+  ALARM_KIND_JUST_ONCE,     // Alarms of this type will happen next time the specified time occurs
+  ALARM_KIND_CUSTOM,        // Alarms of this type happen on specified days
 } AlarmKind;
 
 typedef enum AlarmType {
@@ -49,16 +49,16 @@ typedef enum AlarmTone {
 } AlarmTone;
 
 typedef struct AlarmInfo {
-  int hour; //<! Range 0-23, where 0 is 12am
-  int minute; //<! Range is 0-59
-  AlarmKind kind; //<! The kind of recurrence the alarm will have
+  int hour;        //<! Range 0-23, where 0 is 12am
+  int minute;      //<! Range is 0-59
+  AlarmKind kind;  //<! The kind of recurrence the alarm will have
   //! A bool for each weekday (Sunday = index 0) enabled
   bool (*scheduled_days)[DAYS_PER_WEEK];
-  bool enabled; //<! Whether the alarm to go off at the specified time
-  bool is_smart; //<! Whether the alarm is a Smart Alarm
-  bool sound_enabled; //<! Whether the alarm should play a tone on speaker hardware
-  bool vibrate_enabled; //<! Whether the alarm should vibrate
-  AlarmTone tone; //<! Selected tone for this alarm (used when sound_enabled is true)
+  bool enabled;          //<! Whether the alarm to go off at the specified time
+  bool is_smart;         //<! Whether the alarm is a Smart Alarm
+  bool sound_enabled;    //<! Whether the alarm should play a tone on speaker hardware
+  bool vibrate_enabled;  //<! Whether the alarm should vibrate
+  AlarmTone tone;        //<! Selected tone for this alarm (used when sound_enabled is true)
 } AlarmInfo;
 
 typedef void (*AlarmForEach)(AlarmId id, const AlarmInfo *info, void *context);

@@ -44,8 +44,8 @@ _Static_assert(sizeof(BlobDBId) == 1, "BlobDBId is larger than 1 byte");
 typedef struct {
   ListNode node;
   time_t last_updated;
-  int key_len; //!< length of the key, in bytes
-  uint8_t key[]; //!< key_len-size byte array of key data
+  int key_len;    //!< length of the key, in bytes
+  uint8_t key[];  //!< key_len-size byte array of key data
 } BlobDBDirtyItem;
 
 //! A Blob DB's initialization routine.
@@ -59,16 +59,15 @@ typedef void (*BlobDBInitImpl)(void);
 //! \param val_len the length of the value, in bytes
 //! \returns S_SUCCESS if the key/val pair was successfully inserted
 //! and an error code otherwise (See \ref StatusCode)
-typedef status_t (*BlobDBInsertImpl)
-    (const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+typedef status_t (*BlobDBInsertImpl)(const uint8_t *key, int key_len, const uint8_t *val,
+                                     int val_len);
 
 //! Implements the get length API.
 //! \param key a pointer to the key data
 //! \param key_len the length of the key, in bytes
 //! \returns the length in bytes of the value for key on success
 //! and an error code otherwise (See \ref StatusCode)
-typedef int (*BlobDBGetLenImpl)
-    (const uint8_t *key, int key_len);
+typedef int (*BlobDBGetLenImpl)(const uint8_t *key, int key_len);
 
 //! Implements the read API. Note that this function should be blocking.
 //! \param key a pointer to the key data
@@ -77,16 +76,14 @@ typedef int (*BlobDBGetLenImpl)
 //! \param val_len the length of the value to be copied, in bytes
 //! \returns S_SUCCESS if the value for key was successfully read,
 //! and an error code otherwise (See \ref StatusCode)
-typedef status_t (*BlobDBReadImpl)
-    (const uint8_t *key, int key_len, uint8_t *val_out, int val_len);
+typedef status_t (*BlobDBReadImpl)(const uint8_t *key, int key_len, uint8_t *val_out, int val_len);
 
 //! Implements the delete API. Note that this function should be blocking.
 //! \param key a pointer to the key data
 //! \param key_len the length of the key, in bytes
 //! \returns S_SUCCESS if the key/val pair was successfully deleted
 //! and an error code otherwise (See \ref StatusCode)
-typedef status_t (*BlobDBDeleteImpl)
-    (const uint8_t *key, int key_len);
+typedef status_t (*BlobDBDeleteImpl)(const uint8_t *key, int key_len);
 
 //! Implements the flush API. Note that this function should be blocking.
 //! \returns S_SUCCESS if all key/val pairs were successfully deleted
@@ -146,16 +143,15 @@ void blob_db_get_dirty_dbs(uint8_t *ids, uint8_t *num_ids);
 //! \param key_len the length of the key, in bytes
 //! \param val a pointer to the value data
 //! \param val_len the length of the value, in bytes
-status_t blob_db_insert(BlobDBId db_id,
-    const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
+                        int val_len);
 
 //! Get the length of the value in a blob DB for a given key.
 //! See \ref BlobDBGetLenImpl
 //! \param db_id the ID of the blob DB
 //! \param key a pointer to the key data
 //! \param key_len the length of the key, in bytes
-int blob_db_get_len(BlobDBId db_id,
-    const uint8_t *key, int key_len);
+int blob_db_get_len(BlobDBId db_id, const uint8_t *key, int key_len);
 
 //! Get the value of length val_len for a given key
 //! \param db_id the ID of the blob DB
@@ -164,16 +160,15 @@ int blob_db_get_len(BlobDBId db_id,
 //! \param val_out a buffer to store the value data
 //! \param val_len the length of the value, in bytes
 //! See \ref BlobDBReadImpl
-status_t blob_db_read(BlobDBId db_id,
-    const uint8_t *key, int key_len, uint8_t *val_out, int val_len);
+status_t blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *val_out,
+                      int val_len);
 
 //! Delete the key/val pair in a blob DB for a given key
 //! \param db_id the ID of the blob DB
 //! \param key a pointer to the key data
 //! \param key_len the length of the key, in bytes
 //! See \ref BlobDBDeleteImpl
-status_t blob_db_delete(BlobDBId db_id,
-    const uint8_t *key, int key_len);
+status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len);
 
 //! Delete all key/val pairs in a blob DB.
 //! \param db_id the ID of the blob DB

@@ -8,11 +8,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define VIBE_DEF(identifier, enum_name, name_str, alert_types_arg, res_id)\
+#define VIBE_DEF(identifier, enum_name, name_str, alert_types_arg, res_id) \
   VibeScoreId_##enum_name = identifier,
 typedef enum VibeScoreId {
   VibeScoreId_Invalid = 0,
-  #include "vibes.def"
+#include "vibes.def"
 } VibeScoreId;
 #undef VIBE_DEF
 

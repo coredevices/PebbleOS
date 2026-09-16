@@ -16,9 +16,9 @@
 
 //! @file app_storage.h
 //!
-//! Dumping ground for functions for discovering and managing apps stored in SPI flash in the 8 app banks. This will
-//! eventually be replaced by app_file.h when we're ready to get rid of the 8-app limit, so this file shouldn't exist
-//! in a few months.
+//! Dumping ground for functions for discovering and managing apps stored in SPI flash in the 8 app
+//! banks. This will eventually be replaced by app_file.h when we're ready to get rid of the 8-app
+//! limit, so this file shouldn't exist in a few months.
 
 #define MAX_APP_BANKS 8
 #define APP_FILENAME_MAX_LENGTH 32
@@ -40,8 +40,9 @@ typedef enum AppStorageGetAppInfoResult {
 //! @param app_id The app id for which the app metadata needs to be fetched.
 //! @param task PebbleTask_App or PebbleTask_Worker
 //! @return See AppStorageGetAppInfoResult
-AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo* app_info,
-  uint8_t *build_id_out, AppInstallId app_id, PebbleTask task);
+AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
+                                                        uint8_t *build_id_out, AppInstallId app_id,
+                                                        PebbleTask task);
 
 //! Remove related app files for app bank
 void app_storage_delete_app(AppInstallId id);
@@ -59,6 +60,4 @@ void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_i
 //! @param info pointer to a PebbleProcessInfo struct
 //! @param[out] load_size_out receives the computed size on success
 //! @return true if the size can be computed safely
-bool app_storage_get_process_load_size(const PebbleProcessInfo *info,
-                                       size_t *load_size_out);
-
+bool app_storage_get_process_load_size(const PebbleProcessInfo *info, size_t *load_size_out);

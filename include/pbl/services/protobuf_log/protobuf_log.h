@@ -22,32 +22,34 @@
 typedef pebble_pipeline_MeasurementSet_Type ProtobufLogMeasurementType;
 typedef pebble_pipeline_ActivityType_InternalType ProtobufLogActivityType;
 
-#define ProtobufLogMeasurementType_TimeMS           pebble_pipeline_MeasurementSet_Type_TimeMS
-#define ProtobufLogMeasurementType_VMC              pebble_pipeline_MeasurementSet_Type_VMC
-#define ProtobufLogMeasurementType_Steps            pebble_pipeline_MeasurementSet_Type_Steps
-#define ProtobufLogMeasurementType_DistanceCM       pebble_pipeline_MeasurementSet_Type_DistanceCM
-#define ProtobufLogMeasurementType_RestingGCalories pebble_pipeline_MeasurementSet_Type_RestingGCalories
-#define ProtobufLogMeasurementType_ActiveGCalories  pebble_pipeline_MeasurementSet_Type_ActiveGCalories
-#define ProtobufLogMeasurementType_BPM              pebble_pipeline_MeasurementSet_Type_BPM
-#define ProtobufLogMeasurementType_RR               pebble_pipeline_MeasurementSet_Type_RR
-#define ProtobufLogMeasurementType_Orientation      pebble_pipeline_MeasurementSet_Type_Orientation
-#define ProtobufLogMeasurementType_Light            pebble_pipeline_MeasurementSet_Type_Light
-#define ProtobufLogMeasurementType_Temperature      pebble_pipeline_MeasurementSet_Type_Temperature
-#define ProtobufLogMeasurementType_HRQuality        pebble_pipeline_MeasurementSet_Type_HRQuality
+#define ProtobufLogMeasurementType_TimeMS pebble_pipeline_MeasurementSet_Type_TimeMS
+#define ProtobufLogMeasurementType_VMC pebble_pipeline_MeasurementSet_Type_VMC
+#define ProtobufLogMeasurementType_Steps pebble_pipeline_MeasurementSet_Type_Steps
+#define ProtobufLogMeasurementType_DistanceCM pebble_pipeline_MeasurementSet_Type_DistanceCM
+#define ProtobufLogMeasurementType_RestingGCalories \
+  pebble_pipeline_MeasurementSet_Type_RestingGCalories
+#define ProtobufLogMeasurementType_ActiveGCalories \
+  pebble_pipeline_MeasurementSet_Type_ActiveGCalories
+#define ProtobufLogMeasurementType_BPM pebble_pipeline_MeasurementSet_Type_BPM
+#define ProtobufLogMeasurementType_RR pebble_pipeline_MeasurementSet_Type_RR
+#define ProtobufLogMeasurementType_Orientation pebble_pipeline_MeasurementSet_Type_Orientation
+#define ProtobufLogMeasurementType_Light pebble_pipeline_MeasurementSet_Type_Light
+#define ProtobufLogMeasurementType_Temperature pebble_pipeline_MeasurementSet_Type_Temperature
+#define ProtobufLogMeasurementType_HRQuality pebble_pipeline_MeasurementSet_Type_HRQuality
 
 #define ProtobufLogActivityType_UnknownType pebble_pipeline_ActivityType_InternalType_UnknownType
-#define ProtobufLogActivityType_Sleep       pebble_pipeline_ActivityType_InternalType_Sleep
-#define ProtobufLogActivityType_DeepSleep   pebble_pipeline_ActivityType_InternalType_DeepSleep
-#define ProtobufLogActivityType_Nap         pebble_pipeline_ActivityType_InternalType_Nap
-#define ProtobufLogActivityType_DeepNap     pebble_pipeline_ActivityType_InternalType_DeepNap
-#define ProtobufLogActivityType_Walk        pebble_pipeline_ActivityType_InternalType_Walk
-#define ProtobufLogActivityType_Run         pebble_pipeline_ActivityType_InternalType_Run
-#define ProtobufLogActivityType_Open        pebble_pipeline_ActivityType_InternalType_Open
+#define ProtobufLogActivityType_Sleep pebble_pipeline_ActivityType_InternalType_Sleep
+#define ProtobufLogActivityType_DeepSleep pebble_pipeline_ActivityType_InternalType_DeepSleep
+#define ProtobufLogActivityType_Nap pebble_pipeline_ActivityType_InternalType_Nap
+#define ProtobufLogActivityType_DeepNap pebble_pipeline_ActivityType_InternalType_DeepNap
+#define ProtobufLogActivityType_Walk pebble_pipeline_ActivityType_InternalType_Walk
+#define ProtobufLogActivityType_Run pebble_pipeline_ActivityType_InternalType_Run
+#define ProtobufLogActivityType_Open pebble_pipeline_ActivityType_InternalType_Open
 
-#define PLOG_MAX_SENDER_ID_LEN  64
-#define PLOG_MAX_SENDER_TYPE_LEN  64
-#define PLOG_MAX_SENDER_VERSION_PATCH_LEN  FW_METADATA_VERSION_TAG_BYTES
-#define PLOG_PAYLOAD_SENDER_TYPE  "watch"
+#define PLOG_MAX_SENDER_ID_LEN 64
+#define PLOG_MAX_SENDER_TYPE_LEN 64
+#define PLOG_MAX_SENDER_VERSION_PATCH_LEN FW_METADATA_VERSION_TAG_BYTES
+#define PLOG_PAYLOAD_SENDER_TYPE "watch"
 
 // Size of the data logging records we use
 #define PLOG_DLS_RECORD_SIZE DLS_SESSION_MAX_BUFFERED_ITEM_SIZE
@@ -80,8 +82,8 @@ typedef struct ProtobufLogConfig {
   ProtobufLogType type;
   union {
     struct {
-      uint8_t num_types;        // number of readings in each measurement
-      ProtobufLogMeasurementType *types; // Array of measurement types.
+      uint8_t num_types;                  // number of readings in each measurement
+      ProtobufLogMeasurementType *types;  // Array of measurement types.
     } measurements;
     struct {
       // empty for now
@@ -95,7 +97,6 @@ typedef void *ProtobufLogRef;
 // Signature of the transport callback that can be optionally provided to protobuf_log_create()
 typedef bool (*ProtobufLogTransportCB)(uint8_t *buffer, size_t buf_size);
 
-
 // Init the service
 // @return true if successful
 bool protobuf_log_init(void);
@@ -108,8 +109,7 @@ bool protobuf_log_init(void);
 //   a default size is used that fills the data logging record as fully as possible. Non-zero
 //   values are mostly used for unit tests.
 // @return new session pointer, or NULL if error occurred
-ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config,
-                                   ProtobufLogTransportCB transport,
+ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config, ProtobufLogTransportCB transport,
                                    size_t max_encoded_msg_size);
 
 // Add a new measurement sample to the session. Once the amount of accumulated measurement data

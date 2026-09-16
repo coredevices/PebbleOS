@@ -52,9 +52,9 @@ struct pbl_thread_saved_regs {
 void pbl_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs);
 
 struct pbl_thread_stack_info {
-  uintptr_t start;   // lowest address
-  size_t size;       // bytes
-  size_t high_water; // bytes never used
+  uintptr_t start;    // lowest address
+  size_t size;        // bytes
+  size_t high_water;  // bytes never used
 };
 
 void pbl_thread_stack_info(const struct pbl_thread *t, struct pbl_thread_stack_info *info);
@@ -69,6 +69,7 @@ struct pbl_thread_stats {
 };
 
 //! Snapshot of every thread. @return the number of entries written.
-size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max, uint32_t *total_run_time);
+size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
+                                 uint32_t *total_run_time);
 
 size_t pbl_thread_count(void);

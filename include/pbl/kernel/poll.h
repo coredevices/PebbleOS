@@ -13,7 +13,7 @@ struct pbl_poll_group {
   struct pbl_poll_group_backend backend;
 };
 
-#define PBL_POLL_GROUP_INITIALIZER { .members = NULL, .capacity = 0 }
+#define PBL_POLL_GROUP_INITIALIZER {.members = NULL, .capacity = 0}
 
 #define PBL_POLL_GROUP_DEFINE(name) struct pbl_poll_group name = PBL_POLL_GROUP_INITIALIZER
 

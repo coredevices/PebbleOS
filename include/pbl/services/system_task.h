@@ -16,17 +16,19 @@
 void system_task_init(void);
 void system_task_timer_init(void);
 
-//! If your callback running on the system task takes awhile to run, call this regularly to show that
-//! you're still alive.
+//! If your callback running on the system task takes awhile to run, call this regularly to show
+//! that you're still alive.
 void system_task_watchdog_feed(void);
 
 typedef void (*SystemTaskEventCallback)(void *data);
 
 //! @param cb Callback function that will later be called from the system task
 //! @param data Context pointer passed to the callback
-//! @param should_context_switch A boolean that indicates our ISR should context switch at the end instead of
+//! @param should_context_switch A boolean that indicates our ISR should context switch at the end
+//! instead of
 //!                              resuming the previous task.
-bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data, bool* should_context_switch);
+bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
+                                       bool *should_context_switch);
 
 //! Same as system_task_add_callback_from_isr(), except a full queue drops the callback and
 //! returns false instead of resetting the system. Only use this when losing the callback is
@@ -45,7 +47,7 @@ void system_task_block_callbacks(bool block);
 uint32_t system_task_get_available_space(void);
 
 //! Debug! Return the callback we're currently executing.
-void* system_task_get_current_callback(void);
+void *system_task_get_current_callback(void);
 
 //! @param is_raised When true, priority of the KernelBG task is raised to a higher priority. When
 //! false, the priority is set to the normal priority.

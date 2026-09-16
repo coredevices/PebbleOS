@@ -97,5 +97,5 @@ typedef struct GATTService {
 _Static_assert(offsetof(GATTService, uuid) == offsetof(GATTObjectHeader, uuid), "");
 
 #define COMPUTE_GATTSERVICE_SIZE_BYTES(num_chars, num_descs, num_includes) \
-  (sizeof(GATTService) + sizeof(GATTCharacteristic) * (num_chars) +     \
-  sizeof(GATTDescriptor) * (num_descs) + sizeof(uint16_t) * (num_includes))
+  (sizeof(GATTService) + sizeof(GATTCharacteristic) * (num_chars) +        \
+   sizeof(GATTDescriptor) * (num_descs) + sizeof(uint16_t) * (num_includes))

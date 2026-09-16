@@ -23,12 +23,11 @@ extern void bt_driver_cb_ppog_reversed_unsubscribed(uint16_t conn_handle);
 
 //! Driver -> kernel: the phone wrote a PPoG packet to the data-write
 //! characteristic. Ownership of @p buf (kernel heap) transfers to the kernel.
-extern void bt_driver_cb_ppog_reversed_data_written(uint16_t conn_handle,
-                                                    uint8_t *buf, uint16_t len);
+extern void bt_driver_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf,
+                                                    uint16_t len);
 
 //! Kernel -> driver: send a PPoG packet to the phone as a notification.
 //! @return BTErrnoOK on success, BTErrnoNotEnoughResources if out of buffers
 //! (transient; the caller must retry after a short delay — the stack has no
 //! buffers-freed event), or BTErrnoInvalidState if no subscription is active.
-BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle,
-                                       const uint8_t *buf, uint16_t len);
+BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len);

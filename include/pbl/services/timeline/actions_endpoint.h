@@ -20,5 +20,5 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
                                             bool do_async);
 
 //! Handles messages from the phone sent to the timeline action endpoint
-void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const uint8_t* data,
+void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
                                                     size_t length);

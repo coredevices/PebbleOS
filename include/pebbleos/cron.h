@@ -13,7 +13,7 @@
 
 typedef struct CronJob CronJob;
 
-typedef void (*CronJobCallback)(CronJob *job, void* data);
+typedef void (*CronJobCallback)(CronJob *job, void *data);
 
 //! Matches any possible value.
 #define CRON_MINUTE_ANY (-1)
@@ -44,7 +44,7 @@ struct CronJob {
 
   //! Callback that is called when the job fires.
   CronJobCallback cb;
-  void* cb_data;
+  void *cb_data;
 
   //! Occasionally, the system gets a clock change event for various reasons:
   //!  - User changed time-zones or a DST transition happened
@@ -62,10 +62,10 @@ struct CronJob {
   //! This value is specified in seconds.
   uint32_t clock_change_tolerance;
 
-  int8_t minute; //!< 0-59, or CRON_MINUTE_ANY
-  int8_t hour; //!< 0-23, or CRON_HOUR_ANY
-  int8_t mday; //!< 0-30, or CRON_MDAY_ANY
-  int8_t month; //!< 0-11, or CRON_MONTH_ANY
+  int8_t minute;  //!< 0-59, or CRON_MINUTE_ANY
+  int8_t hour;    //!< 0-23, or CRON_HOUR_ANY
+  int8_t mday;    //!< 0-30, or CRON_MDAY_ANY
+  int8_t month;   //!< 0-11, or CRON_MONTH_ANY
 
   //! Seconds to offset the cron execution time applied after regular cron job time calculation.
   //! For example, a cron scheduled for Monday at 0:15 with an offset of negative 30min will fire

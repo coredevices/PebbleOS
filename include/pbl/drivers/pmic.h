@@ -49,4 +49,3 @@ void set_4V5_power_state(bool enabled);
 
 //! Enables the 6.6V power rail. Used for the display on snowy.
 void set_6V6_power_state(bool enabled);
-

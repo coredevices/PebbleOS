@@ -17,23 +17,22 @@
 #define SETTINGS_FILE_VERSION 1
 
 typedef struct PACKED {
-  uint32_t magic; // = "set"
+  uint32_t magic;  // = "set"
   uint16_t version;
   uint16_t flags;
 } SettingsFileHeader;
 
-_Static_assert(
-  sizeof((SettingsFileHeader) {}.magic) == sizeof(SETTINGS_FILE_MAGIC),
-  "The magic has been broken!");
+_Static_assert(sizeof((SettingsFileHeader){}.magic) == sizeof(SETTINGS_FILE_MAGIC),
+               "The magic has been broken!");
 
-#define SETTINGS_FLAG_WRITE_COMPLETE      (1 << 0)
-#define SETTINGS_FLAG_OVERWRITE_STARTED   (1 << 1)
-#define SETTINGS_FLAG_OVERWRITE_COMPLETE  (1 << 2)
+#define SETTINGS_FLAG_WRITE_COMPLETE (1 << 0)
+#define SETTINGS_FLAG_OVERWRITE_STARTED (1 << 1)
+#define SETTINGS_FLAG_OVERWRITE_COMPLETE (1 << 2)
 // Indicate that a record is in sync with the phone
-#define SETTINGS_FLAG_SYNCED              (1 << 3)
+#define SETTINGS_FLAG_SYNCED (1 << 3)
 
 #define SETTINGS_KEY_MAX_LEN 127
-#define SETTINGS_VAL_MAX_LEN (SETTINGS_EOF_MARKER - 1) // we reserve the largest value for EOF
+#define SETTINGS_VAL_MAX_LEN (SETTINGS_EOF_MARKER - 1)  // we reserve the largest value for EOF
 
 #define KEY_LEN_BITS 7
 #define VAL_LEN_BITS 11
@@ -42,14 +41,14 @@ _Static_assert(
 #define SETTINGS_EOF_MARKER ((1 << VAL_LEN_BITS) - 1)
 
 _Static_assert(KEY_LEN_BITS + VAL_LEN_BITS + FLAGS_BITS == 24,
-    "The record header bitfields must add up to 24!");
+               "The record header bitfields must add up to 24!");
 
 typedef struct PACKED {
-  uint32_t     last_modified;
-  uint8_t      key_hash;
-  uint8_t      flags:FLAGS_BITS;
-  unsigned int key_len:KEY_LEN_BITS;
-  unsigned int val_len:VAL_LEN_BITS;
+  uint32_t last_modified;
+  uint8_t key_hash;
+  uint8_t flags : FLAGS_BITS;
+  unsigned int key_len : KEY_LEN_BITS;
+  unsigned int val_len : VAL_LEN_BITS;
 } SettingsRecordHeader;
 
 // A SettingsRawIter is just a more convenient interface for the underlying file
@@ -62,22 +61,22 @@ typedef struct PACKED {
 //     as a header, reading past the end of a key/value, or other nefarious
 //     things.
 typedef struct {
-  const char           *file_name;
-  int                  fd;
-  SettingsFileHeader   file_hdr;
+  const char *file_name;
+  int fd;
+  SettingsFileHeader file_hdr;
 
   // Header for the record we are currently on.
   SettingsRecordHeader hdr;
   // - Offset within the file pointing to the beginning of a `SettingsRecordHeader`
   // - The header it points to is the one where our iterator is.
   // - Used to make sure we can always skip to the next record properly.
-  int                  hdr_pos;
+  int hdr_pos;
   // - Offset within the file pointing to the beginning of a `SettingsRecordHeader`
   // - The header it points to is the one where we began/resumed searching from.
   // - Only gets changed when calling `settings_raw_iter_(being|resume)`
   // - Used to allow wrapping from the end to the beginning when searching
   //   for a specific record.
-  int                  resumed_pos;
+  int resumed_pos;
 } SettingsRawIter;
 
 //! Initialize the iterator for use with the given fd.

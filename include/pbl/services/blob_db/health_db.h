@@ -8,24 +8,16 @@
 
 //! Get the typical metric value for a given day.
 //! If you want "typical steps" you probably want health_db_get_typical_step_averages
-bool health_db_get_typical_value(ActivityMetric metric,
-                                 DayInWeek day,
-                                 int32_t *value_out);
+bool health_db_get_typical_value(ActivityMetric metric, DayInWeek day, int32_t *value_out);
 
 //! Get the average metric value over the last month
-bool health_db_get_monthly_average_value(ActivityMetric metric,
-                                         int32_t *value_out);
+bool health_db_get_monthly_average_value(ActivityMetric metric, int32_t *value_out);
 
 //! Often referred to as "typical steps"
-bool health_db_get_typical_step_averages(DayInWeek day,
-                                         ActivityMetricAverages *averages);
-
-
+bool health_db_get_typical_step_averages(DayInWeek day, ActivityMetricAverages *averages);
 
 //! For test / debug purposes only
-bool health_db_set_typical_values(ActivityMetric metric,
-                                  DayInWeek day,
-                                  uint16_t *values,
+bool health_db_set_typical_values(ActivityMetric metric, DayInWeek day, uint16_t *values,
                                   int num_values);
 
 ///////////////////////////////////////////

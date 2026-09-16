@@ -63,9 +63,9 @@ static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(app_data->window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  app_data->result_text = text_layer_create((GRect) {
-    .origin = { .x = 10, .y = 10},
-    .size = { .w = bounds.size.w - 20, .h = bounds.size.h - 20 }
+  app_data->result_text = text_layer_create((GRect){
+      .origin = {.x = 10, .y = 10},
+      .size = {.w = bounds.size.w - 20, .h = bounds.size.h - 20}
   });
 
   text_layer_set_text(app_data->result_text, "Press SELECT to start");
@@ -89,11 +89,11 @@ static void init(AppData *app_data) {
 
   app_data->window = window_create();
   window_set_click_config_provider_with_context(app_data->window, prv_click_config_provider,
-      app_data);
-  window_set_window_handlers(app_data->window, (WindowHandlers) {
-    .load = prv_window_load,
-    .unload = prv_window_unload,
-  });
+                                                app_data);
+  window_set_window_handlers(app_data->window, (WindowHandlers){
+                                                   .load = prv_window_load,
+                                                   .unload = prv_window_unload,
+                                               });
   window_set_user_data(app_data->window, app_data);
 
   const bool animated = true;
