@@ -33,3 +33,7 @@ bool WEAK alerts_preferences_get_notification_vibe_delay(void) {
 NotificationStatusBarStyle WEAK alerts_preferences_get_notification_status_bar_style(void) {
   return NotificationStatusBarStyle_Default;
 }
+
+PreferredContentSize WEAK alerts_preferences_get_notification_content_size(void) {
+  return NotificationContentSizeSystem;
+}

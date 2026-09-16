@@ -321,16 +321,24 @@ bool notification_layout_get_image_size(const LayoutLayer *layout_ref, GSize *si
 }
 #endif
 
+static PreferredContentSize prv_content_size(void) {
+  const PreferredContentSize size = alerts_preferences_get_notification_content_size();
+  return (size == NotificationContentSizeSystem) ? system_theme_get_content_size() : size;
+}
+
 //! Creates a GTextNode view node representing the inner content of the notification
 //! @param layout NotificationLayout of the notification
 //! @param use_body_icon Whether to display a body icon. Currently used by Jumboji
 //! @return the GTextNode view node of the notification
 static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_body_icon) {
-  const NotificationStyle *style = &s_notification_styles[system_theme_get_content_size()];
+  const PreferredContentSize content_size = prv_content_size();
+  const LayoutContentSize text_size = ToLayoutContentSize(content_size);
+  const NotificationStyle *style = &s_notification_styles[content_size];
 
   const bool is_reminder = prv_is_reminder(layout);
   const LayoutNodeTextAttributeConfig header_config = {
     .attr_id = AttributeIdAppName,
+    .text.style = text_size,
     .text.style_font = TextStyleFont_Header,
     .text.extent.offset.y = style->header_padding,
     .text.extent.margin.h = style->header_padding,
@@ -339,6 +347,7 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_notification_timestamp_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
+    .text.style = text_size,
     .text.style_font = PBL_IF_RECT_ELSE(TextStyleFont_Footer, TextStyleFont_Caption),
     .text.extent.offset.y = style->timestamp_upper_padding,
     .text.extent.margin.h = style->timestamp_upper_padding + style->timestamp_lower_padding,
@@ -347,12 +356,14 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_reminder_timestamp_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
+    .text.style = text_size,
     .text.style_font = TextStyleFont_Header,
     .text.extent.offset.y = style->header_padding,
     .text.extent.margin.h = style->header_padding,
   };
   const LayoutNodeTextAttributeConfig title_config = {
     .attr_id = is_reminder ? AttributeIdUnused : AttributeIdTitle,
+    .text.style = text_size,
     .text.style_font = TextStyleFont_Header,
     .text.line_spacing_delta = style->title_line_delta,
     .text.alignment = use_body_icon ? LayoutTextAlignment_Center : LayoutTextAlignment_Auto,
@@ -362,6 +373,7 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
   };
   const LayoutNodeTextAttributeConfig subtitle_config = {
     .attr_id = is_reminder ? AttributeIdTitle : AttributeIdSubtitle,
+    .text.style = text_size,
     .text.style_font = TextStyleFont_Title,
     .text.line_spacing_delta = style->subtitle_line_delta,
     .text.alignment = use_body_icon ? LayoutTextAlignment_Center : LayoutTextAlignment_Auto,
@@ -382,6 +394,7 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
   };
   const LayoutNodeTextAttributeConfig location_config = {
     .attr_id = AttributeIdLocationName,
+    .text.style = text_size,
     .text.style_font = TextStyleFont_Footer,
     .text.extent.offset.y = style->location_offset,
     .text.extent.margin.h = style->location_margin,
@@ -389,6 +402,7 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
   const int reminder_body_line_delta = 0;
   const LayoutNodeTextAttributeConfig body_config = {
     .attr_id = AttributeIdBody,
+    .text.style = text_size,
     .text.style_font = is_reminder ? TextStyleFont_Caption : TextStyleFont_Body,
     .text.line_spacing_delta = is_reminder ? reminder_body_line_delta : style->body_line_delta,
     .text.extent.offset.y = style->body_padding,
@@ -398,6 +412,7 @@ static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_
     .extent.node.type = LayoutNodeType_HeadingsParagraphs,
     .extent.offset.y = 12,
     .extent.margin.h = 5,
+    .size = text_size,
     .heading_style_font = TextStyleFont_Header,
     .paragraph_style_font = TextStyleFont_Body,
   };
