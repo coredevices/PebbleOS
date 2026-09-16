@@ -7,7 +7,9 @@
 
 #include "applib/app.h"
 #include "applib/app_focus_service.h"
+#include "applib/event_service_client.h"
 #include "applib/ui/app_window_stack.h"
+#include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/prefs.h"
@@ -18,6 +20,7 @@ typedef struct LauncherAppWindowData {
   Window window;
   LauncherMenuLayer launcher_menu_layer;
   AppMenuDataSource app_menu_data_source;
+  EventServiceInfo pref_change_event_info;
 } LauncherAppWindowData;
 
 typedef struct LauncherAppPersistedData {
@@ -44,6 +47,11 @@ static void prv_will_focus(bool in_focus) {
   if (!in_focus) {
     launcher_menu_layer_set_selection_animations_enabled(&data->launcher_menu_layer, false);
   }
+}
+
+static void prv_pref_change_handler(PBL_UNUSED PebbleEvent *event, void *context) {
+  LauncherAppWindowData *data = context;
+  launcher_menu_layer_update_content_size(&data->launcher_menu_layer);
 }
 
 ////////////////////////////////
@@ -104,6 +112,13 @@ static void prv_window_load(Window *window) {
     .did_focus = prv_did_focus,
     .will_focus = prv_will_focus,
   });
+
+  data->pref_change_event_info = (EventServiceInfo){
+    .type = PEBBLE_PREF_CHANGE_EVENT,
+    .handler = prv_pref_change_handler,
+    .context = data,
+  };
+  event_service_client_subscribe(&data->pref_change_event_info);
 }
 
 static void prv_window_unload(Window *window) {
@@ -124,6 +139,7 @@ static void prv_window_unload(Window *window) {
   launcher_menu_layer_get_selection_state(&data->launcher_menu_layer,
                                           &s_launcher_app_persisted_data.selection_state);
 
+  event_service_client_unsubscribe(&data->pref_change_event_info);
   app_focus_service_unsubscribe();
   launcher_menu_layer_deinit(&data->launcher_menu_layer);
   app_menu_data_source_deinit(&data->app_menu_data_source);

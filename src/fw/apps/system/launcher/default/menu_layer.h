@@ -39,6 +39,8 @@ typedef struct LauncherMenuLayer {
 typedef struct LauncherMenuLayerSelectionState {
   int16_t scroll_offset_y;
   uint16_t row_index;
+  //! Content size the scroll offset was captured with
+  PreferredContentSize content_size;
 } LauncherMenuLayerSelectionState;
 
 //! @return The style for the user's preferred content size
@@ -53,6 +55,10 @@ void launcher_menu_layer_set_click_config_onto_window(LauncherMenuLayer *launche
                                                       Window *window);
 
 void launcher_menu_layer_reload_data(LauncherMenuLayer *launcher_menu_layer);
+
+//! Re-initialize the launcher menu layer if the user's preferred content size changed since it was
+//! initialized, keeping the current selection.
+void launcher_menu_layer_update_content_size(LauncherMenuLayer *launcher_menu_layer);
 
 void launcher_menu_layer_set_selection_state(LauncherMenuLayer *launcher_menu_layer,
                                              const LauncherMenuLayerSelectionState *new_state);

@@ -360,6 +360,34 @@ void launcher_menu_layer_reload_data(LauncherMenuLayer *launcher_menu_layer) {
   menu_layer_reload_data(&launcher_menu_layer->menu_layer);
 }
 
+void launcher_menu_layer_update_content_size(LauncherMenuLayer *launcher_menu_layer) {
+  if (!launcher_menu_layer ||
+      (launcher_menu_layer->content_size == system_theme_get_content_size())) {
+    return;
+  }
+
+  LauncherMenuLayerSelectionState selection_state;
+  launcher_menu_layer_get_selection_state(launcher_menu_layer, &selection_state);
+  AppMenuDataSource *data_source = launcher_menu_layer->data_source;
+  const bool selection_animations_enabled = launcher_menu_layer->selection_animations_enabled;
+  Layer *container_layer = &launcher_menu_layer->container_layer;
+  Layer *parent = container_layer->parent;
+  Window *window = layer_get_window(container_layer);
+
+  // Fonts are cached by the glances and cell heights by the menu layer, so start over
+  launcher_menu_layer_deinit(launcher_menu_layer);
+  launcher_menu_layer_init(launcher_menu_layer, data_source);
+  if (window) {
+    launcher_menu_layer_set_click_config_onto_window(launcher_menu_layer, window);
+  }
+  if (parent) {
+    layer_add_child(parent, container_layer);
+  }
+  launcher_menu_layer_set_selection_state(launcher_menu_layer, &selection_state);
+  launcher_menu_layer_set_selection_animations_enabled(launcher_menu_layer,
+                                                       selection_animations_enabled);
+}
+
 void launcher_menu_layer_set_selection_state(LauncherMenuLayer *launcher_menu_layer,
                                              const LauncherMenuLayerSelectionState *new_state) {
   if (!launcher_menu_layer || !launcher_menu_layer->data_source || !new_state) {
@@ -367,6 +395,13 @@ void launcher_menu_layer_set_selection_state(LauncherMenuLayer *launcher_menu_la
   }
 
   const bool animated = false;
+
+  // A scroll offset captured with different cell heights no longer lines up with the rows
+  if (new_state->content_size != launcher_menu_layer->content_size) {
+    prv_launcher_menu_layer_set_selection_index(launcher_menu_layer, new_state->row_index,
+                                                MenuRowAlignCenter, animated);
+    return;
+  }
 
   prv_launcher_menu_layer_set_selection_index(launcher_menu_layer, new_state->row_index,
                                               MenuRowAlignNone, animated);
@@ -404,6 +439,7 @@ void launcher_menu_layer_get_selection_state(const LauncherMenuLayer *launcher_m
     .row_index = menu_layer_get_selected_index(menu_layer).row,
     // This cast is required because this ScrollLayer function's argument isn't const
     .scroll_offset_y = scroll_layer_get_content_offset((ScrollLayer *)scroll_layer).y,
+    .content_size = launcher_menu_layer->content_size,
   };
 }
 
