@@ -12,7 +12,7 @@ typedef struct PACKED {
   uint32_t flags;
   uint8_t num_attributes;
   uint8_t num_addresses;
-  uint8_t data[]; // Serialized attributes followed by serialized addresses
+  uint8_t data[];  // Serialized attributes followed by serialized addresses
 } SerializedContact;
 
 //! Given a contact's uuid, return the serialized data for that contact. This should probably only
@@ -25,7 +25,6 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
 
 //! Frees the serialized contact data returned by contacts_db_get_serialized_contact().
 void contacts_db_free_serialized_contact(SerializedContact *contact);
-
 
 ///////////////////////////////////////////
 // BlobDB Boilerplate (see blob_db/api.h)

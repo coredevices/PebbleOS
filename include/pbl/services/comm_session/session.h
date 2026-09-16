@@ -51,7 +51,7 @@ typedef enum {
   CommSessionOutOfRange
 } CommSessionCapability;
 
-#define COMM_SESSION_DEFAULT_TIMEOUT  (4000)
+#define COMM_SESSION_DEFAULT_TIMEOUT (4000)
 
 //! @return whether the specified capability is supported by the session provided
 bool comm_session_has_capability(CommSession *session, CommSessionCapability capability);
@@ -108,15 +108,16 @@ void comm_session_reset(CommSession *session);
 //! @param endpoint_id Which endpoint to send the pebble protocol message to.
 //! @param data Pointer to the buffer with data to send
 //! @param length The length of the data
-//! @param timeout_ms The duration for how long the call is allowed to block. If the send buffer does
-//! not have enough space available to enqueue the data, this function will block up to timeout_ms.
+//! @param timeout_ms The duration for how long the call is allowed to block. If the send buffer
+//! does not have enough space available to enqueue the data, this function will block up to
+//! timeout_ms.
 //! @return true if the data was successfully queued up for sending.
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id,
-                            const uint8_t *data, size_t length, uint32_t timeout_ms);
+bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
+                            size_t length, uint32_t timeout_ms);
 
 //! See bt_conn_mgr.h for more details on the parameters
-void comm_session_set_responsiveness(
-    CommSession *session, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs);
+void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
+                                     ResponseTimeState state, uint16_t max_period_secs);
 
 //! See bt_conn_mgr.h for more details on the parameters
 void comm_session_set_responsiveness_ext(CommSession *session, BtConsumer consumer,

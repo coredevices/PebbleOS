@@ -10,7 +10,6 @@
 // amount of time.
 uint32_t activity_private_compute_distance_mm(uint32_t steps, uint32_t ms);
 
-
 // ------------------------------------------------------------------------------------------------
 // Compute active calories (in calories, not kcalories) covered by going the given distance in
 // the given amount of time.

@@ -11,16 +11,15 @@
 #define SPRF_MAX_NUM_PAGES_MULT(num) ((num) * 3 / 4)
 
 typedef enum {
-  SprfValidFields_LocalEncryptionInfoValid  = (1 << 0),
+  SprfValidFields_LocalEncryptionInfoValid = (1 << 0),
   SprfValidFields_RemoteEncryptionInfoValid = (1 << 1),
-  SprfValidFields_RemoteIdentityInfoValid   = (1 << 2),
-  SprfValidFields_RemoteSigningInfoValid    = (1 << 3),
+  SprfValidFields_RemoteIdentityInfoValid = (1 << 2),
+  SprfValidFields_RemoteSigningInfoValid = (1 << 3),
 } SprfValidFields;
 
 #ifndef __clang__
 _Static_assert(sizeof(SprfValidFields) == 1, "SprfValidFields unexpected size");
 #endif
-
 
 typedef enum {
   SprfMagic_ValidEntry = 0x46525053,
@@ -64,10 +63,10 @@ typedef struct PACKED SprfRootKeys {
 _Static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
 
 typedef struct PACKED SprfBlePairingData {
-  uint32_t crc; // CRC over the 'pairing_data' struct ('name' through 'fields')
+  uint32_t crc;  // CRC over the 'pairing_data' struct ('name' through 'fields')
 
   // local encryption data
-  SMLongTermKey l_ltk; // 16 byte key
+  SMLongTermKey l_ltk;  // 16 byte key
   uint64_t l_rand;
   uint16_t l_ediv;
 
@@ -76,11 +75,11 @@ typedef struct PACKED SprfBlePairingData {
   SMLongTermKey r_ltk;
   uint64_t r_rand;
 
-  SMIdentityResolvingKey irk; // 16 byte key
-  SMConnectionSignatureResolvingKey csrk; // 16 byte key
+  SMIdentityResolvingKey irk;              // 16 byte key
+  SMConnectionSignatureResolvingKey csrk;  // 16 byte key
   BTDeviceInternal identity;
 
-  SprfValidFields fields:8;
+  SprfValidFields fields : 8;
   bool is_mitm_protection_enabled;
   bool requires_address_pinning;
 

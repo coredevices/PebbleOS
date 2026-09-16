@@ -76,9 +76,9 @@ typedef struct PACKED {
 // 1:1 to WeatherType; WeatherType_Unknown == 255). Cast on read.
 // ---------------------------------------------------------------------------
 typedef struct PACKED {
-  int16_t high_temp;       // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
-  int16_t low_temp;        // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
-  uint8_t weather_type;    // WeatherType; 255 if unknown
+  int16_t high_temp;     // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
+  int16_t low_temp;      // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
+  uint8_t weather_type;  // WeatherType; 255 if unknown
 } WeatherDBDailyForecast;
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ typedef struct PACKED {
 // ---------------------------------------------------------------------------
 typedef struct PACKED {
   // --- v3-compatible fixed prefix (identical offsets to WeatherDBEntryV3) ---
-  uint8_t version;                 // == WEATHER_DB_CURRENT_VERSION (4)
+  uint8_t version;  // == WEATHER_DB_CURRENT_VERSION (4)
   int16_t current_temp;
   WeatherType current_weather_type;
   int16_t today_high_temp;
@@ -111,36 +111,36 @@ typedef struct PACKED {
   bool is_current_location;
 
   // --- v4 additions (fixed-size, appended) ---
-  uint8_t minor_version;            // == WEATHER_DB_CURRENT_MINOR_VERSION
-  int16_t today_feels_like_temp;    // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
-  int16_t today_uv_index_x10;       // UV index * 10 (0..110), or -1 if unknown
-  int16_t today_precip_probability; // 0..100 (%), or -1 if unknown
-  uint16_t today_wind_speed;        // whole units (km/h or mph per phone), 0 if unknown
-  uint16_t today_wind_direction;    // degrees 0..359, 0xFFFF if unknown
-  int16_t latitude_e2;              // latitude * 100 (for the globe), INT16_MIN if unknown
-  int16_t longitude_e2;             // longitude * 100 (for the globe), INT16_MIN if unknown
-  uint8_t num_daily;                // valid entries in daily[] (0..WEATHER_DB_MAX_FORECAST_DAYS)
+  uint8_t minor_version;             // == WEATHER_DB_CURRENT_MINOR_VERSION
+  int16_t today_feels_like_temp;     // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
+  int16_t today_uv_index_x10;        // UV index * 10 (0..110), or -1 if unknown
+  int16_t today_precip_probability;  // 0..100 (%), or -1 if unknown
+  uint16_t today_wind_speed;         // whole units (km/h or mph per phone), 0 if unknown
+  uint16_t today_wind_direction;     // degrees 0..359, 0xFFFF if unknown
+  int16_t latitude_e2;               // latitude * 100 (for the globe), INT16_MIN if unknown
+  int16_t longitude_e2;              // longitude * 100 (for the globe), INT16_MIN if unknown
+  uint8_t num_daily;                 // valid entries in daily[] (0..WEATHER_DB_MAX_FORECAST_DAYS)
   WeatherDBDailyForecast daily[WEATHER_DB_MAX_FORECAST_DAYS];
-  uint8_t today_hourly_count;       // 0 or WEATHER_DB_HOURLY_COUNT
-  uint8_t today_hourly_weather_type[WEATHER_DB_HOURLY_COUNT]; // WeatherType per hour 0-23
-  int8_t today_hourly_temp[WEATHER_DB_HOURLY_COUNT];          // temp per hour 0-23
+  uint8_t today_hourly_count;                                  // 0 or WEATHER_DB_HOURLY_COUNT
+  uint8_t today_hourly_weather_type[WEATHER_DB_HOURLY_COUNT];  // WeatherType per hour 0-23
+  int8_t today_hourly_temp[WEATHER_DB_HOURLY_COUNT];           // temp per hour 0-23
 
   // --- v4 minor 1 additions (appended; present only when minor_version >= 1) ---
   int16_t location_utc_offset_min;  // location's timezone, minutes EAST of UTC (e.g. Tokyo
                                     // +540, New York DST -240); INT16_MIN if unknown. Lets the
                                     // watch show the LOCATION's local sunset/hourly times for
                                     // saved cities instead of watch-local ones.
-  WeatherDBDailyMetrics daily_metrics[WEATHER_DB_MAX_FORECAST_DAYS]; // parallel to daily[]
+  WeatherDBDailyMetrics daily_metrics[WEATHER_DB_MAX_FORECAST_DAYS];  // parallel to daily[]
 
   // --- v4 minor 2 additions (appended; present only when minor_version >= 2) ---
   // Today's raw warning readings for the weather report's alert line. Open-Meteo
   // sources: daily weather_code; hourly
   // relative_humidity_2m (daily mean); hourly visibility (daily MINIMUM, meters);
   // daily precipitation_sum (whole mm).
-  uint8_t today_wmo_code;         // WMO weather code; 0xFF if unknown
-  uint8_t today_humidity_pct;     // relative humidity 0..100 %; 0xFF if unknown
-  uint16_t today_visibility_m;    // minimum visibility, meters (clamp 65534); 0xFFFF if unknown
-  uint16_t today_precip_sum_mm;   // total precipitation, whole mm (clamp 65534); 0xFFFF if unknown
+  uint8_t today_wmo_code;        // WMO weather code; 0xFF if unknown
+  uint8_t today_humidity_pct;    // relative humidity 0..100 %; 0xFF if unknown
+  uint16_t today_visibility_m;   // minimum visibility, meters (clamp 65534); 0xFFFF if unknown
+  uint16_t today_precip_sum_mm;  // total precipitation, whole mm (clamp 65534); 0xFFFF if unknown
   // Per-day feels-like, parallel to daily[] (Open-Meteo daily apparent_temperature_max);
   // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown.
   int16_t daily_feels_like[WEATHER_DB_MAX_FORECAST_DAYS];
@@ -161,9 +161,9 @@ typedef struct PACKED {
   // The clock dial shows the next 12 hours, so from early afternoon it crosses
   // midnight — these give its post-midnight positions real data. Open-Meteo:
   // hourly weather_code + temperature_2m for tomorrow's 24 slots.
-  uint8_t tomorrow_hourly_count;    // 0 or WEATHER_DB_HOURLY_COUNT
-  uint8_t tomorrow_hourly_weather_type[WEATHER_DB_HOURLY_COUNT]; // WeatherType, 255 unknown
-  int8_t tomorrow_hourly_temp[WEATHER_DB_HOURLY_COUNT];          // temp per hour 0-23
+  uint8_t tomorrow_hourly_count;                                  // 0 or WEATHER_DB_HOURLY_COUNT
+  uint8_t tomorrow_hourly_weather_type[WEATHER_DB_HOURLY_COUNT];  // WeatherType, 255 unknown
+  int8_t tomorrow_hourly_temp[WEATHER_DB_HOURLY_COUNT];           // temp per hour 0-23
 
   // --- variable-length trailing strings (MUST stay last) ---
   SerializedArray pstring16s;
@@ -192,9 +192,9 @@ typedef enum WeatherDbStringIndex {
 
 // Smallest acceptable record is a legacy v3 record (smaller fixed prefix).
 #define MIN_ENTRY_SIZE (sizeof(WeatherDBEntryV3))
-#define MAX_ENTRY_SIZE (sizeof(WeatherDBEntry) + \
-                        WEATHER_SERVICE_MAX_WEATHER_LOCATION_BUFFER_SIZE + \
-                        WEATHER_SERVICE_MAX_SHORT_PHRASE_BUFFER_SIZE)
+#define MAX_ENTRY_SIZE                                                         \
+  (sizeof(WeatherDBEntry) + WEATHER_SERVICE_MAX_WEATHER_LOCATION_BUFFER_SIZE + \
+   WEATHER_SERVICE_MAX_SHORT_PHRASE_BUFFER_SIZE)
 
 //! @return true if the firmware can parse a record stamped with this major version.
 static inline bool weather_db_version_is_supported(uint8_t version) {
@@ -222,11 +222,16 @@ static inline size_t weather_db_entry_strings_offset(uint8_t version, uint8_t mi
   if (version < WEATHER_DB_CURRENT_VERSION) {
     return offsetof(WeatherDBEntryV3, pstring16s);
   }
-  if (minor_version >= 5) return offsetof(WeatherDBEntry, pstring16s);
-  if (minor_version >= 4) return WEATHER_DB_V4_4_FIXED_SIZE;
-  if (minor_version >= 3) return WEATHER_DB_V4_3_FIXED_SIZE;
-  if (minor_version >= 2) return WEATHER_DB_V4_2_FIXED_SIZE;
-  if (minor_version >= 1) return WEATHER_DB_V4_1_FIXED_SIZE;
+  if (minor_version >= 5)
+    return offsetof(WeatherDBEntry, pstring16s);
+  if (minor_version >= 4)
+    return WEATHER_DB_V4_4_FIXED_SIZE;
+  if (minor_version >= 3)
+    return WEATHER_DB_V4_3_FIXED_SIZE;
+  if (minor_version >= 2)
+    return WEATHER_DB_V4_2_FIXED_SIZE;
+  if (minor_version >= 1)
+    return WEATHER_DB_V4_1_FIXED_SIZE;
   return WEATHER_DB_V4_0_FIXED_SIZE;
 }
 
@@ -234,8 +239,7 @@ static inline size_t weather_db_entry_strings_offset(uint8_t version, uint8_t mi
 //! record's version + minor. Use this instead of &entry->pstring16s so v3 and
 //! minor-0 records still resolve their strings after fields were appended.
 static inline SerializedArray *weather_db_entry_get_strings(WeatherDBEntry *entry) {
-  const uint8_t minor =
-      (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
+  const uint8_t minor = (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
   return (SerializedArray *)((uint8_t *)entry +
                              weather_db_entry_strings_offset(entry->version, minor));
 }

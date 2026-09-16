@@ -15,7 +15,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 #define FW_METADATA_CURRENT_STRUCT_VERSION 0x1
 #define FW_METADATA_VERSION_SHORT_BYTES 8
 #define FW_METADATA_VERSION_TAG_BYTES 32
@@ -69,49 +68,49 @@ struct PACKED FirmwareMetadata {
   uint32_t version_timestamp;
   char version_tag[FW_METADATA_VERSION_TAG_BYTES];
   char version_short[FW_METADATA_VERSION_SHORT_BYTES];
-  bool is_recovery_firmware:1;
-  bool is_ble_firmware:1;
-  bool is_dual_slot:1;
-  bool is_slot_0:1;
-  uint8_t reserved:4;
+  bool is_recovery_firmware : 1;
+  bool is_ble_firmware : 1;
+  bool is_dual_slot : 1;
+  bool is_slot_0 : 1;
+  uint8_t reserved : 4;
   uint8_t hw_platform;
   //! This should be the last field, since we put the meta data struct at the end of the fw binary.
   uint8_t metadata_version;
 };
 typedef struct FirmwareMetadata FirmwareMetadata;
 
-_Static_assert(sizeof(struct FirmwareMetadata) == (sizeof(uint32_t) +
-               FW_METADATA_VERSION_SHORT_BYTES + FW_METADATA_VERSION_TAG_BYTES + sizeof(uint8_t) +
-               sizeof(uint8_t) + sizeof(uint8_t)),
+_Static_assert(sizeof(struct FirmwareMetadata) ==
+                   (sizeof(uint32_t) + FW_METADATA_VERSION_SHORT_BYTES +
+                    FW_METADATA_VERSION_TAG_BYTES + sizeof(uint8_t) + sizeof(uint8_t) +
+                    sizeof(uint8_t)),
                "FirmwareMetadata bitfields not packed correctly");
-
 
 // Shared defines. Let's not duplicate this everywhere.
 
 #ifdef CONFIG_RECOVERY_FW
-  #define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (true)
+#define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (true)
 #else
-  #define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (false)
+#define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (false)
 #endif
 
 #ifdef CONFIG_BOARD_ASTERIX
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleAsterix)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleAsterix)
 #elif defined(CONFIG_BOARD_OBELIX_DVT)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixDVT)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixDVT)
 #elif defined(CONFIG_BOARD_OBELIX_PVT)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixPVT)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixPVT)
 #elif defined(CONFIG_BOARD_OBELIX_BB2)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard2)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard2)
 #elif defined(CONFIG_BOARD_GETAFIX_DVT)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT)
 #elif defined(CONFIG_BOARD_GETAFIX_DVT2)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT2)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT2)
 #elif defined(CONFIG_BOARD_QEMU_EMERY)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
 #elif defined(CONFIG_BOARD_QEMU_FLINT)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleFlintEmu)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleFlintEmu)
 #elif defined(CONFIG_BOARD_QEMU_GABBRO)
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGabbroEmu)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGabbroEmu)
 #else
-  #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformUnknown)
+#define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformUnknown)
 #endif

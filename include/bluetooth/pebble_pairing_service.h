@@ -14,8 +14,7 @@
 #define PEBBLE_BT_PAIRING_SERVICE_CONNECTION_PARAMETERS_UUID PEBBLE_BT_UUID_EXPAND(5)
 
 typedef enum {
-  PebblePairingServiceGATTError_UnknownCommandID =
-      BLEGATTErrorApplicationSpecificErrorStart,
+  PebblePairingServiceGATTError_UnknownCommandID = BLEGATTErrorApplicationSpecificErrorStart,
   PebblePairingServiceGATTError_ConnParamsInvalidRemoteDesiredState,
   PebblePairingServiceGATTError_ConnParamsMinSlotsTooSmall,
   PebblePairingServiceGATTError_ConnParamsMinSlotsTooLarge,
@@ -29,21 +28,21 @@ typedef struct PACKED {
   union {
     struct {
       //! true if the device that is reading the status is connected (always true)
-      bool ble_is_connected:1;
+      bool ble_is_connected : 1;
       //! true if the device that is reading the status is bonded, false if not
-      bool ble_is_bonded:1;
+      bool ble_is_bonded : 1;
       //! true if the current LE link is encrypted, false if not
-      bool ble_is_encrypted:1;
+      bool ble_is_encrypted : 1;
       //! true if the watch has a bonding to a gateway (LE-based).
-      bool has_bonded_gateway:1;
+      bool has_bonded_gateway : 1;
       //! true if the watch supports writing the "Don't send slave security request" bit.
       //! See https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+GATT+Services
-      bool supports_pinning_without_security_request:1;
+      bool supports_pinning_without_security_request : 1;
       //! true if the reversed ppogatt was enabled at the time of bonding
-      bool is_reversed_ppogatt_enabled:1;
+      bool is_reversed_ppogatt_enabled : 1;
 
       //! Reserved, leave zero for future use.
-      uint32_t rsvd:18;
+      uint32_t rsvd : 18;
 
       //! The error of the last pairing process or all zeroes, if no pairing process has completed
       //! or when there were no errors. Also see BT Spec 4.2, Vol 3, Part H, 3.5.5 Pairing Failed.
@@ -56,15 +55,15 @@ typedef struct PACKED {
 _Static_assert(sizeof(PebblePairingServiceConnectivityStatus) == 4, "");
 
 typedef struct PACKED {
-  bool should_pin_address:1;
+  bool should_pin_address : 1;
 
   //! @note Not available in Bluetopia/cc2564x implementation
   //! This flag and should_force_slave_security_request are mutually exclusive!
-  bool no_slave_security_request:1;
+  bool no_slave_security_request : 1;
 
   //! @note Not available in Bluetopia/cc2564x implementation
   //! This flag and no_slave_security_request are mutually exclusive!
-  bool should_force_slave_security_request:1;
+  bool should_force_slave_security_request : 1;
 
   //! @note Not available in Bluetopia/cc2564x implementation
   //! Flag to indicate that when re-pairing this device, the re-pairing should be accepted
@@ -72,7 +71,7 @@ typedef struct PACKED {
   //! @note This is a work-around for an Android 4.4.x bug. This opens up a security hole :( where
   //! a phone could pretend to be the "trusted" phone and pair w/o the user even knowing about it.
   //! @see https://pebbletechnology.atlassian.net/browse/PBL-39369
-  bool should_auto_accept_re_pairing:1;
+  bool should_auto_accept_re_pairing : 1;
 
   //! @note Not available in Bluetopia/cc2564x implementation
   //! Flag to indicate that the PPoGATT server/client roles should be reversed to support the
@@ -84,7 +83,7 @@ typedef struct PACKED {
   //! does support normal PPoGATT from connecting to the "reversed" PPoGATT service.
   //! @see ppogatt_emulated_server_wa.c
   //! @see https://pebbletechnology.atlassian.net/browse/PBL-39634
-  bool is_reversed_ppogatt_enabled:1;
+  bool is_reversed_ppogatt_enabled : 1;
 } PairingTriggerRequestData;
 
 typedef struct PACKED {
@@ -110,8 +109,8 @@ typedef struct PACKED {
 //! The connection parameters settings, with respect to connection to the device reading them.
 typedef struct PACKED PebblePairingServiceConnParamsReadNotif {
   //! Capability bits. Reserved for future use.
-  uint8_t packet_length_extension_supported:1;
-  uint8_t rsvd:7;
+  uint8_t packet_length_extension_supported : 1;
+  uint8_t rsvd : 7;
 
   //! Current interval / 1.25 msec – valid range: 7.5 msec to 4 seconds
   uint16_t current_interval_1_25ms;
@@ -141,8 +140,8 @@ typedef struct PACKED PebblePairingServiceRemoteParamMgmtSettings {
   //! If false/zero, Pebble should manage the connection parameters. If true/one, Pebble should
   //! NOT manage the connection parameters. In this mode, Pebble will never request a
   //! connection parameter change.
-  bool is_remote_device_managing_connection_parameters:1;
-  uint8_t rsvd:7;
+  bool is_remote_device_managing_connection_parameters : 1;
+  uint8_t rsvd : 7;
   //! Optional. Current parameters sets used by Pebble's Connection Parameter manager.
   PebblePairingServiceConnParamSet connection_parameter_sets[];
 } PebblePairingServiceRemoteParamMgmtSettings;
@@ -157,23 +156,23 @@ typedef struct PACKED PebblePairingServiceRemoteDesiredState {
   //! reset it back to ResponseTimeMax after 5 minutes.  In case the phone app still wants to
   //! keep a particular desired ResponseTime, the phone app is responsible for making sure to
   //! write the value again before the 5 minute timer expires.
-  uint8_t state:2;
+  uint8_t state : 2;
 
-  uint8_t rsvd:6;
+  uint8_t rsvd : 6;
 } PebblePairingServiceRemoteDesiredState;
 
 typedef struct PACKED PebblePairingServicePacketLengthExtension {
-  uint8_t trigger_ll_length_req:1;
-  uint8_t rsvd:7;
+  uint8_t trigger_ll_length_req : 1;
+  uint8_t rsvd : 7;
 } PebblePairingServicePacketLengthExtension;
 
 typedef struct PACKED PebblePairingServiceInhibitBLESleep {
-  uint8_t rsvd; // for future use
+  uint8_t rsvd;  // for future use
 } PebblePairingServiceInhibitBLESleep;
 
 //! The connection parameters settings, with respect to connection to the device writing them.
 typedef struct PACKED PebblePairingServiceConnParamsWrite {
-  PebblePairingServiceConnParamsWriteCmd cmd:8;
+  PebblePairingServiceConnParamsWriteCmd cmd : 8;
   union PACKED {
     //! Valid iff cmd == PebblePairingServiceConnParamsWriteCmd_SetRemoteParamMgmtSettings
     PebblePairingServiceRemoteParamMgmtSettings remote_param_mgmt_settings;
@@ -190,10 +189,10 @@ typedef struct PACKED PebblePairingServiceConnParamsWrite {
 } PebblePairingServiceConnParamsWrite;
 
 #define PEBBLE_PAIRING_SERVICE_REMOTE_PARAM_MGTM_SETTINGS_SIZE_WITH_PARAM_SETS \
-  (sizeof(PebblePairingServiceRemoteParamMgmtSettings) + \
+  (sizeof(PebblePairingServiceRemoteParamMgmtSettings) +                       \
    (sizeof(PebblePairingServiceConnParamSet) * NumResponseTimeState))
 
-#define PEBBLE_PAIRING_SERVICE_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS \
+#define PEBBLE_PAIRING_SERVICE_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS          \
   (offsetof(PebblePairingServiceConnParamsWrite, remote_param_mgmt_settings) + \
    PEBBLE_PAIRING_SERVICE_REMOTE_PARAM_MGTM_SETTINGS_SIZE_WITH_PARAM_SETS)
 
@@ -224,6 +223,5 @@ extern void bt_driver_cb_pebble_pairing_service_handle_ios_app_termination_detec
 //! values.
 //! @param conn_params_length The length of conn_params in bytes.
 extern void bt_driver_cb_pebble_pairing_service_handle_connection_parameter_write(
-    const BTDeviceInternal *device,
-    const PebblePairingServiceConnParamsWrite *conn_params,
+    const BTDeviceInternal *device, const PebblePairingServiceConnParamsWrite *conn_params,
     size_t conn_params_length);

@@ -16,9 +16,9 @@
 
 NORETURN util_assertion_failed(const char *filename, int line);
 
-#define UTIL_ASSERT(expr) \
-  do { \
-    if (UNLIKELY(!(expr))) { \
+#define UTIL_ASSERT(expr)                             \
+  do {                                                \
+    if (UNLIKELY(!(expr))) {                          \
       util_assertion_failed(__FILE_NAME__, __LINE__); \
-    } \
+    }                                                 \
   } while (0)

@@ -12,8 +12,8 @@
 #include "util/time/time.h"
 
 typedef enum {
-  LayoutLayerAnchorTextDirectionUp, // for scrolling up, past mode
-  LayoutLayerAnchorTextDirectionDown, // for scrolling down, future mode
+  LayoutLayerAnchorTextDirectionUp,    // for scrolling up, past mode
+  LayoutLayerAnchorTextDirectionDown,  // for scrolling down, future mode
 } LayoutLayerAnchorTextDirection;
 
 //! LayoutLayer is a type of Layer that is used to display templated 3.0 content
@@ -34,18 +34,18 @@ typedef enum {
 //! instantiate a specific sub-type of LayoutLayer. Simply stated, the LayoutLayer sub-type
 //! informs what kinds of attributes to expect.
 typedef enum {
-  LayoutIdUnknown = 0, //!< Useful for catching error - 0 is not used as an id.
-  LayoutIdGeneric, //!< Generic layout (probably only for testing)
-  LayoutIdCalendar, //!< Calendar Pins
-  LayoutIdReminder, //!< Generic Reminders
-  LayoutIdNotification, //!< Generic Notifications
-  LayoutIdCommNotification, //!< Communication Notification
-  LayoutIdWeather, //!< Weather Pins
-  LayoutIdSports, //!< Sports Pins
-  LayoutIdAlarm, //!< Alarm Pins
-  LayoutIdHealth, //!< Health Pins
+  LayoutIdUnknown = 0,       //!< Useful for catching error - 0 is not used as an id.
+  LayoutIdGeneric,           //!< Generic layout (probably only for testing)
+  LayoutIdCalendar,          //!< Calendar Pins
+  LayoutIdReminder,          //!< Generic Reminders
+  LayoutIdNotification,      //!< Generic Notifications
+  LayoutIdCommNotification,  //!< Communication Notification
+  LayoutIdWeather,           //!< Weather Pins
+  LayoutIdSports,            //!< Sports Pins
+  LayoutIdAlarm,             //!< Alarm Pins
+  LayoutIdHealth,            //!< Health Pins
   NumLayoutIds,
-  LayoutIdTest, //!< Layout only for unit tests with no attribute requirements
+  LayoutIdTest,  //!< Layout only for unit tests with no attribute requirements
 } LayoutId;
 
 typedef struct {
@@ -58,10 +58,10 @@ typedef struct {
 //! context in which the layout is displayed.
 typedef enum {
   LayoutLayerModeNone = 0,
-  LayoutLayerModePeek, //!< Overlay-style mode shown similar to a partially obstructing HUD
-  LayoutLayerModePinnedFat, //!< Menu-style mode in the Timeline app (fat, first item)
-  LayoutLayerModePinnedThin, //!< Menu-style mode in the Timeline app (thin, second item)
-  LayoutLayerModeCard, //!< Card mode, shows details of a TimelineItem
+  LayoutLayerModePeek,        //!< Overlay-style mode shown similar to a partially obstructing HUD
+  LayoutLayerModePinnedFat,   //!< Menu-style mode in the Timeline app (fat, first item)
+  LayoutLayerModePinnedThin,  //!< Menu-style mode in the Timeline app (thin, second item)
+  LayoutLayerModeCard,        //!< Card mode, shows details of a TimelineItem
   NumLayoutLayerModes,
 } LayoutLayerMode;
 
@@ -89,7 +89,7 @@ typedef struct LayoutLayer *(*LayoutLayerConstructor)(const LayoutLayerConfig *c
 typedef bool (*LayoutVerifier)(bool existing_attributes[]);
 
 #pragma push_macro("GSize")
-#undef GSize // [FBO] ugly work around for rogue macro
+#undef GSize  // [FBO] ugly work around for rogue macro
 //! Get the size of the content of a layout. This is defined by the length of the text and
 //! the size of the icons contained within the attributes.
 //! @param ctx a pointer to the GContext in which the layout is rendered
@@ -104,7 +104,7 @@ typedef void (*LayerLayerModeSetter)(struct LayoutLayer *layout, LayoutLayerMode
 typedef const LayoutColors *(*LayoutLayerColorsGetter)(const struct LayoutLayer *layout);
 #endif
 
-typedef void* (*LayoutLayerContextGetter)(struct LayoutLayer *layout);
+typedef void *(*LayoutLayerContextGetter)(struct LayoutLayer *layout);
 
 //! methods for the LayoutLayer type.
 typedef struct {
@@ -119,10 +119,10 @@ typedef struct {
 
 //! Data structure of a LayoutLayer.
 typedef struct LayoutLayer {
-  Layer layer; //!< The Layer underlying the LayoutLayer
-  LayoutLayerMode mode; //!< The mode the LayoutLayer was created with
-  AttributeList *attributes; //!< A pointer to the LayoutLayer's Attributes
-  const LayoutLayerImpl *impl; //!< The implementation (constructor, destructor, methods)
+  Layer layer;                  //!< The Layer underlying the LayoutLayer
+  LayoutLayerMode mode;         //!< The mode the LayoutLayer was created with
+  AttributeList *attributes;    //!< A pointer to the LayoutLayer's Attributes
+  const LayoutLayerImpl *impl;  //!< The implementation (constructor, destructor, methods)
 } LayoutLayer;
 
 struct LayoutLayerConfig {

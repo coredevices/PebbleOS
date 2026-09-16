@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-typedef void* IteratorState;
+typedef void *IteratorState;
 
 typedef bool (*IteratorCallback)(IteratorState state);
 
@@ -17,15 +17,14 @@ typedef struct {
   IteratorState state;
 } Iterator;
 
-#define ITERATOR_EMPTY ((Iterator){ 0, 0, 0 })
+#define ITERATOR_EMPTY ((Iterator){0, 0, 0})
 
-void iter_init(Iterator* iter, IteratorCallback next, IteratorCallback prev, IteratorState state);
+void iter_init(Iterator *iter, IteratorCallback next, IteratorCallback prev, IteratorState state);
 
 //! @return true if successfully moved to next node
-bool iter_next(Iterator* iter);
+bool iter_next(Iterator *iter);
 
 //! @return true if successfully moved to previous node
-bool iter_prev(Iterator* iter);
+bool iter_prev(Iterator *iter);
 
-IteratorState iter_get_state(Iterator* iter);
-
+IteratorState iter_get_state(Iterator *iter);

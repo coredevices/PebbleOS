@@ -4,4 +4,3 @@
 #pragma once
 
 void new_timer_service_init(void);
-

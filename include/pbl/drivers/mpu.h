@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 typedef enum MpuCachePolicy {
   MpuCachePolicy_NotCacheable,
   MpuCachePolicy_WriteThrough,
@@ -37,14 +36,14 @@ typedef enum MpuPermissions {
 // mask required by the hardware; the ARMv8-M backend programs the limit
 // register directly. Callers never see these implementation details.
 typedef struct MpuRegion {
-  uint8_t region_num:4;
-  bool enabled:1;
+  uint8_t region_num : 4;
+  bool enabled : 1;
   // Allow instruction fetch from this region. Maps to XN=0 in the
   // hardware encoding (RASR.XN on ARMv7-M, RBAR.XN on ARMv8-M). The
   // default (false) sets XN=1 -- safer, since most regions hold data
   // and shouldn't be executable. Flash, App RAM, Worker RAM and any
   // text section relocated to RAM need to opt in.
-  bool executable:1;
+  bool executable : 1;
   uintptr_t base_address;
   uint32_t size;
   MpuCachePolicy cache_policy;
@@ -55,13 +54,12 @@ void mpu_enable(void);
 
 void mpu_disable(void);
 
-void mpu_set_region(const MpuRegion* region);
+void mpu_set_region(const MpuRegion *region);
 
 MpuRegion mpu_get_region(int region_num);
 
-void mpu_get_register_settings(const MpuRegion* region, uint32_t *base_address_reg,
+void mpu_get_register_settings(const MpuRegion *region, uint32_t *base_address_reg,
                                uint32_t *attributes_reg);
-
 
 bool mpu_memory_is_cachable(const void *addr);
 

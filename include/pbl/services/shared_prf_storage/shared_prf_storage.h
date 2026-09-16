@@ -41,18 +41,15 @@ void shared_prf_storage_set_root_keys(SM128BitKey *keys_in);
 //! Returns true if there is a valid pairing, otherwise false.
 //! Out params are only valid if the function returns true
 //! Pass in NULL for any values that you aren't interested in
-bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out,
-                                             char *name_out, bool *requires_address_pinning_out,
-                                             uint8_t *flags);
+bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out, char *name_out,
+                                             bool *requires_address_pinning_out, uint8_t *flags);
 
 //! @param pairing_info Data structure containing all the pairing info available.
 //! @param name Optional device name to store. Pass NULL if not available.
 //! @param requires_address_pinning Whether the pairing requires address pinning.
 //! @param flags Pairing flags to store.
-void shared_prf_storage_store_ble_pairing_data(const SMPairingInfo *pairing_info,
-                                               const char *name,
-                                               bool requires_address_pinning,
-                                               uint8_t flags);
+void shared_prf_storage_store_ble_pairing_data(const SMPairingInfo *pairing_info, const char *name,
+                                               bool requires_address_pinning, uint8_t flags);
 
 void shared_prf_storage_erase_ble_pairing_data(void);
 
@@ -80,8 +77,7 @@ bool shared_prf_storage_get_bt_classic_pairing_data(BTDeviceAddress *addr_out,
 
 void shared_prf_storage_store_bt_classic_pairing_data(BTDeviceAddress *addr,
                                                       const char *device_name,
-                                                      SM128BitKey *link_key,
-                                                      uint8_t platform_bits);
+                                                      SM128BitKey *link_key, uint8_t platform_bits);
 
 void shared_prf_storage_store_platform_bits(uint8_t platform_bits);
 

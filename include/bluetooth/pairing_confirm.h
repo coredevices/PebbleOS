@@ -12,8 +12,7 @@ typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
 //! @param[in] ctx The pairing request context, as previously passed to
 //! bt_driver_cb_pairing_confirm_handle_request.
 //! @param[in] is_confirmed Pass true if the user confirmed the pairing.
-void bt_driver_pairing_confirm(const PairingUserConfirmationCtx *ctx,
-                               bool is_confirmed);
+void bt_driver_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confirmed);
 
 //! @param[in] ctx Pointer to opaque BT-driver-implementation specific context. The function can
 //! use the pointer value this to distinguish one pairing process from another, but the pointer

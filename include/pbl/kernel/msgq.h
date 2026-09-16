@@ -18,11 +18,11 @@ struct pbl_msgq {
 };
 
 #define PBL_MSGQ_INITIALIZER(buffer, size, max) \
-  { .buf = (buffer), .msg_size = (size), .max_msgs = (max) }
+  {.buf = (buffer), .msg_size = (size), .max_msgs = (max)}
 
 //! A file-scope compound literal has static storage duration, so the buffer
 //! needs no name and the definition can be prefixed with static.
-#define PBL_MSGQ_STATIC_BUF(size, max) ((uint32_t[((size) * (max) + 3) / 4]){0})
+#define PBL_MSGQ_STATIC_BUF(size, max) ((uint32_t[((size) *(max) + 3) / 4]){0})
 
 #define PBL_MSGQ_DEFINE(name, size, max) \
   struct pbl_msgq name = PBL_MSGQ_INITIALIZER(PBL_MSGQ_STATIC_BUF(size, max), size, max)

@@ -8,19 +8,13 @@
 #define PBL_ANALYTICS_KEY(key_name) PBL_ANALYTICS_KEY__##key_name
 
 enum pbl_analytics_key {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) \
-    PBL_ANALYTICS_KEY(key),
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) \
-    PBL_ANALYTICS_KEY(key),
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) \
-    PBL_ANALYTICS_KEY(key),
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) \
-    PBL_ANALYTICS_KEY(key),
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) \
-    PBL_ANALYTICS_KEY(key),
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) \
-    PBL_ANALYTICS_KEY(key),
-  #include "analytics.def"
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) PBL_ANALYTICS_KEY(key),
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) PBL_ANALYTICS_KEY(key),
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) PBL_ANALYTICS_KEY(key),
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) PBL_ANALYTICS_KEY(key),
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) PBL_ANALYTICS_KEY(key),
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) PBL_ANALYTICS_KEY(key),
+#include "analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -62,8 +56,7 @@ void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
 #define PBL_ANALYTICS_TIMER_START(key_name) \
   sys_pbl_analytics_timer_start(PBL_ANALYTICS_KEY(key_name))
 
-#define PBL_ANALYTICS_TIMER_STOP(key_name) \
-  sys_pbl_analytics_timer_stop(PBL_ANALYTICS_KEY(key_name))
+#define PBL_ANALYTICS_TIMER_STOP(key_name) sys_pbl_analytics_timer_stop(PBL_ANALYTICS_KEY(key_name))
 
 #define PBL_ANALYTICS_ADD(key_name, amount) \
   sys_pbl_analytics_add(PBL_ANALYTICS_KEY(key_name), amount)

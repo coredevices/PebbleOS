@@ -16,8 +16,8 @@ typedef enum FirstUseSource {
 } FirstUseSource;
 
 typedef enum MuteBitfield {
-  MuteBitfield_None     = 0b00000000,
-  MuteBitfield_Always   = 0b01111111,
+  MuteBitfield_None = 0b00000000,
+  MuteBitfield_Always = 0b01111111,
   MuteBitfield_Weekdays = 0b00111110,
   MuteBitfield_Weekends = 0b01000001,
 } MuteBitfield;

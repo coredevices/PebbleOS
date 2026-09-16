@@ -10,11 +10,11 @@
 #define NUM_CONVERSIONS 40
 
 #if defined(CONFIG_SOC_NRF52)
-# include <hal/nrf_saadc.h>
+#include <hal/nrf_saadc.h>
 
 typedef const struct VoltageMonitorDevice {
-  NRF_SAADC_Type *const adc; ///< One of ADCX. For example ADC1.
-  const uint8_t adc_channel; ///< One of ADC_Channel_*
+  NRF_SAADC_Type *const adc;  ///< One of ADCX. For example ADC1.
+  const uint8_t adc_channel;  ///< One of ADC_Channel_*
   const nrf_saadc_input_t input;
 } VoltageMonitorDevice;
 
@@ -26,9 +26,9 @@ typedef const struct VoltageMonitorDevice {
 #else
 
 typedef const struct VoltageMonitorDevice {
-  ADC_TypeDef *const adc; ///< One of ADCX. For example ADC1.
-  const uint8_t adc_channel; ///< One of ADC_Channel_*
-  uint32_t clock_ctrl;  ///< Peripheral clock control flag
+  ADC_TypeDef *const adc;     ///< One of ADCX. For example ADC1.
+  const uint8_t adc_channel;  ///< One of ADC_Channel_*
+  uint32_t clock_ctrl;        ///< Peripheral clock control flag
   const InputConfig input;
 } VoltageMonitorDevice;
 

@@ -14,12 +14,12 @@
 
 // Number of mono samples per I2S half-buffer. The stereo buffer holds 2x this
 // many 16-bit samples. With SAMPLE_RATE=16000, 512 mono samples = 32ms.
-#define NRF5_AUDIO_I2S_BUF_SAMPLES_MONO   512
-#define NRF5_AUDIO_I2S_BUF_COUNT          2
+#define NRF5_AUDIO_I2S_BUF_SAMPLES_MONO 512
+#define NRF5_AUDIO_I2S_BUF_COUNT 2
 
 // Mono bytes held in the circular buffer (caller <-> DMA). 4096 bytes = 2048
 // mono samples = 128ms at 16kHz.
-#define NRF5_AUDIO_CIRC_BUF_SIZE_BYTES    4096
+#define NRF5_AUDIO_CIRC_BUF_SIZE_BYTES 4096
 
 // Request a refill from the caller whenever this much mono-data space is free.
 #define NRF5_AUDIO_REFILL_THRESHOLD_BYTES 1024

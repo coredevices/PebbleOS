@@ -12,7 +12,7 @@ typedef struct PebblePhoneCaller {
 //! @param number The phone number for this caller
 //! @param name The name of the caller
 //! @return Pointer to new caller
-PebblePhoneCaller* phone_call_util_create_caller(const char *number, const char *name);
+PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name);
 
 //! Destroys a caller previously created with \ref phone_call_util_create_caller
 //! @param caller The caller to free

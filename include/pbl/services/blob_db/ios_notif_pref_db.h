@@ -18,7 +18,6 @@
 //! This db stores preferences on different types of notifications so the FW can perform
 //! some processing / filtering.
 
-
 typedef struct {
   AttributeList attr_list;
   TimelineItemActionGroup action_group;
@@ -28,7 +27,7 @@ typedef struct {
 //! @param length The length of the app_id
 //! @return A pointer to the prefs, NULL if none are available
 //! @note The caller must cleanup with ios_notif_pref_db_free_prefs()
-iOSNotifPrefs* ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length);
+iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length);
 
 //! @param prefs A pointer to prefs returned by ios_notif_pref_db_get_prefs()
 void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs);
@@ -61,7 +60,7 @@ status_t ios_notif_pref_db_compact(void);
 
 status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out);
 
-BlobDBDirtyItem* ios_notif_pref_db_get_dirty_list(void);
+BlobDBDirtyItem *ios_notif_pref_db_get_dirty_list(void);
 
 status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len);
 

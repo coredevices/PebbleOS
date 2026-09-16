@@ -20,11 +20,10 @@
 #include <time.h>
 
 #define DLS_HEXDUMP(data, length) \
-          PBL_HEXDUMP_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, data, length)
-
+  PBL_HEXDUMP_D(LOG_DOMAIN_DATA_LOGGING, LOG_LEVEL_DEBUG, data, length)
 
 // File name is formatted as: ("%s%d", DLS_FILE_NAME_PREFIX, session_id)
-#define DLS_FILE_NAME_PREFIX          "dls_storage_"
+#define DLS_FILE_NAME_PREFIX "dls_storage_"
 static const uint32_t DLS_FILE_NAME_MAX_LEN = 20;
 static const uint32_t DLS_FILE_INIT_SIZE_BYTES = KiBYTES(4);
 
@@ -42,8 +41,8 @@ static const uint32_t DLS_MAX_NUM_SESSIONS = 20;
 static const uint32_t DLS_TOTAL_STORAGE_BYTES = KiBYTES(640);
 
 // Maximum amount of space allowed for data over and above the minimum allotment per session
-#define DLS_MAX_DATA_BYTES  (DLS_TOTAL_STORAGE_BYTES  \
-                             - (DLS_MAX_NUM_SESSIONS * DLS_FILE_INIT_SIZE_BYTES))
+#define DLS_MAX_DATA_BYTES \
+  (DLS_TOTAL_STORAGE_BYTES - (DLS_MAX_NUM_SESSIONS * DLS_FILE_INIT_SIZE_BYTES))
 
 typedef enum {
   //! A session is active when it's first created and it's still being logged to.
@@ -52,7 +51,6 @@ typedef enum {
   //! session has since closed or the app has closed it by calling dls_finish.
   DataLoggingStatusInactive = 0x02,
 } DataLoggingStatus;
-
 
 // Endpoint commands
 typedef enum {
@@ -74,7 +72,6 @@ typedef enum {
 //! DataLoggingEndpointCmd for the values of the other 7 bits.
 static const uint8_t DLS_ENDPOINT_CMD_MASK = 0x7f;
 
-
 #define DLS_INVALID_FILE (-1)
 typedef struct DataLoggingSessionStorage {
   //! Handle to the pfs file we are using. Set to DLS_INVALID_FILE if no storage yet
@@ -89,7 +86,6 @@ typedef struct DataLoggingSessionStorage {
   //! Number of unread bytes in storage
   uint32_t num_bytes;
 } DataLoggingSessionStorage;
-
 
 // Our little comm state machine...
 //
@@ -114,7 +110,7 @@ typedef struct {
   //! watch knows about.
   uint8_t session_id;
 
-  DataLoggingSessionCommState state:8;
+  DataLoggingSessionCommState state : 8;
 
   //! The number of times this session got nacked
   uint8_t nack_count;
@@ -127,37 +123,35 @@ typedef struct {
   RtcTicks ack_timeout;
 } DataLoggingSessionComm;
 
-
 //! Information needed while a session is active (watch app still adding more data).
 typedef struct {
   struct pbl_mutex mutex;
-  SharedCircularBuffer buffer;    //! A data buffer
+  SharedCircularBuffer buffer;  //! A data buffer
   SharedCircularBufferClient buffer_client;
-  uint8_t *buffer_storage;        //! Storage for the buffer
+  uint8_t *buffer_storage;  //! Storage for the buffer
   //! true if buffer_storage is in kernel heap, else it's in dls_create() caller's heap
-  bool buffer_in_kernel_heap:1;
+  bool buffer_in_kernel_heap : 1;
   //! bool used to rate control how often we ask the system task to write us out to flash.
-  bool write_request_pending:1;
+  bool write_request_pending : 1;
   //! bool used to record the fact that a session should be inactivated once it is unlocked
   //! (by dls_unlock_session())
-  bool inactivate_pending:1;
+  bool inactivate_pending : 1;
   //! Incremented/decremented under global list mutex. This structure can only be freed up when
   //! this reaches 0.
   uint8_t open_count;
 } DataLoggingActiveState;
 
-
 //! Data logging session metadata, struct in memory
 typedef struct DataLoggingSession {
   // FIXME use a ListNode instead of this custom list
-  struct DataLoggingSession *next; //!< The next logging_session in the linked list
+  struct DataLoggingSession *next;  //!< The next logging_session in the linked list
 
   Uuid app_uuid;
   uint32_t tag;
   PebbleTask task;
 
-  DataLoggingItemType item_type:4;
-  DataLoggingStatus status:4;
+  DataLoggingItemType item_type : 4;
+  DataLoggingStatus status : 4;
   uint16_t item_size;
 
   // A timestamp of when this session was first created.
@@ -171,7 +165,6 @@ typedef struct DataLoggingSession {
   DataLoggingActiveState *data;
 } DataLoggingSession;
 
-
 bool dls_private_send_session(DataLoggingSession *logging_session, bool empty);
 
 //! Must be called on the system task
@@ -182,7 +175,6 @@ void dls_private_handle_disconnect(void *data);
 bool dls_private_get_send_enable(void);
 void dls_private_set_send_enable(bool setting);
 
-
 typedef struct PACKED {
   uint8_t command;
   uint8_t session_id;
@@ -191,20 +183,18 @@ typedef struct PACKED {
   uint8_t bytes[];
 } DataLoggingSendDataMessage;
 
-
 //! Size of the buffer we create for buffered sessions. This is the largest item size allowed
 //! for buffered sessions.
 static const uint32_t DLS_SESSION_MAX_BUFFERED_ITEM_SIZE = 300;
 
 //! Size of the buffer we create for buffered sessions. This must be 1 bigger than
 //! DLS_SESSION_MAX_BUFFERED_ITEM_SIZE because we build a circular buffer out of it
-#define DLS_SESSION_MIN_BUFFER_SIZE  (DLS_SESSION_MAX_BUFFERED_ITEM_SIZE + 1)
+#define DLS_SESSION_MIN_BUFFER_SIZE (DLS_SESSION_MAX_BUFFERED_ITEM_SIZE + 1)
 
 //! Max payload we can send when we send logging data to the phone. This is the largest item
 //! size allowed for non-buffered sessions.
-static const uint32_t DLS_ENDPOINT_MAX_PAYLOAD = (COMM_MAX_OUTBOUND_PAYLOAD_SIZE
-                                                  - sizeof(DataLoggingSendDataMessage));
-
+static const uint32_t DLS_ENDPOINT_MAX_PAYLOAD =
+    (COMM_MAX_OUTBOUND_PAYLOAD_SIZE - sizeof(DataLoggingSendDataMessage));
 
 //! Unit tests only
 int dls_test_read(DataLoggingSession *logging_session, uint8_t *buffer, int num_bytes);

@@ -9,11 +9,11 @@
 // is included by the various number of bt_driver implementations. They don't know what "mfg"
 // is, etc.
 // NOTE: These sizes are asserted in a .c file to be in sync with the FW
-#define MODEL_NUMBER_LEN  (10) // MFG_HW_VERSION_SIZE + 1
-#define MANUFACTURER_LEN  (18) // sizeof("Pebble Technology")
-#define SERIAL_NUMBER_LEN (13) // MFG_SERIAL_NUMBER_SIZE + 1
-#define FW_REVISION_LEN   (32) // FW_METADATA_VERSION_TAG_BYTES)
-#define SW_REVISION_LEN   (8)  // Fmt: xx.xxx\0
+#define MODEL_NUMBER_LEN (10)   // MFG_HW_VERSION_SIZE + 1
+#define MANUFACTURER_LEN (18)   // sizeof("Pebble Technology")
+#define SERIAL_NUMBER_LEN (13)  // MFG_SERIAL_NUMBER_SIZE + 1
+#define FW_REVISION_LEN (32)    // FW_METADATA_VERSION_TAG_BYTES)
+#define SW_REVISION_LEN (8)     // Fmt: xx.xxx\0
 
 typedef struct PACKED DisInfo {
   char model_number[MODEL_NUMBER_LEN];

@@ -11,7 +11,7 @@ void firmware_update_init(void);
 
 unsigned int firmware_update_get_percent_progress(void);
 
-void firmware_update_event_handler(PebbleSystemMessageEvent* event);
+void firmware_update_event_handler(PebbleSystemMessageEvent *event);
 void firmware_update_pb_event_handler(PebblePutBytesEvent *event);
 
 typedef enum {

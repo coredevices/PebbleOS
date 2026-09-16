@@ -23,7 +23,6 @@
 
 typedef struct SettingsFile SettingsFile;
 
-
 //! Initialize the persist service.
 void persist_service_init(void);
 

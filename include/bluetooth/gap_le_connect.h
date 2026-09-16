@@ -71,7 +71,7 @@ typedef struct PACKED BleConnectionUpdateCompleteEvent {
   //! the address type.
   BTDeviceAddress dev_address;
   HciStatusCode status;
-} BleConnectionUpdateCompleteEvent; // 7.7.65.3
+} BleConnectionUpdateCompleteEvent;  // 7.7.65.3
 
 // Note: This will likely change to work with Dialog
 // "Encryption Change Event" - v4.2 7.7.8
