@@ -52,14 +52,14 @@ static void prv_set_sleep_session(char *buffer, size_t buffer_size, int32_t slee
                            end_hours, end_minutes, false);
 }
 
-static void prv_set_deep_sleep(char *buffer, size_t buffer_size, int32_t sleep_duration,
-                               void *i18n_owner) {
-  if (sleep_duration <= 0) {
+static void prv_set_duration(char *buffer, size_t buffer_size, int32_t duration,
+                             void *i18n_owner) {
+  if (duration <= 0) {
     strncpy(buffer, EN_DASH, buffer_size);
     return;
   }
 
-  health_util_format_hours_and_minutes(buffer, buffer_size, sleep_duration, i18n_owner);
+  health_util_format_hours_and_minutes(buffer, buffer_size, duration, i18n_owner);
 }
 
 static void prv_set_avg(char *buffer, size_t buffer_size, int32_t daily_avg, void *i18n_owner) {
@@ -113,16 +113,48 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
   heading = &card_data->headings[card_data->num_headings++];
 
   *heading = (HealthDetailHeading) {
+    // Sharing the row with AWAKE leaves half a heading for the label, too narrow for the full
+    // wording on the smallest display
+#if PBL_DISPLAY_WIDTH < 200
+    .primary_label = (char *)i18n_get("DEEP", card_data),
+#else
     .primary_label = (char *)i18n_get("DEEP SLEEP", card_data),
+#endif
     .primary_value = app_zalloc_check(buffer_len),
+    .secondary_label = (char *)i18n_get("AWAKE", card_data),
+    .secondary_value = app_zalloc_check(buffer_len),
     .fill_color = PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorWhite),
 #if PBL_BW
     .outline_color = GColorBlack,
 #endif
   };
 
-  prv_set_deep_sleep(heading->primary_value, buffer_len,
-                     health_data_current_deep_sleep_get(health_data), card_data);
+  prv_set_duration(heading->primary_value, buffer_len,
+                   health_data_current_deep_sleep_get(health_data), card_data);
+
+  prv_set_duration(heading->secondary_value, buffer_len,
+                   health_data_sleep_awake_get(health_data), card_data);
+
+#if MAX_NUM_HEADINGS >= 3
+  heading = &card_data->headings[card_data->num_headings++];
+
+  *heading = (HealthDetailHeading) {
+    .primary_label = (char *)i18n_get("NIGHT ADJ", card_data),
+    .primary_value = app_zalloc_check(buffer_len),
+    .secondary_label = (char *)i18n_get("NAPS", card_data),
+    .secondary_value = app_zalloc_check(buffer_len),
+    .fill_color = PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorWhite),
+#if PBL_BW
+    .outline_color = GColorBlack,
+#endif
+  };
+
+  prv_set_duration(heading->primary_value, buffer_len,
+                   health_data_sleep_night_adjusted_get(health_data), card_data);
+
+  prv_set_duration(heading->secondary_value, buffer_len,
+                   health_data_sleep_naps_get(health_data), card_data);
+#endif
 
   HealthDetailSubtitle *subtitle = &card_data->subtitles[card_data->num_subtitles++];
 

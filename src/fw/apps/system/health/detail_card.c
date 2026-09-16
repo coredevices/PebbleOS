@@ -10,6 +10,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/health_util.h"
 #include "shell/prefs.h"
+#include "util/math.h"
 #include "pbl/util/size.h"
 
 // Compile-time display offset calculations
@@ -43,7 +44,11 @@ static void prv_draw_headings(HealthDetailCard *detail_card, GContext *ctx, cons
     header_rect.origin.y += PBL_IF_RECT_ELSE(detail_card->y_origin, header_y_origin);
     header_rect.size.h = rect_height;
 
+#if PBL_ROUND
+    detail_card->y_origin = header_rect.origin.y + rect_height;
+#else
     detail_card->y_origin += rect_height + rect_padding;
+#endif
 
 #if PBL_BW
     const GRect inner_rect = grect_inset(header_rect, GEdgeInsets(1));
@@ -118,9 +123,14 @@ static void prv_draw_subtitles(HealthDetailCard *detail_card, GContext *ctx, con
     }
 
     GRect subtitle_rect = grect_inset(layer->bounds, GEdgeInsets(rect_padding));
-    // On taller round displays the subtitle moves down to balance the spread-out headings
-    subtitle_rect.origin.y +=
-        PBL_IF_RECT_ELSE(detail_card->y_origin, (PBL_DISPLAY_HEIGHT >= 200) ? 170 : 125);
+#if PBL_ROUND
+    // On taller round displays the subtitle moves down to balance the spread-out headings, but
+    // never so far up that it collides with the headings above it
+    subtitle_rect.origin.y += MAX((PBL_DISPLAY_HEIGHT >= 200) ? 170 : 125,
+                                  detail_card->y_origin + 5);
+#else
+    subtitle_rect.origin.y += detail_card->y_origin;
+#endif
     subtitle_rect.size.h = rect_height;
 
     detail_card->y_origin += rect_height + rect_padding;

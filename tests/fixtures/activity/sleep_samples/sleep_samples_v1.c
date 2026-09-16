@@ -495,6 +495,9 @@ AlgDlsMinuteData *activity_sample_sleep_v1_watch_on_table(int *len) {
   //> TEST_TOTAL 0
   //> TEST_TOTAL_MIN 0
   //> TEST_TOTAL_MAX 0
+  //> TEST_AWAKE_MIN 0
+  //> TEST_AWAKE_MIN_MIN 0
+  //> TEST_AWAKE_MIN_MAX 0
   //> TEST_DEEP 0
   //> TEST_DEEP_MIN 0
   //> TEST_DEEP_MAX 0
@@ -2087,6 +2090,10 @@ AlgDlsMinuteData *activity_sample_sleep_v1_3(int *len) {
   //> TEST_IN_DEEP_SLEEP 0
   //> TEST_IN_DEEP_SLEEP_MIN 0
   //> TEST_IN_DEEP_SLEEP_MAX 0
+  // The breakdown above records two 5 minute awake periods inside this night
+  //> TEST_AWAKE_MIN 5
+  //> TEST_AWAKE_MIN_MIN 2
+  //> TEST_AWAKE_MIN_MAX 10
   //> TEST_WEIGHT 1.0
   // list of: { steps, orientation, vmc}
   static AlgDlsMinuteData samples[] = { 

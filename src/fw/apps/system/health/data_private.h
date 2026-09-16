@@ -21,6 +21,8 @@ typedef struct HealthData {
   int32_t sleep_data[DAYS_PER_WEEK]; //!< Sleep history for the past week
   int32_t typical_sleep; //! Typical sleep for the current week day
   int32_t deep_sleep; //!< Amount of deep sleep last night
+  int32_t sleep_awake; //!< Time spent awake during last night's interruptions
+  int32_t sleep_naps; //!< Portion of the sleep total spent in naps
 
   int32_t sleep_start; //!< When the user went to sleep (seconds after midnight)
   int32_t sleep_end; //!< When the user woke up (seconds after midnight)

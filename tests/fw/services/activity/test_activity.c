@@ -446,6 +446,8 @@ typedef struct {
 
   uint8_t orientation;
 
+  uint16_t sleep_awake_minutes;
+
 } AlgorithmState;
 static AlgorithmState s_test_alg_state;
 
@@ -615,6 +617,16 @@ bool activity_algorithm_metrics_changed_notification(void) {
   s_test_alg_state.steps = 0;
   s_test_alg_state.rate_last_steps = 0;
   s_test_alg_state.rate_last_update_time = rtc_get_time();
+  return true;
+}
+
+bool activity_algorithm_reset_sleep_awake_minutes(void) {
+  s_test_alg_state.sleep_awake_minutes = 0;
+  return true;
+}
+
+bool activity_algorithm_get_sleep_awake_minutes(uint16_t *awake_minutes) {
+  *awake_minutes = s_test_alg_state.sleep_awake_minutes;
   return true;
 }
 
@@ -1523,6 +1535,45 @@ void test_activity__sleep_derived_metrics(void) {
   activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, &value);
   cl_assert_equal_i(value, 2 * SECONDS_PER_HOUR + 20 * SECONDS_PER_MINUTE
                     /* 2:20am in minutes */);
+}
+
+
+// ---------------------------------------------------------------------------------------
+// The algorithm keeps its awake minutes in RAM, so they restart from zero on a reboot while
+// the metric is restored from the settings file. Verify the day's total is kept and that later
+// interruptions accumulate on top of it.
+void test_activity__sleep_interruptions_survive_algorithm_restart(void) {
+  int32_t awake;
+
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  // Same night as test_activity__sleep_derived_metrics: awake until 10pm, 30 minutes falling
+  // asleep, then a sleep session that the morning walk closes
+  prv_feed_canned_accel_data(5 * SECONDS_PER_HOUR, 50, ActivitySleepStateAwake);
+  prv_feed_canned_accel_data(30 * SECONDS_PER_MINUTE, 5, ActivitySleepStateAwake);
+  prv_feed_canned_accel_data(120 * SECONDS_PER_MINUTE, 0, ActivitySleepStateLightSleep);
+  prv_feed_canned_accel_data(60 * SECONDS_PER_MINUTE, 0, ActivitySleepStateRestfulSleep);
+
+  s_test_alg_state.sleep_awake_minutes = 9;
+  prv_feed_canned_accel_data(30 * SECONDS_PER_MINUTE, 50, ActivitySleepStateAwake);
+
+  activity_get_metric(ActivityMetricSleepAwakeSeconds, 1, &awake);
+  cl_assert_equal_i(awake, 9 * SECONDS_PER_MINUTE);
+
+  // The algorithm starts over, as it does after a reboot
+  s_test_alg_state.sleep_awake_minutes = 0;
+  prv_feed_canned_accel_data(30 * SECONDS_PER_MINUTE, 50, ActivitySleepStateAwake);
+
+  activity_get_metric(ActivityMetricSleepAwakeSeconds, 1, &awake);
+  cl_assert_equal_i(awake, 9 * SECONDS_PER_MINUTE);
+
+  // Interruptions detected after the restart add to the day's total
+  s_test_alg_state.sleep_awake_minutes = 4;
+  prv_feed_canned_accel_data(30 * SECONDS_PER_MINUTE, 50, ActivitySleepStateAwake);
+
+  activity_get_metric(ActivityMetricSleepAwakeSeconds, 1, &awake);
+  cl_assert_equal_i(awake, 13 * SECONDS_PER_MINUTE);
 }
 
 
