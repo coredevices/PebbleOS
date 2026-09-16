@@ -233,8 +233,10 @@ bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
   return false;
 }
 
+static PreferredContentSize s_content_size;
+
 PreferredContentSize system_theme_get_content_size(void) {
-  return PreferredContentSizeDefault;
+  return s_content_size;
 }
 
 void vibes_enqueue_custom_pattern(VibePattern pattern) {
@@ -288,6 +290,8 @@ void test_launcher_menu_layer__initialize(void) {
 
   // Default to showing bitmap icons
   s_use_pdc_icons = false;
+
+  s_content_size = PreferredContentSizeDefault;
 }
 
 void app_glance_db_deinit(void);
@@ -401,6 +405,20 @@ static void prv_insert_glances_for_app_selected_and_apps_above_and_below_with_gl
 }
 
 void test_launcher_menu_layer__app_selected_and_apps_above_and_below_with_glances(void) {
+  prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
+  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_launcher_menu_layer__extra_large_with_glances(void) {
+  s_content_size = PreferredContentSizeExtraLarge;
+  prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
+  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_launcher_menu_layer__medium_with_glances(void) {
+  s_content_size = PreferredContentSizeMedium;
   prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));

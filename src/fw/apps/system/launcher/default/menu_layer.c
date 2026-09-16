@@ -12,10 +12,73 @@
 #include "resource/resource_ids.auto.h"
 #include "system/passert.h"
 #include "shell/prefs.h"
+#include "shell/system_theme.h"
 #include "pbl/util/attributes.h"
 
 #define LAUNCHER_MENU_LAYER_CONTENT_INDICATOR_LAYER_HEIGHT (32)
 #define LAUNCHER_MENU_LAYER_GENERIC_APP_ICON (RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON)
+
+////////////////////////
+// Styles
+
+static const LauncherMenuLayerStyle s_styles[NumPreferredContentSizes] = {
+  //! @note this is the same as Medium until Small is designed
+  [PreferredContentSizeSmall] =
+      {
+        .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
+        .subtitle_font_key = FONT_KEY_GOTHIC_14,
+#if PBL_RECT
+        .cell_height = LAUNCHER_MENU_LAYER_MIN_CELL_HEIGHT,
+#else
+        .focused_cell_height = LAUNCHER_MENU_LAYER_MIN_FOCUSED_CELL_HEIGHT,
+        .unfocused_cell_height = LAUNCHER_MENU_LAYER_MIN_UNFOCUSED_CELL_HEIGHT,
+#endif
+      },
+  [PreferredContentSizeMedium] =
+      {
+        .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
+        .subtitle_font_key = FONT_KEY_GOTHIC_14,
+#if PBL_RECT
+        .cell_height = LAUNCHER_MENU_LAYER_MIN_CELL_HEIGHT,
+#else
+        .focused_cell_height = LAUNCHER_MENU_LAYER_MIN_FOCUSED_CELL_HEIGHT,
+        .unfocused_cell_height = LAUNCHER_MENU_LAYER_MIN_UNFOCUSED_CELL_HEIGHT,
+#endif
+      },
+  [PreferredContentSizeLarge] =
+      {
+        .title_font_key = FONT_KEY_GOTHIC_24_BOLD,
+        .subtitle_font_key = FONT_KEY_GOTHIC_18,
+        .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
+#if PBL_RECT
+        .cell_height = 50,
+#else
+        .focused_cell_height = 55,
+        .unfocused_cell_height = 45,
+#endif
+      },
+  [PreferredContentSizeExtraLarge] = {
+    .title_font_key = FONT_KEY_GOTHIC_28_BOLD,
+    .subtitle_font_key = FONT_KEY_GOTHIC_24,
+    .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
+#if PBL_RECT
+    .cell_height = 60,
+#else
+    .focused_cell_height = 66,
+    .unfocused_cell_height = 56,
+#endif
+  },
+};
+
+const LauncherMenuLayerStyle *launcher_menu_layer_get_style(void) {
+  return &s_styles[system_theme_get_content_size()];
+}
+
+#if PBL_ROUND
+static int prv_num_unfocused_rows_per_side(const LauncherMenuLayerStyle *style) {
+  return (DISP_ROWS - style->focused_cell_height) / (2 * style->unfocused_cell_height);
+}
+#endif
 
 ////////////////////////////
 // Misc. callbacks/helpers
@@ -122,14 +185,14 @@ static void prv_menu_layer_draw_row(GContext *ctx, const Layer *cell_layer, Menu
 }
 
 static int16_t prv_menu_layer_get_cell_height(PBL_UNUSED MenuLayer *menu_layer,
-                                              PBL_UNUSED MenuIndex *cell_index,
-                                              PBL_UNUSED void *context) {
+                                              PBL_UNUSED MenuIndex *cell_index, void *context) {
+  LauncherMenuLayer *launcher_menu_layer = context;
+  const LauncherMenuLayerStyle *style = &s_styles[launcher_menu_layer->content_size];
 #if PBL_RECT
-  return LAUNCHER_MENU_LAYER_CELL_RECT_CELL_HEIGHT;
+  return style->cell_height;
 #elif PBL_ROUND
-  return menu_layer_is_index_selected(menu_layer, cell_index)
-             ? LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT
-             : LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT;
+  return menu_layer_is_index_selected(menu_layer, cell_index) ? style->focused_cell_height
+                                                              : style->unfocused_cell_height;
 #else
 #error "Unknown display shape type"
 #endif
@@ -181,8 +244,7 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
   // LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS in launcher_menu_layer_private.h is valid
   const GRect frame = DISP_FRAME;
 
-  launcher_menu_layer->title_font = fonts_get_system_font(LAUNCHER_MENU_LAYER_TITLE_FONT);
-  launcher_menu_layer->subtitle_font = fonts_get_system_font(LAUNCHER_MENU_LAYER_SUBTITLE_FONT);
+  launcher_menu_layer->content_size = system_theme_get_content_size();
 
   Layer *container_layer = &launcher_menu_layer->container_layer;
   layer_init(container_layer, &frame);
@@ -191,10 +253,11 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
   GRect menu_layer_frame = frame;
 #if PBL_ROUND
-  const int top_bottom_inset = (frame.size.h - LAUNCHER_MENU_LAYER_CELL_ROUND_FOCUSED_CELL_HEIGHT -
-                                (2 * LAUNCHER_MENU_LAYER_NUM_UNFOCUSED_ROWS_PER_SIDE *
-                                 LAUNCHER_MENU_LAYER_CELL_ROUND_UNFOCUSED_CELL_HEIGHT)) /
-                               2;
+  const LauncherMenuLayerStyle *style = &s_styles[launcher_menu_layer->content_size];
+  const int top_bottom_inset =
+      (frame.size.h - style->focused_cell_height -
+       (2 * prv_num_unfocused_rows_per_side(style) * style->unfocused_cell_height)) /
+      2;
   const GEdgeInsets menu_layer_frame_insets = GEdgeInsets(top_bottom_inset, 0);
   menu_layer_frame = grect_inset(menu_layer_frame, menu_layer_frame_insets);
 #endif
