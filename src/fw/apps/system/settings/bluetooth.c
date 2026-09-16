@@ -423,13 +423,13 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     ctx->draw_state.clip_box = ctx->dest_bitmap.bounds;
 
     graphics_context_set_text_color(ctx, GColorBlack);
-    GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
+    GFont font = system_theme_get_font(TextStyleFont_MenuCellSubtitle);
     const int16_t horizontal_inset = menu_cell_basic_horizontal_inset() * 3;
     GRect box = cell_layer->bounds;
     box.origin.x = horizontal_inset;
     box.origin.y = menu_cell_basic_cell_height() + (int16_t)9;
     box.size.w -= horizontal_inset * 2;
-    box.size.h = 83;
+    box.size.h = DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - box.origin.y;
 
     if (!data->remote_list_head) {
       if (bt_ctl_is_airplane_mode_on()) {
@@ -445,6 +445,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       // Position the message lower to appear below the paired phone row
       GRect msg_box = box;
       msg_box.origin.y += menu_cell_basic_cell_height() - 10;
+      msg_box.size.h -= menu_cell_basic_cell_height() - 10;
       graphics_draw_text(ctx, i18n_get("Forget this device to pair a new device.", data), font,
                          msg_box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
     }

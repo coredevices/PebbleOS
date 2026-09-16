@@ -222,7 +222,7 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
       if (menu_cell_layer_is_highlighted(cell_layer)) {
         if (data->show_limit_reached_text) {
           // Trying to add a new alarm when list is already full
-          const GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
+          const GFont font = system_theme_get_font(TextStyleFont_MenuCellSubtitle);
 
           box = GRect(0, 0, cell_layer->bounds.size.w, fonts_get_font_height(font));
 
