@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/debug.h"
 #include "syscall_internal.h"
 
 #include "applib/app_logging.h"
@@ -360,9 +359,7 @@ USED uint64_t syscall_stack_restore_target(void) {
   if (prv_psp_in_syscall_stack(psp, s_app_syscall_stack.words) ||
       prv_psp_in_syscall_stack(psp, s_worker_syscall_stack.words)) {
     const uint32_t sp = (uint32_t)prv_get_syscall_sp(); // slot1 = pre-syscall task SP
-    struct pbl_thread_stack_info info;
-    pbl_thread_stack_info(pbl_thread_current(), &info);
-    const uint32_t psplim = (uint32_t)info.start;
+    const uint32_t psplim = (uint32_t)pbl_thread_current()->stack;
     return ((uint64_t)psplim << 32) | sp;
   }
   return 0;
