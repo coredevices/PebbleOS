@@ -96,6 +96,12 @@ static bool s_touch_enabled = true;
 #define PREF_KEY_TOUCH_NAVIGATION_MENU "touchNavMenuEnabled"
 static bool s_touch_navigation_menu_enabled = true;
 
+#define PREF_KEY_CHARGING_BLINK_WHEN_FULL "chargingBlinkWhenFull"
+static bool s_charging_blink_when_full = false;
+
+#define PREF_KEY_CHARGING_VIBE_WHEN_FULL "chargingVibeWhenFull"
+static bool s_charging_vibe_when_full = false;
+
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
 static uint8_t s_motion_sensitivity = 55; // Default to Medium
 
@@ -488,6 +494,16 @@ static bool prv_set_s_touch_navigation_menu_enabled(bool *enabled) {
     touch_nav_set_enabled(prv_touch_navigation_effective());
   }
 #endif
+  return true;
+}
+
+static bool prv_set_s_charging_blink_when_full(bool *enabled) {
+  s_charging_blink_when_full = *enabled;
+  return true;
+}
+
+static bool prv_set_s_charging_vibe_when_full(bool *enabled) {
+  s_charging_vibe_when_full = *enabled;
   return true;
 }
 
@@ -1412,6 +1428,22 @@ bool touch_navigation_menu_is_enabled(void) {
 
 void touch_set_navigation_menu_enabled(bool enable) {
   prv_pref_set(PREF_KEY_TOUCH_NAVIGATION_MENU, &enable, sizeof(enable));
+}
+
+bool charging_blink_when_full_enabled(void) {
+  return s_charging_blink_when_full;
+}
+
+void charging_set_blink_when_full_enabled(bool enable) {
+  prv_pref_set(PREF_KEY_CHARGING_BLINK_WHEN_FULL, &enable, sizeof(enable));
+}
+
+bool charging_vibe_when_full_enabled(void) {
+  return s_charging_vibe_when_full;
+}
+
+void charging_set_vibe_when_full_enabled(bool enable) {
+  prv_pref_set(PREF_KEY_CHARGING_VIBE_WHEN_FULL, &enable, sizeof(enable));
 }
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT

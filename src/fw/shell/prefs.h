@@ -136,6 +136,12 @@ void touch_set_globally_enabled(bool enable);
 bool touch_navigation_menu_is_enabled(void);
 void touch_set_navigation_menu_enabled(bool enable);
 
+bool charging_blink_when_full_enabled(void);
+void charging_set_blink_when_full_enabled(bool enable);
+
+bool charging_vibe_when_full_enabled(void);
+void charging_set_vibe_when_full_enabled(bool enable);
+
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 // Dynamic backlight: how aggressively brightness ramps with ambient light.
 // Every mode keeps the same dim floor; the mode selects the lux level at
