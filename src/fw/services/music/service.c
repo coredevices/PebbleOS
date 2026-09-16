@@ -125,7 +125,9 @@ static bool prv_str_differs(const char *dest, const char *src, size_t src_length
 //! Free the currently-stored album art. Caller must hold the mutex.
 static void prv_free_album_art_locked(void) {
   if (s_music_ctx.album_art) {
-    kernel_free(s_music_ctx.album_art->addr);
+    if (s_music_ctx.album_art->info.is_bitmap_heap_allocated) {
+      kernel_free(s_music_ctx.album_art->addr);
+    }
     kernel_free(s_music_ctx.album_art->palette);
     kernel_free(s_music_ctx.album_art);
     s_music_ctx.album_art = NULL;

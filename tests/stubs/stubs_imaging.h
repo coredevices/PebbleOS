@@ -8,6 +8,8 @@
 
 void WEAK imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {}
 
+void WEAK imaging_release(ImagingImageType image_type) {}
+
 bool WEAK imaging_is_type_supported(ImagingImageType image_type) {
   return false;
 }
