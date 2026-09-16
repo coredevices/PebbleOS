@@ -6,7 +6,7 @@
 #include "pbl/drivers/mpu.h"
 #include "pbl/kernel/types.h"
 
-#define PBL_THREAD_NAME_LEN 16
+#define PBL_THREAD_NAME_LEN        16
 #define PBL_THREAD_MAX_MEM_REGIONS 4
 
 typedef void (*pbl_thread_entry_t)(void *arg);
@@ -25,15 +25,15 @@ struct pbl_thread_attr {
   void *arg;
   pbl_prio_t prio;
   bool privileged;
-  void *stack;        // lowest address; caller owns the memory
-  size_t stack_size;  // bytes
+  void *stack;       // lowest address; caller owns the memory
+  size_t stack_size; // bytes
   //! MPU regions switched in with the thread. NULL entries are ignored.
   const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS];
 };
 
 struct pbl_thread {
-  struct pbl_thread_backend backend;  // first: the arch code relies on its offset
-  uint32_t id;  // unique per creation, never 0
+  struct pbl_thread_backend backend; // first: the arch code relies on its offset
+  uint32_t id;                       // unique per creation, never 0
   char name[PBL_THREAD_NAME_LEN];
   pbl_prio_t prio;
   bool privileged;
@@ -48,8 +48,8 @@ struct pbl_thread {
 
 //! Returning from the entry function ends the thread.
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr);
-void pbl_thread_abort(struct pbl_thread *t);  // NULL = self
-void pbl_thread_suspend(struct pbl_thread *t);  // NULL = self
+void pbl_thread_abort(struct pbl_thread *t);   // NULL = self
+void pbl_thread_suspend(struct pbl_thread *t); // NULL = self
 void pbl_thread_resume(struct pbl_thread *t);
 void pbl_thread_yield(void);
 void pbl_thread_sleep(pbl_timeout_t timeout);
@@ -62,10 +62,14 @@ void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio);
 pbl_prio_t pbl_thread_prio_get(const struct pbl_thread *t);
 enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t);
 
-static inline const char *pbl_thread_name(const struct pbl_thread *t) { return t->name; }
+static inline const char *pbl_thread_name(const struct pbl_thread *t) {
+  return t->name;
+}
 
 //! Distinguishes successive threads created in the same struct.
-static inline uint32_t pbl_thread_id(const struct pbl_thread *t) { return t->id; }
+static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
+  return t->id;
+}
 
 //! Replaces the MPU regions of a thread; used for the idle thread, whose
 //! regions cannot be passed at creation.

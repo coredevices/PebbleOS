@@ -103,7 +103,6 @@ static const char *prv_get_dnd_mask_subtitle(void *i18n_key) {
   return title;
 }
 
-
 static void prv_get_dnd_time(DoNotDisturbScheduleType type, char *time_string, const uint8_t len) {
   DoNotDisturbSchedule schedule;
   do_not_disturb_get_schedule(type, &schedule);
@@ -125,14 +124,13 @@ enum {
   DNDMenuItem_Count
 };
 
-static void prv_toggle_scheduled_dnd(ActionMenu *action_menu,
-                                     const ActionMenuItem *item,
+static void prv_toggle_scheduled_dnd(ActionMenu *action_menu, const ActionMenuItem *item,
                                      void *context) {
-  do_not_disturb_toggle_scheduled((DoNotDisturbScheduleType) item->action_data);
+  do_not_disturb_toggle_scheduled((DoNotDisturbScheduleType)item->action_data);
 }
 
 static void prv_complete_schedule(TimeRangeSelectionWindowData *schedule_window, void *data) {
-  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType) data;
+  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType)data;
   DoNotDisturbSchedule schedule = {
     .from_hour = schedule_window->from.hour,
     .from_minute = schedule_window->from.minute,
@@ -157,8 +155,8 @@ static void prv_time_range_select_window_push(DoNotDisturbScheduleType type,
   DoNotDisturbSchedule schedule;
   do_not_disturb_get_schedule(type, &schedule);
   TimeRangeSelectionWindowData *schedule_window = &data->schedule_window;
-  time_range_selection_window_init(schedule_window, GColorCobaltBlue,
-                                   prv_complete_schedule, (void*)(uintptr_t) type);
+  time_range_selection_window_init(schedule_window, GColorCobaltBlue, prv_complete_schedule,
+                                   (void *)(uintptr_t)type);
 
   schedule_window->from.hour = schedule.from_hour;
   schedule_window->from.minute = schedule.from_minute;
@@ -167,17 +165,15 @@ static void prv_time_range_select_window_push(DoNotDisturbScheduleType type,
   app_window_stack_push(&schedule_window->window, true);
 }
 
-static void prv_dnd_set_schedule(ActionMenu *action_menu,
-                                    const ActionMenuItem *item,
-                                    void *context) {
-  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType) item->action_data;
+static void prv_dnd_set_schedule(ActionMenu *action_menu, const ActionMenuItem *item,
+                                 void *context) {
+  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType)item->action_data;
   do_not_disturb_set_schedule_enabled(type, true);
   prv_time_range_select_window_push(type, context);
 }
 
-static void prv_scheduled_dnd_menu_cleanup(ActionMenu *action_menu,
-                                 const ActionMenuItem *item,
-                                 void *context) {
+static void prv_scheduled_dnd_menu_cleanup(ActionMenu *action_menu, const ActionMenuItem *item,
+                                           void *context) {
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   SettingsQuietTimeScheduleData *data = context;
   time_range_selection_window_deinit(&data->schedule_window);
@@ -188,7 +184,7 @@ static void prv_scheduled_dnd_menu_cleanup(ActionMenu *action_menu,
 
 static void prv_scheduled_dnd_menu_push(DoNotDisturbScheduleType type,
                                         SettingsQuietTimeScheduleData *data) {
-  data->action_menu = (ActionMenuConfig) {
+  data->action_menu = (ActionMenuConfig){
     .context = data,
     .colors.background = shell_prefs_get_theme_highlight_color(),
     .did_close = prv_scheduled_dnd_menu_cleanup,
@@ -196,7 +192,7 @@ static void prv_scheduled_dnd_menu_push(DoNotDisturbScheduleType type,
 
   ActionMenuLevel *level =
       task_malloc_check(sizeof(ActionMenuLevel) + DNDMenuItem_Count * sizeof(ActionMenuItem));
-  *level = (ActionMenuLevel) {
+  *level = (ActionMenuLevel){
     .num_items = DNDMenuItem_Count,
     .display_mode = ActionMenuLevelDisplayModeWide,
   };
@@ -214,22 +210,22 @@ static void prv_scheduled_dnd_menu_push(DoNotDisturbScheduleType type,
     strcat(data->action_menu_text, ")");
   }
 
-  level->items[DNDMenuItemDisable] = (ActionMenuItem) {
+  level->items[DNDMenuItemDisable] = (ActionMenuItem){
     .label = data->action_menu_text,
     .perform_action = prv_toggle_scheduled_dnd,
   };
 
-  level->items[DNDMenuItemChangeSchedule] = (ActionMenuItem) {
+  level->items[DNDMenuItemChangeSchedule] = (ActionMenuItem){
     .label = i18n_get("Change Schedule", &data->action_menu),
     .perform_action = prv_dnd_set_schedule,
   };
 
   if (type == WeekdaySchedule) {
-    level->items[DNDMenuItemDisable].action_data = (void*)(uintptr_t) WeekdaySchedule;
-    level->items[DNDMenuItemChangeSchedule].action_data = (void*)(uintptr_t) WeekdaySchedule;
+    level->items[DNDMenuItemDisable].action_data = (void *)(uintptr_t)WeekdaySchedule;
+    level->items[DNDMenuItemChangeSchedule].action_data = (void *)(uintptr_t)WeekdaySchedule;
   } else {
-    level->items[DNDMenuItemDisable].action_data = (void*)(uintptr_t) WeekendSchedule;
-    level->items[DNDMenuItemChangeSchedule].action_data = (void*)(uintptr_t) WeekendSchedule;
+    level->items[DNDMenuItemDisable].action_data = (void *)(uintptr_t)WeekendSchedule;
+    level->items[DNDMenuItemChangeSchedule].action_data = (void *)(uintptr_t)WeekendSchedule;
   }
 
   data->action_menu.root_level = level;
@@ -241,14 +237,14 @@ static void prv_scheduled_dnd_menu_push(DoNotDisturbScheduleType type,
 ///////////////////////////////
 
 static void prv_schedule_deinit_cb(SettingsCallbacks *context) {
-  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
   i18n_free_all(data);
   app_free(data);
 }
 
 static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                      const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
   const char *title = NULL;
   char *subtitle = NULL;
   const uint8_t buffer_length = 80;
@@ -257,9 +253,10 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   switch (row) {
     case QuietTimeScheduleItemCalendarAware:
       title = i18n_get("Calendar Aware", data);
-      strncpy(subtitle, do_not_disturb_is_smart_dnd_enabled() ?
-                i18n_ctx_get("QuietTime", "Enabled", data) :
-                i18n_ctx_get("QuietTime", "Disabled", data), buffer_length);
+      strncpy(subtitle,
+              do_not_disturb_is_smart_dnd_enabled() ? i18n_ctx_get("QuietTime", "Enabled", data)
+                                                    : i18n_ctx_get("QuietTime", "Disabled", data),
+              buffer_length);
       break;
     case QuietTimeScheduleItemWeekday:
       title = i18n_get("Weekdays", data);
@@ -278,14 +275,14 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       }
       break;
     default:
-        WTF;
+      WTF;
   }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
   app_free(subtitle);
 }
 
 static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
 
   switch (row) {
     case QuietTimeScheduleItemCalendarAware:
@@ -298,7 +295,7 @@ static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t ro
       prv_scheduled_dnd_menu_push(WeekendSchedule, data);
       break;
     default:
-        WTF;
+      WTF;
   }
   settings_menu_reload_data(SettingsMenuItemQuietTime);
 }
@@ -310,7 +307,7 @@ static uint16_t prv_schedule_num_rows_cb(SettingsCallbacks *context) {
 static void prv_schedule_submenu_push(void) {
   SettingsQuietTimeScheduleData *data = app_zalloc_check(sizeof(*data));
 
-  data->callbacks = (SettingsCallbacks) {
+  data->callbacks = (SettingsCallbacks){
     .deinit = prv_schedule_deinit_cb,
     .draw_row = prv_schedule_draw_row_cb,
     .select_click = prv_schedule_select_click_cb,
@@ -350,14 +347,14 @@ static void prv_cycle_dnd_notifications(void) {
 
 #ifdef CONFIG_TOUCH
 static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
-  SettingsQuietTimeBacklightData *data = (SettingsQuietTimeBacklightData *) context;
+  SettingsQuietTimeBacklightData *data = (SettingsQuietTimeBacklightData *)context;
   i18n_free_all(data);
   app_free(data);
 }
 
 static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                       const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsQuietTimeBacklightData *data = (SettingsQuietTimeBacklightData *) context;
+  SettingsQuietTimeBacklightData *data = (SettingsQuietTimeBacklightData *)context;
   const char *title = NULL;
   const char *subtitle = NULL;
   switch (row) {
@@ -370,7 +367,7 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = alerts_preferences_dnd_get_touch_backlight() ? i18n_noop("On") : i18n_noop("Off");
       break;
     default:
-        WTF;
+      WTF;
   }
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
 }
@@ -384,7 +381,7 @@ static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t r
       alerts_preferences_dnd_set_touch_backlight(!alerts_preferences_dnd_get_touch_backlight());
       break;
     default:
-        WTF;
+      WTF;
   }
   settings_menu_reload_data(SettingsMenuItemQuietTime);
 }
@@ -396,7 +393,7 @@ static uint16_t prv_backlight_num_rows_cb(SettingsCallbacks *context) {
 static void prv_backlight_submenu_push(void) {
   SettingsQuietTimeBacklightData *data = app_zalloc_check(sizeof(*data));
 
-  data->callbacks = (SettingsCallbacks) {
+  data->callbacks = (SettingsCallbacks){
     .deinit = prv_backlight_deinit_cb,
     .draw_row = prv_backlight_draw_row_cb,
     .select_click = prv_backlight_select_click_cb,
@@ -407,29 +404,29 @@ static void prv_backlight_submenu_push(void) {
                                                      i18n_noop("Backlight"), &data->callbacks);
   app_window_stack_push(window, true /* animated */);
 }
-#endif  // CONFIG_TOUCH
+#endif // CONFIG_TOUCH
 
 ///////////////////////////////
 // Top-level Quiet Time menu
 ///////////////////////////////
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
-  SettingsQuietTimeData *data = (SettingsQuietTimeData *) context;
+  SettingsQuietTimeData *data = (SettingsQuietTimeData *)context;
   i18n_free_all(data);
   app_free(data);
 }
 
-static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
-                            const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsQuietTimeData *data = (SettingsQuietTimeData *) context;
+static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
+                            uint16_t row, bool selected) {
+  SettingsQuietTimeData *data = (SettingsQuietTimeData *)context;
   const char *title = NULL;
   const char *subtitle = NULL;
 
   switch (row) {
     case QuietTimeItemManual:
       title = i18n_get("Manual", data);
-      subtitle = do_not_disturb_is_manually_enabled() ?
-                     i18n_get("On", data) : i18n_get("Off", data);
+      subtitle =
+          do_not_disturb_is_manually_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
     case QuietTimeItemSchedule:
       title = i18n_get("Schedule", data);
@@ -449,19 +446,19 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 #else
     case QuietTimeItemMotionBacklight:
       title = i18n_get("Motion Backlight", data);
-      subtitle = alerts_preferences_dnd_get_motion_backlight() ?
-                     i18n_get("On", data) : i18n_get("Off", data);
+      subtitle = alerts_preferences_dnd_get_motion_backlight() ? i18n_get("On", data)
+                                                               : i18n_get("Off", data);
       break;
 #endif
 #ifdef CONFIG_SPEAKER
     case QuietTimeItemMuteSpeaker:
       title = i18n_get("Mute Speaker", data);
-      subtitle = alerts_preferences_dnd_get_mute_speaker() ?
-                     i18n_get("On", data) : i18n_get("Off", data);
+      subtitle =
+          alerts_preferences_dnd_get_mute_speaker() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
 #endif
     default:
-        WTF;
+      WTF;
   }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
 }
@@ -495,7 +492,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
 #endif
     default:
-        WTF;
+      WTF;
   }
   settings_menu_reload_data(SettingsMenuItemQuietTime);
 }
@@ -505,9 +502,9 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
 }
 
 static Window *prv_init(void) {
-  SettingsQuietTimeData* data = app_zalloc_check(sizeof(*data));
+  SettingsQuietTimeData *data = app_zalloc_check(sizeof(*data));
 
-  data->callbacks = (SettingsCallbacks) {
+  data->callbacks = (SettingsCallbacks){
     .deinit = prv_deinit_cb,
     .draw_row = prv_draw_row_cb,
     .select_click = prv_select_click_cb,

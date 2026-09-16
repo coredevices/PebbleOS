@@ -16,9 +16,9 @@
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define REMINDER_DB_FILE_NAME "reminderdb"
-#define REMINDER_DB_MAX_SIZE KiBYTES(40)
-#define MAX_REMINDER_SIZE SETTINGS_VAL_MAX_LEN
-#define MAX_REMINDER_AGE (15 * SECONDS_PER_MINUTE)
+#define REMINDER_DB_MAX_SIZE  KiBYTES(40)
+#define MAX_REMINDER_SIZE     SETTINGS_VAL_MAX_LEN
+#define MAX_REMINDER_AGE      (15 * SECONDS_PER_MINUTE)
 
 typedef struct {
   TimelineItemStorageFilterCallback filter_cb;
@@ -33,7 +33,7 @@ static TimelineItemStorage s_storage;
 static status_t prv_read_item_header(TimelineItem *item_out, TimelineItemId *id) {
   SerializedTimelineItemHeader hdr = {{{0}}};
   status_t rv = reminder_db_read((uint8_t *)id, sizeof(TimelineItemId), (uint8_t *)&hdr,
-    sizeof(SerializedTimelineItemHeader));
+                                 sizeof(SerializedTimelineItemHeader));
   timeline_item_deserialize_header(item_out, &hdr);
   return rv;
 }
@@ -143,8 +143,8 @@ bool reminder_db_find_by_timestamp_title(time_t timestamp, const char *title,
   return reminder_info.match;
 }
 
-static status_t prv_insert_reminder(const uint8_t *key, int key_len,
-                                    const uint8_t *val, int val_len, bool mark_synced) {
+static status_t prv_insert_reminder(const uint8_t *key, int key_len, const uint8_t *val,
+                                    int val_len, bool mark_synced) {
   const SerializedTimelineItemHeader *hdr = (const SerializedTimelineItemHeader *)val;
   const bool has_reminded = hdr->common.reminded;
 
@@ -171,15 +171,16 @@ status_t reminder_db_insert_item(TimelineItem *item) {
 
   size_t payload_size = timeline_item_get_serialized_payload_size(item);
   uint8_t *buffer = kernel_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
-  timeline_item_serialize_header(item, (SerializedTimelineItemHeader *) buffer);
+  timeline_item_serialize_header(item, (SerializedTimelineItemHeader *)buffer);
   timeline_item_serialize_payload(item, buffer + sizeof(SerializedTimelineItemHeader),
-    payload_size);
+                                  payload_size);
 
   // only for items without attributes as of right now
   // Records inserted by the watch are dirty and need to be synced to the phone
   const bool mark_synced = false;
-  status_t rv = prv_insert_reminder((uint8_t *)&item->header.id, sizeof(TimelineItemId),
-    buffer, sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
+  status_t rv =
+      prv_insert_reminder((uint8_t *)&item->header.id, sizeof(TimelineItemId), buffer,
+                          sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
 
   blob_db_sync_record(BlobDBIdReminders, (uint8_t *)&item->header.id, sizeof(TimelineItemId),
                       rtc_get_time());
@@ -198,8 +199,8 @@ static status_t prv_reminder_db_delete_common(const uint8_t *key, int key_len) {
 }
 
 status_t reminder_db_delete_item(const TimelineItemId *id, bool send_event) {
-  return (send_event ? reminder_db_delete :
-                prv_reminder_db_delete_common)((uint8_t *)id, sizeof(TimelineItemId));
+  return (send_event ? reminder_db_delete : prv_reminder_db_delete_common)((uint8_t *)id,
+                                                                           sizeof(TimelineItemId));
 }
 
 bool reminder_db_is_empty(void) {
@@ -207,8 +208,8 @@ bool reminder_db_is_empty(void) {
 }
 
 status_t reminder_db_set_status_bits(const TimelineItemId *id, uint8_t status) {
-  return timeline_item_storage_set_status_bits(&s_storage, (uint8_t *)id,
-                                               sizeof(ReminderId), status);
+  return timeline_item_storage_set_status_bits(&s_storage, (uint8_t *)id, sizeof(ReminderId),
+                                               status);
 }
 
 /////////////////////////
@@ -216,9 +217,7 @@ status_t reminder_db_set_status_bits(const TimelineItemId *id, uint8_t status) {
 /////////////////////////
 
 void reminder_db_init(void) {
-  timeline_item_storage_init(&s_storage,
-                             REMINDER_DB_FILE_NAME,
-                             REMINDER_DB_MAX_SIZE,
+  timeline_item_storage_init(&s_storage, REMINDER_DB_FILE_NAME, REMINDER_DB_MAX_SIZE,
                              MAX_REMINDER_AGE);
   reminders_init();
 }
@@ -247,7 +246,7 @@ status_t reminder_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int
 
 status_t reminder_db_delete(const uint8_t *key, int key_len) {
   status_t rv = prv_reminder_db_delete_common(key, key_len);
-  reminders_handle_reminder_removed((Uuid *) key);
+  reminders_handle_reminder_removed((Uuid *)key);
 
   return rv;
 }
@@ -261,7 +260,7 @@ status_t reminder_db_is_dirty(bool *is_dirty_out) {
   return timeline_item_storage_each(&s_storage, sync_util_is_dirty_cb, is_dirty_out);
 }
 
-BlobDBDirtyItem* reminder_db_get_dirty_list(void) {
+BlobDBDirtyItem *reminder_db_get_dirty_list(void) {
   BlobDBDirtyItem *dirty_list = NULL;
   timeline_item_storage_each(&s_storage, sync_util_build_dirty_list_cb, &dirty_list);
 

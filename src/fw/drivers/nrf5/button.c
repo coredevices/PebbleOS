@@ -20,7 +20,7 @@ bool button_is_pressed(ButtonId id) {
   }
 
   const ButtonConfig *button_config = &BOARD_CONFIG_BUTTON.buttons[id];
-  
+
   uint32_t bit = nrf_gpio_pin_read(button_config->gpiote.gpio_pin);
   return (BOARD_CONFIG_BUTTON.active_high) ? bit : !bit;
 }
@@ -38,11 +38,12 @@ void button_init(void) {
     WTF; // NYI
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    nrf_gpio_cfg_input(BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin, BOARD_CONFIG_BUTTON.buttons[i].pull);
+    nrf_gpio_cfg_input(BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin,
+                       BOARD_CONFIG_BUTTON.buttons[i].pull);
   }
 }
 
-void command_button_read(const char* button_id_str) {
+void command_button_read(const char *button_id_str) {
   int button = atoi(button_id_str);
 
   if (button < 0 || button >= NUM_BUTTONS) {

@@ -77,7 +77,9 @@ static void prv_host_task_main(void *unused) {
   nimble_port_run();
 }
 
-static void prv_ble_hs_stop_cb(int status, void *arg) { pbl_sem_give(&s_host_stopped); }
+static void prv_ble_hs_stop_cb(int status, void *arg) {
+  pbl_sem_give(&s_host_stopped);
+}
 
 // ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {
@@ -90,12 +92,12 @@ void bt_driver_init(void) {
   nimble_store_init();
 
   struct pbl_thread_attr host_attr = {
-      .name = "NimbleHost",
-      .entry = prv_host_task_main,
-      .prio = PBL_PRIO_MAX - 1,
-      .privileged = true,
-      .stack = s_host_task_stack,
-      .stack_size = sizeof(s_host_task_stack),
+    .name = "NimbleHost",
+    .entry = prv_host_task_main,
+    .prio = PBL_PRIO_MAX - 1,
+    .privileged = true,
+    .stack = s_host_task_stack,
+    .stack_size = sizeof(s_host_task_stack),
   };
 
   s_host_task_handle = pebble_task_create(PebbleTask_BTHost, &host_attr);
@@ -103,12 +105,12 @@ void bt_driver_init(void) {
 
 #if NIMBLE_CFG_CONTROLLER
   struct pbl_thread_attr ll_attr = {
-      .name = "NimbleLL",
-      .entry = nimble_port_ll_task_func,
-      .prio = PBL_PRIO_MAX,
-      .privileged = true,
-      .stack = s_ll_task_stack,
-      .stack_size = sizeof(s_ll_task_stack),
+    .name = "NimbleLL",
+    .entry = nimble_port_ll_task_func,
+    .prio = PBL_PRIO_MAX,
+    .privileged = true,
+    .stack = s_ll_task_stack,
+    .stack_size = sizeof(s_ll_task_stack),
   };
 
   s_ll_task_handle = pebble_task_create(PebbleTask_BTController, &ll_attr);
@@ -126,8 +128,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   }
 
   if (s_driver_state != DriverStateStopped) {
-    PBL_LOG_ERR("Unexpected driver state %u; refusing to start",
-                  (unsigned)s_driver_state);
+    PBL_LOG_ERR("Unexpected driver state %u; refusing to start", (unsigned)s_driver_state);
     return false;
   }
 
@@ -206,4 +207,5 @@ void bt_driver_stop(void) {
   nimble_store_unload();
 }
 
-void bt_driver_power_down_controller_on_boot(void) {}
+void bt_driver_power_down_controller_on_boot(void) {
+}

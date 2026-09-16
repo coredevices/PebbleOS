@@ -15,22 +15,22 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // QEMU GPIO register offsets (must match pebble-gpio device)
-#define GPIO_BTN_STATE  0x00
-#define GPIO_BTN_EDGE   0x04
-#define GPIO_INTCTRL    0x08
-#define GPIO_INTSTAT    0x0C
+#define GPIO_BTN_STATE 0x00
+#define GPIO_BTN_EDGE  0x04
+#define GPIO_INTCTRL   0x08
+#define GPIO_INTSTAT   0x0C
 
 // Button bit positions (must match QEMU pebble-gpio device)
-#define BTN_BIT_BACK    (1 << 0)
-#define BTN_BIT_UP      (1 << 1)
-#define BTN_BIT_SELECT  (1 << 2)
-#define BTN_BIT_DOWN    (1 << 3)
+#define BTN_BIT_BACK   (1 << 0)
+#define BTN_BIT_UP     (1 << 1)
+#define BTN_BIT_SELECT (1 << 2)
+#define BTN_BIT_DOWN   (1 << 3)
 
 static const uint32_t s_button_bits[NUM_BUTTONS] = {
-  [BUTTON_ID_BACK]   = BTN_BIT_BACK,
-  [BUTTON_ID_UP]     = BTN_BIT_UP,
+  [BUTTON_ID_BACK] = BTN_BIT_BACK,
+  [BUTTON_ID_UP] = BTN_BIT_UP,
   [BUTTON_ID_SELECT] = BTN_BIT_SELECT,
-  [BUTTON_ID_DOWN]   = BTN_BIT_DOWN,
+  [BUTTON_ID_DOWN] = BTN_BIT_DOWN,
 };
 
 static uint32_t s_last_state;

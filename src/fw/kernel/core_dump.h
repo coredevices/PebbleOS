@@ -19,7 +19,6 @@ void core_dump_test_force_bus_fault(void);
 void core_dump_test_force_inf_loop(void);
 void core_dump_test_force_assert(void);
 
-
 // Warning: these functions use the normal flash driver
 status_t core_dump_size(uint32_t flash_base, uint32_t *size);
 void core_dump_mark_read(uint32_t flash_base);

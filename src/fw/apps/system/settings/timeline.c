@@ -92,9 +92,9 @@ static const char *s_unsupported_faces_strings[UnsupportedFacesMenuIndexCount] =
 
 static const TimelinePeekUnsupportedFaceMode
     s_unsupported_faces_values[UnsupportedFacesMenuIndexCount] = {
-  TimelinePeekUnsupportedFaceMode_None,
-  TimelinePeekUnsupportedFaceMode_ShiftUp,
-  TimelinePeekUnsupportedFaceMode_SquishUp,
+      TimelinePeekUnsupportedFaceMode_None,
+      TimelinePeekUnsupportedFaceMode_ShiftUp,
+      TimelinePeekUnsupportedFaceMode_SquishUp,
 };
 #endif
 
@@ -125,9 +125,9 @@ static void prv_push_before_time_menu(SettingsTimelinePeekData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_before_time_menu_select,
   };
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, selected, &callbacks,
-      ARRAY_LENGTH(s_before_time_strings), true /* icons_enabled */, s_before_time_strings, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, selected, &callbacks,
+                            ARRAY_LENGTH(s_before_time_strings), true /* icons_enabled */,
+                            s_before_time_strings, data);
 }
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
@@ -150,15 +150,14 @@ static void prv_unsupported_faces_menu_select(OptionMenu *option_menu, int selec
 static void prv_push_unsupported_faces_menu(SettingsTimelinePeekData *data) {
   /// Shows up in the Timeline settings as the title for unsupported watchface behavior.
   const char *title = i18n_noop("Unsupported Faces");
-  const int selected = prv_unsupported_face_mode_to_index(
-      timeline_peek_prefs_get_unsupported_face_mode());
+  const int selected =
+      prv_unsupported_face_mode_to_index(timeline_peek_prefs_get_unsupported_face_mode());
   const OptionMenuCallbacks callbacks = {
     .select = prv_unsupported_faces_menu_select,
   };
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, selected, &callbacks,
-      ARRAY_LENGTH(s_unsupported_faces_strings), true /* icons_enabled */,
-      s_unsupported_faces_strings, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, selected, &callbacks,
+                            ARRAY_LENGTH(s_unsupported_faces_strings), true /* icons_enabled */,
+                            s_unsupported_faces_strings, data);
 }
 #endif
 
@@ -168,12 +167,12 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-  return timeline_peek_prefs_get_enabled() ? TimelinePeekMenuIndexEnabledCount :
-                                             TimelinePeekMenuIndexDisabledCount;
+  return timeline_peek_prefs_get_enabled() ? TimelinePeekMenuIndexEnabledCount
+                                           : TimelinePeekMenuIndexDisabledCount;
 }
 
-static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
-                            const Layer *cell_layer, uint16_t row, bool selected) {
+static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
+                            uint16_t row, bool selected) {
   SettingsTimelinePeekData *data = (SettingsTimelinePeekData *)context;
   const char *title = NULL;
   const char *subtitle = NULL;
@@ -183,16 +182,19 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       /// Shows up in the Timeline settings as a toggle-able "Quick View" item.
       title = i18n_noop("Quick View");
       /// Shows up in the Timeline settings as the status under the "Quick View" toggle.
-      subtitle = timeline_peek_prefs_get_enabled() ? i18n_noop("On") :
-      /// Shows up in the Timeline settings as the status under the "Quick View" toggle.
-                                                     i18n_noop("Off");
+      subtitle =
+          timeline_peek_prefs_get_enabled()
+              ? i18n_noop("On")
+              :
+              /// Shows up in the Timeline settings as the status under the "Quick View" toggle.
+              i18n_noop("Off");
       break;
     case TimelinePeekMenuIndex_Timing:
       /// Shows up in the Timeline settings as the title for the menu item that controls the
       /// timing for when to begin showing the peek for an event.
       title = i18n_noop("Timing");
-      subtitle = s_before_time_strings[
-          prv_before_time_min_to_index(timeline_peek_prefs_get_before_time())];
+      subtitle = s_before_time_strings[prv_before_time_min_to_index(
+          timeline_peek_prefs_get_before_time())];
       break;
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
     case TimelinePeekMenuIndex_UnsupportedFaces:
@@ -235,13 +237,14 @@ done:
 static Window *prv_create_settings_window(void) {
   SettingsTimelinePeekData *data = app_malloc_check(sizeof(*data));
 
-  *data = (SettingsTimelinePeekData) {
-    .callbacks = {
-      .deinit = prv_deinit_cb,
-      .draw_row = prv_draw_row_cb,
-      .select_click = prv_select_click_cb,
-      .num_rows = prv_num_rows_cb,
-    },
+  *data = (SettingsTimelinePeekData){
+    .callbacks =
+        {
+          .deinit = prv_deinit_cb,
+          .draw_row = prv_draw_row_cb,
+          .select_click = prv_select_click_cb,
+          .num_rows = prv_num_rows_cb,
+        },
     .info_font = fonts_get_system_font(FONT_KEY_GOTHIC_18),
   };
 
@@ -260,8 +263,8 @@ static Window *prv_create_first_use_dialog(void) {
   /// Title for the Timeline Quick View first use dialog.
   const char *header = i18n_get("Quick View", i18n_owner);
   /// Help text for the Timeline Quick View first use dialog.
-  const char *text = i18n_get("Appears on your watchface when an event is about to start.",
-                              i18n_owner);
+  const char *text =
+      i18n_get("Appears on your watchface when an event is about to start.", i18n_owner);
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
       WINDOW_NAME("Timeline Quick View First Use"), RESOURCE_ID_SUNNY_DAY_TINY, text, GColorBlack,
       PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite), NULL, RESOURCE_ID_ACTION_BAR_ICON_CHECK,

@@ -27,20 +27,21 @@ typedef struct AccelServiceState AccelServiceState;
 
 typedef struct HRMSubscriberState {
   ListNode list_node;
-  HRMSessionRef session_ref;  // The session ref assigned to this subscriber
-  AppInstallId app_id;        // The subscriber's app_id
-  PebbleTask task;            // The subscriber's task
-  struct pbl_msgq *queue;     // Queue to send events to. If NULL, then this is for KernelBG
+  HRMSessionRef session_ref; // The session ref assigned to this subscriber
+  AppInstallId app_id;       // The subscriber's app_id
+  PebbleTask task;           // The subscriber's task
+  struct pbl_msgq *queue;    // Queue to send events to. If NULL, then this is for KernelBG
 
-  HRMSubscriberCallback callback_handler;  // only used for KernelBG subscribers
-  void *callback_context;                  // only used for KernelBG subscribers
+  HRMSubscriberCallback callback_handler; // only used for KernelBG subscribers
+  void *callback_context;                 // only used for KernelBG subscribers
 
   uint32_t update_interval_s; // How often to send updates to this subscriber
   time_t expire_utc;          // This subscription will expire at this time
   bool sent_expiration_event; // true after we've sent a HRMEvent_SubscriptionExpiring event
   HRMFeature features;        // what features the subscriber is interested in
 
-  RtcTicks last_valid_bpm_ticks; // tick count the last time this subscriber received valid HR reading
+  RtcTicks
+      last_valid_bpm_ticks; // tick count the last time this subscriber received valid HR reading
 } HRMSubscriberState;
 
 // HRM manager expects to be update at 1Hz. To the system task, we can currently
@@ -81,20 +82,19 @@ struct HRMManagerState {
   // Event Service to keep track of whether the charger is connected
   EventServiceInfo charger_subscription;
 
-  TimerID update_enable_timer_id;  // used for re-enabling the HRM sensor
+  TimerID update_enable_timer_id; // used for re-enabling the HRM sensor
 
-  uint8_t check_disable_counter;   // increments to HRM_CHECK_SENSOR_DISABLE_COUNT
-  uint8_t enable_failure_count;    // counts consecutive hrm_enable failures, stops retrying after max
+  uint8_t check_disable_counter; // increments to HRM_CHECK_SENSOR_DISABLE_COUNT
+  uint8_t enable_failure_count;  // counts consecutive hrm_enable failures, stops retrying after max
 
-  HRMFeature enabled_features;     // feature union the sensor was last enabled with
+  HRMFeature enabled_features; // feature union the sensor was last enabled with
 
-  RtcTicks sensor_on_since_ticks;  // tick count when the sensor was last turned on; 0 while off
-  bool unserved_timeout_logged;    // limits the unserved-timeout warning to once per on-stretch
+  RtcTicks sensor_on_since_ticks; // tick count when the sensor was last turned on; 0 while off
+  bool unserved_timeout_logged;   // limits the unserved-timeout warning to once per on-stretch
 
-  bool enabled_run_level;          // True if the current run_level (LowPower, Stationary,
-                                   // Normal, etc.) allows the sensor to be turned on
-  bool enabled_charging_state;     // Ture if we aren't plugged in / charging
-
+  bool enabled_run_level;      // True if the current run_level (LowPower, Stationary,
+                               // Normal, etc.) allows the sensor to be turned on
+  bool enabled_charging_state; // Ture if we aren't plugged in / charging
 };
 
 //! Subscription for KernelBG or KernelMain clients.

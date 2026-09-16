@@ -38,7 +38,7 @@ typedef struct PACKED {
 //! list of words (with their confidence values set to zero) making up a single sentence.
 //! The list of objects is serialized in memory as it would be received over the endpoint.
 typedef struct PACKED {
-  TranscriptionType type:8;
+  TranscriptionType type : 8;
   uint8_t sentence_count;
   TranscriptionSentence sentences[];
 } Transcription;
@@ -47,8 +47,7 @@ typedef struct PACKED {
 //! @param sentence   Current sentence in iteration
 //! @param data       Context data pointer
 //! @return true to continue iteration, false to end iteration
-typedef bool (*TranscriptionSentenceIterateCb)(const TranscriptionSentence *sentence,
-    void *data);
+typedef bool (*TranscriptionSentenceIterateCb)(const TranscriptionSentence *sentence, void *data);
 
 //! Callback for iterating over a list of words
 //! @param word   Current word in iteration
@@ -66,7 +65,7 @@ bool transcription_validate(const Transcription *transcription, size_t size);
 //! @param data             Context data pointer - passed into handler callback
 //! @return a pointer to the end of the serialized list
 void *transcription_iterate_sentences(const TranscriptionSentence *sentences, size_t count,
-    TranscriptionSentenceIterateCb handle_sentence, void *data);
+                                      TranscriptionSentenceIterateCb handle_sentence, void *data);
 
 //! Iterate over list of serialized TranscriptionWord objects
 //! @param words        Beginning of serialized list
@@ -75,4 +74,4 @@ void *transcription_iterate_sentences(const TranscriptionSentence *sentences, si
 //! @param data         Context data pointer - passed into handler callback
 //! @return a pointer to the end of the serialized list
 void *transcription_iterate_words(const TranscriptionWord *words, size_t count,
-    TranscriptionWordIterateCb handle_word, void *data);
+                                  TranscriptionWordIterateCb handle_word, void *data);

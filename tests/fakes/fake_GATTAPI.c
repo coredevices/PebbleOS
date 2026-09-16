@@ -29,8 +29,7 @@ struct FakeGATTServiceDiscoveryContext {
   unsigned long callback_param;
 } s_service_discovery_ctx;
 
-int GATT_Initialize(unsigned int BluetoothStackID,
-                    unsigned long Flags,
+int GATT_Initialize(unsigned int BluetoothStackID, unsigned long Flags,
                     GATT_Connection_Event_Callback_t ConnectionEventCallback,
                     unsigned long CallbackParameter) {
   s_stack_id = BluetoothStackID;
@@ -43,14 +42,12 @@ int GATT_Cleanup(unsigned int BluetoothStackID) {
   return 0;
 }
 
-int GATT_Start_Service_Discovery_Handle_Range(unsigned int stack_id,
-                                 unsigned int connection_id,
-                                 GATT_Attribute_Handle_Group_t *DiscoveryHandleRange,
-                                 unsigned int NumberOfUUID,
-                                 GATT_UUID_t *UUIDList,
-                                 GATT_Service_Discovery_Event_Callback_t ServiceDiscoveryCallback,
-                                 unsigned long CallbackParameter) {
-  s_service_discovery_ctx = (struct FakeGATTServiceDiscoveryContext) {
+int GATT_Start_Service_Discovery_Handle_Range(
+    unsigned int stack_id, unsigned int connection_id,
+    GATT_Attribute_Handle_Group_t *DiscoveryHandleRange, unsigned int NumberOfUUID,
+    GATT_UUID_t *UUIDList, GATT_Service_Discovery_Event_Callback_t ServiceDiscoveryCallback,
+    unsigned long CallbackParameter) {
+  s_service_discovery_ctx = (struct FakeGATTServiceDiscoveryContext){
     .is_running = true,
     .stack_id = stack_id,
     .connection_id = connection_id,
@@ -94,14 +91,12 @@ void fake_gatt_put_service_discovery_event(GATT_Service_Discovery_Event_Data_t *
   if (event->Event_Data_Type == etGATT_Service_Discovery_Complete) {
     s_service_discovery_ctx.is_running = false;
   }
-  s_service_discovery_ctx.callback(s_service_discovery_ctx.stack_id,
-                                   event,
+  s_service_discovery_ctx.callback(s_service_discovery_ctx.stack_id, event,
                                    s_service_discovery_ctx.callback_param);
 }
 
 void fake_gatt_init(void) {
-  memset(&s_service_discovery_ctx, 0,
-         sizeof(struct FakeGATTServiceDiscoveryContext));
+  memset(&s_service_discovery_ctx, 0, sizeof(struct FakeGATTServiceDiscoveryContext));
   s_stack_id = 0;
   s_connection_callback_param = 0;
   s_connection_event_callback = NULL;
@@ -113,13 +108,11 @@ void fake_gatt_init(void) {
 }
 
 int GATT_Service_Changed_CCCD_Read_Response(unsigned int BluetoothStackID,
-                                            unsigned int TransactionID,
-                                            Word_t CCCD) {
+                                            unsigned int TransactionID, Word_t CCCD) {
   return 0;
 }
 
-int GATT_Service_Changed_Indication(unsigned int BluetoothStackID,
-                                    unsigned int ConnectionID,
+int GATT_Service_Changed_Indication(unsigned int BluetoothStackID, unsigned int ConnectionID,
                                     GATT_Service_Changed_Data_t *Service_Changed_Data) {
   ++s_service_changed_indication_count;
   return 1; // fake transaction ID
@@ -129,8 +122,7 @@ int fake_gatt_get_service_changed_indication_count(void) {
   return s_service_changed_indication_count;
 }
 
-int GATT_Service_Changed_Read_Response(unsigned int BluetoothStackID,
-                                       unsigned int TransactionID,
+int GATT_Service_Changed_Read_Response(unsigned int BluetoothStackID, unsigned int TransactionID,
                                        GATT_Service_Changed_Data_t *Service_Changed_Data) {
   return 0;
 }
@@ -165,7 +157,7 @@ void fake_gatt_put_write_response_for_last_write(void) {
     .ConnectionID = s_write_connection_id,
     .TransactionID = 1,
     .ConnectionType = gctLE,
-//    .RemoteDevice // TODO
+    //    .RemoteDevice // TODO
     .BytesWritten = s_write_request_length,
   };
   GATT_Client_Event_Data_t event = {

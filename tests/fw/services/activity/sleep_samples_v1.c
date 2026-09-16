@@ -7,7 +7,6 @@
 #include "pbl/services/activity/activity_algorithm.h"
 #include "pbl/util/size.h"
 
-
 // ----------------------------------------------------------------
 // Sample captured at: 2015-08-18 22:15:00 local, 2015-08-19 05:15:00 GMT
 // According to Misfit:
@@ -56,7 +55,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x68, 10},
     {0, 0x67, 0},
     {0, 0x68, 12},
-    {0, 0x68, 0},    // start light
+    {0, 0x68, 0}, // start light
     {0, 0x68, 0},
     {0, 0x67, 41},
     // 30: Local time: 10:45:00 PM
@@ -65,7 +64,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x54, 12},
     {0, 0x64, 0},
     {0, 0x64, 0},
-    {0, 0x64, 0},    // start deep (30 min)
+    {0, 0x64, 0}, // start deep (30 min)
     {0, 0x64, 0},
     {0, 0x64, 0},
     {0, 0x64, 0},
@@ -96,7 +95,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x54, 0},
     {0, 0x54, 0},
     {0, 0x54, 0},
-    {0, 0x54, 0},    // start light
+    {0, 0x54, 0}, // start light
     {0, 0x54, 0},
     {0, 0x54, 0},
     {0, 0x54, 19},
@@ -108,7 +107,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x64, 0},
     {0, 0x64, 0},
     // 75: Local time: 11:30:00 PM
-    {0, 0x64, 0},     // start deep
+    {0, 0x64, 0}, // start deep
     {0, 0x64, 0},
     {0, 0x64, 0},
     {0, 0x64, 0},
@@ -117,7 +116,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x64, 0},
     {0, 0x64, 0},
     {0, 0x64, 0},
-    {0, 0x64, 0},     // start light
+    {0, 0x64, 0}, // start light
     {0, 0x64, 0},
     {0, 0x64, 0},
     {0, 0x54, 16},
@@ -172,7 +171,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x16, 0},
     {0, 0x16, 0},
     // 135: Local time: 12:30:00 AM
-    {0, 0x16, 0},   // start deep
+    {0, 0x16, 0}, // start deep
     {0, 0x16, 0},
     {0, 0x16, 0},
     {0, 0x16, 0},
@@ -316,7 +315,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x15, 0},
     {0, 0x15, 5},
     // 270: Local time: 02:45:00 AM
-    {0, 0x26, 26},  // start light
+    {0, 0x26, 26}, // start light
     {0, 0x26, 0},
     {0, 0x26, 0},
     {0, 0x26, 0},
@@ -348,7 +347,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x65, 0},
     {0, 0x65, 0},
     // 300: Local time: 03:15:00 AM
-    {0, 0x65, 0},  // start deep
+    {0, 0x65, 0}, // start deep
     {0, 0x65, 0},
     {0, 0x65, 0},
     {0, 0x65, 0},
@@ -368,7 +367,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x65, 0},
     {0, 0x65, 0},
     {0, 0x65, 0},
-    {0, 0x65, 0},  // start light
+    {0, 0x65, 0}, // start light
     {0, 0x65, 0},
     {0, 0x66, 17},
     {0, 0x2a, 0},
@@ -401,7 +400,7 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x64, 0},
     {0, 0x64, 0},
     {0, 0x64, 0},
-    {0, 0x64, 0},   // wake up
+    {0, 0x64, 0}, // wake up
     {0, 0x64, 0},
     {0, 0x64, 0},
     {0, 0x64, 0},
@@ -463,4 +462,3 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
   *len = ARRAY_LENGTH(samples);
   return samples;
 }
-

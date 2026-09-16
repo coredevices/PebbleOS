@@ -13,10 +13,8 @@ static int32_t angle_start;
 static int32_t angle_end;
 
 static void prv_setup_data(GRect bounds) {
-  center = GPoint(bounds.origin.x + (bounds.size.w / 2),
-                  bounds.origin.y + (bounds.size.h / 2));
-  rect = GRect(center.x - (outer_size / 2), center.y - (outer_size / 2),
-               outer_size, outer_size);
+  center = GPoint(bounds.origin.x + (bounds.size.w / 2), bounds.origin.y + (bounds.size.h / 2));
+  rect = GRect(center.x - (outer_size / 2), center.y - (outer_size / 2), outer_size, outer_size);
   inset = outer_size - inner_size;
   scale_mode = GOvalScaleModeFitCircle;
 }
@@ -125,14 +123,14 @@ static void prv_setup_odd_full(Window *window) {
   prv_setup_data(bounds);
 }
 
-static void prv_test_radial(Layer *layer, GContext* ctx) {
-  GColor color = { .argb = (uint8_t) rand() };
+static void prv_test_radial(Layer *layer, GContext *ctx) {
+  GColor color = {.argb = (uint8_t)rand()};
   graphics_context_set_fill_color(ctx, color);
   graphics_fill_radial(ctx, rect, GOvalScaleModeFillCircle, inset, angle_start, angle_end);
 }
 
-static void prv_test_circle(Layer *layer, GContext* ctx) {
-  GColor color = { .argb = (uint8_t) rand() };
+static void prv_test_circle(Layer *layer, GContext *ctx) {
+  GColor color = {.argb = (uint8_t)rand()};
   graphics_context_set_fill_color(ctx, color);
   graphics_fill_circle(ctx, center, (outer_size / 2));
 }

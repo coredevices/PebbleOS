@@ -9,7 +9,7 @@
 #define WDT_TIMEOUT_S 10U
 
 static WDT_HandleTypeDef hwdt = {
-    .Instance = hwp_wdt1,
+  .Instance = hwp_wdt1,
 };
 
 static McuRebootReason s_cached_reset_flag;
@@ -48,13 +48,13 @@ McuRebootReason watchdog_clear_reset_flag(void) {
   HAL_PMU_CLEAR_WSR(0xFFFFFFFF);
 
   s_cached_reset_flag = (McuRebootReason){
-      .brown_out_reset = 0,
-      .pin_reset = (((wsr & PMUC_WSR_PIN0) != 0) || ((wsr & PMUC_WSR_PIN1) != 0)),
-      .power_on_reset = (boot & PM_COLD_BOOT) != 0,
-      .software_reset = (boot & PM_REBOOT_BOOT) != 0,
-      .independent_watchdog_reset = 0,
-      .window_watchdog_reset = (wsr & PMUC_WSR_WDT1) != 0,
-      .low_power_manager_reset = 0,
+    .brown_out_reset = 0,
+    .pin_reset = (((wsr & PMUC_WSR_PIN0) != 0) || ((wsr & PMUC_WSR_PIN1) != 0)),
+    .power_on_reset = (boot & PM_COLD_BOOT) != 0,
+    .software_reset = (boot & PM_REBOOT_BOOT) != 0,
+    .independent_watchdog_reset = 0,
+    .window_watchdog_reset = (wsr & PMUC_WSR_WDT1) != 0,
+    .low_power_manager_reset = 0,
   };
 
   return s_cached_reset_flag;

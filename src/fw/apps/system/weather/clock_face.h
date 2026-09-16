@@ -22,13 +22,11 @@ bool clock_face_is_showing(void);
 // hourly_types/hourly_count: the selected day's hourly weather types.
 // animated: pass false when a pre-push transition has already played so the
 //           built-in clock spiral intro fires without a system slide animation.
-void clock_face_push(const WeatherLocationForecast *days, size_t num_days,
-                     int day_index, const uint8_t *hourly_types, size_t hourly_count,
-                     bool animated);
+void clock_face_push(const WeatherLocationForecast *days, size_t num_days, int day_index,
+                     const uint8_t *hourly_types, size_t hourly_count, bool animated);
 
-void clock_face_push_static(const WeatherLocationForecast *days, size_t num_days,
-                            int day_index, const uint8_t *hourly_types,
-                            size_t hourly_count, bool animated);
+void clock_face_push_static(const WeatherLocationForecast *days, size_t num_days, int day_index,
+                            const uint8_t *hourly_types, size_t hourly_count, bool animated);
 
 void clock_face_dismiss(bool animated);
 

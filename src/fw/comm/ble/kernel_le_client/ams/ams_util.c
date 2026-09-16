@@ -21,7 +21,7 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
   bool number_started = false;
   uint32_t decimal_divisor = 0;
   int64_t result = 0;
-  const char * const number_str_end = number_str + number_str_length;
+  const char *const number_str_end = number_str + number_str_length;
   do {
     const char c = *number_str;
     switch (c) {
@@ -41,7 +41,7 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
 
       case '-': {
         if (number_started || is_negative) {
-          return false;  // Encountered minus in the middle of a number or multiple minus signs
+          return false; // Encountered minus in the middle of a number or multiple minus signs
         }
         is_negative = true;
         break;
@@ -51,7 +51,7 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
       case '.': {
         number_started = true;
         if (decimal_divisor) {
-          return false;  // Encountered multiple separators
+          return false; // Encountered multiple separators
         }
         decimal_divisor = 1;
         break;
@@ -80,7 +80,7 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
   }
 
   if (result > INT32_MAX || result < INT32_MIN) {
-    return false;  // overflow
+    return false; // overflow
   }
 
   if (number_started && number_out) {
@@ -93,8 +93,8 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
 // -------------------------------------------------------------------------------------------------
 // Parsing comma-separated value
 
-uint8_t ams_util_csv_parse(const char *csv_value, uint32_t csv_length,
-                           void *context, AMSUtilCSVCallback callback) {
+uint8_t ams_util_csv_parse(const char *csv_value, uint32_t csv_length, void *context,
+                           AMSUtilCSVCallback callback) {
   if (csv_value == NULL || csv_length == 0) {
     return 0;
   }

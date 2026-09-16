@@ -22,7 +22,7 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 #define KEY_SIZE 16
 
 #define BLE_FLAG_SECURE_CONNECTIONS 0x01
-#define BLE_FLAG_AUTHENTICATED 0x02
+#define BLE_FLAG_AUTHENTICATED      0x02
 
 typedef struct {
   ListNode node;
@@ -64,14 +64,14 @@ static ListNode **prv_find_sec_list_for_obj_type(const int obj_type) {
 }
 
 static BleStoreValueSec *prv_nimble_store_find_sec(const int obj_type,
-                                                const struct ble_store_key_sec *key_sec) {
+                                                   const struct ble_store_key_sec *key_sec) {
   ListNode *sec_list = *prv_find_sec_list_for_obj_type(obj_type);
 
   if (!ble_addr_cmp(&key_sec->peer_addr, BLE_ADDR_ANY)) {
     return (BleStoreValueSec *)list_get_at(sec_list, key_sec->idx);
   } else if (key_sec->idx == 0) {
     return (BleStoreValueSec *)list_find(sec_list, prv_nimble_store_find_sec_cb,
-                                      (void *)&key_sec->peer_addr);
+                                         (void *)&key_sec->peer_addr);
   }
 
   return NULL;
@@ -99,7 +99,7 @@ unlock:
 }
 
 static BleStoreValueSec *prv_nimble_store_upsert_sec(const int obj_type,
-                                                  const struct ble_store_value_sec *value_sec) {
+                                                     const struct ble_store_value_sec *value_sec) {
   BleStoreValueSec *s;
   struct ble_store_key_sec key_sec;
   ble_store_key_from_value_sec(&key_sec, value_sec);
@@ -252,7 +252,7 @@ static int prv_nimble_store_write_sec(const int obj_type,
   prv_nimble_store_upsert_sec(obj_type, value_sec);
 
   NimbleStoreSecWrittenContext *ctx = kernel_malloc_check(sizeof(*ctx));
-  *ctx = (NimbleStoreSecWrittenContext) {
+  *ctx = (NimbleStoreSecWrittenContext){
     .obj_type = obj_type,
     .value_sec = *value_sec,
   };
@@ -608,7 +608,7 @@ void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
 void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
   BleStoreValueCCCD *s;
   struct ble_store_key_cccd key_cccd;
-  
+
   pebble_device_to_nimble_addr(&cccd->peer, &key_cccd.peer_addr);
   key_cccd.chr_val_handle = cccd->chr_val_handle;
   key_cccd.idx = 0;

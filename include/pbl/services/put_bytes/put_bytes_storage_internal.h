@@ -8,8 +8,8 @@
 #include <stdbool.h>
 
 typedef struct PutBytesStorageImplementation {
-  bool (*init)(PutBytesStorage *storage, PutBytesObjectType object_type,
-               uint32_t total_size, PutBytesStorageInfo *info, uint32_t append_offset);
+  bool (*init)(PutBytesStorage *storage, PutBytesObjectType object_type, uint32_t total_size,
+               PutBytesStorageInfo *info, uint32_t append_offset);
 
   uint32_t (*get_max_size)(PutBytesObjectType object_type);
 

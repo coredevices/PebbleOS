@@ -36,14 +36,14 @@
 //! \endcode
 typedef struct TextLayer {
   Layer layer;
-  const char* text;
+  const char *text;
   GFont font;
   GTextLayoutCacheRef layout_cache;
   GColor8 text_color;
   GColor8 background_color;
-  GTextOverflowMode overflow_mode:2;
-  GTextAlignment text_alignment:2;
-  bool should_cache_layout:1;
+  GTextOverflowMode overflow_mode : 2;
+  GTextAlignment text_alignment : 2;
+  bool should_cache_layout : 1;
 } TextLayer;
 
 //! Initializes the TextLayer with given frame
@@ -75,10 +75,10 @@ void text_layer_init(TextLayer *text_layer, const GRect *frame);
 //! @param frame The frame with which to initialize the TextLayer
 //! @return A pointer to the TextLayer. `NULL` if the TextLayer could not
 //! be created
-TextLayer* text_layer_create(GRect frame);
+TextLayer *text_layer_create(GRect frame);
 
 //! Destroys a TextLayer previously created by text_layer_create.
-void text_layer_destroy(TextLayer* text_layer);
+void text_layer_destroy(TextLayer *text_layer);
 
 //! Deinitializes the TextLayer and frees any caches.
 //! @param text_layer The TextLayer to deinitialize
@@ -93,12 +93,13 @@ void text_layer_deinit(TextLayer *text_layer);
 //! @return The "root" Layer of the text layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) text_layer`.
-Layer* text_layer_get_layer(TextLayer *text_layer);
+Layer *text_layer_get_layer(TextLayer *text_layer);
 
 //! Sets the pointer to the string where the TextLayer is supposed to find the text
 //! at a later point in time, when it needs to draw itself.
 //! @param text_layer The TextLayer of which to set the text
-//! @param text The new text to set onto the TextLayer. This must be a null-terminated and valid UTF-8 string!
+//! @param text The new text to set onto the TextLayer. This must be a null-terminated and valid
+//! UTF-8 string!
 //! @note The string is not copied, so its buffer most likely cannot be stack allocated,
 //! but is recommended to be a buffer that is long-lived, at least as long as the TextLayer
 //! is part of a visible Layer hierarchy.
@@ -108,7 +109,7 @@ void text_layer_set_text(TextLayer *text_layer, const char *text);
 //! Gets the pointer to the string that the TextLayer is using.
 //! @param text_layer The TextLayer for which to get the text
 //! @see text_layer_set_text
-const char* text_layer_get_text(TextLayer *text_layer);
+const char *text_layer_get_text(TextLayer *text_layer);
 
 //! Sets the background color of the bounding box that will be drawn behind the text
 //! @param text_layer The TextLayer of which to set the background color
@@ -158,7 +159,7 @@ void text_layer_set_should_cache_layout(TextLayer *text_layer, bool should_cache
 //! context, even though this function does not draw anything.
 //! @internal
 //! @see \ref app_get_current_graphics_context()
-GSize text_layer_get_content_size(GContext* ctx, TextLayer *text_layer);
+GSize text_layer_get_content_size(GContext *ctx, TextLayer *text_layer);
 
 //! Calculates the size occupied by the current text of the TextLayer
 //! @param text_layer the TextLayer for which to calculate the text's size
@@ -172,7 +173,7 @@ GSize app_text_layer_get_content_size(TextLayer *text_layer);
 void text_layer_set_size(TextLayer *text_layer, const GSize max_size);
 
 //! @internal
-GSize text_layer_get_size(TextLayer* text_layer);
+GSize text_layer_get_size(TextLayer *text_layer);
 
 //! Set the vertical line spacing delta for the TextLayer
 //! @param text_layer The TextLayer of which to set the line spacing delta

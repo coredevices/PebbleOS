@@ -83,12 +83,16 @@ static int16_t prv_scroll_offset_getter(TimelineItemLayer *item_layer) {
 static void prv_update_scroll_offset(TimelineItemLayer *item_layer, int16_t new_offset,
                                      bool is_first_scroll) {
   static const PropertyAnimationImplementation implementation = {
-    .base = {
-      .update = (AnimationUpdateImplementation) property_animation_update_int16,
-    },
+    .base =
+        {
+          .update = (AnimationUpdateImplementation)property_animation_update_int16,
+        },
     .accessors = {
-      .setter = { .int16 = (const Int16Setter) prv_scroll_offset_setter, },
-      .getter = { .int16 = (const Int16Getter) prv_scroll_offset_getter},
+      .setter =
+          {
+            .int16 = (const Int16Setter)prv_scroll_offset_setter,
+          },
+      .getter = {.int16 = (const Int16Getter)prv_scroll_offset_getter},
     },
   };
 
@@ -97,8 +101,8 @@ static void prv_update_scroll_offset(TimelineItemLayer *item_layer, int16_t new_
     return;
   }
 
-  if (item_layer->animation
-      && animation_is_scheduled(property_animation_get_animation(item_layer->animation))) {
+  if (item_layer->animation &&
+      animation_is_scheduled(property_animation_get_animation(item_layer->animation))) {
     // Don't do anything if we're already animating to this position from our current position
     int16_t offset;
     property_animation_get_to_int16(item_layer->animation, &offset);
@@ -111,8 +115,8 @@ static void prv_update_scroll_offset(TimelineItemLayer *item_layer, int16_t new_
   if (item_layer->animation) {
     property_animation_init(item_layer->animation, &implementation, item_layer, NULL, &new_offset);
   } else {
-    item_layer->animation = property_animation_create(&implementation,
-        item_layer, NULL, &new_offset);
+    item_layer->animation =
+        property_animation_create(&implementation, item_layer, NULL, &new_offset);
     PBL_ASSERTN(item_layer->animation);
     animation_set_auto_destroy(property_animation_get_animation(item_layer->animation), false);
   }
@@ -139,7 +143,7 @@ T_STATIC void prv_handle_down_click(ClickRecognizerRef recognizer, void *context
   int16_t max_scroll = prv_get_max_scroll_offset(item_layer);
   const int16_t first_scroll = prv_get_first_scroll_offset(item_layer);
   int16_t current_scroll = item_layer->scroll_offset_pixels;
-#if PBL_ROUND  // align current_scroll with paging for text flow
+#if PBL_ROUND // align current_scroll with paging for text flow
   current_scroll = ROUND_TO_MOD_CEIL(current_scroll, SCROLL_AMOUNT);
 #endif
 
@@ -173,8 +177,8 @@ static void prv_handle_select_click(ClickRecognizerRef recognizer, void *context
     .colors.background = colors->bg_color,
     .colors.foreground = colors->primary_color,
   };
-  timeline_actions_push_action_menu(
-      &config, window_manager_get_window_stack(ModalPriorityNotification));
+  timeline_actions_push_action_menu(&config,
+                                    window_manager_get_window_stack(ModalPriorityNotification));
 }
 
 static void prv_handle_up_click(ClickRecognizerRef recognizer, void *context) {
@@ -182,13 +186,13 @@ static void prv_handle_up_click(ClickRecognizerRef recognizer, void *context) {
   const int16_t min_scroll = prv_get_min_scroll_offset(item_layer);
   const int16_t first_scroll = prv_get_first_scroll_offset(item_layer);
   int16_t current_scroll = item_layer->scroll_offset_pixels;
-#if PBL_ROUND  // align current_scroll with paging for text flow
+#if PBL_ROUND // align current_scroll with paging for text flow
   current_scroll = ROUND_TO_MOD_CEIL(current_scroll, SCROLL_AMOUNT);
 #endif
 
   if (current_scroll <= first_scroll) {
     prv_update_scroll_offset(item_layer, min_scroll, true);
-#if PBL_RECT  // fudge breaks ROUND display paging
+#if PBL_RECT // fudge breaks ROUND display paging
   } else if (current_scroll - (SCROLL_AMOUNT + SCROLL_FUDGE_AMOUNT) < first_scroll) {
     prv_update_scroll_offset(item_layer, first_scroll, false);
 #endif
@@ -218,9 +222,8 @@ static void timeline_item_layer_click_config_provider(void *context) {
 }
 
 void timeline_item_layer_set_click_config_onto_window(TimelineItemLayer *item_layer,
-    struct Window *window) {
-  window_set_click_config_provider_with_context(window,
-                                                timeline_item_layer_click_config_provider,
+                                                      struct Window *window) {
+  window_set_click_config_provider_with_context(window, timeline_item_layer_click_config_provider,
                                                 item_layer);
 }
 
@@ -228,9 +231,9 @@ void timeline_item_layer_set_click_config_onto_window(TimelineItemLayer *item_la
 // Public functions
 /////////////////////////////////////////
 
-void timeline_item_layer_update_proc(Layer* layer, GContext* ctx) {
+void timeline_item_layer_update_proc(Layer *layer, GContext *ctx) {
   //! Fill background with white to hide layers below
-  TimelineItemLayer* item_layer = (TimelineItemLayer *)layer;
+  TimelineItemLayer *item_layer = (TimelineItemLayer *)layer;
   const LayoutColors *colors = layout_get_colors((LayoutLayer *)item_layer->timeline_layout);
   graphics_context_set_fill_color(ctx, colors->bg_color);
   graphics_fill_rect(ctx, &layer->bounds);
@@ -254,14 +257,14 @@ void timeline_item_layer_deinit(TimelineItemLayer *item_layer) {
 }
 
 void timeline_item_layer_set_item(TimelineItemLayer *item_layer, TimelineItem *item,
-    TimelineLayoutInfo *info) {
+                                  TimelineLayoutInfo *info) {
   item_layer->item = item;
   if (item_layer->timeline_layout) {
     layer_remove_from_parent((Layer *)item_layer->timeline_layout);
     layout_destroy((LayoutLayer *)item_layer->timeline_layout);
   }
   const LayoutLayerConfig config = {
-    .frame = &(GRect) { GPointZero, item_layer->layer.frame.size },
+    .frame = &(GRect){GPointZero, item_layer->layer.frame.size},
     .attributes = &item_layer->item->attr_list,
     .mode = LayoutLayerModeCard,
     .app_id = &item->header.parent_id,

@@ -8,5 +8,4 @@ typedef struct PebbleProcessMd PebbleProcessMd;
 
 //! Configure exception handlers (corruption and double-free) for
 //! app and worker heaps.
-void process_heap_set_exception_handlers(Heap *heap,
-                                         const PebbleProcessMd *app_md);
+void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_md);

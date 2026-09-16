@@ -83,8 +83,7 @@ void activity_insights_process_sleep_data(time_t now_utc);
 void activity_insights_process_minute_data(time_t now_utc);
 
 void activity_insights_push_activity_session_notification(time_t notif_time,
-                                                          ActivitySession *session,
-                                                          int32_t avg_hr,
+                                                          ActivitySession *session, int32_t avg_hr,
                                                           int32_t *hr_zone_time_s);
 
 //! Used by test apps: Pushes the 3 variants of each summary pin to the timeline and a notification

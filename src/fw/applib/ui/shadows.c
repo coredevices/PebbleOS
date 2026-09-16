@@ -18,8 +18,7 @@ static const GBitmap s_shadow_top_bitmap = {
   .row_size_bytes = 4,
   .info.format = GBitmapFormat1Bit,
   .info.version = 1,
-  .bounds = { { 0, 0 },
-              { 32, 19 } },
+  .bounds = {{0, 0}, {32, 19}},
 };
 
 static const uint8_t s_shadow_bottom_data[] = {
@@ -37,15 +36,13 @@ static const GBitmap s_shadow_bottom_bitmap = {
   .row_size_bytes = 4,
   .info.format = GBitmapFormat1Bit,
   .info.version = 1,
-  .bounds = { { 0, 0 },
-              { 32, 19 } },
+  .bounds = {{0, 0}, {32, 19}},
 };
 
-GBitmap* shadow_get_top(void) {
-  return (GBitmap*) &s_shadow_top_bitmap;
+GBitmap *shadow_get_top(void) {
+  return (GBitmap *)&s_shadow_top_bitmap;
 }
 
-GBitmap* shadow_get_bottom(void) {
-  return (GBitmap *) &s_shadow_bottom_bitmap;
+GBitmap *shadow_get_bottom(void) {
+  return (GBitmap *)&s_shadow_bottom_bitmap;
 }
-

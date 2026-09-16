@@ -7,9 +7,7 @@
 #include "applib/ui/property_animation.h"
 
 void loading_layer_init(LoadingLayer *loading_layer, const GRect *frame) {
-  *loading_layer = (LoadingLayer) {
-    .full_frame = *frame
-  };
+  *loading_layer = (LoadingLayer){.full_frame = *frame};
 
   ProgressLayer *progress_layer = &loading_layer->progress_layer;
   progress_layer_init(progress_layer, frame);
@@ -32,8 +30,8 @@ void loading_layer_shrink(LoadingLayer *loading_layer, uint32_t delay, uint32_t 
   stop.origin.x += stop.size.w;
   stop.size.w = 0;
 
-  PropertyAnimation *prop_anim = property_animation_create_layer_frame(
-      (Layer *)loading_layer, start, &stop);
+  PropertyAnimation *prop_anim =
+      property_animation_create_layer_frame((Layer *)loading_layer, start, &stop);
   if (!prop_anim) {
     return;
   }
@@ -43,9 +41,7 @@ void loading_layer_shrink(LoadingLayer *loading_layer, uint32_t delay, uint32_t 
   animation_set_delay(animation, delay);
   animation_set_duration(animation, duration);
   animation_set_curve(animation, AnimationCurveEaseOut);
-  animation_set_handlers(animation, (AnimationHandlers) {
-    .stopped = stopped_handler
-  }, context);
+  animation_set_handlers(animation, (AnimationHandlers){.stopped = stopped_handler}, context);
 
   loading_layer->animation = animation;
   animation_schedule(animation);

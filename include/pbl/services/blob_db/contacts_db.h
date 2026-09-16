@@ -26,7 +26,6 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
 //! Frees the serialized contact data returned by contacts_db_get_serialized_contact().
 void contacts_db_free_serialized_contact(SerializedContact *contact);
 
-
 ///////////////////////////////////////////
 // BlobDB Boilerplate (see blob_db/api.h)
 ///////////////////////////////////////////

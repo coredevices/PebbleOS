@@ -3,7 +3,7 @@
 
 #include <pebble.h>
 
-#define ALLOC_SIZE  2048
+#define ALLOC_SIZE 2048
 
 static Window *window;
 static TextLayer *text_heap_info;

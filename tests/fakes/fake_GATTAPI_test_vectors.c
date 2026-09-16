@@ -6,16 +6,13 @@
 
 #include <pbl/btutil/bt_uuid.h>
 
-void fake_gatt_put_discovery_complete_event(uint8_t status,
-                                            unsigned int connection_id) {
-  GATT_Service_Discovery_Complete_Data_t data =
-  (GATT_Service_Discovery_Complete_Data_t) {
+void fake_gatt_put_discovery_complete_event(uint8_t status, unsigned int connection_id) {
+  GATT_Service_Discovery_Complete_Data_t data = (GATT_Service_Discovery_Complete_Data_t){
     .ConnectionID = connection_id,
     .Status = status,
   };
 
-  GATT_Service_Discovery_Event_Data_t event =
-  (GATT_Service_Discovery_Event_Data_t) {
+  GATT_Service_Discovery_Event_Data_t event = (GATT_Service_Discovery_Event_Data_t){
     .Event_Data_Type = etGATT_Service_Discovery_Complete,
     .Event_Data_Size = GATT_SERVICE_DISCOVERY_COMPLETE_DATA_SIZE,
     .Event_Data = {
@@ -41,15 +38,18 @@ void fake_gatt_put_discovery_indication_health_thermometer_service(unsigned int 
 
   GATT_Characteristic_Information_t characteristics[1] = {
     [0] = {
-      .Characteristic_UUID = {
-        .UUID_Type = guUUID_16,
-        .UUID = {
-          .UUID_16 = {
-            .UUID_Byte0 = 0x1c,
-            .UUID_Byte1 = 0x2a,
+      .Characteristic_UUID =
+          {
+            .UUID_Type = guUUID_16,
+            .UUID =
+                {
+                  .UUID_16 =
+                      {
+                        .UUID_Byte0 = 0x1c,
+                        .UUID_Byte1 = 0x2a,
+                      },
+                },
           },
-        },
-      },
       .Characteristic_Handle = 0x13,
       .Characteristic_Properties = 0x2,
       .NumberOfDescriptors = 0x1,
@@ -59,19 +59,21 @@ void fake_gatt_put_discovery_indication_health_thermometer_service(unsigned int 
 
   GATT_Service_Discovery_Indication_Data_t data = {
     .ConnectionID = connection_id,
-    .ServiceInformation = {
-      .Service_Handle = 0x11,
-      .End_Group_Handle = 0x15,
-      .UUID = {
-        .UUID_Type = guUUID_16,
-        .UUID = {
-          .UUID_16 = {
-            .UUID_Byte0 = 0x09,
-            .UUID_Byte1 = 0x18,
-          },
-        },
-      }
-    },
+    .ServiceInformation =
+        {.Service_Handle = 0x11,
+         .End_Group_Handle = 0x15,
+         .UUID =
+             {
+               .UUID_Type = guUUID_16,
+               .UUID =
+                   {
+                     .UUID_16 =
+                         {
+                           .UUID_Byte0 = 0x09,
+                           .UUID_Byte1 = 0x18,
+                         },
+                   },
+             }},
     .NumberOfCharacteristics = 0x1,
     .CharacteristicInformationList = characteristics,
   };
@@ -87,11 +89,10 @@ void fake_gatt_put_discovery_indication_health_thermometer_service(unsigned int 
   fake_gatt_put_service_discovery_event(&event);
 }
 
-
 static Service s_health_thermometer_service;
 
-const Service * fake_gatt_get_health_thermometer_service(void) {
-  s_health_thermometer_service = (const Service) {
+const Service *fake_gatt_get_health_thermometer_service(void) {
+  s_health_thermometer_service = (const Service){
     .uuid = bt_uuid_expand_16bit(0x1809),
     .handle = 0x11,
     .num_characteristics = 1,
@@ -113,8 +114,7 @@ const Service * fake_gatt_get_health_thermometer_service(void) {
   return &s_health_thermometer_service;
 }
 
-void fake_gatt_put_discovery_indication_blood_pressure_service(
-                                                               unsigned int connection_id) {
+void fake_gatt_put_discovery_indication_blood_pressure_service(unsigned int connection_id) {
   GATT_Characteristic_Descriptor_Information_t cccd1 = {
     .Characteristic_Descriptor_Handle = 0x05,
     .Characteristic_Descriptor_UUID = {
@@ -141,33 +141,39 @@ void fake_gatt_put_discovery_indication_blood_pressure_service(
     }
   };
 
-
   GATT_Characteristic_Information_t characteristics[2] = {
-    [0] = {
-      .Characteristic_UUID = {
-        .UUID_Type = guUUID_16,
-        .UUID = {
-          .UUID_16 = {
-            .UUID_Byte0 = 0x35,
-            .UUID_Byte1 = 0x2a,
-          },
+    [0] =
+        {
+          .Characteristic_UUID =
+              {
+                .UUID_Type = guUUID_16,
+                .UUID =
+                    {
+                      .UUID_16 =
+                          {
+                            .UUID_Byte0 = 0x35,
+                            .UUID_Byte1 = 0x2a,
+                          },
+                    },
+              },
+          .Characteristic_Handle = 0x3,
+          .Characteristic_Properties = 0x20,
+          .NumberOfDescriptors = 0x1,
+          .DescriptorList = &cccd1,
         },
-      },
-      .Characteristic_Handle = 0x3,
-      .Characteristic_Properties = 0x20,
-      .NumberOfDescriptors = 0x1,
-      .DescriptorList = &cccd1,
-    },
     [1] = {
-      .Characteristic_UUID = {
-        .UUID_Type = guUUID_16,
-        .UUID = {
-          .UUID_16 = {
-            .UUID_Byte0 = 0x49,
-            .UUID_Byte1 = 0x2a,
+      .Characteristic_UUID =
+          {
+            .UUID_Type = guUUID_16,
+            .UUID =
+                {
+                  .UUID_16 =
+                      {
+                        .UUID_Byte0 = 0x49,
+                        .UUID_Byte1 = 0x2a,
+                      },
+                },
           },
-        },
-      },
       .Characteristic_Handle = 0x7,
       .Characteristic_Properties = 0x2,
       .NumberOfDescriptors = 0x1,
@@ -192,19 +198,21 @@ void fake_gatt_put_discovery_indication_blood_pressure_service(
 
   GATT_Service_Discovery_Indication_Data_t data = {
     .ConnectionID = connection_id,
-    .ServiceInformation = {
-      .Service_Handle = 0x1,
-      .End_Group_Handle = 0x9,
-      .UUID = {
-        .UUID_Type = guUUID_16,
-        .UUID = {
-          .UUID_16 = {
-            .UUID_Byte0 = 0x10,
-            .UUID_Byte1 = 0x18,
-          },
-        },
-      }
-    },
+    .ServiceInformation =
+        {.Service_Handle = 0x1,
+         .End_Group_Handle = 0x9,
+         .UUID =
+             {
+               .UUID_Type = guUUID_16,
+               .UUID =
+                   {
+                     .UUID_16 =
+                         {
+                           .UUID_Byte0 = 0x10,
+                           .UUID_Byte1 = 0x18,
+                         },
+                   },
+             }},
     .NumberOfIncludedService = 0x1,
     .IncludedServiceList = &inc_service_list,
     .NumberOfCharacteristics = 0x2,
@@ -222,42 +230,48 @@ void fake_gatt_put_discovery_indication_blood_pressure_service(
   fake_gatt_put_service_discovery_event(&event);
 }
 
-
 static Service s_blood_pressure_service;
 #define BP_START_ATT_HANDLE 0x1
-#define BP_END_ATT_HANDLE 0x9
+#define BP_END_ATT_HANDLE   0x9
 
-const Service * fake_gatt_get_blood_pressure_service(void) {
-  s_blood_pressure_service = (const Service) {
+const Service *fake_gatt_get_blood_pressure_service(void) {
+  s_blood_pressure_service = (const Service){
     .uuid = bt_uuid_expand_16bit(0x1810),
     .handle = BP_START_ATT_HANDLE,
     .num_characteristics = 2,
-    .characteristics = {
-      [0] = {
-        .uuid = bt_uuid_expand_16bit(0x2a35),
-        .properties = 0x20, // Indicatable
-        .handle = 0x3,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = 0x05,
-          },
+    .characteristics =
+        {
+          [0] =
+              {
+                .uuid = bt_uuid_expand_16bit(0x2a35),
+                .properties = 0x20, // Indicatable
+                .handle = 0x3,
+                .num_descriptors = 1,
+                .descriptors =
+                    {
+                      [0] =
+                          {
+                            .uuid = bt_uuid_expand_16bit(0x2902),
+                            .handle = 0x05,
+                          },
+                    },
+              },
+          [1] =
+              {
+                .uuid = bt_uuid_expand_16bit(0x2a49),
+                .properties = 0x02,
+                .handle = 0x7,
+                .num_descriptors = 1,
+                .descriptors =
+                    {
+                      [0] =
+                          {
+                            .uuid = bt_uuid_expand_16bit(0x2902),
+                            .handle = BP_END_ATT_HANDLE,
+                          },
+                    },
+              },
         },
-      },
-      [1] = {
-        .uuid = bt_uuid_expand_16bit(0x2a49),
-        .properties = 0x02,
-        .handle = 0x7,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = BP_END_ATT_HANDLE,
-          },
-        },
-      },
-    },
     .num_included_services = 1,
     .included_services = {
       [0] = &s_health_thermometer_service,
@@ -282,7 +296,10 @@ void fake_gatt_put_discovery_indication_random_128bit_uuid_service(unsigned int 
     .Characteristic_Descriptor_UUID = {
       .UUID_Type = guUUID_128,
       .UUID = {
-        .UUID_128 = { 0xB2, 0xF9, 0x66, 0xAC, 0xED, 0xFD, 0xEE, 0x97, 0x63, 0x4F, 0xFA, 0x1B, 0x5B, 0x09, 0x68, 0xF7 },
+        .UUID_128 = {
+          0xB2, 0xF9, 0x66, 0xAC, 0xED, 0xFD, 0xEE, 0x97, 0x63, 0x4F, 0xFA, 0x1B, 0x5B, 0x09, 0x68,
+          0xF7
+        },
       },
     }
   };
@@ -292,11 +309,13 @@ void fake_gatt_put_discovery_indication_random_128bit_uuid_service(unsigned int 
     .Characteristic_Descriptor_UUID = {
       .UUID_Type = guUUID_128,
       .UUID = {
-        .UUID_128 = { 0xB4, 0xF9, 0x66, 0xAC, 0xED, 0xFD, 0xEE, 0x97, 0x63, 0x4F, 0xFA, 0x1B, 0x5B, 0x09, 0x68, 0xF7 },
+        .UUID_128 = {
+          0xB4, 0xF9, 0x66, 0xAC, 0xED, 0xFD, 0xEE, 0x97, 0x63, 0x4F, 0xFA, 0x1B, 0x5B, 0x09, 0x68,
+          0xF7
+        },
       },
     }
   };
-
 
   GATT_Characteristic_Information_t characteristics[2] = {
     [0] = {
@@ -327,16 +346,21 @@ void fake_gatt_put_discovery_indication_random_128bit_uuid_service(unsigned int 
 
   GATT_Service_Discovery_Indication_Data_t data = {
     .ConnectionID = connection_id,
-    .ServiceInformation = {
-      .Service_Handle = RANDOM_S_START_ATT_HANDLE,
-      .End_Group_Handle = 0x9,
-      .UUID = {
-        .UUID_Type = guUUID_128,
-        .UUID = {
-          .UUID_128 = { 0xB0, 0xF9, 0x66, 0xAC, 0xED, 0xFD, 0xEE, 0x97, 0x63, 0x4F, 0xFA, 0x1B, 0x5B, 0x09, 0x68, 0xF7 },
+    .ServiceInformation =
+        {
+          .Service_Handle = RANDOM_S_START_ATT_HANDLE,
+          .End_Group_Handle = 0x9,
+          .UUID =
+              {
+                .UUID_Type = guUUID_128,
+                .UUID =
+                    {
+                      .UUID_128 =
+                          {0xB0, 0xF9, 0x66, 0xAC, 0xED, 0xFD, 0xEE, 0x97, 0x63, 0x4F, 0xFA, 0x1B,
+                           0x5B, 0x09, 0x68, 0xF7},
+                    },
+              },
         },
-      },
-    },
     .NumberOfCharacteristics = 0x2,
     .CharacteristicInformationList = characteristics,
   };
@@ -352,7 +376,7 @@ void fake_gatt_put_discovery_indication_random_128bit_uuid_service(unsigned int 
   fake_gatt_put_service_discovery_event(&event);
 }
 
-const Service * fake_gatt_get_random_128bit_uuid_service(void) {
+const Service *fake_gatt_get_random_128bit_uuid_service(void) {
   s_random_128bit_service = (const Service) {
     .uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97, 0xEE, 0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB0),
     .handle = 0x01,
@@ -387,9 +411,8 @@ const Service * fake_gatt_get_random_128bit_uuid_service(void) {
   return &s_random_128bit_service;
 }
 
-
-void fake_gatt_put_discovery_indication_gatt_profile_service(unsigned int connection_id,
-                                                          bool has_service_changed_characteristic) {
+void fake_gatt_put_discovery_indication_gatt_profile_service(
+    unsigned int connection_id, bool has_service_changed_characteristic) {
   GATT_Characteristic_Descriptor_Information_t cccd1 = {
     .Characteristic_Descriptor_Handle = 0x05,
     .Characteristic_Descriptor_UUID = {
@@ -405,15 +428,18 @@ void fake_gatt_put_discovery_indication_gatt_profile_service(unsigned int connec
 
   GATT_Characteristic_Information_t characteristics[1] = {
     [0] = {
-      .Characteristic_UUID = {
-        .UUID_Type = guUUID_16,
-        .UUID = {
-          .UUID_16 = {
-            .UUID_Byte0 = 0x05,
-            .UUID_Byte1 = 0x2a,
+      .Characteristic_UUID =
+          {
+            .UUID_Type = guUUID_16,
+            .UUID =
+                {
+                  .UUID_16 =
+                      {
+                        .UUID_Byte0 = 0x05,
+                        .UUID_Byte1 = 0x2a,
+                      },
+                },
           },
-        },
-      },
       .Characteristic_Handle = 0x3,
       .Characteristic_Properties = 0x20,
       .NumberOfDescriptors = 1,
@@ -423,19 +449,21 @@ void fake_gatt_put_discovery_indication_gatt_profile_service(unsigned int connec
 
   GATT_Service_Discovery_Indication_Data_t data = {
     .ConnectionID = connection_id,
-    .ServiceInformation = {
-      .Service_Handle = 0x1,
-      .End_Group_Handle = 0x5,
-      .UUID = {
-        .UUID_Type = guUUID_16,
-        .UUID = {
-          .UUID_16 = {
-            .UUID_Byte0 = 0x01,
-            .UUID_Byte1 = 0x18,
-          },
-        },
-      }
-    },
+    .ServiceInformation =
+        {.Service_Handle = 0x1,
+         .End_Group_Handle = 0x5,
+         .UUID =
+             {
+               .UUID_Type = guUUID_16,
+               .UUID =
+                   {
+                     .UUID_16 =
+                         {
+                           .UUID_Byte0 = 0x01,
+                           .UUID_Byte1 = 0x18,
+                         },
+                   },
+             }},
     .NumberOfIncludedService = 0,
     .IncludedServiceList = NULL,
     .NumberOfCharacteristics = has_service_changed_characteristic ? 1 : 0,

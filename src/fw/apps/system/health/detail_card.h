@@ -11,9 +11,9 @@
 #include "applib/ui/content_indicator_private.h"
 #include "applib/ui/ui.h"
 
-#define MAX_NUM_HEADINGS (2)
+#define MAX_NUM_HEADINGS  (2)
 #define MAX_NUM_SUBTITLES (2)
-#define MAX_NUM_ZONES (7)
+#define MAX_NUM_ZONES     (7)
 
 typedef struct HealthDetailHeading {
   char *primary_label;
@@ -109,5 +109,7 @@ void health_detail_card_configure(HealthDetailCard *detail_card,
 //! @param day_data pointer to the daily history data
 //! @param i18n_owner pointer to the i18n owner
 void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *num_zones,
-    int32_t *weekly_max, bool format_hours_and_minutes, bool show_crown, GColor fill_color,
-    GColor today_fill_color, int32_t *day_data, void *i18n_owner);
+                                             int32_t *weekly_max, bool format_hours_and_minutes,
+                                             bool show_crown, GColor fill_color,
+                                             GColor today_fill_color, int32_t *day_data,
+                                             void *i18n_owner);

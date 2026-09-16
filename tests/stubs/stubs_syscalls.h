@@ -56,4 +56,5 @@ AppInstallId WEAK sys_process_manager_get_current_process_id(void) {
   return (AppInstallId)(-1);
 }
 
-void WEAK sys_get_app_uuid(Uuid *uuid) {}
+void WEAK sys_get_app_uuid(Uuid *uuid) {
+}

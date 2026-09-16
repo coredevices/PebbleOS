@@ -11,9 +11,10 @@
 static bool command_dls_list_cb(DataLoggingSession *session, void *data) {
   char buffer[80];
   prompt_send_response_fmt(buffer, sizeof(buffer),
-      "session_id : %"PRIu8", tag: %"PRIu32", bytes: %"PRIu32", write_offset: %"PRIu32,
-      session->comm.session_id, session->tag, session->storage.num_bytes,
-      session->storage.write_offset);
+                           "session_id : %" PRIu8 ", tag: %" PRIu32 ", bytes: %" PRIu32
+                           ", write_offset: %" PRIu32,
+                           session->comm.session_id, session->tag, session->storage.num_bytes,
+                           session->storage.write_offset);
 
   return true;
 }
@@ -38,8 +39,7 @@ void command_dls_show(const char *id) {
 
   char buffer[80];
 
-#define WRITE_LINE(fmt, arg) \
-  prompt_send_response_fmt(buffer, sizeof(buffer), fmt, arg)
+#define WRITE_LINE(fmt, arg) prompt_send_response_fmt(buffer, sizeof(buffer), fmt, arg)
 
   WRITE_LINE("session_id %u", logging_session->comm.session_id);
   WRITE_LINE("uuid %s", uuid_b);

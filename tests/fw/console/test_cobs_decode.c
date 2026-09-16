@@ -21,13 +21,13 @@ static void assert_decode_char_succeeds(char c) {
   cl_assert(cobs_streaming_decode(&ctx, c));
 }
 
-static void assert_decode_succeeds(const char * restrict buf, size_t length) {
+static void assert_decode_succeeds(const char *restrict buf, size_t length) {
   while (length--) {
     assert_decode_char_succeeds(*buf++);
   }
 }
 
-static void assert_decode_fails(const char * restrict buf, size_t length) {
+static void assert_decode_fails(const char *restrict buf, size_t length) {
   bool result = true;
   while (result && length--) {
     result = result && cobs_streaming_decode(&ctx, *buf++);
@@ -47,10 +47,9 @@ static void assert_decode_completed(size_t expected_length) {
   }
 }
 
-static void assert_output_equal(const void * restrict expected, size_t length) {
+static void assert_output_equal(const void *restrict expected, size_t length) {
   cl_assert(memcmp(out, expected, length) == 0);
 }
-
 
 void test_cobs_decode__initialize(void) {
   memset(&ctx, 0xdd, sizeof(ctx));
@@ -58,7 +57,7 @@ void test_cobs_decode__initialize(void) {
 }
 
 void test_cobs_decode__simple(void) {
-  const char vector[] = { 0x06, 'H', 'e', 'l', 'l', 'o' };
+  const char vector[] = {0x06, 'H', 'e', 'l', 'l', 'o'};
   decode_start(5);
   assert_decode_succeeds(vector, sizeof(vector));
   assert_decode_completed(5);
@@ -66,7 +65,7 @@ void test_cobs_decode__simple(void) {
 }
 
 void test_cobs_decode__zeroes(void) {
-  const char vector[] = { 0x01, 0x02, 'A', 0x01, 0x02, 'B', 0x01 };
+  const char vector[] = {0x01, 0x02, 'A', 0x01, 0x02, 'B', 0x01};
   decode_start(6);
   assert_decode_succeeds(vector, sizeof(vector));
   assert_decode_completed(6);
@@ -94,7 +93,7 @@ void test_cobs_decode__empty_data(void) {
 }
 
 void test_cobs_decode__output_too_small_1(void) {
-  const char vector[] = { 0x06, 'L', 'a', 'r', 'g', 'e', '.' };
+  const char vector[] = {0x06, 'L', 'a', 'r', 'g', 'e', '.'};
   decode_start(5);
   assert_decode_fails(vector, sizeof(vector));
   assert_decode_completed(SIZE_MAX);
@@ -102,7 +101,7 @@ void test_cobs_decode__output_too_small_1(void) {
 }
 
 void test_cobs_decode__output_too_small_2(void) {
-  const char vector[] = { 0x05, 'a', 'b', 'c', 'd', 0x01, 0x01 };
+  const char vector[] = {0x05, 'a', 'b', 'c', 'd', 0x01, 0x01};
   decode_start(5);
   assert_decode_fails(vector, sizeof(vector));
   assert_decode_completed(SIZE_MAX);
@@ -110,7 +109,7 @@ void test_cobs_decode__output_too_small_2(void) {
 }
 
 void test_cobs_decode__input_truncated(void) {
-  const char vector[] = { 0x05, 'a', 'b', 'c' };
+  const char vector[] = {0x05, 'a', 'b', 'c'};
   decode_start(100);
   assert_decode_succeeds(vector, sizeof(vector));
   assert_decode_completed(SIZE_MAX);

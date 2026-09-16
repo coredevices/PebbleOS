@@ -65,12 +65,12 @@ void QSPI_IRQHandler(void) {
 static void prv_workaround_215_apply(void) {
   nrf_qspi_pins_t pins;
   nrf_qspi_pins_t disconnected_pins = {
-      .sck_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .csn_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io0_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io1_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io2_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io3_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .sck_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .csn_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io0_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io1_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io2_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io3_pin = NRF_QSPI_PIN_NOT_CONNECTED,
   };
 
   // Disconnect pins to not wait for response from external memory
@@ -90,10 +90,10 @@ static void prv_workaround_215_apply(void) {
 static void prv_cinstr_write_read(QSPIFlash *dev, uint8_t instr, const void *data, void *buf,
                                   size_t len) {
   nrf_qspi_cinstr_conf_t conf = {
-      .opcode = instr,
-      .length = len + 1U,
-      .io2_level = true,
-      .io3_level = true,
+    .opcode = instr,
+    .length = len + 1U,
+    .io2_level = true,
+    .io3_level = true,
   };
 
   PBL_ASSERTN(len <= 8U);
@@ -771,7 +771,7 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
 
   return 0;
 }
-#endif  // CONFIG_RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 
 status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
   return S_NO_ACTION_REQUIRED;

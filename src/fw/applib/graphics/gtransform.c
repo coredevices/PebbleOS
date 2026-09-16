@@ -20,10 +20,10 @@ GTransform gtransform_init_rotation(int32_t angle) {
     int32_t sine = sin_lookup(angle);
     int64_t cosine_val = (cosine * ((int64_t)GTransformNumberOne.raw_value)) / TRIG_MAX_RATIO;
     int64_t sine_val = (sine * ((int64_t)GTransformNumberOne.raw_value)) / TRIG_MAX_RATIO;
-    GTransformNumber a = (GTransformNumber) { .raw_value = cosine_val };
-    GTransformNumber b = (GTransformNumber) { .raw_value = -sine_val };
-    GTransformNumber c = (GTransformNumber) { .raw_value = sine_val };
-    GTransformNumber d = (GTransformNumber) { .raw_value = cosine_val };
+    GTransformNumber a = (GTransformNumber){.raw_value = cosine_val};
+    GTransformNumber b = (GTransformNumber){.raw_value = -sine_val};
+    GTransformNumber c = (GTransformNumber){.raw_value = sine_val};
+    GTransformNumber d = (GTransformNumber){.raw_value = cosine_val};
     return GTransform(a, b, c, d, GTransformNumberZero, GTransformNumberZero);
   } else {
     return GTransformIdentity();
@@ -33,7 +33,7 @@ GTransform gtransform_init_rotation(int32_t angle) {
 //////////////////////////////////////
 /// Evaluating Transforms
 //////////////////////////////////////
-bool gtransform_is_identity(const GTransform * const t) {
+bool gtransform_is_identity(const GTransform *const t) {
   if (!t) {
     return false;
   }
@@ -47,7 +47,7 @@ bool gtransform_is_identity(const GTransform * const t) {
   return false;
 }
 
-bool gtransform_is_only_scale(const GTransform * const t) {
+bool gtransform_is_only_scale(const GTransform *const t) {
   if (!t) {
     return false;
   }
@@ -62,7 +62,7 @@ bool gtransform_is_only_scale(const GTransform * const t) {
   return false;
 }
 
-bool gtransform_is_only_translation(const GTransform * const t) {
+bool gtransform_is_only_translation(const GTransform *const t) {
   if (!t) {
     return false;
   }
@@ -77,7 +77,7 @@ bool gtransform_is_only_translation(const GTransform * const t) {
   return false;
 }
 
-bool gtransform_is_only_scale_or_translation(const GTransform * const t) {
+bool gtransform_is_only_scale_or_translation(const GTransform *const t) {
   if (!t) {
     return false;
   }
@@ -90,7 +90,7 @@ bool gtransform_is_only_scale_or_translation(const GTransform * const t) {
   return false;
 }
 
-bool gtransform_is_equal(const GTransform * const t1, const GTransform * const t2) {
+bool gtransform_is_equal(const GTransform *const t1, const GTransform *const t2) {
   if ((!t1) || (!t2)) {
     return false;
   }
@@ -103,7 +103,7 @@ bool gtransform_is_equal(const GTransform * const t1, const GTransform * const t
 //////////////////////////////////////
 // Note that t_new can be set to either of t1 or t2 safely to do in place multiplication
 // Note this operation is not commutative. The operation is as follows t_new = t1 * t2
-void gtransform_concat(GTransform *t_new, const GTransform *t1, const GTransform * t2) {
+void gtransform_concat(GTransform *t_new, const GTransform *t1, const GTransform *t2) {
   if ((!t_new) || (!t1) || (!t2)) {
     return;
   }
@@ -155,8 +155,8 @@ void gtransform_scale(GTransform *t_new, GTransform *t, GTransformNumber sx, GTr
   t_new->d = Fixed_S32_16_mul(sy, t->d);
 }
 
-void gtransform_translate(GTransform *t_new, GTransform *t,
-                          GTransformNumber tx, GTransformNumber ty) {
+void gtransform_translate(GTransform *t_new, GTransform *t, GTransformNumber tx,
+                          GTransformNumber ty) {
   if ((!t_new) || (!t)) {
     return;
   }
@@ -200,7 +200,7 @@ bool gtransform_invert(GTransform *t_new, GTransform *t) {
 //////////////////////////////////////
 /// Applying Transformations
 //////////////////////////////////////
-GPointPrecise gpoint_transform(GPoint point, const GTransform * const t) {
+GPointPrecise gpoint_transform(GPoint point, const GTransform *const t) {
   GPointPrecise pointP = GPointPreciseFromGPoint(point);
 
   if (!t) {
@@ -221,7 +221,7 @@ GPointPrecise gpoint_transform(GPoint point, const GTransform * const t) {
   return GPointPrecise(sum_x.raw_value, sum_y.raw_value);
 }
 
-GVectorPrecise gvector_transform(GVector vector, const GTransform * const t) {
+GVectorPrecise gvector_transform(GVector vector, const GTransform *const t) {
   GVectorPrecise vectorP = GVectorPreciseFromGVector(vector);
 
   if (!t) {

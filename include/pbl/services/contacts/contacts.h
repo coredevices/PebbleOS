@@ -16,7 +16,7 @@ typedef struct {
 
 //! Lookup a contact given its uuid. Will return NULL if no contact is found.
 //! The contact must be freed with contacts_free_contact().
-Contact* contacts_get_contact_by_uuid(const Uuid *uuid);
+Contact *contacts_get_contact_by_uuid(const Uuid *uuid);
 
 //! Frees a contact
 void contacts_free_contact(Contact *contact);

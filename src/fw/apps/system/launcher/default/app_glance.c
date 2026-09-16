@@ -15,7 +15,7 @@ void launcher_app_glance_init(LauncherAppGlance *glance, const Uuid *uuid, KinoR
     return;
   }
 
-  *glance = (LauncherAppGlance) {
+  *glance = (LauncherAppGlance){
     .uuid = *uuid,
     .reel = impl,
     .should_consider_slices = should_consider_slices,

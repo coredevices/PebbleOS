@@ -47,7 +47,6 @@ typedef struct {
   uint8_t padding;
 } TimezoneDSTRule;
 
-
 //! @return The number of timezone regions we have in our database
 int timezone_database_get_region_count(void);
 

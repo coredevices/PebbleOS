@@ -4,10 +4,10 @@
 #pragma once
 
 #define FRAMEBUFFER_WORDS_PER_ROW ((DISP_COLS / 32) + 1)
-#define FRAMEBUFFER_SIZE_DWORDS (DISP_ROWS * FRAMEBUFFER_WORDS_PER_ROW)
+#define FRAMEBUFFER_SIZE_DWORDS   (DISP_ROWS * FRAMEBUFFER_WORDS_PER_ROW)
 
 #define FRAMEBUFFER_BYTES_PER_ROW (FRAMEBUFFER_WORDS_PER_ROW * 4)
-#define FRAMEBUFFER_SIZE_BYTES (DISP_ROWS * FRAMEBUFFER_BYTES_PER_ROW)
+#define FRAMEBUFFER_SIZE_BYTES    (DISP_ROWS * FRAMEBUFFER_BYTES_PER_ROW)
 
 typedef struct FrameBuffer {
   uint32_t buffer[FRAMEBUFFER_SIZE_DWORDS];
@@ -16,4 +16,4 @@ typedef struct FrameBuffer {
   bool is_dirty;
 } FrameBuffer;
 
-uint32_t* framebuffer_get_line(FrameBuffer* f, uint8_t y);
+uint32_t *framebuffer_get_line(FrameBuffer *f, uint8_t y);

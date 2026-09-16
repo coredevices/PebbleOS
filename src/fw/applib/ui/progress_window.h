@@ -21,7 +21,7 @@
 //! provided. Once progress_window_set_progress_success or progress_window_set_progress_failure
 //! has been called, subsequent calls will be ignored.
 
-#define PROGRESS_WINDOW_DEFAULT_FAKE_PERCENT 15
+#define PROGRESS_WINDOW_DEFAULT_FAKE_PERCENT     15
 #define PROGRESS_WINDOW_DEFAULT_FAILURE_DELAY_MS 1000
 
 typedef struct ProgressWindow ProgressWindow;
@@ -70,7 +70,6 @@ struct ProgressWindow {
   bool is_peek_layer_used;
 };
 
-
 void progress_window_init(ProgressWindow *data);
 
 void progress_window_deinit(ProgressWindow *data);
@@ -79,14 +78,12 @@ ProgressWindow *progress_window_create(void);
 
 void progress_window_destroy(ProgressWindow *window);
 
-
 void progress_window_push(ProgressWindow *window, WindowStack *window_stack);
 
 //! Helper function to push a progress window to the app window stack.
 void app_progress_window_push(ProgressWindow *window);
 
 void progress_window_pop(ProgressWindow *window);
-
 
 //! Set the maximum percentage we should fake progress to until real progress is required.
 void progress_window_set_max_fake_progress(ProgressWindow *window,

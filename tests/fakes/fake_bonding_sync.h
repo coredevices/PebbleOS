@@ -20,12 +20,12 @@ typedef struct {
 static BLEBondingNode *s_ble_bonding_head;
 
 void bonding_sync_add_bonding(const BleBonding *bonding) {
-  BLEBondingNode *node = (BLEBondingNode *) kernel_malloc_check(sizeof(BLEBondingNode));
-  *node = (BLEBondingNode) {
+  BLEBondingNode *node = (BLEBondingNode *)kernel_malloc_check(sizeof(BLEBondingNode));
+  *node = (BLEBondingNode){
     .bonding = *bonding,
   };
-  s_ble_bonding_head = (BLEBondingNode *) list_prepend((ListNode *)s_ble_bonding_head,
-                                                       (ListNode *)node);
+  s_ble_bonding_head =
+      (BLEBondingNode *)list_prepend((ListNode *)s_ble_bonding_head, (ListNode *)node);
 }
 
 void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {

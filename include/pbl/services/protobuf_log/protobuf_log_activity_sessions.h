@@ -12,7 +12,7 @@
 ProtobufLogRef protobuf_log_activity_sessions_create(void);
 
 bool protobuf_log_activity_sessions_add(ProtobufLogRef ref, time_t sample_utc,
-                                       ActivitySession *session);
+                                        ActivitySession *session);
 
 bool protobuf_log_activity_sessions_decode(pebble_pipeline_Event *event_in,
                                            ActivitySession *session_out);

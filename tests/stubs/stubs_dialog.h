@@ -83,8 +83,8 @@ GDrawCommandImage *dialog_create_icon(Dialog *dialog) {
   return NULL;
 }
 
-bool dialog_init_icon_layer(Dialog *dialog, GDrawCommandImage *image,
-                            GPoint origin, bool animated) {
+bool dialog_init_icon_layer(Dialog *dialog, GDrawCommandImage *image, GPoint origin,
+                            bool animated) {
   return false;
 }
 

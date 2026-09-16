@@ -92,8 +92,8 @@ void debounced_connection_service_handle_event(PebbleCommSessionEvent *e) {
     // If we become disconnected don't update apps until we have had a chance
     // to recover the connection. This will make our BT connection seem more
     // reliable.
-    regular_timer_add_multisecond_callback(
-        &s_debounce_timers[conn_id], DISCONNECT_HIDE_DURATION_SECS);
+    regular_timer_add_multisecond_callback(&s_debounce_timers[conn_id],
+                                           DISCONNECT_HIDE_DURATION_SECS);
     return;
   }
 

@@ -87,9 +87,9 @@ void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i
   const int units_offset_y = fonts_get_font_height(number_font) - fonts_get_font_height(units_font);
   const int hours_and_minutes_buffer_size = sizeof("00");
   if (hours != INT_MIN) {
-    GTextNodeText *hours_text_node = health_util_create_text_node(hours_and_minutes_buffer_size,
-                                                                  number_font, color, container);
-    snprintf((char *) hours_text_node->text, hours_and_minutes_buffer_size,
+    GTextNodeText *hours_text_node =
+        health_util_create_text_node(hours_and_minutes_buffer_size, number_font, color, container);
+    snprintf((char *)hours_text_node->text, hours_and_minutes_buffer_size,
              i18n_get("%d", i18n_owner), hours);
 
     GTextNodeText *hours_units_text_node = health_util_create_text_node_with_text(
@@ -103,9 +103,9 @@ void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i
   }
 
   if (minutes != INT_MIN) {
-    GTextNodeText *minutes_text_node = health_util_create_text_node(hours_and_minutes_buffer_size,
-                                                                    number_font, color, container);
-    snprintf((char *) minutes_text_node->text, hours_and_minutes_buffer_size,
+    GTextNodeText *minutes_text_node =
+        health_util_create_text_node(hours_and_minutes_buffer_size, number_font, color, container);
+    snprintf((char *)minutes_text_node->text, hours_and_minutes_buffer_size,
              i18n_get("%d", i18n_owner), minutes);
 
     GTextNodeText *minutes_units_text_node = health_util_create_text_node_with_text(
@@ -115,7 +115,7 @@ void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i
 }
 
 void health_util_convert_fraction_to_whole_and_decimal_part(int numerator, int denominator,
-                                                            int* whole_part, int *decimal_part) {
+                                                            int *whole_part, int *decimal_part) {
   const int figure = ROUND(numerator * 100, denominator * 10);
   *whole_part = figure / 10;
   *decimal_part = figure % 10;
@@ -125,9 +125,8 @@ int health_util_format_whole_and_decimal(char *buffer, size_t buffer_size, int n
                                          int denominator) {
   int converted_distance_whole_part = 0;
   int converted_distance_decimal_part = 0;
-  health_util_convert_fraction_to_whole_and_decimal_part(numerator, denominator,
-                                                         &converted_distance_whole_part,
-                                                         &converted_distance_decimal_part);
+  health_util_convert_fraction_to_whole_and_decimal_part(
+      numerator, denominator, &converted_distance_whole_part, &converted_distance_decimal_part);
   const char *fmt_i18n = i18n_noop("%d.%d");
   const int rv = snprintf(buffer, buffer_size, i18n_get(fmt_i18n, buffer),
                           converted_distance_whole_part, converted_distance_decimal_part);
@@ -167,8 +166,8 @@ int health_util_format_distance(char *buffer, size_t buffer_size, uint32_t dista
 void health_util_convert_distance_to_whole_and_decimal_part(int distance_m, int *whole_part,
                                                             int *decimal_part) {
   const int conversion_factor = health_util_get_distance_factor();
-  health_util_convert_fraction_to_whole_and_decimal_part(distance_m, conversion_factor,
-                                                         whole_part, decimal_part);
+  health_util_convert_fraction_to_whole_and_decimal_part(distance_m, conversion_factor, whole_part,
+                                                         decimal_part);
 }
 
 time_t health_util_get_pace(int time_s, int distance_meter) {

@@ -20,30 +20,21 @@
 
 #define GATT_MTU_MINIMUM (23)
 
-BTErrno gatt_client_op_read(BLECharacteristic characteristic,
-                            GAPLEClient client);
+BTErrno gatt_client_op_read(BLECharacteristic characteristic, GAPLEClient client);
 
-void gatt_client_consume_read_response(uintptr_t object_ref,
-                                       uint8_t value_out[],
-                                       uint16_t value_length,
-                                       GAPLEClient client);
+void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+                                       uint16_t value_length, GAPLEClient client);
 
-BTErrno gatt_client_op_write(BLECharacteristic characteristic,
-                             const uint8_t *value,
-                             size_t value_length,
-                             GAPLEClient client);
+BTErrno gatt_client_op_write(BLECharacteristic characteristic, const uint8_t *value,
+                             size_t value_length, GAPLEClient client);
 
 BTErrno gatt_client_op_write_without_response(BLECharacteristic characteristic,
-                                              const uint8_t *value,
-                                              size_t value_length,
+                                              const uint8_t *value, size_t value_length,
                                               GAPLEClient client);
 
-BTErrno gatt_client_op_write_descriptor(BLEDescriptor descriptor,
-                                        const uint8_t *value,
-                                        size_t value_length,
-                                        GAPLEClient client);
+BTErrno gatt_client_op_write_descriptor(BLEDescriptor descriptor, const uint8_t *value,
+                                        size_t value_length, GAPLEClient client);
 
-BTErrno gatt_client_op_read_descriptor(BLEDescriptor descriptor,
-                                       GAPLEClient client);
+BTErrno gatt_client_op_read_descriptor(BLEDescriptor descriptor, GAPLEClient client);
 
 void gatt_client_op_cleanup(GAPLEClient client);

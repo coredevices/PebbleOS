@@ -14,7 +14,7 @@ static RtcTicks s_rtc_auto_increment = 0;
 static time_t s_time_base = 0;
 static int16_t s_time_ms_base = 0;
 static int64_t s_time_tick_base = 0;
-static TimezoneInfo s_tzinfo = { {0} };
+static TimezoneInfo s_tzinfo = {{0}};
 
 /*
 // TODO: Unused right now
@@ -34,13 +34,14 @@ bool rtc_is_lse_started(void);
 const char* time_t_to_string(char* buffer, time_t t);
 */
 
-
 // Stubs
 ////////////////////////////////////
 //! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
-const char* rtc_get_time_string(char* buffer) {return NULL;}
+const char *rtc_get_time_string(char *buffer) {
+  return NULL;
+}
 
-void rtc_get_time_tm(struct tm* time_tm) {
+void rtc_get_time_tm(struct tm *time_tm) {
   if (time_tm) {
     time_t temp = rtc_get_time();
     gmtime_r(&temp, time_tm);
@@ -84,7 +85,7 @@ uint16_t rtc_get_timezone_id(void) {
 }
 
 //! @return millisecond port of the current second.
-void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
+void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   *out_ms = s_time_ms_base;
   *out_seconds = s_time_base;
 }

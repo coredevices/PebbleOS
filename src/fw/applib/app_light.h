@@ -32,9 +32,10 @@ bool app_light_is_on(void);
 void app_light_enable_interaction(void);
 
 //! Turn the watch's backlight on or put it back into automatic control.
-//! Developers should take care when calling this function, keeping Pebble's backlight on for long periods of time
-//! will rapidly deplete the battery.
-//! @param enable Turn the backlight on if `true`, otherwise `false` to put it back into automatic control.
+//! Developers should take care when calling this function, keeping Pebble's backlight on for long
+//! periods of time will rapidly deplete the battery.
+//! @param enable Turn the backlight on if `true`, otherwise `false` to put it back into automatic
+//! control.
 void app_light_enable(bool enable);
 
 //! Tint the backlight LED to the given color. The color persists while the

@@ -5,5 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* bouncing_box_demo_get_app_info(void);
-
+const PebbleProcessMd *bouncing_box_demo_get_app_info(void);

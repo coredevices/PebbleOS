@@ -40,8 +40,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 static int prv_device_name_read_op_start(void *ctx) {
   const uint16_t conn_handle = *(uint16_t *)ctx;
 
-  int rc = ble_gattc_read_by_uuid(conn_handle, 1, UINT16_MAX,
-                                  (ble_uuid_t *)&s_device_name_chr_uuid,
+  int rc = ble_gattc_read_by_uuid(conn_handle, 1, UINT16_MAX, (ble_uuid_t *)&s_device_name_chr_uuid,
                                   prv_device_name_read_event_cb, NULL);
   if (rc != 0) {
     PBL_LOG_ERR("Pairing device name read failed to start (rc=0x%04x)", (uint16_t)rc);
@@ -61,7 +60,9 @@ void bt_driver_advert_advertising_disable(void) {
   PBL_ASSERT(rc == 0, "Failed to stop advertising (0x%04x)", (uint16_t)rc);
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) { return false; }
+bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+  return false;
+}
 
 bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   int rc;
@@ -84,7 +85,8 @@ bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
 
 static void prv_handle_connection_event(struct ble_gap_event *event) {
   // we only want to notify on a successful connection
-  if (event->connect.status != 0) return;
+  if (event->connect.status != 0)
+    return;
 
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->connect.conn_handle, &desc) != 0) {
@@ -93,10 +95,10 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
   }
 
   struct BleConnectionCompleteEvent complete_event = {
-      .handle = event->connect.conn_handle,
-      .is_master = desc.role == BLE_GAP_ROLE_MASTER,
-      .status = HciStatusCode_Success,
-      .mtu = ble_att_mtu(event->connect.conn_handle),
+    .handle = event->connect.conn_handle,
+    .is_master = desc.role == BLE_GAP_ROLE_MASTER,
+    .status = HciStatusCode_Success,
+    .mtu = ble_att_mtu(event->connect.conn_handle),
   };
 
   // If OTA address != ID address, then the address must be resolved.
@@ -154,9 +156,9 @@ static void prv_handle_disconnection_event(struct ble_gap_event *event) {
   bt_driver_cb_gatt_handle_disconnect(&gatt_event);
 
   struct BleDisconnectionCompleteEvent disconnection_event = {
-      .handle = event->disconnect.conn.conn_handle,
-      .reason = event->disconnect.reason,
-      .status = HciStatusCode_Success,
+    .handle = event->disconnect.conn.conn_handle,
+    .reason = event->disconnect.reason,
+    .status = HciStatusCode_Success,
   };
   nimble_addr_to_pebble_device(&event->disconnect.conn.peer_id_addr,
                                &disconnection_event.peer_address);
@@ -171,13 +173,11 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
   }
 
   PBL_LOG_INFO("Encryption change: status=0x%04x encrypted=%u bonded=%u",
-               (uint16_t)event->enc_change.status, desc.sec_state.encrypted,
-               desc.sec_state.bonded);
+               (uint16_t)event->enc_change.status, desc.sec_state.encrypted, desc.sec_state.bonded);
 
   struct BleEncryptionChange enc_change_event = {
-      .encryption_enabled = desc.sec_state.encrypted,
-      .status =
-          event->enc_change.status,  // doesn't technically match but only logged so this is fine
+    .encryption_enabled = desc.sec_state.encrypted,
+    .status = event->enc_change.status, // doesn't technically match but only logged so this is fine
   };
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &enc_change_event.dev_address);
   bt_driver_handle_le_encryption_change_event(&enc_change_event);
@@ -185,8 +185,7 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
 
 static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
   if (event->conn_update.status != 0) {
-    PBL_LOG_ERR("Connection parameters update failed: 0x%04x",
-              (uint16_t)event->conn_update.status);
+    PBL_LOG_ERR("Connection parameters update failed: 0x%04x", (uint16_t)event->conn_update.status);
     return;
   }
 
@@ -196,13 +195,14 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
     return;
   }
 
-  PBL_LOG_INFO("Connection parameters updated: "
-            "itvl=%u ms, latency=%u, spvn timeout=%u ms",
-            desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
-            desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
+  PBL_LOG_INFO(
+      "Connection parameters updated: "
+      "itvl=%u ms, latency=%u, spvn timeout=%u ms",
+      desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
+      desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
 
   struct BleConnectionUpdateCompleteEvent conn_params_update_event = {
-      .status = HciStatusCode_Success,
+    .status = HciStatusCode_Success,
   };
   nimble_conn_params_to_pebble(&desc, &conn_params_update_event.conn_params);
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &conn_params_update_event.dev_address);
@@ -213,12 +213,13 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
 static void prv_handle_conn_update_req_event(struct ble_gap_event *event) {
   *event->conn_update_req.self_params = *event->conn_update_req.peer_params;
 
-  PBL_LOG_INFO("Connection update request: "
-            "itvl=(%u, %u) ms, latency=%u, spvn timeout=%u ms",
-            event->conn_update_req.self_params->itvl_min * BLE_HCI_CONN_ITVL / 1000,
-            event->conn_update_req.self_params->itvl_max * BLE_HCI_CONN_ITVL / 1000,
-            event->conn_update_req.self_params->latency,
-            event->conn_update_req.self_params->supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
+  PBL_LOG_INFO(
+      "Connection update request: "
+      "itvl=(%u, %u) ms, latency=%u, spvn timeout=%u ms",
+      event->conn_update_req.self_params->itvl_min * BLE_HCI_CONN_ITVL / 1000,
+      event->conn_update_req.self_params->itvl_max * BLE_HCI_CONN_ITVL / 1000,
+      event->conn_update_req.self_params->latency,
+      event->conn_update_req.self_params->supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
 }
 
 static void prv_handle_passkey_event(struct ble_gap_event *event) {
@@ -283,9 +284,9 @@ extern int pebble_pairing_service_get_connectivity_send_notification(uint16_t co
                                                                      uint16_t attr_handle);
 static void prv_handle_subscription_event(struct ble_gap_event *event) {
   PBL_LOG_DBG("prv_handle_subscription_event: connhandle: %d attr:%d notify:%d/%d indicate:%d/%d",
-            event->subscribe.conn_handle, event->subscribe.attr_handle,
-            event->subscribe.prev_notify, event->subscribe.cur_notify,
-            event->subscribe.prev_indicate, event->subscribe.cur_indicate);
+              event->subscribe.conn_handle, event->subscribe.attr_handle,
+              event->subscribe.prev_notify, event->subscribe.cur_notify,
+              event->subscribe.prev_indicate, event->subscribe.cur_indicate);
 }
 
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
@@ -296,9 +297,9 @@ static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
   }
 
   GattServerNotifIndicEvent notification_event = {
-      .attr_handle = event->notify_rx.attr_handle,
-      .attr_val = event->notify_rx.om->om_data,
-      .attr_val_len = event->notify_rx.om->om_len,
+    .attr_handle = event->notify_rx.attr_handle,
+    .attr_val = event->notify_rx.om->om_data,
+    .attr_val_len = event->notify_rx.om->om_len,
   };
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &notification_event.dev_address);
 
@@ -311,9 +312,7 @@ static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
 
 static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
   PBL_LOG_DBG("notification tx event; status=%d attr_handle=%d indication=%d\n",
-            event->notify_tx.status,
-            event->notify_tx.attr_handle,
-            event->notify_tx.indication);
+              event->notify_tx.status, event->notify_tx.attr_handle, event->notify_tx.indication);
 }
 
 static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
@@ -342,13 +341,12 @@ static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
 
 static void prv_handle_phy_update_event(struct ble_gap_event *event) {
   if (event->phy_updated.status != 0) {
-    PBL_LOG_ERR("PHY update failed: 0x%04x",
-              (uint16_t)event->phy_updated.status);
+    PBL_LOG_ERR("PHY update failed: 0x%04x", (uint16_t)event->phy_updated.status);
     return;
   }
 
   PBL_LOG_DBG("PHY update complete; conn_handle=%d, tx_phy=%d, rx_phy=%d",
-          event->phy_updated.conn_handle, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
+              event->phy_updated.conn_handle, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
 }
 
 static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
@@ -358,8 +356,7 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
       prv_handle_connection_event(event);
       break;
     case BLE_GAP_EVENT_DISCONNECT:
-      PBL_LOG_DBG("BLE_GAP_EVENT_DISCONNECT reason=0x%x",
-              event->disconnect.reason);
+      PBL_LOG_DBG("BLE_GAP_EVENT_DISCONNECT reason=0x%x", event->disconnect.reason);
       prv_handle_disconnection_event(event);
       break;
     case BLE_GAP_EVENT_ENC_CHANGE:
@@ -420,10 +417,10 @@ bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_
   int rc;
   uint8_t own_addr_type;
   struct ble_gap_adv_params advp = {
-      .conn_mode = BLE_GAP_CONN_MODE_UND,
-      .disc_mode = BLE_GAP_DISC_MODE_GEN,
-      .itvl_min = BLE_GAP_ADV_ITVL_MS(min_interval_ms),
-      .itvl_max = BLE_GAP_ADV_ITVL_MS(max_interval_ms),
+    .conn_mode = BLE_GAP_CONN_MODE_UND,
+    .disc_mode = BLE_GAP_DISC_MODE_GEN,
+    .itvl_min = BLE_GAP_ADV_ITVL_MS(min_interval_ms),
+    .itvl_max = BLE_GAP_ADV_ITVL_MS(max_interval_ms),
   };
 
   rc = ble_hs_id_infer_auto(0, &own_addr_type);

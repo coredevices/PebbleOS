@@ -5,15 +5,15 @@
 #include "gtypes.h"
 
 #define MAX_PLOT_BRIGHTNESS 3
-#define MAX_PLOT_OPACITY 0
-#define MAX_RADIUS_LOOKUP 13
+#define MAX_PLOT_OPACITY    0
+#define MAX_RADIUS_LOOKUP   13
 
 //! Plots pixel at given coordinates
 //! Note this does not adjust to drawing_box!
 //! @internal
 //! @param ctx Graphics context for drawing
 //! @param point Point to set pixel at using draw state's stroke color
-void graphics_private_set_pixel(GContext* ctx, GPoint point);
+void graphics_private_set_pixel(GContext *ctx, GPoint point);
 
 //! Draws horizontal line with antialiased starting and ending pixel
 //! Will adjust to the drawing_box and clip_box
@@ -24,7 +24,7 @@ void graphics_private_set_pixel(GContext* ctx, GPoint point);
 //! @param x2 Fixedpoint X coordinate for ending point
 //! @internal
 void graphics_private_draw_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_3 x1,
-                                            Fixed_S16_3 x2);
+                                           Fixed_S16_3 x2);
 
 //! Draws horizontal line into framebuffer, requires adjustment for drawing_box and clip_box
 //! @param ctx Graphics context for drawing

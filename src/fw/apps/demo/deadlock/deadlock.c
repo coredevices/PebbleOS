@@ -45,10 +45,7 @@ static void s_main(void) {
   app_event_loop();
 }
 
-const PebbleProcessMd* deadlock_get_app_info(void) {
-  static const PebbleProcessMdSystem s_app_info = {
-    .common.main_func = &s_main,
-    .name = "Deadlock"
-  };
-  return (const PebbleProcessMd*) &s_app_info;
+const PebbleProcessMd *deadlock_get_app_info(void) {
+  static const PebbleProcessMdSystem s_app_info = {.common.main_func = &s_main, .name = "Deadlock"};
+  return (const PebbleProcessMd *)&s_app_info;
 }

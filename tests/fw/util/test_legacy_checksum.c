@@ -15,25 +15,20 @@ void test_legacy_checksum__initialize(void) {
   legacy_defective_checksum_init(&cksum);
 }
 
-static void update(const void * restrict data, size_t length) {
+static void update(const void *restrict data, size_t length) {
   legacy_defective_checksum_update(&cksum, data, length);
 }
 
-#define assert_checksum(EXPECTED) \
-  do { \
-    uint32_t checksum = legacy_defective_checksum_finish(&cksum); \
-    uint32_t expected = (EXPECTED); \
-    if (checksum != expected) { \
-      char error_msg[256]; \
-      sprintf(error_msg, \
-              "%#08"PRIx32" != %#08"PRIx32"\n", \
-              expected, checksum); \
-      clar__assert(0, __FILE__, __LINE__, \
-                   "  expected != checksum", error_msg, 1); \
-    } \
+#define assert_checksum(EXPECTED)                                                   \
+  do {                                                                              \
+    uint32_t checksum = legacy_defective_checksum_finish(&cksum);                   \
+    uint32_t expected = (EXPECTED);                                                 \
+    if (checksum != expected) {                                                     \
+      char error_msg[256];                                                          \
+      sprintf(error_msg, "%#08" PRIx32 " != %#08" PRIx32 "\n", expected, checksum); \
+      clar__assert(0, __FILE__, __LINE__, "  expected != checksum", error_msg, 1);  \
+    }                                                                               \
   } while (0)
-
-
 
 void test_legacy_checksum__no_data(void) {
   assert_checksum(0xffffffff);

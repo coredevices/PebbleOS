@@ -38,22 +38,22 @@ static const LayoutVerifier s_layout_verifiers[NumLayoutIds] = {
 };
 
 static const LayoutColors s_default_colors = {
-  .primary_color = { .argb = GColorBlackARGB8 },
-  .secondary_color = { .argb = GColorBlackARGB8 },
-  .bg_color = { .argb = PBL_IF_COLOR_ELSE(GColorLightGrayARGB8, GColorWhiteARGB8) },
+  .primary_color = {.argb = GColorBlackARGB8},
+  .secondary_color = {.argb = GColorBlackARGB8},
+  .bg_color = {.argb = PBL_IF_COLOR_ELSE(GColorLightGrayARGB8, GColorWhiteARGB8)},
 };
 
 #if !PBL_COLOR
 static const LayoutColors s_default_notification_colors_alternative = {
-    .primary_color = {.argb = GColorWhiteARGB8},
-    .secondary_color = {.argb = GColorBlackARGB8},
-    .bg_color = {.argb = GColorBlackARGB8},
+  .primary_color = {.argb = GColorWhiteARGB8},
+  .secondary_color = {.argb = GColorBlackARGB8},
+  .bg_color = {.argb = GColorBlackARGB8},
 };
 
 static const LayoutColors s_default_notification_colors_standard = {
-    .primary_color = {.argb = GColorBlackARGB8},
-    .secondary_color = {.argb = GColorBlackARGB8},
-    .bg_color = {.argb = GColorLightGrayARGB8},
+  .primary_color = {.argb = GColorBlackARGB8},
+  .secondary_color = {.argb = GColorBlackARGB8},
+  .bg_color = {.argb = GColorLightGrayARGB8},
 };
 #endif
 
@@ -96,7 +96,8 @@ const LayoutColors *layout_get_notification_colors(const LayoutLayer *layout) {
   return layout_get_colors(layout);
 #else
   const bool use_alternative_design = alerts_preferences_get_notification_alternative_design();
-  return use_alternative_design ? &s_default_notification_colors_alternative : &s_default_notification_colors_standard;
+  return use_alternative_design ? &s_default_notification_colors_alternative
+                                : &s_default_notification_colors_standard;
 #endif
 }
 

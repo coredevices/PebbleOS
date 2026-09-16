@@ -21,12 +21,12 @@ _Static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a f
 
 void reboot_reason_set(RebootReason *reason) {
 #ifdef CONFIG_SOC_NRF52
-  uint32_t *raw = (uint32_t*)reason;
+  uint32_t *raw = (uint32_t *)reason;
 
   if (retained_read(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
-            && pbl_kernel_is_running()) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
+    // != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -37,12 +37,12 @@ void reboot_reason_set(RebootReason *reason) {
   retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
   retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
 #elif defined(CONFIG_SOC_SF32LB52)
-  uint32_t *raw = (uint32_t*)reason;
+  uint32_t *raw = (uint32_t *)reason;
 
   if (HAL_Get_backup(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
-            && pbl_kernel_is_running()) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
+    // != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -53,12 +53,12 @@ void reboot_reason_set(RebootReason *reason) {
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
 #elif defined(CONFIG_QEMU)
-  uint32_t *raw = (uint32_t*)reason;
+  uint32_t *raw = (uint32_t *)reason;
 
   if (RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
-            && pbl_kernel_is_running()) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
+    // != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -77,13 +77,13 @@ void reboot_reason_set_restarted_safely(void) {
   reason.restarted_safely = true;
 
 #ifdef CONFIG_SOC_NRF52
-  uint32_t* raw = (uint32_t *)&reason;
+  uint32_t *raw = (uint32_t *)&reason;
   retained_write(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined(CONFIG_SOC_SF32LB52)
-  uint32_t* raw = (uint32_t *)&reason;
+  uint32_t *raw = (uint32_t *)&reason;
   HAL_Set_backup(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined(CONFIG_QEMU)
-  uint32_t* raw = (uint32_t *)&reason;
+  uint32_t *raw = (uint32_t *)&reason;
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, *raw);
 #endif
 }
@@ -148,4 +148,3 @@ void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
   RTC_WriteBackupRegister(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #endif
 }
-

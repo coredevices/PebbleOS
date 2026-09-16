@@ -33,7 +33,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_health_card_view__initialize(void) {
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -57,7 +57,7 @@ void test_health_card_view__cleanup(void) {
 // Helpers
 //////////////////////
 
-static Window* prv_create_card_and_render(HealthData *health_data) {
+static Window *prv_create_card_and_render(HealthData *health_data) {
   Window *window = (Window *)health_card_view_create(health_data);
   window_set_on_screen(window, true, true);
   window_render(window, &s_ctx);
@@ -68,6 +68,6 @@ static Window* prv_create_card_and_render(HealthData *health_data) {
 //////////////////////
 
 void test_health_card_view__render_indicators(void) {
-  prv_create_card_and_render(&(HealthData) {});
+  prv_create_card_and_render(&(HealthData){});
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }

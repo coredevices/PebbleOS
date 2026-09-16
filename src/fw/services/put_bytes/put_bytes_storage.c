@@ -10,11 +10,10 @@
 
 PBL_LOG_MODULE_DECLARE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
 
-
 #ifdef UNITTEST
 extern const PutBytesStorageImplementation s_raw_implementation;
 extern const PutBytesStorageImplementation s_file_implementation;
-#else  // #ifdef UNITTEST
+#else // #ifdef UNITTEST
 #include "pbl/services/put_bytes/put_bytes_storage_raw.h"
 
 static const PutBytesStorageImplementation s_raw_implementation = {
@@ -35,9 +34,8 @@ static const PutBytesStorageImplementation s_file_implementation = {
   .calculate_crc = pb_storage_file_calculate_crc,
   .deinit = pb_storage_file_deinit
 };
-#endif  // #ifndef CONFIG_RECOVERY_FW
-#endif  // #ifdef UNITTEST
-
+#endif // #ifndef CONFIG_RECOVERY_FW
+#endif // #ifdef UNITTEST
 
 void pb_storage_write(PutBytesStorage *storage, uint32_t offset, const uint8_t *buffer,
                       uint32_t length) {
@@ -53,9 +51,9 @@ uint32_t pb_storage_calculate_crc(PutBytesStorage *storage, PutBytesCrcType crc_
   return storage->impl->calculate_crc(storage, crc_type);
 }
 
-bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type,
-                     uint32_t total_size, PutBytesStorageInfo *info, uint32_t append_offset) {
-  static const PutBytesStorageImplementation* IMPL_FOR_OBJECT_TYPE[] = {
+bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type, uint32_t total_size,
+                     PutBytesStorageInfo *info, uint32_t append_offset) {
+  static const PutBytesStorageImplementation *IMPL_FOR_OBJECT_TYPE[] = {
     [ObjectFirmware] = &s_raw_implementation,
     [ObjectRecovery] = &s_raw_implementation,
     [ObjectSysResources] = &s_raw_implementation,
@@ -80,8 +78,8 @@ bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type,
 
   uint32_t max_size = impl->get_max_size(object_type);
   if (total_size > max_size) {
-    PBL_LOG_WRN("Invalid size for type %u, size: %"PRIu32", max_size: %"PRIu32,
-            object_type, total_size, max_size);
+    PBL_LOG_WRN("Invalid size for type %u, size: %" PRIu32 ", max_size: %" PRIu32, object_type,
+                total_size, max_size);
     return false;
   }
 
@@ -96,7 +94,7 @@ void pb_storage_deinit(PutBytesStorage *storage, bool is_success) {
   }
 }
 
-extern bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *status);
+extern bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *status);
 bool pb_storage_get_status(PutBytesObjectType obj_type, PbInstallStatus *status) {
   switch (obj_type) {
     case ObjectFirmware:

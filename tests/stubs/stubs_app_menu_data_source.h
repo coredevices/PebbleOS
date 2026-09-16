@@ -15,9 +15,10 @@ WEAK void app_menu_data_source_init(AppMenuDataSource *source,
 WEAK void app_menu_data_source_deinit(AppMenuDataSource *source) {
 }
 
-WEAK void app_menu_data_source_enable_icons(AppMenuDataSource *source, uint32_t fallback_icon_id) {}
+WEAK void app_menu_data_source_enable_icons(AppMenuDataSource *source, uint32_t fallback_icon_id) {
+}
 
-WEAK AppMenuNode* app_menu_data_source_get_node_at_index(AppMenuDataSource *source,
+WEAK AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source,
                                                          uint16_t row_index) {
   return NULL;
 }
@@ -32,9 +33,11 @@ WEAK uint16_t app_menu_data_source_get_index_of_app_with_install_id(AppMenuDataS
 }
 
 WEAK void app_menu_data_source_draw_row(AppMenuDataSource *source, GContext *ctx, Layer *cell_layer,
-                                        MenuIndex *cell_index) {}
+                                        MenuIndex *cell_index) {
+}
 
-WEAK void app_menu_data_source_set_default_icon(AppMenuDataSource *source, uint32_t icon_id) {}
+WEAK void app_menu_data_source_set_default_icon(AppMenuDataSource *source, uint32_t icon_id) {
+}
 
 WEAK GBitmap *app_menu_data_source_get_node_icon(AppMenuDataSource *source, AppMenuNode *node) {
   return NULL;

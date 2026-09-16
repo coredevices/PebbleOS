@@ -5,7 +5,6 @@
 
 #include "clar.h"
 
-
 // Stubs
 ///////////////////////////////////////////////////////////////////////////////
 #include "stubs_logging.h"
@@ -29,7 +28,7 @@ void factory_reset(bool shutdown) {
   s_factory_reset_called = true;
 }
 
-Window* spinner_ui_window_get(void) {
+Window *spinner_ui_window_get(void) {
   return NULL;
 }
 
@@ -69,9 +68,8 @@ void test_getting_started_button_combo__cleanup(void) {
   getting_started_button_combo_deinit(&s_state);
 }
 
-
-static StubTimer* prv_find_combo_timer(void) {
-  return (StubTimer*) s_running_timers;
+static StubTimer *prv_find_combo_timer(void) {
+  return (StubTimer *)s_running_timers;
 }
 
 static void prv_press_button(ButtonId id) {
@@ -176,7 +174,8 @@ void test_getting_started_button_combo__push_complex_and_release_to_simple(void)
   cl_assert(s_select_cb_called);
 }
 
-void test_getting_started_button_combo__push_complex_and_release_to_simple_and_back_to_complex(void) {
+void test_getting_started_button_combo__push_complex_and_release_to_simple_and_back_to_complex(
+    void) {
   // Just up (nothing) -> Up+Select (mfg mode) -> Select (show version) -> Up+Select (mfg mode)
 
   prv_press_button(BUTTON_ID_UP);
@@ -196,4 +195,3 @@ void test_getting_started_button_combo__push_complex_and_release_to_simple_and_b
   cl_assert(s_mfg_mode_entered);
   cl_assert(!s_factory_reset_called);
 }
-

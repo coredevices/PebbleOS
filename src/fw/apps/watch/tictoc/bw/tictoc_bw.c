@@ -22,7 +22,7 @@ typedef struct {
   char date_text[13];
 } TicTocData;
 
-static void prv_line_layer_update_callback(Layer *me, GContext* ctx) {
+static void prv_line_layer_update_callback(Layer *me, GContext *ctx) {
   GRect bounds;
   layer_get_bounds(me, &bounds);
   GRect unobstructed_bounds;
@@ -75,8 +75,8 @@ static void prv_minute_tick_handler(struct tm *tick_time, TimeUnits units_change
   strftime(data->date_text, sizeof(data->date_text), i18n_get("%B %e", data), tick_time);
   text_layer_set_text(&data->text_date_layer, data->date_text);
 
-  strftime(data->time_text, sizeof(data->time_text),
-      clock_is_24h_style() ? "%R" : "%I:%M", tick_time);
+  strftime(data->time_text, sizeof(data->time_text), clock_is_24h_style() ? "%R" : "%I:%M",
+           tick_time);
 
   // Handle lack of non-padded hour format string for twelve hour clock.
   char *start_time_text = data->time_text;
@@ -129,9 +129,7 @@ static void prv_init(void) {
   app_window_stack_push(&data->window, true);
 
   // Subscribe to unobstructed area changes
-  UnobstructedAreaHandlers unobstructed_handlers = {
-    .change = prv_unobstructed_area_change_handler
-  };
+  UnobstructedAreaHandlers unobstructed_handlers = {.change = prv_unobstructed_area_change_handler};
   app_unobstructed_area_service_subscribe(unobstructed_handlers, NULL);
 
   // Set initial positions based on unobstructed area

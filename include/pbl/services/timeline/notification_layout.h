@@ -13,21 +13,17 @@
 
 //! Banner height of notification and reminder layouts (excluding status bar)
 //! Rectangular banner is the same size on both the top and bottom
-#define LAYOUT_BANNER_HEIGHT_RECT                                  \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ 36,                                              \
-      /* medium */ 36,                                             \
-      /* large */ 29,                                              \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* extralarge */ 29                                          \
-    )
+#define LAYOUT_BANNER_HEIGHT_RECT                                                               \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                                \
+      PreferredContentSizeDefault,     /* This is the same as Medium until Small is designed */ \
+      /* small */ 36, /* medium */ 36, /* large */                                              \
+      29, /* This is the same as Large until ExtraLarge is designed */ /* extralarge */ 29)
 //! Round banner is different between the top and bottom
-#define LAYOUT_TOP_BANNER_HEIGHT_ROUND 60
+#define LAYOUT_TOP_BANNER_HEIGHT_ROUND    60
 #define LAYOUT_BOTTOM_BANNER_HEIGHT_ROUND 40
-#define LAYOUT_TOP_BANNER_HEIGHT \
-    PBL_IF_RECT_ELSE(LAYOUT_BANNER_HEIGHT_RECT, \
-                     LAYOUT_TOP_BANNER_HEIGHT_ROUND - STATUS_BAR_LAYER_HEIGHT)
+#define LAYOUT_TOP_BANNER_HEIGHT              \
+  PBL_IF_RECT_ELSE(LAYOUT_BANNER_HEIGHT_RECT, \
+                   LAYOUT_TOP_BANNER_HEIGHT_ROUND - STATUS_BAR_LAYER_HEIGHT)
 //! Height of the white arrow layer
 #define LAYOUT_ARROW_HEIGHT PBL_IF_RECT_ELSE(19, 16)
 //! Display height of the layout, which removes the arrow_height from the text layout region
@@ -38,12 +34,12 @@
 //! Radius of the (round) banner
 #define BANNER_CIRCLE_RADIUS 140
 //! The starting y-position of the top banner
-#define LAYOUT_TOP_BANNER_ORIGIN_Y (LAYOUT_TOP_BANNER_HEIGHT_ROUND - \
-                                    (BANNER_CIRCLE_RADIUS + STATUS_BAR_LAYER_HEIGHT) - 1)
+#define LAYOUT_TOP_BANNER_ORIGIN_Y \
+  (LAYOUT_TOP_BANNER_HEIGHT_ROUND - (BANNER_CIRCLE_RADIUS + STATUS_BAR_LAYER_HEIGHT) - 1)
 
 #define TEXT_VISIBLE_UPPER_THRESHOLD (STATUS_BAR_LAYER_HEIGHT - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
 #define TEXT_VISIBLE_LOWER_THRESHOLD(h) \
-    (-(h) + DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
+  (-(h) + DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
 
 //! Offset and margin refer to the GTextNode definition where offset is the internal position delta
 //! to be applied not affecting neighboring elements and margin is the size delta to be applied not
@@ -94,7 +90,7 @@ typedef struct {
 
 //! Default notification color
 #define DEFAULT_NOTIFICATION_COLOR (GColorFolly)
-#define DEFAULT_REMINDER_COLOR (GColorRed)
+#define DEFAULT_REMINDER_COLOR     (GColorRed)
 //! Generic notification icon
 static const TimelineResourceId NOTIF_FALLBACK_ICON = TIMELINE_RESOURCE_NOTIFICATION_GENERIC;
 static const TimelineResourceId REMINDER_FALLBACK_ICON = TIMELINE_RESOURCE_NOTIFICATION_REMINDER;
@@ -105,23 +101,19 @@ static const TimelineResourceId REMINDER_FALLBACK_ICON = TIMELINE_RESOURCE_NOTIF
 //! Adjusts the vertical position of the tiny resource icon on notifications to account for the
 //! whitespace inside the status bar but below the status bar text. Note that this depends on the
 //! font used in the status bar.
-#define NOTIFICATION_TINY_RESOURCE_VERTICAL_OFFSET                 \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ -1,                                              \
-      /* medium */ -1,                                             \
-      /* large */ -2,                                              \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* extralarge */ -2                                          \
-    )
+#define NOTIFICATION_TINY_RESOURCE_VERTICAL_OFFSET                                              \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                                \
+      PreferredContentSizeDefault,     /* This is the same as Medium until Small is designed */ \
+      /* small */ -1, /* medium */ -1, /* large */                                              \
+      -2, /* This is the same as Large until ExtraLarge is designed */ /* extralarge */ -2)
 //! Used to know where the icon is within the layout.
-#define CARD_ICON_UPPER_PADDING                                            \
-    ((LAYOUT_TOP_BANNER_HEIGHT - NOTIFICATION_TINY_RESOURCE_HEIGHT) / 2) + \
+#define CARD_ICON_UPPER_PADDING                                          \
+  ((LAYOUT_TOP_BANNER_HEIGHT - NOTIFICATION_TINY_RESOURCE_HEIGHT) / 2) + \
       NOTIFICATION_TINY_RESOURCE_VERTICAL_OFFSET
 
 //! Bounds on the aspect a notification image band can reserve; the phone clamps to the same range.
-#define NOTIFICATION_IMAGE_MIN_ASPECT (4)   //!< 4:1 landscape
-#define NOTIFICATION_IMAGE_MAX_ASPECT (24)  //!< 2:3 portrait
+#define NOTIFICATION_IMAGE_MIN_ASPECT (4)  //!< 4:1 landscape
+#define NOTIFICATION_IMAGE_MAX_ASPECT (24) //!< 2:3 portrait
 
 LayoutLayer *notification_layout_create(const LayoutLayerConfig *config);
 

@@ -7,7 +7,7 @@ struct Layer;
 
 //! Dumps debug information of the layer and all its children to debug serial
 //! @param node the layer to dump
-void layer_dump_tree(struct Layer* node);
+void layer_dump_tree(struct Layer *node);
 
 //! Tries to guess the type of the layer based on the update_proc
 //! @return a friendly string of the name of the layer type

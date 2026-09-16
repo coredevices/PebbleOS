@@ -42,8 +42,7 @@ typedef struct {
 KERNEL_READONLY_DATA static WorkerState *s_worker_state_ptr;
 
 bool worker_state_configure(MemorySegment *worker_state_ram) {
-  s_worker_state_ptr = memory_segment_split(worker_state_ram, NULL,
-                                            sizeof(WorkerState));
+  s_worker_state_ptr = memory_segment_split(worker_state_ram, NULL, sizeof(WorkerState));
   return s_worker_state_ptr != NULL;
 }
 
@@ -126,8 +125,6 @@ HealthServiceState *worker_state_get_health_service_state(void) {
   return &s_worker_state_ptr->health_service_state;
 }
 
-
-
 // ===================================================================================================
 // Serial Commands
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
@@ -135,6 +132,3 @@ void command_dump_malloc_worker(void) {
   heap_dump_malloc_instrumentation_to_dbgserial(worker_state_get_heap());
 }
 #endif
-
-
-

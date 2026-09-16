@@ -30,7 +30,6 @@ static struct tm bad_data = {
   .tm_isdst = 49756567
 };
 
-
 static void prv_test_valid_data(void) {
   const int buf_size = 64;
   char buf[buf_size];
@@ -280,7 +279,6 @@ static void window_load(Window *window) {
   prv_test_valid_data();
   prv_test_invalid_data();
 
-
   Layer *window_layer = window_get_root_layer(window);
   result_layer = text_layer_create(GRect(0, 0, 144, 168));
   text_layer_set_text(result_layer, "strftime() test. Check the app logs for details");
@@ -294,10 +292,10 @@ static void window_unload(Window *window) {
 
 static void init(void) {
   window = window_create();
-  window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload,
-  });
+  window_set_window_handlers(window, (WindowHandlers){
+                                       .load = window_load,
+                                       .unload = window_unload,
+                                     });
   const bool animated = true;
   window_stack_push(window, animated);
 }

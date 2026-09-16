@@ -72,7 +72,7 @@ void dialog_set_timeout(Dialog *dialog, uint32_t timeout) {
 void dialog_set_callbacks(Dialog *dialog, const DialogCallbacks *callbacks,
                           void *callback_context) {
   if (!callbacks) {
-    dialog->callbacks = (DialogCallbacks) {};
+    dialog->callbacks = (DialogCallbacks){};
     return;
   }
 

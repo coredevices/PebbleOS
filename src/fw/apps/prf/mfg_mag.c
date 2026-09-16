@@ -20,10 +20,10 @@
 #define STATUS_STRING_LEN 200
 
 // Minimum variation required on each axis (in mG)
-#define MIN_VARIATION_MG 100  // Each axis must vary by at least this much
+#define MIN_VARIATION_MG 100 // Each axis must vary by at least this much
 
-#define TEST_DURATION_MS 5000
-#define RESULT_DISPLAY_MS 1000
+#define TEST_DURATION_MS   5000
+#define RESULT_DISPLAY_MS  1000
 #define SAMPLE_INTERVAL_MS 100
 
 typedef enum {
@@ -91,12 +91,18 @@ static void prv_update_display(void *context) {
         data->min_y = data->max_y = sample.y;
         data->min_z = data->max_z = sample.z;
       } else {
-        if (sample.x < data->min_x) data->min_x = sample.x;
-        if (sample.x > data->max_x) data->max_x = sample.x;
-        if (sample.y < data->min_y) data->min_y = sample.y;
-        if (sample.y > data->max_y) data->max_y = sample.y;
-        if (sample.z < data->min_z) data->min_z = sample.z;
-        if (sample.z > data->max_z) data->max_z = sample.z;
+        if (sample.x < data->min_x)
+          data->min_x = sample.x;
+        if (sample.x > data->max_x)
+          data->max_x = sample.x;
+        if (sample.y < data->min_y)
+          data->min_y = sample.y;
+        if (sample.y > data->max_y)
+          data->max_y = sample.y;
+        if (sample.z < data->min_z)
+          data->min_z = sample.z;
+        if (sample.z > data->max_z)
+          data->max_z = sample.z;
       }
       data->sample_count++;
 
@@ -219,28 +225,28 @@ static void s_main(void) {
 
 const PebbleProcessMd *mfg_mag_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main,
-      // UUID: 3F4C8A2E-1B6D-4F9E-A3C5-7D8E9F0A1B2C
-      .common.uuid =
-          {
-              0x3F,
-              0x4C,
-              0x8A,
-              0x2E,
-              0x1B,
-              0x6D,
-              0x4F,
-              0x9E,
-              0xA3,
-              0xC5,
-              0x7D,
-              0x8E,
-              0x9F,
-              0x0A,
-              0x1B,
-              0x2C,
-          },
-      .name = "MfgMag",
+    .common.main_func = &s_main,
+    // UUID: 3F4C8A2E-1B6D-4F9E-A3C5-7D8E9F0A1B2C
+    .common.uuid =
+        {
+          0x3F,
+          0x4C,
+          0x8A,
+          0x2E,
+          0x1B,
+          0x6D,
+          0x4F,
+          0x9E,
+          0xA3,
+          0xC5,
+          0x7D,
+          0x8E,
+          0x9F,
+          0x0A,
+          0x1B,
+          0x2C,
+        },
+    .name = "MfgMag",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

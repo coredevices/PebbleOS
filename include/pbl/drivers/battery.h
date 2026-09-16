@@ -93,8 +93,8 @@ ADCVoltageMonitorReading battery_read_voltage_monitor(void);
 //! @param reading The voltage monitor reading to convert.
 //! @param numerator The numerator to multiply the result by.
 //! @param denominator The denominator to divide the result by.
-uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,
-                                               uint32_t numerator, uint32_t denominator);
+uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading, uint32_t numerator,
+                                               uint32_t denominator);
 
 //! Get the current battery charge status.
 //!

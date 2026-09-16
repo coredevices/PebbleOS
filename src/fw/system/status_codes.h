@@ -69,10 +69,7 @@ typedef enum StatusCode {
 //! Return value for system operations. See \ref StatusCode for possible values.
 typedef int32_t status_t;
 
-
 #define DECLARE_DOMAIN_STATUS(e) ((status_t)(e & (1 << 30)))
-
 
 #define PASSED(s) ((status_t)(s) >= 0)
 #define FAILED(s) ((status_t)(s) < 0)
-

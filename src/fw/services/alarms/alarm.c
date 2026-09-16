@@ -30,12 +30,12 @@
 PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 
 #define DEFAULT_SNOOZE_DELAY_M (10)
-#define MAX_CONFIGURED_ALARMS (10)
+#define MAX_CONFIGURED_ALARMS  (10)
 
-#define ALARM_FILE_NAME "alarms"
-#define ALARM_MAX_FILE_SIZE KiBYTES(1) // ~50 alarms or so
+#define ALARM_FILE_NAME          "alarms"
+#define ALARM_MAX_FILE_SIZE      KiBYTES(1) // ~50 alarms or so
 #define NUM_ALARM_PINS_PER_ALARM (3)
-#define ALARM_ENTRY_SIZE (UUID_SIZE * NUM_ALARM_PINS_PER_ALARM)
+#define ALARM_ENTRY_SIZE         (UUID_SIZE * NUM_ALARM_PINS_PER_ALARM)
 
 // All alarm preferences are saved in the file under separate keys to simplify
 // backward compatibility. When a new preference is added, watches with older
@@ -70,11 +70,11 @@ typedef enum AlarmDataType {
 // so that programmatic construction of a key is straightforward.
 typedef struct PACKED AlarmStorageKey {
   AlarmId id;
-  AlarmDataType type:8;
+  AlarmDataType type : 8;
 } AlarmStorageKey;
 
 typedef struct PACKED {
-  AlarmKind kind:8;
+  AlarmKind kind : 8;
   //! Whether the alarm is disabled or not. This field cannot be updated to a bitfield because the
   //! compiler sets arbitrary bits to indicate true as an optimization.
   bool is_disabled;
@@ -88,16 +88,16 @@ typedef struct PACKED {
     struct {
       //! Whether the alarm is a smart alarm or not. Smart alarms attempt to wake the user the
       //! first moment the user is not in deep sleep in the time range T-30min to T every 5 min.
-      bool is_smart:1;
+      bool is_smart : 1;
       //! Whether the alarm should play a tone on speaker hardware. Default 0 (off) so legacy
       //! alarms loaded from older firmware stay silent.
-      bool sound_enabled:1;
+      bool sound_enabled : 1;
       //! Whether vibration is *disabled* for this alarm. Default 0 (vibration on) so legacy
       //! alarms loaded from older firmware keep vibrating.
-      bool vibrate_disabled:1;
+      bool vibrate_disabled : 1;
       //! Selected tone (AlarmTone enum value). Default 0 (Reveille). Irrelevant when
       //! sound_enabled is 0.
-      uint8_t tone:3;
+      uint8_t tone : 3;
     };
     uint8_t flags;
   };
@@ -113,9 +113,9 @@ typedef bool (*AlarmOperationCallback)(AlarmId id, AlarmConfig *config, void *co
 // Forward declarations
 static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, void *context);
 static bool prv_reload_alarms(SettingsFile *file);
-static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig* config_out);
-static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig* config);
-static void prv_cron_callback(CronJob *job, void* data);
+static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *config_out);
+static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig *config);
+static void prv_cron_callback(CronJob *job, void *data);
 static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated);
 static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context);
 static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *context);
@@ -143,7 +143,7 @@ static bool s_user_snoozed;
 static int s_smart_snooze_counter;
 
 //! Mirrors what ALARM_PREF_KEY_ARMED holds, so it is only rewritten when it changes.
-static AlarmArmedRecord s_armed_record = { .id = ALARM_INVALID_ID };
+static AlarmArmedRecord s_armed_record = {.id = ALARM_INVALID_ID};
 
 //! Alarm which should have fired while the watch was down. Fired once alarms are enabled.
 static AlarmId s_missed_alarm_id = ALARM_INVALID_ID;
@@ -209,7 +209,7 @@ static bool prv_should_smart_alarm_trigger(const AlarmConfig *config) {
 //! @return true if an alarm pin was removed
 static bool prv_timeline_remove_alarm(SettingsFile *fd, AlarmId id) {
   bool success = false;
-  AlarmStorageKey key = { .id = id, .type = ALARM_DATA_PINS };
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
   int size = settings_file_get_len(fd, &key, sizeof(key));
 
   if (size == 0) { // empty (likely deleted) entry
@@ -221,7 +221,7 @@ static bool prv_timeline_remove_alarm(SettingsFile *fd, AlarmId id) {
     uint8_t buffer[size];
     if (settings_file_get(fd, &key, sizeof(key), buffer, size) == S_SUCCESS) {
       for (int i = 0; i < size / UUID_SIZE; i++) {
-        Uuid *pinid = (Uuid *) &buffer[UUID_SIZE * i];
+        Uuid *pinid = (Uuid *)&buffer[UUID_SIZE * i];
         if (uuid_is_invalid(pinid)) {
           continue;
         }
@@ -253,8 +253,8 @@ static void prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_time
 
 // ----------------------------------------------------------------------------------------------
 //! Pins alarm in the timeline for the next three days
-static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
-                                   const CronJob *cron, const time_t current_time) {
+static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm, const CronJob *cron,
+                                   const time_t current_time) {
   // If an alarm was updated then remove all the pins with stale information
   // If an alarm was added then this has no effect
   bool updated = prv_timeline_remove_alarm(file, alarm->id);
@@ -288,9 +288,8 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
         alarm, cron_job_get_execute_time_from_epoch(cron, current_time + (i * SECONDS_PER_DAY)));
   }
 
-  AlarmStorageKey key = { .id = alarm->id, .type = ALARM_DATA_PINS };
-  settings_file_set(file, &key, sizeof(key),
-                    settings_file_buffer, UUID_SIZE * num_pin_adds);
+  AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_PINS};
+  settings_file_set(file, &key, sizeof(key), settings_file_buffer, UUID_SIZE * num_pin_adds);
 
 cleanup:
   kernel_free(settings_file_buffer);
@@ -300,9 +299,9 @@ cleanup:
 
 // ----------------------------------------------------------------------------------------------
 static time_t prv_build_cron(AlarmConfig *config, CronJob *cron) {
-  *cron = (CronJob) {
+  *cron = (CronJob){
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = config->minute,
     .hour = config->hour,
@@ -324,12 +323,11 @@ static time_t prv_build_cron(AlarmConfig *config, CronJob *cron) {
 static void prv_assign_alarm(Alarm *alarm, CronJob *cron) {
   cron_job_unschedule(&s_next_alarm_cron);
   s_next_alarm_cron = *cron;
-  s_next_alarm_cron.cb_data = (void*)(intptr_t)alarm->id;
+  s_next_alarm_cron.cb_data = (void *)(intptr_t)alarm->id;
   s_next_alarm = *alarm;
   s_next_alarm_time = cron_job_schedule(&s_next_alarm_cron);
-  PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)",
-          alarm->id, alarm->config.hour, alarm->config.minute, s_next_alarm_time,
-          alarm->config.is_smart);
+  PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)", alarm->id,
+               alarm->config.hour, alarm->config.minute, s_next_alarm_time, alarm->config.is_smart);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -368,8 +366,8 @@ static void prv_persist_armed_alarm(SettingsFile *file) {
   if (memcmp(&record, &s_armed_record, sizeof(record)) == 0) {
     return;
   }
-  if (settings_file_set(file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED),
-                        &record, sizeof(record)) == S_SUCCESS) {
+  if (settings_file_set(file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &record,
+                        sizeof(record)) == S_SUCCESS) {
     s_armed_record = record;
   }
 }
@@ -386,7 +384,7 @@ static bool prv_reload_alarms(SettingsFile *file) {
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
     AlarmConfig config;
     if (prv_alarm_get_config(file, i, &config)) {
-      Alarm alarm = { .id = i, .config = config };
+      Alarm alarm = {.id = i, .config = config};
       prv_check_and_schedule_alarm(file, &alarm, false /* refresh */);
       alarm_found = true;
     }
@@ -404,10 +402,10 @@ static void prv_put_alarm_event(void) {
     return;
   }
 
-  AlarmConfig *config = s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config :
-                                                                     NULL;
+  AlarmConfig *config =
+      s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : NULL;
   const bool is_smart = (config && config->is_smart && activity_tracking_on());
-  PebbleEvent e = (PebbleEvent) {
+  PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_ALARM_CLOCK_EVENT,
     .alarm_clock = {
       .alarm_time = rtc_get_time(),
@@ -436,8 +434,8 @@ static void prv_clear_snooze_timer(void) {
 // Put a trigger event if applicable based on the type of alarm.
 static void prv_process_most_recent_alarm(void) {
   // Only processes the most recent alarm since it modifies the alarm config
-  AlarmConfig *config = s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config :
-                                                                     NULL;
+  AlarmConfig *config =
+      s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : NULL;
   const bool user_snoozed = s_user_snoozed;
   s_user_snoozed = false;
   bool trigger = true;
@@ -478,7 +476,7 @@ static void prv_snooze_timer_callback(void *unused) {
 
 // ----------------------------------------------------------------------------------------------
 T_STATIC void prv_timer_kernel_bg_callback(void *data) {
-  AlarmId id = (intptr_t) data;
+  AlarmId id = (intptr_t)data;
   if (id == ALARM_INVALID_ID) {
     return;
   }
@@ -507,7 +505,6 @@ cleanup:
   prv_file_close_and_unlock(file);
   kernel_free(file);
 
-
   PBL_LOG_INFO("Alarm %u timeout", id);
   s_most_recent_alarm_recorded = false;
   s_most_recent_alarm_id = rv ? id : ALARM_INVALID_ID;
@@ -523,7 +520,7 @@ static void prv_cron_callback(CronJob *job, void *data) {
 static void prv_persist_alarm(SettingsFile *fd, Alarm *alarm) {
   PBL_ASSERT(alarm->id >= 0 && alarm->id < MAX_CONFIGURED_ALARMS, "Invalid id %d", alarm->id);
 
-  AlarmStorageKey key = { .id = alarm->id, .type = ALARM_DATA_CONFIG };
+  AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_CONFIG};
   AlarmConfig config = {
     .kind = alarm->config.kind,
     .is_disabled = alarm->config.is_disabled,
@@ -546,8 +543,8 @@ static void prv_add_and_schedule_alarm(SettingsFile *file, Alarm *alarm) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig* config_out) {
-  AlarmStorageKey key = { .id = id, .type = ALARM_DATA_CONFIG };
+static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *config_out) {
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
   const int size = settings_file_get_len(file, &key, sizeof(key));
   if (size <= 0) {
     return false;
@@ -557,14 +554,15 @@ static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig* co
   const int load_size = MIN(size, (int)sizeof(config));
   if (settings_file_get(file, &key, sizeof(key), &config, load_size) == S_SUCCESS) {
     if (config.hour > 23 || config.minute > 59) {
-      PBL_LOG_DBG("Invalid config for id %u! Blowing it out! "
-              "Hours %u Minutes %u Kind %u", id, config.hour, config.minute,
-              config.kind);
+      PBL_LOG_DBG(
+          "Invalid config for id %u! Blowing it out! "
+          "Hours %u Minutes %u Kind %u",
+          id, config.hour, config.minute, config.kind);
       settings_file_delete(file, &key, sizeof(key));
       return false;
     }
 
-    *config_out = (AlarmConfig) {
+    *config_out = (AlarmConfig){
       .hour = config.hour,
       .minute = config.minute,
       .is_disabled = config.is_disabled,
@@ -582,10 +580,10 @@ static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig* co
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig* config) {
+static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig *config) {
   PBL_ASSERTN(id >= 0 && id < MAX_CONFIGURED_ALARMS);
 
-  Alarm alarm = { .id = id, .config = *config };
+  Alarm alarm = {.id = id, .config = *config};
   prv_persist_alarm(file, &alarm);
 
   prv_reload_alarms(file);
@@ -596,7 +594,7 @@ static AlarmId prv_get_next_free_alarm_id(SettingsFile *file) {
   AlarmId id_out = ALARM_INVALID_ID;
 
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
-    AlarmStorageKey key = { .id = i, .type = ALARM_DATA_CONFIG };
+    AlarmStorageKey key = {.id = i, .type = ALARM_DATA_CONFIG};
     if (settings_file_get_len(file, &key, sizeof(key)) == 0) {
       id_out = i;
       break;
@@ -649,7 +647,7 @@ static void prv_refresh_just_once_alarm_days(SettingsFile *file) {
       continue;
     }
 
-    Alarm alarm = { .id = i, .config = config };
+    Alarm alarm = {.id = i, .config = config};
     prv_persist_alarm(file, &alarm);
   }
 }
@@ -696,10 +694,9 @@ AlarmId alarm_create(const AlarmInfo *info) {
     prv_set_alarm_kind_op(id, &config, (void *)(uintptr_t)info->kind);
   }
 
-  Alarm alarm = { .id = id, .config = config };
+  Alarm alarm = {.id = id, .config = config};
   prv_add_and_schedule_alarm(&file, &alarm);
   prv_file_close_and_unlock(&file);
-
 
   return id;
 }
@@ -749,7 +746,7 @@ static bool prv_set_alarm_time_op(AlarmId id, AlarmConfig *config, void *context
 
 void alarm_set_time(AlarmId id, int hour, int minute) {
   prv_assert_alarm_params(hour, minute);
-  prv_alarm_operation(id, prv_set_alarm_time_op, &(SetAlarmTimeContext) { hour, minute });
+  prv_alarm_operation(id, prv_set_alarm_time_op, &(SetAlarmTimeContext){hour, minute});
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -798,22 +795,22 @@ static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context
   switch (type) {
     case ALARM_KIND_EVERYDAY:
       config->kind = ALARM_KIND_EVERYDAY;
-      const bool everyday[DAYS_PER_WEEK] = { true, true, true, true, true, true, true };
+      const bool everyday[DAYS_PER_WEEK] = {true, true, true, true, true, true, true};
       memcpy(&config->scheduled_days, everyday, sizeof(everyday));
       break;
     case ALARM_KIND_WEEKENDS:
       config->kind = ALARM_KIND_WEEKENDS;
-      const bool weekends[DAYS_PER_WEEK] = { true, false, false, false, false, false, true };
+      const bool weekends[DAYS_PER_WEEK] = {true, false, false, false, false, false, true};
       memcpy(&config->scheduled_days, weekends, sizeof(weekends));
       break;
     case ALARM_KIND_WEEKDAYS:
       config->kind = ALARM_KIND_WEEKDAYS;
-      const bool weekdays[DAYS_PER_WEEK] = { false, true, true, true, true, true, false };
+      const bool weekdays[DAYS_PER_WEEK] = {false, true, true, true, true, true, false};
       memcpy(&config->scheduled_days, weekdays, sizeof(weekdays));
       break;
     case ALARM_KIND_JUST_ONCE:
       config->kind = ALARM_KIND_JUST_ONCE;
-      const bool no_day[DAYS_PER_WEEK] = { false, false, false, false, false, false, false };
+      const bool no_day[DAYS_PER_WEEK] = {false, false, false, false, false, false, false};
       memcpy(&config->scheduled_days, no_day, sizeof(no_day));
       prv_set_day_for_just_once_alarm(config, config->hour, config->minute);
       break;
@@ -900,7 +897,7 @@ void alarm_delete(AlarmId id) {
     s_smart_snooze_counter = 0;
   }
 
-  AlarmStorageKey key = { .id = id, .type = ALARM_DATA_CONFIG };
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
   settings_file_delete(&file, &key, sizeof(key));
   prv_timeline_remove_alarm(&file, id);
   prv_reload_alarms(&file);
@@ -1054,7 +1051,7 @@ bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
     goto cleanup;
   }
 
-  *info_out = (AlarmInfo) {
+  *info_out = (AlarmInfo){
     .hour = config.hour,
     .minute = config.minute,
     .kind = config.kind,
@@ -1101,17 +1098,14 @@ void alarm_set_snooze_delay(uint16_t delay_m) {
 
   s_snooze_delay_m = delay_m;
 
-  settings_file_set(&file, ALARM_PREF_KEY_SNOOZE_DELAY,
-                    strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
+  settings_file_set(&file, ALARM_PREF_KEY_SNOOZE_DELAY, strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
                     &s_snooze_delay_m, sizeof(s_snooze_delay_m));
 
   prv_file_close_and_unlock(&file);
 }
 
-
 void alarm_dismiss_alarm(void) {
   prv_clear_snooze_timer();
-
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1126,10 +1120,10 @@ static bool alarm_for_each_itr(SettingsFile *file, SettingsRecordInfo *info, voi
     return true; // continue iterating
   }
 
-  ForEachAlarmItrData *itr_data = (ForEachAlarmItrData*) context;
+  ForEachAlarmItrData *itr_data = (ForEachAlarmItrData *)context;
 
   AlarmStorageKey key;
-  info->get_key(file, (uint8_t*) &key, info->key_len);
+  info->get_key(file, (uint8_t *)&key, info->key_len);
 
   if (key.type != ALARM_DATA_CONFIG) {
     return true;
@@ -1215,7 +1209,7 @@ void alarm_handle_clock_change(void) {
       if (s_smart_snooze_counter >= (SMART_ALARM_MAX_SMART_SNOOZE - 2)) {
         should_force_trigger = true;
         PBL_LOG_INFO("Smart alarm %u at counter %d near deadline, forcing trigger",
-                s_most_recent_alarm_id, s_smart_snooze_counter);
+                     s_most_recent_alarm_id, s_smart_snooze_counter);
       } else {
         // Also check if current time is within the smart alarm window past the deadline
         // This handles cases where counter < 28 but we're legitimately past the alarm time
@@ -1223,7 +1217,8 @@ void alarm_handle_clock_change(void) {
         struct tm now_tm;
         localtime_r(&now, &now_tm);
         int current_minutes = now_tm.tm_hour * 60 + now_tm.tm_min;
-        int alarm_minutes = s_most_recent_alarm_config.hour * 60 + s_most_recent_alarm_config.minute;
+        int alarm_minutes =
+            s_most_recent_alarm_config.hour * 60 + s_most_recent_alarm_config.minute;
         int time_diff_minutes = current_minutes - alarm_minutes;
 
         // Only trigger if we're 0-30 minutes past the alarm time (the smart window)
@@ -1232,7 +1227,7 @@ void alarm_handle_clock_change(void) {
         if (time_diff_minutes >= 0 && time_diff_minutes <= (SMART_ALARM_RANGE_S / 60)) {
           should_force_trigger = true;
           PBL_LOG_INFO("Smart alarm %u in window, %d min past deadline, forcing trigger",
-                  s_most_recent_alarm_id, time_diff_minutes);
+                       s_most_recent_alarm_id, time_diff_minutes);
         }
       }
     }
@@ -1255,7 +1250,7 @@ void alarm_handle_clock_change(void) {
       // change such as a periodic phone time sync must not cancel it, or the
       // smart alarm silently never goes off while basic alarms keep working.
       PBL_LOG_INFO("Clock change during alarm %u, leaving snooze loop intact",
-              s_most_recent_alarm_id);
+                   s_most_recent_alarm_id);
     }
   }
 
@@ -1281,16 +1276,14 @@ void alarm_init(void) {
   }
 
   uint16_t snooze_delay_value;
-  if (settings_file_get(&file, ALARM_PREF_KEY_SNOOZE_DELAY,
-                        strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
-                        &snooze_delay_value,
-                        sizeof(snooze_delay_value)) == S_SUCCESS) {
+  if (settings_file_get(&file, ALARM_PREF_KEY_SNOOZE_DELAY, strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
+                        &snooze_delay_value, sizeof(snooze_delay_value)) == S_SUCCESS) {
     s_snooze_delay_m = snooze_delay_value;
   }
 
   AlarmArmedRecord armed;
-  if (settings_file_get(&file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED),
-                        &armed, sizeof(armed)) == S_SUCCESS) {
+  if (settings_file_get(&file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &armed,
+                        sizeof(armed)) == S_SUCCESS) {
     s_armed_record = armed;
 
     // An alarm which was armed for a time we have already passed never got the chance to fire:
@@ -1301,7 +1294,7 @@ void alarm_init(void) {
       s_missed_alarm_id = armed.id;
       s_missed_alarm_time = armed.time;
       PBL_LOG_INFO("Alarm %d missed by %lds, firing once alarms are enabled", armed.id,
-              (long)(now - armed.time));
+                   (long)(now - armed.time));
     }
   }
 
@@ -1330,57 +1323,61 @@ void alarm_service_enable_alarms(bool enable) {
   system_task_add_callback(prv_timer_kernel_bg_callback, (void *)(intptr_t)id);
 }
 
-
 // ----------------------------------------------------------------------------------------------
 const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
   const char *alarm_day_text = NULL;
   switch (kind) {
     case ALARM_KIND_EVERYDAY:
       alarm_day_text = all_caps ?
-      /// A frequency option for alarms, i.e. the alarm would go off every day. Respect
-      /// capitalization!
-                          i18n_noop("EVERY DAY") :
-      /// A frequency option for alarms, i.e. the alarm would go off every day. Respect
-      /// capitalization!
-                          i18n_noop("Every Day");
+                                /// A frequency option for alarms, i.e. the alarm would go off every
+                                /// day. Respect capitalization!
+                           i18n_noop("EVERY DAY")
+                                :
+                                /// A frequency option for alarms, i.e. the alarm would go off every
+                                /// day. Respect capitalization!
+                           i18n_noop("Every Day");
       break;
     case ALARM_KIND_WEEKDAYS:
       alarm_day_text = all_caps ?
-      /// A frequency option for alarms, i.e. the alarm would only go off every weekday. Respect
-      /// capitalization!
-                          i18n_noop("WEEKDAYS") :
-      /// A frequency option for alarms, i.e. the alarm would only go off every weekday. Respect
-      /// capitalization!
-                          i18n_noop("Weekdays");
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// every weekday. Respect capitalization!
+                           i18n_noop("WEEKDAYS")
+                                :
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// every weekday. Respect capitalization!
+                           i18n_noop("Weekdays");
       break;
     case ALARM_KIND_WEEKENDS:
       alarm_day_text = all_caps ?
-      /// A frequency option for alarms, i.e. the alarm would only go off each day on the weekend.
-      /// Respect capitalization!
-                          i18n_noop("WEEKENDS") :
-      /// A frequency option for alarms, i.e. the alarm would only go off each day on the weekend.
-      /// Respect capitalization!
-                          i18n_noop("Weekends");
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// each day on the weekend. Respect capitalization!
+                           i18n_noop("WEEKENDS")
+                                :
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// each day on the weekend. Respect capitalization!
+                           i18n_noop("Weekends");
       break;
     case ALARM_KIND_JUST_ONCE:
 
       alarm_day_text = all_caps ?
-      /// A frequency option for alarms, i.e. the alarm would only go off one time ever. Respect
-      /// capitalization!
-                          i18n_noop("ONCE") :
-      /// A frequency option for alarms, i.e. the alarm would only go off one time ever. Respect
-      /// capitalization!
-                          i18n_noop("Once");
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// one time ever. Respect capitalization!
+                           i18n_noop("ONCE")
+                                :
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// one time ever. Respect capitalization!
+                           i18n_noop("Once");
       break;
     case ALARM_KIND_CUSTOM:
       // TODO: Use selected days as the string
       alarm_day_text = all_caps ?
-      /// A frequency option for alarms, i.e. the alarm would only go off on a custom choice of
-      /// days. Respect capitalization!
-                          i18n_noop("CUSTOM") :
-      /// A frequency option for alarms, i.e. the alarm would only go off on a custom choice of
-      /// days. Respect capitalization!
-                          i18n_noop("Custom");
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// on a custom choice of days. Respect capitalization!
+                           i18n_noop("CUSTOM")
+                                :
+                                /// A frequency option for alarms, i.e. the alarm would only go off
+                                /// on a custom choice of days. Respect capitalization!
+                           i18n_noop("Custom");
       break;
     default:
       alarm_day_text = "";
@@ -1393,23 +1390,13 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
 void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm_day_text) {
   // 4 chars per day, 3 for letters and 1 for comma
   // max length = 7 days in a week * 4 chars per day = 28
-  static const char *day_strings[7] = { i18n_noop("Sun"),
-                                        i18n_noop("Mon"),
-                                        i18n_noop("Tue"),
-                                        i18n_noop("Wed"),
-                                        i18n_noop("Thu"),
-                                        i18n_noop("Fri"),
-                                        i18n_noop("Sat")
-                                      };
-  static const char *full_day_strings[7] = {
-                                             i18n_noop("Sundays"),
-                                             i18n_noop("Mondays"),
-                                             i18n_noop("Tuesdays"),
-                                             i18n_noop("Wednesdays"),
-                                             i18n_noop("Thursdays"),
-                                             i18n_noop("Fridays"),
-                                             i18n_noop("Saturdays")
-                                           };
+  static const char *day_strings[7] = {i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"),
+                                       i18n_noop("Wed"), i18n_noop("Thu"), i18n_noop("Fri"),
+                                       i18n_noop("Sat")};
+  static const char *full_day_strings[7] = {i18n_noop("Sundays"),   i18n_noop("Mondays"),
+                                            i18n_noop("Tuesdays"),  i18n_noop("Wednesdays"),
+                                            i18n_noop("Thursdays"), i18n_noop("Fridays"),
+                                            i18n_noop("Saturdays")};
 
   uint8_t num_days_scheduled = 0, latest_day_scheduled = 0;
   // Monday should come first in the list
@@ -1425,8 +1412,8 @@ void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm
   }
   if (num_days_scheduled == 1) {
     // Write the full day string
-    const char *full_day_string = i18n_get(full_day_strings[latest_day_scheduled],
-                                           full_day_strings);
+    const char *full_day_string =
+        i18n_get(full_day_strings[latest_day_scheduled], full_day_strings);
     strcpy(alarm_day_text, full_day_string);
     i18n_free(full_day_strings[latest_day_scheduled], full_day_strings); // copied in above.
   } else if (num_days_scheduled > 1) {

@@ -31,12 +31,12 @@ static ALWAYS_INLINE void prv_set_color(const GContext *ctx, GColor *dst_color,
 // Plots row at given starting position and width, dithers grayscale colors
 static void prv_assign_row_with_pattern_1bit(GBitmap *framebuffer, int16_t y, int16_t x,
                                              int32_t width, GColor color) {
-  const uint32_t pattern = graphics_private_get_1bit_grayscale_pattern(color, (uint8_t) y);
+  const uint32_t pattern = graphics_private_get_1bit_grayscale_pattern(color, (uint8_t)y);
   uint32_t left_edge_block, right_edge_block, mask;
   const uint32_t left_edge_bits_count = x % 32;
   const uint32_t right_edge_bits_count = (x + width) % 32;
-  uint32_t *block = ((uint32_t*)framebuffer->addr) + (y * (framebuffer->row_size_bytes / 4))
-                    + (x / 32);
+  uint32_t *block =
+      ((uint32_t *)framebuffer->addr) + (y * (framebuffer->row_size_bytes / 4)) + (x / 32);
 
   bool both_edges_in_same_block = (left_edge_bits_count + width) < 32;
   if (both_edges_in_same_block) {
@@ -119,8 +119,8 @@ T_STATIC void prv_assign_horizontal_line_raw(GContext *ctx, int16_t y, Fixed_S16
 // This function draws vertical line with AA edges, given values have to be adjusted for
 // screen coordinates and clipped according to the clip box, does not respect transparency
 // on the drawn line (beside edges)
-T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S16_3 y1,
-                                           Fixed_S16_3 y2, GColor color) {
+T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S16_3 y1, Fixed_S16_3 y2,
+                                           GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
@@ -214,11 +214,10 @@ T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1, 
 }
 
 // This function will draw a horizontal line with two gradients on side representing AA edges
-T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y,
-                                                   Fixed_S16_3 x1, Fixed_S16_3 x2,
-                                                   uint8_t left_aa_offset, uint8_t right_aa_offset,
-                                                   int16_t clip_box_min_x, int16_t clip_box_max_x,
-                                                   GColor color) {
+T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y, Fixed_S16_3 x1,
+                                                   Fixed_S16_3 x2, uint8_t left_aa_offset,
+                                                   uint8_t right_aa_offset, int16_t clip_box_min_x,
+                                                   int16_t clip_box_max_x, GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
@@ -267,9 +266,9 @@ T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y,
       if (x1.integer > clip_box_max_x) {
         break;
       }
-      graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, color, x1.integer,
-                                              (uint8_t)(FIXED_S16_3_ONE.raw_value * i /
-                                                left_aa_offset));
+      graphics_private_raw_blend_color_factor(
+          ctx, output, data_row_offset, color, x1.integer,
+          (uint8_t)(FIXED_S16_3_ONE.raw_value * i / left_aa_offset));
       output++;
       x1.integer++;
     }
@@ -295,9 +294,9 @@ T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y,
       if (x1.integer > clip_box_max_x) {
         break;
       }
-      graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, color, x1.integer,
-                                              (uint8_t)(FIXED_S16_3_ONE.raw_value *
-                                                (right_aa_offset - i) / right_aa_offset));
+      graphics_private_raw_blend_color_factor(
+          ctx, output, data_row_offset, color, x1.integer,
+          (uint8_t)(FIXED_S16_3_ONE.raw_value * (right_aa_offset - i) / right_aa_offset));
       output++;
       x1.integer++;
     }

@@ -30,7 +30,7 @@ enum pbl_thread_reg {
 };
 
 struct pbl_thread_info {
-  struct pbl_thread *thread;  // NULL for threads the kernel created itself
+  struct pbl_thread *thread; // NULL for threads the kernel created itself
   const char *name;
   uintptr_t id;
   bool current;
@@ -64,11 +64,12 @@ struct pbl_thread_stats {
   const char *name;
   uint32_t number;
   uint32_t run_time;
-  size_t stack_high_water;  // bytes
+  size_t stack_high_water; // bytes
   enum pbl_thread_state state;
 };
 
 //! Snapshot of every thread. @return the number of entries written.
-size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max, uint32_t *total_run_time);
+size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
+                                 uint32_t *total_run_time);
 
 size_t pbl_thread_count(void);

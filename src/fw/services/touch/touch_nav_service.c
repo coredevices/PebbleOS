@@ -146,4 +146,4 @@ void touch_nav_master_changed(void) {
   process_manager_send_callback_event_to_process(PebbleTask_App, prv_app_resync_cb, NULL);
 }
 
-#endif  // CONFIG_TOUCH
+#endif // CONFIG_TOUCH

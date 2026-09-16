@@ -21,7 +21,7 @@ typedef struct PACKED FirmwareDescription {
 FirmwareDescription firmware_storage_read_firmware_description(uint32_t firmware_start_address);
 
 bool firmware_storage_check_valid_firmware_description(
-    uint32_t firmware_start_address, const FirmwareDescription* firmware_description);
+    uint32_t firmware_start_address, const FirmwareDescription *firmware_description);
 #else
 
 #define FIRMWARE_HEADER_MAGIC 0x96f3b83d
@@ -36,8 +36,7 @@ typedef struct PACKED FirmwareHeader {
 } FirmwareHeader;
 
 FirmwareHeader firmware_storage_read_firmware_header(uint32_t address);
-bool firmware_storage_check_valid_firmware_header(
-    uint32_t address, const FirmwareHeader* header);
+bool firmware_storage_check_valid_firmware_header(uint32_t address, const FirmwareHeader *header);
 
 void firmware_storage_invalidate_firmware_slot(uint8_t slot);
 #endif

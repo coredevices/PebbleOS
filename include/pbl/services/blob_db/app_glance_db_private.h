@@ -34,12 +34,12 @@ typedef struct PACKED SerializedAppGlanceSliceHeader {
 //! The minimum size of an AppGlanceSliceType_IconAndSubtitle slice is the size of the header plus
 //! the expiration_time because the icon and subtitle are optional
 #define APP_GLANCE_DB_ICON_AND_SUBTITLE_SLICE_MIN_SIZE \
-    (sizeof(SerializedAppGlanceSliceHeader) + sizeof(SerializedAttributeHeader) + sizeof(uint32_t))
+  (sizeof(SerializedAppGlanceSliceHeader) + sizeof(SerializedAttributeHeader) + sizeof(uint32_t))
 //! The maximum size of an AppGlanceSliceType_IconAndSubtitle slice is the size of the header plus
 //! the expiration_time, icon resource ID, and subtitle string attributes (+1 added for null char)
-#define APP_GLANCE_DB_ICON_AND_SUBTITLE_SLICE_MAX_SIZE \
-    (sizeof(SerializedAppGlanceSliceHeader) + (sizeof(SerializedAttributeHeader) * 3) + \
-        sizeof(uint32_t) + sizeof(uint32_t) + ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN + 1)
+#define APP_GLANCE_DB_ICON_AND_SUBTITLE_SLICE_MAX_SIZE                                \
+  (sizeof(SerializedAppGlanceSliceHeader) + (sizeof(SerializedAttributeHeader) * 3) + \
+   sizeof(uint32_t) + sizeof(uint32_t) + ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN + 1)
 
 #define APP_GLANCE_DB_SLICE_MIN_SIZE (APP_GLANCE_DB_ICON_AND_SUBTITLE_SLICE_MIN_SIZE)
 #define APP_GLANCE_DB_SLICE_MAX_SIZE (APP_GLANCE_DB_ICON_AND_SUBTITLE_SLICE_MAX_SIZE)

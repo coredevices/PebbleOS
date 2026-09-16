@@ -44,7 +44,7 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
   uint16_t out_len = 0;
   int rc = ble_hs_mbuf_to_flat(ctxt->om, buf, pkt_len, &out_len);
   if (rc != 0) {
-    PBL_LOG_ERR("Reversed PPoG write flatten failed: 0x%04x", (uint16_t) rc);
+    PBL_LOG_ERR("Reversed PPoG write flatten failed: 0x%04x", (uint16_t)rc);
     kernel_free(buf);
     return BLE_ATT_ERR_UNLIKELY;
   }
@@ -53,36 +53,36 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
 }
 
 static const struct ble_gatt_svc_def s_ppog_reversed_svc[] = {
-    {
-        .type = BLE_GATT_SVC_TYPE_PRIMARY,
-        .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(
-            PEBBLE_BT_UUID_EXPAND(PEBBLE_BT_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT))),
-        .characteristics =
-            (struct ble_gatt_chr_def[]){
-                {
-                    .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(
-                        PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT))),
-                    .access_cb = prv_access_data_notify,
-                    // READ_ENC (without READ) gates the CCCD: subscribing
-                    // requires an encrypted link, explicit reads stay blocked.
-                    .flags = BLE_GATT_CHR_F_NOTIFY | BLE_GATT_CHR_F_READ_ENC,
-                    .val_handle = &s_data_notify_handle,
-                },
-                {
-                    .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(
-                        PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT))),
-                    .access_cb = prv_access_data_write,
-                    .flags = BLE_GATT_CHR_F_WRITE_NO_RSP | BLE_GATT_CHR_F_WRITE_ENC,
-                    .val_handle = &s_data_write_handle,
-                },
-                {
-                    0,
-                },
-            },
-    },
-    {
-        0,
-    },
+  {
+    .type = BLE_GATT_SVC_TYPE_PRIMARY,
+    .uuid = BLE_UUID128_DECLARE(
+        BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(PEBBLE_BT_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT))),
+    .characteristics =
+        (struct ble_gatt_chr_def[]){
+          {
+            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(
+                PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT))),
+            .access_cb = prv_access_data_notify,
+            // READ_ENC (without READ) gates the CCCD: subscribing
+            // requires an encrypted link, explicit reads stay blocked.
+            .flags = BLE_GATT_CHR_F_NOTIFY | BLE_GATT_CHR_F_READ_ENC,
+            .val_handle = &s_data_notify_handle,
+          },
+          {
+            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(
+                PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT))),
+            .access_cb = prv_access_data_write,
+            .flags = BLE_GATT_CHR_F_WRITE_NO_RSP | BLE_GATT_CHR_F_WRITE_ENC,
+            .val_handle = &s_data_write_handle,
+          },
+          {
+            0,
+          },
+        },
+  },
+  {
+    0,
+  },
 };
 
 static void prv_handle_subscribe_event(struct ble_gap_event *event) {
@@ -131,8 +131,7 @@ void ppog_reversed_service_init(void) {
   PBL_ASSERTN(rc == 0 || rc == BLE_HS_EALREADY);
 }
 
-BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle,
-                                       const uint8_t *buf, uint16_t len) {
+BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, len);
   if (!om) {
     return BTErrnoNotEnoughResources;
@@ -147,7 +146,7 @@ BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle,
     case BLE_HS_ENOTCONN:
       return BTErrnoInvalidState;
     default:
-      PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t) rc);
+      PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t)rc);
       return (BTErrno)(BTErrnoInternalErrorBegin + rc);
   }
 }

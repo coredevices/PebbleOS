@@ -15,4 +15,4 @@
  */
 
 #define CORE_ID_MAIN_MCU 0
-#define CORE_ID_BLE 1
+#define CORE_ID_BLE      1

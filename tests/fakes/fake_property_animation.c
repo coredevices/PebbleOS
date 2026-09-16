@@ -11,10 +11,10 @@ static const PropertyAnimationImplementation s_frame_layer_implementation = {
   },
 };
 
-PropertyAnimation *WEAK property_animation_create_layer_frame(
-    struct Layer *layer, GRect *from_frame, GRect *to_frame) {
-  PropertyAnimationPrivate *animation = (PropertyAnimationPrivate *)
-      property_animation_create(&s_frame_layer_implementation, layer, from_frame, to_frame);
+PropertyAnimation *WEAK property_animation_create_layer_frame(struct Layer *layer,
+                                                              GRect *from_frame, GRect *to_frame) {
+  PropertyAnimationPrivate *animation = (PropertyAnimationPrivate *)property_animation_create(
+      &s_frame_layer_implementation, layer, from_frame, to_frame);
   if (from_frame) {
     animation->values.from.grect = *from_frame;
     PropertyAnimationImplementation *impl =
@@ -26,4 +26,3 @@ PropertyAnimation *WEAK property_animation_create_layer_frame(
   }
   return (PropertyAnimation *)animation;
 }
-

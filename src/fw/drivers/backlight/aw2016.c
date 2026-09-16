@@ -8,31 +8,31 @@
 
 PBL_LOG_MODULE_DEFINE(driver_backlight_aw2016, CONFIG_DRIVER_BACKLIGHT_LOG_LEVEL);
 
-#define AW2016_REG_RSTR 0x00U
+#define AW2016_REG_RSTR         0x00U
 #define AW2016_REG_RSTR_CHIP_ID 0x09U
-#define AW2016_REG_RSTR_RST 0x55U
+#define AW2016_REG_RSTR_RST     0x55U
 
-#define AW2016_REG_GCR1 0x01U
+#define AW2016_REG_GCR1            0x01U
 #define AW2016_REG_GCR1_CHGDIS_DIS (1U << 1U)
-#define AW2016_REG_GCR1_CHIPEN_EN (1U << 0U)
+#define AW2016_REG_GCR1_CHIPEN_EN  (1U << 0U)
 #define AW2016_REG_GCR1_CHIPEN_DIS 0U
 
-#define AW2016_REG_GCR2 0x04U
+#define AW2016_REG_GCR2           0x04U
 #define AW2016_REG_GCR2_IMAX_30MA 1U
 
-#define AW2016_REG_LCTR (0x30)
+#define AW2016_REG_LCTR            (0x30)
 #define AW2016_REG_LCTR_EXP_LINEAR (1U << 3U)
-#define AW2016_REG_LCTR_LE3_EN (1U << 2U)
-#define AW2016_REG_LCTR_LE2_EN (1U << 1U)
-#define AW2016_REG_LCTR_LE1_EN (1U << 0U)
+#define AW2016_REG_LCTR_LE3_EN     (1U << 2U)
+#define AW2016_REG_LCTR_LE2_EN     (1U << 1U)
+#define AW2016_REG_LCTR_LE1_EN     (1U << 0U)
 
-#define AW2016_REG_LCFG1 0x31U
+#define AW2016_REG_LCFG1         0x31U
 #define AW2016_REG_LCFG1_CUR_MAX 0x0FU
 
-#define AW2016_REG_LCFG2 0x32U
+#define AW2016_REG_LCFG2         0x32U
 #define AW2016_REG_LCFG2_CUR_MAX 0x0FU
 
-#define AW2016_REG_LCFG3 0x33U
+#define AW2016_REG_LCFG3         0x33U
 #define AW2016_REG_LCFG3_CUR_MAX 0x0FU
 
 #define AW2016_REG_PWM1 0x34U
@@ -165,8 +165,7 @@ void backlight_refresh(void) {
     return;
   }
 
-  ret = prv_write_register(AW2016_REG_GCR1,
-                           AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
+  ret = prv_write_register(AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN);
   ret &= prv_configure_registers();
   if (!ret) {
     PBL_LOG_ERR("AW2016 refresh failed (i2c)");

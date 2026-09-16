@@ -17,15 +17,13 @@ void test_uuid__equal(void) {
   cl_assert(uuid_equal(&invalid, &invalid));
   cl_assert(!uuid_equal(&system, &invalid));
 
-  const Uuid test_uuid_1 = (Uuid) {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5
-  };
+  const Uuid test_uuid_1 = (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5};
 
   // Different at the start
   Uuid test_uuid_2 = test_uuid_1;
   ++test_uuid_2.byte0;
 
-  // Different at the end 
+  // Different at the end
   Uuid test_uuid_3 = test_uuid_1;
   ++test_uuid_3.byte15;
 
@@ -40,9 +38,7 @@ void test_uuid__invalid(void) {
   const Uuid system = UUID_SYSTEM;
   const Uuid invalid = UUID_INVALID;
 
-  const Uuid test_uuid_1 = (Uuid) {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5
-  };
+  const Uuid test_uuid_1 = (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5};
 
   cl_assert(uuid_is_invalid(&invalid));
   cl_assert(!uuid_is_invalid(&system));
@@ -52,9 +48,7 @@ void test_uuid__invalid(void) {
 void test_uuid__string(void) {
   char buffer[UUID_STRING_BUFFER_LENGTH];
 
-  const Uuid test_uuid_1 = (Uuid) {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5
-  };
+  const Uuid test_uuid_1 = (Uuid){0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5};
 
   uuid_to_string(&test_uuid_1, buffer);
   cl_assert_equal_s(buffer, "{00010203-0405-0607-0809-000102030405}");
@@ -70,4 +64,3 @@ void test_uuid__string(void) {
   uuid_to_string(NULL, buffer);
   cl_assert_equal_s(buffer, "{NULL UUID}");
 }
-

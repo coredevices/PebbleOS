@@ -6,7 +6,8 @@
 #include "pbl/services/music.h"
 #include "pbl/util/attributes.h"
 
-void WEAK music_get_now_playing(char* title, char* artist, char* album) {}
+void WEAK music_get_now_playing(char *title, char *artist, char *album) {
+}
 
 MusicPlayState WEAK music_get_playback_state(void) {
   return MusicPlayStateUnknown;

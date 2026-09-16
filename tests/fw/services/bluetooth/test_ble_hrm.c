@@ -12,7 +12,6 @@
 
 #include <clar.h>
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stubs & Fakes
 
@@ -194,13 +193,13 @@ void test_ble_hrm__initialize(void) {
   s_ble_hrm_push_reminder_popup_call_count = 0;
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
-  s_last_disconnected = (BTDeviceInternal) {};
+  s_last_disconnected = (BTDeviceInternal){};
   s_last_sharing_request = NULL;
-  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement) {};
+  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement){};
   fake_event_service_init();
 
   // Set up fake devices/connections:
-  s_conn_a = (GAPLEConnection) {
+  s_conn_a = (GAPLEConnection){
     .device_name = TEST_DEVICE_NAME,
     .device = {
       .address = {
@@ -208,7 +207,7 @@ void test_ble_hrm__initialize(void) {
       },
     },
   };
-  s_conn_b = (GAPLEConnection) {
+  s_conn_b = (GAPLEConnection){
     .device_name = TEST_DEVICE_NAME,
     .device = {
       .address = {

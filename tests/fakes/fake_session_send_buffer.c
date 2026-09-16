@@ -5,11 +5,10 @@
 
 #include <stdint.h>
 
-static SendBuffer *s_stub_send_buffer = (SendBuffer *) ~0;
+static SendBuffer *s_stub_send_buffer = (SendBuffer *)~0;
 
-SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
-                                                  size_t required_free_length,
-                                                  uint32_t timeout_ms) {
+SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
+                                                 size_t required_free_length, uint32_t timeout_ms) {
   if (!session) {
     return NULL;
   }
@@ -26,12 +25,12 @@ void comm_session_send_buffer_end_write(SendBuffer *send_buffer) {
 static int s_send_buffer_create_count;
 static bool s_send_buffer_create_simulate_oom;
 
-SendBuffer * comm_session_send_buffer_create(bool is_system) {
+SendBuffer *comm_session_send_buffer_create(bool is_system) {
   ++s_send_buffer_create_count;
   if (s_send_buffer_create_simulate_oom) {
     return NULL;
   } else {
-    return (SendBuffer *) ~0;
+    return (SendBuffer *)~0;
   }
 }
 

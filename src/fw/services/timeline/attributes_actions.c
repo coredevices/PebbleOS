@@ -9,84 +9,46 @@
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
-
 #define GROUP_TYPE AttributeGroupType_Action
 
-bool attributes_actions_parse_serial_data(uint8_t num_attributes,
-                                          uint8_t num_actions,
-                                          const uint8_t *data,
-                                          size_t size,
+bool attributes_actions_parse_serial_data(uint8_t num_attributes, uint8_t num_actions,
+                                          const uint8_t *data, size_t size,
                                           size_t *string_alloc_size_out,
                                           uint8_t *attributes_per_actions_out) {
-
-  return attribute_group_parse_serial_data(GROUP_TYPE,
-                                           num_attributes,
-                                           num_actions,
-                                           data,
-                                           size,
-                                           string_alloc_size_out,
-                                           attributes_per_actions_out);
+  return attribute_group_parse_serial_data(GROUP_TYPE, num_attributes, num_actions, data, size,
+                                           string_alloc_size_out, attributes_per_actions_out);
 }
 
-size_t attributes_actions_get_required_buffer_size(uint8_t num_attributes,
-                                                   uint8_t num_actions,
+size_t attributes_actions_get_required_buffer_size(uint8_t num_attributes, uint8_t num_actions,
                                                    uint8_t *attributes_per_actions,
                                                    size_t required_size_for_strings) {
-
-  return attribute_group_get_required_buffer_size(GROUP_TYPE,
-                                                  num_attributes,
-                                                  num_actions,
-                                                  attributes_per_actions,
-                                                  required_size_for_strings);
+  return attribute_group_get_required_buffer_size(
+      GROUP_TYPE, num_attributes, num_actions, attributes_per_actions, required_size_for_strings);
 }
 
-void attributes_actions_init(AttributeList *attr_list,
-                             TimelineItemActionGroup *action_group,
-                             uint8_t **buffer,
-                             uint8_t num_attributes,
-                             uint8_t num_actions,
+void attributes_actions_init(AttributeList *attr_list, TimelineItemActionGroup *action_group,
+                             uint8_t **buffer, uint8_t num_attributes, uint8_t num_actions,
                              const uint8_t *attributes_per_actions) {
-
-  attribute_group_init(GROUP_TYPE,
-                       attr_list,
-                       action_group,
-                       buffer,
-                       num_attributes,
-                       num_actions,
+  attribute_group_init(GROUP_TYPE, attr_list, action_group, buffer, num_attributes, num_actions,
                        attributes_per_actions);
 }
 
-bool attributes_actions_deserialize(AttributeList *attr_list,
-                                    TimelineItemActionGroup *action_group,
-                                    uint8_t *buffer,
-                                    uint8_t *buf_end,
-                                    const uint8_t *payload,
+bool attributes_actions_deserialize(AttributeList *attr_list, TimelineItemActionGroup *action_group,
+                                    uint8_t *buffer, uint8_t *buf_end, const uint8_t *payload,
                                     size_t payload_size) {
-
-  return attribute_group_deserialize(GROUP_TYPE,
-                                     attr_list,
-                                     action_group,
-                                     buffer,
-                                     buf_end,
-                                     payload,
+  return attribute_group_deserialize(GROUP_TYPE, attr_list, action_group, buffer, buf_end, payload,
                                      payload_size);
 }
 
 size_t attributes_actions_get_serialized_payload_size(AttributeList *attr_list,
                                                       TimelineItemActionGroup *action_group) {
-  return attribute_group_get_serialized_payload_size(GROUP_TYPE,
-                                                     attr_list,
-                                                     action_group);
+  return attribute_group_get_serialized_payload_size(GROUP_TYPE, attr_list, action_group);
 }
 
 size_t attributes_actions_serialize_payload(AttributeList *attr_list,
-                                            TimelineItemActionGroup *action_group,
-                                            uint8_t *buffer,
+                                            TimelineItemActionGroup *action_group, uint8_t *buffer,
                                             size_t buffer_size) {
-  return attribute_group_serialize_payload(GROUP_TYPE,
-                                           attr_list,
-                                           action_group,
-                                           buffer,
+  return attribute_group_serialize_payload(GROUP_TYPE, attr_list, action_group, buffer,
                                            buffer_size);
 }
 
@@ -113,7 +75,7 @@ static bool prv_action_group_copy(TimelineItemActionGroup *dest, TimelineItemAct
   }
 
   dest->num_actions = source->num_actions;
-  dest->actions = (TimelineItemAction*) buffer;
+  dest->actions = (TimelineItemAction *)buffer;
   memcpy(dest->actions, source->actions, actions_size);
 
   size_t offset = actions_size;
@@ -123,33 +85,32 @@ static bool prv_action_group_copy(TimelineItemActionGroup *dest, TimelineItemAct
       return false;
     }
 
-    attribute_list_copy(&dest->actions[i].attr_list, &source->actions[i].attr_list,
-                        buffer + offset, buffer + offset + attr_size);
+    attribute_list_copy(&dest->actions[i].attr_list, &source->actions[i].attr_list, buffer + offset,
+                        buffer + offset + attr_size);
     offset += attr_size;
   }
 
   return true;
 }
 
-bool attributes_actions_deep_copy(AttributeList *src_attr_list,
-                                  AttributeList *dest_attr_list,
+bool attributes_actions_deep_copy(AttributeList *src_attr_list, AttributeList *dest_attr_list,
                                   TimelineItemActionGroup *src_action_group,
-                                  TimelineItemActionGroup *dest_action_group,
-                                  uint8_t *buffer, uint8_t *buf_end) {
+                                  TimelineItemActionGroup *dest_action_group, uint8_t *buffer,
+                                  uint8_t *buf_end) {
   bool rv;
   const size_t attr_list_size = attribute_list_get_buffer_size(src_attr_list);
 
   if (src_attr_list && dest_attr_list) {
-    rv = attribute_list_copy(dest_attr_list, src_attr_list,
-                             buffer, MIN(buffer + attr_list_size, buf_end));
+    rv = attribute_list_copy(dest_attr_list, src_attr_list, buffer,
+                             MIN(buffer + attr_list_size, buf_end));
     if (!rv) {
       PBL_LOG_ERR("Error deep-copying pin attribute list");
       return false;
     }
   }
   if (src_action_group && dest_action_group) {
-    rv = prv_action_group_copy(dest_action_group, src_action_group,
-                               buffer + attr_list_size, buf_end);
+    rv = prv_action_group_copy(dest_action_group, src_action_group, buffer + attr_list_size,
+                               buf_end);
     if (!rv) {
       PBL_LOG_ERR("Error deep-copying pin action group");
       return false;

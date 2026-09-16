@@ -12,7 +12,7 @@
 #include <stdbool.h>
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable" 
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #include <hal/nrf_gpio.h>
 #include <nrfx_spim.h>
 #include <nrfx_gpiote.h>
@@ -22,7 +22,7 @@
 #pragma GCC diagnostic pop
 
 #define GPIO_Port_NULL (NULL)
-#define GPIO_Pin_NULL ((uint16_t)-1)
+#define GPIO_Pin_NULL  ((uint16_t)-1)
 //! Guaranteed invalid IRQ priority
 #define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
 
@@ -30,24 +30,24 @@
 enum {
 #define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
 #if defined(CONFIG_SOC_NRF52)
-#  include "irq_nrf52.def"
+#include "irq_nrf52.def"
 #else
-#  error need IRQ table for new micro family
+#error need IRQ table for new micro family
 #endif
 #undef IRQ_DEF
 };
 
 //! Creates a trampoline to the interrupt handler defined within the driver
 #define IRQ_MAP(irq, handler, device) \
-  void irq##_IRQHandler(void) { \
-    handler(device); \
-  } \
+  void irq##_IRQHandler(void) {       \
+    handler(device);                  \
+  }                                   \
   _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
 
 #define IRQ_MAP_NRFX(irq, handler) \
-  void irq##_IRQHandler(void) { \
-    handler(); \
-  } \
+  void irq##_IRQHandler(void) {    \
+    handler();                     \
+  }                                \
   _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
 
 /*
@@ -65,7 +65,7 @@ typedef struct {
 typedef GpioteConfig ExtiConfig; /* compatibility */
 
 typedef struct {
-  const char* const name; ///< Name for debugging purposes.
+  const char *const name; ///< Name for debugging purposes.
   GpioteConfig gpiote;
   nrf_gpio_pin_pull_t pull;
 } ButtonConfig;
@@ -83,7 +83,7 @@ typedef struct {
 typedef struct {
   void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
   const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
-  bool active_high; ///< Pin is active high or active low
+  bool active_high;        ///< Pin is active high or active low
 } OutputConfig;
 
 //! Alternate function pin configuration

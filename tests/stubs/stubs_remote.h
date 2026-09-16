@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-typedef void * RemoteRef;
+typedef void *RemoteRef;
 
 RemoteRef remote_get_active() {
   return NULL;

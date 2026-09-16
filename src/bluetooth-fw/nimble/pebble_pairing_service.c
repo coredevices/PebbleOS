@@ -69,7 +69,8 @@ int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_hand
 
 static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
                                         struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR) return 0;
+  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR)
+    return 0;
 
   PebblePairingServiceConnectivityStatus status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
@@ -122,31 +123,31 @@ static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle
 }
 
 static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
-    {
-        .type = BLE_GATT_SVC_TYPE_PRIMARY,
-        .uuid = BLE_UUID16_DECLARE(PEBBLE_BT_PAIRING_SERVICE_UUID_16BIT),
-        .characteristics =
-            (struct ble_gatt_chr_def[]){
-                {
-                    .uuid = BLE_UUID128_DECLARE(
-                        BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)),
-                    .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
-                    .access_cb = prv_access_connection_status,
-                },
-                {
-                    .uuid = BLE_UUID128_DECLARE(
-                        BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID)),
-                    .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE,
-                    .access_cb = prv_access_trigger_pairing,
-                },
-                {
-                    0, /* No more characteristics in this service */
-                },
-            },
-    },
-    {
-        0, /* No more services */
-    },
+  {
+    .type = BLE_GATT_SVC_TYPE_PRIMARY,
+    .uuid = BLE_UUID16_DECLARE(PEBBLE_BT_PAIRING_SERVICE_UUID_16BIT),
+    .characteristics =
+        (struct ble_gatt_chr_def[]){
+          {
+            .uuid = BLE_UUID128_DECLARE(
+                BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)),
+            .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
+            .access_cb = prv_access_connection_status,
+          },
+          {
+            .uuid = BLE_UUID128_DECLARE(
+                BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID)),
+            .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE,
+            .access_cb = prv_access_trigger_pairing,
+          },
+          {
+            0, /* No more characteristics in this service */
+          },
+        },
+  },
+  {
+    0, /* No more services */
+  },
 };
 
 void pebble_pairing_service_init(void) {

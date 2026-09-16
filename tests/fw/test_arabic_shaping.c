@@ -36,8 +36,10 @@ static size_t prv_shape(const char *in, Codepoint *cps, size_t max) {
   return count;
 }
 
-void test_arabic_shaping__initialize(void) {}
-void test_arabic_shaping__cleanup(void) {}
+void test_arabic_shaping__initialize(void) {
+}
+void test_arabic_shaping__cleanup(void) {
+}
 
 ///////////////////////////////////////////////////////////
 // Tests
@@ -56,8 +58,8 @@ void test_arabic_shaping__lam_alef_final_after_connector(void) {
   Codepoint cps[8];
   size_t n = prv_shape("\xD8\xA8\xD9\x84\xD8\xA7", cps, 8);
   cl_assert_equal_i(n, 2);
-  cl_assert_equal_i(cps[0], 0xFE91);  // Beh initial
-  cl_assert_equal_i(cps[1], 0xFEFC);  // Lam-Alef final ligature
+  cl_assert_equal_i(cps[0], 0xFE91); // Beh initial
+  cl_assert_equal_i(cps[1], 0xFEFC); // Lam-Alef final ligature
 }
 
 // "سلام" = Seen Lam Alef Meem -> Seen initial, Lam-Alef final ligature, Meem
@@ -66,9 +68,9 @@ void test_arabic_shaping__salaam_has_ligature(void) {
   Codepoint cps[8];
   size_t n = prv_shape("\xD8\xB3\xD9\x84\xD8\xA7\xD9\x85", cps, 8);
   cl_assert_equal_i(n, 3);
-  cl_assert_equal_i(cps[0], 0xFEB3);  // Seen initial
-  cl_assert_equal_i(cps[1], 0xFEFC);  // Lam-Alef final
-  cl_assert_equal_i(cps[2], 0xFEE1);  // Meem isolated
+  cl_assert_equal_i(cps[0], 0xFEB3); // Seen initial
+  cl_assert_equal_i(cps[1], 0xFEFC); // Lam-Alef final
+  cl_assert_equal_i(cps[2], 0xFEE1); // Meem isolated
 }
 
 // "مكمّلات" = Meem Kaf Meem shadda Lam Alef Teh. The shadda is transparent for
@@ -77,16 +79,16 @@ void test_arabic_shaping__salaam_has_ligature(void) {
 void test_arabic_shaping__diacritic_transparent_join(void) {
   Codepoint cps[12];
   size_t n = prv_shape("\xD9\x85\xD9\x83\xD9\x85\xD9\x91\xD9\x84\xD8\xA7\xD8\xAA", cps, 12);
-  cl_assert_equal_i(n, 6);            // seven letters, Lam-Alef ligates into one
-  cl_assert_equal_i(cps[2], 0xFEE4);  // Meem medial (joins forward through the shadda)
-  cl_assert_equal_i(cps[3], 0x0651);  // shadda preserved, in place
-  cl_assert_equal_i(cps[4], 0xFEFC);  // Lam-Alef final (connected), not isolated FEFB
+  cl_assert_equal_i(n, 6);           // seven letters, Lam-Alef ligates into one
+  cl_assert_equal_i(cps[2], 0xFEE4); // Meem medial (joins forward through the shadda)
+  cl_assert_equal_i(cps[3], 0x0651); // shadda preserved, in place
+  cl_assert_equal_i(cps[4], 0xFEFC); // Lam-Alef final (connected), not isolated FEFB
 }
 
 // Alef with Hamza above (U+0623) maps to its own ligature pair (U+FEF7/FEF8).
 void test_arabic_shaping__lam_alef_hamza_variant(void) {
   Codepoint cps[8];
-  size_t n = prv_shape("\xD9\x84\xD8\xA3", cps, 8);  // Lam + Alef-Hamza-above
+  size_t n = prv_shape("\xD9\x84\xD8\xA3", cps, 8); // Lam + Alef-Hamza-above
   cl_assert_equal_i(n, 1);
   cl_assert_equal_i(cps[0], 0xFEF7);
 }
@@ -105,10 +107,10 @@ void test_arabic_shaping__ascii_passthrough(void) {
 void test_arabic_shaping__shape_pair_consumes_alef(void) {
   bool consumed = false;
   Codepoint cp = arabic_shape_pair(0, 0x0644 /* Lam */, 0x0627 /* Alef */, &consumed);
-  cl_assert_equal_i(cp, 0xFEFB);  // isolated Lam-Alef
+  cl_assert_equal_i(cp, 0xFEFB); // isolated Lam-Alef
   cl_assert(consumed);
 
-  consumed = true;  // ensure it gets cleared
+  consumed = true; // ensure it gets cleared
   cp = arabic_shape_pair(0, 0x0628 /* Beh */, 0x0644 /* Lam */, &consumed);
   cl_assert(!consumed);
   cl_assert_equal_i(cp, arabic_shape_codepoint(0, 0x0628, 0x0644));

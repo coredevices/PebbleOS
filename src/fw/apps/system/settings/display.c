@@ -30,10 +30,10 @@ typedef struct SettingsDisplayData {
 
 typedef struct SettingsBacklightData {
   SettingsCallbacks callbacks;
-  char als_value_buffer[16];  // Buffer for ALS value display
-  char backlight_percent_buffer[16];  // Buffer for backlight percentage display
-  AppTimer *update_timer;  // Timer for live updating debug values
-  bool als_primed;  // Whether we currently hold an ambient_light_prime() ref
+  char als_value_buffer[16];         // Buffer for ALS value display
+  char backlight_percent_buffer[16]; // Buffer for backlight percentage display
+  AppTimer *update_timer;            // Timer for live updating debug values
+  bool als_primed;                   // Whether we currently hold an ambient_light_prime() ref
 } SettingsBacklightData;
 
 static const char *s_language_labels[] = {
@@ -51,18 +51,17 @@ static void prv_language_menu_push(SettingsDisplayData *data) {
     .select = prv_language_menu_select,
   };
   settings_option_menu_push(i18n_noop("Language"), OptionMenuContentType_SingleLine,
-                            shell_prefs_get_language(), &callbacks,
-                            ARRAY_LENGTH(s_language_labels), false /* icons_enabled */,
-                            s_language_labels, data);
+                            shell_prefs_get_language(), &callbacks, ARRAY_LENGTH(s_language_labels),
+                            false /* icons_enabled */, s_language_labels, data);
 }
 
 // Text Size
 /////////////////////////////
 
 static const char *s_text_size_names[] = {
-  [SettingsContentSize_Small]   = i18n_noop("Smaller"),
+  [SettingsContentSize_Small] = i18n_noop("Smaller"),
   [SettingsContentSize_Default] = i18n_ctx_noop("TextSize", "Default"),
-  [SettingsContentSize_Large]   = i18n_noop("Larger"),
+  [SettingsContentSize_Large] = i18n_noop("Larger"),
 };
 
 static void prv_text_size_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -78,30 +77,27 @@ static void prv_text_size_menu_push(SettingsDisplayData *data) {
   const char *title = i18n_noop("Text Size");
   const SettingsContentSize index =
       settings_content_size_from_preferred_size(system_theme_get_content_size());
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks, SettingsContentSizeCount,
-      true /* icons_enabled */, s_text_size_names, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            SettingsContentSizeCount, true /* icons_enabled */, s_text_size_names,
+                            data);
 }
 
 // Intensity Settings
 /////////////////////////////
 
-static const uint32_t s_intensity_values[] = { 10, 25, 50, 100 };
+static const uint32_t s_intensity_values[] = {10, 25, 50, 100};
 
 static const char *s_intensity_labels[] = {
-    i18n_noop("Low"),
-    i18n_noop("Medium"),
-    i18n_noop("High"),
-    i18n_noop("Blinding")
+  i18n_noop("Low"), i18n_noop("Medium"), i18n_noop("High"), i18n_noop("Blinding")
 };
 
 #define BACKLIGHT_SCALE_GRANULARITY 5
 // Normalize the result from light get brightness as it sometimes
 // will round down/up by a %
 static uint8_t prv_get_scaled_brightness(void) {
-  return BACKLIGHT_SCALE_GRANULARITY
-         * ((backlight_get_intensity() + BACKLIGHT_SCALE_GRANULARITY - 1)
-            / BACKLIGHT_SCALE_GRANULARITY);
+  return BACKLIGHT_SCALE_GRANULARITY *
+         ((backlight_get_intensity() + BACKLIGHT_SCALE_GRANULARITY - 1) /
+          BACKLIGHT_SCALE_GRANULARITY);
 }
 
 static int prv_intensity_get_selection_index() {
@@ -128,17 +124,17 @@ static void prv_intensity_menu_push(SettingsBacklightData *data) {
     .select = prv_intensity_menu_select,
   };
   const char *title = PBL_IF_RECT_ELSE(i18n_noop("INTENSITY"), i18n_noop("Intensity"));
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks, ARRAY_LENGTH(s_intensity_labels),
-      true /* icons_enabled */, s_intensity_labels, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_intensity_labels), true /* icons_enabled */,
+                            s_intensity_labels, data);
 }
 
 #ifdef CONFIG_ORIENTATION_MANAGER
 // Orientation Settings
 /////////////////////////////
 static const char *s_display_orientation_labels[] = {
-    i18n_ctx_noop("Orientation", "Default"),
-    i18n_noop("Left-Handed"),
+  i18n_ctx_noop("Orientation", "Default"),
+  i18n_noop("Left-Handed"),
 };
 
 static int prv_display_orientation_get_selection_index() {
@@ -160,7 +156,7 @@ static void prv_display_orientation_menu_select(OptionMenu *option_menu, int sel
 static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
   const int index = prv_display_orientation_get_selection_index();
   const OptionMenuCallbacks callbacks = {
-      .select = prv_display_orientation_menu_select,
+    .select = prv_display_orientation_menu_select,
   };
 
   const char *title = i18n_noop("Orientation");
@@ -173,12 +169,10 @@ static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
 // Timeout Settings
 /////////////////////////////
 
-static const uint32_t s_timeout_values[] = { 3000, 5000, 8000 };
+static const uint32_t s_timeout_values[] = {3000, 5000, 8000};
 
 static const char *s_timeout_labels[] = {
-  i18n_noop("3 Seconds"),
-  i18n_noop("5 Seconds"),
-  i18n_noop("8 Seconds")
+  i18n_noop("3 Seconds"), i18n_noop("5 Seconds"), i18n_noop("8 Seconds")
 };
 
 static int prv_timeout_get_selection_index() {
@@ -202,18 +196,18 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
     .select = prv_timeout_menu_select,
   };
   const char *title = PBL_IF_RECT_ELSE(i18n_noop("TIMEOUT"), i18n_noop("Timeout"));
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks, ARRAY_LENGTH(s_timeout_labels),
-      true /* icons_enabled */, s_timeout_labels, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_timeout_labels), true /* icons_enabled */,
+                            s_timeout_labels, data);
 }
 
 // Touch Wake Settings
 /////////////////////////////
 #ifdef CONFIG_TOUCH
 static const char *s_touch_wake_labels[] = {
-    [BacklightTouchWake_DoubleTap] = i18n_noop("Double Tap"),
-    [BacklightTouchWake_Tap] = i18n_noop("Tap"),
-    [BacklightTouchWake_Off] = i18n_ctx_noop("TouchWake", "Off"),
+  [BacklightTouchWake_DoubleTap] = i18n_noop("Double Tap"),
+  [BacklightTouchWake_Tap] = i18n_noop("Tap"),
+  [BacklightTouchWake_Off] = i18n_ctx_noop("TouchWake", "Off"),
 };
 
 static void prv_touch_wake_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -227,9 +221,9 @@ static void prv_touch_wake_menu_push(SettingsBacklightData *data) {
     .select = prv_touch_wake_menu_select,
   };
   const char *title = PBL_IF_RECT_ELSE(i18n_noop("WAKE ON TOUCH"), i18n_noop("Wake on touch"));
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_touch_wake_labels), true /* icons_enabled */, s_touch_wake_labels, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_touch_wake_labels), true /* icons_enabled */,
+                            s_touch_wake_labels, data);
 }
 #endif
 
@@ -237,10 +231,10 @@ static void prv_touch_wake_menu_push(SettingsBacklightData *data) {
 /////////////////////////////
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 static const char *s_dynamic_mode_labels[BacklightDynamicModeCount] = {
-    [BacklightDynamicMode_Off] = i18n_ctx_noop("DynBacklight", "Off"),
-    [BacklightDynamicMode_Bright] = i18n_noop("Bright"),
-    [BacklightDynamicMode_Standard] = i18n_noop("Standard"),
-    [BacklightDynamicMode_Dim] = i18n_noop("Dim"),
+  [BacklightDynamicMode_Off] = i18n_ctx_noop("DynBacklight", "Off"),
+  [BacklightDynamicMode_Bright] = i18n_noop("Bright"),
+  [BacklightDynamicMode_Standard] = i18n_noop("Standard"),
+  [BacklightDynamicMode_Dim] = i18n_noop("Dim"),
 };
 
 static void prv_dynamic_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -253,21 +247,21 @@ static void prv_dynamic_mode_menu_push(SettingsBacklightData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_dynamic_mode_menu_select,
   };
-  const char *title = PBL_IF_RECT_ELSE(i18n_noop("DYNAMIC BACKLIGHT"),
-                                       i18n_noop("Dynamic Backlight"));
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_dynamic_mode_labels), true /* icons_enabled */, s_dynamic_mode_labels, data);
+  const char *title =
+      PBL_IF_RECT_ELSE(i18n_noop("DYNAMIC BACKLIGHT"), i18n_noop("Dynamic Backlight"));
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_dynamic_mode_labels), true /* icons_enabled */,
+                            s_dynamic_mode_labels, data);
 }
 #endif
 
 // Backlight Preset Settings
 /////////////////////////////
 static const char *s_backlight_preset_labels[BacklightPresetCount] = {
-    [BacklightPreset_MaxBrightness] = i18n_noop("Max Brightness"),
-    [BacklightPreset_Standard] = i18n_noop("Standard"),
-    [BacklightPreset_BatterySaver] = i18n_noop("Battery Saver"),
-    [BacklightPreset_Advanced] = i18n_noop("Advanced"),
+  [BacklightPreset_MaxBrightness] = i18n_noop("Max Brightness"),
+  [BacklightPreset_Standard] = i18n_noop("Standard"),
+  [BacklightPreset_BatterySaver] = i18n_noop("Battery Saver"),
+  [BacklightPreset_Advanced] = i18n_noop("Advanced"),
 };
 
 static void prv_preset_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -288,19 +282,16 @@ static void prv_preset_menu_push(SettingsDisplayData *data) {
     .select = prv_preset_menu_select,
   };
   const char *title = PBL_IF_RECT_ELSE(i18n_noop("BACKLIGHT"), i18n_noop("Backlight"));
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_backlight_preset_labels), true /* icons_enabled */,
-      s_backlight_preset_labels, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_backlight_preset_labels), true /* icons_enabled */,
+                            s_backlight_preset_labels, data);
 }
 
 // Legacy App Mode Settings (Obelix only)
 /////////////////////////////
 #ifdef CONFIG_APP_SCALING
 static const char *s_legacy_app_mode_labels[] = {
-    i18n_noop("Centered"),
-    i18n_noop("Scaled (Nearest)"),
-    i18n_noop("Scaled (Bilinear)")
+  i18n_noop("Centered"), i18n_noop("Scaled (Nearest)"), i18n_noop("Scaled (Bilinear)")
 };
 
 static void prv_legacy_app_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -314,10 +305,9 @@ static void prv_legacy_app_mode_menu_push(SettingsDisplayData *data) {
     .select = prv_legacy_app_mode_menu_select,
   };
   const char *title = i18n_noop("Legacy App Display");
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_legacy_app_mode_labels),
-      false /* icons_enabled */, s_legacy_app_mode_labels, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_legacy_app_mode_labels), false /* icons_enabled */,
+                            s_legacy_app_mode_labels, data);
 }
 #endif
 
@@ -372,7 +362,7 @@ static uint16_t prv_backlight_item_from_row(uint16_t row) {
 }
 
 static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  SettingsBacklightData *data = (SettingsBacklightData *)context;
   switch (prv_backlight_item_from_row(row)) {
     case SettingsBacklightMode:
       light_toggle_enabled();
@@ -408,7 +398,7 @@ static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t r
 
 static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                       const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsBacklightData *data = (SettingsBacklightData*) context;
+  SettingsBacklightData *data = (SettingsBacklightData *)context;
   const char *title = NULL;
   const char *subtitle = NULL;
   switch (prv_backlight_item_from_row(row)) {
@@ -445,8 +435,8 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Ambient Sensor");
       if (backlight_is_ambient_sensor_enabled()) {
         uint32_t als_value = light_get_ambient_lux();
-        snprintf(data->als_value_buffer, sizeof(data->als_value_buffer),
-                 i18n_get("On (%d)", data), (int)als_value);
+        snprintf(data->als_value_buffer, sizeof(data->als_value_buffer), i18n_get("On (%d)", data),
+                 (int)als_value);
         subtitle = data->als_value_buffer;
       } else {
         subtitle = i18n_ctx_noop("DeviceState", "Off");
@@ -491,16 +481,16 @@ static uint16_t prv_backlight_num_rows_cb(SettingsCallbacks *context) {
 // the ALS reading and the dynamic-backlight percentage subtitle.
 #define UPDATE_INTERVAL_MS 500
 static void prv_backlight_update_timer_cb(void *context) {
-  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  SettingsBacklightData *data = (SettingsBacklightData *)context;
   settings_menu_mark_dirty(SettingsMenuItemDisplay);
   data->update_timer = app_timer_register(UPDATE_INTERVAL_MS, prv_backlight_update_timer_cb, data);
 }
 
 static void prv_backlight_appear_cb(SettingsCallbacks *context) {
-  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  SettingsBacklightData *data = (SettingsBacklightData *)context;
   if (!data->update_timer) {
-    data->update_timer = app_timer_register(UPDATE_INTERVAL_MS,
-                                            prv_backlight_update_timer_cb, data);
+    data->update_timer =
+        app_timer_register(UPDATE_INTERVAL_MS, prv_backlight_update_timer_cb, data);
   }
   // Hold the ALS in continuous mode while this submenu is visible so the
   // 500 ms refresh tick doesn't pay a full integration time per read.
@@ -511,7 +501,7 @@ static void prv_backlight_appear_cb(SettingsCallbacks *context) {
 }
 
 static void prv_backlight_hide_cb(SettingsCallbacks *context) {
-  SettingsBacklightData *data = (SettingsBacklightData*)context;
+  SettingsBacklightData *data = (SettingsBacklightData *)context;
   if (data->update_timer) {
     app_timer_cancel(data->update_timer);
     data->update_timer = NULL;
@@ -523,7 +513,7 @@ static void prv_backlight_hide_cb(SettingsCallbacks *context) {
 }
 
 static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
-  SettingsBacklightData *data = (SettingsBacklightData*) context;
+  SettingsBacklightData *data = (SettingsBacklightData *)context;
   if (data->update_timer) {
     app_timer_cancel(data->update_timer);
     data->update_timer = NULL;
@@ -540,7 +530,7 @@ static void prv_backlight_submenu_push(void) {
   SettingsBacklightData *data = app_malloc_check(sizeof(*data));
   *data = (SettingsBacklightData){};
 
-  data->callbacks = (SettingsCallbacks) {
+  data->callbacks = (SettingsCallbacks){
     .deinit = prv_backlight_deinit_cb,
     .draw_row = prv_backlight_draw_row_cb,
     .select_click = prv_backlight_select_click_cb,
@@ -550,8 +540,8 @@ static void prv_backlight_submenu_push(void) {
   };
 
   const char *title = i18n_noop("Backlight Settings");
-  Window *window = settings_window_create_with_title(SettingsMenuItemDisplay,
-                                                     title, &data->callbacks);
+  Window *window =
+      settings_window_create_with_title(SettingsMenuItemDisplay, title, &data->callbacks);
   app_window_stack_push(window, true /* animated */);
 }
 
@@ -626,7 +616,7 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
 #endif
 #ifdef CONFIG_ORIENTATION_MANAGER
     case SettingsDisplayOrientation:
-      prv_display_orientation_menu_push((SettingsDisplayData*)context);
+      prv_display_orientation_menu_push((SettingsDisplayData *)context);
       break;
 #endif
     case SettingsDisplayTextSize:
@@ -637,7 +627,7 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
       break;
 #ifdef CONFIG_APP_SCALING
     case SettingsDisplayLegacyAppMode:
-      prv_legacy_app_mode_menu_push((SettingsDisplayData*)context);
+      prv_legacy_app_mode_menu_push((SettingsDisplayData *)context);
       break;
 #endif
     default:
@@ -649,7 +639,7 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
 
 static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                     const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsDisplayData *data = (SettingsDisplayData*) context;
+  SettingsDisplayData *data = (SettingsDisplayData *)context;
   const char *title = NULL;
   const char *subtitle = NULL;
   switch (prv_display_item_from_row(row)) {
@@ -712,7 +702,7 @@ static uint16_t prv_display_num_rows_cb(SettingsCallbacks *context) {
 }
 
 static void prv_display_deinit_cb(SettingsCallbacks *context) {
-  SettingsDisplayData *data = (SettingsDisplayData*) context;
+  SettingsDisplayData *data = (SettingsDisplayData *)context;
   i18n_free_all(data);
   app_free(data);
 }
@@ -721,7 +711,7 @@ static Window *prv_init(void) {
   SettingsDisplayData *data = app_malloc_check(sizeof(*data));
   *data = (SettingsDisplayData){};
 
-  data->callbacks = (SettingsCallbacks) {
+  data->callbacks = (SettingsCallbacks){
     .deinit = prv_display_deinit_cb,
     .draw_row = prv_display_draw_row_cb,
     .select_click = prv_display_select_click_cb,

@@ -148,8 +148,7 @@ static void prv_update_status(void) {
     if (has_item) {
       timeline_item_deserialize_header(&item, state->filter_header);
     }
-    const uint32_t other_timeout_ms =
-        state->impl->update(has_item ? &item : NULL, &state->context);
+    const uint32_t other_timeout_ms = state->impl->update(has_item ? &item : NULL, &state->context);
     if (other_timeout_ms) {
       timeout_ms = timeout_ms ? MIN(timeout_ms, other_timeout_ms) : other_timeout_ms;
     }
@@ -214,11 +213,11 @@ bool timeline_event_is_ongoing(time_t now, time_t event_start, int event_duratio
   return ((event_start <= now) && ((event_start + (SECONDS_PER_MINUTE * event_duration_m)) > now));
 }
 
-bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now,
-                                  int delta_start_s, int delta_end_s) {
-  return ((common->type == TimelineItemTypePin) && // Ignore non-pins
+bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now, int delta_start_s,
+                                  int delta_end_s) {
+  return ((common->type == TimelineItemTypePin) &&              // Ignore non-pins
           (((delta_start_s == TIMELINE_EVENT_DELTA_INFINITE) || // Any past event or
-            (common->timestamp > (now + delta_start_s))) && // Begins after range start and
-           ((delta_end_s == TIMELINE_EVENT_DELTA_INFINITE) || // Any future event or
-            (common->timestamp < (now + delta_end_s))))); // Begins before range end
+            (common->timestamp > (now + delta_start_s))) &&     // Begins after range start and
+           ((delta_end_s == TIMELINE_EVENT_DELTA_INFINITE) ||   // Any future event or
+            (common->timestamp < (now + delta_end_s)))));       // Begins before range end
 }

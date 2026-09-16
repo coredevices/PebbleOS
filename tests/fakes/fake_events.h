@@ -19,4 +19,3 @@ void **fake_event_get_buffer(PebbleEvent *event);
 
 typedef void (*FakeEventCallback)(PebbleEvent *event);
 void fake_event_set_callback(FakeEventCallback cb);
-

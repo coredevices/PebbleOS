@@ -51,7 +51,7 @@ typedef struct {
   };
 } FwUpdateCurrentCompletionStatus;
 
-static FwUpdateCurrentCompletionStatus s_current_completion_status =  { 0 };
+static FwUpdateCurrentCompletionStatus s_current_completion_status = {0};
 
 //
 // Start handlers for legacy percentage status handling. Someday, we can hopefully
@@ -107,10 +107,9 @@ static bool prv_legacy_completion_status_init(PebbleSystemMessageEvent *event) {
   }
 
   s_current_completion_status.use_legacy_mode = true;
-  LegacyFwUpdateCompletionStatus *status =
-      &s_current_completion_status.legacy_status;
+  LegacyFwUpdateCompletionStatus *status = &s_current_completion_status.legacy_status;
 
-  *status = (LegacyFwUpdateCompletionStatus) {
+  *status = (LegacyFwUpdateCompletionStatus){
     .recovery_percent_completion = 0,
     .resource_percent_completion = 0,
     .firmware_percent_completion = 0
@@ -139,7 +138,7 @@ static void prv_initialize_completion_status(PebbleSystemMessageEvent *event) {
 
   s_current_completion_status.use_legacy_mode = false;
   FwUpdateCompletionStatus *status = &s_current_completion_status.status;
-  *status = (FwUpdateCompletionStatus) {
+  *status = (FwUpdateCompletionStatus){
     .bytes_transferred = event->bytes_transferred,
     .total_size = event->total_transfer_size
   };
@@ -152,7 +151,7 @@ static void prv_initialize_completion_status(PebbleSystemMessageEvent *event) {
 
 static FirmwareUpdateStatus prv_firmware_update_start(PebbleSystemMessageEvent *event) {
   if (battery_monitor_critical_lockout()) {
-    return FirmwareUpdateCancelled;  // Disable firmware updates on low power
+    return FirmwareUpdateCancelled; // Disable firmware updates on low power
   }
 
   if ((pbl_sem_take(&s_firmware_update_semaphore, PBL_NO_WAIT) != 0)) {
@@ -169,7 +168,7 @@ static FirmwareUpdateStatus prv_firmware_update_start(PebbleSystemMessageEvent *
     static const ProgressUIAppArgs s_update_args = {
       .progress_source = PROGRESS_UI_SOURCE_FW_UPDATE,
     };
-    app_manager_launch_new_app(&(AppLaunchConfig) {
+    app_manager_launch_new_app(&(AppLaunchConfig){
       .md = progress_ui_app_get_info(),
       .common.args = &s_update_args,
       .restart = true,
@@ -185,8 +184,7 @@ static FirmwareUpdateStatus prv_firmware_update_start(PebbleSystemMessageEvent *
 static void prv_handle_firmware_update_start_msg(PebbleSystemMessageEvent *event) {
   FirmwareUpdateStatus result = prv_firmware_update_start(event);
   s_update_status = result;
-  PBL_ASSERTN((result == FirmwareUpdateRunning) ||
-              (result == FirmwareUpdateStopped) ||
+  PBL_ASSERTN((result == FirmwareUpdateRunning) || (result == FirmwareUpdateStopped) ||
               (result == FirmwareUpdateCancelled));
   system_message_send_firmware_start_response(result);
 }
@@ -221,7 +219,7 @@ unsigned int firmware_update_get_percent_progress(void) {
   return (status->bytes_transferred * 100) / status->total_size;
 }
 
-void firmware_update_event_handler(PebbleSystemMessageEvent* event) {
+void firmware_update_event_handler(PebbleSystemMessageEvent *event) {
   switch (event->type) {
     case PebbleSystemMessageFirmwareUpdateStartLegacy:
     case PebbleSystemMessageFirmwareUpdateStart:

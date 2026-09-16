@@ -75,7 +75,7 @@ typedef struct {
 } Utf8Bounds;
 
 typedef struct {
-  Utf8Bounds const  *bounds;
+  Utf8Bounds const *bounds;
   utf8_t *current; //<! Must be within bounds, inclusive; advancing past trips assert
   utf8_t *next;
   uint32_t codepoint; //! Cached current codepoint
@@ -83,7 +83,8 @@ typedef struct {
 
 Utf8Bounds utf8_get_bounds(bool *const success, char const *text);
 
-void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bounds const  *bounds, utf8_t *start);
+void utf8_iter_init(Iterator *utf8_iter, Utf8IterState *utf8_iter_state, Utf8Bounds const *bounds,
+                    utf8_t *start);
 
 bool utf8_iter_next(IteratorState state);
 

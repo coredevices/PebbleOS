@@ -40,8 +40,8 @@ static void prv_trace(char c) {
   }
 }
 
-static struct pbl_thread *prv_spawn(int i, const char *name, pbl_prio_t prio,
-                                    void (*entry)(void *), void *arg) {
+static struct pbl_thread *prv_spawn(int i, const char *name, pbl_prio_t prio, void (*entry)(void *),
+                                    void *arg) {
   struct pbl_thread_attr attr = {
     .name = name,
     .entry = entry,
@@ -88,7 +88,7 @@ static void prv_sleep_then_stop(void *arg) {
   pbl_tick_t start = pbl_uptime_ticks();
   pbl_thread_sleep(PBL_TICKS(10));
   cl_assert_equal_i(pbl_uptime_ticks() - start, 10);
-  pbl_thread_sleep(PBL_MSEC(0));  // yield only
+  pbl_thread_sleep(PBL_MSEC(0)); // yield only
   prv_trace('S');
   pbl_test_kernel_stop();
 }
@@ -177,7 +177,7 @@ static void prv_isr_giver(void *arg) {
   pbl_test_isr_enter();
   pbl_sem_give(&s_sem);
   prv_trace('g');
-  pbl_test_isr_exit();  // the higher-priority taker runs on ISR exit
+  pbl_test_isr_exit(); // the higher-priority taker runs on ISR exit
   prv_trace('r');
 }
 
@@ -296,7 +296,7 @@ static void prv_producer(void *arg) {
 }
 
 static void prv_consumer(void *arg) {
-  pbl_thread_sleep(PBL_TICKS(1));  // let the producer fill the queue and block
+  pbl_thread_sleep(PBL_TICKS(1)); // let the producer fill the queue and block
   cl_assert_equal_i(pbl_msgq_num_used(&s_q), 2);
   for (int i = 1; i <= 4; i++) {
     int v;
@@ -401,7 +401,7 @@ static void prv_controller(void *arg) {
   cl_assert(strlen(s_trace) > before);
   pbl_thread_abort(victim);
   cl_assert_equal_i(pbl_thread_state(victim), PBL_THREAD_DEAD);
-  cl_assert_equal_i(pbl_thread_count(), 2);  // idle + this one
+  cl_assert_equal_i(pbl_thread_count(), 2); // idle + this one
   pbl_test_kernel_stop();
 }
 
@@ -454,7 +454,7 @@ void test_kernel__stats_and_stack_info(void) {
 static void prv_prio_raiser(void *arg) {
   struct pbl_thread *other = arg;
   prv_trace('a');
-  pbl_thread_prio_set(other, 4);  // other now outranks us and runs at once
+  pbl_thread_prio_set(other, 4); // other now outranks us and runs at once
   prv_trace('b');
   pbl_test_kernel_stop();
 }
@@ -474,10 +474,10 @@ void test_kernel__prio_set_preempts(void) {
 static void prv_sched_locked(void *arg) {
   prv_trace('a');
   pbl_sched_lock();
-  pbl_sem_give(&s_sem);  // would wake the higher-priority waiter
+  pbl_sem_give(&s_sem); // would wake the higher-priority waiter
   prv_trace('b');
   cl_assert(!pbl_kernel_is_running() && pbl_sched_is_locked());
-  pbl_sched_unlock();  // the switch happens here
+  pbl_sched_unlock(); // the switch happens here
   prv_trace('c');
   pbl_test_kernel_stop();
 }

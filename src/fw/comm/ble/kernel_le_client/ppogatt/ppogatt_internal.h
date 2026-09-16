@@ -11,12 +11,12 @@
 #include "mfg/mfg_serials.h"
 #include "pbl/util/attributes.h"
 
-#define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / MAX_ATT_WRITE_PAYLOAD_SIZE)
-#define PPOGATT_MIN_VERSION (0x00)
-#define PPOGATT_MAX_VERSION (0x01)
-#define PPOGATT_SN_BITS (5)
-#define PPOGATT_SN_MOD_DIV (1 << PPOGATT_SN_BITS)
-#define PPOGATT_V0_WINDOW_SIZE (4)
+#define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE  (4500 / MAX_ATT_WRITE_PAYLOAD_SIZE)
+#define PPOGATT_MIN_VERSION                (0x00)
+#define PPOGATT_MAX_VERSION                (0x01)
+#define PPOGATT_SN_BITS                    (5)
+#define PPOGATT_SN_MOD_DIV                 (1 << PPOGATT_SN_BITS)
+#define PPOGATT_V0_WINDOW_SIZE             (4)
 #define PPOGATT_TIMEOUT_TICK_INTERVAL_SECS (2)
 //! Effective timeout: between 5 - 6 secs, because packet could be sent out just before the
 //! RegularTimer second tick is about to fire.
@@ -60,8 +60,8 @@ _Static_assert(PPoGATTPacketTypeResetRequest != 0, "Reset type can't be 0; see r
 _Static_assert(PPoGATTPacketTypeResetComplete != 0, "Reset type can't be 0; see reset_packet_byte");
 
 typedef struct PACKED {
-  PPoGATTPacketType type:3;
-  uint8_t sn:PPOGATT_SN_BITS;
+  PPoGATTPacketType type : 3;
+  uint8_t sn : PPOGATT_SN_BITS;
   uint8_t payload[];
 } PPoGATTPacket;
 
@@ -99,5 +99,5 @@ typedef struct PACKED {
   uint8_t ppogatt_min_version;
   uint8_t ppogatt_max_version;
   Uuid app_uuid;
-  PPoGATTSessionType pp_session_type:8;
+  PPoGATTSessionType pp_session_type : 8;
 } PPoGATTMetaV1;

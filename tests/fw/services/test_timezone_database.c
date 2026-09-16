@@ -20,7 +20,7 @@ int timezone_database_find_region_by_name(const char *region_name, int region_na
 #include "resource/resource.h"
 size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
                                        uint32_t start_offset, uint8_t *data, size_t num_bytes) {
-  memcpy(data, ((uint8_t*) s_timezone_database) + start_offset, num_bytes);
+  memcpy(data, ((uint8_t *)s_timezone_database) + start_offset, num_bytes);
   return num_bytes;
 }
 

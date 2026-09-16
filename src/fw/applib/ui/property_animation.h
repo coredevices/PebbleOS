@@ -99,7 +99,8 @@ typedef uint32_t (*UInt32Getter)(void *subject);
 //! @see \ref PropertyAnimationAccessors
 typedef void (*GPointSetter)(void *subject, GPoint gpoint);
 
-//! Function signature of a getter function to get the current property of type GPoint of the subject.
+//! Function signature of a getter function to get the current property of type GPoint of the
+//! subject.
 //! @see \ref property_animation_create()
 //! @see \ref PropertyAnimationAccessors
 typedef GPointReturn (*GPointGetter)(void *subject);
@@ -109,7 +110,8 @@ typedef GPointReturn (*GPointGetter)(void *subject);
 //! @see \ref PropertyAnimationAccessors
 typedef void (*GRectSetter)(void *subject, GRect grect);
 
-//! Function signature of a getter function to get the current property of type GRect of the subject.
+//! Function signature of a getter function to get the current property of type GRect of the
+//! subject.
 //! @see \ref property_animation_create()
 //! @see \ref PropertyAnimationAccessors
 typedef GRectReturn (*GRectGetter)(void *subject);
@@ -172,8 +174,8 @@ typedef struct PropertyAnimationAccessors {
     UInt32Setter uint32;
   } setter;
   //! Function pointer to the implementation of the function that __gets__ the current property
-  //! value. This function will be called during \ref property_animation_create(), to get the current
-  //! property value, in case the `from_value` or `to_value` argument is `NULL`.
+  //! value. This function will be called during \ref property_animation_create(), to get the
+  //! current property value, in case the `from_value` or `to_value` argument is `NULL`.
   //! @see PropertyAnimationAccessors
   union {
     //! Use if the property to animate is of int16_t type
@@ -198,7 +200,6 @@ typedef struct PropertyAnimationImplementation {
   //! The accessors to set/get the property to be animated.
   PropertyAnimationAccessors accessors;
 } PropertyAnimationImplementation;
-
 
 //! Convenience function to create and initialize a property animation that animates the frame of a
 //! Layer. It sets up the PropertyAnimation to use \ref layer_set_frame() and \ref layer_get_frame()
@@ -227,7 +228,7 @@ PropertyAnimation *property_animation_create_layer_frame(struct Layer *layer, GR
 //! frame of the layer.
 //! @return A handle to the property animation. `NULL` if animation could not be created
 PropertyAnimation *property_animation_create_layer_bounds(struct Layer *layer, GRect *from_bounds,
-                                                         GRect *to_bounds);
+                                                          GRect *to_bounds);
 
 //! Convenience function to create and initialize a property animation that animates the bound's
 //! origin of a Layer. It sets up the PropertyAnimation to use layer_set_bounds() and
@@ -238,11 +239,9 @@ PropertyAnimation *property_animation_create_layer_bounds(struct Layer *layer, G
 //! @param to the origin that the layer should animate to
 //! @return A handle to the property animation. `NULL` if animation could not be created
 PropertyAnimation *property_animation_create_bounds_origin(struct Layer *layer, GPoint *from,
-    GPoint *to);
-
+                                                           GPoint *to);
 
 PropertyAnimation *property_animation_create_mark_dirty(struct Layer *layer);
-
 
 //! @internal
 //! Convenience function to re-initialize an already instantiated layer frame animation.
@@ -253,14 +252,12 @@ PropertyAnimation *property_animation_create_mark_dirty(struct Layer *layer);
 //! current frame. This will result in a call to \ref layer_get_frame() to get the current frame of
 //! the layer.
 //! @return true if successful
-bool property_animation_init_layer_frame(PropertyAnimation *animation_h,
-                            struct Layer *layer, GRect *from_frame, GRect *to_frame);
-
+bool property_animation_init_layer_frame(PropertyAnimation *animation_h, struct Layer *layer,
+                                         GRect *from_frame, GRect *to_frame);
 
 //! Destroy a property animation allocated by property_animation_create() or relatives.
 //! @param property_animation the return value from property_animation_create
-void property_animation_destroy(PropertyAnimation* property_animation);
-
+void property_animation_destroy(PropertyAnimation *property_animation);
 
 //! Convenience function to retrieve an animation instance from a property animation instance
 //! @param property_animation The property animation
@@ -271,220 +268,216 @@ Animation *property_animation_get_animation(PropertyAnimation *property_animatio
 //! @param property_animation The property animation
 //! @return A clone of the original Animation
 #define property_animation_clone(property_animation) \
-    (PropertyAnimation *)animation_clone((Animation *)property_animation)
+  (PropertyAnimation *)animation_clone((Animation *)property_animation)
 
 //! Convenience function to retrieve the 'from' GRect value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_from_grect(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GRect), false)
+  property_animation_from(property_animation, value_ptr, sizeof(GRect), false)
 
 //! Convenience function to set the 'from' GRect value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_from_grect(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GRect), true)
+  property_animation_from(property_animation, value_ptr, sizeof(GRect), true)
 
 //! Convenience function to retrieve the 'from' GPoint value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_from_gpoint(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GPoint), false)
+  property_animation_from(property_animation, value_ptr, sizeof(GPoint), false)
 
 //! Convenience function to set the 'from' GPoint value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_from_gpoint(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GPoint), true)
+  property_animation_from(property_animation, value_ptr, sizeof(GPoint), true)
 
 //! Convenience function to retrieve the 'from' int16_t value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_from_int16(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(int16_t), false)
+  property_animation_from(property_animation, value_ptr, sizeof(int16_t), false)
 
 //! Convenience function to set the 'from' int16_t value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_from_int16(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(int16_t), true)
+  property_animation_from(property_animation, value_ptr, sizeof(int16_t), true)
 
 //! Convenience function to retrieve the 'from' uint32_t value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_from_uint32(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(uint32_t), false)
+  property_animation_from(property_animation, value_ptr, sizeof(uint32_t), false)
 
 //! Convenience function to set the 'from' uint32_t value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_from_uint32(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(uint32_t), true)
+  property_animation_from(property_animation, value_ptr, sizeof(uint32_t), true)
 
 //! Convenience function to retrieve the 'from' GTransform value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_from_gtransform(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GTransform), false)
+  property_animation_from(property_animation, value_ptr, sizeof(GTransform), false)
 
 //! Convenience function to set the 'from' GTransform value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_from_gtransform(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GTransform), true)
+  property_animation_from(property_animation, value_ptr, sizeof(GTransform), true)
 
 //! Convenience function to retrieve the 'from' GColor8 value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_from_gcolor8(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GColor8), false)
+  property_animation_from(property_animation, value_ptr, sizeof(GColor8), false)
 
 //! Convenience function to set the 'from' GColor8 value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_from_gcolor8(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(GColor8), true)
+  property_animation_from(property_animation, value_ptr, sizeof(GColor8), true)
 
 //! Convenience function to retrieve the 'from' Fixed_S32_16 value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_from_fixed_s32_16(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(Fixed_S32_16), false)
+  property_animation_from(property_animation, value_ptr, sizeof(Fixed_S32_16), false)
 
 //! Convenience function to set the 'from' Fixed_S32_16 value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_from_fixed_s32_16(property_animation, value_ptr) \
-    property_animation_from(property_animation, value_ptr, sizeof(Fixed_S32_16), true)
-
-
+  property_animation_from(property_animation, value_ptr, sizeof(Fixed_S32_16), true)
 
 //! Convenience function to retrieve the 'to' GRect value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_to_grect(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GRect), false)
+  property_animation_to(property_animation, value_ptr, sizeof(GRect), false)
 
 //! Convenience function to set the 'to' GRect value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_to_grect(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GRect), true)
+  property_animation_to(property_animation, value_ptr, sizeof(GRect), true)
 
 //! Convenience function to retrieve the 'to' GPoint value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_to_gpoint(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GPoint), false)
+  property_animation_to(property_animation, value_ptr, sizeof(GPoint), false)
 
 //! Convenience function to set the 'to' GPoint value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_to_gpoint(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GPoint), true)
+  property_animation_to(property_animation, value_ptr, sizeof(GPoint), true)
 
 //! Convenience function to retrieve the 'to' int16_t value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_to_int16(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(int16_t), false)
+  property_animation_to(property_animation, value_ptr, sizeof(int16_t), false)
 
 //! Convenience function to set the 'to' int16_t value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_to_int16(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(int16_t), true)
+  property_animation_to(property_animation, value_ptr, sizeof(int16_t), true)
 
 //! Convenience function to retrieve the 'to' uint32_t value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_to_uint32(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(uint32_t), false)
+  property_animation_to(property_animation, value_ptr, sizeof(uint32_t), false)
 
 //! Convenience function to set the 'to' uint32_t value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_to_uint32(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(uint32_t), true)
+  property_animation_to(property_animation, value_ptr, sizeof(uint32_t), true)
 
 //! Convenience function to retrieve the 'to' GTransform value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_to_gtransform(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GTransform), false)
+  property_animation_to(property_animation, value_ptr, sizeof(GTransform), false)
 
 //! Convenience function to set the 'to' GTransform value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_to_gtransform(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GTransform), true)
+  property_animation_to(property_animation, value_ptr, sizeof(GTransform), true)
 
 //! Convenience function to retrieve the 'to' GColor8 value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_to_gcolor8(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GColor8), false)
+  property_animation_to(property_animation, value_ptr, sizeof(GColor8), false)
 
 //! Convenience function to set the 'to' GColor8 value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_to_gcolor8(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(GColor8), true)
+  property_animation_to(property_animation, value_ptr, sizeof(GColor8), true)
 
 //! Convenience function to retrieve the 'to' Fixed_S32_16 value from property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr The value will be retrieved into this pointer
 //! @return true on success, false on failure
 #define property_animation_get_to_fixed_s32_16(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(Fixed_S32_16), false)
+  property_animation_to(property_animation, value_ptr, sizeof(Fixed_S32_16), false)
 
 //! Convenience function to set the 'to' Fixed_S32_16 value of property animation handle
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new value
 //! @return true on success, false on failure
 #define property_animation_set_to_fixed_s32_16(property_animation, value_ptr) \
-    property_animation_to(property_animation, value_ptr, sizeof(Fixed_S32_16), true)
-
+  property_animation_to(property_animation, value_ptr, sizeof(Fixed_S32_16), true)
 
 //! Retrieve the subject of a property animation
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer used to store the subject of this property animation
 //! @return The subject of this PropertyAnimation
 #define property_animation_get_subject(property_animation, value_ptr) \
-    property_animation_subject(property_animation, value_ptr, false)
+  property_animation_subject(property_animation, value_ptr, false)
 
 //! Set the subject of a property animation
 //! @param property_animation The PropertyAnimation to be accessed
 //! @param value_ptr Pointer to the new subject value
 #define property_animation_set_subject(property_animation, value_ptr) \
-    property_animation_subject(property_animation, value_ptr, true)
-
+  property_animation_subject(property_animation, value_ptr, true)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Primitive helper functions for the property_animation_get|set.* macros
@@ -497,7 +490,6 @@ Animation *property_animation_get_animation(PropertyAnimation *property_animatio
 //! @return true if successful, false on failure (usually a bad animation_h)
 bool property_animation_subject(PropertyAnimation *property_animation, void **subject, bool set);
 
-
 //! Helper function used by the property_animation_get|set_from_.* macros
 //! @param property_animation Handle to the property animation
 //! @param from Pointer to the value
@@ -505,7 +497,7 @@ bool property_animation_subject(PropertyAnimation *property_animation, void **su
 //! @param set true to set new value, false to retrieve existing one
 //! @return true if successful, false on failure (usually a bad animation_h)
 bool property_animation_from(PropertyAnimation *property_animation, void *from, size_t size,
-                              bool set);
+                             bool set);
 
 //! Helper function used by the property_animation_get|set_to_.* macros
 //! @param property_animation handle to the property animation
@@ -513,9 +505,7 @@ bool property_animation_from(PropertyAnimation *property_animation, void *from, 
 //! @param size Size of the to value
 //! @param set true to set new value, false to retrieve existing one
 //! @return true if successful, false on failure (usually a bad animation_h)
-bool property_animation_to(PropertyAnimation *property_animation, void *to, size_t size,
-                            bool set);
-
+bool property_animation_to(PropertyAnimation *property_animation, void *to, size_t size, bool set);
 
 //////////////////////////////////////////
 // Implementing custom Property Animations
@@ -538,8 +528,8 @@ bool property_animation_to(PropertyAnimation *property_animation, void *to, size
 //! both `from_value` and `to_value`, will result in the animation having the same from- and to-
 //! values, effectively not doing anything.
 //! @return A handle to the property animation. `NULL` if animation could not be created
-PropertyAnimation* property_animation_create(const PropertyAnimationImplementation *implementation,
-                      void *subject, void *from_value, void *to_value);
+PropertyAnimation *property_animation_create(const PropertyAnimationImplementation *implementation,
+                                             void *subject, void *from_value, void *to_value);
 
 //! @internal
 //! Convenience function to re-initialize an already instantiated property animation.
@@ -557,9 +547,8 @@ PropertyAnimation* property_animation_create(const PropertyAnimationImplementati
 //! values, effectively not doing anything.
 //! @return true if successful
 bool property_animation_init(PropertyAnimation *animation_h,
-                            const PropertyAnimationImplementation *implementation,
-                            void *subject, void *from_value, void *to_value);
-
+                             const PropertyAnimationImplementation *implementation, void *subject,
+                             void *from_value, void *to_value);
 
 //! Default update callback for a property animations to update a property of type int16_t.
 //! Assign this function to the `.base.update` callback field of your

@@ -23,7 +23,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 //! Notification preferences file name and size
 #define NOTIF_PREFS_FILE_NAME "notifpref"
-#define NOTIF_PREFS_FILE_LEN (1024)
+#define NOTIF_PREFS_FILE_LEN  (1024)
 
 //! Flag to suppress change callback during phone-originated INSERTs.
 //! This prevents queuing unnecessary sync callbacks that would flood the system task queue.
@@ -52,7 +52,7 @@ static const char *s_syncable_settings[] = {
   "displayOrientationLeftHanded",
 #endif
 
-  // Motion preferences
+// Motion preferences
 #ifdef CONFIG_ACCEL_SENSITIVITY
   "motionSensitivity",
 #endif
@@ -161,8 +161,8 @@ bool settings_blob_db_phone_supports_sync(void) {
 
 //! Find a key's canonical whitelist entry, or NULL if it isn't in the list.
 //! Handles both key_len with null terminator (strlen+1) and without (strlen)
-static const char *prv_find_in_list(const uint8_t *key, int key_len,
-                                    const char **list, size_t list_len) {
+static const char *prv_find_in_list(const uint8_t *key, int key_len, const char **list,
+                                    size_t list_len) {
   for (size_t i = 0; i < list_len; i++) {
     const char *list_key = list[i];
     size_t list_key_strlen = strlen(list_key);
@@ -176,8 +176,8 @@ static const char *prv_find_in_list(const uint8_t *key, int key_len,
 }
 
 //! Check if a key matches an entry in a given list
-static bool prv_is_key_in_list(const uint8_t *key, int key_len,
-                               const char **list, size_t list_len) {
+static bool prv_is_key_in_list(const uint8_t *key, int key_len, const char **list,
+                               size_t list_len) {
   return prv_find_in_list(key, key_len, list, list_len) != NULL;
 }
 
@@ -188,8 +188,8 @@ static bool prv_is_key_in_list(const uint8_t *key, int key_len,
 //! setting silently fails to apply. Points the caller at the whitelist's own string so the null
 //! byte is guaranteed to be present. Returns false if the key isn't a whitelisted shell pref.
 static bool prv_canonical_shell_key(const uint8_t **key, int *key_len) {
-  const char *canonical = prv_find_in_list(*key, *key_len, s_syncable_settings,
-                                           s_num_syncable_settings);
+  const char *canonical =
+      prv_find_in_list(*key, *key_len, s_syncable_settings, s_num_syncable_settings);
   if (!canonical) {
     return false;
   }
@@ -308,11 +308,10 @@ void settings_blob_db_init(void) {
 
   s_initialized = true;
   PBL_LOG_DBG("Settings BlobDB initialized (%u whitelisted settings)",
-          (unsigned int) s_num_syncable_settings);
+              (unsigned int)s_num_syncable_settings);
 }
 
-status_t settings_blob_db_insert(const uint8_t *key, int key_len,
-                                 const uint8_t *val, int val_len) {
+status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!s_initialized) {
     return E_INTERNAL;
   }
@@ -331,8 +330,8 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len,
     file_len = SHELL_PREFS_FILE_LEN;
   } else {
     char key_str[128];
-    size_t copy_len = (key_len > 0 && (size_t)key_len < sizeof(key_str)) ?
-                      (size_t)key_len : sizeof(key_str) - 1;
+    size_t copy_len =
+        (key_len > 0 && (size_t)key_len < sizeof(key_str)) ? (size_t)key_len : sizeof(key_str) - 1;
     memcpy(key_str, key, copy_len);
     key_str[copy_len] = '\0';
     PBL_LOG_WRN("Rejecting non-whitelisted setting: %s", key_str);
@@ -417,8 +416,7 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   return len;
 }
 
-status_t settings_blob_db_read(const uint8_t *key, int key_len,
-                               uint8_t *val_out, int val_len) {
+status_t settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
   if (!s_initialized) {
     return E_INTERNAL;
   }
@@ -497,8 +495,7 @@ typedef struct {
   BlobDBDirtyItem *dirty_list_tail;
 } BuildDirtyListContext;
 
-static bool prv_build_dirty_list_callback(SettingsFile *file,
-                                          SettingsRecordInfo *info,
+static bool prv_build_dirty_list_callback(SettingsFile *file, SettingsRecordInfo *info,
                                           void *context) {
   BuildDirtyListContext *ctx = (BuildDirtyListContext *)context;
 
@@ -528,8 +525,8 @@ static bool prv_build_dirty_list_callback(SettingsFile *file,
     ctx->dirty_list = item;
     ctx->dirty_list_tail = item;
   } else {
-    ctx->dirty_list_tail = (BlobDBDirtyItem *)list_append(
-        (ListNode *)ctx->dirty_list_tail, (ListNode *)item);
+    ctx->dirty_list_tail =
+        (BlobDBDirtyItem *)list_append((ListNode *)ctx->dirty_list_tail, (ListNode *)item);
   }
 
   return true; // Continue iteration
@@ -540,7 +537,7 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
     return NULL;
   }
 
-  BuildDirtyListContext ctx = { .dirty_list = NULL, .dirty_list_tail = NULL };
+  BuildDirtyListContext ctx = {.dirty_list = NULL, .dirty_list_tail = NULL};
 
   // Iterate shell prefs file
   prefs_private_lock();
@@ -607,7 +604,7 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     bool found_dirty;
   } IsDirtyContext;
 
-  bool is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+  bool is_dirty_callback(SettingsFile * file, SettingsRecordInfo * info, void *context) {
     IsDirtyContext *ctx = (IsDirtyContext *)context;
 
     if (!info->dirty) {
@@ -626,7 +623,7 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     return true; // Continue
   }
 
-  IsDirtyContext ctx = { .found_dirty = false };
+  IsDirtyContext ctx = {.found_dirty = false};
 
   // Check shell prefs file
   prefs_private_lock();
@@ -730,9 +727,8 @@ static bool prv_get_timestamp_callback(SettingsFile *file, SettingsRecordInfo *i
   return true; // Continue
 }
 
-status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
-                                                const uint8_t *val, int val_len,
-                                                time_t timestamp) {
+status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len, const uint8_t *val,
+                                                int val_len, time_t timestamp) {
   if (!s_initialized) {
     return E_INTERNAL;
   }
@@ -775,8 +771,8 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     // Watch data is newer - reject the insert
     settings_file_close(&file);
     prv_unlock_for_file(is_notif_pref);
-    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu",
-            (unsigned long)ctx.last_modified, (unsigned long)timestamp);
+    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu", (unsigned long)ctx.last_modified,
+                (unsigned long)timestamp);
     return E_INVALID_OPERATION;
   }
 

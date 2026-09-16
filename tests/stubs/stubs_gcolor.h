@@ -13,4 +13,3 @@ bool WEAK gcolor_equal(GColor8 x, GColor8 y) {
 GColor8 WEAK gcolor_legible_over(GColor8 background_color) {
   return GColorBlack;
 }
-

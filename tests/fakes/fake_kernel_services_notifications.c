@@ -21,7 +21,8 @@ void notifications_handle_notification_acted_upon(Uuid *id) {
   return;
 }
 
-void notifications_handle_notification_action_result(PebbleSysNotificationActionResult *action_result) {
+void notifications_handle_notification_action_result(
+    PebbleSysNotificationActionResult *action_result) {
 }
 
 void notifications_add_notification(TimelineItem *notification) {
@@ -41,5 +42,3 @@ uint32_t fake_kernel_services_notifications_ancs_notifications_count(void) {
 uint32_t fake_kernel_services_notifications_acted_upon_count(void) {
   return s_acted_upon_count;
 }
-
-

@@ -26,7 +26,7 @@ static PBL_SEM_DEFINE(s_wake_srv_loop, 1, 1);
 
 //! Queue of pointers to that should be called on the new_timer thread. This allows very high
 //! priority pieces of work to be done on the new_timer thread in between timers.
-#define WORK_QUEUE_SIZE 5
+#define WORK_QUEUE_SIZE       5
 #define TASK_STACK_SIZE_BYTES 1380
 
 PBL_THREAD_STACK_DEFINE(s_new_timer_stack, TASK_STACK_SIZE_BYTES);
@@ -47,7 +47,7 @@ TimerID new_timer_create(void) {
 }
 
 // --------------------------------------------------------------------------------
-// Schedule a timer to run. 
+// Schedule a timer to run.
 bool new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
                      uint32_t flags) {
   return task_timer_start(&s_task_timer_manager, timer_id, timeout_ms, cb, cb_data, flags);
@@ -93,7 +93,7 @@ static void new_timer_service_loop(void *data) {
 
 // -----------------------------------------------------------------------------------------------
 // Used by the watchdog timer logic
-void* new_timer_debug_get_current_callback(void) {
+void *new_timer_debug_get_current_callback(void) {
   void *timer_cb = task_timer_manager_get_current_cb(&s_task_timer_manager);
   if (timer_cb) {
     return timer_cb;
@@ -123,7 +123,7 @@ void new_timer_service_init(void) {
 // -----------------------------------------------------------------------------------------------------
 // Used by the console command to list timers
 bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
-  NewTimerWorkItem work = { cb, data };
+  NewTimerWorkItem work = {cb, data};
   pbl_msgq_put(&s_work_queue, &work, PBL_NO_WAIT);
 
   // Wake up the thread to process the work item we just added.
@@ -135,7 +135,7 @@ bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
 bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {
   pbl_tick_t TICKS_TO_WAIT = 50;
 
-  NewTimerWorkItem work = { cb, data };
+  NewTimerWorkItem work = {cb, data};
   if (pbl_msgq_put(&s_work_queue, &work, PBL_TICKS(TICKS_TO_WAIT)) == 0) {
     // Wake up the thread to process the work item we just added.
     pbl_sem_give(&s_wake_srv_loop);

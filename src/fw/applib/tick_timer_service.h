@@ -5,7 +5,6 @@
 
 #include <time.h>
 
-
 //! @addtogroup Foundation
 //! @{
 //!   @addtogroup EventService
@@ -18,8 +17,8 @@
 //! change a tick should occur. Time components are defined by a \ref TimeUnits enum bitmask.
 //! @{
 
-//! Time unit flags that can be used to create a bitmask for use in \ref tick_timer_service_subscribe().
-//! This will also be passed to \ref TickHandler.
+//! Time unit flags that can be used to create a bitmask for use in \ref
+//! tick_timer_service_subscribe(). This will also be passed to \ref TickHandler.
 typedef enum {
   //! Flag to represent the "seconds" time unit
   SECOND_UNIT = 1 << 0,
@@ -55,4 +54,3 @@ void tick_timer_service_unsubscribe(void);
 //!     @} // end addtogroup TickTimerService
 //!   @} // end addtogroup EventService
 //! @} // end addtogroup Foundation
-

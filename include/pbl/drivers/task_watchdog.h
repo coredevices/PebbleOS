@@ -7,7 +7,7 @@
 
 #include "kernel/pebble_tasks.h"
 
-#define TASK_WATCHDOG_PRIORITY 0x1
+#define TASK_WATCHDOG_PRIORITY       0x1
 #define TASK_WATCHDOG_FEED_PERIOD_MS 500
 
 void task_watchdog_init(void);

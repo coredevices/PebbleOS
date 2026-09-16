@@ -38,4 +38,4 @@ uint32_t als_compensation_correct(uint32_t raw_level) {
                                 CONFIG_ALS_BLACK_SCALE_Q8);
 }
 
-#endif  // CONFIG_ALS_SCREEN_COMPENSATION
+#endif // CONFIG_ALS_SCREEN_COMPENSATION

@@ -10,4 +10,3 @@ void fake_reminder_db_set_empty(bool empty) {
 bool reminder_db_is_empty() {
   return s_empty;
 }
-

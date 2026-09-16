@@ -27,7 +27,5 @@ void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
 }
 
 void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
-  GATT_Service_Changed_CCCD_Read_Response(bt_stack_id(),
-                                          transaction_id,
-                                          response_code);
+  GATT_Service_Changed_CCCD_Read_Response(bt_stack_id(), transaction_id, response_code);
 }

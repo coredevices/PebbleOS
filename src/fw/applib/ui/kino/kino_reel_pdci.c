@@ -27,7 +27,8 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
   KinoReelImplPDCI *dci_reel = (KinoReelImplPDCI *)reel;
 
   gdraw_command_image_draw_processed(
-    ctx, dci_reel->image, offset, NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, NULL));
+      ctx, dci_reel->image, offset,
+      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, NULL));
 }
 
 static GSize prv_get_size(KinoReel *reel) {
@@ -42,14 +43,14 @@ static size_t prv_get_data_size(const KinoReel *reel) {
 
 static GDrawCommandImage *prv_get_gdraw_command_image(KinoReel *reel) {
   if (reel) {
-    return ((KinoReelImplPDCI*)reel)->image;
+    return ((KinoReelImplPDCI *)reel)->image;
   }
   return NULL;
 }
 
 static GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
   if (reel) {
-    return gdraw_command_image_get_command_list(((KinoReelImplPDCI*)reel)->image);
+    return gdraw_command_image_get_command_list(((KinoReelImplPDCI *)reel)->image);
   }
   return NULL;
 }

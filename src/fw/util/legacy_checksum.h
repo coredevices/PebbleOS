@@ -30,12 +30,10 @@ typedef struct LegacyChecksum {
 
 void legacy_defective_checksum_init(LegacyChecksum *checksum);
 
-void legacy_defective_checksum_update(
-    LegacyChecksum * restrict checksum,
-    const void * restrict data, size_t length);
+void legacy_defective_checksum_update(LegacyChecksum *restrict checksum, const void *restrict data,
+                                      size_t length);
 
 uint32_t legacy_defective_checksum_finish(LegacyChecksum *checksum);
 
 //! Convenience wrapper to checksum memory in one shot.
-uint32_t legacy_defective_checksum_memory(const void * restrict data,
-                                          size_t length);
+uint32_t legacy_defective_checksum_memory(const void *restrict data, size_t length);

@@ -14,7 +14,7 @@
 #include "pbl/util/size.h"
 #include "util/time/time.h"
 
-#define HEARTBEAT_PERIOD_SEC 3600
+#define HEARTBEAT_PERIOD_SEC     3600
 #define ANALYTICS_STRING_MAX_LEN 64
 
 extern void pbl_analytics_external_collect_battery(void);
@@ -38,15 +38,15 @@ extern const struct pbl_analytics_backend_ops pbl_analytics__native_ops;
 static TimerID s_heartbeat_timer;
 
 static void (*const s_init[])(void) = {
-    pbl_analytics__native_init,
+  pbl_analytics__native_init,
 };
 
 static void (*const s_heartbeat[])(void) = {
-    pbl_analytics__native_heartbeat,
+  pbl_analytics__native_heartbeat,
 };
 
 static const struct pbl_analytics_backend_ops *s_backend_ops[] = {
-    &pbl_analytics__native_ops,
+  &pbl_analytics__native_ops,
 };
 
 static void prv_heartbeat_system_task_cb(void *data) {
@@ -125,14 +125,13 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
   }
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
-               const char *value) {
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
   if (PRIVILEGE_WAS_ELEVATED) {
-    if (!memory_layout_is_cstring_in_region(
-          memory_layout_get_app_region(), value, ANALYTICS_STRING_MAX_LEN)) {
+    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), value,
+                                            ANALYTICS_STRING_MAX_LEN)) {
       syscall_failed();
     }
   }
@@ -173,18 +172,25 @@ void command_analytics_heartbeat(void) {
   system_task_add_callback(prv_heartbeat_system_task_cb, NULL);
 }
 
-#else  // No analytics backend: provide no-op stubs.
+#else // No analytics backend: provide no-op stubs.
 
-void pbl_analytics_init(void) {}
+void pbl_analytics_init(void) {
+}
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
-               int32_t signed_value) {}
+               int32_t signed_value) {
+}
 DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
-               uint32_t unsigned_value) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key,
-               const char *value) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {}
-DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {}
-void command_analytics_heartbeat(void) {}
+               uint32_t unsigned_value) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {
+}
+DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {
+}
+void command_analytics_heartbeat(void) {
+}
 
 #endif

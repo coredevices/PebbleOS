@@ -30,8 +30,7 @@ static GTextNodeText *prv_create_text_node_attribute(const LayoutLayer *layout,
   return text_node;
 }
 
-static void prv_set_text_node_extent(GTextNode *node,
-                                     const LayoutNodeExtentConfig *config) {
+static void prv_set_text_node_extent(GTextNode *node, const LayoutNodeExtentConfig *config) {
   // These are added instead of just set since in some cases, a node can have its extent influenced
   // twice. For example, a pre-configured node created by a Constructor Config with its own extent.
   node->offset.x += config->offset.x;
@@ -45,19 +44,22 @@ static const char *prv_get_font_key(const LayoutNodeTextConfig *config) {
     return config->font_key;
   }
   const LayoutContentSize content_size = config->style;
-  return (content_size == LayoutContentSize_Auto) ?
-      system_theme_get_font_key(config->style_font) :
-      system_theme_get_font_key_for_size(ToPreferredContentSize(content_size), config->style_font);
+  return (content_size == LayoutContentSize_Auto)
+             ? system_theme_get_font_key(config->style_font)
+             : system_theme_get_font_key_for_size(ToPreferredContentSize(content_size),
+                                                  config->style_font);
 }
 
-static void prv_set_text_node_text_parameters_from_config(
-    GTextNodeText *text_node, const LayoutLayer *layout, const LayoutNodeTextConfig *config) {
+static void prv_set_text_node_text_parameters_from_config(GTextNodeText *text_node,
+                                                          const LayoutLayer *layout,
+                                                          const LayoutNodeTextConfig *config) {
   text_node->font = fonts_get_system_font(prv_get_font_key(config));
   const int fixed_lines = config->fixed_lines;
   const int line_spacing_delta = config->line_spacing_delta;
-  text_node->max_size.h = fixed_lines ? (fixed_lines * (fonts_get_font_height(text_node->font) +
-                                                        line_spacing_delta) - line_spacing_delta)
-                                      : 0;
+  text_node->max_size.h =
+      fixed_lines ? (fixed_lines * (fonts_get_font_height(text_node->font) + line_spacing_delta) -
+                     line_spacing_delta)
+                  : 0;
   text_node->overflow = GTextOverflowModeTrailingEllipsis;
   text_node->alignment = PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentCenter);
   text_node->line_spacing_delta = line_spacing_delta;
@@ -128,7 +130,7 @@ static GTextNodeTextDynamic *prv_create_text_dynamic_node_from_config(
       sizeof(TextDynamicContext) + config->buffer_size, prv_text_dynamic_node_callback, NULL);
   if (text_node) {
     TextDynamicContext *context = (TextDynamicContext *)text_node->buffer;
-    *context = (TextDynamicContext) {
+    *context = (TextDynamicContext){
       .layout = layout,
       .config = *config,
     };
@@ -147,16 +149,16 @@ static GTextNodeTextDynamic *prv_create_text_dynamic_node_from_config(
   return text_node;
 }
 
-static GTextNodeText *prv_create_text_node_from_config(
-    const LayoutLayer *layout, const LayoutNodeTextConfig *config) {
+static GTextNodeText *prv_create_text_node_from_config(const LayoutLayer *layout,
+                                                       const LayoutNodeTextConfig *config) {
   GTextNodeText *text_node = prv_create_text_node_buffer(NULL);
   prv_set_text_node_text_parameters_from_config(text_node, layout, config);
   return text_node;
 }
 
-static void prv_setup_container_node_from_config(
-    GTextNodeContainer *container_node, const LayoutLayer *layout,
-    const LayoutNodeContainerConfig *config) {
+static void prv_setup_container_node_from_config(GTextNodeContainer *container_node,
+                                                 const LayoutLayer *layout,
+                                                 const LayoutNodeContainerConfig *config) {
   const uint16_t num_nodes = config->num_nodes;
   for (int i = 0; i < num_nodes; i++) {
     GTextNode *node = layout_create_text_node_from_config(layout, config->nodes[i]);
@@ -200,8 +202,8 @@ static GTextNode *prv_create_node_from_constructor_config(
   return node;
 }
 
-static GTextNode *prv_create_timeline_icon_node_from_config(
-    const LayoutLayer *layout, const LayoutNodeExtentConfig *config) {
+static GTextNode *prv_create_timeline_icon_node_from_config(const LayoutLayer *layout,
+                                                            const LayoutNodeExtentConfig *config) {
   GTextNode *node = &timeline_layout_create_icon_node((const TimelineLayout *)layout)->node;
   prv_set_text_node_extent(node, config);
   return node;
@@ -209,9 +211,9 @@ static GTextNode *prv_create_timeline_icon_node_from_config(
 
 static const char *prv_get_font_key_for_size(TextStyleFont style_font,
                                              LayoutContentSize content_size) {
-  return (content_size == LayoutContentSize_Auto) ?
-      system_theme_get_font_key(style_font) :
-      system_theme_get_font_key_for_size(ToPreferredContentSize(content_size), style_font);
+  return (content_size == LayoutContentSize_Auto)
+             ? system_theme_get_font_key(style_font)
+             : system_theme_get_font_key_for_size(ToPreferredContentSize(content_size), style_font);
 }
 
 GTextNodeVertical *layout_create_headings_paragraphs_node(
@@ -245,11 +247,9 @@ GTextNodeVertical *layout_create_headings_paragraphs_node(
     }
 
     GTextNodeText *heading_node =
-        (GTextNodeText *)layout_create_text_node_from_config(
-            layout, &s_heading_config.extent.node);
-    GTextNodeText *paragraph_node =
-        (GTextNodeText *)layout_create_text_node_from_config(
-            layout, &s_paragraph_config.extent.node);
+        (GTextNodeText *)layout_create_text_node_from_config(layout, &s_heading_config.extent.node);
+    GTextNodeText *paragraph_node = (GTextNodeText *)layout_create_text_node_from_config(
+        layout, &s_paragraph_config.extent.node);
     heading_node->text = (char *)heading;
     paragraph_node->text = (char *)paragraph;
     graphics_text_node_container_add_child(&vertical_node->container, &heading_node->node);
@@ -278,8 +278,8 @@ typedef struct {
   int index;
 } MetricContext;
 
-static GTextNode *prv_metric_constructor(
-    const LayoutLayer *layout, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_metric_constructor(const LayoutLayer *layout,
+                                         const LayoutNodeConstructorConfig *config) {
   MetricContext *context = config->context;
   const int icon_offset_x = PBL_IF_RECT_ELSE(-2, 0);
   const int icon_offset_y = PBL_IF_RECT_ELSE(4, 0);
@@ -313,10 +313,9 @@ static GTextNode *prv_metric_constructor(
     .str = context->value,
     .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
   };
-  const LayoutNodeConfig * const icon_config_node =
-      (context->index == 0) ? &timeline_icon_config.node :
-                              &icon_config.extent.node;
-  const LayoutNodeConfig * const vertical_config_nodes[] = {
+  const LayoutNodeConfig *const icon_config_node =
+      (context->index == 0) ? &timeline_icon_config.node : &icon_config.extent.node;
+  const LayoutNodeConfig *const vertical_config_nodes[] = {
     PBL_IF_ROUND_ELSE(icon_config_node, NULL),
     &name_config.text.extent.node,
     &value_config.text.extent.node,
@@ -327,7 +326,7 @@ static GTextNode *prv_metric_constructor(
     .container.nodes = (LayoutNodeConfig **)&vertical_config_nodes,
   };
 #if PBL_RECT
-  const LayoutNodeConfig * const horizontal_config_nodes[] = {
+  const LayoutNodeConfig *const horizontal_config_nodes[] = {
     icon_config_node,
     &vertical_config.container.extent.node,
   };
@@ -348,9 +347,9 @@ static GTextNode *prv_metric_constructor(
     const int metric_margin_h =
         PBL_IF_RECT_ELSE(metric_margin_h_rect,
                          // special case for the first metric after a page break
-                         (context->index == METRICS_PER_PAGE) ? metric_margin_top :
-                         (context->index % METRICS_PER_PAGE) ? metric_margin_h_round_inner :
-                                                               metric_margin_h_round_page);
+                         (context->index == METRICS_PER_PAGE)  ? metric_margin_top
+                         : (context->index % METRICS_PER_PAGE) ? metric_margin_h_round_inner
+                                                               : metric_margin_h_round_page);
     metric_node->offset.y += metric_margin_h;
     metric_node->margin.h += metric_margin_h;
   }
@@ -419,19 +418,17 @@ GTextNodeVertical *layout_create_metrics_node(const LayoutLayer *layout_ref) {
     const LayoutNodeConstructorConfig metric_config = {
       .extent.node.type = LayoutNodeType_Constructor,
       .constructor = prv_metric_constructor,
-      .context = &(MetricContext) {
+      .context = &(MetricContext){
         .index = i,
         .name = name,
         .value = value,
         .icon_info = &icon_res_info,
-        .icon_layer = i == 0 ? &layout->icon_layer :
-                               layout->metric_icon_layers[i - 1],
+        .icon_layer = i == 0 ? &layout->icon_layer : layout->metric_icon_layers[i - 1],
       },
     };
 
-    GTextNodeText *metric_node =
-        (GTextNodeText *)layout_create_text_node_from_config(
-            layout_ref, &metric_config.extent.node);
+    GTextNodeText *metric_node = (GTextNodeText *)layout_create_text_node_from_config(
+        layout_ref, &metric_config.extent.node);
     prv_add_metric(layout, vertical_node, i, &metric_node->node);
   }
 
@@ -453,7 +450,7 @@ static GTextNode *prv_create_icon_node_from_config(const LayoutLayer *layout,
     return NULL;
   }
 
-  KinoLayer *icon_layer = kino_layer_create((GRect) { .size = kino_reel_get_size(icon_reel) });
+  KinoLayer *icon_layer = kino_layer_create((GRect){.size = kino_reel_get_size(icon_reel)});
   *config->icon_layer = icon_layer;
   kino_layer_set_alignment(icon_layer, config->align);
   kino_layer_set_reel(icon_layer, icon_reel, true /* take_ownership */);
@@ -470,22 +467,26 @@ GTextNode *layout_create_text_node_from_config(const LayoutLayer *layout,
   }
   switch (config->type) {
     case LayoutNodeType_TextAttribute:
-      return &prv_create_text_attribute_node_from_config(
-          layout, (LayoutNodeTextAttributeConfig *)config)->node;
+      return &prv_create_text_attribute_node_from_config(layout,
+                                                         (LayoutNodeTextAttributeConfig *)config)
+                  ->node;
     case LayoutNodeType_TextBuffer:
-      return &prv_create_text_buffer_node_from_config(
-          layout, (LayoutNodeTextBufferConfig *)config)->node;
+      return &prv_create_text_buffer_node_from_config(layout, (LayoutNodeTextBufferConfig *)config)
+                  ->node;
     case LayoutNodeType_TextDynamic:
-      return &prv_create_text_dynamic_node_from_config(
-          layout, (LayoutNodeTextDynamicConfig *)config)->text.node;
+      return &prv_create_text_dynamic_node_from_config(layout,
+                                                       (LayoutNodeTextDynamicConfig *)config)
+                  ->text.node;
     case LayoutNodeType_Text:
       return &prv_create_text_node_from_config(layout, (LayoutNodeTextConfig *)config)->node;
     case LayoutNodeType_Horizontal:
-      return &prv_create_horizontal_container_node_from_config(
-          layout, (LayoutNodeHorizontalConfig *)config)->container.node;
+      return &prv_create_horizontal_container_node_from_config(layout,
+                                                               (LayoutNodeHorizontalConfig *)config)
+                  ->container.node;
     case LayoutNodeType_Vertical:
-      return &prv_create_vertical_container_node_from_config(
-          layout, (LayoutNodeVerticalConfig *)config)->container.node;
+      return &prv_create_vertical_container_node_from_config(layout,
+                                                             (LayoutNodeVerticalConfig *)config)
+                  ->container.node;
     case LayoutNodeType_Constructor:
       return prv_create_node_from_constructor_config(layout, (LayoutNodeConstructorConfig *)config);
     case LayoutNodeType_Icon:
@@ -497,8 +498,8 @@ GTextNode *layout_create_text_node_from_config(const LayoutLayer *layout,
     case LayoutNodeType_TimelineMetrics:
       return prv_create_metrics_node(layout, config);
     case LayoutNodeType_HeadingsParagraphs:
-      return prv_create_headings_paragraphs_node(
-          layout, (LayoutNodeHeadingsParagraphsConfig *)config);
+      return prv_create_headings_paragraphs_node(layout,
+                                                 (LayoutNodeHeadingsParagraphsConfig *)config);
   }
   return NULL;
 }

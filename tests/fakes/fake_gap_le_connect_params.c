@@ -7,8 +7,7 @@
 
 static ResponseTimeState s_last_requested_desired_state;
 
-void gap_le_connect_params_request(GAPLEConnection *connection,
-                                   ResponseTimeState desired_state) {
+void gap_le_connect_params_request(GAPLEConnection *connection, ResponseTimeState desired_state) {
   s_last_requested_desired_state = desired_state;
 }
 

@@ -12,7 +12,7 @@ PBL_LOG_MODULE_DEFINE(driver_rng_sf32lb, CONFIG_DRIVER_RNG_LOG_LEVEL);
 
 static bool s_inited;
 static RNG_HandleTypeDef s_rng_hdl = {
-    .Instance = hwp_trng,
+  .Instance = hwp_trng,
 };
 
 bool rng_rand(uint32_t *rand_out) {

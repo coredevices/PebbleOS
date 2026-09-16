@@ -75,7 +75,7 @@ static GPoint prv_displacement_from(CompositorTransitionDirection direction) {
 }
 
 static CompositorTransitionDirection prv_direction_from_context(
-  const WindowTransitioningContext *context) {
+    const WindowTransitioningContext *context) {
   return ((WindowTransitionRoundImplementation *)context->implementation)->transition_direction;
 }
 
@@ -130,17 +130,19 @@ static Animation *prv_window_transition_create_animation(WindowTransitioningCont
 }
 
 const WindowTransitionRoundImplementation g_window_transition_default_push_implementation_round = {
-  .implementation =  {
-    .create_animation = prv_window_transition_create_animation,
-    .render = prv_window_transition_render,
-  },
+  .implementation =
+      {
+        .create_animation = prv_window_transition_create_animation,
+        .render = prv_window_transition_render,
+      },
   .transition_direction = CompositorTransitionDirectionLeft,
 };
 
 const WindowTransitionRoundImplementation g_window_transition_default_pop_implementation_round = {
-  .implementation =  {
-    .create_animation = prv_window_transition_create_animation,
-    .render = prv_window_transition_render,
-  },
+  .implementation =
+      {
+        .create_animation = prv_window_transition_create_animation,
+        .render = prv_window_transition_render,
+      },
   .transition_direction = CompositorTransitionDirectionRight,
 };

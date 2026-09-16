@@ -22,10 +22,10 @@
 
 #include <string.h>
 
-#define EMERY_SCREEN_RES (PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228)
-#define SNOWY_SCREEN_RES (PBL_DISPLAY_WIDTH == 144 && PBL_DISPLAY_HEIGHT == 168)
+#define EMERY_SCREEN_RES    (PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228)
+#define SNOWY_SCREEN_RES    (PBL_DISPLAY_WIDTH == 144 && PBL_DISPLAY_HEIGHT == 168)
 #define SPALDING_SCREEN_RES (PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180)
-#define GETAFIX_SCREEN_RES (PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260)
+#define GETAFIX_SCREEN_RES  (PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // UI Utils
@@ -39,7 +39,7 @@ T_STATIC void prv_set_unobstructed_area_height(int16_t height) {
 #endif
 
 #define MULT_X(a, b) (b ? (1000 * a / b) : 0)
-#define DIV_X(a) (a / 1000)
+#define DIV_X(a)     (a / 1000)
 
 static GPoint prv_steps_to_point(int32_t cur, int32_t total, GRect frame) {
 #if PBL_RECT
@@ -72,9 +72,9 @@ static GPoint prv_steps_to_point(int32_t cur, int32_t total, GRect frame) {
                   frame.origin.y);
   } else if (cur <= limit_c) {
     // zone b - c
-    return GPoint(frame.origin.x + frame.size.w,
-                  frame.origin.y +
-                      DIV_X(frame.size.h * MULT_X((cur - limit_b), (limit_c - limit_b))));
+    return GPoint(
+        frame.origin.x + frame.size.w,
+        frame.origin.y + DIV_X(frame.size.h * MULT_X((cur - limit_b), (limit_c - limit_b))));
   } else if (cur <= limit_d) {
     // zone c - d
     return GPoint(frame.origin.x +
@@ -87,9 +87,9 @@ static GPoint prv_steps_to_point(int32_t cur, int32_t total, GRect frame) {
                       DIV_X(frame.size.h * (1000 - MULT_X((cur - limit_d), (limit_e - limit_d)))));
   } else {
     // zone e - 0
-    return GPoint(frame.origin.x +
-                      DIV_X(frame.size.w / 2 * MULT_X((cur - limit_e), (total - limit_e))),
-                  frame.origin.y);
+    return GPoint(
+        frame.origin.x + DIV_X(frame.size.w / 2 * MULT_X((cur - limit_e), (total - limit_e))),
+        frame.origin.y);
   }
 #elif PBL_ROUND
   // Simply a calculated point on the circumference
@@ -101,7 +101,7 @@ static GPoint prv_steps_to_point(int32_t cur, int32_t total, GRect frame) {
 #if PBL_RECT
 static GPoint prv_inset_point(GRect *frame, GPoint outer_point, int32_t inset_amount) {
   // Insets the given point by the specified amount
-  return (GPoint) {
+  return (GPoint){
     .x = MAX(inset_amount - 1, MIN(outer_point.x, frame->size.w - inset_amount)),
     .y = MAX(inset_amount - 1, MIN(outer_point.y, frame->size.h - inset_amount))
   };
@@ -134,7 +134,7 @@ static void prv_draw_outer_ring(GContext *ctx, int32_t current, int32_t total,
 
   const int32_t max_points = 20;
 
-  GPath path = (GPath) {
+  GPath path = (GPath){
     .points = app_zalloc_check(sizeof(GPoint) * max_points),
     .num_points = 0,
   };
@@ -145,12 +145,14 @@ static void prv_draw_outer_ring(GContext *ctx, int32_t current, int32_t total,
   const int32_t top_left = frame.size.h + bot_left;
   const int32_t rect_perimeter = top_left + top_right;
 
-  const int32_t corners[] = {0,
-                             total * top_right / rect_perimeter,
-                             total * bot_right / rect_perimeter,
-                             total * bot_left / rect_perimeter,
-                             total * top_left / rect_perimeter,
-                             total};
+  const int32_t corners[] = {
+    0,
+    total * top_right / rect_perimeter,
+    total * bot_right / rect_perimeter,
+    total * bot_left / rect_perimeter,
+    total * top_left / rect_perimeter,
+    total
+  };
 
   // start the path with start_outer_point
   path.points[path.num_points++] = start_outer_point;
@@ -220,8 +222,8 @@ static void prv_draw_goal_line(GContext *ctx, int32_t current_progress, int32_t 
   const GPoint line_inner_point = prv_inset_point(&frame, line_outer_point, line_length);
 #elif PBL_ROUND
   const GRect inner_bounds = grect_inset(frame, GEdgeInsets(line_length));
-  const GPoint line_inner_point = prv_steps_to_point(current_progress,
-                                                     total_progress, inner_bounds);
+  const GPoint line_inner_point =
+      prv_steps_to_point(current_progress, total_progress, inner_bounds);
 #endif
 
   graphics_context_set_stroke_color(ctx, color);
@@ -260,7 +262,7 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
   icon_bounds.origin = bounds.origin;
 #if PBL_BW
   icon_bounds.origin.x += 23; // icon left offset
-  icon_bounds.origin.y += 9; // icon top offset
+  icon_bounds.origin.y += 9;  // icon top offset
 #elif EMERY_SCREEN_RES
   icon_bounds.origin.y += (46 - icon_bounds.size.h); // icon top offset
 #elif SNOWY_SCREEN_RES
@@ -284,7 +286,8 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
 #elif EMERY_SCREEN_RES
   const GTextAlignment alignment = GTextAlignmentRight;
 #elif SNOWY_SCREEN_RES
-  const GTextAlignment alignment = screen_is_obstructed ? GTextAlignmentRight: GTextAlignmentCenter;
+  const GTextAlignment alignment =
+      screen_is_obstructed ? GTextAlignmentRight : GTextAlignmentCenter;
   bounds.origin.y += screen_is_obstructed ? 65 : 108; // steps text top offset
 #elif SPALDING_SCREEN_RES
   const GTextAlignment alignment = GTextAlignmentCenter;
@@ -311,15 +314,13 @@ static void prv_draw_time(GContext *ctx, GFont time_font, GFont am_pm_font, GRec
   /// Current time in 24 or 12 hour
   const char *time_fmt = clock_is_24h_style() ? "%R" : "%l:%M";
   strftime(time_buffer, sizeof(time_buffer), time_fmt, pbl_override_localtime(&now));
-  health_util_create_text_node_with_text(
-      string_strip_leading_whitespace(time_buffer),
-      time_font, GColorWhite, container);
+  health_util_create_text_node_with_text(string_strip_leading_whitespace(time_buffer), time_font,
+                                         GColorWhite, container);
 
   if (!clock_is_24h_style()) {
     /// AM/PM for the current time
     strftime(am_pm_buffer, sizeof(am_pm_buffer), "%p", pbl_override_localtime(&now));
-    health_util_create_text_node_with_text(
-        am_pm_buffer, am_pm_font, GColorWhite, container);
+    health_util_create_text_node_with_text(am_pm_buffer, am_pm_font, GColorWhite, container);
   }
 
 #if PBL_BW
@@ -404,8 +405,8 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   const GColor fill_color = has_passed_goal ? GColorJaegerGreen : GColorVividCerulean;
   const GColor text_color = has_passed_goal ? GColorJaegerGreen : GColorVividCerulean;
 #if SNOWY_SCREEN_RES
-  GBitmap *shoe =
-      has_passed_goal ? (screen_is_obstructed ? &data->shoe_green_small : &data->shoe_green)
+  GBitmap *shoe = has_passed_goal
+                      ? (screen_is_obstructed ? &data->shoe_green_small : &data->shoe_green)
                       : (screen_is_obstructed ? &data->shoe_blue_small : &data->shoe_blue);
 #else
   GBitmap *shoe = has_passed_goal ? &data->shoe_green : &data->shoe_blue;
@@ -421,8 +422,8 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
 #endif
 
   // draw outer ring
-  prv_draw_outer_ring(ctx, data->current_steps, data->daily_steps_avg,
-                      fill_thickness, bounds, fill_color);
+  prv_draw_outer_ring(ctx, data->current_steps, data->daily_steps_avg, fill_thickness, bounds,
+                      fill_color);
 
   const int goal_line_length = PBL_IF_COLOR_ELSE(fill_thickness + 3, 12);
   const int goal_line_width = 4;
@@ -434,8 +435,8 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   const bool has_bpm = (data->current_bpm > 0);
 
   // draw time
-  prv_draw_time(ctx, data->time_font, PBL_IF_COLOR_ELSE(data->am_pm_font, data->time_font),
-                bounds, screen_is_obstructed, has_bpm);
+  prv_draw_time(ctx, data->time_font, PBL_IF_COLOR_ELSE(data->am_pm_font, data->time_font), bounds,
+                screen_is_obstructed, has_bpm);
 
 #if EMERY_SCREEN_RES
   bounds = grect_inset(bounds, GEdgeInsets(0, 25));
@@ -467,12 +468,11 @@ static void prv_update_steps_buffer(KickstartData *data) {
   const int hundreds = data->current_steps % 1000;
   if (thousands) {
     /// Step count greater than 1000 with a thousands separator
-    snprintf(data->steps_buffer, sizeof(data->steps_buffer), i18n_get("%d,%03d", data),
-             thousands, hundreds);
+    snprintf(data->steps_buffer, sizeof(data->steps_buffer), i18n_get("%d,%03d", data), thousands,
+             hundreds);
   } else {
     /// Step count less than 1000
-    snprintf(data->steps_buffer, sizeof(data->steps_buffer), i18n_get("%d", data),
-             hundreds);
+    snprintf(data->steps_buffer, sizeof(data->steps_buffer), i18n_get("%d", data), hundreds);
   }
   layer_mark_dirty(&data->base_layer);
 }
@@ -483,17 +483,14 @@ static void prv_update_current_steps(KickstartData *data) {
 }
 
 static void prv_update_typical_steps(KickstartData *data) {
-  data->typical_steps = health_service_sum_averaged(HealthMetricStepCount,
-                                                time_start_of_today(),
-                                                rtc_get_time(),
-                                                HealthServiceTimeScopeWeekly);
+  data->typical_steps = health_service_sum_averaged(HealthMetricStepCount, time_start_of_today(),
+                                                    rtc_get_time(), HealthServiceTimeScopeWeekly);
 }
 
 static void prv_update_daily_steps_avg(KickstartData *data) {
-  data->daily_steps_avg = health_service_sum_averaged(HealthMetricStepCount,
-                                                  time_start_of_today(),
-                                                  time_start_of_today() + SECONDS_PER_DAY,
-                                                  HealthServiceTimeScopeWeekly);
+  data->daily_steps_avg = health_service_sum_averaged(HealthMetricStepCount, time_start_of_today(),
+                                                      time_start_of_today() + SECONDS_PER_DAY,
+                                                      HealthServiceTimeScopeWeekly);
 }
 
 static void prv_update_hrm_bpm(KickstartData *data) {
@@ -523,8 +520,8 @@ static void prv_update_data(KickstartData *data) {
 }
 
 #if UNITTEST
-T_STATIC void prv_set_data(KickstartData *data, int32_t current_steps,
-                           int32_t typical_steps, int32_t daily_steps_avg, int32_t current_bpm) {
+T_STATIC void prv_set_data(KickstartData *data, int32_t current_steps, int32_t typical_steps,
+                           int32_t daily_steps_avg, int32_t current_bpm) {
   data->current_steps = current_steps;
   data->typical_steps = typical_steps;
   data->daily_steps_avg = daily_steps_avg;
@@ -630,10 +627,10 @@ static void prv_main(void) {
 
   window_init(&data->window, WINDOW_NAME("Kickstart"));
   window_set_user_data(&data->window, data);
-  window_set_window_handlers(&data->window, &(WindowHandlers) {
-    .load = prv_window_load_handler,
-    .unload = prv_window_unload_handler,
-  });
+  window_set_window_handlers(&data->window, &(WindowHandlers){
+                                              .load = prv_window_load_handler,
+                                              .unload = prv_window_unload_handler,
+                                            });
   app_window_stack_push(&data->window, true);
 
   app_event_loop();
@@ -643,17 +640,19 @@ static void prv_main(void) {
   app_free(data);
 }
 
-const PebbleProcessMd* kickstart_get_app_info() {
+const PebbleProcessMd *kickstart_get_app_info() {
   static const PebbleProcessMdSystem s_app_md = {
-    .common = {
-      // UUID: 3af858c3-16cb-4561-91e7-f1ad2df8725f
-      .uuid = {0x3a, 0xf8, 0x58, 0xc3, 0x16, 0xcb, 0x45, 0x61,
-               0x91, 0xe7, 0xf1, 0xad, 0x2d, 0xf8, 0x72, 0x5f},
-      .main_func = prv_main,
-      .process_type = ProcessTypeWatchface,
-    },
+    .common =
+        {
+          // UUID: 3af858c3-16cb-4561-91e7-f1ad2df8725f
+          .uuid =
+              {0x3a, 0xf8, 0x58, 0xc3, 0x16, 0xcb, 0x45, 0x61, 0x91, 0xe7, 0xf1, 0xad, 0x2d, 0xf8,
+               0x72, 0x5f},
+          .main_func = prv_main,
+          .process_type = ProcessTypeWatchface,
+        },
     .icon_resource_id = RESOURCE_ID_MENU_ICON_KICKSTART_WATCH,
     .name = "Kickstart"
   };
-  return (const PebbleProcessMd*) &s_app_md;
+  return (const PebbleProcessMd *)&s_app_md;
 }

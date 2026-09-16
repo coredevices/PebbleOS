@@ -21,7 +21,8 @@
 #include "test_recognizer_impl.h"
 
 // The manager is not under test here; swallow the notification.
-void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {}
+void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
+}
 
 static RecognizerEvent s_last_event;
 
@@ -35,7 +36,8 @@ void test_pan__initialize(void) {
   fake_rtc_init(0, 0);
 }
 
-void test_pan__cleanup(void) {}
+void test_pan__cleanup(void) {
+}
 
 // Helpers
 static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t y) {
@@ -91,8 +93,8 @@ void test_pan__dominance_over_ratio_starts(void) {
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Started);
 }
 
-// At the instant Started fires, delta_since_start is exactly (0, 0) (the anti-jump guarantee), while
-// total_delta reflects the full movement from touchdown.
+// At the instant Started fires, delta_since_start is exactly (0, 0) (the anti-jump guarantee),
+// while total_delta reflects the full movement from touchdown.
 void test_pan__delta_since_start_zero_at_start(void) {
   NEW_RECOGNIZER(r) = pan_recognizer_create(prv_event_cb, NULL, PanAxis_Horizontal);
 
@@ -113,7 +115,7 @@ void test_pan__updated_events_grow(void) {
   NEW_RECOGNIZER(r) = pan_recognizer_create(prv_event_cb, NULL, PanAxis_Horizontal);
 
   prv_dispatch(r, TouchEvent_Touchdown, 50, 50);
-  prv_dispatch(r, TouchEvent_PositionUpdate, 61, 50);  // Started, anchor at x=61
+  prv_dispatch(r, TouchEvent_PositionUpdate, 61, 50); // Started, anchor at x=61
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Started);
 
   prv_dispatch(r, TouchEvent_PositionUpdate, 71, 50);
@@ -135,7 +137,7 @@ void test_pan__foreign_axis_fails(void) {
   NEW_RECOGNIZER(r) = pan_recognizer_create(prv_event_cb, NULL, PanAxis_Horizontal);
 
   prv_dispatch(r, TouchEvent_Touchdown, 50, 50);
-  prv_dispatch(r, TouchEvent_PositionUpdate, 50, 61);  // 11px vertical dominates, threshold crossed
+  prv_dispatch(r, TouchEvent_PositionUpdate, 50, 61); // 11px vertical dominates, threshold crossed
 
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Failed);
 }
@@ -162,10 +164,10 @@ void test_pan__completes_with_velocity(void) {
 
   prv_dispatch(r, TouchEvent_Touchdown, 50, 50);
   prv_advance_ms(20);
-  prv_dispatch(r, TouchEvent_PositionUpdate, 50, 70);  // Started
+  prv_dispatch(r, TouchEvent_PositionUpdate, 50, 70); // Started
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Started);
   prv_advance_ms(20);
-  prv_dispatch(r, TouchEvent_PositionUpdate, 50, 90);  // Updated
+  prv_dispatch(r, TouchEvent_PositionUpdate, 50, 90); // Updated
   prv_advance_ms(20);
   // Liftoff coordinates are ignored; the end point is the last position update.
   prv_dispatch(r, TouchEvent_Liftoff, 0, 0);
@@ -184,7 +186,7 @@ void test_pan__liftoff_origin_ignored(void) {
 
   prv_dispatch(r, TouchEvent_Touchdown, 50, 50);
   prv_advance_ms(20);
-  prv_dispatch(r, TouchEvent_PositionUpdate, 90, 50);  // Started, dx = 40
+  prv_dispatch(r, TouchEvent_PositionUpdate, 90, 50); // Started, dx = 40
   prv_advance_ms(20);
   prv_dispatch(r, TouchEvent_Liftoff, 0, 0);
 
@@ -199,7 +201,7 @@ void test_pan__liftoff_before_start_fails(void) {
   NEW_RECOGNIZER(r) = pan_recognizer_create(prv_event_cb, NULL, PanAxis_Horizontal);
 
   prv_dispatch(r, TouchEvent_Touchdown, 50, 50);
-  prv_dispatch(r, TouchEvent_PositionUpdate, 55, 50);  // only 5px, stays Possible
+  prv_dispatch(r, TouchEvent_PositionUpdate, 55, 50); // only 5px, stays Possible
   prv_advance_ms(50);
   prv_dispatch(r, TouchEvent_Liftoff, 0, 0);
 
@@ -211,7 +213,7 @@ void test_pan__zero_dt_velocity_zero(void) {
   NEW_RECOGNIZER(r) = pan_recognizer_create(prv_event_cb, NULL, PanAxis_Horizontal);
 
   prv_dispatch(r, TouchEvent_Touchdown, 50, 50);
-  prv_dispatch(r, TouchEvent_PositionUpdate, 70, 50);  // Started, same tick as touchdown
+  prv_dispatch(r, TouchEvent_PositionUpdate, 70, 50); // Started, same tick as touchdown
   prv_dispatch(r, TouchEvent_Liftoff, 0, 0);
 
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Completed);

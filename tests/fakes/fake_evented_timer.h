@@ -15,7 +15,7 @@ typedef struct {
 } FakeEventedTimer;
 
 EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
-                                      EventedTimerCallback callback, void* callback_data) {
+                                      EventedTimerCallback callback, void *callback_data) {
   FakeEventedTimer *fake_timer = malloc(sizeof(FakeEventedTimer));
   fake_timer->timeout_ms = timeout_ms;
   fake_timer->callback = callback;
@@ -24,10 +24,9 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
   return (EventedTimerID)fake_timer;
 }
 
-
 bool evented_timer_reschedule(EventedTimerID timer_id, uint32_t new_timeout_ms) {
   if (timer_id) {
-    FakeEventedTimer *fake_timer = (FakeEventedTimer*)timer_id;
+    FakeEventedTimer *fake_timer = (FakeEventedTimer *)timer_id;
     fake_timer->timeout_ms = new_timeout_ms;
     return true;
   }
@@ -35,7 +34,7 @@ bool evented_timer_reschedule(EventedTimerID timer_id, uint32_t new_timeout_ms) 
 }
 
 EventedTimerID evented_timer_register_or_reschedule(EventedTimerID timer_id, uint32_t timeout_ms,
-    EventedTimerCallback callback, void *data) {
+                                                    EventedTimerCallback callback, void *data) {
   if (timer_id && evented_timer_reschedule(timer_id, timeout_ms)) {
     return timer_id;
   } else {
@@ -45,14 +44,14 @@ EventedTimerID evented_timer_register_or_reschedule(EventedTimerID timer_id, uin
 
 void evented_timer_cancel(EventedTimerID timer_id) {
   if (timer_id) {
-    FakeEventedTimer *fake_timer = (FakeEventedTimer*)timer_id;
+    FakeEventedTimer *fake_timer = (FakeEventedTimer *)timer_id;
     free(fake_timer);
   }
 }
 
 bool fake_evented_timer_trigger(EventedTimerID timer_id) {
   if (timer_id) {
-    FakeEventedTimer *fake_timer = (FakeEventedTimer*)timer_id;
+    FakeEventedTimer *fake_timer = (FakeEventedTimer *)timer_id;
     fake_timer->callback(fake_timer->callback_data);
     if (!fake_timer->repeating) {
       free(fake_timer);
@@ -61,4 +60,3 @@ bool fake_evented_timer_trigger(EventedTimerID timer_id) {
   }
   return false;
 }
-

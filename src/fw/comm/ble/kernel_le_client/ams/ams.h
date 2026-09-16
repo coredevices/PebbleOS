@@ -49,7 +49,6 @@ void ams_invalidate_all_references(void);
 
 void ams_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics);
 
-
 //! @param characteristic The characteristic for which to test whether the AMS module handles
 //! reads/writes/notifications for it.
 //! @return True whether the AMS module handles reads/writes/etc for it, false if not
@@ -58,8 +57,8 @@ bool ams_can_handle_characteristic(BLECharacteristic characteristic);
 //! Handles GATT subscriptions
 //! @see BLEClientSubscribeHandler
 //! Must only be called from KernelMain!
-void ams_handle_subscribe(BLECharacteristic characteristic,
-                           BLESubscription subscription_type, BLEGATTError error);
+void ams_handle_subscribe(BLECharacteristic characteristic, BLESubscription subscription_type,
+                          BLEGATTError error);
 
 //! Handles GATT write responses
 //! @see BLEClientWriteHandler
@@ -69,7 +68,7 @@ void ams_handle_write_response(BLECharacteristic characteristic, BLEGATTError er
 //! Handles GATT notifications
 //! Must only be called from KernelMain!
 void ams_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                      size_t value_length, BLEGATTError error);
+                                     size_t value_length, BLEGATTError error);
 
 //! Destroys the AMS client.
 //! Must only be called from KernelMain!

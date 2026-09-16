@@ -57,7 +57,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
-void event_put(PebbleEvent* event) {
+void event_put(PebbleEvent *event) {
   if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT) {
     s_num_dnd_events_put++;
   }
@@ -110,8 +110,8 @@ void do_not_disturb_toggle_push(ActionTogglePrompt prompt, bool set_exit_reason)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Helper Functions
 
-static void prv_assert_settings_value(const void *key, size_t key_len,
-                                      const void *expected_value, size_t value_len) {
+static void prv_assert_settings_value(const void *key, size_t key_len, const void *expected_value,
+                                      size_t value_len) {
   SettingsFile file;
   char buffer[value_len];
   cl_must_pass(settings_file_open(&file, "notifpref", 1024));
@@ -122,8 +122,8 @@ static void prv_assert_settings_value(const void *key, size_t key_len,
 
 static void prv_assert_manually_dnd_setting_val(bool expected_value) {
   const char *key = "dndManuallyEnabled";
-  prv_assert_settings_value((void*)key, strlen("dndManuallyEnabled"),
-                            (void*)&expected_value, sizeof(bool));
+  prv_assert_settings_value((void *)key, strlen("dndManuallyEnabled"), (void *)&expected_value,
+                            sizeof(bool));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +303,7 @@ void test_do_not_disturb__is_active(void) {
   cl_assert(active == true);
 
   // !Manual && !Scheduled && Smart
-  do_not_disturb_set_manually_enabled(false); // Overrides all DND and disables
+  do_not_disturb_set_manually_enabled(false);                  // Overrides all DND and disables
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, false); // Clears overrides
   active = do_not_disturb_is_active();
   cl_assert(active == true);
@@ -421,7 +421,6 @@ void test_do_not_disturb__change_schedule_while_in_scheduled(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == true); // Scheduled ON
 
-
   DoNotDisturbSchedule schedule_3 = {
     .from_hour = 14,
     .from_minute = 0,
@@ -463,7 +462,6 @@ void test_do_not_disturb__smart_dnd(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == false);
 }
-
 
 void test_do_not_disturb__weekday_weekend_schedule(void) {
   bool active;

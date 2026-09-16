@@ -8,7 +8,8 @@
 #include "pbl/util/attributes.h"
 
 void WEAK timeline_actions_add_action_to_root_level(TimelineItemAction *action,
-                                                    ActionMenuLevel *root_level) {}
+                                                    ActionMenuLevel *root_level) {
+}
 
 ActionMenuLevel *WEAK timeline_actions_create_action_menu_root_level(
     uint8_t num_actions, uint8_t separator_index, TimelineItemActionSource source) {
@@ -28,11 +29,15 @@ ActionMenu *WEAK timeline_actions_push_response_menu(
 };
 
 void WEAK timeline_actions_cleanup_action_menu(ActionMenu *action_menu, const ActionMenuItem *item,
-                                               void *context) {}
+                                               void *context) {
+}
 
-void WEAK timeline_actions_dismiss_all(
-    NotificationInfo *notif_list, int num_notifications, ActionMenu *action_menu,
-    ActionCompleteCallback dismiss_all_complete_callback, void *dismiss_all_cb_data) {}
+void WEAK timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifications,
+                                       ActionMenu *action_menu,
+                                       ActionCompleteCallback dismiss_all_complete_callback,
+                                       void *dismiss_all_cb_data) {
+}
 
 void WEAK timeline_actions_invoke_action(const TimelineItemAction *action, const TimelineItem *pin,
-                                         ActionCompleteCallback cb, void *cb_data) {}
+                                         ActionCompleteCallback cb, void *cb_data) {
+}

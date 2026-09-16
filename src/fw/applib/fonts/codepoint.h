@@ -11,29 +11,29 @@ typedef uint32_t Codepoint;
 #define EM_DASH "—"
 #define EN_DASH "–"
 
-#define ELLIPSIS_CODEPOINT 0x2026
-#define HYPHEN_CODEPOINT 0x002D
-#define MINUS_SIGN_CODEPOINT 0x2212
-#define SPACE_CODEPOINT ' '
-#define NEWLINE_CODEPOINT '\n'
-#define NULL_CODEPOINT '\0'
-#define NO_BREAK_SPACE_CODEPOINT 0x00A0
-#define EN_QUAD_CODEPOINT 0x2000
-#define EM_QUAD_CODEPOINT 0x2001
-#define EN_SPACE_CODEPOINT 0x2002
-#define EM_SPACE_CODEPOINT 0x2003
-#define THREE_PER_EM_SPACE_CODEPOINT 0x2004
-#define FOUR_PER_EM_SPACE_CODEPOINT 0x2005
-#define SIX_PER_EM_SPACE_CODEPOINT 0x2006
-#define FIGURE_SPACE_CODEPOINT 0x2007
-#define PUNCTUATION_SPACE_CODEPOINT 0x2008
-#define THIN_SPACE_CODEPOINT 0x2009
-#define HAIR_SPACE_CODEPOINT 0x200A
-#define ZERO_WIDTH_SPACE_CODEPOINT 0x200B
-#define NARROW_NO_BREAK_SPACE_CODEPOINT 0x202F
+#define ELLIPSIS_CODEPOINT                  0x2026
+#define HYPHEN_CODEPOINT                    0x002D
+#define MINUS_SIGN_CODEPOINT                0x2212
+#define SPACE_CODEPOINT                     ' '
+#define NEWLINE_CODEPOINT                   '\n'
+#define NULL_CODEPOINT                      '\0'
+#define NO_BREAK_SPACE_CODEPOINT            0x00A0
+#define EN_QUAD_CODEPOINT                   0x2000
+#define EM_QUAD_CODEPOINT                   0x2001
+#define EN_SPACE_CODEPOINT                  0x2002
+#define EM_SPACE_CODEPOINT                  0x2003
+#define THREE_PER_EM_SPACE_CODEPOINT        0x2004
+#define FOUR_PER_EM_SPACE_CODEPOINT         0x2005
+#define SIX_PER_EM_SPACE_CODEPOINT          0x2006
+#define FIGURE_SPACE_CODEPOINT              0x2007
+#define PUNCTUATION_SPACE_CODEPOINT         0x2008
+#define THIN_SPACE_CODEPOINT                0x2009
+#define HAIR_SPACE_CODEPOINT                0x200A
+#define ZERO_WIDTH_SPACE_CODEPOINT          0x200B
+#define NARROW_NO_BREAK_SPACE_CODEPOINT     0x202F
 #define MEDIUM_MATHEMATICAL_SPACE_CODEPOINT 0x205F
-#define WORD_JOINER_CODEPOINT 0x2060
-#define IDEOGRAPHIC_SPACE_CODEPOINT 0x3000
+#define WORD_JOINER_CODEPOINT               0x2060
+#define IDEOGRAPHIC_SPACE_CODEPOINT         0x3000
 // Generic substitute for regional-indicator flag pairs (white flag)
 #define FLAG_CODEPOINT 0x1F3F3
 
@@ -64,8 +64,7 @@ bool codepoint_is_regional_indicator(const Codepoint codepoint);
 // for curr_cp and sets *consumed_next when next_cp is folded into it; returns
 // curr_cp unchanged otherwise. Callers must give a consumed codepoint zero
 // width and must not draw it.
-Codepoint emoji_shape_pair(const Codepoint curr_cp, const Codepoint next_cp,
-                           bool *consumed_next);
+Codepoint emoji_shape_pair(const Codepoint curr_cp, const Codepoint next_cp, bool *consumed_next);
 
 // This is a least dirty hack to enable special rendering when a special codepoint is hit in the
 // text being rendered

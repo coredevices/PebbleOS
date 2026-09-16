@@ -27,8 +27,8 @@ uint32_t als_compensation_apply(uint32_t raw_level, uint16_t avg_luminance_q8,
 //! Average front-pixel luminance over a framebuffer region, Q8 (0..256).
 //! Clamps the region to the bitmap bounds and each row's valid pixel range.
 //! Returns 256 (no-op gain) for an empty/zero-area region.
-uint16_t als_compensation_region_luminance(const struct GBitmap *fb, int16_t rx,
-                                           int16_t ry, int16_t rw, int16_t rh);
+uint16_t als_compensation_region_luminance(const struct GBitmap *fb, int16_t rx, int16_t ry,
+                                           int16_t rw, int16_t rh);
 
 //! Sample the live system framebuffer over the board's sensor region and return
 //! the average front-pixel luminance, Q8 (0..256). KernelMain-only (reads the

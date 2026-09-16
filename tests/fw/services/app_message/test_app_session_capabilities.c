@@ -18,7 +18,7 @@ static const CommSessionCapability s_live_capabilities = (CommSessionInfiniteLog
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static PebbleProcessMd s_app_md;
-const PebbleProcessMd* app_manager_get_current_app_md(void) {
+const PebbleProcessMd *app_manager_get_current_app_md(void) {
   return &s_app_md;
 }
 
@@ -40,16 +40,15 @@ void settings_file_close(SettingsFile *file) {
 }
 
 static status_t s_open_status;
-status_t settings_file_open(SettingsFile *file, const char *name,
-                            int max_used_space) {
+status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
   return s_open_status;
 }
 
 static bool s_has_cache;
 static bool s_get_called;
 static uint64_t s_get_value;
-status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len,
-                           void *val_out, size_t val_out_len) {
+status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
+                           size_t val_out_len) {
   s_get_called = true;
   if (!s_has_cache) {
     return E_DOES_NOT_EXIST;
@@ -59,27 +58,23 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len,
 }
 
 static uint64_t s_set_value;
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
-                           const void *val, size_t val_len) {
+status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, const void *val,
+                           size_t val_len) {
   cl_assert_equal_i(val_len, sizeof(uint64_t));
   s_set_value = *(uint64_t *)val;
   return S_SUCCESS;
 }
 
-status_t settings_file_delete(SettingsFile *file,
-                              const void *key, size_t key_len) {
+status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
   return S_SUCCESS;
 }
 
-status_t settings_file_rewrite(SettingsFile *file,
-                               SettingsFileRewriteCallback cb, void *context) {
+status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context) {
   return S_SUCCESS;
 }
 
 // Helpers
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 // Tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +94,6 @@ void test_app_session_capabilities__initialize(void) {
 }
 
 void test_app_session_capabilities__cleanup(void) {
-
 }
 
 void test_app_session_capabilities__no_cache_file_and_not_connected(void) {

@@ -45,12 +45,12 @@ void mfg_info_set_rtc_freq(uint32_t rtc_freq);
 
 //! Get the model string. Populates a supplied buffer with a null-terminated string.
 //! @param buffer a character array that's at least MFG_INFO_MODEL_STRING_LENGTH in size
-void mfg_info_get_model(char* buffer);
+void mfg_info_get_model(char *buffer);
 
 //! Set the model string to a new value.
 //! @param model A null-terminated string that's at most MFG_INFO_MODEL_STRING_LENGTH bytes in
 //!              length including the null-terminator. Longer strings will be truncated to fit.
-void mfg_info_set_model(const char* model);
+void mfg_info_set_model(const char *model);
 
 //! Set or update any constant data that needs to be written at manufacturing
 //! time but which is not customized to the individual unit.

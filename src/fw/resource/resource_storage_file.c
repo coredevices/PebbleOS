@@ -31,8 +31,8 @@ static uint32_t prv_file_common_get_crc(int fd, uint32_t num_bytes, uint32_t ent
   if (fd < 0) {
     return 0xFFFFFFFF;
   }
-  uint32_t crc = pfs_crc_calculate_file(fd, RESOURCE_STORE_METADATA_BYTES + entry_offset,
-                                        num_bytes);
+  uint32_t crc =
+      pfs_crc_calculate_file(fd, RESOURCE_STORE_METADATA_BYTES + entry_offset, num_bytes);
   pfs_close(fd);
   return crc;
 }
@@ -71,7 +71,7 @@ static int prv_file_open_by_name(const char *name, uint8_t op_flags) {
 }
 
 static int prv_file_open(ResourceStoreEntry *entry, uint8_t op_flags) {
-  return prv_file_open_by_name(((FileResourceData *) entry->store_data)->name, op_flags);
+  return prv_file_open_by_name(((FileResourceData *)entry->store_data)->name, op_flags);
 }
 
 static uint32_t resource_storage_file_get_length(ResourceStoreEntry *entry) {
@@ -117,7 +117,7 @@ static bool resource_storage_file_find_resource(ResourceStoreEntry *entry, ResAp
 
 static ResourceCallbackHandle resource_storage_file_watch(ResourceStoreEntry *entry,
                                                           ResourceChangedCallback callback,
-                                                          void* data) {
+                                                          void *data) {
   const FileResourceData *file = entry->store_data;
   if (!file) {
     return NULL;
@@ -149,7 +149,7 @@ static void resource_storage_file_init(void) {
          resource_id <= g_file_resource_stores[i].last_resource_id; resource_id++) {
       // TODO PBL-21402
       if (!resource_storage_check(SYSTEM_APP, resource_id, NULL)) {
-        PBL_LOG_ERR("System resource file %"PRIu32" corrupt!!!", resource_id);
+        PBL_LOG_ERR("System resource file %" PRIu32 " corrupt!!!", resource_id);
       }
 
       const uint32_t large_file_size_threshold = 200 * 1024;
@@ -209,7 +209,7 @@ static bool resource_storage_app_file_find_resource(ResourceStoreEntry *entry, R
     return false;
   }
   // Need to cast to uintptr_t first to make test compiling on 64-bit happy
-  entry->store_data = (void*)(uintptr_t)app_num;
+  entry->store_data = (void *)(uintptr_t)app_num;
   return true;
 }
 

@@ -77,7 +77,7 @@ bool ancs_phone_call_should_ignore_missed_calls(void) {
 }
 
 static void prv_handle_missed_call_timer_timeout(void *not_used) {
-if (regular_timer_is_scheduled(&s_missed_call_timer_id)) {
+  if (regular_timer_is_scheduled(&s_missed_call_timer_id)) {
     regular_timer_remove_callback(&s_missed_call_timer_id);
   }
 }
@@ -88,7 +88,7 @@ void ancs_phone_call_temporarily_block_missed_calls(void) {
     regular_timer_remove_callback(&s_missed_call_timer_id);
   }
 
-  s_missed_call_timer_id = (const RegularTimerInfo) {
+  s_missed_call_timer_id = (const RegularTimerInfo){
     .cb = prv_handle_missed_call_timer_timeout,
   };
   regular_timer_add_multisecond_callback(&s_missed_call_timer_id, BLOCK_MISS_CALL_TIME_S);

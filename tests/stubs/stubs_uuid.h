@@ -5,7 +5,6 @@
 
 #include "pbl/util/uuid.h"
 
-
 bool uuid_equal(const Uuid *uu1, const Uuid *uu2) {
   return false;
 }
@@ -22,5 +21,4 @@ bool uuid_is_invalid(const Uuid *uuid) {
 }
 
 void uuid_to_string(const Uuid *uuid, char *buffer) {
-
 }

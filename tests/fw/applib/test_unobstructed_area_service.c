@@ -62,13 +62,13 @@ static void prv_did_change(void *context) {
 /////////////////////
 
 void test_unobstructed_area_service__initialize(void) {
-  s_data = (UnobstructedAreaTestData) {
+  s_data = (UnobstructedAreaTestData){
     .context = &s_context_target,
     .last_change_progress = -1,
   };
 
   fake_event_service_init();
-  s_app_state_framebuffer = &(FrameBuffer) { .size = DISP_FRAME.size };
+  s_app_state_framebuffer = &(FrameBuffer){.size = DISP_FRAME.size};
 
   unobstructed_area_service_init(app_state_get_unobstructed_area_state(), DISP_ROWS);
 }

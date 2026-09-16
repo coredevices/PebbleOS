@@ -12,12 +12,12 @@
 #include <stdbool.h>
 
 #define DIALOG_MAX_MESSAGE_LEN 140
-#define DIALOG_IS_ANIMATED true
+#define DIALOG_IS_ANIMATED     true
 
 // TODO PBL-38106: Replace uses of DIALOG_TIMEOUT_DEFAULT with preferred_result_display_duration()
 // The number of milliseconds it takes for the dialog to automatically go away if has_timeout is
 // set to true.
-#define DIALOG_TIMEOUT_DEFAULT (1000)
+#define DIALOG_TIMEOUT_DEFAULT  (1000)
 #define DIALOG_TIMEOUT_INFINITE (0)
 
 struct Dialog;
@@ -125,8 +125,7 @@ void dialog_set_timeout(Dialog *dialog, uint32_t timeout);
 // dialog. This callback will be called from the dialog's own unload function and can be used
 // to clean up resources used by the dialog such as icons. If the unload context is NULL, the
 // parent dialog object will be passed instead.
-void dialog_set_callbacks(Dialog *dialog, const DialogCallbacks *callbacks,
-                          void *callback_context);
+void dialog_set_callbacks(Dialog *dialog, const DialogCallbacks *callbacks, void *callback_context);
 
 // Enable or disable automatically destroying the dialog when it's popped.
 void dialog_set_destroy_on_pop(Dialog *dialog, bool destroy_on_pop);

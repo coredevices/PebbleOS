@@ -53,7 +53,7 @@ static void prv_handle_touch_event(PebbleEvent *e, void *context) {
 static void prv_update_subscription(TouchServiceState *state) {
   const bool want = (state->system_handler != NULL) || (state->raw_handler != NULL);
   if (want && !state->subscribed) {
-    state->event_info = (EventServiceInfo) {
+    state->event_info = (EventServiceInfo){
       .type = PEBBLE_TOUCH_EVENT,
       .handler = prv_handle_touch_event,
     };
@@ -108,5 +108,5 @@ void app_touch_navigation_enable(bool enable) {
 }
 
 void touch_service_state_init(TouchServiceState *state) {
-  *state = (TouchServiceState){ 0 };
+  *state = (TouchServiceState){0};
 }

@@ -47,8 +47,8 @@ uint32_t fake_comm_session_is_latency_reduced(void);
 // Transport mock
 
 //! Pointer to function handling data that is sent out by the session
-typedef void (*FakeTransportSentCallback)(uint16_t endpoint_id,
-                                          const uint8_t* data, unsigned int data_length);
+typedef void (*FakeTransportSentCallback)(uint16_t endpoint_id, const uint8_t *data,
+                                          unsigned int data_length);
 
 //! Creates a mock transport
 //! @param destination The destination type this transport is connected to. See comments with the
@@ -58,8 +58,7 @@ typedef void (*FakeTransportSentCallback)(uint16_t endpoint_id,
 //! @param sent_cb The callback that needs to be called whenever data is sent out using this mock
 //! transport. Note that data will only be sent out when fake_comm_session_process_send_next() is
 //! called. It's recommended to leave this NULL and use fake_transport_assert_sent instead.
-Transport *fake_transport_create(TransportDestination destination,
-                                 const Uuid *app_uuid,
+Transport *fake_transport_create(TransportDestination destination, const Uuid *app_uuid,
                                  FakeTransportSentCallback sent_cb);
 
 //! Simulating (dis)connecting the transport.
@@ -82,7 +81,7 @@ void fake_transport_assert_nothing_sent(Transport *transport);
 //! are much easier to read.
 void fake_transport_set_sent_cb(Transport *transport, FakeTransportSentCallback sent_cb);
 
-//! Destroys the mock transport 
+//! Destroys the mock transport
 void fake_transport_destroy(Transport *transport);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +89,8 @@ void fake_transport_destroy(Transport *transport);
 
 //! Writes data into the fake send buffer, skipping Pebble Protocol
 //! @return false if there's insufficient space.
-bool fake_comm_session_send_buffer_write_raw_by_transport(Transport *transport,
-                                                          const uint8_t *data, size_t length);
+bool fake_comm_session_send_buffer_write_raw_by_transport(Transport *transport, const uint8_t *data,
+                                                          size_t length);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake life cycle

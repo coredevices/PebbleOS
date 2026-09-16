@@ -16,10 +16,11 @@ inline static uint16_t bswap16(uint16_t v) {
 #ifdef __arm__
 inline static char reverse_byte(uint8_t input) {
   uint8_t result;
-  __asm__ ("rev  %[result], %[input]\n\t"
-           "rbit %[result], %[result]"
-           : [result] "=r" (result)
-           : [input] "r" (input));
+  __asm__(
+      "rev  %[result], %[input]\n\t"
+      "rbit %[result], %[result]"
+      : [result] "=r"(result)
+      : [input] "r"(input));
   return result;
 }
 #else

@@ -19,13 +19,16 @@ int16_t WEAK timeline_peek_get_obstruction_origin_y(void) {
   return DISP_ROWS;
 }
 
-void WEAK timeline_peek_handle_process_start(void) {}
+void WEAK timeline_peek_handle_process_start(void) {
+}
 
-void WEAK timeline_peek_handle_process_kill(void) {}
+void WEAK timeline_peek_handle_process_kill(void) {
+}
 
 void WEAK timeline_peek_set_show_before_time(unsigned int before_time_s) {};
 
-void WEAK timeline_peek_set_enabled(bool enabled) {}
+void WEAK timeline_peek_set_enabled(bool enabled) {
+}
 
 bool WEAK timeline_peek_prefs_get_enabled() {
   return true;
@@ -37,4 +40,5 @@ uint16_t WEAK timeline_peek_prefs_get_before_time() {
 
 void WEAK timeline_peek_prefs_set_before_time(uint16_t before_time_m) {};
 
-void WEAK peek_animations_draw_timeline_speed_lines(GContext *ctx, GPoint offset) {}
+void WEAK peek_animations_draw_timeline_speed_lines(GContext *ctx, GPoint offset) {
+}

@@ -62,7 +62,7 @@ void test_option_menu_window__initialize(void) {
   fake_app_state_init();
   load_system_resources_fixture();
 
-  s_data = (OptionMenuTestData) {};
+  s_data = (OptionMenuTestData){};
   rtc_set_time(3 * SECONDS_PER_DAY);
 }
 
@@ -103,8 +103,8 @@ static void prv_create_menu_and_render(MenuConfig *config) {
   const OptionMenuConfig option_menu_config = {
     .title = config->title ?: "Option Menu",
     .content_type = config->content_type,
-    .status_colors = { GColorWhite, GColorBlack },
-    .highlight_colors = { PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack), GColorWhite },
+    .status_colors = {GColorWhite, GColorBlack},
+    .highlight_colors = {PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack), GColorWhite},
     .icons_enabled = config->icons_enabled,
   };
   option_menu_configure(&s_data.option_menu, &option_menu_config);
@@ -129,20 +129,23 @@ static void prv_create_menu_and_render(MenuConfig *config) {
 
 void prv_create_menu_and_render_long_title(bool icons_enabled, const char *title,
                                            bool special_height) {
-  prv_create_menu_and_render(&(MenuConfig) {
+  prv_create_menu_and_render(&(MenuConfig){
     .title = title,
-    .content_type = special_height ? OptionMenuContentType_DoubleLine :
-                                     OptionMenuContentType_Default,
+    .content_type =
+        special_height ? OptionMenuContentType_DoubleLine : OptionMenuContentType_Default,
     .num_items = 3,
-    .items = (MenuItemConfig[]) {
-      {
-        .title = "Allow All Notifications",
-      }, {
-        .title = "Allow Phone Calls Only",
-      }, {
-        .title = "Mute All Notifications",
-      }
-    },
+    .items =
+        (MenuItemConfig[]){
+          {
+            .title = "Allow All Notifications",
+          },
+          {
+            .title = "Allow Phone Calls Only",
+          },
+          {
+            .title = "Mute All Notifications",
+          }
+        },
     .icons_enabled = icons_enabled,
   });
 }
@@ -173,20 +176,23 @@ void test_option_menu_window__long_title_special_height_icons(void) {
 
 void prv_create_menu_and_render_short_title(bool icons_enabled, const char *title,
                                             bool special_height) {
-  prv_create_menu_and_render(&(MenuConfig) {
+  prv_create_menu_and_render(&(MenuConfig){
     .title = title,
-    .content_type = special_height ? OptionMenuContentType_SingleLine :
-                                     OptionMenuContentType_Default,
+    .content_type =
+        special_height ? OptionMenuContentType_SingleLine : OptionMenuContentType_Default,
     .num_items = 3,
-    .items = (MenuItemConfig[]) {
-      {
-        .title = "Smaller",
-      }, {
-        .title = "Default",
-      }, {
-        .title = "Larger",
-      }
-    },
+    .items =
+        (MenuItemConfig[]){
+          {
+            .title = "Smaller",
+          },
+          {
+            .title = "Default",
+          },
+          {
+            .title = "Larger",
+          }
+        },
     .icons_enabled = icons_enabled,
   });
 }

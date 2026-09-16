@@ -10,4 +10,4 @@
 
 // Notif pref db keys for incoming call reply
 #define ANDROID_PHONE_KEY "com.pebble.android.phone"
-#define IOS_PHONE_KEY "com.apple.mobilephone"
+#define IOS_PHONE_KEY     "com.apple.mobilephone"

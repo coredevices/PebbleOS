@@ -15,7 +15,7 @@ typedef struct NotificationWindowData {
   RegularTimerInfo reminder_watchdog_timer_id; // Clear stale reminders once a minute
 
   EventedTimerID pop_timer_id; //!< Timer that automatically pops us in case of inactivity.
-  bool pop_timer_is_final; // true, if pop_timer_id cannot be rescheduled anymore
+  bool pop_timer_is_final;     // true, if pop_timer_id cannot be rescheduled anymore
 
   bool is_modal;
   bool window_frozen; // Don't pop when performing an action via a hotkey until the action completes

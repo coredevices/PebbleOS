@@ -49,25 +49,24 @@ static int prv_iso8601_base_week(const struct tm *t) {
 }
 
 // Here be dragons
-static int prv_year_week_count(int year, const struct tm *t,
-                               int normal_compare, int leap_compare) {
-/*
-Find first wday of the year.
+static int prv_year_week_count(int year, const struct tm *t, int normal_compare, int leap_compare) {
+  /*
+  Find first wday of the year.
 
-        CurWday
-CurYday|  0  |  1  |  2  |  3  |  4  |  5  |  6  |
-     0 | Sun | Mon | Tue | Wed | Thu | Fri | Sat |
-     1 | Sat | Sun | Mon | Tue | Wed | Thu | Fri |
-     2 | Fri | Sat | Sun | Mon | Tue | Wed | Thu |
+          CurWday
+  CurYday|  0  |  1  |  2  |  3  |  4  |  5  |  6  |
+       0 | Sun | Mon | Tue | Wed | Thu | Fri | Sat |
+       1 | Sat | Sun | Mon | Tue | Wed | Thu | Fri |
+       2 | Fri | Sat | Sun | Mon | Tue | Wed | Thu |
 
-wday - yday
+  wday - yday
 
-6 - 0 = 6 = Sat
-6 - 2 = 4 = Thu
-0 - 2 = -2+7 = 5 = Fri
+  6 - 0 = 6 = Sat
+  6 - 2 = 4 = Thu
+  0 - 2 = -2+7 = 5 = Fri
 
-(wday - yday % 7)
-*/
+  (wday - yday % 7)
+  */
   // First wday of the year
   int wday = (((t->tm_wday - t->tm_yday) % 7) + 7) % 7;
 
@@ -112,15 +111,15 @@ static int prv_iso8601_week(const struct tm *t) {
 }
 
 // Sorry I made a mess, it was in the name of size.
-size_t localized_strftime(char * restrict dest_str, size_t maxsize, const char * restrict fmt,
-                          const struct tm * restrict t, const char *locale) {
+size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *restrict fmt,
+                          const struct tm *restrict t, const char *locale) {
   const struct lc_time_T *time_locale = time_locale_get();
   size_t left = maxsize;
   const int year = prv_full_year(t->tm_year);
   const int hour_12h = (t->tm_hour % 12 == 0) ? 12 : (t->tm_hour % 12);
   // Only use i18n if we're in the kernel, or the app locale is the system locale.
-  const bool use_i18n = !locale ||
-                        (strncmp(locale, app_get_system_locale(), ISO_LOCALE_LENGTH) == 0);
+  const bool use_i18n =
+      !locale || (strncmp(locale, app_get_system_locale(), ISO_LOCALE_LENGTH) == 0);
 
   while (left) {
     // Copy up to the next '%'
@@ -169,32 +168,37 @@ size_t localized_strftime(char * restrict dest_str, size_t maxsize, const char *
     }
 
 // Helper macros to make goto stuff look cleaner
-#define FMT_STRCOPY(V) do { \
-  i18nstr = NULL; \
-  cpystr = V; \
-  goto _fmt_strcopy; \
-} while (0)
-#define FMT_STRCOPY_I18N(V) do { \
-  i18nstr = V; \
-  goto _fmt_strcopy; \
-} while (0)
+#define FMT_STRCOPY(V) \
+  do {                 \
+    i18nstr = NULL;    \
+    cpystr = V;        \
+    goto _fmt_strcopy; \
+  } while (0)
+#define FMT_STRCOPY_I18N(V) \
+  do {                      \
+    i18nstr = V;            \
+    goto _fmt_strcopy;      \
+  } while (0)
 
-#define FMT_INTCOPY(V, L, F) do { \
-  cpyint_val = V; \
-  cpyint_len = L; \
-  cpyint_flag = F; \
-  goto _fmt_intcopy; \
-} while (0)
+#define FMT_INTCOPY(V, L, F) \
+  do {                       \
+    cpyint_val = V;          \
+    cpyint_len = L;          \
+    cpyint_flag = F;         \
+    goto _fmt_intcopy;       \
+  } while (0)
 
-#define FMT_RECURSE(FMT) do { \
-  i18nstr = NULL; \
-  cpystr = FMT; \
-  goto _fmt_recurse; \
-} while (0)
-#define FMT_RECURSE_I18N(FMT) do { \
-  i18nstr = FMT; \
-  goto _fmt_recurse; \
-} while (0)
+#define FMT_RECURSE(FMT) \
+  do {                   \
+    i18nstr = NULL;      \
+    cpystr = FMT;        \
+    goto _fmt_recurse;   \
+  } while (0)
+#define FMT_RECURSE_I18N(FMT) \
+  do {                        \
+    i18nstr = FMT;            \
+    goto _fmt_recurse;        \
+  } while (0)
 
     // Terrible local state for goto hell
     const char *cpystr = NULL;
@@ -206,7 +210,7 @@ size_t localized_strftime(char * restrict dest_str, size_t maxsize, const char *
     switch (*fmt) {
       case 'a':
         FMT_STRCOPY_I18N(time_locale->wday[t->tm_wday % DAYS_PER_WEEK]);
-_fmt_strcopy:
+      _fmt_strcopy:
         // old strftime doesn't use 'width' for strings
         if (!use_i18n && i18nstr) {
           cpystr = i18nstr;
@@ -240,7 +244,7 @@ _fmt_strcopy:
         break;
       case 'c':
         FMT_RECURSE_I18N(time_locale->c_fmt);
-_fmt_recurse:
+      _fmt_recurse:
         if (!use_i18n && i18nstr) {
           cpystr = i18nstr;
           i18nstr = NULL;
@@ -260,24 +264,22 @@ _fmt_recurse:
         break;
       case 'C': // SU
         FMT_INTCOPY(year / 100, 2, INTFMT_PADZERO);
-_fmt_intcopy:
-        {
-          const char *intfmt;
-          if (pad != '\0' || cpyint_flag == INTFMT_PADZERO) {
-            intfmt = "%0*d";
-          } else {
-            intfmt = "%*d";
-          }
-          width = MAX(width, cpyint_len);
-          length = snprintf(NULL, 0, intfmt, width, cpyint_val);
-          if (left <= length) {
-            goto _out_of_size;
-          }
-          sprintf(dest_str, intfmt, width, cpyint_val);
-          dest_str += length;
-          left -= length;
+      _fmt_intcopy: {
+        const char *intfmt;
+        if (pad != '\0' || cpyint_flag == INTFMT_PADZERO) {
+          intfmt = "%0*d";
+        } else {
+          intfmt = "%*d";
         }
-        break;
+        width = MAX(width, cpyint_len);
+        length = snprintf(NULL, 0, intfmt, width, cpyint_val);
+        if (left <= length) {
+          goto _out_of_size;
+        }
+        sprintf(dest_str, intfmt, width, cpyint_val);
+        dest_str += length;
+        left -= length;
+      } break;
       case 'd':
         FMT_INTCOPY(t->tm_mday, 2, INTFMT_PADZERO);
         break;
@@ -303,7 +305,7 @@ _fmt_intcopy:
         FMT_INTCOPY(hour_12h, 2, INTFMT_PADZERO);
         break;
       case 'j':
-        FMT_INTCOPY(t->tm_yday+1, 3, INTFMT_PADZERO);
+        FMT_INTCOPY(t->tm_yday + 1, 3, INTFMT_PADZERO);
         break;
       case 'k': // TZ
         FMT_INTCOPY(t->tm_hour, 2, INTFMT_PADSPACE);
@@ -397,12 +399,12 @@ _fmt_intcopy:
       // Copy stuff
       case '%':
         *dest_str++ = '%';
-_fmt_chcopy:
+      _fmt_chcopy:
         left--;
         break;
       case 's': // TZ // Old implementation didn't have it, skip it for code size.
       case '+': // TZ // Old implementation didn't have it, skip it for code size.
-      default: // Old implementation just ignores invalid specifiers
+      default:  // Old implementation just ignores invalid specifiers
         break;
     }
     fmt++;
@@ -419,7 +421,7 @@ _out_of_size:
   return 0;
 }
 
-size_t strftime(char * restrict s, size_t maxsize, const char* format, const struct tm* tim_p) {
+size_t strftime(char *restrict s, size_t maxsize, const char *format, const struct tm *tim_p) {
   // Pass a NULL locale because firmware strftime is always localized
   return localized_strftime(s, maxsize, format, tim_p, NULL);
 }

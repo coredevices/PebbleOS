@@ -7,7 +7,7 @@
 
 //! Returns true on success, false on failure
 bool bt_driver_start_le_scan(bool active_scan, bool use_white_list_filter, bool filter_dups,
-                         uint16_t scan_interval_ms, uint16_t scan_window_ms);
+                             uint16_t scan_interval_ms, uint16_t scan_window_ms);
 
 //! Returns true on success, false on failure
 bool bt_driver_stop_le_scan(void);

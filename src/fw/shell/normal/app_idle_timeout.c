@@ -10,7 +10,6 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-
 TimerID s_timer;
 bool s_app_paused = false;
 bool s_app_started = false;
@@ -21,7 +20,7 @@ bool s_touch_held = false;
 #ifndef CONFIG_NO_WATCH_TIMEOUT
 static const int WATCHFACE_TIMEOUT_MS = 30000;
 
-static void prv_kernel_callback_watchface_launch(void* data) {
+static void prv_kernel_callback_watchface_launch(void *data) {
   watchface_launch_default(shell_get_watchface_compositor_animation(true /* watchface_is_dest */));
 }
 
@@ -36,8 +35,8 @@ static void prv_start_timer(bool create) {
   }
 
   if (s_timer != TIMER_INVALID_ID && !s_app_paused && !s_touch_held && s_app_started) {
-    bool success = new_timer_start(s_timer, WATCHFACE_TIMEOUT_MS, prv_timeout_expired,
-        NULL, 0 /* flags */);
+    bool success =
+        new_timer_start(s_timer, WATCHFACE_TIMEOUT_MS, prv_timeout_expired, NULL, 0 /* flags */);
     PBL_ASSERTN(success);
   }
 }

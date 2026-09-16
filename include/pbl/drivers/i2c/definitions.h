@@ -66,10 +66,10 @@ struct I2CBus {
   I2CBusState *const state;
   const struct I2CBusHal *const hal;
 #ifdef CONFIG_SOC_NRF52
-  AfConfig scl_gpio;  ///< Alternate Function configuration for SCL pin
-  AfConfig sda_gpio;  ///< Alternate Function configuration for SDA pin
+  AfConfig scl_gpio; ///< Alternate Function configuration for SCL pin
+  AfConfig sda_gpio; ///< Alternate Function configuration for SDA pin
 #endif
-  const char *name;  //! Device ID for logging purposes
+  const char *name; //! Device ID for logging purposes
 };
 
 struct I2CSlavePort {

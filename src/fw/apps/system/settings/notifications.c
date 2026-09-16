@@ -88,23 +88,17 @@ static void prv_filter_menu_push(SettingsNotificationsData *data) {
   };
   /// The option in the Settings app for filtering notifications by type.
   const char *title = i18n_noop("Filter");
-  settings_option_menu_push(
-      title, OptionMenuContentType_DoubleLine, index, &callbacks, cycle_len,
-      true /* icons_enabled */, s_alert_mode_labels, data);
+  settings_option_menu_push(title, OptionMenuContentType_DoubleLine, index, &callbacks, cycle_len,
+                            true /* icons_enabled */, s_alert_mode_labels, data);
 }
 
 // Window Timeout
 ////////////////////////
 
 // NOTE: Keep the following two arrays in sync and with the same size.
-static const uint32_t s_window_timeouts_ms[] = {
-  15 * MS_PER_SECOND,
-  30 * MS_PER_SECOND,
-  1  * MS_PER_MINUTE,
-  NOTIF_WINDOW_TIMEOUT_DEFAULT,
-  10 * MS_PER_MINUTE,
-  NOTIF_WINDOW_TIMEOUT_INFINITE
-};
+static const uint32_t s_window_timeouts_ms[] = {15 * MS_PER_SECOND, 30 * MS_PER_SECOND,
+                                                1 * MS_PER_MINUTE,  NOTIF_WINDOW_TIMEOUT_DEFAULT,
+                                                10 * MS_PER_MINUTE, NOTIF_WINDOW_TIMEOUT_INFINITE};
 
 static const char *s_window_timeouts_labels[] = {
   /// 15 Second Notification Window Timeout
@@ -151,10 +145,9 @@ static void prv_window_timeout_menu_push(SettingsNotificationsData *data) {
   };
   /// Status bar title for the Notification Window Timeout settings screen
   const char *title = i18n_noop("Timeout");
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_window_timeouts_labels), true /* icons_enabled */, s_window_timeouts_labels,
-      data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_window_timeouts_labels), true /* icons_enabled */,
+                            s_window_timeouts_labels, data);
 }
 
 // Design Style
@@ -184,10 +177,9 @@ static void prv_design_style_menu_push(SettingsNotificationsData *data) {
   };
   /// Status bar title for the Notification Design Style settings screen
   const char *title = i18n_noop("Banner Style");
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_design_style_labels), true /* icons_enabled */, s_design_style_labels,
-      data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_design_style_labels), true /* icons_enabled */,
+                            s_design_style_labels, data);
 }
 #endif /* PBL_BW */
 
@@ -217,26 +209,24 @@ static void prv_vibe_delay_menu_push(SettingsNotificationsData *data) {
   };
   /// Status bar title for the Notification Vibe Timing settings screen
   const char *title = i18n_noop("Vibe Timing");
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_vibe_delay_labels), true /* icons_enabled */, s_vibe_delay_labels,
-      data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_vibe_delay_labels), true /* icons_enabled */,
+                            s_vibe_delay_labels, data);
 }
 
 // Status Bar Style
 ////////////////////////
 
 static const char *s_status_bar_style_labels[] = {
-  [NotificationStatusBarStyle_Default]   = i18n_ctx_noop("StatusBar", "Default"),
-  [NotificationStatusBarStyle_Bold]      = i18n_noop("Bold"),
+  [NotificationStatusBarStyle_Default] = i18n_ctx_noop("StatusBar", "Default"),
+  [NotificationStatusBarStyle_Bold] = i18n_noop("Bold"),
   [NotificationStatusBarStyle_LargeBold] = i18n_noop("Big & Bold"),
 };
 
 _Static_assert(ARRAY_LENGTH(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");
 
 static int prv_status_bar_style_get_selection_index(void) {
-  const NotificationStatusBarStyle style =
-      alerts_preferences_get_notification_status_bar_style();
+  const NotificationStatusBarStyle style = alerts_preferences_get_notification_status_bar_style();
   return (style < NotificationStatusBarStyleCount) ? (int)style : 0;
 }
 
@@ -253,10 +243,9 @@ static void prv_status_bar_style_menu_push(SettingsNotificationsData *data) {
   };
   /// Status bar title for the Notification Status Bar Style settings screen
   const char *title = i18n_noop("Clock Style");
-  settings_option_menu_push(
-      title, OptionMenuContentType_SingleLine, index, &callbacks,
-      ARRAY_LENGTH(s_status_bar_style_labels), true /* icons_enabled */,
-      s_status_bar_style_labels, data);
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
+                            ARRAY_LENGTH(s_status_bar_style_labels), true /* icons_enabled */,
+                            s_status_bar_style_labels, data);
 }
 
 // Menu Layer Callbacks
@@ -266,8 +255,8 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
   return NotificationsItem_Count;
 }
 
-static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
-                            const Layer *cell_layer, uint16_t row, bool selected) {
+static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
+                            uint16_t row, bool selected) {
   SettingsNotificationsData *data = ((SettingsOptionMenuData *)context)->context;
   const char *subtitle = NULL;
   const char *title = NULL;
@@ -283,14 +272,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_window_timeouts_labels[prv_window_timeout_get_selection_index()];
       break;
     }
-  #if PBL_BW
+#if PBL_BW
     case NotificationsItemDesignStyle: {
       /// String within Settings->Notifications that describes the notification design style
       title = i18n_noop("Banner Style");
       subtitle = s_design_style_labels[prv_design_style_get_selection_index()];
       break;
     }
-  #endif /* PBL_BW */
+#endif /* PBL_BW */
     case NotificationsItemVibeDelay: {
       /// String within Settings->Notifications that describes when vibration happens
       title = i18n_noop("Vibe Timing");
@@ -300,8 +289,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case NotificationsItemBacklight: {
       /// String within Settings->Notifications that describes backlight setting
       title = i18n_noop("Backlight");
-      subtitle = alerts_preferences_get_notification_backlight() ?
-                 i18n_noop("On") : i18n_noop("Off");
+      subtitle =
+          alerts_preferences_get_notification_backlight() ? i18n_noop("On") : i18n_noop("Off");
       break;
     }
     case NotificationsItemStatusBarStyle: {
@@ -324,7 +313,7 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  SettingsNotificationsData *data = (SettingsNotificationsData *) context;
+  SettingsNotificationsData *data = (SettingsNotificationsData *)context;
 
   switch (row) {
     case NotificationsItemFilter:
@@ -367,27 +356,26 @@ static void prv_settings_notifications_event_handler(PebbleEvent *event, void *c
 }
 
 static void prv_expand_cb(SettingsCallbacks *context) {
-  SettingsNotificationsData *data = (SettingsNotificationsData *) context;
+  SettingsNotificationsData *data = (SettingsNotificationsData *)context;
 
-  data->battery_connection_event_info = (EventServiceInfo) {
+  data->battery_connection_event_info = (EventServiceInfo){
     .type = PEBBLE_BATTERY_CONNECTION_EVENT,
     .handler = prv_settings_notifications_event_handler,
   };
   event_service_client_subscribe(&data->battery_connection_event_info);
-
 }
 
 static void prv_hide_cb(SettingsCallbacks *context) {
-  SettingsNotificationsData *data = (SettingsNotificationsData *) context;
+  SettingsNotificationsData *data = (SettingsNotificationsData *)context;
 
   event_service_client_unsubscribe(&data->battery_connection_event_info);
 }
 
 static Window *prv_init(void) {
-  SettingsNotificationsData* data = app_malloc_check(sizeof(*data));
+  SettingsNotificationsData *data = app_malloc_check(sizeof(*data));
   *data = (SettingsNotificationsData){};
 
-  data->callbacks = (SettingsCallbacks) {
+  data->callbacks = (SettingsCallbacks){
     .deinit = prv_deinit_cb,
     .draw_row = prv_draw_row_cb,
     .select_click = prv_select_click_cb,

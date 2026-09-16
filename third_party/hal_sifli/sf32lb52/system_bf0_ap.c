@@ -18,7 +18,8 @@ extern uint8_t __ramfunc_end[];
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __FLASH_size__[];
 
-void SystemCoreClockUpdate(void) {}
+void SystemCoreClockUpdate(void) {
+}
 
 enum {
   ATTR_CODE_IDX,
@@ -26,8 +27,8 @@ enum {
   ATTR_DEVICE_IDX,
 };
 
-#define ATTR_CODE ARM_MPU_ATTR(ARM_MPU_ATTR_MEMORY_(0, 0, 1, 0), ARM_MPU_ATTR_MEMORY_(0, 0, 1, 0))
-#define ATTR_RAM ARM_MPU_ATTR(ARM_MPU_ATTR_NON_CACHEABLE, ARM_MPU_ATTR_NON_CACHEABLE)
+#define ATTR_CODE   ARM_MPU_ATTR(ARM_MPU_ATTR_MEMORY_(0, 0, 1, 0), ARM_MPU_ATTR_MEMORY_(0, 0, 1, 0))
+#define ATTR_RAM    ARM_MPU_ATTR(ARM_MPU_ATTR_NON_CACHEABLE, ARM_MPU_ATTR_NON_CACHEABLE)
 #define ATTR_DEVICE ARM_MPU_ATTR(ARM_MPU_ATTR_DEVICE, ARM_MPU_ATTR_DEVICE_nGnRnE)
 
 // FIXME(SF32LB52): ARMv8 MPU support is not complete, so for now, configure
@@ -112,7 +113,9 @@ int mpu_icache_invalidate(void *data, uint32_t size) {
   return r;
 }
 
-pm_power_on_mode_t SystemPowerOnModeGet(void) { return PM_COLD_BOOT; }
+pm_power_on_mode_t SystemPowerOnModeGet(void) {
+  return PM_COLD_BOOT;
+}
 
 void SystemInit(void) {
 #if defined(__VTOR_PRESENT) && (__VTOR_PRESENT == 1U)

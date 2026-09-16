@@ -7,21 +7,21 @@
 //! @internal
 //! Draws a quadrant of a circle based on what is set in the context for stroke width and
 //! antialiasing.
-void graphics_circle_quadrant_draw(GContext* ctx, GPoint p, uint16_t radius, GCornerMask quadrant);
+void graphics_circle_quadrant_draw(GContext *ctx, GPoint p, uint16_t radius, GCornerMask quadrant);
 
 //! @internal
 //! Fills an antialiased circle in quadrants
-MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext* ctx, GPoint p,
-                                                        uint16_t radius, GCornerMask quadrant);
+MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                        GCornerMask quadrant);
 
 //! @internal
 //! Fills a non-antialiased circle in quadrants
-void graphics_circle_quadrant_fill_non_aa(GContext* ctx, GPoint p,
-                                          uint16_t radius, GCornerMask quadrant);
+void graphics_circle_quadrant_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                          GCornerMask quadrant);
 
 //! @internal
 //! Fills a non-antialiased circle
-MOCKABLE void graphics_circle_fill_non_aa(GContext* ctx, GPoint p, uint16_t radius);
+MOCKABLE void graphics_circle_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius);
 
 //! @internal
 //! Draws an arc with fixed-point precision
@@ -44,13 +44,13 @@ void graphics_fill_radial_precise_internal(GContext *ctx, GPointPrecise center,
 //! @param ctx The destination graphics context in which to draw
 //! @param p The center point of the circle
 //! @param radius The radius in pixels
-void graphics_draw_circle(GContext* ctx, GPoint p, uint16_t radius);
+void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius);
 
 //! Fills a circle in the current fill color
 //! @param ctx The destination graphics context in which to draw
 //! @param p The center point of the circle
 //! @param radius The radius in pixels
-void graphics_fill_circle(GContext* ctx, GPoint p, uint16_t radius);
+void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius);
 
 //! Values to specify how a given rectangle should be used to derive an oval shape.
 //! @see \ref graphics_fill_radial_internal
@@ -77,8 +77,8 @@ typedef enum {
 //! @param angle_start Radial starting angle. Use \ref DEG_TO_TRIGANGLE to easily convert degrees
 //! to the appropriate value.
 //! @param angle_end Radial finishing angle. If smaller than `angle_start`, nothing will be drawn.
-void graphics_draw_arc(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
-                       int32_t angle_start, int32_t angle_end);
+void graphics_draw_arc(GContext *ctx, GRect rect, GOvalScaleMode scale_mode, int32_t angle_start,
+                       int32_t angle_end);
 
 //! @internal
 void graphics_draw_arc_internal(GContext *ctx, GPoint center, uint16_t radius, int32_t angle_start,
@@ -101,8 +101,7 @@ void graphics_draw_arc_internal(GContext *ctx, GPoint center, uint16_t radius, i
 //! to the appropriate value.
 //! @param angle_end Radial finishing angle. If smaller than `angle_start`, nothing will be drawn.
 void graphics_fill_radial(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
-                          uint16_t inset_thickness,
-                          int32_t angle_start, int32_t angle_end);
+                          uint16_t inset_thickness, int32_t angle_start, int32_t angle_end);
 
 //! @internal
 void graphics_fill_radial_internal(GContext *ctx, GPoint center, uint16_t radius_inner,

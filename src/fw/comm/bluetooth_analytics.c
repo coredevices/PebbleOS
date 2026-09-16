@@ -19,7 +19,7 @@ typedef struct {
   int num_samps;
 } LeConnectionParams;
 
-static LeConnectionParams s_le_conn_params = { 0 };
+static LeConnectionParams s_le_conn_params = {0};
 
 void bluetooth_analytics_get_param_averages(uint16_t *params) {
   int num_samps = s_le_conn_params.num_samps;
@@ -31,8 +31,7 @@ void bluetooth_analytics_get_param_averages(uint16_t *params) {
   s_le_conn_params = (LeConnectionParams){};
 }
 
-static void prv_update_conn_params(uint16_t slave_latency_events,
-                                   uint16_t supervision_to_10ms) {
+static void prv_update_conn_params(uint16_t slave_latency_events, uint16_t supervision_to_10ms) {
   bt_lock();
   s_le_conn_params.slave_latency_events += slave_latency_events;
   s_le_conn_params.supervision_to_ms += (supervision_to_10ms * 10);
@@ -65,19 +64,19 @@ void bluetooth_analytics_handle_connection_disconnection_event(
   // Per-reason counters — see nimble/ble.h ble_error_codes. The NimBLE BLE_HS_HCI_ERR
   // (0x200) prefix is dropped by the uint8_t narrowing, so the raw HCI status remains.
   switch (reason) {
-    case 0x08:  // BLE_ERR_CONN_SPVN_TMO
+    case 0x08: // BLE_ERR_CONN_SPVN_TMO
       PBL_ANALYTICS_ADD(ble_disconnect_conn_spvn_tmo_count, 1);
       break;
-    case 0x13:  // BLE_ERR_REM_USER_CONN_TERM
+    case 0x13: // BLE_ERR_REM_USER_CONN_TERM
       PBL_ANALYTICS_ADD(ble_disconnect_rem_user_term_count, 1);
       break;
-    case 0x16:  // BLE_ERR_CONN_TERM_LOCAL
+    case 0x16: // BLE_ERR_CONN_TERM_LOCAL
       PBL_ANALYTICS_ADD(ble_disconnect_conn_term_local_count, 1);
       break;
-    case 0x22:  // BLE_ERR_LMP_LL_RSP_TMO
+    case 0x22: // BLE_ERR_LMP_LL_RSP_TMO
       PBL_ANALYTICS_ADD(ble_disconnect_lmp_ll_rsp_tmo_count, 1);
       break;
-    case 0x3e:  // BLE_ERR_CONN_ESTABLISHMENT
+    case 0x3e: // BLE_ERR_CONN_ESTABLISHMENT
       PBL_ANALYTICS_ADD(ble_disconnect_conn_establishment_count, 1);
       break;
     default:
@@ -99,8 +98,8 @@ void bluetooth_analytics_handle_connection_disconnection_event(
   num_events_logged++;
 }
 
-void bluetooth_analytics_handle_connect(
-    const BTDeviceInternal *peer_addr, const BleConnectionParams *conn_params) {
+void bluetooth_analytics_handle_connect(const BTDeviceInternal *peer_addr,
+                                        const BleConnectionParams *conn_params) {
   bluetooth_analytics_handle_connection_params_update(conn_params);
 }
 
@@ -122,7 +121,7 @@ void bluetooth_analytics_handle_ble_pairing_error(uint32_t error) {
 }
 
 static bool prv_calc_stats_and_print(const SlaveConnEventStats *orig_stats,
-                                           SlaveConnEventStats *stats_buf, bool is_putbytes) {
+                                     SlaveConnEventStats *stats_buf, bool is_putbytes) {
   return false;
 }
 
@@ -131,7 +130,6 @@ void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, u
                                                 const SlaveConnEventStats *orig_stats) {
   SlaveConnEventStats new_stats = {};
   prv_calc_stats_and_print(orig_stats, &new_stats, true /* is_putbytes */);
-
 }
 
 void bluetooth_analytics_handle_get_bytes_stats(uint8_t type, uint32_t total_size,
@@ -139,5 +137,4 @@ void bluetooth_analytics_handle_get_bytes_stats(uint8_t type, uint32_t total_siz
                                                 const SlaveConnEventStats *orig_stats) {
   SlaveConnEventStats new_stats = {};
   prv_calc_stats_and_print(orig_stats, &new_stats, false /* is_putbytes */);
-
 }

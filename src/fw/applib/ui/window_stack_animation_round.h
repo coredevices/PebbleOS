@@ -13,6 +13,6 @@ typedef struct {
 } WindowTransitionRoundImplementation;
 
 extern const WindowTransitionRoundImplementation
-  g_window_transition_default_push_implementation_round;
+    g_window_transition_default_push_implementation_round;
 extern const WindowTransitionRoundImplementation
-  g_window_transition_default_pop_implementation_round;
+    g_window_transition_default_pop_implementation_round;

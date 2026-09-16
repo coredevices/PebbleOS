@@ -13,7 +13,7 @@
 #pragma GCC diagnostic ignored "-Wformat-truncation"
 
 static const int MIN_SELECTABLE_YEAR = 2010;
-static const int MAX_SELECTABLE_YEAR = 2037;  // Work around Y2038 problem
+static const int MAX_SELECTABLE_YEAR = 2037; // Work around Y2038 problem
 
 static int prv_wrap(int x, int max, int delta) {
   x = (x + delta) % max;
@@ -52,7 +52,7 @@ int date_time_selection_truncate_date(int year, int month, int day) {
 int date_time_selection_step_year(int year, int delta) {
   year += delta;
   return CLIP(year, MIN_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET,
-      MAX_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET);
+              MAX_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET);
 }
 
 char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *buf) {

@@ -19,4 +19,3 @@ char *pbl_setlocale(int category, const char *locale);
 struct _reent;
 
 struct lconv *pbl_localeconv_r(struct _reent *data);
-

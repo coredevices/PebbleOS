@@ -7,17 +7,15 @@
 
 #include "applib/ui/kino/kino_reel.h"
 
-#define UNFOLD_DEFAULT_POINT_DURATION \
-  Fixed_S32_16(FIXED_S32_16_ONE.raw_value / 6)
+#define UNFOLD_DEFAULT_POINT_DURATION Fixed_S32_16(FIXED_S32_16_ONE.raw_value / 6)
 
-#define UNFOLD_DEFAULT_EFFECT_DURATION \
-  Fixed_S32_16(3 * FIXED_S32_16_ONE.raw_value / 4)
+#define UNFOLD_DEFAULT_EFFECT_DURATION Fixed_S32_16(3 * FIXED_S32_16_ONE.raw_value / 4)
 
 #define UNFOLD_DEFAULT_NUM_DELAY_GROUPS 3
-#define UNFOLD_DEFAULT_GROUP_DELAY Fixed_S32_16(FIXED_S32_16_ONE.raw_value * 3 / 2)
+#define UNFOLD_DEFAULT_GROUP_DELAY      Fixed_S32_16(FIXED_S32_16_ONE.raw_value * 3 / 2)
 
 #define UNFOLD_DOT_SIZE_PX SCALE_SEGMENTED_DOT_SIZE_PX
-#define UNFOLD_DOT_SIZE SCALE_SEGMENTED_DOT_SIZE
+#define UNFOLD_DOT_SIZE    SCALE_SEGMENTED_DOT_SIZE
 
 //! A KinoReel that can perform a one-stage or two-stage unfold with or
 //! without a deflation and bounce back effect. The effects can be simultaneous or independent and

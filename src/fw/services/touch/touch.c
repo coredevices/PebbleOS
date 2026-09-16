@@ -79,11 +79,8 @@ static void prv_remove_subscriber_cb(PebbleTask task) {
 }
 
 void touch_init(void) {
-
-  event_service_init(PEBBLE_TOUCH_EVENT, &prv_add_subscriber_cb,
-      &prv_remove_subscriber_cb);
-  event_service_init(PEBBLE_GESTURE_EVENT, &prv_add_subscriber_cb,
-      &prv_remove_subscriber_cb);
+  event_service_init(PEBBLE_TOUCH_EVENT, &prv_add_subscriber_cb, &prv_remove_subscriber_cb);
+  event_service_init(PEBBLE_GESTURE_EVENT, &prv_add_subscriber_cb, &prv_remove_subscriber_cb);
 }
 
 bool touch_nav_enabled(void) {

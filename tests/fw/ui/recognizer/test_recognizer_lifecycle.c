@@ -50,7 +50,8 @@ GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   return state;
 }
 
-void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
 
 static RecognizerManager s_manager;
 static RecognizerManager s_modal_manager;
@@ -69,7 +70,8 @@ void test_recognizer_lifecycle__initialize(void) {
   recognizer_manager_init(&s_manager);
 }
 
-void test_recognizer_lifecycle__cleanup(void) {}
+void test_recognizer_lifecycle__cleanup(void) {
+}
 
 // window_get_recognizer_manager routing
 ////////////////////////////////////////

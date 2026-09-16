@@ -26,10 +26,9 @@
 // The test data and descriptions in this file are captured using the FrontLine
 // Bluetooth sniffer.
 
-static const size_t s_buffer_size = sizeof(BLEAdData) +
-                                    (2 * GAP_LE_AD_REPORT_DATA_MAX_LENGTH);
+static const size_t s_buffer_size = sizeof(BLEAdData) + (2 * GAP_LE_AD_REPORT_DATA_MAX_LENGTH);
 static uint8_t s_buffer[s_buffer_size];
-static BLEAdData * const s_ad_data = (BLEAdData *)s_buffer;
+static BLEAdData *const s_ad_data = (BLEAdData *)s_buffer;
 
 static void set_ad_data(uint8_t *data, size_t length) {
   memcpy(s_ad_data->data, data, length);
@@ -48,8 +47,7 @@ void test_ble_ad_parse__16_bit_uuid_and_device_name(void) {
   // AD Element, Length: 2, AD Type: Flags (0x1a)
   // AD Element, Length: 3, AD Type: Complete list of 16-bit UUID, [0x7b29]
   // AD Element, Length: 10, AD Type: Complete local name, Text: LightBlue
-  uint8_t data[] =
-    "\x02\x01\x1a\x03\x03\x29\x7b\x0a\x09\x4c\x69\x67\x68\x74\x42\x6c\x75\x65";
+  uint8_t data[] = "\x02\x01\x1a\x03\x03\x29\x7b\x0a\x09\x4c\x69\x67\x68\x74\x42\x6c\x75\x65";
   set_ad_data(data, sizeof(data));
 
   // Test ble_ad_get_raw_data_size:
@@ -99,13 +97,14 @@ void test_ble_ad_parse__128_bit_uuid(void) {
   // Value: 0x68753a444d6f12269c600050e4c00067
 
   uint8_t data[GAP_LE_AD_REPORT_DATA_MAX_LENGTH] =
-    "\x02\x01\x1a\x11\x06\x67\x00\xc0\xe4\x50\x00\x60\x9c\x26\x12\x6f\x4d\x44" \
-    "\x3a\x75\x68";
+      "\x02\x01\x1a\x11\x06\x67\x00\xc0\xe4\x50\x00\x60\x9c\x26\x12\x6f\x4d\x44"
+      "\x3a\x75\x68";
   set_ad_data(data, sizeof(data));
 
   // Test ble_ad_includes_service:
-  uint8_t uuid_bytes[] = "\x68\x75\x3a\x44\x4d\x6f\x12\x26\x9c\x60\x00\x50" \
-  "\xe4\xc0\x00\x67";
+  uint8_t uuid_bytes[] =
+      "\x68\x75\x3a\x44\x4d\x6f\x12\x26\x9c\x60\x00\x50"
+      "\xe4\xc0\x00\x67";
   Uuid included_uuid = UuidMakeFromBEBytes(uuid_bytes);
   cl_assert(ble_ad_includes_service(s_ad_data, &included_uuid));
   Uuid missing_uuid = bt_uuid_expand_16bit(0xabcd);
@@ -126,7 +125,17 @@ void test_ble_ad_parse__start_scan_response(void) {
   uint8_t expected_scan_resp_data[] = {
     1 /* +1 for Type byte */ + strlen("Pebble 1234"),
     0x09, // Local Name, Complete
-    'P', 'e', 'b', 'b', 'l', 'e', ' ', '1', '2', '3', '4'
+    'P',
+    'e',
+    'b',
+    'b',
+    'l',
+    'e',
+    ' ',
+    '1',
+    '2',
+    '3',
+    '4'
   };
 
   // Should fit fine, expect true:
@@ -136,9 +145,8 @@ void test_ble_ad_parse__start_scan_response(void) {
   // Expect scan response data:
   cl_assert_equal_i(ad->scan_resp_data_length, sizeof(expected_scan_resp_data));
   // Compare scan response data:
-  cl_assert_equal_i(memcmp(expected_scan_resp_data,
-                           ad->data + ad->ad_data_length,
-                           ad->scan_resp_data_length), 0);
+  cl_assert_equal_i(
+      memcmp(expected_scan_resp_data, ad->data + ad->ad_data_length, ad->scan_resp_data_length), 0);
 
   ble_ad_destroy(ad);
 }
@@ -146,8 +154,9 @@ void test_ble_ad_parse__start_scan_response(void) {
 void test_ble_ad_parse__set_service_uuids_128_bit(void) {
   BLEAdData *ad = ble_ad_create();
 
-  uint8_t uuid_bytes[] = "\x97\x6e\xbb\x18\xd3\xe9\x43\xc0\x8a\x63\x8d\x2b" \
-  "\x60\xd9\x04\x2a";
+  uint8_t uuid_bytes[] =
+      "\x97\x6e\xbb\x18\xd3\xe9\x43\xc0\x8a\x63\x8d\x2b"
+      "\x60\xd9\x04\x2a";
   Uuid uuid[2];
   uuid[0] = UuidMakeFromBEBytes(uuid_bytes);
   uuid[1] = UuidMakeFromLEBytes(uuid_bytes); // just reversed, laziness
@@ -165,8 +174,7 @@ void test_ble_ad_parse__set_service_uuids_128_bit(void) {
   // One should fit though:
   cl_assert_equal_b(ble_ad_set_service_uuids(ad, uuid, 1), true);
 
-  cl_assert_equal_i(memcmp(expected_ad_data, ad->data,
-                           sizeof(expected_ad_data)), 0);
+  cl_assert_equal_i(memcmp(expected_ad_data, ad->data, sizeof(expected_ad_data)), 0);
   cl_assert_equal_i(ad->ad_data_length, sizeof(expected_ad_data));
   cl_assert_equal_i(ad->scan_resp_data_length, 0);
 
@@ -185,15 +193,20 @@ void test_ble_ad_parse__set_service_uuids_32_bit(void) {
   uint8_t expected_ad_data[] = {
     (2 * sizeof(uint32_t)) + 1 /* +1 for Type byte */,
     0x05, // Service UUIDs, 32-bit, Complete
-    0x00, 0x67, 0x34, 0x12, // Little endian
-    0x01, 0x67, 0x34, 0x12,
+    0x00,
+    0x67,
+    0x34,
+    0x12, // Little endian
+    0x01,
+    0x67,
+    0x34,
+    0x12,
   };
 
   // 2x 32-bit UUIDs should fit fine, expect true:
   ad = ble_ad_create();
   cl_assert_equal_b(ble_ad_set_service_uuids(ad, uuid, 2), true);
-  cl_assert_equal_i(memcmp(expected_ad_data, ad->data,
-                           sizeof(expected_ad_data)), 0);
+  cl_assert_equal_i(memcmp(expected_ad_data, ad->data, sizeof(expected_ad_data)), 0);
   cl_assert_equal_i(ad->ad_data_length, sizeof(expected_ad_data));
   cl_assert_equal_i(ad->scan_resp_data_length, 0);
   ble_ad_destroy(ad);
@@ -221,15 +234,16 @@ void test_ble_ad_parse__set_service_uuids_16_bit(void) {
   uint8_t expected_ad_data[] = {
     (2 * sizeof(uint16_t)) + 1 /* +1 for Type byte */,
     0x03, // Service UUIDs, 16-bit, Complete
-    0x00, 0x18, // Little endian
-    0x01, 0x18,
+    0x00,
+    0x18, // Little endian
+    0x01,
+    0x18,
   };
 
   // 2x 16-bit UUIDs should fit fine, expect true:
   ad = ble_ad_create();
   cl_assert_equal_b(ble_ad_set_service_uuids(ad, uuid, 2), true);
-  cl_assert_equal_i(memcmp(expected_ad_data, ad->data,
-                           sizeof(expected_ad_data)), 0);
+  cl_assert_equal_i(memcmp(expected_ad_data, ad->data, sizeof(expected_ad_data)), 0);
   cl_assert_equal_i(ad->ad_data_length, sizeof(expected_ad_data));
   cl_assert_equal_i(ad->scan_resp_data_length, 0);
   ble_ad_destroy(ad);
@@ -252,7 +266,17 @@ void test_ble_ad_parse__set_local_name(void) {
   uint8_t expected_ad_data[] = {
     1 /* +1 for Type byte */ + strlen("Pebble 1234"),
     0x09, // Local Name, Complete
-    'P', 'e', 'b', 'b', 'l', 'e', ' ', '1', '2', '3', '4'
+    'P',
+    'e',
+    'b',
+    'b',
+    'l',
+    'e',
+    ' ',
+    '1',
+    '2',
+    '3',
+    '4'
   };
 
   // Should fit fine, expect true:
@@ -286,15 +310,24 @@ void test_ble_ad_parse__set_manufacturer_specific_data(void) {
   uint8_t expected_ad_data[] = {
     1 /* +1 for Type byte */ + 13 /* Company ID + data */,
     0xff, // Manufacturer Specific data
-    0x34, 0x12,
-    'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd',
+    0x34,
+    0x12,
+    'h',
+    'e',
+    'l',
+    'l',
+    'o',
+    ' ',
+    'w',
+    'o',
+    'r',
+    'l',
+    'd',
   };
 
   // Should fit fine, expect true:
-  cl_assert_equal_b(ble_ad_set_manufacturer_specific_data(ad,
-                                                      0x1234,
-                                                      (uint8_t *) "hello world",
-                                                      11), true);
+  cl_assert_equal_b(ble_ad_set_manufacturer_specific_data(ad, 0x1234, (uint8_t *)"hello world", 11),
+                    true);
   cl_assert_equal_i(memcmp(expected_ad_data, ad->data, ad->ad_data_length), 0);
 
   ble_ad_destroy(ad);

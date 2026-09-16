@@ -17,22 +17,22 @@
 
 #define GDRAW_COMMAND_VERSION (1)
 
-#define PDCS_SIGNATURE MAKE_WORD('P', 'D', 'C', 'S')
+#define PDCS_SIGNATURE   MAKE_WORD('P', 'D', 'C', 'S')
 #define PDCS_SIZE_OFFSET sizeof(PDCS_SIGNATURE)
 #define PDCS_DATA_OFFSET (PDCS_SIZE_OFFSET + sizeof(uint32_t))
 
-#define PDCI_SIGNATURE MAKE_WORD('P', 'D', 'C', 'I')
+#define PDCI_SIGNATURE   MAKE_WORD('P', 'D', 'C', 'I')
 #define PDCI_SIZE_OFFSET sizeof(PDCI_SIGNATURE)
 #define PDCI_DATA_OFFSET (PDCI_SIZE_OFFSET + sizeof(uint32_t))
 
 struct __attribute__((__packed__)) GDrawCommand {
-  GDrawCommandType type:8;
+  GDrawCommandType type : 8;
   struct {
-    uint8_t hidden:1;
-    uint8_t reserved:7;
+    uint8_t hidden : 1;
+    uint8_t reserved : 7;
   };
   GColor stroke_color;
-  uint8_t  stroke_width;
+  uint8_t stroke_width;
   GColor fill_color;
   union {
     struct { // path

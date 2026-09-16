@@ -4,7 +4,6 @@
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/gbitmap_png.h"
 
-
 #include "clar.h"
 #include "util.h"
 
@@ -37,7 +36,7 @@ void test_palettized_conversion__test_byte_reverse(void) {
 // 1-bit palettized image.
 // The palettized PNG loaded in is to be used as the expected value
 
-#define TEST_1BIT_FILE TEST_PBI_FILE_FMT(1bit)
+#define TEST_1BIT_FILE       TEST_PBI_FILE_FMT(1bit)
 #define TEST_PALETTIZED_FILE TEST_PBI_FILE
 
 void test_palettized_conversion__create_palettized_from_1bit(void) {

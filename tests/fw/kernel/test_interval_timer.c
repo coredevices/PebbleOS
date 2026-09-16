@@ -7,7 +7,7 @@
 
 #include "clar.h"
 
-void passert_failed_no_message(const char* filename, int line_number) {
+void passert_failed_no_message(const char *filename, int line_number) {
 }
 
 void pbl_irq_lock(void) {
@@ -222,4 +222,3 @@ void test_interval_timer__moving_average(void) {
   // = 1027
   cl_assert_equal_i(average_ms, 1027);
 }
-

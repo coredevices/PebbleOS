@@ -13,7 +13,7 @@
 struct GAPLEConnection;
 
 #define MAX_ATT_WRITE_PAYLOAD_SIZE (ATT_MAX_SUPPORTED_MTU - 3)
-#define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE \
+#define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE                              \
   ((MAX_ATT_WRITE_PAYLOAD_SIZE + sizeof(GATTBufferedNotificationHeader)) * \
    CONFIG_BLE_GATT_SUBSCRIPTION_DEPTH)
 
@@ -45,8 +45,7 @@ typedef struct PACKED {
 } GATTBufferedNotificationHeader;
 
 BTErrno gatt_client_subscriptions_subscribe(BLECharacteristic characteristic,
-                                            BLESubscription subscription_type,
-                                            GAPLEClient client);
+                                            BLESubscription subscription_type, GAPLEClient client);
 
 //! Gets the length of the next notification in the buffer that was received.
 //! @param client The client for which to get the next notification header.

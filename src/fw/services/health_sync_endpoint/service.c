@@ -10,8 +10,8 @@
 PBL_LOG_MODULE_DEFINE(service_health_sync_endpoint, CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT_LOG_LEVEL);
 
 #define HEALTH_SYNC_ENDPOINT_ID 911
-#define ACK 0x1
-#define NACK 0x2
+#define ACK                     0x1
+#define NACK                    0x2
 
 typedef enum HealthSyncEndpointCmd {
   HealthSyncEndpointCmd_Sync = 0x1,
@@ -34,10 +34,8 @@ static void prv_send_ack_nack(bool ok) {
     .ack_nack = ok ? ACK : NACK,
   };
 
-  comm_session_send_data(comm_session_get_system_session(),
-                         HEALTH_SYNC_ENDPOINT_ID,
-                         (uint8_t*)&msg,
-                         sizeof(HealthSyncEndpointAckMsg),
+  comm_session_send_data(comm_session_get_system_session(), HEALTH_SYNC_ENDPOINT_ID,
+                         (uint8_t *)&msg, sizeof(HealthSyncEndpointAckMsg),
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 

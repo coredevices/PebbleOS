@@ -13,7 +13,7 @@ bool WEAK shell_prefs_get_clock_24h_style(void) {
 }
 
 void WEAK shell_prefs_set_clock_24h_style(bool is_24h) {
-  s_clock_24h= is_24h;
+  s_clock_24h = is_24h;
 }
 
 static bool s_clock_timezone_manual;

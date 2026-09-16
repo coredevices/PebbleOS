@@ -72,10 +72,8 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = light_allow,
     .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal,
   },
-  {
-    .set_enable_fn = vibe_service_set_enabled,
-    .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal
-  },
+  {.set_enable_fn = vibe_service_set_enabled,
+   .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal},
   {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
@@ -102,4 +100,3 @@ void services_common_set_runlevel(RunLevel runlevel) {
     service->set_enable_fn(((1 << runlevel) & service->enable_mask) != 0);
   }
 }
-

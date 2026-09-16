@@ -23,7 +23,7 @@ Heap *task_heap_get_for_current_task(void) {
   return kernel_heap_get();
 }
 
-static char* prv_strdup(Heap *heap, const char* s, uintptr_t lr) {
+static char *prv_strdup(Heap *heap, const char *s, uintptr_t lr) {
   char *dup = heap_zalloc(heap, strlen(s) + 1, lr);
   if (dup) {
     strcpy(dup, s);
@@ -65,14 +65,14 @@ void task_free_with_pc(void *ptr, uintptr_t client_pc) {
 }
 #endif
 
-void task_free(void* ptr) {
+void task_free(void *ptr) {
   register uintptr_t lr __asm("lr");
   uintptr_t saved_lr = lr;
 
   heap_free(task_heap_get_for_current_task(), ptr, saved_lr);
 }
 
-void *task_realloc(void* ptr, size_t size) {
+void *task_realloc(void *ptr, size_t size) {
   register uintptr_t lr __asm("lr");
   uintptr_t saved_lr = lr;
 
@@ -337,4 +337,3 @@ void *__wrap_calloc(size_t count, size_t size) {
 
   return heap_calloc(task_heap_get_for_current_task(), count, size, saved_lr);
 }
-

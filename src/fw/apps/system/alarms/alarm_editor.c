@@ -158,10 +158,11 @@ static void prv_time_picker_window_unload(Window *window) {
 static void prv_time_picker_window_appear(Window *window) {
   AlarmEditorData *data = (AlarmEditorData *)window_get_user_data(window);
   const bool is_smart = (data->alarm_type == AlarmType_Smart);
-  const char *label = (!data->creating_alarm ? i18n_noop("Change Time") :
-                       is_smart ? i18n_noop("New Smart Alarm") : i18n_noop("New Alarm"));
-  const char *range_text = PBL_IF_RECT_ELSE(i18n_noop("Wake up between"),
-                                             i18n_noop("Wake up interval"));
+  const char *label = (!data->creating_alarm ? i18n_noop("Change Time")
+                       : is_smart            ? i18n_noop("New Smart Alarm")
+                                             : i18n_noop("New Alarm"));
+  const char *range_text =
+      PBL_IF_RECT_ELSE(i18n_noop("Wake up between"), i18n_noop("Wake up interval"));
   const TimeSelectionWindowConfig config = {
     .label = i18n_get(label, data),
     .range = {
@@ -176,7 +177,7 @@ static void prv_time_picker_window_appear(Window *window) {
 }
 
 static void prv_time_picker_complete(TimeSelectionWindowData *time_picker_window, void *cb_data) {
-  AlarmEditorData *data = (AlarmEditorData *) cb_data;
+  AlarmEditorData *data = (AlarmEditorData *)cb_data;
   data->time_picker_was_completed = true;
   data->alarm_hour = time_picker_window->time_data.hour;
   data->alarm_minute = time_picker_window->time_data.minute;
@@ -269,10 +270,10 @@ static void prv_setup_type_menu_window(AlarmEditorData *data) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Public API
 
-Window* alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callback,
+Window *alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callback,
                                       void *callback_context) {
-  AlarmEditorData* data = task_malloc_check(sizeof(AlarmEditorData));
-  *data = (AlarmEditorData) {
+  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  *data = (AlarmEditorData){
     .alarm_id = ALARM_INVALID_ID,
     .complete_callback = complete_callback,
     .callback_context = callback_context,
@@ -287,8 +288,8 @@ Window* alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callb
 void alarm_editor_update_alarm_time(AlarmId alarm_id, AlarmType alarm_type,
                                     AlarmEditorCompleteCallback complete_callback,
                                     void *callback_context) {
-  AlarmEditorData* data = task_malloc_check(sizeof(AlarmEditorData));
-  *data = (AlarmEditorData) {
+  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  *data = (AlarmEditorData){
     .alarm_id = alarm_id,
     .alarm_type = alarm_type,
     .complete_callback = complete_callback,
@@ -302,8 +303,8 @@ void alarm_editor_update_alarm_time(AlarmId alarm_id, AlarmType alarm_type,
 
 void alarm_editor_update_alarm_days(AlarmId alarm_id, AlarmEditorCompleteCallback complete_callback,
                                     void *callback_context) {
-  AlarmEditorData* data = task_malloc_check(sizeof(AlarmEditorData));
-  *data = (AlarmEditorData) {
+  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  *data = (AlarmEditorData){
     .alarm_id = alarm_id,
     .complete_callback = complete_callback,
     .callback_context = callback_context,

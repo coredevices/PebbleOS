@@ -40,20 +40,34 @@
 // through these accessors; the recognizer manager needs a few window/layer collaborators to link.
 
 static bool s_nav_enabled = true;
-bool sys_touch_nav_enabled(void) { return s_nav_enabled; }
-bool sys_touch_app_nav_active(void) { return false; }
+bool sys_touch_nav_enabled(void) {
+  return s_nav_enabled;
+}
+bool sys_touch_app_nav_active(void) {
+  return false;
+}
 
 static TouchNavState s_touch_nav_state;
-struct TouchNavState *app_state_get_touch_nav_state(void) { return &s_touch_nav_state; }
-struct TouchNavState *modal_manager_get_touch_nav_state(void) { return &s_touch_nav_state; }
+struct TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
+struct TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_touch_nav_state;
+}
 
-static Layer s_root_layer;               // window root, holds the menu under test while driving pans
+static Layer s_root_layer; // window root, holds the menu under test while driving pans
 static RecognizerManager s_recognizer_manager;
 static RecognizerList s_global_list;
 
-struct Layer *window_get_root_layer(const Window *window) { return &s_root_layer; }
-RecognizerList *window_get_recognizer_list(Window *window) { return NULL; }
-RecognizerManager *window_get_recognizer_manager(Window *window) { return &s_recognizer_manager; }
+struct Layer *window_get_root_layer(const Window *window) {
+  return &s_root_layer;
+}
+RecognizerList *window_get_recognizer_list(Window *window) {
+  return NULL;
+}
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return &s_recognizer_manager;
+}
 
 // Fake bridge ops so swipe-left BACK is observable.
 typedef struct FakeBridgeOps {
@@ -63,10 +77,16 @@ typedef struct FakeBridgeOps {
   ButtonId last_emit;
 } FakeBridgeOps;
 static FakeBridgeOps s_bridge;
-static bool prv_bridge_top_overrides_back(void *ctx) { return ((FakeBridgeOps *)ctx)->overrides_back; }
-static void prv_bridge_pop_top(void *ctx) { ((FakeBridgeOps *)ctx)->pop_count++; }
+static bool prv_bridge_top_overrides_back(void *ctx) {
+  return ((FakeBridgeOps *)ctx)->overrides_back;
+}
+static void prv_bridge_pop_top(void *ctx) {
+  ((FakeBridgeOps *)ctx)->pop_count++;
+}
 static void prv_bridge_emit_button(void *ctx, ButtonId b) {
-  FakeBridgeOps *o = ctx; o->emit_count++; o->last_emit = b;
+  FakeBridgeOps *o = ctx;
+  o->emit_count++;
+  o->last_emit = b;
 }
 static TouchNavOps s_bridge_ops;
 
@@ -82,41 +102,49 @@ static void prv_touch_nav_setup(void) {
   layer_init(&s_root_layer, &GRect(0, 0, 200, 400));
   recognizer_list_init(&s_global_list);
   recognizer_manager_init(&s_recognizer_manager);
-  s_recognizer_manager.window = (Window *)&s_root_layer;  // non-NULL sentinel
+  s_recognizer_manager.window = (Window *)&s_root_layer; // non-NULL sentinel
   s_recognizer_manager.global_list = &s_global_list;
   touch_nav_state_init(&s_touch_nav_state, &s_recognizer_manager, &s_bridge_ops);
 }
 
-
 // Fakes
 ////////////////////////
 
-//#include "fake_gbitmap_png.c"
+// #include "fake_gbitmap_png.c"
 
-GDrawState graphics_context_get_drawing_state(GContext* ctx) {
+GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   return (GDrawState){};
 }
 
-void graphics_context_set_drawing_state(GContext* ctx, GDrawState draw_state) {}
-void graphics_context_set_fill_color(GContext* ctx, GColor color){}
+void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
+}
+void graphics_context_set_fill_color(GContext *ctx, GColor color) {
+}
 
-Layer* inverter_layer_get_layer(InverterLayer *inverter_layer) {
+Layer *inverter_layer_get_layer(InverterLayer *inverter_layer) {
   return &inverter_layer->layer;
 }
 
-void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {}
+void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {
+}
 
-void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms,
-                                 ClickHandler down_handler, ClickHandler up_handler) {}
-void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {}
+void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
+                                 ClickHandler up_handler) {
+}
+void window_single_click_subscribe(ButtonId button_id, ClickHandler handler) {
+}
 void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat_interval_ms,
-                                             ClickHandler handler) {}
+                                             ClickHandler handler) {
+}
 void window_set_click_config_provider_with_context(Window *window,
                                                    ClickConfigProvider click_config_provider,
-                                                   void *context) {}
-void window_set_click_context(ButtonId button_id, void *context) {}
+                                                   void *context) {
+}
+void window_set_click_context(ButtonId button_id, void *context) {
+}
 
-void content_indicator_destroy_for_scroll_layer(ScrollLayer *scroll_layer) {}
+void content_indicator_destroy_for_scroll_layer(ScrollLayer *scroll_layer) {
+}
 
 ContentIndicator s_content_indicator;
 ContentIndicator *content_indicator_get_for_scroll_layer(ScrollLayer *scroll_layer) {
@@ -128,13 +156,14 @@ ContentIndicator *content_indicator_get_or_create_for_scroll_layer(ScrollLayer *
 
 static bool s_content_available[NumContentIndicatorDirections];
 void content_indicator_set_content_available(ContentIndicator *content_indicator,
-                                             ContentIndicatorDirection direction,
-                                             bool available) {
+                                             ContentIndicatorDirection direction, bool available) {
   s_content_available[direction] = available;
 }
 
-void graphics_context_set_compositing_mode(GContext* ctx, GCompOp mode) {}
-void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect){}
+void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
+}
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+}
 
 int16_t menu_cell_basic_cell_height(void) {
   return 44;
@@ -142,7 +171,6 @@ int16_t menu_cell_basic_cell_height(void) {
 
 // Tests
 //////////////////////
-
 
 static uint16_t s_num_rows;
 
@@ -153,17 +181,17 @@ static AnimationHandlers s_anim_handlers;
 static void *s_anim_handlers_context;
 
 bool property_animation_init(PropertyAnimation *animation,
-                             const PropertyAnimationImplementation *implementation,
-                             void *subject, void *from_value, void *to_value) {
+                             const PropertyAnimationImplementation *implementation, void *subject,
+                             void *from_value, void *to_value) {
   if (!animation) {
     return false;
   }
-  *(PropertyAnimationPrivate *)animation = (PropertyAnimationPrivate) {
+  *(PropertyAnimationPrivate *)animation = (PropertyAnimationPrivate){
     .animation.implementation = (const AnimationImplementation *)implementation,
     .subject = subject,
   };
   if (to_value) {
-    s_anim_to = *(GPoint *)to_value;   // every scroll animation targets a GPoint offset
+    s_anim_to = *(GPoint *)to_value; // every scroll animation targets a GPoint offset
   }
   return true;
 }
@@ -183,7 +211,7 @@ void test_menu_layer__initialize(void) {
   fake_app_timer_init();
   fake_rtc_init(0, 0);
   s_anim_to = GPointZero;
-  s_anim_handlers = (AnimationHandlers) { 0 };
+  s_anim_handlers = (AnimationHandlers){0};
   s_anim_handlers_context = NULL;
   s_nav_enabled = true;
   // A zeroed state has a NULL manager, so menu_layer_init() registration is inert for the tests
@@ -197,13 +225,11 @@ void test_menu_layer__cleanup(void) {
   fake_app_timer_deinit();
 }
 
-static void prv_draw_row(GContext* ctx,
-                         const Layer *cell_layer,
-                         MenuIndex *cell_index,
-                         void *callback_context) {}
+static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                         void *callback_context) {
+}
 
-static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer,
-                                 uint16_t section_index,
+static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
   return s_num_rows;
 }
@@ -211,10 +237,11 @@ static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer,
 void test_menu_layer__test_set_selected_classic(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(10, 10, 180, 180));
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-      .draw_row = prv_draw_row,
-      .get_num_rows = prv_get_num_rows,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                           });
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
   cl_assert_equal_i(0, l.selection.y);
   cl_assert_equal_i(0, scroll_layer_get_content_offset(&l.scroll_layer).y);
@@ -223,8 +250,7 @@ void test_menu_layer__test_set_selected_classic(void) {
   cl_assert_equal_i(1, menu_layer_get_selected_index(&l).row);
   const int16_t basic_cell_height = menu_cell_basic_cell_height();
   cl_assert_equal_i(basic_cell_height, l.selection.y);
-  cl_assert_equal_i(-basic_cell_height,
-                    scroll_layer_get_content_offset(&l.scroll_layer).y);
+  cl_assert_equal_i(-basic_cell_height, scroll_layer_get_content_offset(&l.scroll_layer).y);
 }
 
 void test_menu_layer__test_set_selected_center_focused(void) {
@@ -232,14 +258,15 @@ void test_menu_layer__test_set_selected_center_focused(void) {
   const int height = 180;
   menu_layer_init(&l, &GRect(10, 10, height, 180));
   menu_layer_set_center_focused(&l, true);
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-      .draw_row = prv_draw_row,
-      .get_num_rows = prv_get_num_rows,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                           });
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
   cl_assert_equal_i(0, l.selection.y);
   const int16_t basic_cell_height = menu_cell_basic_cell_height();
-  const int row0_vertically_centered = (height - basic_cell_height)/2;
+  const int row0_vertically_centered = (height - basic_cell_height) / 2;
   cl_assert_equal_i(row0_vertically_centered, scroll_layer_get_content_offset(&l.scroll_layer).y);
 
   menu_layer_set_selected_index(&l, MenuIndex(0, 1), MenuRowAlignTop, false);
@@ -255,10 +282,11 @@ void test_menu_layer__test_set_selection_animation(void) {
   MenuLayer l;
   const int height = 180;
   menu_layer_init(&l, &GRect(10, 10, height, 180));
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                           });
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
   cl_assert_equal_i(0, l.selection.y);
 
@@ -287,11 +315,12 @@ void test_menu_layer__default_ignores_row_height_for_selection(void) {
   MenuLayer l;
   const int height = 180;
   menu_layer_init(&l, &GRect(10, 10, height, 180));
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-      .draw_row = prv_draw_row,
-      .get_num_rows = prv_get_num_rows,
-      .get_cell_height = prv_get_row_height_depending_on_selection_state,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .get_cell_height = prv_get_row_height_depending_on_selection_state,
+                           });
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
   cl_assert_equal_i(0, l.selection.y);
   cl_assert_equal_i(0, scroll_layer_get_content_offset(&l.scroll_layer).y);
@@ -340,18 +369,19 @@ void test_menu_layer__center_focused_respects_row_height_for_selection(void) {
   const int height = 180;
   menu_layer_init(&l, &GRect(10, 10, height, 180));
   menu_layer_set_center_focused(&l, true);
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-      .draw_row = prv_draw_row,
-      .get_num_rows = prv_get_num_rows,
-      .get_cell_height = prv_get_row_height_depending_on_selection_state,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .get_cell_height = prv_get_row_height_depending_on_selection_state,
+                           });
 
   const int FOCUSED = MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT;
   const int NORMAL = menu_cell_basic_cell_height();
 
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
   cl_assert_equal_i(0, l.selection.y);
-  const int row0_vertically_centered = (height - FOCUSED)/2;
+  const int row0_vertically_centered = (height - FOCUSED) / 2;
   cl_assert_equal_i(row0_vertically_centered, scroll_layer_get_content_offset(&l.scroll_layer).y);
   cl_assert_equal_i(FOCUSED, l.selection.h);
   cl_assert_equal_b(false, s_content_available[ContentIndicatorDirectionUp]);
@@ -388,10 +418,8 @@ void test_menu_layer__center_focused_respects_row_height_for_selection(void) {
   cl_assert_equal_b(true, s_content_available[ContentIndicatorDirectionDown]);
 }
 
-static void prv_skip_odd_rows(struct MenuLayer *menu_layer,
-                               MenuIndex *new_index,
-                               MenuIndex old_index,
-                               void *callback_context) {
+static void prv_skip_odd_rows(struct MenuLayer *menu_layer, MenuIndex *new_index,
+                              MenuIndex old_index, void *callback_context) {
   if (new_index->row == 1) {
     new_index->row = 2;
   }
@@ -404,11 +432,12 @@ void test_menu_layer__center_focused_handles_skipped_rows(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
   menu_layer_set_center_focused(&l, true);
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks) {
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-    .selection_will_change = prv_skip_odd_rows,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .selection_will_change = prv_skip_odd_rows,
+                           });
   menu_layer_reload_data(&l);
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).section);
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
@@ -440,10 +469,8 @@ void test_menu_layer__center_focused_handles_skipped_rows(void) {
 extern void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer);
 extern void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer);
 
-static void prv_redirect_off_last_row(struct MenuLayer *menu_layer,
-                                      MenuIndex *new_index,
-                                      MenuIndex old_index,
-                                      void *callback_context) {
+static void prv_redirect_off_last_row(struct MenuLayer *menu_layer, MenuIndex *new_index,
+                                      MenuIndex old_index, void *callback_context) {
   if (new_index->row == s_num_rows - 1) {
     new_index->row = s_num_rows - 2;
   }
@@ -452,11 +479,12 @@ static void prv_redirect_off_last_row(struct MenuLayer *menu_layer,
 void test_menu_layer__wrap_around_honors_selection_will_change(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks) {
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-    .selection_will_change = prv_redirect_off_last_row,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .selection_will_change = prv_redirect_off_last_row,
+                           });
   menu_layer_set_scroll_wrap_around(&l, true);
   menu_layer_reload_data(&l);
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
@@ -472,21 +500,20 @@ void test_menu_layer__wrap_around_honors_selection_will_change(void) {
   cl_assert_equal_i(s_num_rows - 2, menu_layer_get_selected_index(&l).row);
 }
 
-static void prv_lock_selection(struct MenuLayer *menu_layer,
-                               MenuIndex *new_index,
-                               MenuIndex old_index,
-                               void *callback_context) {
+static void prv_lock_selection(struct MenuLayer *menu_layer, MenuIndex *new_index,
+                               MenuIndex old_index, void *callback_context) {
   *new_index = old_index;
 }
 
 void test_menu_layer__wrap_around_cancelled_when_selection_locked(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks) {
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-    .selection_will_change = prv_lock_selection,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .selection_will_change = prv_lock_selection,
+                           });
   menu_layer_set_scroll_wrap_around(&l, true);
   menu_layer_reload_data(&l);
 
@@ -498,11 +525,12 @@ void test_menu_layer__center_focused_handles_skipped_rows_animated(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
   menu_layer_set_center_focused(&l, true);
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks) {
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-    .selection_will_change = prv_skip_odd_rows,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .selection_will_change = prv_skip_odd_rows,
+                           });
   menu_layer_reload_data(&l);
   const int16_t basic_cell_height = menu_cell_basic_cell_height();
   const int initial_scroll_offset = (DISP_ROWS - basic_cell_height) / 2;
@@ -519,7 +547,7 @@ void test_menu_layer__center_focused_handles_skipped_rows_animated(void) {
   cl_assert_equal_i(initial_scroll_offset, l.scroll_layer.content_sublayer.bounds.origin.y);
 
   // in this test setup, we can directly cast an animation to AnimationPrivate
-  AnimationPrivate *ap = (AnimationPrivate *) l.animation.animation;
+  AnimationPrivate *ap = (AnimationPrivate *)l.animation.animation;
   const AnimationImplementation *const impl = ap->implementation;
   impl->update(l.animation.animation, ANIMATION_NORMALIZED_MAX / 10);
   // still unchanged
@@ -545,8 +573,7 @@ void test_menu_layer__center_focused_handles_skipped_rows_animated(void) {
 
 static MenuLayer s_menu_layer_hierarchy;
 
-static void prv_menu_cell_is_part_of_hierarchy_draw_row(GContext* ctx,
-                                                        const Layer *cell_layer,
+static void prv_menu_cell_is_part_of_hierarchy_draw_row(GContext *ctx, const Layer *cell_layer,
                                                         MenuIndex *cell_index,
                                                         void *callback_context) {
   cl_assert_equal_p(cell_layer->window, s_menu_layer_hierarchy.scroll_layer.layer.window);
@@ -572,10 +599,11 @@ void test_menu_layer__menu_cell_is_part_of_hierarchy(void) {
   Layer *layer = &s_menu_layer_hierarchy.scroll_layer.content_sublayer;
   // two layers (inverter + shadow)
   cl_assert_equal_i(2, prv_num_sublayers(layer));
-  menu_layer_set_callbacks(&s_menu_layer_hierarchy, NULL, &(MenuLayerCallbacks){
-    .draw_row = prv_menu_cell_is_part_of_hierarchy_draw_row,
-    .get_num_rows = prv_get_num_rows,
-  });
+  menu_layer_set_callbacks(&s_menu_layer_hierarchy, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_menu_cell_is_part_of_hierarchy_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                           });
   menu_layer_reload_data(&s_menu_layer_hierarchy);
   GContext ctx = {};
   cl_assert_equal_i(2, prv_num_sublayers(layer));
@@ -589,11 +617,12 @@ void test_menu_layer__center_focused_updates_height_on_reload(void) {
   menu_layer_init(&l, &GRect(10, 10, height, DISP_COLS));
   menu_layer_set_center_focused(&l, true);
   s_num_rows = 3;
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks) {
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-    .get_cell_height = prv_get_row_height_depending_on_selection_state,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .get_cell_height = prv_get_row_height_depending_on_selection_state,
+                           });
   menu_layer_set_center_focused(&l, true);
   menu_layer_reload_data(&l);
   const int focused_height = MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT;
@@ -628,7 +657,7 @@ typedef enum {
 } WillChangeMode;
 
 static int s_will_change_count;
-static MenuIndex s_will_change_candidate;   // value of *new_index observed on entry
+static MenuIndex s_will_change_candidate; // value of *new_index observed on entry
 static MenuIndex s_will_change_old;
 static int s_selection_changed_count;
 static int s_select_click_count;
@@ -649,9 +678,14 @@ static void prv_touch_will_change(struct MenuLayer *m, MenuIndex *new_index, Men
   s_will_change_candidate = *new_index;
   s_will_change_old = old_index;
   switch (s_will_change_mode) {
-    case WillChange_Veto:     *new_index = old_index; break;
-    case WillChange_Redirect: *new_index = s_will_change_redirect; break;
-    case WillChange_Passthrough: break;
+    case WillChange_Veto:
+      *new_index = old_index;
+      break;
+    case WillChange_Redirect:
+      *new_index = s_will_change_redirect;
+      break;
+    case WillChange_Passthrough:
+      break;
   }
 }
 
@@ -666,36 +700,47 @@ static void prv_touch_select_click(struct MenuLayer *m, MenuIndex *index, void *
 }
 
 static void prv_set_touch_callbacks(MenuLayer *l) {
-  menu_layer_set_callbacks(l, NULL, &(MenuLayerCallbacks){
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-    .selection_will_change = prv_touch_will_change,
-    .selection_changed = prv_touch_selection_changed,
-    .select_click = prv_touch_select_click,
-  });
+  menu_layer_set_callbacks(l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .selection_will_change = prv_touch_will_change,
+                             .selection_changed = prv_touch_selection_changed,
+                             .select_click = prv_touch_select_click,
+                           });
 }
 
 // ---- Criterion 1: hit-test with section headers ----
 
-static uint16_t prv_two_sections(struct MenuLayer *m, void *ctx) { return 2; }
-static uint16_t prv_five_rows(struct MenuLayer *m, uint16_t s, void *ctx) { return 5; }
-static int16_t prv_header_20(struct MenuLayer *m, uint16_t s, void *ctx) { return 20; }
-static int16_t prv_sep_0(struct MenuLayer *m, MenuIndex *i, void *ctx) { return 0; }
+static uint16_t prv_two_sections(struct MenuLayer *m, void *ctx) {
+  return 2;
+}
+static uint16_t prv_five_rows(struct MenuLayer *m, uint16_t s, void *ctx) {
+  return 5;
+}
+static int16_t prv_header_20(struct MenuLayer *m, uint16_t s, void *ctx) {
+  return 20;
+}
+static int16_t prv_sep_0(struct MenuLayer *m, MenuIndex *i, void *ctx) {
+  return 0;
+}
 
 void test_menu_layer__touch_hit_test_with_headers(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(0, 0, 144, 168));
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_five_rows,
-    .get_num_sections = prv_two_sections,
-    .get_header_height = prv_header_20,
-    .draw_header = (MenuLayerDrawHeaderCallback)prv_draw_row,
-    .get_separator_height = prv_sep_0,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_five_rows,
+                             .get_num_sections = prv_two_sections,
+                             .get_header_height = prv_header_20,
+                             .draw_header = (MenuLayerDrawHeaderCallback)prv_draw_row,
+                             .get_separator_height = prv_sep_0,
+                           });
   menu_layer_reload_data(&l);
 
-  // Use the real per-row geometry: focus a row in section 1 (past a header) and hit-test its centre.
+  // Use the real per-row geometry: focus a row in section 1 (past a header) and hit-test its
+  // centre.
   menu_layer_set_selected_index(&l, MenuIndex(1, 2), MenuRowAlignNone, false);
   const int16_t row_y = l.selection.y + l.selection.h / 2;
   MenuIndex hit;
@@ -703,16 +748,18 @@ void test_menu_layer__touch_hit_test_with_headers(void) {
   cl_assert_equal_i(hit.section, 1);
   cl_assert_equal_i(hit.row, 2);
 
-  // A y inside the section-1 header (just above the first row of section 1) is not a selectable row.
+  // A y inside the section-1 header (just above the first row of section 1) is not a selectable
+  // row.
   menu_layer_set_selected_index(&l, MenuIndex(1, 0), MenuRowAlignNone, false);
-  const int16_t header_y = l.selection.y - 10;  // within the 20px header above row (1, 0)
+  const int16_t header_y = l.selection.y - 10; // within the 20px header above row (1, 0)
   MenuIndex miss;
   cl_assert(!menu_layer_touch_find_row_at_content_y(&l, header_y, &miss));
 
   // The row boundary is half-open [top, bottom): a hit exactly on a row's bottom edge belongs to
   // the NEXT row, not the current one (pins the < vs <= at the boundary).
   menu_layer_set_selected_index(&l, MenuIndex(1, 2), MenuRowAlignNone, false);
-  const int16_t edge_y = l.selection.y + l.selection.h;  // exact bottom of row (1, 2) == top of (1, 3)
+  const int16_t edge_y =
+      l.selection.y + l.selection.h; // exact bottom of row (1, 2) == top of (1, 3)
   MenuIndex edge;
   cl_assert(menu_layer_touch_find_row_at_content_y(&l, edge_y, &edge));
   cl_assert_equal_i(edge.section, 1);
@@ -725,7 +772,8 @@ void test_menu_layer__touch_tap_accounts_for_scroll_offset(void) {
   menu_layer_init(&l, &GRect(0, 0, 144, 180));
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
-  // Scroll down two rows, then tap near the top of the frame: content_y = 22 - (-88) = 110 => row 2.
+  // Scroll down two rows, then tap near the top of the frame: content_y = 22 - (-88) = 110 =>
+  // row 2.
   scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -88), false);
   prv_reset_touch_counters();
   menu_layer_touch_handle_tap(&l, GPoint(72, 22));
@@ -734,8 +782,8 @@ void test_menu_layer__touch_tap_accounts_for_scroll_offset(void) {
 
 // A menu inset below the status bar: the tap point is in screen space, so it must be mapped through
 // the scroll layer's global frame. A tap at screen y = 56 on a menu whose frame starts at y = 16 is
-// frame-relative y = 40 -> row 0 (44px rows). Without the global-frame conversion content_y would be
-// 56 -> row 1, i.e. the bottom of every row would activate the next row down.
+// frame-relative y = 40 -> row 0 (44px rows). Without the global-frame conversion content_y would
+// be 56 -> row 1, i.e. the bottom of every row would activate the next row down.
 void test_menu_layer__touch_tap_below_status_bar(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(0, 16, 144, 180));
@@ -763,11 +811,11 @@ void test_menu_layer__touch_snap_leaves_selection_unchanged(void) {
   menu_layer_touch_handle_snap(&l, GPoint(0, 0), GPoint(0, -88), GPointZero);
   const MenuIndex after = menu_layer_get_selected_index(&l);
   cl_assert_equal_i(after.section, before.section);
-  cl_assert_equal_i(after.row, before.row);                    // selection unchanged
-  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -88);  // offset settled
-  cl_assert_equal_i(s_will_change_count, 0);                   // no selection contract on a pan
+  cl_assert_equal_i(after.row, before.row);                                   // selection unchanged
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -88); // offset settled
+  cl_assert_equal_i(s_will_change_count, 0); // no selection contract on a pan
   cl_assert_equal_i(s_selection_changed_count, 0);
-  cl_assert_equal_i(s_select_click_count, 0);                  // no activation
+  cl_assert_equal_i(s_select_click_count, 0); // no activation
 }
 
 // The same for an upward pan (scroll back toward the top): selection is still frozen.
@@ -780,9 +828,10 @@ void test_menu_layer__touch_snap_up_leaves_selection_unchanged(void) {
   scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -176), false);
   const MenuIndex before = menu_layer_get_selected_index(&l);
   prv_reset_touch_counters();
-  menu_layer_touch_handle_snap(&l, GPoint(0, -176), GPoint(0, 88), GPointZero);  // pan up two rows, Liftoff
+  menu_layer_touch_handle_snap(&l, GPoint(0, -176), GPoint(0, 88),
+                               GPointZero); // pan up two rows, Liftoff
   const MenuIndex after = menu_layer_get_selected_index(&l);
-  cl_assert_equal_i(after.row, before.row);                    // selection unchanged
+  cl_assert_equal_i(after.row, before.row); // selection unchanged
   cl_assert_equal_i(s_will_change_count, 0);
   cl_assert_equal_i(s_select_click_count, 0);
 }
@@ -798,14 +847,14 @@ void test_menu_layer__touch_pan_center_focused_tracks_center_row(void) {
   menu_layer_set_center_focused(&l, true);
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
-  const int16_t base = scroll_layer_get_content_offset(&l.scroll_layer).y;  // row 0 centred
+  const int16_t base = scroll_layer_get_content_offset(&l.scroll_layer).y; // row 0 centred
   prv_reset_touch_counters();
   // Drag up two (uniform 44px) rows: row 2 crosses the centre.
   menu_layer_touch_handle_pan_update(&l, GPoint(0, base), GPoint(0, -88));
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // focus tracked the centre
-  cl_assert_equal_i(s_will_change_count, 1);                     // through the contract
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2); // focus tracked the centre
+  cl_assert_equal_i(s_will_change_count, 1);                   // through the contract
   cl_assert_equal_i(s_selection_changed_count, 1);
-  cl_assert_equal_i(s_select_click_count, 0);                    // a pan never activates
+  cl_assert_equal_i(s_select_click_count, 0); // a pan never activates
   // The finger owns the offset: no re-centring mid-pan.
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, base - 88);
 }
@@ -822,9 +871,10 @@ void test_menu_layer__touch_pan_center_focused_veto_keeps_selection(void) {
   s_will_change_mode = WillChange_Veto;
   menu_layer_touch_handle_pan_update(&l, GPoint(0, base), GPoint(0, -88));
   cl_assert_equal_i(s_will_change_count, 1);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);   // vetoed: focus stays
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0); // vetoed: focus stays
   cl_assert_equal_i(s_selection_changed_count, 0);
-  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, base - 88);  // still scrolled
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y,
+                    base - 88); // still scrolled
 }
 
 // Liftoff adopts the row under the centre and glides it to the exact centre (this replaces the
@@ -840,9 +890,9 @@ void test_menu_layer__touch_snap_center_focused_settles_center_row(void) {
   // -100 leaves the centre inside row 2 but off its exact centre, so a settle is required (a
   // two-row drag of -88 would land dead-centre and hide a missing settle).
   menu_layer_touch_handle_snap(&l, GPoint(0, base), GPoint(0, -100), GPointZero);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // nearest row adopted
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2); // nearest row adopted
   cl_assert_equal_i(s_will_change_count, 1);
-  cl_assert_equal_i(s_select_click_count, 0);                    // snapping never activates
+  cl_assert_equal_i(s_select_click_count, 0); // snapping never activates
   // The settle glide is animated. The stubbed property animation cannot be driven to its target
   // here, so assert it was scheduled; the exact-centre target math is pinned by the cancel test,
   // which runs the same settle synchronously.
@@ -860,11 +910,11 @@ void test_menu_layer__touch_cancel_center_focused_recenters(void) {
   menu_layer_reload_data(&l);
   const int16_t base = scroll_layer_get_content_offset(&l.scroll_layer).y;
   prv_reset_touch_counters();
-  menu_layer_touch_handle_pan_update(&l, GPoint(0, base), GPoint(0, -100));  // row 2, off-grid
+  menu_layer_touch_handle_pan_update(&l, GPoint(0, base), GPoint(0, -100)); // row 2, off-grid
   cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);
   menu_layer_touch_handle_cancel(&l);
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y,
-                    90 - l.selection.y - l.selection.h / 2);     // immediately centred
+                    90 - l.selection.y - l.selection.h / 2); // immediately centred
   cl_assert_equal_i(s_select_click_count, 0);
 }
 
@@ -875,14 +925,15 @@ void test_menu_layer__touch_pan_center_focused_tracks_with_focus_heights(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(0, 0, 144, 180));
   menu_layer_set_center_focused(&l, true);
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_get_num_rows,
-    .get_cell_height = prv_get_row_height_depending_on_selection_state,
-    .selection_will_change = prv_touch_will_change,
-    .selection_changed = prv_touch_selection_changed,
-    .select_click = prv_touch_select_click,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                             .get_cell_height = prv_get_row_height_depending_on_selection_state,
+                             .selection_will_change = prv_touch_will_change,
+                             .selection_changed = prv_touch_selection_changed,
+                             .select_click = prv_touch_select_click,
+                           });
   menu_layer_reload_data(&l);
   const int FOCUSED = MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT;
   const int NORMAL = menu_cell_basic_cell_height();
@@ -893,8 +944,8 @@ void test_menu_layer__touch_pan_center_focused_tracks_with_focus_heights(void) {
   const int16_t target_offset = (int16_t)(90 - FOCUSED - NORMAL / 2);
   menu_layer_touch_handle_pan_update(&l, GPoint(0, base), GPoint(0, target_offset - base));
   cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1);
-  cl_assert_equal_i(l.selection.y, NORMAL);        // row 0 deflated above it
-  cl_assert_equal_i(l.selection.h, FOCUSED);       // the focused row inflated
+  cl_assert_equal_i(l.selection.y, NORMAL);  // row 0 deflated above it
+  cl_assert_equal_i(l.selection.h, FOCUSED); // the focused row inflated
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, target_offset);
 }
 
@@ -912,12 +963,12 @@ void test_menu_layer__touch_tap_unselected_selects_and_activates(void) {
   prv_reset_touch_counters();
   s_will_change_mode = WillChange_Passthrough;
   // Default selection is row 0; tap row 2 (unselected).
-  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // row 2, offset 0
-  cl_assert_equal_i(s_will_change_count, 1);                 // the full contract ran
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);  // selection moved to the tapped row
-  cl_assert_equal_i(s_select_click_count, 1);                // and it activated in the same tap
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));    // row 2, offset 0
+  cl_assert_equal_i(s_will_change_count, 1);                   // the full contract ran
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2); // selection moved to the tapped row
+  cl_assert_equal_i(s_select_click_count, 1);                  // and it activated in the same tap
   cl_assert_equal_i(s_select_click_index.row, 2);
-  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 0);  // no re-centre scroll
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 0); // no re-centre scroll
 }
 
 // A tap on the row that IS the current selection activates it, without re-running the contract.
@@ -926,12 +977,12 @@ void test_menu_layer__touch_tap_selected_activates(void) {
   menu_layer_init(&l, &GRect(0, 0, 144, 180));
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
-  menu_layer_set_selected_index(&l, MenuIndex(0, 2), MenuRowAlignNone, false);  // select, no scroll
+  menu_layer_set_selected_index(&l, MenuIndex(0, 2), MenuRowAlignNone, false); // select, no scroll
   prv_reset_touch_counters();
-  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // tap the already-selected row 2
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22)); // tap the already-selected row 2
   cl_assert_equal_i(s_select_click_count, 1);               // activated
   cl_assert_equal_i(s_select_click_index.row, 2);
-  cl_assert_equal_i(s_will_change_count, 0);                // no reselection contract on the selected row
+  cl_assert_equal_i(s_will_change_count, 0); // no reselection contract on the selected row
 }
 
 // The "tapped == selection" check keys off the committed selection INDEX, not the on-screen
@@ -945,7 +996,7 @@ void test_menu_layer__touch_tap_selected_offcenter_activates(void) {
   // Commit selection to row 3 but leave it OFF-CENTRE (screen centre is 90; row 3 sits at ~154).
   menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignNone, false);
   prv_reset_touch_counters();
-  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // tap where row 3 currently sits
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22)); // tap where row 3 currently sits
   cl_assert_equal_i(s_select_click_count, 1);               // activated despite not being centred
   cl_assert_equal_i(s_select_click_index.row, 3);
   cl_assert_equal_i(s_will_change_count, 0);
@@ -958,10 +1009,10 @@ void test_menu_layer__touch_tap_veto_no_select_no_activate(void) {
   menu_layer_reload_data(&l);
   prv_reset_touch_counters();
   s_will_change_mode = WillChange_Veto;
-  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // taps row 2, but veto keeps row 0
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22)); // taps row 2, but veto keeps row 0
   cl_assert_equal_i(s_will_change_count, 1);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);  // no selection change
-  cl_assert_equal_i(s_select_click_count, 0);                   // no activation
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0); // no selection change
+  cl_assert_equal_i(s_select_click_count, 0);                  // no activation
 }
 
 void test_menu_layer__touch_tap_redirect_selects_without_activating(void) {
@@ -972,9 +1023,9 @@ void test_menu_layer__touch_tap_redirect_selects_without_activating(void) {
   prv_reset_touch_counters();
   s_will_change_mode = WillChange_Redirect;
   s_will_change_redirect = MenuIndex(0, 5);
-  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));  // taps row 2, redirected to row 5
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 5);  // selected the third row
-  cl_assert_equal_i(s_select_click_count, 0);                   // but did NOT activate
+  menu_layer_touch_handle_tap(&l, GPoint(72, 2 * 44 + 22));    // taps row 2, redirected to row 5
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 5); // selected the third row
+  cl_assert_equal_i(s_select_click_count, 0);                  // but did NOT activate
 }
 
 // A tap-select on a center-focused menu plays the button-style jump animation instead of
@@ -986,11 +1037,11 @@ void test_menu_layer__touch_tap_center_focused_schedules_jump(void) {
   menu_layer_set_center_focused(&l, true);
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
-  menu_layer_set_selected_index(&l, MenuIndex(0, 1), MenuRowAlignCenter, false);  // offset 24
+  menu_layer_set_selected_index(&l, MenuIndex(0, 1), MenuRowAlignCenter, false); // offset 24
   prv_reset_touch_counters();
-  menu_layer_touch_handle_tap(&l, GPoint(72, 154 + 24));  // row 3 (content_y 154), on-screen at 178
+  menu_layer_touch_handle_tap(&l, GPoint(72, 154 + 24)); // row 3 (content_y 154), on-screen at 178
   cl_assert_equal_i(s_will_change_count, 1);
-  cl_assert_equal_i(s_select_click_count, 0);                  // select, not activate
+  cl_assert_equal_i(s_select_click_count, 0); // select, not activate
   // The jump is in flight: index not yet committed, target recorded for the double-tap window.
   cl_assert(l.animation.animation != NULL);
   cl_assert(animation_is_scheduled(l.animation.animation));
@@ -1016,13 +1067,13 @@ void test_menu_layer__touch_double_tap_during_center_focused_jump(void) {
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
   prv_reset_touch_counters();
-  menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));  // row 2 (content_y 110), row 0 centred
+  menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68)); // row 2 (content_y 110), row 0 centred
   cl_assert_equal_i(s_select_click_count, 0);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);  // commit still pending
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // within the 300ms window
-  menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));  // same spot, mid-jump
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);   // commit still pending
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // within the 300ms window
+  menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));         // same spot, mid-jump
   cl_assert_equal_i(s_select_click_count, 1);
-  cl_assert_equal_i(s_select_click_index.row, 2);          // the jump target, not the stale row 0
+  cl_assert_equal_i(s_select_click_index.row, 2); // the jump target, not the stale row 0
 }
 
 // ---- Criterion 3a: plain menus have no double-tap special case — every tap activates ----
@@ -1038,15 +1089,15 @@ void test_menu_layer__touch_tap_each_tap_activates(void) {
   prv_reset_touch_counters();
   s_will_change_mode = WillChange_Passthrough;
 
-  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // row 3: select + activate
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22)); // row 3: select + activate
   cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);
   cl_assert_equal_i(s_select_click_count, 1);
   cl_assert_equal_i(s_select_click_index.row, 3);
-  cl_assert(!l.double_tap_armed);                            // plain taps never arm the window
+  cl_assert(!l.double_tap_armed); // plain taps never arm the window
 
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // a fast second tap...
-  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22));  // ...same spot (the row never moved)
-  cl_assert_equal_i(s_select_click_count, 2);                // ...simply activates again
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // a fast second tap...
+  menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22)); // ...same spot (the row never moved)
+  cl_assert_equal_i(s_select_click_count, 2);               // ...simply activates again
   cl_assert_equal_i(s_select_click_index.row, 3);
 }
 
@@ -1066,22 +1117,22 @@ void test_menu_layer__touch_double_tap_records_clamped_selection(void) {
   s_will_change_mode = WillChange_Redirect;
   s_will_change_redirect = MenuIndex(0, 999);
   menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));
-  cl_assert_equal_i(s_select_click_count, 0);              // selected, not activated
-  const uint16_t clamped_row = l.animation.new_selection.index.row;  // the jump's committed target
-  cl_assert(clamped_row < 999);                            // proved clamped to a valid row
+  cl_assert_equal_i(s_select_click_count, 0);                       // selected, not activated
+  const uint16_t clamped_row = l.animation.new_selection.index.row; // the jump's committed target
+  cl_assert(clamped_row < 999);                                     // proved clamped to a valid row
 
   // Tap 2 inside the window: priority 1 activates the RECORDED index, which must be the clamped
   // row, never the out-of-range 999 the client redirect asked for.
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // +100ms < 300ms
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // +100ms < 300ms
   prv_reset_touch_counters();
   menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));
   cl_assert_equal_i(s_select_click_count, 1);
-  cl_assert_equal_i(s_select_click_index.row, clamped_row);  // clamped, NOT the out-of-range 999
+  cl_assert_equal_i(s_select_click_index.row, clamped_row); // clamped, NOT the out-of-range 999
 }
 
-// Fix B: a vetoed tap must change NOTHING — in particular it must not re-centre the (off-centre) old
-// selection. A vetoed tap on a visible other row must not call set_selected_index at all, so the
-// scroll offset stays exactly where it was and nothing activates.
+// Fix B: a vetoed tap must change NOTHING — in particular it must not re-centre the (off-centre)
+// old selection. A vetoed tap on a visible other row must not call set_selected_index at all, so
+// the scroll offset stays exactly where it was and nothing activates.
 //
 // A center_focused menu is used so a (buggy) re-centre would be observable synchronously: even the
 // animated jump applies the scroll position at schedule time (only the content-offset trick
@@ -1101,9 +1152,9 @@ void test_menu_layer__touch_tap_veto_does_not_recenter(void) {
   s_will_change_mode = WillChange_Veto;
   // Tap at screen y 22 => content_y 42 => row 0 (a visible row that is not the selected row 3).
   menu_layer_touch_handle_tap(&l, GPoint(72, 22));
-  cl_assert_equal_i(s_will_change_count, 1);                    // the contract ran
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);  // veto kept the old selection
-  cl_assert_equal_i(s_select_click_count, 0);                   // no activation
+  cl_assert_equal_i(s_will_change_count, 1);                   // the contract ran
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3); // veto kept the old selection
+  cl_assert_equal_i(s_select_click_count, 0);                  // no activation
   // Offset unchanged: a re-centre would have snapped row 3 back to the middle (a different offset).
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, offset_before);
 }
@@ -1131,12 +1182,12 @@ void test_menu_layer__touch_button_nav_disarms_double_tap(void) {
 
   // A tap within the 300ms window on a not-selected row: with the arm gone it is an ordinary
   // carousel tap-select (no activation). A stale arm would have activated the recorded row here.
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // +100ms < 300ms
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // +100ms < 300ms
   prv_reset_touch_counters();
   const int16_t off = scroll_layer_get_content_offset(&l.scroll_layer).y;
-  menu_layer_touch_handle_tap(&l, GPoint(72, 154 + off));  // row 3 (content_y 154)
-  cl_assert_equal_i(s_select_click_count, 0);              // selected, not activated
-  cl_assert_equal_i(s_will_change_count, 1);               // the normal tap contract ran
+  menu_layer_touch_handle_tap(&l, GPoint(72, 154 + off)); // row 3 (content_y 154)
+  cl_assert_equal_i(s_select_click_count, 0);             // selected, not activated
+  cl_assert_equal_i(s_will_change_count, 1);              // the normal tap contract ran
 }
 
 // A2: menu_layer_reload_data disarms the window, so a reload that deletes the recorded row cannot
@@ -1161,11 +1212,11 @@ void test_menu_layer__touch_reload_disarms_double_tap(void) {
   cl_assert(!l.double_tap_armed);
 
   // A tap within the window must NOT activate the stale (now out-of-range) row 2.
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000);  // +100ms < 300ms
+  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // +100ms < 300ms
   prv_reset_touch_counters();
   const int16_t off = scroll_layer_get_content_offset(&l.scroll_layer).y;
-  menu_layer_touch_handle_tap(&l, GPoint(72, 66 + off));   // row 1 (content_y 66)
-  cl_assert_equal_i(s_select_click_count, 0);              // no stale activation
+  menu_layer_touch_handle_tap(&l, GPoint(72, 66 + off)); // row 1 (content_y 66)
+  cl_assert_equal_i(s_select_click_count, 0);            // no stale activation
 }
 
 // ---- Criterion 4: on a plain menu the selection is frozen during a pan; no client callbacks ----
@@ -1178,18 +1229,19 @@ void test_menu_layer__touch_pan_freezes_selection(void) {
   menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignNone, false);
   prv_reset_touch_counters();
   menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, -100));
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);            // unchanged
-  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -100);  // content moved
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 3);                 // unchanged
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -100); // content moved
   cl_assert_equal_i(s_will_change_count, 0);
   cl_assert_equal_i(s_selection_changed_count, 0);
   cl_assert_equal_i(s_select_click_count, 0);
 }
 
-// ---- Criterion 5: offset stays within coarse bounds (short content + center_focused widening) ----
+// ---- Criterion 5: offset stays within coarse bounds (short content + center_focused widening)
+// ----
 
 void test_menu_layer__touch_clamp_content_shorter_than_viewport(void) {
   MenuLayer l;
-  s_num_rows = 1;  // content shorter than the 180px viewport => lower bound is 0 via min()
+  s_num_rows = 1; // content shorter than the 180px viewport => lower bound is 0 via min()
   menu_layer_init(&l, &GRect(0, 0, 144, 180));
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
@@ -1237,11 +1289,11 @@ void test_menu_layer__touch_cancel_leaves_selection_unchanged(void) {
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
   menu_layer_set_selected_index(&l, MenuIndex(0, 1), MenuRowAlignNone, false);
-  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -20), false);  // centre over row 2
+  scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -20), false); // centre over row 2
   prv_reset_touch_counters();
   menu_layer_touch_handle_cancel(&l);
-  cl_assert_equal_i(s_will_change_count, 0);                     // no contract call
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1);  // selection untouched by the cancel
+  cl_assert_equal_i(s_will_change_count, 0);                   // no contract call
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 1); // selection untouched by the cancel
   cl_assert_equal_i(s_selection_changed_count, 0);
   cl_assert_equal_i(s_select_click_count, 0);
 }
@@ -1250,16 +1302,16 @@ void test_menu_layer__touch_cancel_leaves_selection_unchanged(void) {
 
 void test_menu_layer__touch_swipe_right_emits_back(void) {
   prv_touch_nav_setup();
-  s_bridge.overrides_back = false;   // no back handler => the bridge pops the window
+  s_bridge.overrides_back = false; // no back handler => the bridge pops the window
   MenuLayer l;
   menu_layer_init(&l, &GRect(0, 0, 144, 180));
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
   prv_reset_touch_counters();
   menu_layer_touch_handle_swipe(&l, SwipeDirection_Right);
-  cl_assert_equal_i(s_bridge.pop_count, 1);       // right emits BACK
+  cl_assert_equal_i(s_bridge.pop_count, 1); // right emits BACK
   cl_assert_equal_i(s_bridge.emit_count, 0);
-  cl_assert_equal_i(s_select_click_count, 0);     // and does NOT activate
+  cl_assert_equal_i(s_select_click_count, 0); // and does NOT activate
   menu_layer_deinit(&l);
 }
 
@@ -1273,9 +1325,9 @@ void test_menu_layer__touch_swipe_left_does_nothing(void) {
   menu_layer_set_selected_index(&l, MenuIndex(0, 3), MenuRowAlignNone, false);
   prv_reset_touch_counters();
   menu_layer_touch_handle_swipe(&l, SwipeDirection_Left);
-  cl_assert_equal_i(s_select_click_count, 0);     // left no longer activates
-  cl_assert_equal_i(s_bridge.emit_count, 0);      // and emits nothing
-  cl_assert_equal_i(s_bridge.pop_count, 0);       // and does NOT pop / go BACK
+  cl_assert_equal_i(s_select_click_count, 0); // left no longer activates
+  cl_assert_equal_i(s_bridge.emit_count, 0);  // and emits nothing
+  cl_assert_equal_i(s_bridge.pop_count, 0);   // and does NOT pop / go BACK
   menu_layer_deinit(&l);
 }
 
@@ -1286,7 +1338,7 @@ void test_menu_layer__touch_legacy2_not_registered(void) {
   process_manager_set_compiled_with_legacy2_sdk(true);
   MenuLayer l;
   menu_layer_init(&l, &GRect(0, 0, 144, 180));
-  cl_assert(s_touch_nav_state.menu_head == NULL);  // not a Tier-1 widget => falls back to the bridge
+  cl_assert(s_touch_nav_state.menu_head == NULL); // not a Tier-1 widget => falls back to the bridge
   menu_layer_deinit(&l);
 }
 
@@ -1328,10 +1380,14 @@ void test_menu_layer__touch_double_init_and_double_deinit(void) {
 
 // ---- Criterion 7: deinit mid-gesture cancels with no callbacks; the next gesture still works ----
 
-typedef struct { TouchEventType type; int16_t x; int16_t y; } DriveEvent;
+typedef struct {
+  TouchEventType type;
+  int16_t x;
+  int16_t y;
+} DriveEvent;
 
 static void prv_drive(TouchEventType type, int16_t x, int16_t y) {
-  const TouchEvent e = { .type = type, .x = x, .y = y, .non_navigational = false };
+  const TouchEvent e = {.type = type, .x = x, .y = y, .non_navigational = false};
   touch_nav_dispatch(&e, &s_touch_nav_state);
 }
 
@@ -1415,17 +1471,17 @@ void test_menu_layer__scroll_gesture_not_eaten_by_menu(void) {
   ScrollLayer scroll;
   prv_make_menu_and_scroll(&menu, &scroll);
 
-  prv_drive(TouchEvent_Touchdown, 100, 300);         // active layer -> the standalone ScrollLayer
+  prv_drive(TouchEvent_Touchdown, 100, 300); // active layer -> the standalone ScrollLayer
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 260);    // 40px up -> pan Started on the scroll set
+  prv_drive(TouchEvent_PositionUpdate, 100, 260); // 40px up -> pan Started on the scroll set
   cl_assert(scroll_layer_touch_is_gesture_target(&scroll));
   cl_assert(!menu_layer_touch_is_gesture_target(&menu));
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 230);    // Updated -> live scroll
-  prv_drive(TouchEvent_Liftoff, 100, 230);           // Completed -> final commit
+  prv_drive(TouchEvent_PositionUpdate, 100, 230); // Updated -> live scroll
+  prv_drive(TouchEvent_Liftoff, 100, 230);        // Completed -> final commit
 
-  cl_assert(scroll_layer_get_content_offset(&scroll).y < 0);            // scrolled by finger
-  cl_assert_equal_i(scroll_layer_get_content_offset(&menu.scroll_layer).y, 0);  // menu inert
+  cl_assert(scroll_layer_get_content_offset(&scroll).y < 0);                   // scrolled by finger
+  cl_assert_equal_i(scroll_layer_get_content_offset(&menu.scroll_layer).y, 0); // menu inert
 
   scroll_layer_deinit(&scroll);
   menu_layer_deinit(&menu);
@@ -1438,17 +1494,17 @@ void test_menu_layer__menu_gesture_not_eaten_by_scroll(void) {
   ScrollLayer scroll;
   prv_make_menu_and_scroll(&menu, &scroll);
 
-  prv_drive(TouchEvent_Touchdown, 100, 90);          // active layer -> the MenuLayer
+  prv_drive(TouchEvent_Touchdown, 100, 90); // active layer -> the MenuLayer
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 50);     // 40px up -> pan Started on the menu set
+  prv_drive(TouchEvent_PositionUpdate, 100, 50); // 40px up -> pan Started on the menu set
   cl_assert(menu_layer_touch_is_gesture_target(&menu));
   cl_assert(!scroll_layer_touch_is_gesture_target(&scroll));
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 20);     // Updated -> live scroll
-  prv_drive(TouchEvent_Liftoff, 100, 20);            // Completed -> final commit
+  prv_drive(TouchEvent_PositionUpdate, 100, 20); // Updated -> live scroll
+  prv_drive(TouchEvent_Liftoff, 100, 20);        // Completed -> final commit
 
-  cl_assert(scroll_layer_get_content_offset(&menu.scroll_layer).y < 0);   // menu scrolled
-  cl_assert_equal_i(scroll_layer_get_content_offset(&scroll).y, 0);       // scroll set inert
+  cl_assert(scroll_layer_get_content_offset(&menu.scroll_layer).y < 0); // menu scrolled
+  cl_assert_equal_i(scroll_layer_get_content_offset(&scroll).y, 0);     // scroll set inert
 
   scroll_layer_deinit(&scroll);
   menu_layer_deinit(&menu);
@@ -1461,7 +1517,7 @@ void test_menu_layer__menu_gesture_not_eaten_by_scroll(void) {
 // selection teleports across the list.
 void test_menu_layer__step_reconciles_offscreen_selection(void) {
   MenuLayer l;
-  menu_layer_init(&l, &GRect(0, 0, 144, 180));  // 10 rows * 44 = 440 content, max scroll -260
+  menu_layer_init(&l, &GRect(0, 0, 144, 180)); // 10 rows * 44 = 440 content, max scroll -260
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
   menu_layer_set_selected_index(&l, MenuIndex(0, 0), MenuRowAlignNone, false);
@@ -1478,7 +1534,7 @@ void test_menu_layer__step_reconciles_offscreen_selection(void) {
   // Stepped from the CENTRE row 7 -> row 8, NOT selection+1 (row 1) of the off-screen row 0.
   cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 8);
   cl_assert(menu_layer_get_selected_index(&l).row != 1);
-  cl_assert_equal_i(s_select_click_count, 0);  // reselect never activates
+  cl_assert_equal_i(s_select_click_count, 0); // reselect never activates
 }
 
 // The mandatory gate: when the selection is VISIBLE, UP/DOWN behaves exactly as a non-touch build
@@ -1504,15 +1560,16 @@ void test_menu_layer__step_visible_selection_unchanged(void) {
 void test_menu_layer__step_offscreen_center_on_header_falls_back(void) {
   MenuLayer l;
   menu_layer_init(&l, &GRect(0, 0, 144, 168));
-  menu_layer_set_callbacks(&l, NULL, &(MenuLayerCallbacks){
-    .draw_row = prv_draw_row,
-    .get_num_rows = prv_five_rows,
-    .get_num_sections = prv_two_sections,
-    .get_header_height = prv_header_20,
-    .draw_header = (MenuLayerDrawHeaderCallback)prv_draw_row,
-    .get_separator_height = prv_sep_0,
-    .select_click = prv_touch_select_click,
-  });
+  menu_layer_set_callbacks(&l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_five_rows,
+                             .get_num_sections = prv_two_sections,
+                             .get_header_height = prv_header_20,
+                             .draw_header = (MenuLayerDrawHeaderCallback)prv_draw_row,
+                             .get_separator_height = prv_sep_0,
+                             .select_click = prv_touch_select_click,
+                           });
   menu_layer_reload_data(&l);
   menu_layer_set_selected_index(&l, MenuIndex(0, 0), MenuRowAlignNone, false);
   prv_reset_touch_counters();
@@ -1522,7 +1579,7 @@ void test_menu_layer__step_offscreen_center_on_header_falls_back(void) {
   // off-screen (viewport shows content [160, 328]).
   scroll_layer_set_content_offset(&l.scroll_layer, GPoint(0, -160), false);
   MenuIndex miss;
-  cl_assert(!menu_layer_touch_find_row_at_content_y(&l, 244, &miss));  // centre is a header
+  cl_assert(!menu_layer_touch_find_row_at_content_y(&l, 244, &miss)); // centre is a header
 
   menu_down_click_handler(NULL, &l);
   // No reconcile (centre was a header): step from the current selection (0,0) -> (0,1).
@@ -1561,10 +1618,10 @@ void test_menu_layer__dispatch_tap_passthrough_selects(void) {
   prv_dispatch_menu_setup(&l);
   prv_reset_touch_counters();
   s_will_change_mode = WillChange_Passthrough;
-  prv_menu_dispatch_tap(100, 2 * 44 + 22);  // row 2 (offset 0)
-  cl_assert_equal_i(s_will_change_count, 1);                     // the contract ran through dispatch
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // selection moved to the tapped row
-  cl_assert_equal_i(s_select_click_count, 1);                    // and it activated
+  prv_menu_dispatch_tap(100, 2 * 44 + 22);                     // row 2 (offset 0)
+  cl_assert_equal_i(s_will_change_count, 1);                   // the contract ran through dispatch
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2); // selection moved to the tapped row
+  cl_assert_equal_i(s_select_click_count, 1);                  // and it activated
   cl_assert_equal_i(s_select_click_index.row, 2);
   menu_layer_deinit(&l);
 }
@@ -1576,9 +1633,9 @@ void test_menu_layer__dispatch_tap_veto_changes_nothing(void) {
   prv_dispatch_menu_setup(&l);
   prv_reset_touch_counters();
   s_will_change_mode = WillChange_Veto;
-  prv_menu_dispatch_tap(100, 2 * 44 + 22);  // taps row 2, veto keeps the default row 0
+  prv_menu_dispatch_tap(100, 2 * 44 + 22); // taps row 2, veto keeps the default row 0
   cl_assert_equal_i(s_will_change_count, 1);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);   // veto kept the old selection
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0); // veto kept the old selection
   cl_assert_equal_i(s_select_click_count, 0);
   menu_layer_deinit(&l);
 }
@@ -1591,8 +1648,8 @@ void test_menu_layer__dispatch_tap_redirect_selects_target(void) {
   prv_reset_touch_counters();
   s_will_change_mode = WillChange_Redirect;
   s_will_change_redirect = MenuIndex(0, 5);
-  prv_menu_dispatch_tap(100, 2 * 44 + 22);  // taps row 2, redirected to row 5
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 5);   // selected the redirect target
+  prv_menu_dispatch_tap(100, 2 * 44 + 22);                     // taps row 2, redirected to row 5
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 5); // selected the redirect target
   cl_assert_equal_i(s_select_click_count, 0);
   menu_layer_deinit(&l);
 }
@@ -1606,11 +1663,11 @@ void test_menu_layer__dispatch_pan_scrolls_1to1_and_snaps(void) {
   menu_layer_set_selected_index(&l, MenuIndex(0, 2), MenuRowAlignNone, false);
   prv_reset_touch_counters();
 
-  // Touchdown, then a first update 40px up crosses the pan threshold: the pan Starts and only latches
-  // the base (offset unchanged). delta_since_start is re-anchored to (0,0) at Start.
+  // Touchdown, then a first update 40px up crosses the pan threshold: the pan Starts and only
+  // latches the base (offset unchanged). delta_since_start is re-anchored to (0,0) at Start.
   prv_drive(TouchEvent_Touchdown, 100, 200);
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 160);   // pan Started at y=160, base latched
+  prv_drive(TouchEvent_PositionUpdate, 100, 160); // pan Started at y=160, base latched
   cl_assert(menu_layer_touch_is_gesture_target(&l));
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 0);
 
@@ -1622,10 +1679,10 @@ void test_menu_layer__dispatch_pan_scrolls_1to1_and_snaps(void) {
   // Liftoff snaps to the final (unthrottled) offset, still -30, and the selection never moved.
   prv_drive(TouchEvent_Liftoff, 100, 130);
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -30);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // selection frozen for the pan
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2); // selection frozen for the pan
   cl_assert_equal_i(s_will_change_count, 0);
   cl_assert_equal_i(s_select_click_count, 0);
-  cl_assert(!menu_layer_touch_is_gesture_target(&l));            // latch cleared on completion
+  cl_assert(!menu_layer_touch_is_gesture_target(&l)); // latch cleared on completion
   menu_layer_deinit(&l);
 }
 
@@ -1641,25 +1698,25 @@ void test_menu_layer__dispatch_pan_cancel_is_clean(void) {
 
   prv_drive(TouchEvent_Touchdown, 100, 200);
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 160);   // pan Started
+  prv_drive(TouchEvent_PositionUpdate, 100, 160); // pan Started
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 130);   // live scroll
+  prv_drive(TouchEvent_PositionUpdate, 100, 130); // live scroll
   cl_assert(menu_layer_touch_is_gesture_target(&l));
   cl_assert(scroll_layer_get_content_offset(&l.scroll_layer).y < 0);
   prv_reset_touch_counters();
 
-  // A new navigational Touchdown pre-empts the in-flight pan: the manager resets and unwinds the pan
-  // with no snap. The selection is untouched and no client callback fires.
+  // A new navigational Touchdown pre-empts the in-flight pan: the manager resets and unwinds the
+  // pan with no snap. The selection is untouched and no client callback fires.
   prv_drive(TouchEvent_Touchdown, 100, 200);
   cl_assert_equal_i(s_will_change_count, 0);
   cl_assert_equal_i(s_selection_changed_count, 0);
   cl_assert_equal_i(s_select_click_count, 0);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2);   // selection survived the cancel
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 2); // selection survived the cancel
   menu_layer_deinit(&l);
 }
 
-// A fast vertical flick scrolls/flings the menu: the unified swipe mask is Left|Right, so a vertical
-// gesture is a pan, never a swipe, and emits no navigation button.
+// A fast vertical flick scrolls/flings the menu: the unified swipe mask is Left|Right, so a
+// vertical gesture is a pan, never a swipe, and emits no navigation button.
 void test_menu_layer__dispatch_vertical_flick_scrolls_not_swipe(void) {
   prv_touch_nav_setup();
   s_bridge.overrides_back = false;
@@ -1669,12 +1726,12 @@ void test_menu_layer__dispatch_vertical_flick_scrolls_not_swipe(void) {
 
   prv_drive(TouchEvent_Touchdown, 100, 220);
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 140);   // fast upward move -> pan Started
+  prv_drive(TouchEvent_PositionUpdate, 100, 140); // fast upward move -> pan Started
   prv_advance_ms(20);
-  prv_drive(TouchEvent_PositionUpdate, 100, 80);    // live scroll
+  prv_drive(TouchEvent_PositionUpdate, 100, 80); // live scroll
   prv_drive(TouchEvent_Liftoff, 100, 80);
-  cl_assert(scroll_layer_get_content_offset(&l.scroll_layer).y < 0);   // scrolled by the flick
-  cl_assert_equal_i(s_bridge.emit_count, 0);                           // NOT emitted as a swipe
+  cl_assert(scroll_layer_get_content_offset(&l.scroll_layer).y < 0); // scrolled by the flick
+  cl_assert_equal_i(s_bridge.emit_count, 0);                         // NOT emitted as a swipe
   cl_assert_equal_i(s_bridge.pop_count, 0);
   cl_assert_equal_i(s_select_click_count, 0);
   menu_layer_deinit(&l);
@@ -1692,7 +1749,8 @@ void test_menu_layer__dispatch_no_trigger_leaves_manager_idle(void) {
   cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_pan), RecognizerState_Failed);
   cl_assert_equal_i(recognizer_get_state(s_touch_nav_state.widget_swipe), RecognizerState_Failed);
 
-  // Liftoff with nothing triggered returns the manager to idle: no stuck Possible recognizer (wart).
+  // Liftoff with nothing triggered returns the manager to idle: no stuck Possible recognizer
+  // (wart).
   prv_drive(TouchEvent_Liftoff, 100, 4);
   cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
 }
@@ -1714,7 +1772,7 @@ void test_menu_layer__touch_fling_plain_coasts_content_only(void) {
   // [-280, 0] -> the unclamped coast runs the full 3*TAU duration.
   menu_layer_touch_handle_pan_update(&l, GPoint(0, 0), GPoint(0, -88));
   menu_layer_touch_handle_snap(&l, GPoint(0, 0), GPoint(0, -88), GPoint(0, -500));
-  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -88);  // no liftoff jump
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -88); // no liftoff jump
   cl_assert(l.touch_fling_active);
   Animation *anim = property_animation_get_animation(l.scroll_layer.animation);
   cl_assert(anim != NULL);
@@ -1759,7 +1817,7 @@ void test_menu_layer__touch_fling_below_threshold_settles_only(void) {
                                GPoint(0, -(TOUCH_FLING_MIN_VELOCITY_PX_S - 1)));
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -88);
   cl_assert(!l.touch_fling_active);
-  cl_assert(l.scroll_layer.animation == NULL);   // never animated: no coast was scheduled
+  cl_assert(l.scroll_layer.animation == NULL); // never animated: no coast was scheduled
 }
 
 // The coast's stopped handler clears the fling flag and restores the shared animation defaults,
@@ -1779,7 +1837,7 @@ void test_menu_layer__touch_fling_stopped_clears_state(void) {
   s_anim_handlers.stopped(anim, true /* finished */, s_anim_handlers_context);
   cl_assert(!l.touch_fling_active);
   cl_assert_equal_i(animation_get_duration(anim, false, false), ANIMATION_DEFAULT_DURATION_MS);
-  cl_assert(s_anim_handlers.stopped == NULL);    // handlers cleared for the next plain scroll
+  cl_assert(s_anim_handlers.stopped == NULL); // handlers cleared for the next plain scroll
 }
 
 // =============================================================================================
@@ -1798,7 +1856,7 @@ void test_menu_layer__touch_fling_center_tracks_rows_and_settles(void) {
   menu_layer_set_center_focused(&l, true);
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
-  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 68);  // row 0 centred
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, 68); // row 0 centred
   prv_reset_touch_counters();
 
   // The drag lands at -32 (centre inside row 2, tracked live by the pan); the fast liftoff then
@@ -1809,7 +1867,7 @@ void test_menu_layer__touch_fling_center_tracks_rows_and_settles(void) {
   cl_assert_equal_i(s_will_change_count, 1);
   menu_layer_touch_handle_snap(&l, GPoint(0, 68), GPoint(0, -100), GPoint(0, -800));
   cl_assert(l.touch_fling_active);
-  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -32);  // no liftoff jump
+  cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, -32); // no liftoff jump
   Animation *anim = property_animation_get_animation(l.scroll_layer.animation);
   cl_assert(anim != NULL);
   cl_assert(animation_is_scheduled(anim));
@@ -1822,7 +1880,7 @@ void test_menu_layer__touch_fling_center_tracks_rows_and_settles(void) {
   cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 4);
   cl_assert_equal_i(s_will_change_count, 2);
   cl_assert_equal_i(s_selection_changed_count, 2);
-  cl_assert_equal_i(s_select_click_count, 0);   // a coast never activates
+  cl_assert_equal_i(s_select_click_count, 0); // a coast never activates
   // Regression: the reselect on a row crossing must NOT unschedule the coast (the selection
   // highlight update's change_ongoing_animation path once killed the fling on the first crossing).
   cl_assert(animation_is_scheduled(anim));
@@ -1837,7 +1895,7 @@ void test_menu_layer__touch_fling_center_tracks_rows_and_settles(void) {
   animation_unschedule(anim);
   s_anim_handlers.stopped(anim, true /* finished */, s_anim_handlers_context);
   cl_assert(!l.touch_fling_active);
-  cl_assert(animation_is_scheduled(anim));      // the settle glide was scheduled
+  cl_assert(animation_is_scheduled(anim)); // the settle glide was scheduled
   cl_assert_equal_i(s_anim_to.y, -240);
   // (Defaults restoration is asserted in the unscheduled_no_settle test: the stubbed
   // property_animation_init zeroes the duration on the settle's re-init, unlike the real one.)
@@ -1857,17 +1915,17 @@ void test_menu_layer__touch_fling_center_veto_reconciles(void) {
   menu_layer_touch_handle_pan_update(&l, GPoint(0, 68), GPoint(0, -100));
   menu_layer_touch_handle_snap(&l, GPoint(0, 68), GPoint(0, -100), GPoint(0, -500));
   cl_assert(l.touch_fling_active);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);   // vetoed: focus stays
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0); // vetoed: focus stays
   Animation *anim = property_animation_get_animation(l.scroll_layer.animation);
   prv_scroll_layer_set_content_offset_internal(&l.scroll_layer, GPoint(0, -152));
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);   // still vetoed mid-coast
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0); // still vetoed mid-coast
   cl_assert_equal_i(s_selection_changed_count, 0);
 
   animation_unschedule(anim);
   s_anim_handlers.stopped(anim, true /* finished */, s_anim_handlers_context);
   cl_assert(!l.touch_fling_active);
   cl_assert(animation_is_scheduled(anim));
-  cl_assert_equal_i(s_anim_to.y, 68);   // settle back to the vetoed row 0's centre
+  cl_assert_equal_i(s_anim_to.y, 68); // settle back to the vetoed row 0's centre
 }
 
 // A not-finished stop (caught, or something else took the offset) only clears state: whoever
@@ -1923,7 +1981,7 @@ void test_menu_layer__touch_catch_stops_fling_and_swallows_tap(void) {
   menu_layer_touch_handle_touchdown(&l);
   cl_assert(!l.touch_tap_swallow);
   menu_layer_touch_handle_tap(&l, GPoint(72, 66));
-  cl_assert_equal_i(s_will_change_count, 1);   // tap-select ran the contract this time
+  cl_assert_equal_i(s_will_change_count, 1); // tap-select ran the contract this time
 }
 
 // A caught-then-abandoned gesture (the catch became a pan, not a tap) leaves a stale swallow mark;
@@ -1935,7 +1993,7 @@ void test_menu_layer__touch_catch_abandoned_swallow_reassigned(void) {
   menu_layer_reload_data(&l);
   prv_reset_touch_counters();
   menu_layer_touch_handle_snap(&l, GPoint(0, 0), GPoint(0, -88), GPoint(0, -500));
-  menu_layer_touch_handle_touchdown(&l);   // catch
+  menu_layer_touch_handle_touchdown(&l); // catch
   cl_assert(l.touch_tap_swallow);
   // ...the gesture becomes a pan (no tap consumes the flag)...
   menu_layer_touch_handle_pan_update(&l, GPoint(0, -88), GPoint(0, 20));
@@ -1979,10 +2037,11 @@ GRect prv_scrollbar_thumb_rect(MenuLayer *menu_layer, int16_t content_top_y);
 
 static void prv_init_scrollbar_menu(MenuLayer *l) {
   menu_layer_init(l, &GRect(0, 0, 144, 168));
-  menu_layer_set_callbacks(l, NULL, &(MenuLayerCallbacks){
-      .draw_row = prv_draw_row,
-      .get_num_rows = prv_get_num_rows,
-  });
+  menu_layer_set_callbacks(l, NULL,
+                           &(MenuLayerCallbacks){
+                             .draw_row = prv_draw_row,
+                             .get_num_rows = prv_get_num_rows,
+                           });
 }
 
 void test_menu_layer__scrollbar_shows_on_touch_pan_and_times_out(void) {
@@ -2082,12 +2141,12 @@ void test_menu_layer__scrollbar_thumb_rect_geometry(void) {
   const int16_t content_h = scroll_layer_get_content_size(&l.scroll_layer).h;
   cl_assert(content_h > frame_h);
   const int16_t scrollable_h = content_h - frame_h;
-  const int16_t track_h = frame_h - 2;  // 1px margin at each end
+  const int16_t track_h = frame_h - 2; // 1px margin at each end
   const int16_t thumb_h = (int16_t)(((int32_t)track_h * frame_h) / content_h);
 
   // Top of the list: thumb rests at the top track margin
   GRect r = prv_scrollbar_thumb_rect(&l, 0);
-  cl_assert_equal_i(r.origin.x, frame_w - 4);  // 1px margin + 3px thumb
+  cl_assert_equal_i(r.origin.x, frame_w - 4); // 1px margin + 3px thumb
   cl_assert_equal_i(r.size.w, 3);
   cl_assert_equal_i(r.origin.y, 1);
   cl_assert_equal_i(r.size.h, thumb_h);
@@ -2135,7 +2194,7 @@ void test_menu_layer__overscroll_snap_springs_back_to_edge(void) {
   cl_assert(anim != NULL);
   cl_assert(animation_is_scheduled(anim));
   cl_assert_equal_i(s_anim_to.y, 0);
-  cl_assert(!l.touch_fling_active);  // a spring-back is not a coast
+  cl_assert(!l.touch_fling_active); // a spring-back is not a coast
   // The glide starts from the rubber-banded offset; nothing snapped yet.
   cl_assert_equal_i(scroll_layer_get_content_offset(&l.scroll_layer).y, overscrolled_y);
   menu_layer_deinit(&l);
@@ -2161,7 +2220,7 @@ void test_menu_layer__overscroll_stretch_fills_gap_at_top(void) {
   MenuLayer l;
   prv_init_scrollbar_menu(&l);
   const int16_t cell_h = l.selection.h;
-  cl_assert_equal_i(l.selection.y, 0);  // first row selected
+  cl_assert_equal_i(l.selection.y, 0); // first row selected
 
   // Pulling past the top rubber-bands the offset; the selection background extends up to the
   // viewport top so the exposed gap reads as the selected cell stretching.
@@ -2212,7 +2271,7 @@ void test_menu_layer__overscroll_stretch_fills_gap_at_bottom(void) {
   cl_assert(l.overscroll_stretched);
   cl_assert_equal_i(l.inverter.layer.frame.origin.y, l.selection.y);
   cl_assert_equal_i(l.inverter.layer.frame.origin.y + l.inverter.layer.frame.size.h,
-                    frame_h - offset_y);  // content-space viewport bottom
+                    frame_h - offset_y); // content-space viewport bottom
   menu_layer_deinit(&l);
 }
 
@@ -2228,10 +2287,11 @@ void test_menu_layer__overscroll_stretch_follows_spring_back(void) {
   menu_layer_touch_handle_snap(&l, GPoint(0, 0), GPoint(0, 50), GPoint(0, 0));
   cl_assert(animation_is_scheduled(property_animation_get_animation(l.scroll_layer.animation)));
   cl_assert_equal_i(s_anim_to.y, 0);
-  scroll_layer_touch_set_content_offset_overscrolled(&l.scroll_layer, 5);  // a mid-glide frame
+  scroll_layer_touch_set_content_offset_overscrolled(&l.scroll_layer, 5); // a mid-glide frame
   cl_assert(l.overscroll_stretched);
   cl_assert_equal_i(l.inverter.layer.frame.origin.y, -5);
-  scroll_layer_touch_set_content_offset_overscrolled(&l.scroll_layer, 0);  // the glide lands on the edge
+  scroll_layer_touch_set_content_offset_overscrolled(&l.scroll_layer,
+                                                     0); // the glide lands on the edge
   cl_assert(!l.overscroll_stretched);
   cl_assert_equal_i(l.inverter.layer.frame.origin.y, 0);
   cl_assert_equal_i(l.inverter.layer.frame.size.h, cell_h);
@@ -2263,7 +2323,7 @@ void test_menu_layer__touch_center_pin_holds_highlight_during_pan(void) {
   menu_layer_set_center_focused(&l, true);
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
-  const int16_t centered_pad = (frame_h - 44) / 2;  // 68: row 0 centred offset
+  const int16_t centered_pad = (frame_h - 44) / 2; // 68: row 0 centred offset
 
   // Mid-pan the highlight is pinned to the viewport centre, not to the selected row.
   menu_layer_touch_handle_pan_update(&l, GPoint(0, centered_pad), GPoint(0, -30));
@@ -2271,7 +2331,7 @@ void test_menu_layer__touch_center_pin_holds_highlight_during_pan(void) {
   cl_assert_equal_i(offset_y, centered_pad - 30);
   cl_assert(l.touch_center_pin);
   cl_assert_equal_i(l.inverter.layer.frame.origin.y, -offset_y + centered_pad);
-  cl_assert(l.inverter.layer.frame.origin.y != l.selection.y);  // row 0 is mid-transit
+  cl_assert(l.inverter.layer.frame.origin.y != l.selection.y); // row 0 is mid-transit
 
   // A centre crossing re-selects the row underneath but the box does not move with it.
   menu_layer_touch_handle_pan_update(&l, GPoint(0, centered_pad), GPoint(0, -188));
@@ -2324,7 +2384,7 @@ void test_menu_layer__touch_center_pin_moves_with_row_past_the_edge(void) {
   menu_layer_set_center_focused(&l, true);
   prv_set_touch_callbacks(&l);
   menu_layer_reload_data(&l);
-  const int16_t rest_y = (frame_h - 44) / 2;  // row 0 centred
+  const int16_t rest_y = (frame_h - 44) / 2; // row 0 centred
 
   // Pulling past the first row's centred rest rubber-bands the offset; the box has no next row
   // to transit to, so it glues to the row and moves together with the pull.

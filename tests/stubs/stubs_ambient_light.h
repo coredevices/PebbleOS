@@ -14,18 +14,18 @@ void ambient_light_suspend(void) {
 void ambient_light_resume(void) {
 }
 uint32_t ambient_light_get_light_level(void) {
-	return 0;
+  return 0;
 }
 void command_als_read(void) {
 }
 uint32_t ambient_light_get_dark_threshold(void) {
-	return 0;
+  return 0;
 }
 void ambient_light_set_dark_threshold(uint32_t new_threshold) {
 }
 bool ambient_light_is_light(void) {
-	return false;
+  return false;
 }
 uint32_t ambient_light_level_to_lux(uint32_t light_level) {
-	return light_level;
+  return light_level;
 }

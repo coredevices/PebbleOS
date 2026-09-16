@@ -16,8 +16,7 @@
 
 static Heap s_app_heap;
 
-bool app_state_configure(MemorySegment *app_state_ram,
-                         ProcessAppSDKType sdk_type,
+bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_type,
                          int16_t obstruction_origin_y) {
   return true;
 }
@@ -48,39 +47,38 @@ LocaleInfo *app_state_get_locale_info(void) {
 }
 
 GContext *s_app_state_get_graphics_context;
-GContext* app_state_get_graphics_context(void) {
+GContext *app_state_get_graphics_context(void) {
   return s_app_state_get_graphics_context;
 }
 
-Heap* app_state_get_heap(void) {
+Heap *app_state_get_heap(void) {
   return &s_app_heap;
 }
 
 static AnimationState s_stub_app_animation_state;
 
-AnimationState* app_state_get_animation_state(void) {
+AnimationState *app_state_get_animation_state(void) {
   return &s_stub_app_animation_state;
 }
 
 static AnimationState s_stub_kernel_animation_state;
 
-AnimationState* kernel_applib_get_animation_state(void) {
+AnimationState *kernel_applib_get_animation_state(void) {
   return &s_stub_kernel_animation_state;
 }
 
-GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {
+GBitmap *app_state_legacy2_get_2bit_framebuffer(void) {
   // Shouldn't be used, only for backwards compatibility
   return NULL;
 }
 
-
 static Layer *s_layer_tree_stack[LAYER_TREE_STACK_SIZE];
 
-Layer** app_state_get_layer_tree_stack(void) {
+Layer **app_state_get_layer_tree_stack(void) {
   return s_layer_tree_stack;
 }
 
-Layer** kernel_applib_get_layer_tree_stack(void) {
+Layer **kernel_applib_get_layer_tree_stack(void) {
   return s_layer_tree_stack;
 }
 
@@ -108,7 +106,7 @@ void *app_state_get_user_data(void) {
 static JsRuntimeContext *s_js_runtime_context = NULL;
 static uint8_t *s_runtime_context_buffer = NULL;
 void app_state_set_js_runtime_context(uint8_t *unaligned_buffer,
-                                         JsRuntimeContext *js_runtime_context) {
+                                      JsRuntimeContext *js_runtime_context) {
   s_js_runtime_context = js_runtime_context;
   s_runtime_context_buffer = unaligned_buffer;
 }
@@ -157,6 +155,6 @@ TextRenderState *app_state_get_text_render_state(void) {
 }
 
 FrameBuffer *s_app_state_framebuffer;
-FrameBuffer * WEAK app_state_get_framebuffer(void) {
+FrameBuffer *WEAK app_state_get_framebuffer(void) {
   return s_app_state_framebuffer;
 }

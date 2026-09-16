@@ -21,11 +21,11 @@
 
 PBL_LOG_MODULE_DEFINE(service_stationary, CONFIG_SERVICE_STATIONARY_LOG_LEVEL);
 
-#define STATIONARY_PEEKING_TIME_MINS 5
+#define STATIONARY_PEEKING_TIME_MINS              5
 #define STATIONARY_WAIT_BEFORE_ENGAGING_TIME_MINS 30
-#define STATIONARY_ENABLED_DIALOG_TIMEOUT_MS 1800000
+#define STATIONARY_ENABLED_DIALOG_TIMEOUT_MS      1800000
 #define STATIONARY_WELCOME_BACK_DIALOG_TIMEOUT_MS 2000
-#define ACCEL_MAX_IDLE_DELTA 50
+#define ACCEL_MAX_IDLE_DELTA                      50
 
 #define DEBUG_STATIONARY 0
 
@@ -323,8 +323,7 @@ static void prv_handle_action(StationaryAction action) {
   // we need to be on kernel main so that we subscribe to event services
   // for kernel main
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
-  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary: state %d action %d",
-            s_current_state, action);
+  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary: state %d action %d", s_current_state, action);
 
   static StationaryActionHandler const prv_action_jump_table[] = {
     [StationaryStateAwake] = prv_handle_awake_action,
@@ -338,12 +337,10 @@ static void prv_handle_action(StationaryAction action) {
 
 static void prv_setup_callback_info(void) {
   //! Timer callback to check whether the watch is stationary every minute
-  s_accel_stationary_timer_info = (RegularTimerInfo) {
-    .cb = prv_stationary_check_timer_cb
-  };
+  s_accel_stationary_timer_info = (RegularTimerInfo){.cb = prv_stationary_check_timer_cb};
 
   //! Button press events
-  s_button_event_info = (EventServiceInfo) {
+  s_button_event_info = (EventServiceInfo){
     .type = PEBBLE_BUTTON_DOWN_EVENT,
     .handler = prv_button_down_handler,
   };

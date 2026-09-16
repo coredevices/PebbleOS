@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#pragma once 
+#pragma once
 
-void reboot_reason_set(RebootReason *reason) {}
-
+void reboot_reason_set(RebootReason *reason) {
+}

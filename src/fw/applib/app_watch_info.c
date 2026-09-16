@@ -82,7 +82,7 @@ WatchInfoModel watch_info_get_model() {
 }
 
 WatchInfoVersion watch_info_get_firmware_version(void) {
-  return (WatchInfoVersion) {
+  return (WatchInfoVersion){
     .major = GIT_MAJOR_VERSION,
     .minor = GIT_MINOR_VERSION,
     .patch = GIT_PATCH_VERSION

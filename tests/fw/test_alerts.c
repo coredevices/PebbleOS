@@ -27,7 +27,6 @@
 #include "stubs_vibe_score_info.h"
 #include "fake_rtc.h"
 
-
 // Overrides
 /////////////////////////////////
 void do_not_disturb_init(void) {

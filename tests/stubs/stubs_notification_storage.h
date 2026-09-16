@@ -15,7 +15,7 @@ void WEAK notification_storage_lock(void) {
 void WEAK notification_storage_unlock(void) {
 }
 
-void WEAK notification_storage_store(TimelineItem* notification) {
+void WEAK notification_storage_store(TimelineItem *notification) {
 }
 
 bool WEAK notification_storage_notification_exists(const Uuid *id) {
@@ -50,8 +50,11 @@ bool WEAK notification_storage_find_ancs_notification_by_timestamp(
 }
 
 void WEAK notification_storage_rewrite(void (*iter_callback)(TimelineItem *notification,
-    SerializedTimelineItemHeader *header, void *data), void *data) {
+                                                             SerializedTimelineItemHeader *header,
+                                                             void *data),
+                                       void *data) {
 }
 
 void WEAK notification_storage_iterate(
-    bool (*iter_callback)(void *data, SerializedTimelineItemHeader *header_id), void *data) {}
+    bool (*iter_callback)(void *data, SerializedTimelineItemHeader *header_id), void *data) {
+}

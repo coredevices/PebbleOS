@@ -15,8 +15,7 @@ typedef struct GContext GContext;
 //! @see \ref Drawing
 //! @see \ref LayerUpdateProc
 
-GContext* app_get_current_graphics_context(void);
+GContext *app_get_current_graphics_context(void);
 
 //!   @} // end addtogroup App
 //! @} // end addtogroup Foundation
-

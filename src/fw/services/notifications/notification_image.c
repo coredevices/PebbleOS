@@ -16,8 +16,8 @@ static PBL_MUTEX_DEFINE(s_lock);
 static Uuid s_item_id;
 static GBitmap *s_bitmap;
 static uint8_t s_token;
-static bool s_claimed;  //!< The slot belongs to s_item_id (in flight, delivered or empty).
-static bool s_pending;  //!< Waiting on a response for s_token.
+static bool s_claimed; //!< The slot belongs to s_item_id (in flight, delivered or empty).
+static bool s_pending; //!< Waiting on a response for s_token.
 
 static void prv_free(GBitmap *bitmap) {
   if (bitmap) {
@@ -64,8 +64,7 @@ void notification_image_unlock(void) {
 
 bool notification_image_is_pending(const Uuid *item_id) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  const bool pending =
-      s_pending && s_claimed && item_id && uuid_equal(&s_item_id, item_id);
+  const bool pending = s_pending && s_claimed && item_id && uuid_equal(&s_item_id, item_id);
   pbl_mutex_unlock(&s_lock);
   return pending;
 }

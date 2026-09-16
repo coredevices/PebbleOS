@@ -82,13 +82,16 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
   return NULL;
 }
 
-void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {}
+void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {
+}
 
 bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint target) {
   return false;
 }
 
-uint16_t time_ms(time_t *tloc, uint16_t *out_ms) { return 0; }
+uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
+  return 0;
+}
 
 // Helper Functions
 /////////////////////
@@ -103,7 +106,7 @@ static FrameBuffer *fb = NULL;
 
 void test_expandable_dialog__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   // Must use System init mode to enable orphan avoidance algorithm
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);
@@ -147,13 +150,14 @@ void prv_push_and_render_expandable_dialog(ExpandableDialog *expandable_dialog,
 //////////////////////
 
 void test_expandable_dialog__dismiss_tutorial_portuguese_orphan(void) {
-  const char* tutorial_msg = "Remova rapidamente todas as notificações ao segurar o botão Select "
-                             "durante 2 segundos a partir de qualquer notificação.";
+  const char *tutorial_msg =
+      "Remova rapidamente todas as notificações ao segurar o botão Select "
+      "durante 2 segundos a partir de qualquer notificação.";
 
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
-    "Dismiss First Use", RESOURCE_ID_QUICK_DISMISS, tutorial_msg,
-    gcolor_legible_over(GColorLightGray), GColorLightGray, NULL,
-    RESOURCE_ID_ACTION_BAR_ICON_CHECK, NULL);
+      "Dismiss First Use", RESOURCE_ID_QUICK_DISMISS, tutorial_msg,
+      gcolor_legible_over(GColorLightGray), GColorLightGray, NULL,
+      RESOURCE_ID_ACTION_BAR_ICON_CHECK, NULL);
 
   // Scroll down to the last page where we will observe the orphan avoidance effect
   const uint32_t num_times_to_scroll_down = 2;

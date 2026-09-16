@@ -18,19 +18,19 @@
 
 #include <pebbleos/cron.h>
 
-#define TIMELINE_PEEK_FRAME_HIDDEN GRect(0, DISP_ROWS, DISP_COLS, TIMELINE_PEEK_HEIGHT)
-#define TIMELINE_PEEK_OUTER_BORDER_WIDTH PBL_IF_RECT_ELSE(2, 1)
-#define TIMELINE_PEEK_MULTI_BORDER_WIDTH (1)
+#define TIMELINE_PEEK_FRAME_HIDDEN         GRect(0, DISP_ROWS, DISP_COLS, TIMELINE_PEEK_HEIGHT)
+#define TIMELINE_PEEK_OUTER_BORDER_WIDTH   PBL_IF_RECT_ELSE(2, 1)
+#define TIMELINE_PEEK_MULTI_BORDER_WIDTH   (1)
 #define TIMELINE_PEEK_MULTI_CONTENT_HEIGHT PBL_IF_RECT_ELSE(2, 1)
-#define TIMELINE_PEEK_MAX_CONCURRENT (2)
+#define TIMELINE_PEEK_MAX_CONCURRENT       (2)
 
 static TimelinePeek s_peek;
 
 static unsigned int prv_get_concurrent_height(unsigned int num_concurrent) {
   // Height of the border and other concurrent contents
-  return (TIMELINE_PEEK_OUTER_BORDER_WIDTH +
-          (num_concurrent * (TIMELINE_PEEK_MULTI_BORDER_WIDTH +
-                             TIMELINE_PEEK_MULTI_CONTENT_HEIGHT)));
+  return (
+      TIMELINE_PEEK_OUTER_BORDER_WIDTH +
+      (num_concurrent * (TIMELINE_PEEK_MULTI_BORDER_WIDTH + TIMELINE_PEEK_MULTI_CONTENT_HEIGHT)));
 }
 
 unsigned int timeline_peek_get_concurrent_height(unsigned int num_concurrent) {
@@ -62,9 +62,9 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
     for (unsigned int type = 0; type < (has_content ? 2 : 1); type++) {
       const bool is_outer = (i == 0);
       const bool is_border = (type == 0);
-      const int height = (is_outer && is_border) ? TIMELINE_PEEK_OUTER_BORDER_WIDTH :
-                                       is_border ? TIMELINE_PEEK_MULTI_BORDER_WIDTH :
-                                                   TIMELINE_PEEK_MULTI_CONTENT_HEIGHT;
+      const int height = (is_outer && is_border) ? TIMELINE_PEEK_OUTER_BORDER_WIDTH
+                         : is_border             ? TIMELINE_PEEK_MULTI_BORDER_WIDTH
+                                                 : TIMELINE_PEEK_MULTI_CONTENT_HEIGHT;
       frame.size.h = height;
       graphics_context_set_fill_color(ctx, is_border ? border_color : background_color);
       graphics_fill_rect(ctx, &frame);
@@ -82,15 +82,15 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
 #endif
 }
 
-void timeline_peek_draw_background(GContext *ctx, const GRect *frame,
-                                   unsigned int num_concurrent) {
+void timeline_peek_draw_background(GContext *ctx, const GRect *frame, unsigned int num_concurrent) {
   prv_draw_background(ctx, frame, num_concurrent);
 }
 
 static void prv_timeline_peek_update_proc(Layer *layer, GContext *ctx) {
   TimelinePeek *peek = (TimelinePeek *)layer;
-  const unsigned int num_concurrent = peek->peek_layout ?
-      MIN(peek->peek_layout->info.num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT) : 0;
+  const unsigned int num_concurrent =
+      peek->peek_layout ? MIN(peek->peek_layout->info.num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT)
+                        : 0;
   if (peek->removing_concurrent && (num_concurrent > 0)) {
     prv_draw_background(ctx, &TIMELINE_PEEK_FRAME_VISIBLE, num_concurrent - 1);
   }
@@ -161,13 +161,13 @@ static bool prv_is_upscaled_app(void) {
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
   if (app_framebuffer_size.h == DISP_ROWS) {
-    return false;  // Native app, not upscaled
+    return false; // Native app, not upscaled
   }
 #if defined(CONFIG_APP_SCALING) && !defined(CONFIG_RECOVERY_FW)
   // On platforms that support scaling mode, check the preference
   return shell_prefs_get_legacy_app_render_mode() >= LegacyAppRenderMode_ScalingNearest;
 #else
-  return false;  // Other platforms use bezel mode only
+  return false; // Other platforms use bezel mode only
 #endif
 }
 
@@ -217,10 +217,8 @@ static void prv_peek_frame_update(Animation *animation, AnimationProgress progre
   GRect to_frame;
   property_animation_get_to_grect(prop_anim, &to_frame);
   if (prv_should_use_unobstructed_area()) {
-    unobstructed_area_service_change(
-        prv_scale_y_to_framebuffer(peek->layout_layer.frame.origin.y),
-        prv_scale_y_to_framebuffer(to_frame.origin.y),
-        progress);
+    unobstructed_area_service_change(prv_scale_y_to_framebuffer(peek->layout_layer.frame.origin.y),
+                                     prv_scale_y_to_framebuffer(to_frame.origin.y), progress);
   }
 }
 
@@ -246,11 +244,12 @@ static void prv_peek_frame_setter(void *subject, GRect frame) {
 }
 
 static const PropertyAnimationImplementation s_peek_prop_impl = {
-  .base = {
-    .setup = prv_peek_frame_setup,
-    .update = prv_peek_frame_update,
-    .teardown = prv_peek_frame_teardown,
-  },
+  .base =
+      {
+        .setup = prv_peek_frame_setup,
+        .update = prv_peek_frame_update,
+        .teardown = prv_peek_frame_teardown,
+      },
   .accessors = {
     .getter.grect = prv_peek_frame_getter,
     .setter.grect = prv_peek_frame_setter,
@@ -306,8 +305,9 @@ static void prv_transition_frame(TimelinePeek *peek, bool visible, bool animated
 
 #define EXTENDED_BOUNCE_BACK (2 * INTERPOLATE_MOOOK_BOUNCE_BACK)
 
-static const int32_t s_extended_moook_out[] =
-    {EXTENDED_BOUNCE_BACK, INTERPOLATE_MOOOK_BOUNCE_BACK, 2, 1, 0};
+static const int32_t s_extended_moook_out[] = {
+  EXTENDED_BOUNCE_BACK, INTERPOLATE_MOOOK_BOUNCE_BACK, 2, 1, 0
+};
 static const MoookConfig s_extended_moook_out_config = {
   .frames_out = s_extended_moook_out,
   .num_frames_out = ARRAY_LENGTH(s_extended_moook_out),
@@ -319,22 +319,20 @@ static int64_t prv_interpolate_extended_moook_out(AnimationProgress progress, in
   return interpolate_moook_custom(progress, from, to, &s_extended_moook_out_config);
 }
 
-static Animation *prv_create_transition_adding_concurrent(
-    TimelinePeek *peek, PeekLayout *layout) {
+static Animation *prv_create_transition_adding_concurrent(TimelinePeek *peek, PeekLayout *layout) {
   const int height_shrink = 20;
   GRect frame_normal = TIMELINE_PEEK_FRAME_VISIBLE;
   GRect frame_shrink = grect_inset(frame_normal, GEdgeInsets(0, 0, height_shrink, 0));
   // Starting with shrink instead of ending with it will flash white
-  PropertyAnimation *white_prop_anim = property_animation_create_layer_frame(
-      &peek->layout_layer, &frame_shrink, &frame_normal);
+  PropertyAnimation *white_prop_anim =
+      property_animation_create_layer_frame(&peek->layout_layer, &frame_shrink, &frame_normal);
   Animation *white_animation = property_animation_get_animation(white_prop_anim);
   animation_set_duration(white_animation, ANIMATION_TARGET_FRAME_INTERVAL_MS);
   animation_set_handlers(white_animation, s_peek_anim_handlers, layout);
 
-  GRect frame_bounce =
-      grect_inset(frame_normal, GEdgeInsets(-EXTENDED_BOUNCE_BACK, 0, 0, 0));
-  PropertyAnimation *bounce_prop_anim = property_animation_create_layer_frame(
-      &peek->layout_layer, &frame_bounce, &frame_normal);
+  GRect frame_bounce = grect_inset(frame_normal, GEdgeInsets(-EXTENDED_BOUNCE_BACK, 0, 0, 0));
+  PropertyAnimation *bounce_prop_anim =
+      property_animation_create_layer_frame(&peek->layout_layer, &frame_bounce, &frame_normal);
   Animation *bounce_animation = property_animation_get_animation(bounce_prop_anim);
   animation_set_duration(bounce_animation,
                          interpolate_moook_custom_duration(&s_extended_moook_out_config));
@@ -358,8 +356,8 @@ static int64_t prv_interpolate_moook_out(AnimationProgress progress, int64_t fro
                                false /* bounce_back */);
 }
 
-static Animation *prv_create_transition_removing_concurrent(
-    TimelinePeek *peek, PeekLayout *layout) {
+static Animation *prv_create_transition_removing_concurrent(TimelinePeek *peek,
+                                                            PeekLayout *layout) {
   PropertyAnimation *remove_prop_anim = property_animation_create_layer_frame(
       &peek->layout_layer, &TIMELINE_PEEK_FRAME_VISIBLE, &TIMELINE_PEEK_FRAME_HIDDEN);
   Animation *remove_animation = property_animation_get_animation(remove_prop_anim);
@@ -369,10 +367,10 @@ static Animation *prv_create_transition_removing_concurrent(
   animation_set_custom_interpolation(remove_animation, prv_interpolate_custom_moook_in);
   animation_set_handlers(remove_animation, s_peek_anim_handlers, layout);
 
-  GRect bounds_normal = { .size = TIMELINE_PEEK_FRAME_VISIBLE.size };
-  GRect bounds_bounce = { .origin.y = TIMELINE_PEEK_HEIGHT, .size = bounds_normal.size };
-  PropertyAnimation *bounce_prop_anim = property_animation_create_layer_bounds(
-      &peek->layout_layer, &bounds_bounce, &bounds_normal);
+  GRect bounds_normal = {.size = TIMELINE_PEEK_FRAME_VISIBLE.size};
+  GRect bounds_bounce = {.origin.y = TIMELINE_PEEK_HEIGHT, .size = bounds_normal.size};
+  PropertyAnimation *bounce_prop_anim =
+      property_animation_create_layer_bounds(&peek->layout_layer, &bounds_bounce, &bounds_normal);
   Animation *bounce_animation = property_animation_get_animation(bounce_prop_anim);
   animation_set_duration(bounce_animation, interpolate_moook_out_duration());
   animation_set_custom_interpolation(bounce_animation, prv_interpolate_moook_out);
@@ -409,7 +407,7 @@ static void prv_push_timeline_peek(void *unused) {
 
 void timeline_peek_init(void) {
   TimelinePeek *peek = &s_peek;
-  *peek = (TimelinePeek) {
+  *peek = (TimelinePeek){
 #ifndef CONFIG_SHELL_SDK
     .enabled = timeline_peek_prefs_get_enabled(),
 #endif
@@ -488,8 +486,7 @@ void timeline_peek_dismiss(void) {
   } else {
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&item->header.id, uuid_buffer);
-    PBL_LOG_WRN("Failed to dismiss Timeline Peek event %s (status: %"PRIi32")",
-            uuid_buffer, rv);
+    PBL_LOG_WRN("Failed to dismiss Timeline Peek event %s (status: %" PRIi32 ")", uuid_buffer, rv);
   }
 }
 
@@ -511,7 +508,8 @@ int16_t timeline_peek_get_obstruction_origin_y(void) {
 void timeline_peek_get_item_id(TimelineItemId *item_id_out) {
   TimelinePeek *peek = &s_peek;
   *item_id_out = (peek->enabled && peek->visible && peek->exists && peek->peek_layout)
-      ? peek->peek_layout->item->header.id : UUID_INVALID;
+                     ? peek->peek_layout->item->header.id
+                     : UUID_INVALID;
 }
 
 bool timeline_peek_is_first_event(void) {
@@ -568,8 +566,8 @@ void timeline_peek_handle_peek_event(PebbleTimelinePeekEvent *event) {
     show = (rv == S_SUCCESS);
   }
   if (show) {
-    timeline_peek_set_item(&item, started, event->num_concurrent,
-                           event->is_first_event, true /* animated */);
+    timeline_peek_set_item(&item, started, event->num_concurrent, event->is_first_event,
+                           true /* animated */);
   } else {
     timeline_peek_set_item(NULL, false /* started */, 0 /* num_concurrent */,
                            false /* is_first_event */, true /* animated */);

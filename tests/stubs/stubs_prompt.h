@@ -10,11 +10,11 @@ void prompt_command_continues_after_returning(void) {
 void prompt_command_finish(void) {
 }
 
-void prompt_send_response(const char* response) {
+void prompt_send_response(const char *response) {
   printf("%s\n", response);
 }
 
-void prompt_send_response_fmt(char* buffer, size_t buffer_size, const char* fmt, ...) {
+void prompt_send_response_fmt(char *buffer, size_t buffer_size, const char *fmt, ...) {
   va_list fmt_args;
   va_start(fmt_args, fmt);
   vprintf(fmt, fmt_args);

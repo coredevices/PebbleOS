@@ -9,13 +9,12 @@
 
 // Use display height to determine launcher fonts: larger displays use larger fonts
 #if PBL_DISPLAY_HEIGHT >= 200
-#define LAUNCHER_MENU_LAYER_TITLE_FONT (FONT_KEY_GOTHIC_24_BOLD)
+#define LAUNCHER_MENU_LAYER_TITLE_FONT    (FONT_KEY_GOTHIC_24_BOLD)
 #define LAUNCHER_MENU_LAYER_SUBTITLE_FONT (FONT_KEY_GOTHIC_18)
 #else
-#define LAUNCHER_MENU_LAYER_TITLE_FONT (FONT_KEY_GOTHIC_18_BOLD)
+#define LAUNCHER_MENU_LAYER_TITLE_FONT    (FONT_KEY_GOTHIC_18_BOLD)
 #define LAUNCHER_MENU_LAYER_SUBTITLE_FONT (FONT_KEY_GOTHIC_14)
 #endif
-
 
 typedef struct LauncherMenuLayer {
   Layer container_layer;

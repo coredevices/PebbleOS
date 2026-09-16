@@ -13,7 +13,7 @@
 #include "pbl/util/size.h"
 
 // Compile-time display offset calculations
-#define HEALTH_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
+#define HEALTH_Y_OFFSET       ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
 #define HEALTH_PADDING_OFFSET (HEALTH_Y_OFFSET / 10)
 
 #define CORNER_RADIUS (3)
@@ -32,8 +32,8 @@ static void prv_draw_headings(HealthDetailCard *detail_card, GContext *ctx, cons
 #if PBL_ROUND
 #if PBL_DISPLAY_HEIGHT >= 200
     // Spread the summary content over the taller display instead of packing it at the top
-    int16_t header_y_origin = ((detail_card->num_headings > 1) ? 40 : 52) +
-                              (i * (rect_height + 12));
+    int16_t header_y_origin =
+        ((detail_card->num_headings > 1) ? 40 : 52) + (i * (rect_height + 12));
 #else
     int16_t header_y_origin = ((detail_card->num_headings > 1) ? 22 : 32) + (i * (rect_height + 5));
 #endif
@@ -66,16 +66,16 @@ static void prv_draw_headings(HealthDetailCard *detail_card, GContext *ctx, cons
 
     graphics_context_set_text_color(ctx, gcolor_legible_over(heading->fill_color));
 
-    graphics_draw_text(ctx, heading->primary_label, detail_card->heading_label_font,
-                       label_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    graphics_draw_text(ctx, heading->primary_label, detail_card->heading_label_font, label_rect,
+                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 
     const int16_t value_rect_y_padding = 12;
 
     GRect value_rect = label_rect;
     value_rect.origin.y += value_rect_y_padding;
 
-    graphics_draw_text(ctx, heading->primary_value, detail_card->heading_value_font,
-                       value_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    graphics_draw_text(ctx, heading->primary_value, detail_card->heading_value_font, value_rect,
+                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 
     if (!heading->secondary_label) {
       continue;
@@ -85,8 +85,9 @@ static void prv_draw_headings(HealthDetailCard *detail_card, GContext *ctx, cons
 
     GPoint separator_top_point = GPoint(header_rect.origin.x + (header_rect.size.w / 2) - 1,
                                         header_rect.origin.y + separator_padding);
-    GPoint separator_bot_point = GPoint(separator_top_point.x, separator_top_point.y +
-                                        header_rect.size.h - (separator_padding * 2) - 1);
+    GPoint separator_bot_point =
+        GPoint(separator_top_point.x,
+               separator_top_point.y + header_rect.size.h - (separator_padding * 2) - 1);
 
     graphics_draw_line(ctx, separator_top_point, separator_bot_point);
 
@@ -98,11 +99,11 @@ static void prv_draw_headings(HealthDetailCard *detail_card, GContext *ctx, cons
     label_rect.origin.x += label_rect.size.w;
     value_rect.origin.x += value_rect.size.w;
 
-    graphics_draw_text(ctx, heading->secondary_label, detail_card->heading_label_font,
-                       label_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    graphics_draw_text(ctx, heading->secondary_label, detail_card->heading_label_font, label_rect,
+                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 
-    graphics_draw_text(ctx, heading->secondary_value, detail_card->heading_value_font,
-                       value_rect, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    graphics_draw_text(ctx, heading->secondary_value, detail_card->heading_value_font, value_rect,
+                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
   }
 }
 
@@ -143,8 +144,8 @@ static void prv_draw_subtitles(HealthDetailCard *detail_card, GContext *ctx, con
 }
 
 static void prv_draw_progress_bar(GContext *ctx, HealthProgressBar *progress_bar, GColor bg_color,
-    GColor fill_color, int current_progress, int typical_progress, int max_progress,
-    bool hide_typical) {
+                                  GColor fill_color, int current_progress, int typical_progress,
+                                  int max_progress, bool hide_typical) {
   const GColor typical_color = PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack);
   const GColor outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack);
 
@@ -166,7 +167,8 @@ static void prv_draw_progress_bar(GContext *ctx, HealthProgressBar *progress_bar
 
 #if PBL_RECT
 static void prv_draw_progress_bar_in_zone(GContext *ctx, const GRect *zone_rect, GColor fill_color,
-    int current_progress, int typical_progress, int max_progress, bool hide_typical) {
+                                          int current_progress, int typical_progress,
+                                          int max_progress, bool hide_typical) {
   const int16_t progress_bar_x = zone_rect->origin.x + PBL_IF_BW_ELSE(0, -1);
   const int16_t progress_bar_y = zone_rect->origin.y + 22;
   const int16_t progress_bar_width = zone_rect->size.w + PBL_IF_BW_ELSE(-2, 1);
@@ -176,22 +178,24 @@ static void prv_draw_progress_bar_in_zone(GContext *ctx, const GRect *zone_rect,
     {
       // Left side vertical line (needed for the draw outline function to draw the vertical lines)
       .type = HealthProgressSegmentType_Corner,
-      .points = {
-        {progress_bar_x, progress_bar_y},
-        {progress_bar_x, progress_bar_y + progress_bar_height},
-        {progress_bar_x, progress_bar_y + progress_bar_height},
-        {progress_bar_x, progress_bar_y},
-      },
+      .points =
+          {
+            {progress_bar_x, progress_bar_y},
+            {progress_bar_x, progress_bar_y + progress_bar_height},
+            {progress_bar_x, progress_bar_y + progress_bar_height},
+            {progress_bar_x, progress_bar_y},
+          },
     },
     {
       // Right side vertical line (needed for the draw outline function to draw the vertical lines)
       .type = HealthProgressSegmentType_Corner,
-      .points = {
-        {progress_bar_x + progress_bar_width, progress_bar_y},
-        {progress_bar_x + progress_bar_width, progress_bar_y + progress_bar_height},
-        {progress_bar_x + progress_bar_width, progress_bar_y + progress_bar_height},
-        {progress_bar_x + progress_bar_width, progress_bar_y},
-      },
+      .points =
+          {
+            {progress_bar_x + progress_bar_width, progress_bar_y},
+            {progress_bar_x + progress_bar_width, progress_bar_y + progress_bar_height},
+            {progress_bar_x + progress_bar_width, progress_bar_y + progress_bar_height},
+            {progress_bar_x + progress_bar_width, progress_bar_y},
+          },
     },
     {
       // Horizontal bar from left line to right line
@@ -238,8 +242,9 @@ static void prv_draw_zones(HealthDetailCard *detail_card, GContext *ctx) {
                        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
     if (zone->show_crown) {
-      const GSize label_size = app_graphics_text_layout_get_content_size(zone->label,
-          detail_card->subtitle_font, zone_rect, GTextOverflowModeWordWrap, GTextAlignmentLeft);
+      const GSize label_size = app_graphics_text_layout_get_content_size(
+          zone->label, detail_card->subtitle_font, zone_rect, GTextOverflowModeWordWrap,
+          GTextAlignmentLeft);
       GPoint icon_offset = zone_rect.origin;
       icon_offset.x += label_size.w + 4;
 #if PBL_BW
@@ -249,7 +254,8 @@ static void prv_draw_zones(HealthDetailCard *detail_card, GContext *ctx) {
     }
 
     prv_draw_progress_bar_in_zone(ctx, &zone_rect, zone->fill_color, zone->progress,
-        detail_card->daily_avg, detail_card->max_progress, zone->hide_typical);
+                                  detail_card->daily_avg, detail_card->max_progress,
+                                  zone->hide_typical);
 
     zone_rect.origin.y += rect_height + rect_padding;
     detail_card->y_origin += rect_height + rect_padding;
@@ -260,14 +266,14 @@ static void prv_draw_zones(HealthDetailCard *detail_card, GContext *ctx) {
 #endif // PBL_RECT
 
 #if PBL_ROUND
-static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer,
-                                          uint16_t section_index, void *context) {
+static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index,
+                                          void *context) {
   HealthDetailCard *detail_card = (HealthDetailCard *)context;
   return detail_card->num_zones + 1;
 }
 
-static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
-                                  MenuIndex *cell_index, void *context) {
+static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                                  void *context) {
   HealthDetailCard *detail_card = (HealthDetailCard *)context;
 
   if (cell_index->row == 0) {
@@ -339,8 +345,8 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer,
   }
 }
 
-static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer,
-                                            MenuIndex *cell_index, void *context) {
+static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
+                                            void *context) {
   if (cell_index->row == 0) {
     return menu_layer_is_index_selected(menu_layer, cell_index) ? DISP_ROWS : 0;
   }
@@ -355,16 +361,15 @@ static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer,
 
 static void prv_refresh_content_indicators(HealthDetailCard *detail_card) {
   const bool is_up_visible = (menu_layer_get_selected_index(&detail_card->menu_layer).row > 0);
-  const bool is_down_visible = (menu_layer_get_selected_index(&detail_card->menu_layer).row <
-      prv_get_num_rows_callback(&detail_card->menu_layer, 0, detail_card) - 1);
+  const bool is_down_visible =
+      (menu_layer_get_selected_index(&detail_card->menu_layer).row <
+       prv_get_num_rows_callback(&detail_card->menu_layer, 0, detail_card) - 1);
 
-  content_indicator_set_content_available(&detail_card->up_indicator,
-                                          ContentIndicatorDirectionUp,
+  content_indicator_set_content_available(&detail_card->up_indicator, ContentIndicatorDirectionUp,
                                           is_up_visible);
 
   content_indicator_set_content_available(&detail_card->down_indicator,
-                                          ContentIndicatorDirectionDown,
-                                          is_down_visible);
+                                          ContentIndicatorDirectionDown, is_down_visible);
 }
 
 static void prv_selection_changed_callback(struct MenuLayer *menu_layer, MenuIndex new_index,
@@ -372,7 +377,7 @@ static void prv_selection_changed_callback(struct MenuLayer *menu_layer, MenuInd
   HealthDetailCard *detail_card = (HealthDetailCard *)context;
   prv_refresh_content_indicators(detail_card);
 }
-#else // PBL_RECT
+#else  // PBL_RECT
 static void prv_health_detail_scroll_layer_update_proc(Layer *layer, GContext *ctx) {
   ScrollLayer *scroll_layer = (ScrollLayer *)layer->parent;
   HealthDetailCard *detail_card = (HealthDetailCard *)scroll_layer->context;
@@ -397,35 +402,38 @@ HealthDetailCard *health_detail_card_create(const HealthDetailCardConfig *config
   // setup menu layer
   MenuLayer *menu_layer = &detail_card->menu_layer;
   menu_layer_init(menu_layer, &window_frame);
-  menu_layer_set_callbacks(menu_layer, detail_card, &(MenuLayerCallbacks) {
-    .get_num_rows = prv_get_num_rows_callback,
-    .get_cell_height = prv_get_cell_height_callback,
-    .draw_row = prv_draw_row_callback,
-    .selection_changed = prv_selection_changed_callback,
-  });
+  menu_layer_set_callbacks(menu_layer, detail_card,
+                           &(MenuLayerCallbacks){
+                             .get_num_rows = prv_get_num_rows_callback,
+                             .get_cell_height = prv_get_cell_height_callback,
+                             .draw_row = prv_draw_row_callback,
+                             .selection_changed = prv_selection_changed_callback,
+                           });
   menu_layer_set_normal_colors(menu_layer, detail_card->bg_color, GColorWhite);
   menu_layer_set_highlight_colors(menu_layer, detail_card->bg_color, GColorBlack);
   menu_layer_set_click_config_onto_window(menu_layer, &detail_card->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
-  menu_layer_set_scroll_vibe_on_wrap(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
-  menu_layer_set_scroll_vibe_on_blocked(menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
+  menu_layer_set_scroll_vibe_on_wrap(
+      menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnWrapAround);
+  menu_layer_set_scroll_vibe_on_blocked(
+      menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
   layer_add_child(&detail_card->window.layer, menu_layer_get_layer(menu_layer));
 
   // setup content indicators
   const int content_indicator_height = 15;
-  const GRect down_arrow_layer_frame = grect_inset(window_frame,
-      GEdgeInsets(window_frame.size.h - content_indicator_height, 0, 0));
+  const GRect down_arrow_layer_frame =
+      grect_inset(window_frame, GEdgeInsets(window_frame.size.h - content_indicator_height, 0, 0));
   layer_init(&detail_card->down_arrow_layer, &down_arrow_layer_frame);
   layer_add_child(&detail_card->window.layer, &detail_card->down_arrow_layer);
   content_indicator_init(&detail_card->down_indicator);
 
-  const GRect up_arrow_layer_frame = grect_inset(window_frame,
-      GEdgeInsets(0, 0, window_frame.size.h - content_indicator_height));
+  const GRect up_arrow_layer_frame =
+      grect_inset(window_frame, GEdgeInsets(0, 0, window_frame.size.h - content_indicator_height));
   layer_init(&detail_card->up_arrow_layer, &up_arrow_layer_frame);
   layer_add_child(&detail_card->window.layer, &detail_card->up_arrow_layer);
   content_indicator_init(&detail_card->up_indicator);
 
-  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig) {
+  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
     .layer = &detail_card->up_arrow_layer,
     .colors.foreground = gcolor_legible_over(detail_card->bg_color),
     .colors.background = detail_card->bg_color,
@@ -436,7 +444,7 @@ HealthDetailCard *health_detail_card_create(const HealthDetailCardConfig *config
   content_indicator_configure_direction(&detail_card->down_indicator, ContentIndicatorDirectionDown,
                                         &content_indicator_config);
   prv_refresh_content_indicators(detail_card);
-#else // PBL_RECT
+#else  // PBL_RECT
   // setup scroll layer
   scroll_layer_init(&detail_card->scroll_layer, &window_frame);
   scroll_layer_set_click_config_onto_window(&detail_card->scroll_layer, &detail_card->window);
@@ -497,8 +505,10 @@ void health_detail_card_configure(HealthDetailCard *detail_card,
 }
 
 void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *num_zones,
-    int32_t *weekly_max, bool format_hours_and_minutes, bool show_crown, GColor fill_color,
-    GColor today_fill_color, int32_t *day_data, void *i18n_owner) {
+                                             int32_t *weekly_max, bool format_hours_and_minutes,
+                                             bool show_crown, GColor fill_color,
+                                             GColor today_fill_color, int32_t *day_data,
+                                             void *i18n_owner) {
   time_t time_utc = rtc_get_time();
   struct tm time_tm;
 
@@ -513,7 +523,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
     const bool is_today = (i == 0);
 
     const size_t buffer_size = 32;
-    zones[i] = (HealthDetailZone) {
+    zones[i] = (HealthDetailZone){
       .label = app_zalloc_check(buffer_size),
       .progress = day_data[i],
       .fill_color = is_today ? PBL_IF_ROUND_ELSE(fill_color, today_fill_color) : fill_color,
@@ -535,7 +545,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
         health_util_format_hours_and_minutes(label_ptr + pos, buffer_size - pos, day_data[i],
                                              i18n_owner);
       } else {
-        snprintf(label_ptr + pos, buffer_size - pos, "%"PRId32, day_data[i]);
+        snprintf(label_ptr + pos, buffer_size - pos, "%" PRId32, day_data[i]);
       }
     }
 

@@ -38,21 +38,21 @@ uint16_t gaps_get_starting_att_handle(void) {
   return 4;
 }
 
-BLEService gatt_client_att_handle_get_service(
-      GAPLEConnection *connection, uint16_t att_handle, const GATTServiceNode **service_node_out) {
+BLEService gatt_client_att_handle_get_service(GAPLEConnection *connection, uint16_t att_handle,
+                                              const GATTServiceNode **service_node_out) {
   return 0;
 }
 
-uint8_t gatt_client_copy_service_refs_by_discovery_generation(
-                                    const BTDeviceInternal *device, BLEService services_out[],
-                                    uint8_t num_services, uint8_t discovery_gen) {
+uint8_t gatt_client_copy_service_refs_by_discovery_generation(const BTDeviceInternal *device,
+                                                              BLEService services_out[],
+                                                              uint8_t num_services,
+                                                              uint8_t discovery_gen) {
   return 0;
 }
 
 void gatt_client_service_get_all_characteristics_and_descriptors(
-                                     GAPLEConnection *connection, GATTService *service,
-                                     BLECharacteristic *characteristic_hdls_out,
-                                     BLEDescriptor *descriptor_hdls_out) {
+    GAPLEConnection *connection, GATTService *service, BLECharacteristic *characteristic_hdls_out,
+    BLEDescriptor *descriptor_hdls_out) {
 }
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
@@ -65,7 +65,12 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 static const BTDeviceInternal s_device = {
   .address = {
     .octets = {
-      1, 2, 3, 4, 5, 6,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
     },
   },
 };
@@ -90,15 +95,14 @@ static void prv_process_pending_callbacks(GAPLEConnection *connection) {
   fake_system_task_callbacks_invoke_pending();
 }
 
-#define prv_expect_service_changed_indication_api_call_count(expected_count) \
-{ \
-  prv_process_pending_callbacks(s_connection); \
-  cl_assert_equal_i(fake_gatt_get_service_changed_indication_count(), expected_count); \
-}
+#define prv_expect_service_changed_indication_api_call_count(expected_count)             \
+  {                                                                                      \
+    prv_process_pending_callbacks(s_connection);                                         \
+    cl_assert_equal_i(fake_gatt_get_service_changed_indication_count(), expected_count); \
+  }
 
 // Tests
 ///////////////////////////////////////////////////////////
-
 
 void test_gatt_service_changed_server__initialize(void) {
   gatt_service_changed_server_init();

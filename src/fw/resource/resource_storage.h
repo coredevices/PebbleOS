@@ -59,7 +59,7 @@ typedef struct ResourceStoreImplementation {
   const uint8_t *(*readonly_bytes)(ResourceStoreEntry *entry, bool has_privileged_access);
 
   ResourceCallbackHandle (*watch)(ResourceStoreEntry *entry, ResourceChangedCallback callback,
-                                  void* data);
+                                  void *data);
   bool (*unwatch)(ResourceCallbackHandle cb_handle);
 } ResourceStoreImplementation;
 

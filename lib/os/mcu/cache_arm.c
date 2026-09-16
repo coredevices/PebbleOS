@@ -8,12 +8,12 @@
 
 // I-Cache definition doesn't always exist
 #ifndef __ICACHE_PRESENT
-# define __ICACHE_PRESENT 0U
+#define __ICACHE_PRESENT 0U
 #endif
 
 // D-Cache definition doesn't always exist
 #ifndef __DCACHE_PRESENT
-# define __DCACHE_PRESENT 0U
+#define __DCACHE_PRESENT 0U
 #endif
 
 // Most of these implementations are derived from CMSIS
@@ -120,7 +120,6 @@ MOCKABLE uint32_t icache_line_size(void) {
 #endif
   return 1;
 }
-
 
 MOCKABLE void dcache_enable(void) {
 #if __DCACHE_PRESENT

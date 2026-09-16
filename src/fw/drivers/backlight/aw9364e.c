@@ -18,10 +18,10 @@
 // without a restart, but raising the current requires a full shutdown
 // followed by a fresh pulse train.
 
-#define AW9364E_TON_US 20U
-#define AW9364E_THI_US 1U
-#define AW9364E_TLO_US 1U
-#define AW9364E_MAX_PULSES 16U
+#define AW9364E_TON_US      20U
+#define AW9364E_THI_US      1U
+#define AW9364E_TLO_US      1U
+#define AW9364E_MAX_PULSES  16U
 #define AW9364E_OFF_TIME_US 2600U
 
 //! Pulse count currently latched by the chip; 0 = shut down.

@@ -56,7 +56,7 @@ typedef struct __attribute__((__packed__)) {
 } OffsetTableEntry_4_2;
 
 #if !defined(MAX_FONT_GLYPH_SIZE)
-  #define MAX_FONT_GLYPH_SIZE 256
+#define MAX_FONT_GLYPH_SIZE 256
 #endif
 
 // Slightly bigger than the biggest glyph we have
@@ -129,4 +129,3 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint c
 //! @param font_info a pointer to the fontinfo struct to initialize
 bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
                               uint32_t extension_resource, FontInfo *font_info);
-

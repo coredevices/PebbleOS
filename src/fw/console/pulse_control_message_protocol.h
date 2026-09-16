@@ -15,8 +15,8 @@ typedef const struct PulseControlMessageProtocol {
   void (*send_fn)(void *buf, size_t length);
 } PulseControlMessageProtocol;
 
-void pulse_control_message_protocol_on_packet(PulseControlMessageProtocol *this,
-                                              void *information, size_t length);
+void pulse_control_message_protocol_on_packet(PulseControlMessageProtocol *this, void *information,
+                                              size_t length);
 
-void pulse_control_message_protocol_send_port_closed_message(
-    PulseControlMessageProtocol *this, net16 port);
+void pulse_control_message_protocol_send_port_closed_message(PulseControlMessageProtocol *this,
+                                                             net16 port);

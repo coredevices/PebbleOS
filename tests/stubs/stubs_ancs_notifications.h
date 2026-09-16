@@ -5,7 +5,8 @@
 
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
 
-void ancs_notifications_enable_bulk_action_mode(bool enable) { }
+void ancs_notifications_enable_bulk_action_mode(bool enable) {
+}
 
 bool ancs_notifications_is_bulk_action_mode_enabled(void) {
   return false;

@@ -12,20 +12,20 @@ typedef struct HealthData {
   int32_t current_calories;
 
   //!< Typical step info
-  ActivityMetricAverages step_averages; //!< The step averages for the current day
-  int32_t current_step_average; //!< The current step average so far
+  ActivityMetricAverages step_averages;   //!< The step averages for the current day
+  int32_t current_step_average;           //!< The current step average so far
   int32_t step_average_last_updated_time; //!< The time at which current_step_average was updated
 
   int32_t monthly_step_average;
 
   int32_t sleep_data[DAYS_PER_WEEK]; //!< Sleep history for the past week
-  int32_t typical_sleep; //! Typical sleep for the current week day
-  int32_t deep_sleep; //!< Amount of deep sleep last night
+  int32_t typical_sleep;             //! Typical sleep for the current week day
+  int32_t deep_sleep;                //!< Amount of deep sleep last night
 
-  int32_t sleep_start; //!< When the user went to sleep (seconds after midnight)
-  int32_t sleep_end; //!< When the user woke up (seconds after midnight)
+  int32_t sleep_start;         //!< When the user went to sleep (seconds after midnight)
+  int32_t sleep_end;           //!< When the user woke up (seconds after midnight)
   int32_t typical_sleep_start; //!< When the user typically goes to sleep
-  int32_t typical_sleep_end; //!< When the user typically wakes up
+  int32_t typical_sleep_end;   //!< When the user typically wakes up
 
   int32_t monthly_sleep_average;
 

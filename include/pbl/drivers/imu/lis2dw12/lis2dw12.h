@@ -10,7 +10,7 @@
 #include <pbl/drivers/rtc.h>
 #include "pbl/services/regular_timer.h"
 
-#define LIS2DW12_FIFO_SIZE 32
+#define LIS2DW12_FIFO_SIZE         32
 #define LIS2DW12_SAMPLE_SIZE_BYTES 6
 
 typedef struct LIS2DW12State {

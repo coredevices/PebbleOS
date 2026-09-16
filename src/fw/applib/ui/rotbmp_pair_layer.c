@@ -10,8 +10,8 @@ static void set_compositing(RotBmpPairLayer *pair) {
 }
 
 void rotbmp_pair_layer_init(RotBmpPairLayer *pair, GBitmap *white, GBitmap *black) {
-  if (white->bounds.size.w != black->bounds.size.w
-      && white->bounds.size.h != black->bounds.size.h) {
+  if (white->bounds.size.w != black->bounds.size.w &&
+      white->bounds.size.h != black->bounds.size.h) {
     PBL_LOG_ERR("rotbmp_pair inited with unmatching bitmaps");
     return;
   }
@@ -37,7 +37,7 @@ void rotbmp_pair_layer_set_angle(RotBmpPairLayer *pair, int32_t angle) {
   rot_bitmap_layer_set_angle(&pair->white_layer, angle);
   rot_bitmap_layer_set_angle(&pair->black_layer, angle);
 }
-  
+
 void rotbmp_pair_layer_increment_angle(RotBmpPairLayer *pair, int32_t angle_change) {
   rot_bitmap_layer_increment_angle(&pair->white_layer, angle_change);
   rot_bitmap_layer_increment_angle(&pair->black_layer, angle_change);
@@ -47,15 +47,14 @@ void rotbmp_pair_layer_set_src_ic(RotBmpPairLayer *pair, GPoint ic) {
   rot_bitmap_set_src_ic(&pair->white_layer, ic);
   rot_bitmap_set_src_ic(&pair->black_layer, ic);
 
-  layer_set_frame(&pair->layer, &(GRect) { pair->layer.frame.origin,
-                                           pair->white_layer.layer.bounds.size });
+  layer_set_frame(&pair->layer,
+                  &(GRect){pair->layer.frame.origin, pair->white_layer.layer.bounds.size});
 }
 
 void rotbmp_pair_layer_inver_colors(RotBmpPairLayer *pair) {
   RotBitmapLayer temp = pair->black_layer;
   pair->black_layer = pair->white_layer;
   pair->white_layer = temp;
-
 
   set_compositing(pair);
 }

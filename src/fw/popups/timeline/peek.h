@@ -8,25 +8,19 @@
 #include "applib/ui/window.h"
 #include "kernel/events.h"
 
-#define TIMELINE_PEEK_HEIGHT \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ PBL_IF_RECT_ELSE(51, 45),                        \
-      /* medium */ PBL_IF_RECT_ELSE(51, 45),                       \
-      /* large */ 59,                                              \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* x-large */ 59                                             \
-    )
+#define TIMELINE_PEEK_HEIGHT                                                                   \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                               \
+      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */    \
+      /* small */ PBL_IF_RECT_ELSE(51, 45), /* medium */ PBL_IF_RECT_ELSE(51, 45), /* large */ \
+      59, /* This is the same as Large until ExtraLarge is designed */ /* x-large */ 59)
 
-#define TIMELINE_PEEK_ICON_BOX_WIDTH \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ PBL_IF_RECT_ELSE(30, 51),                        \
-      /* medium */ PBL_IF_RECT_ELSE(30, 51),                       \
-      /* large */ PBL_IF_RECT_ELSE(34, 51),                        \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* x-large */ PBL_IF_RECT_ELSE(34, 51)                       \
-    )
+#define TIMELINE_PEEK_ICON_BOX_WIDTH                                                         \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                             \
+      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */  \
+      /* small */ PBL_IF_RECT_ELSE(30, 51), /* medium */ PBL_IF_RECT_ELSE(30, 51),           \
+      /* large */ PBL_IF_RECT_ELSE(34, 51), /* This is the same as Large until ExtraLarge is \
+                                               designed */                                   \
+      /* x-large */ PBL_IF_RECT_ELSE(34, 51))
 
 #define TIMELINE_PEEK_MARGIN (5)
 
@@ -42,8 +36,8 @@
 #define TIMELINE_PEEK_ORIGIN_Y_VISIBLE (DISP_ROWS - TIMELINE_PEEK_HEIGHT)
 #endif
 
-#define TIMELINE_PEEK_FRAME_VISIBLE GRect(0, TIMELINE_PEEK_ORIGIN_Y_VISIBLE, DISP_COLS, \
-                                          TIMELINE_PEEK_HEIGHT)
+#define TIMELINE_PEEK_FRAME_VISIBLE \
+  GRect(0, TIMELINE_PEEK_ORIGIN_Y_VISIBLE, DISP_COLS, TIMELINE_PEEK_HEIGHT)
 
 //! Gets the concurrent height needed to render for the number of concurrent events.
 //! @return The concurrent height
@@ -53,8 +47,7 @@ unsigned int timeline_peek_get_concurrent_height(unsigned int num_concurrent);
 //! @param ctx Graphics context to draw with.
 //! @param frame The rectangle of the peek to draw.
 //! @param num_concurrent The number of events to indicate.
-void timeline_peek_draw_background(GContext *ctx, const GRect *frame,
-                                   unsigned int num_concurrent);
+void timeline_peek_draw_background(GContext *ctx, const GRect *frame, unsigned int num_concurrent);
 
 //! Initializes a TimelinePeek overlay (transparent, unfocusable modal window)
 void timeline_peek_init(void);

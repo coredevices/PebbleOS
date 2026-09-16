@@ -33,7 +33,7 @@ static const ActionToggleImpl s_airplane_mode_action_toggle_impl = {
 };
 
 static void prv_main(void) {
-  action_toggle_push(&(ActionToggleConfig) {
+  action_toggle_push(&(ActionToggleConfig){
     .impl = &s_airplane_mode_action_toggle_impl,
     .set_exit_reason = true,
   });
@@ -42,11 +42,12 @@ static void prv_main(void) {
 
 const PebbleProcessMd *airplane_mode_toggle_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      .uuid = AIRPLANE_MODE_TOGGLE_UUID,
-      .visibility = ProcessVisibilityQuickLaunch,
-    },
+    .common =
+        {
+          .main_func = &prv_main,
+          .uuid = AIRPLANE_MODE_TOGGLE_UUID,
+          .visibility = ProcessVisibilityQuickLaunch,
+        },
     .name = i18n_noop("Airplane Mode"),
   };
   return &s_app_info.common;

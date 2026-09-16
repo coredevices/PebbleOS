@@ -50,21 +50,20 @@ size_t pulse_reliable_max_send_size(void);
 #ifndef CONFIG_PULSE_EVERYWHERE
 // PULSEv1 has no equivalent to the PUSH protocol.
 #define pulse_push_send_begin pulse_best_effort_send_begin
-#define pulse_push_send pulse_best_effort_send
+#define pulse_push_send       pulse_best_effort_send
 #endif
 
 // Use preprocessor magic to generate function signatures for all protocol
 // handler functions.
 #define REGISTER_PROTOCOL(n, message_handler, link_state_handler) \
-    void message_handler(void *packet, size_t length); \
-    void link_state_handler(PulseLinkState link_state);
+  void message_handler(void *packet, size_t length);              \
+  void link_state_handler(PulseLinkState link_state);
 #include "console/pulse_protocol_registry.def"
 #undef REGISTER_PROTOCOL
 
-#define ON_PACKET(N, PACKET_HANDLER) \
-  void PACKET_HANDLER(void *packet, size_t length);
+#define ON_PACKET(N, PACKET_HANDLER) void PACKET_HANDLER(void *packet, size_t length);
 #define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) \
-  void UP_HANDLER(void); \
+  void UP_HANDLER(void);                                    \
   void DOWN_HANDLER(void);
 #include "console/pulse2_reliable_protocol_registry.def"
 #undef ON_PACKET

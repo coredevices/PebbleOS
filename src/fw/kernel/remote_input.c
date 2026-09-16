@@ -56,7 +56,6 @@ static void prv_comm_session_event_handler(PebbleEvent *e, void *context) {
 }
 
 void remote_input_init(void) {
-
   static EventServiceInfo s_comm_session_event_info;
   s_comm_session_event_info = (EventServiceInfo){
     .type = PEBBLE_COMM_SESSION_EVENT,
@@ -227,7 +226,8 @@ RemoteInputResult remote_input_button_set(uint8_t buttons) {
 #define REMOTE_INPUT_SWIPE_TRAVEL_DEN 5
 
 _Static_assert((MIN(DISP_COLS, DISP_ROWS) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
-                   REMOTE_INPUT_SWIPE_TRAVEL_DEN >= SWIPE_MIN_LENGTH_PX,
+                       REMOTE_INPUT_SWIPE_TRAVEL_DEN >=
+                   SWIPE_MIN_LENGTH_PX,
                "swipe travel is below the swipe recognizer's minimum length");
 
 typedef struct SwipeContext {
@@ -300,14 +300,14 @@ RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16
   const int16_t travel =
       (int16_t)((axis * REMOTE_INPUT_SWIPE_TRAVEL_NUM) / REMOTE_INPUT_SWIPE_TRAVEL_DEN);
   // The finger starts on the far side of centre and travels towards the named direction.
-  const int16_t sign = ((direction == RemoteInputSwipeDirection_Up) ||
-                        (direction == RemoteInputSwipeDirection_Left))
-                           ? -1
-                           : 1;
+  const int16_t sign =
+      ((direction == RemoteInputSwipeDirection_Up) || (direction == RemoteInputSwipeDirection_Left))
+          ? -1
+          : 1;
   const int16_t half = (int16_t)(travel / 2);
   // Round the per-step delta away from zero so the accumulated path never falls short of `travel`.
-  const int16_t step = (int16_t)(sign * ((travel + REMOTE_INPUT_SWIPE_STEPS - 1) /
-                                         REMOTE_INPUT_SWIPE_STEPS));
+  const int16_t step =
+      (int16_t)(sign * ((travel + REMOTE_INPUT_SWIPE_STEPS - 1) / REMOTE_INPUT_SWIPE_STEPS));
 
   SwipeContext *context = kernel_malloc(sizeof(SwipeContext));
   if (!context) {
@@ -335,13 +335,13 @@ RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16
   return result;
 }
 
-#else  // !CONFIG_SERVICE_TOUCH
+#else // !CONFIG_SERVICE_TOUCH
 
 RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16_t duration_ms) {
   return RemoteInputResult_Invalid;
 }
 
-#endif  // CONFIG_SERVICE_TOUCH
+#endif // CONFIG_SERVICE_TOUCH
 
 // ---------------------------------------------------------------------------------------------
 // Pebble protocol endpoint

@@ -12,7 +12,7 @@
 #include "util/time/time.h"
 
 typedef enum {
-  LayoutLayerAnchorTextDirectionUp, // for scrolling up, past mode
+  LayoutLayerAnchorTextDirectionUp,   // for scrolling up, past mode
   LayoutLayerAnchorTextDirectionDown, // for scrolling down, future mode
 } LayoutLayerAnchorTextDirection;
 
@@ -34,16 +34,16 @@ typedef enum {
 //! instantiate a specific sub-type of LayoutLayer. Simply stated, the LayoutLayer sub-type
 //! informs what kinds of attributes to expect.
 typedef enum {
-  LayoutIdUnknown = 0, //!< Useful for catching error - 0 is not used as an id.
-  LayoutIdGeneric, //!< Generic layout (probably only for testing)
-  LayoutIdCalendar, //!< Calendar Pins
-  LayoutIdReminder, //!< Generic Reminders
-  LayoutIdNotification, //!< Generic Notifications
+  LayoutIdUnknown = 0,      //!< Useful for catching error - 0 is not used as an id.
+  LayoutIdGeneric,          //!< Generic layout (probably only for testing)
+  LayoutIdCalendar,         //!< Calendar Pins
+  LayoutIdReminder,         //!< Generic Reminders
+  LayoutIdNotification,     //!< Generic Notifications
   LayoutIdCommNotification, //!< Communication Notification
-  LayoutIdWeather, //!< Weather Pins
-  LayoutIdSports, //!< Sports Pins
-  LayoutIdAlarm, //!< Alarm Pins
-  LayoutIdHealth, //!< Health Pins
+  LayoutIdWeather,          //!< Weather Pins
+  LayoutIdSports,           //!< Sports Pins
+  LayoutIdAlarm,            //!< Alarm Pins
+  LayoutIdHealth,           //!< Health Pins
   NumLayoutIds,
   LayoutIdTest, //!< Layout only for unit tests with no attribute requirements
 } LayoutId;
@@ -58,10 +58,10 @@ typedef struct {
 //! context in which the layout is displayed.
 typedef enum {
   LayoutLayerModeNone = 0,
-  LayoutLayerModePeek, //!< Overlay-style mode shown similar to a partially obstructing HUD
-  LayoutLayerModePinnedFat, //!< Menu-style mode in the Timeline app (fat, first item)
+  LayoutLayerModePeek,       //!< Overlay-style mode shown similar to a partially obstructing HUD
+  LayoutLayerModePinnedFat,  //!< Menu-style mode in the Timeline app (fat, first item)
   LayoutLayerModePinnedThin, //!< Menu-style mode in the Timeline app (thin, second item)
-  LayoutLayerModeCard, //!< Card mode, shows details of a TimelineItem
+  LayoutLayerModeCard,       //!< Card mode, shows details of a TimelineItem
   NumLayoutLayerModes,
 } LayoutLayerMode;
 
@@ -104,7 +104,7 @@ typedef void (*LayerLayerModeSetter)(struct LayoutLayer *layout, LayoutLayerMode
 typedef const LayoutColors *(*LayoutLayerColorsGetter)(const struct LayoutLayer *layout);
 #endif
 
-typedef void* (*LayoutLayerContextGetter)(struct LayoutLayer *layout);
+typedef void *(*LayoutLayerContextGetter)(struct LayoutLayer *layout);
 
 //! methods for the LayoutLayer type.
 typedef struct {
@@ -119,9 +119,9 @@ typedef struct {
 
 //! Data structure of a LayoutLayer.
 typedef struct LayoutLayer {
-  Layer layer; //!< The Layer underlying the LayoutLayer
-  LayoutLayerMode mode; //!< The mode the LayoutLayer was created with
-  AttributeList *attributes; //!< A pointer to the LayoutLayer's Attributes
+  Layer layer;                 //!< The Layer underlying the LayoutLayer
+  LayoutLayerMode mode;        //!< The mode the LayoutLayer was created with
+  AttributeList *attributes;   //!< A pointer to the LayoutLayer's Attributes
   const LayoutLayerImpl *impl; //!< The implementation (constructor, destructor, methods)
 } LayoutLayer;
 

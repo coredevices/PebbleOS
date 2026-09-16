@@ -37,7 +37,8 @@ message ActivitySession {
   }
 
   message Summary {
-    repeated MeasurementSet.Type types = 1; /// denotes types and order of packed data in each Sample
+    repeated MeasurementSet.Type types =
+        1; /// denotes types and order of packed data in each Sample
     required Measurement measurement = 2;
   }
 

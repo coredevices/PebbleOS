@@ -15,7 +15,6 @@
 //!
 //!   @{
 
-
 typedef enum {
   ActionMenuAlignTop = 0,
   ActionMenuAlignCenter
@@ -38,8 +37,7 @@ typedef struct ActionMenu ActionMenu;
 //! @param performed_action the ActionMenuItem for the action that was performed,
 //! NULL if the ActionMenu is closing without an action being selected by the user
 //! @param context the context passed to the ActionMenu
-typedef void (*ActionMenuDidCloseCb)(ActionMenu *menu,
-                                     const ActionMenuItem *performed_action,
+typedef void (*ActionMenuDidCloseCb)(ActionMenu *menu, const ActionMenuItem *performed_action,
                                      void *context);
 
 //! Callback executed immediately before the ActionMenu closes.
@@ -47,8 +45,7 @@ typedef void (*ActionMenuDidCloseCb)(ActionMenu *menu,
 //! @param performed_action the ActionMenuItem for the action that was performed,
 //! NULL if the ActionMenu is closing without an action being selected by the user
 //! @param context the context passed to the ActionMenu
-typedef void (*ActionMenuWillCloseCb)(ActionMenu *menu,
-                                      const ActionMenuItem *performed_action,
+typedef void (*ActionMenuWillCloseCb)(ActionMenu *menu, const ActionMenuItem *performed_action,
                                       void *context);
 
 //! Configuration struct for the ActionMenu
@@ -60,7 +57,7 @@ typedef struct {
     GColor foreground; //!< the color of the individual "crumbs" that indicate menu depth
   } colors;
   ActionMenuDidCloseCb will_close; //!< Called immediately before the ActionMenu closes
-  ActionMenuDidCloseCb did_close; //!< a callback used to cleanup memory after the menu has closed
+  ActionMenuDidCloseCb did_close;  //!< a callback used to cleanup memory after the menu has closed
   ActionMenuAlign align;
 } ActionMenuConfig;
 

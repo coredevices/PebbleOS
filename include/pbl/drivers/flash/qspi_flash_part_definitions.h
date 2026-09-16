@@ -70,11 +70,10 @@ typedef const struct QSPIFlashPart {
     uint8_t fast_read_ddr;
   } dummy_cycles;
   struct {
-    bool has_lock_data;  //<! true ifdata needs to be send along with the block_lock instruction
-    uint8_t lock_data;   //<! The data to be sent on a block_lock command, if has_lock_data is true
-    uint8_t
-        locked_check;  //<! Value block_lock_status instruction should return if sector is locked
-    uint8_t protection_enabled_mask;  //<! Mask read_protection_status instr to check if enabled
+    bool has_lock_data;   //<! true ifdata needs to be send along with the block_lock instruction
+    uint8_t lock_data;    //<! The data to be sent on a block_lock command, if has_lock_data is true
+    uint8_t locked_check; //<! Value block_lock_status instruction should return if sector is locked
+    uint8_t protection_enabled_mask; //<! Mask read_protection_status instr to check if enabled
   } block_lock;
   FlashSecurityRegisters sec_registers;
   uint32_t reset_latency_ms;

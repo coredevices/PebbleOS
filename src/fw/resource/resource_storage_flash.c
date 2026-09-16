@@ -88,8 +88,7 @@ static uint32_t resource_storage_system_bank_metadata_size(ResourceStoreEntry *e
 static uint32_t resource_storage_system_bank_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                                      uint32_t entry_offset) {
   uint32_t start_offset = resource_store_get_metadata_size(entry) + entry_offset;
-  return flash_calculate_legacy_defective_checksum(
-      BANK.begin + start_offset, num_bytes);
+  return flash_calculate_legacy_defective_checksum(BANK.begin + start_offset, num_bytes);
 }
 
 static uint32_t resource_storage_system_bank_read(ResourceStoreEntry *entry, uint32_t offset,
@@ -130,7 +129,6 @@ static void resource_storage_system_bank_clear(ResourceStoreEntry *entry) {
   flash_write_bytes(buffer, BANK.begin, MANIFEST_SIZE);
 }
 
-
 bool resource_storage_system_bank_check(ResAppNum app_num, uint32_t resource_id,
                                         ResourceStoreEntry *entry,
                                         const ResourceVersion *expected_version) {
@@ -149,8 +147,8 @@ bool resource_storage_system_bank_check(ResAppNum app_num, uint32_t resource_id,
   return resource_storage_generic_check(app_num, resource_id, entry, expected_version);
 }
 
-static bool resource_storage_system_bank_find_resource(ResourceStoreEntry *entry,
-                                                       ResAppNum app_num, uint32_t resource_id) {
+static bool resource_storage_system_bank_find_resource(ResourceStoreEntry *entry, ResAppNum app_num,
+                                                       uint32_t resource_id) {
   return app_num == SYSTEM_APP && s_valid_resources_found;
 }
 

@@ -19,7 +19,7 @@ void kernel_free(void *ptr);
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_PLATFORM_CALLOC_MACRO kernel_calloc
-#define MBEDTLS_PLATFORM_FREE_MACRO kernel_free
+#define MBEDTLS_PLATFORM_FREE_MACRO   kernel_free
 
 #define MBEDTLS_AES_C
 #define MBEDTLS_AES_ROM_TABLES
@@ -35,7 +35,7 @@ void kernel_free(void *ptr);
  * reduction: the generic division-based path makes one P-256 point multiply
  * slow enough to trip the task watchdog. */
 #define MBEDTLS_ECP_NIST_OPTIM
-#define MBEDTLS_ECP_WINDOW_SIZE 2
+#define MBEDTLS_ECP_WINDOW_SIZE       2
 #define MBEDTLS_ECP_FIXED_POINT_OPTIM 0
 
 #define MBEDTLS_NO_PLATFORM_ENTROPY

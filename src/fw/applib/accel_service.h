@@ -41,12 +41,9 @@ typedef enum {
 
 // Make sure the AccelAxisType enum is compatible with the unified
 // IMUCoordinateAxis enum.
-_Static_assert(ACCEL_AXIS_X == (int)AXIS_X,
-    "AccelAxisType incompatible with IMUCoordinateAxis");
-_Static_assert(ACCEL_AXIS_Y == (int)AXIS_Y,
-    "AccelAxisType incompatible with IMUCoordinateAxis");
-_Static_assert(ACCEL_AXIS_Z == (int)AXIS_Z,
-    "AccelAxisType incompatible with IMUCoordinateAxis");
+_Static_assert(ACCEL_AXIS_X == (int)AXIS_X, "AccelAxisType incompatible with IMUCoordinateAxis");
+_Static_assert(ACCEL_AXIS_Y == (int)AXIS_Y, "AccelAxisType incompatible with IMUCoordinateAxis");
+_Static_assert(ACCEL_AXIS_Z == (int)AXIS_Z, "AccelAxisType incompatible with IMUCoordinateAxis");
 
 #define ACCEL_DEFAULT_SAMPLING_RATE ACCEL_SAMPLING_25HZ
 #define ACCEL_MINIMUM_SAMPLING_RATE ACCEL_SAMPLING_10HZ
@@ -124,11 +121,11 @@ int accel_service_peek(AccelData *data);
 //!   @} // end addtogroup EventService
 //! @} // end addtogroup Foundation
 
-
 //! @internal
 typedef void (*AccelRawDataHandler__deprecated)(AccelRawData *data, uint32_t num_samples);
 
 //! @internal
 //! This is used to stay in the jump table where the old accel_data_service_subscribe was located.
 //! Allows operation on AccelRawData data, which is the same as the previous version of AccelData.
-void accel_data_service_subscribe__deprecated(uint32_t samples_per_update, AccelRawDataHandler__deprecated handler);
+void accel_data_service_subscribe__deprecated(uint32_t samples_per_update,
+                                              AccelRawDataHandler__deprecated handler);

@@ -16,22 +16,18 @@
 //  Card Mode
 //////////////////////////////////////////
 
-#define CARD_MARGIN_TOP                                            \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ PBL_IF_RECT_ELSE(8, 13),                         \
-      /* medium */ PBL_IF_RECT_ELSE(8, 13),                        \
-      /* large */ 2,                                               \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* extralarge */ 2                                           \
-    )
+#define CARD_MARGIN_TOP                                                                      \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                             \
+      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */  \
+      /* small */ PBL_IF_RECT_ELSE(8, 13), /* medium */ PBL_IF_RECT_ELSE(8, 13), /* large */ \
+      2, /* This is the same as Large until ExtraLarge is designed */ /* extralarge */ 2)
 #define CARD_MARGIN_BOTTOM PBL_IF_RECT_ELSE(7, 0)
-#define CARD_LINE_DELTA -2
+#define CARD_LINE_DELTA    -2
 
 #if PBL_RECT
 static void prv_horizontal_rule_node_callback(GContext *ctx, const GRect *box,
-                                              const GTextNodeDrawConfig *config,
-                                              bool render, GSize *size_out, void *user_data) {
+                                              const GTextNodeDrawConfig *config, bool render,
+                                              GSize *size_out, void *user_data) {
   const LayoutLayer *layout = user_data;
 
   const int16_t horizontal_margin = 1;
@@ -56,8 +52,8 @@ static void prv_horizontal_rule_node_callback(GContext *ctx, const GRect *box,
 
 static GTextNode *prv_horizontal_rule_constructor(const LayoutLayer *layout_ref,
                                                   const LayoutNodeConstructorConfig *config) {
-  GTextNodeCustom *custom_node = graphics_text_node_create_custom(prv_horizontal_rule_node_callback,
-                                                                  (void *)layout_ref);
+  GTextNodeCustom *custom_node =
+      graphics_text_node_create_custom(prv_horizontal_rule_node_callback, (void *)layout_ref);
   if (custom_node) {
     custom_node->node.offset.y = 11;
     custom_node->node.margin.h = 12;
@@ -73,7 +69,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .node.type = LayoutNodeType_TimelineIcon,
 #if PBL_RECT
     .offset.x = -1, // icon offset x
-    .margin.w = 9, // icon margin width
+    .margin.w = 9,  // icon margin width
 #endif
     .margin.h = PBL_IF_RECT_ELSE(-2, 2), // icon margin height
   };
@@ -118,7 +114,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .extent.node.type = LayoutNodeType_Constructor,
     .constructor = prv_horizontal_rule_constructor,
   };
-  static const LayoutNodeConfig * const s_icon_vertical_config_nodes[] = {
+  static const LayoutNodeConfig *const s_icon_vertical_config_nodes[] = {
     &s_icon_config.node,
   };
   static const LayoutNodeVerticalConfig s_icon_vertical_container_config = {
@@ -127,7 +123,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .container.num_nodes = ARRAY_LENGTH(s_icon_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_icon_vertical_config_nodes,
   };
-  static const LayoutNodeConfig * const s_time_vertical_config_nodes[] = {
+  static const LayoutNodeConfig *const s_time_vertical_config_nodes[] = {
     &s_time_config.text.extent.node,
   };
   static const LayoutNodeVerticalConfig s_time_vertical_container_config = {
@@ -136,7 +132,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .container.num_nodes = ARRAY_LENGTH(s_time_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_time_vertical_config_nodes,
   };
-  static const LayoutNodeConfig * const s_horizontal_config_nodes[] = {
+  static const LayoutNodeConfig *const s_horizontal_config_nodes[] = {
     &s_icon_vertical_container_config.container.extent.node,
     &s_time_vertical_container_config.container.extent.node,
   };
@@ -146,18 +142,15 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .container.nodes = (LayoutNodeConfig **)&s_horizontal_config_nodes,
   };
 #endif
-  static const LayoutNodeConfig * const s_vertical_config_nodes[] = {
+  static const LayoutNodeConfig *const s_vertical_config_nodes[] = {
 #if PBL_RECT
-    &s_horizontal_config.container.extent.node,
-    &s_horizontal_rule_config.extent.node,
+    &s_horizontal_config.container.extent.node, &s_horizontal_rule_config.extent.node,
 #else
     &s_icon_config.node,
     &s_time_config.text.extent.node,
 #endif
-    &s_title_config.text.extent.node,
-    &s_subtitle_config.text.extent.node,
-    &s_location_config.text.extent.node,
-    &s_body_config.text.extent.node,
+    &s_title_config.text.extent.node,           &s_subtitle_config.text.extent.node,
+    &s_location_config.text.extent.node,        &s_body_config.text.extent.node,
   };
   static const LayoutNodeVerticalConfig s_vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
@@ -183,19 +176,19 @@ LayoutLayer *generic_layout_create(const LayoutLayerConfig *config) {
   GenericLayout *layout = task_zalloc_check(sizeof(GenericLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
-    .attributes = { AttributeIdTitle, AttributeIdSubtitle },
-    .default_colors = { { .argb = GColorBlackARGB8 },
-                        { .argb = GColorWhiteARGB8 },
-                        { .argb = GColorSunsetOrangeARGB8 } },
+    .attributes = {AttributeIdTitle, AttributeIdSubtitle},
+    .default_colors =
+        {{.argb = GColorBlackARGB8}, {.argb = GColorWhiteARGB8}, {.argb = GColorSunsetOrangeARGB8}},
     .default_icon = TIMELINE_RESOURCE_NOTIFICATION_FLAG,
     .card_icon_align = PBL_IF_RECT_ELSE(GAlignLeft, GAlignCenter),
-    .card_icon_size = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
-      //! @note this is the same as Medium until Small is designed
-      /* small */ TimelineResourceSizeTiny,
-      /* medium */ TimelineResourceSizeTiny,
-      /* large */ TimelineResourceSizeSmall,
-      //! @note this is the same as Large until ExtraLarge is designed
-      /* extralarge */ TimelineResourceSizeSmall),
+    .card_icon_size = PREFERRED_CONTENT_SIZE_SWITCH(
+        PreferredContentSizeDefault,
+        //! @note this is the same as Medium until Small is designed
+        /* small */ TimelineResourceSizeTiny,
+        /* medium */ TimelineResourceSizeTiny,
+        /* large */ TimelineResourceSizeSmall,
+        //! @note this is the same as Large until ExtraLarge is designed
+        /* extralarge */ TimelineResourceSizeSmall),
     .card_view_constructor = prv_card_view_constructor,
   };
 

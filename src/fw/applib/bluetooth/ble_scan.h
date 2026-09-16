@@ -19,9 +19,7 @@
 //! immediately after returning from this callback. Do not keep around
 //! any long-lived references around to the advertisement_data.
 //! @note Do not use ble_ad_destroy() on the advertisement_data.
-typedef void (*BLEScanHandler)(BTDevice device,
-                               int8_t rssi,
-                               const BLEAdData *advertisement_data);
+typedef void (*BLEScanHandler)(BTDevice device, int8_t rssi, const BLEAdData *advertisement_data);
 
 //! Start scanning for advertisements. Pebble will scan actively, meaning it
 //! will perform scan requests whenever the advertisement is scannable.

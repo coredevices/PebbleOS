@@ -17,8 +17,8 @@
 //! \brief Layer that displays a bitmap image.
 //!
 //! ![](bitmap_layer.png)
-//! BitmapLayer is a Layer subtype that draws a GBitmap within its frame. It uses an alignment property
-//! to specify how to position the bitmap image within its frame. Optionally, when the
+//! BitmapLayer is a Layer subtype that draws a GBitmap within its frame. It uses an alignment
+//! property to specify how to position the bitmap image within its frame. Optionally, when the
 //! background color is not GColorClear, it draws a solid background color behind the
 //! bitmap image, filling areas of the frame that are not covered by the bitmap image.
 //! Lastly, using the compositing mode property of the BitmapLayer, determines the way the
@@ -49,8 +49,8 @@ typedef struct BitmapLayer {
   Layer layer;
   const GBitmap *bitmap;
   GColor8 background_color;
-  GAlign alignment:4;
-  GCompOp compositing_mode:3;
+  GAlign alignment : 4;
+  GCompOp compositing_mode : 3;
 } BitmapLayer;
 
 //! Initializes the BitmapLayer
@@ -73,7 +73,7 @@ void bitmap_layer_init(BitmapLayer *bitmap_layer, const GRect *frame);
 //! * Clips: `true`
 //! @return A pointer to the BitmapLayer. `NULL` if the BitmapLayer could not
 //! be created
-BitmapLayer* bitmap_layer_create(GRect frame);
+BitmapLayer *bitmap_layer_create(GRect frame);
 
 //! De-initializes the BitmapLayer
 //! Removes the layer from the parent layer.
@@ -81,7 +81,7 @@ BitmapLayer* bitmap_layer_create(GRect frame);
 void bitmap_layer_deinit(BitmapLayer *bitmap_layer);
 
 //! Destroys a window previously created by bitmap_layer_create
-void bitmap_layer_destroy(BitmapLayer* bitmap_layer);
+void bitmap_layer_destroy(BitmapLayer *bitmap_layer);
 
 //! Gets the "root" Layer of the bitmap layer, which is the parent for the sub-
 //! layers used for its implementation.
@@ -89,13 +89,13 @@ void bitmap_layer_destroy(BitmapLayer* bitmap_layer);
 //! @return The "root" Layer of the bitmap layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) bitmap_layer`.
-Layer* bitmap_layer_get_layer(const BitmapLayer *bitmap_layer);
+Layer *bitmap_layer_get_layer(const BitmapLayer *bitmap_layer);
 
 //! Gets the pointer to the bitmap image that the BitmapLayer is using.
 //!
 //! @param bitmap_layer The BitmapLayer for which to get the bitmap image
 //! @return A pointer to the bitmap image that the BitmapLayer is using
-const GBitmap* bitmap_layer_get_bitmap(BitmapLayer *bitmap_layer);
+const GBitmap *bitmap_layer_get_bitmap(BitmapLayer *bitmap_layer);
 
 //! Sets the bitmap onto the BitmapLayer. The bitmap is set by reference (no deep
 //! copy), thus the caller of this function has to make sure the bitmap is kept

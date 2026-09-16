@@ -53,7 +53,7 @@ void irq_reset(void);
 void sched_start_prepare(void);
 
 //! Arch entry points into the scheduler.
-struct pbl_thread *sched_switch_in(void);  // picks and accounts the next thread
+struct pbl_thread *sched_switch_in(void); // picks and accounts the next thread
 void sched_tick(void);
 bool sched_idle_confirm(void);
 void sched_idle_slept(pbl_tick_t elapsed);

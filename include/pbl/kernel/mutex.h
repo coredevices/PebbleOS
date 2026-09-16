@@ -9,11 +9,11 @@
 struct pbl_mutex {
   struct pbl_thread *owner;
   uint32_t count;
-  uintptr_t lock_lr;  // return address of the outermost lock, for diagnostics
+  uintptr_t lock_lr; // return address of the outermost lock, for diagnostics
   struct pbl_mutex_backend backend;
 };
 
-#define PBL_MUTEX_INITIALIZER { .owner = NULL, .count = 0, .lock_lr = 0 }
+#define PBL_MUTEX_INITIALIZER {.owner = NULL, .count = 0, .lock_lr = 0}
 
 #define PBL_MUTEX_DEFINE(name) struct pbl_mutex name = PBL_MUTEX_INITIALIZER
 

@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/framebuffer.h"
@@ -19,7 +18,6 @@
 #include "stubs_resources.h"
 #include "stubs_syscalls.h"
 
-
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -32,11 +30,11 @@
 static char *s_pbi2png_path;
 
 // Stubs
-void passert_failed(const char* filename, int line_number, const char* message, ...) {
+void passert_failed(const char *filename, int line_number, const char *message, ...) {
   exit(EXIT_FAILURE);
 }
 
-void passert_failed_no_message(const char* filename, int line_number) {
+void passert_failed_no_message(const char *filename, int line_number) {
   exit(EXIT_FAILURE);
 }
 
@@ -150,7 +148,7 @@ void prv_convert_image(const char *filename, void *data, size_t size) {
   gdraw_command_image_draw(&ctx, image, GPoint(0, 0));
 
   // Write output to file of the same name with extension replaced with .png
-  char output[strlen(filename) + 5];  // add space for .pdc + '\0'
+  char output[strlen(filename) + 5]; // add space for .pdc + '\0'
   prv_get_base_path(filename, output);
   strcat(output, ".png");
 
@@ -160,7 +158,6 @@ void prv_convert_image(const char *filename, void *data, size_t size) {
 }
 
 static void prv_convert_pdc(const char *filename) {
-
   FILE *f = fopen(filename, "rb");
   if (f == NULL) {
     printf("File not found: %s\n", filename);
@@ -203,14 +200,15 @@ static void prv_convert_pdc(const char *filename) {
   free(data);
 }
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[]) {
   // pdc2png file path always passed in as first argument
   if (argc == 1) {
-    printf("No files specified. Pass a list of file paths to convert "
+    printf(
+        "No files specified. Pass a list of file paths to convert "
         "(e.g. pdc2png [path-to-file1] [path-to-file2] ...)\n");
   }
 
-  char *dir = dirname((char *) argv[0]);
+  char *dir = dirname((char *)argv[0]);
   printf("%s\n", dir);
   s_pbi2png_path = malloc(strlen(dir) + 1 + strlen(PBI2PNG_EXE) + 1);
   sprintf(s_pbi2png_path, "%s/%s", dir, PBI2PNG_EXE);

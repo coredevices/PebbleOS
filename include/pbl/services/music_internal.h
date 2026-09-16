@@ -40,9 +40,8 @@ typedef struct {
 bool music_set_connected_server(const MusicServerImplementation *implementation, bool connected);
 
 //! Update the track that's currently playing. The strings don't need to be null terminated.
-void music_update_now_playing(const char *title, size_t title_length,
-                              const char *artist, size_t artist_length,
-                              const char *album, size_t album_length);
+void music_update_now_playing(const char *title, size_t title_length, const char *artist,
+                              size_t artist_length, const char *album, size_t album_length);
 
 //! Update the name of the player that's currently playing.
 //! The string doesn't need to be null terminated.

@@ -37,9 +37,7 @@ bool ble_ad_includes_service(const BLEAdData *ad, const Uuid *service_uuid);
 //! equivalents using the Bluetooth Base UUID using bt_uuid_expand_16bit or
 //! bt_uuid_expand_32bit.
 //! @see ble_ad_get_number_of_service_uuids
-uint8_t ble_ad_copy_service_uuids(const BLEAdData *ad,
-                                  Uuid *uuids_out,
-                                  uint8_t num_uuids);
+uint8_t ble_ad_copy_service_uuids(const BLEAdData *ad, Uuid *uuids_out, uint8_t num_uuids);
 
 //! If present, returns the number of Service UUIDs the advertisement data
 //! contains.
@@ -65,8 +63,7 @@ bool ble_ad_get_tx_power_level(const BLEAdData *ad, int8_t *tx_power_level_out);
 //! @return The size of the Local Name in bytes, *including* zero terminator.
 //! Note that this might be more than the size of the provided buffer.
 //! If the Local Name was not found, the return value will be zero.
-size_t ble_ad_copy_local_name(const BLEAdData *ad,
-                              char *buffer, size_t size);
+size_t ble_ad_copy_local_name(const BLEAdData *ad, char *buffer, size_t size);
 
 //! If the Local Name is present in the advertisement data, returns the number
 //! of bytes a C-string needs to be to hold the full name.
@@ -91,8 +88,7 @@ size_t ble_ad_get_local_name_buffer_size(const BLEAdData *ad);
 //! can be larger than the size of the provided buffer. If the Manufacturer
 //! Specific data was not found, the return value will be zero.
 //! @see ble_ad_get_manufacturer_specific_data_size
-size_t ble_ad_copy_manufacturer_specific_data(const BLEAdData *ad,
-                                              uint16_t *company_id_out,
+size_t ble_ad_copy_manufacturer_specific_data(const BLEAdData *ad, uint16_t *company_id_out,
                                               uint8_t *buffer, size_t size);
 
 //! Gets the size in bytes of Manufacturer Specific data in the advertisement.
@@ -115,7 +111,6 @@ size_t ble_ad_get_raw_data_size(const BLEAdData *ad);
 //! @return The number of bytes copied.
 size_t ble_ad_copy_raw_data(const BLEAdData *ad, uint8_t *buffer, size_t size);
 
-
 // -----------------------------------------------------------------------------
 // Creating BLEAdData:
 // -----------------------------------------------------------------------------
@@ -135,7 +130,7 @@ size_t ble_ad_copy_raw_data(const BLEAdData *ad, uint8_t *buffer, size_t size);
 //! data written to it will occupy the advertisement payload until there is not
 //! enough space left, in which case all following data is written into the scan
 //! response. @see ble_ad_start_scan_response()
-BLEAdData* ble_ad_create(void);
+BLEAdData *ble_ad_create(void);
 
 //! Destroys an advertisement payload that was created earlier with
 //! ble_ad_create().
@@ -156,16 +151,14 @@ void ble_ad_start_scan_response(BLEAdData *ad_data);
 //! @see bt_uuid_expand_32bit
 //! @param num_uuids Number of UUIDs in the uuids array.
 //! @return true if the data was successfully written or false if not.
-bool ble_ad_set_service_uuids(BLEAdData *ad,
-                              const Uuid uuids[], uint8_t num_uuids);
+bool ble_ad_set_service_uuids(BLEAdData *ad, const Uuid uuids[], uint8_t num_uuids);
 
 //! Writes the Local Name to the advertisement or scan response payload.
 //! @param ad The advertisement payload as created earlier by ble_ad_create()
 //! @param local_name Zero terminated, UTF-8 string with the Local Name. The
 //! name is assumed to be complete and not abbreviated.
 //! @return true if the data was successfully written or false if not.
-bool ble_ad_set_local_name(BLEAdData *ad,
-                           const char *local_name);
+bool ble_ad_set_local_name(BLEAdData *ad, const char *local_name);
 
 //! Writes the TX Power Level to advertisement or scan response payload.
 //! The actual transmission power level value is set automatically, based on the
@@ -181,9 +174,8 @@ bool ble_ad_set_tx_power_level(BLEAdData *ad);
 //! @param data The data
 //! @param size The size of data in bytes
 //! @return true if the data was successfully written or false if not.
-bool ble_ad_set_manufacturer_specific_data(BLEAdData *ad,
-                                           uint16_t company_id,
-                                           const uint8_t *data, size_t size);
+bool ble_ad_set_manufacturer_specific_data(BLEAdData *ad, uint16_t company_id, const uint8_t *data,
+                                           size_t size);
 
 //! @internal -- Do not export
 //! Writes the Flags AD Type to the advertisement or scan response payload.

@@ -29,7 +29,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_health_hr_summary_card__initialize(void) {
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -69,7 +69,7 @@ static void prv_create_card_and_render(HealthData *health_data) {
 //////////////////////
 
 void test_health_hr_summary_card__render_no_data(void) {
-  prv_create_card_and_render(&(HealthData) {});
+  prv_create_card_and_render(&(HealthData){});
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 

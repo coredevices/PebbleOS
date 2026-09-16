@@ -39,9 +39,8 @@ static bool prv_elapsed_setter(KinoReel *reel, uint32_t elapsed_ms) {
     gbitmap_sequence_restart(sequence_reel->sequence);
   }
 
-  return gbitmap_sequence_update_bitmap_by_elapsed(sequence_reel->sequence,
-                                                   sequence_reel->render_bitmap,
-                                                   sequence_reel->elapsed_ms);
+  return gbitmap_sequence_update_bitmap_by_elapsed(
+      sequence_reel->sequence, sequence_reel->render_bitmap, sequence_reel->elapsed_ms);
 }
 
 static uint32_t prv_duration_getter(KinoReel *reel) {
@@ -66,7 +65,7 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
   // Save compositing mode
   GCompOp prev_compositing_mode = ctx->draw_state.compositing_mode;
 
-  graphics_context_set_compositing_mode(ctx, GCompOpSet);  // Enable compositing
+  graphics_context_set_compositing_mode(ctx, GCompOpSet); // Enable compositing
 
   graphics_draw_bitmap_in_rect_processed(ctx, sequence_reel->render_bitmap, &bounds,
                                          NULL_SAFE_FIELD_ACCESS(processor, bitmap_processor, NULL));
@@ -77,14 +76,14 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
 static GBitmap *prv_get_gbitmap(KinoReel *reel) {
   if (reel) {
-    return ((KinoReelImplGBitmapSequence*)reel)->render_bitmap;
+    return ((KinoReelImplGBitmapSequence *)reel)->render_bitmap;
   }
   return NULL;
 }
 
 static GBitmapSequence *prv_get_gbitmap_sequence(KinoReel *reel) {
   if (reel) {
-    return ((KinoReelImplGBitmapSequence*)reel)->sequence;
+    return ((KinoReelImplGBitmapSequence *)reel)->sequence;
   }
   return NULL;
 }
@@ -109,8 +108,8 @@ KinoReel *kino_reel_gbitmap_sequence_create(GBitmapSequence *sequence, bool take
     reel->elapsed_ms = 0;
     reel->base.impl = &KINO_REEL_IMPL_GBITMAPSEQUENCE;
     // init render bitmap
-    reel->render_bitmap = gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(sequence),
-                                               GBitmapFormat8Bit);
+    reel->render_bitmap =
+        gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(sequence), GBitmapFormat8Bit);
     // Render initial frame upon load
     prv_elapsed_setter((KinoReel *)reel, 0);
   }

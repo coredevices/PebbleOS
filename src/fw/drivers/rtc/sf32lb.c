@@ -28,9 +28,9 @@ PBL_LOG_MODULE_DEFINE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
 //   F(CLK1S) = CLK_RTC / (DIV_A_INT + DIV_A_FRAC / 2^14) / DIV_B
 
 #ifndef SF32LB52_USE_LXT
-#define DIV_A_INT 38U
+#define DIV_A_INT  38U
 #define DIV_A_FRAC 4608U
-#define DIV_B 256U
+#define DIV_B      256U
 
 // Default RC10K cycles value on 48MHz clock
 #define RC10K_DEFAULT_CYCLES 1200000UL
@@ -63,20 +63,19 @@ static void prv_reset_calibration_state(void) {
 // Forward declaration - defined later in file
 static void prv_rtc_set_time_no_cal_reset(time_t time);
 #else
-#define DIV_A_INT 128U
+#define DIV_A_INT  128U
 #define DIV_A_FRAC 0U
-#define DIV_B 256U
+#define DIV_B      256U
 #endif
 
 static RTC_HandleTypeDef RTC_Handler = {
-    .Instance = (RTC_TypeDef*)RTC_BASE,
-    .Init =
-        {
-            .HourFormat = RTC_HOURFORMAT_24,
-            .DivAInt = DIV_A_INT,
-            .DivAFrac = DIV_A_FRAC,
-            .DivB = DIV_B,
-        },
+  .Instance = (RTC_TypeDef *)RTC_BASE,
+  .Init = {
+    .HourFormat = RTC_HOURFORMAT_24,
+    .DivAInt = DIV_A_INT,
+    .DivAFrac = DIV_A_FRAC,
+    .DivB = DIV_B,
+  },
 };
 
 static bool s_initialized = false;
@@ -95,7 +94,7 @@ static uint32_t prv_rtc_get_lpcycle() {
   return value;
 }
 
-void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef* hdl, uint32_t value) {
+void prv_rtc_rc10_calculate_div(RTC_HandleTypeDef *hdl, uint32_t value) {
   hdl->Init.DivB = RC10K_SUB_SEC_DIVB;
 
   // 1 seconds has total 1/(x/(48*8))/256=1.5M/x cycles, times 2^14 for DIVA
@@ -115,7 +114,7 @@ static void prv_rtc_reconfig() {
   PBL_ASSERTN(ret == HAL_OK);
 }
 
-static void prv_rtc_cal_timer_cb(void* data) {
+static void prv_rtc_cal_timer_cb(void *data) {
   if (s_rtc_cycle_count_init == 0) {
     uint16_t sub;
     time_t t;
@@ -155,7 +154,7 @@ static void prv_rtc_cal_timer_cb(void* data) {
     if (s_delta_total > MAX_REASONABLE_CORRECTION_SECS ||
         s_delta_total < -MAX_REASONABLE_CORRECTION_SECS) {
       PBL_LOG_WRN("RTC calibration: delta_sum=%d exceeds max, resetting calibration state",
-              (int)(s_delta_total * 1000));
+                  (int)(s_delta_total * 1000));
       prv_reset_calibration_state();
       return;
     }
@@ -182,11 +181,10 @@ static void prv_rtc_cal_timer_cb(void* data) {
     }
 
     PBL_LOG_DBG("origin: f=%dHz,cycle=%d avr: f=%dHz cycle_ave=%d delta=%d, delta_sum=%d\n",
-            (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / s_rtc_cycle_count_init),
-            (int)s_rtc_cycle_count_init,
-            (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / ref_cycle),
-            (int)ref_cycle,
-            (int)(delta * 1000), (int)(s_delta_total * 1000));
+                (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / s_rtc_cycle_count_init),
+                (int)s_rtc_cycle_count_init,
+                (int)(48000000ULL * HAL_RC_CAL_GetLPCycle() / ref_cycle), (int)ref_cycle,
+                (int)(delta * 1000), (int)(s_delta_total * 1000));
   }
 }
 #endif
@@ -207,7 +205,8 @@ void rtc_init(void) {
   s_initialized = true;
 }
 
-void rtc_init_timers(void) {}
+void rtc_init_timers(void) {
+}
 
 static RtcTicks get_ticks(void) {
   static pbl_tick_t s_last_freertos_tick_count = 0;
@@ -248,9 +247,9 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
   RTC_TimeTypeDef rtc_time_struct = {.Hours = t.tm_hour, .Minutes = t.tm_min, .Seconds = t.tm_sec};
 
   RTC_DateTypeDef rtc_date_struct = {
-      .Month = t.tm_mon + 1,
-      .Date = t.tm_mday,
-      .Year = t.tm_year % 100,
+    .Month = t.tm_mon + 1,
+    .Date = t.tm_mday,
+    .Year = t.tm_year % 100,
   };
 
   HAL_RTC_SetTime(&RTC_Handler, &rtc_time_struct, RTC_FORMAT_BIN);
@@ -282,12 +281,12 @@ void rtc_set_time(time_t time) {
   prv_rtc_set_time_no_cal_reset(time);
 }
 
-void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
+void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   RTC_DateTypeDef rtc_date;
   RTC_TimeTypeDef rtc_time;
 
   if (s_initialized) {
-    while((RTC_Handler.Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET) {
+    while ((RTC_Handler.Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET) {
       // Wait for RTC registers to synchronize
     }
   }
@@ -299,15 +298,15 @@ void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
   };
 
   struct tm current_time = {
-      .tm_sec = rtc_time.Seconds,
-      .tm_min = rtc_time.Minutes,
-      .tm_hour = rtc_time.Hours,
-      .tm_mday = rtc_date.Date,
-      .tm_mon = rtc_date.Month - 1,
-      .tm_year = rtc_date.Year + 100,
-      .tm_wday = rtc_date.WeekDay,
-      .tm_yday = 0,
-      .tm_isdst = 0,
+    .tm_sec = rtc_time.Seconds,
+    .tm_min = rtc_time.Minutes,
+    .tm_hour = rtc_time.Hours,
+    .tm_mday = rtc_date.Date,
+    .tm_mon = rtc_date.Month - 1,
+    .tm_year = rtc_date.Year + 100,
+    .tm_wday = rtc_date.WeekDay,
+    .tm_yday = 0,
+    .tm_isdst = 0,
   };
 
   *out_seconds = mktime(&current_time);
@@ -327,9 +326,11 @@ RtcTicks rtc_get_ticks(void) {
   return get_ticks();
 }
 
-void rtc_alarm_init(void) {}
+void rtc_alarm_init(void) {
+}
 
-void rtc_alarm_set(RtcTicks num_ticks) {}
+void rtc_alarm_set(RtcTicks num_ticks) {
+}
 
 RtcTicks rtc_alarm_get_elapsed_ticks(void) {
   return 0;
@@ -339,7 +340,7 @@ bool rtc_alarm_is_initialized(void) {
   return true;
 }
 
-bool rtc_sanitize_struct_tm(struct tm* t) {
+bool rtc_sanitize_struct_tm(struct tm *t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which
   // only stores a 2 digit year, so we only represent values after 2000.
 
@@ -355,7 +356,7 @@ bool rtc_sanitize_struct_tm(struct tm* t) {
   return false;
 }
 
-bool rtc_sanitize_time_t(time_t* t) {
+bool rtc_sanitize_time_t(time_t *t) {
   struct tm time_struct;
   gmtime_r(t, &time_struct);
 
@@ -365,16 +366,16 @@ bool rtc_sanitize_time_t(time_t* t) {
   return result;
 }
 
-void rtc_get_time_tm(struct tm* time_tm) {
+void rtc_get_time_tm(struct tm *time_tm) {
   time_t t = rtc_get_time();
   localtime_r(&t, time_tm);
 }
 
-const char* rtc_get_time_string(char* buffer) {
+const char *rtc_get_time_string(char *buffer) {
   return time_t_to_string(buffer, rtc_get_time());
 }
 
-const char* time_t_to_string(char* buffer, time_t t) {
+const char *time_t_to_string(char *buffer, time_t t) {
   struct tm time;
   localtime_r(&t, &time);
 
@@ -388,20 +389,20 @@ const char* time_t_to_string(char* buffer, time_t t) {
 //! Versioned storage structure for timezone info in flash
 //! This allows for future migrations and avoids struct alignment issues
 typedef struct __attribute__((packed)) {
-  uint8_t version;            // Version number for future migrations
-  char tm_zone[TZ_LEN - 1];   // Up to 5 character timezone abbreviation
-  uint8_t dst_id;             // Daylight savings time zone index
-  int16_t timezone_id;        // Olson index of timezone
-  int32_t tm_gmtoff;          // GMT time offset
-  time_t dst_start;           // Timestamp of start of DST period (0 if none)
-  time_t dst_end;             // Timestamp of end of DST period (0 if none)
+  uint8_t version;          // Version number for future migrations
+  char tm_zone[TZ_LEN - 1]; // Up to 5 character timezone abbreviation
+  uint8_t dst_id;           // Daylight savings time zone index
+  int16_t timezone_id;      // Olson index of timezone
+  int32_t tm_gmtoff;        // GMT time offset
+  time_t dst_start;         // Timestamp of start of DST period (0 if none)
+  time_t dst_end;           // Timestamp of end of DST period (0 if none)
 } TzinfoFlashStorage;
 
 #define TZINFO_VERSION 1
 
-void rtc_set_timezone(TimezoneInfo* tzinfo) {
+void rtc_set_timezone(TimezoneInfo *tzinfo) {
   _Static_assert(sizeof(TzinfoFlashStorage) <= SUBSECTOR_SIZE_BYTES,
-      "TzinfoFlashStorage must fit in TZINFO flash region (4KB)");
+                 "TzinfoFlashStorage must fit in TZINFO flash region (4KB)");
 
   // Copy to versioned buffer
   TzinfoFlashStorage storage = {
@@ -415,13 +416,14 @@ void rtc_set_timezone(TimezoneInfo* tzinfo) {
   memcpy(storage.tm_zone, tzinfo->tm_zone, TZ_LEN - 1);
 
   flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
-  flash_write_bytes((const uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+  flash_write_bytes((const uint8_t *)&storage, FLASH_REGION_TZINFO_BEGIN,
+                    sizeof(TzinfoFlashStorage));
 }
 
-void rtc_get_timezone(TimezoneInfo* tzinfo) {
+void rtc_get_timezone(TimezoneInfo *tzinfo) {
   TzinfoFlashStorage storage;
 
-  flash_read_bytes((uint8_t*)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
+  flash_read_bytes((uint8_t *)&storage, FLASH_REGION_TZINFO_BEGIN, sizeof(TzinfoFlashStorage));
 
   if (storage.version != TZINFO_VERSION) {
     // Future versions can handle migrations here
@@ -453,12 +455,13 @@ uint16_t rtc_get_timezone_id(void) {
 bool rtc_is_timezone_set(void) {
   uint8_t version;
 
-  flash_read_bytes((uint8_t*)&version, FLASH_REGION_TZINFO_BEGIN, sizeof(version));
+  flash_read_bytes((uint8_t *)&version, FLASH_REGION_TZINFO_BEGIN, sizeof(version));
 
   return version == TZINFO_VERSION;
 }
 
-void rtc_enable_backup_regs(void) {}
+void rtc_enable_backup_regs(void) {
+}
 
 void rtc_calibrate_frequency(uint32_t frequency) {
 #ifndef SF32LB52_USE_LXT
@@ -467,8 +470,7 @@ void rtc_calibrate_frequency(uint32_t frequency) {
   s_rtc_cal_timer = new_timer_create();
   PBL_ASSERTN(s_rtc_cal_timer != TIMER_INVALID_ID);
 
-  bool success = new_timer_start(s_rtc_cal_timer, RTC_CAL_PERIOD_MS,
-                                 prv_rtc_cal_timer_cb, NULL,
+  bool success = new_timer_start(s_rtc_cal_timer, RTC_CAL_PERIOD_MS, prv_rtc_cal_timer_cb, NULL,
                                  TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
 #endif

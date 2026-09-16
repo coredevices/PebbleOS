@@ -298,7 +298,7 @@ static void prv_mmc5603nj_polling_callback(void *data) {
     // Post event to trigger data processing
     s_measurement_ready = true;
     PebbleEvent e = {
-        .type = PEBBLE_ECOMPASS_SERVICE_EVENT,
+      .type = PEBBLE_ECOMPASS_SERVICE_EVENT,
     };
     event_put(&e);
   }
@@ -319,7 +319,7 @@ static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample) {
   }
 
   // Check if data is ready
-  if (!s_measurement_ready) {  // Avoid multiple status checks if we already know data is ready
+  if (!s_measurement_ready) { // Avoid multiple status checks if we already know data is ready
     if (prv_mmc5603nj_is_data_ready()) {
       s_measurement_ready = true;
     }
@@ -327,10 +327,10 @@ static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample) {
   if (!s_measurement_ready) {
     return MagReadCommunicationFail;
   }
-  s_measurement_ready = false;  // Clear state since we will be reading the measurement below
+  s_measurement_ready = false; // Clear state since we will be reading the measurement below
 
   // Ready data
-  uint8_t raw_data[6];  // Only need 16 bit precision per axis
+  uint8_t raw_data[6]; // Only need 16 bit precision per axis
   if (!prv_mmc5603nj_read(MMC5603NJ_REG_XOUT0, sizeof(raw_data), raw_data)) {
     return MagReadCommunicationFail;
   }
@@ -339,7 +339,7 @@ static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample) {
   for (uint8_t axis = 0; axis < 3; axis++) {
     uint16_t raw_axis_value = ((uint16_t)raw_data[2 * axis] << 8) | raw_data[2 * axis + 1];
     raw_vector[axis] =
-        (int16_t)(raw_axis_value - (1 << 15));  // offset by 2^15 for uint -> int alignment
+        (int16_t)(raw_axis_value - (1 << 15)); // offset by 2^15 for uint -> int alignment
   }
 
   // Convert raw counts to milliGauss (mG)

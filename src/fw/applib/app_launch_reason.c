@@ -10,7 +10,6 @@ AppLaunchReason app_launch_reason(void) {
   return sys_process_get_launch_reason();
 }
 
-
 uint32_t app_launch_get_args(void) {
   return sys_process_get_launch_args();
 }

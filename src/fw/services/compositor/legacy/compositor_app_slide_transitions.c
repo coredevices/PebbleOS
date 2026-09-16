@@ -21,8 +21,7 @@ typedef struct {
 
 _Static_assert(sizeof(AppSlideTransitionAnimationConfiguration) == sizeof(void *), "");
 
-void compositor_app_slide_transition_animation_update(GContext *ctx,
-                                                      uint32_t distance_normalized,
+void compositor_app_slide_transition_animation_update(GContext *ctx, uint32_t distance_normalized,
                                                       CompositorTransitionDirection dir) {
   const bool is_right = (dir == CompositorTransitionDirectionRight);
   const int16_t from = (int16_t)((is_right) ? -DISP_COLS : DISP_COLS);
@@ -48,17 +47,12 @@ void compositor_app_slide_transition_animation_update(GContext *ctx,
   compositor_set_modal_transition_offset(dest_bitmap_blit_offset);
 }
 
-static void prv_transition_animation_update(GContext *ctx,
-                                            Animation *animation,
+static void prv_transition_animation_update(GContext *ctx, Animation *animation,
                                             uint32_t distance_normalized) {
   // Unwrap our animation configuration from the context
-  AppSlideTransitionAnimationConfiguration config = {
-    .data = animation_get_context(animation)
-  };
+  AppSlideTransitionAnimationConfiguration config = {.data = animation_get_context(animation)};
 
-  compositor_app_slide_transition_animation_update(ctx,
-                                                   distance_normalized,
-                                                   config.direction);
+  compositor_app_slide_transition_animation_update(ctx, distance_normalized, config.direction);
 }
 
 //! The transition direction here is the direction of the visual elements, not the motion
@@ -68,7 +62,7 @@ static void prv_configure_transition_animation(Animation *animation,
     .direction = direction,
   };
 
-  animation_set_handlers(animation, (AnimationHandlers) { 0 }, config.data);
+  animation_set_handlers(animation, (AnimationHandlers){0}, config.data);
   animation_set_custom_interpolation(animation, interpolate_moook);
   animation_set_duration(animation, interpolate_moook_duration());
 }

@@ -135,15 +135,15 @@ typedef enum {
 typedef struct PACKED { // 9 bytes
   AppOutboxSentHandler sent_handler;
   void *cb_ctx;
-  AppOutboxStatus status:8;
+  AppOutboxStatus status : 8;
 } PebbleAppOutboxSentEvent;
 
 typedef struct PACKED { // 1 byte
-  bool is_active; //<! ANCS has become active or has become inactive
+  bool is_active;       //<! ANCS has become active or has become inactive
 } PebbleAncsChangedEvent;
 
 typedef struct PACKED { // 1 byte
-  bool is_active; //<! do not disturb has become active or has become inactive
+  bool is_active;       //<! do not disturb has become active or has become inactive
 } PebbleDoNotDisturbEvent;
 
 typedef struct PACKED { // 1 byte?
@@ -170,10 +170,10 @@ typedef enum PhoneCallSource {
 } PhoneCallSource;
 
 typedef struct PACKED PebblePhoneEvent { // 9 bytes
-  PhoneEventType type:6;
-  PhoneCallSource source:2;
+  PhoneEventType type : 6;
+  PhoneCallSource source : 2;
   uint32_t call_identifier;
-  PebblePhoneCaller* caller;
+  PebblePhoneCaller *caller;
 } PebblePhoneEvent;
 
 typedef enum {
@@ -184,7 +184,7 @@ typedef enum {
 } PebbleSysNotificationType;
 
 typedef struct PACKED { // 6 bytes
-  PebbleSysNotificationType type:8;
+  PebbleSysNotificationType type : 8;
   union {
     Uuid *notification_id;
     PebbleSysNotificationActionResult *action_result;
@@ -192,8 +192,8 @@ typedef struct PACKED { // 6 bytes
   };
 } PebbleSysNotificationEvent;
 
-typedef struct PACKED {   // 4 bytes
-  time_t tick_time; //!< Needs to be converted to 'struct tm' in the event service handler
+typedef struct PACKED { // 4 bytes
+  time_t tick_time;     //!< Needs to be converted to 'struct tm' in the event service handler
 } PebbleTickEvent;
 
 typedef struct PACKED { // 4 bytes
@@ -238,7 +238,7 @@ typedef struct PACKED { // 9 bytes
     //! Valid if type is PebbleBluetoothPairEventTypePairingComplete
     bool success;
   };
-  PebbleBluetoothPairEventType type:1;
+  PebbleBluetoothPairEventType type : 1;
 } PebbleBluetoothPairEvent;
 
 typedef enum {
@@ -246,18 +246,18 @@ typedef enum {
   PebbleBluetoothConnectionEventStateDisconnected,
 } PebbleBluetoothConnectionEventState;
 
-  // FIXME: This event muddles classic + LE connection events for the phone.
+// FIXME: This event muddles classic + LE connection events for the phone.
 typedef struct PACKED { // 9 bytes
-  PebbleBluetoothConnectionEventState state:1;
-  bool is_ble:1;
+  PebbleBluetoothConnectionEventState state : 1;
+  bool is_ble : 1;
   BTDeviceInternal device;
 } PebbleBluetoothConnectionEvent;
 
 typedef struct PACKED { // 9 bytes
   uint8_t hci_reason;
   BTBondingID bonding_id;
-  uint64_t bt_device_bits:50;
-  bool connected:1;
+  uint64_t bt_device_bits : 50;
+  bool connected : 1;
 } PebbleBLEConnectionEvent;
 
 typedef struct PACKED { // 4 bytes
@@ -280,17 +280,17 @@ typedef struct PACKED { // 9 bytes
   uintptr_t object_ref;
   union {
     uint16_t value_length;
-    BLESubscription subscription_type:2;
+    BLESubscription subscription_type : 2;
   };
-  BLEGATTError gatt_error:16;
+  BLEGATTError gatt_error : 16;
 
   //! This is here to make sure we don't accidentally add more fields here without thinking:
-  uint16_t zero:2;
-  PebbleBLEGATTClientEventType subtype:6;
+  uint16_t zero : 2;
+  PebbleBLEGATTClientEventType subtype : 6;
 } PebbleBLEGATTClientEvent;
 
-#define BLE_GATT_MAX_SERVICES_CHANGED_BITS (5)  // max. 31
-#define BLE_GATT_MAX_SERVICES_CHANGED ((1 << BLE_GATT_MAX_SERVICES_CHANGED_BITS) - 1)
+#define BLE_GATT_MAX_SERVICES_CHANGED_BITS (5) // max. 31
+#define BLE_GATT_MAX_SERVICES_CHANGED      ((1 << BLE_GATT_MAX_SERVICES_CHANGED_BITS) - 1)
 
 #define BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS (3)
 
@@ -330,24 +330,22 @@ typedef struct {
 
 typedef struct PACKED { // 9 bytes
   PebbleBLEGATTClientServiceEventInfo *info;
-  uint64_t rsvd:34;
+  uint64_t rsvd : 34;
 
-  uint8_t subtype:BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS;
+  uint8_t subtype : BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS;
 } PebbleBLEGATTClientServiceEvent;
 
 _Static_assert((1 << BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS) >= PebbleBLEGATTClientEventTypeNum,
                "Not enough bits to represent all PebbleBLEGATTClientEventTypes");
 
 #ifdef __arm__
-_Static_assert(sizeof(PebbleBLEGATTClientServiceEvent) == sizeof(PebbleBLEGATTClientServiceEvent),
-          "PebbleBLEGATTClientEvent and PebbleBLEGATTClientServiceEvent must be the same size");
+_Static_assert(
+    sizeof(PebbleBLEGATTClientServiceEvent) == sizeof(PebbleBLEGATTClientServiceEvent),
+    "PebbleBLEGATTClientEvent and PebbleBLEGATTClientServiceEvent must be the same size");
 #endif
 
-#define PebbleEventToBTDeviceInternal(e) ((const BTDeviceInternal) { \
-  .opaque = { \
-    .opaque_64 = (e)->bt_device_bits \
-  } \
-})
+#define PebbleEventToBTDeviceInternal(e) \
+  ((const BTDeviceInternal){.opaque = {.opaque_64 = (e)->bt_device_bits}})
 
 typedef struct PACKED { // 3 byte?
   bool airplane;
@@ -363,10 +361,10 @@ typedef enum {
 } PebblePutBytesEventType;
 
 typedef struct PACKED { // 8 bytes
-  PebblePutBytesEventType type:8;
+  PebblePutBytesEventType type : 8;
   uint8_t progress_percent; // the percent complete for the current PB transfer
-  PutBytesObjectType object_type:7;
-  bool has_cookie:1;
+  PutBytesObjectType object_type : 7;
+  bool has_cookie : 1;
   bool failed;
   union {
     // if type != PebblePutBytesEventTypeCleanup, populated with:
@@ -397,9 +395,9 @@ typedef struct PACKED { // 5 bytes
 //! This is fired when a PP comm session is opened or closed
 typedef struct PACKED PebbleCommSessionEvent { // 1 byte
   //! indicates whether the we are connecting or disconnecting
-  bool is_open:1;
+  bool is_open : 1;
   //! True if the pebble app has connected & false if a third-party app has connected
-  bool is_system:1;
+  bool is_system : 1;
 } PebbleCommSessionEvent;
 
 typedef struct PACKED { // 1 bytes
@@ -434,7 +432,7 @@ typedef struct PACKED { // 8 bytes
 } PebbleLaunchAppEvent;
 
 typedef struct PACKED { // 8 bytes
-  time_t alarm_time; //!< Needs to be converted to 'struct tm' in the event service handler
+  time_t alarm_time;    //!< Needs to be converted to 'struct tm' in the event service handler
   const char *alarm_label;
 } PebbleAlarmClockEvent;
 
@@ -446,12 +444,12 @@ typedef struct PACKED { // 8 bytes
 } PebbleCallbackEvent;
 
 typedef struct PACKED { // 4 bytes
-  void* data;
+  void *data;
 } PebbleNewAppMessageEvent;
 
 typedef struct PACKED { // 7 bytes
   bool subscribe;
-  PebbleTask task:8;
+  PebbleTask task : 8;
   PebbleEventType event_type;
   void *event_queue;
 } PebbleSubscriptionEvent;
@@ -465,9 +463,9 @@ typedef struct PACKED { // 1 byte
   bool in_focus;
 } PebbleAppFocusEvent;
 
-typedef struct PACKED { // 9 bytes
-  uint8_t  type;                // service event type
-  uint16_t  service_index;      // service index
+typedef struct PACKED {   // 9 bytes
+  uint8_t type;           // service event type
+  uint16_t service_index; // service index
   PluginEventData data;
 } PebblePluginServiceEvent;
 
@@ -483,8 +481,8 @@ typedef struct PACKED { // 7 bytes
 } PebbleBlobDBEvent;
 
 typedef struct PACKED { // 5 bytes
-  const char *key;  //!< The preference key that changed (null-terminated)
-  uint8_t key_len;  //!< Length of the key including null terminator
+  const char *key;      //!< The preference key that changed (null-terminated)
+  uint8_t key_len;      //!< Length of the key including null terminator
 } PebblePrefChangeEvent;
 
 typedef enum {
@@ -492,8 +490,8 @@ typedef enum {
 } SpeakerEventType;
 
 typedef struct PACKED { // 2 bytes
-  SpeakerEventType type:8;
-  uint8_t finish_reason;  // SpeakerFinishReason
+  SpeakerEventType type : 8;
+  uint8_t finish_reason; // SpeakerFinishReason
 } PebbleSpeakerEvent;
 
 typedef struct PACKED { // 1 byte
@@ -513,8 +511,8 @@ typedef struct {
 } PebbleVoiceServiceEventData;
 
 typedef struct PACKED { // 6 bytes
-  VoiceEventType type:8;
-  VoiceStatus status:8;
+  VoiceEventType type : 8;
+  VoiceStatus status : 8;
   PebbleVoiceServiceEventData *data;
 } PebbleVoiceServiceEvent;
 
@@ -575,7 +573,7 @@ typedef struct PACKED { // 4 bytes
 
 typedef struct PACKED { // 9 bytes
   HealthEventData data;
-  HealthEventType type:8;     // At the end so that data is word aligned.
+  HealthEventType type : 8; // At the end so that data is word aligned.
 } PebbleHealthEvent;
 
 typedef struct PACKED { // 1 byte
@@ -607,22 +605,22 @@ typedef enum WeatherEventType {
 } WeatherEventType;
 
 typedef struct PACKED PebbleWeatherEvent {
-  WeatherEventType type:8;
+  WeatherEventType type : 8;
 } PebbleWeatherEvent;
 
 typedef struct HRMBPMData { // 2 bytes
   uint8_t bpm;
-  HRMQuality quality:8;
+  HRMQuality quality : 8;
 } HRMBPMData;
 
 typedef struct HRMHRVData { // 3 bytes
-  uint16_t ppi_ms; //!< Peak-to-peak interval (ms)
-  HRMQuality quality:8;
+  uint16_t ppi_ms;          //!< Peak-to-peak interval (ms)
+  HRMQuality quality : 8;
 } HRMHRVData;
 
 typedef struct HRMSpO2Data { // 2 bytes
   uint8_t percent;
-  HRMQuality quality:8;
+  HRMQuality quality : 8;
 } HRMSpO2Data;
 
 #ifdef CONFIG_MFG
@@ -657,8 +655,8 @@ typedef struct PACKED PebbleHRMEvent { // 5 bytes
     HRMHRVData hrv;
     HRMSpO2Data spo2;
 #ifdef CONFIG_MFG
-    HRMCTRData* ctr;
-    HRMLeakageData* leakage;
+    HRMCTRData *ctr;
+    HRMLeakageData *leakage;
 #endif
     HRMSubscriptionExpiringData expiring;
   };
@@ -680,7 +678,7 @@ typedef struct PACKED {
   int16_t current_y;
   int16_t final_y;
   AnimationProgress progress;
-  UnobstructedAreaEventType type:8; //!< At the end for alignment.
+  UnobstructedAreaEventType type : 8; //!< At the end for alignment.
 } PebbleUnobstructedAreaEvent;
 
 #if !__clang__
@@ -694,15 +692,14 @@ typedef struct PACKED PebbleAppGlanceEvent {
 
 typedef struct PACKED {
   TimelineItemId *item_id;
-  TimelinePeekTimeType time_type:8;
+  TimelinePeekTimeType time_type : 8;
   uint8_t num_concurrent;
   bool is_first_event;
   bool is_future_empty;
 } PebbleTimelinePeekEvent;
 
 #if !__clang__
-_Static_assert(sizeof(PebbleTimelinePeekEvent) == 8,
-               "PebbleTimelinePeekEvent size mismatch.");
+_Static_assert(sizeof(PebbleTimelinePeekEvent) == 8, "PebbleTimelinePeekEvent size mismatch.");
 #endif
 
 typedef enum PebbleAppCacheEventType {
@@ -712,13 +709,12 @@ typedef enum PebbleAppCacheEventType {
 } PebbleAppCacheEventType;
 
 typedef struct PACKED PebbleAppCacheEvent {
-  PebbleAppCacheEventType cache_event_type:8;
+  PebbleAppCacheEventType cache_event_type : 8;
   AppInstallId install_id;
 } PebbleAppCacheEvent;
 
 #if !__clang__
-_Static_assert(sizeof(PebbleAppCacheEvent) == 5,
-               "PebbleTimelinePeekEvent size mismatch.");
+_Static_assert(sizeof(PebbleAppCacheEvent) == 5, "PebbleTimelinePeekEvent size mismatch.");
 #endif
 
 typedef enum PebbleActivityEventType {
@@ -729,7 +725,7 @@ typedef enum PebbleActivityEventType {
 } PebbleActivityEventType;
 
 typedef struct PACKED PebbleActivityEvent {
-  PebbleActivityEventType type:8;
+  PebbleActivityEventType type : 8;
 } PebbleActivityEvent;
 
 typedef enum PebbleWorkoutEventType {
@@ -810,10 +806,10 @@ typedef struct PACKED {
     PebbleSpeakerEvent speaker;
     PebbleBacklightEvent backlight;
   };
-  PebbleTaskBitset task_mask;  // 1 == filter out, 0 == leave in
+  PebbleTaskBitset task_mask; // 1 == filter out, 0 == leave in
   // NOTE: we put this 8 bit field at the end so that we can pack this structure and still keep the
   //  event data unions word aligned (and avoid unaligned access exceptions).
-  PebbleEventType type:8;
+  PebbleEventType type : 8;
 } PebbleEvent;
 
 // Guard the on-target size. The bound assumes 4-byte pointers, so it only
@@ -824,14 +820,14 @@ _Static_assert(sizeof(PebbleEvent) <= 12, "PebbleEvent grew; check the event uni
 
 void events_init(void);
 
-void event_put(PebbleEvent* event);
-bool event_put_isr(PebbleEvent* event);
-void event_put_from_process(PebbleTask task, PebbleEvent* event);
+void event_put(PebbleEvent *event);
+bool event_put_isr(PebbleEvent *event);
+void event_put_from_process(PebbleTask task, PebbleEvent *event);
 
 //! Like event_put_from_app but it's allowed to fail.
-bool event_try_put_from_process(PebbleTask task, PebbleEvent* event);
+bool event_try_put_from_process(PebbleTask task, PebbleEvent *event);
 
-bool event_take_timeout(PebbleEvent* event, int timeout_ms);
+bool event_take_timeout(PebbleEvent *event, int timeout_ms);
 
 //! Return a reference to the allocated buffer within an event, if applicable
 void **event_get_buffer(PebbleEvent *event);
@@ -840,7 +836,7 @@ void **event_get_buffer(PebbleEvent *event);
 void event_deinit(PebbleEvent *event);
 
 //! Call to clean up after an event that has been dequeued using event_take.
-void event_cleanup(PebbleEvent* event);
+void event_cleanup(PebbleEvent *event);
 
 void event_reset_from_process_queue(PebbleTask task);
 

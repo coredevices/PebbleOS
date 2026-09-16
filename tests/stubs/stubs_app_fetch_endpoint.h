@@ -10,5 +10,5 @@ bool WEAK app_fetch_in_progress(void) {
   return false;
 }
 
-void WEAK app_fetch_cancel_from_system_task(AppInstallId app_id) {}
-
+void WEAK app_fetch_cancel_from_system_task(AppInstallId app_id) {
+}

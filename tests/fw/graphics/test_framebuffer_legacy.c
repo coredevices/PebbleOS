@@ -21,14 +21,14 @@
 // (spalding) packed circular layout, so chalk apps that access the
 // framebuffer directly render correctly.
 
-#define CHALK_GUARD_PAD 76
+#define CHALK_GUARD_PAD         76
 #define CHALK_FRAMEBUFFER_BYTES 25944
 
 static FrameBuffer *fb = NULL;
 
 void test_framebuffer_legacy__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) { LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS });
+  framebuffer_init(fb, &(GSize){LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS});
 }
 
 void test_framebuffer_legacy__cleanup(void) {

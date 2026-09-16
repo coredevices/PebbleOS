@@ -49,6 +49,8 @@ void WEAK sys_i18n_get_locale(char *buf) {
   strncpy(buf, "en_US", ISO_LOCALE_LENGTH);
 }
 
-void WEAK i18n_enable(bool enable) { }
+void WEAK i18n_enable(bool enable) {
+}
 
-void WEAK i18n_set_resource(uint32_t resource_id) { }
+void WEAK i18n_set_resource(uint32_t resource_id) {
+}

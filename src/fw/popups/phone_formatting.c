@@ -58,7 +58,7 @@ void phone_format_phone_number(const char *phone_number, char *formatted_phone_n
   const int phone_number_length = strlen(phone_number);
 
   // Only modify if phone number includes area code and correctly formatted
-  const int long_distance_min_len = 12;  // 650-777-1234, +49 30 90260
+  const int long_distance_min_len = 12; // 650-777-1234, +49 30 90260
   if (phone_number_length >= long_distance_min_len) {
     int local_number_length = 0;
     // Parse from the end of the string to identify the local portion of the phone number
@@ -82,8 +82,8 @@ void phone_format_phone_number(const char *phone_number, char *formatted_phone_n
           (phone_number[region_length - 1] == ' ')) {
         region_length--;
       }
-      snprintf(formatted_phone_number, length, "%.*s\n%.*s",
-               region_length, phone_number, local_number_length, local_number);
+      snprintf(formatted_phone_number, length, "%.*s\n%.*s", region_length, phone_number,
+               local_number_length, local_number);
       return;
     }
   }

@@ -34,7 +34,8 @@ void NOINLINE delay_us(uint32_t us) {
   // Use DWT cycle counter for accurate delays
   uint32_t cycles = us * (SystemCoreClock / 1000000);
   uint32_t start = DWT->CYCCNT;
-  while ((DWT->CYCCNT - start) < cycles) {}
+  while ((DWT->CYCCNT - start) < cycles) {
+  }
 }
 
 void delay_init(void) {

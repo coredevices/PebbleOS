@@ -31,8 +31,7 @@ static void prv_croak_on_heap_corruption(void *ptr) {
   PBL_CROAK("Error: Heap corrupt around <%p>", ptr);
 }
 
-void process_heap_set_exception_handlers(Heap *heap,
-                                         const PebbleProcessMd *app_md) {
+void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_md) {
   // prior to version 2.1 of the firmware (app sdk version 5.2), we never had
   // double free detection in our heap and we would just silently ignore someone
   // trying to free an invalid pointer.  going forward we want to let our
@@ -40,10 +39,9 @@ void process_heap_set_exception_handlers(Heap *heap,
   // compiled with the old sdk, yell at them through a log message so we don't
   // break any existing apps. if the app is compiled with a new sdk after we
   // made this change, just crash their app.
-  static const Version old_style_double_free_handling_version = { 5, 1 };
+  static const Version old_style_double_free_handling_version = {5, 1};
   const Version app_sdk_version = process_metadata_get_sdk_version(app_md);
-  if (version_compare(app_sdk_version,
-                      old_style_double_free_handling_version) <= 0) {
+  if (version_compare(app_sdk_version, old_style_double_free_handling_version) <= 0) {
     heap_set_double_free_handler(heap, prv_warn_on_double_free);
   } else {
     heap_set_double_free_handler(heap, prv_croak_on_double_free);
@@ -67,7 +65,7 @@ void process_heap_set_exception_handlers(Heap *heap,
   // Since some apps can continue to run without issue, rather than tearing
   // everything down and create a bad user experience, let's hope that
   // developers read the logs and fix their apps.
-  static const Version old_style_heap_corruption_version = { 5, 0x38 };
+  static const Version old_style_heap_corruption_version = {5, 0x38};
 
   if (version_compare(app_sdk_version, old_style_heap_corruption_version) < 0) {
     // They're using 3.2 SDK or older, just let them off with a log message.

@@ -36,8 +36,8 @@ static uint32_t prv_elapsed_getter(KinoReel *reel) {
 static bool prv_elapsed_setter(KinoReel *reel, uint32_t elapsed_ms) {
   KinoReelImplPDCS *dcs_reel = (KinoReelImplPDCS *)reel;
   dcs_reel->elapsed_ms = elapsed_ms;
-  GDrawCommandFrame *frame = gdraw_command_sequence_get_frame_by_elapsed(dcs_reel->sequence,
-                                                                         dcs_reel->elapsed_ms);
+  GDrawCommandFrame *frame =
+      gdraw_command_sequence_get_frame_by_elapsed(dcs_reel->sequence, dcs_reel->elapsed_ms);
   bool frame_changed = false;
   if (frame != dcs_reel->current_frame) {
     dcs_reel->current_frame = frame;
@@ -69,14 +69,14 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
     return;
   }
 
-  gdraw_command_frame_draw_processed(ctx, dcs_reel->sequence, dcs_reel->current_frame, offset,
-                                     NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor,
-                                                            NULL));
+  gdraw_command_frame_draw_processed(
+      ctx, dcs_reel->sequence, dcs_reel->current_frame, offset,
+      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, NULL));
 }
 
 static GDrawCommandSequence *prv_get_gdraw_command_sequence(KinoReel *reel) {
   if (reel) {
-    return ((KinoReelImplPDCS*)reel)->sequence;
+    return ((KinoReelImplPDCS *)reel)->sequence;
   }
   return NULL;
 }
@@ -122,8 +122,8 @@ KinoReel *kino_reel_pdcs_create_with_resource(uint32_t resource_id) {
 }
 
 KinoReel *kino_reel_pdcs_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
-  GDrawCommandSequence *sequence = gdraw_command_sequence_create_with_resource_system(app_num,
-                                                                                      resource_id);
+  GDrawCommandSequence *sequence =
+      gdraw_command_sequence_create_with_resource_system(app_num, resource_id);
   if (sequence == NULL) {
     return NULL;
   }

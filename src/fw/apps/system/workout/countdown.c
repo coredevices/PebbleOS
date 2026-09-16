@@ -9,7 +9,7 @@
 #include "resource/resource_ids.auto.h"
 
 #define TIMER_DURATION (1000)
-#define NUM_IMAGES (3)
+#define NUM_IMAGES     (3)
 
 typedef struct WorkoutCountdownWindow {
   Window window;
@@ -78,8 +78,8 @@ void workout_countdown_start(ActivitySessionType type, StartWorkoutCallback star
   window_set_user_data(window, countdown_window);
   window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorYellow, GColorDarkGray));
   window_set_window_handlers(window, &(WindowHandlers){
-    .unload = prv_window_unload_handler,
-  });
+                                       .unload = prv_window_unload_handler,
+                                     });
 
   layer_init(&countdown_window->base_layer, &window->layer.bounds);
   layer_set_update_proc(&countdown_window->base_layer, prv_base_layer_update_proc);

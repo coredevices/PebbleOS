@@ -8,9 +8,9 @@
 #include "system/passert.h"
 #include "kernel/util/delay.h"
 
-#define SLOPE_NUM (2971)  // approximate slope molecule
-#define SLOPE_DEN (40)    // approximate slope denominator
-#define OFFSET (277539)
+#define SLOPE_NUM (2971) // approximate slope molecule
+#define SLOPE_DEN (40)   // approximate slope denominator
+#define OFFSET    (277539)
 #define ROUND_ADD (SLOPE_DEN / 2)
 
 void temperature_init(void) {
@@ -50,8 +50,8 @@ int32_t temperature_read(void) {
     // COEF_NUM/COEF_DEN ≃ 749.2916/10100 × 1000
     // (DATA+3000)*COEF_NUM/COEF_DEN - OFFSET
     uint32_t raw = hwp_tsen->TSEN_RDATA;
-    uint32_t D = raw + 3000;                   // D = DATA + 3000
-    uint32_t num = D * SLOPE_NUM + ROUND_ADD;  // discard four, but treat five as whole
+    uint32_t D = raw + 3000;                  // D = DATA + 3000
+    uint32_t num = D * SLOPE_NUM + ROUND_ADD; // discard four, but treat five as whole
     uint32_t tmp = num / SLOPE_DEN;
     temp = tmp - OFFSET;
   }

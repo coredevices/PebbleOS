@@ -15,8 +15,8 @@
 #include "fixtures/load_test_resources.h"
 
 bool property_animation_init(PropertyAnimation *animation,
-                             const PropertyAnimationImplementation *implementation,
-                             void *subject, void *from_value, void *to_value) {
+                             const PropertyAnimationImplementation *implementation, void *subject,
+                             void *from_value, void *to_value) {
   if (!animation) {
     return false;
   }
@@ -108,7 +108,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_timeline_layouts__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);
@@ -141,15 +141,16 @@ static void prv_render_layout(LayoutId layout_id, const AttributeList *attr_list
                               size_t num_down_clicks) {
   PBL_ASSERTN(attr_list);
 
-  TimelineItem item = (TimelineItem) {
-    .header = (CommonTimelineItemHeader) {
-      .layout = layout_id,
-      .type = TimelineItemTypePin,
-    },
+  TimelineItem item = (TimelineItem){
+    .header =
+        (CommonTimelineItemHeader){
+          .layout = layout_id,
+          .type = TimelineItemTypePin,
+        },
     .attr_list = *attr_list,
   };
 
-  TimelinePinWindow pin_window = (TimelinePinWindow) {};
+  TimelinePinWindow pin_window = (TimelinePinWindow){};
   timeline_pin_window_init(&pin_window, &item, rtc_get_time());
   Window *window = &pin_window.window;
 
@@ -184,7 +185,7 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
     return;
   }
 
-  AttributeList attr_list = (AttributeList) {0};
+  AttributeList attr_list = (AttributeList){0};
   if (config->title) {
     attribute_list_add_cstring(&attr_list, AttributeIdTitle, config->title);
   }
@@ -213,7 +214,7 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
 //////////////////////
 
 void test_timeline_layouts__generic(void) {
-  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig) {
+  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig){
     .layout_id = LayoutIdGeneric,
     .title = "Delfina Pizza",
     .subtitle = "Open Table Reservation",
@@ -236,7 +237,7 @@ void test_timeline_layouts__generic(void) {
 }
 
 void test_timeline_layouts__weather(void) {
-  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig) {
+  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig){
     .layout_id = LayoutIdWeather,
     .title = "The Greatest Sunrise Ever",
     .subtitle = "90°/60°",

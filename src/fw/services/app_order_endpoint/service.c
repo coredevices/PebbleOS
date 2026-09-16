@@ -41,7 +41,7 @@ typedef struct {
 
 static void prv_send_result(CommSession *session, uint8_t result) {
   PBL_LOG_DBG("Sending result of %d", result);
-  comm_session_send_data(session, APP_ORDER_ENDPOINT_ID, (uint8_t*)&result, sizeof(result),
+  comm_session_send_data(session, APP_ORDER_ENDPOINT_ID, (uint8_t *)&result, sizeof(result),
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
@@ -59,7 +59,7 @@ static void prv_handle_app_order_msg(CommSession *session, const uint8_t *data, 
   prv_send_result(session, APP_ORDER_RES_SUCCESS);
 }
 
-void app_order_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
+void app_order_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   // header includes APP_ORDER_CMD and a num_uuids uint8_t
   const uint8_t header_len = sizeof(AppOrderCommand) + sizeof(uint8_t);
 

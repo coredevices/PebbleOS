@@ -15,10 +15,10 @@
 //!
 //! These alarm settings will be persisted across watch resets.
 
-#define SMART_ALARM_RANGE_S (30 * SECONDS_PER_MINUTE)
-#define SMART_ALARM_SNOOZE_DELAY_S (1 * SECONDS_PER_MINUTE)
+#define SMART_ALARM_RANGE_S           (30 * SECONDS_PER_MINUTE)
+#define SMART_ALARM_SNOOZE_DELAY_S    (1 * SECONDS_PER_MINUTE)
 #define SMART_ALARM_MAX_LIGHT_SLEEP_S (30 * SECONDS_PER_MINUTE)
-#define SMART_ALARM_MAX_SMART_SNOOZE (SMART_ALARM_RANGE_S / SMART_ALARM_SNOOZE_DELAY_S)
+#define SMART_ALARM_MAX_SMART_SNOOZE  (SMART_ALARM_RANGE_S / SMART_ALARM_SNOOZE_DELAY_S)
 
 #define ALARMS_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack)
 
@@ -49,16 +49,16 @@ typedef enum AlarmTone {
 } AlarmTone;
 
 typedef struct AlarmInfo {
-  int hour; //<! Range 0-23, where 0 is 12am
-  int minute; //<! Range is 0-59
+  int hour;       //<! Range 0-23, where 0 is 12am
+  int minute;     //<! Range is 0-59
   AlarmKind kind; //<! The kind of recurrence the alarm will have
   //! A bool for each weekday (Sunday = index 0) enabled
   bool (*scheduled_days)[DAYS_PER_WEEK];
-  bool enabled; //<! Whether the alarm to go off at the specified time
-  bool is_smart; //<! Whether the alarm is a Smart Alarm
-  bool sound_enabled; //<! Whether the alarm should play a tone on speaker hardware
+  bool enabled;         //<! Whether the alarm to go off at the specified time
+  bool is_smart;        //<! Whether the alarm is a Smart Alarm
+  bool sound_enabled;   //<! Whether the alarm should play a tone on speaker hardware
   bool vibrate_enabled; //<! Whether the alarm should vibrate
-  AlarmTone tone; //<! Selected tone for this alarm (used when sound_enabled is true)
+  AlarmTone tone;       //<! Selected tone for this alarm (used when sound_enabled is true)
 } AlarmInfo;
 
 typedef void (*AlarmForEach)(AlarmId id, const AlarmInfo *info, void *context);

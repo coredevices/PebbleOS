@@ -25,14 +25,14 @@ struct PACKED native_heartbeat_record {
   uint64_t timestamp;
   uint8_t build_id[BUILD_ID_EXPECTED_LEN];
 #define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) uint32_t metric_##key;
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) int32_t metric_##key;
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)   int32_t metric_##key;
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) \
   uint32_t metric_##key;                                        \
   uint16_t metric_##key##_scale;
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) \
   int32_t metric_##key;                                       \
   uint16_t metric_##key##_scale;
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) uint32_t metric_##key;
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)       uint32_t metric_##key;
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) char metric_##key[(len) + 1];
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
@@ -44,15 +44,14 @@ struct PACKED native_heartbeat_record {
 };
 
 /* The record is logged as a raw byte blob, so it must have no padding. */
-_Static_assert(
-    sizeof(struct native_heartbeat_record) ==
-        sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) +sizeof(uint32_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) +sizeof(int32_t)
+_Static_assert(sizeof(struct native_heartbeat_record) ==
+                   sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               +sizeof(uint32_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 +sizeof(int32_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) +sizeof(uint32_t) + sizeof(uint16_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) +sizeof(int32_t) + sizeof(uint16_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) +sizeof(uint32_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) +((len) + 1)
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   +sizeof(int32_t) + sizeof(uint16_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  +sizeof(uint32_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            +((len) + 1)
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -60,16 +59,16 @@ _Static_assert(
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
-    ,
-    "native_heartbeat_record must be packed (no padding)");
+               ,
+               "native_heartbeat_record must be packed (no padding)");
 
 /* Type-specific internal index enums (dense, no gaps) */
 
 enum native_integer_index {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)
 #include "pbl/services/analytics/analytics.def"
@@ -119,12 +118,12 @@ enum native_string_index {
 /* Mapping tables: global key enum -> type-specific index (-1 if N/A) */
 
 static const int8_t s_key_to_integer[] = {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            -1,
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -135,12 +134,12 @@ static const int8_t s_key_to_integer[] = {
 };
 
 static const int8_t s_key_to_timer[] = {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) NATIVE_TIMER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  NATIVE_TIMER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            -1,
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -151,12 +150,12 @@ static const int8_t s_key_to_timer[] = {
 };
 
 static const int8_t s_key_to_string[] = {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) NATIVE_STRING_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            NATIVE_STRING_IDX_##key,
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -382,12 +381,12 @@ static void prv_add(enum pbl_analytics_key key, int32_t amount) {
 }
 
 const struct pbl_analytics_backend_ops pbl_analytics__native_ops = {
-    .set_signed = prv_set_signed,
-    .set_unsigned = prv_set_unsigned,
-    .set_string = prv_set_string,
-    .timer_start = prv_timer_start,
-    .timer_stop = prv_timer_stop,
-    .add = prv_add,
+  .set_signed = prv_set_signed,
+  .set_unsigned = prv_set_unsigned,
+  .set_string = prv_set_string,
+  .timer_start = prv_timer_start,
+  .timer_stop = prv_timer_stop,
+  .add = prv_add,
 };
 
 void command_analytics_native_metrics_dump(void) {

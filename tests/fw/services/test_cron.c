@@ -67,8 +67,8 @@ static void prv_set_rtc(time_t t, const TimezoneInfo *tz_info) {
   time_util_update_timezone(&g_timezone);
 }
 
-static void prv_cron_callback(CronJob *job, void* data) {
-  job->cb_data = (void*)((uintptr_t)data + 1);
+static void prv_cron_callback(CronJob *job, void *data) {
+  job->cb_data = (void *)((uintptr_t)data + 1);
 }
 
 static void prv_clock_change(int32_t time_diff, int32_t gmt_diff, bool dst_trans) {
@@ -104,7 +104,7 @@ void test_cron__timer_aligned_to_execute_second(void) {
 void test_cron__time_change_basic(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 45,
     .hour = CRON_HOUR_ANY,
@@ -177,7 +177,7 @@ void test_cron__time_change_basic(void) {
 void test_cron__time_change_instant(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 35,
     .hour = CRON_HOUR_ANY,
@@ -212,8 +212,8 @@ void test_cron__time_change_instant(void) {
   cron_clear_all_jobs();
 }
 
-static void prv_basic_test(const TimezoneInfo *tz_info, CronJob *job, time_t base,
-                           time_t offset, time_t increment, int dst_type) {
+static void prv_basic_test(const TimezoneInfo *tz_info, CronJob *job, time_t base, time_t offset,
+                           time_t increment, int dst_type) {
   TimezoneInfo new_tz_info = *tz_info;
   switch (dst_type) {
     case 0:
@@ -232,7 +232,7 @@ static void prv_basic_test(const TimezoneInfo *tz_info, CronJob *job, time_t bas
   cron_clear_all_jobs();
   cl_assert_equal_i(cron_service_get_job_count(), 0);
 
-  job->cb_data = (void*)0;
+  job->cb_data = (void *)0;
 
   cron_job_schedule(job);
   cl_assert_equal_i((uintptr_t)job->cb_data, 0);
@@ -260,7 +260,7 @@ static void prv_basic_test(const TimezoneInfo *tz_info, CronJob *job, time_t bas
 void test_cron__1_basic(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = CRON_MINUTE_ANY,
     .hour = CRON_HOUR_ANY,
@@ -275,8 +275,9 @@ void test_cron__1_basic(void) {
 
 void test_cron__4_basic(void) {
   CronJob test_cron[4] = {
-    { .cb = prv_cron_callback,
-      .cb_data = (void*)0,
+    {
+      .cb = prv_cron_callback,
+      .cb_data = (void *)0,
 
       .minute = 45,
       .hour = CRON_HOUR_ANY,
@@ -285,8 +286,9 @@ void test_cron__4_basic(void) {
 
       .may_be_instant = true,
     },
-    { .cb = prv_cron_callback,
-      .cb_data = (void*)0,
+    {
+      .cb = prv_cron_callback,
+      .cb_data = (void *)0,
 
       .minute = CRON_MINUTE_ANY,
       .hour = 13,
@@ -295,8 +297,9 @@ void test_cron__4_basic(void) {
 
       .may_be_instant = true,
     },
-    { .cb = prv_cron_callback,
-      .cb_data = (void*)0,
+    {
+      .cb = prv_cron_callback,
+      .cb_data = (void *)0,
 
       .minute = CRON_MINUTE_ANY,
       .hour = CRON_HOUR_ANY,
@@ -305,8 +308,9 @@ void test_cron__4_basic(void) {
 
       .may_be_instant = true,
     },
-    { .cb = prv_cron_callback,
-      .cb_data = (void*)0,
+    {
+      .cb = prv_cron_callback,
+      .cb_data = (void *)0,
 
       .minute = CRON_MINUTE_ANY,
       .hour = CRON_HOUR_ANY,
@@ -334,7 +338,7 @@ void test_cron__4_basic(void) {
     cron_job_schedule(job);
     cl_assert_equal_i((uintptr_t)job->cb_data, 0);
     cl_assert_equal_i(job->cached_execute_time, timestamps[4 - i - 1]);
-    cl_assert_equal_i(cron_service_get_job_count(), i+1);
+    cl_assert_equal_i(cron_service_get_job_count(), i + 1);
   }
 
   time_t left = s_2015_nov12_123456_gmt;
@@ -352,7 +356,7 @@ void test_cron__4_basic(void) {
 void test_cron__already_elapsed(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = CRON_MINUTE_ANY,
     .hour = CRON_HOUR_ANY,
@@ -373,123 +377,123 @@ struct {
   //////// 'future' time finding
   // minute
   // 2015 Nov 12, 12:45:00
-  { -1,-1,-1,45, WDAY_ANY, 1447332300},
+  {-1, -1, -1, 45, WDAY_ANY, 1447332300},
   // hour
   // 2015 Nov 12, 13:00:00
-  { -1,-1,13,-1, WDAY_ANY, 1447333200},
+  {-1, -1, 13, -1, WDAY_ANY, 1447333200},
   // hour+minute
   // 2015 Nov 12, 13:45:00
-  { -1,-1,13,45, WDAY_ANY, 1447335900},
+  {-1, -1, 13, 45, WDAY_ANY, 1447335900},
   // mday
   // 2015 Nov 13, 00:00:00
-  { -1,12,-1,-1, WDAY_ANY, 1447372800},
+  {-1, 12, -1, -1, WDAY_ANY, 1447372800},
   // mday+minute
   // 2015 Nov 13, 00:45:00
-  { -1,12,-1,45, WDAY_ANY, 1447375500},
+  {-1, 12, -1, 45, WDAY_ANY, 1447375500},
   // mday+hour
   // 2015 Nov 13, 13:00:00
-  { -1,12,13,-1, WDAY_ANY, 1447419600},
+  {-1, 12, 13, -1, WDAY_ANY, 1447419600},
   // mday+hour+minute
   // 2015 Nov 13, 13:45:00
-  { -1,12,13,45, WDAY_ANY, 1447422300},
+  {-1, 12, 13, 45, WDAY_ANY, 1447422300},
   // month
   // 2015 Dec  1, 00:00:00
-  { 11,-1,-1,-1, WDAY_ANY, 1448928000},
+  {11, -1, -1, -1, WDAY_ANY, 1448928000},
   // month+minute
   // 2015 Dec  1, 00:45:00
-  { 11,-1,-1,45, WDAY_ANY, 1448930700},
+  {11, -1, -1, 45, WDAY_ANY, 1448930700},
   // month+hour
   // 2015 Dec  1, 13:00:00
-  { 11,-1,13,-1, WDAY_ANY, 1448974800},
+  {11, -1, 13, -1, WDAY_ANY, 1448974800},
   // month+hour+minute
   // 2015 Dec  1, 13:45:00
-  { 11,-1,13,45, WDAY_ANY, 1448977500},
+  {11, -1, 13, 45, WDAY_ANY, 1448977500},
   // month+mday
   // 2015 Dec 13, 00:00:00
-  { 11,12,-1,-1, WDAY_ANY, 1449964800},
+  {11, 12, -1, -1, WDAY_ANY, 1449964800},
   // month+mday+minute
   // 2015 Dec 13, 00:45:00
-  { 11,12,-1,45, WDAY_ANY, 1449967500},
+  {11, 12, -1, 45, WDAY_ANY, 1449967500},
   // month+mday+hour
   // 2015 Dec 13, 13:00:00
-  { 11,12,13,-1, WDAY_ANY, 1450011600},
+  {11, 12, 13, -1, WDAY_ANY, 1450011600},
   // month+mday+hour+minute
   // 2015 Dec 13, 13:45:00
-  { 11,12,13,45, WDAY_ANY, 1450014300},
+  {11, 12, 13, 45, WDAY_ANY, 1450014300},
 
   //////// 'past' time finding
   // minute
   // 2015 Nov 12, 13:23:00
-  { -1,-1,-1,23, WDAY_ANY, 1447334580},
+  {-1, -1, -1, 23, WDAY_ANY, 1447334580},
   // hour
   // 2015 Nov 13, 11:00:00
-  { -1,-1,11,-1, WDAY_ANY, 1447412400},
+  {-1, -1, 11, -1, WDAY_ANY, 1447412400},
   // day
   // 2015 Dec 11, 00:00:00
-  { -1,10,-1,-1, WDAY_ANY, 1449792000},
+  {-1, 10, -1, -1, WDAY_ANY, 1449792000},
   // month
   // 2016 Oct  1, 00:00:00
-  {  9,-1,-1,-1, WDAY_ANY, 1475280000},
+  {9, -1, -1, -1, WDAY_ANY, 1475280000},
   // month+hour
   // 2016 Oct  1, 12:00:00
-  {  9,-1,12,-1, WDAY_ANY, 1475323200},
+  {9, -1, 12, -1, WDAY_ANY, 1475323200},
 
   //////// wday time finding
   // now, -Th
   // 2015 Nov 13, 00:00:00
-  { -1,-1,-1,-1, WDAY_ANY & ~WDAY_THURSDAY, 1447372800},
+  {-1, -1, -1, -1, WDAY_ANY & ~WDAY_THURSDAY, 1447372800},
   // now, -Th-Fr
   // 2015 Nov 14, 00:00:00
-  { -1,-1,-1,-1, WDAY_ANY & ~(WDAY_THURSDAY|WDAY_FRIDAY), 1447459200},
+  {-1, -1, -1, -1, WDAY_ANY & ~(WDAY_THURSDAY | WDAY_FRIDAY), 1447459200},
   // now, -Th-Fr-Sa
   // 2015 Nov 15, 00:00:00
-  { -1,-1,-1,-1, WDAY_ANY & ~(WDAY_THURSDAY|WDAY_FRIDAY|WDAY_SATURDAY), 1447545600},
+  {-1, -1, -1, -1, WDAY_ANY & ~(WDAY_THURSDAY | WDAY_FRIDAY | WDAY_SATURDAY), 1447545600},
   // now, -Th-Fr-Sa-Su
   // 2015 Nov 16, 00:00:00
-  { -1,-1,-1,-1, WDAY_MONDAY|WDAY_TUESDAY|WDAY_WEDNESDAY, 1447632000},
+  {-1, -1, -1, -1, WDAY_MONDAY | WDAY_TUESDAY | WDAY_WEDNESDAY, 1447632000},
   // now, -Th-Fr-Sa-Su-Mo
   // 2015 Nov 17, 00:00:00
-  { -1,-1,-1,-1, WDAY_TUESDAY|WDAY_WEDNESDAY, 1447718400},
+  {-1, -1, -1, -1, WDAY_TUESDAY | WDAY_WEDNESDAY, 1447718400},
   // now, -Th-Fr-Sa-Su-Mo-Tu
   // 2015 Nov 18, 00:00:00
-  { -1,-1,-1,-1, WDAY_WEDNESDAY, 1447804800},
+  {-1, -1, -1, -1, WDAY_WEDNESDAY, 1447804800},
   // now, -We
   // now
-  { -1,-1,-1,-1, WDAY_ANY & ~WDAY_WEDNESDAY, s_2015_nov12_123456_gmt},
+  {-1, -1, -1, -1, WDAY_ANY & ~WDAY_WEDNESDAY, s_2015_nov12_123456_gmt},
   // now, wday=0
   // now
-  { -1,-1,-1,-1, 0, s_2015_nov12_123456_gmt},
+  {-1, -1, -1, -1, 0, s_2015_nov12_123456_gmt},
 
   //////// wday+ time finding
   // 19th, -Th
   // 2015 Nov 20, 00:00:00
-  { -1,18,-1,-1, WDAY_ANY & ~WDAY_THURSDAY, 1447977600},
+  {-1, 18, -1, -1, WDAY_ANY & ~WDAY_THURSDAY, 1447977600},
   // Dec, -Tu
   // 2015 Dec  2, 00:00:00
-  { 11,-1,-1,-1, WDAY_ANY & ~WDAY_TUESDAY, 1449014400},
+  {11, -1, -1, -1, WDAY_ANY & ~WDAY_TUESDAY, 1449014400},
 
   //////// 'bogus' time finding
   // minute
   // 2015 Nov 12, 12:60:00 = 2015 Nov 12, 13:00:00
-  { -1,-1,-1,60, WDAY_ANY, 1447333200},
+  {-1, -1, -1, 60, WDAY_ANY, 1447333200},
   // hour
   // 2015 Nov 12, 24:00:00 = 2015 Nov 13, 00:00:00
-  { -1,-1,24,-1, WDAY_ANY, 1447372800},
+  {-1, -1, 24, -1, WDAY_ANY, 1447372800},
   // mday
   // 2015 Nov 33, 00:00:00 = 2015 Dec  3, 00:00:00
-  { -1,32,-1,-1, WDAY_ANY, 1449100800},
+  {-1, 32, -1, -1, WDAY_ANY, 1449100800},
   // month
   // 2015 Month13 1, 00:00:00 = 2016 Jan  1, 00:00:00
-  { 12,-1,-1,-1, WDAY_ANY, 1451606400},
+  {12, -1, -1, -1, WDAY_ANY, 1451606400},
 
   // Sentinel
-  { 0,0,0,0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
 };
 
 void test_cron__simples(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = CRON_MINUTE_ANY,
     .hour = CRON_HOUR_ANY,
@@ -498,7 +502,7 @@ void test_cron__simples(void) {
 
     .may_be_instant = true,
   };
-  for (int i = 0; ; i++) {
+  for (int i = 0;; i++) {
     if (s_cron_test_info[i].dest_time == 0) {
       break;
     }
@@ -521,7 +525,7 @@ void test_cron__dst_simple_to(void) {
   // Nov 21st, 01:00:00 local
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 0,
     .hour = 1,
@@ -539,7 +543,7 @@ void test_cron__dst_simple_from(void) {
   // Dec 21st, 01:00:00 local
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 0,
     .hour = 1,
@@ -557,7 +561,7 @@ void test_cron__dst_rollover_to(void) {
   // Nov 20th, 03:00:00 local
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 0,
     .hour = 3,
@@ -575,7 +579,7 @@ void test_cron__dst_rollover_from(void) {
   // Dec 20th, 02:00:00 local
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 0,
     .hour = 2,
@@ -596,7 +600,7 @@ void test_cron__dst_hole_to(void) {
   // Nov 20th, 02:30:00 local
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 2,
@@ -617,7 +621,7 @@ void test_cron__dst_hole_from(void) {
   // Dec 20th, 01:30:00 local
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 1,
@@ -633,35 +637,35 @@ void test_cron__dst_hole_from(void) {
 
 static void prv_counting_cb(CronJob *job, void *cb_data) {
   static int s_counter = 0;
-  job->cb_data = (void*)((uintptr_t)++s_counter);
+  job->cb_data = (void *)((uintptr_t)++s_counter);
 }
 
 #define CRON_JOB(min, hr, day, mo, callback) \
-  { \
-    .cb = callback, \
-    .cb_data = (void*)0, \
-    .minute = min, \
-    .hour = hr, \
-    .mday = day, \
-    .month = mo, \
-    .may_be_instant = true, \
+  {                                          \
+    .cb = callback,                          \
+    .cb_data = (void *)0,                    \
+    .minute = min,                           \
+    .hour = hr,                              \
+    .mday = day,                             \
+    .month = mo,                             \
+    .may_be_instant = true,                  \
   },
 
 void test_cron__scheduled_after(void) {
   CronJob jobs[] = {
     CRON_JOB(CRON_MINUTE_ANY, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_counting_cb)
-    CRON_JOB(CRON_MINUTE_ANY, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
-    CRON_JOB(1, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
-    CRON_JOB(3, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
-    CRON_JOB(10, CRON_HOUR_ANY, 1, CRON_MONTH_ANY, prv_cron_callback)
-    CRON_JOB(25, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
-    CRON_JOB(55, 1, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
-    CRON_JOB(CRON_MINUTE_ANY, CRON_HOUR_ANY, 1, CRON_MONTH_ANY, prv_cron_callback)
+        CRON_JOB(CRON_MINUTE_ANY, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
+            CRON_JOB(1, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
+                CRON_JOB(3, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
+                    CRON_JOB(10, CRON_HOUR_ANY, 1, CRON_MONTH_ANY, prv_cron_callback) CRON_JOB(
+                        25, CRON_HOUR_ANY, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback)
+                        CRON_JOB(55, 1, CRON_MDAY_ANY, CRON_MONTH_ANY, prv_cron_callback) CRON_JOB(
+                            CRON_MINUTE_ANY, CRON_HOUR_ANY, 1, CRON_MONTH_ANY, prv_cron_callback)
   };
 
   CronJob new_job = {
     .cb = prv_counting_cb,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
   };
 
   prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
@@ -693,7 +697,7 @@ void test_cron__scheduled_after(void) {
 void test_cron__offset_negative_seconds_one_wday(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 0,
@@ -712,7 +716,7 @@ void test_cron__offset_negative_seconds_one_wday(void) {
 void test_cron__offset_negative_seconds_any_day(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 0,
@@ -730,7 +734,7 @@ void test_cron__offset_negative_seconds_any_day(void) {
 void test_cron__offset_positive_seconds_one_wday(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 0,
@@ -749,7 +753,7 @@ void test_cron__offset_positive_seconds_one_wday(void) {
 void test_cron__offset_positive_seconds_any_day(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 0,
@@ -767,7 +771,7 @@ void test_cron__offset_positive_seconds_any_day(void) {
 void test_cron__offset_negative_seconds_every_second(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = CRON_MINUTE_ANY,
     .hour = CRON_HOUR_ANY,
@@ -784,7 +788,7 @@ void test_cron__offset_negative_seconds_every_second(void) {
 void test_cron__offset_positive_seconds_every_second(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = CRON_MINUTE_ANY,
     .hour = CRON_HOUR_ANY,
@@ -801,7 +805,7 @@ void test_cron__offset_positive_seconds_every_second(void) {
 void test_cron__offset_negative_seconds_any_day_dst(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 1,
@@ -819,7 +823,7 @@ void test_cron__offset_negative_seconds_any_day_dst(void) {
 void test_cron__offset_positive_seconds_any_day_dst(void) {
   CronJob test_cron = {
     .cb = prv_cron_callback,
-    .cb_data = (void*)0,
+    .cb_data = (void *)0,
 
     .minute = 30,
     .hour = 0,

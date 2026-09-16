@@ -49,7 +49,7 @@ static void prv_init_peek_transition_animation(Animation *animation) {
 }
 
 const CompositorTransition *compositor_peek_transition_timeline_get(void) {
-  s_data = (CompositorPeekTransitionData) {};
+  s_data = (CompositorPeekTransitionData){};
   static const CompositorTransition s_impl = {
     .init = prv_init_peek_transition_animation,
     .update = prv_update_peek_transition_animation,

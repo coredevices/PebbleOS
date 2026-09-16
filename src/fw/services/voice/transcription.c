@@ -16,8 +16,7 @@ static bool prv_validate_word(utf8_t *str, uint16_t size) {
 }
 
 bool transcription_validate(const Transcription *transcription, size_t size) {
-  if (!transcription ||
-      (size <= sizeof(Transcription)) ||
+  if (!transcription || (size <= sizeof(Transcription)) ||
       (transcription->type != TranscriptionTypeSentenceList)) {
     return false;
   }
@@ -28,7 +27,7 @@ bool transcription_validate(const Transcription *transcription, size_t size) {
   const TranscriptionSentence *sentence = transcription->sentences;
 
   for (size_t i = 0; i < transcription->sentence_count; i++) {
-    cursor = (uint8_t *) sentence->words;
+    cursor = (uint8_t *)sentence->words;
 
     // Check that sentence header fits into buffer and length is valid
     if ((cursor >= end) || (sentence->word_count == 0)) {
@@ -36,8 +35,8 @@ bool transcription_validate(const Transcription *transcription, size_t size) {
     }
 
     for (size_t j = 0; j < sentence->word_count; j++) {
-      TranscriptionWord *word = (TranscriptionWord *) cursor;
-      cursor = (uint8_t *) word->data;
+      TranscriptionWord *word = (TranscriptionWord *)cursor;
+      cursor = (uint8_t *)word->data;
 
       // Check that word header fits into buffer and length is valid
       if ((cursor >= end) || (word->length == 0) || (word->data + word->length > end) ||
@@ -54,8 +53,7 @@ bool transcription_validate(const Transcription *transcription, size_t size) {
 }
 
 void *transcription_iterate_sentences(const TranscriptionSentence *sentence, size_t count,
-    TranscriptionSentenceIterateCb handle_sentence, void *data) {
-
+                                      TranscriptionSentenceIterateCb handle_sentence, void *data) {
   for (size_t i = 0; i < count; i++) {
     if (handle_sentence && !handle_sentence(sentence, data)) {
       // end iteration if callback returns false
@@ -68,11 +66,10 @@ void *transcription_iterate_sentences(const TranscriptionSentence *sentence, siz
 }
 
 void *transcription_iterate_words(const TranscriptionWord *words, size_t count,
-    TranscriptionWordIterateCb handle_word, void *data) {
-
+                                  TranscriptionWordIterateCb handle_word, void *data) {
   uint8_t *cursor = (uint8_t *)words;
   for (size_t i = 0; i < count; i++) {
-    TranscriptionWord *word = (TranscriptionWord *) cursor;
+    TranscriptionWord *word = (TranscriptionWord *)cursor;
 
     if (handle_word && !handle_word(word, data)) {
       // end iteration if callback returns false

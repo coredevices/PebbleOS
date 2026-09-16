@@ -35,7 +35,7 @@ T_STATIC void prv_play_animation_update(Animation *animation, const AnimationPro
   bool is_reel_infinite = (kino_reel_duration == PLAY_DURATION_INFINITE);
   bool is_animation_reversed = animation_get_reverse(animation);
   bool is_animation_infinite =
-    (animation_get_duration(animation, false, false) == PLAY_DURATION_INFINITE);
+      (animation_get_duration(animation, false, false) == PLAY_DURATION_INFINITE);
 
   if (!is_animation_infinite && !is_reel_infinite) {
     // If neither animation nor reel is infinite
@@ -165,8 +165,9 @@ ImmutableAnimation *kino_player_create_play_animation(KinoPlayer *player) {
   return NULL;
 }
 
-ImmutableAnimation *kino_player_create_play_section_animation(
-    KinoPlayer *player, uint32_t from_elapsed_ms, uint32_t to_elapsed_ms) {
+ImmutableAnimation *kino_player_create_play_section_animation(KinoPlayer *player,
+                                                              uint32_t from_elapsed_ms,
+                                                              uint32_t to_elapsed_ms) {
   if (player && player->reel) {
     prv_create_play_animation(player, from_elapsed_ms, to_elapsed_ms);
     return (ImmutableAnimation *)player->animation;
@@ -203,6 +204,6 @@ void kino_player_draw_processed(KinoPlayer *player, GContext *ctx, GPoint offset
 }
 
 void kino_player_deinit(KinoPlayer *player) {
-  player->callbacks = (KinoPlayerCallbacks) { 0 };
+  player->callbacks = (KinoPlayerCallbacks){0};
   kino_player_set_reel(player, NULL, false);
 }

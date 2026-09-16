@@ -66,5 +66,5 @@ typedef struct PACKED { // PACKED since this struct is serialized
   uint16_t supervision_timeout_10ms;
 } BleConnectionParamsUpdateReq;
 
-bool bt_driver_le_connection_parameter_update(
-    const BTDeviceInternal *addr, const BleConnectionParamsUpdateReq *req);
+bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
+                                              const BleConnectionParamsUpdateReq *req);

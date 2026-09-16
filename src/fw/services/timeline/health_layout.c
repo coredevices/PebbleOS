@@ -11,7 +11,7 @@
 //  Card Mode
 //////////////////////////////////////////
 
-#define CARD_MARGIN_TOP PBL_IF_RECT_ELSE(0, 5)
+#define CARD_MARGIN_TOP    PBL_IF_RECT_ELSE(0, 5)
 #define CARD_MARGIN_BOTTOM PBL_IF_RECT_ELSE(11, 0)
 
 static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
@@ -36,10 +36,9 @@ LayoutLayer *health_layout_create(const LayoutLayerConfig *config) {
   HealthLayout *layout = task_zalloc_check(sizeof(HealthLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
-    .attributes = { AttributeIdTitle, AttributeIdSubtitle },
-    .default_colors = { { .argb = GColorBlackARGB8 },
-                        { .argb = GColorWhiteARGB8 },
-                        { .argb = GColorSunsetOrangeARGB8 } },
+    .attributes = {AttributeIdTitle, AttributeIdSubtitle},
+    .default_colors =
+        {{.argb = GColorBlackARGB8}, {.argb = GColorWhiteARGB8}, {.argb = GColorSunsetOrangeARGB8}},
     .default_icon = TIMELINE_RESOURCE_ACTIVITY,
     .card_icon_align = PBL_IF_ROUND_ELSE(GAlignCenter, GAlignLeft),
     .card_icon_size = TimelineResourceSizeTiny,

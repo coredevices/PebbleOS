@@ -61,7 +61,8 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
   return NULL;
 }
 
-void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {}
+void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {
+}
 
 bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint target) {
   return false;

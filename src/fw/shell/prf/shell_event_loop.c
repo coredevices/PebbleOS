@@ -13,13 +13,12 @@ void shell_event_loop_init(void) {
 }
 
 void shell_event_loop_handle_event(PebbleEvent *e) {
-  switch(e->type) {
-  case PEBBLE_BT_PAIRING_EVENT:
-    bluetooth_pairing_ui_handle_event(&e->bluetooth.pair);
-    return;
+  switch (e->type) {
+    case PEBBLE_BT_PAIRING_EVENT:
+      bluetooth_pairing_ui_handle_event(&e->bluetooth.pair);
+      return;
 
-  default:
-    return;
+    default:
+      return;
   }
 }
-

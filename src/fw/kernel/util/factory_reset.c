@@ -55,7 +55,7 @@ static void prv_factory_reset_non_pfs_data() {
 }
 
 void factory_reset_set_reason_and_reset(void) {
-  RebootReason reason = { RebootReasonCode_FactoryResetReset, 0 };
+  RebootReason reason = {RebootReasonCode_FactoryResetReset, 0};
   reboot_reason_set(&reason);
   system_reset();
 }

@@ -6,7 +6,7 @@
 #include <bluetooth/bluetooth_types.h>
 
 #define GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS (2)
-#define GATT_CLIENT_DISCOVERY_MAX_RETRY ((1 << GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS) - 1)
+#define GATT_CLIENT_DISCOVERY_MAX_RETRY      ((1 << GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS) - 1)
 
 //! Starts discovery of all GATT services, characteristics and descriptors.
 //! @param device The device of which its services, characteristics and

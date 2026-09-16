@@ -6,5 +6,5 @@
 #include "pbl/services/prf_update.h"
 #include "pbl/util/attributes.h"
 
-void WEAK put_bytes_cancel(void) {}
-
+void WEAK put_bytes_cancel(void) {
+}

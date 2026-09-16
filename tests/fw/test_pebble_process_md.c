@@ -6,8 +6,7 @@
 #include "process_management/pebble_process_md.h"
 
 void test_pebble_process_md__uninitialized(void) {
-  PebbleProcessMdFlash md = {
-  };
+  PebbleProcessMdFlash md = {};
   const PlatformType type = process_metadata_get_app_sdk_platform(&md.common);
   cl_assert_equal_i(type, PBL_PLATFORM_TYPE_CURRENT);
 }
@@ -21,16 +20,16 @@ void test_pebble_process_md__uninitialized_unprivileged(void) {
 }
 
 #if PBL_ROUND
-  #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeChalk
-  #define LEGACY_PLATFORM_AFTER_4 PlatformTypeChalk
+#define LEGACY_PLATFORM_PRIOR_4 PlatformTypeChalk
+#define LEGACY_PLATFORM_AFTER_4 PlatformTypeChalk
 #elif PBL_RECT
-  #if PBL_BW
-  #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeAplite
-  #define LEGACY_PLATFORM_AFTER_4 PlatformTypeDiorite
-  #elif PBL_COLOR
-  #define LEGACY_PLATFORM_PRIOR_4 PlatformTypeBasalt
-  #define LEGACY_PLATFORM_AFTER_4 PlatformTypeBasalt
-  #endif
+#if PBL_BW
+#define LEGACY_PLATFORM_PRIOR_4 PlatformTypeAplite
+#define LEGACY_PLATFORM_AFTER_4 PlatformTypeDiorite
+#elif PBL_COLOR
+#define LEGACY_PLATFORM_PRIOR_4 PlatformTypeBasalt
+#define LEGACY_PLATFORM_AFTER_4 PlatformTypeBasalt
+#endif
 #endif
 
 void test_pebble_process_md__SDK2(void) {

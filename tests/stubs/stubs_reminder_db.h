@@ -64,7 +64,7 @@ status_t reminder_db_is_dirty(bool *is_dirty_out) {
   return S_SUCCESS;
 }
 
-BlobDBDirtyItem* reminder_db_get_dirty_list(void) {
+BlobDBDirtyItem *reminder_db_get_dirty_list(void) {
   return NULL;
 }
 

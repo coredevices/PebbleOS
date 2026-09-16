@@ -61,18 +61,15 @@ void test_pfs__initialize(void) {
   int fd;
 
   memset(s_test_file_a, 0, sizeof(s_test_file_a));
-  fd = pfs_open(TEST_FILE_A_NAME, OP_FLAG_WRITE, FILE_TYPE_STATIC,
-      sizeof(s_test_file_a));
+  fd = pfs_open(TEST_FILE_A_NAME, OP_FLAG_WRITE, FILE_TYPE_STATIC, sizeof(s_test_file_a));
   pfs_write(fd, (uint8_t *)s_test_file_a, sizeof(s_test_file_a));
   pfs_close(fd);
 
   memset(s_test_file_b, 0, sizeof(s_test_file_b));
-  fd = pfs_open(TEST_FILE_B_NAME, OP_FLAG_WRITE, FILE_TYPE_STATIC,
-      sizeof(s_test_file_b));
+  fd = pfs_open(TEST_FILE_B_NAME, OP_FLAG_WRITE, FILE_TYPE_STATIC, sizeof(s_test_file_b));
   pfs_close(fd);
 
-  fd = pfs_open(TEST_FILE_C_NAME, OP_FLAG_WRITE, FILE_TYPE_STATIC,
-      sizeof (s_test_file_c));
+  fd = pfs_open(TEST_FILE_C_NAME, OP_FLAG_WRITE, FILE_TYPE_STATIC, sizeof(s_test_file_c));
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_test_file_c); ++i) {
     s_test_file_c[i] = 'c';
   }
@@ -85,7 +82,7 @@ void test_pfs__cleanup(void) {
 }
 
 void test_pfs__create(void) {
-  char hello[] = { 'h', 'e', 'l', 'l', 'o' };
+  char hello[] = {'h', 'e', 'l', 'l', 'o'};
   int fd_z = pfs_open("z", OP_FLAG_WRITE, FILE_TYPE_STATIC, sizeof(hello));
   cl_assert(fd_z >= 0);
   int bytes_written = pfs_write(fd_z, (uint8_t *)hello, sizeof(hello));
@@ -124,8 +121,7 @@ void test_pfs__garbage_collection(void) {
   test_force_garbage_collection(start_page);
 
   // now make sure the files are still there!
-  for (int i = 0; i < 16; i+=2) {
-
+  for (int i = 0; i < 16; i += 2) {
     snprintf(file_small, sizeof(file_small), "file%d", i);
 
     uint8_t buf[PFS_SECTOR_SIZE * 2];
@@ -230,8 +226,7 @@ void test_pfs__page_lookup_cache(void) {
     cl_assert(pfs_write(fd, (uint8_t *)buf_small, len) == len);
     cl_assert(pfs_close(fd) == S_SUCCESS);
     // delete every few files and a bunch of pages near the end
-    if (((i & 0x1) == 0) ||
-        ((i > ((num_pages() * 7) / 10)) && (i < ((num_pages() * 8) / 10)))) {
+    if (((i & 0x1) == 0) || ((i > ((num_pages() * 7) / 10)) && (i < ((num_pages() * 8) / 10)))) {
       cl_assert(pfs_remove(file_small) == S_SUCCESS);
     }
   }
@@ -273,8 +268,7 @@ void test_pfs__write(void) {
   cl_assert(rv == E_INVALID_ARGUMENT);
 
   uint8_t buf[10];
-  int fd = pfs_open("newfile", OP_FLAG_WRITE | OP_FLAG_READ,
-      FILE_TYPE_STATIC, sizeof(buf));
+  int fd = pfs_open("newfile", OP_FLAG_WRITE | OP_FLAG_READ, FILE_TYPE_STATIC, sizeof(buf));
   for (int i = 0; i < sizeof(buf); i++) {
     buf[i] = i;
   }
@@ -434,7 +428,7 @@ void test_pfs__close_and_remove(void) {
   cl_assert(pfs_close_and_remove(2) == E_INVALID_ARGUMENT);
 
   int fd[NUM_ENTRIES];
-  char *fname[NUM_ENTRIES] = {"a", "b", "c" };
+  char *fname[NUM_ENTRIES] = {"a", "b", "c"};
 
   // create several files
   for (int i = 0; i < NUM_ENTRIES; i++) {
@@ -455,7 +449,6 @@ void test_pfs__close_and_remove(void) {
 }
 
 void test_pfs__discontiguous_page_test(void) {
-
   pfs_format(false /* write erase headers */); // start with an empty flash
   pfs_init(false);
 
@@ -529,8 +522,8 @@ void test_pfs__file_span_regions(void) {
   char name[128];
   snprintf(name, sizeof(name), "bigfile");
 
-  //Fill up entire memory section, subtract 32768 for header space.
-  int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, pfs_get_size() - (num_pages()*128));
+  // Fill up entire memory section, subtract 32768 for header space.
+  int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, pfs_get_size() - (num_pages() * 128));
 
   printf("%d\n", pfs_get_size() - 1024);
 
@@ -571,7 +564,6 @@ void test_pfs__active_regions(void) {
   cl_assert(fd >= 0);
   cl_assert(pfs_close(fd) == S_SUCCESS);
   cl_assert(pfs_active_in_region(32000, 68000));
-
 }
 
 int run_full_flash_region_test(void) {
@@ -714,10 +706,10 @@ static void prv_file_changed_callback(void *data) {
 }
 
 void test_pfs__watch_file_callbacks(void) {
-  const char* file_name = "newfile";
+  const char *file_name = "newfile";
 
-  PFSCallbackHandle cb_handle = pfs_watch_file(file_name, prv_file_changed_callback,
-                                               FILE_CHANGED_EVENT_ALL, NULL);
+  PFSCallbackHandle cb_handle =
+      pfs_watch_file(file_name, prv_file_changed_callback, FILE_CHANGED_EVENT_ALL, NULL);
 
   // Callback should get invoked if we close with write access
   s_watch_file_callback_called_count = 0;
@@ -779,7 +771,6 @@ void test_pfs__last_written_page(void) {
   cl_assert(test_scan_for_last_written() >= 0);
 }
 
-
 extern void test_force_reboot_during_garbage_collection(uint16_t start_page);
 extern void pfs_reset_all_state(void);
 void test_pfs__reboot_during_gc(void) {
@@ -826,9 +817,8 @@ void test_pfs__reboot_during_gc(void) {
   // simulate a reboot, all files should now appear because the GC completes
   pfs_init(false);
 
-    // now make sure the files are still there!
-  for (int i = 0; i < pages_to_write; i+=2) {
-
+  // now make sure the files are still there!
+  for (int i = 0; i < pages_to_write; i += 2) {
     snprintf(file_small, sizeof(file_small), "file%d", i);
 
     uint8_t buf[PFS_SECTOR_SIZE * 2];
@@ -880,7 +870,6 @@ void test_pfs__file_list(void) {
   cl_assert(list_find(&dir_list->list_node, prv_find_name, "b_test_1"));
   pfs_delete_file_list(dir_list);
 
-
   // Do another search using a filter
   dir_list = pfs_create_file_list(prv_filename_filter_a_prefix_cb);
 
@@ -908,13 +897,13 @@ extern void test_force_recalc_of_gc_region(void);
 // sector (requirement is that no files exist in the entire sector) & use the last page as a
 // starting point for where we will create initialize new files.
 //
-// There is a perfect storm of events which can lead to corruption on reboot. The sequence is as follows:
-// 1) The last written file is deleted right before a reboot
-// 2) No other files exist in the same sector as the one where the last file was deleted
+// There is a perfect storm of events which can lead to corruption on reboot. The sequence is as
+// follows: 1) The last written file is deleted right before a reboot 2) No other files exist in the
+// same sector as the one where the last file was deleted
 //
 // Upon reboot, a file could be created in this region & then later deleted when a garbage
-// collection was needed. In practice, I think this is most likely to happen after issuing a command like
-// 'factory reset fast' which we rely on heavily for automated testing
+// collection was needed. In practice, I think this is most likely to happen after issuing a command
+// like 'factory reset fast' which we rely on heavily for automated testing
 void test_pfs__start_page_collides_with_gc_page(void) {
   pfs_format(true);
 
@@ -997,9 +986,9 @@ void test_pfs__doesnt_give_out_fd_zero(void) {
 
 // PageHeader field offsets/masks, mirroring the layout in pfs.c, so the tests
 // can corrupt and inspect raw page headers.
-#define PAGE_HDR_FLAGS_OFFSET   3
-#define PAGE_HDR_CRC_OFFSET     24
-#define PAGE_HDR_FLAG_DELETED   (1 << 1)
+#define PAGE_HDR_FLAGS_OFFSET 3
+#define PAGE_HDR_CRC_OFFSET   24
+#define PAGE_HDR_FLAG_DELETED (1 << 1)
 
 static void prv_corrupt_page_hdr_crc(uint16_t page) {
   const uint32_t bad_crc = 0;

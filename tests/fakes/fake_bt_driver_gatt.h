@@ -39,7 +39,7 @@ typedef struct Service {
 //! Status codes the tests pass to fake_gatt_put_discovery_complete_event. They
 //! mirror the Bluetopia discovery status values the firmware was originally
 //! tested against; the fake maps them onto the bt_driver BTErrno contract.
-#define GATT_SERVICE_DISCOVERY_STATUS_SUCCESS (0x00)
+#define GATT_SERVICE_DISCOVERY_STATUS_SUCCESS          (0x00)
 #define GATT_SERVICE_DISCOVERY_STATUS_RESPONSE_TIMEOUT (0x01)
 
 //! An opaque controller-level GATT error code. The driver surfaces it into the
@@ -83,8 +83,7 @@ const BTDeviceInternal *fake_gatt_get_service_changed_last_device(void);
 ATTHandleRange fake_gatt_get_service_changed_last_range(void);
 
 //! Feeds a single discovered service to the firmware, as the driver would.
-void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
-                                                const Service *service);
+void fake_gatt_put_discovery_indication_service(unsigned int connection_id, const Service *service);
 
 //! Simulates the driver reporting service discovery completion with the given
 //! status (see GATT_SERVICE_DISCOVERY_STATUS_*).

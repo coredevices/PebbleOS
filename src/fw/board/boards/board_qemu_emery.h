@@ -3,14 +3,14 @@
 
 #pragma once
 
-#define BT_VENDOR_ID 0x0000
+#define BT_VENDOR_ID   0x0000
 #define BT_VENDOR_NAME "QEMU"
 
-extern UARTDevice * const DBG_UART;
-extern UARTDevice * const QEMU_UART;
+extern UARTDevice *const DBG_UART;
+extern UARTDevice *const QEMU_UART;
 extern DisplayDevice *const DISPLAY;
-extern MicDevice * const MIC;
-extern HRMDevice * const HRM;
+extern MicDevice *const MIC;
+extern HRMDevice *const HRM;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;

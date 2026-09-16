@@ -198,15 +198,15 @@ void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
     const Characteristic *src = &service->characteristics[c];
     GATTCharacteristic *dst = (GATTCharacteristic *)end_ptr;
     *dst = (GATTCharacteristic){
-        .uuid = src->uuid,
-        .att_handle_offset = src->handle - service->handle,
-        .properties = src->properties,
-        .num_descriptors = src->num_descriptors,
+      .uuid = src->uuid,
+      .att_handle_offset = src->handle - service->handle,
+      .properties = src->properties,
+      .num_descriptors = src->num_descriptors,
     };
     for (uint8_t d = 0; d < src->num_descriptors; ++d) {
       dst->descriptors[d] = (GATTDescriptor){
-          .uuid = src->descriptors[d].uuid,
-          .att_handle_offset = src->descriptors[d].handle - service->handle,
+        .uuid = src->descriptors[d].uuid,
+        .att_handle_offset = src->descriptors[d].handle - service->handle,
       };
     }
     end_ptr += sizeof(GATTCharacteristic) + sizeof(GATTDescriptor) * src->num_descriptors;
@@ -226,8 +226,8 @@ void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
   const Uuid service_changed_uuid = bt_uuid_expand_16bit(GATT_SERVICE_CHANGED_CHARACTERISTIC_UUID);
   for (uint8_t c = 0; c < service->num_characteristics; ++c) {
     if (uuid_equal(&service->characteristics[c].uuid, &service_changed_uuid)) {
-      bt_driver_cb_gatt_client_discovery_handle_service_changed(
-          connection, service->characteristics[c].handle);
+      bt_driver_cb_gatt_client_discovery_handle_service_changed(connection,
+                                                                service->characteristics[c].handle);
     }
   }
 }
@@ -280,7 +280,7 @@ void fake_gatt_put_discovery_indication_health_thermometer_service(unsigned int 
 
 static Service s_blood_pressure_service;
 #define BP_START_ATT_HANDLE 0x1
-#define BP_END_ATT_HANDLE 0x9
+#define BP_END_ATT_HANDLE   0x9
 
 const Service *fake_gatt_get_blood_pressure_service(void) {
   // Ensure the included Health Thermometer reference is populated.
@@ -289,32 +289,39 @@ const Service *fake_gatt_get_blood_pressure_service(void) {
     .uuid = bt_uuid_expand_16bit(0x1810),
     .handle = BP_START_ATT_HANDLE,
     .num_characteristics = 2,
-    .characteristics = {
-      [0] = {
-        .uuid = bt_uuid_expand_16bit(0x2a35),
-        .properties = 0x20,  // Indicatable
-        .handle = 0x3,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = 0x05,
-          },
+    .characteristics =
+        {
+          [0] =
+              {
+                .uuid = bt_uuid_expand_16bit(0x2a35),
+                .properties = 0x20, // Indicatable
+                .handle = 0x3,
+                .num_descriptors = 1,
+                .descriptors =
+                    {
+                      [0] =
+                          {
+                            .uuid = bt_uuid_expand_16bit(0x2902),
+                            .handle = 0x05,
+                          },
+                    },
+              },
+          [1] =
+              {
+                .uuid = bt_uuid_expand_16bit(0x2a49),
+                .properties = 0x02,
+                .handle = 0x7,
+                .num_descriptors = 1,
+                .descriptors =
+                    {
+                      [0] =
+                          {
+                            .uuid = bt_uuid_expand_16bit(0x2902),
+                            .handle = BP_END_ATT_HANDLE,
+                          },
+                    },
+              },
         },
-      },
-      [1] = {
-        .uuid = bt_uuid_expand_16bit(0x2a49),
-        .properties = 0x02,
-        .handle = 0x7,
-        .num_descriptors = 1,
-        .descriptors = {
-          [0] = {
-            .uuid = bt_uuid_expand_16bit(0x2902),
-            .handle = BP_END_ATT_HANDLE,
-          },
-        },
-      },
-    },
     .num_included_services = 1,
     .included_services = {
       [0] = &s_health_thermometer_service,
@@ -324,8 +331,7 @@ const Service *fake_gatt_get_blood_pressure_service(void) {
 }
 
 void fake_gatt_put_discovery_indication_blood_pressure_service(unsigned int connection_id) {
-  fake_gatt_put_discovery_indication_service(connection_id,
-                                             fake_gatt_get_blood_pressure_service());
+  fake_gatt_put_discovery_indication_service(connection_id, fake_gatt_get_blood_pressure_service());
 }
 
 void fake_gatt_get_bp_att_handle_range(uint16_t *start, uint16_t *end) {
@@ -407,9 +413,9 @@ void fake_gatt_put_discovery_indication_gatt_profile_service(
 }
 
 uint16_t fake_gatt_gatt_profile_service_service_changed_att_handle(void) {
-  return 3;  // .handle = 0x3
+  return 3; // .handle = 0x3
 }
 
 uint16_t fake_gatt_gatt_profile_service_service_changed_cccd_att_handle(void) {
-  return 5;  // descriptor .handle = 0x05
+  return 5; // descriptor .handle = 0x05
 }

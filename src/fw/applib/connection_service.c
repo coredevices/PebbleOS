@@ -12,7 +12,7 @@
 #include "process_state/app_state/app_state.h"
 #include "process_state/worker_state/worker_state.h"
 
-static ConnectionServiceState* prv_get_state(void) {
+static ConnectionServiceState *prv_get_state(void) {
   PebbleTask task = pebble_task_get_current();
 
   if (task == PebbleTask_App) {
@@ -29,9 +29,8 @@ static void prv_do_handle(PebbleEvent *e, void *context) {
   bool connected = e->bluetooth.comm_session_event.is_open;
 
   ConnectionHandler handler =
-      (e->bluetooth.comm_session_event.is_system ?
-       state->handlers.pebble_app_connection_handler :
-       state->handlers.pebblekit_connection_handler);
+      (e->bluetooth.comm_session_event.is_system ? state->handlers.pebble_app_connection_handler
+                                                 : state->handlers.pebblekit_connection_handler);
 
   if (handler) {
     handler(connected);
@@ -59,7 +58,7 @@ void connection_service_subscribe(ConnectionHandlers conn_handlers) {
 }
 
 void connection_service_state_init(ConnectionServiceState *state) {
-  *state = (ConnectionServiceState) {
+  *state = (ConnectionServiceState){
     .bcs_info = {
       .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
       .handler = prv_do_handle,

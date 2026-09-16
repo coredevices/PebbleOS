@@ -4,4 +4,3 @@
 #pragma once
 
 void debounced_button_init(void);
-

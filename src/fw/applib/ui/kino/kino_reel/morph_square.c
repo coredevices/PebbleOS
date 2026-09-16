@@ -46,7 +46,7 @@ KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership
     return NULL;
   }
 
-  GRect frame = { GPointZero, kino_reel_get_size(from_reel) };
+  GRect frame = {GPointZero, kino_reel_get_size(from_reel)};
 
   KinoReel *reel = kino_reel_transform_create(&MORPH_SQUARE_TRANSFORM_IMPL, data);
   if (reel) {

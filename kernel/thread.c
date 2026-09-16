@@ -64,9 +64,13 @@ void pbl_thread_resume(struct pbl_thread *t) {
   pbl_irq_unlock();
 }
 
-struct pbl_thread *pbl_thread_current(void) { return pbl_cur; }
+struct pbl_thread *pbl_thread_current(void) {
+  return pbl_cur;
+}
 
-struct pbl_thread *pbl_thread_idle(void) { return sched_idle_thread(); }
+struct pbl_thread *pbl_thread_idle(void) {
+  return sched_idle_thread();
+}
 
 void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio) {
   KERNEL_ASSERT(prio <= PBL_PRIO_MAX);
@@ -77,7 +81,9 @@ void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio) {
   pbl_irq_unlock();
 }
 
-pbl_prio_t pbl_thread_prio_get(const struct pbl_thread *t) { return t->backend.base_prio; }
+pbl_prio_t pbl_thread_prio_get(const struct pbl_thread *t) {
+  return t->backend.base_prio;
+}
 
 enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
   return (enum pbl_thread_state)t->backend.state;

@@ -34,9 +34,9 @@ struct TapRecognizerData {
   struct {
     uint16_t taps_detected;
     uint16_t fingers_down;
-    GPoint touch_down_point;    // Touchdown point, used for the movement check
-    GPoint tap_point;           // Last PositionUpdate point; the reported tap coord
-    RtcTicks touch_down_ticks;  // Touchdown time, used for the duration check
+    GPoint touch_down_point;   // Touchdown point, used for the movement check
+    GPoint tap_point;          // Last PositionUpdate point; the reported tap coord
+    RtcTicks touch_down_ticks; // Touchdown time, used for the duration check
   } state;
 };
 
@@ -45,16 +45,13 @@ static void prv_reset(Recognizer *recognizer);
 static bool prv_cancel(Recognizer *recognizer);
 
 static const RecognizerImpl s_tap_recognizer_impl = {
-  .handle_touch_event = prv_handle_touch_event,
-  .reset = prv_reset,
-  .cancel = prv_cancel
+  .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel
 };
 
 static bool prv_moved_too_far(const TapRecognizerData *data, const TouchEvent *touch_event) {
   const int16_t dx = ABS(touch_event->x - data->state.touch_down_point.x);
   const int16_t dy = ABS(touch_event->y - data->state.touch_down_point.y);
-  return (dx > data->config.movement_threshold.x) ||
-         (dy > data->config.movement_threshold.y);
+  return (dx > data->config.movement_threshold.x) || (dy > data->config.movement_threshold.y);
 }
 
 static uint32_t prv_touch_duration_ms(const TapRecognizerData *data) {
@@ -63,8 +60,8 @@ static uint32_t prv_touch_duration_ms(const TapRecognizerData *data) {
 }
 
 static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {
-  TapRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                     &s_tap_recognizer_impl);
+  TapRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_tap_recognizer_impl);
 
   switch (touch_event->type) {
     case TouchEvent_Touchdown:
@@ -96,8 +93,8 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
 }
 
 static void prv_reset(Recognizer *recognizer) {
-  TapRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                     &s_tap_recognizer_impl);
+  TapRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_tap_recognizer_impl);
   memset(&data->state, 0, sizeof(data->state));
 }
 
@@ -139,8 +136,8 @@ const TapRecognizerData *tap_recognizer_get_data(const Recognizer *recognizer) {
 }
 
 GPoint tap_recognizer_get_tap_point(const Recognizer *recognizer) {
-  const TapRecognizerData *data = recognizer_get_impl_data((Recognizer *)recognizer,
-                                                           &s_tap_recognizer_impl);
+  const TapRecognizerData *data =
+      recognizer_get_impl_data((Recognizer *)recognizer, &s_tap_recognizer_impl);
   if (!data) {
     // SDK-reachable with a NULL or non-tap recognizer: reject, don't crash.
     return GPointZero;

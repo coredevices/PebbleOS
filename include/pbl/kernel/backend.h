@@ -18,12 +18,12 @@ struct pbl_waitq {
 };
 
 struct pbl_thread_backend {
-  void *sp;  // saved stack pointer; must stay first
+  void *sp; // saved stack pointer; must stay first
   struct pbl_arch_thread arch;
-  struct pbl_thread *next;          // ready list or wait queue link
-  struct pbl_thread *timeout_next;  // timeout list link
-  struct pbl_thread *all_next;      // list of every live thread
-  struct pbl_waitq *waitq;          // object blocked on, NULL for a plain sleep
+  struct pbl_thread *next;         // ready list or wait queue link
+  struct pbl_thread *timeout_next; // timeout list link
+  struct pbl_thread *all_next;     // list of every live thread
+  struct pbl_waitq *waitq;         // object blocked on, NULL for a plain sleep
   uint32_t wake_at;
   uint32_t run_time;
   uint32_t switched_in_at;
@@ -57,5 +57,4 @@ struct pbl_poll_group_backend {
   struct pbl_msgq *cursor;
 };
 
-#define PBL_SEM_BACKEND_INITIALIZER(initial) { .count = (initial) }
-
+#define PBL_SEM_BACKEND_INITIALIZER(initial) {.count = (initial)}

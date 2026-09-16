@@ -19,8 +19,7 @@
 TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
                                             ANCSAttribute *app_attributes[],
                                             const ANCSAppMetadata *app_metadata,
-                                            iOSNotifPrefs *notif_prefs,
-                                            time_t timestamp,
+                                            iOSNotifPrefs *notif_prefs, time_t timestamp,
                                             ANCSProperty properties);
 
 //! Replaces the dismiss action of an existing timeline item with the ancs negative action

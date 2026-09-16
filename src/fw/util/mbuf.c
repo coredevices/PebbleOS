@@ -11,7 +11,7 @@
 
 //! Flags used for internal purposes (bits 24-31 are allocated for this purpose)
 #define MBUF_FLAG_IS_MANAGED ((uint32_t)(1 << 24))
-#define MBUF_FLAG_IS_FREE ((uint32_t)(1 << 25))
+#define MBUF_FLAG_IS_FREE    ((uint32_t)(1 << 25))
 
 T_STATIC MBuf *s_free_list;
 static PBL_MUTEX_DEFINE(s_free_list_lock);
@@ -26,13 +26,11 @@ static int s_mbuf_pool_space[] = {
 _Static_assert(ARRAY_LENGTH(s_mbuf_pool_space) == NumMBufPools,
                "s_mbuf_pool_space array does not match MBufPool enum");
 
-
 // Init
 ////////////////////////////////////////////////////////////////////////////////
 
 void mbuf_init(void) {
 }
-
 
 // Allocation / free list management
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +100,6 @@ void mbuf_free(MBuf *m) {
   pbl_mutex_unlock(&s_free_list_lock);
 }
 
-
 // Basic setters and getters
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -152,7 +149,6 @@ uint32_t mbuf_get_chain_length(MBuf *m) {
   return total;
 }
 
-
 // MBuf chain management
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -170,15 +166,17 @@ void mbuf_clear_next(MBuf *m) {
   m->next = NULL;
 }
 
-
 // Debug
 ////////////////////////////////////////////////////////////////////////////////
 
 void mbuf_debug_dump(MBuf *m) {
   char buffer[80];
   while (m) {
-    dbgserial_putstr_fmt(buffer, sizeof(buffer), "MBuf <%p>: length=%"PRIu32", data=%p, "
-                         "flags=0x%"PRIx32, m, m->length, m->data, m->flags);
+    dbgserial_putstr_fmt(buffer, sizeof(buffer),
+                         "MBuf <%p>: length=%" PRIu32
+                         ", data=%p, "
+                         "flags=0x%" PRIx32,
+                         m, m->length, m->data, m->flags);
     m = m->next;
   }
 }

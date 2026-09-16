@@ -8,8 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define NEW_RECOGNIZER(r) \
-  Recognizer *r __attribute__ ((__cleanup__(test_recognizer_destroy)))
+#define NEW_RECOGNIZER(r) Recognizer *r __attribute__((__cleanup__(test_recognizer_destroy)))
 
 typedef struct TestImplData {
   int test;

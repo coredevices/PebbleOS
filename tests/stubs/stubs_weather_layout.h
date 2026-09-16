@@ -6,7 +6,7 @@
 #include "pbl/services/timeline/weather_layout.h"
 #include "pbl/util/attributes.h"
 
-LayoutLayer * WEAK weather_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *WEAK weather_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 

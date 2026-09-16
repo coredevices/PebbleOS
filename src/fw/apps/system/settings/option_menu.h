@@ -10,14 +10,14 @@ typedef struct {
   uint16_t num_rows;
 } SettingsOptionMenuData;
 
-OptionMenu *settings_option_menu_create(
-    const char *i18n_title_key, OptionMenuContentType content_type, int choice,
-    const OptionMenuCallbacks *callbacks, uint16_t num_rows, bool icons_enabled, const char **rows,
-    void *context);
+OptionMenu *settings_option_menu_create(const char *i18n_title_key,
+                                        OptionMenuContentType content_type, int choice,
+                                        const OptionMenuCallbacks *callbacks, uint16_t num_rows,
+                                        bool icons_enabled, const char **rows, void *context);
 
-OptionMenu *settings_option_menu_push(
-    const char *i18n_title_key, OptionMenuContentType content_type, int choice,
-    const OptionMenuCallbacks *callbacks, uint16_t num_rows, bool icons_enabled, const char **rows,
-    void *context);
+OptionMenu *settings_option_menu_push(const char *i18n_title_key,
+                                      OptionMenuContentType content_type, int choice,
+                                      const OptionMenuCallbacks *callbacks, uint16_t num_rows,
+                                      bool icons_enabled, const char **rows, void *context);
 
 void *settings_option_menu_get_context(SettingsOptionMenuData *data);

@@ -4,4 +4,3 @@
 bool battery_monitor_critical_lockout(void) {
   return false;
 }
-

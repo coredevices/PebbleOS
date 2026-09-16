@@ -14,8 +14,8 @@
 #include "bf0_hal_tim.h"
 
 /* Timer period 100us, auto reload is 2ms. */
-#define TIMER_FREQUENCY_HZ    10000
-#define TIMER_PERIOD_TICKS    20
+#define TIMER_FREQUENCY_HZ 10000
+#define TIMER_PERIOD_TICKS 20
 
 #define RESET_BUTTONS ((1 << BUTTON_ID_SELECT) | (1 << BUTTON_ID_BACK))
 
@@ -46,7 +46,7 @@ static void initialize_button_timer(void) {
   HAL_NVIC_SetPriority(BOARD_CONFIG_BUTTON.timer_irqn, 7, 0);
   HAL_NVIC_EnableIRQ(BOARD_CONFIG_BUTTON.timer_irqn);
 
-  __HAL_GPT_CLEAR_FLAG(&s_tim_hdl, GPT_FLAG_UPDATE); 
+  __HAL_GPT_CLEAR_FLAG(&s_tim_hdl, GPT_FLAG_UPDATE);
   __HAL_GPT_URS_ENABLE(&s_tim_hdl);
   __HAL_GPT_SET_MODE(&s_tim_hdl, GPT_OPMODE_REPETITIVE);
 }
@@ -93,8 +93,7 @@ void debounced_button_init(void) {
   }
 }
 
-void debounced_button_irq_handler(GPT_TypeDef *timer)
-{
+void debounced_button_irq_handler(GPT_TypeDef *timer) {
   if (__HAL_GPT_GET_FLAG(&s_tim_hdl, GPT_FLAG_UPDATE) != RESET) {
     if (__HAL_GPT_GET_IT_SOURCE(&s_tim_hdl, GPT_IT_UPDATE) != RESET) {
       __HAL_GPT_CLEAR_IT(&s_tim_hdl, GPT_IT_UPDATE);
@@ -136,8 +135,8 @@ static void prv_timer_handler(void) {
   }
 
 #if !defined(CONFIG_MFG)
-  // Now that s_debounced_button_state is updated, check to see if the user is holding down the reset
-  // combination.
+  // Now that s_debounced_button_state is updated, check to see if the user is holding down the
+  // reset combination.
   static uint32_t s_hard_reset_timer = 0;
   if ((s_debounced_button_state & RESET_BUTTONS) == RESET_BUTTONS) {
     s_hard_reset_timer += 1;
@@ -153,8 +152,7 @@ static void prv_timer_handler(void) {
       }
 
       RebootReason reason = {
-        .code = force_prf ? RebootReasonCode_PrfResetButtonsHeld :
-                            RebootReasonCode_ResetButtonsHeld
+        .code = force_prf ? RebootReasonCode_PrfResetButtonsHeld : RebootReasonCode_ResetButtonsHeld
       };
       reboot_reason_set(&reason);
 
@@ -171,12 +169,11 @@ static void prv_timer_handler(void) {
     disable_button_timer();
     __enable_irq();
   }
-
 }
 
 // Serial commands
 ///////////////////////////////////////////////////////////
-void command_put_raw_button_event(const char* button_index, const char* is_button_down_event) {
+void command_put_raw_button_event(const char *button_index, const char *is_button_down_event) {
   PebbleEvent e;
   int is_down = atoi(is_button_down_event);
   int button = atoi(button_index);

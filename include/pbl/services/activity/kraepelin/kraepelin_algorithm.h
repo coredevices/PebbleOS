@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include "util/time/time.h"
 
-
 // ---------------------------------------------------------------------------------------------
 // Equates
 // number of samples per second
@@ -140,8 +139,8 @@ uint32_t kalg_analyze_finish_epoch(KAlgState *state);
 // @param[in] context passed to the sessions_cb
 void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
                             uint8_t orientation, bool definitely_not_worn,
-                            uint32_t resting_calories,
-                            uint32_t active_calories, uint32_t distance_mm, bool shutting_down,
+                            uint32_t resting_calories, uint32_t active_calories,
+                            uint32_t distance_mm, bool shutting_down,
                             KAlgActivitySessionCallback sessions_cb, void *context);
 
 // Return the timestamp of the last minute that was processed for the given activity type

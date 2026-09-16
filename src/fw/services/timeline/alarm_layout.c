@@ -78,8 +78,8 @@ static void prv_time_am_pm_update(const LayoutLayer *layout_ref,
   clock_get_time_word(buffer, config->buffer_size, layout->info->timestamp);
 }
 
-static GTextNode *prv_time_node_constructor(
-    const LayoutLayer *layout_ref, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_time_node_constructor(const LayoutLayer *layout_ref,
+                                            const LayoutNodeConstructorConfig *config) {
   static const LayoutNodeTextDynamicConfig s_time_default_config = {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = timeline_layout_time_text_update,
@@ -104,7 +104,8 @@ static GTextNode *prv_time_node_constructor(
     .text.extent.offset.y = 14,
   };
 
-  const bool use_large_time = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+  const bool use_large_time = PREFERRED_CONTENT_SIZE_SWITCH(
+      PreferredContentSizeDefault,
       /* small */ false, /* medium */ false, /* large */ true, /* extralarge */ true);
 
   if (!use_large_time) {
@@ -113,10 +114,10 @@ static GTextNode *prv_time_node_constructor(
 
   GTextNodeHorizontal *horizontal_node = graphics_text_node_create_horizontal(2);
   horizontal_node->horizontal_alignment = GTextAlignmentCenter;
-  GTextNode *digits_node = layout_create_text_node_from_config(
-      layout_ref, &s_time_digits_config.text.extent.node);
-  GTextNode *am_pm_node = layout_create_text_node_from_config(
-      layout_ref, &s_time_am_pm_config.text.extent.node);
+  GTextNode *digits_node =
+      layout_create_text_node_from_config(layout_ref, &s_time_digits_config.text.extent.node);
+  GTextNode *am_pm_node =
+      layout_create_text_node_from_config(layout_ref, &s_time_am_pm_config.text.extent.node);
   graphics_text_node_container_add_child(&horizontal_node->container, digits_node);
   graphics_text_node_container_add_child(&horizontal_node->container, am_pm_node);
   return &horizontal_node->container.node;
@@ -130,28 +131,29 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.style = LayoutContentSizeDefault,
     .text.style_font = TextStyleFont_Header,
     .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
-      /* small */ PBL_IF_RECT_ELSE(2, 0),
-      /* medium */ PBL_IF_RECT_ELSE(2, 0),
-      /* large */ 2,
-      /* extralarge */ 2), // title margin height
+    .text.extent.margin.h =
+        PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
+                                      /* small */ PBL_IF_RECT_ELSE(2, 0),
+                                      /* medium */ PBL_IF_RECT_ELSE(2, 0),
+                                      /* large */ 2,
+                                      /* extralarge */ 2), // title margin height
   };
   static const LayoutNodeConstructorConfig s_time_config = {
     .extent.node.type = LayoutNodeType_Constructor,
     .constructor = prv_time_node_constructor,
     .extent.margin.h = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
-      /* small */ PBL_IF_RECT_ELSE(9, 1),
-      /* medium */ PBL_IF_RECT_ELSE(9, 1),
-      /* large */ 5,
-      /* extralarge */ 5), // time margin height
+                                                     /* small */ PBL_IF_RECT_ELSE(9, 1),
+                                                     /* medium */ PBL_IF_RECT_ELSE(9, 1),
+                                                     /* large */ 5,
+                                                     /* extralarge */ 5), // time margin height
   };
   static const LayoutNodeExtentConfig s_icon_config = {
     .node.type = LayoutNodeType_TimelineIcon,
     .margin.h = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
-      /* small */ PBL_IF_RECT_ELSE(3, 1),
-      /* medium */ PBL_IF_RECT_ELSE(3, 1),
-      /* large */ 0,
-      /* extralarge */ 0), // icon margin height
+                                              /* small */ PBL_IF_RECT_ELSE(3, 1),
+                                              /* medium */ PBL_IF_RECT_ELSE(3, 1),
+                                              /* large */ 0,
+                                              /* extralarge */ 0), // icon margin height
   };
   static const LayoutNodeTextDynamicConfig s_subtitle_config = {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
@@ -161,7 +163,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.style_font = TextStyleFont_Header,
     .text.alignment = LayoutTextAlignment_Center,
   };
-  static const LayoutNodeConfig * const s_vertical_config_nodes[] = {
+  static const LayoutNodeConfig *const s_vertical_config_nodes[] = {
     PBL_IF_RECT_ELSE(&s_title_config.text.extent.node, &s_icon_config.node),
     PBL_IF_RECT_ELSE(&s_time_config.extent.node, &s_title_config.text.extent.node),
     PBL_IF_RECT_ELSE(&s_icon_config.node, &s_time_config.extent.node),
@@ -191,17 +193,16 @@ LayoutLayer *alarm_layout_create(const LayoutLayerConfig *config) {
   AlarmLayout *layout = task_zalloc_check(sizeof(AlarmLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
-    .attributes = { AttributeIdTitle, AttributeIdSubtitle },
-    .default_colors = { { .argb = GColorBlackARGB8 },
-                        { .argb = GColorClearARGB8 },
-                        { .argb = GColorJaegerGreenARGB8 } },
+    .attributes = {AttributeIdTitle, AttributeIdSubtitle},
+    .default_colors =
+        {{.argb = GColorBlackARGB8}, {.argb = GColorClearARGB8}, {.argb = GColorJaegerGreenARGB8}},
     .default_icon = TIMELINE_RESOURCE_ALARM_CLOCK,
     .card_icon_align = GAlignCenter,
     .card_icon_size = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
-      /* small */ TimelineResourceSizeSmall,
-      /* medium */ TimelineResourceSizeSmall,
-      /* large */ TimelineResourceSizeLarge,
-      /* extralarge */ TimelineResourceSizeLarge),
+                                                    /* small */ TimelineResourceSizeSmall,
+                                                    /* medium */ TimelineResourceSizeSmall,
+                                                    /* large */ TimelineResourceSizeLarge,
+                                                    /* extralarge */ TimelineResourceSizeLarge),
     .card_view_constructor = prv_card_view_constructor,
   };
 

@@ -25,7 +25,6 @@
  * from inside your own headers files.
  */
 
-
 /* remove previous DUMA definitions */
 
 #ifdef DUMA_newFrame
@@ -47,7 +46,6 @@
 #ifdef DUMA_SET_FILL
 #undef DUMA_SET_FILL
 #endif
-
 
 /* remove previous wrappers to standard C functions */
 
@@ -137,7 +135,6 @@
 #undef NEW_ARRAY_NOTHROW
 #endif
 
-
 #ifdef DEL_ELEM
 #undef DEL_ELEM
 #endif
@@ -155,7 +152,6 @@
 #endif
 
 #endif /* SKIP_DUMA_NO_CXX */
-
 
 /* remove definitions for protection of functions return address */
 
@@ -188,7 +184,6 @@
 #ifdef CA_REF
 #undef CA_REF
 #endif
-
 
 /* Following defines are kept:
  *

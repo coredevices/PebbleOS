@@ -9,7 +9,7 @@
 
 static const char *expected_serial_number = "2DQ0135B3424";
 
-const char* mfg_get_serial_number(void) {
+const char *mfg_get_serial_number(void) {
   return expected_serial_number;
 }
 
@@ -21,7 +21,7 @@ void mfg_info_get_serialnumber(char *serial_number, size_t serial_number_size) {
 }
 
 static const char *expected_hw_version = "V2R2";
-const char* mfg_get_hw_version(void) {
+const char *mfg_get_hw_version(void) {
   return expected_hw_version;
 }
 

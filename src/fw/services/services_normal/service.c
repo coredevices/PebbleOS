@@ -54,10 +54,10 @@ static void prv_time_set_event_handler(PebbleEvent *e, void *context) {
   if (s_activity_init_deferred && rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP) {
     // Time is now valid, initialize activity
     s_activity_init_deferred = false;
-    
+
     // Unsubscribe from time events
     event_service_client_unsubscribe(&s_time_event_info);
-    
+
     activity_init();
     // If the user had tracking enabled before init was deferred, start tracking now so we
     // don't miss steps when initialization happens after boot.
@@ -104,7 +104,7 @@ void services_normal_init(void) {
     s_activity_init_deferred = true;
 
     // Subscribe to time set events
-    s_time_event_info = (EventServiceInfo) {
+    s_time_event_info = (EventServiceInfo){
       .type = PEBBLE_SET_TIME_EVENT,
       .handler = prv_time_set_event_handler,
     };

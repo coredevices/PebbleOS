@@ -45,7 +45,9 @@ void boot_bit_init(void) {
   // in-memory value is probably scrambled and should be reset.
   uint32_t crc32_computed = crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
   if (crc32_computed != retained[NRF_RETAINED_REGISTER_CRC]) {
-    PBL_LOG_WRN("Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!", crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
+    PBL_LOG_WRN(
+        "Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!",
+        crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
     memset(retained, 0, sizeof(retained));
   }
 
@@ -72,7 +74,7 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%"PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
@@ -81,7 +83,7 @@ uint32_t boot_bits_get(void) {
 
 void command_boot_bits_get(void) {
   char buffer[32];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
+  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
 uint32_t boot_version_read(void) {
@@ -113,16 +115,16 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%"PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
- return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
 }
 
 void command_boot_bits_get(void) {
   char buffer[32];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
+  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
 #define PB_VERSION_MAGIC 0x50425652UL
@@ -149,10 +151,8 @@ uint32_t boot_version_read(void) {
     return 0UL;
   }
 
-  version = ((uint32_t)version_data.major << 24) |
-            ((uint32_t)version_data.minor << 16) |
-            ((uint32_t)version_data.patch << 8) |
-            (uint32_t)version_data.tweak;
+  version = ((uint32_t)version_data.major << 24) | ((uint32_t)version_data.minor << 16) |
+            ((uint32_t)version_data.patch << 8) | (uint32_t)version_data.tweak;
 
   return version;
 }
@@ -185,7 +185,7 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%"PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
@@ -194,7 +194,7 @@ uint32_t boot_bits_get(void) {
 
 void command_boot_bits_get(void) {
   char buffer[32];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
+  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
 uint32_t boot_version_read(void) {

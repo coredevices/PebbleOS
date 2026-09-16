@@ -9,7 +9,7 @@
 
 void kernel_ui_init(void);
 
-GContext* kernel_ui_get_graphics_context(void);
+GContext *kernel_ui_get_graphics_context(void);
 
 GContext *graphics_context_get_current_context(void);
 

@@ -18,9 +18,9 @@ typedef void (*DateSelectionCompleteCallback)(struct DateSelectionWindowData *wi
 
 //! Date data stored as fields mirroring struct tm
 typedef struct {
-  int16_t year;  //!< years since 1900 (tm_year)
-  int8_t month;  //!< 0-11 (tm_mon)
-  int8_t day;    //!< 1-31 (tm_mday)
+  int16_t year; //!< years since 1900 (tm_year)
+  int8_t month; //!< 0-11 (tm_mon)
+  int8_t day;   //!< 1-31 (tm_mday)
 } DateData;
 
 typedef struct DateSelectionWindowData {
@@ -47,9 +47,8 @@ void date_selection_window_set_to_current_date(DateSelectionWindowData *window);
 //! @param color     Highlight colour for the active selection cell.
 //! @param complete  Callback invoked when the user confirms their selection.
 //! @param context   Caller-provided pointer passed to the callback.
-void date_selection_window_init(DateSelectionWindowData *window, const char *label,
-                                GColor color, DateSelectionCompleteCallback complete,
-                                void *context);
+void date_selection_window_init(DateSelectionWindowData *window, const char *label, GColor color,
+                                DateSelectionCompleteCallback complete, void *context);
 
 //! Deinitialize the date selection window.
 void date_selection_window_deinit(DateSelectionWindowData *window);

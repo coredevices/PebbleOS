@@ -15,5 +15,5 @@ typedef enum ReminderAppState {
 } ReminderAppState;
 
 typedef struct PACKED SerializedReminderAppPrefs {
-  uint8_t appState;  // actually enum ReminderAppState
+  uint8_t appState; // actually enum ReminderAppState
 } SerializedReminderAppPrefs;

@@ -22,8 +22,8 @@ static const uint16_t IMAGING_ENDPOINT = 0x35;
 
 // Full-screen 4-bpp on the largest supported display (260x260) is ~34 KB. Cap generously and reject
 // anything larger to bound kernel-heap use against a malformed or hostile phone.
-#define IMAGING_MAX_BYTES (40 * 1024)
-#define IMAGING_MAX_DIM (300)
+#define IMAGING_MAX_BYTES       (40 * 1024)
+#define IMAGING_MAX_DIM         (300)
 #define IMAGING_PALETTE_ENTRIES (16)
 
 static ImagingReceivedHandler s_handlers[ImagingImageTypeCount];
@@ -52,13 +52,13 @@ static struct {
   uint32_t total_bytes;
   uint32_t received_bytes;
   uint8_t *pixels;
-  GColor *palette;  // NULL for non-palette formats
+  GColor *palette; // NULL for non-palette formats
 } s_rx;
 
 static void prv_rx_reset(void) {
   kernel_free(s_rx.pixels);
   kernel_free(s_rx.palette);
-  s_rx = (__typeof__(s_rx)) { 0 };
+  s_rx = (__typeof__(s_rx)){0};
 }
 
 void imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {
@@ -81,8 +81,7 @@ static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *rea
   unsigned int free_bytes;
   unsigned int largest_free;
   heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &largest_free);
-  PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size,
-              largest_free);
+  PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size, largest_free);
 
   prv_rx_reset();
   ImagingTransferFailedHandler handler =
@@ -123,8 +122,7 @@ static bool prv_type_latched_unsupported(CommSession *session, ImagingImageType 
 
 bool imaging_is_type_supported(ImagingImageType image_type) {
   CommSession *session = comm_session_get_system_session();
-  if (!session ||
-      !comm_session_has_capability(session, CommSessionImagingSupport)) {
+  if (!session || !comm_session_has_capability(session, CommSessionImagingSupport)) {
     return false;
   }
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -187,7 +185,7 @@ static uint16_t prv_gbitmap_format_for(ImagingFormat format, GBitmapFormat *out)
   switch (format) {
     case ImagingFormat8BitColor:
       *out = GBitmapFormat8Bit;
-      return 0;  // no palette
+      return 0; // no palette
     case ImagingFormat4BitPalette:
       *out = GBitmapFormat4BitPalette;
       return IMAGING_PALETTE_ENTRIES;
@@ -279,7 +277,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
         return;
       }
       for (uint8_t i = 0; i < palette_count; ++i) {
-        s_rx.palette[i] = (GColor) { .argb = cursor[i] };
+        s_rx.palette[i] = (GColor){.argb = cursor[i]};
       }
       cursor += palette_count;
     }
@@ -329,7 +327,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     bmp->row_size_bytes = s_rx.row_size_bytes;
     bmp->info.format = s_rx.format;
     bmp->info.version = GBITMAP_VERSION_CURRENT;
-    bmp->bounds = (GRect) { { 0, 0 }, { s_rx.width, s_rx.height } };
+    bmp->bounds = (GRect){{0, 0}, {s_rx.width, s_rx.height}};
     bmp->palette = s_rx.palette;
     // Ownership of the pixel and palette buffers moves into the bitmap.
     const uint8_t token = s_rx.token;

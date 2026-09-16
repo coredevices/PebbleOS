@@ -11,11 +11,11 @@ void rtc_init(void) {
 void rtc_init_timers(void) {
 }
 
-bool rtc_sanitize_struct_tm(struct tm* t) {
+bool rtc_sanitize_struct_tm(struct tm *t) {
   return false;
 }
 
-bool rtc_sanitize_time_t(time_t* t) {
+bool rtc_sanitize_time_t(time_t *t) {
   return false;
 }
 
@@ -27,13 +27,13 @@ time_t rtc_get_time(void) {
 }
 
 // Wrappers for the above functions that take struct tm instead of time_t
-void rtc_set_time_tm(struct tm* time_tm) {
+void rtc_set_time_tm(struct tm *time_tm) {
 }
 
-void rtc_get_time_tm(struct tm* time_tm) {
+void rtc_get_time_tm(struct tm *time_tm) {
 }
 
-void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
+void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
 }
 
 void rtc_set_timezone(TimezoneInfo *tzinfo) {

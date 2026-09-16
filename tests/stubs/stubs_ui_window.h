@@ -5,4 +5,5 @@
 
 #include "applib/ui/window_private.h"
 
-void window_schedule_render(Window *window) {}
+void window_schedule_render(Window *window) {
+}

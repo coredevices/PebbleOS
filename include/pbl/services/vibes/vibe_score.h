@@ -9,8 +9,8 @@
 #include "util/pack.h"
 
 #define VIBE_SCORE_VERSION (1)
-#define VIBE_SIGNATURE MAKE_WORD('V', 'I', 'B', 'E')
-#define VIBE_DATA_OFFSET sizeof(VIBE_SIGNATURE)
+#define VIBE_SIGNATURE     MAKE_WORD('V', 'I', 'B', 'E')
+#define VIBE_DATA_OFFSET   sizeof(VIBE_SIGNATURE)
 
 typedef enum VibeAttributeId {
   VibeAttributeId_Invalid = 0x00,

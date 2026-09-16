@@ -22,7 +22,8 @@ void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   callback(data);
 }
 
-const CompositorTransition *shell_get_watchface_compositor_animation(bool watchface_is_destination) {
+const CompositorTransition *shell_get_watchface_compositor_animation(
+    bool watchface_is_destination) {
   return NULL;
 }
 

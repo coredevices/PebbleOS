@@ -22,7 +22,7 @@ typedef struct HealthHrDetailCard {
 
 static void prv_set_zone(HealthDetailZone *zone, int32_t minutes, int32_t *max_progress,
                          const size_t buffer_size, const char *zone_label, void *i18n_owner) {
-  *zone = (HealthDetailZone) {
+  *zone = (HealthDetailZone){
     .label = app_zalloc_check(buffer_size),
     .progress = minutes * SECONDS_PER_MINUTE,
     .fill_color = PBL_IF_COLOR_ELSE(GColorSunsetOrange, GColorDarkGray),
@@ -30,8 +30,8 @@ static void prv_set_zone(HealthDetailZone *zone, int32_t minutes, int32_t *max_p
 
   int pos = snprintf(zone->label, buffer_size, "%s ", i18n_get(zone_label, i18n_owner));
   if (zone->progress) {
-    health_util_format_hours_and_minutes(zone->label + pos, buffer_size - pos,
-                                         zone->progress, i18n_owner);
+    health_util_format_hours_and_minutes(zone->label + pos, buffer_size - pos, zone->progress,
+                                         i18n_owner);
   }
 
   if (zone->progress > *max_progress) {
@@ -72,7 +72,7 @@ Window *health_hr_detail_card_create(HealthData *health_data) {
 
   HealthDetailHeading *heading = &card_data->headings[card_data->num_headings++];
 
-  *heading = (HealthDetailHeading) {
+  *heading = (HealthDetailHeading){
     /// Resting HR
     .primary_label = (char *)i18n_get("TIME IN ZONES", card_data),
     .primary_value = app_zalloc_check(buffer_size),

@@ -142,7 +142,7 @@ static int s_each_count = 0;
 
 static bool prv_each_codepoint(int index, Codepoint codepoint, void *context) {
   static int s_index = 0;
-  static Codepoint s_codes[] = { 0xf0, 'a' };
+  static Codepoint s_codes[] = {0xf0, 'a'};
   cl_assert_equal_i(s_codes[index], codepoint);
   cl_assert_equal_i(s_index++, index);
   cl_assert_equal_p(context, &s_context);
@@ -152,7 +152,9 @@ static bool prv_each_codepoint(int index, Codepoint codepoint, void *context) {
 
 void test_utf8_iterator__each_codepoint(void) {
   void *context = &s_context;
-  const char *str = "\xc3\xb0" "a";
+  const char *str =
+      "\xc3\xb0"
+      "a";
   s_each_count = 0;
   cl_assert_equal_b(utf8_each_codepoint(str, prv_each_codepoint, context), true);
   cl_assert_equal_i(s_each_count, 2);
@@ -160,7 +162,7 @@ void test_utf8_iterator__each_codepoint(void) {
 
 static bool prv_each_codepoint_break(int index, Codepoint codepoint, void *context) {
   static int s_index = 0;
-  static Codepoint s_codes[] = { 'a', 'b', 'c', 'd', 'e' };
+  static Codepoint s_codes[] = {'a', 'b', 'c', 'd', 'e'};
   cl_assert_equal_i(s_index++, index);
   cl_assert_equal_i(s_codes[index], codepoint);
   cl_assert_equal_p(context, &s_context);

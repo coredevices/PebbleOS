@@ -14,8 +14,8 @@ bool gdraw_command_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
                                      uint32_t expected_signature, uint32_t *data_size) {
   // Load file signature, and check that it matches the expected_signature
   uint32_t data_signature;
-  if (!(sys_resource_load_range(app_num, resource_id, 0, (uint8_t*)&data_signature,
-        sizeof(data_signature)) == sizeof(data_signature) &&
+  if (!(sys_resource_load_range(app_num, resource_id, 0, (uint8_t *)&data_signature,
+                                sizeof(data_signature)) == sizeof(data_signature) &&
         (ntohl(data_signature) == expected_signature))) {
     return NULL;
   }
@@ -27,7 +27,8 @@ bool gdraw_command_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
                    "code re-use between PDCI/PDCS requires same file format header");
 
     if (sys_resource_load_range(app_num, resource_id, sizeof(expected_signature),
-          (uint8_t*)&output_data_size, sizeof(output_data_size)) != sizeof(output_data_size)) {
+                                (uint8_t *)&output_data_size,
+                                sizeof(output_data_size)) != sizeof(output_data_size)) {
       return NULL;
     }
     *data_size = output_data_size;
@@ -49,10 +50,7 @@ static void prv_draw_path(GContext *ctx, GDrawCommand *command) {
   if (command->num_points <= 1) {
     return;
   }
-  GPath path = {
-    .num_points = command->num_points,
-    .points = command->points
-  };
+  GPath path = {.num_points = command->num_points, .points = command->points};
   // draw all values of alpha, except fully transparent
   if ((command->fill_color.a != 0)) {
     graphics_context_set_fill_color(ctx, command->fill_color);
@@ -91,8 +89,8 @@ static void prv_draw_precise_path(GContext *ctx, GDrawCommand *command) {
   if ((command->stroke_color.a != 0) && (command->stroke_width > 0)) {
     graphics_context_set_stroke_color(ctx, command->stroke_color);
     graphics_context_set_stroke_width(ctx, command->stroke_width);
-    gpath_draw_outline_precise_internal(ctx, command->precise_points,
-                                        command->num_precise_points, command->path_open);
+    gpath_draw_outline_precise_internal(ctx, command->precise_points, command->num_precise_points,
+                                        command->path_open);
   }
 }
 
@@ -139,7 +137,7 @@ void gdraw_command_set_fill_color(GDrawCommand *command, GColor fill_color) {
 
 GColor gdraw_command_get_fill_color(GDrawCommand *command) {
   if (!command) {
-    return (GColor) {0};
+    return (GColor){0};
   } else {
     return command->fill_color;
   }
@@ -148,14 +146,14 @@ GColor gdraw_command_get_fill_color(GDrawCommand *command) {
 void gdraw_command_set_stroke_color(GDrawCommand *command, GColor stroke_color) {
   if (!command) {
     return;
-  } else  {
+  } else {
     command->stroke_color = stroke_color;
   }
 }
 
 GColor gdraw_command_get_stroke_color(GDrawCommand *command) {
   if (!command) {
-    return (GColor) {0};
+    return (GColor){0};
   } else {
     return command->stroke_color;
   }
@@ -213,8 +211,7 @@ uint16_t gdraw_command_get_radius(GDrawCommand *command) {
 
 void gdraw_command_set_path_open(GDrawCommand *command, bool path_open) {
   if (!command ||
-      ((command->type != GDrawCommandTypePath) &&
-       (command->type != GDrawCommandTypePrecisePath))) {
+      ((command->type != GDrawCommandTypePath) && (command->type != GDrawCommandTypePrecisePath))) {
     return;
   }
   command->path_open = path_open;
@@ -222,8 +219,7 @@ void gdraw_command_set_path_open(GDrawCommand *command, bool path_open) {
 
 bool gdraw_command_get_path_open(GDrawCommand *command) {
   if (!command ||
-      ((command->type != GDrawCommandTypePath) &&
-       (command->type != GDrawCommandTypePrecisePath))) {
+      ((command->type != GDrawCommandTypePath) && (command->type != GDrawCommandTypePrecisePath))) {
     return false;
   }
   return command->path_open;

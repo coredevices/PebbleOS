@@ -7,7 +7,7 @@
 #include "applib/applib_malloc.auto.h"
 #include "process_management/process_manager.h"
 
-void bitmap_layer_update_proc(BitmapLayer *image, GContext* ctx) {
+void bitmap_layer_update_proc(BitmapLayer *image, GContext *ctx) {
   const GColor bg_color = image->background_color;
   if (!gcolor_is_transparent(bg_color)) {
     graphics_context_set_fill_color(ctx, bg_color);
@@ -16,7 +16,7 @@ void bitmap_layer_update_proc(BitmapLayer *image, GContext* ctx) {
   graphics_context_set_compositing_mode(ctx, image->compositing_mode);
   if (image->bitmap != NULL) {
     const GSize size = image->bitmap->bounds.size;
-    const bool clips = true;  // bitmap layer not allowed to draw outside of its frame
+    const bool clips = true; // bitmap layer not allowed to draw outside of its frame
     GRect rect = (GRect){{0, 0}, size};
     grect_align(&rect, &image->layer.bounds, image->alignment, clips);
     if (!process_manager_compiled_with_legacy2_sdk()) {
@@ -42,8 +42,8 @@ void bitmap_layer_init(BitmapLayer *image, const GRect *frame) {
   layer_mark_dirty(&(image->layer));
 }
 
-BitmapLayer* bitmap_layer_create(GRect frame) {
-  BitmapLayer* layer = applib_type_malloc(BitmapLayer);
+BitmapLayer *bitmap_layer_create(GRect frame) {
+  BitmapLayer *layer = applib_type_malloc(BitmapLayer);
   if (layer) {
     bitmap_layer_init(layer, &frame);
   }
@@ -54,7 +54,7 @@ void bitmap_layer_deinit(BitmapLayer *bitmap_layer) {
   layer_deinit(&bitmap_layer->layer);
 }
 
-void bitmap_layer_destroy(BitmapLayer* bitmap_layer) {
+void bitmap_layer_destroy(BitmapLayer *bitmap_layer) {
   if (bitmap_layer == NULL) {
     return;
   }
@@ -62,11 +62,11 @@ void bitmap_layer_destroy(BitmapLayer* bitmap_layer) {
   applib_free(bitmap_layer);
 }
 
-Layer* bitmap_layer_get_layer(const BitmapLayer *bitmap_layer) {
+Layer *bitmap_layer_get_layer(const BitmapLayer *bitmap_layer) {
   return &((BitmapLayer *)bitmap_layer)->layer;
 }
 
-const GBitmap* bitmap_layer_get_bitmap(BitmapLayer* bitmap_layer) {
+const GBitmap *bitmap_layer_get_bitmap(BitmapLayer *bitmap_layer) {
   return bitmap_layer->bitmap;
 }
 

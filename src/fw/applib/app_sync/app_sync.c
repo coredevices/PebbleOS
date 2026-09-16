@@ -15,8 +15,8 @@ static void delegate_errors(AppSync *s, DictionaryResult dict_result,
   }
 }
 
-static void update_key_callback(const uint32_t key, const Tuple *new_tuple,
-                                const Tuple *old_tuple, void *context) {
+static void update_key_callback(const uint32_t key, const Tuple *new_tuple, const Tuple *old_tuple,
+                                void *context) {
   AppSync *s = context;
   if (s->callback.value_changed) {
     s->callback.value_changed(key, new_tuple, old_tuple, s->callback.context);
@@ -36,10 +36,8 @@ static void update_callback(DictionaryIterator *updated_iter, void *context) {
   AppSync *s = context;
   uint32_t size = s->buffer_size;
   const bool update_existing_keys_only = true;
-  DictionaryResult result = dict_merge(&s->current_iter, &size,
-                                       updated_iter,
-                                       update_existing_keys_only,
-                                       update_key_callback, s);
+  DictionaryResult result = dict_merge(&s->current_iter, &size, updated_iter,
+                                       update_existing_keys_only, update_key_callback, s);
   delegate_errors(s, result, APP_MSG_OK);
 }
 
@@ -55,12 +53,10 @@ static void in_dropped_callback(AppMessageResult reason, void *context) {
 }
 
 // FIXME PBL-1709: this should return an AppMessageResult ...
-void app_sync_init(AppSync *s,
-                   uint8_t *buffer, const uint16_t buffer_size,
-                   const Tuplet * const keys_and_initial_values, const uint8_t count,
+void app_sync_init(AppSync *s, uint8_t *buffer, const uint16_t buffer_size,
+                   const Tuplet *const keys_and_initial_values, const uint8_t count,
                    AppSyncTupleChangedCallback tuple_changed_callback,
-                   AppSyncErrorCallback error_callback,
-                   void *context) {
+                   AppSyncErrorCallback error_callback, void *context) {
   PBL_ASSERTN(buffer != NULL);
   PBL_ASSERTN(buffer_size > 0);
   s->buffer = buffer;
@@ -70,7 +66,7 @@ void app_sync_init(AppSync *s,
   s->callback.context = context;
   uint32_t in_out_size = buffer_size;
   const DictionaryResult dict_result = dict_serialize_tuplets_to_buffer_with_iter(
-    &s->current_iter, keys_and_initial_values, count, s->buffer, &in_out_size);
+      &s->current_iter, keys_and_initial_values, count, s->buffer, &in_out_size);
   app_message_set_context(s);
   app_message_register_outbox_sent(update_callback);
   app_message_register_outbox_failed(out_failed_callback);
@@ -89,7 +85,7 @@ void app_sync_deinit(AppSync *s) {
   s->current = NULL;
 }
 
-AppMessageResult app_sync_set(AppSync *s, const Tuplet * const updated_keys_and_values,
+AppMessageResult app_sync_set(AppSync *s, const Tuplet *const updated_keys_and_values,
                               const uint8_t count) {
   DictionaryIterator *iter;
   AppMessageResult result = app_message_outbox_begin(&iter);
@@ -103,6 +99,6 @@ AppMessageResult app_sync_set(AppSync *s, const Tuplet * const updated_keys_and_
   return app_message_outbox_send();
 }
 
-const Tuple * app_sync_get(const AppSync *s, const uint32_t key) {
+const Tuple *app_sync_get(const AppSync *s, const uint32_t key) {
   return dict_find(&s->current_iter, key);
 }

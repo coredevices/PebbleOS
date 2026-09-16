@@ -50,17 +50,15 @@ static const uint8_t *prv_read_token_and_response(const uint8_t *iter, BlobDBTok
   return iter;
 }
 
-T_STATIC void prv_send_response(CommSession *session, uint8_t *response,
-                                uint8_t response_length) {
+T_STATIC void prv_send_response(CommSession *session, uint8_t *response, uint8_t response_length) {
   comm_session_send_data(session, BLOB_DB2_ENDPOINT_ID, response, response_length,
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-static void prv_handle_get_dirty_databases(CommSession *session,
-                                           const uint8_t *data,
+static void prv_handle_get_dirty_databases(CommSession *session, const uint8_t *data,
                                            uint32_t length) {
   if (length < DIRTY_DATABASES_LENGTH) {
-    PBL_LOG_ERR("Got a dirty databases with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a dirty databases with an invalid length: %" PRIu32 "", length);
     return;
   }
 
@@ -76,19 +74,16 @@ static void prv_handle_get_dirty_databases(CommSession *session,
     .result = BLOB_DB_SUCCESS,
   };
 
-
   blob_db_get_dirty_dbs(response.db_ids, &response.num_ids);
   // we don't want to send the extra bytes in response.db_ids
   int num_empty_ids = NumBlobDBs - response.num_ids;
 
-  prv_send_response(session, (uint8_t *) &response, sizeof(response) - num_empty_ids);
+  prv_send_response(session, (uint8_t *)&response, sizeof(response) - num_empty_ids);
 }
 
-static void prv_handle_start_sync(CommSession *session,
-                                  const uint8_t *data,
-                                  uint32_t length) {
+static void prv_handle_start_sync(CommSession *session, const uint8_t *data, uint32_t length) {
   if (length < START_SYNC_LENGTH) {
-    PBL_LOG_ERR("Got a start sync with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a start sync with an invalid length: %" PRIu32 "", length);
     return;
   }
 
@@ -123,8 +118,7 @@ static void prv_handle_start_sync(CommSession *session,
   prv_send_response(session, (uint8_t *)&response, sizeof(response));
 }
 
-static void prv_handle_wb_write_response(const uint8_t *data,
-                                         uint32_t length) {
+static void prv_handle_wb_write_response(const uint8_t *data, uint32_t length) {
   // read token and response code
   BlobDBToken token;
   BlobDBResponse response_code;
@@ -136,8 +130,8 @@ static void prv_handle_wb_write_response(const uint8_t *data,
       // Log rejected items but still mark synced to avoid spamming phone on every sync
       BlobDBDirtyItem *dirty_item = sync_session->dirty_list;
       char key_str[32];
-      int copy_len = (dirty_item->key_len < (int)sizeof(key_str) - 1) ?
-                      dirty_item->key_len : (int)sizeof(key_str) - 1;
+      int copy_len = (dirty_item->key_len < (int)sizeof(key_str) - 1) ? dirty_item->key_len
+                                                                      : (int)sizeof(key_str) - 1;
       memcpy(key_str, dirty_item->key, copy_len);
       key_str[copy_len] = '\0';
       PBL_LOG_WRN("Writeback rejected: key=%s response=%d", key_str, response_code);
@@ -149,33 +143,28 @@ static void prv_handle_wb_write_response(const uint8_t *data,
   }
 }
 
-static void prv_handle_write_response(CommSession *session,
-                                      const uint8_t *data,
-                                      uint32_t length) {
+static void prv_handle_write_response(CommSession *session, const uint8_t *data, uint32_t length) {
   if (length < WRITE_RESPONSE_LENGTH) {
-    PBL_LOG_ERR("Got a write response with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a write response with an invalid length: %" PRIu32 "", length);
     return;
   }
 
   prv_handle_wb_write_response(data, length);
 }
 
-static void prv_handle_wb_response(CommSession *session,
-                                   const uint8_t *data,
-                                   uint32_t length) {
+static void prv_handle_wb_response(CommSession *session, const uint8_t *data, uint32_t length) {
   if (length < WRITEBACK_RESPONSE_LENGTH) {
-    PBL_LOG_ERR("Got a writeback response with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a writeback response with an invalid length: %" PRIu32 "", length);
     return;
   }
 
   prv_handle_wb_write_response(data, length);
 }
 
-static void prv_handle_sync_done_response(CommSession *session,
-                                          const uint8_t *data,
+static void prv_handle_sync_done_response(CommSession *session, const uint8_t *data,
                                           uint32_t length) {
   if (length < SYNC_DONE_RESPONSE_LENGTH) {
-    PBL_LOG_ERR("Got a sync done response with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a sync done response with an invalid length: %" PRIu32 "", length);
     return;
   }
 
@@ -207,12 +196,11 @@ static void prv_handle_version(CommSession *session, const uint8_t *data, uint32
   prv_send_response(session, (uint8_t *)&response, sizeof(response));
 }
 
-
 static void prv_handle_dirty_all(CommSession *session, const uint8_t *data, uint32_t length) {
   // Message format: [token (2 bytes)] [db_id (1 byte)]
   static const uint8_t MIN_DIRTY_ALL_LENGTH = sizeof(BlobDBToken) + sizeof(BlobDBId);
   if (length < MIN_DIRTY_ALL_LENGTH) {
-    PBL_LOG_ERR("Got a dirty_all with an invalid length: %"PRIu32"", length);
+    PBL_LOG_ERR("Got a dirty_all with an invalid length: %" PRIu32 "", length);
     return;
   }
 
@@ -241,10 +229,7 @@ static void prv_handle_dirty_all(CommSession *session, const uint8_t *data, uint
   prv_send_response(session, (uint8_t *)&response, sizeof(response));
 }
 
-
-static void prv_send_error_response(CommSession *session,
-                                    BlobDBCommand cmd,
-                                    const uint8_t *data,
+static void prv_send_error_response(CommSession *session, BlobDBCommand cmd, const uint8_t *data,
                                     BlobDBResponse response_code) {
   struct PACKED ErrorResponseMsg {
     BlobDBCommand cmd;
@@ -259,8 +244,8 @@ static void prv_send_error_response(CommSession *session,
   prv_send_response(session, (uint8_t *)&response, sizeof(response));
 }
 
-static void prv_blob_db_msg_decode_and_handle(
-    CommSession *session, BlobDBCommand cmd, const uint8_t *data, size_t data_length) {
+static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBCommand cmd,
+                                              const uint8_t *data, size_t data_length) {
   switch (cmd) {
     case BLOB_DB_COMMAND_DIRTY_DBS:
       PBL_LOG_DBG("Got DIRTY DBs");
@@ -297,12 +282,8 @@ static void prv_blob_db_msg_decode_and_handle(
   }
 }
 
-static uint16_t prv_send_write_writeback(BlobDBCommand cmd,
-                                         BlobDBId db_id,
-                                         time_t last_updated,
-                                         const uint8_t *key,
-                                         int key_len,
-                                         const uint8_t *val,
+static uint16_t prv_send_write_writeback(BlobDBCommand cmd, BlobDBId db_id, time_t last_updated,
+                                         const uint8_t *key, int key_len, const uint8_t *val,
                                          int val_len) {
   struct PACKED WritebackMetadata {
     BlobDBCommand cmd;
@@ -316,16 +297,12 @@ static uint16_t prv_send_write_writeback(BlobDBCommand cmd,
     .last_updated = last_updated,
   };
 
-  size_t writeback_length = sizeof(writeback_metadata) +
-                            sizeof(uint8_t) /* key length size*/ +
-                            key_len +
-                            sizeof(uint16_t) /* val length size */ +
-                            val_len;
+  size_t writeback_length = sizeof(writeback_metadata) + sizeof(uint8_t) /* key length size*/ +
+                            key_len + sizeof(uint16_t) /* val length size */ + val_len;
 
-  SendBuffer *sb = comm_session_send_buffer_begin_write(comm_session_get_system_session(),
-                                                        BLOB_DB2_ENDPOINT_ID,
-                                                        writeback_length,
-                                                        COMM_SESSION_DEFAULT_TIMEOUT);
+  SendBuffer *sb =
+      comm_session_send_buffer_begin_write(comm_session_get_system_session(), BLOB_DB2_ENDPOINT_ID,
+                                           writeback_length, COMM_SESSION_DEFAULT_TIMEOUT);
   if (sb) {
     comm_session_send_buffer_write(sb, (uint8_t *)&writeback_metadata, sizeof(writeback_metadata));
     comm_session_send_buffer_write(sb, (uint8_t *)&key_len, sizeof(uint8_t));
@@ -338,26 +315,18 @@ static uint16_t prv_send_write_writeback(BlobDBCommand cmd,
   return writeback_metadata.token;
 }
 
-BlobDBToken blob_db_endpoint_send_write(BlobDBId db_id,
-                                        time_t last_updated,
-                                        const void *key,
-                                        int key_len,
-                                        const void *val,
-                                        int val_len) {
-  BlobDBToken token = prv_send_write_writeback(BLOB_DB_COMMAND_WRITE, db_id, last_updated,
-                                               key, key_len, val, val_len);
+BlobDBToken blob_db_endpoint_send_write(BlobDBId db_id, time_t last_updated, const void *key,
+                                        int key_len, const void *val, int val_len) {
+  BlobDBToken token = prv_send_write_writeback(BLOB_DB_COMMAND_WRITE, db_id, last_updated, key,
+                                               key_len, val, val_len);
 
   return token;
 }
 
-BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id,
-                                            time_t last_updated,
-                                            const void *key,
-                                            int key_len,
-                                            const void *val,
-                                            int val_len) {
-  BlobDBToken token = prv_send_write_writeback(BLOB_DB_COMMAND_WRITEBACK, db_id, last_updated,
-                                               key, key_len, val, val_len);
+BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id, time_t last_updated, const void *key,
+                                            int key_len, const void *val, int val_len) {
+  BlobDBToken token = prv_send_write_writeback(BLOB_DB_COMMAND_WRITEBACK, db_id, last_updated, key,
+                                               key_len, val, val_len);
 
   return token;
 }
@@ -375,14 +344,11 @@ void blob_db_endpoint_send_sync_done(BlobDBId db_id) {
 
   PBL_LOG_DBG("Sending sync done for db: %d", db_id);
 
-  comm_session_send_data(comm_session_get_system_session(),
-                         BLOB_DB2_ENDPOINT_ID,
-                         (uint8_t *)&msg,
-                         sizeof(msg),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  comm_session_send_data(comm_session_get_system_session(), BLOB_DB2_ENDPOINT_ID, (uint8_t *)&msg,
+                         sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-void blob_db2_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
+void blob_db2_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
 
   // Each BlobDB message is required to have at least a Command and a Token

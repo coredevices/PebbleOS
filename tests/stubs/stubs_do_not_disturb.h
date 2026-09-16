@@ -10,10 +10,14 @@ bool WEAK do_not_disturb_is_active(void) {
   return false;
 }
 
-void WEAK do_not_disturb_init(void) {}
+void WEAK do_not_disturb_init(void) {
+}
 
-void WEAK do_not_disturb_manual_toggle_with_dialog(void) {}
+void WEAK do_not_disturb_manual_toggle_with_dialog(void) {
+}
 
-void WEAK do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSource source) {}
+void WEAK do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSource source) {
+}
 
-void WEAK do_not_disturb_handle_pref_synced(void) {}
+void WEAK do_not_disturb_handle_pref_synced(void) {
+}

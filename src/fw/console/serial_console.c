@@ -19,7 +19,7 @@ static bool s_serial_console_initialized;
 
 static bool s_prompt_enabled = false;
 
-static void logging_handle_character(char c, bool* should_context_switch) {
+static void logging_handle_character(char c, bool *should_context_switch) {
 #ifndef CONFIG_PROMPT
   return;
 #endif
@@ -66,7 +66,7 @@ void serial_console_enable_prompt(void) {
   s_prompt_enabled = true;
 }
 
-void serial_console_write_log_message(const char* msg) {
+void serial_console_write_log_message(const char *msg) {
   while (*msg) {
     dbgserial_putchar(*(msg++));
   }
