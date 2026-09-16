@@ -169,6 +169,11 @@ bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t wid
 static bool s_prefs_music_show_volume_controls;
 static bool s_prefs_music_show_progress_bar;
 static bool s_prefs_music_show_album_art;
+static bool s_left_handed;
+
+bool sys_display_orientation_is_left(void) {
+  return s_left_handed;
+}
 
 bool shell_prefs_get_music_show_volume_controls(void) {
   return s_prefs_music_show_volume_controls;
@@ -259,6 +264,7 @@ GContext *graphics_context_get_current_context(void) {
 }
 
 void test_music__initialize(void) {
+  s_left_handed = false;
   s_music_title[0] = '\0';
   s_music_artist[0] = '\0';
   s_music_play_state = MusicPlayStateUnknown;
@@ -502,5 +508,39 @@ void test_music__album_art_pref_toggled_off(void) {
 
   prv_render();
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_NAMED_PBI_FILE("test_music__playing")));
+#endif
+}
+
+void test_music__left_hand_content_stays_beside_bar(void) {
+  s_left_handed = true;
+  prv_set_now_playing("Just Like Heaven", "The Cure");
+  s_music_play_state = MusicPlayStatePlaying;
+  prv_launch_app_and_render();
+  MusicAppData *data = app_state_get_user_data();
+  cl_assert_equal_i(data->action_bar.layer.frame.origin.x, 0);
+#if PBL_RECT
+  GRect icon_frame;
+  layer_get_global_frame(&data->cassette_layer.layer, &icon_frame);
+  cl_assert_equal_i(icon_frame.origin.x, ACTION_BAR_WIDTH + prv_config()->horizontal_margin);
+  cl_assert_equal_i(data->artist_text_layer.layer.frame.origin.x,
+                    ACTION_BAR_WIDTH + prv_config()->horizontal_margin);
+#endif
+}
+
+void test_music__left_hand_album_art_uses_content_bounds(void) {
+#if PBL_RECT && MUSIC_ALBUM_ART_SUPPORTED
+  s_left_handed = true;
+  prv_set_now_playing("Just Like Heaven", "The Cure");
+  s_music_play_state = MusicPlayStatePlaying;
+  s_prefs_music_show_album_art = true;
+  prv_receive_album_art();
+  prv_launch_app_and_render();
+  MusicAppData *data = app_state_get_user_data();
+  cl_assert(data->has_album_art);
+  cl_assert_equal_i(data->album_art_layer.frame.origin.x, ACTION_BAR_WIDTH);
+  cl_assert_equal_i(grect_get_max_x(&data->album_art_layer.frame), DISP_COLS);
+  cl_assert_equal_i(data->artist_text_layer.layer.frame.origin.x, ACTION_BAR_WIDTH);
+  const GRect title = prv_art_title_rect();
+  cl_assert_equal_i(grect_get_max_x(&title), DISP_COLS - 7);
 #endif
 }

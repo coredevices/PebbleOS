@@ -129,6 +129,7 @@ typedef struct {
   void *context;
   ClickConfigProvider click_config_provider;
   unsigned is_highlighted:NUM_ACTION_BAR_ITEMS;
+  unsigned on_left:1;
   struct AppTimer *redraw_timer;
   GColor8 background_color;
   ActionBarLayerIconPressAnimation animation[NUM_ACTION_BAR_ITEMS];
