@@ -12,3 +12,8 @@ pbl_clar_test(test_remote_input
     src/fw/kernel/remote_input.c
   DEFINES CONFIG_SERVICE_TOUCH
 )
+
+pbl_clar_test(test_system_version_capabilities
+  SOURCES
+    src/fw/kernel/system_version_capabilities.c
+)

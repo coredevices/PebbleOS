@@ -61,6 +61,13 @@ static uint32_t s_music_track_pos_ms;
 static uint32_t s_music_track_length_ms;
 static bool s_music_needs_user_to_start_playback;
 static bool s_music_progress_supported;
+static bool s_music_output_routing_supported;
+static MusicOutputRouteStatus s_music_output_route_status;
+static MusicOutputRoute s_music_output_routes[MUSIC_OUTPUT_ROUTE_MAX_COUNT];
+static uint8_t s_music_output_route_count;
+static unsigned int s_music_output_route_request_count;
+static uint8_t s_selected_output_route_generation;
+static uint8_t s_selected_output_route_id;
 
 void music_get_now_playing(char *title, char *artist, char *album) {
   if (title) {
@@ -85,6 +92,47 @@ void music_get_pos(uint32_t *track_pos_ms, uint32_t *track_length_ms) {
 
 bool music_is_progress_reporting_supported(void) {
   return s_music_progress_supported;
+}
+
+bool music_is_output_routing_supported(void) {
+  return s_music_output_routing_supported;
+}
+
+MusicOutputRouteStatus music_get_output_route_status(void) {
+  return s_music_output_route_status;
+}
+
+uint8_t music_get_output_route_count(void) {
+  return s_music_output_route_count;
+}
+
+uint8_t music_get_output_routes(MusicOutputRouteStatus *status_out, MusicOutputRoute *routes_out,
+                                uint8_t max_count) {
+  *status_out = s_music_output_route_status;
+  const uint8_t count = MIN(s_music_output_route_count, max_count);
+  if (count) {
+    memcpy(routes_out, s_music_output_routes, count * sizeof(*routes_out));
+  }
+  return count;
+}
+
+bool music_get_output_route(uint8_t index, MusicOutputRoute *route_out) {
+  if (index >= s_music_output_route_count) {
+    return false;
+  }
+  *route_out = s_music_output_routes[index];
+  return true;
+}
+
+void music_request_output_routes(void) {
+  s_music_output_route_request_count++;
+  s_music_output_route_status = MusicOutputRouteStatusLoading;
+  s_music_output_route_count = 0;
+}
+
+void music_select_output_route(uint8_t generation, uint8_t route_id) {
+  s_selected_output_route_generation = generation;
+  s_selected_output_route_id = route_id;
 }
 
 bool music_needs_user_to_start_playback_on_phone(void) {
@@ -182,10 +230,45 @@ bool shell_prefs_get_music_show_album_art(void) {
   return s_prefs_music_show_album_art;
 }
 
+GColor shell_prefs_get_theme_highlight_color(void) {
+  return GColorWhite;
+}
+
 // Misc stubs
 /////////////////////
 
+static const char *s_menu_cell_title;
+static const char *s_menu_cell_subtitle;
+static unsigned int s_menu_reload_count;
+
 void app_event_loop(void) {}
+
+void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {}
+
+void menu_layer_deinit(MenuLayer *menu_layer) {}
+
+Layer *menu_layer_get_layer(const MenuLayer *menu_layer) {
+  return (Layer *)menu_layer;
+}
+
+void menu_layer_set_callbacks(MenuLayer *menu_layer, void *callback_context,
+                              const MenuLayerCallbacks *callbacks) {}
+
+void menu_layer_set_click_config_onto_window(MenuLayer *menu_layer, Window *window) {}
+
+void menu_layer_reload_data(MenuLayer *menu_layer) {
+  s_menu_reload_count++;
+}
+
+void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {}
+
+void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {}
+
+void menu_cell_basic_draw(GContext *ctx, const Layer *cell_layer, const char *title,
+                          const char *subtitle, GBitmap *icon) {
+  s_menu_cell_title = title;
+  s_menu_cell_subtitle = subtitle;
+}
 
 void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {}
 
@@ -267,6 +350,15 @@ void test_music__initialize(void) {
   s_music_needs_user_to_start_playback = false;
   s_music_progress_supported = false;
   s_music_now_playing_generation = 0;
+  s_music_output_routing_supported = false;
+  s_music_output_route_status = MusicOutputRouteStatusUnsupported;
+  s_music_output_route_count = 0;
+  s_music_output_route_request_count = 0;
+  s_selected_output_route_generation = 0;
+  s_selected_output_route_id = 0;
+  s_menu_cell_title = NULL;
+  s_menu_cell_subtitle = NULL;
+  s_menu_reload_count = 0;
 
   s_album_art = NULL;
   s_album_art_current = false;
@@ -280,7 +372,7 @@ void test_music__initialize(void) {
   s_prefs_music_show_progress_bar = true;
   s_prefs_music_show_album_art = false;
 
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -352,8 +444,7 @@ void test_music__playing(void) {
 }
 
 void test_music__playing_long_text(void) {
-  prv_set_now_playing("It Could Be The First Day Of Springtime",
-                      "Godspeed You! Black Emperor");
+  prv_set_now_playing("It Could Be The First Day Of Springtime", "Godspeed You! Black Emperor");
   s_music_play_state = MusicPlayStatePlaying;
   s_music_track_pos_ms = 754 * 1000;
   s_music_track_length_ms = 3945 * 1000;
@@ -463,14 +554,14 @@ void test_music__album_art_shown_when_received(void) {
 
   prv_receive_album_art();
   PebbleEvent event = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media = { .type = PebbleMediaEventTypeAlbumArtUpdated },
+      .type = PEBBLE_MEDIA_EVENT,
+      .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
   };
   prv_music_event_handler(&event, NULL);
 
   prv_render();
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap,
-                          TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
+  cl_check(
+      gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
 #endif
 }
 
@@ -492,15 +583,148 @@ void test_music__album_art_pref_toggled_off(void) {
 
   s_prefs_music_show_album_art = false;
   PebbleEvent event = {
-    .type = PEBBLE_PREF_CHANGE_EVENT,
-    .pref_change = {
-      .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
-      .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
-    },
+      .type = PEBBLE_PREF_CHANGE_EVENT,
+      .pref_change =
+          {
+              .key = MUSIC_SHOW_ALBUM_ART_PREF_KEY,
+              .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
+          },
   };
   prv_pref_change_handler(&event, NULL);
 
   prv_render();
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_NAMED_PBI_FILE("test_music__playing")));
 #endif
+}
+
+void test_music__output_route_rows_and_selection(void) {
+  s_music_output_route_status = MusicOutputRouteStatusAvailable;
+  s_music_output_route_count = 2;
+  s_music_output_routes[0] = (MusicOutputRoute){
+      .id = 2,
+      .generation = 7,
+      .selected = true,
+      .name = "Phone",
+  };
+  s_music_output_routes[1] = (MusicOutputRoute){
+      .id = 5,
+      .generation = 7,
+      .name = "Nest Mini",
+  };
+
+  MusicOutputWindow output_window = {};
+  cl_assert(prv_output_update_snapshot(&output_window));
+  cl_assert_equal_i(prv_output_get_num_rows(NULL, 0, &output_window), 2);
+
+  MenuIndex selected_index = {.row = 0};
+  prv_output_draw_row(NULL, NULL, &selected_index, &output_window);
+  cl_assert_equal_s(s_menu_cell_title, "Phone");
+  cl_assert_equal_s(s_menu_cell_subtitle, "Current");
+
+  s_music_output_routes[1].generation = 8;
+  s_music_output_routes[1].id = 6;
+  cl_assert(!prv_output_update_snapshot(&output_window));
+
+  MenuIndex nest_index = {.row = 1};
+  prv_output_select(NULL, &nest_index, &output_window);
+  cl_assert_equal_i(s_selected_output_route_generation, 7);
+  cl_assert_equal_i(s_selected_output_route_id, 5);
+}
+
+void test_music__output_route_snapshot_resets_when_unavailable(void) {
+  s_music_output_route_status = MusicOutputRouteStatusAvailable;
+  s_music_output_route_count = 1;
+  s_music_output_routes[0] = (MusicOutputRoute){
+      .id = 2,
+      .generation = 7,
+      .name = "Phone",
+  };
+
+  MusicOutputWindow output_window = {};
+  cl_assert(prv_output_update_snapshot(&output_window));
+
+  s_music_output_route_status = MusicOutputRouteStatusUnsupported;
+  s_music_output_route_count = 0;
+  cl_assert(prv_output_update_snapshot(&output_window));
+  cl_assert_equal_i(output_window.status, MusicOutputRouteStatusUnsupported);
+  cl_assert_equal_i(output_window.route_count, 0);
+  cl_assert(!output_window.has_available_snapshot);
+  cl_assert_equal_i(prv_output_get_num_rows(NULL, 0, &output_window), 1);
+}
+
+void test_music__output_route_snapshot_resets_on_event(void) {
+  s_music_output_route_status = MusicOutputRouteStatusAvailable;
+  s_music_output_route_count = 1;
+  s_music_output_routes[0] = (MusicOutputRoute){
+      .id = 2,
+      .generation = 7,
+      .name = "Phone",
+  };
+
+  MusicOutputWindow output_window = {};
+  MusicAppData data = {
+      .output_window = &output_window,
+  };
+  app_state_set_user_data(&data);
+  cl_assert(prv_output_update_snapshot(&output_window));
+
+  s_music_output_route_status = MusicOutputRouteStatusUnsupported;
+  s_music_output_route_count = 0;
+  PebbleEvent event = {
+      .type = PEBBLE_MEDIA_EVENT,
+      .media = {.type = PebbleMediaEventTypeOutputRoutesChanged},
+  };
+  prv_music_event_handler(&event, NULL);
+
+  cl_assert_equal_i(output_window.status, MusicOutputRouteStatusUnsupported);
+  cl_assert_equal_i(output_window.route_count, 0);
+  cl_assert(!output_window.has_available_snapshot);
+  cl_assert_equal_i(s_menu_reload_count, 1);
+  app_state_set_user_data(NULL);
+}
+
+void test_music__output_route_status_row_retries(void) {
+  s_music_output_route_status = MusicOutputRouteStatusPermissionRequired;
+
+  MusicOutputWindow output_window = {};
+  cl_assert(prv_output_update_snapshot(&output_window));
+  cl_assert_equal_i(prv_output_get_num_rows(NULL, 0, &output_window), 1);
+
+  MenuIndex index = {};
+  prv_output_draw_row(NULL, NULL, &index, &output_window);
+  cl_assert_equal_s(s_menu_cell_title, "Permission required");
+  cl_assert_equal_s(s_menu_cell_subtitle, "Enable in Pebble app");
+
+  prv_output_select(NULL, &index, &output_window);
+  cl_assert_equal_i(s_music_output_route_request_count, 1);
+  cl_assert_equal_i(output_window.status, MusicOutputRouteStatusLoading);
+}
+
+void test_music__output_picker_requires_phone_capability(void) {
+  MusicAppData data = {};
+  prv_push_output_window(&data);
+
+  cl_assert(data.output_window == NULL);
+  cl_assert_equal_i(s_music_output_route_request_count, 0);
+}
+
+void test_music__output_picker_lifecycle(void) {
+  s_music_output_routing_supported = true;
+  MusicAppData data = {};
+  prv_push_output_window(&data);
+
+  cl_assert(data.output_window != NULL);
+  cl_assert_equal_i(s_music_output_route_request_count, 1);
+
+  prv_output_window_unload(&data.output_window->window);
+  cl_assert(data.output_window == NULL);
+}
+
+void test_music__output_picker_long_press_modes(void) {
+  cl_assert_equal_i(prv_select_long_press_action(false), SelectLongPressActionNone);
+  cl_assert_equal_i(prv_select_long_press_action(true), SelectLongPressActionPlayPause);
+
+  s_music_output_routing_supported = true;
+  cl_assert_equal_i(prv_select_long_press_action(false), SelectLongPressActionOutput);
+  cl_assert_equal_i(prv_select_long_press_action(true), SelectLongPressActionOutput);
 }

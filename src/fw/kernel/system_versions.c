@@ -14,8 +14,7 @@
 #include "pbl/services/comm_session/session_remote_version.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/insights_settings.h"
-#include "pbl/services/notifications/notification_image.h"
-#include "shell/system_app_ids.auto.h"
+#include "kernel/system_version_capabilities.h"
 #include "system/bootbits.h"
 #include <pbl/logging/logging.h>
 #include "system/version.h"
@@ -108,39 +107,7 @@ static void prv_send_watch_versions(CommSession *session) {
   versions_msg.lang_version = htons(i18n_get_version());
   PBL_LOG_DBG("Sending lang version: %d", versions_msg.lang_version);
 
-  // Set the capabilities as zero, effectively saying that we don't support anything.
-  versions_msg.capabilities.flags = 0;
-  // Assign the individual bits for the capabilities that we support.
-  versions_msg.capabilities.run_state_support = 1;
-  versions_msg.capabilities.infinite_log_dumping_support = 1;
-  versions_msg.capabilities.extended_music_service = 1;
-  versions_msg.capabilities.extended_notification_service = 1;
-  versions_msg.capabilities.lang_pack_support = 1;
-  versions_msg.capabilities.app_message_8k_support = 1;
-  versions_msg.capabilities.activity_insights_support = 1;
-  versions_msg.capabilities.voice_api_support = 1;
-  versions_msg.capabilities.unread_coredump_support = 1;
-  // FIXME: PBL-31627 In PRF, APP_ID_SEND_TEXT isn't defined - requiring the #ifdef and ternary op.
-#ifdef APP_ID_SEND_TEXT
-  versions_msg.capabilities.send_text_support = (APP_ID_SEND_TEXT != INSTALL_ID_INVALID) ? 1 : 0;
-#endif
-  versions_msg.capabilities.notification_filtering_support = 1;
-#ifdef APP_ID_WEATHER
-  versions_msg.capabilities.weather_app_support = (APP_ID_WEATHER != INSTALL_ID_INVALID) ? 1 : 0;
-#endif
-#ifdef APP_ID_REMINDERS
-  versions_msg.capabilities.reminders_app_support =
-      (APP_ID_REMINDERS != INSTALL_ID_INVALID) ? 1 : 0;
-#endif
-#ifdef APP_ID_WORKOUT
-  versions_msg.capabilities.workout_app_support = (APP_ID_WORKOUT != INSTALL_ID_INVALID) ? 1 : 0;
-#endif
-  versions_msg.capabilities.continue_fw_install_across_disconnect_support = 1;
-  versions_msg.capabilities.smooth_fw_install_progress_support = 1;
-  versions_msg.capabilities.custom_vibe_pattern_support = 1;
-  versions_msg.capabilities.blob_db_version_support = 1;
-  versions_msg.capabilities.weather_db_v4_support = 1;
-  versions_msg.capabilities.notification_image_support = NOTIFICATION_IMAGE_SUPPORTED;
+  versions_msg.capabilities = system_version_get_capabilities();
   bt_local_id_copy_address(&versions_msg.device_address);
 
   versions_msg.system_resources_version = resource_get_system_version();
