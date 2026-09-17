@@ -84,5 +84,7 @@ pbl_library_compile_options(
   -Wno-unused-function
   -Wno-sign-compare
   -Wno-old-style-declaration
+  # hal_timer.c trips GCC 13's flow analysis outside the docker image
+  -Wno-maybe-uninitialized
   -Wimplicit-fallthrough=1
 )
