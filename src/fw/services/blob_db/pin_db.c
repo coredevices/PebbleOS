@@ -215,9 +215,20 @@ bool pin_db_has_entry_expired(time_t pin_end_timestamp) {
 }
 
 status_t pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
-  // Records inserted from the phone are already synced
+  if (val_len < (int)sizeof(SerializedTimelineItemHeader)) {
+    return E_INVALID_ARGUMENT;
+  }
+
+  // Records inserted from the phone are already synced. from_watch is what gates watch-local
+  // actions, so clear it on the way in rather than trusting whatever the phone sent.
   const bool mark_synced = true;
-  return prv_insert_serialized_item(key, key_len, val, val_len, mark_synced);
+  uint8_t *item_copy = kernel_malloc_check(val_len);
+  memcpy(item_copy, val, val_len);
+  ((SerializedTimelineItemHeader *)item_copy)->common.from_watch = false;
+
+  const status_t rv = prv_insert_serialized_item(key, key_len, item_copy, val_len, mark_synced);
+  kernel_free(item_copy);
+  return rv;
 }
 
 int pin_db_get_len(const uint8_t *key, int key_len) {
