@@ -8,7 +8,7 @@
 #include "pbl/services/speaker/track.h"
 
 #define NOTE(midi, wave, ms) \
-  { .midi_note = (midi), .waveform = (wave), .duration_ms = (ms), .velocity = 0, .reserved = 0 }
+  {.midi_note = (midi), .waveform = (wave), .duration_ms = (ms), .velocity = 0, .reserved = 0}
 
 // MIDI: C5=72, E5=76, G5=79, B5=83, C6=84.
 
@@ -20,14 +20,14 @@ static const SpeakerNote s_ping[] = {
 // Doorbell — classic two-note ding-dong, E5 down to C5.
 static const SpeakerNote s_doorbell[] = {
   NOTE(76, SpeakerWaveformSine, 250),
-  NOTE(0,  SpeakerWaveformSine, 40),
+  NOTE(0, SpeakerWaveformSine, 40),
   NOTE(72, SpeakerWaveformSine, 400),
 };
 
 // Trill — SMS-style double beep on B5 squares.
 static const SpeakerNote s_trill[] = {
   NOTE(83, SpeakerWaveformSquare, 80),
-  NOTE(0,  SpeakerWaveformSquare, 50),
+  NOTE(0, SpeakerWaveformSquare, 50),
   NOTE(83, SpeakerWaveformSquare, 80),
 };
 
@@ -51,24 +51,24 @@ static const SpeakerSample s_glass_sample = {
   .data = s_glass_pcm,
   .num_bytes = sizeof(s_glass_pcm),
   .format = SpeakerPcmFormat_16kHz_8bit,
-  .base_midi_note = 95,  // B6, the sample's own fundamental
+  .base_midi_note = 95, // B6, the sample's own fundamental
   .loop = false,
 };
 
 static const SpeakerNote s_glass_notes[] = {
-  { .midi_note = 95, .waveform = 0, .duration_ms = 280, .velocity = 0, .reserved = 0 },
+  {.midi_note = 95, .waveform = 0, .duration_ms = 280, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_pop_sample = {
   .data = s_pop_pcm,
   .num_bytes = sizeof(s_pop_pcm),
   .format = SpeakerPcmFormat_16kHz_8bit,
-  .base_midi_note = 91,  // G6, the ding the chirp lands on
+  .base_midi_note = 91, // G6, the ding the chirp lands on
   .loop = false,
 };
 
 static const SpeakerNote s_pop_notes[] = {
-  { .midi_note = 91, .waveform = 0, .duration_ms = 270, .velocity = 0, .reserved = 0 },
+  {.midi_note = 91, .waveform = 0, .duration_ms = 270, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_kalimba_sample = {
@@ -80,7 +80,7 @@ static const SpeakerSample s_kalimba_sample = {
 };
 
 static const SpeakerNote s_kalimba_notes[] = {
-  { .midi_note = 81, .waveform = 0, .duration_ms = 550, .velocity = 0, .reserved = 0 },
+  {.midi_note = 81, .waveform = 0, .duration_ms = 550, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_coin_sample = {
@@ -92,7 +92,7 @@ static const SpeakerSample s_coin_sample = {
 };
 
 static const SpeakerNote s_coin_notes[] = {
-  { .midi_note = 88, .waveform = 0, .duration_ms = 430, .velocity = 0, .reserved = 0 },
+  {.midi_note = 88, .waveform = 0, .duration_ms = 430, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_sonar_sample = {
@@ -104,7 +104,7 @@ static const SpeakerSample s_sonar_sample = {
 };
 
 static const SpeakerNote s_sonar_notes[] = {
-  { .midi_note = 78, .waveform = 0, .duration_ms = 580, .velocity = 0, .reserved = 0 },
+  {.midi_note = 78, .waveform = 0, .duration_ms = 580, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_bounce_sample = {
@@ -116,7 +116,7 @@ static const SpeakerSample s_bounce_sample = {
 };
 
 static const SpeakerNote s_bounce_notes[] = {
-  { .midi_note = 84, .waveform = 0, .duration_ms = 470, .velocity = 0, .reserved = 0 },
+  {.midi_note = 84, .waveform = 0, .duration_ms = 470, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_chirp_sample = {
@@ -128,7 +128,7 @@ static const SpeakerSample s_chirp_sample = {
 };
 
 static const SpeakerNote s_chirp_notes[] = {
-  { .midi_note = 101, .waveform = 0, .duration_ms = 270, .velocity = 0, .reserved = 0 },
+  {.midi_note = 101, .waveform = 0, .duration_ms = 270, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_bloom_sample = {
@@ -140,7 +140,7 @@ static const SpeakerSample s_bloom_sample = {
 };
 
 static const SpeakerNote s_bloom_notes[] = {
-  { .midi_note = 72, .waveform = 0, .duration_ms = 600, .velocity = 0, .reserved = 0 },
+  {.midi_note = 72, .waveform = 0, .duration_ms = 600, .velocity = 0, .reserved = 0},
 };
 
 static const SpeakerSample s_sparkle_sample = {
@@ -152,47 +152,53 @@ static const SpeakerSample s_sparkle_sample = {
 };
 
 static const SpeakerNote s_sparkle_notes[] = {
-  { .midi_note = 100, .waveform = 0, .duration_ms = 500, .velocity = 0, .reserved = 0 },
+  {.midi_note = 100, .waveform = 0, .duration_ms = 500, .velocity = 0, .reserved = 0},
 };
 
-#endif  // CONFIG_NOTIFICATION_SOUND_SAMPLES
-
+#endif // CONFIG_NOTIFICATION_SOUND_SAMPLES
 
 static const struct {
   const SpeakerNote *notes;
   uint32_t count;
   const char *name;
-  const SpeakerSample *sample;  // non-NULL: play via the track player
+  const SpeakerSample *sample; // non-NULL: play via the track player
 } s_sounds[NotificationSound_Count] = {
-  [NotificationSound_None]     = { NULL, 0, i18n_noop("Off") },
-  [NotificationSound_Ping]     = { s_ping, sizeof(s_ping) / sizeof(s_ping[0]),
-                                   i18n_noop("Ping") },
-  [NotificationSound_Doorbell] = { s_doorbell, sizeof(s_doorbell) / sizeof(s_doorbell[0]),
-                                   i18n_noop("Doorbell") },
-  [NotificationSound_Trill]    = { s_trill, sizeof(s_trill) / sizeof(s_trill[0]),
-                                   i18n_noop("Trill") },
-  [NotificationSound_Ascent]   = { s_ascent, sizeof(s_ascent) / sizeof(s_ascent[0]),
-                                   i18n_noop("Ascent") },
+  [NotificationSound_None] = {NULL, 0, i18n_noop("Off")},
+  [NotificationSound_Ping] = {s_ping, sizeof(s_ping) / sizeof(s_ping[0]), i18n_noop("Ping")},
+  [NotificationSound_Doorbell] =
+      {s_doorbell, sizeof(s_doorbell) / sizeof(s_doorbell[0]), i18n_noop("Doorbell")},
+  [NotificationSound_Trill] = {s_trill, sizeof(s_trill) / sizeof(s_trill[0]), i18n_noop("Trill")},
+  [NotificationSound_Ascent] =
+      {s_ascent, sizeof(s_ascent) / sizeof(s_ascent[0]), i18n_noop("Ascent")},
 #if CONFIG_NOTIFICATION_SOUND_SAMPLES
-  [NotificationSound_Glass]    = { s_glass_notes, sizeof(s_glass_notes) / sizeof(s_glass_notes[0]),
-                                   i18n_noop("Glass"), &s_glass_sample },
-  [NotificationSound_Pop]      = { s_pop_notes, sizeof(s_pop_notes) / sizeof(s_pop_notes[0]),
-                                   i18n_noop("Pop"), &s_pop_sample },
-  [NotificationSound_Kalimba]  = { s_kalimba_notes, sizeof(s_kalimba_notes) / sizeof(s_kalimba_notes[0]),
-                                   i18n_noop("Kalimba"), &s_kalimba_sample },
-  [NotificationSound_Coin]     = { s_coin_notes, sizeof(s_coin_notes) / sizeof(s_coin_notes[0]),
-                                   i18n_noop("Coin"), &s_coin_sample },
-  [NotificationSound_Sonar]    = { s_sonar_notes, sizeof(s_sonar_notes) / sizeof(s_sonar_notes[0]),
-                                   i18n_noop("Sonar"), &s_sonar_sample },
-  [NotificationSound_Bounce]   = { s_bounce_notes, sizeof(s_bounce_notes) / sizeof(s_bounce_notes[0]),
-                                   i18n_noop("Bounce"), &s_bounce_sample },
-  [NotificationSound_Chirp]    = { s_chirp_notes, sizeof(s_chirp_notes) / sizeof(s_chirp_notes[0]),
-                                   i18n_noop("Chirp"), &s_chirp_sample },
-  [NotificationSound_Bloom]    = { s_bloom_notes, sizeof(s_bloom_notes) / sizeof(s_bloom_notes[0]),
-                                   i18n_noop("Bloom"), &s_bloom_sample },
-  [NotificationSound_Sparkle]  = { s_sparkle_notes, sizeof(s_sparkle_notes) / sizeof(s_sparkle_notes[0]),
-                                   i18n_noop("Sparkle"), &s_sparkle_sample },
-#endif  // CONFIG_NOTIFICATION_SOUND_SAMPLES
+  [NotificationSound_Glass] =
+      {s_glass_notes, sizeof(s_glass_notes) / sizeof(s_glass_notes[0]), i18n_noop("Glass"),
+       &s_glass_sample},
+  [NotificationSound_Pop] =
+      {s_pop_notes, sizeof(s_pop_notes) / sizeof(s_pop_notes[0]), i18n_noop("Pop"), &s_pop_sample},
+  [NotificationSound_Kalimba] =
+      {s_kalimba_notes, sizeof(s_kalimba_notes) / sizeof(s_kalimba_notes[0]), i18n_noop("Kalimba"),
+       &s_kalimba_sample},
+  [NotificationSound_Coin] =
+      {s_coin_notes, sizeof(s_coin_notes) / sizeof(s_coin_notes[0]), i18n_noop("Coin"),
+       &s_coin_sample},
+  [NotificationSound_Sonar] =
+      {s_sonar_notes, sizeof(s_sonar_notes) / sizeof(s_sonar_notes[0]), i18n_noop("Sonar"),
+       &s_sonar_sample},
+  [NotificationSound_Bounce] =
+      {s_bounce_notes, sizeof(s_bounce_notes) / sizeof(s_bounce_notes[0]), i18n_noop("Bounce"),
+       &s_bounce_sample},
+  [NotificationSound_Chirp] =
+      {s_chirp_notes, sizeof(s_chirp_notes) / sizeof(s_chirp_notes[0]), i18n_noop("Chirp"),
+       &s_chirp_sample},
+  [NotificationSound_Bloom] =
+      {s_bloom_notes, sizeof(s_bloom_notes) / sizeof(s_bloom_notes[0]), i18n_noop("Bloom"),
+       &s_bloom_sample},
+  [NotificationSound_Sparkle] = {
+    s_sparkle_notes, sizeof(s_sparkle_notes) / sizeof(s_sparkle_notes[0]), i18n_noop("Sparkle"),
+    &s_sparkle_sample
+  },
+#endif // CONFIG_NOTIFICATION_SOUND_SAMPLES
 };
 
 _Static_assert(NotificationSound_Sparkle + 1 == NotificationSound_Count,
