@@ -44,7 +44,10 @@ native watchapps, all under `build/`:
 
 - `build/sdk/<platform>/include/pebble.h` — typedefs, defines and function
   prototypes for apps (plus `pebble_worker.h` for background workers and a
-  few version/fonts headers)
+  few version/fonts headers). Exported declarations are copied verbatim, so
+  the SDK also ships `pbl/kernel/compiler.h` and its backends, included from
+  `pebble.h`, and exported headers use its `PBL_*` macros rather than raw
+  `__attribute__`.
 - `build/sdk/<platform>/lib/libpebble.a` — static library containing
   trampolines that call the exported functions in flash
 - `build/src/fw/pebble.auto.c` — `g_pbl_system_tbl`, the table of function

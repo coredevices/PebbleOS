@@ -31,6 +31,21 @@ SRC_DIR = "src"
 INCLUDE_DIR = "include"
 LIB_DIR = "lib"
 
+COMPILER_HEADERS = (
+    "pbl/kernel/compiler.h",
+    "pbl/kernel/compiler/gcc.h",
+    "pbl/kernel/compiler/clang.h",
+)
+
+
+def copy_compiler_headers(pbl_src_dir, sdk_include_dir):
+    include_dir = path.join(path.dirname(pbl_src_dir), "include")
+    for header in COMPILER_HEADERS:
+        dest = path.join(sdk_include_dir, header)
+        os.makedirs(path.dirname(dest), exist_ok=True)
+        shutil.copy(path.join(include_dir, header), dest)
+
+
 PEBBLE_APP_H_TEXT = """\
 #include "pebble_fonts.h"
 #include "message_keys.auto.h"
@@ -250,6 +265,8 @@ if __name__ == "__main__":
         path.join(pbl_src_dir, "fw", "applib", "pebble_warn_unsupported_functions.h"),
         path.join(sdk_include_dir, "pebble_warn_unsupported_functions.h"),
     )
+
+    copy_compiler_headers(pbl_src_dir, sdk_include_dir)
 
     generate_shim_files(
         shim_config,
