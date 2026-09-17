@@ -82,9 +82,3 @@ void do_not_disturb_handle_pref_synced(void);
 void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e);
 
 void do_not_disturb_manual_toggle_with_dialog(void);
-
-#if UNITTEST
-#include "pbl/services/new_timer/new_timer.h"
-TimerID get_dnd_timer_id(void);
-void set_dnd_timer_id(TimerID id);
-#endif

@@ -418,7 +418,9 @@ pbl_clar_test(test_do_not_disturb
     src/fw/services/settings/settings_raw_iter.c
     src/fw/services/notifications/alerts_preferences.c
     src/fw/services/notifications/do_not_disturb.c
+    src/fw/services/cron/service.c
     src/fw/util/time/time.c
+    src/fw/util/time/mktime.c
     src/fw/util/crc8.c
     src/fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
