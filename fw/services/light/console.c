@@ -9,6 +9,17 @@
 #include <pbl/services/light.h>
 #include <pbl/shell/shell.h>
 
+#if defined(CONFIG_BACKLIGHT_SHELL) && defined(CONFIG_BACKLIGHT_HAS_COLOR)
+#include <errno.h>
+#include <string.h>
+
+#include <pbl/drivers/backlight.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/util/units.h>
+
+#include <shell/prefs.h>
+#endif
+
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 #include <string.h>
 
@@ -70,6 +81,48 @@ static int prv_cmd_backlight_test(const struct pbl_shell *sh, size_t argc, char 
 
 PBL_SHELL_SUBCMD_ADD(sub_backlight, test, nullptr, "Turn the light on and print its state",
                      prv_cmd_backlight_test, 0, 0);
+#endif
+
+#if defined(CONFIG_BACKLIGHT_SHELL) && defined(CONFIG_BACKLIGHT_HAS_COLOR)
+static void prv_day_night_status(const struct pbl_shell *sh) {
+  struct pbl_tm now;
+
+  rtc_get_time_tm(&now);
+  pbl_shell_print(sh, "enabled=%d now=%02d:%02d sunrise=%u sunset=%u",
+                  backlight_day_night_color_is_enabled(), now.tm_hour, now.tm_min,
+                  backlight_get_sunrise_minute(), backlight_get_sunset_minute());
+  pbl_shell_print(sh, "day=%06" PRIx32 " night=%06" PRIx32, backlight_get_default_color(),
+                  backlight_get_night_color());
+}
+
+// Arms a green (day) -> red (night) switch one minute from now.
+static int prv_cmd_backlight_day_night(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (strcmp(argv[1], "start") == 0) {
+    struct pbl_tm now;
+
+    rtc_get_time_tm(&now);
+    const uint16_t sunrise = now.tm_hour * PBL_MIN_PER_HOUR + now.tm_min;
+    backlight_set_default_color(BACKLIGHT_COLOR_GREEN);
+    backlight_set_night_color(BACKLIGHT_COLOR_RED);
+    backlight_set_sunrise_minute(sunrise);
+    backlight_set_sunset_minute((sunrise + 1) % PBL_MIN_PER_DAY);
+    backlight_day_night_color_set_enabled(true);
+    light_enable(true);
+  } else if (strcmp(argv[1], "off") == 0) {
+    backlight_day_night_color_set_enabled(false);
+    light_enable(false);
+  } else if (strcmp(argv[1], "status") != 0) {
+    pbl_shell_error(sh, "usage: backlight daynight <start|status|off>");
+    return -EINVAL;
+  }
+
+  prv_day_night_status(sh);
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_backlight, daynight, nullptr,
+                     "Test the day/night color switch <start|status|off>",
+                     prv_cmd_backlight_day_night, 2, 0);
 #endif
 
 // Print raw, compensated, and lux values in one shot. Forces the backlight off
