@@ -204,7 +204,8 @@ static void prv_notification_window_add_notification(Uuid *id, NotificationType 
   }
 }
 
-static void prv_reload_swap_layer(NotificationWindowData *data) {
+//! @return true if the swap layer actually reloaded. A skipped reload announces no appearance.
+static bool prv_reload_swap_layer(NotificationWindowData *data) {
   // If the action menu is on the screen, then don't reload the swap layer.
   // The action menu's context is just a pointer to the swap layer's layout layer's context.
   // Reloading the swap layer will give the action menu a bogus timeline item pointer.
@@ -212,9 +213,35 @@ static void prv_reload_swap_layer(NotificationWindowData *data) {
   // notification window appears again
   if (data->action_menu && window_is_loaded((Window *)data->action_menu)) {
     data->notifications_modified = true;
-  } else {
-    swap_layer_reload_data(&data->swap_layer);
+    return false;
   }
+  swap_layer_reload_data(&data->swap_layer);
+  return true;
+}
+
+/////////////////////
+// Read tracking
+/////////////////////
+
+//! A notification only becomes read when the wearer deliberately engages with it: pressing back
+//! out of the stack, pressing select, scrolling onto it, dismissing it, or opening it in the
+//! notification history app. A popup that simply times out on its own stays unread - that is what
+//! makes an unread count meaningful to a watchface, which would otherwise see everything marked
+//! read the instant it was displayed.
+static void prv_mark_notification_read(Uuid *id, NotificationType type) {
+  if ((id == NULL) || uuid_is_invalid(id) || (type != NotificationMobile)) {
+    // Reminders live in reminder_db and are deleted once shown, so they are never unread.
+    return;
+  }
+  notification_storage_set_status(id, TimelineItemStatusRead);
+}
+
+static void prv_mark_current_notification_read(void) {
+  Uuid *id = notifications_presented_list_current();
+  if (id == NULL) {
+    return;
+  }
+  prv_mark_notification_read(id, notifications_presented_list_get_type(id));
 }
 
 /////////////////////
@@ -245,6 +272,7 @@ static void prv_dismiss_all(void *data, ActionMenu *action_menu) {
     Uuid *id = notifications_presented_list_relative(first_id, i);
     memcpy(&notif_list[i].id, id, sizeof(Uuid));
     notif_list[i].type = notifications_presented_list_get_type(id);
+    prv_mark_notification_read(id, notif_list[i].type);
   }
 
   PBL_LOG_DBG("Dismissing %d notifications", num_notifications);
@@ -988,6 +1016,10 @@ static void prv_action_menu_did_close(ActionMenu *action_menu, const ActionMenuI
 static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void *data) {
   NotificationWindowData *window_data = data;
 
+  // Before the early return below: pressing select is the wearer engaging with the notification
+  // whether or not it turns out to have an action menu to open.
+  prv_mark_current_notification_read();
+
   TimelineItem *item = prv_get_current_notification(window_data);
   if (!prv_should_provide_action_menu_for_item(window_data, item)) {
     return;
@@ -1022,6 +1054,7 @@ static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *d
 
 static void prv_back_button_single_click_handler(ClickRecognizerRef recognizer, void *data) {
   NotificationWindowData *window_data = data;
+  prv_mark_current_notification_read();
   prv_pop_notification_window(window_data);
 }
 
@@ -1170,10 +1203,28 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
   NotificationWindowData *data = context;
   TimelineItem *n = layout_get_context(layout);
   Uuid *id = &n->header.id;
+  Uuid outgoing_id = data->displayed_id;
+  data->displayed_id = *id;
   notifications_presented_list_set_current(id);
 #if NOTIFICATION_IMAGE_SUPPORTED
   prv_maybe_request_notification_image(layout, n);
 #endif
+  // Non-modal is the notification history app, where anything on screen was deliberately opened.
+  // In the modal popup only a scroll counts as engagement; rel_change == 0 is the notification
+  // presenting itself, which must not mark it read.
+  if (uuid_equal(&data->suppress_read_marking_for, id)) {
+    // This appearance was a programmatic swap, not the wearer scrolling. Clear it here rather
+    // than at the call site: the swap is animated, so did_appear lands well after
+    // notification_window_focus_notification() has returned.
+    data->suppress_read_marking_for = UUID_INVALID;
+  } else if (!data->is_modal || (rel_change != 0)) {
+    if ((rel_change != 0) && !uuid_equal(&outgoing_id, id)) {
+      // Scrolling away from a notification is engagement too. The popup opens on one the wearer
+      // never scrolls onto, so without this it would stay unread however long they read it.
+      prv_mark_notification_read(&outgoing_id, notifications_presented_list_get_type(&outgoing_id));
+    }
+    prv_mark_current_notification_read();
+  }
   if (data->first_notif_loaded || !data->is_modal) {
     layer_set_hidden(&data->action_button_layer, !prv_should_provide_action_menu_for_item(data, n));
   }
@@ -1278,6 +1329,9 @@ static void prv_init_notification_window(bool is_modal) {
   s_in_use = true;
   data->pop_timer_is_final = false;
   data->is_modal = is_modal;
+  // A focus that never produced its did_appear must not leak into the next window.
+  data->suppress_read_marking_for = UUID_INVALID;
+  data->displayed_id = UUID_INVALID;
   data->notification_app_id = UUID_INVALID;
   data->peek_layer_timer = EVENTED_TIMER_INVALID_ID;
   data->peek_animation = NULL;
@@ -1406,6 +1460,13 @@ void notification_window_add_notification_by_id(Uuid *id) {
 void notification_window_focus_notification(Uuid *id, bool animated) {
   NotificationWindowData *data = &s_notification_window_data;
 
+  // In the modal popup every path below moves the stack without the wearer touching anything.
+  // The notification app is the opposite: a focus there is the wearer opening a notification,
+  // which is exactly the engagement the count is meant to record.
+  if (data->is_modal) {
+    data->suppress_read_marking_for = *id;
+  }
+
   if (animated) {
 #if PBL_RECT
     Uuid *second_id =
@@ -1416,7 +1477,9 @@ void notification_window_focus_notification(Uuid *id, bool animated) {
       // to accomplish the animation effect, while still pleasing the SwapLayer
       // when it wants to retrieve the layouts it wants to.
       notifications_presented_list_set_current(second_id);
-      swap_layer_attempt_layer_swap(&data->swap_layer, ScrollDirectionUp);
+      if (!swap_layer_attempt_layer_swap(&data->swap_layer, ScrollDirectionUp)) {
+        data->suppress_read_marking_for = UUID_INVALID;
+      }
       return;
     }
 #else
@@ -1431,7 +1494,9 @@ void notification_window_focus_notification(Uuid *id, bool animated) {
   // Animated was set to false or there was no notification after the focusing one.
   // Just set the current notification and reload data.
   notifications_presented_list_set_current(id);
-  prv_reload_swap_layer(data);
+  if (!prv_reload_swap_layer(data)) {
+    data->suppress_read_marking_for = UUID_INVALID;
+  }
 }
 
 void notification_window_service_init(void) {
@@ -1457,7 +1522,10 @@ static void prv_handle_action_result(PebbleSysNotificationActionResult *action_r
 
   // the notification has been acted on. Remove it.
   NotificationWindowData *data = &s_notification_window_data;
-  notification_storage_set_status(&action_result->id, TimelineItemStatusActioned);
+  // Acting on a notification implies having read it. Status bits accumulate in storage, so this
+  // adds Read alongside Actioned rather than replacing it.
+  notification_storage_set_status(&action_result->id,
+                                  TimelineItemStatusActioned | TimelineItemStatusRead);
   data->notifications_modified = true;
 
   if (data->is_modal) {
@@ -1692,6 +1760,9 @@ void app_notification_window_add_new_notification_by_id(Uuid *id) {
   bool should_focus = (app_window_stack_get_top_window() == &data->window);
   notification_window_add_notification_by_id(id);
   if (should_focus) {
+    // This focus follows an incoming notification, not a wearer action. Suppress the arriving
+    // layout's appearance, which also preserves the notification it covers as unread.
+    data->suppress_read_marking_for = *id;
     const bool animated = true;
     notification_window_focus_notification(id, animated);
   }
