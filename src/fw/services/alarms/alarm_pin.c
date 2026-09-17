@@ -33,8 +33,16 @@ static void prv_set_edit_action_attributes(AttributeList *list, AlarmId id) {
 }
 
 // ----------------------------------------------------------------------------------------------
+static void prv_set_skip_action_attributes(AttributeList *list, AlarmId id) {
+  attribute_list_add_cstring(list, AttributeIdTitle, i18n_get("Skip", list));
+  attribute_list_add_uint32(list, AttributeIdLaunchCode, (uint32_t)id);
+}
+
+// ----------------------------------------------------------------------------------------------
 void alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind, Uuid *uuid_out) {
-  const unsigned num_actions = 1; // We are just supporting "edit" for now
+  // A "just once" alarm has no occurrence beyond this one to skip.
+  const bool can_skip = (kind != ALARM_KIND_JUST_ONCE);
+  const unsigned num_actions = can_skip ? 2 : 1;
   TimelineItemActionGroup action_group = {
     .num_actions = num_actions,
     .actions = task_zalloc_check(sizeof(TimelineItemAction) * num_actions),
@@ -48,6 +56,16 @@ void alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind
     .attr_list = edit_attr_list,
   };
 
+  AttributeList skip_attr_list = {0};
+  if (can_skip) {
+    prv_set_skip_action_attributes(&skip_attr_list, id);
+    action_group.actions[1] = (TimelineItemAction){
+      .id = (uint8_t)id,
+      .type = TimelineItemActionTypeAlarmSkip,
+      .attr_list = skip_attr_list,
+    };
+  }
+
   AttributeList pin_attr_list = {0};
   prv_set_pin_attributes(&pin_attr_list, type, kind);
   TimelineItem *item = timeline_item_create_with_attributes(
@@ -59,8 +77,10 @@ void alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind
 
   i18n_free_all(&pin_attr_list);
   i18n_free_all(&edit_attr_list);
+  i18n_free_all(&skip_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
   attribute_list_destroy_list(&edit_attr_list);
+  attribute_list_destroy_list(&skip_attr_list);
   task_free(action_group.actions);
 
   if (uuid_out) {

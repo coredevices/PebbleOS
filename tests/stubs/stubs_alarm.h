@@ -15,3 +15,6 @@ bool PBL_WEAK alarm_get_next_enabled_alarm(time_t *next_alarm_time_out) {
 bool PBL_WEAK alarm_is_next_enabled_alarm_smart(void) {
   return false;
 }
+
+void PBL_WEAK alarm_skip_occurrence(int id, time_t occurrence_time) {
+}

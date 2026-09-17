@@ -481,7 +481,7 @@ void test_alarm__pin_add(void) {
       (AlarmKind)attribute_get_uint8(pin_attr_list, AttributeIdAlarmKind, 0);
   cl_assert_equal_i(pin_alarm_kind, alarm_kind);
 
-  cl_assert_equal_i(s_last_timeline_item_added->action_group.num_actions, 1);
+  cl_assert_equal_i(s_last_timeline_item_added->action_group.num_actions, 2);
 
   const TimelineItemAction *alarm_action = s_last_timeline_item_added->action_group.actions;
   cl_assert_equal_i(alarm_action->id, dummy_alarm_id);
@@ -491,6 +491,21 @@ void test_alarm__pin_add(void) {
 
   const char *action_title = attribute_get_string(action_attr_list, AttributeIdTitle, NULL);
   cl_assert_equal_s(action_title, "Edit");
+
+  const TimelineItemAction *skip_action = &s_last_timeline_item_added->action_group.actions[1];
+  cl_assert_equal_i(skip_action->id, dummy_alarm_id);
+  cl_assert_equal_i(skip_action->type, TimelineItemActionTypeAlarmSkip);
+
+  const char *skip_title = attribute_get_string(&skip_action->attr_list, AttributeIdTitle, NULL);
+  cl_assert_equal_s(skip_title, "Skip");
+}
+
+void test_alarm__pin_add_just_once_has_no_skip_action(void) {
+  const AlarmId dummy_alarm_id = 0;
+  Uuid added_pin_uuid;
+  alarm_pin_add(s_monday, dummy_alarm_id, AlarmType_Basic, ALARM_KIND_JUST_ONCE, &added_pin_uuid);
+
+  cl_assert_equal_i(s_last_timeline_item_added->action_group.num_actions, 1);
 }
 
 void test_alarm__pin_remove(void) {

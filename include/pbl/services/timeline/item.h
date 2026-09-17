@@ -65,6 +65,8 @@ typedef enum {
   TimelineItemActionTypeRemoteRemove = 0x12,
   TimelineItemActionTypeAncsGeneric = 0x13,
   TimelineItemActionTypeBLEHRMStopSharing = 0x14,
+  //! Skips the next firing of a watch-local repeating alarm pin.
+  TimelineItemActionTypeAlarmSkip = 0x15,
 } TimelineItemActionType;
 
 //! Attribute identifiers for icons in the resource pack

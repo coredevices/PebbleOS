@@ -659,10 +659,13 @@ PBL_T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
     case TimelineItemActionTypeHttp:
     case TimelineItemActionTypeSnooze:
     case TimelineItemActionTypeRemove:
+    case TimelineItemActionTypeAlarmSkip:
     case TimelineItemActionTypeInsightResponse:
     case TimelineItemActionTypeComplete:
     case TimelineItemActionTypePostpone:
     case TimelineItemActionTypeRemoteRemove:
+      // These are handled locally too (see timeline_invoke_action), but still need the freeze +
+      // result-dialog plumbing that prv_invoke_local_action skips, same as Remove/Dismiss.
       return prv_invoke_remote_action(action_menu, action, pin, (void *)label);
     case TimelineItemActionTypeEmpty:
     case TimelineItemActionTypeUnknown:
