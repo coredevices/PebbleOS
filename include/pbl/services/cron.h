@@ -32,4 +32,7 @@ uint32_t cron_service_get_job_count(void);
 
 //! Run the cron timers if they've fired.
 void cron_service_wakeup(void);
+
+//! Execute time of the earliest scheduled job, or 0 when none is scheduled.
+time_t cron_service_get_next_execute_time(void);
 #endif

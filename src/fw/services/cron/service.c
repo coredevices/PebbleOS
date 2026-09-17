@@ -223,6 +223,13 @@ void cron_service_wakeup(void) {
   prv_timer_callback(NULL);
 }
 
+time_t cron_service_get_next_execute_time(void) {
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
+  const time_t rv = s_scheduled_jobs ? ((CronJob *)s_scheduled_jobs)->cached_execute_time : 0;
+  pbl_mutex_unlock(&s_list_mutex);
+  return rv;
+}
+
 // ---------------------------------------------------------------------------------------
 // The brains.
 typedef enum {
