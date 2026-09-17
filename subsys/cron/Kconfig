@@ -1,14 +1,15 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config SERVICE_CRON
+config CRON
     bool "Cron"
     help
-      Cron-like scheduler for periodic jobs.
+      Wall-clock based job scheduler that handles DST and time zone
+      changes.
 
-if SERVICE_CRON
+if CRON
 
-module = SERVICE_CRON
+module = CRON
 module-str = Cron
 source "subsys/logging/Kconfig.template.log_level"
 

@@ -9,7 +9,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include "resource/timeline_resource_ids.auto.h"
-#include "pbl/services/cron.h"
+#include <pbl/cron/cron.h>
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/filesystem/pfs.h"

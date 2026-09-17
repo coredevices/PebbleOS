@@ -26,7 +26,7 @@
 #include "pbl/util/math.h"
 #include "util/time/time.h"
 
-#include <pebbleos/cron.h>
+#include <pbl/cron/cron.h>
 #include <stdbool.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
@@ -41,11 +41,11 @@ static DoNotDisturbData s_data;
 
 //! Cron jobs for the schedule boundaries, and for midnight of the days on
 //! which the weekday/weekend schedule takes over from the other.
-static CronJob s_weekday_from_job;
-static CronJob s_weekday_to_job;
-static CronJob s_weekend_from_job;
-static CronJob s_weekend_to_job;
-static CronJob s_schedule_switch_job;
+static struct pbl_cron_job s_weekday_from_job;
+static struct pbl_cron_job s_weekday_to_job;
+static struct pbl_cron_job s_weekend_from_job;
+static struct pbl_cron_job s_weekend_to_job;
+static struct pbl_cron_job s_schedule_switch_job;
 
 static bool prv_is_smart_dnd_active(void);
 static bool prv_is_schedule_active(void);
@@ -142,7 +142,7 @@ static void prv_try_update_schedule_mode_callback(bool clear_manual_override) {
   system_task_add_callback(prv_try_update_schedule_mode, (void *)(uintptr_t)clear_manual_override);
 }
 
-static void prv_schedule_cron_callback(CronJob *job, void *data) {
+static void prv_schedule_cron_callback(struct pbl_cron_job *job, void *data) {
   prv_try_update_schedule_mode_callback(true);
 }
 
@@ -173,20 +173,20 @@ static bool prv_is_in_schedule_period(void) {
   return from != to && (now >= from || now < to);
 }
 
-static void prv_schedule_job(CronJob *job, int hour, int minute, uint8_t wday) {
-  *job = (CronJob){
+static void prv_schedule_job(struct pbl_cron_job *job, int hour, int minute, uint8_t wday) {
+  *job = (struct pbl_cron_job){
     .cb = prv_schedule_cron_callback,
     .minute = minute,
     .hour = hour,
-    .mday = CRON_MDAY_ANY,
-    .month = CRON_MONTH_ANY,
+    .mday = PBL_CRON_MDAY_ANY,
+    .month = PBL_CRON_MONTH_ANY,
     .wday = wday,
   };
-  cron_job_schedule(job);
+  pbl_cron_job_schedule(job);
 }
 
-static void prv_schedule_jobs(DoNotDisturbScheduleType type, CronJob *from_job, CronJob *to_job,
-                              uint8_t wday) {
+static void prv_schedule_jobs(DoNotDisturbScheduleType type, struct pbl_cron_job *from_job,
+                              struct pbl_cron_job *to_job, uint8_t wday) {
   DoNotDisturbSchedule schedule;
   do_not_disturb_get_schedule(type, &schedule);
   prv_schedule_job(from_job, schedule.from_hour, schedule.from_minute, wday);
@@ -194,22 +194,24 @@ static void prv_schedule_jobs(DoNotDisturbScheduleType type, CronJob *from_job, 
 }
 
 static void prv_update_schedule_mode(void) {
-  cron_job_unschedule(&s_weekday_from_job);
-  cron_job_unschedule(&s_weekday_to_job);
-  cron_job_unschedule(&s_weekend_from_job);
-  cron_job_unschedule(&s_weekend_to_job);
-  cron_job_unschedule(&s_schedule_switch_job);
+  pbl_cron_job_unschedule(&s_weekday_from_job);
+  pbl_cron_job_unschedule(&s_weekday_to_job);
+  pbl_cron_job_unschedule(&s_weekend_from_job);
+  pbl_cron_job_unschedule(&s_weekend_to_job);
+  pbl_cron_job_unschedule(&s_schedule_switch_job);
 
   const bool weekday_enabled = do_not_disturb_is_schedule_enabled(WeekdaySchedule);
   const bool weekend_enabled = do_not_disturb_is_schedule_enabled(WeekendSchedule);
   if (weekday_enabled) {
-    prv_schedule_jobs(WeekdaySchedule, &s_weekday_from_job, &s_weekday_to_job, WDAY_WEEKDAYS);
+    prv_schedule_jobs(WeekdaySchedule, &s_weekday_from_job, &s_weekday_to_job,
+                      PBL_CRON_WDAY_WEEKDAYS);
   }
   if (weekend_enabled) {
-    prv_schedule_jobs(WeekendSchedule, &s_weekend_from_job, &s_weekend_to_job, WDAY_WEEKENDS);
+    prv_schedule_jobs(WeekendSchedule, &s_weekend_from_job, &s_weekend_to_job,
+                      PBL_CRON_WDAY_WEEKENDS);
   }
   if (weekday_enabled || weekend_enabled) {
-    prv_schedule_job(&s_schedule_switch_job, 0, 0, WDAY_MONDAY | WDAY_SATURDAY);
+    prv_schedule_job(&s_schedule_switch_job, 0, 0, PBL_CRON_WDAY_MONDAY | PBL_CRON_WDAY_SATURDAY);
   }
 
   const bool in_period = prv_is_in_schedule_period();

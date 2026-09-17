@@ -117,7 +117,7 @@ pbl_clar_test(test_alarm
     src/fw/util/time/mktime.c
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/services/cron/service.c
+    subsys/cron/cron.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
     src/fw/services/blob_db/timeline_item_storage.c
@@ -143,7 +143,7 @@ pbl_clar_test(test_alarm_smart
     src/fw/util/time/time.c
     src/fw/util/time/mktime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/services/cron/service.c
+    subsys/cron/cron.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
     src/fw/services/blob_db/timeline_item_storage.c

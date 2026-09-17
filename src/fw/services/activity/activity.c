@@ -24,7 +24,7 @@
 #include "pbl/util/math.h"
 #include "util/units.h"
 
-#include <pebbleos/cron.h>
+#include <pbl/cron/cron.h>
 
 #include "pbl/kernel/sem.h"
 
@@ -969,16 +969,16 @@ PBL_T_STATIC void prv_minute_system_task_cb(void *data) {
 
 // ------------------------------------------------------------------------------------------------
 // Runs on the timer task. Simply register a callback for the KernelBG task from here.
-static void prv_minute_cb(CronJob *job, void *data) {
+static void prv_minute_cb(struct pbl_cron_job *job, void *data) {
   system_task_add_callback(prv_minute_system_task_cb, data);
-  cron_job_schedule(job);
+  pbl_cron_job_schedule(job);
 }
 
-static CronJob s_activity_job = {
-  .minute = CRON_MINUTE_ANY,
-  .hour = CRON_HOUR_ANY,
-  .mday = CRON_MDAY_ANY,
-  .month = CRON_MONTH_ANY,
+static struct pbl_cron_job s_activity_job = {
+  .minute = PBL_CRON_MINUTE_ANY,
+  .hour = PBL_CRON_HOUR_ANY,
+  .mday = PBL_CRON_MDAY_ANY,
+  .month = PBL_CRON_MONTH_ANY,
   .cb = prv_minute_cb,
 };
 
@@ -1231,7 +1231,7 @@ static void prv_start_tracking_cb(void *context) {
     activity_algorithm_metrics_changed_notification();
 
     // Register our minutes callback
-    cron_job_schedule(&s_activity_job);
+    pbl_cron_job_schedule(&s_activity_job);
     s_activity_state.started = true;
     PBL_LOG_INFO("Activity tracking started");
 
@@ -1253,7 +1253,7 @@ static void prv_stop_tracking_cb(void *context) {
     return;
   }
 
-  cron_job_unschedule(&s_activity_job);
+  pbl_cron_job_unschedule(&s_activity_job);
   if (s_activity_state.accel_session) {
     accel_session_data_unsubscribe(s_activity_state.accel_session);
     accel_session_delete(s_activity_state.accel_session);
@@ -1827,7 +1827,7 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
     // Wait for stop_tracking KernelBG callback to run
     sys_psleep(1);
   }
-  cron_job_unschedule(&s_activity_job);
+  pbl_cron_job_unschedule(&s_activity_job);
   pbl_mutex_deinit(&s_activity_state.mutex);
   if (reset_settings) {
     pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);

@@ -3,20 +3,21 @@
 
 #pragma once
 
-#include <pebbleos/cron.h>
+#include <pbl/cron/cron.h>
 
-time_t cron_job_get_execute_time(const CronJob *job) {
+time_t pbl_cron_job_get_execute_time(const struct pbl_cron_job *job) {
   return 0;
 }
 
-time_t cron_job_get_execute_time_from_epoch(const CronJob *job, time_t local_epoch) {
+time_t pbl_cron_job_get_execute_time_from_epoch(const struct pbl_cron_job *job,
+                                                time_t local_epoch) {
   return 0;
 }
 
-time_t cron_job_schedule(CronJob *job) {
+time_t pbl_cron_job_schedule(struct pbl_cron_job *job) {
   return 0;
 }
 
-bool cron_job_unschedule(CronJob *job) {
+bool pbl_cron_job_unschedule(struct pbl_cron_job *job) {
   return true;
 }

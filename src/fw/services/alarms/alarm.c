@@ -24,7 +24,7 @@
 #include "pbl/util/string.h"
 #include "util/units.h"
 
-#include <pebbleos/cron.h>
+#include <pbl/cron/cron.h>
 
 #include <string.h>
 
@@ -116,7 +116,7 @@ static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, voi
 static bool prv_reload_alarms(SettingsFile *file);
 static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *config_out);
 static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig *config);
-static void prv_cron_callback(CronJob *job, void *data);
+static void prv_cron_callback(struct pbl_cron_job *job, void *data);
 static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated);
 static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context);
 static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *context);
@@ -127,7 +127,7 @@ static time_t s_next_alarm_time;
 
 //! This is only valid when s_next_alarm_time is not 0.
 static Alarm s_next_alarm;
-static CronJob s_next_alarm_cron;
+static struct pbl_cron_job s_next_alarm_cron;
 static AlarmId s_most_recent_alarm_id = ALARM_INVALID_ID;
 static AlarmConfig s_most_recent_alarm_config;
 static bool s_most_recent_alarm_recorded;
@@ -254,8 +254,8 @@ static void prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_time
 
 // ----------------------------------------------------------------------------------------------
 //! Pins alarm in the timeline for the next three days
-static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm, const CronJob *cron,
-                                   const time_t current_time) {
+static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
+                                   const struct pbl_cron_job *cron, const time_t current_time) {
   // If an alarm was updated then remove all the pins with stale information
   // If an alarm was added then this has no effect
   bool updated = prv_timeline_remove_alarm(file, alarm->id);
@@ -269,7 +269,7 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm, const
   }
 
   int num_pin_adds = 0;
-  time_t alarm_time = prv_get_alarm_time(alarm, cron_job_get_execute_time(cron));
+  time_t alarm_time = prv_get_alarm_time(alarm, pbl_cron_job_get_execute_time(cron));
 
   time_t last_alarm = 0;
   for (int i = 0; alarm_time <= current_time + SECONDS_PER_DAY * 3; i++) {
@@ -285,8 +285,8 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm, const
         }
       }
     }
-    alarm_time = prv_get_alarm_time(
-        alarm, cron_job_get_execute_time_from_epoch(cron, current_time + (i * SECONDS_PER_DAY)));
+    alarm_time = prv_get_alarm_time(alarm, pbl_cron_job_get_execute_time_from_epoch(
+                                               cron, current_time + (i * SECONDS_PER_DAY)));
   }
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_PINS};
@@ -299,15 +299,15 @@ cleanup:
 }
 
 // ----------------------------------------------------------------------------------------------
-static time_t prv_build_cron(AlarmConfig *config, CronJob *cron) {
-  *cron = (CronJob){
+static time_t prv_build_cron(AlarmConfig *config, struct pbl_cron_job *cron) {
+  *cron = (struct pbl_cron_job){
     .cb = prv_cron_callback,
     .cb_data = (void *)0,
 
     .minute = config->minute,
     .hour = config->hour,
-    .mday = CRON_MDAY_ANY,
-    .month = CRON_MONTH_ANY,
+    .mday = PBL_CRON_MDAY_ANY,
+    .month = PBL_CRON_MONTH_ANY,
 
     .offset_seconds = config->is_smart ? -SMART_ALARM_RANGE_S : 0,
 
@@ -317,16 +317,16 @@ static time_t prv_build_cron(AlarmConfig *config, CronJob *cron) {
   for (int i = 0; i < DAYS_PER_WEEK; i++) {
     cron->wday |= config->scheduled_days[i] ? (1 << i) : 0;
   }
-  return cron_job_get_execute_time(cron);
+  return pbl_cron_job_get_execute_time(cron);
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_assign_alarm(Alarm *alarm, CronJob *cron) {
-  cron_job_unschedule(&s_next_alarm_cron);
+static void prv_assign_alarm(Alarm *alarm, struct pbl_cron_job *cron) {
+  pbl_cron_job_unschedule(&s_next_alarm_cron);
   s_next_alarm_cron = *cron;
   s_next_alarm_cron.cb_data = (void *)(intptr_t)alarm->id;
   s_next_alarm = *alarm;
-  s_next_alarm_time = cron_job_schedule(&s_next_alarm_cron);
+  s_next_alarm_time = pbl_cron_job_schedule(&s_next_alarm_cron);
   PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)", alarm->id,
                alarm->config.hour, alarm->config.minute, s_next_alarm_time, alarm->config.is_smart);
 }
@@ -343,7 +343,7 @@ static void prv_check_and_schedule_alarm(SettingsFile *fd, Alarm *alarm, bool re
     return;
   }
 
-  CronJob cron;
+  struct pbl_cron_job cron;
   time_t execute_time = prv_build_cron(&alarm->config, &cron);
   prv_timeline_add_alarm(fd, alarm, &cron, rtc_get_time());
 
@@ -380,7 +380,7 @@ static bool prv_reload_alarms(SettingsFile *file) {
   bool alarm_found = false;
 
   s_next_alarm_time = 0;
-  cron_job_unschedule(&s_next_alarm_cron);
+  pbl_cron_job_unschedule(&s_next_alarm_cron);
 
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
     AlarmConfig config;
@@ -513,7 +513,7 @@ cleanup:
   prv_process_most_recent_alarm();
 }
 
-static void prv_cron_callback(CronJob *job, void *data) {
+static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
   system_task_add_callback(prv_timer_kernel_bg_callback, data);
 }
 
@@ -998,7 +998,7 @@ bool alarm_get_time_until(AlarmId id, time_t *time_out) {
   }
 
   if (time_out) {
-    CronJob cron;
+    struct pbl_cron_job cron;
     *time_out = prv_build_cron(&config, &cron) - rtc_get_time();
   }
   alarm_is_scheduled = true;

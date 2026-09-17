@@ -34,7 +34,7 @@
 #include "pbl/services/battery/battery_monitor.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/compositor/compositor.h"
-#include "pbl/services/cron.h"
+#include <pbl/cron/cron.h>
 #include "pbl/services/debounced_connection_service.h"
 #include "pbl/services/ecompass.h"
 #include "pbl/services/event_service.h"
@@ -468,7 +468,8 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
           ABS(set_time_info->utc_time_delta) > 15) {
         alarm_handle_clock_change();
         wakeup_handle_significant_clock_change();
-        cron_service_handle_clock_change(set_time_info);
+        pbl_cron_handle_clock_change(set_time_info->utc_time_delta, set_time_info->gmt_offset_delta,
+                                     set_time_info->dst_changed);
       }
 
       // Always reschedule wakeup timers on any time change to prevent timers from

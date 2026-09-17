@@ -6,7 +6,7 @@
 #include "applib/ui/action_toggle.h"
 #include "kernel/events.h"
 #include "resource/resource.h"
-#include "pbl/services/cron.h"
+#include <pbl/cron/cron.h>
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/system_task.h"
@@ -122,7 +122,7 @@ static void prv_assert_settings_value(const void *key, size_t key_len, const voi
 }
 
 static void prv_assert_seconds_until_update(time_t expected) {
-  cl_assert_equal_i(cron_service_get_next_execute_time() - rtc_get_time(), expected);
+  cl_assert_equal_i(pbl_cron_get_next_execute_time() - rtc_get_time(), expected);
 }
 
 static void prv_assert_manually_dnd_setting_val(bool expected_value) {
@@ -141,7 +141,7 @@ void test_do_not_disturb__initialize(void) {
 
   rtc_set_time(s_thursday_00_00);
   alerts_preferences_init();
-  cron_service_init();
+  pbl_cron_init();
   do_not_disturb_init();
 
   do_not_disturb_set_manually_enabled(false);
@@ -162,7 +162,7 @@ void test_do_not_disturb__cleanup(void) {
   do_not_disturb_set_manually_enabled(false);
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, false);
   do_not_disturb_set_schedule_enabled(WeekendSchedule, false);
-  cron_service_deinit();
+  pbl_cron_deinit();
 }
 
 void test_do_not_disturb__manually_enable(void) {
@@ -411,13 +411,13 @@ void test_do_not_disturb__cron_fires_schedule_boundaries(void) {
   prv_assert_seconds_until_update(3600);
 
   rtc_set_time(s_thursday_01_00);
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == true);
   prv_assert_seconds_until_update(11.5 * SECONDS_PER_HOUR);
 
   do_not_disturb_set_manually_enabled(true);
   rtc_set_time(s_thursday_13_00);
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   prv_assert_seconds_until_update(12 * SECONDS_PER_HOUR);
@@ -575,12 +575,12 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   // Timer will go off at 07:00 on Thursday. (7.0 hours)
   prv_assert_seconds_until_update(25200);
 
-  cl_assert(cron_service_get_job_count() != 0);
+  cl_assert(pbl_cron_get_job_count() != 0);
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, false);
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Neither schedules enabled, nothing should be scheduled
-  cl_assert_equal_i(cron_service_get_job_count(), 0);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
 
   do_not_disturb_set_schedule_enabled(WeekdaySchedule, true);
   active = do_not_disturb_is_active();
