@@ -80,7 +80,7 @@ typedef struct PBL_PACKED AlarmStorageKey {
 } AlarmStorageKey;
 
 typedef struct PBL_PACKED {
-  AlarmKind kind : 8;
+  uint8_t kind;
   bool is_disabled;
   uint8_t hour;
   uint8_t minute;
@@ -121,6 +121,9 @@ static int s_num_timeline_adds = 0;
 static int s_num_timeline_removes = 0;
 static int s_num_alarm_events_put = 0;
 static int s_num_alarms_fired = 0;
+static bool s_defer_system_task_callback = false;
+static SystemTaskEventCallback s_pending_system_task_callback = NULL;
+static void *s_pending_system_task_data = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
@@ -130,11 +133,30 @@ static int s_num_alarms_fired = 0;
 void prv_timer_kernel_bg_callback(void *data);
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+  if (s_defer_system_task_callback) {
+    cl_assert(!s_pending_system_task_callback);
+    s_pending_system_task_callback = cb;
+    s_pending_system_task_data = data;
+    return true;
+  }
+
   cb(data);
   if (cb == prv_timer_kernel_bg_callback) {
     s_num_alarms_fired++;
   }
   return true;
+}
+
+void prv_invoke_pending_system_task_callback(void) {
+  cl_assert(s_pending_system_task_callback);
+  SystemTaskEventCallback callback = s_pending_system_task_callback;
+  void *data = s_pending_system_task_data;
+  s_pending_system_task_callback = NULL;
+  s_pending_system_task_data = NULL;
+  callback(data);
+  if (callback == prv_timer_kernel_bg_callback) {
+    s_num_alarms_fired++;
+  }
 }
 
 int prv_hours_and_minutes_to_seconds(int hour, int minute) {
