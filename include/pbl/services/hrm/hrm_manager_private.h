@@ -89,7 +89,9 @@ struct HRMManagerState {
 
   HRMFeature enabled_features; // feature union the sensor was last enabled with
 
-  RtcTicks sensor_on_since_ticks; // tick count when the sensor was last turned on; 0 while off
+  RtcTicks sensor_on_since_ticks; // tick count when the sensor was last turned on (also when the
+                                  // current optical path was enabled, since a path switch cycles
+                                  // the sensor); 0 while off
   bool unserved_timeout_logged;   // limits the unserved-timeout warning to once per on-stretch
 
   bool enabled_run_level;      // True if the current run_level (LowPower, Stationary,

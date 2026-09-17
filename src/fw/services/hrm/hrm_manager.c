@@ -207,27 +207,17 @@ static bool prv_features_use_ir_path(HRMFeature features) {
   return (features & HRMFeature_SpO2) != 0;
 }
 
-// Reduce the union of features wanted by all currently-due subscribers down to the single optical
-// path we can sample right now. The two paths are mutually exclusive in hardware, so when both are
-// due we keep whichever path is already running (so an in-progress measurement isn't cut short);
-// once its subscribers are served they back off and drop out of `wanted`, and we hand the sensor
-// over to the other path. This is what lets HR and SpO2 take turns instead of one starving the
-// other when they come due at the same time.
-T_STATIC HRMFeature prv_select_active_path(HRMFeature wanted, HRMFeature active) {
+// Resolve the features wanted by all due subscribers down to the one optical path we can run now
+// (the paths are mutually exclusive in hardware). The red/IR (SpO2) path wins whenever it is due:
+// SpO2 subscribers are only due during the short, bounded measurement windows the activity service
+// opens, whereas green consumers (live workout HR, the BLE relay, foreground apps) are due
+// continuously and would otherwise starve SpO2, or, with time slicing, cut its window short before
+// the algorithm converges. A green consumer loses at most one SpO2 window; the activity service's
+// own background SpO2 reader defers its window while a continuous green consumer is running (see
+// hrm_manager_has_continuous_green_subscriber()).
+T_STATIC HRMFeature prv_select_active_path(HRMFeature wanted) {
   const HRMFeature ir_features = wanted & HRMFeature_SpO2;
-  const HRMFeature green_features = wanted & ~HRMFeature_SpO2;
-
-  if (ir_features == 0 || green_features == 0) {
-    // At most one path is due - no contention.
-    return wanted;
-  }
-
-  // Both paths are due. Keep the green path if it's the one already running; otherwise serve SpO2
-  // (the running path, or, on a cold start with both due, first since it needs the longer signal).
-  if (active != 0 && !prv_features_use_ir_path(active)) {
-    return green_features;
-  }
-  return ir_features;
+  return ir_features ? ir_features : wanted;
 }
 
 // Whether the running sensor must be re-enabled to move from `active` to `wanted`: the optical path
@@ -403,9 +393,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     // Check if we've permanently failed to enable HRM
     bool hrm_permanently_failed = (s_manager_state.enable_failure_count >= HRM_MAX_ENABLE_FAILURES);
 
-    // Resolve the union of wanted features down to the single optical path we can run right now.
-    const HRMFeature active_features =
-        prv_select_active_path(wanted_features, s_manager_state.active_features);
+    const HRMFeature active_features = prv_select_active_path(wanted_features);
 
     if (turn_sensor_on && active_features != 0 && !hrm_permanently_failed) {
       if (!hrm_is_enabled(HRM)) {
@@ -667,15 +655,18 @@ void hrm_manager_new_data_cb(const HRMData *data) {
   while (state) {
     HRMSubscriberState *expired_state = NULL;
 
-    // Only count Good+ or OffWrist as "served" for sensor power cycling. A subscriber is served
-    // once it receives usable data for a feature it actually requested; this lets SpO2-only
-    // subscribers power-cycle off the same way BPM subscribers do.
+    // Mark a subscriber "served" once it gets usable data for a feature it requested, so the sensor
+    // can power-cycle off. BPM keys off its Good+ quality grade. SpO2 keys off the algorithm's own
+    // invalid flag, not the confidence grade: an algorithm-accepted reading is usable even if its
+    // confidence only grades Acceptable/Poor, and requiring Good kept the sensor on forever.
     const bool bpm_served =
         (state->features & HRMFeature_BPM) && (data->features & HRMFeature_BPM) &&
         (data->hrm_quality >= HRMQuality_Good || data->hrm_quality == HRMQuality_OffWrist);
-    const bool spo2_served =
-        (state->features & HRMFeature_SpO2) && (data->features & HRMFeature_SpO2) &&
-        (data->spo2_quality >= HRMQuality_Good || data->spo2_quality == HRMQuality_OffWrist);
+    const bool spo2_served = (state->features & HRMFeature_SpO2) &&
+                             (data->features & HRMFeature_SpO2) &&
+                             ((!data->spo2_invalid && data->spo2_percent > 0 &&
+                               data->spo2_quality != HRMQuality_OffWrist) ||
+                              data->spo2_quality == HRMQuality_OffWrist);
     if (bpm_served || spo2_served) {
       state->last_valid_bpm_ticks = cur_ticks;
     }
@@ -743,6 +734,26 @@ unlock:
 
 void hrm_manager_handle_prefs_changed(void) {
   system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
+}
+
+bool hrm_manager_has_continuous_green_subscriber(void) {
+  const time_t utc_now = rtc_get_time();
+  bool found = false;
+  pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
+  {
+    const HRMFeature prefs_allowed = prv_prefs_allowed_features();
+    HRMSubscriberState *state = (HRMSubscriberState *)s_manager_state.subscribers;
+    for (; state != NULL && !found; state = (HRMSubscriberState *)state->list_node.next) {
+      if (state->expire_utc && (utc_now >= state->expire_utc)) {
+        continue;
+      }
+      // An interval within the spin-up time is always due, so the sensor never turns off for it.
+      const HRMFeature features = prv_subscriber_allowed_features(state, prefs_allowed);
+      found = (features & ~HRMFeature_SpO2) && (state->update_interval_s <= HRM_SENSOR_SPIN_UP_SEC);
+    }
+  }
+  pbl_mutex_unlock(&s_manager_state.lock);
+  return found;
 }
 
 void hrm_manager_init(void) {

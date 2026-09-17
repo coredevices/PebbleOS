@@ -41,7 +41,7 @@ extern TimerID prv_get_timer_id(void);
 extern bool prv_can_turn_sensor_on(void);
 extern void prv_charger_event_cb(PebbleEvent *e);
 extern uint32_t prv_get_dropped_events_count(void);
-extern HRMFeature prv_select_active_path(HRMFeature wanted, HRMFeature active);
+extern HRMFeature prv_select_active_path(HRMFeature wanted);
 
 // -----------------------------------------------------------------------------
 // HRM Driver fakes
@@ -314,31 +314,82 @@ void test_hrm_manager__pref_mask_exempts_foreground_app(void) {
   sys_hrm_manager_unsubscribe(bg_ref);
 }
 
-// The green (BPM/HRV) and red/IR (SpO2) optical paths are mutually exclusive in hardware. When both
-// are due the manager must serve exactly one path at a time and hand off to the other once the
-// running path's subscribers are served, instead of one starving the other.
+// The green (BPM/HRV) and red/IR (SpO2) optical paths are mutually exclusive in hardware. SpO2 is
+// only due during short bounded windows while green consumers are due continuously, so when both
+// are due the SpO2 path wins.
 void test_hrm_manager__select_active_path(void) {
   // Only one path due -> sample it, untouched.
-  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM, 0), HRMFeature_BPM);
-  cl_assert_equal_i(prv_select_active_path(HRMFeature_SpO2, 0), HRMFeature_SpO2);
-  cl_assert_equal_i(prv_select_active_path(0, 0), 0);
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM), HRMFeature_BPM);
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_HRV),
+                    HRMFeature_BPM | HRMFeature_HRV);
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_SpO2), HRMFeature_SpO2);
+  cl_assert_equal_i(prv_select_active_path(0), 0);
 
-  // Cold start with both paths due (nothing running yet) -> SpO2 goes first.
-  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_SpO2, 0), HRMFeature_SpO2);
-
-  // SpO2 already running and both still due -> keep SpO2 (don't cut its measurement short).
-  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_SpO2, HRMFeature_SpO2),
+  // Both due -> SpO2 takes the path.
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_SpO2), HRMFeature_SpO2);
+  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_HRV | HRMFeature_SpO2),
                     HRMFeature_SpO2);
+}
 
-  // SpO2 served and backed off (only BPM left due) while SpO2 was running -> hand off to BPM.
-  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM, HRMFeature_SpO2), HRMFeature_BPM);
+// A due SpO2 subscriber pre-empts a running green consumer, and the green path resumes as soon as
+// the SpO2 subscriber is served and backs off.
+void test_hrm_manager__spo2_preempts_green(void) {
+  s_activity_prefs_blood_oxygen_is_enabled = true;
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  HRMSessionRef green_ref = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, prv_fake_hrm_1_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
 
-  // BPM already running and both still due -> keep the green path running.
-  cl_assert_equal_i(prv_select_active_path(HRMFeature_BPM | HRMFeature_SpO2, HRMFeature_BPM),
-                    HRMFeature_BPM);
+  HRMSessionRef spo2_ref = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, SECONDS_PER_HOUR, 0, HRMFeature_SpO2, prv_fake_hrm_2_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_SpO2);
 
-  // BPM served and backed off (only SpO2 left due) while BPM was running -> hand off to SpO2.
-  cl_assert_equal_i(prv_select_active_path(HRMFeature_SpO2, HRMFeature_BPM), HRMFeature_SpO2);
+  // A valid SpO2 reading serves the hourly subscriber; the green consumer gets the path back.
+  const HRMData spo2_data = {
+    .features = HRMFeature_SpO2,
+    .spo2_percent = 97,
+    .spo2_quality = HRMQuality_Good,
+  };
+  hrm_manager_new_data_cb(&spo2_data);
+  hrm_manager_handle_prefs_changed();
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
+
+  sys_hrm_manager_unsubscribe(spo2_ref);
+  sys_hrm_manager_unsubscribe(green_ref);
+  fake_system_task_callbacks_invoke_pending();
+}
+
+// A subscriber whose interval is within the spin-up time is always due and so keeps the green path
+// on continuously; pref-masked and SpO2 subscribers don't count.
+void test_hrm_manager__has_continuous_green_subscriber(void) {
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  cl_assert(!hrm_manager_has_continuous_green_subscriber());
+
+  HRMSessionRef slow_ref = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, SECONDS_PER_MINUTE, 0, HRMFeature_BPM, prv_fake_hrm_1_cb, NULL);
+  cl_assert(!hrm_manager_has_continuous_green_subscriber());
+
+  HRMSessionRef spo2_ref = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, prv_fake_hrm_1_cb, NULL);
+  cl_assert(!hrm_manager_has_continuous_green_subscriber());
+
+  HRMSessionRef live_ref = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, prv_fake_hrm_1_cb, NULL);
+  cl_assert(hrm_manager_has_continuous_green_subscriber());
+
+  // Heart rate monitoring off masks the background BPM subscriber out.
+  s_activity_prefs_heart_rate_is_enabled = false;
+  cl_assert(!hrm_manager_has_continuous_green_subscriber());
+  s_activity_prefs_heart_rate_is_enabled = true;
+
+  sys_hrm_manager_unsubscribe(live_ref);
+  cl_assert(!hrm_manager_has_continuous_green_subscriber());
+  sys_hrm_manager_unsubscribe(spo2_ref);
+  sys_hrm_manager_unsubscribe(slow_ref);
+  fake_system_task_callbacks_invoke_pending();
 }
 
 // When we cleanup after an app process, its subscription, if any, should get an expiration time

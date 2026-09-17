@@ -72,6 +72,12 @@ void hrm_manager_init(void);
 
 void hrm_manager_handle_prefs_changed(void);
 
+//! True if a live subscriber keeps the green (BPM/HRV) optical path on continuously, i.e. its
+//! update interval is within the sensor spin-up time so it is always due (live workout HR, the BLE
+//! HR relay, a foreground app). Background SpO2 readers use this to defer a measurement window
+//! rather than take the optical path away from a live consumer.
+bool hrm_manager_has_continuous_green_subscriber(void);
+
 //! Enable the HRM and subscribe to updates from an app or worker task.
 //! This should not be used by KernelBG or KernelMain clients. For KernelBG client subscriptions,
 //! please see \ref hrm_manager_subscribe_with_callback. KernelMain clients are not yet supported.
