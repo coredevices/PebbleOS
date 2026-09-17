@@ -6,7 +6,6 @@
 #include <pbl/logging/logging.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/util/likely.h>
 
 #ifdef CONFIG_LOG_HASHED
 #include <pbl/logging/log_hashing.h>
@@ -21,7 +20,7 @@ PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr);
 
 #define PBL_ASSERT(expr, msg, ...)                                         \
   do {                                                                     \
-    if (UNLIKELY(!(expr))) {                                               \
+    if (PBL_UNLIKELY(!(expr))) {                                           \
       NEW_LOG_HASH(passert_failed_hashed, LOG_LEVEL_ALWAYS, LOG_COLOR_RED, \
                    "*** ASSERTION FAILED: " msg, ##__VA_ARGS__);           \
     }                                                                      \
@@ -29,14 +28,14 @@ PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr);
 
 #define PBL_ASSERTN(expr)                 \
   do {                                    \
-    if (UNLIKELY(!(expr))) {              \
+    if (PBL_UNLIKELY(!(expr))) {          \
       passert_failed_hashed_no_message(); \
     }                                     \
   } while (0)
 
 #define PBL_ASSERTN_LR(expr, lr)                    \
   do {                                              \
-    if (UNLIKELY(!(expr))) {                        \
+    if (PBL_UNLIKELY(!(expr))) {                    \
       passert_failed_hashed_no_message_with_lr(lr); \
     }                                               \
   } while (0)
@@ -46,21 +45,21 @@ PBL_NORETURN void passert_failed(const char *filename, int line_number, const ch
 
 #define PBL_ASSERT(expr, ...)                               \
   do {                                                      \
-    if (UNLIKELY(!(expr))) {                                \
+    if (PBL_UNLIKELY(!(expr))) {                            \
       passert_failed(__FILE_NAME__, __LINE__, __VA_ARGS__); \
     }                                                       \
   } while (0)
 
 #define PBL_ASSERTN(expr)                                 \
   do {                                                    \
-    if (UNLIKELY(!(expr))) {                              \
+    if (PBL_UNLIKELY(!(expr))) {                          \
       passert_failed_no_message(__FILE_NAME__, __LINE__); \
     }                                                     \
   } while (0)
 
 #define PBL_ASSERTN_LR(expr, lr)                                      \
   do {                                                                \
-    if (UNLIKELY(!(expr))) {                                          \
+    if (PBL_UNLIKELY(!(expr))) {                                      \
       passert_failed_no_message_with_lr(__FILE_NAME__, __LINE__, lr); \
     }                                                                 \
   } while (0)

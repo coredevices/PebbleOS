@@ -21,7 +21,7 @@
 
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 
 #include "comm/ble/gap_le_connect.h"
 #include "comm/ble/gap_le_slave_reconnect.h"
@@ -292,7 +292,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
     // This is ugly and causes double-copying the data...
     // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
     buffer = (uint8_t *)kernel_malloc(value_length);
-    if (UNLIKELY(!buffer)) {
+    if (PBL_UNLIKELY(!buffer)) {
       PBL_LOG_ERR("OOM for GATT read response - %d bytes", (int)value_length);
       return;
     }
@@ -325,7 +325,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
     // This is ugly and causes double-copying the data...
     // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
     uint8_t *buffer = (uint8_t *)kernel_malloc(header.value_length);
-    if (UNLIKELY(header.value_length && !buffer)) {
+    if (PBL_UNLIKELY(header.value_length && !buffer)) {
       PBL_LOG_ERR("OOM for GATT notification");
       return;
     }

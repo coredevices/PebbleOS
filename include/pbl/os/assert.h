@@ -4,7 +4,6 @@
 #pragma once
 
 #include "pbl/kernel/compiler.h"
-#include "pbl/util/likely.h"
 
 #include <stdint.h>
 
@@ -13,14 +12,14 @@ PBL_NORETURN void os_assertion_failed_lr(const char *filename, int line, uint32_
 
 #define OS_ASSERT(expr)                             \
   do {                                              \
-    if (UNLIKELY(!(expr))) {                        \
+    if (PBL_UNLIKELY(!(expr))) {                    \
       os_assertion_failed(__FILE_NAME__, __LINE__); \
     }                                               \
   } while (0)
 
 #define OS_ASSERT_LR(expr, lr)                             \
   do {                                                     \
-    if (UNLIKELY(!(expr))) {                               \
+    if (PBL_UNLIKELY(!(expr))) {                           \
       os_assertion_failed_lr(__FILE_NAME__, __LINE__, lr); \
     }                                                      \
   } while (0)

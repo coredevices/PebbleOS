@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 
 void cobs_streaming_decode_start(CobsDecodeContext *restrict ctx, void *restrict output_buffer,
                                  size_t length) {
@@ -23,13 +23,13 @@ bool cobs_streaming_decode(CobsDecodeContext *restrict ctx, char in) {
     return false;
   }
 
-  if (UNLIKELY(in == '\0')) {
+  if (PBL_UNLIKELY(in == '\0')) {
     // Zero byte is never allowed in a COBS stream.
     ctx->output = NULL;
     return false;
   }
 
-  if (UNLIKELY(ctx->payload_remaining == 0)) {
+  if (PBL_UNLIKELY(ctx->payload_remaining == 0)) {
     // Incoming byte is a code byte.
     ctx->payload_remaining = (uint8_t)in - 1;
     if (ctx->decoded_length + ctx->payload_remaining + (ctx->block_is_terminated ? 1 : 0) >

@@ -22,7 +22,7 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 
@@ -664,7 +664,7 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
   ppogatt_reset_disconnect_counter();
   client->resets_counter = 0;
 
-  if (LIKELY(client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset)) {
+  if (PBL_LIKELY(client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset)) {
     client->out.reset_packet_to_send = (const PPoGATTPacket){
       .sn = 0,
       .type = PPoGATTPacketTypeResetComplete,
@@ -771,32 +771,32 @@ static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *v
   //  PBL_LOG_DBG("IN:");
   //  PBL_HEXDUMP(LOG_LEVEL_DEBUG, value, value_length);
 
-  if (UNLIKELY(value_length == 0)) {
+  if (PBL_UNLIKELY(value_length == 0)) {
     PBL_LOG_ERR("Zero length packet");
     return;
   }
   const PPoGATTPacket *packet = (const PPoGATTPacket *)value;
-  if (UNLIKELY(packet->type >= PPoGATTPacketTypeInvalidRangeStart)) {
+  if (PBL_UNLIKELY(packet->type >= PPoGATTPacketTypeInvalidRangeStart)) {
     PBL_LOG_ERR("Invalid type %u", packet->type);
     return;
   }
-  if (UNLIKELY(packet->type == PPoGATTPacketTypeResetRequest)) {
+  if (PBL_UNLIKELY(packet->type == PPoGATTPacketTypeResetRequest)) {
     PBL_LOG_INFO("Got reset request!");
     prv_handle_reset_request(client);
     return;
   }
-  if (LIKELY(client->state == StateConnectedOpen)) {
-    if (LIKELY(packet->type == PPoGATTPacketTypeData)) {
+  if (PBL_LIKELY(client->state == StateConnectedOpen)) {
+    if (PBL_LIKELY(packet->type == PPoGATTPacketTypeData)) {
       prv_handle_data(client, packet, value_length - sizeof(PPoGATTPacket));
-    } else if (LIKELY(packet->type == PPoGATTPacketTypeAck)) {
+    } else if (PBL_LIKELY(packet->type == PPoGATTPacketTypeAck)) {
       prv_handle_ack(client, packet->sn);
-    } else if (UNLIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
+    } else if (PBL_UNLIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
       PBL_LOG_ERR("Got reset complete while open!?");
     }
   } else if (client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset ||
              client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedResetStalled ||
              client->state == StateConnectedClosedAwaitingResetCompleteRemoteInitiatedReset) {
-    if (LIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
+    if (PBL_LIKELY(packet->type == PPoGATTPacketTypeResetComplete)) {
       prv_handle_reset_complete(client, packet, value_length - sizeof(PPoGATTPacket));
     } else {
       PBL_LOG_DBG("Resetting, ignoring data/ack packets (%u)", packet->type);

@@ -10,7 +10,7 @@
 #include "pulse_protocol_impl.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 
 #include "pbl/services/system_task.h"
 
@@ -218,7 +218,7 @@ static void prv_execute_command_from_dbgserial(void *data) {
 }
 
 bool prompt_context_append_char(PromptContext *prompt_context, char c) {
-  if (UNLIKELY(prompt_context->write_index + 1 >= PROMPT_BUFFER_SIZE_BYTES)) {
+  if (PBL_UNLIKELY(prompt_context->write_index + 1 >= PROMPT_BUFFER_SIZE_BYTES)) {
     return false;
   }
 
@@ -228,11 +228,11 @@ bool prompt_context_append_char(PromptContext *prompt_context, char c) {
 
 // Crank up the optimization on this bad boy.
 PBL_OPTIMIZE(2) void prompt_handle_character(char c, bool *should_context_switch) {
-  if (UNLIKELY(prompt_command_is_executing())) {
+  if (PBL_UNLIKELY(prompt_command_is_executing())) {
     return;
   }
 
-  if (LIKELY(c >= 0x20 && c < 127)) {
+  if (PBL_LIKELY(c >= 0x20 && c < 127)) {
     // Printable character.
     if (!prompt_context_append_char(&s_dbgserial_prompt_context, c)) {
       dbgserial_putchar(0x07); // bell
@@ -247,26 +247,26 @@ PBL_OPTIMIZE(2) void prompt_handle_character(char c, bool *should_context_switch
 
   // Handle unprintable control characters.
 
-  if (UNLIKELY(c == 0x3)) { // CTRL-C
+  if (PBL_UNLIKELY(c == 0x3)) { // CTRL-C
     dbgserial_putstr("");
     start_prompt(); // Start over
     return;
   }
 
-  if (UNLIKELY(c == 0x4)) { // CTRL-D
+  if (PBL_UNLIKELY(c == 0x4)) { // CTRL-D
     dbgserial_putstr("^D");
     serial_console_set_state(SERIAL_CONSOLE_STATE_LOGGING);
     return;
   }
 
-  if (UNLIKELY(c == 0xd)) { // Enter key
+  if (PBL_UNLIKELY(c == 0xd)) { // Enter key
     s_executing_command = ExecutingCommandDbgSerial;
     system_task_add_callback_from_isr(prv_execute_command_from_dbgserial, NULL,
                                       should_context_switch);
     return;
   }
 
-  if (UNLIKELY(c == 0x7f)) { // Backspace
+  if (PBL_UNLIKELY(c == 0x7f)) { // Backspace
     if (s_dbgserial_prompt_context.write_index != 0) {
       s_dbgserial_prompt_context.write_index--;
       dbgserial_putchar(0x8);  // move cursor back one character

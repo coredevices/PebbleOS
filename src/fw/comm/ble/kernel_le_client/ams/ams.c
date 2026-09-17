@@ -20,7 +20,7 @@
 #include <pbl/logging/logging.h>
 #include "system/hexdump.h"
 #include "system/passert.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 #include "util/time/time.h"
 
 #include <pbl/btutil/bt_device.h>
@@ -234,7 +234,7 @@ static bool prv_is_entity_update_registration_done(void) {
 }
 
 static void prv_register_next_entity(void *unused) {
-  if (LIKELY(!s_ams_client || prv_is_entity_update_registration_done())) {
+  if (PBL_LIKELY(!s_ams_client || prv_is_entity_update_registration_done())) {
     return;
   }
 

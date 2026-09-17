@@ -10,7 +10,6 @@
 #include <pbl/logging/logging.h>
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/testing.h"
-#include "pbl/util/likely.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
 
@@ -255,7 +254,7 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
 }
 
 bool comm_session_send_buffer_write(SendBuffer *sb, const uint8_t *data, size_t length) {
-  if (UNLIKELY((sb->payload_buffer_length - sb->written_length) < length)) {
+  if (PBL_UNLIKELY((sb->payload_buffer_length - sb->written_length) < length)) {
     return false;
   }
   memcpy(sb->payload + sb->header.length + sb->written_length, data, length);

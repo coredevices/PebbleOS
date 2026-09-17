@@ -4,7 +4,6 @@
 #pragma once
 
 #include "pbl/kernel/compiler.h"
-#include "pbl/util/likely.h"
 
 #ifndef __FILE_NAME__
 #ifdef __FILE_NAME_LEGACY__
@@ -18,7 +17,7 @@ PBL_NORETURN void util_assertion_failed(const char *filename, int line);
 
 #define UTIL_ASSERT(expr)                             \
   do {                                                \
-    if (UNLIKELY(!(expr))) {                          \
+    if (PBL_UNLIKELY(!(expr))) {                      \
       util_assertion_failed(__FILE_NAME__, __LINE__); \
     }                                                 \
   } while (0)

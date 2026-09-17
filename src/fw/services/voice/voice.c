@@ -19,7 +19,7 @@
 #include "syscall/syscall_internal.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
 #include <string.h>
@@ -356,7 +356,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
 
   // Start new session generation and clear teardown guard
   s_session_generation++;
-  if (UNLIKELY(s_session_generation == 0)) { // handle wrap-around (very unlikely)
+  if (PBL_UNLIKELY(s_session_generation == 0)) { // handle wrap-around (very unlikely)
     s_session_generation = 1;
   }
   s_teardown_in_progress = false;
