@@ -1,15 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/cron/cron.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/services/light.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
+#include <pbl/util/units.h>
 
 #include <board/board.h>
 #include <clar.h>
 #include <fake_new_timer.h>
+#include <fake_rtc.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -28,6 +31,12 @@ static TimerID s_light_timer;
 
 static uint8_t s_backlight_brightness;
 static bool s_backlight_enabled = true;
+static uint32_t s_backlight_color;
+
+int pbl_backlight_set_color(const struct pbl_backlight *bl, uint32_t rgb_color) {
+  s_backlight_color = rgb_color;
+  return 0;
+}
 
 BacklightBehaviour backlight_get_behaviour(void) {
   return BacklightBehaviour_On;
@@ -88,6 +97,32 @@ void backlight_set_intensity(uint8_t percent_intensity) {
   s_backlight_intensity = percent_intensity;
 }
 
+static bool s_day_night_enabled;
+static uint32_t s_day_color = BACKLIGHT_COLOR_WARM_WHITE;
+static uint32_t s_night_color = BACKLIGHT_COLOR_RED;
+static uint16_t s_sunrise_minute;
+static uint16_t s_sunset_minute;
+
+bool backlight_day_night_color_is_enabled(void) {
+  return s_day_night_enabled;
+}
+
+uint32_t backlight_get_default_color(void) {
+  return s_day_color;
+}
+
+uint32_t backlight_get_night_color(void) {
+  return s_night_color;
+}
+
+uint16_t backlight_get_sunrise_minute(void) {
+  return s_sunrise_minute;
+}
+
+uint16_t backlight_get_sunset_minute(void) {
+  return s_sunset_minute;
+}
+
 // Helper functions
 ///////////////////////////////////////////////////////////
 
@@ -138,17 +173,33 @@ static void check_off(void) {
 // Tests
 ///////////////////////////////////////////////////////////
 
+static void prv_set_schedule(bool enabled, int sunrise_hour, int sunset_hour) {
+  s_day_night_enabled = enabled;
+  s_sunrise_minute = sunrise_hour * PBL_MIN_PER_HOUR;
+  s_sunset_minute = sunset_hour * PBL_MIN_PER_HOUR;
+  light_handle_color_prefs_changed();
+}
+
+static void prv_set_time_of_day(int hour, int minute) {
+  fake_rtc_init(0, hour * PBL_SEC_PER_HOUR + minute * PBL_SEC_PER_MIN);
+}
+
 void test_light__initialize(void) {
+  prv_set_time_of_day(12, 0);
+  pbl_cron_init();
   light_init();
   light_allow(true);
   s_light_timer = ((StubTimer *)s_idle_timers)->id;
   backlight_set_intensity(100);
   s_backlight_enabled = true;
+  s_backlight_color = 0;
+  prv_set_schedule(false, 6, 18);
 }
 
 void test_light__cleanup(void) {
   s_backlight_brightness = 0;
   s_backlight_enabled = true;
+  pbl_cron_deinit();
   stub_new_timer_delete(s_light_timer);
 }
 
@@ -331,4 +382,89 @@ void test_light__touch_lit_period_is_tracked(void) {
   check_on_timed_and_consume();
 
   cl_assert(!light_is_lit_by_touch());
+}
+
+void test_light__day_night_disabled_uses_default_color(void) {
+  prv_set_time_of_day(23, 0);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+}
+
+void test_light__day_night_picks_color_from_schedule(void) {
+  prv_set_schedule(true, 6, 18);
+
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+  light_enable(false);
+
+  prv_set_time_of_day(23, 0);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_night_color);
+  light_enable(false);
+
+  prv_set_time_of_day(5, 59);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_night_color);
+  light_enable(false);
+
+  prv_set_time_of_day(6, 0);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+}
+
+void test_light__day_night_schedule_wraps_midnight(void) {
+  prv_set_schedule(true, 22, 4);
+
+  prv_set_time_of_day(2, 0);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+  light_enable(false);
+
+  prv_set_time_of_day(12, 0);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_night_color);
+}
+
+void test_light__day_night_equal_times_disable_schedule(void) {
+  prv_set_schedule(true, 6, 6);
+
+  prv_set_time_of_day(23, 0);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+}
+
+void test_light__day_night_schedules_cron_jobs(void) {
+  prv_set_schedule(true, 6, 18);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 2);
+
+  prv_set_schedule(false, 6, 18);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+}
+
+void test_light__day_night_cron_retints_lit_backlight(void) {
+  prv_set_schedule(true, 6, 18);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+
+  prv_set_time_of_day(18, 0);
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_backlight_color, s_night_color);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 2);
+
+  fake_rtc_init(0, PBL_SEC_PER_DAY + 6 * PBL_SEC_PER_HOUR);
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 2);
+}
+
+void test_light__day_night_clock_change_retints_lit_backlight(void) {
+  prv_set_schedule(true, 6, 18);
+  light_enable(true);
+  cl_assert_equal_i(s_backlight_color, s_day_color);
+
+  prv_set_time_of_day(23, 0);
+  light_handle_clock_change();
+  cl_assert_equal_i(s_backlight_color, s_night_color);
 }
