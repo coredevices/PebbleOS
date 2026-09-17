@@ -4,9 +4,10 @@
 #pragma once
 
 #include "pbl/kernel/types.h"
+#include "pbl/kernel/compiler.h"
 
 //! Starts the scheduler; never returns.
-void pbl_kernel_start(void) __attribute__((noreturn));
+void pbl_kernel_start(void) PBL_NORETURN;
 
 //! The scheduler has started.
 bool pbl_kernel_is_started(void);

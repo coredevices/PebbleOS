@@ -18,6 +18,7 @@
 #include <nrfx.h>
 
 #include "pbl/kernel/sem.h"
+#include "pbl/kernel/compiler.h"
 
 // NOTE: This driver does not cover anomaly 244, which may cause data corruption
 // if HF clock source is switching between HFXO and HFINT (e.g. by BLE). This
@@ -36,7 +37,7 @@
 // Minimum address to enable 4-byte addressing
 #define ADDR_4BYTE_THRESHOLD 0x1000000UL
 
-static uint8_t __attribute__((aligned(4))) s_bounce_buf[32];
+static uint8_t PBL_ALIGNED(4) s_bounce_buf[32];
 
 void QSPI_IRQHandler(void) {
   nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
@@ -472,7 +473,7 @@ status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
 }
 
 void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
-  uint8_t __attribute__((aligned(4))) b_buf[4];
+  uint8_t PBL_ALIGNED(4) b_buf[4];
   uint8_t buf_pre;
   uint8_t buf_suf;
   uint32_t buf_mid;
@@ -510,7 +511,7 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
 int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
                                 uint32_t length) {
-  uint8_t __attribute__((aligned(4))) b_buf[4];
+  uint8_t PBL_ALIGNED(4) b_buf[4];
   uint8_t buf_pre;
   uint8_t buf_suf;
   uint32_t buf_mid;

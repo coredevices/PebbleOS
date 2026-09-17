@@ -490,7 +490,7 @@ PBL_NORETURN void core_dump_reset(bool is_forced) {
   prv_reset();
 }
 
-void __attribute__((naked)) NMI_Handler(void) {
+void PBL_NAKED NMI_Handler(void) {
   // Save the processor state at the moment the NMI exception was entered to a
   // struct of type CoreDumpSavedRegisters.
   //

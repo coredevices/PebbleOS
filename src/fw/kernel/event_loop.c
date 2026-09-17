@@ -65,6 +65,7 @@
 #include "system/passert.h"
 #include "system/testinfra.h"
 #include "pbl/util/struct.h"
+#include "pbl/kernel/compiler.h"
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;
@@ -628,5 +629,5 @@ void launcher_main_loop(void) {
     }
   }
 
-  __builtin_unreachable();
+  PBL_UNREACHABLE();
 }

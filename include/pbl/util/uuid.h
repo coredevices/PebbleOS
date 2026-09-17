@@ -6,10 +6,11 @@
 #include "pbl/util/list.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "pbl/kernel/compiler.h"
 
 #define UUID_SIZE 16
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t byte0;
   uint8_t byte1;
   uint8_t byte2;

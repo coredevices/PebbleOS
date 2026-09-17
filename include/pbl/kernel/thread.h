@@ -5,6 +5,7 @@
 
 #include "pbl/drivers/mpu.h"
 #include "pbl/kernel/types.h"
+#include "pbl/kernel/compiler.h"
 
 #define PBL_THREAD_NAME_LEN        16
 #define PBL_THREAD_MAX_MEM_REGIONS 4
@@ -44,7 +45,7 @@ struct pbl_thread {
 
 //! Declare a stack with the alignment the MPU port needs for a guard region.
 #define PBL_THREAD_STACK_DEFINE(name, size) \
-  static uint8_t name[size] __attribute__((aligned(CONFIG_KERNEL_STACK_ALIGN)))
+  static uint8_t name[size] PBL_ALIGNED(CONFIG_KERNEL_STACK_ALIGN)
 
 //! Returning from the entry function ends the thread.
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr);

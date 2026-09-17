@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include "pbl/kernel/compiler.h"
 
 //! @file dict.h Generic key/value serializer and parser.
 
@@ -135,7 +136,7 @@ typedef enum {
 //! Data structure for one serialized key/value tuple
 //! @note The structure is variable length! The length depends on the value data that the tuple
 //! contains.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   //! The key
   uint32_t key;
   //! The type of data that the `.value` fields contains.
@@ -177,7 +178,7 @@ typedef struct __attribute__((__packed__)) {
 //! @internal
 //! Header data structure of a serialized "dictionary" of zero or more Tuple
 //! key-value pairs.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t count; //!< The number of key-value pairs (Tuples) in the dictionary
   Tuple head[];  //!< The first Tuple in the dictionary
 } Dictionary;

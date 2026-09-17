@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "pbl/kernel/compiler.h"
 
 // Run App/Worker syscalls on a dedicated privileged stack instead of the
 // caller's small unprivileged one, so a task that exhausts its stack faults
@@ -283,8 +284,8 @@ typedef struct SyscallStack {
   uint32_t words[SYSCALL_STACK_WORDS];
 } SyscallStack;
 
-static SyscallStack s_app_syscall_stack __attribute__((aligned(32)));
-static SyscallStack s_worker_syscall_stack __attribute__((aligned(32)));
+static SyscallStack s_app_syscall_stack PBL_ALIGNED(32);
+static SyscallStack s_worker_syscall_stack PBL_ALIGNED(32);
 
 #if SYSCALL_STACK_GUARD_WORDS
 static const MpuRegion s_app_syscall_stack_guard_region = {

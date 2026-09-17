@@ -15,6 +15,7 @@
 #include "process_state/app_state/app_state.h"
 
 #include <stdio.h>
+#include "pbl/kernel/compiler.h"
 
 // Demo app that deliberately runs a series of memory accesses that the
 // MPU is supposed to deny for the unprivileged App task. Use up/down to
@@ -106,7 +107,7 @@ typedef struct {
 // turning this into a tail call (which would not consume stack).
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winfinite-recursion"
-static uint32_t __attribute__((noinline)) prv_overflow_recurse(uint32_t depth) {
+static uint32_t PBL_NOINLINE prv_overflow_recurse(uint32_t depth) {
   volatile uint8_t big_local[128];
   big_local[0] = (uint8_t)depth;
   return prv_overflow_recurse(depth + 1) + big_local[0];
@@ -117,7 +118,7 @@ static uint32_t __attribute__((noinline)) prv_overflow_recurse(uint32_t depth) {
 // whose privileged call chain needs far more than that. The kernel must
 // run it on its own syscall stack; running it on ours overflows into the
 // stack guard while privileged, which reboots the system.
-static void __attribute__((noinline)) prv_syscall_near_limit(size_t headroom) {
+static void PBL_NOINLINE prv_syscall_near_limit(size_t headroom) {
   volatile uint8_t marker;
   const uintptr_t stack_base = (uintptr_t)__APP_RAM__ + (uintptr_t)__stack_guard_size__;
   const uintptr_t sp = (uintptr_t)&marker;

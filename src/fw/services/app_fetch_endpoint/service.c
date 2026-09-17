@@ -387,7 +387,7 @@ bool app_fetch_in_progress(void) {
 // Exported Callbacks
 ////////////////////////////
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t command;
   uint8_t result_code;
 } AppFetchResponseData;

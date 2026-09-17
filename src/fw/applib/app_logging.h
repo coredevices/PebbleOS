@@ -14,6 +14,7 @@
 #include "logging/logging_private.h"
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 //! @addtogroup Foundation
 //! @{
@@ -46,7 +47,7 @@ void app_log(uint8_t log_level, const char *src_filename, int src_line_number, c
              ...);
 #else
 void app_log(uint8_t log_level, const char *src_filename, int src_line_number, const char *fmt, ...)
-    __attribute__((format(printf, 4, 5)));
+    PBL_FORMAT_PRINTF(4, 5);
 #endif
 
 //! A helper macro that simplifies the use of the app_log function
@@ -82,7 +83,7 @@ typedef enum AppLoggingMode {
   NumAppLoggingModes
 } AppLoggingMode;
 
-typedef struct __attribute__((__packed__)) AppLogBinaryMessage {
+typedef struct PBL_PACKED AppLogBinaryMessage {
   Uuid uuid;
   LogBinaryMessage log_msg;
 } AppLogBinaryMessage;

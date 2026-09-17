@@ -27,6 +27,7 @@
 #include <pbl/bluetooth/pairing_confirm.h>
 
 #include <string.h>
+#include "pbl/kernel/compiler.h"
 
 #define CODE_BUF_SIZE    16
 #define MAX_PAIR_STR_LEN 16
@@ -245,7 +246,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
   GAlign alignment;
   const int16_t width_of_sidebar = data->action_bar_layer.layer.frame.size.w;
   const int16_t window_width = data->window.layer.bounds.size.w;
-  const int16_t config_width __attribute__((unused)) = window_width - width_of_sidebar + 10;
+  const int16_t config_width PBL_UNUSED = window_width - width_of_sidebar + 10;
   int16_t x_offset, y_offset, width;
 
   switch (data->ui_state) {

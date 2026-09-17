@@ -1,6 +1,7 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 /* +++++++++++++++ PERSISTENT STORAGE KEYS +++++++++++++++ */
 
@@ -123,14 +124,14 @@ struct config_general {
   uint16_t wear_class_thres;
   uint16_t pts_goal;
 
-} __attribute__((__packed__));
+} PBL_PACKED;
 
 #define NUM_DAYS_HISTORY 8
 
 struct daily_acti {
   uint16_t steps[NUM_DAYS_HISTORY]; // total daily steps
   uint16_t kcal[NUM_DAYS_HISTORY];  // daily calories estimated expended only through motion
-} __attribute__((__packed__));
+} PBL_PACKED;
 
 struct pinteract_state {
   int8_t pi_11[NUM_DAYS_HISTORY]; // can make this a uint8_t array for last 10 days
@@ -138,13 +139,13 @@ struct pinteract_state {
   int16_t pi_13;
   int16_t pi_14;
   int16_t pi_15;
-} __attribute__((__packed__));
+} PBL_PACKED;
 
 struct acticlass_learn_alg_state {
   bool init_alg;
   uint16_t f_mean[NUM_ACTICLASS][NUM_ACLF];
   uint16_t f_std[NUM_ACTICLASS][NUM_ACLF];
-} __attribute__((__packed__));
+} PBL_PACKED;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */

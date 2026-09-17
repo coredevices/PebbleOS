@@ -120,7 +120,7 @@ void PBL_LOG_x_printf_arg_check(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
 
 #define NEW_LOG_HASH(logfunc, level, color, fmt, ...)                            \
   {                                                                              \
-    static const char str[] __attribute__((nocommon, section(".log_strings"))) = \
+    static const char str[] PBL_NOCOMMON PBL_SECTION(".log_strings") =           \
         __FILE__ ":" STRINGIFY(__LINE__) ":" STRINGIFY(level) ":" color ":" fmt; \
     _Pragma("GCC diagnostic push");                                              \
     _Pragma("GCC diagnostic ignored \"-Warray-bounds\"");                        \
@@ -138,21 +138,21 @@ PBL_ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const 
 
   // Search for % characters in fmt. p1-p8 point to the character immediately succeeding the first
   // 8 % characters in fmt (or NULL, if there aren't 8 % characters in fmt).
-  p1 = __builtin_strchr(fmt, '%') ? (__builtin_strchr(fmt, '%') + 1) : NULL;
+  p1 = strchr(fmt, '%') ? (strchr(fmt, '%') + 1) : NULL;
   if (p1)
-    p2 = __builtin_strchr(p1, '%') ? (__builtin_strchr(p1, '%') + 1) : NULL;
+    p2 = strchr(p1, '%') ? (strchr(p1, '%') + 1) : NULL;
   if (p2)
-    p3 = __builtin_strchr(p2, '%') ? (__builtin_strchr(p2, '%') + 1) : NULL;
+    p3 = strchr(p2, '%') ? (strchr(p2, '%') + 1) : NULL;
   if (p3)
-    p4 = __builtin_strchr(p3, '%') ? (__builtin_strchr(p3, '%') + 1) : NULL;
+    p4 = strchr(p3, '%') ? (strchr(p3, '%') + 1) : NULL;
   if (p4)
-    p5 = __builtin_strchr(p4, '%') ? (__builtin_strchr(p4, '%') + 1) : NULL;
+    p5 = strchr(p4, '%') ? (strchr(p4, '%') + 1) : NULL;
   if (p5)
-    p6 = __builtin_strchr(p5, '%') ? (__builtin_strchr(p5, '%') + 1) : NULL;
+    p6 = strchr(p5, '%') ? (strchr(p5, '%') + 1) : NULL;
   if (p6)
-    p7 = __builtin_strchr(p6, '%') ? (__builtin_strchr(p6, '%') + 1) : NULL;
+    p7 = strchr(p6, '%') ? (strchr(p6, '%') + 1) : NULL;
   if (p7)
-    p8 = __builtin_strchr(p7, '%') ? (__builtin_strchr(p7, '%') + 1) : NULL;
+    p8 = strchr(p7, '%') ? (strchr(p7, '%') + 1) : NULL;
 
   // Check that fmt doesn't contain the escaped % symbol, '%%'. It's too hard to handle correctly
   // in every case.
@@ -173,19 +173,19 @@ PBL_ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const 
   // charactres in fmt after the previously found % characters (or NULL if there aren't 7 's'
   // characters in fmt).
   if (p1)
-    s1 = __builtin_strchr(p1, 's');
+    s1 = strchr(p1, 's');
   if (p2)
-    s2 = __builtin_strchr(p2, 's');
+    s2 = strchr(p2, 's');
   if (p3)
-    s3 = __builtin_strchr(p3, 's');
+    s3 = strchr(p3, 's');
   if (p4)
-    s4 = __builtin_strchr(p4, 's');
+    s4 = strchr(p4, 's');
   if (p5)
-    s5 = __builtin_strchr(p5, 's');
+    s5 = strchr(p5, 's');
   if (p6)
-    s6 = __builtin_strchr(p6, 's');
+    s6 = strchr(p6, 's');
   if (p7)
-    s7 = __builtin_strchr(p7, 's');
+    s7 = strchr(p7, 's');
 
   // See if the 's' characters immediately succeed the '%' characters. If so, set flag psX.
   const int ps1 = p1 ? (p1 == s1) : 0;

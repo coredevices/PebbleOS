@@ -6,8 +6,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "order.h"
+#include "pbl/kernel/compiler.h"
 
-typedef struct __attribute__((packed)) ListNode {
+typedef struct PBL_PACKED ListNode {
   struct ListNode *next;
   struct ListNode *prev;
 } ListNode;

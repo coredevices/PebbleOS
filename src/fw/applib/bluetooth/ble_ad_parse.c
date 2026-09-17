@@ -12,6 +12,7 @@
 #include "util/net.h"
 
 #include <pbl/btutil/bt_uuid.h>
+#include "pbl/kernel/compiler.h"
 
 // -----------------------------------------------------------------------------
 //! Internal parsed advertisement data structures.
@@ -38,12 +39,12 @@ typedef enum {
 
 // -----------------------------------------------------------------------------
 //! AD DATA element header
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t length;
   BLEAdType type : 8;
 } BLEAdElementHeader;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   BLEAdElementHeader header;
   uint8_t data[];
 } BLEAdElement;
@@ -606,7 +607,7 @@ static uint32_t prv_convert_to_32bit_uuid(const Uuid *uuid) {
 
 // -----------------------------------------------------------------------------
 bool ble_ad_set_service_uuids(struct pbl_bt_ad_data *ad, const Uuid uuids[], uint8_t num_uuids) {
-  struct __attribute__((__packed__)) BLEAdElementService {
+  struct PBL_PACKED BLEAdElementService {
     BLEAdElementHeader header;
     union {
       Uuid uuid_128[0];
@@ -687,7 +688,7 @@ bool ble_ad_set_tx_power_level(struct pbl_bt_ad_data *ad) {
 // -----------------------------------------------------------------------------
 bool ble_ad_set_manufacturer_specific_data(struct pbl_bt_ad_data *ad, uint16_t company_id,
                                            const uint8_t *data, size_t size) {
-  struct __attribute__((__packed__)) BLEAdElementManufacturerSpecific {
+  struct PBL_PACKED BLEAdElementManufacturerSpecific {
     BLEAdElementHeader header;
     uint16_t company_id;
     uint8_t data[];
@@ -706,7 +707,7 @@ bool ble_ad_set_manufacturer_specific_data(struct pbl_bt_ad_data *ad, uint16_t c
 
 // -----------------------------------------------------------------------------
 bool ble_ad_set_flags(struct pbl_bt_ad_data *ad, uint8_t flags) {
-  struct __attribute__((__packed__)) BLEAdElementManufacturerSpecific {
+  struct PBL_PACKED BLEAdElementManufacturerSpecific {
     BLEAdElementHeader header;
     uint8_t flags;
   } element = {

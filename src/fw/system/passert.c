@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "pbl/kernel/compiler.h"
 
 #define CORE_NUMBER 0
 
@@ -46,14 +47,14 @@ PBL_NORETURN void passert_failed(const char *filename, int line_number, const ch
   va_list fmt_args;
   va_start(fmt_args, message);
 
-  handle_passert_failed_vargs(filename, line_number, (uintptr_t)__builtin_return_address(0),
-                              "ASSERT", message, fmt_args);
+  handle_passert_failed_vargs(filename, line_number, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERT",
+                              message, fmt_args);
 
   va_end(fmt_args);
 }
 
 PBL_NORETURN void passert_failed_hashed(uint32_t packed_loghash, ...) {
-  uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
+  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
   PBL_LOG_ALWAYS("ASSERTION at LR 0x%x", saved_lr);
 
   va_list fmt_args;
@@ -86,7 +87,7 @@ PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr) {
 }
 
 PBL_NORETURN void passert_failed_hashed_no_message(void) {
-  passert_failed_hashed_no_message_with_lr((uint32_t)__builtin_return_address(0));
+  passert_failed_hashed_no_message_with_lr((uint32_t)PBL_RETURN_ADDRESS(0));
 }
 
 PBL_NORETURN void passert_failed_no_message_with_lr(const char *filename, int line_number,
@@ -95,18 +96,17 @@ PBL_NORETURN void passert_failed_no_message_with_lr(const char *filename, int li
 }
 
 PBL_NORETURN void passert_failed_no_message(const char *filename, int line_number) {
-  handle_passert_failed(filename, line_number, (uintptr_t)__builtin_return_address(0), "ASSERTN",
-                        NULL);
+  handle_passert_failed(filename, line_number, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", NULL);
 }
 
 PBL_NORETURN void wtf(void) {
-  uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
+  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
   PBL_LOG_ALWAYS("*** WTF %p", (void *)saved_lr);
   trigger_fault(RebootReasonCode_Assert, saved_lr);
 }
 
 void passert_check_task(PebbleTask expected_task) {
-  uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
+  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
 
   if (pebble_task_get_current() != expected_task) {
     PBL_LOG_ALWAYS("LR: %p. Incorrect task! Expected <%s> got <%s>", (void *)saved_lr,
@@ -117,7 +117,7 @@ void passert_check_task(PebbleTask expected_task) {
 }
 
 void passert_check_not_task(PebbleTask unexpected_task) {
-  uintptr_t saved_lr = (uintptr_t)__builtin_return_address(0);
+  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
 
   if (pebble_task_get_current() == unexpected_task) {
     PBL_LOG_ALWAYS("LR: %p. Incorrect task! Can't be <%s>", (void *)saved_lr,
@@ -160,6 +160,6 @@ PBL_NORETURN void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t inf
 }
 
 PBL_NORETURN void app_error_handler_bare(uint32_t error_code) {
-  app_error_fault_handler(error_code, (uint32_t)__builtin_return_address(0), 0);
+  app_error_fault_handler(error_code, (uint32_t)PBL_RETURN_ADDRESS(0), 0);
 }
 #endif

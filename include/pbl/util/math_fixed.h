@@ -5,6 +5,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include "pbl/kernel/compiler.h"
 
 ////////////////////////////////////////////////////////////////
 /// Fixed_S16_3 = 1 bit sign, 12 bits integer, 3 bits fraction
@@ -17,7 +18,7 @@
 // without any complicated logic.
 // The same representation for negative numbers applies for all fixed point representations
 // in this file (i.e. fraction component is a positive addition to the integer).
-typedef union __attribute__((__packed__)) Fixed_S16_3 {
+typedef union PBL_PACKED Fixed_S16_3 {
   int16_t raw_value;
   struct {
     uint16_t fraction : 3;
@@ -61,7 +62,7 @@ static __inline__ int16_t Fixed_S16_3_rounded_int(Fixed_S16_3 a) {
 ////////////////////////////////////////////////////////////////
 /// Fixed_S32_16 = 1 bit sign, 15 bits integer, 16 bits fraction
 ////////////////////////////////////////////////////////////////
-typedef union __attribute__((__packed__)) Fixed_S32_16 {
+typedef union PBL_PACKED Fixed_S32_16 {
   int32_t raw_value;
   struct {
     uint16_t fraction : 16;
@@ -102,7 +103,7 @@ static __inline__ Fixed_S32_16 Fixed_S32_16_sub(Fixed_S32_16 a, Fixed_S32_16 b) 
 ////////////////////////////////////////////////////////////////
 /// Fixed_S64_32 = 1 bit sign, 31 bits integer, 32 bits fraction
 ////////////////////////////////////////////////////////////////
-typedef union __attribute__((__packed__)) Fixed_S64_32 {
+typedef union PBL_PACKED Fixed_S64_32 {
   int64_t raw_value;
   struct {
     uint32_t fraction : 32;

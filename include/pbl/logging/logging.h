@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include "pbl/kernel/compiler.h"
 
 #define SPLIT_64_BIT_ARG(x) (uint32_t)((x >> 32) & 0xFFFFFFFF), (uint32_t)(x & 0xFFFFFFFF)
 
@@ -120,8 +121,8 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 // PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL) (see
 // Kconfig.template.log_level). Kconfig never yields LOG_LEVEL_ALWAYS (0) for a
 // module, so 0 marks a file without one; those use DEFAULT_LOG_LEVEL.
-__attribute__((unused)) static const int16_t _pbl_log_module_level;
-__attribute__((unused)) static const char *const _pbl_log_module_name;
+PBL_UNUSED static const int16_t _pbl_log_module_level;
+PBL_UNUSED static const char *const _pbl_log_module_name;
 
 // Unit tests build with CONFIG_LOG but without the board Kconfig symbols,
 // so module levels fall back to the default there.
@@ -129,20 +130,18 @@ __attribute__((unused)) static const char *const _pbl_log_module_name;
 #ifdef CONFIG_LOG_HASHED
 // The MODULE map entry gives the loghash dict generator the
 // file -> module mapping; the module name costs nothing at runtime.
-#define PBL_LOG_MODULE_DEFINE(name, level)                                           \
-  __attribute__((unused)) static const int16_t _pbl_log_module_level = (level);      \
-  __attribute__((unused)) static const char *const _pbl_log_module_name = #name;     \
-  __attribute__((used, nocommon,                                                     \
-                 section(".log_strings"))) static const char _pbl_log_module_map[] = \
+#define PBL_LOG_MODULE_DEFINE(name, level)                                                    \
+  PBL_UNUSED static const int16_t _pbl_log_module_level = (level);                            \
+  PBL_UNUSED static const char *const _pbl_log_module_name = #name;                           \
+  PBL_USED PBL_NOCOMMON PBL_SECTION(".log_strings") static const char _pbl_log_module_map[] = \
       "MODULE:" __FILE__ ":" #name
 #else
-#define PBL_LOG_MODULE_DEFINE(name, level)                                      \
-  __attribute__((unused)) static const int16_t _pbl_log_module_level = (level); \
-  __attribute__((unused)) static const char *const _pbl_log_module_name = #name
+#define PBL_LOG_MODULE_DEFINE(name, level)                         \
+  PBL_UNUSED static const int16_t _pbl_log_module_level = (level); \
+  PBL_UNUSED static const char *const _pbl_log_module_name = #name
 #endif
 #else
-#define PBL_LOG_MODULE_DEFINE(name, level) \
-  __attribute__((unused)) static const int16_t _pbl_log_module_level = 0
+#define PBL_LOG_MODULE_DEFINE(name, level) PBL_UNUSED static const int16_t _pbl_log_module_level = 0
 #endif
 
 #define PBL_LOG_MODULE_DECLARE(name, level) PBL_LOG_MODULE_DEFINE(name, level)

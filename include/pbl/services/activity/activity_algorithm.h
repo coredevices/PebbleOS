@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "pbl/services/activity/activity.h"
+#include "pbl/kernel/compiler.h"
 
 // Version of our minute file minute records
 // Version history:
@@ -19,7 +20,7 @@
 // on the watch, we store a subset of what we send to data logging since we only need the
 // information required by the sleep algorithm and the information that could be returned by
 // the health_service_get_minute_history() API call.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   // Base fields, present in versions 4 and 5
   uint8_t steps;       // # of steps in this minute
   uint8_t orientation; // average orientation of the watch
@@ -37,7 +38,7 @@ typedef struct __attribute__((__packed__)) {
   };
 } AlgMinuteFileSampleV5;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   // Base fields, present in versions <= 5
   AlgMinuteFileSampleV5 v5_fields;
   // New fields added in version 6
@@ -66,7 +67,7 @@ _Static_assert((ALG_DLS_MINUTES_RECORD_VERSION & (1 << 2)) > 0,
 _Static_assert(ALG_DLS_MINUTES_RECORD_VERSION <= 225, "iOS requires version less that 255");
 
 // Format of each minute in our data logging minute records.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   // Base fields, which are also stored in the minute file on the watch. These are
   // present in versions 4 and 5.
   AlgMinuteFileSampleV5 base;
@@ -98,7 +99,7 @@ typedef struct {
 } AlgMinuteRecord;
 
 // Record header. The same header is used for minute file records and minute data logging records
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint16_t version;                // Set to ALG_DLS_MINUTES_RECORD_VERSION or
                                    //   ALG_MINUTE_FILE_RECORD_VERSION
   uint32_t time_utc;               // UTC time
@@ -109,14 +110,14 @@ typedef struct __attribute__((__packed__)) {
 
 // Format of each data logging minute data record
 #define ALG_MINUTES_PER_DLS_RECORD 15
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   AlgMinuteRecordHdr hdr;
   AlgMinuteDLSSample samples[ALG_MINUTES_PER_DLS_RECORD];
 } AlgMinuteDLSRecord;
 
 // Format of each minute file record
 #define ALG_MINUTES_PER_FILE_RECORD 15
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   AlgMinuteRecordHdr hdr;
   AlgMinuteFileSample samples[ALG_MINUTES_PER_FILE_RECORD];
 } AlgMinuteFileRecord;

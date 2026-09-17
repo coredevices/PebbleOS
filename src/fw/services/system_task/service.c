@@ -15,6 +15,7 @@
 #include "pbl/kernel/msgq.h"
 #include "pbl/kernel/poll.h"
 #include "pbl/kernel/thread.h"
+#include "pbl/kernel/compiler.h"
 
 PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL);
 
@@ -143,7 +144,7 @@ static bool prv_send_to_queue_no_wait(SystemTaskEventCallback cb, void *data) {
 bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
                                        bool *should_context_switch) {
   // Capture caller LR at entry; reading from a deeper helper is unreliable.
-  uintptr_t caller_lr = (uintptr_t)__builtin_return_address(0);
+  uintptr_t caller_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
   if (!prv_is_accepting_callbacks()) {
     return false;
   }
@@ -172,7 +173,7 @@ bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, voi
 }
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
-  uintptr_t caller_lr = (uintptr_t)__builtin_return_address(0);
+  uintptr_t caller_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
   if (!prv_is_accepting_callbacks()) {
     return false;
   }

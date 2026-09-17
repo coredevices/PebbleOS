@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "pbl/kernel/compiler.h"
 
 #define GDRAW_COMMAND_VERSION (1)
 
@@ -25,7 +26,7 @@
 #define PDCI_SIZE_OFFSET sizeof(PDCI_SIGNATURE)
 #define PDCI_DATA_OFFSET (PDCI_SIZE_OFFSET + sizeof(uint32_t))
 
-struct __attribute__((__packed__)) GDrawCommand {
+struct PBL_PACKED GDrawCommand {
   GDrawCommandType type : 8;
   struct {
     uint8_t hidden : 1;
@@ -54,24 +55,24 @@ struct __attribute__((__packed__)) GDrawCommand {
   };
 };
 
-struct __attribute__((__packed__)) GDrawCommandList {
+struct PBL_PACKED GDrawCommandList {
   uint16_t num_commands;
   GDrawCommand commands[];
 };
 
-struct __attribute__((__packed__)) GDrawCommandImage {
+struct PBL_PACKED GDrawCommandImage {
   uint8_t version;
   uint8_t reserved;
   GSize size;
   GDrawCommandList command_list;
 };
 
-struct __attribute__((__packed__)) GDrawCommandFrame {
+struct PBL_PACKED GDrawCommandFrame {
   uint16_t duration;
   GDrawCommandList command_list;
 };
 
-struct __attribute__((__packed__)) GDrawCommandSequence {
+struct PBL_PACKED GDrawCommandSequence {
   uint8_t version;
   uint8_t reserved;
   GSize size;

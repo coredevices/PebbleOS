@@ -17,6 +17,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 
 #include "bf0_hal_rtc.h"
+#include "pbl/kernel/compiler.h"
 
 PBL_LOG_MODULE_DEFINE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
 
@@ -388,7 +389,7 @@ const char *time_t_to_string(char *buffer, time_t t) {
 
 //! Versioned storage structure for timezone info in flash
 //! This allows for future migrations and avoids struct alignment issues
-typedef struct __attribute__((packed)) {
+typedef struct PBL_PACKED {
   uint8_t version;          // Version number for future migrations
   char tm_zone[TZ_LEN - 1]; // Up to 5 character timezone abbreviation
   uint8_t dst_id;           // Daylight savings time zone index

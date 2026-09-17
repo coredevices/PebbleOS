@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "pbl/kernel/compiler.h"
 
 int32_t sign_extend(uint32_t a, int bits) {
   if (bits == 32) {
@@ -33,9 +34,9 @@ int32_t serial_distance(uint32_t a, uint32_t b, int bits) {
 
 int ceil_log_two(uint32_t n) {
   // clz stands for Count Leading Zeroes. We use it to find the MSB
-  int msb = 31 - __builtin_clz(n);
+  int msb = 31 - PBL_CLZ(n);
   // popcount counts the number of set bits in a word (1's)
-  bool power_of_two = __builtin_popcount(n) == 1;
+  bool power_of_two = PBL_POPCOUNT(n) == 1;
   // if not exact power of two, use the next power of two
   // we want to err on the side of caution and want to
   // always round up

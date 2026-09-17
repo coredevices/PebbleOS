@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
@@ -61,18 +62,17 @@ int32_t integer_sqrt(int64_t x);
 //! Determine whether a variable is signed or not.
 //! @param var The variable to evaluate.
 //! @return true if the variable is signed.
-#define IS_SIGNED(var)                                                                          \
-  (__builtin_choose_expr(                                                                       \
-      __builtin_types_compatible_p(__typeof__(var), unsigned char), false,                      \
-      __builtin_choose_expr(                                                                    \
-          __builtin_types_compatible_p(__typeof__(var), unsigned short), false,                 \
-          __builtin_choose_expr(                                                                \
-              __builtin_types_compatible_p(__typeof__(var), unsigned int), false,               \
-              __builtin_choose_expr(                                                            \
-                  __builtin_types_compatible_p(__typeof__(var), unsigned long), false,          \
-                  __builtin_choose_expr(                                                        \
-                      __builtin_types_compatible_p(__typeof__(var), unsigned long long), false, \
-                      true))))))
+#define IS_SIGNED(var)                                                                       \
+  (PBL_CHOOSE_EXPR(                                                                          \
+      PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned char), false,                           \
+      PBL_CHOOSE_EXPR(                                                                       \
+          PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned short), false,                      \
+          PBL_CHOOSE_EXPR(                                                                   \
+              PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned int), false,                    \
+              PBL_CHOOSE_EXPR(                                                               \
+                  PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned long), false,               \
+                  PBL_CHOOSE_EXPR(PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned long long), \
+                                  false, true))))))
 
 // http://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
 static inline int positive_modulo(int i, int n) {

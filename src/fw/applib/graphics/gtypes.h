@@ -335,7 +335,7 @@ void gpoint_sort(GPoint *points, size_t num_points, GPointComparator comparator,
 //! Internal respresentation of a point
 //! 1 bit for sign, 12 bits represent the coordinate, 3 bits represent the precision
 //! Supports -4096.000 px to 4095.875 px resolution
-typedef struct __attribute__((__packed__)) GPointPrecise {
+typedef struct PBL_PACKED GPointPrecise {
   //! The x-coordinate.
   Fixed_S16_3 x;
   //! The y-coordinate.
@@ -721,7 +721,7 @@ typedef enum GBitmapFormat {
 #define GBITMAP_VERSION_1       1
 #define GBITMAP_VERSION_CURRENT GBITMAP_VERSION_1
 
-typedef struct __attribute__((__packed__)) GBitmapLegacy2 {
+typedef struct PBL_PACKED GBitmapLegacy2 {
   //! Pointer to the address where the image data lives
   void *addr;
   //! @note The number of bytes per row may have restrictions depending on the format:
@@ -788,7 +788,7 @@ typedef struct BitmapInfo {
   uint8_t version : 4;
 } BitmapInfo;
 
-typedef struct __attribute__((__packed__)) GBitmap {
+typedef struct PBL_PACKED GBitmap {
   //! Pointer to the address where the image data lives
   void *addr;
   //! @note The number of bytes per row may have restrictions depending on the format:
@@ -1326,7 +1326,7 @@ typedef Fixed_S32_16 GTransformNumber;
 //! However, internally we do not need to store the last row since we only support two
 //! dimensions (x,y). Thus the last row is omitted from the internal storage.
 //! Data values are in 16.16 fixed point representation
-typedef struct __attribute__((__packed__)) GTransform {
+typedef struct PBL_PACKED GTransform {
   GTransformNumber a;
   GTransformNumber b;
   GTransformNumber c;

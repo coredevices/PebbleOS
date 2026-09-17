@@ -278,7 +278,7 @@ typedef struct PBL_PACKED {
 
 #define ACTIVITY_RAW_SAMPLE_FLAG_FIRST_RECORD 0x01 // Set for first record of session
 #define ACTIVITY_RAW_SAMPLE_FLAG_LAST_RECORD  0x02 // set for last record of session
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint16_t version;    // Set to ACTIVITY_RAW_SAMPLE_VERSION
   uint16_t session_id; // raw sample session id
   uint32_t time_local; // local time

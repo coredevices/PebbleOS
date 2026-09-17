@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "arabic_shaping.h"
+#include "pbl/kernel/compiler.h"
 
 // Caps codepoints per shaping call. Sized to match walk_line's 128-byte
 // shape buffer (~64 Arabic codepoints at 2 UTF-8 bytes each).
@@ -14,7 +15,7 @@
 
 // Shaping table entry - compact representation of Arabic letter forms
 // Each entry maps a basic Arabic letter to its presentation forms
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint16_t base;     // Basic Arabic codepoint (e.g., 0x0628 for Ba)
   uint16_t isolated; // Presentation form isolated
   uint8_t offsets;   // Packed offsets: final(4) | initial(2) | medial(2) from isolated

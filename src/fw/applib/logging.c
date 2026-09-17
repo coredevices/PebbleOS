@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "pbl/kernel/compiler.h"
 
 #define NEW_LOG_HEADER "NL" NEW_LOG_VERSION
 _Static_assert((CORE_ID_MAIN_MCU & PACKED_CORE_MASK) == CORE_ID_MAIN_MCU, "Core number invalid");
@@ -30,8 +31,8 @@ _Static_assert((CORE_ID_MAIN_MCU & PACKED_CORE_MASK) == CORE_ID_MAIN_MCU, "Core 
 
 #ifdef CONFIG_LOG_HASHED
 // Define the .log_string section format.
-static const char prv_NewLogHeader[]
-    __attribute__((nocommon, used, section(".log_string.header"))) = NEW_LOG_HEADER
+static const char prv_NewLogHeader[] PBL_NOCOMMON PBL_USED PBL_SECTION(".log_string.header") =
+    NEW_LOG_HEADER
     "=<file>:<line>:<level>:<color>:<msg>,"
     "CORE_ID=" str(CORE_ID_MAIN_MCU) ",CORE_NAME=Tintin";
 
