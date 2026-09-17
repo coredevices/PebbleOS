@@ -57,7 +57,7 @@ void event_put(PebbleEvent *event) {
 #include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 extern RegularTimerInfo *get_reminder_timer(void);
 extern bool get_reminder_armed(void);

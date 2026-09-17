@@ -18,7 +18,7 @@
 #include "stubs_print.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 #include <pbl/logging/logging.h>
 #include "system/passert.h"

@@ -207,7 +207,7 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include "stubs_status_bar_layer.h"
 #include "stubs_system_theme.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_tick.h"
 #include "stubs_time.h"
 #include "stubs_watchface.h"

@@ -30,7 +30,7 @@
 #include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 void app_install_clear_app_db(void) {
 }

@@ -6,7 +6,6 @@
 
 #include "drivers/flash.h"
 #include "drivers/rtc.h"
-#include "drivers/task_watchdog.h"
 #include "console/prompt.h"
 #include "kernel/util/idle.h"
 #include "pbl/services/analytics/analytics.h"
@@ -66,7 +65,6 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
       pbl_idle_slept(elapsed_ticks);
 
       flash_power_up_after_stop_mode();
-      task_watchdog_step_elapsed_time_ms((elapsed_ticks * 1000) / RTC_TICKS_HZ);
 
       s_analytics_full_sleep_ticks += elapsed_ticks;
     }

@@ -22,7 +22,7 @@
 #include "stubs_passert.h"
 #include "stubs_mutex.h"
 #include "stubs_system_reset.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_pbl_malloc.h"
 
 // Test data

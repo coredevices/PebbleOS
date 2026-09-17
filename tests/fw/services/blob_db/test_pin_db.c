@@ -34,7 +34,7 @@
 #include "stubs_regular_timer.h"
 #include "stubs_reminder_db.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
   return NULL;

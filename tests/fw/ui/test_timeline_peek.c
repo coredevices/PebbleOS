@@ -68,7 +68,7 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_
 #include "stubs_sleep.h"
 #include "stubs_status_bar_layer.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_timeline_event.h"
 #include "stubs_timeline_layer.h"
 #include "stubs_unobstructed_area.h"

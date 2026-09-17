@@ -4,7 +4,7 @@
 #include "flash_region.h"
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/util/sleep.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
@@ -16,7 +16,7 @@
 //!
 //! @param[in, out] erase_count Counter variable to track how many times we've run this upkeep
 //!                             function
-//! @param feed_watchdog Whether we should feed the task_watchdog for the current task or not
+//! @param feed_watchdog Whether we should feed the task watchdog for the current thread
 static void prv_erase_upkeep(int *erase_count, bool feed_watchdog) {
   (*erase_count)++;
   if ((*erase_count %= 2) == 0) {
@@ -28,7 +28,7 @@ static void prv_erase_upkeep(int *erase_count, bool feed_watchdog) {
   }
 
   if (feed_watchdog) {
-    task_watchdog_bit_set(pebble_task_get_current());
+    pbl_task_wdt_feed_self();
   }
 }
 

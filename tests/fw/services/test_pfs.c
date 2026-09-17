@@ -27,7 +27,7 @@
 #include "stubs_prompt.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 #define PFS_SECTOR_SIZE 4096
 

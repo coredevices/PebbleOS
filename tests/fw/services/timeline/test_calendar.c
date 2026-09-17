@@ -40,7 +40,7 @@
 #include "stubs_session.h"
 #include "stubs_sleep.h"
 #include "stubs_system_task.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_text_layer_flow.h"
 #include "stubs_timeline.h"
 #include "stubs_timeline_pin_window.h"

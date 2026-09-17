@@ -29,7 +29,7 @@
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
 #include "stubs_system_reset.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_memory_layout.h"
 
 // Fakes

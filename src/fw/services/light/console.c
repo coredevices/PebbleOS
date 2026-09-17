@@ -11,7 +11,7 @@
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 #include "applib/graphics/framebuffer.h"
 #include "applib/ui/animation_private.h"
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include <pbl/drivers/watchdog.h>
 #include "kernel/event_loop.h"
 #include "pbl/services/compositor/compositor.h"
@@ -115,7 +115,7 @@ static uint32_t prv_als_read_raw_avg(uint8_t n) {
   for (uint8_t i = 0; i < n; i++) {
     sum += ambient_light_get_light_level();
     watchdog_feed();
-    task_watchdog_bit_set_all();
+    pbl_task_wdt_feed_all();
     psleep(30);
   }
   return (n > 0) ? (sum / n) : 0;

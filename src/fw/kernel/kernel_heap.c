@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/task_watchdog.h>
 #include "kernel_heap.h"
 #include "pbl/mcu/interrupts.h"
 #include "pbl/services/analytics/analytics.h"
@@ -13,16 +12,15 @@ static Heap s_kernel_heap;
 static bool s_interrupts_disabled_by_heap;
 static uint32_t s_pri_mask; // cache basepri mask we restore to in heap_unlock
 
-// Locking callbacks for our kernel heap.
-// FIXME: Note that we use __set_BASEPRI() instead of a mutex because our heap
-// has to be used before we even initialize FreeRTOS. We don't use
-// __disable_irq() because we want to catch any hangs in the heap code with our
-// high priority watchdog so that a coredump is triggered.
+// The heap is used before the kernel runs, so it locks by masking
+// interrupts rather than with a mutex. Faults and the most urgent
+// interrupts stay enabled.
+#define HEAP_LOCK_BASEPRI (2 << (8 - __NVIC_PRIO_BITS))
 
 static void prv_heap_lock(void *ctx) {
   if (mcu_state_are_interrupts_enabled()) {
     s_pri_mask = __get_BASEPRI();
-    __set_BASEPRI((TASK_WATCHDOG_PRIORITY + 1) << (8 - __NVIC_PRIO_BITS));
+    __set_BASEPRI(HEAP_LOCK_BASEPRI);
     s_interrupts_disabled_by_heap = true;
   }
 }

@@ -5,7 +5,7 @@
 #include "pbl/services/settings/settings_raw_iter.h"
 
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
 #include <pbl/logging/logging.h>
@@ -228,9 +228,8 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
     return E_OUT_OF_MEMORY;
   }
 
-  // A 1 MiB grow can take many seconds of pure flash erase + write time. Pause
-  // the task watchdog rather than letting it trip and kick App Throttling.
-  task_watchdog_pause(60);
+  // A 1 MiB grow can take many seconds of pure flash erase + write time.
+  pbl_task_wdt_suspend(60 * 1000);
 
   SettingsFile new_file;
   status_t status =
@@ -241,7 +240,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
                 status);
     kernel_free(kv_buf);
     kernel_free(name);
-    task_watchdog_resume();
+    pbl_task_wdt_resume();
     return status;
   }
 
@@ -295,7 +294,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
                     alloc_used_space, min_alloc_used_space);
   kernel_free(name);
 
-  task_watchdog_resume();
+  pbl_task_wdt_resume();
 
   return status;
 }

@@ -68,7 +68,7 @@
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"
 #include "stubs_system_task.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_watchface.h"
 #include "stubs_worker_manager.h"
 

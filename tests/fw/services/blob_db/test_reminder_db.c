@@ -28,7 +28,7 @@
 #include "stubs_regular_timer.h"
 #include "stubs_reminders.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 void reminders_handle_reminder_removed(const Uuid *reminder_id) {
 }

@@ -97,8 +97,8 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
       break;
     // Error occurred
     case RebootReasonCode_Watchdog:
-      PBL_LOG_WRN("%s%sWatchdog: Bits 0x%" PRIx8 ", Mask 0x%" PRIx8, restarted_safely_string,
-                  rebooted_due_to, reason.data8[0], reason.data8[1]);
+      PBL_LOG_WRN("%s%sWatchdog: channels fed 0x%" PRIx8 ", active 0x%" PRIx8,
+                  restarted_safely_string, rebooted_due_to, reason.data8[0], reason.data8[1]);
 
       if (reason.watchdog.stuck_task_pc != 0) {
         PBL_LOG_WRN("Stuck task PC: 0x%" PRIx32 ", LR: 0x%" PRIx32, reason.watchdog.stuck_task_pc,

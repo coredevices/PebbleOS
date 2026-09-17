@@ -23,7 +23,7 @@
 #include "stubs_prompt.h"
 #include "stubs_rtc.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_vibe_score_info.h"
 
 #include "fake_spi_flash.h"

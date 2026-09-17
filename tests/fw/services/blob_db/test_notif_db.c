@@ -29,7 +29,7 @@
 #include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 void test_notif_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);

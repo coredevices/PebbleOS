@@ -12,7 +12,7 @@
 #include "dbgserial.h"
 #include "debug/flash_logging.h"
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "flash_region/flash_region.h"
 #include "kernel/event_loop.h"
 #include "logging/logging_private.h"
@@ -362,7 +362,7 @@ void command_flash_show_erased_sectors(const char *arg) {
       }
     }
     addr += SECTOR_SIZE_BYTES;
-    task_watchdog_bit_set(pebble_task_get_current());
+    pbl_task_wdt_feed_self();
   }
 }
 
@@ -604,7 +604,7 @@ static void s_flash_benchmark(size_t sz) {
   free(buf);
 
   /* this could take a while -- don't crash! */
-  task_watchdog_bit_set(pebble_task_get_current());
+  pbl_task_wdt_feed_self();
 }
 
 void command_flash_benchmark() {
@@ -907,7 +907,6 @@ void command_log_dump_spam(void) {
 
 #ifdef TEST_FLASH_LOCK_PROTECTION
 #include "flash_region/flash_region.h"
-#include <pbl/drivers/task_watchdog.h>
 #include <pbl/drivers/watchdog.h>
 
 // This test attempts to write over every region of the flash.
@@ -940,7 +939,7 @@ void command_flash_test_locked_sectors(void) {
     }
   }
 
-  task_watchdog_bit_set(pebble_task_get_current());
+  pbl_task_wdt_feed_self();
   __enable_irq();
 }
 #endif
@@ -1048,7 +1047,7 @@ void command_litter_filesystem(const char *s_number, const char *s_size) {
       PBL_LOG_DBG("Closed %s", name);
     }
 
-    task_watchdog_bit_set(pebble_task_get_current());
+    pbl_task_wdt_feed_self();
   }
 }
 #endif
@@ -1136,8 +1135,6 @@ void command_ble_logging_get_level(void) {
 }
 
 #ifdef CONFIG_PERFORMANCE_TESTS
-// for task_watchdog_bit_set_all
-#include <pbl/drivers/task_watchdog.h>
 // For taskYIELD()
 
 // Average this many iterations of the text test for getting useful perf numbers.
@@ -1410,7 +1407,7 @@ static void prv_perftest_test_main(void *data) {
   for (int i = 0; i < PERFTEST_TEXT_ITERATIONS; i++) {
     // Sometimes this loop takes long enough that we end up watchdogging
     watchdog_feed();
-    task_watchdog_bit_set_all();
+    pbl_task_wdt_feed_all();
 
     GContext *ctx = prv_perftest_get_context();
     graphics_context_set_text_color(ctx, GColorBlack);
@@ -1439,7 +1436,7 @@ void command_perftest_text(const char *string_type, const char *fontkey, const c
   while (s_perftest_text_arguments.string_type != NULL) {
     taskYIELD();
     watchdog_feed();
-    task_watchdog_bit_set_all();
+    pbl_task_wdt_feed_all();
   }
 }
 

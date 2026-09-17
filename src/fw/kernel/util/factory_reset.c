@@ -4,7 +4,7 @@
 #include "kernel/util/factory_reset.h"
 
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "flash_region/filesystem_regions.h"
 #include "kernel/event_loop.h"
 #include "kernel/util/standby.h"
@@ -106,8 +106,8 @@ void close_db_files() {
 void factory_reset_fast(void *unused) {
   s_in_factory_reset = true;
 
-  // disable the watchdog... we've got lots to do before we reset
-  task_watchdog_mask_clear(pebble_task_get_current());
+  // Lots of flash work follows before the reset.
+  pbl_task_wdt_suspend(0);
 
   close_db_files();
 

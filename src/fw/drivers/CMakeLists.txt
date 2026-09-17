@@ -34,8 +34,6 @@ pbl_library_sources(
   mpu.c
   ${mpu_arch_source}
 )
-pbl_library_named(driver_task_watchdog)
-pbl_library_sources(task_watchdog.c)
 if(CONFIG_QEMU)
   pbl_library_named(driver_button)
   pbl_library_sources(qemu/qemu_button.c)

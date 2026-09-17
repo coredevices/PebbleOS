@@ -16,7 +16,7 @@
 #include "console/control_protocol_impl.h"
 #include "console/dbgserial.h"
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/mcu/interrupts.h"
@@ -239,8 +239,10 @@ static pbl_tick_t prv_poll_timer(uint8_t *const sequence_number) {
   return timeout;
 }
 
+static int s_wdt_channel = -1;
+
 static void prv_pulse_task_feed_watchdog(void) {
-  task_watchdog_bit_set(PebbleTask_PULSE);
+  pbl_task_wdt_feed(s_wdt_channel);
 }
 
 static void prv_pulse_task_idle_timer_callback(void *data) {
@@ -250,7 +252,8 @@ static void prv_pulse_task_idle_timer_callback(void *data) {
 }
 
 static void prv_pulse_task_main(void *unused) {
-  task_watchdog_mask_set(PebbleTask_PULSE);
+  s_wdt_channel = pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, NULL, NULL);
+  PBL_ASSERTN(s_wdt_channel >= 0);
 
   static RegularTimerInfo idle_watchdog_timer = {.cb = prv_pulse_task_idle_timer_callback};
   regular_timer_add_seconds_callback(&idle_watchdog_timer);

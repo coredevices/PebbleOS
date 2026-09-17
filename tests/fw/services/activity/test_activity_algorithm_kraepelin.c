@@ -36,7 +36,7 @@
 #include "stubs_passert.h"
 #include "stubs_prompt.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 // Fakes
 #include "fake_accel_service.h"

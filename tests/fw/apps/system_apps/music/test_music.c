@@ -46,7 +46,7 @@
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_vibe_score.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"

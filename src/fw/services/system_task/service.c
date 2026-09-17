@@ -5,21 +5,28 @@
 
 #include <pbl/logging/logging.h>
 
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/pebble_tasks.h"
+#include "process_management/app_manager.h"
+#include "pbl/services/new_timer/new_timer.h"
 #include "kernel/util/task_init.h"
 #include "pbl/mcu/fpu.h"
 #include "pbl/kernel/types.h"
 #include "pbl/services/regular_timer.h"
+#include "system/passert.h"
 
 #include "pbl/kernel/msgq.h"
 #include "pbl/kernel/poll.h"
 #include "pbl/kernel/thread.h"
 #include "pbl/kernel/compiler.h"
 
+#include <string.h>
+
 PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL);
 
 #define SYSTEM_TASK_PRIORITY (PBL_PRIO_IDLE + 1)
+
+#define APP_THROTTLE_TIME_MS 300
 
 typedef struct {
   SystemTaskEventCallback cb;
@@ -37,6 +44,9 @@ static bool s_initialized;
 
 static SystemTaskEventCallback s_current_cb;
 
+static int s_wdt_channel = -1;
+static TimerID s_throttle_timer = TIMER_INVALID_ID;
+
 static bool s_system_task_idle = true;
 static bool s_should_block_callbacks = false;
 
@@ -50,8 +60,47 @@ static void system_task_idle_timer_callback(void *data) {
   }
 }
 
+static void prv_app_throttle_end(void *data) {
+  struct pbl_thread *app = pebble_task_get_thread(PebbleTask_App);
+  if (app) {
+    pbl_thread_prio_set(app, APP_TASK_PRIORITY);
+  }
+  PBL_LOG_DBG("Ending App Throttling");
+}
+
+static void prv_app_throttle_start(void) {
+  static char s_last_throttled_app[PBL_THREAD_NAME_LEN];
+  struct pbl_thread *app = pebble_task_get_thread(PebbleTask_App);
+  if (!app) {
+    return;
+  }
+
+  const char *name = pbl_thread_name(app);
+  if (strcmp(s_last_throttled_app, name) != 0) {
+    strcpy(s_last_throttled_app, name);
+    PBL_LOG_WRN("Starting App Throttling for %s", name);
+  } else {
+    PBL_LOG_DBG("Starting App Throttling for %s", name);
+  }
+
+  pbl_thread_prio_set(app, PBL_PRIO_IDLE);
+  new_timer_start(s_throttle_timer, APP_THROTTLE_TIME_MS, prv_app_throttle_end, NULL, 0);
+}
+
+//! The system task is starved when it is ready to run but does not get the
+//! CPU, or blocked in a callback on a lock the worker cannot release because
+//! the app hogs the CPU. Parking the app briefly resolves both.
+static void *prv_wdt_expired(int channel_id, void *user_data) {
+  if (s_throttle_timer != TIMER_INVALID_ID &&
+      (system_task_is_ready_to_run() || s_current_cb != NULL)) {
+    prv_app_throttle_start();
+  }
+  return s_current_cb;
+}
+
 static void system_task_main(void *paramater) {
-  task_watchdog_mask_set(PebbleTask_KernelBackground);
+  s_wdt_channel = pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, NULL);
+  PBL_ASSERTN(s_wdt_channel >= 0);
   task_init();
 
   while (true) {
@@ -101,6 +150,8 @@ void system_task_init(void) {
 }
 
 void system_task_timer_init(void) {
+  s_throttle_timer = new_timer_create();
+
   // Register a regular timer to kick the watchdog while we're waiting for something
   // to do. The other way to do this is to have the queue wait in system_task_main time out
   // occasionally, but that isn't necessarily second aligned and will require the watch
@@ -113,7 +164,7 @@ void system_task_timer_init(void) {
 }
 
 void system_task_watchdog_feed(void) {
-  task_watchdog_bit_set(PebbleTask_KernelBackground);
+  pbl_task_wdt_feed(s_wdt_channel);
 }
 
 static void handle_system_task_send_failure(SystemTaskEventCallback cb, uintptr_t caller_lr) {

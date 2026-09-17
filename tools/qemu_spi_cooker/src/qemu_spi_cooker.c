@@ -26,7 +26,7 @@
 #include "stubs_prompt.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "fake_spi_flash.h"
 
 void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,

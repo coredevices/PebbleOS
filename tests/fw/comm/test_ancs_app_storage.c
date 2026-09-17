@@ -24,7 +24,7 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_system_reset.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 // Fakes
 ////////////////////////////////////

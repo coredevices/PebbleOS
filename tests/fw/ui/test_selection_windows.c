@@ -96,7 +96,7 @@ GContext *graphics_context_get_current_context(void) {
 #include "stubs_status_bar_layer.h"
 #include "stubs_syscall_internal.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_text_layer_flow.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"

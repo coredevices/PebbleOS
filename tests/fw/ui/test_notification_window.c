@@ -73,7 +73,7 @@
 #include "stubs_stringlist.h"
 #include "stubs_syscall_internal.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_time.h"
 #include "stubs_timeline.h"
 #include "stubs_timeline_actions.h"

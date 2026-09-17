@@ -25,7 +25,7 @@
 #include "stubs_prompt.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_memory_layout.h"
 
 static const uint8_t pug[] = {

@@ -28,7 +28,7 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 #define TEST_START FLASH_REGION_FILE_TEST_SPACE_BEGIN
 #define TEST_SIZE  (FLASH_REGION_FILE_TEST_SPACE_END - FLASH_REGION_FILE_TEST_SPACE_BEGIN)

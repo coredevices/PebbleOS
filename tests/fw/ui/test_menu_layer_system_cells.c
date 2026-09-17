@@ -87,7 +87,7 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
   prv_stubbed_sys_process_manager_get_current_process_id
 #include "stubs_syscalls.h"
 #undef sys_process_manager_get_current_process_id
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
 

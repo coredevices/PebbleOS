@@ -39,7 +39,7 @@
 #include "stubs_session.h"
 #include "stubs_sleep.h"
 #include "stubs_system_reset.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_memory_layout.h"
 
 static bool s_prefs_24h_style;

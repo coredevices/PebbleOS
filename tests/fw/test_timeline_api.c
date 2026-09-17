@@ -41,7 +41,7 @@
 #include "stubs_regular_timer.h"
 #include "stubs_session.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_window_stack.h"
 
 // Fakes

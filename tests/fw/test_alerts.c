@@ -22,7 +22,7 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_prompt.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_vibes.h"
 #include "stubs_vibe_score_info.h"
 #include "fake_rtc.h"

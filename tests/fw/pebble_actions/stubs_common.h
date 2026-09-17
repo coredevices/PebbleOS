@@ -48,7 +48,7 @@
 #include "stubs_reminder_db.h"
 #include "stubs_rtc.h"
 #include "stubs_simple_dialog.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_ui_window.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"

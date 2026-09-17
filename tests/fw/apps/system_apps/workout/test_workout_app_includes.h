@@ -48,7 +48,7 @@
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_timeline_item.h"
 #include "stubs_vibes.h"
 #include "stubs_window_manager.h"

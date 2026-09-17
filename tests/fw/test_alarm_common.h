@@ -39,7 +39,7 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_timeline_event.h"
 
 // Fakes

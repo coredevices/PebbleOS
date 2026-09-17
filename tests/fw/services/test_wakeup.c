@@ -36,7 +36,7 @@
 #include "stubs_sleep.h"
 #include "stubs_mutex.h"
 #include "stubs_hexdump.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_compiled_with_legacy2_sdk.h"
 #include "stubs_memory_layout.h"
 

@@ -11,7 +11,7 @@
 #include "applib/event_service_client.h"
 #include "apps/system_app_registry.h"
 #include "console/prompt.h"
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
@@ -853,7 +853,7 @@ void app_install_release_md(const PebbleProcessMd *md) {
 
 static void prv_enumerate_app_db_delete(AppInstallId install_id, AppDBEntry *db_entry, void *data) {
   PBL_ASSERTN(app_install_id_from_app_db(install_id));
-  task_watchdog_bit_set(pebble_task_get_current());
+  pbl_task_wdt_feed_self();
 
   const bool gracefully = true;
   if (app_manager_get_current_app_id() == install_id) {

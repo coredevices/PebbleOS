@@ -16,7 +16,7 @@
 #include "comm/ble/kernel_le_client/kernel_le_client.h"
 #include "console/serial_console.h"
 #include <pbl/drivers/button.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/core_dump.h"
 #include "kernel/kernel_applib_state.h"
 #include "kernel/low_power.h"
@@ -566,7 +566,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   stationary_init();
 #endif
 
-  task_watchdog_bit_set(PebbleTask_KernelMain);
+  pbl_task_wdt_feed_self();
 
   // if we are in launcher panic, don't turn on any extra services.
   const RunLevel run_level =
@@ -609,7 +609,7 @@ void launcher_main_loop(void) {
   prv_launcher_main_loop_init();
 
   while (1) {
-    task_watchdog_bit_set(PebbleTask_KernelMain);
+    pbl_task_wdt_feed_self();
 
     // We make this PebbleEvent static to save stack space
     static PebbleEvent e;

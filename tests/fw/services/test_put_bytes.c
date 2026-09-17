@@ -38,7 +38,7 @@
 #include "stubs_pfs.h"
 #include "stubs_prompt.h"
 #include "stubs_serial.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_tick.h"
 
 extern struct pbl_sem *put_bytes_get_semaphore(void);

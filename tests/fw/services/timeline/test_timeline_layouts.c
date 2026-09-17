@@ -90,7 +90,7 @@ void clock_get_until_time_capitalized(char *buffer, int buf_size, time_t timesta
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_timeline.h"
 #include "stubs_timeline_actions.h"
 #include "stubs_timeline_item.h"

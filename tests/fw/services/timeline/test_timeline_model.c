@@ -52,7 +52,7 @@ static TimezoneInfo tz = {
 #include "stubs_session.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_window_stack.h"
 
 void ancs_notifications_enable_bulk_action_mode(bool enable) {

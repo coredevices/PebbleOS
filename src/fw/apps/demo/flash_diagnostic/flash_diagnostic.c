@@ -10,7 +10,6 @@
 #include "applib/ui/ui.h"
 #include "applib/ui/window.h"
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/task_watchdog.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"

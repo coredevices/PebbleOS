@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/flash/flash_impl.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "flash_region/flash_region.h"
 #include "pbl/kernel/mutex.h"
 #include "pbl/kernel/types.h"
@@ -73,7 +73,7 @@ static void prv_erase_pause(void) {
     // If an erase is in progress, make sure it gets at least a minimum time slice to progress.
     // If not, the successive kicking of the suspend timer could starve it out completely
     psleep(100);
-    task_watchdog_bit_set(s_erase.task);
+    pbl_task_wdt_feed_thread(pebble_task_get_thread(s_erase.task));
     status_t status = flash_impl_erase_suspend(s_erase.address);
     PBL_ASSERT(PASSED(status), "Erase suspend failure: %" PRId32, status);
     if (status == S_NO_ACTION_REQUIRED) {
@@ -330,12 +330,12 @@ static void prv_flash_erase_blocking(uint32_t sector_addr, bool is_subsector) {
       // triggering their task watchdogs before this erase completes. Let's kick all watchdogs
       // instead. The downside to this is that it may take us longer to detect another thread is
       // stuck, but we should still detect it eventually as long as we're not constantly erasing.
-      task_watchdog_bit_set_all();
+      pbl_task_wdt_feed_all();
 #else
       // Just kick the watchdog for the current task. This should give us more accurate watchdog
       // behaviour and sealed watches haven't been abused as much and shouldn't have extremely
       // long erase problems.
-      task_watchdog_bit_set(pebble_task_get_current());
+      pbl_task_wdt_feed_self();
 #endif
     }
   }

@@ -51,7 +51,7 @@
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
 #include "stubs_syscall_internal.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_reboot_reason.h"
 
 #include <stdlib.h>

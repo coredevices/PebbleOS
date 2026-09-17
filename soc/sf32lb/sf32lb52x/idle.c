@@ -9,7 +9,6 @@
 #include "drivers/flash.h"
 #include "drivers/rtc.h"
 #include "drivers/sf32lb52/rc10k.h"
-#include "drivers/task_watchdog.h"
 #include "kernel/util/idle.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/soc/sf32lb/sleep.h"
@@ -51,16 +50,6 @@ static const uint32_t MIN_DEEPSLEEP_TICKS = RTC_TICKS_HZ / 20;
 static const uint32_t MAX_LPTIM_CNT = 0xFFFFFFUL;
 
 static uint32_t s_iser_bak[16];
-
-static void prv_wdt_feed(uint16_t elapsed_ticks) {
-  static uint32_t wdt_feed_ticks;
-
-  wdt_feed_ticks += elapsed_ticks;
-  if (wdt_feed_ticks >= (RTC_TICKS_HZ / (1000 / TASK_WATCHDOG_FEED_PERIOD_MS))) {
-    wdt_feed_ticks = 0U;
-    task_watchdog_feed();
-  }
-}
 
 static void prv_save_iser(void) {
   uint32_t i;
@@ -252,8 +241,6 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
         // increment HAL tick counter by elapsed ticks
         uwTick += elapsed_ticks;
 
-        prv_wdt_feed(elapsed_ticks);
-
         // Force RTC synchronization of shadow registers
         hwp_rtc->ISR &= RTC_RSF_MASK;
 
@@ -332,8 +319,6 @@ void SysTick_Handler(void) {
   pbl_kernel_tick_isr();
 
   HAL_IncTick();
-
-  prv_wdt_feed(1U);
 
   if (s_last_sleep_type == SleepTypeWfi) {
     s_analytics_wfi_ticks++;

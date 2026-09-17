@@ -49,7 +49,7 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_watchface.h"
 #include "stubs_worker_manager.h"
 

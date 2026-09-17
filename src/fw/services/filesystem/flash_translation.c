@@ -4,7 +4,6 @@
 #include "pbl/services/filesystem/flash_translation.h"
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/task_watchdog.h>
 #include "flash_region/filesystem_regions.h"
 #include "flash_region/flash_region.h"
 #include "pbl/services/filesystem/pfs.h"

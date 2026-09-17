@@ -44,7 +44,7 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
 #include "stubs_system_reset.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 static int s_ble_bonding_change_add_count;
 static int s_ble_bonding_change_update_count;

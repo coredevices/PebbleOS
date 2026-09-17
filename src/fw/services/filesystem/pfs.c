@@ -12,7 +12,7 @@
 #include "console/prompt.h"
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "flash_region/filesystem_regions.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
@@ -510,7 +510,7 @@ static int get_updated_erase_hdr(PageHeader *hdr, uint16_t page) {
   // feed watchdog since erases can take a while & give lower priority tasks
   // a little time in case we are calling this from a high priority task and
   // stalling them
-  task_watchdog_bit_set(pebble_task_get_current());
+  pbl_task_wdt_feed_self();
   psleep(1);
 
   // mark the page as erased. This way we know that the erase completed
