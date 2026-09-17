@@ -15,9 +15,12 @@
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
+#include "pbl/services/i18n/i18n.h"
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/notifications/notifications.h"
+#include "pbl/services/timeline/attribute.h"
 #include "pbl/services/timeline/timeline.h"
+#include "pbl/services/timeline/timeline_resources.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/pstring.h"
@@ -401,4 +404,28 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
   if (properties & ANCSProperty_IncomingCall) {
     ancs_phone_call_handle_removed(ancs_uid, ios_9);
   }
+}
+
+void ancs_notifications_handle_access_denied(void) {
+  AttributeList attr_list = {};
+  attribute_list_add_cstring(&attr_list, AttributeIdTitle,
+                             i18n_get("iPhone Notifications Blocked", &attr_list));
+  attribute_list_add_cstring(
+      &attr_list, AttributeIdBody,
+      i18n_get("Your iPhone is not sharing notifications with this watch. On your iPhone, open "
+               "Settings > Bluetooth, tap the (i) next to your Pebble and turn on Share System "
+               "Notifications.",
+               &attr_list));
+  attribute_list_add_uint32(&attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_GENERIC_WARNING);
+  attribute_list_add_uint8(&attr_list, AttributeIdBgColor, GColorOrangeARGB8);
+
+  TimelineItem *item = timeline_item_create_with_attributes(
+      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, NULL);
+  i18n_free_all(&attr_list);
+  attribute_list_destroy_list(&attr_list);
+  if (!item) {
+    return;
+  }
+  notifications_add_notification(item);
+  timeline_item_destroy(item);
 }

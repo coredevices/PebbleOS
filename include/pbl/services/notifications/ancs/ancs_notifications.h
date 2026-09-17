@@ -13,3 +13,6 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
                                        ANCSAttribute **app_attributes);
 
 void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSProperty properties);
+
+//! iOS keeps rejecting Control Point writes: it no longer lets this watch read notifications.
+void ancs_notifications_handle_access_denied(void);

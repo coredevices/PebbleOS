@@ -527,6 +527,42 @@ void test_ancs__alive_check_disconnection(void) {
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
 }
 
+// iOS answers the alive check with an ATT error when it no longer lets this
+// watch read notifications. Warn the user once, and re-arm only after iOS
+// answers normally again.
+void test_ancs__alive_check_rejected_warns_user_once(void) {
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0x03);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0x03);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+
+  // Further rejections, including across a reconnect, don't repeat the warning.
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0x03);
+  ancs_handle_service_removed(s_characteristics, NumANCSCharacteristic);
+  ancs_handle_service_discovered(s_characteristics);
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0x03);
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0x03);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+
+  // iOS answers normally again: a later block warns again.
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0xA2);
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0x03);
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0x03);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
+
+  prv_check_ancs_alive();
+  ancs_handle_write_response(0, 0xA2);
+}
+
 void test_ancs__notification_dismissal(void) {
   NSNotification ns_notification = {
     .event_id = EventIDNotificationRemoved,
