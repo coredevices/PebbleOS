@@ -30,6 +30,9 @@ bool new_timer_stop(TimerID timer) {
   return true;
 }
 
+void new_timer_delete(TimerID timer) {
+}
+
 // Tests
 ///////////////////////////////////////////////////////////
 // Thursday 2015 Nov 12, 00:00:00 GMT

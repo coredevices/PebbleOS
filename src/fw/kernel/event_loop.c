@@ -479,6 +479,9 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
 
       // TODO: evaluate if these need to change on every time update
       do_not_disturb_handle_clock_change();
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+      light_handle_clock_change();
+#endif
 #endif
       return;
     }

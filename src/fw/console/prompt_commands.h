@@ -64,6 +64,7 @@ extern void command_als_lux(void);
 extern void command_als_curve(void);
 #endif
 extern void command_backlight_set_color(const char *);
+extern void command_backlight_day_night(const char *);
 
 extern void command_battery_charge_option(const char *);
 
@@ -513,6 +514,7 @@ static const Command s_prompt_commands[] = {
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
   // Drivers
   {"backlight color", command_backlight_set_color, 1},
+  {"backlight daynight", command_backlight_day_night, 1},
 #endif
 
   //  { "watch", command_watch, 0 },

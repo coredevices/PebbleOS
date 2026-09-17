@@ -5,8 +5,14 @@
 
 #include "console/prompt.h"
 #include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/backlight.h>
+#include <pbl/drivers/rtc.h>
 #include "kernel/util/sleep.h"
 #include "pbl/services/light.h"
+#include "shell/prefs.h"
+#include "util/time/time.h"
+
+#include <string.h>
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 #include "applib/graphics/framebuffer.h"
@@ -166,3 +172,38 @@ void command_als_curve(void) {
 }
 
 #endif // CONFIG_ALS_SCREEN_COMPENSATION
+
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+static void prv_day_night_status(void) {
+  char buffer[96];
+  struct tm now;
+  rtc_get_time_tm(&now);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "enabled=%d now=%02d:%02d sunrise=%u sunset=%u",
+                           backlight_day_night_color_is_enabled(), now.tm_hour, now.tm_min,
+                           backlight_get_sunrise_minute(), backlight_get_sunset_minute());
+  prompt_send_response_fmt(buffer, sizeof(buffer), "day=%06" PRIx32 " night=%06" PRIx32,
+                           backlight_get_default_color(), backlight_get_night_color());
+}
+
+// Arms a green (day) -> red (night) switch one minute from now.
+void command_backlight_day_night(const char *arg) {
+  if (strcmp(arg, "start") == 0) {
+    struct tm now;
+    rtc_get_time_tm(&now);
+    const uint16_t sunrise = now.tm_hour * MINUTES_PER_HOUR + now.tm_min;
+    backlight_set_default_color(BACKLIGHT_COLOR_GREEN);
+    backlight_set_night_color(BACKLIGHT_COLOR_RED);
+    backlight_set_sunrise_minute(sunrise);
+    backlight_set_sunset_minute((sunrise + 1) % MINUTES_PER_DAY);
+    backlight_day_night_color_set_enabled(true);
+    light_enable(true);
+  } else if (strcmp(arg, "off") == 0) {
+    backlight_day_night_color_set_enabled(false);
+    light_enable(false);
+  } else if (strcmp(arg, "status") != 0) {
+    prompt_send_response("usage: backlight daynight <start|status|off>");
+    return;
+  }
+  prv_day_night_status();
+}
+#endif

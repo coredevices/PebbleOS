@@ -108,6 +108,11 @@ pbl_clar_test(test_compass_cal
 pbl_clar_test(test_light
   SOURCES
     src/fw/services/light/service.c
+    src/fw/services/cron/service.c
+    src/fw/util/time/time.c
+    src/fw/util/time/mktime.c
+    tests/fakes/fake_rtc.c
+  DEFINES CONFIG_BACKLIGHT_HAS_COLOR
   OVERRIDES getafix_backlight
 )
 

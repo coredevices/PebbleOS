@@ -17,7 +17,9 @@
 #include "pbl/util/math.h"
 #include "services/light/als_screen_compensation.h"
 #include "syscall/syscall_internal.h"
+#include "util/time/time.h"
 #include <pbl/logging/logging.h>
+#include <pebbleos/cron.h>
 #include "pbl/kernel/mutex.h"
 
 PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
@@ -84,9 +86,12 @@ static bool s_app_rgb_override_valid;
 
 //! Count of active modal preempts (notifications, etc.) that temporarily
 //! mask any app RGB override. The app's override stays stored; only while
-//! this refcount is non-zero is the LED driven to the default color.
+//! this refcount is non-zero is the LED driven to the system color.
 //! When the refcount returns to zero, the override (if any) is re-applied.
 static uint8_t s_color_preempt_refcount;
+
+static CronJob s_sunrise_job;
+static CronJob s_sunset_job;
 #endif
 
 //! For temporary disabling backlight (ie: low power mode)
@@ -293,13 +298,80 @@ static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
 }
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-//! LED color to drive when no app has set an override. Backed by the
-//! user's stored backlight-color preference, defaulting to BACKLIGHT_COLOR_WARM_WHITE.
+static bool prv_day_night_schedule_valid(void) {
+  const uint16_t sunrise = backlight_get_sunrise_minute();
+  const uint16_t sunset = backlight_get_sunset_minute();
+
+  return backlight_day_night_color_is_enabled() && sunrise < MINUTES_PER_DAY &&
+         sunset < MINUTES_PER_DAY && sunrise != sunset;
+}
+
+static bool prv_is_daytime(const struct tm *now) {
+  const uint16_t minute = now->tm_hour * MINUTES_PER_HOUR + now->tm_min;
+  const uint16_t sunrise = backlight_get_sunrise_minute();
+  const uint16_t sunset = backlight_get_sunset_minute();
+
+  if (sunrise < sunset) {
+    return minute >= sunrise && minute < sunset;
+  }
+  return minute >= sunrise || minute < sunset;
+}
+
+//! LED color to drive when no app has set an override: the user's day color,
+//! or the night color while the day/night schedule says so.
+static uint32_t prv_get_system_color(void) {
+  if (!prv_day_night_schedule_valid()) {
+    return backlight_get_default_color();
+  }
+
+  struct tm now;
+  rtc_get_time_tm(&now);
+  return prv_is_daytime(&now) ? backlight_get_default_color() : backlight_get_night_color();
+}
+
 static void prv_apply_rgb_color(void) {
   const bool preempted = (s_color_preempt_refcount > 0);
   const uint32_t color =
-      (preempted || !s_app_rgb_override_valid) ? backlight_get_default_color() : s_app_rgb_override;
+      (preempted || !s_app_rgb_override_valid) ? prv_get_system_color() : s_app_rgb_override;
   backlight_set_color(color);
+}
+
+static void prv_apply_system_color_locked(void) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  if (s_light_state != LIGHT_STATE_OFF) {
+    prv_apply_rgb_color();
+  }
+  pbl_mutex_unlock(&s_mutex);
+}
+
+static void prv_day_night_cron_callback(CronJob *job, void *data) {
+  prv_apply_system_color_locked();
+  cron_job_schedule(job);
+}
+
+static void prv_schedule_daily_job(CronJob *job, uint16_t minute_of_day) {
+  *job = (CronJob){
+    .cb = prv_day_night_cron_callback,
+    .minute = minute_of_day % MINUTES_PER_HOUR,
+    .hour = minute_of_day / MINUTES_PER_HOUR,
+    .mday = CRON_MDAY_ANY,
+    .month = CRON_MONTH_ANY,
+  };
+  cron_job_schedule(job);
+}
+
+void light_handle_color_prefs_changed(void) {
+  cron_job_unschedule(&s_sunrise_job);
+  cron_job_unschedule(&s_sunset_job);
+  if (prv_day_night_schedule_valid()) {
+    prv_schedule_daily_job(&s_sunrise_job, backlight_get_sunrise_minute());
+    prv_schedule_daily_job(&s_sunset_job, backlight_get_sunset_minute());
+  }
+  prv_apply_system_color_locked();
+}
+
+void light_handle_clock_change(void) {
+  prv_apply_system_color_locked();
 }
 #endif
 

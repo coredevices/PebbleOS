@@ -208,7 +208,8 @@ void cron_clear_all_jobs(void) {
 void cron_service_deinit(void) {
   cron_clear_all_jobs();
 
-  new_timer_stop(s_wakeup_timer);
+  new_timer_delete(s_wakeup_timer);
+  s_wakeup_timer = TIMER_INVALID_ID;
 }
 
 uint32_t cron_service_get_job_count(void) {
