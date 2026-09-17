@@ -962,6 +962,7 @@ void test_notification_storage__rewrite_skips_deleted(void) {
   int count = 0;
   notification_storage_rewrite(prv_rewrite_bump_timestamp_callback, &count);
   cl_assert_equal_i(count, 2);
+  cl_assert_equal_i(2, notification_storage_get_unread_count());
 
   TimelineItem r;
   e1.header.timestamp += 42;
@@ -985,4 +986,201 @@ void test_notification_storage__rewrite_skips_deleted(void) {
   cl_assert(notification_storage_get(&i4, &r));
   compare_notifications(&e4, &r);
   free(r.allocated_buffer);
+}
+
+// Unread count
+////////////////////////////////////
+
+static TimelineItem prv_make_notification(Uuid *id_out, uint8_t status) {
+  uuid_generate(id_out);
+  TimelineItem item = {
+    .header =
+        {
+          .id = *id_out,
+          .type = TimelineItemTypeNotification,
+          .status = status,
+          .ancs_uid = 0,
+          .layout = LayoutIdGeneric,
+          .timestamp = 0x53f0dda5,
+        },
+    .attr_list =
+        {
+          .num_attributes = ARRAY_LENGTH(attributes),
+          .attributes = attributes,
+        },
+    .action_group = {
+      .num_actions = ARRAY_LENGTH(actions),
+      .actions = actions,
+    }
+  };
+  return item;
+}
+
+void test_notification_storage__unread_count_starts_empty(void) {
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_counts_stored_notifications(void) {
+  Uuid i1, i2, i3;
+  TimelineItem e1 = prv_make_notification(&i1, 0);
+  TimelineItem e2 = prv_make_notification(&i2, 0);
+  TimelineItem e3 = prv_make_notification(&i3, 0);
+
+  notification_storage_store(&e1);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+  notification_storage_store(&e2);
+  notification_storage_store(&e3);
+  cl_assert_equal_i(3, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_decrements_on_read(void) {
+  Uuid i1, i2;
+  TimelineItem e1 = prv_make_notification(&i1, 0);
+  TimelineItem e2 = prv_make_notification(&i2, 0);
+  notification_storage_store(&e1);
+  notification_storage_store(&e2);
+  cl_assert_equal_i(2, notification_storage_get_unread_count());
+
+  notification_storage_set_status(&i1, TimelineItemStatusRead);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+
+  // Marking the same notification read again must not double-decrement
+  notification_storage_set_status(&i1, TimelineItemStatusRead);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_decrements_on_remove(void) {
+  Uuid i1, i2;
+  TimelineItem e1 = prv_make_notification(&i1, 0);
+  TimelineItem e2 = prv_make_notification(&i2, 0);
+  notification_storage_store(&e1);
+  notification_storage_store(&e2);
+
+  notification_storage_remove(&i1);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+
+  // Removing a notification that was already read must not decrement again
+  notification_storage_set_status(&i2, TimelineItemStatusRead);
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
+  notification_storage_remove(&i2);
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_ignores_notifications_stored_as_read(void) {
+  Uuid i1;
+  TimelineItem e1 = prv_make_notification(&i1, TimelineItemStatusRead);
+  notification_storage_store(&e1);
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_survives_actioned_status(void) {
+  // Status bits accumulate in storage, so Actioned|Read must clear unread exactly once and an
+  // Actioned-only update must leave the notification unread.
+  Uuid i1, i2;
+  TimelineItem e1 = prv_make_notification(&i1, 0);
+  TimelineItem e2 = prv_make_notification(&i2, 0);
+  notification_storage_store(&e1);
+  notification_storage_store(&e2);
+
+  notification_storage_set_status(&i1, TimelineItemStatusActioned);
+  cl_assert_equal_i(2, notification_storage_get_unread_count());
+
+  notification_storage_set_status(&i2, TimelineItemStatusActioned | TimelineItemStatusRead);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_decrements_on_dismiss(void) {
+  // The phone-side paths (ANCS removal from Notification Centre, a blob_db status update) retire
+  // a notification with Dismissed and never set Read.
+  Uuid i1, i2;
+  TimelineItem e1 = prv_make_notification(&i1, 0);
+  TimelineItem e2 = prv_make_notification(&i2, 0);
+  notification_storage_store(&e1);
+  notification_storage_store(&e2);
+  cl_assert_equal_i(2, notification_storage_get_unread_count());
+
+  notification_storage_set_status(&i1, TimelineItemStatusDismissed);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+
+  // Dismissing again, or reading something already dismissed, must not double-decrement
+  notification_storage_set_status(&i1, TimelineItemStatusDismissed);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+  notification_storage_set_status(&i1, TimelineItemStatusRead);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+
+  // A notification read on the watch and then dismissed from the phone decrements exactly once
+  notification_storage_set_status(&i2, TimelineItemStatusRead);
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
+  notification_storage_set_status(&i2, TimelineItemStatusDismissed);
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_ignores_notifications_stored_as_dismissed(void) {
+  Uuid i1;
+  TimelineItem e1 = prv_make_notification(&i1, TimelineItemStatusDismissed);
+  notification_storage_store(&e1);
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_tracks_eviction(void) {
+  // Storage is a fixed-size ring: once it fills, prv_reclaim_space marks the oldest notifications
+  // deleted to make room. Those were never read, so the count has to follow them down or the
+  // unread indicator strands on with nothing behind it.
+  TimelineItem sizer = prv_make_notification(&(Uuid){0}, 0);
+  const size_t notif_size =
+      sizeof(SerializedTimelineItemHeader) + timeline_item_get_serialized_payload_size(&sizer);
+  const size_t capacity = NOTIFICATION_STORAGE_FILE_SIZE / notif_size;
+
+  // Overfill by a comfortable margin so reclaim runs several times
+  const size_t stored = capacity * 2;
+  Uuid uuids[stored];
+  for (size_t i = 0; i < stored; i++) {
+    TimelineItem e = prv_make_notification(&uuids[i], 0);
+    notification_storage_store(&e);
+  }
+
+  // Every notification still in storage is unread; the evicted ones must not be counted.
+  size_t live = 0;
+  for (size_t i = 0; i < stored; i++) {
+    TimelineItem r;
+    if (notification_storage_get(&uuids[i], &r)) {
+      live++;
+      free(r.allocated_buffer);
+    }
+  }
+  cl_assert(live > 0);
+  cl_assert(live < stored);
+  cl_assert_equal_i(MIN(live, UINT8_MAX), notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_saturates_at_uint8_max(void) {
+  // A 30K store holds more than UINT8_MAX notifications, so the clamp in the getter is reachable
+  // in normal use, not just defensive. The running total is kept wider than the return type so
+  // that saturating cannot desynchronise it from storage: once enough are read to drop under the
+  // cap, the count has to be exact again rather than stuck at the clamp.
+  const int stored = UINT8_MAX + 1;
+  Uuid uuids[stored];
+  for (int i = 0; i < stored; i++) {
+    TimelineItem e = prv_make_notification(&uuids[i], 0);
+    notification_storage_store(&e);
+  }
+  cl_assert_equal_i(UINT8_MAX, notification_storage_get_unread_count());
+
+  // Reading one drops the true total to exactly the cap
+  notification_storage_set_status(&uuids[0], TimelineItemStatusRead);
+  cl_assert_equal_i(UINT8_MAX, notification_storage_get_unread_count());
+
+  // ...and the next one has to come off the reported count
+  notification_storage_set_status(&uuids[1], TimelineItemStatusRead);
+  cl_assert_equal_i(UINT8_MAX - 1, notification_storage_get_unread_count());
+}
+
+void test_notification_storage__unread_count_cleared_by_reset(void) {
+  Uuid i1;
+  TimelineItem e1 = prv_make_notification(&i1, 0);
+  notification_storage_store(&e1);
+  cl_assert_equal_i(1, notification_storage_get_unread_count());
+
+  notification_storage_reset_and_init();
+  cl_assert_equal_i(0, notification_storage_get_unread_count());
 }

@@ -12,9 +12,11 @@
 #include "pbl/kernel/mutex.h"
 #include "system/passert.h"
 #include "pbl/util/iterator.h"
+#include "pbl/util/math.h"
 
 #include <inttypes.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 PBL_LOG_MODULE_DEFINE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
@@ -31,10 +33,34 @@ static PBL_MUTEX_DEFINE(s_notif_storage_mutex);
 
 static uint32_t s_write_offset;
 
+//! Count of notifications in storage carrying neither the Read nor the Deleted status bit.
+//! Kept as uint16_t so that saturating the uint8_t API return value cannot desynchronise the
+//! running total from storage.
+static uint16_t s_unread_count;
+
+//! A notification counts as unread until the user either dismisses it or it is reclaimed.
+//! Dismissed covers the phone-side paths (ANCS removal, a blob_db status update), which retire a
+//! notification without ever setting Read. Actioned/Reminded are deliberately not considered
+//! here - the code paths that set those also set Read when the user was the one who acted.
+static bool prv_status_is_unread(uint8_t status) {
+  return !(status &
+           (TimelineItemStatusRead | TimelineItemStatusDeleted | TimelineItemStatusDismissed));
+}
+
+//! Storage and the running total are updated separately, so clamp rather than trusting them to
+//! agree: a uint16_t that wraps would pin the count at UINT8_MAX for the rest of the boot.
+static void prv_decrement_unread_count(void) {
+  if (s_unread_count > 0) {
+    s_unread_count--;
+  } else {
+    PBL_LOG_ERR("Unread notification count underflow");
+  }
+}
+
 static bool prv_iter_next(NotificationIterState *iter_state);
 static bool prv_get_notification(TimelineItem *notification, SerializedTimelineItemHeader *header,
                                  int fd);
-static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status, int fd);
+static bool prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status, int fd);
 
 void notification_storage_init(void) {
   // Clear notifications storage on reset
@@ -47,6 +73,14 @@ void notification_storage_init(void) {
     pfs_close(fd);
   }
   s_write_offset = 0;
+  s_unread_count = 0;
+}
+
+uint8_t notification_storage_get_unread_count(void) {
+  notification_storage_lock();
+  const uint16_t count = s_unread_count;
+  notification_storage_unlock();
+  return MIN(count, UINT8_MAX);
 }
 
 void notification_storage_lock(void) {
@@ -139,7 +173,12 @@ static void prv_reclaim_space(size_t size_needed, int fd) {
       uuid_to_string(&iter_state.header.common.id, uuid_buffer);
       PBL_LOG_WRN("Storage full: marking notification %s as deleted (ANCS UID: %" PRIu32 ")",
                   uuid_buffer, iter_state.header.common.ancs_uid);
-      prv_set_header_status(&iter_state.header, TimelineItemStatusDeleted, fd);
+      const bool was_unread = prv_status_is_unread(status);
+      if (prv_set_header_status(&iter_state.header, TimelineItemStatusDeleted, fd) && was_unread) {
+        // Evicted before the user ever saw it, but it is gone from storage either way - leaving
+        // it counted would strand the unread indicator on with nothing behind it.
+        prv_decrement_unread_count();
+      }
       size_available += sizeof(SerializedTimelineItemHeader) + iter_state.header.payload_length;
       if (size_needed <= size_available) {
         return;
@@ -292,6 +331,10 @@ void notification_storage_store(TimelineItem *notification) {
   }
 
   s_write_offset += result;
+
+  if (prv_status_is_unread(header.common.status)) {
+    s_unread_count++;
+  }
 
   prv_file_close(fd);
   return;
@@ -482,7 +525,9 @@ static bool prv_rewrite_iter_next(NotificationIterState *iter_state) {
   return prv_get_notification(&iter_state->notification, &iter_state->header, iter_state->fd);
 }
 
-static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status, int fd) {
+//! @return true if the status reached flash. The unread count mirrors what is stored, so a
+//! caller that decrements on a failed write would drift permanently out of sync.
+static bool prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status, int fd) {
   // Seek to the status field
   pfs_seek(fd, (-(int)sizeof(*header) + (int)offsetof(CommonTimelineItemHeader, status)), FSeekCur);
 
@@ -499,6 +544,8 @@ static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t 
            ((int)sizeof(*header) - (int)offsetof(CommonTimelineItemHeader, status) -
             sizeof(header->common.status)),
            FSeekCur);
+
+  return result >= 0;
 }
 
 bool notification_storage_get_status(const Uuid *id, uint8_t *status) {
@@ -527,7 +574,14 @@ void notification_storage_set_status(const Uuid *id, uint8_t status) {
   }
 
   if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd)) {
-    prv_set_header_status(&header, status, fd);
+    // Status is stored inverted and written without an erase, so flash can only clear bits:
+    // a write ORs the new status into the old one rather than replacing it. Evaluate the union,
+    // otherwise re-marking an already-deleted notification would decrement the count twice.
+    const uint8_t old_status = header.common.status;
+    if (prv_set_header_status(&header, status, fd) && prv_status_is_unread(old_status) &&
+        !prv_status_is_unread(old_status | status)) {
+      prv_decrement_unread_count();
+    }
   }
 
   prv_file_close(fd);
@@ -662,6 +716,7 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
   iter_init(&iter, (IteratorCallback)prv_rewrite_iter_next, NULL, &iter_state);
 
   int write_offset = 0;
+  uint16_t unread_count = 0;
   while (iter_next(&iter)) {
     uint8_t status = iter_state.header.common.status;
     if (status & TimelineItemStatusDeleted) {
@@ -676,8 +731,12 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
       break;
     }
     write_offset += result;
+    if (prv_status_is_unread(iter_state.header.common.status)) {
+      unread_count++;
+    }
   }
   s_write_offset = write_offset;
+  s_unread_count = unread_count;
 
   // Close the old file
   prv_file_close(fd);
@@ -727,6 +786,7 @@ void notification_storage_reset_and_init(void) {
   notification_storage_lock();
   pfs_remove(FILENAME);
   s_write_offset = 0;
+  s_unread_count = 0;
   notification_storage_unlock();
 }
 

@@ -37,6 +37,10 @@ bool PBL_WEAK notification_storage_get_status(const Uuid *id, uint8_t *status) {
   return false;
 }
 
+uint8_t PBL_WEAK notification_storage_get_unread_count(void) {
+  return 0;
+}
+
 void PBL_WEAK notification_storage_remove(const Uuid *id) {
 }
 

@@ -79,6 +79,10 @@ bool notification_storage_get_status(const Uuid *id, uint8_t *status) {
   return true;
 }
 
+uint8_t notification_storage_get_unread_count(void) {
+  return 0;
+}
+
 void notification_storage_remove(const Uuid *id) {
   ++s_notification_remove_count;
 }
