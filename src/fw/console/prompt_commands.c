@@ -15,6 +15,7 @@
 #include <pbl/task_wdt/task_wdt.h>
 #include "flash_region/flash_region.h"
 #include "kernel/event_loop.h"
+#include "pbl/kernel/irq.h"
 #include "logging/logging_private.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
@@ -686,6 +687,32 @@ void command_croak(void) {
   prompt_command_finish();
 
   PBL_CROAK("You asked for this!");
+}
+
+static void prv_stall(void *data) {
+  PBL_LOG_WRN("Stalling %s", pebble_task_get_name(pebble_task_get_current()));
+  for (;;) {
+  }
+}
+
+//! Spins a system thread forever so the task watchdog can be exercised.
+void command_wdt_stall(const char *thread) {
+  if (strcmp(thread, "main") == 0) {
+    launcher_task_add_callback(prv_stall, NULL);
+  } else if (strcmp(thread, "timers") == 0) {
+    new_timer_start(new_timer_create(), 10, prv_stall, NULL, 0);
+  } else if (strcmp(thread, "bg") == 0) {
+    prompt_command_finish();
+    prv_stall(NULL);
+  } else if (strcmp(thread, "irq") == 0) {
+    // Nothing can run, not even the watchdog thread: the hardware watchdog
+    // has to reset us.
+    prompt_command_finish();
+    pbl_irq_lock();
+    prv_stall(NULL);
+  } else {
+    prompt_send_response("main | bg | timers | irq");
+  }
 }
 
 typedef void (*KaboomCallback)(void);
