@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "apps/system/timeline/pin_window.h"
+#include "pbl/services/timeline/sports_layout.h"
 #include "pbl/services/timeline/weather_layout.h"
 
 #include "clar.h"
@@ -48,6 +49,14 @@ void clock_get_friendly_date(char *buffer, int buf_size, time_t timestamp) {
 void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
   if (buffer) {
     strncpy(buffer, "15 minutes ago", buf_size);
+    buffer[buf_size - 1] = '\0';
+  }
+}
+
+void clock_get_until_time_capitalized(char *buffer, int buf_size, time_t timestamp,
+                                      int max_relative_hrs) {
+  if (buffer) {
+    strncpy(buffer, "IN 2 HOURS", buf_size);
     buffer[buf_size - 1] = '\0';
   }
 }
@@ -258,4 +267,44 @@ void test_timeline_layouts__weather(void) {
   prv_construct_and_render_layout(&config, 2);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details2)));
 #endif
+}
+
+static void prv_construct_and_render_sports_layout(GameState state, size_t num_down_clicks) {
+  AttributeList attr_list = (AttributeList){0};
+  attribute_list_add_cstring(&attr_list, AttributeIdTitle, "Warriors at Bulls");
+  attribute_list_add_uint8(&attr_list, AttributeIdSportsGameState, state);
+  attribute_list_add_cstring(&attr_list, AttributeIdNameAway, "GSW");
+  attribute_list_add_cstring(&attr_list, AttributeIdNameHome, "CHI");
+  if (state == GameStatePreGame) {
+    attribute_list_add_cstring(&attr_list, AttributeIdRecordAway, "42-18");
+    attribute_list_add_cstring(&attr_list, AttributeIdRecordHome, "35-25");
+    attribute_list_add_cstring(&attr_list, AttributeIdBody, "United Center, Chicago");
+  } else {
+    attribute_list_add_cstring(&attr_list, AttributeIdSubtitle, "Q3 - 4:12");
+    attribute_list_add_cstring(&attr_list, AttributeIdScoreAway, "78");
+    attribute_list_add_cstring(&attr_list, AttributeIdScoreHome, "81");
+    attribute_list_add_cstring(&attr_list, AttributeIdBody, "Curry 3pt Shot: Made");
+  }
+  attribute_list_add_cstring(&attr_list, AttributeIdBroadcaster, "ESPN");
+  attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 1337);
+
+  prv_render_layout(LayoutIdSports, &attr_list, num_down_clicks);
+
+  attribute_list_destroy_list(&attr_list);
+}
+
+void test_timeline_layouts__sports_pregame(void) {
+  prv_construct_and_render_sports_layout(GameStatePreGame, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(peek)));
+
+  prv_construct_and_render_sports_layout(GameStatePreGame, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details1)));
+}
+
+void test_timeline_layouts__sports_ingame(void) {
+  prv_construct_and_render_sports_layout(GameStateInGame, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(peek)));
+
+  prv_construct_and_render_sports_layout(GameStateInGame, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details1)));
 }

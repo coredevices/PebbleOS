@@ -204,6 +204,7 @@ pbl_clar_test(test_timeline_layouts
     src/fw/services/timeline/generic_layout.c
     src/fw/services/timeline/layout_layer.c
     src/fw/services/timeline/layout_node.c
+    src/fw/services/timeline/sports_layout.c
     src/fw/services/timeline/timeline_layout.c
     src/fw/services/timeline/timeline_resources.c
     src/fw/services/timeline/weather_layout.c
