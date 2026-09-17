@@ -1,0 +1,35 @@
+name: Lint Python files
+
+on:
+  pull_request:
+
+jobs:
+  has-changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: steps.filter.outputs.src == 'true'
+    steps:
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            src:
+              - ".github/workflows/lint-python.yml"
+              - ".ruff.toml"
+              - "**/*.py"
+              - "!sdk/waf/waflib/**/*.py"
+  lint:
+    needs: has-changes
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
+      - uses: astral-sh/ruff-action@v4.1.0
