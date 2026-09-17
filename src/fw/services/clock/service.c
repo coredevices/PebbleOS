@@ -15,7 +15,8 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
 #include "pbl/util/size.h"
@@ -61,7 +62,7 @@ static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
   rtc_set_timezone(tz_info);
 }
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   // This struct is packed because it mirrors the endpoint definition:
   // https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=491698#PebbleProtocol(BluetoothSerial)-0xb(11)-Time/Clock(bigendian)
   time_t utc_time;                        // UTC timestamp
@@ -137,7 +138,8 @@ static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz
 }
 #endif // CONFIG_RECOVERY_FW
 
-T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info, time_t utc_time) {
+PBL_T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info,
+                                                              time_t utc_time) {
   if (tz_info->dst_id == 0) {
     tz_info->dst_start = 0;
     tz_info->dst_end = 0;
@@ -243,7 +245,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
 // This routine is solely responsible for setting the time and/or timezone for
 // the system RTC. After the time is changed, it generates an event for
 // consumers interested in time changes
-T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info) {
+PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info) {
   int orig_gmt_offset = time_get_gmtoffset();
   time_t orig_utc_time = rtc_get_time();
   TimezoneInfo tz_adjust_info = {{0}};
@@ -382,7 +384,7 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
 //! Runs once a minute from the regular_timer minutes list. DST transitions and
 //! the top of the hour both land on minute boundaries, so minute granularity
 //! detects them at the same instant the old per-second poll did.
-T_STATIC void prv_watch_dst(void *user) {
+PBL_T_STATIC void prv_watch_dst(void *user) {
   const bool was_dst = (bool)user;
   const bool is_dst = time_get_isdst(rtc_get_time());
 

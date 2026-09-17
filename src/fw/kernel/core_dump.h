@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "system/status_codes.h"
 
 #include <stdbool.h>
 
 //! NOTE: This function performs a hard reset after the core dump and never returns
-NORETURN core_dump_reset(bool is_forced);
+PBL_NORETURN void core_dump_reset(bool is_forced);
 
 bool is_unread_coredump_available(void);
 

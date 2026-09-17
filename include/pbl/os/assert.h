@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/likely.h"
 
 #include <stdint.h>
 
-NORETURN os_assertion_failed(const char *filename, int line);
-NORETURN os_assertion_failed_lr(const char *filename, int line, uint32_t lr);
+PBL_NORETURN void os_assertion_failed(const char *filename, int line);
+PBL_NORETURN void os_assertion_failed_lr(const char *filename, int line, uint32_t lr);
 
 #define OS_ASSERT(expr)                             \
   do {                                              \

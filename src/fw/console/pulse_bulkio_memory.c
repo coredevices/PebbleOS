@@ -4,12 +4,12 @@
 #include "pulse_bulkio_domain_handler.h"
 
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 #include <string.h>
 
-typedef struct PACKED MemoryEraseOptions {
+typedef struct PBL_PACKED MemoryEraseOptions {
   uint32_t address;
   uint32_t length;
 } MemoryEraseOptions;

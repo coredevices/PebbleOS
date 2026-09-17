@@ -5,17 +5,17 @@
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct PACKED BtPersistLEEncryptionInfo {
+typedef struct PBL_PACKED BtPersistLEEncryptionInfo {
   SMLongTermKey ltk;
   uint16_t ediv;
   uint64_t rand;
 } BtPersistLEEncryptionInfo;
 
-typedef struct PACKED BtPersistLEPairingInfo {
+typedef struct PBL_PACKED BtPersistLEPairingInfo {
   BtPersistLEEncryptionInfo local_encryption_info;
 
   BtPersistLEEncryptionInfo remote_encryption_info;

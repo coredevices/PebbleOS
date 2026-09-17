@@ -102,8 +102,8 @@ static void prv_unlock(void) {
 
 // ----------------------------------------------------------------------------------------------
 // Open the minute data settings file and malloc space for the file struct
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static NOINLINE SettingsFile *prv_minute_data_file_open(void) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static PBL_NOINLINE SettingsFile *prv_minute_data_file_open(void) {
   SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
   if (settings_file_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != S_SUCCESS) {
     PBL_LOG_ERR("No minute data file");
@@ -403,10 +403,11 @@ static void prv_init_minute_record(AlgMinuteRecordHdr *hdr, time_t utc_sec, bool
 }
 
 // -------------------------------------------------------------------------------------
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static void NOINLINE prv_set_file_minute_record_entry(AlgMinuteFileRecord *file_record,
-                                                      AlgMinuteDLSSample *data, uint16_t sample_idx,
-                                                      time_t sample_utc, bool was_sleeping) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static void PBL_NOINLINE prv_set_file_minute_record_entry(AlgMinuteFileRecord *file_record,
+                                                          AlgMinuteDLSSample *data,
+                                                          uint16_t sample_idx, time_t sample_utc,
+                                                          bool was_sleeping) {
   if (sample_idx == 0) {
     // If first record, init the header
     prv_init_minute_record(&file_record->hdr, sample_utc, true /*to_file*/);
@@ -489,10 +490,11 @@ static DataLoggingSession *prv_get_dls_minute_session(void) {
 }
 
 // -------------------------------------------------------------------------------------
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static void NOINLINE prv_set_dls_minute_record_entry(AlgMinuteDLSRecord *dls_record,
-                                                     AlgMinuteDLSSample *data, uint16_t sample_idx,
-                                                     time_t sample_utc, bool was_sleeping) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static void PBL_NOINLINE prv_set_dls_minute_record_entry(AlgMinuteDLSRecord *dls_record,
+                                                         AlgMinuteDLSSample *data,
+                                                         uint16_t sample_idx, time_t sample_utc,
+                                                         bool was_sleeping) {
   if (sample_idx == 0) {
     // If first record, init the header
     prv_init_minute_record(&dls_record->hdr, sample_utc, false /*to_file*/);
@@ -519,10 +521,11 @@ static void NOINLINE prv_set_dls_minute_record_entry(AlgMinuteDLSRecord *dls_rec
 // Prepare a minute record for writing. Either file_record or dls_record should be non-NULL,
 // never both.
 // Returns true if we have enough data to prepare a record, false if not enough data.
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static bool NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sleep_start_utc,
-                                             uint16_t sleep_len_m, AlgMinuteFileRecord *file_record,
-                                             AlgMinuteDLSRecord *dls_record, bool force_send) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sleep_start_utc,
+                                                 uint16_t sleep_len_m,
+                                                 AlgMinuteFileRecord *file_record,
+                                                 AlgMinuteDLSRecord *dls_record, bool force_send) {
   // Get the circular buffer client we are working with
   SharedCircularBufferClient *cbuf_client =
       file_record ? &s_alg_state->file_minute_data_client : &s_alg_state->dls_minute_data_client;
@@ -880,9 +883,9 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples,
 }
 
 // ------------------------------------------------------------------------------------
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
 // Returns distance we traveled in the last minute, in mm.
-static uint32_t NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLSSample *m_rec) {
+static uint32_t PBL_NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLSSample *m_rec) {
   bool still;
   kalg_minute_stats(s_alg_state->k_state, &m_rec->base.vmc, &m_rec->base.orientation, &still);
 
@@ -927,7 +930,7 @@ static uint32_t NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLSSamp
   return minute_distance_mm;
 }
 
-static void NOINLINE prv_reset_state_minute_handler(const AlgMinuteDLSSample *m_rec) {
+static void PBL_NOINLINE prv_reset_state_minute_handler(const AlgMinuteDLSSample *m_rec) {
   s_alg_state->prev_resting_calories = activity_metrics_prv_get_resting_calories();
   s_alg_state->prev_active_calories = activity_metrics_prv_get_active_calories();
   s_alg_state->prev_distance_mm = activity_metrics_prv_get_distance_mm();

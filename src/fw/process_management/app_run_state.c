@@ -11,11 +11,11 @@
 #include "process_management/process_manager.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define PB_APP_STATE_ENDPOINT_ID 0x34
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppState state : 8;
   Uuid uuid;
 } AppRunState;
@@ -93,7 +93,7 @@ void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const U
 }
 
 void app_run_state_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
-  typedef struct PACKED {
+  typedef struct PBL_PACKED {
     uint8_t command;
     Uuid uuid;
   } AppStateMessage;

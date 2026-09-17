@@ -18,6 +18,7 @@
 // Fakes
 #include "fake_rtc.h"
 #include "fake_pbl_std.h"
+#include "pbl/util/testing.h"
 
 bool sys_activity_is_initialized(void) {
   return true;
@@ -26,7 +27,7 @@ bool sys_activity_is_initialized(void) {
 static HealthServiceState s_health_service;
 
 // -----------------------------------
-// T_STATIC functions from health_service.c
+// PBL_T_STATIC functions from health_service.c
 bool prv_calculate_time_range(time_t time_start, time_t time_end, HealthServiceTimeRange *range);
 
 void prv_adjust_value_boundaries(HealthValue *values, size_t num_values,

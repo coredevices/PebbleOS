@@ -5,19 +5,19 @@
 
 #include <pbl/logging/logging.h>
 
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/util/likely.h>
 
 #ifdef CONFIG_LOG_HASHED
 #include <pbl/logging/log_hashing.h>
 
-NORETURN passert_failed_hashed(uint32_t packed_loghash, ...);
+PBL_NORETURN void passert_failed_hashed(uint32_t packed_loghash, ...);
 
-NORETURN passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...);
+PBL_NORETURN void passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...);
 
-NORETURN passert_failed_hashed_no_message(void);
+PBL_NORETURN void passert_failed_hashed_no_message(void);
 
-NORETURN passert_failed_hashed_no_message_with_lr(uint32_t lr);
+PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr);
 
 #define PBL_ASSERT(expr, msg, ...)                                         \
   do {                                                                     \
@@ -42,7 +42,7 @@ NORETURN passert_failed_hashed_no_message_with_lr(uint32_t lr);
   } while (0)
 
 #else
-NORETURN passert_failed(const char *filename, int line_number, const char *message, ...);
+PBL_NORETURN void passert_failed(const char *filename, int line_number, const char *message, ...);
 
 #define PBL_ASSERT(expr, ...)                               \
   do {                                                      \
@@ -67,11 +67,12 @@ NORETURN passert_failed(const char *filename, int line_number, const char *messa
 
 #endif
 
-NORETURN passert_failed_no_message(const char *filename, int line_number);
+PBL_NORETURN void passert_failed_no_message(const char *filename, int line_number);
 
-NORETURN passert_failed_no_message_with_lr(const char *filename, int line_number, uint32_t lr);
+PBL_NORETURN void passert_failed_no_message_with_lr(const char *filename, int line_number,
+                                                    uint32_t lr);
 
-NORETURN wtf(void);
+PBL_NORETURN void wtf(void);
 
 #define WTF wtf()
 
@@ -123,6 +124,6 @@ void passert_check_not_task(enum PebbleTask unexpected_task);
 
 typedef struct Heap Heap;
 
-NORETURN croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr);
+PBL_NORETURN void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr);
 
 #define PBL_CROAK_OOM(bytes, saved_lr, heap_ptr) croak_oom(bytes, saved_lr, heap_ptr)

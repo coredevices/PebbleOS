@@ -10,7 +10,7 @@
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/comm_session/protocol.h"
 #include "system/hexdump.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/shared_circular_buffer.h"
 #include "util/units.h"
 #include "pbl/util/uuid.h"
@@ -175,7 +175,7 @@ void dls_private_handle_disconnect(void *data);
 bool dls_private_get_send_enable(void);
 void dls_private_set_send_enable(bool setting);
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t command;
   uint8_t session_id;
   uint32_t items_left_hereafter;

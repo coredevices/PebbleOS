@@ -55,6 +55,7 @@
 #include "stubs_worker_manager.h"
 #include "stubs_workout_service.h"
 #include "stubs_ambient_light.h"
+#include "pbl/util/testing.h"
 
 void prefs_sync_init(void) {
 }
@@ -89,7 +90,7 @@ const int s_exp_full_day_resting_kcalories = 1455;
 void health_tracking_ui_feature_show_disabled(void) {
 }
 
-// These are declared as T_STATIC in activity.c
+// These are declared as PBL_T_STATIC in activity.c
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_minute_system_task_cb(void *data);
 

@@ -5,7 +5,7 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 PBL_LOG_MODULE_DEFINE(service_health_sync_endpoint, CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT_LOG_LEVEL);
 
@@ -18,12 +18,12 @@ typedef enum HealthSyncEndpointCmd {
   HealthSyncEndpointCmd_Ack = 0x11,
 } HealthSyncEndpointCmd;
 
-typedef struct PACKED HealthSyncEndpointSyncMsg {
+typedef struct PBL_PACKED HealthSyncEndpointSyncMsg {
   HealthSyncEndpointCmd cmd : 8;
   uint32_t seconds_since_sync;
 } HealthSyncEndpointSyncMsg;
 
-typedef struct PACKED HealthSyncEndpointAckMsg {
+typedef struct PBL_PACKED HealthSyncEndpointAckMsg {
   HealthSyncEndpointCmd cmd : 8;
   uint8_t ack_nack;
 } HealthSyncEndpointAckMsg;

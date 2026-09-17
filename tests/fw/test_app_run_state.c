@@ -8,7 +8,7 @@
 #include "pbl/services/comm_session/protocol.h"
 #include "system/passert.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 
 #include <stdlib.h>
@@ -27,14 +27,14 @@
 
 // Structures
 ///////////////////////////////////////
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t command;
   Uuid uuid;
 } AppStateMessage;
 
 struct CommSession {};
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppState state : 8;
   Uuid uuid;
 } AppRunState;

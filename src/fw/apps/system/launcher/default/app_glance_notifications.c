@@ -11,7 +11,7 @@
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/timeline/attribute.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/string.h"
 #include "pbl/util/struct.h"
 

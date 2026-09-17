@@ -11,6 +11,7 @@
 #include "system/passert.h"
 #include "util/graphics.h"
 #include "pbl/util/trig.h"
+#include "pbl/util/testing.h"
 
 void graphics_draw_bitmap_in_rect_processed(GContext *ctx, const GBitmap *src_bitmap,
                                             const GRect *rect_ref, GBitmapProcessor *processor) {
@@ -97,14 +98,14 @@ static DivResult polar_div(int32_t numer, int32_t denom) {
 }
 
 #if PBL_BW
-T_STATIC bool get_bitmap_bit(GBitmap *bmp, int x, int y) {
+PBL_T_STATIC bool get_bitmap_bit(GBitmap *bmp, int x, int y) {
   int byte_num = y * bmp->row_size_bytes + x / 8;
   int bit_num = x % 8;
   uint8_t byte = ((uint8_t *)(bmp->addr))[byte_num];
   return (byte & (1 << bit_num)) ? 1 : 0;
 }
 #elif PBL_COLOR
-T_STATIC GColor get_bitmap_color(GBitmap *bmp, int x, int y) {
+PBL_T_STATIC GColor get_bitmap_color(GBitmap *bmp, int x, int y) {
   const GBitmapFormat format = gbitmap_get_format(bmp);
   const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bmp, y);
   const uint8_t *src = row_info.data;

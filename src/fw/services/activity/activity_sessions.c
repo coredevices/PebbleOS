@@ -631,7 +631,7 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
 }
 
 // --------------------------------------------------------------------------------------
-void NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
+void PBL_NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
   ActivityState *state = activity_private_state();
   time_t last_sleep_processed_utc = activity_algorithm_get_last_sleep_utc();
 

@@ -19,7 +19,7 @@
 typedef struct {
   Window window;
   TextLayer text;
-  ALIGN(32) uint32_t test; // Align on 32-bit boundary (D-cache line on M7 is 32 bytes)
+  PBL_ALIGNED(32) uint32_t test; // Align on 32-bit boundary (D-cache line on M7 is 32 bytes)
 } AppData;
 
 static void prv_window_load(Window *window) {

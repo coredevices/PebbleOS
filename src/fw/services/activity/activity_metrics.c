@@ -244,8 +244,8 @@ void activity_metrics_set_metric_exact(ActivityMetric metric, int32_t value) {
 
 // ----------------------------------------------------------------------------------------------
 // Shift the history back one day and reset the current day's stats.
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static void NOINLINE prv_shift_history(time_t utc_now) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static void PBL_NOINLINE prv_shift_history(time_t utc_now) {
   ActivityState *state = activity_private_state();
   PBL_LOG_INFO("resetting metrics for new day");
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
@@ -305,8 +305,8 @@ static void prv_update_real_time_derived_metrics(void) {
 // --------------------------------------------------------------------------------------------
 // Called periodically from the minute handler to update step derived metrics that do not have to
 // be updated in real time.
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static void NOINLINE prv_update_step_derived_metrics(time_t utc_sec) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static void PBL_NOINLINE prv_update_step_derived_metrics(time_t utc_sec) {
   ActivityState *state = activity_private_state();
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {

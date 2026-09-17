@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pebbleos/core_dump_structs.h"
 
 // Size of RAM
@@ -86,7 +86,7 @@ typedef struct {
 // CoreDumpChunkHeader's, terminated by one with a key of CORE_DUMP_CHUNK_KEY_TERMINATOR
 #define CORE_DUMP_MAGIC   0xF00DCAFE
 #define CORE_DUMP_VERSION 1 // Current version
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t magic; // Set to CORE_DUMP_MAGIC
 
   uint32_t core_number : 8; // See include/pebbleos/core_id.h
@@ -103,14 +103,14 @@ typedef struct PACKED {
 #define CORE_DUMP_CHUNK_KEY_THREAD     2
 #define CORE_DUMP_CHUNK_KEY_EXTRA_REG  3
 #define CORE_DUMP_CHUNK_KEY_MEMORY     4
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t key; // CORE_DUMP_CHUNK_KEY_.*
   uint32_t size;
   // uint8_t  data[size];
 } CoreDumpChunkHeader;
 
 // Header for dumped segments of memory, whether from RAM or peripheral space.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t start; // start address of the chunk of dumped memory
   // uint8_t data[size - sizeof(CoreDumpMemoryHeader)];
 } CoreDumpMemoryHeader;

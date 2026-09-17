@@ -11,6 +11,7 @@
 #include "applib/ui/animation_timing.h"
 #include "system/passert.h"
 #include "pbl/util/math_fixed.h"
+#include "pbl/util/testing.h"
 
 ////////////////////
 // scale
@@ -20,7 +21,7 @@ typedef struct {
   GSize to;
 } ScaleCBContext;
 
-T_STATIC bool prv_gdraw_command_scale(GDrawCommand *command, uint32_t index, void *context) {
+PBL_T_STATIC bool prv_gdraw_command_scale(GDrawCommand *command, uint32_t index, void *context) {
   ScaleCBContext *scale = context;
   const uint16_t num_points = gdraw_command_get_num_points(command);
   for (uint16_t i = 0; i < num_points; i++) {
@@ -67,8 +68,8 @@ typedef struct {
   int32_t normalized;
 } ToSquareCBContext;
 
-T_STATIC bool prv_gdraw_command_attract_to_square(GDrawCommand *command, uint32_t index,
-                                                  void *context) {
+PBL_T_STATIC bool prv_gdraw_command_attract_to_square(GDrawCommand *command, uint32_t index,
+                                                      void *context) {
   ToSquareCBContext *to_square = context;
   const uint16_t num_points = gdraw_command_get_num_points(command);
   for (uint16_t i = 0; i < num_points; i++) {
@@ -106,8 +107,8 @@ typedef struct {
   } iter;
 } GPointCreateIndexCBContext;
 
-T_STATIC bool prv_gdraw_command_create_point_index_lookup(GDrawCommand *command, uint32_t index,
-                                                          void *context) {
+PBL_T_STATIC bool prv_gdraw_command_create_point_index_lookup(GDrawCommand *command, uint32_t index,
+                                                              void *context) {
   GPointCreateIndexCBContext *lookup = context;
   const uint16_t num_points = gdraw_command_get_num_points(command);
   for (uint16_t i = 0; i < num_points; i++) {
@@ -241,10 +242,10 @@ static int16_t prv_int_scale_to(int16_t value, int16_t size, int16_t from_range,
          ((int32_t)value * interpolate(normalized, from_range - size, to_range - size)) / size;
 }
 
-T_STATIC int16_t prv_int_scale_and_translate_to(int16_t value, int16_t size, int16_t from_range,
-                                                int16_t to_range, int16_t from_min, int16_t to_min,
-                                                int32_t normalized,
-                                                InterpolateInt64Function interpolate) {
+PBL_T_STATIC int16_t prv_int_scale_and_translate_to(int16_t value, int16_t size, int16_t from_range,
+                                                    int16_t to_range, int16_t from_min,
+                                                    int16_t to_min, int32_t normalized,
+                                                    InterpolateInt64Function interpolate) {
   const int32_t scale =
       prv_int_scale_to(value, size, from_range, to_range, normalized, interpolate);
   const int32_t translate = interpolate(normalized, from_min, to_min);
@@ -284,13 +285,13 @@ typedef struct {
   } iter;
 } ScaleToCBContext;
 
-T_STATIC int64_t prv_default_interpolate(int32_t normalized, int64_t from, int64_t to) {
+PBL_T_STATIC int64_t prv_default_interpolate(int32_t normalized, int64_t from, int64_t to) {
   const int32_t curved = animation_timing_curve(normalized, AnimationCurveEaseInOut);
   return interpolate_int64_linear(curved, from, to);
 }
 
-T_STATIC bool prv_gdraw_command_scale_segmented(GDrawCommand *command, uint32_t index,
-                                                void *context) {
+PBL_T_STATIC bool prv_gdraw_command_scale_segmented(GDrawCommand *command, uint32_t index,
+                                                    void *context) {
   ScaleToCBContext *scale = context;
   const ScaleToGValues *const gvalues = (command->type == GDrawCommandTypePrecisePath)
                                             ? &scale->values.precise

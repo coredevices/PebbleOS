@@ -59,8 +59,8 @@ void prv_render_modal_if_necessary(void) {
   }
 }
 
-static NOINLINE void prv_render_transition_rect(GContext *ctx, Animation *animation,
-                                                uint32_t distance_normalized) {
+static PBL_NOINLINE void prv_render_transition_rect(GContext *ctx, Animation *animation,
+                                                    uint32_t distance_normalized) {
   // If the modal is the destination, just draw the frame and fill its inner ring with the app's
   // frame buffer
   if (s_data.modal_is_destination) {
@@ -101,8 +101,8 @@ static void prv_modal_transition_animation_update_rect(GContext *ctx, Animation 
   prv_render_transition_rect(ctx, animation, distance_normalized);
 }
 
-static NOINLINE void prv_render_transition_round(GContext *ctx, Animation *animation,
-                                                 uint32_t distance_normalized) {
+static PBL_NOINLINE void prv_render_transition_round(GContext *ctx, Animation *animation,
+                                                     uint32_t distance_normalized) {
   const int16_t dot_radius = DOT_ANIMATION_STROKE_WIDTH / 2;
   const GRect display_bounds = ctx->draw_state.clip_box;
   const GPoint circle_center = grect_center_point(&display_bounds);

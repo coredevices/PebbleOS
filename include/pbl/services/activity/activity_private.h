@@ -15,7 +15,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -267,7 +267,7 @@ typedef struct {
 #define ACTIVITY_SLEEP_SESSION_LOGGING_VERSION 1
 
 // Data logging record used to send sleep sessions to the phone
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t version;     // set to ACTIVITY_SLEEP_SESSION_LOGGING_VERSION
   int32_t utc_to_local; // Add this to UTC to get local time
   uint32_t start_utc;   // The start time in UTC
@@ -286,7 +286,7 @@ typedef struct PACKED {
 // NOTE: modifying this struct requires a bump to the ACTIVITY_SESSION_LOGGING_VERSION and
 // an update to documentation on this wiki page:
 //   https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=46301269
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t version;     // set to ACTIVITY_SESSION_LOGGING_VERSION
   uint16_t size;        // size of this structure
   uint16_t activity;    // ActivitySessionType: the type of activity

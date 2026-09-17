@@ -4,12 +4,12 @@
 #pragma once
 
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef struct PACKED LogBinaryMessage {
+typedef struct PBL_PACKED LogBinaryMessage {
   uint32_t timestamp;
   uint8_t log_level;
   uint8_t message_length;

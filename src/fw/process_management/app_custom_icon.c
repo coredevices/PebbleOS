@@ -9,7 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/comm_session/session.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include <string.h>
@@ -34,7 +34,7 @@ typedef enum {
   FIELD_MASK = 0x80,
 } FieldId;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! OR'ed value of (CustomizableAppType | FieldId). No C bitfields here, because order is
   //! compiler-specific.
   uint8_t app_type_and_field_bits;

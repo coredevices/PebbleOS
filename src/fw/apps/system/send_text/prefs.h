@@ -3,16 +3,16 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid contact_uuid;
   Uuid address_uuid;
   bool is_fav;
 } SerializedSendTextContact;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t num_contacts;
   SerializedSendTextContact contacts[];
 } SerializedSendTextPrefs;

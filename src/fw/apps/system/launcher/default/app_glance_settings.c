@@ -20,7 +20,7 @@
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/size.h"
 #include "pbl/util/struct.h"
 

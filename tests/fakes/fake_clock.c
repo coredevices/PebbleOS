@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/i18n/i18n.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include "stubs_i18n.h"
@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-WEAK const char *string_strip_leading_whitespace(const char *string) {
+PBL_WEAK const char *string_strip_leading_whitespace(const char *string) {
   const char *result_string = string;
   while (*result_string != '\0') {
     if (*result_string != ' ' && *result_string != '\n') {
@@ -26,11 +26,11 @@ WEAK const char *string_strip_leading_whitespace(const char *string) {
   return result_string;
 }
 
-WEAK int time_util_get_num_hours(int hours, bool is24h) {
+PBL_WEAK int time_util_get_num_hours(int hours, bool is24h) {
   return is24h ? hours : (hours + 12 - 1) % 12 + 1;
 }
 
-WEAK bool clock_is_24h_style() {
+PBL_WEAK bool clock_is_24h_style() {
   return false;
 }
 

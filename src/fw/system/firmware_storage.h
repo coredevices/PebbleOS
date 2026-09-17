@@ -6,13 +6,13 @@
 //! @file firmware_storage.h
 //! Utilities for reading a firmware image stored in flash.
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
 #ifndef CONFIG_PBLBOOT
-typedef struct PACKED FirmwareDescription {
+typedef struct PBL_PACKED FirmwareDescription {
   uint32_t description_length;
   uint32_t firmware_length;
   uint32_t checksum;
@@ -26,7 +26,7 @@ bool firmware_storage_check_valid_firmware_description(
 
 #define FIRMWARE_HEADER_MAGIC 0x96f3b83d
 
-typedef struct PACKED FirmwareHeader {
+typedef struct PBL_PACKED FirmwareHeader {
   uint32_t magic;
   uint32_t header_length;
   uint64_t fw_timestamp;

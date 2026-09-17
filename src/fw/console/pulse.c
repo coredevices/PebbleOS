@@ -20,7 +20,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/legacy_checksum.h"
 #include "pbl/util/likely.h"
 #include "pbl/util/math.h"
@@ -50,7 +50,7 @@ static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(PULSE_MAX_SEND_SIZE + PULSE
 typedef void (*ProtocolHandlerFunc)(void *packet, size_t length);
 typedef void (*LinkStateChangedHandlerFunc)(PulseLinkState link_state);
 
-typedef struct PACKED ProtocolHandler {
+typedef struct PBL_PACKED ProtocolHandler {
   uint8_t number;
   ProtocolHandlerFunc handler;
   LinkStateChangedHandlerFunc link_state_handler;

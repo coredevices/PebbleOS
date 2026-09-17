@@ -8,7 +8,7 @@
 
 #include "applib/accel_service_private.h"
 #include "applib/health_service.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/time/time.h"
 
 // Max # of days of history we store
@@ -30,7 +30,7 @@ typedef enum {
 } ActivityGender;
 
 // Activity Settings Struct, for storing to prefs
-typedef struct PACKED ActivitySettings {
+typedef struct PBL_PACKED ActivitySettings {
   int16_t height_mm;
   int16_t weight_dag;
   bool tracking_enabled;
@@ -41,7 +41,7 @@ typedef struct PACKED ActivitySettings {
 } ActivitySettings;
 
 // Heart Rate Preferences Struct, for storing to prefs
-typedef struct PACKED HeartRatePreferences {
+typedef struct PBL_PACKED HeartRatePreferences {
   uint8_t resting_hr;
   uint8_t elevated_hr;
   uint8_t max_hr;
@@ -60,7 +60,7 @@ typedef enum {
 } HRMonitoringInterval;
 
 // Activity HRM Settings Struct, for storing to prefs
-typedef struct PACKED ActivityHRMSettings {
+typedef struct PBL_PACKED ActivityHRMSettings {
   bool enabled;
   uint8_t measurement_interval;   // HRMonitoringInterval value
   bool activity_tracking_enabled; // HR tracking during detected activities (walk/run)
@@ -69,7 +69,7 @@ typedef struct PACKED ActivityHRMSettings {
 // Activity SpO2 (blood oxygen) Settings Struct, for storing to prefs.
 // The on/off bit is synced from the phone under its own key
 // (PREF_KEY_BLOOD_OXYGEN_PREFERENCES); only the watch-local interval lives here.
-typedef struct PACKED ActivitySpO2Settings {
+typedef struct PBL_PACKED ActivitySpO2Settings {
   uint8_t measurement_interval; // HRMonitoringInterval value
 } ActivitySpO2Settings;
 
@@ -200,7 +200,7 @@ typedef enum {
 // NOTE: modifying this struct requires a bump to the ACTIVITY_SESSION_LOGGING_VERSION and
 // an update to documentation on this wiki page:
 //   https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=46301269
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t steps;             // number of steps
   uint16_t active_kcalories;  // number of active kcalories
   uint16_t resting_kcalories; // number of resting kcalories
@@ -216,7 +216,7 @@ typedef struct {
 
 #define ACTIVITY_SESSION_MAX_LENGTH_MIN MINUTES_PER_DAY
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   time_t start_utc;             // session start time
   uint16_t length_min;          // length of session in minutes
   ActivitySessionType type : 8; // type of activity

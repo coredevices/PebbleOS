@@ -92,7 +92,7 @@
 
 // Local replacements for stubs_alerts_preferences.h so the notification status
 // bar style is settable per test (a strong override cannot share a TU with the
-// header's WEAK definition).
+// header's PBL_WEAK definition).
 static NotificationStatusBarStyle s_notification_status_bar_style =
     NotificationStatusBarStyle_Default;
 

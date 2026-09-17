@@ -10,10 +10,11 @@
 #include "system/passert.h"
 
 #include "applib/ui/animation_private.h"
+#include "pbl/util/testing.h"
 
 static GContext s_kernel_graphics_context;
 
-T_STATIC ContentIndicatorsBuffer s_kernel_content_indicators_buffer;
+PBL_T_STATIC ContentIndicatorsBuffer s_kernel_content_indicators_buffer;
 
 static TimelineItemActionSource s_kernel_current_timeline_item_action_source;
 

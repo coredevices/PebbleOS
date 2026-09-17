@@ -14,7 +14,7 @@
 #include "pbl/services/timeline/attribute.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/string.h"
 #include "pbl/util/struct.h"
 
@@ -381,8 +381,8 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   return &vertical_node->container.node;
 }
 
-// NOINLINE to save stack; on Spalding this can be enough to push us over the edge.
-static NOINLINE GTextNode *prv_create_structured_glance_node(
+// PBL_NOINLINE to save stack; on Spalding this can be enough to push us over the edge.
+static PBL_NOINLINE GTextNode *prv_create_structured_glance_node(
     LauncherAppGlanceStructured *structured_glance, const GRect *glance_frame) {
   // Icon node and title/subtitle nodes
   const size_t max_horizontal_nodes = 2;

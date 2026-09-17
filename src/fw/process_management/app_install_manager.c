@@ -30,9 +30,10 @@
 #include "pbl/util/size.h"
 
 #include "pbl/kernel/mutex.h"
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/testing.h>
 
-typedef struct PACKED RecentApp {
+typedef struct PBL_PACKED RecentApp {
   AppInstallId id;
   time_t last_activity;
   bool can_expire;
@@ -209,7 +210,7 @@ bool app_install_entry_is_SDK_compatible(const AppInstallEntry *entry) {
           entry->sdk_version.minor <= PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
 }
 
-T_STATIC ListNode *s_head_callback_node_list = NULL;
+PBL_T_STATIC ListNode *s_head_callback_node_list = NULL;
 
 void app_install_register_callback(struct AppInstallCallbackNode *callback_node) {
   PBL_ASSERTN(callback_node->node.next == NULL);

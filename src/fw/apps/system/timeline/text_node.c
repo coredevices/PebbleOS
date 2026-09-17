@@ -5,7 +5,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include "applib/graphics/graphics.h"
@@ -442,9 +442,9 @@ bool graphics_text_node_container_add_child(GTextNodeContainer *parent, GTextNod
   return prv_container(&parent->node)->add_child(parent, child);
 }
 
-static void NOINLINE prv_init_draw_context(GTextNodeDrawContext *ctx, GTextNode *node,
-                                           GContext *gcontext, const GRect *box,
-                                           const GTextNodeDrawConfig *config, bool render) {
+static void PBL_NOINLINE prv_init_draw_context(GTextNodeDrawContext *ctx, GTextNode *node,
+                                               GContext *gcontext, const GRect *box,
+                                               const GTextNodeDrawConfig *config, bool render) {
   *ctx = (GTextNodeDrawContext){
     .config = config,
     .gcontext = gcontext,

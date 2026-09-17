@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -12,9 +12,9 @@ typedef struct CommSession CommSession;
 // Capabilities are a bitfield set by passing the capabilities character array in
 // system_versions.c.  The corresponding mobile applications return an integer
 // field indicating which endpoints it has support for over the deprecated ones.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   union {
-    struct PACKED {
+    struct PBL_PACKED {
       bool run_state_support : 1;
       bool infinite_log_dumping_support : 1;
       bool extended_music_service : 1;

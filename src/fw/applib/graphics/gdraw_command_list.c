@@ -6,6 +6,7 @@
 
 #include "applib/applib_malloc.auto.h"
 #include "system/passert.h"
+#include "pbl/util/testing.h"
 
 bool gdraw_command_list_copy(void *buffer, size_t buffer_length, GDrawCommandList *src) {
   size_t src_size = gdraw_command_list_get_data_size(src);
@@ -132,7 +133,7 @@ static bool prv_iterate_max_command_size(GDrawCommand *command, uint32_t idx, vo
   return true;
 }
 
-T_STATIC size_t prv_get_list_max_command_size(GDrawCommandList *command_list) {
+PBL_T_STATIC size_t prv_get_list_max_command_size(GDrawCommandList *command_list) {
   if (!command_list) {
     return 0;
   }

@@ -12,6 +12,7 @@
 #include "system/passert.h"
 #include "system/version.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 static const ResourceStoreImplementation *s_resource_store_impls[] = {
 #define RESOURCE_IMPL(impl) &impl,
@@ -76,7 +77,7 @@ static uint32_t prv_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes, uint3
   return entry->impl->get_crc(entry, num_bytes, entry_offset);
 }
 
-T_STATIC uint32_t prv_get_store_length(ResourceStoreEntry *entry, ResourceManifest *manifest) {
+PBL_T_STATIC uint32_t prv_get_store_length(ResourceStoreEntry *entry, ResourceManifest *manifest) {
   // Get the resource entry for the last entry
   ResTableEntry res_entry = {0};
   if (!prv_read_res_table_entry(&res_entry, entry, manifest->num_resources - 1)) {

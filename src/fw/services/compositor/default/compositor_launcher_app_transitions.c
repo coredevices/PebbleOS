@@ -9,7 +9,7 @@
 #include "apps/system/launcher/default/launcher.h"
 #include "pbl/services/compositor/compositor_transitions.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 

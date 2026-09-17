@@ -4,69 +4,69 @@
 #pragma once
 
 #include "pbl/services/timeline/timeline_layout.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-void WEAK timeline_layout_init(TimelineLayout *layout, const LayoutLayerConfig *config,
-                               const TimelineLayoutImpl *timeline_layout_impl) {
+void PBL_WEAK timeline_layout_init(TimelineLayout *layout, const LayoutLayerConfig *config,
+                                   const TimelineLayoutImpl *timeline_layout_impl) {
 }
 
-void WEAK timeline_layout_time_text_update(const LayoutLayer *layout,
-                                           const LayoutNodeTextDynamicConfig *config, char *buffer,
-                                           bool render) {
+void PBL_WEAK timeline_layout_time_text_update(const LayoutLayer *layout,
+                                               const LayoutNodeTextDynamicConfig *config,
+                                               char *buffer, bool render) {
 }
 
-LayoutLayer *WEAK alarm_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK alarm_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK alarm_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK alarm_layout_verify(bool existing_attributes[]) {
   return false;
 }
 
-LayoutLayer *WEAK calendar_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK calendar_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK calendar_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK calendar_layout_verify(bool existing_attributes[]) {
   return false;
 }
 
-LayoutLayer *WEAK generic_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK generic_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK generic_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK generic_layout_verify(bool existing_attributes[]) {
   return false;
 }
 
-LayoutLayer *WEAK health_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK health_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK health_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK health_layout_verify(bool existing_attributes[]) {
   return false;
 }
 
-LayoutLayer *WEAK notification_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK notification_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK notification_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK notification_layout_verify(bool existing_attributes[]) {
   return false;
 }
 
-LayoutLayer *WEAK sports_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK sports_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK sports_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK sports_layout_verify(bool existing_attributes[]) {
   return false;
 }
 
-LayoutLayer *WEAK weather_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK weather_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK weather_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK weather_layout_verify(bool existing_attributes[]) {
   return false;
 }

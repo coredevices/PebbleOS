@@ -9,6 +9,7 @@
 #include "text_resources.h"
 #include "util/bitset.h"
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
 #if !defined(__clang__)
 #pragma GCC optimize("O2")
@@ -32,8 +33,8 @@ static GRect get_glyph_rect(const GlyphData *glyph) {
 /// @param block_addr source address in 1-bit frame buffer of where the word is being updated
 ///                   within a given row; assumed to be zero-based
 /// @param y_offset row offset within the source 1-bit frame buffer
-T_STATIC int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint32_t *block_addr,
-                                                 int32_t y_offset) {
+PBL_T_STATIC int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint32_t *block_addr,
+                                                     int32_t y_offset) {
   // Each byte block_addr corresponds to 8 pixels (i.e. 4-bytes in the 8-bit frame buffer).
   // Thus multiply by 8 to get the word offset within the destination 8-bit frame buffer.
   // Also need to account for the fact that the 1-bit frame buffer has 16 bits of unused space

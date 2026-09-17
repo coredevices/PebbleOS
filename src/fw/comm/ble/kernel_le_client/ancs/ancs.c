@@ -21,7 +21,8 @@
 #include "system/passert.h"
 #include <pbl/logging/logging.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "util/buffer.h"
 #include "pbl/util/size.h"
 
@@ -42,7 +43,7 @@ static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size)
 
 static void prv_reset_reassembly_context(void);
 
-T_STATIC void prv_check_ancs_alive(void);
+PBL_T_STATIC void prv_check_ancs_alive(void);
 
 static void prv_perform_action(uint32_t notification_uid, ActionId action_id);
 
@@ -159,7 +160,7 @@ static void prv_set_state(ANCSClientState new_state) {
 }
 
 #if UNITTEST
-T_STATIC ANCSClientState prv_get_state(void) {
+PBL_T_STATIC ANCSClientState prv_get_state(void) {
   return s_ancs_client->state;
 }
 #endif
@@ -294,11 +295,11 @@ static void prv_notif_queue_next(void) {
 }
 
 #if UNITTEST
-T_STATIC uint32_t prv_get_queue_depth(void) {
+PBL_T_STATIC uint32_t prv_get_queue_depth(void) {
   return list_count((ListNode *)s_ancs_client->queue);
 }
 
-T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
+PBL_T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
   NotificationQueueNode key = {
     .op = NotificationQueueOpGetAttributes,
     .uid = uid,
@@ -520,7 +521,7 @@ static void prv_ancs_is_alive(void) {
   prv_ancs_is_alive_start_tracking();
 }
 
-T_STATIC void prv_check_ancs_alive(void) {
+PBL_T_STATIC void prv_check_ancs_alive(void) {
   // Stop the next check timer
   prv_ancs_is_alive_stop_timer();
 
@@ -555,7 +556,7 @@ T_STATIC void prv_check_ancs_alive(void) {
   }
 }
 
-T_STATIC void prv_is_ancs_alive_launcher_task_cb(void *data) {
+PBL_T_STATIC void prv_is_ancs_alive_launcher_task_cb(void *data) {
   if (!s_ancs_client) {
     return;
   }
@@ -767,7 +768,7 @@ fail:
 // Get Notification Attributes request
 
 static void prv_add_attributes_to_request(Buffer *request_buffer) {
-  static const struct PACKED {
+  static const struct PBL_PACKED {
     NotificationAttributeID positive_action : 8;
     NotificationAttributeID negative_action : 8;
     NotificationAttributeID app_id : 8;

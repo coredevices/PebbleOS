@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 
@@ -12,14 +12,14 @@ typedef enum {
   MsgIdStopTransfer = 0x03,
 } MsgId;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   MsgId msg_id;
   AudioEndpointSessionId session_id;
   uint8_t frame_count;
   uint8_t frames[];
 } DataTransferMsg;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   MsgId msg_id;
   AudioEndpointSessionId session_id;
 } StopTransferMsg;

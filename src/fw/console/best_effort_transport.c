@@ -11,7 +11,7 @@
 #include "console/pulse2_transport_impl.h"
 #include "console/pulse_control_message_protocol.h"
 #include "system/passert.h"
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <util/net.h>
 
 #include <stdbool.h>
@@ -61,7 +61,7 @@ void pulse2_best_effort_control_on_packet(void *packet, size_t length) {
 // Best Effort Application Transport protocol
 // ==========================================
 
-typedef struct PACKED BestEffortPacket {
+typedef struct PBL_PACKED BestEffortPacket {
   net16 protocol;
   net16 length;
   char information[];

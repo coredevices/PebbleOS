@@ -9,7 +9,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/util/size.h>
 
 #include <string.h>
@@ -37,7 +37,7 @@ PBL_LOG_MODULE_DEFINE(service_timezone_database, CONFIG_SERVICE_TIMEZONE_DATABAS
 //     2 bytes  - The region id this link maps to
 //     33 bytes - The name of the link that should be treated as an alias to the linked region
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t region_count;
   uint16_t dst_rule_count;
   uint16_t link_count;
@@ -95,7 +95,7 @@ bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_inf
       (region_id * REGION_BYTES);
 
   //! Struct for reading data from a raw database of timezone information
-  struct PACKED {
+  struct PBL_PACKED {
     int16_t gmt_offset_minutes; //!< timezone offset from UTC time (in minutes)
     char tz_abbr[TZ_LEN - 1];   //!< timezone abbreviation (without terminating nul)
     int8_t dst_id;              //!< daylight savings time index identifier

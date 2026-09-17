@@ -6,7 +6,7 @@
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_types.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/pstring.h"
 #include "util/time/time.h"
 #include "pbl/util/uuid.h"
@@ -57,7 +57,7 @@ typedef Uuid WeatherDBKey;
 // Legacy v3 record. Kept verbatim so the firmware can still read records
 // written by an older mobile app during the rollout window. Do not change.
 // ---------------------------------------------------------------------------
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t version;
   int16_t current_temp;
   WeatherType current_weather_type;
@@ -75,7 +75,7 @@ typedef struct PACKED {
 // One day of daily forecast (v4+). Weather type stored as uint8_t (values map
 // 1:1 to WeatherType; WeatherType_Unknown == 255). Cast on read.
 // ---------------------------------------------------------------------------
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   int16_t high_temp;    // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
   int16_t low_temp;     // WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP if unknown
   uint8_t weather_type; // WeatherType; 255 if unknown
@@ -87,7 +87,7 @@ typedef struct PACKED {
 // precip/wind/UV as the user pages through days — without these, future days
 // render "--". 255 = unknown for every field.
 // ---------------------------------------------------------------------------
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t precip_probability; // 0..100 (%), 255 if unknown
   uint8_t wind_speed;         // whole units, same unit as today_wind_speed; 255 if unknown
   uint8_t uv_index_x10;       // UV index * 10 (0..110), 255 if unknown
@@ -97,7 +97,7 @@ typedef struct PACKED {
 // v4 record. Layout: [ v3 fixed prefix, unchanged offsets ] + [ v4 fixed
 // fields ] + [ trailing pstring16s ]. The trailing pstring array MUST be last.
 // ---------------------------------------------------------------------------
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   // --- v3-compatible fixed prefix (identical offsets to WeatherDBEntryV3) ---
   uint8_t version; // == WEATHER_DB_CURRENT_VERSION (4)
   int16_t current_temp;

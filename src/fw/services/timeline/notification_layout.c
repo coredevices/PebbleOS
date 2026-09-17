@@ -19,6 +19,7 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
+#include "pbl/util/testing.h"
 
 // NOTIFICATION
 // Title -> Sender/App
@@ -175,7 +176,7 @@ fail:
   return false;
 }
 
-T_STATIC ResourceId prv_get_emoji_icon_by_string(const EmojiEntry *table, const char *str) {
+PBL_T_STATIC ResourceId prv_get_emoji_icon_by_string(const EmojiEntry *table, const char *str) {
   if (!str) {
     return INVALID_RESOURCE;
   }
@@ -330,7 +331,7 @@ static PreferredContentSize prv_content_size(void) {
 //! @param layout NotificationLayout of the notification
 //! @param use_body_icon Whether to display a body icon. Currently used by Jumboji
 //! @return the GTextNode view node of the notification
-static NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_body_icon) {
+static PBL_NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool use_body_icon) {
   const PreferredContentSize content_size = prv_content_size();
   const LayoutContentSize text_size = ToLayoutContentSize(content_size);
   const NotificationStyle *style = &s_notification_styles[content_size];
@@ -499,7 +500,7 @@ static void prv_card_init(NotificationLayout *layout, AttributeList *attributes,
   layer_add_child(&layout->layout.layer, kino_layer_get_layer(&layout->icon_layer));
 }
 
-static void NOINLINE prv_init_view(NotificationLayout *layout) {
+static void PBL_NOINLINE prv_init_view(NotificationLayout *layout) {
   const bool use_body_icon = prv_should_enlarge_emoji(layout);
   layout->view_node = prv_create_view(layout, use_body_icon);
 
@@ -529,8 +530,9 @@ static void prv_hide_or_show_banner_icon(KinoLayer *icon_layer,
 #endif
 
 #if PBL_ROUND
-static CONST_FUNC int32_t prv_interpolate_linear(int32_t out_min, int32_t out_max, int32_t in_min,
-                                                 int32_t in_max, int32_t progress) {
+static PBL_CONST_FUNC int32_t prv_interpolate_linear(int32_t out_min, int32_t out_max,
+                                                     int32_t in_min, int32_t in_max,
+                                                     int32_t progress) {
   return out_min + (out_max - out_min) * (progress - in_min) / (in_max - in_min);
 }
 
@@ -577,8 +579,8 @@ static void prv_draw_banner_round(NotificationLayout *notification_layout, GCont
 }
 #endif
 
-static NOINLINE void prv_card_render_internal(NotificationLayout *layout, GContext *ctx,
-                                              bool render) {
+static PBL_NOINLINE void prv_card_render_internal(NotificationLayout *layout, GContext *ctx,
+                                                  bool render) {
 #if PBL_ROUND
   const int orig_clip_height = ctx->draw_state.clip_box.size.h;
   const GRect *notification_layout_frame = &layout->layout.layer.frame;

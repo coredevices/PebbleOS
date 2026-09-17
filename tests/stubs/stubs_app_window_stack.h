@@ -4,22 +4,22 @@
 #pragma once
 
 #include "applib/ui/window.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-Window *WEAK app_window_stack_pop(bool animated) {
+Window *PBL_WEAK app_window_stack_pop(bool animated) {
   return NULL;
 }
 
-void WEAK app_window_stack_pop_all(const bool animated) {
+void PBL_WEAK app_window_stack_pop_all(const bool animated) {
 }
 
-void WEAK app_window_stack_push(Window *window, bool animated) {
+void PBL_WEAK app_window_stack_push(Window *window, bool animated) {
 }
 
-Window *WEAK app_window_stack_get_top_window(void) {
+Window *PBL_WEAK app_window_stack_get_top_window(void) {
   return NULL;
 }
 
-bool WEAK app_window_stack_contains_window(Window *window) {
+bool PBL_WEAK app_window_stack_contains_window(Window *window) {
   return false;
 }

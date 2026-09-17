@@ -28,9 +28,10 @@
 
 #include <stdio.h>
 #include <services/hrm/hrm_manager.h>
+#include "pbl/util/testing.h"
 
 // -----------------------------------------------------------------------------
-// T_STATIC functions
+// PBL_T_STATIC functions
 // -----------------------------------------------------------------------------
 extern HRMSubscriberState *prv_get_subscriber_state_from_ref(HRMSessionRef session);
 extern HRMSubscriberState *prv_get_subscriber_state_from_app_id(PebbleTask task,

@@ -24,6 +24,7 @@
 #include "pbl/util/math.h"
 
 #include <string.h>
+#include "pbl/util/testing.h"
 
 KERNEL_READONLY_DATA static bool s_paused = false;
 
@@ -46,7 +47,7 @@ static AnimationState *prv_animation_state_get(PebbleTask task) {
 }
 
 // -------------------------------------------------------------------------------------------
-T_STATIC AnimationPrivate *prv_animation_get_current(void) {
+PBL_T_STATIC AnimationPrivate *prv_animation_get_current(void) {
   AnimationState *state = prv_animation_state_get(PebbleTask_Unknown);
   return state->aux->current_animation;
 }

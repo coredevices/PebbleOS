@@ -25,6 +25,7 @@
 #include "pbl/kernel/types.h"
 
 #include "pbl/kernel/sem.h"
+#include "pbl/util/testing.h"
 
 // TODO:
 // - Intercept "manual" CCCD writes from the app, error for now? or translate to
@@ -775,7 +776,7 @@ void gatt_client_subscription_boot(void) {
 
 #if UNITTEST
 //! Only for unit tests
-T_STATIC bool gatt_client_get_event_pending_state(GAPLEClient client) {
+PBL_T_STATIC bool gatt_client_get_event_pending_state(GAPLEClient client) {
   return s_is_notification_event_pending[client];
 }
 #endif

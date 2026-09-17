@@ -5,9 +5,9 @@
 
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_loader.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-void *WEAK process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
-                               MemorySegment *segment) {
+void *PBL_WEAK process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
+                                   MemorySegment *segment) {
   return app_md->main_func;
 }

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/utf8.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -20,14 +20,14 @@ typedef enum {
 } TranscriptionType;
 
 //! A word string with associated confidence value and length. The string is not zero terminated
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t confidence; //!< Word confidence value (1 - 100%) or 0 if confidence value is not valid
   uint16_t length;    //!< Length of word
   utf8_t data[];      //!< UTF-8 encoded text
 } TranscriptionWord;
 
 //! A serialized list of words making up a sentence.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t word_count;
   TranscriptionWord words[];
 } TranscriptionSentence;
@@ -37,7 +37,7 @@ typedef struct PACKED {
 //! not all support confidence per word. The simplest representation of a string would be a single
 //! list of words (with their confidence values set to zero) making up a single sentence.
 //! The list of objects is serialized in memory as it would be received over the endpoint.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   TranscriptionType type : 8;
   uint8_t sentence_count;
   TranscriptionSentence sentences[];

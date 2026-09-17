@@ -8,12 +8,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 typedef uint16_t BlobDBToken;
 
 //! Response / result values
-typedef enum PACKED {
+typedef enum PBL_PACKED {
   BLOB_DB_SUCCESS = 0x01,
   BLOB_DB_GENERAL_FAILURE = 0x02,
   BLOB_DB_INVALID_OPERATION = 0x03,
@@ -30,7 +30,7 @@ _Static_assert(sizeof(BlobDBResponse) == 1, "BlobDBResponse is larger than 1 byt
 
 #define RESPONSE_MASK (1 << 7)
 
-typedef enum PACKED {
+typedef enum PBL_PACKED {
   BLOB_DB_COMMAND_INSERT = 0x01,
   BLOB_DB_COMMAND_READ = 0x02,   // Not implemented yet
   BLOB_DB_COMMAND_UPDATE = 0x03, // Not implemented yet

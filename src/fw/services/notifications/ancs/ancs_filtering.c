@@ -25,12 +25,12 @@ typedef enum {
   FilteringMatchFieldBody = 2,
 } FilteringMatchField;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t count;
   uint8_t data[];
 } FilteringRulesSerialized;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t match_type;
   uint8_t match_field;
   uint8_t case_sensitive;

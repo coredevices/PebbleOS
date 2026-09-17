@@ -23,6 +23,7 @@
 #include "util/units.h"
 
 #include "pbl/kernel/mutex.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -263,12 +264,12 @@ bool workout_service_is_workout_type_supported(ActivitySessionType type) {
 }
 
 // ---------------------------------------------------------------------------------------
-T_STATIC void prv_abandon_workout_timer_callback(void *unused) {
+PBL_T_STATIC void prv_abandon_workout_timer_callback(void *unused) {
   workout_service_stop_workout();
 }
 
 // ---------------------------------------------------------------------------------------
-T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
+PBL_T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
   workout_utils_send_abandoned_workout_notification();
 
   s_workout_data.current_workout->workout_abandoned_timer = evented_timer_register(
@@ -276,7 +277,7 @@ T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
 }
 
 // ---------------------------------------------------------------------------------------
-T_STATIC void prv_workout_timer_cb(void *unused) {
+PBL_T_STATIC void prv_workout_timer_cb(void *unused) {
   // This runs on the NewTimer task, which has a watchdog. The workout mutex
   // can be held by paths that block on flash (e.g. stop_workout pushing the
   // session notification), so a blocking lock here can trip the watchdog and

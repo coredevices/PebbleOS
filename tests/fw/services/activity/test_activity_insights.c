@@ -6,7 +6,7 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/insights_settings.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 

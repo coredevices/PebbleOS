@@ -6,7 +6,7 @@
 #include "applib/app_message/app_message_internal.h"
 #include "kernel/events.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include <stddef.h>
@@ -28,15 +28,15 @@ extern AppTimer *app_message_outbox_get_ack_nack_timer(void);
 
 // Structures and Externs
 ////////////////////////////////////
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppMessageCmd command : 8;
   uint8_t transaction_id;
-  union PACKED {
-    struct PACKED {
+  union PBL_PACKED {
+    struct PBL_PACKED {
       Uuid uuid;
       Dictionary dictionary; //!< Variable length!
     } push;                  //!< valid for CMD_PUSH only
-    struct PACKED {
+    struct PBL_PACKED {
     } ack;
   } payload[];
 } AppMessage;

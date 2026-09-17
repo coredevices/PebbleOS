@@ -11,14 +11,14 @@
  *
  */
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // r0-r12, sp, lr, pc, xpsr
 #define CORE_DUMP_NUM_REGISTERS 17
 
 // Structure of thread info stored within a CORE_DUMP_CHUNK_KEY_THREAD chunk in the core dump
 #define CORE_DUMP_THREAD_NAME_SIZE 16
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   int8_t name[CORE_DUMP_THREAD_NAME_SIZE];     // Name, includes null termination
   uint32_t id;                                 // thread id
   uint8_t running;                             // true if this thread is running
@@ -27,7 +27,7 @@ typedef struct PACKED {
 
 // Structure of extra registers stored within a CORE_DUMP_CHUNK_KEY_EXTRA_REG chunk in the
 // core dump
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t msp;
   uint32_t psp;
   uint8_t primask;
@@ -40,7 +40,7 @@ typedef struct PACKED {
 // on the core_dump_reset() stack and save a pointer to it in the s_saved_registers global.
 // IMPORTANT!: There is assembly code near the top of core_dump_reset() that makes assumptions
 // about the order and packing of this structure.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t core_reg[CORE_DUMP_NUM_REGISTERS];
   CoreDumpExtraRegInfo extra_reg;
 } CoreDumpSavedRegisters;

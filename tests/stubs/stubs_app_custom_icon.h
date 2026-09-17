@@ -4,8 +4,8 @@
 #pragma once
 
 #include "process_management/app_custom_icon.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-const char *WEAK app_custom_get_title(AppInstallId app_id) {
+const char *PBL_WEAK app_custom_get_title(AppInstallId app_id) {
   return "";
 }

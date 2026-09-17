@@ -20,6 +20,7 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "util/stats.h"
+#include "pbl/util/testing.h"
 
 // Fetching minute history can take a while, so we limit the amount of data we will ever access
 // in one call to this
@@ -400,8 +401,8 @@ static HealthValue prv_sum_intraday_averages(ActivityMetricAverages *averages, t
 // * How many seconds from the range we should count from the last day (range->seconds_last_day)
 // * How many seconds of data we have collected for the last day of the range
 //    (range->seconds_total_last_day)
-T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
-                                       HealthServiceTimeRange *range) {
+PBL_T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
+                                           HealthServiceTimeRange *range) {
   // as the data set from activity_get_metric() uses day boundaries in local time we
   // need to convert the arguments to local time
   const time_t now = sys_time_utc_to_local(sys_get_time());
@@ -476,8 +477,8 @@ static HealthServiceAccessibilityMask prv_get_range_and_daily_history(
 // This adjusts the values in the values array that represent the first and last day of
 // the given time range. If either of these are not totally included in the time range, we
 // decrease their value proportionally to how many seconds in the range overlap them.
-T_STATIC void prv_adjust_value_boundaries(HealthValue *values, size_t num_values,
-                                          const HealthServiceTimeRange *range) {
+PBL_T_STATIC void prv_adjust_value_boundaries(HealthValue *values, size_t num_values,
+                                              const HealthServiceTimeRange *range) {
   PBL_ASSERTN(values && range && range->seconds_total_last_day > 0);
 
   if (((range->last_day_idx + range->num_days) > num_values) || (range->num_days < 1)) {
@@ -756,7 +757,7 @@ uint16_t health_service_peek_hrv_ppi_ms(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-T_STATIC void prv_health_event_handler(PebbleEvent *e, void *context) {
+PBL_T_STATIC void prv_health_event_handler(PebbleEvent *e, void *context) {
 #if !defined(CONFIG_RECOVERY_FW)
   HealthServiceState *state = prv_get_state(true);
   PBL_ASSERTN(state && state->event_handler != NULL);
@@ -791,8 +792,9 @@ T_STATIC void prv_health_event_handler(PebbleEvent *e, void *context) {
 }
 
 // ----------------------------------------------------------------------------------------------
-T_STATIC bool prv_activity_session_matches(const ActivitySession *session, HealthActivityMask mask,
-                                           time_t time_start, time_t time_end) {
+PBL_T_STATIC bool prv_activity_session_matches(const ActivitySession *session,
+                                               HealthActivityMask mask, time_t time_start,
+                                               time_t time_end) {
   PBL_ASSERTN(session);
 
   const bool type_matches =
@@ -816,8 +818,8 @@ T_STATIC bool prv_activity_session_matches(const ActivitySession *session, Healt
 }
 
 // ----------------------------------------------------------------------------------------------
-T_STATIC int64_t prv_session_compare(const ActivitySession *a, const ActivitySession *b,
-                                     HealthIterationDirection direction) {
+PBL_T_STATIC int64_t prv_session_compare(const ActivitySession *a, const ActivitySession *b,
+                                         HealthIterationDirection direction) {
   PBL_ASSERTN(a && b);
 
   switch (direction) {

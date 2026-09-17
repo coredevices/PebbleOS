@@ -7,7 +7,8 @@
 #include "pbl/services/i18n/i18n.h"
 #include "syscall/syscall.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -93,7 +94,7 @@ static bool prv_predicate_valid_splitter(char ch) {
   return ((ch == ':') || prv_format_string_ending(ch));
 }
 
-T_STATIC intmax_t prv_template_predicate_time(TemplateStringState *state) {
+PBL_T_STATIC intmax_t prv_template_predicate_time(TemplateStringState *state) {
   bool negative = false;
   if (*state->position == '-') {
     negative = true;
@@ -152,8 +153,8 @@ T_STATIC intmax_t prv_template_predicate_time(TemplateStringState *state) {
   return total_value;
 }
 
-T_STATIC bool prv_template_predicate_match(TemplateStringState *state, PredicateCondition *cond,
-                                           intmax_t *value) {
+PBL_T_STATIC bool prv_template_predicate_match(TemplateStringState *state, PredicateCondition *cond,
+                                               intmax_t *value) {
   *cond = PredicateCondition_Invalid;
   if (*state->position == '<') {
     *cond = PredicateCondition_L;
@@ -428,8 +429,8 @@ static void prv_do_conversion(TemplateStringState *state, intmax_t value, int di
 // This is a recursive function, so watch out!
 // The recursion happens on the %R and %T cases only, and will only recurse once.
 // So when adding stack variables, realize the stack usage may be doubled!
-T_STATIC const char *prv_template_format_specifier(TemplateStringState *state, const char *input,
-                                                   intmax_t value) {
+PBL_T_STATIC const char *prv_template_format_specifier(TemplateStringState *state,
+                                                       const char *input, intmax_t value) {
   if (*input == '%') { // Escaped %
     prv_append_char(state, *input);
     input++;
@@ -751,8 +752,8 @@ static void prv_filter_end(TemplateStringState *state) {
   state->filters_complete = true;
 }
 
-T_STATIC void prv_template_evaluate_filter(TemplateStringState *state, const char *filter_name,
-                                           const char *parameters_start) {
+PBL_T_STATIC void prv_template_evaluate_filter(TemplateStringState *state, const char *filter_name,
+                                               const char *parameters_start) {
   for (size_t i = 0; i < ARRAY_LENGTH(s_filter_impls); i++) {
     if (strcmp(s_filter_impls[i].name, filter_name) == 0) {
       state->position = parameters_start;

@@ -14,7 +14,7 @@
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/prefs.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 typedef struct LauncherAppWindowData {
   Window window;

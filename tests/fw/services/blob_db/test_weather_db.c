@@ -4,7 +4,7 @@
 #include "pbl/drivers/rtc.h"
 #include "clar.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/pstring.h"
 
 #include "pbl/services/blob_db/weather_db.h"

@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <time.h>
+#include "pbl/util/testing.h"
 
 ///////////////////////////////////////////////////////////
 // Drawing functions
@@ -138,7 +139,7 @@ static const int SCROLL_FUDGE_AMOUNT = PBL_IF_RECT_ELSE(10, 0);
 // Click Config
 /////////////////////////////////////////
 
-T_STATIC void prv_handle_down_click(ClickRecognizerRef recognizer, void *context) {
+PBL_T_STATIC void prv_handle_down_click(ClickRecognizerRef recognizer, void *context) {
   TimelineItemLayer *item_layer = (TimelineItemLayer *)context;
   int16_t max_scroll = prv_get_max_scroll_offset(item_layer);
   const int16_t first_scroll = prv_get_first_scroll_offset(item_layer);

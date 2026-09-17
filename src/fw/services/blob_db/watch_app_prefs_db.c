@@ -12,6 +12,7 @@
 #include "system/status_codes.h"
 #include "util/units.h"
 #include "pbl/util/uuid.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -27,7 +28,7 @@ static struct {
 #define SETTINGS_FILE_NAME "watch_app_prefs"
 #define SETTINGS_FILE_SIZE KiBYTES(20)
 
-T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
+PBL_T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
 
 // Settings helpers
 ////////////////////////////////////////////////////////////////////////////////

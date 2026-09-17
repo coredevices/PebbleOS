@@ -4,7 +4,7 @@
 #pragma once
 
 #include <bluetooth/bluetooth_types.h>
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 
 #define SPRF_PAGE_IDX_INVALID ((uint16_t)~0)
 
@@ -56,13 +56,13 @@ _Static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 //! which are some 2^n multiple so this size pretty much guarantees that a divisible number
 //! of structs can fit in the region allocated
 
-typedef struct PACKED SprfRootKeys {
+typedef struct PBL_PACKED SprfRootKeys {
   uint32_t crc;
   SM128BitKey keys[SMRootKeyTypeNum];
 } SprfRootKeys;
 _Static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfBlePairingData {
+typedef struct PBL_PACKED SprfBlePairingData {
   uint32_t crc; // CRC over the 'pairing_data' struct ('name' through 'fields')
 
   // local encryption data
@@ -88,27 +88,27 @@ typedef struct PACKED SprfBlePairingData {
 } SprfBlePairingData;
 _Static_assert(offsetof(SprfBlePairingData, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfBlePairingName {
+typedef struct PBL_PACKED SprfBlePairingName {
   uint32_t crc;
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
 } SprfBlePairingName;
 _Static_assert(offsetof(SprfBlePairingName, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfPinnedAddress {
+typedef struct PBL_PACKED SprfPinnedAddress {
   uint32_t crc;
   BTDeviceAddress pinned_address;
   uint8_t rsvd[2];
 } SprfPinnedAddress;
 _Static_assert(offsetof(SprfPinnedAddress, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfGettingStarted {
+typedef struct PBL_PACKED SprfGettingStarted {
   uint32_t crc;
   bool is_complete;
   uint8_t rsvd[3];
 } SprfGettingStarted;
 _Static_assert(offsetof(SprfGettingStarted, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfLocalName {
+typedef struct PBL_PACKED SprfLocalName {
   // Not used today, but in the future we could replace 'Pebble XXXX' with
   // a user friendly name, 'Chris' Pebble'
   uint32_t crc;
@@ -116,7 +116,7 @@ typedef struct PACKED SprfLocalName {
 } SprfLocalName;
 _Static_assert(offsetof(SprfLocalName, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SharedPRFData {
+typedef struct PBL_PACKED SharedPRFData {
   SprfMagic magic;
   uint8_t version;
   uint8_t rsvd[3];
@@ -130,7 +130,7 @@ typedef struct PACKED SharedPRFData {
 
   // Occasions have arisen in the past where a region in sharedPRF that
   // main FW can stash info related to a pairing. That is the intent of this region.
-  struct PACKED {
+  struct PBL_PACKED {
     uint8_t rsvd[44];
   } main_fw_scratch;
 } SharedPRFData;

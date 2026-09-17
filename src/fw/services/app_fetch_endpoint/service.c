@@ -15,7 +15,7 @@
 #include "pbl/services/blob_db/app_db.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "pbl/util/uuid.h"
 
@@ -52,7 +52,7 @@ enum {
 } AppFetchInstallResult;
 
 //! Data sent to mobile phone for an INSTALL_COMMAND
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t command;
   Uuid uuid;
   AppInstallId app_id;

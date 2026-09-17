@@ -4,10 +4,10 @@
 #pragma once
 
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid uuid;
   uint32_t flags;
   uint8_t num_attributes;

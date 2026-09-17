@@ -10,8 +10,9 @@
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
 #include "util/time/time.h"
+#include "pbl/util/testing.h"
 
-T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {
+PBL_T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {
   if (previous == NULL || current == NULL) {
     return;
   }

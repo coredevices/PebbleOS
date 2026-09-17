@@ -44,7 +44,7 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/logging/logging.h>
 #include "system/version.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
@@ -80,7 +80,7 @@ void cd_flash_read_bytes(void *buffer_ptr, uint32_t start_addr, uint32_t buffer_
 
 static uint32_t s_flash_addr; // next address in flash to write to
 // Saved registers before we trigger our interrupt: [r0-r12, sp, lr, pc, xpsr]
-static ALIGN(4) CoreDumpSavedRegisters s_saved_registers;
+static PBL_ALIGNED(4) CoreDumpSavedRegisters s_saved_registers;
 static uint32_t s_time_stamp;
 static bool s_core_dump_initiated = false;
 static bool s_core_dump_is_forced = false;
@@ -203,7 +203,7 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
 #endif
 }
 
-static NORETURN prv_reset(void) {
+static PBL_NORETURN void prv_reset(void) {
   dbgserial_flush();
   system_hard_reset();
 }
@@ -467,7 +467,7 @@ static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
 
 // -----------------------------------------------------------------------------------------------
 // Trigger a core dump
-NORETURN core_dump_reset(bool is_forced) {
+PBL_NORETURN void core_dump_reset(bool is_forced) {
   // Big problem if we re-enter here - it likely means we encountered an
   // exception during the core dump
   if (s_core_dump_initiated) {
@@ -514,7 +514,7 @@ void __attribute__((naked)) NMI_Handler(void) {
       : "r0", "r1", "r2", "r3", "cc");
 }
 
-EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
+PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // Locate the stack pointer where the processor state was stacked before the
   // NMI handler was executed so that the saved state can be copied into
   // s_saved_registers.

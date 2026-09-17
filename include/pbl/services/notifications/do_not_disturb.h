@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "kernel/events.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 
@@ -15,7 +15,7 @@ typedef enum DoNotDisturbScheduleType {
   NumDNDSchedules,
 } DoNotDisturbScheduleType;
 
-typedef struct PACKED DoNotDisturbSchedule {
+typedef struct PBL_PACKED DoNotDisturbSchedule {
   uint8_t from_hour;
   uint8_t from_minute;
   uint8_t to_hour;

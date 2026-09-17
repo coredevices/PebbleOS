@@ -7,10 +7,10 @@
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "bluetooth/hci_types.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 typedef enum BleAddressType {
   BleAddressType_Public,
@@ -23,20 +23,20 @@ _Static_assert(sizeof(BleAddressType) == 1, "BleAddressType is not 1 byte in siz
 
 // All values in ms
 // Used for ConnectionCompleteEvents
-typedef struct PACKED BleConnectionParams {
+typedef struct PBL_PACKED BleConnectionParams {
   uint16_t conn_interval_1_25ms;
   uint16_t slave_latency_events;
   uint16_t supervision_timeout_10ms;
 } BleConnectionParams;
 
 // Matches data from "LL_VERSION_IND" - v4.2 2.4.2.13
-typedef struct PACKED BleRemoteVersionInfo {
+typedef struct PBL_PACKED BleRemoteVersionInfo {
   uint8_t version_number;
   uint16_t company_identifier;
   uint16_t subversion_number;
 } BleRemoteVersionInfo;
 
-typedef struct PACKED BleRemoteVersionInfoReceivedEvent {
+typedef struct PBL_PACKED BleRemoteVersionInfoReceivedEvent {
   BTDeviceInternal peer_address;
   BleRemoteVersionInfo remote_version_info;
 } BleRemoteVersionInfoReceivedEvent;
@@ -45,7 +45,7 @@ typedef struct PACKED BleRemoteVersionInfoReceivedEvent {
 // what section of the BT Core Spec more info about the event can be found
 
 // "LE Connection Complete Event" - v4.2 7.7.65.1
-typedef struct PACKED BleConnectionCompleteEvent {
+typedef struct PBL_PACKED BleConnectionCompleteEvent {
   BleConnectionParams conn_params;
   BTDeviceInternal peer_address;
   HciStatusCode status;
@@ -57,7 +57,7 @@ typedef struct PACKED BleConnectionCompleteEvent {
 } BleConnectionCompleteEvent;
 
 // "Disconnection Complete Event" - v4.2 7.7.5
-typedef struct PACKED BleDisconnectionCompleteEvent {
+typedef struct PBL_PACKED BleDisconnectionCompleteEvent {
   BTDeviceInternal peer_address;
   HciStatusCode status;
   HciDisconnectReason reason;
@@ -65,7 +65,7 @@ typedef struct PACKED BleDisconnectionCompleteEvent {
 } BleDisconnectionCompleteEvent;
 
 // "LE Connection Update Complete Event" - v4.2 7.7.65.3
-typedef struct PACKED BleConnectionUpdateCompleteEvent {
+typedef struct PBL_PACKED BleConnectionUpdateCompleteEvent {
   BleConnectionParams conn_params;
   //! Using BTDeviceAddress instead of BTDeviceInternal, because Bluetopia's event doesn't contain
   //! the address type.
@@ -75,7 +75,7 @@ typedef struct PACKED BleConnectionUpdateCompleteEvent {
 
 // Note: This will likely change to work with Dialog
 // "Encryption Change Event" - v4.2 7.7.8
-typedef struct PACKED BleEncryptionChange {
+typedef struct PBL_PACKED BleEncryptionChange {
   //! Using BTDeviceAddress instead of BTDeviceInternal, because Bluetopia's event doesn't contain
   //! the address type.
   BTDeviceAddress dev_address;
@@ -83,14 +83,14 @@ typedef struct PACKED BleEncryptionChange {
   bool encryption_enabled;
 } BleEncryptionChange;
 
-typedef struct PACKED BleAddressChange {
+typedef struct PBL_PACKED BleAddressChange {
   //! Current device address info.
   BTDeviceInternal device;
   //! New device address info.
   BTDeviceInternal new_device;
 } BleAddressChange;
 
-typedef struct PACKED BleIRKChange {
+typedef struct PBL_PACKED BleIRKChange {
   //! Current device address info.
   BTDeviceInternal device;
   //! True if the "irk" field is valid

@@ -23,6 +23,7 @@
 #include "system/passert.h"
 #include "system/profiler.h"
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
@@ -179,7 +180,7 @@ static void prv_notify_frozen(void) {
   callback(s_frozen_callback_data);
 }
 
-T_STATIC void prv_handle_display_update_complete(void) {
+PBL_T_STATIC void prv_handle_display_update_complete(void) {
   if (s_deferred_render.transition_complete.pending) {
     s_deferred_render.transition_complete.pending = false;
     prv_finish_transition();

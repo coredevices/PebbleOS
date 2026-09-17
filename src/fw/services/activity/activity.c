@@ -34,6 +34,7 @@
 #include "pbl/services/activity/activity_insights.h"
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/workout_service.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -178,7 +179,7 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new data arrives
 #ifdef CONFIG_HRM
-T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
+PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   ACTIVITY_LOG_DEBUG("Got HR event: %d", (int)hrm_event->event_type);
   if (hrm_event->event_type == HRMEvent_BPM) {
     ACTIVITY_LOG_DEBUG("HR bpm: %" PRIu8 ", qual: %" PRId8 " ", hrm_event->bpm.bpm,
@@ -408,7 +409,7 @@ static uint8_t prv_spo2_health_quality(HRMQuality quality) {
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new SpO2 data arrives
 #ifdef CONFIG_HRM
-T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
+PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   if (hrm_event->event_type != HRMEvent_SpO2) {
     return;
   }
@@ -584,7 +585,7 @@ static void prv_activity_spo2_schedule_update(void) {
 
 // Kernel BG callback for the activity SpO2 session. Only fires while we are sampling (our session
 // is idle otherwise).
-T_STATIC void prv_activity_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
+PBL_T_STATIC void prv_activity_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   if (hrm_event->event_type != HRMEvent_SpO2) {
     return;
   }
@@ -791,7 +792,7 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
 
 // -----------------------------------------------------------------------------------------
 // Called from the prv_minute_system_task_cb(). Determines if we should update storage.
-static void NOINLINE prv_update_storage(time_t utc_sec) {
+static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
   // If no reason to update storage, we can bail immediately.
   s_activity_state.update_settings_counter -= 1;
   if (s_activity_state.update_settings_counter > 0) {
@@ -851,8 +852,8 @@ static void NOINLINE prv_update_storage(time_t utc_sec) {
 // Tail end of prv_process_minute_data, separated out to decrease stack requirements. This
 // portion of the logic handles activity process, saving prefs to our backing store, and
 // resetting metrics at midnight.
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
   bool need_history_update_event;
   uint16_t cur_day_index;
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
@@ -918,8 +919,8 @@ static void NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
 // ------------------------------------------------------------------------------------------------
 // Takes care of updating the history when we reach midnight as well as checking for changes in
 // sleep state. Returns true if the sleep metrics were updated
-// We use NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
-static void NOINLINE prv_process_minute_data(time_t utc_sec) {
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+static void PBL_NOINLINE prv_process_minute_data(time_t utc_sec) {
   // Update the metrics
   activity_metrics_prv_minute_handler(utc_sec);
 
@@ -945,7 +946,7 @@ static void NOINLINE prv_process_minute_data(time_t utc_sec) {
 // ------------------------------------------------------------------------------------------------
 // This system task, triggered by a minute regular timer, takes care of updating the history
 // when we reach midnight, checking for changes in sleep state, and updating insights
-T_STATIC void prv_minute_system_task_cb(void *data) {
+PBL_T_STATIC void prv_minute_system_task_cb(void *data) {
   if (!s_activity_state.started) {
     return;
   }

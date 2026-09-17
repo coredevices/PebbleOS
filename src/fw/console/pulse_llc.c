@@ -8,7 +8,7 @@
 #include "console/pulse_protocol_impl.h"
 
 #include "console/pulse_internal.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #define LLC_INMSG_LINK_ESTABLISHMENT_REQUEST (1)
@@ -63,7 +63,7 @@ void pulse_llc_link_state_handler(PulseLinkState link_state) {
 }
 
 void pulse_llc_send_link_opened_msg(void) {
-  typedef struct PACKED Response {
+  typedef struct PBL_PACKED Response {
     uint8_t type;
     uint8_t pulse_version;
     uint16_t mtu;
@@ -91,7 +91,7 @@ void pulse_llc_send_link_closed_msg(void) {
 }
 
 static void prv_bad_packet_response(uint8_t type, uint8_t bad_id, void *body, size_t body_length) {
-  typedef struct PACKED Response {
+  typedef struct PBL_PACKED Response {
     uint8_t type;
     uint8_t bad_identifier;
     char body[8];

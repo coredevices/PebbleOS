@@ -13,6 +13,7 @@
 #include "pbl/util/size.h"
 
 #include <string.h>
+#include "pbl/util/testing.h"
 
 static void add_app_with_install_id(const AppInstallEntry *entry, AppMenuDataSource *source);
 static bool remove_app_with_install_id(const AppInstallId install_id, AppMenuDataSource *source);
@@ -72,7 +73,7 @@ static int prv_comparator_ascending_zero_last(unsigned int a, unsigned int b) {
              (a - b);                       // 0 should be sorted last so invert the sort
 }
 
-T_STATIC int prv_app_node_comparator(void *app_node_ref, void *new_node_ref) {
+PBL_T_STATIC int prv_app_node_comparator(void *app_node_ref, void *new_node_ref) {
   const AppMenuNode *app_node = app_node_ref;
   const AppMenuNode *new_node = new_node_ref;
 

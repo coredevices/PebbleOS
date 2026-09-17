@@ -8,7 +8,7 @@
 #include "system/bootbits.h"
 #include "system/firmware_storage.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/net.h"
 
 #include <bluetooth/conn_event_stats.h>
@@ -101,7 +101,7 @@ typedef enum {
 } Response;
 
 // Send an INIT message
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Cmd cmd : 8;
   uint32_t total_size;
   PutBytesObjectType type : 8;
@@ -114,30 +114,30 @@ typedef struct PACKED {
   };
 } InitRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Cmd cmd : 8;
   uint32_t cookie;
   uint32_t payload_size;
   uint8_t payload[];
 } PutRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Cmd cmd : 8;
   uint32_t cookie;
 } InstallRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Cmd cmd : 8;
   uint32_t cookie;
 } AbortRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Cmd cmd : 8;
   uint32_t cookie;
   uint32_t crc;
 } CommitRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Response response : 8;
   uint32_t cookie;
 } ResponseMsg;

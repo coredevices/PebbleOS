@@ -10,7 +10,7 @@
  * identify the build info, etc.
  */
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -64,7 +64,7 @@ typedef enum FirmwareMetadataPlatform {
 // WARNING: changes in this struct must be reflected in:
 // - iOS/PebblePrivateKit/PebblePrivateKit/PBBundle.m
 
-struct PACKED FirmwareMetadata {
+struct PBL_PACKED FirmwareMetadata {
   uint32_t version_timestamp;
   char version_tag[FW_METADATA_VERSION_TAG_BYTES];
   char version_short[FW_METADATA_VERSION_SHORT_BYTES];

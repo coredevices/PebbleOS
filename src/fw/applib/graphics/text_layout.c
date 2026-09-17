@@ -39,6 +39,7 @@
 
 #include <stdint.h>
 #include <limits.h>
+#include "pbl/util/testing.h"
 
 static bool prv_char_iter_next_start_of_word(Iterator *char_iter);
 
@@ -1186,8 +1187,9 @@ bool is_clip_box_overflow_stop_condition_cb(GContext *ctx, Line *line,
 // DroidSerif Bold ascent = 1638, descent = 410
 #define TEXT_LINE_DESCENDER_LINE(line) DIVIDE_CEIL((line)->height_px, 5) // 1/5th rounded up
 
-T_STATIC NOINLINE MOCKABLE void prv_debug_perimeter(GContext *ctx, const GRangeHorizontal *h_range,
-                                                    const Line *line) {
+PBL_T_STATIC PBL_NOINLINE PBL_T_MOCKABLE void prv_debug_perimeter(GContext *ctx,
+                                                                  const GRangeHorizontal *h_range,
+                                                                  const Line *line) {
   // PBL-23045 Eventually remove perimeter debugging
   // Draw a red horizontal line to show the range of the current lines perimeter
   if (app_state_get_text_perimeter_debugging_enabled()) {

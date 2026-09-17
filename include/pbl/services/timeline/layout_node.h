@@ -11,7 +11,7 @@
 #include "pbl/services/timeline/layout_layer.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! LayoutNode is a compact TextNode constructor using packed structs. Using LayoutNode configs, a
 //! hierarchy of nested TextNodes can be described and instantiated with
@@ -98,11 +98,11 @@ typedef enum {
   LayoutNodeType_TimelineMetrics,
 } LayoutNodeType;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeType type;
 } LayoutNodeConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeConfig node;
   struct {
     int8_t x;
@@ -114,7 +114,7 @@ typedef struct PACKED {
   } margin;
 } LayoutNodeExtentConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeExtentConfig extent;
   const char *font_key;
   LayoutContentSize style : 8;
@@ -132,19 +132,19 @@ typedef struct PACKED {
 #endif
 } LayoutNodeTextConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeExtentConfig extent;
   LayoutContentSize size : 8;
   TextStyleFont heading_style_font : 8;
   TextStyleFont paragraph_style_font : 8;
 } LayoutNodeHeadingsParagraphsConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeTextConfig text;
   AttributeId attr_id;
 } LayoutNodeTextAttributeConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeTextConfig text;
   const char *str;
   bool use_i18n;
@@ -156,26 +156,26 @@ typedef void (*LayoutNodeTextDynamicUpdate)(const LayoutLayer *layout,
                                             const LayoutNodeTextDynamicConfig *config, char *buffer,
                                             bool render);
 
-struct PACKED LayoutNodeTextDynamicConfig {
+struct PBL_PACKED LayoutNodeTextDynamicConfig {
   LayoutNodeTextConfig text;
   LayoutNodeTextDynamicUpdate update;
   void *context;
   uint16_t buffer_size;
 };
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeExtentConfig extent;
   LayoutNodeConfig **nodes;
   uint8_t num_nodes;
   uint8_t extra_capacity;
 } LayoutNodeContainerConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeContainerConfig container;
   LayoutTextAlignment horizontal_alignment;
 } LayoutNodeHorizontalConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeContainerConfig container;
   LayoutVerticalAlignment vertical_alignment;
 } LayoutNodeVerticalConfig;
@@ -185,7 +185,7 @@ typedef struct LayoutNodeConstructorConfig LayoutNodeConstructorConfig;
 typedef GTextNode *(*LayoutNodeConstructor)(const LayoutLayer *layout,
                                             const LayoutNodeConstructorConfig *config);
 
-struct PACKED LayoutNodeConstructorConfig {
+struct PBL_PACKED LayoutNodeConstructorConfig {
   LayoutNodeExtentConfig extent;
   LayoutNodeConstructor constructor;
   void *context;

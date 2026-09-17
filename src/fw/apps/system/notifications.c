@@ -133,7 +133,7 @@ static void prv_unload_loaded_notification(LoadedNotificationNode *loaded_notif)
   app_free(loaded_notif);
 }
 
-static NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
+static PBL_NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_item(
     LoadedNotificationNode **loaded_list, NotificationNode *node) {
   if (node == NULL) {
     return NULL;

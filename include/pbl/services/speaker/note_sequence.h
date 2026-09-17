@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,7 +21,7 @@ typedef enum {
 //! waveform: SpeakerWaveform value.
 //! duration_ms: Note duration in ms (max 10000).
 //! velocity: Volume 0-127 (0 = use global volume).
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t midi_note;
   uint8_t waveform;
   uint16_t duration_ms;

@@ -102,4 +102,4 @@ void app_manager_get_framebuffer_size(GSize *size);
 
 //! Exit the application. Do some cleanup to make sure things close nicely.
 //! Called from the app task
-NORETURN app_task_exit(void);
+PBL_NORETURN void app_task_exit(void);

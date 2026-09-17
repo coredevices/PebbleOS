@@ -17,7 +17,8 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -51,7 +52,7 @@ static bool prv_match_session_ref(ListNode *found_node, void *data) {
   return (state->session_ref == (HRMSessionRef)data);
 }
 
-T_STATIC HRMSubscriberState *prv_get_subscriber_state_from_ref(HRMSessionRef session) {
+PBL_T_STATIC HRMSubscriberState *prv_get_subscriber_state_from_ref(HRMSessionRef session) {
   ListNode *node =
       list_find(s_manager_state.subscribers, prv_match_session_ref, (void *)(uintptr_t)session);
   return (HRMSubscriberState *)node;
@@ -68,8 +69,8 @@ static bool prv_match_app_id(ListNode *found_node, void *data) {
   return ((state->app_id == context->app_id) && (state->task == context->task));
 }
 
-T_STATIC HRMSubscriberState *prv_get_subscriber_state_from_app_id(PebbleTask task,
-                                                                  AppInstallId app_id) {
+PBL_T_STATIC HRMSubscriberState *prv_get_subscriber_state_from_app_id(PebbleTask task,
+                                                                      AppInstallId app_id) {
   HRMAppIdAndTask context = {
     .app_id = app_id,
     .task = task,
@@ -89,8 +90,8 @@ static bool prv_needs_expiring_event(HRMSubscriberState *state, time_t utc_now) 
                                               (int)state->update_interval_s)));
 }
 
-T_STATIC void prv_read_event_from_buffer_and_consume(CircularBuffer *buffer,
-                                                     PebbleHRMEvent *event) {
+PBL_T_STATIC void prv_read_event_from_buffer_and_consume(CircularBuffer *buffer,
+                                                         PebbleHRMEvent *event) {
   const uint16_t total_size = sizeof(*event);
   uint16_t remaining = total_size;
   uint8_t *out_buf = (uint8_t *)event;
@@ -117,19 +118,19 @@ static void prv_remove_and_free_subscription(HRMSubscriberState *state) {
 
 #if UNITTEST
 // Used by unit tests
-T_STATIC TimerID prv_get_timer_id(void) {
+PBL_T_STATIC TimerID prv_get_timer_id(void) {
   return s_manager_state.update_enable_timer_id;
 }
 
 // Used by unit tests
-T_STATIC uint32_t prv_num_system_task_events_queued(void) {
+PBL_T_STATIC uint32_t prv_num_system_task_events_queued(void) {
   uint16_t avail_bytes =
       circular_buffer_get_read_space_remaining(&s_manager_state.system_task_event_buffer);
   return avail_bytes / sizeof(PebbleHRMEvent);
 }
 
 // Used by unit tests
-T_STATIC uint32_t prv_get_dropped_events_count(void) {
+PBL_T_STATIC uint32_t prv_get_dropped_events_count(void) {
   return s_manager_state.dropped_events;
 }
 #endif
@@ -162,7 +163,7 @@ static void prv_handle_accel_data(void *data) {
   sys_accel_manager_consume_samples(s_manager_state.accel_state, num_new_samples);
 }
 
-T_STATIC bool prv_can_turn_sensor_on(void) {
+PBL_T_STATIC bool prv_can_turn_sensor_on(void) {
 #if defined(CONFIG_IS_BIGBOARD) || defined(CONFIG_RECOVERY_FW)
   return true;
 #endif
@@ -222,7 +223,7 @@ static bool prv_features_use_ir_path(HRMFeature features) {
 // the algorithm converges. A green consumer loses at most one SpO2 window; the activity service's
 // own background SpO2 reader defers its window while a continuous green consumer is running (see
 // hrm_manager_has_continuous_green_subscriber()).
-T_STATIC HRMFeature prv_select_active_path(HRMFeature wanted) {
+PBL_T_STATIC HRMFeature prv_select_active_path(HRMFeature wanted) {
   const HRMFeature ir_features = wanted & HRMFeature_SpO2;
   return ir_features ? ir_features : wanted;
 }
@@ -617,7 +618,7 @@ static bool prv_event_put(HRMSubscriberState *state, PebbleHRMEvent *event) {
   return success;
 }
 
-T_STATIC void prv_charger_event_cb(PebbleEvent *e, void *context) {
+PBL_T_STATIC void prv_charger_event_cb(PebbleEvent *e, void *context) {
   const PebbleBatteryStateChangeEvent *evt = &e->battery_state;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   {

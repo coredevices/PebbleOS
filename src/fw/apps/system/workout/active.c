@@ -23,6 +23,7 @@
 #include "pbl/util/size.h"
 
 #include <stdio.h>
+#include "pbl/util/testing.h"
 
 #define TEXT_COLOR       (GColorBlack)
 #define TEXT_ALIGNMENT   (PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight))
@@ -739,7 +740,7 @@ static void prv_set_pause_button(WorkoutActiveWindow *active_window) {
   }
 }
 
-T_STATIC void prv_cycle_scrollable_metrics(WorkoutActiveWindow *active_window) {
+PBL_T_STATIC void prv_cycle_scrollable_metrics(WorkoutActiveWindow *active_window) {
   active_window->current_scrollable_metric =
       (active_window->current_scrollable_metric + 1) % active_window->num_scrollable_metrics;
 }

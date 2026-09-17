@@ -15,7 +15,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/timeline/item.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -74,12 +74,12 @@ typedef enum AlarmDataType {
   ALARM_DATA_PINS = 1,
 } AlarmDataType;
 
-typedef struct PACKED AlarmStorageKey {
+typedef struct PBL_PACKED AlarmStorageKey {
   AlarmId id;
   AlarmDataType type : 8;
 } AlarmStorageKey;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AlarmKind kind : 8;
   bool is_disabled;
   uint8_t hour;

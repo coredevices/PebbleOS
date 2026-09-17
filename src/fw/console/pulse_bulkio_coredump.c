@@ -7,11 +7,11 @@
 #include "kernel/core_dump.h"
 #include "kernel/core_dump_private.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 
-typedef struct PACKED CoredumpStatResp {
+typedef struct PBL_PACKED CoredumpStatResp {
   uint8_t flags;
   uint8_t unread;
   uint32_t size;

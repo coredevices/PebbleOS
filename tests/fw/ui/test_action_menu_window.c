@@ -22,6 +22,7 @@
 #include "clar.h"
 
 #include <stdio.h>
+#include "pbl/util/testing.h"
 
 static GContext s_ctx;
 
@@ -318,7 +319,8 @@ void test_action_menu_window__wide_display_mode_with_just_titles(void) {
 
 void test_action_menu_window__thin_display_mode_with_emoji(void) {
   // Copied from prv_create_emoji_level_from_action() in timeline_actions.c; it wouldn't work that
-  // well to just make the array T_STATIC in that function because we need to know its length too
+  // well to just make the array PBL_T_STATIC in that function because we need to know its length
+  // too
   static const char *thin_values[] = {
     "😃", "😉", "😂", "😍", "😘", "\xe2\x9d\xa4", "😇", "😎", "😛", "😟", "😩",
     "😭", "😴", "😐", "😯", "👍", "👎",           "👌", "💩", "🎉", "🍺",

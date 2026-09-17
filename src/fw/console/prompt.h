@@ -12,7 +12,7 @@
 //! TODO: We should probably split this in the future so there's one module to handle the
 //! dbgserial part and another module to handle executing commands.
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -62,7 +62,7 @@ void prompt_send_response(const char *response);
 //! appropriate output terminal depending on who ran the command (dbgserial or accessory
 //! connector). This option allows the use of printf style formatters to create output.
 void prompt_send_response_fmt(char *buffer, size_t buffer_size, const char *fmt, ...)
-    FORMAT_PRINTF(3, 4);
+    PBL_FORMAT_PRINTF(3, 4);
 
 //! Finishes the currently running prompt command, and sends the prompt command complete message.
 //! This is only to be used if \ref prompt_command_continues_after_returning has been called,

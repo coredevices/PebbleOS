@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/sm_types.h>
@@ -14,7 +14,7 @@
 //! 3: Added remote Rand, remote EDIV, local DIV, local EDIV, is_..._valid flags, local device name
 #define SHARED_PRF_STORAGE_VERSION 3
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   // Remote device name
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
 
@@ -48,14 +48,14 @@ typedef struct PACKED {
   bool is_remote_signing_info_valid : 1;
 } BLEPairingData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   BTDeviceAddress address;
   SM128BitKey link_key;
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
   uint8_t platform_bits;
 } BTClassicPairingData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t version;
 
   // Customized local device name, or zero-length string if the default device name should be used

@@ -15,6 +15,7 @@
 #include "pbl/services/alarms/alarm.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
+#include "pbl/util/testing.h"
 
 //////////////////////////////////////////
 //  Card Mode
@@ -31,8 +32,8 @@ static void prv_until_time_update(const LayoutLayer *layout_ref,
                                         max_relative_hours);
 }
 
-T_STATIC void prv_get_subtitle_from_attributes(AttributeList *attributes, char *buffer,
-                                               size_t buffer_size, const void *i18n_owner) {
+PBL_T_STATIC void prv_get_subtitle_from_attributes(AttributeList *attributes, char *buffer,
+                                                   size_t buffer_size, const void *i18n_owner) {
   const char *subtitle_string = NULL;
   // We only all-caps the subtitle in the card view on rectangular displays
   bool all_caps_desired = PBL_IF_RECT_ELSE(true, false);

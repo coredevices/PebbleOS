@@ -135,7 +135,7 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
   convert_to_process_offset(s_current_app_crash_info.lr_known, &s_current_app_crash_info.lr, task);
 }
 
-static NORETURN kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
+static PBL_NORETURN void kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
   RebootReason reason = {.code = reason_code, .extra = {.value = lr}};
   reboot_reason_set(&reason);
   if (reason_code == RebootReasonCode_Assert) {
@@ -149,7 +149,7 @@ static NORETURN kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
 // TODO: Can we tell if it was the worker and not the app?
 extern void sys_app_fault(uint32_t lr);
 
-NORETURN trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
+PBL_NORETURN void trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
   if (mcu_state_is_privileged()) {
     kernel_fault(reason_code, lr);
   } else {
@@ -157,7 +157,7 @@ NORETURN trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
   }
 }
 
-NORETURN trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
+PBL_NORETURN void trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
   // OOM on a process's own heap is the app's fault, not the kernel's: kill just
   // that process even when privileged (Moddable apps run privileged inside the
   // moddable_createMachine syscall). Only kernel-heap OOM reboots.
@@ -185,7 +185,7 @@ NORETURN trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
   reset_due_to_software_failure();
 }
 
-void NOINLINE app_crashed(void) {
+void PBL_NOINLINE app_crashed(void) {
   // Just sit here and look pretty. The purpose of this function is to give app developers a symbol
   // that they can set a breakpoint on to debug app crashes. We need to make sure this function is
   // not going to get optimized away and that it's globally visible.
@@ -215,7 +215,7 @@ static void prv_kill_user_process(uint32_t stashed_lr) {
   pbl_thread_suspend(NULL);
 }
 
-DEFINE_SYSCALL(NORETURN, sys_app_fault, uint32_t stashed_lr) {
+DEFINE_SYSCALL(PBL_NORETURN void, sys_app_fault, uint32_t stashed_lr) {
   // This is the privileged side of handling a failed assert/croak from unprivileged code.
   // Always run on the current task.
 

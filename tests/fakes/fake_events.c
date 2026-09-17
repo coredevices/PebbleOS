@@ -8,7 +8,7 @@ static PebbleEvent s_last_pebble_event;
 static uint32_t s_fake_event_count = 0;
 static FakeEventCallback s_fake_event_cb = NULL;
 
-WEAK void **fake_event_get_buffer(PebbleEvent *event) {
+PBL_WEAK void **fake_event_get_buffer(PebbleEvent *event) {
   switch (event->type) {
     case PEBBLE_BLE_GATT_CLIENT_EVENT:
       if (event->bluetooth.le.gatt_client.subtype == PebbleBLEGATTClientEventTypeServiceChange) {

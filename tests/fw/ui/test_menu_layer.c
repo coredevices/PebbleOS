@@ -34,6 +34,7 @@
 #include "stubs_process_manager.h"
 #include "stubs_unobstructed_area.h"
 #include "stubs_vibes.h"
+#include "pbl/util/testing.h"
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH). menu_layer.c resolves the per-task touch-nav state
@@ -174,7 +175,7 @@ int16_t menu_cell_basic_cell_height(void) {
 
 static uint16_t s_num_rows;
 
-// Strong overrides of the WEAK animation stubs: capture the scroll animation's to-target and
+// Strong overrides of the PBL_WEAK animation stubs: capture the scroll animation's to-target and
 // stopped handler so fling physics are observable and the coast end can be simulated by the test.
 static GPoint s_anim_to;
 static AnimationHandlers s_anim_handlers;
@@ -1844,7 +1845,7 @@ void test_menu_layer__touch_fling_stopped_clears_state(void) {
 // Inertial fling (center-focused carousels): the coast tracks the row crossing the centre live,
 // then the stopped handler settles the final row to the exact centre. Geometry: 10 rows x 44px,
 // frame 180 -> row r centres at offset 68 - 44r; widened clamp [-370, 90]. Coast frames are
-// simulated through the animation's actual setter (the T_STATIC internal offset setter), NOT
+// simulated through the animation's actual setter (the PBL_T_STATIC internal offset setter), NOT
 // scroll_layer_set_content_offset: the public call unschedules the running animation, which a
 // real animation frame never does, and would mask a tracking path that kills the coast.
 

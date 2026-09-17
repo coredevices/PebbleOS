@@ -16,7 +16,7 @@
 #include <pbl/drivers/rtc.h>
 #include "pbl/services/data_logging/data_logging_service.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/size.h"
 
 #include "stubs_passert.h"

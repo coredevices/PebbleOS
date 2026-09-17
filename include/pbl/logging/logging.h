@@ -37,10 +37,10 @@ void pbl_log_vargs(uint8_t log_level, const char *src_filename, int src_line_num
                    const char *fmt, va_list args);
 
 void pbl_log(uint8_t log_level, const char *src_filename, int src_line_number, const char *fmt, ...)
-    FORMAT_PRINTF(4, 5);
+    PBL_FORMAT_PRINTF(4, 5);
 
 void pbl_log_sync(uint8_t log_level, const char *src_filename, int src_line_number, const char *fmt,
-                  ...) FORMAT_PRINTF(4, 5);
+                  ...) PBL_FORMAT_PRINTF(4, 5);
 
 int pbl_log_binary_format(char *buffer, int buffer_len, const uint8_t log_level,
                           const char *src_filename_path, int src_line_number, const char *fmt,

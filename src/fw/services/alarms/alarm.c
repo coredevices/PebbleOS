@@ -19,7 +19,8 @@
 #include "pbl/services/timeline/event.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/string.h"
 #include "util/units.h"
 
@@ -52,7 +53,7 @@ PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 // How late a missed alarm may be before it is no longer worth firing.
 #define ALARM_MISSED_MAX_DELAY_S (5 * SECONDS_PER_MINUTE)
 
-typedef struct PACKED AlarmArmedRecord {
+typedef struct PBL_PACKED AlarmArmedRecord {
   //! Cron execute time of the armed alarm, 0 if no alarm is armed.
   time_t time;
   AlarmId id;
@@ -68,12 +69,12 @@ typedef enum AlarmDataType {
 
 // Stored alarm data is keyed off a binary (AlarmId, AlarmDataType) tuple
 // so that programmatic construction of a key is straightforward.
-typedef struct PACKED AlarmStorageKey {
+typedef struct PBL_PACKED AlarmStorageKey {
   AlarmId id;
   AlarmDataType type : 8;
 } AlarmStorageKey;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AlarmKind kind : 8;
   //! Whether the alarm is disabled or not. This field cannot be updated to a bitfield because the
   //! compiler sets arbitrary bits to indicate true as an optimization.
@@ -475,7 +476,7 @@ static void prv_snooze_timer_callback(void *unused) {
 }
 
 // ----------------------------------------------------------------------------------------------
-T_STATIC void prv_timer_kernel_bg_callback(void *data) {
+PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
   AlarmId id = (intptr_t)data;
   if (id == ALARM_INVALID_ID) {
     return;

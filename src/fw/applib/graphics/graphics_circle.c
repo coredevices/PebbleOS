@@ -10,6 +10,7 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/trig.h"
+#include "pbl/util/testing.h"
 
 #if PBL_COLOR
 static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {
@@ -112,8 +113,8 @@ static GPointPrecise prv_get_rotated_precise_point_for_ellipsis(GPointPrecise ce
   return GPointPrecise(center.x.raw_value - x, center.y.raw_value - y);
 }
 
-T_STATIC void graphics_circle_quadrant_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                                       GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                           GCornerMask quadrant) {
   int f = 1 - radius;
   int ddF_x = 1;
   int ddF_y = -2 * radius;
@@ -216,8 +217,8 @@ static void prv_plot8(GBitmap *fb, GRect *clip_box, GPoint center, GPoint offset
   prv_plot4(fb, clip_box, center, GPoint(offset.y, offset.x), brightness, stroke_color, quadrant);
 }
 
-T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                                   GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                       GCornerMask quadrant) {
   /* This will draw antialiased circle with width of 1px, can be drawn in quadrants
    * Based on wu-xiang line drawing, will draw circle in two steps
    * 1. Calculate point on the edge of eighth of the circle and plot it around by mirroring
@@ -432,17 +433,19 @@ static void prv_stroke_circle_quadrant_full_override_aa(GContext *ctx, GPoint p,
 #if PBL_COLOR
 //! Draws antialiased stroked quadrant of a circle
 //! @internal
-T_STATIC void graphics_circle_quadrant_draw_stroked_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                                       uint8_t stroke_width, GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_stroked_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                           uint8_t stroke_width,
+                                                           GCornerMask quadrant) {
   prv_stroke_circle_quadrant_full_override_aa(ctx, p, radius, stroke_width, quadrant, true);
 }
 #endif // PBL_COLOR
 
 //! Draws aliased stroked quadrant of a circle
 //! @internal
-T_STATIC void graphics_circle_quadrant_draw_stroked_non_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                                           uint8_t stroke_width,
-                                                           GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_stroked_non_aa(GContext *ctx, GPoint p,
+                                                               uint16_t radius,
+                                                               uint8_t stroke_width,
+                                                               GCornerMask quadrant) {
   prv_stroke_circle_quadrant_full_override_aa(ctx, p, radius, stroke_width, quadrant, false);
 }
 
@@ -470,7 +473,7 @@ void graphics_circle_quadrant_draw(GContext *ctx, GPoint p, uint16_t radius, GCo
   }
 }
 
-T_STATIC void graphics_circle_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t radius) {
+PBL_T_STATIC void graphics_circle_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t radius) {
   graphics_circle_quadrant_draw_1px_non_aa(ctx, p, radius, GCornersAll);
 
   p.x += ctx->draw_state.drawing_box.origin.x;
@@ -483,15 +486,15 @@ T_STATIC void graphics_circle_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t 
 }
 
 #if PBL_COLOR
-T_STATIC void graphics_circle_draw_1px_aa(GContext *ctx, GPoint p, uint16_t radius) {
+PBL_T_STATIC void graphics_circle_draw_1px_aa(GContext *ctx, GPoint p, uint16_t radius) {
   graphics_circle_quadrant_draw_1px_aa(ctx, p, radius, GCornersAll);
 }
 
 //! Draws an antialiased circle of stroke width > 1
 //! @note This only supports odd numbers for stroke_width - even numbers will be rounded up.
 //! Minimal supported stroke_width is 3
-T_STATIC void graphics_circle_draw_stroked_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                              uint8_t stroke_width) {
+PBL_T_STATIC void graphics_circle_draw_stroked_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                  uint8_t stroke_width) {
   graphics_circle_quadrant_draw_stroked_aa(ctx, p, radius, stroke_width, GCornersAll);
 }
 #endif // PBL_COLOR
@@ -499,8 +502,8 @@ T_STATIC void graphics_circle_draw_stroked_aa(GContext *ctx, GPoint p, uint16_t 
 //! Draws a non-antialiased circle of stroke width > 1
 //! @note This only supports odd numbers for stroke_width - even numbers will be rounded up.
 //! Minimal supported stroke_width is 3
-T_STATIC void graphics_circle_draw_stroked_non_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                                  uint8_t stroke_width) {
+PBL_T_STATIC void graphics_circle_draw_stroked_non_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                      uint8_t stroke_width) {
   graphics_circle_quadrant_draw_stroked_non_aa(ctx, p, radius, stroke_width, GCornersAll);
 }
 
@@ -544,7 +547,7 @@ void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {
   }
 }
 
-ALWAYS_INLINE
+PBL_ALWAYS_INLINE
 static void prv_fill_horizontal_line(GContext *ctx, GPoint p, int16_t width) {
   graphics_fill_rect(ctx, &(GRect){.origin = p, .size = {width, 1}});
 }
@@ -637,14 +640,15 @@ static void graphics_fill_half_circle(GContext *ctx, int x0, int y0, uint16_t ra
   }
 }
 
-MOCKABLE void graphics_circle_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius) {
+PBL_T_MOCKABLE void graphics_circle_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius) {
   prv_fill_horizontal_line(ctx, GPoint(p.x - radius, p.y), 2 * radius + 1);
   graphics_fill_half_circle(ctx, p.x, p.y, radius, GCornersAll);
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                                        GCornerMask quadrant) {
+PBL_T_MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p,
+                                                              uint16_t radius,
+                                                              GCornerMask quadrant) {
   // Radius cannot be smaller than 1
   PBL_ASSERTN(radius > 0);
 
@@ -745,7 +749,8 @@ static void prv_get_angles_mask_edge(Fixed_S16_3 y, GPointPrecise center, GCorne
   }
 }
 
-T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, int32_t angle_end) {
+PBL_T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start,
+                                                              int32_t angle_end) {
   PBL_ASSERTN(angle_start <= angle_end);
 
   EllipsisDrawConfig config = (EllipsisDrawConfig){
@@ -1172,9 +1177,9 @@ void prv_fill_oval_quadrant(GContext *ctx, GPoint point, uint16_t outer_radius_x
                                  inner_x_precise, inner_y_precise, quadrant);
 }
 
-MOCKABLE void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrecise center,
-                                                 Fixed_S16_3 radius, int32_t angle_start,
-                                                 int32_t angle_end) {
+PBL_T_MOCKABLE void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrecise center,
+                                                       Fixed_S16_3 radius, int32_t angle_start,
+                                                       int32_t angle_end) {
   uint16_t stroke_width = ctx->draw_state.stroke_width;
 
   // We accept only .0 and .5 precision for now:
@@ -1257,10 +1262,10 @@ void graphics_draw_arc(GContext *ctx, GRect rect, GOvalScaleMode scale_mode, int
   graphics_draw_arc_precise_internal(ctx, center, radius, angle_start, angle_end);
 }
 
-MOCKABLE void graphics_fill_radial_precise_internal(GContext *ctx, GPointPrecise center,
-                                                    Fixed_S16_3 radius_inner,
-                                                    Fixed_S16_3 radius_outer, int32_t angle_start,
-                                                    int32_t angle_end) {
+PBL_T_MOCKABLE void graphics_fill_radial_precise_internal(GContext *ctx, GPointPrecise center,
+                                                          Fixed_S16_3 radius_inner,
+                                                          Fixed_S16_3 radius_outer,
+                                                          int32_t angle_start, int32_t angle_end) {
   // This function is going to be replaced with function that will support drawing of ellipsis
   //   as documented in PBL-23640
 

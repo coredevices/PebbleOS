@@ -41,7 +41,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/pack.h"
 
 // PNG files start with [137, 'P', 'N', 'G']
@@ -98,7 +98,7 @@ typedef enum upng_format {
 
 typedef struct upng_t upng_t;
 
-typedef struct PACKED rgb {
+typedef struct PBL_PACKED rgb {
   uint8_t r;
   uint8_t g;
   uint8_t b;
@@ -143,7 +143,7 @@ typedef enum apng_blend_ops {
   APNG_BLEND_OP_OVER
 } apng_blend_ops;
 
-typedef struct PACKED apng_fctl {
+typedef struct PBL_PACKED apng_fctl {
   uint32_t sequence_number;
   uint32_t width;
   uint32_t height;

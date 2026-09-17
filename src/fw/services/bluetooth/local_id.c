@@ -5,7 +5,8 @@
 
 #include "mfg/mfg_serials.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/hash.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
@@ -85,7 +86,7 @@ void bt_local_id_copy_address_mac_string(char addr_mac_str_out[BT_DEVICE_ADDRESS
             BT_DEVICE_ADDRESS_XPLODE(s_local_address));
 }
 
-T_STATIC void prv_generate_address(BTDeviceAddress *addr_out) {
+PBL_T_STATIC void prv_generate_address(BTDeviceAddress *addr_out) {
   const char *serial = mfg_get_serial_number();
   const uint32_t full_len = strlen(serial);
 
@@ -98,10 +99,10 @@ T_STATIC void prv_generate_address(BTDeviceAddress *addr_out) {
   string_reverse(tmp);
   const uint32_t reverse_hash = hash((uint8_t *)tmp, full_len);
 
-  struct PACKED {
+  struct PBL_PACKED {
     union {
       BTDeviceAddress bt_addr;
-      struct PACKED {
+      struct PBL_PACKED {
         uint16_t a;
         uint32_t b;
       };

@@ -7,7 +7,7 @@
 
 #include "console/pulse2_transport_impl.h"
 #include "system/passert.h"
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <util/net.h>
 
 #include <stddef.h>
@@ -15,7 +15,7 @@
 
 #define PULSE2_PUSH_TRANSPORT_PROTOCOL (0x5021)
 
-typedef struct PACKED PushPacket {
+typedef struct PBL_PACKED PushPacket {
   net16 protocol;
   net16 length;
   char information[];

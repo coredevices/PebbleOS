@@ -13,7 +13,8 @@
 #include "system/passert.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 
 #define LAUNCHER_MENU_LAYER_CONTENT_INDICATOR_LAYER_HEIGHT (32)
 #define LAUNCHER_MENU_LAYER_GENERIC_APP_ICON (RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON)
@@ -218,9 +219,8 @@ static void prv_menu_layer_selection_will_change(MenuLayer *PBL_UNUSED menu_laye
   prv_play_glance_for_row(launcher_menu_layer, new_index->row);
 }
 
-T_STATIC void prv_launcher_menu_layer_set_selection_index(LauncherMenuLayer *launcher_menu_layer,
-                                                          uint16_t index, MenuRowAlign row_align,
-                                                          bool animated) {
+PBL_T_STATIC void prv_launcher_menu_layer_set_selection_index(
+    LauncherMenuLayer *launcher_menu_layer, uint16_t index, MenuRowAlign row_align, bool animated) {
   if (!launcher_menu_layer || !launcher_menu_layer->data_source) {
     return;
   }

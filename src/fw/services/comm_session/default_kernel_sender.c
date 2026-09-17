@@ -8,7 +8,8 @@
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/comm_session/session_send_queue.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/likely.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
@@ -38,7 +39,7 @@ typedef struct SendBuffer {
   //! Number of bytes that have been consumed so far
   size_t consumed_length;
 
-  struct PACKED {
+  struct PBL_PACKED {
     //! The remainder of this struct is the Pebble Protocol message (header + payload):
     PebbleProtocolHeader header;
     uint8_t payload[];
@@ -170,7 +171,7 @@ static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
   prv_destroy_send_buffer((SendBuffer *)send_job);
 }
 
-T_STATIC const SessionSendJobImpl s_default_kernel_send_job_impl = {
+PBL_T_STATIC const SessionSendJobImpl s_default_kernel_send_job_impl = {
   .get_length = prv_send_job_impl_get_length,
   .copy = prv_send_job_impl_copy,
   .get_read_pointer = prv_send_job_impl_get_read_pointer,

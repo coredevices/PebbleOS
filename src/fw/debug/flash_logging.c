@@ -10,7 +10,7 @@
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
 #include "system/version.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
@@ -48,7 +48,7 @@
 
 static bool s_flash_logging_enabled = false;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t magic;
   uint8_t version;
   uint8_t build_id[BUILD_ID_EXPECTED_LEN];
@@ -62,7 +62,7 @@ typedef struct PACKED {
 #define LOG_MAGIC           0x21474F4C /* LOG! */
 #define LOG_VERSION         0x1
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t flags;
   uint8_t length;
 } LogRecordHeader;

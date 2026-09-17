@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/graphics/gtypes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -22,7 +22,7 @@ typedef struct FrameBuffer {
 #else // UNITTEST
 // For unit-tests, the framebuffer buffer is moved to the end of the struct
 // and packed to allow for DUMA to catch memory overflows
-typedef struct PACKED FrameBuffer {
+typedef struct PBL_PACKED FrameBuffer {
   GSize size;       //<! Active size of the framebuffer
   GRect dirty_rect; //<! Smallest rect covering all dirty pixels.
   bool is_dirty;

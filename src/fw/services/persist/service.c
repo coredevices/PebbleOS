@@ -15,7 +15,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 #include "util/units.h"
@@ -49,7 +49,7 @@ static PersistStore *prv_find_open_store(const Uuid *uuid) {
   return (PersistStore *)list_find(s_client_stores, prv_uuid_list_filter, (void *)uuid);
 }
 
-static ALWAYS_INLINE void prv_lock(void) {
+static PBL_ALWAYS_INLINE void prv_lock(void) {
   pbl_mutex_lock_lr(&s_mutex, PBL_FOREVER, (uintptr_t)__builtin_return_address(0));
 }
 
@@ -101,11 +101,11 @@ size_t persist_service_get_max_size(void) {
 #define LEGACY_PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000001")
 #define LEGACY_PMAP_EOF_ID                  ((int)(~0))
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t version;
 } LegacyPersistMapHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   int id;
   Uuid uuid;
 } LegacyPersistMapField;

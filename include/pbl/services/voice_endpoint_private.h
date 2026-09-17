@@ -5,7 +5,7 @@
 
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/voice_endpoint.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/generic_attribute.h"
 
 // Shared message definitions with unit test
@@ -28,14 +28,14 @@ typedef enum {
 
 // Sent and received by watch. Result is only sent by phone.
 
-typedef union PACKED {
+typedef union PBL_PACKED {
   struct {
     uint32_t app_initiated : 1;
   };
   uint32_t all;
 } VEFlags;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   MsgId msg_id : 8;
   VEFlags flags;
   VoiceEndpointSessionType session_type : 8;
@@ -43,14 +43,14 @@ typedef struct PACKED {
   GenericAttributeList attr_list;
 } SessionSetupMsg;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   MsgId msg_id : 8;
   VEFlags flags;
   VoiceEndpointSessionType session_type : 8;
   VoiceEndpointResult result : 8;
 } SessionSetupResultMsg;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   MsgId msg_id : 8;
   VEFlags flags;
   AudioEndpointSessionId session_id;

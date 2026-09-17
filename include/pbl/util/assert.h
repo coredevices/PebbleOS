@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/likely.h"
 
 #ifndef __FILE_NAME__
@@ -14,7 +14,7 @@
 #endif
 #endif
 
-NORETURN util_assertion_failed(const char *filename, int line);
+PBL_NORETURN void util_assertion_failed(const char *filename, int line);
 
 #define UTIL_ASSERT(expr)                             \
   do {                                                \

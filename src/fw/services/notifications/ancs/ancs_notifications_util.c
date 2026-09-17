@@ -6,7 +6,7 @@
 #include <pbl/drivers/rtc.h>
 #include "resource/timeline_resource_ids.auto.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/date.h"
 #include "util/pstring.h"
 #include "pbl/util/size.h"
@@ -37,7 +37,7 @@ const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttrib
 
 time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_attr) {
   PBL_ASSERTN(timestamp_attr);
-  struct PACKED {
+  struct PBL_PACKED {
     char year[4];
     char month[2];
     char day[2];

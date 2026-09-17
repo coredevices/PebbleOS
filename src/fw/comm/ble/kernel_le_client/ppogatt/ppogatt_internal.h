@@ -9,7 +9,7 @@
 
 #include "pbl/util/uuid.h"
 #include "mfg/mfg_serials.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE  (4500 / MAX_ATT_WRITE_PAYLOAD_SIZE)
 #define PPOGATT_MIN_VERSION                (0x00)
@@ -59,7 +59,7 @@ _Static_assert(PPoGATTPacketTypeAck != 0, "Ack type can't be 0; see ack_packet_b
 _Static_assert(PPoGATTPacketTypeResetRequest != 0, "Reset type can't be 0; see reset_packet_byte");
 _Static_assert(PPoGATTPacketTypeResetComplete != 0, "Reset type can't be 0; see reset_packet_byte");
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PPoGATTPacketType type : 3;
   uint8_t sn : PPOGATT_SN_BITS;
   uint8_t payload[];
@@ -69,7 +69,7 @@ _Static_assert(sizeof(PPoGATTPacket) == 1,
                "You can't increase the size of PPoGATTPacket. It's set in stone now!");
 
 //! Client identification payload that is attached to the client's Reset Request messages
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! The PPoGATT version that the client wants to use.
   //! Must be within the server's [ppogatt_min_version, ppogatt_max_version]
   uint8_t ppogatt_version;
@@ -78,12 +78,12 @@ typedef struct PACKED {
   char serial_number[MFG_SERIAL_NUMBER_SIZE];
 } PPoGATTResetRequestClientIDPayload;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t ppogatt_max_rx_window;
   uint8_t ppogatt_max_tx_window;
 } PPoGATTResetCompleteClientIDPayloadV1;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t ppogatt_min_version;
   uint8_t ppogatt_max_version;
   Uuid app_uuid;
@@ -95,7 +95,7 @@ typedef enum {
   PPoGATTSessionTypeCount,
 } PPoGATTSessionType;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t ppogatt_min_version;
   uint8_t ppogatt_max_version;
   Uuid app_uuid;

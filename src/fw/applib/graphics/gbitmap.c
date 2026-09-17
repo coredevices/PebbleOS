@@ -15,6 +15,7 @@
 
 #include <string.h>
 #include <stddef.h>
+#include "pbl/util/testing.h"
 
 uint8_t gbitmap_get_bits_per_pixel(GBitmapFormat format) {
   switch (format) {
@@ -90,11 +91,11 @@ uint8_t gbitmap_get_version(const GBitmap *bitmap) {
 }
 
 // indirection to allow conditional mocking in unit-tests
-T_STATIC
+PBL_T_STATIC
 #if !UNITTEST
 // apparently, GCC doesn't inline this otherwise
 // scary, I wonder how many more places like these aren't inlined
-ALWAYS_INLINE
+PBL_ALWAYS_INLINE
 #endif
 GBitmapDataRowInfo prv_gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
   if (bitmap->info.format == GBitmapFormat8BitCircular) {
@@ -117,7 +118,7 @@ GBitmapDataRowInfo prv_gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t
   }
 }
 
-MOCKABLE GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
+PBL_T_MOCKABLE GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
   return prv_gbitmap_get_data_row_info(bitmap, y);
 }
 
@@ -205,7 +206,7 @@ static GColor *prv_allocate_palette(GBitmapFormat format) {
 #define BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format) \
   ((format) == GBitmapFormat8BitCircular && (size).w == DISP_COLS && (size).h == DISP_ROWS)
 
-T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
+PBL_T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
 #if PBL_ROUND
   if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
     return DISPLAY_FRAMEBUFFER_BYTES;
@@ -286,8 +287,8 @@ static bool prv_is_palettized_format(GBitmapFormat format) {
   return format >= GBitmapFormat1BitPalette && format <= GBitmapFormat4BitPalette;
 }
 
-T_STATIC GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size,
-                                                                       GBitmapFormat format) {
+PBL_T_STATIC GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size,
+                                                                           GBitmapFormat format) {
   GBitmap *bitmap = prv_gbitmap_create_blank(size, format);
 
   // If bitmap allocated and format requires a palette
@@ -341,7 +342,7 @@ GBitmap *gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format, GCo
 }
 
 // Adapted from http://aggregate.org/MAGIC/#Bit%20Reversal
-T_STATIC uint8_t prv_byte_reverse(uint8_t b) {
+PBL_T_STATIC uint8_t prv_byte_reverse(uint8_t b) {
   b = (b & 0xaa) >> 1 | (b & 0x55) << 1;
   b = (b & 0xcc) >> 2 | (b & 0x33) << 2;
   b = (b & 0xf0) >> 4 | (b & 0x0f) << 4;

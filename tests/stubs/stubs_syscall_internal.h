@@ -16,7 +16,7 @@ void stubs_syscall_init(void) {
   s_syscall_did_fail = false;
 }
 
-NORETURN syscall_failed(void) {
+PBL_NORETURN void syscall_failed(void) {
   s_syscall_did_fail = true;
   printf("Warning: Syscall failed!\n");
 

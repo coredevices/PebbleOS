@@ -14,6 +14,7 @@
 #include "pbl/services/notifications/alerts.h"
 #include "pbl/services/notifications/ancs/ancs_phone_call.h"
 #include <pbl/logging/logging.h>
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_phone_call, CONFIG_SERVICE_PHONE_CALL_LOG_LEVEL);
 
@@ -203,7 +204,7 @@ static void prv_handle_caller_id(PebblePhoneEvent *event) {
   }
 }
 
-T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
+PBL_T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
   PebblePhoneEvent event = (PebblePhoneEvent)e->phone;
 
   if (!alerts_should_notify_for_type(AlertPhoneCall)) {
@@ -253,7 +254,7 @@ T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
   phone_call_util_destroy_caller(event.caller);
 }
 
-T_STATIC void prv_handle_mobile_app_event(PebbleEvent *e, void *context) {
+PBL_T_STATIC void prv_handle_mobile_app_event(PebbleEvent *e, void *context) {
   if (!e->bluetooth.comm_session_event.is_system) {
     return;
   }
@@ -264,7 +265,7 @@ T_STATIC void prv_handle_mobile_app_event(PebbleEvent *e, void *context) {
   }
 }
 
-T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void *context) {
+PBL_T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void *context) {
   if (s_call_source == PhoneCallSource_ANCS) {
     prv_handle_call_end(true /* disconnected */);
   }

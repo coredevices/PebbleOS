@@ -7,7 +7,7 @@
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/endpoint.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdio.h>
 
@@ -49,7 +49,7 @@ void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
 void blob_db2_set_accepting_messages(bool ehh) {
 }
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t length;
   uint16_t endpoint_id;
 } PebbleProtocolHeader;

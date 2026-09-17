@@ -40,7 +40,7 @@ static void prv_set_syscall_sp(uintptr_t new_sp) {
   pbl_thread_tls_set(pbl_thread_current(), TLS_SYSCALL_SP_IDX, (void *)new_sp);
 }
 
-USED uintptr_t get_syscall_lr(void) {
+PBL_USED uintptr_t get_syscall_lr(void) {
   return (uintptr_t)pbl_thread_tls_get(pbl_thread_current(), TLS_SYSCALL_LR_IDX);
 }
 
@@ -75,8 +75,8 @@ static McuUnprivilegedCallContext *prv_unprivileged_call_ctx_for_current_task(vo
   return &s_unprivileged_call_ctx[task];
 }
 
-static USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, uintptr_t caller_lr,
-                                             uintptr_t entry_sp, const uint32_t *saved_regs) {
+static PBL_USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, uintptr_t caller_lr,
+                                                 uintptr_t entry_sp, const uint32_t *saved_regs) {
   (void)ctx;
 
   PBL_ASSERTN(mcu_state_is_thread_privileged());
@@ -108,7 +108,7 @@ static USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, uint
   }
 }
 
-EXTERNALLY_VISIBLE void mcu_call_unprivileged_resume(void);
+PBL_EXTERNALLY_VISIBLE void mcu_call_unprivileged_resume(void);
 
 static uintptr_t prv_mcu_call_unprivileged_reentry_return_pc(void) {
   extern const uint16_t __mcu_call_unprivileged_svc[];
@@ -178,7 +178,8 @@ bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr) {
 //! The re-entry SVC is deliberately outside .syscall_text. It is only accepted
 //! while this call is active for the current task, and the SVC handler resumes
 //! through saved kernel state instead of the callback's stack.
-EXTERNALLY_VISIBLE NAKED_FUNC USED void mcu_call_unprivileged(void (*fn)(void *), void *ctx) {
+PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged(void (*fn)(void *),
+                                                                     void *ctx) {
   __asm volatile(
       // Keep fn/ctx across the setup call. Copy r4-r11 too; native app code is
       // not trusted to preserve the privileged caller's callee-saved registers.
@@ -217,7 +218,7 @@ EXTERNALLY_VISIBLE NAKED_FUNC USED void mcu_call_unprivileged(void (*fn)(void *)
       "  udf #0                           \n");
 }
 
-EXTERNALLY_VISIBLE NAKED_FUNC USED void mcu_call_unprivileged_resume(void) {
+PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged_resume(void) {
   __asm volatile(
       // r0 is the state pointer stamped into the frame by Handler mode. Restore
       // SP before any stack use.
@@ -233,7 +234,7 @@ EXTERNALLY_VISIBLE NAKED_FUNC USED void mcu_call_unprivileged_resume(void) {
         [regs_off] "i"(offsetof(McuUnprivilegedCallContext, saved_r4_r11)));
 }
 
-NORETURN syscall_failed(void) {
+PBL_NORETURN void syscall_failed(void) {
   register uint32_t lr __asm("lr");
   uint32_t saved_lr = lr;
 
@@ -354,7 +355,7 @@ static bool prv_psp_in_syscall_stack(uintptr_t psp, const uint32_t *stack) {
 
 // Task SP/PSPLIM to restore if the finishing syscall ran on a dedicated stack,
 // packed as (psplim << 32 | sp) to return in r0:r1; 0 = no switch needed.
-USED uint64_t syscall_stack_restore_target(void) {
+PBL_USED uint64_t syscall_stack_restore_target(void) {
   const uintptr_t psp = __get_PSP();
   if (prv_psp_in_syscall_stack(psp, s_app_syscall_stack.words) ||
       prv_psp_in_syscall_stack(psp, s_worker_syscall_stack.words)) {
@@ -385,7 +386,7 @@ uint16_t syscall_worker_stack_free_bytes(void) {
 
 // Drop privilege and return to the task. If the syscall ran on a dedicated
 // stack, restore PSP/PSPLIM to the task stack first (while still privileged).
-EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
+PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege(void) {
   __asm volatile(
       " push {r0, r1} \n" // save syscall return value
       " bl process_manager_handle_syscall_exit \n"
@@ -425,7 +426,7 @@ uint16_t syscall_worker_stack_free_bytes(void) {
 
 // Drop privileges and return to the address stored in thread local storage
 // Has to preserve r0 and r1 so the syscall's return value is passed through
-EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
+PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege(void) {
   __asm volatile(
       " push {r0, r1} \n"
       " bl process_manager_handle_syscall_exit \n"
@@ -444,7 +445,7 @@ EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege(void) {
 #endif // SYSCALL_PRIVILEGED_STACK
 
 // Just jump straight into the drop privilege code
-EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege_wrapper(void) {
+PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege_wrapper(void) {
   __asm volatile("b prv_drop_privilege\n");
 }
 
@@ -454,7 +455,7 @@ EXTERNALLY_VISIBLE void NAKED_FUNC USED prv_drop_privilege_wrapper(void) {
 // unprivileged, this function returns normally to the syscall wrapper, and svc 2 is
 // called elevating privileges. If the caller was already privileged, this function
 // returns past the svc 2 instruction so privileges are not elevated.
-void NAKED_FUNC USED syscall_internal_maybe_skip_privilege(void) {
+void PBL_NAKED PBL_USED syscall_internal_maybe_skip_privilege(void) {
   __asm volatile(
       // Save argument registers
       " push {r0-r3, lr} \n"

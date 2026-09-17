@@ -14,7 +14,7 @@
 #include "kernel/pbl_malloc.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/legacy_checksum.h"
 #include "pbl/util/math.h"
 
@@ -40,12 +40,12 @@ static struct {
   bool report_in_progress;
 } s_endpoint_data;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t command;
   uint8_t session_id;
 } DataLoggingCloseSessionMessage;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t command;
   uint8_t session_id;
   Uuid app_uuid;
@@ -101,7 +101,7 @@ static void send_timeout_msg(void *session_id_param) {
 
   DataLoggingSession *logging_session = dls_list_find_by_session_id(session_id);
 
-  struct PACKED {
+  struct PBL_PACKED {
     uint8_t command;
     uint8_t session_id;
   } msg = {
@@ -531,7 +531,7 @@ void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *dat
 
     case (DataLoggingEndpointCmdGetSendEnableReq): {
       bool enabled = dls_get_send_enable();
-      struct PACKED {
+      struct PBL_PACKED {
         uint8_t command;
         uint8_t enabled;
       } msg = {

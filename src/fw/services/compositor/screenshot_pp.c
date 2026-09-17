@@ -11,7 +11,7 @@
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/net.h"
 
 PBL_LOG_MODULE_DECLARE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
@@ -41,7 +41,7 @@ typedef struct ScreenshotState {
 } ScreenshotState;
 static ScreenshotState s_screenshot_state;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t response_code;
   uint32_t version;
   uint32_t width;

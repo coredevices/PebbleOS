@@ -14,10 +14,10 @@
 //! @param row_stride_bytes the byte-aligned width in bytes
 //! @param bitdepth bits per pixel for the image (1,2,4 or 8 supported)
 //! @return The value from the image buffer at the specified coordinates
-static ALWAYS_INLINE uint8_t raw_image_get_value_for_bitdepth(const uint8_t *raw_image_buffer,
-                                                              uint32_t x, uint32_t y,
-                                                              uint16_t row_stride_bytes,
-                                                              uint8_t bitdepth) {
+static PBL_ALWAYS_INLINE uint8_t raw_image_get_value_for_bitdepth(const uint8_t *raw_image_buffer,
+                                                                  uint32_t x, uint32_t y,
+                                                                  uint16_t row_stride_bytes,
+                                                                  uint8_t bitdepth) {
   // Retrieve the byte from the image buffer containing the requested pixel
   uint32_t pixel_in_byte = raw_image_buffer[y * row_stride_bytes + (x * bitdepth / 8)];
   // Find the index of the pixel in terms of coordinates and aligned_width
@@ -37,9 +37,10 @@ static ALWAYS_INLINE uint8_t raw_image_get_value_for_bitdepth(const uint8_t *raw
 //! @param row_stride_bytes The byte-aligned width of each row in bytes
 //! @param bitdepth The bits-per-pixel for the image (Only 1, 2, 4 or 8 bitdepths are supported)
 //! @param value The pixel value to set in the image buffer at the specified (x, y) coordinates
-static ALWAYS_INLINE void raw_image_set_value_for_bitdepth(uint8_t *raw_image_buffer, uint32_t x,
-                                                           uint32_t y, uint16_t row_stride_bytes,
-                                                           uint8_t bitdepth, uint8_t value) {
+static PBL_ALWAYS_INLINE void raw_image_set_value_for_bitdepth(uint8_t *raw_image_buffer,
+                                                               uint32_t x, uint32_t y,
+                                                               uint16_t row_stride_bytes,
+                                                               uint8_t bitdepth, uint8_t value) {
   const uint8_t pixels_per_byte = (uint8_t)(8 / bitdepth);
 
   // Retrieve the byte from the image buffer containing the requested pixel

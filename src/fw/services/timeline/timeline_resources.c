@@ -13,6 +13,7 @@
 #include "system/passert.h"
 #include "util/net.h"
 #include "pbl/util/uuid.h"
+#include "pbl/util/testing.h"
 
 #define RESOURCE_MAX_SIZE (700)
 
@@ -24,7 +25,7 @@
 //! until we have more than 2^16 resource ids.
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
 
-T_STATIC bool prv_is_app_published_resource_valid(const AppResourceInfo *res_info) {
+PBL_T_STATIC bool prv_is_app_published_resource_valid(const AppResourceInfo *res_info) {
   // TODO: PBL-39864 Improve this code so it doesn't requiring loading/unloading a resource
   bool is_valid = true;
 
@@ -50,7 +51,7 @@ T_STATIC bool prv_is_app_published_resource_valid(const AppResourceInfo *res_inf
   return is_valid;
 }
 
-T_STATIC bool prv_validate_lut(ResAppNum res_app_num) {
+PBL_T_STATIC bool prv_validate_lut(ResAppNum res_app_num) {
   uint32_t data_signature;
   if (sys_resource_load_range(res_app_num, TLUT_RESOURCE_ID, 0, (uint8_t *)&data_signature,
                               sizeof(data_signature)) != sizeof(data_signature)) {
@@ -60,8 +61,8 @@ T_STATIC bool prv_validate_lut(ResAppNum res_app_num) {
   return (ntohl(data_signature) == TLUT_SIGNATURE);
 }
 
-T_STATIC uint32_t prv_get_app_resource_id(ResAppNum res_app_num, TimelineResourceId timeline_id,
-                                          TimelineResourceSize size) {
+PBL_T_STATIC uint32_t prv_get_app_resource_id(ResAppNum res_app_num, TimelineResourceId timeline_id,
+                                              TimelineResourceSize size) {
   // Load the entry from timeline resource lookup table
   uint32_t id;
   const uint32_t row = sizeof(TimelineLutEntry) * timeline_id;

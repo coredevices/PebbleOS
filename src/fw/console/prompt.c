@@ -227,7 +227,7 @@ bool prompt_context_append_char(PromptContext *prompt_context, char c) {
 }
 
 // Crank up the optimization on this bad boy.
-OPTIMIZE_FUNC(2) void prompt_handle_character(char c, bool *should_context_switch) {
+PBL_OPTIMIZE(2) void prompt_handle_character(char c, bool *should_context_switch) {
   if (UNLIKELY(prompt_command_is_executing())) {
     return;
   }

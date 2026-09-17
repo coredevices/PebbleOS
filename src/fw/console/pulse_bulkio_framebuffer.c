@@ -9,12 +9,12 @@
 #include "pbl/services/compositor/compositor.h"
 #include "pbl/services/compositor/compositor_display.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 #include <string.h>
 
-typedef struct PACKED FramebufferStatResp {
+typedef struct PBL_PACKED FramebufferStatResp {
   uint8_t flags;
   uint16_t width;
   uint16_t height;

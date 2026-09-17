@@ -6,14 +6,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <bluetooth/bluetooth_types.h>
 #include <bluetooth/conn_event_stats.h>
 
 #define NUM_LE_CHANNELS 37
 
-typedef struct PACKED LEChannelMap {
+typedef struct PBL_PACKED LEChannelMap {
   uint8_t byte0;
   uint8_t byte1;
   uint8_t byte2;

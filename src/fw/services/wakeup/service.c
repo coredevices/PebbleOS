@@ -16,7 +16,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "util/units.h"
 
@@ -40,7 +40,7 @@ static PBL_MUTEX_DEFINE(s_mutex);
 //! duplicate timestamps not allowed (can't have 2 wakeup events at same time)
 //! repeating and repeat_hours_offset were included for future use
 //! and use in repeat support for alarms
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid uuid;                    //!< UUID of app that scheduled the wakeup event
   int32_t reason;               //!< App provided value to differentiate wakeup event
   bool repeating;               //!< Enable event repetition
@@ -50,7 +50,7 @@ typedef struct PACKED {
   bool utc;                     //!< If timezone has been set, the this is UTC time
 } WakeupEntry;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   WakeupId current_wakeup_id;
   WakeupId next_wakeup_id;
   time_t timestamp;

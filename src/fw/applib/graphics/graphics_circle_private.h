@@ -3,6 +3,7 @@
 
 #pragma once
 #include "gtypes.h"
+#include "pbl/util/testing.h"
 
 // For arc/radial fill algorithms
 #define QUADRANTS_NUM  4 // Just in case of fluctuation
@@ -38,7 +39,8 @@ static GCornerMultiplier quadrant_mask_mul[] = {
 };
 #endif
 
-T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, int32_t angle_end);
+PBL_T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start,
+                                                              int32_t angle_end);
 
 void prv_fill_oval_quadrant(GContext *ctx, GPoint point, uint16_t outer_radius_x,
                             uint16_t outer_radius_y, uint16_t inner_radius_x,

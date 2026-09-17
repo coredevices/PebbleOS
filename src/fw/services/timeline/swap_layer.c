@@ -20,6 +20,7 @@
 #ifdef CONFIG_TOUCH
 #include "applib/ui/recognizer/touch_nav.h"
 #include "kernel/pebble_tasks.h"
+#include "pbl/util/testing.h"
 #endif
 
 // Initial pixel scroll amount, paging_height (LAYOUT_HEIGHT) for circular display
@@ -568,8 +569,8 @@ static void prv_handle_swap_attempt(SwapLayer *swap_layer, ScrollDirection direc
   }
 }
 
-T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection direction,
-                                 bool is_repeating) {
+PBL_T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection direction,
+                                     bool is_repeating) {
   prv_finish_animation(swap_layer);
 
 #if PBL_ROUND

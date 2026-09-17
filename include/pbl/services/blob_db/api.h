@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 #include "util/time/time.h"
 
@@ -22,7 +22,7 @@
 //! If you want to route commands to your BlobDB implementation API, you need
 //! to add it to the \ref BlobDBId enum and to the BlobDBs list (\ref s_blob_dbs) in api.c
 
-typedef enum PACKED {
+typedef enum PBL_PACKED {
   BlobDBIdTest = 0x00,
   BlobDBIdPins = 0x01,
   BlobDBIdApps = 0x02,

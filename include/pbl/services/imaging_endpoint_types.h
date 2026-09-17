@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! Generic image-fetch endpoint (0x0035). The watch pulls an image from the phone: it sends an
 //! ImageRequest naming what it wants (type, encoding, dimensions and type-specific parameters), and
@@ -37,7 +37,7 @@ typedef enum {
 } ImagingFormat;
 
 //! Watch -> Phone. Fixed head, then type-specific parameters.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t cmd;        //!< ImagingCmdIDRequest.
   uint8_t token;      //!< Opaque; echoed in the response so the watch can match it to a request.
   uint8_t image_type; //!< ImagingImageType.
@@ -69,7 +69,7 @@ typedef enum {
 
 //! Phone -> Watch, chunked. `chunk_len` pixel bytes follow this header (after the image header on
 //! the first chunk).
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t cmd;        //!< ImagingCmdIDResponse.
   uint8_t token;      //!< Echo of the request token.
   uint8_t flags;      //!< ImagingResponseFlags bitset.

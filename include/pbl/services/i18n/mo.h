@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 /* ==============
  * MO File Format            *
@@ -91,7 +91,7 @@
 #define LANG_PROP_NAME "Language: "
 
 /* *.mo file format */
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t mo_magic;    /* determines endian */
   uint32_t mo_revision; /* file format revision: 0 */
   uint32_t mo_nstring;  /* N: number of strings */
@@ -101,7 +101,7 @@ typedef struct PACKED {
   uint32_t mo_hoffset;  /* H: offset of hashing table */
 } MoHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t len; /* strlen(str), so region will be len + 1 */
   uint32_t off; /* offset of \0-terminated string */
 } MoEntry;

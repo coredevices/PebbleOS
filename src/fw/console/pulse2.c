@@ -23,7 +23,7 @@
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/crc32.h"
 #include "pbl/util/likely.h"
 #include "pbl/util/math.h"

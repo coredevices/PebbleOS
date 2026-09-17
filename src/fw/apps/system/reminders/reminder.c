@@ -229,7 +229,7 @@ static void prv_appear(struct Window *window) {
   }
 }
 
-static NOINLINE void prv_init(void) {
+static PBL_NOINLINE void prv_init(void) {
   ReminderAppData *data = app_zalloc_check(sizeof(ReminderAppData));
   app_state_set_user_data(data);
 

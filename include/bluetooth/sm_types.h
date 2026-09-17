@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include <bluetooth/bluetooth_types.h>
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 
 typedef enum {
   SMRootKeyTypeEncryption,
@@ -15,7 +15,7 @@ typedef enum {
   SMRootKeyTypeNum,
 } SMRootKeyType;
 
-typedef struct PACKED SM128BitKey {
+typedef struct PBL_PACKED SM128BitKey {
   uint8_t data[16];
 } SM128BitKey;
 
@@ -23,7 +23,7 @@ typedef SM128BitKey SMLongTermKey;
 typedef SM128BitKey SMIdentityResolvingKey;
 typedef SM128BitKey SMConnectionSignatureResolvingKey;
 
-typedef struct PACKED SMLocalEncryptionInfo {
+typedef struct PBL_PACKED SMLocalEncryptionInfo {
   uint16_t ediv;
 
   //! @note Only used by cc2564x/Bluetopia driver!
@@ -36,7 +36,7 @@ typedef struct PACKED SMLocalEncryptionInfo {
   uint64_t rand;
 } SMLocalEncryptionInfo;
 
-typedef struct PACKED SMRemoteEncryptionInfo {
+typedef struct PBL_PACKED SMRemoteEncryptionInfo {
   SMLongTermKey ltk;
   uint64_t rand;
   uint16_t ediv;
@@ -44,7 +44,7 @@ typedef struct PACKED SMRemoteEncryptionInfo {
 
 //! @note Some fields might not get populated/used, this depends on the BT Driver implementation.
 //! @note Packed, because this is used in HC protocol messages.
-typedef struct PACKED SMPairingInfo {
+typedef struct PBL_PACKED SMPairingInfo {
   //! The encryption info that will be used when the local device is the slave.
   SMLocalEncryptionInfo local_encryption_info;
 

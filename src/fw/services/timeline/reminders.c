@@ -12,6 +12,7 @@
 #include "pbl/services/blob_db/reminder_db.h"
 #include "pbl/services/timeline/item.h"
 #include <pbl/logging/logging.h>
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -119,7 +120,7 @@ status_t reminders_delete(ReminderId *reminder_id) {
   return reminder_db_delete_item(reminder_id, true /* send_event */);
 }
 
-T_STATIC uint32_t prv_calculate_snooze_delay(TimelineItem *item) {
+PBL_T_STATIC uint32_t prv_calculate_snooze_delay(TimelineItem *item) {
   time_t current_time_utc = rtc_get_time();
   time_t reminder_time_utc = item->header.timestamp;
   if (current_time_utc <= reminder_time_utc) {

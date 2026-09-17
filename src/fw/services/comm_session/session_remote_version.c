@@ -11,7 +11,7 @@
 #include "pbl/services/comm_session/session_remote_os.h"
 #include "kernel/event_loop.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/net.h"
 #include <pbl/logging/logging.h>
 
@@ -31,14 +31,14 @@ typedef enum {
 } CommSessionVersionCommand;
 
 // The 1.x mobile app response
-struct PACKED VersionsPhoneResponseV1 {
+struct PBL_PACKED VersionsPhoneResponseV1 {
   uint32_t pebble_library_version;
   uint32_t session_capabilities_bitfield;
   uint32_t platform_bitfield;
 };
 
 // The 2.x mobile apps return a longer response than the 1.x apps do.
-struct PACKED VersionsPhoneResponseV2 {
+struct PBL_PACKED VersionsPhoneResponseV2 {
   uint32_t pebble_library_version;
   uint32_t session_capabilities_bitfield;
   uint32_t platform_bitfield;
@@ -49,7 +49,7 @@ struct PACKED VersionsPhoneResponseV2 {
 };
 
 // The 3.x mobile apps return a longer response than the 2.x apps do
-struct PACKED VersionsPhoneResponseV3 {
+struct PBL_PACKED VersionsPhoneResponseV3 {
   uint32_t pebble_library_version_deprecated; // Deprecated as of v3.x
   uint32_t session_capabilities_bitfield;     // Deprecated as of v3.x
   uint32_t platform_bitfield;

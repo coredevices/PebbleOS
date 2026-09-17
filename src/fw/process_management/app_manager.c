@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "pbl/util/testing.h"
 
 #define RETURN_CRASH_TIMEOUT_TICKS (60 * RTC_TICKS_HZ)
 
@@ -219,11 +220,11 @@ static size_t prv_get_app_stack_size(const PebbleProcessMd *app_md) {
   }
 }
 
-T_STATIC MemorySegment prv_get_app_ram_segment(void) {
+PBL_T_STATIC MemorySegment prv_get_app_ram_segment(void) {
   return (MemorySegment){__APP_RAM__, __APP_RAM_end__};
 }
 
-T_STATIC size_t prv_get_stack_guard_size(void) {
+PBL_T_STATIC size_t prv_get_stack_guard_size(void) {
   return (uintptr_t)__stack_guard_size__;
 }
 

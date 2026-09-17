@@ -12,6 +12,7 @@
 #include "util/bitset.h"
 #include "util/graphics.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 #define MAX_SUPPORTED_PALETTE_ENTRIES 4
 
@@ -25,7 +26,7 @@ typedef struct {
 
 typedef RowLookUp TwoRowLookUp[2];
 
-T_STATIC void prv_apply_tint_color(GColor *color, GColor tint_color) {
+PBL_T_STATIC void prv_apply_tint_color(GColor *color, GColor tint_color) {
   // tint_color.a is always 0 or 3
   if (tint_color.a != 0) {
     tint_color.a = (*color).a;
@@ -33,9 +34,9 @@ T_STATIC void prv_apply_tint_color(GColor *color, GColor tint_color) {
   }
 }
 
-T_STATIC void prv_calc_two_row_look_ups(TwoRowLookUp *look_up, GCompOp compositing_mode,
-                                        const GColor8 *palette, uint8_t num_entries,
-                                        GColor tint_color) {
+PBL_T_STATIC void prv_calc_two_row_look_ups(TwoRowLookUp *look_up, GCompOp compositing_mode,
+                                            const GColor8 *palette, uint8_t num_entries,
+                                            GColor tint_color) {
   for (unsigned int palette_index = 0; palette_index < num_entries; palette_index++) {
     GColor color = palette[palette_index];
     // gcolor_get_grayscale will convert any color with an alpha less than 2 to clear

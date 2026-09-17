@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/kernel/mutex.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/shared_circular_buffer.h"
 
 #include <stdbool.h>
@@ -18,14 +18,14 @@
 // Every message sent over the QEMU comm channel has the following header. All
 // data is set in network byte order. The maximum data len (not including header or footer)
 // allowed is QEMU_MAX_DATA_LEN bytes
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t signature; // QEMU_HEADER_SIGNATURE
   uint16_t protocol;  // one of QemuProtocol
   uint16_t len;       // number of bytes that follow (not including this header or footer)
 } QemuCommChannelHdr;
 
 // Every message sent over the QEMU comm channel has the following footer.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t signature; // QEMU_FOOTER_SIGNATURE
 } QemuCommChannelFooter;
 

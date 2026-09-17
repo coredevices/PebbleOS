@@ -100,7 +100,7 @@ static void prv_force_close_timer_callback(void *data) {
 }
 
 // ---------------------------------------------------------------------------------------------
-EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
+PBL_EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
   PebbleTask task = pebble_task_get_current();
   ProcessContext *context = prv_get_context_for_task(task);
 
@@ -475,7 +475,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 // -----------------------------------------------------------------------------------------------------------
 // This is designed to be called from the task itself, in privilege mode, after it exits. It is
 // called from app_task_exit for app tasks and worker_task_exit from worker tasks
-NORETURN process_manager_task_exit(void) {
+PBL_NORETURN void process_manager_task_exit(void) {
   PebbleTask task = pebble_task_get_current();
   ProcessContext *context = prv_get_context_for_task(task);
 

@@ -7,6 +7,7 @@
 #include "kernel/pbl_malloc.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -40,9 +41,9 @@ static bool prv_item_init(TimelineItem *item, int num_attributes, int num_action
   return true;
 }
 
-T_STATIC bool prv_deep_copy_attributes_actions(AttributeList *attr_list,
-                                               TimelineItemActionGroup *action_group,
-                                               TimelineItem *item_out) {
+PBL_T_STATIC bool prv_deep_copy_attributes_actions(AttributeList *attr_list,
+                                                   TimelineItemActionGroup *action_group,
+                                                   TimelineItem *item_out) {
   // deep copy our attribute list / action group
   const size_t data_size = attributes_actions_get_buffer_size(attr_list, action_group);
 

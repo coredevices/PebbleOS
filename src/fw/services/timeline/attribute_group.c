@@ -5,15 +5,15 @@
 
 #include "pbl/services/contacts/attributes_address.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t id;
   uint8_t type;
   uint8_t num_attributes;
 } SerializedActionHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid uuid;
   uint8_t type;
   uint8_t num_attributes;

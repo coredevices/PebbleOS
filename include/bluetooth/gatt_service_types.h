@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 
 //! Below are the data structures to store information about a *remote* GATT
 //! service and its characteristics and descriptors.
@@ -26,7 +26,7 @@
 //! - Create a shared list of UUIDs that can be referenced,
 //! to avoid wasting 16 bytes of RAM per service, characteristic and descriptor?
 
-typedef struct PACKED ATTHandleRange {
+typedef struct PBL_PACKED ATTHandleRange {
   uint16_t start;
   uint16_t end;
 } ATTHandleRange;

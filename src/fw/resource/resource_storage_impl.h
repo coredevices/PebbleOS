@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include "resource.h"
 #include "resource_storage.h"
@@ -29,14 +29,14 @@
 
 //! Actually baked into the flash storage format.
 //! Do not change this without changing the associated tooling!
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t num_resources;
   ResourceVersion version;
 } ResourceManifest;
 
 //! Actually baked into the flash storage format.
 //! Do not change this without changing the associated tooling!
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t resource_id;
   uint32_t offset;
   uint32_t length;

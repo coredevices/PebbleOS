@@ -704,7 +704,7 @@ static void prv_handle_weather(PebbleEvent *event, void *context) {
   prv_refresh(s_data);
 }
 
-static NOINLINE void prv_init(void) {
+static PBL_NOINLINE void prv_init(void) {
   // System-app statics survive across launches and a crashed run never reaches
   // unload — clear every module's launch-persistent state first (like s_page).
   clock_face_reset();

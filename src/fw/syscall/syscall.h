@@ -33,7 +33,7 @@
 
 #include "process_management/pebble_process_info.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <bluetooth/bluetooth_types.h>
 
@@ -58,7 +58,7 @@ void sys_get_pebble_event(PebbleEvent *event);
 
 void sys_pbl_log(LogBinaryMessage *log_message, bool async);
 
-NORETURN sys_app_fault(uint32_t stashed_lr);
+PBL_NORETURN void sys_app_fault(uint32_t stashed_lr);
 
 bool sys_resource_is_valid(ResAppNum app_num, uint32_t resource_id);
 size_t sys_resource_size(ResAppNum app_num, uint32_t handle);
@@ -71,7 +71,7 @@ const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource
 
 uint32_t sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id);
 
-NORETURN sys_exit(void);
+PBL_NORETURN void sys_exit(void);
 
 GFont sys_font_get_system_font(const char *font_key);
 void sys_font_reload_font(FontInfo *fontinfo);

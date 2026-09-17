@@ -8,11 +8,12 @@
 #include "system/passert.h"
 #include "util/bitset.h"
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
 // ## Point setting/blending functions
 
 #if PBL_COLOR
-T_STATIC inline void set_pixel_raw_8bit(GContext *ctx, GPoint point) {
+PBL_T_STATIC inline void set_pixel_raw_8bit(GContext *ctx, GPoint point) {
   if (!grect_contains_point(&ctx->dest_bitmap.bounds, &point)) {
     return;
   }
@@ -522,8 +523,8 @@ void graphics_private_draw_horizontal_line_delta_non_aa(GContext *ctx, int16_t y
 }
 
 // This function will replicate source column in given area
-T_STATIC void prv_replicate_column_row_raw(GBitmap *framebuffer, int16_t src_x, int16_t dst_x1,
-                                           int16_t dst_x2) {
+PBL_T_STATIC void prv_replicate_column_row_raw(GBitmap *framebuffer, int16_t src_x, int16_t dst_x1,
+                                               int16_t dst_x2) {
   const GRect column_to_replicate = (GRect){
     .origin = GPoint(src_x, framebuffer->bounds.origin.y),
     .size = GSize(1, framebuffer->bounds.size.h),

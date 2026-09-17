@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/util/list.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -15,7 +15,7 @@
 //! read index that gets updated as they consume data. If desired, the read index for clients that
 //! "fall behind" can be force advanced to make room for new write data.
 
-typedef struct PACKED SharedCircularBufferClient {
+typedef struct PBL_PACKED SharedCircularBufferClient {
   ListNode list_node;
   uint16_t read_index; // Index of next available byte in the buffer for this client
 } SharedCircularBufferClient;

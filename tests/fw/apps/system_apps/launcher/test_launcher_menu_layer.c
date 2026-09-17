@@ -11,6 +11,7 @@
 #include "pbl/services/app_glances/app_glance_service.h"
 #include "pbl/services/blob_db/app_glance_db.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 static GContext s_ctx;
 
@@ -306,9 +307,9 @@ void test_launcher_menu_layer__cleanup(void) {
 // Helpers
 //////////////////////
 
-//! Declared T_STATIC in launcher_menu_layer.c so we can easily change the launcher's selected index
-//! from unit tests without also specifying the y offset for the scroll layer that is required by
-//! `launcher_menu_layer_set_selection_state()`.
+//! Declared PBL_T_STATIC in launcher_menu_layer.c so we can easily change the launcher's selected
+//! index from unit tests without also specifying the y offset for the scroll layer that is required
+//! by `launcher_menu_layer_set_selection_state()`.
 void prv_launcher_menu_layer_set_selection_index(LauncherMenuLayer *launcher_menu_layer,
                                                  uint16_t index, MenuRowAlign row_align,
                                                  bool animated);
