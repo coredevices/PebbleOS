@@ -66,11 +66,12 @@ typedef struct NotificationsData {
 struct NotificationGroupWindow {
   Window window;
   MenuLayer menu_layer;
+  TextLayer sender_layer;
   NotificationsData *notifications_data;
   Uuid *notification_ids;
   uint16_t count;
   char *sender;
-  char time_buffer[16];
+  char time_buffer[TIME_STRING_REQUIRED_LENGTH];
 };
 
 static NotificationsData *s_data = NULL;
@@ -237,20 +238,13 @@ static uint16_t prv_group_window_get_num_rows(MenuLayer *menu_layer, uint16_t se
   return group_window->count;
 }
 
-static int16_t prv_group_window_get_header_height(MenuLayer *menu_layer, uint16_t section_index,
-                                                  void *context) {
-  return MENU_CELL_BASIC_HEADER_HEIGHT;
-}
-
 static int16_t prv_group_window_get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index,
                                                 void *context) {
-  return menu_cell_basic_cell_height();
-}
-
-static void prv_group_window_draw_header(GContext *ctx, const Layer *cell_layer,
-                                         uint16_t section_index, void *context) {
-  NotificationGroupWindow *group_window = context;
-  menu_cell_basic_header_draw(ctx, cell_layer, group_window->sender);
+  const GFont subtitle_font = system_theme_get_font(TextStyleFont_MenuCellSubtitle);
+  const GFont caption_font = system_theme_get_font(TextStyleFont_Caption);
+  const int16_t saved_height =
+      MAX(0, fonts_get_font_height(subtitle_font) - fonts_get_font_height(caption_font));
+  return menu_cell_basic_cell_height() - saved_height;
 }
 
 static void prv_group_window_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
@@ -276,9 +270,11 @@ static void prv_group_window_draw_row(GContext *ctx, const Layer *cell_layer, Me
     message = attribute_get_string(&notification->attr_list, AttributeIdTitle, "[Empty]");
   }
 
-  clock_copy_time_string_timestamp(group_window->time_buffer, sizeof(group_window->time_buffer),
-                                   notification->header.timestamp);
-  menu_cell_basic_draw(ctx, cell_layer, message, group_window->time_buffer, NULL);
+  clock_get_since_time(group_window->time_buffer, sizeof(group_window->time_buffer),
+                       notification->header.timestamp);
+  menu_cell_basic_draw_custom(ctx, cell_layer, system_theme_get_font(TextStyleFont_MenuCellTitle),
+                              message, NULL, NULL, system_theme_get_font(TextStyleFont_Caption),
+                              group_window->time_buffer, NULL, false, GTextOverflowModeFill);
 }
 
 static void prv_group_window_select(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
@@ -290,14 +286,23 @@ static void prv_group_window_select(MenuLayer *menu_layer, MenuIndex *cell_index
 
 static void prv_group_window_load(Window *window) {
   NotificationGroupWindow *group_window = window_get_user_data(window);
+  GRect sender_frame = window->layer.bounds;
+  sender_frame.size.h = MENU_CELL_BASIC_HEADER_HEIGHT;
+  text_layer_init_with_parameters(&group_window->sender_layer, &sender_frame, group_window->sender,
+                                  fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), GColorBlack,
+                                  GColorWhite,
+                                  PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentCenter),
+                                  GTextOverflowModeTrailingEllipsis);
+
   MenuLayer *menu_layer = &group_window->menu_layer;
-  menu_layer_init(menu_layer, &window->layer.bounds);
+  GRect menu_frame = window->layer.bounds;
+  menu_frame.origin.y += MENU_CELL_BASIC_HEADER_HEIGHT;
+  menu_frame.size.h -= MENU_CELL_BASIC_HEADER_HEIGHT;
+  menu_layer_init(menu_layer, &menu_frame);
   menu_layer_set_callbacks(menu_layer, group_window,
                            &(MenuLayerCallbacks){
                              .get_num_rows = prv_group_window_get_num_rows,
-                             .get_header_height = prv_group_window_get_header_height,
                              .get_cell_height = prv_group_window_get_cell_height,
-                             .draw_header = prv_group_window_draw_header,
                              .draw_row = prv_group_window_draw_row,
                              .select_click = prv_group_window_select,
                            });
@@ -307,12 +312,14 @@ static void prv_group_window_load(Window *window) {
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, false);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
+  layer_add_child(&window->layer, &group_window->sender_layer.layer);
   menu_layer_set_selected_index(menu_layer, MenuIndex(0, 0), MenuRowAlignTop, false);
 }
 
 static void prv_group_window_unload(Window *window) {
   NotificationGroupWindow *group_window = window_get_user_data(window);
   menu_layer_deinit(&group_window->menu_layer);
+  text_layer_deinit(&group_window->sender_layer);
   group_window->notifications_data->group_window = NULL;
   app_free(group_window->notification_ids);
   app_free(group_window->sender);
