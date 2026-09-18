@@ -63,6 +63,9 @@ void test_alarm__initialize(void) {
   s_num_timeline_adds = 0;
   s_num_timeline_removes = 0;
   s_num_alarm_events_put = 0;
+  s_defer_system_task_callback = false;
+  s_pending_system_task_callback = NULL;
+  s_pending_system_task_data = NULL;
   s_alarm_timer_timeout_ms = 0;
   s_snooze_timer_timeout_ms = 0;
   s_num_alarms_fired = 0;
@@ -478,7 +481,7 @@ void test_alarm__pin_add(void) {
       (AlarmKind)attribute_get_uint8(pin_attr_list, AttributeIdAlarmKind, 0);
   cl_assert_equal_i(pin_alarm_kind, alarm_kind);
 
-  cl_assert_equal_i(s_last_timeline_item_added->action_group.num_actions, 1);
+  cl_assert_equal_i(s_last_timeline_item_added->action_group.num_actions, 2);
 
   const TimelineItemAction *alarm_action = s_last_timeline_item_added->action_group.actions;
   cl_assert_equal_i(alarm_action->id, dummy_alarm_id);
@@ -488,6 +491,21 @@ void test_alarm__pin_add(void) {
 
   const char *action_title = attribute_get_string(action_attr_list, AttributeIdTitle, NULL);
   cl_assert_equal_s(action_title, "Edit");
+
+  const TimelineItemAction *skip_action = &s_last_timeline_item_added->action_group.actions[1];
+  cl_assert_equal_i(skip_action->id, dummy_alarm_id);
+  cl_assert_equal_i(skip_action->type, TimelineItemActionTypeAlarmSkip);
+
+  const char *skip_title = attribute_get_string(&skip_action->attr_list, AttributeIdTitle, NULL);
+  cl_assert_equal_s(skip_title, "Skip");
+}
+
+void test_alarm__pin_add_just_once_has_no_skip_action(void) {
+  const AlarmId dummy_alarm_id = 0;
+  Uuid added_pin_uuid;
+  alarm_pin_add(s_monday, dummy_alarm_id, AlarmType_Basic, ALARM_KIND_JUST_ONCE, &added_pin_uuid);
+
+  cl_assert_equal_i(s_last_timeline_item_added->action_group.num_actions, 1);
 }
 
 void test_alarm__pin_remove(void) {
@@ -526,6 +544,93 @@ void test_alarm__recurring_daily_alarm_timeout_behind(void) {
   s_current_minute = 30;
   cron_service_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__skip_occurrence(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+
+  time_t next_alarm_time;
+  alarm_get_next_enabled_alarm(&next_alarm_time);
+  alarm_skip_occurrence(id, next_alarm_time);
+
+  // The skipped occurrence still wakes the timer (to reschedule) but doesn't fire the alarm.
+  s_current_hour = 10;
+  s_current_minute = 30;
+  cron_service_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
+
+  // The next day's occurrence is unaffected and fires normally.
+  s_current_hour = 10;
+  s_current_minute = 30;
+  s_current_day = s_friday;
+  cron_service_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 2);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+}
+
+void test_alarm__skip_occurrence_preserves_queued_fire_context(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  time_t occurrence_time;
+  alarm_get_next_enabled_alarm(&occurrence_time);
+
+  s_defer_system_task_callback = true;
+  s_current_hour = 10;
+  s_current_minute = 30;
+  cron_service_wakeup();
+
+  // Rearming after the cron callback is queued must not alter that callback's context.
+  alarm_skip_occurrence(id, occurrence_time);
+  s_defer_system_task_callback = false;
+  prv_invoke_pending_system_task_callback();
+
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
+}
+
+void test_alarm__skip_occurrence_does_not_repin(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert_equal_i(s_num_timeline_adds, 3);
+
+  time_t next_alarm_time;
+  alarm_get_next_enabled_alarm(&next_alarm_time);
+  alarm_skip_occurrence(id, next_alarm_time);
+
+  // alarm_skip_occurrence() itself re-pins the 3-day window; the skipped occurrence's pin must
+  // not come back as part of that, or skipping would appear to do nothing in the timeline.
+  SettingsFile file;
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
+  cl_must_pass(settings_file_open(&file, "alarms", 1024));
+  cl_assert_equal_i(settings_file_get_len(&file, &key, sizeof(key)) / (int)sizeof(Uuid), 2);
+  settings_file_close(&file);
+}
+
+void test_alarm__skip_occurrence_does_not_reenable_disabled_alarm(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_enabled(id, false);
+
+  time_t next_alarm_time;
+  cl_assert(!alarm_get_next_enabled_alarm(&next_alarm_time));
+
+  alarm_skip_occurrence(id, 0);
+
+  cl_assert(!alarm_get_next_enabled_alarm(&next_alarm_time));
+}
+
+void test_alarm__editing_time_clears_pending_skip(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+
+  time_t next_alarm_time;
+  alarm_get_next_enabled_alarm(&next_alarm_time);
+  alarm_skip_occurrence(id, next_alarm_time);
+
+  // Changing the alarm's time invalidates the skipped occurrence's timestamp.
+  alarm_set_time(id, 11, 0);
+
+  s_current_hour = 11;
+  s_current_minute = 0;
+  cron_service_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
 }
 
 void test_alarm__recurring_daily_alarm(void) {
@@ -1265,6 +1370,25 @@ void test_alarm__missed_alarm_fires_after_reboot(void) {
 
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
+}
+
+void test_alarm__skipped_occurrence_not_fired_after_reboot(void) {
+  // Regression test: the missed-alarm catch-up path used to compare against s_next_alarm_time,
+  // which alarm_init()'s own reload had already advanced to the *next* occurrence by this point,
+  // so a skip on the missed occurrence was silently ignored and it fired anyway.
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+
+  time_t next_alarm_time;
+  alarm_get_next_enabled_alarm(&next_alarm_time);
+  alarm_skip_occurrence(id, next_alarm_time);
+
+  // The watch was down over the skipped occurrence's time and comes back up shortly after.
+  s_current_hour = 6;
+  s_current_minute = 2;
+  prv_simulate_reboot();
+
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
 }
 
 void test_alarm__missed_alarm_not_fired_when_too_late(void) {

@@ -25,6 +25,7 @@
 #include "stubs_activity.h"
 #include "stubs_alerts.h"
 #include "stubs_alerts_preferences.h"
+#include "stubs_alarm.h"
 #include "stubs_analytics.h"
 #include "stubs_ancs.h"
 #include "stubs_animation_timing.h"

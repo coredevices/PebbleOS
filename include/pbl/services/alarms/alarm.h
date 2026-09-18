@@ -162,6 +162,12 @@ void alarm_set_snooze_delay(uint16_t delay_m);
 //! Dismisses the most recently triggered alarm.
 void alarm_dismiss_alarm(void);
 
+//! Skips a single scheduled occurrence of a repeating alarm, identified by the time it was due
+//! to fire. Future occurrences are unaffected.
+//! @param id The alarm to skip an occurrence of
+//! @param occurrence_time The scheduled fire time of the occurrence to skip
+void alarm_skip_occurrence(AlarmId id, time_t occurrence_time);
+
 //! Runs the callback for each alarm pairing
 void alarm_for_each(AlarmForEach cb, void *context);
 

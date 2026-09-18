@@ -13,6 +13,7 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
+#include "stubs_alarm.h"
 #include "stubs_analytics.h"
 #include "stubs_ancs.h"
 #include "stubs_ancs_notifications.h"

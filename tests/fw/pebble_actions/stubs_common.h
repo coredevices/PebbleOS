@@ -70,6 +70,16 @@ status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
   return S_SUCCESS;
 }
 
+static int s_blob_db_event_put_calls = 0;
+static BlobDBEventType s_blob_db_event_put_type;
+static BlobDBId s_blob_db_event_put_db_id;
+
+void blob_db_event_put(BlobDBEventType type, BlobDBId db_id, const uint8_t *key, int key_len) {
+  s_blob_db_event_put_calls++;
+  s_blob_db_event_put_type = type;
+  s_blob_db_event_put_db_id = db_id;
+}
+
 void timeline_pin_window_push_modal(TimelineItem *item) {
 }
 

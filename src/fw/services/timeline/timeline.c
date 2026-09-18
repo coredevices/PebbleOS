@@ -17,6 +17,7 @@
 #include "process_management/app_manager.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/activity_insights.h"
+#include "pbl/services/alarms/alarm.h"
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
@@ -723,6 +724,29 @@ static void prv_dismiss_local_notification_action(const TimelineItem *item) {
                                      TIMELINE_RESOURCE_RESULT_DISMISSED, ActionResultTypeSuccess);
 }
 
+static void prv_skip_alarm_occurrence_action(const TimelineItem *item,
+                                             const TimelineItemAction *action) {
+  const Uuid alarm_data_source = UUID_ALARMS_DATA_SOURCE;
+  if (!item->header.from_watch || !uuid_equal(&item->header.parent_id, &alarm_data_source)) {
+    // Only locally-created alarm pins may skip an alarm occurrence.
+    return;
+  }
+
+  const AlarmId alarm_id =
+      (AlarmId)attribute_get_uint32(&action->attr_list, AttributeIdLaunchCode, ALARM_INVALID_ID);
+  // Removes the pin itself as part of rescheduling, but through alarm_pin_remove(), which
+  // (unlike blob_db_delete()) doesn't emit a blobdb event: nothing would tell an open pin card or
+  // the timeline list this pin is gone. Emit it ourselves so they refresh the same way they
+  // already do for Remove.
+  alarm_skip_occurrence(alarm_id, item->header.timestamp);
+  blob_db_event_put(BlobDBEventTypeDelete, BlobDBIdPins, (uint8_t *)&item->header.id, UUID_SIZE);
+
+  // We leak this i18n'd string for the same reason the other local action results do; it is only
+  // ever allocated once.
+  prv_put_notification_action_result(&item->header.id, i18n_get("Skipped", &i18n_key),
+                                     TIMELINE_RESOURCE_RESULT_DISMISSED, ActionResultTypeSuccess);
+}
+
 static void prv_perform_ancs_negative_action(const TimelineItem *item,
                                              const TimelineItemAction *action) {
   uint8_t action_id =
@@ -897,6 +921,9 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     }
     case TimelineItemActionTypeRemove:
       prv_remove_pin_action(item, action, attributes);
+      break;
+    case TimelineItemActionTypeAlarmSkip:
+      prv_skip_alarm_occurrence_action(item, action);
       break;
     case TimelineItemActionTypeInsightResponse:
       prv_perform_health_response_action(item, action);

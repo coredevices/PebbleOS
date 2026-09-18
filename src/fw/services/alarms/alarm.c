@@ -102,12 +102,26 @@ typedef struct PBL_PACKED {
     };
     uint8_t flags;
   };
+  //! Epoch time of an occurrence to suppress the next time it's due to fire, or 0 if none is
+  //! pending. Set by alarm_skip_occurrence(); consumed and cleared in prv_timer_kernel_bg_callback.
+  time_t skipped_occurrence;
 } AlarmConfig;
 
 typedef struct Alarm {
   AlarmId id;
   AlarmConfig config;
 } Alarm;
+
+//! Context handed to prv_timer_kernel_bg_callback for whichever alarm is about to fire, captured
+//! at arm time rather than read back from s_next_alarm_time: for a missed alarm caught up after
+//! boot, s_next_alarm_time has already moved on to the next real occurrence by the time this
+//! fires, so it can no longer be used to recognize a skip.
+typedef struct AlarmFireContext {
+  AlarmId id;
+  //! Cron-scheduled fire time (pre smart-alarm offset); pass through prv_get_alarm_time() to
+  //! compare against AlarmConfig.skipped_occurrence.
+  time_t cron_time;
+} AlarmFireContext;
 
 typedef bool (*AlarmOperationCallback)(AlarmId id, AlarmConfig *config, void *context);
 
@@ -128,6 +142,10 @@ static time_t s_next_alarm_time;
 //! This is only valid when s_next_alarm_time is not 0.
 static Alarm s_next_alarm;
 static CronJob s_next_alarm_cron;
+
+//! Context used by the scheduled cron job. It must be copied before handing work to the system
+//! task because rearming an alarm overwrites this value. See AlarmFireContext.
+static AlarmFireContext s_alarm_fire_context;
 static AlarmId s_most_recent_alarm_id = ALARM_INVALID_ID;
 static AlarmConfig s_most_recent_alarm_config;
 static bool s_most_recent_alarm_recorded;
@@ -253,7 +271,9 @@ static void prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_time
 }
 
 // ----------------------------------------------------------------------------------------------
-//! Pins alarm in the timeline for the next three days
+//! Pins alarm in the timeline for the next three days. Skips re-pinning a skipped occurrence:
+//! this runs on every config change, including alarm_skip_occurrence() itself, so the pin would
+//! otherwise reappear with a fresh UUID moments after being removed.
 static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm, const CronJob *cron,
                                    const time_t current_time) {
   // If an alarm was updated then remove all the pins with stale information
@@ -276,7 +296,8 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm, const
     if (last_alarm != alarm_time) {
       last_alarm = alarm_time;
       localtime_r(&alarm_time, local_alarm_time);
-      if (alarm->config.scheduled_days[local_alarm_time->tm_wday]) {
+      if (alarm->config.scheduled_days[local_alarm_time->tm_wday] &&
+          alarm_time != alarm->config.skipped_occurrence) {
         Uuid *pinid = (Uuid *)&settings_file_buffer[num_pin_adds++ * UUID_SIZE];
         prv_add_pin(alarm->id, &alarm->config, alarm_time, pinid);
 
@@ -324,9 +345,10 @@ static time_t prv_build_cron(AlarmConfig *config, CronJob *cron) {
 static void prv_assign_alarm(Alarm *alarm, CronJob *cron) {
   cron_job_unschedule(&s_next_alarm_cron);
   s_next_alarm_cron = *cron;
-  s_next_alarm_cron.cb_data = (void *)(intptr_t)alarm->id;
+  s_next_alarm_cron.cb_data = &s_alarm_fire_context;
   s_next_alarm = *alarm;
   s_next_alarm_time = cron_job_schedule(&s_next_alarm_cron);
+  s_alarm_fire_context = (AlarmFireContext){.id = alarm->id, .cron_time = s_next_alarm_time};
   PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)", alarm->id,
                alarm->config.hour, alarm->config.minute, s_next_alarm_time, alarm->config.is_smart);
 }
@@ -477,14 +499,20 @@ static void prv_snooze_timer_callback(void *unused) {
 
 // ----------------------------------------------------------------------------------------------
 PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
-  AlarmId id = (intptr_t)data;
+  AlarmFireContext *ctx = data;
+  const AlarmId id = ctx->id;
   if (id == ALARM_INVALID_ID) {
+    kernel_free(ctx);
     return;
   }
 
-  // We allocate some larger variables on the heap to reduce stack usage
-  AlarmConfig *config = &s_most_recent_alarm_config;
+  // We allocate some larger variables on the heap to reduce stack usage. config is kept separate
+  // from s_most_recent_alarm_config until we know this occurrence actually fires, so a skipped
+  // occurrence can't clobber the config of whichever alarm is genuinely the most recent (e.g. one
+  // still mid-snooze).
+  AlarmConfig *config = kernel_malloc_check(sizeof(AlarmConfig));
   SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
+  bool skipped = false;
   bool rv = prv_file_open_and_lock(file);
   if (!rv) {
     goto cleanup;
@@ -494,8 +522,17 @@ PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
 
   s_smart_snooze_counter = 0;
 
-  // If this is a just once alarm, then disable it.
-  if (rv && config->kind == ALARM_KIND_JUST_ONCE) {
+  if (rv && config->skipped_occurrence != 0) {
+    const Alarm alarm = {.id = id, .config = *config};
+    skipped = (config->skipped_occurrence == prv_get_alarm_time(&alarm, ctx->cron_time));
+  }
+
+  // If this occurrence was skipped, just clear the flag and reschedule for the next one.
+  if (skipped) {
+    config->skipped_occurrence = 0;
+    prv_alarm_set_config(file, id, config); // This will reload the alarms
+  } else if (rv && config->kind == ALARM_KIND_JUST_ONCE) {
+    // If this is a just once alarm, then disable it.
     config->is_disabled = true;
     prv_alarm_set_config(file, id, config); // This will reload the alarms
   } else {
@@ -506,15 +543,38 @@ cleanup:
   prv_file_close_and_unlock(file);
   kernel_free(file);
 
+  if (skipped) {
+    // Suppress this occurrence entirely: no popup, no snooze, no event.
+    PBL_LOG_DBG("Alarm %u occurrence skipped", id);
+    kernel_free(config);
+    kernel_free(ctx);
+    return;
+  }
+
   PBL_LOG_INFO("Alarm %u timeout", id);
   s_most_recent_alarm_recorded = false;
   s_most_recent_alarm_id = rv ? id : ALARM_INVALID_ID;
+  if (rv) {
+    s_most_recent_alarm_config = *config;
+  }
+  kernel_free(config);
+  kernel_free(ctx);
   prv_clear_snooze_timer();
   prv_process_most_recent_alarm();
 }
 
+// ----------------------------------------------------------------------------------------------
+static void prv_enqueue_timer_callback(const AlarmFireContext *context) {
+  AlarmFireContext *context_copy = kernel_malloc_check(sizeof(*context_copy));
+  *context_copy = *context;
+  if (!system_task_add_callback(prv_timer_kernel_bg_callback, context_copy)) {
+    kernel_free(context_copy);
+  }
+}
+
+// ----------------------------------------------------------------------------------------------
 static void prv_cron_callback(CronJob *job, void *data) {
-  system_task_add_callback(prv_timer_kernel_bg_callback, data);
+  prv_enqueue_timer_callback(data);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -531,6 +591,7 @@ static void prv_persist_alarm(SettingsFile *fd, Alarm *alarm) {
     .sound_enabled = alarm->config.sound_enabled,
     .vibrate_disabled = alarm->config.vibrate_disabled,
     .tone = alarm->config.tone,
+    .skipped_occurrence = alarm->config.skipped_occurrence,
   };
   memcpy(&config.scheduled_days, alarm->config.scheduled_days, sizeof(config.scheduled_days));
   settings_file_set(fd, &key, sizeof(key), &config, sizeof(config));
@@ -572,6 +633,7 @@ static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *co
       .sound_enabled = config.sound_enabled,
       .vibrate_disabled = config.vibrate_disabled,
       .tone = config.tone,
+      .skipped_occurrence = config.skipped_occurrence,
     };
     memcpy(&config_out->scheduled_days, config.scheduled_days, sizeof(config.scheduled_days));
     return true;
@@ -742,6 +804,8 @@ static bool prv_set_alarm_time_op(AlarmId id, AlarmConfig *config, void *context
   }
   config->hour = ctx->hour;
   config->minute = ctx->minute;
+  // A pending skip was for an occurrence at the old time; it no longer applies.
+  config->skipped_occurrence = 0;
   return true;
 }
 
@@ -791,8 +855,24 @@ void alarm_set_tone(AlarmId id, AlarmTone tone) {
 }
 
 // ----------------------------------------------------------------------------------------------
+static bool prv_set_skip_occurrence_op(AlarmId id, AlarmConfig *config, void *context) {
+  if (config->is_disabled) {
+    // Nothing is scheduled to skip, and prv_alarm_operation() would re-enable the alarm.
+    return false;
+  }
+  config->skipped_occurrence = (time_t)(uintptr_t)context;
+  return true;
+}
+
+void alarm_skip_occurrence(AlarmId id, time_t occurrence_time) {
+  prv_alarm_operation(id, prv_set_skip_occurrence_op, (void *)(uintptr_t)occurrence_time);
+}
+
+// ----------------------------------------------------------------------------------------------
 static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context) {
   AlarmKind type = (uintptr_t)context;
+  // A pending skip was for an occurrence under the old day pattern; it no longer applies.
+  config->skipped_occurrence = 0;
   switch (type) {
     case ALARM_KIND_EVERYDAY:
       config->kind = ALARM_KIND_EVERYDAY;
@@ -830,6 +910,8 @@ static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *conte
   const bool (*scheduled_days)[DAYS_PER_WEEK] = context;
   config->kind = ALARM_KIND_CUSTOM;
   memcpy(&config->scheduled_days, scheduled_days, sizeof(config->scheduled_days));
+  // A pending skip was for an occurrence under the old day pattern; it no longer applies.
+  config->skipped_occurrence = 0;
   return true;
 }
 
@@ -1321,7 +1403,8 @@ void alarm_service_enable_alarms(bool enable) {
     PBL_LOG_DBG("Missed alarm %d is too late to fire", id);
     return;
   }
-  system_task_add_callback(prv_timer_kernel_bg_callback, (void *)(intptr_t)id);
+  const AlarmFireContext context = {.id = id, .cron_time = s_missed_alarm_time};
+  prv_enqueue_timer_callback(&context);
 }
 
 // ----------------------------------------------------------------------------------------------

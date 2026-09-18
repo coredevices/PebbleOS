@@ -149,6 +149,23 @@ void test_pin_db__is_dirty_insert_from_phone(void) {
   cl_assert(!dirty_list);
 }
 
+void test_pin_db__remote_item_cannot_claim_watch_provenance(void) {
+  TimelineItem item = item1;
+  item.header.from_watch = true;
+  cl_must_pass(pin_db_insert((uint8_t *)&item.header.id, sizeof(TimelineItemId), (uint8_t *)&item,
+                             sizeof(TimelineItem)));
+
+  TimelineItem stored_item;
+  cl_must_pass(pin_db_read_item_header(&stored_item, &item.header.id));
+  cl_assert(!stored_item.header.from_watch);
+}
+
+void test_pin_db__rejects_truncated_item(void) {
+  cl_assert_equal_i(pin_db_insert((uint8_t *)&item1.header.id, sizeof(TimelineItemId),
+                                  (uint8_t *)&item1, sizeof(SerializedTimelineItemHeader) - 1),
+                    E_INVALID_ARGUMENT);
+}
+
 void test_pin_db__is_dirty_insert_locally(void) {
   // Insert a bunch of pins "from the watch"
   // These should not be dirty because they are not from the reminders app

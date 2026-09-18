@@ -26,6 +26,7 @@ static TimezoneInfo tz = {
 
 // Stubs
 ////////////////////////////////////////////////////////////////
+#include "stubs_alarm.h"
 #include "stubs_analytics.h"
 #include "stubs_app_cache.h"
 #include "stubs_app_install_manager.h"

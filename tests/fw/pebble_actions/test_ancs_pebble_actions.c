@@ -15,6 +15,7 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
+#include "stubs_alarm.h"
 #include "stubs_common.h"
 #include "stubs_blob_db_sync_util.h"
 #include "stubs_prompt.h"
