@@ -132,7 +132,7 @@ static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_ro
 #ifdef CONFIG_SPEAKER
     case VibeSettingsRow_MuteSpeaker:
     case VibeSettingsRow_SpeakerVolume: {
-      // No vibe preview — this row controls a non-vibe setting.
+      // No vibe preview — these rows control non-vibe settings.
       return;
     }
 #endif
