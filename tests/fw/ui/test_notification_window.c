@@ -690,6 +690,16 @@ void test_notification_window__history_app_marks_read_on_appear(void) {
   cl_assert(prv_was_marked_read(&s_multi.ids[0]));
 }
 
+void test_notification_window__opening_history_marks_the_first_notification_read(void) {
+  // The wearer has engaged as soon as they open history, even if the window transition is
+  // interrupted before its first layout appears.
+  prv_setup_notification_stack(false /* is_modal */);
+
+  notification_window_mark_focused_read();
+
+  cl_assert(prv_was_marked_read(&s_multi.ids[0]));
+}
+
 void test_notification_window__incoming_notification_does_not_mark_history_read(void) {
   // A notification arriving while the history app is foregrounded moves focus programmatically.
   // Neither it nor the notification it covers was opened by the wearer.

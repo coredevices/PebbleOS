@@ -470,6 +470,10 @@ static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, vo
     return;
   }
 
+  // The selection is an intentional acknowledgement even if a newly arriving notification wins
+  // the race to open the detail window.
+  notification_storage_set_status(&node->id, TimelineItemStatusRead);
+
   bool success = prv_push_notification_window(notifications_data);
   if (!success) {
     // Bail if a notification came in ahead of us and created a modal window

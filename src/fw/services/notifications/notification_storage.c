@@ -568,6 +568,14 @@ bool notification_storage_get_status(const Uuid *id, uint8_t *status) {
 void notification_storage_set_status(const Uuid *id, uint8_t status) {
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
 
+  // A dismissal reported by the phone is an acknowledgement just as much as a dismissal made on
+  // the watch. Persist Read too, rather than relying only on Dismissed being excluded by the
+  // unread-count predicate. This makes the status accurately describe the notification when it
+  // is later inspected or synchronised.
+  if (status & TimelineItemStatusDismissed) {
+    status |= TimelineItemStatusRead;
+  }
+
   int fd = prv_file_open(OP_FLAG_READ | OP_FLAG_WRITE);
   if (fd < 0) {
     return;

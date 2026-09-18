@@ -1444,6 +1444,14 @@ void notification_window_show() {
     return;
   }
 
+  // Opening notification history is itself deliberate engagement with the first item. The
+  // layout callback normally records this too, but doing it here covers an interrupted push.
+  Uuid *first_id = notifications_presented_list_first();
+  if (!notifications_presented_list_current() && first_id) {
+    notifications_presented_list_set_current(first_id);
+  }
+  notification_window_mark_focused_read();
+
   const bool animated = true;
   app_window_stack_push(&s_notification_window_data.window, animated);
 }
@@ -1496,6 +1504,12 @@ void notification_window_focus_notification(Uuid *id, bool animated) {
   notifications_presented_list_set_current(id);
   if (!prv_reload_swap_layer(data)) {
     data->suppress_read_marking_for = UUID_INVALID;
+  }
+}
+
+void notification_window_mark_focused_read(void) {
+  if (s_in_use && !s_notification_window_data.is_modal) {
+    prv_mark_current_notification_read();
   }
 }
 

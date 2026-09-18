@@ -1102,6 +1102,11 @@ void test_notification_storage__unread_count_decrements_on_dismiss(void) {
   notification_storage_set_status(&i1, TimelineItemStatusDismissed);
   cl_assert_equal_i(1, notification_storage_get_unread_count());
 
+  TimelineItem dismissed;
+  cl_assert(notification_storage_get(&i1, &dismissed));
+  cl_assert(dismissed.header.status & TimelineItemStatusRead);
+  free(dismissed.allocated_buffer);
+
   // Dismissing again, or reading something already dismissed, must not double-decrement
   notification_storage_set_status(&i1, TimelineItemStatusDismissed);
   cl_assert_equal_i(1, notification_storage_get_unread_count());
