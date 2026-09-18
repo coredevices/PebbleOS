@@ -8,6 +8,7 @@
 
 #include "pbl/services/blob_db/app_db.h"
 #include "pbl/services/blob_db/app_glance_db.h"
+#include "pbl/services/blob_db/app_permissions_db.h"
 #include "pbl/services/blob_db/contacts_db.h"
 #include "pbl/services/blob_db/health_db.h"
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
@@ -171,17 +172,28 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
         .compact = app_glance_db_compact,
         .name = "app_glance_db",
       },
-  [BlobDBIdSettings] = {
-    .init = settings_blob_db_init,
-    .insert = settings_blob_db_insert,
-    .get_len = settings_blob_db_get_len,
-    .read = settings_blob_db_read,
-    .del = settings_blob_db_delete,
-    .flush = settings_blob_db_flush,
-    .is_dirty = settings_blob_db_is_dirty,
-    .get_dirty_list = settings_blob_db_get_dirty_list,
-    .mark_synced = settings_blob_db_mark_synced,
-    .name = "settings_blob_db",
+  [BlobDBIdSettings] =
+      {
+        .init = settings_blob_db_init,
+        .insert = settings_blob_db_insert,
+        .get_len = settings_blob_db_get_len,
+        .read = settings_blob_db_read,
+        .del = settings_blob_db_delete,
+        .flush = settings_blob_db_flush,
+        .is_dirty = settings_blob_db_is_dirty,
+        .get_dirty_list = settings_blob_db_get_dirty_list,
+        .mark_synced = settings_blob_db_mark_synced,
+        .name = "settings_blob_db",
+      },
+  [BlobDBIdAppPermissions] = {
+    .init = app_permissions_db_init,
+    .insert = app_permissions_db_insert,
+    .get_len = app_permissions_db_get_len,
+    .read = app_permissions_db_read,
+    .del = app_permissions_db_delete,
+    .flush = app_permissions_db_flush,
+    .compact = app_permissions_db_compact,
+    .name = "app_permissions_db",
   },
 };
 

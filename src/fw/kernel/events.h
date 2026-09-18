@@ -128,6 +128,8 @@ typedef enum {
   PEBBLE_PREF_CHANGE_EVENT,
   PEBBLE_SPEAKER_EVENT,
   PEBBLE_BACKLIGHT_EVENT,
+  PEBBLE_APP_PERMISSION_EVENT,
+  PEBBLE_MIC_CAPTURE_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;
@@ -498,6 +500,24 @@ typedef struct PBL_PACKED { // 1 byte
   bool is_on;
 } PebbleBacklightEvent;
 
+typedef struct PACKED { // 2 bytes
+  uint8_t permission;   //!< AppPermission
+  uint8_t state;        //!< AppPermissionState
+} PebbleAppPermissionEvent;
+
+typedef enum {
+  MicCaptureEventData = 0,
+  MicCaptureEventStopped = 1,
+  MicCaptureEventStarted = 2, //!< A stream to the phone is up
+} MicCaptureEventType;
+
+typedef struct PACKED { // 5 bytes
+  uint8_t type;         //!< MicCaptureEventType
+  uint8_t stop_reason;  //!< MicCaptureStopReason (Stopped events only)
+  bool overrun;         //!< Samples were dropped since the last data event
+  uint16_t num_samples; //!< Samples available when the event was posted
+} PebbleMicCaptureEvent;
+
 typedef enum {
   VoiceEventTypeSessionSetup,
   VoiceEventTypeSessionResult,
@@ -808,6 +828,8 @@ typedef struct PBL_PACKED {
     PebblePrefChangeEvent pref_change;
     PebbleSpeakerEvent speaker;
     PebbleBacklightEvent backlight;
+    PebbleAppPermissionEvent app_permission;
+    PebbleMicCaptureEvent mic_capture;
   };
   PebbleTaskBitset task_mask; // 1 == filter out, 0 == leave in
   // NOTE: we put this 8 bit field at the end so that we can pack this structure and still keep the

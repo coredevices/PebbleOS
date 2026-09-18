@@ -5,6 +5,8 @@ config SERVICE_VOICE
     bool "Voice"
     default y if MIC
     select SPEEX
+    select SERVICE_AUDIO_ENCODER
+    select SERVICE_MIC_MANAGER
     help
       Voice (dictation) service. Requires a microphone driver (CONFIG_MIC).
 

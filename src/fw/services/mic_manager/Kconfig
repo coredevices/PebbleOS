@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_MIC_MANAGER
+    bool "Microphone manager"
+    depends on MIC
+    default y
+    help
+      Arbitrates the microphone between dictation and app capture.
+
+if SERVICE_MIC_MANAGER
+
+module = SERVICE_MIC_MANAGER
+module-str = Mic manager
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

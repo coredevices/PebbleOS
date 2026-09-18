@@ -82,6 +82,7 @@ typedef struct {
   ProcessVisibility visibility;
   ProcessType process_type; // WATCHFACE/APP
   bool has_worker;
+  bool uses_microphone;
   Uuid uuid;
   GColor color;
   char name[APP_NAME_SIZE_BYTES];
@@ -184,6 +185,10 @@ bool app_install_entry_is_watchface(const AppInstallEntry *entry);
 //! Returns true if the app associated with the provided entry has a worker
 //! @param entry AppInstallEntry to check the parameters of
 bool app_install_entry_has_worker(const AppInstallEntry *entry);
+
+//! Returns true if the app associated with the provided entry declares the microphone permission
+//! @param entry AppInstallEntry to check the parameters of
+bool app_install_entry_uses_microphone(const AppInstallEntry *entry);
 
 //! Returns true if the app associated with the provided entry should be hidden in menus
 //! @param entry AppInstallEntry to check the parameters of

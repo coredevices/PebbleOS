@@ -115,6 +115,10 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
         flags.append("PROCESS_INFO_VISIBILITY_HIDDEN")
     if is_moddable:
         flags.append("PROCESS_INFO_MODDABLE_APP")
+    if "microphone" in app_info.get("capabilities", []):
+        if is_watchface:
+            raise ValueError("Watchfaces cannot use the microphone; remove the 'microphone' capability")
+        flags.append("PROCESS_INFO_USES_MICROPHONE")
     if platform_name:
         flags.append(f"PROCESS_INFO_PLATFORM_{platform_name.upper()}")
 

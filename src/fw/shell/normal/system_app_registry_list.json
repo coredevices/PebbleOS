@@ -284,6 +284,14 @@
       ]
     },
     {
+      "id": -193,
+      "enum": "MIC_DEMO",
+      "md_fn": "mic_demo_get_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_MIC_DEMO"
+      ]
+    },
+    {
       "id": -43,
       "enum": "PERSIST",
       "md_fn": "persist_app_get_info",

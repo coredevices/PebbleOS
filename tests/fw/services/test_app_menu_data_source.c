@@ -56,6 +56,7 @@
 #include "stubs_pbl_malloc.h"
 #include "stubs_pebble_tasks.h"
 #include "stubs_persist.h"
+#include "stubs_app_permissions_db.h"
 #include "stubs_pin_db.h"
 #include "stubs_process_loader.h"
 #include "stubs_process_manager.h"

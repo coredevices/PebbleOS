@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_APP_PERMISSIONS
+    bool "App permissions"
+    depends on SERVICE_BLOB_DB
+    help
+      Per-app permission grants (microphone, ...) pushed by the phone and
+      enforced by the firmware.
+
+if SERVICE_APP_PERMISSIONS
+
+module = SERVICE_APP_PERMISSIONS
+module-str = App permissions
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

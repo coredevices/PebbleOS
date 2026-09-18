@@ -37,6 +37,8 @@ typedef enum {
 
   //! True, if process uses Moddable XS APIs
   PROCESS_INFO_MODDABLE_APP = 1 << 10,
+  //! Process declares the microphone permission (bits 12-31 are free)
+  PROCESS_INFO_USES_MICROPHONE = 1 << 11,
   //! SDK older than 4.2 doesn't store any value
   PROCESS_INFO_PLATFORM_UNKNOWN = 0x0 << 6,
   PROCESS_INFO_PLATFORM_APLITE = 0x1 << 6,
@@ -168,9 +170,13 @@ typedef enum {
 // (tap/pan/swipe + window attach/detach) to apps (rev 107) sdk.major:0x5 .minor:0x69 -- Add
 // app_touch_navigation_enable() opt-in for third-party touch nav (rev 108) sdk.major:0x5
 // .minor:0x6a -- Add HRV sampling API (health_service_set_hrv_sample_period) (rev 109)
+// sdk.major:0x5 .minor:0x6b -- Add app permissions API (rev 110)
+// sdk.major:0x5 .minor:0x6c -- Add Microphone API (mic_data_service_subscribe) (rev 111)
+// sdk.major:0x5 .minor:0x6d -- Add AudioEncoder API (audio_encoder_open) (rev 112)
+// sdk.major:0x5 .minor:0x6e -- Add mic_stream_to_phone_start() (rev 113)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6a
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6e
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4

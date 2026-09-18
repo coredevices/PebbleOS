@@ -11,7 +11,7 @@
   },
   "capabilities": {
     "type": "array",
-    "items": { "enum": ["location", "configurable", "health"] },
+    "items": { "enum": ["location", "configurable", "health", "microphone"] },
     "uniqueItems": true
   },
   "messageKeys": {

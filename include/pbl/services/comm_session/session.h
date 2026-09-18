@@ -48,6 +48,7 @@ typedef enum {
   CommSessionSmoothFwInstallProgressSupport = 1 << 14,
   CommSessionImagingSupport = 1 << 17,
   CommSessionSettingsSyncSupport = 1 << 23,
+  CommSessionAppPermissionsSupport = 1 << 25,
   CommSessionOutOfRange
 } CommSessionCapability;
 

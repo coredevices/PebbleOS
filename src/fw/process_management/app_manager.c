@@ -20,6 +20,7 @@
 #include "pbl/mcu/privilege.h"
 #include "popups/health_tracking_ui.h"
 #include "popups/timeline/peek.h"
+#include "popups/mic_banner.h"
 #include "process_management/app_run_state.h"
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_heap.h"
@@ -35,6 +36,12 @@
 #include "pbl/services/vibe_pattern.h"
 #ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/speaker/speaker_service.h"
+#ifdef CONFIG_SERVICE_MIC_CAPTURE
+#include "pbl/services/mic_capture/mic_capture_service.h"
+#endif
+#ifdef CONFIG_SERVICE_AUDIO_ENCODER
+#include "pbl/services/audio_encoder/audio_encoder.h"
+#endif
 #endif
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
@@ -295,7 +302,9 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   const ProcessAppSDKType sdk_type = process_metadata_get_app_sdk_type(app_md);
 
   // The rest of app_ram is available for app_state to use as it sees fit.
-  if (!app_state_configure(&app_ram, sdk_type, timeline_peek_get_obstruction_origin_y())) {
+  const int16_t obstruction_y =
+      MIN(timeline_peek_get_obstruction_origin_y(), mic_banner_get_obstruction_origin_y());
+  if (!app_state_configure(&app_ram, sdk_type, obstruction_y)) {
     PBL_LOG_ERR("App state configuration failed");
     return false;
   }
@@ -412,6 +421,12 @@ static void prv_app_cleanup(void) {
   vibe_pattern_clear_for_owner(VibePatternOwner_App);
 #ifndef CONFIG_RECOVERY_FW
   speaker_service_stop_for_task(PebbleTask_App);
+#ifdef CONFIG_SERVICE_MIC_CAPTURE
+  mic_capture_service_stop_for_task(PebbleTask_App);
+#endif
+#ifdef CONFIG_SERVICE_AUDIO_ENCODER
+  audio_encoder_service_close_for_task(PebbleTask_App);
+#endif
 #endif
   ble_app_cleanup();
 
