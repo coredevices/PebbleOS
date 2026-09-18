@@ -21,6 +21,7 @@
 #include "applib/vendor/tinflate/tinflate.h"
 
 #include <string.h>
+#include "pbl/kernel/compiler.h"
 
 #define GLOBE_FRAME_INTERVAL_MS     35 // ~28.6 FPS, matching Pebble's shredder PDC cadence
 #define GLOBE_IDLE_TIMEOUT_MS       5000
@@ -279,7 +280,7 @@ static int bw_frame_for_longitude_e2(int16_t longitude_e2) {
   return positive_modulo(rounded_divide(-longitude_e2, 600), NUM_BW_FRAMES);
 }
 
-__attribute__((noinline)) static int32_t longitude_e2_for_bw_frame(int bw_frame) {
+PBL_NOINLINE static int32_t longitude_e2_for_bw_frame(int bw_frame) {
   int frame = ((bw_frame * NUM_COLOR_LON_FRAMES) + (NUM_BW_FRAMES / 2)) / NUM_BW_FRAMES %
               NUM_COLOR_LON_FRAMES;
   return -frame * 1500;
@@ -731,7 +732,7 @@ static int32_t normalize_longitude_e2(int32_t longitude_e2) {
   return longitude_e2;
 }
 
-__attribute__((noinline)) static int32_t clamp_latitude_e2(int32_t latitude_e2) {
+PBL_NOINLINE static int32_t clamp_latitude_e2(int32_t latitude_e2) {
   if (latitude_e2 > 8900)
     return 8900;
   if (latitude_e2 < -8900)
@@ -748,7 +749,7 @@ static int32_t shortest_longitude_delta_e2(int32_t from_e2, int32_t to_e2) {
   return delta;
 }
 
-__attribute__((noinline)) static int trigangle_from_degrees_e2(int32_t degrees_e2) {
+PBL_NOINLINE static int trigangle_from_degrees_e2(int32_t degrees_e2) {
   return (int)weather_scale_i32(degrees_e2, TRIG_MAX_ANGLE, 36000);
 }
 
@@ -1260,7 +1261,7 @@ static int revealed_globe_radius(void) {
   return ((GLOBE_RENDER_BASE_DIAMETER * GLOBE_COLOR_FINAL_SCALE_PERCENT) / 100) / 2;
 }
 
-__attribute__((noinline)) static GPoint revealed_globe_center_for_bounds(GRect bounds, int offset) {
+PBL_NOINLINE static GPoint revealed_globe_center_for_bounds(GRect bounds, int offset) {
   return GPoint(bounds.origin.x + (bounds.size.w / 2),
                 bounds.origin.y + (bounds.size.h / 2) + GLOBE_REVEALED_CENTER_Y_OFFSET + offset);
 }
@@ -1525,11 +1526,9 @@ static bool project_lat_lon_to_globe_point_with_depth(GlobeView *view, int32_t l
 }
 
 #ifdef CONFIG_TOUCH
-__attribute__((noinline)) static bool project_lat_lon_to_globe_point(GlobeView *view,
-                                                                     int32_t latitude_e2,
-                                                                     int32_t longitude_e2,
-                                                                     GPoint center, int radius,
-                                                                     GPoint *point_out) {
+PBL_NOINLINE static bool project_lat_lon_to_globe_point(GlobeView *view, int32_t latitude_e2,
+                                                        int32_t longitude_e2, GPoint center,
+                                                        int radius, GPoint *point_out) {
   return project_lat_lon_to_globe_point_with_depth(view, latitude_e2, longitude_e2, center, radius,
                                                    GLOBE_ROT_SCALE / 10, point_out, NULL);
 }
@@ -2650,7 +2649,7 @@ static void navigate_city(GlobeView *view, bool is_down) {
 }
 
 #ifdef CONFIG_TOUCH
-__attribute__((noinline)) static int32_t clamp_globe_velocity_q8(int32_t value) {
+PBL_NOINLINE static int32_t clamp_globe_velocity_q8(int32_t value) {
   if (value > GLOBE_COAST_MAX_SPEED_Q8)
     return GLOBE_COAST_MAX_SPEED_Q8;
   if (value < -GLOBE_COAST_MAX_SPEED_Q8)

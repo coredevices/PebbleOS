@@ -323,13 +323,13 @@ void prompt_command_finish(void) {
 #ifndef CONFIG_PULSE_EVERYWHERE
 static uint16_t s_latest_cookie = UINT16_MAX;
 
-typedef struct __attribute__((__packed__)) PromptCommand {
+typedef struct PBL_PACKED PromptCommand {
   uint8_t cookie;
   char command[];
 } PromptCommand;
 #endif
 
-typedef struct __attribute__((__packed__)) PromptResponseContents {
+typedef struct PBL_PACKED PromptResponseContents {
   uint8_t message_type;
   uint64_t time_ms;
   char message[];

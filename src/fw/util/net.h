@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 // When compiling test, the host OS might have conflicting defines for this:
 #undef ntohs
@@ -15,7 +16,7 @@
 
 static inline uint16_t ntohs(uint16_t v) {
   // return ((v & 0x00ff) << 8) | ((v & 0xff00) >> 8);
-  return __builtin_bswap16(v);
+  return PBL_BSWAP16(v);
 }
 
 static inline uint16_t htons(uint16_t v) {
@@ -27,7 +28,7 @@ static inline uint32_t ntohl(uint32_t v) {
   //        ((v & 0x0000ff00) << 8) |
   //        ((v & 0x00ff0000) >> 8) |
   //        ((v & 0xff000000) >> 24);
-  return __builtin_bswap32(v);
+  return PBL_BSWAP32(v);
 }
 
 static inline uint32_t htonl(uint32_t v) {

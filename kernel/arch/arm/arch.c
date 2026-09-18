@@ -11,6 +11,7 @@
 #include "pbl/mcu/interrupts.h"
 
 #include "kernel.h"
+#include "pbl/kernel/compiler.h"
 
 #if defined(__VFP_FP__) && !defined(__SOFTFP__)
 #define HAS_FPU 1
@@ -51,7 +52,7 @@
 #define SHPR_PENDSV  10
 #define SHPR_SYSTICK 11
 
-struct pbl_thread *pbl_cur __attribute__((section(".kernel_unpriv_ro_bss")));
+struct pbl_thread *pbl_cur PBL_SECTION(".kernel_unpriv_ro_bss");
 
 //! Saved context, lowest address first. Matches the layout core dump tooling
 //! learned from the FreeRTOS port so the canonical register walk is unchanged.
@@ -94,7 +95,7 @@ struct pbl_kernel_debug_layout {
   uint16_t ctx_fp_extra; // bytes of s16-s31 that precede it otherwise
 };
 
-const struct pbl_kernel_debug_layout pbl_kernel_debug_layout __attribute__((used)) = {
+const struct pbl_kernel_debug_layout pbl_kernel_debug_layout PBL_USED = {
   .version = 1,
   .thread_sp = offsetof(struct pbl_thread, backend.sp),
   .thread_all_next = offsetof(struct pbl_thread, backend.all_next),
@@ -233,7 +234,7 @@ void arch_switch_request(void) {
   "  ldmia r1!, {r4-r11} \n"                                                 \
   "  stmia r2!, {r4-r11} \n"
 
-__attribute__((naked)) void PendSV_Handler(void) {
+PBL_NAKED void PendSV_Handler(void) {
   __asm volatile(
       "  mrs r0, psp \n"
       "  isb \n"
@@ -260,7 +261,7 @@ __attribute__((naked)) void PendSV_Handler(void) {
 }
 
 // Loads the first thread's context. MSP is reset to the top of the ISR stack.
-__attribute__((naked)) static void prv_restore_first_thread(void) {
+PBL_NAKED static void prv_restore_first_thread(void) {
   __asm volatile(
       "  ldr r0, =0xE000ED08 \n" /* VTOR: initial MSP is the first vector */
       "  ldr r0, [r0] \n"
@@ -296,7 +297,7 @@ static uintptr_t prv_original_sp(const uint32_t *frame, uint32_t exc_return) {
 #define SYSCALL_STACK_ARG_WORDS 16u
 
 // Boards without a dedicated syscall stack run syscalls on the caller's.
-__attribute__((weak)) uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
+PBL_WEAK uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
   (void)base_out;
   return NULL;
 }
@@ -341,7 +342,7 @@ static void prv_raise_privilege(uint32_t *frame, uint32_t exc_return) {
   __ISB();
 }
 
-__attribute__((noinline, used)) static void prv_svc(uint32_t *frame, uint32_t exc_return) {
+PBL_NOINLINE PBL_USED static void prv_svc(uint32_t *frame, uint32_t exc_return) {
   uint8_t number = ((uint8_t *)frame[6])[-2];
   switch (number) {
     case SVC_START:
@@ -360,7 +361,7 @@ __attribute__((noinline, used)) static void prv_svc(uint32_t *frame, uint32_t ex
   }
 }
 
-__attribute__((naked)) void SVC_Handler(void) {
+PBL_NAKED void SVC_Handler(void) {
   __asm volatile(
       "  tst lr, #4 \n"
       "  ite eq \n"

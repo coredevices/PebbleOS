@@ -21,6 +21,7 @@
 #include "pbl/util/trig.h"
 
 #include <time.h>
+#include "pbl/kernel/compiler.h"
 
 // The redesigned animated 5-day forecast — today header (large animated condition icon +
 // current temp / date / phrase), the day fan, and the hi/lo dot graph — renders on the
@@ -1349,9 +1350,9 @@ static void prv_draw_exiting_paper(GContext *ctx) {
 // delay_by_distance lookup pulls from middle-x + the leading edge (top when going up-screen, bottom
 // when going down), so as fx_progress advances the leading points reach `to` first while the
 // trailing points still lag near `from` — that gap IS the across-the-travel stretch.
-__attribute__((unused)) static bool prv_draw_jelly_icon(GContext *ctx, GDrawCommandImage *src,
-                                                        GPoint end_origin, GSize isz, int travel,
-                                                        GPointIndexLookup **lookup_cache) {
+PBL_UNUSED static bool prv_draw_jelly_icon(GContext *ctx, GDrawCommandImage *src, GPoint end_origin,
+                                           GSize isz, int travel,
+                                           GPointIndexLookup **lookup_cache) {
   if (!src)
     return false;
   GDrawCommandImage *clone = gdraw_command_image_clone(src);
@@ -1504,7 +1505,7 @@ static void prv_draw_flying_content(GContext *ctx) {
 // (R5_ICON_CY - R5_SECTION_TRAVEL). At rest / at the destination the two edges coincide => circle.
 //
 // Returns the capsule rect for column centre-x `cx`; *is_capsule_out is true while stretched.
-__attribute__((unused)) static GRect prv_fx_disc_capsule(int cx, bool *is_capsule_out) {
+PBL_UNUSED static GRect prv_fx_disc_capsule(int cx, bool *is_capsule_out) {
   if (is_capsule_out)
     *is_capsule_out = false;
   const bool going_up = (s_list->header_to == R5_HEADER_TRAVEL); // DOWN press -> section travels up

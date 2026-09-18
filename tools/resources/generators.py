@@ -103,12 +103,13 @@ def build_builtin(ball_path, output_path, resource_id_include):
     with open(output_path, "w") as f:
         f.write(f'#include "{resource_id_include}"\n')
         f.write('#include "resource/resource_storage.h"\n')
-        f.write('#include "resource/resource_storage_builtin.h"\n\n')
+        f.write('#include "resource/resource_storage_builtin.h"\n')
+        f.write('#include "pbl/kernel/compiler.h"\n\n')
 
         for reso in resos:
             # Some resources require 8-byte aligned addresses; aligning them
             # all keeps the handling simple.
-            f.write("__attribute__ ((aligned (8)))\n")
+            f.write("PBL_ALIGNED(8)\n")
             generate_c_byte_array.write(f, reso.data, var_name(reso))
 
         f.write("\n")

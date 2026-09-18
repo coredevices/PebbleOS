@@ -11,6 +11,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include <pbl/logging/logging.h>
+#include "pbl/kernel/compiler.h"
 
 // Time
 time_t pbl_override_time(time_t *tloc) {
@@ -52,7 +53,7 @@ static double prv_time_to_double(time_t time) {
 
   // In order to normalize the significand, we shift off all the leading 0s
   // plus the msb which is implicitly included
-  int shift = __builtin_clz(time) + 1;
+  int shift = PBL_CLZ(time) + 1;
 
   significand <<= shift;
 

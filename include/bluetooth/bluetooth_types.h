@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "pbl/kernel/compiler.h"
 
 //! Bluetooth error codes.
 typedef enum {
@@ -168,7 +169,7 @@ typedef uint16_t BTCCCDID;
 
 #define BT_CCCD_ID_INVALID (0xFFU)
 
-typedef struct __attribute__((__packed__)) BTDeviceAddress {
+typedef struct PBL_PACKED BTDeviceAddress {
   uint8_t octets[6];
 } BTDeviceAddress;
 
@@ -206,9 +207,9 @@ typedef struct BTDevice {
 //! @internal The internal layout of the opaque BTDevice. This should not be
 //! exported. It can also never be changed in size. It has to be exactly as
 //! large as the BTDevice struct.
-typedef struct __attribute__((__packed__)) BTDeviceInternal {
+typedef struct PBL_PACKED BTDeviceInternal {
   union {
-    struct __attribute__((__packed__)) {
+    struct PBL_PACKED {
       BTDeviceAddress address;
       bool is_classic : 1;
       bool is_random_address : 1;

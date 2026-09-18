@@ -50,7 +50,7 @@ static PersistStore *prv_find_open_store(const Uuid *uuid) {
 }
 
 static PBL_ALWAYS_INLINE void prv_lock(void) {
-  pbl_mutex_lock_lr(&s_mutex, PBL_FOREVER, (uintptr_t)__builtin_return_address(0));
+  pbl_mutex_lock_lr(&s_mutex, PBL_FOREVER, (uintptr_t)PBL_RETURN_ADDRESS(0));
 }
 
 static inline void prv_unlock(void) {

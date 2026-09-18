@@ -6,6 +6,7 @@
 #include "pbl/kernel/idle.h"
 
 #include "kernel.h"
+#include "pbl/kernel/compiler.h"
 
 #define NUM_PRIO CONFIG_KERNEL_NUM_PRIORITIES
 _Static_assert(NUM_PRIO <= 32, "the ready bitmap is 32 bits wide");
@@ -67,7 +68,7 @@ static void prv_ready_remove(struct pbl_thread *t) {
 
 static struct pbl_thread *prv_pick(void) {
   KERNEL_ASSERT(s_ready_mask != 0);
-  return s_ready_head[31 - __builtin_clz(s_ready_mask)];
+  return s_ready_head[31 - PBL_CLZ(s_ready_mask)];
 }
 
 static void prv_rotate(pbl_prio_t p) {

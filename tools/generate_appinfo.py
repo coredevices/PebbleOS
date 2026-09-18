@@ -140,7 +140,7 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
 
 
 PEBBLE_APP_INFO_TEMPLATE = string.Template("""
-const PebbleProcessInfo __pbl_app_info __attribute__ ((section (".pbl_header"))) = {
+const PebbleProcessInfo __pbl_app_info PBL_SECTION(".pbl_header") = {
   .header = "PBLAPP",
   .struct_version = { PROCESS_INFO_CURRENT_STRUCT_VERSION_MAJOR, PROCESS_INFO_CURRENT_STRUCT_VERSION_MINOR },
   .sdk_version = { PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR },

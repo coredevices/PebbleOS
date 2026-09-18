@@ -29,6 +29,7 @@
 #include "pbl/util/size.h"
 
 #include <stdio.h>
+#include "pbl/kernel/compiler.h"
 
 // helpers from accel manager
 extern void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *num,
@@ -205,7 +206,7 @@ void test_accel_manager__subscription_sampling_rates(void) {
   int max_permutations = 0x1 << poss_rates;
 
   for (int mask = 0; mask < max_permutations; mask++) {
-    int count = __builtin_popcount(mask);
+    int count = PBL_POPCOUNT(mask);
     if (count == 0) {
       continue; // we don't care about the empty set
     }

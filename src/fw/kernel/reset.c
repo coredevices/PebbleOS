@@ -16,6 +16,7 @@
 
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
+#include "pbl/kernel/compiler.h"
 #endif
 
 void system_reset_prepare(void) {
@@ -62,5 +63,5 @@ PBL_NORETURN void system_hard_reset(void) {
   NVIC_SystemReset();
 #endif
 
-  __builtin_unreachable();
+  PBL_UNREACHABLE();
 }

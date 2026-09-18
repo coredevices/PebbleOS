@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "pbl/kernel/compiler.h"
+
 //! @addtogroup Foundation
 //! @{
 //!   @addtogroup Resources
@@ -75,7 +77,7 @@
 
 //! This struct is used to either embed bitmap data directly into the software image or when
 //! reading resources from SPI flash.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint16_t row_size_bytes;
   uint16_t info_flags;
   uint16_t deprecated[2];

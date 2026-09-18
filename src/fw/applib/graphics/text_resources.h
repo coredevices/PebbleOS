@@ -8,8 +8,9 @@
 #include "pbl/util/keyed_circular_cache.h"
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t width_px;
   union {
     uint8_t height_px;
@@ -20,7 +21,7 @@ typedef struct __attribute__((__packed__)) {
   int8_t horiz_advance;
 } GlyphHeaderData;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t width_px;
   uint8_t height_px;
   int8_t left_offset_px;
@@ -29,28 +30,28 @@ typedef struct __attribute__((__packed__)) {
   int8_t horiz_advance;
 } GlyphHeaderDataV1;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   GlyphHeaderData header;
   uint32_t data[];
 } GlyphData;
 
 //! Maps a codepoint to the location of the actual font data.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint : 16;
   uint16_t offset;
 } OffsetTableEntry_2_2;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint : 16;
   uint32_t offset;
 } OffsetTableEntry_2_4;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint;
   uint32_t offset;
 } OffsetTableEntry_4_4;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint;
   uint16_t offset;
 } OffsetTableEntry_4_2;

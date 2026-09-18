@@ -10,6 +10,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "pbl/util/math.h"
+#include "pbl/kernel/compiler.h"
 
 _Static_assert(PERSIST_DATA_MAX_LENGTH <= SETTINGS_VAL_MAX_LEN,
                "PERSIST_DATA_MAX_LENGTH is larger than the max length that "
@@ -24,7 +25,7 @@ static void prv_unlock(SettingsFile **store) {
 }
 
 #define LOCK_AND_GET_STORE(name) \
-  SettingsFile *name __attribute__((cleanup(prv_unlock))) = prv_lock_and_get_store()
+  SettingsFile *name PBL_CLEANUP(prv_unlock) = prv_lock_and_get_store()
 
 DEFINE_SYSCALL(size_t, persist_get_max_size, void) {
   return persist_service_get_max_size();

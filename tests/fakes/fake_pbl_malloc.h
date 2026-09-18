@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "pbl/kernel/compiler.h"
 
 typedef struct {
   ListNode list_node;
@@ -124,15 +125,15 @@ void fake_pbl_malloc_clear_tracking(void) {
 }
 
 void *task_malloc(size_t bytes) {
-  return malloc_and_track(bytes, __builtin_return_address(0));
+  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void *task_malloc_check(size_t bytes) {
-  return malloc_and_track(bytes, __builtin_return_address(0));
+  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void *task_realloc(void *ptr, size_t bytes) {
-  return realloc_and_track(ptr, bytes, __builtin_return_address(0));
+  return realloc_and_track(ptr, bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void *task_zalloc(size_t bytes) {
@@ -150,11 +151,11 @@ void *task_zalloc_check(size_t bytes) {
 }
 
 void *task_calloc(size_t count, size_t size) {
-  return calloc_and_track(count, size, __builtin_return_address(0));
+  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
 }
 
 void *task_calloc_check(size_t count, size_t size) {
-  return calloc_and_track(count, size, __builtin_return_address(0));
+  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
 }
 
 void task_free(void *ptr) {
@@ -162,7 +163,7 @@ void task_free(void *ptr) {
 }
 
 void *applib_zalloc(size_t bytes) {
-  return calloc_and_track(1, bytes, __builtin_return_address(0));
+  return calloc_and_track(1, bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void applib_free(void *ptr) {
@@ -170,11 +171,11 @@ void applib_free(void *ptr) {
 }
 
 void *app_malloc(size_t bytes) {
-  return malloc_and_track(bytes, __builtin_return_address(0));
+  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void *app_malloc_check(size_t bytes) {
-  return malloc_and_track(bytes, __builtin_return_address(0));
+  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void app_free(void *ptr) {
@@ -182,11 +183,11 @@ void app_free(void *ptr) {
 }
 
 void *kernel_malloc(size_t bytes) {
-  return malloc_and_track(bytes, __builtin_return_address(0));
+  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void *kernel_zalloc(size_t bytes) {
-  return calloc_and_track(1, bytes, __builtin_return_address(0));
+  return calloc_and_track(1, bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void *kernel_zalloc_check(size_t bytes) {
@@ -194,11 +195,11 @@ void *kernel_zalloc_check(size_t bytes) {
 }
 
 void *kernel_malloc_check(size_t bytes) {
-  return malloc_and_track(bytes, __builtin_return_address(0));
+  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void *kernel_realloc(void *ptr, size_t bytes) {
-  return realloc_and_track(ptr, bytes, __builtin_return_address(0));
+  return realloc_and_track(ptr, bytes, PBL_RETURN_ADDRESS(0));
 }
 
 void kernel_free(void *ptr) {
@@ -206,11 +207,11 @@ void kernel_free(void *ptr) {
 }
 
 void *kernel_calloc(size_t count, size_t size) {
-  return calloc_and_track(count, size, __builtin_return_address(0));
+  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
 }
 
 char *kernel_strdup(const char *s) {
-  char *r = malloc_and_track(strlen(s) + 1, __builtin_return_address(0));
+  char *r = malloc_and_track(strlen(s) + 1, PBL_RETURN_ADDRESS(0));
   if (!r) {
     return NULL;
   }

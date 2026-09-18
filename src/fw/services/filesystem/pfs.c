@@ -611,7 +611,7 @@ static int prv_find_free_erase_region(bool skip_gc_region) {
 
     uint16_t free_pg;
     uint32_t sectors_active = prv_get_sector_page_status(erase_region, &free_pg);
-    if ((__builtin_popcount(sectors_active) == 0)) {
+    if ((PBL_POPCOUNT(sectors_active) == 0)) {
       return (erase_region * PFS_PAGES_PER_ERASE_SECTOR);
     }
   }
@@ -719,7 +719,7 @@ static status_t find_free_page(uint16_t *free_page, bool use_gc_allocator, bool 
       if (next_page != INVALID_PAGE) {
         // we have found a page which is already erased
         break;
-      } else if (__builtin_popcount(sectors_active) < PFS_PAGES_PER_ERASE_SECTOR) {
+      } else if (PBL_POPCOUNT(sectors_active) < PFS_PAGES_PER_ERASE_SECTOR) {
         // we can erase this region and have at least 1 free page after
         uint16_t sector_start_pg = curr_region * PFS_PAGES_PER_ERASE_SECTOR;
         garbage_collect_sector(&next_page, sector_start_pg, sectors_active);
@@ -1960,7 +1960,7 @@ done:
 
 static int prv_copy_sector_to_gc_file(uint16_t *free_page, uint16_t sector_start_page,
                                       uint32_t sectors_active) {
-  size_t num_entries = __builtin_popcount(sectors_active);
+  size_t num_entries = PBL_POPCOUNT(sectors_active);
 
   // We need space to store all the data for active pages, the
   // page header for all pages, and the GCData struct

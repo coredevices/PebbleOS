@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "pbl/kernel/compiler.h"
 
 // The kernel on the POSIX arch: threads are pthreads that run one at
 // a time under the kernel's scheduling decisions, and time only moves when a
@@ -27,7 +28,7 @@ PBL_NORETURN void os_assertion_failed_lr(const char *filename, int line, uint32_
 }
 
 #define STACK 4096
-static uint8_t s_stacks[8][STACK] __attribute__((aligned(8)));
+static uint8_t s_stacks[8][STACK] PBL_ALIGNED(8);
 static struct pbl_thread s_threads[8];
 
 static char s_trace[128];

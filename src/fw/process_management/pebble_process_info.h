@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 //! @addtogroup Foundation
 //! @{
@@ -196,7 +197,7 @@ typedef enum {
 //! changes, the major version should get bumped. When making a change (e.g. to the
 //! PebbleProcessInfo struct) that is backwards compatible (e.g. adding a field at the end), you
 //! should only bump the minor version.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t major; //!< "compatibility" version number
   uint8_t minor;
 } Version;
@@ -208,7 +209,7 @@ int version_compare(Version a, Version b);
 // WARNING: changes in this struct must be reflected in:
 // - tintin/waftools/inject_metadata.py
 // - iOS/PebblePrivateKit/PebblePrivateKit/PBBundle.m
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   char header[8];          //!< Sentinal value, should always be 'PBLAPP'
   Version struct_version;  //!< version of this structure's format
   Version sdk_version;     //!< version of the SDK used to build this process
@@ -225,7 +226,7 @@ typedef struct __attribute__((__packed__)) {
                            //!< on load
   uint32_t flags;          //!< Bitwise OR of PebbleProcessInfoFlags
   uint32_t num_reloc_entries; //!< The number of entries in the address relocation list
-  struct __attribute__((__packed__)) {
+  struct PBL_PACKED {
     uint8_t byte0;
     uint8_t byte1;
     uint8_t byte2;
@@ -249,7 +250,7 @@ typedef struct __attribute__((__packed__)) {
 } PebbleProcessInfo;
 
 //! @internal
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   char header[8];          //!< Sentinal value, should always be 'PBLAPP'
   Version struct_version;  //!< version of this structure's format
   Version sdk_version;     //!< version of the SDK used to build this process
@@ -267,7 +268,7 @@ typedef struct __attribute__((__packed__)) {
   uint32_t flags;          //!< Bitwise OR of PebbleProcessInfoFlags
   uint32_t reloc_list_start;  //!< The offset of the address relocation list
   uint32_t num_reloc_entries; //!< The number of entries in the address relocation list
-  struct __attribute__((__packed__)) {
+  struct PBL_PACKED {
     uint8_t byte0;
     uint8_t byte1;
     uint8_t byte2;

@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 void dbgserial_init(void);
 
@@ -17,7 +18,7 @@ void dbgserial_putchar_lazy(uint8_t c);
 void dbgserial_putstr(const char *str);
 
 void dbgserial_putstr_fmt(char *buffer, unsigned int buffer_size, const char *fmt, ...)
-    __attribute__((__format__(__printf__, 3, 4)));
+    PBL_FORMAT_PRINTF(3, 4);
 
 void dbgserial_change_baud_rate(uint32_t new_baud);
 

@@ -16,6 +16,7 @@
 
 #if MICRO_FAMILY_STM32F4
 #include <stm32f4xx.h>
+#include "pbl/kernel/compiler.h"
 #endif
 
 #ifdef CONFIG_QEMU
@@ -28,7 +29,7 @@ extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 #include <stdint.h>
 
 #ifdef CONFIG_SOC_NRF52
-static uint32_t __attribute__((section(".retained"))) retained[256 / 4];
+static uint32_t PBL_SECTION(".retained") retained[256 / 4];
 
 void retained_write(uint8_t id, uint32_t value) {
   retained[id] = value;
@@ -135,7 +136,7 @@ struct pb_version {
   uint8_t minor;
   uint8_t patch;
   uint8_t tweak;
-} __attribute__((packed));
+} PBL_PACKED;
 
 _Static_assert(sizeof(struct pb_version) == 8, "pb_version struct must be 8 bytes");
 

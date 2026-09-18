@@ -7,6 +7,7 @@
 #include "util/net.h"
 
 #include <string.h>
+#include "pbl/kernel/compiler.h"
 
 // -----------------------------------------------------------------------------
 //! Apple's iBeacon AD DATA format.
@@ -17,7 +18,7 @@ static const uint16_t COMPANY_ID_APPLE = 0x004c;
 static const uint8_t APPLE_TYPE_IBEACON = 0x02;
 static const uint8_t APPLE_IBEACON_LENGTH = 0x15;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   //! @see APPLE_AD_TYPE_IBEACON
   uint8_t type;
 

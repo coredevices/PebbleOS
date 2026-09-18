@@ -37,6 +37,9 @@ for f in files:
     ${sdk_dir}/include/pebble_process_info.h
     ${sdk_dir}/include/pebble_worker.h
     ${sdk_dir}/include/pebble_worker_sdk_version.h
+    ${sdk_dir}/include/pbl/kernel/compiler.h
+    ${sdk_dir}/include/pbl/kernel/compiler/gcc.h
+    ${sdk_dir}/include/pbl/kernel/compiler/clang.h
     ${sdk_dir}/lib/libpebble.a
   )
 

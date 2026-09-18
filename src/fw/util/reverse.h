@@ -4,13 +4,14 @@
 #pragma once
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 inline static uint32_t bswap32(uint32_t v) {
-  return __builtin_bswap32(v);
+  return PBL_BSWAP32(v);
 }
 
 inline static uint16_t bswap16(uint16_t v) {
-  return __builtin_bswap16(v);
+  return PBL_BSWAP16(v);
 }
 
 #ifdef __arm__

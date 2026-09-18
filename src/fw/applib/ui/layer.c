@@ -22,6 +22,7 @@
 
 #include <string.h>
 #include "pbl/util/testing.h"
+#include "pbl/kernel/compiler.h"
 
 void layer_init(Layer *layer, const GRect *frame) {
   *layer = (Layer){};
@@ -141,9 +142,9 @@ void layer_process_tree(Layer *node, void *ctx, LayerIteratorFunc iterator_func)
   layer_process_tree_level(node, ctx, iterator_func);
 }
 
-inline static Layer __attribute__((always_inline)) *
-    prv_layer_tree_traverse_next(Layer *stack[], int const stack_size, uint8_t *current_depth,
-                                 const bool descend) {
+static PBL_ALWAYS_INLINE Layer *prv_layer_tree_traverse_next(Layer *stack[], int const stack_size,
+                                                             uint8_t *current_depth,
+                                                             const bool descend) {
   const Layer *top_of_stack = stack[*current_depth];
 
   // goto first child
