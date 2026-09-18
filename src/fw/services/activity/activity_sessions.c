@@ -434,6 +434,15 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
                          "state_min: %" PRIu32 "",
                          sleep_data->total_minutes, sleep_data->restful_minutes,
                          sleep_data->cur_state, sleep_data->cur_state_elapsed_minutes);
+
+      PebbleEvent e = {
+        .type = PEBBLE_ACTIVITY_EVENT,
+        .activity_event = {
+          .type = PebbleActivityEvent_SleepStateChanged,
+          .sleep_state = sleep_data->cur_state,
+        },
+      };
+      event_put(&e);
     }
   }
 unlock:
