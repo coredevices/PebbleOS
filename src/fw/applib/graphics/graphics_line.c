@@ -7,10 +7,11 @@
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "util/swap.h"
+#include "pbl/util/testing.h"
 
 #define MINIMUM_PRECISE_STROKE_WIDTH 2
 
-MOCKABLE void graphics_line_draw_1px_non_aa(GContext *ctx, GPoint p0, GPoint p1) {
+PBL_T_MOCKABLE void graphics_line_draw_1px_non_aa(GContext *ctx, GPoint p0, GPoint p1) {
   p0.x += ctx->draw_state.drawing_box.origin.x;
   p1.x += ctx->draw_state.drawing_box.origin.x;
   p0.y += ctx->draw_state.drawing_box.origin.y;
@@ -54,7 +55,7 @@ MOCKABLE void graphics_line_draw_1px_non_aa(GContext *ctx, GPoint p0, GPoint p1)
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_line_draw_1px_aa(GContext *ctx, GPoint p0, GPoint p1) {
+PBL_T_MOCKABLE void graphics_line_draw_1px_aa(GContext *ctx, GPoint p0, GPoint p1) {
   // Implementation of Wu-Xiang fast anti-aliased line drawing algorithm
 
   // Points over which we're going to iterate adjusted to drawing_box
@@ -703,30 +704,31 @@ static void prv_draw_stroked_line_override_aa(GContext *ctx, GPointPrecise p0, G
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_line_draw_stroked_aa(GContext *ctx, GPoint p0, GPoint p1,
-                                            uint8_t stroke_width) {
+PBL_T_MOCKABLE void graphics_line_draw_stroked_aa(GContext *ctx, GPoint p0, GPoint p1,
+                                                  uint8_t stroke_width) {
   prv_adjust_stroked_line_width(&stroke_width);
   prv_draw_stroked_line_override_aa(ctx, GPointPreciseFromGPoint(p0), GPointPreciseFromGPoint(p1),
                                     stroke_width, true);
 }
 #endif // PBL_COLOR
 
-MOCKABLE void graphics_line_draw_stroked_non_aa(GContext *ctx, GPoint p0, GPoint p1,
-                                                uint8_t stroke_width) {
+PBL_T_MOCKABLE void graphics_line_draw_stroked_non_aa(GContext *ctx, GPoint p0, GPoint p1,
+                                                      uint8_t stroke_width) {
   prv_adjust_stroked_line_width(&stroke_width);
   prv_draw_stroked_line_override_aa(ctx, GPointPreciseFromGPoint(p0), GPointPreciseFromGPoint(p1),
                                     stroke_width, false);
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_line_draw_precise_stroked_aa(GContext *ctx, GPointPrecise p0,
-                                                    GPointPrecise p1, uint8_t stroke_width) {
+PBL_T_MOCKABLE void graphics_line_draw_precise_stroked_aa(GContext *ctx, GPointPrecise p0,
+                                                          GPointPrecise p1, uint8_t stroke_width) {
   prv_draw_stroked_line_override_aa(ctx, p0, p1, stroke_width, true);
 }
 #endif // PBL_COLOR
 
-MOCKABLE void graphics_line_draw_precise_stroked_non_aa(GContext *ctx, GPointPrecise p0,
-                                                        GPointPrecise p1, uint8_t stroke_width) {
+PBL_T_MOCKABLE void graphics_line_draw_precise_stroked_non_aa(GContext *ctx, GPointPrecise p0,
+                                                              GPointPrecise p1,
+                                                              uint8_t stroke_width) {
   prv_draw_stroked_line_override_aa(ctx, p0, p1, stroke_width, false);
 }
 

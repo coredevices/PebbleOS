@@ -18,6 +18,7 @@
 #include "gh_demo.h"
 #include "gh_demo_inner.h"
 #include "gh3x2x_demo_mp.h"
+#include "goodix_hba.h"
 #endif // CONFIG_GH3X2X_ALGO
 
 PBL_LOG_MODULE_DEFINE(driver_hrm_gh3x2x, CONFIG_DRIVER_HRM_LOG_LEVEL);
@@ -30,10 +31,26 @@ void gh3026_reset_pin_ctrl(uint8_t pin_level) {
 
 #ifdef CONFIG_GH3X2X_ALGO
 
-#define GH3X2X_LOG_ENABLE            0
-#define GH3X2X_FIFO_WATERMARK_CONFIG 80
-#define GH3X2X_HR_SAMPLING_RATE      25
-#define GH3X2X_HRV_SAMPLING_RATE     100
+// Defined in the Goodix algo demo layer (gh3x2x_demo_algo_call_hr.c); selects the HR algorithm's
+// activity "scene" (read on every frame). Not declared in any shipped header, forward-declared
+// here.
+extern void Gh3x2xSetHbaMode(GS32 nHbaScenario);
+
+#define GH3X2X_LOG_ENABLE 0
+// FIFO read batch size. In normal interrupt mode the hardware IRQ fires when this many samples
+// accumulate, so it sets the end-to-end latency and update cadence. Lower = snappier first reading
+// and finer-grained HR/SpO2 updates, at the cost of more frequent I2C bursts. The manager picks per
+// session (see hrm_enable's low_latency arg) which of these two to use.
+//
+// Default (background daily HR/SpO2 logging, the BLE relay, apps polling at a longer interval):
+// the shipped watermark, draining every ~3.2s at the 25 Hz rate.
+#define GH3X2X_FIFO_WATERMARK_DEFAULT 80
+// A foreground app showing live HR at a 1-2s update interval: IRQ every ~1s so on-screen values
+// update promptly, at 3.2x the FIFO-drain wakeups and I2C bursts. Only worth paying while someone
+// is watching.
+#define GH3X2X_FIFO_WATERMARK_LOW_LATENCY 25
+#define GH3X2X_HR_SAMPLING_RATE           25
+#define GH3X2X_HRV_SAMPLING_RATE          100
 // The Goodix HRV algorithm reports at most 4 RR intervals per result
 #define GH3X2X_HRV_MAX_RRI_PER_RESULT 4
 
@@ -115,6 +132,12 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
 #endif
 }
 
+// Absolute physiological bounds for a wrist HR reading. The Goodix algorithm can occasionally emit
+// a spurious out-of-range value (motion artifact, unstable signal right after a sensor restart);
+// treat anything outside this range as no valid reading so it never reaches the UI as a real BPM.
+#define GH3X2X_HR_MIN_PLAUSIBLE_BPM 25
+#define GH3X2X_HR_MAX_PLAUSIBLE_BPM 240
+
 void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
   HRMData hrm_data = {0};
 
@@ -125,6 +148,10 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
 
   if (!HRM->state->is_wear) {
     hrm_data.hrm_quality = HRMQuality_OffWrist;
+  } else if (bpm < GH3X2X_HR_MIN_PLAUSIBLE_BPM || bpm > GH3X2X_HR_MAX_PLAUSIBLE_BPM) {
+    // Implausible reading: report as worst quality with no BPM so consumers discard it.
+    PBL_LOG_WRN("GH3X2X dropping implausible BPM %" PRIu8, bpm);
+    hrm_data.hrm_quality = HRMQuality_Worst;
   } else {
     hrm_data.hrm_bpm = bpm;
 
@@ -144,30 +171,42 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
   hrm_manager_new_data_cb(&hrm_data);
 }
 
-void gh3x2x_spo2_result_report(uint8_t pct, uint8_t quality) {
+void gh3x2x_spo2_result_report(uint8_t pct, uint8_t confidence, uint8_t valid_level,
+                               int32_t invalid_flg, int32_t r_val) {
   HRMData hrm_data = {0};
 
-  PBL_LOG_DBG("GH3X2X SpO2 %" PRIu8 " (quality=%" PRIu8 ", wear=%u)", pct, quality,
-              HRM->state->is_wear);
+  // Surface the full algorithm result so we can tell a real reading from a rejected one. Fires on
+  // every SpO2 sample, so keep it at DBG.
+  PBL_LOG_DBG("GH3X2X SpO2 pct=%" PRIu8 " conf=%" PRIu8 " valid=%" PRIu8 " invalid=%" PRId32
+              " r=%" PRId32 " wear=%u",
+              pct, confidence, valid_level, invalid_flg, r_val, HRM->state->is_wear);
 
   hrm_data.features = HRMFeature_SpO2;
 
+  // Always carry the raw algorithm values through for debugging.
+  hrm_data.spo2_percent = pct;
+  hrm_data.spo2_confidence = confidence;
+  hrm_data.spo2_valid_level = valid_level;
+  hrm_data.spo2_invalid = (invalid_flg != 0);
+
+  // Map the algorithm confidence coefficient (0-100) onto our quality scale. Thresholds are tuned
+  // to what this sensor actually produces on the wrist; the old 90/98 cut-offs were unreachable, so
+  // nothing ever scored Good and no downstream gate fired. A reading the algorithm rejects
+  // (invalid_flg) is never treated as usable.
   if (!HRM->state->is_wear) {
     hrm_data.spo2_quality = HRMQuality_OffWrist;
+  } else if (invalid_flg) {
+    hrm_data.spo2_quality = HRMQuality_Worst;
+  } else if (confidence >= 85U) {
+    hrm_data.spo2_quality = HRMQuality_Excellent;
+  } else if (confidence >= 65U) {
+    hrm_data.spo2_quality = HRMQuality_Good;
+  } else if (confidence >= 45U) {
+    hrm_data.spo2_quality = HRMQuality_Acceptable;
+  } else if (confidence >= 25U) {
+    hrm_data.spo2_quality = HRMQuality_Poor;
   } else {
-    hrm_data.spo2_percent = pct;
-
-    if (quality >= 98U) {
-      hrm_data.spo2_quality = HRMQuality_Excellent;
-    } else if (quality >= 90U) {
-      hrm_data.spo2_quality = HRMQuality_Good;
-    } else if (quality >= 80U) {
-      hrm_data.spo2_quality = HRMQuality_Acceptable;
-    } else if (quality >= 70U) {
-      hrm_data.spo2_quality = HRMQuality_Poor;
-    } else {
-      hrm_data.spo2_quality = HRMQuality_Worst;
-    }
+    hrm_data.spo2_quality = HRMQuality_Worst;
   }
 
   hrm_manager_new_data_cb(&hrm_data);
@@ -496,7 +535,7 @@ void hrm_init(HRMDevice *dev) {
   dev->state->initialized = true;
 }
 
-bool hrm_enable(HRMDevice *dev, HRMFeature features) {
+bool hrm_enable(HRMDevice *dev, HRMFeature features, bool low_latency) {
 #ifdef CONFIG_GH3X2X_ALGO
   if (!dev->state->initialized) {
     return false;
@@ -504,7 +543,31 @@ bool hrm_enable(HRMDevice *dev, HRMFeature features) {
 
   s_hrm_int_flag = false;
 
-  dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SOFT_ADT_GREEN;
+  // One optical path at a time (green + red together looks orange). SpO2 runs red/IR alone:
+  // co-running SOFT_ADT shares IR frame time and perturbs the SpO2 AGC. With no ADT there is no
+  // wear signal, so assume worn - the activity scheduler gates on an accel off-wrist heuristic and
+  // a truly off-wrist sample comes back flagged invalid. HR uses the green path with green wear
+  // detection.
+  if (features & HRMFeature_SpO2) {
+    dev->state->work_mode = GH3X2X_FUNCTION_SPO2;
+    if (!dev->state->spo2_assumed_wear) {
+      // Remember the green ADT's last verdict so it survives the assumed-worn SpO2 window.
+      dev->state->wear_before_spo2 = dev->state->is_wear;
+      dev->state->spo2_assumed_wear = true;
+    }
+    dev->state->is_wear = true;
+  } else {
+    dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SOFT_ADT_GREEN;
+    if (dev->state->spo2_assumed_wear) {
+      // Back on the green path: restore the ADT's verdict rather than keep the assumed-worn value
+      // (the first HR samples after a SpO2 window would report as real BPMs with the watch off the
+      // wrist) or force off-wrist (the soft ADT is re-initialised on every start and only confirms
+      // wear a pass after the first HR result, so every window would open with off-wrist samples,
+      // marking the user off-wrist for sleep tracking and zeroing live workout HR).
+      dev->state->is_wear = dev->state->wear_before_spo2;
+      dev->state->spo2_assumed_wear = false;
+    }
+  }
 #ifdef CONFIG_MFG
   dev->state->work_mode = GH3X2X_FUNCTION_HR | GH3X2X_FUNCTION_SPO2 | GH3X2X_FUNCTION_SOFT_ADT_IR;
 #endif
@@ -525,7 +588,8 @@ bool hrm_enable(HRMDevice *dev, HRMFeature features) {
   }
 #endif
 
-  GH3X2X_FifoWatermarkThrConfig(GH3X2X_FIFO_WATERMARK_CONFIG);
+  GH3X2X_FifoWatermarkThrConfig(low_latency ? GH3X2X_FIFO_WATERMARK_LOW_LATENCY
+                                            : GH3X2X_FIFO_WATERMARK_DEFAULT);
   GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_NEED_FORCE_READ_FIFO);
   Gh3x2xDemoFunctionSampleRateSet(GH3X2X_FUNCTION_HR, GH3X2X_HR_SAMPLING_RATE);
 #ifdef CONFIG_HRM_HRV
@@ -555,4 +619,27 @@ void hrm_disable(HRMDevice *dev) {
 
 bool hrm_is_enabled(HRMDevice *dev) {
   return dev->state->enabled;
+}
+
+void hrm_set_activity_scene(HRMDevice *dev, HRMActivityScene scene) {
+#ifdef CONFIG_GH3X2X_ALGO
+  (void)dev;
+  // The Goodix EXCLUSIVE HR model ships per-activity "scenes" that are far more motion-tolerant
+  // than the default (e.g. high-HR running, high-intensity combine). Without this call the
+  // algorithm always runs the DEFAULT scene, which is where most movement-driven inaccuracy comes
+  // from. Gh3x2xSetHbaMode() writes a global the algorithm reads on every frame, so it is safe to
+  // flip live (no re-init) and idempotent.
+  static const GS32 s_scene_map[] = {
+    [HRMActivityScene_Default] = HBA_SCENES_DEFAULT,
+    [HRMActivityScene_Walk] = HBA_SCENES_WALKING_OUTSIDE,
+    [HRMActivityScene_Run] = HBA_SCENES_RUNNING_HIGH_HR,
+    [HRMActivityScene_HighIntensity] = HBA_SCENES_HIGH_INTENSITY_COMBINE,
+  };
+  const GS32 goodix_scene =
+      (scene <= HRMActivityScene_HighIntensity) ? s_scene_map[scene] : HBA_SCENES_DEFAULT;
+  Gh3x2xSetHbaMode(goodix_scene);
+#else
+  (void)dev;
+  (void)scene;
+#endif
 }

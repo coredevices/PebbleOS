@@ -10,7 +10,7 @@ void dbgserial_putstr(const char *str) {
   printf("%s\n", str);
 }
 
-FORMAT_PRINTF(3, 4)
+PBL_FORMAT_PRINTF(3, 4)
 void dbgserial_putstr_fmt(char *str, unsigned int size, const char *fmt, ...) {
   va_list fmt_args;
   va_start(fmt_args, fmt);

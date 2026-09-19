@@ -13,7 +13,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -35,7 +36,7 @@ static const uint8_t SYNC_DONE_RESPONSE_LENGTH = 3;
 
 static bool s_b2db_accepting_messages;
 
-T_STATIC BlobDBToken prv_new_token(void) {
+PBL_T_STATIC BlobDBToken prv_new_token(void) {
   static BlobDBToken next_token = 1; // 0 token should be avoided
   return next_token++;
 }
@@ -50,7 +51,8 @@ static const uint8_t *prv_read_token_and_response(const uint8_t *iter, BlobDBTok
   return iter;
 }
 
-T_STATIC void prv_send_response(CommSession *session, uint8_t *response, uint8_t response_length) {
+PBL_T_STATIC void prv_send_response(CommSession *session, uint8_t *response,
+                                    uint8_t response_length) {
   comm_session_send_data(session, BLOB_DB2_ENDPOINT_ID, response, response_length,
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
@@ -62,7 +64,7 @@ static void prv_handle_get_dirty_databases(CommSession *session, const uint8_t *
     return;
   }
 
-  struct PACKED DirtyDatabasesResponseMsg {
+  struct PBL_PACKED DirtyDatabasesResponseMsg {
     BlobDBCommand cmd;
     BlobDBToken token;
     BlobDBResponse result;
@@ -87,7 +89,7 @@ static void prv_handle_start_sync(CommSession *session, const uint8_t *data, uin
     return;
   }
 
-  struct PACKED StartSyncResponseMsg {
+  struct PBL_PACKED StartSyncResponseMsg {
     BlobDBCommand cmd;
     BlobDBToken token;
     BlobDBResponse result;
@@ -181,7 +183,7 @@ static void prv_handle_sync_done_response(CommSession *session, const uint8_t *d
 static void prv_handle_version(CommSession *session, const uint8_t *data, uint32_t length) {
   BlobDBToken token = *(BlobDBToken *)data;
 
-  struct PACKED BlobDBVersionResponseMsg {
+  struct PBL_PACKED BlobDBVersionResponseMsg {
     BlobDBCommand command;
     BlobDBToken token;
     BlobDBResponse result;
@@ -208,7 +210,7 @@ static void prv_handle_dirty_all(CommSession *session, const uint8_t *data, uint
   BlobDBId db_id;
   endpoint_private_read_token_db_id(data, &token, &db_id);
 
-  struct PACKED DirtyAllResponseMsg {
+  struct PBL_PACKED DirtyAllResponseMsg {
     BlobDBCommand cmd;
     BlobDBToken token;
     BlobDBResponse result;
@@ -231,7 +233,7 @@ static void prv_handle_dirty_all(CommSession *session, const uint8_t *data, uint
 
 static void prv_send_error_response(CommSession *session, BlobDBCommand cmd, const uint8_t *data,
                                     BlobDBResponse response_code) {
-  struct PACKED ErrorResponseMsg {
+  struct PBL_PACKED ErrorResponseMsg {
     BlobDBCommand cmd;
     BlobDBToken token;
     BlobDBResponse result;
@@ -285,7 +287,7 @@ static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBComman
 static uint16_t prv_send_write_writeback(BlobDBCommand cmd, BlobDBId db_id, time_t last_updated,
                                          const uint8_t *key, int key_len, const uint8_t *val,
                                          int val_len) {
-  struct PACKED WritebackMetadata {
+  struct PBL_PACKED WritebackMetadata {
     BlobDBCommand cmd;
     BlobDBToken token;
     BlobDBId db_id;
@@ -332,7 +334,7 @@ BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id, time_t last_updated,
 }
 
 void blob_db_endpoint_send_sync_done(BlobDBId db_id) {
-  struct PACKED SyncDoneMsg {
+  struct PBL_PACKED SyncDoneMsg {
     BlobDBCommand cmd;
     BlobDBToken token;
     BlobDBId db_id;

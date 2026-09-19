@@ -12,7 +12,7 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/units.h"
 
 #include <stdio.h>
@@ -43,7 +43,7 @@ static const char *WEEKDAY_NAMES[] = {
 #define CURRENT_SLEEP_DATA_VERSION    1
 #define CURRENT_HR_ZONE_DATA_VERSION  1
 
-typedef struct PACKED MovementData {
+typedef struct PBL_PACKED MovementData {
   uint32_t version;
   uint32_t last_processed_timestamp;
   uint32_t steps;
@@ -55,7 +55,7 @@ typedef struct PACKED MovementData {
 _Static_assert(offsetof(MovementData, version) == 0, "Version not at the start of MovementData");
 _Static_assert(sizeof(MovementData) % sizeof(uint32_t) == 0, "MovementData size is invalid");
 
-typedef struct PACKED SleepData {
+typedef struct PBL_PACKED SleepData {
   uint32_t version;
   uint32_t last_processed_timestamp;
   uint32_t sleep_duration;
@@ -71,7 +71,7 @@ _Static_assert(offsetof(SleepData, version) == 0, "Version not at the start of S
 _Static_assert(sizeof(SleepData) % sizeof(uint32_t) == 0, "SleepData size is invalid");
 
 // The phone doesn't send us Zone0 minutes
-typedef struct PACKED HeartRateZoneData {
+typedef struct PBL_PACKED HeartRateZoneData {
   uint32_t version;
   uint32_t last_processed_timestamp;
   uint32_t num_zones;

@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <clar.h>
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdbool.h>
 
-NORETURN sys_exit(void) {
+PBL_NORETURN void sys_exit(void) {
   cl_assert(false);
   while (true) {
   }

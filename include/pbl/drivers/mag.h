@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
 //! @internal
 //! Structure containing 3-axis magnetometer data
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! magnetic field along the x axis
   int16_t x;
   //! magnetic field along the y axis

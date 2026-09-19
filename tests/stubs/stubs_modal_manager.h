@@ -5,33 +5,33 @@
 
 #include "applib/ui/window_stack_private.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-WindowStack *WEAK modal_manager_get_window_stack(ModalPriority priority) {
+WindowStack *PBL_WEAK modal_manager_get_window_stack(ModalPriority priority) {
   return NULL;
 }
 
-Window *WEAK modal_manager_get_top_window(void) {
+Window *PBL_WEAK modal_manager_get_top_window(void) {
   return NULL;
 }
 
-ClickManager *WEAK modal_manager_get_click_manager(void) {
+ClickManager *PBL_WEAK modal_manager_get_click_manager(void) {
   return NULL;
 }
 
-void WEAK modal_manager_pop_all(void) {
+void PBL_WEAK modal_manager_pop_all(void) {
   return;
 }
 
-bool WEAK modal_manager_get_enabled(void) {
+bool PBL_WEAK modal_manager_get_enabled(void) {
   return true;
 }
 
-void WEAK modal_manager_set_enabled(bool enabled) {
+void PBL_WEAK modal_manager_set_enabled(bool enabled) {
   return;
 }
 
-ModalProperty WEAK modal_manager_get_properties(void) {
+ModalProperty PBL_WEAK modal_manager_get_properties(void) {
   return ModalPropertyDefault;
 }
 

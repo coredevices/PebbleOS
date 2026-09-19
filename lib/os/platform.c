@@ -3,7 +3,7 @@
 
 #include "pbl/os/malloc.h"
 #include "pbl/os/assert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,31 +12,31 @@
 // These functions assume a working C standard library is linked into the program.
 // For programs where this isn't the case (e.g. the Pebble FW),
 // alternate implementations need to be provided.
-// The functions are defined as WEAK so they may be easily overridden.
+// The functions are defined as PBL_WEAK so they may be easily overridden.
 
-WEAK void os_log(const char *filename, int line, const char *string) {
+PBL_WEAK void os_log(const char *filename, int line, const char *string) {
   printf("%s:%d %s\n", filename, line, string);
 }
 
-WEAK NORETURN os_assertion_failed(const char *filename, int line) {
+PBL_WEAK PBL_NORETURN void os_assertion_failed(const char *filename, int line) {
   os_log(filename, line, "*** OS ASSERT FAILED");
   exit(EXIT_FAILURE);
 }
 
-WEAK NORETURN os_assertion_failed_lr(const char *filename, int line, uint32_t lr) {
+PBL_WEAK PBL_NORETURN void os_assertion_failed_lr(const char *filename, int line, uint32_t lr) {
   os_assertion_failed(filename, line);
 }
 
-WEAK void *os_malloc(size_t size) {
+PBL_WEAK void *os_malloc(size_t size) {
   return malloc(size);
 }
 
-WEAK void *os_malloc_check(size_t size) {
+PBL_WEAK void *os_malloc_check(size_t size) {
   void *ptr = malloc(size);
   OS_ASSERT(ptr);
   return ptr;
 }
 
-WEAK void os_free(void *ptr) {
+PBL_WEAK void os_free(void *ptr) {
   free(ptr);
 }

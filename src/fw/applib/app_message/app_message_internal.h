@@ -6,7 +6,7 @@
 #include "applib/app_message/app_message.h"
 #include "applib/app_timer.h"
 #include "pbl/services/app_message/app_message_sender.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
 typedef struct CommSession CommSession;
@@ -21,13 +21,13 @@ typedef enum {
   CMD_NACK = 0x7f,
 } AppMessageCmd;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppMessageCmd command : 8;
   uint8_t transaction_id;
 } AppMessageHeader;
 
 //! The actual wire format of an app message message
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppMessageHeader header;
   Uuid uuid;
   Dictionary dictionary; //!< Variable length!
@@ -37,7 +37,7 @@ typedef struct PACKED {
 
 #define APP_MSG_8K_DICT_SIZE (sizeof(Dictionary) + sizeof(Tuple) + (8 * 1024))
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppMessageHeader header;
 } AppMessageAck;
 
@@ -84,7 +84,7 @@ typedef struct AppMessageCtxOutbox {
 
   AppTimer *ack_nack_timer;
 
-  struct PACKED {
+  struct PBL_PACKED {
     AppMessagePhaseOut phase : 8;
     uint8_t transaction_id;
     uint16_t not_ready_throttle_ms; // used for throttling app task when outbox is not ready

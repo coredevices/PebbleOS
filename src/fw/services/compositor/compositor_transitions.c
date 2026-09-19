@@ -93,6 +93,18 @@ void compositor_transition_pdcs_animation_update(GContext *ctx, GDrawCommandSequ
                                      &processor.draw_command_processor);
 }
 
+//! Legacy apps render into a framebuffer smaller than the display, so the 1:1 copies below can't
+//! place them. Route those through the compositor copy that applies the bezel or scaling instead.
+static bool prv_app_fb_fill_legacy_app(const GRect *rect) {
+  const GBitmap app_framebuffer = compositor_get_app_framebuffer_as_bitmap();
+  const GBitmap framebuffer = compositor_get_framebuffer_as_bitmap();
+  if (gsize_equal(&app_framebuffer.bounds.size, &framebuffer.bounds.size)) {
+    return false;
+  }
+  compositor_scaled_app_fb_copy(*rect, true /* copy_relative_to_origin */);
+  return true;
+}
+
 //! Copy horizontal lines from the app framebuffer to the provided framebuffer
 //! This is basically duplicated from prv_assign_horizontal_line_raw() in graphics_private_raw.c
 void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_3 x1,
@@ -100,6 +112,10 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
+
+  if (prv_app_fb_fill_legacy_app(&GRect(x1.integer, y, x2.integer - x1.integer + 1, 1))) {
+    return;
+  }
 
   // Clip the line to the bitmap data row's range, taking into account fractions
   const GBitmapDataRowInfo destination_data_row_info = gbitmap_get_data_row_info(framebuffer, y);
@@ -164,6 +180,10 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
+
+  if (prv_app_fb_fill_legacy_app(&GRect(x, y1.integer, 1, y2.integer - y1.integer + 1))) {
+    return;
+  }
 
   GBitmap app_framebuffer = compositor_get_app_framebuffer_as_bitmap();
   // Both source and destination must use the same format (native bitmap format)

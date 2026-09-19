@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "system/rtc_registers.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // NOTE: We include the reboot reason in analytics and the tools we use to analyze the analytics are
 // dependent on the position and ordering of these enumerated values. To keep the analysis tools
@@ -45,7 +45,7 @@ typedef enum {
   RebootReasonCode_CoreDumpEntryFailed,
 } RebootReasonCode;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   RebootReasonCode code : 8;
   bool restarted_safely : 1;
   uint8_t padding : 7;

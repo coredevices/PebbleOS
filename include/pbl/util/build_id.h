@@ -6,10 +6,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! The linker inserts the build id as an "elf external note" structure:
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t name_length;
   uint32_t data_length;
   uint32_t type;  // NT_GNU_BUILD_ID = 3

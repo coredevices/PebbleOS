@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "resource/timeline_resource_ids.auto.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // Chunked dictionary 1/2 sent by ANCS (w/header)
 // 00 97 00 00 00 00 13 00  63 6f 6d 2e 61 70 70 6c   ........ com.appl
@@ -382,7 +382,7 @@ static const uint8_t s_loading_response[] = {
 // 66 66 69 6c 69 61 74 69 6f 6e 3a 20 55 6e 69 76 ffiliati on: Univ
 // 65 72 73 69 74 79 20 6f 66 20 56 69 72 67 69 6e ersity o f Virgin
 // 69 61 20 48 6f 05 ia Ho.
-typedef struct PACKED s_sample_memory_layout {
+typedef struct PBL_PACKED s_sample_memory_layout {
   const uint8_t attribute_data[310];
   const uint8_t out_of_bounds_memory[6];
 } s_sample_memory_layout;

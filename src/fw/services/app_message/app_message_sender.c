@@ -10,6 +10,7 @@
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
 #include "util/net.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
 
@@ -138,7 +139,7 @@ static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
   app_outbox_service_consume_message(outbox_message, status);
 }
 
-T_STATIC const SessionSendJobImpl s_app_message_send_job_impl = {
+PBL_T_STATIC const SessionSendJobImpl s_app_message_send_job_impl = {
   .get_length = prv_send_job_impl_get_length,
   .copy = prv_send_job_impl_copy,
   .get_read_pointer = prv_send_job_impl_get_read_pointer,

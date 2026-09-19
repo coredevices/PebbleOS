@@ -7,7 +7,7 @@
 #include "layout_layer.h"
 #include "timeline_layout.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define HEALTH_METRIC_BUFFER_LENGTH 128
 
@@ -19,7 +19,7 @@ typedef enum HealthCardType {
 } HealthCardType;
 
 //! Shared with insights to allow the app to launch into the appropriate card
-typedef struct PACKED HealthLaunchArgs {
+typedef struct PBL_PACKED HealthLaunchArgs {
   union {
     struct {
       HealthCardType card_type

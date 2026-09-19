@@ -254,7 +254,7 @@ static void prv_assert_sent_reset_request(BLECharacteristic characteristic) {
 }
 
 static void prv_assert_sent_reset_complete(BLECharacteristic characteristic) {
-  struct PACKED {
+  struct PBL_PACKED {
     PPoGATTPacketType type : 3;
     uint8_t sn : PPOGATT_SN_BITS;
     PPoGATTResetCompleteClientIDPayloadV1 payload;

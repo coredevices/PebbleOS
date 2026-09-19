@@ -7,6 +7,7 @@
 #include "hrm_manager.h"
 
 #include "applib/event_service_client.h"
+#include "pbl/services/hrm/hrm_activity_scene.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "pbl/kernel/mutex.h"
@@ -19,9 +20,15 @@
 
 typedef void (*HRMSubscriberCallback)(PebbleHRMEvent *event, void *context);
 
-// We need roughly this many seconds of "spin up" time to get a good reading from the HR sensor
-// right after turning it on
+// Seconds of "spin up" time needed for a good reading right after turning the sensor on. Besides
+// pre-warming the sensor ahead of a future-due subscriber, this is subtracted from every
+// subscriber's remaining time, so a subscriber with an interval within it is always due and keeps
+// the sensor on continuously rather than paying an algorithm restart every interval.
 #define HRM_SENSOR_SPIN_UP_SEC 20
+
+// A foreground app polling at or under this interval is showing live readings and gets the
+// low-latency FIFO cadence; anything slower takes the default, cheaper cadence.
+#define HRM_LOW_LATENCY_MAX_INTERVAL_S 2
 
 typedef struct AccelServiceState AccelServiceState;
 
@@ -38,6 +45,8 @@ typedef struct HRMSubscriberState {
   uint32_t update_interval_s; // How often to send updates to this subscriber
   time_t expire_utc;          // This subscription will expire at this time
   bool sent_expiration_event; // true after we've sent a HRMEvent_SubscriptionExpiring event
+  bool low_latency;           // true if this consumer needs the prompt FIFO cadence (a foreground
+                              // app showing live readings); false for background logging
   HRMFeature features;        // what features the subscriber is interested in
 
   RtcTicks
@@ -53,8 +62,9 @@ typedef struct HRMSubscriberState {
 #define HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE 4
 
 // After every HRM_CHECK_SENSOR_DISABLE_COUNT calls to hrm_manager_new_data_cb(), we check to see
-// if we should disable the sensor.
-#define HRM_CHECK_SENSOR_DISABLE_COUNT 10
+// if we should disable the sensor. Kept low so a served subscriber doesn't keep the LED lit (and
+// block the other optical path) for many seconds of extra on-time.
+#define HRM_CHECK_SENSOR_DISABLE_COUNT 3
 
 // After this many consecutive hrm_enable failures, stop trying until reboot
 #define HRM_MAX_ENABLE_FAILURES 3
@@ -89,12 +99,20 @@ struct HRMManagerState {
 
   HRMFeature enabled_features; // feature union the sensor was last enabled with
 
-  RtcTicks sensor_on_since_ticks; // tick count when the sensor was last turned on; 0 while off
+  RtcTicks sensor_on_since_ticks; // tick count when the sensor was last turned on (also when the
+                                  // current optical path was enabled, since a path switch cycles
+                                  // the sensor); 0 while off
   bool unserved_timeout_logged;   // limits the unserved-timeout warning to once per on-stretch
 
   bool enabled_run_level;      // True if the current run_level (LowPower, Stationary,
                                // Normal, etc.) allows the sensor to be turned on
   bool enabled_charging_state; // Ture if we aren't plugged in / charging
+
+  HRMFeature active_features; // Features the sensor is sampling now (0 when off). Only one
+                              // optical path (green BPM/HRV or red/IR SpO2) runs at a time.
+
+  HRMActivityScene activity_scene; // Activity context for the sensor's HR algorithm (motion-tuned
+                                   // model). Re-applied whenever the sensor powers on.
 };
 
 //! Subscription for KernelBG or KernelMain clients.
@@ -107,9 +125,19 @@ struct HRMManagerState {
 //! @param expire_s after this many seconds, this subscription will automatically expire. Pass 0
 //!   for no expiration.
 //! @param features A bitfield of the features the subscriber would like updates for
+//! @param low_latency true if this consumer shows live data and needs prompt updates; false for
+//!   background logging and streaming, which lets the sensor drain the FIFO less often to save
+//!   power. App subscriptions (via sys_hrm_manager_app_subscribe) derive this from their task and
+//!   update interval.
 //! @param callback the KernelBG callback to call when an HRM event is available
 //! @param context the context pointer for the callback
 //! @return the HRMSessionRef for this subscription. NULL on failure
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
-                                                  HRMSubscriberCallback callback, void *context);
+                                                  bool low_latency, HRMSubscriberCallback callback,
+                                                  void *context);
+
+//! Set the activity context the HR algorithm should optimize for (see HRMActivityScene). Stored and
+//! re-applied on every sensor power-on, so callers don't need to re-arm it across sensor cycles.
+//! Safe to call from any task.
+void hrm_manager_set_activity_scene(HRMActivityScene scene);

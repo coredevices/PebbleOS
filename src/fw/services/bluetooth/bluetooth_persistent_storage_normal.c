@@ -18,7 +18,7 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "pbl/util/string.h"
 
@@ -38,7 +38,7 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 //! The BtPersistBonding*Data structs can never shrink, only grow
 
 //! Stores data about a remote BT classic device
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   BTDeviceAddress addr;
   SM128BitKey link_key;
   char name[BT_DEVICE_NAME_BUFFER_SIZE];
@@ -47,7 +47,7 @@ typedef struct PACKED {
 } BtPersistBondingBTClassicData;
 
 //! Stores data about a remote BLE device
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   bool supports_ancs : 1;
   bool is_gateway : 1;
   bool requires_address_pinning : 1;
@@ -56,23 +56,23 @@ typedef struct PACKED {
   BtPersistLEPairingInfo pairing_info;
 } BtPersistBondingBLEData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   BtPersistBondingType type : 8;
 
-  union PACKED {
+  union PBL_PACKED {
     BtPersistBondingBTClassicData bt_classic_data;
     BtPersistBondingBLEData ble_data;
   };
 } BtPersistBondingData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   BTDeviceInternal peer;
   uint16_t chr_val_handle;
   uint16_t flags;
   unsigned value_changed : 1;
 } BtPersistCCCDData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   BTCCCDID id;
   BtPersistCCCDData data;
 } BtPersistCCCD;

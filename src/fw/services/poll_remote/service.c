@@ -7,7 +7,7 @@
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 PBL_LOG_MODULE_DEFINE(service_poll_remote, CONFIG_SERVICE_POLL_REMOTE_LOG_LEVEL);
 
@@ -27,25 +27,25 @@ typedef enum {
 } PollRemoteCommand;
 
 // Deprecated -- used to set the mail poll interval
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t cmd;
   uint8_t interval_minutes;
 } PollLegacySetIntervalMessage;
 
 // Poll a service at a specific interval
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PollRemoteCommand cmd;
   PollRemoteService service;
   uint8_t interval_minutes;
 } PollSetIntervalMessage;
 
 // Request to poll a service now
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PollRemoteCommand cmd;
   PollRemoteService service;
 } PollRequestMessage;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PollRemoteCommand cmd;
   PollRemoteService service;
 } PollRemoteMessage;

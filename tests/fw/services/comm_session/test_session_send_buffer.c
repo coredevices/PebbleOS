@@ -14,11 +14,12 @@
 #include "pbl/kernel/sem.h"
 
 #include "clar.h"
+#include "pbl/util/testing.h"
 
 extern SendBuffer *comm_session_send_buffer_create(bool is_system);
 extern void comm_session_send_buffer_destroy(SendBuffer *sb);
 extern struct pbl_sem *comm_session_send_buffer_write_semaphore(void);
-extern T_STATIC const SessionSendJobImpl s_default_kernel_send_job_impl;
+extern PBL_T_STATIC const SessionSendJobImpl s_default_kernel_send_job_impl;
 extern void comm_default_kernel_sender_deinit(void);
 extern void comm_session_send_queue_cleanup(CommSession *session);
 

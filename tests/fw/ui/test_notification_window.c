@@ -92,7 +92,7 @@
 
 // Local replacements for stubs_alerts_preferences.h so the notification status
 // bar style is settable per test (a strong override cannot share a TU with the
-// header's WEAK definition).
+// header's PBL_WEAK definition).
 static NotificationStatusBarStyle s_notification_status_bar_style =
     NotificationStatusBarStyle_Default;
 
@@ -122,6 +122,10 @@ bool alerts_preferences_dnd_get_auto_dismiss(void) {
 
 bool alerts_preferences_get_notification_vibe_delay(void) {
   return false;
+}
+
+PreferredContentSize alerts_preferences_get_notification_content_size(void) {
+  return NotificationContentSizeSystem;
 }
 
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {

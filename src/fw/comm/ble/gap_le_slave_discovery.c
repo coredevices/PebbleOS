@@ -26,7 +26,7 @@
 #include <bluetooth/pebble_pairing_service.h>
 #include <bluetooth/bluetooth_types.h>
 #include <pbl/btutil/bt_uuid.h>
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 
 static GAPLEAdvertisingJobRef s_discovery_advert_job;
 
@@ -84,7 +84,7 @@ static void prv_schedule_ad_job(void) {
   ble_ad_start_scan_response(ad);
 
   // Add serial number in a Manufacturer Specific AD Type:
-  struct PACKED ManufacturerSpecificData {
+  struct PBL_PACKED ManufacturerSpecificData {
     uint8_t payload_type;
     char serial_number[MFG_SERIAL_NUMBER_SIZE];
     uint8_t hw_platform;

@@ -15,7 +15,8 @@
 #include "process_management/process_manager.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "vibes.h"
@@ -106,8 +107,8 @@ static void prv_scrollbar_kick(MenuLayer *menu_layer) {
 #define MENU_LAYER_SCROLLBAR_MIN_THUMB_SWEEP DEG_TO_TRIGANGLE(10)
 
 //! Thumb start/end angles for the curved scrollbar; false if the content doesn't scroll.
-T_STATIC bool prv_scrollbar_thumb_angles(MenuLayer *menu_layer, int16_t content_top_y,
-                                         int32_t *angle_start, int32_t *angle_end) {
+PBL_T_STATIC bool prv_scrollbar_thumb_angles(MenuLayer *menu_layer, int16_t content_top_y,
+                                             int32_t *angle_start, int32_t *angle_end) {
   const GSize frame_size = menu_layer->scroll_layer.layer.frame.size;
   const int16_t content_h = scroll_layer_get_content_size(&menu_layer->scroll_layer).h;
   const int16_t scrollable_h = content_h - frame_size.h;
@@ -175,7 +176,7 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
 }
 #else
 //! Scrollbar thumb rect in content-space coordinates (the space menu_layer_update_proc draws in).
-T_STATIC GRect prv_scrollbar_thumb_rect(MenuLayer *menu_layer, int16_t content_top_y) {
+PBL_T_STATIC GRect prv_scrollbar_thumb_rect(MenuLayer *menu_layer, int16_t content_top_y) {
   const GSize frame_size = menu_layer->scroll_layer.layer.frame.size;
   const int16_t content_h = scroll_layer_get_content_size(&menu_layer->scroll_layer).h;
   const int16_t scrollable_h = content_h - frame_size.h;
@@ -833,8 +834,8 @@ static void prv_menu_layer_walk_upward_from_iterator(MenuIterator *it) {
   } // for() sections
 }
 
-static void NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ctx, Layer *bg_layer,
-                                         bool highlight) {
+static void PBL_NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ctx, Layer *bg_layer,
+                                             bool highlight) {
   GDrawState prev_state = graphics_context_get_drawing_state(ctx);
 
   const GRect *bounds = &bg_layer->bounds;

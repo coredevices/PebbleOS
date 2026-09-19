@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <bluetooth/sm_types.h>
 
 //! Packed, because this is serialized for the host-controller protocol.
-typedef struct PACKED BleBonding {
+typedef struct PBL_PACKED BleBonding {
   SMPairingInfo pairing_info;
   //! True if the remote device is capable of talking PPoGATT.
   bool is_gateway : 1;
@@ -26,7 +26,7 @@ typedef struct PACKED BleBonding {
   BTDeviceAddress pinned_address;
 } BleBonding;
 
-typedef struct PACKED BleCCCD {
+typedef struct PBL_PACKED BleCCCD {
   //! The peer device.
   BTDeviceInternal peer;
   //! The characteristic value handle that this CCCD is associated with.

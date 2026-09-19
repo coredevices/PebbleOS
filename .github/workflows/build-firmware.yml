@@ -129,6 +129,10 @@ jobs:
           cp build/pebbleos_loghash_dict.json \
             "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}_loghash_dict.json"
 
+      - name: Copy translation source
+        if: matrix.board == 'asterix'
+        run: cp build/pebbleos.pot artifacts/
+
       - name: Store
         uses: actions/upload-artifact@v7
         with:
@@ -151,6 +155,29 @@ jobs:
           aws s3 cp build/pebbleos_loghash_dict.json \
             "s3://${{ vars.LOG_HASH_BUCKET_NAME }}/${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json" \
             --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
+
+  upload-translation-source:
+    needs: build-firmware
+    if: >-
+      github.repository == 'coredevices/PebbleOS' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: firmware-asterix
+      - name: Upload translation source to Weblate
+        env:
+          WEBLATE_SOURCE_URL: ${{ vars.WEBLATE_SOURCE_URL }}
+          WEBLATE_TOKEN: ${{ secrets.WEBLATE_TOKEN }}
+        run: |
+          sed -i '/^"POT-Creation-Date:/d' pebbleos.pot
+          curl --silent --show-error --fail-with-body --proto '=https' \
+            --header "Authorization: Token $WEBLATE_TOKEN" \
+            --form-string 'method=source' --form 'file=@pebbleos.pot' \
+            "$WEBLATE_SOURCE_URL" | jq -e '.result == true'
 
   merge-firmware:
     needs: build-firmware

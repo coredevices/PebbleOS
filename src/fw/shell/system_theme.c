@@ -8,6 +8,7 @@
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 typedef struct SystemThemeTextStyle {
   const char *fonts[TextStyleFontCount];
@@ -180,9 +181,8 @@ static const PreferredContentSize s_platform_default_content_sizes[] = {
   [PlatformTypeGabbro] = PreferredContentSizeLarge,
 };
 
-T_STATIC PreferredContentSize prv_convert_content_size_between_platforms(PreferredContentSize size,
-                                                                         PlatformType from_platform,
-                                                                         PlatformType to_platform) {
+PBL_T_STATIC PreferredContentSize prv_convert_content_size_between_platforms(
+    PreferredContentSize size, PlatformType from_platform, PlatformType to_platform) {
   const size_t num_platform_default_content_sizes = ARRAY_LENGTH(s_platform_default_content_sizes);
   PBL_ASSERTN(from_platform < num_platform_default_content_sizes);
   PBL_ASSERTN(to_platform < num_platform_default_content_sizes);

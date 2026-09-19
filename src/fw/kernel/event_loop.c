@@ -34,7 +34,7 @@
 #include "pbl/services/battery/battery_monitor.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/compositor/compositor.h"
-#include "pbl/services/cron.h"
+#include <pbl/cron/cron.h>
 #include "pbl/services/debounced_connection_service.h"
 #include "pbl/services/ecompass.h"
 #include "pbl/services/event_service.h"
@@ -230,7 +230,7 @@ static void launcher_handle_button_event(PebbleEvent *e) {
 
 // This function should handle very basic events (Button clicks, app launching, battery events,
 // crashes, etc.
-static NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
+static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
   switch (e->type) {
     case PEBBLE_BUTTON_DOWN_EVENT:
     case PEBBLE_BUTTON_UP_EVENT:
@@ -420,14 +420,14 @@ static NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
   }
 }
 
-static NOINLINE void prv_handle_app_fetch_request_event(PebbleEvent *e) {
+static PBL_NOINLINE void prv_handle_app_fetch_request_event(PebbleEvent *e) {
   AppInstallEntry entry;
   PBL_ASSERTN(app_install_get_entry_for_install_id(e->app_fetch_request.id, &entry));
   bool has_worker = app_install_entry_has_worker(&entry);
   app_fetch_binaries(&entry.uuid, e->app_fetch_request.id, has_worker);
 }
 
-static NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
+static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
   switch (e->type) {
     case PEBBLE_APP_OUTBOX_MSG_EVENT:
       e->app_outbox_msg.callback(e->app_outbox_msg.data);
@@ -468,7 +468,8 @@ static NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
           ABS(set_time_info->utc_time_delta) > 15) {
         alarm_handle_clock_change();
         wakeup_handle_significant_clock_change();
-        cron_service_handle_clock_change(set_time_info);
+        pbl_cron_handle_clock_change(set_time_info->utc_time_delta, set_time_info->gmt_offset_delta,
+                                     set_time_info->dst_changed);
       }
 
       // Always reschedule wakeup timers on any time change to prevent timers from
@@ -514,8 +515,8 @@ static void event_loop_upkeep(void) {
   modal_manager_event_loop_upkeep();
 }
 
-// NOTE: Marking this as NOINLINE saves us 150+ bytes on the KernelMain stack
-static void NOINLINE prv_handle_event(PebbleEvent *e) {
+// NOTE: Marking this as PBL_NOINLINE saves us 150+ bytes on the KernelMain stack
+static void PBL_NOINLINE prv_handle_event(PebbleEvent *e) {
   prv_minimal_event_handler(e);
 
   // FIXME: This logic is pretty wacky, but I'm going to leave it as is to refactor later out of
@@ -536,7 +537,7 @@ static void NOINLINE prv_handle_event(PebbleEvent *e) {
   shell_event_loop_handle_event(e);
 }
 
-static NOINLINE void prv_launcher_main_loop_init(void) {
+static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   s_back_hold_timer = new_timer_create();
 
   process_manager_init();

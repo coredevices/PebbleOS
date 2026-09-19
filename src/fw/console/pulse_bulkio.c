@@ -9,7 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/crc32.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
@@ -37,36 +37,36 @@
 #define BULKIO_RESP_MALFORMED_CMD  (192)
 #define BULKIO_RESP_INTERNAL_ERROR (193)
 
-typedef struct PACKED Command {
+typedef struct PBL_PACKED Command {
   uint8_t opcode;
   union {
     uint8_t fd;
-    struct PACKED OpenCommand {
+    struct PBL_PACKED OpenCommand {
       uint8_t domain;
       uint8_t data[0];
     } open;
-    struct PACKED CloseCommand {
+    struct PBL_PACKED CloseCommand {
       uint8_t fd;
     } close;
-    struct PACKED ReadCommand {
+    struct PBL_PACKED ReadCommand {
       uint8_t fd;
       uint32_t address;
       uint32_t length;
     } read;
-    struct PACKED WriteCommand {
+    struct PBL_PACKED WriteCommand {
       uint8_t fd;
       uint32_t address;
       uint8_t data[0];
     } write;
-    struct PACKED CRCCommand {
+    struct PBL_PACKED CRCCommand {
       uint8_t fd;
       uint32_t address;
       uint32_t length;
     } crc;
-    struct PACKED StatCommand {
+    struct PBL_PACKED StatCommand {
       uint8_t fd;
     } stat;
-    struct PACKED EraseCommand {
+    struct PBL_PACKED EraseCommand {
       uint8_t domain;
       uint8_t cookie;
       uint8_t data[0];
@@ -74,31 +74,31 @@ typedef struct PACKED Command {
   };
 } Command;
 
-typedef struct PACKED OpenResponse {
+typedef struct PBL_PACKED OpenResponse {
   uint8_t opcode;
   uint8_t fd;
 } OpenResponse;
 
-typedef struct PACKED CloseResponse {
+typedef struct PBL_PACKED CloseResponse {
   uint8_t opcode;
   uint8_t fd;
 } CloseResponse;
 
-typedef struct PACKED ReadResponse {
+typedef struct PBL_PACKED ReadResponse {
   uint8_t opcode;
   uint8_t fd;
   uint32_t offset;
   uint8_t data[0];
 } ReadResponse;
 
-typedef struct PACKED WriteResponse {
+typedef struct PBL_PACKED WriteResponse {
   uint8_t opcode;
   uint8_t fd;
   uint32_t address;
   uint32_t length;
 } WriteResponse;
 
-typedef struct PACKED CRCResponse {
+typedef struct PBL_PACKED CRCResponse {
   uint8_t opcode;
   uint8_t fd;
   uint32_t address;
@@ -106,20 +106,20 @@ typedef struct PACKED CRCResponse {
   uint32_t crc;
 } CRCResponse;
 
-typedef struct PACKED StatResponse {
+typedef struct PBL_PACKED StatResponse {
   uint8_t opcode;
   uint8_t fd;
   uint8_t data[0];
 } StatResponse;
 
-typedef struct PACKED EraseResponse {
+typedef struct PBL_PACKED EraseResponse {
   uint8_t opcode;
   uint8_t domain;
   uint8_t cookie;
   int8_t status;
 } EraseResponse;
 
-typedef struct PACKED InternalErrorResponse {
+typedef struct PBL_PACKED InternalErrorResponse {
   uint8_t opcode;
   int32_t status_code;
   uint8_t bad_command[0];

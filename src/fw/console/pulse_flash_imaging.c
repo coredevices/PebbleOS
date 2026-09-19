@@ -12,7 +12,7 @@
 #include "resource/resource_storage_flash.h"
 #include "pbl/services/system_task.h"
 #include "system/bootbits.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #define IMAGING_CMD_ERASE           (1)
@@ -35,22 +35,22 @@
 
 typedef union Command {
   uint8_t opcode;
-  struct PACKED EraseCommand {
+  struct PBL_PACKED EraseCommand {
     uint8_t opcode;
     uint32_t address;
     uint32_t length;
   } erase;
-  struct PACKED WriteCommand {
+  struct PBL_PACKED WriteCommand {
     uint8_t opcode;
     uint32_t address;
     uint8_t data[0];
   } write;
-  struct PACKED CrcCommand {
+  struct PBL_PACKED CrcCommand {
     uint8_t opcode;
     uint32_t address;
     uint32_t length;
   } crc;
-  struct PACKED RegionCommand {
+  struct PBL_PACKED RegionCommand {
     uint8_t opcode;
     uint8_t region;
   } region;
@@ -97,7 +97,7 @@ static bool s_erase_in_progress = false;
 static uint32_t s_erase_start_address;
 static uint32_t s_erase_length;
 
-typedef struct PACKED EraseAndWriteAck {
+typedef struct PBL_PACKED EraseAndWriteAck {
   uint8_t opcode;
   uint32_t address;
   uint32_t length;
@@ -192,7 +192,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
     return;
   }
 
-  typedef struct PACKED CrcAck {
+  typedef struct PBL_PACKED CrcAck {
     uint8_t opcode;
     uint32_t address;
     uint32_t length;
@@ -237,7 +237,7 @@ static void prv_handle_query_region(Command *cmd, size_t length) {
       break;
   }
 
-  typedef struct PACKED RegionGeometry {
+  typedef struct PBL_PACKED RegionGeometry {
     uint8_t opcode;
     uint8_t region;
     uint32_t address;
@@ -282,7 +282,7 @@ static void prv_handle_finalize_region(Command *cmd, size_t length) {
 }
 
 static void prv_respond_malformed_command(Command *cmd, size_t length, const char *message) {
-  typedef struct PACKED MalformedCommandResponse {
+  typedef struct PBL_PACKED MalformedCommandResponse {
     uint8_t opcode;
     uint8_t bad_command[9];
     char error_message[40];

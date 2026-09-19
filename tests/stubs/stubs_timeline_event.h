@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/timeline/event.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-void WEAK timeline_event_refresh(void) {
+void PBL_WEAK timeline_event_refresh(void) {
 }

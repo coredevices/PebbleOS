@@ -82,7 +82,7 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
 #include "stubs_serial.h"
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"
-// Hide the WEAK stub so the controllable strong definition above owns the real symbol
+// Hide the PBL_WEAK stub so the controllable strong definition above owns the real symbol
 #define sys_process_manager_get_current_process_id \
   prv_stubbed_sys_process_manager_get_current_process_id
 #include "stubs_syscalls.h"

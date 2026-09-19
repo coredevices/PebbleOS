@@ -5,7 +5,7 @@
 #include "pbl/services/bluetooth/pairability.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -14,7 +14,7 @@ typedef enum {
   BLEControlCommandTypeSetDiscoverablePairable = 4,
 } BLEControlCommandType;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t opcode;
   bool discoverable_pairable;
   uint16_t duration;

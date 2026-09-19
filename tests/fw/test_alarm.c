@@ -80,14 +80,14 @@ void test_alarm__initialize(void) {
   pfs_init(false);
   pfs_format(false);
 
-  cron_service_init();
+  pbl_cron_init();
 
   alarm_init();
   alarm_service_enable_alarms(true);
 }
 
 void test_alarm__cleanup(void) {
-  cron_service_deinit();
+  pbl_cron_deinit();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -449,7 +449,7 @@ void test_alarm__handle_clock_change(void) {
 
   s_current_hour = 13;
   s_current_minute = 14;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 
@@ -509,7 +509,7 @@ void test_alarm__recurring_daily_alarm_timeout_ahead(void) {
 
   s_current_hour = 10;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 
@@ -524,7 +524,7 @@ void test_alarm__recurring_daily_alarm_timeout_behind(void) {
   // Alarm set for tomorrow, so add 24 hours.
   s_current_hour = 10 + 24;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 
@@ -554,7 +554,7 @@ void test_alarm__recurring_daily_alarm(void) {
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 13);
@@ -564,7 +564,7 @@ void test_alarm__recurring_daily_alarm(void) {
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 20);
@@ -575,7 +575,7 @@ void test_alarm__recurring_daily_alarm(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_friday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 3);
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 27);
@@ -585,7 +585,7 @@ void test_alarm__recurring_daily_alarm(void) {
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 4);
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 34);
@@ -596,7 +596,7 @@ void test_alarm__recurring_daily_alarm(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_saturday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 5);
   cl_assert_equal_i(s_num_alarm_events_put, 5);
   cl_assert_equal_i(s_num_timeline_adds, 41);
@@ -606,7 +606,7 @@ void test_alarm__recurring_daily_alarm(void) {
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 6);
   cl_assert_equal_i(s_num_alarm_events_put, 6);
   cl_assert_equal_i(s_num_timeline_adds, 48);
@@ -617,7 +617,7 @@ void test_alarm__recurring_daily_alarm(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_sunday; // Make sure the wday can wrap properly
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 7);
   cl_assert_equal_i(s_num_alarm_events_put, 7);
   cl_assert_equal_i(s_num_timeline_adds, 55);
@@ -634,13 +634,13 @@ void test_alarm__recurring_weekends_alarm_timeout_ahead(void) {
   s_current_hour = 10;
   s_current_minute = 29;
   s_current_day = s_saturday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
   // Only 1 pin should be added (for Saturday)
   cl_assert_equal_i(s_num_timeline_adds, 1);
 
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_i(s_num_timeline_adds, 3);
 }
@@ -671,7 +671,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_saturday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 6);
@@ -681,7 +681,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 9);
@@ -692,7 +692,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_sunday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 3);
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 11);
@@ -702,7 +702,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   // Second alarm goes off. First one should be up again, but not until Saturday
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 4);
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 12);
@@ -743,7 +743,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 8);
@@ -753,7 +753,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 11);
@@ -764,7 +764,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_friday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 3);
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 14);
@@ -774,7 +774,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   // Second alarm goes off. First one should be up again, but not until Monday
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 4);
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 17);
@@ -820,7 +820,7 @@ void test_alarm__just_once_alarm(void) {
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
   prv_assert_alarm_config(id1, 10, 30, true, ALARM_KIND_JUST_ONCE, just_once_schedule_thursday);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
@@ -831,7 +831,7 @@ void test_alarm__just_once_alarm(void) {
   // Second alarm goes off. No alarms should be up
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
   prv_assert_alarm_config(id2, 11, 30, true, ALARM_KIND_JUST_ONCE, just_once_schedule_thursday);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
@@ -855,27 +855,27 @@ void test_alarm__custom_alarm_everyday(void) {
   // It's currently Thursday @ 00:00.
 
   s_current_day = s_friday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 
   s_current_day = s_saturday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
 
   s_current_day = s_sunday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 3);
 
   s_current_day = s_monday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 4);
 
   s_current_day = s_tuesday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 5);
 
   s_current_day = s_wednesday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 6);
 }
 
@@ -894,27 +894,27 @@ void test_alarm__custom_alarm_weekends_and_weekday(void) {
   // It's currently Thursday @ 00:00.
 
   s_current_day = s_friday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
 
   s_current_day = s_saturday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
 
   s_current_day = s_sunday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 
   s_current_day = s_monday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
 
   s_current_day = s_tuesday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
 
   s_current_day = s_wednesday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
 }
 
@@ -933,27 +933,27 @@ void test_alarm__custom_alarm_partial_weekdays(void) {
   // It's currently Thursday @ 00:00.
 
   s_current_day = s_friday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 
   s_current_day = s_saturday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 
   s_current_day = s_sunday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 
   s_current_day = s_monday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 
   s_current_day = s_tuesday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
 
   s_current_day = s_wednesday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 3);
 }
 
@@ -985,7 +985,7 @@ void test_alarm__custom_alarm_weekends(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_saturday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 6);
@@ -995,7 +995,7 @@ void test_alarm__custom_alarm_weekends(void) {
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 9);
@@ -1006,7 +1006,7 @@ void test_alarm__custom_alarm_weekends(void) {
   s_current_hour = 10;
   s_current_minute = 30;
   s_current_day = s_sunday;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 3);
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 11);
@@ -1016,7 +1016,7 @@ void test_alarm__custom_alarm_weekends(void) {
   // Second alarm goes off. First one should be up again, but not until Saturday
   s_current_hour = 11;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 4);
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 12);
@@ -1058,7 +1058,7 @@ void test_alarm__custom_alarm_multiple(void) {
   s_current_day = s_sunday;
   s_current_hour = 12;
   s_current_minute = 15;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   bool schedule_2[7] = {false, true, false, false, false, false, false};
   id2 = alarm_create(&(AlarmInfo){
     .hour = 13,
@@ -1072,7 +1072,7 @@ void test_alarm__custom_alarm_multiple(void) {
   s_current_day = s_tuesday;
   s_current_hour = 1;
   s_current_minute = 0;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 2);
 }
 
@@ -1090,7 +1090,7 @@ void test_alarm__disable_upcoming_alarm(void) {
   // The 10:30 alarm should not have gone off
   s_current_hour = 11;
   s_current_minute = 0;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
 
   // Disable the 11:30 alarm
@@ -1098,14 +1098,14 @@ void test_alarm__disable_upcoming_alarm(void) {
 
   // The 11:30 alarm should not go off either
   s_current_hour = 12;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
 
   // Enable the 11:30 alarm - now it should go off
   s_current_hour = 11;
   alarm_set_enabled(id2, true);
   s_current_hour = 12;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 
@@ -1123,7 +1123,7 @@ void test_alarm__delete_upcoming_alarm(void) {
   // The 10:30 alarm should not go off
   s_current_hour = 11;
   s_current_minute = 0;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
 
   // Delete the 11:30 alarm
@@ -1131,7 +1131,7 @@ void test_alarm__delete_upcoming_alarm(void) {
 
   // The 11:30 alarm should not go off either
   s_current_hour = 12;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
 }
 
@@ -1147,14 +1147,14 @@ void test_alarm__alarm_type_change_updates_timeout(void) {
   // Alarm should not go off on Thursday anymore
   s_current_hour = 10;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 0);
 
   // Alarm should go off on the weekend
   s_current_day = s_saturday;
   s_current_hour = 10;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 
@@ -1235,11 +1235,11 @@ void test_alarm__skip_two_alarms(void) {
   // One of the alarms should go off
   s_current_hour = 10;
   s_current_minute = 30;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 
   // The other alarm should not go off
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 
@@ -1248,8 +1248,8 @@ void test_alarm__skip_two_alarms(void) {
 
 //! Restarts the alarm service the way a reboot would, leaving the settings file intact.
 static void prv_simulate_reboot(void) {
-  cron_service_deinit();
-  cron_service_init();
+  pbl_cron_deinit();
+  pbl_cron_init();
   alarm_init();
   alarm_service_enable_alarms(true);
 }
@@ -1290,7 +1290,7 @@ void test_alarm__alarm_not_fired_when_reboot_precedes_it(void) {
   // The alarm is still armed and goes off at its own time
   s_current_hour = 6;
   s_current_minute = 0;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 
@@ -1337,7 +1337,7 @@ void test_alarm__missed_just_once_alarm_rearmed_for_next_day(void) {
   s_current_day = s_friday;
   s_current_hour = 6;
   s_current_minute = 0;
-  cron_service_wakeup();
+  pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
 }
 

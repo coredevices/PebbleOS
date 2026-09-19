@@ -16,6 +16,7 @@
 #include "shell/system_theme.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
 #define INDICATOR "»"
 
@@ -151,7 +152,7 @@ static int16_t prv_get_cell_offset(void *subject) {
   return aml->item_animation.current_offset_y;
 }
 
-T_STATIC void prv_set_cell_offset(void *subject, int16_t value) {
+PBL_T_STATIC void prv_set_cell_offset(void *subject, int16_t value) {
   ActionMenuLayer *aml = subject;
   aml->item_animation.current_offset_y = value;
   layer_mark_dirty(&aml->layer);
@@ -466,7 +467,8 @@ static void prv_selection_changed(ActionMenuLayer *aml) {
   }
 }
 
-T_STATIC void prv_set_selected_index(ActionMenuLayer *aml, int new_selected_index, bool animated) {
+PBL_T_STATIC void prv_set_selected_index(ActionMenuLayer *aml, int new_selected_index,
+                                         bool animated) {
   new_selected_index = CLIP(new_selected_index, 0, aml->num_items + aml->num_short_items - 1);
   const bool selection_changed = (new_selected_index != aml->selected_index);
 

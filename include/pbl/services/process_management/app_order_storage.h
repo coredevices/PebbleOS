@@ -4,9 +4,9 @@
 #pragma once
 
 #include "process_management/app_install_manager.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-typedef struct PACKED AppMenuOrderStorage {
+typedef struct PBL_PACKED AppMenuOrderStorage {
   uint8_t list_length;
   AppInstallId id_list[];
 } AppMenuOrderStorage;

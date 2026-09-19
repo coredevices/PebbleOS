@@ -20,12 +20,12 @@
 #include "system/passert.h"
 #include "system/reboot_reason.h"
 #include "system/version.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 
 static const uint16_t ENDPOINT_ID = 2002;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t command;
   uint32_t cookie;
 } BluetoothHeader;

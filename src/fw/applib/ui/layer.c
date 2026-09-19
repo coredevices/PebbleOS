@@ -21,6 +21,7 @@
 #include "pbl/util/math.h"
 
 #include <string.h>
+#include "pbl/util/testing.h"
 
 void layer_init(Layer *layer, const GRect *frame) {
   *layer = (Layer){};
@@ -607,7 +608,7 @@ static bool prv_find_layer_containing_point(const Layer *node, LayerTouchIterato
   return true;
 }
 
-MOCKABLE Layer *layer_find_layer_containing_point(const Layer *node, const GPoint *point) {
+PBL_T_MOCKABLE Layer *layer_find_layer_containing_point(const Layer *node, const GPoint *point) {
   if (!node || !point) {
     return NULL;
   }

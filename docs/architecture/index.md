@@ -18,7 +18,8 @@ implemented under `kernel/`). The main source layers, as described on the
 - `src/fw/drivers` — hardware drivers (public interfaces under
   `include/pbl/drivers`).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
-  logging, included via the `pbl/logging/` header path.
+  logging and cron, included via the `pbl/logging/` and `pbl/cron/` header
+  paths.
 
 Alongside these sit `src/fw/shell` (launcher/watchface UX flow),
 `src/fw/process_management` (app lifecycle) and `src/fw/comm` (phone

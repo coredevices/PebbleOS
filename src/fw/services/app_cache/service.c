@@ -17,7 +17,7 @@
 #include "shell/prefs.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 #include "util/time/time.h"
@@ -65,7 +65,7 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 static PBL_MUTEX_DEFINE(s_app_cache_mutex);
 
 //! Actual data structure stored in flash about an app cache entry
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   time_t install_date;
   time_t last_launch;
   uint32_t total_size;

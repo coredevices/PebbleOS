@@ -19,12 +19,13 @@
 #include "system/passert.h"
 
 #include "pbl/util/circular_buffer.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 
 #include "pbl/kernel/mutex.h"
 #include "pbl/kernel/types.h"
 
 #include "pbl/kernel/sem.h"
+#include "pbl/util/testing.h"
 
 // TODO:
 // - Intercept "manual" CCCD writes from the app, error for now? or translate to
@@ -146,8 +147,8 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
     // it still exists.
     const uint16_t write_space = circular_buffer_get_write_space_remaining(buffer);
     prv_unlock();
-    if (LIKELY(write_space >= required_length)) {
-      if (UNLIKELY(did_stall)) {
+    if (PBL_LIKELY(write_space >= required_length)) {
+      if (PBL_UNLIKELY(did_stall)) {
         PBL_LOG_DBG("GATT notification stalled for %d ms...",
                     (int)(timeout_ms - pbl_ticks_to_ms(timeout_end_ticks - rtc_get_ticks())));
       }
@@ -183,7 +184,7 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
   ListNode *head = (ListNode *)connection->gatt_subscriptions;
   const GATTClientSubscriptionNode *subscription = (const GATTClientSubscriptionNode *)list_find(
       head, prv_find_subscription_by_att_handle, (void *)(uintptr_t)att_handle);
-  if (UNLIKELY(!subscription)) {
+  if (PBL_UNLIKELY(!subscription)) {
     // MT: I suspect this can be hit when the remote remembers the CCCD subscription state across
     // disconnections (while we don't remember it across disconnections).
     // iOS 7 behaves like this. iOS 8 supposedly does not.
@@ -202,7 +203,7 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
   PebbleTaskBitset task_mask = task_mask_none;
 
   for (GAPLEClient c = 0; c < GAPLEClientNum; ++c) {
-    if (UNLIKELY(subscription->subscriptions[c] == BLESubscriptionNone)) {
+    if (PBL_UNLIKELY(subscription->subscriptions[c] == BLESubscriptionNone)) {
       // Not subscribed, continue
       continue;
     }
@@ -231,7 +232,7 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
     {
       circular_buffer_write(buffer, (const uint8_t *)&header, sizeof(header));
       circular_buffer_write(buffer, value, length);
-      if (UNLIKELY(!s_is_notification_event_pending[c])) {
+      if (PBL_UNLIKELY(!s_is_notification_event_pending[c])) {
         task_mask &= ~gap_le_pebble_task_bit_for_client(c);
         s_is_notification_event_pending[c] = true;
       }
@@ -239,7 +240,7 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
     prv_unlock();
   }
 
-  if (UNLIKELY(task_mask != task_mask_none)) {
+  if (PBL_UNLIKELY(task_mask != task_mask_none)) {
     prv_send_notification_event(task_mask);
   }
 unlock:
@@ -371,12 +372,12 @@ uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *chara
 
     GATTBufferedNotificationHeader header = {};
     const bool has_notification = prv_get_next_notification_header(client, &header);
-    if (LIKELY(has_notification)) {
-      if (LIKELY(*value_length_in_out >= header.value_length)) {
+    if (PBL_LIKELY(has_notification)) {
+      if (PBL_LIKELY(*value_length_in_out >= header.value_length)) {
         const uint16_t copied_length =
             circular_buffer_copy_offset(s_circular_buffer[client], sizeof(header), /* skip header */
                                         value_out, header.value_length);
-        if (UNLIKELY(copied_length != header.value_length)) {
+        if (PBL_UNLIKELY(copied_length != header.value_length)) {
           PBL_LOG_ERR("Couldn't copy the number of requested byes (%u vs %u)", header.value_length,
                       copied_length);
         }
@@ -775,7 +776,7 @@ void gatt_client_subscription_boot(void) {
 
 #if UNITTEST
 //! Only for unit tests
-T_STATIC bool gatt_client_get_event_pending_state(GAPLEClient client) {
+PBL_T_STATIC bool gatt_client_get_event_pending_state(GAPLEClient client) {
   return s_is_notification_event_pending[client];
 }
 #endif

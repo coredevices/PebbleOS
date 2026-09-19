@@ -23,6 +23,7 @@
 #include "kernel/util/sleep.h"
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
+#include "process_management/app_manager.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/bluetooth/local_id.h"
 #include "pbl/services/i18n/i18n.h"
@@ -31,6 +32,7 @@
 #include "pbl/services/stationary.h"
 #include "shell/normal/battery_ui.h"
 #include "shell/prefs.h"
+#include "shell/system_app_ids.auto.h"
 #include "system/bootbits.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
@@ -68,6 +70,9 @@ enum {
   DebuggingItemAccelShakeLogInfo,
   DebuggingItemVibeLogInfo,
   DebuggingItemCompactSettingsDbs,
+#if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
+  DebuggingItemSpO2Test,
+#endif
   DebuggingItem_Count,
 };
 
@@ -491,6 +496,9 @@ static const char *s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemAccelShakeLogInfo] = i18n_noop("Shake Log Info"),
   [DebuggingItemVibeLogInfo] = i18n_noop("Vibe Log Info"),
   [DebuggingItemCompactSettingsDbs] = i18n_noop("Compact Settings DBs"),
+#if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
+  [DebuggingItemSpO2Test] = i18n_noop("SpO2 Test"),
+#endif
 };
 
 static void prv_debugging_draw_row_callback(GContext *ctx, const Layer *cell_layer,
@@ -575,6 +583,14 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer, MenuIndex *cell
     case DebuggingItemCompactSettingsDbs:
       prv_compact_settings_dbs();
       break;
+#if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
+    case DebuggingItemSpO2Test:
+      app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+        .id = APP_ID_SPO2_TEST,
+        .common.reason = APP_LAUNCH_USER,
+      });
+      break;
+#endif
     default:
       WTF;
   }

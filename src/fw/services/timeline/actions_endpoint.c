@@ -13,7 +13,8 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -36,26 +37,26 @@ typedef enum {
   ResponseNACKStartReply = 0x15,
 } Response;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Command command : 8;
   Uuid item_id;
   Response response : 8;
 } ResponseHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   ResponseHeader header;
   uint8_t num_attributes;
   uint8_t data[];
 } PhoneResponseMsg;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   ResponseHeader header;
   uint8_t num_attributes;
   uint8_t num_actions;
   uint8_t data[];
 } PhoneActionResponseMsg;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Command command : 8;
   Uuid item_id;
   uint8_t action_id;
@@ -68,7 +69,7 @@ typedef struct {
   InvokeActionMsg msg;
 } InvokeActionMsgCbData;
 
-T_STATIC const int TIMELINE_ACTION_ENDPOINT = 0x2cb0;
+PBL_T_STATIC const int TIMELINE_ACTION_ENDPOINT = 0x2cb0;
 
 static void prv_action_system_task_callback(void *data) {
   InvokeActionMsgCbData *action = data;

@@ -40,6 +40,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -638,9 +639,9 @@ static void prv_invoke_ble_hrm_stop_sharing_action(ActionMenu *action_menu,
 }
 #endif
 
-T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
-                                             const TimelineItemAction *action,
-                                             const TimelineItem *pin, const char *label) {
+PBL_T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
+                                                 const TimelineItemAction *action,
+                                                 const TimelineItem *pin, const char *label) {
   switch (action->type) {
     case TimelineItemActionTypeOpenPin:
     case TimelineItemActionTypeOpenWatchApp:

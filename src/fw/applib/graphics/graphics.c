@@ -17,6 +17,7 @@
 #include "pbl/util/math.h"
 
 #include <string.h>
+#include "pbl/util/testing.h"
 
 #if !defined(__clang__)
 #pragma GCC optimize("O3")
@@ -34,8 +35,8 @@ void graphics_draw_pixel(GContext *ctx, GPoint point) {
   graphics_private_set_pixel(ctx, point);
 }
 
-T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radius,
-                                    GCornerMask corner_mask, GColor fill_color) {
+PBL_T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radius,
+                                        GCornerMask corner_mask, GColor fill_color) {
   if (gcolor_is_transparent(fill_color)) {
     fill_color = GColorWhite;
   }
@@ -119,7 +120,8 @@ T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radius,
 }
 
 //! Return the maximum rounded corner radius allowed for a given rectangle size
-T_STATIC uint16_t prv_clamp_corner_radius(GSize size, GCornerMask corner_mask, uint16_t radius) {
+PBL_T_STATIC uint16_t prv_clamp_corner_radius(GSize size, GCornerMask corner_mask,
+                                              uint16_t radius) {
   if (corner_mask == GCornerNone) {
     return 0;
   }
@@ -197,8 +199,8 @@ void prv_fill_rect_internal(GContext *ctx, const GRect *rect, uint16_t radius,
   }
 }
 
-T_STATIC void prv_fill_rect_non_aa(GContext *ctx, const GRect *rect, uint16_t radius,
-                                   GCornerMask corner_mask, GColor fill_color) {
+PBL_T_STATIC void prv_fill_rect_non_aa(GContext *ctx, const GRect *rect, uint16_t radius,
+                                       GCornerMask corner_mask, GColor fill_color) {
   // for radii <= 8 we can safely use the legacy2 behavior
   const uint16_t alt_radius = 8;
   FillCircleImplFunc circle_func = graphics_circle_quadrant_fill_non_aa;
@@ -206,8 +208,8 @@ T_STATIC void prv_fill_rect_non_aa(GContext *ctx, const GRect *rect, uint16_t ra
 }
 
 #if PBL_COLOR
-T_STATIC void prv_fill_rect_aa(GContext *ctx, const GRect *rect, uint16_t radius,
-                               GCornerMask corner_mask, GColor fill_color) {
+PBL_T_STATIC void prv_fill_rect_aa(GContext *ctx, const GRect *rect, uint16_t radius,
+                                   GCornerMask corner_mask, GColor fill_color) {
   FillCircleImplFunc circle_func = graphics_internal_circle_quadrant_fill_aa;
   prv_fill_rect_internal(ctx, rect, radius, corner_mask, fill_color, 0, circle_func);
 }
@@ -239,7 +241,7 @@ void graphics_fill_rect(GContext *ctx, const GRect *rect) {
   graphics_fill_round_rect(ctx, rect, 0, GCornerNone);
 }
 
-T_STATIC void prv_draw_rect(GContext *ctx, const GRect *rect) {
+PBL_T_STATIC void prv_draw_rect(GContext *ctx, const GRect *rect) {
   GColor fill_color = ctx->draw_state.fill_color;
   ctx->draw_state.fill_color = ctx->draw_state.stroke_color;
   graphics_fill_rect(ctx, &GRect(rect->origin.x, rect->origin.y, rect->size.w, 1)); // top
@@ -252,7 +254,7 @@ T_STATIC void prv_draw_rect(GContext *ctx, const GRect *rect) {
 }
 
 #if PBL_COLOR
-T_STATIC void prv_draw_rect_aa_stroked(GContext *ctx, const GRect *rect, uint8_t stroke_width) {
+PBL_T_STATIC void prv_draw_rect_aa_stroked(GContext *ctx, const GRect *rect, uint8_t stroke_width) {
   const GPoint tl = GPoint(rect->origin.x, rect->origin.y);
   const GPoint tr = GPoint(rect->origin.x + rect->size.w - 1, rect->origin.y);
   const GPoint bl = GPoint(rect->origin.x, rect->origin.y + rect->size.h - 1);
@@ -265,7 +267,7 @@ T_STATIC void prv_draw_rect_aa_stroked(GContext *ctx, const GRect *rect, uint8_t
 }
 #endif // PBL_COLOR
 
-T_STATIC void prv_draw_rect_stroked(GContext *ctx, const GRect *rect, uint8_t stroke_width) {
+PBL_T_STATIC void prv_draw_rect_stroked(GContext *ctx, const GRect *rect, uint8_t stroke_width) {
   const GPoint tl = GPoint(rect->origin.x, rect->origin.y);
   const GPoint tr = GPoint(rect->origin.x + rect->size.w - 1, rect->origin.y);
   const GPoint bl = GPoint(rect->origin.x, rect->origin.y + rect->size.h - 1);
@@ -321,7 +323,7 @@ void graphics_draw_rect_precise(GContext *ctx, const GRectPrecise *rect) {
 
 // This takes care of all routines since it re-uses existing AA and SW functionality in draw line
 // and draw circle
-T_STATIC void prv_draw_round_rect(GContext *ctx, const GRect *rect, uint16_t radius) {
+PBL_T_STATIC void prv_draw_round_rect(GContext *ctx, const GRect *rect, uint16_t radius) {
   const GPoint origin = rect->origin;
   const int16_t width = rect->size.w;
   const int16_t height = rect->size.h;
@@ -363,20 +365,20 @@ T_STATIC void prv_draw_round_rect(GContext *ctx, const GRect *rect, uint16_t rad
 }
 
 #if PBL_COLOR
-T_STATIC void prv_draw_round_rect_aa(GContext *ctx, const GRect *rect, uint16_t radius) {
+PBL_T_STATIC void prv_draw_round_rect_aa(GContext *ctx, const GRect *rect, uint16_t radius) {
   // Assumes AA and stroke_width is set appropriately in ctx
   prv_draw_round_rect(ctx, rect, radius);
 }
 
-T_STATIC void prv_draw_round_rect_aa_stroked(GContext *ctx, const GRect *rect, uint16_t radius,
-                                             uint8_t stroke_width) {
+PBL_T_STATIC void prv_draw_round_rect_aa_stroked(GContext *ctx, const GRect *rect, uint16_t radius,
+                                                 uint8_t stroke_width) {
   // Assumes AA and stroke_width is set appropriately in ctx
   prv_draw_round_rect(ctx, rect, radius);
 }
 #endif // CONFIG_SCREEN_COLOR_DEPTH_BITS
 
-T_STATIC void prv_draw_round_rect_stroked(GContext *ctx, const GRect *rect, uint16_t radius,
-                                          uint8_t stroke_width) {
+PBL_T_STATIC void prv_draw_round_rect_stroked(GContext *ctx, const GRect *rect, uint16_t radius,
+                                              uint8_t stroke_width) {
   // Assumes AA and stroke_width is set appropriately in ctx
   prv_draw_round_rect(ctx, rect, radius);
 }
@@ -668,12 +670,12 @@ GBitmap *graphics_capture_frame_buffer_2bit(GContext *ctx) {
   return graphics_capture_frame_buffer_format(ctx, GBitmapFormat1Bit);
 }
 
-MOCKABLE GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
+PBL_T_MOCKABLE GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
   PBL_ASSERTN(ctx);
   return graphics_capture_frame_buffer_format(ctx, GBITMAP_NATIVE_FORMAT);
 }
 
-MOCKABLE bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
+PBL_T_MOCKABLE bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
   PBL_ASSERTN(ctx);
   GBitmap *native_framebuffer = graphics_context_get_bitmap(ctx);
   if (gbitmap_get_format(buffer) != GBITMAP_NATIVE_FORMAT) {

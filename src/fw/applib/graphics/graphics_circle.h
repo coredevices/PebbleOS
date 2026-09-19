@@ -3,6 +3,7 @@
 
 #pragma once
 #include "gtypes.h"
+#include "pbl/util/testing.h"
 
 //! @internal
 //! Draws a quadrant of a circle based on what is set in the context for stroke width and
@@ -11,8 +12,9 @@ void graphics_circle_quadrant_draw(GContext *ctx, GPoint p, uint16_t radius, GCo
 
 //! @internal
 //! Fills an antialiased circle in quadrants
-MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p, uint16_t radius,
-                                                        GCornerMask quadrant);
+PBL_T_MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p,
+                                                              uint16_t radius,
+                                                              GCornerMask quadrant);
 
 //! @internal
 //! Fills a non-antialiased circle in quadrants
@@ -21,7 +23,7 @@ void graphics_circle_quadrant_fill_non_aa(GContext *ctx, GPoint p, uint16_t radi
 
 //! @internal
 //! Fills a non-antialiased circle
-MOCKABLE void graphics_circle_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius);
+PBL_T_MOCKABLE void graphics_circle_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius);
 
 //! @internal
 //! Draws an arc with fixed-point precision

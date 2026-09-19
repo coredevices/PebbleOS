@@ -8,7 +8,7 @@
 #ifdef CONFIG_MFG
 #include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #endif
 
 #define NUM_MODES 2
@@ -20,7 +20,7 @@ static uint8_t s_mode_index;
 #ifdef CONFIG_MFG
 // Append-only log of results in the MFG_RESULTS subsector. Each report writes
 // one record; the subsector is only erased once the log fills up (compaction).
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t test_id; // MFG_RESULT_EMPTY marks a free slot
   uint8_t mode_index;
   uint8_t passed;

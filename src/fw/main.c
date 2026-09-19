@@ -225,7 +225,7 @@ static void prv_low_power_debug_config_callback(void *data) {
   new_timer_delete(s_lowpower_timer);
 }
 
-static NOINLINE void prv_main_task_init(void) {
+static PBL_NOINLINE void prv_main_task_init(void) {
   // The Snowy bootloader does not clear the watchdog flag itself. Clear the
   // flag ourselves so that a future safe reset does not look like a watchdog
   // reset to the bootloader.

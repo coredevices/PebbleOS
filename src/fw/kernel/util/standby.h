@@ -4,11 +4,9 @@
 #pragma once
 
 #include "system/reboot_reason.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #if !UNITTEST
-NORETURN
-#else
-void
+PBL_NORETURN
 #endif
-enter_standby(RebootReasonCode reason);
+void enter_standby(RebootReasonCode reason);

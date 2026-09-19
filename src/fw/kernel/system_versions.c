@@ -19,7 +19,7 @@
 #include "system/bootbits.h"
 #include <pbl/logging/logging.h>
 #include "system/version.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/net.h"
 #include "pbl/util/string.h"
 
@@ -32,7 +32,7 @@
 
 static const uint16_t s_endpoint_id = 0x0010;
 
-struct PACKED VersionsMessage {
+struct PBL_PACKED VersionsMessage {
   const uint8_t command;
   FirmwareMetadata running_fw_metadata;
   FirmwareMetadata recovery_fw_metadata;

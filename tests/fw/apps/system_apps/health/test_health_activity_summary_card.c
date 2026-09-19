@@ -19,7 +19,7 @@ GContext *graphics_context_get_current_context(void) {
   return &s_ctx;
 }
 
-// Override fake_clock's WEAK default so the split layout's bin time renders
+// Override fake_clock's PBL_WEAK default so the split layout's bin time renders
 // in a stable 24h format.
 bool clock_is_24h_style(void) {
   return true;

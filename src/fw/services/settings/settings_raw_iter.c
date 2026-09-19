@@ -54,7 +54,7 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
   return contents;
 }
 
-static NORETURN fatal_logic_error(SettingsRawIter *iter) {
+static PBL_NORETURN void fatal_logic_error(SettingsRawIter *iter) {
   PBL_LOG_ERR(
       "settings_raw_iter logic error. "
       "Attempting to read affected file into RAM for easier debugging...");

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <bf0_hal.h>
 
@@ -25,7 +25,7 @@ extern uint8_t __isr_stack_start__[];
 
 extern int main(void);
 
-NAKED_FUNC NORETURN Reset_Handler(void) {
+PBL_NAKED PBL_NORETURN void Reset_Handler(void) {
   // Set MSPLIM to protect the ISR stack
   __set_MSPLIM((uint32_t)__isr_stack_start__);
   // PSPLIM is set per-task by FreeRTOS during context switches

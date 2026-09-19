@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 void prepare_for_software_failure(void);
 
 //! Does not call reboot_reason_set, only calls reboot_reason_set_restarted_safely if we were
 //! able shut everything down nicely before rebooting.
-NORETURN reset_due_to_software_failure(void);
+PBL_NORETURN void reset_due_to_software_failure(void);

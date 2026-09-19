@@ -55,6 +55,7 @@
 #include "stubs_worker_manager.h"
 #include "stubs_workout_service.h"
 #include "stubs_ambient_light.h"
+#include "pbl/util/testing.h"
 
 void prefs_sync_init(void) {
 }
@@ -89,7 +90,7 @@ const int s_exp_full_day_resting_kcalories = 1455;
 void health_tracking_ui_feature_show_disabled(void) {
 }
 
-// These are declared as T_STATIC in activity.c
+// These are declared as PBL_T_STATIC in activity.c
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_minute_system_task_cb(void *data);
 
@@ -136,7 +137,8 @@ static int s_hrm_manager_num_update_interval_changes;
 static uint16_t s_hrm_manager_expire_s;
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
                                                   uint16_t expire_s, HRMFeature features,
-                                                  HRMSubscriberCallback callback, void *context) {
+                                                  bool low_latency, HRMSubscriberCallback callback,
+                                                  void *context) {
   s_hrm_manager_update_interval = update_interval_s;
   s_hrm_manager_expire_s = expire_s;
   return s_hrm_next_session_ref++;
@@ -145,6 +147,24 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
 bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {
   cl_assert(session < s_hrm_next_session_ref);
   return true;
+}
+
+bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
+  return true;
+}
+
+bool hrm_manager_has_continuous_green_subscriber(void) {
+  return false;
+}
+
+// Activity-SpO2 / HR-pause APIs referenced by activity.c. Stubbed to keep the auto-activity HR
+// path idle so these tests exercise only the daily HR/SpO2 schedulers.
+bool activity_algorithm_activity_hrm_is_active(void) {
+  return false;
+}
+
+void activity_algorithm_activity_hrm_set_paused(bool paused) {
+  (void)paused;
 }
 
 bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
@@ -656,6 +676,12 @@ bool activity_algorithm_minute_file_info(bool compact_first, uint32_t *num_recor
 
 bool activity_algorithm_test_fill_minute_file(void) {
   return true;
+}
+
+// Activity-SpO2 / HR-pause APIs referenced by activity.c. Stubbed to keep the auto-activity HR
+// path idle so these tests exercise only the daily HR/SpO2 schedulers.
+void workout_service_set_hrm_paused(bool paused) {
+  (void)paused;
 }
 
 // We simulate the activity_algorithm_get_minute_history() call to return data that reflects

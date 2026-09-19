@@ -4,16 +4,16 @@
 #pragma once
 
 #include "kernel/events.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-void WEAK event_put(PebbleEvent *event) {
+void PBL_WEAK event_put(PebbleEvent *event) {
 }
 
-void WEAK event_put_from_app(PebbleEvent *event) {
+void PBL_WEAK event_put_from_app(PebbleEvent *event) {
 }
 
-void WEAK event_put_from_process(PebbleTask task, PebbleEvent *event) {
+void PBL_WEAK event_put_from_process(PebbleTask task, PebbleEvent *event) {
 }
 
-void WEAK event_reset_from_process_queue(PebbleTask task) {
+void PBL_WEAK event_reset_from_process_queue(PebbleTask task) {
 }

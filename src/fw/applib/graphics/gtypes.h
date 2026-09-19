@@ -8,7 +8,7 @@
 
 #include <pbl/drivers/display/display.h> // FIXME: Need display dimensions
 #include "resource/resource.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "pbl/util/math_fixed.h"
 
@@ -1282,7 +1282,7 @@ typedef struct GDrawMask GDrawMask;
 //! @internal
 //! Data structure that contains all kinds of drawing parameters, like the clipping box,
 //! the drawing box, stroke, fill and text colors and bitmap compositing mode.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! The box relative to bitmap's bounds, that graphics functions MUST use to clip what they draw
   GRect clip_box;
   //! The box relative to bitmap's bounds, that graphics functions MUST use as their coordinate

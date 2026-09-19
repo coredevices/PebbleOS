@@ -23,9 +23,8 @@
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/crc32.h"
-#include "pbl/util/likely.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
 #include "pbl/util/size.h"
@@ -277,7 +276,7 @@ static void prv_pulse_task_main(void *unused) {
     // handler is running.
     char c;
     while (pbl_msgq_get(&s_pulse_task_queue, &c, PBL_NO_WAIT) == 0) {
-      if (UNLIKELY(c == FRAME_DELIMITER)) {
+      if (PBL_UNLIKELY(c == FRAME_DELIMITER)) {
         size_t decoded_length = cobs_streaming_decode_finish(&frame_decode_ctx);
         prv_process_received_frame(decoded_length);
         cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame, RX_MAX_FRAME_SIZE);

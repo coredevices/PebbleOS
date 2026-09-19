@@ -5,13 +5,13 @@
 
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <util/net.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct PACKED LCPPacket {
+typedef struct PBL_PACKED LCPPacket {
   uint8_t code;
   uint8_t identifier;
   net16 length;

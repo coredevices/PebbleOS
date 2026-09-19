@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include <bluetooth/pebble_bt.h>
 #include <bluetooth/responsiveness.h>
 
@@ -24,7 +24,7 @@ typedef enum {
 } PebblePairingServiceGATTError;
 
 //! The connectivity status, with respect to the device reading it.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   union {
     struct {
       //! true if the device that is reading the status is connected (always true)
@@ -54,7 +54,7 @@ typedef struct PACKED {
 
 _Static_assert(sizeof(PebblePairingServiceConnectivityStatus) == 4, "");
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   bool should_pin_address : 1;
 
   //! @note Not available in Bluetopia/cc2564x implementation
@@ -86,7 +86,7 @@ typedef struct PACKED {
   bool is_reversed_ppogatt_enabled : 1;
 } PairingTriggerRequestData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! interval_min_ms / 1.25 msec – valid range: 7.5 msec to 4 seconds
   uint16_t interval_min_1_25ms;
 
@@ -107,7 +107,7 @@ typedef struct PACKED {
 } PebblePairingServiceConnParamSet;
 
 //! The connection parameters settings, with respect to connection to the device reading them.
-typedef struct PACKED PebblePairingServiceConnParamsReadNotif {
+typedef struct PBL_PACKED PebblePairingServiceConnParamsReadNotif {
   //! Capability bits. Reserved for future use.
   uint8_t packet_length_extension_supported : 1;
   uint8_t rsvd : 7;
@@ -136,7 +136,7 @@ typedef enum PebblePairingServiceConnParamsWriteCmd {
   PebblePairingServiceConnParamsWriteCmdCount,
 } PebblePairingServiceConnParamsWriteCmd;
 
-typedef struct PACKED PebblePairingServiceRemoteParamMgmtSettings {
+typedef struct PBL_PACKED PebblePairingServiceRemoteParamMgmtSettings {
   //! If false/zero, Pebble should manage the connection parameters. If true/one, Pebble should
   //! NOT manage the connection parameters. In this mode, Pebble will never request a
   //! connection parameter change.
@@ -146,7 +146,7 @@ typedef struct PACKED PebblePairingServiceRemoteParamMgmtSettings {
   PebblePairingServiceConnParamSet connection_parameter_sets[];
 } PebblePairingServiceRemoteParamMgmtSettings;
 
-typedef struct PACKED PebblePairingServiceRemoteDesiredState {
+typedef struct PBL_PACKED PebblePairingServiceRemoteDesiredState {
   //! The desired ResponseTime as desired by the remote device.  The remote end can set this
   //! value to a faster mode when it's about to transfer/receive a lot of data. For example,
   //! when a lot of BlobDB operations are queued up, the watch doesn't know how much data is
@@ -161,19 +161,19 @@ typedef struct PACKED PebblePairingServiceRemoteDesiredState {
   uint8_t rsvd : 6;
 } PebblePairingServiceRemoteDesiredState;
 
-typedef struct PACKED PebblePairingServicePacketLengthExtension {
+typedef struct PBL_PACKED PebblePairingServicePacketLengthExtension {
   uint8_t trigger_ll_length_req : 1;
   uint8_t rsvd : 7;
 } PebblePairingServicePacketLengthExtension;
 
-typedef struct PACKED PebblePairingServiceInhibitBLESleep {
+typedef struct PBL_PACKED PebblePairingServiceInhibitBLESleep {
   uint8_t rsvd; // for future use
 } PebblePairingServiceInhibitBLESleep;
 
 //! The connection parameters settings, with respect to connection to the device writing them.
-typedef struct PACKED PebblePairingServiceConnParamsWrite {
+typedef struct PBL_PACKED PebblePairingServiceConnParamsWrite {
   PebblePairingServiceConnParamsWriteCmd cmd : 8;
-  union PACKED {
+  union PBL_PACKED {
     //! Valid iff cmd == PebblePairingServiceConnParamsWriteCmd_SetRemoteParamMgmtSettings
     PebblePairingServiceRemoteParamMgmtSettings remote_param_mgmt_settings;
 

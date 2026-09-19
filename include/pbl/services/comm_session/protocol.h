@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <stdint.h>
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t length;
   uint16_t endpoint_id;
 } PebbleProtocolHeader;

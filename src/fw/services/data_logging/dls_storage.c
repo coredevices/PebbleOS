@@ -12,7 +12,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "pbl/util/string.h"
 
@@ -33,7 +33,7 @@ static bool s_initializing_storage = false;
 
 // Each session stores data in a separate pfs file with this data in the front. The file name
 // is constructed as ("%s%d", DLS_FILE_NAME_PREFIX, comm_session_id)
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   DLSFileHeaderVersion version : 8;
 
   uint8_t comm_session_id;
@@ -49,7 +49,7 @@ typedef struct PACKED {
 // successfully read it out. This is necessary to keep track of read chunks in the file system
 // so that we can recover our read position after a reboot.
 #define DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED 0x7f
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! The number of data bytes after this header, not including this header. If this value
   //! is DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED (all bits set), it means no data follows.
   uint8_t num_bytes : 7;

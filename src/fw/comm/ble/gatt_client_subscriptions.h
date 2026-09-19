@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/bluetooth/ble_client.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include "gap_le_task.h"
 
@@ -38,7 +38,7 @@ typedef struct {
 } GATTClientSubscriptionNode;
 
 //! Data structure representing a serialized GATT notification header.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   BLECharacteristic characteristic;
   uint16_t value_length;
   uint8_t value[];

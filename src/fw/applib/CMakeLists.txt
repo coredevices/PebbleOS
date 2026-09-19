@@ -69,7 +69,5 @@ add_custom_command(
 add_custom_target(pbl_applib_malloc DEPENDS ${applib_malloc_h})
 add_dependencies(pbl_generated_headers pbl_applib_malloc)
 
-pbl_gettext(${CMAKE_CURRENT_BINARY_DIR}/applib.pot ${sources})
-
 pbl_library()
 pbl_library_sources(${sources} ${applib_malloc_c})

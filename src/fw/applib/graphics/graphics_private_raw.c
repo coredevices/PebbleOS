@@ -8,11 +8,13 @@
 #include "system/passert.h"
 #include "util/bitset.h"
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
-ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *ctx, GColor *dst_color,
-                                                           unsigned int data_offset,
-                                                           GColor src_color, int x,
-                                                           uint8_t factor) {
+PBL_ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *ctx,
+                                                               GColor *dst_color,
+                                                               unsigned int data_offset,
+                                                               GColor src_color, int x,
+                                                               uint8_t factor) {
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   src_color.a = (uint8_t)(factor * 3 / (FIXED_S16_3_ONE.raw_value - 1));
 
@@ -21,9 +23,9 @@ ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *ctx, 
 #endif // (CONFIG_SCREEN_COLOR_DEPTH_BITS == 8)
 }
 
-static ALWAYS_INLINE void prv_set_color(const GContext *ctx, GColor *dst_color,
-                                        unsigned int data_row_offset, int x, int width,
-                                        GColor src_color) {
+static PBL_ALWAYS_INLINE void prv_set_color(const GContext *ctx, GColor *dst_color,
+                                            unsigned int data_row_offset, int x, int width,
+                                            GColor src_color) {
   memset(dst_color, src_color.argb, (size_t)width);
 }
 
@@ -68,8 +70,8 @@ static void prv_assign_row_with_pattern_1bit(GBitmap *framebuffer, int16_t y, in
 // This function draws horizontal line with AA edges, given values have to be adjusted for
 //   screen coordinates and clipped according to the clip box, does not respect transparency
 //   on the drawn line (beside edges)
-T_STATIC void prv_assign_horizontal_line_raw(GContext *ctx, int16_t y, Fixed_S16_3 x1,
-                                             Fixed_S16_3 x2, GColor color) {
+PBL_T_STATIC void prv_assign_horizontal_line_raw(GContext *ctx, int16_t y, Fixed_S16_3 x1,
+                                                 Fixed_S16_3 x2, GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
@@ -119,8 +121,8 @@ T_STATIC void prv_assign_horizontal_line_raw(GContext *ctx, int16_t y, Fixed_S16
 // This function draws vertical line with AA edges, given values have to be adjusted for
 // screen coordinates and clipped according to the clip box, does not respect transparency
 // on the drawn line (beside edges)
-T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S16_3 y1, Fixed_S16_3 y2,
-                                           GColor color) {
+PBL_T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S16_3 y1,
+                                               Fixed_S16_3 y2, GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);
@@ -164,8 +166,8 @@ T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S16_3
 
 // This function draws horizontal line with blending, given values have to be clipped and adjusted
 //   clip_box and draw_box respectively.
-T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_t x1, int16_t x2,
-                                            GColor color) {
+PBL_T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_t x1, int16_t x2,
+                                                GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   // Clip the line to the bitmap data row's range
@@ -188,8 +190,8 @@ T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_t x1
 
 // This function draws vertical line with blending, given values have to be clipped and adjusted
 //   clip_box and draw_box respectively.
-T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1, int16_t y2,
-                                          GColor color) {
+PBL_T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1, int16_t y2,
+                                              GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
@@ -214,10 +216,11 @@ T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t y1, 
 }
 
 // This function will draw a horizontal line with two gradients on side representing AA edges
-T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y, Fixed_S16_3 x1,
-                                                   Fixed_S16_3 x2, uint8_t left_aa_offset,
-                                                   uint8_t right_aa_offset, int16_t clip_box_min_x,
-                                                   int16_t clip_box_max_x, GColor color) {
+PBL_T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y, Fixed_S16_3 x1,
+                                                       Fixed_S16_3 x2, uint8_t left_aa_offset,
+                                                       uint8_t right_aa_offset,
+                                                       int16_t clip_box_min_x,
+                                                       int16_t clip_box_max_x, GColor color) {
   PBL_ASSERTN(ctx);
   GBitmap *framebuffer = &ctx->dest_bitmap;
   PBL_ASSERTN(framebuffer->bounds.origin.x == 0 && framebuffer->bounds.origin.y == 0);

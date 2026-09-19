@@ -52,20 +52,8 @@ pbl_library()
 pbl_library_sources(${sources})
 
 if(NOT CONFIG_RECOVERY_FW)
-  # Translatable strings from the firmware core; apps, services and applib
-  # have their own catalogs, merged in here.
+  # One universal catalog, independent of board and enabled services.
   file(GLOB_RECURSE pot_sources CONFIGURE_DEPENDS *.c *.h *.def)
-  pbl_filter_sources(pot_sources EXCLUDE apps services applib)
-  pbl_gettext(${PROJECT_BINARY_DIR}/fw.pot ${pot_sources})
-
-  set(catalogs ${PROJECT_BINARY_DIR}/fw.pot)
-  get_property(service_pots GLOBAL PROPERTY PBL_SERVICES_POT)
-  if(service_pots)
-    list(APPEND catalogs ${CMAKE_CURRENT_BINARY_DIR}/services/services.pot)
-  endif()
-  list(APPEND catalogs
-    ${CMAKE_CURRENT_BINARY_DIR}/applib/applib.pot
-    ${CMAKE_CURRENT_BINARY_DIR}/apps/apps.pot
-  )
-  pbl_firmware_pot(${PROJECT_BINARY_DIR}/pebbleos.pot ${catalogs})
+  pbl_firmware_pot(${PROJECT_BINARY_DIR}/pebbleos.pot ${pot_sources}
+    EXCLUDE apps/prf/** applib/vendor/**)
 endif()

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include <pbl/logging/logging.h>
 #include "applib/app_logging.h"
 
@@ -49,7 +49,7 @@ DEFINE_SYSCALL(void, sys_app_log, size_t length, void *log_buffer) {
 }
 
 void app_log_protocol_msg_callback(CommSession *session, const uint8_t *data, const size_t length) {
-  typedef struct PACKED AppLogCommand {
+  typedef struct PBL_PACKED AppLogCommand {
     uint8_t commandType;
   } AppLogCommand;
 

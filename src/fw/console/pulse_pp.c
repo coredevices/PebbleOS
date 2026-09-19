@@ -16,7 +16,7 @@
 #include "system/passert.h"
 #include <pbl/logging/logging.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include <string.h>
@@ -27,12 +27,12 @@
 
 #define PULSE_PP_OPCODE_UNKNOWN (255)
 
-typedef struct PACKED PulsePPPacket {
+typedef struct PBL_PACKED PulsePPPacket {
   uint8_t opcode;
   uint8_t data[0];
 } PulsePPPacket;
 
-typedef struct PACKED PulsePPCallbackPacket {
+typedef struct PBL_PACKED PulsePPCallbackPacket {
   size_t packet_length;
   PulsePPPacket packet;
 } PulsePPCallbackPacket;

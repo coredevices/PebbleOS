@@ -14,7 +14,7 @@
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/workout_service.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/string.h"
 #include "pbl/util/struct.h"
 

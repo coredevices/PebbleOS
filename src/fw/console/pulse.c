@@ -20,9 +20,8 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/legacy_checksum.h"
-#include "pbl/util/likely.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -50,7 +49,7 @@ static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(PULSE_MAX_SEND_SIZE + PULSE
 typedef void (*ProtocolHandlerFunc)(void *packet, size_t length);
 typedef void (*LinkStateChangedHandlerFunc)(PulseLinkState link_state);
 
-typedef struct PACKED ProtocolHandler {
+typedef struct PBL_PACKED ProtocolHandler {
   uint8_t number;
   ProtocolHandlerFunc handler;
   LinkStateChangedHandlerFunc link_state_handler;
@@ -192,7 +191,7 @@ void pulse_handle_character(char c, bool *should_context_switch) {
     }
   }
 
-  if (UNLIKELY(c == FRAME_DELIMITER)) {
+  if (PBL_UNLIKELY(c == FRAME_DELIMITER)) {
     s_drop_rest_of_frame = false;
     size_t decoded_length = cobs_streaming_decode_finish(&s_frame_decode_ctx);
     if (decoded_length >= PULSE_MIN_FRAME_LENGTH && decoded_length < SIZE_MAX) {
@@ -209,7 +208,8 @@ void pulse_handle_character(char c, bool *should_context_switch) {
   } else if (s_drop_rest_of_frame) {
     // The frame has already been found to be bad and we haven't yet
     // seen the start of the next frame.
-  } else if (UNLIKELY(s_current_receive_buffer->length >= sizeof(s_current_receive_buffer->data))) {
+  } else if (PBL_UNLIKELY(s_current_receive_buffer->length >=
+                          sizeof(s_current_receive_buffer->data))) {
     // Frame too long; invalid.
     s_drop_rest_of_frame = true;
     prv_reset_receive_buffer(s_current_receive_buffer);

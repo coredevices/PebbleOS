@@ -15,7 +15,7 @@
 #include "applib/graphics/gpath.h"
 #include "pbl/util/trig.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -139,7 +139,7 @@ static void prv_draw_dot(GContext *ctx, GPoint pos, GColor color) {
 }
 
 //! Packed so we can squeeze this into a void* as the animation context
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   union {
     struct {
       //! Whether or not to collapse the starting screen of the animation to a dot

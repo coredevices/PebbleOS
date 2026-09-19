@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,18 +21,18 @@ void Default_Handler(void) {
 // All these functions are weak references to the Default_Handler,
 // so if we define a handler in elsewhere in the firmware, these
 // will be overriden
-ALIAS("Default_Handler") void NMI_Handler(void);
-ALIAS("Default_Handler") void HardFault_Handler(void);
-ALIAS("Default_Handler") void MemManage_Handler(void);
-ALIAS("Default_Handler") void BusFault_Handler(void);
-ALIAS("Default_Handler") void UsageFault_Handler(void);
-ALIAS("Default_Handler") void SVC_Handler(void);
-ALIAS("Default_Handler") void DebugMon_Handler(void);
-ALIAS("Default_Handler") void PendSV_Handler(void);
-ALIAS("Default_Handler") void SysTick_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void NMI_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void HardFault_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void MemManage_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void BusFault_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void UsageFault_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void SVC_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void DebugMon_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void PendSV_Handler(void);
+PBL_WEAK PBL_ALIAS("Default_Handler") void SysTick_Handler(void);
 
 // External Interrupts
-#define IRQ_DEF(idx, irq) ALIAS("Default_Handler") void irq##_IRQHandler(void);
+#define IRQ_DEF(idx, irq) PBL_WEAK PBL_ALIAS("Default_Handler") void irq##_IRQHandler(void);
 #if defined(CONFIG_SOC_NRF52)
 #include "irq_nrf52.def"
 #elif defined(CONFIG_SOC_SF32LB52)
@@ -65,7 +65,7 @@ ALIAS("Default_Handler") void SysTick_Handler(void);
 #undef IRQ_DEF
 #endif // CONFIG_PROFILE_INTERRUPTS
 
-EXTERNALLY_VISIBLE SECTION(".isr_vector") const void *const vector_table[] = {
+PBL_EXTERNALLY_VISIBLE PBL_SECTION(".isr_vector") const void *const vector_table[] = {
   _estack,
   Reset_Handler,
   NMI_Handler,

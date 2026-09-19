@@ -2,4 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_library()
-pbl_library_sources(service.c)
+pbl_library_sources(spo2_test.c)
+pbl_library_include_directories(.)

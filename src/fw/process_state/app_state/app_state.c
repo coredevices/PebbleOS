@@ -24,7 +24,7 @@
 #include "process_management/app_manager.h"
 #include "process_management/process_loader.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "tinymt32.h"
 
 typedef struct {
@@ -257,7 +257,7 @@ static const TouchNavTwinOps s_app_twin_ops = {
 };
 #endif
 
-NOINLINE void app_state_init(void) {
+PBL_NOINLINE void app_state_init(void) {
   s_app_state_ptr->rand_seed.mat1 = 0; // Uninitialized
 
   click_manager_init(&s_app_state_ptr->click_manager);
@@ -333,7 +333,7 @@ NOINLINE void app_state_init(void) {
   s_app_state_ptr->current_timeline_item_action_source = TimelineItemActionSourceModalNotification;
 }
 
-NOINLINE void app_state_deinit(void) {
+PBL_NOINLINE void app_state_deinit(void) {
   animation_private_state_deinit(&s_app_state_ptr->animation_state);
   health_service_state_deinit(app_state_get_health_service_state());
   unobstructed_area_service_deinit(app_state_get_unobstructed_area_state());

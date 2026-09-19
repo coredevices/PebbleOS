@@ -4,7 +4,7 @@
 #pragma once
 
 #include "resource/resource.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //
 // Definitions only for font loading and text rendering
@@ -34,7 +34,7 @@
 // The name 'FontMetaData' is retained instead of a more consistent 'FontMetaDataV2' because the
 // uses of V1 and V3 are localized but 'FontMetaData' is used in many places, requiring many ugly
 // changes.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t version;
   uint8_t max_height;
   uint16_t number_of_glyphs;
@@ -45,7 +45,7 @@ typedef struct PACKED {
   uint8_t features;
 } FontMetaDataV3;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t version;
   uint8_t max_height;
   uint16_t number_of_glyphs;
@@ -54,7 +54,7 @@ typedef struct PACKED {
   uint8_t codepoint_bytes;
 } FontMetaData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t version;
   uint8_t max_height;
   uint16_t number_of_glyphs;
@@ -76,7 +76,7 @@ typedef struct {
   ResourceCallbackHandle extension_changed_cb;
 } FontInfo;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t hash;
   uint8_t count;
   uint16_t offset;

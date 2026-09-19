@@ -23,7 +23,7 @@ void system_reset_prepare(void) {
   flash_stop();
 }
 
-NORETURN system_reset(void) {
+PBL_NORETURN void system_reset(void) {
   static bool failure_occurred = false;
 
   bool already_failed = failure_occurred;
@@ -52,7 +52,7 @@ void system_reset_callback(void *data) {
   (void)data;
 }
 
-NORETURN system_hard_reset(void) {
+PBL_NORETURN void system_hard_reset(void) {
   // Don't do anything fancy here. We may be in a context where nothing works, not even
   // interrupts. Just reset us.
 

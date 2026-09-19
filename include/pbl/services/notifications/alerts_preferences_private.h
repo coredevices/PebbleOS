@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "applib/preferred_content_size.h"
 #include "kernel/events.h"
 #include "pbl/services/notifications/alerts_private.h"
 #include "pbl/services/notifications/do_not_disturb.h"
@@ -62,6 +63,15 @@ typedef enum {
 NotificationStatusBarStyle alerts_preferences_get_notification_status_bar_style(void);
 
 void alerts_preferences_set_notification_status_bar_style(NotificationStatusBarStyle style);
+
+//! Notification content size preference value that follows the system content size
+#define NotificationContentSizeSystem ((PreferredContentSize)NumPreferredContentSizes)
+
+//! @return The notification content size preference, NotificationContentSizeSystem when
+//! notifications follow the system content size.
+PreferredContentSize alerts_preferences_get_notification_content_size(void);
+
+void alerts_preferences_set_notification_content_size(PreferredContentSize size);
 
 bool alerts_preferences_get_vibrate(void);
 

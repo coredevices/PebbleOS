@@ -10,7 +10,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
 
@@ -352,7 +352,7 @@ typedef enum RemoteInputCommand {
   RemoteInputCommand_ButtonSet = 0x02,
 } RemoteInputCommand;
 
-typedef struct PACKED RemoteInputButtonMsg {
+typedef struct PBL_PACKED RemoteInputButtonMsg {
   uint8_t command;
   uint8_t button_id;
   uint8_t presses;
@@ -360,18 +360,18 @@ typedef struct PACKED RemoteInputButtonMsg {
   uint16_t gap_ms;
 } RemoteInputButtonMsg;
 
-typedef struct PACKED RemoteInputButtonSetMsg {
+typedef struct PBL_PACKED RemoteInputButtonSetMsg {
   uint8_t command;
   uint8_t buttons;
 } RemoteInputButtonSetMsg;
 
-typedef struct PACKED RemoteInputSwipeMsg {
+typedef struct PBL_PACKED RemoteInputSwipeMsg {
   uint8_t command;
   uint8_t direction;
   uint16_t duration_ms;
 } RemoteInputSwipeMsg;
 
-typedef struct PACKED RemoteInputAck {
+typedef struct PBL_PACKED RemoteInputAck {
   uint8_t command;
   uint8_t status;
 } RemoteInputAck;

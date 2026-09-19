@@ -6,4 +6,3 @@ pbl_library_sources(
   service.c
   util.c
 )
-pbl_service_gettext(phone_call service.c util.c)

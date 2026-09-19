@@ -3,18 +3,18 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <inttypes.h>
 #include <stddef.h>
 
-typedef struct PACKED GenericAttribute {
+typedef struct PBL_PACKED GenericAttribute {
   uint8_t id;
   uint16_t length;
   uint8_t data[];
 } GenericAttribute;
 
-typedef struct PACKED GenericAttributeList {
+typedef struct PBL_PACKED GenericAttributeList {
   uint8_t num_attributes;
   GenericAttribute attributes[];
 } GenericAttributeList;

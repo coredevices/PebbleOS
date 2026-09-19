@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include <stdint.h>
@@ -151,14 +151,14 @@ typedef enum {
 
 //! Written (with Response) to the Remote Command characteristic,
 //! to execute the specified command on the AMS.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AMSRemoteCommandID command_id : 8;
 } AMSRemoteCommand;
 
 //! Written (without Response) to the Entity Update characteristic,
 //! to indicate that the client is interested in receiving updates for the specified entity
 //! and attributes.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AMSEntityID entity_id : 8;
 
   //! Array of Attribute IDs for which the client wants to receive updates.
@@ -169,7 +169,7 @@ typedef struct PACKED {
 
 //! Notification from the Entity Update characteristic,
 //! sent to notify the client of an updated attribute value.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AMSEntityID entity_id : 8;
 
   //! The Attribute ID of the updated value.

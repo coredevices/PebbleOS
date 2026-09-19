@@ -15,7 +15,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <util/net.h>
 
 #include "pbl/kernel/sem.h"
@@ -48,7 +48,7 @@ enum SupervisoryKind {
 
 typedef union ReliablePacket {
   bool is_supervisory : 1;
-  struct PACKED ReliableInfoPacket {
+  struct PBL_PACKED ReliableInfoPacket {
     bool is_supervisory : 1;
     uint8_t sequence_number : 7;
     bool poll : 1;
@@ -57,7 +57,7 @@ typedef union ReliablePacket {
     net16 length;
     char information[];
   } i;
-  struct PACKED ReliableSupervisoryPacket {
+  struct PBL_PACKED ReliableSupervisoryPacket {
     bool is_supervisory : 1;
     bool is_unnumbered : 1; // is_unnumbered=true is unsupported
     enum SupervisoryKind kind : 2;

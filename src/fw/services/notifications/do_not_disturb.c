@@ -16,7 +16,6 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
-#include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
@@ -27,12 +26,12 @@
 #include "pbl/util/math.h"
 #include "util/time/time.h"
 
+#include <pbl/cron/cron.h>
 #include <stdbool.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
 typedef struct DoNotDisturbData {
-  TimerID update_timer_id;
   bool is_in_schedule_period;
   bool manually_override_dnd;
   bool was_active;
@@ -40,9 +39,17 @@ typedef struct DoNotDisturbData {
 
 static DoNotDisturbData s_data;
 
+//! Cron jobs for the schedule boundaries, and for midnight of the days on
+//! which the weekday/weekend schedule takes over from the other.
+static struct pbl_cron_job s_weekday_from_job;
+static struct pbl_cron_job s_weekday_to_job;
+static struct pbl_cron_job s_weekend_from_job;
+static struct pbl_cron_job s_weekend_to_job;
+static struct pbl_cron_job s_schedule_switch_job;
+
 static bool prv_is_smart_dnd_active(void);
 static bool prv_is_schedule_active(void);
-static void prv_set_schedule_mode_timer();
+static void prv_update_schedule_mode(void);
 
 static void prv_update_active_time(bool is_active) {
   if (is_active) {
@@ -127,14 +134,7 @@ static void prv_try_update_schedule_mode(void *data) {
   if (clear_override) {
     s_data.manually_override_dnd = false;
   }
-
-  if (do_not_disturb_is_schedule_enabled(WeekdaySchedule) ||
-      do_not_disturb_is_schedule_enabled(WeekendSchedule)) {
-    prv_set_schedule_mode_timer();
-  } else {
-    new_timer_stop(s_data.update_timer_id);
-    s_data.is_in_schedule_period = false;
-  }
+  prv_update_schedule_mode();
   prv_do_update();
 }
 
@@ -142,7 +142,7 @@ static void prv_try_update_schedule_mode_callback(bool clear_manual_override) {
   system_task_add_callback(prv_try_update_schedule_mode, (void *)(uintptr_t)clear_manual_override);
 }
 
-static void prv_update_schedule_mode_timer_callback(void *not_used) {
+static void prv_schedule_cron_callback(struct pbl_cron_job *job, void *data) {
   prv_try_update_schedule_mode_callback(true);
 }
 
@@ -152,57 +152,75 @@ static DoNotDisturbScheduleType prv_current_schedule_type(void) {
   return ((time.tm_wday == Saturday || time.tm_wday == Sunday) ? WeekendSchedule : WeekdaySchedule);
 }
 
-// Updates the timer for scheduled DND check
-// Only enters if at least one of the schedules is enabled
-static void prv_set_schedule_mode_timer() {
+static bool prv_is_in_schedule_period(void) {
+  const DoNotDisturbScheduleType type = prv_current_schedule_type();
+  if (!do_not_disturb_is_schedule_enabled(type)) {
+    return false;
+  }
+
+  DoNotDisturbSchedule schedule;
+  do_not_disturb_get_schedule(type, &schedule);
+  const int from = schedule.from_hour * MINUTES_PER_HOUR + schedule.from_minute;
+  const int to = schedule.to_hour * MINUTES_PER_HOUR + schedule.to_minute;
+
   struct tm time;
   rtc_get_time_tm(&time);
+  const int now = time.tm_hour * MINUTES_PER_HOUR + time.tm_min;
 
-  DoNotDisturbScheduleType curr_schedule_type = prv_current_schedule_type();
-  DoNotDisturbSchedule curr_schedule;
-  do_not_disturb_get_schedule(curr_schedule_type, &curr_schedule);
-  bool curr_schedule_enabled = do_not_disturb_is_schedule_enabled(curr_schedule_type);
+  if (from < to) {
+    return now >= from && now < to;
+  }
+  return from != to && (now >= from || now < to);
+}
 
-  time_t seconds_until_update;
-  bool is_enable_next;
-  int curr_day = time.tm_wday;
-  if (!curr_schedule_enabled) { // Only next schedule is enabled
-    is_enable_next = true;
-    // Depending on the current schedule, determine the first day index of the next schedule
-    int next_schedule_day = (curr_schedule_type == WeekdaySchedule) ? Saturday : Monday;
-    // Count the number of full days until next schedule (Sunday = 0)
-    int num_full_days = ((next_schedule_day - curr_day + DAYS_PER_WEEK) % DAYS_PER_WEEK) - 1;
-    // Calculate the number of seconds until the start of the next schedule, update then
-    seconds_until_update =
-        time_util_get_seconds_until_daily_time(&time, 0, 0) + (num_full_days * SECONDS_PER_DAY);
-  } else { // Current schedule is enabled
-    const time_t seconds_until_start = time_util_get_seconds_until_daily_time(
-        &time, curr_schedule.from_hour, curr_schedule.from_minute);
-    const time_t seconds_until_end = time_util_get_seconds_until_daily_time(
-        &time, curr_schedule.to_hour, curr_schedule.to_minute);
-    seconds_until_update = MIN(seconds_until_start, seconds_until_end);
-    is_enable_next = (seconds_until_update == seconds_until_start);
-    // Update at midnight if on the last day of the current schedule
-    if ((curr_day == Sunday) || (curr_day == Friday)) {
-      const time_t seconds_until_midnight = time_util_get_seconds_until_daily_time(&time, 0, 0);
-      seconds_until_update = MIN(seconds_until_update, seconds_until_midnight);
-    }
+static void prv_schedule_job(struct pbl_cron_job *job, int hour, int minute, uint8_t wday) {
+  *job = (struct pbl_cron_job){
+    .cb = prv_schedule_cron_callback,
+    .minute = minute,
+    .hour = hour,
+    .mday = PBL_CRON_MDAY_ANY,
+    .month = PBL_CRON_MONTH_ANY,
+    .wday = wday,
+  };
+  pbl_cron_job_schedule(job);
+}
+
+static void prv_schedule_jobs(DoNotDisturbScheduleType type, struct pbl_cron_job *from_job,
+                              struct pbl_cron_job *to_job, uint8_t wday) {
+  DoNotDisturbSchedule schedule;
+  do_not_disturb_get_schedule(type, &schedule);
+  prv_schedule_job(from_job, schedule.from_hour, schedule.from_minute, wday);
+  prv_schedule_job(to_job, schedule.to_hour, schedule.to_minute, wday);
+}
+
+static void prv_update_schedule_mode(void) {
+  pbl_cron_job_unschedule(&s_weekday_from_job);
+  pbl_cron_job_unschedule(&s_weekday_to_job);
+  pbl_cron_job_unschedule(&s_weekend_from_job);
+  pbl_cron_job_unschedule(&s_weekend_to_job);
+  pbl_cron_job_unschedule(&s_schedule_switch_job);
+
+  const bool weekday_enabled = do_not_disturb_is_schedule_enabled(WeekdaySchedule);
+  const bool weekend_enabled = do_not_disturb_is_schedule_enabled(WeekendSchedule);
+  if (weekday_enabled) {
+    prv_schedule_jobs(WeekdaySchedule, &s_weekday_from_job, &s_weekday_to_job,
+                      PBL_CRON_WDAY_WEEKDAYS);
+  }
+  if (weekend_enabled) {
+    prv_schedule_jobs(WeekendSchedule, &s_weekend_from_job, &s_weekend_to_job,
+                      PBL_CRON_WDAY_WEEKENDS);
+  }
+  if (weekday_enabled || weekend_enabled) {
+    prv_schedule_job(&s_schedule_switch_job, 0, 0, PBL_CRON_WDAY_MONDAY | PBL_CRON_WDAY_SATURDAY);
   }
 
-  if (s_data.is_in_schedule_period == is_enable_next) {
-    // Coming out of scheduled DND with manual DND on, turning it off
-    if (is_enable_next && do_not_disturb_is_manually_enabled()) {
-      do_not_disturb_set_manually_enabled(false);
-    }
-    s_data.is_in_schedule_period = !is_enable_next;
+  const bool in_period = prv_is_in_schedule_period();
+  // Coming out of scheduled DND with manual DND on, turning it off
+  if (s_data.is_in_schedule_period && !in_period && do_not_disturb_is_manually_enabled()) {
+    do_not_disturb_set_manually_enabled(false);
   }
-
-  PBL_LOG_INFO("%s scheduled period. %u seconds until update",
-               s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int)seconds_until_update);
-
-  bool success = new_timer_start(s_data.update_timer_id, seconds_until_update * 1000,
-                                 prv_update_schedule_mode_timer_callback, NULL, 0 /*flags*/);
-  PBL_ASSERTN(success);
+  s_data.is_in_schedule_period = in_period;
+  PBL_LOG_DBG("%s scheduled period", s_data.is_in_schedule_period ? "In" : "Out of");
 }
 
 static bool prv_is_current_schedule_enabled() {
@@ -304,7 +322,6 @@ void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type) {
 
 void do_not_disturb_init(void) {
   s_data = (DoNotDisturbData){
-    .update_timer_id = new_timer_create(),
     .was_active = false,
   };
   prv_try_update_schedule_mode((void *)true);
@@ -325,13 +342,3 @@ void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e) {
 void do_not_disturb_manual_toggle_with_dialog(void) {
   do_not_disturb_toggle_push(ActionTogglePrompt_Auto, false /* set_exit_reason */);
 }
-
-#ifdef UNITTEST
-TimerID get_dnd_timer_id(void) {
-  return s_data.update_timer_id;
-}
-
-void set_dnd_timer_id(TimerID id) {
-  s_data.update_timer_id = id;
-}
-#endif

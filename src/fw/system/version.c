@@ -6,7 +6,7 @@
 #include "flash_region/flash_region.h"
 #include "system/firmware_storage.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/string.h"
 
@@ -22,7 +22,7 @@
 //! .note.gnu.build-id section in src/fw/fw_common.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
-const FirmwareMetadata TINTIN_METADATA SECTION(".pbl_fw_version") = {
+const FirmwareMetadata TINTIN_METADATA PBL_SECTION(".pbl_fw_version") = {
   .version_timestamp = GIT_TIMESTAMP,
   .version_tag = GIT_TAG,
   .version_short = GIT_REVISION,

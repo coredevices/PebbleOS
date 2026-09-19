@@ -13,7 +13,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/persist.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // Stubs
 ////////////////////////////////////
@@ -281,11 +281,11 @@ void test_persist__legacy2_max_usage(void) {
 }
 
 // Legacy persist_map layout, used to seed a migration scenario.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t version;
 } LegacyPmapHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   int id;
   Uuid uuid;
 } LegacyPmapField;

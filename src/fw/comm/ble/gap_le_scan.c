@@ -8,7 +8,7 @@
 #include "kernel/events.h"
 #include "system/passert.h"
 #include "pbl/util/circular_buffer.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 
 // -----------------------------------------------------------------------------
 // Static Variables -- MUST be protected with bt_lock/unlock!
@@ -105,7 +105,7 @@ bool gap_le_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out) {
   uint16_t write_space = *size_in_out;
   bt_lock();
   {
-    if (UNLIKELY(!s_is_scanning)) {
+    if (PBL_UNLIKELY(!s_is_scanning)) {
       // Return, the buffers are deallocated by now already...
       *size_in_out = 0;
       bt_unlock();

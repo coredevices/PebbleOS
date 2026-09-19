@@ -14,7 +14,7 @@
 #include "pbl/services/timeline/attribute.h"
 #include "shell/prefs.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/string.h"
 #include "pbl/util/struct.h"
 
@@ -357,11 +357,7 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   // We require a valid title node
   PBL_ASSERTN(title_node);
 
-  // Push the margin a bit closer
-#if PBL_DISPLAY_HEIGHT >= 200 && PBL_RECT
-  title_node->margin.h = -3;
-#endif
-
+  title_node->margin.h = launcher_menu_layer_get_style()->title_margin_h;
   title_node->offset.y -= 1;
   graphics_text_node_container_add_child(&vertical_node->container, title_node);
 
@@ -385,8 +381,8 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   return &vertical_node->container.node;
 }
 
-// NOINLINE to save stack; on Spalding this can be enough to push us over the edge.
-static NOINLINE GTextNode *prv_create_structured_glance_node(
+// PBL_NOINLINE to save stack; on Spalding this can be enough to push us over the edge.
+static PBL_NOINLINE GTextNode *prv_create_structured_glance_node(
     LauncherAppGlanceStructured *structured_glance, const GRect *glance_frame) {
   // Icon node and title/subtitle nodes
   const size_t max_horizontal_nodes = 2;
@@ -528,8 +524,9 @@ LauncherAppGlanceStructured *launcher_app_glance_structured_create(
   structured_glance->data = data;
   structured_glance->icon_max_size = LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE;
   structured_glance->icon_horizontal_margin = LAUNCHER_APP_GLANCE_STRUCTURED_ICON_HORIZONTAL_MARGIN;
-  structured_glance->title_font = fonts_get_system_font(LAUNCHER_MENU_LAYER_TITLE_FONT);
-  structured_glance->subtitle_font = fonts_get_system_font(LAUNCHER_MENU_LAYER_SUBTITLE_FONT);
+  const LauncherMenuLayerStyle *style = launcher_menu_layer_get_style();
+  structured_glance->title_font = fonts_get_system_font(style->title_font_key);
+  structured_glance->subtitle_font = fonts_get_system_font(style->subtitle_font_key);
   KinoReel *glance_impl =
       kino_reel_custom_create(&s_launcher_app_glance_structured_reel_impl, structured_glance);
   // Now that we've setup the structured glance's fields, initialize the LauncherAppGlance

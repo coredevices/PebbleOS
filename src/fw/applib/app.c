@@ -64,7 +64,7 @@ void app_request_render(void) {
 }
 
 //! Tasks that have to be done in between each event.
-static NOINLINE void event_loop_upkeep(void) {
+static PBL_NOINLINE void event_loop_upkeep(void) {
   // Check to see if the most recent event caused us to pop our final window. If that's the case, we
   // need to kill ourselves.
   if (app_window_stack_count() == 0) {
@@ -174,7 +174,7 @@ static void prv_app_callback_handler(PebbleEvent *e) {
   e->callback.callback(e->callback.data);
 }
 
-static NOINLINE void prv_handle_deinit_event(void) {
+static PBL_NOINLINE void prv_handle_deinit_event(void) {
   ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
   event_service_client_unsubscribe(&events_info->will_focus_event);
   event_service_client_unsubscribe(&events_info->button_down_event);

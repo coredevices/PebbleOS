@@ -12,6 +12,7 @@
 #include "system/passert.h"
 #include "util/buffer.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 //! Signature for callbacks provided to prv_content_indicator_iterate()
 //! @param content_indicator The current ContentIndicator in the iteration.
@@ -291,7 +292,7 @@ void content_indicator_draw_arrow(GContext *ctx, const GRect *frame,
   graphics_context_set_antialiased(ctx, prev_antialiased);
 }
 
-T_STATIC void prv_content_indicator_update_proc(Layer *layer, GContext *ctx) {
+PBL_T_STATIC void prv_content_indicator_update_proc(Layer *layer, GContext *ctx) {
   // Find the direction data corresponding to the layer that should be updated
   ContentIndicatorDirectionData *direction_data;
   if (!prv_content_indicator_iterate(prv_content_indicator_find_direction_data_cb, layer,

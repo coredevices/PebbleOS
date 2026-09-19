@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/pstring.h"
 #include "pbl/util/size.h"
 
@@ -57,7 +57,7 @@ typedef enum {
 } CategoryID;
 
 //! Notification Source's "Notification" format
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   EventID event_id : 8;
   EventFlags event_flags : 8;
   CategoryID category_id : 8;
@@ -74,25 +74,25 @@ typedef enum {
 } CommandID;
 
 //! Header for Control Point (CP) and Data Source (DS) messages
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   CommandID command_id : 8;
   uint8_t data[];
 } CPDSMessage;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   CommandID command_id : 8;
   uint32_t notification_uid;
   uint8_t attributes_data[];
 } GetNotificationAttributesMsg;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   CommandID command_id : 8;
   char app_id[];
   // uint8_t attributes_data[] follows after the zero-terminated app_id string,
   // but it's not possible to express this in a C struct.
 } GetAppAttributesMsg;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   CommandID command_id : 8;
   uint32_t notification_uid;
   uint8_t action_id;
@@ -195,7 +195,7 @@ static const FetchedAttribute s_fetched_app_attributes[] = {
 
 #define NUM_FETCHED_APP_ATTRIBUTES (ARRAY_LENGTH(s_fetched_app_attributes))
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t id;
   union {
     PascalString16 pstr;

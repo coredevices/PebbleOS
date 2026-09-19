@@ -6,7 +6,7 @@
 #include "attribute.h"
 #include "layout_layer.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
 #include <time.h>
@@ -96,7 +96,7 @@ typedef struct {
   TimelineItemAction *actions;
 } TimelineItemActionGroup;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! Unique identifier for this item.  Controlled by the watch.  Needed for responding
   //! to the phone to satisfy actions actuated on the watch.
   TimelineItemId id;
@@ -170,7 +170,7 @@ typedef struct {
   uint8_t *allocated_buffer;
 } TimelineItem;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   CommonTimelineItemHeader common;
   uint16_t payload_length;
   //! Number of attributes that determine how the view/pin look when they are rendered.

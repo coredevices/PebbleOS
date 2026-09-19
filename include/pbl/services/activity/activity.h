@@ -8,7 +8,7 @@
 
 #include "applib/accel_service_private.h"
 #include "applib/health_service.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/time/time.h"
 
 // Max # of days of history we store
@@ -30,7 +30,7 @@ typedef enum {
 } ActivityGender;
 
 // Activity Settings Struct, for storing to prefs
-typedef struct PACKED ActivitySettings {
+typedef struct PBL_PACKED ActivitySettings {
   int16_t height_mm;
   int16_t weight_dag;
   bool tracking_enabled;
@@ -41,7 +41,7 @@ typedef struct PACKED ActivitySettings {
 } ActivitySettings;
 
 // Heart Rate Preferences Struct, for storing to prefs
-typedef struct PACKED HeartRatePreferences {
+typedef struct PBL_PACKED HeartRatePreferences {
   uint8_t resting_hr;
   uint8_t elevated_hr;
   uint8_t max_hr;
@@ -60,11 +60,18 @@ typedef enum {
 } HRMonitoringInterval;
 
 // Activity HRM Settings Struct, for storing to prefs
-typedef struct PACKED ActivityHRMSettings {
+typedef struct PBL_PACKED ActivityHRMSettings {
   bool enabled;
   uint8_t measurement_interval;   // HRMonitoringInterval value
   bool activity_tracking_enabled; // HR tracking during detected activities (walk/run)
 } ActivityHRMSettings;
+
+// Activity SpO2 (blood oxygen) Settings Struct, for storing to prefs.
+// The on/off bit is synced from the phone under its own key
+// (PREF_KEY_BLOOD_OXYGEN_PREFERENCES); only the watch-local interval lives here.
+typedef struct PBL_PACKED ActivitySpO2Settings {
+  uint8_t measurement_interval; // HRMonitoringInterval value
+} ActivitySpO2Settings;
 
 // Default values, taken from http://www.cdc.gov/nchs/fastats/body-measurements.htm
 #define ACTIVITY_DEFAULT_HEIGHT_MM 1620 // 5'3.8"
@@ -99,6 +106,11 @@ typedef struct PACKED ActivityHRMSettings {
     .enabled = true,                                    \
     .measurement_interval = HRMonitoringInterval_10Min, \
     .activity_tracking_enabled = false,                 \
+  }
+
+#define ACTIVITY_SPO2_DEFAULT_PREFERENCES               \
+  {                                                     \
+    .measurement_interval = HRMonitoringInterval_10Min, \
   }
 
 // We consider values outside of this range to be invalid
@@ -188,7 +200,7 @@ typedef enum {
 // NOTE: modifying this struct requires a bump to the ACTIVITY_SESSION_LOGGING_VERSION and
 // an update to documentation on this wiki page:
 //   https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=46301269
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t steps;             // number of steps
   uint16_t active_kcalories;  // number of active kcalories
   uint16_t resting_kcalories; // number of resting kcalories
@@ -204,7 +216,7 @@ typedef struct {
 
 #define ACTIVITY_SESSION_MAX_LENGTH_MIN MINUTES_PER_DAY
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   time_t start_utc;             // session start time
   uint16_t length_min;          // length of session in minutes
   ActivitySessionType type : 8; // type of activity
@@ -411,6 +423,16 @@ uint8_t activity_prefs_heart_get_zone3_threshold(void);
 //! Return true if the HRM is enabled, false if not
 bool activity_prefs_heart_rate_is_enabled(void);
 
+//! Return true if blood oxygen (SpO2) monitoring is enabled, false if not. Declared unconditionally
+//! (like activity_prefs_heart_rate_is_enabled) because the HRM manager gates sensor power on it
+//! regardless of CONFIG_HRM.
+bool activity_prefs_blood_oxygen_is_enabled(void);
+
+//! Return true if blood oxygen sampling during detected activities is enabled. Opt-in, only
+//! meaningful alongside HR-during-activities. Declared unconditionally; the HRM manager reads it
+//! to allow the SpO2 path during activities even when daily SpO2 monitoring is off.
+bool activity_prefs_blood_oxygen_activity_tracking_is_enabled(void);
+
 #ifdef CONFIG_HRM
 //! Get the HRM measurement interval setting
 //! @return the current HRMonitoringInterval value
@@ -425,6 +447,20 @@ bool activity_prefs_hrm_activity_tracking_is_enabled(void);
 
 //! Enable or disable HR tracking during detected activities (walk/run)
 void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled);
+
+//! Enable or disable blood oxygen (SpO2) monitoring
+void activity_prefs_set_blood_oxygen_enabled(bool enabled);
+
+//! Enable or disable blood oxygen sampling during detected activities
+void activity_prefs_set_blood_oxygen_activity_tracking_enabled(bool enabled);
+
+//! Get the SpO2 measurement interval setting
+//! @return the current HRMonitoringInterval value
+HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void);
+
+//! Set the SpO2 measurement interval
+//! @param interval the desired HRMonitoringInterval value
+void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval);
 #endif
 
 //! Get the current and (optionally) historical values for a given metric. The caller passes

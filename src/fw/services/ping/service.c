@@ -10,7 +10,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/net.h"
 
 #include <inttypes.h>
@@ -25,21 +25,21 @@ static bool s_is_ping_kernel_bg_callback_scheduled;
 
 // ---------------------------------------------------------------------------------------------------------
 // Ping Pong structures
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t cmd;
   uint32_t cookie;
 } PingMsgHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PingMsgHeader hdr;
 } PingMsgV1;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PingMsgHeader hdr;
   uint8_t idle; // Optional
 } PingMsgV2;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PingMsgHeader hdr;
 } PongMsg;
 

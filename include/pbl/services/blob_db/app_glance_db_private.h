@@ -5,7 +5,7 @@
 
 #include "pbl/services/timeline/attribute.h"
 #include "pbl/services/timeline/attribute_private.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define APP_GLANCE_DB_CURRENT_VERSION (1)
 
@@ -18,13 +18,13 @@
 
 #define APP_GLANCE_DB_MAX_NUM_APP_GLANCES (50)
 
-typedef struct PACKED SerializedAppGlanceHeader {
+typedef struct PBL_PACKED SerializedAppGlanceHeader {
   uint8_t version;
   uint32_t creation_time;
   uint8_t data[]; // Serialized slices
 } SerializedAppGlanceHeader;
 
-typedef struct PACKED SerializedAppGlanceSliceHeader {
+typedef struct PBL_PACKED SerializedAppGlanceSliceHeader {
   uint16_t total_size;
   uint8_t type;
   uint8_t num_attributes;

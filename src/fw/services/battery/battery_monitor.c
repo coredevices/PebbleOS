@@ -13,6 +13,7 @@
 #include "util/ratio.h"
 
 #include <stdint.h>
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -50,7 +51,7 @@ static const PowerState power_states[] = {
 ////////////////////////
 // Business logic
 static TimerID s_standby_timer_id = TIMER_INVALID_ID;
-T_STATIC PowerStateID s_power_state;
+PBL_T_STATIC PowerStateID s_power_state;
 static bool s_low_on_first_run;
 static bool s_first_run;
 

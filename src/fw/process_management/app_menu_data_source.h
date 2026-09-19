@@ -15,7 +15,7 @@
 #include "process_management/pebble_process_info.h"
 #include "process_management/pebble_process_md.h"
 #include "pbl/services/process_management/app_order_storage.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 
 struct AppMenuDataSource;
@@ -29,7 +29,7 @@ typedef enum AppMenuStorageOrder {
   AppMenuStorageOrderGeneralOrderOffset
 } AppMenuStorageOrder;
 
-typedef struct PACKED AppMenuNode {
+typedef struct PBL_PACKED AppMenuNode {
   ListNode node;
   AppInstallId install_id;
   ResAppNum app_num;

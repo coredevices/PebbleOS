@@ -9,11 +9,11 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! App database entry for BlobDB. First pass is very basic. The list will expand as more features
 //! and requirements are implemented.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid uuid;
   uint32_t info_flags;
   uint32_t icon_resource_id;

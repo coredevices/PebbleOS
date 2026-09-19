@@ -5,7 +5,7 @@
 
 #include "activity.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD     "sleep_reward"
 #define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_SUMMARY    "sleep_summary"
@@ -13,7 +13,7 @@
 #define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SUMMARY "activity_summary"
 #define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SESSION "activity_session"
 
-typedef struct PACKED ActivityRewardSettings {
+typedef struct PBL_PACKED ActivityRewardSettings {
   // Note: these parameters are the number of days in addition to 'today' that we want to look at
   uint8_t min_days_data;            //!< How many days of the metric's history we require
   uint8_t continuous_min_days_data; //!< How many consecutive days of history we require
@@ -24,18 +24,18 @@ typedef struct PACKED ActivityRewardSettings {
 
   // Insight-specific values
   union {
-    struct PACKED {
+    struct PBL_PACKED {
       uint16_t trigger_after_wakeup_seconds; //!< Time we wait before showing sleep reward
     } sleep;
 
-    struct PACKED {
+    struct PBL_PACKED {
       uint8_t trigger_active_minutes;   //!< Time we must be currently active before showing reward
       uint8_t trigger_steps_per_minute; //!< Steps per minute required for an 'active' minute
     } activity;
   };
 } ActivityRewardSettings;
 
-typedef struct PACKED ActivitySummarySettings {
+typedef struct PBL_PACKED ActivitySummarySettings {
   int8_t above_avg_threshold; //!< Values greater than this are counted as above avg
                               //!< In relation to 100% (eg 105% would be 5)
   int8_t below_avg_threshold; //!< Values less than this are counted as above avg
@@ -44,7 +44,7 @@ typedef struct PACKED ActivitySummarySettings {
                               //!< In relation to 100% (e.g. 55% would be -45)
 
   union {
-    struct PACKED {
+    struct PBL_PACKED {
       uint16_t trigger_minute;              //!< Minute of the day that we trigger the pin
       uint16_t update_threshold_steps;      //!< Step delta that will cause the pin to update
       uint32_t update_max_interval_seconds; //!< Max time we'll go without updating the pin
@@ -52,7 +52,7 @@ typedef struct PACKED ActivitySummarySettings {
       uint16_t max_fail_steps;              //!< Don't show negative if walked more than X steps
     } activity;
 
-    struct PACKED {
+    struct PBL_PACKED {
       uint16_t max_fail_minutes;            //!< Don't show negative if slept more than X minutes
       uint16_t trigger_notif_seconds;       //!< Time in seconds after wakeup to notify about sleep
       uint16_t trigger_notif_activity;      //!< Minimum amount of steps per minute to trigger the
@@ -63,18 +63,18 @@ typedef struct PACKED ActivitySummarySettings {
   };
 } ActivitySummarySettings;
 
-typedef struct PACKED ActivitySessionSettings {
+typedef struct PBL_PACKED ActivitySessionSettings {
   bool show_notification; //!< Whether to show a notification
 
   union {
-    struct PACKED {
+    struct PBL_PACKED {
       uint16_t trigger_elapsed_minutes;  //!< Minimum length of a walk to be given an insight
       uint16_t trigger_cooldown_minutes; //!< Minutes wait after end of session before notifying
     } activity;
   };
 } ActivitySessionSettings;
 
-typedef struct PACKED ActivityInsightSettings {
+typedef struct PBL_PACKED ActivityInsightSettings {
   // Common parameters
   uint8_t version; //!< Current version of the struct - must be first
 

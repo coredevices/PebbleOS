@@ -97,20 +97,20 @@ static GFont prv_get_cell_font(TextStyleFont font) {
                                          : system_theme_get_font(font);
 }
 
-static ALWAYS_INLINE GFont prv_get_cell_title_font(const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE GFont prv_get_cell_title_font(const MenuCellLayerConfig *config) {
   return config->title_font ?: prv_get_cell_font(TextStyleFont_MenuCellTitle);
 }
 
-static ALWAYS_INLINE GFont prv_get_cell_subtitle_font(const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE GFont prv_get_cell_subtitle_font(const MenuCellLayerConfig *config) {
   return config->subtitle_font ?: prv_get_cell_font(TextStyleFont_MenuCellSubtitle);
 }
 
-static ALWAYS_INLINE GFont prv_get_cell_value_font(const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE GFont prv_get_cell_value_font(const MenuCellLayerConfig *config) {
   return config->value_font ?: prv_get_cell_title_font(config);
 }
 
-static ALWAYS_INLINE void prv_draw_icon(GContext *ctx, GBitmap *icon, const GRect *icon_frame,
-                                        bool is_legacy2) {
+static PBL_ALWAYS_INLINE void prv_draw_icon(GContext *ctx, GBitmap *icon, const GRect *icon_frame,
+                                            bool is_legacy2) {
   if (!is_legacy2) {
     bool tint_icon = (icon && (gbitmap_get_format(icon) == GBitmapFormat1Bit));
     if (tint_icon) {
@@ -232,7 +232,7 @@ static void prv_menu_cell_basic_draw_custom_rect(GContext *ctx, const Layer *cel
 
 // This function duplicates `grect_inset()` but helps us save some stack space by using pointer
 // arguments and always inlining the function
-static ALWAYS_INLINE void prv_grect_inset(GRect *rect, GEdgeInsets *insets) {
+static PBL_ALWAYS_INLINE void prv_grect_inset(GRect *rect, GEdgeInsets *insets) {
   grect_standardize(rect);
   const int16_t new_width = rect->size.w - insets->left - insets->right;
   const int16_t new_height = rect->size.h - insets->top - insets->bottom;
@@ -244,13 +244,13 @@ static ALWAYS_INLINE void prv_grect_inset(GRect *rect, GEdgeInsets *insets) {
   }
 }
 
-static ALWAYS_INLINE bool prv_should_render_subtitle_round(const MenuCellLayerConfig *config,
-                                                           bool is_selected) {
+static PBL_ALWAYS_INLINE bool prv_should_render_subtitle_round(const MenuCellLayerConfig *config,
+                                                               bool is_selected) {
   // If the cell isn't selected and there's no value text, then no subtitle text should be shown
   return ((is_selected || config->value) && (config->subtitle != NULL));
 }
 
-static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
+static PBL_ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
     GContext *ctx, const GRect *cell_layer_bounds, const MenuCellLayerConfig *config,
     GTextAlignment text_alignment, GAlign container_alignment, bool is_selected) {
   if (!cell_layer_bounds) {
@@ -449,7 +449,7 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
   return rect;
 }
 
-static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
+static PBL_ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
     GContext *ctx, const GRect *cell_layer_bounds, const MenuCellLayerConfig *config,
     bool is_selected) {
   if (!cell_layer_bounds) {
@@ -505,9 +505,8 @@ static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
   }
 }
 
-static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(GContext *ctx,
-                                                                const Layer *cell_layer,
-                                                                const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(
+    GContext *ctx, const Layer *cell_layer, const MenuCellLayerConfig *config) {
   // TODO PBL-23041: When round MenuLayer animations are enabled, we need a "is_selected" function
   const bool cell_is_selected = menu_cell_layer_is_highlighted(cell_layer);
   const bool draw_two_columns =
@@ -529,8 +528,8 @@ static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(GContext *ctx,
   }
 }
 
-static ALWAYS_INLINE void prv_draw_cell(GContext *ctx, const Layer *cell_layer,
-                                        const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE void prv_draw_cell(GContext *ctx, const Layer *cell_layer,
+                                            const MenuCellLayerConfig *config) {
   PBL_IF_RECT_ELSE(prv_menu_cell_basic_draw_custom_rect, prv_menu_cell_basic_draw_custom_round)(
       ctx, cell_layer, config);
 }
@@ -541,12 +540,12 @@ void menu_cell_layer_draw(GContext *ctx, const Layer *cell_layer,
   prv_draw_cell(ctx, cell_layer, config);
 }
 
-static ALWAYS_INLINE void prv_draw_basic(GContext *ctx, const Layer *cell_layer,
-                                         GFont const title_font, const char *title,
-                                         GFont const value_font, const char *value,
-                                         GFont const subtitle_font, const char *subtitle,
-                                         GBitmap *icon, bool icon_on_right,
-                                         GTextOverflowMode overflow_mode) {
+static PBL_ALWAYS_INLINE void prv_draw_basic(GContext *ctx, const Layer *cell_layer,
+                                             GFont const title_font, const char *title,
+                                             GFont const value_font, const char *value,
+                                             GFont const subtitle_font, const char *subtitle,
+                                             GBitmap *icon, bool icon_on_right,
+                                             GTextOverflowMode overflow_mode) {
   MenuCellLayerConfig config = {
     .title_font = title_font,
     .subtitle_font = subtitle_font,

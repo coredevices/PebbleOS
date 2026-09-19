@@ -5,12 +5,12 @@
 
 #include "pulse_control_message_protocol.h"
 
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdint.h>
 #include <string.h>
 
-typedef struct PACKED PCMPPacket {
+typedef struct PBL_PACKED PCMPPacket {
   uint8_t code;
   char information[];
 } PCMPPacket;

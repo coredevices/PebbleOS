@@ -71,9 +71,9 @@ void moddable_cleanup(void) {
 #define kModdableCreationRecordFFISize \
   (offsetof(ModdableCreationRecord, fxBuildFFI) + sizeof(((ModdableCreationRecord *)0)->fxBuildFFI))
 
-// ALWAYS_INLINE: PRIVILEGE_WAS_ELEVATED is only valid inside the syscall body.
-static ALWAYS_INLINE void prv_assert_userspace_creation_record(ModdableCreationRecord *cr,
-                                                               size_t len) {
+// PBL_ALWAYS_INLINE: PRIVILEGE_WAS_ELEVATED is only valid inside the syscall body.
+static PBL_ALWAYS_INLINE void prv_assert_userspace_creation_record(ModdableCreationRecord *cr,
+                                                                   size_t len) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(cr, len);
   }

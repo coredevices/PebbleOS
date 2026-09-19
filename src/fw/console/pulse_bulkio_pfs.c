@@ -6,18 +6,18 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include <stdint.h>
 #include <string.h>
 
-typedef struct PACKED PFSStatResp {
+typedef struct PBL_PACKED PFSStatResp {
   uint8_t flags;
   uint32_t size;
 } PFSStatResp;
 
-typedef struct PACKED PFSOpenOptions {
+typedef struct PBL_PACKED PFSOpenOptions {
   uint8_t op_flags;
   uint8_t filetype;
   uint32_t start_size;

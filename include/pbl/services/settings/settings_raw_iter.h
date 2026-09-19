@@ -11,12 +11,12 @@
 #include <stdbool.h>
 
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define SETTINGS_FILE_MAGIC   "set"
 #define SETTINGS_FILE_VERSION 1
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t magic; // = "set"
   uint16_t version;
   uint16_t flags;
@@ -43,7 +43,7 @@ _Static_assert(sizeof((SettingsFileHeader){}.magic) == sizeof(SETTINGS_FILE_MAGI
 _Static_assert(KEY_LEN_BITS + VAL_LEN_BITS + FLAGS_BITS == 24,
                "The record header bitfields must add up to 24!");
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t last_modified;
   uint8_t key_hash;
   uint8_t flags : FLAGS_BITS;

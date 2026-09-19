@@ -21,6 +21,7 @@
 #include "applib/ui/recognizer/swipe.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/drivers/rtc.h"
+#include "pbl/util/testing.h"
 
 // Provided by the owning task; forward-declared (as in menu_layer.c) to avoid pulling kernel
 // app-state / modal-manager headers into this applib translation unit.
@@ -28,7 +29,7 @@ struct TouchNavState *app_state_get_touch_nav_state(void);
 struct TouchNavState *modal_manager_get_touch_nav_state(void);
 #endif
 
-T_STATIC bool prv_scroll_layer_is_paging_enabled(ScrollLayer *scroll_layer) {
+PBL_T_STATIC bool prv_scroll_layer_is_paging_enabled(ScrollLayer *scroll_layer) {
   PBL_ASSERTN(scroll_layer);
   if (process_manager_compiled_with_legacy2_sdk() || !scroll_layer->shadow_sublayer.hidden) {
     return false;
@@ -36,7 +37,7 @@ T_STATIC bool prv_scroll_layer_is_paging_enabled(ScrollLayer *scroll_layer) {
   return !scroll_layer->paging.paging_disabled;
 }
 
-T_STATIC uint16_t prv_scroll_layer_get_paging_height(ScrollLayer *scroll_layer) {
+PBL_T_STATIC uint16_t prv_scroll_layer_get_paging_height(ScrollLayer *scroll_layer) {
   if (!prv_scroll_layer_is_paging_enabled(scroll_layer)) {
     return 0;
   }
@@ -412,8 +413,8 @@ GPoint scroll_layer_get_content_offset(ScrollLayer *scroll_layer) {
   return scroll_layer->content_sublayer.bounds.origin;
 }
 
-T_STATIC void prv_scroll_layer_set_content_offset_internal(ScrollLayer *scroll_layer,
-                                                           GPoint offset) {
+PBL_T_STATIC void prv_scroll_layer_set_content_offset_internal(ScrollLayer *scroll_layer,
+                                                               GPoint offset) {
   const GSize frame_size = scroll_layer->layer.frame.size;
   GRect bounds = scroll_layer->content_sublayer.bounds;
   const GPoint old_offset = bounds.origin;

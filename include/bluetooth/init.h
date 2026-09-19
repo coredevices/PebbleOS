@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <bluetooth/sm_types.h>
 #include <bluetooth/dis.h>
 
 #include <stdbool.h>
 
-typedef struct PACKED BTDriverConfig {
+typedef struct PBL_PACKED BTDriverConfig {
   SM128BitKey root_keys[SMRootKeyTypeNum];
   DisInfo dis_info;
   BTDeviceAddress identity_addr;

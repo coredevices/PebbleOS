@@ -21,7 +21,8 @@
 #include "system/passert.h"
 #include <pbl/logging/logging.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "util/buffer.h"
 #include "pbl/util/size.h"
 
@@ -42,7 +43,7 @@ static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size)
 
 static void prv_reset_reassembly_context(void);
 
-T_STATIC void prv_check_ancs_alive(void);
+PBL_T_STATIC void prv_check_ancs_alive(void);
 
 static void prv_perform_action(uint32_t notification_uid, ActionId action_id);
 
@@ -115,6 +116,8 @@ typedef struct ANCSClient {
   uint8_t alive_checks_without_ns;
   // Consecutive non-Idle alive checks; forces recovery at the threshold.
   uint8_t consecutive_busy_alive_checks;
+  // Consecutive alive checks whose Control Point write iOS rejected.
+  uint8_t consecutive_rejected_alive_checks;
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
@@ -159,7 +162,7 @@ static void prv_set_state(ANCSClientState new_state) {
 }
 
 #if UNITTEST
-T_STATIC ANCSClientState prv_get_state(void) {
+PBL_T_STATIC ANCSClientState prv_get_state(void) {
   return s_ancs_client->state;
 }
 #endif
@@ -294,11 +297,11 @@ static void prv_notif_queue_next(void) {
 }
 
 #if UNITTEST
-T_STATIC uint32_t prv_get_queue_depth(void) {
+PBL_T_STATIC uint32_t prv_get_queue_depth(void) {
   return list_count((ListNode *)s_ancs_client->queue);
 }
 
-T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
+PBL_T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
   NotificationQueueNode key = {
     .op = NotificationQueueOpGetAttributes,
     .uid = uid,
@@ -416,6 +419,28 @@ static void prv_op_timeout_kick(void) {
 static void prv_is_ancs_alive_cb(void *data);
 static void prv_is_ancs_alive_response_timeout(void *data);
 
+// iOS rejects Control Point writes (ATT error, typically Write Not Permitted)
+// when it no longer allows this watch to read its notifications. Nothing on
+// the watch side can recover that, so tell the user instead of looping.
+#define ANCS_REJECTED_ALIVE_CHECKS_BEFORE_WARNING 2
+
+// Persists across connections so reconnects don't repeat the warning.
+static bool s_cp_rejected_warning_shown;
+
+static void prv_handle_alive_check_rejected(BLEGATTError error) {
+  if (++s_ancs_client->consecutive_rejected_alive_checks <
+      ANCS_REJECTED_ALIVE_CHECKS_BEFORE_WARNING) {
+    return;
+  }
+  if (s_cp_rejected_warning_shown) {
+    return;
+  }
+  PBL_LOG_WRN("ANCS Control Point rejected %u times (error=%d); warning user",
+              s_ancs_client->consecutive_rejected_alive_checks, error);
+  s_cp_rejected_warning_shown = true;
+  ancs_notifications_handle_access_denied();
+}
+
 static void prv_ancs_is_alive_schedule_next_check(void) {
   s_ancs_client->is_alive_timer = (const RegularTimerInfo){
     .cb = prv_is_ancs_alive_cb,
@@ -516,11 +541,14 @@ static void prv_is_ancs_alive_response_timeout(void *data) {
 static void prv_ancs_is_alive(void) {
   PBL_LOG_DBG("ANCS is alive!");
 
+  s_ancs_client->consecutive_rejected_alive_checks = 0;
+  s_cp_rejected_warning_shown = false;
+
   // Restart analytics tracking (if it stopped) and the 'is alive' timer
   prv_ancs_is_alive_start_tracking();
 }
 
-T_STATIC void prv_check_ancs_alive(void) {
+PBL_T_STATIC void prv_check_ancs_alive(void) {
   // Stop the next check timer
   prv_ancs_is_alive_stop_timer();
 
@@ -555,7 +583,7 @@ T_STATIC void prv_check_ancs_alive(void) {
   }
 }
 
-T_STATIC void prv_is_ancs_alive_launcher_task_cb(void *data) {
+PBL_T_STATIC void prv_is_ancs_alive_launcher_task_cb(void *data) {
   if (!s_ancs_client) {
     return;
   }
@@ -767,7 +795,7 @@ fail:
 // Get Notification Attributes request
 
 static void prv_add_attributes_to_request(Buffer *request_buffer) {
-  static const struct PACKED {
+  static const struct PBL_PACKED {
     NotificationAttributeID positive_action : 8;
     NotificationAttributeID negative_action : 8;
     NotificationAttributeID app_id : 8;
@@ -1128,6 +1156,9 @@ void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError e
 
   if (error != BLEGATTErrorSuccess) {
     PBL_LOG_ERR("Control point error response: %d", error);
+    if (s_ancs_client->state == ANCSClientStateAliveCheck) {
+      prv_handle_alive_check_rejected(error);
+    }
     prv_reset_due_to_bt_error();
     return;
   }

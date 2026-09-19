@@ -5,20 +5,20 @@
 
 #include "applib/app_launch_button.h"
 #include "applib/app_launch_reason.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-AppLaunchReason WEAK app_launch_reason(void) {
+AppLaunchReason PBL_WEAK app_launch_reason(void) {
   return APP_LAUNCH_SYSTEM;
 }
 
-ButtonId WEAK app_launch_button(void) {
+ButtonId PBL_WEAK app_launch_button(void) {
   return BUTTON_ID_UP;
 }
 
-AppQuickLaunchAction WEAK app_launch_get_quick_launch_action(void) {
+AppQuickLaunchAction PBL_WEAK app_launch_get_quick_launch_action(void) {
   return APP_QUICK_LAUNCH_ACTION_NONE;
 }
 
-uint32_t WEAK app_launch_get_args(void) {
+uint32_t PBL_WEAK app_launch_get_args(void) {
   return 0;
 }

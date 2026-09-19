@@ -7,7 +7,7 @@
 
 #include <stddef.h>
 
-#define KERNEL_READONLY_DATA SECTION(".kernel_unpriv_ro_bss")
+#define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
 
 enum MemoryRegionAssignments {
 // SF32LB52: SiFli's system_bf0_ap.c programs MPU regions 0..4 in

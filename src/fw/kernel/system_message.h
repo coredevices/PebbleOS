@@ -5,7 +5,7 @@
 
 #include "pbl/services/firmware_update.h"
 
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 
 typedef enum SystemMessageType {
   SysMsgFirmwareAvailable_Deprecated = 0x00,
@@ -23,7 +23,7 @@ typedef enum SystemMessageType {
   SysMsgFirmwareStatusResponse = 0x0c, // Watch -> Phone response of what fw is partially installed
 } SystemMessageType;
 
-typedef struct PACKED SysMsgSmoothFirmwareStartPayload {
+typedef struct PBL_PACKED SysMsgSmoothFirmwareStartPayload {
   uint8_t deprecated;         // not used anymore but all messages start with 0x0
   SystemMessageType type : 8; // == SysMsgFirmwareStart
   // The number of bytes the phone has transferred in a previous operation

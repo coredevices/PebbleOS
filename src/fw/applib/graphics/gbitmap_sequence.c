@@ -46,7 +46,7 @@ static bool prv_gbitmap_sequence_restart(GBitmapSequence *bitmap_sequence, bool 
 
 //! Directly modifies dst, blending src into dst using equation
 //! dst = src * (alpha_normalized) + dst * (1 - alpha_normalized)
-static ALWAYS_INLINE void prv_gbitmap_sequence_blend_over(GColor8 src_color, GColor8 *dst) {
+static PBL_ALWAYS_INLINE void prv_gbitmap_sequence_blend_over(GColor8 src_color, GColor8 *dst) {
   if (src_color.a == 3) {
     // Fast path: 100% opacity
     *dst = src_color;
@@ -166,8 +166,8 @@ void gbitmap_sequence_destroy(GBitmapSequence *bitmap_sequence) {
   }
 }
 
-static ALWAYS_INLINE GColor8 *prv_target_pixel_addr(GBitmap *bitmap, apng_fctl *fctl, uint32_t x,
-                                                    uint32_t y) {
+static PBL_ALWAYS_INLINE GColor8 *prv_target_pixel_addr(GBitmap *bitmap, apng_fctl *fctl,
+                                                        uint32_t x, uint32_t y) {
   uint32_t offset = (fctl->y_offset + y + bitmap->bounds.origin.y) * bitmap->row_size_bytes +
                     (fctl->x_offset + x + bitmap->bounds.origin.x);
   GColor8 *pixel_data = bitmap->addr;

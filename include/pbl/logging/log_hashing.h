@@ -75,7 +75,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define NEW_LOG_VERSION "0102"
 
@@ -116,7 +116,7 @@
  * evaluated twice. This is fine with normal parameters, but could result in macros or functions
  * being called twice and messing up globals in unexpected ways.
  */
-void PBL_LOG_x_printf_arg_check(const char *fmt, ...) FORMAT_PRINTF(1, 2);
+void PBL_LOG_x_printf_arg_check(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
 
 #define NEW_LOG_HASH(logfunc, level, color, fmt, ...)                            \
   {                                                                              \
@@ -130,7 +130,7 @@ void PBL_LOG_x_printf_arg_check(const char *fmt, ...) FORMAT_PRINTF(1, 2);
       PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__);                            \
   }
 
-ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char *fmt) {
+PBL_ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char *fmt) {
   const char *p1 = NULL, *p2 = NULL, *p3 = NULL, *p4 = NULL;
   const char *p5 = NULL, *p6 = NULL, *p7 = NULL, *p8 = NULL;
   const char *s1 = NULL, *s2 = NULL, *s3 = NULL, *s4 = NULL;

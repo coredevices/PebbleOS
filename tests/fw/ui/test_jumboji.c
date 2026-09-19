@@ -12,6 +12,7 @@
 // Stubs
 /////////////////////
 
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_attribute.h"
 #include "stubs_clock.h"

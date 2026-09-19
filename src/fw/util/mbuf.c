@@ -8,12 +8,13 @@
 #include "pbl/kernel/mutex.h"
 #include "system/passert.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 //! Flags used for internal purposes (bits 24-31 are allocated for this purpose)
 #define MBUF_FLAG_IS_MANAGED ((uint32_t)(1 << 24))
 #define MBUF_FLAG_IS_FREE    ((uint32_t)(1 << 25))
 
-T_STATIC MBuf *s_free_list;
+PBL_T_STATIC MBuf *s_free_list;
 static PBL_MUTEX_DEFINE(s_free_list_lock);
 
 //! This array should be initialized with the maximum number of MBufs which may be allocated for

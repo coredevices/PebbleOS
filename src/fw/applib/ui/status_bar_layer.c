@@ -27,17 +27,18 @@ typedef struct StatusBarTextFormat {
 
 // The two "Big & Bold" clock variants share the same larger font and taller bar; the Outlined one
 // additionally draws a black outline around the glyphs.
-static ALWAYS_INLINE bool prv_mode_is_large_bold(StatusBarLayerMode mode) {
+static PBL_ALWAYS_INLINE bool prv_mode_is_large_bold(StatusBarLayerMode mode) {
   return mode == StatusBarLayerModeClockLargeBold ||
          mode == StatusBarLayerModeClockLargeBoldOutlined;
 }
 
-static ALWAYS_INLINE bool prv_mode_is_clock(StatusBarLayerMode mode) {
+static PBL_ALWAYS_INLINE bool prv_mode_is_clock(StatusBarLayerMode mode) {
   return mode == StatusBarLayerModeClock || mode == StatusBarLayerModeClockBold ||
          prv_mode_is_large_bold(mode);
 }
 
-static ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(const StatusBarLayerConfig *config) {
+static PBL_ALWAYS_INLINE StatusBarTextFormat
+prv_get_text_format(const StatusBarLayerConfig *config) {
   const PlatformType platform = process_manager_current_platform();
   const StatusBarLayerMode mode = config ? config->mode : StatusBarLayerModeClock;
   const char *font_key;

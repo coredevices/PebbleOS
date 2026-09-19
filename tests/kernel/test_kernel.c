@@ -17,12 +17,12 @@
 // a time under the kernel's scheduling decisions, and time only moves when a
 // test delivers ticks or every thread is blocked.
 
-NORETURN os_assertion_failed(const char *filename, int line) {
+PBL_NORETURN void os_assertion_failed(const char *filename, int line) {
   fprintf(stderr, "kernel assert at %s:%d\n", filename, line);
   abort();
 }
 
-NORETURN os_assertion_failed_lr(const char *filename, int line, uint32_t lr) {
+PBL_NORETURN void os_assertion_failed_lr(const char *filename, int line, uint32_t lr) {
   os_assertion_failed(filename, line);
 }
 

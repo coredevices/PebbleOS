@@ -11,8 +11,9 @@ static const PropertyAnimationImplementation s_frame_layer_implementation = {
   },
 };
 
-PropertyAnimation *WEAK property_animation_create_layer_frame(struct Layer *layer,
-                                                              GRect *from_frame, GRect *to_frame) {
+PropertyAnimation *PBL_WEAK property_animation_create_layer_frame(struct Layer *layer,
+                                                                  GRect *from_frame,
+                                                                  GRect *to_frame) {
   PropertyAnimationPrivate *animation = (PropertyAnimationPrivate *)property_animation_create(
       &s_frame_layer_implementation, layer, from_frame, to_frame);
   if (from_frame) {

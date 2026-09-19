@@ -13,7 +13,7 @@
 
 #include "pbl/mcu/interrupts.h"
 #include "pbl/mcu/privilege.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/circular_buffer.h"
 #include "pbl/util/math.h"
 #include "pbl/util/string.h"
@@ -21,7 +21,7 @@
 #include <ctype.h>
 
 //! This is the format for a PULSEv2 log message when sent out over the wire.
-typedef struct PACKED MessageContents {
+typedef struct PBL_PACKED MessageContents {
   uint8_t message_type;
   char src_filename[16];
   char log_level_char;
@@ -32,7 +32,7 @@ typedef struct PACKED MessageContents {
   char message[128];
 } MessageContents;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint64_t timestamp_ms;
   uint8_t log_level;
 } BufferedLogInfo;

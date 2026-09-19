@@ -14,15 +14,16 @@
 #include "pbl/services/timeline/attributes_actions.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "iosnotifprefdb";
-T_STATIC const int iOS_NOTIF_PREF_MAX_SIZE = KiBYTES(32);
+PBL_T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "iosnotifprefdb";
+PBL_T_STATIC const int iOS_NOTIF_PREF_MAX_SIZE = KiBYTES(32);
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t flags;
   uint8_t num_attributes;
   uint8_t num_actions;

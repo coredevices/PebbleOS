@@ -3,6 +3,7 @@
 
 #pragma once
 #include "gtypes.h"
+#include "pbl/util/testing.h"
 
 //! @addtogroup Graphics
 //! @{
@@ -21,37 +22,38 @@ void graphics_draw_line(GContext *ctx, GPoint p0, GPoint p1);
 
 //! @internal
 //! Draws non-antialiased 1px width line between given points, will adjust to drawing_box
-MOCKABLE void graphics_line_draw_1px_non_aa(GContext *ctx, GPoint p0, GPoint p1);
+PBL_T_MOCKABLE void graphics_line_draw_1px_non_aa(GContext *ctx, GPoint p0, GPoint p1);
 
 //! @internal
 //! Draws antialiased 1px width line between given points, will adjust to drawing box
-MOCKABLE void graphics_line_draw_1px_aa(GContext *ctx, GPoint p0, GPoint p1);
+PBL_T_MOCKABLE void graphics_line_draw_1px_aa(GContext *ctx, GPoint p0, GPoint p1);
 
 //! @internal
 //! Draws antialiased stroked line between given points, will adjust for drawing_box
 //! @note This only supports odd numbers for stroke_width - even numbers will be rounded up.
 //! Minimal supported stroke_width is 3
-MOCKABLE void graphics_line_draw_stroked_aa(GContext *ctx, GPoint p0, GPoint p1,
-                                            uint8_t stroke_width);
+PBL_T_MOCKABLE void graphics_line_draw_stroked_aa(GContext *ctx, GPoint p0, GPoint p1,
+                                                  uint8_t stroke_width);
 
 //! @internal
 //! Draws non-antialiased stroked line between given precise points, will adjust for drawing_box
 //! Minimal supported stroke_width is 2
-MOCKABLE void graphics_line_draw_precise_stroked_non_aa(GContext *ctx, GPointPrecise p0,
-                                                        GPointPrecise p1, uint8_t stroke_width);
+PBL_T_MOCKABLE void graphics_line_draw_precise_stroked_non_aa(GContext *ctx, GPointPrecise p0,
+                                                              GPointPrecise p1,
+                                                              uint8_t stroke_width);
 
 //! @internal
 //! Draws antialiased stroked line between given precise points, will adjust for drawing_box
 //! Minimal supported stroke_width is 2
-MOCKABLE void graphics_line_draw_precise_stroked_aa(GContext *ctx, GPointPrecise p0,
-                                                    GPointPrecise p1, uint8_t stroke_width);
+PBL_T_MOCKABLE void graphics_line_draw_precise_stroked_aa(GContext *ctx, GPointPrecise p0,
+                                                          GPointPrecise p1, uint8_t stroke_width);
 
 //! @internal
 //! Draws non-antialiased stroked line between given point, will adjust for drawing_box
 //! @note This only supports odd numbers for stroke_width - even numbers will be rounded up.
 //! Minimal supported stroke_width is 3
-MOCKABLE void graphics_line_draw_stroked_non_aa(GContext *ctx, GPoint p0, GPoint p1,
-                                                uint8_t stroke_width);
+PBL_T_MOCKABLE void graphics_line_draw_stroked_non_aa(GContext *ctx, GPoint p0, GPoint p1,
+                                                      uint8_t stroke_width);
 
 //! @internal
 //! Draws stroked line between given precise points, will adjust for drawing_box,

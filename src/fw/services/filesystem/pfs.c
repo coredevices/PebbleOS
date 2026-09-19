@@ -23,7 +23,7 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/crc8.h"
 #include "util/legacy_checksum.h"
 #include "pbl/util/math.h"
@@ -73,7 +73,7 @@ static PBL_MUTEX_DEFINE(s_pfs_mutex);
 #define LAST_WRITTEN_TAG    0xfe
 #define LAST_WRITTEN_UNMARK 0xfc
 
-typedef struct PACKED PageHeader {
+typedef struct PBL_PACKED PageHeader {
   uint16_t version;
   uint8_t last_written; //!< used by wear leveling algo
   uint8_t page_flags;
@@ -85,7 +85,7 @@ typedef struct PACKED PageHeader {
   uint32_t hdr_crc; //!< a crc for all data that comes before it
 } PageHeader;
 
-typedef struct PACKED FileHeader {
+typedef struct PBL_PACKED FileHeader {
   uint32_t file_size;
   uint8_t file_type;
   uint8_t file_namelen;
@@ -94,7 +94,7 @@ typedef struct PACKED FileHeader {
 } FileHeader;
 
 // File metadata stored immediately after the header in the first page
-typedef struct PACKED FileMetaData {
+typedef struct PBL_PACKED FileMetaData {
   uint16_t tmp_state;
   uint16_t create_state;
   uint16_t delete_state;
@@ -623,7 +623,7 @@ static status_t garbage_collect_sector(uint16_t *free_page, uint16_t sector_star
                                        uint32_t sectors_active);
 
 //! Updates the last written page to point to next_page
-static NOINLINE void prv_update_last_written_page(uint16_t next_page) {
+static PBL_NOINLINE void prv_update_last_written_page(uint16_t next_page) {
   PageHeader hdr = {0};
 
   uint16_t prev_written_page = s_last_page_written;
@@ -1619,7 +1619,7 @@ static void update_page_cache(FilePageCache *fpc, int *cur_idx, FilePageCache *t
   fpc[optimal_idx] = *toadd;
 }
 
-static NOINLINE void allocate_page_cache(int fd) {
+static PBL_NOINLINE void allocate_page_cache(int fd) {
   File *f = &PFS_FD(fd).file;
 
   if (f->pg_cache != NULL) {
@@ -1679,7 +1679,7 @@ static NOINLINE void allocate_page_cache(int fd) {
 //! Returns true iff the file is found in the cache and the fd is ready to use
 //! fd_used >= 0 if we were able to allocate a fd for the file (regardless of
 //! whether or not its in the cache), else it reflects the error code
-static NOINLINE bool file_found_in_cache(const char *name, uint8_t op_flags, int *fd_used) {
+static PBL_NOINLINE bool file_found_in_cache(const char *name, uint8_t op_flags, int *fd_used) {
   int fd, res;
   bool is_tmp = ((op_flags & OP_FLAG_OVERWRITE) != 0);
   bool file_found = false;
@@ -1728,8 +1728,8 @@ cleanup:
 }
 
 // handles the creation of a file which was not previously on the FS
-static NOINLINE status_t pfs_open_handle_create_request(int fd, uint8_t file_type,
-                                                        size_t start_size) {
+static PBL_NOINLINE status_t pfs_open_handle_create_request(int fd, uint8_t file_type,
+                                                            size_t start_size) {
   if (!VALID_TYPE(file_type) || (start_size == 0)) {
     return (E_INVALID_ARGUMENT);
   }
@@ -1756,7 +1756,7 @@ static NOINLINE status_t pfs_open_handle_create_request(int fd, uint8_t file_typ
 
 // given the fd and start page of a file, loads file description with relevent
 // info about file so it can be read from
-static NOINLINE status_t pfs_open_handle_read_request(int fd, uint16_t page) {
+static PBL_NOINLINE status_t pfs_open_handle_read_request(int fd, uint16_t page) {
   PageHeader pg_hdr;
   FileHeader file_hdr;
   int hdr_rv;
@@ -1999,8 +1999,8 @@ static int prv_copy_sector_to_gc_file(uint16_t *free_page, uint16_t sector_start
   return (fd);
 }
 
-static NOINLINE status_t garbage_collect_sector(uint16_t *free_page, uint16_t sector_start_page,
-                                                uint32_t sectors_active) {
+static PBL_NOINLINE status_t garbage_collect_sector(uint16_t *free_page, uint16_t sector_start_page,
+                                                    uint32_t sectors_active) {
   // if no sectors are active in the region, just erase it!
   if (sectors_active == 0) {
     prv_handle_sector_erase(sector_start_page, true);

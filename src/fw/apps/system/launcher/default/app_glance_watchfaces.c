@@ -9,7 +9,7 @@
 #include "process_management/app_install_manager.h"
 #include "shell/normal/watchface.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/struct.h"
 
 typedef struct LauncherAppGlanceWatchfaces {

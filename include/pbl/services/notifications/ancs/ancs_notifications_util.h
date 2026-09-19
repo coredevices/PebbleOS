@@ -5,7 +5,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/time/time.h"
 
 #define IOS_PHONE_APP_ID     "com.apple.mobilephone"
@@ -15,7 +15,7 @@
 #define IOS_SMS_APP_ID       "com.apple.MobileSMS"
 #define IOS_FACETIME_APP_ID  "com.apple.facetime"
 
-typedef struct PACKED ANCSAppMetadata {
+typedef struct PBL_PACKED ANCSAppMetadata {
   const char *app_id;
   uint32_t icon_id;
 #if PBL_COLOR

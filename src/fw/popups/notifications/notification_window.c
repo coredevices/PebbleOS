@@ -60,6 +60,7 @@
 
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score.h"
+#include "pbl/util/testing.h"
 
 #define NOTIFICATION_PRIORITY (ModalPriorityNotification)
 
@@ -70,9 +71,9 @@
 // pop timer for window. Refreshed during any point of activity (button clicks)
 static const unsigned int QUICK_DND_HOLD_MS = 800;
 
-T_STATIC NotificationWindowData s_notification_window_data;
+PBL_T_STATIC NotificationWindowData s_notification_window_data;
 
-T_STATIC bool s_in_use = false;
+PBL_T_STATIC bool s_in_use = false;
 struct pbl_mutex s_notification_window_mutex;
 
 static bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
@@ -485,8 +486,8 @@ static void prv_layout_removed_handler(SwapLayer *swap_layer, LayoutLayer *layou
   layout_destroy(layout);
 }
 
-T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position,
-                                             void *context) {
+PBL_T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position,
+                                                 void *context) {
   NotificationWindowData *data = context;
   Uuid *id =
       notifications_presented_list_relative(notifications_presented_list_current(), rel_position);

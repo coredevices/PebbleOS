@@ -4,11 +4,11 @@
 #pragma once
 
 #include "pbl/services/app_fetch_endpoint.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-bool WEAK app_fetch_in_progress(void) {
+bool PBL_WEAK app_fetch_in_progress(void) {
   return false;
 }
 
-void WEAK app_fetch_cancel_from_system_task(AppInstallId app_id) {
+void PBL_WEAK app_fetch_cancel_from_system_task(AppInstallId app_id) {
 }

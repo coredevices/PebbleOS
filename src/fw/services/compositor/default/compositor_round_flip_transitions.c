@@ -6,12 +6,12 @@
 #include "pbl/services/compositor/compositor_transitions.h"
 
 #include "applib/graphics/framebuffer.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/trig.h"
 #include "system/passert.h"
 
 //! Packed so we can squeeze this into a void* as the animation context
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   union {
     struct {
       //! The direction of the animation of the visual elements

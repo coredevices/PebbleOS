@@ -18,16 +18,71 @@
 #include "pbl/services/bluetooth/ble_hrm.h"
 #include "pbl/services/notifications/alerts_private.h"
 #include "pbl/services/notifications/do_not_disturb.h"
+#include "shell/system_theme.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/size.h"
 #include "pbl/util/struct.h"
 
 #include <stdio.h>
 
-// These dimensions are separate defines so we can use them to statically define the battery points
-#define BATTERY_SILHOUETTE_ICON_WIDTH  (16)
-#define BATTERY_SILHOUETTE_ICON_HEIGHT (9)
+//! Horizontal span of one row of the charging bolt, top to bottom
+typedef struct ChargingIconRow {
+  uint8_t x;
+  uint8_t w;
+} ChargingIconRow;
+
+static const ChargingIconRow s_charging_icon_rows_medium[] = {
+  {4, 1}, {3, 2}, {2, 2}, {1, 3}, {0, 7}, {3, 3}, {3, 2}, {2, 2}, {2, 1},
+};
+
+static const ChargingIconRow s_charging_icon_rows_extra_large[] = {
+  {5, 1}, {4, 2}, {3, 3}, {2, 3}, {1, 3}, {0, 9}, {0, 9}, {4, 3}, {3, 3}, {3, 2}, {2, 2}, {2, 1},
+};
+
+typedef struct SettingsGlanceIconStyle {
+  GSize battery_size;
+  int16_t charging_width;
+  const ChargingIconRow *charging_rows;
+  uint8_t num_charging_rows;
+  //! Pushes the icons down from the top of the subtitle line to center them on the text
+  int16_t offset_y;
+} SettingsGlanceIconStyle;
+
+static const SettingsGlanceIconStyle s_icon_styles[NumPreferredContentSizes] = {
+  //! @note this is the same as Medium until Small is designed
+  [PreferredContentSizeSmall] =
+      {
+        .battery_size = {16, 9},
+        .charging_width = 7,
+        .charging_rows = s_charging_icon_rows_medium,
+        .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_medium),
+        .offset_y = 2,
+      },
+  [PreferredContentSizeMedium] =
+      {
+        .battery_size = {16, 9},
+        .charging_width = 7,
+        .charging_rows = s_charging_icon_rows_medium,
+        .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_medium),
+        .offset_y = 2,
+      },
+  [PreferredContentSizeLarge] =
+      {
+        .battery_size = {16, 9},
+        .charging_width = 7,
+        .charging_rows = s_charging_icon_rows_medium,
+        .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_medium),
+        .offset_y = 5,
+      },
+  [PreferredContentSizeExtraLarge] = {
+    .battery_size = {21, 12},
+    .charging_width = 9,
+    .charging_rows = s_charging_icon_rows_extra_large,
+    .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_extra_large),
+    .offset_y = 7,
+  },
+};
 
 typedef struct LauncherAppGlanceSettingsState {
   BatteryChargeState battery_charge_state;
@@ -44,7 +99,7 @@ typedef struct LauncherAppGlanceSettings {
   char battery_percent_text[5]; //!< longest string is "100%" (4 characters + 1 for NULL terminator)
   KinoReel *icon;
   uint32_t icon_resource_id;
-  KinoReel *charging_indicator_icon;
+  const SettingsGlanceIconStyle *icon_style;
   uint8_t subtitle_font_height;
   LauncherAppGlanceSettingsState glance_state;
   EventServiceInfo battery_state_event_info;
@@ -75,18 +130,21 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
 
-  KinoReel *charging_indicator_icon =
-      NULL_SAFE_FIELD_ACCESS(settings_glance, charging_indicator_icon, NULL);
-  PBL_ASSERTN(charging_indicator_icon);
+  const SettingsGlanceIconStyle *style = settings_glance->icon_style;
 
-  if (render && charging_indicator_icon) {
-    launcher_app_glance_structured_draw_icon(structured_glance, ctx, charging_indicator_icon,
-                                             rect->origin);
+  if (render) {
+    // Icons are always black on color displays, white on B&W when highlighted
+    graphics_context_set_fill_color(
+        ctx, PBL_IF_COLOR_ELSE(GColorBlack, launcher_app_glance_structured_get_highlight_color(
+                                                structured_glance)));
+    for (unsigned int i = 0; i < style->num_charging_rows; i++) {
+      const ChargingIconRow *row = &style->charging_rows[i];
+      graphics_fill_rect(ctx, &GRect(rect->origin.x + row->x, rect->origin.y + i, row->w, 1));
+    }
   }
 
   if (size_out) {
-    *size_out =
-        GSize(kino_reel_get_size(charging_indicator_icon).w, settings_glance->subtitle_font_height);
+    *size_out = GSize(style->charging_width, settings_glance->subtitle_font_height);
   }
 }
 
@@ -97,24 +155,18 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
 
-  const GSize battery_silhouette_icon_size =
-      GSize(BATTERY_SILHOUETTE_ICON_WIDTH, BATTERY_SILHOUETTE_ICON_HEIGHT);
+  const GSize battery_silhouette_icon_size = settings_glance->icon_style->battery_size;
 
   if (render) {
-    // This points array is static to help conserve stack usage
-    static const GPoint s_battery_silhouette_path_points[] = {
-      {0, 0},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, 0},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, 1},
-      {BATTERY_SILHOUETTE_ICON_WIDTH + 1, 2},
-      {BATTERY_SILHOUETTE_ICON_WIDTH + 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 3},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 3},
-      {BATTERY_SILHOUETTE_ICON_WIDTH - 1, BATTERY_SILHOUETTE_ICON_HEIGHT - 1},
-      {0, BATTERY_SILHOUETTE_ICON_HEIGHT - 1},
+    const int16_t w = battery_silhouette_icon_size.w;
+    const int16_t h = battery_silhouette_icon_size.h;
+    const GPoint battery_silhouette_path_points[] = {
+      {0, 0},         {w - 1, 0},     {w - 1, 1},     {w + 1, 2},
+      {w + 1, h - 3}, {w - 1, h - 3}, {w - 1, h - 1}, {0, h - 1},
     };
     GPath battery_silhouette_path = (GPath){
-      .num_points = ARRAY_LENGTH(s_battery_silhouette_path_points),
-      .points = (GPoint *)s_battery_silhouette_path_points,
+      .num_points = ARRAY_LENGTH(battery_silhouette_path_points),
+      .points = (GPoint *)battery_silhouette_path_points,
       .offset = rect->origin,
     };
 
@@ -203,11 +255,7 @@ static GTextNode *prv_create_subtitle_node(LauncherAppGlanceStructured *structur
                                            vertically_centered_battery_percent_text_node);
   }
 
-#if PBL_DISPLAY_HEIGHT >= 200
-  const int16_t subtitle_icon_offset_y = 5;
-#else
-  const int16_t subtitle_icon_offset_y = 2;
-#endif
+  const int16_t subtitle_icon_offset_y = settings_glance->icon_style->offset_y;
 
   GTextNodeCustom *battery_icon_node =
       graphics_text_node_create_custom(prv_battery_icon_node_draw_cb, structured_glance);
@@ -247,7 +295,6 @@ static void prv_destructor(LauncherAppGlanceStructured *structured_glance) {
     event_service_client_unsubscribe(&settings_glance->hrm_sharing_event_info);
 #endif
     kino_reel_destroy(settings_glance->icon);
-    kino_reel_destroy(settings_glance->charging_indicator_icon);
   }
   app_free(settings_glance);
 }
@@ -386,13 +433,11 @@ LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) 
   strncpy(settings_glance->title, node->name, title_size);
   settings_glance->title[title_size - 1] = '\0';
 
-  // Load the charging indicator icon
-  settings_glance->charging_indicator_icon =
-      kino_reel_create_with_resource(RESOURCE_ID_BATTERY_CHARGING_ICON);
+  settings_glance->icon_style = &s_icon_styles[system_theme_get_content_size()];
 
   // Cache the subtitle font height for simplifying layout calculations
-  settings_glance->subtitle_font_height =
-      fonts_get_font_height(fonts_get_system_font(LAUNCHER_MENU_LAYER_SUBTITLE_FONT));
+  settings_glance->subtitle_font_height = fonts_get_font_height(
+      fonts_get_system_font(launcher_menu_layer_get_style()->subtitle_font_key));
 
   const bool should_consider_slices = false;
   LauncherAppGlanceStructured *structured_glance = launcher_app_glance_structured_create(

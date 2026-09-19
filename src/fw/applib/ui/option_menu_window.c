@@ -37,15 +37,26 @@ static const OptionMenuStyle s_style_large = {
   .right_text_inset_with_icon = 4,
 };
 
+static const OptionMenuStyle s_style_extra_large = {
+#if PBL_RECT
+  .cell_heights[OptionMenuContentType_SingleLine] = 56,
+#endif
+  .top_inset = 1,
+  .right_icon_spacing = PBL_IF_RECT_ELSE(10, 35),
+  .text_inset_single = -1,
+  .text_inset_multi = -3,
+  .right_text_inset_with_icon = 4,
+};
+
 static const OptionMenuStyle *const s_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeSmall] = &s_style_medium,
   [PreferredContentSizeMedium] = &s_style_medium,
   [PreferredContentSizeLarge] = &s_style_large,
-  [PreferredContentSizeExtraLarge] = &s_style_large,
+  [PreferredContentSizeExtraLarge] = &s_style_extra_large,
 };
 
 static const OptionMenuStyle *prv_get_style(void) {
-  return s_styles[PreferredContentSizeDefault];
+  return s_styles[system_theme_get_content_size()];
 }
 
 static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index,
@@ -245,7 +256,7 @@ void option_menu_configure(OptionMenu *option_menu, const OptionMenuConfig *conf
 void option_menu_init(OptionMenu *option_menu) {
   *option_menu = (OptionMenu){
     .choice = OPTION_MENU_CHOICE_NONE,
-    .title_font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellTitle),
+    .title_font = system_theme_get_font(TextStyleFont_MenuCellTitle),
   };
 
   // radio button icons are enabled by default

@@ -10,7 +10,7 @@
 #include "pbl/services/data_logging/data_logging_service.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/math.h"
 #include "pbl/util/uuid.h"
@@ -20,7 +20,7 @@ PBL_LOG_MODULE_DEFINE(service_analytics, CONFIG_SERVICE_ANALYTICS_LOG_LEVEL);
 #define NATIVE_HEARTBEAT_RECORD_VERSION 3
 
 /* Heartbeat record logged to DLS */
-struct PACKED native_heartbeat_record {
+struct PBL_PACKED native_heartbeat_record {
   uint8_t version;
   uint64_t timestamp;
   uint8_t build_id[BUILD_ID_EXPECTED_LEN];

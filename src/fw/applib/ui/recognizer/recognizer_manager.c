@@ -12,9 +12,10 @@
 #include "system/passert.h"
 
 #include <stddef.h>
+#include "pbl/util/testing.h"
 
-T_STATIC bool prv_process_all_recognizers(RecognizerManager *manager,
-                                          RecognizerListIteratorCb iter_cb, void *context) {
+PBL_T_STATIC bool prv_process_all_recognizers(RecognizerManager *manager,
+                                              RecognizerListIteratorCb iter_cb, void *context) {
   // Process the task-global recognizers first (NULL list is a no-op)
   if (!recognizer_list_iterate(manager->global_list, iter_cb, context)) {
     return false;
@@ -46,7 +47,7 @@ typedef struct ProcessTouchCtx {
   const TouchEvent *touch_event;
 } ProcessTouchCtx;
 
-T_STATIC bool prv_dispatch_touch_event(Recognizer *recognizer, void *context) {
+PBL_T_STATIC bool prv_dispatch_touch_event(Recognizer *recognizer, void *context) {
   ProcessTouchCtx *ctx = context;
   // Skip recognizer if it has already failed, been cancelled or completed
   if (!recognizer_is_active(recognizer)) {
@@ -84,7 +85,7 @@ typedef struct FailRecognizerCtx {
   bool recognizers_active;
 } FailRecognizerCtx;
 
-T_STATIC bool prv_fail_recognizer(Recognizer *recognizer, void *context) {
+PBL_T_STATIC bool prv_fail_recognizer(Recognizer *recognizer, void *context) {
   FailRecognizerCtx *ctx = context;
   if ((recognizer == ctx->triggered) || !recognizer_is_active(recognizer)) {
     return true;

@@ -9,7 +9,7 @@
 #include <bluetooth/bluetooth_types.h>
 
 #include "bluetooth/gap_le_connect.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 typedef enum {
   BtConsumerNone = 0,
@@ -59,7 +59,7 @@ typedef void (*ResponsivenessGrantedHandler)(void);
 #define MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS                (10)
 
 //! Connection Parameters Update Request Packet
-typedef struct PACKED { // PACKED since this struct is serialized
+typedef struct PBL_PACKED { // PBL_PACKED since this struct is serialized
   uint16_t interval_min_1_25ms;
   uint16_t interval_max_1_25ms;
   uint16_t slave_latency_events;

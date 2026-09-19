@@ -12,7 +12,7 @@
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "system/hexdump.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 
@@ -68,7 +68,7 @@ static const uint8_t MIN_CLEAR_LENGTH = 3;
 static bool s_bdb_accepting_messages;
 
 static void prv_send_response(CommSession *session, BlobDBToken token, BlobDBResponse result) {
-  struct PACKED BlobDBResponseMsg {
+  struct PBL_PACKED BlobDBResponseMsg {
     BlobDBToken token;
     BlobDBResponse result;
   } response = {

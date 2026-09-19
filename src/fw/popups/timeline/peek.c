@@ -16,7 +16,7 @@
 #include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 
-#include <pebbleos/cron.h>
+#include <pbl/cron/cron.h>
 
 #define TIMELINE_PEEK_FRAME_HIDDEN         GRect(0, DISP_ROWS, DISP_COLS, TIMELINE_PEEK_HEIGHT)
 #define TIMELINE_PEEK_OUTER_BORDER_WIDTH   PBL_IF_RECT_ELSE(2, 1)
@@ -102,16 +102,16 @@ static void prv_redraw(void *PBL_UNUSED data) {
   layer_mark_dirty(&peek->layout_layer);
 }
 
-static void prv_cron_callback(CronJob *job, void *PBL_UNUSED data) {
+static void prv_cron_callback(struct pbl_cron_job *job, void *PBL_UNUSED data) {
   launcher_task_add_callback(prv_redraw, NULL);
-  cron_job_schedule(job);
+  pbl_cron_job_schedule(job);
 }
 
-static CronJob s_timeline_peek_job = {
-  .minute = CRON_MINUTE_ANY,
-  .hour = CRON_HOUR_ANY,
-  .mday = CRON_MDAY_ANY,
-  .month = CRON_MONTH_ANY,
+static struct pbl_cron_job s_timeline_peek_job = {
+  .minute = PBL_CRON_MINUTE_ANY,
+  .hour = PBL_CRON_HOUR_ANY,
+  .mday = PBL_CRON_MDAY_ANY,
+  .month = PBL_CRON_MONTH_ANY,
   .cb = prv_cron_callback,
 };
 
@@ -428,9 +428,9 @@ void timeline_peek_init(void) {
 static void prv_set_visible(bool visible, bool animated) {
   TimelinePeek *peek = &s_peek;
   if (!peek->started && visible) {
-    cron_job_schedule(&s_timeline_peek_job);
+    pbl_cron_job_schedule(&s_timeline_peek_job);
   } else {
-    cron_job_unschedule(&s_timeline_peek_job);
+    pbl_cron_job_unschedule(&s_timeline_peek_job);
   }
   prv_transition_frame(peek, visible, animated);
 }

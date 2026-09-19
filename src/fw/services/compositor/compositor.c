@@ -23,6 +23,7 @@
 #include "system/passert.h"
 #include "system/profiler.h"
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
@@ -179,7 +180,7 @@ static void prv_notify_frozen(void) {
   callback(s_frozen_callback_data);
 }
 
-T_STATIC void prv_handle_display_update_complete(void) {
+PBL_T_STATIC void prv_handle_display_update_complete(void) {
   if (s_deferred_render.transition_complete.pending) {
     s_deferred_render.transition_complete.pending = false;
     prv_finish_transition();
@@ -600,7 +601,9 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
         const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
         const int16_t end_x =
             MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
-        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+        if (end_x > start_x) {
+          memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+        }
       }
     }
 
@@ -734,7 +737,9 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
       const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
       const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
-      memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      if (end_x > start_x) {
+        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      }
     }
 
     GRect clipped_update_region = update_rect;
@@ -766,7 +771,9 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
       const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
       const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
-      memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      if (end_x > start_x) {
+        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      }
     }
 
     // bitblt the region of the app framebuffer into the display framebuffer

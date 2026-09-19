@@ -21,6 +21,7 @@
 #include "pbl/util/trig.h"
 
 #include <string.h>
+#include "pbl/util/testing.h"
 
 #define EMERY_SCREEN_RES    (PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228)
 #define SNOWY_SCREEN_RES    (PBL_DISPLAY_WIDTH == 144 && PBL_DISPLAY_HEIGHT == 168)
@@ -33,7 +34,7 @@
 #if UNITTEST
 static int16_t s_unobstructed_area_height = 0;
 
-T_STATIC void prv_set_unobstructed_area_height(int16_t height) {
+PBL_T_STATIC void prv_set_unobstructed_area_height(int16_t height) {
   s_unobstructed_area_height = height;
 }
 #endif
@@ -520,8 +521,8 @@ static void prv_update_data(KickstartData *data) {
 }
 
 #if UNITTEST
-T_STATIC void prv_set_data(KickstartData *data, int32_t current_steps, int32_t typical_steps,
-                           int32_t daily_steps_avg, int32_t current_bpm) {
+PBL_T_STATIC void prv_set_data(KickstartData *data, int32_t current_steps, int32_t typical_steps,
+                               int32_t daily_steps_avg, int32_t current_bpm) {
   data->current_steps = current_steps;
   data->typical_steps = typical_steps;
   data->daily_steps_avg = daily_steps_avg;
@@ -544,7 +545,7 @@ static void prv_tick_handler(struct tm *tick_time, TimeUnits changed) {
   prv_update_data(data);
 }
 
-T_STATIC void prv_window_load_handler(Window *window) {
+PBL_T_STATIC void prv_window_load_handler(Window *window) {
   KickstartData *data = window_get_user_data(window);
 
   // load resources
@@ -594,7 +595,7 @@ T_STATIC void prv_window_load_handler(Window *window) {
   tick_timer_service_subscribe(MINUTE_UNIT, prv_tick_handler);
 }
 
-T_STATIC void prv_window_unload_handler(Window *window) {
+PBL_T_STATIC void prv_window_unload_handler(Window *window) {
   KickstartData *data = window_get_user_data(window);
 
   // unsubscribe from service events

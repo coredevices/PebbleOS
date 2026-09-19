@@ -20,7 +20,8 @@
 #include "pbl/services/timeline/timeline.h"
 #include "pbl/services/timeline/weather_layout.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "util/stats.h"
 #include "pbl/util/string.h"
@@ -103,7 +104,7 @@ static EventServiceInfo s_blobdb_event_info;     // Used to detect pin deletion 
 
 // Timestamp and UUID of the last time we added a new summary pin - stored to flash to allow
 // us to continue to update the pin across reboots
-typedef struct PACKED SummaryPinLastState {
+typedef struct PBL_PACKED SummaryPinLastState {
   time_t last_triggered_utc;
   Uuid uuid;
 } SummaryPinLastState;
@@ -329,7 +330,7 @@ static void prv_build_notification_attr_list(AttributeList *attr_list, const cha
 
 // ------------------------------------------------------------------------------------------------
 // Generates a new timeline item for a reward notification
-static NOINLINE TimelineItem *prv_create_reward_notification(
+static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
     time_t notif_time, const RewardNotifConfig *notif_config) {
   AttributeList notif_attr_list = {0};
   prv_build_notification_attr_list(
@@ -431,7 +432,7 @@ static void prv_set_open_app_action(AttributeList *action_attr_list, HealthCardT
 }
 
 // ------------------------------------------------------------------------------------------------
-static NOINLINE TimelineItem *prv_create_pin_with_response_items(
+static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
     time_t pin_time_utc, time_t now_utc, uint32_t duration_m, LayoutId layout_id,
     AttributeList *pin_attr_list, HealthCardType health_card_type, int num_responses,
     ResponseItem *response_items) {
@@ -511,10 +512,10 @@ PercentTier prv_calc_percent_tier(const SummaryPinConfig *config, ActivityScalar
 
 // ------------------------------------------------------------------------------------------------
 // Generates a new timeline item for a summary pin
-static NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t now_utc,
-                                                     ActivityScalarStore cur_val,
-                                                     ActivityScalarStore average,
-                                                     const SummaryPinConfig *config) {
+static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t now_utc,
+                                                         ActivityScalarStore cur_val,
+                                                         ActivityScalarStore average,
+                                                         const SummaryPinConfig *config) {
   AttributeList pin_attr_list = {0};
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
                              i18n_get(config->short_title, &pin_attr_list));
@@ -652,8 +653,8 @@ static bool prv_stats_filter(int index, int32_t value, void *context) {
 // ------------------------------------------------------------------------------------------------
 // Calculates the mean and median of a metric over the entire history we have for it and counts the
 // total and consecutive days of history
-T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
-                                                 ActivityInsightMetricHistoryStats *stats) {
+PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
+                                                     ActivityInsightMetricHistoryStats *stats) {
   int32_t *history = kernel_malloc_check(sizeof(int32_t[ACTIVITY_HISTORY_DAYS]));
   activity_get_metric(metric, ACTIVITY_HISTORY_DAYS, history);
 
@@ -868,7 +869,7 @@ static bool prv_push_sleep_summary_pin(time_t now_utc, time_t pin_time_utc,
 }
 
 // -----------------------------------------------------------------------------------------
-static NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySession *session) {
+static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySession *session) {
   AttributeList pin_attr_list = {};
 
   attribute_list_add_resource_id(&pin_attr_list, AttributeIdIconPin, TIMELINE_RESOURCE_SLEEP);
@@ -1115,7 +1116,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
 }
 
 // ------------------------------------------------------------------------------------------------
-void NOINLINE activity_insights_process_sleep_data(time_t now_utc) {
+void PBL_NOINLINE activity_insights_process_sleep_data(time_t now_utc) {
   // Check sleep insights
   if (activity_prefs_sleep_insights_are_enabled()) {
     prv_do_sleep_reward(now_utc);
@@ -1126,7 +1127,7 @@ void NOINLINE activity_insights_process_sleep_data(time_t now_utc) {
 
 // ------------------------------------------------------------------------------------------------
 // Checks to see if we should trigger an activity reward
-static NOINLINE void prv_do_activity_reward(time_t now_utc) {
+static PBL_NOINLINE void prv_do_activity_reward(time_t now_utc) {
   INSIGHTS_LOG_DEBUG("Checking activity reward...");
   if (!prv_reward_check_common(&s_activity_reward_settings, &s_activity_reward_state.common,
                                &s_activity_stats, now_utc)) {
@@ -1172,7 +1173,7 @@ static ActivityScalarStore prv_cur_step_avg(time_t now_utc, int minute_of_day) {
 
 // ------------------------------------------------------------------------------------------------
 // Creates a notification to notify the user of a new pin with a response action
-static NOINLINE TimelineItem *prv_create_notification(const NotificationConfig *config) {
+static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConfig *config) {
   AttributeList notif_attr_list = {};
   ActivitySession *session = config->session;
   prv_build_notification_attr_list(&notif_attr_list, config->body, config->icon_id,
@@ -1505,7 +1506,7 @@ static bool prv_push_activity_summary_pin(time_t now_utc, time_t pin_time_utc, i
 
 // ------------------------------------------------------------------------------------------------
 // Checks to see if we should add/update an activity summary pin
-static NOINLINE void prv_do_activity_summary(time_t now_utc) {
+static PBL_NOINLINE void prv_do_activity_summary(time_t now_utc) {
   if (!s_activity_summary_settings.enabled) {
     return;
   }
@@ -1909,7 +1910,7 @@ void prv_process_activity_sessions(time_t now_utc) {
 }
 
 // ------------------------------------------------------------------------------------------------
-void NOINLINE activity_insights_process_minute_data(time_t now_utc) {
+void PBL_NOINLINE activity_insights_process_minute_data(time_t now_utc) {
   // Update our active stats - needs to happen each iteration to ensure it's current
   // If we're above the 'active' threshold, increment the number of consecutive active minutes,
   // otherwise, reset to 0

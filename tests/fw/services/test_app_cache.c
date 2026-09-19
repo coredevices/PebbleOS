@@ -15,7 +15,7 @@
 #include "shell/normal/quick_launch.h"
 #include <pbl/util/size.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include <stdio.h>
 
 // Fakes
@@ -256,7 +256,7 @@ void test_app_cache__clear(void) {
 #define APP_CACHE_FILE_NAME "appcache"
 #define APP_CACHE_MAX_SIZE  4000
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   time_t install_date;
   time_t last_launch;
   uint32_t total_size;

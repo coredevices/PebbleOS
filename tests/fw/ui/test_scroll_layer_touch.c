@@ -137,7 +137,7 @@ void window_single_repeating_click_subscribe(ButtonId button_id, uint16_t repeat
 }
 
 // ---------------------------------------------------------------------------------------------
-// Strong overrides of the WEAK animation stubs: capture the animation's to-target and stopped
+// Strong overrides of the PBL_WEAK animation stubs: capture the animation's to-target and stopped
 // handler so the fling physics are observable and the coast end can be simulated by the test.
 
 static GPoint s_anim_to;

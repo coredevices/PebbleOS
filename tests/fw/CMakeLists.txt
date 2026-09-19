@@ -48,9 +48,10 @@ pbl_clar_test(test_codepoint
     src/fw/applib/fonts/codepoint.c
 )
 
-pbl_clar_test(test_rtl_support
+pbl_clar_test(test_bidi
   SOURCES
-    src/fw/applib/graphics/rtl_support.c
+    src/fw/applib/graphics/bidi.c
+    src/fw/applib/graphics/arabic_shaping.c
     src/fw/applib/graphics/utf8.c
     src/fw/applib/fonts/codepoint.c
 )
@@ -67,7 +68,7 @@ pbl_clar_test(test_char_iterator
     src/fw/applib/graphics/framebuffer.c
     src/fw/applib/graphics/gtypes.c
     src/fw/applib/graphics/text_layout.c
-    src/fw/applib/graphics/rtl_support.c
+    src/fw/applib/graphics/bidi.c
     src/fw/applib/graphics/arabic_shaping.c
     src/fw/applib/fonts/codepoint.c
     tests/fakes/fake_gbitmap_png.c
@@ -79,7 +80,7 @@ pbl_clar_test(test_word_iterator
     src/fw/applib/graphics/framebuffer.c
     src/fw/applib/graphics/gtypes.c
     src/fw/applib/graphics/text_layout.c
-    src/fw/applib/graphics/rtl_support.c
+    src/fw/applib/graphics/bidi.c
     src/fw/applib/graphics/arabic_shaping.c
     src/fw/applib/fonts/codepoint.c
     tests/fakes/fake_gbitmap_png.c
@@ -100,7 +101,7 @@ pbl_clar_test(test_line_layout
     src/fw/applib/graphics/framebuffer.c
     src/fw/applib/graphics/gtypes.c
     src/fw/applib/graphics/text_layout.c
-    src/fw/applib/graphics/rtl_support.c
+    src/fw/applib/graphics/bidi.c
     src/fw/applib/graphics/arabic_shaping.c
     src/fw/applib/fonts/codepoint.c
     tests/fakes/fake_gbitmap_png.c
@@ -116,7 +117,7 @@ pbl_clar_test(test_alarm
     src/fw/util/time/mktime.c
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/services/cron/service.c
+    subsys/cron/cron.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
     src/fw/services/blob_db/timeline_item_storage.c
@@ -142,7 +143,7 @@ pbl_clar_test(test_alarm_smart
     src/fw/util/time/time.c
     src/fw/util/time/mktime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/services/cron/service.c
+    subsys/cron/cron.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c
     src/fw/services/blob_db/timeline_item_storage.c
@@ -322,7 +323,7 @@ pbl_clar_test(test_text_layout_8_bit
     src/fw/applib/graphics/bitblt.c
     src/fw/applib/graphics/8_bit/bitblt_private.c
     src/fw/applib/graphics/text_layout.c
-    src/fw/applib/graphics/rtl_support.c
+    src/fw/applib/graphics/bidi.c
     src/fw/applib/graphics/arabic_shaping.c
     tests/fakes/fake_gbitmap_png.c
     src/fw/applib/fonts/codepoint.c

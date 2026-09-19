@@ -1394,7 +1394,7 @@ static void draw_space_background(GContext *ctx, GRect bounds, GlobeView *view) 
 }
 
 // A filled circle IS a ring with inner radius 0 (d2 >= 0 is always true) —
-// one rasterizer serves both (size pass). NOINLINE on the ring keeps
+// one rasterizer serves both (size pass). PBL_NOINLINE on the ring keeps
 // the sharing real; inlined, it would clone into every caller.
 static void framebuffer_draw_ring(GBitmap *fb, GPoint center, int outer_r, int inner_r,
                                   uint8_t color, GRect clip_rect);
@@ -1406,8 +1406,8 @@ static void framebuffer_fill_circle(GBitmap *fb, GPoint center, int radius, uint
 
 // Ring (annulus) rasterizer for the lock pulse — framebuffer_fill_circle's
 // bbox scan with an inner-radius reject.
-static NOINLINE void framebuffer_draw_ring(GBitmap *fb, GPoint center, int outer_r, int inner_r,
-                                           uint8_t color, GRect clip_rect) {
+static PBL_NOINLINE void framebuffer_draw_ring(GBitmap *fb, GPoint center, int outer_r, int inner_r,
+                                               uint8_t color, GRect clip_rect) {
   if (!fb || outer_r <= 0)
     return;
   if (inner_r < 0)

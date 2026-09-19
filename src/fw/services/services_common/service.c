@@ -16,7 +16,7 @@
 #include "pbl/services/comm_session/app_session_capabilities.h"
 #include "pbl/services/comm_session/default_kernel_sender.h"
 #include "pbl/services/comm_session/session.h"
-#include "pbl/services/cron.h"
+#include <pbl/cron/cron.h>
 #include "pbl/services/firmware_update.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/light.h"
@@ -37,7 +37,7 @@ void services_common_init(void) {
   accel_manager_init();
   light_init();
 
-  cron_service_init();
+  pbl_cron_init();
 
   shared_prf_storage_init();
   bt_persistent_storage_init();

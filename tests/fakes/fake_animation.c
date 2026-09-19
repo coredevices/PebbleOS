@@ -58,8 +58,8 @@ static Animation *prv_create_from_vararg(Animation *animation_a, Animation *anim
   return prv_create_from_array(animation_array, array_len);
 }
 
-Animation *WEAK animation_sequence_create(Animation *animation_a, Animation *animation_b,
-                                          Animation *animation_c, ...) {
+Animation *PBL_WEAK animation_sequence_create(Animation *animation_a, Animation *animation_b,
+                                              Animation *animation_c, ...) {
   va_list args;
   va_start(args, animation_c);
   Animation *animation = prv_create_from_vararg(animation_a, animation_b, animation_c, args);
@@ -67,13 +67,13 @@ Animation *WEAK animation_sequence_create(Animation *animation_a, Animation *ani
   return animation;
 }
 
-Animation *WEAK animation_sequence_create_from_array(Animation **animation_array,
-                                                     uint32_t array_len) {
+Animation *PBL_WEAK animation_sequence_create_from_array(Animation **animation_array,
+                                                         uint32_t array_len) {
   return prv_create_from_array(animation_array, array_len);
 }
 
-Animation *WEAK animation_spawn_create(Animation *animation_a, Animation *animation_b,
-                                       Animation *animation_c, ...) {
+Animation *PBL_WEAK animation_spawn_create(Animation *animation_a, Animation *animation_b,
+                                           Animation *animation_c, ...) {
   va_list args;
   va_start(args, animation_c);
   Animation *animation = prv_create_from_vararg(animation_a, animation_b, animation_c, args);
@@ -81,7 +81,8 @@ Animation *WEAK animation_spawn_create(Animation *animation_a, Animation *animat
   return animation;
 }
 
-Animation *WEAK animation_spawn_create_from_array(Animation **animation_array, uint32_t array_len) {
+Animation *PBL_WEAK animation_spawn_create_from_array(Animation **animation_array,
+                                                      uint32_t array_len) {
   return prv_create_from_array(animation_array, array_len);
 }
 

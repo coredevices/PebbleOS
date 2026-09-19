@@ -4,12 +4,12 @@
 #pragma once
 
 #include "pbl/services/timeline/generic_layout.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-LayoutLayer *WEAK generic_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK generic_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK generic_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK generic_layout_verify(bool existing_attributes[]) {
   return false;
 }

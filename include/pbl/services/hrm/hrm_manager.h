@@ -72,6 +72,12 @@ void hrm_manager_init(void);
 
 void hrm_manager_handle_prefs_changed(void);
 
+//! True if a live subscriber keeps the green (BPM/HRV) optical path on continuously, i.e. its
+//! update interval is within the sensor spin-up time so it is always due (live workout HR, the BLE
+//! HR relay, a foreground app). Background SpO2 readers use this to defer a measurement window
+//! rather than take the optical path away from a live consumer.
+bool hrm_manager_has_continuous_green_subscriber(void);
+
 //! Enable the HRM and subscribe to updates from an app or worker task.
 //! This should not be used by KernelBG or KernelMain clients. For KernelBG client subscriptions,
 //! please see \ref hrm_manager_subscribe_with_callback. KernelMain clients are not yet supported.
@@ -96,7 +102,8 @@ HRMSessionRef sys_hrm_manager_get_app_subscription(AppInstallId app_id);
 //! @return true on success, false on failure
 bool sys_hrm_manager_unsubscribe(HRMSessionRef session);
 
-//! Set the enabled features for the given HRM subscription
+//! Set the enabled features for the given HRM subscription. A subscription with no features is
+//! kept but ignored by the sensor scheduler (it never turns the sensor on and receives no data).
 //! @param session the HRMSessionRef returned by sys_hrm_manager_app_subscribe
 //! @param features the desired features
 //! @return true on success, false on failure
@@ -148,6 +155,9 @@ typedef struct {
 
   uint8_t spo2_percent;
   HRMQuality spo2_quality;
+  uint8_t spo2_confidence;  //!< raw algorithm confidence coefficient (debug)
+  uint8_t spo2_valid_level; //!< raw algorithm valid level (debug)
+  bool spo2_invalid;        //!< raw algorithm invalid flag (debug)
 
 #ifdef CONFIG_MFG
   double ctr[6];

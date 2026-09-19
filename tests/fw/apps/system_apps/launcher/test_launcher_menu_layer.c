@@ -11,6 +11,7 @@
 #include "pbl/services/app_glances/app_glance_service.h"
 #include "pbl/services/blob_db/app_glance_db.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 static GContext s_ctx;
 
@@ -233,8 +234,10 @@ bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
   return false;
 }
 
+static PreferredContentSize s_content_size;
+
 PreferredContentSize system_theme_get_content_size(void) {
-  return PreferredContentSizeDefault;
+  return s_content_size;
 }
 
 void vibes_enqueue_custom_pattern(VibePattern pattern) {
@@ -288,6 +291,8 @@ void test_launcher_menu_layer__initialize(void) {
 
   // Default to showing bitmap icons
   s_use_pdc_icons = false;
+
+  s_content_size = PreferredContentSizeDefault;
 }
 
 void app_glance_db_deinit(void);
@@ -302,9 +307,9 @@ void test_launcher_menu_layer__cleanup(void) {
 // Helpers
 //////////////////////
 
-//! Declared T_STATIC in launcher_menu_layer.c so we can easily change the launcher's selected index
-//! from unit tests without also specifying the y offset for the scroll layer that is required by
-//! `launcher_menu_layer_set_selection_state()`.
+//! Declared PBL_T_STATIC in launcher_menu_layer.c so we can easily change the launcher's selected
+//! index from unit tests without also specifying the y offset for the scroll layer that is required
+//! by `launcher_menu_layer_set_selection_state()`.
 void prv_launcher_menu_layer_set_selection_index(LauncherMenuLayer *launcher_menu_layer,
                                                  uint16_t index, MenuRowAlign row_align,
                                                  bool animated);
@@ -404,6 +409,65 @@ void test_launcher_menu_layer__app_selected_and_apps_above_and_below_with_glance
   prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_launcher_menu_layer__extra_large_with_glances(void) {
+  s_content_size = PreferredContentSizeExtraLarge;
+  prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
+  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_launcher_menu_layer__medium_with_glances(void) {
+  s_content_size = PreferredContentSizeMedium;
+  prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
+  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_launcher_menu_layer__content_size_change_keeps_selection(void) {
+  AppMenuDataSource data_source = {};
+  app_menu_data_source_init(&data_source, NULL, NULL);
+  app_menu_data_source_enable_icons(&data_source, RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON);
+
+  LauncherMenuLayer launcher_menu_layer = {};
+  launcher_menu_layer_init(&launcher_menu_layer, &data_source);
+  cl_assert_equal_i(launcher_menu_layer.content_size, PreferredContentSizeDefault);
+
+  const uint16_t selected_row = LauncherMenuLayerTestApp_NoIcon;
+  prv_launcher_menu_layer_set_selection_index(&launcher_menu_layer, selected_row,
+                                              MenuRowAlignBottom, false /* animated */);
+  LauncherMenuLayerSelectionState state;
+  launcher_menu_layer_get_selection_state(&launcher_menu_layer, &state);
+  cl_assert_equal_i(state.row_index, selected_row);
+  cl_assert_equal_i(state.content_size, PreferredContentSizeDefault);
+
+  // Nothing to do while the preference is unchanged
+  launcher_menu_layer_update_content_size(&launcher_menu_layer);
+  cl_assert_equal_i(launcher_menu_layer.content_size, PreferredContentSizeDefault);
+
+  s_content_size = PreferredContentSizeExtraLarge;
+  launcher_menu_layer_update_content_size(&launcher_menu_layer);
+  cl_assert_equal_i(launcher_menu_layer.content_size, PreferredContentSizeExtraLarge);
+  cl_assert_equal_i(menu_layer_get_selected_index(&launcher_menu_layer.menu_layer).row,
+                    selected_row);
+
+  // The selection must still be on screen despite the taller cells
+  GRangeVertical selection_range;
+  launcher_menu_layer_get_selection_vertical_range(&launcher_menu_layer, &selection_range);
+  cl_assert(selection_range.origin_y >= 0);
+  cl_assert(selection_range.origin_y + selection_range.size_h <= DISP_ROWS);
+
+  // Restoring a state captured with a different content size also keeps the row on screen
+  launcher_menu_layer_set_selection_state(&launcher_menu_layer, &state);
+  cl_assert_equal_i(menu_layer_get_selected_index(&launcher_menu_layer.menu_layer).row,
+                    selected_row);
+  launcher_menu_layer_get_selection_vertical_range(&launcher_menu_layer, &selection_range);
+  cl_assert(selection_range.origin_y >= 0);
+  cl_assert(selection_range.origin_y + selection_range.size_h <= DISP_ROWS);
+
+  launcher_menu_layer_deinit(&launcher_menu_layer);
+  app_menu_data_source_deinit(&data_source);
 }
 
 void test_launcher_menu_layer__long_title_pdc(void) {

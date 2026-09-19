@@ -22,7 +22,6 @@ pbl_add_subdirectory_ifdef(CONFIG_SERVICE_CLOCK clock)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_COMM_SESSION comm_session)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_COMPOSITOR compositor)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_CONTACTS contacts)
-pbl_add_subdirectory_ifdef(CONFIG_SERVICE_CRON cron)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_DATA_LOGGING data_logging)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_DEBOUNCED_CONNECTION_SERVICE debounced_connection_service)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_ECOMPASS ecompass)
@@ -73,9 +72,3 @@ pbl_add_subdirectory_ifdef(CONFIG_SERVICE_WEATHER weather)
 
 pbl_library()
 pbl_library_sources(services.c)
-
-# Every service that has translatable strings contributes a catalog.
-get_property(service_pots GLOBAL PROPERTY PBL_SERVICES_POT)
-if(service_pots)
-  pbl_msgcat(${CMAKE_CURRENT_BINARY_DIR}/services.pot ${service_pots})
-endif()

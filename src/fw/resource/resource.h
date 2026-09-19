@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 #include "applib/applib_resource.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! @addtogroup Foundation
 //! @{
@@ -22,7 +22,7 @@ typedef uint32_t ResAppNum;
 #define SYSTEM_APP ((ResAppNum)0)
 
 //! The version information baked into every binary resource pack.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   //! The crc of the resource pack between content_start and last_used. See check_bank_crc for how
   //! this is calculated.
   uint32_t crc;

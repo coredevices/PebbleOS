@@ -5,7 +5,7 @@
 
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/voice/transcription.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
 #include <inttypes.h>
@@ -30,7 +30,7 @@ typedef enum {
 } VoiceEndpointResult;
 
 // Sent before Speex encoded data
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   char version[20];
   uint32_t sample_rate;
   uint16_t bit_rate;

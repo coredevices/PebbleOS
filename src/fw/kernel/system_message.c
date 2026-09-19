@@ -14,7 +14,7 @@
 #include "system/passert.h"
 #include "system/reboot_reason.h"
 #include "system/reset.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <inttypes.h>
@@ -54,7 +54,7 @@ static void prv_handle_firmware_complete_msg(void) {
 //! it would be nice for this exchange to take place as part of PutBytes
 extern bool pb_storage_get_status(PutBytesObjectType obj_type, PbInstallStatus *status);
 static void prv_handle_firmware_status_request(CommSession *session) {
-  struct PACKED {
+  struct PBL_PACKED {
     uint8_t deprecated;
     uint8_t type;
     uint8_t rsvd[2];
@@ -171,7 +171,7 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t *data, si
 }
 
 void system_message_send_firmware_start_response(FirmwareUpdateStatus status) {
-  struct PACKED {
+  struct PBL_PACKED {
     uint8_t zero;
     uint8_t type;
     uint8_t status;

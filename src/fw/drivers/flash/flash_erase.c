@@ -8,7 +8,8 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 
 #include "pbl/kernel/sem.h"
@@ -25,8 +26,8 @@ static struct FlashRegionEraseState {
 
 static void prv_erase_next_async(void *ignored);
 
-T_STATIC void prv_lock_erase_mutex(void);
-T_STATIC void prv_unlock_erase_mutex(void);
+PBL_T_STATIC void prv_lock_erase_mutex(void);
+PBL_T_STATIC void prv_unlock_erase_mutex(void);
 #if !UNITTEST
 void flash_erase_init(void) {
   pbl_sem_give(&s_erase_mutex);

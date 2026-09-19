@@ -24,7 +24,8 @@
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/uuid.h"
 
 // This is used to determine whether this app was launched as Timeline or Timeline Past.
@@ -130,7 +131,7 @@ static bool prv_set_state(TimelineAppData *data, TimelineAppState next_state) {
 // Exit Animation & Inactivity Timer
 /////////////////////////////////////
 
-T_STATIC void prv_init_peek_layer(TimelineAppData *data);
+PBL_T_STATIC void prv_init_peek_layer(TimelineAppData *data);
 
 static void prv_launch_watchface(void *data) {
 #ifdef CONFIG_SHELL_SDK
@@ -449,7 +450,7 @@ static void prv_refresh_pin(TimelineAppData *data, int idx) {
 // Timeline Controller
 /////////////////////////////////////
 
-T_STATIC void prv_setup_no_events_peek(TimelineAppData *data);
+PBL_T_STATIC void prv_setup_no_events_peek(TimelineAppData *data);
 
 static void prv_update_timeline_layer(TimelineAppData *data) {
   TimelineLayer *timeline_layer = &data->timeline_layer;
@@ -897,7 +898,7 @@ static void prv_setup_peek_animation(TimelineAppData *data, TimelineResourceInfo
 #endif
 }
 
-T_STATIC void prv_setup_no_events_peek(TimelineAppData *data) {
+PBL_T_STATIC void prv_setup_no_events_peek(TimelineAppData *data) {
   PeekLayer *peek_layer = &data->peek_layer;
   // set the text
   peek_layer_set_fields(peek_layer, "", i18n_get("No events", peek_layer), "");
@@ -958,7 +959,7 @@ static void prv_setup_first_pin_peek(TimelineAppData *data) {
   }
 }
 
-static void NOINLINE prv_setup_peek(TimelineAppData *data) {
+static void PBL_NOINLINE prv_setup_peek(TimelineAppData *data) {
   TimelineIterState *state = timeline_model_get_current_state();
   TimelineItem *first_pin = state ? &state->pin : NULL;
   EventServiceEventHandler focus_handler = prv_open_did_focus_handler;
@@ -1015,7 +1016,7 @@ static GColor prv_get_sidebar_color(TimelineAppData *data) {
 }
 #endif
 
-T_STATIC void prv_init_peek_layer(TimelineAppData *data) {
+PBL_T_STATIC void prv_init_peek_layer(TimelineAppData *data) {
   Window *window = &data->timeline_window;
   PeekLayer *peek_layer = &data->peek_layer;
   const TimelineAppStyle *style = prv_get_style();
@@ -1149,7 +1150,7 @@ Animation *timeline_animate_back_from_card(void) {
 // App boilerplate
 /////////////////////////////////////
 
-static bool NOINLINE prv_setup_timeline_app(void) {
+static bool PBL_NOINLINE prv_setup_timeline_app(void) {
   TimelineAppData *data = app_malloc_check(sizeof(TimelineAppData));
   s_app_data = data;
   *data = (TimelineAppData){};
@@ -1233,7 +1234,7 @@ static bool NOINLINE prv_setup_timeline_app(void) {
   return (launch_into_pin && !(args && args->stay_in_list_view));
 }
 
-T_STATIC void NOINLINE prv_init(void) {
+PBL_T_STATIC void PBL_NOINLINE prv_init(void) {
   bool do_push_pin_window = prv_setup_timeline_app();
 
   app_window_stack_push(&s_app_data->timeline_window, true /* animated */);
@@ -1248,7 +1249,7 @@ T_STATIC void NOINLINE prv_init(void) {
   }
 }
 
-static void NOINLINE prv_deinit(void) {
+static void PBL_NOINLINE prv_deinit(void) {
   prv_cleanup_timer(&s_app_data->intro_timer_id);
   prv_cleanup_timer(&s_app_data->inactive_timer_id);
 

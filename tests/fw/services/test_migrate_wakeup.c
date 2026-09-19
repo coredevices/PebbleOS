@@ -8,7 +8,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "process_management/app_install_manager.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include "clar.h"
 
@@ -49,7 +49,7 @@
 // Structures
 ////////////////////////////////////
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid uuid;
   int32_t reason;
   bool repeating;
@@ -57,7 +57,7 @@ typedef struct PACKED {
   bool notify_if_missed;
 } WakeupEntryV1;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid uuid;
   int32_t reason;
   bool repeating;

@@ -10,6 +10,7 @@ may use. The implementation is PebbleOS's own; its internals are described in
 ```
 include/pbl/kernel/     public API: types, irq, thread, mutex, sem, msgq, poll, sched, idle, debug
 include/pbl/kernel/backend.h   per-object private state the public structs embed
+include/pbl/kernel/compiler.h  compiler abstraction, backed by compiler/gcc.h and compiler/clang.h
 kernel/                 scheduler, objects, tick conversion
 kernel/arch/arm/        Cortex-M port: context switch, SVC, MPU, SysTick, idle
 kernel/arch/posix/      host port for the unit tests
@@ -62,6 +63,23 @@ The SoC tickless-idle code talks to the kernel through `pbl/kernel/idle.h`:
 `pbl_soc_idle()` and `pbl_soc_tick_enable()` are implemented per SoC, and
 `pbl_idle_confirm()`, `pbl_idle_slept()` and `pbl_kernel_tick_isr()` are what
 the kernel provides in return.
+
+## Compiler abstraction
+
+`pbl/kernel/compiler.h` is the only place the tree may spell compiler
+specifics: attributes (`PBL_PACKED`, `PBL_WEAK`, `PBL_NORETURN`,
+`PBL_SECTION()`, ...) and builtins (`PBL_LIKELY()`, `PBL_UNREACHABLE()`,
+`PBL_CLZ()`, ...). Every public macro is declared and documented once in the
+frontend and expands to a `*_IMPL` counterpart from the backend selected by
+the predefined macros: `compiler/gcc.h` for GCC and `compiler/clang.h` for
+Clang, which reuses the GCC definitions and blanks the attributes Clang does
+not implement. Supporting another compiler means adding a backend that
+defines the same `*_IMPL` set and a branch in the frontend; callers stay
+untouched. The unit-test hooks built on these (`PBL_T_STATIC`,
+`PBL_T_MOCKABLE`) live in `pbl/util/testing.h`. Code outside
+`include/pbl/kernel/compiler/` must not use `__attribute__` or `__builtin_*`
+directly; the header is shipped with the SDK so exported headers follow the
+same rule.
 
 ## Configuration
 

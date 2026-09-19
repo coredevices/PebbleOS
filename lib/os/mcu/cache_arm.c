@@ -2,7 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/mcu/cache.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 
 #include <cmsis_core.h>
 
@@ -79,7 +80,7 @@ static void prv_dcache_operation_all(volatile uint32_t *reg) {
 }
 #endif
 
-MOCKABLE void icache_enable(void) {
+PBL_T_MOCKABLE void icache_enable(void) {
 #if __ICACHE_PRESENT
   SCB->CSSELR = CSSELR_L1_ICACHE;
   __DMB();
@@ -95,7 +96,7 @@ MOCKABLE void icache_enable(void) {
 #endif
 }
 
-MOCKABLE void icache_disable(void) {
+PBL_T_MOCKABLE void icache_disable(void) {
 #if __ICACHE_PRESENT
   __DSB();
   __ISB();
@@ -107,21 +108,21 @@ MOCKABLE void icache_disable(void) {
 #endif
 }
 
-MOCKABLE bool icache_is_enabled(void) {
+PBL_T_MOCKABLE bool icache_is_enabled(void) {
 #if __ICACHE_PRESENT
   return SCB->CCR & SCB_CCR_IC_Msk;
 #endif
   return false;
 }
 
-MOCKABLE uint32_t icache_line_size(void) {
+PBL_T_MOCKABLE uint32_t icache_line_size(void) {
 #if __ICACHE_PRESENT
   return prv_get_line_size(s_icache_cssidr);
 #endif
   return 1;
 }
 
-MOCKABLE void dcache_enable(void) {
+PBL_T_MOCKABLE void dcache_enable(void) {
 #if __DCACHE_PRESENT
   SCB->CSSELR = CSSELR_L1_DCACHE;
   __DMB();
@@ -135,7 +136,7 @@ MOCKABLE void dcache_enable(void) {
 #endif
 }
 
-MOCKABLE void dcache_disable(void) {
+PBL_T_MOCKABLE void dcache_disable(void) {
 #if __DCACHE_PRESENT
   dcache_flush_invalidate_all();
   __DSB();
@@ -145,21 +146,21 @@ MOCKABLE void dcache_disable(void) {
 #endif
 }
 
-MOCKABLE bool dcache_is_enabled(void) {
+PBL_T_MOCKABLE bool dcache_is_enabled(void) {
 #if __DCACHE_PRESENT
   return SCB->CCR & SCB_CCR_DC_Msk;
 #endif
   return false;
 }
 
-MOCKABLE uint32_t dcache_line_size(void) {
+PBL_T_MOCKABLE uint32_t dcache_line_size(void) {
 #if __DCACHE_PRESENT
   return prv_get_line_size(s_dcache_cssidr);
 #endif
   return 1;
 }
 
-MOCKABLE uint32_t dcache_alignment_mask_minimum(uint32_t min) {
+PBL_T_MOCKABLE uint32_t dcache_alignment_mask_minimum(uint32_t min) {
 #if __DCACHE_PRESENT
   const uint32_t line_size = dcache_line_size();
   if (line_size > min) {
@@ -169,7 +170,7 @@ MOCKABLE uint32_t dcache_alignment_mask_minimum(uint32_t min) {
   return min - 1;
 }
 
-MOCKABLE void icache_invalidate_all(void) {
+PBL_T_MOCKABLE void icache_invalidate_all(void) {
 #if __ICACHE_PRESENT
   __DSB();
   __ISB();
@@ -179,43 +180,43 @@ MOCKABLE void icache_invalidate_all(void) {
 #endif
 }
 
-MOCKABLE void icache_invalidate(void *addr, size_t size) {
+PBL_T_MOCKABLE void icache_invalidate(void *addr, size_t size) {
 #if __ICACHE_PRESENT
   prv_cache_operation_range(&SCB->ICIMVAU, icache_line_size(), (uintptr_t)addr, size);
 #endif
 }
 
-MOCKABLE void dcache_flush_all(void) {
+PBL_T_MOCKABLE void dcache_flush_all(void) {
 #if __DCACHE_PRESENT
   prv_dcache_operation_all(&SCB->DCCSW);
 #endif
 }
 
-MOCKABLE void dcache_invalidate_all(void) {
+PBL_T_MOCKABLE void dcache_invalidate_all(void) {
 #if __DCACHE_PRESENT
   prv_dcache_operation_all(&SCB->DCISW);
 #endif
 }
 
-MOCKABLE void dcache_flush_invalidate_all(void) {
+PBL_T_MOCKABLE void dcache_flush_invalidate_all(void) {
 #if __DCACHE_PRESENT
   prv_dcache_operation_all(&SCB->DCCISW);
 #endif
 }
 
-MOCKABLE void dcache_flush(const void *addr, size_t size) {
+PBL_T_MOCKABLE void dcache_flush(const void *addr, size_t size) {
 #if __DCACHE_PRESENT
   prv_cache_operation_range(&SCB->DCCMVAC, dcache_line_size(), (uintptr_t)addr, size);
 #endif
 }
 
-MOCKABLE void dcache_invalidate(void *addr, size_t size) {
+PBL_T_MOCKABLE void dcache_invalidate(void *addr, size_t size) {
 #if __DCACHE_PRESENT
   prv_cache_operation_range(&SCB->DCIMVAC, dcache_line_size(), (uintptr_t)addr, size);
 #endif
 }
 
-MOCKABLE void dcache_flush_invalidate(const void *addr, size_t size) {
+PBL_T_MOCKABLE void dcache_flush_invalidate(const void *addr, size_t size) {
 #if __DCACHE_PRESENT
   prv_cache_operation_range(&SCB->DCCIMVAC, dcache_line_size(), (uintptr_t)addr, size);
 #endif

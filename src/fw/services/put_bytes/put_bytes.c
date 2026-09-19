@@ -21,7 +21,8 @@
 #include "system/firmware_storage.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
 #include <bluetooth/analytics.h>
@@ -42,12 +43,12 @@ typedef enum {
   NumPutBytesCommands
 } PutBytesCommand;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint32_t init_req_magic;
   uint32_t append_offset;
 } InitRequestExtraInfo;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PutBytesCommand cmd : 8;
   uint32_t total_size;
   PutBytesObjectType type : 7;
@@ -64,27 +65,27 @@ typedef struct PACKED {
   InitRequestExtraInfo extra_info;
 } InitRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   PutBytesCommand cmd : 8;
   uint32_t token;
 } SharedHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   SharedHeader header;
   uint32_t length;
   uint8_t data[];
 } PutRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   SharedHeader header;
   uint32_t crc;
 } CommitRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   SharedHeader header;
 } AbortRequest;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   SharedHeader header;
 } InstallRequest;
 
@@ -422,7 +423,7 @@ static void prv_send_response(ResponseCode code, uint32_t token) {
   struct {
     uint8_t response_code;
     uint32_t token;
-  } PACKED msg = {.response_code = code, .token = htonl(token)};
+  } PBL_PACKED msg = {.response_code = code, .token = htonl(token)};
 
   bool success = comm_session_send_data(comm_session_get_system_session(), PB_ENDPOINT_ID,
                                         (uint8_t *)&msg, sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
@@ -1260,7 +1261,7 @@ uint32_t put_bytes_get_index(void) {
 }
 
 #ifdef UNITTEST
-T_STATIC uint8_t prv_put_bytes_get_max_batched_pb_ops(void) {
+PBL_T_STATIC uint8_t prv_put_bytes_get_max_batched_pb_ops(void) {
   return MAX_BATCHED_PB_PUT_OPS;
 }
 #endif

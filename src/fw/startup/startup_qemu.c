@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! These symbols are defined in the linker script for use in initializing
 //! the data sections.
@@ -17,7 +17,7 @@ extern uint8_t __isr_stack_start__[];
 
 extern int main(void);
 
-NORETURN prv_startup(void) {
+PBL_NORETURN void prv_startup(void) {
   // Copy data section from flash to RAM
   for (int i = 0; i < (__data_end - __data_start); i++) {
     __data_start[i] = __data_load_start[i];
@@ -32,7 +32,7 @@ NORETURN prv_startup(void) {
   }
 }
 
-NAKED_FUNC NORETURN Reset_Handler(void) {
+PBL_NAKED PBL_NORETURN void Reset_Handler(void) {
   __asm volatile(
       // Set MSPLIM to protect the ISR stack (Cortex-M33)
       "ldr r0, =__isr_stack_start__ \n"

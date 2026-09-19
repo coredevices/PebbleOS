@@ -14,7 +14,7 @@
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_types.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/struct.h"
 
 #include <stdio.h>

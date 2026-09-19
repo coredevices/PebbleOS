@@ -6,6 +6,7 @@
 #include "applib/ui/animation_interpolate.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
 //////////////////////////////////
 // Callbacks
@@ -27,7 +28,8 @@ static void prv_announce_did_stop(KinoPlayer *player, bool finished) {
 // Play Animation
 ///////////////////////////////
 
-T_STATIC void prv_play_animation_update(Animation *animation, const AnimationProgress normalized) {
+PBL_T_STATIC void prv_play_animation_update(Animation *animation,
+                                            const AnimationProgress normalized) {
   KinoPlayer *player = animation_get_context(animation);
   int32_t animation_elapsed_ms = 0;
   uint32_t elapsed_ms = 0;

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 
-bool WEAK build_id_contains_gnu_build_id(const ElfExternalNote *note) {
+bool PBL_WEAK build_id_contains_gnu_build_id(const ElfExternalNote *note) {
   return false;
 }

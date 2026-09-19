@@ -6,7 +6,7 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/app_fetch_endpoint.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdio.h>
 
@@ -43,7 +43,7 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
 void app_storage_delete_bank(uint32_t bank) {
 }
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t length;
   uint16_t endpoint_id;
 } PebbleProtocolHeader;
@@ -62,7 +62,7 @@ typedef struct AppFetchData {
   uint8_t data[];
 } AppFetchData;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t command;
   Uuid uuid;
   uint32_t app_id;
