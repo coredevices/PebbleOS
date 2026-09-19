@@ -452,6 +452,26 @@ static void prv_draw_notification_cell_round_unselected(GContext *ctx, const Lay
 }
 #endif
 
+static void prv_mark_notification_row_read(NotificationsData *data, int16_t row) {
+  // Row zero is the Clear All action; notification rows begin at one.
+  if (row <= 0) {
+    return;
+  }
+
+  NotificationNode *node =
+      (NotificationNode *)list_get_at((ListNode *)data->notification_list, row - 1);
+  if (node) {
+    notification_storage_set_status(&node->id, TimelineItemStatusRead);
+  }
+}
+
+static void prv_selection_changed_callback(PBL_UNUSED MenuLayer *menu_layer, MenuIndex new_index,
+                                           PBL_UNUSED MenuIndex old_index, void *context) {
+  // Moving the list focus onto a notification is an acknowledgement, even when the wearer never
+  // opens its detail card.
+  prv_mark_notification_row_read(context, new_index.row);
+}
+
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   NotificationsData *notifications_data = data;
 
@@ -469,6 +489,10 @@ static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, vo
   if (!node) {
     return;
   }
+
+  // The selection is an intentional acknowledgement even if a newly arriving notification wins
+  // the race to open the detail window.
+  prv_mark_notification_row_read(notifications_data, cell_index->row);
 
   bool success = prv_push_notification_window(notifications_data);
   if (!success) {
@@ -681,6 +705,7 @@ static void prv_window_appear(Window *window) {
   NotificationsData *data = window_get_user_data(window);
 
   prv_update_text_layer_visibility(data);
+  prv_mark_notification_row_read(data, menu_layer_get_selected_index(&data->menu_layer).row);
 }
 
 static void prv_window_disappear(Window *window) {
@@ -701,6 +726,7 @@ static void prv_window_load(Window *window) {
                              .draw_row = prv_draw_row_callback,
                              .get_cell_height = prv_get_cell_height,
                              .select_click = prv_select_callback,
+                             .selection_changed = prv_selection_changed_callback,
                            });
 
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);

@@ -21,6 +21,19 @@ typedef struct NotificationWindowData {
   bool window_frozen; // Don't pop when performing an action via a hotkey until the action completes
   bool first_notif_loaded;
 
+  // A notification arriving while the popup is already on screen swaps the stack programmatically,
+  // which is indistinguishable from a user scroll by the time layout_did_appear fires. Holds the
+  // notification that focus was moved to so that appearance alone does not mark it read.
+  // UUID_INVALID when the wearer is driving. Keyed by id rather than a one-shot flag because the
+  // swap may never produce an appearance at all - a failed layer swap, or a reload skipped while
+  // the action menu is up - and a stale flag would then suppress the next genuine scroll.
+  Uuid suppress_read_marking_for;
+
+  // The notification layout_did_appear last reported on screen, which is the only reliable record
+  // of what the wearer actually saw. The presented list's current notification is not: focusing
+  // sets it to a staging notification that is never displayed.
+  Uuid displayed_id;
+
   // Used to keep track of when a notification is modified from a different (event)
   // task, so the reload only occurs in the correct task when something changes
   bool notifications_modified;

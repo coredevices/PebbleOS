@@ -36,6 +36,17 @@ void notification_storage_set_status(const Uuid *id, uint8_t status);
 //! Get the status for a stored notification, returns false if not found
 bool notification_storage_get_status(const Uuid *id, uint8_t *status);
 
+//! Number of stored notifications carrying none of Read, Deleted or Dismissed.
+//!
+//! Maintained incrementally rather than by scanning storage, because this is on the path of a
+//! syscall that watchfaces may poll once a minute and every scan is a flash read. Storage is
+//! wiped on boot (see notification_storage_init), so the count always starts from zero and can
+//! never drift across a reset.
+//!
+//! Saturates at UINT8_MAX. Storage holds more notifications than that, so the running total is
+//! kept wider and clamped here; saturating cannot desynchronise it from storage.
+uint8_t notification_storage_get_unread_count(void);
+
 //! Remove a notification from storage (mark it for deletion)
 void notification_storage_remove(const Uuid *id);
 
