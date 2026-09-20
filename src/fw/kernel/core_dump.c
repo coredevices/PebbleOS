@@ -67,8 +67,8 @@ extern char *itoa(int value, char *str, int base);
 //! .note.gnu.build-id section in src/fw/stm32f2xx_flash_fw.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
-extern const uint32_t __CCM_RAM_size__[];
-extern const uint32_t __DTCM_RAM_size__[];
+extern uint8_t __RAM_start__;
+extern uint8_t __RAM_size__;
 
 void cd_flash_init(void);
 uint32_t cd_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
@@ -101,9 +101,7 @@ typedef struct {
 
 // Memory regions to dump
 static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
-#if CONFIG_SOC_NRF52 || CONFIG_SOC_SF32LB52 || CONFIG_QEMU
-  {.start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE},
-#endif
+  {.start = &__RAM_start__, .length = (uintptr_t)&__RAM_size__},
   {.start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER)}, // Enabled interrupts
   {.start = (void *)&NVIC->ISPR, .length = sizeof(NVIC->ISPR)}, // Pending interrupts
   {.start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR)}, // Active interrupts
