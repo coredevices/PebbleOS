@@ -9,6 +9,7 @@
 #include "pbl/util/misc.h"
 #include "pbl/services/system_task.h"
 #include "pbl/soc/sf32lb/sleep.h"
+#include <pbl/kernel/irq.h>
 
 PBL_LOG_MODULE_DEFINE(driver_speaker_sf32lb, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
 
@@ -366,12 +367,15 @@ void audec_start(AudioDevice *audio_device, AudioTransCB cb) {
 uint32_t audec_write(AudioDevice *audio_device, void *writeBuf, uint32_t size) {
   AudioDeviceState *state = audio_device->state;
   if (state->circ_buffer_storage) {
+    pbl_irq_lock();
     uint32_t free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
     uint16_t to_write = (size > free_size) ? (uint16_t)free_size : (uint16_t)size;
     if (to_write > 0) {
       circular_buffer_write(&state->circ_buffer, writeBuf, to_write);
     }
-    return circular_buffer_get_write_space_remaining(&state->circ_buffer);
+    free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
+    pbl_irq_unlock();
+    return free_size;
   }
 
   return 0;
@@ -394,6 +398,7 @@ void audec_stop(AudioDevice *audio_device) {
   prv_bf0_disable_pll(state);
 
   HAL_NVIC_DisableIRQ(audio_device->audec_dma_irq);
+  state->trans_cb = NULL;
   HAL_AUDCODEC_DMAStop(haudcodec, HAL_AUDCODEC_DAC_CH0);
   haudcodec->channel_ref &= ~(1 << HAL_AUDCODEC_DAC_CH0);
   haudcodec->State[HAL_AUDCODEC_DAC_CH0] = HAL_AUDCODEC_STATE_READY;
@@ -415,9 +420,11 @@ void audec_dac0_dma_irq_handler(AudioDevice *audio_device) {
 
 static void prv_audio_trans_bg(void *data) {
   AudioDeviceState *state = (AudioDeviceState *)data;
+  if (state->trans_cb && state->circ_buffer_storage) {
+    uint32_t free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
+    state->trans_cb(&free_size);
+  }
   state->callback_pending = false;
-  uint32_t free_size = circular_buffer_get_write_space_remaining(&state->circ_buffer);
-  state->trans_cb(&free_size);
 }
 
 static void prv_dma_request_processing(AudioDeviceState *state) {
