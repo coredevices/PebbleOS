@@ -30,9 +30,12 @@ typedef void (*SystemTaskEventCallback)(void *data);
 bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
                                        bool *should_context_switch);
 
-//! Same as system_task_add_callback_from_isr(), except a full queue drops the callback and
-//! returns false instead of resetting the system. Only use this when losing the callback is
-//! tolerable, e.g. a periodic refill that a later interrupt retries.
+//! Enqueue without waiting, from task or ISR context, including with IRQs locked.
+//! Returns false if callbacks are disabled or the queue is full; never resets on failure.
+//! Only use when losing the callback is tolerable or the caller can retry later.
+bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data);
+
+//! ISR wrapper for system_task_add_callback_droppable().
 bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data,
                                                  bool *should_context_switch);
 

@@ -44,10 +44,14 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
   return system_task_add_callback(cb, data);
 }
 
+bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data) {
+  return system_task_add_callback(cb, data);
+}
+
 bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data,
                                                  bool *should_context_switch) {
   *should_context_switch = false;
-  return system_task_add_callback(cb, data);
+  return system_task_add_callback_droppable(cb, data);
 }
 
 uint32_t system_task_get_available_space(void) {

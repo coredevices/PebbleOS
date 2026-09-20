@@ -131,17 +131,13 @@ static void handle_system_task_send_failure(SystemTaskEventCallback cb, uintptr_
   reset_due_to_software_failure();
 }
 
-static bool prv_send_to_queue_from_isr(SystemTaskEventCallback cb, void *data,
-                                       bool *should_context_switch) {
+static bool prv_send_to_queue_no_wait(SystemTaskEventCallback cb, void *data) {
   SystemTaskEvent event = {
     .cb = cb,
     .data = data,
   };
 
-  bool success = (pbl_msgq_put(&s_system_task_queue, &event, PBL_NO_WAIT) == 0);
-  *should_context_switch = false;
-
-  return success;
+  return pbl_msgq_put(&s_system_task_queue, &event, PBL_NO_WAIT) == 0;
 }
 
 bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
@@ -152,7 +148,8 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
     return false;
   }
 
-  bool success = prv_send_to_queue_from_isr(cb, data, should_context_switch);
+  *should_context_switch = false;
+  bool success = prv_send_to_queue_no_wait(cb, data);
   if (!success) {
     handle_system_task_send_failure(cb, caller_lr);
   }
@@ -160,13 +157,18 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
   return success;
 }
 
-bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data,
-                                                 bool *should_context_switch) {
+bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data) {
   if (!prv_is_accepting_callbacks()) {
     return false;
   }
 
-  return prv_send_to_queue_from_isr(cb, data, should_context_switch);
+  return prv_send_to_queue_no_wait(cb, data);
+}
+
+bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data,
+                                                 bool *should_context_switch) {
+  *should_context_switch = false;
+  return system_task_add_callback_droppable(cb, data);
 }
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {

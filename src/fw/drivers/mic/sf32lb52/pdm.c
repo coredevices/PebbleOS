@@ -9,6 +9,7 @@
 #include "pbl/mcu/cache.h"
 #include <pbl/logging/logging.h>
 #include "pbl/kernel/mutex.h"
+#include "pbl/kernel/irq.h"
 #include "system/passert.h"
 #include "pbl/util/circular_buffer.h"
 #include "pbl/util/heap.h"
@@ -167,23 +168,24 @@ static void prv_dispatch_samples_system_task(void *data) {
     while (s_state->is_running && s_state->data_handler &&
            frames_processed < MAX_FRAMES_PER_SYSTEM_TASK_CALLBACK) {
       // Check if we have enough data for a complete frame
+      pbl_irq_lock();
       uint16_t available_data = circular_buffer_get_read_space_remaining(&s_state->circ_buffer);
 
       if (available_data < frame_size_bytes) {
+        pbl_irq_unlock();
         break; // Not enough data for another frame
       }
 
       // Copy one frame
       uint16_t bytes_copied = circular_buffer_copy(
           &s_state->circ_buffer, (uint8_t *)s_state->audio_buffer, frame_size_bytes);
+      circular_buffer_consume(&s_state->circ_buffer, bytes_copied);
+      pbl_irq_unlock();
 
       if (bytes_copied == frame_size_bytes) {
         // Call callback with the frame
         s_state->data_handler(s_state->audio_buffer, s_state->audio_buffer_len,
                               s_state->handler_context);
-
-        // Consume the frame we processed
-        circular_buffer_consume(&s_state->circ_buffer, bytes_copied);
 
         frames_processed++;
 
@@ -195,16 +197,19 @@ static void prv_dispatch_samples_system_task(void *data) {
     }
 
     // If we still have data available after processing, reschedule immediately
+    pbl_irq_lock();
     uint16_t remaining_data = circular_buffer_get_read_space_remaining(&s_state->circ_buffer);
-    if (remaining_data >= frame_size_bytes && s_state->is_running && !s_state->main_pending) {
+    if (remaining_data >= frame_size_bytes && s_state->is_running) {
+      // Keep ownership of the pending callback; never block on our own queue.
       s_state->main_pending = true;
-      if (!system_task_add_callback(prv_dispatch_samples_system_task, NULL)) {
+      if (!system_task_add_callback_droppable(prv_dispatch_samples_system_task, NULL)) {
         s_state->main_pending = false;
       }
     } else {
       // Clear pending flag only if we're done processing
       s_state->main_pending = false;
     }
+    pbl_irq_unlock();
   } else {
     // Clear pending flag if we can't process
     s_state->main_pending = false;
@@ -331,19 +336,18 @@ bool mic_start(const MicDevice *this, MicDataHandlerCB data_handler, void *conte
     pbl_mutex_unlock(&state->mutex);
     return false;
   }
-  // Allocate buffers dynamically
-  if (!prv_allocate_buffers(this)) {
-    pbl_mutex_unlock(&state->mutex);
-    return false;
-  }
-
   hpdm->RxXferSize = this->channels * PDM_AUDIO_RECORD_PIPE_SIZE * sizeof(int16_t);
   // Over-allocate by one cache line so the DMA buffer can start on a line
   // boundary. dcache_invalidate() in the IRQ path would otherwise risk
   // destroying dirty bytes in lines shared with neighboring allocations.
   const size_t cache_align = dcache_line_size();
   state->raw_dma_buffer = kernel_malloc(hpdm->RxXferSize + cache_align - 1U);
-  PBL_ASSERT(state->raw_dma_buffer, "Can not allocate buffer");
+  if (!state->raw_dma_buffer || !prv_allocate_buffers(this)) {
+    kernel_free(state->raw_dma_buffer);
+    state->raw_dma_buffer = NULL;
+    pbl_mutex_unlock(&state->mutex);
+    return false;
+  }
   hpdm->pRxBuffPtr = (uint8_t *)(((uintptr_t)state->raw_dma_buffer + cache_align - 1U) &
                                  ~(uintptr_t)(cache_align - 1U));
 
