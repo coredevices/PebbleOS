@@ -216,14 +216,12 @@ static int prv_config_ipc(void) {
     return -1;
   }
 
+  NVIC_SetPriority(LCPU2HCPU_IRQn, 5);
   ret = ipc_queue_open(s_ipc_port);
   if (ret != 0) {
     PBL_LOG_D_ERR(LOG_DOMAIN_BT_STACK, "ipc_queue_open failed (%" PRId32 ")", ret);
     return -1;
   }
-
-  NVIC_EnableIRQ(LCPU2HCPU_IRQn);
-  NVIC_SetPriority(LCPU2HCPU_IRQn, 5);
 
   return 0;
 }
