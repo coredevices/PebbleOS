@@ -223,9 +223,7 @@ static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, con
 
       if (do_perform_update) {
         s_bt_persistent_storage_updates++;
-        PBL_LOG_D_DBG(LOG_DOMAIN_BT_PAIRING_INFO, "Updating GAP Bonding DB Value <key, val>!");
-        PBL_HEXDUMP_D(LOG_DOMAIN_BT_PAIRING_INFO, LOG_LEVEL_DEBUG, (uint8_t *)key, key_len);
-        PBL_HEXDUMP_D(LOG_DOMAIN_BT_PAIRING_INFO, LOG_LEVEL_DEBUG, (uint8_t *)data_in, data_len);
+        PBL_LOG_D_DBG(LOG_DOMAIN_BT_PAIRING_INFO, "Updating GAP bonding record");
         rv = settings_file_set(&fd, key, key_len, (uint8_t *)data_in, data_len);
       }
     } else {
@@ -374,10 +372,6 @@ static void prv_load_local_data_from_prf(void) {
   SM128BitKey keys[SMRootKeyTypeNum];
   if (shared_prf_storage_get_root_key(SMRootKeyTypeEncryption, &keys[SMRootKeyTypeEncryption]) &&
       shared_prf_storage_get_root_key(SMRootKeyTypeIdentity, &keys[SMRootKeyTypeIdentity])) {
-#if !defined(CONFIG_RELEASE)
-    PBL_LOG_INFO("Loading Root Keys from PRF storage:");
-    PBL_HEXDUMP(LOG_LEVEL_INFO, (const uint8_t *)keys, sizeof(keys));
-#endif
     bt_persistent_storage_set_root_keys(keys);
     return;
   }
@@ -387,7 +381,7 @@ static void prv_load_local_data_from_prf(void) {
   // reboot while saving new information to shared PRF
   if (bt_persistent_storage_get_root_key(SMRootKeyTypeEncryption, &keys[SMRootKeyTypeEncryption]) &&
       bt_persistent_storage_get_root_key(SMRootKeyTypeIdentity, &keys[SMRootKeyTypeIdentity])) {
-    PBL_LOG_ERR("Storing Root Keys to PRF storage");
+    PBL_LOG_DBG("Storing root keys to PRF storage");
     shared_prf_storage_set_root_keys(keys);
   }
 }
