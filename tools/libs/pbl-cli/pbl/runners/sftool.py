@@ -29,15 +29,15 @@ class SfToolRunner(Runner):
     def _sftool(self, command):
         if not self.tty:
             raise RunnerError("Port not specified, use --tty")
-        self.call(f"{self.quote(self.cfg.sftool)} -c {self.cfg.soc} -p {self.tty} {command}")
+        self.call(
+            f"{self.quote(self.cfg.sftool, '-c', self.cfg.soc, '-p', self.tty)} {command}"
+        )
 
     def do_run(self, command):
         if command == "flash":
             files = [self.cfg.hex_file]
             if self.cfg.resources_file:
-                files.append(
-                    f"{self.cfg.resources_file}@{RESOURCES_OFFSET:#x}"
-                )
-            self._sftool("write_flash " + " ".join(files))
+                files.append(f"{self.cfg.resources_file}@{RESOURCES_OFFSET:#x}")
+            self._sftool("write_flash " + self.quote(*files))
         elif command == "erase":
             self._sftool("erase_flash")

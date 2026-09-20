@@ -98,12 +98,17 @@ class Runner(ABC):
         """Concrete runner; run() delegates here once the command is validated."""
 
     def call(self, cmd):
-        """Run a shell command, honoring dry-run."""
+        """Run a shell command, honoring dry-run and raising RunnerError on failure."""
         if self.cfg.dry_run:
             print("[dry-run] " + cmd)
             return 0
         print(cmd)
-        return subprocess.call(cmd, shell=True)
+        try:
+            return subprocess.check_call(cmd, shell=True)
+        except subprocess.CalledProcessError as exc:
+            raise RunnerError(
+                f"Command failed with exit status {exc.returncode}: {cmd}"
+            ) from exc
 
     @staticmethod
     def quote(*args):
