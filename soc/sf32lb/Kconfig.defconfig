@@ -10,6 +10,10 @@ choice BT_BACKEND
     default BT_NIMBLE
 endchoice
 
+choice BT_HCI
+    default BT_HCI_SF32LB52
+endchoice
+
 # 32 MiB of external flash, memory-mapped through MPI. Layout: 64 KiB
 # partition table, 64 KiB bootloader, two 3 MiB firmware slots, two
 # 2 MiB resource areas, then the 576 KiB recovery firmware (PRF).

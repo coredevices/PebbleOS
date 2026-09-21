@@ -14,8 +14,6 @@ choice BT_BACKEND
 config BT_NIMBLE
     bool "NimBLE"
     select MBEDTLS
-    select HAL_SIFLI_IPC_QUEUE if SOC_SF32LB52
-    select HAL_SIFLI_LCPU if SOC_SF32LB52
 
 config BT_QEMU
     bool "QEMU transport"
@@ -24,6 +22,33 @@ config BT_STUB
     bool "Stub (no backend)"
 
 endchoice
+
+if BT_NIMBLE
+
+choice BT_HCI
+    prompt "HCI transport"
+    help
+      How the NimBLE host reaches its controller. The default is derived
+      from the SoC (see each soc/<soc>/Kconfig.defconfig).
+
+config BT_HCI_NRF52
+    bool "NimBLE controller on the nRF52 radio"
+    depends on SOC_NRF52
+    help
+      Run the NimBLE link layer in the same image, on the nRF52 radio.
+
+config BT_HCI_SF32LB52
+    bool "SiFli LCPU over IPC"
+    depends on SOC_SF32LB52
+    select HAL_SIFLI_IPC_QUEUE
+    select HAL_SIFLI_LCPU
+    help
+      Talk H4 HCI to the SiFli controller running on the LCPU through the
+      mailbox IPC queue.
+
+endchoice
+
+endif
 
 module = BT
 module-str = Bluetooth

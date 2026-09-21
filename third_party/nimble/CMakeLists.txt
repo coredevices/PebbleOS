@@ -43,7 +43,7 @@ pbl_filter_sources(sources EXCLUDE
 
 set(defines "")
 
-if(CONFIG_SOC_NRF52)
+if(CONFIG_BT_HCI_NRF52)
   file(GLOB controller_sources CONFIGURE_DEPENDS
     ${nimble}/nimble/controller/src/*.c
     ${nimble}/nimble/drivers/nrf5x/src/*.c
@@ -60,7 +60,7 @@ if(CONFIG_SOC_NRF52)
   )
   list(APPEND defines FREERTOS=1 PEBBLEOS NRF52_SERIES NIMBLE_CFG_CONTROLLER=1)
   pbl_compile_definitions(NIMBLE_CFG_CONTROLLER=1)
-elseif(CONFIG_SOC_SF32LB52)
+elseif(CONFIG_BT_HCI_SF32LB52)
   list(APPEND sources
     transport/hci_sf32lb52.c
     ../nonfree/pebbleos-nonfree/sf32lb52/lcpu_52x.c

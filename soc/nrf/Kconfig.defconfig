@@ -7,6 +7,10 @@ choice BT_BACKEND
     default BT_NIMBLE
 endchoice
 
+choice BT_HCI
+    default BT_HCI_NRF52
+endchoice
+
 # 1 MiB of internal flash; the bootloader occupies the first 32 KiB.
 config FLASH_BASE
     default 0x00000000
