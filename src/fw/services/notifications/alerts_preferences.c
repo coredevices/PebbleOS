@@ -8,6 +8,7 @@
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/vibes/vibe_intensity.h"
+#include "shell/prefs_private.h"
 #include "system/passert.h"
 #include "pbl/kernel/mutex.h"
 
@@ -98,7 +99,8 @@ static bool s_notification_backlight =
 static NotificationStatusBarStyle s_notification_status_bar_style =
     NotificationStatusBarStyle_Default;
 
-#define PREF_KEY_NOTIF_TEXT_SIZE "notifTextSize"
+#define PREF_KEY_NOTIF_TEXT_SIZE  "notifTextSize"
+#define SHELL_PREF_KEY_TEXT_STYLE "textStyle"
 static PreferredContentSize s_notification_content_size = PreferredContentSizeDefault;
 
 ///////////////////////////////////
@@ -144,6 +146,32 @@ static const DoNotDisturbScheduleConfigKeys s_dnd_schedule_keys[NumDNDSchedules]
     .enabled_pref_key = "dndWeekendScheduleEnabled",
   }
 };
+
+// Notifications used to render with the legacy "textStyle" content size. Seed the dedicated
+// preference from it once so an existing choice survives. Shell prefs are not loaded yet
+// when this runs, so read their file directly.
+static void prv_migrate_notification_content_size(SettingsFile *file) {
+  if (settings_file_exists(file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE))) {
+    return;
+  }
+
+  s_notification_content_size = PreferredContentSizeDefault;
+  SettingsFile shell_prefs = {{0}};
+  if (settings_file_open(&shell_prefs, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    uint8_t text_style;
+    // Shell pref keys are stored with their NUL terminator.
+    if (settings_file_get(&shell_prefs, SHELL_PREF_KEY_TEXT_STYLE,
+                          sizeof(SHELL_PREF_KEY_TEXT_STYLE), &text_style,
+                          sizeof(text_style)) == S_SUCCESS &&
+        text_style < NumPreferredContentSizes) {
+      s_notification_content_size = text_style;
+    }
+    settings_file_close(&shell_prefs);
+  }
+
+  settings_file_set(file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE),
+                    &s_notification_content_size, sizeof(s_notification_content_size));
+}
 
 static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
   // If Weekday schedule does not exist, assume that the other 3 settings files are missing as well
@@ -348,6 +376,7 @@ void alerts_preferences_init(void) {
 #undef RESTORE_PREF
 
   prv_migrate_legacy_dnd_schedule(&file);
+  prv_migrate_notification_content_size(&file);
 
   const VibeScoreId orig_vibe_score_notifications = s_vibe_score_notifications;
   const VibeScoreId orig_vibe_score_incoming_calls = s_vibe_score_incoming_calls;
