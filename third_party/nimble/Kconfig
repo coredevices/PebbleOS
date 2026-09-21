@@ -26,4 +26,12 @@ config NIMBLE_HCI_SF32LB52_TRACE_LOG
 
 endchoice
 
+choice "NIMBLE_LOG_LEVEL_CHOICE"
+    default NIMBLE_LOG_LEVEL_OFF
+endchoice
+
+module = NIMBLE
+module-str = NimBLE host
+source "subsys/logging/Kconfig.template.log_level"
+
 endmenu
