@@ -4,8 +4,9 @@
 #include "card_view.h"
 
 #include "activity_summary_card.h"
-#include "sleep_summary_card.h"
 #include "hr_summary_card.h"
+#include "sleep_summary_card.h"
+#include "weight_summary_card.h"
 
 #include "applib/app_launch_button.h"
 #include "applib/app_launch_reason.h"
@@ -22,6 +23,7 @@
 // Enum for different card types
 typedef enum {
   Card_ActivitySummary,
+  Card_WeightSummary,
 #ifdef CONFIG_HRM
   Card_HrSummary,
 #endif
@@ -52,6 +54,7 @@ static Layer *(*s_card_view_create[CardCount])(HealthData *health_data) = {
   [Card_HrSummary] = health_hr_summary_card_create,
 #endif
   [Card_SleepSummary] = health_sleep_summary_card_create,
+  [Card_WeightSummary] = health_weight_summary_card_create,
 };
 
 static void (*s_card_view_select_click_handler[CardCount])(Layer *layer) = {
@@ -60,6 +63,7 @@ static void (*s_card_view_select_click_handler[CardCount])(Layer *layer) = {
   [Card_HrSummary] = health_hr_summary_card_select_click_handler,
 #endif
   [Card_SleepSummary] = health_sleep_summary_card_select_click_handler,
+  [Card_WeightSummary] = health_weight_summary_card_select_click_handler,
 };
 
 static GColor (*s_card_view_get_bg_color[CardCount])(Layer *layer) = {
@@ -68,6 +72,7 @@ static GColor (*s_card_view_get_bg_color[CardCount])(Layer *layer) = {
   [Card_HrSummary] = health_hr_summary_card_get_bg_color,
 #endif
   [Card_SleepSummary] = health_sleep_summary_card_get_bg_color,
+  [Card_WeightSummary] = health_weight_summary_card_get_bg_color,
 };
 
 static bool (*s_card_view_show_select_indicator[CardCount])(Layer *layer) = {
@@ -76,6 +81,7 @@ static bool (*s_card_view_show_select_indicator[CardCount])(Layer *layer) = {
   [Card_HrSummary] = health_hr_summary_show_select_indicator,
 #endif
   [Card_SleepSummary] = health_sleep_summary_show_select_indicator,
+  [Card_WeightSummary] = health_weight_summary_show_select_indicator,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,13 +96,13 @@ static int prv_get_next_card_idx(Card current, bool up) {
 #ifdef CONFIG_HRM
   if (next == Card_HrSummary && !activity_is_hrm_present()) {
     next = next + direction;
-  }
-  // if heart rate is diabled, change the order of cards to Activity <-> Sleep <-> HR
-  else if (activity_is_hrm_present() && !activity_prefs_heart_rate_is_enabled()) {
+  } else if (activity_is_hrm_present() && !activity_prefs_heart_rate_is_enabled()) {
     if (current == Card_ActivitySummary) {
-      next = up ? Card_SleepSummary : BACK_TO_WATCHFACE;
+      next = up ? Card_WeightSummary : BACK_TO_WATCHFACE;
+    } else if (current == Card_WeightSummary) {
+      next = up ? Card_SleepSummary : Card_ActivitySummary;
     } else if (current == Card_SleepSummary) {
-      next = up ? Card_HrSummary : Card_ActivitySummary;
+      next = up ? Card_HrSummary : Card_WeightSummary;
     } else if (current == Card_HrSummary) {
       next = up ? CardCount : Card_SleepSummary;
     }
@@ -396,6 +402,7 @@ void health_card_view_destroy(HealthCardView *health_card_view) {
   // destroy cards
   health_activity_summary_card_destroy(health_card_view->card_layers[Card_ActivitySummary]);
   health_sleep_summary_card_destroy(health_card_view->card_layers[Card_SleepSummary]);
+  health_weight_summary_card_destroy(health_card_view->card_layers[Card_WeightSummary]);
   // destroy self
   window_deinit(&health_card_view->window);
   app_free(health_card_view);

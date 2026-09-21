@@ -4,6 +4,7 @@
 #pragma once
 
 #include "data.h"
+#include "pbl/services/activity/activity_private.h"
 
 typedef struct HealthData {
   //!< Current step / activity info
@@ -39,4 +40,9 @@ typedef struct HealthData {
   int32_t hr_zone1_minutes;
   int32_t hr_zone2_minutes;
   int32_t hr_zone3_minutes;
+
+  uint16_t profile_weight_dag;
+  ActivityWeightSample weight_samples[ACTIVITY_WEIGHT_RECENT_MAX];
+  size_t weight_sample_count;
+  ActivitySettingsValueHistory weight_daily;
 } HealthData;

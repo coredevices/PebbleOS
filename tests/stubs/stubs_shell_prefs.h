@@ -46,8 +46,14 @@ void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
   s_timezone_id = timezone_id;
 }
 
+static UnitsDistance s_units_distance = UnitsDistance_Miles;
+
 UnitsDistance PBL_WEAK shell_prefs_get_units_distance(void) {
-  return UnitsDistance_Miles;
+  return s_units_distance;
+}
+
+void PBL_WEAK shell_prefs_set_units_distance(UnitsDistance units_distance) {
+  s_units_distance = units_distance;
 }
 
 AppInstallId PBL_WEAK worker_preferences_get_default_worker(void) {

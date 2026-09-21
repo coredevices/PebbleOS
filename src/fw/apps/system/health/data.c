@@ -9,6 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
+#include "pbl/util/size.h"
 #include "util/time/time.h"
 #include "pbl/util/testing.h"
 
@@ -64,6 +65,7 @@ void health_data_update_quick(HealthData *health_data) {
   // Get the most recent stable HR Reading timestamp.
   activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1,
                       (int32_t *)&health_data->hr_last_updated);
+  health_data->profile_weight_dag = activity_prefs_get_weight_dag();
 }
 
 void health_data_update(HealthData *health_data) {
@@ -130,6 +132,7 @@ void health_data_update(HealthData *health_data) {
   //! HR related data
   health_data_update_current_bpm(health_data);
   health_data_update_hr_zone_minutes(health_data);
+  health_data_update_weight(health_data);
 }
 
 void health_data_update_step_derived_metrics(HealthData *health_data) {
@@ -150,6 +153,29 @@ void health_data_update_sleep(HealthData *health_data, uint32_t new_sleep,
                               uint32_t new_deep_sleep) {
   health_data->sleep_data[0] = new_sleep;
   health_data->deep_sleep = new_deep_sleep;
+}
+
+void health_data_update_weight(HealthData *health_data) {
+  health_data->profile_weight_dag = activity_prefs_get_weight_dag();
+  activity_weight_history_seed_profile_if_empty(rtc_get_time(),
+                                                health_data->profile_weight_dag);
+  health_data->weight_sample_count = activity_weight_history_get_recent(
+      health_data->weight_samples, ARRAY_LENGTH(health_data->weight_samples));
+  activity_weight_history_get_daily(rtc_get_time(), &health_data->weight_daily);
+}
+
+uint16_t health_data_weight_get_profile_dag(HealthData *health_data) {
+  return health_data->profile_weight_dag;
+}
+
+size_t health_data_weight_get_samples(HealthData *health_data,
+                                      const ActivityWeightSample **samples) {
+  *samples = health_data->weight_samples;
+  return health_data->weight_sample_count;
+}
+
+const ActivitySettingsValueHistory *health_data_weight_get_daily(HealthData *health_data) {
+  return &health_data->weight_daily;
 }
 
 void health_data_update_current_bpm(HealthData *health_data) {

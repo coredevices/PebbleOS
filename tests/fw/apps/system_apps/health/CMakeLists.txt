@@ -100,6 +100,8 @@ pbl_clar_test(test_health_card_view
     src/fw/apps/system/health/hr_summary_card.c
     src/fw/apps/system/health/sleep_detail_card.c
     src/fw/apps/system/health/sleep_summary_card.c
+    src/fw/apps/system/health/weight_detail_card.c
+    src/fw/apps/system/health/weight_summary_card.c
     src/fw/apps/system/health/detail_card.c
     src/fw/apps/system/health/card_view.c
   PLATFORMS obelix gabbro
@@ -204,6 +206,9 @@ pbl_clar_test(test_health_activity_summary_card
     src/fw/apps/system/health/detail_card.c
     src/fw/apps/system/health/activity_detail_card.c
     src/fw/apps/system/health/activity_summary_card.c
+    src/fw/apps/system/health/weight_detail_card.c
+    src/fw/apps/system/health/weight_entry_ui.c
+    src/fw/apps/system/health/weight_summary_card.c
   PLATFORMS obelix gabbro
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

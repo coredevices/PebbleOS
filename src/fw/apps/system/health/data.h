@@ -4,6 +4,7 @@
 #pragma once
 
 #include "pbl/services/activity/activity.h"
+#include "pbl/services/activity/activity_private.h"
 
 typedef struct {
   int32_t sum;
@@ -63,6 +64,12 @@ void health_data_update_current_bpm(HealthData *health_data);
 //! Update the time in HR zones
 //! @param health_data A pointer to the health data to use
 void health_data_update_hr_zone_minutes(HealthData *health_data);
+
+void health_data_update_weight(HealthData *health_data);
+uint16_t health_data_weight_get_profile_dag(HealthData *health_data);
+size_t health_data_weight_get_samples(HealthData *health_data,
+                                      const ActivityWeightSample **samples);
+const ActivitySettingsValueHistory *health_data_weight_get_daily(HealthData *health_data);
 
 //! Get the current step count
 //! @param health_data A pointer to the health data to use

@@ -10,6 +10,7 @@
 #include "apps/system/health/hr_summary_card.h"
 #include "apps/system/health/sleep_summary_card.h"
 #include "apps/system/health/sleep_detail_card.h"
+#include "apps/system/health/weight_entry_window.h"
 
 #include "test_health_app_includes.h"
 
@@ -29,6 +30,10 @@ static FrameBuffer s_fb;
 
 GContext *graphics_context_get_current_context(void) {
   return &s_ctx;
+}
+
+void health_weight_entry_window_push(uint16_t initial_weight_dag,
+                                     WeightEntrySavedCallback saved_callback, void *context) {
 }
 
 void test_health_card_view__initialize(void) {

@@ -26,6 +26,7 @@
 #include "stubs_app_window_stack.h"
 #include "stubs_bootbits.h"
 #include "stubs_click.h"
+#include "stubs_confirmation_dialog.h"
 #include "stubs_health_service.h"
 #include "stubs_layer.h"
 #include "stubs_logging.h"
