@@ -4,7 +4,7 @@
 #include <cmsis_core.h>
 #include <pbl/drivers/speaker/qemu/audio.h>
 
-#include "services/system_task.h"
+#include "pbl/services/system_task.h"
 
 #include <stdint.h>
 
@@ -30,15 +30,13 @@ void audio_init(AudioDevice *dev) {
 }
 
 static void prv_audio_system_task_cb(void *data) {
-  AudioDeviceState *state = (AudioDeviceState *)data;
-  if (state->trans_cb) {
-    // Read how many samples the QEMU ring buffer can accept.
-    // We don't have the base_addr here directly, but the callback
-    // will trigger audio_write() which checks BUFAVAIL itself.
-    // Pass a generous free size — the actual limit is enforced by
-    // audio_write() returning when the QEMU buffer is full.
-    uint32_t free_bytes = 4096 * sizeof(int16_t);
-    state->trans_cb(&free_bytes);
+  AudioDevice *dev = data;
+  dev->state->callback_pending = false;
+  if (dev->state->trans_cb) {
+    uint32_t free_bytes = REG32(dev->base_addr + AUDIO_BUFAVAIL) * sizeof(int16_t);
+    if (free_bytes) {
+      dev->state->trans_cb(&free_bytes);
+    }
   }
 }
 
@@ -60,12 +58,16 @@ uint32_t audio_write(AudioDevice *dev, void *buf, uint32_t size) {
   int16_t *samples = (int16_t *)buf;
   uint32_t num_samples = size / sizeof(int16_t);
 
+  uint32_t avail = REG32(dev->base_addr + AUDIO_BUFAVAIL);
+  if (num_samples > avail) {
+    num_samples = avail;
+  }
   for (uint32_t i = 0; i < num_samples; i++) {
     REG32(dev->base_addr + AUDIO_DATA) = (uint32_t)(uint16_t)samples[i];
   }
 
   // Return how many bytes of free space remain
-  uint32_t avail = REG32(dev->base_addr + AUDIO_BUFAVAIL);
+  avail = REG32(dev->base_addr + AUDIO_BUFAVAIL);
   return avail * sizeof(int16_t);
 }
 
@@ -87,9 +89,12 @@ void qemu_audio_irq_handler(AudioDevice *dev) {
   REG32(dev->base_addr + AUDIO_INTSTAT) = INT_BUFAVAIL;
 
   // Schedule callback on system task; a drop is retried on the next interrupt
-  if (dev->state->trans_cb) {
+  if (dev->state->trans_cb && !dev->state->callback_pending) {
     bool should_context_switch = false;
-    system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb, (void *)dev->state,
-                                                &should_context_switch);
+    dev->state->callback_pending = true;
+    if (!system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb, (void *)dev,
+                                                     &should_context_switch)) {
+      dev->state->callback_pending = false;
+    }
   }
 }
