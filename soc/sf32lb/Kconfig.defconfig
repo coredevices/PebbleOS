@@ -6,10 +6,6 @@ if SOC_SF32LB52
 config MMAP_RESOURCES
     default y
 
-choice BT_BACKEND
-    default BT_NIMBLE
-endchoice
-
 choice BT_HCI
     default BT_HCI_SF32LB52
 endchoice

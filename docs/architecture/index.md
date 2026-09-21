@@ -88,9 +88,12 @@ prose:
   latency and supervision timeouts, and why the firmware deviates from the
   spec-recommended parameter-update pause for iOS.
 
-Beneath it, the transport is a pluggable backend selected per SoC in
-`subsys/bluetooth/` — NimBLE (`third_party/nimble`) for all current boards,
-plus QEMU and stub backends.
+Beneath it sits NimBLE (`third_party/nimble`), glued in by
+`subsys/bluetooth/`. The HCI transport is chosen per SoC (`BT_HCI`): the
+NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
+and a fake controller on QEMU that acknowledges every command so the host
+runs without a radio. On QEMU the phone link is the emulator's serial
+channel, `src/fw/comm/qemu_transport.c`.
 
 ## Storage
 

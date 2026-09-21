@@ -8,6 +8,9 @@
 
 #include "comm/ble/gap_le.h"
 #include "comm/ble/gatt_client_subscriptions.h"
+#ifdef CONFIG_QEMU
+#include "comm/qemu_transport.h"
+#endif
 #include "console/dbgserial.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
@@ -92,6 +95,9 @@ static void prv_comm_start(void) {
 #endif
     ble_bas_init();
     bt_pairability_init();
+#ifdef CONFIG_QEMU
+    qemu_transport_start();
+#endif
   } else {
     PBL_LOG_ERR("BT driver failed to start!");
     // FIXME: PBL-36163 -- handle this better
@@ -107,6 +113,9 @@ static void prv_comm_stop(void) {
   ble_hrm_deinit();
 #endif
   gap_le_deinit();
+#ifdef CONFIG_QEMU
+  qemu_transport_stop();
+#endif
 
   // Should be the last thing to happen that touches the Bluetooth controller directly
   pbl_bt_stop();

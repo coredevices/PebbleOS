@@ -3,10 +3,6 @@
 
 if SOC_QEMU
 
-choice BT_BACKEND
-    default BT_QEMU
-endchoice
-
 # 4 MiB of emulated flash, all of it available to the firmware.
 config FLASH_BASE
     default 0x00000000

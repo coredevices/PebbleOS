@@ -3,10 +3,6 @@
 
 if SOC_NRF52
 
-choice BT_BACKEND
-    default BT_NIMBLE
-endchoice
-
 choice BT_HCI
     default BT_HCI_NRF52
 endchoice

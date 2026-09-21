@@ -17,7 +17,8 @@
 
 #include "pbl/util/math.h"
 
-#include <pbl/bluetooth/qemu_transport.h>
+#include "comm/qemu_transport.h"
+#include <pbl/drivers/qemu/qemu_settings.h>
 
 typedef struct {
   CommSession *session;
@@ -169,7 +170,7 @@ void qemu_transport_set_connected(bool is_connected) {
   bt_unlock();
 }
 
-void qemu_transport_close_session() {
+static void prv_close_session(void) {
   if (!s_transport.session)
     return;
 
@@ -203,4 +204,17 @@ void qemu_transport_handle_received_data(const uint8_t *data, uint32_t length) {
   comm_session_receive_router_write(s_transport.session, data, length);
 unlock:
   bt_unlock();
+}
+
+void qemu_transport_start(void) {
+  // Open the session synchronously: the host may send a WatchVersionRequest
+  // as soon as it sees "Ready for communication".
+  if (qemu_setting_get(QemuSetting_DefaultConnected)) {
+    qemu_transport_set_connected(true);
+  }
+}
+
+void qemu_transport_stop(void) {
+  qemu_transport_set_connected(false);
+  prv_close_session();
 }

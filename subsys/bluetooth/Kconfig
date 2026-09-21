@@ -3,27 +3,15 @@
 
 menu "Bluetooth"
 
-choice BT_BACKEND
-    prompt "Bluetooth backend"
-    default BT_STUB
-    help
-      Which Bluetooth backend implementation to build. The default is
-      derived from the SoC (see each soc/<soc>/Kconfig.defconfig);
-      the stub is the fallback when no SoC default applies.
-
-config BT_NIMBLE
-    bool "NimBLE"
+config BT
+    bool
+    default y
     select MBEDTLS
+    help
+      The Bluetooth subsystem: the NimBLE host and the PebbleOS glue
+      around it.
 
-config BT_QEMU
-    bool "QEMU transport"
-
-config BT_STUB
-    bool "Stub (no backend)"
-
-endchoice
-
-if BT_NIMBLE
+if BT
 
 choice BT_HCI
     prompt "HCI transport"
@@ -57,8 +45,6 @@ config BT_HCI_FAKE
 
 endchoice
 
-endif
-
 module = BT
 module-str = Bluetooth
 source "subsys/logging/Kconfig.template.log_level"
@@ -69,5 +55,7 @@ config BT_GH3X2X_TUNING_SERVICE
     help
       Build the GH3X2X heart-rate sensor tuning GATT service, used to
       tune the sensor over BLE. Off by default.
+
+endif
 
 endmenu

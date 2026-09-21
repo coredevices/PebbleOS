@@ -20,7 +20,7 @@
 #include "util/net.h"
 #include "pbl/util/size.h"
 
-#include <pbl/bluetooth/qemu_transport.h>
+#include "comm/qemu_transport.h"
 
 #include <stdbool.h>
 
