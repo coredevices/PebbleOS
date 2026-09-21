@@ -97,7 +97,7 @@ typedef struct {
 
 static SpeakerServiceState s_state;
 
-// Serializes public APIs against prv_refill_bg (system task).
+// Serializes public APIs against the audio refill callback (system task).
 static PBL_MUTEX_DEFINE(s_lock);
 
 //! Why playback is currently silent, cached so a muted watch logs once per change
@@ -115,7 +115,7 @@ static uint32_t s_total_speaker_on_time_ms; // Total speaker on-time tracked
 
 static void prv_stop_internal(SpeakerFinishReason reason);
 static void prv_audio_trans_cb(uint32_t *free_size);
-static void prv_refill_bg(void *data);
+static void prv_refill_locked(void);
 
 static bool prv_is_speaker_muted(void) {
   if (alerts_preferences_get_speaker_muted()) {
@@ -301,8 +301,25 @@ static bool prv_can_preempt(SpeakerPriority new_pri) {
 //! This is the DMA refill callback path:
 //!   DMA ISR -> system_task_add_callback_from_isr -> audio driver trans_cb -> here
 static void prv_audio_trans_cb(uint32_t *free_size) {
-  // Schedule actual refill work on system task to keep ISR-context callback short
-  system_task_add_callback(prv_refill_bg, NULL);
+  // The drivers already dispatch on KernelBG; refill here and catch up missed blocks.
+  uint32_t refill_count = free_size ? *free_size / (SPEAKER_REFILL_SAMPLES * sizeof(int16_t)) : 1;
+  if (refill_count == 0) {
+    return;
+  }
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  if (s_state.source_type != SpeakerSourceStream) {
+    refill_count = 1;
+  }
+  while (refill_count-- && s_state.state != SpeakerStateIdle) {
+    prv_refill_locked();
+    // Catch up queued PCM without inserting silence between short packets.
+    if (s_state.source_type == SpeakerSourceStream &&
+        pcm_stream_available(&s_state.pcm_stream) == 0) {
+      break;
+    }
+  }
+  pbl_mutex_unlock(&s_lock);
 }
 
 //! Convert a raw sample from the input buffer to 16-bit signed.
@@ -487,12 +504,6 @@ static void prv_refill_locked(void) {
   if (samples_generated > 0) {
     audio_write((AudioDevice *)AUDIO, s_state.refill_buf, samples_generated * sizeof(int16_t));
   }
-}
-
-static void prv_refill_bg(void *data) {
-  pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  prv_refill_locked();
-  pbl_mutex_unlock(&s_lock);
 }
 
 bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,

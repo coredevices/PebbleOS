@@ -252,3 +252,21 @@ void test_speaker_service__stream_write_keeps_16bit_samples_aligned(void) {
   cl_assert(speaker_service_stream_open(SpeakerPriorityApp, 50, SpeakerPcmFormat_8kHz_8bit));
   cl_assert_equal_i(speaker_service_stream_write(bytes, 3), 3);
 }
+
+void test_speaker_service__refill_catches_up_to_driver_capacity(void) {
+  cl_assert(speaker_service_stream_open(SpeakerPriorityApp, 50, SpeakerPcmFormat_16kHz_16bit));
+  int16_t input[1536] = {0};
+  cl_assert_equal_i(speaker_service_stream_write(input, sizeof(input)), sizeof(input));
+
+  uint32_t space = 1024 * sizeof(int16_t);
+  s_trans_cb(&space);
+  cl_assert_equal_i(s_samples_written, 1024);
+
+  space = 0;
+  s_trans_cb(&space);
+  cl_assert_equal_i(s_samples_written, 1024);
+
+  space = 1024 * sizeof(int16_t);
+  s_trans_cb(&space);
+  cl_assert_equal_i(s_samples_written, 1536);
+}
