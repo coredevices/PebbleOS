@@ -135,7 +135,7 @@ void test_gatt_service_changed_client__handle_gatt_profile_service(void) {
   // The driver reports the Service Changed characteristic's handle, which the
   // firmware records so it can match future Service Changed indications. (The
   // CCCD subscription that the old Bluetopia client performed now lives in the
-  // driver; see commit 3b9276848 onward and src/bluetooth-fw/nimble.)
+  // driver; see commit 3b9276848 onward and subsys/bluetooth/nimble.)
   cl_assert_equal_i(s_connection.gatt_service_changed_att_handle,
                     fake_gatt_gatt_profile_service_service_changed_att_handle());
 }

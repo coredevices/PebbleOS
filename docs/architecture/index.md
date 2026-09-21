@@ -18,8 +18,8 @@ implemented under `kernel/`). The main source layers, as described on the
 - `src/fw/drivers` — hardware drivers (public interfaces under
   `include/pbl/drivers`).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
-  logging and cron, included via the `pbl/logging/` and `pbl/cron/` header
-  paths.
+  logging, cron and the Bluetooth backends. Logging and cron are included
+  via the `pbl/logging/` and `pbl/cron/` header paths.
 
 Alongside these sit `src/fw/shell` (launcher/watchface UX flow),
 `src/fw/process_management` (app lifecycle) and `src/fw/comm` (phone
@@ -89,7 +89,7 @@ prose:
   spec-recommended parameter-update pause for iOS.
 
 Beneath it, the transport is a pluggable backend selected per SoC in
-`src/bluetooth-fw/` — NimBLE (`third_party/nimble`) for all current boards,
+`subsys/bluetooth/` — NimBLE (`third_party/nimble`) for all current boards,
 plus QEMU and stub backends.
 
 ## Storage
