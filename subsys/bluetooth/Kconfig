@@ -27,9 +27,11 @@ if BT_NIMBLE
 
 choice BT_HCI
     prompt "HCI transport"
+    default BT_HCI_FAKE
     help
       How the NimBLE host reaches its controller. The default is derived
-      from the SoC (see each soc/<soc>/Kconfig.defconfig).
+      from the SoC (see each soc/<soc>/Kconfig.defconfig); the fake
+      controller is the fallback where there is no radio.
 
 config BT_HCI_NRF52
     bool "NimBLE controller on the nRF52 radio"
@@ -45,6 +47,13 @@ config BT_HCI_SF32LB52
     help
       Talk H4 HCI to the SiFli controller running on the LCPU through the
       mailbox IPC queue.
+
+config BT_HCI_FAKE
+    bool "Fake controller"
+    help
+      Answer every HCI command locally with success and never raise an
+      event. The host synchronises and the GATT server runs, but no link
+      can be established. For targets without a radio, such as QEMU.
 
 endchoice
 
