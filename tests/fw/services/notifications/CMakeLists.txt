@@ -1,6 +1,21 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+pbl_clar_test(test_alerts_preferences
+  SOURCES
+    src/fw/flash_region/flash_region.c
+    src/fw/flash_region/filesystem_regions.c
+    src/fw/services/filesystem/flash_translation.c
+    src/fw/services/filesystem/pfs.c
+    src/fw/services/notifications/alerts_preferences.c
+    src/fw/services/settings/settings_file.c
+    src/fw/services/settings/settings_raw_iter.c
+    src/fw/util/crc8.c
+    src/fw/util/legacy_checksum.c
+    tests/fakes/fake_spi_flash.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_notification_storage
   SOURCES
     src/fw/services/notifications/notification_storage.c
