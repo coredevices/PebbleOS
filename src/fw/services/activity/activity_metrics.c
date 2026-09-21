@@ -294,10 +294,10 @@ static void prv_update_real_time_derived_metrics(void) {
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
     state->step_data.distance_meters = ROUND(state->distance_mm, MM_PER_METER);
-    ACTIVITY_LOG_DEBUG("new distance: %" PRIu32 "", state->step_data.distance_meters);
+    PBL_LOG_DBG("new distance: %" PRIu32 "", state->step_data.distance_meters);
 
     state->step_data.active_kcalories = ROUND(state->active_calories, ACTIVITY_CALORIES_PER_KCAL);
-    ACTIVITY_LOG_DEBUG("new active kcal: %" PRIu32 "", state->step_data.active_kcalories);
+    PBL_LOG_DBG("new active kcal: %" PRIu32 "", state->step_data.active_kcalories);
   }
   pbl_mutex_unlock(&state->mutex);
 }
@@ -321,22 +321,22 @@ static void PBL_NOINLINE prv_update_step_derived_metrics(time_t utc_sec) {
     // Update the walking rate
     state->steps_per_minute = steps_in_minute;
     state->steps_per_minute_last_steps = state->step_data.steps;
-    ACTIVITY_LOG_DEBUG("new steps/minute: %" PRIu32 "", state->steps_per_minute);
+    PBL_LOG_DBG("new steps/minute: %" PRIu32 "", state->steps_per_minute);
 
     // Update the number of stepping minutes and the last active minute
     if (state->steps_per_minute >= ACTIVITY_ACTIVE_MINUTE_MIN_STEPS) {
       state->step_data.step_minutes++;
-      ACTIVITY_LOG_DEBUG("new step minutes: %" PRIu32 "", state->step_data.step_minutes);
+      PBL_LOG_DBG("new step minutes: %" PRIu32 "", state->step_data.step_minutes);
 
       // The prior minute was the most recent active one
       state->last_active_minute = time_util_minute_of_day_adjust(minute_of_day, -1);
-      ACTIVITY_LOG_DEBUG("last active minute: %" PRIu16 "", state->last_active_minute);
+      PBL_LOG_DBG("last active minute: %" PRIu16 "", state->last_active_minute);
     }
 
     // Update the resting calories
     state->resting_calories = activity_private_compute_resting_calories(minute_of_day);
     state->step_data.resting_kcalories = ROUND(state->resting_calories, ACTIVITY_CALORIES_PER_KCAL);
-    ACTIVITY_LOG_DEBUG("resting kcalories: %" PRIu32 "", state->step_data.resting_kcalories);
+    PBL_LOG_DBG("resting kcalories: %" PRIu32 "", state->step_data.resting_kcalories);
   }
   pbl_mutex_unlock(&state->mutex);
 }
@@ -750,7 +750,7 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
       PBL_ASSERTN(m_info.value_u32p && (m_info.converter == prv_convert_none));
       history[0] = *m_info.value_u32p;
     }
-    ACTIVITY_LOG_DEBUG("get current metric %" PRIi32 " : %" PRIi32 "", (int32_t)metric, history[0]);
+    PBL_LOG_DBG("get current metric %" PRIi32 " : %" PRIi32 "", (int32_t)metric, history[0]);
 
     // Look up historical values
     if (history_len > 1) {
@@ -766,8 +766,8 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
                         sizeof(setting_history));
       for (uint32_t i = 1; i < history_len; i++) {
         history[i] = m_info.converter(setting_history.values[i]);
-        ACTIVITY_LOG_DEBUG("get metric %" PRIi32 " %" PRIu32 " days ago: %" PRIi32 "",
-                           (int32_t)metric, i, history[i]);
+        PBL_LOG_DBG("get metric %" PRIi32 " %" PRIu32 " days ago: %" PRIi32 "", (int32_t)metric, i,
+                    history[i]);
       }
       activity_private_settings_close(file);
     }

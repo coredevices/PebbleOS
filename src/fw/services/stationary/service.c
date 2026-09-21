@@ -94,7 +94,7 @@ static void prv_update_stationary_enabled(void *data) {
 }
 
 void stationary_handle_battery_connection_change_event(void) {
-  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary mode battery state change event received");
+  PBL_LOG_DBG("Stationary mode battery state change event received");
   if (battery_is_usb_connected()) {
   } else {
   }
@@ -115,7 +115,7 @@ static void prv_button_down_handler(PebbleEvent *event, void *data) {
 static void prv_watch_is_motionless(void) {
   // Check if we should enable stationary mode and disabled unneeded features
   if (s_stationary_count_down > 0) {
-    PBL_LOG_D_DBG(DEBUG_STATIONARY, "Countdown to stationary: %d", s_stationary_count_down);
+    PBL_LOG_DBG("Countdown to stationary: %d", s_stationary_count_down);
     s_stationary_count_down--;
   } else {
     prv_handle_action(StationaryActionGoToSleep);
@@ -323,7 +323,7 @@ static void prv_handle_action(StationaryAction action) {
   // we need to be on kernel main so that we subscribe to event services
   // for kernel main
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
-  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary: state %d action %d", s_current_state, action);
+  PBL_LOG_DBG("Stationary: state %d action %d", s_current_state, action);
 
   static StationaryActionHandler const prv_action_jump_table[] = {
     [StationaryStateAwake] = prv_handle_awake_action,

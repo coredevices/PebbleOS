@@ -157,9 +157,9 @@ static void prv_check_all_sessions_timer_cb(void *data) {
   // messages. However, occasionally we do want to flush everything out.
   static int check_counter = 0;
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "send all sessions: empty %s connected %s counter %u",
-                bool_to_str(check_counter == 0),
-                bool_to_str(comm_session_get_system_session() != NULL), check_counter);
+  PBL_LOG_DBG("send all sessions: empty %s connected %s counter %u",
+              bool_to_str(check_counter == 0),
+              bool_to_str(comm_session_get_system_session() != NULL), check_counter);
 
   system_task_add_callback(prv_send_all_sessions_system_task_cb,
                            (void *)(uintptr_t)(check_counter == 0));
@@ -177,7 +177,7 @@ static RegularTimerInfo prv_check_all_sessions_timer_info = {.cb = prv_check_all
 static void prv_remove_logging_session(DataLoggingSession *data) {
   DataLoggingSession *logging_session = (DataLoggingSession *)data;
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Removing session %d.", logging_session->comm.session_id);
+  PBL_LOG_DBG("Removing session %d.", logging_session->comm.session_id);
 
   dls_endpoint_close_session(logging_session->comm.session_id);
   dls_storage_delete_logging_storage(logging_session);
@@ -204,11 +204,10 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
   int32_t total_bytes = logging_session->storage.num_bytes;
   bool inactive = (dls_get_session_status(logging_session) == DataLoggingStatusInactive);
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING,
-                "de-logging session %" PRIu8 ", tag %" PRIu32 " (inactive %s tot_bytes %" PRIu32
-                " empty %s)",
-                logging_session->comm.session_id, logging_session->tag, bool_to_str(inactive),
-                total_bytes, bool_to_str(empty));
+  PBL_LOG_DBG("de-logging session %" PRIu8 ", tag %" PRIu32 " (inactive %s tot_bytes %" PRIu32
+              " empty %s)",
+              logging_session->comm.session_id, logging_session->tag, bool_to_str(inactive),
+              total_bytes, bool_to_str(empty));
 
   if (inactive && (total_bytes == 0)) {
     prv_remove_logging_session(logging_session);
@@ -316,8 +315,7 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
   Uuid system_uuid = UUID_SYSTEM;
   if (!uuid_equal(&session->app_uuid, &system_uuid)) {
     if (task == session->task) {
-      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Inactivating session: %" PRIu8,
-                    session->comm.session_id);
+      PBL_LOG_DBG("Inactivating session: %" PRIu8, session->comm.session_id);
 
       // Free the buffer if it's in kernel heap. If not in kernel heap we are intentionally not
       // freeing the data->buffer_storage because it was allocated on the client's heap, and the
@@ -517,8 +515,8 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_
     return (DATA_LOGGING_CLOSED);
   }
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "logging %d items of size %d to session %d",
-                (int)num_items, (int)session->item_size, session->comm.session_id);
+  PBL_LOG_DBG("logging %d items of size %d to session %d", (int)num_items, (int)session->item_size,
+              session->comm.session_id);
 
   if (!session->data->buffer_storage) {
     // Unbuffered, we can write to storage immediately

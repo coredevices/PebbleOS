@@ -20,11 +20,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define ACTIVITY_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY, fmt, ##args)
-
-#define ACTIVITY_HEXDUMP(data, length) \
-  PBL_HEXDUMP_D(LOG_DOMAIN_DATA_ACTIVITY, LOG_LEVEL_DEBUG, data, length)
-
 // How often we update settings with the current step/sleep stats for today.
 #define ACTIVITY_SETTINGS_UPDATE_MIN 15
 

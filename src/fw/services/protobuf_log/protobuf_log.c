@@ -30,8 +30,6 @@
 
 PBL_LOG_MODULE_DEFINE(service_protobuf_log, CONFIG_SERVICE_PROTOBUF_LOG_LOG_LEVEL);
 
-#define PROTOBUF_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_PROTOBUF, fmt, ##args)
-
 #define MLOG_MAX_VARINT_ENCODED_SIZE 5
 
 // Our globals
@@ -292,13 +290,13 @@ ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config, ProtobufLogTranspo
   // Number of bytes that are needed to encode the payload structure
   // (not including the data blob)
   const uint32_t payload_hdr_size = prv_get_hdr_reserved_size(config);
-  PROTOBUF_LOG_DEBUG("Creating payload session with hdr size of %" PRIu32, payload_hdr_size);
+  PBL_LOG_DBG("Creating payload session with hdr size of %" PRIu32, payload_hdr_size);
 
   // Create a buffer for the encoded data blob. We form this first as the caller calls
   // protobuf_log_session_add_* repeatedly. Once it's filled up, we grab it as the
   // data blob portion of the payload that's formed in msg_buffer.
   uint32_t max_data_size = max_msg_size - payload_hdr_size - sizeof(PLogMessageHdr);
-  PROTOBUF_LOG_DEBUG("Max data buffer size: %" PRIu32, max_data_size);
+  PBL_LOG_DBG("Max data buffer size: %" PRIu32, max_data_size);
   uint8_t *data_buffer = kernel_zalloc(max_data_size);
   if (!data_buffer) {
     kernel_free(msg_buffer);
@@ -357,8 +355,8 @@ static bool prv_log_struct(PLogSession *session, uint32_t field_number, const pb
   // If it fits, add it. If it doesn't, flush first.
   if (size_if_added > session->max_data_size) {
     // We would be over capacity if we added this message. Let's flush first.
-    PROTOBUF_LOG_DEBUG("Session: 0x%x - Would have been over limit at size %" PRIu32 ", flushing",
-                       (int)session, size_if_added);
+    PBL_LOG_DBG("Session: 0x%x - Would have been over limit at size %" PRIu32 ", flushing",
+                (int)session, size_if_added);
     protobuf_log_session_flush(session);
   }
 
@@ -383,8 +381,8 @@ bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sa
   // error check
   PBL_ASSERT(num_values == session->config.measurements.num_types, "Wrong number of values passed");
 
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Adding measurement sample with %" PRIu32 " values",
-                     (int)session_ref, num_values);
+  PBL_LOG_DBG("Session: 0x%x - Adding measurement sample with %" PRIu32 " values", (int)session_ref,
+              num_values);
 
   // Encode the Measurement
   PLogPackedVarintsEncoderArg packed_varint_encoder_arg = {
@@ -423,7 +421,7 @@ bool protobuf_log_session_add_event(ProtobufLogRef session_ref, pebble_pipeline_
     .arg = &uuid,
   };
 
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Adding event with type: %d", (int)session_ref, event->type);
+  PBL_LOG_DBG("Session: 0x%x - Adding event with type: %d", (int)session_ref, event->type);
 
   bool success = prv_log_struct(session, pebble_pipeline_Payload_events_tag,
                                 &pebble_pipeline_Event_msg, event);
@@ -454,7 +452,7 @@ bool protobuf_log_session_flush(ProtobufLogRef session_ref) {
   };
 
   // Send it out now
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Flushing %d bytes", (int)session_ref, hdr->msg_size);
+  PBL_LOG_DBG("Session: 0x%x - Flushing %d bytes", (int)session_ref, hdr->msg_size);
   success = (session->transport)(session->msg_buffer, hdr->msg_size + sizeof(PLogMessageHdr));
   if (!success) {
     PBL_LOG_ERR("Failure when sending encoded message, resetting session");
@@ -469,7 +467,7 @@ exit:
 }
 
 bool protobuf_log_session_delete(ProtobufLogRef session_ref) {
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Deleting", (int)session_ref);
+  PBL_LOG_DBG("Session: 0x%x - Deleting", (int)session_ref);
 
   if (session_ref == NULL) {
     return true;

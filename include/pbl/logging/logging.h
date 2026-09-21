@@ -108,48 +108,12 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 #define LOG_COLOR_FOR_DEBUG   LOG_COLOR_GREY
 #define LOG_COLOR_FOR_VERBOSE LOG_COLOR_GREY
 
-#define LOG_DOMAIN_MISC              1
-#define LOG_DOMAIN_FS                1
-#define LOG_DOMAIN_COMM              1
-#define LOG_DOMAIN_TEXT              0
-#define LOG_DOMAIN_ANIMATION         0
-#define LOG_DOMAIN_ANALYTICS         0
-#define LOG_DOMAIN_ACTIVITY          0
-#define LOG_DOMAIN_ACTIVITY_INSIGHTS 0
-#define LOG_DOMAIN_PROTOBUF          0
-
-#define LOG_DOMAIN_BLOBDB 0
-
-#ifndef LOG_DOMAIN_BT_PAIRING_INFO
-#ifndef CONFIG_RELEASE
-#define LOG_DOMAIN_BT_PAIRING_INFO 1
-#else
-#define LOG_DOMAIN_BT_PAIRING_INFO 0
-#endif
-#endif
-
-#ifndef LOG_DOMAIN_BT_STACK
-#define LOG_DOMAIN_BT_STACK 0
-#endif
-
-#ifndef LOG_DOMAIN_DATA_LOGGING
-#define LOG_DOMAIN_DATA_LOGGING 0
-#endif
-
-#ifndef LOG_DOMAIN_I2C
-#define LOG_DOMAIN_I2C 0
-#endif
-
 #ifndef STRINGIFY
 #define STRINGIFY_NX(a) #a
 #define STRINGIFY(a)    STRINGIFY_NX(a)
 #endif // STRINGIFY
 
 #define STATUS_STRING(s) STRINGIFY(s)
-
-#ifndef DEFAULT_LOG_DOMAIN
-#define DEFAULT_LOG_DOMAIN LOG_DOMAIN_MISC
-#endif // DEFAULT_LOG_DOMAIN
 
 // Per-module compile-time log level and name. PBL_LOG_MODULE_DEFINE /
 // PBL_LOG_MODULE_DECLARE override these tentative definitions, e.g.
@@ -189,115 +153,85 @@ __attribute__((unused)) static const char *const _pbl_log_module_name;
 // Internal implementation macros (use level-named macros below instead)
 #ifdef CONFIG_LOG
 #ifdef CONFIG_LOG_HASHED
-#define PBL_LOG_COLOR_D(domain, level, color, fmt, ...)                       \
-  do {                                                                        \
-    if (PBL_SHOULD_LOG(level)) {                                              \
-      if (domain) {                                                           \
-        NEW_LOG_HASH(pbl_log_hashed_async, level, color, fmt, ##__VA_ARGS__); \
-      }                                                                       \
-    }                                                                         \
+#define PBL_LOG_COLOR(level, color, fmt, ...)                               \
+  do {                                                                      \
+    if (PBL_SHOULD_LOG(level)) {                                            \
+      NEW_LOG_HASH(pbl_log_hashed_async, level, color, fmt, ##__VA_ARGS__); \
+    }                                                                       \
   } while (0)
 
-#define PBL_LOG_COLOR_D_SYNC(domain, level, color, fmt, ...)                 \
-  do {                                                                       \
-    if (PBL_SHOULD_LOG(level)) {                                             \
-      if (domain) {                                                          \
-        NEW_LOG_HASH(pbl_log_hashed_sync, level, color, fmt, ##__VA_ARGS__); \
-      }                                                                      \
-    }                                                                        \
+#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                         \
+  do {                                                                     \
+    if (PBL_SHOULD_LOG(level)) {                                           \
+      NEW_LOG_HASH(pbl_log_hashed_sync, level, color, fmt, ##__VA_ARGS__); \
+    }                                                                      \
   } while (0)
 #else
-#define PBL_LOG_COLOR_D(domain, level, color, fmt, ...)                                        \
-  do {                                                                                         \
-    if (PBL_SHOULD_LOG(level)) {                                                               \
-      if (domain) {                                                                            \
-        if (_pbl_log_module_name != NULL) {                                                    \
-          pbl_log(level, __FILE__, __LINE__, "%s: " fmt, _pbl_log_module_name, ##__VA_ARGS__); \
-        } else {                                                                               \
-          pbl_log(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                              \
-        }                                                                                      \
-      }                                                                                        \
-    }                                                                                          \
+#define PBL_LOG_COLOR(level, color, fmt, ...)                                                \
+  do {                                                                                       \
+    if (PBL_SHOULD_LOG(level)) {                                                             \
+      if (_pbl_log_module_name != NULL) {                                                    \
+        pbl_log(level, __FILE__, __LINE__, "%s: " fmt, _pbl_log_module_name, ##__VA_ARGS__); \
+      } else {                                                                               \
+        pbl_log(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                              \
+      }                                                                                      \
+    }                                                                                        \
   } while (0)
 
-#define PBL_LOG_COLOR_D_SYNC(domain, level, color, fmt, ...)                        \
-  do {                                                                              \
-    if (PBL_SHOULD_LOG(level)) {                                                    \
-      if (domain) {                                                                 \
-        if (_pbl_log_module_name != NULL) {                                         \
-          pbl_log_sync(level, __FILE__, __LINE__, "%s: " fmt, _pbl_log_module_name, \
-                       ##__VA_ARGS__);                                              \
-        } else {                                                                    \
-          pbl_log_sync(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);              \
-        }                                                                           \
-      }                                                                             \
-    }                                                                               \
+#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                                                \
+  do {                                                                                            \
+    if (PBL_SHOULD_LOG(level)) {                                                                  \
+      if (_pbl_log_module_name != NULL) {                                                         \
+        pbl_log_sync(level, __FILE__, __LINE__, "%s: " fmt, _pbl_log_module_name, ##__VA_ARGS__); \
+      } else {                                                                                    \
+        pbl_log_sync(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                              \
+      }                                                                                           \
+    }                                                                                             \
   } while (0)
 #endif
 #else // !CONFIG_LOG
-#define PBL_LOG_COLOR_D(domain, level, color, fmt, ...)
-#define PBL_LOG_COLOR_D_SYNC(domain, level, color, fmt, ...)
+#define PBL_LOG_COLOR(level, color, fmt, ...)
+#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)
 #endif // CONFIG_LOG
 
-// Level-named domain macros (async)
-#define PBL_LOG_D_ALWAYS(domain, fmt, ...) \
-  PBL_LOG_COLOR_D(domain, LOG_LEVEL_ALWAYS, LOG_COLOR_FOR_ALWAYS, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_ERR(domain, fmt, ...) \
-  PBL_LOG_COLOR_D(domain, LOG_LEVEL_ERROR, LOG_COLOR_FOR_ERROR, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_WRN(domain, fmt, ...) \
-  PBL_LOG_COLOR_D(domain, LOG_LEVEL_WARNING, LOG_COLOR_FOR_WARNING, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_INFO(domain, fmt, ...) \
-  PBL_LOG_COLOR_D(domain, LOG_LEVEL_INFO, LOG_COLOR_FOR_INFO, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_DBG(domain, fmt, ...) \
-  PBL_LOG_COLOR_D(domain, LOG_LEVEL_DEBUG, LOG_COLOR_FOR_DEBUG, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_VERBOSE(domain, fmt, ...) \
-  PBL_LOG_COLOR_D(domain, LOG_LEVEL_DEBUG_VERBOSE, LOG_COLOR_FOR_VERBOSE, fmt, ##__VA_ARGS__)
+// Level-named macros (async)
+#define PBL_LOG_ALWAYS(fmt, ...) \
+  PBL_LOG_COLOR(LOG_LEVEL_ALWAYS, LOG_COLOR_FOR_ALWAYS, fmt, ##__VA_ARGS__)
+#define PBL_LOG_ERR(fmt, ...) \
+  PBL_LOG_COLOR(LOG_LEVEL_ERROR, LOG_COLOR_FOR_ERROR, fmt, ##__VA_ARGS__)
+#define PBL_LOG_WRN(fmt, ...) \
+  PBL_LOG_COLOR(LOG_LEVEL_WARNING, LOG_COLOR_FOR_WARNING, fmt, ##__VA_ARGS__)
+#define PBL_LOG_INFO(fmt, ...) PBL_LOG_COLOR(LOG_LEVEL_INFO, LOG_COLOR_FOR_INFO, fmt, ##__VA_ARGS__)
+#define PBL_LOG_DBG(fmt, ...) \
+  PBL_LOG_COLOR(LOG_LEVEL_DEBUG, LOG_COLOR_FOR_DEBUG, fmt, ##__VA_ARGS__)
+#define PBL_LOG_VERBOSE(fmt, ...) \
+  PBL_LOG_COLOR(LOG_LEVEL_DEBUG_VERBOSE, LOG_COLOR_FOR_VERBOSE, fmt, ##__VA_ARGS__)
 
-// Level-named macros (default domain, async)
-#define PBL_LOG_ALWAYS(fmt, ...)  PBL_LOG_D_ALWAYS(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_ERR(fmt, ...)     PBL_LOG_D_ERR(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_WRN(fmt, ...)     PBL_LOG_D_WRN(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_INFO(fmt, ...)    PBL_LOG_D_INFO(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_DBG(fmt, ...)     PBL_LOG_D_DBG(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_VERBOSE(fmt, ...) PBL_LOG_D_VERBOSE(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-
-// Level-named domain sync macros
-#define PBL_LOG_D_SYNC_ALWAYS(domain, fmt, ...) \
-  PBL_LOG_COLOR_D_SYNC(domain, LOG_LEVEL_ALWAYS, LOG_COLOR_FOR_ALWAYS, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_SYNC_ERR(domain, fmt, ...) \
-  PBL_LOG_COLOR_D_SYNC(domain, LOG_LEVEL_ERROR, LOG_COLOR_FOR_ERROR, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_SYNC_WRN(domain, fmt, ...) \
-  PBL_LOG_COLOR_D_SYNC(domain, LOG_LEVEL_WARNING, LOG_COLOR_FOR_WARNING, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_SYNC_INFO(domain, fmt, ...) \
-  PBL_LOG_COLOR_D_SYNC(domain, LOG_LEVEL_INFO, LOG_COLOR_FOR_INFO, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_SYNC_DBG(domain, fmt, ...) \
-  PBL_LOG_COLOR_D_SYNC(domain, LOG_LEVEL_DEBUG, LOG_COLOR_FOR_DEBUG, fmt, ##__VA_ARGS__)
-#define PBL_LOG_D_SYNC_VERBOSE(domain, fmt, ...) \
-  PBL_LOG_COLOR_D_SYNC(domain, LOG_LEVEL_DEBUG_VERBOSE, LOG_COLOR_FOR_VERBOSE, fmt, ##__VA_ARGS__)
-
-// Level-named sync macros (default domain)
-#define PBL_LOG_SYNC_ALWAYS(fmt, ...) PBL_LOG_D_SYNC_ALWAYS(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_SYNC_ERR(fmt, ...)    PBL_LOG_D_SYNC_ERR(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_SYNC_WRN(fmt, ...)    PBL_LOG_D_SYNC_WRN(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_SYNC_INFO(fmt, ...)   PBL_LOG_D_SYNC_INFO(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
-#define PBL_LOG_SYNC_DBG(fmt, ...)    PBL_LOG_D_SYNC_DBG(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
+// Level-named sync macros
+#define PBL_LOG_SYNC_ALWAYS(fmt, ...) \
+  PBL_LOG_COLOR_SYNC(LOG_LEVEL_ALWAYS, LOG_COLOR_FOR_ALWAYS, fmt, ##__VA_ARGS__)
+#define PBL_LOG_SYNC_ERR(fmt, ...) \
+  PBL_LOG_COLOR_SYNC(LOG_LEVEL_ERROR, LOG_COLOR_FOR_ERROR, fmt, ##__VA_ARGS__)
+#define PBL_LOG_SYNC_WRN(fmt, ...) \
+  PBL_LOG_COLOR_SYNC(LOG_LEVEL_WARNING, LOG_COLOR_FOR_WARNING, fmt, ##__VA_ARGS__)
+#define PBL_LOG_SYNC_INFO(fmt, ...) \
+  PBL_LOG_COLOR_SYNC(LOG_LEVEL_INFO, LOG_COLOR_FOR_INFO, fmt, ##__VA_ARGS__)
+#define PBL_LOG_SYNC_DBG(fmt, ...) \
+  PBL_LOG_COLOR_SYNC(LOG_LEVEL_DEBUG, LOG_COLOR_FOR_DEBUG, fmt, ##__VA_ARGS__)
 #define PBL_LOG_SYNC_VERBOSE(fmt, ...) \
-  PBL_LOG_D_SYNC_VERBOSE(DEFAULT_LOG_DOMAIN, fmt, ##__VA_ARGS__)
+  PBL_LOG_COLOR_SYNC(LOG_LEVEL_DEBUG_VERBOSE, LOG_COLOR_FOR_VERBOSE, fmt, ##__VA_ARGS__)
 
 #ifdef CONFIG_LOG
-#define RETURN_STATUS_D(d, st)           \
-  do {                                   \
-    if (FAILED(st)) {                    \
-      PBL_LOG_D_WRN(d, "%d", (int)(st)); \
-    }                                    \
-    return st;                           \
+#define RETURN_STATUS(st)           \
+  do {                              \
+    if (FAILED(st)) {               \
+      PBL_LOG_WRN("%d", (int)(st)); \
+    }                               \
+    return st;                      \
   } while (0)
 
-#define RETURN_STATUS_UP_D(d, st) return ((st) != E_INVALID_ARGUMENT ? (st) : E_INTERNAL)
+#define RETURN_STATUS_UP(st) return ((st) != E_INVALID_ARGUMENT ? (st) : E_INTERNAL)
 #else // CONFIG_LOG
-#define RETURN_STATUS_D(d, st)    return (st)
-#define RETURN_STATUS_UP_D(d, st) return ((st) == E_INVALID_ARGUMENT ? E_INTERNAL : (st))
+#define RETURN_STATUS(st)    return (st)
+#define RETURN_STATUS_UP(st) return ((st) == E_INVALID_ARGUMENT ? E_INTERNAL : (st))
 #endif // CONFIG_LOG
-
-#define RETURN_STATUS(s)    RETURN_STATUS_D(DEFAULT_LOG_DOMAIN, s)
-#define RETURN_STATUS_UP(s) RETURN_STATUS_UP_D(DEFAULT_LOG_DOMAIN, s)

@@ -635,8 +635,8 @@ bool activity_algorithm_get_sleep_sessions(time_t sleep_earliest_end_utc,
   for (uint32_t i = 0; i < s_test_alg_state.minute_data.num_sessions_created; i++) {
     ActivitySession *session = &s_test_alg_state.minute_data.sessions[i];
     int start_minute = time_util_get_minute_of_day(session->start_utc);
-    ACTIVITY_LOG_DEBUG("Found session %d: start_min: %d, len_min: %" PRIu16 " ", session->type,
-                       start_minute, session->length_min);
+    PBL_LOG_DBG("Found session %d: start_min: %d, len_min: %" PRIu16 " ", session->type,
+                start_minute, session->length_min);
     if (!activity_sessions_prv_is_sleep_activity(session->type)) {
       continue;
     }
@@ -645,8 +645,8 @@ bool activity_algorithm_get_sleep_sessions(time_t sleep_earliest_end_utc,
         sleep_earliest_end_utc) {
       continue;
     }
-    ACTIVITY_LOG_DEBUG("Returning session %d: start_min: %d, len_min: %" PRIu16 " ", session->type,
-                       start_minute, session->length_min);
+    PBL_LOG_DBG("Returning session %d: start_min: %d, len_min: %" PRIu16 " ", session->type,
+                start_minute, session->length_min);
     activity_sessions_prv_add_activity_session(&s_test_alg_state.minute_data.sessions[i]);
   }
   return true;

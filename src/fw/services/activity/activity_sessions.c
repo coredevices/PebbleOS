@@ -429,11 +429,11 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
 
     if (sleep_data->cur_state != prev_sleep_data.cur_state) {
       // Debug logging
-      ACTIVITY_LOG_DEBUG("total_min: %" PRIu32 ", deep_min: %" PRIu32 ", state: %" PRIu32
-                         ", "
-                         "state_min: %" PRIu32 "",
-                         sleep_data->total_minutes, sleep_data->restful_minutes,
-                         sleep_data->cur_state, sleep_data->cur_state_elapsed_minutes);
+      PBL_LOG_DBG("total_min: %" PRIu32 ", deep_min: %" PRIu32 ", state: %" PRIu32
+                  ", "
+                  "state_min: %" PRIu32 "",
+                  sleep_data->total_minutes, sleep_data->restful_minutes, sleep_data->cur_state,
+                  sleep_data->cur_state_elapsed_minutes);
     }
   }
 unlock:

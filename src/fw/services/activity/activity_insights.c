@@ -31,8 +31,6 @@
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
-#define INSIGHTS_LOG_DEBUG(fmt, args...) PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY_INSIGHTS, fmt, ##args)
-
 #define SUBTITLE_BUFFER_LENGTH 18
 #define TIME_BUFFER_LENGTH     9
 
@@ -641,7 +639,7 @@ static void prv_push_reward(time_t now_utc, const RewardNotifConfig *notif_confi
   prv_save_state(notif_config->settings_key, &notif_config->state->last_triggered_utc,
                  sizeof(notif_config->state->last_triggered_utc));
 
-  INSIGHTS_LOG_DEBUG("Saved reward state: %ld", notif_config->state->last_triggered_utc);
+  PBL_LOG_DBG("Saved reward state: %ld", notif_config->state->last_triggered_utc);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -681,9 +679,9 @@ PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
 
   kernel_free(history);
 
-  INSIGHTS_LOG_DEBUG("Metric history stats - med: %" PRIu32 " mean: %" PRIu32 " tot: %" PRIu8
-                     " cons: %" PRIu8,
-                     stats->median, stats->mean, stats->total_days, stats->consecutive_days);
+  PBL_LOG_DBG("Metric history stats - med: %" PRIu32 " mean: %" PRIu32 " tot: %" PRIu8
+              " cons: %" PRIu8,
+              stats->median, stats->mean, stats->total_days, stats->consecutive_days);
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -693,7 +691,7 @@ static bool prv_validate_history_stats(const ActivityInsightMetricHistoryStats *
   // Make sure we have enough history
   if ((stats->total_days < insight_settings->reward.min_days_data) ||
       (stats->consecutive_days < insight_settings->reward.continuous_min_days_data)) {
-    INSIGHTS_LOG_DEBUG(
+    PBL_LOG_DBG(
         "History validation failed - total/consecutive days didn't match: "
         "%" PRIu8 " %" PRIu8,
         stats->total_days, stats->consecutive_days);
@@ -717,9 +715,8 @@ static bool prv_validate_history_stats(const ActivityInsightMetricHistoryStats *
   // (start at 1 since we don't care about today's metric)
   for (uint32_t i = 1; i < history_len; ++i) {
     if (history[i] < (int32_t)target) {
-      INSIGHTS_LOG_DEBUG("History validation failed - not above target on day %" PRIu32
-                         ": %" PRIi32,
-                         i, history[i]);
+      PBL_LOG_DBG("History validation failed - not above target on day %" PRIu32 ": %" PRIi32, i,
+                  history[i]);
       return false;
     }
   }
@@ -772,13 +769,13 @@ static bool prv_reward_check_common(const ActivityInsightSettings *insight_setti
       insight_state->last_triggered_utc + insight_settings->reward.notif_min_interval_seconds;
   if (time_next_trigger > now_utc) {
     // Stop here if not enough time has passed to trigger this reward
-    INSIGHTS_LOG_DEBUG("Not triggering activity reward - too soon to trigger");
+    PBL_LOG_DBG("Not triggering activity reward - too soon to trigger");
     return false;
   }
 
   // Make sure we're not still sleeping
   if (prv_get_sleep_state() != ActivitySleepStateAwake) {
-    INSIGHTS_LOG_DEBUG("Not triggering reward - asleep");
+    PBL_LOG_DBG("Not triggering reward - asleep");
     return false;
   }
 
@@ -789,7 +786,7 @@ static bool prv_reward_check_common(const ActivityInsightSettings *insight_setti
   int32_t cur_metric;
   activity_get_metric(metric_stats->metric, 1, &cur_metric);
   if (cur_metric < (int32_t)target) {
-    INSIGHTS_LOG_DEBUG("Not triggering reward - not over target: %" PRIi32, cur_metric);
+    PBL_LOG_DBG("Not triggering reward - not over target: %" PRIi32, cur_metric);
     return false;
   }
 
@@ -798,7 +795,7 @@ static bool prv_reward_check_common(const ActivityInsightSettings *insight_setti
 
 // ------------------------------------------------------------------------------------------------
 static void prv_do_sleep_reward(time_t now_utc) {
-  INSIGHTS_LOG_DEBUG("Checking sleep reward...");
+  PBL_LOG_DBG("Checking sleep reward...");
   if (!prv_reward_check_common(&s_sleep_reward_settings, &s_sleep_reward_state.common,
                                &s_sleep_stats, now_utc)) {
     return;
@@ -808,8 +805,8 @@ static void prv_do_sleep_reward(time_t now_utc) {
   int32_t sleep_state_seconds;
   activity_get_metric(ActivityMetricSleepStateSeconds, 1, &sleep_state_seconds);
   if (sleep_state_seconds < s_sleep_reward_settings.reward.sleep.trigger_after_wakeup_seconds) {
-    INSIGHTS_LOG_DEBUG("Not triggering sleep reward - haven't been awake long enough: %" PRId32,
-                       sleep_state_seconds);
+    PBL_LOG_DBG("Not triggering sleep reward - haven't been awake long enough: %" PRId32,
+                sleep_state_seconds);
     return;
   }
 
@@ -991,7 +988,7 @@ static void prv_do_sleep_notification(time_t now_utc, time_t sleep_exit_utc,
   }
 
   if (s_sleep_pin_state.notified) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - already notified");
+    PBL_LOG_DBG("Not notifying sleep pin - already notified");
     return;
   }
 
@@ -1000,15 +997,14 @@ static void prv_do_sleep_notification(time_t now_utc, time_t sleep_exit_utc,
   const int exit_minute_of_day = time_util_get_minute_of_day(sleep_exit_utc);
   if (exit_minute_of_day < SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MIN ||
       exit_minute_of_day >= SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MAX) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - exit outside wake window (%d)",
-                       exit_minute_of_day);
+    PBL_LOG_DBG("Not notifying sleep pin - exit outside wake window (%d)", exit_minute_of_day);
     return;
   }
 
   // Notify about the pin after a certain amount of time
   const time_t since_exited = now_utc - sleep_exit_utc;
   if (since_exited < s_sleep_summary_settings.summary.sleep.trigger_notif_seconds) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - not trigger time yet (%ld)", since_exited);
+    PBL_LOG_DBG("Not notifying sleep pin - not trigger time yet (%ld)", since_exited);
     return;
   }
 
@@ -1016,8 +1012,8 @@ static void prv_do_sleep_notification(time_t now_utc, time_t sleep_exit_utc,
   const int trigger_active_minutes =
       s_sleep_summary_settings.summary.sleep.trigger_notif_active_minutes;
   if (s_sleep_pin_state.active_minutes < trigger_active_minutes) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - not active enough (%d < %d)",
-                       s_sleep_pin_state.active_minutes, trigger_active_minutes);
+    PBL_LOG_DBG("Not notifying sleep pin - not active enough (%d < %d)",
+                s_sleep_pin_state.active_minutes, trigger_active_minutes);
     return;
   }
 
@@ -1037,7 +1033,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
 
   // Don't bother adding a summary if we don't have any history for an average
   if (s_sleep_stats.total_days == 0) {
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - no stats");
+    PBL_LOG_DBG("Not adding sleep pin - no stats");
     return;
   }
 
@@ -1045,7 +1041,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
   int32_t sleep_state;
   activity_get_metric(ActivityMetricSleepState, 1, &sleep_state);
   if (sleep_state != ActivitySleepStateAwake) {
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - still asleep");
+    PBL_LOG_DBG("Not adding sleep pin - still asleep");
     return;
   }
 
@@ -1055,7 +1051,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
   time_t sleep_exit_utc = 0;
   activity_sessions_prv_get_sleep_bounds_utc(now_utc, &sleep_enter_utc, &sleep_exit_utc);
   if (sleep_exit_utc <= sleep_enter_utc) {
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - no sleep data for last night");
+    PBL_LOG_DBG("Not adding sleep pin - no sleep data for last night");
     return;
   }
 
@@ -1068,7 +1064,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
     // Checking "now_utc < s_sleep_pin_state.last_triggered_utc" catches cases where
     // the activity_test integration test might have created a pin in the future (because it
     // mucks with the real time clock)
-    INSIGHTS_LOG_DEBUG("Starting pin for new sleep window");
+    PBL_LOG_DBG("Starting pin for new sleep window");
     s_sleep_pin_state = (SleepPinState){
       .uuid = UUID_INVALID,
       .first_enter_utc = sleep_enter_utc,
@@ -1078,7 +1074,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
 
   if (s_sleep_pin_state.removed) {
     // If this pin was removed by the user, don't bother updating it.
-    INSIGHTS_LOG_DEBUG("Pin was removed");
+    PBL_LOG_DBG("Pin was removed");
     return;
   }
 
@@ -1096,13 +1092,13 @@ static void prv_do_sleep_summary(time_t now_utc) {
       sleep_enter_utc == s_sleep_pin_state.first_enter_utc) {
     // Notify about the sleep pin
     prv_do_sleep_notification(now_utc, sleep_exit_utc, sleep_total_seconds);
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - already checked session %ld", sleep_exit_utc);
+    PBL_LOG_DBG("Not adding sleep pin - already checked session %ld", sleep_exit_utc);
     return;
   }
 
   // Insert or update the pin. This intentionally leaves "notified" untouched: within one
   // sleep window the notification fires at most once, however often the bounds extend.
-  INSIGHTS_LOG_DEBUG("Adding sleep pin");
+  PBL_LOG_DBG("Adding sleep pin");
   prv_push_sleep_summary_pin(now_utc, sleep_exit_utc, sleep_enter_seconds, sleep_exit_seconds,
                              sleep_total_seconds, s_sleep_stats.mean, &s_sleep_pin_state.uuid);
 
@@ -1128,7 +1124,7 @@ void PBL_NOINLINE activity_insights_process_sleep_data(time_t now_utc) {
 // ------------------------------------------------------------------------------------------------
 // Checks to see if we should trigger an activity reward
 static PBL_NOINLINE void prv_do_activity_reward(time_t now_utc) {
-  INSIGHTS_LOG_DEBUG("Checking activity reward...");
+  PBL_LOG_DBG("Checking activity reward...");
   if (!prv_reward_check_common(&s_activity_reward_settings, &s_activity_reward_state.common,
                                &s_activity_stats, now_utc)) {
     return;
@@ -1137,7 +1133,7 @@ static PBL_NOINLINE void prv_do_activity_reward(time_t now_utc) {
   // Make sure the user is currently active
   if (s_activity_reward_state.active_minutes <
       s_activity_reward_settings.reward.activity.trigger_active_minutes) {
-    INSIGHTS_LOG_DEBUG(
+    PBL_LOG_DBG(
         "Not showing activity reward - have only been currently active for "
         "%" PRIu32 " minutes out of %" PRIu8,
         s_activity_reward_state.active_minutes,
@@ -1520,16 +1516,16 @@ static PBL_NOINLINE void prv_do_activity_summary(time_t now_utc) {
   const int minute_of_day = time_util_get_minute_of_day(now_utc);
   if ((minute_of_day < s_activity_summary_settings.summary.activity.trigger_minute) ||
       s_activity_pin_state.removed) {
-    INSIGHTS_LOG_DEBUG("Not adding activity pin - before trigger time (%d < %d) or removed (%d)",
-                       minute_of_day, s_activity_summary_settings.summary.activity.trigger_minute,
-                       s_activity_pin_state.removed);
+    PBL_LOG_DBG("Not adding activity pin - before trigger time (%d < %d) or removed (%d)",
+                minute_of_day, s_activity_summary_settings.summary.activity.trigger_minute,
+                s_activity_pin_state.removed);
     return;
   }
 
   // Make sure we actually have a step count
   const int32_t steps = prv_get_step_count();
   if (steps <= 0) {
-    INSIGHTS_LOG_DEBUG("Not adding activity pin - no steps");
+    PBL_LOG_DBG("Not adding activity pin - no steps");
     return;
   }
 
@@ -1537,7 +1533,7 @@ static PBL_NOINLINE void prv_do_activity_summary(time_t now_utc) {
   const time_t next_update_time = s_activity_pin_state.next_update_time;
   ActivityScalarStore next_step_count = s_activity_pin_state.next_step_count;
   if ((now_utc < next_update_time) && (steps < (int32_t)next_step_count)) {
-    INSIGHTS_LOG_DEBUG("Not updating activity pin - less than next update time and next steps");
+    PBL_LOG_DBG("Not updating activity pin - less than next update time and next steps");
     return;
   }
 
@@ -1842,25 +1838,25 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
   }
 
   if (s_session_pin_state.start_utc >= session->start_utc) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - session too old");
+    PBL_LOG_DBG("Not adding session pin - session too old");
     return;
   }
 
   if (now_utc - (session->start_utc + SECONDS_PER_MINUTE * session->length_min) <
       s_activity_session_settings.session.activity.trigger_cooldown_minutes * SECONDS_PER_MINUTE) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - cooldown not yet elapsed");
+    PBL_LOG_DBG("Not adding session pin - cooldown not yet elapsed");
     return;
   }
 
   if (prv_get_sleep_state() != ActivitySleepStateAwake) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - asleep");
+    PBL_LOG_DBG("Not adding session pin - asleep");
     return;
   }
 
   if (session->length_min < s_activity_session_settings.session.activity.trigger_elapsed_minutes) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - not long enough (%" PRIu16 " < %" PRIu16 ")",
-                       session->length_min,
-                       s_activity_session_settings.session.activity.trigger_elapsed_minutes);
+    PBL_LOG_DBG("Not adding session pin - not long enough (%" PRIu16 " < %" PRIu16 ")",
+                session->length_min,
+                s_activity_session_settings.session.activity.trigger_elapsed_minutes);
     return;
   }
 
@@ -1940,7 +1936,7 @@ static void prv_settings_file_changed_cb(void *data);
 
 // Reloads the reward settings from flash and caches them
 static void prv_reload_settings(void *not_used) {
-  INSIGHTS_LOG_DEBUG("Reloading insights settings");
+  PBL_LOG_DBG("Reloading insights settings");
 
   if (s_pfs_cb_handle) {
     activity_insights_settings_unwatch(s_pfs_cb_handle);
@@ -2042,10 +2038,8 @@ void activity_insights_init(time_t now_utc) {
     s_sleep_pin_state.notified = true;
   }
 
-  INSIGHTS_LOG_DEBUG("Last sleep reward state: %ld",
-                     s_sleep_reward_state.common.last_triggered_utc);
-  INSIGHTS_LOG_DEBUG("Last activity reward state: %ld",
-                     s_activity_reward_state.common.last_triggered_utc);
+  PBL_LOG_DBG("Last sleep reward state: %ld", s_sleep_reward_state.common.last_triggered_utc);
+  PBL_LOG_DBG("Last activity reward state: %ld", s_activity_reward_state.common.last_triggered_utc);
 
   // Recalculate metric stats
   activity_insights_recalculate_stats();

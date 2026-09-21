@@ -600,9 +600,7 @@ static const Command s_prompt_commands[] = {
   {"profiler stats", command_profiler_stats, 0},
 #endif
 
-#if (LOG_DOMAIN_BT_PAIRING_INFO != 0)
-  // Note to future codespace saver ... this is on by default for debug builds
-  // Removing it will save ~2400 bytes but it is super useful for BT bringup debug!
+#ifndef CONFIG_RELEASE
   {"gapdb dump", command_gapdb_dump, 0},
   {"sprf nuke", command_bt_sprf_nuke, 0},
 #if !defined(CONFIG_RECOVERY_FW)

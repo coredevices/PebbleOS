@@ -195,26 +195,24 @@ static void dls_endpoint_print_message(uint8_t *message, int num_bytes) {
   switch (message[0]) {
     case DataLoggingEndpointCmdClose: {
       DataLoggingCloseSessionMessage *msg = (DataLoggingCloseSessionMessage *)message;
-      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Closing session %d", msg->session_id);
+      PBL_LOG_DBG("Closing session %d", msg->session_id);
       break;
     }
     case DataLoggingEndpointCmdOpen: {
       DataLoggingOpenSessionMessage *msg = (DataLoggingOpenSessionMessage *)message;
-      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING,
-                    "Opening session %u with tag %" PRIu32 ", type %u, size %hu", msg->session_id,
-                    msg->logging_session_tag, msg->data_item_type, msg->data_item_size);
+      PBL_LOG_DBG("Opening session %u with tag %" PRIu32 ", type %u, size %hu", msg->session_id,
+                  msg->logging_session_tag, msg->data_item_type, msg->data_item_size);
       break;
     }
     case DataLoggingEndpointCmdData: {
       DataLoggingSendDataMessage *msg = (DataLoggingSendDataMessage *)message;
-      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING,
-                    "Sending data with session_id %" PRIu8 ", items remaining %" PRIu32
-                    ", crc 0x%" PRIx32 ", num_bytes %d",
-                    msg->session_id, msg->items_left_hereafter, msg->crc32, num_bytes);
+      PBL_LOG_DBG("Sending data with session_id %" PRIu8 ", items remaining %" PRIu32
+                  ", crc 0x%" PRIx32 ", num_bytes %d",
+                  msg->session_id, msg->items_left_hereafter, msg->crc32, num_bytes);
       break;
     }
     default:
-      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Message type 0x%x not recognized", message[0]);
+      PBL_LOG_DBG("Message type 0x%x not recognized", message[0]);
   }
 }
 
@@ -300,7 +298,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
   comm_session_send_buffer_end_write(sb);
 
   dls_endpoint_print_message((uint8_t *)&header, num_bytes);
-  DLS_HEXDUMP(data, MIN(num_bytes, 64));
+  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, MIN(num_bytes, 64));
 
   logging_session->comm.num_bytes_pending = num_bytes;
 
@@ -314,15 +312,14 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
   DataLoggingSession *session = dls_list_find_by_session_id(session_id);
   if (session == NULL) {
-    PBL_LOG_D_WRN(LOG_DOMAIN_DATA_LOGGING, "Received ack for non-existent session id: %" PRIu8,
-                  session_id);
+    PBL_LOG_WRN("Received ack for non-existent session id: %" PRIu8, session_id);
     return;
   }
 
   pbl_mutex_lock(&s_endpoint_data.mutex, PBL_FOREVER);
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Received ACK for id: %" PRIu8 " state: %u",
-                session->comm.session_id, session->comm.state);
+  PBL_LOG_DBG("Received ACK for id: %" PRIu8 " state: %u", session->comm.session_id,
+              session->comm.state);
 
   switch (session->comm.state) {
     case DataLoggingSessionCommStateIdle:
@@ -352,12 +349,11 @@ static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
 }
 
 static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Received NACK for id: %" PRIu8, session_id);
+  PBL_LOG_DBG("Received NACK for id: %" PRIu8, session_id);
 
   DataLoggingSession *logging_session = dls_list_find_by_session_id(session_id);
   if (!logging_session) {
-    PBL_LOG_D_WRN(LOG_DOMAIN_DATA_LOGGING, "Received nack for non-existent session id: %" PRIu8,
-                  session_id);
+    PBL_LOG_WRN("Received nack for non-existent session id: %" PRIu8, session_id);
     return;
   }
 
@@ -411,7 +407,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
       uuid_equal(&entry->app_uuid, &entry->session->app_uuid) &&
       entry->timestamp == entry->session->session_created_timestamp &&
       entry->tag == entry->session->tag) {
-    PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Reopening session %d", entry->session->comm.session_id);
+    PBL_LOG_DBG("Reopening session %d", entry->session->comm.session_id);
     success = (dls_endpoint_open_session(entry->session) &&
                dls_private_send_session(entry->session, false));
   } else {
@@ -433,7 +429,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
   } else {
     s_endpoint_data.report_in_progress = false;
     // If we failed, give up on the remaining ones
-    PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Aborting all remaining open requests");
+    PBL_LOG_DBG("Aborting all remaining open requests");
     while (new_head) {
       DataLoggingReopenEntry *entry = new_head;
       new_head = (DataLoggingReopenEntry *)list_pop_head((ListNode *)new_head);
@@ -453,8 +449,7 @@ static bool dls_endpoint_add_reopen_sessions_cb(DataLoggingSession *session, voi
     .timestamp = session->session_created_timestamp,
     .tag = session->tag,
   };
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "adding session %d to reopen list",
-                session->comm.session_id);
+  PBL_LOG_DBG("adding session %d to reopen list", session->comm.session_id);
   *head_ptr =
       (DataLoggingReopenEntry *)list_insert_before((ListNode *)(*head_ptr), &entry->list_node);
   return true;
@@ -466,7 +461,7 @@ static void prv_handle_report_cmd(const uint8_t *session_ids, size_t num_session
 
     DataLoggingSession *logging_session = dls_list_find_by_session_id(session_id);
 
-    PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Phone reported session %u opened", session_id);
+    PBL_LOG_DBG("Phone reported session %u opened", session_id);
 
     // If the phone thinks we're open and we're not, send a close message.
     if (logging_session == NULL) {
@@ -486,7 +481,7 @@ static void prv_handle_report_cmd(const uint8_t *session_ids, size_t num_session
 
 //! Empty a session by session id
 static void prv_empty_session(uint8_t session_id) {
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Phone requested empty of session %u", session_id);
+  PBL_LOG_DBG("Phone requested empty of session %u", session_id);
   DataLoggingSession *logging_session = dls_list_find_by_session_id(session_id);
   if (logging_session) {
     dls_private_send_session(logging_session, true /*empty_all_data*/);

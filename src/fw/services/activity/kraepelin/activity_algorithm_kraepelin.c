@@ -224,7 +224,7 @@ static bool prv_log_minute_file_minutes_cb(SettingsFile *file, SettingsRecordInf
   // if in the wrong time range, skip it
   if (chunk.hdr.time_utc < (uint32_t)context->oldest_valid_utc ||
       chunk.hdr.time_utc > (uint32_t)context->newest_valid_utc) {
-    ACTIVITY_LOG_DEBUG("Minute chunk time out of range, skipping it");
+    PBL_LOG_DBG("Minute chunk time out of range, skipping it");
     return true;
   }
 
@@ -307,14 +307,12 @@ static bool prv_minute_file_rewrite_cb(void *key_arg, size_t key_len, void *val_
   uint32_t key = *(uint32_t *)key_arg;
 
   if (val->hdr.version != ALG_MINUTE_FILE_RECORD_VERSION) {
-    ACTIVITY_LOG_DEBUG("Dropping key %" PRIu32 ", invalid version of %" PRIu16 "", key,
-                       val->hdr.version);
+    PBL_LOG_DBG("Dropping key %" PRIu32 ", invalid version of %" PRIu16 "", key, val->hdr.version);
     return false;
   }
 
   if (key < context->oldest_valid_key || key > context->newest_valid_key) {
-    ACTIVITY_LOG_DEBUG("Dropping key %" PRIu32 ", record UTC of %" PRIu32 "", key,
-                       val->hdr.time_utc);
+    PBL_LOG_DBG("Dropping key %" PRIu32 ", record UTC of %" PRIu32 "", key, val->hdr.time_utc);
     return false;
   }
 
@@ -712,18 +710,18 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
     const time_t end_utc = session->start_utc + (session->length_min * SECONDS_PER_MINUTE);
     const unsigned end_minute = time_util_get_minute_of_day(end_utc);
 
-    ACTIVITY_LOG_DEBUG("processing activity %d, start_min: %u, len: %" PRIu16 "",
-                       (int)session->type, start_minute, session->length_min);
+    PBL_LOG_DBG("processing activity %d, start_min: %u, len: %" PRIu16 "", (int)session->type,
+                start_minute, session->length_min);
 
     // Skip if not a sleep session
     if (!activity_sessions_prv_is_sleep_activity(session->type)) {
-      ACTIVITY_LOG_DEBUG("Not a sleep session");
+      PBL_LOG_DBG("Not a sleep session");
       continue;
     }
 
     // Skip if still ongoing
     if (session->ongoing) {
-      ACTIVITY_LOG_DEBUG("Still ongoing");
+      PBL_LOG_DBG("Still ongoing");
       continue;
     }
 
@@ -733,7 +731,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
       if (session->type == ActivitySessionType_Nap) {
         most_recent_nap_session = session;
       }
-      ACTIVITY_LOG_DEBUG("Already labeled as a nap");
+      PBL_LOG_DBG("Already labeled as a nap");
       continue;
     }
 
@@ -741,7 +739,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
         !WITHIN(start_minute, ALG_PRIMARY_MORNING_MINUTE, ALG_PRIMARY_EVENING_MINUTE) ||
         !WITHIN(end_minute, ALG_PRIMARY_MORNING_MINUTE, ALG_PRIMARY_EVENING_MINUTE)) {
       // If too long, or not within the primary sleep range, can't be a nap
-      ACTIVITY_LOG_DEBUG("Not within nap time bounds or duration");
+      PBL_LOG_DBG("Not within nap time bounds or duration");
       continue;
     }
 
@@ -957,11 +955,11 @@ static void prv_activity_update_states(time_t utc_sec, AlgMinuteRecord *record_o
   const bool hrm_offwrist = activity_metrics_prv_is_hrm_offwrist(utc_sec);
   const bool not_worn = m_rec->base.plugged_in || hrm_offwrist;
 
-  ACTIVITY_LOG_DEBUG("minute handler: steps: %" PRIu8 ", orientation: 0x%" PRIx8 ", vmc: %" PRIu16
-                     ", "
-                     "light: %" PRIu8 ", plugged_in: %d, hrm_offwrist: %d",
-                     m_rec->base.steps, m_rec->base.orientation, m_rec->base.vmc, m_rec->base.light,
-                     (int)m_rec->base.plugged_in, (int)hrm_offwrist);
+  PBL_LOG_DBG("minute handler: steps: %" PRIu8 ", orientation: 0x%" PRIx8 ", vmc: %" PRIu16
+              ", "
+              "light: %" PRIu8 ", plugged_in: %d, hrm_offwrist: %d",
+              m_rec->base.steps, m_rec->base.orientation, m_rec->base.vmc, m_rec->base.light,
+              (int)m_rec->base.plugged_in, (int)hrm_offwrist);
 
   // Pass the minute data onto the activity detection logic
   kalg_activities_update(s_alg_state->k_state, utc_sec, m_rec->base.steps, m_rec->base.vmc,
@@ -1143,7 +1141,7 @@ static bool prv_read_minute_history_file_cb(SettingsFile *file, SettingsRecordIn
   // Check the exact time range using the value
   const uint32_t k_seconds_per_chunk = ALG_MINUTES_PER_FILE_RECORD * SECONDS_PER_MINUTE;
   if (chunk.hdr.time_utc + k_seconds_per_chunk < (uint32_t)context->oldest_requested_utc) {
-    ACTIVITY_LOG_DEBUG("Minute chunk time out of range, skipping it");
+    PBL_LOG_DBG("Minute chunk time out of range, skipping it");
     return true;
     ;
   }

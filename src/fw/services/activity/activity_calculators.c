@@ -70,7 +70,7 @@ uint32_t activity_private_compute_distance_mm(uint32_t steps, uint32_t ms) {
   uint32_t distance_mm = ROUND(stride_len_component * height_mm_64 * steps, k_x10000);
 
   // Return distance in mm
-  ACTIVITY_LOG_DEBUG("Got delta distance of %" PRIu32 " mm", distance_mm);
+  PBL_LOG_DBG("Got delta distance of %" PRIu32 " mm", distance_mm);
   return distance_mm;
 }
 
@@ -132,7 +132,7 @@ uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t
                             1000 * MM_PER_METER * ACTIVITY_DAG_PER_KG);
 
   // Return calories
-  ACTIVITY_LOG_DEBUG("Got delta active calories of %" PRIu32 " ", calories);
+  PBL_LOG_DBG("Got delta active calories of %" PRIu32 " ", calories);
   return calories;
 }
 
@@ -160,6 +160,6 @@ uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
 
   // Scale by the requested number of minutes
   uint32_t resting_calories = ROUND(calories_per_day * elapsed_minutes, MINUTES_PER_DAY);
-  ACTIVITY_LOG_DEBUG("resting_calories: %" PRIu32 "", resting_calories);
+  PBL_LOG_DBG("resting_calories: %" PRIu32 "", resting_calories);
   return resting_calories;
 }

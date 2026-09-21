@@ -153,7 +153,7 @@ void session_remote_version_protocol_msg_callback(CommSession *session_ref, cons
     }
 
     default:
-      PBL_LOG_D_ERR(LOG_DOMAIN_COMM, "Invalid message received. First byte is %u", data[0]);
+      PBL_LOG_ERR("Invalid message received. First byte is %u", data[0]);
       break;
   }
 }

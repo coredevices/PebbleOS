@@ -223,7 +223,7 @@ static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, con
 
       if (do_perform_update) {
         s_bt_persistent_storage_updates++;
-        PBL_LOG_D_DBG(LOG_DOMAIN_BT_PAIRING_INFO, "Updating GAP bonding record");
+        PBL_LOG_DBG("Updating GAP bonding record");
         rv = settings_file_set(&fd, key, key_len, (uint8_t *)data_in, data_len);
       }
     } else {

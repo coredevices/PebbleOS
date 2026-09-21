@@ -7,7 +7,7 @@
 #include "console/prompt.h"
 
 void hexdump_log(int level, const uint8_t *data, size_t length) {
-  PBL_HEXDUMP_D(LOG_DOMAIN_MISC, level, data, length);
+  PBL_HEXDUMP(level, data, length);
 }
 
 void hexdump_using_serial(int level, const char *src_filename, int src_line_number,

@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 
+#include "stubs_logging.h"
+
 // Fakes
 static uint8_t s_age_years;
 uint8_t activity_prefs_get_age_years(void) {

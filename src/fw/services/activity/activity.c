@@ -180,10 +180,10 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 // Kernel BG callback called by the Heart Rate Manager when new data arrives
 #ifdef CONFIG_HRM
 PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
-  ACTIVITY_LOG_DEBUG("Got HR event: %d", (int)hrm_event->event_type);
+  PBL_LOG_DBG("Got HR event: %d", (int)hrm_event->event_type);
   if (hrm_event->event_type == HRMEvent_BPM) {
-    ACTIVITY_LOG_DEBUG("HR bpm: %" PRIu8 ", qual: %" PRId8 " ", hrm_event->bpm.bpm,
-                       (int8_t)hrm_event->bpm.quality);
+    PBL_LOG_DBG("HR bpm: %" PRIu8 ", qual: %" PRId8 " ", hrm_event->bpm.bpm,
+                (int8_t)hrm_event->bpm.quality);
 
     // Perform a basic validity check so we only proceed with reasonable data
     // TODO: Use quality to filter out some readings,
@@ -416,7 +416,7 @@ PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *cont
 
   const uint8_t pct = hrm_event->spo2.percent;
   const HRMQuality quality = hrm_event->spo2.quality;
-  ACTIVITY_LOG_DEBUG("SpO2: %" PRIu8 "%%, qual: %d", pct, (int)quality);
+  PBL_LOG_DBG("SpO2: %" PRIu8 "%%, qual: %d", pct, (int)quality);
 
   // A reading the algorithm accepted (not invalid), on-wrist, with a plausible percent is a usable
   // measurement: count it toward the short-circuit AND stash it for the next minute record. The
@@ -808,7 +808,7 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
     if (file && (s_activity_state.update_settings_counter <= 0)) {
       // Periodically save current stats into settings, so that if watch resets or crashes we
       // don't lose too much info
-      ACTIVITY_LOG_DEBUG("updating current stats in settings");
+      PBL_LOG_DBG("updating current stats in settings");
 
       for (ActivityMetric metric = ActivityMetricFirst; metric < ActivityMetricNumMetrics;
            metric++) {
@@ -950,7 +950,7 @@ PBL_T_STATIC void prv_minute_system_task_cb(void *data) {
   if (!s_activity_state.started) {
     return;
   }
-  ACTIVITY_LOG_DEBUG("running minute system task");
+  PBL_LOG_DBG("running minute system task");
 
   // Get the current time
   time_t utc_sec = rtc_get_time();
@@ -1369,7 +1369,7 @@ static bool prv_wait_system_task(SystemTaskEventCallback cb, void *context, bool
 
 // ------------------------------------------------------------------------------------------------
 bool activity_init(void) {
-  ACTIVITY_LOG_DEBUG("init");
+  PBL_LOG_DBG("init");
   s_activity_state = (ActivityState){};
   pbl_mutex_init(&s_activity_state.mutex);
   s_activity_initialized = true;

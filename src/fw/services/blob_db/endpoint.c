@@ -322,7 +322,7 @@ static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBComman
 void blob_db_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
 
-  PBL_HEXDUMP_D(LOG_DOMAIN_BLOBDB, LOG_LEVEL_DEBUG, data, length);
+  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, length);
 
   // Each BlobDB message is required to have at least a Command and a Token
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);

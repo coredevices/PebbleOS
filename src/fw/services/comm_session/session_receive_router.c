@@ -154,8 +154,8 @@ static void prv_write_payload_to_receiver(ReceiveRouter *rtr, size_t *data_size_
 
 void comm_session_receive_router_write(CommSession *session, const uint8_t *data,
                                        size_t data_size) {
-  PBL_LOG_D_VERBOSE(LOG_DOMAIN_COMM, "Received packet from BT");
-  PBL_HEXDUMP_D(LOG_DOMAIN_COMM, LOG_LEVEL_DEBUG_VERBOSE, data, data_size);
+  PBL_LOG_VERBOSE("Received packet from BT");
+  PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, data_size);
 
   ReceiveRouter *rtr = &session->recv_router;
 
@@ -182,10 +182,9 @@ void comm_session_receive_router_write(CommSession *session, const uint8_t *data
         continue; // while (data_size)
       }
 
-      PBL_LOG_D_DBG(LOG_DOMAIN_COMM,
-                    "Receiving message:  endpoint_id 0x%" PRIx16 " (%" PRIu16
-                    "), payload_length %" PRIu32,
-                    endpoint_id, endpoint_id, payload_length);
+      PBL_LOG_DBG("Receiving message:  endpoint_id 0x%" PRIx16 " (%" PRIu16
+                  "), payload_length %" PRIu32,
+                  endpoint_id, endpoint_id, payload_length);
 
       if (prv_prepare_receiver(payload_length, endpoint, endpoint_id, session, rtr)) {
         continue; // while (data_size)
