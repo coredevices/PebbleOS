@@ -5,7 +5,7 @@
 
 #include "gap_le_connection.h"
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Requests the device name, caches the result in bt_persistent_storage and into
 //! connection->device_name.

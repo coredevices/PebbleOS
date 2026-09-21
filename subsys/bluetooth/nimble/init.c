@@ -3,7 +3,7 @@
 
 #include "gh3x2x_tuning_service.h"
 
-#include <bluetooth/init.h>
+#include <pbl/bluetooth/init.h>
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <host/ble_hs_stop.h>

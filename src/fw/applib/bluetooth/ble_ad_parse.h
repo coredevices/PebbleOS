@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! @file ble_ad_parse.h
 //! API to serialize and deserialize advertisement and scan response payloads.

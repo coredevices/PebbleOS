@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 #include "comm/ble/gap_le_advert.h"
 
 #include <stdbool.h>

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Gets the UUID for a characteristic.
 //! @param characteristic The characteristic for which to get the UUID

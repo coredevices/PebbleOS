@@ -6,9 +6,9 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
-#include "bluetooth/gap_le_connect.h"
+#include "pbl/bluetooth/gap_le_connect.h"
 #include "pbl/kernel/compiler.h"
 
 typedef enum {

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
 
 #define SPRF_PAGE_IDX_INVALID ((uint16_t)~0)

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/hrm_service.h>
+#include <pbl/bluetooth/hrm_service.h>
 
 bool bt_driver_is_hrm_service_supported(void) {
   return false;

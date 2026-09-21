@@ -4,8 +4,8 @@
 #include "gap_le_connect_params.h"
 #include "gap_le_connection.h"
 
-#include "bluetooth/gap_le_connect.h"
-#include "bluetooth/responsiveness.h"
+#include "pbl/bluetooth/gap_le_connect.h"
+#include "pbl/bluetooth/responsiveness.h"
 #include "comm/bluetooth_analytics.h"
 #include "comm/bt_conn_mgr.h"
 #include "comm/bt_lock.h"

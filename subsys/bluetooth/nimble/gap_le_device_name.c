@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/gap_le_device_name.h>
+#include <pbl/bluetooth/gap_le_device_name.h>
 #include <comm/bt_lock.h>
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>

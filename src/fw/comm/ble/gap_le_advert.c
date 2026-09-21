@@ -4,8 +4,8 @@
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
 
-#include <bluetooth/bt_driver_advert.h>
-#include <bluetooth/init.h>
+#include <pbl/bluetooth/advert.h>
+#include <pbl/bluetooth/init.h>
 
 #include "comm/bt_lock.h"
 #include "kernel/event_loop.h"

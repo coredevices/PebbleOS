@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Gets the UUID for a descriptor.
 //! @param descriptor The descriptor for which to get the UUID.

@@ -7,8 +7,8 @@
 #include "kernel/event_loop.h"
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/init.h>
-#include <bluetooth/qemu_transport.h>
+#include <pbl/bluetooth/init.h>
+#include <pbl/bluetooth/qemu_transport.h>
 
 // ----------------------------------------------------------------------------------------
 void bt_driver_init(void) {

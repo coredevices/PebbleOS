@@ -4,7 +4,7 @@
 #include "pbl/btutil/sm_util.h"
 #include "pbl/btutil/bt_device.h"
 
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/sm_types.h>
 
 #include <stdbool.h>
 #include <string.h>

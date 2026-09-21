@@ -40,8 +40,8 @@
 
 #include <cmsis_core.h>
 
-#include <bluetooth/responsiveness.h>
-#include <bluetooth/gatt_discovery.h>
+#include <pbl/bluetooth/responsiveness.h>
+#include <pbl/bluetooth/gatt_discovery.h>
 
 #include <inttypes.h>
 #include <stdint.h>

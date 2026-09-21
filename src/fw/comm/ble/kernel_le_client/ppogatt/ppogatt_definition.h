@@ -5,7 +5,7 @@
 
 #include "ppogatt.h"
 
-#include <bluetooth/pebble_bt.h>
+#include <pbl/bluetooth/pebble_bt.h>
 
 static const Uuid s_ppogatt_service_uuid = {PEBBLE_BT_UUID_EXPAND(
     PEBBLE_BT_PPOGATT_SERVICE_UUID_32BIT)};

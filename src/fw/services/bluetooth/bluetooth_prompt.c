@@ -11,8 +11,8 @@
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/util/string.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/id.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/id.h>
 
 void command_bt_print_mac(void) {
   char addr_hex_str[BT_ADDR_FMT_BUFFER_SIZE_BYTES];

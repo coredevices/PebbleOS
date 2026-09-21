@@ -3,7 +3,7 @@
 
 #include "nimble_type_conversions.h"
 
-#include <bluetooth/gatt.h>
+#include <pbl/bluetooth/gatt.h>
 
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>

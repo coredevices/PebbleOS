@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "gap_le_device_name.h"
-#include "bluetooth/gap_le_device_name.h"
+#include "pbl/bluetooth/gap_le_device_name.h"
 
 #include "comm/bt_lock.h"
 #include "kernel/events.h"

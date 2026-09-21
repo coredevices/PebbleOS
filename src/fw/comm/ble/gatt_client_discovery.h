@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 #define GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS (2)
 #define GATT_CLIENT_DISCOVERY_MAX_RETRY      ((1 << GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS) - 1)

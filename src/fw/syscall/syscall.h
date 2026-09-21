@@ -35,7 +35,7 @@
 
 #include "pbl/kernel/compiler.h"
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! @internal
 //! Just a dummy syscall that we use in the user mode test app. Remove eventually.

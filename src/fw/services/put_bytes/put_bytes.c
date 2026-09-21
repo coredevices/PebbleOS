@@ -25,7 +25,7 @@
 #include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
-#include <bluetooth/analytics.h>
+#include <pbl/bluetooth/analytics.h>
 
 #include "pbl/kernel/sem.h"
 

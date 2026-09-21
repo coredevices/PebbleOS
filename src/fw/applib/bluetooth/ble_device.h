@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Copies the devices that are known to the system. This set includes all
 //! paired devices (connected or not) and devices for which there is a Bluetooth

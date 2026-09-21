@@ -11,8 +11,8 @@
 #include "kernel/pbl_malloc.h"
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/types.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

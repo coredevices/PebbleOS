@@ -4,11 +4,11 @@
 #pragma once
 #include <inttypes.h>
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/sm_types.h>
 
 #include "pbl/kernel/compiler.h"
-#include "bluetooth/hci_types.h"
+#include "pbl/bluetooth/hci_types.h"
 
 #include "pbl/kernel/compiler.h"
 

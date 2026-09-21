@@ -3,8 +3,8 @@
 
 #include "fake_bt_driver_gatt.h"
 
-#include <bluetooth/gatt.h>
-#include <bluetooth/gatt_discovery.h>
+#include <pbl/bluetooth/gatt.h>
+#include <pbl/bluetooth/gatt_discovery.h>
 #include "comm/ble/gap_le_connection.h"
 
 #include "kernel/pbl_malloc.h"

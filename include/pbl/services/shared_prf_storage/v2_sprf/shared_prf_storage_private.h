@@ -5,8 +5,8 @@
 
 #include "pbl/kernel/compiler.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/sm_types.h>
 
 //! Used to version the struct if we have to add additional fields in the future.
 //! 1: Added BLE and BT Classic pairing data

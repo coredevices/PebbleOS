@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "clar.h"
-#include "bluetooth/bt_driver_comm.h"
+#include "pbl/bluetooth/comm.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/comm_session/session_remote_version.h"
 #include "pbl/services/comm_session/session_send_buffer.h"

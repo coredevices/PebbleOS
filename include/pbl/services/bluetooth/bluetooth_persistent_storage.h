@@ -5,9 +5,9 @@
 
 #include "pbl/services/comm_session/session_remote_version.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/sm_types.h>
 
 //! @file bluetooth_persistent_storage.h
 //! Future file-based database for Bluetooth related credentials, cached data, etc.

@@ -4,7 +4,7 @@
 #include "fake_GAPAPI.h"
 
 #include "bluetopia_interface.h"
-#include <bluetooth/bt_driver_advert.h>
+#include <pbl/bluetooth/advert.h>
 
 #include <string.h>
 

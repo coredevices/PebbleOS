@@ -9,7 +9,7 @@
 #include "applib/ui/window.h"
 #include "apps/prf/mfg_test_menu.h"
 #include "apps/prf/mfg_test_result.h"
-#include "bluetooth/bluetooth_types.h"
+#include "pbl/bluetooth/types.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"

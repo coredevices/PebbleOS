@@ -3,7 +3,7 @@
 
 #include "fake_bt_driver_advert.h"
 
-#include <bluetooth/bt_driver_advert.h>
+#include <pbl/bluetooth/advert.h>
 
 #include <string.h>
 

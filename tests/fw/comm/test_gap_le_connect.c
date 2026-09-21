@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "bluetooth/gap_le_connect.h"
+#include "pbl/bluetooth/gap_le_connect.h"
 #include "comm/ble/gap_le_connect.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gap_le_task.h"
@@ -11,8 +11,8 @@
 
 #include "clar.h"
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/bt_device.h>
 
 // Fakes

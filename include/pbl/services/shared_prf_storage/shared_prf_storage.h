@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/sm_types.h>
 
 //!
 //! This module is used to share data between PRF and Normal FW

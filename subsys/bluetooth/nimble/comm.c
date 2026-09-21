@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bt_driver_comm.h>
+#include <pbl/bluetooth/comm.h>
 #include <kernel/event_loop.h>
 
 static void prv_send_job(void *data) {

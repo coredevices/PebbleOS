@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Callback that is called for each advertisement that is found while scanning
 //! using ble_scan_start().

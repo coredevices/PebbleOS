@@ -8,8 +8,8 @@
 #include "comm/ble/gatt_client_operations.h"
 #include "comm/bt_lock.h"
 
-#include <bluetooth/bt_driver_ppog_reversed.h>
-#include <bluetooth/gatt.h>
+#include <pbl/bluetooth/ppog_reversed.h>
+#include <pbl/bluetooth/gatt.h>
 
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"

@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "bluetooth/gap_le_connect.h"
+#include "pbl/bluetooth/gap_le_connect.h"
 
 typedef struct SlaveConnEventStats SlaveConnEventStats;
 

@@ -15,7 +15,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/drivers/rtc.h>
 
-#include <bluetooth/gatt_discovery.h>
+#include <pbl/bluetooth/gatt_discovery.h>
 
 #include <inttypes.h>
 

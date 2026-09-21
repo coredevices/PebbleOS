@@ -7,7 +7,7 @@
 // transport-agnostic BleConnectionParams / BTDeviceInternal types from bluetooth/gap_le_connect.h.
 // These stubs mirror the current declarations in src/fw/comm/bluetooth_analytics.h.
 
-#include "bluetooth/gap_le_connect.h"
+#include "pbl/bluetooth/gap_le_connect.h"
 
 #include <stdbool.h>
 #include <stdint.h>

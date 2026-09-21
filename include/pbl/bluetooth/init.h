@@ -5,8 +5,8 @@
 
 #include "pbl/kernel/compiler.h"
 
-#include <bluetooth/sm_types.h>
-#include <bluetooth/dis.h>
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/dis.h>
 
 #include <stdbool.h>
 

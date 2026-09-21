@@ -8,8 +8,8 @@
 #include "kernel/pbl_malloc.h"
 #include "system/passert.h"
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/sm_util.h>
 
 typedef struct {

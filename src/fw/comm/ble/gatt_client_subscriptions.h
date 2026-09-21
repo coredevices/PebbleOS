@@ -8,7 +8,7 @@
 
 #include "gap_le_task.h"
 
-#include <bluetooth/mtu.h>
+#include <pbl/bluetooth/mtu.h>
 
 struct GAPLEConnection;
 

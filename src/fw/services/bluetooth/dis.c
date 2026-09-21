@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/dis.h>
+#include <pbl/bluetooth/dis.h>
 
 #include <inttypes.h>
 #include <stdio.h>

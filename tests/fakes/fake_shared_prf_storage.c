@@ -3,8 +3,8 @@
 
 #include "fake_shared_prf_storage.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/sm_types.h>
 
 static int s_prf_storage_ble_store_count;
 static int s_prf_storage_ble_delete_count;

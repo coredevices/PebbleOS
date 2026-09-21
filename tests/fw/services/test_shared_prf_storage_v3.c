@@ -7,7 +7,7 @@
 #include <pbl/drivers/flash.h>
 #include "pbl/util/size.h"
 
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/sm_util.h>
 #include "pbl/kernel/mutex.h"
 

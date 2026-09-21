@@ -18,8 +18,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/hrm_service.h>
+#include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/hrm_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>

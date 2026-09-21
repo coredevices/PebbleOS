@@ -14,7 +14,7 @@
 //! ATT handles. These pieces of information is what Bluetopia cares about
 //! when asked to perform a GATT operation.
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 #include "gap_le_task.h"
 

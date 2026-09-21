@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 #include "gap_le_task.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"

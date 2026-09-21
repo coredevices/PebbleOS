@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bt_driver_comm.h>
+#include <pbl/bluetooth/comm.h>
 
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/comm_session/session_analytics.h"

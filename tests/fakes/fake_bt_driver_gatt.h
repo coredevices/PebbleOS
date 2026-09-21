@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/gatt_service_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/gatt_service_types.h>
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/util/uuid.h"
 

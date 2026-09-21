@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/responsiveness.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/responsiveness.h>
 #include <host/ble_gap.h>
 #include <stdint.h>
 

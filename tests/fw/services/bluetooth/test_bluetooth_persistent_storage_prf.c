@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/gap_le_connect.h>
 
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"

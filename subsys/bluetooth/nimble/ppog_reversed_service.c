@@ -3,8 +3,8 @@
 
 #include "ppog_reversed_service.h"
 
-#include <bluetooth/bt_driver_ppog_reversed.h>
-#include <bluetooth/pebble_bt.h>
+#include <pbl/bluetooth/ppog_reversed.h>
+#include <pbl/bluetooth/pebble_bt.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>

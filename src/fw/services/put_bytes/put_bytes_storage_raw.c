@@ -3,7 +3,7 @@
 
 #include "pbl/services/put_bytes/put_bytes_storage_raw.h"
 
-#include "bluetooth/responsiveness.h"
+#include "pbl/bluetooth/responsiveness.h"
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/task_watchdog.h>
 #include "flash_region/flash_region.h"

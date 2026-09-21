@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/responsiveness.h>
+#include <pbl/bluetooth/responsiveness.h>
 
 #include "comm/ble/gap_le_connect_params.h"
 #include "comm/ble/gap_le_connection.h"

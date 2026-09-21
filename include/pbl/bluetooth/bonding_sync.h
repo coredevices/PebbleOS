@@ -5,7 +5,7 @@
 
 #include "pbl/kernel/compiler.h"
 
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/sm_types.h>
 
 //! Packed, because this is serialized for the host-controller protocol.
 typedef struct PBL_PACKED BleBonding {

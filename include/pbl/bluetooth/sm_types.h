@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
 
 typedef enum {

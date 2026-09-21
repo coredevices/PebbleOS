@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/responsiveness.h>
+#include <pbl/bluetooth/responsiveness.h>
 
 #include <inttypes.h>
 

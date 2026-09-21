@@ -23,7 +23,7 @@
 #include "util/net.h"
 #include "pbl/util/string.h"
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 #include <string.h>
 

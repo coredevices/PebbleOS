@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/gatt.h>
+#include <pbl/bluetooth/gatt.h>
 
 struct GAPLEConnection;
 

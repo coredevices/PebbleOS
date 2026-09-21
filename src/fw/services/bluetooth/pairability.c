@@ -13,7 +13,7 @@
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 
-#include <bluetooth/pairability.h>
+#include <pbl/bluetooth/pairability.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

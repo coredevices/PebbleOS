@@ -11,7 +11,7 @@
 #include "pbl/kernel/compiler.h"
 #include "util/net.h"
 
-#include <bluetooth/conn_event_stats.h>
+#include <pbl/bluetooth/conn_event_stats.h>
 
 #include "pbl/kernel/sem.h"
 

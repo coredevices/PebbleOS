@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bt_driver_advert.h>
+#include <pbl/bluetooth/advert.h>
 
 void bt_driver_advert_advertising_disable(void) {
 }

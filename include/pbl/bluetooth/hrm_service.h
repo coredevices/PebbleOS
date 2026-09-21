@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 typedef struct {
   uint16_t bpm;

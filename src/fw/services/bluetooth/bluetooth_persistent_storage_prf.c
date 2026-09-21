@@ -13,8 +13,8 @@
 
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
 

@@ -10,8 +10,8 @@
 #include "pbl/services/comm_session/session.h"
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/analytics.h>
-#include <bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/analytics.h>
+#include <pbl/bluetooth/gap_le_connect.h>
 
 typedef struct {
   uint32_t slave_latency_events;

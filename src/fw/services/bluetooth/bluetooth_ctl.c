@@ -3,7 +3,7 @@
 
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 
-#include <bluetooth/init.h>
+#include <pbl/bluetooth/init.h>
 #include <string.h>
 
 #include "comm/ble/gap_le.h"

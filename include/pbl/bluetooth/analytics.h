@@ -8,8 +8,8 @@
 
 #include "pbl/kernel/compiler.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/conn_event_stats.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/conn_event_stats.h>
 
 #define NUM_LE_CHANNELS 37
 

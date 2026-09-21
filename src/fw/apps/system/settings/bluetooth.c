@@ -29,8 +29,8 @@
 #include "system/passert.h"
 #include "pbl/util/string.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/bt_device.h>
 
 #include <stdio.h>

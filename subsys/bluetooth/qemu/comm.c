@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "bluetooth/bt_driver_comm.h"
+#include "pbl/bluetooth/comm.h"
 #include "kernel/event_loop.h"
 
 #include <stdbool.h>

@@ -4,8 +4,8 @@
 #pragma once
 
 #include "pbl/kernel/compiler.h"
-#include <bluetooth/pebble_bt.h>
-#include <bluetooth/responsiveness.h>
+#include <pbl/bluetooth/pebble_bt.h>
+#include <pbl/bluetooth/responsiveness.h>
 
 #define PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID PEBBLE_BT_UUID_EXPAND(1)
 #define PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID   PEBBLE_BT_UUID_EXPAND(2)

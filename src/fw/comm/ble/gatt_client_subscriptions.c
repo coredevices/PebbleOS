@@ -5,7 +5,7 @@
 #include "gatt_client_accessors.h"
 #include "gatt_service_changed.h"
 
-#include <bluetooth/gatt.h>
+#include <pbl/bluetooth/gatt.h>
 
 #include "gap_le_connection.h"
 

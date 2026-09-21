@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Gets the characteristics associated with a service.
 //! @param service The service for which to get the characteristics

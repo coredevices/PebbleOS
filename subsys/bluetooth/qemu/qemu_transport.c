@@ -17,7 +17,7 @@
 
 #include "pbl/util/math.h"
 
-#include <bluetooth/qemu_transport.h>
+#include <pbl/bluetooth/qemu_transport.h>
 
 typedef struct {
   CommSession *session;

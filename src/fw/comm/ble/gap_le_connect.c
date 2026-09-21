@@ -17,8 +17,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/pebble_pairing_service.h>
+#include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/gap_le_connect.h>
 #include <host/ble_gap.h>
 #include <pbl/logging/logging.h>
 

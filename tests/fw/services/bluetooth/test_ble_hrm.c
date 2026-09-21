@@ -6,7 +6,7 @@
 #include "comm/ble/gap_le_connection.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
 
-#include <bluetooth/hrm_service.h>
+#include <pbl/bluetooth/hrm_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/util/size.h>
 

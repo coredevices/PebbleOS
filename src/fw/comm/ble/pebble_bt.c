@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/pebble_bt.h>
+#include <pbl/bluetooth/pebble_bt.h>
 
 #include <stddef.h>
 #include <string.h>

@@ -18,7 +18,7 @@
 
 #include "git_version.auto.h"
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

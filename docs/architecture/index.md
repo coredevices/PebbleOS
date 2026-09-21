@@ -18,8 +18,8 @@ implemented under `kernel/`). The main source layers, as described on the
 - `src/fw/drivers` — hardware drivers (public interfaces under
   `include/pbl/drivers`).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
-  logging, cron and the Bluetooth backends. Logging and cron are included
-  via the `pbl/logging/` and `pbl/cron/` header paths.
+  logging, cron and the Bluetooth backends, included via the
+  `pbl/logging/`, `pbl/cron/` and `pbl/bluetooth/` header paths.
 
 Alongside these sit `src/fw/shell` (launcher/watchface UX flow),
 `src/fw/process_management` (app lifecycle) and `src/fw/comm` (phone

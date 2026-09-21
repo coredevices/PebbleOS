@@ -3,7 +3,7 @@
 
 #include "pbl/services/voice/voice.h"
 
-#include "bluetooth/responsiveness.h"
+#include "pbl/bluetooth/responsiveness.h"
 #include "board/board.h"
 #include <pbl/drivers/mic.h>
 #include "kernel/events.h"

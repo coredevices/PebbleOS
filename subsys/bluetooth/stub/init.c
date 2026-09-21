@@ -5,7 +5,7 @@
 #include "kernel/event_loop.h"
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/init.h>
+#include <pbl/bluetooth/init.h>
 
 #include <stdlib.h>
 

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/sm_types.h>
 #include <host/ble_hs.h>
 #include <host/ble_store.h>
 #include <kernel/event_loop.h>

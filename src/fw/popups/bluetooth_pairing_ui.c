@@ -24,7 +24,7 @@
 
 #include "pbl/util/size.h"
 
-#include <bluetooth/pairing_confirm.h>
+#include <pbl/bluetooth/pairing_confirm.h>
 
 #include <string.h>
 

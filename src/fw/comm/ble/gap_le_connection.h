@@ -13,9 +13,9 @@
 
 #include "pbl/services/new_timer/new_timer.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/sm_types.h>
 
 // FIXME: Including this header results in a compile time failure because the
 // chain eventually includes a Bluetopia API. Figure out why this is problematic

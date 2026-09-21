@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/gatt.h>
+#include <pbl/bluetooth/gatt.h>
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <pbl/logging/logging.h>

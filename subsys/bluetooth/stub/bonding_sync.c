@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/sm_types.h>
 
 void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
 }

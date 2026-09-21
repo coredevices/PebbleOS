@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/responsiveness.h>
+#include <pbl/bluetooth/responsiveness.h>
 #include <host/ble_gap.h>
 #include <pbl/logging/logging.h>
 

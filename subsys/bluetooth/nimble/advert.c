@@ -3,10 +3,10 @@
 
 #include <stdio.h>
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/bt_driver_advert.h>
-#include <bluetooth/gatt.h>
-#include <bluetooth/pairing_confirm.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/advert.h>
+#include <pbl/bluetooth/gatt.h>
+#include <pbl/bluetooth/pairing_confirm.h>
 #include <host/ble_gap.h>
 #include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>

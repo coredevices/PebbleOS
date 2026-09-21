@@ -15,7 +15,7 @@
 #include "pbl/util/math.h"
 #include "util/net.h"
 
-#include <bluetooth/conn_event_stats.h>
+#include <pbl/bluetooth/conn_event_stats.h>
 #include "pbl/kernel/types.h"
 
 #include <inttypes.h>

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/responsiveness.h>
+#include <pbl/bluetooth/responsiveness.h>
 
 typedef struct GAPLEConnection GAPLEConnection;
 

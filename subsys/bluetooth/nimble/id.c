@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/id.h>
+#include <pbl/bluetooth/id.h>
 #include <system/passert.h>
 
 #include <host/ble_hs_id.h>

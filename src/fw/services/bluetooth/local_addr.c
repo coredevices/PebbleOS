@@ -7,8 +7,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/id.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/id.h>
 #include <pbl/btutil/bt_device.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);

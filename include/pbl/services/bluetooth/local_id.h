@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/id.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/id.h>
 
 //! Called by bl_ctl right after the stack starts, to configure the local device name and address.
 void bt_local_id_configure_driver(void);

@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bt_driver_ppog_reversed.h>
-#include <bluetooth/gatt.h>
+#include <pbl/bluetooth/ppog_reversed.h>
+#include <pbl/bluetooth/gatt.h>
 
 #include <pbl/btutil/bt_device.h>
 

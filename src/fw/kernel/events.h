@@ -38,7 +38,7 @@
 
 #include "pbl/kernel/msgq.h"
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 #include <stdint.h>
 #include <stdbool.h>

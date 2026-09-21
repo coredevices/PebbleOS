@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Callback that is called for each connection and disconnection event.
 //! @param device The device that got (dis)connected

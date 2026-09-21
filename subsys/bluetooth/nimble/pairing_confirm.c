@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/pairing_confirm.h>
+#include <pbl/bluetooth/pairing_confirm.h>
 #include <host/ble_hs.h>
 #include <host/ble_sm.h>
 #include <stdint.h>

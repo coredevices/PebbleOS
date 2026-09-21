@@ -39,7 +39,7 @@
     "fw/applib/bluetooth/ble_ibeacon.h",
     "fw/applib/bluetooth/ble_scan.h",
     "fw/applib/bluetooth/ble_service.h",
-    "include/bluetooth/bluetooth_types.h",
+    "include/pbl/bluetooth/types.h",
     "include/pbl/btutil/bt_device.h",
     "include/pbl/btutil/bt_uuid.h",
     "fw/applib/alarm_service.h",

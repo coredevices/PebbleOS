@@ -74,7 +74,7 @@
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
 
-#include <bluetooth/init.h>
+#include <pbl/bluetooth/init.h>
 
 void soc_early_init(void);
 
