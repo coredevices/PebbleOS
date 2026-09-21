@@ -331,7 +331,7 @@ static void prv_perform_next_job(bool force_refresh) {
     if (s_is_advertising) {
       // Controller needs to stop advertising before we can start a new job:
       PBL_LOG_DBG("Disable last Ad job");
-      bt_driver_advert_advertising_disable();
+      pbl_bt_advert_advertising_disable();
       prv_analytics_stop_timers();
       s_is_advertising = false;
     }
@@ -347,7 +347,7 @@ static void prv_perform_next_job(bool force_refresh) {
 
     if (s_current_ad_data != &next->payload) {
       // Give the advertisement data to the BT controller:
-      bool result = bt_driver_advert_set_advertising_data(&next->payload);
+      bool result = pbl_bt_advert_set_advertising_data(&next->payload);
       if (result) {
         s_current_ad_data = &next->payload;
       }
@@ -358,7 +358,7 @@ static void prv_perform_next_job(bool force_refresh) {
     const uint32_t max_interval_ms = s_interval_ms[interval];
 
     PBL_LOG_DBG("Enable Ad job %s", prv_string_for_debug_tag(next->tag));
-    bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms);
+    bool result = pbl_bt_advert_advertising_enable(min_interval_ms, max_interval_ms);
     if (result) {
       s_is_advertising = true;
       prv_analytics_start_timer(interval);
@@ -523,7 +523,7 @@ int8_t gap_le_advert_get_tx_power(void) {
   {
     // In case this API call fails, (e.g. Airplane Mode),
     // the s_tx_power_cached is untouched:
-    if (bt_driver_advert_client_get_tx_power(&tx_power)) {
+    if (pbl_bt_advert_client_get_tx_power(&tx_power)) {
       s_tx_power_cached = tx_power;
     }
   }
@@ -617,7 +617,7 @@ unlock:
 }
 
 // -----------------------------------------------------------------------------
-void bt_driver_handle_host_resynced(void) {
+void pbl_bt_handle_host_resynced(void) {
   bt_lock();
   {
     if (!s_gap_le_advert_is_initialized) {

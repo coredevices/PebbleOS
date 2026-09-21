@@ -798,13 +798,13 @@ static void prv_init_and_assign_ble_bonding(BleBonding *bonding,
   bonding->is_gateway = stored_data->ble_data.is_gateway;
 }
 
-static void prv_remove_ble_bonding_from_bt_driver(const BtPersistBondingData *deleted_data) {
+static void prv_remove_ble_bonding_from_backend(const BtPersistBondingData *deleted_data) {
   if (!bt_ctl_is_bluetooth_running()) {
     return;
   }
   BleBonding bonding;
   prv_init_and_assign_ble_bonding(&bonding, deleted_data);
-  bt_driver_handle_host_removed_bonding(&bonding);
+  pbl_bt_handle_host_removed_bonding(&bonding);
 }
 
 status_t prv_delete_all_cccd_for_addr(const BTDeviceInternal *dev) {
@@ -835,7 +835,7 @@ status_t prv_delete_all_cccd_for_addr(const BTDeviceInternal *dev) {
             .value_changed = stored_data.value_changed,
           };
 
-          bt_driver_handle_host_removed_cccd(&cccd_to_delete);
+          pbl_bt_handle_host_removed_cccd(&cccd_to_delete);
 
           rv = settings_file_delete(&fd, &id, sizeof(id));
           if (rv) {
@@ -862,7 +862,7 @@ static bool prv_delete_ble_pairing_by_id(BTBondingID bonding) {
   rv = prv_delete_all_cccd_for_addr(&deleted_data.ble_data.pairing_info.identity);
   PBL_ASSERTN(rv == S_SUCCESS);
 
-  prv_remove_ble_bonding_from_bt_driver(&deleted_data);
+  prv_remove_ble_bonding_from_backend(&deleted_data);
 
   prv_call_ble_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
   return true;
@@ -1155,7 +1155,7 @@ static void prv_register_bondings_for_each_ble_cb(BTBondingID key,
   prv_init_and_assign_ble_bonding(&bonding, stored_data);
   bonding.is_gateway = stored_data->ble_data.is_gateway;
   bonding.flags = stored_data->ble_data.flags;
-  bt_driver_handle_host_added_bonding(&bonding);
+  pbl_bt_handle_host_added_bonding(&bonding);
 }
 
 static void prv_register_cccd_for_each_ble_cb(BTCCCDID key, BtPersistCCCDData *stored_data,
@@ -1167,7 +1167,7 @@ static void prv_register_cccd_for_each_ble_cb(BTCCCDID key, BtPersistCCCDData *s
     .value_changed = stored_data->value_changed,
   };
 
-  bt_driver_handle_host_added_cccd(&cccd);
+  pbl_bt_handle_host_added_cccd(&cccd);
 }
 
 void bt_persistent_storage_register_existing_ble_bondings(void) {

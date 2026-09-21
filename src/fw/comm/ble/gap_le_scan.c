@@ -40,8 +40,8 @@ bool gap_le_start_scan(void) {
     if (!s_is_scanning) {
       s_dropped_reports = 0;
 
-      success = bt_driver_start_le_scan(true /* active_scan */, false /* use_white_list_filter */,
-                                        true /* filter_dups */, 10240, 10240);
+      success = pbl_bt_start_le_scan(true /* active_scan */, false /* use_white_list_filter */,
+                                     true /* filter_dups */, 10240, 10240);
 
       if (success) {
         // Allocate report buffers if advertising started successfully
@@ -62,7 +62,7 @@ bool gap_le_stop_scan(void) {
   bt_lock();
   {
     if (s_is_scanning) {
-      success = bt_driver_stop_le_scan();
+      success = pbl_bt_stop_le_scan();
       kernel_free(s_reports_buffer);
       s_reports_buffer = NULL;
       s_is_scanning = false;
@@ -84,7 +84,7 @@ bool gap_le_is_scanning(void) {
 //! Copies over the pending report to the circular buffer and free the pending
 //! "slot". In case there is no space left, the pending report will be dropped.
 //! and a counter will be incremented
-void bt_driver_cb_le_scan_handle_report(const GAPLERawAdReport *report_buffer, int length) {
+void pbl_bt_cb_le_scan_handle_report(const GAPLERawAdReport *report_buffer, int length) {
   const bool written = circular_buffer_write(&s_circular_buffer, (uint8_t *)report_buffer, length);
 
   if (!written) {

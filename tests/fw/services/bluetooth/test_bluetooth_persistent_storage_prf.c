@@ -40,25 +40,25 @@ const BleBonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {
   return NULL;
 }
 
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
+void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
 }
 
 bool bt_ctl_is_bluetooth_running(void) {
   return true;
 }
 
-void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
+void pbl_bt_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
 }
 
 typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
 
-void bt_driver_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
-                                                 const char *device_name,
-                                                 const char *confirmation_token) {
+void pbl_bt_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
+                                              const char *device_name,
+                                              const char *confirmation_token) {
 }
 
-void bt_driver_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
-                                                   bool success) {
+void pbl_bt_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
+                                                bool success) {
 }
 
 void bt_local_addr_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {

@@ -15,7 +15,7 @@ extern void gatt_service_changed_server_init(void);
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_driver_gatt.h"
+#include "fake_bt_gatt.h"
 #include "fake_pbl_malloc.h"
 #include "fake_new_timer.h"
 #include "fake_rtc.h"
@@ -85,7 +85,7 @@ static void prv_cccd_write(bool is_subscribing) {
     .dev_address = s_device.address,
     .is_subscribing = is_subscribing,
   };
-  bt_driver_cb_gatt_service_changed_server_subscribe(&event);
+  pbl_bt_cb_gatt_service_changed_server_subscribe(&event);
 }
 
 static void prv_process_pending_callbacks(GAPLEConnection *connection) {

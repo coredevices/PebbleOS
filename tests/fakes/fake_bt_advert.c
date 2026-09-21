@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "fake_bt_driver_advert.h"
+#include "fake_bt_advert.h"
 
 #include <pbl/bluetooth/advert.h>
 
@@ -9,7 +9,7 @@
 
 #include "clar_asserts.h"
 
-// Simulated state of the BT controller, as driven through the bt_driver_advert
+// Simulated state of the BT controller, as driven through the pbl_bt_advert
 // contract by gap_le_advert.c.
 static bool s_is_advertising_enabled;
 static uint32_t s_min_advertising_interval_ms;
@@ -21,7 +21,7 @@ static unsigned int s_ad_data_length;
 static Scan_Response_Data_t s_scan_resp_data;
 static unsigned int s_scan_resp_data_length;
 
-void fake_bt_driver_advert_init(void) {
+void fake_bt_advert_init(void) {
   s_is_advertising_enabled = false;
   s_min_advertising_interval_ms = 0;
   s_max_advertising_interval_ms = 0;
@@ -39,22 +39,22 @@ void gap_le_set_advertising_disabled(void) {
   s_max_advertising_interval_ms = 0;
 }
 
-// -- bt_driver_advert contract -------------------------------------------------
+// -- pbl_bt_advert contract -------------------------------------------------
 
-bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+bool pbl_bt_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
   s_is_advertising_enabled = true;
   s_min_advertising_interval_ms = min_interval_ms;
   s_max_advertising_interval_ms = max_interval_ms;
   return true;
 }
 
-void bt_driver_advert_advertising_disable(void) {
+void pbl_bt_advert_advertising_disable(void) {
   s_is_advertising_enabled = false;
   s_min_advertising_interval_ms = 0;
   s_max_advertising_interval_ms = 0;
 }
 
-bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data) {
   if (!ad_data) {
     return false;
   }
@@ -68,7 +68,7 @@ bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   return true;
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power) {
   // No tx-power source in the fake; gap_le_advert keeps its cached value.
   return false;
 }

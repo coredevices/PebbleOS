@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "fake_bt_driver_gatt.h"
+#include "fake_bt_gatt.h"
 
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/gatt_discovery.h>
@@ -23,7 +23,7 @@
 // which fire the timer explicitly through stub_new_timer_fire.
 #define WATCHDOG_TIMEOUT_MS (10000)
 
-// Simulated discovery state, driven through the bt_driver_gatt contract by
+// Simulated discovery state, driven through the pbl_bt_gatt contract by
 // gatt_client_discovery.c.
 static bool s_is_discovery_running;
 static int s_start_count;
@@ -50,8 +50,7 @@ static BTErrno prv_code_to_bterrno(int code) {
 
 static void prv_watchdog_timeout_cb(void *data) {
   // The controller reports the in-flight discovery as timed out.
-  bt_driver_cb_gatt_client_discovery_complete(s_watchdog_connection,
-                                              BTErrnoServiceDiscoveryTimeout);
+  pbl_bt_cb_gatt_client_discovery_complete(s_watchdog_connection, BTErrnoServiceDiscoveryTimeout);
 }
 
 static void prv_arm_watchdog(GAPLEConnection *connection) {
@@ -70,10 +69,10 @@ static void prv_disarm_watchdog(void) {
   }
 }
 
-// -- bt_driver_gatt discovery contract ----------------------------------------
+// -- pbl_bt_gatt discovery contract ----------------------------------------
 
-BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
-                                             const ATTHandleRange *data) {
+BTErrno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
+                                          const ATTHandleRange *data) {
   ++s_start_count;
   if (s_start_ret_code != 0) {
     return prv_code_to_bterrno(s_start_ret_code);
@@ -83,7 +82,7 @@ BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
   return BTErrnoOK;
 }
 
-BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
+BTErrno pbl_bt_gatt_stop_discovery(GAPLEConnection *connection) {
   ++s_stop_count;
   if (s_stop_ret_code != 0) {
     return prv_code_to_bterrno(s_stop_ret_code);
@@ -93,23 +92,23 @@ BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
   return BTErrnoOK;
 }
 
-void bt_driver_gatt_handle_discovery_abandoned(void) {
+void pbl_bt_gatt_handle_discovery_abandoned(void) {
   s_is_discovery_running = false;
   prv_disarm_watchdog();
 }
 
-void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
+void pbl_bt_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
   // The response is consumed by the controller; nothing observes it in tests.
 }
 
-void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
-                                            const ATTHandleRange *data) {
+void pbl_bt_gatt_send_changed_indication(const BTDeviceInternal *device,
+                                         const ATTHandleRange *data) {
   ++s_service_changed_indication_count;
   s_service_changed_last_device = *device;
   s_service_changed_last_range = *data;
 }
 
-TimerID bt_driver_gatt_get_watchdog_timer_id(void) {
+TimerID pbl_bt_gatt_get_watchdog_timer_id(void) {
   return s_watchdog_timer;
 }
 
@@ -164,7 +163,7 @@ void fake_gatt_init(void) {
 
 // Builds the packed GATTService blob the firmware expects from the high-level
 // Service description, mirroring the conversion the real driver performs, then
-// pushes it through bt_driver_cb_gatt_client_discovery_handle_indication. The
+// pushes it through pbl_bt_cb_gatt_client_discovery_handle_indication. The
 // firmware takes ownership of the heap blob.
 void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
                                                 const Service *service) {
@@ -218,7 +217,7 @@ void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
     included[i] = service->included_services[i]->handle;
   }
 
-  bt_driver_cb_gatt_client_discovery_handle_indication(connection, blob, BTErrnoOK);
+  pbl_bt_cb_gatt_client_discovery_handle_indication(connection, blob, BTErrnoOK);
 
   // Mirror the driver: when the discovered service carries the GATT "Service
   // Changed" characteristic, the driver subscribes to it and reports its handle
@@ -226,8 +225,8 @@ void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
   const Uuid service_changed_uuid = bt_uuid_expand_16bit(GATT_SERVICE_CHANGED_CHARACTERISTIC_UUID);
   for (uint8_t c = 0; c < service->num_characteristics; ++c) {
     if (uuid_equal(&service->characteristics[c].uuid, &service_changed_uuid)) {
-      bt_driver_cb_gatt_client_discovery_handle_service_changed(connection,
-                                                                service->characteristics[c].handle);
+      pbl_bt_cb_gatt_client_discovery_handle_service_changed(connection,
+                                                             service->characteristics[c].handle);
     }
   }
 }
@@ -243,7 +242,7 @@ void fake_gatt_put_discovery_complete_event(uint8_t status, unsigned int connect
   // A non-success status is surfaced as a discovery error in the BTErrno space,
   // which the firmware forwards verbatim into the client event.
   const BTErrno errno = prv_code_to_bterrno(status);
-  bt_driver_cb_gatt_client_discovery_complete(connection, errno);
+  pbl_bt_cb_gatt_client_discovery_complete(connection, errno);
 }
 
 // -- reference service descriptions -------------------------------------------

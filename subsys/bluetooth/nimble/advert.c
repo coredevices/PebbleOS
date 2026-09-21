@@ -49,7 +49,7 @@ static int prv_device_name_read_op_start(void *ctx) {
   return rc;
 }
 
-void bt_driver_advert_advertising_disable(void) {
+void pbl_bt_advert_advertising_disable(void) {
   int rc;
 
   if (ble_gap_adv_active() == 0) {
@@ -60,11 +60,11 @@ void bt_driver_advert_advertising_disable(void) {
   PBL_ASSERT(rc == 0, "Failed to stop advertising (0x%04x)", (uint16_t)rc);
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power) {
   return false;
 }
 
-bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data) {
   int rc;
 
   rc = ble_gap_adv_set_data((uint8_t *)&ad_data->data, ad_data->ad_data_length);
@@ -147,13 +147,13 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
 
   s_pairing_in_progress = false;
 
-  bt_driver_handle_le_connection_complete_event(&complete_event);
+  pbl_bt_handle_le_connection_complete_event(&complete_event);
 }
 
 static void prv_handle_disconnection_event(struct ble_gap_event *event) {
   GattDeviceDisconnectionEvent gatt_event;
   nimble_addr_to_pebble_addr(&event->disconnect.conn.peer_id_addr, &gatt_event.dev_address);
-  bt_driver_cb_gatt_handle_disconnect(&gatt_event);
+  pbl_bt_cb_gatt_handle_disconnect(&gatt_event);
 
   struct BleDisconnectionCompleteEvent disconnection_event = {
     .handle = event->disconnect.conn.conn_handle,
@@ -162,7 +162,7 @@ static void prv_handle_disconnection_event(struct ble_gap_event *event) {
   };
   nimble_addr_to_pebble_device(&event->disconnect.conn.peer_id_addr,
                                &disconnection_event.peer_address);
-  bt_driver_handle_le_disconnection_complete_event(&disconnection_event);
+  pbl_bt_handle_le_disconnection_complete_event(&disconnection_event);
 }
 
 static void prv_handle_enc_change_event(struct ble_gap_event *event) {
@@ -180,7 +180,7 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
     .status = event->enc_change.status, // doesn't technically match but only logged so this is fine
   };
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &enc_change_event.dev_address);
-  bt_driver_handle_le_encryption_change_event(&enc_change_event);
+  pbl_bt_handle_le_encryption_change_event(&enc_change_event);
 }
 
 static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
@@ -207,7 +207,7 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
   nimble_conn_params_to_pebble(&desc, &conn_params_update_event.conn_params);
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &conn_params_update_event.dev_address);
 
-  bt_driver_handle_le_conn_params_update_event(&conn_params_update_event);
+  pbl_bt_handle_le_conn_params_update_event(&conn_params_update_event);
 }
 
 static void prv_handle_conn_update_req_event(struct ble_gap_event *event) {
@@ -238,7 +238,7 @@ static void prv_handle_passkey_event(struct ble_gap_event *event) {
   }
 
   snprintf(passkey_str, sizeof(passkey_str), "%06lu", passkey);
-  bt_driver_cb_pairing_confirm_handle_request(ctx, device_name, passkey_str);
+  pbl_bt_cb_pairing_confirm_handle_request(ctx, device_name, passkey_str);
   s_pairing_in_progress = true;
 }
 
@@ -251,7 +251,7 @@ static void prv_handle_pairing_complete_event(struct ble_gap_event *event) {
 
   PairingUserConfirmationCtx *ctx =
       (PairingUserConfirmationCtx *)((uintptr_t)event->pairing_complete.conn_handle);
-  bt_driver_cb_pairing_confirm_handle_completed(ctx, event->pairing_complete.status == 0);
+  pbl_bt_cb_pairing_confirm_handle_completed(ctx, event->pairing_complete.status == 0);
   s_pairing_in_progress = false;
 }
 
@@ -265,7 +265,7 @@ static void prv_handle_identity_resolved_event(struct ble_gap_event *event) {
   BleAddressChange addr_change_event;
   nimble_addr_to_pebble_device(&desc.peer_ota_addr, &addr_change_event.device);
   nimble_addr_to_pebble_device(&desc.peer_id_addr, &addr_change_event.new_device);
-  bt_driver_handle_le_connection_handle_update_address(&addr_change_event);
+  pbl_bt_handle_le_connection_handle_update_address(&addr_change_event);
 }
 
 static void prv_handle_mtu_change_event(struct ble_gap_event *event) {
@@ -277,7 +277,7 @@ static void prv_handle_mtu_change_event(struct ble_gap_event *event) {
 
   GattDeviceMtuUpdateEvent mtu_update_event = {.mtu = event->mtu.value};
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &mtu_update_event.dev_address);
-  bt_driver_cb_gatt_handle_mtu_update(&mtu_update_event);
+  pbl_bt_cb_gatt_handle_mtu_update(&mtu_update_event);
 }
 
 extern int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_handle,
@@ -304,9 +304,9 @@ static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &notification_event.dev_address);
 
   if (event->notify_rx.indication == 1) {
-    bt_driver_cb_gatt_handle_indication(&notification_event);
+    pbl_bt_cb_gatt_handle_indication(&notification_event);
   } else {
-    bt_driver_cb_gatt_handle_notification(&notification_event);
+    pbl_bt_cb_gatt_handle_notification(&notification_event);
   }
 }
 
@@ -413,7 +413,7 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
   return 0;
 }
 
-bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+bool pbl_bt_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
   int rc;
   uint8_t own_addr_type;
   struct ble_gap_adv_params advp = {

@@ -21,7 +21,7 @@ extern void gatt_client_subscriptions_handle_server_notification(GAPLEConnection
 
 extern PebbleTaskBitset gap_le_connect_task_mask_for_connection(const GAPLEConnection *connection);
 
-void bt_driver_cb_gatt_handle_connect(const GattDeviceConnectionEvent *event) {
+void pbl_bt_cb_gatt_handle_connect(const GattDeviceConnectionEvent *event) {
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
@@ -37,7 +37,7 @@ unlock:
   bt_unlock();
 }
 
-void bt_driver_cb_gatt_handle_disconnect(const GattDeviceDisconnectionEvent *event) {
+void pbl_bt_cb_gatt_handle_disconnect(const GattDeviceDisconnectionEvent *event) {
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
@@ -53,7 +53,7 @@ unlock:
   bt_unlock();
 }
 
-void bt_driver_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *event) {
+void pbl_bt_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *event) {
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
@@ -68,7 +68,7 @@ unlock:
   bt_unlock();
 }
 
-void bt_driver_cb_gatt_handle_notification(const GattServerNotifIndicEvent *event) {
+void pbl_bt_cb_gatt_handle_notification(const GattServerNotifIndicEvent *event) {
   GAPLEConnection *connection = NULL;
   bt_lock();
   {
@@ -86,7 +86,7 @@ void bt_driver_cb_gatt_handle_notification(const GattServerNotifIndicEvent *even
                   event->attr_handle, BT_DEVICE_ADDRESS_XPLODE(event->dev_address));
 }
 
-void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event) {
+void pbl_bt_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event) {
   GAPLEConnection *connection = NULL;
   bool done = false;
   bt_lock();
@@ -112,7 +112,7 @@ void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event)
                                                        event->attr_val, event->attr_val_len);
 }
 
-void bt_driver_cb_gatt_handle_buffer_empty(const GattDeviceBufferEmptyEvent *event) {
+void pbl_bt_cb_gatt_handle_buffer_empty(const GattDeviceBufferEmptyEvent *event) {
   bt_lock();
   {
     const GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);

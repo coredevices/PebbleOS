@@ -99,7 +99,7 @@ void gatt_service_changed_server_handle_fw_update(void) {
   s_service_changed_indications_left = GATT_SERVICE_CHANGED_INDICATION_MAX_TIMES;
 }
 
-void bt_driver_cb_gatt_service_changed_server_confirmation(
+void pbl_bt_cb_gatt_service_changed_server_confirmation(
     const GattServerChangedConfirmationEvent *event) {
   if (event->status_code != HciStatusCode_Success) {
     PBL_LOG_ERR("Service Changed indication confirmation failure (timed out?) %" PRIu32,
@@ -141,7 +141,7 @@ static void prv_send_service_changed_indication(void *ctx) {
     .start = 0x0001,
     .end = 0xFFFF,
   };
-  bt_driver_gatt_send_changed_indication(&device, &range);
+  pbl_bt_gatt_send_changed_indication(&device, &range);
 }
 
 static void prv_send_indication_timer_cb(void *ctx) {
@@ -149,7 +149,7 @@ static void prv_send_indication_timer_cb(void *ctx) {
   system_task_add_callback(prv_send_service_changed_indication, connection);
 }
 
-void bt_driver_cb_gatt_service_changed_server_subscribe(const GattServerSubscribeEvent *event) {
+void pbl_bt_cb_gatt_service_changed_server_subscribe(const GattServerSubscribeEvent *event) {
   // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
   // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
   // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
@@ -202,17 +202,17 @@ unlock:
   }
 }
 
-void bt_driver_cb_gatt_service_changed_server_read_subscription(
+void pbl_bt_cb_gatt_service_changed_server_read_subscription(
     const GattServerReadSubscriptionEvent *event) {
   bt_lock();
   {
-    bt_driver_gatt_respond_read_subscription(event->transaction_id, 0 /* not subscribed */);
+    pbl_bt_gatt_respond_read_subscription(event->transaction_id, 0 /* not subscribed */);
   }
   bt_unlock();
 }
 
-void bt_driver_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *connection,
-                                                               uint16_t handle) {
+void pbl_bt_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *connection,
+                                                            uint16_t handle) {
   bt_lock();
   {
     connection->gatt_service_changed_att_handle = handle;

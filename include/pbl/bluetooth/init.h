@@ -19,19 +19,19 @@ typedef struct PBL_PACKED BTDriverConfig {
 
 //! Function that performs one-time initialization of the BT Driver.
 //! The main FW is expected to call this once at boot.
-void bt_driver_init(void);
+void pbl_bt_init(void);
 
 //! Starts the Bluetooth stack.
 //! @return True if the stack started successfully.
-bool bt_driver_start(BTDriverConfig *config);
+bool pbl_bt_start(BTDriverConfig *config);
 
 //! Stops the Bluetooth stack.
-void bt_driver_stop(void);
+void pbl_bt_stop(void);
 
 //! Powers down the BT controller if has yet to be used
-void bt_driver_power_down_controller_on_boot(void);
+void pbl_bt_power_down_controller_on_boot(void);
 
 //! Invoked by the BT driver each time the host (re-)synchronizes with the controller.
 //! Consumers can use this to refresh controller state that gets wiped on a host reset
 //! (e.g. advertising data and parameters).
-extern void bt_driver_handle_host_resynced(void);
+extern void pbl_bt_handle_host_resynced(void);

@@ -61,7 +61,7 @@ typedef struct TransportImplementation {
   TransportGetType get_type;
 
   //! Pointer to function that schedules a callback to send data over the transport.
-  //! When left NULL, bt_driver_comm_schedule_send_next_job() will be used instead.
+  //! When left NULL, pbl_bt_comm_schedule_send_next_job() will be used instead.
   //! @note When providing a function, .schedule_task must be provided as well!
   TransportSchedule schedule;
   TransportScheduleTask is_current_task_schedule_task;

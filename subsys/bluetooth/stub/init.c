@@ -10,17 +10,17 @@
 #include <stdlib.h>
 
 // ----------------------------------------------------------------------------------------
-void bt_driver_init(void) {
+void pbl_bt_init(void) {
   bt_lock_init();
 }
 
-bool bt_driver_start(BTDriverConfig *config) {
+bool pbl_bt_start(BTDriverConfig *config) {
   return true;
 }
 
-void bt_driver_stop(void) {
+void pbl_bt_stop(void) {
 }
 
-void bt_driver_power_down_controller_on_boot(void) {
+void pbl_bt_power_down_controller_on_boot(void) {
   // no-op
 }

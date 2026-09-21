@@ -80,7 +80,7 @@ static void prv_comm_start(void) {
   // no-op bonding handlers, so doing it early is harmless for them too.
   bt_persistent_storage_register_existing_ble_bondings();
 
-  s_comm_is_running = bt_driver_start(config);
+  s_comm_is_running = pbl_bt_start(config);
   kernel_free(config);
 
   if (s_comm_is_running) {
@@ -109,7 +109,7 @@ static void prv_comm_stop(void) {
   gap_le_deinit();
 
   // Should be the last thing to happen that touches the Bluetooth controller directly
-  bt_driver_stop();
+  pbl_bt_stop();
   s_comm_is_running = false;
 
   // This is a legacy event used to update the Settings app.
@@ -154,7 +154,7 @@ static void prv_comm_state_change(void *context) {
     }
   } else if (!s_comm_is_running && s_first_run) {
     PBL_LOG_DBG("Shutting down the BT stack on boot");
-    bt_driver_power_down_controller_on_boot();
+    pbl_bt_power_down_controller_on_boot();
   }
 
   s_first_run = false;

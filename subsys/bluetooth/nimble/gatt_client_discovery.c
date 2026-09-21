@@ -133,7 +133,7 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
 
   char service_uuid_str[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&gatt_service->uuid, service_uuid_str);
-  bt_driver_cb_gatt_client_discovery_handle_indication(connection, gatt_service, BTErrnoOK);
+  pbl_bt_cb_gatt_client_discovery_handle_indication(connection, gatt_service, BTErrnoOK);
 
   return true;
 }
@@ -195,7 +195,7 @@ static int prv_on_svc_chgd_subscribe(uint16_t conn_handle, const struct ble_gatt
     PBL_LOG_ERR("Failed to subscribe to service changed: 0x%" PRIx16, error->status);
   } else {
     GATTServiceDiscoveryDescriptorContext *ctx = arg;
-    bt_driver_cb_gatt_client_discovery_handle_service_changed(ctx->connection, ctx->chr_handle);
+    pbl_bt_cb_gatt_client_discovery_handle_service_changed(ctx->connection, ctx->chr_handle);
 
     PBL_LOG_DBG("Subscribed to service changed");
   }
@@ -208,7 +208,7 @@ static int prv_on_svc_chgd_subscribe(uint16_t conn_handle, const struct ble_gatt
 static void prv_convert_service_and_notify_os(uint16_t conn_handle,
                                               GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_convert_service_and_notify_os_cb, context->connection);
-  bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
+  pbl_bt_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
 
   // Subscribe to service changed indications (BLE Core 6.0, part G 7.7.1)
   uint16_t chr_handle, dsc_handle;
@@ -389,7 +389,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       }
 
       prv_discovery_finished();
-      bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
+      pbl_bt_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
   }
@@ -460,7 +460,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       }
 
       prv_discovery_finished();
-      bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
+      pbl_bt_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
   }
@@ -506,7 +506,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
       } else {
         // no services found
         prv_discovery_finished();
-        bt_driver_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
+        pbl_bt_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
         prv_free_discovery_context(context);
       }
 
@@ -523,7 +523,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
       }
 
       prv_discovery_finished();
-      bt_driver_cb_gatt_client_discovery_complete(context->connection, errno);
+      pbl_bt_cb_gatt_client_discovery_complete(context->connection, errno);
       prv_free_discovery_context(context);
       break;
   }
@@ -575,22 +575,22 @@ static int prv_discovery_op_start(void *ctx) {
   PBL_LOG_WRN("Failed to start discovery (errno=%d)", err);
   if (valid) {
     // The firmware was told the start succeeded (see
-    // bt_driver_gatt_start_discovery_range); report the failure through the
+    // pbl_bt_gatt_start_discovery_range); report the failure through the
     // completion callback so it can finalize.
-    bt_driver_cb_gatt_client_discovery_complete(op->connection, err);
+    pbl_bt_cb_gatt_client_discovery_complete(op->connection, err);
   }
   return -1;
 }
 
-BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
-                                             const ATTHandleRange *data) {
+BTErrno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
+                                          const ATTHandleRange *data) {
   DiscoveryOp *op = kernel_zalloc_check(sizeof(*op));
   op->connection = (GAPLEConnection *)connection;
   op->range = *data;
 
   // Queued so it never runs concurrently with another GATT client procedure
   // (e.g. a device name read). Start errors are reported through
-  // bt_driver_cb_gatt_client_discovery_complete.
+  // pbl_bt_cb_gatt_client_discovery_complete.
   nimble_gattc_op_queue_push(prv_discovery_op_start, op);
 
   return BTErrnoOK;
@@ -599,7 +599,7 @@ BTErrno bt_driver_gatt_start_discovery_range(const GAPLEConnection *connection,
 // will need to implement this by returning a different value in the callback
 // but not sure if this can get called multiple times in parallel, might need
 // to stuff the flag in the connection struct
-BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
+BTErrno pbl_bt_gatt_stop_discovery(GAPLEConnection *connection) {
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
     return BTErrnoInvalidState;
@@ -613,5 +613,5 @@ BTErrno bt_driver_gatt_stop_discovery(GAPLEConnection *connection) {
   return BTErrnoOK;
 }
 
-void bt_driver_gatt_handle_discovery_abandoned(void) {
+void pbl_bt_gatt_handle_discovery_abandoned(void) {
 }

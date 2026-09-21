@@ -13,11 +13,11 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
+void pbl_bt_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
 }
 
-void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
-                                            const ATTHandleRange *data) {
+void pbl_bt_gatt_send_changed_indication(const BTDeviceInternal *device,
+                                         const ATTHandleRange *data) {
   // Resolve the NimBLE connection handle through the NimBLE connection table
   // (ble_gap_conn_find_by_addr). No bt_lock needed — the device address is a
   // value copy from the service layer, which held bt_lock when it took the copy.

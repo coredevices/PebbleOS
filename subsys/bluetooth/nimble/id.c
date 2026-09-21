@@ -7,12 +7,12 @@
 #include <host/ble_hs_id.h>
 #include <services/gap/ble_svc_gap.h>
 
-void bt_driver_id_set_local_device_name(const char device_name[BT_DEVICE_NAME_BUFFER_SIZE]) {
+void pbl_bt_id_set_local_device_name(const char device_name[BT_DEVICE_NAME_BUFFER_SIZE]) {
   int rc = ble_svc_gap_device_name_set(device_name);
   PBL_ASSERTN(rc == 0);
 }
 
-void bt_driver_id_copy_local_identity_address(BTDeviceAddress *addr_out) {
+void pbl_bt_id_copy_local_identity_address(BTDeviceAddress *addr_out) {
   int rc;
   uint8_t own_addr_type;
 
@@ -23,14 +23,14 @@ void bt_driver_id_copy_local_identity_address(BTDeviceAddress *addr_out) {
   PBL_ASSERTN(rc == 0);
 }
 
-void bt_driver_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_address) {
+void pbl_bt_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_address) {
 }
 
-void bt_driver_id_copy_chip_info_string(char *dest, size_t dest_size) {
+void pbl_bt_id_copy_chip_info_string(char *dest, size_t dest_size) {
   strncpy(dest, "NimBLE", dest_size);
 }
 
-bool bt_driver_id_generate_private_resolvable_address(BTDeviceAddress *address_out) {
+bool pbl_bt_id_generate_private_resolvable_address(BTDeviceAddress *address_out) {
   *address_out = (BTDeviceAddress){};
   return true;
 }

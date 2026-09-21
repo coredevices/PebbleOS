@@ -11,13 +11,13 @@
 #include <pbl/bluetooth/qemu_transport.h>
 
 // ----------------------------------------------------------------------------------------
-void bt_driver_init(void) {
+void pbl_bt_init(void) {
   // We need the QEMU serial driver
   qemu_serial_init();
   bt_lock_init();
 }
 
-bool bt_driver_start(BTDriverConfig *config) {
+bool pbl_bt_start(BTDriverConfig *config) {
   // For QEMU there's no "disconnected" state — the host process is always
   // attached.  Used to defer this to a launcher_task callback so app_message
   // callbacks were registered first, but that opened a race where the host
@@ -31,11 +31,11 @@ bool bt_driver_start(BTDriverConfig *config) {
   return true;
 }
 
-void bt_driver_stop(void) {
+void pbl_bt_stop(void) {
   qemu_transport_set_connected(false);
   qemu_transport_close_session();
 }
 
-void bt_driver_power_down_controller_on_boot(void) {
+void pbl_bt_power_down_controller_on_boot(void) {
   // no-op
 }

@@ -11,7 +11,7 @@
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_driver_advert.h"
+#include "fake_bt_advert.h"
 #include "fake_new_timer.h"
 #include "fake_rtc.h"
 #include "fake_system_task.h"
@@ -65,7 +65,7 @@ static void unscheduled_callback(GAPLEAdvertisingJobRef job, bool completed, voi
 }
 
 void test_gap_le_advert__initialize(void) {
-  fake_bt_driver_advert_init();
+  fake_bt_advert_init();
 
   s_unscheduled_cb_count = 0;
   s_unscheduled_job = NULL;
@@ -609,7 +609,7 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
   cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
 
   // While connected as slave, the cycle timer must not re-enable advertising:
-  // the bt_driver contract does not advertise during a connection.
+  // the backend contract does not advertise during a connection.
   regular_timer_fire_seconds(1);
   cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
 

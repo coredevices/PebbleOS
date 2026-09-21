@@ -40,12 +40,12 @@ static bool prv_has_device_name(void) {
 }
 
 static void prv_configure_device_name(void) {
-  bt_driver_id_set_local_device_name(s_local_device_name);
+  pbl_bt_id_set_local_device_name(s_local_device_name);
 }
 
 void bt_local_id_configure_driver(void) {
   // Request the local address from the BT driver and cache it:
-  bt_driver_id_copy_local_identity_address(&s_local_address);
+  pbl_bt_id_copy_local_identity_address(&s_local_address);
 
   if (!prv_has_device_name()) {
     if (!bt_persistent_storage_get_local_device_name(s_local_device_name,

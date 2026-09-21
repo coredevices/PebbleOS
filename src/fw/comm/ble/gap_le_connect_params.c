@@ -228,7 +228,7 @@ static void prv_request_params_update(GAPLEConnection *connection, ResponseTimeS
     .supervision_timeout_10ms = desired_params->supervision_timeout_10ms,
   };
 
-  const bool success = bt_driver_le_connection_parameter_update(&connection->device, &req);
+  const bool success = pbl_bt_le_connection_parameter_update(&connection->device, &req);
   if (success) {
     connection->param_update_info.is_request_pending = true;
   }
@@ -323,7 +323,7 @@ void gap_le_connect_params_re_evaluate(GAPLEConnection *connection) {
 //! This event is sent by our BT controller when the updated parameters have actually been applied
 //! and taken effect.
 //! bt_lock is assumed to be taken before calling this function.
-void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
+void pbl_bt_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
   bt_lock();
   const BleConnectionParams *params = &event->conn_params;
   if (event->status != HciStatusCode_Success) {

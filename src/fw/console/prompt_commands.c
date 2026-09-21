@@ -1082,7 +1082,7 @@ void command_bt_conn_param_set(char *interval_min_1_25ms, char *interval_max_1_2
     addr.address = conn->device.address;
   }
 
-  bt_driver_le_connection_parameter_update(&addr, &req);
+  pbl_bt_le_connection_parameter_update(&addr, &req);
 }
 // Not in a header because it's really only used from within the gatt_service_changed module
 extern void gatt_client_discovery_discover_range(GAPLEConnection *connection,
@@ -1105,7 +1105,7 @@ void command_bt_disc_stop(void) {
   {
     GAPLEConnection *conn = prv_get_le_connection_and_print_info();
     if (conn) {
-      bt_driver_gatt_stop_discovery(conn);
+      pbl_bt_gatt_stop_discovery(conn);
     }
   }
   bt_unlock();

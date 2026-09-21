@@ -82,7 +82,7 @@ void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, u
                                                 const SlaveConnEventStats *orig_stats) {
 }
 
-bool bt_driver_analytics_get_conn_event_stats(SlaveConnEventStats *stats) {
+bool pbl_bt_analytics_get_conn_event_stats(SlaveConnEventStats *stats) {
   return false;
 }
 

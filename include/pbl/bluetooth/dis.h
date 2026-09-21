@@ -6,7 +6,7 @@
 #include "pbl/kernel/compiler.h"
 
 // The reason the headers that define these lengths aren't included is because this header
-// is included by the various number of bt_driver implementations. They don't know what "mfg"
+// is included by the various number of backend implementations. They don't know what "mfg"
 // is, etc.
 // NOTE: These sizes are asserted in a .c file to be in sync with the FW
 #define MODEL_NUMBER_LEN  (10) // MFG_HW_VERSION_SIZE + 1

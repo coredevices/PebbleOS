@@ -48,7 +48,7 @@
 // and the FW is currently "hard-wired" to be slave as a precautionary measure to prevent it from
 // trying to connect as master. See PBL-20368.
 
-void bt_driver_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr) {
+void pbl_bt_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr) {
 }
 
 void cc2564A_bad_le_connection_complete_handle(
@@ -65,21 +65,21 @@ void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection)
 void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {
 }
 
-void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
+void pbl_bt_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
 }
 
 typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
 
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
+void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
 }
 
-void bt_driver_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
-                                                 const char *device_name,
-                                                 const char *confirmation_token) {
+void pbl_bt_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
+                                              const char *device_name,
+                                              const char *confirmation_token) {
 }
 
-void bt_driver_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
-                                                   bool success) {
+void pbl_bt_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
+                                                bool success) {
 }
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
@@ -120,7 +120,7 @@ static BTBondingID prv_add_bonding_for_fake_resolvable_device(void) {
         },
     .is_gateway = true,
   };
-  bt_driver_handle_host_added_bonding(&bonding);
+  pbl_bt_handle_host_added_bonding(&bonding);
   return fake_bt_persistent_storage_add(irk, &identity_device, "Dummy", true /* is_gateway */);
 }
 
@@ -663,7 +663,7 @@ void test_gap_le_connect__add_intent_requiring_pairing_after_connected_and_encry
     .is_resolved = true,
     .irk = *(const SMIdentityResolvingKey *)fake_GAPAPI_get_fake_irk(),
   };
-  bt_driver_handle_le_connection_handle_update_address_and_irk(&e);
+  pbl_bt_handle_le_connection_handle_update_address_and_irk(&e);
 
   gap_le_connection_by_device(&device);
 

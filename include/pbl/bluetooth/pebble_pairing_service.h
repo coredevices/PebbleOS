@@ -209,11 +209,11 @@ typedef struct GAPLEConnection GAPLEConnection;
 //! allowing it to notify any BLE devices that are subscribed to connectivity status updates of the
 //! change.
 //! @param connection The connection for which the status was changed.
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection);
+void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection);
 
 //! Indicate to the FW that Connectivity Status characteristic has been unsubscribed from.
 //! This is used to detect that the Pebble iOS app has been terminated.
-extern void bt_driver_cb_pebble_pairing_service_handle_ios_app_termination_detected(void);
+extern void pbl_bt_cb_pps_handle_ios_app_termination_detected(void);
 
 //! Indicate to the FW that the Connection Parameters characteristic has been written to with a new
 //! values.
@@ -222,6 +222,6 @@ extern void bt_driver_cb_pebble_pairing_service_handle_ios_app_termination_detec
 //! driver lib is expected to validate any written values and only call this function with valid
 //! values.
 //! @param conn_params_length The length of conn_params in bytes.
-extern void bt_driver_cb_pebble_pairing_service_handle_connection_parameter_write(
+extern void pbl_bt_cb_pps_handle_connection_parameter_write(
     const BTDeviceInternal *device, const PebblePairingServiceConnParamsWrite *conn_params,
     size_t conn_params_length);

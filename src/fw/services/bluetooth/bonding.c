@@ -47,7 +47,7 @@ static void prv_finalize_create_bonding_cb(void *data) {
   kernel_free(context);
 }
 
-void bt_driver_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr) {
+void pbl_bt_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr) {
   PBL_LOG_INFO("Creating new bonding for " BT_DEVICE_ADDRESS_FMT,
                BT_DEVICE_ADDRESS_XPLODE(bonding->pairing_info.identity.address));
   const bool should_pin_address = bonding->should_pin_address;

@@ -26,11 +26,11 @@
 void app_launch_trigger(void) {
 }
 
-bool bt_driver_comm_schedule_send_next_job(CommSession *data) {
+bool pbl_bt_comm_schedule_send_next_job(CommSession *data) {
   return true;
 }
 
-bool bt_driver_comm_is_current_task_send_next_task(void) {
+bool pbl_bt_comm_is_current_task_send_next_task(void) {
   return false;
 }
 

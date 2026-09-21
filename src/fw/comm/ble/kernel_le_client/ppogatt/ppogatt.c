@@ -623,7 +623,7 @@ static void prv_start_reset(PPoGATTClient *client) {
     PBL_ASSERTN(connection != NULL);
     bt_unlock();
 
-    bt_driver_gap_le_disconnect(&connection->device);
+    pbl_bt_gap_le_disconnect(&connection->device);
     client->disconnect_requested = true;
   } else {
     prv_enter_awaiting_reset_complete(client, true /* self_initiated */);
@@ -1163,7 +1163,7 @@ unlock:
   bt_unlock();
 }
 
-// The bt_driver_cb_* callbacks below defer to KernelMain: the NimBLE host-task
+// The pbl_bt_cb_* callbacks below defer to KernelMain: the NimBLE host-task
 // stack is too small to run the PPoG state machine directly, and KernelBG
 // callbacks may block waiting for Pebble Protocol send progress (e.g. the BT
 // log dump), which would starve inbound ACK processing and deadlock the
@@ -1204,7 +1204,7 @@ static void prv_reversed_data_kernelmain_cb(void *data) {
   kernel_free(ctx);
 }
 
-void bt_driver_cb_ppog_reversed_subscribed(const BTDeviceInternal *device, uint16_t conn_handle) {
+void pbl_bt_cb_ppog_reversed_subscribed(const BTDeviceInternal *device, uint16_t conn_handle) {
   ReversedSubscribedCtx *ctx = kernel_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG subscribed: out of memory");
@@ -1215,7 +1215,7 @@ void bt_driver_cb_ppog_reversed_subscribed(const BTDeviceInternal *device, uint1
   launcher_task_add_callback(prv_reversed_subscribed_kernelmain_cb, ctx);
 }
 
-void bt_driver_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
+void pbl_bt_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
   ReversedUnsubscribedCtx *ctx = kernel_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG unsubscribed: out of memory");
@@ -1225,7 +1225,7 @@ void bt_driver_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
   launcher_task_add_callback(prv_reversed_unsubscribed_kernelmain_cb, ctx);
 }
 
-void bt_driver_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len) {
+void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len) {
   ReversedDataCtx *ctx = kernel_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG data: out of memory");
@@ -1606,8 +1606,8 @@ static void prv_send_next_packets(PPoGATTClient *client) {
       if (lock_was_held) {
         bt_unlock();
       }
-      const BTErrno e = bt_driver_ppog_reversed_notify(client->rev.conn_handle,
-                                                       (const uint8_t *)packet, total_len);
+      const BTErrno e =
+          pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, total_len);
       if (lock_was_held) {
         bt_lock();
       }
@@ -1682,7 +1682,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
     }
 
     // Call into NimBLE without holding bt_lock
-    const BTErrno e = bt_driver_gatt_write_without_response(
+    const BTErrno e = pbl_bt_gatt_write_without_response(
         connection, (const uint8_t *)packet, sizeof(PPoGATTPacket) + payload_size, att_handle);
 
     // Re-acquire bt_lock before accessing client state

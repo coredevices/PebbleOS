@@ -56,7 +56,7 @@ static DriverState s_driver_state = DriverStateStopped;
 static void prv_sync_cb(void) {
   PBL_LOG_DBG("NimBLE host synchronized");
   pbl_sem_give(&s_host_started);
-  bt_driver_handle_host_resynced();
+  pbl_bt_handle_host_resynced();
 }
 
 static void prv_reset_cb(int reason) {
@@ -82,7 +82,7 @@ static void prv_ble_hs_stop_cb(int status, void *arg) {
 }
 
 // ----------------------------------------------------------------------------------------
-void bt_driver_init(void) {
+void pbl_bt_init(void) {
   bt_lock_init();
 
   nimble_discover_init();
@@ -118,7 +118,7 @@ void bt_driver_init(void) {
 #endif
 }
 
-bool bt_driver_start(BTDriverConfig *config) {
+bool pbl_bt_start(BTDriverConfig *config) {
   int rc;
   bool f_rc;
 
@@ -192,7 +192,7 @@ err:
   return false;
 }
 
-void bt_driver_stop(void) {
+void pbl_bt_stop(void) {
   bool f_rc;
 
   s_driver_state = DriverStateStopping;
@@ -207,5 +207,5 @@ void bt_driver_stop(void) {
   nimble_store_unload();
 }
 
-void bt_driver_power_down_controller_on_boot(void) {
+void pbl_bt_power_down_controller_on_boot(void) {
 }

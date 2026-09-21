@@ -4,14 +4,14 @@
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/sm_types.h>
 
-void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_added_bonding(const BleBonding *bonding) {
 }
 
-void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding) {
 }
 
-void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
+void pbl_bt_handle_host_added_cccd(const BleCCCD *cccd) {
 }
 
-void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
+void pbl_bt_handle_host_removed_cccd(const BleCCCD *cccd) {
 }

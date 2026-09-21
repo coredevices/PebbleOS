@@ -5,4 +5,4 @@
 
 #include <stdbool.h>
 
-void bt_driver_le_pairability_set_enabled(bool enabled);
+void pbl_bt_le_pairability_set_enabled(bool enabled);

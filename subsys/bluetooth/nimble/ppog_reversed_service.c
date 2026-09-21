@@ -48,7 +48,7 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
     kernel_free(buf);
     return BLE_ATT_ERR_UNLIKELY;
   }
-  bt_driver_cb_ppog_reversed_data_written(conn_handle, buf, out_len);
+  pbl_bt_cb_ppog_reversed_data_written(conn_handle, buf, out_len);
   return 0;
 }
 
@@ -101,9 +101,9 @@ static void prv_handle_subscribe_event(struct ble_gap_event *event) {
     }
     BTDeviceInternal device;
     nimble_addr_to_pebble_device(&desc.peer_id_addr, &device);
-    bt_driver_cb_ppog_reversed_subscribed(&device, event->subscribe.conn_handle);
+    pbl_bt_cb_ppog_reversed_subscribed(&device, event->subscribe.conn_handle);
   } else {
-    bt_driver_cb_ppog_reversed_unsubscribed(event->subscribe.conn_handle);
+    pbl_bt_cb_ppog_reversed_unsubscribed(event->subscribe.conn_handle);
   }
 }
 
@@ -125,13 +125,13 @@ void ppog_reversed_service_init(void) {
   PBL_ASSERTN(rc == 0);
   rc = ble_gatts_add_svcs(s_ppog_reversed_svc);
   PBL_ASSERTN(rc == 0);
-  // Called on every bt_driver_start, but the listener list is only cleared on
+  // Called on every pbl_bt_start, but the listener list is only cleared on
   // nimble_port_init, so tolerate EALREADY.
   rc = ble_gap_event_listener_register(&s_gap_event_listener, prv_handle_gap_event, NULL);
   PBL_ASSERTN(rc == 0 || rc == BLE_HS_EALREADY);
 }
 
-BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+BTErrno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, len);
   if (!om) {
     return BTErrnoNotEnoughResources;

@@ -15,7 +15,7 @@
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_driver_gatt.h"
+#include "fake_bt_gatt.h"
 #include "fake_events.h"
 #include "fake_new_timer.h"
 #include "fake_pbl_malloc.h"
@@ -206,7 +206,7 @@ static void prv_fire_watchdog_timeouts(const BTDeviceInternal *device, int retri
     const int stop_count = fake_gatt_is_service_discovery_stop_count();
 
     // Fire the watchdog timer:
-    const TimerID watchdog_timer = bt_driver_gatt_get_watchdog_timer_id();
+    const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
     stub_new_timer_fire(watchdog_timer);
 
     // Check whether GATT_Stop_Service_Discovery has been called:
@@ -261,7 +261,7 @@ void test_gatt_client_discovery__watchdog_race_with_stopping(void) {
   fake_gatt_set_stop_return_value(BTGATT_ERROR_INVALID_PARAMETER);
 
   // Fire the watchdog timer:
-  const TimerID watchdog_timer = bt_driver_gatt_get_watchdog_timer_id();
+  const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
   stub_new_timer_fire(watchdog_timer);
 
   // No event should be generated, because the finishing / disconnecting / ... should cause
@@ -285,7 +285,7 @@ void test_gatt_client_discovery__watchdog_race_with_restarting(void) {
   fake_gatt_set_start_return_value(BTGATT_ERROR_INVALID_PARAMETER);
 
   // Fire the watchdog timer:
-  const TimerID watchdog_timer = bt_driver_gatt_get_watchdog_timer_id();
+  const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
   stub_new_timer_fire(watchdog_timer);
 
   // Stopping did not fail, but restarting did. In this case we need to generate an event that

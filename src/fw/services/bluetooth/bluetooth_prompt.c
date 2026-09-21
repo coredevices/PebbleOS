@@ -48,7 +48,7 @@ void command_bt_status(void) {
   const char *prefix = "BT Chip Info: ";
   size_t prefix_length = strlen(prefix);
   strncpy(buffer, prefix, sizeof(buffer));
-  bt_driver_id_copy_chip_info_string(buffer + prefix_length, sizeof(buffer) - prefix_length);
+  pbl_bt_id_copy_chip_info_string(buffer + prefix_length, sizeof(buffer) - prefix_length);
   prompt_send_response(buffer);
 
   char name[BT_DEVICE_NAME_BUFFER_SIZE];

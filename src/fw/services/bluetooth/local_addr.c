@@ -18,7 +18,7 @@ static BTDeviceAddress s_pinned_addr;
 static bool s_cycling_paused_due_to_dependent_bondings;
 
 static void prv_allow_cycling(bool allow_cycling) {
-  bt_driver_set_local_address(allow_cycling, allow_cycling ? NULL : &s_pinned_addr);
+  pbl_bt_set_local_address(allow_cycling, allow_cycling ? NULL : &s_pinned_addr);
 }
 
 void bt_local_addr_pause_cycling(void) {
@@ -90,7 +90,7 @@ void bt_local_addr_init(void) {
 
   // Load pinned address from settings file or generate one if it hasn't happened before:
   if (!bt_persistent_storage_get_ble_pinned_address(&s_pinned_addr)) {
-    if (bt_driver_id_generate_private_resolvable_address(&s_pinned_addr)) {
+    if (pbl_bt_id_generate_private_resolvable_address(&s_pinned_addr)) {
       bt_persistent_storage_set_ble_pinned_address(&s_pinned_addr);
     } else {
       PBL_LOG_ERR("Failed to generate PRA... :(");
@@ -108,7 +108,7 @@ void bt_local_addr_init(void) {
     bt_local_addr_pause_cycling();
 #else
     PBL_LOG_INFO("No bondings found that require address pinning!");
-    bt_driver_set_local_address(true /* allow_cycling */, NULL);
+    pbl_bt_set_local_address(true /* allow_cycling */, NULL);
 #endif
   }
 }

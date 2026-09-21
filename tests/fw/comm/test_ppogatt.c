@@ -41,7 +41,7 @@
 
 uint16_t s_mtu_size;
 
-int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
+int pbl_bt_gap_le_disconnect(const BTDeviceInternal *peer_address) {
   return 0;
 }
 
@@ -70,14 +70,14 @@ uint16_t gatt_client_characteristic_get_handle_and_connection(BLECharacteristic 
   return 0;
 }
 
-BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
-                                              size_t value_length, uint16_t att_handle) {
+BTErrno pbl_bt_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
+                                           size_t value_length, uint16_t att_handle) {
   cl_fail("unexpected call: bt_lock is never held in this test");
   return BTErrnoOK;
 }
 
 // Reversed PPoG only fires from a reversed-role client, which this test never creates.
-BTErrno bt_driver_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+BTErrno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   cl_fail("unexpected call: no reversed client in this test");
   return BTErrnoOK;
 }

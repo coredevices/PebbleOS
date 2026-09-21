@@ -125,7 +125,7 @@ bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const cha
                                        flags, device_name, BtPersistBondingOpDidChange));
 }
 
-static void prv_remove_ble_bonding_from_bt_driver(void) {
+static void prv_remove_ble_bonding_from_backend(void) {
   if (!bt_ctl_is_bluetooth_running()) {
     return;
   }
@@ -135,12 +135,12 @@ static void prv_remove_ble_bonding_from_bt_driver(void) {
   if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, NULL, NULL, NULL)) {
     return;
   }
-  bt_driver_handle_host_removed_bonding(&bonding);
+  pbl_bt_handle_host_removed_bonding(&bonding);
 }
 
 void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID bonding) {
   PBL_LOG_INFO("Deleting stored BLE pairing");
-  prv_remove_ble_bonding_from_bt_driver();
+  prv_remove_ble_bonding_from_backend();
   shared_prf_storage_erase_ble_pairing_data();
   prv_call_ble_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
 }
@@ -212,7 +212,7 @@ void bt_persistent_storage_register_existing_ble_bondings(void) {
   }
   bonding.is_gateway = true;
   bonding.flags = flags;
-  bt_driver_handle_host_added_bonding(&bonding);
+  pbl_bt_handle_host_added_bonding(&bonding);
 }
 
 // PRF does not support persistent CCCD storage, these are just stubs

@@ -100,17 +100,17 @@ typedef struct PBL_PACKED BleIRKChange {
 } BleIRKChange;
 
 //! Bluetooth LE GAP Connection Driver APIs
-int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address);
+int pbl_bt_gap_le_disconnect(const BTDeviceInternal *peer_address);
 
-// Callbacks invoked by the bt_driver regarding different BLE Events. It is expected that consumers
+// Callbacks invoked by the backend regarding different BLE Events. It is expected that consumers
 // of this module provide an implementation for these callbacks
 
-extern void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEvent *event);
-extern void bt_driver_handle_le_disconnection_complete_event(
+extern void pbl_bt_handle_le_connection_complete_event(const BleConnectionCompleteEvent *event);
+extern void pbl_bt_handle_le_disconnection_complete_event(
     const BleDisconnectionCompleteEvent *event);
-extern void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *event);
-extern void bt_driver_handle_le_conn_params_update_event(
+extern void pbl_bt_handle_le_encryption_change_event(const BleEncryptionChange *event);
+extern void pbl_bt_handle_le_conn_params_update_event(
     const BleConnectionUpdateCompleteEvent *event);
-extern void bt_driver_handle_le_connection_handle_update_address(const BleAddressChange *e);
-extern void bt_driver_handle_le_connection_handle_update_irk(const BleIRKChange *e);
-extern void bt_driver_handle_peer_version_info_event(const BleRemoteVersionInfoReceivedEvent *e);
+extern void pbl_bt_handle_le_connection_handle_update_address(const BleAddressChange *e);
+extern void pbl_bt_handle_le_connection_handle_update_irk(const BleIRKChange *e);
+extern void pbl_bt_handle_peer_version_info_event(const BleRemoteVersionInfoReceivedEvent *e);

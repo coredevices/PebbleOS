@@ -44,15 +44,15 @@ int GAP_LE_Advertising_Enable(unsigned int BluetoothStackID, Boolean_t EnableSca
   return 0;
 }
 
-// bt_driver_advert fakes used by gap_le_advert.c
-bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+// pbl_bt_advert fakes used by gap_le_advert.c
+bool pbl_bt_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
   s_is_le_advertising_enabled = true;
   s_min_advertising_interval_ms = min_interval_ms;
   s_max_advertising_interval_ms = max_interval_ms;
   return true;
 }
 
-void bt_driver_advert_advertising_disable(void) {
+void pbl_bt_advert_advertising_disable(void) {
   s_is_le_advertising_enabled = false;
   s_min_advertising_interval_ms = 0;
   s_max_advertising_interval_ms = 0;
@@ -104,7 +104,7 @@ unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_
   return s_scan_resp_data_length;
 }
 
-bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data) {
   if (ad_data) {
     memcpy(&s_ad_data, ad_data->data, ad_data->ad_data_length);
     s_ad_data_length = ad_data->ad_data_length;
@@ -116,7 +116,7 @@ bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   return true;
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power) {
   return false;
 }
 

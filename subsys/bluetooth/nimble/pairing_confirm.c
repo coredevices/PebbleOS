@@ -9,7 +9,7 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-void bt_driver_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confirmed) {
+void pbl_bt_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confirmed) {
   uint16_t conn_handle = (uintptr_t)ctx;
   struct ble_sm_io key = {
     .action = BLE_SM_IOACT_NUMCMP,

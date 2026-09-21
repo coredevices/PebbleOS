@@ -10,9 +10,9 @@ typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
 
 //! Confirms a pairing request.
 //! @param[in] ctx The pairing request context, as previously passed to
-//! bt_driver_cb_pairing_confirm_handle_request.
+//! pbl_bt_cb_pairing_confirm_handle_request.
 //! @param[in] is_confirmed Pass true if the user confirmed the pairing.
-void bt_driver_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confirmed);
+void pbl_bt_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confirmed);
 
 //! @param[in] ctx Pointer to opaque BT-driver-implementation specific context. The function can
 //! use the pointer value this to distinguish one pairing process from another, but the pointer
@@ -25,11 +25,11 @@ void bt_driver_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_co
 //! @param[in] confirmation_token Optional confirmation token. Pass NULL if not available.
 //! @note This function should immediately copy the device name and confirmation token, so the
 //! buffers do not have to continue existing after this function returns.
-extern void bt_driver_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
-                                                        const char *device_name,
-                                                        const char *confirmation_token);
+extern void pbl_bt_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
+                                                     const char *device_name,
+                                                     const char *confirmation_token);
 
-//! @param[in] ctx See bt_driver_cb_pairing_confirm_handle_request
+//! @param[in] ctx See pbl_bt_cb_pairing_confirm_handle_request
 //! @param[in] success True if the pairing process finished successfully.
-extern void bt_driver_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
-                                                          bool success);
+extern void pbl_bt_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
+                                                       bool success);

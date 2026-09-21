@@ -3,5 +3,5 @@
 
 #include "pbl/bluetooth/bas.h"
 
-void bt_driver_bas_handle_update(uint8_t percent) {
+void pbl_bt_bas_handle_update(uint8_t percent) {
 }

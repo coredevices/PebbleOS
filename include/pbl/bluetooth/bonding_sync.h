@@ -39,21 +39,20 @@ typedef struct PBL_PACKED BleCCCD {
 
 //! Called by the FW after starting the Bluetooth stack to register existing bondings.
 //! @note When the Bluetooth is torn down, there won't be any "remove" calls. If needed, the BT
-//! driver lib should clean up itself in bt_driver_stop().
-void bt_driver_handle_host_added_bonding(const BleBonding *bonding);
+//! driver lib should clean up itself in pbl_bt_stop().
+void pbl_bt_handle_host_added_bonding(const BleBonding *bonding);
 
 //! Called by the FW when a bonding is removed (i.e. user "Forgot" a bonding from Settings).
-void bt_driver_handle_host_removed_bonding(const BleBonding *bonding);
+void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding);
 
 //! Called by the FW when a CCCD entry is added.
-void bt_driver_handle_host_added_cccd(const BleCCCD *cccd);
+void pbl_bt_handle_host_added_cccd(const BleCCCD *cccd);
 
 //! Called by the FW when a CCCD entry is removed.
-void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd);
+void pbl_bt_handle_host_removed_cccd(const BleCCCD *cccd);
 
 //! Called by the BT driver after successfully pairing a new device.
 //! @param bonding The newly created bonding.
 //! @param addr The address that is used to refer to the connection. This is used to associate
 //! the bonding with the GAPLEConnection.
-extern void bt_driver_cb_handle_create_bonding(const BleBonding *bonding,
-                                               const BTDeviceAddress *addr);
+extern void pbl_bt_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr);

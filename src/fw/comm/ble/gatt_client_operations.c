@@ -109,7 +109,7 @@ static bool prv_ctx_in_client_event_ctxs(GattClientEventContext *context) {
   return exists;
 }
 
-void bt_driver_cb_gatt_client_operations_handle_response(GattClientOpResponseHdr *event) {
+void pbl_bt_cb_gatt_client_operations_handle_response(GattClientOpResponseHdr *event) {
   const GattClientEventContext *data = event->context;
   bt_lock();
   {
@@ -209,7 +209,7 @@ static BTErrno prv_read(uintptr_t obj_ref, GAPLEClient client,
   // will fail to look up the conn_handle and return an error.
   bt_unlock();
 
-  ret_val = bt_driver_gatt_read(connection, att_handle, data);
+  ret_val = pbl_bt_gatt_read(connection, att_handle, data);
   if (ret_val != BTErrnoOK) {
     // Clean up the context we created if the driver call failed
     bt_lock();
@@ -252,7 +252,7 @@ static BTErrno prv_write(uintptr_t obj_ref, const uint8_t *value, size_t value_l
   // will fail to look up the conn_handle and return an error.
   bt_unlock();
 
-  ret_val = bt_driver_gatt_write(connection, value, value_length, att_handle, data);
+  ret_val = pbl_bt_gatt_write(connection, value, value_length, att_handle, data);
   if (ret_val != BTErrnoOK) {
     // Clean up the context we created if the driver call failed
     bt_lock();
@@ -315,7 +315,7 @@ BTErrno gatt_client_op_write_without_response(BLECharacteristic characteristic,
   // will fail to look up the conn_handle and return BTErrnoInvalidState.
   bt_unlock();
 
-  return bt_driver_gatt_write_without_response(connection, value, value_length, att_handle);
+  return pbl_bt_gatt_write_without_response(connection, value, value_length, att_handle);
 }
 
 BTErrno gatt_client_op_write_descriptor(BLEDescriptor descriptor, const uint8_t *value,

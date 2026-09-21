@@ -91,50 +91,49 @@ typedef struct GattClientOpWriteResponse {
 
 // -- Gatt Data Structures
 
-void bt_driver_gatt_acknowledge_indication(uint32_t connection_id, uint32_t transaction_id);
+void pbl_bt_gatt_acknowledge_indication(uint32_t connection_id, uint32_t transaction_id);
 
 // TODO: This will probably need to be changed for the Dialog chip (doesn't have transaction ids)
-void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code);
+void pbl_bt_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code);
 
-void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
-                                            const ATTHandleRange *data);
+void pbl_bt_gatt_send_changed_indication(const BTDeviceInternal *device,
+                                         const ATTHandleRange *data);
 
-BTErrno bt_driver_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
-                                              size_t value_length, uint16_t att_handle);
+BTErrno pbl_bt_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
+                                           size_t value_length, uint16_t att_handle);
 
-BTErrno bt_driver_gatt_write(GAPLEConnection *connection, const uint8_t *value, size_t value_length,
-                             uint16_t att_handle, void *context);
+BTErrno pbl_bt_gatt_write(GAPLEConnection *connection, const uint8_t *value, size_t value_length,
+                          uint16_t att_handle, void *context);
 
-BTErrno bt_driver_gatt_read(GAPLEConnection *connection, uint16_t att_handle, void *context);
+BTErrno pbl_bt_gatt_read(GAPLEConnection *connection, uint16_t att_handle, void *context);
 
-//! The following are callbacks that the bt_driver implementation will call when handling events.
+//! The following are callbacks that the backend implementation will call when handling events.
 
 //! gatt callbacks
-extern void bt_driver_cb_gatt_handle_connect(const GattDeviceConnectionEvent *event);
+extern void pbl_bt_cb_gatt_handle_connect(const GattDeviceConnectionEvent *event);
 
-extern void bt_driver_cb_gatt_handle_disconnect(const GattDeviceDisconnectionEvent *event);
+extern void pbl_bt_cb_gatt_handle_disconnect(const GattDeviceDisconnectionEvent *event);
 
-extern void bt_driver_cb_gatt_handle_buffer_empty(const GattDeviceBufferEmptyEvent *event);
+extern void pbl_bt_cb_gatt_handle_buffer_empty(const GattDeviceBufferEmptyEvent *event);
 
-extern void bt_driver_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *event);
+extern void pbl_bt_cb_gatt_handle_mtu_update(const GattDeviceMtuUpdateEvent *event);
 
-extern void bt_driver_cb_gatt_handle_notification(const GattServerNotifIndicEvent *event);
+extern void pbl_bt_cb_gatt_handle_notification(const GattServerNotifIndicEvent *event);
 
-//! @note The indication is unconditionally confirmed within the bt_driver as soon as one is
+//! @note The indication is unconditionally confirmed within the backend as soon as one is
 //!        received.
-extern void bt_driver_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event);
+extern void pbl_bt_cb_gatt_handle_indication(const GattServerNotifIndicEvent *event);
 
 //! gatt_service_changed callbacks
-extern void bt_driver_cb_gatt_service_changed_server_confirmation(
+extern void pbl_bt_cb_gatt_service_changed_server_confirmation(
     const GattServerChangedConfirmationEvent *event);
 
-extern void bt_driver_cb_gatt_service_changed_server_subscribe(
-    const GattServerSubscribeEvent *event);
+extern void pbl_bt_cb_gatt_service_changed_server_subscribe(const GattServerSubscribeEvent *event);
 
-extern void bt_driver_cb_gatt_service_changed_server_read_subscription(
+extern void pbl_bt_cb_gatt_service_changed_server_read_subscription(
     const GattServerReadSubscriptionEvent *event);
 
-extern void bt_driver_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *connection,
-                                                                      uint16_t handle);
+extern void pbl_bt_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *connection,
+                                                                   uint16_t handle);
 
-extern void bt_driver_cb_gatt_client_operations_handle_response(GattClientOpResponseHdr *event);
+extern void pbl_bt_cb_gatt_client_operations_handle_response(GattClientOpResponseHdr *event);

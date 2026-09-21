@@ -286,7 +286,7 @@ bool comm_session_is_current_task_send_next_task(CommSession *session) {
   if (session->transport_imp->schedule) {
     return session->transport_imp->is_current_task_schedule_task(session->transport);
   }
-  return bt_driver_comm_is_current_task_send_next_task();
+  return pbl_bt_comm_is_current_task_send_next_task();
 }
 
 void prv_send_next(CommSession *session, bool is_callback) {
@@ -312,7 +312,7 @@ unlock:
   bt_unlock();
 }
 
-void bt_driver_run_send_next_job(CommSession *session, bool is_callback) {
+void pbl_bt_run_send_next_job(CommSession *session, bool is_callback) {
   prv_send_next(session, is_callback);
 }
 
@@ -324,7 +324,7 @@ void comm_session_send_next(CommSession *session) {
 
   TransportSchedule schedule_func = session->transport_imp->schedule;
   if (!schedule_func) {
-    schedule_func = bt_driver_comm_schedule_send_next_job;
+    schedule_func = pbl_bt_comm_schedule_send_next_job;
   }
 
   if (schedule_func(session)) {

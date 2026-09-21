@@ -68,7 +68,7 @@ static void prv_handle_set_remote_desired_state(
                                       remote_desired_state, max_period_secs);
 }
 
-void bt_driver_cb_pebble_pairing_service_handle_connection_parameter_write(
+void pbl_bt_cb_pps_handle_connection_parameter_write(
     const BTDeviceInternal *device, const PebblePairingServiceConnParamsWrite *conn_params,
     size_t conn_params_length) {
   bt_lock();
@@ -97,6 +97,6 @@ unlock:
   bt_unlock();
 }
 
-void bt_driver_cb_pebble_pairing_service_handle_ios_app_termination_detected(void) {
+void pbl_bt_cb_pps_handle_ios_app_termination_detected(void) {
   app_launch_trigger();
 }

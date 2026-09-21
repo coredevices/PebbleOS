@@ -20,7 +20,7 @@ typedef struct {
 } Scan_Response_Data_t;
 
 //! Resets all simulated controller state. Call from test initialize().
-void fake_bt_driver_advert_init(void);
+void fake_bt_advert_init(void);
 
 //! Simulates the controller dropping advertising due to an inbound connection,
 //! without clearing the configured ad/scan-response payload.

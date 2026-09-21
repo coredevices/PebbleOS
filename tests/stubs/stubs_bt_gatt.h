@@ -8,8 +8,8 @@
 
 // TODO: Rethink how we want to stub out these new driver wrapper calls.
 
-void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
-                                            const ATTHandleRange *data) {
+void pbl_bt_gatt_send_changed_indication(const BTDeviceInternal *device,
+                                         const ATTHandleRange *data) {
   GATT_Service_Changed_Data_t all_changed_range = {
     .Affected_Start_Handle = data->start,
     .Affected_End_Handle = data->end,
@@ -26,6 +26,6 @@ void bt_driver_gatt_send_changed_indication(const BTDeviceInternal *device,
   GATT_Service_Changed_Indication(bt_stack_id(), conn_id, &all_changed_range);
 }
 
-void bt_driver_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
+void pbl_bt_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
   GATT_Service_Changed_CCCD_Read_Response(bt_stack_id(), transaction_id, response_code);
 }

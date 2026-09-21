@@ -37,7 +37,7 @@ static void evaluate_pairing_refcount(void *data) {
 
   bool is_ble_pairable_and_discoverable = (s_allow_ble_pairing_refcount > 0);
 
-  bt_driver_le_pairability_set_enabled(is_ble_pairable_and_discoverable);
+  pbl_bt_le_pairability_set_enabled(is_ble_pairable_and_discoverable);
   if (s_last_ble_discoverable_state != is_ble_pairable_and_discoverable) {
     if (is_ble_pairable_and_discoverable) {
       bt_local_addr_pause_cycling();

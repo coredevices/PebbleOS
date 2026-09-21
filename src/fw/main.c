@@ -316,7 +316,7 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   compositor_init();
   kernel_ui_init();
 
-  bt_driver_init();
+  pbl_bt_init();
 
   services_init();
 

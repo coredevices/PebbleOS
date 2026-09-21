@@ -9,11 +9,11 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-int bt_driver_gap_le_disconnect(const BTDeviceInternal *peer_address) {
+int pbl_bt_gap_le_disconnect(const BTDeviceInternal *peer_address) {
   uint16_t conn_handle;
 
   if (!pebble_device_to_nimble_conn_handle(peer_address, &conn_handle)) {
-    PBL_LOG_ERR("bt_driver_gap_le_disconnect: Failed to find connection handle");
+    PBL_LOG_ERR("pbl_bt_gap_le_disconnect: Failed to find connection handle");
     return -1;
   }
 

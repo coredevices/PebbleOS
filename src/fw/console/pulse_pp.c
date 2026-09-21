@@ -98,7 +98,7 @@ static CommSessionTransportType prv_get_type(struct Transport *transport) {
 
 static void prv_send_job(void *data) {
   CommSession *session = (CommSession *)data;
-  bt_driver_run_send_next_job(session, true);
+  pbl_bt_run_send_next_job(session, true);
 }
 
 static bool prv_schedule_send_next_job(CommSession *session) {

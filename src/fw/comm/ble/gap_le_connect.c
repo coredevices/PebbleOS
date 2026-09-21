@@ -291,7 +291,7 @@ static bool prv_update_clients(GAPLEConnectionIntent *intent, uint8_t hci_reason
   return true;
 }
 
-void bt_driver_handle_le_connection_handle_update_address(const BleAddressChange *e) {
+void pbl_bt_handle_le_connection_handle_update_address(const BleAddressChange *e) {
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_device(&e->device);
@@ -311,7 +311,7 @@ unlock:
   bt_unlock();
 }
 
-void bt_driver_handle_le_connection_handle_update_irk(const BleIRKChange *e) {
+void pbl_bt_handle_le_connection_handle_update_irk(const BleIRKChange *e) {
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_device(&e->device);
@@ -330,7 +330,7 @@ unlock:
   bt_unlock();
 }
 
-void bt_driver_handle_peer_version_info_event(const BleRemoteVersionInfoReceivedEvent *e) {
+void pbl_bt_handle_peer_version_info_event(const BleRemoteVersionInfoReceivedEvent *e) {
   bt_lock();
 
   GAPLEConnection *connection = gap_le_connection_by_device(&e->peer_address);
@@ -346,7 +346,7 @@ void bt_driver_handle_peer_version_info_event(const BleRemoteVersionInfoReceived
 }
 
 //! bt_lock is assumed to be taken before calling this function.
-void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEvent *event) {
+void pbl_bt_handle_le_connection_complete_event(const BleConnectionCompleteEvent *event) {
   // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
   // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
   // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
@@ -393,7 +393,7 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
         // user is sitting in the Bluetooth settings menu and walking in and out of range. If it
         // does take place, let's trigger a disconnect to try and put us back into a sane state
         PBL_LOG_ERR("Not adding connection for device. It is already connected .. disconnecting");
-        bt_driver_gap_le_disconnect(&event->peer_address);
+        pbl_bt_gap_le_disconnect(&event->peer_address);
         param_watchdog_timer = TIMER_INVALID_ID; // Don't use timer, will clean up below
         break;
       }
@@ -481,7 +481,7 @@ void bt_driver_handle_le_connection_complete_event(const BleConnectionCompleteEv
 }
 
 //! bt_lock is assumed to be taken before calling this function.
-void bt_driver_handle_le_disconnection_complete_event(const BleDisconnectionCompleteEvent *event) {
+void pbl_bt_handle_le_disconnection_complete_event(const BleDisconnectionCompleteEvent *event) {
   bt_lock();
 
   switch (event->status) {
@@ -568,7 +568,7 @@ static void prv_send_clients_encrypted_event(GAPLEConnectionIntent *intent, void
 }
 
 //! bt_lock is assumed to be taken before calling this function.
-void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *event) {
+void pbl_bt_handle_le_encryption_change_event(const BleEncryptionChange *event) {
   bt_lock();
   const bool is_encrypted = (event->encryption_enabled);
   if (!is_encrypted) {
@@ -593,7 +593,7 @@ void bt_driver_handle_le_encryption_change_event(const BleEncryptionChange *even
     // The driver already logs encryption changes (status/encrypted/bonded)
     PBL_LOG_DBG("LE encryption change: encrypted");
     bluetooth_analytics_handle_encryption_change();
-    bt_driver_pebble_pairing_service_handle_status_change(connection);
+    pbl_bt_pps_handle_status_change(connection);
   }
 
   prv_apply_fuction_to_intents_matching_connection(connection, prv_send_clients_encrypted_event,
@@ -955,7 +955,7 @@ static BTErrno prv_unregister_intent(GAPLEConnectionIntent *intent, GAPLEClient 
       // Disconnect the device because no one is using it
       // If connection is not encrypted, we are likely undergoing a re-pairing,
       // so don't disconnect.
-      const int result = bt_driver_gap_le_disconnect(device);
+      const int result = pbl_bt_gap_le_disconnect(device);
       if (result != 0) {
         PBL_LOG_ERR("Ble disconnect failed: %d", result);
       }

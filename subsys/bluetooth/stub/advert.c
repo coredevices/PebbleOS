@@ -3,17 +3,17 @@
 
 #include <pbl/bluetooth/advert.h>
 
-void bt_driver_advert_advertising_disable(void) {
+void pbl_bt_advert_advertising_disable(void) {
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power) {
   return false;
 }
 
-bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data) {
   return false;
 }
 
-bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+bool pbl_bt_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
   return false;
 }

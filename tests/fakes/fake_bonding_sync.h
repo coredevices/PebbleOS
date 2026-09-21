@@ -28,7 +28,7 @@ void bonding_sync_add_bonding(const BleBonding *bonding) {
       (BLEBondingNode *)list_prepend((ListNode *)s_ble_bonding_head, (ListNode *)node);
 }
 
-void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_added_bonding(const BleBonding *bonding) {
   bonding_sync_add_bonding(bonding);
 }
 
@@ -54,7 +54,7 @@ bool bonding_sync_contains_pairing_info(const SMPairingInfo *pairing_info, bool 
   return (found_node != NULL);
 }
 
-void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding) {
   // Match the qemu/stub driver behavior: removing a bonding the driver was never told about is a
   // no-op rather than a fault. Production code may issue a remove even when the driver-side state
   // was never populated (e.g. cleaning up stale entries at boot).

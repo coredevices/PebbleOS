@@ -129,18 +129,18 @@ static const TransportImplementation s_transport_imp = {
 
 static void prv_system_task_cb(void *data) {
   CommSession *session = (CommSession *)data;
-  bt_driver_run_send_next_job(session, true);
+  pbl_bt_run_send_next_job(session, true);
 }
 
-bool bt_driver_comm_schedule_send_next_job(CommSession *data) {
+bool pbl_bt_comm_schedule_send_next_job(CommSession *data) {
   // Implement this API in this test suite using the fake_system_task:
   system_task_add_callback(prv_system_task_cb, data);
   return true;
 }
 
-static bool s_bt_driver_comm_is_current_task_send_next_task;
-bool bt_driver_comm_is_current_task_send_next_task(void) {
-  return s_bt_driver_comm_is_current_task_send_next_task;
+static bool s_pbl_bt_comm_is_current_task_send_next_task;
+bool pbl_bt_comm_is_current_task_send_next_task(void) {
+  return s_pbl_bt_comm_is_current_task_send_next_task;
 }
 
 // Tests
@@ -160,7 +160,7 @@ void test_session__initialize(void) {
   s_last_closed_transport = NULL;
   s_dls_private_handle_disconnect_called = false;
   s_comm_session_event_put = false;
-  s_bt_driver_comm_is_current_task_send_next_task = false;
+  s_pbl_bt_comm_is_current_task_send_next_task = false;
 }
 
 void test_session__cleanup(void) {
@@ -365,9 +365,9 @@ void test_session__transport_send_next_task(void) {
 
   session = comm_session_open(transport, &transport_imp, TransportDestinationSystem);
 
-  s_bt_driver_comm_is_current_task_send_next_task = true;
+  s_pbl_bt_comm_is_current_task_send_next_task = true;
   cl_assert_equal_b(comm_session_is_current_task_send_next_task(session), true);
-  s_bt_driver_comm_is_current_task_send_next_task = false;
+  s_pbl_bt_comm_is_current_task_send_next_task = false;
   cl_assert_equal_b(comm_session_is_current_task_send_next_task(session), false);
   comm_session_close(session, CommSessionCloseReason_UnderlyingDisconnection);
 }

@@ -21,7 +21,7 @@ pbl_clar_test(test_gap_le_advert
   SOURCES
     src/fw/comm/ble/gap_le_advert.c
     src/fw/services/regular_timer/service.c
-    tests/fakes/fake_bt_driver_advert.c
+    tests/fakes/fake_bt_advert.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )
@@ -45,7 +45,7 @@ pbl_clar_test(test_gatt_client_accessors
     src/fw/comm/internals/bt_conn_mgr.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_bt_driver_gatt.c
+    tests/fakes/fake_bt_gatt.c
     tests/fakes/fake_gap_le_connect_params.c
 )
 
@@ -61,7 +61,7 @@ pbl_clar_test(test_gatt_client_discovery
     tests/fakes/fake_gap_le_connect_params.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_bt_driver_gatt.c
+    tests/fakes/fake_bt_gatt.c
 )
 
 pbl_clar_test(test_gatt_client_subscriptions
@@ -77,7 +77,7 @@ pbl_clar_test(test_gatt_client_subscriptions
     src/fw/comm/internals/bt_conn_mgr.c
     tests/fakes/fake_gap_le_connect_params.c
     tests/fakes/fake_events.c
-    tests/fakes/fake_bt_driver_gatt.c
+    tests/fakes/fake_bt_gatt.c
     tests/fakes/fake_rtc.c
   DEFINES CONFIG_BLE_GATT_NOTIF_WRITE_TIMEOUT_MS=100 CONFIG_BLE_GATT_SUBSCRIPTION_DEPTH=4
 )
@@ -90,7 +90,7 @@ pbl_clar_test(test_gatt_service_changed_client
     src/fw/comm/ble/gatt_service_changed.c
     src/fw/comm/internals/bt_conn_mgr.c
     tests/fakes/fake_gap_le_connect_params.c
-    tests/fakes/fake_bt_driver_gatt.c
+    tests/fakes/fake_bt_gatt.c
     tests/fakes/fake_rtc.c
 )
 
@@ -103,7 +103,7 @@ pbl_clar_test(test_gatt_service_changed_server
     src/fw/comm/ble/gatt_service_changed.c
     src/fw/comm/internals/bt_conn_mgr.c
     tests/fakes/fake_gap_le_connect_params.c
-    tests/fakes/fake_bt_driver_gatt.c
+    tests/fakes/fake_bt_gatt.c
     tests/fakes/fake_rtc.c
 )
 

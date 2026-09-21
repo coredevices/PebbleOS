@@ -75,7 +75,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 
   BTDeviceAddress *addr = kernel_zalloc_check(sizeof(BTDeviceAddress));
   *addr = addr_copy;
-  system_task_add_callback(bt_driver_store_device_name_kernelbg_cb, addr);
+  system_task_add_callback(pbl_bt_store_device_name_kernelbg_cb, addr);
 
   return 0;
 }
@@ -100,17 +100,17 @@ static int prv_device_name_read_op_start(void *ctx) {
   return rc;
 }
 
-void bt_driver_gap_le_device_name_request(const BTDeviceInternal *device) {
+void pbl_bt_gap_le_device_name_request(const BTDeviceInternal *device) {
   BTDeviceInternal *ctx = kernel_zalloc_check(sizeof(*ctx));
   *ctx = *device;
   nimble_gattc_op_queue_push(prv_device_name_read_op_start, ctx);
 }
 
 static void prv_request_device_name_cb(GAPLEConnection *connection, void *data) {
-  bt_driver_gap_le_device_name_request(&connection->device);
+  pbl_bt_gap_le_device_name_request(&connection->device);
 }
 
-void bt_driver_gap_le_device_name_request_all(void) {
+void pbl_bt_gap_le_device_name_request_all(void) {
   bt_lock();
   gap_le_connection_for_each(prv_request_device_name_cb, NULL);
   bt_unlock();

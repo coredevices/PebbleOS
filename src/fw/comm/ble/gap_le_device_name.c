@@ -31,7 +31,7 @@ unlock:
   return bonding_id;
 }
 
-void bt_driver_store_device_name_kernelbg_cb(void *ctx) {
+void pbl_bt_store_device_name_kernelbg_cb(void *ctx) {
   char device_name[BT_DEVICE_NAME_BUFFER_SIZE];
   BTBondingID bonding_id = prv_get_bonding_id_and_name_from_address_safe(ctx, device_name);
   kernel_free(ctx);
@@ -53,12 +53,12 @@ void bt_driver_store_device_name_kernelbg_cb(void *ctx) {
 
 void gap_le_device_name_request_all(void) {
   bt_lock();
-  bt_driver_gap_le_device_name_request_all();
+  pbl_bt_gap_le_device_name_request_all();
   bt_unlock();
 }
 
 void gap_le_device_name_request(const BTDeviceInternal *address) {
   bt_lock();
-  bt_driver_gap_le_device_name_request(address);
+  pbl_bt_gap_le_device_name_request(address);
   bt_unlock();
 }

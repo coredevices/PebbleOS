@@ -92,11 +92,11 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
   ATTHandleRange hdl = {.start = node->hdl.start, .end = node->hdl.end};
 
   // Release bt_lock before calling into Nimble to avoid deadlock.
-  // bt_driver_gatt_start_discovery_range calls pebble_device_to_nimble_conn_handle
+  // pbl_bt_gatt_start_discovery_range calls pebble_device_to_nimble_conn_handle
   // which needs ble_hs_mutex.
   bt_unlock();
 
-  BTErrno rv = bt_driver_gatt_start_discovery_range(connection, &hdl);
+  BTErrno rv = pbl_bt_gatt_start_discovery_range(connection, &hdl);
 
   // Re-acquire bt_lock before modifying connection state
   bt_lock();
@@ -129,10 +129,10 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e
     }
 
     // Release bt_lock before calling into Nimble to avoid deadlock.
-    // bt_driver_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
+    // pbl_bt_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
     // which needs ble_hs_mutex.
     bt_unlock();
-    BTErrno stop_result = bt_driver_gatt_stop_discovery(connection);
+    BTErrno stop_result = pbl_bt_gatt_stop_discovery(connection);
     bt_lock();
 
     if (stop_result != BTErrnoOK) {
@@ -365,8 +365,8 @@ static void prv_finalize_discovery(GAPLEConnection *connection, BTErrno errno) {
   prv_run_next_job(connection);
 }
 
-void bt_driver_cb_gatt_client_discovery_handle_indication(GAPLEConnection *connection,
-                                                          GATTService *service, BTErrno error) {
+void pbl_bt_cb_gatt_client_discovery_handle_indication(GAPLEConnection *connection,
+                                                       GATTService *service, BTErrno error) {
   // We experienced some kind of conversion error, pass it on
   if (error != BTErrnoOK) {
     prv_send_services_added_event(connection, error);
@@ -390,7 +390,7 @@ void bt_driver_cb_gatt_client_discovery_handle_indication(GAPLEConnection *conne
   bt_unlock();
 }
 
-bool bt_driver_cb_gatt_client_discovery_complete(GAPLEConnection *connection, BTErrno errno) {
+bool pbl_bt_cb_gatt_client_discovery_complete(GAPLEConnection *connection, BTErrno errno) {
   bool finalize_discovery = true;
   bt_lock();
   {
@@ -464,7 +464,7 @@ void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection, BT
   if (connection->gatt_is_service_discovery_in_progress) {
     // Assuming "disconnection" reason is appropriate here:
     prv_finalize_discovery(connection, reason);
-    bt_driver_gatt_handle_discovery_abandoned();
+    pbl_bt_gatt_handle_discovery_abandoned();
   } else {
     prv_free_service_nodes(connection);
   }
@@ -485,10 +485,10 @@ BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device) {
         gatt_client_cleanup_discovery_jobs(connection);
 
         // Release bt_lock before calling into Nimble to avoid deadlock.
-        // bt_driver_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
+        // pbl_bt_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
         // which needs ble_hs_mutex.
         bt_unlock();
-        bt_driver_gatt_stop_discovery(connection);
+        pbl_bt_gatt_stop_discovery(connection);
         bt_lock();
       } else {
         // Queue up CCCD writes to unsubscribe all the subscriptions:

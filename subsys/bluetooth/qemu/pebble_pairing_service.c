@@ -3,5 +3,5 @@
 
 #include <pbl/bluetooth/pebble_pairing_service.h>
 
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
+void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
 }

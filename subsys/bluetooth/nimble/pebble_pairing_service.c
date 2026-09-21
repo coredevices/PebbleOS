@@ -177,7 +177,7 @@ void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t 
   pebble_pairing_service_get_connectivity_send_notification(conn_handle, attr_handle);
 }
 
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
+void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
   prv_notify_chr_updated(
       connection,
       BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)));

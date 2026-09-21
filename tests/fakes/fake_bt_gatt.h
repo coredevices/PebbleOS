@@ -13,7 +13,7 @@
 
 //! High-level description of a remote GATT service used by the unit tests. The
 //! fake converts these into the packed GATTService blobs the firmware expects
-//! and pushes them through the bt_driver_cb_gatt_client_discovery_* contract.
+//! and pushes them through the pbl_bt_cb_gatt_client_discovery_* contract.
 typedef struct {
   Uuid uuid;
   uint16_t handle;
@@ -38,7 +38,7 @@ typedef struct Service {
 
 //! Status codes the tests pass to fake_gatt_put_discovery_complete_event. They
 //! mirror the Bluetopia discovery status values the firmware was originally
-//! tested against; the fake maps them onto the bt_driver BTErrno contract.
+//! tested against; the fake maps them onto the backend BTErrno contract.
 #define GATT_SERVICE_DISCOVERY_STATUS_SUCCESS          (0x00)
 #define GATT_SERVICE_DISCOVERY_STATUS_RESPONSE_TIMEOUT (0x01)
 
@@ -50,36 +50,36 @@ typedef struct Service {
 //! Resets all simulated discovery state. Call from test initialize().
 void fake_gatt_init(void);
 
-//! @return true while a discovery started through bt_driver_gatt_start_discovery_range
+//! @return true while a discovery started through pbl_bt_gatt_start_discovery_range
 //! has not yet completed.
 bool fake_gatt_is_service_discovery_running(void);
 
-//! @return the number of bt_driver_gatt_start_discovery_range calls so far.
+//! @return the number of pbl_bt_gatt_start_discovery_range calls so far.
 int fake_gatt_is_service_discovery_start_count(void);
 
-//! @return the number of bt_driver_gatt_stop_discovery calls so far.
+//! @return the number of pbl_bt_gatt_stop_discovery calls so far.
 int fake_gatt_is_service_discovery_stop_count(void);
 
-//! Sets the controller error code that bt_driver_gatt_start_discovery_range
+//! Sets the controller error code that pbl_bt_gatt_start_discovery_range
 //! reports. A non-zero code is surfaced as BTErrnoWithBluetopiaError(code); zero
 //! means success (BTErrnoOK).
 void fake_gatt_set_start_return_value(int ret_value);
 
-//! As fake_gatt_set_start_return_value, but for bt_driver_gatt_stop_discovery.
+//! As fake_gatt_set_start_return_value, but for pbl_bt_gatt_stop_discovery.
 void fake_gatt_set_stop_return_value(int ret_value);
 
 //! @return the TimerID of the simulated discovery watchdog. Firing it (via
 //! stub_new_timer_fire) makes the controller report a discovery timeout.
-TimerID bt_driver_gatt_get_watchdog_timer_id(void);
+TimerID pbl_bt_gatt_get_watchdog_timer_id(void);
 
 //! @return the number of Service Changed indications the firmware has pushed to
-//! the controller through bt_driver_gatt_send_changed_indication.
+//! the controller through pbl_bt_gatt_send_changed_indication.
 int fake_gatt_get_service_changed_indication_count(void);
 
-//! @return the device from the most recent bt_driver_gatt_send_changed_indication call.
+//! @return the device from the most recent pbl_bt_gatt_send_changed_indication call.
 const BTDeviceInternal *fake_gatt_get_service_changed_last_device(void);
 
-//! @return the ATT handle range from the most recent bt_driver_gatt_send_changed_indication call.
+//! @return the ATT handle range from the most recent pbl_bt_gatt_send_changed_indication call.
 ATTHandleRange fake_gatt_get_service_changed_last_range(void);
 
 //! Feeds a single discovered service to the firmware, as the driver would.

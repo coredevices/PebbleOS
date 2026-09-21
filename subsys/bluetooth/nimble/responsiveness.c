@@ -9,8 +9,8 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-bool bt_driver_le_connection_parameter_update(const BTDeviceInternal *addr,
-                                              const BleConnectionParamsUpdateReq *req) {
+bool pbl_bt_le_connection_parameter_update(const BTDeviceInternal *addr,
+                                           const BleConnectionParamsUpdateReq *req) {
   ble_addr_t nimble_addr;
   struct ble_gap_conn_desc desc;
   struct ble_gap_upd_params params;

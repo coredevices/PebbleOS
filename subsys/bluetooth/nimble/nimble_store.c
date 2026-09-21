@@ -157,7 +157,7 @@ static void prv_notify_irk_updated(const struct ble_store_value_sec *value_sec) 
 
   nimble_addr_to_pebble_device(&value_sec->peer_addr, &irk_change_event.device);
 
-  bt_driver_handle_le_connection_handle_update_irk(&irk_change_event);
+  pbl_bt_handle_le_connection_handle_update_irk(&irk_change_event);
 }
 
 static void prv_notify_host_bonding_changed(const int obj_type,
@@ -208,7 +208,7 @@ static void prv_notify_host_bonding_changed(const int obj_type,
   nimble_addr_to_pebble_addr(&value_sec->peer_addr, &addr);
 
   if (bonding.pairing_info.is_remote_encryption_info_valid) {
-    bt_driver_cb_handle_create_bonding(&bonding, &addr);
+    pbl_bt_cb_handle_create_bonding(&bonding, &addr);
   } else {
     PBL_LOG_DBG("Skipping notifying OS of our keys");
   }
@@ -275,7 +275,7 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
 
   // Remove from in-memory list before calling into persistent storage,
   // so that NimBLE's ble_store_util_delete_all() loop terminates correctly.
-  // Previously we relied on bt_driver_handle_host_removed_bonding() to remove
+  // Previously we relied on pbl_bt_handle_host_removed_bonding() to remove
   // the entry as a side-effect, but that reads the identity from SPRF which
   // may already be erased by a prior iteration, causing an infinite loop.
   list_remove((ListNode *)s, sec_list, NULL);
@@ -546,7 +546,7 @@ static void prv_convert_bonding_local_to_store_val(const BleBonding *bonding,
   pebble_device_to_nimble_addr(&bonding->pairing_info.identity, &value_sec->peer_addr);
 }
 
-void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_added_bonding(const BleBonding *bonding) {
   struct ble_store_value_sec value_sec;
 
   PBL_LOG_INFO("Host added bonding: addr=" BT_DEVICE_ADDRESS_FMT " random=%u",
@@ -564,7 +564,7 @@ void bt_driver_handle_host_added_bonding(const BleBonding *bonding) {
   prv_nimble_store_upsert_sec(BLE_STORE_OBJ_TYPE_OUR_SEC, &value_sec);
 }
 
-void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding) {
   BleStoreValueSec *s_sec;
   struct ble_store_key_sec key_sec;
 
@@ -592,7 +592,7 @@ void bt_driver_handle_host_removed_bonding(const BleBonding *bonding) {
   pbl_mutex_unlock(&s_store_mutex);
 }
 
-void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
+void pbl_bt_handle_host_added_cccd(const BleCCCD *cccd) {
   struct ble_store_value_cccd value_cccd;
 
   pebble_device_to_nimble_addr(&cccd->peer, &value_cccd.peer_addr);
@@ -605,7 +605,7 @@ void bt_driver_handle_host_added_cccd(const BleCCCD *cccd) {
   pbl_mutex_unlock(&s_store_mutex);
 }
 
-void bt_driver_handle_host_removed_cccd(const BleCCCD *cccd) {
+void pbl_bt_handle_host_removed_cccd(const BleCCCD *cccd) {
   BleStoreValueCCCD *s;
   struct ble_store_key_cccd key_cccd;
 
