@@ -57,14 +57,11 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 #define LOG_LEVEL_DEBUG         200
 #define LOG_LEVEL_DEBUG_VERBOSE 255
 
-#if defined(CONFIG_DEFAULT_LOG_LEVEL_ERROR)
-#define DEFAULT_LOG_LEVEL LOG_LEVEL_ERROR
-#elif defined(CONFIG_DEFAULT_LOG_LEVEL_WARNING)
-#define DEFAULT_LOG_LEVEL LOG_LEVEL_WARNING
-#elif defined(CONFIG_DEFAULT_LOG_LEVEL_INFO)
-#define DEFAULT_LOG_LEVEL LOG_LEVEL_INFO
-#elif defined(CONFIG_DEFAULT_LOG_LEVEL_DEBUG_VERBOSE)
-#define DEFAULT_LOG_LEVEL LOG_LEVEL_DEBUG_VERBOSE
+// Module level that disables every log in the module
+#define LOG_LEVEL_OFF (-1)
+
+#ifdef CONFIG_DEFAULT_LOG_LEVEL
+#define DEFAULT_LOG_LEVEL CONFIG_DEFAULT_LOG_LEVEL
 #else
 #define DEFAULT_LOG_LEVEL LOG_LEVEL_DEBUG
 #endif
@@ -157,8 +154,9 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 // Per-module compile-time log level and name. PBL_LOG_MODULE_DEFINE /
 // PBL_LOG_MODULE_DECLARE override these tentative definitions, e.g.
 // PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL) (see
-// Kconfig.template.log_level); level 0 selects DEFAULT_LOG_LEVEL.
-__attribute__((unused)) static const uint8_t _pbl_log_module_level;
+// Kconfig.template.log_level). Kconfig never yields LOG_LEVEL_ALWAYS (0) for a
+// module, so 0 marks a file without one; those use DEFAULT_LOG_LEVEL.
+__attribute__((unused)) static const int16_t _pbl_log_module_level;
 __attribute__((unused)) static const char *const _pbl_log_module_name;
 
 // Unit tests build with CONFIG_LOG but without the board Kconfig symbols,
@@ -168,19 +166,19 @@ __attribute__((unused)) static const char *const _pbl_log_module_name;
 // The MODULE map entry gives the loghash dict generator the
 // file -> module mapping; the module name costs nothing at runtime.
 #define PBL_LOG_MODULE_DEFINE(name, level)                                           \
-  __attribute__((unused)) static const uint8_t _pbl_log_module_level = (level);      \
+  __attribute__((unused)) static const int16_t _pbl_log_module_level = (level);      \
   __attribute__((unused)) static const char *const _pbl_log_module_name = #name;     \
   __attribute__((used, nocommon,                                                     \
                  section(".log_strings"))) static const char _pbl_log_module_map[] = \
       "MODULE:" __FILE__ ":" #name
 #else
 #define PBL_LOG_MODULE_DEFINE(name, level)                                      \
-  __attribute__((unused)) static const uint8_t _pbl_log_module_level = (level); \
+  __attribute__((unused)) static const int16_t _pbl_log_module_level = (level); \
   __attribute__((unused)) static const char *const _pbl_log_module_name = #name
 #endif
 #else
 #define PBL_LOG_MODULE_DEFINE(name, level) \
-  __attribute__((unused)) static const uint8_t _pbl_log_module_level = 0
+  __attribute__((unused)) static const int16_t _pbl_log_module_level = 0
 #endif
 
 #define PBL_LOG_MODULE_DECLARE(name, level) PBL_LOG_MODULE_DEFINE(name, level)
