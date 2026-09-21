@@ -1,4 +1,11 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(nimble)
+set(excludes)
+if(NOT CONFIG_BT_GH3X2X_TUNING_SERVICE)
+  list(APPEND excludes gh3x2x_tuning_service.c)
+endif()
+file(GLOB sources CONFIGURE_DEPENDS *.c)
+pbl_filter_sources(sources EXCLUDE ${excludes})
+pbl_library()
+pbl_library_sources(${sources})
