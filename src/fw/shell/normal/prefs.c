@@ -175,11 +175,14 @@ static bool s_stationary_mode_enabled = true;
 #define PREF_KEY_DEFAULT_WORKER "workerId"
 static Uuid s_default_worker = UUID_INVALID_INIT;
 
-// We use "textStyle" to indicate the content size
+// Legacy content size, kept for the phone sync and to seed the notification text size.
 #define PREF_KEY_TEXT_STYLE "textStyle"
 static uint8_t s_text_style = PreferredContentSizeDefault;
+
+#define PREF_KEY_SYSTEM_TEXT_SIZE "systemTextSize"
+static uint8_t s_system_text_size = PreferredContentSizeDefault;
 #if !UNITTEST
-_Static_assert(sizeof(PreferredContentSize) == sizeof(s_text_style),
+_Static_assert(sizeof(PreferredContentSize) == sizeof(s_system_text_size),
                "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
@@ -591,6 +594,11 @@ static bool prv_set_s_default_worker(Uuid *uuid) {
 
 static bool prv_set_s_text_style(uint8_t *style) {
   s_text_style = *style;
+  return true;
+}
+
+static bool prv_set_s_system_text_size(uint8_t *size) {
+  s_system_text_size = *size;
   return true;
 }
 
@@ -1869,14 +1877,14 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
     return;
   }
   const uint8_t content_size_uint = content_size;
-  prv_pref_set(PREF_KEY_TEXT_STYLE, &content_size_uint, sizeof(content_size_uint));
+  prv_pref_set(PREF_KEY_SYSTEM_TEXT_SIZE, &content_size_uint, sizeof(content_size_uint));
 
   // Watch-side sets bypass the blob-db path, so notify subscribed UI here too.
   PebbleEvent pref_event = {
     .type = PEBBLE_PREF_CHANGE_EVENT,
     .pref_change = {
-      .key = PREF_KEY_TEXT_STYLE,
-      .key_len = sizeof(PREF_KEY_TEXT_STYLE),
+      .key = PREF_KEY_SYSTEM_TEXT_SIZE,
+      .key_len = sizeof(PREF_KEY_SYSTEM_TEXT_SIZE),
     },
   };
   event_put(&pref_event);
@@ -1884,7 +1892,7 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
 
 PreferredContentSize system_theme_get_content_size(void) {
   return system_theme_convert_host_content_size_to_runtime_platform(
-      (PreferredContentSize)s_text_style);
+      (PreferredContentSize)s_system_text_size);
 }
 
 bool shell_prefs_get_language_english(void) {
