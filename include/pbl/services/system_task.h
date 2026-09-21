@@ -39,6 +39,11 @@ bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data);
 bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data,
                                                  bool *should_context_switch);
 
+//! Droppable ISR callback that raises KernelBG priority while pending or executing.
+//! The queue releases the priority reference after the callback returns.
+bool system_task_add_callback_from_isr_droppable_raised(SystemTaskEventCallback cb, void *data,
+                                                        bool *should_context_switch);
+
 //! @param cb Callback function that will later be called from the system task
 //! @param data Context pointer passed to the callback
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data);
@@ -52,10 +57,8 @@ uint32_t system_task_get_available_space(void);
 //! Debug! Return the callback we're currently executing.
 void *system_task_get_current_callback(void);
 
-//! @param is_raised When true, priority of the KernelBG task is raised to a higher priority. When
-//! false, the priority is set to the normal priority.
-//! @note WARNING: if you want to use this, implement ref counting internally. Currently only
-//! comm/session.c uses this hence we can get away without ref counting.
+//! Acquires or releases a reference that keeps KernelBG at a higher priority.
+//! @param is_raised True to acquire a reference, false to release one. Calls must be balanced.
 void system_task_enable_raised_priority(bool is_raised);
 
 //! @return True if the KernelBG task is ready to run (i.e. not blocked by mutex / queue)

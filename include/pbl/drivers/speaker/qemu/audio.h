@@ -3,12 +3,14 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/audio.h>
 
 typedef struct AudioState {
   AudioTransCB trans_cb;
+  bool callback_pending;
 } AudioDeviceState;
 
 struct AudioDevice {
