@@ -9,6 +9,7 @@
 #include "util/time/time.h"
 #include "util/units.h"
 
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -168,6 +169,33 @@ void health_util_convert_distance_to_whole_and_decimal_part(int distance_m, int 
   const int conversion_factor = health_util_get_distance_factor();
   health_util_convert_fraction_to_whole_and_decimal_part(distance_m, conversion_factor, whole_part,
                                                          decimal_part);
+}
+
+bool health_util_weight_uses_imperial_units(void) {
+  return shell_prefs_get_units_distance() == UnitsDistance_Miles;
+}
+
+int32_t health_util_weight_dag_to_tenths(uint16_t weight_dag) {
+  if (health_util_weight_uses_imperial_units()) {
+    return ROUND((int64_t)weight_dag * 100000, 453592);
+  }
+  return ROUND(weight_dag, 10);
+}
+
+uint16_t health_util_weight_tenths_to_dag(int32_t weight_tenths) {
+  if (health_util_weight_uses_imperial_units()) {
+    return ROUND((int64_t)weight_tenths * 453592, 100000);
+  }
+  return weight_tenths * 10;
+}
+
+int health_util_format_weight(char *buffer, size_t buffer_size, uint16_t weight_dag) {
+  const int32_t tenths = health_util_weight_dag_to_tenths(weight_dag);
+  return snprintf(buffer, buffer_size, "%" PRId32 ".%" PRId32, tenths / 10, tenths % 10);
+}
+
+const char *health_util_get_weight_unit(void) {
+  return health_util_weight_uses_imperial_units() ? i18n_noop("lb") : i18n_noop("kg");
 }
 
 time_t health_util_get_pace(int time_s, int distance_meter) {

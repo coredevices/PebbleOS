@@ -1019,6 +1019,128 @@ void test_activity__cleanup(void) {
   fake_system_task_callbacks_invoke_pending();
 }
 
+void test_activity__weight_history_keeps_multiple_same_day_entries(void) {
+  const time_t now = rtc_get_time();
+  cl_assert(activity_weight_history_add(now - 60, 7730));
+  cl_assert(activity_weight_history_add(now, 7710));
+
+  ActivityWeightSample samples[ACTIVITY_WEIGHT_RECENT_MAX];
+  const size_t count = activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples));
+  cl_assert_equal_i(count, 2);
+  cl_assert_equal_i(samples[0].utc_sec, now);
+  cl_assert_equal_i(samples[0].weight_dag, 7710);
+  cl_assert_equal_i(samples[1].weight_dag, 7730);
+
+  ActivitySettingsValueHistory daily;
+  cl_assert(activity_weight_history_get_daily(now, &daily));
+  cl_assert_equal_i(daily.values[0], 7710);
+}
+
+void test_activity__weight_history_tracks_daily_closing_value(void) {
+  const time_t first_day = rtc_get_time();
+  const time_t second_day = first_day + SECONDS_PER_DAY;
+  cl_assert(activity_weight_history_add(first_day, 7730));
+  cl_assert(activity_weight_history_add(second_day, 7690));
+
+  ActivitySettingsValueHistory daily;
+  cl_assert(activity_weight_history_get_daily(second_day, &daily));
+  cl_assert_equal_i(daily.values[0], 7690);
+  cl_assert_equal_i(daily.values[1], 7730);
+}
+
+void test_activity__weight_history_keeps_latest_ninety_entries(void) {
+  const time_t now = rtc_get_time();
+  for (int i = 0; i < ACTIVITY_WEIGHT_RECENT_MAX + 5; i++) {
+    cl_assert(activity_weight_history_add(now + i, 7000 + i));
+  }
+
+  ActivityWeightSample samples[ACTIVITY_WEIGHT_RECENT_MAX];
+  const size_t count = activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples));
+  cl_assert_equal_i(count, ACTIVITY_WEIGHT_RECENT_MAX);
+  cl_assert_equal_i(samples[0].weight_dag, 7000 + ACTIVITY_WEIGHT_RECENT_MAX + 4);
+  cl_assert_equal_i(samples[count - 1].weight_dag, 7005);
+}
+
+void test_activity__weight_history_rejects_invalid_values(void) {
+  const time_t now = rtc_get_time();
+  cl_assert(!activity_weight_history_add(now, ACTIVITY_WEIGHT_MIN_DAG - 1));
+  cl_assert(!activity_weight_history_add(now, ACTIVITY_WEIGHT_MAX_DAG + 1));
+
+  ActivityWeightSample samples[1];
+  cl_assert_equal_i(activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples)), 0);
+}
+
+void test_activity__weight_history_imports_profile_after_corrupt_data(void) {
+  const time_t now = rtc_get_time();
+  SettingsFile file;
+  cl_assert_equal_i(settings_file_open(&file, "weight_history", 0x1000), S_SUCCESS);
+  const uint32_t key = now - 1;
+  const uint16_t invalid_weight_dag = 80;
+  cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), &invalid_weight_dag,
+                                      sizeof(invalid_weight_dag)),
+                    S_SUCCESS);
+  settings_file_close(&file);
+
+  cl_assert(activity_weight_history_seed_profile_if_empty(now, 7500));
+  cl_assert(activity_weight_history_seed_profile_if_empty(now + 1, 7600));
+
+  ActivityWeightSample samples[2];
+  const size_t count = activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples));
+  cl_assert_equal_i(count, 1);
+  cl_assert_equal_i(samples[0].weight_dag, 7500);
+}
+
+void test_activity__weight_history_remove_latest_ignores_empty_history(void) {
+  uint16_t new_weight_dag = 0;
+  cl_assert(!activity_weight_history_remove_latest(rtc_get_time(), &new_weight_dag));
+}
+
+void test_activity__weight_history_remove_latest_preserves_baseline(void) {
+  const time_t now = rtc_get_time();
+  cl_assert(activity_weight_history_add(now, 7500));
+
+  uint16_t new_weight_dag = 0;
+  cl_assert(!activity_weight_history_remove_latest(now, &new_weight_dag));
+
+  ActivityWeightSample samples[2];
+  cl_assert_equal_i(activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples)), 1);
+  cl_assert_equal_i(samples[0].weight_dag, 7500);
+}
+
+void test_activity__weight_history_remove_latest_restores_same_day_closing_value(void) {
+  const time_t now = rtc_get_time();
+  cl_assert(activity_weight_history_add(now - 120, 7700));
+  cl_assert(activity_weight_history_add(now - 60, 7710));
+  cl_assert(activity_weight_history_add(now, 7720));
+
+  uint16_t new_weight_dag = 0;
+  cl_assert(activity_weight_history_remove_latest(now, &new_weight_dag));
+  cl_assert_equal_i(new_weight_dag, 7710);
+
+  ActivityWeightSample samples[3];
+  cl_assert_equal_i(activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples)), 2);
+  cl_assert_equal_i(samples[0].weight_dag, 7710);
+
+  ActivitySettingsValueHistory daily;
+  cl_assert(activity_weight_history_get_daily(now, &daily));
+  cl_assert_equal_i(daily.values[0], 7710);
+}
+
+void test_activity__weight_history_remove_latest_clears_latest_day(void) {
+  const time_t now = rtc_get_time();
+  cl_assert(activity_weight_history_add(now - SECONDS_PER_DAY, 7700));
+  cl_assert(activity_weight_history_add(now, 7720));
+
+  uint16_t new_weight_dag = 0;
+  cl_assert(activity_weight_history_remove_latest(now, &new_weight_dag));
+  cl_assert_equal_i(new_weight_dag, 7700);
+
+  ActivitySettingsValueHistory daily;
+  cl_assert(activity_weight_history_get_daily(now, &daily));
+  cl_assert_equal_i(daily.values[0], 0);
+  cl_assert_equal_i(daily.values[1], 7700);
+}
+
 // ---------------------------------------------------------------------------------------
 // Test that we correctly initialize the history upon startup based on stored settings
 void test_activity__init_history(void) {

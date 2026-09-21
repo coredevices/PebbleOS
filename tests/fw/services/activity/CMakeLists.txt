@@ -15,6 +15,7 @@ pbl_clar_test(test_activity
     src/fw/services/activity/activity_metrics.c
     src/fw/services/activity/activity_sessions.c
     src/fw/services/activity/activity_calculators.c
+    src/fw/services/activity/activity_weight.c
     src/fw/services/activity/hr_util.c
     src/fw/services/filesystem/flash_translation.c
     src/fw/services/filesystem/pfs.c

@@ -5,6 +5,7 @@
 
 #include "apps/system/timeline/text_node.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
@@ -122,3 +123,9 @@ int health_util_format_distance(char *buffer, size_t buffer_size, uint32_t dista
 //! @param[out] decimal_part the decimal part of the converted decimal representation
 void health_util_convert_distance_to_whole_and_decimal_part(int distance_m, int *whole_part,
                                                             int *decimal_part);
+
+bool health_util_weight_uses_imperial_units(void);
+int32_t health_util_weight_dag_to_tenths(uint16_t weight_dag);
+uint16_t health_util_weight_tenths_to_dag(int32_t weight_tenths);
+int health_util_format_weight(char *buffer, size_t buffer_size, uint16_t weight_dag);
+const char *health_util_get_weight_unit(void);
