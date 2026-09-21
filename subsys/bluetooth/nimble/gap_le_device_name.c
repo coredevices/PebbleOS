@@ -22,7 +22,7 @@ const ble_uuid16_t device_name_chr_uuid = BLE_UUID16_INIT(GAP_DEVICE_NAME_CHR);
 
 static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                          struct ble_gatt_attr *attr, void *arg) {
-  const BTDeviceInternal *device = arg;
+  const struct pbl_bt_device_internal *device = arg;
 
   if (error->status != 0) {
     if (error->status != BLE_HS_EDONE) {
@@ -44,7 +44,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
   }
 
   bool changed;
-  BTDeviceAddress addr_copy;
+  struct pbl_bt_addr addr_copy;
 
   bt_lock();
 
@@ -73,7 +73,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
     return 0;
   }
 
-  BTDeviceAddress *addr = kernel_zalloc_check(sizeof(BTDeviceAddress));
+  struct pbl_bt_addr *addr = kernel_zalloc_check(sizeof(struct pbl_bt_addr));
   *addr = addr_copy;
   system_task_add_callback(pbl_bt_store_device_name_kernelbg_cb, addr);
 
@@ -81,7 +81,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 }
 
 static int prv_device_name_read_op_start(void *ctx) {
-  const BTDeviceInternal *device = ctx;
+  const struct pbl_bt_device_internal *device = ctx;
   uint16_t conn_handle;
 
   if (!pebble_device_to_nimble_conn_handle(device, &conn_handle)) {
@@ -100,8 +100,8 @@ static int prv_device_name_read_op_start(void *ctx) {
   return rc;
 }
 
-void pbl_bt_gap_le_device_name_request(const BTDeviceInternal *device) {
-  BTDeviceInternal *ctx = kernel_zalloc_check(sizeof(*ctx));
+void pbl_bt_gap_le_device_name_request(const struct pbl_bt_device_internal *device) {
+  struct pbl_bt_device_internal *ctx = kernel_zalloc_check(sizeof(*ctx));
   *ctx = *device;
   nimble_gattc_op_queue_push(prv_device_name_read_op_start, ctx);
 }

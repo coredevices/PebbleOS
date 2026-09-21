@@ -102,7 +102,7 @@ typedef struct {
 
 typedef struct ANCSClient {
   ANCSClientState state;
-  BLECharacteristic characteristics[NumANCSCharacteristic];
+  pbl_bt_characteristic_t characteristics[NumANCSCharacteristic];
   RegularTimerInfo is_alive_timer;
   // Watchdog for the in-flight Control Point request.
   RegularTimerInfo op_timeout_timer;
@@ -427,7 +427,7 @@ static void prv_is_ancs_alive_response_timeout(void *data);
 // Persists across connections so reconnects don't repeat the warning.
 static bool s_cp_rejected_warning_shown;
 
-static void prv_handle_alive_check_rejected(BLEGATTError error) {
+static void prv_handle_alive_check_rejected(enum pbl_bt_gatt_error error) {
   if (++s_ancs_client->consecutive_rejected_alive_checks <
       ANCS_REJECTED_ALIVE_CHECKS_BEFORE_WARNING) {
     return;
@@ -479,7 +479,7 @@ static void prv_resubscribe_to_ancs(void) {
 
   // Check if we have valid characteristic handles to re-subscribe to
   if (s_ancs_client->characteristics[ANCSCharacteristicNotification] ==
-      BLE_CHARACTERISTIC_INVALID) {
+      PBL_BT_CHARACTERISTIC_INVALID) {
     PBL_LOG_WRN("Cannot resubscribe to ANCS: no valid characteristic handles");
     return;
   }
@@ -488,19 +488,19 @@ static void prv_resubscribe_to_ancs(void) {
 
   // Unsubscribe first to clear local subscription state, then re-subscribe.
   // Without this, gatt_client_subscriptions_subscribe() sees the existing local
-  // subscription and returns BTErrnoInvalidState without writing the CCCD to
+  // subscription and returns PBL_BT_ERRNO_INVALID_STATE without writing the CCCD to
   // the remote device. iOS may have silently dropped its subscription state
   // (e.g. during a PPoGATT reset), so we must re-write the CCCD to restore it.
   for (int c = ANCSCharacteristicData; c >= ANCSCharacteristicNotification; --c) {
-    BLECharacteristic charx = s_ancs_client->characteristics[c];
-    if (charx != BLE_CHARACTERISTIC_INVALID) {
+    pbl_bt_characteristic_t charx = s_ancs_client->characteristics[c];
+    if (charx != PBL_BT_CHARACTERISTIC_INVALID) {
       // Unsubscribe to clear the local state (ignore errors -- the subscription
       // may already have been cleaned up)
       gatt_client_subscriptions_subscribe(charx, BLESubscriptionNone, GAPLEClientKernel);
 
-      const BTErrno e = gatt_client_subscriptions_subscribe(charx, BLESubscriptionNotifications,
-                                                            GAPLEClientKernel);
-      if (e != BTErrnoOK) {
+      const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+          charx, BLESubscriptionNotifications, GAPLEClientKernel);
+      if (e != PBL_BT_ERRNO_OK) {
         PBL_LOG_ERR("Failed to resubscribe to ANCS charx %d: %d", c, e);
       }
     }
@@ -932,8 +932,9 @@ static void prv_handle_notification_attributes_response(const uint8_t *data, siz
 // -----------------------------------------------------------------------------
 // GATT Characteristic update & subscribe
 
-static ANCSCharacteristic prv_get_id_for_characteristic(BLECharacteristic characteristic_to_find) {
-  const BLECharacteristic *characteristic = s_ancs_client->characteristics;
+static ANCSCharacteristic prv_get_id_for_characteristic(
+    pbl_bt_characteristic_t characteristic_to_find) {
+  const pbl_bt_characteristic_t *characteristic = s_ancs_client->characteristics;
   for (ANCSCharacteristic id = 0; id < NumANCSCharacteristic; ++id, ++characteristic) {
     if (*characteristic == characteristic_to_find) {
       return id;
@@ -950,8 +951,8 @@ static void prv_put_ancs_disconnected_event(void) {
 }
 
 // Catching the subscription (CCCD write) confirmation for analytics purposes:
-void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
-                           BLESubscription subscription_type, BLEGATTError error) {
+void ancs_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
+                           BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
   ANCSCharacteristic characteristic_id = prv_get_id_for_characteristic(subscribed_characteristic);
   if (characteristic_id != ANCSCharacteristicNotification &&
       characteristic_id != ANCSCharacteristicData) {
@@ -959,7 +960,7 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
     WTF;
   }
 
-  if (error == BLEGATTErrorSuccess) {
+  if (error == PBL_BT_GATT_ERROR_SUCCESS) {
     PBL_LOG_INFO("ANCS subscribed: %u", characteristic_id);
 
     if (characteristic_id == ANCSCharacteristicData) {
@@ -973,40 +974,41 @@ void ancs_handle_subscribe(BLECharacteristic subscribed_characteristic,
 
 void ancs_invalidate_all_references(void) {
   for (int c = 0; c < NumANCSCharacteristic; c++) {
-    s_ancs_client->characteristics[c] = BLE_CHARACTERISTIC_INVALID;
+    s_ancs_client->characteristics[c] = PBL_BT_CHARACTERISTIC_INVALID;
   }
 
   prv_reset_and_flush();
   prv_put_ancs_disconnected_event();
 }
 
-void ancs_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
+void ancs_handle_service_removed(pbl_bt_characteristic_t *characteristics,
+                                 uint8_t num_characteristics) {
   // There should only be one ancs client
   ancs_invalidate_all_references();
 }
 
-void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
+void ancs_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   PBL_LOG_DBG("In ANCS service discovery CB");
   PBL_ASSERTN(characteristics); // should only be called if we found something!
 
   // Pause while re-subscribing, it will be resumed when re-subscribed:
   prv_ancs_is_alive_stop_timer();
 
-  if (s_ancs_client->characteristics[0] != BLE_CHARACTERISTIC_INVALID) {
+  if (s_ancs_client->characteristics[0] != PBL_BT_CHARACTERISTIC_INVALID) {
     PBL_LOG_WRN("Multiple ANCS services registered?!");
     ancs_invalidate_all_references();
   }
 
-  // Keep around the BLECharacteristic references:
+  // Keep around the pbl_bt_characteristic_t references:
   memcpy(s_ancs_client->characteristics, characteristics,
-         sizeof(BLECharacteristic) * NumANCSCharacteristic);
+         sizeof(pbl_bt_characteristic_t) * NumANCSCharacteristic);
 
   // Subscribe to Data, then to Notification characteristics. Reject the service
   // if subscribing fails instead of asserting (e.g. a "fake ANCS" without CCCD).
   for (int c = ANCSCharacteristicData; c >= ANCSCharacteristicNotification; --c) {
-    const BTErrno e = gatt_client_subscriptions_subscribe(
+    const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
         characteristics[c], BLESubscriptionNotifications, GAPLEClientKernel);
-    if (e != BTErrnoOK) {
+    if (e != PBL_BT_ERRNO_OK) {
       PBL_LOG_WRN("Failed to subscribe ANCS charx %d (err=%d), ignoring service", c, e);
       ancs_invalidate_all_references();
       return;
@@ -1014,7 +1016,7 @@ void ancs_handle_service_discovered(BLECharacteristic *characteristics) {
   }
 }
 
-bool ancs_can_handle_characteristic(BLECharacteristic characteristic) {
+bool ancs_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
   if (!s_ancs_client) {
     return false;
   }
@@ -1116,9 +1118,9 @@ static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
   }
 }
 
-void ancs_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                      size_t value_length, BLEGATTError error) {
-  if (error != BLEGATTErrorSuccess) {
+void ancs_handle_read_or_notification(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                      size_t value_length, enum pbl_bt_gatt_error error) {
+  if (error != PBL_BT_GATT_ERROR_SUCCESS) {
     PBL_LOG_ERR("Read or notification error: %d", error);
     prv_reset_due_to_bt_error();
     return;
@@ -1142,7 +1144,8 @@ void ancs_handle_read_or_notification(BLECharacteristic characteristic, const ui
 // -----------------------------------------------------------------------------
 // Writing commands to the ANCS Control Point
 
-void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {
+void ancs_handle_write_response(pbl_bt_characteristic_t characteristic,
+                                enum pbl_bt_gatt_error error) {
   if (error == ANCS_INVALID_PARAM) {
     if (s_ancs_client->state == ANCSClientStateAliveCheck) {
       // We got a response so cancel the response wait timer and setup another check.
@@ -1154,7 +1157,7 @@ void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError e
     return;
   }
 
-  if (error != BLEGATTErrorSuccess) {
+  if (error != PBL_BT_GATT_ERROR_SUCCESS) {
     PBL_LOG_ERR("Control point error response: %d", error);
     if (s_ancs_client->state == ANCSClientStateAliveCheck) {
       prv_handle_alive_check_rejected(error);
@@ -1172,13 +1175,14 @@ void ancs_handle_write_response(BLECharacteristic characteristic, BLEGATTError e
 }
 
 static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size) {
-  const BLECharacteristic cp = s_ancs_client->characteristics[ANCSCharacteristicControl];
-  const BTErrno error = gatt_client_op_write(cp, (const uint8_t *)cmd, size, GAPLEClientKernel);
+  const pbl_bt_characteristic_t cp = s_ancs_client->characteristics[ANCSCharacteristicControl];
+  const enum pbl_bt_errno error =
+      gatt_client_op_write(cp, (const uint8_t *)cmd, size, GAPLEClientKernel);
 
   PBL_LOG_DBG("Writing to control point:");
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, (const uint8_t *)cmd, size);
 
-  if (error != BTErrnoOK) {
+  if (error != PBL_BT_ERRNO_OK) {
     PBL_LOG_DBG("Control point write error: %d", error);
     return false;
   }

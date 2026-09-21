@@ -38,7 +38,7 @@ void ble_scan_handle_event(PebbleEvent *e) {
   while (cursor < buffer + size) {
     const GAPLERawAdReport *report = (GAPLERawAdReport *)cursor;
 
-    const BTDeviceInternal device = (const BTDeviceInternal){
+    const struct pbl_bt_device_internal device = (const struct pbl_bt_device_internal){
       .address = report->address.address,
       .is_classic = false,
       .is_random_address = report->is_random_address,
@@ -56,35 +56,35 @@ finally:
   applib_free(buffer);
 }
 
-BTErrno ble_scan_start(BLEScanHandler handler) {
+enum pbl_bt_errno ble_scan_start(BLEScanHandler handler) {
   if (!handler) {
-    return (BTErrnoInvalidParameter);
+    return (PBL_BT_ERRNO_INVALID_PARAMETER);
   }
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   if (ble_app_state->scan_handler) {
-    return (BTErrnoInvalidState);
+    return (PBL_BT_ERRNO_INVALID_STATE);
   }
   const bool result = sys_ble_scan_start();
   if (!result) {
-    return BTErrnoOther;
+    return PBL_BT_ERRNO_OTHER;
   }
   ble_app_state->scan_handler = handler;
   event_service_client_subscribe(&ble_app_state->scan_service_info);
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
-BTErrno ble_scan_stop(void) {
+enum pbl_bt_errno ble_scan_stop(void) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   if (!ble_app_state->scan_handler) {
-    return (BTErrnoInvalidState);
+    return (PBL_BT_ERRNO_INVALID_STATE);
   }
   const bool result = sys_ble_scan_stop();
   if (!result) {
-    return BTErrnoOther;
+    return PBL_BT_ERRNO_OTHER;
   }
   event_service_client_unsubscribe(&ble_app_state->scan_service_info);
   ble_app_state->scan_handler = NULL;
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
 bool ble_scan_is_scanning(void) {

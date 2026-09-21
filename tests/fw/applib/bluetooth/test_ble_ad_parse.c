@@ -26,9 +26,10 @@
 // The test data and descriptions in this file are captured using the FrontLine
 // Bluetooth sniffer.
 
-static const size_t s_buffer_size = sizeof(BLEAdData) + (2 * GAP_LE_AD_REPORT_DATA_MAX_LENGTH);
+static const size_t s_buffer_size =
+    sizeof(struct pbl_bt_ad_data) + (2 * PBL_BT_AD_REPORT_DATA_MAX_LENGTH);
 static uint8_t s_buffer[s_buffer_size];
-static BLEAdData *const s_ad_data = (BLEAdData *)s_buffer;
+static struct pbl_bt_ad_data *const s_ad_data = (struct pbl_bt_ad_data *)s_buffer;
 
 static void set_ad_data(uint8_t *data, size_t length) {
   memcpy(s_ad_data->data, data, length);
@@ -40,7 +41,7 @@ void test_ble_ad_parse__initialize(void) {
 }
 
 // -----------------------------------------------------------------------------
-// Consuming BLEAdData:
+// Consuming struct pbl_bt_ad_data:
 // -----------------------------------------------------------------------------
 
 void test_ble_ad_parse__16_bit_uuid_and_device_name(void) {
@@ -54,7 +55,7 @@ void test_ble_ad_parse__16_bit_uuid_and_device_name(void) {
   cl_assert_equal_i(ble_ad_get_raw_data_size(s_ad_data), sizeof(data));
 
   // Test ble_ad_copy_raw_data:
-  uint8_t buffer[GAP_LE_AD_REPORT_DATA_MAX_LENGTH * 2];
+  uint8_t buffer[PBL_BT_AD_REPORT_DATA_MAX_LENGTH * 2];
   size_t size = ble_ad_copy_raw_data(s_ad_data, buffer, sizeof(buffer));
   cl_assert_equal_i(size, sizeof(data));
   cl_assert_equal_i(memcmp(buffer, data, sizeof(data)), 0);
@@ -96,7 +97,7 @@ void test_ble_ad_parse__128_bit_uuid(void) {
   // AD Element, Length: 17, AD Type: More 128-bit UUIDs available,
   // Value: 0x68753a444d6f12269c600050e4c00067
 
-  uint8_t data[GAP_LE_AD_REPORT_DATA_MAX_LENGTH] =
+  uint8_t data[PBL_BT_AD_REPORT_DATA_MAX_LENGTH] =
       "\x02\x01\x1a\x11\x06\x67\x00\xc0\xe4\x50\x00\x60\x9c\x26\x12\x6f\x4d\x44"
       "\x3a\x75\x68";
   set_ad_data(data, sizeof(data));
@@ -112,14 +113,14 @@ void test_ble_ad_parse__128_bit_uuid(void) {
 }
 
 // -----------------------------------------------------------------------------
-// Creating BLEAdData:
+// Creating struct pbl_bt_ad_data:
 // -----------------------------------------------------------------------------
 
 void test_ble_ad_parse__ad_and_scan_resp_boundaries(void) {
 }
 
 void test_ble_ad_parse__start_scan_response(void) {
-  BLEAdData *ad = ble_ad_create();
+  struct pbl_bt_ad_data *ad = ble_ad_create();
   ble_ad_start_scan_response(ad);
 
   uint8_t expected_scan_resp_data[] = {
@@ -152,7 +153,7 @@ void test_ble_ad_parse__start_scan_response(void) {
 }
 
 void test_ble_ad_parse__set_service_uuids_128_bit(void) {
-  BLEAdData *ad = ble_ad_create();
+  struct pbl_bt_ad_data *ad = ble_ad_create();
 
   uint8_t uuid_bytes[] =
       "\x97\x6e\xbb\x18\xd3\xe9\x43\xc0\x8a\x63\x8d\x2b"
@@ -182,7 +183,7 @@ void test_ble_ad_parse__set_service_uuids_128_bit(void) {
 }
 
 void test_ble_ad_parse__set_service_uuids_32_bit(void) {
-  BLEAdData *ad;
+  struct pbl_bt_ad_data *ad;
 
   Uuid uuid[8];
   for (int i = 0; i < 8; ++i) {
@@ -223,7 +224,7 @@ void test_ble_ad_parse__set_service_uuids_32_bit(void) {
 }
 
 void test_ble_ad_parse__set_service_uuids_16_bit(void) {
-  BLEAdData *ad;
+  struct pbl_bt_ad_data *ad;
 
   Uuid uuid[15];
   for (int i = 0; i < 15; ++i) {
@@ -260,7 +261,7 @@ void test_ble_ad_parse__set_service_uuids_16_bit(void) {
 }
 
 void test_ble_ad_parse__set_local_name(void) {
-  BLEAdData *ad;
+  struct pbl_bt_ad_data *ad;
   ad = ble_ad_create();
 
   uint8_t expected_ad_data[] = {
@@ -287,7 +288,7 @@ void test_ble_ad_parse__set_local_name(void) {
 }
 
 void test_ble_ad_parse__set_tx_power_level(void) {
-  BLEAdData *ad;
+  struct pbl_bt_ad_data *ad;
   ad = ble_ad_create();
 
   uint8_t expected_ad_data[] = {
@@ -304,7 +305,7 @@ void test_ble_ad_parse__set_tx_power_level(void) {
 }
 
 void test_ble_ad_parse__set_manufacturer_specific_data(void) {
-  BLEAdData *ad;
+  struct pbl_bt_ad_data *ad;
   ad = ble_ad_create();
 
   uint8_t expected_ad_data[] = {
@@ -334,7 +335,7 @@ void test_ble_ad_parse__set_manufacturer_specific_data(void) {
 }
 
 void test_ble_ad_parse__set_flags(void) {
-  BLEAdData *ad;
+  struct pbl_bt_ad_data *ad;
   ad = ble_ad_create();
 
   const uint8_t flags = 0x03;

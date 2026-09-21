@@ -46,7 +46,7 @@ static void prv_watchdog_feed(PebbleEvent *e, void *context) {
 
 void prf_idle_watchdog_init(void) {
   s_bt_event_info = (EventServiceInfo){
-    .type = PEBBLE_BT_CONNECTION_EVENT,
+    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
     .handler = prv_watchdog_feed,
   };
   event_service_client_subscribe(&s_bt_event_info);

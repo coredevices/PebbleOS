@@ -1060,8 +1060,8 @@ static GAPLEConnection *prv_get_le_connection_and_print_info(void) {
     prompt_send_response("No device connected");
   } else {
     char buf[80];
-    prompt_send_response_fmt(buf, sizeof(buf), "Connected to " BT_DEVICE_ADDRESS_FMT,
-                             BT_DEVICE_ADDRESS_XPLODE(conn->device.address));
+    prompt_send_response_fmt(buf, sizeof(buf), "Connected to " PBL_BT_ADDR_FMT,
+                             PBL_BT_ADDR_XPLODE(conn->device.address));
   }
 
   return conn;
@@ -1069,7 +1069,7 @@ static GAPLEConnection *prv_get_le_connection_and_print_info(void) {
 
 void command_bt_conn_param_set(char *interval_min_1_25ms, char *interval_max_1_25ms,
                                char *slave_latency_events, char *timeout_10ms) {
-  BleConnectionParamsUpdateReq req = {
+  struct pbl_bt_conn_params_update_req req = {
     .interval_min_1_25ms = atoi(interval_min_1_25ms),
     .interval_max_1_25ms = atoi(interval_max_1_25ms),
     .slave_latency_events = atoi(slave_latency_events),
@@ -1077,7 +1077,7 @@ void command_bt_conn_param_set(char *interval_min_1_25ms, char *interval_max_1_2
   };
 
   GAPLEConnection *conn = prv_get_le_connection_and_print_info();
-  BTDeviceInternal addr = {};
+  struct pbl_bt_device_internal addr = {};
   if (conn) {
     addr.address = conn->device.address;
   }
@@ -1086,11 +1086,11 @@ void command_bt_conn_param_set(char *interval_min_1_25ms, char *interval_max_1_2
 }
 // Not in a header because it's really only used from within the gatt_service_changed module
 extern void gatt_client_discovery_discover_range(GAPLEConnection *connection,
-                                                 ATTHandleRange *hdl_range);
+                                                 struct pbl_bt_att_handle_range *hdl_range);
 void command_bt_disc_start(char *start_handle, char *end_handle) {
   bt_lock();
   {
-    ATTHandleRange range = {.start = atoi(start_handle), .end = atoi(end_handle)};
+    struct pbl_bt_att_handle_range range = {.start = atoi(start_handle), .end = atoi(end_handle)};
 
     GAPLEConnection *conn = prv_get_le_connection_and_print_info();
     if (conn) {

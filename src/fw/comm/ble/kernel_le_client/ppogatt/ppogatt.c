@@ -78,8 +78,8 @@ typedef struct PPoGATTClient {
   Uuid app_uuid;
 
   struct {
-    BLECharacteristic meta;
-    BLECharacteristic data;
+    pbl_bt_characteristic_t meta;
+    pbl_bt_characteristic_t data;
   } characteristics;
 
   //! State for the reversed role (watch hosts the GATT service).
@@ -182,18 +182,20 @@ static void prv_send_next_packets(PPoGATTClient *client);
 static void prv_start_reset(PPoGATTClient *client);
 static void prv_request_meta_rediscovery(PPoGATTClient *client);
 
-extern BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device);
+extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
+    const struct pbl_bt_device_internal *device);
 
 //! Gets the GAPLEConnection associated with the characteristic reference.
 //! @return The connection or NULL in case it could not be found.
 //! @note The caller MUST own bt_lock()
-extern GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic);
+extern GAPLEConnection *gatt_client_characteristic_get_connection(
+    pbl_bt_characteristic_t characteristic);
 
 //! Gets the att_handle and connection for a characteristic.
 //! @return The att_handle or 0 if not found. Connection is returned via out parameter.
 //! @note The caller MUST own bt_lock()
 extern uint16_t gatt_client_characteristic_get_handle_and_connection(
-    BLECharacteristic characteristic_ref, GAPLEConnection **connection_out);
+    pbl_bt_characteristic_t characteristic_ref, GAPLEConnection **connection_out);
 
 // -------------------------------------------------------------------------------------------------
 void ppogatt_reset_disconnect_counter(void) {
@@ -222,9 +224,10 @@ static GAPLEConnection *prv_get_connection(const PPoGATTClient *client) {
   return gatt_client_characteristic_get_connection(client->characteristics.meta);
 }
 
-static void prv_set_connection_responsiveness(Transport *transport, BtConsumer consumer,
-                                              ResponseTimeState state, uint16_t max_period_secs,
-                                              ResponsivenessGrantedHandler granted_handler) {
+static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_consumer consumer,
+                                              enum pbl_bt_response_time_state state,
+                                              uint16_t max_period_secs,
+                                              pbl_bt_responsiveness_granted_cb_t granted_handler) {
   PPoGATTClient *client = (PPoGATTClient *)transport;
   GAPLEConnection *connection = prv_get_connection(client);
   conn_mgr_set_ble_conn_response_time_ext(connection, consumer, state, max_period_secs,
@@ -421,7 +424,7 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   // Unsubscribe from the phone's Data characteristic (forward role only):
   if (client->role == PPoGATTRoleForward && client->state > StateDisconnectedSubscribingData &&
       !is_disconnected) {
-    BLECharacteristic data_char = client->characteristics.data;
+    pbl_bt_characteristic_t data_char = client->characteristics.data;
     // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
     bt_unlock();
     gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNone, GAPLEClientKernel);
@@ -450,12 +453,12 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
 
 static bool prv_characteristic_filter_callback(ListNode *found_node, void *data) {
   const PPoGATTClient *client = (const PPoGATTClient *)found_node;
-  const BLECharacteristic characteristic = (const BLECharacteristic)data;
+  const pbl_bt_characteristic_t characteristic = (const pbl_bt_characteristic_t)data;
   return (client->characteristics.data == characteristic ||
           client->characteristics.meta == characteristic);
 }
 
-static PPoGATTClient *prv_find_client_with_characteristic(BLECharacteristic characteristic,
+static PPoGATTClient *prv_find_client_with_characteristic(pbl_bt_characteristic_t characteristic,
                                                           bool *is_data) {
   PPoGATTClient *client =
       (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head, prv_characteristic_filter_callback,
@@ -522,7 +525,7 @@ static bool prv_is_client_valid(const PPoGATTClient *client) {
 // -------------------------------------------------------------------------------------------------
 
 static uint16_t prv_get_max_payload_size(const PPoGATTClient *client) {
-  BTDeviceInternal device;
+  struct pbl_bt_device_internal device;
   if (client->role == PPoGATTRoleReversed) {
     if (!client->rev.connection) {
       return 0;
@@ -809,10 +812,10 @@ static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *v
 // -------------------------------------------------------------------------------------------------
 
 static void prv_rediscover_kernelbg_cb(void *data) {
-  BTDeviceInternal *device = (BTDeviceInternal *)data;
-  const BTErrno e = gatt_client_discovery_rediscover_all(device);
+  struct pbl_bt_device_internal *device = (struct pbl_bt_device_internal *)data;
+  const enum pbl_bt_errno e = gatt_client_discovery_rediscover_all(device);
   kernel_free(device);
-  if (e != BTErrnoOK) {
+  if (e != PBL_BT_ERRNO_OK) {
     PBL_LOG_ERR("PPoGATT couldn't restart discovery: %d", (int)e);
   }
 }
@@ -826,7 +829,7 @@ static void prv_request_meta_rediscovery(PPoGATTClient *client) {
     return;
   }
 
-  BTDeviceInternal *device = kernel_malloc(sizeof(BTDeviceInternal));
+  struct pbl_bt_device_internal *device = kernel_malloc(sizeof(struct pbl_bt_device_internal));
   if (!device) {
     return;
   }
@@ -845,18 +848,18 @@ static void prv_retry_meta_read(PPoGATTClient *client) {
                PPOGATT_META_READ_RETRY_COUNT_MAX);
 
   client->state = StateDisconnectedReadingMeta;
-  BLECharacteristic meta = client->characteristics.meta;
+  pbl_bt_characteristic_t meta = client->characteristics.meta;
 
   // Release bt_lock before calling gatt_client_op_read to avoid recursive lock deadlock.
   // gatt_client_op_read manages bt_lock internally.
   bt_unlock();
 
-  BTErrno result = gatt_client_op_read(meta, GAPLEClientKernel);
+  enum pbl_bt_errno result = gatt_client_op_read(meta, GAPLEClientKernel);
 
   // Re-acquire bt_lock before accessing client state again
   bt_lock();
 
-  if (result != BTErrnoOK) {
+  if (result != PBL_BT_ERRNO_OK) {
     // Read failed to start, delete the client
     PBL_LOG_ERR("Failed to initiate meta read retry");
     prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
@@ -884,10 +887,10 @@ static void prv_meta_read_retry_timer_cb(void *data) {
 // -------------------------------------------------------------------------------------------------
 
 static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, size_t value_length,
-                                 BLEGATTError error) {
+                                 enum pbl_bt_gatt_error error) {
   const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
   PBL_ASSERTN(client->state == StateDisconnectedReadingMeta);
-  if (error != BLEGATTErrorSuccess) {
+  if (error != PBL_BT_GATT_ERROR_SUCCESS) {
     PBL_LOG_ERR("PPoGATT meta read failed: err=0x%x after %" PRIu32 "ms (retry %u/%u)", error,
                 elapsed_ms, client->meta_read_retries, PPOGATT_META_READ_RETRY_COUNT_MAX);
     // GATT read failed - this is retriable since the mobile app may not be ready yet
@@ -929,7 +932,7 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
   }
 
   // Save data needed across the bt_lock release
-  BLECharacteristic data_char = client->characteristics.data;
+  pbl_bt_characteristic_t data_char = client->characteristics.data;
   Uuid app_uuid = meta->app_uuid;
 
   // Release bt_lock before calling gatt_client_subscriptions_subscribe, which
@@ -939,8 +942,8 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
   // See prv_retry_meta_read for the same pattern.
   bt_unlock();
 
-  BTErrno e = gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNotifications,
-                                                  GAPLEClientKernel);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNotifications,
+                                                            GAPLEClientKernel);
 
   // Re-acquire bt_lock before accessing client state
   bt_lock();
@@ -952,7 +955,7 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
     return;
   }
 
-  if (e == BTErrnoOK) {
+  if (e == PBL_BT_ERRNO_OK) {
     // Delete any existing client with this UUID, last one wins.
     // iOS behavior is a bit strange when it comes to service persistence. When an app crashes or
     // gets killed through Xcode, the service records persist. When the app is relaunched again,
@@ -1017,7 +1020,7 @@ void ppogatt_create(void) {
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_service_removed(BLECharacteristic *characteristics,
+void ppogatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
                                     uint8_t num_characteristics) {
   bt_lock();
   {
@@ -1041,8 +1044,8 @@ void ppogatt_handle_service_removed(BLECharacteristic *characteristics,
     // PBL-42768 - In the logs in this ticket it looks to me like we missed that the service
     // was removed. Add some diagnostic logging to hopefully reveal more info on a failure
     if (!client_removed) {
-      BLECharacteristic meta = 0;
-      BLECharacteristic data = 0;
+      pbl_bt_characteristic_t meta = 0;
+      pbl_bt_characteristic_t data = 0;
 
       // assume one client
       PPoGATTClient *client = s_ppogatt_head;
@@ -1051,8 +1054,8 @@ void ppogatt_handle_service_removed(BLECharacteristic *characteristics,
         data = client->characteristics.data;
       }
 
-      BLECharacteristic char1 = num_characteristics > 0 ? characteristics[0] : 0;
-      BLECharacteristic char2 = num_characteristics > 1 ? characteristics[1] : 0;
+      pbl_bt_characteristic_t char1 = num_characteristics > 0 ? characteristics[0] : 0;
+      pbl_bt_characteristic_t char2 = num_characteristics > 1 ? characteristics[1] : 0;
 
       PBL_LOG_WRN("No ppog client removed? 0x%x 0x%x vs 0x%x 0x%x", (int)meta, (int)data,
                   (int)char1, (int)char2);
@@ -1106,7 +1109,8 @@ static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle
   return true;
 }
 
-void ppogatt_reversed_handle_subscribed(const BTDeviceInternal *device, uint16_t conn_handle) {
+void ppogatt_reversed_handle_subscribed(const struct pbl_bt_device_internal *device,
+                                        uint16_t conn_handle) {
   // new_timer_create() must be called outside bt_lock (see ppogatt_handle_service_discovered).
   TimerID rx_ack_timer = new_timer_create();
   PBL_ASSERTN(rx_ack_timer);
@@ -1171,7 +1175,7 @@ unlock:
 // run.
 
 typedef struct {
-  BTDeviceInternal device;
+  struct pbl_bt_device_internal device;
   uint16_t conn_handle;
 } ReversedSubscribedCtx;
 
@@ -1204,7 +1208,8 @@ static void prv_reversed_data_kernelmain_cb(void *data) {
   kernel_free(ctx);
 }
 
-void pbl_bt_cb_ppog_reversed_subscribed(const BTDeviceInternal *device, uint16_t conn_handle) {
+void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *device,
+                                        uint16_t conn_handle) {
   ReversedSubscribedCtx *ctx = kernel_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG subscribed: out of memory");
@@ -1240,7 +1245,7 @@ void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, ui
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
+void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   PBL_LOG_INFO("PPoGATT service discovered, starting handshake");
 
   // Create timers outside of bt_lock to avoid deadlock with NimbleHost.
@@ -1274,7 +1279,7 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
       return;
     }
     client->role = PPoGATTRoleForward;
-    BLECharacteristic meta = characteristics[PPoGATTCharacteristicMeta];
+    pbl_bt_characteristic_t meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.meta = characteristics[PPoGATTCharacteristicMeta];
     client->characteristics.data = characteristics[PPoGATTCharacteristicData];
 
@@ -1284,12 +1289,12 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
     // gatt_client_op_read manages bt_lock internally.
     bt_unlock();
 
-    BTErrno result = gatt_client_op_read(meta, GAPLEClientKernel);
+    enum pbl_bt_errno result = gatt_client_op_read(meta, GAPLEClientKernel);
 
     // Re-acquire bt_lock before accessing client state again
     bt_lock();
 
-    if (result != BTErrnoOK) {
+    if (result != PBL_BT_ERRNO_OK) {
       PBL_LOG_ERR("PPoGATT meta read initiation failed: err=0x%x", result);
       // Read failed, probably disconnected or insufficient resources
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_MetaDataReadFailure);
@@ -1300,7 +1305,7 @@ void ppogatt_handle_service_discovered(BLECharacteristic *characteristics) {
 
 // -------------------------------------------------------------------------------------------------
 
-bool ppogatt_can_handle_characteristic(BLECharacteristic characteristic) {
+bool ppogatt_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
   bt_lock();
   bool can_handle = (prv_find_client_with_characteristic(characteristic, NULL) != NULL);
   bt_unlock();
@@ -1309,8 +1314,8 @@ bool ppogatt_can_handle_characteristic(BLECharacteristic characteristic) {
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_subscribe(BLECharacteristic characteristic, BLESubscription subscription_type,
-                              BLEGATTError error) {
+void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
+                              BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
   bt_lock();
   {
     const bool is_subscribed = (subscription_type != BLESubscriptionNone);
@@ -1348,8 +1353,9 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                         size_t value_length, BLEGATTError error) {
+void ppogatt_handle_read_or_notification(pbl_bt_characteristic_t characteristic,
+                                         const uint8_t *value, size_t value_length,
+                                         enum pbl_bt_gatt_error error) {
   bt_lock();
   {
     bool is_data = false;
@@ -1606,12 +1612,12 @@ static void prv_send_next_packets(PPoGATTClient *client) {
       if (lock_was_held) {
         bt_unlock();
       }
-      const BTErrno e =
+      const enum pbl_bt_errno e =
           pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, total_len);
       if (lock_was_held) {
         bt_lock();
       }
-      if (e == BTErrnoNotEnoughResources) {
+      if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
         // Out of mbufs (e.g. inbound flood during a firmware update). NimBLE
         // has no "buffers freed" event, so retry after a short delay.
         if (client->send_retry_count++ == 0) {
@@ -1622,7 +1628,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
                           prv_send_retry_timer_cb, client, 0);
         }
         break;
-      } else if (e != BTErrnoOK) {
+      } else if (e != PBL_BT_ERRNO_OK) {
         PBL_LOG_ERR("Reversed PPoG notify failed %i", e);
         break;
       }
@@ -1658,13 +1664,13 @@ static void prv_send_next_packets(PPoGATTClient *client) {
     } else {
       // If bt_lock wasn't held, we can call gatt_client_op_write_without_response directly
       // (it will manage the lock itself)
-      const BTErrno e = gatt_client_op_write_without_response(
+      const enum pbl_bt_errno e = gatt_client_op_write_without_response(
           client->characteristics.data, (const uint8_t *)packet,
           sizeof(PPoGATTPacket) + payload_size, GAPLEClientKernel);
-      if (e == BTErrnoNotEnoughResources) {
+      if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
         // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
         break;
-      } else if (e != BTErrnoOK) {
+      } else if (e != PBL_BT_ERRNO_OK) {
         // Most likely the LE connection got busted, don't think retrying will help.
         PBL_LOG_ERR("Write failed %i", e);
         break;
@@ -1682,16 +1688,16 @@ static void prv_send_next_packets(PPoGATTClient *client) {
     }
 
     // Call into NimBLE without holding bt_lock
-    const BTErrno e = pbl_bt_gatt_write_without_response(
+    const enum pbl_bt_errno e = pbl_bt_gatt_write_without_response(
         connection, (const uint8_t *)packet, sizeof(PPoGATTPacket) + payload_size, att_handle);
 
     // Re-acquire bt_lock before accessing client state
     bt_lock();
 
-    if (e == BTErrnoNotEnoughResources) {
+    if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
       // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
       break;
-    } else if (e != BTErrnoOK) {
+    } else if (e != PBL_BT_ERRNO_OK) {
       // Most likely the LE connection got busted, don't think retrying will help.
       PBL_LOG_ERR("Write failed %i", e);
       break;

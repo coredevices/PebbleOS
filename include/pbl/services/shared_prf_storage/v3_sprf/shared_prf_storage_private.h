@@ -58,7 +58,7 @@ _Static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 
 typedef struct PBL_PACKED SprfRootKeys {
   uint32_t crc;
-  SM128BitKey keys[SMRootKeyTypeNum];
+  struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
 } SprfRootKeys;
 _Static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
 
@@ -66,18 +66,18 @@ typedef struct PBL_PACKED SprfBlePairingData {
   uint32_t crc; // CRC over the 'pairing_data' struct ('name' through 'fields')
 
   // local encryption data
-  SMLongTermKey l_ltk; // 16 byte key
+  struct pbl_bt_sm_key l_ltk; // 16 byte key
   uint64_t l_rand;
   uint16_t l_ediv;
 
   // remote encryption data
   uint16_t r_ediv;
-  SMLongTermKey r_ltk;
+  struct pbl_bt_sm_key r_ltk;
   uint64_t r_rand;
 
-  SMIdentityResolvingKey irk;             // 16 byte key
-  SMConnectionSignatureResolvingKey csrk; // 16 byte key
-  BTDeviceInternal identity;
+  struct pbl_bt_sm_key irk;  // 16 byte key
+  struct pbl_bt_sm_key csrk; // 16 byte key
+  struct pbl_bt_device_internal identity;
 
   SprfValidFields fields : 8;
   bool is_mitm_protection_enabled;
@@ -90,13 +90,13 @@ _Static_assert(offsetof(SprfBlePairingData, crc) == 0, "crc must be the first fi
 
 typedef struct PBL_PACKED SprfBlePairingName {
   uint32_t crc;
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 } SprfBlePairingName;
 _Static_assert(offsetof(SprfBlePairingName, crc) == 0, "crc must be the first field");
 
 typedef struct PBL_PACKED SprfPinnedAddress {
   uint32_t crc;
-  BTDeviceAddress pinned_address;
+  struct pbl_bt_addr pinned_address;
   uint8_t rsvd[2];
 } SprfPinnedAddress;
 _Static_assert(offsetof(SprfPinnedAddress, crc) == 0, "crc must be the first field");
@@ -112,7 +112,7 @@ typedef struct PBL_PACKED SprfLocalName {
   // Not used today, but in the future we could replace 'Pebble XXXX' with
   // a user friendly name, 'Chris' Pebble'
   uint32_t crc;
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 } SprfLocalName;
 _Static_assert(offsetof(SprfLocalName, crc) == 0, "crc must be the first field");
 
@@ -135,5 +135,5 @@ typedef struct PBL_PACKED SharedPRFData {
   } main_fw_scratch;
 } SharedPRFData;
 
-_Static_assert(BT_DEVICE_NAME_BUFFER_SIZE == 20, "Changing the length will break SharedPRF");
+_Static_assert(PBL_BT_DEVICE_NAME_BUFFER_SIZE == 20, "Changing the length will break SharedPRF");
 _Static_assert(sizeof(SharedPRFData) == 256, "SharedPRFData does not match expected size");

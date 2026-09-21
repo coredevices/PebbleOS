@@ -41,8 +41,8 @@ DEFINE_SYSCALL(bool, sys_app_pp_send_data, CommSession *session, uint16_t endpoi
 
   // TODO: apply some heuristic to decide whether to put connection in fast mode or not:
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
-  comm_session_set_responsiveness(session, BtConsumerPpAppMessage, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE, PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 
   // FIXME: Let the app task wait indefinitely for now
   const uint32_t timeout_ms = ~0;

@@ -50,7 +50,7 @@ typedef struct {
 
 typedef struct {
   GAPLEConnection *connection;
-  ATTHandleRange range;
+  struct pbl_bt_att_handle_range range;
   ListNode *services;
   ListNode *current_service;
   ListNode *current_characteristic;
@@ -90,8 +90,8 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
 
   uint16_t num_characteristics = list_count(service_node->characteristics);
   size_t size_bytes =
-      COMPUTE_GATTSERVICE_SIZE_BYTES(num_characteristics, service_node->num_descriptors, 0);
-  GATTService *gatt_service = kernel_zalloc_check(size_bytes);
+      PBL_BT_GATT_SERVICE_SIZE_BYTES(num_characteristics, service_node->num_descriptors, 0);
+  struct pbl_bt_gatt_service *gatt_service = kernel_zalloc_check(size_bytes);
   gatt_service->size_bytes = size_bytes;
   gatt_service->att_handle = service_node->service.start_handle;
   gatt_service->num_characteristics = num_characteristics;
@@ -103,8 +103,9 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
       (GATTServiceDiscoveryCharacteristicNode *)service_node->characteristics;
   uint8_t *end_ptr = (uint8_t *)gatt_service->characteristics;
   while (chr_node != NULL) {
-    GATTCharacteristic *gatt_characteristic = (GATTCharacteristic *)end_ptr;
-    *gatt_characteristic = (GATTCharacteristic){
+    struct pbl_bt_gatt_characteristic *gatt_characteristic =
+        (struct pbl_bt_gatt_characteristic *)end_ptr;
+    *gatt_characteristic = (struct pbl_bt_gatt_characteristic){
       .att_handle_offset = chr_node->characteristic.val_handle - gatt_service->att_handle,
       .properties = chr_node->characteristic.properties,
       .num_descriptors = 0,
@@ -115,25 +116,25 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
         (GATTServiceDiscoveryDescriptorNode *)chr_node->descriptors;
     uint16_t dsc_index = 0;
     while (dsc_node != NULL) {
-      GATTDescriptor *gatt_descriptor = &gatt_characteristic->descriptors[dsc_index];
-      *gatt_descriptor = (GATTDescriptor){
+      struct pbl_bt_gatt_descriptor *gatt_descriptor = &gatt_characteristic->descriptors[dsc_index];
+      *gatt_descriptor = (struct pbl_bt_gatt_descriptor){
         .att_handle_offset = dsc_node->descriptor.handle - gatt_service->att_handle,
       };
       nimble_uuid_to_pebble(&dsc_node->descriptor.uuid, &gatt_descriptor->uuid);
 
       dsc_index++;
       dsc_node = (GATTServiceDiscoveryDescriptorNode *)list_get_next(&dsc_node->node);
-      end_ptr += sizeof(GATTDescriptor);
+      end_ptr += sizeof(struct pbl_bt_gatt_descriptor);
     }
 
     gatt_characteristic->num_descriptors = dsc_index;
-    end_ptr += sizeof(GATTCharacteristic);
+    end_ptr += sizeof(struct pbl_bt_gatt_characteristic);
     chr_node = (GATTServiceDiscoveryCharacteristicNode *)list_get_next(&chr_node->node);
   }
 
   char service_uuid_str[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(&gatt_service->uuid, service_uuid_str);
-  pbl_bt_cb_gatt_client_discovery_handle_indication(connection, gatt_service, BTErrnoOK);
+  pbl_bt_cb_gatt_client_discovery_handle_indication(connection, gatt_service, PBL_BT_ERRNO_OK);
 
   return true;
 }
@@ -208,7 +209,7 @@ static int prv_on_svc_chgd_subscribe(uint16_t conn_handle, const struct ble_gatt
 static void prv_convert_service_and_notify_os(uint16_t conn_handle,
                                               GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_convert_service_and_notify_os_cb, context->connection);
-  pbl_bt_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
+  pbl_bt_cb_gatt_client_discovery_complete(context->connection, PBL_BT_ERRNO_OK);
 
   // Subscribe to service changed indications (BLE Core 6.0, part G 7.7.1)
   uint16_t chr_handle, dsc_handle;
@@ -322,7 +323,7 @@ static void prv_list_append_or_set(ListNode **list, ListNode *node) {
 static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                            uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
-  BTErrno errno;
+  enum pbl_bt_errno errno;
 
   if (s_stop_discovery_requested) {
     pbl_sem_give(&s_discovery_stopped);
@@ -381,11 +382,11 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
     default:
       PBL_LOG_ERR("Descriptor discovery error: %d", error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
-        errno = BTErrnoServiceDiscoveryTimeout;
+        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
       } else if (error->status == BLE_HS_ENOTCONN) {
-        errno = BTErrnoServiceDiscoveryDisconnected;
+        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
       } else {
-        errno = BTErrnoInternalErrorBegin + error->status;
+        errno = PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + error->status;
       }
 
       prv_discovery_finished();
@@ -400,7 +401,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                            const struct ble_gatt_chr *chr, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
-  BTErrno errno;
+  enum pbl_bt_errno errno;
 
   if (s_stop_discovery_requested) {
     pbl_sem_give(&s_discovery_stopped);
@@ -452,11 +453,11 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
     default:
       PBL_LOG_ERR("Characteristic discovery error: %d", error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
-        errno = BTErrnoServiceDiscoveryTimeout;
+        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
       } else if (error->status == BLE_HS_ENOTCONN) {
-        errno = BTErrnoServiceDiscoveryDisconnected;
+        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
       } else {
-        errno = BTErrnoInternalErrorBegin + error->status;
+        errno = PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + error->status;
       }
 
       prv_discovery_finished();
@@ -471,7 +472,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                const struct ble_gatt_svc *service, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
-  BTErrno errno;
+  enum pbl_bt_errno errno;
 
   if (s_stop_discovery_requested) {
     pbl_sem_give(&s_discovery_stopped);
@@ -506,7 +507,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
       } else {
         // no services found
         prv_discovery_finished();
-        pbl_bt_cb_gatt_client_discovery_complete(context->connection, BTErrnoOK);
+        pbl_bt_cb_gatt_client_discovery_complete(context->connection, PBL_BT_ERRNO_OK);
         prv_free_discovery_context(context);
       }
 
@@ -515,11 +516,11 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
     default:
       PBL_LOG_ERR("Service discovery error: %d", error->status);
       if (error->status == BLE_HS_ETIMEOUT) {
-        errno = BTErrnoServiceDiscoveryTimeout;
+        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
       } else if (error->status == BLE_HS_ENOTCONN) {
-        errno = BTErrnoServiceDiscoveryDisconnected;
+        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
       } else {
-        errno = BTErrnoInternalErrorBegin + error->status;
+        errno = PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + error->status;
       }
 
       prv_discovery_finished();
@@ -533,10 +534,11 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 void nimble_discover_init(void) {
 }
 
-static BTErrno prv_start_discovery(const GAPLEConnection *connection, const ATTHandleRange *data) {
+static enum pbl_bt_errno prv_start_discovery(const GAPLEConnection *connection,
+                                             const struct pbl_bt_att_handle_range *data) {
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
-    return BTErrnoInvalidState;
+    return PBL_BT_ERRNO_INVALID_STATE;
   }
 
   GATTServiceDiscoveryContext *context = kernel_zalloc_check(sizeof(GATTServiceDiscoveryContext));
@@ -546,18 +548,18 @@ static BTErrno prv_start_discovery(const GAPLEConnection *connection, const ATTH
   int rc = ble_gattc_disc_all_svcs(conn_handle, prv_find_inc_svc_cb, (void *)context);
   if (rc != 0) {
     prv_free_discovery_context(context);
-    return BTErrnoInternalErrorBegin + rc;
+    return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + rc;
   }
 
   s_discovery_in_progress = true;
   s_stop_discovery_requested = false;
 
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
 typedef struct {
   GAPLEConnection *connection;
-  ATTHandleRange range;
+  struct pbl_bt_att_handle_range range;
 } DiscoveryOp;
 
 static int prv_discovery_op_start(void *ctx) {
@@ -567,8 +569,9 @@ static int prv_discovery_op_start(void *ctx) {
   const bool valid = gap_le_connection_is_valid(op->connection);
   bt_unlock();
 
-  BTErrno err = valid ? prv_start_discovery(op->connection, &op->range) : BTErrnoInvalidState;
-  if (err == BTErrnoOK) {
+  enum pbl_bt_errno err =
+      valid ? prv_start_discovery(op->connection, &op->range) : PBL_BT_ERRNO_INVALID_STATE;
+  if (err == PBL_BT_ERRNO_OK) {
     return 0;
   }
 
@@ -582,8 +585,8 @@ static int prv_discovery_op_start(void *ctx) {
   return -1;
 }
 
-BTErrno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
-                                          const ATTHandleRange *data) {
+enum pbl_bt_errno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
+                                                    const struct pbl_bt_att_handle_range *data) {
   DiscoveryOp *op = kernel_zalloc_check(sizeof(*op));
   op->connection = (GAPLEConnection *)connection;
   op->range = *data;
@@ -593,16 +596,16 @@ BTErrno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
   // pbl_bt_cb_gatt_client_discovery_complete.
   nimble_gattc_op_queue_push(prv_discovery_op_start, op);
 
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
 // will need to implement this by returning a different value in the callback
 // but not sure if this can get called multiple times in parallel, might need
 // to stuff the flag in the connection struct
-BTErrno pbl_bt_gatt_stop_discovery(GAPLEConnection *connection) {
+enum pbl_bt_errno pbl_bt_gatt_stop_discovery(GAPLEConnection *connection) {
   uint16_t conn_handle;
   if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
-    return BTErrnoInvalidState;
+    return PBL_BT_ERRNO_INVALID_STATE;
   }
 
   if (s_discovery_in_progress) {
@@ -610,7 +613,7 @@ BTErrno pbl_bt_gatt_stop_discovery(GAPLEConnection *connection) {
     pbl_sem_take(&s_discovery_stopped, PBL_FOREVER);
   }
 
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
 void pbl_bt_gatt_handle_discovery_abandoned(void) {

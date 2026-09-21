@@ -12,16 +12,15 @@
 #include <pbl/btutil/bt_uuid.h>
 
 // -------------------------------------------------------------------------------------------------
-// Helpers to calculate the BLEService, BLECharacteristic and BLEDescriptor
+// Helpers to calculate the pbl_bt_service_t, pbl_bt_characteristic_t and pbl_bt_descriptor_t
 // opaque references. To avoid having to store separate identifiers, the values
 // of these references are based on the pointer values to the internal data
-// structures GATTService, GATTCharacteristic and GATTDescriptor. To provide
-// extra protection against the scenario where an app uses a stale (pointer)
-// value that after a new service discovery still happens to map to a valid
-// object, the pointer values are XOR'd with a "generation" number. This
-// generation number is changed whenever gatt_remote_services are updated.
-// The most significant bit (MACHINE_WORD_MSB) is not used for RAM addresses
-// and forced to be always set for a reference. This way, 0 is never used and
+// structures struct pbl_bt_gatt_service, struct pbl_bt_gatt_characteristic and struct
+// pbl_bt_gatt_descriptor. To provide extra protection against the scenario where an app uses a
+// stale (pointer) value that after a new service discovery still happens to map to a valid object,
+// the pointer values are XOR'd with a "generation" number. This generation number is changed
+// whenever gatt_remote_services are updated. The most significant bit (MACHINE_WORD_MSB) is not
+// used for RAM addresses and forced to be always set for a reference. This way, 0 is never used and
 // we can use it to symbolize an "invalid reference".
 
 #define MACHINE_WORD_MSB (((uintptr_t)1) << ((sizeof(uintptr_t) * 8) - 1))
@@ -45,13 +44,13 @@ static uintptr_t prv_get_service_ref(const GAPLEConnection *connection,
   return prv_get_ref(connection, service_node);
 }
 
-static uintptr_t prv_get_characteristic_ref(const GAPLEConnection *connection,
-                                            const GATTCharacteristic *characteristic) {
+static uintptr_t prv_get_characteristic_ref(
+    const GAPLEConnection *connection, const struct pbl_bt_gatt_characteristic *characteristic) {
   return prv_get_ref(connection, characteristic);
 }
 
 static uintptr_t prv_get_descriptor_ref(const GAPLEConnection *connection,
-                                        const GATTDescriptor *descriptor) {
+                                        const struct pbl_bt_gatt_descriptor *descriptor) {
   return prv_get_ref(connection, descriptor);
 }
 
@@ -75,9 +74,11 @@ static const GATTServiceNode *prv_get_service_by_ref(const GAPLEConnection *conn
 // -------------------------------------------------------------------------------------------------
 // Iteration Helpers
 
-typedef bool (*GATTCharacteristicIterator)(const GATTCharacteristic *characteristic, void *cb_data);
+typedef bool (*GATTCharacteristicIterator)(const struct pbl_bt_gatt_characteristic *characteristic,
+                                           void *cb_data);
 
-typedef bool (*GATTDescriptorIterator)(const GATTDescriptor *descriptor, void *cb_data);
+typedef bool (*GATTDescriptorIterator)(const struct pbl_bt_gatt_descriptor *descriptor,
+                                       void *cb_data);
 
 typedef bool (*GATTIncludedServicesIterator)(const GATTServiceNode *included_service_node,
                                              void *cb_data);
@@ -106,10 +107,10 @@ static const GATTServiceNode *prv_find_service_node_by_att_handle(
 //! or true if the iterator reached the end completely.
 static bool prv_iter_service_node(const GATTServiceNode *service_node,
                                   const GATTIterationCallbacks *callbacks, void *cb_data) {
-  const GATTService *service = service_node->service;
+  const struct pbl_bt_gatt_service *service = service_node->service;
 
   // Walk all the characteristics for the service:
-  const GATTCharacteristic *characteristic = service->characteristics;
+  const struct pbl_bt_gatt_characteristic *characteristic = service->characteristics;
   for (unsigned int c = 0; c < service->num_characteristics; ++c) {
     if (callbacks->characteristic_iterator) {
       const bool should_continue = callbacks->characteristic_iterator(characteristic, cb_data);
@@ -121,7 +122,7 @@ static bool prv_iter_service_node(const GATTServiceNode *service_node,
     // Walk all the descriptors for this characteristic:
     if (callbacks->descriptor_iterator) {
       for (unsigned int d = 0; d < characteristic->num_descriptors; ++d) {
-        const GATTDescriptor *descriptor = &characteristic->descriptors[d];
+        const struct pbl_bt_gatt_descriptor *descriptor = &characteristic->descriptors[d];
         const bool should_continue = callbacks->descriptor_iterator(descriptor, cb_data);
         if (!should_continue) {
           return false;
@@ -129,8 +130,8 @@ static bool prv_iter_service_node(const GATTServiceNode *service_node,
       }
     }
 
-    characteristic =
-        (const GATTCharacteristic *)&characteristic->descriptors[characteristic->num_descriptors];
+    characteristic = (const struct pbl_bt_gatt_characteristic *)&characteristic
+                         ->descriptors[characteristic->num_descriptors];
   }
 
   // Walk all the Included Services:
@@ -156,7 +157,7 @@ static bool prv_iter_service_node(const GATTServiceNode *service_node,
 // Service lookup & validation of references
 
 typedef struct {
-  BLEService service_ref;
+  pbl_bt_service_t service_ref;
   const GATTServiceNode *service_node;
 } FindServiceNodeByRefCtx;
 
@@ -167,7 +168,7 @@ static bool prv_find_connection_and_service_node_by_service_ref_find_cb(GAPLECon
   const GATTServiceNode *service_node = prv_get_service_by_ref(connection, ctx->service_ref);
   if (list_contains(head, &service_node->node)) {
     // The service_ref is valid :)
-    // The associated GATTService is found with this GAPLEConnection!
+    // The associated struct pbl_bt_gatt_service is found with this GAPLEConnection!
     ctx->service_node = service_node;
     return true;
   }
@@ -177,8 +178,8 @@ static bool prv_find_connection_and_service_node_by_service_ref_find_cb(GAPLECon
 //! Based on a potentially invalid service reference, find the internal GATTServiceNode and
 //! GAPLEConnection. This function is actually safe to call with an invalid / bogus service ref.
 static const GATTServiceNode *prv_find_service_and_connection(
-    BLEService service_ref, const GAPLEConnection **out_connection) {
-  // Find the GAPLEConnection & GATTServiceNode with the BLEService service_ref:
+    pbl_bt_service_t service_ref, const GAPLEConnection **out_connection) {
+  // Find the GAPLEConnection & GATTServiceNode with the pbl_bt_service_t service_ref:
   FindServiceNodeByRefCtx ctx = {
     .service_ref = service_ref,
   };
@@ -201,11 +202,12 @@ typedef struct {
   const GATTIterationCallbacks *object_iter_callbacks_in;
   const GAPLEConnection *connection_out;
   const GATTServiceNode *service_node_out;
-  const GATTCharacteristic *characteristic_out;
-  const GATTDescriptor *descriptor_out;
+  const struct pbl_bt_gatt_characteristic *characteristic_out;
+  const struct pbl_bt_gatt_descriptor *descriptor_out;
 } FindObjectByRefCtx;
 
-static bool prv_find_characteristic_cb(const GATTCharacteristic *characteristic, void *cb_data) {
+static bool prv_find_characteristic_cb(const struct pbl_bt_gatt_characteristic *characteristic,
+                                       void *cb_data) {
   FindObjectByRefCtx *ctx = (FindObjectByRefCtx *)cb_data;
   if (ctx->object_ref_in == prv_get_ref(ctx->connection_out, characteristic)) {
     ctx->characteristic_out = characteristic;
@@ -214,7 +216,7 @@ static bool prv_find_characteristic_cb(const GATTCharacteristic *characteristic,
   return true /* should_continue */;
 }
 
-static bool prv_find_descriptor_cb(const GATTDescriptor *descriptor, void *cb_data) {
+static bool prv_find_descriptor_cb(const struct pbl_bt_gatt_descriptor *descriptor, void *cb_data) {
   FindObjectByRefCtx *ctx = (FindObjectByRefCtx *)cb_data;
   if (ctx->object_ref_in == prv_get_ref(ctx->connection_out, descriptor)) {
     ctx->descriptor_out = descriptor;
@@ -225,8 +227,8 @@ static bool prv_find_descriptor_cb(const GATTDescriptor *descriptor, void *cb_da
 
 //! Used only in prv_find_descriptor to keep track of the characteristic that contains the found
 //! descriptor. It's kind of ugly, I know.
-static bool prv_track_last_characteristic_cb(const GATTCharacteristic *characteristic,
-                                             void *cb_data) {
+static bool prv_track_last_characteristic_cb(
+    const struct pbl_bt_gatt_characteristic *characteristic, void *cb_data) {
   FindObjectByRefCtx *ctx = (FindObjectByRefCtx *)cb_data;
   ctx->characteristic_out = characteristic;
   return true /* should_continue */;
@@ -262,8 +264,9 @@ static bool prv_find_connection_and_object_by_ref_find_cb(GAPLEConnection *conne
   return (ctx->service_node_out != NULL);
 }
 
-static void prv_find_object(uintptr_t object_ref, const GATTDescriptor **descriptor_out,
-                            const GATTCharacteristic **characteristic_out,
+static void prv_find_object(uintptr_t object_ref,
+                            const struct pbl_bt_gatt_descriptor **descriptor_out,
+                            const struct pbl_bt_gatt_characteristic **characteristic_out,
                             const GATTServiceNode **service_node_out,
                             const GAPLEConnection **connection_out,
                             const GATTIterationCallbacks *object_iter_callbacks) {
@@ -287,34 +290,34 @@ static void prv_find_object(uintptr_t object_ref, const GATTDescriptor **descrip
   }
 }
 
-//! Based on a potentially invalid characteristic reference, find the internal GATTCharacteristic
-//! and GAPLEConnection.
-//! This function is actually safe to call with an invalid / bogus characteristic reference.
-static const GATTCharacteristic *prv_find_characteristic(BLECharacteristic characteristic_ref,
-                                                         const GATTServiceNode **service_node_out,
-                                                         const GAPLEConnection **connection_out) {
+//! Based on a potentially invalid characteristic reference, find the internal struct
+//! pbl_bt_gatt_characteristic and GAPLEConnection. This function is actually safe to call with an
+//! invalid / bogus characteristic reference.
+static const struct pbl_bt_gatt_characteristic *prv_find_characteristic(
+    pbl_bt_characteristic_t characteristic_ref, const GATTServiceNode **service_node_out,
+    const GAPLEConnection **connection_out) {
   const GATTIterationCallbacks object_iter_callbacks = {
     .characteristic_iterator = prv_find_characteristic_cb,
   };
-  const GATTCharacteristic *characteristic;
+  const struct pbl_bt_gatt_characteristic *characteristic;
   prv_find_object(characteristic_ref, NULL, &characteristic, service_node_out, connection_out,
                   &object_iter_callbacks);
   return characteristic;
 }
 
-//! Based on a potentially invalid descriptor reference, find the internal GATTDescriptor and
-//! GAPLEConnection.
-//! This function is actually safe to call with an invalid / bogus descriptor reference.
-static const GATTDescriptor *prv_find_descriptor(BLEDescriptor descriptor_ref,
-                                                 const GATTCharacteristic **characteristic_out,
-                                                 const GATTServiceNode **service_node_out,
-                                                 const GAPLEConnection **connection_out) {
+//! Based on a potentially invalid descriptor reference, find the internal struct
+//! pbl_bt_gatt_descriptor and GAPLEConnection. This function is actually safe to call with an
+//! invalid / bogus descriptor reference.
+static const struct pbl_bt_gatt_descriptor *prv_find_descriptor(
+    pbl_bt_descriptor_t descriptor_ref,
+    const struct pbl_bt_gatt_characteristic **characteristic_out,
+    const GATTServiceNode **service_node_out, const GAPLEConnection **connection_out) {
   const GATTIterationCallbacks object_iter_callbacks = {
     .characteristic_iterator = prv_track_last_characteristic_cb,
     .descriptor_iterator = prv_find_descriptor_cb,
   };
-  const GATTDescriptor *descriptor;
-  const GATTCharacteristic *characteristic;
+  const struct pbl_bt_gatt_descriptor *descriptor;
+  const struct pbl_bt_gatt_characteristic *characteristic;
   prv_find_object(descriptor_ref, &descriptor, &characteristic, service_node_out, connection_out,
                   &object_iter_callbacks);
   if (characteristic_out) {
@@ -325,15 +328,14 @@ static const GATTDescriptor *prv_find_descriptor(BLEDescriptor descriptor_ref,
 
 // -------------------------------------------------------------------------------------------------
 
-uint8_t gatt_client_copy_service_refs(const BTDeviceInternal *device, BLEService services_out[],
-                                      uint8_t num_services) {
+uint8_t gatt_client_copy_service_refs(const struct pbl_bt_device_internal *device,
+                                      pbl_bt_service_t services_out[], uint8_t num_services) {
   return gatt_client_copy_service_refs_matching_uuid(device, services_out, num_services, NULL);
 }
 
-uint8_t gatt_client_copy_service_refs_by_discovery_generation(const BTDeviceInternal *device,
-                                                              BLEService services_out[],
-                                                              uint8_t num_services,
-                                                              uint8_t discovery_gen) {
+uint8_t gatt_client_copy_service_refs_by_discovery_generation(
+    const struct pbl_bt_device_internal *device, pbl_bt_service_t services_out[],
+    uint8_t num_services, uint8_t discovery_gen) {
   uint8_t index = 0;
   bt_lock();
   {
@@ -361,8 +363,9 @@ unlock:
   return index;
 }
 
-uint8_t gatt_client_copy_service_refs_matching_uuid(const BTDeviceInternal *device,
-                                                    BLEService services_out[], uint8_t num_services,
+uint8_t gatt_client_copy_service_refs_matching_uuid(const struct pbl_bt_device_internal *device,
+                                                    pbl_bt_service_t services_out[],
+                                                    uint8_t num_services,
                                                     const Uuid *matching_service_uuid) {
   uint8_t index = 0;
   bt_lock();
@@ -403,12 +406,12 @@ typedef struct {
   const Uuid *const matching_uuids;
 } CopyRefsCtx;
 
-//! Please do not use the functions that take GATTObjectHeader directly, but use the typed versions
-//! instead: prv_copy_characteristic_refs_cb, prv_copy_descriptor_refs_cb and
+//! Please do not use the functions that take struct pbl_bt_gatt_object_header directly, but use the
+//! typed versions instead: prv_copy_characteristic_refs_cb, prv_copy_descriptor_refs_cb and
 //! prv_copy_included_service_refs_cb. This way the compiler can detect type errors.
 
 //! Copies the reference for object into the CopyRefsCtx->refs_out array
-static bool prv_copy_refs_cb(const GATTObjectHeader *object, void *cb_data) {
+static bool prv_copy_refs_cb(const struct pbl_bt_gatt_object_header *object, void *cb_data) {
   CopyRefsCtx *ctx = (CopyRefsCtx *)cb_data;
   int index = ctx->num_found++;
   if (index < ctx->num_max) {
@@ -419,7 +422,8 @@ static bool prv_copy_refs_cb(const GATTObjectHeader *object, void *cb_data) {
 
 //! Copies the reference for object into the CopyRefsCtx->refs_out array, only when
 //! its Uuid is found in the matching_uuids array
-static bool prv_copy_refs_matching_cb(const GATTObjectHeader *object, void *cb_data) {
+static bool prv_copy_refs_matching_cb(const struct pbl_bt_gatt_object_header *object,
+                                      void *cb_data) {
   CopyRefsCtx *ctx = (CopyRefsCtx *)cb_data;
   for (int i = 0; i < ctx->num_max; ++i) {
     if (uuid_equal(&ctx->matching_uuids[i], &object->uuid)) {
@@ -433,21 +437,22 @@ static bool prv_copy_refs_matching_cb(const GATTObjectHeader *object, void *cb_d
 }
 
 //! Copies the reference for characteristic into the CopyRefsCtx->refs_out array
-static bool prv_copy_characteristic_refs_cb(const GATTCharacteristic *characteristic,
+static bool prv_copy_characteristic_refs_cb(const struct pbl_bt_gatt_characteristic *characteristic,
                                             void *cb_data) {
-  return prv_copy_refs_cb((const GATTObjectHeader *)characteristic, cb_data);
+  return prv_copy_refs_cb((const struct pbl_bt_gatt_object_header *)characteristic, cb_data);
 }
 
 //! Copies the reference for characteristic into the CopyRefsCtx->refs_out array, only when
 //! its Uuid is found in the matching_uuids array
-static bool prv_copy_characteristic_refs_matching_cb(const GATTCharacteristic *characteristic,
-                                                     void *cb_data) {
-  return prv_copy_refs_matching_cb((const GATTObjectHeader *)characteristic, cb_data);
+static bool prv_copy_characteristic_refs_matching_cb(
+    const struct pbl_bt_gatt_characteristic *characteristic, void *cb_data) {
+  return prv_copy_refs_matching_cb((const struct pbl_bt_gatt_object_header *)characteristic,
+                                   cb_data);
 }
 
 //! Copies the reference for included service into the CopyRefsCtx->refs_out array
 static bool prv_copy_included_service_refs_cb(const GATTServiceNode *inc_service, void *cb_data) {
-  return prv_copy_refs_cb((const GATTObjectHeader *)inc_service, cb_data);
+  return prv_copy_refs_cb((const struct pbl_bt_gatt_object_header *)inc_service, cb_data);
 }
 
 //! Copies object references associated with service_ref into refs_out.
@@ -457,8 +462,8 @@ static bool prv_copy_included_service_refs_cb(const GATTServiceNode *inc_service
 //! @param matching_uuids If not NULL, only copy references for objects with a matching Uuid
 //! @param callbacks These callbacks determine references for what objects need to be copied out
 //! (characteristics, descriptors or included services)
-static uint8_t prv_locked_copy_refs_with_service_ref(BLEService service_ref, uintptr_t refs_out[],
-                                                     uint8_t num_refs_out,
+static uint8_t prv_locked_copy_refs_with_service_ref(pbl_bt_service_t service_ref,
+                                                     uintptr_t refs_out[], uint8_t num_refs_out,
                                                      const Uuid *matching_uuids,
                                                      const GATTIterationCallbacks *callbacks) {
   CopyRefsCtx ctx = {
@@ -484,8 +489,8 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
-uint8_t gatt_client_service_get_characteristics(BLEService service_ref,
-                                                BLECharacteristic characteristics[],
+uint8_t gatt_client_service_get_characteristics(pbl_bt_service_t service_ref,
+                                                pbl_bt_characteristic_t characteristics[],
                                                 uint8_t num_characteristics) {
   const GATTIterationCallbacks callbacks = {
     .characteristic_iterator = prv_copy_characteristic_refs_cb,
@@ -497,12 +502,12 @@ uint8_t gatt_client_service_get_characteristics(BLEService service_ref,
 // -------------------------------------------------------------------------------------------------
 
 uint8_t gatt_client_service_get_characteristics_matching_uuids(
-    BLEService service_ref, BLECharacteristic characteristics[],
+    pbl_bt_service_t service_ref, pbl_bt_characteristic_t characteristics[],
     const Uuid matching_characteristic_uuids[], uint8_t num_characteristics) {
   const GATTIterationCallbacks callbacks = {
     .characteristic_iterator = prv_copy_characteristic_refs_matching_cb,
   };
-  // Set all elements to BLE_CHARACTERISTIC_INVALID first:
+  // Set all elements to PBL_BT_CHARACTERISTIC_INVALID first:
   memset(characteristics, 0, sizeof(characteristics[0]) * num_characteristics);
   return prv_locked_copy_refs_with_service_ref(service_ref, characteristics, num_characteristics,
                                                matching_characteristic_uuids, &callbacks);
@@ -510,7 +515,8 @@ uint8_t gatt_client_service_get_characteristics_matching_uuids(
 
 // -------------------------------------------------------------------------------------------------
 
-uint8_t gatt_client_service_get_included_services(BLEService service_ref, BLEService services_out[],
+uint8_t gatt_client_service_get_included_services(pbl_bt_service_t service_ref,
+                                                  pbl_bt_service_t services_out[],
                                                   uint8_t num_services_out) {
   const GATTIterationCallbacks callbacks = {
     .included_services_iterator = prv_copy_included_service_refs_cb,
@@ -521,7 +527,7 @@ uint8_t gatt_client_service_get_included_services(BLEService service_ref, BLESer
 
 // -------------------------------------------------------------------------------------------------
 
-Uuid gatt_client_service_get_uuid(BLEService service_ref) {
+Uuid gatt_client_service_get_uuid(pbl_bt_service_t service_ref) {
   Uuid uuid;
   bt_lock();
   {
@@ -539,14 +545,14 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
-BTDeviceInternal gatt_client_service_get_device(BLEService service_ref) {
-  BTDeviceInternal device;
+struct pbl_bt_device_internal gatt_client_service_get_device(pbl_bt_service_t service_ref) {
+  struct pbl_bt_device_internal device;
   bt_lock();
   {
     const GAPLEConnection *connection = NULL;
     prv_find_service_and_connection(service_ref, &connection);
     if (!connection) {
-      device = BT_DEVICE_INTERNAL_INVALID;
+      device = PBL_BT_DEVICE_INTERNAL_INVALID;
       goto unlock;
     }
     device = connection->device;
@@ -558,9 +564,9 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
-Uuid gatt_client_characteristic_get_uuid(BLECharacteristic characteristic_ref) {
+Uuid gatt_client_characteristic_get_uuid(pbl_bt_characteristic_t characteristic_ref) {
   bt_lock();
-  const GATTCharacteristic *const characteristic =
+  const struct pbl_bt_gatt_characteristic *const characteristic =
       prv_find_characteristic(characteristic_ref, NULL, NULL);
   // MT: Working around compiler bug in gcc 4.7.2, when written using ?: it generates broken code
   Uuid characteristic_uuid = UUID_INVALID;
@@ -573,10 +579,10 @@ Uuid gatt_client_characteristic_get_uuid(BLECharacteristic characteristic_ref) {
 
 // -------------------------------------------------------------------------------------------------
 
-BLEAttributeProperty gatt_client_characteristic_get_properties(
-    BLECharacteristic characteristic_ref) {
+enum pbl_bt_attribute_property gatt_client_characteristic_get_properties(
+    pbl_bt_characteristic_t characteristic_ref) {
   bt_lock();
-  const GATTCharacteristic *const characteristic =
+  const struct pbl_bt_gatt_characteristic *const characteristic =
       prv_find_characteristic(characteristic_ref, NULL, NULL);
   const uint8_t properties = characteristic ? characteristic->properties : 0;
   bt_unlock();
@@ -585,24 +591,27 @@ BLEAttributeProperty gatt_client_characteristic_get_properties(
 
 // -------------------------------------------------------------------------------------------------
 
-BLEService gatt_client_characteristic_get_service(BLECharacteristic characteristic_ref) {
+pbl_bt_service_t gatt_client_characteristic_get_service(
+    pbl_bt_characteristic_t characteristic_ref) {
   bt_lock();
   const GATTServiceNode *service_node = NULL;
   const GAPLEConnection *connection;
   prv_find_characteristic(characteristic_ref, &service_node, &connection);
-  const BLEService service_ref =
-      service_node ? prv_get_service_ref(connection, service_node) : BLE_SERVICE_INVALID;
+  const pbl_bt_service_t service_ref =
+      service_node ? prv_get_service_ref(connection, service_node) : PBL_BT_SERVICE_INVALID;
   bt_unlock();
   return service_ref;
 }
 
 // -------------------------------------------------------------------------------------------------
 
-BTDeviceInternal gatt_client_characteristic_get_device(BLECharacteristic characteristic_ref) {
+struct pbl_bt_device_internal gatt_client_characteristic_get_device(
+    pbl_bt_characteristic_t characteristic_ref) {
   bt_lock();
   const GAPLEConnection *connection;
   prv_find_characteristic(characteristic_ref, NULL, &connection);
-  const BTDeviceInternal device = connection ? connection->device : BT_DEVICE_INTERNAL_INVALID;
+  const struct pbl_bt_device_internal device =
+      connection ? connection->device : PBL_BT_DEVICE_INTERNAL_INVALID;
   bt_unlock();
   return device;
 }
@@ -610,7 +619,8 @@ BTDeviceInternal gatt_client_characteristic_get_device(BLECharacteristic charact
 // -------------------------------------------------------------------------------------------------
 // Used by and extern'd for ppogatt.c and dis.c
 
-GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic_ref) {
+GAPLEConnection *gatt_client_characteristic_get_connection(
+    pbl_bt_characteristic_t characteristic_ref) {
   bt_lock_assert_held(true);
   GAPLEConnection *connection;
   prv_find_characteristic(characteristic_ref, NULL, (const GAPLEConnection **)&connection);
@@ -619,16 +629,16 @@ GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic cha
 
 // -------------------------------------------------------------------------------------------------
 
-uint8_t gatt_client_characteristic_get_descriptors(BLECharacteristic characteristic_ref,
-                                                   BLEDescriptor descriptor_refs_out[],
+uint8_t gatt_client_characteristic_get_descriptors(pbl_bt_characteristic_t characteristic_ref,
+                                                   pbl_bt_descriptor_t descriptor_refs_out[],
                                                    uint8_t num_descriptors) {
   uint8_t index = 0;
   bt_lock();
   const GAPLEConnection *connection;
-  const GATTCharacteristic *characteristic =
+  const struct pbl_bt_gatt_characteristic *characteristic =
       prv_find_characteristic(characteristic_ref, NULL, &connection);
   if (characteristic) {
-    const GATTDescriptor *descriptor = characteristic->descriptors;
+    const struct pbl_bt_gatt_descriptor *descriptor = characteristic->descriptors;
     while (index < characteristic->num_descriptors) {
       if (index < num_descriptors) {
         descriptor_refs_out[index] = prv_get_descriptor_ref(connection, descriptor);
@@ -642,29 +652,30 @@ uint8_t gatt_client_characteristic_get_descriptors(BLECharacteristic characteris
 }
 
 void gatt_client_service_get_all_characteristics_and_descriptors(
-    GAPLEConnection *connection, GATTService *service, BLECharacteristic *characteristic_hdls_out,
-    BLEDescriptor *descriptor_hdls_out) {
+    GAPLEConnection *connection, struct pbl_bt_gatt_service *service,
+    pbl_bt_characteristic_t *characteristic_hdls_out, pbl_bt_descriptor_t *descriptor_hdls_out) {
   uint8_t curr_desc_idx = 0;
-  const GATTCharacteristic *characteristic = service->characteristics;
+  const struct pbl_bt_gatt_characteristic *characteristic = service->characteristics;
   for (unsigned int c = 0; c < service->num_characteristics; c++) {
     for (unsigned int d = 0; d < characteristic->num_descriptors; ++d) {
-      const GATTDescriptor *descriptor = &characteristic->descriptors[d];
+      const struct pbl_bt_gatt_descriptor *descriptor = &characteristic->descriptors[d];
       descriptor_hdls_out[curr_desc_idx] = prv_get_descriptor_ref(connection, descriptor);
       curr_desc_idx++;
     }
 
     characteristic_hdls_out[c] = prv_get_characteristic_ref(connection, characteristic);
 
-    characteristic =
-        (const GATTCharacteristic *)&characteristic->descriptors[characteristic->num_descriptors];
+    characteristic = (const struct pbl_bt_gatt_characteristic *)&characteristic
+                         ->descriptors[characteristic->num_descriptors];
   }
 }
 
 // -------------------------------------------------------------------------------------------------
 
-Uuid gatt_client_descriptor_get_uuid(BLEDescriptor descriptor_ref) {
+Uuid gatt_client_descriptor_get_uuid(pbl_bt_descriptor_t descriptor_ref) {
   bt_lock();
-  const GATTDescriptor *descriptor = prv_find_descriptor(descriptor_ref, NULL, NULL, NULL);
+  const struct pbl_bt_gatt_descriptor *descriptor =
+      prv_find_descriptor(descriptor_ref, NULL, NULL, NULL);
   // MT: Working around compiler bug in gcc 4.7.2, when written using ?: it generates broken code
   Uuid uuid = UUID_INVALID;
   if (descriptor) {
@@ -676,12 +687,13 @@ Uuid gatt_client_descriptor_get_uuid(BLEDescriptor descriptor_ref) {
 
 // -------------------------------------------------------------------------------------------------
 
-BLECharacteristic gatt_client_descriptor_get_characteristic_and_connection(
-    BLEDescriptor descriptor_ref, GAPLEConnection **connection_out);
+pbl_bt_characteristic_t gatt_client_descriptor_get_characteristic_and_connection(
+    pbl_bt_descriptor_t descriptor_ref, GAPLEConnection **connection_out);
 
-BLECharacteristic gatt_client_descriptor_get_characteristic(BLEDescriptor descriptor_ref) {
+pbl_bt_characteristic_t gatt_client_descriptor_get_characteristic(
+    pbl_bt_descriptor_t descriptor_ref) {
   bt_lock();
-  const BLECharacteristic characteristic_ref =
+  const pbl_bt_characteristic_t characteristic_ref =
       gatt_client_descriptor_get_characteristic_and_connection(descriptor_ref, NULL);
   bt_unlock();
   return characteristic_ref;
@@ -690,11 +702,11 @@ BLECharacteristic gatt_client_descriptor_get_characteristic(BLEDescriptor descri
 // -------------------------------------------------------------------------------------------------
 
 //! @note !!! To access the returned GAPLEConnection bt_lock MUST be held!!!
-uint16_t gatt_client_characteristic_get_handle_and_connection(BLECharacteristic characteristic_ref,
-                                                              GAPLEConnection **connection_out) {
+uint16_t gatt_client_characteristic_get_handle_and_connection(
+    pbl_bt_characteristic_t characteristic_ref, GAPLEConnection **connection_out) {
   GAPLEConnection *connection;
   const GATTServiceNode *service_node;
-  const GATTCharacteristic *characteristic = prv_find_characteristic(
+  const struct pbl_bt_gatt_characteristic *characteristic = prv_find_characteristic(
       characteristic_ref, &service_node, (const GAPLEConnection **)&connection);
   if (!characteristic) {
     return GATTHandleInvalid;
@@ -705,28 +717,29 @@ uint16_t gatt_client_characteristic_get_handle_and_connection(BLECharacteristic 
   return service_node->service->att_handle + characteristic->att_handle_offset;
 }
 
-static uint16_t prv_get_largest_att_handle_offset(const GATTService *service) {
+static uint16_t prv_get_largest_att_handle_offset(const struct pbl_bt_gatt_service *service) {
   uint16_t largest_offset_hdl = 0;
-  const GATTCharacteristic *characteristic = service->characteristics;
+  const struct pbl_bt_gatt_characteristic *characteristic = service->characteristics;
   for (unsigned int c = 0; c < service->num_characteristics; ++c) {
     if (characteristic->att_handle_offset > largest_offset_hdl) {
       largest_offset_hdl = characteristic->att_handle_offset;
     }
 
     for (unsigned int d = 0; d < characteristic->num_descriptors; ++d) {
-      const GATTDescriptor *descriptor = &characteristic->descriptors[d];
+      const struct pbl_bt_gatt_descriptor *descriptor = &characteristic->descriptors[d];
       if (descriptor->att_handle_offset > largest_offset_hdl) {
         largest_offset_hdl = descriptor->att_handle_offset;
       }
     }
 
-    characteristic =
-        (const GATTCharacteristic *)&characteristic->descriptors[characteristic->num_descriptors];
+    characteristic = (const struct pbl_bt_gatt_characteristic *)&characteristic
+                         ->descriptors[characteristic->num_descriptors];
   }
   return largest_offset_hdl;
 }
 
-bool gatt_client_service_get_handle_range(BLEService service_ref, ATTHandleRange *range) {
+bool gatt_client_service_get_handle_range(pbl_bt_service_t service_ref,
+                                          struct pbl_bt_att_handle_range *range) {
   bool success = false;
   bt_lock();
   {
@@ -737,7 +750,7 @@ bool gatt_client_service_get_handle_range(BLEService service_ref, ATTHandleRange
 
     uint16_t start_hdl = service_node->service->att_handle;
 
-    *range = (ATTHandleRange){
+    *range = (struct pbl_bt_att_handle_range){
       .start = start_hdl,
       .end = start_hdl + prv_get_largest_att_handle_offset(service_node->service),
     };
@@ -752,12 +765,12 @@ done:
 // -------------------------------------------------------------------------------------------------
 
 //! @note !!! To access the returned GAPLEConnection bt_lock MUST be held!!!
-uint16_t gatt_client_descriptor_get_handle_and_connection(BLEDescriptor descriptor_ref,
+uint16_t gatt_client_descriptor_get_handle_and_connection(pbl_bt_descriptor_t descriptor_ref,
                                                           GAPLEConnection **connection_out) {
   GAPLEConnection *connection;
   const GATTServiceNode *service_node;
-  const GATTDescriptor *descriptor = prv_find_descriptor(descriptor_ref, NULL, &service_node,
-                                                         (const GAPLEConnection **)&connection);
+  const struct pbl_bt_gatt_descriptor *descriptor = prv_find_descriptor(
+      descriptor_ref, NULL, &service_node, (const GAPLEConnection **)&connection);
   if (!descriptor) {
     return GATTHandleInvalid;
   }
@@ -770,9 +783,9 @@ uint16_t gatt_client_descriptor_get_handle_and_connection(BLEDescriptor descript
 // -------------------------------------------------------------------------------------------------
 
 //! @note !!! To access the returned GAPLEConnection bt_lock MUST be held!!!
-const GATTCharacteristic *gatt_client_find_characteristic(BLECharacteristic characteristic_ref,
-                                                          const GATTServiceNode **service_node_out,
-                                                          const GAPLEConnection **connection_out) {
+const struct pbl_bt_gatt_characteristic *gatt_client_find_characteristic(
+    pbl_bt_characteristic_t characteristic_ref, const GATTServiceNode **service_node_out,
+    const GAPLEConnection **connection_out) {
   return prv_find_characteristic(characteristic_ref, service_node_out, connection_out);
 }
 
@@ -780,18 +793,18 @@ const GATTCharacteristic *gatt_client_find_characteristic(BLECharacteristic char
 
 //! Used by gatt_client_subscription.c
 //! @note !!! To access the returned GAPLEConnection bt_lock MUST be held!!!
-BLEDescriptor gatt_client_accessors_find_cccd_with_characteristic(
-    BLECharacteristic characteristic_ref, uint8_t *characteristic_properties_out,
+pbl_bt_descriptor_t gatt_client_accessors_find_cccd_with_characteristic(
+    pbl_bt_characteristic_t characteristic_ref, uint8_t *characteristic_properties_out,
     uint16_t *characteristic_att_handle_out, GAPLEConnection **connection_out) {
   const GAPLEConnection *connection;
   const GATTServiceNode *service_node;
-  const GATTCharacteristic *characteristic =
+  const struct pbl_bt_gatt_characteristic *characteristic =
       gatt_client_find_characteristic(characteristic_ref, &service_node, &connection);
   if (characteristic) {
     *characteristic_properties_out = characteristic->properties;
     const Uuid cccd_uuid = bt_uuid_expand_16bit(0x2902);
     for (unsigned int d = 0; d < characteristic->num_descriptors; ++d) {
-      const GATTDescriptor *descriptor = &characteristic->descriptors[d];
+      const struct pbl_bt_gatt_descriptor *descriptor = &characteristic->descriptors[d];
       if (uuid_equal(&descriptor->uuid, &cccd_uuid)) {
         *connection_out = (GAPLEConnection *)connection;
         *characteristic_att_handle_out =
@@ -802,33 +815,34 @@ BLEDescriptor gatt_client_accessors_find_cccd_with_characteristic(
   }
   *connection_out = NULL;
   *characteristic_att_handle_out = 0;
-  return BLE_DESCRIPTOR_INVALID;
+  return PBL_BT_DESCRIPTOR_INVALID;
 }
 
 // -------------------------------------------------------------------------------------------------
 
 //! Used by gatt_client_subscription.c
 //! @note !!! To access the returned GAPLEConnection bt_lock MUST be held!!!
-BLECharacteristic gatt_client_descriptor_get_characteristic_and_connection(
-    BLEDescriptor descriptor_ref, GAPLEConnection **connection_out) {
-  const GATTCharacteristic *characteristic;
+pbl_bt_characteristic_t gatt_client_descriptor_get_characteristic_and_connection(
+    pbl_bt_descriptor_t descriptor_ref, GAPLEConnection **connection_out) {
+  const struct pbl_bt_gatt_characteristic *characteristic;
   GAPLEConnection *connection;
-  const GATTDescriptor *descriptor = prv_find_descriptor(descriptor_ref, &characteristic, NULL,
-                                                         (const GAPLEConnection **)&connection);
-  const BLECharacteristic characteristic_ref =
+  const struct pbl_bt_gatt_descriptor *descriptor = prv_find_descriptor(
+      descriptor_ref, &characteristic, NULL, (const GAPLEConnection **)&connection);
+  const pbl_bt_characteristic_t characteristic_ref =
       descriptor ? prv_get_characteristic_ref(connection, characteristic)
-                 : BLE_CHARACTERISTIC_INVALID;
+                 : PBL_BT_CHARACTERISTIC_INVALID;
   if (connection_out) {
     *connection_out = connection;
   }
   return characteristic_ref;
 }
 
-BLEService gatt_client_att_handle_get_service(GAPLEConnection *connection, uint16_t att_handle,
-                                              const GATTServiceNode **service_node_out) {
+pbl_bt_service_t gatt_client_att_handle_get_service(GAPLEConnection *connection,
+                                                    uint16_t att_handle,
+                                                    const GATTServiceNode **service_node_out) {
   const GATTServiceNode *node =
       prv_find_service_node_by_att_handle(connection->gatt_remote_services, att_handle);
   *service_node_out = node;
 
-  return node ? prv_get_service_ref(connection, node) : BLE_SERVICE_INVALID;
+  return node ? prv_get_service_ref(connection, node) : PBL_BT_SERVICE_INVALID;
 }

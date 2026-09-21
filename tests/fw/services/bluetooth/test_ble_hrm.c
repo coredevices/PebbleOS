@@ -43,12 +43,12 @@ void pbl_bt_hrm_service_enable(bool enable) {
   s_pbl_bt_hrm_service_is_enabled = enable;
 }
 
-static BleHrmServiceMeasurement s_last_ble_hrm_measurement;
+static struct pbl_bt_hrm_service_measurement s_last_ble_hrm_measurement;
 static int s_pbl_bt_hrm_service_handle_measurement_call_count;
-static BTDeviceInternal s_last_permitted_devices[10];
+static struct pbl_bt_device_internal s_last_permitted_devices[10];
 static size_t s_last_num_permitted_devices;
-void pbl_bt_hrm_service_handle_measurement(const BleHrmServiceMeasurement *measurement,
-                                           const BTDeviceInternal *permitted_devices,
+void pbl_bt_hrm_service_handle_measurement(const struct pbl_bt_hrm_service_measurement *measurement,
+                                           const struct pbl_bt_device_internal *permitted_devices,
                                            size_t num_permitted_devices) {
   ++s_pbl_bt_hrm_service_handle_measurement_call_count;
   s_last_ble_hrm_measurement = *measurement;
@@ -69,13 +69,13 @@ bool pbl_bt_is_hrm_service_supported(void) {
   return true;
 }
 
-static BTDeviceInternal s_last_disconnected;
-int pbl_bt_gap_le_disconnect(const BTDeviceInternal *peer_address) {
+static struct pbl_bt_device_internal s_last_disconnected;
+int pbl_bt_gap_le_disconnect(const struct pbl_bt_device_internal *peer_address) {
   s_last_disconnected = *peer_address;
   return 0;
 }
 
-static void prv_assert_last_disconnected(const BTDeviceInternal *peer_address) {
+static void prv_assert_last_disconnected(const struct pbl_bt_device_internal *peer_address) {
   cl_assert_equal_b(bt_device_internal_equal(peer_address, &s_last_disconnected), true);
 }
 
@@ -101,7 +101,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
 
 static GAPLEConnection *s_connections[2];
 
-GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
+GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *device) {
   for (int i = 0; i < ARRAY_LENGTH(s_connections); ++i) {
     if (bt_device_internal_equal(device, &s_connections[i]->device)) {
       return s_connections[i];
@@ -109,7 +109,7 @@ GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device) {
   }
   return NULL;
 }
-BTDeviceInternal *device_from_le_connection(GAPLEConnection *conn) {
+struct pbl_bt_device_internal *device_from_le_connection(GAPLEConnection *conn) {
   return &conn->device;
 }
 
@@ -175,8 +175,8 @@ void test_ble_hrm__cleanup(void) {
 
 static GAPLEConnection s_conn_a;
 static GAPLEConnection s_conn_b;
-static const BTDeviceInternal *s_device_a;
-static const BTDeviceInternal *s_device_b;
+static const struct pbl_bt_device_internal *s_device_a;
+static const struct pbl_bt_device_internal *s_device_b;
 
 void test_ble_hrm__initialize(void) {
   fake_pbl_malloc_clear_tracking();
@@ -195,9 +195,9 @@ void test_ble_hrm__initialize(void) {
   s_ble_hrm_push_reminder_popup_call_count = 0;
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
-  s_last_disconnected = (BTDeviceInternal){};
+  s_last_disconnected = (struct pbl_bt_device_internal){};
   s_last_sharing_request = NULL;
-  s_last_ble_hrm_measurement = (BleHrmServiceMeasurement){};
+  s_last_ble_hrm_measurement = (struct pbl_bt_hrm_service_measurement){};
   fake_event_service_init();
 
   // Set up fake devices/connections:

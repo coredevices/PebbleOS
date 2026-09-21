@@ -6,7 +6,7 @@
 
 #include <inttypes.h>
 
-bool pbl_bt_le_connection_parameter_update(const BTDeviceInternal *addr,
-                                           const BleConnectionParamsUpdateReq *req) {
+bool pbl_bt_le_connection_parameter_update(const struct pbl_bt_device_internal *addr,
+                                           const struct pbl_bt_conn_params_update_req *req) {
   return true;
 }

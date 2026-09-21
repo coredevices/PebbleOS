@@ -6,20 +6,23 @@
 
 #include <pbl/btutil/bt_device.h>
 
-BTErrno pbl_bt_gatt_write_without_response(GAPLEConnection *connection, const uint8_t *value,
-                                           size_t value_length, uint16_t att_handle) {
+enum pbl_bt_errno pbl_bt_gatt_write_without_response(GAPLEConnection *connection,
+                                                     const uint8_t *value, size_t value_length,
+                                                     uint16_t att_handle) {
   return 0;
 }
 
-BTErrno pbl_bt_gatt_write(GAPLEConnection *connection, const uint8_t *value, size_t value_length,
-                          uint16_t att_handle, void *context) {
+enum pbl_bt_errno pbl_bt_gatt_write(GAPLEConnection *connection, const uint8_t *value,
+                                    size_t value_length, uint16_t att_handle, void *context) {
   return 0;
 }
 
-BTErrno pbl_bt_gatt_read(GAPLEConnection *connection, uint16_t att_handle, void *context) {
+enum pbl_bt_errno pbl_bt_gatt_read(GAPLEConnection *connection, uint16_t att_handle,
+                                   void *context) {
   return 0;
 }
 
-BTErrno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
-  return BTErrnoInvalidState;
+enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
+                                              uint16_t len) {
+  return PBL_BT_ERRNO_INVALID_STATE;
 }

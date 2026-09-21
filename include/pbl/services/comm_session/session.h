@@ -116,12 +116,14 @@ bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const ui
                             size_t length, uint32_t timeout_ms);
 
 //! See bt_conn_mgr.h for more details on the parameters
-void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs);
+void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
+                                     enum pbl_bt_response_time_state state,
+                                     uint16_t max_period_secs);
 
 //! See bt_conn_mgr.h for more details on the parameters
-void comm_session_set_responsiveness_ext(CommSession *session, BtConsumer consumer,
-                                         ResponseTimeState state, uint16_t max_period_secs,
-                                         ResponsivenessGrantedHandler granted_handler);
+void comm_session_set_responsiveness_ext(CommSession *session, enum pbl_bt_consumer consumer,
+                                         enum pbl_bt_response_time_state state,
+                                         uint16_t max_period_secs,
+                                         pbl_bt_responsiveness_granted_cb_t granted_handler);
 
 void comm_session_init(void);

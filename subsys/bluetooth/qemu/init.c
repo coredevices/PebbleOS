@@ -17,7 +17,7 @@ void pbl_bt_init(void) {
   bt_lock_init();
 }
 
-bool pbl_bt_start(BTDriverConfig *config) {
+bool pbl_bt_start(struct pbl_bt_config *config) {
   // For QEMU there's no "disconnected" state — the host process is always
   // attached.  Used to defer this to a launcher_task callback so app_message
   // callbacks were registered first, but that opened a race where the host

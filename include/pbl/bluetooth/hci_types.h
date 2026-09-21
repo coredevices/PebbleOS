@@ -5,16 +5,14 @@
 
 #include <stdint.h>
 
-typedef enum {
-  HciStatusCode_Success = 0x00,
-  HciStatusCode_UnknownConnectionIdentifier = 0x02,
-  HciStatusCode_VS_Base = 0x50,
-  HciStatusCode_Max = UINT16_MAX
-} HciStatusCode;
+enum pbl_bt_hci_status {
+  PBL_BT_HCI_STATUS_SUCCESS = 0x00,
+  PBL_BT_HCI_STATUS_UNKNOWN_CONNECTION_IDENTIFIER = 0x02,
+  PBL_BT_HCI_STATUS_VS_BASE = 0x50,
+  PBL_BT_HCI_STATUS_MAX = UINT16_MAX
+};
 
 #ifndef __clang__
-_Static_assert(sizeof(HciStatusCode) == 2, "packed structs expect the status code to be 2 bytes!");
+_Static_assert(sizeof(enum pbl_bt_hci_status) == 2,
+               "packed structs expect the status code to be 2 bytes!");
 #endif
-
-// disconnect reasons are just status codes
-typedef HciStatusCode HciDisconnectReason;

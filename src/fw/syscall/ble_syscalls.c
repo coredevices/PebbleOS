@@ -49,42 +49,44 @@ DEFINE_SYSCALL(int8_t, sys_ble_get_advertising_tx_power, void) {
 // -----------------------------------------------------------------------------
 // ble_central.h
 
-DEFINE_SYSCALL(BTErrno, sys_ble_central_connect, BTDeviceInternal device, bool auto_reconnect,
-               bool is_pairing_required) {
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_central_connect, struct pbl_bt_device_internal device,
+               bool auto_reconnect, bool is_pairing_required) {
   return gap_le_connect_connect(&device, auto_reconnect, is_pairing_required, GAPLEClientApp);
 }
 
-DEFINE_SYSCALL(BTErrno, sys_ble_central_cancel_connect, BTDeviceInternal device) {
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_central_cancel_connect,
+               struct pbl_bt_device_internal device) {
   return gap_le_connect_cancel(&device, GAPLEClientApp);
 }
 
 // -----------------------------------------------------------------------------
 // ble_client.h
 
-DEFINE_SYSCALL(BTErrno, sys_ble_client_discover_services_and_characteristics,
-               BTDeviceInternal device) {
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_client_discover_services_and_characteristics,
+               struct pbl_bt_device_internal device) {
   return gatt_client_discovery_discover_all(&device);
 }
 
-DEFINE_SYSCALL(uint8_t, sys_ble_client_copy_services, BTDeviceInternal device,
-               BLEService services[], uint8_t num_services) {
+DEFINE_SYSCALL(uint8_t, sys_ble_client_copy_services, struct pbl_bt_device_internal device,
+               pbl_bt_service_t services[], uint8_t num_services) {
   if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(services, sizeof(BLEService) * num_services);
+    syscall_assert_userspace_buffer(services, sizeof(pbl_bt_service_t) * num_services);
   }
 
   return gatt_client_copy_service_refs(&device, services, num_services);
 }
 
-DEFINE_SYSCALL(uint16_t, sys_ble_client_get_maximum_value_length, BTDeviceInternal device) {
+DEFINE_SYSCALL(uint16_t, sys_ble_client_get_maximum_value_length,
+               struct pbl_bt_device_internal device) {
   return gap_le_connection_get_gatt_mtu(&device);
 }
 
-DEFINE_SYSCALL(BTErrno, sys_ble_client_read, BLECharacteristic characteristic) {
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_client_read, pbl_bt_characteristic_t characteristic) {
   return gatt_client_op_read(characteristic, GAPLEClientApp);
 }
 
 DEFINE_SYSCALL(bool, sys_ble_client_get_notification_value_length,
-               BLECharacteristic *characteristic_out, uint16_t *value_length_out) {
+               pbl_bt_characteristic_t *characteristic_out, uint16_t *value_length_out) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (characteristic_out) {
       syscall_assert_userspace_buffer(characteristic_out, sizeof(*characteristic_out));
@@ -149,7 +151,7 @@ DEFINE_SYSCALL(bool, sys_ble_client_consume_notification, uintptr_t *object_ref_
   return result;
 }
 
-DEFINE_SYSCALL(BTErrno, sys_ble_client_write, BLECharacteristic characteristic,
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_client_write, pbl_bt_characteristic_t characteristic,
                const uint8_t *value, size_t value_length) {
   // gatt_client_op_write hands `value`/`value_length` straight to the BLE
   // driver, which transmits those bytes to the peer. Without this check an
@@ -161,20 +163,20 @@ DEFINE_SYSCALL(BTErrno, sys_ble_client_write, BLECharacteristic characteristic,
   return gatt_client_op_write(characteristic, value, value_length, GAPLEClientApp);
 }
 
-DEFINE_SYSCALL(BTErrno, sys_ble_client_write_without_response, BLECharacteristic characteristic,
-               const uint8_t *value, size_t value_length) {
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_client_write_without_response,
+               pbl_bt_characteristic_t characteristic, const uint8_t *value, size_t value_length) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(value, value_length);
   }
   return gatt_client_op_write_without_response(characteristic, value, value_length, GAPLEClientApp);
 }
 
-DEFINE_SYSCALL(BTErrno, sys_ble_client_subscribe, BLECharacteristic characteristic,
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_client_subscribe, pbl_bt_characteristic_t characteristic,
                BLESubscription subscription_type) {
   return gatt_client_subscriptions_subscribe(characteristic, subscription_type, GAPLEClientApp);
 }
 
-DEFINE_SYSCALL(BTErrno, sys_ble_client_write_descriptor, BLEDescriptor descriptor,
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_client_write_descriptor, pbl_bt_descriptor_t descriptor,
                const uint8_t *value, size_t value_length) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(value, value_length);
@@ -182,42 +184,43 @@ DEFINE_SYSCALL(BTErrno, sys_ble_client_write_descriptor, BLEDescriptor descripto
   return gatt_client_op_write_descriptor(descriptor, value, value_length, GAPLEClientApp);
 }
 
-DEFINE_SYSCALL(BTErrno, sys_ble_client_read_descriptor, BLEDescriptor descriptor) {
+DEFINE_SYSCALL(enum pbl_bt_errno, sys_ble_client_read_descriptor, pbl_bt_descriptor_t descriptor) {
   return gatt_client_op_read_descriptor(descriptor, GAPLEClientApp);
 }
 
 // -----------------------------------------------------------------------------
 // ble_service.h
 
-DEFINE_SYSCALL(uint8_t, sys_ble_service_get_characteristics, BLEService service_ref,
-               BLECharacteristic characteristics_out[], uint8_t num_characteristics) {
+DEFINE_SYSCALL(uint8_t, sys_ble_service_get_characteristics, pbl_bt_service_t service_ref,
+               pbl_bt_characteristic_t characteristics_out[], uint8_t num_characteristics) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(characteristics_out,
-                                    sizeof(BLECharacteristic) * num_characteristics);
+                                    sizeof(pbl_bt_characteristic_t) * num_characteristics);
   }
 
   return gatt_client_service_get_characteristics(service_ref, characteristics_out,
                                                  num_characteristics);
 }
 
-DEFINE_SYSCALL(void, sys_ble_service_get_uuid, Uuid *uuid, BLEService service_ref) {
+DEFINE_SYSCALL(void, sys_ble_service_get_uuid, Uuid *uuid, pbl_bt_service_t service_ref) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(uuid, sizeof(*uuid));
   }
   *uuid = gatt_client_service_get_uuid(service_ref);
 }
 
-DEFINE_SYSCALL(void, sys_ble_service_get_device, BTDeviceInternal *device, BLEService service) {
+DEFINE_SYSCALL(void, sys_ble_service_get_device, struct pbl_bt_device_internal *device,
+               pbl_bt_service_t service) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(device, sizeof(*device));
   }
   *device = gatt_client_service_get_device(service);
 }
 
-DEFINE_SYSCALL(uint8_t, sys_ble_service_get_included_services, BLEService service_ref,
-               BLEService included_services_out[], uint8_t num_services) {
+DEFINE_SYSCALL(uint8_t, sys_ble_service_get_included_services, pbl_bt_service_t service_ref,
+               pbl_bt_service_t included_services_out[], uint8_t num_services) {
   if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(included_services_out, sizeof(BLEService) * num_services);
+    syscall_assert_userspace_buffer(included_services_out, sizeof(pbl_bt_service_t) * num_services);
   }
 
   return gatt_client_service_get_included_services(service_ref, included_services_out,
@@ -228,34 +231,36 @@ DEFINE_SYSCALL(uint8_t, sys_ble_service_get_included_services, BLEService servic
 // ble_characteristic.h
 
 DEFINE_SYSCALL(void, sys_ble_characteristic_get_uuid, Uuid *uuid,
-               BLECharacteristic characteristic) {
+               pbl_bt_characteristic_t characteristic) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(uuid, sizeof(*uuid));
   }
   *uuid = gatt_client_characteristic_get_uuid(characteristic);
 }
 
-DEFINE_SYSCALL(BLEAttributeProperty, sys_ble_characteristic_get_properties,
-               BLECharacteristic characteristic) {
+DEFINE_SYSCALL(enum pbl_bt_attribute_property, sys_ble_characteristic_get_properties,
+               pbl_bt_characteristic_t characteristic) {
   return gatt_client_characteristic_get_properties(characteristic);
 }
 
-DEFINE_SYSCALL(BLEService, sys_ble_characteristic_get_service, BLECharacteristic characteristic) {
+DEFINE_SYSCALL(pbl_bt_service_t, sys_ble_characteristic_get_service,
+               pbl_bt_characteristic_t characteristic) {
   return gatt_client_characteristic_get_service(characteristic);
 }
 
-DEFINE_SYSCALL(void, sys_ble_characteristic_get_device, BTDevice *device,
-               BLECharacteristic characteristic) {
+DEFINE_SYSCALL(void, sys_ble_characteristic_get_device, struct pbl_bt_device *device,
+               pbl_bt_characteristic_t characteristic) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(device, sizeof(*device));
   }
   *device = gatt_client_characteristic_get_device(characteristic).opaque;
 }
 
-DEFINE_SYSCALL(uint8_t, sys_ble_characteristic_get_descriptors, BLECharacteristic characteristic,
-               BLEDescriptor descriptors_out[], uint8_t num_descriptors) {
+DEFINE_SYSCALL(uint8_t, sys_ble_characteristic_get_descriptors,
+               pbl_bt_characteristic_t characteristic, pbl_bt_descriptor_t descriptors_out[],
+               uint8_t num_descriptors) {
   if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(descriptors_out, sizeof(BLEDescriptor) * num_descriptors);
+    syscall_assert_userspace_buffer(descriptors_out, sizeof(pbl_bt_descriptor_t) * num_descriptors);
   }
   return gatt_client_characteristic_get_descriptors(characteristic, descriptors_out,
                                                     num_descriptors);
@@ -264,13 +269,14 @@ DEFINE_SYSCALL(uint8_t, sys_ble_characteristic_get_descriptors, BLECharacteristi
 // -----------------------------------------------------------------------------
 // ble_descriptor.h
 
-DEFINE_SYSCALL(void, sys_ble_descriptor_get_uuid, Uuid *uuid, BLEDescriptor descriptor) {
+DEFINE_SYSCALL(void, sys_ble_descriptor_get_uuid, Uuid *uuid, pbl_bt_descriptor_t descriptor) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(uuid, sizeof(*uuid));
   }
   *uuid = gatt_client_descriptor_get_uuid(descriptor);
 }
 
-DEFINE_SYSCALL(BLECharacteristic, sys_ble_descriptor_get_characteristic, BLEDescriptor descriptor) {
+DEFINE_SYSCALL(pbl_bt_characteristic_t, sys_ble_descriptor_get_characteristic,
+               pbl_bt_descriptor_t descriptor) {
   return gatt_client_descriptor_get_characteristic(descriptor);
 }

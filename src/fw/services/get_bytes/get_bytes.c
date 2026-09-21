@@ -33,7 +33,7 @@ typedef struct {
   bool sent_header;
   GetBytesStorage storage;
   pbl_tick_t start_ticks;
-  SlaveConnEventStats conn_event_stats;
+  struct pbl_bt_slave_conn_event_stats conn_event_stats;
 } GetBytesState;
 
 // ----------------------------------------------------------------------------------------
@@ -171,11 +171,13 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
     s_get_bytes_in_progress = false;
     prv_put_status_event(DebugInfoStateFinished);
-    comm_session_set_responsiveness(state->session, BtConsumerPpGetBytes, ResponseTimeMax, 0);
+    comm_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
+                                    PBL_BT_RESPONSE_TIME_MAX, 0);
     return;
   } else {
-    comm_session_set_responsiveness(state->session, BtConsumerPpGetBytes, ResponseTimeMin,
-                                    MIN_LATENCY_MODE_TIMEOUT_CD_SECS);
+    comm_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS);
   }
 
   system_task_add_callback(prv_protocol_send_next_chunk, state);

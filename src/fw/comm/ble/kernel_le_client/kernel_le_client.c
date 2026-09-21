@@ -64,27 +64,29 @@ typedef struct {
   //! @param characteristics - handles for the characteristics discovered.
   //!    The array will be 'num_characteristics' size and ordered the same way
   //!    as the characteristics_uuids array provided
-  void (*handle_service_discovered)(BLECharacteristic *characteristics);
+  void (*handle_service_discovered)(pbl_bt_characteristic_t *characteristics);
   //! Callback executed every time a BT LE service matching 'service_uuid' is removed
   //!
   //!  @param characteristics - An array of all the characteristic handles that
   //!    have been invalidated
   //!  @param num_characteristics - The length of the array
-  void (*handle_service_removed)(BLECharacteristic *characteristics, uint8_t num_characteristics);
+  void (*handle_service_removed)(pbl_bt_characteristic_t *characteristics,
+                                 uint8_t num_characteristics);
   //! Invoked when all handles should be flushed by the connection
   //! (events such as a disconnect or full re-discovery will trigger this)
   void (*invalidate_all_references)(void);
   //! Function that is called to test whether the client handles the characteristic, in which case
   //! write/read responses/notifications will be routed to this client (can be NULL)
-  bool (*can_handle_characteristic)(BLECharacteristic characteristic);
+  bool (*can_handle_characteristic)(pbl_bt_characteristic_t characteristic);
   //! Handler for GATT read responses and notifications / indications (can be NULL)
-  void (*handle_read_or_notification)(BLECharacteristic characteristic, const uint8_t *value,
-                                      size_t value_length, BLEGATTError error);
+  void (*handle_read_or_notification)(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                      size_t value_length, enum pbl_bt_gatt_error error);
   //! Handler for GATT write responses (can be NULL)
-  void (*handle_write_response)(BLECharacteristic characteristic, BLEGATTError error);
+  void (*handle_write_response)(pbl_bt_characteristic_t characteristic,
+                                enum pbl_bt_gatt_error error);
   //! Handler for GATT subscription confirmations (can be NULL)
-  void (*handle_subscribe)(BLECharacteristic subscribed_characteristic,
-                           BLESubscription subscription_type, BLEGATTError error);
+  void (*handle_subscribe)(pbl_bt_characteristic_t subscribed_characteristic,
+                           BLESubscription subscription_type, enum pbl_bt_gatt_error error);
 } KernelLEClient;
 
 static const KernelLEClient s_clients[KernelLEClientNum] = {
@@ -182,7 +184,7 @@ static void prv_handle_services_removed(PebbleBLEGATTClientServicesRemoved *serv
       const KernelLEClient *const client = &s_clients[c];
       if (uuid_equal(&service_remove_info->uuid, client->service_uuid)) {
         client->handle_service_removed(
-            (BLECharacteristic *)&service_remove_info->char_and_desc_handles[0],
+            (pbl_bt_characteristic_t *)&service_remove_info->char_and_desc_handles[0],
             service_remove_info->num_characteristics);
       }
     }
@@ -201,7 +203,7 @@ static void prv_handle_all_services_invalidated(void) {
 }
 
 static void prv_handle_services_added(PebbleBLEGATTClientServicesAdded *added_services,
-                                      BTDeviceInternal *device) {
+                                      struct pbl_bt_device_internal *device) {
   // loop through the new services
   for (int s = 0; s < added_services->num_services_added; s++) {
     // get the uuid for the service
@@ -217,7 +219,7 @@ static void prv_handle_services_added(PebbleBLEGATTClientServicesAdded *added_se
 
       // We have found a service that a client is looking for. Make sure the
       // characteristics we want are present and if so notify the interested client about it
-      BLECharacteristic characteristics[client->num_characteristics];
+      pbl_bt_characteristic_t characteristics[client->num_characteristics];
       const uint8_t num_characteristics = gatt_client_service_get_characteristics_matching_uuids(
           added_services->services[s], &characteristics[0], client->characteristic_uuids,
           client->num_characteristics);
@@ -235,13 +237,13 @@ static void prv_handle_services_added(PebbleBLEGATTClientServicesAdded *added_se
 
 static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientServiceEvent *event) {
   PebbleBLEGATTClientServiceEventInfo *event_info = event->info;
-  if (event_info->status == BTErrnoServiceDiscoveryDisconnected) {
+  if (event_info->status == PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED) {
     // TODO: In the past we'd disconnect when service discovery
     // failed (not due to a disconnection)
     return;
   }
-  if (event_info->status != BTErrnoServiceDiscoveryDatabaseChanged &&
-      event_info->status != BTErrnoOK) {
+  if (event_info->status != PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED &&
+      event_info->status != PBL_BT_ERRNO_OK) {
     // gatt_client_discovery.c already logs errors for this condition
     return;
   }
@@ -267,7 +269,7 @@ static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientSer
   }
 }
 
-static const KernelLEClient *prv_client_for_characteristic(BLECharacteristic characteristic) {
+static const KernelLEClient *prv_client_for_characteristic(pbl_bt_characteristic_t characteristic) {
   for (int c = 0; c < KernelLEClientNum; ++c) {
     const KernelLEClient *const client = &s_clients[c];
     if (client->can_handle_characteristic && client->can_handle_characteristic(characteristic)) {
@@ -277,11 +279,11 @@ static const KernelLEClient *prv_client_for_characteristic(BLECharacteristic cha
   return NULL;
 }
 
-typedef void (*ConsumeFuncPtr)(BLECharacteristic characteristic_ref, uint8_t *value_out,
+typedef void (*ConsumeFuncPtr)(pbl_bt_characteristic_t characteristic_ref, uint8_t *value_out,
                                uint16_t value_length, GAPLEClient client);
 
-typedef void (*ReadNotifyHandler)(BLECharacteristic characteristic, const uint8_t *value,
-                                  size_t value_length, BLEGATTError error);
+typedef void (*ReadNotifyHandler)(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                  size_t value_length, enum pbl_bt_gatt_error error);
 
 static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
                                       const KernelLEClient *client) {
@@ -336,7 +338,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
     const KernelLEClient *const client = prv_client_for_characteristic(header.characteristic);
     if (client->handle_read_or_notification) {
       client->handle_read_or_notification(header.characteristic, buffer, header.value_length,
-                                          BLEGATTErrorSuccess);
+                                          PBL_BT_GATT_ERROR_SUCCESS);
     } else {
       PBL_LOG_DBG("No client to handle GATT notification from characteristic %p",
                   (void *)header.characteristic);
@@ -411,7 +413,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
   // we could be getting this call as a result of a disconnect due to
   // forgetting a pairing key
 
-  const BTDeviceInternal device = PebbleEventToBTDeviceInternal(event);
+  const struct pbl_bt_device_internal device = PebbleEventToBTDeviceInternal(event);
   if (connected) {
     PBL_LOG_DBG("Connected to Gateway!");
 
@@ -466,14 +468,14 @@ void kernel_le_client_handle_event(const PebbleEvent *e) {
 }
 
 // -------------------------------------------------------------------------------------------------
-static void prv_connect_gateway_bonding(BTBondingID gateway_bonding) {
+static void prv_connect_gateway_bonding(pbl_bt_bonding_id_t gateway_bonding) {
   gap_le_slave_reconnect_start();
   gap_le_connect_connect_by_bonding(gateway_bonding, true /* auto_reconnect */,
                                     true /* is_pairing_required */, GAPLEClientKernel);
 }
 
 // -------------------------------------------------------------------------------------------------
-static void prv_cancel_connect_gateway_bonding(BTBondingID gateway_bonding) {
+static void prv_cancel_connect_gateway_bonding(pbl_bt_bonding_id_t gateway_bonding) {
   gap_le_slave_reconnect_stop();
   // FIXME: Redundant? since gap_le_connect will also clean up?
   gap_le_connect_cancel_by_bonding(gateway_bonding, GAPLEClientKernel);
@@ -490,7 +492,7 @@ static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 }
 
 // -------------------------------------------------------------------------------------------------
-void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
+void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op) {
   if (bt_persistent_storage_is_ble_ancs_bonding(bonding)) {
     if (op == BtPersistBondingOpWillDelete) {
       prv_cancel_connect_gateway_bonding(bonding);
@@ -505,8 +507,8 @@ void kernel_le_client_init(void) {
   // Reset analytics
   ppogatt_reset_disconnect_counter();
 
-  BTBondingID gateway_bonding = bt_persistent_storage_get_ble_ancs_bonding();
-  if (gateway_bonding != BT_BONDING_ID_INVALID) {
+  pbl_bt_bonding_id_t gateway_bonding = bt_persistent_storage_get_ble_ancs_bonding();
+  if (gateway_bonding != PBL_BT_BONDING_ID_INVALID) {
     prv_connect_gateway_bonding(gateway_bonding);
   }
 }

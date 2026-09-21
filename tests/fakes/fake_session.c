@@ -246,21 +246,23 @@ void comm_session_send_buffer_end_write(SendBuffer *sb) {
 
 static uint32_t s_responsiveness_max_period_s;
 static bool s_responsiveness_latency_is_reduced;
-static ResponsivenessGrantedHandler s_last_responsiveness_granted_handler;
+static pbl_bt_responsiveness_granted_cb_t s_last_responsiveness_granted_handler;
 
-void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs) {
+void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
+                                     enum pbl_bt_response_time_state state,
+                                     uint16_t max_period_secs) {
   comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, NULL);
 }
 
-void comm_session_set_responsiveness_ext(CommSession *session, BtConsumer consumer,
-                                         ResponseTimeState state, uint16_t max_period_secs,
-                                         ResponsivenessGrantedHandler granted_handler) {
+void comm_session_set_responsiveness_ext(CommSession *session, enum pbl_bt_consumer consumer,
+                                         enum pbl_bt_response_time_state state,
+                                         uint16_t max_period_secs,
+                                         pbl_bt_responsiveness_granted_cb_t granted_handler) {
   s_responsiveness_max_period_s = max_period_secs;
 
-  if (state == ResponseTimeMiddle) {
+  if (state == PBL_BT_RESPONSE_TIME_MIDDLE) {
     s_responsiveness_latency_is_reduced = true;
-  } else if (state == ResponseTimeMax) {
+  } else if (state == PBL_BT_RESPONSE_TIME_MAX) {
     s_responsiveness_latency_is_reduced = false;
   }
 
@@ -270,7 +272,7 @@ void comm_session_set_responsiveness_ext(CommSession *session, BtConsumer consum
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Session related functions
 
-ResponsivenessGrantedHandler fake_comm_session_get_last_responsiveness_granted_handler(void) {
+pbl_bt_responsiveness_granted_cb_t fake_comm_session_get_last_responsiveness_granted_handler(void) {
   return s_last_responsiveness_granted_handler;
 }
 

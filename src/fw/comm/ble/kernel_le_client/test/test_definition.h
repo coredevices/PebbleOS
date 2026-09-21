@@ -59,19 +59,21 @@ static const Uuid s_test_characteristic_uuids[TestCharacteristicCount] = {
   },
 };
 
-void test_client_handle_service_discovered(BLECharacteristic *characteristics);
+void test_client_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
 
 void test_client_invalidate_all_references(void);
 
-void test_client_handle_service_removed(BLECharacteristic *characteristics,
+void test_client_handle_service_removed(pbl_bt_characteristic_t *characteristics,
                                         uint8_t num_characteristics);
 
-bool test_client_can_handle_characteristic(BLECharacteristic characteristic);
+bool test_client_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
 
-void test_client_handle_write_response(BLECharacteristic characteristic, BLEGATTError error);
+void test_client_handle_write_response(pbl_bt_characteristic_t characteristic,
+                                       enum pbl_bt_gatt_error error);
 
-void test_client_handle_subscribe(BLECharacteristic characteristic,
-                                  BLESubscription subscription_type, BLEGATTError error);
+void test_client_handle_subscribe(pbl_bt_characteristic_t characteristic,
+                                  BLESubscription subscription_type, enum pbl_bt_gatt_error error);
 
-void test_client_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                             size_t value_length, BLEGATTError error);
+void test_client_handle_read_or_notification(pbl_bt_characteristic_t characteristic,
+                                             const uint8_t *value, size_t value_length,
+                                             enum pbl_bt_gatt_error error);

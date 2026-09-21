@@ -43,14 +43,14 @@ void bluetooth_analytics_handle_param_update_failed(void) {
 }
 
 //! only called when we are connected as a slave
-void bluetooth_analytics_handle_connection_params_update(const BleConnectionParams *params) {
+void bluetooth_analytics_handle_connection_params_update(const struct pbl_bt_conn_params *params) {
   // When connected as a slave device, the 'Slave Latency' connection parameter allows
   // the controller to skip the connection sync for that number of connection events.
   prv_update_conn_params(params->slave_latency_events, params->supervision_timeout_10ms);
 }
 
 void bluetooth_analytics_handle_connection_disconnection_event(
-    uint8_t reason, const BleRemoteVersionInfo *vers_info) {
+    uint8_t reason, const struct pbl_bt_remote_version_info *vers_info) {
   static uint32_t last_reset_counter_ticks = 0;
   static uint8_t num_events_logged = 0;
 
@@ -98,8 +98,8 @@ void bluetooth_analytics_handle_connection_disconnection_event(
   num_events_logged++;
 }
 
-void bluetooth_analytics_handle_connect(const BTDeviceInternal *peer_addr,
-                                        const BleConnectionParams *conn_params) {
+void bluetooth_analytics_handle_connect(const struct pbl_bt_device_internal *peer_addr,
+                                        const struct pbl_bt_conn_params *conn_params) {
   bluetooth_analytics_handle_connection_params_update(conn_params);
 }
 
@@ -120,21 +120,22 @@ void bluetooth_analytics_handle_ble_pairing_request(void) {
 void bluetooth_analytics_handle_ble_pairing_error(uint32_t error) {
 }
 
-static bool prv_calc_stats_and_print(const SlaveConnEventStats *orig_stats,
-                                     SlaveConnEventStats *stats_buf, bool is_putbytes) {
+static bool prv_calc_stats_and_print(const struct pbl_bt_slave_conn_event_stats *orig_stats,
+                                     struct pbl_bt_slave_conn_event_stats *stats_buf,
+                                     bool is_putbytes) {
   return false;
 }
 
-void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, uint32_t total_size,
-                                                uint32_t elapsed_time_ms,
-                                                const SlaveConnEventStats *orig_stats) {
-  SlaveConnEventStats new_stats = {};
+void bluetooth_analytics_handle_put_bytes_stats(
+    bool successful, uint8_t type, uint32_t total_size, uint32_t elapsed_time_ms,
+    const struct pbl_bt_slave_conn_event_stats *orig_stats) {
+  struct pbl_bt_slave_conn_event_stats new_stats = {};
   prv_calc_stats_and_print(orig_stats, &new_stats, true /* is_putbytes */);
 }
 
-void bluetooth_analytics_handle_get_bytes_stats(uint8_t type, uint32_t total_size,
-                                                uint32_t elapsed_time_ms,
-                                                const SlaveConnEventStats *orig_stats) {
-  SlaveConnEventStats new_stats = {};
+void bluetooth_analytics_handle_get_bytes_stats(
+    uint8_t type, uint32_t total_size, uint32_t elapsed_time_ms,
+    const struct pbl_bt_slave_conn_event_stats *orig_stats) {
+  struct pbl_bt_slave_conn_event_stats new_stats = {};
   prv_calc_stats_and_print(orig_stats, &new_stats, false /* is_putbytes */);
 }

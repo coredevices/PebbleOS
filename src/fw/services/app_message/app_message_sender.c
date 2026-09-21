@@ -20,8 +20,8 @@ PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL)
 static void prv_request_fast_connection(CommSession *session) {
   // TODO: apply some heuristic to decide whether to put connection in fast mode or not:
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
-  comm_session_set_responsiveness(session, BtConsumerPpAppMessage, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE, PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 }
 
 static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(

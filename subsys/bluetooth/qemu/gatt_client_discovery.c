@@ -7,12 +7,12 @@
 // -------------------------------------------------------------------------------------------------
 // Gatt Client Discovery API calls
 
-BTErrno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
-                                          const ATTHandleRange *data) {
+enum pbl_bt_errno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
+                                                    const struct pbl_bt_att_handle_range *data) {
   return 0;
 }
 
-BTErrno pbl_bt_gatt_stop_discovery(GAPLEConnection *connection) {
+enum pbl_bt_errno pbl_bt_gatt_stop_discovery(GAPLEConnection *connection) {
   return 0;
 }
 

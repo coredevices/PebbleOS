@@ -20,4 +20,5 @@ typedef struct GAPLEConnectRequestParams {
 //! @note The change does not take effect immediately. When Pebble is the LE slave, it depends on
 //! the other side (master) to actually act upon the request and apply the change. With iOS
 //! devices, this does not always happen.
-void gap_le_connect_params_request(GAPLEConnection *connection, ResponseTimeState desired_state);
+void gap_le_connect_params_request(GAPLEConnection *connection,
+                                   enum pbl_bt_response_time_state desired_state);

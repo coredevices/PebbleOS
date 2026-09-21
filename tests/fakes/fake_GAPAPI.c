@@ -104,7 +104,7 @@ unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_
   return s_scan_resp_data_length;
 }
 
-bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const struct pbl_bt_ad_data *ad_data) {
   if (ad_data) {
     memcpy(&s_ad_data, ad_data->data, ad_data->ad_data_length);
     s_ad_data_length = ad_data->ad_data_length;
@@ -145,7 +145,8 @@ void prv_fake_gap_le_adv_connection_event_put(GAP_LE_Event_Data_t *event) {
   s_le_adv_connection_event_callback(1, event, s_le_adv_connection_callback_param);
 }
 
-void fake_gap_put_connection_event(uint8_t status, bool is_master, const BTDeviceInternal *device) {
+void fake_gap_put_connection_event(uint8_t status, bool is_master,
+                                   const struct pbl_bt_device_internal *device) {
   GAP_LE_Connection_Complete_Event_Data_t event_data = (GAP_LE_Connection_Complete_Event_Data_t){
     .Status = status,
     .Master = is_master,
@@ -165,7 +166,7 @@ void fake_gap_put_connection_event(uint8_t status, bool is_master, const BTDevic
 }
 
 void fake_gap_put_disconnection_event(uint8_t status, uint8_t reason, bool is_master,
-                                      const BTDeviceInternal *device) {
+                                      const struct pbl_bt_device_internal *device) {
   GAP_LE_Disconnection_Complete_Event_Data_t event_data =
       (GAP_LE_Disconnection_Complete_Event_Data_t){
         .Status = status,
@@ -186,7 +187,7 @@ void fake_gap_put_disconnection_event(uint8_t status, uint8_t reason, bool is_ma
 }
 
 void fake_GAPAPI_put_encryption_change_event(bool encrypted, uint8_t status, bool is_master,
-                                             const BTDeviceInternal *device) {
+                                             const struct pbl_bt_device_internal *device) {
   GAP_LE_Encryption_Change_Event_Data_t event_data = (GAP_LE_Encryption_Change_Event_Data_t){
     .BD_ADDR = BTDeviceAddressToBDADDR(device->address),
     .Encryption_Change_Status = status,
@@ -210,7 +211,8 @@ int GAP_LE_Cancel_Create_Connection(unsigned int BluetoothStackID) {
 
 // Puts the event that the BT Controller will emit after a successful
 // GAP_LE_Cancel_Create_Connection call.
-void fake_gap_le_put_cancel_create_event(const BTDeviceInternal *device, bool is_master) {
+void fake_gap_le_put_cancel_create_event(const struct pbl_bt_device_internal *device,
+                                         bool is_master) {
   fake_gap_put_connection_event(HCI_ERROR_CODE_UNKNOWN_CONNECTION_IDENTIFIER, is_master, device);
 }
 
@@ -254,7 +256,7 @@ int GAP_LE_Query_Encryption_Mode(unsigned int BluetoothStackID, BD_ADDR_t BD_ADD
   return 0;
 }
 
-void fake_GAPAPI_set_encrypted_for_device(const BTDeviceInternal *device) {
+void fake_GAPAPI_set_encrypted_for_device(const struct pbl_bt_device_internal *device) {
   s_encrypted_device = BTDeviceAddressToBDADDR(device->address);
 }
 
@@ -321,9 +323,9 @@ const BD_ADDR_t *fake_GAPAPI_get_bd_addr_not_resolving_to_fake_irk(void) {
   return &s_not_resolving_bd_addr;
 }
 
-const BTDeviceInternal *fake_GAPAPI_get_device_not_resolving_to_fake_irk(void) {
-  static BTDeviceInternal s_not_resolving_device;
-  s_not_resolving_device = (const BTDeviceInternal){
+const struct pbl_bt_device_internal *fake_GAPAPI_get_device_not_resolving_to_fake_irk(void) {
+  static struct pbl_bt_device_internal s_not_resolving_device;
+  s_not_resolving_device = (const struct pbl_bt_device_internal){
     .address = BDADDRToBTDeviceAddress(s_not_resolving_bd_addr),
     .is_random_address = true,
   };
@@ -334,9 +336,9 @@ const BD_ADDR_t *fake_GAPAPI_get_bd_addr_resolving_to_fake_irk(void) {
   return &s_resolving_bd_addr;
 }
 
-const BTDeviceInternal *fake_GAPAPI_get_device_resolving_to_fake_irk(void) {
-  static BTDeviceInternal s_resolving_device;
-  s_resolving_device = (const BTDeviceInternal){
+const struct pbl_bt_device_internal *fake_GAPAPI_get_device_resolving_to_fake_irk(void) {
+  static struct pbl_bt_device_internal s_resolving_device;
+  s_resolving_device = (const struct pbl_bt_device_internal){
     .address = BDADDRToBTDeviceAddress(s_resolving_bd_addr),
     .is_random_address = true,
   };

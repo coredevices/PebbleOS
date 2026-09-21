@@ -10,12 +10,12 @@
 
 #include <stdbool.h>
 
-typedef struct PBL_PACKED BTDriverConfig {
-  SM128BitKey root_keys[SMRootKeyTypeNum];
-  DisInfo dis_info;
-  BTDeviceAddress identity_addr;
+struct PBL_PACKED pbl_bt_config {
+  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
+  struct pbl_bt_dis_info dis_info;
+  struct pbl_bt_addr identity_addr;
   bool is_hrm_supported_and_enabled;
-} BTDriverConfig;
+};
 
 //! Function that performs one-time initialization of the BT Driver.
 //! The main FW is expected to call this once at boot.
@@ -23,7 +23,7 @@ void pbl_bt_init(void);
 
 //! Starts the Bluetooth stack.
 //! @return True if the stack started successfully.
-bool pbl_bt_start(BTDriverConfig *config);
+bool pbl_bt_start(struct pbl_bt_config *config);
 
 //! Stops the Bluetooth stack.
 void pbl_bt_stop(void);

@@ -60,7 +60,7 @@ void connection_service_subscribe(ConnectionHandlers conn_handlers) {
 void connection_service_state_init(ConnectionServiceState *state) {
   *state = (ConnectionServiceState){
     .bcs_info = {
-      .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+      .type = PBL_BT_PEBBLE_CONNECTION_DEBOUNCED_EVENT,
       .handler = prv_do_handle,
     },
   };

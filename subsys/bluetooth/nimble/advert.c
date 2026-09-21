@@ -20,7 +20,7 @@
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 static const ble_uuid16_t s_device_name_chr_uuid = BLE_UUID16_INIT(0x2A00);
-static char s_device_name[BT_DEVICE_NAME_BUFFER_SIZE];
+static char s_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 static bool s_pairing_in_progress;
 
 static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
@@ -64,7 +64,7 @@ bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power) {
   return false;
 }
 
-bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const struct pbl_bt_ad_data *ad_data) {
   int rc;
 
   rc = ble_gap_adv_set_data((uint8_t *)&ad_data->data, ad_data->ad_data_length);
@@ -94,10 +94,10 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
     return;
   }
 
-  struct BleConnectionCompleteEvent complete_event = {
+  struct pbl_bt_conn_complete_event complete_event = {
     .handle = event->connect.conn_handle,
     .is_master = desc.role == BLE_GAP_ROLE_MASTER,
-    .status = HciStatusCode_Success,
+    .status = PBL_BT_HCI_STATUS_SUCCESS,
     .mtu = ble_att_mtu(event->connect.conn_handle),
   };
 
@@ -106,13 +106,13 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
   complete_event.is_resolved = ble_addr_cmp(&desc.peer_id_addr, &desc.peer_ota_addr) != 0;
 
   {
-    BTDeviceAddress ota_addr, id_addr;
+    struct pbl_bt_addr ota_addr, id_addr;
     nimble_addr_to_pebble_addr(&desc.peer_ota_addr, &ota_addr);
     nimble_addr_to_pebble_addr(&desc.peer_id_addr, &id_addr);
-    PBL_LOG_DBG("Conn compl: ota=" BT_DEVICE_ADDRESS_FMT " atype=%u",
-                BT_DEVICE_ADDRESS_XPLODE(ota_addr), desc.peer_ota_addr.type);
-    PBL_LOG_DBG("Conn compl: id=" BT_DEVICE_ADDRESS_FMT " atype=%u",
-                BT_DEVICE_ADDRESS_XPLODE(id_addr), desc.peer_id_addr.type);
+    PBL_LOG_DBG("Conn compl: ota=" PBL_BT_ADDR_FMT " atype=%u", PBL_BT_ADDR_XPLODE(ota_addr),
+                desc.peer_ota_addr.type);
+    PBL_LOG_DBG("Conn compl: id=" PBL_BT_ADDR_FMT " atype=%u", PBL_BT_ADDR_XPLODE(id_addr),
+                desc.peer_id_addr.type);
   }
 
   if (complete_event.is_resolved) {
@@ -151,14 +151,14 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_disconnection_event(struct ble_gap_event *event) {
-  GattDeviceDisconnectionEvent gatt_event;
+  struct pbl_bt_gatt_device_disconnection_event gatt_event;
   nimble_addr_to_pebble_addr(&event->disconnect.conn.peer_id_addr, &gatt_event.dev_address);
   pbl_bt_cb_gatt_handle_disconnect(&gatt_event);
 
-  struct BleDisconnectionCompleteEvent disconnection_event = {
+  struct pbl_bt_disconn_complete_event disconnection_event = {
     .handle = event->disconnect.conn.conn_handle,
     .reason = event->disconnect.reason,
-    .status = HciStatusCode_Success,
+    .status = PBL_BT_HCI_STATUS_SUCCESS,
   };
   nimble_addr_to_pebble_device(&event->disconnect.conn.peer_id_addr,
                                &disconnection_event.peer_address);
@@ -175,7 +175,7 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
   PBL_LOG_INFO("Encryption change: status=0x%04x encrypted=%u bonded=%u",
                (uint16_t)event->enc_change.status, desc.sec_state.encrypted, desc.sec_state.bonded);
 
-  struct BleEncryptionChange enc_change_event = {
+  struct pbl_bt_encryption_change enc_change_event = {
     .encryption_enabled = desc.sec_state.encrypted,
     .status = event->enc_change.status, // doesn't technically match but only logged so this is fine
   };
@@ -201,8 +201,8 @@ static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
       desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
       desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
 
-  struct BleConnectionUpdateCompleteEvent conn_params_update_event = {
-    .status = HciStatusCode_Success,
+  struct pbl_bt_conn_update_complete_event conn_params_update_event = {
+    .status = PBL_BT_HCI_STATUS_SUCCESS,
   };
   nimble_conn_params_to_pebble(&desc, &conn_params_update_event.conn_params);
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &conn_params_update_event.dev_address);
@@ -226,8 +226,8 @@ static void prv_handle_passkey_event(struct ble_gap_event *event) {
   char passkey_str[7];
   uint32_t passkey = 0;
   const char *device_name = NULL;
-  PairingUserConfirmationCtx *ctx =
-      (PairingUserConfirmationCtx *)((uintptr_t)event->passkey.conn_handle);
+  struct pbl_bt_pairing_confirm_ctx *ctx =
+      (struct pbl_bt_pairing_confirm_ctx *)((uintptr_t)event->passkey.conn_handle);
 
   if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
     passkey = event->passkey.params.numcmp;
@@ -249,8 +249,8 @@ static void prv_handle_pairing_complete_event(struct ble_gap_event *event) {
     return;
   }
 
-  PairingUserConfirmationCtx *ctx =
-      (PairingUserConfirmationCtx *)((uintptr_t)event->pairing_complete.conn_handle);
+  struct pbl_bt_pairing_confirm_ctx *ctx =
+      (struct pbl_bt_pairing_confirm_ctx *)((uintptr_t)event->pairing_complete.conn_handle);
   pbl_bt_cb_pairing_confirm_handle_completed(ctx, event->pairing_complete.status == 0);
   s_pairing_in_progress = false;
 }
@@ -262,7 +262,7 @@ static void prv_handle_identity_resolved_event(struct ble_gap_event *event) {
     return;
   }
 
-  BleAddressChange addr_change_event;
+  struct pbl_bt_addr_change addr_change_event;
   nimble_addr_to_pebble_device(&desc.peer_ota_addr, &addr_change_event.device);
   nimble_addr_to_pebble_device(&desc.peer_id_addr, &addr_change_event.new_device);
   pbl_bt_handle_le_connection_handle_update_address(&addr_change_event);
@@ -275,7 +275,7 @@ static void prv_handle_mtu_change_event(struct ble_gap_event *event) {
     return;
   }
 
-  GattDeviceMtuUpdateEvent mtu_update_event = {.mtu = event->mtu.value};
+  struct pbl_bt_gatt_device_mtu_update_event mtu_update_event = {.mtu = event->mtu.value};
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &mtu_update_event.dev_address);
   pbl_bt_cb_gatt_handle_mtu_update(&mtu_update_event);
 }
@@ -296,7 +296,7 @@ static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
     return;
   }
 
-  GattServerNotifIndicEvent notification_event = {
+  struct pbl_bt_gatt_server_notif_indic_event notification_event = {
     .attr_handle = event->notify_rx.attr_handle,
     .attr_val = event->notify_rx.om->om_data,
     .attr_val_len = event->notify_rx.om->om_len,

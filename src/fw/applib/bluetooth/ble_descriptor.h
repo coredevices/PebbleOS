@@ -8,7 +8,7 @@
 //! Gets the UUID for a descriptor.
 //! @param descriptor The descriptor for which to get the UUID.
 //! @return The UUID of the descriptor
-Uuid ble_descriptor_get_uuid(BLEDescriptor descriptor);
+Uuid ble_descriptor_get_uuid(pbl_bt_descriptor_t descriptor);
 
 //! Gets the characteristic for a descriptor.
 //! @param descriptor The descriptor for which to get the characteristic.
@@ -17,12 +17,13 @@ Uuid ble_descriptor_get_uuid(BLEDescriptor descriptor);
 //! to services, characteristics and descriptors are guaranteed to remain valid
 //! *until the BLEClientServiceChangeHandler is called again* or until
 //! application is terminated.
-BLECharacteristic ble_descriptor_get_characteristic(BLEDescriptor descriptor);
+pbl_bt_characteristic_t ble_descriptor_get_characteristic(pbl_bt_descriptor_t descriptor);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // (FUTURE / LATER / NOT SCOPED)
 // Just to see how symmetric the Server APIs would be:
 
-BLEDescriptor ble_descriptor_create(const Uuid *uuid, BLEAttributeProperty properties);
+pbl_bt_descriptor_t ble_descriptor_create(const Uuid *uuid,
+                                          enum pbl_bt_attribute_property properties);
 
-BTErrno ble_descriptor_destroy(BLEDescriptor descriptor);
+enum pbl_bt_errno ble_descriptor_destroy(pbl_bt_descriptor_t descriptor);

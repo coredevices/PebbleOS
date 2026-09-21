@@ -66,7 +66,7 @@ void prefs_sync_init(void) {
 
   // Subscribe to connection events
   s_connection_event_info = (EventServiceInfo){
-    .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+    .type = PBL_BT_PEBBLE_CONNECTION_DEBOUNCED_EVENT,
     .handler = prv_connection_handler,
   };
   event_service_client_subscribe(&s_connection_event_info);

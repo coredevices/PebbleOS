@@ -14,4 +14,4 @@ void pbl_bt_advert_advertising_disable(void);
 
 bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power);
 
-bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data);
+bool pbl_bt_advert_set_advertising_data(const struct pbl_bt_ad_data *ad_data);

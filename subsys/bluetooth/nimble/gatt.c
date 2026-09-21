@@ -16,8 +16,8 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 void pbl_bt_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t response_code) {
 }
 
-void pbl_bt_gatt_send_changed_indication(const BTDeviceInternal *device,
-                                         const ATTHandleRange *data) {
+void pbl_bt_gatt_send_changed_indication(const struct pbl_bt_device_internal *device,
+                                         const struct pbl_bt_att_handle_range *data) {
   // Resolve the NimBLE connection handle through the NimBLE connection table
   // (ble_gap_conn_find_by_addr). No bt_lock needed — the device address is a
   // value copy from the service layer, which held bt_lock when it took the copy.
@@ -29,7 +29,7 @@ void pbl_bt_gatt_send_changed_indication(const BTDeviceInternal *device,
 
   // The Service Changed characteristic lives in the GATT profile service (0x1801),
   // registered by ble_svc_gatt_init(). Look up its value handle.
-  const ble_uuid16_t svc_uuid = BLE_UUID16_INIT(GATT_SERVICE_UUID);
+  const ble_uuid16_t svc_uuid = BLE_UUID16_INIT(PBL_BT_GATT_SERVICE_UUID);
   const ble_uuid16_t chr_uuid = BLE_UUID16_INIT(BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16);
   uint16_t val_handle;
   int rc = ble_gatts_find_chr(&svc_uuid.u, &chr_uuid.u, NULL, &val_handle);

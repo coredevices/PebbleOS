@@ -15,8 +15,8 @@
 //!
 //! It's designed for compactness and ease of serialization, at the cost of
 //! CPU cycles to iterate over and access the data.
-//! The GATTCharacteristic are tacked at the end of the struct. At the end of
-//! each GATTCharacteristic, its descriptors are tacked on. Lastly, after all
+//! The struct pbl_bt_gatt_characteristic are tacked at the end of the struct. At the end of
+//! each struct pbl_bt_gatt_characteristic, its descriptors are tacked on. Lastly, after all
 //! the characteristics, an array of Included Service handles is tacked on.
 //! Struct packing is not enabled at the moment, but could be if needed.
 //! Handles for the Characteristics and Descriptors are stored as offsets from
@@ -26,27 +26,30 @@
 //! - Create a shared list of UUIDs that can be referenced,
 //! to avoid wasting 16 bytes of RAM per service, characteristic and descriptor?
 
-typedef struct PBL_PACKED ATTHandleRange {
+struct PBL_PACKED pbl_bt_att_handle_range {
   uint16_t start;
   uint16_t end;
-} ATTHandleRange;
+};
 
-//! Common header for GATTDescriptor, GATTCharacteristic and GATTService
-typedef struct {
+//! Common header for struct pbl_bt_gatt_descriptor, struct pbl_bt_gatt_characteristic and struct
+//! pbl_bt_gatt_service
+struct pbl_bt_gatt_object_header {
   Uuid uuid;
-} GATTObjectHeader;
+};
 
-typedef struct {
+struct pbl_bt_gatt_descriptor {
   //! The UUID of the descriptor
   Uuid uuid;
 
   //! The offset of the handle with respect to service.att_handle
   uint8_t att_handle_offset;
-} GATTDescriptor;
+};
 
-_Static_assert(offsetof(GATTDescriptor, uuid) == offsetof(GATTObjectHeader, uuid), "");
+_Static_assert(offsetof(struct pbl_bt_gatt_descriptor, uuid) ==
+                   offsetof(struct pbl_bt_gatt_object_header, uuid),
+               "");
 
-typedef struct {
+struct pbl_bt_gatt_characteristic {
   //! The UUID of the characteristic
   Uuid uuid;
 
@@ -56,18 +59,20 @@ typedef struct {
   uint8_t properties;
 
   uint8_t num_descriptors;
-  GATTDescriptor descriptors[];
-} GATTCharacteristic;
+  struct pbl_bt_gatt_descriptor descriptors[];
+};
 
-_Static_assert(offsetof(GATTCharacteristic, uuid) == offsetof(GATTObjectHeader, uuid), "");
+_Static_assert(offsetof(struct pbl_bt_gatt_characteristic, uuid) ==
+                   offsetof(struct pbl_bt_gatt_object_header, uuid),
+               "");
 
-typedef struct GATTService {
+struct pbl_bt_gatt_service {
   //! The UUID of the service
   Uuid uuid;
 
   uint8_t discovery_generation;
 
-  //! The size in bytes of the GATTService blob, including all its
+  //! The size in bytes of the struct pbl_bt_gatt_service blob, including all its
   //! characteristics, descriptors and included service handles.
   uint16_t size_bytes;
 
@@ -75,7 +80,7 @@ typedef struct GATTService {
   uint16_t att_handle;
 
   //! Number of characteristics in the array
-  //! @note because GATTCharacteristic is variable length, it is not possible
+  //! @note because struct pbl_bt_gatt_characteristic is variable length, it is not possible
   //! to use array subscripting.
   uint8_t num_characteristics;
 
@@ -86,16 +91,18 @@ typedef struct GATTService {
   uint8_t num_att_handles_included_services;
 
   //! Array with the characteristics of the service
-  GATTCharacteristic characteristics[];
+  struct pbl_bt_gatt_characteristic characteristics[];
 
   //! Array with the ATT handles of Included Services
   //! This array follows after the characteristics, when
   //! num_att_handles_included_services > 0
   //! uint16_t att_handles_included_services[];
-} GATTService;
+};
 
-_Static_assert(offsetof(GATTService, uuid) == offsetof(GATTObjectHeader, uuid), "");
+_Static_assert(offsetof(struct pbl_bt_gatt_service, uuid) ==
+                   offsetof(struct pbl_bt_gatt_object_header, uuid),
+               "");
 
-#define COMPUTE_GATTSERVICE_SIZE_BYTES(num_chars, num_descs, num_includes) \
-  (sizeof(GATTService) + sizeof(GATTCharacteristic) * (num_chars) +        \
-   sizeof(GATTDescriptor) * (num_descs) + sizeof(uint16_t) * (num_includes))
+#define PBL_BT_GATT_SERVICE_SIZE_BYTES(num_chars, num_descs, num_includes)                        \
+  (sizeof(struct pbl_bt_gatt_service) + sizeof(struct pbl_bt_gatt_characteristic) * (num_chars) + \
+   sizeof(struct pbl_bt_gatt_descriptor) * (num_descs) + sizeof(uint16_t) * (num_includes))

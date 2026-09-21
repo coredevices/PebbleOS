@@ -20,8 +20,9 @@ typedef enum {
 
 //! Updates the /ref GAPLEConnection to register that the DIS service has been discovered
 //! @param characteristics Matrix of characteristics references of the DIS service
-void dis_handle_service_discovered(BLECharacteristic *characteristics);
+void dis_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
 
 void dis_invalidate_all_references(void);
 
-void dis_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics);
+void dis_handle_service_removed(pbl_bt_characteristic_t *characteristics,
+                                uint8_t num_characteristics);

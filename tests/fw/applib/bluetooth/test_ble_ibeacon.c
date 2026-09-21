@@ -25,7 +25,7 @@
 
 // This excludes the "Manufacturer Specific" opcode (0xff) but it
 // includes the Apple Inc company ID:
-static BLEAdData *create_apple_ibeacon_ad_data(void) {
+static struct pbl_bt_ad_data *create_apple_ibeacon_ad_data(void) {
   static const uint8_t apple_ibeacon_ad_element[] = {
     0x1a,                                                       // 26 bytes
     0xff,                                                       // Manufacturer Specific AD Type
@@ -38,7 +38,8 @@ static BLEAdData *create_apple_ibeacon_ad_data(void) {
     0xc5                                                        // TX Power
   };
   const size_t ad_data_length = sizeof(apple_ibeacon_ad_element);
-  BLEAdData *ad_data = (BLEAdData *)malloc(sizeof(BLEAdData) + ad_data_length);
+  struct pbl_bt_ad_data *ad_data =
+      (struct pbl_bt_ad_data *)malloc(sizeof(struct pbl_bt_ad_data) + ad_data_length);
   ad_data->ad_data_length = ad_data_length;
   ad_data->scan_resp_data_length = 0;
   memcpy(ad_data->data, apple_ibeacon_ad_element, ad_data_length);
@@ -46,7 +47,7 @@ static BLEAdData *create_apple_ibeacon_ad_data(void) {
 }
 
 void test_ble_ibeacon__parse_ibeacon_data(void) {
-  BLEAdData *apple_ibeacon_ad_data = create_apple_ibeacon_ad_data();
+  struct pbl_bt_ad_data *apple_ibeacon_ad_data = create_apple_ibeacon_ad_data();
   BLEiBeacon ibeacon;
   const int8_t rssi = -60;
   bool is_ibeacon = ble_ibeacon_parse(apple_ibeacon_ad_data, rssi, &ibeacon);
@@ -68,12 +69,12 @@ void test_ble_ibeacon__parse_ibeacon_data(void) {
 }
 
 void test_ble_ibeacon__ibeacon_compose(void) {
-  BLEAdData *apple_ibeacon_ad_data = create_apple_ibeacon_ad_data();
+  struct pbl_bt_ad_data *apple_ibeacon_ad_data = create_apple_ibeacon_ad_data();
   BLEiBeacon ibeacon;
   const int8_t rssi = -60;
   ble_ibeacon_parse(apple_ibeacon_ad_data, rssi, &ibeacon);
 
-  BLEAdData *new_ibeacon_ad_data = ble_ad_create();
+  struct pbl_bt_ad_data *new_ibeacon_ad_data = ble_ad_create();
   cl_assert_equal_b(ble_ibeacon_compose(&ibeacon, new_ibeacon_ad_data), true);
 
   const size_t ad_data_size =
@@ -87,7 +88,7 @@ void test_ble_ibeacon__ibeacon_compose(void) {
   ble_ad_destroy(new_ibeacon_ad_data);
 }
 
-static BLEAdData *create_too_short_ad_data(void) {
+static struct pbl_bt_ad_data *create_too_short_ad_data(void) {
   static const uint8_t too_short_ad_element[] = {
     0x1a,       // 26 bytes
     0xff,       // Manufacturer Specific AD Type
@@ -100,14 +101,15 @@ static BLEAdData *create_too_short_ad_data(void) {
     0xc5                                                        // TX Power
   };
 
-  BLEAdData *ad_data = (BLEAdData *)malloc(sizeof(BLEAdData) + sizeof(too_short_ad_element));
+  struct pbl_bt_ad_data *ad_data =
+      (struct pbl_bt_ad_data *)malloc(sizeof(struct pbl_bt_ad_data) + sizeof(too_short_ad_element));
   ad_data->ad_data_length = sizeof(too_short_ad_element);
   ad_data->scan_resp_data_length = 0;
   return ad_data;
 }
 
 void test_ble_ibeacon__ibeacon_data_too_short(void) {
-  BLEAdData *too_short_to_ibeacon = create_too_short_ad_data();
+  struct pbl_bt_ad_data *too_short_to_ibeacon = create_too_short_ad_data();
   bool is_ibeacon = ble_ibeacon_parse(too_short_to_ibeacon, 0, NULL);
   cl_assert(!is_ibeacon);
   free(too_short_to_ibeacon);

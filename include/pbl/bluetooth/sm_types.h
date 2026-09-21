@@ -9,52 +9,48 @@
 #include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
 
-typedef enum {
-  SMRootKeyTypeEncryption,
-  SMRootKeyTypeIdentity,
-  SMRootKeyTypeNum,
-} SMRootKeyType;
+enum pbl_bt_sm_root_key_type {
+  PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
+  PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
+  PBL_BT_SM_ROOT_KEY_TYPE_NUM,
+};
 
-typedef struct PBL_PACKED SM128BitKey {
+struct PBL_PACKED pbl_bt_sm_key {
   uint8_t data[16];
-} SM128BitKey;
+};
 
-typedef SM128BitKey SMLongTermKey;
-typedef SM128BitKey SMIdentityResolvingKey;
-typedef SM128BitKey SMConnectionSignatureResolvingKey;
-
-typedef struct PBL_PACKED SMLocalEncryptionInfo {
+struct PBL_PACKED pbl_bt_sm_local_encryption_info {
   uint16_t ediv;
 
   //! @note Only used by cc2564x/Bluetopia driver!
   uint16_t div;
 
   //! @note Only used by Dialog driver!
-  SMLongTermKey ltk;
+  struct pbl_bt_sm_key ltk;
 
   //! @note Only used by Dialog driver!
   uint64_t rand;
-} SMLocalEncryptionInfo;
+};
 
-typedef struct PBL_PACKED SMRemoteEncryptionInfo {
-  SMLongTermKey ltk;
+struct PBL_PACKED pbl_bt_sm_remote_encryption_info {
+  struct pbl_bt_sm_key ltk;
   uint64_t rand;
   uint16_t ediv;
-} SMRemoteEncryptionInfo;
+};
 
 //! @note Some fields might not get populated/used, this depends on the BT Driver implementation.
 //! @note Packed, because this is used in HC protocol messages.
-typedef struct PBL_PACKED SMPairingInfo {
+struct PBL_PACKED pbl_bt_sm_pairing_info {
   //! The encryption info that will be used when the local device is the slave.
-  SMLocalEncryptionInfo local_encryption_info;
+  struct pbl_bt_sm_local_encryption_info local_encryption_info;
 
   //! The encryption info that will be used when the local device is the master.
-  SMRemoteEncryptionInfo remote_encryption_info;
+  struct pbl_bt_sm_remote_encryption_info remote_encryption_info;
 
-  SMIdentityResolvingKey irk;
-  BTDeviceInternal identity;
+  struct pbl_bt_sm_key irk;
+  struct pbl_bt_device_internal identity;
 
-  SMConnectionSignatureResolvingKey csrk;
+  struct pbl_bt_sm_key csrk;
 
   //! True if div and ediv are valid
   bool is_local_encryption_info_valid;
@@ -70,4 +66,4 @@ typedef struct PBL_PACKED SMPairingInfo {
 
   //! @note NOT valid for cc2564x BT lib, only for Dialog BT lib!
   bool is_mitm_protection_enabled;
-} SMPairingInfo;
+};

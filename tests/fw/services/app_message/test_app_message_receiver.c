@@ -73,8 +73,9 @@ static void prv_protocol_msg_callback(CommSession *session, const uint8_t *data,
 void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
 }
 
-void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs) {
+void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
+                                     enum pbl_bt_response_time_state state,
+                                     uint16_t max_period_secs) {
 }
 
 static bool s_kernel_receiver_available;

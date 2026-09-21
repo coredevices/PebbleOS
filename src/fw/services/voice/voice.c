@@ -104,7 +104,8 @@ static void prv_teardown_session(void) {
   // Reset communication session responsiveness to default after voice session ends
   CommSession *comm_session = comm_session_get_system_session();
   if (comm_session) {
-    comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMax, 0);
+    comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
+                                    PBL_BT_RESPONSE_TIME_MAX, 0);
   }
 }
 
@@ -378,8 +379,9 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   // Set up communication session responsiveness for voice session
   CommSession *comm_session = comm_session_get_system_session();
   if (comm_session) {
-    comm_session_set_responsiveness(comm_session, BtConsumerPpVoiceEndpoint, ResponseTimeMin,
-                                    MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
+    comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
   }
 
   // Get Speex transfer info

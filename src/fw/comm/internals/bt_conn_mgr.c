@@ -32,9 +32,9 @@
 typedef struct {
   ListNode list_node;
   uint32_t timeout; // time to stop this request (in rtc ticks)
-  ResponseTimeState req_state;
-  BtConsumer consumer;
-  ResponsivenessGrantedHandler granted_handler;
+  enum pbl_bt_response_time_state req_state;
+  enum pbl_bt_consumer consumer;
+  pbl_bt_responsiveness_granted_cb_t granted_handler;
 } ConnectionStateRequest;
 
 typedef struct ConnectionMgrInfo {
@@ -42,50 +42,50 @@ typedef struct ConnectionMgrInfo {
   // a high power state
   RegularTimerInfo watchdog_cb_info;
   // current running state of the connection
-  ResponseTimeState curr_requested_state;
-  // A list of consumers who have requested changes to latency state != ResponseTimeMax
+  enum pbl_bt_response_time_state curr_requested_state;
+  // A list of consumers who have requested changes to latency state != PBL_BT_RESPONSE_TIME_MAX
   ConnectionStateRequest *requests;
 } ConnectionMgrInfo;
 
-ResponseTimeState gap_le_connect_params_get_actual_state(GAPLEConnection *connection);
+enum pbl_bt_response_time_state gap_le_connect_params_get_actual_state(GAPLEConnection *connection);
 
-static const char *prv_response_time_state_name(ResponseTimeState state) {
+static const char *prv_response_time_state_name(enum pbl_bt_response_time_state state) {
   switch (state) {
-    case ResponseTimeMax:
+    case PBL_BT_RESPONSE_TIME_MAX:
       return "Max";
-    case ResponseTimeMiddle:
+    case PBL_BT_RESPONSE_TIME_MIDDLE:
       return "Middle";
-    case ResponseTimeMin:
+    case PBL_BT_RESPONSE_TIME_MIN:
       return "Min";
     default:
       return "?";
   }
 }
 
-static const char *prv_consumer_name(BtConsumer consumer) {
-  static const char *const s_consumer_names[NumBtConsumer] = {
-    [BtConsumerNone] = "None",
-    [BtConsumerApp] = "App",
-    [BtConsumerLePairing] = "LePairing",
-    [BtConsumerLeServiceDiscovery] = "LeServiceDiscovery",
-    [BtConsumerMusicServiceIndefinite] = "MusicServiceIndefinite",
-    [BtConsumerMusicServiceMomentary] = "MusicServiceMomentary",
-    [BtConsumerPpAppFetch] = "PpAppFetch",
-    [BtConsumerPpAppMessage] = "PpAppMessage",
-    [BtConsumerPpAudioEndpoint] = "PpAudioEndpoint",
-    [BtConsumerPpGetBytes] = "PpGetBytes",
-    [BtConsumerPpLogDump] = "PpLogDump",
-    [BtConsumerPpPutBytes] = "PpPutBytes",
-    [BtConsumerPpScreenshot] = "PpScreenshot",
-    [BtConsumerPpVoiceEndpoint] = "PpVoiceEndpoint",
-    [BtConsumerPrompt] = "Prompt",
-    [BtConsumerTimelineActionMenu] = "TimelineActionMenu",
-    [BtConsumerPRF] = "PRF",
-    [BtConsumerPebblePairingServiceRemoteDevice] = "PebblePairingServiceRemoteDevice",
-    [BtConsumerUnitTests] = "UnitTests",
+static const char *prv_consumer_name(enum pbl_bt_consumer consumer) {
+  static const char *const s_consumer_names[PBL_BT_CONSUMER_NUM] = {
+    [PBL_BT_CONSUMER_NONE] = "None",
+    [PBL_BT_CONSUMER_APP] = "App",
+    [PBL_BT_CONSUMER_LE_PAIRING] = "LePairing",
+    [PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY] = "LeServiceDiscovery",
+    [PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE] = "MusicServiceIndefinite",
+    [PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY] = "MusicServiceMomentary",
+    [PBL_BT_CONSUMER_PP_APP_FETCH] = "PpAppFetch",
+    [PBL_BT_CONSUMER_PP_APP_MESSAGE] = "PpAppMessage",
+    [PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT] = "PpAudioEndpoint",
+    [PBL_BT_CONSUMER_PP_GET_BYTES] = "PpGetBytes",
+    [PBL_BT_CONSUMER_PP_LOG_DUMP] = "PpLogDump",
+    [PBL_BT_CONSUMER_PP_PUT_BYTES] = "PpPutBytes",
+    [PBL_BT_CONSUMER_PP_SCREENSHOT] = "PpScreenshot",
+    [PBL_BT_CONSUMER_PP_VOICE_ENDPOINT] = "PpVoiceEndpoint",
+    [PBL_BT_CONSUMER_PROMPT] = "Prompt",
+    [PBL_BT_CONSUMER_TIMELINE_ACTION_MENU] = "TimelineActionMenu",
+    [PBL_BT_CONSUMER_PRF] = "PRF",
+    [PBL_BT_CONSUMER_PPS_REMOTE_DEVICE] = "PebblePairingServiceRemoteDevice",
+    [PBL_BT_CONSUMER_UNIT_TESTS] = "UnitTests",
   };
 
-  if (consumer >= NumBtConsumer || s_consumer_names[consumer] == NULL) {
+  if (consumer >= PBL_BT_CONSUMER_NUM || s_consumer_names[consumer] == NULL) {
     return "?";
   }
   return s_consumer_names[consumer];
@@ -95,12 +95,11 @@ static const char *prv_consumer_name(BtConsumer consumer) {
 //! connection. Also detects the longest amount of time that interval has been
 //! requested. Also gets the consumer that is responsible for the lowest latency + longest timeout
 //! combo. These pieces of information are then returned to the caller.
-static ResponseTimeState prv_determine_latency_for_connection(ConnectionStateRequest *requests,
-                                                              uint16_t *secs_to_wait,
-                                                              BtConsumer *consumer_out) {
-  ResponseTimeState state = ResponseTimeMax;
+static enum pbl_bt_response_time_state prv_determine_latency_for_connection(
+    ConnectionStateRequest *requests, uint16_t *secs_to_wait, enum pbl_bt_consumer *consumer_out) {
+  enum pbl_bt_response_time_state state = PBL_BT_RESPONSE_TIME_MAX;
   uint32_t timeout = 0;
-  BtConsumer responsible_consumer = BtConsumerNone;
+  enum pbl_bt_consumer responsible_consumer = PBL_BT_CONSUMER_NONE;
 
   ConnectionStateRequest *curr_request = requests;
   while (curr_request != NULL) {
@@ -143,17 +142,18 @@ static ResponseTimeState prv_determine_latency_for_connection(ConnectionStateReq
 static void prv_bt_le_gateway_response_latency_watchdog_cb(void *data);
 
 static void prv_granted_kernel_main_cb(void *ctx) {
-  ResponsivenessGrantedHandler granted_handler = ctx;
+  pbl_bt_responsiveness_granted_cb_t granted_handler = ctx;
   granted_handler();
 }
 
-static void prv_schedule_granted_handler(ResponsivenessGrantedHandler granted_handler) {
+static void prv_schedule_granted_handler(pbl_bt_responsiveness_granted_cb_t granted_handler) {
   PBL_ASSERTN(granted_handler);
   launcher_task_add_callback(prv_granted_kernel_main_cb, granted_handler);
 }
 
 //! extern'd for gap_le_connect_params.c
-void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl, ResponseTimeState granted_state) {
+void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
+                                           enum pbl_bt_response_time_state granted_state) {
   bt_lock_assert_held(true);
 
   ConnectionStateRequest *curr_request = hdl->conn_mgr_info->requests;
@@ -168,12 +168,12 @@ void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl, ResponseTimeSta
 
 static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
   uint16_t secs_til_max_latency;
-  ResponseTimeState state;
-  BtConsumer responsible_consumer;
+  enum pbl_bt_response_time_state state;
+  enum pbl_bt_consumer responsible_consumer;
 #ifdef CONFIG_RECOVERY_FW
   // We don't care if we burn up some power from PRF and we want FW to update quickly
   secs_til_max_latency = MAX_PERIOD_RUN_FOREVER;
-  state = ResponseTimeMin;
+  state = PBL_BT_RESPONSE_TIME_MIN;
   responsible_consumer = 0;
 #else
   state = prv_determine_latency_for_connection(hdl->conn_mgr_info->requests, &secs_til_max_latency,
@@ -196,7 +196,7 @@ static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
 
   // don't start the watchdog timer if we have entered the lowest power mode or
   // if we want to run at the specified rate indefinitely
-  if ((state != ResponseTimeMax) && (secs_til_max_latency != MAX_PERIOD_RUN_FOREVER)) {
+  if ((state != PBL_BT_RESPONSE_TIME_MAX) && (secs_til_max_latency != MAX_PERIOD_RUN_FOREVER)) {
     watchdog_cb_info->cb = prv_bt_le_gateway_response_latency_watchdog_cb;
     watchdog_cb_info->cb_data = hdl;
     // wait an extra second since the multisecond callback will fire somewhere
@@ -255,21 +255,23 @@ static void prv_bt_le_gateway_response_latency_watchdog_cb(void *data) {
 }
 
 static bool prv_find_source(ListNode *found_node, void *data) {
-  return (((ConnectionStateRequest *)found_node)->consumer == (BtConsumer)data);
+  return (((ConnectionStateRequest *)found_node)->consumer == (enum pbl_bt_consumer)data);
 }
 
 /*
  * Exported APIs
  */
 
-void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, BtConsumer consumer,
-                                         ResponseTimeState state, uint16_t max_period_secs) {
+void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
+                                         enum pbl_bt_response_time_state state,
+                                         uint16_t max_period_secs) {
   conn_mgr_set_ble_conn_response_time_ext(hdl, consumer, state, max_period_secs, NULL);
 }
 
-void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, BtConsumer consumer,
-                                             ResponseTimeState state, uint16_t max_period_secs,
-                                             ResponsivenessGrantedHandler granted_handler) {
+void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
+                                             enum pbl_bt_response_time_state state,
+                                             uint16_t max_period_secs,
+                                             pbl_bt_responsiveness_granted_cb_t granted_handler) {
   ConnectionMgrInfo *conn_mgr_info;
   if (!hdl || !((conn_mgr_info = hdl->conn_mgr_info))) {
     PBL_LOG_ERR("GAP Handle not properly initialized");
@@ -290,7 +292,7 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, BtConsumer co
   bool is_already_granted = (gap_le_connect_params_get_actual_state(hdl) >= state);
 
   if (consumer_request == NULL) {
-    if (state == ResponseTimeMax) {
+    if (state == PBL_BT_RESPONSE_TIME_MAX) {
       // No changes: there was no previous node and the new state is the default "low power" one.
       goto handle_current_state;
     }
@@ -302,11 +304,11 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, BtConsumer co
         &conn_mgr_info->requests->list_node, &consumer_request->list_node);
   }
 
-  // If the consumer requests to go back to low power (ResponseTimeMax), wait a little longer
-  // before actually going back. This prevents rapid back-n-forths between low power and fast modes,
-  // that can happen especially in a chain of operations, for example, the resource & bin put-bytes
-  // sessions to install an app.
-  if (state == ResponseTimeMax) {
+  // If the consumer requests to go back to low power (PBL_BT_RESPONSE_TIME_MAX), wait a little
+  // longer before actually going back. This prevents rapid back-n-forths between low power and fast
+  // modes, that can happen especially in a chain of operations, for example, the resource & bin
+  // put-bytes sessions to install an app.
+  if (state == PBL_BT_RESPONSE_TIME_MAX) {
     // Keep the existing node in the list for the duration of our "activity timeout". It will be
     // cleaned up automatically by the watchdog timer.
     max_period_secs = BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS;
@@ -333,7 +335,7 @@ handle_current_state:
 ConnectionMgrInfo *bt_conn_mgr_info_init(void) {
   ConnectionMgrInfo *newinfo = kernel_malloc_check(sizeof(ConnectionMgrInfo));
   *newinfo = (ConnectionMgrInfo){
-    .curr_requested_state = ResponseTimeMax,
+    .curr_requested_state = PBL_BT_RESPONSE_TIME_MAX,
   };
 
   return newinfo;
@@ -362,13 +364,14 @@ void bt_conn_mgr_info_deinit(ConnectionMgrInfo **info) {
 void command_change_le_mode(char *mode) {
   // assume we only have one connection for debug
   GAPLEConnection *conn_hdl = gap_le_connection_any();
-  ResponseTimeState state = atoi(mode);
+  enum pbl_bt_response_time_state state = atoi(mode);
 
-  conn_mgr_set_ble_conn_response_time(conn_hdl, BtConsumerPrompt, state, MAX_PERIOD_RUN_FOREVER);
+  conn_mgr_set_ble_conn_response_time(conn_hdl, PBL_BT_CONSUMER_PROMPT, state,
+                                      MAX_PERIOD_RUN_FOREVER);
 }
 
-ResponseTimeState conn_mgr_get_latency_for_le_connection(GAPLEConnection *hdl,
-                                                         uint16_t *secs_to_wait) {
+enum pbl_bt_response_time_state conn_mgr_get_latency_for_le_connection(GAPLEConnection *hdl,
+                                                                       uint16_t *secs_to_wait) {
   bt_lock_assert_held(true);
   return prv_determine_latency_for_connection(hdl->conn_mgr_info->requests, secs_to_wait, NULL);
 }

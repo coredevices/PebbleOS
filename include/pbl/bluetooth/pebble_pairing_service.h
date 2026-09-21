@@ -7,24 +7,24 @@
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/responsiveness.h>
 
-#define PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID PEBBLE_BT_UUID_EXPAND(1)
-#define PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID   PEBBLE_BT_UUID_EXPAND(2)
+#define PBL_BT_PPS_CONNECTION_STATUS_UUID PBL_BT_PEBBLE_UUID_EXPAND(1)
+#define PBL_BT_PPS_TRIGGER_PAIRING_UUID   PBL_BT_PEBBLE_UUID_EXPAND(2)
 // Note: UUID 4 was used by the 3.14-rc Android App for V0 of the Connection Param characteristic
 // but never shipped externally
-#define PEBBLE_BT_PAIRING_SERVICE_CONNECTION_PARAMETERS_UUID PEBBLE_BT_UUID_EXPAND(5)
+#define PBL_BT_PPS_CONNECTION_PARAMETERS_UUID PBL_BT_PEBBLE_UUID_EXPAND(5)
 
-typedef enum {
-  PebblePairingServiceGATTError_UnknownCommandID = BLEGATTErrorApplicationSpecificErrorStart,
-  PebblePairingServiceGATTError_ConnParamsInvalidRemoteDesiredState,
-  PebblePairingServiceGATTError_ConnParamsMinSlotsTooSmall,
-  PebblePairingServiceGATTError_ConnParamsMinSlotsTooLarge,
-  PebblePairingServiceGATTError_ConnParamsMaxSlotsTooLarge,
-  PebblePairingServiceGATTError_ConnParamsSupervisionTimeoutTooSmall,
-  PebblePairingServiceGATTError_DeviceDoesNotSupportPLE,
-} PebblePairingServiceGATTError;
+enum pbl_bt_pps_gatt_error {
+  PBL_BT_PPS_GATT_ERROR_UNKNOWN_COMMAND_ID = PBL_BT_GATT_ERROR_APPLICATION_SPECIFIC_ERROR_START,
+  PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_INVALID_REMOTE_DESIRED_STATE,
+  PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_MIN_SLOTS_TOO_SMALL,
+  PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_MIN_SLOTS_TOO_LARGE,
+  PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_MAX_SLOTS_TOO_LARGE,
+  PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_SUPERVISION_TIMEOUT_TOO_SMALL,
+  PBL_BT_PPS_GATT_ERROR_DEVICE_DOES_NOT_SUPPORT_PLE,
+};
 
 //! The connectivity status, with respect to the device reading it.
-typedef struct PBL_PACKED {
+struct PBL_PACKED pbl_bt_pps_connectivity_status {
   union {
     struct {
       //! true if the device that is reading the status is connected (always true)
@@ -50,11 +50,11 @@ typedef struct PBL_PACKED {
     };
     uint8_t bytes[4];
   };
-} PebblePairingServiceConnectivityStatus;
+};
 
-_Static_assert(sizeof(PebblePairingServiceConnectivityStatus) == 4, "");
+_Static_assert(sizeof(struct pbl_bt_pps_connectivity_status) == 4, "");
 
-typedef struct PBL_PACKED {
+struct PBL_PACKED pbl_bt_pps_trigger_request {
   bool should_pin_address : 1;
 
   //! @note Not available in Bluetopia/cc2564x implementation
@@ -84,9 +84,9 @@ typedef struct PBL_PACKED {
   //! @see ppogatt_emulated_server_wa.c
   //! @see https://pebbletechnology.atlassian.net/browse/PBL-39634
   bool is_reversed_ppogatt_enabled : 1;
-} PairingTriggerRequestData;
+};
 
-typedef struct PBL_PACKED {
+struct PBL_PACKED pbl_bt_pps_conn_param_set {
   //! interval_min_ms / 1.25 msec – valid range: 7.5 msec to 4 seconds
   uint16_t interval_min_1_25ms;
 
@@ -104,10 +104,10 @@ typedef struct PBL_PACKED {
   //! byte and to fit the parent struct in the minimum GATT MTU, the increments is not the standard
   //! 10msec!
   uint8_t supervision_timeout_30ms;
-} PebblePairingServiceConnParamSet;
+};
 
 //! The connection parameters settings, with respect to connection to the device reading them.
-typedef struct PBL_PACKED PebblePairingServiceConnParamsReadNotif {
+struct PBL_PACKED pbl_bt_pps_conn_params_read_notif {
   //! Capability bits. Reserved for future use.
   uint8_t packet_length_extension_supported : 1;
   uint8_t rsvd : 7;
@@ -121,87 +121,89 @@ typedef struct PBL_PACKED PebblePairingServiceConnParamsReadNotif {
 
   //! Current Supervision Timeout / 10 msec – valid range: 100 msec to 32 seconds.
   uint16_t current_supervision_timeout_10ms;
-} PebblePairingServiceConnParamsReadNotif;
+};
 
-typedef enum PebblePairingServiceConnParamsWriteCmd {
+enum pbl_bt_pps_conn_params_write_cmd {
   //! Allows phone to change connection parameter set and take over control of parameter management
-  PebblePairingServiceConnParamsWriteCmd_SetRemoteParamMgmtSettings = 0x00,
+  PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_PARAM_MGMT_SETTINGS = 0x00,
   //! Issues a connection parameter change request if the watch is not in the desired state
-  PebblePairingServiceConnParamsWriteCmd_SetRemoteDesiredState = 0x01,
+  PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_DESIRED_STATE = 0x01,
   //! Controls settings for BLE 4.2 Packet Length Extension feature
-  PebblePairingServiceConnParamsWriteCmd_EnablePacketLengthExtension = 0x02,
+  PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_ENABLE_PACKET_LENGTH_EXTENSION = 0x02,
   //! If written to disables Dialog BLE sleep mode (safeguard against PBL-39777 in case it affects
   //! more watches in the future)
-  PebblePairingServiceConnParamsWriteCmd_InhibitBLESleep = 0x03,
-  PebblePairingServiceConnParamsWriteCmdCount,
-} PebblePairingServiceConnParamsWriteCmd;
+  PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_INHIBIT_BLE_SLEEP = 0x03,
+  PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_NUM,
+};
 
-typedef struct PBL_PACKED PebblePairingServiceRemoteParamMgmtSettings {
+struct PBL_PACKED pbl_bt_pps_remote_param_mgmt_settings {
   //! If false/zero, Pebble should manage the connection parameters. If true/one, Pebble should
   //! NOT manage the connection parameters. In this mode, Pebble will never request a
   //! connection parameter change.
   bool is_remote_device_managing_connection_parameters : 1;
   uint8_t rsvd : 7;
   //! Optional. Current parameters sets used by Pebble's Connection Parameter manager.
-  PebblePairingServiceConnParamSet connection_parameter_sets[];
-} PebblePairingServiceRemoteParamMgmtSettings;
+  struct pbl_bt_pps_conn_param_set connection_parameter_sets[];
+};
 
-typedef struct PBL_PACKED PebblePairingServiceRemoteDesiredState {
+struct PBL_PACKED pbl_bt_pps_remote_desired_state {
   //! The desired ResponseTime as desired by the remote device.  The remote end can set this
   //! value to a faster mode when it's about to transfer/receive a lot of data. For example,
   //! when a lot of BlobDB operations are queued up, the watch doesn't know how much data is
-  //! queued up on the remote end. In this case, the remote could write "ResponseTimeMin" so
-  //! increase the speed temporarily. It's the remote end's responsibility to reset this to
-  //! ResponseTimeMax when the bulk transfer is done.  As a safety measure, the watch is will
-  //! reset it back to ResponseTimeMax after 5 minutes.  In case the phone app still wants to
-  //! keep a particular desired ResponseTime, the phone app is responsible for making sure to
-  //! write the value again before the 5 minute timer expires.
+  //! queued up on the remote end. In this case, the remote could write "PBL_BT_RESPONSE_TIME_MIN"
+  //! so increase the speed temporarily. It's the remote end's responsibility to reset this to
+  //! PBL_BT_RESPONSE_TIME_MAX when the bulk transfer is done.  As a safety measure, the watch is
+  //! will reset it back to PBL_BT_RESPONSE_TIME_MAX after 5 minutes.  In case the phone app still
+  //! wants to keep a particular desired ResponseTime, the phone app is responsible for making sure
+  //! to write the value again before the 5 minute timer expires.
   uint8_t state : 2;
 
   uint8_t rsvd : 6;
-} PebblePairingServiceRemoteDesiredState;
+};
 
-typedef struct PBL_PACKED PebblePairingServicePacketLengthExtension {
+struct PBL_PACKED pbl_bt_pps_packet_length_extension {
   uint8_t trigger_ll_length_req : 1;
   uint8_t rsvd : 7;
-} PebblePairingServicePacketLengthExtension;
+};
 
-typedef struct PBL_PACKED PebblePairingServiceInhibitBLESleep {
+struct PBL_PACKED pbl_bt_pps_inhibit_ble_sleep {
   uint8_t rsvd; // for future use
-} PebblePairingServiceInhibitBLESleep;
+};
 
 //! The connection parameters settings, with respect to connection to the device writing them.
-typedef struct PBL_PACKED PebblePairingServiceConnParamsWrite {
-  PebblePairingServiceConnParamsWriteCmd cmd : 8;
+struct PBL_PACKED pbl_bt_pps_conn_params_write {
+  enum pbl_bt_pps_conn_params_write_cmd cmd : 8;
   union PBL_PACKED {
-    //! Valid iff cmd == PebblePairingServiceConnParamsWriteCmd_SetRemoteParamMgmtSettings
-    PebblePairingServiceRemoteParamMgmtSettings remote_param_mgmt_settings;
+    //! Valid iff cmd ==
+    //! PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_PARAM_MGMT_SETTINGS
+    struct pbl_bt_pps_remote_param_mgmt_settings remote_param_mgmt_settings;
 
-    //! Valid iff cmd == PebblePairingServiceConnParamsWriteCmd_SetRemoteDesiredState
-    PebblePairingServiceRemoteDesiredState remote_desired_state;
+    //! Valid iff cmd ==
+    //! PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_DESIRED_STATE
+    struct pbl_bt_pps_remote_desired_state remote_desired_state;
 
-    //! Valid iff cmd == PebblePairingServiceConnParamsWriteCmd_EnablePacketLengthExtension
-    PebblePairingServicePacketLengthExtension ple_req;
+    //! Valid iff cmd ==
+    //! PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_ENABLE_PACKET_LENGTH_EXTENSION
+    struct pbl_bt_pps_packet_length_extension ple_req;
 
-    //! Valid iff cmd == PebblePairingServiceConnParamsWriteCmd_InhibitBLESleep
-    PebblePairingServiceInhibitBLESleep ble_sleep;
+    //! Valid iff cmd == PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_INHIBIT_BLE_SLEEP
+    struct pbl_bt_pps_inhibit_ble_sleep ble_sleep;
   };
-} PebblePairingServiceConnParamsWrite;
+};
 
-#define PEBBLE_PAIRING_SERVICE_REMOTE_PARAM_MGTM_SETTINGS_SIZE_WITH_PARAM_SETS \
-  (sizeof(PebblePairingServiceRemoteParamMgmtSettings) +                       \
-   (sizeof(PebblePairingServiceConnParamSet) * NumResponseTimeState))
+#define PBL_BT_PPS_REMOTE_PARAM_MGMT_SETTINGS_SIZE_WITH_PARAM_SETS \
+  (sizeof(struct pbl_bt_pps_remote_param_mgmt_settings) +          \
+   (sizeof(struct pbl_bt_pps_conn_param_set) * PBL_BT_RESPONSE_TIME_NUM))
 
-#define PEBBLE_PAIRING_SERVICE_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS          \
-  (offsetof(PebblePairingServiceConnParamsWrite, remote_param_mgmt_settings) + \
-   PEBBLE_PAIRING_SERVICE_REMOTE_PARAM_MGTM_SETTINGS_SIZE_WITH_PARAM_SETS)
+#define PBL_BT_PPS_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS                      \
+  (offsetof(struct pbl_bt_pps_conn_params_write, remote_param_mgmt_settings) + \
+   PBL_BT_PPS_REMOTE_PARAM_MGMT_SETTINGS_SIZE_WITH_PARAM_SETS)
 
-_Static_assert(NumResponseTimeState == 3, "");
-_Static_assert(sizeof(PebblePairingServiceConnParamsReadNotif) <= 20, "Larger than minimum MTU!");
-_Static_assert(PEBBLE_PAIRING_SERVICE_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS <= 20,
-               "Larger than minimum MTU!");
-_Static_assert(sizeof(PebblePairingServiceConnParamsWrite) <= 20, "Larger than minimum MTU!");
-_Static_assert(sizeof(PebblePairingServiceConnectivityStatus) <= 20, "Larger than minimum MTU!");
+_Static_assert(PBL_BT_RESPONSE_TIME_NUM == 3, "");
+_Static_assert(sizeof(struct pbl_bt_pps_conn_params_read_notif) <= 20, "Larger than minimum MTU!");
+_Static_assert(PBL_BT_PPS_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS <= 20, "Larger than minimum MTU!");
+_Static_assert(sizeof(struct pbl_bt_pps_conn_params_write) <= 20, "Larger than minimum MTU!");
+_Static_assert(sizeof(struct pbl_bt_pps_connectivity_status) <= 20, "Larger than minimum MTU!");
 
 typedef struct GAPLEConnection GAPLEConnection;
 
@@ -223,5 +225,5 @@ extern void pbl_bt_cb_pps_handle_ios_app_termination_detected(void);
 //! values.
 //! @param conn_params_length The length of conn_params in bytes.
 extern void pbl_bt_cb_pps_handle_connection_parameter_write(
-    const BTDeviceInternal *device, const PebblePairingServiceConnParamsWrite *conn_params,
-    size_t conn_params_length);
+    const struct pbl_bt_device_internal *device,
+    const struct pbl_bt_pps_conn_params_write *conn_params, size_t conn_params_length);

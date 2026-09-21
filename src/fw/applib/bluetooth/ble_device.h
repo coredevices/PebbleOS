@@ -16,4 +16,4 @@
 //! @return The total number of known devices. This might be a larger
 //! number than num_devices_out will contain, if the passed array was not large
 //! enough to hold all the connected devices.
-uint8_t ble_device_copy_known_devices(BTDevice *devices_out, uint8_t *num_devices_out);
+uint8_t ble_device_copy_known_devices(struct pbl_bt_device *devices_out, uint8_t *num_devices_out);

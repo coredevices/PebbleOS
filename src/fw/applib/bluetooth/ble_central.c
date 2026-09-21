@@ -7,9 +7,9 @@
 
 #include "comm/ble/gap_le_connect.h"
 
-static BTErrno prv_bt_errno_for_event(const PebbleBLEConnectionEvent *e) {
+static enum pbl_bt_errno prv_bt_errno_for_event(const PebbleBLEConnectionEvent *e) {
   if (e->connected) {
-    return BTErrnoConnected;
+    return PBL_BT_ERRNO_CONNECTED;
   }
 
   // FIXME: PBL-35506 We need to re-evaluate what error code to actually use here
@@ -22,11 +22,11 @@ void ble_central_handle_event(PebbleEvent *e) {
     return;
   }
   const PebbleBLEConnectionEvent *conn_event = &e->bluetooth.le.connection;
-  const BTDeviceInternal device = PebbleEventToBTDeviceInternal(conn_event);
+  const struct pbl_bt_device_internal device = PebbleEventToBTDeviceInternal(conn_event);
   ble_app_state->connection_handler(device.opaque, prv_bt_errno_for_event(conn_event));
 }
 
-BTErrno ble_central_set_connection_handler(BLEConnectionHandler handler) {
+enum pbl_bt_errno ble_central_set_connection_handler(BLEConnectionHandler handler) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   const bool is_subscribed = (ble_app_state->connection_handler != NULL);
   ble_app_state->connection_handler = handler;
@@ -39,5 +39,5 @@ BTErrno ble_central_set_connection_handler(BLEConnectionHandler handler) {
       event_service_client_unsubscribe(&ble_app_state->connection_service_info);
     }
   }
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }

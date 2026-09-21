@@ -43,7 +43,7 @@ static void prv_job_unschedule_callback(GAPLEAdvertisingJobRef job, bool complet
 //! is 0, a short period of high-rate advertising will be used. When this short
 //! period is completed, an indefinite, low-rate job will be scheduled.
 static void prv_schedule_ad_job(void) {
-  BLEAdData *ad = ble_ad_create();
+  struct pbl_bt_ad_data *ad = ble_ad_create();
 
   // Advertisement part:
   // Centrals will be filtering on Service UUID first. Assuming that the
@@ -54,9 +54,9 @@ static void prv_schedule_ad_job(void) {
   // BLE-only watches, so dual-mode hosts must connect over LE instead of attempting
   // a classic page (which would time out).
   ble_ad_set_flags(
-      ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK | GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
+      ad, PBL_BT_AD_FLAGS_GEN_DISCOVERABLE_MASK | PBL_BT_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
 
-  // *DO NOT* use pebble_bt_uuid_expand() here!
+  // *DO NOT* use pbl_bt_pebble_uuid_expand() here!
   // ble_ad_set_service_uuids() will be "smart" and include only the 16-bit UUID, but only if the
   // BT SIG Base UUID is used.
   Uuid service_uuids[2];
@@ -71,11 +71,11 @@ static void prv_schedule_ad_job(void) {
 #endif
 
   // Pebble Pairing Service UUID:
-  service_uuids[num_uuids++] = bt_uuid_expand_16bit(PEBBLE_BT_PAIRING_SERVICE_UUID_16BIT);
+  service_uuids[num_uuids++] = bt_uuid_expand_16bit(PBL_BT_PPS_UUID_16BIT);
 
   ble_ad_set_service_uuids(ad, service_uuids, num_uuids);
 
-  char device_name[BT_DEVICE_NAME_BUFFER_SIZE];
+  char device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   bt_local_id_copy_device_name(device_name, true);
   ble_ad_set_local_name(ad, device_name);
   ble_ad_set_tx_power_level(ad);

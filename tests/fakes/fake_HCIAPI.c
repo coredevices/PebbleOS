@@ -99,7 +99,7 @@ int HCI_LE_Remove_Device_From_White_List(unsigned int BluetoothStackID, Byte_t A
   }
 }
 
-bool fake_HCIAPI_whitelist_contains(const BTDeviceInternal *device) {
+bool fake_HCIAPI_whitelist_contains(const struct pbl_bt_device_internal *device) {
   const WhitelistEntry model = {
     .Address_Type = device->is_random_address ? 0x01 : 0x00,
     .Address = BTDeviceAddressToBDADDR(device->address),

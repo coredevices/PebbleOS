@@ -100,14 +100,15 @@ void test_gap_le_advert__cleanup(void) {
     cl_assert_equal_s((const char *)&ad_data_out, ad_data_cstring);            \
   }
 
-//! Helper to create BLEAdData from C strings.
+//! Helper to create struct pbl_bt_ad_data from C strings.
 //! In reality, people will use ble_ad_create() and the ble_ad_set_* functions,
 //! but that's part of another test.
-static BLEAdData *create_ad(const char ad_data[], const char scan_resp_data[]) {
+static struct pbl_bt_ad_data *create_ad(const char ad_data[], const char scan_resp_data[]) {
   const size_t ad_data_length = ad_data ? strlen(ad_data) + 1 : 0;
   const size_t scan_resp_data_length = scan_resp_data ? strlen(scan_resp_data) + 1 : 0;
 
-  BLEAdData *ad = (BLEAdData *)malloc(sizeof(BLEAdData) + ad_data_length + scan_resp_data_length);
+  struct pbl_bt_ad_data *ad = (struct pbl_bt_ad_data *)malloc(
+      sizeof(struct pbl_bt_ad_data) + ad_data_length + scan_resp_data_length);
   ad->ad_data_length = ad_data_length;
   ad->scan_resp_data_length = scan_resp_data_length;
   if (ad_data_length) {
@@ -122,7 +123,7 @@ static BLEAdData *create_ad(const char ad_data[], const char scan_resp_data[]) {
 void test_gap_le_advert__single_job(void) {
   const char ad_data[] = "ad data";
   const char scan_resp_data[] = "scan resp data";
-  BLEAdData *ad = create_ad(ad_data, scan_resp_data);
+  struct pbl_bt_ad_data *ad = create_ad(ad_data, scan_resp_data);
 
   GAPLEAdvertisingJobTerm advert_term = {
     .interval = GAPLEAdvertisingInterval_Short,
@@ -169,7 +170,7 @@ void test_gap_le_advert__single_job(void) {
 }
 
 void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void) {
-  BLEAdData *ad = create_ad("yo", NULL);
+  struct pbl_bt_ad_data *ad = create_ad("yo", NULL);
 
   GAPLEAdvertisingJobTerm advert_terms[] = {
     {
@@ -216,7 +217,7 @@ void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void)
 void test_gap_le_advert__single_job_multiple_terms(void) {
   const char ad_data[] = "ad data";
   const char scan_resp_data[] = "scan resp data";
-  BLEAdData *ad = create_ad(ad_data, scan_resp_data);
+  struct pbl_bt_ad_data *ad = create_ad(ad_data, scan_resp_data);
 
   GAPLEAdvertisingJobTerm advert_terms[2] = {
     {
@@ -285,7 +286,7 @@ void test_gap_le_advert__job_round_robin(void) {
   };
 
   // Schedule infinite job "A":
-  BLEAdData *ad_a = create_ad("A", NULL);
+  struct pbl_bt_ad_data *ad_a = create_ad("A", NULL);
   GAPLEAdvertisingJobRef infinite_job_a;
   infinite_job_a = gap_le_advert_schedule(ad_a, &advert_term,
                                           sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
@@ -294,7 +295,7 @@ void test_gap_le_advert__job_round_robin(void) {
   assert_ad_data("A");
 
   // Schedule infinite job "B":
-  BLEAdData *ad_b = create_ad("B", NULL);
+  struct pbl_bt_ad_data *ad_b = create_ad("B", NULL);
   GAPLEAdvertisingJobRef infinite_job_b;
   infinite_job_b = gap_le_advert_schedule(ad_b, &advert_term,
                                           sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
@@ -312,7 +313,7 @@ void test_gap_le_advert__job_round_robin(void) {
 
   // Introduce non-infinite job "C" for 10 seconds:
   advert_term.duration_secs = 10;
-  BLEAdData *ad_c = create_ad("C", NULL);
+  struct pbl_bt_ad_data *ad_c = create_ad("C", NULL);
   GAPLEAdvertisingJobRef infinite_job_c;
   infinite_job_c = gap_le_advert_schedule(ad_c, &advert_term,
                                           sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
@@ -331,7 +332,7 @@ void test_gap_le_advert__job_round_robin(void) {
   }
 
   // Introduce a second non-infinite job "D" for 10 seconds:
-  BLEAdData *ad_d = create_ad("D", NULL);
+  struct pbl_bt_ad_data *ad_d = create_ad("D", NULL);
   GAPLEAdvertisingJobRef infinite_job_d;
   infinite_job_d = gap_le_advert_schedule(ad_d, &advert_term,
                                           sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
@@ -353,7 +354,7 @@ void test_gap_le_advert__job_round_robin(void) {
   }
 
   // Schedule yet another infinite job "E".
-  BLEAdData *ad_e = create_ad("E", NULL);
+  struct pbl_bt_ad_data *ad_e = create_ad("E", NULL);
   advert_term.duration_secs = GAPLE_ADVERTISING_DURATION_INFINITE;
   GAPLEAdvertisingJobRef infinite_job_e;
   infinite_job_e = gap_le_advert_schedule(ad_e, &advert_term,
@@ -426,7 +427,7 @@ void test_gap_le_advert__job_round_robin_multiple_terms(void) {
   };
 
   // Schedule job "A":
-  BLEAdData *ad_a = create_ad("A", NULL);
+  struct pbl_bt_ad_data *ad_a = create_ad("A", NULL);
   GAPLEAdvertisingJobRef job_a;
   job_a = gap_le_advert_schedule(ad_a, advert_terms,
                                  sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
@@ -435,7 +436,7 @@ void test_gap_le_advert__job_round_robin_multiple_terms(void) {
   assert_ad_data("A");
 
   // Schedule job "B":
-  BLEAdData *ad_b = create_ad("B", NULL);
+  struct pbl_bt_ad_data *ad_b = create_ad("B", NULL);
   GAPLEAdvertisingJobRef job_b;
   job_b = gap_le_advert_schedule(ad_b, advert_terms,
                                  sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
@@ -480,7 +481,7 @@ void test_gap_le_advert__expiring_job(void) {
     .duration_secs = seconds_left,
   };
 
-  BLEAdData *ad = create_ad(NULL, NULL);
+  struct pbl_bt_ad_data *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobRef job;
   job = gap_le_advert_schedule(ad, &advert_term,
                                sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
@@ -510,7 +511,7 @@ void test_gap_le_advert__expiring_job(void) {
 
 void test_gap_le_advert__invalid_params(void) {
   GAPLEAdvertisingJobRef job;
-  BLEAdData *ad = create_ad(NULL, NULL);
+  struct pbl_bt_ad_data *ad = create_ad(NULL, NULL);
 
   GAPLEAdvertisingJobTerm advert_term = {
     .interval = GAPLEAdvertisingInterval_Short,
@@ -553,7 +554,7 @@ void test_gap_le_advert__unschedule_non_existent(void) {
 }
 
 void test_gap_le_advert__deinit_unschedules(void) {
-  BLEAdData *ad = create_ad(NULL, NULL);
+  struct pbl_bt_ad_data *ad = create_ad(NULL, NULL);
 
   GAPLEAdvertisingJobTerm advert_term = {
     .interval = GAPLEAdvertisingInterval_Short,
@@ -574,7 +575,7 @@ void test_gap_le_advert__deinit_unschedules(void) {
 
 void test_gap_le_advert__cant_schedule_after_deinit(void) {
   gap_le_advert_deinit();
-  BLEAdData *ad = create_ad(NULL, NULL);
+  struct pbl_bt_ad_data *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
     .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
@@ -588,7 +589,7 @@ void test_gap_le_advert__cant_schedule_after_deinit(void) {
 }
 
 void test_gap_le_advert__continue_after_slave_connection(void) {
-  BLEAdData *ad = create_ad(NULL, NULL);
+  struct pbl_bt_ad_data *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
     .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
@@ -628,7 +629,7 @@ void test_gap_le_advert__stack_restart_while_connected_resets_state(void) {
   gap_le_advert_deinit();
   gap_le_advert_init();
 
-  BLEAdData *ad = create_ad("A", NULL);
+  struct pbl_bt_ad_data *ad = create_ad("A", NULL);
   GAPLEAdvertisingJobTerm advert_term = {
     .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,
@@ -651,7 +652,7 @@ void test_gap_le_advert__stack_restart_while_connected_resets_state(void) {
 }
 
 void test_gap_le_advert__unschedule_job_types(void) {
-  BLEAdData *ad = create_ad(NULL, NULL);
+  struct pbl_bt_ad_data *ad = create_ad(NULL, NULL);
   GAPLEAdvertisingJobTerm advert_term = {
     .interval = GAPLEAdvertisingInterval_Short,
     .duration_secs = 10,

@@ -75,8 +75,9 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
   // FIXME: Find a better solution for this.
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
   if (total_payload_size > 500) {
-    comm_session_set_responsiveness(session, BtConsumerPpAppMessage, ResponseTimeMin,
-                                    MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+    comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
   }
 
   AppMessageReceiver *rcv = (AppMessageReceiver *)kernel_zalloc(sizeof(AppMessageReceiver));
@@ -123,8 +124,9 @@ static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *da
 
   // FIXME: Find a better solution for this.
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
-  comm_session_set_responsiveness(rcv->session, BtConsumerPpAppMessage, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  comm_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                  PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = MIN(rcv->header_bytes_remaining, length);

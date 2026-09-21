@@ -3,5 +3,5 @@
 
 #include <pbl/bluetooth/pairing_confirm.h>
 
-void pbl_bt_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confirmed) {
+void pbl_bt_pairing_confirm(const struct pbl_bt_pairing_confirm_ctx *ctx, bool is_confirmed) {
 }

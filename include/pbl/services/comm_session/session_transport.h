@@ -28,10 +28,9 @@ typedef void (*TransportReset)(Transport *transport);
 
 //! Pointer to function which calls the appropriate connection speed API
 //! exported by bt_conn_mgr
-typedef void (*TransportSetConnectionResponsiveness)(Transport *transport, BtConsumer consumer,
-                                                     ResponseTimeState state,
-                                                     uint16_t max_period_secs,
-                                                     ResponsivenessGrantedHandler granted_handler);
+typedef void (*TransportSetConnectionResponsiveness)(
+    Transport *transport, enum pbl_bt_consumer consumer, enum pbl_bt_response_time_state state,
+    uint16_t max_period_secs, pbl_bt_responsiveness_granted_cb_t granted_handler);
 
 //! Pointer to function which returns the UUID of the app that the transport connects to.
 typedef const Uuid *(*TransportGetUUID)(Transport *transport);

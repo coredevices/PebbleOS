@@ -92,8 +92,9 @@ void comm_session_send_next(CommSession *session) {
   ++s_send_next_count;
 }
 
-void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs) {
+void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
+                                     enum pbl_bt_response_time_state state,
+                                     uint16_t max_period_secs) {
 }
 
 void comm_session_sanitize_app_session(CommSession **session_in_out) {

@@ -23,18 +23,18 @@
 
 //! Defined in gatt_client_subscriptions.c. Should only be called when receiving
 //! notification of a service change
-extern void gatt_client_subscription_cleanup_by_att_handle_range(struct GAPLEConnection *connection,
-                                                                 ATTHandleRange *range);
+extern void gatt_client_subscription_cleanup_by_att_handle_range(
+    struct GAPLEConnection *connection, struct pbl_bt_att_handle_range *range);
 
 //! Defined in gatt_client_accessors.c. Should only be needed in this module
-extern BLEService gatt_client_att_handle_get_service(GAPLEConnection *connection,
-                                                     uint16_t att_handle,
-                                                     GATTServiceNode **service_node_out);
+extern pbl_bt_service_t gatt_client_att_handle_get_service(GAPLEConnection *connection,
+                                                           uint16_t att_handle,
+                                                           GATTServiceNode **service_node_out);
 
 // -------------------------------------------------------------------------------------------------
 // Static function prototypes
 
-static BTErrno prv_run_next_job(GAPLEConnection *connection);
+static enum pbl_bt_errno prv_run_next_job(GAPLEConnection *connection);
 
 // -------------------------------------------------------------------------------------------------
 // Wrappers around Bluetopia's API
@@ -44,16 +44,17 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection);
 
 typedef struct DiscoveryJobQueue {
   ListNode node;
-  ATTHandleRange hdl;
+  struct pbl_bt_att_handle_range hdl;
 } DiscoveryJobQueue;
 
 // Assumes we are holding the BT lock
-static void prv_add_discovery_job(GAPLEConnection *connection, ATTHandleRange *hdl_range) {
+static void prv_add_discovery_job(GAPLEConnection *connection,
+                                  struct pbl_bt_att_handle_range *hdl_range) {
   DiscoveryJobQueue *node = kernel_zalloc_check(sizeof(DiscoveryJobQueue));
   if (hdl_range) {
     node->hdl = *hdl_range;
   } else { // discover everything
-    node->hdl = (ATTHandleRange){.start = MIN_ATT_HANDLE, .end = MAX_ATT_HANDLE};
+    node->hdl = (struct pbl_bt_att_handle_range){.start = MIN_ATT_HANDLE, .end = MAX_ATT_HANDLE};
   }
 
   if (!connection->discovery_jobs) {
@@ -64,7 +65,8 @@ static void prv_add_discovery_job(GAPLEConnection *connection, ATTHandleRange *h
   }
 }
 
-void gatt_client_discovery_discover_range(GAPLEConnection *connection, ATTHandleRange *hdl_range) {
+void gatt_client_discovery_discover_range(GAPLEConnection *connection,
+                                          struct pbl_bt_att_handle_range *hdl_range) {
   bt_lock();
   {
     prv_add_discovery_job(connection, hdl_range);
@@ -76,12 +78,12 @@ void gatt_client_discovery_discover_range(GAPLEConnection *connection, ATTHandle
 }
 
 // assumes bt lock is held
-static BTErrno prv_run_next_job(GAPLEConnection *connection) {
+static enum pbl_bt_errno prv_run_next_job(GAPLEConnection *connection) {
   bt_lock_assert_held(true);
 
   DiscoveryJobQueue *node = connection->discovery_jobs;
   if (!node) {
-    return BTErrnoOK; // no more jobs to run
+    return PBL_BT_ERRNO_OK; // no more jobs to run
   }
 
   // Note, that the job only gets removed from the list after discovery
@@ -89,19 +91,19 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
   // can simply call this routine again to kick off another discovery attempt
 
   PBL_LOG_INFO("Starting BLE Service Discovery: 0x%x to 0x%x", node->hdl.start, node->hdl.end);
-  ATTHandleRange hdl = {.start = node->hdl.start, .end = node->hdl.end};
+  struct pbl_bt_att_handle_range hdl = {.start = node->hdl.start, .end = node->hdl.end};
 
   // Release bt_lock before calling into Nimble to avoid deadlock.
   // pbl_bt_gatt_start_discovery_range calls pebble_device_to_nimble_conn_handle
   // which needs ble_hs_mutex.
   bt_unlock();
 
-  BTErrno rv = pbl_bt_gatt_start_discovery_range(connection, &hdl);
+  enum pbl_bt_errno rv = pbl_bt_gatt_start_discovery_range(connection, &hdl);
 
   // Re-acquire bt_lock before modifying connection state
   bt_lock();
 
-  if (rv == BTErrnoOK) {
+  if (rv == PBL_BT_ERRNO_OK) {
     if (!connection->gatt_is_service_discovery_in_progress) {
       // Fresh job (not a transparent watchdog retry), record the start time
       connection->gatt_discovery_start_ticks = rtc_get_ticks();
@@ -115,11 +117,11 @@ static BTErrno prv_run_next_job(GAPLEConnection *connection) {
 }
 
 // This function returns true if a retry started. If a retry did not start
-// it sets e to BTErrnoOK if discovery completed or the actual error that happened
+// it sets e to PBL_BT_ERRNO_OK if discovery completed or the actual error that happened
 // which should be forwarded on
-static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e) {
+static bool prv_discovery_handle_timeout(GAPLEConnection *connection, enum pbl_bt_errno *e) {
   bool retry_started = false;
-  BTErrno finalize_result = BTErrnoOK;
+  enum pbl_bt_errno finalize_result = PBL_BT_ERRNO_OK;
   // Executing on NewTimer task, so need to bt_lock():
   PBL_LOG_WRN("Service Discovery Watchdog Timeout");
   bt_lock();
@@ -132,10 +134,10 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e
     // pbl_bt_gatt_stop_discovery calls pebble_device_to_nimble_conn_handle
     // which needs ble_hs_mutex.
     bt_unlock();
-    BTErrno stop_result = pbl_bt_gatt_stop_discovery(connection);
+    enum pbl_bt_errno stop_result = pbl_bt_gatt_stop_discovery(connection);
     bt_lock();
 
-    if (stop_result != BTErrnoOK) {
+    if (stop_result != PBL_BT_ERRNO_OK) {
       // Handle the race: Bluetopia service discovery has stopped in the mean time, for example
       // because of a disconnection, internal error or it completed right when the timer fired.
       goto unlock;
@@ -146,13 +148,13 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, BTErrno *e
       core_dump_reset(true /* is_forced */);
 #endif
       // Done retrying, just error out:
-      finalize_result = BTErrnoServiceDiscoveryTimeout;
+      finalize_result = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
       goto unlock;
     }
 
     // Retry transparently (don't let the clients know):
-    BTErrno ret_val = prv_run_next_job(connection);
-    if (ret_val != BTErrnoOK) {
+    enum pbl_bt_errno ret_val = prv_run_next_job(connection);
+    if (ret_val != PBL_BT_ERRNO_OK) {
       // Start failed, just error out
       finalize_result = ret_val;
       goto unlock;
@@ -169,10 +171,9 @@ unlock:
 }
 
 // -------------------------------------------------------------------------------------------------
-extern uint8_t gatt_client_copy_service_refs_by_discovery_generation(const BTDeviceInternal *device,
-                                                                     BLEService services_out[],
-                                                                     uint8_t num_services,
-                                                                     uint8_t discovery_gen);
+extern uint8_t gatt_client_copy_service_refs_by_discovery_generation(
+    const struct pbl_bt_device_internal *device, pbl_bt_service_t services_out[],
+    uint8_t num_services, uint8_t discovery_gen);
 
 static void prv_send_event(PebbleBLEGATTClientServiceEventInfo *info) {
   PebbleEvent e = (const PebbleEvent){
@@ -191,9 +192,10 @@ static void prv_send_event(PebbleBLEGATTClientServiceEventInfo *info) {
   event_put(&e);
 }
 
-static void prv_send_services_added_event(const GAPLEConnection *connection, BTErrno status) {
+static void prv_send_services_added_event(const GAPLEConnection *connection,
+                                          enum pbl_bt_errno status) {
   uint8_t num_services_changed =
-      (status == BTErrnoOK) ? list_count(&connection->gatt_remote_services->node) : 0;
+      (status == PBL_BT_ERRNO_OK) ? list_count(&connection->gatt_remote_services->node) : 0;
 
   if (num_services_changed > BLE_GATT_MAX_SERVICES_CHANGED) {
     PBL_LOG_ERR("Remote has %u services, more than we can handle.", num_services_changed);
@@ -220,7 +222,7 @@ static void prv_send_services_added_event(const GAPLEConnection *connection, BTE
 }
 
 static void prv_send_services_invalidate_all_event(const GAPLEConnection *connection,
-                                                   BTErrno status) {
+                                                   enum pbl_bt_errno status) {
   PebbleBLEGATTClientServiceEventInfo *info =
       kernel_zalloc_check(sizeof(PebbleBLEGATTClientServiceEventInfo));
 
@@ -234,22 +236,23 @@ static void prv_send_services_invalidate_all_event(const GAPLEConnection *connec
 }
 
 extern void gatt_client_service_get_all_characteristics_and_descriptors(
-    GAPLEConnection *connection, GATTService *service, BLECharacteristic *characteristics_hdls_out,
-    BLEDescriptor *descriptor_hdls_out);
+    GAPLEConnection *connection, struct pbl_bt_gatt_service *service,
+    pbl_bt_characteristic_t *characteristics_hdls_out, pbl_bt_descriptor_t *descriptor_hdls_out);
 
 //! @note bt_lock is assumed to be taken by the caller
 void gatt_client_discovery_handle_service_range_change(GAPLEConnection *connection,
-                                                       ATTHandleRange *range) {
+                                                       struct pbl_bt_att_handle_range *range) {
   GATTServiceNode *service_node;
-  BLEService service = gatt_client_att_handle_get_service(connection, range->start, &service_node);
+  pbl_bt_service_t service =
+      gatt_client_att_handle_get_service(connection, range->start, &service_node);
 
-  if (service == BLE_SERVICE_INVALID) {
+  if (service == PBL_BT_SERVICE_INVALID) {
     // Must be a new service
     return;
   }
 
-  int memory_needed = service_node->service->num_characteristics * sizeof(BLECharacteristic) +
-                      service_node->service->num_descriptors * sizeof(BLEDescriptor);
+  int memory_needed = service_node->service->num_characteristics * sizeof(pbl_bt_characteristic_t) +
+                      service_node->service->num_descriptors * sizeof(pbl_bt_descriptor_t);
   memory_needed +=
       sizeof(PebbleBLEGATTClientServiceEventInfo) + sizeof(PebbleBLEGATTClientServiceHandles);
 
@@ -257,7 +260,7 @@ void gatt_client_discovery_handle_service_range_change(GAPLEConnection *connecti
   *info = (PebbleBLEGATTClientServiceEventInfo){
     .type = PebbleServicesRemoved,
     .device = connection->device,
-    .status = BTErrnoOK
+    .status = PBL_BT_ERRNO_OK
   };
 
   info->services_removed_data.num_services_removed = 1;
@@ -317,7 +320,8 @@ static void prv_remove_current_discovery_job(GAPLEConnection *connection) {
   if ((new_job->hdl.start == MIN_ATT_HANDLE) && (new_job->hdl.end == MAX_ATT_HANDLE)) {
     // we are rediscovering all services so flush everything
     prv_free_service_nodes(connection);
-    prv_send_services_invalidate_all_event(connection, BTErrnoServiceDiscoveryDatabaseChanged);
+    prv_send_services_invalidate_all_event(connection,
+                                           PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED);
   } else { // we are rediscovering one service
     gatt_client_discovery_handle_service_range_change(connection, &new_job->hdl);
   }
@@ -333,16 +337,16 @@ void gatt_client_cleanup_discovery_jobs(GAPLEConnection *connection) {
   bt_unlock();
 }
 
-static void prv_finalize_discovery(GAPLEConnection *connection, BTErrno errno) {
-  if (errno != BTErrnoOK) {
+static void prv_finalize_discovery(GAPLEConnection *connection, enum pbl_bt_errno errno) {
+  if (errno != PBL_BT_ERRNO_OK) {
     const DiscoveryJobQueue *job = connection->discovery_jobs;
     const bool is_range_job =
         (job && ((job->hdl.start != MIN_ATT_HANDLE) || (job->hdl.end != MAX_ATT_HANDLE)));
-    if (errno != BTErrnoServiceDiscoveryDatabaseChanged) {
+    if (errno != PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED) {
       PBL_LOG_ERR("GATT service discovery failed: errno=%d, range=0x%x-0x%x", errno,
                   job ? job->hdl.start : 0, job ? job->hdl.end : 0);
     }
-    if (!is_range_job || (errno == BTErrnoServiceDiscoveryDatabaseChanged)) {
+    if (!is_range_job || (errno == PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED)) {
       // Handle failure -- cleanup and dispatch event:
       prv_free_service_nodes(connection);
       gatt_client_subscriptions_cleanup_by_connection(connection, false /* should_unsubscribe */);
@@ -356,7 +360,7 @@ static void prv_finalize_discovery(GAPLEConnection *connection, BTErrno errno) {
   prv_remove_current_discovery_job(connection);
   connection->gatt_is_service_discovery_in_progress = false;
   connection->gatt_service_discovery_retries = 0;
-  if (errno == BTErrnoServiceDiscoveryDatabaseChanged) {
+  if (errno == PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED) {
     prv_send_services_invalidate_all_event(connection, errno);
   } else {
     prv_send_services_added_event(connection, errno);
@@ -366,9 +370,10 @@ static void prv_finalize_discovery(GAPLEConnection *connection, BTErrno errno) {
 }
 
 void pbl_bt_cb_gatt_client_discovery_handle_indication(GAPLEConnection *connection,
-                                                       GATTService *service, BTErrno error) {
+                                                       struct pbl_bt_gatt_service *service,
+                                                       enum pbl_bt_errno error) {
   // We experienced some kind of conversion error, pass it on
-  if (error != BTErrnoOK) {
+  if (error != PBL_BT_ERRNO_OK) {
     prv_send_services_added_event(connection, error);
     return;
   }
@@ -390,32 +395,33 @@ void pbl_bt_cb_gatt_client_discovery_handle_indication(GAPLEConnection *connecti
   bt_unlock();
 }
 
-bool pbl_bt_cb_gatt_client_discovery_complete(GAPLEConnection *connection, BTErrno errno) {
+bool pbl_bt_cb_gatt_client_discovery_complete(GAPLEConnection *connection,
+                                              enum pbl_bt_errno errno) {
   bool finalize_discovery = true;
   bt_lock();
   {
-    if (errno == BTErrnoServiceDiscoveryTimeout) {
+    if (errno == PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT) {
       if (prv_discovery_handle_timeout(connection, &errno)) {
         // if a retry started, don't generate any events yet
         finalize_discovery = false;
         goto unlock;
       }
       // it's possible the discovery completed before we handled the timeout, in which case
-      // we get a BTErrnoOK which means we will get a completion event already
-      finalize_discovery = (errno != BTErrnoOK);
-    } else if (errno == BTErrnoServiceDiscoveryDisconnected) {
+      // we get a PBL_BT_ERRNO_OK which means we will get a completion event already
+      finalize_discovery = (errno != PBL_BT_ERRNO_OK);
+    } else if (errno == PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED) {
       finalize_discovery = false;
     }
 
-    if (errno == BTErrnoOK) {
+    if (errno == PBL_BT_ERRNO_OK) {
       const uint32_t discovery_ms =
           (rtc_get_ticks() - connection->gatt_discovery_start_ticks) * 1000 / RTC_TICKS_HZ;
       PBL_LOG_INFO("GATT service discovery completed in %" PRIu32 "ms", discovery_ms);
       // Completion of service discovery implies we are about to have more BLE
       // traffic (for example, ANCS notifications, PPoG communication). Keep the
       // channel at a high throughput speed for a little bit longer to handle these bursts.
-      conn_mgr_set_ble_conn_response_time(connection, BtConsumerLeServiceDiscovery, ResponseTimeMin,
-                                          10);
+      conn_mgr_set_ble_conn_response_time(connection, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                          PBL_BT_RESPONSE_TIME_MIN, 10);
     }
 
     if (finalize_discovery) {
@@ -427,26 +433,26 @@ unlock:
   return finalize_discovery;
 }
 
-BTErrno gatt_client_discovery_discover_all(const BTDeviceInternal *device) {
-  BTErrno ret_val = BTErrnoOK;
+enum pbl_bt_errno gatt_client_discovery_discover_all(const struct pbl_bt_device_internal *device) {
+  enum pbl_bt_errno ret_val = PBL_BT_ERRNO_OK;
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_device(device);
     if (!connection) {
-      ret_val = BTErrnoInvalidParameter;
+      ret_val = PBL_BT_ERRNO_INVALID_PARAMETER;
       goto unlock;
     }
     if (connection->gatt_is_service_discovery_in_progress) {
-      ret_val = BTErrnoInvalidState;
+      ret_val = PBL_BT_ERRNO_INVALID_STATE;
       goto unlock;
     }
     if (connection->gatt_remote_services) {
       // Already discovered, no need to do it again!
-      prv_send_services_added_event(connection, BTErrnoOK);
+      prv_send_services_added_event(connection, PBL_BT_ERRNO_OK);
       goto unlock;
     }
-    conn_mgr_set_ble_conn_response_time(connection, BtConsumerLeServiceDiscovery, ResponseTimeMin,
-                                        30);
+    conn_mgr_set_ble_conn_response_time(connection, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                        PBL_BT_RESPONSE_TIME_MIN, 30);
     prv_add_discovery_job(connection, NULL);
     // if we get here there is no discovery in progress so dispatch the job
     ret_val = prv_run_next_job(connection);
@@ -460,7 +466,8 @@ unlock:
 //! Cleans up any state and frees the associated memory of all the things this module might have
 //! created for a given connection.
 //! bt_lock() is assumed to be taken by the caller
-void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection, BTErrno reason) {
+void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection,
+                                                 enum pbl_bt_errno reason) {
   if (connection->gatt_is_service_discovery_in_progress) {
     // Assuming "disconnection" reason is appropriate here:
     prv_finalize_discovery(connection, reason);
@@ -473,8 +480,9 @@ void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection, BT
 //! extern for gatt_service_changed.c
 //! Same as gatt_client_discovery_discover_all, but cleans up existing service discovery
 //! state and stops any existing service discovery process.
-BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device) {
-  BTErrno ret_val = BTErrnoServiceDiscoveryDisconnected;
+enum pbl_bt_errno gatt_client_discovery_rediscover_all(
+    const struct pbl_bt_device_internal *device) {
+  enum pbl_bt_errno ret_val = PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_device(device);
@@ -494,7 +502,7 @@ BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device) {
         // Queue up CCCD writes to unsubscribe all the subscriptions:
         gatt_client_subscriptions_cleanup_by_connection(connection, true /* should_unsubscribe */);
       }
-      prv_finalize_discovery(connection, BTErrnoServiceDiscoveryDatabaseChanged);
+      prv_finalize_discovery(connection, PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED);
       ret_val = gatt_client_discovery_discover_all(device);
     }
   }

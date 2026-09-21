@@ -49,7 +49,7 @@ typedef struct __attribute__((__packed__)) {
 } BLEAdElement;
 
 // -----------------------------------------------------------------------------
-// Consuming BLEAdData:
+// Consuming struct pbl_bt_ad_data:
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
@@ -196,8 +196,8 @@ static bool parse_manufact_spec(const BLEAdElement *elem, const BLEAdParseCallba
 //! to receive parse callbacks for. You can leave a callback NULL if you are not
 //! interested in receiving callbacks for that type of data.
 //! @param cb_data Pointer to client data that is passed into the callback.
-static void ble_ad_parse_ad_data(const BLEAdData *ad_data, const BLEAdParseCallbacks *callbacks,
-                                 void *cb_data) {
+static void ble_ad_parse_ad_data(const struct pbl_bt_ad_data *ad_data,
+                                 const BLEAdParseCallbacks *callbacks, void *cb_data) {
   const uint8_t *cursor = ad_data->data;
   const uint8_t *end = cursor + ad_data->ad_data_length + ad_data->scan_resp_data_length;
   while (cursor < end) {
@@ -275,7 +275,7 @@ static bool includes_service_parse_cb(const Uuid uuids[], uint8_t count, void *c
   return true; // continue parsing
 }
 
-bool ble_ad_includes_service(const BLEAdData *ad, const Uuid *service_uuid) {
+bool ble_ad_includes_service(const struct pbl_bt_ad_data *ad, const Uuid *service_uuid) {
   struct IncludesServiceCtx ctx = {
     .service_uuid = service_uuid,
     .included = false,
@@ -310,7 +310,8 @@ static bool copy_services_parse_cb(const Uuid uuids[], uint8_t count, void *cb_d
   return false; // stop parsing, only one Services UUID element allowed by spec
 }
 
-uint8_t ble_ad_copy_service_uuids(const BLEAdData *ad, Uuid *uuids_out, uint8_t num_uuids) {
+uint8_t ble_ad_copy_service_uuids(const struct pbl_bt_ad_data *ad, Uuid *uuids_out,
+                                  uint8_t num_uuids) {
   struct CopyServiceUUIDsCtx ctx = {
     .uuids_out = uuids_out,
     .max = num_uuids,
@@ -337,7 +338,7 @@ static bool tx_power_level_cb(int8_t tx_power_level, void *cb_data) {
   return false; // stop parsing
 }
 
-bool ble_ad_get_tx_power_level(const BLEAdData *ad, int8_t *tx_power_level_out) {
+bool ble_ad_get_tx_power_level(const struct pbl_bt_ad_data *ad, int8_t *tx_power_level_out) {
   struct TxPowerLevelCtx ctx = {
     .tx_power_level_out = tx_power_level_out,
     .included = false,
@@ -370,7 +371,7 @@ static bool copy_local_name_parse_cb(const uint8_t *local_name_bytes, uint8_t le
   return false; // stop parsing
 }
 
-size_t ble_ad_copy_local_name(const BLEAdData *ad, char *buffer, size_t size) {
+size_t ble_ad_copy_local_name(const struct pbl_bt_ad_data *ad, char *buffer, size_t size) {
   struct LocalNameCtx ctx = {
     .buffer = buffer,
     .size = MIN(size, 0xff),
@@ -386,14 +387,14 @@ size_t ble_ad_copy_local_name(const BLEAdData *ad, char *buffer, size_t size) {
 // -----------------------------------------------------------------------------
 //! ble_ad_get_raw_data_size() wrapper and helper function:
 
-size_t ble_ad_get_raw_data_size(const BLEAdData *ad) {
+size_t ble_ad_get_raw_data_size(const struct pbl_bt_ad_data *ad) {
   return ad->ad_data_length + ad->scan_resp_data_length;
 }
 
 // -----------------------------------------------------------------------------
 //! ble_ad_copy_raw_data() wrapper and helper function:
 
-size_t ble_ad_copy_raw_data(const BLEAdData *ad, uint8_t *buffer, size_t size) {
+size_t ble_ad_copy_raw_data(const struct pbl_bt_ad_data *ad, uint8_t *buffer, size_t size) {
   const size_t size_to_copy = ble_ad_get_raw_data_size(ad);
   if (size < size_to_copy) {
     return 0;
@@ -424,7 +425,7 @@ static bool copy_manufacturer_specific_parse_cb(uint16_t company_id, const uint8
   return false; // stop parsing
 }
 
-size_t ble_ad_copy_manufacturer_specific_data(const BLEAdData *ad, uint16_t *company_id,
+size_t ble_ad_copy_manufacturer_specific_data(const struct pbl_bt_ad_data *ad, uint16_t *company_id,
                                               uint8_t *buffer, size_t size) {
   struct ManufacturerSpecificCtx ctx = {
     .size = size,
@@ -441,7 +442,7 @@ size_t ble_ad_copy_manufacturer_specific_data(const BLEAdData *ad, uint16_t *com
 }
 
 // -----------------------------------------------------------------------------
-// Creating BLEAdData:
+// Creating struct pbl_bt_ad_data:
 // -----------------------------------------------------------------------------
 
 //! Magic high bit used as scan_resp_data_length to indicate that the ad_data
@@ -451,12 +452,12 @@ size_t ble_ad_copy_manufacturer_specific_data(const BLEAdData *ad, uint16_t *com
 //! optimization, saving another "finalized" bool.
 #define BLE_AD_DATA_FINALIZED ((uint8_t)0x80)
 
-bool prv_ad_is_finalized(const BLEAdData *ad_data) {
+bool prv_ad_is_finalized(const struct pbl_bt_ad_data *ad_data) {
   // Scan response data has already been added / started
   return (ad_data->scan_resp_data_length != 0);
 }
 
-void ble_ad_start_scan_response(BLEAdData *ad_data) {
+void ble_ad_start_scan_response(struct pbl_bt_ad_data *ad_data) {
   if (prv_ad_is_finalized(ad_data)) {
     // Already finalized
     return;
@@ -474,7 +475,7 @@ void ble_ad_start_scan_response(BLEAdData *ad_data) {
 static uint8_t *prv_length_ptr_if_fits_or_null(uint8_t *length, size_t size_to_write) {
   // Unset finalized bit:
   const uint8_t used = *length & (~BLE_AD_DATA_FINALIZED);
-  const uint8_t left = GAP_LE_AD_REPORT_DATA_MAX_LENGTH - used;
+  const uint8_t left = PBL_BT_AD_REPORT_DATA_MAX_LENGTH - used;
   // Return pointer to the pointer if size_to_write will fit, or NULL otherwise:
   return (left >= size_to_write) ? length : NULL;
 }
@@ -482,7 +483,7 @@ static uint8_t *prv_length_ptr_if_fits_or_null(uint8_t *length, size_t size_to_w
 // -----------------------------------------------------------------------------
 //! @return Pointer to the length that is incremented when writing size_to_write
 //! number of bytes, or NULL if there is not enough space left.
-static uint8_t *prv_length_to_increase(BLEAdData *ad_data, size_t size_to_write) {
+static uint8_t *prv_length_to_increase(struct pbl_bt_ad_data *ad_data, size_t size_to_write) {
   if (ad_data->scan_resp_data_length) {
     // The scan response part is already being populated:
     return prv_length_ptr_if_fits_or_null(&ad_data->scan_resp_data_length, size_to_write);
@@ -499,7 +500,7 @@ static uint8_t *prv_length_to_increase(BLEAdData *ad_data, size_t size_to_write)
 }
 
 // -----------------------------------------------------------------------------
-bool prv_write_element_to_ad_data(BLEAdData *ad_data, const BLEAdElement *element) {
+bool prv_write_element_to_ad_data(struct pbl_bt_ad_data *ad_data, const BLEAdElement *element) {
   if (!ad_data || !element) {
     return false;
   }
@@ -526,17 +527,18 @@ bool prv_write_element_to_ad_data(BLEAdData *ad_data, const BLEAdElement *elemen
 }
 
 // -----------------------------------------------------------------------------
-BLEAdData *ble_ad_create(void) {
-  const size_t max_ad_data_size = sizeof(BLEAdData) + (GAP_LE_AD_REPORT_DATA_MAX_LENGTH * 2);
-  BLEAdData *ad_data = applib_malloc(max_ad_data_size);
+struct pbl_bt_ad_data *ble_ad_create(void) {
+  const size_t max_ad_data_size =
+      sizeof(struct pbl_bt_ad_data) + (PBL_BT_AD_REPORT_DATA_MAX_LENGTH * 2);
+  struct pbl_bt_ad_data *ad_data = applib_malloc(max_ad_data_size);
   if (ad_data) {
-    memset(ad_data, 0, sizeof(BLEAdData));
+    memset(ad_data, 0, sizeof(struct pbl_bt_ad_data));
   }
   return ad_data;
 }
 
 // -----------------------------------------------------------------------------
-void ble_ad_destroy(BLEAdData *ad) {
+void ble_ad_destroy(struct pbl_bt_ad_data *ad) {
   applib_free(ad);
 }
 
@@ -603,7 +605,7 @@ static uint32_t prv_convert_to_32bit_uuid(const Uuid *uuid) {
 }
 
 // -----------------------------------------------------------------------------
-bool ble_ad_set_service_uuids(BLEAdData *ad, const Uuid uuids[], uint8_t num_uuids) {
+bool ble_ad_set_service_uuids(struct pbl_bt_ad_data *ad, const Uuid uuids[], uint8_t num_uuids) {
   struct __attribute__((__packed__)) BLEAdElementService {
     BLEAdElementHeader header;
     union {
@@ -657,7 +659,7 @@ bool ble_ad_set_service_uuids(BLEAdData *ad, const Uuid uuids[], uint8_t num_uui
 }
 
 // -----------------------------------------------------------------------------
-bool ble_ad_set_local_name(BLEAdData *ad, const char *local_name) {
+bool ble_ad_set_local_name(struct pbl_bt_ad_data *ad, const char *local_name) {
   if (!local_name) {
     return false;
   }
@@ -672,7 +674,7 @@ bool ble_ad_set_local_name(BLEAdData *ad, const char *local_name) {
 }
 
 // -----------------------------------------------------------------------------
-bool ble_ad_set_tx_power_level(BLEAdData *ad) {
+bool ble_ad_set_tx_power_level(struct pbl_bt_ad_data *ad) {
   uint8_t element_buffer[sizeof(BLEAdElement) + sizeof(int8_t)];
   BLEAdElement *element = (BLEAdElement *)element_buffer;
   element->header.length = sizeof(int8_t) + 1 /* +1 Type byte */;
@@ -683,8 +685,8 @@ bool ble_ad_set_tx_power_level(BLEAdData *ad) {
 }
 
 // -----------------------------------------------------------------------------
-bool ble_ad_set_manufacturer_specific_data(BLEAdData *ad, uint16_t company_id, const uint8_t *data,
-                                           size_t size) {
+bool ble_ad_set_manufacturer_specific_data(struct pbl_bt_ad_data *ad, uint16_t company_id,
+                                           const uint8_t *data, size_t size) {
   struct __attribute__((__packed__)) BLEAdElementManufacturerSpecific {
     BLEAdElementHeader header;
     uint16_t company_id;
@@ -703,7 +705,7 @@ bool ble_ad_set_manufacturer_specific_data(BLEAdData *ad, uint16_t company_id, c
 }
 
 // -----------------------------------------------------------------------------
-bool ble_ad_set_flags(BLEAdData *ad, uint8_t flags) {
+bool ble_ad_set_flags(struct pbl_bt_ad_data *ad, uint8_t flags) {
   struct __attribute__((__packed__)) BLEAdElementManufacturerSpecific {
     BLEAdElementHeader header;
     uint8_t flags;

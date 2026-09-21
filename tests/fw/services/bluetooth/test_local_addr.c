@@ -18,9 +18,9 @@
 #include "stubs_passert.h"
 
 static bool s_last_driver_allow_cycling;
-BTDeviceAddress s_last_driver_addr;
+struct pbl_bt_addr s_last_driver_addr;
 bool s_last_driver_addr_is_null;
-void pbl_bt_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_address) {
+void pbl_bt_set_local_address(bool allow_cycling, const struct pbl_bt_addr *pinned_address) {
   s_last_driver_allow_cycling = allow_cycling;
   if (pinned_address) {
     s_last_driver_addr_is_null = false;
@@ -32,10 +32,10 @@ void pbl_bt_set_local_address(bool allow_cycling, const BTDeviceAddress *pinned_
   return cl_mock_type(void);
 }
 
-BTDeviceAddress s_last_bt_persist_pinned_addr;
+struct pbl_bt_addr s_last_bt_persist_pinned_addr;
 bool s_last_bt_persist_pinned_addr_is_null;
 
-bool bt_persistent_storage_get_ble_pinned_address(BTDeviceAddress *address_out) {
+bool bt_persistent_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
   if (s_last_bt_persist_pinned_addr_is_null) {
     return false;
   }
@@ -45,7 +45,7 @@ bool bt_persistent_storage_get_ble_pinned_address(BTDeviceAddress *address_out) 
   return true;
 }
 
-bool bt_persistent_storage_set_ble_pinned_address(const BTDeviceAddress *addr) {
+bool bt_persistent_storage_set_ble_pinned_address(const struct pbl_bt_addr *addr) {
   if (addr) {
     s_last_bt_persist_pinned_addr_is_null = false;
     s_last_bt_persist_pinned_addr = *addr;
@@ -60,10 +60,10 @@ bool bt_persistent_storage_has_pinned_ble_pairings(void) {
   return cl_mock_type(bool);
 }
 
-#define TEST_PINNED_ADDR_1 ((BTDeviceAddress){.octets = {0x11, 0x22, 0x33, 0x33, 0x44, 0x55}})
-#define TEST_PINNED_ADDR_2 ((BTDeviceAddress){.octets = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}})
+#define TEST_PINNED_ADDR_1 ((struct pbl_bt_addr){.octets = {0x11, 0x22, 0x33, 0x33, 0x44, 0x55}})
+#define TEST_PINNED_ADDR_2 ((struct pbl_bt_addr){.octets = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}})
 
-bool pbl_bt_id_generate_private_resolvable_address(BTDeviceAddress *root_pinned_address_out) {
+bool pbl_bt_id_generate_private_resolvable_address(struct pbl_bt_addr *root_pinned_address_out) {
   *root_pinned_address_out = TEST_PINNED_ADDR_1;
   return true;
 }
@@ -71,7 +71,7 @@ bool pbl_bt_id_generate_private_resolvable_address(BTDeviceAddress *root_pinned_
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tests
 
-#define TEST_BONDING_ID ((BTBondingID)1)
+#define TEST_BONDING_ID ((pbl_bt_bonding_id_t)1)
 
 static void prv_init_no_pinnings_no_pinned_address(void) {
   cl_will_return(bt_persistent_storage_has_pinned_ble_pairings, false);
@@ -83,7 +83,7 @@ static void prv_init_no_pinnings_no_pinned_address(void) {
 
 static void prv_assert_driver_addr_is_null(void) {
   cl_assert_equal_b(s_last_driver_addr_is_null, true);
-  cl_assert_equal_m(&s_last_driver_addr, &(BTDeviceAddress){}, sizeof(s_last_driver_addr));
+  cl_assert_equal_m(&s_last_driver_addr, &(struct pbl_bt_addr){}, sizeof(s_last_driver_addr));
 }
 
 static void prv_assert_driver_addr_is_addr1(void) {

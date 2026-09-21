@@ -10,13 +10,13 @@
 #include <stdint.h>
 
 //! Byte buffers mirroring what the controller would hold. Sized to the maximum
-//! advertising report length, matching GAP_LE_AD_REPORT_DATA_MAX_LENGTH.
+//! advertising report length, matching PBL_BT_AD_REPORT_DATA_MAX_LENGTH.
 typedef struct {
-  uint8_t data[GAP_LE_AD_REPORT_DATA_MAX_LENGTH];
+  uint8_t data[PBL_BT_AD_REPORT_DATA_MAX_LENGTH];
 } Advertising_Data_t;
 
 typedef struct {
-  uint8_t data[GAP_LE_AD_REPORT_DATA_MAX_LENGTH];
+  uint8_t data[PBL_BT_AD_REPORT_DATA_MAX_LENGTH];
 } Scan_Response_Data_t;
 
 //! Resets all simulated controller state. Call from test initialize().

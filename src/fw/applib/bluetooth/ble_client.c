@@ -27,8 +27,9 @@
 //       back to device name?
 
 static void prv_handle_services_added(BLEClientServiceChangeHandler handler,
-                                      BTDeviceInternal device, BTErrno status) {
-  BLEService services[BLE_GATT_MAX_SERVICES_CHANGED];
+                                      struct pbl_bt_device_internal device,
+                                      enum pbl_bt_errno status) {
+  pbl_bt_service_t services[BLE_GATT_MAX_SERVICES_CHANGED];
 
   uint8_t num_services =
       sys_ble_client_copy_services(device, services, BLE_GATT_MAX_SERVICES_CHANGED);
@@ -96,21 +97,22 @@ static void prv_handle_service_change(const PebbleBLEGATTClientEvent *e) {
   }
 }
 
-typedef void (*GenericReadHandler)(BLECharacteristic characteristic, const uint8_t *value,
-                                   size_t value_length, uint16_t value_offset, BLEGATTError error);
+typedef void (*GenericReadHandler)(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                   size_t value_length, uint16_t value_offset,
+                                   enum pbl_bt_gatt_error error);
 
 static void prv_consume_read_response(const PebbleBLEGATTClientEvent *e,
                                       GenericReadHandler handler) {
   uint8_t *value = NULL;
   uint16_t value_length = e->value_length;
   const uintptr_t object_ref = e->object_ref;
-  BLEGATTError gatt_error = e->gatt_error;
+  enum pbl_bt_gatt_error gatt_error = e->gatt_error;
 
   // Read Responses / Notifications with 0 length data must not be attempted to be consumed
   if (value_length) {
     value = (uint8_t *)applib_malloc(value_length);
     if (!value) {
-      gatt_error = BLEGATTErrorLocalInsufficientResources;
+      gatt_error = PBL_BT_GATT_ERROR_LOCAL_INSUFFICIENT_RESOURCES;
       value_length = 0;
     }
     // If there is a read response, we *must* consume it,
@@ -128,7 +130,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *e,
 static void prv_consume_notifications(const PebbleBLEGATTClientEvent *e,
                                       GenericReadHandler handler) {
   uint8_t *value = NULL;
-  BLEGATTError gatt_error = e->gatt_error;
+  enum pbl_bt_gatt_error gatt_error = e->gatt_error;
 
   uint16_t heap_buffer_size = 0;
   uint16_t value_length = 0;
@@ -141,7 +143,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *e,
       heap_buffer_size = value ? new_heap_buffer_size : 0;
     }
     if (!value) {
-      gatt_error = BLEGATTErrorLocalInsufficientResources;
+      gatt_error = PBL_BT_GATT_ERROR_LOCAL_INSUFFICIENT_RESOURCES;
       value_length = 0;
     }
     // Init: consume may return without writing object_ref (e.g. buffer already freed),
@@ -226,7 +228,7 @@ void ble_client_handle_event(PebbleEvent *e) {
   prv_handler_for_subtype(gatt_event->subtype)(gatt_event);
 }
 
-static BTErrno prv_set_handler(void *new_handler, off_t struct_offset_bytes) {
+static enum pbl_bt_errno prv_set_handler(void *new_handler, off_t struct_offset_bytes) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   typedef void (*BLEGenericHandler)(void);
   BLEGenericHandler *handler_storage =
@@ -252,45 +254,45 @@ static BTErrno prv_set_handler(void *new_handler, off_t struct_offset_bytes) {
       }
     }
   }
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
-BTErrno ble_client_set_service_filter(const Uuid service_uuids[], uint8_t num_uuids) {
+enum pbl_bt_errno ble_client_set_service_filter(const Uuid service_uuids[], uint8_t num_uuids) {
   // TODO
   return 0;
 }
 
-BTErrno ble_client_set_service_change_handler(BLEClientServiceChangeHandler handler) {
+enum pbl_bt_errno ble_client_set_service_change_handler(BLEClientServiceChangeHandler handler) {
   const off_t offset = offsetof(BLEAppState, gatt_service_change_handler);
   return prv_set_handler(handler, offset);
 }
 
-BTErrno ble_client_set_read_handler(BLEClientReadHandler handler) {
+enum pbl_bt_errno ble_client_set_read_handler(BLEClientReadHandler handler) {
   const off_t offset = offsetof(BLEAppState, gatt_characteristic_read_handler);
   return prv_set_handler(handler, offset);
 }
 
-BTErrno ble_client_set_write_response_handler(BLEClientWriteHandler handler) {
+enum pbl_bt_errno ble_client_set_write_response_handler(BLEClientWriteHandler handler) {
   const off_t offset = offsetof(BLEAppState, gatt_characteristic_write_handler);
   return prv_set_handler(handler, offset);
 }
 
-BTErrno ble_client_set_subscribe_handler(BLEClientSubscribeHandler handler) {
+enum pbl_bt_errno ble_client_set_subscribe_handler(BLEClientSubscribeHandler handler) {
   const off_t offset = offsetof(BLEAppState, gatt_characteristic_subscribe_handler);
   return prv_set_handler(handler, offset);
 }
 
-BTErrno ble_client_set_buffer_empty_handler(BLEClientBufferEmptyHandler empty_handler) {
+enum pbl_bt_errno ble_client_set_buffer_empty_handler(BLEClientBufferEmptyHandler empty_handler) {
   // TODO
-  return BTErrnoOther;
+  return PBL_BT_ERRNO_OTHER;
 }
 
-BTErrno ble_client_set_descriptor_write_handler(BLEClientWriteDescriptorHandler handler) {
+enum pbl_bt_errno ble_client_set_descriptor_write_handler(BLEClientWriteDescriptorHandler handler) {
   const off_t offset = offsetof(BLEAppState, gatt_descriptor_write_handler);
   return prv_set_handler(handler, offset);
 }
 
-BTErrno ble_client_set_descriptor_read_handler(BLEClientReadDescriptorHandler handler) {
+enum pbl_bt_errno ble_client_set_descriptor_read_handler(BLEClientReadDescriptorHandler handler) {
   const off_t offset = offsetof(BLEAppState, gatt_descriptor_read_handler);
   return prv_set_handler(handler, offset);
 }

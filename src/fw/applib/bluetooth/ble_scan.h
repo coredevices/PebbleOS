@@ -19,20 +19,21 @@
 //! immediately after returning from this callback. Do not keep around
 //! any long-lived references around to the advertisement_data.
 //! @note Do not use ble_ad_destroy() on the advertisement_data.
-typedef void (*BLEScanHandler)(BTDevice device, int8_t rssi, const BLEAdData *advertisement_data);
+typedef void (*BLEScanHandler)(struct pbl_bt_device device, int8_t rssi,
+                               const struct pbl_bt_ad_data *advertisement_data);
 
 //! Start scanning for advertisements. Pebble will scan actively, meaning it
 //! will perform scan requests whenever the advertisement is scannable.
 //! @param handler The callback to handle the found advertisements. It must not
 //! be NULL.
-//! @return BTErrnoOK if scanning started successfully, BTErrnoInvalidParameter
-//! if the handler was invalid or BTErrnoInvalidState if scanning had already
+//! @return PBL_BT_ERRNO_OK if scanning started successfully, PBL_BT_ERRNO_INVALID_PARAMETER
+//! if the handler was invalid or PBL_BT_ERRNO_INVALID_STATE if scanning had already
 //! been started.
-BTErrno ble_scan_start(BLEScanHandler handler);
+enum pbl_bt_errno ble_scan_start(BLEScanHandler handler);
 
 //! Stop scanning for advertisements.
-//! @return BTErrnoOK if scanning stopped successfully, or TODO...
-BTErrno ble_scan_stop(void);
+//! @return PBL_BT_ERRNO_OK if scanning stopped successfully, or TODO...
+enum pbl_bt_errno ble_scan_stop(void);
 
 //! @return True if the system is scanning for advertisements or false if not.
 bool ble_scan_is_scanning(void);

@@ -4,4 +4,4 @@
 #pragma once
 
 // See NimBLE BLE_ATT_PREFERRED_MTU setting
-#define ATT_MAX_SUPPORTED_MTU 256
+#define PBL_BT_ATT_MAX_SUPPORTED_MTU 256

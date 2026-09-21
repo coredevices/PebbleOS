@@ -29,11 +29,12 @@
 
 #include "stubs_regular_timer.h"
 
-static BTErrno s_write_descriptor_cccd_result;
-static BLEDescriptor s_last_cccd_ref;
+static enum pbl_bt_errno s_write_descriptor_cccd_result;
+static pbl_bt_descriptor_t s_last_cccd_ref;
 static uint16_t s_last_cccd_value;
 
-BTErrno gatt_client_op_write_descriptor_cccd(BLEDescriptor cccd, const uint16_t *value) {
+enum pbl_bt_errno gatt_client_op_write_descriptor_cccd(pbl_bt_descriptor_t cccd,
+                                                       const uint16_t *value) {
   s_last_cccd_ref = cccd;
   s_last_cccd_value = *value;
   return s_write_descriptor_cccd_result;
@@ -75,25 +76,25 @@ extern void gatt_client_subscriptions_handle_server_notification(GAPLEConnection
                                                                  const uint8_t *att_value,
                                                                  uint16_t att_length);
 
-extern void gatt_client_subscriptions_handle_write_cccd_response(BLEDescriptor cccd,
-                                                                 BLEGATTError error);
+extern void gatt_client_subscriptions_handle_write_cccd_response(pbl_bt_descriptor_t cccd,
+                                                                 enum pbl_bt_gatt_error error);
 
 extern uint16_t gatt_client_characteristic_get_handle_and_connection(
-    BLECharacteristic characteristic_ref, GAPLEConnection **connection);
+    pbl_bt_characteristic_t characteristic_ref, GAPLEConnection **connection);
 
 extern struct pbl_sem *gatt_client_subscription_get_semaphore(void);
 extern void gatt_client_subscription_cleanup(void);
 
 #define TEST_GATT_CONNECTION_ID (1234)
-#define BOGUS_CHARACTERISTIC    ((BLECharacteristic)888)
+#define BOGUS_CHARACTERISTIC    ((pbl_bt_characteristic_t)888)
 #define BOGUS_ATT_HANDLE        ((uint16_t)0xffff)
 
-static BTDeviceInternal s_device;
+static struct pbl_bt_device_internal s_device;
 static GAPLEConnection *s_connection;
 static uint16_t s_handle;
 
-static BTDeviceInternal prv_dummy_device(uint8_t octet) {
-  BTDeviceAddress address = {
+static struct pbl_bt_device_internal prv_dummy_device(uint8_t octet) {
+  struct pbl_bt_addr address = {
     .octets = {
       [0] = octet,
       [1] = octet,
@@ -103,12 +104,12 @@ static BTDeviceInternal prv_dummy_device(uint8_t octet) {
       [5] = octet,
     },
   };
-  BTDevice device = bt_device_init_with_address(address, true /* is_random */);
-  return *(BTDeviceInternal *)(&device);
+  struct pbl_bt_device device = bt_device_init_with_address(address, true /* is_random */);
+  return *(struct pbl_bt_device_internal *)(&device);
 }
 
-static BTDeviceInternal prv_connected_dummy_device(uint8_t octet) {
-  BTDeviceInternal device = prv_dummy_device(octet);
+static struct pbl_bt_device_internal prv_connected_dummy_device(uint8_t octet) {
+  struct pbl_bt_device_internal device = prv_dummy_device(octet);
   gap_le_connection_add(&device, NULL, true /* local_is_master */, TIMER_INVALID_ID);
   s_connection = gap_le_connection_by_device(&device);
   s_connection->gatt_connection_id = TEST_GATT_CONNECTION_ID;
@@ -120,9 +121,9 @@ static void prv_assert_no_event(void) {
   cl_assert_equal_i(event.type, PEBBLE_NULL_EVENT);
 }
 
-static void prv_assert_subscription_event(BLECharacteristic characteristic,
-                                          BLESubscription subscription_type, BLEGATTError error,
-                                          bool kernel, bool app) {
+static void prv_assert_subscription_event(pbl_bt_characteristic_t characteristic,
+                                          BLESubscription subscription_type,
+                                          enum pbl_bt_gatt_error error, bool kernel, bool app) {
   PebbleEvent event = fake_event_get_last();
   cl_assert_equal_i(event.type, PEBBLE_BLE_GATT_CLIENT_EVENT);
   cl_assert_equal_i(event.bluetooth.le.gatt_client.subtype,
@@ -140,7 +141,7 @@ static void prv_assert_subscription_event(BLECharacteristic characteristic,
   cl_assert_equal_i(event.task_mask, task_mask);
 }
 
-static void prv_assert_notification_event_ext(BLECharacteristic characteristic,
+static void prv_assert_notification_event_ext(pbl_bt_characteristic_t characteristic,
                                               const uint8_t *value, uint16_t assert_value_length,
                                               bool kernel, bool app, bool should_consume) {
   PebbleEvent event = fake_event_get_last();
@@ -156,7 +157,7 @@ static void prv_assert_notification_event_ext(BLECharacteristic characteristic,
   }
   cl_assert_equal_i(event.task_mask, task_mask);
 
-  BLECharacteristic characteristic_out;
+  pbl_bt_characteristic_t characteristic_out;
   uint8_t *buffer = (uint8_t *)malloc(assert_value_length);
   memset(buffer, 0, assert_value_length);
   if (kernel) {
@@ -191,13 +192,15 @@ static void prv_assert_notification_event_ext(BLECharacteristic characteristic,
   free(buffer);
 }
 
-static void prv_assert_notification_event(BLECharacteristic characteristic, const uint8_t *value,
-                                          uint16_t assert_value_length, bool kernel, bool app) {
+static void prv_assert_notification_event(pbl_bt_characteristic_t characteristic,
+                                          const uint8_t *value, uint16_t assert_value_length,
+                                          bool kernel, bool app) {
   prv_assert_notification_event_ext(characteristic, value, assert_value_length, kernel, app,
                                     true /* should_consume */);
 }
 
-static void prv_simulate_and_assert_discovery_of_one_service(const BTDeviceInternal *device) {
+static void prv_simulate_and_assert_discovery_of_one_service(
+    const struct pbl_bt_device_internal *device) {
   // Simulate discovery of Blood Pressure service:
   fake_gatt_put_discovery_indication_blood_pressure_service(TEST_GATT_CONNECTION_ID);
   // Simulate discovery of random 128-bit service:
@@ -206,17 +209,17 @@ static void prv_simulate_and_assert_discovery_of_one_service(const BTDeviceInter
                                          TEST_GATT_CONNECTION_ID);
 }
 
-static BLECharacteristic prv_get_indicatable_characteristic(void) {
+static pbl_bt_characteristic_t prv_get_indicatable_characteristic(void) {
   // The Blood Pressure Service UUID:
   Uuid service_uuid = bt_uuid_expand_16bit(0x1810);
-  BLEService service;
+  pbl_bt_service_t service;
   uint8_t num_copied =
       gatt_client_copy_service_refs_matching_uuid(&s_device, &service, 1, &service_uuid);
   cl_assert_equal_i(num_copied, 1);
 
   // UUID for indicatable Pressure Measurement characteristic:
   Uuid characteristic_uuid = bt_uuid_expand_16bit(0x2a35);
-  BLECharacteristic characteristic;
+  pbl_bt_characteristic_t characteristic;
   num_copied = gatt_client_service_get_characteristics_matching_uuids(service, &characteristic,
                                                                       &characteristic_uuid, 1);
   cl_assert_equal_i(num_copied, 1);
@@ -227,7 +230,7 @@ static BLECharacteristic prv_get_indicatable_characteristic(void) {
   return characteristic;
 }
 
-static void prv_confirm_cccd_write(BLEGATTError error) {
+static void prv_confirm_cccd_write(enum pbl_bt_gatt_error error) {
   gatt_client_subscriptions_handle_write_cccd_response(s_last_cccd_ref, error);
 }
 
@@ -235,7 +238,7 @@ static void prv_confirm_cccd_write(BLEGATTError error) {
 ///////////////////////////////////////////////////////////
 
 void test_gatt_client_subscriptions__initialize(void) {
-  s_write_descriptor_cccd_result = BTErrnoOK;
+  s_write_descriptor_cccd_result = PBL_BT_ERRNO_OK;
 
   fake_pbl_malloc_clear_tracking();
   fake_event_init();
@@ -244,7 +247,7 @@ void test_gatt_client_subscriptions__initialize(void) {
 
   // Prepare connected device with Blood Pressure GATT service discovered:
   s_device = prv_connected_dummy_device(1);
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&s_device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&s_device), PBL_BT_ERRNO_OK);
   prv_simulate_and_assert_discovery_of_one_service(&s_device);
 
   fake_event_clear_last();
@@ -266,9 +269,9 @@ void test_gatt_client_subscriptions__cleanup(void) {
 
 void test_gatt_client_subscriptions__subscribe_invalid_characteristic(void) {
   fake_kernel_malloc_mark();
-  BTErrno e = gatt_client_subscriptions_subscribe(BOGUS_CHARACTERISTIC, BLESubscriptionAny,
-                                                  GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoInvalidParameter);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(BOGUS_CHARACTERISTIC,
+                                                            BLESubscriptionAny, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
@@ -277,7 +280,7 @@ void test_gatt_client_subscriptions__subscribe_no_cccd(void) {
   // The random 128-bit Service UUID:
   Uuid service_uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97, 0xEE, 0xFD,
                                0xED, 0xAC, 0x66, 0xF9, 0xB0);
-  BLEService service;
+  pbl_bt_service_t service;
   uint8_t num_copied =
       gatt_client_copy_service_refs_matching_uuid(&s_device, &service, 1, &service_uuid);
   cl_assert_equal_i(num_copied, 1);
@@ -285,70 +288,70 @@ void test_gatt_client_subscriptions__subscribe_no_cccd(void) {
   // UUID for Characteristic that has no CCCD:
   Uuid characteristic_uuid = UuidMake(0xF7, 0x68, 0x09, 0x5B, 0x1B, 0xFA, 0x4F, 0x63, 0x97, 0xEE,
                                       0xFD, 0xED, 0xAC, 0x66, 0xF9, 0xB1);
-  BLECharacteristic characteristic;
+  pbl_bt_characteristic_t characteristic;
   num_copied = gatt_client_service_get_characteristics_matching_uuids(service, &characteristic,
                                                                       &characteristic_uuid, 1);
   cl_assert_equal_i(num_copied, 1);
 
   fake_kernel_malloc_mark();
   // Try to subscribe to the non-subscribe-able characteristic:
-  BTErrno e =
+  enum pbl_bt_errno e =
       gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionAny, GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoInvalidParameter);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
 
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
 
 void test_gatt_client_subscriptions__subscribe_unsupported_subscription_type(void) {
-  BTErrno e;
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e;
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
 
   fake_kernel_malloc_mark();
   // Try to subscribe for notifications to the indicatable (but not notify-able) characteristic:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNotifications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoInvalidParameter);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 
   // Try to subscribe for indications to the indicatable characteristic:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 }
 
 void test_gatt_client_subscriptions__subscribe_already_subscribed(void) {
-  BTErrno e;
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e;
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
 
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   fake_event_clear_last();
   fake_kernel_malloc_mark();
   // Subscribe again:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoInvalidState);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_STATE);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
 
 void test_gatt_client_subscriptions__unsubscribe_pending_subscription(void) {
-  BTErrno e;
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e;
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
 
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   fake_event_clear_last();
   fake_kernel_malloc_mark();
   // Un-subscribe, while subscribing process is still pending:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoInvalidState);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_STATE);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
@@ -356,9 +359,9 @@ void test_gatt_client_subscriptions__unsubscribe_pending_subscription(void) {
 void test_gatt_client_subscriptions__subscribe_oom_for_subscription_allocation(void) {
   fake_kernel_malloc_mark();
   fake_malloc_set_largest_free_block(sizeof(GATTClientSubscriptionNode) - 1);
-  BTErrno e = gatt_client_subscriptions_subscribe(prv_get_indicatable_characteristic(),
-                                                  BLESubscriptionIndications, GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoNotEnoughResources);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      prv_get_indicatable_characteristic(), BLESubscriptionIndications, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
@@ -366,9 +369,9 @@ void test_gatt_client_subscriptions__subscribe_oom_for_subscription_allocation(v
 void test_gatt_client_subscriptions__subscribe_oom_for_buffer_allocation(void) {
   fake_kernel_malloc_mark();
   fake_malloc_set_largest_free_block(sizeof(GATTClientSubscriptionNode));
-  BTErrno e = gatt_client_subscriptions_subscribe(prv_get_indicatable_characteristic(),
-                                                  BLESubscriptionIndications, GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoNotEnoughResources);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      prv_get_indicatable_characteristic(), BLESubscriptionIndications, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
@@ -378,8 +381,8 @@ void test_gatt_client_subscriptions__subscribe_cccd_write_error(void) {
 
   fake_kernel_malloc_mark();
   // Try to subscribe for indications to the indicatable characteristic:
-  BTErrno e = gatt_client_subscriptions_subscribe(prv_get_indicatable_characteristic(),
-                                                  BLESubscriptionIndications, GAPLEClientKernel);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      prv_get_indicatable_characteristic(), BLESubscriptionIndications, GAPLEClientKernel);
   cl_assert_equal_i(e, -1);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
@@ -387,66 +390,66 @@ void test_gatt_client_subscriptions__subscribe_cccd_write_error(void) {
 
 void test_gatt_client_subscriptions__unsubscribe_no_clients_subscribed(void) {
   fake_kernel_malloc_mark();
-  BTErrno e;
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e;
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoInvalidState);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_STATE);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
 
 void test_gatt_client_subscriptions__unsubscribe_not_subscribed_but_other_client_is(void) {
-  BTErrno e;
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e;
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   fake_kernel_malloc_mark();
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoInvalidState);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_STATE);
   fake_kernel_malloc_mark_assert_equal();
   prv_assert_no_event();
 }
 
 void test_gatt_client_subscriptions__subscribe_first_subscriber(void) {
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   cl_assert_equal_i(s_last_cccd_value, BLESubscriptionIndications);
 
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
-  prv_assert_subscription_event(characteristic, BLESubscriptionIndications, BLEGATTErrorSuccess,
-                                true /* kernel */, false /* app */);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
+  prv_assert_subscription_event(characteristic, BLESubscriptionIndications,
+                                PBL_BT_GATT_ERROR_SUCCESS, true /* kernel */, false /* app */);
 }
 
 void test_gatt_client_subscriptions__subscribe_not_first_subscriber(void) {
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
   // Subscribe kernel:
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   cl_assert_equal_i(s_last_cccd_value, BLESubscriptionIndications);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
   // Subscribe app:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientApp);
   // App should get event immediately:
-  prv_assert_subscription_event(characteristic, BLESubscriptionIndications, BLEGATTErrorSuccess,
-                                false /* kernel */, true /* app */);
+  prv_assert_subscription_event(characteristic, BLESubscriptionIndications,
+                                PBL_BT_GATT_ERROR_SUCCESS, false /* kernel */, true /* app */);
 }
 
 void test_gatt_client_subscriptions__two_subscribers_before_cccd_write_response(void) {
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
   // Subscribe kernel:
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   cl_assert_equal_i(s_last_cccd_value, BLESubscriptionIndications);
 
   s_last_cccd_value = ~0;
@@ -454,41 +457,41 @@ void test_gatt_client_subscriptions__two_subscribers_before_cccd_write_response(
   // Subscribe app:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   // Should not be written again, because BLESubscriptionIndications was already written:
   cl_assert_equal_i(s_last_cccd_value, (uint16_t)~0);
 
   fake_event_clear_last();
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
 
   // Expect one event for both Kernel + App:
-  prv_assert_subscription_event(characteristic, BLESubscriptionIndications, BLEGATTErrorSuccess,
-                                true /* kernel */, true /* app */);
+  prv_assert_subscription_event(characteristic, BLESubscriptionIndications,
+                                PBL_BT_GATT_ERROR_SUCCESS, true /* kernel */, true /* app */);
 }
 
 void test_gatt_client_subscriptions__unsubscribe_last_subscriber(void) {
-  BTErrno e;
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e;
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
 
   fake_kernel_malloc_mark();
 
   // Subscribe kernel:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
   // Unsubscribe kernel:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Kernel should get event immediately:
-  prv_assert_subscription_event(characteristic, BLESubscriptionNone, BLEGATTErrorSuccess,
+  prv_assert_subscription_event(characteristic, BLESubscriptionNone, PBL_BT_GATT_ERROR_SUCCESS,
                                 true /* kernel */, false /* app */);
 
   // CCCD value should be 0 now:
@@ -499,15 +502,15 @@ void test_gatt_client_subscriptions__unsubscribe_last_subscriber(void) {
 }
 
 void test_gatt_client_subscriptions__unsubscribe_not_last_subscriber(void) {
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
   // Subscribe kernel:
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   cl_assert_equal_i(s_last_cccd_value, BLESubscriptionIndications);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
   // Subscribe app:
@@ -519,7 +522,7 @@ void test_gatt_client_subscriptions__unsubscribe_not_last_subscriber(void) {
   // Unsubscribe kernel:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
   // Kernel should get event immediately:
-  prv_assert_subscription_event(characteristic, BLESubscriptionNone, BLEGATTErrorSuccess,
+  prv_assert_subscription_event(characteristic, BLESubscriptionNone, PBL_BT_GATT_ERROR_SUCCESS,
                                 true /* kernel */, false /* app */);
 
   // CCCD value should not be written, because app is still subscribed:
@@ -527,22 +530,23 @@ void test_gatt_client_subscriptions__unsubscribe_not_last_subscriber(void) {
 }
 
 void test_gatt_client_subscriptions__subscribe_failed_cccd_write(void) {
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
 
   fake_kernel_malloc_mark();
 
   // Subscribe kernel:
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientKernel);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   cl_assert_equal_i(s_last_cccd_value, BLESubscriptionIndications);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorInvalidHandle);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_INVALID_HANDLE);
 
   // Expect kernel event with 'BLESubscriptionNone' type and error bubbled up:
-  prv_assert_subscription_event(characteristic, BLESubscriptionNone, BLEGATTErrorInvalidHandle,
-                                true /* kernel */, false /* app */);
+  prv_assert_subscription_event(characteristic, BLESubscriptionNone,
+                                PBL_BT_GATT_ERROR_INVALID_HANDLE, true /* kernel */,
+                                false /* app */);
 
   // Verify everything is cleaned up:
   fake_kernel_malloc_mark_assert_equal();
@@ -561,7 +565,7 @@ void test_gatt_client_subscriptions__notification_but_no_subscribers(void) {
 
 void test_gatt_client_subscriptions__cccd_write_confirmation_but_no_subscription(void) {
   s_last_cccd_ref = 1;
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
 
   // This used to cause a crash:
   // https://pebbletechnology.atlassian.net/browse/PBL-23455
@@ -569,13 +573,13 @@ void test_gatt_client_subscriptions__cccd_write_confirmation_but_no_subscription
 
 void test_gatt_client_subscriptions__notification_single_subscriber(void) {
   // Subscribe app:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
   // Nothing to be read before getting the notification:
@@ -596,13 +600,13 @@ void test_gatt_client_subscriptions__notification_single_subscriber(void) {
 
 void test_gatt_client_subscriptions__zero_length_notification(void) {
   // Subscribe app:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
   gatt_client_subscriptions_handle_server_notification(s_connection, s_handle, NULL, 0);
@@ -616,18 +620,18 @@ void test_gatt_client_subscriptions__zero_length_notification(void) {
 
 void test_gatt_client_subscriptions__notification_app_and_kernel_subscribers(void) {
   // Subscribe app:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Subscribe kernel:
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
   fake_event_reset_count();
 
@@ -662,7 +666,7 @@ static pbl_tick_t prv_taking_too_long_to_consume_yield_cb(struct pbl_sem *queue)
 
 static pbl_tick_t prv_consume_in_time_yield_cb(struct pbl_sem *queue) {
   // Consume while BT task is waiting for buffer to be freed up:
-  BLECharacteristic characteristic_out;
+  pbl_bt_characteristic_t characteristic_out;
   uint8_t *value_out = (uint8_t *)malloc(GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE);
   uint16_t value_length = GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE;
   gatt_client_subscriptions_consume_notification(&characteristic_out, value_out, &value_length,
@@ -673,13 +677,13 @@ static pbl_tick_t prv_consume_in_time_yield_cb(struct pbl_sem *queue) {
 
 void test_gatt_client_subscriptions__notification_buffer_full(void) {
   // Subscribe app:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
   // We had a bug at some point where the header size was not taken into account correctly, take
@@ -722,26 +726,26 @@ void test_gatt_client_subscriptions__notification_buffer_full(void) {
 
 void test_gatt_client_subscriptions__consume_but_too_small_buffer(void) {
   // Subscribe app:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
   const uint8_t value[] = {0xAA, 0xBB, 0xCC};
   gatt_client_subscriptions_handle_server_notification(s_connection, s_handle, value,
                                                        sizeof(value));
 
-  BLECharacteristic handle_out = ~0;
+  pbl_bt_characteristic_t handle_out = ~0;
   uint8_t out[1];
   uint16_t value_length = sizeof(out);
   bool has_more = true;
   const uint16_t next_length = gatt_client_subscriptions_consume_notification(
       &handle_out, out, &value_length, GAPLEClientApp, &has_more);
-  cl_assert_equal_i(handle_out, BLE_CHARACTERISTIC_INVALID);
+  cl_assert_equal_i(handle_out, PBL_BT_CHARACTERISTIC_INVALID);
   cl_assert_equal_i(value_length, 0);
   // Notification will be eaten, regardless of whether it was copied:
   cl_assert_equal_b(has_more, false);
@@ -750,22 +754,22 @@ void test_gatt_client_subscriptions__consume_but_too_small_buffer(void) {
 
 void test_gatt_client_subscriptions__consume_but_nothing_in_buffer(void) {
   // Subscribe app:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Simulate getting confirmation from remote:
-  prv_confirm_cccd_write(BLEGATTErrorSuccess);
+  prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
-  BLECharacteristic handle_out = ~0;
+  pbl_bt_characteristic_t handle_out = ~0;
   uint8_t out[1];
   uint16_t value_length = sizeof(out);
   bool has_more = true;
   const uint16_t next_length = gatt_client_subscriptions_consume_notification(
       &handle_out, out, &value_length, GAPLEClientApp, &has_more);
-  cl_assert_equal_i(handle_out, BLE_CHARACTERISTIC_INVALID);
+  cl_assert_equal_i(handle_out, PBL_BT_CHARACTERISTIC_INVALID);
   cl_assert_equal_i(value_length, 0);
   cl_assert_equal_b(has_more, false);
   cl_assert_equal_i(next_length, 0);
@@ -773,7 +777,7 @@ void test_gatt_client_subscriptions__consume_but_nothing_in_buffer(void) {
 
 void test_gatt_client_subscriptions__consume_but_buffer_client_buffer_null(void) {
   bool has_more = true;
-  BLECharacteristic handle_out = ~0;
+  pbl_bt_characteristic_t handle_out = ~0;
   uint8_t out[1];
   uint16_t value_length = sizeof(out);
 
@@ -785,19 +789,19 @@ void test_gatt_client_subscriptions__consume_but_buffer_client_buffer_null(void)
 }
 
 void test_gatt_client_subscriptions__notification_consume_without_notification(void) {
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
 
   uint16_t value_length;
   GATTBufferedNotificationHeader header = {
-    .characteristic = BLE_CHARACTERISTIC_INVALID,
+    .characteristic = PBL_BT_CHARACTERISTIC_INVALID,
     .value_length = 0,
   };
   bool has_more = gatt_client_subscriptions_get_notification_header(GAPLEClientKernel, &header);
   cl_assert_equal_i(header.value_length, 0);
-  cl_assert_equal_i(header.characteristic, BLE_CHARACTERISTIC_INVALID);
+  cl_assert_equal_i(header.characteristic, PBL_BT_CHARACTERISTIC_INVALID);
   cl_assert_equal_b(has_more, false);
 
-  BLECharacteristic characteristic_out = ~0;
+  pbl_bt_characteristic_t characteristic_out = ~0;
   uint8_t value = 0xff;
   value_length = sizeof(value);
   gatt_client_subscriptions_consume_notification(&characteristic_out, &value, &value_length,
@@ -815,10 +819,10 @@ void test_gatt_client_subscriptions__cleanup_by_client(void) {
   fake_kernel_malloc_mark();
 
   // Subscribe app:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   gatt_client_subscriptions_cleanup_by_client(GAPLEClientApp);
   prv_assert_no_event();
@@ -852,13 +856,13 @@ void test_gatt_client_subscriptions__cleanup_by_connection(void) {
   fake_kernel_malloc_mark();
 
   // Subscribe app and kernel:
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   prv_pend_events_to_kernel_and_app();
 
@@ -872,26 +876,26 @@ void test_gatt_client_subscriptions__cleanup_by_connection(void) {
   fake_kernel_malloc_mark_assert_equal();
 }
 
-extern void gatt_client_subscription_cleanup_by_att_handle_range(struct GAPLEConnection *connection,
-                                                                 ATTHandleRange *range);
+extern void gatt_client_subscription_cleanup_by_att_handle_range(
+    struct GAPLEConnection *connection, struct pbl_bt_att_handle_range *range);
 
 void test_gatt_client_subscriptions__cleanup_by_att_handle_range(void) {
   fake_kernel_malloc_mark();
 
-  BLECharacteristic characteristic = prv_get_indicatable_characteristic();
-  BTErrno e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
-                                                  GAPLEClientApp);
-  cl_assert_equal_i(e, BTErrnoOK);
+  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
+  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
+      characteristic, BLESubscriptionIndications, GAPLEClientApp);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
   e = gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionIndications,
                                           GAPLEClientKernel);
-  cl_assert_equal_i(e, BTErrnoOK);
+  cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   cl_assert(s_connection->gatt_subscriptions != NULL);
 
-  ATTHandleRange range;
+  struct pbl_bt_att_handle_range range;
   fake_gatt_get_bp_att_handle_range(&range.start, &range.end);
 
-  ATTHandleRange bogus_range = {.start = range.end + 1, .end = range.end + 5};
+  struct pbl_bt_att_handle_range bogus_range = {.start = range.end + 1, .end = range.end + 5};
 
   prv_pend_events_to_kernel_and_app();
 

@@ -9,7 +9,7 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-int pbl_bt_gap_le_disconnect(const BTDeviceInternal *peer_address) {
+int pbl_bt_gap_le_disconnect(const struct pbl_bt_device_internal *peer_address) {
   uint16_t conn_handle;
 
   if (!pebble_device_to_nimble_conn_handle(peer_address, &conn_handle)) {

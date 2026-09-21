@@ -63,7 +63,7 @@ uint16_t ble_ibeacon_get_distance_cm(const BLEiBeacon *ibeacon);
 //! BLEScanHandler callback.
 //! @return BLEiBeacon object if iBeacon data is found, or NULL if the
 //! advertisement data did not contain valid iBeacon data.
-BLEiBeacon *ble_ibeacon_create_from_ad_data(const BLEAdData *ad, int8_t rssi);
+BLEiBeacon *ble_ibeacon_create_from_ad_data(const struct pbl_bt_ad_data *ad, int8_t rssi);
 
 //! Destroys an BLEiBeacon object and frees its resources that were allocated
 //! earlier by ble_ibeacon_create_from_ad_data().
@@ -78,7 +78,7 @@ void ble_ibeacon_destroy(BLEiBeacon *ibeacon);
 //! returns true.
 //! @return true if the data element was successfully parsed as iBeacon,
 //! false if the data element could not be parsed as iBeacon.
-bool ble_ibeacon_parse(const BLEAdData *ad, int8_t rssi, BLEiBeacon *ibeacon_out);
+bool ble_ibeacon_parse(const struct pbl_bt_ad_data *ad, int8_t rssi, BLEiBeacon *ibeacon_out);
 
 // -----------------------------------------------------------------------------
 //! Internal iBeacon Advertisement Data serializer
@@ -87,4 +87,4 @@ bool ble_ibeacon_parse(const BLEAdData *ad, int8_t rssi, BLEiBeacon *ibeacon_out
 //! iBeacon packets.
 //! @param[out] ad_out The advertisement payload to write the data into.
 //! @return true if the iBeacon data was written successfully.
-bool ble_ibeacon_compose(const BLEiBeacon *ibeacon_in, BLEAdData *ad_out);
+bool ble_ibeacon_compose(const BLEiBeacon *ibeacon_in, struct pbl_bt_ad_data *ad_out);

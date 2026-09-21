@@ -62,13 +62,14 @@ static void prv_reset(Transport *transport) {
 }
 
 static void prv_granted_kernel_main_cb(void *ctx) {
-  ResponsivenessGrantedHandler granted_handler = ctx;
+  pbl_bt_responsiveness_granted_cb_t granted_handler = ctx;
   granted_handler();
 }
 
-static void prv_set_connection_responsiveness(Transport *transport, BtConsumer consumer,
-                                              ResponseTimeState state, uint16_t max_period_secs,
-                                              ResponsivenessGrantedHandler granted_handler) {
+static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_consumer consumer,
+                                              enum pbl_bt_response_time_state state,
+                                              uint16_t max_period_secs,
+                                              pbl_bt_responsiveness_granted_cb_t granted_handler) {
   // PutBytes calls this every single packet — at INFO it pushes ~76 bytes/packet
   // into the 1200-byte advanced_logging ring buffer, which fills in ~16 packets
   // and forces inline flash-logging flushes on KernelMain.  That starves
@@ -138,7 +139,7 @@ void qemu_transport_set_connected(bool is_connected) {
 
     if (send_event) {
       PebbleEvent e = {
-        .type = PEBBLE_BT_CONNECTION_EVENT,
+        .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
         .bluetooth = {
           .connection = {
             .state = (s_transport.session) ? PebbleBluetoothConnectionEventStateConnected
@@ -178,7 +179,7 @@ void qemu_transport_close_session() {
   s_transport.session = NULL;
 
   PebbleEvent e = {
-    .type = PEBBLE_BT_CONNECTION_EVENT,
+    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
     .bluetooth = {.connection = {.state = PebbleBluetoothConnectionEventStateDisconnected}}
   };
   event_put(&e);

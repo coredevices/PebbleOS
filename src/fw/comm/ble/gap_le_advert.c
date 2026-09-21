@@ -74,7 +74,7 @@ typedef struct GAPLEAdvertisingJob {
   GAPLEAdvertisingJobTag tag : 8;
 
   //! The advertisement and scan response data
-  BLEAdData payload;
+  struct pbl_bt_ad_data payload;
 } GAPLEAdvertisingJob;
 // -----------------------------------------------------------------------------
 // Static Variables -- MUST be protected with bt_lock/unlock!
@@ -90,7 +90,7 @@ static GAPLEAdvertisingJob *s_current;
 
 //! Advertising data that was last configured into the controller.
 //! @note This pointer may be dangling, don't try to reference!
-static const BLEAdData *s_current_ad_data;
+static const struct pbl_bt_ad_data *s_current_ad_data;
 
 //! The regular timer that marks the end of a cycle and triggers the next job
 //! to be aired.
@@ -370,14 +370,14 @@ static void prv_perform_next_job(bool force_refresh) {
 }
 
 // -----------------------------------------------------------------------------
-GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
+GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *payload,
                                               const GAPLEAdvertisingJobTerm *terms,
                                               uint8_t num_terms,
                                               GAPLEAdvertisingJobUnscheduleCallback callback,
                                               void *callback_data, GAPLEAdvertisingJobTag tag) {
   // Sanity check payload:
-  if (!payload || payload->ad_data_length > GAP_LE_AD_REPORT_DATA_MAX_LENGTH ||
-      payload->scan_resp_data_length > GAP_LE_AD_REPORT_DATA_MAX_LENGTH) {
+  if (!payload || payload->ad_data_length > PBL_BT_AD_REPORT_DATA_MAX_LENGTH ||
+      payload->scan_resp_data_length > PBL_BT_AD_REPORT_DATA_MAX_LENGTH) {
     return NULL;
   }
 

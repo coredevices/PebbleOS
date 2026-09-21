@@ -83,7 +83,7 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
 const uint32_t s_invalid_param_uid = 0x12;
 const uint32_t s_get_wrong_data_uid = 0xee;
 
-static BLECharacteristic s_characteristics[NumANCSCharacteristic] = {1, 2, 3};
+static pbl_bt_characteristic_t s_characteristics[NumANCSCharacteristic] = {1, 2, 3};
 
 // Helper Functions
 ///////////////////////////////////////////////////////////
@@ -95,12 +95,12 @@ static bool s_gatt_client_op_write_should_fail_unlimited = false;
 static bool s_gatt_client_op_write_should_fail_once = false;
 
 static void prv_fake_receiving_ds_notification(size_t value_length, uint8_t *value) {
-  BLECharacteristic characteristic = s_characteristics[ANCSCharacteristicData];
+  pbl_bt_characteristic_t characteristic = s_characteristics[ANCSCharacteristicData];
   ancs_handle_read_or_notification(characteristic, (const uint8_t *)value, value_length, 0);
 }
 
 static void prv_fake_receiving_ns_notification(size_t value_length, uint8_t *value) {
-  BLECharacteristic characteristic = s_characteristics[ANCSCharacteristicNotification];
+  pbl_bt_characteristic_t characteristic = s_characteristics[ANCSCharacteristicNotification];
   ancs_handle_read_or_notification(characteristic, (const uint8_t *)value, value_length, 0);
 }
 
@@ -155,17 +155,17 @@ void prv_cmp_last_received_notification(TimelineItem *item) {
 
 // Called from inside prv_write_control_point_request.
 // If this function is called we have requested a ds_notification
-BTErrno gatt_client_op_write(BLECharacteristic characteristic, const uint8_t *buffer, size_t length,
-                             GAPLEClient client) {
+enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
+                                       const uint8_t *buffer, size_t length, GAPLEClient client) {
   cl_assert_equal_i(characteristic, s_characteristics[ANCSCharacteristicControl]);
 
   if (s_gatt_client_op_write_should_fail_once) {
     s_gatt_client_op_write_should_fail_once = false;
-    return BTErrnoInvalidParameter;
+    return PBL_BT_ERRNO_INVALID_PARAMETER;
   }
 
   if (s_gatt_client_op_write_should_fail_unlimited) {
-    return BTErrnoInvalidParameter;
+    return PBL_BT_ERRNO_INVALID_PARAMETER;
   }
 
   const uint32_t complete_dict_uid =
@@ -211,7 +211,7 @@ BTErrno gatt_client_op_write(BLECharacteristic characteristic, const uint8_t *bu
       prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_app_info_dict),
                                          (uint8_t *)s_message_app_info_dict);
     }
-    return BTErrnoOK;
+    return PBL_BT_ERRNO_OK;
   }
 
   // else: notif request
@@ -292,7 +292,7 @@ BTErrno gatt_client_op_write(BLECharacteristic characteristic, const uint8_t *bu
     s_num_ds_notifications_received++;
   }
 
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
 // Tests
@@ -312,7 +312,7 @@ void test_ancs__initialize(void) {
   fake_kernel_services_notifications_reset();
   fake_notification_storage_reset();
   fake_event_init();
-  fake_gatt_client_subscriptions_set_subscribe_return_value(BTErrnoOK);
+  fake_gatt_client_subscriptions_set_subscribe_return_value(PBL_BT_ERRNO_OK);
 
   ancs_create();
   ancs_handle_service_discovered(s_characteristics);
@@ -332,7 +332,7 @@ void test_ancs__cleanup(void) {
 void test_ancs__should_fail_soft_on_subscribe_failure(void) {
   cl_assert(ancs_can_handle_characteristic(s_characteristics[ANCSCharacteristicData]));
 
-  fake_gatt_client_subscriptions_set_subscribe_return_value(BTErrnoInvalidParameter);
+  fake_gatt_client_subscriptions_set_subscribe_return_value(PBL_BT_ERRNO_INVALID_PARAMETER);
   ancs_handle_service_discovered(s_characteristics);
 
   // ANCS is left disconnected rather than crashing:

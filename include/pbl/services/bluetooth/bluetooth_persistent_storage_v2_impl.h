@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 typedef struct PBL_PACKED BtPersistLEEncryptionInfo {
-  SMLongTermKey ltk;
+  struct pbl_bt_sm_key ltk;
   uint16_t ediv;
   uint64_t rand;
 } BtPersistLEEncryptionInfo;
@@ -20,10 +20,10 @@ typedef struct PBL_PACKED BtPersistLEPairingInfo {
 
   BtPersistLEEncryptionInfo remote_encryption_info;
 
-  SMIdentityResolvingKey irk;
-  BTDeviceInternal identity;
+  struct pbl_bt_sm_key irk;
+  struct pbl_bt_device_internal identity;
 
-  SMConnectionSignatureResolvingKey csrk;
+  struct pbl_bt_sm_key csrk;
 
   //! True if local_encryption_info is valid
   bool is_local_encryption_info_valid : 1;
@@ -43,8 +43,8 @@ typedef struct PBL_PACKED BtPersistLEPairingInfo {
   uint8_t rsvd : 3;
 } BtPersistLEPairingInfo;
 
-static void bt_persistent_storage_assign_persist_pairing_info(BtPersistLEPairingInfo *out,
-                                                              const SMPairingInfo *in) {
+static void bt_persistent_storage_assign_persist_pairing_info(
+    BtPersistLEPairingInfo *out, const struct pbl_bt_sm_pairing_info *in) {
   *out = (BtPersistLEPairingInfo){
     .local_encryption_info =
         {
@@ -69,9 +69,9 @@ static void bt_persistent_storage_assign_persist_pairing_info(BtPersistLEPairing
   };
 }
 
-static void bt_persistent_storage_assign_sm_pairing_info(SMPairingInfo *out,
+static void bt_persistent_storage_assign_sm_pairing_info(struct pbl_bt_sm_pairing_info *out,
                                                          const BtPersistLEPairingInfo *in) {
-  *out = (SMPairingInfo){
+  *out = (struct pbl_bt_sm_pairing_info){
     .local_encryption_info =
         {
           .ltk = in->local_encryption_info.ltk,

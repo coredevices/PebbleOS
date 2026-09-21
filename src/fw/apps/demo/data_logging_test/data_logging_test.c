@@ -151,8 +151,8 @@ static void click_config_provider(void *context) {
 }
 
 static void handle_deinit(void) {
-  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerApp, ResponseTimeMax,
-                                  MAX_PERIOD_RUN_FOREVER);
+  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_APP,
+                                  PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER);
 }
 
 static void handle_init(void) {
@@ -179,8 +179,8 @@ static void handle_init(void) {
 
   start_logging();
 
-  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerApp, ResponseTimeMax,
-                                  MAX_PERIOD_RUN_FOREVER);
+  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_APP,
+                                  PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER);
 }
 
 ////////////////////

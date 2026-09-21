@@ -99,14 +99,14 @@ static void prv_evaluate(ReconnectType prev_type) {
     const bool use_hrm_payload = false;
 #endif
 
-    BLEAdData *ad;
+    struct pbl_bt_ad_data *ad;
     if (use_hrm_payload) {
       // Create adv payload with only flags + HR service UUID. This is enough for various mobile
       // fitness apps to be able to reconnect to Pebble as BLE HRM.
       ad = ble_ad_create();
       // BLE-only watch: advertise "BR/EDR Not Supported" so dual-mode hosts use LE.
       ble_ad_set_flags(
-          ad, GAP_LE_AD_FLAGS_GEN_DISCOVERABLE_MASK | GAP_LE_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
+          ad, PBL_BT_AD_FLAGS_GEN_DISCOVERABLE_MASK | PBL_BT_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
       Uuid service_uuid = bt_uuid_expand_16bit(0x180D);
       ble_ad_set_service_uuids(ad, &service_uuid, 1);
     } else {
@@ -126,7 +126,7 @@ static void prv_evaluate(ReconnectType prev_type) {
       // a non-issue (because addresses will be private). Therefore I decided to
       // still leave out the flags.
 
-      static BLEAdData payload = {
+      static struct pbl_bt_ad_data payload = {
         .ad_data_length = 0,
         .scan_resp_data_length = 0,
       };

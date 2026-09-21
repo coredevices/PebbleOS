@@ -19,7 +19,7 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 #define TRIGGER_PAIRING_FORCE_SEC_REQ (1U << 2U)
 
 static int pebble_pairing_service_get_connectivity_status(
-    uint16_t conn_handle, PebblePairingServiceConnectivityStatus *status) {
+    uint16_t conn_handle, struct pbl_bt_pps_connectivity_status *status) {
   struct ble_gap_conn_desc desc;
   int rc = ble_gap_conn_find(conn_handle, &desc);
   if (rc != 0) {
@@ -50,7 +50,7 @@ static int pebble_pairing_service_get_connectivity_status(
 
 int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_handle,
                                                               uint16_t attr_handle) {
-  PebblePairingServiceConnectivityStatus status;
+  struct pbl_bt_pps_connectivity_status status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
   if (rc != 0) {
     PBL_LOG_ERR("pebble_pairing_service_get_connectivity_status failed: %d", rc);
@@ -72,7 +72,7 @@ static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_hand
   if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR)
     return 0;
 
-  PebblePairingServiceConnectivityStatus status;
+  struct pbl_bt_pps_connectivity_status status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
   if (rc != 0) {
     PBL_LOG_ERR("prv_access_connection_status failed: %d", rc);
@@ -125,18 +125,16 @@ static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle
 static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
   {
     .type = BLE_GATT_SVC_TYPE_PRIMARY,
-    .uuid = BLE_UUID16_DECLARE(PEBBLE_BT_PAIRING_SERVICE_UUID_16BIT),
+    .uuid = BLE_UUID16_DECLARE(PBL_BT_PPS_UUID_16BIT),
     .characteristics =
         (struct ble_gatt_chr_def[]){
           {
-            .uuid = BLE_UUID128_DECLARE(
-                BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)),
+            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_CONNECTION_STATUS_UUID)),
             .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
             .access_cb = prv_access_connection_status,
           },
           {
-            .uuid = BLE_UUID128_DECLARE(
-                BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_TRIGGER_PAIRING_UUID)),
+            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_TRIGGER_PAIRING_UUID)),
             .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE,
             .access_cb = prv_access_trigger_pairing,
           },
@@ -178,7 +176,6 @@ void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t 
 }
 
 void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
-  prv_notify_chr_updated(
-      connection,
-      BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_PAIRING_SERVICE_CONNECTION_STATUS_UUID)));
+  prv_notify_chr_updated(connection,
+                         BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_CONNECTION_STATUS_UUID)));
 }

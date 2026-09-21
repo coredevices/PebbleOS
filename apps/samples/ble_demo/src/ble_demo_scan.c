@@ -9,7 +9,7 @@ struct ScanResult;
 
 typedef struct ScanResult {
   struct ScanResult *next;
-  BTDevice device;
+  struct pbl_bt_device device;
   int8_t rssi;
   int8_t tx_power_level;
   char local_name[32];
@@ -51,8 +51,8 @@ static void list_free_last(void) {
   }
 }
 
-//! Finds ScanResult based on BTDevice. If found, unlink and return ScanResult.
-static ScanResult *list_unlink(const BTDevice *device) {
+//! Finds ScanResult based on struct pbl_bt_device. If found, unlink and return ScanResult.
+static ScanResult *list_unlink(const struct pbl_bt_device *device) {
   ScanResult *prev = NULL;
   ScanResult *result = s_head;
   while (result) {
@@ -133,12 +133,13 @@ static void list_free_all(void) {
 //------------------------------------------------------------------------------
 // BLE Scan API callback
 
-static void ble_scan_handler(BTDevice device, int8_t rssi, const BLEAdData *ad_data) {
-  const BTDeviceAddress address = bt_device_get_address(device);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Got Advertisement from: " BT_DEVICE_ADDRESS_FMT,
-          BT_DEVICE_ADDRESS_XPLODE(address));
+static void ble_scan_handler(struct pbl_bt_device device, int8_t rssi,
+                             const struct pbl_bt_ad_data *ad_data) {
+  const struct pbl_bt_addr address = bt_device_get_address(device);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Got Advertisement from: " PBL_BT_ADDR_FMT,
+          PBL_BT_ADDR_XPLODE(address));
 
-  // Find existing ScanResult with BTDevice:
+  // Find existing ScanResult with struct pbl_bt_device:
   ScanResult *result = list_unlink(&device);
 
   // If no existing result, create one:
@@ -256,9 +257,8 @@ static void draw_data_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cel
   if (strlen(result->local_name)) {
     snprintf(title, sizeof(title), "%s %s", result->local_name, hrm_str);
   } else {
-    const BTDeviceAddress address = bt_device_get_address(result->device);
-    snprintf(title, sizeof(title), BT_DEVICE_ADDRESS_FMT " %s", BT_DEVICE_ADDRESS_XPLODE(address),
-             hrm_str);
+    const struct pbl_bt_addr address = bt_device_get_address(result->device);
+    snprintf(title, sizeof(title), PBL_BT_ADDR_FMT " %s", PBL_BT_ADDR_XPLODE(address), hrm_str);
   }
 
   // Build the subtitle string:
@@ -298,8 +298,8 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
   // Connect
   ScanResult *result = list_get_by_index(cell_index->row);
 
-  BTErrno e = ble_central_connect(result->device, true /* auto_reconnect */,
-                                  false /* is_pairing_required */);
+  enum pbl_bt_errno e = ble_central_connect(result->device, true /* auto_reconnect */,
+                                            false /* is_pairing_required */);
   if (e) {
     APP_LOG(APP_LOG_LEVEL_INFO, "ble_central_connect: %d", e);
   }
@@ -313,7 +313,7 @@ static void menu_select_long_callback(MenuLayer *menu_layer, MenuIndex *cell_ind
   // Disconnect
   ScanResult *result = list_get_by_index(cell_index->row);
 
-  BTErrno e = ble_central_cancel_connect(result->device);
+  enum pbl_bt_errno e = ble_central_cancel_connect(result->device);
 
   if (e) {
     APP_LOG(APP_LOG_LEVEL_INFO, "ble_central_cancel_connect: %d", e);

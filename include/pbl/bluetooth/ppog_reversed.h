@@ -15,7 +15,7 @@
 
 //! Driver -> kernel: the phone enabled notifications on the data-notify
 //! characteristic.
-extern void pbl_bt_cb_ppog_reversed_subscribed(const BTDeviceInternal *device,
+extern void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *device,
                                                uint16_t conn_handle);
 
 //! Driver -> kernel: the phone disabled notifications or disconnected.
@@ -26,7 +26,8 @@ extern void pbl_bt_cb_ppog_reversed_unsubscribed(uint16_t conn_handle);
 extern void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len);
 
 //! Kernel -> driver: send a PPoG packet to the phone as a notification.
-//! @return BTErrnoOK on success, BTErrnoNotEnoughResources if out of buffers
+//! @return PBL_BT_ERRNO_OK on success, PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES if out of buffers
 //! (transient; the caller must retry after a short delay — the stack has no
-//! buffers-freed event), or BTErrnoInvalidState if no subscription is active.
-BTErrno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len);
+//! buffers-freed event), or PBL_BT_ERRNO_INVALID_STATE if no subscription is active.
+enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
+                                              uint16_t len);

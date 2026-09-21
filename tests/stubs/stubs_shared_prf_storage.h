@@ -18,48 +18,52 @@ bool shared_prf_storage_get_local_device_name(char *local_device_name_out, size_
 void shared_prf_storage_set_local_device_name(const char *local_device_name) {
 }
 
-bool shared_prf_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key_out) {
+bool shared_prf_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
+                                     struct pbl_bt_sm_key *key_out) {
   return false;
 }
 
-void shared_prf_storage_set_root_keys(SM128BitKey *keys_in) {
+void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
 }
 
-bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out, char *name_out,
-                                             bool *requires_address_pinning_out, uint8_t *flags) {
+bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
+                                             char *name_out, bool *requires_address_pinning_out,
+                                             uint8_t *flags) {
   return false;
 }
 
-void shared_prf_storage_store_ble_pairing_data(const SMPairingInfo *pairing_info, const char *name,
-                                               bool requires_address_pinning, uint8_t flags) {
+void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
+                                               const char *name, bool requires_address_pinning,
+                                               uint8_t flags) {
 }
 
-bool shared_prf_storage_get_ble_pinned_address(BTDeviceAddress *address_out) {
+bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
   return false;
 }
 
-void shared_prf_storage_set_ble_pinned_address(const BTDeviceAddress *address) {
+void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address) {
 }
 
-bool shared_prf_storage_get_bt_classic_pairing_data(BTDeviceAddress *addr_out,
+bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,
                                                     char *device_name_out,
-                                                    SM128BitKey *link_key_out,
+                                                    struct pbl_bt_sm_key *link_key_out,
                                                     uint8_t *platform_bits) {
   return false;
 }
 
-void shared_prf_storage_store_bt_classic_pairing_data(BTDeviceAddress *addr,
+void shared_prf_storage_store_bt_classic_pairing_data(struct pbl_bt_addr *addr,
                                                       const char *device_name,
-                                                      SM128BitKey *link_key,
+                                                      struct pbl_bt_sm_key *link_key,
                                                       uint8_t platform_bits) {
 }
 
 void shared_prf_storage_store_platform_bits(uint8_t platform_bits) {
 }
 
-void shared_prf_store_pairing_data(SMPairingInfo *pairing_info, const char *device_name_ble,
-                                   BTDeviceAddress *addr, const char *device_name_classic,
-                                   SM128BitKey *link_key, uint8_t platform_bits) {
+void shared_prf_store_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info,
+                                   const char *device_name_ble, struct pbl_bt_addr *addr,
+                                   const char *device_name_classic, struct pbl_bt_sm_key *link_key,
+                                   uint8_t platform_bits) {
 }
 
 bool shared_prf_storage_get_getting_started_complete(void) {

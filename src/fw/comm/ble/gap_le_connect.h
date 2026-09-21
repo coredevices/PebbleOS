@@ -28,17 +28,21 @@ void gap_le_connect_deinit(void);
 
 bool gap_le_connect_is_connected_as_slave(void);
 
-void gap_le_connect_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op);
+void gap_le_connect_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
 
-BTErrno gap_le_connect_connect(const BTDeviceInternal *device, bool auto_reconnect,
-                               bool is_pairing_required, GAPLEClient client);
+enum pbl_bt_errno gap_le_connect_connect(const struct pbl_bt_device_internal *device,
+                                         bool auto_reconnect, bool is_pairing_required,
+                                         GAPLEClient client);
 
-BTErrno gap_le_connect_cancel(const BTDeviceInternal *device, GAPLEClient client);
+enum pbl_bt_errno gap_le_connect_cancel(const struct pbl_bt_device_internal *device,
+                                        GAPLEClient client);
 
-BTErrno gap_le_connect_connect_by_bonding(BTBondingID bonding_id, bool auto_reconnect,
-                                          bool is_pairing_required, GAPLEClient client);
+enum pbl_bt_errno gap_le_connect_connect_by_bonding(pbl_bt_bonding_id_t bonding_id,
+                                                    bool auto_reconnect, bool is_pairing_required,
+                                                    GAPLEClient client);
 
-BTErrno gap_le_connect_cancel_by_bonding(BTBondingID bonding_id, GAPLEClient client);
+enum pbl_bt_errno gap_le_connect_cancel_by_bonding(pbl_bt_bonding_id_t bonding_id,
+                                                   GAPLEClient client);
 
 //! @note As opposed to gap_le_connect_cancel(), this function will not
 //! generate virtual disconnection events for any connected devices.
@@ -53,8 +57,10 @@ bool gap_le_connect_has_pending_create_connection(void);
 
 //! @return true if there is a connection intent for the specified device and
 //! specified client.
-bool gap_le_connect_has_connection_intent(const BTDeviceInternal *device, GAPLEClient client);
+bool gap_le_connect_has_connection_intent(const struct pbl_bt_device_internal *device,
+                                          GAPLEClient client);
 
-bool gap_le_connect_has_connection_intent_for_bonding(BTBondingID bonding_id, GAPLEClient c);
+bool gap_le_connect_has_connection_intent_for_bonding(pbl_bt_bonding_id_t bonding_id,
+                                                      GAPLEClient c);
 
 uint32_t gap_le_connect_connection_intents_count(void);

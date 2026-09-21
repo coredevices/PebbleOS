@@ -38,7 +38,7 @@
 #include <stdbool.h>
 
 #define QR_URL_BUFFER_SIZE 72
-#define NAME_BUFFER_SIZE   (BT_DEVICE_NAME_BUFFER_SIZE + 2)
+#define NAME_BUFFER_SIZE   (PBL_BT_DEVICE_NAME_BUFFER_SIZE + 2)
 
 typedef struct RecoveryFUAppData {
   Window launch_app_window;
@@ -147,7 +147,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     // If we have connected to a device and we have a connection to the mobile app, show the device
     // name (we are required to have a connection to mobile app to get the name).
     gap_le_connection_copy_device_name(gap_conn, data->name_text_buffer,
-                                       BT_DEVICE_NAME_BUFFER_SIZE);
+                                       PBL_BT_DEVICE_NAME_BUFFER_SIZE);
   } else {
     // If we aren't connected and/or don't have a session, display the name of the device
     // so it's easier for a user to figure out what they should be trying to connect to
@@ -156,7 +156,8 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     // For debugging purposes, we are going to add -'s to the beginning and end of the name
     // if we are connected to a BLE device but don't have a session
     if (gap_le_connect_is_connected_as_slave()) {
-      memmove(&data->name_text_buffer[1], &data->name_text_buffer[0], BT_DEVICE_NAME_BUFFER_SIZE);
+      memmove(&data->name_text_buffer[1], &data->name_text_buffer[0],
+              PBL_BT_DEVICE_NAME_BUFFER_SIZE);
       data->name_text_buffer[0] = '-';
       strcat(data->name_text_buffer, "-");
     }
@@ -310,7 +311,7 @@ static void handle_init(void) {
   event_service_client_subscribe(&data->pebble_gather_logs_event_info);
 
   data->bt_connection_event_info = (EventServiceInfo){
-    .type = PEBBLE_BT_CONNECTION_EVENT,
+    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
     .handler = prv_bt_event_handler,
   };
   event_service_client_subscribe(&data->bt_connection_event_info);

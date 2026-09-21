@@ -7,10 +7,10 @@
 
 #include <pbl/bluetooth/types.h>
 
-typedef struct {
+struct pbl_bt_hrm_service_measurement {
   uint16_t bpm;
   bool is_on_wrist;
-} BleHrmServiceMeasurement;
+};
 
 //! @return True if the BT driver lib supports exposing the GATT HRM service.
 bool pbl_bt_is_hrm_service_supported(void);
@@ -20,11 +20,11 @@ bool pbl_bt_is_hrm_service_supported(void);
 void pbl_bt_hrm_service_enable(bool enable);
 
 //! Sends the Heart Rate Measurement to all subscribed & connected devices.
-void pbl_bt_hrm_service_handle_measurement(const BleHrmServiceMeasurement *measurement,
-                                           const BTDeviceInternal *permitted_devices,
+void pbl_bt_hrm_service_handle_measurement(const struct pbl_bt_hrm_service_measurement *measurement,
+                                           const struct pbl_bt_device_internal *permitted_devices,
                                            size_t num_permitted_devices);
 
 //! Called when a connected device (un)subscribes to the GATT HRM service's "Heart Rate Measurement"
 //! characteristic.
-extern void pbl_bt_cb_hrm_service_update_subscription(const BTDeviceInternal *device,
+extern void pbl_bt_cb_hrm_service_update_subscription(const struct pbl_bt_device_internal *device,
                                                       bool is_subscribed);

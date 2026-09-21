@@ -18,11 +18,11 @@
 // Caches of the local address and device name.
 // Some clients (i.e. Settings app) make a lot of calls to this module. By caching this info,
 // we avoid having to reach out to the BT driver every time.
-static BTDeviceAddress s_local_address;
-static char s_local_device_name[BT_DEVICE_NAME_BUFFER_SIZE];
-static char s_local_le_device_name[BT_DEVICE_NAME_BUFFER_SIZE];
+static struct pbl_bt_addr s_local_address;
+static char s_local_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+static char s_local_le_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
-static void prv_populate_name(char name[BT_DEVICE_NAME_BUFFER_SIZE], const char *name_fmt) {
+static void prv_populate_name(char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE], const char *name_fmt) {
   sprintf(name, name_fmt, s_local_address.octets[1], s_local_address.octets[0]);
 }
 
@@ -63,30 +63,30 @@ void bt_local_id_set_device_name(const char *device_name) {
   prv_configure_device_name();
 }
 
-void bt_local_id_copy_device_name(char name_out[BT_DEVICE_NAME_BUFFER_SIZE], bool is_le) {
-  strncpy(name_out, s_local_device_name, BT_DEVICE_NAME_BUFFER_SIZE);
+void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE], bool is_le) {
+  strncpy(name_out, s_local_device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
 }
 
-void bt_local_id_copy_address(BTDeviceAddress *addr_out) {
+void bt_local_id_copy_address(struct pbl_bt_addr *addr_out) {
   *addr_out = s_local_address;
 }
 
-void bt_local_id_copy_address_hex_string(char addr_hex_str_out[BT_ADDR_FMT_BUFFER_SIZE_BYTES]) {
-  static const BTDeviceAddress null_addr = {};
+void bt_local_id_copy_address_hex_string(char addr_hex_str_out[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE]) {
+  static const struct pbl_bt_addr null_addr = {};
   if (0 != memcmp(&null_addr, &s_local_address, sizeof(s_local_address))) {
-    sniprintf(addr_hex_str_out, BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE, BD_ADDR_FMT,
-              BT_DEVICE_ADDRESS_XPLODE(s_local_address));
+    sniprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_BD_ADDR_FMT,
+              PBL_BT_ADDR_XPLODE(s_local_address));
   } else {
-    sniprintf(addr_hex_str_out, BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE, "Unknown");
+    sniprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, "Unknown");
   }
 }
 
-void bt_local_id_copy_address_mac_string(char addr_mac_str_out[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE]) {
-  sniprintf(addr_mac_str_out, BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE, BT_DEVICE_ADDRESS_FMT,
-            BT_DEVICE_ADDRESS_XPLODE(s_local_address));
+void bt_local_id_copy_address_mac_string(char addr_mac_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]) {
+  sniprintf(addr_mac_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_ADDR_FMT,
+            PBL_BT_ADDR_XPLODE(s_local_address));
 }
 
-PBL_T_STATIC void prv_generate_address(BTDeviceAddress *addr_out) {
+PBL_T_STATIC void prv_generate_address(struct pbl_bt_addr *addr_out) {
   const char *serial = mfg_get_serial_number();
   const uint32_t full_len = strlen(serial);
 
@@ -101,7 +101,7 @@ PBL_T_STATIC void prv_generate_address(BTDeviceAddress *addr_out) {
 
   struct PBL_PACKED {
     union {
-      BTDeviceAddress bt_addr;
+      struct pbl_bt_addr bt_addr;
       struct PBL_PACKED {
         uint16_t a;
         uint32_t b;
@@ -115,20 +115,20 @@ PBL_T_STATIC void prv_generate_address(BTDeviceAddress *addr_out) {
   *addr_out = addr.bt_addr;
 }
 
-void bt_local_id_generate_address_from_serial(BTDeviceAddress *addr_out) {
+void bt_local_id_generate_address_from_serial(struct pbl_bt_addr *addr_out) {
   prv_generate_address(addr_out);
   addr_out->octets[ARRAY_LENGTH(addr_out->octets) - 1] |= 0b11000000;
 
   // Addresses with all 0's or 1's
-  const BTDeviceAddress zero_addr = {.octets = {0x00, 0x00, 0x00, 0x00, 0x00, 0xC0}};
-  const BTDeviceAddress one_addr = {.octets = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}};
+  const struct pbl_bt_addr zero_addr = {.octets = {0x00, 0x00, 0x00, 0x00, 0x00, 0xC0}};
+  const struct pbl_bt_addr one_addr = {.octets = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}};
   // NOTE: It already has the two most sig. bits set.
-  const BTDeviceAddress fallback_addr = {.octets = {0x3c, 0x08, 0x55, 0xaf, 0xd3, 0xc4}};
+  const struct pbl_bt_addr fallback_addr = {.octets = {0x3c, 0x08, 0x55, 0xaf, 0xd3, 0xc4}};
 
   // Compare (the first 5 bytes) the generated one with the invalid ones. If they are equal,
   // fall back to this address.
-  if (!memcmp(addr_out, &zero_addr, sizeof(BTDeviceAddress)) ||
-      !memcmp(addr_out, &one_addr, sizeof(BTDeviceAddress))) {
+  if (!memcmp(addr_out, &zero_addr, sizeof(struct pbl_bt_addr)) ||
+      !memcmp(addr_out, &one_addr, sizeof(struct pbl_bt_addr))) {
     *addr_out = fallback_addr;
   }
 

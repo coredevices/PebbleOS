@@ -39,7 +39,7 @@ static void prv_perform_on_kernel_main_task(void (*callback)(void *), void *data
 
 typedef struct {
   bool connected;
-  BLECharacteristic characteristics[NumAMSCharacteristic];
+  pbl_bt_characteristic_t characteristics[NumAMSCharacteristic];
   AMSEntityID next_entity_to_register;
 } AMSClient;
 
@@ -105,13 +105,15 @@ static bool prv_music_needs_user_to_start_playback_on_phone(void) {
   return !music_has_now_playing();
 }
 
-static void prv_request_response_time(BtConsumer consumer, ResponseTimeState state,
+static void prv_request_response_time(enum pbl_bt_consumer consumer,
+                                      enum pbl_bt_response_time_state state,
                                       uint16_t max_period_secs) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
   bt_lock();
   if (s_ams_client) {
-    const BLECharacteristic characteristic = s_ams_client->characteristics[0];
-    const BTDeviceInternal device = gatt_client_characteristic_get_device(characteristic);
+    const pbl_bt_characteristic_t characteristic = s_ams_client->characteristics[0];
+    const struct pbl_bt_device_internal device =
+        gatt_client_characteristic_get_device(characteristic);
     if (!bt_device_is_invalid(&device.opaque)) {
       GAPLEConnection *connection = gap_le_connection_by_device(&device);
       conn_mgr_set_ble_conn_response_time(connection, consumer, state, max_period_secs);
@@ -122,13 +124,15 @@ static void prv_request_response_time(BtConsumer consumer, ResponseTimeState sta
 
 static void prv_request_reduced_latency_cb(void *data) {
   const bool reduced_latency = (uintptr_t)data;
-  const ResponseTimeState state = reduced_latency ? ResponseTimeMiddle : ResponseTimeMax;
-  prv_request_response_time(BtConsumerMusicServiceIndefinite, state, MAX_PERIOD_RUN_FOREVER);
+  const enum pbl_bt_response_time_state state =
+      reduced_latency ? PBL_BT_RESPONSE_TIME_MIDDLE : PBL_BT_RESPONSE_TIME_MAX;
+  prv_request_response_time(PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE, state,
+                            MAX_PERIOD_RUN_FOREVER);
 }
 
 static void prv_request_low_latency_for_period_cb(void *data) {
   const uint32_t period_ms = (uintptr_t)data;
-  prv_request_response_time(BtConsumerMusicServiceMomentary, ResponseTimeMin,
+  prv_request_response_time(PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY, PBL_BT_RESPONSE_TIME_MIN,
                             period_ms / MS_PER_SECOND);
 }
 
@@ -164,11 +168,12 @@ static void prv_perform_on_kernel_main_task(void (*callback)(void *), void *data
   }
 }
 
-static AMSCharacteristic prv_get_id_for_characteristic(BLECharacteristic characteristic_to_find) {
+static AMSCharacteristic prv_get_id_for_characteristic(
+    pbl_bt_characteristic_t characteristic_to_find) {
   if (!s_ams_client) {
     return AMSCharacteristicInvalid;
   }
-  const BLECharacteristic *characteristic = s_ams_client->characteristics;
+  const pbl_bt_characteristic_t *characteristic = s_ams_client->characteristics;
   for (AMSCharacteristic id = 0; id < NumAMSCharacteristic; ++id, ++characteristic) {
     if (*characteristic == characteristic_to_find) {
       return id;
@@ -242,14 +247,14 @@ static void prv_register_next_entity(void *unused) {
   // by having only one outstanding GATT operation queued up at any moment in time (instead of
   // queueing up all the writes in one go):
   const AMSEntityID entity_id = s_ams_client->next_entity_to_register;
-  const BLECharacteristic entity_update_characteristic =
+  const pbl_bt_characteristic_t entity_update_characteristic =
       s_ams_client->characteristics[AMSCharacteristicEntityUpdate];
   uint8_t cmd_length = 0;
   const uint8_t *cmd_value = prv_get_registration_cmd_for_entity(entity_id, &cmd_length);
-  const BTErrno e =
+  const enum pbl_bt_errno e =
       gatt_client_op_write(entity_update_characteristic, cmd_value, cmd_length, GAPLEClientKernel);
-  if (e != BTErrnoOK) {
-    if (e == BTErrnoNotEnoughResources) {
+  if (e != PBL_BT_ERRNO_OK) {
+    if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
       // Need to wait for space to become available
       launcher_task_add_callback(&prv_register_next_entity, NULL);
     } else {
@@ -546,15 +551,16 @@ void ams_invalidate_all_references(void) {
   prv_reset_next_entity_to_register();
 
   for (int c = 0; c < NumAMSCharacteristic; c++) {
-    s_ams_client->characteristics[c] = BLE_CHARACTERISTIC_INVALID;
+    s_ams_client->characteristics[c] = PBL_BT_CHARACTERISTIC_INVALID;
   }
 }
 
-void ams_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
+void ams_handle_service_removed(pbl_bt_characteristic_t *characteristics,
+                                uint8_t num_characteristics) {
   ams_invalidate_all_references();
 }
 
-void ams_handle_service_discovered(BLECharacteristic *characteristics) {
+void ams_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   if (!s_ams_client) {
     return;
   }
@@ -562,29 +568,29 @@ void ams_handle_service_discovered(BLECharacteristic *characteristics) {
   PBL_LOG_DBG("In AMS service discovery CB");
   PBL_ASSERTN(characteristics);
 
-  if (s_ams_client->characteristics[0] != BLE_CHARACTERISTIC_INVALID) {
+  if (s_ams_client->characteristics[0] != PBL_BT_CHARACTERISTIC_INVALID) {
     PBL_LOG_WRN("Multiple AMS instances registered!?");
     return;
   }
 
-  // Keep around the BLECharacteristic references:
+  // Keep around the pbl_bt_characteristic_t references:
   memcpy(s_ams_client->characteristics, characteristics,
-         sizeof(BLECharacteristic) * NumAMSCharacteristic);
+         sizeof(pbl_bt_characteristic_t) * NumAMSCharacteristic);
 
-  const BLECharacteristic entity_update_characteristic =
+  const pbl_bt_characteristic_t entity_update_characteristic =
       characteristics[AMSCharacteristicEntityUpdate];
-  const BTErrno e = gatt_client_subscriptions_subscribe(
+  const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
       entity_update_characteristic, BLESubscriptionNotifications, GAPLEClientKernel);
   // Reject the service if subscribing fails instead of asserting (e.g. a "fake
   // AMS" without CCCD).
-  if (e != BTErrnoOK) {
+  if (e != PBL_BT_ERRNO_OK) {
     PBL_LOG_WRN("Failed to subscribe AMS (err=%d), ignoring service", e);
     ams_invalidate_all_references();
     return;
   }
 }
 
-bool ams_can_handle_characteristic(BLECharacteristic characteristic) {
+bool ams_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
   if (!s_ams_client) {
     return false;
   }
@@ -596,15 +602,15 @@ bool ams_can_handle_characteristic(BLECharacteristic characteristic) {
   return false;
 }
 
-void ams_handle_subscribe(BLECharacteristic subscribed_characteristic,
-                          BLESubscription subscription_type, BLEGATTError error) {
+void ams_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
+                          BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
   AMSCharacteristic characteristic_id = prv_get_id_for_characteristic(subscribed_characteristic);
   if (characteristic_id != AMSCharacteristicEntityUpdate) {
     // Only Entity Update characteristic is expected to be subscribed to
     WTF;
   }
 
-  if (error != BLEGATTErrorSuccess) {
+  if (error != PBL_BT_GATT_ERROR_SUCCESS) {
     PBL_LOG_ERR("Failed to subscribe AMS");
     return;
   }
@@ -616,14 +622,15 @@ void ams_handle_subscribe(BLECharacteristic subscribed_characteristic,
   prv_register_next_entity(NULL);
 }
 
-void ams_handle_write_response(BLECharacteristic characteristic, BLEGATTError error) {
+void ams_handle_write_response(pbl_bt_characteristic_t characteristic,
+                               enum pbl_bt_gatt_error error) {
   if (!s_ams_client) {
     return;
   }
   const bool is_entity_update_characteristic =
       (characteristic == s_ams_client->characteristics[AMSCharacteristicEntityUpdate]);
 
-  const bool has_error = (error != BLEGATTErrorSuccess);
+  const bool has_error = (error != PBL_BT_GATT_ERROR_SUCCESS);
 
   if (!is_entity_update_characteristic) {
     // We only need to act upon getting a write response of the Entity Update characteristic.
@@ -642,8 +649,8 @@ void ams_handle_write_response(BLECharacteristic characteristic, BLEGATTError er
   prv_register_next_entity(NULL);
 }
 
-void ams_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                     size_t value_length, BLEGATTError error) {
+void ams_handle_read_or_notification(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                     size_t value_length, enum pbl_bt_gatt_error error) {
   if (!s_ams_client ||
       s_ams_client->characteristics[AMSCharacteristicEntityUpdate] != characteristic) {
     PBL_LOG_ERR("Unexpected characteristic (s_ams_client=%p)", s_ams_client);
@@ -669,10 +676,11 @@ static void prv_send_command_kernel_main_task_cb(void *data) {
     return;
   }
   const AMSRemoteCommandID command_id = (uintptr_t)data;
-  BLECharacteristic characteristic = s_ams_client->characteristics[AMSCharacteristicRemoteCommand];
-  BTErrno error =
+  pbl_bt_characteristic_t characteristic =
+      s_ams_client->characteristics[AMSCharacteristicRemoteCommand];
+  enum pbl_bt_errno error =
       gatt_client_op_write(characteristic, (const uint8_t *)&command_id, 1, GAPLEClientKernel);
-  const bool has_error = (error != BTErrnoOK);
+  const bool has_error = (error != PBL_BT_ERRNO_OK);
   if (has_error) {
     PBL_LOG_ERR("Couldn't write command: %d", error);
   }

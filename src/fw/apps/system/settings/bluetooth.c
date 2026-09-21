@@ -126,8 +126,8 @@ static void prv_copy_device_name_with_fallback(StoredRemote *remote, const char 
   }
 }
 
-static void prv_add_ble_remote(BTDeviceInternal *device, SMIdentityResolvingKey *irk,
-                               const char *name, BTBondingID *id, void *context) {
+static void prv_add_ble_remote(struct pbl_bt_device_internal *device, struct pbl_bt_sm_key *irk,
+                               const char *name, pbl_bt_bonding_id_t *id, void *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
   if (!data) {
     return;
@@ -144,8 +144,8 @@ static void prv_add_ble_remotes(SettingsBluetoothData *data) {
 
   StoredRemote *remote = (StoredRemote *)data->remote_list_head;
   while (remote) {
-    SMIdentityResolvingKey irk;
-    BTDeviceInternal device;
+    struct pbl_bt_sm_key irk;
+    struct pbl_bt_device_internal device;
 
     if (bt_persistent_storage_get_ble_pairing_by_id(remote->ble.bonding, &irk, &device, NULL)) {
       bt_lock();
@@ -201,7 +201,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
   SettingsBluetoothData *settings_data = (SettingsBluetoothData *)context;
   PBL_LOG_DBG("BT EVENT");
   switch (event->type) {
-    case PEBBLE_BT_CONNECTION_EVENT:
+    case PBL_BT_PEBBLE_CONNECTION_EVENT:
       // If BT Settings is open, update BLE device name upon connecting device:
       if (event->bluetooth.connection.is_ble &&
           event->bluetooth.connection.state == PebbleBluetoothConnectionEventStateConnected) {
@@ -211,7 +211,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
         gap_le_device_name_request(&event->bluetooth.connection.device);
       }
       // fall-through!
-    case PEBBLE_BT_PAIRING_EVENT:
+    case PBL_BT_PEBBLE_PAIRING_EVENT:
 #ifdef CONFIG_HRM
     case PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT:
 #endif
@@ -241,7 +241,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
       break;
     }
 
-    case PEBBLE_BT_STATE_EVENT: {
+    case PBL_BT_PEBBLE_STATE_EVENT: {
       settings_data->toggle_state = ToggleStateIdle;
       settings_menu_mark_dirty(SettingsMenuItemBluetooth);
       break;
@@ -340,8 +340,8 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer, uint
 
   // Add ellipsis if the name might have been cut off by the mobile
   const char ellipsis[] = UTF8_ELLIPSIS_STRING;
-  const size_t max_name_size = BT_DEVICE_NAME_BUFFER_SIZE - 2;
-  const size_t name_size = strnlen(remote->name, BT_DEVICE_NAME_BUFFER_SIZE);
+  const size_t max_name_size = PBL_BT_DEVICE_NAME_BUFFER_SIZE - 2;
+  const size_t name_size = strnlen(remote->name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
   char *remote_name = task_zalloc_check(max_name_size + sizeof(ellipsis));
   strncpy(remote_name, remote->name, name_size);
   if (name_size > max_name_size) {
@@ -392,7 +392,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
                             uint16_t row, bool selected) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
   if (row == 0) {
-    char device_name_buffer[BT_DEVICE_NAME_BUFFER_SIZE];
+    char device_name_buffer[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
     const char *subtitle = NULL;
     const char *title = i18n_get("Connection", data);
     GBitmap *icon = NULL;
@@ -490,17 +490,17 @@ static void prv_expand_cb(SettingsCallbacks *context) {
   }
 
   data->bt_airplane_event_info = (EventServiceInfo){
-    .type = PEBBLE_BT_STATE_EVENT,
+    .type = PBL_BT_PEBBLE_STATE_EVENT,
     .handler = prv_settings_bluetooth_event_handler,
     .context = data,
   };
   data->bt_connection_event_info = (EventServiceInfo){
-    .type = PEBBLE_BT_CONNECTION_EVENT,
+    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
     .handler = prv_settings_bluetooth_event_handler,
     .context = data,
   };
   data->bt_pairing_event_info = (EventServiceInfo){
-    .type = PEBBLE_BT_PAIRING_EVENT,
+    .type = PBL_BT_PEBBLE_PAIRING_EVENT,
     .handler = prv_settings_bluetooth_event_handler,
     .context = data,
   };

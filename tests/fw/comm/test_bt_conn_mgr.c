@@ -23,7 +23,7 @@
 #include "stubs_passert.h"
 
 extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
-                                                  ResponseTimeState granted_state);
+                                                  enum pbl_bt_response_time_state granted_state);
 
 // Stubs
 /////
@@ -69,71 +69,78 @@ void test_bt_conn_mgr__cleanup(void) {
 
 void test_bt_conn_mgr__ble_latency_mgr(void) {
   // 1 consumer at fastest rate should result in fastest rate getting scheduled
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMin, 100);
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                      PBL_BT_RESPONSE_TIME_MIN, 100);
 
   uint16_t secs_to_wait;
-  ResponseTimeState state;
+  enum pbl_bt_response_time_state state;
 
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMin);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(secs_to_wait, 100);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeMin);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_MIN);
 
   // another consumer at lower rate should not have any effect
   fake_gap_le_connect_params_reset_last_requested();
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerUnitTests, ResponseTimeMiddle, 30);
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_UNIT_TESTS,
+                                      PBL_BT_RESPONSE_TIME_MIDDLE, 30);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMin);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(secs_to_wait, 100);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeInvalid);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_INVALID);
 
   // removing the fastest consumer should result in the next fastest being scheduled, but only
   // after an "inactivity timeout":
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMax, 0);
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                      PBL_BT_RESPONSE_TIME_MAX, 0);
 
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMin);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(secs_to_wait, BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeInvalid);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_INVALID);
 
   prv_regular_timer_spend_seconds(BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
 
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMiddle);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIDDLE);
   cl_assert_equal_i(secs_to_wait, 30 - BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeMiddle);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_MIDDLE);
 
   // removing all consumers we should fall back to slowest interval, but only
   // after an "inactivity timeout":
   fake_gap_le_connect_params_reset_last_requested();
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerUnitTests, ResponseTimeMax, 0);
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_UNIT_TESTS, PBL_BT_RESPONSE_TIME_MAX,
+                                      0);
 
   prv_regular_timer_spend_seconds(BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMax);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeMax);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MAX);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_MAX);
 
   // if nothing else is scheduled, middle rate should get picked up right away
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerUnitTests, ResponseTimeMiddle, 30);
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_UNIT_TESTS,
+                                      PBL_BT_RESPONSE_TIME_MIDDLE, 30);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMiddle);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIDDLE);
   cl_assert_equal_i(secs_to_wait, 30);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeMiddle);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_MIDDLE);
 
   // higher rate should take over lower rate already scheduled
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMin, 25);
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                      PBL_BT_RESPONSE_TIME_MIN, 25);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMin);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(secs_to_wait, 25);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeMin);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_MIN);
 
   // two requests at same high rate, longest time should be selected as timeout
   fake_gap_le_connect_params_reset_last_requested();
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerUnitTests, ResponseTimeMin, 250);
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_UNIT_TESTS, PBL_BT_RESPONSE_TIME_MIN,
+                                      250);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMin);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(secs_to_wait, 250);
-  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), ResponseTimeInvalid);
+  cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_INVALID);
 
   bt_conn_mgr_info_deinit(&s_hdl.conn_mgr_info);
 }
@@ -143,54 +150,55 @@ static void prv_granted_handler(void) {
 }
 
 void test_bt_conn_mgr__granted_handler_request_max_no_existing_node(void) {
-  fake_gap_le_connect_params_set_actual_state(ResponseTimeMax);
-  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMax, 1,
-                                          prv_granted_handler);
+  fake_gap_le_connect_params_set_actual_state(PBL_BT_RESPONSE_TIME_MAX);
+  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                          PBL_BT_RESPONSE_TIME_MAX, 1, prv_granted_handler);
   // Expect granted handler to be called immediately:
   cl_assert_equal_i(s_granted_count, 1);
 }
 
 void test_bt_conn_mgr__granted_handler_request_existing(void) {
-  fake_gap_le_connect_params_set_actual_state(ResponseTimeMax);
-  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMin, 1,
-                                          prv_granted_handler);
+  fake_gap_le_connect_params_set_actual_state(PBL_BT_RESPONSE_TIME_MAX);
+  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                          PBL_BT_RESPONSE_TIME_MIN, 1, prv_granted_handler);
   cl_assert_equal_i(s_granted_count, 0);
 
   // Simulate that the requested state takes effect:
-  fake_gap_le_connect_params_set_actual_state(ResponseTimeMin);
-  conn_mgr_handle_desired_state_granted(&s_hdl, ResponseTimeMin);
+  fake_gap_le_connect_params_set_actual_state(PBL_BT_RESPONSE_TIME_MIN);
+  conn_mgr_handle_desired_state_granted(&s_hdl, PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(s_granted_count, 1);
 
-  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMin, 1,
-                                          prv_granted_handler);
+  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                          PBL_BT_RESPONSE_TIME_MIN, 1, prv_granted_handler);
   cl_assert_equal_i(s_granted_count, 2);
 
-  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMiddle,
-                                          1, prv_granted_handler);
+  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                          PBL_BT_RESPONSE_TIME_MIDDLE, 1, prv_granted_handler);
   cl_assert_equal_i(s_granted_count, 3);
 
-  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMax, 1,
-                                          prv_granted_handler);
+  conn_mgr_set_ble_conn_response_time_ext(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                          PBL_BT_RESPONSE_TIME_MAX, 1, prv_granted_handler);
   cl_assert_equal_i(s_granted_count, 4);
 }
 
 void test_bt_conn_mgr__request_max_time_while_no_requests_are_running(void) {
   uint16_t secs_to_wait;
-  ResponseTimeState state;
+  enum pbl_bt_response_time_state state;
 
-  // Always start off with ResponseTimeMax:
+  // Always start off with PBL_BT_RESPONSE_TIME_MAX:
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMax);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MAX);
 
-  // Requesting ResponseTimeMax should have no effect:
-  conn_mgr_set_ble_conn_response_time(&s_hdl, BtConsumerLeServiceDiscovery, ResponseTimeMax, 1);
+  // Requesting PBL_BT_RESPONSE_TIME_MAX should have no effect:
+  conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                      PBL_BT_RESPONSE_TIME_MAX, 1);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMax);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MAX);
 
   // Not even after waiting 10 seconds:
   prv_regular_timer_spend_seconds(10);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
-  cl_assert_equal_i(state, ResponseTimeMax);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MAX);
 
   bt_conn_mgr_info_deinit(&s_hdl.conn_mgr_info);
 }

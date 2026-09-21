@@ -54,8 +54,8 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
   CommSession *session = s_bt_dump_chunk_callback_data.comm_session;
 
   // keep us sending data quickly
-  comm_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session, BtConsumerPpLogDump,
-                                  ResponseTimeMin, 5);
+  comm_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session,
+                                  PBL_BT_CONSUMER_PP_LOG_DUMP, PBL_BT_RESPONSE_TIME_MIN, 5);
 
   const uint16_t required_length = total_length + 1 + 4;
   SendBuffer *sb = comm_session_send_buffer_begin_write(session, ENDPOINT_ID, required_length,
@@ -95,8 +95,8 @@ static void prv_bt_log_dump_completed_cb(bool success) {
   s_bt_dump_chunk_callback_data.in_progress = false;
 
   // Ok to enter a lower power less responsive state
-  comm_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session, BtConsumerPpLogDump,
-                                  ResponseTimeMax, 0);
+  comm_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session,
+                                  PBL_BT_CONSUMER_PP_LOG_DUMP, PBL_BT_RESPONSE_TIME_MAX, 0);
   prv_put_status_event(DebugInfoStateFinished);
 }
 

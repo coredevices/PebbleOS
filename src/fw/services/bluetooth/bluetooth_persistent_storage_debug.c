@@ -18,8 +18,8 @@
 // in the gap bonding db and shared PRF.
 //
 
-void bluetooth_persistent_storage_debug_dump_ble_pairing_info(char *display_buf,
-                                                              const SMPairingInfo *info) {
+void bluetooth_persistent_storage_debug_dump_ble_pairing_info(
+    char *display_buf, const struct pbl_bt_sm_pairing_info *info) {
   prompt_send_response(" Local Encryption Info: ");
   PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->local_encryption_info,
                        sizeof(info->local_encryption_info));
@@ -28,15 +28,15 @@ void bluetooth_persistent_storage_debug_dump_ble_pairing_info(char *display_buf,
   PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->remote_encryption_info,
                        sizeof(info->remote_encryption_info));
 
-  prompt_send_response(" SMIdentityResolvingKey: ");
+  prompt_send_response(" struct pbl_bt_sm_key: ");
   PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->irk, sizeof(info->irk));
 
-  prompt_send_response(" BTDeviceInternal: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->identity, sizeof(BTDeviceInternal));
+  prompt_send_response(" struct pbl_bt_device_internal: ");
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->identity,
+                       sizeof(struct pbl_bt_device_internal));
 
-  prompt_send_response(" SMConnectionSignatureResolvingKey: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->csrk,
-                       sizeof(SMConnectionSignatureResolvingKey));
+  prompt_send_response(" struct pbl_bt_sm_key: ");
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->csrk, sizeof(struct pbl_bt_sm_key));
 
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN,
                            " local encryption valid:  %s\n"
@@ -50,32 +50,33 @@ void bluetooth_persistent_storage_debug_dump_ble_pairing_info(char *display_buf,
 }
 
 void bluetooth_persistent_storage_debug_dump_classic_pairing_info(char *display_buf,
-                                                                  BTDeviceAddress *addr,
+                                                                  struct pbl_bt_addr *addr,
                                                                   char *device_name,
-                                                                  SM128BitKey *link_key,
+                                                                  struct pbl_bt_sm_key *link_key,
                                                                   uint8_t platform_bits) {
   prompt_send_response(" Link Key:");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)link_key, sizeof(SM128BitKey));
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " BT ADDR: " BD_ADDR_FMT,
-                           BT_DEVICE_ADDRESS_XPLODE(*addr));
+  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)link_key, sizeof(struct pbl_bt_sm_key));
+  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " BT ADDR: " PBL_BT_BD_ADDR_FMT,
+                           PBL_BT_ADDR_XPLODE(*addr));
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Name: %s", device_name);
   prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Platform Bits: 0x%x",
                            (int)platform_bits);
 }
 
-void bluetooth_persistent_storage_debug_dump_root_keys(SM128BitKey *irk, SM128BitKey *erk) {
+void bluetooth_persistent_storage_debug_dump_root_keys(struct pbl_bt_sm_key *irk,
+                                                       struct pbl_bt_sm_key *erk) {
   prompt_send_response("Root Key hexdumps:");
 
   prompt_send_response(" IRK:");
   if (irk) {
-    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)irk, sizeof(SM128BitKey));
+    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)irk, sizeof(struct pbl_bt_sm_key));
   } else {
     prompt_send_response("  None");
   };
 
   prompt_send_response(" ERK:");
   if (erk) {
-    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)erk, sizeof(SM128BitKey));
+    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)erk, sizeof(struct pbl_bt_sm_key));
   } else {
     prompt_send_response("  None");
   };

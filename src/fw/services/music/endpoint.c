@@ -251,14 +251,16 @@ static bool prv_music_needs_user_to_start_playback_on_phone(void) {
 }
 
 static void prv_music_request_reduced_latency(bool reduced_latency) {
-  const ResponseTimeState state = reduced_latency ? ResponseTimeMiddle : ResponseTimeMax;
+  const enum pbl_bt_response_time_state state =
+      reduced_latency ? PBL_BT_RESPONSE_TIME_MIDDLE : PBL_BT_RESPONSE_TIME_MAX;
   comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerMusicServiceIndefinite, state, MAX_PERIOD_RUN_FOREVER);
+                                  PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE, state,
+                                  MAX_PERIOD_RUN_FOREVER);
 }
 
 static void prv_music_request_low_latency_for_period(uint32_t period_ms) {
   comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerMusicServiceMomentary, ResponseTimeMin,
+                                  PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY, PBL_BT_RESPONSE_TIME_MIN,
                                   period_ms / MS_PER_SECOND);
 }
 

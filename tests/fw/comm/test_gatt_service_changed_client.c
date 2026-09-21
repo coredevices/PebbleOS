@@ -37,11 +37,11 @@ void core_dump_reset(bool is_forced) {
 
 static GAPLEConnection s_connection;
 
-GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *addr) {
+GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *addr) {
   return &s_connection;
 }
 
-GAPLEConnection *gap_le_connection_by_addr(const BTDeviceAddress *addr) {
+GAPLEConnection *gap_le_connection_by_addr(const struct pbl_bt_addr *addr) {
   return &s_connection;
 }
 
@@ -61,25 +61,26 @@ uint16_t gaps_get_starting_att_handle(void) {
   return 4;
 }
 
-GAPLEConnection *gatt_client_characteristic_get_connection(BLECharacteristic characteristic_ref) {
+GAPLEConnection *gatt_client_characteristic_get_connection(
+    pbl_bt_characteristic_t characteristic_ref) {
   return NULL;
 }
 
-BLEService gatt_client_att_handle_get_service(GAPLEConnection *connection, uint16_t att_handle,
-                                              const GATTServiceNode **service_node_out) {
+pbl_bt_service_t gatt_client_att_handle_get_service(GAPLEConnection *connection,
+                                                    uint16_t att_handle,
+                                                    const GATTServiceNode **service_node_out) {
   return 0;
 }
 
-uint8_t gatt_client_copy_service_refs_by_discovery_generation(const BTDeviceInternal *device,
-                                                              BLEService services_out[],
-                                                              uint8_t num_services,
-                                                              uint8_t discovery_gen) {
+uint8_t gatt_client_copy_service_refs_by_discovery_generation(
+    const struct pbl_bt_device_internal *device, pbl_bt_service_t services_out[],
+    uint8_t num_services, uint8_t discovery_gen) {
   return 0;
 }
 
 void gatt_client_service_get_all_characteristics_and_descriptors(
-    GAPLEConnection *connection, GATTService *service, BLECharacteristic *characteristic_hdls_out,
-    BLEDescriptor *descriptor_hdls_out) {
+    GAPLEConnection *connection, struct pbl_bt_gatt_service *service,
+    pbl_bt_characteristic_t *characteristic_hdls_out, pbl_bt_descriptor_t *descriptor_hdls_out) {
 }
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
@@ -97,7 +98,7 @@ void fake_kernel_malloc_mark_assert_equal(void) {
 
 #define TEST_GATT_CONNECTION_ID (1234)
 
-static const BTDeviceInternal s_device = {
+static const struct pbl_bt_device_internal s_device = {
   .address = {.octets = {1, 2, 3, 4, 5, 6}},
 };
 
@@ -113,7 +114,7 @@ void test_gatt_service_changed_client__initialize(void) {
   };
   // Kick off a discovery so the fake driver is in the running state and will
   // deliver the service indications the tests inject below.
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&s_device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&s_device), PBL_BT_ERRNO_OK);
 }
 
 void test_gatt_service_changed_client__cleanup(void) {

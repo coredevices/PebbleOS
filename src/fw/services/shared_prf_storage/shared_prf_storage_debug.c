@@ -17,8 +17,8 @@ void shared_prf_storage_dump_contents(void) {
   prompt_send_response("---Shared PRF Contents---\n------------------------\n");
 
   char buf[DISPLAY_BUF_LEN];
-  SMPairingInfo pairing_info;
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
+  struct pbl_bt_sm_pairing_info pairing_info;
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   bool requires_address_pinning;
   uint8_t flags;
   if (shared_prf_storage_get_ble_pairing_data(&pairing_info, name, &requires_address_pinning,
@@ -30,28 +30,30 @@ void shared_prf_storage_dump_contents(void) {
     prompt_send_response("No BLE Data");
   }
 
-  SM128BitKey keys[SMRootKeyTypeNum];
-  if (shared_prf_storage_get_root_key(SMRootKeyTypeEncryption, &keys[SMRootKeyTypeEncryption]) &&
-      shared_prf_storage_get_root_key(SMRootKeyTypeIdentity, &keys[SMRootKeyTypeIdentity])) {
-    bluetooth_persistent_storage_debug_dump_root_keys(&keys[SMRootKeyTypeIdentity],
-                                                      &keys[SMRootKeyTypeEncryption]);
+  struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
+  if (shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
+                                      &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
+      shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
+                                      &keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
+    bluetooth_persistent_storage_debug_dump_root_keys(&keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY],
+                                                      &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]);
   } else {
     prompt_send_response("Missing IRK and/or ERK root key(s)!");
   }
 
-  BTDeviceAddress addr;
+  struct pbl_bt_addr addr;
 
   if (shared_prf_storage_get_ble_pinned_address(&addr)) {
-    prompt_send_response_fmt(buf, DISPLAY_BUF_LEN, "\nPinned address: " BT_DEVICE_ADDRESS_FMT,
-                             BT_DEVICE_ADDRESS_XPLODE_PTR(&addr));
+    prompt_send_response_fmt(buf, DISPLAY_BUF_LEN, "\nPinned address: " PBL_BT_ADDR_FMT,
+                             PBL_BT_ADDR_XPLODE_PTR(&addr));
   }
 
-  if (shared_prf_storage_get_local_device_name(name, BT_DEVICE_NAME_BUFFER_SIZE)) {
-    prompt_send_response_fmt(buf, BT_DEVICE_NAME_BUFFER_SIZE, "Local device name: %s", name);
+  if (shared_prf_storage_get_local_device_name(name, PBL_BT_DEVICE_NAME_BUFFER_SIZE)) {
+    prompt_send_response_fmt(buf, PBL_BT_DEVICE_NAME_BUFFER_SIZE, "Local device name: %s", name);
   } else {
     prompt_send_response("No Device Name");
   }
 
-  prompt_send_response_fmt(buf, BT_DEVICE_NAME_BUFFER_SIZE, "Started Complete: %s",
+  prompt_send_response_fmt(buf, PBL_BT_DEVICE_NAME_BUFFER_SIZE, "Started Complete: %s",
                            bool_to_str(shared_prf_storage_get_getting_started_complete()));
 }

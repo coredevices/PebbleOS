@@ -91,7 +91,7 @@ typedef void (*GAPLEAdvertisingJobUnscheduleCallback)(GAPLEAdvertisingJobRef job
 //! @param tag A tag that will be used for debug logging.
 //! @return Reference to the scheduled job, or NULL if the parameters were not
 //! valid.
-GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
+GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *payload,
                                               const GAPLEAdvertisingJobTerm *terms,
                                               uint8_t num_terms,
                                               GAPLEAdvertisingJobUnscheduleCallback callback,

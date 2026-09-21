@@ -54,7 +54,7 @@ void pbl_bt_advert_advertising_disable(void) {
   s_max_advertising_interval_ms = 0;
 }
 
-bool pbl_bt_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const struct pbl_bt_ad_data *ad_data) {
   if (!ad_data) {
     return false;
   }

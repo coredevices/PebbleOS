@@ -13,14 +13,14 @@
 // -------------------------------------------------------------------------------------------------
 // Static variables
 
-static BLECharacteristic s_app_launch_characteristic = BLE_CHARACTERISTIC_INVALID;
+static pbl_bt_characteristic_t s_app_launch_characteristic = PBL_BT_CHARACTERISTIC_INVALID;
 
 // -------------------------------------------------------------------------------------------------
 
-void app_launch_handle_service_discovered(BLECharacteristic *characteristics) {
+void app_launch_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   PBL_ASSERTN(characteristics);
 
-  if (s_app_launch_characteristic != BLE_CHARACTERISTIC_INVALID) {
+  if (s_app_launch_characteristic != PBL_BT_CHARACTERISTIC_INVALID) {
     PBL_LOG_WRN("Multiple app launch services!? Will use most recent one.");
   }
 
@@ -33,34 +33,34 @@ void app_launch_handle_service_discovered(BLECharacteristic *characteristics) {
 }
 
 void app_launch_invalidate_all_references(void) {
-  s_app_launch_characteristic = BLE_CHARACTERISTIC_INVALID;
+  s_app_launch_characteristic = PBL_BT_CHARACTERISTIC_INVALID;
 }
 
-void app_launch_handle_service_removed(BLECharacteristic *characteristics,
+void app_launch_handle_service_removed(pbl_bt_characteristic_t *characteristics,
                                        uint8_t num_characteristics) {
   app_launch_invalidate_all_references();
 }
 
 // -------------------------------------------------------------------------------------------------
 
-bool app_launch_can_handle_characteristic(BLECharacteristic characteristic) {
+bool app_launch_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
   return (characteristic == s_app_launch_characteristic);
 }
 
 // -------------------------------------------------------------------------------------------------
 
 void app_launch_handle_disconnection(void) {
-  s_app_launch_characteristic = BLE_CHARACTERISTIC_INVALID;
+  s_app_launch_characteristic = PBL_BT_CHARACTERISTIC_INVALID;
 }
 
 // -------------------------------------------------------------------------------------------------
 
 void app_launch_trigger(void) {
-  if (s_app_launch_characteristic == BLE_CHARACTERISTIC_INVALID) {
+  if (s_app_launch_characteristic == PBL_BT_CHARACTERISTIC_INVALID) {
     return;
   }
-  BTErrno err = gatt_client_op_read(s_app_launch_characteristic, GAPLEClientKernel);
-  if (err != BTErrnoOK) {
+  enum pbl_bt_errno err = gatt_client_op_read(s_app_launch_characteristic, GAPLEClientKernel);
+  if (err != PBL_BT_ERRNO_OK) {
     PBL_LOG_ERR("App relaunch failed: %u", err);
   }
 }

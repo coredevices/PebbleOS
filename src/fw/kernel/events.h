@@ -50,8 +50,8 @@ typedef enum {
   PEBBLE_NULL_EVENT = 0,
   PEBBLE_ACCEL_SHAKE_EVENT,
   PEBBLE_ACCEL_DOUBLE_TAP_EVENT,
-  PEBBLE_BT_CONNECTION_EVENT,
-  PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
+  PBL_BT_PEBBLE_CONNECTION_EVENT,
+  PBL_BT_PEBBLE_CONNECTION_DEBOUNCED_EVENT,
   PEBBLE_BUTTON_DOWN_EVENT,
   PEBBLE_BUTTON_UP_EVENT,
   //! From kernel to app, ask the app to render itself
@@ -62,7 +62,7 @@ typedef enum {
   PEBBLE_RENDER_FINISHED_EVENT,
   PEBBLE_BATTERY_CONNECTION_EVENT, // TODO: this has a poor name
   PEBBLE_PUT_BYTES_EVENT,
-  PEBBLE_BT_PAIRING_EVENT,
+  PBL_BT_PEBBLE_PAIRING_EVENT,
   // Emitted when the Pebble mobile app or third party app is (dis)connected
   PEBBLE_COMM_SESSION_EVENT,
   PEBBLE_MEDIA_EVENT,
@@ -76,7 +76,7 @@ typedef enum {
   PEBBLE_ALARM_CLOCK_EVENT,
   PEBBLE_SYSTEM_MESSAGE_EVENT,
   PEBBLE_FIRMWARE_UPDATE_EVENT,
-  PEBBLE_BT_STATE_EVENT,
+  PBL_BT_PEBBLE_STATE_EVENT,
   PEBBLE_BATTERY_STATE_CHANGE_EVENT,
   PEBBLE_CALLBACK_EVENT,
   PEBBLE_NEW_APP_MESSAGE_EVENT,
@@ -223,7 +223,7 @@ typedef enum {
   PebbleBluetoothPairEventTypePairingComplete,
 } PebbleBluetoothPairEventType;
 
-typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
+struct pbl_bt_pairing_confirm_ctx;
 
 typedef struct {
   char *device_name;
@@ -231,7 +231,7 @@ typedef struct {
 } PebbleBluetoothPairingConfirmationInfo;
 
 typedef struct PBL_PACKED { // 9 bytes
-  const PairingUserConfirmationCtx *ctx;
+  const struct pbl_bt_pairing_confirm_ctx *ctx;
   union {
     //! Valid if type is PebbleBluetoothPairEventTypePairingUserConfirmation
     PebbleBluetoothPairingConfirmationInfo *confirmation_info;
@@ -250,12 +250,12 @@ typedef enum {
 typedef struct PBL_PACKED { // 9 bytes
   PebbleBluetoothConnectionEventState state : 1;
   bool is_ble : 1;
-  BTDeviceInternal device;
+  struct pbl_bt_device_internal device;
 } PebbleBluetoothConnectionEvent;
 
 typedef struct PBL_PACKED { // 9 bytes
   uint8_t hci_reason;
-  BTBondingID bonding_id;
+  pbl_bt_bonding_id_t bonding_id;
   uint64_t bt_device_bits : 50;
   bool connected : 1;
 } PebbleBLEConnectionEvent;
@@ -282,7 +282,7 @@ typedef struct PBL_PACKED { // 9 bytes
     uint16_t value_length;
     BLESubscription subscription_type : 2;
   };
-  BLEGATTError gatt_error : 16;
+  enum pbl_bt_gatt_error gatt_error : 16;
 
   //! This is here to make sure we don't accidentally add more fields here without thinking:
   uint16_t zero : 2;
@@ -302,11 +302,11 @@ typedef enum {
 
 typedef struct {
   uint8_t num_services_added;
-  BLEService services[];
+  pbl_bt_service_t services[];
 } PebbleBLEGATTClientServicesAdded;
 
 typedef struct {
-  BLEService service;
+  pbl_bt_service_t service;
   Uuid uuid;
   uint8_t num_characteristics;
   uint8_t num_descriptors;
@@ -320,8 +320,8 @@ typedef struct {
 
 typedef struct {
   PebbleServiceNotificationType type;
-  BTDeviceInternal device;
-  BTErrno status;
+  struct pbl_bt_device_internal device;
+  enum pbl_bt_errno status;
   union {
     PebbleBLEGATTClientServicesAdded services_added_data;
     PebbleBLEGATTClientServicesRemoved services_removed_data;
@@ -345,7 +345,7 @@ _Static_assert(
 #endif
 
 #define PebbleEventToBTDeviceInternal(e) \
-  ((const BTDeviceInternal){.opaque = {.opaque_64 = (e)->bt_device_bits}})
+  ((const struct pbl_bt_device_internal){.opaque = {.opaque_64 = (e)->bt_device_bits}})
 
 typedef struct PBL_PACKED { // 3 byte?
   bool airplane;

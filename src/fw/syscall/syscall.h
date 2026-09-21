@@ -128,48 +128,51 @@ bool sys_ble_scan_is_scanning(void);
 bool sys_ble_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out);
 int8_t sys_ble_get_advertising_tx_power(void);
 
-BTErrno sys_ble_central_connect(BTDevice device, bool auto_reconnect, bool is_pairing_required);
-BTErrno sys_ble_central_cancel_connect(BTDevice device);
+enum pbl_bt_errno sys_ble_central_connect(struct pbl_bt_device device, bool auto_reconnect,
+                                          bool is_pairing_required);
+enum pbl_bt_errno sys_ble_central_cancel_connect(struct pbl_bt_device device);
 
-BTErrno sys_ble_client_discover_services_and_characteristics(BTDevice device);
-uint8_t sys_ble_client_copy_services(BTDeviceInternal device, BLEService services[],
-                                     uint8_t num_services);
-uint16_t sys_ble_client_get_maximum_value_length(BTDevice device);
-BTErrno sys_ble_client_read(BLECharacteristic characteristic);
+enum pbl_bt_errno sys_ble_client_discover_services_and_characteristics(struct pbl_bt_device device);
+uint8_t sys_ble_client_copy_services(struct pbl_bt_device_internal device,
+                                     pbl_bt_service_t services[], uint8_t num_services);
+uint16_t sys_ble_client_get_maximum_value_length(struct pbl_bt_device device);
+enum pbl_bt_errno sys_ble_client_read(pbl_bt_characteristic_t characteristic);
 bool sys_ble_client_get_notification_value_length(uint16_t *value_length_out);
 void sys_ble_client_consume_read(uintptr_t object_ref, uint8_t value_out[],
                                  uint16_t *value_length_in_out);
 bool sys_ble_client_consume_notification(uintptr_t *object_ref_out, uint8_t value_out[],
                                          uint16_t *value_length_in_out, bool *has_more_out);
-BTErrno sys_ble_client_write(BLECharacteristic characteristic, const uint8_t *value,
-                             size_t value_length);
-BTErrno sys_ble_client_write_without_response(BLECharacteristic characteristic,
-                                              const uint8_t *value, size_t value_length);
-BTErrno sys_ble_client_subscribe(BLECharacteristic characteristic,
-                                 BLESubscription subscription_type);
-BTErrno sys_ble_client_write_descriptor(BLEDescriptor descriptor, const uint8_t *value,
-                                        size_t value_length);
-BTErrno sys_ble_client_read_descriptor(BLEDescriptor descriptor);
+enum pbl_bt_errno sys_ble_client_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                       size_t value_length);
+enum pbl_bt_errno sys_ble_client_write_without_response(pbl_bt_characteristic_t characteristic,
+                                                        const uint8_t *value, size_t value_length);
+enum pbl_bt_errno sys_ble_client_subscribe(pbl_bt_characteristic_t characteristic,
+                                           BLESubscription subscription_type);
+enum pbl_bt_errno sys_ble_client_write_descriptor(pbl_bt_descriptor_t descriptor,
+                                                  const uint8_t *value, size_t value_length);
+enum pbl_bt_errno sys_ble_client_read_descriptor(pbl_bt_descriptor_t descriptor);
 
-uint8_t sys_ble_service_get_characteristics(BLEService service,
-                                            BLECharacteristic characteristics_out[],
+uint8_t sys_ble_service_get_characteristics(pbl_bt_service_t service,
+                                            pbl_bt_characteristic_t characteristics_out[],
                                             uint8_t num_characteristics);
-void sys_ble_service_get_uuid(Uuid *uuid, BLEService service);
-void sys_ble_service_get_device(BTDevice *device, BLEService service);
-uint8_t sys_ble_service_get_included_services(BLEService service,
-                                              BLEService included_services_out[],
+void sys_ble_service_get_uuid(Uuid *uuid, pbl_bt_service_t service);
+void sys_ble_service_get_device(struct pbl_bt_device *device, pbl_bt_service_t service);
+uint8_t sys_ble_service_get_included_services(pbl_bt_service_t service,
+                                              pbl_bt_service_t included_services_out[],
                                               uint8_t num_services);
 
-void sys_ble_characteristic_get_uuid(Uuid *uuid, BLECharacteristic characteristic);
-BLEAttributeProperty sys_ble_characteristic_get_properties(BLECharacteristic characteristic);
-BLEService sys_ble_characteristic_get_service(BLECharacteristic characteristic);
-void sys_ble_characteristic_get_device(BTDevice *device, BLECharacteristic characteristic);
-uint8_t sys_ble_characteristic_get_descriptors(BLECharacteristic characteristic,
-                                               BLEDescriptor descriptors_out[],
+void sys_ble_characteristic_get_uuid(Uuid *uuid, pbl_bt_characteristic_t characteristic);
+enum pbl_bt_attribute_property sys_ble_characteristic_get_properties(
+    pbl_bt_characteristic_t characteristic);
+pbl_bt_service_t sys_ble_characteristic_get_service(pbl_bt_characteristic_t characteristic);
+void sys_ble_characteristic_get_device(struct pbl_bt_device *device,
+                                       pbl_bt_characteristic_t characteristic);
+uint8_t sys_ble_characteristic_get_descriptors(pbl_bt_characteristic_t characteristic,
+                                               pbl_bt_descriptor_t descriptors_out[],
                                                uint8_t num_descriptors);
 
-void sys_ble_descriptor_get_uuid(Uuid *uuid, BLEDescriptor descriptor);
-BLECharacteristic sys_ble_descriptor_get_characteristic(BLEDescriptor descriptor);
+void sys_ble_descriptor_get_uuid(Uuid *uuid, pbl_bt_descriptor_t descriptor);
+pbl_bt_characteristic_t sys_ble_descriptor_get_characteristic(pbl_bt_descriptor_t descriptor);
 
 int16_t sys_event_service_get_plugin_service_index(const Uuid *uuid);
 

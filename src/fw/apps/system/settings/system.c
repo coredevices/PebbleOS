@@ -118,7 +118,7 @@ typedef struct SystemCertificationData {
 
 typedef struct SystemInformationData {
   FirmwareMetadata recovery_fw_metadata;
-  char bt_mac_addr[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE];
+  char bt_mac_addr[PBL_BT_ADDR_FMT_BUFFER_SIZE];
   char boot_version_string[(sizeof(uint32_t) * 2) + 3];
   char recovery_version_string[sizeof(TINTIN_METADATA.version_tag)];
   // Ensure that OTP values are null-terminated

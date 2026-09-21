@@ -53,16 +53,16 @@ void pbl_mutex_unlock(struct pbl_mutex *m) {
   s_mutex_locked = false;
 }
 
-static const char DEVICE_NAME[BT_DEVICE_NAME_BUFFER_SIZE] = "ABCDEFGHIJKLMNOPQRS";
+static const char DEVICE_NAME[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = "ABCDEFGHIJKLMNOPQRS";
 static const char *PAIRING_NAME = "Blah123";
-static const BTDeviceAddress DEVICE_ADDR = {.octets = {0x88, 0x99, 0xaa, 0xbb, 0x00, 0x11}};
+static const struct pbl_bt_addr DEVICE_ADDR = {.octets = {0x88, 0x99, 0xaa, 0xbb, 0x00, 0x11}};
 
-static const SMPairingInfo PAIRING_INFO = (const SMPairingInfo){
+static const struct pbl_bt_sm_pairing_info PAIRING_INFO = (const struct pbl_bt_sm_pairing_info){
   .local_encryption_info =
       {
         .ediv = 123,
         .ltk =
-            (const SMLongTermKey){
+            (const struct pbl_bt_sm_key){
               .data =
                   {
                     0x44,
@@ -89,7 +89,7 @@ static const SMPairingInfo PAIRING_INFO = (const SMPairingInfo){
   .remote_encryption_info =
       {
         .ltk =
-            (const SMLongTermKey){
+            (const struct pbl_bt_sm_key){
               .data =
                   {
                     0x00,
@@ -115,7 +115,7 @@ static const SMPairingInfo PAIRING_INFO = (const SMPairingInfo){
       },
 
   .irk =
-      (const SMIdentityResolvingKey){
+      (const struct pbl_bt_sm_key){
         .data =
             {
               0x88,
@@ -137,7 +137,7 @@ static const SMPairingInfo PAIRING_INFO = (const SMPairingInfo){
             },
       },
   .identity =
-      (const BTDeviceInternal){
+      (const struct pbl_bt_device_internal){
         .opaque.opaque_64 = 0x1122334455667788,
       },
 
@@ -247,7 +247,7 @@ void test_shared_prf_storage_v3__find_first_valid_sector(void) {
 }
 
 void test_shared_prf_storage_v3__wipe_all(void) {
-  SMPairingInfo sm_pairing_info;
+  struct pbl_bt_sm_pairing_info sm_pairing_info;
   memset(&sm_pairing_info, 0xaa, sizeof(sm_pairing_info));
   sm_pairing_info.is_local_encryption_info_valid = true;
   sm_pairing_info.is_remote_signing_info_valid = true;
@@ -276,9 +276,9 @@ void test_shared_prf_storage_v3__ble_pairing(void) {
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME,
                                             false /* requires_address_pinning */, 0 /* flags */);
 
-  char name_out[BT_DEVICE_NAME_BUFFER_SIZE];
+  char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   memset(name_out, 0, sizeof(name_out));
-  SMPairingInfo pairing_info_out = {};
+  struct pbl_bt_sm_pairing_info pairing_info_out = {};
   bool requires_address_pinning_out = true;
   uint8_t flags = 0;
   cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(&pairing_info_out, name_out,
@@ -307,12 +307,14 @@ void test_shared_prf_storage_v3__ble_pairing(void) {
                     pairing_info_out.remote_encryption_info.rand);
   cl_assert_equal_i(PAIRING_INFO.remote_encryption_info.ediv,
                     pairing_info_out.remote_encryption_info.ediv);
-  cl_assert_equal_i(memcmp(&PAIRING_INFO.remote_encryption_info.ltk,
-                           &pairing_info_out.remote_encryption_info.ltk, sizeof(SMLongTermKey)),
+  cl_assert_equal_i(
+      memcmp(&PAIRING_INFO.remote_encryption_info.ltk, &pairing_info_out.remote_encryption_info.ltk,
+             sizeof(struct pbl_bt_sm_key)),
+      0);
+  cl_assert_equal_i(memcmp(&PAIRING_INFO.irk, &pairing_info_out.irk, sizeof(struct pbl_bt_sm_key)),
                     0);
   cl_assert_equal_i(
-      memcmp(&PAIRING_INFO.irk, &pairing_info_out.irk, sizeof(SMIdentityResolvingKey)), 0);
-  cl_assert_equal_i(memcmp(&PAIRING_INFO.csrk, &pairing_info_out.csrk, sizeof(SM128BitKey)), 0);
+      memcmp(&PAIRING_INFO.csrk, &pairing_info_out.csrk, sizeof(struct pbl_bt_sm_key)), 0);
 
   shared_prf_storage_erase_ble_pairing_data();
   cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(NULL, NULL, NULL, NULL), false);
@@ -321,18 +323,20 @@ void test_shared_prf_storage_v3__ble_pairing(void) {
 void test_shared_prf_storage_v3__root_keys(void) {
   shared_prf_storage_wipe_all();
 
-  cl_assert_equal_b(shared_prf_storage_get_root_key(SMRootKeyTypeIdentity, NULL), false);
-  cl_assert_equal_b(shared_prf_storage_get_root_key(SMRootKeyTypeEncryption, NULL), false);
+  cl_assert_equal_b(shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY, NULL), false);
+  cl_assert_equal_b(shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION, NULL),
+                    false);
 
-  SM128BitKey keys[2];
+  struct pbl_bt_sm_key keys[2];
   for (int i = 0; i < sizeof(keys); ++i) {
     ((uint8_t *)keys)[i] = i;
   }
 
   shared_prf_storage_set_root_keys(keys);
 
-  SM128BitKey keys_out[2];
-  for (SMRootKeyType key_type = 0; key_type < SMRootKeyTypeNum; ++key_type) {
+  struct pbl_bt_sm_key keys_out[2];
+  for (enum pbl_bt_sm_root_key_type key_type = 0; key_type < PBL_BT_SM_ROOT_KEY_TYPE_NUM;
+       ++key_type) {
     cl_assert_equal_b(shared_prf_storage_get_root_key(key_type, &keys_out[key_type]), true);
     // It's a byte array inside, so memcmp should be OK to use:
     cl_assert_equal_i(memcmp(&keys[key_type], &keys_out[key_type], sizeof(keys[0])), 0);
@@ -344,7 +348,7 @@ void test_shared_prf_storage_v3__local_device_name(void) {
 
   shared_prf_storage_set_local_device_name(DEVICE_NAME);
 
-  char device_name_out[BT_DEVICE_NAME_BUFFER_SIZE];
+  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   cl_assert_equal_b(
       shared_prf_storage_get_local_device_name(device_name_out, sizeof(device_name_out)), true);
   cl_assert_equal_s(DEVICE_NAME, device_name_out);
@@ -355,7 +359,7 @@ void test_shared_prf_storage_v3__local_device_name(void) {
 void test_shared_prf_storage_v3__local_device_name_NULL_new_erased_field(void) {
   shared_prf_storage_set_local_device_name(DEVICE_NAME);
 
-  char device_name_out[BT_DEVICE_NAME_BUFFER_SIZE];
+  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   cl_assert_equal_b(
       shared_prf_storage_get_local_device_name(device_name_out, sizeof(device_name_out)), true);
   cl_assert_equal_s(DEVICE_NAME, device_name_out);
@@ -372,7 +376,7 @@ void test_shared_prf_storage_v3__local_device_name_NULL_new_erased_field(void) {
 // Test that setting and retrieving a pinned address works.
 void test_shared_prf_storage_v3__pinned_address(void) {
   shared_prf_storage_set_ble_pinned_address(&DEVICE_ADDR);
-  BTDeviceAddress addr_buf;
+  struct pbl_bt_addr addr_buf;
   bool rv = shared_prf_storage_get_ble_pinned_address(&addr_buf);
   cl_assert_equal_b(rv, true);
   cl_assert_equal_m(&DEVICE_ADDR, &addr_buf, sizeof(DEVICE_ADDR));
@@ -414,10 +418,10 @@ void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
   shared_prf_storage_set_local_device_name(DEVICE_NAME);
 
-  char device_name_out[BT_DEVICE_NAME_BUFFER_SIZE];
+  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
   // Check pairing info
-  SMPairingInfo pairing_info_out;
+  struct pbl_bt_sm_pairing_info pairing_info_out;
   bool requires_address_pinning = false;
   uint8_t flags = 0;
   shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out,
@@ -454,10 +458,10 @@ void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_stil
 
   // Check if our old information is still in tact after looping and rewriting a ton of times
 
-  char device_name_out[BT_DEVICE_NAME_BUFFER_SIZE];
+  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
   // Check pairing info
-  SMPairingInfo pairing_info_out;
+  struct pbl_bt_sm_pairing_info pairing_info_out;
   bool requires_address_pinning = false;
   uint8_t flags = 0;
 
@@ -574,8 +578,8 @@ void test_shared_prf_storage_v3__write_ble_data_name_delete_rewrite(void) {
   shared_prf_storage_erase_ble_pairing_data();
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 2);
 
-  char device_name_out[BT_DEVICE_NAME_BUFFER_SIZE];
-  SMPairingInfo pairing_info_out;
+  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+  struct pbl_bt_sm_pairing_info pairing_info_out;
   const bool rv =
       shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out, NULL, NULL);
   cl_assert_equal_b(rv, false);

@@ -15,17 +15,18 @@ typedef enum {
 
 void ppogatt_create(void);
 
-void ppogatt_handle_service_discovered(BLECharacteristic *characteristics);
+void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
 
-bool ppogatt_can_handle_characteristic(BLECharacteristic characteristic);
+bool ppogatt_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
 
-void ppogatt_handle_subscribe(BLECharacteristic subscribed_characteristic,
-                              BLESubscription subscription_type, BLEGATTError error);
+void ppogatt_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
+                              BLESubscription subscription_type, enum pbl_bt_gatt_error error);
 
-void ppogatt_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                         size_t value_length, BLEGATTError error);
+void ppogatt_handle_read_or_notification(pbl_bt_characteristic_t characteristic,
+                                         const uint8_t *value, size_t value_length,
+                                         enum pbl_bt_gatt_error error);
 
-void ppogatt_handle_service_removed(BLECharacteristic *characteristics,
+void ppogatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
                                     uint8_t num_characteristics);
 
 void ppogatt_invalidate_all_references(void);

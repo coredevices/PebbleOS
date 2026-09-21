@@ -70,14 +70,15 @@ static void prv_send_error_response(CommSession *session, uint8_t response) {
 }
 
 static void prv_finish(ScreenshotState *state) {
-  comm_session_set_responsiveness(state->session, BtConsumerPpScreenshot, ResponseTimeMax, 0);
+  comm_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_SCREENSHOT,
+                                  PBL_BT_RESPONSE_TIME_MAX, 0);
   compositor_unfreeze();
   s_screenshot_in_progress = false;
 }
 
 static void prv_request_fast_connection(CommSession *session) {
-  comm_session_set_responsiveness(session, BtConsumerPpScreenshot, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_SCREENSHOT_SECS);
+  comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_SCREENSHOT, PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_SCREENSHOT_SECS);
 }
 
 static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,

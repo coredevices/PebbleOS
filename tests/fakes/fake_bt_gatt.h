@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 //! High-level description of a remote GATT service used by the unit tests. The
-//! fake converts these into the packed GATTService blobs the firmware expects
+//! fake converts these into the packed struct pbl_bt_gatt_service blobs the firmware expects
 //! and pushes them through the pbl_bt_cb_gatt_client_discovery_* contract.
 typedef struct {
   Uuid uuid;
@@ -38,12 +38,12 @@ typedef struct Service {
 
 //! Status codes the tests pass to fake_gatt_put_discovery_complete_event. They
 //! mirror the Bluetopia discovery status values the firmware was originally
-//! tested against; the fake maps them onto the backend BTErrno contract.
+//! tested against; the fake maps them onto the backend enum pbl_bt_errno contract.
 #define GATT_SERVICE_DISCOVERY_STATUS_SUCCESS          (0x00)
 #define GATT_SERVICE_DISCOVERY_STATUS_RESPONSE_TIMEOUT (0x01)
 
 //! An opaque controller-level GATT error code. The driver surfaces it into the
-//! BTErrno space (via BTErrnoWithBluetopiaError) when returned from a discovery
+//! enum pbl_bt_errno space (via PBL_BT_ERRNO_WITH_INTERNAL_ERROR) when returned from a discovery
 //! start/stop, just as the real driver maps internal error codes.
 #define BTGATT_ERROR_INVALID_PARAMETER (0x07)
 
@@ -61,8 +61,8 @@ int fake_gatt_is_service_discovery_start_count(void);
 int fake_gatt_is_service_discovery_stop_count(void);
 
 //! Sets the controller error code that pbl_bt_gatt_start_discovery_range
-//! reports. A non-zero code is surfaced as BTErrnoWithBluetopiaError(code); zero
-//! means success (BTErrnoOK).
+//! reports. A non-zero code is surfaced as PBL_BT_ERRNO_WITH_INTERNAL_ERROR(code); zero
+//! means success (PBL_BT_ERRNO_OK).
 void fake_gatt_set_start_return_value(int ret_value);
 
 //! As fake_gatt_set_start_return_value, but for pbl_bt_gatt_stop_discovery.
@@ -77,10 +77,10 @@ TimerID pbl_bt_gatt_get_watchdog_timer_id(void);
 int fake_gatt_get_service_changed_indication_count(void);
 
 //! @return the device from the most recent pbl_bt_gatt_send_changed_indication call.
-const BTDeviceInternal *fake_gatt_get_service_changed_last_device(void);
+const struct pbl_bt_device_internal *fake_gatt_get_service_changed_last_device(void);
 
 //! @return the ATT handle range from the most recent pbl_bt_gatt_send_changed_indication call.
-ATTHandleRange fake_gatt_get_service_changed_last_range(void);
+struct pbl_bt_att_handle_range fake_gatt_get_service_changed_last_range(void);
 
 //! Feeds a single discovered service to the firmware, as the driver would.
 void fake_gatt_put_discovery_indication_service(unsigned int connection_id, const Service *service);

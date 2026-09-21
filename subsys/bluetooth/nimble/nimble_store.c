@@ -125,7 +125,7 @@ static BleStoreValueSec *prv_nimble_store_upsert_sec(const int obj_type,
 }
 
 static void prv_convert_peer_sec_to_bonding(const struct ble_store_value_sec *value_sec,
-                                            BleBonding *bonding) {
+                                            struct pbl_bt_bonding *bonding) {
   if (value_sec->ltk_present) {
     bonding->pairing_info.is_remote_encryption_info_valid = true;
     bonding->pairing_info.remote_encryption_info.ediv = value_sec->ediv;
@@ -140,7 +140,7 @@ static void prv_convert_peer_sec_to_bonding(const struct ble_store_value_sec *va
 }
 
 static void prv_convert_our_sec_to_bonding(const struct ble_store_value_sec *value_sec,
-                                           BleBonding *bonding) {
+                                           struct pbl_bt_bonding *bonding) {
   if (value_sec->ltk_present) {
     bonding->pairing_info.is_local_encryption_info_valid = true;
     bonding->pairing_info.local_encryption_info.ediv = value_sec->ediv;
@@ -150,7 +150,7 @@ static void prv_convert_our_sec_to_bonding(const struct ble_store_value_sec *val
 }
 
 static void prv_notify_irk_updated(const struct ble_store_value_sec *value_sec) {
-  BleIRKChange irk_change_event;
+  struct pbl_bt_irk_change irk_change_event;
 
   irk_change_event.irk_valid = true;
   memcpy(irk_change_event.irk.data, value_sec->irk, KEY_SIZE);
@@ -163,8 +163,8 @@ static void prv_notify_irk_updated(const struct ble_store_value_sec *value_sec) 
 static void prv_notify_host_bonding_changed(const int obj_type,
                                             const struct ble_store_value_sec *value_sec) {
   int rc;
-  BleBonding bonding;
-  BTDeviceAddress addr;
+  struct pbl_bt_bonding bonding;
+  struct pbl_bt_addr addr;
   struct ble_store_key_sec key_sec;
   struct ble_store_value_sec existing_value_sec;
 
@@ -234,11 +234,10 @@ static void prv_handle_sec_written_cb(void *data) {
 
 static int prv_nimble_store_write_sec(const int obj_type,
                                       const struct ble_store_value_sec *value_sec) {
-  BTDeviceAddress addr;
+  struct pbl_bt_addr addr;
 
   nimble_addr_to_pebble_addr(&value_sec->peer_addr, &addr);
-  PBL_LOG_INFO("SEC write: obj=%d addr=" BT_DEVICE_ADDRESS_FMT, obj_type,
-               BT_DEVICE_ADDRESS_XPLODE(addr));
+  PBL_LOG_INFO("SEC write: obj=%d addr=" PBL_BT_ADDR_FMT, obj_type, PBL_BT_ADDR_XPLODE(addr));
   PBL_LOG_INFO("SEC write: atype=%u ltk=%u irk=%u csrk=%u sc=%u auth=%u ksz=%u",
                value_sec->peer_addr.type, value_sec->ltk_present, value_sec->irk_present,
                value_sec->csrk_present, value_sec->sc, value_sec->authenticated,
@@ -262,7 +261,7 @@ static int prv_nimble_store_write_sec(const int obj_type,
 }
 
 static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_sec *key_sec) {
-  BTDeviceInternal device;
+  struct pbl_bt_device_internal device;
   BleStoreValueSec *s;
   ListNode **sec_list = prv_find_sec_list_for_obj_type(obj_type);
 
@@ -284,8 +283,8 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
   kernel_free(s);
 
   nimble_addr_to_pebble_device(&key_sec->peer_addr, &device);
-  PBL_LOG_INFO("SEC delete: obj=%d addr=" BT_DEVICE_ADDRESS_FMT, obj_type,
-               BT_DEVICE_ADDRESS_XPLODE(device.address));
+  PBL_LOG_INFO("SEC delete: obj=%d addr=" PBL_BT_ADDR_FMT, obj_type,
+               PBL_BT_ADDR_XPLODE(device.address));
   bt_persistent_storage_delete_ble_pairing_by_addr(&device);
 
   return 0;
@@ -363,8 +362,8 @@ static void prv_nimble_store_insert_cccd(const struct ble_store_value_cccd *valu
 }
 
 static int prv_nimble_store_write_cccd(const struct ble_store_value_cccd *value_cccd) {
-  BleCCCD cccd;
-  BTCCCDID cccd_id;
+  struct pbl_bt_cccd cccd;
+  pbl_bt_cccd_id_t cccd_id;
 
   nimble_addr_to_pebble_device(&value_cccd->peer_addr, &cccd.peer);
   cccd.chr_val_handle = value_cccd->chr_val_handle;
@@ -372,7 +371,7 @@ static int prv_nimble_store_write_cccd(const struct ble_store_value_cccd *value_
   cccd.value_changed = value_cccd->value_changed;
 
   cccd_id = bt_persistent_storage_store_cccd(&cccd);
-  if (cccd_id == BT_CCCD_ID_INVALID) {
+  if (cccd_id == PBL_BT_CCCD_ID_INVALID) {
     return BLE_HS_ESTORE_CAP;
   }
 
@@ -386,7 +385,7 @@ static int prv_nimble_store_write_cccd(const struct ble_store_value_cccd *value_
 static int prv_nimble_store_delete_cccd(const struct ble_store_key_cccd *key_cccd) {
   bool res;
   int ret = 0;
-  BTDeviceInternal peer;
+  struct pbl_bt_device_internal peer;
   BleStoreValueCCCD *s;
 
   nimble_addr_to_pebble_device(&key_cccd->peer_addr, &peer);
@@ -451,10 +450,10 @@ static int prv_nimble_store_delete(int obj_type, const union ble_store_key *key)
 
 static int prv_nimble_store_gen_key(uint8_t key, struct ble_store_gen_key *gen_key,
                                     uint16_t conn_handle) {
-  SM128BitKey stored_keys[SMRootKeyTypeNum];
+  struct pbl_bt_sm_key stored_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
 
-  if (!bt_persistent_storage_get_root_key(SMRootKeyTypeIdentity,
-                                          &stored_keys[SMRootKeyTypeIdentity])) {
+  if (!bt_persistent_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
+                                          &stored_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
     int ret;
 
     ret = ble_hs_hci_rand(stored_keys, sizeof(stored_keys));
@@ -468,7 +467,7 @@ static int prv_nimble_store_gen_key(uint8_t key, struct ble_store_gen_key *gen_k
 
   switch (key) {
     case BLE_STORE_GEN_KEY_IRK:
-      memcpy(gen_key->irk, stored_keys[SMRootKeyTypeIdentity].data, KEY_SIZE);
+      memcpy(gen_key->irk, stored_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY].data, KEY_SIZE);
       break;
     default:
       return BLE_HS_ENOTSUP;
@@ -503,7 +502,7 @@ void nimble_store_unload(void) {
   pbl_mutex_unlock(&s_store_mutex);
 }
 
-static void prv_convert_bonding_remote_to_store_val(const BleBonding *bonding,
+static void prv_convert_bonding_remote_to_store_val(const struct pbl_bt_bonding *bonding,
                                                     struct ble_store_value_sec *value_sec) {
   memset(value_sec, 0, sizeof(struct ble_store_value_sec));
 
@@ -527,7 +526,7 @@ static void prv_convert_bonding_remote_to_store_val(const BleBonding *bonding,
   pebble_device_to_nimble_addr(&bonding->pairing_info.identity, &value_sec->peer_addr);
 }
 
-static void prv_convert_bonding_local_to_store_val(const BleBonding *bonding,
+static void prv_convert_bonding_local_to_store_val(const struct pbl_bt_bonding *bonding,
                                                    struct ble_store_value_sec *value_sec) {
   memset(value_sec, 0, sizeof(struct ble_store_value_sec));
 
@@ -546,11 +545,11 @@ static void prv_convert_bonding_local_to_store_val(const BleBonding *bonding,
   pebble_device_to_nimble_addr(&bonding->pairing_info.identity, &value_sec->peer_addr);
 }
 
-void pbl_bt_handle_host_added_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_added_bonding(const struct pbl_bt_bonding *bonding) {
   struct ble_store_value_sec value_sec;
 
-  PBL_LOG_INFO("Host added bonding: addr=" BT_DEVICE_ADDRESS_FMT " random=%u",
-               BT_DEVICE_ADDRESS_XPLODE(bonding->pairing_info.identity.address),
+  PBL_LOG_INFO("Host added bonding: addr=" PBL_BT_ADDR_FMT " random=%u",
+               PBL_BT_ADDR_XPLODE(bonding->pairing_info.identity.address),
                bonding->pairing_info.identity.is_random_address);
   PBL_LOG_INFO("Host added bonding: remote_enc=%u local_enc=%u irk=%u",
                bonding->pairing_info.is_remote_encryption_info_valid,
@@ -564,12 +563,12 @@ void pbl_bt_handle_host_added_bonding(const BleBonding *bonding) {
   prv_nimble_store_upsert_sec(BLE_STORE_OBJ_TYPE_OUR_SEC, &value_sec);
 }
 
-void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_removed_bonding(const struct pbl_bt_bonding *bonding) {
   BleStoreValueSec *s_sec;
   struct ble_store_key_sec key_sec;
 
-  PBL_LOG_INFO("Host removed bonding: addr=" BT_DEVICE_ADDRESS_FMT " random=%u",
-               BT_DEVICE_ADDRESS_XPLODE(bonding->pairing_info.identity.address),
+  PBL_LOG_INFO("Host removed bonding: addr=" PBL_BT_ADDR_FMT " random=%u",
+               PBL_BT_ADDR_XPLODE(bonding->pairing_info.identity.address),
                bonding->pairing_info.identity.is_random_address);
 
   key_sec.idx = 0;
@@ -592,7 +591,7 @@ void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding) {
   pbl_mutex_unlock(&s_store_mutex);
 }
 
-void pbl_bt_handle_host_added_cccd(const BleCCCD *cccd) {
+void pbl_bt_handle_host_added_cccd(const struct pbl_bt_cccd *cccd) {
   struct ble_store_value_cccd value_cccd;
 
   pebble_device_to_nimble_addr(&cccd->peer, &value_cccd.peer_addr);
@@ -605,7 +604,7 @@ void pbl_bt_handle_host_added_cccd(const BleCCCD *cccd) {
   pbl_mutex_unlock(&s_store_mutex);
 }
 
-void pbl_bt_handle_host_removed_cccd(const BleCCCD *cccd) {
+void pbl_bt_handle_host_removed_cccd(const struct pbl_bt_cccd *cccd) {
   BleStoreValueCCCD *s;
   struct ble_store_key_cccd key_cccd;
 

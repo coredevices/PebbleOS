@@ -39,7 +39,7 @@ static struct pbl_thread *s_host_task_handle;
 PBL_THREAD_STACK_DEFINE(s_host_task_stack, 5000);
 static PBL_SEM_DEFINE(s_host_started, 0, 1);
 static PBL_SEM_DEFINE(s_host_stopped, 0, 1);
-static DisInfo s_dis_info;
+static struct pbl_bt_dis_info s_dis_info;
 static struct ble_hs_stop_listener s_listener;
 
 typedef enum {
@@ -118,7 +118,7 @@ void pbl_bt_init(void) {
 #endif
 }
 
-bool pbl_bt_start(BTDriverConfig *config) {
+bool pbl_bt_start(struct pbl_bt_config *config) {
   int rc;
   bool f_rc;
 

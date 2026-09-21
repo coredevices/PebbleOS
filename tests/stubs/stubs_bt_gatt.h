@@ -8,8 +8,8 @@
 
 // TODO: Rethink how we want to stub out these new driver wrapper calls.
 
-void pbl_bt_gatt_send_changed_indication(const BTDeviceInternal *device,
-                                         const ATTHandleRange *data) {
+void pbl_bt_gatt_send_changed_indication(const struct pbl_bt_device_internal *device,
+                                         const struct pbl_bt_att_handle_range *data) {
   GATT_Service_Changed_Data_t all_changed_range = {
     .Affected_Start_Handle = data->start,
     .Affected_End_Handle = data->end,

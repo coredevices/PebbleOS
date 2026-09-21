@@ -18,7 +18,7 @@ typedef struct {
   Window window;
   QRCode qr_code;
   TextLayer mac_label;
-  char mac_buffer[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE];
+  char mac_buffer[PBL_BT_ADDR_FMT_BUFFER_SIZE];
 } AppData;
 
 static void prv_handle_init(void) {

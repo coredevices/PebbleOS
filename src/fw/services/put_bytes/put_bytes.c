@@ -139,7 +139,7 @@ typedef struct {
 
   //! the time in ticks at which the put bytes init request completed
   RtcTicks start_ticks;
-  SlaveConnEventStats conn_event_stats;
+  struct pbl_bt_slave_conn_event_stats conn_event_stats;
 
   //! Holds PB commands. Will enqueue multiple PutRequests when pre-acking is enabled
   PutBytesPendingJobs pb_pending_jobs;
@@ -311,9 +311,9 @@ static bool prv_init_put_job_queue_if_necessary(void) {
   return true;
 }
 
-static void prv_set_responsiveness(ResponseTimeState state, uint16_t timeout_secs) {
-  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes, state,
-                                  timeout_secs);
+static void prv_set_responsiveness(enum pbl_bt_response_time_state state, uint16_t timeout_secs) {
+  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                  state, timeout_secs);
 }
 
 static void prv_send_nack_from_system_task(void *data) {
@@ -342,13 +342,13 @@ static void prv_cleanup(void) {
 
   pb_storage_deinit(&s_pb_state.storage, s_pb_state.is_success);
 
-  // Stay at ResponseTimeMin for a bit so that we don't force a quick transition between
+  // Stay at PBL_BT_RESPONSE_TIME_MIN for a bit so that we don't force a quick transition between
   // Min -> Max -> Min. The Dialog chip would disconnect with reasons 0x1f. Also, it doesn't really
   // make sense to transition for just 2 seconds anyways. However, during an App/File install
   // PutBytes, we will stay at Min for an extra 10 seconds after the entire transaction is
   // completed. Marginal power hit, but shouldn't happen often since PutBytes itself doesn't
   // happen too often.
-  prv_set_responsiveness(ResponseTimeMin, 10);
+  prv_set_responsiveness(PBL_BT_RESPONSE_TIME_MIN, 10);
 
   PebbleEvent event = {
     .type = PEBBLE_PUT_BYTES_EVENT,
@@ -1223,7 +1223,7 @@ void prv_receiver_finish(Receiver *receiver) {
   }
 
   // We are still processing PB data, keep the BT connection fast
-  prv_set_responsiveness(ResponseTimeMin, MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+  prv_set_responsiveness(PBL_BT_RESPONSE_TIME_MIN, PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
 
   prv_finalize_pb_job();
   if (prv_receiver_contains_put_request()) {

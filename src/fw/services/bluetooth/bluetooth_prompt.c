@@ -15,7 +15,7 @@
 #include <pbl/bluetooth/id.h>
 
 void command_bt_print_mac(void) {
-  char addr_hex_str[BT_ADDR_FMT_BUFFER_SIZE_BYTES];
+  char addr_hex_str[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE];
   bt_local_id_copy_address_hex_string(addr_hex_str);
   prompt_send_response(addr_hex_str);
 }
@@ -51,14 +51,14 @@ void command_bt_status(void) {
   pbl_bt_id_copy_chip_info_string(buffer + prefix_length, sizeof(buffer) - prefix_length);
   prompt_send_response(buffer);
 
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   bt_lock();
   bool connected = false;
   GAPLEConnection *connection = gap_le_connection_any();
   if (connection) {
     const char *device_name = connection->device_name ?: "<Unknown>";
-    strncpy(name, device_name, BT_DEVICE_NAME_BUFFER_SIZE);
-    name[BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
+    strncpy(name, device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
+    name[PBL_BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
     connected = true;
   }
   bt_unlock();

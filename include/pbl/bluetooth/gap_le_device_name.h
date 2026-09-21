@@ -7,7 +7,7 @@
 
 //! Bluetooth LE GAP Device name APIs
 void pbl_bt_gap_le_device_name_request_all(void);
-void pbl_bt_gap_le_device_name_request(const BTDeviceInternal *address);
+void pbl_bt_gap_le_device_name_request(const struct pbl_bt_device_internal *address);
 
 //! The caller is expected to have implemented:
 //! ctx will be kernel_free()'d

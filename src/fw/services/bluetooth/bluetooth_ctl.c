@@ -54,7 +54,7 @@ bool bt_ctl_is_bluetooth_running(void) {
 
 static void prv_put_disconnection_event(void) {
   PebbleEvent event = (PebbleEvent){
-    .type = PEBBLE_BT_CONNECTION_EVENT,
+    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
     .bluetooth.connection = {
       .is_ble = true,
       .state = PebbleBluetoothConnectionEventStateDisconnected,
@@ -69,7 +69,7 @@ static void prv_comm_start(void) {
     return;
   }
   // Heap allocated to reduce stack usage
-  BTDriverConfig *config = kernel_zalloc_check(sizeof(BTDriverConfig));
+  struct pbl_bt_config *config = kernel_zalloc_check(sizeof(struct pbl_bt_config));
   dis_get_info(&config->dis_info);
 #if defined(CONFIG_HRM) && !defined(CONFIG_RECOVERY_FW)
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
@@ -119,7 +119,7 @@ static void prv_comm_stop(void) {
 static void prv_send_state_change_event(void) {
   PBL_LOG_DBG("----> Sending a BT state event");
   PebbleEvent event = {
-    .type = PEBBLE_BT_STATE_EVENT,
+    .type = PBL_BT_PEBBLE_STATE_EVENT,
     .bluetooth = {
       .state = {
         .airplane = s_comm_airplane_mode_on,

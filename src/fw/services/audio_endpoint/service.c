@@ -42,7 +42,8 @@ static void prv_session_deinit(bool call_stop_handler) {
     new_timer_delete(s_session.active_mode_trigger);
     s_session.active_mode_trigger = TIMER_INVALID_ID;
     CommSession *comm_session = comm_session_get_system_session();
-    comm_session_set_responsiveness(comm_session, BtConsumerPpAudioEndpoint, ResponseTimeMax, 0);
+    comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT,
+                                    PBL_BT_RESPONSE_TIME_MAX, 0);
   }
 
   s_session.id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
@@ -69,9 +70,9 @@ void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
 
 static void prv_start_active_mode(void *data) {
   CommSession *comm_session = comm_session_get_system_session();
-  comm_session_set_responsiveness_ext(comm_session, BtConsumerPpAudioEndpoint, ResponseTimeMin,
-                                      MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS,
-                                      NULL /* granted_handler */);
+  comm_session_set_responsiveness_ext(
+      comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT, PBL_BT_RESPONSE_TIME_MIN,
+      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS, NULL /* granted_handler */);
 }
 
 //! Never block on bt_lock from the timer task (comm_session_set_responsiveness_ext

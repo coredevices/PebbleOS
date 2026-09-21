@@ -8,7 +8,7 @@
 
 #include <pbl/bluetooth/types.h>
 
-bool fake_HCIAPI_whitelist_contains(const BTDeviceInternal *device);
+bool fake_HCIAPI_whitelist_contains(const struct pbl_bt_device_internal *device);
 
 uint32_t fake_HCIAPI_whitelist_count(void);
 

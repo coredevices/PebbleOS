@@ -8,8 +8,8 @@
 #include <pbl/bluetooth/sm_types.h>
 
 //! Packed, because this is serialized for the host-controller protocol.
-typedef struct PBL_PACKED BleBonding {
-  SMPairingInfo pairing_info;
+struct PBL_PACKED pbl_bt_bonding {
+  struct pbl_bt_sm_pairing_info pairing_info;
   //! True if the remote device is capable of talking PPoGATT.
   bool is_gateway : 1;
 
@@ -23,36 +23,37 @@ typedef struct PBL_PACKED BleBonding {
   uint8_t rsvd : 1;
 
   //! Valid iff should_pin_address is true
-  BTDeviceAddress pinned_address;
-} BleBonding;
+  struct pbl_bt_addr pinned_address;
+};
 
-typedef struct PBL_PACKED BleCCCD {
+struct PBL_PACKED pbl_bt_cccd {
   //! The peer device.
-  BTDeviceInternal peer;
+  struct pbl_bt_device_internal peer;
   //! The characteristic value handle that this CCCD is associated with.
   uint16_t chr_val_handle;
   //! Flags for the CCCD.
   uint16_t flags;
   //! True if the value has changed.
   bool value_changed : 1;
-} BleCCCD;
+};
 
 //! Called by the FW after starting the Bluetooth stack to register existing bondings.
 //! @note When the Bluetooth is torn down, there won't be any "remove" calls. If needed, the BT
 //! driver lib should clean up itself in pbl_bt_stop().
-void pbl_bt_handle_host_added_bonding(const BleBonding *bonding);
+void pbl_bt_handle_host_added_bonding(const struct pbl_bt_bonding *bonding);
 
 //! Called by the FW when a bonding is removed (i.e. user "Forgot" a bonding from Settings).
-void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding);
+void pbl_bt_handle_host_removed_bonding(const struct pbl_bt_bonding *bonding);
 
 //! Called by the FW when a CCCD entry is added.
-void pbl_bt_handle_host_added_cccd(const BleCCCD *cccd);
+void pbl_bt_handle_host_added_cccd(const struct pbl_bt_cccd *cccd);
 
 //! Called by the FW when a CCCD entry is removed.
-void pbl_bt_handle_host_removed_cccd(const BleCCCD *cccd);
+void pbl_bt_handle_host_removed_cccd(const struct pbl_bt_cccd *cccd);
 
 //! Called by the BT driver after successfully pairing a new device.
 //! @param bonding The newly created bonding.
 //! @param addr The address that is used to refer to the connection. This is used to associate
 //! the bonding with the GAPLEConnection.
-extern void pbl_bt_cb_handle_create_bonding(const BleBonding *bonding, const BTDeviceAddress *addr);
+extern void pbl_bt_cb_handle_create_bonding(const struct pbl_bt_bonding *bonding,
+                                            const struct pbl_bt_addr *addr);

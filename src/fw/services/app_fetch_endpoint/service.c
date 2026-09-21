@@ -335,8 +335,9 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) 
 
   // Start "warming up" the connection, this will cause the low-latency period to start ~1s sooner.
   // Put bytes will extend the low-latency period after this:
-  comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpAppFetch,
-                                  ResponseTimeMin, MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS);
+  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_APP_FETCH,
+                                  PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS);
 
   system_task_add_callback(prv_app_fetch_binaries_system_task_cb, request);
 }

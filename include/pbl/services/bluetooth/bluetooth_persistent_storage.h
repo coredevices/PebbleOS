@@ -28,46 +28,49 @@ typedef enum {
 } BtPersistBondingType;
 
 //! Signature of function that handles changes in the pairing database
-typedef void (*BtPersistBondingChangeHandler)(BTBondingID affected_bonding,
+typedef void (*BtPersistBondingChangeHandler)(pbl_bt_bonding_id_t affected_bonding,
                                               BtPersistBondingOp operation);
 
-typedef void (*BtPersistBondingDBEachBLE)(BTDeviceInternal *device, SMIdentityResolvingKey *irk,
-                                          const char *name, BTBondingID *id, void *context);
+typedef void (*BtPersistBondingDBEachBLE)(struct pbl_bt_device_internal *device,
+                                          struct pbl_bt_sm_key *irk, const char *name,
+                                          pbl_bt_bonding_id_t *id, void *context);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Info
 
 bool bt_persistent_storage_has_pinned_ble_pairings(void);
 
-bool bt_persistent_storage_set_ble_pinned_address(const BTDeviceAddress *address);
+bool bt_persistent_storage_set_ble_pinned_address(const struct pbl_bt_addr *address);
 
-bool bt_persistent_storage_get_ble_pinned_address(BTDeviceAddress *address_out);
+bool bt_persistent_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out);
 
-BTBondingID bt_persistent_storage_store_ble_pairing(const SMPairingInfo *pairing_info,
-                                                    bool is_gateway, const char *device_name,
-                                                    bool requires_address_pinning, uint8_t flags);
+pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
+    const struct pbl_bt_sm_pairing_info *pairing_info, bool is_gateway, const char *device_name,
+    bool requires_address_pinning, uint8_t flags);
 
-bool bt_persistent_storage_update_ble_device_name(BTBondingID bonding, const char *device_name);
+bool bt_persistent_storage_update_ble_device_name(pbl_bt_bonding_id_t bonding,
+                                                  const char *device_name);
 
-void bt_persistent_storage_delete_ble_pairing_by_id(BTBondingID);
+void bt_persistent_storage_delete_ble_pairing_by_id(pbl_bt_bonding_id_t);
 
-void bt_persistent_storage_delete_ble_pairing_by_addr(const BTDeviceInternal *device);
+void bt_persistent_storage_delete_ble_pairing_by_addr(const struct pbl_bt_device_internal *device);
 
-bool bt_persistent_storage_get_ble_pairing_by_id(BTBondingID bonding,
-                                                 SMIdentityResolvingKey *IRK_out,
-                                                 BTDeviceInternal *device_out, char *name_out);
+bool bt_persistent_storage_get_ble_pairing_by_id(pbl_bt_bonding_id_t bonding,
+                                                 struct pbl_bt_sm_key *IRK_out,
+                                                 struct pbl_bt_device_internal *device_out,
+                                                 char *name_out);
 
-bool bt_persistent_storage_get_ble_pairing_by_addr(const BTDeviceInternal *device,
-                                                   SMIdentityResolvingKey *IRK_out,
-                                                   char name_out[BT_DEVICE_NAME_BUFFER_SIZE]);
+bool bt_persistent_storage_get_ble_pairing_by_addr(const struct pbl_bt_device_internal *device,
+                                                   struct pbl_bt_sm_key *IRK_out,
+                                                   char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE]);
 
 //! Returns the first ANCS supported bonding that is found
 //! The case of having multiple supported ANCS bondings isn't handled well yet.
 //! When this happens this could easily be changed to a for_each_ancs_supported_bonding(cb)
-BTBondingID bt_persistent_storage_get_ble_ancs_bonding(void);
+pbl_bt_bonding_id_t bt_persistent_storage_get_ble_ancs_bonding(void);
 
 //! Returns true if the bondings is BLE and supports ANCS
-bool bt_persistent_storage_is_ble_ancs_bonding(BTBondingID bonding);
+bool bt_persistent_storage_is_ble_ancs_bonding(pbl_bt_bonding_id_t bonding);
 
 //! Returns true if there exists a BLE bonding which supports ANCS
 bool bt_persistent_storage_has_ble_ancs_bonding(void);
@@ -83,9 +86,10 @@ void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, vo
 //! Registers all the existing BLE bondings with the BT driver lib.
 void bt_persistent_storage_register_existing_ble_bondings(void);
 
-BTCCCDID bt_persistent_storage_store_cccd(const BleCCCD *cccd);
+pbl_bt_cccd_id_t bt_persistent_storage_store_cccd(const struct pbl_bt_cccd *cccd);
 
-bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t chr_val_handle);
+bool bt_persistent_storage_delete_cccd(const struct pbl_bt_device_internal *peer,
+                                       uint16_t chr_val_handle);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Local Device Info
@@ -93,11 +97,11 @@ bool bt_persistent_storage_delete_cccd(const BTDeviceInternal *peer, uint16_t ch
 //! Updates the active gateway (the gateway which implements PP)
 //! This bonding is used for BT Classic reconnection as well
 //! @param bonding The desired active gateway
-void bt_persistent_storage_set_active_gateway(BTBondingID bonding);
+void bt_persistent_storage_set_active_gateway(pbl_bt_bonding_id_t bonding);
 
 //! Returns false if no active gateway exists, true if one does exist
 //! bonding_out and type_out are only valid when this function returns true;
-bool bt_persistent_storage_get_active_gateway(BTBondingID *bonding_out,
+bool bt_persistent_storage_get_active_gateway(pbl_bt_bonding_id_t *bonding_out,
                                               BtPersistBondingType *type_out);
 
 //! Returns true when the active gateway is changed until a sync happens
@@ -110,10 +114,11 @@ void bt_persistent_storage_set_unfaithful(bool is_unfaithful);
 //! @param key_out Storage into which ER or IR should be copied.
 //! @param key_type The type of key to copy
 //! @return true if ER and IR are copied, false if there are no keys have been found to copy.
-bool bt_persistent_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key_out);
+bool bt_persistent_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
+                                        struct pbl_bt_sm_key *key_out);
 
 //! Stores new BLE Encryption Root (ER) and Identity Root (IR) keys
-void bt_persistent_storage_set_root_keys(SM128BitKey *keys_in);
+void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in);
 
 //! @param local_device_name_out Storage for the local device name.
 //! @param max_size Size of the local_device_name_out buffer

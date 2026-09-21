@@ -375,7 +375,7 @@ static void prv_event_handler(PebbleEvent *event, void *context) {
             event->bluetooth.comm_session_event.is_open;
       }
       break;
-    case PEBBLE_BT_STATE_EVENT:
+    case PBL_BT_PEBBLE_STATE_EVENT:
       settings_glance->glance_state.is_airplane_mode_enabled = bt_ctl_is_airplane_mode_on();
       break;
     case PEBBLE_DO_NOT_DISTURB_EVENT:
@@ -465,7 +465,7 @@ LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) 
                          PEBBLE_BATTERY_STATE_CHANGE_EVENT, structured_glance);
   prv_subscribe_to_event(&settings_glance->pebble_app_event_info, PEBBLE_COMM_SESSION_EVENT,
                          structured_glance);
-  prv_subscribe_to_event(&settings_glance->airplane_mode_event_info, PEBBLE_BT_STATE_EVENT,
+  prv_subscribe_to_event(&settings_glance->airplane_mode_event_info, PBL_BT_PEBBLE_STATE_EVENT,
                          structured_glance);
   prv_subscribe_to_event(&settings_glance->quiet_time_event_info, PEBBLE_DO_NOT_DISTURB_EVENT,
                          structured_glance);

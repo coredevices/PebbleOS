@@ -88,9 +88,10 @@ void meta_endpoint_send_response_async(const MetaResponseInfo *meta_response_inf
 
 static void prv_send_next(Transport *transport);
 static void prv_reset(Transport *transport);
-static void prv_set_connection_responsiveness(Transport *transport, BtConsumer consumer,
-                                              ResponseTimeState state, uint16_t max_period_secs,
-                                              ResponsivenessGrantedHandler granted_handler);
+static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_consumer consumer,
+                                              enum pbl_bt_response_time_state state,
+                                              uint16_t max_period_secs,
+                                              pbl_bt_responsiveness_granted_cb_t granted_handler);
 
 CommSession *s_session;
 
@@ -108,9 +109,10 @@ static void prv_send_next(Transport *transport) {
 static void prv_reset(Transport *transport) {
 }
 
-static void prv_set_connection_responsiveness(Transport *transport, BtConsumer consumer,
-                                              ResponseTimeState state, uint16_t max_period_secs,
-                                              ResponsivenessGrantedHandler granted_handler) {
+static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_consumer consumer,
+                                              enum pbl_bt_response_time_state state,
+                                              uint16_t max_period_secs,
+                                              pbl_bt_responsiveness_granted_cb_t granted_handler) {
 }
 
 // Referenced from protocol_endpoints_table.auto.h override header:

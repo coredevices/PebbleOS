@@ -7,12 +7,13 @@
 
 //! Callback that is called for each connection and disconnection event.
 //! @param device The device that got (dis)connected
-//! @param connection_status BTErrnoConnected if connected, otherwise the
-//! reason for the disconnection: BTErrnoConnectionTimeout,
-//! BTErrnoRemotelyTerminated, BTErrnoLocallyTerminatedBySystem or
-//! BTErrnoLocallyTerminatedByApp.
+//! @param connection_status PBL_BT_ERRNO_CONNECTED if connected, otherwise the
+//! reason for the disconnection: PBL_BT_ERRNO_CONNECTION_TIMEOUT,
+//! PBL_BT_ERRNO_REMOTELY_TERMINATED, PBL_BT_ERRNO_LOCALLY_TERMINATED_BY_SYSTEM or
+//! PBL_BT_ERRNO_LOCALLY_TERMINATED_BY_APP.
 //! @note See additional notes with ble_central_set_connection_handler()
-typedef void (*BLEConnectionHandler)(BTDevice device, BTErrno connection_status);
+typedef void (*BLEConnectionHandler)(struct pbl_bt_device device,
+                                     enum pbl_bt_errno connection_status);
 
 //! Registers the connection event handler of the application.
 //! This event handler will be called when connections and disconnection occur,
@@ -24,8 +25,8 @@ typedef void (*BLEConnectionHandler)(BTDevice device, BTErrno connection_status)
 //! system will attempt to initiate a connection to the device again.
 //! If this is called again, the previous handler will be unregistered.
 //! @param handler The connection event handler of the application
-//! @return Always returns BTErrnoOK.
-BTErrno ble_central_set_connection_handler(BLEConnectionHandler handler);
+//! @return Always returns PBL_BT_ERRNO_OK.
+enum pbl_bt_errno ble_central_set_connection_handler(BLEConnectionHandler handler);
 
 //! Attempts to initiate a connection from the application to another device.
 //! In case there is no Bluetooth connection to the device yet, this function
@@ -57,14 +58,15 @@ BTErrno ble_central_set_connection_handler(BLEConnectionHandler handler);
 //! pairing process. If the application does not require pairing, set to false.
 //! @note It is possible that encryption is still enabled, even if the
 //! application did not require this.
-//! @return BTErrnoOK if the intent to connect was processed successfully, or
+//! @return PBL_BT_ERRNO_OK if the intent to connect was processed successfully, or
 //! ... TODO
-BTErrno ble_central_connect(BTDevice device, bool auto_reconnect, bool is_pairing_required);
+enum pbl_bt_errno ble_central_connect(struct pbl_bt_device device, bool auto_reconnect,
+                                      bool is_pairing_required);
 
 //! Attempts to cancel the connection, as initiated by ble_central_connect().
 //! The underlying Bluetooth connection might not be disconnected if the
 //! connection is still in use by the system. However, as far as the application
 //! is concerned, the device is disconnected and the connection handler will
-//! be called with BTErrnoLocallyTerminatedByApp.
-//! @return BTErrnoOK if the cancelling was successful, or ... TODO
-BTErrno ble_central_cancel_connect(BTDevice device);
+//! be called with PBL_BT_ERRNO_LOCALLY_TERMINATED_BY_APP.
+//! @return PBL_BT_ERRNO_OK if the cancelling was successful, or ... TODO
+enum pbl_bt_errno ble_central_cancel_connect(struct pbl_bt_device device);

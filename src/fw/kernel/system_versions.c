@@ -39,7 +39,7 @@ struct PBL_PACKED VersionsMessage {
   uint32_t boot_version;
   char hw_version[MFG_HW_VERSION_SIZE];
   char serial_number[MFG_SERIAL_NUMBER_SIZE];
-  BTDeviceAddress device_address;
+  struct pbl_bt_addr device_address;
   ResourceVersion system_resources_version;
   char iso_locale[ISO_LOCALE_LENGTH];
   uint16_t lang_version;

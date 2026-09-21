@@ -9,9 +9,9 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 
-BTBondingID prv_get_bonding_id_and_name_from_address_safe(void *ctx, char *device_name) {
-  BTBondingID bonding_id = BT_BONDING_ID_INVALID;
-  BTDeviceAddress *addr = (BTDeviceAddress *)ctx;
+pbl_bt_bonding_id_t prv_get_bonding_id_and_name_from_address_safe(void *ctx, char *device_name) {
+  pbl_bt_bonding_id_t bonding_id = PBL_BT_BONDING_ID_INVALID;
+  struct pbl_bt_addr *addr = (struct pbl_bt_addr *)ctx;
   GAPLEConnection *connection = gap_le_connection_by_addr(addr);
 
   bt_lock();
@@ -22,8 +22,8 @@ BTBondingID prv_get_bonding_id_and_name_from_address_safe(void *ctx, char *devic
   bonding_id = connection->bonding_id;
 
   if (device_name) {
-    strncpy(device_name, connection->device_name, BT_DEVICE_NAME_BUFFER_SIZE);
-    device_name[BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
+    strncpy(device_name, connection->device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
+    device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
   }
 
 unlock:
@@ -32,11 +32,11 @@ unlock:
 }
 
 void pbl_bt_store_device_name_kernelbg_cb(void *ctx) {
-  char device_name[BT_DEVICE_NAME_BUFFER_SIZE];
-  BTBondingID bonding_id = prv_get_bonding_id_and_name_from_address_safe(ctx, device_name);
+  char device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+  pbl_bt_bonding_id_t bonding_id = prv_get_bonding_id_and_name_from_address_safe(ctx, device_name);
   kernel_free(ctx);
 
-  if (bonding_id == BT_BONDING_ID_INVALID) {
+  if (bonding_id == PBL_BT_BONDING_ID_INVALID) {
     return;
   }
 
@@ -57,7 +57,7 @@ void gap_le_device_name_request_all(void) {
   bt_unlock();
 }
 
-void gap_le_device_name_request(const BTDeviceInternal *address) {
+void gap_le_device_name_request(const struct pbl_bt_device_internal *address) {
   bt_lock();
   pbl_bt_gap_le_device_name_request(address);
   bt_unlock();

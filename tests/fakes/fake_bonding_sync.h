@@ -14,12 +14,12 @@
 
 typedef struct {
   ListNode node;
-  BleBonding bonding;
+  struct pbl_bt_bonding bonding;
 } BLEBondingNode;
 
 static BLEBondingNode *s_ble_bonding_head;
 
-void bonding_sync_add_bonding(const BleBonding *bonding) {
+void bonding_sync_add_bonding(const struct pbl_bt_bonding *bonding) {
   BLEBondingNode *node = (BLEBondingNode *)kernel_malloc_check(sizeof(BLEBondingNode));
   *node = (BLEBondingNode){
     .bonding = *bonding,
@@ -28,14 +28,14 @@ void bonding_sync_add_bonding(const BleBonding *bonding) {
       (BLEBondingNode *)list_prepend((ListNode *)s_ble_bonding_head, (ListNode *)node);
 }
 
-void pbl_bt_handle_host_added_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_added_bonding(const struct pbl_bt_bonding *bonding) {
   bonding_sync_add_bonding(bonding);
 }
 
 static bool prv_list_find_cb(ListNode *found_list_node, void *data) {
-  const BleBonding *bonding = (const BleBonding *)data;
+  const struct pbl_bt_bonding *bonding = (const struct pbl_bt_bonding *)data;
   const BLEBondingNode *found_node = (const BLEBondingNode *)found_list_node;
-  const BleBonding *found_bonding = &found_node->bonding;
+  const struct pbl_bt_bonding *found_bonding = &found_node->bonding;
   return sm_is_pairing_info_equal_identity(&bonding->pairing_info, &found_bonding->pairing_info);
 }
 
@@ -44,8 +44,9 @@ static void prv_remove_node(BLEBondingNode *node) {
   kernel_free(node);
 }
 
-bool bonding_sync_contains_pairing_info(const SMPairingInfo *pairing_info, bool is_gateway) {
-  BleBonding bonding = {
+bool bonding_sync_contains_pairing_info(const struct pbl_bt_sm_pairing_info *pairing_info,
+                                        bool is_gateway) {
+  struct pbl_bt_bonding bonding = {
     .is_gateway = is_gateway,
     .pairing_info = *pairing_info,
   };
@@ -54,7 +55,7 @@ bool bonding_sync_contains_pairing_info(const SMPairingInfo *pairing_info, bool 
   return (found_node != NULL);
 }
 
-void pbl_bt_handle_host_removed_bonding(const BleBonding *bonding) {
+void pbl_bt_handle_host_removed_bonding(const struct pbl_bt_bonding *bonding) {
   // Match the qemu/stub driver behavior: removing a bonding the driver was never told about is a
   // no-op rather than a fault. Production code may issue a remove even when the driver-side state
   // was never populated (e.g. cleaning up stale entries at boot).

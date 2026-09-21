@@ -14,7 +14,7 @@ void pbl_bt_init(void) {
   bt_lock_init();
 }
 
-bool pbl_bt_start(BTDriverConfig *config) {
+bool pbl_bt_start(struct pbl_bt_config *config) {
   return true;
 }
 

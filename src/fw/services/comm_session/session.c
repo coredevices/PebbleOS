@@ -262,14 +262,16 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   kernel_free(session);
 }
 
-void comm_session_set_responsiveness(CommSession *session, BtConsumer consumer,
-                                     ResponseTimeState state, uint16_t max_period_secs) {
+void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
+                                     enum pbl_bt_response_time_state state,
+                                     uint16_t max_period_secs) {
   comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, NULL);
 }
 
-void comm_session_set_responsiveness_ext(CommSession *session, BtConsumer consumer,
-                                         ResponseTimeState state, uint16_t max_period_secs,
-                                         ResponsivenessGrantedHandler granted_handler) {
+void comm_session_set_responsiveness_ext(CommSession *session, enum pbl_bt_consumer consumer,
+                                         enum pbl_bt_response_time_state state,
+                                         uint16_t max_period_secs,
+                                         pbl_bt_responsiveness_granted_cb_t granted_handler) {
   if (session) {
     bt_lock();
     if (comm_session_is_valid(session)) {
@@ -548,11 +550,12 @@ DEFINE_SYSCALL(void, sys_app_comm_set_responsiveness, SniffInterval interval) {
   CommSession *comm_session = comm_session_get_current_app_session();
   switch (interval) {
     case SNIFF_INTERVAL_REDUCED:
-      comm_session_set_responsiveness(comm_session, BtConsumerApp, ResponseTimeMiddle,
-                                      MAX_PERIOD_RUN_FOREVER);
+      comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_APP,
+                                      PBL_BT_RESPONSE_TIME_MIDDLE, MAX_PERIOD_RUN_FOREVER);
       return;
     case SNIFF_INTERVAL_NORMAL:
-      comm_session_set_responsiveness(comm_session, BtConsumerApp, ResponseTimeMax, 0);
+      comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MAX,
+                                      0);
       return;
   }
   PBL_LOG_WRN("Invalid sniff interval");

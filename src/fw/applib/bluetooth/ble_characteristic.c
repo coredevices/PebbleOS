@@ -5,28 +5,29 @@
 
 #include "syscall/syscall.h"
 
-bool ble_characteristic_is_readable(BLECharacteristic characteristic) {
-  return (sys_ble_characteristic_get_properties(characteristic) & BLEAttributePropertyRead);
+bool ble_characteristic_is_readable(pbl_bt_characteristic_t characteristic) {
+  return (sys_ble_characteristic_get_properties(characteristic) & PBL_BT_ATTRIBUTE_PROPERTY_READ);
 }
 
-bool ble_characteristic_is_writable(BLECharacteristic characteristic) {
-  return (sys_ble_characteristic_get_properties(characteristic) & BLEAttributePropertyWrite);
+bool ble_characteristic_is_writable(pbl_bt_characteristic_t characteristic) {
+  return (sys_ble_characteristic_get_properties(characteristic) & PBL_BT_ATTRIBUTE_PROPERTY_WRITE);
 }
 
-bool ble_characteristic_is_writable_without_response(BLECharacteristic characteristic) {
+bool ble_characteristic_is_writable_without_response(pbl_bt_characteristic_t characteristic) {
   return (sys_ble_characteristic_get_properties(characteristic) &
-          BLEAttributePropertyWriteWithoutResponse);
+          PBL_BT_ATTRIBUTE_PROPERTY_WRITE_WITHOUT_RESPONSE);
 }
 
-bool ble_characteristic_is_subscribable(BLECharacteristic characteristic) {
+bool ble_characteristic_is_subscribable(pbl_bt_characteristic_t characteristic) {
   return (sys_ble_characteristic_get_properties(characteristic) &
-          (BLEAttributePropertyNotify | BLEAttributePropertyIndicate));
+          (PBL_BT_ATTRIBUTE_PROPERTY_NOTIFY | PBL_BT_ATTRIBUTE_PROPERTY_INDICATE));
 }
 
-bool ble_characteristic_is_notifiable(BLECharacteristic characteristic) {
-  return (sys_ble_characteristic_get_properties(characteristic) & BLEAttributePropertyNotify);
+bool ble_characteristic_is_notifiable(pbl_bt_characteristic_t characteristic) {
+  return (sys_ble_characteristic_get_properties(characteristic) & PBL_BT_ATTRIBUTE_PROPERTY_NOTIFY);
 }
 
-bool ble_characteristic_is_indicatable(BLECharacteristic characteristic) {
-  return (sys_ble_characteristic_get_properties(characteristic) & BLEAttributePropertyIndicate);
+bool ble_characteristic_is_indicatable(pbl_bt_characteristic_t characteristic) {
+  return (sys_ble_characteristic_get_properties(characteristic) &
+          PBL_BT_ATTRIBUTE_PROPERTY_INDICATE);
 }

@@ -77,12 +77,12 @@ void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_i
   strcpy(name, "t");
 }
 
-void bluetooth_analytics_handle_put_bytes_stats(bool successful, uint8_t type, uint32_t total_size,
-                                                uint32_t elapsed_time_ms,
-                                                const SlaveConnEventStats *orig_stats) {
+void bluetooth_analytics_handle_put_bytes_stats(
+    bool successful, uint8_t type, uint32_t total_size, uint32_t elapsed_time_ms,
+    const struct pbl_bt_slave_conn_event_stats *orig_stats) {
 }
 
-bool pbl_bt_analytics_get_conn_event_stats(SlaveConnEventStats *stats) {
+bool pbl_bt_analytics_get_conn_event_stats(struct pbl_bt_slave_conn_event_stats *stats) {
   return false;
 }
 

@@ -18,12 +18,13 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 void dis_invalidate_all_references(void) {
 }
 
-void dis_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics) {
+void dis_handle_service_removed(pbl_bt_characteristic_t *characteristics,
+                                uint8_t num_characteristics) {
   // dis_service_discovered doesn't get set to false here, since services can temporarily disappear
   // and we're just using this to detect whether or not we're on iOS 9
 }
 
-void dis_handle_service_discovered(BLECharacteristic *characteristics) {
+void dis_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   PBL_LOG_DBG("In DIS service discovery CB");
   PBL_ASSERTN(characteristics);
 

@@ -55,13 +55,13 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
 static const struct ble_gatt_svc_def s_ppog_reversed_svc[] = {
   {
     .type = BLE_GATT_SVC_TYPE_PRIMARY,
-    .uuid = BLE_UUID128_DECLARE(
-        BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(PEBBLE_BT_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT))),
+    .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(
+        PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT))),
     .characteristics =
         (struct ble_gatt_chr_def[]){
           {
-            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(
-                PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT))),
+            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PEBBLE_UUID_EXPAND(
+                PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT))),
             .access_cb = prv_access_data_notify,
             // READ_ENC (without READ) gates the CCCD: subscribing
             // requires an encrypted link, explicit reads stay blocked.
@@ -69,8 +69,8 @@ static const struct ble_gatt_svc_def s_ppog_reversed_svc[] = {
             .val_handle = &s_data_notify_handle,
           },
           {
-            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PEBBLE_BT_UUID_EXPAND(
-                PEBBLE_BT_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT))),
+            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PEBBLE_UUID_EXPAND(
+                PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT))),
             .access_cb = prv_access_data_write,
             .flags = BLE_GATT_CHR_F_WRITE_NO_RSP | BLE_GATT_CHR_F_WRITE_ENC,
             .val_handle = &s_data_write_handle,
@@ -99,7 +99,7 @@ static void prv_handle_subscribe_event(struct ble_gap_event *event) {
                   event->subscribe.conn_handle);
       return;
     }
-    BTDeviceInternal device;
+    struct pbl_bt_device_internal device;
     nimble_addr_to_pebble_device(&desc.peer_id_addr, &device);
     pbl_bt_cb_ppog_reversed_subscribed(&device, event->subscribe.conn_handle);
   } else {
@@ -131,22 +131,23 @@ void ppog_reversed_service_init(void) {
   PBL_ASSERTN(rc == 0 || rc == BLE_HS_EALREADY);
 }
 
-BTErrno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
+                                              uint16_t len) {
   struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, len);
   if (!om) {
-    return BTErrnoNotEnoughResources;
+    return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
   }
   int rc = ble_gatts_notify_custom(conn_handle, s_data_notify_handle, om);
   // ble_gatts_notify_custom always consumes the mbuf, even on error.
   switch (rc) {
     case 0:
-      return BTErrnoOK;
+      return PBL_BT_ERRNO_OK;
     case BLE_HS_ENOMEM:
-      return BTErrnoNotEnoughResources;
+      return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
     case BLE_HS_ENOTCONN:
-      return BTErrnoInvalidState;
+      return PBL_BT_ERRNO_INVALID_STATE;
     default:
       PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t)rc);
-      return (BTErrno)(BTErrnoInternalErrorBegin + rc);
+      return (enum pbl_bt_errno)(PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + rc);
   }
 }

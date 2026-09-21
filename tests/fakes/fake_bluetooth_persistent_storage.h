@@ -7,7 +7,7 @@
 
 void fake_bt_persistent_storage_reset(void);
 
-BTBondingID fake_bt_persistent_storage_add(const SMIdentityResolvingKey *irk,
-                                           const BTDeviceInternal *device,
-                                           const char name[BT_DEVICE_NAME_BUFFER_SIZE],
-                                           bool is_gateway);
+pbl_bt_bonding_id_t fake_bt_persistent_storage_add(const struct pbl_bt_sm_key *irk,
+                                                   const struct pbl_bt_device_internal *device,
+                                                   const char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE],
+                                                   bool is_gateway);

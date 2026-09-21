@@ -6,13 +6,13 @@
 #include <stdbool.h>
 
 //! Forward declaration to internal, implementation specific state.
-typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
+struct pbl_bt_pairing_confirm_ctx;
 
 //! Confirms a pairing request.
 //! @param[in] ctx The pairing request context, as previously passed to
 //! pbl_bt_cb_pairing_confirm_handle_request.
 //! @param[in] is_confirmed Pass true if the user confirmed the pairing.
-void pbl_bt_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confirmed);
+void pbl_bt_pairing_confirm(const struct pbl_bt_pairing_confirm_ctx *ctx, bool is_confirmed);
 
 //! @param[in] ctx Pointer to opaque BT-driver-implementation specific context. The function can
 //! use the pointer value this to distinguish one pairing process from another, but the pointer
@@ -25,11 +25,11 @@ void pbl_bt_pairing_confirm(const PairingUserConfirmationCtx *ctx, bool is_confi
 //! @param[in] confirmation_token Optional confirmation token. Pass NULL if not available.
 //! @note This function should immediately copy the device name and confirmation token, so the
 //! buffers do not have to continue existing after this function returns.
-extern void pbl_bt_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
+extern void pbl_bt_cb_pairing_confirm_handle_request(const struct pbl_bt_pairing_confirm_ctx *ctx,
                                                      const char *device_name,
                                                      const char *confirmation_token);
 
 //! @param[in] ctx See pbl_bt_cb_pairing_confirm_handle_request
 //! @param[in] success True if the pairing process finished successfully.
-extern void pbl_bt_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
+extern void pbl_bt_cb_pairing_confirm_handle_completed(const struct pbl_bt_pairing_confirm_ctx *ctx,
                                                        bool success);
