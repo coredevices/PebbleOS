@@ -92,8 +92,8 @@ void qemu_audio_irq_handler(AudioDevice *dev) {
   if (dev->state->trans_cb && !dev->state->callback_pending) {
     bool should_context_switch = false;
     dev->state->callback_pending = true;
-    if (!system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb, (void *)dev,
-                                                     &should_context_switch)) {
+    if (!system_task_add_callback_from_isr_droppable_raised(prv_audio_system_task_cb, (void *)dev,
+                                                            &should_context_switch)) {
       dev->state->callback_pending = false;
     }
   }

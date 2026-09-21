@@ -15,6 +15,8 @@
 #include "pbl/kernel/msgq.h"
 #include "pbl/kernel/poll.h"
 #include "pbl/kernel/thread.h"
+#include "pbl/kernel/irq.h"
+#include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL);
 
@@ -23,6 +25,7 @@ PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL)
 typedef struct {
   SystemTaskEventCallback cb;
   void *data;
+  bool raised_priority;
 } SystemTaskEvent;
 
 #define SYSTEM_TASK_QUEUE_LENGTH          30
@@ -38,6 +41,7 @@ static SystemTaskEventCallback s_current_cb;
 
 static bool s_system_task_idle = true;
 static bool s_should_block_callbacks = false;
+static uint32_t s_raised_priority_refcount;
 
 static bool prv_is_accepting_callbacks() {
   return s_initialized && !s_should_block_callbacks;
@@ -71,6 +75,9 @@ static void system_task_main(void *paramater) {
       event.cb(event.data);
       mcu_fpu_cleanup();
       s_current_cb = NULL;
+      if (event.raised_priority) {
+        system_task_enable_raised_priority(false);
+      }
     }
 
     // Refresh the watchdog immediately, just in case that cb() took awhile to run.
@@ -79,6 +86,7 @@ static void system_task_main(void *paramater) {
 }
 
 void system_task_init(void) {
+  s_raised_priority_refcount = 0;
   pbl_poll_group_add(&s_system_task_queue_set, &s_system_task_queue);
   pbl_poll_group_add(&s_system_task_queue_set, &s_from_app_system_task_queue);
   s_initialized = true;
@@ -171,6 +179,31 @@ bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, voi
   return system_task_add_callback_droppable(cb, data);
 }
 
+bool system_task_add_callback_from_isr_droppable_raised(SystemTaskEventCallback cb, void *data,
+                                                        bool *should_context_switch) {
+  *should_context_switch = false;
+  if (!prv_is_accepting_callbacks()) {
+    return false;
+  }
+
+  SystemTaskEvent event = {
+    .cb = cb,
+    .data = data,
+    .raised_priority = true,
+  };
+
+  // The queued event owns the boost until its callback returns, even if the
+  // device stops in the meantime. Rejected work must not retain a reference.
+  pbl_irq_lock();
+  system_task_enable_raised_priority(true);
+  bool success = (pbl_msgq_put(&s_system_task_queue, &event, PBL_NO_WAIT) == 0);
+  if (!success) {
+    system_task_enable_raised_priority(false);
+  }
+  pbl_irq_unlock();
+  return success;
+}
+
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   uintptr_t caller_lr = (uintptr_t)__builtin_return_address(0);
   if (!prv_is_accepting_callbacks()) {
@@ -216,8 +249,30 @@ void *system_task_get_current_callback(void) {
 
 void system_task_enable_raised_priority(bool is_raised) {
   const pbl_prio_t raised_priority_level = PBL_PRIO_IDLE + 3; // Same as KernelMain / BT tasks
-  pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
-                      is_raised ? raised_priority_level : SYSTEM_TASK_PRIORITY);
+
+  pbl_irq_lock();
+  if (is_raised) {
+    PBL_ASSERTN(s_raised_priority_refcount < UINT32_MAX);
+    if (s_raised_priority_refcount == UINT32_MAX) {
+      pbl_irq_unlock();
+      return;
+    }
+    if (s_raised_priority_refcount++ == 0) {
+      pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
+                          raised_priority_level);
+    }
+  } else {
+    PBL_ASSERTN(s_raised_priority_refcount > 0);
+    if (s_raised_priority_refcount == 0) {
+      pbl_irq_unlock();
+      return;
+    }
+    if (--s_raised_priority_refcount == 0) {
+      pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
+                          SYSTEM_TASK_PRIORITY);
+    }
+  }
+  pbl_irq_unlock();
 }
 
 bool system_task_is_ready_to_run(void) {
