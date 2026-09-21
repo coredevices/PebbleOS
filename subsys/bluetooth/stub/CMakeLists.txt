@@ -3,6 +3,6 @@
 
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS *.c)
 
-pbl_library_named(bt_driver)
+pbl_library()
 pbl_library_kind(stlib)
 pbl_library_sources(${sources})

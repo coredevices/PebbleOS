@@ -83,7 +83,7 @@ hand-written neighbours.
 Headers are global; there is no per-consumer opt-in. A library that is not
 always needed is gated behind a Kconfig symbol instead, as Zephyr does:
 its directory is added with `pbl_add_subdirectory_ifdef()`, and consumers
-`select` (or `imply`) the symbol in their own Kconfig, e.g. `BT_FW_NIMBLE`
+`select` (or `imply`) the symbol in their own Kconfig, e.g. `BT_NIMBLE`
 selects `MBEDTLS` and `SERVICE_VOICE` selects `SPEEX`.
 
 Prebuilt vendor archives are registered with

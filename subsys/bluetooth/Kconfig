@@ -3,24 +3,24 @@
 
 menu "Bluetooth"
 
-choice BT_FW
+choice BT_BACKEND
     prompt "Bluetooth backend"
-    default BT_FW_STUB
+    default BT_STUB
     help
       Which Bluetooth backend implementation to build. The default is
       derived from the SoC (see each soc/<soc>/Kconfig.defconfig);
       the stub is the fallback when no SoC default applies.
 
-config BT_FW_NIMBLE
+config BT_NIMBLE
     bool "NimBLE"
     select MBEDTLS
     select HAL_SIFLI_IPC_QUEUE if SOC_SF32LB52
     select HAL_SIFLI_LCPU if SOC_SF32LB52
 
-config BT_FW_QEMU
+config BT_QEMU
     bool "QEMU transport"
 
-config BT_FW_STUB
+config BT_STUB
     bool "Stub (no backend)"
 
 endchoice
@@ -29,7 +29,7 @@ module = BT
 module-str = Bluetooth
 source "subsys/logging/Kconfig.template.log_level"
 
-config GH3X2X_TUNING_SERVICE_ENABLED
+config BT_GH3X2X_TUNING_SERVICE
     bool "GH3X2X tuning service"
     depends on HRM_GH3X2X
     help

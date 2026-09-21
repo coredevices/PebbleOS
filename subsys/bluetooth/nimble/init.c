@@ -151,7 +151,7 @@ bool bt_driver_start(BTDriverConfig *config) {
   ble_svc_bas_init();
   ppog_reversed_service_init();
 
-#ifdef CONFIG_GH3X2X_TUNING_SERVICE_ENABLED
+#ifdef CONFIG_BT_GH3X2X_TUNING_SERVICE
   gh3x2x_tuning_service_init();
 #endif
 

@@ -6,8 +6,8 @@ if SOC_SF32LB52
 config MMAP_RESOURCES
     default y
 
-choice BT_FW
-    default BT_FW_NIMBLE
+choice BT_BACKEND
+    default BT_NIMBLE
 endchoice
 
 # 32 MiB of external flash, memory-mapped through MPI. Layout: 64 KiB
