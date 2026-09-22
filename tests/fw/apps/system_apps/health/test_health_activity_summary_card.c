@@ -182,7 +182,6 @@ void test_health_activity_summary_card__weight_one_entry(void) {
     .profile_weight_dag = 7730,
     .weight_samples = {{.utc_sec = 1704557975, .weight_dag = 7710}},
     .weight_sample_count = 1,
-    .weight_daily = {.values = {7710}},
   };
   prv_create_weight_detail_and_render(&health_data);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));

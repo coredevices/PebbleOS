@@ -44,5 +44,4 @@ typedef struct HealthData {
   uint16_t profile_weight_dag;
   ActivityWeightSample weight_samples[ACTIVITY_WEIGHT_RECENT_MAX];
   size_t weight_sample_count;
-  ActivitySettingsValueHistory weight_daily;
 } HealthData;

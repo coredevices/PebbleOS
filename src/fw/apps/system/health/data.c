@@ -159,7 +159,6 @@ void health_data_update_weight(HealthData *health_data) {
   health_data->profile_weight_dag = activity_prefs_get_weight_dag();
   health_data->weight_sample_count = activity_weight_history_get_recent(
       health_data->weight_samples, ARRAY_LENGTH(health_data->weight_samples));
-  activity_weight_history_get_daily(rtc_get_time(), &health_data->weight_daily);
 }
 
 uint16_t health_data_weight_get_profile_dag(HealthData *health_data) {
@@ -170,10 +169,6 @@ size_t health_data_weight_get_samples(HealthData *health_data,
                                       const ActivityWeightSample **samples) {
   *samples = health_data->weight_samples;
   return health_data->weight_sample_count;
-}
-
-const ActivitySettingsValueHistory *health_data_weight_get_daily(HealthData *health_data) {
-  return &health_data->weight_daily;
 }
 
 void health_data_update_current_bpm(HealthData *health_data) {

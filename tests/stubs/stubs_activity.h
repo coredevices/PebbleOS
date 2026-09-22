@@ -86,12 +86,6 @@ size_t PBL_WEAK activity_weight_history_get_recent(ActivityWeightSample *samples
   return 0;
 }
 
-bool PBL_WEAK activity_weight_history_get_daily(time_t utc_sec,
-                                                ActivitySettingsValueHistory *history) {
-  *history = (ActivitySettingsValueHistory){};
-  return true;
-}
-
 uint8_t PBL_WEAK activity_prefs_heart_get_elevated_hr(void) {
   return 100;
 }

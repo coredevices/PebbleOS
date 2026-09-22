@@ -69,7 +69,6 @@ void health_data_update_weight(HealthData *health_data);
 uint16_t health_data_weight_get_profile_dag(HealthData *health_data);
 size_t health_data_weight_get_samples(HealthData *health_data,
                                       const ActivityWeightSample **samples);
-const ActivitySettingsValueHistory *health_data_weight_get_daily(HealthData *health_data);
 
 //! Get the current step count
 //! @param health_data A pointer to the health data to use

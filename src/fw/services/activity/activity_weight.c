@@ -6,15 +6,11 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/util/size.h"
-#include "util/time/time.h"
 
 #include <string.h>
 
 #define WEIGHT_HISTORY_FILE_NAME "weight_history"
 #define WEIGHT_HISTORY_FILE_LEN  0x1000
-
-_Static_assert(ACTIVITY_WEIGHT_HISTORY_DAYS == ACTIVITY_HISTORY_DAYS,
-               "Weight history must match activity history");
 
 static PBL_MUTEX_DEFINE(s_weight_history_mutex);
 
@@ -31,12 +27,6 @@ typedef struct {
   size_t count;
   size_t max_samples;
 } WeightHistoryReadContext;
-
-typedef struct {
-  uint16_t day;
-  uint32_t newest_utc;
-  uint16_t newest_weight_dag;
-} WeightDayLatestContext;
 
 static bool prv_is_valid_weight(uint16_t weight_dag) {
   return weight_dag >= ACTIVITY_WEIGHT_MIN_DAG && weight_dag <= ACTIVITY_WEIGHT_MAX_DAG;
@@ -152,76 +142,6 @@ static bool prv_read_recent_cb(SettingsFile *file, SettingsRecordInfo *info, voi
   return true;
 }
 
-static bool prv_find_latest_for_day_cb(SettingsFile *file, SettingsRecordInfo *info,
-                                       void *context) {
-  WeightDayLatestContext *day_context = context;
-  if (info->key_len != sizeof(uint32_t) || info->val_len != sizeof(uint16_t)) {
-    return true;
-  }
-
-  uint32_t utc_sec;
-  uint16_t weight_dag;
-  info->get_key(file, &utc_sec, sizeof(utc_sec));
-  info->get_val(file, &weight_dag, sizeof(weight_dag));
-  if (utc_sec > day_context->newest_utc && time_util_get_day(utc_sec) == day_context->day &&
-      prv_is_valid_weight(weight_dag)) {
-    day_context->newest_utc = utc_sec;
-    day_context->newest_weight_dag = weight_dag;
-  }
-  return true;
-}
-
-static bool prv_align_daily_history(ActivitySettingsValueHistory *history, time_t utc_sec) {
-  if (history->utc_sec == 0) {
-    history->utc_sec = utc_sec;
-    return true;
-  }
-
-  const uint16_t current_day = time_util_get_day(utc_sec);
-  const uint16_t stored_day = time_util_get_day(history->utc_sec);
-  const uint16_t elapsed_days = current_day - stored_day;
-  if (elapsed_days == 0) {
-    return false;
-  }
-
-  if (elapsed_days >= ACTIVITY_WEIGHT_HISTORY_DAYS) {
-    memset(history->values, 0, sizeof(history->values));
-  } else {
-    for (int i = ACTIVITY_WEIGHT_HISTORY_DAYS - 1; i >= elapsed_days; i--) {
-      history->values[i] = history->values[i - elapsed_days];
-    }
-    memset(history->values, 0, elapsed_days * sizeof(history->values[0]));
-  }
-  history->utc_sec = utc_sec;
-  return true;
-}
-
-static bool prv_get_daily(SettingsFile *file, time_t utc_sec,
-                          ActivitySettingsValueHistory *history) {
-  const ActivitySettingsKey key = ActivitySettingsKeyWeightDailyHistory;
-  *history = (ActivitySettingsValueHistory){};
-  const int stored_len = settings_file_get_len(file, &key, sizeof(key));
-  bool needs_save = stored_len > 0 && stored_len != sizeof(*history);
-  if (stored_len == sizeof(*history)) {
-    settings_file_get(file, &key, sizeof(key), history, sizeof(*history));
-  }
-
-  for (size_t i = 0; i < ARRAY_LENGTH(history->values); i++) {
-    if (history->values[i] > 0 &&
-        (history->values[i] < ACTIVITY_WEIGHT_MIN_DAG ||
-         history->values[i] > ACTIVITY_WEIGHT_MAX_DAG)) {
-      history->values[i] = 0;
-      needs_save = true;
-    }
-  }
-
-  needs_save |= prv_align_daily_history(history, utc_sec);
-  if (needs_save) {
-    return settings_file_set(file, &key, sizeof(key), history, sizeof(*history)) == S_SUCCESS;
-  }
-  return true;
-}
-
 bool activity_weight_history_add(time_t utc_sec, uint16_t weight_dag) {
   if (utc_sec <= 0 || !prv_is_valid_weight(weight_dag)) {
     return false;
@@ -251,25 +171,6 @@ bool activity_weight_history_add(time_t utc_sec, uint16_t weight_dag) {
     prv_close_recent_file(recent_file);
   }
 
-  ActivityState *state = activity_private_state();
-  pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  SettingsFile *activity_file = activity_private_settings_open();
-  if (activity_file) {
-    ActivitySettingsValueHistory history;
-    if (prv_get_daily(activity_file, utc_sec, &history)) {
-      const ActivitySettingsKey key = ActivitySettingsKeyWeightDailyHistory;
-      history.values[0] = weight_dag;
-      success = settings_file_set(activity_file, &key, sizeof(key), &history, sizeof(history)) ==
-                    S_SUCCESS &&
-                success;
-    } else {
-      success = false;
-    }
-    activity_private_settings_close(activity_file);
-  } else {
-    success = false;
-  }
-  pbl_mutex_unlock(&state->mutex);
   pbl_mutex_unlock(&s_weight_history_mutex);
   return success;
 }
@@ -302,29 +203,7 @@ bool activity_weight_history_remove_latest(time_t utc_sec, uint16_t *new_weight_
   const WeightHistoryStats remaining = prv_get_stats(recent_file);
   *new_weight_dag = remaining.newest_weight_dag;
 
-  const uint16_t removed_day = time_util_get_day(removed_utc);
-  WeightDayLatestContext day_context = {
-    .day = removed_day,
-  };
-  settings_file_each(recent_file, prv_find_latest_for_day_cb, &day_context);
   prv_close_recent_file(recent_file);
-
-  ActivityState *state = activity_private_state();
-  pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  SettingsFile *activity_file = activity_private_settings_open();
-  if (activity_file) {
-    ActivitySettingsValueHistory history;
-    if (prv_get_daily(activity_file, utc_sec, &history)) {
-      const uint16_t elapsed_days = time_util_get_day(utc_sec) - removed_day;
-      if (elapsed_days < ACTIVITY_WEIGHT_HISTORY_DAYS) {
-        const ActivitySettingsKey key = ActivitySettingsKeyWeightDailyHistory;
-        history.values[elapsed_days] = day_context.newest_weight_dag;
-        settings_file_set(activity_file, &key, sizeof(key), &history, sizeof(history));
-      }
-    }
-    activity_private_settings_close(activity_file);
-  }
-  pbl_mutex_unlock(&state->mutex);
 
 unlock:
   pbl_mutex_unlock(&s_weight_history_mutex);
@@ -352,36 +231,8 @@ size_t activity_weight_history_get_recent(ActivityWeightSample *samples, size_t 
   return context.count;
 }
 
-bool activity_weight_history_get_daily(time_t utc_sec, ActivitySettingsValueHistory *history) {
-  if (!history || utc_sec <= 0) {
-    return false;
-  }
-
-  bool success = false;
-  pbl_mutex_lock(&s_weight_history_mutex, PBL_FOREVER);
-  ActivityState *state = activity_private_state();
-  pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  SettingsFile *file = activity_private_settings_open();
-  if (file) {
-    success = prv_get_daily(file, utc_sec, history);
-    activity_private_settings_close(file);
-  }
-  pbl_mutex_unlock(&state->mutex);
-  pbl_mutex_unlock(&s_weight_history_mutex);
-  return success;
-}
-
 void activity_weight_history_clear(void) {
   pbl_mutex_lock(&s_weight_history_mutex, PBL_FOREVER);
   pfs_remove(WEIGHT_HISTORY_FILE_NAME);
-  ActivityState *state = activity_private_state();
-  pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-  SettingsFile *file = activity_private_settings_open();
-  if (file) {
-    const ActivitySettingsKey key = ActivitySettingsKeyWeightDailyHistory;
-    settings_file_delete(file, &key, sizeof(key));
-    activity_private_settings_close(file);
-  }
-  pbl_mutex_unlock(&state->mutex);
   pbl_mutex_unlock(&s_weight_history_mutex);
 }
