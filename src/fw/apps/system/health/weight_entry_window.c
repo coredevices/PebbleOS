@@ -16,6 +16,7 @@
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/system_icons.h"
 #include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/health_util.h"
@@ -74,8 +75,11 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context)
 static void prv_save(WeightEntryWindow *entry_window) {
   const uint16_t weight_dag =
       health_util_weight_tenths_to_dag(entry_window->value_tenths);
+  if (!activity_weight_history_add(rtc_get_time(), weight_dag)) {
+    PBL_LOG_ERR("Failed to save weight history");
+    return;
+  }
   activity_prefs_set_weight_dag(weight_dag);
-  activity_weight_history_add(rtc_get_time(), weight_dag);
   if (entry_window->saved_callback) {
     entry_window->saved_callback(weight_dag, entry_window->context);
   }
