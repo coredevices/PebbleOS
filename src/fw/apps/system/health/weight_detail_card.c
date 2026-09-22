@@ -295,8 +295,9 @@ static void prv_draw_summary(GContext *ctx, Layer *layer, WeightDetailCard *card
     prv_draw_graph(ctx, &graph_frame, card, now, &graph_range);
 
     graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
-    char period[4];
-    snprintf(period, sizeof(period), "%uD", (unsigned int)graph_range.period_days);
+    char period[8];
+    snprintf(period, sizeof(period), i18n_get("%uD", card),
+             (unsigned int)graph_range.period_days);
     const GRect period_frame =
         GRect(graph_frame.origin.x, grect_get_max_y(&graph_frame) - 1, 30, 16);
     graphics_draw_text(ctx, period,
@@ -427,7 +428,8 @@ static void prv_delete_latest(ClickRecognizerRef recognizer, void *context) {
   snprintf(card->delete_text, sizeof(card->delete_text), "%s\n%s  %s",
            i18n_get("Delete latest weight?", card), weight, date);
 
-  ConfirmationDialog *dialog = confirmation_dialog_create("Delete Weight");
+  ConfirmationDialog *dialog =
+      confirmation_dialog_create(i18n_get("Delete Weight", card));
   Dialog *base_dialog = confirmation_dialog_get_dialog(dialog);
   dialog_set_text(base_dialog, card->delete_text);
   dialog_set_background_color(base_dialog, GColorRed);
