@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# The apache-mynewt-core MCU options NimBLE's nRF5x radio driver and timer
+# shim read. Split from port.yml because they only describe the part the
+# NimBLE link layer runs on, and are meaningless in a build that does not
+# compile it.
+
+syscfg.defs:
+    MCU_TARGET:
+        description: The part the NimBLE radio driver is built for.
+        choices:
+            - nRF51822
+            - nRF52810
+            - nRF52811
+            - nRF52832
+            - nRF52840
+            - nRF5340_NET
+        value: nRF52840
+    MCU_HFCLK_SOURCE:
+        description: >
+            Source of the high-frequency clock the radio and the cputime
+            timer run from.
+        choices:
+            - HFINT
+            - HFXO
+        value: HFINT
+
