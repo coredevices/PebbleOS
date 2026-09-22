@@ -102,6 +102,26 @@ jobs:
             exit 1
           fi
 
+  nimble-syscfg:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check out the NimBLE submodule
+        run: git submodule update --init --depth 1 third_party/nimble/mynewt-nimble
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install PyYAML
+        run: pip install PyYAML
+
+      - name: Check the generated Kconfig and syscfg.h are up to date
+        run: python3 third_party/nimble/scripts/gen_syscfg.py --check
+
   clang-format:
     runs-on: ubuntu-24.04
     steps:
