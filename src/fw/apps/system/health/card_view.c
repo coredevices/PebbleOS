@@ -23,10 +23,10 @@
 // Enum for different card types
 typedef enum {
   Card_ActivitySummary,
-  Card_WeightSummary,
 #ifdef CONFIG_HRM
   Card_HrSummary,
 #endif
+  Card_WeightSummary,
   Card_SleepSummary,
   CardCount
 } Card;
