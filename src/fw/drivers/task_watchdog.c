@@ -110,7 +110,7 @@ static void prv_log_stuck_task(RebootReason *reboot_reason, PebbleTask task) {
   reboot_reason->watchdog.stuck_task_lr = (uint32_t)current_lr;
 }
 
-#ifndef CONFIG_NO_WATCHDOG
+#ifdef CONFIG_WATCHDOG
 // TCB-only variant of prv_log_failed_message; no logging or FreeRTOS calls
 // so it's safe from above PBL_IRQ_PRIO_MAX_SYSCALL.
 static void prv_capture_stuck_task_info(RebootReason *reboot_reason) {
@@ -231,7 +231,7 @@ void WATCHDOG_FREERTOS_IRQHandler(void) {
     // If getting reset by the watchdog timer is imminent (it will reset the
     // CPU if not fed at least once every 7 seconds), then just coredump now
     if (s_ticks_since_successful_feed >= (6 * TIMER_INTERRUPT_HZ)) {
-#if !defined(CONFIG_NO_WATCHDOG)
+#ifdef CONFIG_WATCHDOG
       reset_due_to_software_failure();
 #endif
     }
@@ -388,7 +388,7 @@ static void prv_task_watchdog_feed(void) {
     // after s_last_successful_feed_time), it likely means that we are stuck in
     // an ISR or low priority interrupts are disabled, so coredump now
     if (s_ticks_since_successful_feed >= WATCHDOG_COREDUMP_TICK_CNT) {
-#if !defined(CONFIG_NO_WATCHDOG)
+#ifdef CONFIG_WATCHDOG
       // Low-pri handler didn't run; capture stuck_task_pc/lr ourselves so
       // the coredump has a real PC to fingerprint on.
       prv_capture_stuck_task_info(&reboot_reason);

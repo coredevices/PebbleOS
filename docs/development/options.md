@@ -42,8 +42,10 @@ Enable manufacturing-only functionality in the PRF build.
 
 ## Debugging
 
-:`-DCONFIG_NO_WATCHDOG=y`:
-Disable watchdog
+:`-DCONFIG_WATCHDOG=n`:
+Build without the hardware watchdog driver. Software failures then halt
+with interrupts disabled for a debugger instead of rebooting, and the task
+watchdog only logs the stalls it detects.
 
 :`-DCONFIG_DEBUG_INFO_MACROS=y`:
 Compile with `-g3` rather than `-g`, so a debugger can expand the

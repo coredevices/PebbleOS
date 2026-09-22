@@ -85,12 +85,6 @@ menu "Debug & instrumentation"
 config NO_WATCH_TIMEOUT
     bool "Disable watchface idle timeout"
 
-config NO_WATCHDOG
-    bool "Disable watchdog reboots"
-    help
-      Do not reboot automatically when a watchdog fires; break into
-      the debugger instead.
-
 config UI_DEBUG
     bool "UI debug commands"
     help

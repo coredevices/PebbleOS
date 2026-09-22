@@ -167,11 +167,6 @@ static bool prv_event_put_isr(struct pbl_msgq *queue, const char *queue_type, ui
   if (pbl_msgq_put(queue, event, PBL_NO_WAIT) != 0) {
     prv_log_event_put_failure(queue_type, saved_lr, event);
 
-#ifdef CONFIG_NO_WATCHDOG
-    while (1)
-      ;
-#endif
-
     reset_due_to_software_failure();
   }
 
