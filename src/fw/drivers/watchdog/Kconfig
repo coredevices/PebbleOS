@@ -26,6 +26,6 @@ config WATCHDOG_QEMU
     bool "QEMU Watchdog"
     default y if SOC_QEMU
     help
-      Support for the QEMU watchdog (no-op).
+      Support for the CMSDK APB watchdog of the QEMU Pebble machines.
 
 endif # WATCHDOG

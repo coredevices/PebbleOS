@@ -3,7 +3,7 @@
 
 set(sources)
 if(CONFIG_WATCHDOG_QEMU)
-  list(APPEND sources ../stubs/watchdog.c)
+  list(APPEND sources qemu.c)
 elseif(CONFIG_WATCHDOG_NRF5)
   list(APPEND sources nrf5.c)
 elseif(CONFIG_WATCHDOG_SF32LB)
