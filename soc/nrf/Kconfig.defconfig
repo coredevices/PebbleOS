@@ -24,4 +24,28 @@ config SRAM_BASE
 config SRAM_SIZE
     default 0x3ff00
 
+# The NimBLE link layer runs on this SoC's radio, so its porting layer drives
+# cputime from the 32.768 kHz RTC on TIMER5.
+config NIMBLE_OS_CPUTIME_FREQ
+    default 32768
+
+config NIMBLE_OS_CPUTIME_TIMER_NUM
+    default 5
+
+config NIMBLE_TIMER_5
+    default y
+
+# Time the XTAL takes to settle, in us. rfmgmt enables the PHY this far ahead
+# of the link layer's request.
+config NIMBLE_BLE_LL_RFMGMT_ENABLE_TIME
+    default 1500
+
+# Sized to be _okay_ for firmware update over BLE; they may need further
+# tuning.
+config NIMBLE_MSYS_1_BLOCK_COUNT
+    default 35
+
+config NIMBLE_MSYS_1_BLOCK_SIZE
+    default 304
+
 endif # SOC_NRF52

@@ -4,6 +4,8 @@
 set(nimble mynewt-nimble)
 
 set(includes
+  # Ahead of porting/nimble/include, whose syscfg.h is a placeholder.
+  port/include
   ${nimble}/nimble/include
   ${nimble}/nimble/host/include
   ${nimble}/nimble/host/services/ans/include
@@ -19,7 +21,6 @@ set(includes
   ${nimble}/nimble/transport/include
   ${nimble}/nimble/transport/common/hci_h4/include
   ${nimble}/porting/nimble/include
-  port/include
 )
 
 file(GLOB sources CONFIGURE_DEPENDS
@@ -54,7 +55,6 @@ if(CONFIG_BT_HCI_NRF52)
     port/src/nrf52.c
   )
   list(PREPEND includes
-    port/include/nrf52
     ${nimble}/nimble/controller/include
     ${nimble}/nimble/drivers/nrf5x/include
   )
@@ -65,8 +65,6 @@ elseif(CONFIG_BT_HCI_SF32LB52)
     transport/hci_sf32lb52.c
     ../nonfree/pebbleos-nonfree/sf32lb52/lcpu_52x.c
   )
-  list(PREPEND includes port/include/host)
-
   if(CONFIG_NIMBLE_HCI_SF32LB52_TRACE_BINARY)
     pbl_compile_definitions(NIMBLE_HCI_SF32LB52_TRACE NIMBLE_HCI_SF32LB52_TRACE_BINARY)
   elseif(CONFIG_NIMBLE_HCI_SF32LB52_TRACE_LOG)
@@ -74,7 +72,6 @@ elseif(CONFIG_BT_HCI_SF32LB52)
   endif()
 elseif(CONFIG_BT_HCI_FAKE)
   list(APPEND sources transport/hci_fake.c)
-  list(PREPEND includes port/include/host)
 endif()
 
 pbl_include_directories(${includes})

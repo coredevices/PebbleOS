@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# PebbleOS-wide values for the NimBLE options generated under
+# third_party/nimble. Sourced before them so these defaults win.
+
+if BT
+
+# NimBLE's transport choice says where the link layer lives. PebbleOS supplies
+# its own transport for every controller other than the in-image NimBLE one.
+choice NIMBLE_BLE_TRANSPORT_LL_CHOICE
+    default NIMBLE_BLE_TRANSPORT_LL_NATIVE if BT_HCI_NRF52
+    default NIMBLE_BLE_TRANSPORT_LL_CUSTOM
+endchoice
+
+# The Bluetooth subsystem starts the host itself, once the controller is up.
+config NIMBLE_BLE_HS_AUTO_START
+    default n
+
+# LE Secure Connections only, with MITM protection: mode 1 level 4.
+config NIMBLE_BLE_SM_BONDING
+    default y
+
+config NIMBLE_BLE_SM_SC
+    default y
+
+config NIMBLE_BLE_SM_SC_ONLY
+    default y
+
+config NIMBLE_BLE_SM_LEGACY
+    default n
+
+config NIMBLE_BLE_SM_MITM
+    default y
+
+config NIMBLE_BLE_SM_LVL
+    default 4
+
+config NIMBLE_BLE_SM_OUR_KEY_DIST
+    default 1
+
+config NIMBLE_BLE_SM_THEIR_KEY_DIST
+    default 3
+
+choice NIMBLE_BLE_SM_IO_CAP_CHOICE
+    default NIMBLE_BLE_SM_IO_CAP_DISPLAY_YESNO
+endchoice
+
+config NIMBLE_BLE_SVC_DIS_DEFAULT_READ_PERM
+    default 0
+
+# On some cases (e.g. iOS while subscribing to discovered services) the memory
+# pool used for concurrent GATT procedures runs out of slots. This doubles the
+# NimBLE default.
+config NIMBLE_BLE_GATT_MAX_PROCS
+    default 8
+
+endif # BT

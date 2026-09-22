@@ -34,4 +34,15 @@ module = NIMBLE
 module-str = NimBLE host
 source "subsys/logging/Kconfig.template.log_level"
 
+# NimBLE's own options, generated from its syscfg.yml files by
+# scripts/gen_syscfg.py. PebbleOS-wide values live in
+# subsys/bluetooth/Kconfig.defconfig, per-SoC ones in soc/*/Kconfig.defconfig.
+rsource "Kconfig.ble"
+rsource "Kconfig.host"
+rsource "Kconfig.services"
+rsource "Kconfig.transport"
+rsource "Kconfig.controller"
+rsource "Kconfig.drivers"
+rsource "Kconfig.port"
+
 endmenu

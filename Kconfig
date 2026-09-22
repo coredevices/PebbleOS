@@ -3,6 +3,10 @@ mainmenu "PebbleOS Configuration"
 # Per-SoC symbol defaults; loaded first so they take precedence.
 osource "soc/*/Kconfig.defconfig"
 
+# Defaults for the options third_party/nimble generates from NimBLE's own
+# syscfg.yml files; same reason, they have to come before the definitions.
+rsource "subsys/bluetooth/Kconfig.defconfig"
+
 rsource "soc/Kconfig"
 
 config RELEASE

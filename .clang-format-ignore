@@ -7,3 +7,4 @@ src/fw/apps/demo/demo_images/*
 src/fw/apps/demo/fps_test_bitmaps.h
 tools/clar/*
 tests/fixtures/**
+third_party/nimble/port/include/syscfg/syscfg.h

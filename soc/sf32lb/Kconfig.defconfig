@@ -38,4 +38,9 @@ config SRAM_SIZE
 config FIRMWARE_OFFSET
     default 4096
 
+# Raised to prevent ACL mbuf allocation failures during high-throughput
+# operations (e.g. firmware update over BLE on iOS).
+config NIMBLE_BLE_TRANSPORT_ACL_COUNT
+    default 60
+
 endif # SOC_SF32LB52
