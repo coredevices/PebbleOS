@@ -1070,7 +1070,7 @@ void test_activity__weight_history_rejects_invalid_values(void) {
   cl_assert_equal_i(activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples)), 0);
 }
 
-void test_activity__weight_history_imports_profile_after_corrupt_data(void) {
+void test_activity__weight_history_discards_corrupt_data(void) {
   const time_t now = rtc_get_time();
   SettingsFile file;
   cl_assert_equal_i(settings_file_open(&file, "weight_history", 0x1000), S_SUCCESS);
@@ -1081,13 +1081,8 @@ void test_activity__weight_history_imports_profile_after_corrupt_data(void) {
                     S_SUCCESS);
   settings_file_close(&file);
 
-  cl_assert(activity_weight_history_seed_profile_if_empty(now, 7500));
-  cl_assert(activity_weight_history_seed_profile_if_empty(now + 1, 7600));
-
-  ActivityWeightSample samples[2];
-  const size_t count = activity_weight_history_get_recent(samples, ARRAY_LENGTH(samples));
-  cl_assert_equal_i(count, 1);
-  cl_assert_equal_i(samples[0].weight_dag, 7500);
+  ActivityWeightSample sample;
+  cl_assert_equal_i(activity_weight_history_get_recent(&sample, 1), 0);
 }
 
 void test_activity__weight_history_remove_latest_ignores_empty_history(void) {

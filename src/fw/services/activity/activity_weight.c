@@ -274,14 +274,6 @@ bool activity_weight_history_add(time_t utc_sec, uint16_t weight_dag) {
   return success;
 }
 
-bool activity_weight_history_seed_profile_if_empty(time_t utc_sec, uint16_t weight_dag) {
-  ActivityWeightSample sample;
-  if (activity_weight_history_get_recent(&sample, 1) > 0) {
-    return true;
-  }
-  return activity_weight_history_add(utc_sec, weight_dag);
-}
-
 bool activity_weight_history_remove_latest(time_t utc_sec, uint16_t *new_weight_dag) {
   if (utc_sec <= 0 || !new_weight_dag) {
     return false;

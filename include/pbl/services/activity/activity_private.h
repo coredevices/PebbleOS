@@ -515,7 +515,6 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
                          const ActivitySettingsValueHistory *step_history);
 
 bool activity_weight_history_add(time_t utc_sec, uint16_t weight_dag);
-bool activity_weight_history_seed_profile_if_empty(time_t utc_sec, uint16_t weight_dag);
 bool activity_weight_history_remove_latest(time_t utc_sec, uint16_t *new_weight_dag);
 size_t activity_weight_history_get_recent(ActivityWeightSample *samples, size_t max_samples);
 bool activity_weight_history_get_daily(time_t utc_sec, ActivitySettingsValueHistory *history);

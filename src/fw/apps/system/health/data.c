@@ -157,8 +157,6 @@ void health_data_update_sleep(HealthData *health_data, uint32_t new_sleep,
 
 void health_data_update_weight(HealthData *health_data) {
   health_data->profile_weight_dag = activity_prefs_get_weight_dag();
-  activity_weight_history_seed_profile_if_empty(rtc_get_time(),
-                                                health_data->profile_weight_dag);
   health_data->weight_sample_count = activity_weight_history_get_recent(
       health_data->weight_samples, ARRAY_LENGTH(health_data->weight_samples));
   activity_weight_history_get_daily(rtc_get_time(), &health_data->weight_daily);

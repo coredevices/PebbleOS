@@ -76,11 +76,6 @@ uint16_t PBL_WEAK activity_prefs_get_weight_dag(void) {
 void PBL_WEAK activity_prefs_set_weight_dag(uint16_t weight_dag) {
 }
 
-bool PBL_WEAK activity_weight_history_seed_profile_if_empty(time_t utc_sec,
-                                                            uint16_t weight_dag) {
-  return true;
-}
-
 bool PBL_WEAK activity_weight_history_remove_latest(time_t utc_sec,
                                                     uint16_t *new_weight_dag) {
   return false;
