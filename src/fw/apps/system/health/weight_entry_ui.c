@@ -67,7 +67,7 @@ void health_weight_entry_ui_draw(GContext *ctx, const GRect *bounds, int32_t val
   frame.origin.y = 30 + HEALTH_Y_OFFSET;
   frame.size.h = 34;
   graphics_context_set_text_color(ctx, ENTRY_NEIGHBOR_COLOR);
-  prv_format_value(neighbor, sizeof(neighbor), MAX(min_tenths, value_tenths - 1));
+  prv_format_value(neighbor, sizeof(neighbor), MIN(max_tenths, value_tenths + 1));
   graphics_draw_text(ctx, neighbor, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), frame,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 
@@ -84,7 +84,7 @@ void health_weight_entry_ui_draw(GContext *ctx, const GRect *bounds, int32_t val
 
   frame.origin.y = 124 + HEALTH_Y_OFFSET;
   graphics_context_set_text_color(ctx, ENTRY_NEIGHBOR_COLOR);
-  prv_format_value(neighbor, sizeof(neighbor), MIN(max_tenths, value_tenths + 1));
+  prv_format_value(neighbor, sizeof(neighbor), MAX(min_tenths, value_tenths - 1));
   graphics_draw_text(ctx, neighbor, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), frame,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
