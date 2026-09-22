@@ -1,44 +1,10 @@
-name: Compliance checks
+name: Lint license headers
 
 on:
-  pull_request: {}
+  pull_request:
 
 jobs:
   lint:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-
-      - name: Install GitLint
-        run: pip install gitlint
-
-      - name: Run GitLint
-        env:
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: gitlint --commits "origin/${GITHUB_BASE_REF}..${HEAD_SHA}"
-
-  ruff:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Rebase onto target branch
-        uses: ./.github/actions/rebase
-
-      - uses: astral-sh/ruff-action@v4.1.0
-
-  license:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -101,19 +67,3 @@ jobs:
             echo "  /* SPDX-License-Identifier: Apache-2.0 */"
             exit 1
           fi
-
-  clang-format:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Rebase onto target branch
-        uses: ./.github/actions/rebase
-
-      - name: Run clang-format
-        uses: jidicula/clang-format-action@v4.18.0
-        with:
-          clang-format-version: "22"

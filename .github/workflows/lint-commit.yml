@@ -1,0 +1,26 @@
+name: Lint commit messages
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install GitLint
+        run: pip install gitlint
+
+      - name: Run GitLint
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: gitlint --commits "origin/${GITHUB_BASE_REF}..${HEAD_SHA}"
