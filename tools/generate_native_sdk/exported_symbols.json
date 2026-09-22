@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "109",
+  "revision" : "110",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/ambient_light.h",
@@ -32,6 +32,7 @@
     "fw/applib/backlight_service.h",
     "fw/applib/battery_state_service.h",
     "fw/applib/alarm_service.h",
+    "fw/applib/notification_service.h",
     "fw/applib/compass_service.h",
     "fw/applib/connection_service.h",
     "fw/applib/data_logging.h",
@@ -308,6 +309,15 @@
                 { "type": "function",
                   "name": "alarm_service_peek_next",
                   "addedRevision": "105"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "NotificationService",
+              "exports": [
+                { "type": "function",
+                  "name": "notification_service_get_unread_count",
+                  "addedRevision": "110"
                 }
               ]
             }, {

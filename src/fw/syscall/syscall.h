@@ -336,3 +336,7 @@ bool sys_do_not_disturb_is_active(void);
 //! @param timestamp_out Set to the UTC time of the next enabled alarm.
 //! @return True if at least one enabled alarm is scheduled.
 bool sys_alarm_get_next_enabled(time_t *timestamp_out);
+
+//! Get the number of notifications the wearer has not yet engaged with.
+//! @return Count of unread notifications, saturating at UINT8_MAX.
+uint8_t sys_notification_get_unread_count(void);
