@@ -105,6 +105,15 @@ class SerialConnection(Connection):
                 self._cond.wait(remaining)
             return self._prompt_buf
 
+    def prompt_no_reply(self, command):
+        with self._prompt_lock:
+            with self._cond:
+                self._in_prompt = True
+                self._prompt_buf = ""
+            self._serial.write(CTRL_C)
+            self._wait_prompt_until(lambda b: ">" in b, 5, "entering the prompt")
+            self._serial.write(command.encode() + b"\r")
+
     def prompt(self, command, timeout):
         if self._serial is None:
             raise HarnessError(f"{self!r} is not open")

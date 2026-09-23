@@ -30,6 +30,7 @@ CATEGORY_MARKERS = {
     "smoke": "quick checks that the firmware boots and answers",
     "ui": "drives the UI and compares screenshots",
     "notifications": "notification delivery and presentation",
+    "power": "measures current consumption (needs a PPK2)",
     "slow": "takes more than a minute",
 }
 
@@ -80,6 +81,12 @@ def pytest_addoption(parser):
         help="Flash the build to the watch before the tests",
     )
     group.addoption(
+        "--erase-fs",
+        action="store_true",
+        help="Erase the watch's filesystem (bondings, settings, apps, data) "
+        "and the bonding kept for PRF before the tests",
+    )
+    group.addoption(
         "--flash-command",
         help="Command to flash the watch with (default: pbl flash)",
     )
@@ -110,6 +117,18 @@ def pytest_addoption(parser):
         "--update-golden",
         action="store_true",
         help="Write screenshots as the new golden images instead of comparing",
+    )
+    group.addoption(
+        "--ppk2",
+        metavar="PORT",
+        help="Power the watch from a PPK2 on PORT ('auto' to find it)",
+    )
+    group.addoption(
+        "--ppk2-voltage",
+        type=int,
+        default=3800,
+        metavar="MV",
+        help="VBAT the PPK2 supplies, in millivolts (default: %(default)s)",
     )
 
 

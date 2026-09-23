@@ -9,6 +9,7 @@ the connections' capabilities (prompt, logs, Pebble protocol) is served by
 the first connection that has it.
 """
 
+import contextlib
 import os
 import threading
 import time
@@ -21,6 +22,10 @@ from harness.connections import Capability
 from harness.errors import HarnessError, Unsupported, WatchTimeout
 from harness.logs import Dehasher, LogBuffer, LogFile
 
+QUIESCE_SEND_S = 0.5
+# The console listens again once the firmware's timer fires.
+QUIESCE_MARGIN_S = 2.0
+
 
 @dataclass
 class DeviceConfig:
@@ -31,8 +36,10 @@ class DeviceConfig:
     serial: list = field(default_factory=list)
     serial_baud: int = 115200
     flash_before: bool = False
+    erase_fs: bool = False
     flash_command: str = None
     qemu_rtc: str = None
+    power_supply: object = None
 
 
 class DeviceAdapter(ABC):
@@ -104,6 +111,30 @@ class DeviceAdapter(ABC):
     def disconnect(self):
         while self.connections:
             self.connections.pop().close()
+
+    @contextlib.contextmanager
+    def quiesce(self, seconds):
+        """Have the firmware stop listening on its console for ``seconds``
+        (so it can sleep as it would unplugged) and drop every connection
+        meanwhile; reconnect once it listens again."""
+        self._connection(Capability.PROMPT).prompt_no_reply(
+            f"console disable rx {int(seconds)}"
+        )
+        until = time.monotonic() + seconds
+        # Let the command go out before the port closes.
+        time.sleep(QUIESCE_SEND_S)
+        self.disconnect()
+        try:
+            yield until
+        finally:
+            time.sleep(max(until - time.monotonic(), 0) + QUIESCE_MARGIN_S)
+            self.connect()
+            self.wait_ready()
+
+    def wipe(self):
+        """Erase the watch's filesystem and boot it afresh: no bondings,
+        default settings, no apps or data."""
+        raise Unsupported(f"the {self.type} device cannot be wiped")
 
     def reset(self):
         """Restart the firmware, and wait until it answers again."""

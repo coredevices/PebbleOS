@@ -15,8 +15,22 @@ from harness.plugin import results_dir_for
 REPORT_LOG_LINES = 200
 
 
-def _determine_scope(fixture_name, config):
+SCOPES = ("function", "class", "module", "package", "session")
+
+
+def dut_scope(fixture_name, config):
+    """How long a launched device is shared (--dut-scope)."""
     return config.getoption("dut_scope")
+
+
+def dut_scope_within(scope):
+    """A dynamic scope: ``scope``, or the device's when narrower, for
+    fixtures that use the device."""
+
+    def determine(fixture_name, config):
+        return min(scope, dut_scope(fixture_name, config), key=SCOPES.index)
+
+    return determine
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +48,23 @@ def results_dir(request):
 
 
 @pytest.fixture(scope="session")
-def device_object(request, build, results_dir):
+def ppk2(request):
+    """The PPK2 powering the watch, if one was given with --ppk2."""
+    port = request.config.getoption("ppk2")
+    if port is None:
+        yield None
+        return
+    from harness.helpers.power import Ppk2
+
+    supply = Ppk2(port, request.config.getoption("ppk2_voltage"))
+    try:
+        yield supply
+    finally:
+        supply.close()
+
+
+@pytest.fixture(scope="session")
+def device_object(request, build, results_dir, ppk2):
     """The device, not launched."""
     config = request.config
     device_type = config.pbl_device_type
@@ -47,8 +77,10 @@ def device_object(request, build, results_dir):
             serial=config.getoption("device_serial"),
             serial_baud=config.getoption("device_serial_baud"),
             flash_before=config.getoption("flash_before"),
+            erase_fs=config.getoption("erase_fs"),
             flash_command=config.getoption("flash_command"),
             qemu_rtc=config.getoption("qemu_rtc"),
+            power_supply=ppk2,
         )
     )
     try:
@@ -57,7 +89,7 @@ def device_object(request, build, results_dir):
         device.close()
 
 
-@pytest.fixture(scope=_determine_scope)
+@pytest.fixture(scope=dut_scope)
 def unlaunched_dut(request, device_object):
     """The device, with log files set up but not launched."""
     device_object.initialize_log_files(request.node.name)
@@ -67,7 +99,7 @@ def unlaunched_dut(request, device_object):
         device_object.close()
 
 
-@pytest.fixture(scope=_determine_scope)
+@pytest.fixture(scope=dut_scope)
 def dut(unlaunched_dut):
     """The launched device: firmware booted and connected."""
     unlaunched_dut.launch()
@@ -150,3 +182,13 @@ def snapshot(request, build, test_results_dir):
         test_results_dir,
         update=request.config.getoption("update_golden"),
     )
+
+
+@pytest.fixture
+def power(ppk2, dut, test_results_dir):
+    """Current measurement through the PPK2."""
+    if ppk2 is None:
+        pytest.skip("no PPK2: pass --ppk2 PORT")
+    from harness.helpers.power import Power
+
+    return Power(ppk2, dut, test_results_dir)

@@ -24,6 +24,10 @@ HOME_SETTLE_S = 2.0
 
 TICTOC_UUID = "8f3c8686-31a1-4f5f-91f5-01600c9bdc59"
 TICTOC_WINDOW = "TicToc"
+# The Quick Launch action: flips airplane mode, then returns to the watchface.
+AIRPLANE_MODE_TOGGLE_UUID = "88c28c12-7f81-42db-aaa6-14ccef6f27e5"
+# How long its result dialog stays up.
+AIRPLANE_MODE_TOGGLE_S = 2.5
 
 
 class Button(enum.IntEnum):
@@ -265,6 +269,11 @@ class Ui:
         response = self.dut.prompt(f"app launch {apps[app]}")
         if response != ["OK"]:
             raise PromptError(f"launching {app!r}: {response}")
+
+    def toggle_airplane_mode(self):
+        """Flip airplane mode, as the Quick Launch action does."""
+        self.launch_app(AIRPLANE_MODE_TOGGLE_UUID)
+        time.sleep(AIRPLANE_MODE_TOGGLE_S)
 
     def set_time(self, when):
         """Set the RTC to ``when``, a datetime or a UNIX timestamp."""

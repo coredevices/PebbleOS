@@ -126,6 +126,10 @@ class PulseConnection(Connection):
             raise PromptError(lines[0])
         return lines
 
+    def prompt_no_reply(self, command):
+        with self._prompt_lock:
+            self._prompt.socket.send(command.encode())
+
     @property
     def protocol(self):
         if self._pebble is None or not self._pebble.connected:

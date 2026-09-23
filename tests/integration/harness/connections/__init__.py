@@ -64,6 +64,11 @@ class Connection(ABC):
         """Run a prompt command, returning its response lines."""
         raise Unsupported(f"{self!r} has no prompt")
 
+    def prompt_no_reply(self, command):
+        """Send a prompt command without waiting for its response, for
+        commands after which the firmware stops listening."""
+        raise Unsupported(f"{self!r} has no prompt")
+
     @property
     def protocol(self):
         """A connected libpebble2 ``PebbleConnection``."""

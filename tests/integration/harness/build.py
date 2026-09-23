@@ -4,6 +4,7 @@
 """What the harness needs to know about the firmware build under test."""
 
 import os
+import re
 
 from harness.errors import HarnessError
 
@@ -100,6 +101,35 @@ class Build:
     @property
     def loghash_dict(self):
         return self.join("src", "fw", "loghash_dict.json")
+
+    def flash_region(self, name):
+        """``(address, size)`` of a flash region (e.g. ``FILESYSTEM``), from
+        the layout header the build's flash part selects."""
+        for key, value in self.config.items():
+            if not key.startswith("CONFIG_FLASH_") or value is not True:
+                continue
+            header = os.path.join(
+                self.topdir,
+                "src",
+                "fw",
+                "flash_region",
+                f"flash_region_{key[len('CONFIG_FLASH_') :].lower()}.h",
+            )
+            if os.path.isfile(header):
+                break
+        else:
+            raise HarnessError(f"no flash layout for board {self.board}")
+
+        with open(header) as f:
+            text = f.read()
+        base = re.search(r"#define FLASH_REGION_BASE_ADDRESS\s+(0x[0-9A-Fa-f]+)", text)
+        # Regions are laid out back to back, in the order they are listed.
+        address = int(base.group(1), 16) if base else 0
+        for region, size in re.findall(r"MACRO\((\w+),\s*(0x[0-9A-Fa-f]+)", text):
+            if region == name:
+                return address, int(size, 16)
+            address += int(size, 16)
+        raise HarnessError(f"no {name} flash region for board {self.board}")
 
     def tool(self, name):
         """An SDK tool CMake located (PBL_<NAME>), or None."""
