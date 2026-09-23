@@ -134,3 +134,19 @@ def ui(dut):
     ui = Ui(dut)
     ui.go_home()
     return ui
+
+
+@pytest.fixture
+def snapshot(request, build, test_results_dir):
+    """Screenshot comparison against the board's golden images."""
+    from harness.helpers.snapshot import Snapshot
+
+    module = os.path.splitext(os.path.basename(request.node.path))[0]
+    golden_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "golden")
+    return Snapshot(
+        golden_dir,
+        build.board,
+        module,
+        test_results_dir,
+        update=request.config.getoption("update_golden"),
+    )

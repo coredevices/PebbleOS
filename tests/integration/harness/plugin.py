@@ -106,6 +106,11 @@ def pytest_addoption(parser):
         help="The emulator's RTC at boot, for reproducible screens (default: "
         "%(default)s; 'localtime' for the host's)",
     )
+    group.addoption(
+        "--update-golden",
+        action="store_true",
+        help="Write screenshots as the new golden images instead of comparing",
+    )
 
 
 @pytest.hookimpl(tryfirst=True)
