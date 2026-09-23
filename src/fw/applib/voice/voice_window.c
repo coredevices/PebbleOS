@@ -223,6 +223,18 @@ static void prv_show_connectivity_error_and_exit(VoiceUiData *data) {
   }
 }
 
+static void prv_show_disabled_error_and_exit(VoiceUiData *data) {
+  data->error_count = MAX_ERROR_COUNT; // exit UI after the dialog is shown
+  if (data->show_error_dialog) {
+    prv_push_long_error_dialog(data, NULL,
+                               i18n_noop("Enable voice in the settings page of the Pebble app."),
+                               RESOURCE_ID_GENERIC_WARNING_TINY);
+    data->error_exit_status = DictationSessionStatusFailureDisabled;
+  } else {
+    prv_exit_and_send_result_event(data, DictationSessionStatusFailureDisabled);
+  }
+}
+
 static void prv_handle_bt_conn_result(bool connected, void *context) {
   VoiceUiData *data = context;
   if (connected) {
@@ -306,15 +318,7 @@ static void prv_handle_ready_event(VoiceUiData *data, PebbleVoiceServiceEvent *e
     case VoiceStatusErrorDisabled:
       // This should happen before loading the window, but we currently do not have a mechanism to
       // tell the watch whether or not voice reply is enabled
-      data->error_count = MAX_ERROR_COUNT; // exit UI after the dialog is shown
-      if (data->show_error_dialog) {
-        prv_push_long_error_dialog(
-            data, NULL, i18n_noop("Enable voice in the settings page of the Pebble app."),
-            RESOURCE_ID_GENERIC_WARNING_TINY);
-        data->error_exit_status = DictationSessionStatusFailureDisabled;
-      } else {
-        prv_exit_and_send_result_event(data, DictationSessionStatusFailureDisabled);
-      }
+      prv_show_disabled_error_and_exit(data);
       break;
 
     case VoiceStatusErrorGeneric:
@@ -395,6 +399,10 @@ static void prv_handle_dictation_result(VoiceUiData *data, PebbleVoiceServiceEve
 
     case VoiceStatusErrorConnectivity:
       prv_show_connectivity_error_and_exit(data);
+      break;
+
+    case VoiceStatusErrorDisabled:
+      prv_show_disabled_error_and_exit(data);
       break;
 
     case VoiceStatusErrorGeneric:
