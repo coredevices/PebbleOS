@@ -114,6 +114,20 @@ def pytest_addoption(parser):
         "%(default)s; 'localtime' for the host's)",
     )
     group.addoption(
+        "--qemu-bt-hci",
+        metavar="CHARDEV",
+        help="H4 controller for builds with CONFIG_BT_HCI_UART: the serial port "
+        "of an hci_uart dongle or any QEMU -serial spec, or 'virtual' for "
+        "Bumble's software controllers, which also give the harness one",
+    )
+    group.addoption(
+        "--ble-controller",
+        metavar="TRANSPORT",
+        help="Controller the harness uses Bluetooth through: the serial port of "
+        "an H4 controller, e.g. an nRF52840 dongle running Zephyr's hci_uart "
+        "(/dev/cu.usbmodem1101), or a Bumble transport",
+    )
+    group.addoption(
         "--update-golden",
         action="store_true",
         help="Write screenshots as the new golden images instead of comparing",

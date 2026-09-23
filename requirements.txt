@@ -35,6 +35,8 @@ libpebble2>=0.0.16
 pytest
 numpy
 ppk2-api
+# Its software controller asks the peripheral for the LTK since 0.0.235.
+bumble>=0.0.235
 
 -e tools/libs/pbl-cli
 -e tools/libs/pebble-commander

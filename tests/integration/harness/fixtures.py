@@ -80,6 +80,8 @@ def device_object(request, build, results_dir, ppk2):
             erase_fs=config.getoption("erase_fs"),
             flash_command=config.getoption("flash_command"),
             qemu_rtc=config.getoption("qemu_rtc"),
+            qemu_bt_hci=config.getoption("qemu_bt_hci"),
+            ble_controller=config.getoption("ble_controller"),
             power_supply=ppk2,
         )
     )

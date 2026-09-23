@@ -37,10 +37,15 @@ class Connection(ABC):
     scheme = None
     capabilities = Capability.NONE
     help = None
+    #: Open after the other connections, which it may need (e.g. a prompt
+    #: to confirm pairing on the watch).
+    opens_last = False
 
     def __init__(self, address, dehasher=None):
         self.address = address
         self.dehasher = dehasher
+        #: The device this connection belongs to, set before it is opened.
+        self.device = None
         self._listeners = []
         self._listeners_lock = threading.Lock()
 
