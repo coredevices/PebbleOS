@@ -34,9 +34,13 @@ int8_t text_resources_get_glyph_height(FontCache *font_cache, Codepoint codepoin
 }
 
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                          FontInfo *fontinfo, int16_t *baseline_adjust_out) {
-  if (baseline_adjust_out) {
-    *baseline_adjust_out = 0;
+                                          FontInfo *fontinfo, GlyphLocation *location_out) {
+  if (location_out) {
+    *location_out = (GlyphLocation){0};
   }
   return NULL;
+}
+
+bool text_resources_glyph_is_color(const GlyphLocation *location) {
+  return false;
 }

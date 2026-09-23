@@ -5,6 +5,7 @@
 
 #include "gcontext.h"
 #include "process_state/app_state/app_state.h"
+#include "syscall/syscall.h"
 #include "system/passert.h"
 #include "text_resources.h"
 #include "util/bitset.h"
@@ -48,6 +49,156 @@ PBL_T_STATIC int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint3
 }
 #endif
 
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+#define COLOR_GLYPH_CHUNK_SIZE 64
+
+typedef struct {
+  const FontResource *font_res;
+  uint32_t offset;
+  uint32_t end;
+  uint8_t pos;
+  uint8_t len;
+  uint8_t buf[COLOR_GLYPH_CHUNK_SIZE];
+} ColorGlyphReader;
+
+typedef struct {
+  ColorGlyphReader reader;
+  ColorGlyphMode mode;
+  uint8_t bpp;
+  uint8_t byte;
+  uint8_t bits_left;
+  uint8_t run_left;
+  uint8_t run_value;
+} ColorGlyphDecoder;
+
+static bool prv_read(ColorGlyphReader *r, uint8_t *out, size_t len) {
+  const size_t n =
+      sys_resource_load_range(r->font_res->app_num, r->font_res->resource_id, r->offset, out, len);
+  r->offset += len;
+  return n == len;
+}
+
+static bool prv_read_byte(ColorGlyphReader *r, uint8_t *byte) {
+  if (r->pos == r->len) {
+    if (r->offset >= r->end) {
+      return false;
+    }
+    r->len = MIN(sizeof(r->buf), r->end - r->offset);
+    r->pos = 0;
+    if (!prv_read(r, r->buf, r->len)) {
+      return false;
+    }
+  }
+  *byte = r->buf[r->pos++];
+  return true;
+}
+
+static bool prv_decode_next(ColorGlyphDecoder *d, uint8_t *value) {
+  if (d->mode == ColorGlyphModeRle) {
+    if (d->run_left == 0) {
+      uint8_t run;
+      if (!prv_read_byte(&d->reader, &run)) {
+        return false;
+      }
+      d->run_left = (run >> 4) + 1;
+      d->run_value = run & 0x0F;
+    }
+    d->run_left--;
+    *value = d->run_value;
+    return true;
+  }
+
+  if (d->bits_left == 0) {
+    if (!prv_read_byte(&d->reader, &d->byte)) {
+      return false;
+    }
+    d->bits_left = 8;
+  }
+  d->bits_left -= d->bpp;
+  *value = (d->byte >> d->bits_left) & ((1 << d->bpp) - 1);
+  return true;
+}
+
+static void prv_render_color_glyph(GContext *ctx, const GlyphData *glyph,
+                                   const GlyphLocation *location, const GRect *target,
+                                   const GRect *clipped) {
+  ColorGlyphDecoder d = {
+    .reader = {
+      .font_res = location->font_res,
+      .offset = location->offset + sizeof(GlyphHeaderData)
+    },
+  };
+
+  ColorGlyphHeader header;
+  if (!prv_read(&d.reader, (uint8_t *)&header, sizeof(header)) ||
+      header.palette_size > COLOR_GLYPH_MAX_PALETTE) {
+    return;
+  }
+  d.mode = COLOR_GLYPH_MODE(header.encoding);
+  d.bpp = COLOR_GLYPH_BPP(header.encoding);
+
+  GColor palette[COLOR_GLYPH_MAX_PALETTE];
+  if (d.mode == ColorGlyphModeTinted) {
+    palette[0] = GColorClear;
+    palette[1] = ctx->draw_state.text_color;
+    if (ctx->draw_state.compositing_mode != GCompOpSet) {
+      palette[1].a = 3;
+    }
+  } else if (!prv_read(&d.reader, (uint8_t *)palette, header.palette_size)) {
+    return;
+  }
+  d.reader.end = d.reader.offset + header.data_len;
+
+  GBitmap *dest_bitmap = graphics_context_get_bitmap(ctx);
+  const bool direct = (d.mode != ColorGlyphModeTinted) && (d.bpp == 8);
+  const uint8_t num_colors = (d.mode == ColorGlyphModeTinted) ? 2 : header.palette_size;
+  const int16_t clip_max_x = grect_get_max_x(clipped);
+  const int16_t clip_max_y = grect_get_max_y(clipped);
+
+  for (int16_t y = 0; y < glyph->header.height_px; y++) {
+    const int16_t dest_y = target->origin.y + y;
+    if (dest_y >= clip_max_y) {
+      break;
+    }
+    const bool row_visible = (dest_y >= clipped->origin.y);
+    const GBitmapDataRowInfo row =
+        row_visible ? gbitmap_get_data_row_info(dest_bitmap, dest_y) : (GBitmapDataRowInfo){0};
+
+    // Raw rows are byte-aligned
+    d.bits_left = 0;
+
+    for (int16_t x = 0; x < glyph->header.width_px; x++) {
+      uint8_t value;
+      if (!prv_decode_next(&d, &value)) {
+        return;
+      }
+
+      const int16_t dest_x = target->origin.x + x;
+      if (!row_visible || dest_x < clipped->origin.x || dest_x >= clip_max_x ||
+          dest_x < row.min_x || dest_x > row.max_x) {
+        continue;
+      }
+
+      GColor color;
+      if (direct) {
+        color.argb = value;
+      } else if (value < num_colors) {
+        color = palette[value];
+      } else {
+        continue;
+      }
+
+      uint8_t *pixel = &row.data[dest_x];
+      if (color.a == 3) {
+        *pixel = color.argb;
+      } else if (color.a != 0) {
+        *pixel = gcolor_alpha_blend(color, (GColor){.argb = *pixel}).argb;
+      }
+    }
+  }
+}
+#endif
+
 // PRO TIP: if you have to modify this function, expect to waste the rest of your day on it
 void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const font,
                   const GRect cursor) {
@@ -60,16 +211,15 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
     return;
   }
 
-  int16_t baseline_adjust = 0;
-  const GlyphData *glyph =
-      text_resources_get_glyph(&ctx->font_cache, codepoint, font, &baseline_adjust);
+  GlyphLocation location;
+  const GlyphData *glyph = text_resources_get_glyph(&ctx->font_cache, codepoint, font, &location);
 
   PBL_ASSERTN(glyph);
   // Bitfiddle the metrics data:
   GRect glyph_metrics = get_glyph_rect(glyph);
   // Sit a substituted glyph on the primary font's baseline. Must happen before the target and
   // clipping rects are derived from it.
-  glyph_metrics.origin.y += baseline_adjust;
+  glyph_metrics.origin.y += location.baseline_adjust;
 
   // Calculate the box that we intend to draw to the screen, in screen coordinates
   GRect glyph_target = {
@@ -87,6 +237,16 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
   // actually fill with bits on the screen.
   GRect clipped_glyph_target = glyph_target;
   grect_clip(&clipped_glyph_target, &ctx->draw_state.clip_box);
+
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+  if (text_resources_glyph_is_color(&location)) {
+    if (clipped_glyph_target.size.h > 0 && clipped_glyph_target.size.w > 0) {
+      prv_render_color_glyph(ctx, glyph, &location, &glyph_target, &clipped_glyph_target);
+      graphics_context_mark_dirty_rect(ctx, clipped_glyph_target);
+    }
+    return;
+  }
+#endif
 
   // The number of bits to be clipped off the edges
   const int left_clip = clipped_glyph_target.origin.x - glyph_target.origin.x;

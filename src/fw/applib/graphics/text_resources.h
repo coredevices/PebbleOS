@@ -35,6 +35,24 @@ typedef struct PBL_PACKED {
   uint32_t data[];
 } GlyphData;
 
+//! Body that follows GlyphHeaderData in fonts with FEATURE_COLOR, then
+//! palette[palette_size] (GColor8) and data[data_len]
+typedef struct PBL_PACKED {
+  uint8_t encoding;
+  uint8_t palette_size;
+  uint16_t data_len;
+} ColorGlyphHeader;
+
+#define COLOR_GLYPH_BPP(_encoding)  (1 << ((_encoding) & 0x3))
+#define COLOR_GLYPH_MODE(_encoding) (((_encoding) >> 2) & 0x3)
+#define COLOR_GLYPH_MAX_PALETTE     16
+
+typedef enum {
+  ColorGlyphModeRaw = 0,
+  ColorGlyphModeRle = 1,
+  ColorGlyphModeTinted = 2,
+} ColorGlyphMode;
+
 //! Maps a codepoint to the location of the actual font data.
 typedef struct PBL_PACKED {
   Codepoint codepoint : 16;
@@ -107,13 +125,25 @@ typedef struct FontCache {
   const FontResource *cached_font;
 } FontCache;
 
+typedef struct {
+  //! Pixels to add to the glyph's top_offset when drawing, non-zero only when another font
+  //! (emoji or system fallback) supplied the glyph
+  int16_t baseline_adjust;
+  //! Font resource the glyph was read from
+  const FontResource *font_res;
+  //! Offset of the glyph header within font_res
+  uint32_t offset;
+} GlyphLocation;
+
 //! @param font_cache The font cache to look up the glyph in
 //! @param codepoint The codepoint to get the glyph for
 //! @param font_info The font to get the glyph from
-//! @param baseline_adjust_out optional: pixels to add to the glyph's top_offset when drawing,
-//! non-zero only when another font (emoji or system fallback) supplied the glyph
+//! @param location_out optional: where the glyph was found
+//! @note for color glyphs only the header is returned; the body is streamed from location_out
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                          FontInfo *font_info, int16_t *baseline_adjust_out);
+                                          FontInfo *font_info, GlyphLocation *location_out);
+
+bool text_resources_glyph_is_color(const GlyphLocation *location);
 
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint codepoint,
                                               FontInfo *font_info);

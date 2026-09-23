@@ -308,10 +308,10 @@ void test_text_resources__baseline_adjust_for_fallback_font(void) {
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24, 0, &s_font_info));
 
   // A glyph from the primary font itself needs no adjust.
-  int16_t adjust = -1;
-  const GlyphData *g0 = text_resources_get_glyph(&s_font_cache, 'a', &s_font_info, &adjust);
+  GlyphLocation loc = {.baseline_adjust = -1};
+  const GlyphData *g0 = text_resources_get_glyph(&s_font_cache, 'a', &s_font_info, &loc);
   cl_assert(g0 != NULL);
-  cl_assert_equal_i(adjust, 0);
+  cl_assert_equal_i(loc.baseline_adjust, 0);
 
   // Install a shorter fallback (gothic 18 + extended) that carries 0x4E50.
   static FontInfo s_fallback;
@@ -330,10 +330,10 @@ void test_text_resources__baseline_adjust_for_fallback_font(void) {
       (int16_t)s_font_info.base.md.max_height - (int16_t)s_fallback.base.md.max_height;
   cl_assert(expected > 0); // premise: the fallback really is shorter
 
-  adjust = -1;
-  const GlyphData *g1 = text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info, &adjust);
+  loc.baseline_adjust = -1;
+  const GlyphData *g1 = text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info, &loc);
   cl_assert(g1 != NULL);
-  cl_assert_equal_i(adjust, expected);
+  cl_assert_equal_i(loc.baseline_adjust, expected);
 }
 
 // Regression: an extension is part of the SAME font and its glyph offsets are already baked
@@ -351,11 +351,11 @@ void test_text_resources__baseline_adjust_zero_for_own_extension(void) {
   const uint8_t cjk_bytes[] = {0x00, 0x0C, 0xE2, 0x01, 0x0F, 0x80, 0x30, 0x40, 0x08, 0x10, 0x04,
                                0x08, 0x82, 0xFC, 0xFF, 0x80, 0x00, 0x44, 0x00, 0x26, 0x01, 0x11,
                                0x41, 0x08, 0x11, 0x84, 0x04, 0x82, 0xC0, 0x01, 0x40, 0x00};
-  int16_t adjust = -1;
-  const GlyphData *g = text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info, &adjust);
+  GlyphLocation loc = {.baseline_adjust = -1};
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info, &loc);
   cl_assert(g != NULL);
   cl_assert_equal_m(cjk_bytes, g->data, glyph_get_size_bytes(g));
-  cl_assert_equal_i(adjust, 0);
+  cl_assert_equal_i(loc.baseline_adjust, 0);
 }
 
 // The case this all exists for: a 36px font has no emoji font of its own size, so the 28px one
@@ -372,11 +372,10 @@ void test_text_resources__baseline_adjust_for_emoji_font(void) {
   s_test_emoji_font = &s_emoji;
 
   const Codepoint PHONE_CODEPOINT = 0x260E;
-  int16_t adjust = -1;
-  const GlyphData *g =
-      text_resources_get_glyph(&s_font_cache, PHONE_CODEPOINT, &s_font_info, &adjust);
+  GlyphLocation loc = {.baseline_adjust = -1};
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, PHONE_CODEPOINT, &s_font_info, &loc);
   cl_assert(g != NULL);
-  cl_assert_equal_i(adjust, 8); // 36px primary baseline - 28px emoji font baseline
+  cl_assert_equal_i(loc.baseline_adjust, 8); // 36px primary baseline - 28px emoji font baseline
 }
 
 // A codepoint present in the primary font is served by the primary font; the fallback is not
@@ -499,12 +498,12 @@ void test_text_resources__extension_routed_miss_rescued_from_base(void) {
   keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
                             s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
 
-  int16_t adjust = -1;
-  const GlyphData *g = text_resources_get_glyph(&s_font_cache, PI, &s_font_info, &adjust);
+  GlyphLocation loc = {.baseline_adjust = -1};
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, PI, &s_font_info, &loc);
   cl_assert(g != NULL);
   cl_assert_equal_i(glyph_get_size_bytes(g), base_size);
   cl_assert_equal_m(base_bytes, g->data, base_size); // rescued from base, not the wildcard
-  cl_assert_equal_i(adjust, 0);                      // owner is the primary font
+  cl_assert_equal_i(loc.baseline_adjust, 0);         // owner is the primary font
 }
 
 // #1709 itself: a latin-classified codepoint absent from the base but present in the extension must
@@ -536,12 +535,12 @@ void test_text_resources__base_routed_miss_rescued_from_extension(void) {
   keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
                             s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
 
-  int16_t adjust = -1;
-  const GlyphData *g = text_resources_get_glyph(&s_font_cache, ELLIPSIS, &s_font_info, &adjust);
+  GlyphLocation loc = {.baseline_adjust = -1};
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, ELLIPSIS, &s_font_info, &loc);
   cl_assert(g != NULL);
   cl_assert_equal_i(glyph_get_size_bytes(g), ext_size);
   cl_assert_equal_m(ext_bytes, g->data, ext_size); // rescued from extension, not the wildcard
-  cl_assert_equal_i(adjust, 0);                    // owner is the primary font
+  cl_assert_equal_i(loc.baseline_adjust, 0);       // owner is the primary font
 }
 
 // Regression guards for the in-font rescue: (a) a codepoint present in the routed resource still

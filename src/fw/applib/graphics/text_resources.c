@@ -347,6 +347,11 @@ static bool prv_load_glyph_bitmap(Codepoint codepoint, const FontResource *font_
 
 static PBL_ALWAYS_INLINE const GlyphData *prv_get_glyph_metadata_from_spi(
     Codepoint codepoint, FontCache *font_cache, const FontResource *font_res, bool need_bitmap) {
+  // Color glyph bodies do not fit the cache, the renderer streams them instead
+  if (HAS_FEATURE(font_res->md.version, VERSION_FIELD_FEATURE_COLOR)) {
+    need_bitmap = false;
+  }
+
   const uint32_t cache_key = prv_get_cache_key(font_res, codepoint);
   LineCacheData *cached = NULL;
 
@@ -514,6 +519,18 @@ static bool prv_load_font_res(ResAppNum app_num, uint32_t resource_id, FontResou
       if (header.features & FEATURE_RLE4) {
         font_res->md.version |= VERSION_FIELD_FEATURE_RLE4;
       }
+      if (header.features & FEATURE_COLOR) {
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+        if (header.features & FEATURE_RLE4) {
+          PBL_LOG_ERR("Color font res %" PRId32 " can't use RLE4", resource_id);
+          return false;
+        }
+        font_res->md.version |= VERSION_FIELD_FEATURE_COLOR;
+#else
+        PBL_LOG_ERR("Color font res %" PRId32 " needs a color display", resource_id);
+        return false;
+#endif
+      }
       break;
     default:
       PBL_LOG_ERR("Unknown font resource version %" PRIu8, header.version);
@@ -590,9 +607,11 @@ bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource, uint32_
 // font's other own resource, so a codepoint whose class routes it to base/extension is still found
 // in the other one. Skipped when the emoji font took over (owner != font_info).
 // @param owner_out if non-NULL, receives the FontInfo the glyph was looked up in
+// @param font_res_out if non-NULL, receives the resource the glyph was read from
 static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint codepoint,
                                               FontInfo *font_info, bool need_bitmap,
-                                              const FontInfo **owner_out) {
+                                              const FontInfo **owner_out,
+                                              const FontResource **font_res_out) {
   const FontInfo *owner = font_info;
   const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info, &owner);
   prv_check_font_cache(font_cache, font_res);
@@ -607,10 +626,14 @@ static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint c
     if (other) {
       prv_check_font_cache(font_cache, other);
       data = prv_get_glyph_metadata_from_spi(codepoint, font_cache, other, need_bitmap);
+      font_res = other;
     }
   }
   if (owner_out) {
     *owner_out = owner;
+  }
+  if (font_res_out) {
+    *font_res_out = font_res;
   }
   return data;
 }
@@ -624,11 +647,24 @@ static int16_t prv_baseline_adjust(const FontInfo *font_info, const FontInfo *ow
   return MAX(0, (int16_t)font_info->base.md.max_height - (int16_t)owner->base.md.max_height);
 }
 
+// The returned glyph always lives in glyph_buffer, whose resource_offset locates it
+static void prv_set_location(GlyphLocation *location_out, const FontCache *font_cache,
+                             const FontInfo *font_info, const FontInfo *owner,
+                             const FontResource *font_res) {
+  if (location_out) {
+    *location_out = (GlyphLocation){
+      .baseline_adjust = prv_baseline_adjust(font_info, owner),
+      .font_res = font_res,
+      .offset = ((const LineCacheData *)font_cache->glyph_buffer)->resource_offset,
+    };
+  }
+}
+
 static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,
                                       FontInfo *font_info, bool need_bitmap,
-                                      int16_t *baseline_adjust_out) {
-  if (baseline_adjust_out) {
-    *baseline_adjust_out = 0;
+                                      GlyphLocation *location_out) {
+  if (location_out) {
+    *location_out = (GlyphLocation){0};
   }
 
   if (!font_info->loaded) {
@@ -636,14 +672,13 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   }
 
   const FontInfo *owner = NULL;
+  const FontResource *font_res = NULL;
 
   // (a) Requested codepoint in the primary font.
   const GlyphData *data =
-      prv_get_glyph_in_font(font_cache, codepoint, font_info, need_bitmap, &owner);
+      prv_get_glyph_in_font(font_cache, codepoint, font_info, need_bitmap, &owner, &font_res);
   if (data) {
-    if (baseline_adjust_out) {
-      *baseline_adjust_out = prv_baseline_adjust(font_info, owner);
-    }
+    prv_set_location(location_out, font_cache, font_info, owner, font_res);
     return data;
   }
 
@@ -659,12 +694,10 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
     if (!fallback->loaded) {
       sys_font_reload_font(fallback);
     }
-    data = prv_get_glyph_in_font(font_cache, codepoint, fallback, need_bitmap, &owner);
+    data = prv_get_glyph_in_font(font_cache, codepoint, fallback, need_bitmap, &owner, &font_res);
     if (data) {
       // Baseline is still the caller's font, not the fallback's
-      if (baseline_adjust_out) {
-        *baseline_adjust_out = prv_baseline_adjust(font_info, owner);
-      }
+      prv_set_location(location_out, font_cache, font_info, owner, font_res);
       return data;
     }
   }
@@ -676,11 +709,10 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   //     missing-glyph box is the correct indicator.
   const Codepoint substitutes[] = {font_info->base.md.wildcard_codepoint, ' '};
   for (unsigned int i = 0; i < ARRAY_LENGTH(substitutes); i++) {
-    data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap, &owner);
+    data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap, &owner,
+                                 &font_res);
     if (data) {
-      if (baseline_adjust_out) {
-        *baseline_adjust_out = prv_baseline_adjust(font_info, owner);
-      }
+      prv_set_location(location_out, font_cache, font_info, owner, font_res);
       return data;
     }
   }
@@ -700,7 +732,11 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, const Codep
 }
 
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, const Codepoint codepoint,
-                                          FontInfo *font_info, int16_t *baseline_adjust_out) {
-  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */,
-                       baseline_adjust_out);
+                                          FontInfo *font_info, GlyphLocation *location_out) {
+  return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */, location_out);
+}
+
+bool text_resources_glyph_is_color(const GlyphLocation *location) {
+  return location->font_res &&
+         HAS_FEATURE(location->font_res->md.version, VERSION_FIELD_FEATURE_COLOR);
 }
