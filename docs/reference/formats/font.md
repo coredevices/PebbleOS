@@ -38,7 +38,9 @@ unrelated runtime struct).
 - bit 0: glyph-table offsets are `uint16_t` if set, `uint32_t` if clear.
   The generator sets it when the glyph table fits in 64 KiB.
 - bit 1: glyph bitmaps are RLE4-compressed if set, plain bitmaps if clear.
-- bits 2–7: reserved.
+- bit 2: glyphs are color glyphs (see Color glyphs below).
+  Cannot be combined with bit 1, and only loads on color displays.
+- bits 3–7: reserved.
 
 ## Hash table
 
@@ -90,3 +92,31 @@ first): each unit is `[symbol:1][length:3]`, emitting `length + 1`
 firmware decompresses in place in the glyph cache; the generator verifies
 at build time that every glyph is in-place decodable. The decoder-side
 description lives in `text_resources.c`.
+
+## Color glyphs
+
+With `features` bit 2 set, `height` in the glyph header is always the
+height, and the 1-bit bitmap is replaced by a color body:
+
+| Field          | Type                    | Notes                           |
+| -------------- | ----------------------- | ------------------------------- |
+| `encoding`     | `uint8_t`               | bits 0–1: log2 of bpp (1/2/4/8), bits 2–3: mode |
+| `palette_size` | `uint8_t`               | 0–16                            |
+| `data_len`     | `uint16_t`              | bytes of `data`                 |
+| `palette`      | `GColor8[palette_size]` | ARGB2222, alpha 0 = transparent |
+| `data`         | `uint8_t[data_len]`     | pixels, see mode                |
+
+Modes:
+
+- 0, raw: rows of `bpp`-bit palette indices, MSB-first, each row padded
+  to a byte. With 8 bpp there is no palette and each byte is a `GColor8`.
+- 1, RLE: one byte per run, high nibble `run - 1` (1–16 pixels), low
+  nibble the palette index. Runs continue across rows.
+- 2, tinted: raw 1 bpp coverage with no palette; set pixels are drawn in
+  the text color, like a regular glyph.
+
+The body is zero-padded to a multiple of 4 bytes. The firmware streams it
+from the resource while drawing instead of caching it, so glyph size is not
+bound by the glyph cache. `tools/font/pbf_color.py` implements the
+encoding; `pbf_extract.py` and `pbf_repack.py` round-trip color fonts
+through RGBA PNGs.

@@ -17,6 +17,7 @@ import os
 import struct
 import sys
 
+import pbf_color
 from PIL import Image
 
 # Font version constants
@@ -131,6 +132,36 @@ def extract_pbf(pbf_path, output_dir):
                 GLYPH_MD_STRUCT, header_data
             )
 
+            filename = f"U+{codepoint:04X}.png"
+            filepath = os.path.join(glyphs_dir, filename)
+            entry = {
+                "codepoint": codepoint,
+                "char": chr(codepoint) if 0x20 <= codepoint <= 0x10FFFF else None,
+                "file": f"glyphs/{filename}",
+                "width": width,
+                "height": height_or_rle,
+                "left_offset": left,
+                "top_offset": top,
+                "advance": advance,
+            }
+
+            if features & pbf_color.FEATURE_COLOR:
+                tinted, values = pbf_color.decode(
+                    glyph_table[bitmap_offset_bytes:], width, height_or_rle
+                )
+                if width > 0 and height_or_rle > 0:
+                    if tinted:
+                        img = Image.new("1", (width, height_or_rle), 1)
+                        img.putdata([0 if v else 1 for v in values])
+                    else:
+                        img = Image.new("RGBA", (width, height_or_rle))
+                        img.putdata([pbf_color.gcolor8_to_rgba(v) for v in values])
+                    img.save(filepath)
+                if not tinted:
+                    entry["color"] = True
+                glyphs.append(entry)
+                continue
+
             # Read bitmap data
             if features & FEATURE_RLE4:
                 bitmap_length = (height_or_rle + 1) // 2
@@ -155,9 +186,6 @@ def extract_pbf(pbf_path, output_dir):
                 height = height_or_rle
 
             # Create and save image
-            filename = f"U+{codepoint:04X}.png"
-            filepath = os.path.join(glyphs_dir, filename)
-
             if width > 0 and height > 0 and bitlist:
                 # PBF format: 1 = glyph (drawn as text_color), 0 = background.
                 # PIL mode '1': 0 = black, 255 = white. Write glyph bits as black.
@@ -170,18 +198,8 @@ def extract_pbf(pbf_path, output_dir):
                             pixels[x, y] = 0  # black glyph pixel
                 img.save(filepath)
 
-            glyphs.append(
-                {
-                    "codepoint": codepoint,
-                    "char": chr(codepoint) if 0x20 <= codepoint <= 0x10FFFF else None,
-                    "file": f"glyphs/{filename}",
-                    "width": width,
-                    "height": height,
-                    "left_offset": left,
-                    "top_offset": top,
-                    "advance": advance,
-                }
-            )
+            entry["height"] = height
+            glyphs.append(entry)
 
     # Sort glyphs by codepoint
     glyphs.sort(key=lambda g: g["codepoint"])
@@ -197,6 +215,7 @@ def extract_pbf(pbf_path, output_dir):
         "features": {
             "offset_16": bool(features & FEATURE_OFFSET_16),
             "rle4": bool(features & FEATURE_RLE4),
+            "color": bool(features & pbf_color.FEATURE_COLOR),
         },
         "glyphs": glyphs,
     }
