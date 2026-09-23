@@ -17,6 +17,7 @@
 #include "applib/voice/voice_window.h"
 #include "applib/voice/voice_window_private.h"
 #include "comm/ble/kernel_le_client/ancs/ancs.h"
+#include "kernel/event_loop.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
@@ -1144,6 +1145,67 @@ ActionMenu *timeline_actions_push_response_menu(TimelineItem *item,
   return timeline_actions_push_action_menu(&config, window_stack);
 }
 
+typedef struct {
+  ActionResultData *data;
+  int num_notifications;
+  int next;
+  bool performed_actions;
+  bool ancs_bulk_mode;
+  NotificationInfo notif_list[];
+} DismissAllContext;
+
+static bool prv_dismiss_all_load_item(NotificationInfo *info, TimelineItem *item) {
+  if (info->type == NotificationReminder) {
+    if (reminder_db_read_item(item, &info->id) != S_SUCCESS) {
+      PBL_LOG_ERR("Trying to dismiss all an invalid reminder");
+      return false;
+    }
+  } else if (info->type == NotificationMobile) {
+    if (!notification_storage_get(&info->id, item)) {
+      PBL_LOG_ERR("Trying to dismiss all an invalid notification");
+      return false;
+    }
+  }
+  return true;
+}
+
+// Dismissing can post events to KernelMain, the task running this, so dismiss one notification
+// per callback to let its event queue drain in between.
+static void prv_dismiss_all_step(void *context) {
+  DismissAllContext *ctx = context;
+
+  if (ctx->next == ctx->num_notifications) {
+    if (!ctx->performed_actions) {
+      PBL_LOG_DBG("Didn't take any actions, cleaning up");
+      const bool success = false;
+      prv_cleanup_action_result(ctx->data, success);
+    }
+    kernel_free(ctx);
+    return;
+  }
+
+  NotificationInfo *info = &ctx->notif_list[ctx->next++];
+  TimelineItem item;
+  if (prv_dismiss_all_load_item(info, &item)) {
+    const TimelineItemAction *action = timeline_item_find_dismiss_action(&item);
+    if (action) {
+      timeline_enable_ancs_bulk_action_mode(ctx->ancs_bulk_mode);
+      timeline_invoke_action(&item, action, NULL);
+      timeline_enable_ancs_bulk_action_mode(false);
+      ctx->performed_actions = true;
+
+      // FIXME: PBL-34338 There are other actions that should also use bulk mode to avoid crashes
+      // such as dismissing notifications on Android while disconnected
+      if (action->type == TimelineItemActionTypeAncsNegative) {
+        ctx->ancs_bulk_mode = true;
+      }
+    }
+    timeline_item_free_allocated_buffer(&item);
+  }
+
+  launcher_task_add_callback(prv_dismiss_all_step, ctx);
+}
+
 void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifications,
                                   ActionMenu *action_menu,
                                   ActionCompleteCallback dismiss_all_complete_callback,
@@ -1163,7 +1225,6 @@ void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifica
   // timeout handler will convey the error message
   const bool ignore_failures = true;
   prv_subscribe_to_action_results_and_timeouts(data, ignore_failures);
-  bool performed_actions = false;
 
   if (action_menu) {
     TimelineActionMenu *timeline_action_menu = action_menu_get_context(action_menu);
@@ -1175,40 +1236,13 @@ void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifica
     prv_push_dismiss_first_use_dialog(action_menu);
   }
 
-  for (int i = 0; i < num_notifications; i++) {
-    TimelineItem item;
-    if (notif_list[i].type == NotificationReminder) {
-      if (reminder_db_read_item(&item, &notif_list[i].id) != S_SUCCESS) {
-        PBL_LOG_ERR("Trying to dismiss all an invalid reminder");
-        continue;
-      }
-    } else if (notif_list[i].type == NotificationMobile) {
-      if (!notification_storage_get(&notif_list[i].id, &item)) {
-        PBL_LOG_ERR("Trying to dismiss all an invalid notification");
-        continue;
-      }
-    }
+  DismissAllContext *ctx =
+      kernel_malloc_check(sizeof(DismissAllContext) + num_notifications * sizeof(NotificationInfo));
+  *ctx = (DismissAllContext){
+    .data = data,
+    .num_notifications = num_notifications,
+  };
+  memcpy(ctx->notif_list, notif_list, num_notifications * sizeof(NotificationInfo));
 
-    const TimelineItemAction *action = timeline_item_find_dismiss_action(&item);
-    if (action) {
-      timeline_invoke_action(&item, action, NULL);
-      performed_actions = true;
-
-      // FIXME: PBL-34338 There are other actions that should also use bulk mode to avoid crashes
-      // such as dismissing notifications on Android while disconnected
-      if (action->type == TimelineItemActionTypeAncsNegative) {
-        timeline_enable_ancs_bulk_action_mode(true);
-      }
-    }
-    timeline_item_free_allocated_buffer(&item);
-  }
-
-  // It's safe to do this even if we didn't enable it
-  timeline_enable_ancs_bulk_action_mode(false);
-
-  if (!performed_actions) {
-    PBL_LOG_DBG("Didn't take any actions, cleaning up");
-    const bool success = false;
-    prv_cleanup_action_result(data, success);
-  }
+  prv_dismiss_all_step(ctx);
 }
