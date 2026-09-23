@@ -3,7 +3,7 @@
 
 #pragma once
 
-#define BT_VENDOR_ID   0x0000
+#define BT_VENDOR_ID   0x0EEA
 #define BT_VENDOR_NAME "QEMU"
 
 extern UARTDevice *const DBG_UART;
