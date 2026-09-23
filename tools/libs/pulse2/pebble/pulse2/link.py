@@ -109,7 +109,9 @@ class Interface:
                 break
             try:
                 splitter.write(self.iostream.read(1))
-            except OSError:
+            except Exception:
+                # Closing a socket:// port under a pending read tears the
+                # socket down mid-call, which is not always an OSError.
                 if self.closed:
                     self.logger.info("Interface closed; receive loop exiting")
                 else:
