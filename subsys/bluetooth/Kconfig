@@ -36,6 +36,14 @@ config BT_HCI_SF32LB52
       Talk H4 HCI to the SiFli controller running on the LCPU through the
       mailbox IPC queue.
 
+config BT_HCI_UART
+    bool "H4 over UART"
+    depends on QEMU
+    help
+      Talk H4 HCI to an external controller over the board's BT_HCI_UART.
+      On QEMU this is the fourth serial port, which can be attached to a
+      host controller such as an nRF52840 dongle running Zephyr's hci_uart.
+
 config BT_HCI_FAKE
     bool "Fake controller"
     help

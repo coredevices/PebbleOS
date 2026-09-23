@@ -147,6 +147,7 @@ typedef struct {
 #define QEMU_TOUCH_BASE      0x40011000
 #define QEMU_AUDIO_BASE      0x40012000
 #define QEMU_WDOG_BASE       0x40013000
+#define QEMU_UART3_BASE      0x40014000
 
 #define QEMU_EXTFLASH_XIP_BASE 0x10000000
 

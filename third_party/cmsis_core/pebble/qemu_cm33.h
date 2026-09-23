@@ -47,6 +47,7 @@ typedef enum IRQn {
   TOUCH_IRQn = 9,
   AUDIO_IRQn = 10,
   WATCHDOG_IRQn = 11,
+  UART3_IRQn = 12,
 } IRQn_Type;
 
 #include "core_cm33.h"
