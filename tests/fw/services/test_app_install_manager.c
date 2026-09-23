@@ -28,6 +28,7 @@
 // Stub Includes
 ////////////////////////////////////
 #include "stubs_analytics.h"
+#include "stubs_app_permissions_db.h"
 #include "stubs_app_manager.h"
 #include "stubs_app_state.h"
 #include "stubs_bootbits.h"
@@ -171,6 +172,15 @@ bool app_install_has_worker(AppInstallId id) {
   return app_install_entry_has_worker(&entry);
 }
 
+bool app_install_uses_microphone(AppInstallId id) {
+  AppInstallEntry entry;
+  bool exists = app_install_get_entry_for_install_id(id, &entry);
+  if (!exists) {
+    return false;
+  }
+  return app_install_entry_uses_microphone(&entry);
+}
+
 bool app_install_is_hidden(AppInstallId id) {
   AppInstallEntry entry;
   bool exists = app_install_get_entry_for_install_id(id, &entry);
@@ -199,7 +209,7 @@ static const AppDBEntry bg_counter = {
   .uuid =
       {0x1e, 0xb1, 0xd3, 0x9b, 0x56, 0x98, 0x48, 0x44, 0xb3, 0x94, 0x1f, 0x87, 0xb6, 0xbe, 0xae,
        0x67},
-  .info_flags = PROCESS_INFO_HAS_WORKER | PROCESS_INFO_STANDARD_APP,
+  .info_flags = PROCESS_INFO_HAS_WORKER | PROCESS_INFO_USES_MICROPHONE | PROCESS_INFO_STANDARD_APP,
   .app_version =
       {
         .major = 1,
@@ -389,6 +399,14 @@ void test_app_install_manager__has_worker(void) {
   cl_assert_equal_b(false, app_install_has_worker(menu_layer_id));
 
   cl_assert_equal_b(false, app_install_has_worker(CRAZY_ID));
+}
+
+void test_app_install_manager__uses_microphone(void) {
+  cl_assert_equal_b(false, app_install_uses_microphone(tictoc_id));
+  cl_assert_equal_b(false, app_install_uses_microphone(music_id));
+  cl_assert_equal_b(true, app_install_uses_microphone(bg_counter_id));
+  cl_assert_equal_b(false, app_install_uses_microphone(menu_layer_id));
+  cl_assert_equal_b(false, app_install_uses_microphone(CRAZY_ID));
 }
 
 void test_app_install_manager__is_hidden(void) {

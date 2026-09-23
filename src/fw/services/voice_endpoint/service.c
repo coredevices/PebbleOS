@@ -2,6 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/voice_endpoint.h"
+#ifdef CONFIG_SERVICE_MIC_CAPTURE
+#include "pbl/services/mic_capture/mic_capture_service.h"
+#endif
 
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/comm_session/session.h"
@@ -142,6 +145,12 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
         }
 
         bool app_initiated = (msg->flags.app_initiated == 1);
+#ifdef CONFIG_SERVICE_MIC_CAPTURE
+        if (msg->session_type == VoiceEndpointSessionTypeAudioStream) {
+          mic_capture_service_handle_stream_setup_result(result);
+          break;
+        }
+#endif
         voice_handle_session_setup_result(result, msg->session_type, app_initiated);
       } else {
         PBL_LOG_WRN("Invalid size for session setup result message");

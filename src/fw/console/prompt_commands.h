@@ -129,6 +129,11 @@ extern void command_get_active_app_metadata(void);
 extern void command_app_list(void);
 extern void command_app_launch(const char *app_num_str);
 extern void command_app_remove(const char *app_num_str);
+#ifdef CONFIG_SERVICE_APP_PERMISSIONS
+extern void command_perm_list(void);
+extern void command_perm_grant(const char *app_num_str, const char *permission);
+extern void command_perm_revoke(const char *app_num_str, const char *permission);
+#endif
 
 extern void command_worker_launch(const char *app_num_str);
 extern void command_worker_kill(void);
@@ -345,6 +350,11 @@ static const Command s_prompt_commands[] = {
   {"app list", command_app_list, 0},
   {"app launch", command_app_launch, 1},
   {"app remove", command_app_remove, 1},
+#ifdef CONFIG_SERVICE_APP_PERMISSIONS
+  {"perm list", command_perm_list, 0},
+  {"perm grant", command_perm_grant, 2},
+  {"perm revoke", command_perm_revoke, 2},
+#endif
 #endif
   // End of automation commands
   // ====================================================================================

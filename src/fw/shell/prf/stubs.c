@@ -19,6 +19,7 @@
 #include "pbl/services/light.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/notifications/alerts_private.h"
+#include "pbl/services/blob_db/app_permissions_db.h"
 #include "pbl/services/persist.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
@@ -80,6 +81,10 @@ SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
 }
 
 status_t persist_service_delete_file(const Uuid *uuid) {
+  return E_INVALID_OPERATION;
+}
+
+status_t app_permissions_db_delete_for_uuid(const Uuid *uuid) {
   return E_INVALID_OPERATION;
 }
 
@@ -287,6 +292,10 @@ int16_t timeline_peek_get_origin_y(void) {
 }
 
 int16_t timeline_peek_get_obstruction_origin_y(void) {
+  return DISP_ROWS;
+}
+
+int16_t mic_banner_get_obstruction_origin_y(void) {
   return DISP_ROWS;
 }
 

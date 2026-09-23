@@ -15,6 +15,8 @@ typedef enum {
   VoiceEndpointSessionTypeDictation = 0x01,
   VoiceEndpointSessionTypeCommand = 0x02, // Not used yet
   VoiceEndpointSessionTypeNLP = 0x03,
+  //! Live audio for an app; the phone decodes and hands it to the app's companion, no result
+  VoiceEndpointSessionTypeAudioStream = 0x04,
 
   VoiceEndpointSessionTypeCount,
 } VoiceEndpointSessionType;

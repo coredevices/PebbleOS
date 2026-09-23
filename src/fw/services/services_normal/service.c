@@ -13,6 +13,10 @@
 #include "pbl/services/alarms/alarm.h"
 #include "pbl/services/app_cache.h"
 #include "pbl/services/app_glances/app_glance_service.h"
+#include "pbl/services/app_permissions/app_permissions.h"
+#include "pbl/services/audio_encoder/audio_encoder.h"
+#include "pbl/services/mic_capture/mic_capture_service.h"
+#include "pbl/services/mic_manager.h"
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/endpoint_private.h"
 #include "pbl/services/data_logging/data_logging_service.h"
@@ -120,11 +124,24 @@ void services_normal_init(void) {
 
   speaker_service_init();
 
+#ifdef CONFIG_SERVICE_AUDIO_ENCODER
+  audio_encoder_service_init();
+#endif
+#ifdef CONFIG_SERVICE_MIC_MANAGER
+  mic_manager_init();
+#endif
+#ifdef CONFIG_SERVICE_MIC_CAPTURE
+  mic_capture_service_init();
+#endif
 #ifdef CONFIG_MIC
   voice_init();
 #endif
 
   app_glance_service_init();
+
+#ifdef CONFIG_SERVICE_APP_PERMISSIONS
+  app_permissions_init();
+#endif
 }
 
 static struct ServiceRunLevelSetting s_runlevel_settings[] = {

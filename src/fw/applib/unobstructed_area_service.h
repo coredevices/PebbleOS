@@ -12,12 +12,11 @@
 //!
 //! \brief Events about when the app's unobstructed area changes for visually adapting
 //!
-//! Unobstructed Area enables a watchface to adapt to overlays partially obstructing it. Timeline
-//! Peek is the only overlay, and it partially obstructs the bottom of watchfaces, displaying the
-//! immediately upcoming or newly began event. Unobstructed Area is for use only with watchfaces.
-//! There will be no Unobstructed Area events emitted for apps that are not watchfaces. Timeline
-//! Peek is also limited to rectangular platforms, thus using Unobstructed Area on Chalk will also
-//! result in no events.
+//! Unobstructed Area enables an app to adapt to overlays partially obstructing it. Timeline Peek
+//! partially obstructs the bottom of watchfaces, displaying the immediately upcoming or newly began
+//! event; it is limited to rectangular platforms and watchfaces. The system "Listening" banner
+//! obstructs the bottom of any app while it captures the microphone (see the Microphone API).
+//! Apps that use neither receive no Unobstructed Area events.
 //!
 //! Watchfaces are encouraged to respect Unobstructed Area in order to dynamically resize within
 //! the remaining screen area that isn't obstructed by an overlay. Unobstructed Area provides

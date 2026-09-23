@@ -29,6 +29,7 @@
 #include "stubs_prefs_db.h"
 #include "stubs_reminder_db.h"
 #include "stubs_watch_app_prefs_db.h"
+#include "stubs_app_permissions_db.h"
 #include "stubs_weather_db.h"
 #include "stubs_bt_lock.h"
 #include "stubs_evented_timer.h"

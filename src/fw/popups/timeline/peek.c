@@ -7,6 +7,7 @@
 #include "process_management/app_manager.h"
 #include "applib/ui/window_stack.h"
 #include "applib/unobstructed_area_service.h"
+#include "popups/mic_banner.h"
 #include "apps/system/timeline/common.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
@@ -195,6 +196,11 @@ static int16_t prv_scale_y_to_framebuffer(int16_t display_y) {
   return (display_y * app_framebuffer_size.h) / DISP_ROWS;
 }
 
+//! The mic banner may also obstruct the app; the app sees the union of both.
+static int16_t prv_compose_obstruction_y(int16_t peek_y) {
+  return MIN(peek_y, mic_banner_get_obstruction_origin_y());
+}
+
 static void prv_peek_frame_setup(Animation *animation) {
   PropertyAnimation *prop_anim = (PropertyAnimation *)animation;
   TimelinePeek *peek;
@@ -204,8 +210,9 @@ static void prv_peek_frame_setup(Animation *animation) {
   GRect to_frame;
   property_animation_get_to_grect(prop_anim, &to_frame);
   if (prv_should_use_unobstructed_area()) {
-    unobstructed_area_service_will_change(prv_scale_y_to_framebuffer(from_frame.origin.y),
-                                          prv_scale_y_to_framebuffer(to_frame.origin.y));
+    unobstructed_area_service_will_change(
+        prv_compose_obstruction_y(prv_scale_y_to_framebuffer(from_frame.origin.y)),
+        prv_compose_obstruction_y(prv_scale_y_to_framebuffer(to_frame.origin.y)));
   }
 }
 
@@ -217,8 +224,9 @@ static void prv_peek_frame_update(Animation *animation, AnimationProgress progre
   GRect to_frame;
   property_animation_get_to_grect(prop_anim, &to_frame);
   if (prv_should_use_unobstructed_area()) {
-    unobstructed_area_service_change(prv_scale_y_to_framebuffer(peek->layout_layer.frame.origin.y),
-                                     prv_scale_y_to_framebuffer(to_frame.origin.y), progress);
+    unobstructed_area_service_change(
+        prv_compose_obstruction_y(prv_scale_y_to_framebuffer(peek->layout_layer.frame.origin.y)),
+        prv_compose_obstruction_y(prv_scale_y_to_framebuffer(to_frame.origin.y)), progress);
   }
 }
 
@@ -227,7 +235,8 @@ static void prv_peek_frame_teardown(Animation *animation) {
   GRect to_frame;
   property_animation_get_to_grect(prop_anim, &to_frame);
   if (prv_should_use_unobstructed_area()) {
-    unobstructed_area_service_did_change(prv_scale_y_to_framebuffer(to_frame.origin.y));
+    unobstructed_area_service_did_change(
+        prv_compose_obstruction_y(prv_scale_y_to_framebuffer(to_frame.origin.y)));
   }
 }
 

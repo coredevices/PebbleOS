@@ -305,6 +305,34 @@ pbl_clar_test(test_app_cache
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_audio_encoder
+  SOURCES
+    src/fw/services/audio_encoder/audio_encoder.c
+  OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_mic_manager
+  SOURCES
+    src/fw/services/mic_manager/mic_manager.c
+  OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_mic_capture_service
+  SOURCES
+    src/fw/services/mic_capture/mic_capture_service.c
+    src/fw/services/mic_manager/mic_manager.c
+    lib/util/circular_buffer.c
+    tests/fakes/fake_events.c
+  OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_app_permissions
+  SOURCES
+    src/fw/services/app_permissions/app_permissions.c
+    tests/fakes/fake_events.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_app_install_manager
   SOURCES
     src/fw/flash_region/flash_region.c

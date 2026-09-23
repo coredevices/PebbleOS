@@ -3,6 +3,10 @@
 
 #include "modal_manager.h"
 
+#ifdef CONFIG_SERVICE_MIC_CAPTURE
+#include "pbl/services/mic_capture/mic_capture_service.h"
+#endif
+
 #include "applib/ui/app_window_click_glue.h"
 #include "applib/ui/click_internal.h"
 #include "applib/ui/recognizer/recognizer_list.h"
@@ -327,6 +331,11 @@ static void prv_handle_app_to_modal_transition_focus(void) {
   // Let the underlying window know it has lost focus if this is the first modal
   // window to show up.
   prv_send_will_focus_event(false /* in_focus */);
+
+#ifdef CONFIG_SERVICE_MIC_CAPTURE
+  // The OS mic banner is no longer guaranteed visible, so live capture must end.
+  mic_capture_service_handle_app_focus_lost();
+#endif
 }
 
 static void prv_handle_modal_to_app_transition_focus(void) {

@@ -74,6 +74,7 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_
 #include "stubs_unobstructed_area.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
+#include "stubs_mic_banner.h"
 
 // Helper Functions
 /////////////////////

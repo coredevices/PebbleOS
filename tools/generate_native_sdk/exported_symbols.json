@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "109",
+  "revision" : "113",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/ambient_light.h",
@@ -124,7 +124,12 @@
     "fw/applib/voice/dictation_session.h",
     "fw/applib/ui/content_indicator.h",
     "fw/applib/rockyjs/rocky.h",
-    "fw/applib/unobstructed_area_service.h"
+    "fw/applib/unobstructed_area_service.h",
+    "include/pbl/services/app_permissions/app_permissions_types.h",
+    "fw/applib/app_permissions.h",
+    "fw/applib/mic_data_service.h",
+    "include/pbl/services/audio_encoder/audio_encoder_types.h",
+    "fw/applib/audio_encoder.h"
   ],
   "exports": [
     {
@@ -4400,6 +4405,131 @@
               "type": "function",
               "name": "speaker_is_muted",
               "addedRevision": "100"
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "Permissions",
+          "appOnly": true,
+          "addedRevision": "110",
+          "exports": [
+            {
+              "type": "type",
+              "name": "AppPermission"
+            }, {
+              "type": "type",
+              "name": "AppPermissionState"
+            }, {
+              "type": "type",
+              "name": "AppPermissionChangedHandler"
+            }, {
+              "type": "function",
+              "name": "app_permission_get_state",
+              "addedRevision": "110"
+            }, {
+              "type": "function",
+              "name": "app_permission_is_granted",
+              "addedRevision": "110"
+            }, {
+              "type": "function",
+              "name": "app_permission_service_subscribe",
+              "addedRevision": "110"
+            }, {
+              "type": "function",
+              "name": "app_permission_service_unsubscribe",
+              "addedRevision": "110"
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "Microphone",
+          "appOnly": true,
+          "addedRevision": "111",
+          "exports": [
+            {
+              "type": "define",
+              "name": "MIC_DATA_SAMPLE_RATE"
+            }, {
+              "type": "define",
+              "name": "MIC_DATA_MIN_SAMPLES_PER_UPDATE"
+            }, {
+              "type": "define",
+              "name": "MIC_DATA_MAX_SAMPLES_PER_UPDATE"
+            }, {
+              "type": "type",
+              "name": "MicDataStartResult"
+            }, {
+              "type": "type",
+              "name": "MicDataStopReason"
+            }, {
+              "type": "type",
+              "name": "MicDataHandler"
+            }, {
+              "type": "type",
+              "name": "MicDataStoppedHandler"
+            }, {
+              "type": "type",
+              "name": "MicDataHandlers"
+            }, {
+              "type": "function",
+              "name": "mic_data_service_subscribe",
+              "addedRevision": "111"
+            }, {
+              "type": "function",
+              "name": "mic_data_service_unsubscribe",
+              "addedRevision": "111"
+            }, {
+              "type": "function",
+              "name": "mic_data_service_is_active",
+              "addedRevision": "111"
+            }, {
+              "type": "type",
+              "name": "MicStreamStartedHandler"
+            }, {
+              "type": "type",
+              "name": "MicStreamHandlers"
+            }, {
+              "type": "function",
+              "name": "mic_stream_to_phone_start",
+              "addedRevision": "113"
+            }, {
+              "type": "function",
+              "name": "mic_stream_to_phone_stop",
+              "addedRevision": "113"
+            }, {
+              "type": "function",
+              "name": "mic_stream_to_phone_is_active",
+              "addedRevision": "113"
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "AudioEncoder",
+          "appOnly": true,
+          "addedRevision": "112",
+          "exports": [
+            {
+              "type": "type",
+              "name": "AudioCodec"
+            }, {
+              "type": "type",
+              "name": "AudioEncoderInfo"
+            }, {
+              "type": "function",
+              "name": "audio_encoder_codec_available",
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "audio_encoder_open",
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "audio_encoder_encode_frame",
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "audio_encoder_close",
+              "addedRevision": "112"
             }
           ]
         }, {

@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_AUDIO_ENCODER
+    bool "Audio encoder"
+    help
+      Codec-agnostic speech encoder shared by dictation and the app
+      Microphone API. Backends: Speex (CONFIG_SPEEX).
+
+if SERVICE_AUDIO_ENCODER
+
+module = SERVICE_AUDIO_ENCODER
+module-str = Audio encoder
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

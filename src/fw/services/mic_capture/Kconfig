@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_MIC_CAPTURE
+    bool "Microphone capture for apps"
+    depends on SERVICE_MIC_MANAGER && SERVICE_APP_PERMISSIONS && SERVICE_AUDIO_ENCODER
+    default y
+    help
+      Live PCM capture service backing the app microphone API.
+
+if SERVICE_MIC_CAPTURE
+
+module = SERVICE_MIC_CAPTURE
+module-str = Mic capture
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

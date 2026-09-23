@@ -94,6 +94,7 @@ development/qemu.md
 development/debugging.md
 development/moddable.md
 development/sdk_export.md
+development/app_permissions.md
 development/contributing.md
 ```
 
