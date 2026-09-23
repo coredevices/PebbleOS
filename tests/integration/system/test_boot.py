@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+from harness.helpers.ui import Button
 
 pytestmark = pytest.mark.smoke
 
@@ -20,3 +21,14 @@ def test_logs_stream(dut):
     since = dut.logs.mark()
     SyncWrapper(BlobDBClient(dut.protocol).clear, BlobDatabaseID.Notification).wait()
     dut.wait_for_log(r"Flushing BlobDB", timeout=30, since=since)
+
+
+def test_reset(dut, ui):
+    ui.press(Button.SELECT)
+    ui.wait_idle()
+    ui.press(Button.SELECT)
+    ui.wait_idle()
+    assert ui.top_window() == "Settings"
+    dut.reset()
+    ui.wait_idle(timeout=30)
+    assert "Settings" not in ui.window_stack()

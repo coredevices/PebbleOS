@@ -84,8 +84,8 @@ def test_results_dir(request):
 
 @pytest.fixture(autouse=True)
 def _device_test_session(request):
-    """Per-test device log, and on failure the log tail in the report, for
-    tests that use the device."""
+    """Per-test device log, and on failure the screen and log tail in the
+    report, for tests that use the device."""
     if "dut" not in request.fixturenames:
         yield
         return
@@ -108,6 +108,12 @@ def _device_test_session(request):
             request.node.add_report_section(
                 "call", "device log", "\n".join(str(r) for r in tail)
             )
+            try:
+                from harness.helpers.ui import Ui
+
+                Ui(dut).screenshot().save(os.path.join(results, "failure.png"))
+            except Exception as e:  # noqa: BLE001
+                request.node.add_report_section("call", "failure screenshot", str(e))
 
 
 @pytest.fixture
@@ -116,3 +122,15 @@ def prompt(dut):
     if not dut.has(Capability.PROMPT):
         pytest.skip("no connection offers the prompt")
     return dut.prompt
+
+
+@pytest.fixture
+def ui(dut):
+    """UI helpers, starting from the watchface."""
+    from harness.helpers.ui import Ui
+
+    if not (dut.has(Capability.PROMPT) or dut.has(Capability.PROTOCOL)):
+        pytest.skip("no connection can drive the UI")
+    ui = Ui(dut)
+    ui.go_home()
+    return ui
