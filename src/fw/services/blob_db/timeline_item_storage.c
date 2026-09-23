@@ -405,40 +405,20 @@ status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage, const u
   return rv;
 }
 
-static void prv_flush_rewrite_cb(SettingsFile *old, SettingsFile *new, SettingsRecordInfo *info,
-                                 void *context) {
-  if ((unsigned)info->key_len != sizeof(Uuid) ||
-      (unsigned)info->val_len < sizeof(SerializedTimelineItemHeader)) {
-    // invalid
-    return;
+static bool prv_flush_filter_cb(void *key, size_t key_len, void *val, size_t val_len,
+                                void *context) {
+  if (key_len != sizeof(Uuid) || val_len < sizeof(SerializedTimelineItemHeader)) {
+    return false;
   }
 
-  SerializedTimelineItemHeader hdr;
-  info->get_val(old, &hdr, sizeof(SerializedTimelineItemHeader));
-  // Restore flags & status
-  hdr.common.flags = ~hdr.common.flags;
-  hdr.common.status = ~hdr.common.status;
-
-  // keep watch-only items
-  if (hdr.common.flags & TimelineItemFlagFromWatch) {
-    // fetch the whole item
-    uint8_t *val = kernel_malloc_check(info->val_len);
-    uint8_t *key = kernel_malloc_check(info->key_len);
-    info->get_val(old, val, info->val_len);
-    info->get_key(old, key, info->key_len);
-
-    // Don't restore flags & status here - we're writing it back immediately.
-
-    // write it to the new file
-    settings_file_set(new, key, info->key_len, val, info->val_len);
-    kernel_free(key);
-    kernel_free(val);
-  }
+  // Flags are stored inverted
+  const SerializedTimelineItemHeader *hdr = val;
+  return (~hdr->common.flags & TimelineItemFlagFromWatch) != 0;
 }
 
 status_t timeline_item_storage_flush(TimelineItemStorage *storage) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = settings_file_rewrite(&storage->file, prv_flush_rewrite_cb, NULL);
+  status_t rv = settings_file_rewrite_filtered(&storage->file, prv_flush_filter_cb, NULL);
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }

@@ -182,7 +182,21 @@ status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback c
 status_t settings_file_rewrite_filtered(SettingsFile *file,
                                         SettingsFileRewriteFilterCallback filter_cb,
                                         void *context) {
-  // TODO
-  fake_settings_file_reset();
+  for (unsigned i = 0; i < UINT8_MAX; ++i) {
+    if (s_settings_file.keys[i] == NULL || s_settings_file.values[i] == NULL) {
+      continue;
+    }
+    if (!filter_cb || filter_cb(s_settings_file.keys[i], s_settings_file.key_lens[i],
+                                s_settings_file.values[i], s_settings_file.val_lens[i], context)) {
+      continue;
+    }
+    free(s_settings_file.values[i]);
+    s_settings_file.values[i] = NULL;
+    free(s_settings_file.keys[i]);
+    s_settings_file.keys[i] = NULL;
+    s_settings_file.val_lens[i] = 0;
+    s_settings_file.key_lens[i] = 0;
+    s_settings_file.dirty[i] = false;
+  }
   return S_SUCCESS;
 }
