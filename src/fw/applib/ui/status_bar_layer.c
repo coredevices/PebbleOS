@@ -80,6 +80,21 @@ static int prv_height(const StatusBarLayerConfig *config) {
 // Function prototypes
 static void prv_status_bar_layer_update_clock(StatusBarLayer *status_bar_layer);
 static void prv_tick_timer_handler_cb(PebbleEvent *e, void *cb_data);
+static void prv_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig *config,
+                       StatusBarLayer *status_bar_layer);
+static void prv_marquee_stop(StatusBarLayer *status_bar_layer);
+
+static void prv_set_mode(StatusBarLayer *status_bar_layer, StatusBarLayerMode mode) {
+  if (!prv_mode_is_clock(status_bar_layer->config.mode)) {
+    prv_marquee_stop(status_bar_layer);
+  }
+  status_bar_layer->config.mode = mode;
+  if (prv_mode_is_clock(mode)) {
+    status_bar_layer->previous_min_of_day = -1;
+  } else {
+    status_bar_layer->marquee = NULL;
+  }
+}
 
 static void prv_status_bar_property_changed(struct Layer *layer) {
   StatusBarLayer *status_bar_layer = (StatusBarLayer *)layer;
@@ -104,7 +119,7 @@ static void prv_status_bar_layer_render(Layer *layer, GContext *ctx) {
     ctx->draw_state.drawing_box.origin.x -= status_bar_layer->layer.window->layer.frame.origin.x;
   }
 
-  status_bar_layer_render(ctx, &status_bar_layer->layer.bounds, &status_bar_layer->config);
+  prv_render(ctx, &status_bar_layer->layer.bounds, &status_bar_layer->config, status_bar_layer);
 
   ctx->draw_state.drawing_box.origin.x = stored_drawing_box_x;
 }
@@ -160,6 +175,9 @@ void status_bar_layer_destroy(StatusBarLayer *status_bar_layer) {
 
 void status_bar_layer_deinit(StatusBarLayer *status_bar_layer) {
   layer_deinit(&status_bar_layer->layer);
+  if (!prv_mode_is_clock(status_bar_layer->config.mode)) {
+    prv_marquee_stop(status_bar_layer);
+  }
   if (status_bar_layer->title_timer_id != TIMER_INVALID_ID) {
     app_timer_cancel(status_bar_layer->title_timer_id);
   }
@@ -206,7 +224,7 @@ void status_bar_layer_set_title(StatusBarLayer *status_bar_layer, const char *te
     status_bar_layer->title_timer_id = app_timer_register(
         STATUS_BAR_LAYER_TITLE_TIMEOUT, status_bar_layer_reset_title, status_bar_layer);
   }
-  status_bar_layer->config.mode = StatusBarLayerModeLoading;
+  prv_set_mode(status_bar_layer, StatusBarLayerModeLoading);
   layer_mark_dirty(&(status_bar_layer->layer));
 }
 
@@ -218,7 +236,7 @@ const char *status_bar_layer_get_title(const StatusBarLayer *status_bar_layer) {
 void status_bar_layer_reset_title(void *cb_data) {
   StatusBarLayer *status_bar_layer = (StatusBarLayer *)cb_data;
   // set title text mode to 'clock', update text, and setup timer to allow clock text to update
-  status_bar_layer->config.mode = StatusBarLayerModeClock;
+  prv_set_mode(status_bar_layer, StatusBarLayerModeClock);
   prv_status_bar_layer_update_clock(status_bar_layer);
 }
 
@@ -273,7 +291,7 @@ void status_bar_layer_set_separator_mode(StatusBarLayer *status_bar_layer,
 
 void status_bar_layer_set_mode(StatusBarLayer *status_bar_layer, StatusBarLayerMode mode) {
   PBL_ASSERTN(status_bar_layer);
-  status_bar_layer->config.mode = mode;
+  prv_set_mode(status_bar_layer, mode);
   GRect frame = status_bar_layer->layer.frame;
   frame.size.h = prv_height(&status_bar_layer->config);
   layer_set_frame(&status_bar_layer->layer, &frame);
@@ -319,8 +337,156 @@ static void prv_tick_timer_handler_cb(PebbleEvent *e, void *cb_data) {
   }
 }
 
+#define MARQUEE_TICK_MS          33
+#define MARQUEE_MS_PER_PX        20
+#define MARQUEE_REWIND_MS_PER_PX 2
+#define MARQUEE_PAUSE_START_MS   600
+#define MARQUEE_PAUSE_END_MS     750
+#define MARQUEE_CYCLES           3
+#define ROUND_TITLE_EDGE_MARGIN  2
+
+typedef struct StatusBarMarquee {
+  AppTimer *timer;
+  uint32_t elapsed_ms;
+  int16_t offset;
+  int16_t span;
+} StatusBarMarquee;
+
+static void prv_marquee_stop(StatusBarLayer *status_bar_layer) {
+  StatusBarMarquee *marquee = status_bar_layer->marquee;
+  if (!marquee) {
+    return;
+  }
+  if (marquee->timer) {
+    app_timer_cancel(marquee->timer);
+  }
+  applib_free(marquee);
+  status_bar_layer->marquee = NULL;
+}
+
+static void prv_marquee_cb(void *context) {
+  StatusBarLayer *status_bar_layer = context;
+  StatusBarMarquee *marquee = status_bar_layer->marquee;
+  marquee->timer = NULL;
+
+  const uint32_t span = marquee->span;
+  const uint32_t fwd_ms = span * MARQUEE_MS_PER_PX;
+  const uint32_t rewind_ms = span * MARQUEE_REWIND_MS_PER_PX;
+  const uint32_t cycle_ms = MARQUEE_PAUSE_START_MS + fwd_ms + MARQUEE_PAUSE_END_MS + rewind_ms;
+  if (marquee->elapsed_ms / cycle_ms >= MARQUEE_CYCLES) {
+    marquee->offset = 0;
+    layer_mark_dirty(&status_bar_layer->layer);
+    return;
+  }
+
+  const uint32_t t = marquee->elapsed_ms % cycle_ms;
+  int16_t offset;
+  uint32_t sleep_ms;
+  if (t < MARQUEE_PAUSE_START_MS) {
+    offset = 0;
+    sleep_ms = MARQUEE_PAUSE_START_MS - t;
+  } else if (t < MARQUEE_PAUSE_START_MS + fwd_ms) {
+    offset = (t - MARQUEE_PAUSE_START_MS) / MARQUEE_MS_PER_PX;
+    sleep_ms = MARQUEE_TICK_MS;
+  } else if (t < MARQUEE_PAUSE_START_MS + fwd_ms + MARQUEE_PAUSE_END_MS) {
+    offset = span;
+    sleep_ms = MARQUEE_PAUSE_START_MS + fwd_ms + MARQUEE_PAUSE_END_MS - t;
+  } else {
+    offset = (cycle_ms - t) / MARQUEE_REWIND_MS_PER_PX;
+    sleep_ms = MARQUEE_TICK_MS;
+  }
+  if (offset != marquee->offset) {
+    marquee->offset = offset;
+    layer_mark_dirty(&status_bar_layer->layer);
+  }
+  marquee->elapsed_ms += sleep_ms;
+  marquee->timer = app_timer_register(sleep_ms, prv_marquee_cb, status_bar_layer);
+}
+
+// Narrows [min_x, max_x] to what a round display shows halfway down the capitals
+static void prv_round_visible_range(GContext *ctx, GFont font, int16_t text_y, int16_t text_h,
+                                    int16_t *min_x, int16_t *max_x) {
+  const PlatformType platform = process_manager_current_platform();
+  const bool is_round = PBL_PLATFORM_SWITCH(platform,
+                                            /*aplite*/ false,
+                                            /*basalt*/ false,
+                                            /*chalk*/ true,
+                                            /*diorite*/ false,
+                                            /*emery*/ false,
+                                            /*flint*/ false,
+                                            /*gabbro*/ true);
+  if (!is_round) {
+    return;
+  }
+
+  const GSize fb_size = graphics_context_get_framebuffer_size(ctx);
+  const int32_t radius = fb_size.w / 2;
+  const int32_t cap_top = text_y + fonts_get_font_cap_offset(font);
+  const int32_t screen_y = ctx->draw_state.drawing_box.origin.y + (cap_top + text_y + text_h) / 2;
+  const int32_t dy = radius - screen_y;
+  if (dy <= 0) {
+    return;
+  }
+  const int32_t half = (dy < radius) ? integer_sqrt(radius * radius - dy * dy) : 0;
+  const int16_t center_x = radius - ctx->draw_state.drawing_box.origin.x;
+  *min_x = MAX(*min_x, center_x - half + ROUND_TITLE_EDGE_MARGIN);
+  *max_x = MIN(*max_x, center_x + half - ROUND_TITLE_EDGE_MARGIN);
+}
+
+// Returns false if the title fits the visible part of a round display
+static bool prv_render_round_title(GContext *ctx, const StatusBarTextFormat *text_format,
+                                   StatusBarLayer *status_bar_layer, int16_t min_x, int16_t max_x,
+                                   int16_t y, int16_t height, const char *text) {
+  int16_t vis_min_x = min_x;
+  int16_t vis_max_x = max_x;
+  prv_round_visible_range(ctx, text_format->font, y, height, &vis_min_x, &vis_max_x);
+  const int16_t vis_w = vis_max_x - vis_min_x;
+  if (vis_w <= 0) {
+    return false;
+  }
+
+  const GSize text_size = graphics_text_layout_get_max_used_size(
+      ctx, text, text_format->font, GRect(0, 0, INT16_MAX, height), GTextOverflowModeFill,
+      GTextAlignmentLeft, NULL);
+  const int16_t span = MAX(text_size.w - vis_w, 0);
+
+  if (status_bar_layer && (!status_bar_layer->marquee || span != status_bar_layer->marquee->span)) {
+    prv_marquee_stop(status_bar_layer);
+    if (span > 0) {
+      StatusBarMarquee *marquee = applib_zalloc(sizeof(StatusBarMarquee));
+      if (marquee) {
+        marquee->span = span;
+        marquee->timer = app_timer_register(MARQUEE_TICK_MS, prv_marquee_cb, status_bar_layer);
+        status_bar_layer->marquee = marquee;
+      }
+    }
+  }
+
+  if (span == 0) {
+    return false;
+  }
+
+  const StatusBarMarquee *marquee = status_bar_layer ? status_bar_layer->marquee : NULL;
+  if (marquee && marquee->timer) {
+    const GRect saved_clip = ctx->draw_state.clip_box;
+    GRect clip = GRect(ctx->draw_state.drawing_box.origin.x + vis_min_x, saved_clip.origin.y, vis_w,
+                       saved_clip.size.h);
+    grect_clip(&clip, &saved_clip);
+    ctx->draw_state.clip_box = clip;
+    graphics_draw_text(ctx, text, text_format->font,
+                       GRect(vis_min_x - marquee->offset, y, text_size.w, height),
+                       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+    ctx->draw_state.clip_box = saved_clip;
+  } else {
+    graphics_draw_text(ctx, text, text_format->font, GRect(vis_min_x, y, vis_w, height),
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  }
+  return true;
+}
+
 // Calculate position and renders text
 static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayerConfig *config,
+                                             StatusBarLayer *status_bar_layer, bool is_title,
                                              int16_t min_x, int16_t max_x, int16_t min_y,
                                              int16_t max_y, char *data) {
   const StatusBarTextFormat text_format = prv_get_text_format(config);
@@ -354,6 +520,10 @@ static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayer
     // Default: bottom-aligned with separator-area padding.
     y = min_y + max_y - (2 * STATUS_BAR_LAYER_SEPARATOR_Y_OFFSET) - font_height;
   }
+  if (is_title && prv_render_round_title(ctx, &text_format, status_bar_layer, min_x, max_x, y,
+                                         font_height, data)) {
+    return;
+  }
   const GRect text_box = GRect(x_start, y, width, font_height);
   // In the outlined mode, draw a 1px black outline for legibility over busy backgrounds (e.g. album
   // art): the glyphs are drawn black at the 8 surrounding offsets first, then the foreground on
@@ -376,7 +546,8 @@ static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayer
 }
 
 // Renders all of StatusBarLayer when layer_mark_dirty triggers LayerUpdateProc
-void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig *config) {
+static void prv_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig *config,
+                       StatusBarLayer *status_bar_layer) {
   // define x and y coords of status_bar_layer
   int16_t x_offset_l = bounds->origin.x;
   int16_t x_offset_r = x_offset_l + bounds->size.w;
@@ -405,8 +576,11 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
 
   if (config->mode != StatusBarLayerModeCustomText) { // draw center text
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-    prv_status_bar_layer_render_text(ctx, config, x_offset_l, x_offset_r, y_offset_top,
-                                     y_offset_bottom, config->title_text_buffer);
+    StatusBarLayer *marquee_owner =
+        (status_bar_layer && !prv_mode_is_clock(config->mode)) ? status_bar_layer : NULL;
+    prv_status_bar_layer_render_text(ctx, config, marquee_owner, true /* is_title */, x_offset_l,
+                                     x_offset_r, y_offset_top, y_offset_bottom,
+                                     config->title_text_buffer);
   } else { // TODO: here goes center text animations
   }
 
@@ -420,8 +594,9 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
   int16_t info_text_left_offset =
       (int16_t)(x_offset_r - max_used_size.w - STATUS_BAR_LAYER_INFO_PADDING);
   int16_t info_text_right_offset = (int16_t)(x_offset_r - STATUS_BAR_LAYER_INFO_PADDING);
-  prv_status_bar_layer_render_text(ctx, config, info_text_left_offset, info_text_right_offset,
-                                   y_offset_top, y_offset_bottom, config->info_text_buffer);
+  prv_status_bar_layer_render_text(ctx, config, status_bar_layer, false /* is_title */,
+                                   info_text_left_offset, info_text_right_offset, y_offset_top,
+                                   y_offset_bottom, config->info_text_buffer);
 
   // draw the separator
   if (config->separator.mode != StatusBarLayerSeparatorModeNone) {
@@ -429,6 +604,10 @@ void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerC
     GPoint origin = {x_offset_l, (int16_t)(y_offset_bottom - STATUS_BAR_LAYER_SEPARATOR_Y_OFFSET)};
     graphics_draw_horizontal_line_dotted(ctx, origin, (uint16_t)x_offset_r);
   }
+}
+
+void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig *config) {
+  prv_render(ctx, bounds, config, NULL);
 }
 
 bool layer_is_status_bar_layer(Layer *layer) {

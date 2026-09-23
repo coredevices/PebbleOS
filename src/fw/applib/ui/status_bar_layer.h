@@ -112,7 +112,10 @@ typedef struct StatusBarLayer {
   StatusBarLayerConfig config;
   AppTimer *title_timer_id;    // timer id for title revert
   EventServiceInfo tick_event; // Event service to update the time
-  int previous_min_of_day;
+  union {
+    int previous_min_of_day;          // clock modes
+    struct StatusBarMarquee *marquee; // title modes
+  };
 } StatusBarLayer;
 
 //! Creates a new StatusBarLayer on the heap and initializes it with the default values.
