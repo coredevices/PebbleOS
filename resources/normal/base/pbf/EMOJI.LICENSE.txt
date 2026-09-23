@@ -7,6 +7,11 @@ added glyphs are rendered from Noto Emoji, Copyright 2013 Google LLC, licensed
 under the SIL Open Font License, Version 1.1 — the full text is in the
 accompanying file EMOJI.NOTO.OFL.txt.
 
+The EMOJI_14~color.pbf, EMOJI_18~color.pbf, EMOJI_24~color.pbf and
+EMOJI_28~color.pbf files are the color-display variants of these fonts. They
+carry the same glyphs, some of them colored, and every notice in this file
+applies to them as well.
+
 The original community glyphs described below are retained unchanged and remain
 under the Apache License, Version 2.0.
 =============================================================================
