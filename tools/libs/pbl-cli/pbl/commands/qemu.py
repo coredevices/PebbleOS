@@ -48,6 +48,13 @@ class Qemu(_QemuCommand):
             help="SDL decoration to draw around the screen, or 'none' "
             "(default: the board's first)",
         )
+        parser.add_argument(
+            "--bt-hci",
+            metavar="CHARDEV",
+            help="Serial port of an H4 Bluetooth controller, e.g. "
+            "/dev/cu.usbmodem1101, or any QEMU -serial spec (builds with "
+            "CONFIG_BT_HCI_UART only)",
+        )
         return parser
 
     def do_run(self, args, unknown):
@@ -61,7 +68,20 @@ class Qemu(_QemuCommand):
         if not args.keep_flash_image or not os.path.isfile(spi_flash):
             self.cmake_build(build, SPI_FLASH_TARGET, msg="QEMU SPI flash image failed")
 
-        return self.run_shell(self._command_line(build, decoration, spi_flash))
+        hci_uart = bool(build.config.CONFIG_BT_HCI_UART)
+        if hci_uart and not args.bt_hci:
+            raise CommandContextError(
+                "the build uses CONFIG_BT_HCI_UART; pass --bt-hci with the "
+                "controller's serial port"
+            )
+        if args.bt_hci and not hci_uart:
+            raise CommandContextError(
+                "--bt-hci needs a build with CONFIG_BT_HCI_UART=y"
+            )
+
+        return self.run_shell(
+            self._command_line(build, decoration, spi_flash, args.bt_hci)
+        )
 
     def _decoration(self, build, requested):
         available = build.board_spec.qemu.get("decorations", [])
@@ -98,7 +118,7 @@ class Qemu(_QemuCommand):
             "-drive", f"if=mtd,format=raw,file={spi_flash}",
         ]
 
-    def _command_line(self, build, decoration, spi_flash):
+    def _command_line(self, build, decoration, spi_flash, bt_hci):
         qemu = os.getenv("PEBBLE_QEMU_BIN")
         if not qemu or not (os.path.isfile(qemu) and os.access(qemu, os.X_OK)):
             qemu = build.tool("qemu") or "qemu-pebble"
@@ -126,7 +146,10 @@ class Qemu(_QemuCommand):
             "-serial", "file:uart1.log",
             "-serial", f"tcp::{emulator.PEBBLE_TOOL_PORT},server=on,wait=off",
             "-serial", f"tcp::{emulator.CONSOLE_PORT},server=on,wait=off",
-        ] + machine_args
+        ]
+        if bt_hci:
+            launch += ["-serial", bt_hci]
+        launch += machine_args
 
         command = shlex.join(launch)
         self.inf("QEMU command:", command)
