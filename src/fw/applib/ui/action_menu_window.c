@@ -183,6 +183,9 @@ static void prv_set_level(ActionMenuData *data, const ActionMenuLevel *level) {
 
 static void prv_action_callback(const ActionMenuItem *item, void *context) {
   ActionMenuData *data = context;
+  if (data->frozen) {
+    return;
+  }
   ActionMenu *action_menu = &data->action_menu;
   if (item->is_leaf && item->perform_action) {
     item->perform_action(action_menu, item, data->config.context);

@@ -453,3 +453,38 @@ void test_action_menu_window__wide_display_mode_with_separator(void) {
   prv_prepare_canvas_and_render_action_menus_static(root_level, selected_index, 1);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
+
+static int s_freezing_action_count;
+
+static void prv_freezing_action_callback(ActionMenu *action_menu, const ActionMenuItem *action,
+                                         void *context) {
+  s_freezing_action_count++;
+  action_menu_freeze(action_menu);
+}
+
+void test_action_menu_window__frozen_ignores_tap(void) {
+  ActionMenuLevel *root_level = action_menu_level_create(2);
+  action_menu_level_add_action(root_level, "Send to phone", prv_freezing_action_callback, NULL);
+  action_menu_level_add_action(root_level, "Other", prv_noop_action_callback, NULL);
+
+  ActionMenuConfig config = {
+    .root_level = root_level,
+    .did_close = prv_action_menu_did_close_cb,
+  };
+  ActionMenu *action_menu = app_action_menu_open(&config);
+  window_set_on_screen(&action_menu->window, true, true);
+
+  ActionMenuData *data = window_get_user_data(&action_menu->window);
+  MenuLayer *menu_layer = &data->action_menu_layer.menu_layer;
+  MenuIndex index = MenuIndex(0, 0);
+
+  s_freezing_action_count = 0;
+  menu_layer->callbacks.select_click(menu_layer, &index, menu_layer->callback_context);
+  cl_assert(action_menu_is_frozen(action_menu));
+  menu_layer->callbacks.select_click(menu_layer, &index, menu_layer->callback_context);
+  cl_assert_equal_i(s_freezing_action_count, 1);
+
+  action_menu_unfreeze(action_menu);
+  menu_layer->callbacks.select_click(menu_layer, &index, menu_layer->callback_context);
+  cl_assert_equal_i(s_freezing_action_count, 2);
+}
