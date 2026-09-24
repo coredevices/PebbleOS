@@ -3,6 +3,10 @@
 
 if SOC_QEMU
 
+choice BT_ID_ADDR_SOURCE
+    default BT_ID_ADDR_STORAGE
+endchoice
+
 # 4 MiB of emulated flash, all of it available to the firmware.
 config FLASH_BASE
     default 0x00000000
