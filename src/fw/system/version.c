@@ -84,9 +84,17 @@ static bool prv_version_copy_flash_fw_metadata(FirmwareMetadata *out_metadata,
 }
 
 bool version_copy_recovery_fw_metadata(FirmwareMetadata *out_metadata) {
+#ifdef CONFIG_QEMU
+  // QEMU has no recovery firmware. Report the running one, so the phone app
+  // does not treat the emulator as a watch without PRF.
+  version_copy_running_fw_metadata(out_metadata);
+  out_metadata->is_recovery_firmware = true;
+  return true;
+#else
   const bool check_crc = true;
   return prv_version_copy_flash_fw_metadata(out_metadata, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
                                             check_crc);
+#endif
 }
 
 bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
@@ -98,9 +106,7 @@ bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
 
 bool version_copy_recovery_fw_version(char *dest, const int dest_len_bytes) {
   FirmwareMetadata out_metadata;
-  const bool check_crc = true;
-  bool success = prv_version_copy_flash_fw_metadata(&out_metadata, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-                                                    check_crc);
+  bool success = version_copy_recovery_fw_metadata(&out_metadata);
   if (success) {
     strncpy(dest, out_metadata.version_tag, dest_len_bytes);
   }
