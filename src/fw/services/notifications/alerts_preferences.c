@@ -10,6 +10,7 @@
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "shell/prefs_private.h"
 #include "system/passert.h"
+#include "pbl/util/math.h"
 #include "pbl/kernel/mutex.h"
 
 #include <string.h>
@@ -432,7 +433,7 @@ void alerts_preferences_set_alert_mask(AlertMask mask) {
 }
 
 uint32_t alerts_preferences_get_notification_window_timeout_ms(void) {
-  return s_notif_window_timeout_ms;
+  return MAX(s_notif_window_timeout_ms, NOTIF_WINDOW_TIMEOUT_MIN);
 }
 
 void alerts_preferences_set_notification_window_timeout_ms(uint32_t timeout_ms) {

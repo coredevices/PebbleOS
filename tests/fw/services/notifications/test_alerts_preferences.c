@@ -28,10 +28,11 @@
 
 #include "fake_spi_flash.h"
 
-#define NOTIF_PREFS_FILE_NAME    "notifpref"
-#define NOTIF_PREFS_FILE_LEN     1024
-#define PREF_KEY_NOTIF_TEXT_SIZE "notifTextSize"
-#define PREF_KEY_TEXT_STYLE      "textStyle"
+#define NOTIF_PREFS_FILE_NAME         "notifpref"
+#define NOTIF_PREFS_FILE_LEN          1024
+#define PREF_KEY_NOTIF_TEXT_SIZE      "notifTextSize"
+#define PREF_KEY_TEXT_STYLE           "textStyle"
+#define PREF_KEY_NOTIF_WINDOW_TIMEOUT "notifWindowTimeout"
 
 static void prv_set(const char *file_name, int file_len, const char *key, size_t key_len,
                     const void *val, size_t val_len) {
@@ -103,4 +104,27 @@ void test_alerts_preferences__text_size_ignores_invalid_system_value(void) {
   alerts_preferences_init();
   cl_assert_equal_i(alerts_preferences_get_notification_content_size(),
                     PreferredContentSizeDefault);
+}
+
+static void prv_set_notification_window_timeout(uint32_t timeout_ms) {
+  prv_set(NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN, PREF_KEY_NOTIF_WINDOW_TIMEOUT,
+          strlen(PREF_KEY_NOTIF_WINDOW_TIMEOUT), &timeout_ms, sizeof(timeout_ms));
+}
+
+void test_alerts_preferences__window_timeout_below_minimum(void) {
+  prv_set_notification_window_timeout(0);
+  alerts_preferences_init();
+  cl_assert_equal_i(alerts_preferences_get_notification_window_timeout_ms(),
+                    NOTIF_WINDOW_TIMEOUT_MIN);
+}
+
+void test_alerts_preferences__window_timeout_keeps_valid_values(void) {
+  prv_set_notification_window_timeout(30 * MS_PER_SECOND);
+  alerts_preferences_init();
+  cl_assert_equal_i(alerts_preferences_get_notification_window_timeout_ms(), 30 * MS_PER_SECOND);
+
+  prv_set_notification_window_timeout(NOTIF_WINDOW_TIMEOUT_INFINITE);
+  alerts_preferences_init();
+  cl_assert(alerts_preferences_get_notification_window_timeout_ms() ==
+            NOTIF_WINDOW_TIMEOUT_INFINITE);
 }

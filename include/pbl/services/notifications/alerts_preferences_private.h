@@ -14,6 +14,7 @@
 
 #define NOTIF_WINDOW_TIMEOUT_INFINITE ((uint32_t)~0)
 #define NOTIF_WINDOW_TIMEOUT_DEFAULT  (3 * MS_PER_MINUTE)
+#define NOTIF_WINDOW_TIMEOUT_MIN      (15 * MS_PER_SECOND)
 
 void alerts_preferences_init(void);
 

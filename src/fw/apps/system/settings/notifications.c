@@ -140,9 +140,10 @@ static void prv_text_size_menu_push(SettingsNotificationsData *data) {
 ////////////////////////
 
 // NOTE: Keep the following two arrays in sync and with the same size.
-static const uint32_t s_window_timeouts_ms[] = {15 * MS_PER_SECOND, 30 * MS_PER_SECOND,
-                                                1 * MS_PER_MINUTE,  NOTIF_WINDOW_TIMEOUT_DEFAULT,
-                                                10 * MS_PER_MINUTE, NOTIF_WINDOW_TIMEOUT_INFINITE};
+static const uint32_t s_window_timeouts_ms[] = {
+  NOTIF_WINDOW_TIMEOUT_MIN,     30 * MS_PER_SECOND, 1 * MS_PER_MINUTE,
+  NOTIF_WINDOW_TIMEOUT_DEFAULT, 10 * MS_PER_MINUTE, NOTIF_WINDOW_TIMEOUT_INFINITE
+};
 
 static const char *s_window_timeouts_labels[] = {
   /// 15 Second Notification Window Timeout
