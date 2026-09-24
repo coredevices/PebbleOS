@@ -8,6 +8,7 @@
 
 #include <bf0_hal.h>
 #include <kernel/pebble_tasks.h>
+#include <pbl/bluetooth/id_addr.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
 #include <system/hexdump.h>
@@ -109,7 +110,7 @@ static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
 
 extern void lcpu_power_on(void);
 extern uint8_t lcpu_power_off(void);
-extern void lcpu_custom_nvds_config(void);
+extern void lcpu_custom_nvds_config(const uint8_t *bd_addr);
 
 #if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
 void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
@@ -294,6 +295,21 @@ static void prv_hci_task_main(void *unused) {
   }
 }
 
+static void prv_nvds_config(void) {
+#ifdef CONFIG_BT_ID_ADDR
+  struct pbl_bt_addr addr;
+  enum pbl_bt_id_addr_type type;
+  int rc;
+
+  rc = pbl_bt_id_addr_get(&addr, &type);
+  PBL_ASSERT(rc == 0, "No identity address (%d)", rc);
+
+  lcpu_custom_nvds_config(type == PBL_BT_ID_ADDR_PUBLIC ? addr.octets : NULL);
+#else
+  lcpu_custom_nvds_config(NULL);
+#endif
+}
+
 void ble_transport_ll_reinit(void) {
   int ret;
 
@@ -302,7 +318,7 @@ void ble_transport_ll_reinit(void) {
   ret = prv_config_ipc();
   PBL_ASSERTN(ret == 0);
 
-  lcpu_custom_nvds_config();
+  prv_nvds_config();
   lcpu_power_on();
 }
 
