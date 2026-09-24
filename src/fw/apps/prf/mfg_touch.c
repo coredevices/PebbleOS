@@ -17,6 +17,8 @@
 #include "pbl/services/light.h"
 #include "pbl/util/math.h"
 
+#include <stdio.h>
+
 #define TOUCH_SUPPORT_DEBUG 0
 
 #define TEST_TIMEOUT_S    (30)
