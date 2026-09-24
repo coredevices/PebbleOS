@@ -194,3 +194,48 @@ def power(ppk2, dut, test_results_dir):
     from harness.helpers.power import Power
 
     return Power(ppk2, dut, test_results_dir)
+
+
+@pytest.fixture
+def phones(dut, test_results_dir):
+    """Make phones: ``phones()`` is the harness's usual one, and another
+    ``address`` is another phone to the watch; ``ppogatt`` picks who hosts
+    the PPoGATT service (``reversed``, the watch, or ``forward``)."""
+    from harness.ble import HOST_ADDRESS, HOST_NAME, REVERSED
+    from harness.helpers.phone import Phone
+
+    if not dut.ble_controller:
+        pytest.skip("no Bluetooth controller: pass --ble-controller or --qemu-bt-hci")
+    made = []
+
+    def make(address=HOST_ADDRESS, name=HOST_NAME, ppogatt=REVERSED):
+        keystore = os.path.join(
+            test_results_dir, f"keys-{address.replace(':', '')}.json"
+        )
+        phone = Phone(dut, keystore, address=address, name=name, ppogatt=ppogatt)
+        made.append(phone)
+        return phone
+
+    try:
+        yield make
+    finally:
+        for phone in made:
+            phone.disconnect()
+
+
+@pytest.fixture(scope="session")
+def main_bundle(request):
+    """The normal firmware bundle given with --main-build."""
+    import glob
+
+    from harness.build import Build
+    from harness.helpers.firmware import FirmwareBundle
+
+    path = request.config.getoption("main_build")
+    if path is None:
+        pytest.skip("no normal firmware: pass --main-build")
+    main = Build(path)
+    bundles = sorted(glob.glob(main.join("normal_*.pbz")), key=os.path.getmtime)
+    if not bundles:
+        pytest.fail(f"no firmware bundle in {path}: run 'pbl build bundle' there")
+    return FirmwareBundle(bundles[-1])

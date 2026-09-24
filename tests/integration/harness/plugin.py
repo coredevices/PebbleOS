@@ -128,6 +128,12 @@ def pytest_addoption(parser):
         "(/dev/cu.usbmodem1101), or a Bumble transport",
     )
     group.addoption(
+        "--main-build",
+        metavar="PATH",
+        help="A normal firmware build, bundled ('pbl build bundle'), for tests "
+        "that install it",
+    )
+    group.addoption(
         "--update-golden",
         action="store_true",
         help="Write screenshots as the new golden images instead of comparing",

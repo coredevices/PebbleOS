@@ -35,6 +35,16 @@ CONNECTIVITY_CHARACTERISTIC = "00000001" + PEBBLE_UUID_BASE
 PPOG_SERVICE = "40000000" + PEBBLE_UUID_BASE
 PPOG_NOTIFY_CHARACTERISTIC = "40000001" + PEBBLE_UUID_BASE
 PPOG_WRITE_CHARACTERISTIC = "40000003" + PEBBLE_UUID_BASE
+PPOG_FORWARD_SERVICE = "10000000" + PEBBLE_UUID_BASE
+PPOG_FORWARD_DATA_CHARACTERISTIC = "10000001" + PEBBLE_UUID_BASE
+PPOG_FORWARD_META_CHARACTERISTIC = "10000002" + PEBBLE_UUID_BASE
+# PPoGATT versions 0 to 1, the system app, a session inferred from it.
+PPOG_FORWARD_META = bytes([0, 1]) + bytes(16) + bytes([0])
+
+#: PPoGATT service hosted by the watch, the phone starting the session.
+REVERSED = "reversed"
+#: PPoGATT service hosted by the phone, the watch starting the session.
+FORWARD = "forward"
 
 REQUESTED_MTU = 339
 TICK_S = 0.5
@@ -82,10 +92,26 @@ class BleLink:
     ``Pebble 24F0``), or ``auto`` for the first watch bonded or advertising.
     ``confirm_pairing()``, when given, is called when the watch asks its user
     to confirm a pairing, and should confirm it (press Up); without it the
-    confirmation has to be done by hand."""
+    confirmation has to be done by hand. ``address`` and ``name`` are the
+    host's identity: another one is another phone to the watch. ``ppogatt``
+    is :data:`REVERSED` or :data:`FORWARD`."""
 
-    def __init__(self, watch, controller, keystore=None, confirm_pairing=None):
+    def __init__(
+        self,
+        watch,
+        controller,
+        keystore=None,
+        confirm_pairing=None,
+        address=HOST_ADDRESS,
+        name=HOST_NAME,
+        ppogatt=REVERSED,
+    ):
+        if ppogatt not in (REVERSED, FORWARD):
+            raise HarnessError(f"no PPoGATT mode {ppogatt!r}")
         self.watch = watch
+        self.ppogatt = ppogatt
+        self.address = address
+        self.name = name
         self.controller = controller_transport(controller)
         self.keystore = keystore or os.path.join(
             os.path.expanduser("~"), ".cache", "pbl-itest", "ble-keys.json"
@@ -101,6 +127,7 @@ class BleLink:
         self._connection = None
         self._peer = None
         self._write_characteristic = None
+        self._data_characteristic = None
         self._ppog = None
         self._session_open = None
         self._ticker = None
@@ -151,12 +178,12 @@ class BleLink:
         from bumble.transport import open_transport
 
         self._transport = await open_transport(self.controller)
-        config = DeviceConfiguration(name=HOST_NAME, address=Address(HOST_ADDRESS))
+        config = DeviceConfiguration(name=self.name, address=Address(self.address))
         device = Device.from_config_with_hci(
             config, self._transport.source, self._transport.sink
         )
         os.makedirs(os.path.dirname(self.keystore), exist_ok=True)
-        device.keystore = JsonKeyStore(namespace=HOST_ADDRESS, filename=self.keystore)
+        device.keystore = JsonKeyStore(namespace=self.address, filename=self.keystore)
 
         link = self
 
@@ -183,6 +210,8 @@ class BleLink:
             sc=True, mitm=True, bonding=True, delegate=Delegate()
         )
         self._keep_connection_parameters(device)
+        if self.ppogatt == FORWARD:
+            device.add_service(self._forward_service())
         await device.power_on()
         self._device = device
 
@@ -259,18 +288,34 @@ class BleLink:
             self._device.remove_listener("advertisement", on_advertisement)
             await self._device.stop_scanning()
 
-    async def _open(self):
-        from bumble.device import Peer
+    def _forward_service(self):
+        """The phone's PPoGATT service, which the watch finds once the link is
+        encrypted."""
+        from bumble.gatt import Characteristic, CharacteristicValue, Service
 
+        def on_write(connection, value):
+            if self._ppog is not None:
+                self._ppog.receive(bytes(value))
+
+        self._data_characteristic = Characteristic(
+            PPOG_FORWARD_DATA_CHARACTERISTIC,
+            Characteristic.NOTIFY | Characteristic.WRITE_WITHOUT_RESPONSE,
+            Characteristic.WRITEABLE,
+            CharacteristicValue(write=on_write),
+        )
+        meta = Characteristic(
+            PPOG_FORWARD_META_CHARACTERISTIC,
+            Characteristic.READ,
+            Characteristic.READABLE,
+            PPOG_FORWARD_META,
+        )
+        return Service(PPOG_FORWARD_SERVICE, [self._data_characteristic, meta])
+
+    async def _open(self):
         if self._device is None:
             await self._power_on()
         address = await self._resolve_address()
-        self._connection = await self._connect(address)
-        self._connection.on("disconnection", self._on_disconnection)
-        self._peer = Peer(self._connection)
-        mtu = await self._peer.request_mtu(REQUESTED_MTU)
-
-        await self._peer.discover_services()
+        await self._attach(address)
         self.connectivity = await self._read_connectivity()
         logger.info("BLE: %s", self.connectivity)
 
@@ -278,7 +323,27 @@ class BleLink:
         if not self._connection.is_encrypted:
             raise HarnessError("the link to the watch is not encrypted")
 
-        await self._open_ppogatt(mtu)
+        if self.ppogatt == REVERSED:
+            await self._open_reversed_ppogatt()
+        try:
+            await asyncio.wait_for(self._session_open, SESSION_TIMEOUT_S)
+        except TimeoutError:
+            raise WatchTimeout("the watch did not open the PPoGATT session") from None
+        logger.info(
+            "BLE: %s PPoGATT session open (MTU %d)", self.ppogatt, self._ppog.mtu
+        )
+
+    async def _attach(self, address):
+        """Connect, and get a PPoGATT session ready for the link: forward,
+        the watch starts it as soon as the link is encrypted."""
+        from bumble.device import Peer
+
+        self._connection = await self._connect(address)
+        self._connection.on("disconnection", self._on_disconnection)
+        self._peer = Peer(self._connection)
+        mtu = await self._peer.request_mtu(REQUESTED_MTU)
+        await self._peer.discover_services()
+        self._new_session(mtu)
 
     async def _connect(self, address):
         from bumble.core import ConnectionError as BumbleConnectionError
@@ -315,7 +380,6 @@ class BleLink:
         """Encrypt with the kept bond, or pair when there is none or the
         watch no longer has its side (e.g. its filesystem was erased)."""
         from bumble.core import BaseBumbleError
-        from bumble.device import Peer
 
         keystore = self._device.keystore
         if await keystore.get(str(address)) is not None:
@@ -328,10 +392,7 @@ class BleLink:
                 )
                 await keystore.delete(str(address))
             if self._connection is None:
-                self._connection = await self._connect(address)
-                self._connection.on("disconnection", self._on_disconnection)
-                self._peer = Peer(self._connection)
-                await self._peer.discover_services()
+                await self._attach(address)
         await asyncio.wait_for(self._connection.pair(), PAIRING_TIMEOUT_S)
 
     async def _read_connectivity(self):
@@ -348,7 +409,21 @@ class BleLink:
             return None
         return Connectivity(bytes(await characteristics[0].read_value()))
 
-    async def _open_ppogatt(self, mtu):
+    def _new_session(self, mtu):
+        if self._ticker is not None:
+            self._ticker.cancel()
+        self._session_open = asyncio.get_running_loop().create_future()
+        self._ppog = PPoGATT(
+            write=self._write,
+            on_data=self._deliver,
+            on_open=lambda: (
+                self._session_open.done() or self._session_open.set_result(True)
+            ),
+        )
+        self._ppog.mtu = mtu
+        self._ticker = asyncio.ensure_future(self._tick())
+
+    async def _open_reversed_ppogatt(self):
         from bumble.core import UUID
 
         services = self._peer.get_services_by_uuid(UUID(PPOG_SERVICE))
@@ -362,24 +437,8 @@ class BleLink:
         self._write_characteristic = service.get_characteristics_by_uuid(
             UUID(PPOG_WRITE_CHARACTERISTIC)
         )[0]
-
-        self._session_open = asyncio.get_running_loop().create_future()
-        self._ppog = PPoGATT(
-            write=self._write,
-            on_data=self._deliver,
-            on_open=lambda: (
-                self._session_open.done() or self._session_open.set_result(True)
-            ),
-        )
-        self._ppog.mtu = mtu
         await notify.subscribe(lambda value: self._ppog.receive(bytes(value)))
         self._ppog.reset()
-        self._ticker = asyncio.ensure_future(self._tick())
-        try:
-            await asyncio.wait_for(self._session_open, SESSION_TIMEOUT_S)
-        except TimeoutError:
-            raise WatchTimeout("the watch did not open the PPoGATT session") from None
-        logger.info("BLE: PPoGATT session open (MTU %d)", mtu)
 
     async def _tick(self):
         while True:
@@ -391,6 +450,13 @@ class BleLink:
         logger.debug(
             "tx type=%d sn=%d len=%d", packet[0] & 7, packet[0] >> 3, len(packet) - 1
         )
+        if self.ppogatt == FORWARD:
+            asyncio.ensure_future(
+                self._device.notify_subscriber(
+                    self._connection, self._data_characteristic, packet
+                )
+            )
+            return
         asyncio.ensure_future(
             self._peer.write_value(
                 self._write_characteristic, packet, with_response=False

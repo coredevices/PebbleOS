@@ -132,6 +132,20 @@ pbl itest --qemu-bt-hci /dev/cu.usbmodem1101 --ble-controller /dev/cu.usbmodem12
 controllers, linked in memory, stand in for them. It covers the host
 stacks and the protocols above them, not a radio, and is what CI uses.
 
+Tests that need a phone take the `phones` fixture: `phones()` makes the
+harness's phone, `phones(address=...)` another one, each with its own
+bond, and `connect()` pairs and opens the Pebble protocol session
+(`phone.pebble`). The session is over reversed PPoGATT, the service the
+watch hosts, or with `phones(ppogatt="forward")` over the one the phone
+hosts. `harness.helpers.firmware` installs a firmware bundle
+through it, as the phone app does:
+
+```python
+def test_version(phones):
+    phone = phones().connect()
+    assert phone.watch_version().version_tag
+```
+
 ### Results
 
 Everything a run produces goes to `BUILD/itest` (or `--results-dir`):
