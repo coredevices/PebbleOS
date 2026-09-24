@@ -128,6 +128,8 @@ typedef enum {
   PEBBLE_PREF_CHANGE_EVENT,
   PEBBLE_SPEAKER_EVENT,
   PEBBLE_BACKLIGHT_EVENT,
+  //! Emitted when the system language changes; i18n_get() already returns the new strings
+  PEBBLE_LANGUAGE_CHANGE_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;

@@ -32,6 +32,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/i18n/mo.h"
 #include "kernel/event_loop.h"
+#include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource.h"
 #include "shell/normal/language_ui.h"
@@ -527,12 +528,30 @@ void i18n_free_all(const void *owner) {
   }
 }
 
+static uint32_t prv_language_id(void) {
+  return s_system_domain.mohandle.mo.mo_htable ? s_system_domain.version.crc : 0;
+}
+
+static void prv_put_event_if_changed(uint32_t prev_language_id) {
+  if (prv_language_id() == prev_language_id) {
+    return;
+  }
+
+  PebbleEvent event = {
+    .type = PEBBLE_LANGUAGE_CHANGE_EVENT,
+  };
+  event_put(&event);
+}
+
 static void prv_resource_changed_handler(void *data) {
   struct DomainBinding *db = (struct DomainBinding *)data;
   // Mark as invalid
   PBL_LOG_DBG("lang resource file reloading");
   shell_prefs_set_language_english(false);
+  const uint32_t prev_language_id = prv_language_id();
   db->need_reload = true;
+  prv_mapit(db->resource_id, db);
+  prv_put_event_if_changed(prev_language_id);
 
   if (resource_is_valid(SYSTEM_APP, db->resource_id)) {
     language_ui_display_changed(db->lang_name);
@@ -563,15 +582,15 @@ void i18n_set_resource(uint32_t resource_id) {
   s_system_domain.watch_handle =
       resource_watch(SYSTEM_APP, resource_id, prv_resource_changed_callback, &s_system_domain);
 
+  const uint32_t prev_language_id = prv_language_id();
   if (shell_prefs_get_language_english()) {
     prv_unset();
-    return;
+  } else {
+    s_system_domain.need_reload = true;
+    // try mapping it right away
+    prv_mapit(resource_id, &s_system_domain);
   }
-
-  s_system_domain.need_reload = true;
-
-  // try mapping it right away
-  prv_mapit(resource_id, &s_system_domain);
+  prv_put_event_if_changed(prev_language_id);
 }
 
 char *i18n_get_locale(void) {
@@ -587,12 +606,14 @@ char *i18n_get_lang_name(void) {
 }
 
 void i18n_enable(bool enable) {
+  const uint32_t prev_language_id = prv_language_id();
   if (enable) {
     s_system_domain.need_reload = true;
     prv_mapit(s_system_domain.resource_id, &s_system_domain);
   } else {
     prv_unset();
   }
+  prv_put_event_if_changed(prev_language_id);
 }
 
 void command_i18n_resource(const char *arg) {
