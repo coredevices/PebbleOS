@@ -9,6 +9,8 @@
 #include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "clar.h"
 
@@ -16,7 +18,6 @@
 #include "stubs_analytics.h"
 #include "stubs_app_install_manager.h"
 #include "stubs_app_state.h"
-#include "stubs_attribute.h"
 #include "stubs_event_service_client.h"
 #include "stubs_health_db.h"
 #include "stubs_health_util.h"
@@ -296,13 +297,49 @@ void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
 
 // =========================================================================================
 // Timeline item stubs
+// We keep the headings/paragraphs of the most recently built timeline item so tests can assert
+// on the metrics a notification reports. The strings are copied out here because the insight
+// code frees its StringLists right after the notification is pushed.
+#define MAX_CAPTURED_METRICS 8
+
 static TimelineItem s_item = {};
+static char s_captured_headings[MAX_CAPTURED_METRICS][32];
+static char s_captured_values[MAX_CAPTURED_METRICS][32];
+static uint32_t s_num_captured_metrics;
+
 TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t duration,
                                                    TimelineItemType type, LayoutId layout,
                                                    AttributeList *attr_list,
                                                    TimelineItemActionGroup *action_group) {
   uuid_generate(&s_item.header.id);
+
+  s_num_captured_metrics = 0;
+  if (attr_list) {
+    StringList *headings = attribute_get_string_list(attr_list, AttributeIdHeadings);
+    StringList *values = attribute_get_string_list(attr_list, AttributeIdParagraphs);
+    const size_t num_metrics = string_list_count(headings);
+    for (size_t i = 0; i < num_metrics && i < MAX_CAPTURED_METRICS; i++) {
+      const char *heading = string_list_get_at(headings, i);
+      const char *value = string_list_get_at(values, i);
+      strncpy(s_captured_headings[i], heading ? heading : "", sizeof(s_captured_headings[i]) - 1);
+      s_captured_headings[i][sizeof(s_captured_headings[i]) - 1] = '\0';
+      strncpy(s_captured_values[i], value ? value : "", sizeof(s_captured_values[i]) - 1);
+      s_captured_values[i][sizeof(s_captured_values[i]) - 1] = '\0';
+      s_num_captured_metrics++;
+    }
+  }
+
   return &s_item;
+}
+
+// Returns the value reported for the given heading, or -1 if the heading was not present.
+static int prv_get_notification_metric(const char *heading) {
+  for (uint32_t i = 0; i < s_num_captured_metrics; i++) {
+    if (strcmp(s_captured_headings[i], heading) == 0) {
+      return atoi(s_captured_values[i]);
+    }
+  }
+  return -1;
 }
 
 void timeline_item_destroy(TimelineItem *item) {
@@ -1045,4 +1082,43 @@ void test_activity_insights__sleep_summary_notification_wake_window_gate(void) {
   rtc_set_time(rtc_get_time() + 28 * SECONDS_PER_MINUTE);
   activity_insights_process_sleep_data(rtc_get_time());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+}
+
+// ---------------------------------------------------------------------------------------
+// End-of-workout session notification metrics
+static void prv_push_session_notification(ActivitySessionType type, int32_t active_kcalories) {
+  ActivitySession session = {
+    .type = type,
+    .start_utc = rtc_get_time(),
+    .length_min = 30,
+    .step_data = {
+      .steps = 3000,
+      .active_kcalories = active_kcalories,
+      .resting_kcalories = 100,
+      .distance_meters = 2000,
+    },
+  };
+  activity_insights_push_activity_session_notification(rtc_get_time(), &session, 120, NULL);
+}
+
+// A manual "Workout" (Open) session should report its active calories, just like Run and Walk.
+void test_activity_insights__open_session_notification_includes_calories(void) {
+  prv_push_session_notification(ActivitySessionType_Open, 250);
+  cl_assert_equal_i(s_data.notifs_shown, 1);
+  cl_assert_equal_i(prv_get_notification_metric("Active Calories"), 250);
+}
+
+// Open workouts are often stationary, where the distance-based estimate is 0. Skip the row
+// rather than showing a misleading zero.
+void test_activity_insights__open_session_notification_omits_zero_calories(void) {
+  prv_push_session_notification(ActivitySessionType_Open, 0);
+  cl_assert_equal_i(s_data.notifs_shown, 1);
+  cl_assert_equal_i(prv_get_notification_metric("Active Calories"), -1);
+}
+
+// Regression guard: Run always reports the row, even when the value is zero.
+void test_activity_insights__run_session_notification_includes_zero_calories(void) {
+  prv_push_session_notification(ActivitySessionType_Run, 0);
+  cl_assert_equal_i(s_data.notifs_shown, 1);
+  cl_assert_equal_i(prv_get_notification_metric("Active Calories"), 0);
 }

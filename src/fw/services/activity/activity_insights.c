@@ -1796,6 +1796,12 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
     icon = TIMELINE_RESOURCE_HEART;
 
     prv_add_metric_duration_info(headings, headings_buf_size, values, values_buf_size, session);
+    // Open workouts are often stationary (weights, yoga, ...), where the distance-based estimate
+    // is 0. Skip the row rather than show a misleading zero.
+    if (session->step_data.active_kcalories > 0) {
+      prv_add_active_calories_metric_info(headings, headings_buf_size, values, values_buf_size,
+                                          session);
+    }
     prv_add_hr_metric_info(headings, headings_buf_size, values, values_buf_size, avg_hr,
                            hr_zone_time_s);
   } else {

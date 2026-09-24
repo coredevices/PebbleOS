@@ -37,10 +37,12 @@ pbl_clar_test(test_activity_insights
     src/fw/util/base64.c
     src/fw/util/crc8.c
     src/fw/util/stats.c
+    src/fw/util/stringlist.c
     src/fw/util/time/time.c
     src/fw/util/time/mktime.c
     src/fw/services/activity/activity_insights.c
     src/fw/services/activity/insights_settings.c
+    src/fw/services/timeline/attribute.c
     src/fw/services/timeline/metricgroup.c
     src/fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
