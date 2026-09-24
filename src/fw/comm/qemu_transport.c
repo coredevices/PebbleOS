@@ -207,11 +207,13 @@ unlock:
 }
 
 void qemu_transport_start(void) {
+#ifndef CONFIG_BT_HCI_UART
   // Open the session synchronously: the host may send a WatchVersionRequest
   // as soon as it sees "Ready for communication".
   if (qemu_setting_get(QemuSetting_DefaultConnected)) {
     qemu_transport_set_connected(true);
   }
+#endif
 }
 
 void qemu_transport_stop(void) {
