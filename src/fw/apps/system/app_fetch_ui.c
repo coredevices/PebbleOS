@@ -50,7 +50,7 @@ typedef struct {
   EventServiceInfo fetch_event_info;
   EventServiceInfo connect_event_info;
 
-  bool failed;
+  bool done;
 } AppFetchUIData;
 
 static void prv_set_progress(AppFetchUIData *data, int16_t progress) {
@@ -149,9 +149,19 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
 
 static void prv_progress_window_finished(ProgressWindow *window, bool success, void *context) {
   AppFetchUIData *data = context;
-  if (success) {
-    prv_app_fetch_launch_app(data);
+  if (!success) {
+    return;
   }
+
+  AppInstallEntry entry;
+  if (!app_install_get_entry_for_install_id(data->next_app_args.app_id, &entry)) {
+    PBL_LOG_WRN("App Fetch: entry %" PRId32 " gone after fetch, not launching",
+                data->next_app_args.app_id);
+    app_window_stack_pop(true);
+    return;
+  }
+
+  prv_app_fetch_launch_app(data);
 }
 
 ////////////////////////////
@@ -188,7 +198,7 @@ static void prv_app_fetch_failure(AppFetchUIData *data, uint8_t error_code) {
     worker_manager_set_default_install_id(INSTALL_ID_INVALID);
   }
 
-  data->failed = true;
+  data->done = true;
   prv_set_progress_failure(data);
   prv_app_fetch_cleanup(data);
 }
@@ -208,6 +218,7 @@ static void prv_app_fetch_event_handler(PebbleEvent *event, void *context) {
 
     // We have finished the app fetch. Launching
   } else if (af_event->type == AppFetchEventTypeFinish) {
+    data->done = true;
     progress_window_set_result_success(&data->window);
     prv_app_fetch_cleanup(data);
 
@@ -220,7 +231,7 @@ static void prv_app_fetch_event_handler(PebbleEvent *event, void *context) {
 // TODO: Use appropriate transitions to and from watchfaces or apps
 static void prv_click_handler(ClickRecognizerRef recognizer, Window *window) {
   AppFetchUIData *data = app_state_get_user_data();
-  if (data->failed) {
+  if (data->done) {
     app_window_stack_pop(true);
   } else {
     app_fetch_cancel(data->install_entry.install_id);
