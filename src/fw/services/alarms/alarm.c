@@ -4,6 +4,7 @@
 #include "pbl/services/alarms/alarm.h"
 #include "pbl/services/alarms/alarm_pin.h"
 
+#include "applib/event_service_client.h"
 #include "apps/system_app_ids.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
@@ -1267,9 +1268,31 @@ void alarm_handle_clock_change(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
+static void prv_language_change_kernel_bg_callback(void *unused) {
+  SettingsFile file;
+  if (!prv_file_open_and_lock(&file)) {
+    return;
+  }
+  prv_reload_alarms(&file);
+  prv_file_close_and_unlock(&file);
+}
+
+static EventServiceInfo s_language_change_event_info;
+
+static void prv_language_change_event_handler(PebbleEvent *event, void *context) {
+  system_task_add_callback(prv_language_change_kernel_bg_callback, NULL);
+}
+
+// ----------------------------------------------------------------------------------------------
 void alarm_init(void) {
   s_next_alarm_time = 0;
   s_snooze_timer_id = new_timer_create();
+
+  s_language_change_event_info = (EventServiceInfo){
+    .type = PEBBLE_LANGUAGE_CHANGE_EVENT,
+    .handler = prv_language_change_event_handler,
+  };
+  event_service_client_subscribe(&s_language_change_event_info);
 
   SettingsFile file;
   if (!prv_file_open_and_lock(&file)) {

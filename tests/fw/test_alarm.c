@@ -490,6 +490,19 @@ void test_alarm__pin_add(void) {
   cl_assert_equal_s(action_title, "Edit");
 }
 
+void test_alarm__language_change_rebuilds_pins(void) {
+  alarm_create(&(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_EVERYDAY});
+  alarm_create(&(AlarmInfo){.hour = 4, .minute = 14, .kind = ALARM_KIND_JUST_ONCE});
+  const int num_pins = s_num_timeline_adds;
+  cl_assert(num_pins > 0);
+
+  cl_assert(s_language_change_event_info);
+  PebbleEvent event = {.type = PEBBLE_LANGUAGE_CHANGE_EVENT};
+  s_language_change_event_info->handler(&event, s_language_change_event_info->context);
+  cl_assert_equal_i(s_num_timeline_removes, num_pins);
+  cl_assert_equal_i(s_num_timeline_adds, 2 * num_pins);
+}
+
 void test_alarm__pin_remove(void) {
   const AlarmId dummy_alarm_id = 0;
   Uuid pin_uuid;

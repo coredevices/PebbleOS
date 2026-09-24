@@ -17,6 +17,7 @@
 #include "stubs_app_install_manager.h"
 #include "stubs_clock.h"
 #include "stubs_cron.h"
+#include "stubs_event_service_client.h"
 #include "stubs_events.h"
 #include "stubs_i18n.h"
 #include "stubs_layout_node.h"

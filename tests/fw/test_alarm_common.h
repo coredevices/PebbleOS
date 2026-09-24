@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "applib/event_service_client.h"
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/alarms/alarm.h"
 #include "pbl/services/alarms/alarm_pin.h"
@@ -160,6 +161,14 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
 
 void event_put(PebbleEvent *event) {
   s_num_alarm_events_put++;
+}
+
+static EventServiceInfo *s_language_change_event_info;
+
+void event_service_client_subscribe(EventServiceInfo *service_info) {
+  if (service_info->type == PEBBLE_LANGUAGE_CHANGE_EVENT) {
+    s_language_change_event_info = service_info;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
