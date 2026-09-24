@@ -176,15 +176,15 @@ function(pbl_link_firmware)
       WORKING_DIRECTORY ${PBL_BASE}
       VERBATIM
     )
+    set(spi_args --config ${PBL_DOTCONFIG} --output ${PROJECT_BINARY_DIR}/qemu_spi_flash.bin)
     if(PBL_PBPACK)
-      add_custom_target(qemu_image_spi
-        COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_FIRMWARE_PY} qemu-image-spi
-                --config ${PBL_DOTCONFIG} --pbpack ${PBL_PBPACK}
-                --output ${PROJECT_BINARY_DIR}/qemu_spi_flash.bin
-        DEPENDS pbl_firmware
-        WORKING_DIRECTORY ${PBL_BASE}
-        VERBATIM
-      )
+      list(APPEND spi_args --pbpack ${PBL_PBPACK})
     endif()
+    add_custom_target(qemu_image_spi
+      COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_FIRMWARE_PY} qemu-image-spi ${spi_args}
+      DEPENDS pbl_firmware
+      WORKING_DIRECTORY ${PBL_BASE}
+      VERBATIM
+    )
   endif()
 endfunction()

@@ -131,8 +131,10 @@ def cmd_qemu_image_spi(args):
         image_size = 0x400000
 
     pprint(f"Writing SPI flash image to {args.output}")
-    with open(args.pbpack, "rb") as f:
-        resources = f.read()
+    resources = b""
+    if args.pbpack:
+        with open(args.pbpack, "rb") as f:
+            resources = f.read()
     with open(args.output, "wb") as f:
         # Pad the region ahead of the system resources with 0xff
         f.write(b"\xff" * resources_begin)
@@ -167,7 +169,7 @@ def main():
 
     p = sub.add_parser("qemu-image-spi")
     p.add_argument("--config", required=True)
-    p.add_argument("--pbpack", required=True)
+    p.add_argument("--pbpack")
     p.add_argument("--output", required=True)
     p.set_defaults(func=cmd_qemu_image_spi)
 
