@@ -26,6 +26,7 @@ jobs:
               - 'platform/**'
               - 'resources/**'
               - 'sdk/**'
+              - 'soc/**'
               - 'src/**'
               - 'stored_apps/**'
               - 'tools/**'
