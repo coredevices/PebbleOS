@@ -72,6 +72,10 @@ pbl qemu --bt-hci /dev/cu.usbmodemXXXX
 `--bt-hci` takes any QEMU `-serial` spec, e.g. `tcp:localhost:9000`. On
 macOS use the `cu.*` device: opening `tty.*` blocks until carrier detect.
 
+The watch generates its identity address on first boot and keeps it in
+flash, so pass `--keep-flash-image` to keep existing bondings across
+launches. A fresh flash image gets a new address.
+
 ## Console
 
 You can launch a console using:

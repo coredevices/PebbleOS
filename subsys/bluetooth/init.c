@@ -3,6 +3,7 @@
 
 #include "gh3x2x_tuning_service.h"
 
+#include <pbl/bluetooth/id_addr.h>
 #include <pbl/bluetooth/init.h>
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
@@ -66,6 +67,30 @@ static void prv_reset_cb(int reason) {
   // (core_dump wakes the LCPU itself); the reboot cold-recovers the controller.
   PBL_CROAK("NimBLE host reset 0x%04x; captured LCPU RAM", (uint16_t)reason);
 #endif
+}
+
+static int prv_ensure_addr(void) {
+#ifdef CONFIG_BT_ID_ADDR
+  struct pbl_bt_addr addr;
+  enum pbl_bt_id_addr_type type;
+  int rc;
+
+  rc = pbl_bt_id_addr_get(&addr, &type);
+  if (rc != 0) {
+    PBL_LOG_ERR("No identity address (%d)", rc);
+    return BLE_HS_ENOADDR;
+  }
+
+  // A public one is programmed into the controller by its transport.
+  if (type == PBL_BT_ID_ADDR_RANDOM_STATIC) {
+    rc = ble_hs_id_set_rnd(addr.octets);
+    if (rc != 0) {
+      return rc;
+    }
+  }
+#endif
+
+  return ble_hs_util_ensure_addr(0);
 }
 
 static void prv_host_task_main(void *unused) {
@@ -162,7 +187,7 @@ bool pbl_bt_start(struct pbl_bt_config *config) {
     PBL_CROAK("NimBLE host start timed out");
   }
 
-  rc = ble_hs_util_ensure_addr(0);
+  rc = prv_ensure_addr();
   if (rc != 0) {
     PBL_LOG_ERR("Failed to ensure address: 0x%04x", (uint16_t)rc);
     goto err;
