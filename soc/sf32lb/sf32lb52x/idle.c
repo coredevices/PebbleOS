@@ -174,12 +174,12 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
     return;
   }
 
+  __disable_irq();
+
   if (!ipc_queue_check_idle()) {
     s_analytics_ipc_not_idle_count++;
-    return;
+    goto end;
   }
-
-  __disable_irq();
 
   if (pbl_idle_confirm()) {
     SocSf32lbSleepLevel max_level = soc_sf32lb_sleep_max_level();
@@ -259,6 +259,7 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
     }
   }
 
+end:
   __enable_irq();
 }
 
