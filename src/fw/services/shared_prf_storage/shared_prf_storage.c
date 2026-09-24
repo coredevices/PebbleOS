@@ -585,6 +585,52 @@ void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address
 }
 
 //!
+//! Local identity address
+//!
+
+bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_out) {
+  bool rv = false;
+  prv_lock();
+  {
+    // Not part of the page validation: a bad value only reads as absent, so
+    // bytes left in this former scratch area can never invalidate a page.
+    SprfLocalIdentityAddress data;
+    const size_t offset = offsetof(SharedPRFData, local_identity_address);
+    flash_read_bytes((uint8_t *)&data, prv_current_page_flash_addr() + offset, sizeof(data));
+
+    const uint32_t crc =
+        crc32(CRC32_INIT, SPRF_FIELD_DATA(&data), SPRF_FIELD_DATA_SIZE(sizeof(data)));
+    if (data.crc == SPRF_UNWRITTEN_CRC || data.crc != crc) {
+      goto unlock;
+    }
+
+    if (address_out) {
+      *address_out = data.address;
+    }
+    rv = true;
+  }
+
+unlock:
+  prv_unlock();
+  return rv;
+}
+
+void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *address) {
+  prv_lock();
+  {
+    if (address) {
+      SprfLocalIdentityAddress data = {
+        .address = *address,
+      };
+      SPRF_PERSIST_FIELD(data, local_identity_address);
+    } else {
+      SPRF_ERASE_FIELD(local_identity_address);
+    }
+  }
+  prv_unlock();
+}
+
+//!
 //! Getting started bit
 //!
 

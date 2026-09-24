@@ -390,6 +390,66 @@ void test_shared_prf_storage_v3__pinned_address(void) {
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
 }
 
+void test_shared_prf_storage_v3__local_identity_address(void) {
+  struct pbl_bt_addr addr_buf;
+  cl_assert_equal_b(shared_prf_storage_get_local_identity_address(&addr_buf), false);
+
+  shared_prf_storage_set_local_identity_address(&DEVICE_ADDR);
+  cl_assert_equal_b(shared_prf_storage_get_local_identity_address(&addr_buf), true);
+  cl_assert_equal_m(&DEVICE_ADDR, &addr_buf, sizeof(DEVICE_ADDR));
+
+  shared_prf_storage_set_local_identity_address(NULL);
+  cl_assert_equal_b(shared_prf_storage_get_local_identity_address(NULL), false);
+}
+
+// Pages written by firmware that predates the field leave it erased.
+void test_shared_prf_storage_v3__local_identity_address_absent_in_old_page(void) {
+  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, PAIRING_NAME,
+                                            false /* requires_address_pinning */, 0 /* flags */);
+
+  cl_assert_equal_b(shared_prf_storage_get_local_identity_address(NULL), false);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(NULL, NULL, NULL, NULL), true);
+}
+
+// Rewriting other fields copies the whole struct, as older firmware does too.
+void test_shared_prf_storage_v3__local_identity_address_survives_rewrites(void) {
+  shared_prf_storage_set_local_identity_address(&DEVICE_ADDR);
+
+  shared_prf_storage_set_getting_started_complete(true);
+  shared_prf_storage_set_getting_started_complete(false);
+  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
+
+  struct pbl_bt_addr addr_buf;
+  cl_assert_equal_b(shared_prf_storage_get_local_identity_address(&addr_buf), true);
+  cl_assert_equal_m(&DEVICE_ADDR, &addr_buf, sizeof(DEVICE_ADDR));
+}
+
+// Junk in the field reads as absent and never invalidates the page.
+void test_shared_prf_storage_v3__local_identity_address_junk(void) {
+  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, PAIRING_NAME,
+                                            false /* requires_address_pinning */, 0 /* flags */);
+
+  uint8_t junk[sizeof(SprfLocalIdentityAddress)];
+  memset(junk, 0x17, sizeof(junk));
+  flash_write_bytes(junk,
+                    SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()) +
+                        offsetof(SharedPRFData, local_identity_address),
+                    sizeof(junk));
+
+  cl_assert_equal_b(shared_prf_storage_get_local_identity_address(NULL), false);
+  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(NULL, NULL, NULL, NULL), true);
+
+  shared_prf_storage_init();
+  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
+
+  struct pbl_bt_addr addr_buf;
+  shared_prf_storage_set_local_identity_address(&DEVICE_ADDR);
+  cl_assert_equal_b(shared_prf_storage_get_local_identity_address(&addr_buf), true);
+  cl_assert_equal_m(&DEVICE_ADDR, &addr_buf, sizeof(DEVICE_ADDR));
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(NULL, NULL, NULL, NULL), true);
+}
+
 void test_shared_prf_storage_v3__rewrite_pages_and_wrap_around(void) {
   bool toggle = false;
 

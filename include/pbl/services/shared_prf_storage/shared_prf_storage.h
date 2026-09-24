@@ -68,6 +68,15 @@ bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out);
 void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+//! Local Identity Address
+
+//! Returns true if a local identity address is stored, otherwise false.
+bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_out);
+
+//! Stores the local identity address, or erases it if address is NULL.
+void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *address);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BT Classic Pairing Data
 
 //! Returns true if there is a valid pairing, otherwise false.

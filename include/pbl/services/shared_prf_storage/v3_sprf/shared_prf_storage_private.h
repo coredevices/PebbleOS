@@ -31,13 +31,16 @@ _Static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 
 //! This is the struct written out to the Shared PRF flash region
 //!
-//! It's composed of seven sub entries:
+//! It's composed of eight sub entries:
 //!   root_keys: Root keys (only identity since that is all Dialog needs)
 //!   ble_pairing_data: The pairing info for the device most recently paired to the watch
 //!   ble_pairing_name: The name of the device most recently paired to the watch
 //!   pinned_address: Pinned address of the device most recently paired to watch (may be empty)
 //!   getting_started: Captures whether or not we have gone through onboarding
 //!   local_name: Not used yet, but saved for future proofing
+//!   local_identity_address: Random static identity address of the watch, for controllers
+//!     without one of their own. Carved out of main_fw_scratch, so firmware that predates it
+//!     neither validates it nor drops it when rewriting the struct
 //!   main_fw_scratch: A region for normal fw to stash info in the future if needed
 //!
 //! Each entry, or field, has its own crc which is written once the write of the field is complete.
@@ -116,6 +119,13 @@ typedef struct PBL_PACKED SprfLocalName {
 } SprfLocalName;
 _Static_assert(offsetof(SprfLocalName, crc) == 0, "crc must be the first field");
 
+typedef struct PBL_PACKED SprfLocalIdentityAddress {
+  uint32_t crc;
+  struct pbl_bt_addr address;
+  uint8_t rsvd[2];
+} SprfLocalIdentityAddress;
+_Static_assert(offsetof(SprfLocalIdentityAddress, crc) == 0, "crc must be the first field");
+
 typedef struct PBL_PACKED SharedPRFData {
   SprfMagic magic;
   uint8_t version;
@@ -127,11 +137,12 @@ typedef struct PBL_PACKED SharedPRFData {
   SprfPinnedAddress pinned_address;
   SprfGettingStarted getting_started;
   SprfLocalName local_name;
+  SprfLocalIdentityAddress local_identity_address;
 
   // Occasions have arisen in the past where a region in sharedPRF that
   // main FW can stash info related to a pairing. That is the intent of this region.
   struct PBL_PACKED {
-    uint8_t rsvd[44];
+    uint8_t rsvd[32];
   } main_fw_scratch;
 } SharedPRFData;
 
