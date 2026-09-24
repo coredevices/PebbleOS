@@ -1530,6 +1530,27 @@ void test_activity__sleep_derived_metrics(void) {
 }
 
 // ---------------------------------------------------------------------------------------
+// A sleep state restored without its sleep session (lost across a reboot) must not stick
+void test_activity__sleep_state_without_session(void) {
+  int32_t value;
+
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  activity_private_state()->sleep_data.cur_state = ActivitySleepStateRestfulSleep;
+  activity_private_state()->sleep_data.cur_state_elapsed_minutes = 30;
+
+  prv_feed_canned_accel_data(SECONDS_PER_MINUTE * ACTIVITY_SESSION_UPDATE_MIN, 50,
+                             ActivitySleepStateAwake);
+
+  activity_get_metric(ActivityMetricSleepState, 1, &value);
+  cl_assert_equal_i(value, ActivitySleepStateAwake);
+  activity_get_metric(ActivityMetricSleepStateSeconds, 1, &value);
+  cl_assert_equal_i(value, 0);
+  cl_assert_equal_i(health_service_peek_current_activities(), HealthActivityNone);
+}
+
+// ---------------------------------------------------------------------------------------
 // Test that sleep sessions get registered in the correct day
 void test_activity__sleep_history(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must

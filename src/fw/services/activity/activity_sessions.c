@@ -370,7 +370,11 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
     // Collect stats on sleep
     ActivitySleepStats stats;
     if (!prv_compute_sleep_stats(now_utc, 0 /*min_end_utc*/, max_end_utc, &stats)) {
-      // We didn't have any sleep data exit early
+      // No sleep session to be in, e.g. it was lost across a reboot
+      if (sleep_data->cur_state != ActivitySleepStateAwake) {
+        sleep_data->cur_state = ActivitySleepStateAwake;
+        sleep_data->cur_state_elapsed_minutes = 0;
+      }
       goto unlock;
     }
 
