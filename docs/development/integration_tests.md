@@ -171,6 +171,8 @@ the build under test are deselected:
 - `platforms("emery")`: the platform, covering its emulated board too
 - `device_types("hardware")`: `qemu` or `hardware`
 - `requires_config("CONFIG_TOUCH")`: Kconfig symbols that must be set
+- `variants("prf")`: the firmware variant, `normal` or `prf`; unmarked
+  tests are for `normal`
 
 The names are also keywords, so `-k obelix` selects tests declared for
 obelix. `--board` selects for another board than the build's, e.g. to see
@@ -295,6 +297,40 @@ so run them on a test watch, with no phone bonded to it nearby. Each passes
 within 10% of the board's nominal figure in `power/test_idle.py`, measured
 at 3.8 V; update the nominals when a change moves them on purpose. Boards
 without nominals record their figures with a warning.
+
+## Recovery firmware
+
+The tests in `prf/` cover what a PRF release is checked for: the Getting
+Started screen and the phone's name on it, pairing and the Pebble protocol
+over reversed PPoGATT, a second phone taking over the single bond,
+installing the normal firmware from the phone and "Reset to PRF" from it,
+the backlight timeout, turning off after 10 minutes unplugged and
+unconnected (not while a phone or a charger is connected), the low battery
+screen, and the current advertising, connected and off. On the emulator
+the screens are compared with golden images, the backlight is timed on the
+display, and `dut.set_battery()` sets the emulated battery's charge and
+charger; on a watch the current is measured with a PPK2, the backlight
+timed on it, and the low battery screen shown by powering it at 3.5 V.
+
+Installing the firmware takes a normal build of the same board, bundled:
+
+```shell
+pbl -b build-main configure --board qemu_emery
+pbl -b build-main build bundle
+pbl -b build-prf configure --board qemu_emery --variant prf -DCONFIG_BT_HCI_UART=y
+pbl -b build-prf build qemu_image_micro qemu_image_spi
+pbl -b build-prf itest --no-build --qemu-bt-hci virtual --main-build "$PWD/build-main"
+```
+
+The emulator has no bootloader, so it only checks the transfer. A watch
+installs it, boots it, and goes back to PRF when the phone asks; it has to
+be running PRF to start with, as set up for a release check (the
+bootloader and PRF alone on the flash). `slow` covers the idle shutdown,
+about 12 minutes each way.
+
+Left for a person: the Back+Up+Select hold that reboots into PRF,
+charging a watch, the MFG menu's tests (checked in the factory), and the
+phone apps themselves.
 
 ## Extending the harness
 

@@ -150,6 +150,13 @@ class DeviceAdapter(ABC):
             self.connect()
             self.wait_ready()
 
+    def standby(self):
+        """Have the firmware turn the watch off (PRF only); :meth:`reset`
+        turns it back on."""
+        self._connection(Capability.PROMPT).prompt_no_reply("enter standby")
+        time.sleep(QUIESCE_SEND_S)
+        self.disconnect()
+
     def wipe(self):
         """Erase the watch's filesystem and boot it afresh: no bondings,
         default settings, no apps or data."""

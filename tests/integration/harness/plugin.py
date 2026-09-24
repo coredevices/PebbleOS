@@ -23,6 +23,8 @@ SCOPE_MARKERS = {
     "platforms": "platforms(*names): only on these platforms (emery, flint, gabbro)",
     "device_types": "device_types(*types): only on these device types (qemu, hardware)",
     "requires_config": "requires_config(*symbols): only when these Kconfig symbols are set",
+    "variants": "variants(*names): only on these firmware variants (normal, prf); "
+    "unmarked tests are for normal",
 }
 
 # What a test covers; select with -m.
@@ -200,6 +202,10 @@ def _applies(item, config):
     types = _marker_args(item, "device_types")
     if types and device_type and device_type not in types:
         return f"device type {device_type} not in {sorted(types)}"
+    if build is not None and board == build.board:
+        variants = _marker_args(item, "variants") or {"normal"}
+        if build.variant not in variants:
+            return f"variant {build.variant} not in {sorted(variants)}"
     symbols = _marker_args(item, "requires_config")
     if symbols and build is not None and board == build.board:
         missing = sorted(s for s in symbols if not build.config.get(s))

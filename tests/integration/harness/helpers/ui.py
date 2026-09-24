@@ -142,7 +142,8 @@ class Ui:
         """The framebuffer as an RGB PIL image."""
         from PIL import Image
 
-        if self.dut.has(Capability.PROTOCOL):
+        # PRF has no screenshot endpoint.
+        if self.dut.has(Capability.PROTOCOL) and self.dut.build.variant != "prf":
             rows = self._protocol_screenshot()
             width = len(rows[0]) // 3
             return Image.frombytes(

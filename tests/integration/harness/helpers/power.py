@@ -154,6 +154,11 @@ class Ppk2:
         self._ppk = ppk
         self._lock = threading.Lock()
 
+    def set_voltage(self, voltage_mv):
+        with self._lock:
+            self._ppk.set_source_voltage(voltage_mv)
+        self.voltage_mv = voltage_mv
+
     @staticmethod
     def _read_metadata(ppk):
         """The PPK2's metadata (calibration), or None if the port is not a
