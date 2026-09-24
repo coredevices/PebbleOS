@@ -1086,7 +1086,7 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
 }
 
 void put_bytes_handle_comm_session_event(const PebbleCommSessionEvent *comm_session_event) {
-  if (comm_session_event->is_system) {
+  if (comm_session_event->is_system && !comm_session_event->is_open) {
     prv_cleanup_async();
   }
 }

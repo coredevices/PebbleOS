@@ -1011,6 +1011,22 @@ void test_put_bytes__session_closed_after_fw_init(void) {
   assert_cleanup_event(ObjectFirmware, VALID_OBJECT_SIZE);
 }
 
+void test_put_bytes__session_opened_before_fw_init(void) {
+  put_bytes_expect_init(EXPECT_INIT_TIMEOUT_MS);
+
+  PebbleCommSessionEvent app_event = {.is_open = true, .is_system = true};
+
+  // The session opening is handled after the update started
+  put_bytes_handle_comm_session_event(&app_event);
+  fake_event_reset_count();
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(fake_event_get_count(), 0);
+
+  prv_receive_init_fw_object();
+  assert_ack_count(1);
+  assert_nack_count(0);
+}
+
 void test_put_bytes__session_closed_after_expect_init(void) {
   put_bytes_expect_init(EXPECT_INIT_TIMEOUT_MS);
 
