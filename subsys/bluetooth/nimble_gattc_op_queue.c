@@ -5,7 +5,7 @@
 
 #include <comm/bt_lock.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/system_task.h>
+#include <nimble/nimble_port.h>
 #include <pbl/util/list.h>
 
 typedef struct {
@@ -19,15 +19,17 @@ typedef struct {
 static ListNode *s_ops;
 static bool s_op_running;
 static bool s_kick_scheduled;
-
-static void prv_run_cb(void *unused);
+//! Ops start on the host task, where the host also handles disconnections:
+//! NimBLE sends a procedure's request before it tracks the procedure, so a
+//! disconnection handled in between would leave it waiting for its timeout.
+static struct ble_npl_event s_run_event;
 
 static void prv_kick_locked(void) {
   if (s_op_running || s_kick_scheduled || (s_ops == NULL)) {
     return;
   }
   s_kick_scheduled = true;
-  system_task_add_callback(prv_run_cb, NULL);
+  ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &s_run_event);
 }
 
 static void prv_pop_locked(void) {
@@ -37,7 +39,7 @@ static void prv_pop_locked(void) {
   kernel_free(op);
 }
 
-static void prv_run_cb(void *unused) {
+static void prv_run_cb(struct ble_npl_event *ev) {
   bt_lock();
   s_kick_scheduled = false;
   while (!s_op_running && (s_ops != NULL)) {
@@ -85,10 +87,13 @@ void nimble_gattc_op_queue_complete(void) {
 }
 
 void nimble_gattc_op_queue_init(void) {
+  ble_npl_event_init(&s_run_event, prv_run_cb, NULL);
+
   bt_lock();
   while (s_ops != NULL) {
     prv_pop_locked();
   }
   s_op_running = false;
+  s_kick_scheduled = false;
   bt_unlock();
 }
