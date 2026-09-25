@@ -122,14 +122,12 @@ void new_timer_service_init(void) {
 
 // -----------------------------------------------------------------------------------------------------
 // Used by the console command to list timers
-bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
+void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
   NewTimerWorkItem work = {cb, data};
   pbl_msgq_put(&s_work_queue, &work, PBL_NO_WAIT);
 
   // Wake up the thread to process the work item we just added.
   pbl_sem_give(&s_wake_srv_loop);
-
-  return false;
 }
 
 bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {

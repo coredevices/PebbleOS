@@ -221,9 +221,7 @@ typedef void (*AccelOffloadCallback)(void);
 //! It is up to the implementer to decide how this should work
 //!
 //! @param cb The callback to be invoked from a thread context
-//! @param should_context_switch Set to true if a context switch should be
-//!        performed when returning from the ISR
-extern void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_switch);
+extern void accel_offload_work_from_isr(AccelOffloadCallback cb);
 
 //! Function called by driver when it needs to offload work.
 //! It is up to the implementer to decide how this should work

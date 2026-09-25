@@ -41,9 +41,8 @@ static void prv_process_touch_update(void *unused) {
 void TOUCH_IRQHandler(void) {
   REG32(QEMU_TOUCH_BASE + TOUCH_INTSTAT) = INT_TOUCH_EVENT;
 
-  bool should_context_switch = false;
   if (!s_callback_scheduled) {
-    if (system_task_add_callback_from_isr(prv_process_touch_update, NULL, &should_context_switch)) {
+    if (system_task_add_callback_from_isr(prv_process_touch_update, NULL)) {
       s_callback_scheduled = true;
     }
   }

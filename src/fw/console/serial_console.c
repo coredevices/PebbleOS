@@ -19,7 +19,7 @@ static bool s_serial_console_initialized;
 
 static bool s_prompt_enabled = false;
 
-static void logging_handle_character(char c, bool *should_context_switch) {
+static void logging_handle_character(char c) {
 #ifndef CONFIG_SHELL
   return;
 #endif
@@ -30,7 +30,7 @@ static void logging_handle_character(char c, bool *should_context_switch) {
       PBL_LOG_DBG("Ignoring prompt request, not yet ready!");
       return;
     }
-    shell_dbgserial_start_from_isr(should_context_switch);
+    shell_dbgserial_start_from_isr();
   }
 }
 

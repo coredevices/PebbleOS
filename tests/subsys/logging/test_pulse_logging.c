@@ -17,14 +17,12 @@ const int LOG_METADATA_LENGTH = 29;
 
 static int s_num_event_puts;
 static PebbleEvent s_last_event;
-bool event_put_isr(PebbleEvent *e) {
+void event_put_isr(PebbleEvent *e) {
   cl_assert_equal_i(e->type, PEBBLE_CALLBACK_EVENT);
 
   ++s_num_event_puts;
 
   s_last_event = *e;
-
-  return true;
 }
 
 char pbl_log_get_level_char(const uint8_t log_level) {

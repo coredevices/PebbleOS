@@ -53,14 +53,14 @@ struct pbl_shell {
   }
 
 //! Interactive shells: starts a session, printing the prompt from KernelBG.
-void pbl_shell_start_from_isr(const struct pbl_shell *sh, bool *should_context_switch);
+void pbl_shell_start_from_isr(const struct pbl_shell *sh);
 
 //! Interactive shells: ends the session, dropping pending input.
 void pbl_shell_stop(const struct pbl_shell *sh);
 
 //! Interactive shells: queues a received character. ISR-safe; characters
 //! overflowing CONFIG_SHELL_RX_BUFF_SIZE are dropped.
-void pbl_shell_input_from_isr(const struct pbl_shell *sh, char c, bool *should_context_switch);
+void pbl_shell_input_from_isr(const struct pbl_shell *sh, char c);
 
 //! Line shells: runs @p line (not NUL-terminated) on KernelBG.
 //! @return 0, -EBUSY while a command runs, or -ENOSPC for a line longer

@@ -192,15 +192,13 @@ static bool prv_send_to_queue_no_wait(SystemTaskEventCallback cb, void *data) {
   return pbl_msgq_put(&s_system_task_queue, &event, PBL_NO_WAIT) == 0;
 }
 
-bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
-                                       bool *should_context_switch) {
+bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data) {
   // Capture caller LR at entry; reading from a deeper helper is unreliable.
   uintptr_t caller_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
   if (!prv_is_accepting_callbacks()) {
     return false;
   }
 
-  *should_context_switch = false;
   bool success = prv_send_to_queue_no_wait(cb, data);
   if (!success) {
     handle_system_task_send_failure(cb, caller_lr);
@@ -217,9 +215,7 @@ bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data) 
   return prv_send_to_queue_no_wait(cb, data);
 }
 
-bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data,
-                                                 bool *should_context_switch) {
-  *should_context_switch = false;
+bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data) {
   return system_task_add_callback_droppable(cb, data);
 }
 

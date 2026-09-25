@@ -78,8 +78,7 @@ typedef void (*NewTimerWorkCallback)(void *data);
 
 //! Push a piece of work onto the new timer thread from an ISR. Used to handle time sensitive
 //! hardware events.
-//! @return True if the caller should trigger a context switch
-bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data);
+void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data);
 
 //! @return True if there was space in the queue, false otherwise
 bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data);

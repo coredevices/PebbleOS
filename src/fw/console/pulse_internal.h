@@ -22,7 +22,7 @@ void pulse_start(void);
 void pulse_end(void);
 
 //! PULSE ISR receive character handler.
-void pulse_handle_character(char c, bool *should_context_switch);
+void pulse_handle_character(char c);
 
 //! Change the dbgserial baud rate.
 void pulse_change_baud_rate(uint32_t new_baud);

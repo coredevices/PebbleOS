@@ -473,7 +473,7 @@ static void prv_rx_process(void *data) {
   }
 }
 
-static void prv_schedule_from_isr(const struct pbl_shell *sh, bool *should_context_switch) {
+static void prv_schedule_from_isr(const struct pbl_shell *sh) {
   struct pbl_shell_ctx *ctx = sh->ctx;
 
   if (ctx->rx_scheduled) {
@@ -481,15 +481,15 @@ static void prv_schedule_from_isr(const struct pbl_shell *sh, bool *should_conte
   }
 
   ctx->rx_scheduled = true;
-  if (!system_task_add_callback_from_isr(prv_rx_process, (void *)sh, should_context_switch)) {
+  if (!system_task_add_callback_from_isr(prv_rx_process, (void *)sh)) {
     ctx->rx_scheduled = false;
   }
 }
 
-void pbl_shell_start_from_isr(const struct pbl_shell *sh, bool *should_context_switch) {
+void pbl_shell_start_from_isr(const struct pbl_shell *sh) {
   sh->ctx->rx_tail = sh->ctx->rx_head;
   sh->ctx->active = false;
-  prv_schedule_from_isr(sh, should_context_switch);
+  prv_schedule_from_isr(sh);
 }
 
 void pbl_shell_stop(const struct pbl_shell *sh) {
@@ -497,7 +497,7 @@ void pbl_shell_stop(const struct pbl_shell *sh) {
   sh->ctx->rx_tail = sh->ctx->rx_head;
 }
 
-void pbl_shell_input_from_isr(const struct pbl_shell *sh, char c, bool *should_context_switch) {
+void pbl_shell_input_from_isr(const struct pbl_shell *sh, char c) {
   struct pbl_shell_ctx *ctx = sh->ctx;
   uint8_t next = (ctx->rx_head + 1) % CONFIG_SHELL_RX_BUFF_SIZE;
 
@@ -507,7 +507,7 @@ void pbl_shell_input_from_isr(const struct pbl_shell *sh, char c, bool *should_c
 
   ctx->rx[ctx->rx_head] = c;
   ctx->rx_head = next;
-  prv_schedule_from_isr(sh, should_context_switch);
+  prv_schedule_from_isr(sh);
 }
 
 static int prv_strto(const char *str, bool is_signed, long *sout, unsigned long *uout) {

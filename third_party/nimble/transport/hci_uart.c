@@ -83,7 +83,7 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   return -1;
 }
 
-static bool prv_rx_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
+static void prv_rx_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
   uint32_t head = s_rx_head;
   uint32_t next = (head + 1U) % RX_RING_SIZE;
 
@@ -98,8 +98,6 @@ static bool prv_rx_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorF
   }
 
   pbl_sem_give(&s_rx_ready);
-
-  return false;
 }
 
 static void prv_hci_task_main(void *unused) {

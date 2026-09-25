@@ -508,12 +508,12 @@ static void prv_lsm6dso_int1_work_handler(void) {
   }
 }
 
-static void prv_lsm6dso_int1_irq_handler(bool *should_context_switch) {
+static void prv_lsm6dso_int1_irq_handler(void) {
   // A rising edge proves the pad was low, i.e. the wake-up source deasserted
   LSM6DSO->state->wu_active = false;
   // ... which also breaks any stuck-high streak the watchdog counted
   LSM6DSO->state->shake_stuck_passes = 0U;
-  accel_offload_work_from_isr(prv_lsm6dso_int1_work_handler, should_context_switch);
+  accel_offload_work_from_isr(prv_lsm6dso_int1_work_handler);
 }
 
 static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detection_enabled) {

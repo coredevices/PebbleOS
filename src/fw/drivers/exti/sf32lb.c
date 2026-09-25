@@ -115,9 +115,7 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
   for (uint8_t index = 0; index < EXTI_MAX_GPIO1_PIN_NUM; index++) {
     if (s_exti_gpio1_handler_configs[index].callback != NULL &&
         s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {
-      bool should_context_switch = false;
-
-      s_exti_gpio1_handler_configs[index].callback(&should_context_switch);
+      s_exti_gpio1_handler_configs[index].callback();
       return;
     }
   }

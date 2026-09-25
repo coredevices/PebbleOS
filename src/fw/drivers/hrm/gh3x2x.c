@@ -103,16 +103,13 @@ static void gh3026_int_callback_function(void *context) {
   Gh3x2xDemoInterruptProcess();
 }
 
-static void gh3026_int_irq_callback(bool *should_context_switch) {
+static void gh3026_int_irq_callback(void) {
   hal_gh3x2x_int_handler_call_back();
 
   if (s_hrm_int_flag == false) {
-    if (system_task_add_callback_from_isr(gh3026_int_callback_function, NULL,
-                                          should_context_switch)) {
+    if (system_task_add_callback_from_isr(gh3026_int_callback_function, NULL)) {
       s_hrm_int_flag = true;
     }
-  } else {
-    *should_context_switch = false;
   }
 }
 

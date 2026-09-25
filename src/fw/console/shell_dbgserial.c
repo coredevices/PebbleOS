@@ -24,12 +24,12 @@ static const struct pbl_shell_backend_api s_api = {
 
 PBL_SHELL_DEFINE(shell_dbgserial, "pebble> ", &s_api, NULL);
 
-void shell_dbgserial_start_from_isr(bool *should_context_switch) {
+void shell_dbgserial_start_from_isr(void) {
   serial_console_set_state(SERIAL_CONSOLE_STATE_PROMPT);
-  pbl_shell_start_from_isr(&shell_dbgserial, should_context_switch);
+  pbl_shell_start_from_isr(&shell_dbgserial);
 }
 
-void shell_dbgserial_handle_char(char c, bool *should_context_switch) {
+void shell_dbgserial_handle_char(char c) {
   if (c == 0x04) {
     pbl_shell_stop(&shell_dbgserial);
     dbgserial_putstr("^D");
@@ -37,5 +37,5 @@ void shell_dbgserial_handle_char(char c, bool *should_context_switch) {
     return;
   }
 
-  pbl_shell_input_from_isr(&shell_dbgserial, c, should_context_switch);
+  pbl_shell_input_from_isr(&shell_dbgserial, c);
 }

@@ -24,11 +24,7 @@ typedef void (*SystemTaskEventCallback)(void *data);
 
 //! @param cb Callback function that will later be called from the system task
 //! @param data Context pointer passed to the callback
-//! @param should_context_switch A boolean that indicates our ISR should context switch at the end
-//! instead of
-//!                              resuming the previous task.
-bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
-                                       bool *should_context_switch);
+bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data);
 
 //! Enqueue without waiting, from task or ISR context, including with IRQs locked.
 //! Returns false if callbacks are disabled or the queue is full; never resets on failure.
@@ -36,8 +32,7 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data,
 bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data);
 
 //! ISR wrapper for system_task_add_callback_droppable().
-bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data,
-                                                 bool *should_context_switch);
+bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data);
 
 //! @param cb Callback function that will later be called from the system task
 //! @param data Context pointer passed to the callback

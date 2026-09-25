@@ -88,8 +88,6 @@ void qemu_audio_irq_handler(AudioDevice *dev) {
 
   // Schedule callback on system task; a drop is retried on the next interrupt
   if (dev->state->trans_cb) {
-    bool should_context_switch = false;
-    system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb, (void *)dev->state,
-                                                &should_context_switch);
+    system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb, (void *)dev->state);
   }
 }

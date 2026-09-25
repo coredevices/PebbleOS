@@ -73,7 +73,7 @@ static bool s_activity_since_check = false;
 static RtcTicks s_last_irq_ticks = 0;
 static PBL_MUTEX_DEFINE(s_i2c_lock);
 
-static void prv_exti_cb(bool *should_context_switch);
+static void prv_exti_cb(void);
 static void cst816_hw_reset(void);
 static void prv_watchdog_cb(void *data);
 
@@ -349,12 +349,12 @@ static void prv_process_pending_messages(void *context) {
   }
 }
 
-static void prv_exti_cb(bool *should_context_switch) {
+static void prv_exti_cb(void) {
   if (s_callback_scheduled) {
     return;
   }
 
-  system_task_add_callback_from_isr(prv_process_pending_messages, NULL, should_context_switch);
+  system_task_add_callback_from_isr(prv_process_pending_messages, NULL);
   s_callback_scheduled = true;
 }
 

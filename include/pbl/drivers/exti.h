@@ -11,7 +11,7 @@ typedef enum {
   ExtiTrigger_RisingFalling
 } ExtiTrigger;
 
-typedef void (*ExtiHandlerCallback)(bool *should_context_switch);
+typedef void (*ExtiHandlerCallback)(void);
 
 void exti_enable(ExtiConfig config);
 void exti_disable(ExtiConfig config);

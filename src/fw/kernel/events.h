@@ -826,7 +826,7 @@ _Static_assert(sizeof(PebbleEvent) <= 12, "PebbleEvent grew; check the event uni
 void events_init(void);
 
 void event_put(PebbleEvent *event);
-bool event_put_isr(PebbleEvent *event);
+void event_put_isr(PebbleEvent *event);
 void event_put_from_process(PebbleTask task, PebbleEvent *event);
 
 //! Like event_put_from_app but it's allowed to fail.

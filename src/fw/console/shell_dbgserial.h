@@ -6,6 +6,6 @@
 #include <stdbool.h>
 
 //! Switches the debug serial to its shell. Ctrl-D switches it back to logs.
-void shell_dbgserial_start_from_isr(bool *should_context_switch);
+void shell_dbgserial_start_from_isr(void);
 
-void shell_dbgserial_handle_char(char c, bool *should_context_switch);
+void shell_dbgserial_handle_char(char c);

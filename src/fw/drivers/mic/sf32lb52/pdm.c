@@ -315,9 +315,7 @@ static void prv_dma_data_processing(uint8_t *data, uint16_t size) {
     // Dispatch to system task instead of kernel event queue (matches asterix behavior).
     // A drop is retried on the next PDM buffer event; losing samples beats
     // resetting the system over a full queue.
-    bool should_context_switch = false;
-    if (!system_task_add_callback_from_isr_droppable(prv_dispatch_samples_system_task, NULL,
-                                                     &should_context_switch)) {
+    if (!system_task_add_callback_from_isr_droppable(prv_dispatch_samples_system_task, NULL)) {
       s_state->main_pending = false;
     }
   }
