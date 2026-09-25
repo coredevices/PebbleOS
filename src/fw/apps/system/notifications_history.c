@@ -160,6 +160,9 @@ void notifications_history_deinit(NotificationHistory *history) {
 
 void notifications_history_add_header(NotificationHistory *history,
                                       const CommonTimelineItemHeader *header) {
+  if (notifications_history_is_hidden(header)) {
+    return;
+  }
   NotificationHistoryRow *row = prv_create_individual_row(history, header);
   if (history->group_by_sender) {
     prv_insert_row_sorted(history, row);
@@ -169,6 +172,9 @@ void notifications_history_add_header(NotificationHistory *history,
 }
 
 void notifications_history_add_item(NotificationHistory *history, const TimelineItem *item) {
+  if (notifications_history_is_hidden(&item->header)) {
+    return;
+  }
   char buffer[ATTRIBUTE_TITLE_MAX_LEN + 1];
   const char *sender = NULL;
   if (history->group_by_sender && (item->header.timestamp >= history->grouping_cutoff)) {

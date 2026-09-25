@@ -289,3 +289,62 @@ void test_notifications_history__only_notifications_within_range_are_grouped(voi
   cl_assert(!prv_row(1)->is_group);
   prv_assert_id(&prv_row(1)->notification.id, 1);
 }
+
+void test_notifications_history__actioned_and_dismissed_notifications_are_skipped(void) {
+  notifications_history_deinit(&s_history);
+  notifications_history_init(&s_history, false, 0);
+
+  CommonTimelineItemHeader kept = {
+    .id = prv_id(1),
+    .timestamp = 100,
+  };
+  CommonTimelineItemHeader actioned = {
+    .id = prv_id(2),
+    .timestamp = 200,
+    .status = TimelineItemStatusActioned,
+  };
+  CommonTimelineItemHeader dismissed = {
+    .id = prv_id(3),
+    .timestamp = 300,
+    .status = TimelineItemStatusDismissed,
+  };
+  notifications_history_add_header(&s_history, &kept);
+  notifications_history_add_header(&s_history, &actioned);
+  notifications_history_add_header(&s_history, &dismissed);
+
+  cl_assert_equal_i(notifications_history_get_row_count(&s_history), 1);
+  prv_assert_id(&prv_row(0)->notification.id, 1);
+}
+
+void test_notifications_history__actioned_and_dismissed_notifications_are_not_grouped(void) {
+  Attribute sender = {
+    .id = AttributeIdSender,
+    .cstring = "Anna",
+  };
+  TimelineItem item = {
+    .header =
+        {
+          .id = prv_id(3),
+          .timestamp = 300,
+          .type = TimelineItemTypeNotification,
+          .status = TimelineItemStatusDismissed,
+        },
+    .attr_list = {
+      .num_attributes = 1,
+      .attributes = &sender,
+    },
+  };
+
+  prv_add(1, 100, "Anna");
+  prv_add(2, 200, "Anna");
+  notifications_history_add_item(&s_history, &item);
+  item.header.id = prv_id(4);
+  item.header.timestamp = 400;
+  item.header.status = TimelineItemStatusActioned;
+  notifications_history_add_item(&s_history, &item);
+
+  cl_assert_equal_i(notifications_history_get_row_count(&s_history), 1);
+  cl_assert(prv_row(0)->is_group);
+  cl_assert_equal_i(prv_row(0)->group.count, 2);
+  prv_assert_id(notifications_history_row_get_latest_id(prv_row(0)), 2);
+}
