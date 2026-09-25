@@ -17,6 +17,7 @@
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gap_le_device_name.h"
 #include "kernel/pbl_malloc.h"
+#include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/system_icons.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
@@ -39,6 +40,8 @@
 #define HEADER_BUFFER_SIZE 22
 
 #define SHARING_HEART_RATE_EXTRA_HEIGHT_PX (18)
+
+#define HINT_VERTICAL_MARGIN_PX (4)
 
 typedef enum SettingsBluetooth {
   SettingsBluetoothAirplaneMode,
@@ -237,13 +240,13 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
         }
       }
 
-      settings_menu_mark_dirty(SettingsMenuItemBluetooth);
+      settings_menu_reload_data(SettingsMenuItemBluetooth);
       break;
     }
 
     case PBL_BT_PEBBLE_STATE_EVENT: {
       settings_data->toggle_state = ToggleStateIdle;
-      settings_menu_mark_dirty(SettingsMenuItemBluetooth);
+      settings_menu_reload_data(SettingsMenuItemBluetooth);
       break;
     }
 
@@ -360,6 +363,74 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer, uint
   task_free(remote_name);
 }
 
+#if PBL_RECT
+static int16_t prv_get_row_base_height(SettingsBluetoothData *data, uint16_t row) {
+  int16_t height = menu_cell_basic_cell_height();
+#ifdef CONFIG_HRM
+  if (row > 0) {
+    StoredRemote *remote = (StoredRemote *)list_get_at(data->remote_list_head, row - 1);
+    if (settings_bluetooth_is_sharing_heart_rate_for_stored_remote(remote)) {
+      height += SHARING_HEART_RATE_EXTRA_HEIGHT_PX;
+    }
+  }
+#endif // CONFIG_HRM
+  return height;
+}
+
+static const char *prv_get_hint(SettingsBluetoothData *data) {
+  if (data->remote_list_head) {
+    return i18n_get("Forget this device to pair a new device.", data);
+  }
+  if (bt_ctl_is_airplane_mode_on()) {
+    return i18n_get("Disable Airplane Mode to connect.", data);
+  }
+  return i18n_get("Open the Pebble app on your phone to connect.", data);
+}
+
+static GRect prv_get_hint_box(void) {
+  const int16_t horizontal_inset = menu_cell_basic_horizontal_inset() * 3;
+  return GRect(horizontal_inset, HINT_VERTICAL_MARGIN_PX, DISP_COLS - horizontal_inset * 2,
+               DISP_ROWS);
+}
+
+static int16_t prv_get_hint_height_for_font(SettingsBluetoothData *data, GFont font) {
+  const GSize size = graphics_text_layout_get_max_used_size(
+      graphics_context_get_current_context(), prv_get_hint(data), font, prv_get_hint_box(),
+      GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+  return size.h + HINT_VERTICAL_MARGIN_PX * 2;
+}
+
+static int16_t prv_get_hint_height(SettingsBluetoothData *data, uint16_t row, GFont *font) {
+  if (row != list_count(data->remote_list_head)) {
+    return 0;
+  }
+  const int16_t max_height =
+      DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - prv_get_row_base_height(data, row);
+  *font = system_theme_get_font(TextStyleFont_MenuCellSubtitle);
+  int16_t height = prv_get_hint_height_for_font(data, *font);
+  if (height > max_height) {
+    *font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
+    height = prv_get_hint_height_for_font(data, *font);
+  }
+  return height;
+}
+
+static void prv_draw_hint(GContext *ctx, SettingsBluetoothData *data, const GRect *cell_bounds,
+                          int16_t hint_height, GFont font) {
+  const GRect hint_bounds = GRect(cell_bounds->origin.x, cell_bounds->size.h - hint_height,
+                                  cell_bounds->size.w, hint_height);
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, &hint_bounds);
+
+  GRect box = prv_get_hint_box();
+  box.origin.y += hint_bounds.origin.y;
+  box.size.h = hint_height;
+  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_draw_text(ctx, prv_get_hint(data), font, box, GTextOverflowModeWordWrap,
+                     GTextAlignmentCenter, NULL);
+}
+#endif
+
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
   return list_count(data->remote_list_head) + 1;
@@ -367,20 +438,9 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
 
 static int16_t prv_row_height_cb(SettingsCallbacks *context, uint16_t row, bool is_selected) {
 #if PBL_RECT
-#ifdef CONFIG_HRM
-  int heart_rate_sharing_text_height = 0;
-  if (row > 0) {
-    SettingsBluetoothData *data = (SettingsBluetoothData *)context;
-    const uint16_t device_index = row - 1;
-    StoredRemote *remote = (StoredRemote *)list_get_at(data->remote_list_head, device_index);
-    if (settings_bluetooth_is_sharing_heart_rate_for_stored_remote(remote)) {
-      heart_rate_sharing_text_height = SHARING_HEART_RATE_EXTRA_HEIGHT_PX;
-    }
-  }
-#else
-  const int heart_rate_sharing_text_height = 0;
-#endif // CONFIG_HRM
-  return menu_cell_basic_cell_height() + heart_rate_sharing_text_height;
+  SettingsBluetoothData *data = (SettingsBluetoothData *)context;
+  GFont hint_font;
+  return prv_get_row_base_height(data, row) + prv_get_hint_height(data, row, &hint_font);
 #elif PBL_ROUND
   return (is_selected ? MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT
                       : MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT);
@@ -391,6 +451,11 @@ static int16_t prv_row_height_cb(SettingsCallbacks *context, uint16_t row, bool 
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
                             uint16_t row, bool selected) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
+#if PBL_RECT
+  GFont hint_font = NULL;
+  const int16_t hint_height = prv_get_hint_height(data, row, &hint_font);
+  ((Layer *)cell_layer)->bounds.size.h -= hint_height;
+#endif
   if (row == 0) {
     char device_name_buffer[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
     const char *subtitle = NULL;
@@ -414,48 +479,16 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     }
 
     menu_cell_basic_draw(ctx, cell_layer, title, subtitle, icon);
-
-    // TODO PBL-23111: Decide how we should show these strings on round displays
-#if PBL_RECT
-    // Hack: the pairing instruction is drawn in the cell callback, but outside of the cell...
-    const GDrawState draw_state = ctx->draw_state;
-    // Enable drawing outside of the cell:
-    ctx->draw_state.clip_box = ctx->dest_bitmap.bounds;
-
-    graphics_context_set_text_color(ctx, GColorBlack);
-    GFont font = system_theme_get_font(TextStyleFont_MenuCellSubtitle);
-    const int16_t horizontal_inset = menu_cell_basic_horizontal_inset() * 3;
-    GRect box = cell_layer->bounds;
-    box.origin.x = horizontal_inset;
-    box.origin.y = menu_cell_basic_cell_height() + (int16_t)9;
-    box.size.w -= horizontal_inset * 2;
-    box.size.h = DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - box.origin.y;
-
-    if (!data->remote_list_head) {
-      if (bt_ctl_is_airplane_mode_on()) {
-        graphics_draw_text(ctx, i18n_get("Disable Airplane Mode to connect.", data), font, box,
-                           GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-      } else {
-        graphics_draw_text(ctx, i18n_get("Open the Pebble app on your phone to connect.", data),
-                           font, box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
-                           NULL);
-      }
-    } else {
-      // Show message when any phone is paired (even if disconnected)
-      // Position the message lower to appear below the paired phone row
-      GRect msg_box = box;
-      msg_box.origin.y += menu_cell_basic_cell_height() - 10;
-      msg_box.size.h -= menu_cell_basic_cell_height() - 10;
-      graphics_draw_text(ctx, i18n_get("Forget this device to pair a new device.", data), font,
-                         msg_box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    }
-
-    ctx->draw_state = draw_state;
-#endif
   } else {
     const uint16_t device_index = row - 1;
     draw_stored_remote_item(ctx, cell_layer, device_index, data);
   }
+#if PBL_RECT
+  ((Layer *)cell_layer)->bounds.size.h += hint_height;
+  if (hint_height) {
+    prv_draw_hint(ctx, data, &cell_layer->bounds, hint_height, hint_font);
+  }
+#endif
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
@@ -482,7 +515,7 @@ static void prv_focus_handler(bool in_focus) {
 static void prv_expand_cb(SettingsCallbacks *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
 
-  settings_bluetooth_update_remotes_private(data);
+  settings_bluetooth_update_remotes(data);
 
   // When entering the BT Settings, update device names of all connected devices:
   if (!bt_ctl_is_airplane_mode_on()) {
