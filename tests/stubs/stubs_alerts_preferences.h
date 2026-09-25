@@ -37,3 +37,7 @@ NotificationStatusBarStyle PBL_WEAK alerts_preferences_get_notification_status_b
 PreferredContentSize PBL_WEAK alerts_preferences_get_notification_content_size(void) {
   return NotificationContentSizeSystem;
 }
+
+NotificationHoldSelectAction PBL_WEAK alerts_preferences_get_notification_hold_select_action(void) {
+  return NotificationHoldSelectAction_DismissAll;
+}
