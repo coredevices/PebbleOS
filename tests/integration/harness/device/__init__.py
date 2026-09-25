@@ -252,6 +252,10 @@ class DeviceAdapter(ABC):
         """Reset without the firmware's help; False when not possible."""
         return False
 
+    def set_battery(self, percent, charging=False):
+        """Have the battery report ``percent``, with a charger or not."""
+        raise Unsupported(f"the {self.type} device has no battery to set")
+
     def screenshot(self):
         """The display as a PIL image, when the device can capture it."""
 
