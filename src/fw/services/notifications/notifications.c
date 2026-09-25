@@ -11,6 +11,8 @@
 #include "kernel/pbl_malloc.h"
 
 #include "pbl/services/analytics/analytics.h"
+#include "pbl/services/comm_session/session.h"
+#include "pbl/services/timeline/timeline.h"
 #include "pbl/services/vibes/vibe_intensity.h"
 
 static void prv_notification_migration_iterator_callback(TimelineItem *notification,
@@ -44,6 +46,36 @@ void notifications_handle_notification_removed(Uuid *notification_id) {
     }
   };
   event_put(&launcher_event);
+}
+
+static bool prv_can_send_dismiss(const TimelineItemAction *action) {
+  switch (action->type) {
+    case TimelineItemActionTypeAncsPositive:
+    case TimelineItemActionTypeAncsNegative:
+    case TimelineItemActionTypeAncsDelete:
+      // Goes over ANCS, not the Pebble app session
+      return true;
+    default:
+      // Skip rather than surface a "Can't connect" result
+      return comm_session_get_system_session() != NULL;
+  }
+}
+
+void notifications_clear(const Uuid *notification_id) {
+  TimelineItem item;
+  if (!notification_storage_get(notification_id, &item)) {
+    return;
+  }
+
+  // Dismiss on the phone first: the action may still update the stored item's status
+  const TimelineItemAction *dismiss = timeline_item_find_dismiss_action(&item);
+  if (dismiss && !item.header.dismissed && prv_can_send_dismiss(dismiss)) {
+    timeline_invoke_action(&item, dismiss, NULL);
+  }
+  timeline_item_free_allocated_buffer(&item);
+
+  notification_storage_remove(notification_id);
+  notifications_handle_notification_removed((Uuid *)notification_id);
 }
 
 void notifications_handle_notification_added(Uuid *notification_id) {

@@ -55,6 +55,17 @@ NotificationGroupingRange alerts_preferences_get_notification_grouping_range(voi
 void alerts_preferences_set_notification_grouping_range(NotificationGroupingRange range);
 
 typedef enum {
+  NotificationHoldSelectAction_DismissAll = 0,
+  NotificationHoldSelectAction_Clear,
+  NotificationHoldSelectActionCount,
+} NotificationHoldSelectAction;
+
+//! @return What holding Select on an open notification does
+NotificationHoldSelectAction alerts_preferences_get_notification_hold_select_action(void);
+
+void alerts_preferences_set_notification_hold_select_action(NotificationHoldSelectAction action);
+
+typedef enum {
   NotificationStatusBarStyle_Default = 0,
   NotificationStatusBarStyle_Bold = 1,
   NotificationStatusBarStyle_LargeBold = 2,

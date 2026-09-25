@@ -6,10 +6,14 @@
 #include <stdbool.h>
 
 #include "applib/fonts/fonts.h"
+#include "applib/ui/action_menu_window.h"
 #include "pbl/services/notifications/notifications.h"
 #include "kernel/events.h"
 
 void notification_window_service_init(void);
+
+//! Shows the shredder "Cleared" confirmation, as the action menu's result if one is given
+void notification_window_show_cleared_dialog(ActionMenu *action_menu);
 
 void notification_window_init(bool is_modal);
 

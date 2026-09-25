@@ -21,6 +21,9 @@ void notifications_handle_notification_acted_upon(Uuid *notification_id) {
 void notifications_handle_notification_removed(Uuid *notification_id) {
 }
 
+void notifications_clear(const Uuid *notification_id) {
+}
+
 void notifications_handle_ancs_notification_removed(uint32_t ancs_uid) {
 }
 
