@@ -29,6 +29,7 @@
 #include "pbl/services/clock.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/notifications/notification_storage.h"
+#include "pbl/services/notifications/notifications.h"
 #include "pbl/services/timeline/notification_layout.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
@@ -284,6 +285,15 @@ static void prv_group_window_select(MenuLayer *menu_layer, MenuIndex *cell_index
   }
 }
 
+static void prv_group_window_select_long(MenuLayer *menu_layer, MenuIndex *cell_index,
+                                         void *context) {
+  NotificationGroupWindow *group_window = context;
+  if (cell_index->row < group_window->count) {
+    notifications_clear(&group_window->notification_ids[cell_index->row]);
+    notification_window_show_cleared_dialog(NULL);
+  }
+}
+
 static void prv_group_window_load(Window *window) {
   NotificationGroupWindow *group_window = window_get_user_data(window);
   GRect sender_frame = window->layer.bounds;
@@ -305,6 +315,7 @@ static void prv_group_window_load(Window *window) {
                              .get_cell_height = prv_group_window_get_cell_height,
                              .draw_row = prv_group_window_draw_row,
                              .select_click = prv_group_window_select,
+                             .select_long_click = prv_group_window_select_long,
                            });
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
   menu_layer_set_highlight_colors(
@@ -609,6 +620,39 @@ static void prv_draw_notification_cell_round_unselected(GContext *ctx, const Lay
   prv_draw_notification_cell_round(ctx, cell_layer, &frame, font, title, NULL, NULL, NULL);
 }
 #endif
+
+static void prv_select_long_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  NotificationsData *notifications_data = data;
+
+  // Row 0 is Clear All
+  if (!notifications_data->history.rows || (cell_index->row == 0)) {
+    return;
+  }
+
+  NotificationHistoryRow *row =
+      notifications_history_get_row(&notifications_data->history, cell_index->row - 1);
+  if (!row) {
+    return;
+  }
+
+  if (!row->is_group) {
+    notifications_clear(&row->notification.id);
+  } else {
+    // Removal events are handled later, but copy the ids so the list can't change under us
+    Uuid *ids = app_malloc_check(sizeof(Uuid) * row->group.count);
+    uint16_t count = 0;
+    NotificationHistoryMember *member = row->group.members;
+    while (member && (count < row->group.count)) {
+      ids[count++] = member->entry.id;
+      member = (NotificationHistoryMember *)list_get_next(&member->node);
+    }
+    for (uint16_t i = 0; i < count; i++) {
+      notifications_clear(&ids[i]);
+    }
+    app_free(ids);
+  }
+  notification_window_show_cleared_dialog(NULL);
+}
 
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   NotificationsData *notifications_data = data;
@@ -962,6 +1006,7 @@ static void prv_window_load(Window *window) {
                              .draw_row = prv_draw_row_callback,
                              .get_cell_height = prv_get_cell_height,
                              .select_click = prv_select_callback,
+                             .select_long_click = prv_select_long_callback,
                            });
 
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
