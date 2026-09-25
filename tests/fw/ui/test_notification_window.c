@@ -128,6 +128,13 @@ PreferredContentSize alerts_preferences_get_notification_content_size(void) {
   return NotificationContentSizeSystem;
 }
 
+NotificationHoldSelectAction alerts_preferences_get_notification_hold_select_action(void) {
+  return NotificationHoldSelectAction_DismissAll;
+}
+
+void notifications_clear(const Uuid *notification_id) {
+}
+
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
   return to;
 }
