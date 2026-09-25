@@ -85,6 +85,7 @@ static const RegulatoryFlags s_regulatory_flags_obelix = {
   .has_eu_weee = true,
   .has_ukca = true,
   .has_usa_fcc = true,
+  .has_japan_telec_r = true,
 };
 
 static const CertificationIds s_certification_ids_obelix = {
@@ -98,6 +99,7 @@ static const CertificationIds s_certification_ids_obelix = {
   .watt_hour = "0.71 Wh",
   .canada_ised_id = "34223-PEBBLETIME2",
   .usa_fcc_id = "2BQB2-PEBBLETIME2",
+  .japan_telec_r_id = "201-260506",
 };
 
 static const RegulatoryFlags *prv_get_regulatory_flags(void) {
