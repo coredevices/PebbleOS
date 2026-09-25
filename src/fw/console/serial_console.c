@@ -19,7 +19,7 @@ static bool s_serial_console_initialized;
 
 static bool s_prompt_enabled = false;
 
-static void logging_handle_character(char c, bool *should_context_switch) {
+static void logging_handle_character(char c) {
 #ifndef CONFIG_PROMPT
   return;
 #endif

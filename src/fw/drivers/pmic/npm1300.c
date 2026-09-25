@@ -259,8 +259,8 @@ static void prv_pmic_state_change_cb(void *null) {
                   NULL, 0 /*flags*/);
 }
 
-static void prv_npm1300_interrupt_handler(bool *should_context_switch) {
-  system_task_add_callback_from_isr(prv_pmic_state_change_cb, NULL, should_context_switch);
+static void prv_npm1300_interrupt_handler(void) {
+  system_task_add_callback_from_isr(prv_pmic_state_change_cb, NULL);
 }
 
 static void prv_configure_interrupts(void) {

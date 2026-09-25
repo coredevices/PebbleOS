@@ -16,12 +16,10 @@ static DbgSerialCharacterCallback s_character_callback;
 static uint8_t s_dma_buffer[DMA_BUFFER_LENGTH] PBL_ALIGNED(32);
 static bool s_dma_enabled = false;
 
-static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
-  bool should_context_switch = false;
+static void prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
   if (s_character_callback) {
-    s_character_callback(data, &should_context_switch);
+    s_character_callback(data);
   }
-  return should_context_switch;
 }
 
 void dbgserial_input_init(void) {

@@ -24,7 +24,7 @@
 
 #include <stdbool.h>
 
-static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags);
+static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags);
 
 // Our globals
 static QemuSerialGlobals s_qemu_state;
@@ -290,7 +290,7 @@ static void prv_process_receive_buffer(void *context) {
 }
 
 // -----------------------------------------------------------------------------------------
-static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags) {
+static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags) {
   // The interrupt triggers when a byte has been read from the UART. QEMU's
   // emulated UARTs don't emulate receive overruns by default so we don't have
   // to worry about that case. QEMU will buffer the data stream until we're
@@ -318,7 +318,6 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
   }
 
   // Is it time to wake up the main thread?
-  bool should_context_switch = false;
   if (s_qemu_state.recv_error_count || buffer_full ||
       (byte == QEMU_FOOTER_LSB && s_qemu_state.prev_byte == QEMU_FOOTER_MSB)) {
     if (!s_qemu_state.callback_pending) {
@@ -327,13 +326,11 @@ static bool prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
         .type = PEBBLE_CALLBACK_EVENT,
         .callback = {.callback = prv_process_receive_buffer, .data = NULL}
       };
-      should_context_switch = event_put_isr(&e);
+      event_put_isr(&e);
     }
   }
 
   s_qemu_state.prev_byte = byte;
-
-  return should_context_switch;
 }
 
 // -----------------------------------------------------------------------------------------

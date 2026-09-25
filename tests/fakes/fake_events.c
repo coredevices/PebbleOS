@@ -31,8 +31,7 @@ void event_put(PebbleEvent *event) {
   }
 }
 
-bool event_put_isr(PebbleEvent *event) {
-  return false;
+void event_put_isr(PebbleEvent *event) {
 }
 
 struct pbl_msgq *event_kernel_to_kernel_event_queue(void) {

@@ -368,10 +368,9 @@ static void prv_assert_tx_buffer(void *buf) {
   PBL_ASSERT(buf_valid, "Buffer is not from the PULSE transmit buffer pool");
 }
 
-void pulse_handle_character(char c, bool *should_context_switch) {
+void pulse_handle_character(char c) {
   pbl_msgq_put(&s_pulse_task_queue, &c, PBL_NO_WAIT);
   pbl_sem_give(&s_pulse_task_service_semaphore);
-  *should_context_switch = false;
 }
 
 static bool prv_safe_to_touch_mutex(void) {

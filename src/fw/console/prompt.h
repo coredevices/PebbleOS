@@ -39,7 +39,7 @@ typedef struct PromptContext {
 void console_switch_to_prompt(void);
 
 //! Called on an ISR. Handles a new character from the dbgserial when we're in prompt mode.
-void prompt_handle_character(char c, bool *should_context_switch);
+void prompt_handle_character(char c);
 
 //! Appends a character to a given context.
 //! @return true if the character fits, false if the buffer is full

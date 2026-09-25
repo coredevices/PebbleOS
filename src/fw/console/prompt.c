@@ -227,7 +227,7 @@ bool prompt_context_append_char(PromptContext *prompt_context, char c) {
 }
 
 // Crank up the optimization on this bad boy.
-PBL_OPTIMIZE(2) void prompt_handle_character(char c, bool *should_context_switch) {
+PBL_OPTIMIZE(2) void prompt_handle_character(char c) {
   if (PBL_UNLIKELY(prompt_command_is_executing())) {
     return;
   }
@@ -261,8 +261,7 @@ PBL_OPTIMIZE(2) void prompt_handle_character(char c, bool *should_context_switch
 
   if (PBL_UNLIKELY(c == 0xd)) { // Enter key
     s_executing_command = ExecutingCommandDbgSerial;
-    system_task_add_callback_from_isr(prv_execute_command_from_dbgserial, NULL,
-                                      should_context_switch);
+    system_task_add_callback_from_isr(prv_execute_command_from_dbgserial, NULL);
     return;
   }
 

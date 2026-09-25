@@ -17,8 +17,7 @@ static void prv_exti_handler(nrfx_gpiote_pin_t pin, nrfx_gpiote_trigger_t trigge
                              void *p_context) {
   ExtiHandlerCallback cb = (ExtiHandlerCallback)p_context;
 
-  bool should_context_switch = false;
-  cb(&should_context_switch);
+  cb();
 }
 
 void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback cb) {

@@ -103,8 +103,7 @@ bool accel_get_double_tap_detection_enabled(void) {
   return false;
 }
 
-bool new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
-  return false;
+void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
 }
 bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {
   return true;

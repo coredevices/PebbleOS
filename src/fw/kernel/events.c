@@ -160,7 +160,7 @@ static void prv_log_event_put_failure(const char *queue_name, uintptr_t saved_lr
   reboot_reason_set(&reason);
 }
 
-static bool prv_event_put_isr(struct pbl_msgq *queue, const char *queue_type, uintptr_t saved_lr,
+static void prv_event_put_isr(struct pbl_msgq *queue, const char *queue_type, uintptr_t saved_lr,
                               PebbleEvent *event) {
   PBL_ASSERTN(queue);
 
@@ -173,8 +173,6 @@ static bool prv_event_put_isr(struct pbl_msgq *queue, const char *queue_type, ui
   if (queue == &s_kernel_event_queue && event->type == PEBBLE_CALLBACK_EVENT) {
     prv_callback_tracker_push((uintptr_t)event->callback.callback);
   }
-
-  return false;
 }
 
 static bool prv_try_event_put(struct pbl_msgq *queue, PebbleEvent *event) {
@@ -230,10 +228,10 @@ void event_put(PebbleEvent *event) {
   }
 }
 
-bool event_put_isr(PebbleEvent *event) {
+void event_put_isr(PebbleEvent *event) {
   uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
 
-  return prv_event_put_isr(&s_kernel_event_queue, "kernel", saved_lr, event);
+  prv_event_put_isr(&s_kernel_event_queue, "kernel", saved_lr, event);
 }
 
 void event_put_from_process(PebbleTask task, PebbleEvent *event) {

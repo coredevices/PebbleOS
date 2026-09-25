@@ -911,11 +911,10 @@ static void prv_handle_accel_driver_work_cb(void *data) {
   pbl_mutex_unlock(&s_accel_manager_mutex);
 }
 
-void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_switch) {
+void accel_offload_work_from_isr(AccelOffloadCallback cb) {
   PBL_ASSERTN(mcu_state_is_isr());
 
-  *should_context_switch =
-      new_timer_add_work_callback_from_isr(prv_handle_accel_driver_work_cb, cb);
+  new_timer_add_work_callback_from_isr(prv_handle_accel_driver_work_cb, cb);
 }
 
 void accel_offload_work(AccelOffloadCallback cb) {

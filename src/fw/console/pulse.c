@@ -178,7 +178,7 @@ static void prv_assert_tx_buffer(void *buf) {
   PBL_ASSERT(buf_valid, "Buffer is not from the PULSE transmit buffer pool");
 }
 
-void pulse_handle_character(char c, bool *should_context_switch) {
+void pulse_handle_character(char c) {
   // TODO: discard a frame outright if a framing error occurs
   if (s_current_receive_buffer == NULL) {
     s_current_receive_buffer = prv_take_receive_buffer();
@@ -197,8 +197,7 @@ void pulse_handle_character(char c, bool *should_context_switch) {
     if (decoded_length >= PULSE_MIN_FRAME_LENGTH && decoded_length < SIZE_MAX) {
       // Potentially valid frame; queue up for further processing.
       s_current_receive_buffer->length = decoded_length;
-      system_task_add_callback_from_isr(prv_process_received_frame, s_current_receive_buffer,
-                                        should_context_switch);
+      system_task_add_callback_from_isr(prv_process_received_frame, s_current_receive_buffer);
       // Prepare to receive the next character.
       s_current_receive_buffer = prv_take_receive_buffer();
     } else {

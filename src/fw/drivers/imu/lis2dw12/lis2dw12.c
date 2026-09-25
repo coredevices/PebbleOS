@@ -407,12 +407,12 @@ static void prv_lis2dw12_int1_work_handler(void) {
   }
 }
 
-static void prv_lis2dw12_int1_irq_handler(bool *should_context_switch) {
+static void prv_lis2dw12_int1_irq_handler(void) {
   // A rising edge proves the pad was low, i.e. the wake-up source deasserted
   LIS2DW12->state->wu_active = false;
   // ... which also breaks any stuck-high streak the watchdog counted
   LIS2DW12->state->shake_stuck_passes = 0U;
-  accel_offload_work_from_isr(prv_lis2dw12_int1_work_handler, should_context_switch);
+  accel_offload_work_from_isr(prv_lis2dw12_int1_work_handler);
 }
 
 static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detection_enabled) {
