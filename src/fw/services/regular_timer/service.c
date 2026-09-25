@@ -6,6 +6,7 @@
 
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
+#include "pbl/util/math.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
@@ -27,6 +28,11 @@ static ListNode s_minutes_callbacks;
 #define MISSING_MINUTE_CB_LOG_THRESHOLD_S 90
 static time_t s_last_minute_fire_ts; // uses
 static int s_last_minute_fired = -1; // Track which minute we last fired on
+
+// Fire slightly after the RTC second boundary so the new second is always visible
+#define SECOND_BOUNDARY_MARGIN_MS 10
+static time_t s_last_second_fired;
+static bool s_last_second_fired_valid;
 
 // -------------------------------------------------------------------------------------------
 // Passed to list_find() to determine if a callback is already registered or not
@@ -70,12 +76,31 @@ static void do_callbacks(ListNode *list) {
 }
 
 // -------------------------------------------------------------------------------------------
+static void timer_callback(void *data);
+
+static void prv_schedule_next_second(uint16_t ms) {
+  const uint32_t timeout_ms = (1000 - MIN(ms, 999)) + SECOND_BOUNDARY_MARGIN_MS;
+  bool success = new_timer_start(s_timer_id, timeout_ms, timer_callback, NULL, 0 /*flags*/);
+  PBL_ASSERTN(success);
+}
+
+// -------------------------------------------------------------------------------------------
 static void timer_callback(void *data) {
   (void)data;
 
+  time_t t;
+  uint16_t ms;
+  rtc_get_time_ms(&t, &ms);
+  prv_schedule_next_second(ms);
+
+  if (s_last_second_fired_valid && (t == s_last_second_fired)) {
+    return;
+  }
+  s_last_second_fired = t;
+  s_last_second_fired_valid = true;
+
   do_callbacks(&s_seconds_callbacks);
 
-  time_t t = rtc_get_time();
   struct tm time;
   localtime_r(&t, &time);
 
@@ -104,25 +129,13 @@ static void timer_callback(void *data) {
   }
 }
 
-// -------------------------------------------------------------------------------------------
-//! Used only once when we first start up. This should be really close to the 0ms point.
-static void timer_callback_initializing(void *data) {
-  // FIXME: FreeRTOS timers are subject to skew if something else is running on the millisecond.
-  // We'll need to continuously adjust our timer period in really annoying ways.
-  new_timer_start(s_timer_id, 1000, timer_callback, NULL, TIMER_START_FLAG_REPEATING);
-
-  timer_callback(data);
-}
-
 // --------------------------------------------------------------------------------------------
 void regular_timer_init(void) {
   time_t seconds;
   uint16_t milliseconds;
   rtc_get_time_ms(&seconds, &milliseconds);
   s_timer_id = new_timer_create();
-  bool success = new_timer_start(s_timer_id, 1000 - milliseconds, timer_callback_initializing, NULL,
-                                 0 /*flags*/);
-  PBL_ASSERTN(success);
+  prv_schedule_next_second(milliseconds);
 }
 
 // -------------------------------------------------------------------------------------------
@@ -228,6 +241,7 @@ bool regular_timer_remove_callback(RegularTimerInfo *cb) {
 void regular_timer_deinit(void) {
   new_timer_delete(s_timer_id);
   s_timer_id = TIMER_INVALID_ID;
+  s_last_second_fired_valid = false;
 }
 
 static void prv_fire_callbacks(ListNode *list, uint16_t mod) {
