@@ -37,6 +37,7 @@ enum NotificationsItem {
   NotificationsItemVibeDelay,
   NotificationsItemBacklight,
   NotificationsItemGroupBySender,
+  NotificationsItemHoldSelect,
   NotificationsItemStatusBarStyle,
   NotificationsItem_Count,
 };
@@ -328,6 +329,35 @@ static void prv_notification_grouping_range_menu_push(SettingsNotificationsData 
                             true /* icons_enabled */, s_notification_grouping_range_labels, data);
 }
 
+// Hold Select
+////////////////////////
+
+static const char *s_hold_select_action_labels[] = {
+  /// Holding Select on a notification dismisses all notifications
+  [NotificationHoldSelectAction_DismissAll] = i18n_noop("Dismiss All"),
+  /// Holding Select on a notification clears only that notification
+  [NotificationHoldSelectAction_Clear] = i18n_noop("Clear This"),
+};
+
+_Static_assert(ARRAY_LENGTH(s_hold_select_action_labels) == NotificationHoldSelectActionCount, "");
+
+static void prv_hold_select_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  alerts_preferences_set_notification_hold_select_action((NotificationHoldSelectAction)selection);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_hold_select_menu_push(SettingsNotificationsData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_hold_select_menu_select,
+  };
+  /// Title for the setting choosing what holding Select on a notification does
+  const char *title = i18n_noop("Hold Select to");
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            alerts_preferences_get_notification_hold_select_action(), &callbacks,
+                            ARRAY_LENGTH(s_hold_select_action_labels), true /* icons_enabled */,
+                            s_hold_select_action_labels, data);
+}
+
 // Menu Layer Callbacks
 ////////////////////////
 
@@ -385,6 +415,13 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
           [alerts_preferences_get_notification_grouping_range()];
       break;
     }
+    case NotificationsItemHoldSelect: {
+      /// Notification settings item choosing what holding Select on a notification does
+      title = i18n_noop("Hold Select to");
+      subtitle =
+          s_hold_select_action_labels[alerts_preferences_get_notification_hold_select_action()];
+      break;
+    }
     case NotificationsItemStatusBarStyle: {
       /// String within Settings->Notifications that selects the notification status bar style
       title = i18n_noop("Status Bar");
@@ -432,6 +469,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case NotificationsItemGroupBySender:
       prv_notification_grouping_range_menu_push(data);
+      break;
+    case NotificationsItemHoldSelect:
+      prv_hold_select_menu_push(data);
       break;
     case NotificationsItemStatusBarStyle:
       prv_status_bar_style_menu_push(data);
