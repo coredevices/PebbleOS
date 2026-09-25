@@ -5,6 +5,8 @@
 
 #include "app_glance_structured.h"
 
+#include "apps/system/notifications_history.h"
+
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
@@ -68,7 +70,9 @@ static bool prv_notification_iterator_cb(void *data, SerializedTimelineItemHeade
   // The iterator proceeds from the first notification received to the last notification received,
   // so copy the ID of the current notification and then return true so we iterate until the end.
   // Thus the last ID we save will be the last notification received.
-  *last_notification_received_id = header_id->common.id;
+  if (!notifications_history_is_hidden(&header_id->common)) {
+    *last_notification_received_id = header_id->common.id;
+  }
 
   return true;
 }
@@ -76,11 +80,12 @@ static bool prv_notification_iterator_cb(void *data, SerializedTimelineItemHeade
 static void prv_update_glance_for_last_notification_received(
     LauncherAppGlanceNotifications *notifications_glance) {
   // Find the ID of the last notification received
-  Uuid last_notification_received_id;
+  Uuid last_notification_received_id = UUID_INVALID_INIT;
   notification_storage_iterate(prv_notification_iterator_cb, &last_notification_received_id);
 
   TimelineItem notification;
-  if (!notification_storage_get(&last_notification_received_id, &notification)) {
+  if (uuid_is_invalid(&last_notification_received_id) ||
+      !notification_storage_get(&last_notification_received_id, &notification)) {
     // We couldn't load the notification for some reason; just bail out with the subtitle cleared
     notifications_glance->subtitle[0] = '\0';
     return;
@@ -115,11 +120,11 @@ static void prv_notification_event_handler(PebbleEvent *event, void *context) {
   switch (event->sys_notification.type) {
     case NotificationAdded:
     case NotificationRemoved:
+    case NotificationActedUpon:
       prv_update_glance_for_last_notification_received(notifications_glance);
       // Broadcast to the service that we changed the glance
       launcher_app_glance_structured_notify_service_glance_changed(structured_glance);
       return;
-    case NotificationActedUpon:
     case NotificationActionResult:
       return;
   }
