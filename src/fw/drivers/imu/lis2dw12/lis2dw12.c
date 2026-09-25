@@ -71,6 +71,7 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LIS2DW12_FIFO_SAMPLES        0x2FU
 #define LIS2DW12_WAKE_UP_THS         0x34U
 #define LIS2DW12_WAKE_UP_DUR         0x35U
+#define LIS2DW12_WAKE_UP_SRC         0x38U
 #define LIS2DW12_ALL_INT_SRC         0x3BU
 #define LIS2DW12_CTRL7               0x3FU
 
@@ -149,8 +150,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LIS2DW12_WAKE_UP_DUR_WAKE_DUR(val) \
   (((val) << LIS2DW12_WAKE_UP_DUR_WAKE_DUR_POS) & LIS2DW12_WAKE_UP_DUR_WAKE_DUR_MASK)
 
-// ALL_INT_SRC fields
-#define LIS2DW12_ALL_INT_SRC_WU_IA (1U << 1U)
+// WAKE_UP_SRC fields
+#define LIS2DW12_WAKE_UP_SRC_WU_IA              (1U << 3U)
+#define LIS2DW12_WAKE_UP_SRC_AXIS_WU(chip_axis) (1U << (2U - (chip_axis)))
 
 // CTRL7 fields
 #define LIS2DW12_CTRL7_INTERRUPTS_ENABLE (1U << 5U)
@@ -308,6 +310,43 @@ static void prv_lis2dw12_drain_fifo(void) {
   LIS2DW12->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
+static void prv_lis2dw12_dispatch_shake(uint8_t wake_up_src) {
+  AccelDriverSample sample = {0};
+  IMUCoordinateAxis axis = AXIS_Z;
+  int16_t val = 0;
+  bool found = false;
+
+  if (LIS2DW12->state->num_samples > 0U) {
+    prv_lis2dw12_drain_fifo();
+    if (LIS2DW12->state->last_sample_valid) {
+      sample = LIS2DW12->state->last_sample;
+    }
+  } else {
+    uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES];
+
+    if (prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw))) {
+      prv_raw_to_mg(raw, &sample);
+    } else {
+      PBL_LOG_ERR("Failed to read sample");
+    }
+  }
+
+  const int16_t vals[] = {[AXIS_X] = sample.x, [AXIS_Y] = sample.y, [AXIS_Z] = sample.z};
+  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
+    if ((wake_up_src & LIS2DW12_WAKE_UP_SRC_AXIS_WU(LIS2DW12->axis_map[a])) == 0U) {
+      continue;
+    }
+
+    if (!found || ABS(vals[a]) > ABS(val)) {
+      axis = a;
+      val = vals[a];
+      found = true;
+    }
+  }
+
+  accel_cb_shake_detected(axis, (val < 0) ? -1 : 1);
+}
+
 static void prv_lis2dw12_recover(void);
 
 //! Single INT1 servicing pass; returns true if any INT source was handled.
@@ -315,6 +354,7 @@ static void prv_lis2dw12_recover(void);
 static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
   bool ret;
   uint8_t val;
+  uint8_t wake_up_src;
   bool action_taken = false;
   bool fifo_overrun = false;
   bool shake = false;
@@ -324,7 +364,7 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
   // Read all device registers back-to-back to keep the I2C critical section
   // short, then convert/dispatch below. The sample processing has no dependency
   // on these reads, so deferring it avoids stretching the gap between the FIFO
-  // read and the ALL_INT_SRC read if this task gets preempted mid-handler.
+  // read and the WAKE_UP_SRC read if this task gets preempted mid-handler.
   if (LIS2DW12->state->num_samples > 0U) {
     ret = prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1);
     if (!ret) {
@@ -349,13 +389,13 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
   }
 
   if (LIS2DW12->state->shake_detection_enabled) {
-    ret = prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1);
+    ret = prv_lis2dw12_read(LIS2DW12_WAKE_UP_SRC, &wake_up_src, 1);
     if (!ret) {
-      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+      PBL_LOG_ERR("Could not read WAKE_UP_SRC register");
       return false;
     }
 
-    shake = (val & LIS2DW12_ALL_INT_SRC_WU_IA) != 0U;
+    shake = (wake_up_src & LIS2DW12_WAKE_UP_SRC_WU_IA) != 0U;
   }
 
   if (fifo_overrun) {
@@ -373,10 +413,7 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
     // WU_IA stays set while the wake-up condition persists (LIR), so only
     // dispatch on its assertion to avoid flooding events
     if (!LIS2DW12->state->wu_active) {
-      PBL_LOG_DBG("Shake detected");
-      // TODO: provide more info about the shake (axis, direction, etc.) or
-      // refactor shake to be non-dimensional
-      accel_cb_shake_detected(AXIS_Z, 0);
+      prv_lis2dw12_dispatch_shake(wake_up_src);
     }
     action_taken = true;
   }
