@@ -9,6 +9,7 @@ import re
 
 import pytest
 
+from harness import lab as labs
 from harness.build import Build
 from harness.errors import HarnessError, Unsupported
 
@@ -37,8 +38,36 @@ CATEGORY_MARKERS = {
 }
 
 
+# What tests need of the setup, by the fixtures they use.
+FIXTURE_NEEDS = {
+    "phones": "phone",
+    "power": "power",
+}
+
+
 def pytest_addoption(parser):
     group = parser.getgroup("PebbleOS integration")
+    group.addoption(
+        "--lab",
+        metavar="PATH",
+        default=labs.default_lab_path(),
+        help="Lab file: the hardware wired to this host (watches, power "
+        "supplies, Bluetooth dongles), which the setup is taken from (default: "
+        "$PBL_ITEST_LAB); the options below override it",
+    )
+    group.addoption(
+        "--lab-watch",
+        metavar="NAME",
+        help="The lab's watch to test, when several run the build",
+    )
+    group.addoption(
+        "--phone",
+        choices=labs.PHONE_TYPES,
+        default=labs.PHONE_BUMBLE,
+        help="What plays the phone: the harness on a Bluetooth controller "
+        "(bumble), or a phone running CoreApp (coreapp, not supported yet) "
+        "(default: %(default)s)",
+    )
     group.addoption(
         "--build-dir",
         metavar="PATH",
@@ -65,8 +94,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--device-serial-baud",
         type=int,
-        default=115200,
-        help="Baudrate of the legacy (non-PULSE) console (default: %(default)s)",
+        help="Baudrate of the legacy (non-PULSE) console (default: 115200)",
     )
     group.addoption(
         "--connection",
@@ -118,16 +146,19 @@ def pytest_addoption(parser):
     group.addoption(
         "--qemu-bt-hci",
         metavar="CHARDEV",
-        help="H4 controller for builds with CONFIG_BT_HCI_UART: the serial port "
-        "of an hci_uart dongle or any QEMU -serial spec, or 'virtual' for "
-        "Bumble's software controllers, which also give the harness one",
+        help="H4 controller for builds with CONFIG_BT_HCI_UART: 'virtual' for "
+        "Bumble's software controllers, which also give the phone one (the "
+        "default), 'lab' for the lab's first dongle (the phone taking its "
+        "second), or the serial port of an hci_uart dongle or any QEMU -serial "
+        "spec",
     )
     group.addoption(
         "--ble-controller",
         metavar="TRANSPORT",
-        help="Controller the harness uses Bluetooth through: the serial port of "
-        "an H4 controller, e.g. an nRF52840 dongle running Zephyr's hci_uart "
-        "(/dev/cu.usbmodem1101), or a Bumble transport",
+        help="Controller the phone uses: the serial port of an H4 controller, "
+        "e.g. an nRF52840 dongle running Zephyr's hci_uart "
+        "(/dev/cu.usbmodem1101), or a Bumble transport (default: the lab's "
+        "first dongle)",
     )
     group.addoption(
         "--main-build",
@@ -148,9 +179,8 @@ def pytest_addoption(parser):
     group.addoption(
         "--ppk2-voltage",
         type=int,
-        default=3800,
         metavar="MV",
-        help="VBAT the PPK2 supplies, in millivolts (default: %(default)s)",
+        help="VBAT the PPK2 supplies, in millivolts (default: 3800)",
     )
 
 
@@ -179,9 +209,34 @@ def pytest_configure(config):
     config.pbl_board = board
     config.pbl_platform = build.platform if build and board == build.board else None
 
+    try:
+        config.pbl_setup = _resolve_setup(config, build, board, device_type)
+    except HarnessError as e:
+        raise pytest.UsageError(str(e)) from None
+
     # Always leave a JUnit report with the rest of the results.
     if not config.option.xmlpath and not config.option.collectonly:
         config.option.xmlpath = os.path.join(results_dir_for(config), "junit.xml")
+
+
+def _resolve_setup(config, build, board, device_type):
+    lab_path = config.getoption("lab")
+    lab = labs.Lab.load(lab_path) if lab_path else None
+    return labs.resolve(
+        build if build is not None and board == build.board else None,
+        device_type,
+        {
+            "serial": config.getoption("device_serial"),
+            "serial_baud": config.getoption("device_serial_baud"),
+            "ppk2": config.getoption("ppk2"),
+            "voltage_mv": config.getoption("ppk2_voltage"),
+            "qemu_bt_hci": config.getoption("qemu_bt_hci"),
+            "ble_controller": config.getoption("ble_controller"),
+            "watch": config.getoption("lab_watch"),
+            "phone": config.getoption("phone"),
+        },
+        lab,
+    )
 
 
 def _marker_args(item, name):
@@ -221,10 +276,16 @@ def pytest_collection_modifyitems(config, items):
         # Declared scopes are keywords too, so -k obelix finds obelix tests.
         for name in ("boards", "platforms", "device_types"):
             item.extra_keyword_matches.update(_marker_args(item, name))
-        if _applies(item, config) is None:
-            selected.append(item)
-        else:
+        if _applies(item, config) is not None:
             deselected.append(item)
+            continue
+        selected.append(item)
+        for fixture, need in FIXTURE_NEEDS.items():
+            if fixture in item.fixturenames:
+                reason = config.pbl_setup.lacks(need)
+                if reason:
+                    item.add_marker(pytest.mark.skip(reason=reason))
+                    break
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = selected
@@ -240,6 +301,7 @@ def pytest_report_header(config):
     ]
     if build is not None:
         lines.append(f"build: {build.path} ({build.variant})")
+    lines.append(f"setup: {config.pbl_setup.describe()}")
     return lines
 
 

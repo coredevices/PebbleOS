@@ -11,12 +11,12 @@ import time
 
 from harness.device import DeviceAdapter
 from harness.errors import HarnessError
+from harness.lab import VIRTUAL
 
 MICRO_FLASH_IMAGE = "qemu_micro_flash.bin"
 SPI_FLASH_IMAGE = "qemu_spi_flash.bin"
 ABS_MAX = 32767
 # --qemu-bt-hci value for Bumble's software controllers instead of a radio.
-VIRTUAL_BT_HCI = "virtual"
 
 
 def _free_port():
@@ -143,10 +143,12 @@ class QemuAdapter(DeviceAdapter):
         hci_uart = bool(self.build.config.get("CONFIG_BT_HCI_UART"))
         chardev = self.config.qemu_bt_hci
         if hci_uart and not chardev:
-            raise HarnessError("the build uses CONFIG_BT_HCI_UART: pass --qemu-bt-hci")
+            raise HarnessError(
+                "the build uses CONFIG_BT_HCI_UART: its Bluetooth needs a controller"
+            )
         if chardev and not hci_uart:
             raise HarnessError("--qemu-bt-hci needs a build with CONFIG_BT_HCI_UART=y")
-        if chardev == VIRTUAL_BT_HCI:
+        if chardev == VIRTUAL:
             from harness.ble.virtual import VirtualLink
 
             self._virtual_link = VirtualLink(os.path.join(self.workdir, "bt-link.log"))

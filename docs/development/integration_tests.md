@@ -59,11 +59,41 @@ second, before the firmware can deep sleep, which leaves its debug UART
 reachable only at random.
 
 `--erase-fs` erases the watch's filesystem first (bondings, settings, apps
-and data) and the bonding kept for PRF, for a known starting point; it needs a board flashed with
-sftool.
+and data) and the bonding kept for PRF, for a known starting point; it
+needs a board flashed with sftool.
 
 The integration tests run debug builds, including the current measurements
 (see below): release builds have no usable console.
+
+### Setups and lab files
+
+The tests run with a setup: the device, how it is reached and powered, and
+what plays the phone. The same tests run on any of:
+
+| Watch | Phone | How |
+|---|---|---|
+| Emulator | Bumble, software controllers | a `CONFIG_BT_HCI_UART` build, by default |
+| Emulator | Bumble, on a dongle | `--qemu-bt-hci lab`: the lab's first dongle for the watch, its second for the phone |
+| Watch, serial console | Bumble, on a dongle | the lab's watch, and its first dongle for the phone |
+| Watch, serial console | CoreApp | `--phone coreapp` (not supported yet) |
+
+A lab file describes the hardware wired to this host, and nothing else:
+watches (board, serial port, the supply powering them), power supplies and
+Bluetooth dongles. Pass it with `--lab` (or `$PBL_ITEST_LAB`), and the
+harness takes the setup for the build from it: the watch running its
+board (`--lab-watch` picks another), its supply, and a dongle for the
+phone. Options on the command line override it.
+`tests/integration/lab.example.yaml` describes the format:
+
+```shell
+pbl -b build-getafix itest --lab ~/pebble-lab.yaml --flash-before
+```
+
+The report starts with the setup, e.g. `setup: getafix, serial
+/dev/tty.wchusbserial1, PPK2 auto at 3800 mV, phone bumble on
+/dev/cu.usbmodem1101`. Tests that need what the setup lacks are skipped
+with the reason, without touching the device: a test needs a phone when it
+takes `phones`, and a power supply when it takes `power`.
 
 ### Connections
 
@@ -119,26 +149,26 @@ opens the link with and declines the watch's requests to change them:
 those updates stall the watch's sending for seconds, and some fail and
 drop the link.
 
-An emulator built with `CONFIG_BT_HCI_UART` needs a controller of its own
-(`--qemu-bt-hci`), so Bluetooth tests against it take two dongles, one
-for the watch and one for the harness:
+An emulator built with `CONFIG_BT_HCI_UART` needs a controller of its own.
+By default it gets Bumble's software controllers (`virtual`), two linked
+in memory, one for the watch and one for the harness: they cover the host
+stacks and the protocols above them, not a radio, and are what CI uses.
+With real ones it takes two dongles, one for the watch and one for the
+harness: the lab's (`--qemu-bt-hci lab`), or given on the command line:
 
 ```shell
 pbl configure --board qemu_emery -DCONFIG_BT_HCI_UART=y
 pbl itest --qemu-bt-hci /dev/cu.usbmodem1101 --ble-controller /dev/cu.usbmodem1201
 ```
 
-`--qemu-bt-hci virtual` needs no dongle: two of Bumble's software
-controllers, linked in memory, stand in for them. It covers the host
-stacks and the protocols above them, not a radio, and is what CI uses.
-
 Tests that need a phone take the `phones` fixture: `phones()` makes the
-harness's phone, `phones(address=...)` another one, each with its own
-bond, and `connect()` pairs and opens the Pebble protocol session
-(`phone.pebble`). The session is over reversed PPoGATT, the service the
-watch hosts, or with `phones(ppogatt="forward")` over the one the phone
-hosts. `harness.helpers.firmware` installs a firmware bundle
-through it, as the phone app does:
+setup's phone, and `connect()` pairs and opens the Pebble protocol session
+(`phone.pebble`). A Bumble phone can also be another phone to the watch,
+`phones(address=...)`, with a bond of its own, and host the PPoGATT
+service itself, `phones(ppogatt="forward")`, instead of using the one the
+watch hosts; tests that ask for these skip on other phones.
+`harness.helpers.firmware` installs a firmware bundle through a phone, as
+the phone app does:
 
 ```python
 def test_version(phones):

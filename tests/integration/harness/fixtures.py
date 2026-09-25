@@ -48,15 +48,21 @@ def results_dir(request):
 
 
 @pytest.fixture(scope="session")
-def ppk2(request):
-    """The PPK2 powering the watch, if one was given with --ppk2."""
-    port = request.config.getoption("ppk2")
-    if port is None:
+def lab_setup(request):
+    """What the tests run with (:class:`harness.lab.Setup`), from the lab
+    file and the command line."""
+    return request.config.pbl_setup
+
+
+@pytest.fixture(scope="session")
+def ppk2(lab_setup):
+    """The PPK2 powering the watch, if the setup has one."""
+    if lab_setup.ppk2 is None:
         yield None
         return
     from harness.helpers.power import Ppk2
 
-    supply = Ppk2(port, request.config.getoption("ppk2_voltage"))
+    supply = Ppk2(lab_setup.ppk2, lab_setup.voltage_mv)
     try:
         yield supply
     finally:
@@ -64,7 +70,7 @@ def ppk2(request):
 
 
 @pytest.fixture(scope="session")
-def device_object(request, build, results_dir, ppk2):
+def device_object(request, build, results_dir, lab_setup, ppk2):
     """The device, not launched."""
     config = request.config
     device_type = config.pbl_device_type
@@ -74,14 +80,14 @@ def device_object(request, build, results_dir, ppk2):
             results_dir=results_dir,
             base_timeout=config.getoption("base_timeout"),
             connections=config.getoption("connection"),
-            serial=config.getoption("device_serial"),
-            serial_baud=config.getoption("device_serial_baud"),
+            serial=lab_setup.serial,
+            serial_baud=lab_setup.serial_baud,
             flash_before=config.getoption("flash_before"),
             erase_fs=config.getoption("erase_fs"),
             flash_command=config.getoption("flash_command"),
             qemu_rtc=config.getoption("qemu_rtc"),
-            qemu_bt_hci=config.getoption("qemu_bt_hci"),
-            ble_controller=config.getoption("ble_controller"),
+            qemu_bt_hci=lab_setup.qemu_bt_hci,
+            ble_controller=lab_setup.phone.controller if lab_setup.phone else None,
             power_supply=ppk2,
         )
     )
@@ -190,29 +196,26 @@ def snapshot(request, build, test_results_dir):
 def power(ppk2, dut, test_results_dir):
     """Current measurement through the PPK2."""
     if ppk2 is None:
-        pytest.skip("no PPK2: pass --ppk2 PORT")
+        pytest.skip("no power supply: add one to the lab, or pass --ppk2 PORT")
     from harness.helpers.power import Power
 
     return Power(ppk2, dut, test_results_dir)
 
 
 @pytest.fixture
-def phones(dut, test_results_dir):
-    """Make phones: ``phones()`` is the harness's usual one, and another
-    ``address`` is another phone to the watch; ``ppogatt`` picks who hosts
-    the PPoGATT service (``reversed``, the watch, or ``forward``)."""
-    from harness.ble import HOST_ADDRESS, HOST_NAME, REVERSED
-    from harness.helpers.phone import Phone
+def phones(dut, lab_setup, test_results_dir):
+    """Make phones: ``phones()`` is the setup's phone. A Bumble phone can
+    also be another phone to the watch (``address``, ``name``) and host the
+    PPoGATT service itself (``ppogatt="forward"``)."""
+    from harness.helpers.phone import make_phone
 
-    if not dut.ble_controller:
-        pytest.skip("no Bluetooth controller: pass --ble-controller or --qemu-bt-hci")
+    reason = lab_setup.lacks("phone")
+    if reason:
+        pytest.skip(reason)
     made = []
 
-    def make(address=HOST_ADDRESS, name=HOST_NAME, ppogatt=REVERSED):
-        keystore = os.path.join(
-            test_results_dir, f"keys-{address.replace(':', '')}.json"
-        )
-        phone = Phone(dut, keystore, address=address, name=name, ppogatt=ppogatt)
+    def make(**options):
+        phone = make_phone(dut, lab_setup.phone, test_results_dir, **options)
         made.append(phone)
         return phone
 

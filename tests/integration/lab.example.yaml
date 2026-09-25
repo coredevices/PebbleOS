@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# A lab: the hardware wired to this host. Pass it with --lab (or
+# $PBL_ITEST_LAB) and the harness takes the setup for the build from it:
+# the watch running its board, the supply powering it, and a dongle for the
+# phone. Command-line options override it.
+
+# Watches, by their debug serial port. `board` may leave out the revision
+# to match any; `supply` is the one wired to its battery terminals.
+watches:
+  obelix:
+    board: obelix@pvt
+    serial: /dev/tty.wchusbserial5B7A1355001
+  getafix:
+    board: getafix@dvt2
+    serial: /dev/tty.wchusbserial5B7A1354971
+    supply: ppk2
+
+# Power supplies; one powers one watch at a time.
+supplies:
+  ppk2:
+    type: ppk2
+    port: auto          # or the PPK2's data port
+
+# Bluetooth dongles: nRF52840s running Zephyr's hci_uart (see qemu.md), by
+# serial port. The phone takes the first; the emulator, with
+# --qemu-bt-hci lab, takes the first and the phone the second.
+dongles:
+  dongle-a:
+    port: /dev/cu.usbmodem112401

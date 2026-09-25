@@ -22,7 +22,7 @@ def test_pairs_and_opens_session(dut, phones, ppogatt):
     since = dut.logs.mark()
     phone = phones(ppogatt=ppogatt).connect()
     assert phone.watch_version().is_recovery
-    _stored(dut, phone.link.address, since)
+    _stored(dut, phone.address, since)
     dut.wait_for_log(rf"PPoGATT Session is opened \({ppogatt},", 10, since)
 
 
