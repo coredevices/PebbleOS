@@ -100,6 +100,11 @@ pbl_clar_test(test_imaging
     src/fw/services/imaging/imaging.c
 )
 
+pbl_clar_test(test_analytics_native
+  SOURCES
+    src/fw/services/analytics/native.c
+)
+
 pbl_clar_test(test_compass_cal
   SOURCES
     src/fw/services/ecompass/correction.c

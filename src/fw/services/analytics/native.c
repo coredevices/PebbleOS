@@ -9,7 +9,6 @@
 #include "pbl/services/analytics/backend.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/math.h"
@@ -303,7 +302,10 @@ void pbl_analytics__native_heartbeat(void) {
 
     s_dls_session = dls_create(DlsSystemTagAnalyticsNativeHeartbeat, DATA_LOGGING_BYTE_ARRAY,
                                sizeof(struct native_heartbeat_record), false, false, &system_uuid);
-    PBL_ASSERTN(s_dls_session != NULL);
+    if (s_dls_session == NULL) {
+      PBL_LOG_WRN("Native analytics DLS session unavailable");
+      return;
+    }
   }
 
   DataLoggingResult result = dls_log(s_dls_session, &record, 1);
