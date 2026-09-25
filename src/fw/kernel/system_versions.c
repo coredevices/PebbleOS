@@ -141,6 +141,7 @@ static void prv_send_watch_versions(CommSession *session) {
   versions_msg.capabilities.custom_vibe_pattern_support = 1;
   versions_msg.capabilities.blob_db_version_support = 1;
   versions_msg.capabilities.weather_db_v4_support = 1;
+  versions_msg.capabilities.unknown_attributes_support = 1;
   versions_msg.capabilities.notification_image_support = NOTIFICATION_IMAGE_SUPPORTED;
   bt_local_id_copy_address(&versions_msg.device_address);
 

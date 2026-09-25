@@ -219,7 +219,7 @@ static bool prv_deserialize_group_element(AttributeGroupType type, void *group_p
     }
 
     if (!attribute_deserialize_list((char **)&buffer, (char *)buf_end, &cursor, payload_end,
-                                    *group_type_element_attribute_list)) {
+                                    group_type_element_attribute_list)) {
       return false;
     }
   }
@@ -235,7 +235,7 @@ bool attribute_group_deserialize(AttributeGroupType type, AttributeList *attr_li
   const uint8_t *cursor = payload;
 
   if (!attribute_deserialize_list((char **)&buffer, (char *)buf_end, &cursor, payload_end,
-                                  *attr_list)) {
+                                  attr_list)) {
     return false;
   }
 

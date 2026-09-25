@@ -41,6 +41,8 @@ typedef GTextNode *(*TimelineLayoutViewConstructor)(TimelineLayout *layout);
 
 typedef void (*TimelineLayoutViewDeinitializer)(TimelineLayout *layout);
 
+typedef const char *(*TimelineLayoutPrimaryTextGetter)(const TimelineLayout *layout);
+
 typedef enum {
   TimelineScrollDirectionUp,   //!< Timeline Past
   TimelineScrollDirectionDown, //!< Timeline Future
@@ -104,6 +106,8 @@ struct TimelineLayoutImpl {
 
   TimelineLayoutViewConstructor card_view_constructor;
   TimelineLayoutViewDeinitializer card_view_deinitializer;
+  //! Optional, overrides the primary text of the pin and peek views when it returns non-NULL
+  TimelineLayoutPrimaryTextGetter get_primary_text;
 };
 
 TimelineResourceId timeline_layout_get_icon_resource_id(LayoutLayerMode mode,

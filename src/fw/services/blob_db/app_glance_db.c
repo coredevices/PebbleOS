@@ -255,7 +255,7 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
   // Try to deserialize the AttributeList
   const bool was_attr_list_deserialized =
       attribute_deserialize_list(&attribute_data_buffer_pointer, attribute_data_buffer_end,
-                                 &deserialization_cursor, serialized_attr_list_end, *attr_list_out);
+                                 &deserialization_cursor, serialized_attr_list_end, attr_list_out);
   if (!was_attr_list_deserialized) {
     kernel_free(attribute_buffer);
     kernel_free(*attr_list_data_buffer_out);

@@ -65,6 +65,8 @@ pbl_clar_test(test_timeline_peek_event
 pbl_clar_test(test_attribute
   SOURCES
     src/fw/services/timeline/attribute.c
+    src/fw/services/timeline/attribute_group.c
+    src/fw/services/timeline/attributes_actions.c
 )
 
 pbl_clar_test(test_timeline_model

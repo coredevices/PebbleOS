@@ -11,6 +11,7 @@
 #include "font_resource_keys.auto.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/clock.h"
+#include "pbl/services/i18n/i18n.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
@@ -42,11 +43,25 @@ static bool prv_should_display_time(const LayoutLayer *layout) {
   return (display_time == WeatherTimeType_Pin);
 }
 
+static const char *prv_get_kind_title(const TimelineLayout *layout) {
+  const WeatherPinKind kind = attribute_get_uint8(layout->layout_layer.attributes,
+                                                  AttributeIdWeatherPinKind, WeatherPinKind_None);
+  switch (kind) {
+    case WeatherPinKind_Sunrise:
+      return i18n_get("Sunrise", layout);
+    case WeatherPinKind_Sunset:
+      return i18n_get("Sunset", layout);
+    default:
+      return NULL;
+  }
+}
+
 // Append the pin time to the pin title to generate the card title
 static void prv_title_update(const LayoutLayer *layout_ref,
                              const LayoutNodeTextDynamicConfig *config, char *buffer, bool render) {
   TimelineLayout *layout = (TimelineLayout *)layout_ref;
-  const char *attr_text = attribute_get_string(layout_ref->attributes, AttributeIdTitle, "");
+  const char *attr_text = prv_get_kind_title(layout)
+                              ?: attribute_get_string(layout_ref->attributes, AttributeIdTitle, "");
   strncpy(buffer, attr_text, config->buffer_size);
   buffer[config->buffer_size - 1] = '\0';
   if (!prv_should_display_time(layout_ref)) {
@@ -201,6 +216,7 @@ LayoutLayer *weather_layout_create(const LayoutLayerConfig *config) {
         //! @note this is the same as Large until ExtraLarge is designed
         /* extralarge */ TimelineResourceSizeLarge),
     .card_view_constructor = prv_card_view_constructor,
+    .get_primary_text = prv_get_kind_title,
   };
 
   timeline_layout_init((TimelineLayout *)layout, config, &s_timeline_layout_impl);

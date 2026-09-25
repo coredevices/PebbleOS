@@ -522,8 +522,11 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 
     GTextNodeText *primary_node = (GTextNodeText *)layout_create_text_node_from_config(
         &layout->layout_layer, &s_primary_config.extent.node);
+    const char *primary_text =
+        layout->impl->get_primary_text ? layout->impl->get_primary_text(layout) : NULL;
     primary_node->text =
-        attribute_get_string(attributes, AttributeIdShortTitle, NULL)
+        primary_text
+            ?: attribute_get_string(attributes, AttributeIdShortTitle, NULL)
             ?: attribute_get_string(attributes, layout->impl->attributes.primary_id, "");
     primary_node->line_spacing_delta = style->primary_line_spacing_delta;
     int num_primary_lines = is_fat ? 2 : 1;

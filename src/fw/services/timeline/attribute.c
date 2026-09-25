@@ -73,6 +73,7 @@ static AttributeType prv_attribute_type(AttributeId id) {
     case AttributeIdHealthActivityType:
     case AttributeIdAlarmKind:
     case AttributeIdImageAspectRatio:
+    case AttributeIdWeatherPinKind:
       return AttributeTypeUint8;
     case AttributeIdIconTiny:
     case AttributeIdIconSmall:
@@ -106,9 +107,6 @@ static bool prv_deserialize_attribute(char **buffer, char *const buf_end, const 
   SerializedAttributeHeader *attribute = (SerializedAttributeHeader *)*cursor;
 
   *cursor += sizeof(SerializedAttributeHeader);
-  if ((*cursor + attribute->length) > payload_end) {
-    return false;
-  }
 
   notif_attr->id = attribute->id;
   switch (prv_attribute_type(attribute->id)) {
@@ -175,13 +173,21 @@ static bool prv_deserialize_attribute(char **buffer, char *const buf_end, const 
   return true;
 }
 
+static bool prv_serialized_attribute_fits(const uint8_t *cursor, const uint8_t *end) {
+  if ((cursor + sizeof(SerializedAttributeHeader)) > end) {
+    return false;
+  }
+  const SerializedAttributeHeader *attribute = (const SerializedAttributeHeader *)cursor;
+  return (cursor + sizeof(SerializedAttributeHeader) + attribute->length) <= end;
+}
+
 static int32_t prv_get_buffer_size_for_serialized_attribute(const uint8_t **cursor,
                                                             const uint8_t *end) {
-  SerializedAttributeHeader *attribute = (SerializedAttributeHeader *)*cursor;
-  *cursor += sizeof(SerializedAttributeHeader);
-  if ((*cursor + attribute->length) > end) {
+  if (!prv_serialized_attribute_fits(*cursor, end)) {
     return -1;
   }
+  SerializedAttributeHeader *attribute = (SerializedAttributeHeader *)*cursor;
+  *cursor += sizeof(SerializedAttributeHeader);
   int32_t string_alloc_size = 0;
   switch (prv_attribute_type(attribute->id)) {
     case AttributeTypeString:
@@ -313,14 +319,25 @@ size_t attribute_list_serialize(const AttributeList *attr_list, uint8_t *buffer,
 }
 
 bool attribute_deserialize_list(char **buffer, char *const buf_end, const uint8_t **cursor,
-                                const uint8_t *payload_end, AttributeList attr_list) {
-  for (int i = 0; i < attr_list.num_attributes; i++) {
-    if (!prv_deserialize_attribute(buffer, buf_end, cursor, payload_end,
-                                   &attr_list.attributes[i])) {
-      PBL_LOG_WRN("Encountered unknown attribute");
-      break;
+                                const uint8_t *payload_end, AttributeList *attr_list) {
+  uint8_t num_deserialized = 0;
+  for (int i = 0; i < attr_list->num_attributes; i++) {
+    if (!prv_serialized_attribute_fits(*cursor, payload_end)) {
+      return false;
     }
+    const SerializedAttributeHeader *attribute = (const SerializedAttributeHeader *)*cursor;
+    if (prv_attribute_type(attribute->id) == AttributeTypeUnknown) {
+      PBL_LOG_DBG("Skipping unknown attribute %u", attribute->id);
+      *cursor += sizeof(SerializedAttributeHeader) + attribute->length;
+      continue;
+    }
+    if (!prv_deserialize_attribute(buffer, buf_end, cursor, payload_end,
+                                   &attr_list->attributes[num_deserialized])) {
+      return false;
+    }
+    num_deserialized++;
   }
+  attr_list->num_attributes = num_deserialized;
   return true;
 }
 
@@ -480,6 +497,9 @@ void attribute_list_destroy_list(AttributeList *list) {
 bool attribute_check_serialized_list(const uint8_t *cursor, const uint8_t *val_end,
                                      uint8_t num_attributes, bool has_attribute[]) {
   for (int i = 0; i < num_attributes; i++) {
+    if ((cursor + sizeof(SerializedAttributeHeader)) > val_end) {
+      return false;
+    }
     SerializedAttributeHeader *attrib_hdr = (SerializedAttributeHeader *)cursor;
     cursor += sizeof(SerializedAttributeHeader);
     switch (prv_attribute_type(attrib_hdr->id)) {

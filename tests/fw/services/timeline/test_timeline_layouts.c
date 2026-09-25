@@ -8,6 +8,8 @@
 #include "clar.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Fakes
 /////////////////////
@@ -186,6 +188,7 @@ typedef struct TimelineLayoutTestConfig {
   const char *body;
   TimelineResourceId icon_timeline_res_id;
   WeatherTimeType weather_time_type;
+  uint8_t weather_pin_kind;
 } TimelineLayoutTestConfig;
 
 static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *config,
@@ -211,6 +214,9 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
     attribute_list_add_resource_id(&attr_list, AttributeIdIconPin, config->icon_timeline_res_id);
   }
   attribute_list_add_uint8(&attr_list, AttributeIdDisplayTime, config->weather_time_type);
+  if (config->weather_pin_kind) {
+    attribute_list_add_uint8(&attr_list, AttributeIdWeatherPinKind, config->weather_pin_kind);
+  }
   // Just need to put something here so our mocked clock_get_since_time() gets called
   attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 1337);
 
@@ -267,6 +273,41 @@ void test_timeline_layouts__weather(void) {
   prv_construct_and_render_layout(&config, 2);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details2)));
 #endif
+}
+
+static void prv_check_renders_like(const TimelineLayoutTestConfig *config,
+                                   const TimelineLayoutTestConfig *reference,
+                                   size_t num_down_clicks) {
+  const size_t size = s_ctx.dest_bitmap.row_size_bytes * s_ctx.dest_bitmap.bounds.size.h;
+  uint8_t *expected = malloc(size);
+  prv_construct_and_render_layout(reference, num_down_clicks);
+  memcpy(expected, s_ctx.dest_bitmap.addr, size);
+  prv_construct_and_render_layout(config, num_down_clicks);
+  cl_assert(memcmp(expected, s_ctx.dest_bitmap.addr, size) == 0);
+  free(expected);
+}
+
+void test_timeline_layouts__weather_pin_kind(void) {
+  const TimelineLayoutTestConfig reference = (TimelineLayoutTestConfig){
+    .layout_id = LayoutIdWeather,
+    .title = "Sunset",
+    .subtitle = "90°/60°",
+    .location_name = "Redwood City",
+    .body = "A clear sky. Low around 60F.",
+    .icon_timeline_res_id = TIMELINE_RESOURCE_PARTLY_CLOUDY,
+    .weather_time_type = WeatherTimeType_Pin,
+  };
+
+  TimelineLayoutTestConfig with_kind = reference;
+  with_kind.title = "Ignored title";
+  with_kind.weather_pin_kind = WeatherPinKind_Sunset;
+  prv_check_renders_like(&with_kind, &reference, 0);
+  prv_check_renders_like(&with_kind, &reference, 1);
+
+  TimelineLayoutTestConfig unknown_kind = reference;
+  unknown_kind.weather_pin_kind = 0xFF;
+  prv_check_renders_like(&unknown_kind, &reference, 0);
+  prv_check_renders_like(&unknown_kind, &reference, 1);
 }
 
 static void prv_construct_and_render_sports_layout(GameState state, size_t num_down_clicks) {

@@ -11,6 +11,12 @@ typedef enum {
   WeatherTimeType_Pin,
 } WeatherTimeType;
 
+typedef enum {
+  WeatherPinKind_None = 0,
+  WeatherPinKind_Sunrise,
+  WeatherPinKind_Sunset,
+} WeatherPinKind;
+
 typedef struct {
   TimelineLayout timeline_layout;
 } WeatherLayout;
