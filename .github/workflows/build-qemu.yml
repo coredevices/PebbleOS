@@ -88,7 +88,7 @@ jobs:
         run: pbl configure --board ${{ matrix.board }} --variant ${{ matrix.variant }} ${{ matrix.options }}
 
       - name: Build
-        run: pbl build qemu_image_micro qemu_image_spi
+        run: pbl build qemu_image_micro qemu_image_spi bundle
 
       - name: Copy artifacts
         run: |
@@ -103,7 +103,8 @@ jobs:
           name: firmware-${{ matrix.board }}${{ matrix.suffix }}-qemu
           path: artifacts
 
-      # What the integration tests need of the build, laid out as in build/.
+      # What the integration tests need of the build, laid out as in build/;
+      # the firmware bundle is what the PRF tests install.
       - name: Store integration test build
         uses: actions/upload-artifact@v7
         with:
@@ -116,6 +117,7 @@ jobs:
             build/pebbleos.elf
             build/qemu_micro_flash.bin
             build/qemu_spi_flash.bin
+            build/normal_*.pbz
 
   integration-tests:
     needs: build-qemu
@@ -128,6 +130,11 @@ jobs:
       fail-fast: false
       matrix:
         board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
+        build: ["normal", "prf-itest"]
+        include:
+          - build: prf-itest
+            suffix: -prf-itest
+            options: --qemu-bt-hci virtual --main-build "$GITHUB_WORKSPACE/build-main" -m "not slow"
 
     steps:
       - name: Mark Github workspace as safe
@@ -152,18 +159,25 @@ jobs:
       - name: Download build
         uses: actions/download-artifact@v8
         with:
-          name: itest-build-${{ matrix.board }}
+          name: itest-build-${{ matrix.board }}${{ matrix.suffix }}
           path: build
 
+      - name: Download normal build
+        if: matrix.build == 'prf-itest'
+        uses: actions/download-artifact@v8
+        with:
+          name: itest-build-${{ matrix.board }}
+          path: build-main
+
       - name: Integration tests
-        run: pbl itest --no-build
+        run: pbl itest --no-build ${{ matrix.options }}
 
       - name: Publish integration test report
         uses: mikepenz/action-junit-report@v6
         if: (!cancelled())
         with:
           report_paths: build/itest/junit.xml
-          check_name: Integration tests (${{ matrix.board }})
+          check_name: Integration tests (${{ matrix.board }}${{ matrix.suffix }})
           annotate_only: true
           detailed_summary: true
 
@@ -171,7 +185,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: itest-results-${{ matrix.board }}
+          name: itest-results-${{ matrix.board }}${{ matrix.suffix }}
           path: build/itest
 
   build-qemu-status:
