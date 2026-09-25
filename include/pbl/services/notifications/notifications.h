@@ -38,6 +38,9 @@ void notifications_handle_notification_acted_upon(Uuid *notification_id);
 //! Remove a notification
 void notifications_handle_notification_removed(Uuid *notification_id);
 
+//! Remove a notification from the watch, and dismiss it on the phone when reachable
+void notifications_clear(const Uuid *notification_id);
+
 //! Notify of remove command from ANCS. Notification will be kept in history
 void notifications_handle_ancs_notification_removed(uint32_t ancs_uid);
 
