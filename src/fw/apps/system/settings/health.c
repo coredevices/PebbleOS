@@ -24,12 +24,47 @@ static const char *s_units_distance_labels[] = {
 };
 
 #ifdef CONFIG_HRM
+static const HRMonitoringInterval s_hrm_intervals[] = {
+  HRMonitoringInterval_5Min,  HRMonitoringInterval_10Min,    HRMonitoringInterval_30Min,
+  HRMonitoringInterval_1Hour, HRMonitoringInterval_Disabled,
+};
+
 static const char *s_hrm_interval_labels[] = {
+  i18n_noop("5 Minutes"), i18n_noop("10 Minutes"), i18n_noop("30 Minutes"),
+  i18n_noop("1 Hour"),    i18n_noop("Disabled"),
+};
+
+static int prv_hrm_interval_to_index(HRMonitoringInterval interval) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_hrm_intervals); i++) {
+    if (s_hrm_intervals[i] == interval) {
+      return (int)i;
+    }
+  }
+  return prv_hrm_interval_to_index(HRMonitoringInterval_10Min);
+}
+
+static const HRMonitoringInterval s_spo2_intervals[] = {
+  HRMonitoringInterval_10Min,
+  HRMonitoringInterval_30Min,
+  HRMonitoringInterval_1Hour,
+  HRMonitoringInterval_Disabled,
+};
+
+static const char *s_spo2_interval_labels[] = {
   i18n_noop("10 Minutes"),
   i18n_noop("30 Minutes"),
   i18n_noop("1 Hour"),
   i18n_noop("Disabled"),
 };
+
+static int prv_spo2_interval_to_index(HRMonitoringInterval interval) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_spo2_intervals); i++) {
+    if (s_spo2_intervals[i] == interval) {
+      return (int)i;
+    }
+  }
+  return prv_spo2_interval_to_index(HRMonitoringInterval_10Min);
+}
 #endif
 
 enum SettingsHealthItem {
@@ -50,12 +85,14 @@ enum SettingsHealthItem {
 /////////////////////////////
 
 static void prv_hrm_interval_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  activity_prefs_set_hrm_measurement_interval((HRMonitoringInterval)selection);
+  if (selection >= 0 && (size_t)selection < ARRAY_LENGTH(s_hrm_intervals)) {
+    activity_prefs_set_hrm_measurement_interval(s_hrm_intervals[selection]);
+  }
   app_window_stack_remove(&option_menu->window, true /*animated*/);
 }
 
 static void prv_hrm_interval_menu_push(SettingsHealthData *data) {
-  const int index = (int)activity_prefs_get_hrm_measurement_interval();
+  const int index = prv_hrm_interval_to_index(activity_prefs_get_hrm_measurement_interval());
   const OptionMenuCallbacks callbacks = {
     .select = prv_hrm_interval_menu_select,
   };
@@ -69,19 +106,21 @@ static void prv_hrm_interval_menu_push(SettingsHealthData *data) {
 /////////////////////////////
 
 static void prv_spo2_interval_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  activity_prefs_set_spo2_measurement_interval((HRMonitoringInterval)selection);
+  if (selection >= 0 && (size_t)selection < ARRAY_LENGTH(s_spo2_intervals)) {
+    activity_prefs_set_spo2_measurement_interval(s_spo2_intervals[selection]);
+  }
   app_window_stack_remove(&option_menu->window, true /*animated*/);
 }
 
 static void prv_spo2_interval_menu_push(SettingsHealthData *data) {
-  const int index = (int)activity_prefs_get_spo2_measurement_interval();
+  const int index = prv_spo2_interval_to_index(activity_prefs_get_spo2_measurement_interval());
   const OptionMenuCallbacks callbacks = {
     .select = prv_spo2_interval_menu_select,
   };
   const char *title = i18n_noop("Blood Oxygen");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_hrm_interval_labels), true /* icons_enabled */,
-                            s_hrm_interval_labels, data);
+                            ARRAY_LENGTH(s_spo2_interval_labels), true /* icons_enabled */,
+                            s_spo2_interval_labels, data);
 }
 #endif
 
@@ -122,11 +161,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     case SettingsHealthHRMonitoringInterval: {
       title = i18n_noop("HR Monitoring");
       HRMonitoringInterval interval = activity_prefs_get_hrm_measurement_interval();
-      if (interval >= HRMonitoringIntervalCount) {
-        subtitle = i18n_noop("Unknown");
-      } else {
-        subtitle = s_hrm_interval_labels[interval];
-      }
+      int idx = prv_hrm_interval_to_index(interval);
+      subtitle = s_hrm_interval_labels[idx];
       break;
     }
     case SettingsHealthHRActivityTracking: {
@@ -143,11 +179,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     case SettingsHealthSpO2MonitoringInterval: {
       title = i18n_noop("SpO2 Monitoring");
       HRMonitoringInterval interval = activity_prefs_get_spo2_measurement_interval();
-      if (interval >= HRMonitoringIntervalCount) {
-        subtitle = i18n_noop("Unknown");
-      } else {
-        subtitle = s_hrm_interval_labels[interval];
-      }
+      int idx = prv_spo2_interval_to_index(interval);
+      subtitle = s_spo2_interval_labels[idx];
       break;
     }
     case SettingsHealthBloodOxygenActivityTracking: {
