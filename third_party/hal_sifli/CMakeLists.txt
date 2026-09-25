@@ -262,4 +262,5 @@ pbl_library_named(hal_sifli)
 pbl_library_kind(stlib)
 pbl_library_sources(${micro_sources})
 pbl_library_compile_definitions(${micro_defines})
-pbl_library_compile_options(-Wno-unused-value -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-sign-compare -Wno-type-limits)
+# -Wno-maybe-uninitialized: bt_rf_fulcal.c trips GCC 13's flow analysis
+pbl_library_compile_options(-Wno-unused-value -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-sign-compare -Wno-type-limits -Wno-maybe-uninitialized)
