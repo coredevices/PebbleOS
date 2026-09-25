@@ -31,6 +31,7 @@ jobs:
               - 'stored_apps/**'
               - 'tools/**'
               - 'third_party/**'
+              - 'tests/integration/**'
               - 'cmake/**'
               - 'CMakeLists.txt'
               - 'Kconfig'
@@ -87,7 +88,7 @@ jobs:
         run: pbl configure --board ${{ matrix.board }} --variant ${{ matrix.variant }} ${{ matrix.options }}
 
       - name: Build
-        run: pbl build qemu_image_micro qemu_image_spi
+        run: pbl build qemu_image_micro qemu_image_spi bundle
 
       - name: Copy artifacts
         run: |
@@ -102,10 +103,99 @@ jobs:
           name: firmware-${{ matrix.board }}${{ matrix.suffix }}-qemu
           path: artifacts
 
+      # What the integration tests need of the build, laid out as in build/;
+      # the firmware bundle is what the PRF tests install.
+      - name: Store integration test build
+        uses: actions/upload-artifact@v7
+        with:
+          name: itest-build-${{ matrix.board }}${{ matrix.suffix }}
+          include-hidden-files: true
+          retention-days: 3
+          path: |
+            build/CMakeCache.txt
+            build/.config
+            build/pebbleos.elf
+            build/qemu_micro_flash.bin
+            build/qemu_spi_flash.bin
+            build/normal_*.pbz
+
+  integration-tests:
+    needs: build-qemu
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/coredevices/pebbleos-docker:v8
+
+    strategy:
+      fail-fast: false
+      matrix:
+        board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
+        build: ["normal", "prf-itest"]
+        include:
+          - build: prf-itest
+            suffix: -prf-itest
+            options: --qemu-bt-hci virtual --main-build "$GITHUB_WORKSPACE/build-main" -m "not slow"
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
+      - name: Install dependencies
+        run: |
+          # QEMU links SDL even when run headless.
+          apt-get update
+          apt-get install -y --no-install-recommends libsdl2-2.0-0
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Download build
+        uses: actions/download-artifact@v8
+        with:
+          name: itest-build-${{ matrix.board }}${{ matrix.suffix }}
+          path: build
+
+      - name: Download normal build
+        if: matrix.build == 'prf-itest'
+        uses: actions/download-artifact@v8
+        with:
+          name: itest-build-${{ matrix.board }}
+          path: build-main
+
+      - name: Integration tests
+        run: pbl itest --no-build ${{ matrix.options }}
+
+      - name: Publish integration test report
+        uses: mikepenz/action-junit-report@v6
+        if: (!cancelled())
+        with:
+          report_paths: build/itest/junit.xml
+          check_name: Integration tests (${{ matrix.board }}${{ matrix.suffix }})
+          annotate_only: true
+          detailed_summary: true
+
+      - name: Store integration test results
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: itest-results-${{ matrix.board }}${{ matrix.suffix }}
+          path: build/itest
+
   build-qemu-status:
-    needs: [changes-qemu, build-qemu]
+    needs: [changes-qemu, build-qemu, integration-tests]
     if: always()
     runs-on: ubuntu-24.04
     steps:
-      - if: needs.build-qemu.result == 'failure' || needs.build-qemu.result == 'cancelled'
+      - if: >-
+          needs.build-qemu.result == 'failure' ||
+          needs.build-qemu.result == 'cancelled' ||
+          needs.integration-tests.result == 'failure' ||
+          needs.integration-tests.result == 'cancelled'
         run: exit 1
