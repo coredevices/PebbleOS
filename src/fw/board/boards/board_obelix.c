@@ -67,14 +67,14 @@ static DisplayJDIState s_display_state = {
       .freq = 746268, // HCK frequency
       .cfg = {
         .jdi = {
-          .bank_col_head = 2,
+          .bank_col_head = 0,
           .valid_columns = PBL_DISPLAY_WIDTH,
-          .bank_col_tail = 6,
+          .bank_col_tail = 8,
           .bank_row_head = 0,
           .valid_rows = PBL_DISPLAY_HEIGHT,
-          .bank_row_tail = 6,
-          .enb_start_col = 3,
-          .enb_end_col = 99,
+          .bank_row_tail = 4,
+          .enb_start_col = 6,
+	  .enb_end_col = 98,
         },
       },
     },
