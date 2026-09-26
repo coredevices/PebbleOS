@@ -226,6 +226,10 @@ static void prv_launch_up_down(ClickRecognizerRef recognizer, void *data) {
   if (!quick_launch_single_click_is_enabled(button))
     return;
   const AppInstallId app_id = quick_launch_single_click_get_app(button);
+  if (app_id == INSTALL_ID_INVALID) {
+    // Enabled but the configured app is missing (e.g. uninstalled): do nothing.
+    return;
+  }
 
   prv_launch_quick_launch_app(app_id, button, APP_LAUNCH_SYSTEM, APP_QUICK_LAUNCH_ACTION_TAP);
 }
