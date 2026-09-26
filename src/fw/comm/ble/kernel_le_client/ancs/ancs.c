@@ -15,6 +15,7 @@
 
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
+#include "pbl/services/notifications/ancs/ancs_reconcile.h"
 #include "pbl/services/regular_timer.h"
 
 #include "system/hexdump.h"
@@ -53,6 +54,14 @@ static void prv_op_timeout_stop(void);
 
 static void prv_op_timeout_kick(void);
 
+static void prv_get_reconcile_attributes(uint32_t uid);
+
+static void prv_handle_reconcile_attributes_response(const uint8_t *data, size_t length);
+
+static void prv_reconcile_free(void);
+
+static void prv_reconcile_advance(void);
+
 // -----------------------------------------------------------------------------
 // Static variables
 //
@@ -72,6 +81,20 @@ static void prv_op_timeout_kick(void);
 // in-flight queue head forever (which blocks every later notification).
 #define ANCS_OP_RESPONSE_TIMEOUT_SECONDS 10
 
+// Most notifications a post-reconnect catch-up compares; with more it is skipped
+#define ANCS_RECONCILE_MAX_UIDS 128
+
+typedef enum {
+  ReconcileAttributeIndexAppID = 0,
+  ReconcileAttributeIndexDate,
+} ReconcileAttributeIndex;
+
+// No length limits: iOS doesn't take one for these, and the date is parsed defensively
+static const FetchedAttribute s_reconcile_attributes[] = {
+  [ReconcileAttributeIndexAppID] = {.id = NotificationAttributeIDAppIdentifier},
+  [ReconcileAttributeIndexDate] = {.id = NotificationAttributeIDDate},
+};
+
 typedef struct {
   uint8_t command_id;
   union {
@@ -85,6 +108,8 @@ typedef struct {
 typedef enum {
   NotificationQueueOpGetAttributes = 0,
   NotificationQueueOpPerformAction,
+  //! App and date only, to compare with the watch's notifications after reconnecting
+  NotificationQueueOpGetReconcileAttributes,
 } NotificationQueueOp;
 
 typedef enum {
@@ -99,6 +124,37 @@ typedef struct {
   ActionId action_id; // Only valid if op == NotificationQueueOpPerformAction
   ANCSProperty properties;
 } NotificationQueueNode;
+
+typedef enum {
+  //! Recording the notifications iOS replays after the watch subscribes
+  ReconcilePhaseCollecting,
+  //! Checking whether iOS kept its UIDs, using one notification the watch has
+  ReconcilePhaseCanary,
+  //! UIDs changed: fetching every replayed notification's app and date
+  ReconcilePhaseFetching,
+} ReconcilePhase;
+
+//! Catch-up with Notification Center after a reconnection, see ancs_reconcile.h
+typedef struct {
+  ReconcilePhase phase;
+  bool overflowed;
+  //! The in-flight fetch finished, successfully or not
+  bool fetch_done;
+  bool fetch_got_entry;
+  //! iOS said the fetched notification no longer exists
+  bool fetch_uid_gone;
+  ANCSReconcileEntry fetched;
+  ANCSReconcileEntry canary;
+  //! Replayed by iOS: what Notification Center had when the watch reconnected
+  uint32_t uids[ANCS_RECONCILE_MAX_UIDS];
+  uint16_t num_uids;
+  //! Added since reconnecting, so never removed by the catch-up
+  uint32_t live_uids[ANCS_RECONCILE_MAX_UIDS];
+  uint16_t num_live_uids;
+  uint16_t next_fetch;
+  ANCSReconcileEntry *entries;
+  uint16_t num_entries;
+} ANCSReconcile;
 
 typedef struct ANCSClient {
   ANCSClientState state;
@@ -118,6 +174,7 @@ typedef struct ANCSClient {
   uint8_t consecutive_busy_alive_checks;
   // Consecutive alive checks whose Control Point write iOS rejected.
   uint8_t consecutive_rejected_alive_checks;
+  ANCSReconcile *reconcile;
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
@@ -175,7 +232,14 @@ static void prv_do_notif_queue_operation(void) {
     prv_get_notification_attributes(s_ancs_client->queue->uid);
   } else if (s_ancs_client->queue->op == NotificationQueueOpPerformAction) {
     prv_perform_action(s_ancs_client->queue->uid, s_ancs_client->queue->action_id);
+  } else if (s_ancs_client->queue->op == NotificationQueueOpGetReconcileAttributes) {
+    prv_get_reconcile_attributes(s_ancs_client->queue->uid);
   }
+}
+
+static bool prv_is_reconcile_fetch_in_flight(void) {
+  return s_ancs_client->queue &&
+         (s_ancs_client->queue->op == NotificationQueueOpGetReconcileAttributes);
 }
 
 static bool prv_notif_queue_comparator(ListNode *found_node, void *data) {
@@ -277,6 +341,9 @@ static void prv_notif_queue_push_attr_request(uint32_t uid, ANCSProperty propert
 static void prv_notif_queue_pop(void) {
   NotificationQueueNode *temp = s_ancs_client->queue;
   if (temp) {
+    if ((temp->op == NotificationQueueOpGetReconcileAttributes) && s_ancs_client->reconcile) {
+      s_ancs_client->reconcile->fetch_done = true;
+    }
     list_remove((ListNode *)s_ancs_client->queue, (ListNode **)&s_ancs_client->queue, NULL);
     kernel_free(temp);
   }
@@ -289,7 +356,8 @@ static void prv_notif_queue_next(void) {
   }
 
   if (s_ancs_client->queue == NULL) {
-    // empty
+    // Empty: the catch-up only runs while nothing else is waiting
+    prv_reconcile_advance();
     return;
   }
 
@@ -339,6 +407,8 @@ static void prv_reset_and_next(void) {
 static void prv_reset_and_flush(void) {
   prv_reset_and_idle();
   prv_notif_queue_reset();
+  // A catch-up that lost its connection can't tell which notifications iOS still has
+  prv_reconcile_free();
 }
 
 static void prv_reset_due_to_parse_error(void) {
@@ -614,9 +684,17 @@ static void prv_is_ancs_alive_cb(void *data) {
 static RegularTimerInfo s_notification_connection_delay_timer;
 static bool s_just_connected = false;
 
+static void prv_reconcile_window_ended_cb(void *data);
+
+// Identifies the connection a catch-up belongs to, so a late callback can't end a newer one
+static uint32_t s_reconcile_generation;
+
 static void prv_set_no_longer_just_connected(void *data) {
   s_just_connected = false;
   regular_timer_remove_callback(&s_notification_connection_delay_timer);
+  // iOS has finished replaying Notification Center; compare it with the watch on KernelMain
+  launcher_task_add_callback(prv_reconcile_window_ended_cb,
+                             (void *)(uintptr_t)s_reconcile_generation);
 }
 
 static void prv_start_temp_notification_connection_delay_timer(void) {
@@ -631,6 +709,170 @@ static void prv_start_temp_notification_connection_delay_timer(void) {
   };
   regular_timer_add_multisecond_callback(&s_notification_connection_delay_timer,
                                          post_connection_notification_ignore_seconds);
+}
+
+// -----------------------------------------------------------------------------
+//! Post-reconnect catch-up
+//!
+//! Notifications cleared on the iPhone while the watch was away never produce a removal event.
+//! When the watch subscribes, iOS replays every notification still in Notification Center, so
+//! the watch compares that replay with its own notifications and marks the ones iOS no longer has
+//! as dismissed, like a removal it had seen live (see ancs_reconcile.h).
+//!
+//! iOS may renumber notifications across reconnections. One notification the watch has (the
+//! canary) is looked up by UID first: if iOS still describes it the same way, UIDs are unchanged
+//! and the replay can be compared directly. Otherwise each replayed notification's app and date
+//! are fetched and compared instead. Any failed fetch cancels the catch-up so that nothing still
+//! on the phone is dismissed.
+
+static void prv_reconcile_free(void) {
+  if (!s_ancs_client || !s_ancs_client->reconcile) {
+    return;
+  }
+  kernel_free(s_ancs_client->reconcile->entries);
+  kernel_free(s_ancs_client->reconcile);
+  s_ancs_client->reconcile = NULL;
+}
+
+static void prv_reconcile_start_collecting(void) {
+  prv_reconcile_free();
+  s_reconcile_generation++;
+  // Best effort: without memory the watch simply skips the catch-up
+  s_ancs_client->reconcile = kernel_zalloc(sizeof(ANCSReconcile));
+}
+
+static void prv_reconcile_add_uid(uint32_t *uids, uint16_t *num_uids, uint32_t uid) {
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  for (uint16_t i = 0; i < *num_uids; i++) {
+    if (uids[i] == uid) {
+      return;
+    }
+  }
+  if (*num_uids >= ANCS_RECONCILE_MAX_UIDS) {
+    reconcile->overflowed = true;
+    return;
+  }
+  uids[(*num_uids)++] = uid;
+}
+
+static void prv_reconcile_handle_ns(const NSNotification *ns, bool replayed) {
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  if (!reconcile) {
+    return;
+  }
+  if (replayed && (reconcile->phase == ReconcilePhaseCollecting)) {
+    prv_reconcile_add_uid(reconcile->uids, &reconcile->num_uids, ns->uid);
+  } else if (ns->event_id != EventIDNotificationRemoved) {
+    prv_reconcile_add_uid(reconcile->live_uids, &reconcile->num_live_uids, ns->uid);
+  }
+}
+
+static void prv_reconcile_push_fetch(uint32_t uid) {
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  reconcile->fetch_done = false;
+  reconcile->fetch_got_entry = false;
+  reconcile->fetch_uid_gone = false;
+
+  NotificationQueueNode *node = kernel_malloc(sizeof(NotificationQueueNode));
+  if (!node) {
+    prv_reconcile_free();
+    return;
+  }
+  *node = (NotificationQueueNode){
+    .op = NotificationQueueOpGetReconcileAttributes,
+    .uid = uid,
+  };
+  prv_notif_queue_push_common(node);
+}
+
+static void prv_reconcile_fetch_next(void) {
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  if (reconcile->next_fetch < reconcile->num_uids) {
+    prv_reconcile_push_fetch(reconcile->uids[reconcile->next_fetch++]);
+    return;
+  }
+
+  ancs_reconcile_by_content(reconcile->entries, reconcile->num_entries, reconcile->live_uids,
+                            reconcile->num_live_uids);
+  prv_reconcile_free();
+}
+
+static void prv_reconcile_start_fetching(void) {
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  reconcile->phase = ReconcilePhaseFetching;
+  reconcile->entries = kernel_malloc(reconcile->num_uids * sizeof(ANCSReconcileEntry));
+  if (!reconcile->entries) {
+    prv_reconcile_free();
+    return;
+  }
+  PBL_LOG_DBG("ANCS UIDs changed since the last connection, comparing %u notifications",
+              reconcile->num_uids);
+  prv_reconcile_fetch_next();
+}
+
+//! Moves the catch-up on once the queue is empty and the last fetch has finished
+static void prv_reconcile_advance(void) {
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  if (!reconcile || !reconcile->fetch_done) {
+    return;
+  }
+  reconcile->fetch_done = false;
+
+  // A notification that arrived meanwhile wasn't recorded and could be removed
+  if (reconcile->overflowed) {
+    PBL_LOG_WRN("ANCS catch-up saw too many notifications, skipping it");
+    prv_reconcile_free();
+    return;
+  }
+
+  if (!reconcile->fetch_got_entry && !reconcile->fetch_uid_gone) {
+    PBL_LOG_WRN("ANCS catch-up fetch failed, skipping the catch-up");
+    prv_reconcile_free();
+    return;
+  }
+
+  if (reconcile->phase == ReconcilePhaseCanary) {
+    if (reconcile->fetch_got_entry &&
+        ancs_reconcile_canary_matches(&reconcile->canary, &reconcile->fetched)) {
+      ancs_reconcile_by_uid(reconcile->uids, reconcile->num_uids, reconcile->live_uids,
+                            reconcile->num_live_uids);
+      prv_reconcile_free();
+    } else {
+      prv_reconcile_start_fetching();
+    }
+    return;
+  }
+
+  // The notification may have been removed since iOS replayed it; then it is simply not kept
+  if (reconcile->fetch_got_entry) {
+    reconcile->entries[reconcile->num_entries++] = reconcile->fetched;
+  }
+  prv_reconcile_fetch_next();
+}
+
+static void prv_reconcile_window_ended_cb(void *data) {
+  if (!s_ancs_client || !s_ancs_client->reconcile ||
+      ((uint32_t)(uintptr_t)data != s_reconcile_generation)) {
+    return;
+  }
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  if (reconcile->phase != ReconcilePhaseCollecting) {
+    return;
+  }
+
+  // An empty replay can't be told apart from one that never came, so it removes nothing
+  if ((s_ancs_client->version != ANCSVersion_iOS9OrNewer) || reconcile->overflowed ||
+      (reconcile->num_uids == 0) || !ancs_reconcile_has_candidates()) {
+    prv_reconcile_free();
+    return;
+  }
+
+  if (ancs_reconcile_find_canary(reconcile->uids, reconcile->num_uids, &reconcile->canary)) {
+    reconcile->phase = ReconcilePhaseCanary;
+    prv_reconcile_push_fetch(reconcile->canary.uid);
+  } else {
+    prv_reconcile_start_fetching();
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -681,6 +923,14 @@ static uint8_t prv_current_command_id(const uint8_t *data) {
 static bool prv_reassembly_is_complete(const uint8_t *data, const size_t length, bool *out_error) {
   switch (prv_current_command_id(data)) {
     case CommandIDGetNotificationAttributes:
+      if (prv_is_reconcile_fetch_in_flight()) {
+        const size_t header_length = sizeof(GetNotificationAttributesMsg);
+        *out_error = false;
+        return (length > header_length) &&
+               ancs_util_get_attr_ptrs(data + header_length, length - header_length,
+                                       s_reconcile_attributes, ARRAY_LENGTH(s_reconcile_attributes),
+                                       NULL, out_error);
+      }
       return ancs_util_is_complete_notif_attr_response(data, length, out_error);
     case CommandIDGetAppAttributes:
       return ancs_util_is_complete_app_attr_dict(data, length, out_error);
@@ -694,7 +944,11 @@ static bool prv_reassembly_is_complete(const uint8_t *data, const size_t length,
 static void prv_reassembly_handle_complete_response(const uint8_t *data, const size_t length) {
   switch (prv_current_command_id(data)) {
     case CommandIDGetNotificationAttributes:
-      prv_handle_notification_attributes_response(data, length);
+      if (prv_is_reconcile_fetch_in_flight()) {
+        prv_handle_reconcile_attributes_response(data, length);
+      } else {
+        prv_handle_notification_attributes_response(data, length);
+      }
       return;
     default:
       // WTF;
@@ -904,6 +1158,45 @@ static void prv_get_notification_attributes(uint32_t uid) {
   }
 }
 
+static void prv_get_reconcile_attributes(uint32_t uid) {
+  uint8_t request[sizeof(GetNotificationAttributesMsg) + ARRAY_LENGTH(s_reconcile_attributes)];
+  *(GetNotificationAttributesMsg *)request = (GetNotificationAttributesMsg){
+    .command_id = CommandIDGetNotificationAttributes,
+    .notification_uid = uid,
+  };
+  // The date last, like in the full request, so the response's end can be detected
+  request[sizeof(GetNotificationAttributesMsg)] = NotificationAttributeIDAppIdentifier;
+  request[sizeof(GetNotificationAttributesMsg) + 1] = NotificationAttributeIDDate;
+
+  prv_set_state(ANCSClientStateRequestedNotification);
+  prv_op_timeout_start();
+  if (!prv_write_control_point_request((const CPDSMessage *)request, sizeof(request))) {
+    // Counts as a failed fetch, which cancels the catch-up
+    prv_reset_and_next();
+  }
+}
+
+static void prv_handle_reconcile_attributes_response(const uint8_t *data, size_t length) {
+  const uint32_t uid = ((const GetNotificationAttributesMsg *)data)->notification_uid;
+  data += sizeof(GetNotificationAttributesMsg);
+  length -= sizeof(GetNotificationAttributesMsg);
+
+  ANCSAttribute *attributes[ARRAY_LENGTH(s_reconcile_attributes)] = {};
+  bool error = false;
+  const bool complete =
+      ancs_util_get_attr_ptrs(data, length, s_reconcile_attributes,
+                              ARRAY_LENGTH(s_reconcile_attributes), attributes, &error);
+
+  ANCSReconcile *reconcile = s_ancs_client->reconcile;
+  if (reconcile && complete && !error) {
+    ancs_reconcile_entry_from_attributes(uid, attributes[ReconcileAttributeIndexAppID],
+                                         attributes[ReconcileAttributeIndexDate],
+                                         &reconcile->fetched);
+    reconcile->fetch_got_entry = true;
+  }
+  prv_reset_and_next();
+}
+
 static void prv_handle_notification_attributes_response(const uint8_t *data, size_t length) {
   // Skip past the header, don't need it (for now):
   data += sizeof(GetNotificationAttributesMsg);
@@ -966,6 +1259,7 @@ void ancs_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
     if (characteristic_id == ANCSCharacteristicData) {
       prv_ancs_is_alive_start_tracking();
       prv_start_temp_notification_connection_delay_timer();
+      prv_reconcile_start_collecting();
     }
   } else {
     PBL_LOG_ERR("Failed to subscribe charx: %u (error=%u)", characteristic_id, error);
@@ -1082,14 +1376,17 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
       // seconds after connecting
       if (s_just_connected && (nsnotification->event_flags & EventFlagPreExisting)) {
         PBL_LOG_DBG("Ignoring notification because we just connected and PreExisting");
+        prv_reconcile_handle_ns(nsnotification, true /* replayed */);
       } else {
         PBL_LOG_DBG("Added ANCS notification!");
+        prv_reconcile_handle_ns(nsnotification, false /* replayed */);
         prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       }
 
       break;
     case EventIDNotificationModified:
       PBL_LOG_DBG("Modified ANCS notification!");
+      prv_reconcile_handle_ns(nsnotification, false /* replayed */);
       prv_notif_queue_push_attr_request(nsnotification->uid, properties);
       break;
     case EventIDNotificationRemoved:
@@ -1150,6 +1447,8 @@ void ancs_handle_write_response(pbl_bt_characteristic_t characteristic,
     if (s_ancs_client->state == ANCSClientStateAliveCheck) {
       // We got a response so cancel the response wait timer and setup another check.
       prv_ancs_is_alive();
+    } else if (prv_is_reconcile_fetch_in_flight() && s_ancs_client->reconcile) {
+      s_ancs_client->reconcile->fetch_uid_gone = true;
     }
 
     // We asked for a non-existent notification, go to the next one
