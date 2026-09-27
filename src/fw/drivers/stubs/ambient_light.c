@@ -24,7 +24,7 @@ uint32_t ambient_light_get_light_level(void) {
 
 void command_als_read(void) {
   char buffer[16];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%"PRIu32"", ambient_light_get_light_level());
+  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRIu32 "", ambient_light_get_light_level());
 }
 
 uint32_t ambient_light_get_dark_threshold(void) {

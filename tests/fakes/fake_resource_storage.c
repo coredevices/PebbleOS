@@ -19,7 +19,7 @@ void resource_storage_clear(ResAppNum app_num) {
   return;
 }
 
-const SystemResourceBank * resource_storage_flash_get_unused_bank(void) {
+const SystemResourceBank *resource_storage_flash_get_unused_bank(void) {
   static const SystemResourceBank unused_bank = {
     .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
     .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END,

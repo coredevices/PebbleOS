@@ -1,20 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "bluetooth/gap_le_scan.h"
+#include "pbl/bluetooth/gap_le_scan.h"
 #include "kernel/pbl_malloc.h"
 #include "comm/bt_lock.h"
 #include "gap_le_scan.h"
 #include "kernel/events.h"
-#include "system/hexdump.h"
-#include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/circular_buffer.h"
-#include "pbl/util/likely.h"
-
-#include <pbl/btutil/bt_device.h>
-
-#include <string.h>
+#include "pbl/kernel/compiler.h"
 
 // -----------------------------------------------------------------------------
 // Static Variables -- MUST be protected with bt_lock/unlock!
@@ -46,14 +40,13 @@ bool gap_le_start_scan(void) {
     if (!s_is_scanning) {
       s_dropped_reports = 0;
 
-      success = bt_driver_start_le_scan(
-          true /* active_scan */, false /* use_white_list_filter */,
-          true /* filter_dups */, 10240, 10240);
+      success = pbl_bt_start_le_scan(true /* active_scan */, false /* use_white_list_filter */,
+                                     true /* filter_dups */, 10240, 10240);
 
       if (success) {
         // Allocate report buffers if advertising started successfully
         const size_t buffer_size = GAP_LE_SCAN_REPORTS_BUFFER_SIZE;
-        s_reports_buffer = (uint8_t *) kernel_malloc_check(buffer_size);
+        s_reports_buffer = (uint8_t *)kernel_malloc_check(buffer_size);
         circular_buffer_init(&s_circular_buffer, s_reports_buffer, buffer_size);
         s_is_scanning = true;
       }
@@ -69,8 +62,7 @@ bool gap_le_stop_scan(void) {
   bt_lock();
   {
     if (s_is_scanning) {
-
-      success = bt_driver_stop_le_scan();
+      success = pbl_bt_stop_le_scan();
       kernel_free(s_reports_buffer);
       s_reports_buffer = NULL;
       s_is_scanning = false;
@@ -92,9 +84,8 @@ bool gap_le_is_scanning(void) {
 //! Copies over the pending report to the circular buffer and free the pending
 //! "slot". In case there is no space left, the pending report will be dropped.
 //! and a counter will be incremented
-void bt_driver_cb_le_scan_handle_report(const GAPLERawAdReport *report_buffer, int length) {
-  const bool written = circular_buffer_write(
-      &s_circular_buffer, (uint8_t *)report_buffer, length);
+void pbl_bt_cb_le_scan_handle_report(const GAPLERawAdReport *report_buffer, int length) {
+  const bool written = circular_buffer_write(&s_circular_buffer, (uint8_t *)report_buffer, length);
 
   if (!written) {
     ++s_dropped_reports;
@@ -114,7 +105,7 @@ bool gap_le_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out) {
   uint16_t write_space = *size_in_out;
   bt_lock();
   {
-    if (UNLIKELY(!s_is_scanning)) {
+    if (PBL_UNLIKELY(!s_is_scanning)) {
       // Return, the buffers are deallocated by now already...
       *size_in_out = 0;
       bt_unlock();
@@ -131,13 +122,12 @@ bool gap_le_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out) {
     while (read_space && write_space >= sizeof(GAPLERawAdReport)) {
       // First copy the header. We know for sure this will fit into buffer,
       // because it was tested in the while() condition:
-      circular_buffer_copy(&s_circular_buffer,
-                           buffer, sizeof(GAPLERawAdReport));
-      const GAPLERawAdReport *report = (const GAPLERawAdReport *) buffer;
+      circular_buffer_copy(&s_circular_buffer, buffer, sizeof(GAPLERawAdReport));
+      const GAPLERawAdReport *report = (const GAPLERawAdReport *)buffer;
 
       // Now use the copied header to figure out how big the report actually is:
-      const uint32_t payload_len = report->payload.ad_data_length +
-                                   report->payload.scan_resp_data_length;
+      const uint32_t payload_len =
+          report->payload.ad_data_length + report->payload.scan_resp_data_length;
       const uint32_t report_len = sizeof(GAPLERawAdReport) + payload_len;
 
       // There should always be at least enough bytes to read in the circular
@@ -178,7 +168,6 @@ void gap_le_scan_init(void) {
   s_is_scanning = false;
   bt_unlock();
 }
-
 
 // -----------------------------------------------------------------------------
 void gap_le_scan_deinit(void) {

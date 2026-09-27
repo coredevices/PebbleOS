@@ -3,20 +3,20 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
 //! @internal
 //! Structure containing 3-axis magnetometer data
-typedef struct PACKED {
- //! magnetic field along the x axis
- int16_t x;
- //! magnetic field along the y axis
- int16_t y;
- //! magnetic field along the z axis
- int16_t z;
+typedef struct PBL_PACKED {
+  //! magnetic field along the x axis
+  int16_t x;
+  //! magnetic field along the y axis
+  int16_t y;
+  //! magnetic field along the z axis
+  int16_t z;
 } MagData;
 
 typedef enum {
@@ -50,4 +50,3 @@ void mag_release(void);
 MagReadStatus mag_read_data(MagData *data);
 
 bool mag_change_sample_rate(MagSampleRate rate);
-

@@ -22,16 +22,16 @@
 //! like saving user settings, caching data from the phone app, or counting high scores for
 //! Pebble watchapp games.
 //!
-//! In Pebble OS, storage is defined by a collection of fields that you can create, modify or delete.
-//! In the API, a field is specified as a key with a corresponding value.
+//! In Pebble OS, storage is defined by a collection of fields that you can create, modify or
+//! delete. In the API, a field is specified as a key with a corresponding value.
 //!
 //! Using the Storage API, every app is able to get its own persistent storage space. Each value
 //! in that space is associated with a uint32_t key.
 //!
 //! Storage supports saving integers, strings and byte arrays. The maximum size of byte arrays and
-//! strings is defined by PERSIST_DATA_MAX_LENGTH (currently set to 256 bytes). You call the function
-//! persist_exists(key), which returns a boolean indicating if the key exists or not.
-//! The Storage API enables your app to save its state, and when compared to using \ref AppMessage to
+//! strings is defined by PERSIST_DATA_MAX_LENGTH (currently set to 256 bytes). You call the
+//! function persist_exists(key), which returns a boolean indicating if the key exists or not. The
+//! Storage API enables your app to save its state, and when compared to using \ref AppMessage to
 //! retrieve values from the phone, it provides you with a much faster way to restore state.
 //! In addition, it draws less power from the battery.
 //!
@@ -135,9 +135,9 @@ int persist_write_string(const uint32_t key, const char *cstring);
 
 //! Deletes the value of a key from persistent storage.
 //! @param key The key of the field to delete from.
-//! @return S_TRUE if successful, E_DOES_NOT_EXIST if a value was not set, or another error value from \ref StatusCode.
+//! @return S_TRUE if successful, E_DOES_NOT_EXIST if a value was not set, or another error value
+//! from \ref StatusCode.
 status_t persist_delete(const uint32_t key);
 
 //!   @} // end addtogroup Storage
 //! @} // end addtogroup Foundation
-

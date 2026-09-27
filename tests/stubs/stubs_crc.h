@@ -4,7 +4,7 @@
 void crc_init(void) {
 }
 
-uint32_t crc_calculate_bytes(const void* data, size_t data_length) {
+uint32_t crc_calculate_bytes(const void *data, size_t data_length) {
   return 0;
 }
 

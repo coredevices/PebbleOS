@@ -5,5 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* number_field_app_get_info();
-
+const PebbleProcessMd *number_field_app_get_info();

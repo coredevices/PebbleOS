@@ -8,9 +8,7 @@
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/os/mutex.h"
 #include "process_management/app_install_manager.h"
-#include "pbl/services/app_cache.h"
 #include "pbl/services/blob_db/app_glance_db.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
@@ -89,9 +87,9 @@ static void prv_glance_event_put(const Uuid *app_uuid) {
   Uuid *app_uuid_copy = kernel_zalloc_check(sizeof(Uuid));
   *app_uuid_copy = *app_uuid;
 
-  PebbleEvent e = (PebbleEvent) {
+  PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_APP_GLANCE_EVENT,
-    .app_glance = (PebbleAppGlanceEvent) {
+    .app_glance = (PebbleAppGlanceEvent){
       .app_uuid = app_uuid_copy,
     },
   };
@@ -133,11 +131,10 @@ void app_glance_service_init_glance(AppGlance *glance) {
   if (!glance) {
     return;
   }
-  *glance = (AppGlance) {};
+  *glance = (AppGlance){};
 }
 
 void app_glance_service_init(void) {
-
   static EventServiceInfo s_blob_db_event_info = {
     .type = PEBBLE_BLOBDB_EVENT,
     .handler = prv_blob_db_event_handler,
@@ -167,7 +164,7 @@ bool app_glance_service_get_current_slice(const Uuid *app_uuid, AppGlanceSliceIn
 
   // Iterate over the slices to find the current slice (which might be NULL if there aren't any
   // slices or if all of the slices have expired)
-  FindCurrentSliceData find_current_slice_data = (FindCurrentSliceData) {
+  FindCurrentSliceData find_current_slice_data = (FindCurrentSliceData){
     .current_time = rtc_get_time(),
   };
   prv_slice_for_each(app_glance, prv_find_current_glance, &find_current_slice_data);

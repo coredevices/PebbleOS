@@ -12,7 +12,7 @@
 #include "util/time/time.h"
 
 typedef enum {
-  LayoutLayerAnchorTextDirectionUp, // for scrolling up, past mode
+  LayoutLayerAnchorTextDirectionUp,   // for scrolling up, past mode
   LayoutLayerAnchorTextDirectionDown, // for scrolling down, future mode
 } LayoutLayerAnchorTextDirection;
 
@@ -21,29 +21,29 @@ typedef enum {
 //! LayoutLayers depart from traditional Layers in a few meaningful way.
 //! 1) LayoutLayers are modulated by a "mode", which is the context in which the LayoutLayer
 //! is displayed. Examples of modes are the "card" mode which displays detailed pin info
-//! and the "minimzed" mode which is used to display a "toast" like mode of a pin.
+//! and the "minimized" mode which is used to display a "toast" like mode of a pin.
 //! 2) LayoutLayers expose three more generic APIs:
 //! \ref layout_get_size which returns the size of the
 //! content within the layout as well as a generic constructor/destructor:
 //!  \ref layout_create / \ref layout_destroy.
 //! 3) LayoutLayers are constructed from a set of Attributes which they are meant to display.
-//! 4) Sub-types of LayoutLayer are instanciated by summoning the correct type ID rather than by
+//! 4) Sub-types of LayoutLayer are instantiated by summoning the correct type ID rather than by
 //! calling a specialized constructor / destructor as per the Layer API.
 
 //! LayoutIds identify the type of a LayoutLayer. They are passed to the constructor to
 //! instantiate a specific sub-type of LayoutLayer. Simply stated, the LayoutLayer sub-type
 //! informs what kinds of attributes to expect.
 typedef enum {
-  LayoutIdUnknown = 0, //!< Useful for catching error - 0 is not used as an id.
-  LayoutIdGeneric, //!< Generic layout (probably only for testing)
-  LayoutIdCalendar, //!< Calendar Pins
-  LayoutIdReminder, //!< Generic Reminders
-  LayoutIdNotification, //!< Generic Notifications
+  LayoutIdUnknown = 0,      //!< Useful for catching error - 0 is not used as an id.
+  LayoutIdGeneric,          //!< Generic layout (probably only for testing)
+  LayoutIdCalendar,         //!< Calendar Pins
+  LayoutIdReminder,         //!< Generic Reminders
+  LayoutIdNotification,     //!< Generic Notifications
   LayoutIdCommNotification, //!< Communication Notification
-  LayoutIdWeather, //!< Weather Pins
-  LayoutIdSports, //!< Sports Pins
-  LayoutIdAlarm, //!< Alarm Pins
-  LayoutIdHealth, //!< Health Pins
+  LayoutIdWeather,          //!< Weather Pins
+  LayoutIdSports,           //!< Sports Pins
+  LayoutIdAlarm,            //!< Alarm Pins
+  LayoutIdHealth,           //!< Health Pins
   NumLayoutIds,
   LayoutIdTest, //!< Layout only for unit tests with no attribute requirements
 } LayoutId;
@@ -58,10 +58,10 @@ typedef struct {
 //! context in which the layout is displayed.
 typedef enum {
   LayoutLayerModeNone = 0,
-  LayoutLayerModePeek, //!< Overlay-style mode shown similar to a partially obstructing HUD
-  LayoutLayerModePinnedFat, //!< Menu-style mode in the Timeline app (fat, first item)
+  LayoutLayerModePeek,       //!< Overlay-style mode shown similar to a partially obstructing HUD
+  LayoutLayerModePinnedFat,  //!< Menu-style mode in the Timeline app (fat, first item)
   LayoutLayerModePinnedThin, //!< Menu-style mode in the Timeline app (thin, second item)
-  LayoutLayerModeCard, //!< Card mode, shows details of a TimelineItem
+  LayoutLayerModeCard,       //!< Card mode, shows details of a TimelineItem
   NumLayoutLayerModes,
 } LayoutLayerMode;
 
@@ -104,7 +104,7 @@ typedef void (*LayerLayerModeSetter)(struct LayoutLayer *layout, LayoutLayerMode
 typedef const LayoutColors *(*LayoutLayerColorsGetter)(const struct LayoutLayer *layout);
 #endif
 
-typedef void* (*LayoutLayerContextGetter)(struct LayoutLayer *layout);
+typedef void *(*LayoutLayerContextGetter)(struct LayoutLayer *layout);
 
 //! methods for the LayoutLayer type.
 typedef struct {
@@ -119,9 +119,9 @@ typedef struct {
 
 //! Data structure of a LayoutLayer.
 typedef struct LayoutLayer {
-  Layer layer; //!< The Layer underlying the LayoutLayer
-  LayoutLayerMode mode; //!< The mode the LayoutLayer was created with
-  AttributeList *attributes; //!< A pointer to the LayoutLayer's Attributes
+  Layer layer;                 //!< The Layer underlying the LayoutLayer
+  LayoutLayerMode mode;        //!< The mode the LayoutLayer was created with
+  AttributeList *attributes;   //!< A pointer to the LayoutLayer's Attributes
   const LayoutLayerImpl *impl; //!< The implementation (constructor, destructor, methods)
 } LayoutLayer;
 

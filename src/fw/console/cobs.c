@@ -6,10 +6,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
 
-void cobs_streaming_decode_start(CobsDecodeContext * restrict ctx,
-                                 void * restrict output_buffer,
+void cobs_streaming_decode_start(CobsDecodeContext *restrict ctx, void *restrict output_buffer,
                                  size_t length) {
   ctx->output = output_buffer;
   ctx->output_length = length;
@@ -18,23 +17,23 @@ void cobs_streaming_decode_start(CobsDecodeContext * restrict ctx,
   ctx->block_is_terminated = false;
 }
 
-bool cobs_streaming_decode(CobsDecodeContext * restrict ctx, char in) {
+bool cobs_streaming_decode(CobsDecodeContext *restrict ctx, char in) {
   if (ctx->output == NULL) {
     // Uninitialized context or decoding has already failed.
     return false;
   }
 
-  if (UNLIKELY(in == '\0')) {
+  if (PBL_UNLIKELY(in == '\0')) {
     // Zero byte is never allowed in a COBS stream.
     ctx->output = NULL;
     return false;
   }
 
-  if (UNLIKELY(ctx->payload_remaining == 0)) {
+  if (PBL_UNLIKELY(ctx->payload_remaining == 0)) {
     // Incoming byte is a code byte.
     ctx->payload_remaining = (uint8_t)in - 1;
-    if (ctx->decoded_length + ctx->payload_remaining +
-        (ctx->block_is_terminated? 1 : 0) > ctx->output_length) {
+    if (ctx->decoded_length + ctx->payload_remaining + (ctx->block_is_terminated ? 1 : 0) >
+        ctx->output_length) {
       // Full decoded output cannot fit into the buffer; fail fast.
       ctx->output = NULL;
       return false;
@@ -58,7 +57,7 @@ bool cobs_streaming_decode(CobsDecodeContext * restrict ctx, char in) {
   return true;
 }
 
-size_t cobs_streaming_decode_finish(CobsDecodeContext * restrict ctx) {
+size_t cobs_streaming_decode_finish(CobsDecodeContext *restrict ctx) {
   if (ctx->output == NULL || ctx->payload_remaining != 0) {
     return SIZE_MAX;
   }

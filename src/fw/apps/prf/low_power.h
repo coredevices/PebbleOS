@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* prf_low_power_app_get_info();
+const PebbleProcessMd *prf_low_power_app_get_info();

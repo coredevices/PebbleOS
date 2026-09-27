@@ -5,4 +5,4 @@
 
 #include <stdint.h>
 
-void packbits_unpack(const char* src, int src_length, uint8_t* dest);
+void packbits_unpack(const char *src, int src_length, uint8_t *dest);

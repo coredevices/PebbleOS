@@ -4,14 +4,19 @@
 #pragma once
 
 #include "applib/ui/vibes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-void WEAK vibes_long_pulse(void) {}
+void PBL_WEAK vibes_long_pulse(void) {
+}
 
-void WEAK vibes_short_pulse(void) {}
+void PBL_WEAK vibes_short_pulse(void) {
+}
 
-void WEAK vibes_double_pulse(void) {}
+void PBL_WEAK vibes_double_pulse(void) {
+}
 
-void WEAK vibes_cancel(void) {}
+void PBL_WEAK vibes_cancel(void) {
+}
 
-void WEAK vibes_enqueue_custom_pattern(VibePattern pattern) {}
+void PBL_WEAK vibes_enqueue_custom_pattern(VibePattern pattern) {
+}

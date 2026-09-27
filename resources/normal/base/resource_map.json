@@ -1224,7 +1224,7 @@
     {
       "type": "pdc",
       "name": "DAY_SEPARATOR_SMALL",
-      "file": "normal/base/images/Pebble_50x50_Day_seperator.svg"
+      "file": "normal/base/images/Pebble_50x50_Day_separator.svg"
     },
     {
       "type": "pdc",
@@ -2398,46 +2398,6 @@
       "type": "pdc",
       "name": "NOTIFICATION_TAPO_LARGE",
       "file": "../third_party/resources/iconography/brand-logos/Tapo_80px.svg"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_CA_ES",
-      "file": "normal/base/lang/ca_ES/tintin.po"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_DE_DE",
-      "file": "normal/base/lang/de_DE/tintin.po"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_ES_ES",
-      "file": "normal/base/lang/es_ES/tintin.po"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_FR_FR",
-      "file": "normal/base/lang/fr_FR/tintin.po"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_IT_IT",
-      "file": "normal/base/lang/it_IT/tintin.po"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_NL_NL",
-      "file": "normal/base/lang/nl_NL/tintin.po"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_PT_PT",
-      "file": "normal/base/lang/pt_PT/tintin.po"
-    },
-    {
-      "type": "mo",
-      "name": "STRINGS_PL_PL",
-      "file": "normal/base/lang/pl_PL/tintin.po"
     },
     {
       "type": "pdc",

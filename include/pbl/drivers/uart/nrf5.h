@@ -13,7 +13,6 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #include <nrfx_uarte.h>
-#include <nrfx_timer.h>
 #pragma GCC diagnostic pop
 
 typedef struct UARTState {
@@ -31,7 +30,7 @@ typedef struct UARTState {
   uint32_t rx_cons_pos;
   uint32_t tx_cache_buffer[8];
   uint32_t rx_cache_buffer[8];
-  } UARTDeviceState;
+} UARTDeviceState;
 
 typedef const struct UARTDevice {
   UARTDeviceState *state;

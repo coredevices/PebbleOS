@@ -9,7 +9,6 @@
 #include "applib/graphics/gdraw_command_image.h"
 #include "applib/graphics/gdraw_command_sequence.h"
 #include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
 
 struct KinoReel;
 typedef struct KinoReel KinoReel;
@@ -31,15 +30,15 @@ typedef GSize (*KinoReelSizeGetter)(KinoReel *reel);
 typedef size_t (*KinoReelDataSizeGetter)(const KinoReel *reel);
 typedef void (*KinoReelDrawProcessedFunc)(KinoReel *reel, GContext *ctx, GPoint offset,
                                           KinoReelProcessor *processor);
-typedef GDrawCommandImage* (*KinoReelGDrawCommandImageGetter)(KinoReel *reel);
-typedef GDrawCommandList* (*KinoReelGDrawCommandListGetter)(KinoReel *reel);
-typedef GDrawCommandSequence* (*KinoReelGDrawCommandSequenceGetter)(KinoReel *reel);
-typedef GBitmap* (*KinoReelGBitmapGetter)(KinoReel *reel);
-typedef GBitmapSequence* (*KinoReelGBitmapSequenceGetter)(KinoReel *reel);
+typedef GDrawCommandImage *(*KinoReelGDrawCommandImageGetter)(KinoReel *reel);
+typedef GDrawCommandList *(*KinoReelGDrawCommandListGetter)(KinoReel *reel);
+typedef GDrawCommandSequence *(*KinoReelGDrawCommandSequenceGetter)(KinoReel *reel);
+typedef GBitmap *(*KinoReelGBitmapGetter)(KinoReel *reel);
+typedef GBitmapSequence *(*KinoReelGBitmapSequenceGetter)(KinoReel *reel);
 
 struct KinoReelProcessor {
-  GBitmapProcessor * const bitmap_processor;
-  GDrawCommandProcessor * const draw_command_processor;
+  GBitmapProcessor *const bitmap_processor;
+  GDrawCommandProcessor *const draw_command_processor;
 };
 
 typedef enum {

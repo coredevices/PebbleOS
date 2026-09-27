@@ -17,14 +17,14 @@
 #define MESSAGE_KEY_DAY_WEATHER_PHRASE 6
 #define MESSAGE_KEY_DAY_LABEL          7
 // Hourly weather types: byte array of 24 values, one per hour 0-23.
-#define MESSAGE_KEY_HOURLY_WEATHER     8
+#define MESSAGE_KEY_HOURLY_WEATHER 8
 // Watch → JS: request an immediate data refresh.
-#define MESSAGE_KEY_REFRESH_REQUEST    9
+#define MESSAGE_KEY_REFRESH_REQUEST 9
 // Today's UV index (0-11), rain chance (%), and max wind speed (mph).
-#define MESSAGE_KEY_DAY_UV             10
-#define MESSAGE_KEY_DAY_PRECIP         11
+#define MESSAGE_KEY_DAY_UV     10
+#define MESSAGE_KEY_DAY_PRECIP 11
 // Hourly temperatures: byte array of 24 signed values (int8), one per hour 0-23.
-#define MESSAGE_KEY_HOURLY_TEMP        12
+#define MESSAGE_KEY_HOURLY_TEMP 12
 // Watch â†’ JS: select a preset city by index. JS â†’ Watch: request id echoed
 // in every response message so stale weather responses can be ignored.
 #define MESSAGE_KEY_CITY_SELECT_INDEX  13
@@ -33,19 +33,19 @@
 #define MESSAGE_KEY_CURRENT_LONGITUDE  16
 // (key 17 retired with the watch-side dictation add flow — locations are phone-owned)
 #define MESSAGE_KEY_CURRENT_LOCATION_REQUEST 18
-#define MESSAGE_KEY_DAY_WIND           19
+#define MESSAGE_KEY_DAY_WIND                 19
 
 typedef enum {
   WeatherType_PartlyCloudy = 0,
-  WeatherType_CloudyDay    = 1,
-  WeatherType_LightSnow    = 2,
-  WeatherType_LightRain    = 3,
-  WeatherType_HeavyRain    = 4,
-  WeatherType_HeavySnow    = 5,
-  WeatherType_Generic      = 6,
-  WeatherType_Sun          = 7,
-  WeatherType_RainAndSnow  = 8,
-  WeatherType_Unknown      = 255,
+  WeatherType_CloudyDay = 1,
+  WeatherType_LightSnow = 2,
+  WeatherType_LightRain = 3,
+  WeatherType_HeavyRain = 4,
+  WeatherType_HeavySnow = 5,
+  WeatherType_Generic = 6,
+  WeatherType_Sun = 7,
+  WeatherType_RainAndSnow = 8,
+  WeatherType_Unknown = 255,
 } WeatherType;
 
 typedef struct WeatherLocationForecast {
@@ -60,12 +60,13 @@ typedef struct WeatherLocationForecast {
                        // hourly UV block; falls back to today_uv until the phone sends it.
   int today_precip_mm; // rain chance percent, or -1 if unknown
   int today_wind_mph;
-  int today_wind_dir_deg;   // dominant direction 0..359, -1 unknown (v4.3)  // max wind speed in mph, or -1 if unknown
-  int today_feels;     // feels-like temp, UNKNOWN_TEMP if unknown (today only)
-  int today_wmo;       // WMO weather code, -1 if unknown (v4.2, today only)
-  int today_humidity;  // relative humidity %, -1 if unknown (v4.2, today only)
-  int today_visibility_m;   // minimum visibility in meters, -1 if unknown (v4.2, today only)
-  int today_precip_sum_mm;  // total precipitation in mm, -1 if unknown (v4.2, today only)
+  int today_wind_dir_deg; // dominant direction 0..359, -1 unknown (v4.3)  // max wind speed in mph,
+                          // or -1 if unknown
+  int today_feels;        // feels-like temp, UNKNOWN_TEMP if unknown (today only)
+  int today_wmo;          // WMO weather code, -1 if unknown (v4.2, today only)
+  int today_humidity;     // relative humidity %, -1 if unknown (v4.2, today only)
+  int today_visibility_m; // minimum visibility in meters, -1 if unknown (v4.2, today only)
+  int today_precip_sum_mm; // total precipitation in mm, -1 if unknown (v4.2, today only)
   WeatherType current_weather_type;
   char *current_weather_phrase;
   // CURRENT-HOUR conditions (the mainscreen header): derived from the

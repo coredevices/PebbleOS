@@ -178,7 +178,7 @@ class LogDehash:
             # Use the current time if one isn't provided by the system
             now = datetime.now().astimezone()
             output.append(
-                f"[{now.hour:02d}:{now.minute:02d}:{now.second:02d}.{now.microsecond / 1000:03d}]"
+                f"[{now.hour:02d}:{now.minute:02d}:{now.second:02d}.{now.microsecond // 1000:03d}]"
             )
 
         if "support" not in line_dict and line_dict.get("re_level"):

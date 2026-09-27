@@ -6,18 +6,16 @@
 #include "recognizer_manager.h"
 #include "recognizer_private.h"
 
-#include "applib/applib_malloc.auto.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/window.h"
 #include "pbl/services/touch/touch_event.h"
 #include "system/passert.h"
-#include "pbl/util/list.h"
 
 #include <stddef.h>
+#include "pbl/util/testing.h"
 
-T_STATIC bool prv_process_all_recognizers(RecognizerManager *manager,
-                                          RecognizerListIteratorCb iter_cb, void *context) {
-
+PBL_T_STATIC bool prv_process_all_recognizers(RecognizerManager *manager,
+                                              RecognizerListIteratorCb iter_cb, void *context) {
   // Process the task-global recognizers first (NULL list is a no-op)
   if (!recognizer_list_iterate(manager->global_list, iter_cb, context)) {
     return false;
@@ -49,7 +47,7 @@ typedef struct ProcessTouchCtx {
   const TouchEvent *touch_event;
 } ProcessTouchCtx;
 
-T_STATIC bool prv_dispatch_touch_event(Recognizer *recognizer, void *context) {
+PBL_T_STATIC bool prv_dispatch_touch_event(Recognizer *recognizer, void *context) {
   ProcessTouchCtx *ctx = context;
   // Skip recognizer if it has already failed, been cancelled or completed
   if (!recognizer_is_active(recognizer)) {
@@ -65,8 +63,7 @@ T_STATIC bool prv_dispatch_touch_event(Recognizer *recognizer, void *context) {
   recognizer_handle_touch_event(recognizer, ctx->touch_event);
   RecognizerState state = recognizer_get_state(recognizer);
   if (!ctx->triggered &&
-      ((state == RecognizerState_Completed) ||
-       (state == RecognizerState_Started) ||
+      ((state == RecognizerState_Completed) || (state == RecognizerState_Started) ||
        (state == RecognizerState_Updated))) {
     ctx->triggered = recognizer;
   }
@@ -88,10 +85,9 @@ typedef struct FailRecognizerCtx {
   bool recognizers_active;
 } FailRecognizerCtx;
 
-T_STATIC bool prv_fail_recognizer(Recognizer *recognizer, void *context) {
+PBL_T_STATIC bool prv_fail_recognizer(Recognizer *recognizer, void *context) {
   FailRecognizerCtx *ctx = context;
-  if ((recognizer == ctx->triggered) ||
-      !recognizer_is_active(recognizer)) {
+  if ((recognizer == ctx->triggered) || !recognizer_is_active(recognizer)) {
     return true;
   }
   if (ctx->triggered && !recognizer_should_evaluate_simultaneously(recognizer, ctx->triggered)) {
@@ -169,7 +165,7 @@ static bool prv_reset_recognizer(Recognizer *recognizer, void *context) {
 }
 
 static void prv_reset_layer_tree_recognizers(RecognizerManager *manager, Layer *top_layer,
-                                                Layer *bottom_layer) {
+                                             Layer *bottom_layer) {
   prv_process_layer_tree_recognizers(manager, top_layer, bottom_layer, prv_reset_recognizer);
 }
 
@@ -239,9 +235,7 @@ void recognizer_manager_handle_touch_event(const TouchEvent *touch_event, void *
 
 void recognizer_manager_init(RecognizerManager *manager) {
   PBL_ASSERTN(manager);
-  *manager = (RecognizerManager) {
-    .state = RecognizerManagerState_WaitForTouchdown
-  };
+  *manager = (RecognizerManager){.state = RecognizerManagerState_WaitForTouchdown};
 }
 
 void recognizer_manager_set_window(RecognizerManager *manager, Window *window) {

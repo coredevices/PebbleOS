@@ -14,28 +14,18 @@
 #include "applib/ui/recognizer/recognizer_list.h"
 #include "applib/ui/recognizer/recognizer_manager.h"
 #include "applib/ui/recognizer/touch_nav.h"
-#include "applib/ui/click.h"
 #include "applib/ui/click_internal.h"
-#include "applib/ui/window_private.h"
 #include "applib/ui/window_stack.h"
-#include "applib/touch_service.h"
 #include "applib/touch_service_private.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/drivers/button_id.h"
-#include "applib/unobstructed_area_service.h"
 #include "kernel/util/segment.h"
 #include "process_management/app_install_types.h"
 #include "process_management/app_manager.h"
 #include "process_management/process_loader.h"
-#include "process_management/process_manager.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/persist.h"
-#include "syscall/syscall_internal.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "tinymt32.h"
-
-#include <string.h>
 
 typedef struct {
   Heap heap;
@@ -77,7 +67,7 @@ typedef struct {
 
   PluginServiceState plugin_service_state;
 
-  void* user_data;
+  void *user_data;
 
   LogState log_state;
 
@@ -103,7 +93,7 @@ typedef struct {
 
   UnobstructedAreaState unobstructed_area_service_state;
 
-  Layer* layer_tree_stack[LAYER_TREE_STACK_SIZE];
+  Layer *layer_tree_stack[LAYER_TREE_STACK_SIZE];
 
   WakeupHandler wakeup_handler;
 
@@ -144,8 +134,7 @@ typedef struct {
 
 KERNEL_READONLY_DATA static AppState *s_app_state_ptr;
 
-bool app_state_configure(MemorySegment *app_state_ram,
-                         ProcessAppSDKType sdk_type,
+bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_type,
                          int16_t obstruction_origin_y) {
   s_app_state_ptr = memory_segment_split(app_state_ram, NULL, sizeof(AppState));
   if (!s_app_state_ptr) {
@@ -155,8 +144,7 @@ bool app_state_configure(MemorySegment *app_state_ram,
   s_app_state_ptr->sdk_type = sdk_type;
   s_app_state_ptr->initial_obstruction_origin_y = obstruction_origin_y;
 
-  if (GBITMAP_NATIVE_FORMAT != GBitmapFormat1Bit &&
-      sdk_type == ProcessAppSDKType_Legacy2x) {
+  if (GBITMAP_NATIVE_FORMAT != GBitmapFormat1Bit && sdk_type == ProcessAppSDKType_Legacy2x) {
     // When running legacy2 aplite apps on basalt we actually have some space
     // after AppState that we don't need, because legacy2 aplite apps need to
     // support running on the smaller platform anyway. We can use this space for
@@ -164,27 +152,25 @@ bool app_state_configure(MemorySegment *app_state_ram,
     // about 3.x aplite here because we don't support running 3.x aplite apps on
     // 3.x basalt platforms.
 
-    s_app_state_ptr->legacy2_framebuffer = memory_segment_split(
-        app_state_ram, NULL, sizeof(GBitmap));
+    s_app_state_ptr->legacy2_framebuffer =
+        memory_segment_split(app_state_ram, NULL, sizeof(GBitmap));
     if (!s_app_state_ptr->legacy2_framebuffer) {
       return false;
     }
 
-    uint16_t row_size = gbitmap_format_get_row_size_bytes(
-        LEGACY_2X_DISP_COLS, GBitmapFormat1Bit);
-    void *fb_data = memory_segment_split(app_state_ram, NULL,
-                                         row_size * LEGACY_2X_DISP_ROWS);
+    uint16_t row_size = gbitmap_format_get_row_size_bytes(LEGACY_2X_DISP_COLS, GBitmapFormat1Bit);
+    void *fb_data = memory_segment_split(app_state_ram, NULL, row_size * LEGACY_2X_DISP_ROWS);
     if (!fb_data) {
       return false;
     }
 
-    *s_app_state_ptr->legacy2_framebuffer = (GBitmap) {
+    *s_app_state_ptr->legacy2_framebuffer = (GBitmap){
       .addr = fb_data,
       .row_size_bytes = row_size,
       .info.is_bitmap_heap_allocated = false,
       .info.format = GBitmapFormat1Bit,
       .info.version = GBITMAP_VERSION_0,
-      .bounds = { { 0, 0 }, { LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS } }
+      .bounds = {{0, 0}, {LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS}}
     };
   }
   return true;
@@ -235,7 +221,7 @@ static const TouchNavOps s_app_touch_nav_ops = {
   .top_bridge_disabled = prv_app_touch_nav_top_bridge_disabled,
   .pop_top = prv_app_touch_nav_pop_top,
   .emit_button = prv_app_touch_nav_emit_button,
-  .idle_refresh = NULL,  // the app task has no idle-timeout refresh; that is the kernel's job
+  .idle_refresh = NULL, // the app task has no idle-timeout refresh; that is the kernel's job
 };
 
 // Twin subscription effects for the app task. The subscribe/reconcile state machine lives in
@@ -271,7 +257,7 @@ static const TouchNavTwinOps s_app_twin_ops = {
 };
 #endif
 
-NOINLINE void app_state_init(void) {
+PBL_NOINLINE void app_state_init(void) {
   s_app_state_ptr->rand_seed.mat1 = 0; // Uninitialized
 
   click_manager_init(&s_app_state_ptr->click_manager);
@@ -281,9 +267,10 @@ NOINLINE void app_state_init(void) {
   s_app_state_ptr->recognizer_manager.global_list = &s_app_state_ptr->recognizer_list;
   touch_nav_state_init(&s_app_state_ptr->touch_nav_state, &s_app_state_ptr->recognizer_manager,
                        &s_app_touch_nav_ops);
-  // Participate only when this is positively a system/built-in app (negative install id). Third-party
-  // app-DB apps (positive id) and unresolved/INSTALL_ID_INVALID (0) are inert by default and must opt
-  // in via app_touch_navigation_enable(), so the unsafe direction (unknown -> on) cannot happen.
+  // Participate only when this is positively a system/built-in app (negative install id).
+  // Third-party app-DB apps (positive id) and unresolved/INSTALL_ID_INVALID (0) are inert by
+  // default and must opt in via app_touch_navigation_enable(), so the unsafe direction (unknown ->
+  // on) cannot happen.
   s_app_state_ptr->touch_nav_participating =
       app_install_id_from_system(app_manager_get_current_app_id());
   s_app_state_ptr->touch_nav_opted_in = false;
@@ -303,11 +290,10 @@ NOINLINE void app_state_init(void) {
   framebuffer_clear(&s_app_state_ptr->framebuffer);
 
   const GContextInitializationMode init_mode =
-      (s_app_state_ptr->sdk_type == ProcessAppSDKType_System) ? GContextInitializationMode_System :
-                                                            GContextInitializationMode_App;
-  graphics_context_init(&s_app_state_ptr->graphics_context,
-                        &s_app_state_ptr->framebuffer, init_mode);
-
+      (s_app_state_ptr->sdk_type == ProcessAppSDKType_System) ? GContextInitializationMode_System
+                                                              : GContextInitializationMode_App;
+  graphics_context_init(&s_app_state_ptr->graphics_context, &s_app_state_ptr->framebuffer,
+                        init_mode);
 
   ble_init_app_state();
 
@@ -347,7 +333,7 @@ NOINLINE void app_state_init(void) {
   s_app_state_ptr->current_timeline_item_action_source = TimelineItemActionSourceModalNotification;
 }
 
-NOINLINE void app_state_deinit(void) {
+PBL_NOINLINE void app_state_deinit(void) {
   animation_private_state_deinit(&s_app_state_ptr->animation_state);
   health_service_state_deinit(app_state_get_health_service_state());
   unobstructed_area_service_deinit(app_state_get_unobstructed_area_state());
@@ -378,7 +364,7 @@ EventServiceInfo *app_state_get_app_outbox_subscription_info(void) {
   return &s_app_state_ptr->app_outbox_subscription_info;
 }
 
-AnimationState* app_state_get_animation_state() {
+AnimationState *app_state_get_animation_state() {
   return &s_app_state_ptr->animation_state;
 }
 
@@ -386,27 +372,27 @@ AppMessageCtx *app_state_get_app_message_ctx(void) {
   return &s_app_state_ptr->app_message_ctx;
 }
 
-BLEAppState* app_state_get_ble_app_state(void) {
+BLEAppState *app_state_get_ble_app_state(void) {
   return &s_app_state_ptr->ble_app_state;
 }
 
-ClickManager* app_state_get_click_manager() {
+ClickManager *app_state_get_click_manager() {
   return &s_app_state_ptr->click_manager;
 }
 
-WindowStack* app_state_get_window_stack() {
+WindowStack *app_state_get_window_stack() {
   return &s_app_state_ptr->window_stack;
 }
 
-FrameBuffer* app_state_get_framebuffer() {
+FrameBuffer *app_state_get_framebuffer() {
   return &s_app_state_ptr->framebuffer;
 }
 
-GContext* app_state_get_graphics_context() {
+GContext *app_state_get_graphics_context() {
   return &s_app_state_ptr->graphics_context;
 }
 
-EventServiceInfo* app_state_get_event_service_state(void) {
+EventServiceInfo *app_state_get_event_service_state(void) {
   return &s_app_state_ptr->event_service_state;
 }
 
@@ -414,11 +400,11 @@ void app_state_set_user_data(void *data) {
   s_app_state_ptr->user_data = data;
 }
 
-void* app_state_get_user_data(void) {
+void *app_state_get_user_data(void) {
   return s_app_state_ptr->user_data;
 }
 
-AccelServiceState* app_state_get_accel_state(void) {
+AccelServiceState *app_state_get_accel_state(void) {
   return &s_app_state_ptr->accel_state;
 }
 
@@ -470,7 +456,7 @@ bool *app_state_get_framebuffer_render_pending() {
   return &s_app_state_ptr->app_framebuffer_render_pending;
 }
 
-Layer** app_state_get_layer_tree_stack(void) {
+Layer **app_state_get_layer_tree_stack(void) {
   return s_app_state_ptr->layer_tree_stack;
 }
 
@@ -518,7 +504,7 @@ EventServiceInfo *app_state_get_speaker_finish_event_info(void) {
   return &s_app_state_ptr->speaker_finish_event_info;
 }
 
-GBitmap* app_state_legacy2_get_2bit_framebuffer(void) {
+GBitmap *app_state_legacy2_get_2bit_framebuffer(void) {
   PBL_ASSERTN(s_app_state_ptr->legacy2_framebuffer);
   return s_app_state_ptr->legacy2_framebuffer;
 }
@@ -573,7 +559,7 @@ uint8_t *app_state_get_js_runtime_context_buffer(void) {
 }
 
 void app_state_set_js_runtime_context(uint8_t *unaligned_buffer,
-                                         JsRuntimeContext *js_runtime_context) {
+                                      JsRuntimeContext *js_runtime_context) {
   s_app_state_ptr->js_runtime_context_buffer = unaligned_buffer;
   s_app_state_ptr->js_runtime_context = js_runtime_context;
 }

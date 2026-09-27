@@ -9,25 +9,23 @@
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
-#include "pbl/util/list.h"
-
+#include "pbl/kernel/compiler.h"
 
 //! App database entry for BlobDB. First pass is very basic. The list will expand as more features
 //! and requirements are implemented.
-typedef struct PACKED {
-  Uuid          uuid;
-  uint32_t      info_flags;
-  uint32_t      icon_resource_id;
-  Version       app_version;
-  Version       sdk_version;
-  GColor8       app_face_bg_color;
-  uint8_t       template_id;
-  char          name[APP_NAME_SIZE_BYTES];
+typedef struct PBL_PACKED {
+  Uuid uuid;
+  uint32_t info_flags;
+  uint32_t icon_resource_id;
+  Version app_version;
+  Version sdk_version;
+  GColor8 app_face_bg_color;
+  uint8_t template_id;
+  char name[APP_NAME_SIZE_BYTES];
 } AppDBEntry;
 
 //! Used in app_db_enumerate_entries
-typedef void(*AppDBEnumerateCb)(AppInstallId install_id, AppDBEntry *entry, void *data);
+typedef void (*AppDBEnumerateCb)(AppInstallId install_id, AppDBEntry *entry, void *data);
 
 /* AppDB Functions */
 

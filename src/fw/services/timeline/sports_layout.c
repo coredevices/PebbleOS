@@ -4,9 +4,8 @@
 #include "pbl/services/timeline/sports_layout.h"
 #include "pbl/services/timeline/timeline_layout.h"
 
-#include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
-#include "applib/graphics/text.h"
+#include "applib/preferred_content_size.h"
 #include "applib/ui/ui.h"
 #include <pbl/drivers/rtc.h>
 #include "font_resource_keys.auto.h"
@@ -14,7 +13,6 @@
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
-#include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 #include "util/time/time.h"
@@ -32,9 +30,22 @@ _Static_assert(AttributeIdScoreAway + 1 == AttributeIdScoreHome,
 //  Card Mode
 //////////////////////////////////////////
 
-#define CARD_MARGIN_TOP 3
+//! Small is the same as Medium and ExtraLarge the same as Large until they are designed
+#define SPORTS_SIZE_SWITCH(medium, large) \
+  PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault, (medium), (medium), (large), (large))
+
+// Round centers the first page vertically
+#define CARD_MARGIN_TOP    SPORTS_SIZE_SWITCH(3, PBL_IF_RECT_ELSE(10, 18))
 #define CARD_MARGIN_BOTTOM PBL_IF_RECT_ELSE(7, 0)
-#define CARD_LINE_DELTA -2
+#define CARD_LINE_DELTA    -2
+
+// Round has more room for the first page, so it goes one content size up
+#define CARD_TOP_CONTENT_SIZE                  \
+  SPORTS_SIZE_SWITCH(LayoutContentSizeDefault, \
+                     PBL_IF_RECT_ELSE(LayoutContentSize_Large, LayoutContentSize_ExtraLarge))
+
+#define TEAM_MARGIN_TOP    SPORTS_SIZE_SWITCH(3, 0)
+#define TEAM_MARGIN_BOTTOM SPORTS_SIZE_SWITCH(CARD_MARGIN_BOTTOM, 0)
 
 static GTextNode *prv_create_team_node(const LayoutLayer *layout, int team_offset);
 
@@ -61,36 +72,39 @@ static void prv_time_until_update(const LayoutLayer *layout_ref,
   prv_get_until_time(layout_ref, buffer, config->buffer_size, layout->info->timestamp);
 }
 
-static GTextNode *prv_subtitle_constructor(
-    const LayoutLayer *layout_ref, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_subtitle_constructor(const LayoutLayer *layout_ref,
+                                           const LayoutNodeConstructorConfig *config) {
   const SportsLayout *layout = (const SportsLayout *)layout_ref;
   static const LayoutNodeTextDynamicConfig s_time_until_config = {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_time_until_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .text.style = CARD_TOP_CONTENT_SIZE,
+    .text.style_font = TextStyleFont_Header,
     .text.fixed_lines = 1,
     .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = -1,
+    .text.extent.margin.h = SPORTS_SIZE_SWITCH(-1, 10),
   };
   static const LayoutNodeTextAttributeConfig s_term_config = {
     .attr_id = AttributeIdSubtitle,
-    .text.font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .text.style = CARD_TOP_CONTENT_SIZE,
+    .text.style_font = TextStyleFont_Header,
     .text.fixed_lines = 1,
     .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = 1,
+    .text.extent.margin.h = SPORTS_SIZE_SWITCH(1, PBL_IF_RECT_ELSE(14, 13)),
   };
   return layout_create_text_node_from_config(
-      layout_ref, (layout->state == GameStatePreGame ? &s_time_until_config.text.extent.node :
-                                                       &s_term_config.text.extent.node));
+      layout_ref, (layout->state == GameStatePreGame ? &s_time_until_config.text.extent.node
+                                                     : &s_term_config.text.extent.node));
 }
 
 static void prv_game_line_node_callback(GContext *ctx, const GRect *box,
                                         const GTextNodeDrawConfig *config, bool render,
                                         GSize *size_out, void *user_data) {
   const SportsLayout *layout = user_data;
-  const int16_t offset_top = (layout->state == GameStatePreGame) ? 11 : 9;
-  const int16_t offset_bottom = PBL_IF_RECT_ELSE(-2, 0);
+  const int16_t offset_top =
+      (layout->state == GameStatePreGame) ? 11 : SPORTS_SIZE_SWITCH(9, PBL_IF_RECT_ELSE(7, 8));
+  const int16_t offset_bottom = SPORTS_SIZE_SWITCH(PBL_IF_RECT_ELSE(-2, 0), 7);
   const int16_t min_y = box->origin.y + offset_top;
   const int16_t max_y = box->origin.y + box->size.h + offset_bottom;
   const int16_t offset_x = box->origin.x + box->size.w / 2;
@@ -99,8 +113,8 @@ static void prv_game_line_node_callback(GContext *ctx, const GRect *box,
   *size_out = GSizeZero;
 }
 
-static GTextNode *prv_game_constructor(
-    const LayoutLayer *layout_ref, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_game_constructor(const LayoutLayer *layout_ref,
+                                       const LayoutNodeConstructorConfig *config) {
   const SportsLayout *layout = (SportsLayout *)layout_ref;
   const int num_teams = 2;
   const int num_nodes = num_teams + 1; // two team nodes and one line node
@@ -115,8 +129,8 @@ static GTextNode *prv_game_constructor(
   return &game_node->container.node;
 }
 
-static GTextNode *prv_broadcaster_header_constructor(
-    const LayoutLayer *layout_ref, const LayoutNodeConstructorConfig *config) {
+static GTextNode *prv_broadcaster_header_constructor(const LayoutLayer *layout_ref,
+                                                     const LayoutNodeConstructorConfig *config) {
   const char *broadcaster =
       attribute_get_string(layout_ref->attributes, AttributeIdBroadcaster, "");
   if (IS_EMPTY_STRING(broadcaster)) {
@@ -126,11 +140,13 @@ static GTextNode *prv_broadcaster_header_constructor(
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("Broadcaster"),
     .use_i18n = true,
-    .text.font_key = FONT_KEY_GOTHIC_14,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_ParagraphHeader,
     .text.line_spacing_delta = CARD_LINE_DELTA,
+    .text.extent.margin.h = SPORTS_SIZE_SWITCH(0, 4),
   };
-  return layout_create_text_node_from_config(
-      layout_ref, &s_broadcaster_header_config.text.extent.node);
+  return layout_create_text_node_from_config(layout_ref,
+                                             &s_broadcaster_header_config.text.extent.node);
 }
 
 static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
@@ -148,29 +164,31 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeExtentConfig s_icon_config = {
     .node.type = LayoutNodeType_TimelineIcon,
-    .offset.y = PBL_IF_RECT_ELSE(5, 11), // icon offset y
-    .margin.h = PBL_IF_RECT_ELSE(5, 11), // icon margin height
+    .offset.y = SPORTS_SIZE_SWITCH(PBL_IF_RECT_ELSE(5, 11), 22), // icon offset y
+    .margin.h = SPORTS_SIZE_SWITCH(PBL_IF_RECT_ELSE(5, 11), 22), // icon margin height
   };
   static const LayoutNodeConfig s_page_break_config = {
     .type = LayoutNodeType_TimelinePageBreak,
   };
   static const LayoutNodeTextAttributeConfig s_body_config = {
     .attr_id = AttributeIdBody,
-    .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Body,
     .text.line_spacing_delta = CARD_LINE_DELTA,
-    .text.extent.margin.h = 14, // body margin height
+    .text.extent.margin.h = SPORTS_SIZE_SWITCH(14, 22), // body margin height
   };
-  static const LayoutNodeConstructorConfig  s_broadcaster_header_config = {
+  static const LayoutNodeConstructorConfig s_broadcaster_header_config = {
     .extent.node.type = LayoutNodeType_Constructor,
     .constructor = prv_broadcaster_header_constructor,
   };
   static const LayoutNodeTextAttributeConfig s_broadcaster_config = {
     .attr_id = AttributeIdBroadcaster,
-    .text.font_key = FONT_KEY_GOTHIC_24_BOLD,
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_Body,
     .text.line_spacing_delta = CARD_LINE_DELTA,
-    .text.extent.margin.h = 8, // broadcaster margin height
+    .text.extent.margin.h = SPORTS_SIZE_SWITCH(8, 17), // broadcaster margin height
   };
-  static const LayoutNodeConfig * const s_vertical_config_nodes[] = {
+  static const LayoutNodeConfig *const s_vertical_config_nodes[] = {
     &s_subtitle_config.extent.node,
     &s_game_config.extent.node,
     &s_icon_config.node,
@@ -198,14 +216,17 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout_ref, int team_o
   const bool is_pregame = (layout->state == GameStatePreGame);
   const bool has_record = (attribute_find(attributes, AttributeIdRecordAway + team_offset) != NULL);
 
-  const AttributeId large_attr = !is_pregame ? AttributeIdScoreAway :
-                                               AttributeIdNameAway;
-  const AttributeId small_attr = !is_pregame ? AttributeIdNameAway :
-                                 has_record  ? AttributeIdRecordAway :
-                                               AttributeIdRankAway;
-  const char *large_font = is_pregame ? FONT_KEY_GOTHIC_28_BOLD :
-                                        FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM;
-  const char *small_font = FONT_KEY_GOTHIC_18_BOLD;
+  const AttributeId large_attr = !is_pregame ? AttributeIdScoreAway : AttributeIdNameAway;
+  const AttributeId small_attr = !is_pregame  ? AttributeIdNameAway
+                                 : has_record ? AttributeIdRecordAway
+                                              : AttributeIdRankAway;
+  const char *large_font =
+      is_pregame ? SPORTS_SIZE_SWITCH(FONT_KEY_GOTHIC_28_BOLD, FONT_KEY_GOTHIC_36_BOLD)
+                 : SPORTS_SIZE_SWITCH(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+                                      PBL_IF_RECT_ELSE(FONT_KEY_LECO_32_BOLD_NUMBERS,
+                                                       FONT_KEY_LECO_36_BOLD_NUMBERS));
+  const char *small_font = SPORTS_SIZE_SWITCH(
+      FONT_KEY_GOTHIC_18_BOLD, PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_28_BOLD));
 
   const LayoutNodeTextAttributeConfig large_config = {
     .attr_id = large_attr + team_offset,
@@ -226,7 +247,7 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout_ref, int team_o
     .text.fixed_lines = 1, // small fixed lines
     .text.alignment = LayoutTextAlignment_Center,
   };
-  const LayoutNodeConfig * const vertical_config_nodes[] = {
+  const LayoutNodeConfig *const vertical_config_nodes[] = {
     &large_config.text.extent.node,
     &small_config.text.extent.node,
   };
@@ -234,13 +255,12 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout_ref, int team_o
     .container.extent.node.type = LayoutNodeType_Vertical,
     .container.num_nodes = ARRAY_LENGTH(vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&vertical_config_nodes,
-    .container.extent.offset.y = CARD_MARGIN_TOP,
-    .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
+    .container.extent.offset.y = TEAM_MARGIN_TOP,
+    .container.extent.margin.h = TEAM_MARGIN_TOP + TEAM_MARGIN_BOTTOM,
   };
 
-  GTextNodeVertical *vertical_node =
-      (GTextNodeVertical *)layout_create_text_node_from_config(
-          layout_ref, &vertical_config.container.extent.node);
+  GTextNodeVertical *vertical_node = (GTextNodeVertical *)layout_create_text_node_from_config(
+      layout_ref, &vertical_config.container.extent.node);
   const GRect *bounds = &((Layer *)layout)->bounds;
   const int16_t midwidth = bounds->size.w / 2 - TIMELINE_CARD_MARGIN;
   vertical_node->container.size.w = midwidth;
@@ -259,10 +279,11 @@ LayoutLayer *sports_layout_create(const LayoutLayerConfig *config) {
   SportsLayout *layout = task_zalloc_check(sizeof(SportsLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
-    .attributes = { AttributeIdTitle, AttributeIdSubtitle },
-    .default_colors = { { .argb = GColorBlackARGB8 },
-                        { .argb = GColorWhiteARGB8 },
-                        { .argb = GColorVividCeruleanARGB8 } },
+    .attributes = {AttributeIdTitle, AttributeIdSubtitle},
+    .default_colors =
+        {{.argb = GColorBlackARGB8},
+         {.argb = GColorWhiteARGB8},
+         {.argb = GColorVividCeruleanARGB8}},
     .default_icon = TIMELINE_RESOURCE_TIMELINE_SPORTS,
     .card_icon_align = GAlignCenter,
     .card_icon_size = TimelineResourceSizeSmall,

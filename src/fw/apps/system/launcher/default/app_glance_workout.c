@@ -7,20 +7,16 @@
 
 #include "applib/template_string.h"
 #include "apps/system/workout/utils.h"
-#include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/workout_service.h"
-#include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/string.h"
 #include "pbl/util/struct.h"
-
-#include <stdio.h>
 
 #define MAX_SUBTITLE_BUFFER_SIZE (16)
 
@@ -46,8 +42,8 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 
 static void prv_workout_glance_subtitle_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceWorkout *workout_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -163,7 +159,8 @@ static void prv_timer_callback(void *data) {
 
   // Set subtitle
   health_util_format_hours_minutes_seconds(workout_glance->subtitle,
-      sizeof(workout_glance->subtitle), workout_duration_s, true, workout_glance);
+                                           sizeof(workout_glance->subtitle), workout_duration_s,
+                                           true, workout_glance);
 
   i18n_free_all(workout_glance);
 
@@ -189,9 +186,8 @@ LauncherAppGlance *launcher_app_glance_workout_create(const AppMenuNode *node) {
   workout_glance->title[title_size - 1] = '\0';
 
   const bool should_consider_slices = false;
-  LauncherAppGlanceStructured *structured_glance =
-      launcher_app_glance_structured_create(&node->uuid, &s_workout_structured_glance_impl,
-                                            should_consider_slices, workout_glance);
+  LauncherAppGlanceStructured *structured_glance = launcher_app_glance_structured_create(
+      &node->uuid, &s_workout_structured_glance_impl, should_consider_slices, workout_glance);
   PBL_ASSERTN(structured_glance);
 
   // Call timer callback and register it to repeat

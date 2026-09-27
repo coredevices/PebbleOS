@@ -57,13 +57,12 @@ void test_time__serial_distance32(void) {
     cl_assert_equal_i(second, 0);
   }
 
-
   {
-    time_util_split_seconds_into_parts((3 * (24 * 60 * 60)) + (2 * (60 * 60)) + (4 * 60) + 5, &day, &hour, &minute, &second);
+    time_util_split_seconds_into_parts((3 * (24 * 60 * 60)) + (2 * (60 * 60)) + (4 * 60) + 5, &day,
+                                       &hour, &minute, &second);
     cl_assert_equal_i(day, 3);
     cl_assert_equal_i(hour, 2);
     cl_assert_equal_i(minute, 4);
     cl_assert_equal_i(second, 5);
   }
-
 }

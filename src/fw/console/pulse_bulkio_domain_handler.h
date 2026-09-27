@@ -8,7 +8,7 @@
 
 typedef enum {
 #define REGISTER_BULKIO_HANDLER(domain_type, domain_id, vtable) \
-  PulseBulkIODomainType_ ## domain_type = domain_id,
+  PulseBulkIODomainType_##domain_type = domain_id,
 #include "pulse_bulkio_handler.def"
 #undef REGISTER_BULKIO_HANDLER
 } PulseBulkIODomainType;

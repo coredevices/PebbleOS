@@ -42,16 +42,16 @@ GContext *graphics_context_get_current_context(void) {
 ////////////////////////////////////
 
 ResourceCallbackHandle resource_watch(ResAppNum app_num, uint32_t resource_id,
-                                      ResourceChangedCallback callback, void* data) {
-  return (ResourceCallbackHandle) { 0 };
+                                      ResourceChangedCallback callback, void *data) {
+  return (ResourceCallbackHandle){0};
 }
 
 // Helpers
 ////////////////////////////////////
 
-#define cl_assert_status_bar_height(status_bar) \
-  do { \
-    cl_assert(status_bar.layer.frame.size.h == STATUS_BAR_LAYER_HEIGHT); \
+#define cl_assert_status_bar_height(status_bar)                           \
+  do {                                                                    \
+    cl_assert(status_bar.layer.frame.size.h == STATUS_BAR_LAYER_HEIGHT);  \
     cl_assert(status_bar.layer.bounds.size.h == STATUS_BAR_LAYER_HEIGHT); \
   } while (0);
 
@@ -84,7 +84,7 @@ void test_status_bar_layer__modify_height(void) {
 void test_status_bar_layer__large_bold_height(void) {
   StatusBarLayer status_bar;
   status_bar_layer_init(&status_bar);
-  cl_assert_status_bar_height(status_bar);  // default height
+  cl_assert_status_bar_height(status_bar); // default height
 
   status_bar_layer_set_mode(&status_bar, StatusBarLayerModeClockLargeBold);
   cl_assert(status_bar.layer.frame.size.h == STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT);
@@ -102,6 +102,5 @@ void test_status_bar_layer__large_bold_height(void) {
   cl_assert(status_bar.layer.bounds.size.h == STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT);
 
   status_bar_layer_set_mode(&status_bar, StatusBarLayerModeClock);
-  cl_assert_status_bar_height(status_bar);  // back to default
+  cl_assert_status_bar_height(status_bar); // back to default
 }
-

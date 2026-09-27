@@ -4,12 +4,14 @@
 #pragma once
 
 #include "shell/normal/watchface.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-AppInstallId WEAK watchface_get_default_install_id(void) {
+AppInstallId PBL_WEAK watchface_get_default_install_id(void) {
   return 0;
 }
 
-void WEAK watchface_set_default_install_id(const AppInstallId app_id) {}
+void PBL_WEAK watchface_set_default_install_id(const AppInstallId app_id) {
+}
 
-void WEAK watchface_launch_default(const CompositorTransition *animation) {}
+void PBL_WEAK watchface_launch_default(const CompositorTransition *animation) {
+}

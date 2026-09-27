@@ -54,8 +54,9 @@ void kino_player_play_section(KinoPlayer *player, uint32_t from_elapsed_ms, uint
 //! @return a pointer to a ImmutableAnimation object that plays the KinoPlayer when scheduled
 ImmutableAnimation *kino_player_create_play_animation(KinoPlayer *player);
 
-ImmutableAnimation *kino_player_create_play_section_animation(
-    KinoPlayer *player, uint32_t from_elapsed_ms, uint32_t to_elapsed_ms);
+ImmutableAnimation *kino_player_create_play_section_animation(KinoPlayer *player,
+                                                              uint32_t from_elapsed_ms,
+                                                              uint32_t to_elapsed_ms);
 
 void kino_player_pause(KinoPlayer *player);
 

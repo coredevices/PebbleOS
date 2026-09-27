@@ -4,7 +4,6 @@
 #include "resource_storage.h"
 #include "resource_storage_impl.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include "pbl/services/filesystem/app_file.h"
@@ -12,8 +11,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/version.h"
-#include "pbl/util/math.h"
 #include "pbl/util/size.h"
+#include "pbl/util/testing.h"
 
 static const ResourceStoreImplementation *s_resource_store_impls[] = {
 #define RESOURCE_IMPL(impl) &impl,
@@ -78,7 +77,7 @@ static uint32_t prv_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes, uint3
   return entry->impl->get_crc(entry, num_bytes, entry_offset);
 }
 
-T_STATIC uint32_t prv_get_store_length(ResourceStoreEntry *entry, ResourceManifest *manifest) {
+PBL_T_STATIC uint32_t prv_get_store_length(ResourceStoreEntry *entry, ResourceManifest *manifest) {
   // Get the resource entry for the last entry
   ResTableEntry res_entry = {0};
   if (!prv_read_res_table_entry(&res_entry, entry, manifest->num_resources - 1)) {
@@ -116,15 +115,14 @@ static bool prv_validate_store(ResourceManifest *manifest, ResourceStoreEntry *e
 
   uint32_t calculated_crc = prv_get_crc(entry, num_bytes, 0);
   if (calculated_crc != manifest->version.crc) {
-    PBL_LOG_WRN("Resource crc mismatch for app %"PRIu32".", app_num);
-    PBL_LOG_WRN("0x%"PRIx32" != 0x%"PRIx32, calculated_crc, manifest->version.crc);
-
+    PBL_LOG_WRN("Resource crc mismatch for app %" PRIu32 ".", app_num);
+    PBL_LOG_WRN("0x%" PRIx32 " != 0x%" PRIx32, calculated_crc, manifest->version.crc);
 
     PBL_LOG_WRN("PBL-28517: If you see this please let Brad know");
 
     const uint32_t calculated_crc_again = prv_get_crc(entry, num_bytes, 0);
-    PBL_LOG_WRN("Num bytes is %"PRIu32, num_bytes);
-    PBL_LOG_WRN("Calculated the CRC again, got 0x%"PRIx32, calculated_crc_again);
+    PBL_LOG_WRN("Num bytes is %" PRIu32, num_bytes);
+    PBL_LOG_WRN("Calculated the CRC again, got 0x%" PRIx32, calculated_crc_again);
 
     return calculated_crc_again == manifest->version.crc;
   }
@@ -145,16 +143,16 @@ static void prv_get_store_entry(ResAppNum app_num, uint32_t resource_id,
       return;
     }
   }
-  PBL_LOG_WRN("get_store_entry(%"PRIu32",%"PRIu32") failed to find appropriate store",
-          app_num, resource_id);
+  PBL_LOG_WRN("get_store_entry(%" PRIu32 ",%" PRIu32 ") failed to find appropriate store", app_num,
+              resource_id);
   entry->impl = NULL;
 }
 
 static bool prv_validate_entry(ResourceStoreEntry *entry, ResourceManifest *manifest,
                                uint32_t resource_id) {
   if (entry->id > manifest->num_resources) {
-    PBL_LOG_DBG("Out of bound resource %"PRId32" vs %"PRId32,
-        entry->id, manifest->num_resources);
+    PBL_LOG_DBG("Out of bound resource %" PRId32 " vs %" PRId32, entry->id,
+                manifest->num_resources);
     return false;
   }
 
@@ -164,15 +162,17 @@ static bool prv_validate_entry(ResourceStoreEntry *entry, ResourceManifest *mani
   }
 
   if (entry->id != table_entry.resource_id) {
-    PBL_LOG_ERR("Resource table entry for %" PRIx32 " is corrupt!"
-      "(%"PRIx32" != %"PRIx32")", resource_id, entry->id, table_entry.resource_id);
+    PBL_LOG_ERR("Resource table entry for %" PRIx32
+                " is corrupt!"
+                "(%" PRIx32 " != %" PRIx32 ")",
+                resource_id, entry->id, table_entry.resource_id);
     return false;
   }
 
   const uint32_t resource_crc = prv_get_crc(entry, table_entry.length, table_entry.offset);
   if (resource_crc != table_entry.crc) {
-    PBL_LOG_DBG("Bad resource CRC for %" PRIx32 ", %" PRIx32
-            " vs %" PRIx32, resource_id, resource_crc, table_entry.crc);
+    PBL_LOG_DBG("Bad resource CRC for %" PRIx32 ", %" PRIx32 " vs %" PRIx32, resource_id,
+                resource_crc, table_entry.crc);
     return false;
   }
 
@@ -205,7 +205,7 @@ static bool prv_get_manifest_by_id(ResAppNum app_num, uint32_t resource_id,
 ResourceVersion resource_storage_get_version(ResAppNum app_num, uint32_t resource_id) {
   ResourceManifest manifest;
   if (!prv_get_manifest_by_id(app_num, resource_id, &manifest)) {
-    return (ResourceVersion) {0};
+    return (ResourceVersion){0};
   }
   return manifest.version;
 }
@@ -259,7 +259,7 @@ void resource_storage_get_resource(ResAppNum app_num, uint32_t resource_id,
 }
 
 ResourceCallbackHandle resource_watch(ResAppNum app_num, uint32_t resource_id,
-                                      ResourceChangedCallback callback, void* data) {
+                                      ResourceChangedCallback callback, void *data) {
   ResourceStoreEntry entry;
   prv_get_store_entry(app_num, resource_id, &entry);
   if (!entry.impl) {
@@ -280,7 +280,6 @@ void resource_storage_get_file_name(char *name, size_t buf_length, ResAppNum res
                      strlen(APP_RESOURCES_FILENAME_SUFFIX));
 }
 
-
 void resource_storage_generic_init(void) {
 }
 
@@ -293,10 +292,10 @@ bool resource_storage_generic_check(ResAppNum app_num, uint32_t resource_id,
   ResourceManifest manifest;
   prv_get_manifest(entry, &manifest);
   if (expected_version && !resource_version_matches(&manifest.version, expected_version)) {
-    PBL_LOG_DBG("expected version <%#010"PRIx32", %"PRIu32">,",
-            expected_version->crc, expected_version->timestamp);
-    PBL_LOG_DBG("got <%#010"PRIx32", %"PRIu32">,",
-            manifest.version.crc, manifest.version.timestamp);
+    PBL_LOG_DBG("expected version <%#010" PRIx32 ", %" PRIu32 ">,", expected_version->crc,
+                expected_version->timestamp);
+    PBL_LOG_DBG("got <%#010" PRIx32 ", %" PRIu32 ">,", manifest.version.crc,
+                manifest.version.timestamp);
     return false;
   }
 
@@ -308,8 +307,7 @@ bool resource_storage_generic_check(ResAppNum app_num, uint32_t resource_id,
   if (resource_id == 0) {
     return (prv_validate_store(&manifest, entry, app_num));
   } else if (!prv_validate_entry(entry, &manifest, resource_id)) {
-    PBL_LOG_WRN("Resource %"PRId32" check for App %"PRIu32" failed",
-            resource_id, app_num);
+    PBL_LOG_WRN("Resource %" PRId32 " check for App %" PRIu32 " failed", resource_id, app_num);
     return false;
   }
 
@@ -331,8 +329,7 @@ bool resource_storage_generic_get_resource(ResourceStoreEntry *entry) {
   if (!prv_read_res_table_entry(&table_entry, entry, entry->id - 1)) {
     return false;
   }
-  if ((table_entry.resource_id != entry->id) ||
-      (table_entry.length == 0)) {
+  if ((table_entry.resource_id != entry->id) || (table_entry.length == 0)) {
     // empty resource
     return false;
   }
@@ -357,9 +354,8 @@ uint32_t resource_storage_generic_write(ResourceStoreEntry *entry, uint32_t offs
 
 ResourceCallbackHandle resource_storage_generic_watch(ResourceStoreEntry *entry,
                                                       ResourceChangedCallback callback,
-                                                      void* data) {
-  PBL_LOG_WRN("resource_watch not supported for resource type %d.",
-          entry->impl->type);
+                                                      void *data) {
+  PBL_LOG_WRN("resource_watch not supported for resource type %d.", entry->impl->type);
   return NULL;
 }
 

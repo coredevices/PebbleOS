@@ -34,8 +34,7 @@ void activity_insights_push_activity_session(time_t start_utc, uint32_t elapsed_
 }
 
 void activity_insights_push_activity_session_notification(time_t notif_time,
-                                                          ActivitySession *session,
-                                                          int32_t avg_hr,
+                                                          ActivitySession *session, int32_t avg_hr,
                                                           int32_t *hr_zone_time_s) {
   return;
 }

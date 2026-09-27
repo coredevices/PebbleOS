@@ -3,13 +3,10 @@
 
 #pragma once
 
+#include "pbl/kernel/sem.h"
 #include <pbl/drivers/rtc.h>
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 
-#include "freertos_types.h"
-#include "portmacro.h"
-
-#include <stdbool.h>
 #include <stdint.h>
 
 typedef enum I2CTransferEvent {
@@ -61,18 +58,18 @@ typedef struct I2CBusState {
   int transfer_nack_count;
   RtcTicks transfer_start_ticks;
   int user_count;
-  SemaphoreHandle_t event_semaphore;
-  PebbleMutex *bus_mutex;
+  struct pbl_sem event_semaphore;
+  struct pbl_mutex bus_mutex;
 } I2CBusState;
 
 struct I2CBus {
   I2CBusState *const state;
   const struct I2CBusHal *const hal;
 #ifdef CONFIG_SOC_NRF52
-  AfConfig scl_gpio;  ///< Alternate Function configuration for SCL pin
-  AfConfig sda_gpio;  ///< Alternate Function configuration for SDA pin
+  AfConfig scl_gpio; ///< Alternate Function configuration for SCL pin
+  AfConfig sda_gpio; ///< Alternate Function configuration for SDA pin
 #endif
-  const char *name;  //! Device ID for logging purposes
+  const char *name; //! Device ID for logging purposes
 };
 
 struct I2CSlavePort {
@@ -84,4 +81,4 @@ struct I2CSlavePort {
 void i2c_init(I2CBus *bus);
 
 //! Transfer event handler implemented in i2c.c and called by HAL implementation
-portBASE_TYPE i2c_handle_transfer_event(I2CBus *device, I2CTransferEvent event);
+void i2c_handle_transfer_event(I2CBus *device, I2CTransferEvent event);

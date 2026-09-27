@@ -32,7 +32,7 @@ void test_layer__cleanup(void) {
 }
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
-  return (GDrawState) { 0 };
+  return (GDrawState){0};
 }
 
 bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
@@ -45,24 +45,32 @@ void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
 void window_schedule_render(struct Window *window) {
 }
 
-void recognizer_destroy(Recognizer *recognizer) {}
+void recognizer_destroy(Recognizer *recognizer) {
+}
 
-void recognizer_add_to_list(Recognizer *recognizer, RecognizerList *list) {}
+void recognizer_add_to_list(Recognizer *recognizer, RecognizerList *list) {
+}
 
-void recognizer_remove_from_list(Recognizer *recognizer, RecognizerList *list) {}
+void recognizer_remove_from_list(Recognizer *recognizer, RecognizerList *list) {
+}
 
-RecognizerManager *window_get_recognizer_manager(Window *window) { return NULL; }
+RecognizerManager *window_get_recognizer_manager(Window *window) {
+  return NULL;
+}
 
-void recognizer_manager_cancel_and_reset(RecognizerManager *manager) {}
+void recognizer_manager_cancel_and_reset(RecognizerManager *manager) {
+}
 
 bool recognizer_list_iterate(RecognizerList *list, RecognizerListIteratorCb iter_cb,
                              void *context) {
   return false;
 }
 
-void recognizer_manager_register_recognizer(RecognizerManager *manager, Recognizer *recognizer) {}
+void recognizer_manager_register_recognizer(RecognizerManager *manager, Recognizer *recognizer) {
+}
 
-void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recognizer *recognizer) {}
+void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recognizer *recognizer) {
+}
 // Tests
 ////////////////////////////////////
 
@@ -253,15 +261,16 @@ void test_layer__traverse(void) {
   stack[0] = a;
 
   // go to child if possible
-  Layer *actual = __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack,
-      true);
+  Layer *actual =
+      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
   cl_assert_equal_p(aa, actual);
   cl_assert_equal_i(1, current_stack);
   cl_assert_equal_p(a, stack[0]);
   cl_assert_equal_p(aa, stack[1]);
 
   // go to child if possible
-  actual = __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+  actual =
+      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
   cl_assert_equal_p(aaa, actual);
   cl_assert_equal_i(2, current_stack);
   cl_assert_equal_p(a, stack[0]);
@@ -269,7 +278,8 @@ void test_layer__traverse(void) {
   cl_assert_equal_p(aaa, stack[2]);
 
   // go to child if possible
-  actual = __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+  actual =
+      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
   cl_assert_equal_p(aaaa, actual);
   cl_assert_equal_i(3, current_stack);
   cl_assert_equal_p(a, stack[0]);
@@ -278,31 +288,34 @@ void test_layer__traverse(void) {
   cl_assert_equal_p(aaaa, stack[3]);
 
   // go back two levels and then to sibling
-  actual = __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+  actual =
+      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
   cl_assert_equal_p(ab, actual);
   cl_assert_equal_i(1, current_stack);
   cl_assert_equal_p(a, stack[0]);
   cl_assert_equal_p(ab, stack[1]);
 
   // go back one level and then to sibling
-  actual = __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+  actual =
+      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
   cl_assert_equal_p(b, actual);
   cl_assert_equal_i(0, current_stack);
   cl_assert_equal_p(b, stack[0]);
 
   // no more siblings on root level
-  actual = __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+  actual =
+      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
   cl_assert_equal_p(NULL, actual);
   cl_assert_equal_i(0, current_stack);
 
   // do not descend
   stack[0] = a;
   current_stack = 0;
-  actual = __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, false);
+  actual =
+      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, false);
   cl_assert_equal_p(b, actual);
   cl_assert_equal_i(0, current_stack);
   cl_assert_equal_p(b, stack[0]);
-
 
   // test limited stack size (go to sibling instead of child)
   stack[0] = a;

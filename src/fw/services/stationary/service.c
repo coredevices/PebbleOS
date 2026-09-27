@@ -4,19 +4,13 @@
 #include "pbl/services/stationary.h"
 
 #include "applib/accel_service_private.h"
-#include "applib/battery_state_service.h"
-#include "applib/ui/dialogs/dialog_private.h"
-#include "applib/ui/dialogs/simple_dialog.h"
-#include "comm/bt_lock.h"
 #include <pbl/drivers/battery.h>
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/accel_manager.h"
 #include "pbl/services/analytics/analytics.h"
-#include "pbl/services/i18n/i18n.h"
 #include "pbl/services/regular_timer.h"
-#include "pbl/services/system_task.h"
 #include "pbl/services/runlevel.h"
 #include "shell/prefs.h"
 #include <pbl/logging/logging.h>
@@ -27,11 +21,11 @@
 
 PBL_LOG_MODULE_DEFINE(service_stationary, CONFIG_SERVICE_STATIONARY_LOG_LEVEL);
 
-#define STATIONARY_PEEKING_TIME_MINS 5
+#define STATIONARY_PEEKING_TIME_MINS              5
 #define STATIONARY_WAIT_BEFORE_ENGAGING_TIME_MINS 30
-#define STATIONARY_ENABLED_DIALOG_TIMEOUT_MS 1800000
+#define STATIONARY_ENABLED_DIALOG_TIMEOUT_MS      1800000
 #define STATIONARY_WELCOME_BACK_DIALOG_TIMEOUT_MS 2000
-#define ACCEL_MAX_IDLE_DELTA 50
+#define ACCEL_MAX_IDLE_DELTA                      50
 
 #define DEBUG_STATIONARY 0
 
@@ -100,7 +94,7 @@ static void prv_update_stationary_enabled(void *data) {
 }
 
 void stationary_handle_battery_connection_change_event(void) {
-  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary mode battery state change event received");
+  PBL_LOG_DBG("Stationary mode battery state change event received");
   if (battery_is_usb_connected()) {
   } else {
   }
@@ -121,7 +115,7 @@ static void prv_button_down_handler(PebbleEvent *event, void *data) {
 static void prv_watch_is_motionless(void) {
   // Check if we should enable stationary mode and disabled unneeded features
   if (s_stationary_count_down > 0) {
-    PBL_LOG_D_DBG(DEBUG_STATIONARY, "Countdown to stationary: %d", s_stationary_count_down);
+    PBL_LOG_DBG("Countdown to stationary: %d", s_stationary_count_down);
     s_stationary_count_down--;
   } else {
     prv_handle_action(StationaryActionGoToSleep);
@@ -143,7 +137,7 @@ static void prv_stationary_check_launcher_task_cb(void *unused_data) {
   }
 }
 
-//! Called every minute to determine whether any motion has occured since the last time
+//! Called every minute to determine whether any motion has occurred since the last time
 //! the call was made. The current position is updated at this time
 static void prv_stationary_check_timer_cb(void *unused_data) {
   //! All stationary events need to be handled by kernel main
@@ -329,8 +323,7 @@ static void prv_handle_action(StationaryAction action) {
   // we need to be on kernel main so that we subscribe to event services
   // for kernel main
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
-  PBL_LOG_D_DBG(DEBUG_STATIONARY, "Stationary: state %d action %d",
-            s_current_state, action);
+  PBL_LOG_DBG("Stationary: state %d action %d", s_current_state, action);
 
   static StationaryActionHandler const prv_action_jump_table[] = {
     [StationaryStateAwake] = prv_handle_awake_action,
@@ -344,12 +337,10 @@ static void prv_handle_action(StationaryAction action) {
 
 static void prv_setup_callback_info(void) {
   //! Timer callback to check whether the watch is stationary every minute
-  s_accel_stationary_timer_info = (RegularTimerInfo) {
-    .cb = prv_stationary_check_timer_cb
-  };
+  s_accel_stationary_timer_info = (RegularTimerInfo){.cb = prv_stationary_check_timer_cb};
 
   //! Button press events
-  s_button_event_info = (EventServiceInfo) {
+  s_button_event_info = (EventServiceInfo){
     .type = PEBBLE_BUTTON_DOWN_EVENT,
     .handler = prv_button_down_handler,
   };

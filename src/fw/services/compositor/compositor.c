@@ -10,12 +10,10 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/animation_private.h"
-#include <pbl/drivers/display/display.h>
 #include "kernel/event_loop.h"
 #include "kernel/kernel_applib_state.h"
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "pbl/mcu/cache.h"
 #include "popups/timeline/peek.h"
 #include "process_management/app_manager.h"
 #include "process_management/process_manager.h"
@@ -24,8 +22,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/profiler.h"
-#include "pbl/util/size.h"
 #include "pbl/util/math.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
@@ -80,6 +78,8 @@ static DeferredRender s_deferred_render;
 static CompositorTransitionState s_animation_state;
 
 static bool s_framebuffer_frozen;
+static CompositorFrozenCallback s_frozen_callback;
+static void *s_frozen_callback_data;
 
 //! Animation .update function for the AnimationImplementation we use to drive our transitions.
 //! Wraps the .update function of the current CompositorTransition.
@@ -96,23 +96,21 @@ void compositor_init(void) {
 
   s_state = CompositorState_App;
 
-  s_deferred_render = (DeferredRender) {
-    .animation.pending = false,
-    .app.pending = false
-  };
+  s_deferred_render = (DeferredRender){.animation.pending = false, .app.pending = false};
 
-  s_animation_state = (CompositorTransitionState) { 0 };
+  s_animation_state = (CompositorTransitionState){0};
 
   s_framebuffer_frozen = false;
+  s_frozen_callback = NULL;
+  s_frozen_callback_data = NULL;
 }
 
 // Helper functions to make implementing transitions easier
 ///////////////////////////////////////////////////////////
 
-void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y,
-                                              Fixed_S16_3 x_range_begin, Fixed_S16_3 x_range_end,
-                                              Fixed_S16_3 delta_begin, Fixed_S16_3 delta_end,
-                                              void *user_data) {
+void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y, Fixed_S16_3 x_range_begin,
+                                              Fixed_S16_3 x_range_end, Fixed_S16_3 delta_begin,
+                                              Fixed_S16_3 delta_end, void *user_data) {
   const GPoint *offset = user_data ?: &GPointZero; // User data has left the building
   GBitmap app_framebuffer = compositor_get_app_framebuffer_as_bitmap();
   const int16_t fb_width = app_framebuffer.bounds.size.w;
@@ -122,12 +120,9 @@ void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y,
   const int16_t clipped_y = CLIP(y - offset->y, 0, fb_height);
   const int16_t x2 = CLIP(x_range_end.integer - offset->x, 0, fb_width);
 
-  compositor_scaled_app_fb_copy(
-    GRect(x1, clipped_y, x2 - x1, 1),
-    true /* copy_relative_to_origin */
+  compositor_scaled_app_fb_copy(GRect(x1, clipped_y, x2 - x1, 1), true /* copy_relative_to_origin */
   );
 }
-
 
 void compositor_set_modal_transition_offset(GPoint modal_offset) {
   s_animation_state.modal_offset = modal_offset;
@@ -142,12 +137,12 @@ void compositor_render_app(void) {
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
 
-
   // Fill entire framebuffer with black first to avoid artifacts
   GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
   memset(dest_bitmap.addr, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
 
-  compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */);
+  compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS),
+                                false /* copy_relative_to_origin */);
 
   if (s_state == CompositorState_AppAndModal) {
     compositor_render_modal();
@@ -176,7 +171,16 @@ void compositor_render_modal(void) {
 // Compositor implementation
 ///////////////////////////////////////////////////////////
 
-T_STATIC void prv_handle_display_update_complete(void) {
+static void prv_notify_frozen(void) {
+  if (!s_frozen_callback || compositor_display_update_in_progress()) {
+    return;
+  }
+  CompositorFrozenCallback callback = s_frozen_callback;
+  s_frozen_callback = NULL;
+  callback(s_frozen_callback_data);
+}
+
+PBL_T_STATIC void prv_handle_display_update_complete(void) {
   if (s_deferred_render.transition_complete.pending) {
     s_deferred_render.transition_complete.pending = false;
     prv_finish_transition();
@@ -196,6 +200,7 @@ T_STATIC void prv_handle_display_update_complete(void) {
     s_deferred_render.app.pending = false;
     compositor_app_render_ready();
   }
+  prv_notify_frozen();
 }
 
 static void prv_compositor_flush(void) {
@@ -247,8 +252,9 @@ void compositor_app_render_ready(void) {
     } else {
       // No animation was used, immediately say that the app is now fully focused.
       const ModalProperty properties = modal_manager_get_properties();
-      s_state = ((properties & ModalProperty_Exists) && (properties & ModalProperty_Transparent)) ?
-          CompositorState_AppAndModal : CompositorState_App;
+      s_state = ((properties & ModalProperty_Exists) && (properties & ModalProperty_Transparent))
+                    ? CompositorState_AppAndModal
+                    : CompositorState_App;
       prv_send_did_focus_event(true);
     }
   }
@@ -344,8 +350,8 @@ static void prv_animation_update(Animation *animation,
 static void prv_finish_transition(void) {
   const ModalProperty properties = modal_manager_get_properties();
   if (properties & ModalProperty_Exists) {
-    s_state = (properties & ModalProperty_Transparent) ? CompositorState_AppAndModal :
-                                                         CompositorState_Modal;
+    s_state = (properties & ModalProperty_Transparent) ? CompositorState_AppAndModal
+                                                       : CompositorState_Modal;
     compositor_modal_render_ready();
 
     // Force the app framebuffer to be released. We hold it during transitions to keep the app
@@ -365,7 +371,7 @@ static void prv_animation_teardown(Animation *animation) {
   if (s_animation_state.impl->teardown) {
     s_animation_state.impl->teardown(animation);
   }
-  s_animation_state = (CompositorTransitionState) { 0 };
+  s_animation_state = (CompositorTransitionState){0};
 
   s_deferred_render.animation.pending = false;
   if (!prv_should_render()) {
@@ -378,11 +384,10 @@ static void prv_animation_teardown(Animation *animation) {
 
 void compositor_transition(const CompositorTransition *compositor_animation) {
   if (s_animation_state.animation != NULL) {
-    PBL_LOG_DBG("Animation <%u> in progress, cancelling",
-            (int) s_animation_state.animation);
+    PBL_LOG_DBG("Animation <%u> in progress, cancelling", (int)s_animation_state.animation);
 
     animation_destroy(s_animation_state.animation);
-    s_animation_state = (CompositorTransitionState) { 0 };
+    s_animation_state = (CompositorTransitionState){0};
 
     s_deferred_render.animation.pending = false;
     s_deferred_render.transition_complete.pending = false;
@@ -402,10 +407,8 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
   if (compositor_animation) {
     // Set up our animation state and schedule it
 
-    s_animation_state = (CompositorTransitionState) {
-      .animation = animation_create(),
-      .impl = compositor_animation
-    };
+    s_animation_state =
+        (CompositorTransitionState){.animation = animation_create(), .impl = compositor_animation};
 
     static const AnimationImplementation s_compositor_animation_impl = {
       .update = prv_animation_update,
@@ -431,7 +434,7 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
     // Now wait for the ready event.
     s_state = CompositorState_AppTransitionPending;
 
-  } else if (is_modal_existing  && !is_modal_transparent) {
+  } else if (is_modal_existing && !is_modal_transparent) {
     // Modal to Modal or App to Modal
 
     // We can start animating immediately if we're going to a modal window. This is because
@@ -484,8 +487,16 @@ void compositor_transition_cancel(void) {
   }
 }
 
-void compositor_freeze(void) {
+static void prv_compositor_freeze_cb(void *ignored) {
   s_framebuffer_frozen = true;
+  prv_notify_frozen();
+}
+
+void compositor_freeze(CompositorFrozenCallback callback, void *data) {
+  s_frozen_callback = callback;
+  s_frozen_callback_data = data;
+
+  launcher_task_add_callback(prv_compositor_freeze_cb, NULL);
 }
 
 static void prv_compositor_unfreeze_cb(void *ignored) {
@@ -507,13 +518,12 @@ static bool prv_app_framebuffer_matches_display(void) {
 
 uint16_t prv_scale_coordinate(const uint32_t scale_factor, uint16_t val) {
   const uint32_t val_fixed = (uint32_t)val * scale_factor;
-  return val_fixed >> 16;  // Get integer part
+  return val_fixed >> 16; // Get integer part
 }
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED && !defined(CONFIG_RECOVERY_FW)
 static TimelinePeekUnsupportedFaceMode prv_get_unsupported_face_mode_for_timeline_peek(void) {
-  const TimelinePeekUnsupportedFaceMode mode =
-      timeline_peek_prefs_get_unsupported_face_mode();
+  const TimelinePeekUnsupportedFaceMode mode = timeline_peek_prefs_get_unsupported_face_mode();
   const PebbleProcessMd *app_md = app_manager_get_current_app_md();
   if (mode == TimelinePeekUnsupportedFaceMode_None || !app_md ||
       app_md->process_type != ProcessTypeWatchface) {
@@ -527,8 +537,9 @@ static TimelinePeekUnsupportedFaceMode prv_get_unsupported_face_mode_for_timelin
   }
 
   const int16_t obstruction_y = timeline_peek_get_origin_y();
-  return ((obstruction_y > 0) && (obstruction_y < DISP_ROWS)) ?
-      mode : TimelinePeekUnsupportedFaceMode_None;
+  return ((obstruction_y > 0) && (obstruction_y < DISP_ROWS))
+             ? mode
+             : TimelinePeekUnsupportedFaceMode_None;
 }
 #endif
 
@@ -571,16 +582,16 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   const int16_t disp_height = dst_bitmap.bounds.size.h;
   // Check if we should use scaling mode for legacy apps
   const LegacyAppRenderMode render_mode = shell_prefs_get_legacy_app_render_mode();
-  const bool should_scale_app =
-      (render_mode >= LegacyAppRenderMode_ScalingNearest) || squish_watchface_for_peek ||
-      (shift_watchface_for_peek && prv_app_framebuffer_matches_display());
+  const bool should_scale_app = (render_mode >= LegacyAppRenderMode_ScalingNearest) ||
+                                squish_watchface_for_peek ||
+                                (shift_watchface_for_peek && prv_app_framebuffer_matches_display());
   if (should_scale_app) {
     const bool bilinear = (render_mode == LegacyAppRenderMode_ScalingBilinear);
     const bool shift_scaled_watchface_for_peek =
         shift_watchface_for_peek && !squish_watchface_for_peek;
     const GRect scale_to = squish_watchface_for_peek
-        ? GRect(0, 0, disp_width, timeline_peek_get_origin_y())
-        : GRect(0, 0, disp_width, disp_height);
+                               ? GRect(0, 0, disp_width, timeline_peek_get_origin_y())
+                               : GRect(0, 0, disp_width, disp_height);
 
     if (shift_scaled_watchface_for_peek) {
       int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
@@ -588,9 +599,11 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       for (int16_t y = first_row; y < last_row; y++) {
         GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
         const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
-        const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w,
-                                  dst_row_info.max_x + 1);
-        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+        const int16_t end_x =
+            MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
+        if (end_x > start_x) {
+          memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+        }
       }
     }
 
@@ -602,12 +615,11 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
 
     for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
       const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
-      if (dst_y_offset < 0 || dst_y_offset >= disp_height) continue;
-      if ((squish_watchface_for_peek &&
-           (dst_y_offset < scale_to.origin.y ||
-            dst_y_offset >= scale_to.origin.y + scale_to.size.h)) ||
-          (shift_scaled_watchface_for_peek &&
-           (dst_y_offset >= timeline_peek_get_origin_y()))) {
+      if (dst_y_offset < 0 || dst_y_offset >= disp_height)
+        continue;
+      if ((squish_watchface_for_peek && (dst_y_offset < scale_to.origin.y ||
+                                         dst_y_offset >= scale_to.origin.y + scale_to.size.h)) ||
+          (shift_scaled_watchface_for_peek && (dst_y_offset >= timeline_peek_get_origin_y()))) {
         continue;
       }
 
@@ -626,7 +638,8 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       const uint32_t src_y_fixed = (uint32_t)dst_y_coord * scale_y;
       const int16_t src_y = src_y_fixed >> 16;
 
-      if (src_y < 0 || src_y >= app_height) continue;
+      if (src_y < 0 || src_y >= app_height)
+        continue;
 
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, dst_y_offset);
       GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, src_y);
@@ -650,15 +663,15 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
         if (dst_x_offset < dst_row_info.min_x || dst_x_offset > dst_row_info.max_x) {
           continue;
         }
-        if (squish_watchface_for_peek &&
-            (dst_x_offset < scale_to.origin.x ||
-             dst_x_offset >= scale_to.origin.x + scale_to.size.w)) {
+        if (squish_watchface_for_peek && (dst_x_offset < scale_to.origin.x ||
+                                          dst_x_offset >= scale_to.origin.x + scale_to.size.w)) {
           continue;
         }
 
-        const uint16_t dst_x_coord = squish_watchface_for_peek
-            ? (dst_x_offset - scale_to.origin.x)
-            : copy_relative_to_origin ? CLIP(dst_x_offset, 0, disp_width - 1) : dst_x;
+        const uint16_t dst_x_coord = squish_watchface_for_peek ? (dst_x_offset - scale_to.origin.x)
+                                     : copy_relative_to_origin
+                                         ? CLIP(dst_x_offset, 0, disp_width - 1)
+                                         : dst_x;
         const uint32_t src_x_fixed = (uint32_t)dst_x_coord * scale_x;
         const int16_t src_x = src_x_fixed >> 16;
 
@@ -675,14 +688,15 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
 
           // Sample 2x2 neighborhood
           const uint8_t p00 = src_row_info.data[src_x];
-          const uint8_t p10 = (src_x1 <= src_row_info.max_x) ?
-              src_row_info.data[src_x1] : p00;
+          const uint8_t p10 = (src_x1 <= src_row_info.max_x) ? src_row_info.data[src_x1] : p00;
           const uint8_t p01 = (src_y1 != src_y && src_x >= src_row_info_next.min_x &&
-                               src_x <= src_row_info_next.max_x) ?
-              src_row_info_next.data[src_x] : p00;
+                               src_x <= src_row_info_next.max_x)
+                                  ? src_row_info_next.data[src_x]
+                                  : p00;
           const uint8_t p11 = (src_y1 != src_y && src_x1 >= src_row_info_next.min_x &&
-                               src_x1 <= src_row_info_next.max_x) ?
-              src_row_info_next.data[src_x1] : p10;
+                               src_x1 <= src_row_info_next.max_x)
+                                  ? src_row_info_next.data[src_x1]
+                                  : p10;
 
           // Fractional X weight (0-16 range, using 4 bits from fixed-point)
           const uint8_t fx = (src_x_fixed >> 12) & 0xF;
@@ -698,9 +712,9 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
             const uint16_t c11 = (p11 >> shift) & 0x3;
 
             // Bilinear: lerp in X for both rows, then lerp in Y
-            const uint16_t top = c00 * (16 - fx) + c10 * fx;    // 0..48
-            const uint16_t bot = c01 * (16 - fx) + c11 * fx;    // 0..48
-            const uint16_t val = top * (16 - fy) + bot * fy;    // 0..768
+            const uint16_t top = c00 * (16 - fx) + c10 * fx; // 0..48
+            const uint16_t bot = c01 * (16 - fx) + c11 * fx; // 0..48
+            const uint16_t val = top * (16 - fy) + bot * fy; // 0..768
 
             // Scale back to 2-bit: divide by 256 with rounding
             const uint8_t channel = (val + 128) >> 8;
@@ -723,7 +737,9 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
       const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
       const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
-      memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      if (end_x > start_x) {
+        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      }
     }
 
     GRect clipped_update_region = update_rect;
@@ -731,12 +747,9 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
     grect_clip(&clipped_update_region, &shifted_region);
     if (clipped_update_region.size.w > 0 && clipped_update_region.size.h > 0) {
       GBitmap sub_bitmap;
-      const GRect src_rect = GRect(
-        clipped_update_region.origin.x - app_offset_x,
-        clipped_update_region.origin.y - app_offset_y + offset_y,
-        clipped_update_region.size.w,
-        clipped_update_region.size.h
-      );
+      const GRect src_rect = GRect(clipped_update_region.origin.x - app_offset_x,
+                                   clipped_update_region.origin.y - app_offset_y + offset_y,
+                                   clipped_update_region.size.w, clipped_update_region.size.h);
       gbitmap_init_as_sub_bitmap(&sub_bitmap, &src_bitmap, src_rect);
       bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, clipped_update_region.origin,
                                 GCompOpAssign, GColorWhite);
@@ -758,7 +771,9 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
       const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
       const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
-      memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      if (end_x > start_x) {
+        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+      }
     }
 
     // bitblt the region of the app framebuffer into the display framebuffer
@@ -770,20 +785,13 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
       GRect clipped_update_region = update_rect;
       grect_clip(&clipped_update_region, &centered_region);
 
-      src_rect = GRect(
-        clipped_update_region.origin.x - bezel_width,
-        clipped_update_region.origin.y - app_offset_y + offset_y,
-        clipped_update_region.size.w,
-        clipped_update_region.size.h
-      );
+      src_rect = GRect(clipped_update_region.origin.x - bezel_width,
+                       clipped_update_region.origin.y - app_offset_y + offset_y,
+                       clipped_update_region.size.w, clipped_update_region.size.h);
       dst_offset = clipped_update_region.origin;
     } else {
-      src_rect = GRect(
-        0,
-        offset_y,
-        update_rect.size.w - bezel_width,
-        update_rect.size.h - app_offset_y
-      );
+      src_rect =
+          GRect(0, offset_y, update_rect.size.w - bezel_width, update_rect.size.h - app_offset_y);
       dst_offset = GPoint(bezel_width + update_rect.origin.x, app_offset_y + update_rect.origin.y);
     }
 

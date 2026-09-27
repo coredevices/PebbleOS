@@ -7,20 +7,20 @@
 
 typedef struct {
   ListNode node;
-  BLECharacteristic characteristic;
+  pbl_bt_characteristic_t characteristic;
   BLESubscription subscription_type;
   GAPLEClient client;
 } Subscribe;
 
 static Subscribe *s_subscribe_head;
 
-static BTErrno s_subscribe_return_value;
+static enum pbl_bt_errno s_subscribe_return_value;
 
-BTErrno gatt_client_subscriptions_subscribe(BLECharacteristic characteristic,
-                                            BLESubscription subscription_type,
-                                            GAPLEClient client) {
+enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
+                                                      BLESubscription subscription_type,
+                                                      GAPLEClient client) {
   Subscribe *subscribe = malloc(sizeof(Subscribe));
-  *subscribe = (const Subscribe) {
+  *subscribe = (const Subscribe){
     .characteristic = characteristic,
     .subscription_type = subscription_type,
     .client = client,
@@ -38,44 +38,41 @@ bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
   return false;
 }
 
-uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *characteristic_ref_out,
-                                                        uint8_t *value_out,
-                                                        uint16_t *value_length_in_out,
-                                                        GAPLEClient client, bool *has_more_out) {
+uint16_t gatt_client_subscriptions_consume_notification(
+    pbl_bt_characteristic_t *characteristic_ref_out, uint8_t *value_out,
+    uint16_t *value_length_in_out, GAPLEClient client, bool *has_more_out) {
   return 0;
 }
 
 void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {
-
 }
 
 void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *connection,
                                                      bool should_unsubscribe) {
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake Manipulation
 
 void fake_gatt_client_subscriptions_init(void) {
-  s_subscribe_return_value = BTErrnoOK;
+  s_subscribe_return_value = PBL_BT_ERRNO_OK;
 }
 
 void fake_gatt_client_subscriptions_deinit(void) {
   Subscribe *subscribe = s_subscribe_head;
   while (subscribe) {
-    Subscribe *next = (Subscribe *) subscribe->node.next;
+    Subscribe *next = (Subscribe *)subscribe->node.next;
     free(subscribe);
     subscribe = next;
   }
   s_subscribe_head = NULL;
 }
 
-void fake_gatt_client_subscriptions_set_subscribe_return_value(BTErrno e) {
+void fake_gatt_client_subscriptions_set_subscribe_return_value(enum pbl_bt_errno e) {
   s_subscribe_return_value = e;
 }
 
-void fake_gatt_client_subscriptions_assert_subscribe(BLECharacteristic characteristic,
+void fake_gatt_client_subscriptions_assert_subscribe(pbl_bt_characteristic_t characteristic,
                                                      BLESubscription subscription_type,
                                                      GAPLEClient client) {
   if (s_subscribe_head) {
@@ -85,5 +82,5 @@ void fake_gatt_client_subscriptions_assert_subscribe(BLECharacteristic character
   } else {
     cl_assert_(false, "No gatt_client_subscriptions_subscribe() has happened at all");
   }
-  s_subscribe_head = (Subscribe *) list_pop_head(&s_subscribe_head->node);
+  s_subscribe_head = (Subscribe *)list_pop_head(&s_subscribe_head->node);
 }

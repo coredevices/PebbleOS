@@ -4,22 +4,24 @@
 #pragma once
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 inline static uint32_t bswap32(uint32_t v) {
-  return __builtin_bswap32(v);
+  return PBL_BSWAP32(v);
 }
 
 inline static uint16_t bswap16(uint16_t v) {
-  return __builtin_bswap16(v);
+  return PBL_BSWAP16(v);
 }
 
 #ifdef __arm__
 inline static char reverse_byte(uint8_t input) {
   uint8_t result;
-  __asm__ ("rev  %[result], %[input]\n\t"
-           "rbit %[result], %[result]"
-           : [result] "=r" (result)
-           : [input] "r" (input));
+  __asm__(
+      "rev  %[result], %[input]\n\t"
+      "rbit %[result], %[result]"
+      : [result] "=r"(result)
+      : [input] "r"(input));
   return result;
 }
 #else

@@ -21,8 +21,8 @@ typedef struct {
   //! @param[out] data_out Pointer to the buffer into which to copy the data
   //! @return The number of bytes copied
   //! @note The caller will ensure there is enough data available.
-  size_t (*copy)(const SessionSendQueueJob *send_job, int start_offset,
-                 size_t length, uint8_t *data_out);
+  size_t (*copy)(const SessionSendQueueJob *send_job, int start_offset, size_t length,
+                 uint8_t *data_out);
 
   //! Gets a read pointer and the number of bytes that can be read from the read pointer.
   //! @note The implementation might use a non-contiguous buffer, so it is possible
@@ -30,8 +30,7 @@ typedef struct {
   //! and consume() repeatedly until it returns zero.
   //! @param data_out Pointer to the pointer to assign the read pointer to.
   //! @return The number of bytes that can be read starting at the read pointer.
-  size_t (*get_read_pointer)(const SessionSendQueueJob *send_job,
-                             const uint8_t **data_out);
+  size_t (*get_read_pointer)(const SessionSendQueueJob *send_job, const uint8_t **data_out);
 
   //! Indicates that `length` bytes have been consumed and sent out by the transport.
   void (*consume)(const SessionSendQueueJob *send_job, size_t length);

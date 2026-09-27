@@ -23,7 +23,6 @@
 #include "pbl/services/blob_db/sync.h"
 #include "pbl/util/size.h"
 
-
 // Writebacks counter
 ////////////////////////
 
@@ -46,14 +45,8 @@ static void prv_generate_responses_from_phone(void) {
   }
 }
 
-
-
-BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id,
-                                            time_t last_updated,
-                                            const void *key,
-                                            int key_len,
-                                            const void *val,
-                                            int val_len) {
+BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id, time_t last_updated, const void *key,
+                                            int key_len, const void *val, int val_len) {
   BlobDBSyncSession *session = blob_db_sync_get_session_for_id(db_id);
   cl_assert(session != NULL);
   if (s_num_until_timeout != 0 && s_num_writebacks >= s_num_until_timeout) {
@@ -65,12 +58,8 @@ BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id,
   return 12345;
 }
 
-BlobDBToken blob_db_endpoint_send_write(BlobDBId db_id,
-                                        time_t last_updated,
-                                        const void *key,
-                                        int key_len,
-                                        const void *val,
-                                        int val_len) {
+BlobDBToken blob_db_endpoint_send_write(BlobDBId db_id, time_t last_updated, const void *key,
+                                        int key_len, const void *val, int val_len) {
   return 0;
 }
 
@@ -99,11 +88,8 @@ void test_blob_db_sync__no_dirty(void) {
   // insert one
   char *key = "key";
   char *value = "value";
-  cl_assert_equal_i(S_SUCCESS, blob_db_insert(BlobDBIdTest,
-                                              (uint8_t *)key,
-                                              strlen(key),
-                                              (uint8_t *)value,
-                                              strlen(value)));
+  cl_assert_equal_i(S_SUCCESS, blob_db_insert(BlobDBIdTest, (uint8_t *)key, strlen(key),
+                                              (uint8_t *)value, strlen(value)));
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 1);
   cl_assert(blob_db_get_dirty_list(BlobDBIdTest) != NULL);
@@ -130,9 +116,9 @@ void test_blob_db_sync__dirty_list(void) {
   cl_assert(dirty_list == NULL);
   blob_db_util_free_dirty_list(dirty_list);
 
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   // insert all keys
@@ -165,9 +151,9 @@ void test_blob_db_sync__dirty_list(void) {
 }
 
 void test_blob_db_sync__sync_all(void) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   // insert all keys
@@ -182,9 +168,9 @@ void test_blob_db_sync__sync_all(void) {
 }
 
 void test_blob_db_sync__sync_oom(void) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   // insert all keys
@@ -197,11 +183,11 @@ void test_blob_db_sync__sync_oom(void) {
   // We have built the dirty list, add more entries.
   // This mimics us performing writes while the sync is ongoing or not having enough memory to
   // build the initial list
-  char *extra_keys[] = { "keyA", "keyB" };
-  char *extra_values[] = { "valA", "valB" };
+  char *extra_keys[] = {"keyA", "keyB"};
+  char *extra_values[] = {"valA", "valB"};
   for (int i = 0; i < ARRAY_LENGTH(extra_keys); ++i) {
-    blob_db_insert(BlobDBIdTest, (uint8_t *)extra_keys[i], key_len,
-                   (uint8_t *)extra_values[i], value_len);
+    blob_db_insert(BlobDBIdTest, (uint8_t *)extra_keys[i], key_len, (uint8_t *)extra_values[i],
+                   value_len);
   }
 
   prv_generate_responses_from_phone();
@@ -210,9 +196,9 @@ void test_blob_db_sync__sync_oom(void) {
 }
 
 void test_blob_db_sync__sync_some(void) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   // insert all keys, mark some as synced
@@ -231,9 +217,9 @@ void test_blob_db_sync__sync_some(void) {
 }
 
 void test_blob_db_sync__timeout_and_retry(void) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   // insert all keys, mark some as synced
@@ -259,9 +245,9 @@ void test_blob_db_sync__timeout_and_retry(void) {
 }
 
 void test_blob_db_sync__sync_while_syncing(void) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
@@ -278,9 +264,9 @@ void test_blob_db_sync__sync_while_syncing(void) {
 }
 
 static BlobDBSyncSession *prv_start_sync_with_two_keys(void) {
-  char *keys[] = { "key1", "key2" };
+  char *keys[] = {"key1", "key2"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2" };
+  char *values[] = {"val1", "val2"};
   int value_len = strlen(values[0]);
 
   for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
@@ -361,9 +347,9 @@ void test_blob_db_sync__stale_callback_does_not_match_new_session(void) {
 }
 
 static void prv_fill_stop_return_session(BlobDBId id) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   fake_blob_db_set_id(id);
@@ -410,4 +396,3 @@ void test_blob_db_sync__find_session(void) {
   fake_blob_db_set_id(BlobDBIdTest);
   blob_db_init_dbs();
 }
-

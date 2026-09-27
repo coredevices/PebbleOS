@@ -40,10 +40,10 @@ void scroll_layer_touch_handle_snap(ScrollLayer *scroll_layer, GPoint base, GPoi
 //! ends softly instead of stopping dead.
 #define TOUCH_FLING_MIN_VELOCITY_PX_S 250
 #define TOUCH_FLING_MAX_VELOCITY_PX_S 3600
-#define TOUCH_FLING_TAU_MS 240
-#define TOUCH_FLING_MIN_DURATION_MS 100
-#define TOUCH_FLING_MAX_DURATION_MS (3 * TOUCH_FLING_TAU_MS)
-#define TOUCH_FLING_MIN_DISTANCE_PX 3
+#define TOUCH_FLING_TAU_MS            240
+#define TOUCH_FLING_MIN_DURATION_MS   100
+#define TOUCH_FLING_MAX_DURATION_MS   (3 * TOUCH_FLING_TAU_MS)
+#define TOUCH_FLING_MIN_DISTANCE_PX   3
 
 //! How long the animated return from a rubber-band overscroll takes.
 #define TOUCH_OVERSCROLL_SPRING_BACK_MS 200
@@ -76,9 +76,8 @@ void scroll_layer_touch_overscroll_spring_back(ScrollLayer *scroll_layer, int16_
 //! caller). \a stopped runs when the coast ends (finished or unscheduled) and MUST call
 //! scroll_layer_touch_fling_cleanup() so the shared animation's defaults are restored.
 //! @return false (and moves nothing) when the remaining distance is below the fling minimum.
-bool scroll_layer_touch_fling_start(ScrollLayer *scroll_layer, int16_t target_y,
-                                    int16_t velocity_y, AnimationStoppedHandler stopped,
-                                    void *stopped_context);
+bool scroll_layer_touch_fling_start(ScrollLayer *scroll_layer, int16_t target_y, int16_t velocity_y,
+                                    AnimationStoppedHandler stopped, void *stopped_context);
 
 //! @internal
 //! Restore the shared scroll animation's defaults after a fling (duration, curve, handlers).

@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <bluetooth/bt_driver_comm.h>
+#include <pbl/bluetooth/comm.h>
 
 #include "comm/bt_lock.h"
 
 #include "console/pulse_protocol_impl.h"
-#include "console/pulse2_transport_impl.h"
 
 #include "kernel/event_loop.h"
 #include "kernel/events.h"
@@ -17,23 +16,23 @@
 #include "system/passert.h"
 #include <pbl/logging/logging.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include <string.h>
 
-#define PULSE_PP_OPCODE_DATA (1)
-#define PULSE_PP_OPCODE_OPEN (2)
+#define PULSE_PP_OPCODE_DATA  (1)
+#define PULSE_PP_OPCODE_OPEN  (2)
 #define PULSE_PP_OPCODE_CLOSE (3)
 
 #define PULSE_PP_OPCODE_UNKNOWN (255)
 
-typedef struct PACKED PulsePPPacket {
+typedef struct PBL_PACKED PulsePPPacket {
   uint8_t opcode;
   uint8_t data[0];
 } PulsePPPacket;
 
-typedef struct PACKED PulsePPCallbackPacket {
+typedef struct PBL_PACKED PulsePPCallbackPacket {
   size_t packet_length;
   PulsePPPacket packet;
 } PulsePPCallbackPacket;
@@ -55,15 +54,14 @@ static void prv_send_next(Transport *transport) {
 
   while (bytes_remaining) {
     bt_unlock();
-    PulsePPPacket *resp = (PulsePPPacket*) pulse_reliable_send_begin(PULSE2_PEBBLE_PROTOCOL);
+    PulsePPPacket *resp = (PulsePPPacket *)pulse_reliable_send_begin(PULSE2_PEBBLE_PROTOCOL);
     bt_lock();
 
     if (resp) {
       resp->opcode = PULSE_PP_OPCODE_DATA;
 
       const size_t bytes_to_copy = MIN(bytes_remaining, mss);
-      comm_session_send_queue_copy(session, 0 /* start_offset */,
-                                   bytes_to_copy, &resp->data[0]);
+      comm_session_send_queue_copy(session, 0 /* start_offset */, bytes_to_copy, &resp->data[0]);
       pulse_reliable_send(resp, bytes_to_copy + sizeof(PulsePPPacket));
       comm_session_send_queue_consume(session, bytes_to_copy);
 
@@ -82,13 +80,14 @@ static void prv_reset(Transport *transport) {
 }
 
 static void prv_granted_kernel_main_cb(void *ctx) {
-  ResponsivenessGrantedHandler granted_handler = ctx;
+  pbl_bt_responsiveness_granted_cb_t granted_handler = ctx;
   granted_handler();
 }
 
-static void prv_set_connection_responsiveness(
-    Transport *transport, BtConsumer consumer, ResponseTimeState state, uint16_t max_period_secs,
-    ResponsivenessGrantedHandler granted_handler) {
+static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_consumer consumer,
+                                              enum pbl_bt_response_time_state state,
+                                              uint16_t max_period_secs,
+                                              pbl_bt_responsiveness_granted_cb_t granted_handler) {
   if (granted_handler) {
     launcher_task_add_callback(prv_granted_kernel_main_cb, granted_handler);
   }
@@ -100,7 +99,7 @@ static CommSessionTransportType prv_get_type(struct Transport *transport) {
 
 static void prv_send_job(void *data) {
   CommSession *session = (CommSession *)data;
-  bt_driver_run_send_next_job(session, true);
+  pbl_bt_run_send_next_job(session, true);
 }
 
 static bool prv_schedule_send_next_job(CommSession *session) {
@@ -113,8 +112,8 @@ static bool prv_is_current_task_schedule_task(struct Transport *transport) {
 }
 
 //! Defined in session.c
-extern void comm_session_set_capabilities(
-    CommSession *session, CommSessionCapability capability_flags);
+extern void comm_session_set_capabilities(CommSession *session,
+                                          CommSessionCapability capability_flags);
 
 bool pulse_transport_is_connected(void) {
   return (s_transport.session != NULL);
@@ -138,21 +137,18 @@ void pulse_transport_set_connected(bool is_connected) {
   bool send_event = true;
 
   if (is_connected) {
-    s_transport.session = comm_session_open((Transport *) &s_transport,
-                                            &s_pulse_transport_implementation,
-                                            TransportDestinationHybrid);
+    s_transport.session = comm_session_open(
+        (Transport *)&s_transport, &s_pulse_transport_implementation, TransportDestinationHybrid);
     if (!s_transport.session) {
       PBL_LOG_ERR("CommSession couldn't be opened");
       send_event = false;
     }
 
     // Give it the appropriate capabilities
-    const CommSessionCapability capabilities = CommSessionRunState |
-                                               CommSessionInfiniteLogDumping |
-                                               CommSessionVoiceApiSupport |
-                                               CommSessionAppMessage8kSupport |
-                                               CommSessionWeatherAppSupport |
-                                               CommSessionExtendedNotificationService;
+    const CommSessionCapability capabilities =
+        CommSessionRunState | CommSessionInfiniteLogDumping | CommSessionVoiceApiSupport |
+        CommSessionAppMessage8kSupport | CommSessionWeatherAppSupport |
+        CommSessionExtendedNotificationService;
     comm_session_set_capabilities(s_transport.session, capabilities);
   } else {
     comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
@@ -161,11 +157,11 @@ void pulse_transport_set_connected(bool is_connected) {
 
   if (send_event) {
     PebbleEvent e = {
-      .type = PEBBLE_BT_CONNECTION_EVENT,
+      .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
       .bluetooth = {
         .connection = {
           .state = (s_transport.session) ? PebbleBluetoothConnectionEventStateConnected
-          : PebbleBluetoothConnectionEventStateDisconnected
+                                         : PebbleBluetoothConnectionEventStateDisconnected
         }
       }
     };

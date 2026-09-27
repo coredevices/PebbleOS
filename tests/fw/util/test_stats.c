@@ -17,7 +17,7 @@ void test_stats__cleanup(void) {
 }
 
 void test_stats__min(void) {
-  const int32_t data[] = { 10, 40, 6, 32, 73, 80, 34, 25, 62 };
+  const int32_t data[] = {10, 40, 6, 32, 73, 80, 34, 25, 62};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_Min;
   int32_t result;
@@ -26,7 +26,7 @@ void test_stats__min(void) {
 }
 
 void test_stats__max(void) {
-  const int32_t data[] = { 10, 40, 6, 32, 73, 80, 34, 25, 62 };
+  const int32_t data[] = {10, 40, 6, 32, 73, 80, 34, 25, 62};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_Max;
   int32_t result;
@@ -35,7 +35,7 @@ void test_stats__max(void) {
 }
 
 void test_stats__avg(void) {
-  const int32_t data[] = { 10, 40, 6, 32, 73, 80, 34, 25, 62 };
+  const int32_t data[] = {10, 40, 6, 32, 73, 80, 34, 25, 62};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_Average;
   int32_t result;
@@ -44,7 +44,7 @@ void test_stats__avg(void) {
 }
 
 void test_stats__sum(void) {
-  const int32_t data[] = { 10, 40, 6, 32, 73, 80, 34, 25, 62 };
+  const int32_t data[] = {10, 40, 6, 32, 73, 80, 34, 25, 62};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_Sum;
   int32_t result;
@@ -60,7 +60,7 @@ static bool prv_filter(int index, int32_t value, void *context) {
 }
 
 void test_stats__filtered_count(void) {
-  const int32_t data[] = { 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0 };
+  const int32_t data[] = {1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_Count;
   int32_t result;
@@ -69,7 +69,7 @@ void test_stats__filtered_count(void) {
 }
 
 void test_stats__filtered_consecutive(void) {
-  const int32_t data[] = { 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0 };
+  const int32_t data[] = {1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_Consecutive;
   int32_t result;
@@ -78,7 +78,7 @@ void test_stats__filtered_consecutive(void) {
 }
 
 void test_stats__filtered_consecutive_first(void) {
-  const int32_t data[] = { 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0 };
+  const int32_t data[] = {1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_ConsecutiveFirst;
   int32_t result;
@@ -87,7 +87,7 @@ void test_stats__filtered_consecutive_first(void) {
 }
 
 void test_stats__median(void) {
-  const int32_t data[] = { 10, 40, 6, 32, 73, 80, 34, 25, 62 };
+  const int32_t data[] = {10, 40, 6, 32, 73, 80, 34, 25, 62};
   const size_t num_data = ARRAY_LENGTH(data);
   const StatsBasicOp op = StatsBasicOp_Median;
   int32_t result;
@@ -96,12 +96,11 @@ void test_stats__median(void) {
 }
 
 void test_stats__all_basic_ops(void) {
-  const int32_t data[] = { 10, 0, 40, 6, 0, -5, 0, 32, 73, 0, 80, 34, 25, 62, 0 };
+  const int32_t data[] = {10, 0, 40, 6, 0, -5, 0, 32, 73, 0, 80, 34, 25, 62, 0};
   const size_t num_data = ARRAY_LENGTH(data);
-  const StatsBasicOp op =
-      (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min | StatsBasicOp_Max |
-       StatsBasicOp_Count | StatsBasicOp_Consecutive | StatsBasicOp_ConsecutiveFirst |
-       StatsBasicOp_Median);
+  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min |
+                           StatsBasicOp_Max | StatsBasicOp_Count | StatsBasicOp_Consecutive |
+                           StatsBasicOp_ConsecutiveFirst | StatsBasicOp_Median);
   struct {
     int32_t sum;
     int32_t avg;
@@ -124,12 +123,11 @@ void test_stats__all_basic_ops(void) {
 }
 
 void test_stats__all_basic_ops_filtered(void) {
-  const int32_t data[] = { 10, 0, 40, 6, 0, 0, 0, 32, 73, 0, 80, 34, 25, 62, 0 };
+  const int32_t data[] = {10, 0, 40, 6, 0, 0, 0, 32, 73, 0, 80, 34, 25, 62, 0};
   const size_t num_data = ARRAY_LENGTH(data);
-  const StatsBasicOp op =
-      (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min | StatsBasicOp_Max |
-       StatsBasicOp_Count | StatsBasicOp_Consecutive | StatsBasicOp_ConsecutiveFirst |
-       StatsBasicOp_Median);
+  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min |
+                           StatsBasicOp_Max | StatsBasicOp_Count | StatsBasicOp_Consecutive |
+                           StatsBasicOp_ConsecutiveFirst | StatsBasicOp_Median);
   struct {
     int32_t sum;
     int32_t avg;
@@ -152,12 +150,11 @@ void test_stats__all_basic_ops_filtered(void) {
 }
 
 void test_stats__all_basic_ops_filtered_out(void) {
-  const int32_t data[] = { 0, 0, 0, 0, 0 };
+  const int32_t data[] = {0, 0, 0, 0, 0};
   const size_t num_data = ARRAY_LENGTH(data);
-  const StatsBasicOp op =
-        (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min | StatsBasicOp_Max |
-         StatsBasicOp_Count | StatsBasicOp_Consecutive | StatsBasicOp_ConsecutiveFirst |
-         StatsBasicOp_Median);
+  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min |
+                           StatsBasicOp_Max | StatsBasicOp_Count | StatsBasicOp_Consecutive |
+                           StatsBasicOp_ConsecutiveFirst | StatsBasicOp_Median);
   struct {
     int32_t sum;
     int32_t avg;
@@ -180,12 +177,11 @@ void test_stats__all_basic_ops_filtered_out(void) {
 }
 
 void test_stats__all_basic_one_value(void) {
-  const int32_t data[] = { 42 };
+  const int32_t data[] = {42};
   const size_t num_data = ARRAY_LENGTH(data);
-  const StatsBasicOp op =
-        (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min | StatsBasicOp_Max |
-         StatsBasicOp_Count | StatsBasicOp_Consecutive | StatsBasicOp_ConsecutiveFirst |
-         StatsBasicOp_Median);
+  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min |
+                           StatsBasicOp_Max | StatsBasicOp_Count | StatsBasicOp_Consecutive |
+                           StatsBasicOp_ConsecutiveFirst | StatsBasicOp_Median);
   struct {
     int32_t sum;
     int32_t avg;
@@ -210,10 +206,9 @@ void test_stats__all_basic_one_value(void) {
 void test_stats__all_basic_no_values(void) {
   const int32_t data[] = {};
   const size_t num_data = 0;
-  const StatsBasicOp op =
-        (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min | StatsBasicOp_Max |
-         StatsBasicOp_Count | StatsBasicOp_Consecutive | StatsBasicOp_ConsecutiveFirst |
-         StatsBasicOp_Median);
+  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Min |
+                           StatsBasicOp_Max | StatsBasicOp_Count | StatsBasicOp_Consecutive |
+                           StatsBasicOp_ConsecutiveFirst | StatsBasicOp_Median);
   struct {
     int32_t sum;
     int32_t avg;
@@ -336,8 +331,7 @@ void test_stats__weighted_median(void) {
   };
 
   for (size_t i = 0; i < ARRAY_LENGTH(test_cases); i++) {
-    int32_t w_median = stats_calculate_weighted_median(test_cases[i].values,
-                                                       test_cases[i].weights,
+    int32_t w_median = stats_calculate_weighted_median(test_cases[i].values, test_cases[i].weights,
                                                        test_cases[i].num_values);
     printf("W_Median test case: %d\n", (int)i);
     cl_assert_equal_i(test_cases[i].answer, w_median);

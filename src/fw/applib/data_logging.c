@@ -23,8 +23,8 @@ DataLoggingSessionRef data_logging_create(uint32_t tag, DataLoggingItemType item
   }
 
   // Create the session
-  DataLoggingSessionRef session = sys_data_logging_create(tag, item_type, item_length, buffer,
-                                                          resume);
+  DataLoggingSessionRef session =
+      sys_data_logging_create(tag, item_type, item_length, buffer, resume);
   if (session == NULL && buffer != NULL) {
     applib_free(buffer);
   }
@@ -40,4 +40,3 @@ DataLoggingResult data_logging_log(DataLoggingSessionRef logging_session, const 
                                    uint32_t num_items) {
   return sys_data_logging_log(logging_session, data, num_items);
 }
-

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-bool WEAK bt_ctl_is_airplane_mode_on(void) {
+bool PBL_WEAK bt_ctl_is_airplane_mode_on(void) {
   return false;
 }

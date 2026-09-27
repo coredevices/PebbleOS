@@ -48,7 +48,7 @@ void button_init(void) {
   }
 }
 
-void command_button_read(const char* button_id_str) {
+void command_button_read(const char *button_id_str) {
   int button = atoi(button_id_str);
 
   if (button < 0 || button >= NUM_BUTTONS) {

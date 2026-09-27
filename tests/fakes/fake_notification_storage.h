@@ -2,30 +2,24 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/timeline/item.h"
+#include "pbl/util/testing.h"
 
 static TimelineItem s_last_stored_notification = {};
 static int s_notification_store_count = 0;
 static int s_notification_remove_count = 0;
 static TimelineItem s_existing_ancs_notification = {
-  .header = (CommonTimelineItemHeader) {
-    .id = UUID_INVALID,
-    .ancs_uid = 0
-  }
+  .header = (CommonTimelineItemHeader){.id = UUID_INVALID, .ancs_uid = 0}
 };
 
-extern T_STATIC bool prv_deep_copy_attributes_actions(AttributeList *attr_list,
-                                                      TimelineItemActionGroup *action_group,
-                                                      TimelineItem *item_out);
+extern PBL_T_STATIC bool prv_deep_copy_attributes_actions(AttributeList *attr_list,
+                                                          TimelineItemActionGroup *action_group,
+                                                          TimelineItem *item_out);
 
 void fake_notification_storage_reset(void) {
   s_notification_store_count = 0;
   s_notification_remove_count = 0;
-  s_existing_ancs_notification = (TimelineItem) {
-    .header = (CommonTimelineItemHeader) {
-      .id = UUID_INVALID,
-      .ancs_uid = 0
-    }
-  };
+  s_existing_ancs_notification =
+      (TimelineItem){.header = (CommonTimelineItemHeader){.id = UUID_INVALID, .ancs_uid = 0}};
 }
 
 TimelineItem *fake_notification_storage_get_last_notification(void) {
@@ -41,12 +35,8 @@ int fake_notification_storage_get_remove_count(void) {
 }
 
 void fake_notification_storage_set_existing_ancs_notification(Uuid *uuid, uint32_t ancs_uid) {
-  s_existing_ancs_notification = (TimelineItem) {
-    .header = (CommonTimelineItemHeader) {
-      .id = *uuid,
-      .ancs_uid = ancs_uid
-    }
-  };
+  s_existing_ancs_notification =
+      (TimelineItem){.header = (CommonTimelineItemHeader){.id = *uuid, .ancs_uid = ancs_uid}};
 }
 
 void notification_storage_init(void) {
@@ -108,5 +98,7 @@ bool notification_storage_find_ancs_notification_by_timestamp(
 }
 
 void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notification,
-    SerializedTimelineItemHeader *header, void *data), void *data) {
+                                                        SerializedTimelineItemHeader *header,
+                                                        void *data),
+                                  void *data) {
 }

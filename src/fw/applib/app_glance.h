@@ -18,8 +18,8 @@
 //!   For example, the app might use it to display a preview of its current state
 //!   such as the currently playing song or the number of pending notifications.
 //!
-//!   The glance is loaded with a stack of \ref AppGlanceSlice structs; only the latest slice is shown,
-//!   and they are set to expire at a certain time to show the next slice in the stack.
+//!   The glance is loaded with a stack of \ref AppGlanceSlice structs; only the latest slice is
+//!   shown, and they are set to expire at a certain time to show the next slice in the stack.
 //!
 //!   To update the glance with a stack of slices, you must define an
 //!   \ref AppGlanceReloadCallback and give it to \ref app_glance_reload.
@@ -33,7 +33,8 @@
 //!   Example code:
 //!   \code{.c}
 //!   #if !PBL_PLATFORM_APLITE
-//!   static void glance_reload_callback(AppGlanceReloadSession *session, size_t limit, void *context) {
+//!   static void glance_reload_callback(AppGlanceReloadSession *session, size_t limit, void
+//!   *context) {
 //!     AppGlanceSlice slice = {
 //!       .expiration_time = APP_GLANCE_SLICE_NO_EXPIRATION,
 //!       .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
@@ -67,12 +68,12 @@ typedef uint32_t PublishedId;
 
 //! Describes how the slice should be visualized in the app's glance in the launcher.
 typedef struct AppGlanceSliceLayout {
-    //! The published resource ID of the bitmap icon to display in the app's glance. Use \ref
-    //! APP_GLANCE_SLICE_DEFAULT_ICON to use the app's default bitmap icon.
-    PublishedId icon;
-    //! A template string to visualize in the app's glance. The string will be copied, so it is safe
-    //! to destroy after adding the slice to the glance. Use NULL if no string should be displayed.
-    const char *subtitle_template_string;
+  //! The published resource ID of the bitmap icon to display in the app's glance. Use \ref
+  //! APP_GLANCE_SLICE_DEFAULT_ICON to use the app's default bitmap icon.
+  PublishedId icon;
+  //! A template string to visualize in the app's glance. The string will be copied, so it is safe
+  //! to destroy after adding the slice to the glance. Use NULL if no string should be displayed.
+  const char *subtitle_template_string;
 } AppGlanceSliceLayout;
 
 //! An app's glance can change over time as defined by zero or more app glance slices that each

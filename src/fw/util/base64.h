@@ -4,7 +4,7 @@
 #pragma once
 #include <stdint.h>
 
-unsigned int base64_decode_inplace(char* buffer, unsigned int length);
+unsigned int base64_decode_inplace(char *buffer, unsigned int length);
 
 // Encode a buffer as base 64
 // @param out the encoded base64 string is written here

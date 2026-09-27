@@ -7,7 +7,7 @@
 
 static Heap s_worker_heap;
 
-Heap* worker_state_get_heap(void) {
+Heap *worker_state_get_heap(void) {
   return &s_worker_heap;
 }
 
@@ -23,4 +23,3 @@ char *worker_state_get_localtime_zone(void) {
   static char localtime_zone[TZ_LEN] = {0};
   return localtime_zone;
 }
-

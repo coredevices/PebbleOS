@@ -6,21 +6,18 @@
 #include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/math.h"
 
 #ifndef CONFIG_PBLBOOT
 FirmwareDescription firmware_storage_read_firmware_description(uint32_t firmware_start_address) {
   FirmwareDescription firmware_description;
-  flash_read_bytes((uint8_t*) &firmware_description, firmware_start_address,
+  flash_read_bytes((uint8_t *)&firmware_description, firmware_start_address,
                    sizeof(FirmwareDescription));
-
 
   return firmware_description;
 }
 
 bool firmware_storage_check_valid_firmware_description(
     uint32_t start_address, const FirmwareDescription *firmware_description) {
-
   if (firmware_description->description_length != sizeof(FirmwareDescription)) {
     // Corrupted description
     return false;
@@ -39,15 +36,12 @@ bool firmware_storage_check_valid_firmware_description(
 #else
 FirmwareHeader firmware_storage_read_firmware_header(uint32_t address) {
   FirmwareHeader header;
-  flash_read_bytes((uint8_t*) &header, address, sizeof(FirmwareHeader));
+  flash_read_bytes((uint8_t *)&header, address, sizeof(FirmwareHeader));
   return header;
 }
 
-bool firmware_storage_check_valid_firmware_header(
-    uint32_t address, const FirmwareHeader* header) {
-
-  if (header->magic != FIRMWARE_HEADER_MAGIC ||
-      header->header_length != sizeof(FirmwareHeader)) {
+bool firmware_storage_check_valid_firmware_header(uint32_t address, const FirmwareHeader *header) {
+  if (header->magic != FIRMWARE_HEADER_MAGIC || header->header_length != sizeof(FirmwareHeader)) {
     // Corrupted header
     return false;
   }
@@ -64,16 +58,14 @@ bool firmware_storage_check_valid_firmware_header(
 
 void firmware_storage_invalidate_firmware_slot(uint8_t slot) {
   uint32_t slot_start;
-  
+
   if (slot == 0U) {
     slot_start = FLASH_REGION_FIRMWARE_SLOT_0_BEGIN;
   } else {
     slot_start = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
   }
 
-  flash_region_erase_optimal_range(slot_start,
-                                   slot_start,
-                                   slot_start + SUBSECTOR_SIZE_BYTES,
+  flash_region_erase_optimal_range(slot_start, slot_start, slot_start + SUBSECTOR_SIZE_BYTES,
                                    slot_start + SUBSECTOR_SIZE_BYTES);
 }
 

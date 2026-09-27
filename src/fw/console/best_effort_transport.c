@@ -11,7 +11,7 @@
 #include "console/pulse2_transport_impl.h"
 #include "console/pulse_control_message_protocol.h"
 #include "system/passert.h"
-#include <pbl/util/attributes.h>
+#include <pbl/kernel/compiler.h>
 #include <util/net.h>
 
 #include <stdbool.h>
@@ -25,8 +25,7 @@ static bool s_layer_up = false;
 
 static void prv_on_this_layer_up(PPPControlProtocol *this) {
   s_layer_up = true;
-#define REGISTER_PROTOCOL(N, HANDLER, LAYER_STATE_HANDLER) \
-  LAYER_STATE_HANDLER(PulseLinkState_Open);
+#define REGISTER_PROTOCOL(N, HANDLER, LAYER_STATE_HANDLER) LAYER_STATE_HANDLER(PulseLinkState_Open);
 #include "console/pulse_protocol_registry.def"
 #undef REGISTER_PROTOCOL
 }
@@ -39,8 +38,7 @@ static void prv_on_this_layer_down(PPPControlProtocol *this) {
 #undef REGISTER_PROTOCOL
 }
 
-static void prv_on_receive_code_reject(PPPControlProtocol *this,
-                                       LCPPacket *packet) {
+static void prv_on_receive_code_reject(PPPControlProtocol *this, LCPPacket *packet) {
   // TODO
 }
 
@@ -54,7 +52,7 @@ static PPPControlProtocol s_becp_protocol = {
   .on_receive_code_reject = prv_on_receive_code_reject,
 };
 
-PPPControlProtocol * const PULSE2_BECP = &s_becp_protocol;
+PPPControlProtocol *const PULSE2_BECP = &s_becp_protocol;
 
 void pulse2_best_effort_control_on_packet(void *packet, size_t length) {
   ppp_control_protocol_handle_incoming_packet(PULSE2_BECP, packet, length);
@@ -63,7 +61,7 @@ void pulse2_best_effort_control_on_packet(void *packet, size_t length) {
 // Best Effort Application Transport protocol
 // ==========================================
 
-typedef struct PACKED BestEffortPacket {
+typedef struct PBL_PACKED BestEffortPacket {
   net16 protocol;
   net16 length;
   char information[];
@@ -91,26 +89,25 @@ void pulse2_best_effort_transport_on_packet(void *raw_packet, size_t length) {
 
   switch (ntoh16(packet->protocol)) {
     case PULSE_CONTROL_MESSAGE_PROTOCOL:
-      pulse_control_message_protocol_on_packet(
-          &s_best_effort_pcmp, packet->information, info_length);
+      pulse_control_message_protocol_on_packet(&s_best_effort_pcmp, packet->information,
+                                               info_length);
       break;
 #define REGISTER_PROTOCOL(N, HANDLER, LAYER_STATE_HANDLER) \
-    case N: \
-      HANDLER(packet->information, info_length); \
-      break;
+  case N:                                                  \
+    HANDLER(packet->information, info_length);             \
+    break;
 #include "console/pulse_protocol_registry.def"
 #undef REGISTER_PROTOCOL
     default:
-      pulse_control_message_protocol_send_port_closed_message(
-          &s_best_effort_pcmp, packet->protocol);
+      pulse_control_message_protocol_send_port_closed_message(&s_best_effort_pcmp,
+                                                              packet->protocol);
       break;
   }
 }
 
 void *pulse_best_effort_send_begin(const uint16_t app_protocol) {
   PBL_ASSERTN(s_layer_up);
-  BestEffortPacket *packet = pulse_link_send_begin(
-      PULSE2_BEST_EFFORT_TRANSPORT_PROTOCOL);
+  BestEffortPacket *packet = pulse_link_send_begin(PULSE2_BEST_EFFORT_TRANSPORT_PROTOCOL);
   packet->protocol = hton16(app_protocol);
   return &packet->information;
 }
@@ -123,8 +120,7 @@ void pulse_best_effort_send(void *buf, const size_t length) {
   // pulse_best_effort_send_begin. If it isn't, we'll either crash here
   // when trying to dereference it or we'll hit the assert in
   // pulse_link_send.
-  BestEffortPacket *packet =
-    (void *)((char *)buf - offsetof(BestEffortPacket, information));
+  BestEffortPacket *packet = (void *)((char *)buf - offsetof(BestEffortPacket, information));
   size_t packet_size = length + sizeof(BestEffortPacket);
   packet->length = hton16(packet_size);
   pulse_link_send(packet, packet_size);

@@ -11,4 +11,4 @@
 #define ALARM_SPEAKER_VOLUME 100
 #endif
 
-void alarm_popup_push_window(PebbleAlarmClockEvent* e);
+void alarm_popup_push_window(PebbleAlarmClockEvent *e);

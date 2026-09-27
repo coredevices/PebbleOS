@@ -5,7 +5,7 @@
 
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 
-typedef struct BTDeviceAddress BTDeviceAddress;
+struct pbl_bt_addr;
 
 //! Pauses cycling of local Private Resolvable Address (ref counted).
 //! As long as the cycling is paused, the address that is used "on air" will be stable for the
@@ -20,10 +20,10 @@ void bt_local_addr_resume_cycling(void);
 
 //! Called by BT driver to indicate what the local address was that was used during the pairing
 //! and pinning was requested. See comment in the implementation for more details.
-void bt_local_addr_pin(const BTDeviceAddress *addr);
+void bt_local_addr_pin(const struct pbl_bt_addr *addr);
 
 //! Handler for bonding changes (deletions primarily).
-void bt_local_addr_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op);
+void bt_local_addr_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
 
 //! Called during the BT stack initialization.
 void bt_local_addr_init(void);

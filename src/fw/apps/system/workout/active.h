@@ -10,7 +10,6 @@
 
 typedef struct WorkoutActiveWindow WorkoutActiveWindow;
 
-
 WorkoutActiveWindow *workout_active_create_single_layout(WorkoutMetricType metric,
                                                          void *workout_data,
                                                          WorkoutController *workout_controller);
@@ -21,12 +20,12 @@ WorkoutActiveWindow *workout_active_create_double_layout(WorkoutMetricType top_m
                                                          void *workout_data,
                                                          WorkoutController *workout_controller);
 
-WorkoutActiveWindow *workout_active_create_tripple_layout(WorkoutMetricType top_metric,
-                                                          WorkoutMetricType middle_metric,
-                                                          int num_scrollable_metrics,
-                                                          WorkoutMetricType *scrollable_metrics,
-                                                          void *workout_data,
-                                                          WorkoutController *workout_controller);
+WorkoutActiveWindow *workout_active_create_triple_layout(WorkoutMetricType top_metric,
+                                                         WorkoutMetricType middle_metric,
+                                                         int num_scrollable_metrics,
+                                                         WorkoutMetricType *scrollable_metrics,
+                                                         void *workout_data,
+                                                         WorkoutController *workout_controller);
 
 WorkoutActiveWindow *workout_active_create_for_activity_type(ActivitySessionType type,
                                                              void *workout_data,

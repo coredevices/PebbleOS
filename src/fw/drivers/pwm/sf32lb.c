@@ -12,8 +12,8 @@
 
 #define MAX_PERIOD_GPT 0xFFFFU
 #define MAX_PERIOD_ATM 0xFFFFFFFFU
-#define MIN_PERIOD 3U
-#define MIN_PULSE 1U
+#define MIN_PERIOD     3U
+#define MIN_PULSE      1U
 
 void pwm_set_duty_cycle(const PwmConfig *pwm, uint32_t duty_cycle) {
   GPT_HandleTypeDef *htim = &pwm->state->handle;
@@ -114,7 +114,7 @@ void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
 
   pwm->state->resolution = resolution;
   pwm->state->value = 1000000000UL / (frequency);
-  
+
   HAL_PIN_Set(pwm->pwm_pin.pad, pwm->pwm_pin.func, pwm->pwm_pin.flags, 1);
 
   ret = HAL_GPT_Base_Init(htim);

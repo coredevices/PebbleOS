@@ -12,15 +12,11 @@
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/list.h"
-#include "pbl/util/size.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 void app_window_stack_push(Window *window, bool animated) {
-  PBL_LOG_DBG("Pushing window %p onto app window stack %p",
-      window, app_state_get_window_stack());
+  PBL_LOG_DBG("Pushing window %p onto app window stack %p", window, app_state_get_window_stack());
   window_stack_push(app_state_get_window_stack(), window, animated);
 }
 
@@ -56,7 +52,7 @@ uint32_t app_window_stack_count(void) {
 ////////////////////////////////////
 
 typedef struct WindowStackInfoContext {
-  SemaphoreHandle_t interlock;
+  struct pbl_sem interlock;
   WindowStackDump *dump;
   size_t count;
 } WindowStackInfoContext;
@@ -69,25 +65,20 @@ static void prv_window_stack_info_cb(void *ctx) {
   WindowStackInfoContext *info = ctx;
   WindowStack *stack = app_state_get_window_stack();
   info->count = window_stack_dump(stack, &info->dump);
-  xSemaphoreGive(info->interlock);
+  pbl_sem_give(&info->interlock);
 }
 
 void command_window_stack_info(void) {
-  struct WindowStackInfoContext info = {
-    .interlock = xSemaphoreCreateBinary(),
-  };
-  if (!info.interlock) {
-    prompt_send_response("Couldn't allocate semaphore for window stack");
-    return;
-  }
+  struct WindowStackInfoContext info = {0};
+  pbl_sem_init(&info.interlock, 0, 1);
   // FIXME: Dumping the app window stack from another task without a
   // lock exposes us to the possibility of catching the window stack in
   // an inconsistent state. It's been like this for years without issue
   // but we could just be really lucky. Switch to the app task to dump
   // the window stack?
   launcher_task_add_callback(prv_window_stack_info_cb, &info);
-  xSemaphoreTake(info.interlock, portMAX_DELAY);
-  vSemaphoreDelete(info.interlock);
+  pbl_sem_take(&info.interlock, PBL_FOREVER);
+  pbl_sem_deinit(&info.interlock);
 
   if (info.count > 0 && !info.dump) {
     prompt_send_response("Couldn't allocate buffers for window stack data");
@@ -95,12 +86,11 @@ void command_window_stack_info(void) {
   }
 
   char buffer[128];
-  prompt_send_response_fmt(
-      buffer, sizeof(buffer),
-      "Window Stack, top to bottom: (%zu)", info.count);
+  prompt_send_response_fmt(buffer, sizeof(buffer), "Window Stack, top to bottom: (%zu)",
+                           info.count);
   for (size_t i = 0; i < info.count; ++i) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "window %p <%s>",
-                             info.dump[i].addr, info.dump[i].name);
+    prompt_send_response_fmt(buffer, sizeof(buffer), "window %p <%s>", info.dump[i].addr,
+                             info.dump[i].name);
   }
 cleanup:
   kernel_free(info.dump);

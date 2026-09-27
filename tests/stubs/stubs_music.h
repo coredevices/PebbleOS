@@ -4,14 +4,15 @@
 #pragma once
 
 #include "pbl/services/music.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-void WEAK music_get_now_playing(char* title, char* artist, char* album) {}
+void PBL_WEAK music_get_now_playing(char *title, char *artist, char *album) {
+}
 
-MusicPlayState WEAK music_get_playback_state(void) {
+MusicPlayState PBL_WEAK music_get_playback_state(void) {
   return MusicPlayStateUnknown;
 }
 
-uint32_t WEAK music_get_ms_since_pos_last_updated(void) {
+uint32_t PBL_WEAK music_get_ms_since_pos_last_updated(void) {
   return 0;
 }

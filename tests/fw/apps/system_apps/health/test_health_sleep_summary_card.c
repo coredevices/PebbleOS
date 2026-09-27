@@ -21,7 +21,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_health_sleep_summary_card__initialize(void) {
   // Setup graphics context
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -61,7 +61,7 @@ static void prv_create_card_and_render(HealthData *health_data) {
 //////////////////////
 
 void test_health_sleep_summary_card__render_no_data(void) {
-  prv_create_card_and_render(&(HealthData) {});
+  prv_create_card_and_render(&(HealthData){});
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -106,16 +106,18 @@ void test_health_sleep_summary_card__render_sleep_late_start_early_end1(void) {
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 3,
-    .activity_sessions[0] = {
-      .start_utc = start_of_today - (3 * SECONDS_PER_HOUR), // 9pm
-      .length_min = (3 * MINUTES_PER_HOUR),
-      .type = ActivitySessionType_Sleep,
-    },
-    .activity_sessions[1] = {
-      .start_utc = start_of_today + (1 * SECONDS_PER_HOUR), // 1am
-      .length_min = (4 * MINUTES_PER_HOUR),
-      .type = ActivitySessionType_Sleep,
-    },
+    .activity_sessions[0] =
+        {
+          .start_utc = start_of_today - (3 * SECONDS_PER_HOUR), // 9pm
+          .length_min = (3 * MINUTES_PER_HOUR),
+          .type = ActivitySessionType_Sleep,
+        },
+    .activity_sessions[1] =
+        {
+          .start_utc = start_of_today + (1 * SECONDS_PER_HOUR), // 1am
+          .length_min = (4 * MINUTES_PER_HOUR),
+          .type = ActivitySessionType_Sleep,
+        },
     .activity_sessions[2] = {
       .start_utc = start_of_today + (2 * SECONDS_PER_HOUR), // 2am
       .length_min = (1 * MINUTES_PER_HOUR) + 30,
@@ -144,16 +146,18 @@ void test_health_sleep_summary_card__render_sleep_late_start_early_end2(void) {
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 3,
-    .activity_sessions[0] = {
-      .start_utc = start_of_today - (0 * SECONDS_PER_HOUR), // 12am
-      .length_min = (7 * MINUTES_PER_HOUR),
-      .type = ActivitySessionType_Sleep,
-    },
-    .activity_sessions[1] = {
-      .start_utc = start_of_today + (2 * SECONDS_PER_HOUR), // 2am
-      .length_min = (1 * MINUTES_PER_HOUR) + 40,
-      .type = ActivitySessionType_RestfulSleep,
-    },
+    .activity_sessions[0] =
+        {
+          .start_utc = start_of_today - (0 * SECONDS_PER_HOUR), // 12am
+          .length_min = (7 * MINUTES_PER_HOUR),
+          .type = ActivitySessionType_Sleep,
+        },
+    .activity_sessions[1] =
+        {
+          .start_utc = start_of_today + (2 * SECONDS_PER_HOUR), // 2am
+          .length_min = (1 * MINUTES_PER_HOUR) + 40,
+          .type = ActivitySessionType_RestfulSleep,
+        },
     .activity_sessions[2] = {
       .start_utc = start_of_today + (4 * SECONDS_PER_HOUR), // 4am
       .length_min = (2 * MINUTES_PER_HOUR),
@@ -182,16 +186,18 @@ void test_health_sleep_summary_card__render_sleep_early_start_early_end1(void) {
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 3,
-    .activity_sessions[0] = {
-      .start_utc = start_of_today - (3 * SECONDS_PER_HOUR), // 9pm
-      .length_min = (10 * MINUTES_PER_HOUR),
-      .type = ActivitySessionType_Sleep,
-    },
-    .activity_sessions[1] = {
-      .start_utc = start_of_today - (2 * SECONDS_PER_HOUR), // 10pm
-      .length_min = (1 * MINUTES_PER_HOUR),
-      .type = ActivitySessionType_RestfulSleep,
-    },
+    .activity_sessions[0] =
+        {
+          .start_utc = start_of_today - (3 * SECONDS_PER_HOUR), // 9pm
+          .length_min = (10 * MINUTES_PER_HOUR),
+          .type = ActivitySessionType_Sleep,
+        },
+    .activity_sessions[1] =
+        {
+          .start_utc = start_of_today - (2 * SECONDS_PER_HOUR), // 10pm
+          .length_min = (1 * MINUTES_PER_HOUR),
+          .type = ActivitySessionType_RestfulSleep,
+        },
     .activity_sessions[2] = {
       .start_utc = start_of_today + (3 * SECONDS_PER_HOUR), // 3am
       .length_min = (1 * MINUTES_PER_HOUR) + 15,
@@ -220,11 +226,12 @@ void test_health_sleep_summary_card__render_sleep_early_start_late_end1(void) {
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 2,
-    .activity_sessions[0] = {
-      .start_utc = start_of_today - (3 * SECONDS_PER_HOUR),
-      .length_min = (3 * MINUTES_PER_HOUR),
-      .type = ActivitySessionType_Sleep,
-    },
+    .activity_sessions[0] =
+        {
+          .start_utc = start_of_today - (3 * SECONDS_PER_HOUR),
+          .length_min = (3 * MINUTES_PER_HOUR),
+          .type = ActivitySessionType_Sleep,
+        },
     .activity_sessions[1] = {
       .start_utc = start_of_today + (1 * SECONDS_PER_HOUR),
       .length_min = (6 * MINUTES_PER_HOUR),
@@ -235,7 +242,6 @@ void test_health_sleep_summary_card__render_sleep_early_start_late_end1(void) {
   prv_create_card_and_render(&health_data);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
-
 
 void test_health_sleep_summary_card__render_sleep_late_start_late_end1(void) {
   const time_t start_of_today = time_util_get_midnight_of(s_now_utc);

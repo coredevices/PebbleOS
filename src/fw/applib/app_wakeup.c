@@ -5,7 +5,6 @@
 
 #include "event_service_client.h"
 #include "process_state/app_state/app_state.h"
-#include "process_management/app_manager.h"
 #include "syscall/syscall.h"
 #include "pbl/services/wakeup.h"
 #include "kernel/events.h"
@@ -49,7 +48,7 @@ void app_wakeup_cancel_all(void) {
 bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie) {
   WakeupInfo wakeup_info;
   sys_process_get_wakeup_info(&wakeup_info);
-  //If the id is invalid, return false
+  // If the id is invalid, return false
   if (wakeup_info.wakeup_id <= 0) {
     return false;
   }

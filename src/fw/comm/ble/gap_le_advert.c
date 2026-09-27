@@ -4,8 +4,8 @@
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
 
-#include <bluetooth/bt_driver_advert.h>
-#include <bluetooth/init.h>
+#include <pbl/bluetooth/advert.h>
+#include <pbl/bluetooth/init.h>
 
 #include "comm/bt_lock.h"
 #include "kernel/event_loop.h"
@@ -46,13 +46,13 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 //! To-Do's:
 //! --------
 //! - ble_discoverability/pairability.c
-//! - Use private addresses for privacy / harder tracebility.
+//! - Use private addresses for privacy / harder traceability.
 
 // Advertising interval parameters in ms, indexed by GAPLEAdvertisingInterval.
 // Values comply with Apple Accessory Design Guidelines.
 static const uint32_t s_interval_ms[] = {
-  [GAPLEAdvertisingInterval_Short] = 20,     // 20ms
-  [GAPLEAdvertisingInterval_Long]  = 1022,   // 1022.5ms (truncated to ms)
+  [GAPLEAdvertisingInterval_Short] = 20,  // 20ms
+  [GAPLEAdvertisingInterval_Long] = 1022, // 1022.5ms (truncated to ms)
 };
 
 typedef struct GAPLEAdvertisingJob {
@@ -71,10 +71,10 @@ typedef struct GAPLEAdvertisingJob {
   //! The terms are run in the order that they appear in this array
   GAPLEAdvertisingJobTerm *terms;
 
-  GAPLEAdvertisingJobTag tag:8;
+  GAPLEAdvertisingJobTag tag : 8;
 
   //! The advertisement and scan response data
-  BLEAdData payload;
+  struct pbl_bt_ad_data payload;
 } GAPLEAdvertisingJob;
 // -----------------------------------------------------------------------------
 // Static Variables -- MUST be protected with bt_lock/unlock!
@@ -90,7 +90,7 @@ static GAPLEAdvertisingJob *s_current;
 
 //! Advertising data that was last configured into the controller.
 //! @note This pointer may be dangling, don't try to reference!
-static const BLEAdData *s_current_ad_data;
+static const struct pbl_bt_ad_data *s_current_ad_data;
 
 //! The regular timer that marks the end of a cycle and triggers the next job
 //! to be aired.
@@ -131,11 +131,14 @@ static void prv_analytics_start_timer(GAPLEAdvertisingInterval interval) {
 
 // -----------------------------------------------------------------------------
 
-static const char * prv_string_for_debug_tag(GAPLEAdvertisingJobTag tag) {
+static const char *prv_string_for_debug_tag(GAPLEAdvertisingJobTag tag) {
   switch (tag) {
-    case GAPLEAdvertisingJobTagDiscovery: return "DIS";
-    case GAPLEAdvertisingJobTagReconnection: return "RCN";
-    default: return "?";
+    case GAPLEAdvertisingJobTagDiscovery:
+      return "DIS";
+    case GAPLEAdvertisingJobTagReconnection:
+      return "RCN";
+    default:
+      return "?";
   }
 }
 
@@ -167,7 +170,7 @@ static void prv_unlink_job(GAPLEAdvertisingJob *job) {
     job->node.prev = NULL;
     s_jobs = NULL;
   } else {
-    list_remove(&job->node, (ListNode **) &s_jobs, NULL);
+    list_remove(&job->node, (ListNode **)&s_jobs, NULL);
   }
 }
 
@@ -179,7 +182,7 @@ static bool prv_is_registered_job(const GAPLEAdvertisingJob *job) {
   // Search jobs (can't use list_contains(), because circular):
   ListNode *node = &s_jobs->node;
   while (node) {
-    if (node == (const ListNode *) job) {
+    if (node == (const ListNode *)job) {
       return true;
     }
     node = node->next;
@@ -206,14 +209,13 @@ static void prv_increment_elapsed_time_for_job(GAPLEAdvertisingJob **job_ptr, bo
     if (job->cur_term < job->num_terms) {
       // Take care of GAPLE_ADVERTISING_DURATION_LOOP_AROUND:
       if (job->terms[job->cur_term].duration_secs == GAPLE_ADVERTISING_DURATION_LOOP_AROUND) {
-        PBL_LOG_DBG("Job looped around to term %"PRIu16,
+        PBL_LOG_DBG("Job looped around to term %" PRIu16,
                     job->terms[job->cur_term].loop_around_index);
         job->cur_term = job->terms[job->cur_term].loop_around_index;
       }
 
       job->term_time_elapsed_secs = 0;
-      PBL_LOG_DBG("Job is performing next advertising term (%d/%d)",
-                  job->cur_term, job->num_terms);
+      PBL_LOG_DBG("Job is performing next advertising term (%d/%d)", job->cur_term, job->num_terms);
       // force an update to make sure the new requested term takes
       if (has_new_term) {
         *has_new_term = true;
@@ -229,8 +231,7 @@ static void prv_increment_elapsed_time_for_job(GAPLEAdvertisingJob **job_ptr, bo
         job->unscheduled_callback(job, true /* completed */, job->unscheduled_callback_data);
       }
 
-      PBL_LOG_DBG("Unscheduled advertising completed job: %s",
-                  prv_string_for_debug_tag(job->tag));
+      PBL_LOG_DBG("Unscheduled advertising completed job: %s", prv_string_for_debug_tag(job->tag));
       kernel_free(job->terms);
       kernel_free(job);
       *job_ptr = NULL;
@@ -263,7 +264,7 @@ static void prv_cycle_kernelmain_cb(void *unused) {
     GAPLEAdvertisingJob *job = s_current;
 
     // Set to next job (round-robin)
-    s_jobs = (GAPLEAdvertisingJob *) job->node.next;
+    s_jobs = (GAPLEAdvertisingJob *)job->node.next;
 
     prv_increment_elapsed_time_for_job(&job, &force_update);
 
@@ -330,7 +331,7 @@ static void prv_perform_next_job(bool force_refresh) {
     if (s_is_advertising) {
       // Controller needs to stop advertising before we can start a new job:
       PBL_LOG_DBG("Disable last Ad job");
-      bt_driver_advert_advertising_disable();
+      pbl_bt_advert_advertising_disable();
       prv_analytics_stop_timers();
       s_is_advertising = false;
     }
@@ -346,7 +347,7 @@ static void prv_perform_next_job(bool force_refresh) {
 
     if (s_current_ad_data != &next->payload) {
       // Give the advertisement data to the BT controller:
-      bool result = bt_driver_advert_set_advertising_data(&next->payload);
+      bool result = pbl_bt_advert_set_advertising_data(&next->payload);
       if (result) {
         s_current_ad_data = &next->payload;
       }
@@ -356,8 +357,8 @@ static void prv_perform_next_job(bool force_refresh) {
     const uint32_t min_interval_ms = s_interval_ms[interval];
     const uint32_t max_interval_ms = s_interval_ms[interval];
 
-    PBL_LOG_DBG("Enable Ad job %s",  prv_string_for_debug_tag(next->tag));
-    bool result = bt_driver_advert_advertising_enable(min_interval_ms, max_interval_ms);
+    PBL_LOG_DBG("Enable Ad job %s", prv_string_for_debug_tag(next->tag));
+    bool result = pbl_bt_advert_advertising_enable(min_interval_ms, max_interval_ms);
     if (result) {
       s_is_advertising = true;
       prv_analytics_start_timer(interval);
@@ -369,16 +370,14 @@ static void prv_perform_next_job(bool force_refresh) {
 }
 
 // -----------------------------------------------------------------------------
-GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
-                            const GAPLEAdvertisingJobTerm *terms,
-                            uint8_t num_terms,
-                            GAPLEAdvertisingJobUnscheduleCallback callback,
-                            void *callback_data,
-                            GAPLEAdvertisingJobTag tag) {
+GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *payload,
+                                              const GAPLEAdvertisingJobTerm *terms,
+                                              uint8_t num_terms,
+                                              GAPLEAdvertisingJobUnscheduleCallback callback,
+                                              void *callback_data, GAPLEAdvertisingJobTag tag) {
   // Sanity check payload:
-  if (!payload ||
-      payload->ad_data_length > GAP_LE_AD_REPORT_DATA_MAX_LENGTH ||
-      payload->scan_resp_data_length > GAP_LE_AD_REPORT_DATA_MAX_LENGTH) {
+  if (!payload || payload->ad_data_length > PBL_BT_AD_REPORT_DATA_MAX_LENGTH ||
+      payload->scan_resp_data_length > PBL_BT_AD_REPORT_DATA_MAX_LENGTH) {
     return NULL;
   }
 
@@ -400,11 +399,10 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
   }
 
   // Create the job data structure:
-  GAPLEAdvertisingJob *job = kernel_malloc_check(sizeof(GAPLEAdvertisingJob) +
-                                           payload->ad_data_length +
-                                           payload->scan_resp_data_length);
+  GAPLEAdvertisingJob *job = kernel_malloc_check(
+      sizeof(GAPLEAdvertisingJob) + payload->ad_data_length + payload->scan_resp_data_length);
 
-  *job = (const GAPLEAdvertisingJob) {
+  *job = (const GAPLEAdvertisingJob){
     .unscheduled_callback = callback,
     .unscheduled_callback_data = callback_data,
     .term_time_elapsed_secs = 0,
@@ -423,8 +421,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const BLEAdData *payload,
   memcpy(job->payload.data, payload->data,
          payload->ad_data_length + payload->scan_resp_data_length);
 
-  PBL_LOG_INFO("Scheduling advertising job: %s",
-          prv_string_for_debug_tag(job->tag));
+  PBL_LOG_INFO("Scheduling advertising job: %s", prv_string_for_debug_tag(job->tag));
 
   // Schedule
   bt_lock();
@@ -460,16 +457,14 @@ void gap_le_advert_unschedule(GAPLEAdvertisingJobRef job) {
     is_registered = prv_is_registered_job(job);
 
     if (is_registered) {
-      PBL_LOG_INFO("Unscheduling advertising job: %s",
-              prv_string_for_debug_tag(job->tag));
+      PBL_LOG_INFO("Unscheduling advertising job: %s", prv_string_for_debug_tag(job->tag));
 
       prv_unlink_job(job);
       prv_perform_next_job(false);
 
       // Call the unscheduled callback:
       if (job->unscheduled_callback) {
-        job->unscheduled_callback(job, false /* completed */,
-                                  job->unscheduled_callback_data);
+        job->unscheduled_callback(job, false /* completed */, job->unscheduled_callback_data);
       }
 
       // In case the payload pointer of a future jobs ends up being the same, ensure the adv data
@@ -488,8 +483,7 @@ unlock:
   }
 }
 
-void gap_le_advert_unschedule_job_types(
-    GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
+void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
   bt_lock();
 
   ListNode *first_node = &s_current->node;
@@ -507,8 +501,7 @@ void gap_le_advert_unschedule_job_types(
 
     for (size_t i = 0; i < num_types; i++) {
       if (job->tag == tag_types[i]) {
-        PBL_LOG_DBG("Removing advertisement of type %s",
-                    prv_string_for_debug_tag(job->tag));
+        PBL_LOG_DBG("Removing advertisement of type %s", prv_string_for_debug_tag(job->tag));
         gap_le_advert_unschedule(job);
       }
     }
@@ -530,7 +523,7 @@ int8_t gap_le_advert_get_tx_power(void) {
   {
     // In case this API call fails, (e.g. Airplane Mode),
     // the s_tx_power_cached is untouched:
-    if (bt_driver_advert_client_get_tx_power(&tx_power)) {
+    if (pbl_bt_advert_client_get_tx_power(&tx_power)) {
       s_tx_power_cached = tx_power;
     }
   }
@@ -551,7 +544,7 @@ void gap_le_advert_init(void) {
     s_jobs = NULL;
     s_current = NULL;
     s_current_ad_data = NULL;
-    s_cycle_regular_timer = (const RegularTimerInfo) {
+    s_cycle_regular_timer = (const RegularTimerInfo){
       .cb = prv_cycle_timer_callback,
     };
 
@@ -624,7 +617,7 @@ unlock:
 }
 
 // -----------------------------------------------------------------------------
-void bt_driver_handle_host_resynced(void) {
+void pbl_bt_handle_host_resynced(void) {
   bt_lock();
   {
     if (!s_gap_le_advert_is_initialized) {

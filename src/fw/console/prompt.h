@@ -12,7 +12,7 @@
 //! TODO: We should probably split this in the future so there's one module to handle the
 //! dbgserial part and another module to handle executing commands.
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -39,7 +39,7 @@ typedef struct PromptContext {
 void console_switch_to_prompt(void);
 
 //! Called on an ISR. Handles a new character from the dbgserial when we're in prompt mode.
-void prompt_handle_character(char c, bool* should_context_switch);
+void prompt_handle_character(char c, bool *should_context_switch);
 
 //! Appends a character to a given context.
 //! @return true if the character fits, false if the buffer is full
@@ -56,13 +56,13 @@ void prompt_watchdog_feed(void);
 //! appropriate output terminal depending on who ran the command (dbgserial or accessory
 //! connector).
 //! @param response NULL-terminated string
-void prompt_send_response(const char* response);
+void prompt_send_response(const char *response);
 
 //! Use this from a prompt command to respond to a command. The output will directed out the
 //! appropriate output terminal depending on who ran the command (dbgserial or accessory
 //! connector). This option allows the use of printf style formatters to create output.
-void prompt_send_response_fmt(char* buffer, size_t buffer_size, const char* fmt, ...)
-    FORMAT_PRINTF(3, 4);
+void prompt_send_response_fmt(char *buffer, size_t buffer_size, const char *fmt, ...)
+    PBL_FORMAT_PRINTF(3, 4);
 
 //! Finishes the currently running prompt command, and sends the prompt command complete message.
 //! This is only to be used if \ref prompt_command_continues_after_returning has been called,

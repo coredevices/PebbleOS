@@ -22,7 +22,7 @@ typedef enum {
 typedef enum {
   SpeakerStateIdle = 0,
   SpeakerStatePlaying,
-  SpeakerStateDraining,    // source exhausted, playing remaining queued data
+  SpeakerStateDraining, // source exhausted, playing remaining queued data
 } SpeakerState;
 
 typedef enum {
@@ -53,9 +53,8 @@ bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
 //! @param pri Priority level
 //! @param vol Volume (0-100)
 //! @return true if playback started, false if preempted by higher priority
-bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms,
-                               uint8_t waveform, uint8_t velocity,
-                               SpeakerPriority pri, uint8_t vol);
+bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms, uint8_t waveform,
+                               uint8_t velocity, SpeakerPriority pri, uint8_t vol);
 
 //! Play a short fixed tone at an absolute output volume, bypassing the user's
 //! speaker-volume preference, so settings UIs can preview a candidate volume
@@ -87,6 +86,16 @@ void speaker_service_register_finish(PebbleTask task);
 //! @return true if stream opened, false if blocked by higher priority
 bool speaker_service_stream_open(SpeakerPriority pri, uint8_t vol, SpeakerPcmFormat fmt);
 
+//! Assign ownership atomically, so services cannot write into a preempting stream.
+bool speaker_service_stream_open_owned(SpeakerPriority pri, uint8_t vol, SpeakerPcmFormat fmt,
+                                       PebbleTask owner);
+//! Internal live audio: writes feed complete driver blocks on the producer task.
+//! Driver callbacks retry backpressure without inserting silence into the PCM queue.
+bool speaker_service_stream_open_realtime_owned(SpeakerPriority pri, uint8_t vol,
+                                                SpeakerPcmFormat fmt, PebbleTask owner);
+uint32_t speaker_service_stream_write_owned(PebbleTask owner, const void *data, uint32_t num_bytes);
+void speaker_service_stream_close_owned(PebbleTask owner);
+
 //! Write PCM data to the active stream.
 //! @param data Source buffer
 //! @param num_bytes Number of bytes to write
@@ -102,6 +111,9 @@ void speaker_service_stop(void);
 //! Set playback volume.
 //! @param vol Volume 0-100
 void speaker_service_set_volume(uint8_t vol);
+
+//! Change volume only if the playback still belongs to this task.
+void speaker_service_set_volume_owned(PebbleTask owner, uint8_t vol);
 
 //! Get current speaker state.
 SpeakerState speaker_service_get_state(void);

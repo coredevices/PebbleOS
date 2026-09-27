@@ -23,10 +23,12 @@ int health_util_format_hours_minutes_seconds(char *buffer, size_t buffer_size, i
 
 void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i18n_owner,
                                                          GFont number_font, GFont units_font,
-                                                         GTextNodeContainer *container) { }
+                                                         GTextNodeContainer *container) {
+}
 
 void health_util_convert_fraction_to_whole_and_decimal_part(int numerator, int denominator,
-                                                            int* whole_part, int *decimal_part) { }
+                                                            int *whole_part, int *decimal_part) {
+}
 
 int health_util_format_whole_and_decimal(char *buffer, size_t buffer_size, int numerator,
                                          int denominator) {
@@ -46,7 +48,8 @@ int health_util_format_distance(char *buffer, size_t buffer_size, uint32_t dista
 }
 
 void health_util_convert_distance_to_whole_and_decimal_part(int distance_m, int *whole_part,
-                                                            int *decimal_part) { }
+                                                            int *decimal_part) {
+}
 
 int health_util_get_pace(int time_min, int distance_meter) {
   return 0;

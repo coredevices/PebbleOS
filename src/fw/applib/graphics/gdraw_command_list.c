@@ -6,6 +6,7 @@
 
 #include "applib/applib_malloc.auto.h"
 #include "system/passert.h"
+#include "pbl/util/testing.h"
 
 bool gdraw_command_list_copy(void *buffer, size_t buffer_length, GDrawCommandList *src) {
   size_t src_size = gdraw_command_list_get_data_size(src);
@@ -38,32 +39,29 @@ void gdraw_command_list_destroy(GDrawCommandList *list) {
 }
 
 static GDrawCommand *prv_next_command(GDrawCommand *command) {
-  return (GDrawCommand *) (command->points + command->num_points);
+  return (GDrawCommand *)(command->points + command->num_points);
 }
 
 bool gdraw_command_list_validate(GDrawCommandList *command_list, size_t size) {
-  if (!command_list ||
-      (size < sizeof(GDrawCommandList)) ||
-      (command_list->num_commands == 0)) {
+  if (!command_list || (size < sizeof(GDrawCommandList)) || (command_list->num_commands == 0)) {
     return false;
   }
 
   uint8_t *end = (uint8_t *)command_list + size;
   GDrawCommand *command = command_list->commands;
   for (uint32_t i = 0; i < command_list->num_commands; i++) {
-    if ((end <= (uint8_t *) command) ||
-        !gdraw_command_validate(command, end - (uint8_t *) command)) {
+    if ((end <= (uint8_t *)command) || !gdraw_command_validate(command, end - (uint8_t *)command)) {
       return false;
     }
     command = prv_next_command(command);
   }
 
-  return ((uint8_t *) command <= end);
+  return ((uint8_t *)command <= end);
 }
 
 void *gdraw_command_list_iterate_private(GDrawCommandList *command_list,
-                                 GDrawCommandListIteratorCb handle_command,
-                                 void *callback_context) {
+                                         GDrawCommandListIteratorCb handle_command,
+                                         void *callback_context) {
   if (!command_list) {
     return NULL;
   }
@@ -71,7 +69,7 @@ void *gdraw_command_list_iterate_private(GDrawCommandList *command_list,
   GDrawCommand *command = command_list->commands;
   for (uint32_t i = 0; i < command_list->num_commands; i++) {
     if ((handle_command) && (!handle_command(command, i, callback_context))) {
-        break;
+      break;
     }
     command = prv_next_command(command);
   }
@@ -79,8 +77,7 @@ void *gdraw_command_list_iterate_private(GDrawCommandList *command_list,
 }
 
 void gdraw_command_list_iterate(GDrawCommandList *command_list,
-                                 GDrawCommandListIteratorCb handle_command,
-                                 void *callback_context) {
+                                GDrawCommandListIteratorCb handle_command, void *callback_context) {
   gdraw_command_list_iterate_private(command_list, handle_command, callback_context);
 }
 
@@ -136,7 +133,7 @@ static bool prv_iterate_max_command_size(GDrawCommand *command, uint32_t idx, vo
   return true;
 }
 
-T_STATIC size_t prv_get_list_max_command_size(GDrawCommandList *command_list) {
+PBL_T_STATIC size_t prv_get_list_max_command_size(GDrawCommandList *command_list) {
   if (!command_list) {
     return 0;
   }
@@ -221,16 +218,18 @@ typedef struct {
   } iter;
 } CollectPointsCBContext;
 
-_Static_assert((sizeof(GPoint) == sizeof(GPointPrecise)),
+_Static_assert(
+    (sizeof(GPoint) == sizeof(GPointPrecise)),
     "GPointPrecise cannot be convert to GPoint in-place because of its size difference.");
 
-_Static_assert((offsetof(GPoint, y) == offsetof(GPointPrecise, y)),
+_Static_assert(
+    (offsetof(GPoint, y) == offsetof(GPointPrecise, y)),
     "GPointPrecise cannot be convert to GPoint in-place because of its member size difference.");
 
 static bool prv_collect_points(GDrawCommand *command, uint32_t idx, void *ctx) {
   CollectPointsCBContext *collect = ctx;
-  const size_t bytes_copied = gdraw_command_copy_points(command,
-      &collect->values.points[collect->iter.current_index], collect->iter.bytes_left);
+  const size_t bytes_copied = gdraw_command_copy_points(
+      command, &collect->values.points[collect->iter.current_index], collect->iter.bytes_left);
   const uint16_t num_copied = bytes_copied / sizeof(GPoint);
 
   // convert to regular GPoint
@@ -257,8 +256,7 @@ static bool prv_collect_points(GDrawCommand *command, uint32_t idx, void *ctx) {
 }
 
 GPoint *gdraw_command_list_collect_points(GDrawCommandList *command_list, bool is_precise,
-    uint16_t *num_points_out) {
-
+                                          uint16_t *num_points_out) {
   const uint16_t num_points = gdraw_command_list_get_num_points(command_list);
   const size_t max_bytes = num_points * sizeof(GPoint);
   GPoint *points = applib_malloc(num_points * sizeof(GPoint));
@@ -267,10 +265,11 @@ GPoint *gdraw_command_list_collect_points(GDrawCommandList *command_list, bool i
   }
 
   CollectPointsCBContext ctx = {
-    .values = {
-      .points = points,
-      .is_precise = is_precise,
-    },
+    .values =
+        {
+          .points = points,
+          .is_precise = is_precise,
+        },
     .iter.bytes_left = max_bytes,
   };
   gdraw_command_list_iterate(command_list, prv_collect_points, &ctx);

@@ -28,9 +28,7 @@ void vibe_ctl(bool on) {
   QemuProtocolVibrationNotificationHeader notification = {
     .on = on ? 1 : 0,
   };
-  qemu_serial_send(QemuProtocol_Vibration,
-                   (const uint8_t *)&notification,
-                   sizeof(notification));
+  qemu_serial_send(QemuProtocol_Vibration, (const uint8_t *)&notification, sizeof(notification));
 }
 
 void vibe_force_off(void) {

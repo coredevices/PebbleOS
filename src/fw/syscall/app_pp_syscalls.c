@@ -4,9 +4,7 @@
 #include "applib/app_message/app_message_internal.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/app_manager.h"
-#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/comm_session/app_session_capabilities.h"
-#include "pbl/services/comm_session/protocol.h"
 #include "pbl/services/comm_session/session.h"
 #include "syscall/syscall_internal.h"
 
@@ -24,7 +22,7 @@ DEFINE_SYSCALL(CommSession *, sys_app_pp_get_comm_session, void) {
 }
 
 DEFINE_SYSCALL(bool, sys_app_pp_send_data, CommSession *session, uint16_t endpoint_id,
-               const uint8_t* data, uint16_t length) {
+               const uint8_t *data, uint16_t length) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(data, length);
   }
@@ -43,8 +41,8 @@ DEFINE_SYSCALL(bool, sys_app_pp_send_data, CommSession *session, uint16_t endpoi
 
   // TODO: apply some heuristic to decide whether to put connection in fast mode or not:
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
-  comm_session_set_responsiveness(session, BtConsumerPpAppMessage, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE, PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 
   // FIXME: Let the app task wait indefinitely for now
   const uint32_t timeout_ms = ~0;

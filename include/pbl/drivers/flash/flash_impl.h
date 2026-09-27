@@ -79,13 +79,12 @@ status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len);
 //!
 //! The result is undefined if this function is called while a write or erase is
 //! in progress.
-status_t flash_impl_read_dma_begin(void *buffer, FlashAddress addr,
-                                   size_t len);
+status_t flash_impl_read_dma_begin(void *buffer, FlashAddress addr, size_t len);
 
 //! Called from an interrupt context when the DMA read has completed. It is
 //! guaranteed that the call is made from an interrupt of low enough priority
 //! that RTOS API calls are safe to use, and that it is a tail-call from the end
-//! of the implementation's ISR (read: portEND_SWITCHING_ISR is permissible).
+//! of the implementation's ISR (read: kernel calls are permissible).
 //!
 //! @param result S_SUCCESS iff the read completed successfully.
 extern void flash_impl_on_read_dma_complete_from_isr(status_t result);
@@ -98,8 +97,7 @@ void flash_impl_enable_write_protection(void);
 //!
 //! The result is undefined if this function is called while a write or erase is
 //! in progress.
-status_t flash_impl_write_protect(FlashAddress start_sector,
-                                  FlashAddress end_sector);
+status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector);
 
 //! Remove write protection.
 //!
@@ -144,8 +142,7 @@ status_t flash_impl_unprotect(void);
 //! The result is undefined if this function is called while a read or erase is
 //! in progress. It is an error to call this function while a write is
 //! in progress or suspended.
-int flash_impl_write_page_begin(const void *buffer, FlashAddress addr,
-                                size_t len);
+int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t len);
 
 //! Poll the status of a flash page write.
 //!

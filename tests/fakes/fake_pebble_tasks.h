@@ -7,9 +7,6 @@
 
 #include "kernel/pebble_tasks.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
-
 static PebbleTask s_current_task = PebbleTask_KernelMain;
 
 PebbleTask pebble_task_get_current(void) {
@@ -20,7 +17,6 @@ void stub_pebble_tasks_set_current(PebbleTask task) {
   s_current_task = task;
 }
 
-const char* pebble_task_get_name(PebbleTask task) {
+const char *pebble_task_get_name(PebbleTask task) {
   return "App <Stub>";
 }
-

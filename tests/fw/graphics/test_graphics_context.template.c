@@ -3,7 +3,7 @@
 
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/graphics.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include "clar.h"
 #include "util.h"
@@ -25,7 +25,7 @@
 
 // Includes all possible fields for all shapes
 // The fields that are not needed for a particular shape will be zeroed out.
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   char func[30];
   GContext ctx;
   GPoint p0;

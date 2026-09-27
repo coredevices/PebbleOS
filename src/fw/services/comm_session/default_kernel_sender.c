@@ -4,18 +4,16 @@
 #include "comm/bt_lock.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/comm_session/protocol.h"
 #include "pbl/services/comm_session/session_send_buffer.h"
 #include "pbl/services/comm_session/session_send_queue.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
-#include "pbl/util/likely.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -40,7 +38,7 @@ typedef struct SendBuffer {
   //! Number of bytes that have been consumed so far
   size_t consumed_length;
 
-  struct PACKED {
+  struct PBL_PACKED {
     //! The remainder of this struct is the Pebble Protocol message (header + payload):
     PebbleProtocolHeader header;
     uint8_t payload[];
@@ -69,7 +67,7 @@ typedef struct SendBuffer {
 //! comm_session_send_buffer_begin_write() in case there is not enough space left.
 //! @note This semaphore *must never* be taken when bt_lock() is held or deadlock will happen!
 //! Giving the semaphore when bt_lock() is held is fine though.
-static SemaphoreHandle_t s_default_kernel_sender_write_semaphore;
+static PBL_SEM_DEFINE(s_default_kernel_sender_write_semaphore, 0, 1);
 
 //! Total number of bytes worth of Pebble Protocol messages (incl. header) allocated by this module.
 //! This excludes sizeof(SendBuffer), see comment with DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED.
@@ -84,9 +82,7 @@ extern void comm_session_send_next_immediately(CommSession *session);
 // -------------------------------------------------------------------------------------------------
 //! To be called once at boot
 void comm_default_kernel_sender_init(void) {
-  s_default_kernel_sender_write_semaphore = xSemaphoreCreateBinary();
 }
-
 
 // -------------------------------------------------------------------------------------------------
 // Helpers
@@ -113,7 +109,7 @@ static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoin
   // Use ...alloc_check() here. If this appears to be an issue, we could consider giving this
   // module its own Heap:
   SendBuffer *sb = (SendBuffer *)kernel_zalloc_check(allocation_size);
-  *sb = (const SendBuffer) {
+  *sb = (const SendBuffer){
     .payload_buffer_length = payload_buffer_length,
     .consumed_length = 0,
     .session = session,
@@ -127,10 +123,10 @@ static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoin
 
 static void prv_destroy_send_buffer(SendBuffer *sb) {
   bt_lock_assert_held(true /* assert_is_held */);
-  s_default_kernel_sender_bytes_allocated -= (sizeof(PebbleProtocolHeader)
-                                              + sb->payload_buffer_length);
+  s_default_kernel_sender_bytes_allocated -=
+      (sizeof(PebbleProtocolHeader) + sb->payload_buffer_length);
   kernel_free(sb);
-  xSemaphoreGive(s_default_kernel_sender_write_semaphore);
+  pbl_sem_give(&s_default_kernel_sender_write_semaphore);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -174,7 +170,7 @@ static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
   prv_destroy_send_buffer((SendBuffer *)send_job);
 }
 
-T_STATIC const SessionSendJobImpl s_default_kernel_send_job_impl = {
+PBL_T_STATIC const SessionSendJobImpl s_default_kernel_send_job_impl = {
   .get_length = prv_send_job_impl_get_length,
   .copy = prv_send_job_impl_copy,
   .get_read_pointer = prv_send_job_impl_get_read_pointer,
@@ -197,15 +193,15 @@ size_t comm_session_send_buffer_get_max_payload_length(const CommSession *sessio
   return max_length;
 }
 
-SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
-                                                  size_t required_payload_length,
-                                                  uint32_t timeout_ms) {
+SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
+                                                 size_t required_payload_length,
+                                                 uint32_t timeout_ms) {
   if (!session) {
     return NULL;
   }
   if (required_payload_length > DEFAULT_KERNEL_SENDER_MAX_PAYLOAD_SIZE) {
-    PBL_LOG_WRN("Message for endpoint_id %u exceeds maximum length (length=%"PRIu32")",
-            endpoint_id, (uint32_t)required_payload_length);
+    PBL_LOG_WRN("Message for endpoint_id %u exceeds maximum length (length=%" PRIu32 ")",
+                endpoint_id, (uint32_t)required_payload_length);
     return NULL;
   }
 
@@ -243,21 +239,22 @@ SendBuffer * comm_session_send_buffer_begin_write(CommSession *session, uint16_t
         comm_session_send_next_immediately(session);
       } else {
         // Wait for the sending process to free up some space in the send buffer:
-        is_timeout = (xSemaphoreTake(s_default_kernel_sender_write_semaphore,
-                                     remaining_ms) == pdFALSE);
+        is_timeout = ((
+            pbl_sem_take(&s_default_kernel_sender_write_semaphore, PBL_TICKS(remaining_ms)) != 0));
       }
     }
 
     if (is_timeout) {
-      PBL_LOG_WRN("Failed to get send buffer (bytes=%"PRIu32", endpoint_id=%"PRIu16", to=%"PRIu32")",
-              (uint32_t)required_payload_length, endpoint_id, (uint32_t)is_timeout);
+      PBL_LOG_WRN("Failed to get send buffer (bytes=%" PRIu32 ", endpoint_id=%" PRIu16
+                  ", to=%" PRIu32 ")",
+                  (uint32_t)required_payload_length, endpoint_id, (uint32_t)is_timeout);
       return NULL;
     }
-  }  // while(true)
+  } // while(true)
 }
 
 bool comm_session_send_buffer_write(SendBuffer *sb, const uint8_t *data, size_t length) {
-  if (UNLIKELY((sb->payload_buffer_length - sb->written_length) < length)) {
+  if (PBL_UNLIKELY((sb->payload_buffer_length - sb->written_length) < length)) {
     return false;
   }
   memcpy(sb->payload + sb->header.length + sb->written_length, data, length);
@@ -268,7 +265,7 @@ bool comm_session_send_buffer_write(SendBuffer *sb, const uint8_t *data, size_t 
 void comm_session_send_buffer_end_write(SendBuffer *sb) {
   CommSession *session = sb->session;
   // Clear out the ListNode and set impl:
-  sb->queue_job = (const SessionSendQueueJob) {
+  sb->queue_job = (const SessionSendQueueJob){
     .impl = &s_default_kernel_send_job_impl,
   };
   sb->header.length = ntohs(sb->written_length);
@@ -278,11 +275,10 @@ void comm_session_send_buffer_end_write(SendBuffer *sb) {
 // -------------------------------------------------------------------------------------------------
 // Interfaces for testing
 
-SemaphoreHandle_t comm_session_send_buffer_write_semaphore(void) {
-  return s_default_kernel_sender_write_semaphore;
+struct pbl_sem *comm_session_send_buffer_write_semaphore(void) {
+  return &s_default_kernel_sender_write_semaphore;
 }
 
 void comm_default_kernel_sender_deinit(void) {
-  vSemaphoreDelete(s_default_kernel_sender_write_semaphore);
-  s_default_kernel_sender_write_semaphore = NULL;
+  pbl_sem_reset(&s_default_kernel_sender_write_semaphore);
 }

@@ -1,29 +1,27 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/irq.h"
+#include "pbl/kernel/sched.h"
 #include "pulse_logging.h"
 
 #include "logging_private.h"
 #include "kernel/pebble_tasks.h"
 
-#include "console/pulse.h"
 #include "console/pulse_protocol_impl.h"
 #include "kernel/events.h"
 
 #include "pbl/mcu/interrupts.h"
 #include "pbl/mcu/privilege.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/circular_buffer.h"
 #include "pbl/util/math.h"
 #include "pbl/util/string.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
-
 #include <ctype.h>
 
 //! This is the format for a PULSEv2 log message when sent out over the wire.
-typedef struct PACKED MessageContents {
+typedef struct PBL_PACKED MessageContents {
   uint8_t message_type;
   char src_filename[16];
   char log_level_char;
@@ -34,7 +32,7 @@ typedef struct PACKED MessageContents {
   char message[128];
 } MessageContents;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint64_t timestamp_ms;
   uint8_t log_level;
 } BufferedLogInfo;
@@ -46,16 +44,15 @@ static CircularBuffer s_isr_log_buffer;
 //! Underlying storage for s_isr_log_buffer
 static uint8_t s_isr_log_buffer_storage[256];
 
-
 static uint64_t prv_get_timestamp_ms(void) {
   time_t time_s;
   uint16_t time_ms;
   rtc_get_time_ms(&time_s, &time_ms);
-  return ((uint64_t) time_s * 1000) + time_ms;
+  return ((uint64_t)time_s * 1000) + time_ms;
 }
 
-static size_t prv_serialize_log_header(MessageContents *contents,
-                                       uint8_t log_level, uint64_t timestamp_ms, PebbleTask task,
+static size_t prv_serialize_log_header(MessageContents *contents, uint8_t log_level,
+                                       uint64_t timestamp_ms, PebbleTask task,
                                        const char *src_filename, uint16_t src_line_number) {
   contents->message_type = 1; // Text
 
@@ -81,21 +78,17 @@ static size_t prv_serialize_log_header(MessageContents *contents,
   return offsetof(MessageContents, message);
 }
 
-
 //! Serialize a message into contents, returning the number of bytes used.
-static size_t prv_serialize_log(MessageContents *contents,
-                                uint8_t log_level, uint64_t timestamp_ms, PebbleTask task,
-                                const char *src_filename, uint16_t src_line_number,
+static size_t prv_serialize_log(MessageContents *contents, uint8_t log_level, uint64_t timestamp_ms,
+                                PebbleTask task, const char *src_filename, uint16_t src_line_number,
                                 const char *message) {
-
-  prv_serialize_log_header(contents, log_level, timestamp_ms, task,
-                           src_filename, src_line_number);
+  prv_serialize_log_header(contents, log_level, timestamp_ms, task, src_filename, src_line_number);
 
   // Write the actual log message.
   strncpy(contents->message, message, sizeof(contents->message));
 
-  size_t payload_length = MIN(sizeof(MessageContents),
-                              offsetof(MessageContents, message) + strlen(message));
+  size_t payload_length =
+      MIN(sizeof(MessageContents), offsetof(MessageContents, message) + strlen(message));
 
   return payload_length;
 }
@@ -104,27 +97,25 @@ static void prv_send_pulse_packet(uint8_t log_level, const char *src_filename,
                                   uint16_t src_line_number, const char *message) {
   MessageContents *contents = pulse_push_send_begin(PULSE_PROTOCOL_LOGGING);
 
-  const size_t payload_length = prv_serialize_log(
-      contents, log_level, prv_get_timestamp_ms(), pebble_task_get_current(),
-      src_filename, src_line_number, message);
+  const size_t payload_length =
+      prv_serialize_log(contents, log_level, prv_get_timestamp_ms(), pebble_task_get_current(),
+                        src_filename, src_line_number, message);
 
   pulse_push_send(contents, payload_length);
 }
 
-
 static bool prv_isr_buffer_read_and_consume(void *buffer, size_t read_length) {
-  portENTER_CRITICAL();
+  pbl_irq_lock();
 
   const bool result = circular_buffer_copy(&s_isr_log_buffer, buffer, read_length);
   if (result) {
     circular_buffer_consume(&s_isr_log_buffer, read_length);
   }
 
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 
   return result;
 }
-
 
 static void prv_event_cb(void *data) {
   while (true) {
@@ -142,9 +133,9 @@ static void prv_event_cb(void *data) {
 
       MessageContents *contents = pulse_push_send_begin(PULSE_PROTOCOL_LOGGING);
 
-      const size_t payload_length = prv_serialize_log(
-          contents, LOG_LEVEL_ERROR, prv_get_timestamp_ms(), PebbleTask_Unknown,
-          "", 0, "ISR Message Dropped!");
+      const size_t payload_length =
+          prv_serialize_log(contents, LOG_LEVEL_ERROR, prv_get_timestamp_ms(), PebbleTask_Unknown,
+                            "", 0, "ISR Message Dropped!");
 
       pulse_push_send(contents, payload_length);
     } else {
@@ -168,11 +159,11 @@ static void prv_enqueue_log_message(uint8_t log_level, const char *message) {
   const bool buffer_was_empty = (circular_buffer_get_read_space_remaining(&s_isr_log_buffer) == 0);
 
   // Need to prevent other interrupts from corrupting the log buffer while we're writing to it
-  portENTER_CRITICAL();
+  pbl_irq_lock();
 
   if (circular_buffer_get_write_space_remaining(&s_isr_log_buffer) < sizeof(uint32_t)) {
     // Completely out of space, can't do anything.
-    portEXIT_CRITICAL();
+    pbl_irq_unlock();
     return;
   }
 
@@ -183,8 +174,8 @@ static void prv_enqueue_log_message(uint8_t log_level, const char *message) {
     // Not enough space for the full message, just write an empty message with only the length
     // word to indicate we're dropping the message.
     const uint32_t insufficient_space_length = sizeof(uint32_t);
-    circular_buffer_write(&s_isr_log_buffer,
-                          &insufficient_space_length, sizeof(insufficient_space_length));
+    circular_buffer_write(&s_isr_log_buffer, &insufficient_space_length,
+                          sizeof(insufficient_space_length));
   } else {
     circular_buffer_write(&s_isr_log_buffer, &required_space, sizeof(required_space));
 
@@ -198,27 +189,21 @@ static void prv_enqueue_log_message(uint8_t log_level, const char *message) {
   }
 
   if (buffer_was_empty) {
-    PebbleEvent e = {
-      .type = PEBBLE_CALLBACK_EVENT,
-      .callback = {
-        .callback = prv_event_cb
-      }
-    };
+    PebbleEvent e = {.type = PEBBLE_CALLBACK_EVENT, .callback = {.callback = prv_event_cb}};
     event_put_isr(&e);
   }
 
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 }
 
 void pulse_logging_init(void) {
-  circular_buffer_init(&s_isr_log_buffer,
-                       s_isr_log_buffer_storage, sizeof(s_isr_log_buffer_storage));
+  circular_buffer_init(&s_isr_log_buffer, s_isr_log_buffer_storage,
+                       sizeof(s_isr_log_buffer_storage));
 }
 
-void pulse_logging_log(uint8_t log_level, const char* src_filename,
-                       uint16_t src_line_number, const char* message) {
-  if (portIN_CRITICAL() || mcu_state_is_isr() ||
-      xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED) {
+void pulse_logging_log(uint8_t log_level, const char *src_filename, uint16_t src_line_number,
+                       const char *message) {
+  if (pbl_irq_is_locked() || mcu_state_is_isr() || pbl_sched_is_locked()) {
     // We're in a state where we can't immediately send the message, save it to an internal buffer
     // instead for later sending.
     prv_enqueue_log_message(log_level, message);
@@ -232,18 +217,17 @@ void pulse_logging_log_buffer_flush(void) {
   prv_event_cb(NULL);
 }
 
-void pulse_logging_log_sync(uint8_t log_level, const char *src_filename,
-                            uint16_t src_line_number, const char *message) {
+void pulse_logging_log_sync(uint8_t log_level, const char *src_filename, uint16_t src_line_number,
+                            const char *message) {
   // Send the log line inline, even if we're in a critical section or ISR
   prv_send_pulse_packet(log_level, src_filename, src_line_number, message);
 }
 
-void *pulse_logging_log_sync_begin(
-    uint8_t log_level, const char *src_filename, uint16_t src_line_number) {
+void *pulse_logging_log_sync_begin(uint8_t log_level, const char *src_filename,
+                                   uint16_t src_line_number) {
   MessageContents *contents = pulse_push_send_begin(PULSE_PROTOCOL_LOGGING);
-  prv_serialize_log_header(contents, log_level, prv_get_timestamp_ms(),
-                           pebble_task_get_current(), src_filename,
-                           src_line_number);
+  prv_serialize_log_header(contents, log_level, prv_get_timestamp_ms(), pebble_task_get_current(),
+                           src_filename, src_line_number);
   contents->message[0] = '\0';
   return contents;
 }
@@ -255,8 +239,7 @@ void pulse_logging_log_sync_append(void *ctx, const char *message) {
 
 void pulse_logging_log_sync_send(void *ctx) {
   MessageContents *contents = ctx;
-  size_t payload_length = MIN(
-      sizeof(MessageContents),
-      offsetof(MessageContents, message) + strlen(contents->message));
+  size_t payload_length =
+      MIN(sizeof(MessageContents), offsetof(MessageContents, message) + strlen(contents->message));
   pulse_push_send(contents, payload_length);
 }

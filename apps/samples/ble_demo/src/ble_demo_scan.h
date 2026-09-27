@@ -5,4 +5,4 @@
 
 #include "pebble.h"
 
-Window * ble_demo_scan_window_create(void);
+Window *ble_demo_scan_window_create(void);

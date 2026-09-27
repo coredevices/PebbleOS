@@ -39,7 +39,7 @@ typedef struct FrameBuffer FrameBuffer;
 //! Draws a pixel at given point in the current stroke color
 //! @param ctx The destination graphics context in which to draw
 //! @param point The point at which to draw the pixel
-void graphics_draw_pixel(GContext* ctx, GPoint point);
+void graphics_draw_pixel(GContext *ctx, GPoint point);
 
 //! Fills a rectangle with the current fill color
 //! @param ctx The destination graphics context in which to draw
@@ -52,7 +52,7 @@ void graphics_fill_rect(GContext *ctx, const GRect *rect);
 //! @param rect The rectangle for which to draw the outline
 void graphics_draw_rect_by_value(GContext *ctx, GRect rect);
 void graphics_draw_rect(GContext *ctx, const GRect *rect);
-void graphics_draw_rect_precise(GContext* ctx, const GRectPrecise *rect);
+void graphics_draw_rect_precise(GContext *ctx, const GRectPrecise *rect);
 
 //! Fills a rectangle with the current fill color, optionally rounding all or a
 //! selection of its corners.
@@ -66,7 +66,6 @@ void graphics_fill_round_rect_by_value(GContext *ctx, GRect rect, uint16_t corne
 void graphics_fill_round_rect(GContext *ctx, const GRect *rect, uint16_t corner_radius,
                               GCornerMask corner_mask);
 
-
 //! Draws the outline of a rounded rectangle in the current stroke color
 //! @param ctx The destination graphics context in which to draw
 //! @param rect The rectangle defining the dimensions of the rounded rectangle to draw
@@ -79,7 +78,7 @@ void graphics_draw_round_rect(GContext *ctx, const GRect *rect, uint16_t radius)
 //! {@link graphics_release_frame_buffer}.
 //! @param ctx The graphics context providing the frame buffer
 //! @return True if the frame buffer has been captured
-bool graphics_frame_buffer_is_captured(GContext* ctx);
+bool graphics_frame_buffer_is_captured(GContext *ctx);
 
 //! Captures the frame buffer for direct access, using the given format.
 //! Graphics functions will not affect the frame buffer while it is captured.
@@ -107,8 +106,8 @@ GBitmap *graphics_capture_frame_buffer_format(GContext *ctx, GBitmapFormat forma
 
 //! A shortcut to capture the framebuffer in the native format of the watch.
 //! @see graphics_capture_frame_buffer_format
-GBitmap* graphics_capture_frame_buffer(GContext* ctx);
-GBitmap* graphics_capture_frame_buffer_2bit(GContext* ctx);
+GBitmap *graphics_capture_frame_buffer(GContext *ctx);
+GBitmap *graphics_capture_frame_buffer_2bit(GContext *ctx);
 
 //! Releases the frame buffer.
 //! Must be called before the end of a layer's `.update_proc` for the layer to be drawn properly.
@@ -118,7 +117,7 @@ GBitmap* graphics_capture_frame_buffer_2bit(GContext* ctx);
 //! @param ctx The graphics context providing the frame buffer
 //! @param buffer The pointer to frame buffer
 //! @return True if the frame buffer was released successfully
-bool graphics_release_frame_buffer(GContext* ctx, GBitmap* buffer);
+bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer);
 
 //!   @} // end addtogroup Drawing
 //! @} // end addtogroup Graphics

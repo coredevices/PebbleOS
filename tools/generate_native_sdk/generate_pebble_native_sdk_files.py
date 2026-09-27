@@ -31,6 +31,21 @@ SRC_DIR = "src"
 INCLUDE_DIR = "include"
 LIB_DIR = "lib"
 
+COMPILER_HEADERS = (
+    "pbl/kernel/compiler.h",
+    "pbl/kernel/compiler/gcc.h",
+    "pbl/kernel/compiler/clang.h",
+)
+
+
+def copy_compiler_headers(pbl_src_dir, sdk_include_dir):
+    include_dir = path.join(path.dirname(pbl_src_dir), "include")
+    for header in COMPILER_HEADERS:
+        dest = path.join(sdk_include_dir, header)
+        os.makedirs(path.dirname(dest), exist_ok=True)
+        shutil.copy(path.join(include_dir, header), dest)
+
+
 PEBBLE_APP_H_TEXT = """\
 #include "pebble_fonts.h"
 #include "message_keys.auto.h"
@@ -56,6 +71,7 @@ def generate_shim_files(
     platform_name,
     internal_sdk_build=False,
     build_shim_lib=True,
+    autoconf=None,
 ):
     if internal_sdk_build:
         try:
@@ -110,13 +126,9 @@ def generate_shim_files(
 
     compiler_flags = [f"-D{d}" for d in platform_info["DEFINES"]]
 
-    freertos_port_name = "ARM_CM3" if platform_name == "aplite" else "ARM_CM4F"
-    compiler_flags.extend(
-        [
-            f"-I{pbl_src_dir}/../third_party/freertos/FreeRTOS-Kernel/FreeRTOS/Source/{p}"
-            for p in ["include", f"portable/GCC/{freertos_port_name}"]
-        ]
-    )
+    compiler_flags.append(f"-I{pbl_src_dir}/../kernel/arch/arm/include")
+    if autoconf:
+        compiler_flags.extend(["-imacros", autoconf])
 
     extract_symbol_info(
         files,
@@ -220,6 +232,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--internal-sdk-build", action="store_true", help="build internal SDK"
     )
+    parser.add_argument("--autoconf", help="Kconfig autoconf.h to predefine while parsing")
 
     options = parser.parse_args()
 
@@ -253,6 +266,8 @@ if __name__ == "__main__":
         path.join(sdk_include_dir, "pebble_warn_unsupported_functions.h"),
     )
 
+    copy_compiler_headers(pbl_src_dir, sdk_include_dir)
+
     generate_shim_files(
         shim_config,
         pbl_src_dir,
@@ -261,4 +276,5 @@ if __name__ == "__main__":
         sdk_lib_dir,
         options.platform_name,
         internal_sdk_build=options.internal_sdk_build,
+        autoconf=options.autoconf,
     )

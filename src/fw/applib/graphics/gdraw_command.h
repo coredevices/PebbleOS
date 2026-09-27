@@ -51,10 +51,10 @@
 //! @{
 
 typedef enum {
-  GDrawCommandTypeInvalid = 0,  //!< Invalid draw command type
-  GDrawCommandTypePath,         //!< Arbitrary path draw command type
-  GDrawCommandTypeCircle,       //!< Circle draw command type
-  GDrawCommandTypePrecisePath,  //!< Arbitrary path drawn with sub-pixel precision (1/8th precision)
+  GDrawCommandTypeInvalid = 0, //!< Invalid draw command type
+  GDrawCommandTypePath,        //!< Arbitrary path draw command type
+  GDrawCommandTypeCircle,      //!< Circle draw command type
+  GDrawCommandTypePrecisePath, //!< Arbitrary path drawn with sub-pixel precision (1/8th precision)
 } GDrawCommandType;
 
 struct GDrawCommand;

@@ -3,6 +3,8 @@
 
 #ifdef CONFIG_PULSE_EVERYWHERE
 
+#include "pbl/kernel/irq.h"
+#include "pbl/kernel/sched.h"
 #include "pulse.h"
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse2_transport_impl.h"
@@ -14,24 +16,22 @@
 #include "console/control_protocol_impl.h"
 #include "console/dbgserial.h"
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
 #include "pbl/mcu/interrupts.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/crc32.h"
-#include "pbl/util/likely.h"
 #include "pbl/util/math.h"
 #include "util/net.h"
 #include "pbl/util/size.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "queue.h"
-#include "task.h"
+#include "pbl/kernel/msgq.h"
+#include "pbl/kernel/thread.h"
+#include "pbl/kernel/sem.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,12 +40,11 @@
 #define LCP_PROTOCOL_NUMBER (0xC021)
 
 #define FRAME_MAX_SEND_SIZE PULSE_MAX_RECEIVE_UNIT
-#define RX_QUEUE_SIZE (PULSE_MAX_RECEIVE_UNIT * 3)
-#define RX_MAX_FRAME_SIZE (PULSE_MAX_RECEIVE_UNIT + PULSE_MIN_FRAME_LENGTH)
+#define RX_QUEUE_SIZE       (PULSE_MAX_RECEIVE_UNIT * 3)
+#define RX_MAX_FRAME_SIZE   (PULSE_MAX_RECEIVE_UNIT + PULSE_MIN_FRAME_LENGTH)
 
 #define FRAME_DELIMITER '\x55'
 #define LINK_HEADER_LEN sizeof(net16)
-
 
 // Link Control Protocol
 // =====================
@@ -70,18 +69,15 @@ static void prv_on_lcp_down(PPPControlProtocol *this) {
 #undef ON_LINK_STATE_CHANGE
 }
 
-static void prv_on_code_reject(PPPControlProtocol *this,
-                               struct LCPPacket *packet) {
+static void prv_on_code_reject(PPPControlProtocol *this, struct LCPPacket *packet) {
   // TODO
 }
 
-static void prv_on_protocol_reject(PPPControlProtocol *this,
-                                   struct LCPPacket *packet) {
+static void prv_on_protocol_reject(PPPControlProtocol *this, struct LCPPacket *packet) {
   // TODO
 }
 
-static void prv_on_echo_request(PPPControlProtocol *this,
-                                struct LCPPacket *packet) {
+static void prv_on_echo_request(PPPControlProtocol *this, struct LCPPacket *packet) {
   if (this->state->link_state == LinkState_Opened) {
     struct LCPPacket *reply = pulse_link_send_begin(this->protocol_number);
     memcpy(reply, packet, ntoh16(packet->length));
@@ -90,13 +86,11 @@ static void prv_on_echo_request(PPPControlProtocol *this,
   }
 }
 
-static void prv_on_echo_reply(PPPControlProtocol *this,
-                              struct LCPPacket *packet) {
+static void prv_on_echo_reply(PPPControlProtocol *this, struct LCPPacket *packet) {
   // TODO
 }
 
-static bool prv_handle_extended_lcp_codes(PPPControlProtocol *this,
-                                          LCPPacket *packet) {
+static bool prv_handle_extended_lcp_codes(PPPControlProtocol *this, LCPPacket *packet) {
   switch (packet->code) {
     case ControlCode_ProtocolReject:
       prv_on_protocol_reject(this, packet);
@@ -125,17 +119,15 @@ static PPPControlProtocol s_lcp_protocol = {
   .on_receive_unrecognized_code = prv_handle_extended_lcp_codes,
 };
 
-PPPControlProtocol * const PULSE2_LCP = &s_lcp_protocol;
+PPPControlProtocol *const PULSE2_LCP = &s_lcp_protocol;
 
-static void prv_lcp_handle_unknown_protocol(uint16_t protocol, void *body,
-                                            size_t body_len) {
+static void prv_lcp_handle_unknown_protocol(uint16_t protocol, void *body, size_t body_len) {
   // TODO: send Protocol-Reject
 }
 
 static void prv_lcp_on_packet(void *packet, size_t length) {
   ppp_control_protocol_handle_incoming_packet(PULSE2_LCP, packet, length);
 }
-
 
 // Data link layer
 // ===============
@@ -146,20 +138,21 @@ static void prv_lcp_on_packet(void *packet, size_t length) {
 // This task handles both the processing of bytes received over dbgserial and
 // running the reliable transport receive expiry timer.
 
-static TaskHandle_t s_pulse_task_handle;
-static QueueHandle_t s_pulse_task_queue;
+static struct pbl_thread *s_pulse_task_handle;
+PBL_THREAD_STACK_DEFINE(s_pulse_task_stack, 1024);
+static PBL_MSGQ_DEFINE(s_pulse_task_queue, sizeof(uint8_t), RX_QUEUE_SIZE);
 // Wake up the PULSE task to process the receive queue or start the timer.
-static SemaphoreHandle_t s_pulse_task_service_semaphore;
+static PBL_SEM_DEFINE(s_pulse_task_service_semaphore, 0, 1);
 static volatile bool s_pulse_task_idle = true;
 
 static uint8_t s_current_rx_frame[RX_MAX_FRAME_SIZE];
 
-static PebbleMutex *s_tx_buffer_mutex;
-static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(
-        FRAME_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH) + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)];
+static PBL_MUTEX_DEFINE(s_tx_buffer_mutex);
+static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(FRAME_MAX_SEND_SIZE + PULSE_MIN_FRAME_LENGTH) +
+                        COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)];
 
 // Lock for exclusive access to the reliable timer state.
-static PebbleMutex *s_reliable_timer_state_lock;
+static PBL_MUTEX_DEFINE(s_reliable_timer_state_lock);
 // Ticks since boot for timer expiry if timer is pending, or 0 if not pending.
 static volatile RtcTicks s_reliable_timer_expiry_time_tick;
 static volatile uint8_t s_reliable_timer_sequence_number;
@@ -182,9 +175,9 @@ static void prv_process_received_frame(size_t frame_length) {
         prv_lcp_on_packet(body, body_len);
         break;
 #define ON_PACKET(NUMBER, HANDLER) \
-      case NUMBER: \
-        HANDLER(body, body_len); \
-        break;
+  case NUMBER:                     \
+    HANDLER(body, body_len);       \
+    break;
 #define ON_INIT(...)
 #define ON_LINK_STATE_CHANGE(...)
 #include "console/pulse2_transport_registry.def"
@@ -197,28 +190,27 @@ static void prv_process_received_frame(size_t frame_length) {
   }
 }
 
-void pulse2_reliable_retransmit_timer_start(unsigned int timeout_ms,
-                                            uint8_t sequence_number) {
-  mutex_lock(s_reliable_timer_state_lock);
+void pulse2_reliable_retransmit_timer_start(unsigned int timeout_ms, uint8_t sequence_number) {
+  pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
   RtcTicks timeout_ticks = timeout_ms * RTC_TICKS_HZ / 1000;
   s_reliable_timer_expiry_time_tick = rtc_get_ticks() + timeout_ticks;
   s_reliable_timer_sequence_number = sequence_number;
   // Wake up the PULSE task to get it to notice the newly-started timer.
-  xSemaphoreGive(s_pulse_task_service_semaphore);
-  mutex_unlock(s_reliable_timer_state_lock);
+  pbl_sem_give(&s_pulse_task_service_semaphore);
+  pbl_mutex_unlock(&s_reliable_timer_state_lock);
 }
 
 void pulse2_reliable_retransmit_timer_cancel(void) {
-  mutex_lock(s_reliable_timer_state_lock);
+  pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
   s_reliable_timer_expiry_time_tick = 0;
   // No need to wake up the PULSE task. It will notice that the timer was
   // cancelled when it wakes up to service the timer.
-  mutex_unlock(s_reliable_timer_state_lock);
+  pbl_mutex_unlock(&s_reliable_timer_state_lock);
 }
 
 // Check the state of the timer.
 //
-// If there is no timer running, portMAX_DELAY is returned.
+// If there is no timer running, PBL_TICK_FOREVER is returned.
 //
 // If there is a timer running but it has not expired yet, the number of ticks
 // (not milliseconds) remaining before the timer expires is returned.
@@ -226,56 +218,56 @@ void pulse2_reliable_retransmit_timer_cancel(void) {
 // If there is a timer running that has expired, the timer state is cleared so
 // that subsequent calls do not expire the same timer twice, sequence_number is
 // filled with the sequence number of the expired timer, and 0 is returned.
-static TickType_t prv_poll_timer(uint8_t *const sequence_number) {
-  mutex_lock(s_reliable_timer_state_lock);
+static pbl_tick_t prv_poll_timer(uint8_t *const sequence_number) {
+  pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
   RtcTicks timer_expiry_tick = s_reliable_timer_expiry_time_tick;
-  TickType_t timeout = portMAX_DELAY;
-  if (timer_expiry_tick) {  // A timer is pending
+  pbl_tick_t timeout = PBL_TICK_FOREVER;
+  if (timer_expiry_tick) { // A timer is pending
     RtcTicks now = rtc_get_ticks();
-    if (now >= timer_expiry_tick) {  // Timer has expired
+    if (now >= timer_expiry_tick) { // Timer has expired
       // Clear the timer pending state.
       s_reliable_timer_expiry_time_tick = 0;
       timeout = 0;
       *sequence_number = s_reliable_timer_sequence_number;
     } else {
-      _Static_assert(pdMS_TO_TICKS(1000) == RTC_TICKS_HZ,
+      _Static_assert(1000 * RTC_TICKS_HZ / 1000 == RTC_TICKS_HZ,
                      "RtcTicks uses different units than FreeRTOS ticks");
       timeout = timer_expiry_tick - now;
     }
   }
-  mutex_unlock(s_reliable_timer_state_lock);
+  pbl_mutex_unlock(&s_reliable_timer_state_lock);
   return timeout;
 }
 
+static int s_wdt_channel = -1;
+
 static void prv_pulse_task_feed_watchdog(void) {
-  task_watchdog_bit_set(PebbleTask_PULSE);
+  pbl_task_wdt_feed(s_wdt_channel);
 }
 
-static void prv_pulse_task_idle_timer_callback(void* data) {
-  if (s_pulse_task_idle && uxQueueMessagesWaiting(s_pulse_task_queue) == 0) {
+static void prv_pulse_task_idle_timer_callback(void *data) {
+  if (s_pulse_task_idle && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
     prv_pulse_task_feed_watchdog();
   }
 }
 
 static void prv_pulse_task_main(void *unused) {
-  task_watchdog_mask_set(PebbleTask_PULSE);
+  s_wdt_channel = pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, NULL, NULL);
+  PBL_ASSERTN(s_wdt_channel >= 0);
 
-  static RegularTimerInfo idle_watchdog_timer = {
-    .cb = prv_pulse_task_idle_timer_callback
-  };
+  static RegularTimerInfo idle_watchdog_timer = {.cb = prv_pulse_task_idle_timer_callback};
   regular_timer_add_seconds_callback(&idle_watchdog_timer);
 
   CobsDecodeContext frame_decode_ctx;
-  cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame,
-                              RX_MAX_FRAME_SIZE);
+  cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame, RX_MAX_FRAME_SIZE);
 
   while (true) {
     uint8_t timer_sequence_number;
-    TickType_t timeout = prv_poll_timer(&timer_sequence_number);
+    pbl_tick_t timeout = prv_poll_timer(&timer_sequence_number);
 
-    if (timeout && uxQueueMessagesWaiting(s_pulse_task_queue) == 0) {
+    if (timeout && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
       s_pulse_task_idle = true;
-      xSemaphoreTake(s_pulse_task_service_semaphore, timeout);
+      pbl_sem_take(&s_pulse_task_service_semaphore, PBL_TICKS(timeout));
       s_pulse_task_idle = false;
 
       // Read the timer state again in case it changed while we were waiting.
@@ -286,12 +278,11 @@ static void prv_pulse_task_main(void *unused) {
     // We don't want to risk the queue filling up while the timer
     // handler is running.
     char c;
-    while (xQueueReceive(s_pulse_task_queue, &c, 0) == pdTRUE) {
-      if (UNLIKELY(c == FRAME_DELIMITER)) {
+    while (pbl_msgq_get(&s_pulse_task_queue, &c, PBL_NO_WAIT) == 0) {
+      if (PBL_UNLIKELY(c == FRAME_DELIMITER)) {
         size_t decoded_length = cobs_streaming_decode_finish(&frame_decode_ctx);
         prv_process_received_frame(decoded_length);
-        cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame,
-                                    RX_MAX_FRAME_SIZE);
+        cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame, RX_MAX_FRAME_SIZE);
         // Break out after processing one complete frame so that we handle
         // the timer and kick the watchdog within a reasonable amount of
         // time, even if the queue is filling as fast as we can drain it.
@@ -318,10 +309,10 @@ static void prv_forge_terminate_ack(void) {
   // API since we need to send these packets from precarious situations
   // when the OS and PULSE may not have been initialized yet.
   uint8_t *packet = pulse_link_send_begin(LCP_PROTOCOL_NUMBER);
-  packet[0] = 6;  // Code: Terminate-Ack
-  packet[1] = 255;  // Identifier
-  packet[2] = 0;  // Length MSB
-  packet[3] = 4;  // Length LSB
+  packet[0] = 6;   // Code: Terminate-Ack
+  packet[1] = 255; // Identifier
+  packet[2] = 0;   // Length MSB
+  packet[3] = 4;   // Length LSB
   pulse_link_send(packet, 4);
 }
 
@@ -332,24 +323,19 @@ void pulse_early_init(void) {
 }
 
 void pulse_init(void) {
-  s_tx_buffer_mutex = mutex_create();
-  PBL_ASSERTN(s_tx_buffer_mutex != INVALID_MUTEX_HANDLE);
 }
 
 void pulse_start(void) {
-  s_pulse_task_queue = xQueueCreate(RX_QUEUE_SIZE, sizeof(uint8_t));
-  s_pulse_task_service_semaphore = xSemaphoreCreateBinary();
-  s_reliable_timer_state_lock = mutex_create();
-
-  TaskParameters_t task_params = {
-    .pvTaskCode = prv_pulse_task_main,
-    .pcName = "PULSE",
-    .usStackDepth = 1024 / sizeof( StackType_t ),
-    .uxPriority = (tskIDLE_PRIORITY + 3) | portPRIVILEGE_BIT,
-    .puxStackBuffer = NULL,
+  struct pbl_thread_attr attr = {
+    .name = "PULSE",
+    .entry = prv_pulse_task_main,
+    .prio = PBL_PRIO_IDLE + 3,
+    .privileged = true,
+    .stack = s_pulse_task_stack,
+    .stack_size = sizeof(s_pulse_task_stack),
   };
 
-  pebble_task_create(PebbleTask_PULSE, &task_params, &s_pulse_task_handle);
+  s_pulse_task_handle = pebble_task_create(PebbleTask_PULSE, &attr);
 
   // FIXME: the initializers could be run more than once if pulse_start is
   // called more than one time. These initializers can't be run during
@@ -383,27 +369,22 @@ static void prv_assert_tx_buffer(void *buf) {
 }
 
 void pulse_handle_character(char c, bool *should_context_switch) {
-  // FromISR calls only write pdTRUE when a higher-priority task is woken; they never
-  // write pdFALSE, so tmp must start as pdFALSE to avoid a spurious context switch.
-  portBASE_TYPE tmp = pdFALSE;
-  xQueueSendToBackFromISR(s_pulse_task_queue, &c, &tmp);
-  xSemaphoreGiveFromISR(s_pulse_task_service_semaphore, &tmp);
-  *should_context_switch = (tmp == pdTRUE);
+  pbl_msgq_put(&s_pulse_task_queue, &c, PBL_NO_WAIT);
+  pbl_sem_give(&s_pulse_task_service_semaphore);
+  *should_context_switch = false;
 }
 
 static bool prv_safe_to_touch_mutex(void) {
-  return !(portIN_CRITICAL() || mcu_state_is_isr() ||
-           xTaskGetSchedulerState() != taskSCHEDULER_RUNNING);
+  return !(pbl_irq_is_locked() || mcu_state_is_isr() || !pbl_kernel_is_running());
 }
 
 void *pulse_link_send_begin(const uint16_t protocol) {
   if (prv_safe_to_touch_mutex()) {
-    mutex_lock(s_tx_buffer_mutex);
+    pbl_mutex_lock(&s_tx_buffer_mutex, PBL_FOREVER);
   }
 
   net16 header = hton16(protocol);
-  memcpy(s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE),
-         &header, sizeof(header));
+  memcpy(s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE), &header, sizeof(header));
   return s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) + sizeof(header);
 }
 
@@ -412,10 +393,9 @@ void pulse_link_send(void *buf, const size_t payload_length) {
   PBL_ASSERT(payload_length <= FRAME_MAX_SEND_SIZE, "PULSE frame payload too long");
 
   // Rewind the pointer to the beginning of the buffer
-  char *frame = ((char *) buf) - COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) - LINK_HEADER_LEN;
+  char *frame = ((char *)buf) - COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) - LINK_HEADER_LEN;
   size_t length = LINK_HEADER_LEN + payload_length;
-  uint32_t fcs = crc32(CRC32_INIT, frame + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE),
-                       length);
+  uint32_t fcs = crc32(CRC32_INIT, frame + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE), length);
 
   memcpy(&frame[length + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)], &fcs, sizeof(fcs));
   length += sizeof(fcs);
@@ -433,13 +413,13 @@ void pulse_link_send(void *buf, const size_t payload_length) {
   dbgserial_putchar_lazy(FRAME_DELIMITER);
 
   if (prv_safe_to_touch_mutex()) {
-    mutex_unlock(s_tx_buffer_mutex);
+    pbl_mutex_unlock(&s_tx_buffer_mutex);
   }
 }
 
 void pulse_link_send_cancel(void *buf) {
   prv_assert_tx_buffer(buf);
-  mutex_unlock(s_tx_buffer_mutex);
+  pbl_mutex_unlock(&s_tx_buffer_mutex);
 }
 
 size_t pulse_link_max_send_size(void) {

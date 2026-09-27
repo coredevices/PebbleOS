@@ -69,9 +69,11 @@ static void prv_setup_dialog(Dialog *dialog, const ActionToggleDialogConfig *con
   dialog_set_text_color(dialog, config->text_color);
   dialog_set_background_color(dialog, config->background_color);
   dialog_set_timeout(dialog, config->timeout_ms);
-  dialog_set_callbacks(dialog, &(DialogCallbacks) {
-    .unload = prv_action_toggle_dialog_unload,
-  }, context);
+  dialog_set_callbacks(dialog,
+                       &(DialogCallbacks){
+                         .unload = prv_action_toggle_dialog_unload,
+                       },
+                       context);
 }
 
 static void prv_vibe(const bool enabled) {
@@ -170,7 +172,7 @@ static bool prv_should_prompt(const ActionToggleConfig *config) {
 void action_toggle_push(const ActionToggleConfig *config) {
   ActionToggleContext *context = applib_zalloc(sizeof(ActionToggleContext));
   PBL_ASSERTN(context);
-  *context = (ActionToggleContext) {
+  *context = (ActionToggleContext){
     .config = *config,
   };
   prv_call_get_state_callback(context);

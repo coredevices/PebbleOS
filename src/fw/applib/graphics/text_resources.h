@@ -8,8 +8,9 @@
 #include "pbl/util/keyed_circular_cache.h"
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t width_px;
   union {
     uint8_t height_px;
@@ -20,7 +21,7 @@ typedef struct __attribute__((__packed__)) {
   int8_t horiz_advance;
 } GlyphHeaderData;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   uint8_t width_px;
   uint8_t height_px;
   int8_t left_offset_px;
@@ -29,34 +30,52 @@ typedef struct __attribute__((__packed__)) {
   int8_t horiz_advance;
 } GlyphHeaderDataV1;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   GlyphHeaderData header;
   uint32_t data[];
 } GlyphData;
 
+//! Body that follows GlyphHeaderData in fonts with FEATURE_COLOR, then
+//! palette[palette_size] (GColor8) and data[data_len]
+typedef struct PBL_PACKED {
+  uint8_t encoding;
+  uint8_t palette_size;
+  uint16_t data_len;
+} ColorGlyphHeader;
+
+#define COLOR_GLYPH_BPP(_encoding)  (1 << ((_encoding) & 0x3))
+#define COLOR_GLYPH_MODE(_encoding) (((_encoding) >> 2) & 0x3)
+#define COLOR_GLYPH_MAX_PALETTE     16
+
+typedef enum {
+  ColorGlyphModeRaw = 0,
+  ColorGlyphModeRle = 1,
+  ColorGlyphModeTinted = 2,
+} ColorGlyphMode;
+
 //! Maps a codepoint to the location of the actual font data.
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint : 16;
   uint16_t offset;
 } OffsetTableEntry_2_2;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint : 16;
   uint32_t offset;
 } OffsetTableEntry_2_4;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint;
   uint32_t offset;
 } OffsetTableEntry_4_4;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   Codepoint codepoint;
   uint16_t offset;
 } OffsetTableEntry_4_2;
 
 #if !defined(MAX_FONT_GLYPH_SIZE)
-  #define MAX_FONT_GLYPH_SIZE 256
+#define MAX_FONT_GLYPH_SIZE 256
 #endif
 
 // Slightly bigger than the biggest glyph we have
@@ -84,7 +103,7 @@ typedef struct FontCache {
   int offset_table_id;
   uint16_t offset_table_size;
   //! The currently loaded font's offset table.
-  //! @note this needs to be able to accomodate legacy fonts
+  //! @note this needs to be able to accommodate legacy fonts
   union {
     OffsetTableEntry_2_2 offsets_buffer_2_2[OFFSET_TABLE_MAX_SIZE / sizeof(OffsetTableEntry_2_2)];
     OffsetTableEntry_2_4 offsets_buffer_2_4[OFFSET_TABLE_MAX_SIZE / sizeof(OffsetTableEntry_2_4)];
@@ -106,13 +125,25 @@ typedef struct FontCache {
   const FontResource *cached_font;
 } FontCache;
 
+typedef struct {
+  //! Pixels to add to the glyph's top_offset when drawing, non-zero only when another font
+  //! (emoji or system fallback) supplied the glyph
+  int16_t baseline_adjust;
+  //! Font resource the glyph was read from
+  const FontResource *font_res;
+  //! Offset of the glyph header within font_res
+  uint32_t offset;
+} GlyphLocation;
+
 //! @param font_cache The font cache to look up the glyph in
 //! @param codepoint The codepoint to get the glyph for
 //! @param font_info The font to get the glyph from
-//! @param baseline_adjust_out optional: pixels to add to the glyph's top_offset when drawing,
-//! non-zero only when another font (emoji or system fallback) supplied the glyph
+//! @param location_out optional: where the glyph was found
+//! @note for color glyphs only the header is returned; the body is streamed from location_out
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                          FontInfo *font_info, int16_t *baseline_adjust_out);
+                                          FontInfo *font_info, GlyphLocation *location_out);
+
+bool text_resources_glyph_is_color(const GlyphLocation *location);
 
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint codepoint,
                                               FontInfo *font_info);
@@ -129,4 +160,3 @@ int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint c
 //! @param font_info a pointer to the fontinfo struct to initialize
 bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource,
                               uint32_t extension_resource, FontInfo *font_info);
-

@@ -3,5 +3,5 @@
 
 #pragma once
 
-#define RTC_CalibSign_Positive            ((uint32_t)0x00000000)
-#define RTC_CalibSign_Negative            ((uint32_t)0x00000080)
+#define RTC_CalibSign_Positive ((uint32_t)0x00000000)
+#define RTC_CalibSign_Negative ((uint32_t)0x00000080)

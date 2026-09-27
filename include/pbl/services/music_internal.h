@@ -40,9 +40,8 @@ typedef struct {
 bool music_set_connected_server(const MusicServerImplementation *implementation, bool connected);
 
 //! Update the track that's currently playing. The strings don't need to be null terminated.
-void music_update_now_playing(const char *title, size_t title_length,
-                              const char *artist, size_t artist_length,
-                              const char *album, size_t album_length);
+void music_update_now_playing(const char *title, size_t title_length, const char *artist,
+                              size_t artist_length, const char *album, size_t album_length);
 
 //! Update the name of the player that's currently playing.
 //! The string doesn't need to be null terminated.
@@ -90,3 +89,6 @@ void music_update_track_duration(uint32_t track_duration_ms);
 //! @note The bitmap and its `addr`/`palette` buffers must be allocated on the kernel heap; the
 //! service frees them with kernel_free.
 void music_set_album_art(struct GBitmap *bitmap, uint8_t token);
+
+//! Notify the service that a transfer for `token` ended without an image response.
+void music_album_art_transfer_failed(uint8_t token);

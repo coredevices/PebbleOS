@@ -7,7 +7,6 @@
 #include "applib/applib_malloc.auto.h"
 #include "applib/graphics/gdraw_command_transforms.h"
 #include "applib/ui/kino/kino_reel.h"
-#include "applib/ui/kino/kino_reel_custom.h"
 #include "applib/ui/animation_timing.h"
 
 typedef struct {
@@ -47,7 +46,7 @@ KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership
     return NULL;
   }
 
-  GRect frame = { GPointZero, kino_reel_get_size(from_reel) };
+  GRect frame = {GPointZero, kino_reel_get_size(from_reel)};
 
   KinoReel *reel = kino_reel_transform_create(&MORPH_SQUARE_TRANSFORM_IMPL, data);
   if (reel) {

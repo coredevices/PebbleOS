@@ -8,9 +8,8 @@
 
 #include "process_management/app_manager.h"
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/process_management/app_storage.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
@@ -23,7 +22,7 @@ typedef struct {
   ResourceStoreEntry stored_resource;
 } CachedResource;
 
-PebbleRecursiveMutex *s_resource_mutex = NULL;
+struct pbl_mutex s_resource_mutex;
 
 static CachedResource *s_resource_list = NULL;
 
@@ -50,12 +49,12 @@ static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry 
     return;
   }
 
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
 
   ListNode *node;
   if (app_num == SYSTEM_APP &&
-     (node = list_find((ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)id))) {
-    mutex_unlock_recursive(s_resource_mutex);
+      (node = list_find((ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)id))) {
+    pbl_mutex_unlock(&s_resource_mutex);
     *entry = ((CachedResource *)node)->stored_resource;
     return;
   }
@@ -66,7 +65,7 @@ static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry 
   if (app_num != SYSTEM_APP && s_app_resource_cache.valid &&
       s_app_resource_cache.app_num == app_num && s_app_resource_cache.id == id) {
     *entry = s_app_resource_cache.entry;
-    mutex_unlock_recursive(s_resource_mutex);
+    pbl_mutex_unlock(&s_resource_mutex);
     return;
   }
 
@@ -74,21 +73,24 @@ static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry 
 
   if (app_num != SYSTEM_APP && entry->id >= 1) {
     s_app_resource_cache = (AppResourceCache){
-      .valid = true, .app_num = app_num, .id = id, .entry = *entry,
+      .valid = true,
+      .app_num = app_num,
+      .id = id,
+      .entry = *entry,
     };
   }
 
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
 }
 
 //! initialize components needed for one apps resources
 bool resource_init_app(ResAppNum app_num, const ResourceVersion *expected_version) {
   // resource_id is ignored in this case, so we set it to 0
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
   // Drop the cache: a reused app slot must not serve a stale entry.
   s_app_resource_cache.valid = false;
   bool rv = resource_storage_check(app_num, 0, expected_version);
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
   return rv;
 }
 
@@ -96,75 +98,74 @@ void resource_init(void) {
   // see if there's a system bank waiting to be loaded
   resource_storage_init();
 
-  s_resource_mutex = mutex_create_recursive();
+  pbl_mutex_init(&s_resource_mutex);
 }
 
 uint32_t resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
   PBL_ASSERTN(app_num == SYSTEM_APP);
   // get from resource store
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
   ResourceStoreEntry res;
   resource_storage_get_resource(app_num, resource_id, &res);
   if (res.id < 1) {
-    mutex_unlock_recursive(s_resource_mutex);
+    pbl_mutex_unlock(&s_resource_mutex);
     return 0;
   }
 
   // check if we already have something in cache for this resource
-  CachedResource *cached_resource = (CachedResource *)list_find((ListNode *)s_resource_list,
-      prv_resource_filter, (void *)(uintptr_t)resource_id);
+  CachedResource *cached_resource = (CachedResource *)list_find(
+      (ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)resource_id);
   if (cached_resource == NULL) {
     cached_resource = kernel_malloc_check(sizeof(CachedResource));
     *cached_resource = (CachedResource){};
     cached_resource->id = resource_id;
-    s_resource_list = (CachedResource *)list_prepend((ListNode *)s_resource_list,
-        (ListNode *)cached_resource);
+    s_resource_list =
+        (CachedResource *)list_prepend((ListNode *)s_resource_list, (ListNode *)cached_resource);
   }
   cached_resource->stored_resource = res;
 
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
   return resource_id;
 }
 
-size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
-    uint32_t offset, uint8_t *buffer, size_t num_bytes) {
+size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id, uint32_t offset,
+                                       uint8_t *buffer, size_t num_bytes) {
   PBL_ASSERTN(buffer);
 
   if (!num_bytes) {
     return 0;
   }
 
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
   ResourceStoreEntry resource;
   prv_get_resource(app_num, resource_id, &resource);
   if (resource.id < 1) {
-    mutex_unlock_recursive(s_resource_mutex);
+    pbl_mutex_unlock(&s_resource_mutex);
     return 0;
   }
 
   if (offset + num_bytes > resource.length) {
     if (offset >= resource.length) {
       // Can't recover from trying to read from beyond the resource. Read nothing.
-      mutex_unlock_recursive(s_resource_mutex);
+      pbl_mutex_unlock(&s_resource_mutex);
       return 0;
     }
     // We want to stop the FW from doing this, so we added an assert
     // but in the name of backwards compatibility, we let the app misbehave
     num_bytes = resource.length - offset;
-    PBL_LOG_DBG("Tried to read past end of resource, reading %d bytes",
-            (int)num_bytes);
+    PBL_LOG_DBG("Tried to read past end of resource, reading %d bytes", (int)num_bytes);
   }
 
   size_t bytes_read = resource_storage_read(&resource, offset, buffer, num_bytes);
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
   return bytes_read;
 }
 
 size_t resource_size(ResAppNum app_num, uint32_t resource_id) {
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
   ResourceStoreEntry resource;
   prv_get_resource(app_num, resource_id, &resource);
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
   return resource.length;
 }
 
@@ -180,14 +181,14 @@ const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_
     return NULL;
   }
 
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
 
   // FIXME PBL-28781: This operation touches flash. Even though this is the cleanest approach
   // to detect if the resource is a builtin, it is a slow one. We should instead only search
   // in the builtin table for the resource_ids and if there are no matches, bail early.
   ResourceStoreEntry resource;
   prv_get_resource(app_num, resource_id, &resource);
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
 
   if (num_bytes_out) {
     *num_bytes_out = resource.length;
@@ -197,9 +198,9 @@ const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_
 }
 
 ResourceVersion resource_get_version(ResAppNum app_num, uint32_t resource_id) {
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
   ResourceVersion v = resource_storage_get_version(app_num, resource_id);
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
   return v;
 }
 
@@ -208,18 +209,17 @@ ResourceVersion resource_get_system_version(void) {
 }
 
 bool resource_is_valid(ResAppNum app_num, uint32_t resource_id) {
-  mutex_lock_recursive(s_resource_mutex);
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
   bool rv = resource_storage_check(app_num, resource_id, NULL /* No expected version */);
   if (rv) {
     ResourceStoreEntry entry;
     prv_get_resource(app_num, resource_id, &entry);
     rv = (entry.id != 0);
   }
-  mutex_unlock_recursive(s_resource_mutex);
+  pbl_mutex_unlock(&s_resource_mutex);
   return rv;
 }
 
 bool resource_version_matches(const ResourceVersion *v1, const ResourceVersion *v2) {
   return (v1->crc == v2->crc);
 }
-

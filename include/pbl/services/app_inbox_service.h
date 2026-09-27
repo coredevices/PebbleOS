@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "applib/app_inbox.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // Design goals of this module:
 //
@@ -40,7 +40,7 @@ typedef enum {
   NumAppInboxServiceTag,
 } AppInboxServiceTag;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   // Length of `data` payload (excluding the size of this header)
   size_t length;
   //! To give us some room for future changes. This structure ends up in a buffer that is sized by

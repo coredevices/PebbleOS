@@ -5,5 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* panic_app_get_app_info();
-
+const PebbleProcessMd *panic_app_get_app_info();

@@ -6,13 +6,13 @@
 #include "applib/app_message/app_message.h"
 #include "applib/app_timer.h"
 #include "pbl/services/app_message/app_message_sender.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
 typedef struct CommSession CommSession;
 
-#define ACK_NACK_TIME_OUT_MS          (10000)
-#define APP_MESSAGE_ENDPOINT_ID       (0x30)
+#define ACK_NACK_TIME_OUT_MS    (10000)
+#define APP_MESSAGE_ENDPOINT_ID (0x30)
 
 typedef enum {
   CMD_PUSH = 0x01,
@@ -21,13 +21,13 @@ typedef enum {
   CMD_NACK = 0x7f,
 } AppMessageCmd;
 
-typedef struct PACKED {
-  AppMessageCmd command:8;
+typedef struct PBL_PACKED {
+  AppMessageCmd command : 8;
   uint8_t transaction_id;
 } AppMessageHeader;
 
 //! The actual wire format of an app message message
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppMessageHeader header;
   Uuid uuid;
   Dictionary dictionary; //!< Variable length!
@@ -37,7 +37,7 @@ typedef struct PACKED {
 
 #define APP_MSG_8K_DICT_SIZE (sizeof(Dictionary) + sizeof(Tuple) + (8 * 1024))
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   AppMessageHeader header;
 } AppMessageAck;
 
@@ -84,11 +84,11 @@ typedef struct AppMessageCtxOutbox {
 
   AppTimer *ack_nack_timer;
 
-  struct PACKED {
-    AppMessagePhaseOut phase:8;
+  struct PBL_PACKED {
+    AppMessagePhaseOut phase : 8;
     uint8_t transaction_id;
-    uint16_t not_ready_throttle_ms;       // used for throttling app task when outbox is not ready
-    AppMessageResult result:16;
+    uint16_t not_ready_throttle_ms; // used for throttling app task when outbox is not ready
+    AppMessageResult result : 16;
   };
 } AppMessageCtxOutbox;
 
@@ -97,8 +97,7 @@ typedef struct AppMessageCtx {
   AppMessageCtxOutbox outbox;
 } AppMessageCtx;
 
-_Static_assert(sizeof(AppMessageCtx) <= 112,
-               "AppMessageCtx must not exceed 112 bytes!");
+_Static_assert(sizeof(AppMessageCtx) <= 112, "AppMessageCtx must not exceed 112 bytes!");
 
 typedef struct {
   CommSession *session;
@@ -135,9 +134,8 @@ void app_message_inbox_send_ack_nack_reply(CommSession *session, const uint8_t t
 
 void app_message_inbox_handle_dropped_messages(uint32_t num_drops);
 
-void app_message_app_protocol_msg_callback(CommSession *session,
-                                           const uint8_t* data, size_t length,
+void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length,
                                            AppInboxConsumerInfo *consumer_info);
 
-void app_message_app_protocol_system_nack_callback(CommSession *session,
-                                                   const uint8_t* data, size_t length);
+void app_message_app_protocol_system_nack_callback(CommSession *session, const uint8_t *data,
+                                                   size_t length);

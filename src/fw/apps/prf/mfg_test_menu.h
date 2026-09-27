@@ -7,10 +7,9 @@
 #include "process_management/pebble_process_md.h"
 
 #include <stdbool.h>
-#include <stdint.h>
 
-const PebbleProcessMd* mfg_test_menu_semi_finished_app_get_info(void);
-const PebbleProcessMd* mfg_test_menu_finished_app_get_info(void);
+const PebbleProcessMd *mfg_test_menu_semi_finished_app_get_info(void);
+const PebbleProcessMd *mfg_test_menu_finished_app_get_info(void);
 
 //! Check and clear the relaunch flag (set when returning from a test)
 bool mfg_test_menu_should_relaunch(void);

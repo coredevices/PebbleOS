@@ -34,14 +34,14 @@ SerializedArray *pstring_create_serialized_array(uint16_t data_size) {
   return NULL;
 }
 
-void pstring_destroy_serialized_array(SerializedArray* serialized_array) {
+void pstring_destroy_serialized_array(SerializedArray *serialized_array) {
 }
 
 void pstring_project_list_on_serialized_array(PascalString16List *pstring16_list,
                                               SerializedArray *serialized_array) {
 }
 
-bool pstring_add_pstring16_to_list(PascalString16List *pstring16_list, PascalString16* pstring) {
+bool pstring_add_pstring16_to_list(PascalString16List *pstring16_list, PascalString16 *pstring) {
   return true;
 }
 
@@ -49,7 +49,8 @@ uint16_t pstring_get_number_of_pstring16s_in_list(PascalString16List *pstring16_
   return 0;
 }
 
-PascalString16* pstring_get_pstring16_from_list(PascalString16List *pstring16_list, uint16_t index) {
+PascalString16 *pstring_get_pstring16_from_list(PascalString16List *pstring16_list,
+                                                uint16_t index) {
   return NULL;
 }
 

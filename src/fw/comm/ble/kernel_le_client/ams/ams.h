@@ -38,38 +38,39 @@ typedef enum {
 //! Must only be called from KernelMain!
 void ams_create(void);
 
-//! Updates the BLECharacteristic references, in case new ones have been obtained after a
+//! Updates the pbl_bt_characteristic_t references, in case new ones have been obtained after a
 //! re-discovery of the remote services.
 //! @param characteristics Matrix of characteristics references of the AMS service
 //! @note This module only uses the first service instance, any others will be ignored.
 //! Must only be called from KernelMain!
-void ams_handle_service_discovered(BLECharacteristic *characteristics);
+void ams_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
 
 void ams_invalidate_all_references(void);
 
-void ams_handle_service_removed(BLECharacteristic *characteristics, uint8_t num_characteristics);
-
+void ams_handle_service_removed(pbl_bt_characteristic_t *characteristics,
+                                uint8_t num_characteristics);
 
 //! @param characteristic The characteristic for which to test whether the AMS module handles
 //! reads/writes/notifications for it.
 //! @return True whether the AMS module handles reads/writes/etc for it, false if not
-bool ams_can_handle_characteristic(BLECharacteristic characteristic);
+bool ams_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
 
 //! Handles GATT subscriptions
 //! @see BLEClientSubscribeHandler
 //! Must only be called from KernelMain!
-void ams_handle_subscribe(BLECharacteristic characteristic,
-                           BLESubscription subscription_type, BLEGATTError error);
+void ams_handle_subscribe(pbl_bt_characteristic_t characteristic, BLESubscription subscription_type,
+                          enum pbl_bt_gatt_error error);
 
 //! Handles GATT write responses
 //! @see BLEClientWriteHandler
 //! Must only be called from KernelMain!
-void ams_handle_write_response(BLECharacteristic characteristic, BLEGATTError error);
+void ams_handle_write_response(pbl_bt_characteristic_t characteristic,
+                               enum pbl_bt_gatt_error error);
 
 //! Handles GATT notifications
 //! Must only be called from KernelMain!
-void ams_handle_read_or_notification(BLECharacteristic characteristic, const uint8_t *value,
-                                      size_t value_length, BLEGATTError error);
+void ams_handle_read_or_notification(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                     size_t value_length, enum pbl_bt_gatt_error error);
 
 //! Destroys the AMS client.
 //! Must only be called from KernelMain!

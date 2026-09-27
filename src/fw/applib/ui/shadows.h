@@ -5,5 +5,5 @@
 
 #include "applib/graphics/gtypes.h"
 
-GBitmap* shadow_get_top(void);
-GBitmap* shadow_get_bottom(void);
+GBitmap *shadow_get_top(void);
+GBitmap *shadow_get_bottom(void);

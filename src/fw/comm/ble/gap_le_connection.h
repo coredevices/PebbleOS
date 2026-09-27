@@ -13,26 +13,26 @@
 
 #include "pbl/services/new_timer/new_timer.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/sm_types.h>
 
 // FIXME: Including this header results in a compile time failure because the
 // chain eventually includes a Bluetopia API. Figure out why this is problematic
 // #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-// void gap_le_connection_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op);
+// void gap_le_connection_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
 
 // -----------------------------------------------------------------------------
 // The calls below are thread-safe, no need to own bt_lock, per se, before
 // calling them.
 
-void gap_le_connection_remove(const BTDeviceInternal *device);
+void gap_le_connection_remove(const struct pbl_bt_device_internal *device);
 
-bool gap_le_connection_is_connected(const BTDeviceInternal *device);
+bool gap_le_connection_is_connected(const struct pbl_bt_device_internal *device);
 
-bool gap_le_connection_is_encrypted(const BTDeviceInternal *device);
+bool gap_le_connection_is_encrypted(const struct pbl_bt_device_internal *device);
 
-uint16_t gap_le_connection_get_gatt_mtu(const BTDeviceInternal *device);
+uint16_t gap_le_connection_get_gatt_mtu(const struct pbl_bt_device_internal *device);
 
 void gap_le_connection_init(void);
 
@@ -50,31 +50,31 @@ typedef struct GAPLEConnection {
   ListNode node;
 
   //! The remote device its (connection) address.
-  BTDeviceInternal device;
+  struct pbl_bt_device_internal device;
 
   //! Whether we are the master for this connection.
-  bool local_is_master:1;
+  bool local_is_master : 1;
 
   //! Whether the connection is encrypted or not.
-  bool is_encrypted:1;
+  bool is_encrypted : 1;
 
   //! Whether GATT service discovery is in progress
-  bool gatt_is_service_discovery_in_progress:1;
+  bool gatt_is_service_discovery_in_progress : 1;
 
   //! Whether the connected device is our gateway (aka "the phone running Pebble app")
-  bool is_gateway:1;
+  bool is_gateway : 1;
 
   //! @see pebble_pairing_service.c
-  bool is_subscribed_to_connection_status_notifications:1;
-  bool is_subscribed_to_gatt_mtu_notifications:1;
+  bool is_subscribed_to_connection_status_notifications : 1;
+  bool is_subscribed_to_gatt_mtu_notifications : 1;
 
   //! Whether the device is subscribed to heart rate monitor value updates (the other device has
   //! enabled the "Notifications" bit of the CCCD).
-  bool hrm_service_is_subscribed:1;
+  bool hrm_service_is_subscribed : 1;
 
   //! The number of service discovery retries.
   //! See field `gatt_service_discovery_watchdog_timer`
-  uint8_t gatt_service_discovery_retries:GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS;
+  uint8_t gatt_service_discovery_retries : GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS;
 
   //! The generation number of the remote services that have been discovered.
   uint8_t gatt_service_discovery_generation;
@@ -95,11 +95,11 @@ typedef struct GAPLEConnection {
   TimerID gatt_service_changed_indication_timer;
 
   //! The bonding ID (only for BLE at the moment).
-  //! If the device is not bonded, the field will be BT_BONDING_ID_INVALID
-  BTBondingID bonding_id;
+  //! If the device is not bonded, the field will be PBL_BT_BONDING_ID_INVALID
+  pbl_bt_bonding_id_t bonding_id;
 
   //! The IRK of the remote device, NULL if the connection address was not resolved.
-  SMIdentityResolvingKey *irk;
+  struct pbl_bt_sm_key *irk;
 
   //! @see gap_le_device_name.c
   char *device_name;
@@ -130,24 +130,22 @@ typedef struct GAPLEConnection {
   } param_update_info;
 
   //! Current BLE connection parameter cache
-  BleConnectionParams conn_params;
+  struct pbl_bt_conn_params conn_params;
 
   //! Contains the BT chip version info for the remote device if available (all 0's if not)
-  BleRemoteVersionInfo remote_version_info;
+  struct pbl_bt_remote_version_info remote_version_info;
 
   //! @see pebble_pairing_service.h for info on these fields:
   bool is_remote_device_managing_connection_parameters;
-  //! Custom connection parameter sets for each ResponseTimeState, as written by the remote through
-  //! the Pebble Pairing Service. Can be NULL if the remote has never written any.
+  //! Custom connection parameter sets for each enum pbl_bt_response_time_state, as written by the
+  //! remote through the Pebble Pairing Service. Can be NULL if the remote has never written any.
   GAPLEConnectRequestParams *connection_parameter_sets;
 
   RtcTicks ticks_since_connection;
 } GAPLEConnection;
 
-
-GAPLEConnection *gap_le_connection_add(const BTDeviceInternal *device,
-                                       const SMIdentityResolvingKey *irk,
-                                       bool local_is_master,
+GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *device,
+                                       const struct pbl_bt_sm_key *irk, bool local_is_master,
                                        TimerID param_watchdog_timer);
 
 //! Checks to see if the LE connection is in our list of currently tracked
@@ -160,34 +158,31 @@ GAPLEConnection *gap_le_connection_any(void);
 
 //! Find the GAPLEConnection by device.
 //! @note !!! To access the returned context bt_lock MUST be held!!!
-GAPLEConnection *gap_le_connection_by_device(const BTDeviceInternal *device);
+GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *device);
 
 //! Find the GAPLEConnection by Bluetooth device address.
 //! @note !!! To access the returned context bt_lock MUST be held!!!
 //! @note Bluetopia's GATT API seems to make no difference between public /
-//! private addresses. Therefore, this function does not take a BTDevice.
-GAPLEConnection *gap_le_connection_by_addr(const BTDeviceAddress *addr);
+//! private addresses. Therefore, this function does not take a struct pbl_bt_device.
+GAPLEConnection *gap_le_connection_by_addr(const struct pbl_bt_addr *addr);
 
 //! Find the GAPLEConnection by Bluetopia GATT ConnectionID.
 //! @note !!! To access the returned context bt_lock MUST be held!!!
 GAPLEConnection *gap_le_connection_by_gatt_id(unsigned int connection_id);
 
 //! Find the GAPLEConnection by IRK.
-GAPLEConnection *gap_le_connection_find_by_irk(const SMIdentityResolvingKey *irk);
+GAPLEConnection *gap_le_connection_find_by_irk(const struct pbl_bt_sm_key *irk);
 
-typedef bool (*GAPLEConnectionFindCallback)(GAPLEConnection *connection,
-                                            void *data);
+typedef bool (*GAPLEConnectionFindCallback)(GAPLEConnection *connection, void *data);
 
-GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter,
-                                        void *data);
+GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter, void *data);
 
-typedef void (*GAPLEConnectionForEachCallback)(GAPLEConnection *connection,
-                                               void *data);
+typedef void (*GAPLEConnectionForEachCallback)(GAPLEConnection *connection, void *data);
 
 void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data);
 
 //! @note deep-copies the IRK.
-void gap_le_connection_set_irk(GAPLEConnection *connection, const SMIdentityResolvingKey *irk);
+void gap_le_connection_set_irk(GAPLEConnection *connection, const struct pbl_bt_sm_key *irk);
 
 //! Sets whether the connection is to the gateway device (aka "the phone").
 //! Updates the is_gateway flag on any associated bonding as well.
@@ -195,5 +190,5 @@ void gap_le_connection_set_gateway(GAPLEConnection *connection, bool is_gateway)
 
 GAPLEConnection *gap_le_connection_get_gateway(void);
 
-void gap_le_connection_copy_device_name(
-    const GAPLEConnection *connection, char *name_out, size_t namelen);
+void gap_le_connection_copy_device_name(const GAPLEConnection *connection, char *name_out,
+                                        size_t namelen);

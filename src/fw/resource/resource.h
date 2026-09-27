@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 #include "applib/applib_resource.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! @addtogroup Foundation
 //! @{
@@ -22,18 +22,17 @@ typedef uint32_t ResAppNum;
 #define SYSTEM_APP ((ResAppNum)0)
 
 //! The version information baked into every binary resource pack.
-typedef struct PACKED {
-  //! The crc of the resource pack between content_start and last_used. See check_bank_crc for how this is calculated.
+typedef struct PBL_PACKED {
+  //! The crc of the resource pack between content_start and last_used. See check_bank_crc for how
+  //! this is calculated.
   uint32_t crc;
   //! Just an identifier, not actually compared to anything.
   uint32_t timestamp;
 } ResourceVersion;
 
-
 //! Types used by pfs_watch_resource()
 typedef void (*ResourceChangedCallback)(void *data);
 typedef void *ResourceCallbackHandle;
-
 
 // inits system resources, and sets app resources to an unloaded state
 void resource_init(void);
@@ -84,7 +83,7 @@ bool resource_version_matches(const ResourceVersion *v1, const ResourceVersion *
 //! NOTE: This currently only supports file-based resources. If the resource is not
 //!  file based, then a NULL PFSCallbackHandle will be returned.
 ResourceCallbackHandle resource_watch(ResAppNum app_num, uint32_t resource_id,
-                                      ResourceChangedCallback callback, void* data);
+                                      ResourceChangedCallback callback, void *data);
 
 //! Stop watching a resource.
 void resource_unwatch(ResourceCallbackHandle cb_handle);

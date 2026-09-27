@@ -16,4 +16,4 @@ bool serial_console_is_prompt_enabled(void);
 //! lands so no need to rearrange the deck chairs on the titanic.
 void serial_console_enable_prompt(void);
 
-void serial_console_write_log_message(const char* msg);
+void serial_console_write_log_message(const char *msg);

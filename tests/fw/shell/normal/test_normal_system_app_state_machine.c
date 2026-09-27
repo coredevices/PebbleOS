@@ -21,7 +21,7 @@ bool low_power_is_active(void) {
   return false;
 }
 
-uint32_t launcher_panic_get_current_error(void ) {
+uint32_t launcher_panic_get_current_error(void) {
   return 0;
 }
 
@@ -36,10 +36,10 @@ bool boot_bit_test(BootBitValue bit) {
 
 // Use this macro to define a PebbleProcessMd* getter function and an associated constant
 // that it will return.
-#define DEFINE_STUB_APP(FUNC_NAME, RESULT_VAL)                             \
-  static const PebbleProcessMd* FUNC_NAME ## _result = (void*) RESULT_VAL; \
-  const PebbleProcessMd* FUNC_NAME(void) {                                 \
-    return FUNC_NAME ## _result;                                           \
+#define DEFINE_STUB_APP(FUNC_NAME, RESULT_VAL)                           \
+  static const PebbleProcessMd *FUNC_NAME##_result = (void *)RESULT_VAL; \
+  const PebbleProcessMd *FUNC_NAME(void) {                               \
+    return FUNC_NAME##_result;                                           \
   }
 
 DEFINE_STUB_APP(battery_critical_get_app_info, 1)

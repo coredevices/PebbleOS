@@ -16,7 +16,7 @@
 #include "pbl/services/comm_session/app_session_capabilities.h"
 #include "pbl/services/comm_session/default_kernel_sender.h"
 #include "pbl/services/comm_session/session.h"
-#include "pbl/services/cron.h"
+#include <pbl/cron/cron.h>
 #include "pbl/services/firmware_update.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/light.h"
@@ -37,7 +37,7 @@ void services_common_init(void) {
   accel_manager_init();
   light_init();
 
-  cron_service_init();
+  pbl_cron_init();
 
   shared_prf_storage_init();
   bt_persistent_storage_init();
@@ -72,10 +72,8 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = light_allow,
     .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal,
   },
-  {
-    .set_enable_fn = vibe_service_set_enabled,
-    .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal
-  },
+  {.set_enable_fn = vibe_service_set_enabled,
+   .enable_mask = R_LowPower | R_FirmwareUpdate | R_Normal},
   {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
@@ -102,4 +100,3 @@ void services_common_set_runlevel(RunLevel runlevel) {
     service->set_enable_fn(((1 << runlevel) & service->enable_mask) != 0);
   }
 }
-

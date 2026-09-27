@@ -1,0 +1,30 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <stdbool.h>
+
+#include <pbl/bluetooth/types.h>
+
+struct pbl_bt_hrm_service_measurement {
+  uint16_t bpm;
+  bool is_on_wrist;
+};
+
+//! @return True if the BT driver lib supports exposing the GATT HRM service.
+bool pbl_bt_is_hrm_service_supported(void);
+
+//! Adds or removes the HRM service from the GATT database, notifying any connected devices
+//! by sending a "Service Changed" indication for the mutated handle range.
+void pbl_bt_hrm_service_enable(bool enable);
+
+//! Sends the Heart Rate Measurement to all subscribed & connected devices.
+void pbl_bt_hrm_service_handle_measurement(const struct pbl_bt_hrm_service_measurement *measurement,
+                                           const struct pbl_bt_device_internal *permitted_devices,
+                                           size_t num_permitted_devices);
+
+//! Called when a connected device (un)subscribes to the GATT HRM service's "Heart Rate Measurement"
+//! characteristic.
+extern void pbl_bt_cb_hrm_service_update_subscription(const struct pbl_bt_device_internal *device,
+                                                      bool is_subscribed);

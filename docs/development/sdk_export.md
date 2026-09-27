@@ -44,17 +44,31 @@ native watchapps, all under `build/`:
 
 - `build/sdk/<platform>/include/pebble.h` — typedefs, defines and function
   prototypes for apps (plus `pebble_worker.h` for background workers and a
-  few version/fonts headers)
+  few version/fonts headers). Exported declarations are copied verbatim, so
+  the SDK also ships `pbl/kernel/compiler.h` and its backends, included from
+  `pebble.h`, and exported headers use its `PBL_*` macros rather than raw
+  `__attribute__`.
 - `build/sdk/<platform>/lib/libpebble.a` — static library containing
   trampolines that call the exported functions in flash
 - `build/src/fw/pebble.auto.c` — `g_pbl_system_tbl`, the table of function
   pointers the trampolines use to find an exported function's address;
   compiled into the firmware image
 
-The rest of the SDK distribution is assembled by `sdk/wscript_build`: it
-copies the common files from `sdk/` into `build/sdk/common/` (including the
-app project templates under `sdk/defaults/`) and bundles the SDK waftools
-into the `waf` binary app developers use to build their apps.
+The rest of the distribution is packaged by the firmware build's `sdk`
+target, which fills in the same `build/sdk/` tree:
+
+```shell
+pbl configure --board $BOARD
+pbl build sdk
+```
+
+`tools/cmake/sdk.py` copies the common files from `sdk/` into
+`build/sdk/common/` — the app project templates under `sdk/defaults/`, and
+the tools and resource pipeline the app build shares with the firmware —
+and bundles `sdk/waftools/` into the `waf` binary app developers use to
+build their apps. That waf is the only one left in the tree: everything it
+needs lives under `sdk/`, and it is built out of tree, so packaging leaves
+the checkout untouched.
 
 ## `exported_symbols.json` format
 

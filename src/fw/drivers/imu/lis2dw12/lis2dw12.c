@@ -57,22 +57,22 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LIS2DW12_S12_SCALE_RANGE (1U << (12U - 1U))
 
 // Registers
-#define LIS2DW12_WHO_AM_I 0x0FU
-#define LIS2DW12_UNDOC 0x17U
-#define LIS2DW12_CTRL1 0x20U
-#define LIS2DW12_CTRL2 0x21U
-#define LIS2DW12_CTRL3 0x22U
+#define LIS2DW12_WHO_AM_I            0x0FU
+#define LIS2DW12_UNDOC               0x17U
+#define LIS2DW12_CTRL1               0x20U
+#define LIS2DW12_CTRL2               0x21U
+#define LIS2DW12_CTRL3               0x22U
 #define LIS2DW12_CTRL4_INT1_PAD_CTRL 0x23U
 #define LIS2DW12_CTRL5_INT2_PAD_CTRL 0x24U
-#define LIS2DW12_CTRL6 0x25U
-#define LIS2DW12_STATUS 0x27U
-#define LIS2DW12_OUT_X_L 0x28U
-#define LIS2DW12_FIFO_CTRL 0x2EU
-#define LIS2DW12_FIFO_SAMPLES 0x2FU
-#define LIS2DW12_WAKE_UP_THS 0x34U
-#define LIS2DW12_WAKE_UP_DUR 0x35U
-#define LIS2DW12_ALL_INT_SRC 0x3BU
-#define LIS2DW12_CTRL7 0x3FU
+#define LIS2DW12_CTRL6               0x25U
+#define LIS2DW12_STATUS              0x27U
+#define LIS2DW12_OUT_X_L             0x28U
+#define LIS2DW12_FIFO_CTRL           0x2EU
+#define LIS2DW12_FIFO_SAMPLES        0x2FU
+#define LIS2DW12_WAKE_UP_THS         0x34U
+#define LIS2DW12_WAKE_UP_DUR         0x35U
+#define LIS2DW12_ALL_INT_SRC         0x3BU
+#define LIS2DW12_CTRL7               0x3FU
 
 // WHO_AM_I fields
 #define LIS2DW12_WHO_AM_I_VAL 0x44U
@@ -81,56 +81,56 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LIS2DW12_UNDOC_ADDR_PULLUP_DIS (1U << 6U)
 
 // CTRL1 fields
-#define LIS2DW12_CTRL1_LP_MODE1 (0U << 0U)
-#define LIS2DW12_CTRL1_MODE_LP (0U << 2U)
-#define LIS2DW12_CTRL1_MODE_SINGLE (2U << 2U)
-#define LIS2DW12_CTRL1_ODR_PD (0x0U << 4U)
-#define LIS2DW12_CTRL1_ODR_1HZ6_LP_ONLY (0x1U << 4U)
-#define LIS2DW12_CTRL1_ODR_12HZ5 (0x2U << 4U)
-#define LIS2DW12_CTRL1_ODR_25HZ (0x3U << 4U)
-#define LIS2DW12_CTRL1_ODR_50HZ (0x4U << 4U)
-#define LIS2DW12_CTRL1_ODR_100HZ (0x5U << 4U)
-#define LIS2DW12_CTRL1_ODR_200HZ (0x6U << 4U)
+#define LIS2DW12_CTRL1_LP_MODE1          (0U << 0U)
+#define LIS2DW12_CTRL1_MODE_LP           (0U << 2U)
+#define LIS2DW12_CTRL1_MODE_SINGLE       (2U << 2U)
+#define LIS2DW12_CTRL1_ODR_PD            (0x0U << 4U)
+#define LIS2DW12_CTRL1_ODR_1HZ6_LP_ONLY  (0x1U << 4U)
+#define LIS2DW12_CTRL1_ODR_12HZ5         (0x2U << 4U)
+#define LIS2DW12_CTRL1_ODR_25HZ          (0x3U << 4U)
+#define LIS2DW12_CTRL1_ODR_50HZ          (0x4U << 4U)
+#define LIS2DW12_CTRL1_ODR_100HZ         (0x5U << 4U)
+#define LIS2DW12_CTRL1_ODR_200HZ         (0x6U << 4U)
 #define LIS2DW12_CTRL1_ODR_400HZ_HP_ONLY (0x7U << 4U)
 #define LIS2DW12_CTRL1_ODR_800HZ_HP_ONLY (0x8U << 4U)
 #define LIS2DW12_CTRL1_ODR_1K6HZ_HP_ONLY (0x9U << 4U)
 
 // CTRL2 fields
 #define LIS2DW12_CTRL2_SOFT_RESET (1U << 6U)
-#define LIS2DW12_CTRL2_BOOT (1U << 7U)
+#define LIS2DW12_CTRL2_BOOT       (1U << 7U)
 
 // CTRL3 fields
-#define LIS2DW12_CTRL3_SLP_MODE_1 (1U << 0U)
+#define LIS2DW12_CTRL3_SLP_MODE_1              (1U << 0U)
 #define LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 (1U << 1U)
-#define LIS2DW12_CTRL3_LIR (1U << 4U)
+#define LIS2DW12_CTRL3_LIR                     (1U << 4U)
 
 // CTRL4_INT1_PAD_CTRL fields
-#define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_WU (1U << 5U)
+#define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_WU  (1U << 5U)
 #define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_FTH (1U << 1U)
 
 // CTRL5_INT2_PAD_CTRL fields
 #define LIS2DW12_CTRL5_INT2_PAD_CTRL_INT2_OVR (1U << 3U)
 
 // CTRL6 fields
-#define LIS2DW12_CTRL6_FS_2G (0U << 4U)
-#define LIS2DW12_CTRL6_FS_4G (1U << 4U)
-#define LIS2DW12_CTRL6_FS_8G (2U << 4U)
+#define LIS2DW12_CTRL6_FS_2G  (0U << 4U)
+#define LIS2DW12_CTRL6_FS_4G  (1U << 4U)
+#define LIS2DW12_CTRL6_FS_8G  (2U << 4U)
 #define LIS2DW12_CTRL6_FS_16G (3U << 4U)
 
 // STATUS fields
 #define LIS2DW12_STATUS_DRDY (1U << 0U)
 
 // FIFO_CTRL fields
-#define LIS2DW12_FIFO_CTRL_FTH_POS 0U
+#define LIS2DW12_FIFO_CTRL_FTH_POS  0U
 #define LIS2DW12_FIFO_CTRL_FTH_MASK 0x1FU
 #define LIS2DW12_FIFO_CTRL_FTH(val) \
   (((val) << LIS2DW12_FIFO_CTRL_FTH_POS) & LIS2DW12_FIFO_CTRL_FTH_MASK)
 #define LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS (0x0U << 5U)
-#define LIS2DW12_FIFO_CTRL_FIFO_MODE_FIFO (0x1U << 5U)
-#define LIS2DW12_FIFO_CTRL_FIFO_MODE_CONT (0x6U << 5U)
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_FIFO   (0x1U << 5U)
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_CONT   (0x6U << 5U)
 
 // FIFO_SAMPLES fields
-#define LIS2DW12_FIFO_SAMPLES_DIFF_POS 0U
+#define LIS2DW12_FIFO_SAMPLES_DIFF_POS  0U
 #define LIS2DW12_FIFO_SAMPLES_DIFF_MASK 0x3FU
 #define LIS2DW12_FIFO_SAMPLES_DIFF_GET(val) \
   (((val) & LIS2DW12_FIFO_SAMPLES_DIFF_MASK) >> LIS2DW12_FIFO_SAMPLES_DIFF_POS)
@@ -138,13 +138,13 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LIS2DW12_FIFO_SAMPLES_FIFO_FTH (1U << 7U)
 
 // WAKE_UP_THS fields
-#define LIS2DW12_WAKE_UP_THS_WK_THS_POS 0U
+#define LIS2DW12_WAKE_UP_THS_WK_THS_POS  0U
 #define LIS2DW12_WAKE_UP_THS_WK_THS_MASK 0x3FU
 #define LIS2DW12_WAKE_UP_THS_WK_THS(val) \
   (((val) << LIS2DW12_WAKE_UP_THS_WK_THS_POS) & LIS2DW12_WAKE_UP_THS_WK_THS_MASK)
 
 // WAKE_UP_DUR fields
-#define LIS2DW12_WAKE_UP_DUR_WAKE_DUR_POS 5U
+#define LIS2DW12_WAKE_UP_DUR_WAKE_DUR_POS  5U
 #define LIS2DW12_WAKE_UP_DUR_WAKE_DUR_MASK 0x60U
 #define LIS2DW12_WAKE_UP_DUR_WAKE_DUR(val) \
   (((val) << LIS2DW12_WAKE_UP_DUR_WAKE_DUR_POS) & LIS2DW12_WAKE_UP_DUR_WAKE_DUR_MASK)
@@ -154,7 +154,7 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
 // CTRL7 fields
 #define LIS2DW12_CTRL7_INTERRUPTS_ENABLE (1U << 5U)
-#define LIS2DW12_CTRL7_INT2_ON_INT1 (1U << 6U)
+#define LIS2DW12_CTRL7_INT2_ON_INT1      (1U << 6U)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -233,13 +233,17 @@ static void prv_lis2dw12_process_samples(uint8_t num_samples, uint64_t timestamp
     .data = LIS2DW12->state->raw_sample_buf,
     .num_samples = num_samples,
     .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
-    .axis = {
-      [AXIS_X] = {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
-                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
-      [AXIS_Y] = {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
-                  .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
-      [AXIS_Z] = {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U, .sign = LIS2DW12->axis_dir[AXIS_Z]},
-    },
+    .axis =
+        {
+          [AXIS_X] =
+              {.offset = LIS2DW12->axis_map[AXIS_X] * 2U,
+               .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_X] * rotate)},
+          [AXIS_Y] =
+              {.offset = LIS2DW12->axis_map[AXIS_Y] * 2U,
+               .sign = (int8_t)(LIS2DW12->axis_dir[AXIS_Y] * rotate)},
+          [AXIS_Z] =
+              {.offset = LIS2DW12->axis_map[AXIS_Z] * 2U, .sign = LIS2DW12->axis_dir[AXIS_Z]},
+        },
     .scale_num = CONFIG_ACCEL_LIS2DW12_SCALE_MG,
     .scale_den = LIS2DW12_S12_SCALE_RANGE << 4U,
     .first_timestamp_us = timestamp_us,
@@ -442,9 +446,8 @@ static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detectio
     sampling_interval_us = 5000UL;
   }
 
-  PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)",
-          sampling_interval_us / 1000UL,
-          sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
+  PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)", sampling_interval_us / 1000UL,
+              sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
 
   ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &val, 1);
   if (!ret) {
@@ -511,8 +514,7 @@ static void prv_lis2dw12_recover(void) {
 
   LIS2DW12->state->num_recoveries++;
   PBL_ANALYTICS_ADD(accel_stream_recovery_count, 1);
-  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")",
-          LIS2DW12->state->num_recoveries);
+  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")", LIS2DW12->state->num_recoveries);
 
   if (!prv_configure_int1(false, false)) {
     return;
@@ -556,8 +558,7 @@ static uint32_t prv_ms_since_last_fifo_read(void) {
 }
 
 static uint32_t prv_stall_threshold_ms(void) {
-  return MAX(LIS2DW12_STALL_MARGIN * LIS2DW12->state->int1_period_ms,
-             LIS2DW12_STALL_MIN_MS);
+  return MAX(LIS2DW12_STALL_MARGIN * LIS2DW12->state->int1_period_ms, LIS2DW12_STALL_MIN_MS);
 }
 
 //! Arm/disarm the INT1 stall watchdog to match the active INT1 sources.
@@ -591,8 +592,7 @@ static void prv_stall_check_work_cb(void) {
     // Shake-only mode: re-run the servicing pass if the pad is stuck high
     // (reading the INT source clears the latch); escalate to a full recovery
     // after consecutive passes that never release it.
-    if (LIS2DW12->state->shake_detection_enabled &&
-        gpio_input_read(&LIS2DW12->int1_in)) {
+    if (LIS2DW12->state->shake_detection_enabled && gpio_input_read(&LIS2DW12->int1_in)) {
       prv_lis2dw12_int1_work_handler();
       // A pad released by the pass is healthy; count only a still-high pad
       if (!gpio_input_read(&LIS2DW12->int1_in)) {
@@ -755,8 +755,7 @@ uint32_t accel_set_sampling_interval(uint32_t interval_us) {
     }
   }
 
-  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us",
-          LIS2DW12->state->sampling_interval_us);
+  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us", LIS2DW12->state->sampling_interval_us);
 
   return LIS2DW12->state->sampling_interval_us;
 }
@@ -986,8 +985,7 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
     return;
   }
 
-  PBL_LOG_DBG("Configured shake sensitivity to %s",
-          sensitivity_high ? "high" : "normal");
+  PBL_LOG_DBG("Configured shake sensitivity to %s", sensitivity_high ? "high" : "normal");
 }
 
 void accel_set_shake_sensitivity_percent(uint8_t percent) {

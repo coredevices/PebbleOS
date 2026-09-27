@@ -14,7 +14,6 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include "stubs_queue.h"
 #include "stubs_fonts.h"
 #include "stubs_events.h"
 #include "stubs_print.h"
@@ -28,17 +27,12 @@
 #include "stubs_mutex.h"
 #include "stubs_rtc.h"
 
-void vTaskDelay(uint32_t ticks) {
-}
-
 // the time that the backlight remains on but there is zero user interaction
 extern const uint32_t INACTIVE_LIGHT_TIMEOUT_MS;
 // the time duration of the fade out
 extern const uint32_t LIGHT_FADE_TIME_MS;
 // number of fade-out steps
 extern const uint32_t LIGHT_FADE_STEPS;
-
-
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -103,7 +97,6 @@ void backlight_set_intensity(uint8_t percent_intensity) {
   s_backlight_intensity = percent_intensity;
 }
 
-
 // Helper functions
 ///////////////////////////////////////////////////////////
 
@@ -151,14 +144,13 @@ static void check_off(void) {
   cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
 }
 
-
 // Tests
 ///////////////////////////////////////////////////////////
 
 void test_light__initialize(void) {
   light_init();
   light_allow(true);
-  s_light_timer = ((StubTimer*) s_idle_timers)->id;
+  s_light_timer = ((StubTimer *)s_idle_timers)->id;
   backlight_set_intensity(100);
   s_backlight_enabled = true;
 }
@@ -174,11 +166,7 @@ void test_light__scales_getafix_presets_upward(void) {
     uint8_t intensity;
     uint8_t scaled;
   } cases[] = {
-    { 0, 0 },
-    { 10, 3 },
-    { 25, 7 },
-    { 50, 13 },
-    { 100, 25 },
+    {0, 0}, {10, 3}, {25, 7}, {50, 13}, {100, 25},
   };
 
   for (size_t i = 0; i < ARRAY_LENGTH(cases); i++) {

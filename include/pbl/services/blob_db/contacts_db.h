@@ -4,10 +4,10 @@
 #pragma once
 
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   Uuid uuid;
   uint32_t flags;
   uint8_t num_attributes;
@@ -25,7 +25,6 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
 
 //! Frees the serialized contact data returned by contacts_db_get_serialized_contact().
 void contacts_db_free_serialized_contact(SerializedContact *contact);
-
 
 ///////////////////////////////////////////
 // BlobDB Boilerplate (see blob_db/api.h)

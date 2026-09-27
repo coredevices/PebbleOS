@@ -8,55 +8,53 @@
 #include <string.h>
 
 #include "kernel/pbl_malloc.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "pbl/services/filesystem/app_file.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 #include "util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 
-#define PERSIST_STORAGE_MAX_SPACE MiBYTES(1)
+#define PERSIST_STORAGE_MAX_SPACE     MiBYTES(1)
 #define PERSIST_STORAGE_INITIAL_ALLOC KiBYTES(4)
 
 typedef struct PersistStore {
-  ListNode  list_node;
+  ListNode list_node;
   Uuid uuid;
   SettingsFile file;
   bool file_open;
-  uint8_t usage_count;          //!< How many clients are using this store
+  uint8_t usage_count; //!< How many clients are using this store
 } PersistStore;
 
 // Each open client has a PersistStore structure linked into this list. If both
 // a worker and foreground app of the same UUID are running, then they share the
 // same store.
 static ListNode *s_client_stores;
-static PebbleMutex *s_mutex;
+static PBL_MUTEX_DEFINE(s_mutex);
 
-
-static bool prv_uuid_list_filter(ListNode* node, void* data) {
+static bool prv_uuid_list_filter(ListNode *node, void *data) {
   const Uuid *uuid = data;
-  PersistStore* store = (PersistStore*)node;
+  PersistStore *store = (PersistStore *)node;
   return uuid_equal(&store->uuid, uuid);
 }
 
-static PersistStore * prv_find_open_store(const Uuid *uuid) {
-    return (PersistStore *)list_find(s_client_stores, prv_uuid_list_filter,
-                                     (void *)uuid);
+static PersistStore *prv_find_open_store(const Uuid *uuid) {
+  return (PersistStore *)list_find(s_client_stores, prv_uuid_list_filter, (void *)uuid);
 }
 
-static ALWAYS_INLINE void prv_lock(void) {
-  mutex_lock_with_lr(s_mutex, (uint32_t)__builtin_return_address(0));
+static PBL_ALWAYS_INLINE void prv_lock(void) {
+  pbl_mutex_lock_lr(&s_mutex, PBL_FOREVER, (uintptr_t)PBL_RETURN_ADDRESS(0));
 }
 
 static inline void prv_unlock(void) {
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 // "ps" prefix + 32 hex chars (16-byte UUID) + NUL.
@@ -70,8 +68,8 @@ static status_t prv_get_file_name(char *name, size_t buf_len, const Uuid *uuid) 
   return snprintf(name, buf_len,
                   "ps%02x%02x%02x%02x%02x%02x%02x%02x"
                   "%02x%02x%02x%02x%02x%02x%02x%02x",
-                  b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
-                  b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]);
+                  b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12],
+                  b[13], b[14], b[15]);
 }
 
 status_t persist_service_delete_file(const Uuid *uuid) {
@@ -99,15 +97,15 @@ size_t persist_service_get_max_size(void) {
 // scheme and removes the now-unused pmap.
 // TODO: remove this migration once all devices have upgraded.
 
-#define LEGACY_PMAP_FILE_NAME "pmap"
+#define LEGACY_PMAP_FILE_NAME               "pmap"
 #define LEGACY_PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000001")
-#define LEGACY_PMAP_EOF_ID ((int)(~0))
+#define LEGACY_PMAP_EOF_ID                  ((int)(~0))
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t version;
 } LegacyPersistMapHeader;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   int id;
   Uuid uuid;
 } LegacyPersistMapField;
@@ -186,8 +184,6 @@ static void prv_migrate_legacy_persist_files(void) {
 
 // Designed to be called once during reset
 void persist_service_init(void) {
-  s_mutex = mutex_create();
-
   prv_migrate_legacy_persist_files();
 
   // Find and delete any AppInstallId-indexed persist files. Due to PBL-16663
@@ -196,8 +192,7 @@ void persist_service_init(void) {
   // we can't be sure that the persist files correspond to the current
   // AppInstallId, the safest thing to do is to simply blow them away.
   // TODO: remove this code before FW 3.0-golden.
-  PFSFileListEntry *bad_file_list = pfs_create_file_list(
-      prv_bad_persist_file_filter);
+  PFSFileListEntry *bad_file_list = pfs_create_file_list(prv_bad_persist_file_filter);
   PFSFileListEntry *iter = bad_file_list;
   while (iter) {
     pfs_remove(iter->name);
@@ -217,16 +212,15 @@ void persist_service_init(void) {
 // only be unlocked after a call to persist_service_unlock(). While the global
 // persist service mutex is currently used, the API is designed such that a
 // per-file mutex could be used without altering the callers.
-SettingsFile * persist_service_lock_and_get_store(const Uuid *uuid) {
+SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
   prv_lock();
   PersistStore *store = prv_find_open_store(uuid);
   PBL_ASSERTN(store);
   if (!store->file_open) {
     char filename[PERSIST_FILE_NAME_MAX_LENGTH];
     PBL_ASSERTN(PASSED(prv_get_file_name(filename, sizeof(filename), uuid)));
-    PBL_ASSERTN(PASSED(settings_file_open_growable(&store->file, filename,
-                                                   PERSIST_STORAGE_MAX_SPACE,
-                                                   PERSIST_STORAGE_INITIAL_ALLOC)));
+    PBL_ASSERTN(PASSED(settings_file_open_growable(
+        &store->file, filename, PERSIST_STORAGE_MAX_SPACE, PERSIST_STORAGE_INITIAL_ALLOC)));
     store->file_open = true;
   }
   return &store->file;
@@ -248,7 +242,7 @@ void persist_service_client_open(const Uuid *uuid) {
       store->usage_count++;
     } else {
       store = kernel_malloc_check(sizeof(*store));
-      *store = (PersistStore) {
+      *store = (PersistStore){
         .uuid = *uuid,
         .usage_count = 1,
         .file_open = false,
@@ -266,16 +260,14 @@ void persist_service_client_close(const Uuid *uuid) {
   prv_lock();
   {
     PersistStore *store = prv_find_open_store(uuid);
-    PBL_ASSERTN(store &&
-                list_contains(s_client_stores, &store->list_node) &&
+    PBL_ASSERTN(store && list_contains(s_client_stores, &store->list_node) &&
                 store->usage_count >= 1);
 
     if (--store->usage_count == 0) {
       if (store->file_open) {
         settings_file_close(&store->file);
       }
-      list_remove(&store->list_node,
-                  &s_client_stores /* &head */, NULL /* &tail */);
+      list_remove(&store->list_node, &s_client_stores /* &head */, NULL /* &tail */);
       kernel_free(store);
     }
   }

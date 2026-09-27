@@ -6,29 +6,27 @@
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include <pbl/drivers/vibe/vibe_aw86225.h>
 #include <pbl/drivers/touch/cst816/touch_sensor_definitions.h>
 #include "pbl/services/imu/units.h"
 
-#define BT_VENDOR_ID 0x0EEA
+#define BT_VENDOR_ID   0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"
 
-extern UARTDevice * const DBG_UART;
+extern UARTDevice *const DBG_UART;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern UARTDevice * const HCI_TRACE_UART;
+extern UARTDevice *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern QSPIPort * const QSPI;
-extern QSPIFlash * const QSPI_FLASH;
+extern QSPIPort *const QSPI;
+extern QSPIFlash *const QSPI_FLASH;
 extern I2CBus *const I2C1_BUS;
 extern I2CBus *const I2C2_BUS;
 extern I2CBus *const I2C3_BUS;
 extern const LIS2DW12Config *const LIS2DW12;
-extern I2CSlavePort * const I2C_MMC5603NJ;
-extern I2CSlavePort * const I2C_NPM1300;
+extern I2CSlavePort *const I2C_MMC5603NJ;
+extern I2CSlavePort *const I2C_NPM1300;
 extern I2CSlavePort *const I2C_W1160;
 #ifdef CONFIG_BOARD_GETAFIX_DVT2
 extern I2CSlavePort *const I2C_AW86225;
-extern const AW86225Config *const AW86225;
 #else
 extern I2CSlavePort *const I2C_AW8623X;
 #endif
@@ -37,7 +35,7 @@ extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
-extern const MicDevice* MIC;
+extern const MicDevice *MIC;
 extern const TouchSensor *CST816;
 extern const LedControllerAW9364E AW9364E;
 

@@ -4,12 +4,12 @@
 #pragma once
 
 #include "pbl/services/timeline/weather_layout.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-LayoutLayer * WEAK weather_layout_create(const LayoutLayerConfig *config) {
+LayoutLayer *PBL_WEAK weather_layout_create(const LayoutLayerConfig *config) {
   return NULL;
 }
 
-bool WEAK weather_layout_verify(bool existing_attributes[]) {
+bool PBL_WEAK weather_layout_verify(bool existing_attributes[]) {
   return false;
 }

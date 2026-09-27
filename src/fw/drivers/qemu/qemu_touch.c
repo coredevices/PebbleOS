@@ -6,8 +6,6 @@
 #include "pbl/services/system_task.h"
 #include "pbl/services/touch/touch.h"
 
-#include "FreeRTOS.h"
-
 #include <cmsis_core.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,11 +13,11 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // QEMU touch register offsets (must match pebble-touch device)
-#define TOUCH_STATE     0x00
-#define TOUCH_X         0x04
-#define TOUCH_Y         0x08
-#define TOUCH_INTCTRL   0x0C
-#define TOUCH_INTSTAT   0x10
+#define TOUCH_STATE   0x00
+#define TOUCH_X       0x04
+#define TOUCH_Y       0x08
+#define TOUCH_INTCTRL 0x0C
+#define TOUCH_INTSTAT 0x10
 
 #define INT_TOUCH_EVENT (1u << 0)
 
@@ -45,12 +43,10 @@ void TOUCH_IRQHandler(void) {
 
   bool should_context_switch = false;
   if (!s_callback_scheduled) {
-    if (system_task_add_callback_from_isr(prv_process_touch_update, NULL,
-                                          &should_context_switch)) {
+    if (system_task_add_callback_from_isr(prv_process_touch_update, NULL, &should_context_switch)) {
       s_callback_scheduled = true;
     }
   }
-  portEND_SWITCHING_ISR(should_context_switch);
 }
 
 void touch_sensor_init(void) {

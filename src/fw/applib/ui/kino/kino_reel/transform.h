@@ -29,7 +29,7 @@ typedef bool (*TransformPositionSetter)(int32_t normalized, void *context);
 //! @param normalized Animation position of the current transform.
 //! @param context User supplied context for transform specific data.
 typedef void (*TransformApply)(GDrawCommandList *list, const GSize size, const GRect *from,
-                                   const GRect *to, AnimationProgress normalized, void *context);
+                               const GRect *to, AnimationProgress normalized, void *context);
 
 //! Transform Implementation Callbacks.
 typedef struct {
@@ -60,15 +60,13 @@ KinoReel *kino_reel_transform_create(const TransformImpl *impl, void *context);
 //! @param reel Transform Kino Reel to get a context from
 void *kino_reel_transform_get_context(KinoReel *reel);
 
-void kino_reel_transform_set_from_reel(KinoReel *reel, KinoReel *from_reel,
-                                            bool take_ownership);
+void kino_reel_transform_set_from_reel(KinoReel *reel, KinoReel *from_reel, bool take_ownership);
 
 //! Get the from reel.
 //! @param reel Transform Kino Reel to get the from reel from
 KinoReel *kino_reel_transform_get_from_reel(KinoReel *reel);
 
-void kino_reel_transform_set_to_reel(KinoReel *reel, KinoReel *to_reel,
-                                          bool take_ownership);
+void kino_reel_transform_set_to_reel(KinoReel *reel, KinoReel *to_reel, bool take_ownership);
 
 //! Get the to reel.
 //! @param reel Transform Kino Reel to get the to reel from

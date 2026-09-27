@@ -6,7 +6,7 @@
 #include "get_bytes_storage.h"
 
 bool gb_storage_file_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
-                            GetBytesStorageInfo *info);
+                           GetBytesStorageInfo *info);
 
 GetBytesInfoErrorCode gb_storage_file_get_size(GetBytesStorage *storage, uint32_t *size);
 

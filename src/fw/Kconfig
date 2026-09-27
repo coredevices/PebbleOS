@@ -18,6 +18,15 @@ config THEMING
     help
       Expose the highlight-color theming UI under Settings.
 
+config BACKLIGHT_STANDARD_INTENSITY
+    int "Standard backlight preset intensity (%)"
+    range 1 100
+    default 50
+    help
+      Logical brightness used by the Standard backlight preset and fresh
+      shell preferences. The light service scales it to the board hardware
+      maximum. Saved brightness preferences take precedence.
+
 config DYNAMIC_BACKLIGHT
     bool "Dynamic backlight"
     help
@@ -75,12 +84,6 @@ menu "Debug & instrumentation"
 
 config NO_WATCH_TIMEOUT
     bool "Disable watchface idle timeout"
-
-config NO_WATCHDOG
-    bool "Disable watchdog reboots"
-    help
-      Do not reboot automatically when a watchdog fires; break into
-      the debugger instead.
 
 config UI_DEBUG
     bool "UI debug commands"

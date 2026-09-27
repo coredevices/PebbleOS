@@ -97,8 +97,7 @@ bool app_outbox_service_is_message_cancelled(AppOutboxMessage *message);
 //! outbox service, on behalf of the consumer. The extra space will be appended to the message that
 //! gets passed into `message_handler`.
 void app_outbox_service_register(AppOutboxServiceTag service_tag,
-                                 AppOutboxMessageHandler message_handler,
-                                 PebbleTask consumer_task,
+                                 AppOutboxMessageHandler message_handler, PebbleTask consumer_task,
                                  size_t consumer_data_size);
 
 //! Will invoke the sender's `sent_handler` with the status on the app task.

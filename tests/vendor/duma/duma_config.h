@@ -62,9 +62,9 @@
 
 #elif defined(DUMA_DLL_LIBRARY)
 
-#define DUMA_SKIP_SETUP 1
+#define DUMA_SKIP_SETUP            1
 #define DUMA_NO_GLOBAL_MALLOC_FREE 1
-#define DUMA_EXPLICIT_INIT 1
+#define DUMA_EXPLICIT_INIT         1
 #ifdef DUMA_NO_THREAD_SAFETY
 #undef DUMA_NO_THREAD_SAFETY
 #endif
@@ -99,9 +99,9 @@
 
 #elif defined(DUMA_DETOURS)
 
-#define DUMA_SKIP_SETUP 1
+#define DUMA_SKIP_SETUP            1
 #define DUMA_NO_GLOBAL_MALLOC_FREE 1
-#define DUMA_EXPLICIT_INIT 1
+#define DUMA_EXPLICIT_INIT         1
 #ifdef DUMA_NO_THREAD_SAFETY
 #undef DUMA_NO_THREAD_SAFETY
 #endif
@@ -181,7 +181,6 @@
 #endif
 
 #endif
-
 
 /*
  * Number of bytes per virtual-memory page, as returned by Page_Size().

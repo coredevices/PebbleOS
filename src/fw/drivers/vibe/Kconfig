@@ -13,6 +13,36 @@ config VIBE_AW86225
     help
       Support for the Awinic AW86225 haptic driver.
 
+config VIBE_AW86225_LRA_FREQUENCY_HZ
+    int "LRA resonant frequency (Hz)"
+    depends on VIBE_AW86225
+    help
+      Nominal resonant frequency (F0) of the LRA.
+
+config VIBE_AW86225_LRA_FREQUENCY_TOLERANCE_HZ
+    int "LRA resonant frequency tolerance (Hz)"
+    depends on VIBE_AW86225
+    help
+      Accepted deviation of the measured F0 from the nominal frequency
+      during calibration.
+
+config VIBE_AW86225_RATED_VOLTAGE_MV
+    int "LRA rated voltage (mVrms)"
+    depends on VIBE_AW86225
+    help
+      Rated AC drive voltage of the LRA in mV RMS. Full strength drives the
+      motor at this voltage, compensated for the supply voltage.
+
+config VIBE_AW86225_OUTPUT_GAIN_PERCENT
+    int "Output gain relative to the nominal model (%)"
+    depends on VIBE_AW86225
+    range 50 100
+    help
+      Measured motor voltage as a percentage of what the Awinic model
+      predicts (a full-scale sample at the supply-compensated gain drives
+      4.2 V). The waveform is scaled up by the inverse so the rated voltage
+      is reached. 100 disables the correction.
+
 config VIBE_AW8623X
     bool "Awinic AW8623X"
     help

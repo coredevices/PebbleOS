@@ -76,7 +76,7 @@ bool gbitmap_png_data_is_png(const uint8_t *data, size_t data_size);
 //! @param png_data_size PNG image size in bytes.
 //! @return A pointer to the \ref GBitmap. `NULL` if the \ref GBitmap could not
 //! be created
-GBitmap* gbitmap_create_from_png_data(const uint8_t *png_data, size_t png_data_size);
+GBitmap *gbitmap_create_from_png_data(const uint8_t *png_data, size_t png_data_size);
 
 bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t data_size);
 
@@ -100,8 +100,8 @@ int32_t gbitmap_png_get_transparent_gray_value(upng_t *upng);
 bool gbitmap_png_is_format_supported(upng_t *upng);
 
 //! @internal
-int32_t png_seek_chunk_in_resource(uint32_t resource_id, uint32_t offset,
-                                   bool seek_framedata, bool *found_actl);
+int32_t png_seek_chunk_in_resource(uint32_t resource_id, uint32_t offset, bool seek_framedata,
+                                   bool *found_actl);
 
 //! @internal
 //! This function returns the distance from an offset in a resource, from the specified app number,

@@ -63,7 +63,7 @@ void test_meta_endpoint__send_meta_corrupted_message(void) {
   };
   meta_endpoint_send_response_async(&meta_response_info);
 
-  const uint8_t expected_payload[] = { 0xd0 };
+  const uint8_t expected_payload[] = {0xd0};
   prv_process_and_assert_sent(expected_payload, sizeof(expected_payload));
 }
 
@@ -77,7 +77,7 @@ void test_meta_endpoint__send_meta_disallowed_message(void) {
   };
   meta_endpoint_send_response_async(&meta_response_info);
 
-  const uint8_t expected_payload[] = { 0xdd, 0xab, 0xcd };
+  const uint8_t expected_payload[] = {0xdd, 0xab, 0xcd};
   prv_process_and_assert_sent(expected_payload, sizeof(expected_payload));
 }
 
@@ -91,7 +91,6 @@ void test_meta_endpoint__send_meta_unhandled_message(void) {
   };
   meta_endpoint_send_response_async(&meta_response_info);
 
-  const uint8_t expected_payload[] = { 0xdc, 0x12, 0x34 };
+  const uint8_t expected_payload[] = {0xdc, 0x12, 0x34};
   prv_process_and_assert_sent(expected_payload, sizeof(expected_payload));
 }
-

@@ -3,19 +3,18 @@
 
 #pragma once
 
-#include "pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
 
 #include "protobuf_log.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 
 // This fixed size header is placed at the beginning of the buffer, before the protobuf
 // encoded message
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint16_t msg_size;
 } PLogMessageHdr;
 

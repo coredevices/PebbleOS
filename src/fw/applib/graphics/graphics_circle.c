@@ -10,6 +10,7 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/trig.h"
+#include "pbl/util/testing.h"
 
 #if PBL_COLOR
 static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {
@@ -25,14 +26,18 @@ static Fixed_S16_3 prv_get_ellipsis_border(Fixed_S16_3 offset, uint32_t offset_r
                                            uint32_t opposite_radius_sq) {
   if (offset_radius_sq == opposite_radius_sq) {
     // We're dealing with a circle
-    return (Fixed_S16_3){.raw_value = integer_sqrt((offset_radius_sq << FIXED_S16_3_PRECISION) -
-                                                    offset.raw_value * offset.raw_value)};
+    return (Fixed_S16_3){
+      .raw_value = integer_sqrt((offset_radius_sq << FIXED_S16_3_PRECISION) -
+                                offset.raw_value * offset.raw_value)
+    };
   }
 
   return (Fixed_S16_3){
-    .raw_value = (integer_sqrt((opposite_radius_sq - opposite_radius_sq *
-                                ((offset.raw_value * offset.raw_value) >> FIXED_S16_3_PRECISION) /
-                                offset_radius_sq) << FIXED_S16_3_PRECISION))
+    .raw_value = (integer_sqrt(
+        (opposite_radius_sq - opposite_radius_sq *
+                                  ((offset.raw_value * offset.raw_value) >> FIXED_S16_3_PRECISION) /
+                                  offset_radius_sq)
+        << FIXED_S16_3_PRECISION))
   };
 }
 
@@ -44,8 +49,7 @@ static GPointPrecise prv_get_rotated_precise_point(GPointPrecise center, uint16_
 
 static GPointPrecise prv_get_rotated_precise_point_for_ellipsis(GPointPrecise center,
                                                                 uint16_t radius_x,
-                                                                uint16_t radius_y,
-                                                                uint32_t angle) {
+                                                                uint16_t radius_y, uint32_t angle) {
   // PBL-25637: goes bonkers for ellipsis and angles around 90° and 270°
   if (radius_x == radius_y) {
     // We're dealing with circle here - theres an easier way...
@@ -59,17 +63,17 @@ static GPointPrecise prv_get_rotated_precise_point_for_ellipsis(GPointPrecise ce
 
     switch (angle / QUADRANT_ANGLE) {
       case 0:
-      return GPointPrecise(center.x.raw_value, center.y.raw_value - radius_y);
+        return GPointPrecise(center.x.raw_value, center.y.raw_value - radius_y);
       case 1:
-      return GPointPrecise(center.x.raw_value + radius_x, center.y.raw_value);
+        return GPointPrecise(center.x.raw_value + radius_x, center.y.raw_value);
       case 2:
-      return GPointPrecise(center.x.raw_value, center.y.raw_value + radius_y);
+        return GPointPrecise(center.x.raw_value, center.y.raw_value + radius_y);
       default:
-      return GPointPrecise(center.x.raw_value - radius_x, center.y.raw_value);
+        return GPointPrecise(center.x.raw_value - radius_x, center.y.raw_value);
     }
   }
 
-  // This algorthm operates on angle starting at our 90° mark, so we add 90°
+  // This algorithm operates on angle starting at our 90° mark, so we add 90°
   // and flip x/y coordinates (see last line of this function)
   angle = (angle + (TRIG_MAX_ANGLE / 4)) % TRIG_MAX_ANGLE;
 
@@ -109,8 +113,8 @@ static GPointPrecise prv_get_rotated_precise_point_for_ellipsis(GPointPrecise ce
   return GPointPrecise(center.x.raw_value - x, center.y.raw_value - y);
 }
 
-T_STATIC void graphics_circle_quadrant_draw_1px_non_aa(GContext* ctx, GPoint p, uint16_t radius,
-                                                       GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                           GCornerMask quadrant) {
   int f = 1 - radius;
   int ddF_x = 1;
   int ddF_y = -2 * radius;
@@ -169,13 +173,13 @@ static void prv_plot4(GBitmap *fb, GRect *clip_box, GPoint center, GPoint offset
    *        |
    *
    *    +  center point
-   *    -  x coordiante mirror line
+   *    -  x coordinate mirror line
    *    |  y coordinate mirror line
    *    x  given offset point
    *    xn mirrored points
    */
 
-  for (unsigned int i=0; i < ARRAY_LENGTH(quadrant_mask_mul); i++) {
+  for (unsigned int i = 0; i < ARRAY_LENGTH(quadrant_mask_mul); i++) {
     if (quadrant_mask_mul[i].mask & quadrant) {
       int16_t x = center.x + (offset.x * quadrant_mask_mul[i].x_mul);
       int16_t y = center.y + (offset.y * quadrant_mask_mul[i].y_mul);
@@ -199,7 +203,7 @@ static void prv_plot8(GBitmap *fb, GRect *clip_box, GPoint center, GPoint offset
    *   /  x5| x4 \
    *
    *    +  center point
-   *    -  x coordiante mirror line
+   *    -  x coordinate mirror line
    *    |  y coordinate mirror line
    *    /  45 degree mirror line
    *    \  135 degree mirror line
@@ -213,11 +217,11 @@ static void prv_plot8(GBitmap *fb, GRect *clip_box, GPoint center, GPoint offset
   prv_plot4(fb, clip_box, center, GPoint(offset.y, offset.x), brightness, stroke_color, quadrant);
 }
 
-T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint16_t radius,
-                                                   GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                       GCornerMask quadrant) {
   /* This will draw antialiased circle with width of 1px, can be drawn in quadrants
    * Based on wu-xiang line drawing, will draw circle in two steps
-   * 1. Calculate point on the edge of eighth of the cricle and plot it around by mirroring
+   * 1. Calculate point on the edge of eighth of the circle and plot it around by mirroring
    *    - if point is matching pixel perfectly thats going to be on fully colored pixel
    *    - if theres fraction, two pixels will be colored accordingly
    * 2. Fill special case pixels (pixels that are between mirrored eighths)
@@ -225,7 +229,7 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint
    *    - three pixels calculated for circle with radius > 6
    *    - two pixels calculated for circle with radius < 6
    *
-   * Theres also special case for the radius of 3, where algorithm couldnt stop at right
+   * Theres also special case for the radius of 3, where algorithm couldn't stop at right
    *   point and wasn't drawing two pixels on each quadrant
    *
    * Here's quadrant example:
@@ -245,7 +249,7 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint
    *   x               -
    *
    *      |  original calculated pixels for plotting
-   *      -  mirrored eight of the circle (will mirror more of them if neccessary)
+   *      -  mirrored eight of the circle (will mirror more of them if necessary)
    *      o  special case pixels
    *      x  center of the circle
    */
@@ -271,8 +275,9 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint
 
   // Step 1
   for (progress = 0; progress < stop_progress; progress++) {
-    Fixed_S16_3 edge = (Fixed_S16_3){.raw_value = radius_fixed -
-                                      prv_get_circle_border(progress, radius).raw_value};
+    Fixed_S16_3 edge = (Fixed_S16_3){
+      .raw_value = radius_fixed - prv_get_circle_border(progress, radius).raw_value
+    };
 
     if (edge.integer != 0) {
       weighting = (edge.fraction >> 1);
@@ -292,7 +297,7 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint
   // Note: magic numbers explained in main comment for this function
   int special_case_pixels = 3;
 
-  // Acommpanied by magic number 7 (not 6, we increased radius at beginning of this function)
+  // Accompanied by magic number 7 (not 6, we increased radius at beginning of this function)
   if (radius < 7) {
     // And sometimes magic number 2
     special_case_pixels = 2;
@@ -301,8 +306,9 @@ T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext* ctx, GPoint p, uint
   // Step 2
   // Special code for filling gap between mirrored parts in a manner that wont overdraw pixels
   for (; progress < stop_progress + special_case_pixels; progress++) {
-    Fixed_S16_3 edge = (Fixed_S16_3){.raw_value = radius_fixed -
-                                      prv_get_circle_border(progress, radius).raw_value};
+    Fixed_S16_3 edge = (Fixed_S16_3){
+      .raw_value = radius_fixed - prv_get_circle_border(progress, radius).raw_value
+    };
 
     if (edge.integer != 0) {
       weighting = (edge.fraction >> 1);
@@ -368,9 +374,9 @@ inline void prv_hline_quadrant(GCornerMask quadrant, GCornerMask desired, GConte
   }
 }
 
-static void prv_stroke_circle_quadrant_full(GContext* ctx, GPoint p, uint16_t radius,
+static void prv_stroke_circle_quadrant_full(GContext *ctx, GPoint p, uint16_t radius,
                                             uint8_t stroke_width, GCornerMask quadrant) {
-  // This algorithm will draw stroked circle with vairable width (only odd numbers for now)
+  // This algorithm will draw stroked circle with variable width (only odd numbers for now)
   const uint8_t half_stroke_width = stroke_width / 2;
   const int16_t inner_radius = radius - half_stroke_width;
   const uint8_t outer_radius = radius + half_stroke_width;
@@ -400,13 +406,13 @@ static void prv_stroke_circle_quadrant_full(GContext* ctx, GPoint p, uint16_t ra
   ctx->draw_state.fill_color = ctx->draw_state.stroke_color;
 
   // For pixel matching we need to decrease inner radius...
-  prv_fill_oval_quadrant(ctx, p, outer_radius, outer_radius,
-                            inner_radius - 1, inner_radius - 1, quadrant);
+  prv_fill_oval_quadrant(ctx, p, outer_radius, outer_radius, inner_radius - 1, inner_radius - 1,
+                         quadrant);
 
   ctx->draw_state.fill_color = fill_color;
 }
 
-static void prv_stroke_circle_quadrant_full_override_aa(GContext* ctx, GPoint p, uint16_t radius,
+static void prv_stroke_circle_quadrant_full_override_aa(GContext *ctx, GPoint p, uint16_t radius,
                                                         uint8_t stroke_width, GCornerMask quadrant,
                                                         bool anti_aliased) {
 #if PBL_COLOR
@@ -425,23 +431,25 @@ static void prv_stroke_circle_quadrant_full_override_aa(GContext* ctx, GPoint p,
 }
 
 #if PBL_COLOR
-//! Draws anit-aliased stroked quadrant of a circle
+//! Draws antialiased stroked quadrant of a circle
 //! @internal
-T_STATIC void graphics_circle_quadrant_draw_stroked_aa(GContext* ctx, GPoint p, uint16_t radius,
-                                                       uint8_t stroke_width, GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_stroked_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                           uint8_t stroke_width,
+                                                           GCornerMask quadrant) {
   prv_stroke_circle_quadrant_full_override_aa(ctx, p, radius, stroke_width, quadrant, true);
 }
 #endif // PBL_COLOR
 
 //! Draws aliased stroked quadrant of a circle
 //! @internal
-T_STATIC void graphics_circle_quadrant_draw_stroked_non_aa(GContext* ctx, GPoint p, uint16_t radius,
-                                                           uint8_t stroke_width,
-                                                           GCornerMask quadrant) {
+PBL_T_STATIC void graphics_circle_quadrant_draw_stroked_non_aa(GContext *ctx, GPoint p,
+                                                               uint16_t radius,
+                                                               uint8_t stroke_width,
+                                                               GCornerMask quadrant) {
   prv_stroke_circle_quadrant_full_override_aa(ctx, p, radius, stroke_width, quadrant, false);
 }
 
-void graphics_circle_quadrant_draw(GContext* ctx, GPoint p, uint16_t radius, GCornerMask quadrant) {
+void graphics_circle_quadrant_draw(GContext *ctx, GPoint p, uint16_t radius, GCornerMask quadrant) {
   uint8_t stroke_width = ctx->draw_state.stroke_width;
 #if PBL_COLOR
   if (ctx->draw_state.antialiased) {
@@ -450,7 +458,7 @@ void graphics_circle_quadrant_draw(GContext* ctx, GPoint p, uint16_t radius, GCo
       graphics_circle_quadrant_draw_stroked_aa(ctx, p, radius, stroke_width, quadrant);
       return;
     } else {
-      // Antialiased and Stroke Width == 1 (not suppported on 1-bit color)
+      // Antialiased and Stroke Width == 1 (not supported on 1-bit color)
       graphics_circle_quadrant_draw_1px_aa(ctx, p, radius, quadrant);
       return;
     }
@@ -465,7 +473,7 @@ void graphics_circle_quadrant_draw(GContext* ctx, GPoint p, uint16_t radius, GCo
   }
 }
 
-T_STATIC void graphics_circle_draw_1px_non_aa(GContext* ctx, GPoint p, uint16_t radius) {
+PBL_T_STATIC void graphics_circle_draw_1px_non_aa(GContext *ctx, GPoint p, uint16_t radius) {
   graphics_circle_quadrant_draw_1px_non_aa(ctx, p, radius, GCornersAll);
 
   p.x += ctx->draw_state.drawing_box.origin.x;
@@ -478,15 +486,15 @@ T_STATIC void graphics_circle_draw_1px_non_aa(GContext* ctx, GPoint p, uint16_t 
 }
 
 #if PBL_COLOR
-T_STATIC void graphics_circle_draw_1px_aa(GContext* ctx, GPoint p, uint16_t radius) {
+PBL_T_STATIC void graphics_circle_draw_1px_aa(GContext *ctx, GPoint p, uint16_t radius) {
   graphics_circle_quadrant_draw_1px_aa(ctx, p, radius, GCornersAll);
 }
 
 //! Draws an antialiased circle of stroke width > 1
 //! @note This only supports odd numbers for stroke_width - even numbers will be rounded up.
 //! Minimal supported stroke_width is 3
-T_STATIC void graphics_circle_draw_stroked_aa(GContext* ctx, GPoint p, uint16_t radius,
-                                              uint8_t stroke_width) {
+PBL_T_STATIC void graphics_circle_draw_stroked_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                  uint8_t stroke_width) {
   graphics_circle_quadrant_draw_stroked_aa(ctx, p, radius, stroke_width, GCornersAll);
 }
 #endif // PBL_COLOR
@@ -494,20 +502,20 @@ T_STATIC void graphics_circle_draw_stroked_aa(GContext* ctx, GPoint p, uint16_t 
 //! Draws a non-antialiased circle of stroke width > 1
 //! @note This only supports odd numbers for stroke_width - even numbers will be rounded up.
 //! Minimal supported stroke_width is 3
-T_STATIC void graphics_circle_draw_stroked_non_aa(GContext* ctx, GPoint p, uint16_t radius,
-                                                  uint8_t stroke_width) {
+PBL_T_STATIC void graphics_circle_draw_stroked_non_aa(GContext *ctx, GPoint p, uint16_t radius,
+                                                      uint8_t stroke_width) {
   graphics_circle_quadrant_draw_stroked_non_aa(ctx, p, radius, stroke_width, GCornersAll);
 }
 
 // Lifted directly from: http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
-void graphics_draw_circle(GContext* ctx, GPoint p, uint16_t radius) {
+void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
   }
 
   if (radius == 0) {
-    // Special case radius 0 to fill a circle with radius eqaul to half the stroke width
+    // Special case radius 0 to fill a circle with radius equal to half the stroke width
     // Backup the fill color and set that to the current stroke color since the fill color
     // is what is used for fill circle. Restore the fill color afterwards.
     GColor backup_fill_color = ctx->draw_state.fill_color;
@@ -539,12 +547,12 @@ void graphics_draw_circle(GContext* ctx, GPoint p, uint16_t radius) {
   }
 }
 
-ALWAYS_INLINE
+PBL_ALWAYS_INLINE
 static void prv_fill_horizontal_line(GContext *ctx, GPoint p, int16_t width) {
-  graphics_fill_rect(ctx, &(GRect) { .origin = p, .size = { width, 1 } });
+  graphics_fill_rect(ctx, &(GRect){.origin = p, .size = {width, 1}});
 }
 
-void graphics_circle_quadrant_fill_non_aa(GContext* ctx, GPoint p, uint16_t radius,
+void graphics_circle_quadrant_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius,
                                           GCornerMask quadrant) {
   const int16_t x0 = p.x;
   const int16_t y0 = p.y;
@@ -599,7 +607,7 @@ void graphics_circle_quadrant_fill_non_aa(GContext* ctx, GPoint p, uint16_t radi
   }
 }
 
-static void graphics_fill_half_circle(GContext* ctx, int x0, int y0, uint16_t radius,
+static void graphics_fill_half_circle(GContext *ctx, int x0, int y0, uint16_t radius,
                                       uint8_t section) {
   int f = 1 - radius;
   int ddF_x = 1;
@@ -632,14 +640,15 @@ static void graphics_fill_half_circle(GContext* ctx, int x0, int y0, uint16_t ra
   }
 }
 
-MOCKABLE void graphics_circle_fill_non_aa(GContext* ctx, GPoint p, uint16_t radius) {
+PBL_T_MOCKABLE void graphics_circle_fill_non_aa(GContext *ctx, GPoint p, uint16_t radius) {
   prv_fill_horizontal_line(ctx, GPoint(p.x - radius, p.y), 2 * radius + 1);
   graphics_fill_half_circle(ctx, p.x, p.y, radius, GCornersAll);
 }
 
 #if PBL_COLOR
-MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext* ctx, GPoint p, uint16_t radius,
-                                                        GCornerMask quadrant) {
+PBL_T_MOCKABLE void graphics_internal_circle_quadrant_fill_aa(GContext *ctx, GPoint p,
+                                                              uint16_t radius,
+                                                              GCornerMask quadrant) {
   // Radius cannot be smaller than 1
   PBL_ASSERTN(radius > 0);
 
@@ -655,8 +664,8 @@ static int16_t prv_intersection_between_horizontal_and_line(Fixed_S16_3 progress
   }
 
   return top.x.raw_value + (bottom.x.raw_value - top.x.raw_value) *
-  (progress.raw_value - top.y.raw_value) /
-  (bottom.y.raw_value - top.y.raw_value);
+                               (progress.raw_value - top.y.raw_value) /
+                               (bottom.y.raw_value - top.y.raw_value);
 }
 
 static void prv_swap_precise_points(GPointPrecise *p0, GPointPrecise *p1) {
@@ -665,37 +674,33 @@ static void prv_swap_precise_points(GPointPrecise *p0, GPointPrecise *p1) {
   *p1 = tmp;
 }
 
-static void prv_draw_scanline_collision_points(GContext *ctx, int16_t y,
-                                               int16_t left, int16_t right,
-                                               int16_t starting_edge, int16_t ending_edge,
-                                               bool ignore_close_angles) {
+static void prv_draw_scanline_collision_points(GContext *ctx, int16_t y, int16_t left,
+                                               int16_t right, int16_t starting_edge,
+                                               int16_t ending_edge, bool ignore_close_angles) {
   if (starting_edge > ending_edge || (ignore_close_angles && starting_edge == ending_edge)) {
     // Two separate drawings...
     starting_edge = MAX(starting_edge, left);
     ending_edge = MIN(ending_edge, right);
 
     if (left <= ending_edge) {
-      graphics_private_draw_horizontal_line(ctx, y,
-                                            (Fixed_S16_3){.raw_value = left},
-                                            (Fixed_S16_3){.raw_value = ending_edge -
-                                              FIXED_S16_3_ONE.raw_value});
+      graphics_private_draw_horizontal_line(
+          ctx, y, (Fixed_S16_3){.raw_value = left},
+          (Fixed_S16_3){.raw_value = ending_edge - FIXED_S16_3_ONE.raw_value});
     }
 
     if (starting_edge <= right) {
-      graphics_private_draw_horizontal_line(ctx, y,
-                                            (Fixed_S16_3){.raw_value = starting_edge},
-                                            (Fixed_S16_3){.raw_value = right -
-                                              FIXED_S16_3_ONE.raw_value});
+      graphics_private_draw_horizontal_line(
+          ctx, y, (Fixed_S16_3){.raw_value = starting_edge},
+          (Fixed_S16_3){.raw_value = right - FIXED_S16_3_ONE.raw_value});
     }
   } else {
     starting_edge = (MAX(left, starting_edge));
     ending_edge = (MIN(right, ending_edge));
 
     if (starting_edge <= ending_edge) {
-      graphics_private_draw_horizontal_line(ctx, y,
-                                            (Fixed_S16_3){.raw_value = starting_edge},
-                                            (Fixed_S16_3){.raw_value = ending_edge -
-                                              FIXED_S16_3_ONE.raw_value});
+      graphics_private_draw_horizontal_line(
+          ctx, y, (Fixed_S16_3){.raw_value = starting_edge},
+          (Fixed_S16_3){.raw_value = ending_edge - FIXED_S16_3_ONE.raw_value});
     }
   }
 }
@@ -715,15 +720,15 @@ static GCornerMask prv_get_full_quadrants(int8_t starting_quadrant, int8_t endin
 }
 
 static void prv_get_angles_mask_edge(Fixed_S16_3 y, GPointPrecise center, GCornerMask quadrant,
-                                     int16_t *top_edge, int16_t *bottom_edge,
-                                     GPointPrecise top, GPointPrecise bottom) {
+                                     int16_t *top_edge, int16_t *bottom_edge, GPointPrecise top,
+                                     GPointPrecise bottom) {
   // This function determines where scanline is in position to the angle line and sets
   //   angle masking values accordingly
   if (quadrant & GCornersTop) {
     if (center.y.raw_value - y.raw_value <= bottom.y.raw_value) {
       if (center.y.raw_value - y.raw_value >= top.y.raw_value) {
-        *top_edge = prv_intersection_between_horizontal_and_line((Fixed_S16_3){.raw_value =
-            (center.y.raw_value - y.raw_value)}, top, bottom);
+        *top_edge = prv_intersection_between_horizontal_and_line(
+            (Fixed_S16_3){.raw_value = (center.y.raw_value - y.raw_value)}, top, bottom);
       } else {
         *top_edge = top.x.raw_value;
       }
@@ -733,8 +738,8 @@ static void prv_get_angles_mask_edge(Fixed_S16_3 y, GPointPrecise center, GCorne
   } else {
     if (center.y.raw_value + y.raw_value >= top.y.raw_value) {
       if (center.y.raw_value + y.raw_value <= bottom.y.raw_value) {
-        *bottom_edge = prv_intersection_between_horizontal_and_line((Fixed_S16_3){.raw_value =
-            (center.y.raw_value + y.raw_value)}, top, bottom);
+        *bottom_edge = prv_intersection_between_horizontal_and_line(
+            (Fixed_S16_3){.raw_value = (center.y.raw_value + y.raw_value)}, top, bottom);
       } else {
         *bottom_edge = bottom.x.raw_value;
       }
@@ -744,12 +749,13 @@ static void prv_get_angles_mask_edge(Fixed_S16_3 y, GPointPrecise center, GCorne
   }
 }
 
-T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, int32_t angle_end) {
+PBL_T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start,
+                                                              int32_t angle_end) {
   PBL_ASSERTN(angle_start <= angle_end);
 
-  EllipsisDrawConfig config = (EllipsisDrawConfig){(EllipsisPartDrawConfig){0, GCornerNone},
-    GCornerNone,
-    (EllipsisPartDrawConfig){0, GCornerNone}};
+  EllipsisDrawConfig config = (EllipsisDrawConfig){
+    (EllipsisPartDrawConfig){0, GCornerNone}, GCornerNone, (EllipsisPartDrawConfig){0, GCornerNone}
+  };
   // Nothing to draw case:
   if (angle_end == angle_start) {
     return config;
@@ -776,8 +782,8 @@ T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, i
 
     if (angle_end - angle_start > QUADRANT_ANGLE) {
       // Full quadrants:
-      config.full_quadrants = prv_get_full_quadrants(starting_quadrant_normalized,
-                                                     ending_quadrant_normalized);
+      config.full_quadrants =
+          prv_get_full_quadrants(starting_quadrant_normalized, ending_quadrant_normalized);
     }
   } else {
     // Angles in different quadrants
@@ -791,18 +797,17 @@ T_STATIC EllipsisDrawConfig prv_calc_draw_config_ellipsis(int32_t angle_start, i
     }
 
     // Full quadrants
-    config.full_quadrants = prv_get_full_quadrants(starting_quadrant_normalized,
-                                                   ending_quadrant_normalized);
+    config.full_quadrants =
+        prv_get_full_quadrants(starting_quadrant_normalized, ending_quadrant_normalized);
   }
 
   return config;
 }
 
-static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
-                                  Fixed_S16_3 radius_outer_x, Fixed_S16_3 radius_outer_y,
-                                  Fixed_S16_3 radius_inner_x, Fixed_S16_3 radius_inner_y,
-                                  int32_t angle_start, int32_t angle_end) {
-
+static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center, Fixed_S16_3 radius_outer_x,
+                                  Fixed_S16_3 radius_outer_y, Fixed_S16_3 radius_inner_x,
+                                  Fixed_S16_3 radius_inner_y, int32_t angle_start,
+                                  int32_t angle_end) {
   // Drawing config calculation
   const EllipsisDrawConfig config = prv_calc_draw_config_ellipsis(angle_start, angle_end);
 
@@ -822,7 +827,7 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
   radius_inner_y.raw_value = MAX(radius_inner_y.raw_value, 0);
 
   // This flag prevents from calculation of the inner circle (and bugs related to it)
-  const bool no_innner_ellipsis = (radius_inner_x.raw_value == 0 || radius_inner_y.raw_value == 0);
+  const bool no_inner_ellipsis = (radius_inner_x.raw_value == 0 || radius_inner_y.raw_value == 0);
 
   // Squared radiuses values - they're used a lot in some cases
   const uint32_t radius_outer_x_sq =
@@ -835,25 +840,23 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
       (radius_inner_y.raw_value * radius_inner_y.raw_value) >> FIXED_S16_3_PRECISION;
 
   // Intersection points of angles and radiuses
-  GPointPrecise start_top =
-      prv_get_rotated_precise_point_for_ellipsis(center,
-                                                 radius_outer_x.raw_value, radius_outer_y.raw_value,
-                                                 config.start_quadrant.angle);
-  GPointPrecise end_top =
-      prv_get_rotated_precise_point_for_ellipsis(center,
-                                                 radius_outer_x.raw_value, radius_outer_y.raw_value,
-                                                 config.end_quadrant.angle);
+  GPointPrecise start_top = prv_get_rotated_precise_point_for_ellipsis(
+      center, radius_outer_x.raw_value, radius_outer_y.raw_value, config.start_quadrant.angle);
+  GPointPrecise end_top = prv_get_rotated_precise_point_for_ellipsis(
+      center, radius_outer_x.raw_value, radius_outer_y.raw_value, config.end_quadrant.angle);
 
-  GPointPrecise start_bottom = (no_innner_ellipsis) ? center :
-      prv_get_rotated_precise_point_for_ellipsis(center,
-                                                 radius_inner_x.raw_value, radius_inner_y.raw_value,
-                                                 config.start_quadrant.angle);
-  GPointPrecise end_bottom = (no_innner_ellipsis) ? center :
-      prv_get_rotated_precise_point_for_ellipsis(center,
-                                                 radius_inner_x.raw_value, radius_inner_y.raw_value,
-                                                 config.end_quadrant.angle);
+  GPointPrecise start_bottom = (no_inner_ellipsis)
+                                   ? center
+                                   : prv_get_rotated_precise_point_for_ellipsis(
+                                         center, radius_inner_x.raw_value, radius_inner_y.raw_value,
+                                         config.start_quadrant.angle);
+  GPointPrecise end_bottom = (no_inner_ellipsis)
+                                 ? center
+                                 : prv_get_rotated_precise_point_for_ellipsis(
+                                       center, radius_inner_x.raw_value, radius_inner_y.raw_value,
+                                       config.end_quadrant.angle);
 
-  // Swapping top/bottom offset points if neccesary
+  // Swapping top/bottom offset points if necessary
   if (start_top.y.raw_value > start_bottom.y.raw_value) {
     prv_swap_precise_points(&start_top, &start_bottom);
   } else if (start_top.y.raw_value == start_bottom.y.raw_value &&
@@ -870,15 +873,15 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
     prv_swap_precise_points(&end_top, &end_bottom);
   }
 
-  // Range for scanline, since scanlines are mirred from the middle of the circle this is also
+  // Range for scanline, since scanlines are mirrored from the middle of the circle this is also
   //   indicated from the middle, therefore initialised with 0 (as middle) and
-  //   radius_y (as scalines are on y axis)
+  //   radius_y (as scanlines are on y axis)
   int draw_min = 0;
   int draw_max = radius_outer_y.integer;
 
   // Adjust to drawing_box offset
   int adjusted_center = center.y.integer + ctx->draw_state.drawing_box.origin.y;
-  // We add one to compenaste in case of odd line needs to be drawn
+  // We add one to compensate in case of odd line needs to be drawn
   int adjusted_top = adjusted_center - radius_outer_y.integer - 1;
   int adjusted_bottom = adjusted_center + radius_outer_y.integer + 1;
 
@@ -937,19 +940,19 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
       //   will return same starting/ending point, which might be invalid angle
       // We might also reject this data if delta of start/end angle is bigger than 180°
       Fixed_S16_3 y_middle = (Fixed_S16_3){.raw_value = y.raw_value - 4};
-      prv_get_angles_mask_edge(y_middle, center, config.start_quadrant.quadrant,
-                               &starting_edge, &ending_edge, start_top, start_bottom);
-      prv_get_angles_mask_edge(y_middle, center, config.end_quadrant.quadrant,
-                               &ending_edge, &starting_edge, end_top, end_bottom);
+      prv_get_angles_mask_edge(y_middle, center, config.start_quadrant.quadrant, &starting_edge,
+                               &ending_edge, start_top, start_bottom);
+      prv_get_angles_mask_edge(y_middle, center, config.end_quadrant.quadrant, &ending_edge,
+                               &starting_edge, end_top, end_bottom);
 
       // Now we use only one with valuable data - same starting/ending is rejected
       if (starting_edge == ending_edge) {
         y_middle.integer++;
 
-        prv_get_angles_mask_edge(y_middle, center, config.start_quadrant.quadrant,
-                                 &starting_edge, &ending_edge, start_top, start_bottom);
-        prv_get_angles_mask_edge(y_middle, center, config.end_quadrant.quadrant,
-                                 &ending_edge, &starting_edge, end_top, end_bottom);
+        prv_get_angles_mask_edge(y_middle, center, config.start_quadrant.quadrant, &starting_edge,
+                                 &ending_edge, start_top, start_bottom);
+        prv_get_angles_mask_edge(y_middle, center, config.end_quadrant.quadrant, &ending_edge,
+                                 &starting_edge, end_top, end_bottom);
       }
     }
 
@@ -957,7 +960,7 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
     int16_t left = center.x.raw_value - outer_edge;
     int16_t right = center.x.raw_value + outer_edge;
 
-    if (!no_innner_ellipsis && radius_inner_y.integer != 0) {
+    if (!no_inner_ellipsis && radius_inner_y.integer != 0) {
       // This complicates the situation
       int16_t inner_edge =
           prv_get_ellipsis_border(y, radius_inner_y_sq, radius_inner_x_sq).raw_value;
@@ -965,13 +968,13 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
       int16_t inner_left = center.x.raw_value - inner_edge;
       int16_t inner_right = center.x.raw_value + inner_edge;
 
-      prv_draw_scanline_collision_points(ctx, center.y.integer, left, inner_left,
-                                         starting_edge, ending_edge, ignore_close_angles);
-      prv_draw_scanline_collision_points(ctx, center.y.integer, inner_right, right,
-                                         starting_edge, ending_edge, ignore_close_angles);
+      prv_draw_scanline_collision_points(ctx, center.y.integer, left, inner_left, starting_edge,
+                                         ending_edge, ignore_close_angles);
+      prv_draw_scanline_collision_points(ctx, center.y.integer, inner_right, right, starting_edge,
+                                         ending_edge, ignore_close_angles);
     } else {
-      prv_draw_scanline_collision_points(ctx, center.y.integer, left, right,
-                                         starting_edge, ending_edge, ignore_close_angles);
+      prv_draw_scanline_collision_points(ctx, center.y.integer, left, right, starting_edge,
+                                         ending_edge, ignore_close_angles);
     }
 
     // After drawing the line we move scanline edge calculation offset
@@ -984,7 +987,7 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
   }
 
   // Main drawing loop
-  for (int i=draw_min; i < draw_max; i++, y.integer++) {
+  for (int i = draw_min; i < draw_max; i++, y.integer++) {
     // Separate min/max offsets for angles masking for lines drawn above and below center point
     int16_t top_starting_edge = center.x.raw_value - radius_outer_x.raw_value;
     int16_t top_ending_edge = center.x.raw_value + radius_outer_x.raw_value;
@@ -993,10 +996,10 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
 
     // If the circle is not full - calculate mask for angles
     if (!is_full_circle) {
-      prv_get_angles_mask_edge(y, center, config.start_quadrant.quadrant,
-                               &top_starting_edge, &bottom_ending_edge, start_top, start_bottom);
-      prv_get_angles_mask_edge(y, center, config.end_quadrant.quadrant,
-                               &top_ending_edge, &bottom_starting_edge, end_top, end_bottom);
+      prv_get_angles_mask_edge(y, center, config.start_quadrant.quadrant, &top_starting_edge,
+                               &bottom_ending_edge, start_top, start_bottom);
+      prv_get_angles_mask_edge(y, center, config.end_quadrant.quadrant, &top_ending_edge,
+                               &bottom_starting_edge, end_top, end_bottom);
     }
 
     // Calculate outer radius edges
@@ -1005,7 +1008,7 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
     int16_t right = center.x.raw_value + outer_edge;
 
     // If theres circle in the middle - calculate it:
-    if (!no_innner_ellipsis && i < radius_inner_y.integer) {
+    if (!no_inner_ellipsis && i < radius_inner_y.integer) {
       int16_t inner_edge =
           prv_get_ellipsis_border(y, radius_inner_y_sq, radius_inner_x_sq).raw_value;
 
@@ -1054,57 +1057,49 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center,
 void prv_fill_oval_in_rect(GContext *ctx, GRect rect, uint16_t inset_x, uint16_t inset_y,
                            int32_t angle_start, int32_t angle_end) {
   // Cast to precision point
-  GPointPrecise center = GPointPrecise(((rect.origin.x << FIXED_S16_3_PRECISION) +
-                                        (rect.size.w << FIXED_S16_3_PRECISION) / 2),
-                                       ((rect.origin.y << FIXED_S16_3_PRECISION) +
-                                        (rect.size.h << FIXED_S16_3_PRECISION) / 2));
+  GPointPrecise center = GPointPrecise(
+      ((rect.origin.x << FIXED_S16_3_PRECISION) + (rect.size.w << FIXED_S16_3_PRECISION) / 2),
+      ((rect.origin.y << FIXED_S16_3_PRECISION) + (rect.size.h << FIXED_S16_3_PRECISION) / 2));
 
-  Fixed_S16_3 radius_outer_x = (Fixed_S16_3){.raw_value =
-    ((rect.size.w << FIXED_S16_3_PRECISION) / 2)};
-  Fixed_S16_3 radius_outer_y = (Fixed_S16_3){.raw_value =
-    ((rect.size.h << FIXED_S16_3_PRECISION) / 2)};
-  Fixed_S16_3 radius_inner_x = (Fixed_S16_3){.raw_value =
-    (((rect.size.w - inset_x * 2) << FIXED_S16_3_PRECISION) / 2)};
-  Fixed_S16_3 radius_inner_y = (Fixed_S16_3){.raw_value =
-    (((rect.size.h - inset_y * 2) << FIXED_S16_3_PRECISION) / 2)};
+  Fixed_S16_3 radius_outer_x =
+      (Fixed_S16_3){.raw_value = ((rect.size.w << FIXED_S16_3_PRECISION) / 2)};
+  Fixed_S16_3 radius_outer_y =
+      (Fixed_S16_3){.raw_value = ((rect.size.h << FIXED_S16_3_PRECISION) / 2)};
+  Fixed_S16_3 radius_inner_x =
+      (Fixed_S16_3){.raw_value = (((rect.size.w - inset_x * 2) << FIXED_S16_3_PRECISION) / 2)};
+  Fixed_S16_3 radius_inner_y =
+      (Fixed_S16_3){.raw_value = (((rect.size.h - inset_y * 2) << FIXED_S16_3_PRECISION) / 2)};
 
-  prv_fill_oval_precise(ctx, center, radius_outer_x, radius_outer_y,
-                        radius_inner_x, radius_inner_y, angle_start, angle_end);
+  prv_fill_oval_precise(ctx, center, radius_outer_x, radius_outer_y, radius_inner_x, radius_inner_y,
+                        angle_start, angle_end);
 }
 
 void prv_fill_oval(GContext *ctx, GPoint center, uint16_t outer_radius_x, uint16_t outer_radius_y,
-                   uint16_t inner_radius_x, uint16_t inner_radius_y,
-                   int32_t angle_start, int32_t angle_end) {
-  const GPointPrecise center_precise = (GPointPrecise) {
-    .x.integer = center.x, .x.fraction = FIXED_S16_3_HALF.raw_value,
-    .y.integer = center.y, .y.fraction = FIXED_S16_3_HALF.raw_value,
+                   uint16_t inner_radius_x, uint16_t inner_radius_y, int32_t angle_start,
+                   int32_t angle_end) {
+  const GPointPrecise center_precise = (GPointPrecise){
+    .x.integer = center.x,
+    .x.fraction = FIXED_S16_3_HALF.raw_value,
+    .y.integer = center.y,
+    .y.fraction = FIXED_S16_3_HALF.raw_value,
   };
 
-  const Fixed_S16_3 outer_x_precise = (Fixed_S16_3){
-    .integer = outer_radius_x,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
-  const Fixed_S16_3 outer_y_precise = (Fixed_S16_3){
-    .integer = outer_radius_y,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
-  const Fixed_S16_3 inner_x_precise = (Fixed_S16_3){
-    .integer = inner_radius_x,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
-  const Fixed_S16_3 inner_y_precise = (Fixed_S16_3){
-    .integer = inner_radius_y,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
+  const Fixed_S16_3 outer_x_precise =
+      (Fixed_S16_3){.integer = outer_radius_x, .fraction = FIXED_S16_3_HALF.raw_value};
+  const Fixed_S16_3 outer_y_precise =
+      (Fixed_S16_3){.integer = outer_radius_y, .fraction = FIXED_S16_3_HALF.raw_value};
+  const Fixed_S16_3 inner_x_precise =
+      (Fixed_S16_3){.integer = inner_radius_x, .fraction = FIXED_S16_3_HALF.raw_value};
+  const Fixed_S16_3 inner_y_precise =
+      (Fixed_S16_3){.integer = inner_radius_y, .fraction = FIXED_S16_3_HALF.raw_value};
 
-  prv_fill_oval_precise(ctx, center_precise, outer_x_precise, outer_y_precise,
-                        inner_x_precise, inner_y_precise, angle_start, angle_end);
+  prv_fill_oval_precise(ctx, center_precise, outer_x_precise, outer_y_precise, inner_x_precise,
+                        inner_y_precise, angle_start, angle_end);
 }
 
-void prv_fill_oval_quadrant_precise(GContext *ctx, GPointPrecise point,
-                                    Fixed_S16_3 outer_radius_x, Fixed_S16_3 outer_radius_y,
-                                    Fixed_S16_3 inner_radius_x, Fixed_S16_3 inner_radius_y,
-                                    GCornerMask quadrant) {
+void prv_fill_oval_quadrant_precise(GContext *ctx, GPointPrecise point, Fixed_S16_3 outer_radius_x,
+                                    Fixed_S16_3 outer_radius_y, Fixed_S16_3 inner_radius_x,
+                                    Fixed_S16_3 inner_radius_y, GCornerMask quadrant) {
   // Translate quadrants to angles
   if (quadrant == GCornerNone) {
     return;
@@ -1118,14 +1113,14 @@ void prv_fill_oval_quadrant_precise(GContext *ctx, GPointPrecise point,
     angle_end = TRIG_MAX_ANGLE;
   } else {
     if (quadrant & radius_quadrants[0]) {
-      for (int i=QUADRANTS_NUM - 1; i >= 0; i--) {
+      for (int i = QUADRANTS_NUM - 1; i >= 0; i--) {
         if (!(quadrant & radius_quadrants[i])) {
           angle_start = ((i + 1) % 4) * (TRIG_MAX_ANGLE / 4);
           break;
         }
       }
     } else {
-      for (int i=1; i <= QUADRANTS_NUM; i++) {
+      for (int i = 1; i <= QUADRANTS_NUM; i++) {
         if (quadrant & radius_quadrants[i % 4]) {
           angle_start = i * (TRIG_MAX_ANGLE / 4);
           break;
@@ -1134,14 +1129,14 @@ void prv_fill_oval_quadrant_precise(GContext *ctx, GPointPrecise point,
     }
 
     if (!(quadrant & radius_quadrants[0])) {
-      for (int i=QUADRANTS_NUM - 1; i >= 0; i--) {
+      for (int i = QUADRANTS_NUM - 1; i >= 0; i--) {
         if (quadrant & radius_quadrants[i]) {
           angle_end = ((i + 1) % 4) * (TRIG_MAX_ANGLE / 4);
           break;
         }
       }
     } else {
-      for (int i=1; i <= QUADRANTS_NUM; i++) {
+      for (int i = 1; i <= QUADRANTS_NUM; i++) {
         if (!(quadrant & radius_quadrants[i % 4])) {
           angle_end = i * (TRIG_MAX_ANGLE / 4);
           break;
@@ -1154,51 +1149,44 @@ void prv_fill_oval_quadrant_precise(GContext *ctx, GPointPrecise point,
     angle_end += TRIG_MAX_ANGLE;
   }
 
-  prv_fill_oval_precise(ctx, point, outer_radius_x, outer_radius_y,
-                        inner_radius_x, inner_radius_y, angle_start, angle_end);
+  prv_fill_oval_precise(ctx, point, outer_radius_x, outer_radius_y, inner_radius_x, inner_radius_y,
+                        angle_start, angle_end);
 }
 
-void prv_fill_oval_quadrant(GContext *ctx, GPoint point,
-                            uint16_t outer_radius_x, uint16_t outer_radius_y,
-                            uint16_t inner_radius_x, uint16_t inner_radius_y,
-                            GCornerMask quadrant) {
+void prv_fill_oval_quadrant(GContext *ctx, GPoint point, uint16_t outer_radius_x,
+                            uint16_t outer_radius_y, uint16_t inner_radius_x,
+                            uint16_t inner_radius_y, GCornerMask quadrant) {
   // Cast to precision point
-  const GPointPrecise center_precise = (GPointPrecise) {
-    .x.integer = point.x, .x.fraction = FIXED_S16_3_HALF.raw_value,
-    .y.integer = point.y, .y.fraction = FIXED_S16_3_HALF.raw_value,
+  const GPointPrecise center_precise = (GPointPrecise){
+    .x.integer = point.x,
+    .x.fraction = FIXED_S16_3_HALF.raw_value,
+    .y.integer = point.y,
+    .y.fraction = FIXED_S16_3_HALF.raw_value,
   };
 
-  const Fixed_S16_3 outer_x_precise = (Fixed_S16_3){
-    .integer = outer_radius_x,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
-  const Fixed_S16_3 outer_y_precise = (Fixed_S16_3){
-    .integer = outer_radius_y,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
-  const Fixed_S16_3 inner_x_precise = (Fixed_S16_3){
-    .integer = inner_radius_x,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
-  const Fixed_S16_3 inner_y_precise = (Fixed_S16_3){
-    .integer = inner_radius_y,
-    .fraction = FIXED_S16_3_HALF.raw_value
-  };
+  const Fixed_S16_3 outer_x_precise =
+      (Fixed_S16_3){.integer = outer_radius_x, .fraction = FIXED_S16_3_HALF.raw_value};
+  const Fixed_S16_3 outer_y_precise =
+      (Fixed_S16_3){.integer = outer_radius_y, .fraction = FIXED_S16_3_HALF.raw_value};
+  const Fixed_S16_3 inner_x_precise =
+      (Fixed_S16_3){.integer = inner_radius_x, .fraction = FIXED_S16_3_HALF.raw_value};
+  const Fixed_S16_3 inner_y_precise =
+      (Fixed_S16_3){.integer = inner_radius_y, .fraction = FIXED_S16_3_HALF.raw_value};
 
   prv_fill_oval_quadrant_precise(ctx, center_precise, outer_x_precise, outer_y_precise,
                                  inner_x_precise, inner_y_precise, quadrant);
 }
 
-MOCKABLE void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrecise center,
-                                                 Fixed_S16_3 radius,
-                                                 int32_t angle_start, int32_t angle_end) {
+PBL_T_MOCKABLE void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrecise center,
+                                                       Fixed_S16_3 radius, int32_t angle_start,
+                                                       int32_t angle_end) {
   uint16_t stroke_width = ctx->draw_state.stroke_width;
 
   // We accept only .0 and .5 precision for now:
   center.x.raw_value -= center.x.raw_value % (FIXED_S16_3_ONE.raw_value / 2);
   center.y.raw_value -= center.y.raw_value % (FIXED_S16_3_ONE.raw_value / 2);
 
-  // To maintain compability we have to adjust from integral points where given point means
+  // To maintain compatibility we have to adjust from integral points where given point means
   //    center of the point
   center.x.raw_value += 4;
   center.y.raw_value += 4;
@@ -1213,12 +1201,12 @@ MOCKABLE void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrecise ce
   }
   // TODO: Adapt this to support new precision, for now this is faked by regular fill
   // This will be done with PBL-24777
-/*
-  else if (stroke_width == 1) {
-    prv_circle_arc_draw_1px(ctx, center, radius, angle_start, angle_end);
-    return;
-  }
-*/
+  /*
+    else if (stroke_width == 1) {
+      prv_circle_arc_draw_1px(ctx, center, radius, angle_start, angle_end);
+      return;
+    }
+  */
   // Color hack to draw using stroke_color instead of fill_color
   GColor tmp_color = ctx->draw_state.fill_color;
   ctx->draw_state.fill_color = ctx->draw_state.stroke_color;
@@ -1256,7 +1244,7 @@ void graphics_draw_arc_internal(GContext *ctx, GPoint center, uint16_t radius, i
   // We're just casting this to precise points
   GPointPrecise fixed_center;
 
-  // GPointPreciseFromGPoint doesnt work for unit tests (!!!)
+  // GPointPreciseFromGPoint doesn't work for unit tests (!!!)
   fixed_center.x.integer = center.x;
   fixed_center.y.integer = center.y;
   fixed_center.x.fraction = 0;
@@ -1266,18 +1254,18 @@ void graphics_draw_arc_internal(GContext *ctx, GPoint center, uint16_t radius, i
   graphics_draw_arc_precise_internal(ctx, fixed_center, fixed_radius, angle_start, angle_end);
 }
 
-void graphics_draw_arc(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
-                       int32_t angle_start, int32_t angle_end) {
+void graphics_draw_arc(GContext *ctx, GRect rect, GOvalScaleMode scale_mode, int32_t angle_start,
+                       int32_t angle_end) {
   GPointPrecise center;
   Fixed_S16_3 radius;
   grect_polar_calc_values(&rect, scale_mode, &center, &radius);
   graphics_draw_arc_precise_internal(ctx, center, radius, angle_start, angle_end);
 }
 
-MOCKABLE void graphics_fill_radial_precise_internal(GContext *ctx, GPointPrecise center,
-                                                    Fixed_S16_3 radius_inner, Fixed_S16_3
-                                                    radius_outer, int32_t angle_start,
-                                                    int32_t angle_end) {
+PBL_T_MOCKABLE void graphics_fill_radial_precise_internal(GContext *ctx, GPointPrecise center,
+                                                          Fixed_S16_3 radius_inner,
+                                                          Fixed_S16_3 radius_outer,
+                                                          int32_t angle_start, int32_t angle_end) {
   // This function is going to be replaced with function that will support drawing of ellipsis
   //   as documented in PBL-23640
 
@@ -1302,29 +1290,28 @@ MOCKABLE void graphics_fill_radial_precise_internal(GContext *ctx, GPointPrecise
 
   // TODO: Adapt this to support new precision, for now this is faked by regular fill
   // This will be done with PBL-24777
-/*
-  if (radius_outer.raw_value - radius_inner.raw_value == FIXED_S16_3_ONE.raw_value) {
-    // Color hack
-    GColor tmp_color = ctx->draw_state.stroke_color;
-    ctx->draw_state.stroke_color = ctx->draw_state.fill_color;
+  /*
+    if (radius_outer.raw_value - radius_inner.raw_value == FIXED_S16_3_ONE.raw_value) {
+      // Color hack
+      GColor tmp_color = ctx->draw_state.stroke_color;
+      ctx->draw_state.stroke_color = ctx->draw_state.fill_color;
 
-    // prv_circle_arc_draw_1px(ctx, center, radius_outer, angle_start, angle_end);
+      // prv_circle_arc_draw_1px(ctx, center, radius_outer, angle_start, angle_end);
 
-    // Restore color
-    ctx->draw_state.stroke_color = tmp_color;
+      // Restore color
+      ctx->draw_state.stroke_color = tmp_color;
 
-    // We're done here
-    return;
-  } else
-*/
+      // We're done here
+      return;
+    } else
+  */
   if (radius_outer.raw_value - radius_inner.raw_value < FIXED_S16_3_ONE.raw_value) {
     // Abort, abort!
     return;
   }
 
-  prv_fill_oval_precise(ctx, center, radius_outer, radius_outer,
-                        radius_inner, radius_inner, angle_start, angle_end);
-
+  prv_fill_oval_precise(ctx, center, radius_outer, radius_outer, radius_inner, radius_inner,
+                        angle_start, angle_end);
 }
 
 void graphics_fill_radial_internal(GContext *ctx, GPoint center, uint16_t radius_inner,
@@ -1343,15 +1330,14 @@ void graphics_fill_radial_internal(GContext *ctx, GPoint center, uint16_t radius
 }
 
 void graphics_fill_radial(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
-                          uint16_t inset_thickness,
-                          int32_t angle_start, int32_t angle_end) {
+                          uint16_t inset_thickness, int32_t angle_start, int32_t angle_end) {
   GPointPrecise center;
   Fixed_S16_3 radius_outer;
   grect_polar_calc_values(&rect, scale_mode, &center, &radius_outer);
   const Fixed_S16_3 radius_inner =
-    Fixed_S16_3(radius_outer.raw_value - inset_thickness * FIXED_S16_3_ONE.raw_value);
-  graphics_fill_radial_precise_internal(ctx, center, radius_inner, radius_outer,
-                                        angle_start, angle_end);
+      Fixed_S16_3(radius_outer.raw_value - inset_thickness * FIXED_S16_3_ONE.raw_value);
+  graphics_fill_radial_precise_internal(ctx, center, radius_inner, radius_outer, angle_start,
+                                        angle_end);
 }
 
 void graphics_fill_oval(GContext *ctx, GRect rect, GOvalScaleMode scale_mode) {
@@ -1360,7 +1346,7 @@ void graphics_fill_oval(GContext *ctx, GRect rect, GOvalScaleMode scale_mode) {
   graphics_fill_radial(ctx, rect, scale_mode, inset_thickness, 0, TRIG_MAX_ANGLE);
 }
 
-void graphics_fill_circle(GContext* ctx, GPoint p, uint16_t radius) {
+void graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {
   PBL_ASSERTN(ctx);
   if (ctx->lock) {
     return;
@@ -1389,9 +1375,8 @@ void graphics_fill_circle(GContext* ctx, GPoint p, uint16_t radius) {
 GPointPrecise gpoint_from_polar_precise(const GPointPrecise *precise_center,
                                         uint16_t precise_radius, int32_t angle) {
   const uint32_t normalized_angle = normalize_angle(angle);
-  const GPointPrecise precise_perimeter_point = prv_get_rotated_precise_point(*precise_center,
-                                                                              precise_radius,
-                                                                              normalized_angle);
+  const GPointPrecise precise_perimeter_point =
+      prv_get_rotated_precise_point(*precise_center, precise_radius, normalized_angle);
   return precise_perimeter_point;
 }
 
@@ -1402,14 +1387,11 @@ GPoint gpoint_from_polar_internal(const GPoint *center, uint16_t radius, int32_t
 
   const GPointPrecise precise_center = GPointPreciseFromGPoint((*center));
   const uint16_t precise_radius = (uint16_t)(radius << GPOINT_PRECISE_PRECISION);
-  const GPointPrecise result = gpoint_from_polar_precise(&precise_center, precise_radius,
-                                                             angle);
+  const GPointPrecise result = gpoint_from_polar_precise(&precise_center, precise_radius, angle);
   return GPointFromGPointPrecise(result);
 }
 
-
-GPointPrecise prv_gpointprecise_from_polar(GRect *rect, GOvalScaleMode scale_mode,
-                                                 int32_t angle) {
+GPointPrecise prv_gpointprecise_from_polar(GRect *rect, GOvalScaleMode scale_mode, int32_t angle) {
   GPointPrecise center;
   Fixed_S16_3 radius;
   grect_polar_calc_values(rect, scale_mode, &center, &radius);
@@ -1425,7 +1407,7 @@ GRect grect_centered_internal(const GPointPrecise *center, GSize size) {
   size.w = ABS(size.w);
   size.h = ABS(size.h);
   const int16_t FIXED_HALF = FIXED_S16_3_HALF.raw_value;
-  return (GRect) {
+  return (GRect){
     // Adding 0.5 to x and y here will ensure we have rounded up when we throw away the fraction
     .origin.x = (center->x.raw_value - (size.w * FIXED_HALF) + FIXED_HALF) >> FIXED_S16_3_PRECISION,
     .origin.y = (center->y.raw_value - (size.h * FIXED_HALF) + FIXED_HALF) >> FIXED_S16_3_PRECISION,
@@ -1467,10 +1449,12 @@ void grect_polar_calc_values(const GRect *r, GOvalScaleMode scale_mode, GPointPr
   }
   if (center) {
     // origin + (origin + len)/2 - 0.5 == (origin * 2 + len) / 2 - 0.5
-    const int16_t x = (rect.size.w <= 0) ? rect.origin.x * FIXED_ONE :
-        (((2 * rect.origin.x + rect.size.w) * FIXED_ONE) / 2 - FIXED_HALF);
-    const int16_t y = (rect.size.h <= 0) ? rect.origin.y * FIXED_ONE :
-                      (((2 * rect.origin.y + rect.size.h) * FIXED_ONE) / 2 - FIXED_HALF);
-    *center = (GPointPrecise) {.x = Fixed_S16_3(x), .y = Fixed_S16_3(y)};
+    const int16_t x = (rect.size.w <= 0)
+                          ? rect.origin.x * FIXED_ONE
+                          : (((2 * rect.origin.x + rect.size.w) * FIXED_ONE) / 2 - FIXED_HALF);
+    const int16_t y = (rect.size.h <= 0)
+                          ? rect.origin.y * FIXED_ONE
+                          : (((2 * rect.origin.y + rect.size.h) * FIXED_ONE) / 2 - FIXED_HALF);
+    *center = (GPointPrecise){.x = Fixed_S16_3(x), .y = Fixed_S16_3(y)};
   }
 }

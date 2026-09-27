@@ -3,17 +3,18 @@
 
 #pragma once
 
+#include "applib/preferred_content_size.h"
 #include "kernel/events.h"
 #include "pbl/services/notifications/alerts_private.h"
 #include "pbl/services/notifications/do_not_disturb.h"
-#include "pbl/services/notifications/notification_types.h"
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "util/time/time.h"
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score_info.h"
 
 #define NOTIF_WINDOW_TIMEOUT_INFINITE ((uint32_t)~0)
-#define NOTIF_WINDOW_TIMEOUT_DEFAULT (3 * MS_PER_MINUTE)
+#define NOTIF_WINDOW_TIMEOUT_DEFAULT  (3 * MS_PER_MINUTE)
+#define NOTIF_WINDOW_TIMEOUT_MIN      (15 * MS_PER_SECOND)
 
 void alerts_preferences_init(void);
 
@@ -42,6 +43,18 @@ bool alerts_preferences_get_notification_backlight(void);
 void alerts_preferences_set_notification_backlight(bool enable);
 
 typedef enum {
+  NotificationGroupingRange_Never = 0,
+  NotificationGroupingRange_OneDay,
+  NotificationGroupingRange_OneWeek,
+  NotificationGroupingRange_All,
+  NotificationGroupingRangeCount,
+} NotificationGroupingRange;
+
+NotificationGroupingRange alerts_preferences_get_notification_grouping_range(void);
+
+void alerts_preferences_set_notification_grouping_range(NotificationGroupingRange range);
+
+typedef enum {
   NotificationStatusBarStyle_Default = 0,
   NotificationStatusBarStyle_Bold = 1,
   NotificationStatusBarStyle_LargeBold = 2,
@@ -51,6 +64,15 @@ typedef enum {
 NotificationStatusBarStyle alerts_preferences_get_notification_status_bar_style(void);
 
 void alerts_preferences_set_notification_status_bar_style(NotificationStatusBarStyle style);
+
+//! Notification content size preference value that follows the system content size
+#define NotificationContentSizeSystem ((PreferredContentSize)NumPreferredContentSizes)
+
+//! @return The notification content size preference, NotificationContentSizeSystem when
+//! notifications follow the system content size.
+PreferredContentSize alerts_preferences_get_notification_content_size(void);
+
+void alerts_preferences_set_notification_content_size(PreferredContentSize size);
 
 bool alerts_preferences_get_vibrate(void);
 
@@ -93,4 +115,3 @@ void alerts_preferences_unlock(void);
 //! new value that was placed into the backing store.
 //! @param[in] event pointer to the blob DB event
 void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event);
-

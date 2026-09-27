@@ -5,23 +5,16 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "applib/ui/dialogs/dialog_private.h"
 #include "applib/ui/dialogs/simple_dialog.h"
-#include "applib/ui/window_stack.h"
 #include "applib/ui/ui.h"
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "process_management/app_manager.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/battery/battery_curve.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
-#include "pbl/services/light.h"
-#include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
 typedef void (*DialogUpdateFn)(Dialog *, void *);
@@ -38,13 +31,12 @@ typedef struct {
 ///////////////////////
 
 static const GColor s_warning_color[] = {
-  { .argb = GColorLightGrayARGB8 },
-  { .argb = GColorRedARGB8 },
+  {.argb = GColorLightGrayARGB8},
+  {.argb = GColorRedARGB8},
 };
 
 static const ResourceId s_warning_icon[] = {
-  RESOURCE_ID_BATTERY_ICON_LOW_LARGE,
-  RESOURCE_ID_BATTERY_ICON_VERY_LOW_LARGE
+  RESOURCE_ID_BATTERY_ICON_LOW_LARGE, RESOURCE_ID_BATTERY_ICON_VERY_LOW_LARGE
 };
 
 static void prv_update_ui_fully_charged(Dialog *dialog, void *ignored) {
@@ -91,13 +83,14 @@ static void prv_display_modal(WindowStack *stack, DialogUpdateFn update_fn, void
     return;
   }
 
-  SimpleDialog *new_simple_dialog = simple_dialog_create(
-      WINDOW_NAME("Battery Status"));
+  SimpleDialog *new_simple_dialog = simple_dialog_create(WINDOW_NAME("Battery Status"));
 
   Dialog *new_dialog = simple_dialog_get_dialog(new_simple_dialog);
-  dialog_set_callbacks(new_dialog, &(DialogCallbacks) {
-    .unload = prv_dialog_on_unload,
-  }, NULL);
+  dialog_set_callbacks(new_dialog,
+                       &(DialogCallbacks){
+                         .unload = prv_dialog_on_unload,
+                       },
+                       NULL);
   update_fn(new_dialog, data);
 
   Dialog *old_dialog = s_dialog;
@@ -119,9 +112,9 @@ static void prv_display_modal(WindowStack *stack, DialogUpdateFn update_fn, void
     const int num_lines = 3;
     const int line_spacing_delta = -4;
     const int text_shift_y = -2;
-    const int text_box_height = (font_height + text_cap_height) * num_lines +
-                                line_spacing_delta * (num_lines - 1);
-    const int text_flow_inset = 6;  // Modify to allow longer central lines
+    const int text_box_height =
+        (font_height + text_cap_height) * num_lines + line_spacing_delta * (num_lines - 1);
+    const int text_flow_inset = 6; // Modify to allow longer central lines
     text_layer_enable_screen_text_flow_and_paging(text_layer, text_flow_inset);
     text_layer_set_size(text_layer, GSize(DISP_COLS, text_box_height));
     text_layer->layer.frame.origin.y += text_shift_y;

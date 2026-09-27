@@ -10,14 +10,14 @@ typedef enum {
   AppLaunchCharacteristicNum
 } AppLaunchCharacteristic;
 
-void app_launch_handle_service_discovered(BLECharacteristic *characteristics);
+void app_launch_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
 
 void app_launch_invalidate_all_references(void);
 
-void app_launch_handle_service_removed(
-    BLECharacteristic *characteristics, uint8_t num_characteristics);
+void app_launch_handle_service_removed(pbl_bt_characteristic_t *characteristics,
+                                       uint8_t num_characteristics);
 
-bool app_launch_can_handle_characteristic(BLECharacteristic characteristic);
+bool app_launch_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
 
 void app_launch_handle_disconnection(void);
 

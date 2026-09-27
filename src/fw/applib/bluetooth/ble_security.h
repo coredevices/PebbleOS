@@ -3,11 +3,10 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //------------------------------------------------------------------------------
 // Out-Of-Band additions
-
 
 //! "Out-of-Band" (OOB) is one of the mechanisms to exchange a shared secret
 //! during a pairing procedure between two devices. "PIN" and "Just Works" are
@@ -41,7 +40,6 @@
 //! JavaScript APIs to fetch the data from the web service and transfer the
 //! data to the application on the watch using the AppMessage APIs.
 
-
 //! Pointer to a function that can provide Out-Of-Band keys.
 //! @see ble_security_set_oob_handler() and ble_security_enable_oob()
 //! @param device The device for which the OOB key needs to be provided
@@ -51,8 +49,7 @@
 //! keys of 128-bit (16 byte) size are supported.
 //! @return true if the OOB key was written or false if no OOB data could be
 //! provided for the device.
-typedef bool (*BLESecurityOOBHandler)(BTDevice device,
-                                      uint8_t *oob_key_buffer_out,
+typedef bool (*BLESecurityOOBHandler)(struct pbl_bt_device device, uint8_t *oob_key_buffer_out,
                                       size_t oob_key_buffer_size);
 
 //! Registers a permanent callback function that is responsible for providing
@@ -62,8 +59,8 @@ typedef bool (*BLESecurityOOBHandler)(BTDevice device,
 //! a pairing procedure, but only if the remote device indicated to have OOB
 //! data as well.
 //! @param oob_handler Pointer to the function that will provide OOB key data.
-//! @return BTErrnoOK if the call was successful, or TODO...
-BTErrno ble_security_set_oob_handler(BLESecurityOOBHandler oob_handler);
+//! @return PBL_BT_ERRNO_OK if the call was successful, or TODO...
+enum pbl_bt_errno ble_security_set_oob_handler(BLESecurityOOBHandler oob_handler);
 
 //! Enable or disable Out-Of-Band pairing for the device.
 //! This function is a way to indicate to the system that the application has
@@ -77,5 +74,5 @@ BTErrno ble_security_set_oob_handler(BLESecurityOOBHandler oob_handler);
 //! application, it will need to re-enable OOB if required.
 //! @param device The device for which to enable or disable OOB
 //! @param enable Pass in true to enable OOB for the device, or false to disable
-//! @return BTErrnoOK if the call was successful, or TODO...
-BTErrno ble_security_enable_oob(BTDevice device, bool enable);
+//! @return PBL_BT_ERRNO_OK if the call was successful, or TODO...
+enum pbl_bt_errno ble_security_enable_oob(struct pbl_bt_device device, bool enable);

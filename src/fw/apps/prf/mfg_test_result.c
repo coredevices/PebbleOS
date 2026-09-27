@@ -8,7 +8,7 @@
 #ifdef CONFIG_MFG
 #include <pbl/drivers/flash.h>
 #include "flash_region/flash_region.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #endif
 
 #define NUM_MODES 2
@@ -20,16 +20,16 @@ static uint8_t s_mode_index;
 #ifdef CONFIG_MFG
 // Append-only log of results in the MFG_RESULTS subsector. Each report writes
 // one record; the subsector is only erased once the log fills up (compaction).
-typedef struct PACKED {
-  uint8_t test_id;  // MFG_RESULT_EMPTY marks a free slot
+typedef struct PBL_PACKED {
+  uint8_t test_id; // MFG_RESULT_EMPTY marks a free slot
   uint8_t mode_index;
   uint8_t passed;
   uint8_t rsvd;
   uint32_t value;
 } MfgResultRecord;
 
-#define MFG_RESULT_EMPTY 0xFF
-#define MFG_RESULTS_SIZE (FLASH_REGION_MFG_RESULTS_END - FLASH_REGION_MFG_RESULTS_BEGIN)
+#define MFG_RESULT_EMPTY        0xFF
+#define MFG_RESULTS_SIZE        (FLASH_REGION_MFG_RESULTS_END - FLASH_REGION_MFG_RESULTS_BEGIN)
 #define MFG_RESULTS_MAX_RECORDS (MFG_RESULTS_SIZE / sizeof(MfgResultRecord))
 
 static bool s_loaded;
@@ -44,8 +44,8 @@ static void prv_write_record(uint32_t index, MfgTestId test, uint8_t mode_index,
     .rsvd = 0,
     .value = value,
   };
-  flash_write_bytes((const uint8_t *)&rec,
-                    FLASH_REGION_MFG_RESULTS_BEGIN + index * sizeof(rec), sizeof(rec));
+  flash_write_bytes((const uint8_t *)&rec, FLASH_REGION_MFG_RESULTS_BEGIN + index * sizeof(rec),
+                    sizeof(rec));
 }
 
 static void prv_load(void) {
@@ -58,7 +58,7 @@ static void prv_load(void) {
     }
     s_record_count = i + 1;
     if (rec.test_id < MfgTestIdCount && rec.mode_index < NUM_MODES) {
-      s_results[rec.mode_index][rec.test_id] = (MfgTestResult) {
+      s_results[rec.mode_index][rec.test_id] = (MfgTestResult){
         .ran = true,
         .passed = (rec.passed != 0),
         .value = rec.value,
@@ -83,8 +83,7 @@ static void prv_append(MfgTestId test, uint8_t mode_index, bool passed, uint32_t
     for (uint8_t m = 0; m < NUM_MODES; m++) {
       for (uint8_t t = 0; t < MfgTestIdCount; t++) {
         if (s_results[m][t].ran) {
-          prv_write_record(s_record_count++, t, m, s_results[m][t].passed,
-                           s_results[m][t].value);
+          prv_write_record(s_record_count++, t, m, s_results[m][t].passed, s_results[m][t].value);
         }
       }
     }
@@ -92,7 +91,7 @@ static void prv_append(MfgTestId test, uint8_t mode_index, bool passed, uint32_t
 
   prv_write_record(s_record_count++, test, mode_index, passed, value);
 }
-#endif  // CONFIG_MFG
+#endif // CONFIG_MFG
 
 void mfg_test_result_set_mode(uint8_t mode) {
   // Map mode bitmask to array index: semi-finished=0, finished=1
@@ -109,7 +108,7 @@ void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value) {
   prv_append(test, s_mode_index, passed, value);
 #endif
 
-  s_results[s_mode_index][test] = (MfgTestResult) {
+  s_results[s_mode_index][test] = (MfgTestResult){
     .ran = true,
     .passed = passed,
     .value = value,

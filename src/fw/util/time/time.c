@@ -1,31 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/types.h"
 #include <pbl/drivers/rtc.h>
 #include "syscall/syscall_internal.h"
 #include "time.h"
 #include "pbl/util/math.h"
 #include <string.h>
 
-#include "FreeRTOS.h"
-#include "portmacro.h"
-
 // timezone abbreviation
-static char s_timezone_abbr[TZ_LEN] = { 0 }; // longest timezone abbreviation is 5 char + null
+static char s_timezone_abbr[TZ_LEN] = {0}; // longest timezone abbreviation is 5 char + null
 static int32_t s_timezone_gmtoffset = 0;
 static int32_t s_dst_adjust = SECONDS_PER_HOUR;
 static time_t s_dst_start = 0;
 static time_t s_dst_end = 0;
 
 static const uint8_t s_mon_lengths[2][MONTHS_PER_YEAR] = {
-  {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-  {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+  {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}, {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
 };
 
-static const uint16_t s_year_lengths[2] = {
-  365,
-  366
-};
+static const uint16_t s_year_lengths[2] = {365, 366};
 
 int32_t time_get_gmtoffset(void) {
   return s_timezone_gmtoffset;
@@ -104,7 +98,7 @@ void time_get_timezone_abbr(char *out_buf, time_t utc_time) {
 }
 
 // converts time_t to struct tm for localtime and gmtime
-struct tm *time_to_tm(const time_t * tim_p, struct tm *res, bool utc_mode) {
+struct tm *time_to_tm(const time_t *tim_p, struct tm *res, bool utc_mode) {
   time_t local_time;
   time_t utc_time = *tim_p;
   if (utc_mode) {
@@ -133,10 +127,10 @@ struct tm *time_to_tm(const time_t * tim_p, struct tm *res, bool utc_mode) {
   }
 
   /* compute hour, min, and sec */
-  res->tm_hour = (int) (rem / SECONDS_PER_HOUR);
+  res->tm_hour = (int)(rem / SECONDS_PER_HOUR);
   rem %= SECONDS_PER_HOUR;
-  res->tm_min = (int) (rem / SECONDS_PER_MINUTE);
-  res->tm_sec = (int) (rem % SECONDS_PER_MINUTE);
+  res->tm_min = (int)(rem / SECONDS_PER_MINUTE);
+  res->tm_sec = (int)(rem % SECONDS_PER_MINUTE);
 
   /* compute day of week */
   if ((res->tm_wday = ((EPOCH_WDAY + days) % DAYS_PER_WEEK)) < 0) {
@@ -182,8 +176,8 @@ struct tm *localtime_r(const time_t *timep, struct tm *result) {
   return time_to_tm(timep, result, false);
 }
 
-void time_util_split_seconds_into_parts(uint32_t seconds,
-      uint32_t *day_part, uint32_t *hour_part, uint32_t *minute_part, uint32_t *second_part) {
+void time_util_split_seconds_into_parts(uint32_t seconds, uint32_t *day_part, uint32_t *hour_part,
+                                        uint32_t *minute_part, uint32_t *second_part) {
   *day_part = seconds / SECONDS_PER_DAY;
   seconds -= *day_part * SECONDS_PER_DAY;
 
@@ -241,17 +235,17 @@ bool time_util_range_spans_day(time_t start, time_t end, time_t start_of_day) {
 
 time_t time_utc_to_local_using_offset(time_t utc_time, int16_t utc_offset_min) {
   if (utc_offset_min < 0) {
-    return utc_time - (time_t) ABS(utc_offset_min) * SECONDS_PER_MINUTE;
+    return utc_time - (time_t)ABS(utc_offset_min) * SECONDS_PER_MINUTE;
   } else {
-    return utc_time + (time_t) utc_offset_min * SECONDS_PER_MINUTE;
+    return utc_time + (time_t)utc_offset_min * SECONDS_PER_MINUTE;
   }
 }
 
 time_t time_local_to_utc_using_offset(time_t local_time, int16_t utc_offset_min) {
   if (utc_offset_min < 0) {
-    return local_time + (time_t) ABS(utc_offset_min) * SECONDS_PER_MINUTE;
+    return local_time + (time_t)ABS(utc_offset_min) * SECONDS_PER_MINUTE;
   } else {
-    return local_time - (time_t) utc_offset_min * SECONDS_PER_MINUTE;
+    return local_time - (time_t)utc_offset_min * SECONDS_PER_MINUTE;
   }
 }
 
@@ -259,7 +253,6 @@ time_t time_util_utc_to_local_offset(void) {
   time_t now = rtc_get_time();
   return (time_utc_to_local(now) - now);
 }
-
 
 // ---------------------------------------------------------------------------------------
 DayInWeek time_util_get_day_in_week(time_t utc_sec) {
@@ -284,7 +277,6 @@ int time_util_get_minute_of_day(time_t utc_sec) {
   return (local_tm.tm_hour * MINUTES_PER_HOUR) + local_tm.tm_min;
 }
 
-
 // ---------------------------------------------------------------------------------------
 int time_util_minute_of_day_adjust(int minute, int delta) {
   minute += delta;
@@ -296,7 +288,6 @@ int time_util_minute_of_day_adjust(int minute, int delta) {
   return minute;
 }
 
-
 // ---------------------------------------------------------------------------------------
 time_t time_start_of_today(void) {
   time_t now = rtc_get_time();
@@ -307,9 +298,8 @@ DEFINE_SYSCALL(time_t, sys_time_start_of_today, void) {
   return time_start_of_today();
 }
 
-
 // ---------------------------------------------------------------------------------------
 uint32_t time_get_uptime_seconds(void) {
   RtcTicks ticks = rtc_get_ticks();
-  return ticks / configTICK_RATE_HZ;
+  return ticks / PBL_TICK_HZ;
 }

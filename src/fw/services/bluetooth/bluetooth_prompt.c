@@ -8,21 +8,17 @@
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/bluetooth/local_id.h"
-#include "pbl/services/bluetooth/pairability.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/util/string.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/id.h>
-
-#include <stdlib.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/id.h>
 
 void command_bt_print_mac(void) {
-  char addr_hex_str[BT_ADDR_FMT_BUFFER_SIZE_BYTES];
+  char addr_hex_str[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE];
   bt_local_id_copy_address_hex_string(addr_hex_str);
   prompt_send_response(addr_hex_str);
 }
-
 
 //! @param bt_name A custom Bluetooth device name.
 void command_bt_set_name(const char *bt_name) {
@@ -52,18 +48,17 @@ void command_bt_status(void) {
   const char *prefix = "BT Chip Info: ";
   size_t prefix_length = strlen(prefix);
   strncpy(buffer, prefix, sizeof(buffer));
-  bt_driver_id_copy_chip_info_string(buffer + prefix_length,
-                                     sizeof(buffer) - prefix_length);
+  pbl_bt_id_copy_chip_info_string(buffer + prefix_length, sizeof(buffer) - prefix_length);
   prompt_send_response(buffer);
 
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   bt_lock();
   bool connected = false;
   GAPLEConnection *connection = gap_le_connection_any();
   if (connection) {
     const char *device_name = connection->device_name ?: "<Unknown>";
-    strncpy(name, device_name, BT_DEVICE_NAME_BUFFER_SIZE);
-    name[BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
+    strncpy(name, device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
+    name[PBL_BT_DEVICE_NAME_BUFFER_SIZE - 1] = '\0';
     connected = true;
   }
   bt_unlock();

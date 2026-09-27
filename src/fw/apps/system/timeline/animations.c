@@ -3,19 +3,17 @@
 
 #include "animations.h"
 
-#include "applib/ui/animation_timing.h"
 #include "applib/ui/property_animation.h"
 #include "applib/ui/ui.h"
 
 #include <stdint.h>
 
-int64_t timeline_animation_interpolate_moook_soft(int32_t normalized,
-                                                  int64_t from, int64_t to) {
+int64_t timeline_animation_interpolate_moook_soft(int32_t normalized, int64_t from, int64_t to) {
   return interpolate_moook_soft(normalized, from, to, TIMELINE_NUM_MOOOK_FRAMES_MID);
 }
 
-int64_t timeline_animation_interpolate_moook_second_half(int32_t normalized,
-                                                         int64_t from, int64_t to) {
+int64_t timeline_animation_interpolate_moook_second_half(int32_t normalized, int64_t from,
+                                                         int64_t to) {
   const int32_t cut = (normalized + ANIMATION_NORMALIZED_MAX) / 2;
   return timeline_animation_interpolate_moook_soft(cut, from, to);
 }

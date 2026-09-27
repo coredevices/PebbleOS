@@ -53,13 +53,13 @@ static const uint8_t s_ios_pref_db_insert_dict[] = {
   0x63, 0x6f, 0x6e, 0x64, 0x3f, 0x21, 0x01, 0x00, 0x00
 };
 
-const uint8_t key[] = { 0x01, 0x02, 0x03 };
+const uint8_t key[] = {0x01, 0x02, 0x03};
 
 void test_ios_notif_pref_db__initialize(void) {
 }
 
 void test_ios_notif_pref_db__cleanup(void) {
-    fake_settings_file_reset();
+  fake_settings_file_reset();
 }
 
 void test_ios_notif_pref_db__insert_inverts_flags(void) {
@@ -77,7 +77,7 @@ void test_ios_notif_pref_db__insert_inverts_flags(void) {
   settings_file_get(&file, key, sizeof(key), prefs_out, prefs_len);
   settings_file_close(&file);
 
-  uint32_t flags = *((uint32_t *) prefs_out);
+  uint32_t flags = *((uint32_t *)prefs_out);
   cl_assert_equal_i(flags, ~0);
 
   kernel_free(prefs_out);
@@ -100,10 +100,11 @@ void test_ios_notif_pref_db__store_prefs(void) {
     StringList list;
     char data[9];
   } filtering_rules = {
-    .list = {
-      .serialized_byte_length = 9,
-    },
-    .data = { 0x01, 0x00, 0x00, 0x00, 's', 'p', 'a', 'm', '\0' },
+    .list =
+        {
+          .serialized_byte_length = 9,
+        },
+    .data = {0x01, 0x00, 0x00, 0x00, 's', 'p', 'a', 'm', '\0'},
   };
 
   AttributeList attr_list;
@@ -134,12 +135,11 @@ void test_ios_notif_pref_db__store_prefs(void) {
   Attribute *name = attribute_find(&notif_prefs->attr_list, AttributeIdAppName);
   cl_assert(name);
   cl_assert_equal_s(name->cstring, "GMail");
-  StringList *rules = attribute_get_string_list(&notif_prefs->attr_list,
-                                                AttributeIdNotificationFilteringRules);
+  StringList *rules =
+      attribute_get_string_list(&notif_prefs->attr_list, AttributeIdNotificationFilteringRules);
   cl_assert(rules);
   cl_assert_equal_i(rules->serialized_byte_length, filtering_rules.list.serialized_byte_length);
   cl_assert_equal_m(rules->data, filtering_rules.data, filtering_rules.list.serialized_byte_length);
-
 
   // Update the current entry with a new attribute
   attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 123456);
@@ -159,8 +159,7 @@ void test_ios_notif_pref_db__store_prefs(void) {
   name = attribute_find(&notif_prefs->attr_list, AttributeIdAppName);
   cl_assert(name);
   cl_assert_equal_s(name->cstring, "GMail");
-  rules = attribute_get_string_list(&notif_prefs->attr_list,
-                                    AttributeIdNotificationFilteringRules);
+  rules = attribute_get_string_list(&notif_prefs->attr_list, AttributeIdNotificationFilteringRules);
   cl_assert(rules);
   cl_assert_equal_i(rules->serialized_byte_length, filtering_rules.list.serialized_byte_length);
   cl_assert_equal_m(rules->data, filtering_rules.data, filtering_rules.list.serialized_byte_length);
@@ -191,9 +190,9 @@ void test_ios_notif_pref_db__store_empty_prefs(void) {
 }
 
 void test_ios_notif_pref_db__is_dirty_insert_from_phone(void) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
-  char *values[] = { "val1", "val2", "val3", "val4", "val5" };
+  char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
   // Insert a bunch of known apps "from the phone"
@@ -211,7 +210,7 @@ void test_ios_notif_pref_db__is_dirty_insert_from_phone(void) {
 }
 
 void test_ios_notif_pref_db__is_dirty_insert_locally(void) {
-  char *keys[] = { "key1", "key2", "key3", "key4", "key5" };
+  char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
   int key_len = strlen(keys[0]);
 
   // Insert a bunch of known apps "from the watch"

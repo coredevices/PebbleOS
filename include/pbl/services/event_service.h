@@ -26,7 +26,7 @@ void event_service_clear_process_subscriptions(PebbleTask task);
 
 //! Claim a buffer. This means it won't automatically get cleaned up
 //! If you claim a buffer you must free it with event_service_free_claimed_buffer()
-void* event_service_claim_buffer(PebbleEvent *e);
+void *event_service_claim_buffer(PebbleEvent *e);
 //! This function expects the pointer returned by event_service_claim_buffer
 void event_service_free_claimed_buffer(void *ref);
 

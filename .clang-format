@@ -1,9 +1,16 @@
 ---
 BasedOnStyle: Google
-IndentWidth: 2
-UseTab: Never
-PointerAlignment: Right
 ColumnLimit: 100
+PointerAlignment: Right
 SortIncludes: Never
-AllowShortFunctionsOnASingleLine: Empty
----
+AllowAllArgumentsOnNextLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BreakAfterOpenBracketBracedList: true
+BreakBeforeCloseBracketBracedList: true
+AlignConsecutiveMacros: Consecutive
+BreakStringLiterals: false
+BracedInitializerIndentWidth: 2
+SpacesBeforeTrailingComments: 1

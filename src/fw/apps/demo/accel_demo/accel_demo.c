@@ -94,8 +94,8 @@ static void prv_handle_tap(AccelAxisType axis, int32_t direction) {
     return;
   }
 
-  snprintf(data->tap_buffer, sizeof(data->tap_buffer), "Taps: %" PRIu32 "\n%c %c",
-           data->tap_count, prv_axis_char(axis), direction < 0 ? '-' : '+');
+  snprintf(data->tap_buffer, sizeof(data->tap_buffer), "Taps: %" PRIu32 "\n%c %c", data->tap_count,
+           prv_axis_char(axis), direction < 0 ? '-' : '+');
   text_layer_set_text(&data->tap_layer, data->tap_buffer);
 }
 
@@ -129,8 +129,8 @@ static void prv_data_window_load(Window *window) {
   Layer *root = &window->layer;
   const int16_t w = root->bounds.size.w;
 
-  snprintf(data->title_buffer, sizeof(data->title_buffer), "%u Hz  x%" PRIu32,
-           (unsigned)data->rate, data->batch);
+  snprintf(data->title_buffer, sizeof(data->title_buffer), "%u Hz  x%" PRIu32, (unsigned)data->rate,
+           data->batch);
   text_layer_init(&data->title_layer, &GRect(0, 0, w, 24));
   text_layer_set_text(&data->title_layer, data->title_buffer);
   layer_add_child(root, &data->title_layer.layer);
@@ -191,8 +191,8 @@ static void prv_rate_selected(int index, void *context) {
 
   window_init(&data->batch_window, "Accel Demo Batch");
   window_set_window_handlers(&data->batch_window, &(WindowHandlers){
-                                                      .load = prv_batch_window_load,
-                                                      .unload = prv_batch_window_unload,
+                                                    .load = prv_batch_window_load,
+                                                    .unload = prv_batch_window_unload,
                                                   });
   app_window_stack_push(&data->batch_window, true /* animated */);
 }
@@ -204,8 +204,8 @@ static void prv_batch_selected(int index, void *context) {
 
   window_init(&data->data_window, "Accel Demo Data");
   window_set_window_handlers(&data->data_window, &(WindowHandlers){
-                                                     .load = prv_data_window_load,
-                                                     .unload = prv_data_window_unload,
+                                                   .load = prv_data_window_load,
+                                                   .unload = prv_data_window_unload,
                                                  });
   window_set_click_config_provider(&data->data_window, prv_click_config_provider);
   app_window_stack_push(&data->data_window, true /* animated */);
@@ -221,8 +221,8 @@ static void prv_handle_init(void) {
 
   window_init(&data->rate_window, "Accel Demo Rate");
   window_set_window_handlers(&data->rate_window, &(WindowHandlers){
-                                                     .load = prv_rate_window_load,
-                                                     .unload = prv_rate_window_unload,
+                                                   .load = prv_rate_window_load,
+                                                   .unload = prv_rate_window_unload,
                                                  });
   app_window_stack_push(&data->rate_window, true /* animated */);
 }

@@ -11,7 +11,7 @@
 #include "pbl/services/timeline/layout_layer.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/system_theme.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! LayoutNode is a compact TextNode constructor using packed structs. Using LayoutNode configs, a
 //! hierarchy of nested TextNodes can be described and instantiated with
@@ -24,12 +24,12 @@
 //! \ref graphics_text_node_get_size which can be very stack intensive.
 
 #define ToLayoutTextAlignment(alignment) (alignment + 1)
-#define ToGTextAlignment(alignment) (alignment - 1)
+#define ToGTextAlignment(alignment)      (alignment - 1)
 
 #define ToLayoutVerticalAlignment(alignment) (alignment + 1)
-#define ToGVerticalAlignment(alignment) (alignment - 1)
+#define ToGVerticalAlignment(alignment)      (alignment - 1)
 
-#define ToLayoutContentSize(size) ((LayoutContentSize)((size) + 1))
+#define ToLayoutContentSize(size)    ((LayoutContentSize)((size) + 1))
 #define ToPreferredContentSize(size) ((PreferredContentSize)((size) - 1))
 
 typedef enum {
@@ -98,11 +98,11 @@ typedef enum {
   LayoutNodeType_TimelineMetrics,
 } LayoutNodeType;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeType type;
 } LayoutNodeConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeConfig node;
   struct {
     int8_t x;
@@ -114,37 +114,37 @@ typedef struct PACKED {
   } margin;
 } LayoutNodeExtentConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeExtentConfig extent;
   const char *font_key;
-  LayoutContentSize style:8;
-  TextStyleFont style_font:8;
-  int8_t line_spacing_delta:4;
+  LayoutContentSize style : 8;
+  TextStyleFont style_font : 8;
+  int8_t line_spacing_delta : 4;
   //! Specifies the fixed height as a function of the font height and number of lines.
   //! The lines corresponds to the multiplier against the font height to use, which correlates with
   //! the amount of lines that will render if used with other fixed components on the first page.
   //! Do not use fixed_lines for text that can appear after the first page fold. Doing so will
   //! result in text nodes that are not guaranteed to draw.
-  uint8_t fixed_lines:2;
-  LayoutTextAlignment alignment:2;
+  uint8_t fixed_lines : 2;
+  LayoutTextAlignment alignment : 2;
 #if PBL_COLOR
   LayoutColor color;
 #endif
 } LayoutNodeTextConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeExtentConfig extent;
-  LayoutContentSize size:8;
-  TextStyleFont heading_style_font:8;
-  TextStyleFont paragraph_style_font:8;
+  LayoutContentSize size : 8;
+  TextStyleFont heading_style_font : 8;
+  TextStyleFont paragraph_style_font : 8;
 } LayoutNodeHeadingsParagraphsConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeTextConfig text;
   AttributeId attr_id;
 } LayoutNodeTextAttributeConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeTextConfig text;
   const char *str;
   bool use_i18n;
@@ -152,40 +152,40 @@ typedef struct PACKED {
 
 typedef struct LayoutNodeTextDynamicConfig LayoutNodeTextDynamicConfig;
 
-typedef void (*LayoutNodeTextDynamicUpdate)(
-    const LayoutLayer *layout, const LayoutNodeTextDynamicConfig *config, char *buffer,
-    bool render);
+typedef void (*LayoutNodeTextDynamicUpdate)(const LayoutLayer *layout,
+                                            const LayoutNodeTextDynamicConfig *config, char *buffer,
+                                            bool render);
 
-struct PACKED LayoutNodeTextDynamicConfig {
+struct PBL_PACKED LayoutNodeTextDynamicConfig {
   LayoutNodeTextConfig text;
   LayoutNodeTextDynamicUpdate update;
   void *context;
   uint16_t buffer_size;
 };
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeExtentConfig extent;
   LayoutNodeConfig **nodes;
   uint8_t num_nodes;
   uint8_t extra_capacity;
 } LayoutNodeContainerConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeContainerConfig container;
   LayoutTextAlignment horizontal_alignment;
 } LayoutNodeHorizontalConfig;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   LayoutNodeContainerConfig container;
   LayoutVerticalAlignment vertical_alignment;
 } LayoutNodeVerticalConfig;
 
 typedef struct LayoutNodeConstructorConfig LayoutNodeConstructorConfig;
 
-typedef GTextNode *(*LayoutNodeConstructor)(
-    const LayoutLayer *layout, const LayoutNodeConstructorConfig *config);
+typedef GTextNode *(*LayoutNodeConstructor)(const LayoutLayer *layout,
+                                            const LayoutNodeConstructorConfig *config);
 
-struct PACKED LayoutNodeConstructorConfig {
+struct PBL_PACKED LayoutNodeConstructorConfig {
   LayoutNodeExtentConfig extent;
   LayoutNodeConstructor constructor;
   void *context;

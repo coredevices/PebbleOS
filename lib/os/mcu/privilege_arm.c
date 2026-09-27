@@ -4,10 +4,10 @@
 #include "pbl/mcu/privilege.h"
 
 #include "pbl/mcu/interrupts.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // These functions need to be called from assembly so they can't be inlined
-EXTERNALLY_VISIBLE void mcu_state_set_thread_privilege(bool privileged) {
+PBL_EXTERNALLY_VISIBLE void mcu_state_set_thread_privilege(bool privileged) {
   uint32_t control = __get_CONTROL();
   if (privileged) {
     control &= ~0x1;

@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* alarms_app_get_info();
+const PebbleProcessMd *alarms_app_get_info();

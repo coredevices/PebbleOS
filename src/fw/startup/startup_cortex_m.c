@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "pbl/mcu/cache.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! These symbols are defined in the linker script for use in initializing
 //! the data sections. uint8_t since we do arithmetic with section lengths.
@@ -31,7 +31,7 @@ extern void SystemInit(void);
 //! starts execution following a reset event. The data and bss
 //! sections are initialized, then we call the firmware's main
 //! function
-NORETURN Reset_Handler(void) {
+PBL_NORETURN void Reset_Handler(void) {
   // Copy data section from flash to RAM
   memcpy(__data_start, __data_load_start, __data_end - __data_start);
 
@@ -46,5 +46,6 @@ NORETURN Reset_Handler(void) {
   main();
 
   // Main shouldn't return
-  while (true) {}
+  while (true) {
+  }
 }

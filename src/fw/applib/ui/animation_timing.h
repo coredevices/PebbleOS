@@ -27,11 +27,11 @@ AnimationProgress animation_timing_segmented(AnimationProgress time_normalized, 
 //! @param time_normalized the normalized time between 0 and ANIMATION_NORMALIZED_MAX inclusive
 //! @param table a curve with entries eased from 0 to ANIMATION_NORMALIZED_MAX
 //! @param num_entries number of entries in the table
-AnimationProgress animation_timing_interpolate(
-    AnimationProgress time_normalized, const uint16_t *table, size_t num_entries);
+AnimationProgress animation_timing_interpolate(AnimationProgress time_normalized,
+                                               const uint16_t *table, size_t num_entries);
 
-AnimationProgress animation_timing_interpolate32(
-    AnimationProgress time_normalized, const int32_t *table, size_t num_entries);
+AnimationProgress animation_timing_interpolate32(AnimationProgress time_normalized,
+                                                 const int32_t *table, size_t num_entries);
 
 //! Converts normalized time to a timing based on a specified curve
 //! @param time_normalized the normalized time between 0 and ANIMATION_NORMALIZED_MAX inclusive
@@ -40,7 +40,7 @@ AnimationProgress animation_timing_interpolate32(
 AnimationProgress animation_timing_curve(AnimationProgress time_normalized, AnimationCurve curve);
 
 static inline AnimationProgress animation_timing_clip(AnimationProgress time_normalized) {
-    return CLIP(time_normalized, 0, ANIMATION_NORMALIZED_MAX);
+  return CLIP(time_normalized, 0, ANIMATION_NORMALIZED_MAX);
 }
 
 //! Rescales a given time as with respect to a given interval

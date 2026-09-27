@@ -16,4 +16,4 @@ typedef struct {
   ProgressUISource progress_source;
 } ProgressUIAppArgs;
 
-const PebbleProcessMd* progress_ui_app_get_info();
+const PebbleProcessMd *progress_ui_app_get_info();

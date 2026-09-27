@@ -5,17 +5,17 @@
 
 #include "app_glance_structured.h"
 
+#include "apps/system/notifications_history.h"
+
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/timeline/attribute.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/string.h"
 #include "pbl/util/struct.h"
-
-#include <stdio.h>
 
 typedef struct LauncherAppGlanceNotifications {
   char title[APP_NAME_SIZE_BYTES];
@@ -38,8 +38,8 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 
 static void prv_notifications_glance_subtitle_dynamic_text_node_update(
     PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer, size_t buffer_size,
-    void *user_data) {
+    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
+    size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceNotifications *notifications_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -70,7 +70,9 @@ static bool prv_notification_iterator_cb(void *data, SerializedTimelineItemHeade
   // The iterator proceeds from the first notification received to the last notification received,
   // so copy the ID of the current notification and then return true so we iterate until the end.
   // Thus the last ID we save will be the last notification received.
-  *last_notification_received_id = header_id->common.id;
+  if (!notifications_history_is_hidden(&header_id->common)) {
+    *last_notification_received_id = header_id->common.id;
+  }
 
   return true;
 }
@@ -78,11 +80,12 @@ static bool prv_notification_iterator_cb(void *data, SerializedTimelineItemHeade
 static void prv_update_glance_for_last_notification_received(
     LauncherAppGlanceNotifications *notifications_glance) {
   // Find the ID of the last notification received
-  Uuid last_notification_received_id;
+  Uuid last_notification_received_id = UUID_INVALID_INIT;
   notification_storage_iterate(prv_notification_iterator_cb, &last_notification_received_id);
 
   TimelineItem notification;
-  if (!notification_storage_get(&last_notification_received_id, &notification)) {
+  if (uuid_is_invalid(&last_notification_received_id) ||
+      !notification_storage_get(&last_notification_received_id, &notification)) {
     // We couldn't load the notification for some reason; just bail out with the subtitle cleared
     notifications_glance->subtitle[0] = '\0';
     return;
@@ -117,11 +120,11 @@ static void prv_notification_event_handler(PebbleEvent *event, void *context) {
   switch (event->sys_notification.type) {
     case NotificationAdded:
     case NotificationRemoved:
+    case NotificationActedUpon:
       prv_update_glance_for_last_notification_received(notifications_glance);
       // Broadcast to the service that we changed the glance
       launcher_app_glance_structured_notify_service_glance_changed(structured_glance);
       return;
-    case NotificationActedUpon:
     case NotificationActionResult:
       return;
   }
@@ -147,8 +150,8 @@ LauncherAppGlance *launcher_app_glance_notifications_create(const AppMenuNode *n
   notifications_glance->title[title_size - 1] = '\0';
 
   // Create the icon for the Notifications app
-  notifications_glance->icon = kino_reel_create_with_resource_system(node->app_num,
-                                                                     node->icon_resource_id);
+  notifications_glance->icon =
+      kino_reel_create_with_resource_system(node->app_num, node->icon_resource_id);
   PBL_ASSERTN(notifications_glance->icon);
 
   const bool should_consider_slices = false;
@@ -161,7 +164,7 @@ LauncherAppGlance *launcher_app_glance_notifications_create(const AppMenuNode *n
   prv_update_glance_for_last_notification_received(notifications_glance);
 
   // Subscribe to notification events for updating the glance
-  notifications_glance->notification_event_info = (EventServiceInfo) {
+  notifications_glance->notification_event_info = (EventServiceInfo){
     .type = PEBBLE_SYS_NOTIFICATION_EVENT,
     .handler = prv_notification_event_handler,
     .context = structured_glance,

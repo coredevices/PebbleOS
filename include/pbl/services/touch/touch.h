@@ -110,9 +110,9 @@ void touch_set_rotated(bool rotated);
 //! a gesture that lost the sensor (a reset, or touch switched off) could have its next sample
 //! taken as the start of a new one, halfway along the path.
 typedef enum TouchInjectPhase {
-  TouchInjectPhase_Begin,  //!< Touchdown, claiming the sensor
-  TouchInjectPhase_Move,   //!< Position update; requires the gesture to still own the sensor
-  TouchInjectPhase_End,    //!< Liftoff, releasing the sensor
+  TouchInjectPhase_Begin, //!< Touchdown, claiming the sensor
+  TouchInjectPhase_Move,  //!< Position update; requires the gesture to still own the sensor
+  TouchInjectPhase_End,   //!< Liftoff, releasing the sensor
 } TouchInjectPhase;
 
 //! Inject a synthetic touch sample, as if a finger had produced it. Intended for automated input

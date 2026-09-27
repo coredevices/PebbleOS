@@ -1,0 +1,96 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# The options NimBLE's porting layer inherits from apache-mynewt-core, in
+# syscfg.yml format so gen_syscfg.py treats them like any other package. newt
+# used to pull these in through the mynewt-core repository; PebbleOS only
+# builds `porting/nimble`, so the handful of options it reads live here.
+#
+# Values are mynewt-core's defaults. Per-SoC values belong in
+# soc/<soc>/Kconfig.defconfig.
+
+syscfg.defs:
+    # Memory pool settings.
+    MSYS_1_BLOCK_COUNT:
+        description: Number of blocks in the first mbuf pool.
+        value: 12
+    MSYS_1_BLOCK_SIZE:
+        description: Size of each block in the first mbuf pool.
+        value: 292
+    MSYS_1_SANITY_MIN_COUNT:
+        description: >
+            Minimum number of free blocks the first mbuf pool must keep for
+            the sanity check to pass. Zero disables the check.
+        value: 0
+    MSYS_2_BLOCK_COUNT:
+        description: Number of blocks in the second mbuf pool.
+        value: 0
+    MSYS_2_BLOCK_SIZE:
+        description: Size of each block in the second mbuf pool.
+        value: 0
+    MSYS_2_SANITY_MIN_COUNT:
+        description: >
+            Minimum number of free blocks the second mbuf pool must keep for
+            the sanity check to pass. Zero disables the check.
+        value: 0
+    MSYS_SANITY_TIMEOUT:
+        description: Interval between mbuf pool sanity checks, in ms.
+        value: 60000
+    OS_MEMPOOL_CHECK:
+        description: Validate every block freed back into a memory pool.
+        value: 0
+    OS_MEMPOOL_GUARD:
+        description: Place a guard word at the end of each memory pool block.
+        value: 0
+    OS_MEMPOOL_POISON:
+        description: Poison memory pool blocks as they are freed.
+        value: 0
+
+    # CPU time settings.
+    OS_CPUTIME_FREQ:
+        description: Frequency of the cputime counter, in Hz.
+        value: 1000000
+    OS_CPUTIME_TIMER_NUM:
+        description: Hardware timer the cputime counter runs on.
+        value: 0
+    TIMER_0:
+        description: Enable hardware timer 0.
+        value: 0
+    TIMER_1:
+        description: Enable hardware timer 1.
+        value: 0
+    TIMER_2:
+        description: Enable hardware timer 2.
+        value: 0
+    TIMER_3:
+        description: Enable hardware timer 3.
+        value: 0
+    TIMER_4:
+        description: Enable hardware timer 4.
+        value: 0
+    TIMER_5:
+        description: Enable hardware timer 5.
+        value: 0
+
+    # Tracing settings.
+    OS_SYSVIEW:
+        description: Enable SEGGER SystemView tracing.
+        value: 0
+    OS_SYSVIEW_TRACE_MBUF:
+        description: Trace mbuf operations through SystemView.
+        value: 0
+    OS_SYSVIEW_TRACE_MEMPOOL:
+        description: Trace memory pool operations through SystemView.
+        value: 0
+
+    # Miscellaneous settings.
+    TRNG:
+        description: >
+            A true random number generator is available, and NimBLE should
+            take its random numbers from it.
+        value: 0
+    SELFTEST:
+        description: >
+            Build for NimBLE's own unit tests, which run parts of the stack
+            without a kernel underneath.
+        value: 0

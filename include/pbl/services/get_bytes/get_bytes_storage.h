@@ -43,7 +43,7 @@ typedef struct {
 
 //! Set up the storage. This may include allocating memory, open a file descriptor, etc.
 bool gb_storage_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
-                     GetBytesStorageInfo *info);
+                      GetBytesStorageInfo *info);
 
 //! Retrieve the size of the object that is to be sent
 GetBytesInfoErrorCode gb_storage_get_size(GetBytesStorage *storage, uint32_t *size);

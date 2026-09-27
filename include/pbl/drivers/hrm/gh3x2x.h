@@ -10,11 +10,11 @@
 
 #ifdef CONFIG_BOARD_OBELIX
 // FIXME(OBELIX): Provide proper GPIO layer abstraction
-#define GH3X2X_RESET_PIN_CTRLBY_NPM1300  1
+#define GH3X2X_RESET_PIN_CTRLBY_NPM1300 1
 #endif
 
-#define HRM_PPG_CH_NUM                      6
-#define HRM_PPG_FACTORY_TEST_FIFO_LEN       80
+#define HRM_PPG_CH_NUM                6
+#define HRM_PPG_FACTORY_TEST_FIFO_LEN 80
 typedef struct {
   double result[HRM_PPG_CH_NUM];
   uint16_t test_mode;
@@ -27,10 +27,12 @@ typedef struct {
 typedef struct HRMDeviceState {
   bool enabled;
   bool is_wear;
+  bool spo2_assumed_wear; // is_wear is the SpO2 path's assumed-worn value, not an ADT verdict
+  bool wear_before_spo2;  // ADT verdict to restore once the green path runs again
   int32_t work_mode;
   uint16_t timer_period_ms;
   AppTimer *timer;
-  GH3x2xFTData* factory;
+  GH3x2xFTData *factory;
   bool initialized;
 } HRMDeviceState;
 
@@ -42,8 +44,7 @@ typedef const struct HRMDevice {
   OutputConfig reset_gpio;
 } HRMDevice;
 
-
-bool gh3x2x_ble_data_recv(void* context);
+bool gh3x2x_ble_data_recv(void *context);
 void gh3x2x_wear_evt_notify(bool is_wear);
 void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count);
 
@@ -61,4 +62,3 @@ void gh3x2x_start_ft_ctr(void);
 void gh3x2x_start_ft_leakage(void);
 void gh3x2x_factory_test_disable();
 void gh3x2x_set_work_mode(int32_t mode);
-

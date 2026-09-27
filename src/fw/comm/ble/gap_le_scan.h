@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 #include <stdbool.h>
 
 //! @internal
 //! The number of reports that the circular reports buffer can contain.
-//! Accomodate for 4 reports with advertisment and scan reponse data:
-#define GAP_LE_SCAN_REPORTS_BUFFER_SIZE (4 * (sizeof(GAPLERawAdReport) + \
-(2 * GAP_LE_AD_REPORT_DATA_MAX_LENGTH)))
+//! Accommodate for 4 reports with advertisement and scan response data:
+#define GAP_LE_SCAN_REPORTS_BUFFER_SIZE \
+  (4 * (sizeof(GAPLERawAdReport) + (2 * PBL_BT_AD_REPORT_DATA_MAX_LENGTH)))
 
 //! @internal
 //! This is a semi-processed advertisement report. It is "raw" in the sense that
@@ -19,18 +19,18 @@
 //! stuff into a circular buffer.
 typedef struct {
   //! Is the advertiser's address a public address or random address?
-  bool is_random_address:1;
-  uint8_t rsvd:7; // free for use
+  bool is_random_address : 1;
+  uint8_t rsvd : 7; // free for use
 
   //! The address of the advertiser
-  BTDeviceInternal address;
+  struct pbl_bt_device_internal address;
 
   //! Received signal strength indication
   int8_t rssi;
 
   //! The raw advertisement data, concatenated with the raw scan response data.
   //! This will be parsed later down the road.
-  BLEAdData payload;
+  struct pbl_bt_ad_data payload;
 } GAPLERawAdReport;
 
 //! @internal
@@ -39,12 +39,12 @@ typedef struct {
 //! reports and scan responses will be buffered. A PEBBLE_BLE_SCAN_EVENT will
 //! be generated when there is data to be collected.
 //! @see gap_le_consume_scan_results
-//! @return 0 if scanning started succesfully or an error code otherwise.
+//! @return 0 if scanning started successfully or an error code otherwise.
 bool gap_le_start_scan(void);
 
 //! @internal
 //! Stops scanning.
-//! @return 0 if scanning stopped succesfully or an error code otherwise.
+//! @return 0 if scanning stopped successfully or an error code otherwise.
 bool gap_le_stop_scan(void);
 
 //! @internal
@@ -66,6 +66,6 @@ bool gap_le_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out);
 void gap_le_scan_init(void);
 
 //! @internal
-//! Stops any ongoing scanning and related activitie and cleans up anything that
+//! Stops any ongoing scanning and related activities and cleans up anything that
 //! had been created by gap_le_scan_init()
 void gap_le_scan_deinit(void);

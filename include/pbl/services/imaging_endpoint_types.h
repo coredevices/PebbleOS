@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 //! Generic image-fetch endpoint (0x0035). The watch pulls an image from the phone: it sends an
 //! ImageRequest naming what it wants (type, encoding, dimensions and type-specific parameters), and
@@ -37,13 +37,13 @@ typedef enum {
 } ImagingFormat;
 
 //! Watch -> Phone. Fixed head, then type-specific parameters.
-typedef struct PACKED {
-  uint8_t cmd;         //!< ImagingCmdIDRequest.
-  uint8_t token;       //!< Opaque; echoed in the response so the watch can match it to a request.
-  uint8_t image_type;  //!< ImagingImageType.
-  uint8_t format;      //!< ImagingFormat the watch wants.
-  uint16_t width;      //!< Desired width in pixels.
-  uint16_t height;     //!< Desired height in pixels.
+typedef struct PBL_PACKED {
+  uint8_t cmd;        //!< ImagingCmdIDRequest.
+  uint8_t token;      //!< Opaque; echoed in the response so the watch can match it to a request.
+  uint8_t image_type; //!< ImagingImageType.
+  uint8_t format;     //!< ImagingFormat the watch wants.
+  uint16_t width;     //!< Desired width in pixels.
+  uint16_t height;    //!< Desired height in pixels.
   // Type-specific parameters follow. For ImagingImageTypeAlbumArt:
   //   uint8_t title_len;  char title[title_len];
   //   uint8_t artist_len; char artist[artist_len];
@@ -54,9 +54,9 @@ typedef struct PACKED {
 
 //! Flags byte in an ImageResponse chunk.
 typedef enum {
-  ImagingResponseFlagFirst = (1 << 0),   //!< First chunk; the image header precedes the pixels.
-  ImagingResponseFlagLast = (1 << 1),    //!< Last chunk of the transfer.
-  ImagingResponseFlagNoImage = (1 << 2), //!< Phone has no image; no pixels follow.
+  ImagingResponseFlagFirst = (1 << 0),       //!< First chunk; the image header precedes the pixels.
+  ImagingResponseFlagLast = (1 << 1),        //!< Last chunk of the transfer.
+  ImagingResponseFlagNoImage = (1 << 2),     //!< Phone has no image; no pixels follow.
   ImagingResponseFlagUnsupported = (1 << 3), //!< Phone can't serve this image type; no pixels
                                              //!< follow. The watch latches the type off for the
                                              //!< rest of the connection and stops requesting it.
@@ -64,17 +64,17 @@ typedef enum {
 
 //! Bits 4-7 of a response's `flags` carry the ImagingImageType it answers. Several consumers can
 //! have a request outstanding at once, and the token alone doesn't say which one a response is for.
-#define IMAGING_RESPONSE_FLAG_TYPE_MASK (0xf0)
+#define IMAGING_RESPONSE_FLAG_TYPE_MASK  (0xf0)
 #define IMAGING_RESPONSE_FLAG_TYPE_SHIFT (4)
 
 //! Phone -> Watch, chunked. `chunk_len` pixel bytes follow this header (after the image header on
 //! the first chunk).
-typedef struct PACKED {
-  uint8_t cmd;         //!< ImagingCmdIDResponse.
-  uint8_t token;       //!< Echo of the request token.
-  uint8_t flags;       //!< ImagingResponseFlags bitset.
-  uint32_t offset;     //!< Byte offset of this chunk's pixels into the pixel stream.
-  uint16_t chunk_len;  //!< Number of pixel bytes in this chunk.
+typedef struct PBL_PACKED {
+  uint8_t cmd;        //!< ImagingCmdIDResponse.
+  uint8_t token;      //!< Echo of the request token.
+  uint8_t flags;      //!< ImagingResponseFlags bitset.
+  uint32_t offset;    //!< Byte offset of this chunk's pixels into the pixel stream.
+  uint16_t chunk_len; //!< Number of pixel bytes in this chunk.
   // First chunk only, before the pixel data:
   //   uint16_t width;
   //   uint16_t height;

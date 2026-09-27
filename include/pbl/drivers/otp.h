@@ -6,7 +6,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
+#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||     \
+    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || \
+    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
 enum {
   OTP_HWVER = 0,
   OTP_SERIAL = 1,
@@ -23,8 +25,8 @@ typedef enum {
   OtpWriteFailCorrupt = 2,
 } OtpWriteResult;
 
-uint8_t * otp_get_lock(const uint8_t index);
+uint8_t *otp_get_lock(const uint8_t index);
 bool otp_is_locked(const uint8_t index);
 
-char * otp_get_slot(const uint8_t index);
+char *otp_get_slot(const uint8_t index);
 OtpWriteResult otp_write_slot(const uint8_t index, const char *value);

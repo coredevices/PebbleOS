@@ -3,11 +3,12 @@
 
 #include <stdbool.h>
 
-typedef struct SMPairingInfo SMPairingInfo;
-typedef struct SM128BitKey SM128BitKey;
+struct pbl_bt_sm_pairing_info;
+struct pbl_bt_sm_key;
 
-bool sm_is_pairing_info_equal_identity(const SMPairingInfo *a, const SMPairingInfo *b);
+bool sm_is_pairing_info_equal_identity(const struct pbl_bt_sm_pairing_info *a,
+                                       const struct pbl_bt_sm_pairing_info *b);
 
-bool sm_is_pairing_info_empty(const SMPairingInfo *p);
+bool sm_is_pairing_info_empty(const struct pbl_bt_sm_pairing_info *p);
 
-bool sm_is_pairing_info_irk_not_used(const SM128BitKey *irk_key);
+bool sm_is_pairing_info_irk_not_used(const struct pbl_bt_sm_key *irk_key);

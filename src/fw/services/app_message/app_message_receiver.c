@@ -55,9 +55,8 @@ static bool prv_fwd_prepare(AppMessageReceiver *rcv, CommSession *session,
     .receiver_imp = &g_default_kernel_receiver_implementation,
     .receiver_opt = NULL,
   };
-  Receiver *kernel_receiver = g_default_kernel_receiver_implementation.prepare(session,
-                                           &kernel_nack_endpoint,
-                                           header_bytes_remaining);
+  Receiver *kernel_receiver = g_default_kernel_receiver_implementation.prepare(
+      session, &kernel_nack_endpoint, header_bytes_remaining);
   if (!kernel_receiver) {
     PBL_LOG_ERR("System receiver wasn't able to prepare");
     return false;
@@ -76,8 +75,9 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
   // FIXME: Find a better solution for this.
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
   if (total_payload_size > 500) {
-    comm_session_set_responsiveness(session, BtConsumerPpAppMessage, ResponseTimeMin,
-                                    MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+    comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
   }
 
   AppMessageReceiver *rcv = (AppMessageReceiver *)kernel_zalloc(sizeof(AppMessageReceiver));
@@ -90,7 +90,7 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
   rcv->header_bytes_remaining = header_bytes_remaining;
 
   // Always forward the header to default system receiver as well, we'll cancel it later on if the
-  // message was written succesfully to the app inbox.
+  // message was written successfully to the app inbox.
   if (!prv_fwd_prepare(rcv, session, header_bytes_remaining)) {
     kernel_free(rcv);
     return NULL;
@@ -110,7 +110,7 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
     app_install_mark_prioritized(app_id, true /* can_expire */);
 
     // Write the header, this info is needed for the app to handle the message and reply:
-    const AppMessageReceiverHeader header = (const AppMessageReceiverHeader) {
+    const AppMessageReceiverHeader header = (const AppMessageReceiverHeader){
       .session = session,
     };
     prv_write((const uint8_t *)&header, sizeof(header));
@@ -124,13 +124,14 @@ static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *da
 
   // FIXME: Find a better solution for this.
   // https://pebbletechnology.atlassian.net/browse/PBL-21538
-  comm_session_set_responsiveness(rcv->session, BtConsumerPpAppMessage, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  comm_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                  PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = MIN(rcv->header_bytes_remaining, length);
-    g_default_kernel_receiver_implementation.write(rcv->kernel_receiver,
-                                                   data, header_bytes_to_write);
+    g_default_kernel_receiver_implementation.write(rcv->kernel_receiver, data,
+                                                   header_bytes_to_write);
     rcv->header_bytes_remaining -= header_bytes_to_write;
   }
 

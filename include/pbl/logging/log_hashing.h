@@ -13,7 +13,7 @@
  * isn't compiled into the final firmware binary image.
  *
  * Token format:
- *   The token is acually a packed uint32_t. The format is as follows:
+ *   The token is actually a packed uint32_t. The format is as follows:
  *   31-29: num fmt conversions  [0-7]
  *   28-26: string index 2       [0-7], 1 based. 0 if no second string. 1-7 otherwise
  *   25-23: string index 1       [0-7], 1 based. 0 if no first string. 1-7 otherwise
@@ -75,36 +75,36 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define NEW_LOG_VERSION "0102"
 
 #define LOG_STRINGS_SECTION_ADDRESS 0xC0000000
 
-#define PACKED_CORE_OFFSET 30        // 2 bits - Core number
+#define PACKED_CORE_OFFSET 30 // 2 bits - Core number
 #define PACKED_CORE_MASK   0x03
 
-#define PACKED_NUM_FMT_OFFSET 29     // 3 bits - Number format conversions
-#define PACKED_NUM_FMT_MASK 0x07
-#define PACKED_STR1FMT_OFFSET 26     // 3 bits - indicies of string parameter 1 format conversion
-#define PACKED_STR1FMT_MASK 0x07
-#define PACKED_STR2FMT_OFFSET 23     // 3 bits - indicies of string parameter 2 format conversion
-#define PACKED_STR2FMT_MASK 0x07
-#define PACKED_STRFMTS_OFFSET 23     // 6 bits - indicies of string parameters 1 & 2.
-#define PACKED_STRFMTS_MASK 0x3f
-#define PACKED_LEVEL_OFFSET 20       // 3 bits  - log level
-#define PACKED_LEVEL_MASK 0x07
-#define PACKED_HASH_OFFSET 0
-#define PACKED_HASH_MASK 0x7FFFF     // 19 bits - string table offset (512 KB)
+#define PACKED_NUM_FMT_OFFSET 29 // 3 bits - Number format conversions
+#define PACKED_NUM_FMT_MASK   0x07
+#define PACKED_STR1FMT_OFFSET 26 // 3 bits - indicies of string parameter 1 format conversion
+#define PACKED_STR1FMT_MASK   0x07
+#define PACKED_STR2FMT_OFFSET 23 // 3 bits - indicies of string parameter 2 format conversion
+#define PACKED_STR2FMT_MASK   0x07
+#define PACKED_STRFMTS_OFFSET 23 // 6 bits - indicies of string parameters 1 & 2.
+#define PACKED_STRFMTS_MASK   0x3f
+#define PACKED_LEVEL_OFFSET   20 // 3 bits  - log level
+#define PACKED_LEVEL_MASK     0x07
+#define PACKED_HASH_OFFSET    0
+#define PACKED_HASH_MASK      0x7FFFF // 19 bits - string table offset (512 KB)
 
-#define MSGID_STR_AND_HASH_MASK ((PACKED_STRFMTS_MASK << PACKED_STRFMTS_OFFSET) | \
-                                 (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
-#define MSGID_CORE_AND_HASH_MASK ((PACKED_CORE_MASK << PACKED_CORE_OFFSET) | \
-                                  (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
+#define MSGID_STR_AND_HASH_MASK \
+  ((PACKED_STRFMTS_MASK << PACKED_STRFMTS_OFFSET) | (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
+#define MSGID_CORE_AND_HASH_MASK \
+  ((PACKED_CORE_MASK << PACKED_CORE_OFFSET) | (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
 
 #ifndef STRINGIFY
-  #define STRINGIFY_NX(a) #a
-  #define STRINGIFY(a) STRINGIFY_NX(a)
+#define STRINGIFY_NX(a) #a
+#define STRINGIFY(a)    STRINGIFY_NX(a)
 #endif // STRINGIFY
 
 /* Printf Format argument checking.
@@ -116,19 +116,21 @@
  * evaluated twice. This is fine with normal parameters, but could result in macros or functions
  * being called twice and messing up globals in unexpected ways.
  */
-void PBL_LOG_x_printf_arg_check(const char *fmt, ...) FORMAT_PRINTF(1, 2);
+void PBL_LOG_x_printf_arg_check(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
 
-#define NEW_LOG_HASH(logfunc, level, color, fmt, ...) \
-{ \
-  static const char str[] __attribute__((nocommon, section(".log_strings"))) = \
-    __FILE__ ":" STRINGIFY(__LINE__) ":" STRINGIFY(level) ":" color ":" fmt; \
-  _Pragma("GCC diagnostic push"); _Pragma("GCC diagnostic ignored \"-Warray-bounds\""); \
-  logfunc((uint32_t)&str[LOG_SECTION_OFFSET(level, fmt)], ##__VA_ARGS__); \
-  _Pragma("GCC diagnostic pop"); \
-  if (0) PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__); \
-}
+#define NEW_LOG_HASH(logfunc, level, color, fmt, ...)                            \
+  {                                                                              \
+    static const char str[] PBL_NOCOMMON PBL_SECTION(".log_strings") =           \
+        __FILE__ ":" STRINGIFY(__LINE__) ":" STRINGIFY(level) ":" color ":" fmt; \
+    _Pragma("GCC diagnostic push");                                              \
+    _Pragma("GCC diagnostic ignored \"-Warray-bounds\"");                        \
+    logfunc((uint32_t)&str[LOG_SECTION_OFFSET(level, fmt)], ##__VA_ARGS__);      \
+    _Pragma("GCC diagnostic pop");                                               \
+    if (0)                                                                       \
+      PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__);                            \
+  }
 
-ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char *fmt) {
+PBL_ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char *fmt) {
   const char *p1 = NULL, *p2 = NULL, *p3 = NULL, *p4 = NULL;
   const char *p5 = NULL, *p6 = NULL, *p7 = NULL, *p8 = NULL;
   const char *s1 = NULL, *s2 = NULL, *s3 = NULL, *s4 = NULL;
@@ -136,19 +138,26 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
 
   // Search for % characters in fmt. p1-p8 point to the character immediately succeeding the first
   // 8 % characters in fmt (or NULL, if there aren't 8 % characters in fmt).
-  p1 = __builtin_strchr(fmt, '%') ? (__builtin_strchr(fmt, '%') + 1) : NULL;
-  if (p1) p2 = __builtin_strchr(p1, '%') ? (__builtin_strchr(p1, '%') + 1) : NULL;
-  if (p2) p3 = __builtin_strchr(p2, '%') ? (__builtin_strchr(p2, '%') + 1) : NULL;
-  if (p3) p4 = __builtin_strchr(p3, '%') ? (__builtin_strchr(p3, '%') + 1) : NULL;
-  if (p4) p5 = __builtin_strchr(p4, '%') ? (__builtin_strchr(p4, '%') + 1) : NULL;
-  if (p5) p6 = __builtin_strchr(p5, '%') ? (__builtin_strchr(p5, '%') + 1) : NULL;
-  if (p6) p7 = __builtin_strchr(p6, '%') ? (__builtin_strchr(p6, '%') + 1) : NULL;
-  if (p7) p8 = __builtin_strchr(p7, '%') ? (__builtin_strchr(p7, '%') + 1) : NULL;
+  p1 = strchr(fmt, '%') ? (strchr(fmt, '%') + 1) : NULL;
+  if (p1)
+    p2 = strchr(p1, '%') ? (strchr(p1, '%') + 1) : NULL;
+  if (p2)
+    p3 = strchr(p2, '%') ? (strchr(p2, '%') + 1) : NULL;
+  if (p3)
+    p4 = strchr(p3, '%') ? (strchr(p3, '%') + 1) : NULL;
+  if (p4)
+    p5 = strchr(p4, '%') ? (strchr(p4, '%') + 1) : NULL;
+  if (p5)
+    p6 = strchr(p5, '%') ? (strchr(p5, '%') + 1) : NULL;
+  if (p6)
+    p7 = strchr(p6, '%') ? (strchr(p6, '%') + 1) : NULL;
+  if (p7)
+    p8 = strchr(p7, '%') ? (strchr(p7, '%') + 1) : NULL;
 
   // Check that fmt doesn't contain the escaped % symbol, '%%'. It's too hard to handle correctly
   // in every case.
-  if ((p1 + 1 == p2) || (p2 + 1 == p3) || (p3 + 1 == p4) || (p4 + 1 == p5) ||
-      (p5 + 1 == p6) || (p6 + 1 == p7) || (p7 + 1 == p8)) {
+  if ((p1 + 1 == p2) || (p2 + 1 == p3) || (p3 + 1 == p4) || (p4 + 1 == p5) || (p5 + 1 == p6) ||
+      (p6 + 1 == p7) || (p7 + 1 == p8)) {
     return 0;
   }
 
@@ -163,13 +172,20 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
   // Search for an 's' character succeeding the % characters in fmt. s1-s7 point to the first 's'
   // charactres in fmt after the previously found % characters (or NULL if there aren't 7 's'
   // characters in fmt).
-  if (p1) s1 = __builtin_strchr(p1, 's');
-  if (p2) s2 = __builtin_strchr(p2, 's');
-  if (p3) s3 = __builtin_strchr(p3, 's');
-  if (p4) s4 = __builtin_strchr(p4, 's');
-  if (p5) s5 = __builtin_strchr(p5, 's');
-  if (p6) s6 = __builtin_strchr(p6, 's');
-  if (p7) s7 = __builtin_strchr(p7, 's');
+  if (p1)
+    s1 = strchr(p1, 's');
+  if (p2)
+    s2 = strchr(p2, 's');
+  if (p3)
+    s3 = strchr(p3, 's');
+  if (p4)
+    s4 = strchr(p4, 's');
+  if (p5)
+    s5 = strchr(p5, 's');
+  if (p6)
+    s6 = strchr(p6, 's');
+  if (p7)
+    s7 = strchr(p7, 's');
 
   // See if the 's' characters immediately succeed the '%' characters. If so, set flag psX.
   const int ps1 = p1 ? (p1 == s1) : 0;
@@ -201,7 +217,6 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
   const int a7 = ps7 ? (a6 << 3) + 7 : a6;
   const int string_indicies = a7;
 
-
   // Convert level to packed_level
   int packed_level = LOG_LEVEL_ALWAYS;
   if (level == LOG_LEVEL_ERROR) {
@@ -216,9 +231,9 @@ ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char
     packed_level = 5;
   }
 
-  const uint32_t offset =  (((num_params & PACKED_NUM_FMT_MASK) << PACKED_NUM_FMT_OFFSET) |
-                            ((packed_level & PACKED_LEVEL_MASK) << PACKED_LEVEL_OFFSET) |
-                            ((string_indicies & PACKED_STRFMTS_MASK) << PACKED_STRFMTS_OFFSET));
+  const uint32_t offset = (((num_params & PACKED_NUM_FMT_MASK) << PACKED_NUM_FMT_OFFSET) |
+                           ((packed_level & PACKED_LEVEL_MASK) << PACKED_LEVEL_OFFSET) |
+                           ((string_indicies & PACKED_STRFMTS_MASK) << PACKED_STRFMTS_OFFSET));
 
   return (offset - LOG_STRINGS_SECTION_ADDRESS);
 }

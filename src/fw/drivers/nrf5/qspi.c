@@ -6,8 +6,6 @@
 #include "board/board.h"
 #include <pbl/drivers/qspi.h>
 #include <pbl/drivers/flash/qspi_flash.h>
-#include <pbl/drivers/flash/flash_impl.h>
-#include <pbl/drivers/qspi_definitions.h>
 #include "flash_region/flash_region.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"
@@ -19,8 +17,8 @@
 #include <hal/nrf_qspi.h>
 #include <nrfx.h>
 
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "pbl/kernel/sem.h"
+#include "pbl/kernel/compiler.h"
 
 // NOTE: This driver does not cover anomaly 244, which may cause data corruption
 // if HF clock source is switching between HFXO and HFINT (e.g. by BLE). This
@@ -39,15 +37,12 @@
 // Minimum address to enable 4-byte addressing
 #define ADDR_4BYTE_THRESHOLD 0x1000000UL
 
-static uint8_t __attribute__((aligned(4))) s_bounce_buf[32];
+static uint8_t PBL_ALIGNED(4) s_bounce_buf[32];
 
 void QSPI_IRQHandler(void) {
-  BaseType_t woken = pdFALSE;
-
   nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
 
-  xSemaphoreGiveFromISR(QSPI_FLASH->qspi->state->sem, &woken);
-  portYIELD_FROM_ISR(woken);
+  pbl_sem_give(&QSPI_FLASH->qspi->state->sem);
 }
 
 // -----------------------------------------------------------------------------
@@ -71,12 +66,12 @@ void QSPI_IRQHandler(void) {
 static void prv_workaround_215_apply(void) {
   nrf_qspi_pins_t pins;
   nrf_qspi_pins_t disconnected_pins = {
-      .sck_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .csn_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io0_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io1_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io2_pin = NRF_QSPI_PIN_NOT_CONNECTED,
-      .io3_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .sck_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .csn_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io0_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io1_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io2_pin = NRF_QSPI_PIN_NOT_CONNECTED,
+    .io3_pin = NRF_QSPI_PIN_NOT_CONNECTED,
   };
 
   // Disconnect pins to not wait for response from external memory
@@ -96,10 +91,10 @@ static void prv_workaround_215_apply(void) {
 static void prv_cinstr_write_read(QSPIFlash *dev, uint8_t instr, const void *data, void *buf,
                                   size_t len) {
   nrf_qspi_cinstr_conf_t conf = {
-      .opcode = instr,
-      .length = len + 1U,
-      .io2_level = true,
-      .io3_level = true,
+    .opcode = instr,
+    .length = len + 1U,
+    .io2_level = true,
+    .io3_level = true,
   };
 
   PBL_ASSERTN(len <= 8U);
@@ -150,7 +145,7 @@ static void prv_read(QSPIFlash *dev, void *buf, size_t len, uint32_t addr) {
     }
     nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
   } else {
-    xSemaphoreTake(dev->qspi->state->sem, portMAX_DELAY);
+    pbl_sem_take(&dev->qspi->state->sem, PBL_FOREVER);
     soc_nrf_sleep_full_release();
   }
 }
@@ -172,7 +167,7 @@ static void prv_write(QSPIFlash *dev, const void *buf, size_t len, uint32_t addr
     }
     nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
   } else {
-    xSemaphoreTake(dev->qspi->state->sem, portMAX_DELAY);
+    pbl_sem_take(&dev->qspi->state->sem, PBL_FOREVER);
     soc_nrf_sleep_full_release();
   }
 }
@@ -390,7 +385,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   NVIC_SetPriority(QSPI_IRQn, 5);
   NVIC_EnableIRQ(QSPI_IRQn);
 
-  dev->qspi->state->sem = xSemaphoreCreateBinary();
+  pbl_sem_init(&dev->qspi->state->sem, 0, 1);
   dev->qspi->state->initialized = true;
 }
 
@@ -478,7 +473,7 @@ status_t qspi_flash_is_erase_complete(QSPIFlash *dev) {
 }
 
 void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint32_t length) {
-  uint8_t __attribute__((aligned(4))) b_buf[4];
+  uint8_t PBL_ALIGNED(4) b_buf[4];
   uint8_t buf_pre;
   uint8_t buf_suf;
   uint32_t buf_mid;
@@ -516,7 +511,7 @@ void qspi_flash_read_blocking(QSPIFlash *dev, uint32_t addr, void *buffer, uint3
 
 int qspi_flash_write_page_begin(QSPIFlash *dev, const void *buffer, uint32_t addr,
                                 uint32_t length) {
-  uint8_t __attribute__((aligned(4))) b_buf[4];
+  uint8_t PBL_ALIGNED(4) b_buf[4];
   uint8_t buf_pre;
   uint8_t buf_suf;
   uint32_t buf_mid;
@@ -777,7 +772,7 @@ status_t qspi_flash_lock_security_register(QSPIFlash *dev, uint32_t addr) {
 
   return 0;
 }
-#endif  // CONFIG_RECOVERY_FW
+#endif // CONFIG_RECOVERY_FW
 
 status_t qspi_flash_write_protection_enable(QSPIFlash *dev) {
   return S_NO_ACTION_REQUIRED;

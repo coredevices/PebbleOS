@@ -8,18 +8,15 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 
-#include "FreeRTOS.h"
-#include "semphr.h"
-
-#include <inttypes.h>
+#include "pbl/kernel/sem.h"
 
 PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 
-
-static SemaphoreHandle_t s_erase_mutex = NULL;
+static PBL_SEM_DEFINE(s_erase_mutex, 0, 1);
 static struct FlashRegionEraseState {
   uint32_t next_erase_addr;
   uint32_t end_addr;
@@ -29,26 +26,24 @@ static struct FlashRegionEraseState {
 
 static void prv_erase_next_async(void *ignored);
 
-T_STATIC void prv_lock_erase_mutex(void);
-T_STATIC void prv_unlock_erase_mutex(void);
+PBL_T_STATIC void prv_lock_erase_mutex(void);
+PBL_T_STATIC void prv_unlock_erase_mutex(void);
 #if !UNITTEST
 void flash_erase_init(void) {
-  s_erase_mutex = xSemaphoreCreateBinary();
-  xSemaphoreGive(s_erase_mutex);
+  pbl_sem_give(&s_erase_mutex);
 }
 
 static void prv_lock_erase_mutex(void) {
-  xSemaphoreTake(s_erase_mutex, portMAX_DELAY);
+  pbl_sem_take(&s_erase_mutex, PBL_FOREVER);
 }
 
 static void prv_unlock_erase_mutex(void) {
-  xSemaphoreGive(s_erase_mutex);
+  pbl_sem_give(&s_erase_mutex);
 }
 #endif
 
 static void prv_async_erase_done_cb(void *ignored, status_t result) {
-  if (PASSED(result) &&
-      s_erase_state.next_erase_addr < s_erase_state.end_addr) {
+  if (PASSED(result) && s_erase_state.next_erase_addr < s_erase_state.end_addr) {
     // Chain the next erase from a new callback to prevent recursion (and the
     // potential for a stack overflow) if the flash_erase_sector calls the
     // completion callback asynchronously.
@@ -65,8 +60,7 @@ static void prv_async_erase_done_cb(void *ignored, status_t result) {
 
 static void prv_erase_next_async(void *ignored) {
   uint32_t addr = s_erase_state.next_erase_addr;
-  if ((addr & ~SECTOR_ADDR_MASK) == 0 &&
-      addr + SECTOR_SIZE_BYTES <= s_erase_state.end_addr) {
+  if ((addr & ~SECTOR_ADDR_MASK) == 0 && addr + SECTOR_SIZE_BYTES <= s_erase_state.end_addr) {
     s_erase_state.next_erase_addr += SECTOR_SIZE_BYTES;
     flash_erase_sector(addr, prv_async_erase_done_cb, NULL);
   } else {
@@ -77,21 +71,19 @@ static void prv_erase_next_async(void *ignored) {
   }
 }
 
-void flash_erase_optimal_range(
-    uint32_t min_start, uint32_t max_start, uint32_t min_end, uint32_t max_end,
-    FlashOperationCompleteCb on_complete, void *context) {
+void flash_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
+                               uint32_t max_end, FlashOperationCompleteCb on_complete,
+                               void *context) {
   PBL_ASSERTN(((min_start & (~SUBSECTOR_ADDR_MASK)) == 0) &&
-              ((max_end & (~SUBSECTOR_ADDR_MASK)) == 0) &&
-              (min_start <= max_start) &&
-              (max_start <= min_end) &&
-              (min_end <= max_end));
+              ((max_end & (~SUBSECTOR_ADDR_MASK)) == 0) && (min_start <= max_start) &&
+              (max_start <= min_end) && (min_end <= max_end));
 
   // We want to erase the sector that starts immediately below max_start but
   // after min_start. If no sector boundary exists between the two, we need to
   // start erasing sectors after min_start and backfill with subsector erases.
   int32_t sector_start = (max_start & SECTOR_ADDR_MASK);
   int32_t subsector_start = (max_start & SUBSECTOR_ADDR_MASK);
-  if (sector_start < (int32_t) min_start) {
+  if (sector_start < (int32_t)min_start) {
     sector_start += SECTOR_SIZE_BYTES;
   }
 
@@ -99,9 +91,8 @@ void flash_erase_optimal_range(
   // running past the end of max_end, we need to erase starting with the sector
   // before and fill in with subsector erases.
   int32_t sector_end = ((min_end - 1) & SECTOR_ADDR_MASK) + SECTOR_SIZE_BYTES;
-  int32_t subsector_end =
-      ((min_end - 1) & SUBSECTOR_ADDR_MASK) + SUBSECTOR_SIZE_BYTES;
-  if (sector_end > (int32_t) max_end) {
+  int32_t subsector_end = ((min_end - 1) & SUBSECTOR_ADDR_MASK) + SUBSECTOR_SIZE_BYTES;
+  if (sector_end > (int32_t)max_end) {
     sector_end -= SECTOR_SIZE_BYTES;
   }
 
@@ -122,7 +113,7 @@ void flash_erase_optimal_range(
 
   prv_lock_erase_mutex();
 
-  s_erase_state = (struct FlashRegionEraseState) {
+  s_erase_state = (struct FlashRegionEraseState){
     .next_erase_addr = start_addr,
     .end_addr = end_addr,
     .on_complete = on_complete,

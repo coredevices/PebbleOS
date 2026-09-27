@@ -22,8 +22,19 @@ typedef struct CommSession CommSession;
 //! (and its pixel/palette buffers) passes to the handler. `token` echoes the request.
 typedef void (*ImagingReceivedHandler)(uint8_t token, struct GBitmap *bitmap);
 
+//! Called before the first chunk's image buffers are allocated.
+typedef void (*ImagingWillReceiveHandler)(uint8_t token);
+
+//! Called when an image transfer is dropped before delivery.
+typedef void (*ImagingTransferFailedHandler)(uint8_t token);
+
 //! Register the handler for an image type. One handler per type; overwrites any previous.
 void imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler);
+
+//! Register transfer lifecycle handlers for an image type.
+void imaging_register_transfer_handlers(ImagingImageType image_type,
+                                        ImagingWillReceiveHandler will_receive,
+                                        ImagingTransferFailedHandler transfer_failed);
 
 //! True if the connected phone advertises image-fetch support and hasn't told us it can't serve
 //! this image type (see ImagingResponseFlagUnsupported). Latched state resets on reconnect.

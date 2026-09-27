@@ -36,8 +36,8 @@ void backlight_set_brightness(uint8_t brightness) {
 
     pwm_enable(&BACKLIGHT_PWM.pwm, true);
 
-    const uint32_t desired_duty_cycle = brightness * BACKLIGHT_PWM.max_duty_cycle_percent *
-                                        TIMER_PERIOD_RESOLUTION / 10000;
+    const uint32_t desired_duty_cycle =
+        brightness * BACKLIGHT_PWM.max_duty_cycle_percent * TIMER_PERIOD_RESOLUTION / 10000;
     pwm_set_duty_cycle(&BACKLIGHT_PWM.pwm, desired_duty_cycle);
   }
 }

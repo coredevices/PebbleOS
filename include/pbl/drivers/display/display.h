@@ -11,11 +11,11 @@
 
 typedef struct {
   uint16_t address;
-  uint8_t* data;
+  uint8_t *data;
 } DisplayRow;
 
-typedef bool(*NextRowCallback)(DisplayRow* row);
-typedef void(*UpdateCompleteCallback)(void);
+typedef bool (*NextRowCallback)(DisplayRow *row);
+typedef void (*UpdateCompleteCallback)(void);
 
 //! Update the display with a boot animation frame.
 //! This is a simple interface for the boot animation service to send frames

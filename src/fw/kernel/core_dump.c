@@ -44,26 +44,20 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/logging/logging.h>
 #include "system/version.h"
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
 #include "pbl/util/size.h"
-#include "pbl/util/string.h"
-
-#include <cmsis_core.h>
 
 #ifdef CONFIG_SOC_NRF52
 #include <nrf52840.h>
 #endif
 
-#include "FreeRTOS.h"       /* FreeRTOS Kernal Prototypes/Constants.          */
-#include "task.h"           /* FreeRTOS Task Prototypes/Constants.            */
+#include "pbl/kernel/debug.h"
 
-#include <inttypes.h>
+#include <cmsis_core.h>
+
 #include <stdint.h>
-#include <stdio.h>
-
 
 //! Evaluates to 1 iff execution will use the process stack when returning from
 //! the exception.
@@ -73,53 +67,51 @@ extern char *itoa(int value, char *str, int base);
 //! .note.gnu.build-id section in src/fw/stm32f2xx_flash_fw.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
-extern const uint32_t __CCM_RAM_size__[];
-extern const uint32_t __DTCM_RAM_size__[];
+extern uint8_t __RAM_start__;
+extern uint8_t __RAM_size__;
 
 void cd_flash_init(void);
-uint32_t cd_flash_write_bytes(const void* buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
+uint32_t cd_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
 void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes);
-void cd_flash_read_bytes(void* buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
+void cd_flash_read_bytes(void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
 
 // ----------------------------------------------------------------------------------------
 // Private globals
 
-static uint32_t s_flash_addr;                   // next address in flash to write to
+static uint32_t s_flash_addr; // next address in flash to write to
 // Saved registers before we trigger our interrupt: [r0-r12, sp, lr, pc, xpsr]
-static ALIGN(4) CoreDumpSavedRegisters s_saved_registers;
+static PBL_ALIGNED(4) CoreDumpSavedRegisters s_saved_registers;
 static uint32_t s_time_stamp;
 static bool s_core_dump_initiated = false;
 static bool s_core_dump_is_forced = false;
-static bool s_test_force_bus_fault = false;     // Used for unit testing
-static bool s_test_force_inf_loop = false;      // Used for unit testing
-static bool s_test_force_assert = false;        // Used for unit testing
-
+static bool s_test_force_bus_fault = false; // Used for unit testing
+static bool s_test_force_inf_loop = false;  // Used for unit testing
+static bool s_test_force_assert = false;    // Used for unit testing
 
 // List of memory regions to include in the core dump
 typedef struct {
-  void*    start;
+  void *start;
   uint32_t length;
-  bool     word_reads_only;  // Some peripherals can only be read 32 bits at a
-                             // time, or you BusFault (maybe). Set this to true
-                             // for memory regions where reads smaller than 32
-                             // bits will fail. The start pointer must also be
-                             // word-aligned.
+  bool word_reads_only; // Some peripherals can only be read 32 bits at a
+                        // time, or you BusFault (maybe). Set this to true
+                        // for memory regions where reads smaller than 32
+                        // bits will fail. The start pointer must also be
+                        // word-aligned.
 } MemoryRegion;
 
 // Memory regions to dump
 static const MemoryRegion MEMORY_REGIONS_DUMP[] = {
-#if CONFIG_SOC_NRF52 || CONFIG_SOC_SF32LB52 || CONFIG_QEMU
-  { .start = (void *)0x20000000, .length = COREDUMP_RAM_SIZE },
-#endif
-  { .start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER) },  // Enabled interrupts
-  { .start = (void *)&NVIC->ISPR, .length = sizeof(NVIC->ISPR) },  // Pending interrupts
-  { .start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR) },  // Active interrupts
+  {.start = &__RAM_start__, .length = (uintptr_t)&__RAM_size__},
+  {.start = (void *)&NVIC->ISER, .length = sizeof(NVIC->ISER)}, // Enabled interrupts
+  {.start = (void *)&NVIC->ISPR, .length = sizeof(NVIC->ISPR)}, // Pending interrupts
+  {.start = (void *)&NVIC->IABR, .length = sizeof(NVIC->IABR)}, // Active interrupts
 };
 
 #if defined(CONFIG_SOC_SF32LB52)
 // LCPU RAM is dumped last and only when its domain is up; see prv_dump_lcpu_ram().
 static const MemoryRegion LCPU_MEMORY_REGION = {
-  .start = (void *)COREDUMP_LCPU_RAM_START, .length = COREDUMP_LCPU_RAM_SIZE,
+  .start = (void *)COREDUMP_LCPU_RAM_START,
+  .length = COREDUMP_LCPU_RAM_SIZE,
 };
 #endif
 
@@ -127,8 +119,8 @@ static const MemoryRegion LCPU_MEMORY_REGION = {
 // Flash driver dual-API.
 static bool s_use_cd_flash_driver = true;
 
-static uint32_t prv_flash_write_bytes(const void* buffer_ptr,
-                                      uint32_t start_addr, uint32_t buffer_size) {
+static uint32_t prv_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr,
+                                      uint32_t buffer_size) {
   if (s_use_cd_flash_driver) {
     return cd_flash_write_bytes(buffer_ptr, start_addr, buffer_size);
   } else {
@@ -146,7 +138,7 @@ static void prv_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
   }
 }
 
-static void prv_flash_read_bytes(void* buffer_ptr, uint32_t start_addr, uint32_t buffer_size) {
+static void prv_flash_read_bytes(void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size) {
   if (s_use_cd_flash_driver) {
     cd_flash_read_bytes(buffer_ptr, start_addr, buffer_size);
   } else {
@@ -157,15 +149,14 @@ static void prv_flash_read_bytes(void* buffer_ptr, uint32_t start_addr, uint32_t
 // -------------------------------------------------------------------------------------------------
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
-static void prv_debug_str(const char* msg) {
+static void prv_debug_str(const char *msg) {
   kernel_pbl_log_from_fault_handler(__FILE_NAME__, 0, msg);
 }
-
 
 // -------------------------------------------------------------------------------------------------
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
-static void prv_debug_str_str(const char* msg, const char* s) {
+static void prv_debug_str_str(const char *msg, const char *s) {
 #ifdef CONFIG_PULSE_EVERYWHERE
   void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
   pulse_logging_log_sync_append(ctx, msg);
@@ -181,11 +172,10 @@ static void prv_debug_str_str(const char* msg, const char* s) {
 #endif
 }
 
-
 // -------------------------------------------------------------------------------------------------
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
-static void prv_debug_str_int(const char* msg, uint32_t i, int base) {
+static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
   char buffer[12];
 
   if (base == 16) {
@@ -211,7 +201,7 @@ static void prv_debug_str_int(const char* msg, uint32_t i, int base) {
 #endif
 }
 
-static NORETURN prv_reset(void) {
+static PBL_NORETURN void prv_reset(void) {
   dbgserial_flush();
   system_hard_reset();
 }
@@ -224,8 +214,8 @@ void coredump_assert(int line) {
 }
 
 // -----------------------------------------------------------------------------------------------
-// Return the start address of the flash region containing the core dump image. We write the core image to
-// different regions in flash to avoid premature burnout of any particular region.
+// Return the start address of the flash region containing the core dump image. We write the core
+// image to different regions in flash to avoid premature burnout of any particular region.
 // @param[in] new If true, then return a pointer to a region where a new image can be stored.
 //                If false, then return the region containing the most recent stored image or
 //                  CORE_DUMP_FLASH_INVALID_ADDR if no image has been written.
@@ -233,9 +223,8 @@ void coredump_assert(int line) {
 static uint32_t prv_flash_start_address(bool new) {
   CoreDumpFlashHeader flash_hdr;
   CoreDumpFlashRegionHeader region_hdr;
-  uint32_t  base_address;
+  uint32_t base_address;
   unsigned int i;
-
 
   // ----------------------------------------------------------------------------------
   // First, see if the flash header has been put in place
@@ -243,7 +232,7 @@ static uint32_t prv_flash_start_address(bool new) {
 
   if (flash_hdr.magic != CORE_DUMP_FLASH_HDR_MAGIC) {
     prv_flash_erase_region(CORE_DUMP_FLASH_START, SUBSECTOR_SIZE_BYTES);
-    flash_hdr = (CoreDumpFlashHeader) {
+    flash_hdr = (CoreDumpFlashHeader){
       .magic = CORE_DUMP_FLASH_HDR_MAGIC,
       .unformatted = CORE_DUMP_ALL_UNFORMATTED,
     };
@@ -260,7 +249,7 @@ static uint32_t prv_flash_start_address(bool new) {
   uint32_t max_last_used = 0;
   int last_used_idx = -1;
 
-  for (i=0; i<CORE_DUMP_MAX_IMAGES; i++) {
+  for (i = 0; i < CORE_DUMP_MAX_IMAGES; i++) {
     // Skip if unformatted
     if (flash_hdr.unformatted & (1 << i)) {
       continue;
@@ -300,7 +289,7 @@ static uint32_t prv_flash_start_address(bool new) {
   base_address = core_dump_get_slot_address(start_idx);
   CD_ASSERTN(base_address + CORE_DUMP_MAX_SIZE <= CORE_DUMP_FLASH_END);
   prv_flash_erase_region(base_address, CORE_DUMP_MAX_SIZE);
-  region_hdr = (CoreDumpFlashRegionHeader) {
+  region_hdr = (CoreDumpFlashRegionHeader){
     .magic = CORE_DUMP_FLASH_HDR_MAGIC,
     .last_used = max_last_used + 1,
     .unread = true,
@@ -314,16 +303,15 @@ static uint32_t prv_flash_start_address(bool new) {
   return base_address;
 }
 
-
 // -------------------------------------------------------------------------------------------------
-// This callback gets called by FreeRTOS for each task during the call to vTaskListWalk.
-static void prvTaskInfoCallback( const xPORT_TASK_INFO * const task_info, void * data) {
+_Static_assert(CORE_DUMP_NUM_REGISTERS == PBL_THREAD_REG_COUNT, "register layout mismatch");
+
+// Called for each thread during the pbl_thread_foreach() walk.
+static void prv_thread_info_cb(const struct pbl_thread_info *task_info, void *data) {
   CoreDumpChunkHeader chunk_hdr;
   CoreDumpThreadInfo packed_info;
 
-  void *current_task_id = (void *)xTaskGetCurrentTaskHandle();
-
-  prv_debug_str_str("CD: Th info ", task_info->pcName);
+  prv_debug_str_str("CD: Th info ", task_info->name);
 
   // Unit testing various types of fault?
   if (s_test_force_bus_fault) {
@@ -332,25 +320,26 @@ static void prvTaskInfoCallback( const xPORT_TASK_INFO * const task_info, void *
     kaboom();
   }
   if (s_test_force_inf_loop) {
-    while (true) ;
+    while (true)
+      ;
   }
   if (s_test_force_assert) {
     PBL_ASSERTN(false);
   }
 
   // Create the packed chunk header
-  strncpy ((char *)packed_info.name, task_info->pcName, CORE_DUMP_THREAD_NAME_SIZE);
-  packed_info.id = (uint32_t)task_info->taskHandle;
-  packed_info.running = (current_task_id == task_info->taskHandle);
-  for (int i = 0; i < portCANONICAL_REG_COUNT; i++) {
+  strncpy((char *)packed_info.name, task_info->name, CORE_DUMP_THREAD_NAME_SIZE);
+  packed_info.id = (uint32_t)task_info->id;
+  packed_info.running = task_info->current;
+  for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
     // registers [r0-r12, sp, lr, pc, sr]
-    packed_info.registers[i] = task_info->registers[i];
+    packed_info.registers[i] = task_info->regs[i];
   }
 
   // If this is the current task, adjust the registers based on whether or not we were handling
   //  an exception at the time core_dump_reset() was called.
   if (packed_info.running) {
-    if (!RETURNS_TO_PSP(s_saved_registers.core_reg[portCANONICAL_REG_INDEX_LR])) {
+    if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
       // The core dump handler got invoked from another exception, therefore the
       // running task was interrupted by an exception.
       // Get R0-R3, R12, R14, PC, xpsr for the task off the process stack used
@@ -361,19 +350,19 @@ static void prvTaskInfoCallback( const xPORT_TASK_INFO * const task_info, void *
       // information available. Unfortunately mainline GDB is unable to unwind
       // across the MSP/PSP split stack so this incomplete hack is required to
       // get useable information.
-      for (int i = 0; i < portCANONICAL_REG_COUNT; i++) {
+      for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
         // Clear out all of the bogus values in the info
         packed_info.registers[i] = 0xa5a5a5a5;
       }
       uint32_t *sp = (uint32_t *)s_saved_registers.extra_reg.psp;
-      packed_info.registers[portCANONICAL_REG_INDEX_R0] = sp[0];
-      packed_info.registers[portCANONICAL_REG_INDEX_R1] = sp[1];
-      packed_info.registers[portCANONICAL_REG_INDEX_R2] = sp[2];
-      packed_info.registers[portCANONICAL_REG_INDEX_R3] = sp[3];
-      packed_info.registers[portCANONICAL_REG_INDEX_R12] = sp[4];
-      packed_info.registers[portCANONICAL_REG_INDEX_LR] = sp[5];
-      packed_info.registers[portCANONICAL_REG_INDEX_PC] = sp[6];
-      packed_info.registers[portCANONICAL_REG_INDEX_XPSR] = sp[7];
+      packed_info.registers[PBL_THREAD_REG_R0] = sp[0];
+      packed_info.registers[PBL_THREAD_REG_R1] = sp[1];
+      packed_info.registers[PBL_THREAD_REG_R2] = sp[2];
+      packed_info.registers[PBL_THREAD_REG_R3] = sp[3];
+      packed_info.registers[PBL_THREAD_REG_R12] = sp[4];
+      packed_info.registers[PBL_THREAD_REG_LR] = sp[5];
+      packed_info.registers[PBL_THREAD_REG_PC] = sp[6];
+      packed_info.registers[PBL_THREAD_REG_XPSR] = sp[7];
       // Pop the exception stack frame, taking stack alignment into account.
       // The 10th bit of the pushed xPSR indicates whether an alignment word was
       // inserted into the stack frame during exception entry in order to make
@@ -383,30 +372,27 @@ static void prvTaskInfoCallback( const xPORT_TASK_INFO * const task_info, void *
       // pushed during exception entry requires unwinding the ISR stack to
       // determine the EXC_RETURN value of the bottom-most ISR.
       if (sp[7] & 0x200) {
-        packed_info.registers[portCANONICAL_REG_INDEX_SP] = (uint32_t)(&sp[9]);
+        packed_info.registers[PBL_THREAD_REG_SP] = (uint32_t)(&sp[9]);
       } else {
-        packed_info.registers[portCANONICAL_REG_INDEX_SP] = (uint32_t)(&sp[8]);
+        packed_info.registers[PBL_THREAD_REG_SP] = (uint32_t)(&sp[8]);
       }
     } else {
       // If current task called core_dump_reset directly, then jam in the
       // registers we saved at the beginning.
-      for (int i = 0; i < portCANONICAL_REG_COUNT; i++) {
+      for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
         // registers [r0-r12, msp, lr, pc, psr]
         packed_info.registers[i] = s_saved_registers.core_reg[i];
       }
       // Set sp to the saved psp so that GDB can unwind the task's stack.
-      packed_info.registers[portCANONICAL_REG_INDEX_SP] =
-          s_saved_registers.extra_reg.psp;
+      packed_info.registers[PBL_THREAD_REG_SP] = s_saved_registers.extra_reg.psp;
     }
   }
 
   // Write out this thread info
   chunk_hdr.key = CORE_DUMP_CHUNK_KEY_THREAD;
   chunk_hdr.size = sizeof(packed_info);
-  s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr,
-                                        sizeof(chunk_hdr));
-  s_flash_addr += prv_flash_write_bytes(&packed_info, s_flash_addr,
-                                        chunk_hdr.size);
+  s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr, sizeof(chunk_hdr));
+  s_flash_addr += prv_flash_write_bytes(&packed_info, s_flash_addr, chunk_hdr.size);
 }
 
 static void prv_write_memory_regions(const MemoryRegion *regions, unsigned int count,
@@ -417,32 +403,26 @@ static void prv_write_memory_regions(const MemoryRegion *regions, unsigned int c
   for (unsigned int i = 0; i < count; i++) {
     chunk_hdr.size = regions[i].length + sizeof(CoreDumpMemoryHeader);
     CD_ASSERTN(s_flash_addr + chunk_hdr.size - flash_base < CORE_DUMP_MAX_SIZE);
-    s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr,
-                                          sizeof(chunk_hdr));
+    s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr, sizeof(chunk_hdr));
     CoreDumpMemoryHeader mem_hdr;
     mem_hdr.start = (uint32_t)regions[i].start;
-    s_flash_addr += prv_flash_write_bytes(&mem_hdr, s_flash_addr,
-                                          sizeof(mem_hdr));
+    s_flash_addr += prv_flash_write_bytes(&mem_hdr, s_flash_addr, sizeof(mem_hdr));
 
     if (regions[i].word_reads_only) {
       // Copy the memory into a temporary buffer before writing it to flash so
       // that we can be sure that the memory is only being accessed by word.
       uint32_t temp;
-      for (uint32_t offset = 0;
-           offset < regions[i].length;
-           offset += sizeof(temp)) {
-        temp = *(volatile uint32_t*)((char *)regions[i].start + offset);
-        s_flash_addr += prv_flash_write_bytes(&temp, s_flash_addr,
-                                              sizeof(temp));
+      for (uint32_t offset = 0; offset < regions[i].length; offset += sizeof(temp)) {
+        temp = *(volatile uint32_t *)((char *)regions[i].start + offset);
+        s_flash_addr += prv_flash_write_bytes(&temp, s_flash_addr, sizeof(temp));
         watchdog_feed();
       }
     } else {
       uint32_t bytes_remaining = regions[i].length;
       for (uint32_t offset = 0; offset < regions[i].length; offset += SECTOR_SIZE_BYTES) {
         uint32_t bytes_to_write = MIN(bytes_remaining, SECTOR_SIZE_BYTES);
-        s_flash_addr += prv_flash_write_bytes(
-            (void *) ((uint32_t)regions[i].start + offset),
-            s_flash_addr, bytes_to_write);
+        s_flash_addr += prv_flash_write_bytes((void *)((uint32_t)regions[i].start + offset),
+                                              s_flash_addr, bytes_to_write);
         bytes_remaining -= bytes_to_write;
         watchdog_feed();
       }
@@ -473,9 +453,9 @@ static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
     .time_stamp = timestamp,
   };
   strncpy((char *)hdr.serial_number, mfg_get_serial_number(), sizeof(hdr.serial_number));
-  hdr.serial_number[sizeof(hdr.serial_number)-1] = 0;
+  hdr.serial_number[sizeof(hdr.serial_number) - 1] = 0;
   version_copy_build_id_hex_string((char *)hdr.build_id, sizeof(hdr.build_id), build_id);
-  hdr.build_id[sizeof(hdr.build_id)-1] = 0;
+  hdr.build_id[sizeof(hdr.build_id) - 1] = 0;
 
   return prv_flash_write_bytes(&hdr, flash_addr, sizeof(hdr));
 }
@@ -485,7 +465,7 @@ static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
 
 // -----------------------------------------------------------------------------------------------
 // Trigger a core dump
-NORETURN core_dump_reset(bool is_forced) {
+PBL_NORETURN void core_dump_reset(bool is_forced) {
   // Big problem if we re-enter here - it likely means we encountered an
   // exception during the core dump
   if (s_core_dump_initiated) {
@@ -496,7 +476,7 @@ NORETURN core_dump_reset(bool is_forced) {
 
   s_core_dump_is_forced = is_forced;
   if (is_forced) {
-    RebootReason reason = { RebootReasonCode_ForcedCoreDump, 0};
+    RebootReason reason = {RebootReasonCode_ForcedCoreDump, 0};
     reboot_reason_set(&reason);
   }
 
@@ -505,50 +485,48 @@ NORETURN core_dump_reset(bool is_forced) {
   __DSB();
   __ISB();
   // Shouldn't get here
-  RebootReason reason = { RebootReasonCode_CoreDumpEntryFailed, 0 };
+  RebootReason reason = {RebootReasonCode_CoreDumpEntryFailed, 0};
   reboot_reason_set(&reason);
   prv_reset();
 }
 
-void __attribute__((naked)) NMI_Handler(void) {
+void PBL_NAKED NMI_Handler(void) {
   // Save the processor state at the moment the NMI exception was entered to a
   // struct of type CoreDumpSavedRegisters.
   //
   // Save the processor state which is not automatically stacked during
   // exception entry before any C code can clobber it.
-  __asm volatile (
-    "  ldr r0, =%[s_saved_registers]\n"
-    "  stmia r0!, {r4-r11}          \n"
-    "  str sp, [r0, #4]!            \n"       // sp, skipping r12
-    "  str lr, [r0, #4]!            \n"       // lr
-    "  mrs r1, xpsr                 \n"
-    "  mrs r2, msp                  \n"
-    "  mrs r3, psp                  \n"
-    "  adds r0, #8                  \n"       // skip pc
-    "  stmia r0!, {r1-r3}           \n"       // xpsr, msp, psp
-    "  b core_dump_handler_c    \n"
-    :
-    : [s_saved_registers] "i"
-          (&s_saved_registers.core_reg[portCANONICAL_REG_INDEX_R4])
-    : "r0", "r1", "r2", "r3", "cc"
-    );
+  __asm volatile(
+      "  ldr r0, =%[s_saved_registers]\n"
+      "  stmia r0!, {r4-r11}          \n"
+      "  str sp, [r0, #4]!            \n" // sp, skipping r12
+      "  str lr, [r0, #4]!            \n" // lr
+      "  mrs r1, xpsr                 \n"
+      "  mrs r2, msp                  \n"
+      "  mrs r3, psp                  \n"
+      "  adds r0, #8                  \n" // skip pc
+      "  stmia r0!, {r1-r3}           \n" // xpsr, msp, psp
+      "  b core_dump_handler_c    \n"
+      :
+      : [s_saved_registers] "i"(&s_saved_registers.core_reg[PBL_THREAD_REG_R4])
+      : "r0", "r1", "r2", "r3", "cc");
 }
 
-EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
+PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // Locate the stack pointer where the processor state was stacked before the
   // NMI handler was executed so that the saved state can be copied into
   // s_saved_registers.
-  uint32_t *process_sp = (uint32_t *)(
-    RETURNS_TO_PSP(s_saved_registers.core_reg[portCANONICAL_REG_INDEX_LR])?
-      s_saved_registers.extra_reg.psp : s_saved_registers.extra_reg.msp);
-  s_saved_registers.core_reg[portCANONICAL_REG_INDEX_R0] = process_sp[0];
-  s_saved_registers.core_reg[portCANONICAL_REG_INDEX_R1] = process_sp[1];
-  s_saved_registers.core_reg[portCANONICAL_REG_INDEX_R2] = process_sp[2];
-  s_saved_registers.core_reg[portCANONICAL_REG_INDEX_R3] = process_sp[3];
+  uint32_t *process_sp = (uint32_t *)(RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])
+                                          ? s_saved_registers.extra_reg.psp
+                                          : s_saved_registers.extra_reg.msp);
+  s_saved_registers.core_reg[PBL_THREAD_REG_R0] = process_sp[0];
+  s_saved_registers.core_reg[PBL_THREAD_REG_R1] = process_sp[1];
+  s_saved_registers.core_reg[PBL_THREAD_REG_R2] = process_sp[2];
+  s_saved_registers.core_reg[PBL_THREAD_REG_R3] = process_sp[3];
   // Replace the r12 saved earlier with the real value.
-  s_saved_registers.core_reg[portCANONICAL_REG_INDEX_R12] = process_sp[4];
+  s_saved_registers.core_reg[PBL_THREAD_REG_R12] = process_sp[4];
   // Make it look like the processor had halted at the start of this function.
-  s_saved_registers.core_reg[portCANONICAL_REG_INDEX_PC] = (uint32_t)NMI_Handler;
+  s_saved_registers.core_reg[PBL_THREAD_REG_PC] = (uint32_t)NMI_Handler;
   // Save the special registers that the C compiler won't clobber.
   s_saved_registers.extra_reg.primask = __get_PRIMASK();
   s_saved_registers.extra_reg.basepri = __get_BASEPRI();
@@ -569,7 +547,7 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   RebootReason reason;
   reboot_reason_get(&reason);
   if (reason.code == RebootReasonCode_Unknown) {
-    reason = (RebootReason) { RebootReasonCode_CoreDump, 0 };
+    reason = (RebootReason){RebootReasonCode_CoreDump, 0};
     reboot_reason_set(&reason);
   }
 
@@ -587,8 +565,8 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   s_use_cd_flash_driver = true;
   cd_flash_init();
 
-  // If there is a fairly recent unread core image already present, don't replace it. Once it is read through
-  // the get_bytes_protocol_msg_callback(), the unread flag gets cleared out.
+  // If there is a fairly recent unread core image already present, don't replace it. Once it is
+  // read through the get_bytes_protocol_msg_callback(), the unread flag gets cleared out.
   uint32_t flash_base;
   flash_base = prv_flash_start_address(false /*new*/);
   if (!s_core_dump_is_forced && flash_base != CORE_DUMP_FLASH_INVALID_ADDR) {
@@ -598,14 +576,14 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
     prv_flash_read_bytes(&region_hdr, flash_base, sizeof(region_hdr));
     prv_flash_read_bytes(&image_hdr, flash_base + sizeof(region_hdr), sizeof(image_hdr));
 
-    if ((image_hdr.magic == CORE_DUMP_MAGIC) && region_hdr.unread
-        && ((s_time_stamp - image_hdr.time_stamp) < CORE_DUMP_MIN_AGE_SECONDS)) {
+    if ((image_hdr.magic == CORE_DUMP_MAGIC) && region_hdr.unread &&
+        ((s_time_stamp - image_hdr.time_stamp) < CORE_DUMP_MIN_AGE_SECONDS)) {
       prv_debug_str("CD: Still fresh");
-      #ifndef CONFIG_IS_BIGBOARD
+#ifndef CONFIG_IS_BIGBOARD
       prv_reset();
-      #else
+#else
       prv_debug_str("CD: BigBoard, forcing dump");
-      #endif
+#endif
     }
   }
 
@@ -616,12 +594,13 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // ---------------------------------------------------------------------------------------
   // Dump RAM and thread info into flash. We store data in flash using the following format:
   //
-  // CoreDumpImageHeader  image_header          // includes magic signature, version, time stamp, serial number
+  // CoreDumpImageHeader  image_header          // includes magic signature, version, time stamp,
+  // serial number
   //                                         //  and build id.
   //
-  // uint32_t          chunk_key             // CORE_DUMP_CHUNK_KEY_MEMORY, CORE_DUMP_CHUNK_KEY_THREAD, etc.
-  // uint32_t          chunk_size            // # of bytes of data that follow
-  // uint8_t           chunk[chunk_size]     // data for the above chunk
+  // uint32_t          chunk_key             // CORE_DUMP_CHUNK_KEY_MEMORY,
+  // CORE_DUMP_CHUNK_KEY_THREAD, etc. uint32_t          chunk_size            // # of bytes of data
+  // that follow uint8_t           chunk[chunk_size]     // data for the above chunk
   //
   // uint32_t          chunk_key
   // uint32_t          chunk_size
@@ -642,41 +621,40 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   s_flash_addr = flash_base + sizeof(CoreDumpFlashRegionHeader);
 
   // Write out the core dump header -----------------------------------
-  s_flash_addr += prv_write_image_header(s_flash_addr, CORE_ID_MAIN_MCU, &TINTIN_BUILD_ID,
-                                         s_time_stamp);
+  s_flash_addr +=
+      prv_write_image_header(s_flash_addr, CORE_ID_MAIN_MCU, &TINTIN_BUILD_ID, s_time_stamp);
 
   // Write out the memory chunks ----------------------------------------
-  prv_write_memory_regions(MEMORY_REGIONS_DUMP, ARRAY_LENGTH(MEMORY_REGIONS_DUMP),
-                           flash_base);
+  prv_write_memory_regions(MEMORY_REGIONS_DUMP, ARRAY_LENGTH(MEMORY_REGIONS_DUMP), flash_base);
 
   // Write out the extra registers chunk --------------------------------------------
   CoreDumpChunkHeader chunk_hdr;
   chunk_hdr.key = CORE_DUMP_CHUNK_KEY_EXTRA_REG;
   chunk_hdr.size = sizeof(CoreDumpExtraRegInfo);
   CD_ASSERTN(s_flash_addr + chunk_hdr.size - flash_base < CORE_DUMP_MAX_SIZE);
-  s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr,
-                                        sizeof(chunk_hdr));
-  s_flash_addr += prv_flash_write_bytes(&s_saved_registers.extra_reg,
-                                        s_flash_addr, chunk_hdr.size);
+  s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr, sizeof(chunk_hdr));
+  s_flash_addr += prv_flash_write_bytes(&s_saved_registers.extra_reg, s_flash_addr, chunk_hdr.size);
 
   // Write out each of the thread chunks ----------------------------------
-  // Note that we leave the threads for last just in case we encounter corrupted FreeRTOS structures.
-  // In that case, the core dump will at least contain the RAM and registers info and perhaps some of the
-  // threads. The format of the binary core dump is streamable and is read until we reach a chunk key
-  // of 0xFFFFFFFF (what gets placed into flash after an erase).
-  vTaskListWalk(prvTaskInfoCallback, NULL);
+  // Note that we leave the threads for last just in case we encounter corrupted FreeRTOS
+  // structures. In that case, the core dump will at least contain the RAM and registers info and
+  // perhaps some of the threads. The format of the binary core dump is streamable and is read until
+  // we reach a chunk key of 0xFFFFFFFF (what gets placed into flash after an erase).
+  pbl_thread_foreach(prv_thread_info_cb, NULL);
 
   // If we core dumped from an ISR, we make up a special "ISR" thread to hold the registers
-  if (!RETURNS_TO_PSP(s_saved_registers.core_reg[portCANONICAL_REG_INDEX_LR])) {
+  if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
     // Another exception invoked the core dump handler
-    xPORT_TASK_INFO task_info;
-    task_info.pcName = "ISR";
-    task_info.taskHandle = (void *)1;
-    for (int i = 0; i < portCANONICAL_REG_COUNT; i++) {
+    struct pbl_thread_info task_info = {
+      .name = "ISR",
+      .id = 1,
+      .current = false,
+    };
+    for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
       // registers [r0-r12, sp, lr, pc, sr]
-      task_info.registers[i] = s_saved_registers.core_reg[i];
+      task_info.regs[i] = s_saved_registers.core_reg[i];
     }
-    prvTaskInfoCallback(&task_info, NULL);
+    prv_thread_info_cb(&task_info, NULL);
   }
 
 #if defined(CONFIG_SOC_SF32LB52)
@@ -687,8 +665,7 @@ EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // Write out chunk terminator
   chunk_hdr.key = CORE_DUMP_CHUNK_KEY_TERMINATOR;
   chunk_hdr.size = 0;
-  s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr,
-                                        sizeof(chunk_hdr));
+  s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr, sizeof(chunk_hdr));
 
   // Reset!
   uint32_t total_size = s_flash_addr - flash_base;
@@ -709,10 +686,10 @@ status_t core_dump_size(uint32_t flash_base, uint32_t *size) {
     if (chunk_hdr.key == CORE_DUMP_CHUNK_KEY_TERMINATOR) {
       current_offset += sizeof(chunk_hdr);
       break;
-    } else if (chunk_hdr.key == CORE_DUMP_CHUNK_KEY_RAM
-           || chunk_hdr.key == CORE_DUMP_CHUNK_KEY_THREAD
-           || chunk_hdr.key == CORE_DUMP_CHUNK_KEY_EXTRA_REG
-           || chunk_hdr.key == CORE_DUMP_CHUNK_KEY_MEMORY) {
+    } else if (chunk_hdr.key == CORE_DUMP_CHUNK_KEY_RAM ||
+               chunk_hdr.key == CORE_DUMP_CHUNK_KEY_THREAD ||
+               chunk_hdr.key == CORE_DUMP_CHUNK_KEY_EXTRA_REG ||
+               chunk_hdr.key == CORE_DUMP_CHUNK_KEY_MEMORY) {
       current_offset += sizeof(chunk_hdr) + chunk_hdr.size;
     } else {
       return E_INTERNAL;
@@ -740,8 +717,7 @@ bool core_dump_is_unread_available(uint32_t flash_base) {
     CoreDumpFlashRegionHeader region_hdr;
     CoreDumpImageHeader image_hdr;
     flash_read_bytes((uint8_t *)&region_hdr, flash_base, sizeof(region_hdr));
-    flash_read_bytes((uint8_t *)&image_hdr, flash_base + sizeof(region_hdr),
-                     sizeof(image_hdr));
+    flash_read_bytes((uint8_t *)&image_hdr, flash_base + sizeof(region_hdr), sizeof(image_hdr));
     return ((image_hdr.magic == CORE_DUMP_MAGIC) && (region_hdr.unread != 0));
   }
 
@@ -779,7 +755,8 @@ cleanup:
 }
 
 // --------------------------------------------------------------------------------------------------
-// Used by unit tests in to cause fw/apps/demo/test_core_dump_app to encounter a bus fault during the core dump
+// Used by unit tests in to cause fw/apps/demo/test_core_dump_app to encounter a bus fault during
+// the core dump
 void core_dump_test_force_bus_fault(void) {
   s_test_force_bus_fault = true;
 }

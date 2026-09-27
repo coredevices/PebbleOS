@@ -16,15 +16,13 @@
 void settings_blob_db_init(void);
 
 //! Insert/update a setting
-status_t settings_blob_db_insert(const uint8_t *key, int key_len,
-                                 const uint8_t *val, int val_len);
+status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 //! Get the length of a setting value
 int settings_blob_db_get_len(const uint8_t *key, int key_len);
 
 //! Read a setting value
-status_t settings_blob_db_read(const uint8_t *key, int key_len,
-                               uint8_t *val_out, int val_len);
+status_t settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len);
 
 //! Delete a setting
 status_t settings_blob_db_delete(const uint8_t *key, int key_len);
@@ -52,9 +50,8 @@ status_t settings_blob_db_mark_all_dirty(void);
 //! @param val_len length of the value
 //! @param timestamp the timestamp of the incoming data
 //! @return S_SUCCESS if inserted, E_INVALID_OPERATION if watch data is newer (stale)
-status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
-                                                const uint8_t *val, int val_len,
-                                                time_t timestamp);
+status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len, const uint8_t *val,
+                                                int val_len, time_t timestamp);
 
 //! Check if the connected phone supports Settings BlobDB sync
 //! @return true if phone advertises settings_sync_support capability

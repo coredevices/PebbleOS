@@ -61,4 +61,3 @@ typedef enum RunLevel {
 } RunLevel;
 
 void services_set_runlevel(RunLevel runlevel);
-

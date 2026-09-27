@@ -3,22 +3,15 @@
 
 #include "window_stack_animation_round.h"
 
-#include "animation_timing.h"
 #include "window_private.h"
 #include "window_stack.h"
 
-#include "applib/applib_malloc.auto.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/graphics_private.h"
-#include "applib/graphics/graphics_private_raw.h"
 #include "applib/graphics/gtypes.h"
-#include "board/display.h"
 #include "kernel/ui/kernel_ui.h"
 #include "pbl/services/compositor/compositor_transitions.h"
-#include "system/passert.h"
-#include "pbl/util/attributes.h"
 #include "pbl/util/math.h"
-#include "pbl/util/trig.h"
 
 // Window transition implementations
 //////////////////////////////////////
@@ -82,7 +75,7 @@ static GPoint prv_displacement_from(CompositorTransitionDirection direction) {
 }
 
 static CompositorTransitionDirection prv_direction_from_context(
-  const WindowTransitioningContext *context) {
+    const WindowTransitioningContext *context) {
   return ((WindowTransitionRoundImplementation *)context->implementation)->transition_direction;
 }
 
@@ -137,17 +130,19 @@ static Animation *prv_window_transition_create_animation(WindowTransitioningCont
 }
 
 const WindowTransitionRoundImplementation g_window_transition_default_push_implementation_round = {
-  .implementation =  {
-    .create_animation = prv_window_transition_create_animation,
-    .render = prv_window_transition_render,
-  },
+  .implementation =
+      {
+        .create_animation = prv_window_transition_create_animation,
+        .render = prv_window_transition_render,
+      },
   .transition_direction = CompositorTransitionDirectionLeft,
 };
 
 const WindowTransitionRoundImplementation g_window_transition_default_pop_implementation_round = {
-  .implementation =  {
-    .create_animation = prv_window_transition_create_animation,
-    .render = prv_window_transition_render,
-  },
+  .implementation =
+      {
+        .create_animation = prv_window_transition_create_animation,
+        .render = prv_window_transition_render,
+      },
   .transition_direction = CompositorTransitionDirectionRight,
 };

@@ -43,7 +43,7 @@ static void prv_reset_sample_stride(TrackState *s, uint8_t target_note) {
   // Compute in two 16.16 multiplies to stay within uint64.
   uint64_t pitch_q16 = ((uint64_t)tgt_x256 << 16) / base_x256;
   uint64_t rate_q16 = ((uint64_t)input_rate << 16) / s_sample_rate;
-  s->sample_stride_q32 = pitch_q16 * rate_q16;  // 32.32
+  s->sample_stride_q32 = pitch_q16 * rate_q16; // 32.32
 }
 
 static void prv_advance_to_note(TrackState *s) {
@@ -83,8 +83,7 @@ static int16_t prv_gen_sample_mode(TrackState *s) {
   }
 
   bool is_16bit = (s->sample->format & 2);
-  int16_t raw_sample = prv_decode_sample_at((const uint8_t *)s->sample->data,
-                                             idx, is_16bit);
+  int16_t raw_sample = prv_decode_sample_at((const uint8_t *)s->sample->data, idx, is_16bit);
 
   s->sample_pos_q32 += s->sample_stride_q32;
 
@@ -99,8 +98,8 @@ static int16_t prv_gen_waveform_mode(TrackState *s) {
   if (s->phase_inc == 0) {
     return 0;
   }
-  int16_t v = note_synth_sample(s->current_waveform, s->phase_acc, s->phase_inc,
-                                s->current_velocity);
+  int16_t v =
+      note_synth_sample(s->current_waveform, s->phase_acc, s->phase_inc, s->current_velocity);
   s->phase_acc += s->phase_inc;
   return v;
 }

@@ -4,13 +4,10 @@
 #include "switch_worker_ui.h"
 
 #include <stdio.h>
-#include <string.h>
 
 #include "applib/ui/action_bar_layer.h"
 #include "applib/ui/dialogs/confirmation_dialog.h"
-#include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "kernel/ui/modals/modal_manager.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
 #include "process_management/worker_manager.h"
@@ -25,14 +22,13 @@ typedef struct {
 
 static bool s_is_on_screen = false;
 
-
 static void prv_click_confirm_decline_callback(ClickRecognizerRef recognizer, void *context) {
   // TODO: Currently set_as_default does nothing.  This will be corrected later on to allow
   // launching of a worker while an app is open, then returning to the default worker after
   // the application has been exited.  The likely UI flow would prompt the user to set the
   // worker as the default (if the flag is false) after they've confirmed enabling activity
   // tracking using the launch application, to which they can decline.
-  SwitchWorkerUIArgs *args = (SwitchWorkerUIArgs *) context;
+  SwitchWorkerUIArgs *args = (SwitchWorkerUIArgs *)context;
   ConfirmationDialog *confirmation_dialog = args->confirmation_dialog;
 
   confirmation_dialog_pop(confirmation_dialog);
@@ -108,10 +104,10 @@ void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
   i18n_free_all(confirmation_dialog);
 
   SwitchWorkerUIArgs *args = task_malloc_check(sizeof(SwitchWorkerUIArgs));
-  *args = (SwitchWorkerUIArgs) {
-      .new_worker_id = new_worker_id,
-      .set_as_default = set_as_default,
-      .confirmation_dialog = confirmation_dialog,
+  *args = (SwitchWorkerUIArgs){
+    .new_worker_id = new_worker_id,
+    .set_as_default = set_as_default,
+    .confirmation_dialog = confirmation_dialog,
   };
 
   // Set our arguments to be passed as the context to the confirmation dialog action bar

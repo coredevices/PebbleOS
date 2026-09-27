@@ -70,6 +70,13 @@ test_log_dict = {
         "line": "69",
         "msg": "Init BLE SPI Protocol",
     },
+    "40807": {
+        "color": "GREEN",
+        "file": "battery_state.c",
+        "level": "100",
+        "line": "415",
+        "msg": "Percent: %hhu, V: %ld mV, I: %ld uA, size: %zu, big: 0x%08llx, neg: %hhd",
+    },
     "new_logging_version": "NL0102",
 }
 
@@ -251,6 +258,20 @@ def test_unformatted():
     assert os.path.basename(line_dict["file"]) == "ispp.c"
     assert line_dict["line"] == "1872"
     assert line_dict["formatted_msg"] == "Start Authentication Process 10 (a) Success"
+
+
+def test_length_modifiers():
+    """
+    Test that C length modifiers Python's printf rejects are stripped
+    """
+
+    line = f"? A 21:35:14.375 :0> NL:{40807:x} 1c ed0 fffea7cb 10 fffffffe fffffffb"
+    line_dict = dehash_line_unformatted(line, test_log_dict)
+
+    assert (
+        line_dict["formatted_msg"]
+        == "Percent: 28, V: 3792 mV, I: -88117 uA, size: 16, big: 0xfffffffe, neg: -5"
+    )
 
 
 def test_core_number():

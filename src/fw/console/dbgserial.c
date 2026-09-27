@@ -9,13 +9,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-
 #ifdef CONFIG_PULSE_EVERYWHERE
 #define DEFAULT_SERIAL_BAUD_RATE 1000000
 #else
 #define DEFAULT_SERIAL_BAUD_RATE 115200
 #endif
-
 
 void dbgserial_init(void) {
 #if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
@@ -34,7 +32,7 @@ void dbgserial_restore_baud_rate(void) {
   dbgserial_change_baud_rate(DEFAULT_SERIAL_BAUD_RATE);
 }
 
-void dbgserial_putstr(const char* str) {
+void dbgserial_putstr(const char *str) {
   while (*str) {
     dbgserial_putchar(*str);
     ++str;
@@ -56,7 +54,7 @@ void dbgserial_flush(void) {
   uart_wait_for_tx_complete(DBG_UART);
 }
 
-void dbgserial_putstr_fmt(char* buffer, unsigned int buffer_size, const char* fmt, ...) {
+void dbgserial_putstr_fmt(char *buffer, unsigned int buffer_size, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   vsniprintf(buffer, buffer_size, fmt, ap);

@@ -7,7 +7,6 @@
 
 #include "pbl/services/activity/hr_util.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -22,7 +21,7 @@ typedef struct WorkoutData {
 
 void workout_data_update(void *workout_data);
 
-void workout_data_fill_metric_value(WorkoutMetricType type, char *buffer,
-                                    size_t buffer_size, void *i18n_owner, void *workout_data);
+void workout_data_fill_metric_value(WorkoutMetricType type, char *buffer, size_t buffer_size,
+                                    void *i18n_owner, void *workout_data);
 
 int32_t workout_data_get_metric_value(WorkoutMetricType type, void *workout_data);

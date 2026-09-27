@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, '*-branch']
   workflow_call:
 
 jobs:
@@ -26,13 +26,14 @@ jobs:
               - 'platform/**'
               - 'resources/**'
               - 'sdk/**'
+              - 'soc/**'
               - 'src/**'
               - 'stored_apps/**'
               - 'tools/**'
               - 'third_party/**'
-              - 'tools/waf/**'
-              - 'waf'
-              - 'wscript'
+              - 'cmake/**'
+              - 'CMakeLists.txt'
+              - 'Kconfig'
 
   build-qemu:
     needs: changes-qemu
@@ -40,11 +41,19 @@ jobs:
     runs-on: ubuntu-24.04
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v6
+      image: ghcr.io/coredevices/pebbleos-docker:v8
 
     strategy:
       matrix:
         board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
+        build: ["normal", "prf-itest"]
+        include:
+          - build: normal
+            variant: normal
+          - build: prf-itest
+            variant: prf
+            suffix: -prf-itest
+            options: -DCONFIG_BT_HCI_UART=y
 
     steps:
       - name: Mark Github workspace as safe
@@ -75,22 +84,22 @@ jobs:
         run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
       - name: Configure
-        run: ./waf configure --board ${{ matrix.board }}
+        run: pbl configure --board ${{ matrix.board }} --variant ${{ matrix.variant }} ${{ matrix.options }}
 
       - name: Build
-        run: ./waf build qemu_image_micro qemu_image_spi
+        run: pbl build qemu_image_micro qemu_image_spi
 
       - name: Copy artifacts
         run: |
           version=$(git describe)
           mkdir artifacts
-          cp build/qemu_micro_flash.bin "artifacts/${{ matrix.board }}_${version}_micro_flash.bin"
-          cp build/qemu_spi_flash.bin "artifacts/${{ matrix.board }}_${version}_spi_flash.bin"
+          cp build/qemu_micro_flash.bin "artifacts/${{ matrix.board }}${{ matrix.suffix }}_${version}_micro_flash.bin"
+          cp build/qemu_spi_flash.bin "artifacts/${{ matrix.board }}${{ matrix.suffix }}_${version}_spi_flash.bin"
 
       - name: Store
         uses: actions/upload-artifact@v7
         with:
-          name: firmware-${{ matrix.board }}-qemu
+          name: firmware-${{ matrix.board }}${{ matrix.suffix }}-qemu
           path: artifacts
 
   build-qemu-status:

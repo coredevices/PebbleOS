@@ -24,7 +24,7 @@
 ////////////////////////////////////
 
 // Reference PNGs reside in "tests/fw/graphics/test_images/"
-// and are created at build time, with the test PBI file generated 
+// and are created at build time, with the test PBI file generated
 // by bitmapgen.py from the reference PNG copied to TEST_IMAGES_PATH
 // covers 1,2,4,8 bit palettized
 // covers 1,2,4,8 bit palettized with transparency
@@ -92,4 +92,3 @@ void test_pbi__color_8_bit_transparent(void) {
   GBitmap *bitmap = setup_pbi_test(TEST_PBI_FILE);
   cl_assert(gbitmap_pbi_eq(bitmap, TEST_PBI_FILE));
 }
-

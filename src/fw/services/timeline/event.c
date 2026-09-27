@@ -6,11 +6,10 @@
 #include "pbl/services/timeline/peek.h"
 
 #include <pbl/drivers/rtc.h>
-#include "kernel/event_loop.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include <pbl/logging/logging.h>
@@ -33,7 +32,8 @@ static TimelineEventImplGetter s_services[TimelineEventServiceCount] = {
 
 // This mutex protects all state, but is only used for factory resetting synchronously, therefore
 // it should not significantly increase blocking time.
-static PebbleMutex *s_mutex;
+static PBL_MUTEX_DEFINE(s_mutex);
+static bool s_initialized;
 
 static TimelineEventState s_states[TimelineEventServiceCount];
 
@@ -106,10 +106,10 @@ static bool prv_item_header_filter(SerializedTimelineItemHeader *header, void *u
 
 static void prv_update_status(void) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
-  if (!s_mutex) {
+  if (!s_initialized) {
     return;
   }
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   new_timer_stop(s_timer);
   SerializedTimelineItemHeader *filter_headers =
       kernel_zalloc_check(TimelineEventServiceCount * sizeof(SerializedTimelineItemHeader));
@@ -148,8 +148,7 @@ static void prv_update_status(void) {
     if (has_item) {
       timeline_item_deserialize_header(&item, state->filter_header);
     }
-    const uint32_t other_timeout_ms =
-        state->impl->update(has_item ? &item : NULL, &state->context);
+    const uint32_t other_timeout_ms = state->impl->update(has_item ? &item : NULL, &state->context);
     if (other_timeout_ms) {
       timeout_ms = timeout_ms ? MIN(timeout_ms, other_timeout_ms) : other_timeout_ms;
     }
@@ -165,12 +164,12 @@ static void prv_update_status(void) {
 
   prv_set_timer(timeout_ms);
   kernel_free(filter_headers);
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static void prv_init(void *PBL_UNUSED data) {
-  s_mutex = mutex_create();
-  mutex_lock(s_mutex);
+  s_initialized = true;
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   for (unsigned int i = 0; i < TimelineEventServiceCount; i++) {
     TimelineEventState *state = &s_states[i];
@@ -179,7 +178,7 @@ static void prv_init(void *PBL_UNUSED data) {
 
   s_timer = new_timer_create();
 
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
   prv_update_status();
 }
 
@@ -188,14 +187,13 @@ void timeline_event_init(void) {
 }
 
 void timeline_event_deinit(void) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   new_timer_delete(s_timer);
   s_timer = TIMER_INVALID_ID;
 
-  mutex_unlock(s_mutex);
-  mutex_destroy(s_mutex);
-  s_mutex = NULL;
+  pbl_mutex_unlock(&s_mutex);
+  s_initialized = false;
 }
 
 void timeline_event_handle_blobdb_event(void) {
@@ -215,11 +213,11 @@ bool timeline_event_is_ongoing(time_t now, time_t event_start, int event_duratio
   return ((event_start <= now) && ((event_start + (SECONDS_PER_MINUTE * event_duration_m)) > now));
 }
 
-bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now,
-                                  int delta_start_s, int delta_end_s) {
-  return ((common->type == TimelineItemTypePin) && // Ignore non-pins
+bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now, int delta_start_s,
+                                  int delta_end_s) {
+  return ((common->type == TimelineItemTypePin) &&              // Ignore non-pins
           (((delta_start_s == TIMELINE_EVENT_DELTA_INFINITE) || // Any past event or
-            (common->timestamp > (now + delta_start_s))) && // Begins after range start and
-           ((delta_end_s == TIMELINE_EVENT_DELTA_INFINITE) || // Any future event or
-            (common->timestamp < (now + delta_end_s))))); // Begins before range end
+            (common->timestamp > (now + delta_start_s))) &&     // Begins after range start and
+           ((delta_end_s == TIMELINE_EVENT_DELTA_INFINITE) ||   // Any future event or
+            (common->timestamp < (now + delta_end_s)))));       // Begins before range end
 }

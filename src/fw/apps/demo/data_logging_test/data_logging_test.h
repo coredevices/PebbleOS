@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* data_logging_test_get_info();
+const PebbleProcessMd *data_logging_test_get_info();

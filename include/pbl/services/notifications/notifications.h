@@ -23,7 +23,6 @@ typedef struct {
   TimelineItemActionGroup action_group;
 } PebbleSysNotificationActionResult;
 
-
 void notifications_init(void);
 
 //! Feedback for the result of an invoke action command

@@ -7,9 +7,7 @@
 
 #include "board/board.h"
 #include "kernel/events.h"
-#include "pbl/mcu/interrupts.h"
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(driver_exti_sf32lb, CONFIG_DRIVER_EXTI_LOG_LEVEL);
 
@@ -21,7 +19,6 @@ typedef struct {
 } ExtiHandlerConfig_t;
 
 static ExtiHandlerConfig_t s_exti_gpio1_handler_configs[EXTI_MAX_GPIO1_PIN_NUM];
-static bool s_should_context_switch;
 
 static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pin,
                                            uint16_t *offset) {
@@ -34,7 +31,8 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
     return (GPIO_TypeDef *)NULL;
   }
 
-  // There are many groups of similar registers in the GPIO, and because of register length limitations, up to 32 gpio can be operated in each group.
+  // There are many groups of similar registers in the GPIO, and because of register length
+  // limitations, up to 32 gpio can be operated in each group.
   inst_idx = gpio_pin >> 5;
   *offset = gpio_pin & 31;
 
@@ -46,8 +44,7 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
 static void prv_insert_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin, ExtiHandlerCallback cb) {
   // Find the handler index for this pin
   uint8_t index = 0;
-  while (index < EXTI_MAX_GPIO1_PIN_NUM &&
-         s_exti_gpio1_handler_configs[index].callback != NULL) {
+  while (index < EXTI_MAX_GPIO1_PIN_NUM && s_exti_gpio1_handler_configs[index].callback != NULL) {
     index++;
   }
   if (index >= EXTI_MAX_GPIO1_PIN_NUM) {
@@ -121,7 +118,6 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
       bool should_context_switch = false;
 
       s_exti_gpio1_handler_configs[index].callback(&should_context_switch);
-      s_should_context_switch |= should_context_switch;
       return;
     }
   }
@@ -130,7 +126,5 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
 }
 
 void GPIO1_IRQHandler(void) {
-  s_should_context_switch = false;
   HAL_GPIO_IRQHandler(hwp_gpio1);
-  portEND_SWITCHING_ISR(s_should_context_switch);
 }

@@ -4,8 +4,8 @@
 #pragma once
 
 #include "pbl/services/timeline/timeline_resources.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-TimelineResourceId WEAK weather_type_get_timeline_resource_id(WeatherType weather_type) {
+TimelineResourceId PBL_WEAK weather_type_get_timeline_resource_id(WeatherType weather_type) {
   return 0;
 }

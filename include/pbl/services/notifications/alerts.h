@@ -8,11 +8,11 @@
 #include "pbl/services/notifications/notification_types.h"
 
 typedef enum AlertType {
-  AlertInvalid   = NotificationInvalid,
-  AlertMobile    = NotificationMobile,
+  AlertInvalid = NotificationInvalid,
+  AlertMobile = NotificationMobile,
   AlertPhoneCall = NotificationPhoneCall,
-  AlertOther     = NotificationOther,
-  AlertReminder  = NotificationReminder
+  AlertOther = NotificationOther,
+  AlertReminder = NotificationReminder
 } AlertType;
 
 // Service to determine how and if the user gets alerted on a call/notification

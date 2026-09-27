@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/responsiveness.h>
+#include <pbl/bluetooth/responsiveness.h>
 
 typedef struct GAPLEConnection GAPLEConnection;
 
@@ -21,4 +21,4 @@ typedef struct GAPLEConnectRequestParams {
 //! the other side (master) to actually act upon the request and apply the change. With iOS
 //! devices, this does not always happen.
 void gap_le_connect_params_request(GAPLEConnection *connection,
-                                   ResponseTimeState desired_state);
+                                   enum pbl_bt_response_time_state desired_state);

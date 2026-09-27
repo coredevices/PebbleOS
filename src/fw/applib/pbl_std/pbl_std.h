@@ -80,11 +80,11 @@ uint16_t pbl_override_time_ms_legacy(time_t *t_loc, uint16_t *out_ms);
 //! @param tm_p A pointer to a struct tm containing a broken out time value
 //! @return The number of bytes placed in the array s, not including the null byte,
 //!   0 if the value does not fit.
-size_t pbl_strftime(char* s, size_t maxsize, const char* format, const struct tm* tm_p);
+size_t pbl_strftime(char *s, size_t maxsize, const char *format, const struct tm *tm_p);
 
 //!   @} // end addtogroup StandardTime
 //! @} // end addtogroup StandardC
 
-int pbl_snprintf(char * str, size_t n, const char * format, ...);
+int pbl_snprintf(char *str, size_t n, const char *format, ...);
 
 void *pbl_memcpy(void *destination, const void *source, size_t num);

@@ -37,7 +37,7 @@
 #define DISABLE_VBR 1
 
 /* Define to 1 to disable wideband */
-/* #define DISABLE_WIDEBAND 1 */  /* Commented out to enable wideband support */
+/* #define DISABLE_WIDEBAND 1 */ /* Commented out to enable wideband support */
 
 /* Define to 1 if you have the `alloca' function. */
 #define HAVE_ALLOCA 1

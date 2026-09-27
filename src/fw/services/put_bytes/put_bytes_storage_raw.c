@@ -3,9 +3,8 @@
 
 #include "pbl/services/put_bytes/put_bytes_storage_raw.h"
 
-#include "bluetooth/responsiveness.h"
+#include "pbl/bluetooth/responsiveness.h"
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/task_watchdog.h>
 #include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_storage_flash.h"
@@ -25,18 +24,14 @@ typedef struct MemoryLayout {
   uint32_t start_offset;
 } MemoryLayout;
 
-static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_type) {
+static const MemoryLayout *prv_get_layout_for_type(PutBytesObjectType object_type) {
   static const MemoryLayout layouts[] = {
 #ifndef CONFIG_PBLBOOT
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription) },
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription) },
+    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription)},
+    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription)},
 #else
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, 0U },
-    { FLASH_REGION_FIRMWARE_DEST_BEGIN,
-      FLASH_REGION_FIRMWARE_DEST_END, 0U },
+    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, 0U},
+    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, 0U},
 #endif
   };
   static MemoryLayout resource_layout;
@@ -44,10 +39,10 @@ static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_typ
   // Our PutBytesObjectType values are 1 indexed instead of zero indexed and the first three
   // are the only raw ones, so we can get away with just subtracting 1.
   if (object_type == ObjectSysResources) {
-    resource_layout = (MemoryLayout) {
-        resource_storage_flash_get_unused_bank()->begin,
-        resource_storage_flash_get_unused_bank()->end,
-        0,
+    resource_layout = (MemoryLayout){
+      resource_storage_flash_get_unused_bank()->begin,
+      resource_storage_flash_get_unused_bank()->end,
+      0,
     };
     return &resource_layout;
   } else {
@@ -55,8 +50,8 @@ static const MemoryLayout* prv_get_layout_for_type(PutBytesObjectType object_typ
   }
 }
 
-bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *status) {
-  const MemoryLayout *layout  = prv_get_layout_for_type(obj_type);
+bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *status) {
+  const MemoryLayout *layout = prv_get_layout_for_type(obj_type);
 
   const size_t read_buffer_size = 2048;
   uint8_t *read_buffer = kernel_zalloc(read_buffer_size);
@@ -99,10 +94,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *st
         // for the mobile apps to implement flash_crc32
         uint32_t crc = flash_calculate_legacy_defective_checksum(stop_read_address, bytes_written);
 
-        *status = (PbInstallStatus) {
-          .num_bytes_written = bytes_written,
-          .crc_of_bytes = crc
-        };
+        *status = (PbInstallStatus){.num_bytes_written = bytes_written, .crc_of_bytes = crc};
 
         success = true;
         goto cleanup;
@@ -118,40 +110,31 @@ cleanup:
 bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_type,
                          uint32_t total_size, PutBytesStorageInfo *info, uint32_t append_offset) {
   const MemoryLayout *layout = prv_get_layout_for_type(object_type);
-  storage->impl_data = (void*) layout;
+  storage->impl_data = (void *)layout;
 
   storage->current_offset = layout->start_offset;
 
-  // This erase operation will take awhile, so disable the task watchdog for the current task
-  // while we're doing this.
-  bool previous_system_task_watchdog_state = task_watchdog_mask_get(PebbleTask_KernelBackground);
-  if (previous_system_task_watchdog_state) {
-    task_watchdog_mask_clear(PebbleTask_KernelBackground);
-  }
-
   if (append_offset == 0) {
     // Reduce BLE activity while the blocking erase runs, to lower stack pressure on the
-    // NimbleHost task. Scoped to the erase only: this shares BtConsumerPpPutBytes with the
-    // ResponseTimeMin request held during chunk streaming, so leaving it in place would cancel
-    // the fast connection interval.
-    comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes,
-                                    ResponseTimeMiddle, MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+    // NimbleHost task. Scoped to the erase only: this shares PBL_BT_CONSUMER_PP_PUT_BYTES with the
+    // PBL_BT_RESPONSE_TIME_MIN request held during chunk streaming, so leaving it in place would
+    // cancel the fast connection interval.
+    comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                    PBL_BT_RESPONSE_TIME_MIDDLE,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
 
     // By erasing the entire region we make it more likely for 'pb_storage_raw_get_status' to
     // recover the correct location.
     flash_region_erase_optimal_range(layout->start_address, layout->start_address,
-        layout->end_address, layout->end_address);
+                                     layout->end_address, layout->end_address);
 
     // Restore the fast interval so the init ACK isn't delayed by the slow connection parameters.
-    comm_session_set_responsiveness(comm_session_get_system_session(), BtConsumerPpPutBytes,
-                                    ResponseTimeMin, MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+    comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
   } else {
     // Some data we want has already been written, just continue from last valid location!
     storage->current_offset += append_offset;
-  }
-
-  if (previous_system_task_watchdog_state) {
-    task_watchdog_mask_set(PebbleTask_KernelBackground);
   }
 
   return true;
@@ -184,7 +167,7 @@ uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType 
 
 void pb_storage_raw_deinit(PutBytesStorage *storage, bool is_success) {
   // Restore normal BLE responsiveness that was reduced in pb_storage_raw_init
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  BtConsumerPpPutBytes, ResponseTimeMin,
-                                  MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                  PBL_BT_RESPONSE_TIME_MIN,
+                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
 }

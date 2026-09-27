@@ -16,4 +16,3 @@ bool process_manager_compiled_with_legacy2_sdk(void) {
   return s_is_legacy2;
 #endif
 }
-

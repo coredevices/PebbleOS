@@ -21,7 +21,7 @@ static GTextLayoutCacheRef prv_text_layer_legacy2_get_cache_handle(TextLayerLega
   return text_layer->should_cache_layout ? text_layer->layout_cache : NULL;
 }
 
-void text_layer_legacy2_update_proc(TextLayerLegacy2 *text_layer, GContext* ctx) {
+void text_layer_legacy2_update_proc(TextLayerLegacy2 *text_layer, GContext *ctx) {
   if (text_layer == NULL) {
     return;
   }
@@ -55,15 +55,15 @@ void text_layer_legacy2_init(TextLayerLegacy2 *text_layer, const GRect *frame) {
   layer_mark_dirty(&(text_layer->layer));
 }
 
-TextLayerLegacy2* text_layer_legacy2_create(GRect frame) {
-  TextLayerLegacy2* layer = task_malloc(sizeof(TextLayerLegacy2));
+TextLayerLegacy2 *text_layer_legacy2_create(GRect frame) {
+  TextLayerLegacy2 *layer = task_malloc(sizeof(TextLayerLegacy2));
   if (layer) {
     text_layer_legacy2_init(layer, &frame);
   }
   return layer;
 }
 
-void text_layer_legacy2_destroy(TextLayerLegacy2* text_layer) {
+void text_layer_legacy2_destroy(TextLayerLegacy2 *text_layer) {
   if (!text_layer) {
     return;
   }
@@ -80,7 +80,7 @@ void text_layer_legacy2_deinit(TextLayerLegacy2 *text_layer) {
   text_layer->layout_cache = NULL;
 }
 
-Layer* text_layer_legacy2_get_layer(TextLayerLegacy2 *text_layer) {
+Layer *text_layer_legacy2_get_layer(TextLayerLegacy2 *text_layer) {
   if (text_layer == NULL) {
     return NULL;
   }
@@ -91,11 +91,11 @@ void text_layer_legacy2_set_size(TextLayerLegacy2 *text_layer, const GSize max_s
   if (text_layer == NULL) {
     return;
   }
-  layer_set_frame(&text_layer->layer, &(GRect)  { text_layer->layer.frame.origin, max_size });
+  layer_set_frame(&text_layer->layer, &(GRect){text_layer->layer.frame.origin, max_size});
   layer_mark_dirty(&text_layer->layer);
 }
 
-GSize text_layer_legacy2_get_size(TextLayerLegacy2* text_layer) {
+GSize text_layer_legacy2_get_size(TextLayerLegacy2 *text_layer) {
   if (text_layer == NULL) {
     return GSizeZero;
   }
@@ -110,7 +110,7 @@ void text_layer_legacy2_set_text(TextLayerLegacy2 *text_layer, const char *text)
   layer_mark_dirty(&text_layer->layer);
 }
 
-const char* text_layer_legacy2_get_text(TextLayerLegacy2 *text_layer) {
+const char *text_layer_legacy2_get_text(TextLayerLegacy2 *text_layer) {
   if (text_layer == NULL) {
     return NULL;
   }
@@ -186,7 +186,7 @@ void text_layer_legacy2_set_should_cache_layout(TextLayerLegacy2 *text_layer,
   }
 }
 
-GSize text_layer_legacy2_get_content_size(GContext* ctx, TextLayerLegacy2 *text_layer) {
+GSize text_layer_legacy2_get_content_size(GContext *ctx, TextLayerLegacy2 *text_layer) {
   if (text_layer == NULL) {
     return GSizeZero;
   } else if (!text_layer->should_cache_layout) {
@@ -195,10 +195,11 @@ GSize text_layer_legacy2_get_content_size(GContext* ctx, TextLayerLegacy2 *text_
   GTextLayoutCacheRef layout = prv_text_layer_legacy2_get_cache_handle(text_layer);
   PBL_ASSERTN(layout);
   return graphics_text_layout_get_max_used_size(ctx, text_layer->text, text_layer->font,
-      text_layer->layer.bounds, text_layer->overflow_mode, text_layer->text_alignment, layout);
+                                                text_layer->layer.bounds, text_layer->overflow_mode,
+                                                text_layer->text_alignment, layout);
 }
 
 GSize app_text_layer_legacy2_get_content_size(TextLayerLegacy2 *text_layer) {
-  GContext* ctx = app_state_get_graphics_context();
+  GContext *ctx = app_state_get_graphics_context();
   return text_layer_legacy2_get_content_size(ctx, text_layer);
 }

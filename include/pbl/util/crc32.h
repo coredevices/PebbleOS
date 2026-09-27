@@ -34,7 +34,7 @@
 //!     crc = crc32(crc, data, length);
 //!   }
 //! \endcode
-uint32_t crc32(uint32_t crc, const void * restrict data, size_t length);
+uint32_t crc32(uint32_t crc, const void *restrict data, size_t length);
 
 //! The initial CRC register value for a standard CRC-32 checksum.
 //!

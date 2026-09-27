@@ -26,7 +26,6 @@
 #define TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED 0
 #endif
 
-
 // The clock 12h/24h setting is required by services/clock.c.
 bool shell_prefs_get_clock_24h_style(void);
 void shell_prefs_set_clock_24h_style(bool is24h);
@@ -55,6 +54,18 @@ typedef enum UnitsDistance {
 
 UnitsDistance shell_prefs_get_units_distance(void);
 void shell_prefs_set_units_distance(UnitsDistance newUnit);
+
+// Wind has its own unit so the UK (metric, but mph wind) is expressible. FromDistance is the
+// default, so a phone that never sets this follows the distance unit.
+typedef enum UnitsWind {
+  UnitsWind_FromDistance,
+  UnitsWind_KmH,
+  UnitsWind_Mph,
+  UnitsWindCount
+} UnitsWind;
+
+UnitsWind shell_prefs_get_units_wind(void);
+void shell_prefs_set_units_wind(UnitsWind newUnit);
 
 // The backlight preferences are required in all shells, but the settings are
 // hardcoded when running PRF.
@@ -183,14 +194,6 @@ void shell_prefs_toggle_language_english(void);
 typedef enum ShellLanguage {
   ShellLanguageInstalledPack = 0,
   ShellLanguageEnglish,
-  ShellLanguageCatalan,
-  ShellLanguageGerman,
-  ShellLanguageSpanish,
-  ShellLanguageFrench,
-  ShellLanguageItalian,
-  ShellLanguageDutch,
-  ShellLanguagePortuguese,
-  ShellLanguagePolish,
   ShellLanguageCount,
 } ShellLanguage;
 
@@ -237,9 +240,9 @@ void shell_prefs_set_settings_dbs_compacted_v1(bool done);
 #ifdef CONFIG_APP_SCALING
 // Legacy app rendering mode - whether to use bezel or scaling for legacy apps
 typedef enum LegacyAppRenderMode {
-  LegacyAppRenderMode_Bezel = 0,    // Center with black bezel (original behavior)
+  LegacyAppRenderMode_Bezel = 0,           // Center with black bezel (original behavior)
   LegacyAppRenderMode_ScalingNearest = 1,  // Scale to fill screen (nearest-neighbor)
-  LegacyAppRenderMode_ScalingBilinear = 2,  // Scale to fill screen (bilinear)
+  LegacyAppRenderMode_ScalingBilinear = 2, // Scale to fill screen (bilinear)
   LegacyAppRenderModeCount
 } LegacyAppRenderMode;
 

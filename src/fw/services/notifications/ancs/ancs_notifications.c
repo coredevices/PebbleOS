@@ -12,19 +12,18 @@
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/i18n/i18n.h"
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
+#include "pbl/services/i18n/i18n.h"
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/notifications/notifications.h"
+#include "pbl/services/timeline/attribute.h"
 #include "pbl/services/timeline/timeline.h"
+#include "pbl/services/timeline/timeline_resources.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/pstring.h"
-
-#include <stdio.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
@@ -53,8 +52,8 @@ static void prv_handle_ancs_update(TimelineItem *notification,
                                    CommonTimelineItemHeader *existing_header) {
   if (existing_header->dismissed) {
     // this should be dismissed from iOS. Dismiss it again
-    PBL_LOG_DBG("ANCS notification already dismissed, dismissing again: %"PRIu32,
-            notification->header.ancs_uid);
+    PBL_LOG_DBG("ANCS notification already dismissed, dismissing again: %" PRIu32,
+                notification->header.ancs_uid);
     prv_dismiss_notification(notification);
   }
 
@@ -116,8 +115,8 @@ static bool prv_should_ignore_because_calendar_reminder(const ANCSAttribute *app
   TimelineItem reminder;
 
   // Check if we have a matching reminder for this calendar event
-  if (reminder_db_find_by_timestamp_title(timestamp, calendar_title_buffer, prv_calendar_reminder_filter,
-                                          &reminder)) {
+  if (reminder_db_find_by_timestamp_title(timestamp, calendar_title_buffer,
+                                          prv_calendar_reminder_filter, &reminder)) {
     timeline_item_free_allocated_buffer(&reminder);
     return true;
   }
@@ -135,10 +134,8 @@ static bool prv_reminder_filter(SerializedTimelineItemHeader *hdr, void *context
   return false;
 }
 
-static bool prv_should_ignore_because_time_reminder(const ANCSAttribute *app_id,
-                                                    time_t timestamp,
-                                                    const ANCSAttribute *title,
-                                                    uint32_t uid,
+static bool prv_should_ignore_because_time_reminder(const ANCSAttribute *app_id, time_t timestamp,
+                                                    const ANCSAttribute *title, uint32_t uid,
                                                     const ANCSAttribute *attr_action_neg) {
   if (!pstring_equal_cstring(&app_id->pstr, IOS_REMINDERS_APP_ID)) {
     return false;
@@ -229,8 +226,7 @@ static bool prv_should_ignore_because_muted(const iOSNotifPrefs *app_notif_prefs
   return ancs_filtering_is_muted(app_notif_prefs);
 }
 
-static bool prv_should_ignore_notification(uint32_t uid,
-                                           time_t timestamp,
+static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
                                            ANCSAttribute **notif_attributes,
                                            iOSNotifPrefs *app_notif_prefs) {
   const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
@@ -273,10 +269,10 @@ static bool prv_should_ignore_notification(uint32_t uid,
   }
 
   // filter out time based reminder notifications
-  if (prv_should_ignore_because_time_reminder(app_id, timestamp, title, uid,
-                                              negative_action)) {
-    PBL_LOG_DBG("Ignoring ANCS reminders notification because existing "
-            "time-based reminder was found in db");
+  if (prv_should_ignore_because_time_reminder(app_id, timestamp, title, uid, negative_action)) {
+    PBL_LOG_DBG(
+        "Ignoring ANCS reminders notification because existing "
+        "time-based reminder was found in db");
     return true;
   }
 
@@ -288,8 +284,7 @@ static bool prv_should_ignore_notification(uint32_t uid,
   return false;
 }
 
-void ancs_notifications_handle_message(uint32_t uid,
-                                       ANCSProperty properties,
+void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
                                        ANCSAttribute **notif_attributes,
                                        ANCSAttribute **app_attributes) {
   PBL_ASSERTN(notif_attributes && app_attributes);
@@ -340,11 +335,12 @@ void ancs_notifications_handle_message(uint32_t uid,
   }
 
   // add a notification
-  const ANCSAppMetadata* app_metadata = ancs_notifications_util_get_app_metadata(app_id);
-  TimelineItem *notification = ancs_item_create_and_populate(notif_attributes, app_attributes,
-                                                             app_metadata, app_notif_prefs,
-                                                             timestamp, properties);
-  if (!notification) { goto cleanup; }
+  const ANCSAppMetadata *app_metadata = ancs_notifications_util_get_app_metadata(app_id);
+  TimelineItem *notification = ancs_item_create_and_populate(
+      notif_attributes, app_attributes, app_metadata, app_notif_prefs, timestamp, properties);
+  if (!notification) {
+    goto cleanup;
+  }
   notification->header.ancs_uid = uid;
   notification->header.type = TimelineItemTypeNotification;
   notification->header.layout = LayoutIdNotification;
@@ -355,15 +351,15 @@ void ancs_notifications_handle_message(uint32_t uid,
   CommonTimelineItemHeader existing_header;
   if (prv_find_existing_notification(notification, &existing_header)) {
     if (prv_should_ignore_because_duplicate(notification, &existing_header)) {
-      PBL_LOG_DBG("Duplicate ANCS notification: %"PRIu32, uid);
+      PBL_LOG_DBG("Duplicate ANCS notification: %" PRIu32, uid);
       timeline_item_destroy(notification);
       notification_storage_unlock();
       goto cleanup;
     }
-    PBL_LOG_DBG("Updating ANCS notification: %"PRIu32, uid);
+    PBL_LOG_DBG("Updating ANCS notification: %" PRIu32, uid);
     prv_handle_ancs_update(notification, &existing_header);
   } else {
-    PBL_LOG_DBG("New ANCS notification: %"PRIu32, uid);
+    PBL_LOG_DBG("New ANCS notification: %" PRIu32, uid);
     prv_handle_new_ancs_notif(notification);
   }
 
@@ -371,10 +367,11 @@ void ancs_notifications_handle_message(uint32_t uid,
 
   // if missed call, also add a pin
   if (is_notification_from_phone_app && has_missed_call_property) {
-    TimelineItem *missed_call_pin =
-        ancs_item_create_and_populate(notif_attributes, app_attributes, app_metadata,
-                                      app_notif_prefs, timestamp, properties);
-    if (missed_call_pin == NULL) { goto cleanup; }
+    TimelineItem *missed_call_pin = ancs_item_create_and_populate(
+        notif_attributes, app_attributes, app_metadata, app_notif_prefs, timestamp, properties);
+    if (missed_call_pin == NULL) {
+      goto cleanup;
+    }
     timeline_add_missed_call_pin(missed_call_pin, uid);
     timeline_item_destroy(missed_call_pin);
   }
@@ -394,8 +391,7 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
   Uuid *notification_id = kernel_malloc_check(sizeof(Uuid));
 
   if (notification_storage_find_ancs_notification_id(ancs_uid, notification_id)) {
-    PBL_LOG_DBG("Notification removed from notification centre: (UID: %"PRIu32")",
-            ancs_uid);
+    PBL_LOG_DBG("Notification removed from notification centre: (UID: %" PRIu32 ")", ancs_uid);
     notification_storage_set_status(notification_id, TimelineItemStatusDismissed);
 
     notifications_handle_notification_acted_upon(notification_id);
@@ -408,4 +404,28 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
   if (properties & ANCSProperty_IncomingCall) {
     ancs_phone_call_handle_removed(ancs_uid, ios_9);
   }
+}
+
+void ancs_notifications_handle_access_denied(void) {
+  AttributeList attr_list = {};
+  attribute_list_add_cstring(&attr_list, AttributeIdTitle,
+                             i18n_get("iPhone Notifications Blocked", &attr_list));
+  attribute_list_add_cstring(
+      &attr_list, AttributeIdBody,
+      i18n_get("Your iPhone is not sharing notifications with this watch. On your iPhone, open "
+               "Settings > Bluetooth, tap the (i) next to your Pebble and turn on Share System "
+               "Notifications.",
+               &attr_list));
+  attribute_list_add_uint32(&attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_GENERIC_WARNING);
+  attribute_list_add_uint8(&attr_list, AttributeIdBgColor, GColorOrangeARGB8);
+
+  TimelineItem *item = timeline_item_create_with_attributes(
+      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, NULL);
+  i18n_free_all(&attr_list);
+  attribute_list_destroy_list(&attr_list);
+  if (!item) {
+    return;
+  }
+  notifications_add_notification(item);
+  timeline_item_destroy(item);
 }

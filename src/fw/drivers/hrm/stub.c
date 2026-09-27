@@ -6,15 +6,20 @@
 void hrm_init(HRMDevice *dev) {
 }
 
-bool hrm_enable(HRMDevice *dev, HRMFeature features) {
-    dev->state->enabled = true;
-    return true;
+bool hrm_enable(HRMDevice *dev, HRMFeature features, bool low_latency) {
+  dev->state->enabled = true;
+  return true;
 }
 
 void hrm_disable(HRMDevice *dev) {
-    dev->state->enabled = false;
+  dev->state->enabled = false;
 }
 
 bool hrm_is_enabled(HRMDevice *dev) {
-    return dev->state->enabled;
+  return dev->state->enabled;
+}
+
+void hrm_set_activity_scene(HRMDevice *dev, HRMActivityScene scene) {
+  (void)dev;
+  (void)scene;
 }

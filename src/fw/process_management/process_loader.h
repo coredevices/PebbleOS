@@ -5,9 +5,6 @@
 
 #include "kernel/pebble_tasks.h"
 
-#include <stdint.h>
-#include <stdbool.h>
-
 typedef struct MemorySegment MemorySegment;
 typedef struct PebbleProcessMd PebbleProcessMd;
 
@@ -23,5 +20,5 @@ typedef struct PebbleProcessMd PebbleProcessMd;
 //!
 //! @return pointer to process's entry point function, or NULL if the
 //!     process loading failed.
-void * process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
-                           MemorySegment *destination);
+void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
+                          MemorySegment *destination);

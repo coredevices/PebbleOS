@@ -5,27 +5,27 @@
 
 #include "applib/graphics/gtypes.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/time/time.h"
 
-#define IOS_PHONE_APP_ID "com.apple.mobilephone"
-#define IOS_CALENDAR_APP_ID "com.apple.mobilecal"
+#define IOS_PHONE_APP_ID     "com.apple.mobilephone"
+#define IOS_CALENDAR_APP_ID  "com.apple.mobilecal"
 #define IOS_REMINDERS_APP_ID "com.apple.reminders"
-#define IOS_MAIL_APP_ID "com.apple.mobilemail"
-#define IOS_SMS_APP_ID "com.apple.MobileSMS"
-#define IOS_FACETIME_APP_ID "com.apple.facetime"
+#define IOS_MAIL_APP_ID      "com.apple.mobilemail"
+#define IOS_SMS_APP_ID       "com.apple.MobileSMS"
+#define IOS_FACETIME_APP_ID  "com.apple.facetime"
 
-typedef struct PACKED ANCSAppMetadata {
+typedef struct PBL_PACKED ANCSAppMetadata {
   const char *app_id;
   uint32_t icon_id;
 #if PBL_COLOR
   uint8_t app_color;
 #endif
-  bool is_blocked:1; //<! Whether the app's notifications should always be ignored
-  bool is_unblockable:1; //<! Whether the app's notifications should never be ignored
+  bool is_blocked : 1;     //<! Whether the app's notifications should always be ignored
+  bool is_unblockable : 1; //<! Whether the app's notifications should never be ignored
 } ANCSAppMetadata;
 
-const ANCSAppMetadata* ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id);
+const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id);
 
 time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_attr);
 

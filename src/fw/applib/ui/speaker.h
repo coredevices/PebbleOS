@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "pbl/services/speaker/limits.h"
 #include "pbl/services/speaker/note_sequence.h"
 #include "pbl/services/speaker/speaker_finish_reason.h"
 #include "pbl/services/speaker/speaker_pcm_format.h"
@@ -59,8 +58,8 @@ bool speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_
 //! @param volume Playback volume (0-100)
 //! @param waveform Waveform to use
 //! @return true if playback started successfully
-bool speaker_play_tone(uint16_t frequency_hz, uint32_t duration_ms,
-                       uint8_t volume, SpeakerWaveform waveform);
+bool speaker_play_tone(uint16_t frequency_hz, uint32_t duration_ms, uint8_t volume,
+                       SpeakerWaveform waveform);
 
 //! Open a raw PCM stream for app-generated audio.
 //! @param format PCM format specifying sample rate and bit depth

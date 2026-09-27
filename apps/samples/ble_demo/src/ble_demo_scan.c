@@ -9,7 +9,7 @@ struct ScanResult;
 
 typedef struct ScanResult {
   struct ScanResult *next;
-  BTDevice device;
+  struct pbl_bt_device device;
   int8_t rssi;
   int8_t tx_power_level;
   char local_name[32];
@@ -51,8 +51,8 @@ static void list_free_last(void) {
   }
 }
 
-//! Finds ScanResult based on BTDevice. If found, unlink and return ScanResult.
-static ScanResult *list_unlink(const BTDevice *device) {
+//! Finds ScanResult based on struct pbl_bt_device. If found, unlink and return ScanResult.
+static ScanResult *list_unlink(const struct pbl_bt_device *device) {
   ScanResult *prev = NULL;
   ScanResult *result = s_head;
   while (result) {
@@ -133,15 +133,13 @@ static void list_free_all(void) {
 //------------------------------------------------------------------------------
 // BLE Scan API callback
 
-static void ble_scan_handler(BTDevice device,
-                             int8_t rssi,
-                             const BLEAdData *ad_data) {
+static void ble_scan_handler(struct pbl_bt_device device, int8_t rssi,
+                             const struct pbl_bt_ad_data *ad_data) {
+  const struct pbl_bt_addr address = bt_device_get_address(device);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Got Advertisement from: " PBL_BT_ADDR_FMT,
+          PBL_BT_ADDR_XPLODE(address));
 
-  const BTDeviceAddress address = bt_device_get_address(device);
-  APP_LOG(APP_LOG_LEVEL_INFO, "Got Advertisement from: " BT_DEVICE_ADDRESS_FMT,
-          BT_DEVICE_ADDRESS_XPLODE(address));
-
-  // Find existing ScanResult with BTDevice:
+  // Find existing ScanResult with struct pbl_bt_device:
   ScanResult *result = list_unlink(&device);
 
   // If no existing result, create one:
@@ -151,7 +149,7 @@ static void ble_scan_handler(BTDevice device,
       list_free_last();
     }
     // Create new ScanResult:
-    result = (ScanResult *) malloc(sizeof(ScanResult));
+    result = (ScanResult *)malloc(sizeof(ScanResult));
     if (!result) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Out of memory!");
       return;
@@ -172,8 +170,7 @@ static void ble_scan_handler(BTDevice device,
   }
 
   // Try getting Local Name:
-  if (ble_ad_copy_local_name(ad_data, result->local_name,
-                             sizeof(result->local_name))) {
+  if (ble_ad_copy_local_name(ad_data, result->local_name, sizeof(result->local_name))) {
     APP_LOG(APP_LOG_LEVEL_INFO, "Local Name: %s", result->local_name);
   } else {
     // Clear out the local name field:
@@ -181,8 +178,7 @@ static void ble_scan_handler(BTDevice device,
   }
 
   // Try to copy the first Service UUID, we'll display this in the list:
-  const uint8_t num_services = ble_ad_copy_service_uuids(ad_data,
-                                                &result->first_service_uuid, 1);
+  const uint8_t num_services = ble_ad_copy_service_uuids(ad_data, &result->first_service_uuid, 1);
   if (num_services) {
     result->has_services = true;
 
@@ -222,12 +218,12 @@ enum {
 };
 
 static uint16_t menu_get_num_sections_callback(struct MenuLayer *menu_layer,
-                 void *callback_context) {
+                                               void *callback_context) {
   return 2;
 }
 
-static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
-                                           uint16_t section_index, void *data) {
+static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index,
+                                           void *data) {
   switch (section_index) {
     case SectionControl:
       return 1;
@@ -238,20 +234,19 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   }
 }
 
-static int16_t menu_get_header_height_callback(MenuLayer *menu_layer,
-                                               uint16_t section_index,
+static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_index,
                                                void *data) {
   return MENU_CELL_BASIC_HEADER_HEIGHT;
 }
 
-static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer,
+static void menu_draw_header_callback(GContext *ctx, const Layer *cell_layer,
                                       uint16_t section_index, void *data) {
   menu_cell_basic_header_draw(ctx, cell_layer,
                               (section_index == SectionData) ? "Results" : "Options");
 }
 
-static void draw_data_row(GContext* ctx, const Layer *cell_layer,
-                          MenuIndex *cell_index, void *data) {
+static void draw_data_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                          void *data) {
   ScanResult *result = list_get_by_index(cell_index->row);
 
   // Build the title string:
@@ -262,9 +257,8 @@ static void draw_data_row(GContext* ctx, const Layer *cell_layer,
   if (strlen(result->local_name)) {
     snprintf(title, sizeof(title), "%s %s", result->local_name, hrm_str);
   } else {
-    const BTDeviceAddress address = bt_device_get_address(result->device);
-    snprintf(title, sizeof(title), BT_DEVICE_ADDRESS_FMT " %s",
-             BT_DEVICE_ADDRESS_XPLODE(address), hrm_str);
+    const struct pbl_bt_addr address = bt_device_get_address(result->device);
+    snprintf(title, sizeof(title), PBL_BT_ADDR_FMT " %s", PBL_BT_ADDR_XPLODE(address), hrm_str);
   }
 
   // Build the subtitle string:
@@ -280,13 +274,12 @@ static void draw_data_row(GContext* ctx, const Layer *cell_layer,
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
 }
 
-static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer,
-                                   MenuIndex *cell_index, void *data) {
+static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
+                                   void *data) {
   switch (cell_index->section) {
     case SectionControl:
-      menu_cell_basic_draw(ctx, cell_layer,
-                           s_is_scanning ? "Disable Scan" : "Enable Scan",
-                           NULL, NULL);
+      menu_cell_basic_draw(ctx, cell_layer, s_is_scanning ? "Disable Scan" : "Enable Scan", NULL,
+                           NULL);
       break;
     case SectionData:
       draw_data_row(ctx, cell_layer, cell_index, data);
@@ -296,8 +289,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer,
   }
 }
 
-static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
-                                 void *data) {
+static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   if (cell_index->section == SectionControl) {
     toggle_scan();
     return;
@@ -306,16 +298,14 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
   // Connect
   ScanResult *result = list_get_by_index(cell_index->row);
 
-  BTErrno e = ble_central_connect(result->device,
-                                  true /* auto_reconnect */,
-                                  false /* is_pairing_required */);
+  enum pbl_bt_errno e = ble_central_connect(result->device, true /* auto_reconnect */,
+                                            false /* is_pairing_required */);
   if (e) {
     APP_LOG(APP_LOG_LEVEL_INFO, "ble_central_connect: %d", e);
   }
 }
 
-static void menu_select_long_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
-                                 void *data) {
+static void menu_select_long_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   if (cell_index->section == SectionControl) {
     return;
   }
@@ -323,7 +313,7 @@ static void menu_select_long_callback(MenuLayer *menu_layer, MenuIndex *cell_ind
   // Disconnect
   ScanResult *result = list_get_by_index(cell_index->row);
 
-  BTErrno e = ble_central_cancel_connect(result->device);
+  enum pbl_bt_errno e = ble_central_cancel_connect(result->device);
 
   if (e) {
     APP_LOG(APP_LOG_LEVEL_INFO, "ble_central_cancel_connect: %d", e);
@@ -340,21 +330,22 @@ static void window_load(Window *window) {
   s_menu_layer = menu_layer_create(bounds);
   window_set_user_data(window, s_menu_layer);
 
-  menu_layer_set_callbacks(s_menu_layer, NULL, (MenuLayerCallbacks){
-    .get_num_sections = menu_get_num_sections_callback,
-    .get_num_rows = menu_get_num_rows_callback,
-    .get_header_height = menu_get_header_height_callback,
-    .draw_header = menu_draw_header_callback,
-    .draw_row = menu_draw_row_callback,
-    .select_click = menu_select_callback,
-    .select_long_click = menu_select_long_callback,
-  });
+  menu_layer_set_callbacks(s_menu_layer, NULL,
+                           (MenuLayerCallbacks){
+                             .get_num_sections = menu_get_num_sections_callback,
+                             .get_num_rows = menu_get_num_rows_callback,
+                             .get_header_height = menu_get_header_height_callback,
+                             .draw_header = menu_draw_header_callback,
+                             .draw_row = menu_draw_row_callback,
+                             .select_click = menu_select_callback,
+                             .select_long_click = menu_select_long_callback,
+                           });
 
   menu_layer_set_click_config_onto_window(s_menu_layer, window);
 
   layer_add_child(window_layer, menu_layer_get_layer(s_menu_layer));
 
-  // Start scanning. Advertisments will be delivered in the callback.
+  // Start scanning. Advertisements will be delivered in the callback.
   toggle_scan();
 }
 
@@ -371,13 +362,13 @@ static void window_unload(Window *window) {
 
 //------------------------------------------------------------------------------
 
-Window * ble_demo_scan_window_create(void) {
-  Window * window = window_create();
+Window *ble_demo_scan_window_create(void) {
+  Window *window = window_create();
 
-  window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload,
-  });
+  window_set_window_handlers(window, (WindowHandlers){
+                                       .load = window_load,
+                                       .unload = window_unload,
+                                     });
 
   return window;
 }

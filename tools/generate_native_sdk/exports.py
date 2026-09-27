@@ -138,10 +138,14 @@ def parse_exports_list(
         if "addedRevision" in e:
             added_revision = int(e["addedRevision"])
             if added_revision > current_revision:
-                logger.warning(
-                    ("Omitting '{}' from SDK export because its revision "
-                    "({:d}) is higher than the current revision ({:d})").format(e["name"], added_revision, current_revision)
-                )
+                if added_revision != INTERNAL_REVISION:
+                    logger.warning(
+                        "Omitting '%s' from SDK export because its revision (%d) "
+                        "is higher than the current revision (%d)",
+                        e["name"],
+                        added_revision,
+                        current_revision,
+                    )
                 continue
 
         should_stub = (

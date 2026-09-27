@@ -5,5 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* flash_demo_get_app_info(void);
-
+const PebbleProcessMd *flash_demo_get_app_info(void);

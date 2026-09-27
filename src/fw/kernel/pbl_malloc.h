@@ -31,7 +31,7 @@ void task_free(void *ptr);
 #if defined(CONFIG_MALLOC_INSTRUMENTATION)
 void task_free_with_pc(void *ptr, uintptr_t client_pc);
 #endif
-char* task_strdup(const char* s);
+char *task_strdup(const char *s);
 
 void *app_malloc(size_t bytes);
 void *app_malloc_check(size_t bytes);
@@ -41,7 +41,7 @@ void *app_zalloc_check(size_t size);
 void *app_calloc(size_t count, size_t size);
 void *app_calloc_check(size_t count, size_t size);
 void app_free(void *ptr);
-char* app_strdup(const char* s);
+char *app_strdup(const char *s);
 
 void *kernel_malloc(size_t bytes);
 void *kernel_malloc_check(size_t bytes);

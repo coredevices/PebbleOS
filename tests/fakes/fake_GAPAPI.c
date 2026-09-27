@@ -4,7 +4,7 @@
 #include "fake_GAPAPI.h"
 
 #include "bluetopia_interface.h"
-#include <bluetooth/bt_driver_advert.h>
+#include <pbl/bluetooth/advert.h>
 
 #include <string.h>
 
@@ -33,8 +33,7 @@ int GAP_LE_Advertising_Disable(unsigned int BluetoothStackID) {
   return 0;
 }
 
-int GAP_LE_Advertising_Enable(unsigned int BluetoothStackID,
-                              Boolean_t EnableScanResponse,
+int GAP_LE_Advertising_Enable(unsigned int BluetoothStackID, Boolean_t EnableScanResponse,
                               GAP_LE_Advertising_Parameters_t *GAP_LE_Advertising_Parameters,
                               GAP_LE_Connectability_Parameters_t *GAP_LE_Connectability_Parameters,
                               GAP_LE_Event_Callback_t GAP_LE_Event_Callback,
@@ -45,15 +44,15 @@ int GAP_LE_Advertising_Enable(unsigned int BluetoothStackID,
   return 0;
 }
 
-// bt_driver_advert fakes used by gap_le_advert.c
-bool bt_driver_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
+// pbl_bt_advert fakes used by gap_le_advert.c
+bool pbl_bt_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
   s_is_le_advertising_enabled = true;
   s_min_advertising_interval_ms = min_interval_ms;
   s_max_advertising_interval_ms = max_interval_ms;
   return true;
 }
 
-void bt_driver_advert_advertising_disable(void) {
+void pbl_bt_advert_advertising_disable(void) {
   s_is_le_advertising_enabled = false;
   s_min_advertising_interval_ms = 0;
   s_max_advertising_interval_ms = 0;
@@ -62,7 +61,7 @@ void bt_driver_advert_advertising_disable(void) {
 // Expected ms values for each interval preset
 static const uint32_t s_expected_interval_ms[] = {
   [GAPLEAdvertisingInterval_Short] = 20,
-  [GAPLEAdvertisingInterval_Long]  = 1022,
+  [GAPLEAdvertisingInterval_Long] = 1022,
 };
 
 void gap_le_assert_advertising_interval(GAPLEAdvertisingInterval expected) {
@@ -78,8 +77,7 @@ bool gap_le_is_advertising_enabled(void) {
 static Advertising_Data_t s_ad_data;
 static unsigned int s_ad_data_length;
 
-int GAP_LE_Set_Advertising_Data(unsigned int BluetoothStackID,
-                                unsigned int Length,
+int GAP_LE_Set_Advertising_Data(unsigned int BluetoothStackID, unsigned int Length,
                                 Advertising_Data_t *Advertising_Data) {
   memcpy(&s_ad_data, Advertising_Data, Length);
   s_ad_data_length = Length;
@@ -94,8 +92,7 @@ unsigned int gap_le_get_advertising_data(Advertising_Data_t *ad_data_out) {
 static Scan_Response_Data_t s_scan_resp_data;
 static unsigned int s_scan_resp_data_length;
 
-int GAP_LE_Set_Scan_Response_Data(unsigned int BluetoothStackID,
-                                  unsigned int Length,
+int GAP_LE_Set_Scan_Response_Data(unsigned int BluetoothStackID, unsigned int Length,
                                   Scan_Response_Data_t *Scan_Response_Data) {
   memcpy(&s_scan_resp_data, Scan_Response_Data, Length);
   s_scan_resp_data_length = Length;
@@ -107,7 +104,7 @@ unsigned int gap_le_get_scan_response_data(Scan_Response_Data_t *scan_resp_data_
   return s_scan_resp_data_length;
 }
 
-bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
+bool pbl_bt_advert_set_advertising_data(const struct pbl_bt_ad_data *ad_data) {
   if (ad_data) {
     memcpy(&s_ad_data, ad_data->data, ad_data->ad_data_length);
     s_ad_data_length = ad_data->ad_data_length;
@@ -119,24 +116,20 @@ bool bt_driver_advert_set_advertising_data(const BLEAdData *ad_data) {
   return true;
 }
 
-bool bt_driver_advert_client_get_tx_power(int8_t *tx_power) {
+bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power) {
   return false;
 }
 
 static GAP_LE_Event_Callback_t s_le_create_connection_event_callback;
 static unsigned long s_le_create_connection_callback_param;
 
-int GAP_LE_Create_Connection(unsigned int BluetoothStackID,
-                             unsigned int ScanInterval,
-                             unsigned int ScanWindow,
-                             GAP_LE_Filter_Policy_t InitatorFilterPolicy,
-                             GAP_LE_Address_Type_t RemoteAddressType,
-                             BD_ADDR_t *RemoteDevice,
+int GAP_LE_Create_Connection(unsigned int BluetoothStackID, unsigned int ScanInterval,
+                             unsigned int ScanWindow, GAP_LE_Filter_Policy_t InitiatorFilterPolicy,
+                             GAP_LE_Address_Type_t RemoteAddressType, BD_ADDR_t *RemoteDevice,
                              GAP_LE_Address_Type_t LocalAddressType,
                              GAP_LE_Connection_Parameters_t *ConnectionParameters,
                              GAP_LE_Event_Callback_t GAP_LE_Event_Callback,
                              unsigned long CallbackParameter) {
-
   s_le_create_connection_event_callback = GAP_LE_Event_Callback;
   s_le_create_connection_callback_param = CallbackParameter;
   return 0;
@@ -152,17 +145,15 @@ void prv_fake_gap_le_adv_connection_event_put(GAP_LE_Event_Data_t *event) {
   s_le_adv_connection_event_callback(1, event, s_le_adv_connection_callback_param);
 }
 
-void fake_gap_put_connection_event(uint8_t status,
-                                   bool is_master,
-                                   const BTDeviceInternal *device) {
-  GAP_LE_Connection_Complete_Event_Data_t event_data =
-                                     (GAP_LE_Connection_Complete_Event_Data_t) {
+void fake_gap_put_connection_event(uint8_t status, bool is_master,
+                                   const struct pbl_bt_device_internal *device) {
+  GAP_LE_Connection_Complete_Event_Data_t event_data = (GAP_LE_Connection_Complete_Event_Data_t){
     .Status = status,
     .Master = is_master,
     .Peer_Address_Type = device->is_random_address ? latRandom : latPublic,
     .Peer_Address = BTDeviceAddressToBDADDR(device->address),
   };
-  GAP_LE_Event_Data_t event =  (GAP_LE_Event_Data_t) {
+  GAP_LE_Event_Data_t event = (GAP_LE_Event_Data_t){
     .Event_Data_Type = etLE_Connection_Complete,
     .Event_Data_Size = sizeof(GAP_LE_Connection_Complete_Event_Data_t),
     .Event_Data.GAP_LE_Connection_Complete_Event_Data = &event_data,
@@ -174,18 +165,16 @@ void fake_gap_put_connection_event(uint8_t status,
   }
 }
 
-
-void fake_gap_put_disconnection_event(uint8_t status, uint8_t reason,
-                                      bool is_master,
-                                      const BTDeviceInternal *device) {
+void fake_gap_put_disconnection_event(uint8_t status, uint8_t reason, bool is_master,
+                                      const struct pbl_bt_device_internal *device) {
   GAP_LE_Disconnection_Complete_Event_Data_t event_data =
-  (GAP_LE_Disconnection_Complete_Event_Data_t) {
-    .Status = status,
-    .Reason = reason,
-    .Peer_Address_Type = device->is_random_address ? latRandom : latPublic,
-    .Peer_Address = BTDeviceAddressToBDADDR(device->address),
-  };
-  GAP_LE_Event_Data_t event =  (GAP_LE_Event_Data_t) {
+      (GAP_LE_Disconnection_Complete_Event_Data_t){
+        .Status = status,
+        .Reason = reason,
+        .Peer_Address_Type = device->is_random_address ? latRandom : latPublic,
+        .Peer_Address = BTDeviceAddressToBDADDR(device->address),
+      };
+  GAP_LE_Event_Data_t event = (GAP_LE_Event_Data_t){
     .Event_Data_Type = etLE_Disconnection_Complete,
     .Event_Data_Size = sizeof(GAP_LE_Disconnection_Complete_Event_Data_t),
     .Event_Data.GAP_LE_Disconnection_Complete_Event_Data = &event_data,
@@ -197,16 +186,14 @@ void fake_gap_put_disconnection_event(uint8_t status, uint8_t reason,
   }
 }
 
-
 void fake_GAPAPI_put_encryption_change_event(bool encrypted, uint8_t status, bool is_master,
-                                             const BTDeviceInternal *device) {
-  GAP_LE_Encryption_Change_Event_Data_t event_data =
-  (GAP_LE_Encryption_Change_Event_Data_t) {
+                                             const struct pbl_bt_device_internal *device) {
+  GAP_LE_Encryption_Change_Event_Data_t event_data = (GAP_LE_Encryption_Change_Event_Data_t){
     .BD_ADDR = BTDeviceAddressToBDADDR(device->address),
     .Encryption_Change_Status = status,
     .Encryption_Mode = encrypted ? emEnabled : emDisabled,
   };
-  GAP_LE_Event_Data_t event =  (GAP_LE_Event_Data_t) {
+  GAP_LE_Event_Data_t event = (GAP_LE_Event_Data_t){
     .Event_Data_Type = etLE_Encryption_Change,
     .Event_Data_Size = sizeof(GAP_LE_Encryption_Change_Event_Data_t),
     .Event_Data.GAP_LE_Encryption_Change_Event_Data = &event_data,
@@ -222,21 +209,18 @@ int GAP_LE_Cancel_Create_Connection(unsigned int BluetoothStackID) {
   return 0;
 }
 
-// Puts the event that the BT Controller will emit after a succesfull
+// Puts the event that the BT Controller will emit after a successful
 // GAP_LE_Cancel_Create_Connection call.
-void fake_gap_le_put_cancel_create_event(const BTDeviceInternal *device, bool is_master) {
-  fake_gap_put_connection_event(HCI_ERROR_CODE_UNKNOWN_CONNECTION_IDENTIFIER,
-                                is_master,
-                                device);
+void fake_gap_le_put_cancel_create_event(const struct pbl_bt_device_internal *device,
+                                         bool is_master) {
+  fake_gap_put_connection_event(HCI_ERROR_CODE_UNKNOWN_CONNECTION_IDENTIFIER, is_master, device);
 }
 
-int GAP_LE_Disconnect(unsigned int BluetoothStackID,
-                      BD_ADDR_t BD_ADDR) {
+int GAP_LE_Disconnect(unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR) {
   return 0;
 }
 
-int GAP_LE_Pair_Remote_Device(unsigned int BluetoothStackID,
-                              BD_ADDR_t BD_ADDR,
+int GAP_LE_Pair_Remote_Device(unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR,
                               GAP_LE_Pairing_Capabilities_t *Capabilities,
                               GAP_LE_Event_Callback_t GAP_LE_Event_Callback,
                               unsigned long CallbackParameter) {
@@ -246,8 +230,9 @@ int GAP_LE_Pair_Remote_Device(unsigned int BluetoothStackID,
 // -------------------------------------------------------------------------------------------------
 // Bluetopia's Security Manager API
 
-int GAP_LE_Authentication_Response(unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR,
-                  GAP_LE_Authentication_Response_Information_t *GAP_LE_Authentication_Information) {
+int GAP_LE_Authentication_Response(
+    unsigned int BluetoothStackID, BD_ADDR_t BD_ADDR,
+    GAP_LE_Authentication_Response_Information_t *GAP_LE_Authentication_Information) {
   return 0;
 }
 
@@ -271,7 +256,7 @@ int GAP_LE_Query_Encryption_Mode(unsigned int BluetoothStackID, BD_ADDR_t BD_ADD
   return 0;
 }
 
-void fake_GAPAPI_set_encrypted_for_device(const BTDeviceInternal *device) {
+void fake_GAPAPI_set_encrypted_for_device(const struct pbl_bt_device_internal *device) {
   s_encrypted_device = BTDeviceAddressToBDADDR(device->address);
 }
 
@@ -281,7 +266,9 @@ int GAP_LE_Regenerate_Long_Term_Key(unsigned int BluetoothStackID, Encryption_Ke
   return 0;
 }
 
-int GAP_LE_Register_Remote_Authentication(unsigned int BluetoothStackID, GAP_LE_Event_Callback_t GAP_LE_Event_Callback, unsigned long CallbackParameter) {
+int GAP_LE_Register_Remote_Authentication(unsigned int BluetoothStackID,
+                                          GAP_LE_Event_Callback_t GAP_LE_Event_Callback,
+                                          unsigned long CallbackParameter) {
   return 0;
 }
 
@@ -320,8 +307,8 @@ static const Encryption_Key_t s_fake_irk = {
 };
 
 static const BD_ADDR_t s_resolving_bd_addr = {
-  0xaa, 0xff, 0xff, 0xff, 0xff,
-  0x7f /* 6th byte: bit 6 set, bit 7 unset indicates "resolvable private address" */
+  0xaa, 0xff, 0xff,
+  0xff, 0xff, 0x7f /* 6th byte: bit 6 set, bit 7 unset indicates "resolvable private address" */
 };
 
 static const BD_ADDR_t s_not_resolving_bd_addr = {
@@ -336,9 +323,9 @@ const BD_ADDR_t *fake_GAPAPI_get_bd_addr_not_resolving_to_fake_irk(void) {
   return &s_not_resolving_bd_addr;
 }
 
-const BTDeviceInternal *fake_GAPAPI_get_device_not_resolving_to_fake_irk(void) {
-  static BTDeviceInternal s_not_resolving_device;
-  s_not_resolving_device = (const BTDeviceInternal) {
+const struct pbl_bt_device_internal *fake_GAPAPI_get_device_not_resolving_to_fake_irk(void) {
+  static struct pbl_bt_device_internal s_not_resolving_device;
+  s_not_resolving_device = (const struct pbl_bt_device_internal){
     .address = BDADDRToBTDeviceAddress(s_not_resolving_bd_addr),
     .is_random_address = true,
   };
@@ -349,9 +336,9 @@ const BD_ADDR_t *fake_GAPAPI_get_bd_addr_resolving_to_fake_irk(void) {
   return &s_resolving_bd_addr;
 }
 
-const BTDeviceInternal *fake_GAPAPI_get_device_resolving_to_fake_irk(void) {
-  static BTDeviceInternal s_resolving_device;
-  s_resolving_device = (const BTDeviceInternal) {
+const struct pbl_bt_device_internal *fake_GAPAPI_get_device_resolving_to_fake_irk(void) {
+  static struct pbl_bt_device_internal s_resolving_device;
+  s_resolving_device = (const struct pbl_bt_device_internal){
     .address = BDADDRToBTDeviceAddress(s_resolving_bd_addr),
     .is_random_address = true,
   };

@@ -5,24 +5,22 @@
 
 #include "board/board.h"
 #include <pbl/drivers/audio.h>
-#include <pbl/os/mutex.h>
 #include <pbl/util/circular_buffer.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CFG_AUDIO_PLAYBACK_PIPE_SIZE          (1024)
+#define CFG_AUDIO_PLAYBACK_PIPE_SIZE (1024)
 
 // Circular buffer configuration
-#define CIRCULAR_BUF_SIZE_MS       (128)
-#define CIRCULAR_BUF_SIZE_SAMPLES  ((MIC_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
-#define CIRCULAR_BUF_SIZE_BYTES    (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
+#define CIRCULAR_BUF_SIZE_MS      (128)
+#define CIRCULAR_BUF_SIZE_SAMPLES ((MIC_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
+#define CIRCULAR_BUF_SIZE_BYTES   (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
 
-typedef enum AUDIO_PLL_STATE_TAG
-{
-    AUDIO_PLL_CLOSED,
-    AUDIO_PLL_OPEN,
-    AUDIO_PLL_ENABLE,
+typedef enum AUDIO_PLL_STATE_TAG {
+  AUDIO_PLL_CLOSED,
+  AUDIO_PLL_OPEN,
+  AUDIO_PLL_ENABLE,
 } AUDIO_PLL_STATE;
 
 typedef struct AudioState {
@@ -35,11 +33,15 @@ typedef struct AudioState {
   AUDIO_PLL_STATE pll_state;
   uint32_t pll_samplerate;
   uint8_t tx_instanc;
-  bool    tx_rbf_enable;
+  bool tx_rbf_enable;
   uint16_t tx_buffer_size;
   uint8_t *circ_buffer_storage;
   CircularBuffer circ_buffer;
   AudioTransCB trans_cb;
+  AudioPlaybackCB playback_cb;
+  void *playback_context;
+  uint32_t playback_time;
+  bool playback_started;
   //! Set while a prv_audio_trans_bg refill callback is queued on the system
   //! task; the DMA ISR must not enqueue another until it has run.
   volatile bool callback_pending;
@@ -48,11 +50,18 @@ typedef struct AudioState {
   //! DMA buffer. haudcodec->buf[] is bumped up to a cache-line boundary so
   //! dcache_flush() of one half can't touch the other half's lines.
   uint8_t *raw_dac_buffer;
+#ifdef CONFIG_SPEAKER_SF32LB_DIAGNOSTICS
+  volatile uint32_t diagnostic_refills;
+  volatile uint32_t diagnostic_underrun_bytes;
+  volatile uint32_t diagnostic_signal_samples;
+  volatile uint32_t diagnostic_peak;
+  uint32_t diagnostic_write_drops;
+#endif
 } AudioDeviceState;
 
 typedef const struct AudioDevice {
   AudioDeviceState *state;
-  uint32_t irq_priority; 
+  uint32_t irq_priority;
   DMA_Channel_TypeDef *audprc_dma_channel;
   uint32_t audprc_dma_request;
   IRQn_Type audprc_dma_irq;
@@ -67,5 +76,5 @@ typedef const struct AudioDevice {
   uint32_t channels;
 } AudioDevice;
 
-extern void audprc_dma_iqr_handler(AudioDevice* audio_device);
-extern void audec_dac0_dma_irq_handler(AudioDevice* audio_device);
+extern void audprc_dma_iqr_handler(AudioDevice *audio_device);
+extern void audec_dac0_dma_irq_handler(AudioDevice *audio_device);

@@ -86,14 +86,9 @@
 //!     @{
 
 //! The width of the action bar in pixels, for all platforms.
-#define _ACTION_BAR_WIDTH(plat) PBL_PLATFORM_SWITCH(plat, \
-  /*aplite*/ 30, \
-  /*basalt*/ 30, \
-  /*chalk*/ 40, \
-  /*diorite*/ 30, \
-  /*emery*/ 34, \
-  /*flint*/ 30, \
-  /*gabbro*/ 40)
+#define _ACTION_BAR_WIDTH(plat)                                                         \
+  PBL_PLATFORM_SWITCH(plat, /*aplite*/ 30, /*basalt*/ 30, /*chalk*/ 40, /*diorite*/ 30, \
+                      /*emery*/ 34, /*flint*/ 30, /*gabbro*/ 40)
 
 //! The width of the action bar in pixels.
 #define ACTION_BAR_WIDTH _ACTION_BAR_WIDTH(PBL_PLATFORM_TYPE_CURRENT)
@@ -128,7 +123,7 @@ typedef struct {
   struct Window *window;
   void *context;
   ClickConfigProvider click_config_provider;
-  unsigned is_highlighted:NUM_ACTION_BAR_ITEMS;
+  unsigned is_highlighted : NUM_ACTION_BAR_ITEMS;
   struct AppTimer *redraw_timer;
   GColor8 background_color;
   ActionBarLayerIconPressAnimation animation[NUM_ACTION_BAR_ITEMS];
@@ -145,14 +140,14 @@ typedef struct {
 //! @param action_bar The action bar to initialize
 void action_bar_layer_init(ActionBarLayer *action_bar);
 
-//! Creates a new ActionBarLayer on the heap and initalizes it with the default values.
+//! Creates a new ActionBarLayer on the heap and initializes it with the default values.
 //! * Background color: \ref GColorBlack
 //! * No click configuration provider (`NULL`)
 //! * No icons
 //! * Not added to / associated with any window, thus not catching any button input yet.
 //! @return A pointer to the ActionBarLayer. `NULL` if the ActionBarLayer could not
 //! be created
-ActionBarLayer* action_bar_layer_create(void);
+ActionBarLayer *action_bar_layer_create(void);
 
 void action_bar_layer_deinit(ActionBarLayer *action_bar_layer);
 
@@ -165,7 +160,7 @@ void action_bar_layer_destroy(ActionBarLayer *action_bar_layer);
 //! @return The "root" Layer of the action bar layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) action_bar_layer`.
-Layer* action_bar_layer_get_layer(ActionBarLayer *action_bar_layer);
+Layer *action_bar_layer_get_layer(ActionBarLayer *action_bar_layer);
 
 //! Sets the context parameter, which will be passed in to \ref ClickHandler
 //! callbacks and the \ref ClickConfigProvider callback of the action bar.
@@ -190,7 +185,8 @@ void action_bar_layer_set_context(ActionBarLayer *action_bar, void *context);
 //! @param action_bar The action bar for which to assign a new click
 //! configuration provider
 //! @param click_config_provider The new click configuration provider
-void action_bar_layer_set_click_config_provider(ActionBarLayer *action_bar, ClickConfigProvider click_config_provider);
+void action_bar_layer_set_click_config_provider(ActionBarLayer *action_bar,
+                                                ClickConfigProvider click_config_provider);
 
 //! Sets an action bar icon onto one of the 3 slots as identified by `button_id`.
 //! Only \ref BUTTON_ID_UP, \ref BUTTON_ID_SELECT and \ref BUTTON_ID_DOWN can be
@@ -255,7 +251,7 @@ void action_bar_layer_clear_icon(ActionBarLayer *action_bar, ButtonId button_id)
 //! @note It is advised to call this is in the window's `.load` or `.appear`
 //! handler. Make sure to call \ref action_bar_layer_remove_from_window() in the
 //! window's `.unload` or `.disappear` handler.
-//! @note Adding additional layers to the window's root layer after this calll
+//! @note Adding additional layers to the window's root layer after this call
 //! can occlude the action bar.
 //! @param action_bar The action bar to associate with the window
 //! @param window The window with which the action bar is to be associated

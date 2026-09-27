@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/blob_db/sync.h"
 #include "pbl/services/blob_db/endpoint_private.h"
 #include "pbl/services/blob_db/settings_blob_db.h"
 
@@ -13,12 +12,9 @@
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "system/hexdump.h"
-#include "pbl/util/attributes.h"
-#include "util/net.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -60,19 +56,19 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 //! BlobDB Endpoint ID
 static const uint16_t BLOB_DB_ENDPOINT_ID = 0xb1db;
 
-static const uint8_t KEY_DATA_LENGTH __attribute__((unused)) = (sizeof(uint8_t) + sizeof(uint8_t));
+static const uint8_t KEY_DATA_LENGTH PBL_UNUSED = (sizeof(uint8_t) + sizeof(uint8_t));
 static const uint8_t VALUE_DATA_LENGTH = (sizeof(uint16_t) + sizeof(uint8_t));
 
 //! Message Length Constants
 static const uint8_t MIN_INSERT_LENGTH = 8;
 static const uint8_t MIN_INSERT_WITH_TIMESTAMP_LENGTH = 12; // + 4 bytes for timestamp
 static const uint8_t MIN_DELETE_LENGTH = 5;
-static const uint8_t MIN_CLEAR_LENGTH  = 3;
+static const uint8_t MIN_CLEAR_LENGTH = 3;
 
 static bool s_bdb_accepting_messages;
 
 static void prv_send_response(CommSession *session, BlobDBToken token, BlobDBResponse result) {
-  struct PACKED BlobDBResponseMsg {
+  struct PBL_PACKED BlobDBResponseMsg {
     BlobDBToken token;
     BlobDBResponse result;
   } response = {
@@ -80,7 +76,7 @@ static void prv_send_response(CommSession *session, BlobDBToken token, BlobDBRes
     .result = result,
   };
 
-  comm_session_send_data(session, BLOB_DB_ENDPOINT_ID, (uint8_t*)&response, sizeof(response),
+  comm_session_send_data(session, BLOB_DB_ENDPOINT_ID, (uint8_t *)&response, sizeof(response),
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
@@ -106,7 +102,6 @@ static BlobDBResponse prv_interpret_db_ret_val(status_t ret_val) {
 
 static const uint8_t *prv_read_ptr(const uint8_t *iter, const uint8_t *iter_end,
                                    const uint8_t **out_buf, uint16_t buf_len) {
-
   // >= because we will be reading more bytes after this point
   if ((buf_len == 0) || ((iter + buf_len) > iter_end)) {
     PBL_LOG_WRN("BlobDB: read invalid length");
@@ -114,7 +109,7 @@ static const uint8_t *prv_read_ptr(const uint8_t *iter, const uint8_t *iter_end,
   }
 
   // grab pointer to start of buf
-  *out_buf = (uint8_t*)iter;
+  *out_buf = (uint8_t *)iter;
   iter += buf_len;
 
   return iter;
@@ -122,7 +117,6 @@ static const uint8_t *prv_read_ptr(const uint8_t *iter, const uint8_t *iter_end,
 
 static const uint8_t *prv_read_key_size(const uint8_t *iter, const uint8_t *iter_end,
                                         uint8_t *out_int) {
-
   // copy length from iter to out_len, then save a local copy of the length
   *out_int = *iter++;
   return iter;
@@ -130,9 +124,8 @@ static const uint8_t *prv_read_key_size(const uint8_t *iter, const uint8_t *iter
 
 static const uint8_t *prv_read_value_size(const uint8_t *iter, const uint8_t *iter_end,
                                           uint16_t *out_int) {
-
   // copy length from iter to out_len, then save a local copy of the length
-  *out_int = *(uint16_t*)iter;
+  *out_int = *(uint16_t *)iter;
   iter += sizeof(uint16_t);
   return iter;
 }
@@ -142,7 +135,7 @@ static BlobDBToken prv_try_read_token(const uint8_t *data, uint32_t length) {
     return 0;
   }
 
-  return *(BlobDBToken*)data;
+  return *(BlobDBToken *)data;
 }
 
 static void prv_handle_database_insert(CommSession *session, const uint8_t *data, uint32_t length) {
@@ -186,7 +179,6 @@ static void prv_handle_database_insert(CommSession *session, const uint8_t *data
   status_t ret = blob_db_insert(db_id, key_bytes, key_size, value_bytes, value_size);
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 }
-
 
 static void prv_handle_database_insert_with_timestamp(CommSession *session, const uint8_t *data,
                                                       uint32_t length) {
@@ -239,12 +231,10 @@ static void prv_handle_database_insert_with_timestamp(CommSession *session, cons
   }
 
   // Use timestamped insert for Settings - will reject if watch data is newer
-  status_t ret = settings_blob_db_insert_with_timestamp(key_bytes, key_size,
-                                                        value_bytes, value_size,
-                                                        (time_t)timestamp);
+  status_t ret = settings_blob_db_insert_with_timestamp(key_bytes, key_size, value_bytes,
+                                                        value_size, (time_t)timestamp);
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 }
-
 
 static void prv_handle_database_delete(CommSession *session, const uint8_t *data, uint32_t length) {
   if (length < MIN_DELETE_LENGTH) {
@@ -276,7 +266,6 @@ static void prv_handle_database_delete(CommSession *session, const uint8_t *data
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 }
 
-
 static void prv_handle_database_clear(CommSession *session, const uint8_t *data, uint32_t length) {
   if (length < MIN_CLEAR_LENGTH) {
     prv_send_response(session, prv_try_read_token(data, length), BLOB_DB_INVALID_DATA);
@@ -299,8 +288,8 @@ static void prv_handle_database_clear(CommSession *session, const uint8_t *data,
   }
 }
 
-static void prv_blob_db_msg_decode_and_handle(
-    CommSession *session, BlobDBCommand cmd, const uint8_t *data, size_t data_length) {
+static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBCommand cmd,
+                                              const uint8_t *data, size_t data_length) {
   switch (cmd) {
     case BLOB_DB_COMMAND_INSERT:
       PBL_LOG_DBG("Got INSERT");
@@ -330,10 +319,10 @@ static void prv_blob_db_msg_decode_and_handle(
   }
 }
 
-void blob_db_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
+void blob_db_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
 
-  PBL_HEXDUMP_D(LOG_DOMAIN_BLOBDB, LOG_LEVEL_DEBUG, data, length);
+  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, length);
 
   // Each BlobDB message is required to have at least a Command and a Token
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);

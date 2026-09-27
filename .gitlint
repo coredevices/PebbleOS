@@ -12,7 +12,7 @@ regex=(?i)dependabot
 ignore=all
 
 [title-match-regex]
-regex=^[a-z0-9/]+: .*
+regex=^[a-z0-9/_]+: .*
 
 [title-max-length]
 line-length=100

@@ -5,14 +5,13 @@
 """Standalone SDK generation script.
 
 Generates SDK files for one or more Pebble platforms without requiring
-a full waf configure/build cycle.
+a configured firmware build.
 
 Usage:
     python tools/build_sdk.py basalt            # Single platform
     python tools/build_sdk.py aplite basalt     # Multiple platforms
     python tools/build_sdk.py all               # All platforms
 """
-
 
 import argparse
 import json
@@ -26,16 +25,18 @@ REPO_ROOT = path.dirname(path.dirname(path.abspath(__file__)))
 sys.path.insert(0, path.join(REPO_ROOT, "tools", "generate_native_sdk"))
 sys.path.insert(0, path.join(REPO_ROOT, "tools"))
 
-from generate_pebble_native_sdk_files import generate_shim_files
+from generate_pebble_native_sdk_files import copy_compiler_headers, generate_shim_files
 from pebble_sdk_platform import pebble_platforms
 
 SHIM_DEF = path.join(REPO_ROOT, "tools", "generate_native_sdk", "exported_symbols.json")
 SRC_DIR = path.join(REPO_ROOT, "src")
 PROCESS_INFO_H = path.join(SRC_DIR, "fw", "process_management", "pebble_process_info.h")
 
-# Regex matching: // sdk.major:0x5 .minor:0x4e -- ... (rev 81)
+# Regex matching SDK version comments, which may be wrapped across lines:
+#   // sdk.major:0x5 .minor:0x4e -- ... (rev 81)
 _REV_COMMENT_RE = re.compile(
-    r"//\s*sdk\.major:(0x[0-9a-fA-F]+)\s*\.minor:(0x[0-9a-fA-F]+)\s*--.*\(rev\.?\s*(\d+)\)"
+    r"sdk\.major:(0x[0-9a-fA-F]+)\s*\.minor:(0x[0-9a-fA-F]+)\s*--.*?\(rev\.?\s*(\d+)\)",
+    re.DOTALL,
 )
 
 
@@ -43,10 +44,10 @@ def _revision_to_sdk_version(frozen_revision):
     """Parse pebble_process_info.h comments to find the SDK major/minor for a
     given export revision number."""
     with open(PROCESS_INFO_H) as f:
-        for line in f:
-            m = _REV_COMMENT_RE.search(line)
-            if m and int(m.group(3)) == frozen_revision:
-                return m.group(1), m.group(2)  # major, minor as hex strings
+        text = f.read()
+    for m in _REV_COMMENT_RE.finditer(text):
+        if int(m.group(3)) == frozen_revision:
+            return m.group(1), m.group(2)  # major, minor as hex strings
     raise RuntimeError(
         f"Could not find SDK version for revision {frozen_revision} in {PROCESS_INFO_H}"
     )
@@ -72,7 +73,7 @@ def _patch_process_info_version(dest_path, frozen_revision):
         f.write(text)
 
 
-def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build):
+def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build, autoconf):
     if platform_name not in pebble_platforms:
         raise SystemExit(
             "Unknown platform '{}'. Available: {}".format(
@@ -107,6 +108,7 @@ def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build):
         path.join(SRC_DIR, "fw", "applib", "pebble_warn_unsupported_functions.h"),
         path.join(sdk_include_dir, "pebble_warn_unsupported_functions.h"),
     )
+    copy_compiler_headers(SRC_DIR, sdk_include_dir)
 
     # Generate pebble_fonts.h from the font whitelist in exported_symbols.json
     with open(SHIM_DEF) as f:
@@ -138,6 +140,7 @@ def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build):
         platform_name,
         internal_sdk_build=internal_sdk_build,
         build_shim_lib=not is_frozen,
+        autoconf=autoconf,
     )
 
     if is_frozen:
@@ -149,7 +152,7 @@ def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build):
 def main():
     parser = argparse.ArgumentParser(
         description="Generate Pebble SDK files for one or more platforms "
-        "without a full waf build."
+        "without a configured firmware build."
     )
     parser.add_argument(
         "platforms",
@@ -166,6 +169,12 @@ def main():
         action="store_true",
         help="Enable internal SDK build",
     )
+    parser.add_argument(
+        "--autoconf",
+        default=path.join(REPO_ROOT, "build", "autoconf.h"),
+        help="Kconfig autoconf.h to predefine while parsing headers "
+        "(default: build/autoconf.h if it exists)",
+    )
     args = parser.parse_args()
 
     if "all" in args.platforms:
@@ -173,8 +182,10 @@ def main():
     else:
         platforms = args.platforms
 
+    autoconf = args.autoconf if args.autoconf and path.exists(args.autoconf) else None
+
     for p in platforms:
-        build_sdk_for_platform(p, args.output_dir, args.internal_sdk_build)
+        build_sdk_for_platform(p, args.output_dir, args.internal_sdk_build, autoconf)
 
     print(f"\nDone. SDK(s) generated in {args.output_dir}")
 

@@ -8,7 +8,7 @@
 #include "system/passert.h"
 #include "pbl/util/heap.h"
 
-static Heap* get_task_heap(void) {
+static Heap *get_task_heap(void) {
   PebbleTask task = pebble_task_get_current();
   Heap *heap = NULL;
 

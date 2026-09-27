@@ -4,7 +4,7 @@
 #include "pbl/services/blob_db/watch_app_prefs_db.h"
 
 #include "kernel/pbl_malloc.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/weather/weather_service_private.h"
@@ -12,12 +12,13 @@
 #include "system/status_codes.h"
 #include "util/units.h"
 #include "pbl/util/uuid.h"
+#include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 static struct {
   SettingsFile settings_file;
-  PebbleRecursiveMutex *mutex;
+  struct pbl_mutex mutex;
   // We cache the reminder app prefs because they're read in reminder_app_get_info() which needs to
   // be fast because it's called by analytics from the system task while counting timeline pins
   bool is_cached_reminder_app_prefs_valid;
@@ -27,26 +28,24 @@ static struct {
 #define SETTINGS_FILE_NAME "watch_app_prefs"
 #define SETTINGS_FILE_SIZE KiBYTES(20)
 
-T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
+PBL_T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
 
 // Settings helpers
 ////////////////////////////////////////////////////////////////////////////////
 
 static status_t prv_lock_mutex_and_open_file(void) {
-  mutex_lock_recursive(s_watch_app_prefs_db.mutex);
-  status_t rv = settings_file_open_growable(&s_watch_app_prefs_db.settings_file,
-                                            SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE,
-                                            KiBYTES(4));
+  pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
+  status_t rv = settings_file_open_growable(&s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
-    mutex_unlock_recursive(s_watch_app_prefs_db.mutex);
+    pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   }
   return rv;
 }
 
 static void prv_close_file_and_unlock_mutex(void) {
   settings_file_close(&s_watch_app_prefs_db.settings_file);
-  mutex_unlock_recursive(s_watch_app_prefs_db.mutex);
+  pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
 }
 
 // WatchAppPrefDB API
@@ -58,13 +57,13 @@ static void *prv_get_prefs(const char *pref_key) {
     return NULL;
   }
 
-  const int len = settings_file_get_len(&s_watch_app_prefs_db.settings_file, pref_key,
-                                        strlen(pref_key));
+  const int len =
+      settings_file_get_len(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key));
   void *prefs = task_zalloc(len);
 
   if (prefs) {
-    rv = settings_file_get(&s_watch_app_prefs_db.settings_file, pref_key,
-                           strlen(pref_key), prefs, len);
+    rv = settings_file_get(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key), prefs,
+                           len);
     if (rv != S_SUCCESS) {
       task_free(prefs);
       prefs = NULL;
@@ -85,7 +84,7 @@ SerializedWeatherAppPrefs *watch_app_prefs_get_weather(void) {
 
 SerializedReminderAppPrefs *watch_app_prefs_get_reminder(void) {
   SerializedReminderAppPrefs *result = NULL;
-  mutex_lock_recursive(s_watch_app_prefs_db.mutex);
+  pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
   if (s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid) {
     result = task_zalloc(sizeof(*result));
     if (result) {
@@ -94,10 +93,10 @@ SerializedReminderAppPrefs *watch_app_prefs_get_reminder(void) {
   } else {
     result = prv_get_prefs(PREF_KEY_REMINDER_APP);
     s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid = true;
-    s_watch_app_prefs_db.cached_reminder_app_prefs = result ? *result :
-                                                              (SerializedReminderAppPrefs) {};
+    s_watch_app_prefs_db.cached_reminder_app_prefs =
+        result ? *result : (SerializedReminderAppPrefs){};
   }
-  mutex_unlock_recursive(s_watch_app_prefs_db.mutex);
+  pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   return result;
 }
 
@@ -110,7 +109,7 @@ void watch_app_prefs_destroy_weather(SerializedWeatherAppPrefs *prefs) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void watch_app_prefs_db_init(void) {
-  s_watch_app_prefs_db.mutex = mutex_create_recursive();
+  pbl_mutex_init(&s_watch_app_prefs_db.mutex);
 }
 
 // All entries in this db currently follow a structure of base data + arbitrary list of records.
@@ -164,8 +163,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
 
     // Cache the data we just set if it was for the Reminders app
     const int expected_reminder_app_prefs_size = sizeof(SerializedReminderAppPrefs);
-    if ((rv == S_SUCCESS) &&
-        is_valid_reminder_key &&
+    if ((rv == S_SUCCESS) && is_valid_reminder_key &&
         (val_len == expected_reminder_app_prefs_size)) {
       s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid = true;
       memcpy(&s_watch_app_prefs_db.cached_reminder_app_prefs, val,
@@ -213,9 +211,9 @@ status_t watch_app_prefs_db_delete(const uint8_t *key, int key_len) {
 }
 
 status_t watch_app_prefs_db_flush(void) {
-  mutex_lock_recursive(s_watch_app_prefs_db.mutex);
+  pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
   status_t rv = pfs_remove(SETTINGS_FILE_NAME);
-  mutex_unlock_recursive(s_watch_app_prefs_db.mutex);
+  pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   return rv;
 }
 

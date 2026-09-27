@@ -3,11 +3,10 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/pstring.h"
 #include "pbl/util/size.h"
 
-#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -18,7 +17,8 @@
 //! is the most unlikely UID that an iOS device would use.
 #define INVALID_UID UINT32_MAX
 
-typedef bool (*AttrDictCompletePredicate)(const uint8_t* data, const size_t length, bool* out_error);
+typedef bool (*AttrDictCompletePredicate)(const uint8_t *data, const size_t length,
+                                          bool *out_error);
 
 typedef enum {
   EventIDNotificationAdded = 0,
@@ -57,10 +57,10 @@ typedef enum {
 } CategoryID;
 
 //! Notification Source's "Notification" format
-typedef struct PACKED {
-  EventID event_id:8;
-  EventFlags event_flags:8;
-  CategoryID category_id:8;
+typedef struct PBL_PACKED {
+  EventID event_id : 8;
+  EventFlags event_flags : 8;
+  CategoryID category_id : 8;
   uint8_t category_count; //<! FIXME PBL-1619: signed?
   uint32_t uid;
 } NSNotification;
@@ -74,35 +74,35 @@ typedef enum {
 } CommandID;
 
 //! Header for Control Point (CP) and Data Source (DS) messages
-typedef struct PACKED {
-  CommandID command_id:8;
+typedef struct PBL_PACKED {
+  CommandID command_id : 8;
   uint8_t data[];
 } CPDSMessage;
 
-typedef struct PACKED {
-  CommandID command_id:8;
+typedef struct PBL_PACKED {
+  CommandID command_id : 8;
   uint32_t notification_uid;
   uint8_t attributes_data[];
 } GetNotificationAttributesMsg;
 
-typedef struct PACKED {
-  CommandID command_id:8;
+typedef struct PBL_PACKED {
+  CommandID command_id : 8;
   char app_id[];
   // uint8_t attributes_data[] follows after the zero-terminated app_id string,
   // but it's not possible to express this in a C struct.
 } GetAppAttributesMsg;
 
-typedef struct PACKED {
-  CommandID command_id:8;
+typedef struct PBL_PACKED {
+  CommandID command_id : 8;
   uint32_t notification_uid;
   uint8_t action_id;
 } PerformNotificationActionMsg;
 
 typedef enum {
   NotificationAttributeIDAppIdentifier = 0,
-  NotificationAttributeIDTitle = 1, //<! Must be followed by a 2-bytes max length param
+  NotificationAttributeIDTitle = 1,    //<! Must be followed by a 2-bytes max length param
   NotificationAttributeIDSubtitle = 2, //<! Must be followed by a 2-bytes max length param
-  NotificationAttributeIDMessage = 3, //<! Must be followed by a 2-bytes max length param
+  NotificationAttributeIDMessage = 3,  //<! Must be followed by a 2-bytes max length param
   NotificationAttributeIDMessageSize = 4,
   NotificationAttributeIDDate = 5,
   NotificationAttributeIDPositiveActionLabel = 6,
@@ -134,61 +134,46 @@ typedef enum {
   FetchedNotifAttributeIndexNegativeActionLabel,
 } FetchedNotifAttributeIndex;
 
-// FIXME AS: APP ID max length determined by looking through installed apps on iOS. Not sure what actual maximum is
+// FIXME AS: APP ID max length determined by looking through installed apps on iOS. Not sure what
+// actual maximum is
 #define APP_ID_MAX_LENGTH (60)
 // Long enough that notification filtering rules can match text near the end
 // of verbose titles (e.g. Discord's "Sender (#channel · Server Name)").
 // Must fit FetchedAttribute.max_length (uint8_t).
-#define TITLE_MAX_LENGTH (128)
-#define SUBTITLE_MAX_LENGTH (40)
-#define MESSAGE_MAX_LENGTH (200)
+#define TITLE_MAX_LENGTH        (128)
+#define SUBTITLE_MAX_LENGTH     (40)
+#define MESSAGE_MAX_LENGTH      (200)
 #define MESSAGE_SIZE_MAX_LENGTH (3)
-#define DATE_LENGTH (15)
-#define ACTION_MAX_LENGTH (10)
-#define MAX_NUM_ACTIONS (2)
-#define NOTIFICATION_ATTRIBUTES_MAX_BUFFER_LENGTH \
-          (APP_ID_MAX_LENGTH + TITLE_MAX_LENGTH + SUBTITLE_MAX_LENGTH + \
-           MESSAGE_MAX_LENGTH + MESSAGE_SIZE_MAX_LENGTH + DATE_LENGTH + \
-          (ACTION_MAX_LENGTH * MAX_NUM_ACTIONS))
+#define DATE_LENGTH             (15)
+#define ACTION_MAX_LENGTH       (10)
+#define MAX_NUM_ACTIONS         (2)
+#define NOTIFICATION_ATTRIBUTES_MAX_BUFFER_LENGTH                                    \
+  (APP_ID_MAX_LENGTH + TITLE_MAX_LENGTH + SUBTITLE_MAX_LENGTH + MESSAGE_MAX_LENGTH + \
+   MESSAGE_SIZE_MAX_LENGTH + DATE_LENGTH + (ACTION_MAX_LENGTH * MAX_NUM_ACTIONS))
 
 #define APP_DISPLAY_NAME_MAX_LENGTH (200)
 
 static const FetchedAttribute s_fetched_notif_attributes[] = {
-  [FetchedNotifAttributeIndexAppID] = {
-    .id = NotificationAttributeIDAppIdentifier,
-    .flags = 0,
-    .max_length = 0
-  },
-  [FetchedNotifAttributeIndexTitle] = {
-    .id = NotificationAttributeIDTitle,
-    .flags = 0,
-    .max_length = TITLE_MAX_LENGTH
-  },
-  [FetchedNotifAttributeIndexSubtitle] = {
-    .id = NotificationAttributeIDSubtitle,
-    .flags = 0,
-    .max_length = SUBTITLE_MAX_LENGTH
-  },
-  [FetchedNotifAttributeIndexMessage] = {
-    .id = NotificationAttributeIDMessage,
-    .flags = 0,
-    .max_length = MESSAGE_MAX_LENGTH
-  },
-  [FetchedNotifAttributeIndexMessageSize] = {
-    .id = NotificationAttributeIDMessageSize,
-    .flags = FetchedAttributeFlagOptional,
-    .max_length = 0,
-  },
-  [FetchedNotifAttributeIndexDate] = {
-    .id = NotificationAttributeIDDate,
-    .flags = 0,
-    .max_length = DATE_LENGTH
-  },
-  [FetchedNotifAttributeIndexPositiveActionLabel] = {
-    .id = NotificationAttributeIDPositiveActionLabel,
-    .flags = FetchedAttributeFlagOptional,
-    .max_length = 0
-  },
+  [FetchedNotifAttributeIndexAppID] =
+      {.id = NotificationAttributeIDAppIdentifier, .flags = 0, .max_length = 0},
+  [FetchedNotifAttributeIndexTitle] =
+      {.id = NotificationAttributeIDTitle, .flags = 0, .max_length = TITLE_MAX_LENGTH},
+  [FetchedNotifAttributeIndexSubtitle] =
+      {.id = NotificationAttributeIDSubtitle, .flags = 0, .max_length = SUBTITLE_MAX_LENGTH},
+  [FetchedNotifAttributeIndexMessage] =
+      {.id = NotificationAttributeIDMessage, .flags = 0, .max_length = MESSAGE_MAX_LENGTH},
+  [FetchedNotifAttributeIndexMessageSize] =
+      {
+        .id = NotificationAttributeIDMessageSize,
+        .flags = FetchedAttributeFlagOptional,
+        .max_length = 0,
+      },
+  [FetchedNotifAttributeIndexDate] =
+      {.id = NotificationAttributeIDDate, .flags = 0, .max_length = DATE_LENGTH},
+  [FetchedNotifAttributeIndexPositiveActionLabel] =
+      {.id = NotificationAttributeIDPositiveActionLabel,
+       .flags = FetchedAttributeFlagOptional,
+       .max_length = 0},
   [FetchedNotifAttributeIndexNegativeActionLabel] = {
     .id = NotificationAttributeIDNegativeActionLabel,
     .flags = FetchedAttributeFlagOptional,
@@ -210,7 +195,7 @@ static const FetchedAttribute s_fetched_app_attributes[] = {
 
 #define NUM_FETCHED_APP_ATTRIBUTES (ARRAY_LENGTH(s_fetched_app_attributes))
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t id;
   union {
     PascalString16 pstr;

@@ -5,24 +5,24 @@
 
 #include "pbl/services/timeline/reminders.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-status_t WEAK reminders_update_timer(void) {
+status_t PBL_WEAK reminders_update_timer(void) {
   return S_SUCCESS;
 }
 
-status_t WEAK reminders_init(void) {
+status_t PBL_WEAK reminders_init(void) {
   return S_SUCCESS;
 }
 
-void WEAK reminders_handle_reminder_updated(const Uuid *reminder_id) {
+void PBL_WEAK reminders_handle_reminder_updated(const Uuid *reminder_id) {
   return;
 }
 
-bool WEAK reminders_can_snooze(Reminder *reminder) {
+bool PBL_WEAK reminders_can_snooze(Reminder *reminder) {
   return false;
 }
 
-status_t WEAK reminders_snooze(Reminder *reminder) {
+status_t PBL_WEAK reminders_snooze(Reminder *reminder) {
   return S_SUCCESS;
 }

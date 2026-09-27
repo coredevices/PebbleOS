@@ -20,11 +20,12 @@
 // files for which enable-masks are defined, the potential for namespace
 // pollution is minimized.
 
-#define RUNLEVEL(number, name) _Static_assert( \
-      0 <= number && number <= 31, \
-      "The numeric value of runlevel " #name " (" #number ")" \
-      " is out of range. Only runlevels in the range 0 <= level <= 31" \
-      " are supported.");
+#define RUNLEVEL(number, name)                                                    \
+  _Static_assert(0 <= number && number <= 31,                                     \
+                 "The numeric value of runlevel " #name " (" #number              \
+                 ")"                                                              \
+                 " is out of range. Only runlevels in the range 0 <= level <= 31" \
+                 " are supported.");
 #include "runlevel.def"
 #undef RUNLEVEL
 

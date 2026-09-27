@@ -61,11 +61,12 @@ static void prv_transition_teardown_destroy_animation(Animation *a) {
 static Animation *prv_window_transition_move(WindowTransitioningContext *ctx,
                                              int16_t start_delta_x) {
   static struct PropertyAnimationImplementation const impl = {
-    .base = {
-      .setup = prv_transition_setup_window_callbacks,
-      .update = prv_update_rect_compatible,
-      .teardown = prv_transition_teardown_destroy_animation,
-    },
+    .base =
+        {
+          .setup = prv_transition_setup_window_callbacks,
+          .update = prv_update_rect_compatible,
+          .teardown = prv_transition_teardown_destroy_animation,
+        },
     .accessors = {
       .setter.grect = prv_window_frame_setter,
     },
@@ -108,12 +109,12 @@ static void prv_window_transition_move_render(WindowTransitioningContext *contex
 }
 
 static Animation *prv_window_transition_move_from_right_create_animation(
-  WindowTransitioningContext *context) {
+    WindowTransitioningContext *context) {
   return prv_window_transition_move(context, DISP_COLS);
 }
 
 static Animation *prv_window_transition_move_from_left_create_animation(
-  WindowTransitioningContext *context) {
+    WindowTransitioningContext *context) {
   return prv_window_transition_move(context, -DISP_COLS);
 }
 

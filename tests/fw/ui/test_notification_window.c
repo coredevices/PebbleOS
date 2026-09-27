@@ -73,7 +73,7 @@
 #include "stubs_stringlist.h"
 #include "stubs_syscall_internal.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_time.h"
 #include "stubs_timeline.h"
 #include "stubs_timeline_actions.h"
@@ -92,7 +92,7 @@
 
 // Local replacements for stubs_alerts_preferences.h so the notification status
 // bar style is settable per test (a strong override cannot share a TU with the
-// header's WEAK definition).
+// header's PBL_WEAK definition).
 static NotificationStatusBarStyle s_notification_status_bar_style =
     NotificationStatusBarStyle_Default;
 
@@ -122,6 +122,10 @@ bool alerts_preferences_dnd_get_auto_dismiss(void) {
 
 bool alerts_preferences_get_notification_vibe_delay(void) {
   return false;
+}
+
+PreferredContentSize alerts_preferences_get_notification_content_size(void) {
+  return NotificationContentSizeSystem;
 }
 
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
@@ -203,8 +207,7 @@ void clock_copy_time_string(char *buffer, uint8_t buf_size) {
 
 //! This function overrides the implementation in swap_layer.c as a way of providing the data
 //! we want to display in each notification
-LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position,
-                                    void *context) {
+LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position, void *context) {
   // Only support one layout at a time for now
   if (rel_position != 0) {
     return NULL;
@@ -236,17 +239,18 @@ LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position,
     attribute_list_add_uint8(attr_list, AttributeIdBgColor, s_test_data.background_color.argb);
   }
 
-  s_test_data.statics.timeline_item = (TimelineItem) {
-    .header = (CommonTimelineItemHeader) {
-      .layout = LayoutIdNotification,
-      .type = s_test_data.is_reminder ? TimelineItemTypeReminder : TimelineItemTypeNotification,
-    },
+  s_test_data.statics.timeline_item = (TimelineItem){
+    .header =
+        (CommonTimelineItemHeader){
+          .layout = LayoutIdNotification,
+          .type = s_test_data.is_reminder ? TimelineItemTypeReminder : TimelineItemTypeNotification,
+        },
     .attr_list = *attr_list,
   };
 
   TimelineItem *item = &s_test_data.statics.timeline_item;
 
-  NotificationLayoutInfo layout_info = (NotificationLayoutInfo) {
+  NotificationLayoutInfo layout_info = (NotificationLayoutInfo){
     .item = item,
     .show_notification_timestamp = s_test_data.show_notification_timestamp,
   };
@@ -277,14 +281,14 @@ static const PropertyAnimationImplementation s_frame_layer_implementation = {
 };
 
 //! Overrides the stub in stubs_animation.c to provide the proper plumbing for scrolling
-PropertyAnimation *property_animation_create_layer_frame(
-  struct Layer *layer, GRect *from_frame, GRect *to_frame) {
-  PropertyAnimationPrivate *animation = (PropertyAnimationPrivate *)
-    property_animation_create(&s_frame_layer_implementation, layer, from_frame, to_frame);
+PropertyAnimation *property_animation_create_layer_frame(struct Layer *layer, GRect *from_frame,
+                                                         GRect *to_frame) {
+  PropertyAnimationPrivate *animation = (PropertyAnimationPrivate *)property_animation_create(
+      &s_frame_layer_implementation, layer, from_frame, to_frame);
   if (from_frame) {
     animation->values.from.grect = *from_frame;
     PropertyAnimationImplementation *impl =
-      (PropertyAnimationImplementation *)animation->animation.implementation;
+        (PropertyAnimationImplementation *)animation->animation.implementation;
     impl->accessors.setter.grect(animation->subject, animation->values.from.grect);
   }
   if (to_frame) {
@@ -309,7 +313,7 @@ PropertyAnimation *property_animation_create_layer_frame(
 // Overrides same function in graphics.c; we need to do this so we can pass in the GBitmapFormat
 // we need to use for the unit test output canvas instead of relying on GBITMAP_NATIVE_FORMAT, which
 // wouldn't work for Spalding since it uses GBitmapFormat8BitCircular
-GBitmap* graphics_capture_frame_buffer(GContext *ctx) {
+GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
   PBL_ASSERTN(ctx);
   return graphics_capture_frame_buffer_format(ctx, CANVAS_GBITMAP_FORMAT);
 }
@@ -332,7 +336,7 @@ void test_notification_window__initialize(void) {
   load_system_resources_fixture();
 
   attribute_list_destroy_list(&s_test_data.statics.attr_list);
-  s_test_data = (NotificationWindowTestData) {};
+  s_test_data = (NotificationWindowTestData){};
   s_notification_status_bar_style = NotificationStatusBarStyle_Default;
   // Reset the notification window so each test gets a fresh prv_init_notification_window
   // call with the correct status-bar style.  Without this, s_in_use=true from a previous
@@ -389,8 +393,8 @@ static void prv_prepare_canvas_and_render_notification_windows(unsigned int num_
 
   const int16_t bitmap_width = (DISP_COLS * num_columns) + (GRID_CELL_PADDING * (num_columns + 1));
   const int16_t bitmap_height =
-      (int16_t)((num_rows == 1) ? DISP_ROWS :
-                                  ((DISP_ROWS * num_rows) + (GRID_CELL_PADDING * (num_rows + 1))));
+      (int16_t)((num_rows == 1) ? DISP_ROWS
+                                : ((DISP_ROWS * num_rows) + (GRID_CELL_PADDING * (num_rows + 1))));
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
   GBitmap *canvas_bitmap = gbitmap_create_blank(bitmap_size, CANVAS_GBITMAP_FORMAT);
   PBL_ASSERTN(canvas_bitmap);
@@ -417,13 +421,13 @@ static void prv_prepare_canvas_and_render_notification_windows(unsigned int num_
 
     for (int down_scrolls = 0; down_scrolls <= num_down_scrolls; down_scrolls++) {
       const int16_t y_offset =
-          (int16_t)((num_rows == 1) ? 0 :
-                    GRID_CELL_PADDING + (down_scrolls * (GRID_CELL_PADDING + DISP_ROWS)));
+          (int16_t)((num_rows == 1)
+                        ? 0
+                        : GRID_CELL_PADDING + (down_scrolls * (GRID_CELL_PADDING + DISP_ROWS)));
       // Set the GContext bitmap's data pointer to the position in the larger bitmap where we
       // want to draw this particular notification window
-      ctx->dest_bitmap.addr =
-          saved_bitmap_addr + (y_offset * ctx->dest_bitmap.row_size_bytes) +
-            (x_offset * bitdepth / 8);
+      ctx->dest_bitmap.addr = saved_bitmap_addr + (y_offset * ctx->dest_bitmap.row_size_bytes) +
+                              (x_offset * bitdepth / 8);
 
       prv_render_notification_window((unsigned int)down_scrolls);
 
@@ -444,7 +448,7 @@ static void prv_prepare_canvas_and_render_notification_windows(unsigned int num_
 //////////////////////
 
 void test_notification_window__title_body(void) {
-  s_test_data = (NotificationWindowTestData) {
+  s_test_data = (NotificationWindowTestData){
     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_FACEBOOK_MESSENGER,
     .title = "Henry Levak",
     .body = "Nu, Shara. Where are my designs, blat?",
@@ -459,7 +463,7 @@ void test_notification_window__title_body(void) {
 }
 
 void test_notification_window__title_subtitle_body(void) {
-  s_test_data = (NotificationWindowTestData) {
+  s_test_data = (NotificationWindowTestData){
     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_GOOGLE_INBOX,
     .title = "Henry Levak",
     .subtitle = "Henry Levak sent you a 1-1 message",
@@ -471,7 +475,7 @@ void test_notification_window__title_subtitle_body(void) {
 }
 
 void test_notification_window__reminder(void) {
-  s_test_data = (NotificationWindowTestData) {
+  s_test_data = (NotificationWindowTestData){
     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,
     .title = "Feed Humphrey",
     .location_name = "RWC Office",
@@ -486,7 +490,7 @@ void test_notification_window__reminder(void) {
 }
 
 void test_notification_window__body_icon(void) {
-  s_test_data = (NotificationWindowTestData) {
+  s_test_data = (NotificationWindowTestData){
     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_GOOGLE_HANGOUTS,
     .title = "Kevin Conley",
     .subtitle = (PreferredContentSizeDefault >= PreferredContentSizeLarge) ? "New mail!" : NULL,
@@ -499,7 +503,7 @@ void test_notification_window__body_icon(void) {
 
 void test_notification_window__big_bold(void) {
   s_notification_status_bar_style = NotificationStatusBarStyle_LargeBold;
-  s_test_data = (NotificationWindowTestData) {
+  s_test_data = (NotificationWindowTestData){
     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_FACEBOOK_MESSENGER,
     .title = "Henry Levak",
     .body = "Nu, Shara. Where are my designs, blat?",

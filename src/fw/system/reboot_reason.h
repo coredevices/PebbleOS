@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "system/rtc_registers.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // NOTE: We include the reboot reason in analytics and the tools we use to analyze the analytics are
 // dependent on the position and ordering of these enumerated values. To keep the analysis tools
@@ -41,14 +41,14 @@ typedef enum {
   RebootReasonCode_WorkerHardFault, // Off by default, compile in with WORKER_CRASH_CAUSES_RESET
   RebootReasonCode_OutOfMemory,
   RebootReasonCode_BtCoredump,
-  RebootReasonCode_CoreDump,  // Core dump initiated without a more specific reason set
+  RebootReasonCode_CoreDump, // Core dump initiated without a more specific reason set
   RebootReasonCode_CoreDumpEntryFailed,
 } RebootReasonCode;
 
-typedef struct PACKED {
-  RebootReasonCode code:8;
-  bool restarted_safely:1;
-  uint8_t padding:7;
+typedef struct PBL_PACKED {
+  RebootReasonCode code : 8;
+  bool restarted_safely : 1;
+  uint8_t padding : 7;
   union {
     uint16_t data16;
     uint8_t data8[2];

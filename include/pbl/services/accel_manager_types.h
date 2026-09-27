@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 //! Valid accelerometer sampling rates, in Hz
 typedef enum {
@@ -19,7 +20,7 @@ typedef enum {
 } AccelSamplingRate;
 
 //! A single accelerometer sample for all three axes
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   //! acceleration along the x axis
   int16_t x;
   //! acceleration along the y axis
@@ -30,7 +31,7 @@ typedef struct __attribute__((__packed__)) {
 
 //! A single accelerometer sample for all three axes including timestamp and
 //! vibration rumble status.
-typedef struct __attribute__((__packed__)) AccelData {
+typedef struct PBL_PACKED AccelData {
   //! acceleration along the x axis
   int16_t x;
   //! acceleration along the y axis

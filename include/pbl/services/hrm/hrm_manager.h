@@ -32,11 +32,11 @@ typedef enum {
 } HRMFeatureShift;
 
 typedef enum {
-  HRMFeature_BPM = (1 << HRMFeatureShift_BPM), //!< Collect heartrate BPM.
-  HRMFeature_HRV = (1 << HRMFeatureShift_HRV), //!< Collect heartrate variability.
+  HRMFeature_BPM = (1 << HRMFeatureShift_BPM),   //!< Collect heartrate BPM.
+  HRMFeature_HRV = (1 << HRMFeatureShift_HRV),   //!< Collect heartrate variability.
   HRMFeature_SpO2 = (1 << HRMFeatureShift_SpO2), //!< Collect blood oxygen saturation.
 #ifdef CONFIG_MFG
-  HRMFeature_CTR = (1 << HRMFeatureShift_CTR), //!< Collect ppg CTR test data.
+  HRMFeature_CTR = (1 << HRMFeatureShift_CTR),         //!< Collect ppg CTR test data.
   HRMFeature_Leakage = (1 << HRMFeatureShift_Leakage), //!< Collect ppg leakage test data.
 #endif
   HRMFeatureMax
@@ -44,10 +44,10 @@ typedef enum {
 
 // Hold enough data for 2s worth of samples just in case we miss a handshake
 #define HRM_MANAGER_ACCEL_RATE_MILLIHZ (25000)
-#define HRM_MANAGER_MAX_ACCEL_SAMPLES ((2 * HRM_MANAGER_ACCEL_RATE_MILLIHZ) / 1000)
+#define HRM_MANAGER_MAX_ACCEL_SAMPLES  ((2 * HRM_MANAGER_ACCEL_RATE_MILLIHZ) / 1000)
 
 // When an app exits, we change its subscription (if any) to expire in this many seconds
-#define HRM_MANAGER_APP_EXIT_EXPIRATION_SEC  SECONDS_PER_HOUR
+#define HRM_MANAGER_APP_EXIT_EXPIRATION_SEC SECONDS_PER_HOUR
 
 typedef struct {
   AccelRawData data[HRM_MANAGER_MAX_ACCEL_SAMPLES];
@@ -56,7 +56,7 @@ typedef struct {
 
 //! Grab the buffer containing accel data for the last 1 second period.
 //! This locks the accel sample buffer that lives in the hrm manager.
-HRMAccelData * hrm_manager_get_accel_data(void);
+HRMAccelData *hrm_manager_get_accel_data(void);
 
 //! Unlock the accel sample buffer.
 void hrm_manager_release_accel_data(void);
@@ -71,6 +71,12 @@ typedef uint32_t HRMSessionRef;
 void hrm_manager_init(void);
 
 void hrm_manager_handle_prefs_changed(void);
+
+//! True if a live subscriber keeps the green (BPM/HRV) optical path on continuously, i.e. its
+//! update interval is within the sensor spin-up time so it is always due (live workout HR, the BLE
+//! HR relay, a foreground app). Background SpO2 readers use this to defer a measurement window
+//! rather than take the optical path away from a live consumer.
+bool hrm_manager_has_continuous_green_subscriber(void);
 
 //! Enable the HRM and subscribe to updates from an app or worker task.
 //! This should not be used by KernelBG or KernelMain clients. For KernelBG client subscriptions,
@@ -96,7 +102,8 @@ HRMSessionRef sys_hrm_manager_get_app_subscription(AppInstallId app_id);
 //! @return true on success, false on failure
 bool sys_hrm_manager_unsubscribe(HRMSessionRef session);
 
-//! Set the enabled features for the given HRM subscription
+//! Set the enabled features for the given HRM subscription. A subscription with no features is
+//! kept but ignored by the sensor scheduler (it never turns the sensor on and receives no data).
 //! @param session the HRMSessionRef returned by sys_hrm_manager_app_subscribe
 //! @param features the desired features
 //! @return true on success, false on failure
@@ -114,9 +121,9 @@ bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_
 //! @param[in] session the HRMSessionRef returned by sys_hrm_manager_app_subscribe
 //! @param[out] app_id if not NULL, the app_id belonging to this subscription is returned here
 //! @param[out] update_interval_s if not NULL, the requested update interval is returned here
-//! @param[out] expire_s if not NULL, the number of seconds that this subcription will expire in
+//! @param[out] expire_s if not NULL, the number of seconds that this subscription will expire in
 //! @param[out] features if not NULL, the features of this subscription are returned here
-//! @return true if succss, false if subscription was not found
+//! @return true if successful, false if subscription was not found
 bool sys_hrm_manager_get_subscription_info(HRMSessionRef session, AppInstallId *app_id,
                                            uint32_t *update_interval_s, uint16_t *expire_s,
                                            HRMFeature *features);
@@ -145,9 +152,12 @@ typedef struct {
 
   uint16_t hrv_ppi_ms;
   HRMQuality hrv_quality;
- 
+
   uint8_t spo2_percent;
   HRMQuality spo2_quality;
+  uint8_t spo2_confidence;  //!< raw algorithm confidence coefficient (debug)
+  uint8_t spo2_valid_level; //!< raw algorithm valid level (debug)
+  bool spo2_invalid;        //!< raw algorithm invalid flag (debug)
 
 #ifdef CONFIG_MFG
   double ctr[6];

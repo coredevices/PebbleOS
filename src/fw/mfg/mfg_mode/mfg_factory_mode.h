@@ -12,4 +12,3 @@ void mfg_enter_mfg_mode(void);
 void mfg_enter_mfg_mode_and_launch_app(void);
 
 bool mfg_is_mfg_mode(void);
-

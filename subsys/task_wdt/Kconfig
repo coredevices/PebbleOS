@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Task watchdog"
+
+config TASK_WDT_CHANNELS
+    int "Channels"
+    range 1 8
+    default 8
+    help
+      Threads the task watchdog can watch at once.
+
+config TASK_WDT_TIMEOUT_MS
+    int "System thread timeout in milliseconds"
+    default 5000
+    help
+      Timeout the system threads (KernelMain, KernelBackground, NewTimers,
+      PULSE) register their channels with.
+
+config TASK_WDT_CHECK_PERIOD_MS
+    int "Check period in milliseconds"
+    default 1000
+    help
+      How often the watchdog thread checks its channels and feeds the
+      hardware watchdog. Keep it well below the hardware watchdog timeout.
+
+config TASK_WDT_GRACE_MS
+    int "Grace period in milliseconds"
+    default 1000
+    help
+      How long an expired channel may stay expired, with its callback
+      running on every check, before the system resets with a core dump.
+
+config TASK_WDT_THREAD_STACK_SIZE
+    int "Watchdog thread stack size in bytes"
+    default 1536
+    help
+      The expiry path logs synchronously and runs the channel callbacks
+      on this stack; the QEMU build uses about 700 bytes of it there.
+
+module = TASK_WDT
+module-str = Task watchdog
+source "subsys/logging/Kconfig.template.log_level"
+
+endmenu

@@ -6,16 +6,12 @@
 #include "board/board.h"
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/exti.h>
-#include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
 #include "util/bitset.h"
-#include "kernel/util/sleep.h"
 
 #include <nrfx.h>
-
-#include "projdefs.h"
 
 // We want TIM4 to run at 32KHz
 static const uint32_t TIMER_FREQUENCY_HZ = 31250;
@@ -44,7 +40,8 @@ static void initialize_button_timer(void) {
     .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
   };
   nrfx_timer_init(&BOARD_CONFIG_BUTTON.timer, &config, prv_timer_handler);
-  nrfx_timer_extended_compare(&BOARD_CONFIG_BUTTON.timer, NRF_TIMER_CC_CHANNEL0, TIMER_PERIOD_TICKS, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, true /* enable interrupt */);
+  nrfx_timer_extended_compare(&BOARD_CONFIG_BUTTON.timer, NRF_TIMER_CC_CHANNEL0, TIMER_PERIOD_TICKS,
+                              NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, true /* enable interrupt */);
 }
 
 static bool prv_check_timer_enabled(void) {
@@ -100,10 +97,9 @@ void debounced_button_init(void) {
   // If someone is holding down a button, we need to start up the timer immediately ourselves as
   // we won't get a button down interrupt to start it.
   if (button_get_state_bits() != 0) {
-     prv_enable_button_timer();
+    prv_enable_button_timer();
   }
 }
-
 
 // Interrupt Service Routines
 ///////////////////////////////////////////////////////////
@@ -114,8 +110,6 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
   // A bitset of the current states of the buttons after the debouncing is done.
   static uint32_t s_debounced_button_state = 0;
 
-  // Should we tell the scheduler to attempt to context switch after this function has completed?
-  bool should_context_switch = pdFALSE;
   // Should we power down this interrupt timer once we're done here or should we leave it on?
   bool can_power_down_tim4 = true;
 
@@ -153,13 +147,13 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
         .type = (is_pressed) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
         .button.button_id = i
       };
-      should_context_switch = event_put_isr(&e);
+      event_put_isr(&e);
     }
   }
 
 #if !defined(CONFIG_MFG)
-  // Now that s_debounced_button_state is updated, check to see if the user is holding down the reset
-  // combination.
+  // Now that s_debounced_button_state is updated, check to see if the user is holding down the
+  // reset combination.
   static uint32_t s_hard_reset_timer = 0;
   if ((s_debounced_button_state & RESET_BUTTONS) == RESET_BUTTONS) {
     s_hard_reset_timer += 1;
@@ -175,8 +169,7 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
       }
 
       RebootReason reason = {
-        .code = force_prf ? RebootReasonCode_PrfResetButtonsHeld :
-                            RebootReasonCode_ResetButtonsHeld
+        .code = force_prf ? RebootReasonCode_PrfResetButtonsHeld : RebootReasonCode_ResetButtonsHeld
       };
       reboot_reason_set(&reason);
 
@@ -188,19 +181,16 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
   }
 #endif
 
-
   if (can_power_down_tim4) {
     __disable_irq();
     disable_button_timer();
     __enable_irq();
   }
-
-  portEND_SWITCHING_ISR(should_context_switch);
 }
 
 // Serial commands
 ///////////////////////////////////////////////////////////
-void command_put_raw_button_event(const char* button_index, const char* is_button_down_event) {
+void command_put_raw_button_event(const char *button_index, const char *is_button_down_event) {
   PebbleEvent e;
   int is_down = atoi(is_button_down_event);
   int button = atoi(button_index);

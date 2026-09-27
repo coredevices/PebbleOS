@@ -9,18 +9,15 @@
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "process_management/app_install_manager.h" // FIXME: This should really be in services/
-#include "process_management/launcher_app_message.h" // FIXME: This should really be in services/
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/alarms/alarm.h"
 #include "pbl/services/app_cache.h"
-#include "pbl/services/app_fetch_endpoint.h"
 #include "pbl/services/app_glances/app_glance_service.h"
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/endpoint_private.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/protobuf_log/protobuf_log.h"
-#include "pbl/services/music_endpoint.h"
 #include "pbl/services/music_internal.h"
 #include "pbl/services/notifications/alerts_private.h"
 #include "pbl/services/notifications/notifications.h"
@@ -57,10 +54,10 @@ static void prv_time_set_event_handler(PebbleEvent *e, void *context) {
   if (s_activity_init_deferred && rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP) {
     // Time is now valid, initialize activity
     s_activity_init_deferred = false;
-    
+
     // Unsubscribe from time events
     event_service_client_unsubscribe(&s_time_event_info);
-    
+
     activity_init();
     // If the user had tracking enabled before init was deferred, start tracking now so we
     // don't miss steps when initialization happens after boot.
@@ -107,7 +104,7 @@ void services_normal_init(void) {
     s_activity_init_deferred = true;
 
     // Subscribe to time set events
-    s_time_event_info = (EventServiceInfo) {
+    s_time_event_info = (EventServiceInfo){
       .type = PEBBLE_SET_TIME_EVENT,
       .handler = prv_time_set_event_handler,
     };

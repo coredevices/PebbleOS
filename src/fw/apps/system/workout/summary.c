@@ -6,23 +6,15 @@
 #include "selection.h"
 #include "utils.h"
 
-#include "applib/app.h"
-#include "applib/ui/action_menu_hierarchy.h"
 #include "applib/ui/action_menu_window.h"
 #include "applib/ui/kino/kino_layer.h"
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
-#include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/health_util.h"
-#include "pbl/services/activity/workout_service.h"
-#include <pbl/logging/logging.h>
-
-#include <stdio.h>
 
 #define BACKGROUND_COLOR PBL_IF_COLOR_ELSE(GColorYellow, GColorWhite)
-#define TEXT_COLOR (gcolor_legible_over(BACKGROUND_COLOR))
+#define TEXT_COLOR       (gcolor_legible_over(BACKGROUND_COLOR))
 
 typedef struct WorkoutSummaryWindow {
   Window window;
@@ -45,7 +37,7 @@ typedef struct WorkoutSummaryWindow {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //! Helpers
 
-static KinoReel* prv_get_icon_for_activity(ActivitySessionType type) {
+static KinoReel *prv_get_icon_for_activity(ActivitySessionType type) {
   switch (type) {
     case ActivitySessionType_Open:
       return kino_reel_create_with_resource(RESOURCE_ID_WORKOUT_APP_WORKOUT);
@@ -70,8 +62,8 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, KinoReel *icon
   GRect drawing_rect = grect_inset(layer->bounds, GEdgeInsets(0, rl_margin));
 
   const GSize icon_size = kino_reel_get_size(icon);
-  const int icon_x = drawing_rect.origin.x + PBL_IF_RECT_ELSE(0, (rl_margin / 2))
-                   + (drawing_rect.size.w / 2) - (icon_size.w / 2);
+  const int icon_x = drawing_rect.origin.x + PBL_IF_RECT_ELSE(0, (rl_margin / 2)) +
+                     (drawing_rect.size.w / 2) - (icon_size.w / 2);
   const int icon_y = PBL_IF_RECT_ELSE(45, 49);
   kino_reel_draw(icon, ctx, GPoint(icon_x, icon_y));
 
@@ -144,8 +136,8 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
   window_set_user_data(window, summary_window);
   window_set_background_color(window, BACKGROUND_COLOR);
   window_set_window_handlers(window, &(WindowHandlers){
-    .unload = prv_window_unload_handler,
-  });
+                                       .unload = prv_window_unload_handler,
+                                     });
 
   GRect layer_bounds = window->layer.bounds;
   layer_bounds.size.w -= ACTION_BAR_WIDTH;
@@ -173,8 +165,7 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
 
   summary_window->action_bar_start =
       gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_START);
-  summary_window->action_bar_more =
-      gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_MORE);
+  summary_window->action_bar_more = gbitmap_create_with_resource(RESOURCE_ID_ACTION_BAR_ICON_MORE);
 
   action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, summary_window->action_bar_start);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, summary_window->action_bar_more);

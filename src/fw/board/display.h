@@ -8,7 +8,7 @@
 //! @internal
 //! data type that's used to store row data infos in a space-efficient manner
 typedef struct {
-  uint32_t offset;  // uint32_t needed for rectangular framebuffers > 65535 bytes
+  uint32_t offset; // uint32_t needed for rectangular framebuffers > 65535 bytes
   uint16_t min_x;
   uint16_t max_x;
 } GBitmapDataRowInfoInternal;
@@ -24,7 +24,8 @@ typedef struct {
 
 #ifdef CONFIG_BOARD_ASTERIX
 #include "displays/display_asterix.h"
-#elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || defined(CONFIG_BOARD_OBELIX_BB2)
+#elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || \
+    defined(CONFIG_BOARD_OBELIX_BB2)
 #include "displays/display_obelix.h"
 #elif defined(CONFIG_BOARD_GETAFIX_DVT) || defined(CONFIG_BOARD_GETAFIX_DVT2)
 #include "displays/display_getafix.h"

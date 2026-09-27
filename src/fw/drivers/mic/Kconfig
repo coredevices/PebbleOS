@@ -21,6 +21,7 @@ config MIC_SF32LB
     select HAL_SIFLI
     select HAL_SIFLI_AUDCODEC
     select HAL_SIFLI_PDM
+    select MIC_POLLING
     help
       Support for the SiFli SF32LB PDM microphone interface.
 
@@ -32,6 +33,12 @@ config MIC_QEMU
       MIC_SAMPLE_RATE so the voice service can run end-to-end against
       `pebble transcribe`, which ignores audio frames and replies with
       a canned transcription on a timer.
+
+config MIC_POLLING
+    bool
+    help
+      The driver implements mic_start_polling(), mic_poll() and
+      mic_get_frame_time().
 
 module = DRIVER_MIC
 module-str = Microphone

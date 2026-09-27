@@ -2,31 +2,27 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pbl/services/data_logging/dls_list.h"
-#include "pbl/services/data_logging/dls_storage.h"
 
 #include <pbl/drivers/flash.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/process_manager.h"
-#include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/uuid.h"
 
 #include <inttypes.h>
 #include <stdlib.h>
-#include <string.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 
 static DataLoggingSession *s_logging_sessions;
-static PebbleRecursiveMutex * s_list_mutex;
-
+static PBL_MUTEX_DEFINE(s_list_mutex);
 
 // ---------------------------------------------------------------------------------------
 // Assert that the current task owns the list mutex
 void dls_assert_own_list_mutex(void) {
-  PBL_ASSERTN(mutex_is_owned_recursive(s_list_mutex));
+  PBL_ASSERTN(pbl_mutex_is_owner(&s_list_mutex));
 }
 
 // ---------------------------------------------------------------------------------------
@@ -38,14 +34,14 @@ void dls_assert_own_list_mutex(void) {
 //   * session->data->open_count can only be read/modified while holding the list mutex
 //     and is only available if session->status == DataLoggingStatusActive
 //   * In order to avoid deadlocks,
-//      - s_list_mutex MUST be released befored trying to grab session->data->mutex.
+//      - s_list_mutex MUST be released before trying to grab session->data->mutex.
 //      - session->data->open_count must incremented to be > 0 under s_list_mutex before you can
 //        grab session->data-mutex
 //      - if you already own session->data-mutex, it is OK to grab s_list_mutex
 bool dls_lock_session(DataLoggingSession *session) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   if (session->status != DataLoggingStatusActive) {
-    mutex_unlock_recursive(s_list_mutex);
+    pbl_mutex_unlock(&s_list_mutex);
     return false;
   }
 
@@ -54,20 +50,18 @@ bool dls_lock_session(DataLoggingSession *session) {
   // Incrementing open_count insures that no one else can do a dls_unlock_session(inactivate=true)
   // on it and cause it to be freed before we grab the session->data->mutex below.
   session->data->open_count++;
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
 
-  mutex_lock(session->data->mutex);
+  pbl_mutex_lock(&session->data->mutex, PBL_FOREVER);
   return true;
 }
-
 
 // ---------------------------------------------------------------------------------------
 // Callback used to free a storage buffer from unprivileged mode.
 static void prv_free_storage_buffer_cb(void *p) {
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Freeing buffer storage ptr: %p", p);
+  PBL_LOG_DBG("Freeing buffer storage ptr: %p", p);
   task_free(p);
 }
-
 
 // ---------------------------------------------------------------------------------------
 static void prv_free_storage_buffer(DataLoggingSession *session) {
@@ -85,23 +79,19 @@ static void prv_free_storage_buffer(DataLoggingSession *session) {
     // in unprivileged mode.
     PebbleEvent e = {
       .type = PEBBLE_CALLBACK_EVENT,
-      .callback = {
-        .callback = prv_free_storage_buffer_cb,
-        .data = session->data->buffer_storage
-      }
+      .callback = {.callback = prv_free_storage_buffer_cb, .data = session->data->buffer_storage}
     };
     PebbleTask task = pebble_task_get_current();
     process_manager_send_event_to_process(task, &e);
   }
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Unlock a session previous locked by dls_lock_session(). If inactive is true, this also marks
 // the session inactive and frees the memory used for maintaining the active state. See the
 // comments above in dls_lock_session() for a description of the locking strategy.
 void dls_unlock_session(DataLoggingSession *session, bool inactivate) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
 
   PBL_ASSERTN(session->data->open_count > 0);
   if (inactivate) {
@@ -110,79 +100,77 @@ void dls_unlock_session(DataLoggingSession *session, bool inactivate) {
   session->data->open_count--;
   if (session->data->inactivate_pending && session->data->open_count == 0) {
     session->status = DataLoggingStatusInactive;
-    mutex_unlock_recursive(s_list_mutex);
+    pbl_mutex_unlock(&s_list_mutex);
 
     prv_free_storage_buffer(session);
-    mutex_unlock(session->data->mutex);
-    mutex_destroy(session->data->mutex);
+    pbl_mutex_unlock(&session->data->mutex);
+    pbl_mutex_deinit(&session->data->mutex);
     kernel_free(session->data);
     session->data = NULL;
 
   } else {
-    mutex_unlock_recursive(s_list_mutex);
-    mutex_unlock(session->data->mutex);
+    pbl_mutex_unlock(&s_list_mutex);
+    pbl_mutex_unlock(&session->data->mutex);
   }
 }
 
 // ---------------------------------------------------------------------------------------
 // Return session status
 DataLoggingStatus dls_get_session_status(DataLoggingSession *session) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingStatus status = session->status;
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
   return status;
 }
 
-
 DataLoggingSession *dls_list_find_by_session_id(uint8_t session_id) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
   while (iter != NULL) {
     if (iter->comm.session_id > session_id) {
       break;
     }
     if (iter->comm.session_id == session_id) {
-      mutex_unlock_recursive(s_list_mutex);
+      pbl_mutex_unlock(&s_list_mutex);
       return (iter);
     }
     iter = iter->next;
   }
 
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
   return (NULL);
 }
 
 DataLoggingSession *dls_list_find_active_session(uint32_t tag, const Uuid *app_uuid) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
   while (iter != NULL) {
-    if (iter->tag == tag && uuid_equal(&(iter->app_uuid), app_uuid)
-        && iter->status == DataLoggingStatusActive) {
-      mutex_unlock_recursive(s_list_mutex);
+    if (iter->tag == tag && uuid_equal(&(iter->app_uuid), app_uuid) &&
+        iter->status == DataLoggingStatusActive) {
+      pbl_mutex_unlock(&s_list_mutex);
       return (iter);
     }
     iter = iter->next;
   }
 
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
   return (NULL);
 }
 
 void dls_list_remove_session(DataLoggingSession *logging_session) {
   if (uuid_is_system(&logging_session->app_uuid)) {
-    PBL_LOG_WRN("Deleting the system data logging session with tag %"PRIu32,
-            logging_session->tag);
+    PBL_LOG_WRN("Deleting the system data logging session with tag %" PRIu32, logging_session->tag);
   }
 
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession **iter = &s_logging_sessions;
 
   while (*iter != NULL) {
     if (*iter == logging_session) {
       *iter = (*iter)->next;
-      mutex_unlock_recursive(s_list_mutex);
+      pbl_mutex_unlock(&s_list_mutex);
       if (logging_session->data) {
-        mutex_destroy(logging_session->data->mutex);
+        pbl_mutex_deinit(&logging_session->data->mutex);
         kernel_free(logging_session->data);
       }
       kernel_free(logging_session);
@@ -191,17 +179,17 @@ void dls_list_remove_session(DataLoggingSession *logging_session) {
     iter = &((*iter)->next);
   }
 
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
 }
 
 void dls_list_remove_all(void) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *cur = s_logging_sessions;
   DataLoggingSession *next;
   while (cur != NULL) {
     next = cur->next;
     if (cur->data) {
-      mutex_destroy(cur->data->mutex);
+      pbl_mutex_deinit(&cur->data->mutex);
       kernel_free(cur->data);
     }
     kernel_free(cur);
@@ -209,12 +197,12 @@ void dls_list_remove_all(void) {
   }
 
   s_logging_sessions = NULL;
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
 }
 
 //! Insert logging session with known id
 void dls_list_insert_session(DataLoggingSession *logging_session) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession **iter = &s_logging_sessions;
 
   for (int i = 0; i < logging_session->comm.session_id; i++) {
@@ -231,10 +219,10 @@ void dls_list_insert_session(DataLoggingSession *logging_session) {
   logging_session->next = *iter;
   *iter = logging_session;
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Created session: %p id %"PRIu8
-      " tag %"PRIu32, logging_session, logging_session->comm.session_id, logging_session->tag);
+  PBL_LOG_DBG("Created session: %p id %" PRIu8 " tag %" PRIu32, logging_session,
+              logging_session->comm.session_id, logging_session->tag);
 
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
 }
 
 // The newlib headers do not expose this because of the __STRICT_ANSI__ define
@@ -260,7 +248,7 @@ uint8_t dls_list_add_new_session(DataLoggingSession *logging_session) {
 }
 
 static bool count_session_cb(DataLoggingSession *session, void *data) {
-  uint32_t *counter = (uint32_t *) data;
+  uint32_t *counter = (uint32_t *)data;
   ++(*counter);
   return true;
 }
@@ -272,8 +260,8 @@ static uint32_t prv_get_num_sessions(void) {
 }
 
 DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType type, uint16_t size,
-    const Uuid *app_uuid, time_t timestamp, DataLoggingStatus status) {
-
+                                            const Uuid *app_uuid, time_t timestamp,
+                                            DataLoggingStatus status) {
   uint32_t num_sessions = prv_get_num_sessions();
   if (num_sessions >= DLS_MAX_NUM_SESSIONS) {
     PBL_LOG_WRN("Could not allocate additional DataLoggingSession objects");
@@ -296,7 +284,7 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
   if (status == DataLoggingStatusActive) {
     DataLoggingActiveState *active_state = kernel_malloc_check(sizeof(DataLoggingActiveState));
     *active_state = (DataLoggingActiveState){};
-    active_state->mutex = mutex_create();
+    pbl_mutex_init(&active_state->mutex);
     logging_session->data = active_state;
   }
 
@@ -304,28 +292,28 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
 }
 
 DataLoggingSession *dls_list_get_next(DataLoggingSession *cur) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   if (cur == NULL) {
     // Return the head
-    mutex_unlock_recursive(s_list_mutex);
+    pbl_mutex_unlock(&s_list_mutex);
     return s_logging_sessions;
   }
 
   DataLoggingSession *logging_session = ((DataLoggingSession *)cur)->next;
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
   return logging_session;
 }
 
 void dls_list_lock(void) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
 }
 
 void dls_list_unlock(void) {
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
 }
 
-bool dls_list_for_each_session(bool (callback(DataLoggingSession*, void*)), void *data) {
-  mutex_lock_recursive(s_list_mutex);
+bool dls_list_for_each_session(bool(callback(DataLoggingSession *, void *)), void *data) {
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *logging_session = s_logging_sessions;
 
   while (logging_session != NULL) {
@@ -333,34 +321,32 @@ bool dls_list_for_each_session(bool (callback(DataLoggingSession*, void*)), void
     DataLoggingSession *next_logging_session = logging_session->next;
 
     if (!callback(logging_session, data)) {
-      mutex_unlock_recursive(s_list_mutex);
+      pbl_mutex_unlock(&s_list_mutex);
       return false;
     }
 
     logging_session = next_logging_session;
   }
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
   return true;
 }
 
 void dls_list_init(void) {
-  s_list_mutex = mutex_create_recursive();
   s_logging_sessions = NULL;
 }
 
 bool dls_list_is_session_valid(DataLoggingSession *logging_session) {
-  mutex_lock_recursive(s_list_mutex);
+  pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
 
   while (iter != NULL) {
     if (iter == logging_session) {
-      mutex_unlock_recursive(s_list_mutex);
+      pbl_mutex_unlock(&s_list_mutex);
       return true;
     }
     iter = iter->next;
   }
-  mutex_unlock_recursive(s_list_mutex);
+  pbl_mutex_unlock(&s_list_mutex);
 
   return false;
 }
-

@@ -6,14 +6,14 @@
 
 #include "applib/app_timer.h"
 #include "applib/event_service_client.h"
+#include "pbl/kernel/compiler.h"
 
-
-typedef struct __attribute__((__packed__)) {
+typedef struct PBL_PACKED {
   CompassHeading compass_filter;
   int32_t last_angle;
   CompassHeading heading_declination;
 
-  AppTimer* peek_timer;
+  AppTimer *peek_timer;
   CompassHeadingHandler compass_cb;
 
   EventServiceInfo info;

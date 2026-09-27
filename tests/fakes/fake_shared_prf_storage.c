@@ -3,8 +3,8 @@
 
 #include "fake_shared_prf_storage.h"
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/sm_types.h>
 
 static int s_prf_storage_ble_store_count;
 static int s_prf_storage_ble_delete_count;
@@ -39,25 +39,25 @@ void shared_prf_storage_set_local_device_name(char *local_device_name) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Root Keys
 
-bool shared_prf_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key_out) {
+bool shared_prf_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
+                                     struct pbl_bt_sm_key *key_out) {
   return false;
 }
 
-void shared_prf_storage_set_root_keys(SM128BitKey *keys_in) {
+void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Pairing Data
 
-bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out,
+bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
                                              char *name_out, bool *requires_address_pinning_out,
                                              uint8_t *flags) {
   return false;
 }
 
-
-void shared_prf_storage_store_ble_pairing_data(const SMPairingInfo *pairing_info,
+void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
                                                char *name, bool requires_address_pinning,
                                                uint8_t flags) {
   s_prf_storage_ble_delete_count++;
@@ -71,16 +71,15 @@ void shared_prf_storage_erase_ble_pairing_data(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BT Classic Pairing Data
 
-bool shared_prf_storage_get_bt_classic_pairing_data(BTDeviceAddress *addr_out,
+bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,
                                                     char *device_name_out,
-                                                    SM128BitKey *link_key_out,
+                                                    struct pbl_bt_sm_key *link_key_out,
                                                     uint8_t *platform_bits) {
   return false;
 }
 
-void shared_prf_storage_store_bt_classic_pairing_data(BTDeviceAddress *addr,
-                                                      char *device_name,
-                                                      SM128BitKey *link_key,
+void shared_prf_storage_store_bt_classic_pairing_data(struct pbl_bt_addr *addr, char *device_name,
+                                                      struct pbl_bt_sm_key *link_key,
                                                       uint8_t platform_bits) {
 }
 
@@ -111,10 +110,10 @@ void shared_prf_storage_wipe_all(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Pinned Address
 
-bool shared_prf_storage_get_ble_pinned_address(BTDeviceAddress *address_out) {
+bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
   return false;
 }
 
 //! Stores the new BLE Pinned Address in the shared storage.
-void shared_prf_storage_set_ble_pinned_address(const BTDeviceAddress *address) {
+void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address) {
 }

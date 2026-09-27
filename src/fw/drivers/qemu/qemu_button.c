@@ -1,15 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/irq.h"
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/debounced_button.h>
 
 #include "board/board.h"
 #include "console/prompt.h"
 #include "kernel/events.h"
-#include "system/passert.h"
-
-#include "FreeRTOS.h"
 
 #include <cmsis_core.h>
 #include <stdlib.h>
@@ -17,22 +15,22 @@
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // QEMU GPIO register offsets (must match pebble-gpio device)
-#define GPIO_BTN_STATE  0x00
-#define GPIO_BTN_EDGE   0x04
-#define GPIO_INTCTRL    0x08
-#define GPIO_INTSTAT    0x0C
+#define GPIO_BTN_STATE 0x00
+#define GPIO_BTN_EDGE  0x04
+#define GPIO_INTCTRL   0x08
+#define GPIO_INTSTAT   0x0C
 
 // Button bit positions (must match QEMU pebble-gpio device)
-#define BTN_BIT_BACK    (1 << 0)
-#define BTN_BIT_UP      (1 << 1)
-#define BTN_BIT_SELECT  (1 << 2)
-#define BTN_BIT_DOWN    (1 << 3)
+#define BTN_BIT_BACK   (1 << 0)
+#define BTN_BIT_UP     (1 << 1)
+#define BTN_BIT_SELECT (1 << 2)
+#define BTN_BIT_DOWN   (1 << 3)
 
 static const uint32_t s_button_bits[NUM_BUTTONS] = {
-  [BUTTON_ID_BACK]   = BTN_BIT_BACK,
-  [BUTTON_ID_UP]     = BTN_BIT_UP,
+  [BUTTON_ID_BACK] = BTN_BIT_BACK,
+  [BUTTON_ID_UP] = BTN_BIT_UP,
   [BUTTON_ID_SELECT] = BTN_BIT_SELECT,
-  [BUTTON_ID_DOWN]   = BTN_BIT_DOWN,
+  [BUTTON_ID_DOWN] = BTN_BIT_DOWN,
 };
 
 static uint32_t s_last_state;
@@ -51,7 +49,6 @@ static void prv_gpio_irq_handler(void) {
   s_last_state = state;
 
   // Generate button events for each changed button
-  bool should_context_switch = false;
   for (int i = 0; i < NUM_BUTTONS; i++) {
     if (changed & s_button_bits[i]) {
       bool is_pressed = (state & s_button_bits[i]) != 0;
@@ -59,11 +56,9 @@ static void prv_gpio_irq_handler(void) {
         .type = is_pressed ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
         .button.button_id = i,
       };
-      should_context_switch |= event_put_isr(&e);
+      event_put_isr(&e);
     }
   }
-
-  portEND_SWITCHING_ISR(should_context_switch);
 }
 
 // IRQ trampoline for GPIO IRQ (IRQ 6)
@@ -80,7 +75,7 @@ void button_init(void) {
   // Enable edge interrupt
   REG32(base + GPIO_INTCTRL) = 1;
 
-  // Enable GPIO IRQ in NVIC - priority must be >= configMAX_SYSCALL_INTERRUPT_PRIORITY
+  // Enable GPIO IRQ in NVIC - priority must be >= PBL_IRQ_PRIO_MAX_SYSCALL
   // to safely call FreeRTOS API from ISR. Use priority 6 (lower urgency than max syscall).
   NVIC_SetPriority(GPIO_IRQn, 6);
   NVIC_EnableIRQ(GPIO_IRQn);

@@ -38,11 +38,11 @@
 extern "C" {
 #endif
 
-void DUMA_Abort(const char * pattern, ...);
-void DUMA_Print(const char * pattern, ...);
-void DUMA_Exit(const char * pattern, ...);
-void DUMA_sprintf(char* buffer, const char * pattern, ...);
-const char * DUMA_strerror(int duma_errno);
+void DUMA_Abort(const char *pattern, ...);
+void DUMA_Print(const char *pattern, ...);
+void DUMA_Exit(const char *pattern, ...);
+void DUMA_sprintf(char *buffer, const char *pattern, ...);
+const char *DUMA_strerror(int duma_errno);
 
 #ifdef __cplusplus
 } /* extern "C" */

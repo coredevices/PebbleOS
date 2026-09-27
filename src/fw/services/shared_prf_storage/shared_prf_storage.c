@@ -12,22 +12,22 @@
 #include "pbl/util/crc32.h"
 
 #include <pbl/btutil/sm_util.h>
-#include <pbl/os/mutex.h>
+#include "pbl/kernel/mutex.h"
 
 PBL_LOG_MODULE_DEFINE(service_shared_prf_storage, CONFIG_SERVICE_SHARED_PRF_STORAGE_LOG_LEVEL);
 
-#define SPRF_REGION_SIZE (FLASH_REGION_SHARED_PRF_STORAGE_END - \
-                          FLASH_REGION_SHARED_PRF_STORAGE_BEGIN)
+#define SPRF_REGION_SIZE \
+  (FLASH_REGION_SHARED_PRF_STORAGE_END - FLASH_REGION_SHARED_PRF_STORAGE_BEGIN)
 #define SPRF_NUM_PAGES (SPRF_REGION_SIZE / sizeof(SharedPRFData))
 
-#define SPRF_PAGE_FLASH_ADDR(idx) (FLASH_REGION_SHARED_PRF_STORAGE_BEGIN + \
-                                     (idx * sizeof(SharedPRFData)))
+#define SPRF_PAGE_FLASH_ADDR(idx) \
+  (FLASH_REGION_SHARED_PRF_STORAGE_BEGIN + (idx * sizeof(SharedPRFData)))
 // CRC Unwritten state and size
 #define SPRF_UNWRITTEN_CRC ((uint32_t)0xFFFFFFFF)
-#define SPRF_CRC_SIZE (sizeof(uint32_t))
+#define SPRF_CRC_SIZE      (sizeof(uint32_t))
 
 // Accessors to a fields data and size. Basically skips over the CRC for the field.
-#define SPRF_FIELD_DATA(f) (((uint8_t *)f) + SPRF_CRC_SIZE)
+#define SPRF_FIELD_DATA(f)       (((uint8_t *)f) + SPRF_CRC_SIZE)
 #define SPRF_FIELD_DATA_SIZE(sz) (sz - SPRF_CRC_SIZE)
 
 // Accessors for the CRC of a field
@@ -46,18 +46,18 @@ PBL_LOG_MODULE_DEFINE(service_shared_prf_storage, CONFIG_SERVICE_SHARED_PRF_STOR
 
 // Keeps track of the current page within the region that the valid (or empty) page is
 static uint32_t s_valid_page_idx;
-static PebbleMutex *s_sprf_mutex;
+static PBL_MUTEX_DEFINE(s_sprf_mutex);
 
 //
 // Helper functions
 //
 
 static void prv_lock(void) {
-  mutex_lock(s_sprf_mutex);
+  pbl_mutex_lock(&s_sprf_mutex, PBL_FOREVER);
 }
 
 static void prv_unlock(void) {
-  mutex_unlock(s_sprf_mutex);
+  pbl_mutex_unlock(&s_sprf_mutex);
 }
 
 static bool prv_buffer_empty(const uint8_t *buf, size_t num_bytes) {
@@ -93,9 +93,9 @@ static bool prv_field_valid(const uint8_t *field, size_t field_size) {
     return true;
   }
 
-  const uint32_t field_crc = *(uint32_t*)field;
-  const bool valid_crc = (field_crc ==
-      crc32(CRC32_INIT, SPRF_FIELD_DATA(field), SPRF_FIELD_DATA_SIZE(field_size)));
+  const uint32_t field_crc = *(uint32_t *)field;
+  const bool valid_crc =
+      (field_crc == crc32(CRC32_INIT, SPRF_FIELD_DATA(field), SPRF_FIELD_DATA_SIZE(field_size)));
   return valid_crc;
 }
 
@@ -137,16 +137,15 @@ static void prv_write_to_current_page(SharedPRFData *data, bool write_metadata) 
 }
 
 static void prv_erase_region_and_save(SharedPRFData *data) {
-  flash_region_erase_optimal_range_no_watchdog(FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
-                                               FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
-                                               FLASH_REGION_SHARED_PRF_STORAGE_END,
-                                               FLASH_REGION_SHARED_PRF_STORAGE_END);
+  flash_region_erase_optimal_range_no_watchdog(
+      FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
+      FLASH_REGION_SHARED_PRF_STORAGE_END, FLASH_REGION_SHARED_PRF_STORAGE_END);
   s_valid_page_idx = 0;
   prv_write_to_current_page(data, false);
 }
 
 static void prv_invalidate_current_page(void) {
-  PBL_LOG_DBG("Invalidating current page: #%"PRIu32, s_valid_page_idx);
+  PBL_LOG_DBG("Invalidating current page: #%" PRIu32, s_valid_page_idx);
   // First, check if the page is Unpopulated
   SprfMagic magic = prv_get_magic_for_page(s_valid_page_idx);
   if (magic == SprfMagic_UnpopulatedEntry) {
@@ -184,8 +183,10 @@ static void prv_fetch_struct(SharedPRFData *data_out) {
   flash_read_bytes((uint8_t *)data_out, prv_current_page_flash_addr(), sizeof(*data_out));
 
   if (!prv_valid_struct(data_out)) {
-    PBL_LOG_WRN("Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
-                               " and starting a new one", s_valid_page_idx);
+    PBL_LOG_WRN("Shared PRF Storage sector # %" PRIu32
+                " is corrupted. Invalidating"
+                " and starting a new one",
+                s_valid_page_idx);
     prv_invalidate_current_page();
     memset(data_out, 0xFF, sizeof(*data_out));
   }
@@ -206,8 +207,8 @@ static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, 
 
   const size_t field_data_size = SPRF_FIELD_DATA_SIZE(field_size);
   const uint32_t old_crc = FIELD_CRC_FROM_DATA(data, offset);
-  const uint32_t new_crc = (calc_crc) ? crc32(CRC32_INIT, SPRF_FIELD_DATA(field), field_data_size)
-                                      : SPRF_UNWRITTEN_CRC;
+  const uint32_t new_crc =
+      (calc_crc) ? crc32(CRC32_INIT, SPRF_FIELD_DATA(field), field_data_size) : SPRF_UNWRITTEN_CRC;
   const bool same_data =
       (0 == memcmp(SPRF_FIELD_DATA(field), SPRF_FIELD_DATA(((uint8_t *)data) + offset),
                    field_data_size));
@@ -227,8 +228,7 @@ static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, 
     prv_write_to_current_page(data, true);
   }
 
-  PBL_LOG_DBG("Overwriting SPRF field at offset %d, size %d",
-          (int)offset, (int)field_size);
+  PBL_LOG_DBG("Overwriting SPRF field at offset %d, size %d", (int)offset, (int)field_size);
 
   // write the crc first so it's easier to detect a non empty field (we can just read if the CRC is
   // not 0xFFFFFFFF instead of comparing all bytes.
@@ -252,8 +252,10 @@ static bool prv_fetch_field(uint8_t *field_out, size_t offset, size_t field_size
   flash_read_bytes(field_out, prv_current_page_flash_addr() + offset, field_size);
   if (!prv_field_valid(field_out, field_size)) {
     // If corrupted field, delete entire page
-    PBL_LOG_WRN("Shared PRF Storage sector # %"PRIu32" is corrupted. Invalidating"
-                               " and starting a new one", s_valid_page_idx);
+    PBL_LOG_WRN("Shared PRF Storage sector # %" PRIu32
+                " is corrupted. Invalidating"
+                " and starting a new one",
+                s_valid_page_idx);
     prv_invalidate_current_page();
     return false;
   }
@@ -268,11 +270,11 @@ static bool prv_fetch_field(uint8_t *field_out, size_t offset, size_t field_size
 }
 
 #define SPRF_PERSIST_FIELD(data, name) \
-    prv_persist_field((uint8_t *)&data, offsetof(SharedPRFData, name), sizeof(data), true)
+  prv_persist_field((uint8_t *)&data, offsetof(SharedPRFData, name), sizeof(data), true)
 #define SPRF_ERASE_FIELD(name) \
-    prv_erase_field(offsetof(SharedPRFData, name), sizeof(((SharedPRFData *)0)->name))
+  prv_erase_field(offsetof(SharedPRFData, name), sizeof(((SharedPRFData *)0)->name))
 #define SPRF_FETCH_FIELD(data, name) \
-    prv_fetch_field((uint8_t *)&data, offsetof(SharedPRFData, name), sizeof(data))
+  prv_fetch_field((uint8_t *)&data, offsetof(SharedPRFData, name), sizeof(data))
 
 //!
 //! SharedPRFStorage API
@@ -283,8 +285,6 @@ static bool prv_fetch_field(uint8_t *field_out, size_t offset, size_t field_size
 //! erase the sector and re-write the info at offset 0. We want to make the chance
 //! of blocking on an erase ~0, by doing this prep on init.
 void shared_prf_storage_init(void) {
-  s_sprf_mutex = mutex_create();
-
   prv_lock();
   {
     s_valid_page_idx = SPRF_PAGE_IDX_INVALID;
@@ -296,7 +296,7 @@ void shared_prf_storage_init(void) {
       page_magic = prv_get_magic_for_page(i);
       // Check the magic to see if we need to investigate further and read the entire contents.
       if (page_magic == SprfMagic_ValidEntry || page_magic == SprfMagic_UnpopulatedEntry) {
-        flash_read_bytes((uint8_t *) &data, SPRF_PAGE_FLASH_ADDR(i), sizeof(data));
+        flash_read_bytes((uint8_t *)&data, SPRF_PAGE_FLASH_ADDR(i), sizeof(data));
         if (prv_valid_struct(&data)) {
           s_valid_page_idx = i;
           break;
@@ -367,7 +367,8 @@ void shared_prf_storage_set_local_device_name(const char *local_device_name) {
 //! BLE Root Key APIs
 //!
 
-bool shared_prf_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key_out) {
+bool shared_prf_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
+                                     struct pbl_bt_sm_key *key_out) {
   bool rv;
   prv_lock();
   {
@@ -377,7 +378,7 @@ bool shared_prf_storage_get_root_key(SMRootKeyType key_type, SM128BitKey *key_ou
       goto unlock;
     }
 
-    SM128BitKey nil_key = {};
+    struct pbl_bt_sm_key nil_key = {};
     if (0 == memcmp(&nil_key, &data.keys[key_type], sizeof(nil_key))) {
       rv = false;
       goto unlock;
@@ -394,7 +395,7 @@ unlock:
   return rv;
 }
 
-void shared_prf_storage_set_root_keys(SM128BitKey *keys_in) {
+void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   prv_lock();
   {
     SprfRootKeys data = {};
@@ -410,8 +411,8 @@ void shared_prf_storage_set_root_keys(SM128BitKey *keys_in) {
 //! BLE Pairing Data APIs
 //!
 
-bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out, char *name_out,
-                                             bool *requires_address_pinning_out,
+bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
+                                             char *name_out, bool *requires_address_pinning_out,
                                              uint8_t *flags) {
   bool rv;
   prv_lock();
@@ -429,7 +430,7 @@ bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out, ch
     }
 
     if (pairing_info_out) {
-      *pairing_info_out = (SMPairingInfo) {
+      *pairing_info_out = (struct pbl_bt_sm_pairing_info){
         .local_encryption_info.ltk = data.l_ltk,
         .local_encryption_info.ediv = data.l_ediv,
         .local_encryption_info.rand = data.l_rand,
@@ -445,13 +446,13 @@ bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out, ch
         .is_mitm_protection_enabled = data.is_mitm_protection_enabled,
 
         .is_local_encryption_info_valid =
-        SPRF_FLAG_IS_SET(data.fields, SprfValidFields_LocalEncryptionInfoValid),
+            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_LocalEncryptionInfoValid),
         .is_remote_encryption_info_valid =
-        SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteEncryptionInfoValid),
+            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteEncryptionInfoValid),
         .is_remote_identity_info_valid =
-        SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteIdentityInfoValid),
+            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteIdentityInfoValid),
         .is_remote_signing_info_valid =
-        SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteSigningInfoValid),
+            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteSigningInfoValid),
       };
     }
 
@@ -467,7 +468,7 @@ bool shared_prf_storage_get_ble_pairing_data(SMPairingInfo *pairing_info_out, ch
       const bool name_rv = SPRF_FETCH_FIELD(name_data, ble_pairing_name);
       // Should we return a failure on a failed name get?
       if (name_rv) {
-        strncpy(name_out, name_data.name, BT_DEVICE_NAME_BUFFER_SIZE);
+        strncpy(name_out, name_data.name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
       } else {
         name_out[0] = '\0';
       }
@@ -480,9 +481,9 @@ unlock:
   return rv;
 }
 
-void shared_prf_storage_store_ble_pairing_data(
-    const SMPairingInfo *pairing_info, const char *name, bool requires_address_pinning,
-    uint8_t flags) {
+void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
+                                               const char *name, bool requires_address_pinning,
+                                               uint8_t flags) {
   if (!pairing_info || sm_is_pairing_info_empty(pairing_info)) {
     PBL_LOG_WRN("PRF Storage: Attempting to store an NULL or empty pairing info");
     return;
@@ -490,7 +491,7 @@ void shared_prf_storage_store_ble_pairing_data(
 
   prv_lock();
   {
-    SprfBlePairingData data = (SprfBlePairingData) {
+    SprfBlePairingData data = (SprfBlePairingData){
       .l_ediv = pairing_info->local_encryption_info.ediv,
       .l_ltk = pairing_info->local_encryption_info.ltk,
       .l_rand = pairing_info->local_encryption_info.rand,
@@ -545,7 +546,7 @@ void shared_prf_storage_erase_ble_pairing_data(void) {
 //! Getting started bit
 //!
 
-bool shared_prf_storage_get_ble_pinned_address(BTDeviceAddress *address_out) {
+bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
   bool rv;
   prv_lock();
   {
@@ -568,7 +569,7 @@ unlock:
 }
 
 //! Stores the new BLE Pinned Address in the shared storage.
-void shared_prf_storage_set_ble_pinned_address(const BTDeviceAddress *address) {
+void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address) {
   prv_lock();
   {
     if (address) {
@@ -578,6 +579,52 @@ void shared_prf_storage_set_ble_pinned_address(const BTDeviceAddress *address) {
       SPRF_PERSIST_FIELD(data, pinned_address);
     } else {
       SPRF_ERASE_FIELD(pinned_address);
+    }
+  }
+  prv_unlock();
+}
+
+//!
+//! Local identity address
+//!
+
+bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_out) {
+  bool rv = false;
+  prv_lock();
+  {
+    // Not part of the page validation: a bad value only reads as absent, so
+    // bytes left in this former scratch area can never invalidate a page.
+    SprfLocalIdentityAddress data;
+    const size_t offset = offsetof(SharedPRFData, local_identity_address);
+    flash_read_bytes((uint8_t *)&data, prv_current_page_flash_addr() + offset, sizeof(data));
+
+    const uint32_t crc =
+        crc32(CRC32_INIT, SPRF_FIELD_DATA(&data), SPRF_FIELD_DATA_SIZE(sizeof(data)));
+    if (data.crc == SPRF_UNWRITTEN_CRC || data.crc != crc) {
+      goto unlock;
+    }
+
+    if (address_out) {
+      *address_out = data.address;
+    }
+    rv = true;
+  }
+
+unlock:
+  prv_unlock();
+  return rv;
+}
+
+void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *address) {
+  prv_lock();
+  {
+    if (address) {
+      SprfLocalIdentityAddress data = {
+        .address = *address,
+      };
+      SPRF_PERSIST_FIELD(data, local_identity_address);
+    } else {
+      SPRF_ERASE_FIELD(local_identity_address);
     }
   }
   prv_unlock();
@@ -606,9 +653,7 @@ unlock:
 void shared_prf_storage_set_getting_started_complete(bool set) {
   prv_lock();
   {
-    SprfGettingStarted data = {
-      .is_complete = set
-    };
+    SprfGettingStarted data = {.is_complete = set};
     SPRF_PERSIST_FIELD(data, getting_started);
   }
   prv_unlock();
@@ -618,15 +663,17 @@ void shared_prf_storage_set_getting_started_complete(bool set) {
 //! Legacy Stubs for BT Classic - Should never be called so assert if they are!
 //!
 
-bool shared_prf_storage_get_bt_classic_pairing_data(
-    BTDeviceAddress *addr_out, char *device_name_out, SM128BitKey *link_key_out,
-    uint8_t *platform_bits) {
+bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,
+                                                    char *device_name_out,
+                                                    struct pbl_bt_sm_key *link_key_out,
+                                                    uint8_t *platform_bits) {
   WTF;
 }
 
-void shared_prf_storage_store_bt_classic_pairing_data(
-    BTDeviceAddress *addr, const char *device_name, SM128BitKey *link_key,
-    uint8_t platform_bits) {
+void shared_prf_storage_store_bt_classic_pairing_data(struct pbl_bt_addr *addr,
+                                                      const char *device_name,
+                                                      struct pbl_bt_sm_key *link_key,
+                                                      uint8_t platform_bits) {
   WTF;
 }
 
@@ -638,15 +685,15 @@ void shared_prf_storage_erase_bt_classic_pairing_data(void) {
   WTF;
 }
 
-void shared_prf_store_pairing_data(
-    SMPairingInfo *pairing_info, const char *device_name_ble, BTDeviceAddress *addr,
-    const char *device_name_classic, SM128BitKey *link_key, uint8_t platform_bits) {
+void shared_prf_store_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info,
+                                   const char *device_name_ble, struct pbl_bt_addr *addr,
+                                   const char *device_name_classic, struct pbl_bt_sm_key *link_key,
+                                   uint8_t platform_bits) {
   WTF;
 }
 
 void command_force_shared_prf_flush(void) {
 }
-
 
 //!
 //! Unit test functions

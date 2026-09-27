@@ -443,10 +443,22 @@ class ReliableTransport:
 
     def down(self):
         self.closed = True
+        with self.transmit_lock:
+            if self.retransmit_timer:
+                self.retransmit_timer.cancel()
+                self.retransmit_timer = None
         self.close_all_sockets()
         self.command_socket.close()
         self.response_socket.close()
         self.ncp.down()
+
+    def _send(self, socket, packet):
+        # A timer or the receive loop can race the transport going down.
+        try:
+            socket.send(packet)
+        except exceptions.SocketClosed:
+            return False
+        return True
 
     def close_all_sockets(self):
         for socket in list(self.sockets.values()):
@@ -470,7 +482,8 @@ class ReliableTransport:
             port=port,
             information=information,
         )
-        self.command_socket.send(packet)
+        if not self._send(self.command_socket, packet):
+            return
         self.stats["info_packets_sent"] += 1
         self.last_packet_sent_time = time.time()
 
@@ -553,14 +566,14 @@ class ReliableTransport:
             command = build_reliable_supervisory_packet(
                 kind=kind, poll=poll, ack_number=self.receive_variable
             )
-            self.command_socket.send(command)
+            self._send(self.command_socket, command)
 
     def send_supervisory_response(self, kind, final=False):
         with self.transmit_lock:
             response = build_reliable_supervisory_packet(
                 kind=kind, final=final, ack_number=self.receive_variable
             )
-            self.response_socket.send(response)
+            self._send(self.response_socket, response)
 
     def command_packet_received(self, packet):
         if not self.ncp.is_Opened():

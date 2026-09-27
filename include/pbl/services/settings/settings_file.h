@@ -9,19 +9,19 @@
 
 // Deleted records have their key stick around for at least DELETED_LIFETIME
 // before they can be garbage collected from the file in which they are
-// contained, that way they have time to propegate to all devices we end up
-// syncronizing with. For more information, refer to the sync protocol proposal:
+// contained, that way they have time to propagate to all devices we end up
+// synchronizing with. For more information, refer to the sync protocol proposal:
 // https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=26837564
 //
 // FIXME: See PBL-18945
 #define DELETED_LIFETIME (0 * SECONDS_PER_DAY)
 
 //! A SettingsFile is just a simple binary key-value store. Keys can be strings,
-//! uint32_ts, or arbitrary bytes. Values are similarilly flexible. All
+//! uint32_ts, or arbitrary bytes. Values are similarly flexible. All
 //! operations are atomic, so a reboot in the middle of changing the value for a
 //! key will always either complete, returning the new value upon reboot, or
 //! will just return the old value.
-//! It also supports bidirection syncronization between the phone & watch,
+//! It also supports bidirectional syncronization between the phone & watch,
 //! using timestamps to resolve conflicts.
 //! Note that although all operations are atomic, they are not thread-safe. If
 //! you will be accessing a SettingsFile from multiple threads, make sure you
@@ -71,28 +71,25 @@ typedef struct SettingsFile {
   int cur_record_pos;
 } SettingsFile;
 
-
 //! max_used_space should be >= 5317 for persist files to make sure we can
 //! always fit all of the records in the worst case (if the programmer stored
 //! nothing but booleans).
 //! Note: If the settings file already exists, the max_used_space parameter is
 //! ignored. We could change this if the need arises.
-status_t settings_file_open(SettingsFile *file, const char *name,
-                            int max_used_space);
-status_t settings_file_open_growable(SettingsFile *file, const char *name,
-                                     int max_used_space, int initial_alloc_size);
+status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space);
+status_t settings_file_open_growable(SettingsFile *file, const char *name, int max_used_space,
+                                     int initial_alloc_size);
 void settings_file_close(SettingsFile *file);
 
 bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len);
-status_t settings_file_delete(SettingsFile *file,
-                              const void *key, size_t key_len);
+status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len);
 
 int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len);
 //! val_out_len must exactly match the length of the record on disk.
-status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len,
-                           void *val_out, size_t val_out_len);
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
-                           const void *val, size_t val_len);
+status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
+                           size_t val_out_len);
+status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, const void *val,
+                           size_t val_len);
 
 //! Set a record with a specific timestamp instead of the current time.
 //! This is useful when rewriting files and preserving original timestamps.
@@ -132,17 +129,13 @@ void settings_file_set_change_callback(SettingsFileChangeCallback callback);
 //! set a byte in a setting. This can only be used a byte at a time to guarantee
 //! atomicity. Do not use to modify several bytes in a row!
 //! Note that only the reset bits will be applied (it writes flash directly)
-status_t settings_file_set_byte(
-    SettingsFile *file, const void *key, size_t key_len,
-    size_t offset, uint8_t byte);
+status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_len, size_t offset,
+                                uint8_t byte);
 
-
-
-  //////////////////
- // Each/rewrite //
 //////////////////
-typedef void (*SettingsFileGetter)(SettingsFile *file,
-                                   void *buf, size_t buf_len);
+// Each/rewrite //
+//////////////////
+typedef void (*SettingsFileGetter)(SettingsFile *file, void *buf, size_t buf_len);
 
 typedef struct {
   uint32_t last_modified;
@@ -156,31 +149,23 @@ typedef struct {
 //! Callback used for using settings_file_each.
 //! The bool returned is used to control the iteration.
 //! - If a callback returns true, the iteration continues
-//! - If a callback returns false, the ieration stops.
-typedef bool (*SettingsFileEachCallback)(SettingsFile *file,
-                                         SettingsRecordInfo *info,
+//! - If a callback returns false, the iteration stops.
+typedef bool (*SettingsFileEachCallback)(SettingsFile *file, SettingsRecordInfo *info,
                                          void *context);
 //! Calls cb for each and every entry within the given file.
 //! Note that you cannot modify the settings file while iterating. If you want
 //! to do this, try settings_file_rewrite instead. (you can read other entries
 //! without fault).
-status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb,
-                            void *context);
+status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context);
 
-
-typedef void (*SettingsFileRewriteCallback)(SettingsFile *old_file,
-                                            SettingsFile *new_file,
-                                            SettingsRecordInfo *info,
-                                            void *context);
+typedef void (*SettingsFileRewriteCallback)(SettingsFile *old_file, SettingsFile *new_file,
+                                            SettingsRecordInfo *info, void *context);
 //! Opens a new SettingsFile with the same name as the original SettingsFile,
 //! in overwrite mode. This new file is passed into the given
 //! SettingsFileRewriteCallback, which is called for each entry within the
 //! original file. If you desire to preserve a key/value pair, you must write
 //! it to the new file.
-status_t settings_file_rewrite(SettingsFile *file,
-                               SettingsFileRewriteCallback cb,
-                               void *context);
-
+status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context);
 
 //! Callback used for using settings_file_rewrite_filtered.
 //! The bool returned is used to control whether or not the record is included in the file

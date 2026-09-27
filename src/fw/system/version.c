@@ -6,15 +6,13 @@
 #include "flash_region/flash_region.h"
 #include "system/firmware_storage.h"
 #include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/string.h"
 
 #include <ctype.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "version.h"
 
@@ -24,7 +22,7 @@
 //! .note.gnu.build-id section in src/fw/fw_common.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
-const FirmwareMetadata TINTIN_METADATA SECTION(".pbl_fw_version") = {
+const FirmwareMetadata TINTIN_METADATA PBL_SECTION(".pbl_fw_version") = {
   .version_timestamp = GIT_TIMESTAMP,
   .version_tag = GIT_TAG,
   .version_short = GIT_REVISION,
@@ -63,35 +61,40 @@ static bool prv_version_copy_flash_fw_metadata(FirmwareMetadata *out_metadata,
       firmware_storage_read_firmware_description(flash_address);
 
   if (check_crc &&
-      !firmware_storage_check_valid_firmware_description(flash_address,
-                                                         &firmware_description)) {
+      !firmware_storage_check_valid_firmware_description(flash_address, &firmware_description)) {
     *out_metadata = (FirmwareMetadata){};
     return false;
   }
   uint32_t fw_len = firmware_description.description_length + firmware_description.firmware_length;
 #else
-  FirmwareHeader header =
-      firmware_storage_read_firmware_header(flash_address);
-  if (check_crc &&
-      !firmware_storage_check_valid_firmware_header(flash_address,
-                                                    &header)) {
+  FirmwareHeader header = firmware_storage_read_firmware_header(flash_address);
+  if (check_crc && !firmware_storage_check_valid_firmware_header(flash_address, &header)) {
     *out_metadata = (FirmwareMetadata){};
     return false;
   }
   uint32_t fw_len = header.fw_length;
 #endif
   // The FirmwareMetadata is stored at the end of the binary
-  const uint32_t metadata_offset = flash_address + FIRMWARE_OFFSET + fw_len - sizeof(FirmwareMetadata);
+  const uint32_t metadata_offset =
+      flash_address + FIRMWARE_OFFSET + fw_len - sizeof(FirmwareMetadata);
 
-  flash_read_bytes((uint8_t*)out_metadata, metadata_offset, sizeof(FirmwareMetadata));
+  flash_read_bytes((uint8_t *)out_metadata, metadata_offset, sizeof(FirmwareMetadata));
 
   return true;
 }
 
 bool version_copy_recovery_fw_metadata(FirmwareMetadata *out_metadata) {
+#ifdef CONFIG_QEMU
+  // QEMU has no recovery firmware. Report the running one, so the phone app
+  // does not treat the emulator as a watch without PRF.
+  version_copy_running_fw_metadata(out_metadata);
+  out_metadata->is_recovery_firmware = true;
+  return true;
+#else
   const bool check_crc = true;
   return prv_version_copy_flash_fw_metadata(out_metadata, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
                                             check_crc);
+#endif
 }
 
 bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
@@ -101,12 +104,9 @@ bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
   return prv_version_copy_flash_fw_metadata(out_metadata, addr, check_crc);
 }
 
-bool version_copy_recovery_fw_version(char* dest, const int dest_len_bytes) {
+bool version_copy_recovery_fw_version(char *dest, const int dest_len_bytes) {
   FirmwareMetadata out_metadata;
-  const bool check_crc = true;
-  bool success = prv_version_copy_flash_fw_metadata(&out_metadata,
-                                                    FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-                                                    check_crc);
+  bool success = version_copy_recovery_fw_metadata(&out_metadata);
   if (success) {
     strncpy(dest, out_metadata.version_tag, dest_len_bytes);
   }
@@ -121,14 +121,12 @@ bool version_is_prf_installed(void) {
   return firmware_storage_check_valid_firmware_description(FLASH_REGION_SAFE_FIRMWARE_BEGIN,
                                                            &firmware_description);
 #else
-  FirmwareHeader header =
-      firmware_storage_read_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN);
-  return firmware_storage_check_valid_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-                                                      &header);
+  FirmwareHeader header = firmware_storage_read_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN);
+  return firmware_storage_check_valid_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN, &header);
 #endif
 }
 
-const uint8_t * version_get_build_id(size_t *out_len) {
+const uint8_t *version_get_build_id(size_t *out_len) {
   if (out_len) {
     *out_len = TINTIN_BUILD_ID.data_length;
   }
@@ -141,8 +139,7 @@ void version_copy_build_id_hex_string(char *buffer, size_t buffer_bytes_left,
                                       const ElfExternalNote *elf_build_id) {
   size_t build_id_bytes_left = elf_build_id->data_length;
   const uint8_t *build_id = &elf_build_id->data[elf_build_id->name_length];
-  byte_stream_to_hex_string(buffer, buffer_bytes_left, build_id,
-                            build_id_bytes_left, false);
+  byte_stream_to_hex_string(buffer, buffer_bytes_left, build_id, build_id_bytes_left, false);
 }
 
 void version_copy_current_build_id_hex_string(char *buffer, size_t buffer_bytes_left) {

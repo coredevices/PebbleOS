@@ -10,4 +10,4 @@
 
 //! @param modal_is_destination Whether the animation should animate to the modal or not
 //! @return \ref CompositorTransition for the requested modal animation
-const CompositorTransition* compositor_modal_transition_to_modal_get(bool modal_is_destination);
+const CompositorTransition *compositor_modal_transition_to_modal_get(bool modal_is_destination);

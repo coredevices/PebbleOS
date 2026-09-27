@@ -15,7 +15,7 @@
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_driver_gatt.h"
+#include "fake_bt_gatt.h"
 #include "fake_events.h"
 #include "fake_new_timer.h"
 #include "fake_pbl_malloc.h"
@@ -50,8 +50,8 @@ uint16_t gaps_get_starting_att_handle(void) {
 
 #define TEST_GATT_CONNECTION_ID (1234)
 
-static BTDeviceInternal prv_dummy_device(uint8_t octet) {
-  BTDeviceAddress address = {
+static struct pbl_bt_device_internal prv_dummy_device(uint8_t octet) {
+  struct pbl_bt_addr address = {
     .octets = {
       [0] = octet,
       [1] = octet,
@@ -61,12 +61,12 @@ static BTDeviceInternal prv_dummy_device(uint8_t octet) {
       [5] = octet,
     },
   };
-  BTDevice device = bt_device_init_with_address(address, true /* is_random */);
-  return *(BTDeviceInternal *)(&device);
+  struct pbl_bt_device device = bt_device_init_with_address(address, true /* is_random */);
+  return *(struct pbl_bt_device_internal *)(&device);
 }
 
-static BTDeviceInternal prv_connected_dummy_device(uint8_t octet) {
-  BTDeviceInternal device = prv_dummy_device(octet);
+static struct pbl_bt_device_internal prv_connected_dummy_device(uint8_t octet) {
+  struct pbl_bt_device_internal device = prv_dummy_device(octet);
   gap_le_connection_add(&device, NULL, true /* local_is_master */, TIMER_INVALID_ID);
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
   connection->gatt_connection_id = TEST_GATT_CONNECTION_ID;
@@ -78,16 +78,16 @@ static void prv_assert_no_event(void) {
   cl_assert_equal_i(event.type, PEBBLE_NULL_EVENT);
 }
 
-static void prv_assert_event(const BTDeviceInternal *device, BTErrno status) {
+static void prv_assert_event(const struct pbl_bt_device_internal *device,
+                             enum pbl_bt_errno status) {
   PebbleEvent event = fake_event_get_last();
   cl_assert_equal_i(event.type, PEBBLE_BLE_GATT_CLIENT_EVENT);
   cl_assert_equal_i(event.bluetooth.le.gatt_client_service.subtype,
                     PebbleBLEGATTClientEventTypeServiceChange);
-  cl_assert_equal_i(event.bluetooth.le.gatt_client_service.info->status,
-                    status);
-  const BTDeviceInternal event_device = event.bluetooth.le.gatt_client_service.info->device;
-  const bool equal_devices = bt_device_equal(&device->opaque,
-                                 &event_device.opaque);
+  cl_assert_equal_i(event.bluetooth.le.gatt_client_service.info->status, status);
+  const struct pbl_bt_device_internal event_device =
+      event.bluetooth.le.gatt_client_service.info->device;
+  const bool equal_devices = bt_device_equal(&device->opaque, &event_device.opaque);
   cl_assert_equal_b(equal_devices, true);
 
   // clear the event
@@ -95,12 +95,13 @@ static void prv_assert_event(const BTDeviceInternal *device, BTErrno status) {
   fake_event_reset_count();
 }
 
-static void prv_simulate_and_assert_discovery_of_one_service(const BTDeviceInternal *device) {
+static void prv_simulate_and_assert_discovery_of_one_service(
+    const struct pbl_bt_device_internal *device) {
   // Simulate discovery of Blood Pressure service:
   fake_gatt_put_discovery_indication_blood_pressure_service(TEST_GATT_CONNECTION_ID);
   fake_gatt_put_discovery_complete_event(GATT_SERVICE_DISCOVERY_STATUS_SUCCESS,
                                          TEST_GATT_CONNECTION_ID);
-  prv_assert_event(device, BTErrnoOK);
+  prv_assert_event(device, PBL_BT_ERRNO_OK);
 }
 
 // Tests
@@ -123,33 +124,31 @@ void test_gatt_client_discovery__cleanup(void) {
 // Edge cases
 
 void test_gatt_client_discovery__not_connected(void) {
-  BTDeviceInternal device = prv_dummy_device(1);
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device),
-                    BTErrnoInvalidParameter);
+  struct pbl_bt_device_internal device = prv_dummy_device(1);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_INVALID_PARAMETER);
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 }
 
 void test_gatt_client_discovery__already_in_progress(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery for device:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), true);
 
   // Start again (expect to fail):
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device),
-                    BTErrnoInvalidState);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_INVALID_STATE);
 
   // take down the connection and a disconnection event should be emitted
   gap_le_connection_remove(&device);
-  prv_assert_event(&device, BTErrnoServiceDiscoveryDisconnected);
+  prv_assert_event(&device, PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED);
 }
 
 void test_gatt_client_discovery__event_is_sent_when_already_discovered(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), true);
 
   // Simulate discovery of 1 service:
@@ -157,23 +156,23 @@ void test_gatt_client_discovery__event_is_sent_when_already_discovered(void) {
   fake_gatt_put_discovery_complete_event(GATT_SERVICE_DISCOVERY_STATUS_SUCCESS,
                                          TEST_GATT_CONNECTION_ID);
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
-  prv_assert_event(&device, BTErrnoOK);
+  prv_assert_event(&device, PBL_BT_ERRNO_OK);
 
   fake_event_clear_last();
 
   // Start discovery again, expect not to run (already discovered):
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 
   // Expect event:
-  prv_assert_event(&device, BTErrnoOK);
+  prv_assert_event(&device, PBL_BT_ERRNO_OK);
 }
 
 void test_gatt_client_discovery__disconnected_during_discovery(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   // Simulate disconnection:
   gap_le_connection_remove(&device);
   // Process racing discovery indication:
@@ -181,22 +180,22 @@ void test_gatt_client_discovery__disconnected_during_discovery(void) {
   // Bluetopia's GATT module does *NOT* emit a service discovery completion event for disconnections
 
   // Test that our API *does* emit an service discovery event with "disconnected" reason:
-  prv_assert_event(&device, BTErrnoServiceDiscoveryDisconnected);
+  prv_assert_event(&device, PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED);
 }
 
 void test_gatt_client_discovery__complete_error(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   // Simulate getting one service indication...
   fake_gatt_put_discovery_indication_blood_pressure_service(TEST_GATT_CONNECTION_ID);
   // ... then a failure:
   fake_gatt_put_discovery_complete_event(GATT_SERVICE_DISCOVERY_STATUS_RESPONSE_TIMEOUT,
                                          TEST_GATT_CONNECTION_ID);
   // Expect event with error status and 0 services:
-  prv_assert_event(&device,
-                   BTErrnoWithBluetopiaError(GATT_SERVICE_DISCOVERY_STATUS_RESPONSE_TIMEOUT));
+  prv_assert_event(
+      &device, PBL_BT_ERRNO_WITH_INTERNAL_ERROR(GATT_SERVICE_DISCOVERY_STATUS_RESPONSE_TIMEOUT));
   // Expect service discovery to be stopped:
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 }
@@ -204,13 +203,13 @@ void test_gatt_client_discovery__complete_error(void) {
 // -------------------------------------------------------------------------------------------------
 // Watchdog timeout tests
 
-static void prv_fire_watchdog_timeouts(const BTDeviceInternal *device, int retries) {
+static void prv_fire_watchdog_timeouts(const struct pbl_bt_device_internal *device, int retries) {
   for (int i = 0; i <= retries; ++i) {
     const int start_count = fake_gatt_is_service_discovery_start_count();
     const int stop_count = fake_gatt_is_service_discovery_stop_count();
 
     // Fire the watchdog timer:
-    const TimerID watchdog_timer = bt_driver_gatt_get_watchdog_timer_id();
+    const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
     stub_new_timer_fire(watchdog_timer);
 
     // Check whether GATT_Stop_Service_Discovery has been called:
@@ -223,29 +222,29 @@ static void prv_fire_watchdog_timeouts(const BTDeviceInternal *device, int retri
       prv_assert_no_event();
     } else {
       // Last iteration: expect event with error status and 0 services:
-      prv_assert_event(device, BTErrnoServiceDiscoveryTimeout);
+      prv_assert_event(device, PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT);
     }
   }
 }
 
 void test_gatt_client_discovery__watchdog_error_out_after_max_retries(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   prv_fire_watchdog_timeouts(&device, GATT_CLIENT_DISCOVERY_MAX_RETRY);
 }
 
 void test_gatt_client_discovery__watchdog_retry_counter_not_affecting_successive_process(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   prv_fire_watchdog_timeouts(&device, GATT_CLIENT_DISCOVERY_MAX_RETRY);
 
   // Make sure the previous retry counter doesn't affect any new discovery process:
   fake_event_clear_last();
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
 
   // Fire watchdog one less time than the maximum:
   prv_fire_watchdog_timeouts(&device, GATT_CLIENT_DISCOVERY_MAX_RETRY - 1);
@@ -255,17 +254,17 @@ void test_gatt_client_discovery__watchdog_retry_counter_not_affecting_successive
 }
 
 void test_gatt_client_discovery__watchdog_race_with_stopping(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
 
   // Make Bluetopia's GATT_Stop_Service_Discovery fail:
   // (Service discovery has finished in the mean time, disconnected, ...)
   fake_gatt_set_stop_return_value(BTGATT_ERROR_INVALID_PARAMETER);
 
   // Fire the watchdog timer:
-  const TimerID watchdog_timer = bt_driver_gatt_get_watchdog_timer_id();
+  const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
   stub_new_timer_fire(watchdog_timer);
 
   // No event should be generated, because the finishing / disconnecting / ... should cause
@@ -275,39 +274,40 @@ void test_gatt_client_discovery__watchdog_race_with_stopping(void) {
 
   // take down the connection and a disconnection event should be emitted
   gap_le_connection_remove(&device);
-  prv_assert_event(&device, BTErrnoServiceDiscoveryDisconnected);
+  prv_assert_event(&device, PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED);
 }
 
 void test_gatt_client_discovery__watchdog_race_with_restarting(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
 
   // Make Bluetopia's GATT_Start_Service_Discovery fail:
   // (Disconnected in the mean time, ...)
   fake_gatt_set_start_return_value(BTGATT_ERROR_INVALID_PARAMETER);
 
   // Fire the watchdog timer:
-  const TimerID watchdog_timer = bt_driver_gatt_get_watchdog_timer_id();
+  const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
   stub_new_timer_fire(watchdog_timer);
 
   // Stopping did not fail, but restarting did. In this case we need to generate an event that
   // the discovery process failed. The error from GATT_Start_Service_Discovery is expected to be
   // passed in the event.
-  prv_assert_event(&device, BTErrnoWithBluetopiaError(BTGATT_ERROR_INVALID_PARAMETER));
+  prv_assert_event(&device, PBL_BT_ERRNO_WITH_INTERNAL_ERROR(BTGATT_ERROR_INVALID_PARAMETER));
 }
 
 // -------------------------------------------------------------------------------------------------
 // Re-discovery
 
-extern BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device);
+extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
+    const struct pbl_bt_device_internal *device);
 
 void test_gatt_client_discovery__rediscover_not_already_running(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   prv_simulate_and_assert_discovery_of_one_service(&device);
 
   GAPLEConnection *connection = gap_le_connection_by_gatt_id(TEST_GATT_CONNECTION_ID);
@@ -317,10 +317,10 @@ void test_gatt_client_discovery__rediscover_not_already_running(void) {
   fake_event_clear_last();
 
   // Re-discovery:
-  cl_assert_equal_i(gatt_client_discovery_rediscover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_rediscover_all(&device), PBL_BT_ERRNO_OK);
 
   // Expect "Database Changed" event:
-  prv_assert_event(&device, BTErrnoServiceDiscoveryDatabaseChanged);
+  prv_assert_event(&device, PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED);
   // Expect all services nodes to be cleaned up:
   cl_assert_equal_i(list_count(&connection->gatt_remote_services->node), 0);
 
@@ -330,10 +330,10 @@ void test_gatt_client_discovery__rediscover_not_already_running(void) {
 }
 
 void test_gatt_client_discovery__rediscover_already_running(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
   // Put one service, but do not finish...
   fake_gatt_put_discovery_indication_blood_pressure_service(TEST_GATT_CONNECTION_ID);
   prv_assert_no_event();
@@ -341,33 +341,27 @@ void test_gatt_client_discovery__rediscover_already_running(void) {
   const int stop_count_before_rediscovery = fake_gatt_is_service_discovery_stop_count();
 
   // Re-discovery:
-  cl_assert_equal_i(gatt_client_discovery_rediscover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_rediscover_all(&device), PBL_BT_ERRNO_OK);
 
   // Assert the previous process has been stopped:
   cl_assert_equal_i(stop_count_before_rediscovery + 1, fake_gatt_is_service_discovery_stop_count());
 
   // Expect "Database Changed" event:
-  prv_assert_event(&device, BTErrnoServiceDiscoveryDatabaseChanged);
+  prv_assert_event(&device, PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED);
 
   // Put one, expect one:
   prv_simulate_and_assert_discovery_of_one_service(&device);
 }
 
 extern void gatt_client_discovery_discover_range(GAPLEConnection *connection,
-                                                 ATTHandleRange *hdl_range);
+                                                 struct pbl_bt_att_handle_range *hdl_range);
 
 void test_gatt_client_discovery__multiple_jobs_pending(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
 
-  ATTHandleRange range = {
-    .start = 0x1,
-    .end = 0x3000
-  };
-  ATTHandleRange range_alt = {
-    .start = 0x3001,
-    .end = 0x4000
-  };
+  struct pbl_bt_att_handle_range range = {.start = 0x1, .end = 0x3000};
+  struct pbl_bt_att_handle_range range_alt = {.start = 0x3001, .end = 0x4000};
 
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 
@@ -383,7 +377,7 @@ void test_gatt_client_discovery__multiple_jobs_pending(void) {
   // Nothing was found so we should just have a completion event
   cl_assert_equal_i(1, fake_event_get_count());
 
-  prv_assert_event(&device, BTErrnoOK);
+  prv_assert_event(&device, PBL_BT_ERRNO_OK);
   cl_assert_equal_i(2, fake_gatt_is_service_discovery_start_count());
 
   // next job should be in progress
@@ -399,7 +393,7 @@ void test_gatt_client_discovery__multiple_jobs_pending(void) {
   // service two events should be generated, one about the discovery complete
   // and one invalidating the just discovered service
   cl_assert_equal_i(2, fake_event_get_count());
-  prv_assert_event(&device, BTErrnoOK);
+  prv_assert_event(&device, PBL_BT_ERRNO_OK);
   cl_assert_equal_i(3, fake_gatt_is_service_discovery_start_count());
 
   fake_gatt_put_discovery_indication_blood_pressure_service(TEST_GATT_CONNECTION_ID);
@@ -412,38 +406,35 @@ void test_gatt_client_discovery__multiple_jobs_pending(void) {
   // Only one event should have been pended since we were not rediscovering the
   // same handle range
   cl_assert_equal_i(1, fake_event_get_count());
-  prv_assert_event(&device, BTErrnoOK);
+  prv_assert_event(&device, PBL_BT_ERRNO_OK);
 
   // Nothing discovered for final query
   fake_gatt_put_discovery_complete_event(GATT_SERVICE_DISCOVERY_STATUS_SUCCESS,
                                          TEST_GATT_CONNECTION_ID);
-  prv_assert_event(&device, BTErrnoOK);
-  
+  prv_assert_event(&device, PBL_BT_ERRNO_OK);
+
   cl_assert_equal_i(4, fake_gatt_is_service_discovery_start_count());
   cl_assert_equal_b(fake_gatt_is_service_discovery_running(), false);
 }
 
 void test_gatt_client_discovery__partial_and_full_discovery_jobs_intermixed(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
 
   // queue up a few jobs - note only one should be running at any time
-  ATTHandleRange range = {
-    .start = 0x1,
-    .end = 0x3000
-  };
+  struct pbl_bt_att_handle_range range = {.start = 0x1, .end = 0x3000};
   for (int i = 0; i < 10; i++) {
     gatt_client_discovery_discover_range(connection, &range);
   }
 
   // kick off a full discovery
-  cl_assert_equal_i(gatt_client_discovery_rediscover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_rediscover_all(&device), PBL_BT_ERRNO_OK);
 
   // Assert the previous process has been stopped:
   cl_assert_equal_i(1, fake_gatt_is_service_discovery_stop_count());
 
   // Expect "Database Changed" event:
-  prv_assert_event(&device, BTErrnoServiceDiscoveryDatabaseChanged);
+  prv_assert_event(&device, PBL_BT_ERRNO_SERVICE_DISCOVERY_DATABASE_CHANGED);
 
   prv_simulate_and_assert_discovery_of_one_service(&device);
 
@@ -457,7 +448,7 @@ void test_gatt_client_discovery__partial_and_full_discovery_jobs_intermixed(void
 // -------------------------------------------------------------------------------------------------
 // Test vectors
 
-static void prv_assert_blood_pressure_service(const GATTService *service) {
+static void prv_assert_blood_pressure_service(const struct pbl_bt_gatt_service *service) {
   const Service *bp_service = fake_gatt_get_blood_pressure_service();
 
   const uint16_t service_handle = bp_service->handle;
@@ -466,9 +457,10 @@ static void prv_assert_blood_pressure_service(const GATTService *service) {
   cl_assert_equal_i(service->num_att_handles_included_services, bp_service->num_included_services);
   cl_assert_equal_i(service->num_characteristics, bp_service->num_characteristics);
 
-  const GATTCharacteristic *characteristic_one = service->characteristics;
+  const struct pbl_bt_gatt_characteristic *characteristic_one = service->characteristics;
   const Characteristic *expected_characteristic1 = &bp_service->characteristics[0];
-  cl_assert_equal_i(characteristic_one->att_handle_offset, expected_characteristic1->handle - service_handle);
+  cl_assert_equal_i(characteristic_one->att_handle_offset,
+                    expected_characteristic1->handle - service_handle);
   cl_assert_equal_i(characteristic_one->num_descriptors, expected_characteristic1->num_descriptors);
   cl_assert_equal_i(characteristic_one->descriptors[0].att_handle_offset,
                     expected_characteristic1->descriptors[0].handle - service_handle);
@@ -476,10 +468,11 @@ static void prv_assert_blood_pressure_service(const GATTService *service) {
   cl_assert_equal_b(uuid_equal(&characteristic_one->uuid, &expected_characteristic1->uuid), true);
 
   // Second characteristic is tacked right after the first one:
-  const GATTCharacteristic *characteristic_two =
-                  (const GATTCharacteristic *) &characteristic_one->descriptors[1];
+  const struct pbl_bt_gatt_characteristic *characteristic_two =
+      (const struct pbl_bt_gatt_characteristic *)&characteristic_one->descriptors[1];
   const Characteristic *expected_characteristic2 = &bp_service->characteristics[1];
-  cl_assert_equal_i(characteristic_two->att_handle_offset, expected_characteristic2->handle - service_handle);
+  cl_assert_equal_i(characteristic_two->att_handle_offset,
+                    expected_characteristic2->handle - service_handle);
   cl_assert_equal_i(characteristic_two->num_descriptors, expected_characteristic2->num_descriptors);
   cl_assert_equal_i(characteristic_two->descriptors[0].att_handle_offset,
                     expected_characteristic2->descriptors[0].handle - service_handle);
@@ -488,16 +481,16 @@ static void prv_assert_blood_pressure_service(const GATTService *service) {
 }
 
 void test_gatt_client_discovery__single_blood_pressure_service(void) {
-  BTDeviceInternal device = prv_connected_dummy_device(1);
+  struct pbl_bt_device_internal device = prv_connected_dummy_device(1);
 
   // Start discovery:
-  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), BTErrnoOK);
+  cl_assert_equal_i(gatt_client_discovery_discover_all(&device), PBL_BT_ERRNO_OK);
 
   prv_simulate_and_assert_discovery_of_one_service(&device);
 
   GAPLEConnection *connection = gap_le_connection_by_gatt_id(TEST_GATT_CONNECTION_ID);
   // Expect one service, Blood Pressure:
   cl_assert_equal_i(list_count(&connection->gatt_remote_services->node), 1);
-  const GATTService *service = connection->gatt_remote_services->service;
+  const struct pbl_bt_gatt_service *service = connection->gatt_remote_services->service;
   prv_assert_blood_pressure_service(service);
 }

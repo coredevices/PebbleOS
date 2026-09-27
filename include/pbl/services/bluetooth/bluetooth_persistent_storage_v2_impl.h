@@ -3,59 +3,61 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
-#include <bluetooth/sm_types.h>
-#include <pbl/util/attributes.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/kernel/compiler.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct PACKED BtPersistLEEncryptionInfo {
-  SMLongTermKey ltk;
+typedef struct PBL_PACKED BtPersistLEEncryptionInfo {
+  struct pbl_bt_sm_key ltk;
   uint16_t ediv;
   uint64_t rand;
 } BtPersistLEEncryptionInfo;
 
-typedef struct PACKED BtPersistLEPairingInfo {
+typedef struct PBL_PACKED BtPersistLEPairingInfo {
   BtPersistLEEncryptionInfo local_encryption_info;
 
   BtPersistLEEncryptionInfo remote_encryption_info;
 
-  SMIdentityResolvingKey irk;
-  BTDeviceInternal identity;
+  struct pbl_bt_sm_key irk;
+  struct pbl_bt_device_internal identity;
 
-  SMConnectionSignatureResolvingKey csrk;
+  struct pbl_bt_sm_key csrk;
 
   //! True if local_encryption_info is valid
-  bool is_local_encryption_info_valid:1;
+  bool is_local_encryption_info_valid : 1;
 
   //! True if remote_encryption_info is valid
-  bool is_remote_encryption_info_valid:1;
+  bool is_remote_encryption_info_valid : 1;
 
   //! True if irk and identity are valid
-  bool is_remote_identity_info_valid:1;
+  bool is_remote_identity_info_valid : 1;
 
   //! True if csrk is valid
-  bool is_remote_signing_info_valid:1;
+  bool is_remote_signing_info_valid : 1;
 
   //! True if Man-in-the-middle protection was enabled during the pairing process.
-  bool is_mitm_protection_enabled:1;
+  bool is_mitm_protection_enabled : 1;
 
-  uint8_t rsvd:3;
+  uint8_t rsvd : 3;
 } BtPersistLEPairingInfo;
 
-static void bt_persistent_storage_assign_persist_pairing_info(BtPersistLEPairingInfo *out,
-                                                              const SMPairingInfo *in) {
-  *out = (BtPersistLEPairingInfo) {
-    .local_encryption_info = {
-      .ltk = in->local_encryption_info.ltk,
-      .rand = in->local_encryption_info.rand,
-      .ediv = in->local_encryption_info.ediv,
-    },
-    .remote_encryption_info = {
-      .ltk = in->remote_encryption_info.ltk,
-      .rand = in->remote_encryption_info.rand,
-      .ediv = in->remote_encryption_info.ediv,
-    },
+static void bt_persistent_storage_assign_persist_pairing_info(
+    BtPersistLEPairingInfo *out, const struct pbl_bt_sm_pairing_info *in) {
+  *out = (BtPersistLEPairingInfo){
+    .local_encryption_info =
+        {
+          .ltk = in->local_encryption_info.ltk,
+          .rand = in->local_encryption_info.rand,
+          .ediv = in->local_encryption_info.ediv,
+        },
+    .remote_encryption_info =
+        {
+          .ltk = in->remote_encryption_info.ltk,
+          .rand = in->remote_encryption_info.rand,
+          .ediv = in->remote_encryption_info.ediv,
+        },
     .irk = in->irk,
     .identity = in->identity,
     .csrk = in->csrk,
@@ -67,19 +69,21 @@ static void bt_persistent_storage_assign_persist_pairing_info(BtPersistLEPairing
   };
 }
 
-static void bt_persistent_storage_assign_sm_pairing_info(SMPairingInfo *out,
+static void bt_persistent_storage_assign_sm_pairing_info(struct pbl_bt_sm_pairing_info *out,
                                                          const BtPersistLEPairingInfo *in) {
-  *out = (SMPairingInfo) {
-    .local_encryption_info = {
-      .ltk = in->local_encryption_info.ltk,
-      .rand = in->local_encryption_info.rand,
-      .ediv = in->local_encryption_info.ediv,
-    },
-    .remote_encryption_info = {
-      .ltk = in->remote_encryption_info.ltk,
-      .rand = in->remote_encryption_info.rand,
-      .ediv = in->remote_encryption_info.ediv,
-    },
+  *out = (struct pbl_bt_sm_pairing_info){
+    .local_encryption_info =
+        {
+          .ltk = in->local_encryption_info.ltk,
+          .rand = in->local_encryption_info.rand,
+          .ediv = in->local_encryption_info.ediv,
+        },
+    .remote_encryption_info =
+        {
+          .ltk = in->remote_encryption_info.ltk,
+          .rand = in->remote_encryption_info.rand,
+          .ediv = in->remote_encryption_info.ediv,
+        },
     .irk = in->irk,
     .identity = in->identity,
     .csrk = in->csrk,

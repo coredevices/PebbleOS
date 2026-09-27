@@ -7,30 +7,25 @@
 #include "board/board.h"
 #include "system/passert.h"
 
-#include "FreeRTOS.h"
-
-#include <cmsis_core.h>
-#include <stddef.h>
-
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // QEMU pebble-simple-uart register offsets
-#define UART_DATA    0x00
-#define UART_STATE   0x04
-#define UART_CTRL    0x08
-#define UART_INT     0x0C
+#define UART_DATA  0x00
+#define UART_STATE 0x04
+#define UART_CTRL  0x08
+#define UART_INT   0x0C
 
 // STATE register bits
-#define STATE_TX_READY  (1 << 0)
-#define STATE_RX_READY  (1 << 1)
+#define STATE_TX_READY (1 << 0)
+#define STATE_RX_READY (1 << 1)
 
 // CTRL register bits (must match QEMU pebble-simple-uart)
-#define CTRL_TX_IE  (1 << 0)
-#define CTRL_RX_IE  (1 << 1)
+#define CTRL_TX_IE (1 << 0)
+#define CTRL_RX_IE (1 << 1)
 
 // INT register bits (must match QEMU pebble-simple-uart)
-#define INT_TX_PENDING  (1 << 0)
-#define INT_RX_PENDING  (1 << 1)
+#define INT_TX_PENDING (1 << 0)
+#define INT_RX_PENDING (1 << 1)
 
 void uart_init(UARTDevice *dev) {
   // Clear any pending interrupts
@@ -176,18 +171,16 @@ void uart_clear_rx_dma_buffer(UARTDevice *dev) {
 // Called from the IRQ handler trampoline defined via IRQ_MAP in the board file
 void uart_irq_handler(UARTDevice *dev) {
   uint32_t int_status = REG32(dev->base_addr + UART_INT);
-  bool should_context_switch = false;
 
   if (int_status & INT_RX_PENDING) {
     REG32(dev->base_addr + UART_INT) = INT_RX_PENDING;
     if (dev->state->rx_irq_handler && dev->state->rx_int_enabled) {
       // Stop if the handler disables RX interrupts (e.g. ISR buffer full);
       // remaining bytes stay in the UART FIFO for the next interrupt.
-      while (dev->state->rx_int_enabled &&
-             (REG32(dev->base_addr + UART_STATE) & STATE_RX_READY)) {
+      while (dev->state->rx_int_enabled && (REG32(dev->base_addr + UART_STATE) & STATE_RX_READY)) {
         uint8_t byte = (uint8_t)(REG32(dev->base_addr + UART_DATA) & 0xFF);
         UARTRXErrorFlags err = {};
-        should_context_switch |= dev->state->rx_irq_handler(dev, byte, &err);
+        dev->state->rx_irq_handler(dev, byte, &err);
       }
     }
   }
@@ -195,9 +188,7 @@ void uart_irq_handler(UARTDevice *dev) {
   if (int_status & INT_TX_PENDING) {
     REG32(dev->base_addr + UART_INT) = INT_TX_PENDING;
     if (dev->state->tx_irq_handler && dev->state->tx_int_enabled) {
-      should_context_switch |= dev->state->tx_irq_handler(dev);
+      dev->state->tx_irq_handler(dev);
     }
   }
-
-  portEND_SWITCHING_ISR(should_context_switch);
 }

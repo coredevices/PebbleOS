@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib/ui/option_menu_window.h"
+#include "shell/system_theme.h"
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/timeline/timeline_resources.h"
@@ -43,7 +44,7 @@
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_unobstructed_area.h"
 #include "stubs_vibes.h"
 #include "stubs_window_manager.h"
@@ -62,11 +63,12 @@ void test_option_menu_window__initialize(void) {
   fake_app_state_init();
   load_system_resources_fixture();
 
-  s_data = (OptionMenuTestData) {};
+  s_data = (OptionMenuTestData){};
   rtc_set_time(3 * SECONDS_PER_DAY);
 }
 
 void test_option_menu_window__cleanup(void) {
+  system_theme_set_content_size(PreferredContentSizeDefault);
 }
 
 // Helpers
@@ -103,8 +105,8 @@ static void prv_create_menu_and_render(MenuConfig *config) {
   const OptionMenuConfig option_menu_config = {
     .title = config->title ?: "Option Menu",
     .content_type = config->content_type,
-    .status_colors = { GColorWhite, GColorBlack },
-    .highlight_colors = { PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack), GColorWhite },
+    .status_colors = {GColorWhite, GColorBlack},
+    .highlight_colors = {PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack), GColorWhite},
     .icons_enabled = config->icons_enabled,
   };
   option_menu_configure(&s_data.option_menu, &option_menu_config);
@@ -129,20 +131,23 @@ static void prv_create_menu_and_render(MenuConfig *config) {
 
 void prv_create_menu_and_render_long_title(bool icons_enabled, const char *title,
                                            bool special_height) {
-  prv_create_menu_and_render(&(MenuConfig) {
+  prv_create_menu_and_render(&(MenuConfig){
     .title = title,
-    .content_type = special_height ? OptionMenuContentType_DoubleLine :
-                                     OptionMenuContentType_Default,
+    .content_type =
+        special_height ? OptionMenuContentType_DoubleLine : OptionMenuContentType_Default,
     .num_items = 3,
-    .items = (MenuItemConfig[]) {
-      {
-        .title = "Allow All Notifications",
-      }, {
-        .title = "Allow Phone Calls Only",
-      }, {
-        .title = "Mute All Notifications",
-      }
-    },
+    .items =
+        (MenuItemConfig[]){
+          {
+            .title = "Allow All Notifications",
+          },
+          {
+            .title = "Allow Phone Calls Only",
+          },
+          {
+            .title = "Mute All Notifications",
+          }
+        },
     .icons_enabled = icons_enabled,
   });
 }
@@ -173,20 +178,23 @@ void test_option_menu_window__long_title_special_height_icons(void) {
 
 void prv_create_menu_and_render_short_title(bool icons_enabled, const char *title,
                                             bool special_height) {
-  prv_create_menu_and_render(&(MenuConfig) {
+  prv_create_menu_and_render(&(MenuConfig){
     .title = title,
-    .content_type = special_height ? OptionMenuContentType_SingleLine :
-                                     OptionMenuContentType_Default,
+    .content_type =
+        special_height ? OptionMenuContentType_SingleLine : OptionMenuContentType_Default,
     .num_items = 3,
-    .items = (MenuItemConfig[]) {
-      {
-        .title = "Smaller",
-      }, {
-        .title = "Default",
-      }, {
-        .title = "Larger",
-      }
-    },
+    .items =
+        (MenuItemConfig[]){
+          {
+            .title = "Smaller",
+          },
+          {
+            .title = "Default",
+          },
+          {
+            .title = "Larger",
+          }
+        },
     .icons_enabled = icons_enabled,
   });
 }
@@ -212,5 +220,26 @@ void test_option_menu_window__short_title_special_height(void) {
 void test_option_menu_window__short_title_special_height_icons(void) {
   prv_create_menu_and_render_short_title(true /* icons_enabled */, "Special Height",
                                          true /* special_height */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_option_menu_window__short_title_default_height_icons_medium(void) {
+  system_theme_set_content_size(PreferredContentSizeMedium);
+  prv_create_menu_and_render_short_title(true /* icons_enabled */, "Default Height",
+                                         false /* special_height */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_option_menu_window__short_title_default_height_icons_extra_large(void) {
+  system_theme_set_content_size(PreferredContentSizeExtraLarge);
+  prv_create_menu_and_render_short_title(true /* icons_enabled */, "Default Height",
+                                         false /* special_height */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_option_menu_window__long_title_special_height_icons_extra_large(void) {
+  system_theme_set_content_size(PreferredContentSizeExtraLarge);
+  prv_create_menu_and_render_long_title(true /* icons_enabled */, "Special Height",
+                                        true /* special_height */);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }

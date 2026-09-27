@@ -19,8 +19,8 @@ void workout_data_update(void *data) {
                                            &workout_data->hr_zone);
 
   if (workout_data->duration_s && workout_data->distance_m) {
-    workout_data->avg_pace = health_util_get_pace(workout_data->duration_s,
-                                                  workout_data->distance_m);
+    workout_data->avg_pace =
+        health_util_get_pace(workout_data->duration_s, workout_data->distance_m);
   }
 }
 
@@ -30,28 +30,23 @@ void workout_data_fill_metric_value(WorkoutMetricType type, char *buffer, size_t
 
   switch (type) {
     case WorkoutMetricType_Hr:
-    case WorkoutMetricType_Steps:
-    {
-      snprintf(buffer, buffer_size, "%"PRId32, metric_value);
+    case WorkoutMetricType_Steps: {
+      snprintf(buffer, buffer_size, "%" PRId32, metric_value);
       break;
     }
-    case WorkoutMetricType_Distance:
-    {
+    case WorkoutMetricType_Distance: {
       const int conversion_factor = health_util_get_distance_factor();
       health_util_format_whole_and_decimal(buffer, buffer_size, metric_value, conversion_factor);
       break;
     }
-    case WorkoutMetricType_Duration:
-    {
-      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value,
-                                               true, i18n_owner);
+    case WorkoutMetricType_Duration: {
+      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value, true, i18n_owner);
       break;
     }
     case WorkoutMetricType_Pace:
-    case WorkoutMetricType_AvgPace:
-    {
-      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value,
-                                               false, i18n_owner);
+    case WorkoutMetricType_AvgPace: {
+      health_util_format_hours_minutes_seconds(buffer, buffer_size, metric_value, false,
+                                               i18n_owner);
       break;
     }
     case WorkoutMetricType_Speed:

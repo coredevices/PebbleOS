@@ -9,11 +9,11 @@
 ////////////////////////////////////////////////
 // App + Click Recognizer + Window = Glue code
 
-//! Calls the provider function of the window with the ClickConfig structs of the "app global" click recognizers.
-//! The window is set as context to of each of the ClickConfig's .context fields for convenience.
-//! In case window has a click_config_context set, it will use that as context instead of the window itself.
+//! Calls the provider function of the window with the ClickConfig structs of the "app global" click
+//! recognizers. The window is set as context to of each of the ClickConfig's .context fields for
+//! convenience. In case window has a click_config_context set, it will use that as context instead
+//! of the window itself.
 //! @see AppContext.click_recognizer[]
 struct Window;
 
-void app_click_config_setup_with_window(ClickManager* click_manager, struct Window *window);
-
+void app_click_config_setup_with_window(ClickManager *click_manager, struct Window *window);

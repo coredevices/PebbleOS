@@ -5,10 +5,10 @@
 
 //! Sleep levels, ordered from shallowest to deepest.
 typedef enum {
-  SOC_SF32LB_ACTIVE = 0,  //!< No sleep at all
-  SOC_SF32LB_WFI,         //!< Light WFI
-  SOC_SF32LB_DEEPWFI,     //!< Deep WFI
-  SOC_SF32LB_DEEPSLEEP,   //!< Deep sleep
+  SOC_SF32LB_ACTIVE = 0, //!< No sleep at all
+  SOC_SF32LB_WFI,        //!< Light WFI
+  SOC_SF32LB_DEEPWFI,    //!< Deep WFI
+  SOC_SF32LB_DEEPSLEEP,  //!< Deep sleep
 } SocSf32lbSleepLevel;
 
 //! Block the given sleep level and every deeper level. For example,

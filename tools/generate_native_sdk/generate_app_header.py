@@ -64,6 +64,7 @@ def make_app_header(exports_tree, output_filename, header_type, inject_text):
         writeline(f, "#include <string.h>")
         writeline(f, "#include <time.h>")
         writeline(f)
+        writeline(f, '#include "pbl/kernel/compiler.h"')
         writeline(f, '#include "pebble_warn_unsupported_functions.h"')
         if header_type == "app":
             writeline(f, '#include "pebble_sdk_version.h"')

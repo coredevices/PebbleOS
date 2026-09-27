@@ -5,16 +5,13 @@
 
 #include "console/prompt.h"
 #include <pbl/drivers/rtc.h>
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/analytics/backend.h"
-#include "pbl/services/system_task.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "pbl/util/math.h"
-#include "pbl/util/size.h"
 #include "pbl/util/uuid.h"
 
 PBL_LOG_MODULE_DEFINE(service_analytics, CONFIG_SERVICE_ANALYTICS_LOG_LEVEL);
@@ -22,19 +19,19 @@ PBL_LOG_MODULE_DEFINE(service_analytics, CONFIG_SERVICE_ANALYTICS_LOG_LEVEL);
 #define NATIVE_HEARTBEAT_RECORD_VERSION 3
 
 /* Heartbeat record logged to DLS */
-struct PACKED native_heartbeat_record {
+struct PBL_PACKED native_heartbeat_record {
   uint8_t version;
   uint64_t timestamp;
   uint8_t build_id[BUILD_ID_EXPECTED_LEN];
 #define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) uint32_t metric_##key;
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) int32_t metric_##key;
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)   int32_t metric_##key;
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) \
   uint32_t metric_##key;                                        \
   uint16_t metric_##key##_scale;
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) \
   int32_t metric_##key;                                       \
   uint16_t metric_##key##_scale;
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) uint32_t metric_##key;
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)       uint32_t metric_##key;
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) char metric_##key[(len) + 1];
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
@@ -46,15 +43,14 @@ struct PACKED native_heartbeat_record {
 };
 
 /* The record is logged as a raw byte blob, so it must have no padding. */
-_Static_assert(
-    sizeof(struct native_heartbeat_record) ==
-        sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) +sizeof(uint32_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) +sizeof(int32_t)
+_Static_assert(sizeof(struct native_heartbeat_record) ==
+                   sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               +sizeof(uint32_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 +sizeof(int32_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) +sizeof(uint32_t) + sizeof(uint16_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) +sizeof(int32_t) + sizeof(uint16_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) +sizeof(uint32_t)
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) +((len) + 1)
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   +sizeof(int32_t) + sizeof(uint16_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  +sizeof(uint32_t)
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            +((len) + 1)
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -62,16 +58,16 @@ _Static_assert(
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
-    ,
-    "native_heartbeat_record must be packed (no padding)");
+               ,
+               "native_heartbeat_record must be packed (no padding)");
 
 /* Type-specific internal index enums (dense, no gaps) */
 
 enum native_integer_index {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)
 #include "pbl/services/analytics/analytics.def"
@@ -121,12 +117,12 @@ enum native_string_index {
 /* Mapping tables: global key enum -> type-specific index (-1 if N/A) */
 
 static const int8_t s_key_to_integer[] = {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) NATIVE_INTEGER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   NATIVE_INTEGER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            -1,
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -137,12 +133,12 @@ static const int8_t s_key_to_integer[] = {
 };
 
 static const int8_t s_key_to_timer[] = {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) NATIVE_TIMER_IDX_##key,
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  NATIVE_TIMER_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            -1,
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -153,12 +149,12 @@ static const int8_t s_key_to_timer[] = {
 };
 
 static const int8_t s_key_to_string[] = {
-#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) -1,
-#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) NATIVE_STRING_IDX_##key,
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  -1,
+#define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            NATIVE_STRING_IDX_##key,
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -227,7 +223,7 @@ static const uint8_t s_string_lens[] = {
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
 };
 
-static PebbleMutex *s_mutex;
+static PBL_MUTEX_DEFINE(s_mutex);
 static DataLoggingSession *s_dls_session;
 
 extern const ElfExternalNote TINTIN_BUILD_ID;
@@ -292,23 +288,24 @@ static void prv_record_metrics(struct native_heartbeat_record *record, bool rese
 }
 
 void pbl_analytics__native_init(void) {
-  s_mutex = mutex_create();
-  PBL_ASSERTN(s_mutex != NULL);
 }
 
 void pbl_analytics__native_heartbeat(void) {
   struct native_heartbeat_record record;
 
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   prv_record_metrics(&record, true);
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 
   if (s_dls_session == NULL) {
     Uuid system_uuid = UUID_SYSTEM;
 
     s_dls_session = dls_create(DlsSystemTagAnalyticsNativeHeartbeat, DATA_LOGGING_BYTE_ARRAY,
                                sizeof(struct native_heartbeat_record), false, false, &system_uuid);
-    PBL_ASSERTN(s_dls_session != NULL);
+    if (s_dls_session == NULL) {
+      PBL_LOG_WRN("Native analytics DLS session unavailable");
+      return;
+    }
   }
 
   DataLoggingResult result = dls_log(s_dls_session, &record, 1);
@@ -322,9 +319,9 @@ static void prv_set_signed(enum pbl_analytics_key key, int32_t signed_value) {
   if (idx < 0) {
     return;
   }
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   s_integer_values[idx] = signed_value;
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static void prv_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {
@@ -332,9 +329,9 @@ static void prv_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value
   if (idx < 0) {
     return;
   }
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   s_integer_values[idx] = (int32_t)unsigned_value;
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static void prv_set_string(enum pbl_analytics_key key, const char *value) {
@@ -342,10 +339,10 @@ static void prv_set_string(enum pbl_analytics_key key, const char *value) {
   if (idx < 0) {
     return;
   }
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   strncpy(s_string_ptrs[idx], value, s_string_lens[idx]);
   s_string_ptrs[idx][s_string_lens[idx]] = '\0';
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static void prv_timer_start(enum pbl_analytics_key key) {
@@ -353,12 +350,12 @@ static void prv_timer_start(enum pbl_analytics_key key) {
   if (idx < 0) {
     return;
   }
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (!s_timers[idx].running) {
     s_timers[idx].running = true;
     s_timers[idx].start_ticks = rtc_get_ticks();
   }
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static void prv_timer_stop(enum pbl_analytics_key key) {
@@ -366,13 +363,13 @@ static void prv_timer_stop(enum pbl_analytics_key key) {
   if (idx < 0) {
     return;
   }
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (s_timers[idx].running) {
     RtcTicks elapsed = rtc_get_ticks() - s_timers[idx].start_ticks;
     s_timers[idx].value_ms += (int32_t)((elapsed * 1000) / RTC_TICKS_HZ);
     s_timers[idx].running = false;
   }
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static void prv_add(enum pbl_analytics_key key, int32_t amount) {
@@ -380,18 +377,18 @@ static void prv_add(enum pbl_analytics_key key, int32_t amount) {
   if (idx < 0) {
     return;
   }
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   s_integer_values[idx] += amount;
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 const struct pbl_analytics_backend_ops pbl_analytics__native_ops = {
-    .set_signed = prv_set_signed,
-    .set_unsigned = prv_set_unsigned,
-    .set_string = prv_set_string,
-    .timer_start = prv_timer_start,
-    .timer_stop = prv_timer_stop,
-    .add = prv_add,
+  .set_signed = prv_set_signed,
+  .set_unsigned = prv_set_unsigned,
+  .set_string = prv_set_string,
+  .timer_start = prv_timer_start,
+  .timer_stop = prv_timer_stop,
+  .add = prv_add,
 };
 
 void command_analytics_native_metrics_dump(void) {

@@ -5,8 +5,9 @@
 
 #include "event_service_client.h"
 #include "battery_state_service.h"
+#include "pbl/kernel/compiler.h"
 
-typedef struct __attribute__((packed)) BatteryStateServiceState {
+typedef struct PBL_PACKED BatteryStateServiceState {
   BatteryStateHandler handler;
 
   EventServiceInfo bss_info;

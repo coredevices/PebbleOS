@@ -13,8 +13,8 @@
 //! remote input endpoint's ack.
 typedef enum RemoteInputResult {
   RemoteInputResult_Ok = 0,
-  RemoteInputResult_Busy = 1,     //!< another injected sequence is still running
-  RemoteInputResult_Invalid = 2,  //!< bad arguments, or unsupported on this board
+  RemoteInputResult_Busy = 1,    //!< another injected sequence is still running
+  RemoteInputResult_Invalid = 2, //!< bad arguments, or unsupported on this board
 } RemoteInputResult;
 
 //! Logical swipe direction, resolved to a touch path by the watch.

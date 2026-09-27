@@ -3,14 +3,10 @@
 
 #include "app_glance.h"
 
-#include "menu_layer.h"
-
 #include "applib/app_glance.h"
-#include "applib/ui/kino/kino_reel_custom.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource_ids.auto.h"
 #include "system/passert.h"
-#include "pbl/util/string.h"
 
 void launcher_app_glance_init(LauncherAppGlance *glance, const Uuid *uuid, KinoReel *impl,
                               bool should_consider_slices,
@@ -19,7 +15,7 @@ void launcher_app_glance_init(LauncherAppGlance *glance, const Uuid *uuid, KinoR
     return;
   }
 
-  *glance = (LauncherAppGlance) {
+  *glance = (LauncherAppGlance){
     .uuid = *uuid,
     .reel = impl,
     .should_consider_slices = should_consider_slices,

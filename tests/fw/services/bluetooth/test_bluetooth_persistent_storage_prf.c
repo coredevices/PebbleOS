@@ -3,8 +3,8 @@
 
 #include "clar.h"
 
-#include <bluetooth/bonding_sync.h>
-#include <bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/gap_le_connect.h>
 
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
@@ -35,34 +35,34 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include "stubs_passert.h"
 #include "stubs_pebble_pairing_service.h"
 
-typedef bool (*BondingSyncFilterCb)(const BleBonding *bonding, void *ctx);
-const BleBonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {
+typedef bool (*BondingSyncFilterCb)(const struct pbl_bt_bonding *bonding, void *ctx);
+const struct pbl_bt_bonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {
   return NULL;
 }
 
-void bt_driver_pebble_pairing_service_handle_status_change(const GAPLEConnection *connection) {
+void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
 }
 
 bool bt_ctl_is_bluetooth_running(void) {
   return true;
 }
 
-void bt_driver_handle_le_conn_params_update_event(
-    const BleConnectionUpdateCompleteEvent *event) {
+void pbl_bt_handle_le_conn_params_update_event(
+    const struct pbl_bt_conn_update_complete_event *event) {
 }
 
-typedef struct PairingUserConfirmationCtx PairingUserConfirmationCtx;
+struct pbl_bt_pairing_confirm_ctx;
 
-void bt_driver_cb_pairing_confirm_handle_request(const PairingUserConfirmationCtx *ctx,
-                                                 const char *device_name,
-                                                 const char *confirmation_token) {
+void pbl_bt_cb_pairing_confirm_handle_request(const struct pbl_bt_pairing_confirm_ctx *ctx,
+                                              const char *device_name,
+                                              const char *confirmation_token) {
 }
 
-void bt_driver_cb_pairing_confirm_handle_completed(const PairingUserConfirmationCtx *ctx,
-                                                   bool success) {
+void pbl_bt_cb_pairing_confirm_handle_completed(const struct pbl_bt_pairing_confirm_ctx *ctx,
+                                                bool success) {
 }
 
-void bt_local_addr_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
+void bt_local_addr_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op) {
 }
 
 // The v3 shared_prf_storage implementation (promoted to the sole implementation in commit
@@ -74,7 +74,7 @@ void bt_local_addr_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp
 
 static int s_bonding_change_count;
 static BtPersistBondingOp s_bonding_change_ops[2];
-void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
+void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op) {
   if (s_bonding_change_count <= ARRAY_LENGTH(s_bonding_change_ops)) {
     s_bonding_change_ops[s_bonding_change_count] = op;
   }
@@ -88,10 +88,10 @@ static void prv_reset_change_op_tracking(void) {
   }
 }
 
-void gap_le_connect_handle_bonding_change(BTBondingID bonding_id, BtPersistBondingOp op) {
+void gap_le_connect_handle_bonding_change(pbl_bt_bonding_id_t bonding_id, BtPersistBondingOp op) {
 }
 
-void gap_le_connection_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op) {
+void gap_le_connection_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op) {
 }
 
 void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection) {
@@ -137,32 +137,32 @@ void test_bluetooth_persistent_storage_prf__ble_store_and_get(void) {
   bool ret;
 
   // Output variables
-  SMIdentityResolvingKey irk_out;
-  BTDeviceInternal device_out;
+  struct pbl_bt_sm_key irk_out;
+  struct pbl_bt_device_internal device_out;
 
   // Store a new pairing
-  SMPairingInfo pairing_1 = (SMPairingInfo) {
-    .irk = (SMIdentityResolvingKey) {
-      .data = {
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00
-      },
-    },
-    .identity = (BTDeviceInternal) {
-      .address = (BTDeviceAddress) {
-        .octets = {
-          0x11, 0x12, 0x13, 0x14, 0x15, 0x16
+  struct pbl_bt_sm_pairing_info pairing_1 = (struct pbl_bt_sm_pairing_info){
+    .irk =
+        (struct pbl_bt_sm_key){
+          .data =
+              {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+               0x0f, 0x00},
         },
-      },
-      .is_classic = false,
-      .is_random_address = false,
-    },
+    .identity =
+        (struct pbl_bt_device_internal){
+          .address =
+              (struct pbl_bt_addr){
+                .octets = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
+              },
+          .is_classic = false,
+          .is_random_address = false,
+        },
     .is_remote_identity_info_valid = true,
   };
-  BTBondingID id_1 = bt_persistent_storage_store_ble_pairing(&pairing_1, true /* is_gateway */,
-                                                             NULL,
-                                                             false /* requires_address_pinning */,
-                                                             false /* auto_accept_re_pairing */);  cl_assert(id_1 != BT_BONDING_ID_INVALID);
+  pbl_bt_bonding_id_t id_1 = bt_persistent_storage_store_ble_pairing(
+      &pairing_1, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      false /* auto_accept_re_pairing */);
+  cl_assert(id_1 != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_bonding_change_count, 1);
   cl_assert_equal_i(s_bonding_change_ops[0], BtPersistBondingOpDidAdd);
 
@@ -179,34 +179,35 @@ void test_bluetooth_persistent_storage_prf__ble_store_and_get(void) {
   prv_reset_change_op_tracking();
   id_1 = bt_persistent_storage_store_ble_pairing(&pairing_1, true /* is_gateway */, NULL,
                                                  false /* requires_address_pinning */,
-                                                 false /* auto_accept_re_pairing */);  cl_assert(id_1 != BT_BONDING_ID_INVALID);
+                                                 false /* auto_accept_re_pairing */);
+  cl_assert(id_1 != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_bonding_change_count, 1);
   cl_assert_equal_i(s_bonding_change_ops[0], BtPersistBondingOpDidChange);
 
   // Store another pairing (different device):
-  SMPairingInfo pairing_2 = (SMPairingInfo) {
-    .irk = (SMIdentityResolvingKey) {
-      .data = {
-        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x08,
-        0x09, 0x02, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x20
-      },
-    },
-    .identity = (BTDeviceInternal) {
-                 .address = (BTDeviceAddress) {
-                   .octets = {
-                     0x21, 0x22, 0x13, 0x14, 0x15, 0x26
-                   },
-                 },
-      .is_classic = false,
-      .is_random_address = false,
-    },
+  struct pbl_bt_sm_pairing_info pairing_2 = (struct pbl_bt_sm_pairing_info){
+    .irk =
+        (struct pbl_bt_sm_key){
+          .data =
+              {0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x08, 0x09, 0x02, 0x0b, 0x0c, 0x0d, 0x0e,
+               0x0f, 0x20},
+        },
+    .identity =
+        (struct pbl_bt_device_internal){
+          .address =
+              (struct pbl_bt_addr){
+                .octets = {0x21, 0x22, 0x13, 0x14, 0x15, 0x26},
+              },
+          .is_classic = false,
+          .is_random_address = false,
+        },
     .is_remote_identity_info_valid = true,
   };
   prv_reset_change_op_tracking();
-  BTBondingID id_2 = bt_persistent_storage_store_ble_pairing(&pairing_2, true /* is_gateway */,
-                                                             NULL,
-                                                             false /* requires_address_pinning */,
-                                                             false /* auto_accept_re_pairing */);  cl_assert(id_2 != BT_BONDING_ID_INVALID);
+  pbl_bt_bonding_id_t id_2 = bt_persistent_storage_store_ble_pairing(
+      &pairing_2, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      false /* auto_accept_re_pairing */);
+  cl_assert(id_2 != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_bonding_change_count, 2);
   cl_assert_equal_i(s_bonding_change_ops[0], BtPersistBondingOpWillDelete);
   cl_assert_equal_i(s_bonding_change_ops[1], BtPersistBondingOpDidAdd);
@@ -218,29 +219,29 @@ void test_bluetooth_persistent_storage_prf__ble_store_and_get(void) {
   cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
 
   // Store another pairing, this time it isn't a gateway
-  SMPairingInfo pairing_3 = (SMPairingInfo) {
-    .irk = (SMIdentityResolvingKey) {
-      .data = {
-        0x33, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x08,
-        0x39, 0x02, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x20
-      },
-    },
-    .identity = (BTDeviceInternal) {
-                 .address = (BTDeviceAddress) {
-                   .octets = {
-                     0x33, 0x22, 0x13, 0x14, 0x15, 0x26
-                   },
-                 },
-      .is_classic = false,
-      .is_random_address = false,
-    },
+  struct pbl_bt_sm_pairing_info pairing_3 = (struct pbl_bt_sm_pairing_info){
+    .irk =
+        (struct pbl_bt_sm_key){
+          .data =
+              {0x33, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x08, 0x39, 0x02, 0x0b, 0x0c, 0x0d, 0x0e,
+               0x0f, 0x20},
+        },
+    .identity =
+        (struct pbl_bt_device_internal){
+          .address =
+              (struct pbl_bt_addr){
+                .octets = {0x33, 0x22, 0x13, 0x14, 0x15, 0x26},
+              },
+          .is_classic = false,
+          .is_random_address = false,
+        },
     .is_remote_identity_info_valid = true,
   };
   prv_reset_change_op_tracking();
-  BTBondingID id_3 = bt_persistent_storage_store_ble_pairing(&pairing_2, false /* is_gateway */,
-                                                             NULL,
-                                                             false /* requires_address_pinning */,
-                                                             false /* auto_accept_re_pairing */);  cl_assert(id_3 == BT_BONDING_ID_INVALID);
+  pbl_bt_bonding_id_t id_3 = bt_persistent_storage_store_ble_pairing(
+      &pairing_2, false /* is_gateway */, NULL, false /* requires_address_pinning */,
+      false /* auto_accept_re_pairing */);
+  cl_assert(id_3 == PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_bonding_change_count, 0);
 
   // Read out the stored pairing (id_2 should still be stored)
@@ -259,31 +260,56 @@ void test_bluetooth_persistent_storage_prf__get_ble_by_address(void) {
   bool ret;
 
   // Output variables
-  SMIdentityResolvingKey irk_out;
+  struct pbl_bt_sm_key irk_out;
 
   // Store a pairing
-  SMPairingInfo pairing = (SMPairingInfo) {
-    .irk = (SMIdentityResolvingKey) {
-      .data = {
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00,
-      },
-    },
-    .identity = (BTDeviceInternal) {
-      .address = (BTDeviceAddress) {
-        .octets = {
-          0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
+  struct pbl_bt_sm_pairing_info pairing = (struct pbl_bt_sm_pairing_info){
+    .irk =
+        (struct pbl_bt_sm_key){
+          .data =
+              {
+                0x01,
+                0x02,
+                0x03,
+                0x04,
+                0x05,
+                0x06,
+                0x07,
+                0x08,
+                0x09,
+                0x0a,
+                0x0b,
+                0x0c,
+                0x0d,
+                0x0e,
+                0x0f,
+                0x00,
+              },
         },
-      },
-      .is_classic = false,
-      .is_random_address = false,
-    },
+    .identity =
+        (struct pbl_bt_device_internal){
+          .address =
+              (struct pbl_bt_addr){
+                .octets =
+                    {
+                      0x11,
+                      0x12,
+                      0x13,
+                      0x14,
+                      0x15,
+                      0x16,
+                    },
+              },
+          .is_classic = false,
+          .is_random_address = false,
+        },
     .is_remote_identity_info_valid = true,
   };
 
-  BTBondingID id = bt_persistent_storage_store_ble_pairing(&pairing, true /* is_gateway */, NULL,
-                                                           false /* requires_address_pinning */,
-                                                           false /* auto_accept_re_pairing */);  cl_assert(id != BT_BONDING_ID_INVALID);
+  pbl_bt_bonding_id_t id = bt_persistent_storage_store_ble_pairing(
+      &pairing, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      false /* auto_accept_re_pairing */);
+  cl_assert(id != PBL_BT_BONDING_ID_INVALID);
 
   // Read it back
   ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing.identity, &irk_out, NULL);
@@ -291,42 +317,42 @@ void test_bluetooth_persistent_storage_prf__get_ble_by_address(void) {
   cl_assert_equal_m(&irk_out, &pairing.irk, sizeof(irk_out));
 }
 
-
 void test_bluetooth_persistent_storage_prf__delete_ble_pairing_by_id(void) {
   bool ret;
 
   // Output variables
-  SMIdentityResolvingKey irk_out;
-  BTDeviceInternal device_out;
+  struct pbl_bt_sm_key irk_out;
+  struct pbl_bt_device_internal device_out;
 
   // Store a pairing
-  SMPairingInfo pairing = (SMPairingInfo) {
-    .irk = (SMIdentityResolvingKey) {
-      .data = {
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00
-      },
-    },
-    .identity = (BTDeviceInternal) {
-                 .address = (BTDeviceAddress) {
-                   .octets = {
-                     0x11, 0x12, 0x13, 0x14, 0x15, 0x16
-                   },
-                 },
-      .is_classic = false,
-      .is_random_address = false,
-    },
+  struct pbl_bt_sm_pairing_info pairing = (struct pbl_bt_sm_pairing_info){
+    .irk =
+        (struct pbl_bt_sm_key){
+          .data =
+              {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+               0x0f, 0x00},
+        },
+    .identity =
+        (struct pbl_bt_device_internal){
+          .address =
+              (struct pbl_bt_addr){
+                .octets = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
+              },
+          .is_classic = false,
+          .is_random_address = false,
+        },
     .is_remote_identity_info_valid = true,
   };
 
-  BleBonding ble_bonding = (BleBonding) {
+  struct pbl_bt_bonding ble_bonding = (struct pbl_bt_bonding){
     .is_gateway = true,
     .pairing_info = pairing,
   };
   bonding_sync_add_bonding(&ble_bonding);
-  BTBondingID id = bt_persistent_storage_store_ble_pairing(&pairing, true /* is_gateway */, NULL,
-                                                           false /* requires_address_pinning */,
-                                                           false /* auto_accept_re_pairing */);  cl_assert(id != BT_BONDING_ID_INVALID);
+  pbl_bt_bonding_id_t id = bt_persistent_storage_store_ble_pairing(
+      &pairing, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      false /* auto_accept_re_pairing */);
+  cl_assert(id != PBL_BT_BONDING_ID_INVALID);
 
   // Delete the Pairing
   bt_persistent_storage_delete_ble_pairing_by_id(id);
@@ -338,7 +364,6 @@ void test_bluetooth_persistent_storage_prf__delete_ble_pairing_by_id(void) {
   // Add the pairing again
   id = bt_persistent_storage_store_ble_pairing(&pairing, true /* is_gateway */, NULL,
                                                false /* requires_address_pinning */,
-                                               false /* auto_accept_re_pairing */);  cl_assert(id != BT_BONDING_ID_INVALID);
+                                               false /* auto_accept_re_pairing */);
+  cl_assert(id != PBL_BT_BONDING_ID_INVALID);
 }
-
-

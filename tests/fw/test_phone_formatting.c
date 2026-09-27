@@ -15,12 +15,11 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 
-
 // Tests
 ///////////////////////////////////////////////////////////
 
 #define NAME_LENGTH 32
-#define E_ACUTE "\xc3\x89"
+#define E_ACUTE     "\xc3\x89"
 
 static const char GUARD_CHAR = 'F';
 static const char *GUARD_REFERENCE = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
@@ -56,7 +55,6 @@ void test_phone_formatting__name_trailing_space(void) {
   phone_format_caller_name("Katharine Berry  ", dest, NAME_LENGTH);
 
   cl_assert_equal_s(dest, "Katharine B.");
-
 }
 
 void test_phone_formatting__single_name_trailing_space(void) {
@@ -138,7 +136,7 @@ void test_phone_formatting__overflowing_multibyte_initial(void) {
 void test_phone_formatting__phone_number_intl_std(void) {
   char test_number[] = "+55 408-555-1212";
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
@@ -148,7 +146,7 @@ void test_phone_formatting__phone_number_intl_std(void) {
 void test_phone_formatting__phone_number_intl_parens(void) {
   char test_number[] = "+55 (408) 555-1212";
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
@@ -156,9 +154,9 @@ void test_phone_formatting__phone_number_intl_parens(void) {
 }
 
 void test_phone_formatting__phone_number_long_distance_parens(void) {
-  char test_number[] = "(608) 555-1212";  // typical format on android
+  char test_number[] = "(608) 555-1212"; // typical format on android
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
@@ -166,9 +164,9 @@ void test_phone_formatting__phone_number_long_distance_parens(void) {
 }
 
 void test_phone_formatting__phone_number_long_distance_parens_plus(void) {
-  char test_number[] = "+1 (608) 555-1212";  // typical format on iOS
+  char test_number[] = "+1 (608) 555-1212"; // typical format on iOS
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
@@ -176,9 +174,9 @@ void test_phone_formatting__phone_number_long_distance_parens_plus(void) {
 }
 
 void test_phone_formatting__phone_number_long_distance_parens_plus_leading_ltor_ancs(void) {
-  char test_number[] = "+1 (608) 555-1212";  // typical format on iOS
+  char test_number[] = "+1 (608) 555-1212"; // typical format on iOS
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
@@ -188,7 +186,7 @@ void test_phone_formatting__phone_number_long_distance_parens_plus_leading_ltor_
 void test_phone_formatting__phone_number_long_distance_uk(void) {
   char test_number[] = "12345-123456";
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
@@ -196,9 +194,9 @@ void test_phone_formatting__phone_number_long_distance_uk(void) {
 }
 
 void test_phone_formatting__phone_number_intl_germany(void) {
-  char test_number[] = "+49 030 90 26 0";  // Berlin, Rotes Rathaus
+  char test_number[] = "+49 030 90 26 0"; // Berlin, Rotes Rathaus
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
@@ -206,12 +204,11 @@ void test_phone_formatting__phone_number_intl_germany(void) {
 }
 
 void test_phone_formatting__phone_number_std_germany(void) {
-  char test_number[] = "030 90 26 0";  // Berlin, Rotes Rathaus
+  char test_number[] = "030 90 26 0"; // Berlin, Rotes Rathaus
   int dest_len = sizeof(test_number) + 1;
-  char *dest = malloc(dest_len);  // malloc'd memory is protected by DUMA
+  char *dest = malloc(dest_len); // malloc'd memory is protected by DUMA
 
   phone_format_phone_number(test_number, dest, dest_len);
 
   cl_assert_equal_s(dest, "030 90 26 0");
 }
-

@@ -155,7 +155,7 @@ class JIRASupport:
         watch_logs = []
         got_device_logs = False
         for path in sorted(local_attachment_paths):
-            # iOS uses "watch_logs...", Android <2.1 uses "pebble.log", and Androind >=2.1 (Holo)
+            # iOS uses "watch_logs...", Android <2.1 uses "pebble.log", and Android >=2.1 (Holo)
             #  uses "device-logs.log"
             if (
                 "watch_logs" not in path
@@ -346,7 +346,7 @@ class ParseAccelSamplesFile:
             logger.debug(f"Got encoded sample {i:d}: 0x{encoded:x}")
 
             if (self.session_num_samples % 25) == 0 and self.format == "c":
-                print(f"    // {self.session_num_samples / 25:d} seconds")
+                print(f"    // {self.session_num_samples // 25:d} seconds")
 
             # Decode it
             if version == self.ACTIVITY_RAW_SAMPLES_VERSION_1:
@@ -386,7 +386,7 @@ class ParseAccelSamplesFile:
                     and (self.session_num_samples % samples_per_minute) == 0
                 ):
                     print(
-                        f"    // elapsed: {self.session_num_samples / samples_per_minute:d} minutes"
+                        f"    // elapsed: {self.session_num_samples // samples_per_minute:d} minutes"
                     )
                 self._output_sample(x, y, z)
                 num_samples_decoded += 1
@@ -529,7 +529,7 @@ class ParseMinuteStatsFile:
                 )
                 print(f"  //> TEST_NAME {self.sample_prefix}")
                 print(SLEEP_DEFAULT_EXPECTED_TEXT)
-                print("  // list of: {steps, orientation, vmc, ligh}")
+                print("  // list of: {steps, orientation, vmc, light}")
                 print("  static AlgDlsMinuteData samples[] = {")
 
             else:

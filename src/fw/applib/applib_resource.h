@@ -7,7 +7,8 @@
 #include <stdint.h>
 
 //! @file applib_resource.h
-//! Wrapper functions for the resource syscalls. These functions give us a nice interface to export to 3rd party apps.
+//! Wrapper functions for the resource syscalls. These functions give us a nice interface to export
+//! to 3rd party apps.
 
 //! @addtogroup Foundation
 //! @{
@@ -32,7 +33,7 @@
 
 //! Opaque reference to a resource.
 //! @see @c resource_get_handle()
-typedef void * ResHandle;
+typedef void *ResHandle;
 
 //! Gets the resource handle for a file identifier.
 //! @param resource_id The resource ID
@@ -79,9 +80,8 @@ size_t applib_resource_load(ResHandle h, uint8_t *buffer, size_t max_length);
 //! @param buffer The buffer to load the resource data into
 //! @param num_bytes The maximum number of bytes to copy
 //! @return The number of bytes actually copied
-size_t applib_resource_load_byte_range(
-    ResHandle h, uint32_t start_offset, uint8_t *buffer, size_t num_bytes);
+size_t applib_resource_load_byte_range(ResHandle h, uint32_t start_offset, uint8_t *buffer,
+                                       size_t num_bytes);
 
 //!   @} // end addtogroup Resources
 //! @} // end addtogroup Foundation
-

@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl/kernel/sched.h"
 #include "reboot_reason.h"
 
 #include "pbl/mcu/interrupts.h"
-#include "pbl/os/tick.h"
+#include "pbl/kernel/types.h"
 #include <pbl/logging/logging.h>
-#include "system/bootbits.h"
 
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
@@ -17,21 +17,16 @@ extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
 extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 #endif
 
-#include <inttypes.h>
-
-#include "FreeRTOS.h"
-#include "task.h"
-
 _Static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
 
 void reboot_reason_set(RebootReason *reason) {
 #ifdef CONFIG_SOC_NRF52
-  uint32_t *raw = (uint32_t*)reason;
+  uint32_t *raw = (uint32_t *)reason;
 
   if (retained_read(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
-            && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
+    // != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -42,12 +37,12 @@ void reboot_reason_set(RebootReason *reason) {
   retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
   retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
 #elif defined(CONFIG_SOC_SF32LB52)
-  uint32_t *raw = (uint32_t*)reason;
+  uint32_t *raw = (uint32_t *)reason;
 
   if (HAL_Get_backup(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
-            && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
+    // != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -58,12 +53,12 @@ void reboot_reason_set(RebootReason *reason) {
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
 #elif defined(CONFIG_QEMU)
-  uint32_t *raw = (uint32_t*)reason;
+  uint32_t *raw = (uint32_t *)reason;
 
   if (RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0
-            && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
+    // != 0)
+    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -82,13 +77,13 @@ void reboot_reason_set_restarted_safely(void) {
   reason.restarted_safely = true;
 
 #ifdef CONFIG_SOC_NRF52
-  uint32_t* raw = (uint32_t *)&reason;
+  uint32_t *raw = (uint32_t *)&reason;
   retained_write(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined(CONFIG_SOC_SF32LB52)
-  uint32_t* raw = (uint32_t *)&reason;
+  uint32_t *raw = (uint32_t *)&reason;
   HAL_Set_backup(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined(CONFIG_QEMU)
-  uint32_t* raw = (uint32_t *)&reason;
+  uint32_t *raw = (uint32_t *)&reason;
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, *raw);
 #endif
 }
@@ -153,4 +148,3 @@ void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
   RTC_WriteBackupRegister(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #endif
 }
-

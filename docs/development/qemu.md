@@ -14,8 +14,8 @@ The QEMU binary ships with the [PebbleOS SDK](https://github.com/coredevices/Peb
 The steps here are similar that of real hardware:
 
 ```shell
-./pbl configure --board=$BOARD
-./pbl build
+pbl configure --board=$BOARD
+pbl build
 ```
 
 where `$BOARD` is one of the dedicated QEMU boards (`qemu_emery`,
@@ -27,13 +27,13 @@ where `$BOARD` is one of the dedicated QEMU boards (`qemu_emery`,
 You can launch QEMU with the built image using:
 
 ```shell
-./pbl qemu
+pbl qemu
 ```
 
 The flash image is rebuilt by default on every launch. To keep the existing flash image (e.g. to preserve stored apps), pass `--keep-flash-image`:
 
 ```shell
-./pbl qemu --keep-flash-image
+pbl qemu --keep-flash-image
 ```
 
 The launched QEMU exposes:
@@ -45,12 +45,43 @@ The launched QEMU exposes:
 
 UART1 output is also captured to `uart1.log` in the repository root.
 
+## Bluetooth
+
+By default the NimBLE host runs against a fake controller that accepts
+every command but never forms a link. To use a real radio, attach an H4 HCI
+controller to the emulator's fourth UART (QEMU pebble19 or later). An nRF52840 Dongle running
+Zephyr's `hci_uart` sample shows up as a USB serial port and works out of
+the box:
+
+```shell
+west build -b nrf52840dongle/nrf52840 zephyr/samples/bluetooth/hci_uart
+nrfutil pkg generate --hw-version 52 --sd-req=0x00 \
+  --application build/zephyr/zephyr.hex --application-version 1 hci_uart.zip
+# press the dongle's reset button to enter the bootloader
+nrfutil dfu usb-serial -pkg hci_uart.zip -p /dev/cu.usbmodemXXXX
+```
+
+Then build with the UART transport and pass the controller's port:
+
+```shell
+pbl configure --board qemu_flint -DCONFIG_BT_HCI_UART=y
+pbl build
+pbl qemu --bt-hci /dev/cu.usbmodemXXXX
+```
+
+`--bt-hci` takes any QEMU `-serial` spec, e.g. `tcp:localhost:9000`. On
+macOS use the `cu.*` device: opening `tty.*` blocks until carrier detect.
+
+The watch generates its identity address on first boot and keeps it in
+flash, so pass `--keep-flash-image` to keep existing bondings across
+launches. A fresh flash image gets a new address.
+
 ## Console
 
 You can launch a console using:
 
 ```shell
-./pbl console
+pbl console
 ```
 
 It connects to the running QEMU over the TCP serial port and provides a
@@ -61,8 +92,8 @@ prompt for sending commands and receiving responses.
 With QEMU running, you can capture the display via the socket monitor:
 
 ```shell
-./pbl screenshot                                  # defaults to build/screenshot.png
-./pbl screenshot --screenshot-output /tmp/foo.png
+pbl screenshot                                  # defaults to build/screenshot.png
+pbl screenshot --output /tmp/foo.png
 ```
 
 Useful to validate or iterate on UI changes.
@@ -87,22 +118,51 @@ Coordinates are given in screen pixels; the display size is read from the
 emulated `pebble-touch` device and scaled automatically.
 
 ```shell
-./pbl touch 130 130                          # tap at (130, 130)
-./pbl swipe 130 220 130 40                   # swipe up (finger bottom -> top)
-./pbl swipe 130 220 130 40 --steps 20 --duration 0.4
+pbl touch 130 130                          # tap at (130, 130)
+pbl swipe 130 220 130 40                   # swipe up (finger bottom -> top)
+pbl swipe 130 220 130 40 --steps 20 --duration 0.4
 ```
 
-Requires QEMU to be running; `./pbl qemu` exposes the QMP socket used for
+Requires QEMU to be running; `pbl qemu` exposes the QMP socket used for
 injection. A tap is a finger down then up; a swipe streams intermediate moves
 so that drag gestures are seen as continuous. Injection uses the
 absolute-pointer input path; multi-touch is not wired up in the device.
+
+## Feeding phone data
+
+Features that depend on the phone app can be exercised without one:
+`pbl feed` writes into the running emulator what the phone would, over the
+Pebble protocol serial port. Each kind of data is a subcommand:
+
+```shell
+pbl feed weather                        # a forecast for a few built-in cities
+pbl feed weather Tokyo Sydney --seed 3   # a subset; the first is the current location
+pbl feed weather --clear                 # remove every location
+pbl feed music                           # a player and playlist; keeps serving until Ctrl-C
+pbl feed music --title "Demo" --paused   # a single track of your own
+pbl feed calendar                       # a day of events around now
+pbl feed calendar --title "Dentist" --start 15 --location "Downtown"
+pbl feed calendar --clear               # remove every pin
+pbl feed notifications                  # a few messages from two senders
+pbl feed notifications --sender Anna --body "Lunch?" --app WhatsApp
+pbl feed notifications --clear          # remove every notification
+```
+
+`pbl feed --help` lists the feeds and `pbl feed <feed> --help` their options.
+A feed that writes a database, like weather, exits once the data is stored.
+One that stands in for the phone, like music, keeps running: it acts on the
+watch's controls, advances playback and draws album art when asked (album
+art is off by default, under Settings > Music). The emulator's port serves
+one host client at a time, so run one such feed at once.
+The feeds live in `tools/libs/pbl-cli/pbl/feeds/`, one module per kind of
+data; see [the `pbl` CLI](pbl.md) for how to add one.
 
 ## Debug
 
 You can debug with GDB using:
 
 ```shell
-./pbl debug
+pbl debug
 ```
 
 ## Install .pbw applications
@@ -112,7 +172,7 @@ You can install applications coming from .pbw files onto QEMU. This requires [pe
 Start by launching QEMU as you normally would:
 
 ```shell
-./pbl qemu
+pbl qemu
 ```
 
 Inside another shell locate a .pbw file to install:

@@ -33,14 +33,14 @@ typedef enum {
   GTextOverflowModeWordWrap,
   //! On overflow, wrap words to a new line below the current one.
   //! Once vertical space is consumed, truncate as needed to fit a trailing ellipsis (...).
-  //! Clipping may occur if the vertical space cannot accomodate the first line of text.
+  //! Clipping may occur if the vertical space cannot accommodate the first line of text.
   GTextOverflowModeTrailingEllipsis,
   //! Acts like \ref GTextOverflowModeTrailingEllipsis, plus trims leading and trailing newlines,
   //! while treating all other newlines as spaces.
   GTextOverflowModeFill
 } GTextOverflowMode;
 
-//! Text aligment controls the way the text is aligned inside the box the text is drawn into.
+//! Text alignment controls the way the text is aligned inside the box the text is drawn into.
 //! @see graphics_draw_text
 //! @see text_layer_set_text_alignment
 typedef enum {
@@ -110,7 +110,7 @@ typedef struct {
 } TextLayoutExtended;
 
 //! Pointer to opaque text layout cache data structure
-typedef TextLayout* GTextLayoutCacheRef;
+typedef TextLayout *GTextLayoutCacheRef;
 
 //! Describes various characteristics for text rendering and measurement.
 //! @see graphics_draw_text
@@ -125,7 +125,7 @@ void graphics_text_init(void);
 
 //! Draw text into the current graphics context, using the context's current text color.
 //! The text will be drawn inside a box with the specified dimensions and
-//! configuration, with clipping occuring automatically.
+//! configuration, with clipping occurring automatically.
 //! @param ctx The destination graphics context in which to draw
 //! @param text The zero terminated UTF-8 string to draw
 //! @param font The font in which the text should be set
@@ -138,7 +138,6 @@ void graphics_text_init(void);
 void graphics_draw_text(GContext *ctx, const char *text, GFont const font, const GRect box,
                         const GTextOverflowMode overflow_mode, const GTextAlignment alignment,
                         GTextAttributes *text_attributes);
-
 
 //! Obtain the maximum size that a text with given font, overflow mode and alignment
 //! occupies within a given rectangular constraint.
@@ -156,9 +155,8 @@ void graphics_draw_text(GContext *ctx, const char *text, GFont const font, const
 //! even though this function does not draw anything.
 //! @internal
 //! @see \ref app_get_current_graphics_context()
-GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text,
-                                             GFont const font, const GRect box,
-                                             const GTextOverflowMode overflow_mode,
+GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GFont const font,
+                                             const GRect box, const GTextOverflowMode overflow_mode,
                                              const GTextAlignment alignment,
                                              GTextLayoutCacheRef layout);
 
@@ -188,10 +186,8 @@ GSize app_graphics_text_layout_get_content_size(const char *text, GFont const fo
 //! @return The maximum size occupied by the text
 //! @see app_graphics_text_layout_get_content_size
 GSize app_graphics_text_layout_get_content_size_with_attributes(
-  const char *text, GFont const font, const GRect box, const GTextOverflowMode overflow_mode,
-  const GTextAlignment alignment, GTextAttributes *text_attributes);
-
-
+    const char *text, GFont const font, const GRect box, const GTextOverflowMode overflow_mode,
+    const GTextAlignment alignment, GTextAttributes *text_attributes);
 
 //! @internal
 //! Does the same as \ref app_graphics_text_layout_get_text_height with the provided GContext

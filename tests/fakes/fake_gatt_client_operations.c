@@ -13,21 +13,20 @@
 
 typedef struct {
   ListNode node;
-  BLECharacteristic characteristic;
+  pbl_bt_characteristic_t characteristic;
   GAPLEClient client;
 } Read;
 
 static Read *s_read_head;
 
-static BTErrno s_read_return_value;
+static enum pbl_bt_errno s_read_return_value;
 
-BTErrno gatt_client_op_read(BLECharacteristic characteristic,
-                            GAPLEClient client) {
-  if (s_read_return_value != BTErrnoOK) {
+enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic, GAPLEClient client) {
+  if (s_read_return_value != PBL_BT_ERRNO_OK) {
     return s_read_return_value;
   }
   Read *read = malloc(sizeof(Read));
-  *read = (const Read) {
+  *read = (const Read){
     .characteristic = characteristic,
     .client = client,
   };
@@ -36,18 +35,16 @@ BTErrno gatt_client_op_read(BLECharacteristic characteristic,
   } else {
     s_read_head = read;
   }
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
-void gatt_client_consume_read_response(uintptr_t object_ref,
-                                       uint8_t value_out[],
-                                       uint16_t value_length,
-                                       GAPLEClient client) {
+void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+                                       uint16_t value_length, GAPLEClient client) {
 }
 
 typedef struct {
   ListNode node;
-  BLECharacteristic characteristic;
+  pbl_bt_characteristic_t characteristic;
   GAPLEClient client;
   uint8_t *value;
   size_t value_length;
@@ -56,14 +53,12 @@ typedef struct {
 
 static Write *s_write_head;
 
-static BTErrno s_write_return_value;
+static enum pbl_bt_errno s_write_return_value;
 
-static BTErrno fake_gatt_client_write(BLECharacteristic characteristic,
-                                      const uint8_t *value,
-                                      size_t value_length,
-                                      GAPLEClient client,
-                                      bool is_response_required) {
-  if (s_write_return_value != BTErrnoOK) {
+static enum pbl_bt_errno fake_gatt_client_write(pbl_bt_characteristic_t characteristic,
+                                                const uint8_t *value, size_t value_length,
+                                                GAPLEClient client, bool is_response_required) {
+  if (s_write_return_value != PBL_BT_ERRNO_OK) {
     return s_write_return_value;
   }
   Write *write = malloc(sizeof(Write));
@@ -76,7 +71,7 @@ static BTErrno fake_gatt_client_write(BLECharacteristic characteristic,
     cl_assert_equal_p(value, NULL);
     buffer = NULL;
   }
-  *write = (const Write) {
+  *write = (const Write){
     .characteristic = characteristic,
     .client = client,
     .is_response_required = is_response_required,
@@ -88,57 +83,53 @@ static BTErrno fake_gatt_client_write(BLECharacteristic characteristic,
   } else {
     s_write_head = write;
   }
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
-BTErrno gatt_client_op_write(BLECharacteristic characteristic,
-                             const uint8_t *value,
-                             size_t value_length,
-                             GAPLEClient client) {
+enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                       size_t value_length, GAPLEClient client) {
   return fake_gatt_client_write(characteristic, value, value_length, client,
                                 true /* is_response_required */);
 }
 
-BTErrno gatt_client_op_write_without_response(BLECharacteristic characteristic,
-                                              const uint8_t *value,
-                                              size_t value_length,
-                                              GAPLEClient client) {
+enum pbl_bt_errno gatt_client_op_write_without_response(pbl_bt_characteristic_t characteristic,
+                                                        const uint8_t *value, size_t value_length,
+                                                        GAPLEClient client) {
   return fake_gatt_client_write(characteristic, value, value_length, client,
                                 false /* is_response_required */);
 }
 
-BTErrno gatt_client_op_write_descriptor(BLEDescriptor descriptor,
-                                        const uint8_t *value,
-                                        size_t value_length,
-                                        GAPLEClient client) {
-  return BTErrnoOK;
+enum pbl_bt_errno gatt_client_op_write_descriptor(pbl_bt_descriptor_t descriptor,
+                                                  const uint8_t *value, size_t value_length,
+                                                  GAPLEClient client) {
+  return PBL_BT_ERRNO_OK;
 }
 
-BTErrno gatt_client_op_read_descriptor(BLEDescriptor descriptor,
-                                       GAPLEClient client) {
-  return BTErrnoOK;
+enum pbl_bt_errno gatt_client_op_read_descriptor(pbl_bt_descriptor_t descriptor,
+                                                 GAPLEClient client) {
+  return PBL_BT_ERRNO_OK;
 }
 
-BTErrno gatt_client_op_write_descriptor_cccd(BLEDescriptor cccd, const uint16_t *value) {
-  return BTErrnoOK;
+enum pbl_bt_errno gatt_client_op_write_descriptor_cccd(pbl_bt_descriptor_t cccd,
+                                                       const uint16_t *value) {
+  return PBL_BT_ERRNO_OK;
 }
 
 void gatt_client_op_cleanup(GAPLEClient client) {
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake Manipulation
 
 void fake_gatt_client_op_init(void) {
-  s_read_return_value = BTErrnoOK;
-  s_write_return_value = BTErrnoOK;
+  s_read_return_value = PBL_BT_ERRNO_OK;
+  s_write_return_value = PBL_BT_ERRNO_OK;
 }
 
 void fake_gatt_client_op_deinit(void) {
   Read *read = s_read_head;
   while (read) {
-    Read *next = (Read *) read->node.next;
+    Read *next = (Read *)read->node.next;
     free(read);
     read = next;
   }
@@ -147,12 +138,11 @@ void fake_gatt_client_op_deinit(void) {
   fake_gatt_client_op_clear_write_list();
 }
 
-void fake_gatt_client_op_set_read_return_value(BTErrno e) {
+void fake_gatt_client_op_set_read_return_value(enum pbl_bt_errno e) {
   s_read_return_value = e;
 }
 
-void fake_gatt_client_op_assert_read(BLECharacteristic characteristic,
-                                     GAPLEClient client) {
+void fake_gatt_client_op_assert_read(pbl_bt_characteristic_t characteristic, GAPLEClient client) {
   if (s_read_head) {
     cl_assert_equal_i(characteristic, s_read_head->characteristic);
     cl_assert_equal_i(client, s_read_head->client);
@@ -160,18 +150,18 @@ void fake_gatt_client_op_assert_read(BLECharacteristic characteristic,
     cl_assert_(false, "No gatt_client_op_read() has happened at all");
   }
   Read *old_head = s_read_head;
-  s_read_head = (Read *) list_pop_head(&s_read_head->node);
+  s_read_head = (Read *)list_pop_head(&s_read_head->node);
   free(old_head);
 }
 
-void fake_gatt_client_op_set_write_return_value(BTErrno e) {
+void fake_gatt_client_op_set_write_return_value(enum pbl_bt_errno e) {
   s_write_return_value = e;
 }
 
 void fake_gatt_client_op_clear_write_list(void) {
   Write *write = s_write_head;
   while (write) {
-    Write *next = (Write *) write->node.next;
+    Write *next = (Write *)write->node.next;
     free(write->value);
     free(write);
     write = next;
@@ -184,13 +174,14 @@ void fake_gatt_client_op_assert_no_write(void) {
 }
 
 static void fake_gatt_client_op_assert_write_failed(void) {
-  cl_assert_(false, "No gatt_client_op_write() or "
+  cl_assert_(false,
+             "No gatt_client_op_write() or "
              "gatt_client_op_write_without_response() has happened at all");
 }
 
-void fake_gatt_client_op_assert_write(BLECharacteristic characteristic,
-                                      const uint8_t *value, size_t value_length,
-                                      GAPLEClient client, bool is_response_required) {
+void fake_gatt_client_op_assert_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                      size_t value_length, GAPLEClient client,
+                                      bool is_response_required) {
   if (s_write_head) {
     cl_assert_equal_i(characteristic, s_write_head->characteristic);
     cl_assert_equal_i(s_write_head->value_length, value_length);
@@ -201,7 +192,7 @@ void fake_gatt_client_op_assert_write(BLECharacteristic characteristic,
     fake_gatt_client_op_assert_write_failed();
   }
   Write *old_write = s_write_head;
-  s_write_head = (Write *) list_pop_head(&s_write_head->node);
+  s_write_head = (Write *)list_pop_head(&s_write_head->node);
   free(old_write->value);
   free(old_write);
 }

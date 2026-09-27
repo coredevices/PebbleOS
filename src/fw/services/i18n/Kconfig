@@ -4,7 +4,8 @@
 config SERVICE_I18N
     bool "Internationalization"
     help
-      Internationalization (gettext) runtime support.
+      Internationalization (gettext) runtime support for installed
+      language packs. Firmware includes only the English source strings.
 
 if SERVICE_I18N
 

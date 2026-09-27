@@ -4,20 +4,18 @@
 #include "gap_le_connect_params.h"
 #include "gap_le_connection.h"
 
-#include "bluetooth/gap_le_connect.h"
-#include "bluetooth/responsiveness.h"
+#include "pbl/bluetooth/gap_le_connect.h"
+#include "pbl/bluetooth/responsiveness.h"
 #include "comm/bluetooth_analytics.h"
 #include "comm/bt_conn_mgr.h"
 #include "comm/bt_lock.h"
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
-#include <bluetooth/bluetooth_types.h>
 #include <stdint.h>
 
 // [MT] See page 129 of BLE Developer's Handbook (R. Heydon) and also
@@ -69,35 +67,38 @@
 //! creates the connection with a 720ms supervision timeout and never raises it on
 //! its own, so the link is fragile until our first update request is granted. See
 //! also the note below about Apple's relaxed handling of TGAP timings.
-#define REQUIRED_INIT_PAUSE_S (1)
+#define REQUIRED_INIT_PAUSE_S     (1)
 #define REQUIRED_INIT_PAUSE_TICKS (REQUIRED_INIT_PAUSE_S * RTC_TICKS_HZ)
 
 //! Try 3 times before giving up.
 #define MAX_UPDATE_REQUEST_ATTEMPTS (3)
 
-static const GAPLEConnectRequestParams s_default_connection_params_table[NumResponseTimeState] = {
-  [ResponseTimeMax] = {
-    .slave_latency_events = 3,
-    .connection_interval_min_1_25ms = 24, // 30ms
-    .connection_interval_max_1_25ms = 36, // 45ms
-    .supervision_timeout_10ms = 600, // 6s
-  },
-  [ResponseTimeMiddle] = {
-    .slave_latency_events = 3,
-    .connection_interval_min_1_25ms = 24, // 30ms
-    .connection_interval_max_1_25ms = 36, // 45ms
-    .supervision_timeout_10ms = 600, // 6s
-  },
-  [ResponseTimeMin] = {
-    .slave_latency_events = 0,
-    .connection_interval_min_1_25ms = 12, // 15ms
-    .connection_interval_max_1_25ms = 12, // 15ms
-    .supervision_timeout_10ms = 600, // 6s
-  },
+static const GAPLEConnectRequestParams s_default_connection_params_table[PBL_BT_RESPONSE_TIME_NUM] =
+    {
+      [PBL_BT_RESPONSE_TIME_MAX] =
+          {
+            .slave_latency_events = 3,
+            .connection_interval_min_1_25ms = 24, // 30ms
+            .connection_interval_max_1_25ms = 36, // 45ms
+            .supervision_timeout_10ms = 600,      // 6s
+          },
+      [PBL_BT_RESPONSE_TIME_MIDDLE] =
+          {
+            .slave_latency_events = 3,
+            .connection_interval_min_1_25ms = 24, // 30ms
+            .connection_interval_max_1_25ms = 36, // 45ms
+            .supervision_timeout_10ms = 600,      // 6s
+          },
+      [PBL_BT_RESPONSE_TIME_MIN] = {
+        .slave_latency_events = 0,
+        .connection_interval_min_1_25ms = 12, // 15ms
+        .connection_interval_max_1_25ms = 12, // 15ms
+        .supervision_timeout_10ms = 600,      // 6s
+      },
 };
 
 extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
-                                                  ResponseTimeState granted_state);
+                                                  enum pbl_bt_response_time_state granted_state);
 
 static void prv_watchdog_timer_callback(void *ctx);
 
@@ -112,19 +113,19 @@ static void prv_analytics_stop_conn_interval_timers(void) {
   PBL_ANALYTICS_TIMER_STOP(ble_conn_slave_lat0_time_ms);
 }
 
-//! Classify the actual connection interval into a ResponseTimeState based on
+//! Classify the actual connection interval into a enum pbl_bt_response_time_state based on
 //! the default connection params table ranges.
-static ResponseTimeState prv_classify_conn_interval(uint16_t conn_interval_1_25ms) {
+static enum pbl_bt_response_time_state prv_classify_conn_interval(uint16_t conn_interval_1_25ms) {
   // Check from fastest (Min) to slowest (Max) so we pick the tightest match
-  for (int state = ResponseTimeMin; state >= ResponseTimeMax; --state) {
+  for (int state = PBL_BT_RESPONSE_TIME_MIN; state >= PBL_BT_RESPONSE_TIME_MAX; --state) {
     const GAPLEConnectRequestParams *params = &s_default_connection_params_table[state];
     if (conn_interval_1_25ms >= params->connection_interval_min_1_25ms &&
         conn_interval_1_25ms <= params->connection_interval_max_1_25ms) {
-      return (ResponseTimeState)state;
+      return (enum pbl_bt_response_time_state)state;
     }
   }
   // Outside all known ranges (only used for analytics bucketing)
-  return ResponseTimeInvalid;
+  return PBL_BT_RESPONSE_TIME_INVALID;
 }
 
 static void prv_analytics_update_conn_params(uint16_t conn_interval_1_25ms,
@@ -132,13 +133,13 @@ static void prv_analytics_update_conn_params(uint16_t conn_interval_1_25ms,
   prv_analytics_stop_conn_interval_timers();
 
   switch (prv_classify_conn_interval(conn_interval_1_25ms)) {
-    case ResponseTimeMin:
+    case PBL_BT_RESPONSE_TIME_MIN:
       PBL_ANALYTICS_TIMER_START(ble_conn_itvl_min_time_ms);
       break;
-    case ResponseTimeMiddle:
+    case PBL_BT_RESPONSE_TIME_MIDDLE:
       PBL_ANALYTICS_TIMER_START(ble_conn_itvl_mid_time_ms);
       break;
-    case ResponseTimeMax:
+    case PBL_BT_RESPONSE_TIME_MAX:
       PBL_ANALYTICS_TIMER_START(ble_conn_itvl_max_time_ms);
       break;
     default:
@@ -153,8 +154,8 @@ static void prv_analytics_update_conn_params(uint16_t conn_interval_1_25ms,
   }
 }
 
-static const GAPLEConnectRequestParams *prv_params_for_state(const GAPLEConnection *connection,
-                                                             ResponseTimeState state) {
+static const GAPLEConnectRequestParams *prv_params_for_state(
+    const GAPLEConnection *connection, enum pbl_bt_response_time_state state) {
   if (connection->connection_parameter_sets) {
     return &connection->connection_parameter_sets[state];
   }
@@ -162,9 +163,9 @@ static const GAPLEConnectRequestParams *prv_params_for_state(const GAPLEConnecti
 }
 
 static bool prv_do_actual_params_match_desired_state(const GAPLEConnection *connection,
-                                                     ResponseTimeState state,
+                                                     enum pbl_bt_response_time_state state,
                                                      uint16_t *actual_conn_interval_ms_out) {
-  const BleConnectionParams *actual_params = &connection->conn_params;
+  const struct pbl_bt_conn_params *actual_params = &connection->conn_params;
 
   if (actual_conn_interval_ms_out) {
     *actual_conn_interval_ms_out = actual_params->conn_interval_1_25ms;
@@ -173,7 +174,7 @@ static bool prv_do_actual_params_match_desired_state(const GAPLEConnection *conn
 
   // When the fastest state is desired, ignore the minimum bound:
   bool is_interval_min_acceptable;
-  if (state == ResponseTimeMin) {
+  if (state == PBL_BT_RESPONSE_TIME_MIN) {
     is_interval_min_acceptable = true;
   } else {
     is_interval_min_acceptable =
@@ -186,7 +187,7 @@ static bool prv_do_actual_params_match_desired_state(const GAPLEConnection *conn
 }
 
 static void prv_request_params_update(GAPLEConnection *connection,
-                                      ResponseTimeState state) {
+                                      enum pbl_bt_response_time_state state) {
   if (connection->is_remote_device_managing_connection_parameters ||
       connection->param_update_info.is_request_pending) {
     return;
@@ -202,7 +203,7 @@ static void prv_request_params_update(GAPLEConnection *connection,
 
   // Fall-back:
   uint16_t actual_connection_interval_ms =
-      prv_params_for_state(connection, ResponseTimeMax)->connection_interval_max_1_25ms;
+      prv_params_for_state(connection, PBL_BT_RESPONSE_TIME_MAX)->connection_interval_max_1_25ms;
   if (prv_do_actual_params_match_desired_state(connection, state, &actual_connection_interval_ms)) {
     return;
   }
@@ -222,14 +223,14 @@ static void prv_request_params_update(GAPLEConnection *connection,
   // 30 second Tgap timeout."
 
   const GAPLEConnectRequestParams *desired_params = prv_params_for_state(connection, state);
-  BleConnectionParamsUpdateReq req = {
+  struct pbl_bt_conn_params_update_req req = {
     .interval_min_1_25ms = desired_params->connection_interval_min_1_25ms,
     .interval_max_1_25ms = desired_params->connection_interval_max_1_25ms,
     .slave_latency_events = desired_params->slave_latency_events,
     .supervision_timeout_10ms = desired_params->supervision_timeout_10ms,
   };
 
-  const bool success = bt_driver_le_connection_parameter_update(&connection->device, &req);
+  const bool success = pbl_bt_le_connection_parameter_update(&connection->device, &req);
   if (success) {
     connection->param_update_info.is_request_pending = true;
   }
@@ -249,7 +250,8 @@ static void prv_watchdog_system_task_callback(void *ctx) {
     // Override the flag:
     connection->param_update_info.is_request_pending = false;
     // Retry with most recently requested latency:
-    const ResponseTimeState state = conn_mgr_get_latency_for_le_connection(connection, NULL);
+    const enum pbl_bt_response_time_state state =
+        conn_mgr_get_latency_for_le_connection(connection, NULL);
     if (connection->param_update_info.attempts > 0) {
       PBL_LOG_INFO("Conn param request timed out: re-requesting %u", state);
     }
@@ -266,7 +268,7 @@ static void prv_watchdog_timer_callback(void *ctx) {
 }
 
 void gap_le_connect_params_request(GAPLEConnection *connection,
-                                   ResponseTimeState desired_state) {
+                                   enum pbl_bt_response_time_state desired_state) {
   // A new desired state is requested by the FW, start afresh:
   connection->param_update_info.attempts = 0;
 
@@ -284,16 +286,18 @@ void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {
 
 // -------------------------------------------------------------------------------------------------
 //! Extern'd for and used by bt_conn_mgr.c
-ResponseTimeState gap_le_connect_params_get_actual_state(GAPLEConnection *connection) {
-  for (ResponseTimeState state = 0; state < NumResponseTimeState; ++state) {
+enum pbl_bt_response_time_state gap_le_connect_params_get_actual_state(
+    GAPLEConnection *connection) {
+  for (enum pbl_bt_response_time_state state = 0; state < PBL_BT_RESPONSE_TIME_NUM; ++state) {
     if (prv_do_actual_params_match_desired_state(connection, state, NULL)) {
       return state;
     }
   }
-  return ResponseTimeInvalid;
+  return PBL_BT_RESPONSE_TIME_INVALID;
 }
 
-static void prv_evaluate(GAPLEConnection *connection, ResponseTimeState desired_state) {
+static void prv_evaluate(GAPLEConnection *connection,
+                         enum pbl_bt_response_time_state desired_state) {
   if (prv_do_actual_params_match_desired_state(connection, desired_state, NULL)) {
     conn_mgr_handle_desired_state_granted(connection, desired_state);
 
@@ -315,7 +319,8 @@ static void prv_evaluate(GAPLEConnection *connection, ResponseTimeState desired_
 //! Forces the module to re-evaluate whether the current parameters match the desired ones.
 //! This is used when the set of desired request params are changed through Pebble Pairing Service.
 void gap_le_connect_params_re_evaluate(GAPLEConnection *connection) {
-  const ResponseTimeState desired_state = conn_mgr_get_latency_for_le_connection(connection, NULL);
+  const enum pbl_bt_response_time_state desired_state =
+      conn_mgr_get_latency_for_le_connection(connection, NULL);
   prv_evaluate(connection, desired_state);
 }
 
@@ -325,10 +330,11 @@ void gap_le_connect_params_re_evaluate(GAPLEConnection *connection) {
 //! This event is sent by our BT controller when the updated parameters have actually been applied
 //! and taken effect.
 //! bt_lock is assumed to be taken before calling this function.
-void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompleteEvent *event) {
+void pbl_bt_handle_le_conn_params_update_event(
+    const struct pbl_bt_conn_update_complete_event *event) {
   bt_lock();
-  const BleConnectionParams *params = &event->conn_params;
-  if (event->status != HciStatusCode_Success) {
+  const struct pbl_bt_conn_params *params = &event->conn_params;
+  if (event->status != PBL_BT_HCI_STATUS_SUCCESS) {
     goto unlock;
   }
 
@@ -338,7 +344,8 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
     goto unlock;
   }
 
-  const ResponseTimeState desired_state = conn_mgr_get_latency_for_le_connection(connection, NULL);
+  const enum pbl_bt_response_time_state desired_state =
+      conn_mgr_get_latency_for_le_connection(connection, NULL);
 
   // Cache the BLE connection parameters
   connection->conn_params = *params;
@@ -346,9 +353,9 @@ void bt_driver_handle_le_conn_params_update_event(const BleConnectionUpdateCompl
 
   const bool local_is_master = connection->local_is_master;
   if (!local_is_master) {
-     bluetooth_analytics_handle_connection_params_update(params);
-     prv_analytics_update_conn_params(params->conn_interval_1_25ms, params->slave_latency_events);
-     PBL_ANALYTICS_ADD(ble_conn_param_update_count, 1);
+    bluetooth_analytics_handle_connection_params_update(params);
+    prv_analytics_update_conn_params(params->conn_interval_1_25ms, params->slave_latency_events);
+    PBL_ANALYTICS_ADD(ble_conn_param_update_count, 1);
   }
 
   prv_evaluate(connection, desired_state);

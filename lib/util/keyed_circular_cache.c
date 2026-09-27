@@ -4,7 +4,6 @@
 #include "pbl/util/keyed_circular_cache.h"
 
 #include "pbl/util/assert.h"
-#include "pbl/util/math.h"
 
 #include <string.h>
 
@@ -15,7 +14,7 @@ void keyed_circular_cache_init(KeyedCircularCache *c, KeyedCircularCacheKey *key
   UTIL_ASSERT(data_buffer);
   UTIL_ASSERT(item_size);
 
-  *c = (KeyedCircularCache) {
+  *c = (KeyedCircularCache){
     .cache_keys = key_buffer,
     .cache_data = (uint8_t *)data_buffer,
     .item_size = item_size,

@@ -17,7 +17,7 @@
 #include "stubs_passert.h"
 #include "stubs_persist.h"
 #include "stubs_prompt.h"
-#include "stubs_queue.h"
+#include "stubs_msgq.h"
 #include "stubs_resources.h"
 #include "stubs_serial.h"
 #include "stubs_syscall_internal.h"
@@ -29,18 +29,21 @@
 #include "pbl/util/size.h"
 
 #include <stdio.h>
+#include "pbl/kernel/compiler.h"
 
 // helpers from accel manager
-extern void test_accel_manager_get_subsample_info(
-    AccelManagerState *state, uint16_t *num, uint16_t *den, uint16_t *samps_per_update);
+extern void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *num,
+                                                  uint16_t *den, uint16_t *samps_per_update);
 extern void test_accel_manager_reset(void);
 
 // stub
-void event_service_init(PebbleEventType type,
-                        EventServiceAddSubscriberCallback start_cb,
-                        EventServiceRemoveSubscriberCallback stop_cb) {}
-void sys_vibe_history_start_collecting(void) {}
-void sys_vibe_history_stop_collecting(void) {}
+void event_service_init(PebbleEventType type, EventServiceAddSubscriberCallback start_cb,
+                        EventServiceRemoveSubscriberCallback stop_cb) {
+}
+void sys_vibe_history_start_collecting(void) {
+}
+void sys_vibe_history_stop_collecting(void) {
+}
 int32_t sys_vibe_get_vibe_strength(void) {
   return 0;
 }
@@ -50,12 +53,14 @@ int32_t vibes_get_vibe_strength(void) {
 uint32_t vibes_get_time_since_last_vibe_ms(void) {
   return UINT32_MAX;
 }
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {}
-void accel_set_shake_sensitivity_percent(uint8_t percent) {}
+void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+}
+void accel_set_shake_sensitivity_percent(uint8_t percent) {
+}
 bool shell_prefs_get_accel_shake_log_info_enabled(void) {
   return false;
 }
-QueueHandle_t pebble_task_get_to_queue(PebbleTask task) {
+struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
   return NULL;
 }
 
@@ -115,13 +120,11 @@ void test_accel_manager__initialize(void) {
   s_force_sampling_interval = false;
 }
 
-
 void test_accel_manager__cleanup(void) {
   test_accel_manager_reset();
 }
 
 static void prv_noop_sample_handler(void *context) {
-
 }
 
 static void prv_validate_sample_rates(int *arr, int num_samples) {
@@ -140,8 +143,8 @@ static void prv_validate_sample_rates(int *arr, int num_samples) {
 }
 
 static void prv_run_accel_test(int *sample_arr, int num_items) {
-  PebbleTask tasks[] = { PebbleTask_KernelMain, PebbleTask_Worker, PebbleTask_App };
-  AccelManagerState* sessions[3];
+  PebbleTask tasks[] = {PebbleTask_KernelMain, PebbleTask_Worker, PebbleTask_App};
+  AccelManagerState *sessions[3];
 
   if (num_items > 3) {
     return; // we only support 3 simultaneous subscribers
@@ -154,8 +157,8 @@ static void prv_run_accel_test(int *sample_arr, int num_items) {
       fastest_rate = sample_arr[i];
     }
 
-    sessions[i] = sys_accel_manager_data_subscribe(
-        sample_arr[i], prv_noop_sample_handler, NULL, tasks[i]);
+    sessions[i] =
+        sys_accel_manager_data_subscribe(sample_arr[i], prv_noop_sample_handler, NULL, tasks[i]);
 
     // buffer size of 1
     sys_accel_manager_set_sample_buffer(sessions[i], fake_buf, 1);
@@ -194,15 +197,16 @@ static void prv_run_accel_test(int *sample_arr, int num_items) {
 // enumerate through all possible sampling rate combinations and confirm
 // that the correct frequency is selected
 void test_accel_manager__subscription_sampling_rates(void) {
-  int sample_rates[] = { ACCEL_SAMPLING_10HZ, ACCEL_SAMPLING_25HZ,
-                         ACCEL_SAMPLING_50HZ, ACCEL_SAMPLING_100HZ};
+  int sample_rates[] = {
+    ACCEL_SAMPLING_10HZ, ACCEL_SAMPLING_25HZ, ACCEL_SAMPLING_50HZ, ACCEL_SAMPLING_100HZ
+  };
   prv_validate_sample_rates(sample_rates, ARRAY_LENGTH(sample_rates));
 
   int poss_rates = ARRAY_LENGTH(sample_rates);
   int max_permutations = 0x1 << poss_rates;
 
   for (int mask = 0; mask < max_permutations; mask++) {
-    int count = __builtin_popcount(mask);
+    int count = PBL_POPCOUNT(mask);
     if (count == 0) {
       continue; // we don't care about the empty set
     }
@@ -236,7 +240,7 @@ void test_accel_manager__jitterfree(void) {
   AccelManagerState *state = sys_accel_manager_data_subscribe(
       ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, NULL, PebbleTask_KernelMain);
   uint32_t resulting_mhz = accel_manager_set_jitterfree_sampling_rate(state, 12500);
-  sys_accel_manager_set_sample_buffer(state , fake_buf, ARRAY_LENGTH(fake_buf));
+  sys_accel_manager_set_sample_buffer(state, fake_buf, ARRAY_LENGTH(fake_buf));
 
   cl_assert_equal_i(resulting_mhz, 12500);
 
@@ -247,7 +251,6 @@ void test_accel_manager__jitterfree(void) {
   cl_assert_equal_i(den, 10);
   cl_assert_equal_i(samples_per_update, ARRAY_LENGTH(fake_buf));
 }
-
 
 void test_accel_manager__batched_samples(void) {
   AccelRawData fake_buf[30];

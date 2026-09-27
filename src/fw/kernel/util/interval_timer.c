@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "system/passert.h"
+#include "pbl/kernel/irq.h"
 #include "interval_timer.h"
 
 #include <pbl/drivers/rtc.h>
-#include "FreeRTOS.h"
 
 static uint64_t prv_get_curr_system_time_ms(void) {
   time_t time_s;
@@ -17,7 +18,7 @@ void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_
                          uint32_t weighting_factor_inverted) {
   PBL_ASSERTN(weighting_factor_inverted != 0); // Divide by zero is not awesome
 
-  *timer = (IntervalTimer) {
+  *timer = (IntervalTimer){
     .min_expected_ms = min_expected_ms,
     .max_expected_ms = max_expected_ms,
     .weighting_factor_inverted = weighting_factor_inverted
@@ -27,7 +28,7 @@ void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_
 //! Record a sample that marks the start/end of an interval.
 //! Safe to call from an ISR.
 void interval_timer_take_sample(IntervalTimer *timer) {
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   {
     const uint64_t current_time = prv_get_curr_system_time_ms();
 
@@ -39,9 +40,7 @@ void interval_timer_take_sample(IntervalTimer *timer) {
       const int64_t last_interval = current_time - timer->last_sample_timestamp_ms;
 
       // Make sure this interval is valid
-      if (last_interval >= timer->min_expected_ms &&
-          last_interval <= timer->max_expected_ms) {
-
+      if (last_interval >= timer->min_expected_ms && last_interval <= timer->max_expected_ms) {
         // It's valid! Let's roll it into our moving average
 
         // This is an exponential moving average.
@@ -54,8 +53,8 @@ void interval_timer_take_sample(IntervalTimer *timer) {
           // Initialize the average to the first sample we have
           timer->average_ms = last_interval;
         } else {
-          timer->average_ms = timer->average_ms +
-              ((last_interval - timer->average_ms) / timer->weighting_factor_inverted);
+          timer->average_ms = timer->average_ms + ((last_interval - timer->average_ms) /
+                                                   timer->weighting_factor_inverted);
         }
 
         timer->num_samples++;
@@ -65,18 +64,18 @@ void interval_timer_take_sample(IntervalTimer *timer) {
     timer->last_sample_timestamp_ms = current_time;
   }
 
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 }
 
 uint32_t interval_timer_get(IntervalTimer *timer, uint32_t *average_ms_out) {
   uint32_t num_intervals;
 
-  portENTER_CRITICAL();
+  pbl_irq_lock();
   {
     num_intervals = timer->num_samples ? timer->num_samples - 1 : 0;
     *average_ms_out = timer->average_ms;
   }
-  portEXIT_CRITICAL();
+  pbl_irq_unlock();
 
   return num_intervals;
 }

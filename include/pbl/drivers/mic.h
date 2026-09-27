@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define MIC_SAMPLE_RATE     (16000) //!< Microphone audio data sample rate
-#define MIC_DEFAULT_VOLUME  (-1)
+#define MIC_SAMPLE_RATE    (16000) //!< Microphone audio data sample rate
+#define MIC_DEFAULT_VOLUME (-1)
 
 typedef const struct MicDevice MicDevice;
 
@@ -18,15 +18,28 @@ typedef void (*MicDataHandlerCB)(int16_t *samples, size_t sample_count, void *co
 //! Initialize microphone driver. Should be called on boot
 void mic_init(MicDevice *this);
 
-//! Set the mic volume.  This must be called afer mic_init, and not while the mic is running.
+//! Set the mic volume.  This must be called after mic_init, and not while the mic is running.
 void mic_set_volume(MicDevice *this, uint16_t volume);
 
 //! Start the microphone. The driver will fill the specified buffer with up to the specified size
 //! each time it calls the audio data handler callback. audio_buffer_len should be specified as the
 //! length of the buffer (number of 16-bit samples it can hold)
 //! @return true if mic was started, false if mic was already running
-bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context,
-               int16_t *audio_buffer, size_t audio_buffer_len);
+bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, int16_t *audio_buffer,
+               size_t audio_buffer_len);
+
+//! Realtime dispatch, provided by drivers that select MIC_POLLING. ready runs from the DMA ISR
+//! and must only wake the consumer, which then calls mic_poll() to receive one frame at a time
+//! on its own task. Returns false without starting capture if the device is busy.
+typedef void (*MicDataReadyCB)(void *context);
+bool mic_start_polling(MicDevice *this, MicDataHandlerCB data_handler, void *context,
+                       int16_t *audio_buffer, size_t audio_buffer_len, MicDataReadyCB ready);
+void mic_poll(MicDevice *this);
+
+//! First-sample time of the frame being delivered, on a wrapping MIC_SAMPLE_RATE clock derived
+//! from uptime and re-anchored whenever it drifts more than 8 ms from it.
+//! Valid only inside the data callback; false otherwise.
+bool mic_get_frame_time(MicDevice *this, uint32_t *sample_time);
 
 //! Stop the microphone. If buffer is not full, the remaining samples will be abandoned. No more
 //! callbacks will be executed nor data copied into the buffer after this returns

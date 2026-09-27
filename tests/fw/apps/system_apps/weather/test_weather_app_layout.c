@@ -12,6 +12,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/timeline/timeline_resources.h"
+#include "shell/prefs.h"
 #include "shell/system_theme.h"
 #include "util/buffer.h"
 #include "util/graphics.h"
@@ -56,7 +57,7 @@
 #include "stubs_status_bar_layer.h"
 #include "stubs_syscalls.h"
 #include "stubs_system_theme.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
 
@@ -93,9 +94,23 @@ GContext *graphics_context_get_current_context(void) {
   return &s_ctx;
 }
 
+static UnitsDistance s_units_distance;
+static UnitsWind s_units_wind;
+
+UnitsDistance shell_prefs_get_units_distance(void) {
+  return s_units_distance;
+}
+
+UnitsWind shell_prefs_get_units_wind(void) {
+  return s_units_wind;
+}
+
 void test_weather_app_layout__initialize(void) {
+  s_units_distance = UnitsDistance_Miles;
+  s_units_wind = UnitsWind_Mph;
+
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);
@@ -109,7 +124,8 @@ void test_weather_app_layout__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
   pfs_format(true /* write erase headers */);
-  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false /* is_next */);
+  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
+                                 false /* is_next */);
 
   resource_init();
 

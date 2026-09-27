@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 
-
 typedef enum {
   SettingsMenuItemBluetooth = 0,
   SettingsMenuItemNotifications,

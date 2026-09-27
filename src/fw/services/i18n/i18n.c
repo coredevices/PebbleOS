@@ -32,9 +32,9 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/i18n/mo.h"
 #include "kernel/event_loop.h"
+#include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "resource/resource.h"
-#include "pbl/services/filesystem/pfs.h"
 #include "shell/normal/language_ui.h"
 #include "shell/prefs.h"
 #include <pbl/logging/logging.h>
@@ -103,8 +103,8 @@ static uint32_t prv_next_index(uint32_t curidx, uint32_t hashsize, uint32_t step
 //! @param[out] rstring Can be NULL. If non-null this buffer will be populated with the translated
 //!                     string. This buffer will be null-terminated.
 //! @param rstring_len The length of the rstring buffer.
-static void prv_lookup(const char *msgid, struct DomainBinding *db,
-                       size_t *rlen, char *rstring, size_t rstring_len) {
+static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen, char *rstring,
+                       size_t rstring_len) {
   MoHandle *mohandle = &db->mohandle;
   *rlen = 0;
 
@@ -123,15 +123,16 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db,
       return;
     }
     MoEntry oentry;
-    if (resource_load_byte_range_system(0, db->resource_id, mohandle->mo.hdr.mo_otable
-            + sizeof(MoEntry) * strno, (uint8_t *)&oentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
+    if (resource_load_byte_range_system(0, db->resource_id,
+                                        mohandle->mo.hdr.mo_otable + sizeof(MoEntry) * strno,
+                                        (uint8_t *)&oentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
       return;
     }
     if (len == oentry.len) {
       // Length of original matches, compare the contents
       char key[oentry.len + 1];
       if (resource_load_byte_range_system(0, db->resource_id, oentry.off, (uint8_t *)key,
-            oentry.len) != oentry.len) {
+                                          oentry.len) != oentry.len) {
         return;
       }
       key[oentry.len] = '\0';
@@ -139,8 +140,9 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db,
       if (!strcmp(msgid, key)) {
         // Contents of original string matches, get the translated string
         MoEntry tentry;
-        if (resource_load_byte_range_system(0, db->resource_id, mohandle->mo.hdr.mo_ttable
-            + sizeof(MoEntry) * strno, (uint8_t *)&tentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
+        if (resource_load_byte_range_system(
+                0, db->resource_id, mohandle->mo.hdr.mo_ttable + sizeof(MoEntry) * strno,
+                (uint8_t *)&tentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
           return;
         }
         if (rstring) { // If we want the translated string, copy it out.
@@ -148,8 +150,8 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db,
           // Leave space for the null-terminator as well.
           const size_t read_length = MIN(tentry.len, rstring_len - 1);
 
-          if (resource_load_byte_range_system(0, db->resource_id, tentry.off,
-                                              (uint8_t *)rstring, read_length) != read_length) {
+          if (resource_load_byte_range_system(0, db->resource_id, tentry.off, (uint8_t *)rstring,
+                                              read_length) != read_length) {
             return;
           }
 
@@ -270,8 +272,8 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   }
 
   MoHandle *mohandle = &db->mohandle;
-  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, 0,
-      (uint8_t *)&mohandle->mo.hdr, sizeof(MoHeader)) == 0) {
+  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, 0, (uint8_t *)&mohandle->mo.hdr,
+                                      sizeof(MoHeader)) == 0) {
     goto fail;
   }
   if (mohandle->mo.hdr.mo_magic != MO_MAGIC) {
@@ -279,7 +281,7 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   }
 
   mohandle->len = size;
-    /* validate htable */
+  /* validate htable */
   if (mohandle->mo.hdr.mo_hsize < 2) {
     goto fail;
   }
@@ -288,7 +290,7 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   uint32_t *htable = kernel_malloc_check(htable_size);
   mohandle->mo.mo_htable = htable;
   if (resource_load_byte_range_system(SYSTEM_APP, resource_id, mohandle->mo.hdr.mo_hoffset,
-      (uint8_t *)htable, htable_size) == 0) {
+                                      (uint8_t *)htable, htable_size) == 0) {
     prv_unmapit(db);
     goto fail;
   }
@@ -302,8 +304,8 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
   }
 
   if (!prv_get_metadata(db)) {
-      prv_unmapit(db);
-      goto fail;
+    prv_unmapit(db);
+    goto fail;
   }
 
   return true;
@@ -328,8 +330,7 @@ void prv_list_flush(void) {
 static bool prv_list_string_filter_callback(ListNode *found_node, void *data) {
   I18nString *i18n_string = (I18nString *)found_node;
   StringLookupInfo *lookup_info = data;
-  if (i18n_string->original_hash == lookup_info->hash &&
-      lookup_info->owner == i18n_string->owner &&
+  if (i18n_string->original_hash == lookup_info->hash && lookup_info->owner == i18n_string->owner &&
       strcmp(i18n_string->original_string, lookup_info->string) == 0) {
     return true;
   } else {
@@ -354,9 +355,8 @@ I18nString *prv_list_find_string(const char *string, const void *owner) {
     .owner = owner
   };
   return (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
-      prv_list_string_filter_callback, (void *)&lookup_info);
+                                 prv_list_string_filter_callback, (void *)&lookup_info);
 }
-
 
 static const char *prv_list_add_string(const char *original_string, const char *translated_string,
                                        const void *owner) {
@@ -364,8 +364,8 @@ static const char *prv_list_add_string(const char *original_string, const char *
 
   // Allocate enough space to hold the original and translated strings. The translated string
   // is stored at i18n_string->translated and the original string immediately after that.
-  I18nString *i18n_string = kernel_malloc_check(sizeof(I18nString) + translated_len + 1
-              + strlen(original_string) + 1);
+  I18nString *i18n_string =
+      kernel_malloc_check(sizeof(I18nString) + translated_len + 1 + strlen(original_string) + 1);
 
   list_init(&i18n_string->node);
   i18n_string->owner = owner;
@@ -373,7 +373,7 @@ static const char *prv_list_add_string(const char *original_string, const char *
   strcpy(i18n_string->translated_string, translated_string);
 
   i18n_string->original_hash = prv_gettext_hash(original_string);
-  // Store the original string immediately after the translated one in memory. 
+  // Store the original string immediately after the translated one in memory.
   i18n_string->original_string = &i18n_string->translated_string[translated_len + 1];
   strcpy(i18n_string->original_string, original_string);
 
@@ -519,13 +519,28 @@ void i18n_free(const char *original, const void *owner) {
 
 void i18n_free_all(const void *owner) {
   I18nString *cur_string = (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
-      prv_list_owner_filter_callback, (void*)owner);
+                                                   prv_list_owner_filter_callback, (void *)owner);
   while (cur_string) {
-    I18nString *next_string = (I18nString *)list_find_next(&cur_string->node,
-        prv_list_owner_filter_callback, false, (void*)owner);
+    I18nString *next_string = (I18nString *)list_find_next(
+        &cur_string->node, prv_list_owner_filter_callback, false, (void *)owner);
     prv_list_remove_string(cur_string);
     cur_string = next_string;
   }
+}
+
+static uint32_t prv_language_id(void) {
+  return s_system_domain.mohandle.mo.mo_htable ? s_system_domain.version.crc : 0;
+}
+
+static void prv_put_event_if_changed(uint32_t prev_language_id) {
+  if (prv_language_id() == prev_language_id) {
+    return;
+  }
+
+  PebbleEvent event = {
+    .type = PEBBLE_LANGUAGE_CHANGE_EVENT,
+  };
+  event_put(&event);
 }
 
 static void prv_resource_changed_handler(void *data) {
@@ -533,7 +548,10 @@ static void prv_resource_changed_handler(void *data) {
   // Mark as invalid
   PBL_LOG_DBG("lang resource file reloading");
   shell_prefs_set_language_english(false);
+  const uint32_t prev_language_id = prv_language_id();
   db->need_reload = true;
+  prv_mapit(db->resource_id, db);
+  prv_put_event_if_changed(prev_language_id);
 
   if (resource_is_valid(SYSTEM_APP, db->resource_id)) {
     language_ui_display_changed(db->lang_name);
@@ -561,18 +579,18 @@ void i18n_set_resource(uint32_t resource_id) {
   }
 
   s_system_domain.resource_id = resource_id;
-  s_system_domain.watch_handle = resource_watch(SYSTEM_APP, resource_id,
-                                                prv_resource_changed_callback, &s_system_domain);
+  s_system_domain.watch_handle =
+      resource_watch(SYSTEM_APP, resource_id, prv_resource_changed_callback, &s_system_domain);
 
+  const uint32_t prev_language_id = prv_language_id();
   if (shell_prefs_get_language_english()) {
     prv_unset();
-    return;
+  } else {
+    s_system_domain.need_reload = true;
+    // try mapping it right away
+    prv_mapit(resource_id, &s_system_domain);
   }
-
-  s_system_domain.need_reload = true;
-
-  // try mapping it right away
-  prv_mapit(resource_id, &s_system_domain);
+  prv_put_event_if_changed(prev_language_id);
 }
 
 char *i18n_get_locale(void) {
@@ -588,16 +606,17 @@ char *i18n_get_lang_name(void) {
 }
 
 void i18n_enable(bool enable) {
+  const uint32_t prev_language_id = prv_language_id();
   if (enable) {
     s_system_domain.need_reload = true;
     prv_mapit(s_system_domain.resource_id, &s_system_domain);
   } else {
     prv_unset();
   }
+  prv_put_event_if_changed(prev_language_id);
 }
 
 void command_i18n_resource(const char *arg) {
   uint32_t resource_id = atoi(arg);
   i18n_set_resource(resource_id);
 }
-

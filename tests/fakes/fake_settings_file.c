@@ -32,8 +32,8 @@ void fake_settings_file_reset(void) {
   s_settings_file.open = false;
 }
 
-status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len,
-                           void *val_out, size_t val_out_len) {
+status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
+                           size_t val_out_len) {
   if (settings_file_exists(file, key, key_len)) {
     const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
     memcpy(val_out, s_settings_file.values[key_crc8], val_out_len);
@@ -44,8 +44,8 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len,
   return E_DOES_NOT_EXIST;
 }
 
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len,
-                           const void *val, size_t val_len) {
+status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, const void *val,
+                           size_t val_len) {
   void *val_copy = malloc(val_len);
   void *key_copy = malloc(key_len);
   cl_assert(val_copy && key_copy);
@@ -75,8 +75,7 @@ int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
   return 0;
 }
 
-status_t settings_file_delete(SettingsFile *file,
-                              const void *key, size_t key_len) {
+status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
   if (settings_file_exists(file, key, key_len)) {
     const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
     free(s_settings_file.values[key_crc8]);
@@ -92,8 +91,7 @@ status_t settings_file_delete(SettingsFile *file,
   }
 }
 
-status_t settings_file_open(SettingsFile *file, const char *name,
-                            int max_used_space) {
+status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
   if (s_settings_file.open) {
     return E_BUSY;
   } else {
@@ -103,8 +101,8 @@ status_t settings_file_open(SettingsFile *file, const char *name,
   }
 }
 
-status_t settings_file_open_growable(SettingsFile *file, const char *name,
-                                     int max_used_space, int initial_alloc_size) {
+status_t settings_file_open_growable(SettingsFile *file, const char *name, int max_used_space,
+                                     int initial_alloc_size) {
   return settings_file_open(file, name, max_used_space);
 }
 
@@ -155,11 +153,9 @@ static void prv_get_val(SettingsFile *file, void *val, size_t val_len) {
   memcpy(val, s_settings_file.values[s_cur_itr], val_len);
 }
 
-status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb,
-                            void *context) {
+status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
-    if (s_settings_file.keys[i] != NULL &&
-        s_settings_file.values[i] != NULL) {
+    if (s_settings_file.keys[i] != NULL && s_settings_file.values[i] != NULL) {
       s_cur_itr = i;
 
       SettingsRecordInfo info = {
@@ -177,9 +173,7 @@ status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb,
   return S_SUCCESS;
 }
 
-status_t settings_file_rewrite(SettingsFile *file,
-                               SettingsFileRewriteCallback cb,
-                               void *context) {
+status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context) {
   // TODO
   fake_settings_file_reset();
   return S_SUCCESS;
@@ -188,7 +182,21 @@ status_t settings_file_rewrite(SettingsFile *file,
 status_t settings_file_rewrite_filtered(SettingsFile *file,
                                         SettingsFileRewriteFilterCallback filter_cb,
                                         void *context) {
-  // TODO
-  fake_settings_file_reset();
+  for (unsigned i = 0; i < UINT8_MAX; ++i) {
+    if (s_settings_file.keys[i] == NULL || s_settings_file.values[i] == NULL) {
+      continue;
+    }
+    if (!filter_cb || filter_cb(s_settings_file.keys[i], s_settings_file.key_lens[i],
+                                s_settings_file.values[i], s_settings_file.val_lens[i], context)) {
+      continue;
+    }
+    free(s_settings_file.values[i]);
+    s_settings_file.values[i] = NULL;
+    free(s_settings_file.keys[i]);
+    s_settings_file.keys[i] = NULL;
+    s_settings_file.val_lens[i] = 0;
+    s_settings_file.key_lens[i] = 0;
+    s_settings_file.dirty[i] = false;
+  }
   return S_SUCCESS;
 }

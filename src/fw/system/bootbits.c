@@ -16,6 +16,7 @@
 
 #if MICRO_FAMILY_STM32F4
 #include <stm32f4xx.h>
+#include "pbl/kernel/compiler.h"
 #endif
 
 #ifdef CONFIG_QEMU
@@ -28,7 +29,7 @@ extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 #include <stdint.h>
 
 #ifdef CONFIG_SOC_NRF52
-static uint32_t __attribute__((section(".retained"))) retained[256 / 4];
+static uint32_t PBL_SECTION(".retained") retained[256 / 4];
 
 void retained_write(uint8_t id, uint32_t value) {
   retained[id] = value;
@@ -45,7 +46,9 @@ void boot_bit_init(void) {
   // in-memory value is probably scrambled and should be reset.
   uint32_t crc32_computed = crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
   if (crc32_computed != retained[NRF_RETAINED_REGISTER_CRC]) {
-    PBL_LOG_WRN("Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!", crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
+    PBL_LOG_WRN(
+        "Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!",
+        crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
     memset(retained, 0, sizeof(retained));
   }
 
@@ -72,7 +75,7 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%"PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
@@ -81,7 +84,7 @@ uint32_t boot_bits_get(void) {
 
 void command_boot_bits_get(void) {
   char buffer[32];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
+  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
 uint32_t boot_version_read(void) {
@@ -113,16 +116,16 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%"PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
- return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
 }
 
 void command_boot_bits_get(void) {
   char buffer[32];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
+  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
 #define PB_VERSION_MAGIC 0x50425652UL
@@ -133,7 +136,7 @@ struct pb_version {
   uint8_t minor;
   uint8_t patch;
   uint8_t tweak;
-} __attribute__((packed));
+} PBL_PACKED;
 
 _Static_assert(sizeof(struct pb_version) == 8, "pb_version struct must be 8 bytes");
 
@@ -149,10 +152,8 @@ uint32_t boot_version_read(void) {
     return 0UL;
   }
 
-  version = ((uint32_t)version_data.major << 24) |
-            ((uint32_t)version_data.minor << 16) |
-            ((uint32_t)version_data.patch << 8) |
-            (uint32_t)version_data.tweak;
+  version = ((uint32_t)version_data.major << 24) | ((uint32_t)version_data.minor << 16) |
+            ((uint32_t)version_data.patch << 8) | (uint32_t)version_data.tweak;
 
   return version;
 }
@@ -185,7 +186,7 @@ bool boot_bit_test(BootBitValue bit) {
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%"PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
@@ -194,7 +195,7 @@ uint32_t boot_bits_get(void) {
 
 void command_boot_bits_get(void) {
   char buffer[32];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%"PRIu32, boot_bits_get());
+  dbgserial_putstr_fmt(buffer, sizeof(buffer), "bootbits: 0x%" PRIu32, boot_bits_get());
 }
 
 uint32_t boot_version_read(void) {

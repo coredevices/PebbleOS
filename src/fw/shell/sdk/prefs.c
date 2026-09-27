@@ -4,7 +4,7 @@
 #include "applib/preferred_content_size.h"
 #include "apps/system_app_ids.h"
 #include "board/board.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/process_manager.h"
 #include "pbl/services/activity/activity.h"
@@ -14,7 +14,7 @@
 #include "shell/prefs.h"
 #include "shell/prefs_private.h"
 
-static PebbleMutex *s_mutex;
+static PBL_MUTEX_DEFINE(s_mutex);
 
 #define PREF_KEY_CLOCK_24H "clock24h"
 static bool s_is_24h_style;
@@ -35,14 +35,13 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
 void shell_prefs_init(void) {
-  s_mutex = mutex_create();
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   SettingsFile file = {};
   if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
     goto cleanup;
   }
-  if (settings_file_get(&file, PREF_KEY_CLOCK_24H, sizeof(PREF_KEY_CLOCK_24H),
-                        &s_is_24h_style, sizeof(s_is_24h_style)) != S_SUCCESS) {
+  if (settings_file_get(&file, PREF_KEY_CLOCK_24H, sizeof(PREF_KEY_CLOCK_24H), &s_is_24h_style,
+                        sizeof(s_is_24h_style)) != S_SUCCESS) {
     // The setting likely doesn't exist yet so set it to the default (true)
     s_is_24h_style = true;
   }
@@ -56,7 +55,7 @@ void shell_prefs_init(void) {
   }
   settings_file_close(&file);
 cleanup:
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static bool prv_pref_set(const char *key, const void *val, size_t val_len) {
@@ -76,11 +75,11 @@ bool shell_prefs_get_clock_24h_style(void) {
 }
 
 void shell_prefs_set_clock_24h_style(bool is_24h_style) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (prv_pref_set(PREF_KEY_CLOCK_24H, &s_is_24h_style, sizeof(s_is_24h_style))) {
     s_is_24h_style = is_24h_style;
   }
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 bool shell_prefs_is_timezone_source_manual(void) {
@@ -107,29 +106,26 @@ int16_t shell_prefs_get_automatic_timezone_id(void) {
 void shell_prefs_set_automatic_timezone_id(int16_t timezone_id) {
 }
 
-
 void prefs_private_lock(void) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 }
 
 void prefs_private_unlock(void) {
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 // Exported function used by blob_db API to set the backing store for a specific key.
 // Not used by the SDK shell
 bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void *value,
-                               int value_len) {
+                                 int value_len) {
   return false;
 }
-
 
 // Exported function used by blob_db API to get the length of a value in our backing store
 // Not used by the SDK shell
 int prefs_private_get_backing_len(const uint8_t *key, size_t key_len) {
   return 0;
 }
-
 
 // Exported function used by blob_db API to read our backing store
 // Not used by the SDK shell
@@ -138,18 +134,17 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
 }
 
 void watchface_set_default_install_id(AppInstallId app_id) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   Uuid uuid;
   app_install_get_uuid_for_install_id(app_id, &uuid);
   if (prv_pref_set(PREF_KEY_DEFAULT_WATCHFACE, &uuid, sizeof(uuid))) {
     s_default_watchface = uuid;
   }
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *entry, void *data) {
-  if (!app_install_entry_is_watchface(entry) ||
-      app_install_entry_is_hidden(entry)) {
+  if (!app_install_entry_is_watchface(entry) || app_install_entry_is_hidden(entry)) {
     return true; // continue search
   }
 
@@ -160,8 +155,7 @@ static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *en
 AppInstallId watchface_get_default_install_id(void) {
   AppInstallId app_id = app_install_get_id_for_uuid(&s_default_watchface);
   AppInstallEntry entry;
-  if ((app_id == INSTALL_ID_INVALID) ||
-      !app_install_get_entry_for_install_id(app_id, &entry) ||
+  if ((app_id == INSTALL_ID_INVALID) || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
     app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
@@ -170,15 +164,14 @@ AppInstallId watchface_get_default_install_id(void) {
 }
 
 void system_theme_set_content_size(PreferredContentSize content_size) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   const uint8_t content_size_uint = content_size;
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
-            content_size);
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d", content_size);
   } else if (prv_pref_set(PREF_KEY_CONTENT_SIZE, &content_size_uint, sizeof(content_size_uint))) {
     s_content_size = content_size;
   }
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
 
 PreferredContentSize system_theme_get_content_size(void) {
@@ -257,10 +250,31 @@ bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
 
 void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
 }
+
+bool activity_prefs_blood_oxygen_is_enabled(void) {
+  return false;
+}
+
+void activity_prefs_set_blood_oxygen_enabled(bool enabled) {
+}
+
+bool activity_prefs_blood_oxygen_activity_tracking_is_enabled(void) {
+  return false;
+}
+
+void activity_prefs_set_blood_oxygen_activity_tracking_enabled(bool enabled) {
+}
+
+HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void) {
+  return HRMonitoringInterval_10Min;
+}
+
+void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval) {
+}
 #endif
 
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
-  static ActivityInsightSettings s_settings = { 0 };
+  static ActivityInsightSettings s_settings = {0};
   return &s_settings;
 }
 
@@ -286,6 +300,10 @@ UnitsDistance shell_prefs_get_units_distance(void) {
   return UnitsDistance_Miles;
 }
 
+UnitsWind shell_prefs_get_units_wind(void) {
+  return UnitsWind_Mph;
+}
+
 GColor shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 }
@@ -308,7 +326,6 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 // Exported function used by blob_db API to handle settings events
 // Not used by the SDK shell
 void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
-
 }
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {

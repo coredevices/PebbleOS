@@ -11,25 +11,25 @@
 
 #include <string.h>
 
-static const char* test_data = "This is a very complicated case, Maude.";
+static const char *test_data = "This is a very complicated case, Maude.";
 
 void test_buffer__should_add_data_until_full(void) {
   const size_t buffer_size = 101;
 
-  Buffer* b = buffer_create(buffer_size);
+  Buffer *b = buffer_create(buffer_size);
 
   int bytes_written = 0;
   int num_elements = buffer_size / sizeof(test_data);
   for (int i = 0; i < num_elements; ++i) {
     cl_assert_equal_i(b->bytes_written, i * sizeof(test_data));
     cl_assert_equal_i(buffer_get_bytes_remaining(b), buffer_size - (i * sizeof(test_data)));
-    bytes_written += buffer_add(b, (uint8_t *) test_data, sizeof(test_data));
+    bytes_written += buffer_add(b, (uint8_t *)test_data, sizeof(test_data));
     cl_assert_equal_i(bytes_written, (i + 1) * sizeof(test_data));
-    cl_assert_equal_i(buffer_get_bytes_remaining(b), buffer_size - ((i+1) * sizeof(test_data)));
+    cl_assert_equal_i(buffer_get_bytes_remaining(b), buffer_size - ((i + 1) * sizeof(test_data)));
   }
 
   cl_assert(buffer_get_bytes_remaining(b) > 0);
-  bytes_written = buffer_add(b, (uint8_t *) test_data, sizeof(test_data));
+  bytes_written = buffer_add(b, (uint8_t *)test_data, sizeof(test_data));
   cl_assert_equal_i(bytes_written, 0);
 
   free(b);
@@ -77,7 +77,7 @@ void test_buffer__can_remove(void) {
   cl_assert_equal_i(b->data[3], b4);
 
   // moves removed remaining bytes to close the gap
-  cl_assert_equal_i(2, buffer_remove(b, 1*sizeof(uint8_t), 2*sizeof(uint8_t)));
+  cl_assert_equal_i(2, buffer_remove(b, 1 * sizeof(uint8_t), 2 * sizeof(uint8_t)));
   cl_assert_equal_i(2, b->bytes_written);
   cl_assert_equal_i(b->data[0], b1);
   cl_assert_equal_i(b->data[1], b4);
@@ -112,8 +112,8 @@ void test_buffer__can_read_and_write_uint32(void) {
 
   Buffer *b = buffer_create(4);
 
-  buffer_add(b, (const uint8_t* const)&expected, sizeof(expected));
-  cl_assert_equal_i(expected, *(uint32_t*)b->data);
+  buffer_add(b, (const uint8_t *const)&expected, sizeof(expected));
+  cl_assert_equal_i(expected, *(uint32_t *)b->data);
 
   free(b);
 }

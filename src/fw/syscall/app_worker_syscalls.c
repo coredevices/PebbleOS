@@ -4,7 +4,6 @@
 #include "applib/app_worker.h"
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
-#include "kernel/ui/modals/modal_manager_private.h"
 #include "process_management/worker_manager.h"
 #include "process_management/app_manager.h"
 #include "popups/switch_worker_ui.h"
@@ -19,7 +18,6 @@ DEFINE_SYSCALL(bool, sys_app_worker_is_running, void) {
   }
   return (uuid_equal(&md->uuid, &app_manager_get_current_app_md()->uuid));
 }
-
 
 // ---------------------------------------------------------------------------------------------------------------
 // Display the confirmation dialog for switching into the worker
@@ -48,7 +46,7 @@ DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_launch, void) {
     }
 
     // We have to get confirmation first that it is OK to launch the new worker
-    launcher_task_add_callback(prv_switch_worker, (void *) install_id);
+    launcher_task_add_callback(prv_switch_worker, (void *)install_id);
     return APP_WORKER_RESULT_ASKING_CONFIRMATION;
   }
 
@@ -57,11 +55,9 @@ DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_launch, void) {
   return APP_WORKER_RESULT_SUCCESS;
 }
 
-
 // ---------------------------------------------------------------------------------------------------------------
 // Kill the worker for the current app
 DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_kill, void) {
-
   const PebbleProcessMd *md = worker_manager_get_current_worker_md();
   if (md == NULL) {
     return APP_WORKER_RESULT_NOT_RUNNING;
@@ -74,13 +70,11 @@ DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_kill, void) {
   return APP_WORKER_RESULT_SUCCESS;
 }
 
-
 // ---------------------------------------------------------------------------------------------------------------
 // Launch the app for the current worker
 DEFINE_SYSCALL(void, sys_launch_app_for_worker, void) {
-  app_manager_put_launch_app_event(&(AppLaunchEventConfig) {
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){
     .id = worker_manager_get_task_context()->install_id,
     .common.reason = APP_LAUNCH_WORKER,
   });
 }
-

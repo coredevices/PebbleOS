@@ -30,7 +30,7 @@ static void prv_set_calories(char *buffer, size_t buffer_size, int32_t current_c
     return;
   }
 
-  snprintf(buffer, buffer_size, "%"PRId32, current_calories);
+  snprintf(buffer, buffer_size, "%" PRId32, current_calories);
 }
 
 static void prv_set_distance(char *buffer, size_t buffer_size, int32_t current_distance_meters) {
@@ -52,13 +52,13 @@ static void prv_set_distance(char *buffer, size_t buffer_size, int32_t current_d
 static void prv_set_avg(char *buffer, size_t buffer_size, int32_t daily_avg, void *i18n_owner) {
   int pos = 0;
 
-  pos += snprintf(buffer, buffer_size,
-                  PBL_IF_ROUND_ELSE("%s\n", "%s"), i18n_get("30 DAY AVG", i18n_owner));
+  pos += snprintf(buffer, buffer_size, PBL_IF_ROUND_ELSE("%s\n", "%s"),
+                  i18n_get("30 DAY AVG", i18n_owner));
 
   if (daily_avg > 0) {
-    snprintf(buffer + pos, buffer_size - pos, " %"PRId32, daily_avg);
+    snprintf(buffer + pos, buffer_size - pos, " %" PRId32, daily_avg);
   } else {
-    snprintf(buffer + pos, buffer_size - pos, " "EN_DASH);
+    snprintf(buffer + pos, buffer_size - pos, " " EN_DASH);
   }
 }
 
@@ -70,21 +70,16 @@ Window *health_activity_detail_card_create(HealthData *health_data) {
   const GColor fill_color = PBL_IF_COLOR_ELSE(GColorIslamicGreen, GColorDarkGray);
   const GColor today_fill_color = PBL_IF_COLOR_ELSE(GColorScreaminGreen, GColorDarkGray);
 
-  health_detail_card_set_render_day_zones(card_data->zones,
-                                          &card_data->num_zones,
-                                          &card_data->weekly_max,
-                                          false /* format hours and minutes */,
-                                          true /* show crown */,
-                                          fill_color,
-                                          today_fill_color,
-                                          health_data_steps_get(health_data),
-                                          card_data);
+  health_detail_card_set_render_day_zones(
+      card_data->zones, &card_data->num_zones, &card_data->weekly_max,
+      false /* format hours and minutes */, true /* show crown */, fill_color, today_fill_color,
+      health_data_steps_get(health_data), card_data);
 
   const size_t buffer_len = 32;
 
   HealthDetailHeading *heading = &card_data->headings[card_data->num_headings++];
 
-  *heading = (HealthDetailHeading) {
+  *heading = (HealthDetailHeading){
     .primary_label = (char *)i18n_get("CALORIES", card_data),
     .primary_value = app_zalloc_check(buffer_len),
     .secondary_label = (char *)i18n_get("DISTANCE", card_data),
@@ -101,7 +96,7 @@ Window *health_activity_detail_card_create(HealthData *health_data) {
 
   HealthDetailSubtitle *subtitle = &card_data->subtitles[card_data->num_subtitles++];
 
-  *subtitle = (HealthDetailSubtitle) {
+  *subtitle = (HealthDetailSubtitle){
     .label = app_zalloc_check(buffer_len),
     .fill_color = PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack),
   };

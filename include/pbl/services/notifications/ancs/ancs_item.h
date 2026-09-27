@@ -7,21 +7,19 @@
 
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
-#include "pbl/services/timeline/timeline.h"
 
 //! Creates a new timeline item from ANCS data
 //! @param notif_attributes ANCS Notification attributes
 //! @param app_attributes ANCS App attributes (namely, the display name)
 //! @param app_metadata The icon and color associated with the app
 //! @param notif_prefs iOS notification prefs for this notification
-//! @param timestamp Time the notification occured
+//! @param timestamp Time the notification occurred
 //! @param properties Additional ANCS properties (category, flags, etc)
 //! @return The newly created timeline item
 TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
                                             ANCSAttribute *app_attributes[],
                                             const ANCSAppMetadata *app_metadata,
-                                            iOSNotifPrefs *notif_prefs,
-                                            time_t timestamp,
+                                            iOSNotifPrefs *notif_prefs, time_t timestamp,
                                             ANCSProperty properties);
 
 //! Replaces the dismiss action of an existing timeline item with the ancs negative action

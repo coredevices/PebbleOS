@@ -7,4 +7,4 @@
 
 #define WATCHFACES_APP_COLOR_PRIMARY GColorJazzberryJam
 
-const PebbleProcessMd* watchfaces_get_app_info();
+const PebbleProcessMd *watchfaces_get_app_info();

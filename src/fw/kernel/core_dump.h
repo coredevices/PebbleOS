@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/build_id.h"
 #include "system/status_codes.h"
 
 #include <stdbool.h>
 
 //! NOTE: This function performs a hard reset after the core dump and never returns
-NORETURN core_dump_reset(bool is_forced);
+PBL_NORETURN void core_dump_reset(bool is_forced);
 
 bool is_unread_coredump_available(void);
 
@@ -18,7 +18,6 @@ bool is_unread_coredump_available(void);
 void core_dump_test_force_bus_fault(void);
 void core_dump_test_force_inf_loop(void);
 void core_dump_test_force_assert(void);
-
 
 // Warning: these functions use the normal flash driver
 status_t core_dump_size(uint32_t flash_base, uint32_t *size);

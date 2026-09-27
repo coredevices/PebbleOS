@@ -14,12 +14,9 @@
 #include "board/board.h"
 #include "applib/graphics/gtypes.h"
 #include <pbl/drivers/ambient_light.h>
-#include <pbl/drivers/backlight.h>
-#include "mfg/mfg_info.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "popups/timeline/peek.h"
 #include "process_management/app_install_manager.h"
-#include "process_management/process_manager.h"
 #include "pbl/services/accel_manager.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/services/touch/touch_nav_service.h"
@@ -46,7 +43,7 @@
 
 #include <stdbool.h>
 
-static PebbleMutex *s_mutex;
+static PBL_MUTEX_DEFINE(s_mutex);
 
 #define PREF_KEY_CLOCK_24H "clock24h"
 static bool s_clock_24h = false;
@@ -63,8 +60,11 @@ static int16_t s_clock_phone_timezone_id = -1;
 #define PREF_KEY_UNITS_DISTANCE "unitsDistance"
 static uint8_t s_units_distance = UnitsDistance_Miles;
 
+#define PREF_KEY_UNITS_WIND "unitsWind"
+static uint8_t s_units_wind = UnitsWind_FromDistance;
+
 #define PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED "lightBehaviour"
-#define PREF_KEY_BACKLIGHT_ENABLED "lightEnabled"
+#define PREF_KEY_BACKLIGHT_ENABLED              "lightEnabled"
 static bool s_backlight_enabled = true;
 #define PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED "lightAmbientSensorEnabled"
 static bool s_backlight_ambient_sensor_enabled = true;
@@ -73,10 +73,9 @@ static bool s_backlight_ambient_sensor_enabled = true;
 static uint32_t s_backlight_timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS;
 #define PREF_KEY_BACKLIGHT_INTENSITY "lightIntensity"
 // Logical 0-100% brightness; the light service scales it to the HW maximum.
-#define BACKLIGHT_INTENSITY_MIN 1U
-#define BACKLIGHT_INTENSITY_MAX 100U
-#define BACKLIGHT_INTENSITY_MEDIUM 25U
-#define BACKLIGHT_INTENSITY_HIGH 50U
+#define BACKLIGHT_INTENSITY_MIN     1U
+#define BACKLIGHT_INTENSITY_MAX     100U
+#define BACKLIGHT_INTENSITY_MEDIUM  25U
 #define BACKLIGHT_INTENSITY_DEFAULT BACKLIGHT_INTENSITY_MEDIUM
 static uint8_t s_backlight_intensity; // default set in shell_prefs_init()
 
@@ -107,7 +106,7 @@ static uint8_t s_backlight_dynamic_mode = BacklightDynamicMode_Standard;
 // Removed prefs; the key defines survive only so migration can convert/scrub
 // stored values.
 #define PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED "lightDynamicIntensity"
-#define PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD "dynBacklightMinThreshold"
+#define PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD        "dynBacklightMinThreshold"
 #endif
 
 #define PREF_KEY_BACKLIGHT_PRESET "lightPreset"
@@ -127,26 +126,28 @@ typedef struct BacklightPresetSettings {
 } BacklightPresetSettings;
 
 static const BacklightPresetSettings s_backlight_preset_settings[] = {
-  [BacklightPreset_MaxBrightness] = {
-    .ambient_sensor_enabled = true,
+  [BacklightPreset_MaxBrightness] =
+      {
+        .ambient_sensor_enabled = true,
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-    .dynamic_mode = BacklightDynamicMode_Off,
+        .dynamic_mode = BacklightDynamicMode_Off,
 #endif
-    .intensity = BACKLIGHT_INTENSITY_MAX,
-    .timeout_ms = 5000,
-    .motion_enabled = true,
-    .touch_wake = BacklightTouchWake_DoubleTap,
-  },
-  [BacklightPreset_Standard] = {
-    .ambient_sensor_enabled = true,
+        .intensity = BACKLIGHT_INTENSITY_MAX,
+        .timeout_ms = 5000,
+        .motion_enabled = true,
+        .touch_wake = BacklightTouchWake_DoubleTap,
+      },
+  [BacklightPreset_Standard] =
+      {
+        .ambient_sensor_enabled = true,
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-    .dynamic_mode = BacklightDynamicMode_Standard,
+        .dynamic_mode = BacklightDynamicMode_Standard,
 #endif
-    .intensity = BACKLIGHT_INTENSITY_HIGH,
-    .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
-    .motion_enabled = true,
-    .touch_wake = BacklightTouchWake_DoubleTap,
-  },
+        .intensity = CONFIG_BACKLIGHT_STANDARD_INTENSITY,
+        .timeout_ms = DEFAULT_BACKLIGHT_TIMEOUT_MS,
+        .motion_enabled = true,
+        .touch_wake = BacklightTouchWake_DoubleTap,
+      },
   [BacklightPreset_BatterySaver] = {
     .ambient_sensor_enabled = true,
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
@@ -162,10 +163,11 @@ static const BacklightPresetSettings s_backlight_preset_settings[] = {
 #ifdef CONFIG_ORIENTATION_MANAGER
 #define PREF_KEY_DISPLAY_ORIENTATION_LEFT_HANDED "displayOrientationLeftHanded"
 static bool s_display_orientation_left = false;
-#endif 
+#endif
 
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
-static uint32_t s_backlight_ambient_threshold = 0; // default set from board config in shell_prefs_init()
+static uint32_t s_backlight_ambient_threshold =
+    0; // default set from board config in shell_prefs_init()
 
 #define PREF_KEY_STATIONARY "stationaryMode"
 static bool s_stationary_mode_enabled = true;
@@ -173,11 +175,14 @@ static bool s_stationary_mode_enabled = true;
 #define PREF_KEY_DEFAULT_WORKER "workerId"
 static Uuid s_default_worker = UUID_INVALID_INIT;
 
-// We use "textStyle" to indicate the content size
+// Legacy content size, kept for the phone sync and to seed the notification text size.
 #define PREF_KEY_TEXT_STYLE "textStyle"
 static uint8_t s_text_style = PreferredContentSizeDefault;
+
+#define PREF_KEY_SYSTEM_TEXT_SIZE "systemTextSize"
+static uint8_t s_system_text_size = PreferredContentSizeDefault;
 #if !UNITTEST
-_Static_assert(sizeof(PreferredContentSize) == sizeof(s_text_style),
+_Static_assert(sizeof(PreferredContentSize) == sizeof(s_system_text_size),
                "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
@@ -192,10 +197,10 @@ typedef struct QuickLaunchPreference {
   Uuid uuid;
 } QuickLaunchPreference;
 
-#define PREF_KEY_QUICK_LAUNCH_UP "qlUp"
-#define PREF_KEY_QUICK_LAUNCH_DOWN "qlDown"
+#define PREF_KEY_QUICK_LAUNCH_UP     "qlUp"
+#define PREF_KEY_QUICK_LAUNCH_DOWN   "qlDown"
 #define PREF_KEY_QUICK_LAUNCH_SELECT "qlSelect"
-#define PREF_KEY_QUICK_LAUNCH_BACK "qlBack"
+#define PREF_KEY_QUICK_LAUNCH_BACK   "qlBack"
 
 static QuickLaunchPreference s_quick_launch_up = {
   .enabled = false,
@@ -217,10 +222,10 @@ static QuickLaunchPreference s_quick_launch_back = {
   .uuid = QUIET_TIME_TOGGLE_UUID,
 };
 
-#define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP "qlSingleClickUp"
+#define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP   "qlSingleClickUp"
 #define PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_DOWN "qlSingleClickDown"
-#define PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP "qlComboBackUp"
-#define PREF_KEY_QUICK_LAUNCH_COMBO_UP_DOWN "qlComboUpDown"
+#define PREF_KEY_QUICK_LAUNCH_COMBO_BACK_UP     "qlComboBackUp"
+#define PREF_KEY_QUICK_LAUNCH_COMBO_UP_DOWN     "qlComboUpDown"
 
 static QuickLaunchPreference s_quick_launch_single_click_up = {
   .enabled = true,
@@ -271,6 +276,30 @@ static uint8_t s_alarms_app_opened = 0;
 
 #define PREF_KEY_ACTIVITY_HRM_PREFERENCES "hrmPreferences"
 static ActivityHRMSettings s_activity_hrm_preferences = ACTIVITY_HRM_DEFAULT_PREFERENCES;
+#if !UNITTEST
+_Static_assert(sizeof(ActivityHRMSettings) == 3,
+               "ActivityHRMSettings changed size; prv_migrate_activity_hrm_prefs() only widens "
+               "records whose fields were appended!");
+#endif
+
+#define PREF_KEY_ACTIVITY_SPO2_PREFERENCES "spo2Preferences"
+static ActivitySpO2Settings s_activity_spo2_preferences = ACTIVITY_SPO2_DEFAULT_PREFERENCES;
+#if !UNITTEST
+_Static_assert(sizeof(ActivitySpO2Settings) == 1,
+               "sizeof(ActivitySpO2Settings) grew, stored records need migrating!");
+#endif
+
+// Blood oxygen on/off. Synced from the phone (and the on-watch toggle) as a
+// single bool byte under its own key, mirroring the mobile app's
+// `bloodOxygenPreferences` blob. Opt-in: default off until enabled.
+#define PREF_KEY_BLOOD_OXYGEN_PREFERENCES "bloodOxygenPreferences"
+static bool s_blood_oxygen_enabled = false;
+
+// Blood oxygen during activities opt-in. Synced from the phone like the other health toggles, and
+// only meaningful when HR-during-activities is on (enforced in the settings UI). Opt-in: default
+// off.
+#define PREF_KEY_BLOOD_OXYGEN_ACTIVITY_PREFERENCES "bloodOxygenActivityPreferences"
+static bool s_blood_oxygen_activity_enabled = false;
 
 #define PREF_KEY_ACTIVITY_HEART_RATE_PREFERENCES "heartRatePreferences"
 static HeartRatePreferences s_activity_hr_preferences = ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES;
@@ -290,9 +319,9 @@ static uint16_t s_timeline_peek_before_time_m =
 static uint8_t s_timeline_peek_unsupported_face_mode = TimelinePeekUnsupportedFaceMode_None;
 #endif
 
-#define PREF_KEY_COREDUMP_ON_REQUEST "coredumpOnRequest"
-#define PREF_KEY_ACCEL_SHAKE_LOG_INFO "accelShakeLogInfo"
-#define PREF_KEY_VIBE_LOG_INFO "vibeLogInfo"
+#define PREF_KEY_COREDUMP_ON_REQUEST       "coredumpOnRequest"
+#define PREF_KEY_ACCEL_SHAKE_LOG_INFO      "accelShakeLogInfo"
+#define PREF_KEY_VIBE_LOG_INFO             "vibeLogInfo"
 #define PREF_KEY_SETTINGS_DBS_COMPACTED_V1 "settingsDbsCompactedV1"
 #define PREF_KEY_ALS_THRESHOLD_MIGRATED_V1 "alsThresholdMigratedV1"
 #define PREF_KEY_ALS_THRESHOLD_MIGRATED_V2 "alsThresholdMigratedV2"
@@ -315,11 +344,11 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 static GColor s_theme_highlight_color = GColorVividCerulean;
 #endif
 
-#define PREF_KEY_MENU_SCROLL_WRAP_AROUND "menuScrollWrapAround"
-#define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR "menuScrollVibeBehavior"
+#define PREF_KEY_MENU_SCROLL_WRAP_AROUND    "menuScrollWrapAround"
+#define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR  "menuScrollVibeBehavior"
 #define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
-#define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR "musicShowProgressBar"
-#define PREF_KEY_MUSIC_SHOW_ALBUM_ART "musicShowAlbumArt"
+#define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR    "musicShowProgressBar"
+#define PREF_KEY_MUSIC_SHOW_ALBUM_ART       "musicShowAlbumArt"
 
 static bool s_menu_scroll_wrap_around = false;
 static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
@@ -378,6 +407,15 @@ static bool prv_set_s_units_distance(uint8_t *new_unit) {
     return false;
   }
   s_units_distance = *new_unit;
+  return true;
+};
+
+static bool prv_set_s_units_wind(uint8_t *new_unit) {
+  if (*new_unit >= UnitsWindCount) {
+    s_units_wind = UnitsWind_FromDistance;
+    return false;
+  }
+  s_units_wind = *new_unit;
   return true;
 };
 
@@ -510,13 +548,13 @@ static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
     return false;
   }
   s_motion_sensitivity = *sensitivity;
-  
-  // Update accelerometer sensitivity in accel_manager
-  // This applies the setting to the hardware
-  #ifdef CONFIG_ACCEL_SENSITIVITY
+
+// Update accelerometer sensitivity in accel_manager
+// This applies the setting to the hardware
+#ifdef CONFIG_ACCEL_SENSITIVITY
   accel_manager_update_sensitivity(*sensitivity);
-  #endif
-  
+#endif
+
   return true;
 }
 
@@ -556,6 +594,11 @@ static bool prv_set_s_default_worker(Uuid *uuid) {
 
 static bool prv_set_s_text_style(uint8_t *style) {
   s_text_style = *style;
+  return true;
+}
+
+static bool prv_set_s_system_text_size(uint8_t *size) {
+  s_system_text_size = *size;
   return true;
 }
 
@@ -661,8 +704,8 @@ static bool prv_set_s_activity_preferences(ActivitySettings *new_settings) {
   }
 
   if (!(new_settings->gender == ActivityGenderMale ||
-       new_settings->gender == ActivityGenderFemale ||
-       new_settings->gender == ActivityGenderOther)) {
+        new_settings->gender == ActivityGenderFemale ||
+        new_settings->gender == ActivityGenderOther)) {
     new_settings->gender = ACTIVITY_DEFAULT_GENDER;
     invalid_data = true;
   }
@@ -746,6 +789,32 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
   return true;
 }
 
+static bool prv_set_s_activity_spo2_preferences(ActivitySpO2Settings *new_settings) {
+  s_activity_spo2_preferences = *new_settings;
+
+#ifdef CONFIG_HRM
+  hrm_manager_handle_prefs_changed();
+#endif // CONFIG_HRM
+  return true;
+}
+
+static bool prv_set_s_blood_oxygen_enabled(bool *enabled) {
+  s_blood_oxygen_enabled = *enabled;
+
+#ifdef CONFIG_HRM
+  hrm_manager_handle_prefs_changed();
+#endif // CONFIG_HRM
+  return true;
+}
+
+static bool prv_set_s_blood_oxygen_activity_enabled(bool *enabled) {
+  s_blood_oxygen_activity_enabled = *enabled;
+
+#ifdef CONFIG_HRM
+  hrm_manager_handle_prefs_changed();
+#endif // CONFIG_HRM
+  return true;
+}
 
 static uint8_t prv_set_s_timeline_settings_opened(uint8_t *version) {
   s_timeline_settings_opened = *version;
@@ -814,7 +883,7 @@ static bool prv_set_s_als_threshold_migrated_v2(bool *done) {
 #ifdef CONFIG_APP_SCALING
 static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
   if (*mode >= LegacyAppRenderModeCount) {
-    return false;  // Invalid value
+    return false; // Invalid value
   }
   s_legacy_app_render_mode = *mode;
   return true;
@@ -831,16 +900,16 @@ static bool prv_is_valid_theme_color(GColor color) {
   }
   // Valid colors from settings_themes.h
   static const uint8_t valid_colors[] = {
-    GColorSunsetOrangeARGB8,        // Red
-    GColorChromeYellowARGB8,        // Orange
-    GColorYellowARGB8,              // Yellow
-    GColorGreenARGB8,               // Green
-    GColorCyanARGB8,                // Cyan
-    GColorVividCeruleanARGB8,       // Light Blue
-    GColorVeryLightBlueARGB8,       // Royal Blue
-    GColorLavenderIndigoARGB8,      // Purple
-    GColorMagentaARGB8,             // Magenta
-    GColorBrilliantRoseARGB8,       // Pink
+    GColorSunsetOrangeARGB8,   // Red
+    GColorChromeYellowARGB8,   // Orange
+    GColorYellowARGB8,         // Yellow
+    GColorGreenARGB8,          // Green
+    GColorCyanARGB8,           // Cyan
+    GColorVividCeruleanARGB8,  // Light Blue
+    GColorVeryLightBlueARGB8,  // Royal Blue
+    GColorLavenderIndigoARGB8, // Purple
+    GColorMagentaARGB8,        // Magenta
+    GColorBrilliantRoseARGB8,  // Pink
   };
   for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
     if (color.argb == valid_colors[i]) {
@@ -852,10 +921,9 @@ static bool prv_is_valid_theme_color(GColor color) {
 
 static bool prv_set_s_theme_highlight_color(GColor *color) {
   if (!prv_is_valid_theme_color(*color)) {
-    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default",
-            color->argb);
+    PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default", color->argb);
     s_theme_highlight_color = GColorVividCerulean;
-    return false;  // Reject invalid value
+    return false; // Reject invalid value
   }
   s_theme_highlight_color = *color;
   return true;
@@ -890,7 +958,7 @@ static bool prv_set_s_music_show_album_art(bool *enabled) {
   s_music_show_album_art = *enabled;
   return true;
 }
-  
+
 // ------------------------------------------------------------------------------------
 // Table of all prefs
 typedef bool (*PrefSetHandler)(const void *value, size_t val_len);
@@ -904,15 +972,15 @@ typedef struct {
 // The PREFS_DECLARE_HANDLER creates a springboard function with a generic signature
 // (of type PrefSetHandler) which simply calls into the specialized function prv_set_<var_name>
 // after dereferencing the void* argument using the right type for that pref
-#define PREFS_MACRO(name, var) \
-  static bool prv_set_ ## var ## _cb(const void *value, size_t val_len) { \
-    return prv_set_ ## var ((__typeof__(var) *)value); \
+#define PREFS_MACRO(name, var)                                        \
+  static bool prv_set_##var##_cb(const void *value, size_t val_len) { \
+    return prv_set_##var((__typeof__(var) *)value);                   \
   }
 #include "prefs_values.h.inc"
 #undef PREFS_MACRO
 
 // Create a time containing the key name and global variable name for each pref
-#define PREFS_MACRO(key, var) {key, &var, sizeof(var), prv_set_ ## var ## _cb},
+#define PREFS_MACRO(key, var) {key, &var, sizeof(var), prv_set_##var##_cb},
 static const PrefsTableEntry s_prefs_table[] = {
 #include "prefs_values.h.inc"
 };
@@ -926,11 +994,11 @@ static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
     bool temp;
     BacklightBehaviour backlight_behaviour = BacklightBehaviour_Auto;
     settings_file_get(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED),
-                      &backlight_behaviour, sizeof(backlight_behaviour));
+                      sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED), &backlight_behaviour,
+                      sizeof(backlight_behaviour));
     temp = (backlight_behaviour != BacklightBehaviour_Off);
-    settings_file_set(file, PREF_KEY_BACKLIGHT_ENABLED,
-                      sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp, sizeof(temp));
+    settings_file_set(file, PREF_KEY_BACKLIGHT_ENABLED, sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp,
+                      sizeof(temp));
     temp = (backlight_behaviour != BacklightBehaviour_On);
     settings_file_set(file, PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED,
                       sizeof(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED), &temp, sizeof(temp));
@@ -947,8 +1015,8 @@ static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
                            sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED))) {
     bool enabled = true;
     settings_file_get(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED),
-                      &enabled, sizeof(enabled));
+                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED), &enabled,
+                      sizeof(enabled));
     const uint8_t mode = enabled ? BacklightDynamicMode_Standard : BacklightDynamicMode_Off;
     settings_file_set(file, PREF_KEY_BACKLIGHT_DYNAMIC_MODE,
                       sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_MODE), &mode, sizeof(mode));
@@ -958,9 +1026,30 @@ static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
 }
 #endif
 
+// hrmPreferences gained fields twice without a version tag, and the loader below only
+// accepts an exact size match. A short record would otherwise be skipped on every boot,
+// silently replacing the user's settings with the defaults (HR on, 10 minute interval).
+// Fields have only ever been appended, so a short record is a valid prefix of the
+// current struct and the trailing fields keep their defaults.
+static void prv_migrate_activity_hrm_prefs(SettingsFile *file) {
+  const size_t key_len = sizeof(PREF_KEY_ACTIVITY_HRM_PREFERENCES);
+  const int stored_len = settings_file_get_len(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len);
+  if (stored_len <= 0 || stored_len >= (int)sizeof(ActivityHRMSettings)) {
+    return;
+  }
+
+  ActivityHRMSettings settings = ACTIVITY_HRM_DEFAULT_PREFERENCES;
+  if (settings_file_get(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, stored_len) !=
+      S_SUCCESS) {
+    return;
+  }
+
+  PBL_LOG_INFO("Widening %d byte hrmPreferences record", stored_len);
+  settings_file_set(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, sizeof(settings));
+}
 
 // ------------------------------------------------------------------------------------
-static void prv_pref_set(const char* key, const void *value, size_t val_len);
+static void prv_pref_set(const char *key, const void *value, size_t val_len);
 
 void shell_prefs_init(void) {
 #ifdef CONFIG_QEMU
@@ -977,7 +1066,6 @@ void shell_prefs_init(void) {
   if (BOARD_CONFIG_ACCEL.default_motion_sensitivity != 0) {
     s_motion_sensitivity = BOARD_CONFIG_ACCEL.default_motion_sensitivity;
   }
-  s_mutex = mutex_create();
 
   SettingsFile file = {{0}};
   if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
@@ -988,6 +1076,7 @@ void shell_prefs_init(void) {
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
   prv_convert_deprecated_dynamic_intensity_key(&file);
 #endif
+  prv_migrate_activity_hrm_prefs(&file);
 
 #if !TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
   {
@@ -1016,7 +1105,7 @@ void shell_prefs_init(void) {
   }
 
   settings_file_close(&file);
-  
+
   if (!prv_backlight_intensity_is_valid(s_backlight_intensity)) {
     s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT;
   }
@@ -1065,7 +1154,7 @@ void shell_prefs_init(void) {
 
   // Update the ambient light driver with the loaded threshold value
   ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
-  
+
   // Initialize prefs sync (must be after prefs are loaded)
   prefs_sync_init();
 
@@ -1085,7 +1174,6 @@ void shell_prefs_init(void) {
 #endif
 }
 
-
 // ------------------------------------------------------------------------------------
 // Find the PrefsTableEntry for the given key
 static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len) {
@@ -1100,46 +1188,45 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
   return NULL;
 }
 
-
 // ------------------------------------------------------------------------------------
 // Set the backing store for a pref
 static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value, int value_len) {
   if (value_len != entry->value_len) {
-    PBL_LOG_WRN("Attempt to set %s using invalid value_len of %"PRIu32"",
-            entry->key, (uint32_t)value_len);
+    PBL_LOG_WRN("Attempt to set %s using invalid value_len of %" PRIu32 "", entry->key,
+                (uint32_t)value_len);
     return false;
   }
 
   status_t rv = E_ERROR;
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     SettingsFile file = {{0}};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator, so we add 1 to key_len
       rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
       if (rv != S_SUCCESS) {
-        PBL_LOG_WRN("Failed to set pref '%s' (%"PRIi32")", entry->key, (int32_t)rv);
+        PBL_LOG_WRN("Failed to set pref '%s' (%" PRIi32 ")", entry->key, (int32_t)rv);
       }
       settings_file_close(&file);
     }
   }
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
   return (rv == S_SUCCESS);
 }
-
 
 // ------------------------------------------------------------------------------------
 // Convenience function used to update the state AND set the backing for a pref. This is
 // used by the functions below that are called by the firmware to change prefs (i.e.
 // shell_prefs_set.*, backlight_set.*, etc.).
-static void prv_pref_set(const char* key, const void *value, size_t val_len) {
+static void prv_pref_set(const char *key, const void *value, size_t val_len) {
   // Find the entry for this key
   const PrefsTableEntry *entry = prv_prefs_entry((const uint8_t *)key, strlen(key));
 
   // validate the key and value length
   PBL_ASSERT(entry != NULL, "Key %s not found", key);
-  PBL_ASSERT(val_len == entry->value_len, "Attempt to set %s using invalid value_len of %"PRIu32"",
-             entry->key, (uint32_t)val_len);
+  PBL_ASSERT(val_len == entry->value_len,
+             "Attempt to set %s using invalid value_len of %" PRIu32 "", entry->key,
+             (uint32_t)val_len);
 
   // Call the update handler
   bool success = entry->handler(value, val_len);
@@ -1151,11 +1238,10 @@ static void prv_pref_set(const char* key, const void *value, size_t val_len) {
   }
 }
 
-
 // ------------------------------------------------------------------------------------
 // Exported function used by blob_db API to set the backing store for a specific key
 bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void *value,
-                               int value_len) {
+                                 int value_len) {
   const PrefsTableEntry *entry = prv_prefs_entry(key, key_len);
   if (!entry) {
     return false;
@@ -1163,7 +1249,6 @@ bool prefs_private_write_backing(const uint8_t *key, size_t key_len, const void 
 
   return prv_set_pref_backing(entry, value, value_len);
 }
-
 
 // ------------------------------------------------------------------------------------
 // Exported function used by blob_db API to get the length of a value in our backing store
@@ -1175,7 +1260,6 @@ int prefs_private_get_backing_len(const uint8_t *key, size_t key_len) {
   return entry->value_len;
 }
 
-
 // ------------------------------------------------------------------------------------
 // Exported function used by blob_db API to read our backing store
 bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value, int value_len) {
@@ -1185,37 +1269,35 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   }
 
   if (value_len != entry->value_len) {
-    PBL_LOG_WRN("Attempt to read %s using invalid value_len of %"PRIu32"",
-            entry->key, (uint32_t)value_len);
+    PBL_LOG_WRN("Attempt to read %s using invalid value_len of %" PRIu32 "", entry->key,
+                (uint32_t)value_len);
     return false;
   }
 
   bool success = false;
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     SettingsFile file = {{0}};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator
       // Use strlen(entry->key) + 1 to match how it was written, since key_len from
       // BlobDB may or may not include the null terminator
-      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len)
-                                   == S_SUCCESS);
+      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) ==
+                 S_SUCCESS);
       settings_file_close(&file);
     }
   }
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
   return success;
 }
 
-
 void prefs_private_lock(void) {
-  mutex_lock(s_mutex);
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 }
 
 void prefs_private_unlock(void) {
-  mutex_unlock(s_mutex);
+  pbl_mutex_unlock(&s_mutex);
 }
-
 
 // ------------------------------------------------------------------------------------
 // Called from KernelMain when we get a blob DB event. We take this opportunity to update the state
@@ -1231,8 +1313,8 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
   }
 
   // Read in the updated value from the backing store
-  bool success = prefs_private_read_backing(event->key, event->key_len, entry->value,
-                                            entry->value_len);
+  bool success =
+      prefs_private_read_backing(event->key, event->key_len, entry->value, entry->value_len);
   if (success) {
     // Call the state update handler in case this pref needs to take other action besides
     // just updating the global
@@ -1272,6 +1354,19 @@ UnitsDistance shell_prefs_get_units_distance(void) {
 void shell_prefs_set_units_distance(UnitsDistance new_unit) {
   uint8_t uint_new_unit = new_unit;
   prv_pref_set(PREF_KEY_UNITS_DISTANCE, &uint_new_unit, sizeof(uint_new_unit));
+}
+
+UnitsWind shell_prefs_get_units_wind(void) {
+  if (s_units_wind == UnitsWind_FromDistance) {
+    return (shell_prefs_get_units_distance() == UnitsDistance_Miles) ? UnitsWind_Mph
+                                                                     : UnitsWind_KmH;
+  }
+  return s_units_wind;
+}
+
+void shell_prefs_set_units_wind(UnitsWind new_unit) {
+  uint8_t uint_new_unit = new_unit;
+  prv_pref_set(PREF_KEY_UNITS_WIND, &uint_new_unit, sizeof(uint_new_unit));
 }
 
 void shell_prefs_set_clock_24h_style(bool is24h) {
@@ -1556,7 +1651,7 @@ AppInstallId quick_launch_get_app(ButtonId button) {
 }
 
 void quick_launch_set_app(ButtonId button, AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
+  QuickLaunchPreference pref = (QuickLaunchPreference){
     .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
@@ -1624,17 +1719,17 @@ uint8_t quick_launch_get_quick_launch_setup_opened(void) {
 }
 
 bool quick_launch_single_click_is_enabled(ButtonId button) {
-    switch (button) {
-      case BUTTON_ID_UP:
-        return s_quick_launch_single_click_up.enabled;
-      case BUTTON_ID_DOWN:
-        return s_quick_launch_single_click_down.enabled;
-      case BUTTON_ID_SELECT:
-      case BUTTON_ID_BACK:
-      case NUM_BUTTONS:
-        break;
-    }
-    return false;
+  switch (button) {
+    case BUTTON_ID_UP:
+      return s_quick_launch_single_click_up.enabled;
+    case BUTTON_ID_DOWN:
+      return s_quick_launch_single_click_down.enabled;
+    case BUTTON_ID_SELECT:
+    case BUTTON_ID_BACK:
+    case NUM_BUTTONS:
+      break;
+  }
+  return false;
 }
 
 AppInstallId quick_launch_single_click_get_app(ButtonId button) {
@@ -1654,7 +1749,7 @@ AppInstallId quick_launch_single_click_get_app(ButtonId button) {
 }
 
 void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
+  QuickLaunchPreference pref = (QuickLaunchPreference){
     .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
@@ -1704,7 +1799,7 @@ AppInstallId quick_launch_combo_back_up_get_app(void) {
 }
 
 void quick_launch_combo_back_up_set_app(AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
+  QuickLaunchPreference pref = (QuickLaunchPreference){
     .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
@@ -1726,7 +1821,7 @@ AppInstallId quick_launch_combo_up_down_get_app(void) {
 }
 
 void quick_launch_combo_up_down_set_app(AppInstallId app_id) {
-  QuickLaunchPreference pref = (QuickLaunchPreference) {
+  QuickLaunchPreference pref = (QuickLaunchPreference){
     .enabled = true,
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
@@ -1757,8 +1852,7 @@ uint8_t welcome_get_welcome_version(void) {
 }
 
 static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *entry, void *data) {
-  if (!app_install_entry_is_watchface(entry)
-      || app_install_entry_is_hidden(entry)) {
+  if (!app_install_entry_is_watchface(entry) || app_install_entry_is_hidden(entry)) {
     return true; // continue search
   }
 
@@ -1769,11 +1863,9 @@ static bool prv_set_default_any_watchface_enumerate_callback(AppInstallEntry *en
 AppInstallId watchface_get_default_install_id(void) {
   AppInstallId app_id = app_install_get_id_for_uuid(&s_default_watchface);
   AppInstallEntry entry;
-  if (app_id == INSTALL_ID_INVALID ||
-      !app_install_get_entry_for_install_id(app_id, &entry) ||
+  if (app_id == INSTALL_ID_INVALID || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
-    app_install_enumerate_entries(
-        prv_set_default_any_watchface_enumerate_callback, NULL);
+    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
   }
   return app_id;
@@ -1781,19 +1873,18 @@ AppInstallId watchface_get_default_install_id(void) {
 
 void system_theme_set_content_size(PreferredContentSize content_size) {
   if (content_size >= NumPreferredContentSizes) {
-    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d",
-            content_size);
+    PBL_LOG_WRN("Ignoring attempt to set content size to invalid size %d", content_size);
     return;
   }
   const uint8_t content_size_uint = content_size;
-  prv_pref_set(PREF_KEY_TEXT_STYLE, &content_size_uint, sizeof(content_size_uint));
+  prv_pref_set(PREF_KEY_SYSTEM_TEXT_SIZE, &content_size_uint, sizeof(content_size_uint));
 
   // Watch-side sets bypass the blob-db path, so notify subscribed UI here too.
   PebbleEvent pref_event = {
     .type = PEBBLE_PREF_CHANGE_EVENT,
     .pref_change = {
-      .key = PREF_KEY_TEXT_STYLE,
-      .key_len = sizeof(PREF_KEY_TEXT_STYLE),
+      .key = PREF_KEY_SYSTEM_TEXT_SIZE,
+      .key_len = sizeof(PREF_KEY_SYSTEM_TEXT_SIZE),
     },
   };
   event_put(&pref_event);
@@ -1801,7 +1892,7 @@ void system_theme_set_content_size(PreferredContentSize content_size) {
 
 PreferredContentSize system_theme_get_content_size(void) {
   return system_theme_convert_host_content_size_to_runtime_platform(
-      (PreferredContentSize)s_text_style);
+      (PreferredContentSize)s_system_text_size);
 }
 
 bool shell_prefs_get_language_english(void) {
@@ -1825,29 +1916,6 @@ ShellLanguage shell_prefs_get_language(void) {
 }
 
 uint32_t shell_prefs_get_language_resource_id(void) {
-  switch (shell_prefs_get_language()) {
-    case ShellLanguageCatalan:
-      return RESOURCE_ID_STRINGS_CA_ES;
-    case ShellLanguageGerman:
-      return RESOURCE_ID_STRINGS_DE_DE;
-    case ShellLanguageSpanish:
-      return RESOURCE_ID_STRINGS_ES_ES;
-    case ShellLanguageFrench:
-      return RESOURCE_ID_STRINGS_FR_FR;
-    case ShellLanguageItalian:
-      return RESOURCE_ID_STRINGS_IT_IT;
-    case ShellLanguageDutch:
-      return RESOURCE_ID_STRINGS_NL_NL;
-    case ShellLanguagePortuguese:
-      return RESOURCE_ID_STRINGS_PT_PT;
-    case ShellLanguagePolish:
-      return RESOURCE_ID_STRINGS_PL_PL;
-    case ShellLanguageEnglish:
-    case ShellLanguageInstalledPack:
-    case ShellLanguageCount:
-      return RESOURCE_ID_STRINGS;
-  }
-
   return RESOURCE_ID_STRINGS;
 }
 
@@ -2035,6 +2103,45 @@ void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
     hrm_manager_handle_prefs_changed();
   }
 }
+
+bool activity_prefs_blood_oxygen_is_enabled(void) {
+  return s_blood_oxygen_enabled;
+}
+
+void activity_prefs_set_blood_oxygen_enabled(bool enabled) {
+  if (s_blood_oxygen_enabled != enabled) {
+    // prv_pref_set runs prv_set_s_blood_oxygen_enabled, which updates the global
+    // and re-evaluates the sensor; writing the key also syncs it to the phone.
+    prv_pref_set(PREF_KEY_BLOOD_OXYGEN_PREFERENCES, &enabled, sizeof(enabled));
+  }
+}
+
+bool activity_prefs_blood_oxygen_activity_tracking_is_enabled(void) {
+  return s_blood_oxygen_activity_enabled;
+}
+
+void activity_prefs_set_blood_oxygen_activity_tracking_enabled(bool enabled) {
+  if (s_blood_oxygen_activity_enabled != enabled) {
+    prv_pref_set(PREF_KEY_BLOOD_OXYGEN_ACTIVITY_PREFERENCES, &enabled, sizeof(enabled));
+  }
+}
+
+HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void) {
+  uint8_t interval = s_activity_spo2_preferences.measurement_interval;
+  if (interval >= HRMonitoringIntervalCount) {
+    return HRMonitoringInterval_10Min;
+  }
+  return (HRMonitoringInterval)interval;
+}
+
+void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval) {
+  if (s_activity_spo2_preferences.measurement_interval != (uint8_t)interval) {
+    s_activity_spo2_preferences.measurement_interval = (uint8_t)interval;
+    prv_pref_set(PREF_KEY_ACTIVITY_SPO2_PREFERENCES, &s_activity_spo2_preferences,
+                 sizeof(s_activity_spo2_preferences));
+    hrm_manager_handle_prefs_changed();
+  }
+}
 #endif
 
 void alarm_prefs_set_alarms_app_opened(uint8_t version) {
@@ -2160,8 +2267,7 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_tracking_enabled,
                              activity_prefs_tracking_is_enabled());
 #ifdef CONFIG_HRM
-  PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_enabled,
-                             activity_prefs_heart_rate_is_enabled());
+  PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_enabled, activity_prefs_heart_rate_is_enabled());
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_measurement_interval,
                              activity_prefs_get_hrm_measurement_interval());
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_activity_tracking_enabled,

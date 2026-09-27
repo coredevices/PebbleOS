@@ -34,7 +34,7 @@
 #include "stubs_regular_timer.h"
 #include "stubs_reminder_db.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
   return NULL;
@@ -42,10 +42,12 @@ const char *timeline_get_private_data_source(Uuid *parent_id) {
 
 static TimelineItem item1 = {
   .header = {
-    .id = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x01},
+    .id =
+        {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22,
+         0xb4},
+    .parent_id =
+        {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22,
+         0x01},
     .timestamp = 1,
     .duration = 0,
     .type = TimelineItemTypePin,
@@ -56,10 +58,12 @@ static TimelineItem item1 = {
 
 static TimelineItem item2 = {
   .header = {
-    .id = {0x55, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87,
-             0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6, 0x76, 0x01},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x01},
+    .id =
+        {0x55, 0xcb, 0x7c, 0x75, 0x8a, 0x35, 0x44, 0x87, 0x90, 0xa4, 0x91, 0x3f, 0x1f, 0xa6, 0x76,
+         0x01},
+    .parent_id =
+        {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22,
+         0x01},
     .timestamp = 3,
     .duration = 0,
     .type = TimelineItemTypePin,
@@ -69,10 +73,12 @@ static TimelineItem item2 = {
 
 static TimelineItem item3 = {
   .header = {
-    .id = {0x7c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x02},
+    .id =
+        {0x7c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2,
+         0x05},
+    .parent_id =
+        {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22,
+         0x02},
     .timestamp = 4,
     .duration = 0,
     .type = TimelineItemTypePin,
@@ -82,10 +88,12 @@ static TimelineItem item3 = {
 
 static TimelineItem item4 = {
   .header = {
-    .id = {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
-    .parent_id = {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
-             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0x03},
+    .id =
+        {0x8c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2,
+         0x05},
+    .parent_id =
+        {0xff, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22,
+         0x03},
     .timestamp = 4,
     .duration = 0,
     .type = TimelineItemTypePin,
@@ -95,8 +103,9 @@ static TimelineItem item4 = {
 
 static TimelineItem reminder_app_item = {
   .header = {
-    .id = {0x9c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c,
-             0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2, 0x05},
+    .id =
+        {0x9c, 0x65, 0x2e, 0xb9, 0x26, 0xd6, 0x44, 0x2c, 0x98, 0x68, 0xa4, 0x36, 0x79, 0x7d, 0xe2,
+         0x05},
     .parent_id = UUID_REMINDERS_DATA_SOURCE,
     .timestamp = 4,
     .duration = 0,
@@ -120,18 +129,17 @@ void test_pin_db__cleanup(void) {
 // Tests
 ////////////////////////////////////////////////////////////////
 
-
 void test_pin_db__is_dirty_insert_from_phone(void) {
   // Insert a bunch of pins "from the phone"
   // They should NOT be dirty (the phone is the source of truth)
-  pin_db_insert((uint8_t *)&item1.header.id, sizeof(TimelineItemId),
-                (uint8_t *)&item1, sizeof(TimelineItem));
-  pin_db_insert((uint8_t *)&item2.header.id, sizeof(TimelineItemId),
-                (uint8_t *)&item2, sizeof(TimelineItem));
-  pin_db_insert((uint8_t *)&item3.header.id, sizeof(TimelineItemId),
-                (uint8_t *)&item3, sizeof(TimelineItem));
-  pin_db_insert((uint8_t *)&item4.header.id, sizeof(TimelineItemId),
-                (uint8_t *)&item4, sizeof(TimelineItem));
+  pin_db_insert((uint8_t *)&item1.header.id, sizeof(TimelineItemId), (uint8_t *)&item1,
+                sizeof(TimelineItem));
+  pin_db_insert((uint8_t *)&item2.header.id, sizeof(TimelineItemId), (uint8_t *)&item2,
+                sizeof(TimelineItem));
+  pin_db_insert((uint8_t *)&item3.header.id, sizeof(TimelineItemId), (uint8_t *)&item3,
+                sizeof(TimelineItem));
+  pin_db_insert((uint8_t *)&item4.header.id, sizeof(TimelineItemId), (uint8_t *)&item4,
+                sizeof(TimelineItem));
 
   bool is_dirty = true;
   cl_assert_equal_i(pin_db_is_dirty(&is_dirty), S_SUCCESS);
@@ -184,4 +192,22 @@ void test_pin_db__set_status_bits(void) {
   cl_must_pass(pin_db_set_status_bits(&item1.header.id, TimelineItemStatusDismissed));
   cl_must_pass(pin_db_read_item_header(&item, &item1.header.id));
   cl_assert_equal_i(item.header.status, TimelineItemStatusDismissed);
+}
+
+void test_pin_db__flush_keeps_watch_pins(void) {
+  TimelineItem watch_item = item2;
+  watch_item.header.from_watch = true;
+
+  cl_must_pass(pin_db_insert_item(&item1));
+  cl_must_pass(pin_db_insert_item(&watch_item));
+  cl_must_pass(pin_db_insert_item(&item3));
+
+  cl_must_pass(pin_db_flush());
+
+  cl_assert_equal_i(pin_db_get_len((uint8_t *)&item1.header.id, sizeof(TimelineItemId)), 0);
+  cl_assert_equal_i(pin_db_get_len((uint8_t *)&item3.header.id, sizeof(TimelineItemId)), 0);
+
+  TimelineItem item;
+  cl_must_pass(pin_db_read_item_header(&item, &watch_item.header.id));
+  cl_assert(item.header.from_watch);
 }

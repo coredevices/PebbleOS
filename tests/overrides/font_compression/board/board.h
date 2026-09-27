@@ -20,9 +20,6 @@ static const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 100,
 };
 
-static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {
-};
+static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {};
 
-static const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 5
-};
+static const BoardConfigPower BOARD_CONFIG_POWER = {.low_power_threshold = 5};

@@ -5,7 +5,6 @@
 
 #include "applib/app.h"
 #include "applib/ui/action_toggle.h"
-#include "process_management/app_manager.h"
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/i18n/i18n.h"
 
@@ -34,7 +33,7 @@ static const ActionToggleImpl s_airplane_mode_action_toggle_impl = {
 };
 
 static void prv_main(void) {
-  action_toggle_push(&(ActionToggleConfig) {
+  action_toggle_push(&(ActionToggleConfig){
     .impl = &s_airplane_mode_action_toggle_impl,
     .set_exit_reason = true,
   });
@@ -43,12 +42,14 @@ static void prv_main(void) {
 
 const PebbleProcessMd *airplane_mode_toggle_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      .uuid = AIRPLANE_MODE_TOGGLE_UUID,
-      .visibility = ProcessVisibilityQuickLaunch,
-    },
-    .name = i18n_noop("Airplane Mode"),
+    .common =
+        {
+          .main_func = &prv_main,
+          .uuid = AIRPLANE_MODE_TOGGLE_UUID,
+          .visibility = ProcessVisibilityQuickLaunch,
+        },
+    /// The Quick Launch action that toggles Airplane Mode.
+    .name = i18n_noop("Toggle Airplane Mode"),
   };
   return &s_app_info.common;
 }

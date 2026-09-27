@@ -110,8 +110,8 @@ typedef struct ActionBarLayerLegacy2 {
   struct Window *window;
   void *context;
   ClickConfigProvider click_config_provider;
-  unsigned is_highlighted:NUM_ACTION_BAR_LEGACY2_ITEMS;
-  GColor2 background_color:2;
+  unsigned is_highlighted : NUM_ACTION_BAR_LEGACY2_ITEMS;
+  GColor2 background_color : 2;
 } ActionBarLayerLegacy2;
 
 //! Initializes the action bar and reverts any state back to the default state:
@@ -123,7 +123,7 @@ typedef struct ActionBarLayerLegacy2 {
 //! @param action_bar The action bar to initialize
 void action_bar_layer_legacy2_init(ActionBarLayerLegacy2 *action_bar);
 
-//! Creates a new ActionBarLayerLegacy2 on the heap and initalizes it with the default values.
+//! Creates a new ActionBarLayerLegacy2 on the heap and initializes it with the default values.
 //! * Background color: \ref GColorBlack
 //! * No click configuration provider (`NULL`)
 //! * No icons
@@ -143,7 +143,7 @@ void action_bar_layer_legacy2_destroy(ActionBarLayerLegacy2 *action_bar_layer);
 //! @return The "root" Layer of the action bar layer.
 //! @internal
 //! @note The result is always equal to `(Layer *) action_bar_layer`.
-Layer*action_bar_layer_legacy2_get_layer(ActionBarLayerLegacy2 *action_bar_layer);
+Layer *action_bar_layer_legacy2_get_layer(ActionBarLayerLegacy2 *action_bar_layer);
 
 //! Sets the context parameter, which will be passed in to \ref ClickHandler
 //! callbacks and the \ref ClickConfigProvider callback of the action bar.
@@ -207,7 +207,7 @@ void action_bar_layer_legacy2_clear_icon(ActionBarLayerLegacy2 *action_bar, Butt
 //! @note It is advised to call this is in the window's `.load` or `.appear`
 //! handler. Make sure to call \ref action_bar_layer_legacy2_remove_from_window() in the
 //! window's `.unload` or `.disappear` handler.
-//! @note Adding additional layers to the window's root layer after this calll
+//! @note Adding additional layers to the window's root layer after this call
 //! can occlude the action bar.
 //! @param action_bar The action bar to associate with the window
 //! @param window The window with which the action bar is to be associated

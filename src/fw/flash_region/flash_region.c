@@ -4,7 +4,7 @@
 #include "flash_region.h"
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "kernel/util/sleep.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
@@ -16,7 +16,7 @@
 //!
 //! @param[in, out] erase_count Counter variable to track how many times we've run this upkeep
 //!                             function
-//! @param feed_watchdog Whether we should feed the task_watchdog for the current task or not
+//! @param feed_watchdog Whether we should feed the task watchdog for the current thread
 static void prv_erase_upkeep(int *erase_count, bool feed_watchdog) {
   (*erase_count)++;
   if ((*erase_count %= 2) == 0) {
@@ -28,35 +28,34 @@ static void prv_erase_upkeep(int *erase_count, bool feed_watchdog) {
   }
 
   if (feed_watchdog) {
-    task_watchdog_bit_set(pebble_task_get_current());
+    pbl_task_wdt_feed_self();
   }
 }
 
-static void prv_erase_optimal_range(uint32_t min_start, uint32_t max_start,
-                                    uint32_t min_end, uint32_t max_end, bool feed_watchdog) {
-  PBL_LOG_DBG("flash_region_erase_optimal_range, 0x%"PRIx32" 0x%"PRIx32" 0x%"PRIx32" 0x%"PRIx32,
-      min_start, max_start, min_end, max_end);
+static void prv_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
+                                    uint32_t max_end, bool feed_watchdog) {
+  PBL_LOG_DBG("flash_region_erase_optimal_range, 0x%" PRIx32 " 0x%" PRIx32 " 0x%" PRIx32
+              " 0x%" PRIx32,
+              min_start, max_start, min_end, max_end);
 
   PBL_ASSERTN(((min_start & (~SUBSECTOR_ADDR_MASK)) == 0) &&
-              ((max_end & (~SUBSECTOR_ADDR_MASK)) == 0) &&
-              (min_start <= max_start) &&
-              (max_start <= min_end) &&
-              (min_end <= max_end));
+              ((max_end & (~SUBSECTOR_ADDR_MASK)) == 0) && (min_start <= max_start) &&
+              (max_start <= min_end) && (min_end <= max_end));
 
-  // We want to erase the sector that starts immediately below max_start but after min_start. If no sector
-  // boundary exists between the two, we need to start erasing sectors after min_start and backfill with
-  // subsector erases.
+  // We want to erase the sector that starts immediately below max_start but after min_start. If no
+  // sector boundary exists between the two, we need to start erasing sectors after min_start and
+  // backfill with subsector erases.
   int32_t sector_start = (max_start & SECTOR_ADDR_MASK);
   int32_t subsector_start = (max_start & SUBSECTOR_ADDR_MASK);
-  if (sector_start < (int32_t) min_start) {
+  if (sector_start < (int32_t)min_start) {
     sector_start += SECTOR_SIZE_BYTES;
   }
 
-  // We want to erase ending after min_end but before max_end. If that ends running past the end of max_end,
-  // we need to erase starting with the sector before and fill in with subsector erases.
+  // We want to erase ending after min_end but before max_end. If that ends running past the end of
+  // max_end, we need to erase starting with the sector before and fill in with subsector erases.
   int32_t sector_end = ((min_end - 1) & SECTOR_ADDR_MASK) + SECTOR_SIZE_BYTES;
   int32_t subsector_end = ((min_end - 1) & SUBSECTOR_ADDR_MASK) + SUBSECTOR_SIZE_BYTES;
-  if (sector_end > (int32_t) max_end) {
+  if (sector_end > (int32_t)max_end) {
     sector_end -= SECTOR_SIZE_BYTES;
   }
 
@@ -93,8 +92,8 @@ static void prv_erase_optimal_range(uint32_t min_start, uint32_t max_start,
   }
 }
 
-void flash_region_erase_optimal_range(uint32_t min_start, uint32_t max_start,
-                                      uint32_t min_end, uint32_t max_end) {
+void flash_region_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
+                                      uint32_t max_end) {
   prv_erase_optimal_range(min_start, max_start, min_end, max_end, false /* feed_watchdog */);
 }
 

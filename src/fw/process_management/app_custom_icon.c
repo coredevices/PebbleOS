@@ -4,14 +4,12 @@
 #include "app_custom_icon.h"
 
 #include "app_install_manager_private.h"
-#include "pebble_process_info.h"
 
 #include "apps/system_app_ids.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/comm_session/session.h"
-#include "pbl/services/i18n/i18n.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
 #include <string.h>
@@ -36,8 +34,9 @@ typedef enum {
   FIELD_MASK = 0x80,
 } FieldId;
 
-typedef struct PACKED {
-  //! OR'ed value of (CustomizableAppType | FieldId). No C bitfields here, because order is compiler-specific.
+typedef struct PBL_PACKED {
+  //! OR'ed value of (CustomizableAppType | FieldId). No C bitfields here, because order is
+  //! compiler-specific.
   uint8_t app_type_and_field_bits;
 
   union {
@@ -55,7 +54,7 @@ typedef struct {
   char *name;
   GBitmap icon;
   uint8_t *image_data;
-  CustomizableAppType app_type:4;
+  CustomizableAppType app_type : 4;
 } AppCustomizeInfo;
 
 static AppCustomizeInfo s_info[NUM_APP_TYPES];
@@ -71,19 +70,15 @@ static void do_callbacks(const CustomizableAppType app_type) {
 
 #if ALLOW_SET_ICON
 static void set_icon(const CustomizableAppType app_type, const uint16_t row_size_bytes,
-    const uint16_t info_flags, const GRect bounds,
-    const uint8_t image_data[], const uint16_t image_data_length) {
-
+                     const uint16_t info_flags, const GRect bounds, const uint8_t image_data[],
+                     const uint16_t image_data_length) {
   AppCustomizeInfo *info = &s_info[app_type];
   const uint16_t desired_size = row_size_bytes * bounds.size.h;
   const uint16_t available_size = MIN(desired_size, image_data_length);
-  if (info->image_data &&
-      memcmp(info->image_data, image_data, available_size) == 0 &&
+  if (info->image_data && memcmp(info->image_data, image_data, available_size) == 0 &&
       info->icon.bounds.origin.x == bounds.origin.x &&
-      info->icon.bounds.origin.y == bounds.origin.y &&
-      info->icon.bounds.size.w == bounds.size.w &&
-      info->icon.bounds.size.h == bounds.size.h &&
-      info->icon.info_flags == info_flags &&
+      info->icon.bounds.origin.y == bounds.origin.y && info->icon.bounds.size.w == bounds.size.w &&
+      info->icon.bounds.size.h == bounds.size.h && info->icon.info_flags == info_flags &&
       info->icon.row_size_bytes == row_size_bytes) {
     // Already equal to current icon
     return;
@@ -91,7 +86,7 @@ static void set_icon(const CustomizableAppType app_type, const uint16_t row_size
   if (info->image_data) {
     kernel_free(info->image_data);
   }
-  info->image_data = (uint8_t *) kernel_malloc(available_size);
+  info->image_data = (uint8_t *)kernel_malloc(available_size);
   memcpy(info->image_data, image_data, available_size);
   info->icon.addr = info->image_data;
   info->icon.bounds = bounds;
@@ -103,23 +98,22 @@ static void set_icon(const CustomizableAppType app_type, const uint16_t row_size
 
 static void set_name(const CustomizableAppType app_type, const char *name, const uint16_t length) {
   AppCustomizeInfo *info = &s_info[app_type];
-  if (info->name &&
-      strlen(info->name) == length &&
-      strncmp(info->name, name, length) == 0) {
+  if (info->name && strlen(info->name) == length && strncmp(info->name, name, length) == 0) {
     // Already equal to current name
     return;
   }
   if (info->name) {
     kernel_free(info->name);
   }
-  info->name = (char *) kernel_malloc(length + 1);
+  info->name = (char *)kernel_malloc(length + 1);
   memcpy(info->name, name, length);
   info->name[length] = 0;
   do_callbacks(app_type);
 }
 
-void customizable_app_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
-  AppCustomizeMessage *message = (AppCustomizeMessage *) data;
+void customizable_app_protocol_msg_callback(CommSession *session, const uint8_t *data,
+                                            size_t length) {
+  AppCustomizeMessage *message = (AppCustomizeMessage *)data;
   const FieldId field_id = message->app_type_and_field_bits & FIELD_MASK;
   const CustomizableAppType app_type = message->app_type_and_field_bits & APP_TYPE_MASK;
   switch (field_id) {
@@ -131,11 +125,13 @@ void customizable_app_protocol_msg_callback(CommSession *session, const uint8_t*
 #if ALLOW_SET_ICON
     case ICON_FIELD: {
       const uint16_t image_data_length = length - offsetof(AppCustomizeMessage, icon.image_data);
-      set_icon(app_type, message->icon.row_size_bytes, message->icon.info_flags, message->icon.bounds, message->icon.image_data, image_data_length);
+      set_icon(app_type, message->icon.row_size_bytes, message->icon.info_flags,
+               message->icon.bounds, message->icon.image_data, image_data_length);
       break;
     }
 #endif
-    default: return;
+    default:
+      return;
   }
   (void)session;
 }

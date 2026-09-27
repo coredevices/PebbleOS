@@ -45,19 +45,17 @@
 #ifndef TINFLATE_H_INCLUDED
 #define TINFLATE_H_INCLUDED
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define TINF_OK              0
+#define TINF_OK            0
 #define TINF_MEMORY_ERROR  (-1)
 #define TINF_DATA_ERROR    (-3)
 #define TINF_DEST_OVERFLOW (-4)
 
-int tinflate_uncompress(void *dest, unsigned int *destLen,
-                        const void *source, unsigned int sourceLen);
+int tinflate_uncompress(void *dest, unsigned int *destLen, const void *source,
+                        unsigned int sourceLen);
 
 #ifdef __cplusplus
 } /* extern "C" */

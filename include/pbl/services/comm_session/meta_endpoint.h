@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/services/comm_session/session.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 
@@ -17,7 +17,7 @@ typedef enum {
 
 typedef struct MetaResponseInfo {
   CommSession *session;
-  struct PACKED {
+  struct PBL_PACKED {
     //! @see MetaResponseCode
     uint8_t error_code;
     uint16_t endpoint_id;

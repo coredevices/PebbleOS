@@ -25,8 +25,7 @@ DEFINE_SYSCALL(void, sys_i18n_get_locale, char *buf) {
   strncpy(buf, i18n_get_locale(), ISO_LOCALE_LENGTH);
 }
 
-DEFINE_SYSCALL(void, sys_i18n_get_with_buffer, const char *string,
-               char *buffer, size_t length) {
+DEFINE_SYSCALL(void, sys_i18n_get_with_buffer, const char *string, char *buffer, size_t length) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (pebble_task_get_current() == PebbleTask_Worker) {
       // not allowed from workers

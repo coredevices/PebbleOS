@@ -12,7 +12,6 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 // by the underlying db API. If .flags or .status is used from a CommonTimelineItemHeader below,
 // be very careful
 
-
 bool sync_util_is_dirty_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   // If there is a single dirty record, update the out bool to dirty and stop iterating
   if (info->dirty) {
@@ -38,7 +37,7 @@ bool sync_util_build_dirty_list_cb(SettingsFile *file, SettingsRecordInfo *info,
     info->get_key(file, new_node->key, new_node->key_len);
 
     *(BlobDBDirtyItem **)context =
-        (BlobDBDirtyItem *)list_prepend((ListNode *) dirty_list, (ListNode *)new_node);
+        (BlobDBDirtyItem *)list_prepend((ListNode *)dirty_list, (ListNode *)new_node);
   }
 
   return true;

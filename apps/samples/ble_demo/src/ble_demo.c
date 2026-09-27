@@ -5,8 +5,7 @@
 
 static Window *s_scan_window;
 
-static void descriptor_write_handler(BLEDescriptor descriptor,
-                                     BLEGATTError error) {
+static void descriptor_write_handler(pbl_bt_descriptor_t descriptor, enum pbl_bt_gatt_error error) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   Uuid descriptor_uuid = ble_descriptor_get_uuid(descriptor);
   uuid_to_string(&descriptor_uuid, uuid_buffer);
@@ -14,51 +13,44 @@ static void descriptor_write_handler(BLEDescriptor descriptor,
   APP_LOG(APP_LOG_LEVEL_INFO, "Write response for Descriptor %s (error=%u)", uuid_buffer, error);
 }
 
-static void descriptor_read_handler(BLEDescriptor descriptor,
-                                    const uint8_t *value,
-                                    size_t value_length,
-                                    uint16_t value_offset,
-                                    BLEGATTError error) {
+static void descriptor_read_handler(pbl_bt_descriptor_t descriptor, const uint8_t *value,
+                                    size_t value_length, uint16_t value_offset,
+                                    enum pbl_bt_gatt_error error) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   Uuid descriptor_uuid = ble_descriptor_get_uuid(descriptor);
   uuid_to_string(&descriptor_uuid, uuid_buffer);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Read Descriptor %s, %u bytes, error: %u",
-          uuid_buffer, value_length, error);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Read Descriptor %s, %u bytes, error: %u", uuid_buffer, value_length,
+          error);
   for (size_t i = 0; i < value_length; ++i) {
     APP_LOG(APP_LOG_LEVEL_INFO, "0x%02x", value[i]);
   }
 }
 
-static void read_handler(BLECharacteristic characteristic,
-                         const uint8_t *value,
-                         size_t value_length,
-                         uint16_t value_offset,
-                         BLEGATTError error) {
+static void read_handler(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                         size_t value_length, uint16_t value_offset, enum pbl_bt_gatt_error error) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   Uuid characteristic_uuid = ble_characteristic_get_uuid(characteristic);
   uuid_to_string(&characteristic_uuid, uuid_buffer);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Read Characteristic %s, %u bytes, error: %u",
-          uuid_buffer, value_length, error);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Read Characteristic %s, %u bytes, error: %u", uuid_buffer,
+          value_length, error);
   for (size_t i = 0; i < value_length; ++i) {
     APP_LOG(APP_LOG_LEVEL_INFO, "0x%02x", value[i]);
   }
 }
 
-static void write_handler(BLECharacteristic characteristic,
-                          BLEGATTError error) {
+static void write_handler(pbl_bt_characteristic_t characteristic, enum pbl_bt_gatt_error error) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   Uuid characteristic_uuid = ble_characteristic_get_uuid(characteristic);
   uuid_to_string(&characteristic_uuid, uuid_buffer);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Write response for Characteristic %s (error=%u)",
-          uuid_buffer, error);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Write response for Characteristic %s (error=%u)", uuid_buffer,
+          error);
 }
 
-static void subscribe_handler(BLECharacteristic characteristic,
-                              BLESubscription subscription_type,
-                              BLEGATTError error) {
+static void subscribe_handler(pbl_bt_characteristic_t characteristic,
+                              BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
   Uuid characteristic_uuid = ble_characteristic_get_uuid(characteristic);
   uuid_to_string(&characteristic_uuid, uuid_buffer);
@@ -67,11 +59,9 @@ static void subscribe_handler(BLECharacteristic characteristic,
           uuid_buffer, subscription_type, error);
 }
 
-static void service_change_handler(BTDevice device,
-                                   const BLEService services[],
-                                   uint8_t num_services,
-                                   BTErrno status) {
-  const BTDeviceAddress address = bt_device_get_address(device);
+static void service_change_handler(struct pbl_bt_device device, const pbl_bt_service_t services[],
+                                   uint8_t num_services, enum pbl_bt_errno status) {
+  const struct pbl_bt_addr address = bt_device_get_address(device);
 
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
 
@@ -79,15 +69,11 @@ static void service_change_handler(BTDevice device,
     Uuid service_uuid = ble_service_get_uuid(services[i]);
     uuid_to_string(&service_uuid, uuid_buffer);
 
-    APP_LOG(APP_LOG_LEVEL_INFO,
-            "Discovered service %s (0x%08x) on " BT_DEVICE_ADDRESS_FMT,
-            uuid_buffer,
-            services[i],
-            BT_DEVICE_ADDRESS_XPLODE(address));
+    APP_LOG(APP_LOG_LEVEL_INFO, "Discovered service %s (0x%08x) on " PBL_BT_ADDR_FMT, uuid_buffer,
+            services[i], PBL_BT_ADDR_XPLODE(address));
 
-    BLECharacteristic characteristics[8];
-    uint8_t num_characteristics =
-               ble_service_get_characteristics(services[i], characteristics, 8);
+    pbl_bt_characteristic_t characteristics[8];
+    uint8_t num_characteristics = ble_service_get_characteristics(services[i], characteristics, 8);
     if (num_characteristics > 8) {
       num_characteristics = 8;
     }
@@ -95,12 +81,12 @@ static void service_change_handler(BTDevice device,
       Uuid characteristic_uuid = ble_characteristic_get_uuid(characteristics[c]);
       uuid_to_string(&characteristic_uuid, uuid_buffer);
 
-      APP_LOG(APP_LOG_LEVEL_INFO, "-- Characteristic: %s (0x%08x)",
-              uuid_buffer, characteristics[c]);
+      APP_LOG(APP_LOG_LEVEL_INFO, "-- Characteristic: %s (0x%08x)", uuid_buffer,
+              characteristics[c]);
 
       Uuid device_name_characteristic = bt_uuid_expand_16bit(0x2A00);
       if (uuid_equal(&device_name_characteristic, &characteristic_uuid)) {
-        BTErrno err =  ble_client_read(characteristics[c]);
+        enum pbl_bt_errno err = ble_client_read(characteristics[c]);
         APP_LOG(APP_LOG_LEVEL_INFO, "Reading... %u", err);
       }
 
@@ -108,7 +94,7 @@ static void service_change_handler(BTDevice device,
       const Uuid alert_control_point = bt_uuid_expand_16bit(0x2A44);
       if (uuid_equal(&alert_control_point, &characteristic_uuid)) {
         const char value[] = "Hello World.";
-        ble_client_write(characteristics[c], (const uint8_t *) value, strlen(value) + 1);
+        ble_client_write(characteristics[c], (const uint8_t *)value, strlen(value) + 1);
       }
 
       const Uuid hrm_uuid = bt_uuid_expand_16bit(0x2A37);
@@ -116,41 +102,41 @@ static void service_change_handler(BTDevice device,
         ble_client_subscribe(characteristics[c], BLESubscriptionNotifications);
       }
 
-//      BLEDescriptor descriptors[8];
-//      uint8_t num_descriptors =
-//              ble_characteristic_get_descriptors(characteristics[c], descriptors, 8);
-//      for (unsigned int d = 0; d < num_descriptors; ++d) {
-//        const Uuid descriptor_uuid =  ble_descriptor_get_uuid(descriptors[d]);
-//        uuid_to_string(&descriptor_uuid, uuid_buffer);
-//        APP_LOG(APP_LOG_LEVEL_INFO, "---- Descriptor: %s (0x%08x)", uuid_buffer, descriptors[d]);
-//
-//        // If the characteristic is the Heart Rate Measurement,
-//        // attempt to subscribe to it by writing to the CCCD:
-//        const Uuid hrm_uuid = bt_uuid_expand_16bit(0x2A37);
-//        const Uuid cccd_uuid = bt_uuid_expand_16bit(0x2902);
-//        if (uuid_equal(&hrm_uuid, &characteristic_uuid) &&
-//            uuid_equal(&cccd_uuid, &descriptor_uuid)) {
-//          APP_LOG(APP_LOG_LEVEL_INFO, "---- Subscribing to Heart Rate Measurement notifications");
-//          const uint16_t enable_notifications = 1;
-//          ble_client_write_descriptor(descriptors[d],
-//                                      (const uint8_t *) &enable_notifications,
-//                                      sizeof(enable_notifications));
-//        }
-//
-//        ble_client_read_descriptor(descriptors[d]);
-//      }
+      //      pbl_bt_descriptor_t descriptors[8];
+      //      uint8_t num_descriptors =
+      //              ble_characteristic_get_descriptors(characteristics[c], descriptors, 8);
+      //      for (unsigned int d = 0; d < num_descriptors; ++d) {
+      //        const Uuid descriptor_uuid =  ble_descriptor_get_uuid(descriptors[d]);
+      //        uuid_to_string(&descriptor_uuid, uuid_buffer);
+      //        APP_LOG(APP_LOG_LEVEL_INFO, "---- Descriptor: %s (0x%08x)", uuid_buffer,
+      //        descriptors[d]);
+      //
+      //        // If the characteristic is the Heart Rate Measurement,
+      //        // attempt to subscribe to it by writing to the CCCD:
+      //        const Uuid hrm_uuid = bt_uuid_expand_16bit(0x2A37);
+      //        const Uuid cccd_uuid = bt_uuid_expand_16bit(0x2902);
+      //        if (uuid_equal(&hrm_uuid, &characteristic_uuid) &&
+      //            uuid_equal(&cccd_uuid, &descriptor_uuid)) {
+      //          APP_LOG(APP_LOG_LEVEL_INFO, "---- Subscribing to Heart Rate Measurement
+      //          notifications"); const uint16_t enable_notifications = 1;
+      //          ble_client_write_descriptor(descriptors[d],
+      //                                      (const uint8_t *) &enable_notifications,
+      //                                      sizeof(enable_notifications));
+      //        }
+      //
+      //        ble_client_read_descriptor(descriptors[d]);
+      //      }
     }
   }
 }
 
-static void connection_handler(BTDevice device, BTErrno connection_status) {
-  const BTDeviceAddress address = bt_device_get_address(device);
+static void connection_handler(struct pbl_bt_device device, enum pbl_bt_errno connection_status) {
+  const struct pbl_bt_addr address = bt_device_get_address(device);
 
-  const bool connected = (connection_status == BTErrnoConnected);
+  const bool connected = (connection_status == PBL_BT_ERRNO_CONNECTED);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "%s " BT_DEVICE_ADDRESS_FMT " (status=%d)",
-          connected ? "Connected" : "Disconnected",
-          BT_DEVICE_ADDRESS_XPLODE(address), connection_status);
+  APP_LOG(APP_LOG_LEVEL_INFO, "%s " PBL_BT_ADDR_FMT " (status=%d)",
+          connected ? "Connected" : "Disconnected", PBL_BT_ADDR_XPLODE(address), connection_status);
 
   ble_client_discover_services_and_characteristics(device);
 }

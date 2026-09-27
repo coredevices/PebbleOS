@@ -12,7 +12,7 @@
 
 #define MAX_SELECTION_LAYER_CELLS 3
 
-typedef char* (*SelectionLayerGetCellText)(unsigned index, void *callback_context);
+typedef char *(*SelectionLayerGetCellText)(unsigned index, void *callback_context);
 
 typedef void (*SelectionLayerCompleteCallback)(void *callback_context);
 
@@ -26,7 +26,6 @@ typedef struct SelectionLayerCallbacks {
   SelectionLayerIncrementCallback increment;
   SelectionLayerDecrementCallback decrement;
 } SelectionLayerCallbacks;
-
 
 typedef struct SelectionLayer {
   Layer layer;
@@ -60,18 +59,16 @@ typedef struct SelectionLayer {
   AnimationImplementation slide_settle_anim_impl;
 } SelectionLayer;
 
-
-
 void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, unsigned num_cells);
 
-SelectionLayer* selection_layer_create(GRect frame, unsigned num_cells);
+SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells);
 
-void selection_layer_deinit(SelectionLayer* selection_layer);
+void selection_layer_deinit(SelectionLayer *selection_layer);
 
-void selection_layer_destroy(SelectionLayer* selection_layer);
+void selection_layer_destroy(SelectionLayer *selection_layer);
 
-void selection_layer_set_cell_width(SelectionLayer *selection_layer,
-                                    unsigned cell_idx, unsigned width);
+void selection_layer_set_cell_width(SelectionLayer *selection_layer, unsigned cell_idx,
+                                    unsigned width);
 
 void selection_layer_set_font(SelectionLayer *selection_layer, GFont font);
 
@@ -87,8 +84,7 @@ void selection_layer_set_active(SelectionLayer *selection_layer, bool is_active)
 void selection_layer_set_click_config_onto_window(SelectionLayer *selection_layer,
                                                   struct Window *window);
 
-void selection_layer_set_callbacks(SelectionLayer *selection_layer,
-                                   void *callback_context,
+void selection_layer_set_callbacks(SelectionLayer *selection_layer, void *callback_context,
                                    SelectionLayerCallbacks callbacks);
 
 int selection_layer_default_cell_height(void);

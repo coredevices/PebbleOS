@@ -12,17 +12,14 @@
 #include "kernel/events.h"
 #include "popups/ble_hrm/ble_hrm_reminder_popup.h"
 #include "popups/ble_hrm/ble_hrm_sharing_popup.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/activity/activity.h"
-#include "shell/system_app_ids.auto.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include <bluetooth/gap_le_connect.h>
-#include <bluetooth/hrm_service.h>
+#include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/hrm_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
@@ -53,7 +50,7 @@ typedef enum {
 
 typedef struct BLEHRMSharingPermission {
   ListNode node;
-  BTDeviceInternal device;
+  struct pbl_bt_device_internal device;
 
   //! Whether the user has confirmed that sharing HRM data to this device is permitted.
   HrmSharingPermission permission;
@@ -62,20 +59,18 @@ typedef struct BLEHRMSharingPermission {
 static BLEHRMSharingPermission *s_permissions_head;
 
 static bool prv_hw_and_sw_supports_hrm(void) {
-  return (bt_driver_is_hrm_service_supported() &&
-          sys_hrm_manager_is_hrm_present());
+  return (pbl_bt_is_hrm_service_supported() && sys_hrm_manager_is_hrm_present());
 }
 
 bool ble_hrm_is_supported_and_enabled(void) {
-  return (prv_hw_and_sw_supports_hrm() &&
-          activity_prefs_heart_rate_is_enabled());
+  return (prv_hw_and_sw_supports_hrm() && activity_prefs_heart_rate_is_enabled());
 }
 
 static void prv_reset_subscriptions(void);
 
 static bool prv_free_permission_for_each_cb(ListNode *node, void *unused) {
   kernel_free(node);
-  return true;  // continue iteration
+  return true; // continue iteration
 }
 
 static void prv_free_all_permissions(void) {
@@ -84,29 +79,31 @@ static void prv_free_all_permissions(void) {
 }
 
 static bool prv_find_permission_by_device_filter_cb(ListNode *found_node, void *data) {
-  const BTDeviceInternal *device = data;
+  const struct pbl_bt_device_internal *device = data;
   BLEHRMSharingPermission *permission = (BLEHRMSharingPermission *)found_node;
   return bt_device_internal_equal(device, &permission->device);
 }
 
-static BLEHRMSharingPermission *prv_find_permission_by_device(const BTDeviceInternal *device) {
-  return (BLEHRMSharingPermission *)list_find((ListNode *)s_permissions_head,
-                                              prv_find_permission_by_device_filter_cb,
-                                              (void *)device);
+static BLEHRMSharingPermission *prv_find_permission_by_device(
+    const struct pbl_bt_device_internal *device) {
+  return (BLEHRMSharingPermission *)list_find(
+      (ListNode *)s_permissions_head, prv_find_permission_by_device_filter_cb, (void *)device);
 }
 
-static void prv_upsert_permission(const BTDeviceInternal *device, HrmSharingPermission permission) {
+static void prv_upsert_permission(const struct pbl_bt_device_internal *device,
+                                  HrmSharingPermission permission) {
   BLEHRMSharingPermission *p = prv_find_permission_by_device(device);
   if (!p) {
     p = kernel_zalloc_check(sizeof(*p));
     p->device = *device;
-    s_permissions_head = (BLEHRMSharingPermission *)list_prepend((ListNode *)s_permissions_head,
-                                                                 (ListNode *)p);
+    s_permissions_head =
+        (BLEHRMSharingPermission *)list_prepend((ListNode *)s_permissions_head, (ListNode *)p);
   }
   p->permission = permission;
 }
 
-static HrmSharingPermission prv_get_permission_by_device(const BTDeviceInternal *device) {
+static HrmSharingPermission prv_get_permission_by_device(
+    const struct pbl_bt_device_internal *device) {
   BLEHRMSharingPermission *p = prv_find_permission_by_device(device);
   if (!p) {
     return HrmSharingPermission_Unknown;
@@ -123,7 +120,7 @@ void ble_hrm_handle_activity_prefs_heart_rate_is_enabled(bool is_enabled) {
   if (!is_enabled) {
     prv_reset_subscriptions();
   }
-  bt_driver_hrm_service_enable(is_enabled);
+  pbl_bt_hrm_service_enable(is_enabled);
 }
 
 static bool prv_is_sharing(const GAPLEConnection *const connection) {
@@ -144,12 +141,12 @@ bool ble_hrm_is_sharing(void) {
 }
 
 typedef struct {
-  BTDeviceInternal *next_permitted_device;
+  struct pbl_bt_device_internal *next_permitted_device;
   size_t slots_left;
 } CopySharingDevicesCtx;
 
 static void prv_copy_sharing_devices_for_each_connection_cb(GAPLEConnection *connection,
-                                                              void *data) {
+                                                            void *data) {
   CopySharingDevicesCtx *ctx = data;
   if (ctx->slots_left && prv_is_sharing(connection)) {
     *ctx->next_permitted_device = connection->device;
@@ -158,7 +155,7 @@ static void prv_copy_sharing_devices_for_each_connection_cb(GAPLEConnection *con
   }
 }
 
-static size_t prv_copy_sharing_devices(BTDeviceInternal *devices_out,
+static size_t prv_copy_sharing_devices(struct pbl_bt_device_internal *devices_out,
                                        size_t max_devices) {
   bt_lock();
   CopySharingDevicesCtx ctx = {
@@ -182,35 +179,35 @@ static void prv_ble_hrm_handle_hrm_data(PebbleEvent *e, void *context) {
   if (hrm_event->event_type != HRMEvent_BPM) {
     return;
   }
-  const BleHrmServiceMeasurement measurement = {
+  const struct pbl_bt_hrm_service_measurement measurement = {
     .bpm = hrm_event->bpm.bpm,
     .is_on_wrist = (hrm_event->bpm.quality >= HRMQuality_Worst),
   };
 
-  BTDeviceInternal sharing_to_devices[4];
-  const size_t num_devices = prv_copy_sharing_devices(sharing_to_devices,
-                                                      ARRAY_LENGTH(sharing_to_devices));
-  bt_driver_hrm_service_handle_measurement(&measurement, sharing_to_devices, num_devices);
+  struct pbl_bt_device_internal sharing_to_devices[4];
+  const size_t num_devices =
+      prv_copy_sharing_devices(sharing_to_devices, ARRAY_LENGTH(sharing_to_devices));
+  pbl_bt_hrm_service_handle_measurement(&measurement, sharing_to_devices, num_devices);
 }
 
 static void prv_start_hrm_kernel_main(void *unused) {
   PBL_LOG_INFO("BLE HRM sharing started");
-  s_ble_hrm_session.service_info = (EventServiceInfo) {
+  s_ble_hrm_session.service_info = (EventServiceInfo){
     .type = PEBBLE_HRM_EVENT,
     .handler = prv_ble_hrm_handle_hrm_data,
   };
   event_service_client_subscribe(&s_ble_hrm_session.service_info);
-  s_ble_hrm_session.manager_session =
-      hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1 /*update_interval_s*/,
-                                          0 /*expire_s*/, HRMFeature_BPM, NULL, NULL);
-
+  // The relay forwards whatever cadence the sensor delivers; batched FIFO drains are fine for the
+  // phone, so don't pay for the low-latency cadence over a whole streaming session.
+  s_ble_hrm_session.manager_session = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM,
+      false /*low_latency*/, NULL, NULL);
 }
 
 static void prv_stop_hrm_kernel_main(void *unused) {
   PBL_LOG_INFO("BLE HRM sharing stopped");
   sys_hrm_manager_unsubscribe(s_ble_hrm_session.manager_session);
   event_service_client_unsubscribe(&s_ble_hrm_session.service_info);
-
 }
 
 static void prv_execute_on_kernel_main(CallbackEventCallback cb) {
@@ -277,7 +274,7 @@ static void prv_stop_popup_timer(void) {
 
 static void prv_reschedule_popup_timer(void) {
   prv_stop_popup_timer();
-  s_ble_hrm_timer = (RegularTimerInfo) {
+  s_ble_hrm_timer = (RegularTimerInfo){
     .cb = prv_reminder_popup_timer_cb,
   };
   regular_timer_add_multiminute_callback(&s_ble_hrm_timer, BLE_HRM_REMINDER_POPUP_DELAY_MINS);
@@ -326,7 +323,7 @@ static void prv_disconnect_to_kill_subscription(GAPLEConnection *connection) {
   // because the phone was already subscribed...
   // For declining to share up-front, we'll just leave the client subscribed and don't disconnect
   // to prevent reconnection-loops.
-  bt_driver_gap_le_disconnect(&connection->device);
+  pbl_bt_gap_le_disconnect(&connection->device);
 }
 
 void ble_hrm_revoke_sharing_permission_for_connection(GAPLEConnection *connection) {
@@ -337,7 +334,6 @@ void ble_hrm_revoke_sharing_permission_for_connection(GAPLEConnection *connectio
     prv_disconnect_to_kill_subscription(connection);
   }
   bt_unlock();
-
 }
 
 static void prv_revoke_gap_le_connection_for_each_cb(GAPLEConnection *connection, void *unused) {
@@ -410,11 +406,10 @@ void ble_hrm_handle_sharing_request_response(bool is_granted,
   bt_unlock();
 
   kernel_free(sharing_request);
-
 }
 
-void bt_driver_cb_hrm_service_update_subscription(const BTDeviceInternal *device,
-                                                  bool is_subscribed) {
+void pbl_bt_cb_hrm_service_update_subscription(const struct pbl_bt_device_internal *device,
+                                               bool is_subscribed) {
   bt_lock();
   if (!s_ble_hrm_is_inited) {
     goto unlock;
@@ -446,7 +441,7 @@ void ble_hrm_handle_disconnection(GAPLEConnection *connection) {
 
 void ble_hrm_init(void) {
   s_ble_hrm_is_inited = true;
-  s_ble_hrm_timer = (RegularTimerInfo) {};
+  s_ble_hrm_timer = (RegularTimerInfo){};
 }
 
 void ble_hrm_deinit(void) {

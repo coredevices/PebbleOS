@@ -10,18 +10,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#define assert_equal_hex(A, B) \
-  do { \
-    uint32_t a = (A); \
-    uint32_t b = (B); \
-    if (a != b) { \
-      char error_msg[256]; \
-      sprintf(error_msg, \
-              "%#08"PRIx32" != %#08"PRIx32"\n", \
-              a, b); \
-      clar__assert(0, __FILE__, __LINE__, \
-                   #A " != " #B, error_msg, 1); \
-    } \
+#define assert_equal_hex(A, B)                                         \
+  do {                                                                 \
+    uint32_t a = (A);                                                  \
+    uint32_t b = (B);                                                  \
+    if (a != b) {                                                      \
+      char error_msg[256];                                             \
+      sprintf(error_msg, "%#08" PRIx32 " != %#08" PRIx32 "\n", a, b);  \
+      clar__assert(0, __FILE__, __LINE__, #A " != " #B, error_msg, 1); \
+    }                                                                  \
   } while (0)
 
 static uint32_t crc;

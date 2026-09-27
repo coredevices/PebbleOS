@@ -9,12 +9,11 @@
 #include "applib/ui/text_layer.h"
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/timeline/timeline_resources.h"
-#include "pbl/services/timeline/item.h"
 
 #define PEEK_LAYER_UNFOLD_DURATION 500
-#define PEEK_LAYER_SCALE_DURATION 300
+#define PEEK_LAYER_SCALE_DURATION  300
 
-#define MAX_PEEK_LAYER_TEXT_LEN 40
+#define MAX_PEEK_LAYER_TEXT_LEN   40
 #define MAX_PEEK_LAYER_NUMBER_LEN 10
 
 //! Icon position adjustment applied to user given frames
@@ -45,7 +44,6 @@ typedef struct {
   uint8_t dot_diameter;
   bool show_dot;
 } PeekLayer;
-
 
 //! Create a peek layer with a frame.
 PeekLayer *peek_layer_create(GRect frame);

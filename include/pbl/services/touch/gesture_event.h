@@ -13,7 +13,7 @@ typedef enum GestureEventType {
 
 //! Gesture event data, carried directly in PebbleGestureEvent
 typedef struct GestureEvent {
-  GestureEventType type:8;
+  GestureEventType type : 8;
   int16_t x;
   int16_t y;
 } GestureEvent;

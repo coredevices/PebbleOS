@@ -12,6 +12,7 @@
 // Stubs
 /////////////////////
 
+#include "stubs_alerts_preferences.h"
 #include "stubs_analytics.h"
 #include "stubs_attribute.h"
 #include "stubs_clock.h"
@@ -32,7 +33,8 @@
 #include "stubs_timeline_resources.h"
 
 // Not in stubs_graphics.h: test_bitmap_layer.c defines its own.
-void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, const GRect *rect) {}
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, const GRect *rect) {
+}
 
 // Statics
 ////////////////////////////////////

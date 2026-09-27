@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t id;
   uint16_t length;
 } SerializedAttributeHeader;

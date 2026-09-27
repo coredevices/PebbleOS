@@ -5,11 +5,11 @@
 
 #include "gap_le_connection.h"
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Requests the device name, caches the result in bt_persistent_storage and into
 //! connection->device_name.
-void gap_le_device_name_request(const BTDeviceInternal *address);
+void gap_le_device_name_request(const struct pbl_bt_device_internal *address);
 
 //! Convenience wrapper to request the device name for each connected BLE device, by calling
 //! gap_le_device_name_request for each connection.

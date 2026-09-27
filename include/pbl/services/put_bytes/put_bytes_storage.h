@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <inttypes.h>
 #include <stdbool.h>
 
 #include "pbl/services/put_bytes/put_bytes.h"
@@ -33,8 +32,8 @@ typedef struct {
 //! @param offset the offset within the storage we'd like to write to
 //! @param buffer the data to write
 //! @param length the amount of data to write
-void pb_storage_write(PutBytesStorage *storage, uint32_t offset,
-                      const uint8_t *buffer, uint32_t length);
+void pb_storage_write(PutBytesStorage *storage, uint32_t offset, const uint8_t *buffer,
+                      uint32_t length);
 
 //! Append data to the end of a putbyte storage. Updates storage->bytes_written
 //! @param storage A pointer to the storage struct representing the underlying storage
@@ -59,15 +58,15 @@ uint32_t pb_storage_calculate_crc(PutBytesStorage *storage, PutBytesCrcType crc_
 //! @param object_type the type of putbyte object we're about to store
 //! @param total_size the size of the incoming object, in bytes
 //! @param append_offset if != 0, this means we are continuing a PB operation that previously failed
-//!                      for some reason. The incomming writes will start at this offset
+//!                      for some reason. The incoming writes will start at this offset
 //! @param info additional information about the data (see PutBytesStorageInfo).
-bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type,
-                     uint32_t total_size, PutBytesStorageInfo *info, uint32_t append_offset);
+bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type, uint32_t total_size,
+                     PutBytesStorageInfo *info, uint32_t append_offset);
 
 //! Deinitialize and free a storage struct after a transaction is over
 //! @param storage a pointer-to-pointer to where the reference to the storage is currently held
 //! @param is_success whether the putbyte transfer succeeded or not
-//! @note if putbytes is unsuccesful, the data will be deleted
+//! @note if putbytes is unsuccessful, the data will be deleted
 void pb_storage_deinit(PutBytesStorage *storage, bool is_success);
 
 //! Some types of storage allow the state of a partial installation to be recovered (today, just

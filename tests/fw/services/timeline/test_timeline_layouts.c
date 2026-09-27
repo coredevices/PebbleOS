@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "apps/system/timeline/pin_window.h"
+#include "pbl/services/timeline/sports_layout.h"
 #include "pbl/services/timeline/weather_layout.h"
 
 #include "clar.h"
@@ -15,8 +16,8 @@
 #include "fixtures/load_test_resources.h"
 
 bool property_animation_init(PropertyAnimation *animation,
-                             const PropertyAnimationImplementation *implementation,
-                             void *subject, void *from_value, void *to_value) {
+                             const PropertyAnimationImplementation *implementation, void *subject,
+                             void *from_value, void *to_value) {
   if (!animation) {
     return false;
   }
@@ -52,6 +53,14 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
   }
 }
 
+void clock_get_until_time_capitalized(char *buffer, int buf_size, time_t timestamp,
+                                      int max_relative_hrs) {
+  if (buffer) {
+    strncpy(buffer, "IN 2 HOURS", buf_size);
+    buffer[buf_size - 1] = '\0';
+  }
+}
+
 // Stubs
 /////////////////////
 
@@ -81,7 +90,7 @@ void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_timeline.h"
 #include "stubs_timeline_actions.h"
 #include "stubs_timeline_item.h"
@@ -108,7 +117,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_timeline_layouts__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);
@@ -141,15 +150,16 @@ static void prv_render_layout(LayoutId layout_id, const AttributeList *attr_list
                               size_t num_down_clicks) {
   PBL_ASSERTN(attr_list);
 
-  TimelineItem item = (TimelineItem) {
-    .header = (CommonTimelineItemHeader) {
-      .layout = layout_id,
-      .type = TimelineItemTypePin,
-    },
+  TimelineItem item = (TimelineItem){
+    .header =
+        (CommonTimelineItemHeader){
+          .layout = layout_id,
+          .type = TimelineItemTypePin,
+        },
     .attr_list = *attr_list,
   };
 
-  TimelinePinWindow pin_window = (TimelinePinWindow) {};
+  TimelinePinWindow pin_window = (TimelinePinWindow){};
   timeline_pin_window_init(&pin_window, &item, rtc_get_time());
   Window *window = &pin_window.window;
 
@@ -184,7 +194,7 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
     return;
   }
 
-  AttributeList attr_list = (AttributeList) {0};
+  AttributeList attr_list = (AttributeList){0};
   if (config->title) {
     attribute_list_add_cstring(&attr_list, AttributeIdTitle, config->title);
   }
@@ -213,7 +223,7 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
 //////////////////////
 
 void test_timeline_layouts__generic(void) {
-  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig) {
+  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig){
     .layout_id = LayoutIdGeneric,
     .title = "Delfina Pizza",
     .subtitle = "Open Table Reservation",
@@ -236,7 +246,7 @@ void test_timeline_layouts__generic(void) {
 }
 
 void test_timeline_layouts__weather(void) {
-  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig) {
+  const TimelineLayoutTestConfig config = (TimelineLayoutTestConfig){
     .layout_id = LayoutIdWeather,
     .title = "The Greatest Sunrise Ever",
     .subtitle = "90°/60°",
@@ -257,4 +267,44 @@ void test_timeline_layouts__weather(void) {
   prv_construct_and_render_layout(&config, 2);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details2)));
 #endif
+}
+
+static void prv_construct_and_render_sports_layout(GameState state, size_t num_down_clicks) {
+  AttributeList attr_list = (AttributeList){0};
+  attribute_list_add_cstring(&attr_list, AttributeIdTitle, "Warriors at Bulls");
+  attribute_list_add_uint8(&attr_list, AttributeIdSportsGameState, state);
+  attribute_list_add_cstring(&attr_list, AttributeIdNameAway, "GSW");
+  attribute_list_add_cstring(&attr_list, AttributeIdNameHome, "CHI");
+  if (state == GameStatePreGame) {
+    attribute_list_add_cstring(&attr_list, AttributeIdRecordAway, "42-18");
+    attribute_list_add_cstring(&attr_list, AttributeIdRecordHome, "35-25");
+    attribute_list_add_cstring(&attr_list, AttributeIdBody, "United Center, Chicago");
+  } else {
+    attribute_list_add_cstring(&attr_list, AttributeIdSubtitle, "Q3 - 4:12");
+    attribute_list_add_cstring(&attr_list, AttributeIdScoreAway, "78");
+    attribute_list_add_cstring(&attr_list, AttributeIdScoreHome, "81");
+    attribute_list_add_cstring(&attr_list, AttributeIdBody, "Curry 3pt Shot: Made");
+  }
+  attribute_list_add_cstring(&attr_list, AttributeIdBroadcaster, "ESPN");
+  attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 1337);
+
+  prv_render_layout(LayoutIdSports, &attr_list, num_down_clicks);
+
+  attribute_list_destroy_list(&attr_list);
+}
+
+void test_timeline_layouts__sports_pregame(void) {
+  prv_construct_and_render_sports_layout(GameStatePreGame, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(peek)));
+
+  prv_construct_and_render_sports_layout(GameStatePreGame, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details1)));
+}
+
+void test_timeline_layouts__sports_ingame(void) {
+  prv_construct_and_render_sports_layout(GameStateInGame, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(peek)));
+
+  prv_construct_and_render_sports_layout(GameStateInGame, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details1)));
 }

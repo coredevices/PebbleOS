@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 #include "applib/bluetooth/ble_ad_parse.h"
 
@@ -32,7 +32,7 @@ typedef struct {
 
   //! The calibrated power of the iBeacon. This is the RSSI measured at 1 meter
   //! distance from the iBeacon. The iBeacon transmits this information in its
-  //! advertisment. Using this and the actual RSSI, the distance is estimated.
+  //! advertisement. Using this and the actual RSSI, the distance is estimated.
   int8_t calibrated_tx_power;
 } BLEiBeacon;
 
@@ -63,8 +63,7 @@ uint16_t ble_ibeacon_get_distance_cm(const BLEiBeacon *ibeacon);
 //! BLEScanHandler callback.
 //! @return BLEiBeacon object if iBeacon data is found, or NULL if the
 //! advertisement data did not contain valid iBeacon data.
-BLEiBeacon *ble_ibeacon_create_from_ad_data(const BLEAdData *ad,
-                                            int8_t rssi);
+BLEiBeacon *ble_ibeacon_create_from_ad_data(const struct pbl_bt_ad_data *ad, int8_t rssi);
 
 //! Destroys an BLEiBeacon object and frees its resources that were allocated
 //! earlier by ble_ibeacon_create_from_ad_data().
@@ -77,10 +76,9 @@ void ble_ibeacon_destroy(BLEiBeacon *ibeacon);
 //! @param rssi The RSSI of the advertisement
 //! @param[out] ibeacon_out Will contain the parsed iBeacon data if the call
 //! returns true.
-//! @return true if the data element was succesfully parsed as iBeacon,
+//! @return true if the data element was successfully parsed as iBeacon,
 //! false if the data element could not be parsed as iBeacon.
-bool ble_ibeacon_parse(const BLEAdData *ad, int8_t rssi,
-                       BLEiBeacon *ibeacon_out);
+bool ble_ibeacon_parse(const struct pbl_bt_ad_data *ad, int8_t rssi, BLEiBeacon *ibeacon_out);
 
 // -----------------------------------------------------------------------------
 //! Internal iBeacon Advertisement Data serializer
@@ -89,4 +87,4 @@ bool ble_ibeacon_parse(const BLEAdData *ad, int8_t rssi,
 //! iBeacon packets.
 //! @param[out] ad_out The advertisement payload to write the data into.
 //! @return true if the iBeacon data was written successfully.
-bool ble_ibeacon_compose(const BLEiBeacon *ibeacon_in, BLEAdData *ad_out);
+bool ble_ibeacon_compose(const BLEiBeacon *ibeacon_in, struct pbl_bt_ad_data *ad_out);

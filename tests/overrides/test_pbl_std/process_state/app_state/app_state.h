@@ -14,4 +14,6 @@ char *app_state_get_localtime_zone(void);
 LocaleInfo *app_state_get_locale_info(void);
 
 typedef int AppStateInitParams;
-typedef struct {char _unused;} TextRenderState;
+typedef struct {
+  char _unused;
+} TextRenderState;

@@ -3,8 +3,6 @@
 
 #include "ble_scan.h"
 
-#include "ble_ad_parse.h"
-
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"
 
@@ -15,7 +13,6 @@
 
 #include "syscall/syscall.h"
 
-
 void ble_scan_handle_event(PebbleEvent *e) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   if (!ble_app_state->scan_handler) {
@@ -23,7 +20,7 @@ void ble_scan_handle_event(PebbleEvent *e) {
   }
 
   // Use the same buffer size as the kernel itself:
-  uint8_t *buffer = (uint8_t *) applib_malloc(GAP_LE_SCAN_REPORTS_BUFFER_SIZE);
+  uint8_t *buffer = (uint8_t *)applib_malloc(GAP_LE_SCAN_REPORTS_BUFFER_SIZE);
   if (!buffer) {
     APP_LOG(LOG_LEVEL_ERROR, "Need %u bytes of heap for ble_scan_start()",
             GAP_LE_SCAN_REPORTS_BUFFER_SIZE);
@@ -41,7 +38,7 @@ void ble_scan_handle_event(PebbleEvent *e) {
   while (cursor < buffer + size) {
     const GAPLERawAdReport *report = (GAPLERawAdReport *)cursor;
 
-    const BTDeviceInternal device = (const BTDeviceInternal) {
+    const struct pbl_bt_device_internal device = (const struct pbl_bt_device_internal){
       .address = report->address.address,
       .is_classic = false,
       .is_random_address = report->is_random_address,
@@ -50,9 +47,8 @@ void ble_scan_handle_event(PebbleEvent *e) {
     // Call the scan handler for each report:
     ble_app_state->scan_handler(device.opaque, report->rssi, &report->payload);
 
-    const size_t report_length = sizeof(GAPLERawAdReport) +
-                                    report->payload.ad_data_length +
-                                    report->payload.scan_resp_data_length;
+    const size_t report_length = sizeof(GAPLERawAdReport) + report->payload.ad_data_length +
+                                 report->payload.scan_resp_data_length;
     cursor += report_length;
   }
 
@@ -60,35 +56,35 @@ finally:
   applib_free(buffer);
 }
 
-BTErrno ble_scan_start(BLEScanHandler handler) {
+enum pbl_bt_errno ble_scan_start(BLEScanHandler handler) {
   if (!handler) {
-    return (BTErrnoInvalidParameter);
+    return (PBL_BT_ERRNO_INVALID_PARAMETER);
   }
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   if (ble_app_state->scan_handler) {
-    return (BTErrnoInvalidState);
+    return (PBL_BT_ERRNO_INVALID_STATE);
   }
   const bool result = sys_ble_scan_start();
   if (!result) {
-    return BTErrnoOther;
+    return PBL_BT_ERRNO_OTHER;
   }
   ble_app_state->scan_handler = handler;
   event_service_client_subscribe(&ble_app_state->scan_service_info);
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
-BTErrno ble_scan_stop(void) {
+enum pbl_bt_errno ble_scan_stop(void) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
   if (!ble_app_state->scan_handler) {
-    return (BTErrnoInvalidState);
+    return (PBL_BT_ERRNO_INVALID_STATE);
   }
   const bool result = sys_ble_scan_stop();
   if (!result) {
-    return BTErrnoOther;
+    return PBL_BT_ERRNO_OTHER;
   }
   event_service_client_unsubscribe(&ble_app_state->scan_service_info);
   ble_app_state->scan_handler = NULL;
-  return BTErrnoOK;
+  return PBL_BT_ERRNO_OK;
 }
 
 bool ble_scan_is_scanning(void) {

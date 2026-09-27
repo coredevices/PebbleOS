@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 typedef enum {
   // Watch -> Phone
@@ -54,7 +54,7 @@ typedef enum {
   MusicEndpointSkipSeeksWithinTrack = (1 << 0),
 } MusicEndpointSkipSeeksFlag;
 
-typedef struct PACKED {
+typedef struct PBL_PACKED {
   uint8_t play_state;
   int32_t track_pos_ms;
   int32_t play_rate;

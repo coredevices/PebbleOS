@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <bluetooth/bluetooth_types.h>
+#include <pbl/bluetooth/types.h>
 
 //! Gets the characteristics associated with a service.
 //! @param service The service for which to get the characteristics
@@ -17,28 +17,28 @@
 //! to services, characteristics and descriptors are guaranteed to remain valid
 //! *until the BLEClientServiceChangeHandler is called again* or until
 //! application is terminated.
-uint8_t ble_service_get_characteristics(BLEService service,
-                                       BLECharacteristic characteristics_out[],
-                                       uint8_t num_characteristics);
+uint8_t ble_service_get_characteristics(pbl_bt_service_t service,
+                                        pbl_bt_characteristic_t characteristics_out[],
+                                        uint8_t num_characteristics);
 
 //! Gets the Service UUID of a service.
 //! @param service The service for which to get the Service UUID.
 //! @return The 128-bit Service UUID, or UUID_INVALID if the service reference
 //! was invalid.
 //! @note The returned UUID is always a 128-bit UUID, even if the device
-//! its interal GATT service database uses 16-bit or 32-bit Service UUIDs.
+//! its internal GATT service database uses 16-bit or 32-bit Service UUIDs.
 //! @see bt_uuid_expand_16bit for a macro that converts 16-bit UUIDs to 128-bit
 //! equivalents.
 //! @see bt_uuid_expand_32bit for a macro that converts 32-bit UUIDs to 128-bit
 //! equivalents.
-Uuid ble_service_get_uuid(BLEService service);
+Uuid ble_service_get_uuid(pbl_bt_service_t service);
 
 //! Gets the device that hosts the service.
 //! @param service The service for which to find the device it belongs to.
 //! @return The device hosting the service, or an invalid device if the service
 //! reference was invalid. Use bt_device_is_invalid() to test whether the
 //! returned device is invalid.
-BTDevice ble_service_get_device(BLEService service);
+struct pbl_bt_device ble_service_get_device(pbl_bt_service_t service);
 
 //! Gets the services that are references by a service as "Included Service".
 //! @param service The service for which to get the included services
@@ -52,10 +52,9 @@ BTDevice ble_service_get_device(BLEService service);
 //! to services, characteristics and descriptors are guaranteed to remain valid
 //! *until the BLEClientServiceChangeHandler is called again* or until
 //! application is terminated.
-uint8_t ble_service_get_included_services(BLEService service,
-                                          BLEService included_services_out[],
+uint8_t ble_service_get_included_services(pbl_bt_service_t service,
+                                          pbl_bt_service_t included_services_out[],
                                           uint8_t num_services);
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // (FUTURE / LATER / NOT SCOPED)
@@ -63,13 +62,13 @@ uint8_t ble_service_get_included_services(BLEService service,
 
 // creates + adds to GATT DB (?)
 // Services aren't supposed to change. Pass everything into the 'create' call:
-BLEService ble_service_create(const Uuid *service_uuid,
-                              BLECharacteristic characteristics[],
-                              uint8_t num_characteristics);
+pbl_bt_service_t ble_service_create(const Uuid *service_uuid,
+                                    pbl_bt_characteristic_t characteristics[],
+                                    uint8_t num_characteristics);
 
-void ble_service_set_included_services(BLEService service,
-                                       BLEService included_services[],
+void ble_service_set_included_services(pbl_bt_service_t service,
+                                       pbl_bt_service_t included_services[],
                                        uint8_t num_included_services);
 
 // removes from GATT DB (?) + destroys
-void ble_service_destroy(BLEService service);
+void ble_service_destroy(pbl_bt_service_t service);

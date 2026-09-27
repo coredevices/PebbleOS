@@ -8,5 +8,4 @@
 void shell_event_loop_init(void);
 
 //! Handle events relating to the base firmware UI
-void NOINLINE shell_event_loop_handle_event(PebbleEvent *event);
-
+void PBL_NOINLINE shell_event_loop_handle_event(PebbleEvent *event);

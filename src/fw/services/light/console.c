@@ -11,7 +11,7 @@
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 #include "applib/graphics/framebuffer.h"
 #include "applib/ui/animation_private.h"
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include <pbl/drivers/watchdog.h>
 #include "kernel/event_loop.h"
 #include "pbl/services/compositor/compositor.h"
@@ -33,8 +33,8 @@ void command_light_test(void) {
   const uint16_t lum_q8 = als_compensation_sample_luminance();
   const uint32_t corr = als_compensation_apply(raw, lum_q8, CONFIG_ALS_BLACK_SCALE_Q8);
   prompt_send_response_fmt(buffer, sizeof(buffer),
-                           "als raw: %" PRIu32 " lum_q8: %" PRIu16 " corr: %" PRIu32,
-                           raw, lum_q8, corr);
+                           "als raw: %" PRIu32 " lum_q8: %" PRIu16 " corr: %" PRIu32, raw, lum_q8,
+                           corr);
 #else
   prompt_send_response_fmt(buffer, sizeof(buffer), "als: %" PRIu32,
                            ambient_light_get_light_level());
@@ -80,6 +80,11 @@ void command_als_lux(void) {
 
 // Set by prv_als_flush_cb on KernelMain once the panel update is kicked.
 static volatile bool s_als_flush_done;
+static volatile bool s_als_frozen;
+
+static void prv_als_frozen_cb(void *unused) {
+  s_als_frozen = true;
+}
 
 // Runs on KernelMain (the compositor's task): push the staged system framebuffer
 // to the panel, the same way the PULSE framebuffer domain does.
@@ -110,7 +115,7 @@ static uint32_t prv_als_read_raw_avg(uint8_t n) {
   for (uint8_t i = 0; i < n; i++) {
     sum += ambient_light_get_light_level();
     watchdog_feed();
-    task_watchdog_bit_set_all();
+    pbl_task_wdt_feed_all();
     psleep(30);
   }
   return (n > 0) ? (sum / n) : 0;
@@ -127,15 +132,16 @@ void command_als_curve(void) {
     uint8_t px;
     uint16_t lum_q8;
   } levels[] = {
-      {"white", ALS_PX_WHITE, 256},
-      {"lgray", 0xEA, 170},
-      {"dgray", 0xD5, 85},
-      {"black", ALS_PX_BLACK, 0},
+    {"white", ALS_PX_WHITE, 256},
+    {"lgray", 0xEA, 170},
+    {"dgray", 0xD5, 85},
+    {"black", ALS_PX_BLACK, 0},
   };
 
   animation_private_pause();
-  compositor_freeze();
-  while (compositor_display_update_in_progress()) {
+  s_als_frozen = false;
+  compositor_freeze(prv_als_frozen_cb, NULL);
+  while (!s_als_frozen) {
     psleep(2);
   }
 
@@ -148,11 +154,10 @@ void command_als_curve(void) {
       raw_white = (raw > 0) ? raw : 1;
     }
     const uint32_t gain_x100 = (raw > 0) ? (raw_white * 100u / raw) : 0;
-    prompt_send_response_fmt(buf, sizeof(buf),
-                             "als curve: %s lum_q8=%" PRIu16 " raw=%" PRIu32
-                             " gain=%" PRIu32 ".%02" PRIu32 "x",
-                             levels[i].name, levels[i].lum_q8, raw,
-                             gain_x100 / 100u, gain_x100 % 100u);
+    prompt_send_response_fmt(
+        buf, sizeof(buf),
+        "als curve: %s lum_q8=%" PRIu16 " raw=%" PRIu32 " gain=%" PRIu32 ".%02" PRIu32 "x",
+        levels[i].name, levels[i].lum_q8, raw, gain_x100 / 100u, gain_x100 % 100u);
   }
 
   compositor_unfreeze();
@@ -160,4 +165,4 @@ void command_als_curve(void) {
   prompt_send_response("als: press a button to repaint");
 }
 
-#endif  // CONFIG_ALS_SCREEN_COMPENSATION
+#endif // CONFIG_ALS_SCREEN_COMPENSATION

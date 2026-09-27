@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/uuid.h"
 
 #define PREF_KEY_WEATHER_APP "weatherApp"
 
-typedef struct PACKED SerializedWeatherAppPrefs {
+typedef struct PBL_PACKED SerializedWeatherAppPrefs {
   uint8_t num_locations;
   Uuid locations[];
 } SerializedWeatherAppPrefs;

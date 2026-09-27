@@ -4,13 +4,13 @@
 #pragma once
 
 #include "resource/resource.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/generic_attribute.h"
 #include "util/pack.h"
 
 #define VIBE_SCORE_VERSION (1)
-#define VIBE_SIGNATURE MAKE_WORD('V', 'I', 'B', 'E')
-#define VIBE_DATA_OFFSET sizeof(VIBE_SIGNATURE)
+#define VIBE_SIGNATURE     MAKE_WORD('V', 'I', 'B', 'E')
+#define VIBE_DATA_OFFSET   sizeof(VIBE_SIGNATURE)
 
 typedef enum VibeAttributeId {
   VibeAttributeId_Invalid = 0x00,
@@ -19,14 +19,14 @@ typedef enum VibeAttributeId {
   VibeAttributeId_RepeatDelay = 0x03,
 } VibeAttributeId;
 
-typedef struct PACKED VibeScore {
+typedef struct PBL_PACKED VibeScore {
   uint16_t version;
   uint8_t reserved[4];
   uint16_t attr_list_size;
   GenericAttributeList attr_list;
 } VibeScore;
 
-typedef struct PACKED VibeNote {
+typedef struct PBL_PACKED VibeNote {
   uint16_t vibe_duration_ms;
   uint8_t brake_duration_ms;
   int8_t strength;

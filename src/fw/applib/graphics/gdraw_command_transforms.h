@@ -117,10 +117,11 @@ void gpoint_index_lookup_set_groups(GPointIndexLookup *lookup, int num_groups,
 //! this prevents the transform from scaling the translation already present in the command list
 //! equivalent to `from.origin`.
 //! @see GPointIndexLookup
-void gdraw_command_list_scale_segmented_to(
-    GDrawCommandList *list, GSize size, GRect from, GRect to, AnimationProgress normalized,
-    InterpolateInt64Function interpolate, GPointIndexLookup *lookup, Fixed_S32_16 duration_fraction,
-    bool is_offset);
+void gdraw_command_list_scale_segmented_to(GDrawCommandList *list, GSize size, GRect from, GRect to,
+                                           AnimationProgress normalized,
+                                           InterpolateInt64Function interpolate,
+                                           GPointIndexLookup *lookup,
+                                           Fixed_S32_16 duration_fraction, bool is_offset);
 
 //! Performs a scaling and translation transform on an image with each point being delayed by delay
 //! segments assigned based on a GPointIndexLookup.
@@ -136,10 +137,11 @@ void gdraw_command_list_scale_segmented_to(
 //! this prevents the transform from scaling the translation already present in the command list
 //! equivalent to `from.origin`.
 //! @see GPointIndexLookup
-void gdraw_command_image_scale_segmented_to(
-    GDrawCommandImage *image, GRect from, GRect to, AnimationProgress normalized,
-    InterpolateInt64Function interpolate, GPointIndexLookup *lookup, Fixed_S32_16 duration_fraction,
-    bool is_offset);
+void gdraw_command_image_scale_segmented_to(GDrawCommandImage *image, GRect from, GRect to,
+                                            AnimationProgress normalized,
+                                            InterpolateInt64Function interpolate,
+                                            GPointIndexLookup *lookup,
+                                            Fixed_S32_16 duration_fraction, bool is_offset);
 
 //! Scales and translates a GPoint.
 //! @param point Point to transform.

@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* mfg_test_aging_app_get_info(void);
+const PebbleProcessMd *mfg_test_aging_app_get_info(void);

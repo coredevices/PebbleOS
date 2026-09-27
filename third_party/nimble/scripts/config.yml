@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Input to gen_syscfg.py: which NimBLE packages are converted, how they are
+# grouped into Kconfig files, and the few options that need a hand-written
+# shape. See README.md.
+
+nimble: mynewt-nimble
+header: port/include/syscfg/syscfg.h
+booleans: booleans.yml
+
+# One Kconfig.<id> file per area. `depends` is a raw Kconfig expression naming
+# the builds that compile the area's packages; where it is false, the options
+# stay undefined, exactly as they would be for a newt target that leaves the
+# package out.
+areas:
+  - id: ble
+    title: "Core"
+    packages:
+      - nimble
+
+  - id: host
+    title: "Host"
+    packages:
+      - nimble/host
+
+  - id: services
+    title: "GATT services"
+    packages:
+      - nimble/host/services/bas
+      - nimble/host/services/dis
+      - nimble/host/services/gap
+      - nimble/host/services/gatt
+
+  - id: transport
+    title: "HCI transport"
+    packages:
+      - nimble/transport
+
+  - id: controller
+    title: "Controller"
+    depends: BT_HCI_NRF52
+    packages:
+      - nimble/controller
+
+  - id: drivers
+    title: "Radio driver"
+    depends: BT_HCI_NRF52
+    packages:
+      - nimble/drivers/nrf5x
+    files:
+      - port_nrf.yml
+
+  - id: port
+    title: "Porting layer"
+    files:
+      - port.yml
+
+# NimBLE options whose value is a C macro rather than a number. Listing the
+# macros here turns the option into a Kconfig choice; without it the option
+# would be fixed at NimBLE's default by the generated header.
+overrides:
+  BLE_SM_IO_CAP:
+    default: NO_INPUT_OUTPUT
+    enum:
+      DISPLAY_ONLY: BLE_HS_IO_DISPLAY_ONLY
+      DISPLAY_YESNO: BLE_HS_IO_DISPLAY_YESNO
+      KEYBOARD_ONLY: BLE_HS_IO_KEYBOARD_ONLY
+      NO_INPUT_OUTPUT: BLE_HS_IO_NO_INPUT_OUTPUT
+      KEYBOARD_DISPLAY: BLE_HS_IO_KEYBOARD_DISPLAY

@@ -15,7 +15,6 @@
 #include "pbl/services/touch/touch.h"
 #endif
 
-
 void prv_change_orientation(bool rotated) {
   display_set_rotated(rotated);
   button_set_rotated(rotated);

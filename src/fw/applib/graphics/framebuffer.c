@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 //! @file framebuffer.c
-//! Bitdepth independant routines for framebuffer.h
-//! Bitdepth depenedant routines can be found in the 1_bit & 8_bit folders in their
+//! Bitdepth independent routines for framebuffer.h
+//! Bitdepth dependant routines can be found in the 1_bit & 8_bit folders in their
 //! respective framebuffer.c files.
 
 #include "applib/graphics/framebuffer.h"
@@ -30,18 +30,18 @@ GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   const GBitmapDataRowInfoInternal *data_row_infos = NULL;
 #endif
 
-  return (GBitmap) {
+  return (GBitmap){
     .addr = fb->buffer,
     .row_size_bytes = gbitmap_format_get_row_size_bytes(size->w, GBITMAP_NATIVE_FORMAT),
-    .info = (BitmapInfo) {.format = GBITMAP_NATIVE_FORMAT, .version = GBITMAP_VERSION_CURRENT},
-    .bounds = (GRect) { GPointZero, *size },
+    .info = (BitmapInfo){.format = GBITMAP_NATIVE_FORMAT, .version = GBITMAP_VERSION_CURRENT},
+    .bounds = (GRect){GPointZero, *size},
     .data_row_infos = data_row_infos,
   };
 }
 
 void framebuffer_dirty_all(FrameBuffer *fb) {
   PBL_ASSERTN(!gsize_equal(&fb->size, &GSizeZero));
-  fb->dirty_rect = (GRect) { GPointZero, fb->size };
+  fb->dirty_rect = (GRect){GPointZero, fb->size};
   fb->is_dirty = true;
 }
 

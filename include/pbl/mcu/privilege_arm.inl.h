@@ -3,7 +3,6 @@
 
 #include <cmsis_core.h>
 
-
 //! @file privilege_arm.inl.h
 //! Helpful functions for dealing with our micros execution state.
 //!

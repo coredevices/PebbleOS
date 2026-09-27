@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
 #include "clar.h"
 
 #include "logging/pulse_logging.h"
@@ -13,9 +14,6 @@ const int LOG_METADATA_LENGTH = 29;
 
 #include "kernel/events.h"
 #include "kernel/pebble_tasks.h"
-
-#include "FreeRTOS.h"
-#include "task.h"
 
 static int s_num_event_puts;
 static PebbleEvent s_last_event;
@@ -55,7 +53,7 @@ void pulse_best_effort_send(void *buf, size_t length) {
   s_num_bytes_sent += length;
 
   const size_t message_length = length - LOG_METADATA_LENGTH;
-  memcpy(s_log_message_buffer, ((char*) buf) + LOG_METADATA_LENGTH, message_length);
+  memcpy(s_log_message_buffer, ((char *)buf) + LOG_METADATA_LENGTH, message_length);
   s_log_message_buffer[message_length] = '\0';
 }
 
@@ -63,25 +61,24 @@ bool pulse_is_started(void) {
   return true;
 }
 
-void rtc_get_time_ms(time_t* out_seconds, uint16_t* out_ms) {
+void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   *out_seconds = 0;
   *out_ms = 0;
 }
 
-
-void vPortEnterCritical(void) {
+void pbl_irq_lock(void) {
 }
 
-void vPortExitCritical(void) {
+void pbl_irq_unlock(void) {
 }
 
 bool s_in_critical_section;
-bool vPortInCritical(void) {
+bool pbl_irq_is_locked(void) {
   return s_in_critical_section;
 }
 
-BaseType_t xTaskGetSchedulerState(void) {
-  return taskSCHEDULER_RUNNING;
+bool pbl_sched_is_locked(void) {
+  return false;
 }
 
 // Tests
@@ -89,7 +86,7 @@ BaseType_t xTaskGetSchedulerState(void) {
 
 void test_pulse_logging__initialize(void) {
   s_num_event_puts = 0;
-  s_last_event = (PebbleEvent) { 0 };
+  s_last_event = (PebbleEvent){0};
 
   s_num_packets_sent = 0;
   s_num_bytes_sent = 0;
@@ -118,19 +115,21 @@ void test_pulse_logging__simple(void) {
   cl_assert_equal_s(s_log_message_buffer, "TestTestTestTestTest");
 }
 
-void test_pulse_logging__simple_trucate(void) {
-  pulse_logging_log(LOG_LEVEL_DEBUG, "", 0, "TestTestTestTestTestTestTestTestTestTest"
-                                            "TestTestTestTestTestTestTestTestTestTest"
-                                            "TestTestTestTestTestTestTestTestTestTest"
-                                            "TestTestTestTestTestTestTestTestTestTest");
+void test_pulse_logging__simple_truncate(void) {
+  pulse_logging_log(LOG_LEVEL_DEBUG, "", 0,
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest");
 
   cl_assert_equal_i(s_num_event_puts, 0);
   cl_assert_equal_i(s_num_packets_sent, 1);
   cl_assert_equal_i(s_num_bytes_sent, LOG_METADATA_LENGTH + 128);
-  cl_assert_equal_s(s_log_message_buffer, "TestTestTestTestTestTestTestTestTestTest"
-                                          "TestTestTestTestTestTestTestTestTestTest"
-                                          "TestTestTestTestTestTestTestTestTestTest"
-                                          "TestTest");
+  cl_assert_equal_s(s_log_message_buffer,
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTest");
 }
 
 void test_pulse_logging__isr_simple(void) {
@@ -156,23 +155,25 @@ void test_pulse_logging__isr_simple(void) {
   cl_assert_equal_s(s_log_message_buffer, "TestTestTestTestTest");
 }
 
-void test_pulse_logging__isr_trucate(void) {
+void test_pulse_logging__isr_truncate(void) {
   s_in_critical_section = true;
 
-  pulse_logging_log(LOG_LEVEL_DEBUG, "", 0, "TestTestTestTestTestTestTestTestTestTest"
-                                            "TestTestTestTestTestTestTestTestTestTest"
-                                            "TestTestTestTestTestTestTestTestTestTest"
-                                            "TestTestTestTestTestTestTestTestTestTest");
+  pulse_logging_log(LOG_LEVEL_DEBUG, "", 0,
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest");
 
   cl_assert_equal_i(s_num_event_puts, 1);
 
   s_last_event.callback.callback(NULL);
   cl_assert_equal_i(s_num_packets_sent, 1);
   cl_assert_equal_i(s_num_bytes_sent, LOG_METADATA_LENGTH + 128);
-  cl_assert_equal_s(s_log_message_buffer, "TestTestTestTestTestTestTestTestTestTest"
-                                          "TestTestTestTestTestTestTestTestTestTest"
-                                          "TestTestTestTestTestTestTestTestTestTest"
-                                          "TestTest");
+  cl_assert_equal_s(s_log_message_buffer,
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTestTestTestTestTestTestTestTestTest"
+                    "TestTest");
 }
 
 void test_pulse_logging__isr_buffer_full(void) {

@@ -1,4 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+rsource "bluetooth/Kconfig"
+rsource "cron/Kconfig"
 rsource "logging/Kconfig"
+rsource "task_wdt/Kconfig"

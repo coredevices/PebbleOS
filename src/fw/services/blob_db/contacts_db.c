@@ -6,9 +6,8 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/services/settings/settings_file.h"
-#include "pbl/services/contacts/attributes_address.h"
 #include "pbl/services/contacts/contacts.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "util/units.h"
@@ -19,7 +18,7 @@
 
 static struct {
   SettingsFile settings_file;
-  PebbleMutex *mutex;
+  struct pbl_mutex mutex;
 } s_contacts_db;
 
 //////////////////////
@@ -27,20 +26,18 @@ static struct {
 //////////////////////
 
 static status_t prv_lock_mutex_and_open_file(void) {
-  mutex_lock(s_contacts_db.mutex);
-  status_t rv = settings_file_open_growable(&s_contacts_db.settings_file,
-                                            SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE,
-                                            KiBYTES(4));
+  pbl_mutex_lock(&s_contacts_db.mutex, PBL_FOREVER);
+  status_t rv = settings_file_open_growable(&s_contacts_db.settings_file, SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE, KiBYTES(4));
   if (rv != S_SUCCESS) {
-    mutex_unlock(s_contacts_db.mutex);
+    pbl_mutex_unlock(&s_contacts_db.mutex);
   }
   return rv;
 }
 
 static void prv_close_file_and_unlock_mutex(void) {
   settings_file_close(&s_contacts_db.settings_file);
-  mutex_unlock(s_contacts_db.mutex);
+  pbl_mutex_unlock(&s_contacts_db.mutex);
 }
 
 //////////////////////////////
@@ -55,8 +52,8 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
     return 0;
   }
 
-  const unsigned contact_len = settings_file_get_len(&s_contacts_db.settings_file,
-                                                     (uint8_t *)uuid, UUID_SIZE);
+  const unsigned contact_len =
+      settings_file_get_len(&s_contacts_db.settings_file, (uint8_t *)uuid, UUID_SIZE);
   if (contact_len < sizeof(SerializedContact)) {
     prv_close_file_and_unlock_mutex();
     return 0;
@@ -69,7 +66,7 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
   }
 
   rv = settings_file_get(&s_contacts_db.settings_file, (uint8_t *)uuid, UUID_SIZE,
-                         (void *) *contact_out, contact_len);
+                         (void *)*contact_out, contact_len);
   prv_close_file_and_unlock_mutex();
   if (rv != S_SUCCESS) {
     task_free(*contact_out);
@@ -89,11 +86,11 @@ void contacts_db_free_serialized_contact(SerializedContact *contact) {
 
 void contacts_db_init(void) {
   memset(&s_contacts_db, 0, sizeof(s_contacts_db));
-  s_contacts_db.mutex = mutex_create();
+  pbl_mutex_init(&s_contacts_db.mutex);
 }
 
 status_t contacts_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
-  if (key_len != UUID_SIZE || val_len < (int) sizeof(SerializedContact)) {
+  if (key_len != UUID_SIZE || val_len < (int)sizeof(SerializedContact)) {
     return E_INVALID_ARGUMENT;
   }
 
@@ -157,9 +154,9 @@ status_t contacts_db_delete(const uint8_t *key, int key_len) {
 }
 
 status_t contacts_db_flush(void) {
-  mutex_lock(s_contacts_db.mutex);
+  pbl_mutex_lock(&s_contacts_db.mutex, PBL_FOREVER);
   status_t rv = pfs_remove(SETTINGS_FILE_NAME);
-  mutex_unlock(s_contacts_db.mutex);
+  pbl_mutex_unlock(&s_contacts_db.mutex);
   return rv;
 }
 

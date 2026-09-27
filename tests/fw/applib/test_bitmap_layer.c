@@ -26,7 +26,7 @@
 
 static GRect s_graphics_draw_bitmap_in_rect__rect = GRectZero;
 
-void graphics_draw_bitmap_in_rect(GContext* ctx, const GBitmap *src_bitmap, const GRect *rect) {
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, const GRect *rect) {
   s_graphics_draw_bitmap_in_rect__rect = *rect;
 }
 
@@ -50,7 +50,7 @@ void test_bitmap_layer__cleanup(void) {
 // on recent SDKs but that a previous bug is kept for 2.x SDK
 void test_bitmap_layer__nonzero_bounds(void) {
   GContext ctx = {
-    .draw_state = (GDrawState) {
+    .draw_state = (GDrawState){
       .clip_box = GRect(0, 0, 144, 168),
       .drawing_box = GRect(0, 0, 144, 168),
     },

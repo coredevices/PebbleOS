@@ -50,7 +50,7 @@ void test_ancs_notifications_util__parse_timestamp(void) {
   // DST info for US/Canada 2015
   TimezoneInfo tz_info = {
     .dst_start = 1425780000, // Sun, 08 Mar 2015 02:00
-    .dst_end = 1446343200 // Sun, 01 Nov 2015 02:00
+    .dst_end = 1446343200    // Sun, 01 Nov 2015 02:00
   };
   time_util_update_timezone(&tz_info);
 

@@ -3,7 +3,6 @@
 
 #include "menu_layer.h"
 
-#include "applib/graphics/graphics.h"
 #include "applib/ui/kino/kino_reel.h"
 #include "applib/ui/kino/kino_reel_gbitmap_private.h"
 #include "kernel/pebble_tasks.h"
@@ -32,24 +31,27 @@ typedef struct MenuCellDimensions {
 
 static const MenuCellDimensions s_menu_cell_dimensions[NumPreferredContentSizes] = {
   //! @note these are the same as Medium until Small is designed
-  [PreferredContentSizeSmall] = {
-    .basic_cell_height = 44,
-    .small_cell_height = 34,
-    .horizontal_inset = 5,
-    .title_subtitle_left_margin = 30,
-  },
-  [PreferredContentSizeMedium] = {
-    .basic_cell_height = 44,
-    .small_cell_height = 34,
-    .horizontal_inset = 5,
-    .title_subtitle_left_margin = 30,
-  },
-  [PreferredContentSizeLarge] = {
-    .basic_cell_height = 61,
-    .small_cell_height = 42,
-    .horizontal_inset = 10,
-    .title_subtitle_left_margin = 34,
-  },
+  [PreferredContentSizeSmall] =
+      {
+        .basic_cell_height = 44,
+        .small_cell_height = 34,
+        .horizontal_inset = 5,
+        .title_subtitle_left_margin = 30,
+      },
+  [PreferredContentSizeMedium] =
+      {
+        .basic_cell_height = 44,
+        .small_cell_height = 34,
+        .horizontal_inset = 5,
+        .title_subtitle_left_margin = 30,
+      },
+  [PreferredContentSizeLarge] =
+      {
+        .basic_cell_height = 61,
+        .small_cell_height = 42,
+        .horizontal_inset = 10,
+        .title_subtitle_left_margin = 34,
+      },
   [PreferredContentSizeExtraLarge] = {
     .basic_cell_height = 85,
     .small_cell_height = 52,
@@ -66,9 +68,9 @@ static bool prv_use_platform_default_size(void) {
 }
 
 static const MenuCellDimensions *prv_get_cell_dimensions(void) {
-  const PreferredContentSize size = prv_use_platform_default_size() ?
-      system_theme_get_default_content_size_for_runtime_platform() :
-      system_theme_get_content_size();
+  const PreferredContentSize size =
+      prv_use_platform_default_size() ? system_theme_get_default_content_size_for_runtime_platform()
+                                      : system_theme_get_content_size();
   return &s_menu_cell_dimensions[size];
 }
 
@@ -91,24 +93,24 @@ static int16_t prv_title_subtitle_left_margin(void) {
 #endif
 
 static GFont prv_get_cell_font(TextStyleFont font) {
-  return prv_use_platform_default_size() ? system_theme_get_font_for_default_size(font) :
-                                           system_theme_get_font(font);
+  return prv_use_platform_default_size() ? system_theme_get_font_for_default_size(font)
+                                         : system_theme_get_font(font);
 }
 
-static ALWAYS_INLINE GFont prv_get_cell_title_font(const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE GFont prv_get_cell_title_font(const MenuCellLayerConfig *config) {
   return config->title_font ?: prv_get_cell_font(TextStyleFont_MenuCellTitle);
 }
 
-static ALWAYS_INLINE GFont prv_get_cell_subtitle_font(const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE GFont prv_get_cell_subtitle_font(const MenuCellLayerConfig *config) {
   return config->subtitle_font ?: prv_get_cell_font(TextStyleFont_MenuCellSubtitle);
 }
 
-static ALWAYS_INLINE GFont prv_get_cell_value_font(const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE GFont prv_get_cell_value_font(const MenuCellLayerConfig *config) {
   return config->value_font ?: prv_get_cell_title_font(config);
 }
 
-static ALWAYS_INLINE void prv_draw_icon(GContext *ctx, GBitmap *icon, const GRect *icon_frame,
-                                        bool is_legacy2) {
+static PBL_ALWAYS_INLINE void prv_draw_icon(GContext *ctx, GBitmap *icon, const GRect *icon_frame,
+                                            bool is_legacy2) {
   if (!is_legacy2) {
     bool tint_icon = (icon && (gbitmap_get_format(icon) == GBitmapFormat1Bit));
     if (tint_icon) {
@@ -122,8 +124,8 @@ static ALWAYS_INLINE void prv_draw_icon(GContext *ctx, GBitmap *icon, const GRec
 }
 
 #if PBL_RECT
-static void prv_menu_cell_basic_draw_custom_rect(
-    GContext *ctx, const Layer *cell_layer, const MenuCellLayerConfig *config) {
+static void prv_menu_cell_basic_draw_custom_rect(GContext *ctx, const Layer *cell_layer,
+                                                 const MenuCellLayerConfig *config) {
   const GRect *bounds = &cell_layer->bounds;
   const bool is_legacy2 = process_manager_compiled_with_legacy2_sdk();
 
@@ -139,18 +141,18 @@ static void prv_menu_cell_basic_draw_custom_rect(
   GRect box;
   const GAlign icon_align = (GAlign)config->icon_align;
   if (config->icon) {
-    box = (GRect) {
+    box = (GRect){
       .size = config->icon->bounds.size,
       .origin = bounds->origin,
     };
 
     if (is_legacy2) {
-      static const GSize s_icon_size = { 33, 44 };
+      static const GSize s_icon_size = {33, 44};
       if (icon_align == GAlignRight) {
         box.origin.x += bounds->size.w - (horizontal_margin + config->icon->bounds.size.w);
-      } else { // icon on left
-        box.origin.x +=  ((config->icon->bounds.size.w & 1) + // Nudge odd-width icons one right
-                          ((s_icon_size.w - config->icon->bounds.size.w) / 2));
+      } else {                                               // icon on left
+        box.origin.x += ((config->icon->bounds.size.w & 1) + // Nudge odd-width icons one right
+                         ((s_icon_size.w - config->icon->bounds.size.w) / 2));
       }
       box.origin.y += (s_icon_size.h - config->icon->bounds.size.h) / 2;
     } else {
@@ -177,10 +179,11 @@ static void prv_menu_cell_basic_draw_custom_rect(
     left_margin = horizontal_margin;
     box.size.w -= config->icon->bounds.size.w;
   } else {
-    left_margin = !config->icon ? horizontal_margin :
-        config->icon_form_fit ? (left_margin + config->icon->bounds.size.w +
-                                 (config->icon_box_model ? config->icon_box_model->margin.w : 0))
-                              : prv_title_subtitle_left_margin() + horizontal_margin;
+    left_margin = !config->icon ? horizontal_margin
+                  : config->icon_form_fit
+                      ? (left_margin + config->icon->bounds.size.w +
+                         (config->icon_box_model ? config->icon_box_model->margin.w : 0))
+                      : prv_title_subtitle_left_margin() + horizontal_margin;
   }
   box.origin.x += left_margin;
   box.size.w -= left_margin;
@@ -205,51 +208,51 @@ static void prv_menu_cell_basic_draw_custom_rect(
     value_box.size.w -= horizontal_margin;
 
     const GFont value_font = prv_get_cell_value_font(config);
-    const GSize text_size = graphics_text_layout_get_max_used_size(
-        ctx, config->value, value_font, value_box, config->overflow_mode,
-        GTextAlignmentRight, NULL);
+    const GSize text_size =
+        graphics_text_layout_get_max_used_size(ctx, config->value, value_font, value_box,
+                                               config->overflow_mode, GTextAlignmentRight, NULL);
     box.size.w -= (text_size.w + horizontal_margin * 2);
-    graphics_draw_text(ctx, config->value, value_font, value_box,
-                       config->overflow_mode, GTextAlignmentRight, NULL);
+    graphics_draw_text(ctx, config->value, value_font, value_box, config->overflow_mode,
+                       GTextAlignmentRight, NULL);
   }
 
   if (config->title) {
-    graphics_draw_text(ctx, config->title, title_font, box,
-                       config->overflow_mode, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, config->title, title_font, box, config->overflow_mode,
+                       GTextAlignmentLeft, NULL);
   }
 
   if (config->subtitle) {
     box.origin.y += title_height;
     box.size.h = subtitle_height + 4;
-    graphics_draw_text(ctx, config->subtitle, subtitle_font, box,
-                       config->overflow_mode, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, config->subtitle, subtitle_font, box, config->overflow_mode,
+                       GTextAlignmentLeft, NULL);
   }
 }
 #endif // PBL_RECT
 
 // This function duplicates `grect_inset()` but helps us save some stack space by using pointer
 // arguments and always inlining the function
-static ALWAYS_INLINE void prv_grect_inset(GRect *rect, GEdgeInsets *insets) {
+static PBL_ALWAYS_INLINE void prv_grect_inset(GRect *rect, GEdgeInsets *insets) {
   grect_standardize(rect);
   const int16_t new_width = rect->size.w - insets->left - insets->right;
   const int16_t new_height = rect->size.h - insets->top - insets->bottom;
   if (new_width < 0 || new_height < 0) {
     *rect = GRectZero;
   } else {
-    *rect = GRect(rect->origin.x + insets->left, rect->origin.y + insets->top,
-                  new_width, new_height);
+    *rect =
+        GRect(rect->origin.x + insets->left, rect->origin.y + insets->top, new_width, new_height);
   }
 }
 
-static ALWAYS_INLINE bool prv_should_render_subtitle_round(const MenuCellLayerConfig *config,
-                                                           bool is_selected) {
+static PBL_ALWAYS_INLINE bool prv_should_render_subtitle_round(const MenuCellLayerConfig *config,
+                                                               bool is_selected) {
   // If the cell isn't selected and there's no value text, then no subtitle text should be shown
   return ((is_selected || config->value) && (config->subtitle != NULL));
 }
 
-static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
-  GContext *ctx, const GRect *cell_layer_bounds, const MenuCellLayerConfig *config,
-  GTextAlignment text_alignment, GAlign container_alignment, bool is_selected) {
+static PBL_ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
+    GContext *ctx, const GRect *cell_layer_bounds, const MenuCellLayerConfig *config,
+    GTextAlignment text_alignment, GAlign container_alignment, bool is_selected) {
   if (!cell_layer_bounds) {
     return GRectZero;
   }
@@ -288,12 +291,12 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
 
   const bool can_use_two_lines_for_title = !(render_subtitle || render_icon);
   const bool can_use_many_lines_for_title = (config->overflow_mode == GTextOverflowModeWordWrap);
-  const int16_t intitial_title_text_lines = can_use_two_lines_for_title ? 2 : 1;
-  int16_t title_text_frame_height = can_use_many_lines_for_title
-      ? graphics_text_layout_get_text_height(ctx, config->title, title_font,
-                                             cell_layer_bounds_size.w, config->overflow_mode,
-                                             text_alignment)
-      : title_font_height * intitial_title_text_lines;
+  const int16_t initial_title_text_lines = can_use_two_lines_for_title ? 2 : 1;
+  int16_t title_text_frame_height =
+      can_use_many_lines_for_title ? graphics_text_layout_get_text_height(
+                                         ctx, config->title, title_font, cell_layer_bounds_size.w,
+                                         config->overflow_mode, text_alignment)
+                                   : title_font_height * initial_title_text_lines;
   const int title_text_cap_offset = (config->title) ? fonts_get_font_cap_offset(title_font) : 0;
 
   int16_t container_height = title_text_frame_height + subtitle_text_frame_height;
@@ -334,15 +337,17 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
   }
 
   // We'll reuse this rect to conserve stack space; here it is used as the title text frame
-  GRect rect = (GRect) {
+  GRect rect = (GRect){
     .origin = cell_layer_bounds->origin,
     .size = GSize(cell_layer_bounds_size.w, title_text_frame_height),
   };
 
   // Update the title text frame's height using the max used size of the title text because we
   // might only have one line of text to render even though we have space for two lines
-  title_text_frame_height = graphics_text_layout_get_max_used_size(
-      ctx, config->title, title_font, rect, config->overflow_mode, text_alignment, NULL).h;
+  title_text_frame_height =
+      graphics_text_layout_get_max_used_size(ctx, config->title, title_font, rect,
+                                             config->overflow_mode, text_alignment, NULL)
+          .h;
   // Calculate the final container height and create a rectangle for it
   container_height = title_text_frame_height + subtitle_text_frame_height;
   const bool icon_on_left = ((icon_align == GAlignLeft) || (icon_align == GAlignTopLeft));
@@ -353,7 +358,7 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
     // Let the icon extend the container height if it's taller than the title/subtitle combo
     container_height = MAX(icon_frame_size.h, container_height);
   }
-  GRect container_rect = (GRect) { .size = GSize(cell_layer_bounds_size.w, container_height) };
+  GRect container_rect = (GRect){.size = GSize(cell_layer_bounds_size.w, container_height)};
 
   // Align the container rect in the cell
   grect_align(&container_rect, cell_layer_bounds, container_alignment, true /* clip */);
@@ -373,7 +378,7 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
       // round has never worked with legacy2 apps
       static const bool is_legacy2 = false;
       // Reuse container_rect as icon frame
-      container_rect = (GRect) {
+      container_rect = (GRect){
         .origin = rect.origin,
         .size = icon_bitmap_size,
       };
@@ -399,8 +404,8 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
       // Vertically center the title and subtitle within the container
       title_text_frame_origin_y =
           cell_layer_bounds->origin.y +
-              ((cell_layer_bounds->size.h - title_text_frame_height -
-                  subtitle_text_frame_height - 1) / 2);
+          ((cell_layer_bounds->size.h - title_text_frame_height - subtitle_text_frame_height - 1) /
+           2);
       if (subtitle_text_frame_height) {
         title_text_frame_origin_y -= icon_on_left_title_subtitle_vertical_spacing_offset;
       }
@@ -415,7 +420,7 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
       subtitle_text_frame_origin_y += icon_on_left_title_subtitle_vertical_spacing_offset;
     }
     // Reuse rect as the subtitle text frame
-    rect = (GRect) {
+    rect = (GRect){
       .origin = GPoint(cell_layer_bounds_origin_x, subtitle_text_frame_origin_y),
       .size = GSize(cell_layer_bounds_size.w, subtitle_text_frame_height)
     };
@@ -426,7 +431,7 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
   // Draw the title, which we're guaranteed to have room for because otherwise we would have bailed
   // out at the beginning of this function
   // Reuse rect as the title text frame
-  rect = (GRect) {
+  rect = (GRect){
     .origin = GPoint(cell_layer_bounds_origin_x, title_text_frame_origin_y),
     .size = GSize(cell_layer_bounds_size.w, title_text_frame_height)
   };
@@ -436,15 +441,15 @@ static ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
     cap_offsets_to_apply += subtitle_text_cap_offset;
   }
   rect.origin.y -= cap_offsets_to_apply;
-  graphics_draw_text(ctx, config->title, title_font, rect, config->overflow_mode,
-                     text_alignment, NULL);
+  graphics_draw_text(ctx, config->title, title_font, rect, config->overflow_mode, text_alignment,
+                     NULL);
   // Add back the cap offset so functions that use the returned title text frame can position
   // themselves using the actual frame
   rect.origin.y += cap_offsets_to_apply;
   return rect;
 }
 
-static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
+static PBL_ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
     GContext *ctx, const GRect *cell_layer_bounds, const MenuCellLayerConfig *config,
     bool is_selected) {
   if (!cell_layer_bounds) {
@@ -459,9 +464,9 @@ static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
   GSize right_element_size;
   const GFont value_font = prv_get_cell_value_font(config);
   if (config->value) {
-    right_element_size = graphics_text_layout_get_max_used_size(
-        ctx, config->value, value_font, *cell_layer_bounds, config->overflow_mode,
-        GTextAlignmentRight, NULL);
+    right_element_size =
+        graphics_text_layout_get_max_used_size(ctx, config->value, value_font, *cell_layer_bounds,
+                                               config->overflow_mode, GTextAlignmentRight, NULL);
   } else {
     right_element_size = icon_size;
   }
@@ -478,10 +483,8 @@ static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
   }
 
   // Now we store the right element frame in rect
-  rect = (GRect) {
-    .origin = GPoint(grect_get_max_x(&rect), rect.origin.y),
-    .size = right_element_size
-  };
+  rect =
+      (GRect){.origin = GPoint(grect_get_max_x(&rect), rect.origin.y), .size = right_element_size};
 
   if (config->value) {
     rect.origin.y -= fonts_get_font_cap_offset(value_font);
@@ -502,8 +505,8 @@ static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
   }
 }
 
-static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(
-    GContext* ctx, const Layer *cell_layer, const MenuCellLayerConfig *config) {
+static PBL_ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(
+    GContext *ctx, const Layer *cell_layer, const MenuCellLayerConfig *config) {
   // TODO PBL-23041: When round MenuLayer animations are enabled, we need a "is_selected" function
   const bool cell_is_selected = menu_cell_layer_is_highlighted(cell_layer);
   const bool draw_two_columns =
@@ -512,25 +515,23 @@ static ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(
   // Determine appropriate insets to match designs
   GRect cell_layer_bounds = cell_layer->bounds;
   const int16_t horizontal_inset = (cell_is_selected && !draw_two_columns)
-                                   ? MENU_CELL_ROUND_FOCUSED_HORIZONTAL_INSET
-                                   : MENU_CELL_ROUND_UNFOCUSED_HORIZONTAL_INSET;
-  prv_grect_inset(&cell_layer_bounds,
-                  &GEdgeInsets(0, horizontal_inset + config->horizontal_inset));
+                                       ? MENU_CELL_ROUND_FOCUSED_HORIZONTAL_INSET
+                                       : MENU_CELL_ROUND_UNFOCUSED_HORIZONTAL_INSET;
+  prv_grect_inset(&cell_layer_bounds, &GEdgeInsets(0, horizontal_inset + config->horizontal_inset));
 
   if (draw_two_columns) {
     prv_menu_cell_basic_draw_custom_two_columns_round(ctx, &cell_layer_bounds, config,
                                                       cell_is_selected);
   } else {
-    prv_menu_cell_basic_draw_custom_one_column_round(ctx, &cell_layer_bounds, config,
-                                                     GTextAlignmentCenter, GAlignCenter,
-                                                     cell_is_selected);
+    prv_menu_cell_basic_draw_custom_one_column_round(
+        ctx, &cell_layer_bounds, config, GTextAlignmentCenter, GAlignCenter, cell_is_selected);
   }
 }
 
-static ALWAYS_INLINE void prv_draw_cell(GContext *ctx, const Layer *cell_layer,
-                                        const MenuCellLayerConfig *config) {
-  PBL_IF_RECT_ELSE(prv_menu_cell_basic_draw_custom_rect,
-                   prv_menu_cell_basic_draw_custom_round)(ctx, cell_layer, config);
+static PBL_ALWAYS_INLINE void prv_draw_cell(GContext *ctx, const Layer *cell_layer,
+                                            const MenuCellLayerConfig *config) {
+  PBL_IF_RECT_ELSE(prv_menu_cell_basic_draw_custom_rect, prv_menu_cell_basic_draw_custom_round)(
+      ctx, cell_layer, config);
 }
 
 //! TODO: PBL-21467 Replace with MenuCellLayer
@@ -539,10 +540,12 @@ void menu_cell_layer_draw(GContext *ctx, const Layer *cell_layer,
   prv_draw_cell(ctx, cell_layer, config);
 }
 
-static ALWAYS_INLINE void prv_draw_basic(
-    GContext* ctx, const Layer *cell_layer, GFont const title_font, const char *title,
-    GFont const value_font, const char *value, GFont const subtitle_font, const char *subtitle,
-    GBitmap *icon, bool icon_on_right, GTextOverflowMode overflow_mode) {
+static PBL_ALWAYS_INLINE void prv_draw_basic(GContext *ctx, const Layer *cell_layer,
+                                             GFont const title_font, const char *title,
+                                             GFont const value_font, const char *value,
+                                             GFont const subtitle_font, const char *subtitle,
+                                             GBitmap *icon, bool icon_on_right,
+                                             GTextOverflowMode overflow_mode) {
   MenuCellLayerConfig config = {
     .title_font = title_font,
     .subtitle_font = subtitle_font,
@@ -551,15 +554,15 @@ static ALWAYS_INLINE void prv_draw_basic(
     .subtitle = subtitle,
     .value = value,
     .icon = icon,
-    .icon_align = icon_on_right ? MenuCellLayerIconAlign_Right :
-                                  PBL_IF_RECT_ELSE(MenuCellLayerIconAlign_Left,
-                                                   MenuCellLayerIconAlign_Top),
+    .icon_align = icon_on_right
+                      ? MenuCellLayerIconAlign_Right
+                      : PBL_IF_RECT_ELSE(MenuCellLayerIconAlign_Left, MenuCellLayerIconAlign_Top),
     .overflow_mode = overflow_mode,
   };
   prv_draw_cell(ctx, cell_layer, &config);
 }
 
-void menu_cell_basic_draw_custom(GContext* ctx, const Layer *cell_layer, GFont const title_font,
+void menu_cell_basic_draw_custom(GContext *ctx, const Layer *cell_layer, GFont const title_font,
                                  const char *title, GFont const value_font, const char *value,
                                  GFont const subtitle_font, const char *subtitle, GBitmap *icon,
                                  bool icon_on_right, GTextOverflowMode overflow_mode) {
@@ -567,13 +570,13 @@ void menu_cell_basic_draw_custom(GContext* ctx, const Layer *cell_layer, GFont c
                  icon, icon_on_right, overflow_mode);
 }
 
-void menu_cell_basic_draw_icon_right(GContext* ctx, const Layer *cell_layer,
-                                     const char *title, const char *subtitle, GBitmap *icon) {
+void menu_cell_basic_draw_icon_right(GContext *ctx, const Layer *cell_layer, const char *title,
+                                     const char *subtitle, GBitmap *icon) {
   prv_draw_basic(ctx, cell_layer, NULL, title, NULL, NULL, NULL, subtitle, icon, true,
                  GTextOverflowModeFill);
 }
 
-void menu_cell_basic_draw(GContext* ctx, const Layer *cell_layer, const char *title,
+void menu_cell_basic_draw(GContext *ctx, const Layer *cell_layer, const char *title,
                           const char *subtitle, GBitmap *icon) {
   prv_draw_basic(ctx, cell_layer, NULL, title, NULL, NULL, NULL, subtitle, icon, false,
                  GTextOverflowModeFill);
@@ -582,7 +585,7 @@ void menu_cell_basic_draw(GContext* ctx, const Layer *cell_layer, const char *ti
 //////////////////////
 // Title menu cell
 
-void menu_cell_title_draw(GContext* ctx, const Layer *cell_layer, const char *title) {
+void menu_cell_title_draw(GContext *ctx, const Layer *cell_layer, const char *title) {
   // Title:
   if (title) {
     const bool is_legacy2 = process_manager_compiled_with_legacy2_sdk();
@@ -603,7 +606,7 @@ void menu_cell_title_draw(GContext* ctx, const Layer *cell_layer, const char *ti
 //////////////////////
 // Basic header cell
 
-void menu_cell_basic_header_draw(GContext* ctx, const Layer *cell_layer, const char *title) {
+void menu_cell_basic_header_draw(GContext *ctx, const Layer *cell_layer, const char *title) {
   // Title:
   if (title) {
     const bool is_legacy2 = process_manager_compiled_with_legacy2_sdk();
@@ -620,4 +623,3 @@ void menu_cell_basic_header_draw(GContext* ctx, const Layer *cell_layer, const c
     graphics_draw_text(ctx, title, font, box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
   }
 }
-

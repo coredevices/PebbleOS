@@ -4,7 +4,7 @@
 #include "kernel/util/factory_reset.h"
 
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/task_watchdog.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include "flash_region/filesystem_regions.h"
 #include "kernel/event_loop.h"
 #include "kernel/util/standby.h"
@@ -55,7 +55,7 @@ static void prv_factory_reset_non_pfs_data() {
 }
 
 void factory_reset_set_reason_and_reset(void) {
-  RebootReason reason = { RebootReasonCode_FactoryResetReset, 0 };
+  RebootReason reason = {RebootReasonCode_FactoryResetReset, 0};
   reboot_reason_set(&reason);
   system_reset();
 }
@@ -106,8 +106,8 @@ void close_db_files() {
 void factory_reset_fast(void *unused) {
   s_in_factory_reset = true;
 
-  // disable the watchdog... we've got lots to do before we reset
-  task_watchdog_mask_clear(pebble_task_get_current());
+  // Lots of flash work follows before the reset.
+  pbl_task_wdt_suspend(0);
 
   close_db_files();
 
@@ -119,7 +119,7 @@ void factory_reset_fast(void *unused) {
 }
 #endif // !defined(CONFIG_RECOVERY_FW)
 
-//! Used by the mfg flow to kick us out the MFG firmware and into the conumer PRF that's stored
+//! Used by the mfg flow to kick us out the MFG firmware and into the consumer PRF that's stored
 //! on the external flash.
 void command_enter_consumer_mode(void) {
   boot_bit_set(BOOT_BIT_FORCE_PRF);

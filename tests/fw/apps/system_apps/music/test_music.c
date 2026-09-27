@@ -46,7 +46,7 @@
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_vibe_score.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
@@ -99,11 +99,14 @@ bool music_skip_seeks_within_track(void) {
   return false;
 }
 
-void music_command_send(MusicCommand command) {}
+void music_command_send(MusicCommand command) {
+}
 
-void music_request_reduced_latency(bool reduced_latency) {}
+void music_request_reduced_latency(bool reduced_latency) {
+}
 
-void music_request_low_latency_for_period(uint32_t period_ms) {}
+void music_request_low_latency_for_period(uint32_t period_ms) {
+}
 
 bool music_has_now_playing(void) {
   return s_music_title[0] != '\0' || s_music_artist[0] != '\0';
@@ -185,15 +188,20 @@ bool shell_prefs_get_music_show_album_art(void) {
 // Misc stubs
 /////////////////////
 
-void app_event_loop(void) {}
+void app_event_loop(void) {
+}
 
-void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {}
+void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
+}
 
-void tick_timer_service_unsubscribe(void) {}
+void tick_timer_service_unsubscribe(void) {
+}
 
-void accel_tap_service_subscribe(AccelTapHandler handler) {}
+void accel_tap_service_subscribe(AccelTapHandler handler) {
+}
 
-void accel_tap_service_unsubscribe(void) {}
+void accel_tap_service_unsubscribe(void) {
+}
 
 VibeScore *vibe_score_create_with_resource(uint32_t resource_id) {
   return NULL;
@@ -205,7 +213,8 @@ PropertyAnimation *property_animation_create_bounds_origin(struct Layer *layer, 
 }
 
 void property_animation_update_grect(PropertyAnimation *property_animation,
-                                     const uint32_t distance_normalized) {}
+                                     const uint32_t distance_normalized) {
+}
 
 bool scroll_layer_is_instance(const Layer *layer) {
   return false;
@@ -280,7 +289,7 @@ void test_music__initialize(void) {
   s_prefs_music_show_progress_bar = true;
   s_prefs_music_show_album_art = false;
 
-  framebuffer_init(&s_fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
   framebuffer_clear(&s_fb);
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_app_state_get_graphics_context = &s_ctx;
@@ -352,8 +361,7 @@ void test_music__playing(void) {
 }
 
 void test_music__playing_long_text(void) {
-  prv_set_now_playing("It Could Be The First Day Of Springtime",
-                      "Godspeed You! Black Emperor");
+  prv_set_now_playing("It Could Be The First Day Of Springtime", "Godspeed You! Black Emperor");
   s_music_play_state = MusicPlayStatePlaying;
   s_music_track_pos_ms = 754 * 1000;
   s_music_track_length_ms = 3945 * 1000;
@@ -428,6 +436,90 @@ void test_music__album_art_not_requested_when_pref_off(void) {
   cl_assert_equal_i(s_imaging_request_count, 0);
 }
 
+void test_music__album_art_failure_retries_are_bounded_per_generation(void) {
+#if MUSIC_ALBUM_ART_SUPPORTED
+  prv_set_now_playing("Track One", "Artist");
+  s_music_now_playing_generation = 1;
+  s_imaging_supported = true;
+  s_prefs_music_show_album_art = true;
+  prv_launch_app_and_render();
+  cl_assert_equal_i(s_imaging_request_count, 1);
+
+  PebbleEvent event = {
+    .type = PEBBLE_MEDIA_EVENT,
+    .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
+  };
+  prv_music_event_handler(&event, NULL);
+  prv_album_art_retry_timer(app_state_get_user_data());
+  cl_assert_equal_i(s_imaging_request_count, 2);
+  prv_music_event_handler(&event, NULL);
+  prv_album_art_retry_timer(app_state_get_user_data());
+  cl_assert_equal_i(s_imaging_request_count, 3);
+  prv_music_event_handler(&event, NULL);
+  prv_album_art_retry_timer(app_state_get_user_data());
+  cl_assert_equal_i(s_imaging_request_count, 3);
+
+  prv_set_now_playing("Track Two", "Artist");
+  s_music_now_playing_generation = 2;
+  event.media.type = PebbleMediaEventTypeNowPlayingChanged;
+  prv_music_event_handler(&event, NULL);
+  prv_album_art_request_timer(app_state_get_user_data());
+  cl_assert_equal_i(s_imaging_request_count, 4);
+
+  s_album_art_current = true;
+  event.media.type = PebbleMediaEventTypeAlbumArtUpdated;
+  prv_music_event_handler(&event, NULL);
+  prv_album_art_retry_timer(app_state_get_user_data());
+  cl_assert_equal_i(s_imaging_request_count, 4);
+#endif
+}
+
+void test_music__album_art_requests_coalesce_now_playing_updates(void) {
+#if MUSIC_ALBUM_ART_SUPPORTED
+  prv_set_now_playing("Track One", "Artist");
+  s_music_now_playing_generation = 1;
+  s_imaging_supported = true;
+  s_prefs_music_show_album_art = true;
+  prv_launch_app_and_render();
+  cl_assert_equal_i(s_imaging_request_count, 1);
+
+  PebbleEvent event = {
+    .type = PEBBLE_MEDIA_EVENT,
+    .media = {.type = PebbleMediaEventTypeNowPlayingChanged},
+  };
+  prv_set_now_playing("Track Two", "Artist");
+  s_music_now_playing_generation = 2;
+  prv_music_event_handler(&event, NULL);
+  prv_set_now_playing("Track Two", "New Artist");
+  s_music_now_playing_generation = 3;
+  prv_music_event_handler(&event, NULL);
+  cl_assert_equal_i(s_imaging_request_count, 1);
+
+  prv_album_art_request_timer(app_state_get_user_data());
+  cl_assert_equal_i(s_imaging_request_count, 2);
+  cl_assert_equal_i(s_imaging_request_token, 3);
+#endif
+}
+
+void test_music__album_art_success_does_not_duplicate_request(void) {
+#if MUSIC_ALBUM_ART_SUPPORTED
+  prv_set_now_playing("Track One", "Artist");
+  s_music_now_playing_generation = 1;
+  s_imaging_supported = true;
+  s_prefs_music_show_album_art = true;
+  prv_launch_app_and_render();
+  cl_assert_equal_i(s_imaging_request_count, 1);
+
+  s_album_art_current = true;
+  PebbleEvent event = {
+    .type = PEBBLE_MEDIA_EVENT,
+    .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
+  };
+  prv_music_event_handler(&event, NULL);
+  cl_assert_equal_i(s_imaging_request_count, 1);
+#endif
+}
+
 void test_music__playing_album_art(void) {
 #if MUSIC_ALBUM_ART_SUPPORTED
   prv_set_now_playing("Crumbling Castle", "King Gizzard & The Lizard Wizard");
@@ -464,13 +556,13 @@ void test_music__album_art_shown_when_received(void) {
   prv_receive_album_art();
   PebbleEvent event = {
     .type = PEBBLE_MEDIA_EVENT,
-    .media = { .type = PebbleMediaEventTypeAlbumArtUpdated },
+    .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
   };
   prv_music_event_handler(&event, NULL);
 
   prv_render();
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap,
-                          TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
+  cl_check(
+      gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_NAMED_PBI_FILE("test_music__playing_album_art")));
 #endif
 }
 

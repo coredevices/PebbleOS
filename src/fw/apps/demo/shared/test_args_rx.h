@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* test_args_receiver_get_app_info();
+const PebbleProcessMd *test_args_receiver_get_app_info();

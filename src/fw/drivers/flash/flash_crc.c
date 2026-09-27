@@ -47,8 +47,7 @@ uint32_t flash_crc32(uint32_t flash_addr, uint32_t num_bytes) {
   return crc;
 }
 
-uint32_t flash_calculate_legacy_defective_checksum(uint32_t flash_addr,
-                                                   uint32_t num_bytes) {
+uint32_t flash_calculate_legacy_defective_checksum(uint32_t flash_addr, uint32_t num_bytes) {
   void *buffer;
   unsigned int chunk_size = prv_allocate_crc_buffer(&buffer);
 

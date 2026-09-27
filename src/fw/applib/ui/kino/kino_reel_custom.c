@@ -103,7 +103,7 @@ GBitmap *prv_get_gbitmap(KinoReel *reel) {
   return NULL;
 }
 
-GBitmapSequence* prv_get_gbitmap_sequence(KinoReel *reel) {
+GBitmapSequence *prv_get_gbitmap_sequence(KinoReel *reel) {
   KinoReelImplCustom *custom_reel = (KinoReelImplCustom *)reel;
   if (custom_reel->impl->get_gbitmap_sequence) {
     return custom_reel->impl->get_gbitmap_sequence(reel);

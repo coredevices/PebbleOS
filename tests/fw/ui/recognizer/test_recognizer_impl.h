@@ -7,9 +7,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
-#define NEW_RECOGNIZER(r) \
-  Recognizer *r __attribute__ ((__cleanup__(test_recognizer_destroy)))
+#define NEW_RECOGNIZER(r) Recognizer *r PBL_CLEANUP(test_recognizer_destroy)
 
 typedef struct TestImplData {
   int test;

@@ -8,18 +8,19 @@
 #ifndef _NIMBLE_NPL_OS_H_
 #define _NIMBLE_NPL_OS_H_
 
+#include "pbl/kernel/irq.h"
+#include "pbl/kernel/sched.h"
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
-#include "FreeRTOS.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/os/mutex.h"
-#include "queue.h"
-#include "semphr.h"
+#include "pbl/kernel/mutex.h"
+#include "pbl/drivers/rtc.h"
+#include "pbl/kernel/msgq.h"
+#include "pbl/kernel/thread.h"
+#include "pbl/kernel/sem.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "task.h"
-#include "timers.h"
 
 #include "os/os_cputime.h"
 
@@ -30,7 +31,7 @@
 
 #define BLE_NPL_OS_ALIGNMENT 4
 
-#define BLE_NPL_TIME_FOREVER portMAX_DELAY
+#define BLE_NPL_TIME_FOREVER PBL_TICK_FOREVER
 
 typedef uint32_t ble_npl_time_t;
 typedef int32_t ble_npl_stime_t;
@@ -41,8 +42,11 @@ struct ble_npl_event {
   void *arg;
 };
 
+#define BLE_NPL_EVENTQ_DEPTH 32
+
 struct ble_npl_eventq {
-  QueueHandle_t q;
+  struct pbl_msgq q;
+  struct ble_npl_event *buf[BLE_NPL_EVENTQ_DEPTH];
 };
 
 struct ble_npl_callout {
@@ -67,23 +71,25 @@ struct ble_npl_callout {
 };
 
 struct ble_npl_mutex {
-  PebbleRecursiveMutex *handle;
+  struct pbl_mutex handle;
 };
 
 struct ble_npl_sem {
-  SemaphoreHandle_t handle;
+  struct pbl_sem handle;
 };
 
 #include "npl_pebble.h"
 
 static inline bool ble_npl_os_started(void) {
-  return xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED;
+  return pbl_kernel_is_started();
 }
 
-static inline void *ble_npl_get_current_task_id(void) { return xTaskGetCurrentTaskHandle(); }
+static inline void *ble_npl_get_current_task_id(void) {
+  return pbl_thread_current();
+}
 
 static inline void ble_npl_eventq_init(struct ble_npl_eventq *evq) {
-  evq->q = xQueueCreate(32, sizeof(struct ble_npl_eventq *));
+  pbl_msgq_init(&evq->q, evq->buf, sizeof(struct ble_npl_event *), BLE_NPL_EVENTQ_DEPTH);
 }
 
 static inline struct ble_npl_event *ble_npl_eventq_get(struct ble_npl_eventq *evq,
@@ -99,10 +105,12 @@ static inline void ble_npl_eventq_remove(struct ble_npl_eventq *evq, struct ble_
   npl_pebble_eventq_remove(evq, ev);
 }
 
-static inline void ble_npl_event_run(struct ble_npl_event *ev) { ev->fn(ev); }
+static inline void ble_npl_event_run(struct ble_npl_event *ev) {
+  ev->fn(ev);
+}
 
 static inline bool ble_npl_eventq_is_empty(struct ble_npl_eventq *evq) {
-  return xQueueIsQueueEmptyFromISR(evq->q);
+  return pbl_msgq_num_used(&evq->q) == 0;
 }
 
 static inline void ble_npl_event_init(struct ble_npl_event *ev, ble_npl_event_fn *fn, void *arg) {
@@ -111,11 +119,17 @@ static inline void ble_npl_event_init(struct ble_npl_event *ev, ble_npl_event_fn
   ev->arg = arg;
 }
 
-static inline bool ble_npl_event_is_queued(struct ble_npl_event *ev) { return ev->queued; }
+static inline bool ble_npl_event_is_queued(struct ble_npl_event *ev) {
+  return ev->queued;
+}
 
-static inline void *ble_npl_event_get_arg(struct ble_npl_event *ev) { return ev->arg; }
+static inline void *ble_npl_event_get_arg(struct ble_npl_event *ev) {
+  return ev->arg;
+}
 
-static inline void ble_npl_event_set_arg(struct ble_npl_event *ev, void *arg) { ev->arg = arg; }
+static inline void ble_npl_event_set_arg(struct ble_npl_event *ev, void *arg) {
+  ev->arg = arg;
+}
 
 static inline ble_npl_error_t ble_npl_mutex_init(struct ble_npl_mutex *mu) {
   return npl_pebble_mutex_init(mu);
@@ -142,7 +156,7 @@ static inline ble_npl_error_t ble_npl_sem_release(struct ble_npl_sem *sem) {
 }
 
 static inline uint16_t ble_npl_sem_get_count(struct ble_npl_sem *sem) {
-  return uxSemaphoreGetCount(sem->handle);
+  return pbl_sem_count(&sem->handle);
 }
 
 static inline void ble_npl_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq,
@@ -155,7 +169,9 @@ static inline ble_npl_error_t ble_npl_callout_reset(struct ble_npl_callout *co,
   return npl_pebble_callout_reset(co, ticks);
 }
 
-static inline void ble_npl_callout_stop(struct ble_npl_callout *co) { npl_pebble_callout_stop(co); }
+static inline void ble_npl_callout_stop(struct ble_npl_callout *co) {
+  npl_pebble_callout_stop(co);
+}
 
 static inline bool ble_npl_callout_is_active(struct ble_npl_callout *co) {
   return npl_pebble_callout_is_active(co);
@@ -199,25 +215,33 @@ static inline ble_npl_error_t ble_npl_time_ticks_to_ms(ble_npl_time_t ticks, uin
   return npl_pebble_time_ticks_to_ms(ticks, out_ms);
 }
 
-static inline ble_npl_time_t ble_npl_time_ms_to_ticks32(uint32_t ms) { return ms; }
+static inline ble_npl_time_t ble_npl_time_ms_to_ticks32(uint32_t ms) {
+  return ms;
+}
 
-static inline uint32_t ble_npl_time_ticks_to_ms32(ble_npl_time_t ticks) { return ticks; }
+static inline uint32_t ble_npl_time_ticks_to_ms32(ble_npl_time_t ticks) {
+  return ticks;
+}
 
-static inline void ble_npl_time_delay(ble_npl_time_t ticks) { vTaskDelay(ticks); }
+static inline void ble_npl_time_delay(ble_npl_time_t ticks) {
+  pbl_thread_sleep(PBL_TICKS(ticks));
+}
 
 #if NIMBLE_CFG_CONTROLLER
 void ble_npl_hw_set_isr(int irqn, void (*addr)(void));
 #endif
 
 static inline uint32_t ble_npl_hw_enter_critical(void) {
-  vPortEnterCritical();
+  pbl_irq_lock();
   return 0;
 }
 
-static inline void ble_npl_hw_exit_critical(uint32_t ctx) { vPortExitCritical(); }
+static inline void ble_npl_hw_exit_critical(uint32_t ctx) {
+  pbl_irq_unlock();
+}
 
 static inline bool ble_npl_hw_is_in_critical(void) {
-  return vPortInCritical();
+  return pbl_irq_is_locked();
 }
 #define realloc kernel_realloc
 

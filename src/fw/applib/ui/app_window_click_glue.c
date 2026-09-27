@@ -6,15 +6,12 @@
 #include "process_state/app_state/app_state.h"
 #include "applib/ui/click_internal.h"
 #include "applib/ui/window.h"
-#include "applib/ui/window_stack_private.h"
-#include "system/passert.h"
-#include "pbl/util/size.h"
 
 ////////////////////////////////////////////////
 // App + Click Recognizer + Window : Glue code
 //
-// [MT] This is a bit ugly, because I decided to to save memory and have all windows in an app share an array of
-// click recognizers (which lives in AppContext) instead of each window having its own.
+// [MT] This is a bit ugly, because I decided to to save memory and have all windows in an app share
+// an array of click recognizers (which lives in AppContext) instead of each window having its own.
 // See the comment near AppContext.click_recognizer.
 
 void app_click_config_setup_with_window(ClickManager *click_manager, struct Window *window) {
@@ -35,4 +32,3 @@ void app_click_config_setup_with_window(ClickManager *click_manager, struct Wind
     window_call_click_config_provider(window, context);
   }
 }
-

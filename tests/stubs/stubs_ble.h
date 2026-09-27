@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#pragma once 
+#pragma once
 
 #include "stubs_bluetooth_pairing_ui.h"
 #include "stubs_events.h"
 #include "stubs_hexdump.h"
-#include "stubs_queue.h"
 
 #include <inttypes.h>
 #include <stdbool.h>

@@ -8,8 +8,7 @@
 #include <stdint.h>
 
 //! Start or restart the PULSEv2 reliable transport retransmit timer.
-void pulse2_reliable_retransmit_timer_start(
-    unsigned int timeout_ms, uint8_t sequence_number);
+void pulse2_reliable_retransmit_timer_start(unsigned int timeout_ms, uint8_t sequence_number);
 
 //! Cancel a running retransmit timer if it has not already expired.
 //!

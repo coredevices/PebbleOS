@@ -13,10 +13,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "pbl/util/testing.h"
 
 // -----------------------------------------------------------------------------------------
 // Convert HRMQuality to the internal protobuf representation.
-T_STATIC uint32_t prv_hr_quality_int(HRMQuality quality) {
+PBL_T_STATIC uint32_t prv_hr_quality_int(HRMQuality quality) {
   switch (quality) {
     case HRMQuality_OffWrist:
       return pebble_pipeline_MeasurementSet_HeartRateQuality_OffWrist;
@@ -31,7 +32,7 @@ T_STATIC uint32_t prv_hr_quality_int(HRMQuality quality) {
     case HRMQuality_Excellent:
       return pebble_pipeline_MeasurementSet_HeartRateQuality_Excellent;
   }
-  WTF;    // Should never get here
+  WTF; // Should never get here
   return 0;
 }
 

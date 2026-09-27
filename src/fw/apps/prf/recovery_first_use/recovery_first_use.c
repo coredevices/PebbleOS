@@ -10,17 +10,11 @@
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/gap_le_device_name.h"
 #include "comm/ble/gap_le_connect.h"
-#include <pbl/drivers/backlight.h>
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_manager.h"
 
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-
-#include <pbl/logging/logging.h>
-#include "system/passert.h"
 
 #include "applib/app.h"
 #include "applib/event_service_client.h"
@@ -31,10 +25,7 @@
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
 #include "applib/ui/window_private.h"
-#include "applib/ui/window_stack.h"
 #include "process_state/app_state/app_state.h"
-
-#include "apps/system/settings/time.h"
 
 #include "pbl/services/bluetooth/local_id.h"
 #include "pbl/services/bluetooth/pairability.h"
@@ -47,7 +38,7 @@
 #include <stdbool.h>
 
 #define QR_URL_BUFFER_SIZE 72
-#define NAME_BUFFER_SIZE (BT_DEVICE_NAME_BUFFER_SIZE + 2)
+#define NAME_BUFFER_SIZE   (PBL_BT_DEVICE_NAME_BUFFER_SIZE + 2)
 
 typedef struct RecoveryFUAppData {
   Window launch_app_window;
@@ -135,7 +126,7 @@ static void prv_raw_up_handler(ClickRecognizerRef recognizer, void *context) {
                                                click_recognizer_get_button_id(recognizer));
 }
 
-static void prv_click_configure(void* context) {
+static void prv_click_configure(void *context) {
   window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_down_handler, prv_raw_up_handler, NULL);
   window_raw_click_subscribe(BUTTON_ID_SELECT, prv_raw_down_handler, prv_raw_up_handler, NULL);
   window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_down_handler, prv_raw_up_handler, NULL);
@@ -156,7 +147,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     // If we have connected to a device and we have a connection to the mobile app, show the device
     // name (we are required to have a connection to mobile app to get the name).
     gap_le_connection_copy_device_name(gap_conn, data->name_text_buffer,
-                                       BT_DEVICE_NAME_BUFFER_SIZE);
+                                       PBL_BT_DEVICE_NAME_BUFFER_SIZE);
   } else {
     // If we aren't connected and/or don't have a session, display the name of the device
     // so it's easier for a user to figure out what they should be trying to connect to
@@ -165,7 +156,8 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     // For debugging purposes, we are going to add -'s to the beginning and end of the name
     // if we are connected to a BLE device but don't have a session
     if (gap_le_connect_is_connected_as_slave()) {
-      memmove(&data->name_text_buffer[1], &data->name_text_buffer[0], BT_DEVICE_NAME_BUFFER_SIZE);
+      memmove(&data->name_text_buffer[1], &data->name_text_buffer[0],
+              PBL_BT_DEVICE_NAME_BUFFER_SIZE);
       data->name_text_buffer[0] = '-';
       strcat(data->name_text_buffer, "-");
     }
@@ -173,8 +165,8 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
   text_layer_set_text(&data->name_text_layer, data->name_text_buffer);
 }
 
-static void prv_window_load(Window* window) {
-  struct RecoveryFUAppData *data = (struct RecoveryFUAppData*) window_get_user_data(window);
+static void prv_window_load(Window *window) {
+  struct RecoveryFUAppData *data = (struct RecoveryFUAppData *)window_get_user_data(window);
 
   char serial_number[MFG_SERIAL_NUMBER_SIZE + 1];
   char model_name[MFG_INFO_MODEL_STRING_LENGTH];
@@ -184,19 +176,17 @@ static void prv_window_load(Window* window) {
 
   snprintf(data->qr_url_buffer, QR_URL_BUFFER_SIZE, s_qr_url_fmt, serial_number, model_name);
 
-  QRCode* qr_code = &data->qr_code;
-  qr_code_init_with_parameters(qr_code,
+  QRCode *qr_code = &data->qr_code;
+  qr_code_init_with_parameters(
+      qr_code,
 #if PBL_ROUND
 #define QR_CODE_SIZE ((window->layer.bounds.size.w * 10) / 14)
-                               &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
-                                      (window->layer.bounds.size.h - QR_CODE_SIZE) / 2,
-                                      QR_CODE_SIZE, QR_CODE_SIZE),
+      &GRect((window->layer.bounds.size.w - QR_CODE_SIZE) / 2,
+             (window->layer.bounds.size.h - QR_CODE_SIZE) / 2, QR_CODE_SIZE, QR_CODE_SIZE),
 #else
-                               &GRect(10, 10, window->layer.bounds.size.w - 20,
-                                      window->layer.bounds.size.h - 30),
+      &GRect(10, 10, window->layer.bounds.size.w - 20, window->layer.bounds.size.h - 30),
 #endif
-                               data->qr_url_buffer, strlen(data->qr_url_buffer), QRCodeECCMedium,
-                               GColorBlack, GColorWhite);
+      data->qr_url_buffer, strlen(data->qr_url_buffer), QRCodeECCMedium, GColorBlack, GColorWhite);
   layer_add_child(&window->layer, &qr_code->layer);
 
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
@@ -205,33 +195,32 @@ static void prv_window_load(Window* window) {
   const uint16_t name_height = 20;
 #endif
 
-  TextLayer* name_text_layer = &data->name_text_layer;
-  text_layer_init_with_parameters(name_text_layer,
-                                  &GRect(0, window->layer.bounds.size.h -
-                                         PBL_IF_RECT_ELSE(name_height, name_height + 10),
-                                         window->layer.bounds.size.w, name_height),
-                                  NULL,
+  TextLayer *name_text_layer = &data->name_text_layer;
+  text_layer_init_with_parameters(
+      name_text_layer,
+      &GRect(0, window->layer.bounds.size.h - PBL_IF_RECT_ELSE(name_height, name_height + 10),
+             window->layer.bounds.size.w, name_height),
+      NULL,
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-                                  fonts_get_system_font(FONT_KEY_GOTHIC_24),
+      fonts_get_system_font(FONT_KEY_GOTHIC_24),
 #else
-                                  fonts_get_system_font(FONT_KEY_GOTHIC_14),
+      fonts_get_system_font(FONT_KEY_GOTHIC_14),
 #endif
-                                  GColorBlack, GColorWhite, GTextAlignmentCenter,
-                                  GTextOverflowModeTrailingEllipsis);
+      GColorBlack, GColorWhite, GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->layer, &name_text_layer->layer);
   data->is_showing_version = false;
 
   prv_update_name_text(data);
 }
 
-static void prv_push_window(struct RecoveryFUAppData* data) {
-  Window* window = &data->launch_app_window;
+static void prv_push_window(struct RecoveryFUAppData *data) {
+  Window *window = &data->launch_app_window;
 
   window_init(window, WINDOW_NAME("First Use / Recovery"));
   window_set_user_data(window, data);
   window_set_window_handlers(window, &(WindowHandlers){
-    .load = prv_window_load,
-  });
+                                       .load = prv_window_load,
+                                     });
   window_set_click_config_provider_with_context(window, prv_click_configure, window);
 
   window_set_fullscreen(window, true);
@@ -244,7 +233,7 @@ static void prv_push_window(struct RecoveryFUAppData* data) {
 ////////////////////
 // App Event Handler + Loop
 
-static void prv_allow_pairing(RecoveryFUAppData* data, bool allow) {
+static void prv_allow_pairing(RecoveryFUAppData *data, bool allow) {
   if (data->is_pairing_allowed == allow) {
     return;
   }
@@ -309,25 +298,25 @@ static void handle_init(void) {
   data->is_pebble_mobile_app_connected = is_connected;
   prv_allow_pairing(data, !is_connected);
 
-  data->pebble_mobile_app_event_info = (EventServiceInfo) {
+  data->pebble_mobile_app_event_info = (EventServiceInfo){
     .type = PEBBLE_COMM_SESSION_EVENT,
     .handler = prv_pebble_mobile_app_event_handler,
   };
   event_service_client_subscribe(&data->pebble_mobile_app_event_info);
 
-  data->pebble_gather_logs_event_info = (EventServiceInfo) {
+  data->pebble_gather_logs_event_info = (EventServiceInfo){
     .type = PEBBLE_GATHER_DEBUG_INFO_EVENT,
     .handler = prv_gather_debug_info_event_handler,
   };
   event_service_client_subscribe(&data->pebble_gather_logs_event_info);
 
-  data->bt_connection_event_info = (EventServiceInfo) {
-    .type = PEBBLE_BT_CONNECTION_EVENT,
+  data->bt_connection_event_info = (EventServiceInfo){
+    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
     .handler = prv_bt_event_handler,
   };
   event_service_client_subscribe(&data->bt_connection_event_info);
 
-  data->ble_device_name_updated_event_info = (EventServiceInfo) {
+  data->ble_device_name_updated_event_info = (EventServiceInfo){
     .type = PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT,
     .handler = prv_bt_event_handler,
   };
@@ -366,19 +355,19 @@ static void prv_main(void) {
   handle_deinit();
 }
 
-const PebbleProcessMd* recovery_first_use_app_get_app_info(void) {
+const PebbleProcessMd *recovery_first_use_app_get_app_info(void) {
   static const PebbleProcessMdSystem s_recovery_first_use_app = {
-    .common = {
-      .main_func = prv_main,
-      .visibility = ProcessVisibilityHidden,
-      // UUID: 85b80081-d78f-41aa-96fa-a821c79f3f0f
-      .uuid = {
-        0x85, 0xb8, 0x00, 0x81, 0xd7, 0x8f, 0x41, 0xaa,
-        0x96, 0xfa, 0xa8, 0x21, 0xc7, 0x9f, 0x3f, 0x0f
-      },
-    },
+    .common =
+        {
+          .main_func = prv_main,
+          .visibility = ProcessVisibilityHidden,
+          // UUID: 85b80081-d78f-41aa-96fa-a821c79f3f0f
+          .uuid =
+              {0x85, 0xb8, 0x00, 0x81, 0xd7, 0x8f, 0x41, 0xaa, 0x96, 0xfa, 0xa8, 0x21, 0xc7, 0x9f,
+               0x3f, 0x0f},
+        },
     .name = "Getting Started",
     .run_level = ProcessAppRunLevelSystem,
   };
-  return (const PebbleProcessMd*) &s_recovery_first_use_app;
+  return (const PebbleProcessMd *)&s_recovery_first_use_app;
 }

@@ -7,10 +7,8 @@
 
 // TODO: PBL-28902 Timeline card layouts integration tests
 
-#include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/gpath.h"
-#include "applib/graphics/text.h"
 #include "applib/ui/status_bar_layer.h"
 #include "applib/ui/kino/kino_layer.h"
 #include "apps/system/timeline/text_node.h"
@@ -19,29 +17,21 @@
 #include "pbl/services/timeline/timeline_resources.h"
 
 #define TIMELINE_MAX_BOX_HEIGHT 2500
-#define TIMELINE_TOP_MARGIN 10
+#define TIMELINE_TOP_MARGIN     10
 
-#define TIMELINE_CARD_ARROW_HEIGHT 13
-#define TIMELINE_CARD_MARGIN PBL_IF_RECT_ELSE(7, 12)
+#define TIMELINE_CARD_ARROW_HEIGHT  13
+#define TIMELINE_CARD_MARGIN        PBL_IF_RECT_ELSE(7, 12)
 #define TIMELINE_CARD_TRANSITION_MS (interpolate_moook_duration())
-#define TIMELINE_CARD_BODY_HEADER_MARGIN_HEIGHT                    \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ -2,                                              \
-      /* medium */ -2,                                             \
-      /* large */ 2,                                               \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* extralarge */ 2                                           \
-    )
-#define TIMELINE_CARD_BODY_MARGIN_HEIGHT                           \
-    PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,     \
-      /* This is the same as Medium until Small is designed */     \
-      /* small */ 17,                                              \
-      /* medium */ 17,                                             \
-      /* large */ 15,                                              \
-      /* This is the same as Large until ExtraLarge is designed */ \
-      /* extralarge */ 15                                          \
-    )
+#define TIMELINE_CARD_BODY_HEADER_MARGIN_HEIGHT                                                 \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                                \
+      PreferredContentSizeDefault,     /* This is the same as Medium until Small is designed */ \
+      /* small */ -2, /* medium */ -2, /* large */                                              \
+      2, /* This is the same as Large until ExtraLarge is designed */ /* extralarge */ 2)
+#define TIMELINE_CARD_BODY_MARGIN_HEIGHT                                                        \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                                \
+      PreferredContentSizeDefault,     /* This is the same as Medium until Small is designed */ \
+      /* small */ 17, /* medium */ 17, /* large */                                              \
+      15, /* This is the same as Large until ExtraLarge is designed */ /* extralarge */ 15)
 
 typedef struct TimelineLayout TimelineLayout;
 
@@ -52,7 +42,7 @@ typedef GTextNode *(*TimelineLayoutViewConstructor)(TimelineLayout *layout);
 typedef void (*TimelineLayoutViewDeinitializer)(TimelineLayout *layout);
 
 typedef enum {
-  TimelineScrollDirectionUp, //!< Timeline Past
+  TimelineScrollDirectionUp,   //!< Timeline Past
   TimelineScrollDirectionDown, //!< Timeline Future
 } TimelineScrollDirection;
 
@@ -92,7 +82,7 @@ struct TimelineLayout {
   GSize view_size;
 
   struct TimelineLayout *transition_layout; //!< The layout this is transitioning to
-  Animation *transition_animation; //!< Transition animation for unscheduling
+  Animation *transition_animation;          //!< Transition animation for unscheduling
 
   KinoLayer **metric_icon_layers;
   unsigned int num_metric_icon_layers;
@@ -116,9 +106,10 @@ struct TimelineLayoutImpl {
   TimelineLayoutViewDeinitializer card_view_deinitializer;
 };
 
-TimelineResourceId timeline_layout_get_icon_resource_id(
-    LayoutLayerMode mode, const AttributeList *attributes, TimelineResourceSize icon_size,
-    TimelineResourceId fallback_resource);
+TimelineResourceId timeline_layout_get_icon_resource_id(LayoutLayerMode mode,
+                                                        const AttributeList *attributes,
+                                                        TimelineResourceSize icon_size,
+                                                        TimelineResourceId fallback_resource);
 
 void timeline_layout_init(TimelineLayout *layout, const LayoutLayerConfig *config,
                           const TimelineLayoutImpl *timeline_layout_impl);
@@ -170,5 +161,5 @@ GTextNodeCustom *timeline_layout_create_icon_node(const TimelineLayout *layout);
 GTextNodeCustom *timeline_layout_create_page_break_node(const TimelineLayout *layout);
 
 void timeline_layout_time_text_update(const LayoutLayer *layout,
-                                      const LayoutNodeTextDynamicConfig *config,
-                                      char *buffer, bool render);
+                                      const LayoutNodeTextDynamicConfig *config, char *buffer,
+                                      bool render);

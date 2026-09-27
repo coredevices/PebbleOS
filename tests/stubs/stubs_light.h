@@ -3,8 +3,11 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-void WEAK light_enable_interaction(void) {}
-void WEAK light_system_color_request(void) {}
-void WEAK light_system_color_release(void) {}
+void PBL_WEAK light_enable_interaction(void) {
+}
+void PBL_WEAK light_system_color_request(void) {
+}
+void PBL_WEAK light_system_color_release(void) {
+}

@@ -8,7 +8,7 @@
 
 // Tests
 ///////////////////////////////////////////////////////////
-void test_mktime__bithdays(void) {
+void test_mktime__birthdays(void) {
   struct tm francois_birthday = {
     .tm_sec = 0,
     .tm_min = 44,
@@ -16,7 +16,7 @@ void test_mktime__bithdays(void) {
     .tm_mday = 30,
     .tm_mon = 4,
     .tm_year = 89,
-  }; 
+  };
   cl_assert_equal_i(mktime(&francois_birthday), 612528240);
 
   struct tm rons_birthday = {
@@ -73,4 +73,3 @@ void test_mktime__leap(void) {
   };
   cl_assert_equal_i(mktime(&real_leap), 1330509600);
 }
-

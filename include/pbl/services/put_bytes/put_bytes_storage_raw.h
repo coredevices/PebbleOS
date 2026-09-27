@@ -17,8 +17,6 @@ void pb_storage_raw_write(PutBytesStorage *storage, uint32_t offset, const uint8
 
 uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType crc_type);
 
-
 void pb_storage_raw_deinit(PutBytesStorage *storage, bool is_success);
 
-
-bool pb_storage_raw_get_status(PutBytesObjectType obj_type,  PbInstallStatus *status);
+bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *status);

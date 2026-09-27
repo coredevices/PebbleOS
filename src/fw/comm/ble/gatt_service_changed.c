@@ -13,28 +13,24 @@
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 
-#include "util/net.h"
-#include "system/hexdump.h"
+#include <pbl/bluetooth/gatt.h>
 
-#include <bluetooth/gatt.h>
-#include <pbl/btutil/bt_device.h>
-
-extern BTErrno gatt_client_discovery_rediscover_all(const BTDeviceInternal *device);
-extern void gatt_client_discovery_handle_service_range_change(GAPLEConnection *connection,
-                                                              ATTHandleRange *range);
+extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
+    const struct pbl_bt_device_internal *device);
+extern void gatt_client_discovery_handle_service_range_change(
+    GAPLEConnection *connection, struct pbl_bt_att_handle_range *range);
 extern void gatt_client_discovery_discover_range(GAPLEConnection *connection,
-                                                 ATTHandleRange *hdl_range);
-
+                                                 struct pbl_bt_att_handle_range *hdl_range);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Client -- Pebble consuming the remote's "Service Changed" characteristic
 
 static void prv_rediscover_kernelbg_cb(void *data) {
   // Rediscover the world:
-  BTDeviceInternal *device = (BTDeviceInternal *) data;
-  const BTErrno e = gatt_client_discovery_rediscover_all(device);
+  struct pbl_bt_device_internal *device = (struct pbl_bt_device_internal *)data;
+  const enum pbl_bt_errno e = gatt_client_discovery_rediscover_all(device);
   kernel_free(device);
-  if (e != BTErrnoOK) {
+  if (e != PBL_BT_ERRNO_OK) {
     PBL_LOG_ERR("Service Changed couldn't restart discovery: %i", e);
   }
 }
@@ -46,19 +42,20 @@ bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *conne
   if (connection->gatt_service_changed_att_handle != att_handle) {
     return false;
   }
-  if (value_length != sizeof(ATTHandleRange)) {
+  if (value_length != sizeof(struct pbl_bt_att_handle_range)) {
     PBL_LOG_ERR("Service Changed Indication incorrect length: %u", value_length);
-      // Pretend we ate the indication. There will be no GAPLECharacteristic in the system that will
-      // match this ATT handle anyway.
+    // Pretend we ate the indication. There will be no GAPLECharacteristic in the system that will
+    // match this ATT handle anyway.
     return true;
   }
-  ATTHandleRange *range = (ATTHandleRange *) value;
+  struct pbl_bt_att_handle_range *range = (struct pbl_bt_att_handle_range *)value;
   PBL_LOG_DBG("Service Changed Indication: %x - %x", range->start, range->end);
 
   // Initiate rediscovery on KernelBG if the Server is asking us to rediscover everything
   // (See "2.5.2 Attribute Caching" in BT Core Specification)
   if ((range->start == 0x001 && range->end == 0xFFFF)) {
-    BTDeviceInternal *device = (BTDeviceInternal *) kernel_malloc_check(sizeof(BTDeviceInternal));
+    struct pbl_bt_device_internal *device =
+        (struct pbl_bt_device_internal *)kernel_malloc_check(sizeof(struct pbl_bt_device_internal));
     *device = connection->device;
     system_task_add_callback(prv_rediscover_kernelbg_cb, device);
     return true;
@@ -77,7 +74,6 @@ bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *conne
   gatt_client_discovery_discover_range(connection, range);
   return true;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server -- Pebble serving up the "Service Changed" characteristic to the remote
@@ -105,11 +101,11 @@ void gatt_service_changed_server_handle_fw_update(void) {
   s_service_changed_indications_left = GATT_SERVICE_CHANGED_INDICATION_MAX_TIMES;
 }
 
-void bt_driver_cb_gatt_service_changed_server_confirmation(
-    const GattServerChangedConfirmationEvent *event) {
-  if (event->status_code != HciStatusCode_Success) {
-    PBL_LOG_ERR("Service Changed indication confirmation failure (timed out?) %"PRIu32,
-            (uint32_t)event->status_code);
+void pbl_bt_cb_gatt_service_changed_server_confirmation(
+    const struct pbl_bt_gatt_server_changed_confirmation_event *event) {
+  if (event->status_code != PBL_BT_HCI_STATUS_SUCCESS) {
+    PBL_LOG_ERR("Service Changed indication confirmation failure (timed out?) %" PRIu32,
+                (uint32_t)event->status_code);
   }
 }
 
@@ -123,7 +119,7 @@ void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connecti
 static void prv_send_service_changed_indication(void *ctx) {
   GAPLEConnection *connection = (GAPLEConnection *)ctx;
 
-  BTDeviceInternal device;
+  struct pbl_bt_device_internal device;
   bt_lock();
   {
     // The connection may have been torn down between the timer firing and this
@@ -143,11 +139,11 @@ static void prv_send_service_changed_indication(void *ctx) {
   // Invalidate the remote's entire attribute cache so it rediscovers all of our
   // services (see "2.5.2 Attribute Caching" in the BT Core Specification). This
   // mirrors what the client side treats as a "rediscover everything" request.
-  const ATTHandleRange range = {
-      .start = 0x0001,
-      .end = 0xFFFF,
+  const struct pbl_bt_att_handle_range range = {
+    .start = 0x0001,
+    .end = 0xFFFF,
   };
-  bt_driver_gatt_send_changed_indication(&device, &range);
+  pbl_bt_gatt_send_changed_indication(&device, &range);
 }
 
 static void prv_send_indication_timer_cb(void *ctx) {
@@ -155,8 +151,8 @@ static void prv_send_indication_timer_cb(void *ctx) {
   system_task_add_callback(prv_send_service_changed_indication, connection);
 }
 
-void bt_driver_cb_gatt_service_changed_server_subscribe(
-    const GattServerSubscribeEvent *event) {
+void pbl_bt_cb_gatt_service_changed_server_subscribe(
+    const struct pbl_bt_gatt_server_subscribe_event *event) {
   // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
   // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
   // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
@@ -202,24 +198,24 @@ void bt_driver_cb_gatt_service_changed_server_subscribe(
   }
 unlock:
   bt_unlock();
-  
+
   // Clean up timer if we didn't use it
   if (timer != TIMER_INVALID_ID) {
     new_timer_delete(timer);
   }
 }
 
-void bt_driver_cb_gatt_service_changed_server_read_subscription(
-    const GattServerReadSubscriptionEvent *event) {
+void pbl_bt_cb_gatt_service_changed_server_read_subscription(
+    const struct pbl_bt_gatt_server_read_subscription_event *event) {
   bt_lock();
   {
-    bt_driver_gatt_respond_read_subscription(event->transaction_id, 0 /* not subscribed */);
+    pbl_bt_gatt_respond_read_subscription(event->transaction_id, 0 /* not subscribed */);
   }
   bt_unlock();
 }
 
-void bt_driver_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *connection,
-                                                               uint16_t handle) {
+void pbl_bt_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *connection,
+                                                            uint16_t handle) {
   bt_lock();
   {
     connection->gatt_service_changed_att_handle = handle;
@@ -238,7 +234,8 @@ void command_ble_send_service_changed_indication(void) {
 void command_ble_rediscover(void) {
   // assume we only have one connection for debug
   GAPLEConnection *conn_hdl = gap_le_connection_any();
-  BTDeviceInternal *device = (BTDeviceInternal *) kernel_malloc_check(sizeof(BTDeviceInternal));
+  struct pbl_bt_device_internal *device =
+      (struct pbl_bt_device_internal *)kernel_malloc_check(sizeof(struct pbl_bt_device_internal));
   *device = conn_hdl->device;
   system_task_add_callback(prv_rediscover_kernelbg_cb, device);
 }

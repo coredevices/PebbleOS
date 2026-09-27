@@ -21,37 +21,38 @@ typedef struct {
 } FontHelper;
 
 static FontHelper s_font_helpers[] = {
-    {.key = FONT_KEY_GOTHIC_14, .handle = RESOURCE_ID_GOTHIC_14},
-    {.key = FONT_KEY_GOTHIC_14_BOLD, .handle = RESOURCE_ID_GOTHIC_14_BOLD},
-    {.key = FONT_KEY_GOTHIC_18, .handle = RESOURCE_ID_GOTHIC_18},
-    {.key = FONT_KEY_GOTHIC_18_BOLD, .handle = RESOURCE_ID_GOTHIC_18_BOLD},
-    {.key = FONT_KEY_GOTHIC_24_BOLD, .handle = RESOURCE_ID_GOTHIC_24_BOLD},
-    {.key = FONT_KEY_DROID_SERIF_28_BOLD, .handle = RESOURCE_ID_GOTHIC_28_BOLD},
-    {.key = FONT_KEY_LECO_20_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_20_BOLD_NUMBERS},
-    {.key = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM, .handle = RESOURCE_ID_LECO_26_BOLD_NUMBERS_AM_PM},
-    {.key = FONT_KEY_LECO_32_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_32_BOLD_NUMBERS},
-    {.key = FONT_KEY_LECO_36_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_36_BOLD_NUMBERS},
-    {.key = FONT_KEY_LECO_38_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_38_BOLD_NUMBERS},
-    {.key = FONT_KEY_LECO_42_NUMBERS, .handle = RESOURCE_ID_LECO_42_NUMBERS},
-    {.key = FONT_KEY_LECO_28_LIGHT_NUMBERS, .handle = RESOURCE_ID_LECO_28_LIGHT_NUMBERS},
+  {.key = FONT_KEY_GOTHIC_14, .handle = RESOURCE_ID_GOTHIC_14},
+  {.key = FONT_KEY_GOTHIC_14_BOLD, .handle = RESOURCE_ID_GOTHIC_14_BOLD},
+  {.key = FONT_KEY_GOTHIC_18, .handle = RESOURCE_ID_GOTHIC_18},
+  {.key = FONT_KEY_GOTHIC_18_BOLD, .handle = RESOURCE_ID_GOTHIC_18_BOLD},
+  {.key = FONT_KEY_GOTHIC_24_BOLD, .handle = RESOURCE_ID_GOTHIC_24_BOLD},
+  {.key = FONT_KEY_DROID_SERIF_28_BOLD, .handle = RESOURCE_ID_GOTHIC_28_BOLD},
+  {.key = FONT_KEY_LECO_20_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_20_BOLD_NUMBERS},
+  {.key = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM, .handle = RESOURCE_ID_LECO_26_BOLD_NUMBERS_AM_PM},
+  {.key = FONT_KEY_LECO_32_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_32_BOLD_NUMBERS},
+  {.key = FONT_KEY_LECO_36_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_36_BOLD_NUMBERS},
+  {.key = FONT_KEY_LECO_38_BOLD_NUMBERS, .handle = RESOURCE_ID_LECO_38_BOLD_NUMBERS},
+  {.key = FONT_KEY_LECO_42_NUMBERS, .handle = RESOURCE_ID_LECO_42_NUMBERS},
+  {.key = FONT_KEY_LECO_28_LIGHT_NUMBERS, .handle = RESOURCE_ID_LECO_28_LIGHT_NUMBERS},
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-    {.key = FONT_KEY_LECO_60_NUMBERS_AM_PM, .handle = RESOURCE_ID_LECO_60_NUMBERS_AM_PM},
+  {.key = FONT_KEY_LECO_60_NUMBERS_AM_PM, .handle = RESOURCE_ID_LECO_60_NUMBERS_AM_PM},
 #endif
-    {.key = FONT_KEY_GOTHIC_14_EMOJI, .handle = RESOURCE_ID_GOTHIC_14_EMOJI},
-    {.key = FONT_KEY_GOTHIC_18_EMOJI, .handle = RESOURCE_ID_GOTHIC_18_EMOJI},
-    {.key = FONT_KEY_GOTHIC_24, .handle = RESOURCE_ID_GOTHIC_24},
-    {.key = FONT_KEY_GOTHIC_24_EMOJI, .handle = RESOURCE_ID_GOTHIC_24_EMOJI},
-    {.key = FONT_KEY_GOTHIC_28, .handle = RESOURCE_ID_GOTHIC_28},
-    {.key = FONT_KEY_GOTHIC_28_EMOJI, .handle = RESOURCE_ID_GOTHIC_28_EMOJI},
-    {.key = FONT_KEY_GOTHIC_28_BOLD, .handle = RESOURCE_ID_GOTHIC_28_BOLD},
-    {.key = FONT_KEY_GOTHIC_36, .handle = RESOURCE_ID_GOTHIC_36},
-    {.key = FONT_KEY_GOTHIC_36_BOLD, .handle = RESOURCE_ID_GOTHIC_36_BOLD},
+  {.key = FONT_KEY_GOTHIC_14_EMOJI, .handle = RESOURCE_ID_GOTHIC_14_EMOJI},
+  {.key = FONT_KEY_GOTHIC_18_EMOJI, .handle = RESOURCE_ID_GOTHIC_18_EMOJI},
+  {.key = FONT_KEY_GOTHIC_24, .handle = RESOURCE_ID_GOTHIC_24},
+  {.key = FONT_KEY_GOTHIC_24_EMOJI, .handle = RESOURCE_ID_GOTHIC_24_EMOJI},
+  {.key = FONT_KEY_GOTHIC_28, .handle = RESOURCE_ID_GOTHIC_28},
+  {.key = FONT_KEY_GOTHIC_28_EMOJI, .handle = RESOURCE_ID_GOTHIC_28_EMOJI},
+  {.key = FONT_KEY_GOTHIC_28_BOLD, .handle = RESOURCE_ID_GOTHIC_28_BOLD},
+  {.key = FONT_KEY_GOTHIC_36, .handle = RESOURCE_ID_GOTHIC_36},
+  {.key = FONT_KEY_GOTHIC_36_BOLD, .handle = RESOURCE_ID_GOTHIC_36_BOLD},
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
-    {.key = FONT_KEY_AGENCY_FB_46_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_46_NUMBERS_AM_PM },
-    {.key = FONT_KEY_AGENCY_FB_88_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_88_NUMBERS_AM_PM },
-    {.key = FONT_KEY_AGENCY_FB_88_THIN_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_88_THIN_NUMBERS_AM_PM },
+  {.key = FONT_KEY_AGENCY_FB_46_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_46_NUMBERS_AM_PM},
+  {.key = FONT_KEY_AGENCY_FB_88_NUMBERS_AM_PM, .handle = RESOURCE_ID_AGENCY_FB_88_NUMBERS_AM_PM},
+  {.key = FONT_KEY_AGENCY_FB_88_THIN_NUMBERS_AM_PM,
+   .handle = RESOURCE_ID_AGENCY_FB_88_THIN_NUMBERS_AM_PM},
 #endif
-    // add more here as we need more fonts from this module
+  // add more here as we need more fonts from this module
 };
 
 static FontHelper *prv_font_helper_from_font_key(const char *font_key) {
@@ -79,11 +80,11 @@ static const struct {
   const char *key_name;
   uint8_t min_height;
 } s_emoji_fonts[] = {
-    // Keep this sorted in descending order
-    { FONT_KEY_GOTHIC_28_EMOJI, 28 },
-    { FONT_KEY_GOTHIC_24_EMOJI, 24 },
-    { FONT_KEY_GOTHIC_18_EMOJI, 18 },
-    { FONT_KEY_GOTHIC_14_EMOJI, 14 },
+  // Keep this sorted in descending order
+  {FONT_KEY_GOTHIC_28_EMOJI, 28},
+  {FONT_KEY_GOTHIC_24_EMOJI, 24},
+  {FONT_KEY_GOTHIC_18_EMOJI, 18},
+  {FONT_KEY_GOTHIC_14_EMOJI, 14},
 };
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {

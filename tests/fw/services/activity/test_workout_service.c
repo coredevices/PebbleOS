@@ -7,6 +7,7 @@
 #include "pbl/services/activity/activity_calculators.h"
 #include "pbl/services/activity/workout_service.h"
 #include "pbl/services/hrm/hrm_manager.h"
+#include "drivers/hrm.h"
 #include "process_management/app_install_types.h"
 #include "util/time/time.h"
 #include "util/units.h"
@@ -36,8 +37,10 @@ static ActivitySession s_saved_session;
 void activity_sessions_prv_add_activity_session(ActivitySession *session) {
   s_saved_session = *session;
 }
-void activity_sessions_prv_delete_activity_session(ActivitySession *session) {}
-void activity_algorithm_enable_activity_tracking(bool enable) {}
+void activity_sessions_prv_delete_activity_session(ActivitySession *session) {
+}
+void activity_algorithm_enable_activity_tracking(bool enable) {
+}
 
 bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions) {
   return false;
@@ -104,6 +107,16 @@ bool sys_hrm_manager_unsubscribe(HRMSessionRef ref) {
 bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
                                          uint16_t expire_s) {
   s_hrm_expiration = expire_s;
+  return true;
+}
+
+void hrm_manager_set_activity_scene(HRMActivityScene scene) {
+  (void)scene;
+}
+
+bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
+  (void)session;
+  (void)features;
   return true;
 }
 
@@ -195,8 +208,8 @@ void test_workout_service__basic(void) {
   int32_t steps, duration_s, distance_m, bpm;
   HRZone hr_zone;
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 0);
   cl_assert_equal_i(duration_s, 0);
   cl_assert_equal_i(distance_m, 0);
@@ -206,8 +219,8 @@ void test_workout_service__basic(void) {
   // Get some step info
   prv_inc_time(5 * SECONDS_PER_MINUTE);
   prv_inc_steps_and_put_event(900 /* 180 steps per min * 5 mins */);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 900);
   cl_assert_equal_i(5900, s_total_step_count);
   cl_assert_equal_i(distance_m, 1201 /* 1.2km in 5 mins is reasonable */);
@@ -215,16 +228,16 @@ void test_workout_service__basic(void) {
 
   // Get some HR info
   prv_put_bpm_event(100, HRMQuality_Good);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
   cl_assert_equal_i(hr_zone, 0);
 
   // Get some more step info
   prv_inc_time(5 * SECONDS_PER_MINUTE);
   prv_inc_steps_and_put_event(900 /* 180 steps per min * 5 mins */);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 1800);
   cl_assert_equal_i(6800, s_total_step_count);
   cl_assert_equal_i(distance_m, 2402 /* 2.4km in 10 mins is reasonable */);
@@ -233,15 +246,15 @@ void test_workout_service__basic(void) {
   // Get some more HR info
   prv_inc_time(10);
   prv_put_bpm_event(180, HRMQuality_Good);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 180);
   cl_assert_equal_i(hr_zone, 3);
   cl_assert_equal_i(duration_s, 10 * SECONDS_PER_MINUTE + 10);
 
   cl_assert(workout_service_stop_workout());
-  cl_assert(!workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                      &bpm, &hr_zone));
+  cl_assert(
+      !workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
 }
 
 // ---------------------------------------------------------------------------------------
@@ -270,8 +283,8 @@ void test_workout_service__takeover_activity_session(void) {
 
   cl_assert(workout_service_takeover_activity_session(&session));
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 2000);
   cl_assert_equal_i(duration_s, 600);
   cl_assert_equal_i(distance_m, 1600);
@@ -286,14 +299,15 @@ void test_workout_service__takeover_activity_session(void) {
 
   // Grab the new distance and active_kcalories
   int32_t new_active_kcalories, new_distance_m;
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &new_distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &new_distance_m, &bpm,
+                                                     &hr_zone));
 
   // Compute our own version of active_kcalories
   const int32_t distance_delta_m = (new_distance_m - distance_m);
-  const int32_t calculated_active_kcalories
-      = ROUND(activity_private_compute_active_calories(distance_delta_m * MM_PER_METER, 600 * MS_PER_SECOND),
-              ACTIVITY_CALORIES_PER_KCAL);
+  const int32_t calculated_active_kcalories =
+      ROUND(activity_private_compute_active_calories(distance_delta_m * MM_PER_METER,
+                                                     600 * MS_PER_SECOND),
+            ACTIVITY_CALORIES_PER_KCAL);
 
   // Make sure that the new_active_kcalories has increased
   workout_service_get_active_kcalories(&new_active_kcalories);
@@ -327,8 +341,8 @@ void test_workout_service__pause_resume(void) {
   prv_inc_steps_and_put_event(10);
   prv_put_bpm_event(100, HRMQuality_Good);
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 10);
   cl_assert_equal_i(duration_s, 10);
   cl_assert_equal_i(bpm, 100);
@@ -339,8 +353,8 @@ void test_workout_service__pause_resume(void) {
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
   prv_put_bpm_event(110, HRMQuality_Good);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 10);
   cl_assert_equal_i(duration_s, 10);
   cl_assert_equal_i(bpm, 110);
@@ -349,8 +363,8 @@ void test_workout_service__pause_resume(void) {
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
   prv_put_bpm_event(190, HRMQuality_Good);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 10);
   cl_assert_equal_i(duration_s, 10);
   cl_assert_equal_i(bpm, 190);
@@ -360,16 +374,16 @@ void test_workout_service__pause_resume(void) {
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
   prv_put_bpm_event(80, HRMQuality_Good);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 20);
   cl_assert_equal_i(duration_s, 20);
   cl_assert_equal_i(bpm, 80);
 
   cl_assert(workout_service_pause_workout(true));
   cl_assert(workout_service_pause_workout(true));
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 20);
   cl_assert_equal_i(duration_s, 20);
   cl_assert_equal_i(bpm, 80);
@@ -378,8 +392,8 @@ void test_workout_service__pause_resume(void) {
   prv_inc_steps_and_put_event(10);
   prv_put_bpm_event(117, HRMQuality_Good);
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 20);
   cl_assert_equal_i(duration_s, 20);
   cl_assert_equal_i(bpm, 117);
@@ -391,8 +405,8 @@ void test_workout_service__pause_resume(void) {
   prv_inc_steps_and_put_event(10);
   prv_put_bpm_event(113, HRMQuality_Good);
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 30);
   cl_assert_equal_i(duration_s, 30);
   cl_assert_equal_i(bpm, 113);
@@ -408,22 +422,22 @@ void test_workout_service__expire_hr_reading(void) {
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   prv_put_bpm_event(100, HRMQuality_Good);
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
 
   // Time forward X seconds
   prv_inc_time(30);
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
 
   // Time forward X seconds
   prv_inc_time(30);
 
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   // HR Reading has expired. Should return 0
   cl_assert_equal_i(bpm, 0);
 
@@ -439,21 +453,21 @@ void test_workout_service__receive_offwrist_reading(void) {
 
   // Put a good quality reading. Verify it was accepted.
   prv_put_bpm_event(100, HRMQuality_Good);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
 
   // Put an OffWrist reading. Verify we received it.
   prv_put_bpm_event(50, HRMQuality_OffWrist);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 0);
   cl_assert_equal_i(hr_zone, HRZone_Zone0);
 
   // Put a good quality reading. Verify it was accepted.
   prv_put_bpm_event(100, HRMQuality_Good);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
 
   cl_assert(workout_service_stop_workout());
@@ -468,14 +482,14 @@ void test_workout_service__working_out_past_midnight(void) {
 
   // Start with only 10 steps and make sure it updates.
   prv_inc_steps_and_put_event(10);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 10);
 
   // Increment a lot so we can make sure that the wrap around of midnight works.
   prv_inc_steps_and_put_event(1000);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 1010);
 
   // Pretend we wrap around midnight. Midnight will reset the step count.
@@ -483,8 +497,8 @@ void test_workout_service__working_out_past_midnight(void) {
 
   // Put some steps and make sure we don't delete or freak out, and append the new step count.
   prv_inc_steps_and_put_event(50);
-  cl_assert(workout_service_get_current_workout_info(&steps, &duration_s, &distance_m,
-                                                     &bpm, &hr_zone));
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 1060);
 }
 

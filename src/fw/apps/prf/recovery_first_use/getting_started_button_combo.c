@@ -16,7 +16,7 @@
 
 void getting_started_button_combo_init(GettingStartedButtonComboState *state,
                                        GettingStartedButtonComboCallback select_callback) {
-  *state = (GettingStartedButtonComboState) {
+  *state = (GettingStartedButtonComboState){
     .buttons_held_bitset = 0,
     .combo_timer = new_timer_create(),
     .select_callback = select_callback
@@ -49,7 +49,7 @@ static void prv_timeout_expired(void *data) {
   PBL_LOG_INFO("Button combo timeout expired!");
 
   // Timeout expired, jump over the app thread to do the thing.
-  void (*real_callback)(void*) = data;
+  void (*real_callback)(void *) = data;
   process_manager_send_callback_event_to_process(PebbleTask_App, real_callback, NULL);
 }
 
@@ -59,12 +59,12 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
   // Map of button combos -> callback to call if we hit it.
   const struct {
     uint8_t desired_bitset;
-    void (*callback)(void*);
+    void (*callback)(void *);
   } BUTTON_COMBOS[] = {
-    { (1 << BUTTON_ID_SELECT), state->select_callback },
-    { (1 << BUTTON_ID_DOWN), prv_down_cb },
+    {(1 << BUTTON_ID_SELECT), state->select_callback},
+    {(1 << BUTTON_ID_DOWN), prv_down_cb},
 #ifdef CONFIG_RECOVERY_FW
-    { (1 << BUTTON_ID_UP) | (1 << BUTTON_ID_SELECT), prv_mfg_mode_cb },
+    {(1 << BUTTON_ID_UP) | (1 << BUTTON_ID_SELECT), prv_mfg_mode_cb},
 #endif
   };
 
@@ -86,12 +86,12 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
 
 void getting_started_button_combo_button_pressed(GettingStartedButtonComboState *state,
                                                  ButtonId button_id) {
-    bitset8_set(&state->buttons_held_bitset, button_id);
-    prv_update_state(state);
+  bitset8_set(&state->buttons_held_bitset, button_id);
+  prv_update_state(state);
 }
 
 void getting_started_button_combo_button_released(GettingStartedButtonComboState *state,
                                                   ButtonId button_id) {
-    bitset8_clear(&state->buttons_held_bitset, button_id);
-    prv_update_state(state);
+  bitset8_clear(&state->buttons_held_bitset, button_id);
+  prv_update_state(state);
 }

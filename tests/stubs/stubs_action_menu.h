@@ -63,21 +63,17 @@ void action_menu_level_set_display_mode(ActionMenuLevel *level,
   return;
 }
 
-ActionMenuItem *action_menu_level_add_action(ActionMenuLevel *level,
-                                             const char *label,
-                                             ActionMenuPerformActionCb cb,
-                                             void *action_data) {
+ActionMenuItem *action_menu_level_add_action(ActionMenuLevel *level, const char *label,
+                                             ActionMenuPerformActionCb cb, void *action_data) {
   return NULL;
 }
 
-ActionMenuItem *action_menu_level_add_child(ActionMenuLevel *level,
-                                            ActionMenuLevel *child,
+ActionMenuItem *action_menu_level_add_child(ActionMenuLevel *level, ActionMenuLevel *child,
                                             const char *label) {
   return NULL;
 }
 
-void action_menu_hierarchy_destroy(const ActionMenuLevel *root,
-                                   ActionMenuEachItemCb each_cb,
+void action_menu_hierarchy_destroy(const ActionMenuLevel *root, ActionMenuEachItemCb each_cb,
                                    void *context) {
   return;
 }

@@ -8,13 +8,12 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "resource/resource_ids.auto.h"
-#include <pbl/logging/logging.h>
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
 #include "util/net.h"
-#include "util/pack.h"
 #include "pbl/util/uuid.h"
+#include "pbl/util/testing.h"
 
 #define RESOURCE_MAX_SIZE (700)
 
@@ -26,7 +25,7 @@
 //! until we have more than 2^16 resource ids.
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
 
-T_STATIC bool prv_is_app_published_resource_valid(const AppResourceInfo *res_info) {
+PBL_T_STATIC bool prv_is_app_published_resource_valid(const AppResourceInfo *res_info) {
   // TODO: PBL-39864 Improve this code so it doesn't requiring loading/unloading a resource
   bool is_valid = true;
 
@@ -52,7 +51,7 @@ T_STATIC bool prv_is_app_published_resource_valid(const AppResourceInfo *res_inf
   return is_valid;
 }
 
-T_STATIC bool prv_validate_lut(ResAppNum res_app_num) {
+PBL_T_STATIC bool prv_validate_lut(ResAppNum res_app_num) {
   uint32_t data_signature;
   if (sys_resource_load_range(res_app_num, TLUT_RESOURCE_ID, 0, (uint8_t *)&data_signature,
                               sizeof(data_signature)) != sizeof(data_signature)) {
@@ -62,15 +61,15 @@ T_STATIC bool prv_validate_lut(ResAppNum res_app_num) {
   return (ntohl(data_signature) == TLUT_SIGNATURE);
 }
 
-T_STATIC uint32_t prv_get_app_resource_id(ResAppNum res_app_num, TimelineResourceId timeline_id,
-                                        TimelineResourceSize size) {
+PBL_T_STATIC uint32_t prv_get_app_resource_id(ResAppNum res_app_num, TimelineResourceId timeline_id,
+                                              TimelineResourceSize size) {
   // Load the entry from timeline resource lookup table
   uint32_t id;
   const uint32_t row = sizeof(TimelineLutEntry) * timeline_id;
   const uint32_t col = size * sizeof(id);
   const uint32_t offset = row + col + TLUT_DATA_OFFSET;
-  const size_t bytes_read = sys_resource_load_range(res_app_num, TLUT_RESOURCE_ID, offset,
-                                                    (uint8_t*)&id, sizeof(id));
+  const size_t bytes_read =
+      sys_resource_load_range(res_app_num, TLUT_RESOURCE_ID, offset, (uint8_t *)&id, sizeof(id));
   return (bytes_read == sizeof(id)) ? id : (uint32_t)RESOURCE_ID_INVALID;
 }
 
@@ -88,7 +87,7 @@ static bool prv_get_sys_resource(TimelineResourceId timeline_id, TimelineResourc
 
   const bool success = (res_id != RESOURCE_ID_INVALID);
   if (success && res_info) {
-    *res_info = (AppResourceInfo) {
+    *res_info = (AppResourceInfo){
       .res_app_num = SYSTEM_APP,
       .res_id = res_id,
     };
@@ -112,7 +111,7 @@ bool timeline_resources_get_id_system(TimelineResourceId timeline_id, TimelineRe
   } else if (prv_validate_lut(res_app_num)) {
     const uint32_t res_id = prv_get_app_resource_id(res_app_num, timeline_id, size);
     if (res_id != RESOURCE_ID_INVALID) {
-      const AppResourceInfo res_info = (AppResourceInfo) {
+      const AppResourceInfo res_info = (AppResourceInfo){
         .res_app_num = res_app_num,
         .res_id = res_id,
       };
@@ -151,7 +150,7 @@ void timeline_resources_get_id(const TimelineResourceInfo *timeline_res, Timelin
     }
 
     // Only try to load icon if app was built with an SDK that supports it
-    const Version first_pbw_icon_version = (Version) {
+    const Version first_pbw_icon_version = (Version){
       .major = TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR,
       .minor = TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR,
     };
@@ -187,7 +186,7 @@ DEFINE_SYSCALL(void, sys_timeline_resources_get_id, const TimelineResourceInfo *
   }
   if (!timeline_res || !res_info || (size >= TimelineResourceSizeCount)) {
     if (res_info) {
-      *res_info = (AppResourceInfo) {0};
+      *res_info = (AppResourceInfo){0};
     }
     return;
   }

@@ -27,20 +27,20 @@ static uint32_t prv_coredump_flash_base(bool unread_only) {
   CoreDumpFlashHeader flash_hdr;
   CoreDumpFlashRegionHeader region_hdr;
   uint32_t max_last_used = 0;
-  uint32_t  base_address;
+  uint32_t base_address;
   uint32_t last_used_idx = 0;
 
   // ----------------------------------------------------------------------------------
   // First, see if the flash header has been put in place
   flash_read_bytes((uint8_t *)&flash_hdr, CORE_DUMP_FLASH_START, sizeof(flash_hdr));
 
-  if (flash_hdr.magic != CORE_DUMP_FLASH_HDR_MAGIC
-        || flash_hdr.unformatted == CORE_DUMP_ALL_UNFORMATTED) {
+  if (flash_hdr.magic != CORE_DUMP_FLASH_HDR_MAGIC ||
+      flash_hdr.unformatted == CORE_DUMP_ALL_UNFORMATTED) {
     return CORE_DUMP_FLASH_INVALID_ADDR;
   }
 
   // Find the region with the highest last_used count
-  for (unsigned int i=0; i<CORE_DUMP_MAX_IMAGES; i++) {
+  for (unsigned int i = 0; i < CORE_DUMP_MAX_IMAGES; i++) {
     if (flash_hdr.unformatted & (1 << i)) {
       continue;
     }
@@ -66,7 +66,7 @@ static uint32_t prv_coredump_flash_base(bool unread_only) {
 }
 
 bool gb_storage_coredump_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
-                            GetBytesStorageInfo *info) {
+                               GetBytesStorageInfo *info) {
   storage->impl_data = kernel_zalloc_check(sizeof(GBCoredumpData));
   ((GBCoredumpData *)storage->impl_data)->only_get_new_coredump = info->only_get_new_coredump;
   return true;

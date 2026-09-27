@@ -7,7 +7,7 @@
 
 static void worker_timer_callback(void *data) {
   // Free -1 to crash the worker
-  free((void *) -1);
+  free((void *)-1);
 }
 
 static void worker_init(void) {

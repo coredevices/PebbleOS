@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CRON
+    bool "Cron"
+    help
+      Wall-clock based job scheduler that handles DST and time zone
+      changes.
+
+if CRON
+
+module = CRON
+module-str = Cron
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

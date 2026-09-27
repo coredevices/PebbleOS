@@ -6,7 +6,6 @@
 #include "gdraw_command.h"
 
 #include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -34,7 +33,7 @@ typedef struct GDrawCommandProcessor GDrawCommandProcessor;
 typedef void (*GDrawCommandProcessCommand)(GDrawCommandProcessor *processor,
                                            GDrawCommand *processed_command,
                                            size_t processed_command_max_size,
-                                           const GDrawCommandList* list,
+                                           const GDrawCommandList *list,
                                            const GDrawCommand *command);
 
 //! @internal
@@ -110,9 +109,9 @@ size_t gdraw_command_list_get_data_size(GDrawCommandList *command_list);
 //! The order is guaranteed to be the definition order of the points
 //! @param command_list \ref GDrawCommandList from which to collect points
 //! @param is_precise true to convert to GPointPrecise, otherwise points are converted to GPoint
-//! @param num_points_out Optinal pointer to uint16_t to receive the num points
+//! @param num_points_out Optional pointer to uint16_t to receive the num points
 GPoint *gdraw_command_list_collect_points(GDrawCommandList *command_list, bool is_precise,
-    uint16_t *num_points_out);
+                                          uint16_t *num_points_out);
 
 bool gdraw_command_list_copy(void *buffer, size_t buffer_length, GDrawCommandList *src);
 

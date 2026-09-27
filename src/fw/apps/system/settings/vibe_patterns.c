@@ -42,7 +42,7 @@ typedef struct SettingsVibePatternsData {
   SettingsCallbacks callbacks;
   unsigned int toggled_vibes_mask;
 #ifdef CONFIG_SPEAKER
-  char volume_subtitle[8];  // "100%" + NUL
+  char volume_subtitle[8]; // "100%" + NUL
 #endif
 } SettingsVibePatternsData;
 
@@ -52,8 +52,8 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
   app_free(data);
 }
 
-static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
-                            const Layer *cell_layer, uint16_t row, bool selected) {
+static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
+                            uint16_t row, bool selected) {
   SettingsVibePatternsData *data = (SettingsVibePatternsData *)context;
 
   const char *title = NULL;
@@ -65,16 +65,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     case VibeSettingsRow_MuteSpeaker: {
       title = i18n_noop("Mute Speaker");
       subtitle = alerts_preferences_get_speaker_muted() ? i18n_noop("On") : i18n_noop("Off");
-      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data),
-                           i18n_get(subtitle, data), NULL);
+      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
       return;
     }
     case VibeSettingsRow_SpeakerVolume: {
       title = i18n_noop("Volume");
       snprintf(data->volume_subtitle, sizeof(data->volume_subtitle), "%u%%",
                alerts_preferences_get_speaker_volume());
-      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data),
-                           data->volume_subtitle, NULL);
+      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), data->volume_subtitle, NULL);
       return;
     }
 #endif
@@ -216,7 +214,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case VibeSettingsRow_System: {
       const VibeIntensity current_system_default_vibe_intensity = vibe_intensity_get();
       const VibeIntensity next_system_default_vibe_intensity =
-        vibe_intensity_cycle_next(current_system_default_vibe_intensity);
+          vibe_intensity_cycle_next(current_system_default_vibe_intensity);
 
       // Set the next system default vibe intensity and vibe a short pulse so the user can feel it
       vibe_intensity_set(next_system_default_vibe_intensity);
@@ -265,7 +263,7 @@ static void prv_hide_cb(SettingsCallbacks *context) {
 static Window *prv_init(void) {
   SettingsVibePatternsData *data = app_zalloc_check(sizeof(SettingsVibePatternsData));
 
-  data->callbacks = (SettingsCallbacks) {
+  data->callbacks = (SettingsCallbacks){
     .deinit = prv_deinit_cb,
     .draw_row = prv_draw_row_cb,
     .selection_changed = prv_selection_changed_cb,

@@ -7,7 +7,7 @@ static void log_data(void *data) {
   DataLoggingSessionRef *session = data_logging_create(0, DATA_LOGGING_BYTE_ARRAY, 4, true);
 
   for (int i = 0; i < 32; ++i) {
-    uint32_t t = ((uint32_t) time(NULL)) + i;
+    uint32_t t = ((uint32_t)time(NULL)) + i;
     data_logging_log(session, &t, 1);
   }
 
@@ -26,4 +26,3 @@ int main(void) {
 
   app_event_loop();
 }
-

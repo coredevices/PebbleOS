@@ -8,7 +8,7 @@
 #include "applib/applib_resource_private.h"
 #include "syscall/syscall.h"
 
-#define GDRAW_COMMAND_SEQUENCE_PLAY_COUNT_INFINITE_STORED ((uint16_t) ~0)
+#define GDRAW_COMMAND_SEQUENCE_PLAY_COUNT_INFINITE_STORED ((uint16_t)~0)
 
 static GDrawCommandFrame *prv_next_frame(GDrawCommandFrame *frame) {
   // Iterate to the end of the command list (next frame starts immediately afterwards)
@@ -27,9 +27,8 @@ GDrawCommandSequence *gdraw_command_sequence_create_with_resource_system(ResAppN
     return NULL;
   }
 
-  GDrawCommandSequence *draw_command_sequence = applib_resource_mmap_or_load(app_num, resource_id,
-                                                                             PDCS_DATA_OFFSET,
-                                                                             data_size, false);
+  GDrawCommandSequence *draw_command_sequence =
+      applib_resource_mmap_or_load(app_num, resource_id, PDCS_DATA_OFFSET, data_size, false);
 
   // Validate the loaded command sequence
   if (!gdraw_command_sequence_validate(draw_command_sequence, data_size)) {
@@ -60,24 +59,22 @@ void gdraw_command_sequence_destroy(GDrawCommandSequence *sequence) {
 }
 
 bool gdraw_command_sequence_validate(GDrawCommandSequence *sequence, size_t size) {
-  if (!sequence ||
-      (size < sizeof(GDrawCommandSequence)) ||
-      (sequence->version > GDRAW_COMMAND_VERSION) ||
-      (sequence->num_frames == 0)) {
+  if (!sequence || (size < sizeof(GDrawCommandSequence)) ||
+      (sequence->version > GDRAW_COMMAND_VERSION) || (sequence->num_frames == 0)) {
     return false;
   }
 
   uint8_t *end = (uint8_t *)sequence + size;
   GDrawCommandFrame *frame = sequence->frames;
   for (uint32_t i = 0; i < sequence->num_frames; i++) {
-    if (((uint8_t *) frame >= end) ||
+    if (((uint8_t *)frame >= end) ||
         !gdraw_command_frame_validate(frame, (size_t)(end - (uint8_t *)frame))) {
       return false;
     }
     frame = prv_next_frame(frame);
   }
 
-  return (end == (uint8_t *) frame);
+  return (end == (uint8_t *)frame);
 }
 
 static uint32_t prv_get_single_play_duration(GDrawCommandSequence *sequence) {

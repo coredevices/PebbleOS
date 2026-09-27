@@ -172,7 +172,9 @@ typedef struct {
   size_t buffer_size;
   //! If the node was created with \ref graphics_text_node_create_text_dynamic, this is the buffer
   //! described by `.buffer_size`.
-  union { uint32_t _align; } buffer[];
+  union {
+    uint32_t _align;
+  } buffer[];
 } GTextNodeTextDynamic;
 
 //! @internal
@@ -203,8 +205,9 @@ GTextNodeText *graphics_text_node_create_text(size_t buffer_size);
 //! @internal
 //! Allocates a single block of memory that ends with a zero-initialized string buffer.
 //! Initializes `.text` with a pointer to the buffer if buffer_size not 0.
-GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(
-    size_t buffer_size, GTextNodeTextDynamicUpdate update, void *user_data);
+GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(size_t buffer_size,
+                                                             GTextNodeTextDynamicUpdate update,
+                                                             void *user_data);
 
 //! @internal
 //! Allocates a single block of memory that ends with a zero-initialized node pointer buffer.
@@ -217,8 +220,7 @@ GTextNodeHorizontal *graphics_text_node_create_horizontal(size_t max_nodes);
 GTextNodeVertical *graphics_text_node_create_vertical(size_t max_nodes);
 
 //! @internal
-GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback,
-                                                  void *user_data);
+GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback, void *user_data);
 
 //! @internal
 //! Deeply destroys a TextNode and all its children

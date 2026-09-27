@@ -5,8 +5,9 @@
 
 #include "backlight_service.h"
 #include "event_service_client.h"
+#include "pbl/kernel/compiler.h"
 
-typedef struct __attribute__((packed)) BacklightServiceState {
+typedef struct PBL_PACKED BacklightServiceState {
   BacklightHandler handler;
   EventServiceInfo bls_info;
 } BacklightServiceState;

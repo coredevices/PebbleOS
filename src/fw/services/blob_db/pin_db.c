@@ -8,24 +8,20 @@
 #include "pbl/services/blob_db/sync_util.h"
 #include "pbl/services/blob_db/timeline_item_storage.h"
 
-#include <string.h>
-
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "pbl/services/app_cache.h"
-#include "pbl/services/timeline/calendar.h"
 #include "pbl/services/timeline/timeline.h"
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
 #include "util/units.h"
 #include "pbl/util/uuid.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-#define PIN_DB_MAX_AGE (3 * SECONDS_PER_DAY) // so we get at two full past days in there
+#define PIN_DB_MAX_AGE   (3 * SECONDS_PER_DAY) // so we get at two full past days in there
 #define PIN_DB_FILE_NAME "pindb"
-#define PIN_DB_MAX_SIZE KiBYTES(40) // TODO [FBO] variable size / reasonable value
+#define PIN_DB_MAX_SIZE  KiBYTES(40) // TODO [FBO] variable size / reasonable value
 
 static TimelineItemStorage s_pin_db_storage;
 
@@ -50,8 +46,8 @@ static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, cons
     return E_INVALID_ARGUMENT;
   }
 
-  status_t rv = timeline_item_storage_insert(&s_pin_db_storage, key, key_len,
-                                             val, val_len, mark_synced);
+  status_t rv =
+      timeline_item_storage_insert(&s_pin_db_storage, key, key_len, val, val_len, mark_synced);
 
   if (rv == S_SUCCESS) {
     TimelineItemId parent_id = ((CommonTimelineItemHeader *)val)->parent_id;
@@ -65,8 +61,7 @@ static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, cons
       // String initialized on the heap to reduce stack usage
       char *parent_id_string = kernel_malloc_check(UUID_STRING_BUFFER_LENGTH);
       uuid_to_string(&parent_id, parent_id_string);
-      PBL_LOG_ERR("Pin insert for a pin with no app installed, parent id: %s",
-              parent_id_string);
+      PBL_LOG_ERR("Pin insert for a pin with no app installed, parent id: %s", parent_id_string);
       kernel_free(parent_id_string);
       goto done;
     }
@@ -106,7 +101,7 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
   uint8_t *write_ptr = buffer;
 
   // serialize the header
-  timeline_item_serialize_header(item, (SerializedTimelineItemHeader *) write_ptr);
+  timeline_item_serialize_header(item, (SerializedTimelineItemHeader *)write_ptr);
   write_ptr += sizeof(SerializedTimelineItemHeader);
 
   // serialize the attributes / actions
@@ -120,9 +115,8 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
   // Only pins from the reminders app should be dirty and synced to the phone
   Uuid reminders_data_source_uuid = UUID_REMINDERS_DATA_SOURCE;
   const bool mark_synced = !uuid_equal(&item->header.parent_id, &reminders_data_source_uuid);
-  rv = prv_insert_serialized_item(
-      (uint8_t *)&item->header.id, sizeof(TimelineItemId),
-      buffer, sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
+  rv = prv_insert_serialized_item((uint8_t *)&item->header.id, sizeof(TimelineItemId), buffer,
+                                  sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
   if (rv == S_SUCCESS && emit_event) {
     blob_db_event_put(BlobDBEventTypeInsert, BlobDBIdPins, (uint8_t *)&item->header.id,
                       sizeof(TimelineItemId));
@@ -183,7 +177,7 @@ bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {
 status_t pin_db_read_item_header(TimelineItem *item_out, TimelineItemId *id) {
   SerializedTimelineItemHeader hdr = {{{0}}};
   status_t rv = pin_db_read((uint8_t *)id, sizeof(TimelineItemId), (uint8_t *)&hdr,
-    sizeof(SerializedTimelineItemHeader));
+                            sizeof(SerializedTimelineItemHeader));
   timeline_item_deserialize_header(item_out, &hdr);
   return rv;
 }
@@ -205,10 +199,7 @@ status_t pin_db_next_item_header(TimelineItem *next_item_out,
 
 void pin_db_init(void) {
   s_pin_db_storage = (TimelineItemStorage){};
-  timeline_item_storage_init(&s_pin_db_storage,
-                             PIN_DB_FILE_NAME,
-                             PIN_DB_MAX_SIZE,
-                             PIN_DB_MAX_AGE);
+  timeline_item_storage_init(&s_pin_db_storage, PIN_DB_FILE_NAME, PIN_DB_MAX_SIZE, PIN_DB_MAX_AGE);
 }
 
 void pin_db_deinit(void) {
@@ -256,7 +247,7 @@ status_t pin_db_is_dirty(bool *is_dirty_out) {
   return timeline_item_storage_each(&s_pin_db_storage, sync_util_is_dirty_cb, is_dirty_out);
 }
 
-BlobDBDirtyItem* pin_db_get_dirty_list(void) {
+BlobDBDirtyItem *pin_db_get_dirty_list(void) {
   BlobDBDirtyItem *dirty_list = NULL;
   timeline_item_storage_each(&s_pin_db_storage, sync_util_build_dirty_list_cb, &dirty_list);
 

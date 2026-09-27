@@ -30,7 +30,6 @@ typedef struct HealthProgressBar {
   HealthProgressSegment *segments;
 } HealthProgressBar;
 
-
 void health_progress_bar_fill(GContext *ctx, HealthProgressBar *progress_bar, GColor color,
                               HealthProgressBarValue start, HealthProgressBarValue end);
 

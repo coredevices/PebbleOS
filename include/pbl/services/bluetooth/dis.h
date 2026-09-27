@@ -3,6 +3,6 @@
 
 #pragma once
 
-typedef struct DisInfo DisInfo;
+struct pbl_bt_dis_info;
 
-void dis_get_info(DisInfo *info);
+void dis_get_info(struct pbl_bt_dis_info *info);

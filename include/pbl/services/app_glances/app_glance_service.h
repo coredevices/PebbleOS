@@ -5,7 +5,7 @@
 
 #include "pbl/services/blob_db/app_glance_db_private.h"
 #include "pbl/services/timeline/attribute.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "util/time/time.h"
 #include "pbl/util/uuid.h"
 
@@ -18,7 +18,7 @@ typedef enum AppGlanceSliceType {
 //! We name this "internal" so it won't conflict with the AppGlanceSlice struct we export in the SDK
 #if UNITTEST
 // Memory comparisons in unit tests won't work unless we pack the struct
-typedef struct PACKED AppGlanceSliceInternal {
+typedef struct PBL_PACKED AppGlanceSliceInternal {
 #else
 typedef struct AppGlanceSliceInternal {
 #endif

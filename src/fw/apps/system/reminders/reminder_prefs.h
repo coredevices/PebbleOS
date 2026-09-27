@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #define PREF_KEY_REMINDER_APP "remindersApp"
 
@@ -14,6 +14,6 @@ typedef enum ReminderAppState {
   ReminderAppStateCount
 } ReminderAppState;
 
-typedef struct PACKED SerializedReminderAppPrefs {
-  uint8_t appState;  // actually enum ReminderAppState
+typedef struct PBL_PACKED SerializedReminderAppPrefs {
+  uint8_t appState; // actually enum ReminderAppState
 } SerializedReminderAppPrefs;

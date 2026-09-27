@@ -8,26 +8,26 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define VIBE_DEF(identifier, enum_name, name_str, alert_types_arg, res_id)\
+#define VIBE_DEF(identifier, enum_name, name_str, alert_types_arg, res_id) \
   VibeScoreId_##enum_name = identifier,
 typedef enum VibeScoreId {
   VibeScoreId_Invalid = 0,
-  #include "vibes.def"
+#include "vibes.def"
 } VibeScoreId;
 #undef VIBE_DEF
 
 #ifdef CONFIG_BOARD_ASTERIX
-#define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_StandardShortPulseHigh)
+#define DEFAULT_VIBE_SCORE_NOTIFS         (VibeScoreId_StandardShortPulseHigh)
 #define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
-#define DEFAULT_VIBE_SCORE_ALARMS (VibeScoreId_Reveille)
-#define DEFAULT_VIBE_SCORE_HOURLY (VibeScoreId_Disabled)
-#define DEFAULT_VIBE_SCORE_ON_DISCONNECT (VibeScoreId_Disabled)
+#define DEFAULT_VIBE_SCORE_ALARMS         (VibeScoreId_Reveille)
+#define DEFAULT_VIBE_SCORE_HOURLY         (VibeScoreId_Disabled)
+#define DEFAULT_VIBE_SCORE_ON_DISCONNECT  (VibeScoreId_Disabled)
 #else
-#define DEFAULT_VIBE_SCORE_NOTIFS (VibeScoreId_NudgeNudge)
+#define DEFAULT_VIBE_SCORE_NOTIFS         (VibeScoreId_NudgeNudge)
 #define DEFAULT_VIBE_SCORE_INCOMING_CALLS (VibeScoreId_Pulse)
-#define DEFAULT_VIBE_SCORE_ALARMS (VibeScoreId_Reveille)
-#define DEFAULT_VIBE_SCORE_HOURLY (VibeScoreId_Disabled)
-#define DEFAULT_VIBE_SCORE_ON_DISCONNECT (VibeScoreId_Disabled)
+#define DEFAULT_VIBE_SCORE_ALARMS         (VibeScoreId_Reveille)
+#define DEFAULT_VIBE_SCORE_HOURLY         (VibeScoreId_Disabled)
+#define DEFAULT_VIBE_SCORE_ON_DISCONNECT  (VibeScoreId_Disabled)
 #endif
 
 // Returns the ResourceId for the VibeScore represented by this id.

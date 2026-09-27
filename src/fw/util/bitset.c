@@ -4,6 +4,7 @@
 #include "bitset.h"
 
 #include <stdint.h>
+#include "pbl/kernel/compiler.h"
 
 uint8_t count_bits_set(uint8_t *bitset_bytes, int num_bits) {
   uint8_t num_bits_set = 0;
@@ -13,7 +14,7 @@ uint8_t count_bits_set(uint8_t *bitset_bytes, int num_bits) {
   }
 
   for (int i = 0; i < num_bytes; i++) {
-    num_bits_set += __builtin_popcount(bitset_bytes[i]);
+    num_bits_set += PBL_POPCOUNT(bitset_bytes[i]);
   }
 
   return (num_bits_set);

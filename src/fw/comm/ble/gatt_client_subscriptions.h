@@ -4,28 +4,28 @@
 #pragma once
 
 #include "applib/bluetooth/ble_client.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include "gap_le_task.h"
 
-#include <bluetooth/mtu.h>
+#include <pbl/bluetooth/mtu.h>
 
 struct GAPLEConnection;
 
-#define MAX_ATT_WRITE_PAYLOAD_SIZE (ATT_MAX_SUPPORTED_MTU - 3)
-#define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE \
+#define MAX_ATT_WRITE_PAYLOAD_SIZE (PBL_BT_ATT_MAX_SUPPORTED_MTU - 3)
+#define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE                              \
   ((MAX_ATT_WRITE_PAYLOAD_SIZE + sizeof(GATTBufferedNotificationHeader)) * \
    CONFIG_BLE_GATT_SUBSCRIPTION_DEPTH)
 
 //! Data structure representing a subscription of a specific client for
-//! noticications or indications of a GATT characteristic for a specific
+//! notifications or indications of a GATT characteristic for a specific
 //! client (GAPLEClientApp or GAPLEClientKernel). The GAPLEConnection struct has
 //! the head for each BLE connection.
 typedef struct {
   ListNode node;
 
   //! The characteristic to which the client is subscribed
-  BLECharacteristic characteristic;
+  pbl_bt_characteristic_t characteristic;
 
   //! Cached ATT handle of the characteristic
   uint16_t att_handle;
@@ -38,15 +38,15 @@ typedef struct {
 } GATTClientSubscriptionNode;
 
 //! Data structure representing a serialized GATT notification header.
-typedef struct PACKED {
-  BLECharacteristic characteristic;
+typedef struct PBL_PACKED {
+  pbl_bt_characteristic_t characteristic;
   uint16_t value_length;
   uint8_t value[];
 } GATTBufferedNotificationHeader;
 
-BTErrno gatt_client_subscriptions_subscribe(BLECharacteristic characteristic,
-                                            BLESubscription subscription_type,
-                                            GAPLEClient client);
+enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
+                                                      BLESubscription subscription_type,
+                                                      GAPLEClient client);
 
 //! Gets the length of the next notification in the buffer that was received.
 //! @param client The client for which to get the next notification header.
@@ -67,13 +67,12 @@ bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
 //! Out: the number of bytes copied into the value_out buffer.
 //! @param client The client for which to consume the next notification.
 //! @param[out] has_more_out Cannot be NULL. Will be set to true if there are more notifications
-//! in the buffer, or to false if there are no more notifiations in the buffer.
+//! in the buffer, or to false if there are no more notifications in the buffer.
 //! @return The length of the next notification's payload, if there is any (has_more_out is true),
 //! undefined otherwise.
-uint16_t gatt_client_subscriptions_consume_notification(BLECharacteristic *characteristic_ref_out,
-                                                        uint8_t *value_out,
-                                                        uint16_t *value_length_in_out,
-                                                        GAPLEClient client, bool *has_more_out);
+uint16_t gatt_client_subscriptions_consume_notification(
+    pbl_bt_characteristic_t *characteristic_ref_out, uint8_t *value_out,
+    uint16_t *value_length_in_out, GAPLEClient client, bool *has_more_out);
 
 //! Indicates that the client wants to pause processing notifications and yield to keep the system
 //! responsive. This puts a new event on the queue so the client can continue processing later on.

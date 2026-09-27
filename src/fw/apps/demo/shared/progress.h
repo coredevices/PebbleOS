@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* progress_app_get_info();
+const PebbleProcessMd *progress_app_get_info();

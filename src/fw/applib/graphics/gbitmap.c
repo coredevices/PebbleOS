@@ -15,6 +15,7 @@
 
 #include <string.h>
 #include <stddef.h>
+#include "pbl/util/testing.h"
 
 uint8_t gbitmap_get_bits_per_pixel(GBitmapFormat format) {
   switch (format) {
@@ -48,7 +49,7 @@ uint8_t gbitmap_get_palette_size(GBitmapFormat format) {
 uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) {
   switch (format) {
     case GBitmapFormat1Bit:
-      return ((width + 31) / 32 ) * 4;  // word aligned bytes
+      return ((width + 31) / 32) * 4; // word aligned bytes
     case GBitmapFormat8Bit:
       return width;
     case GBitmapFormat1BitPalette:
@@ -61,9 +62,9 @@ uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) 
   return 0;
 }
 
-static GBitmap* prv_allocate_gbitmap(void) {
+static GBitmap *prv_allocate_gbitmap(void) {
   if (process_manager_compiled_with_legacy2_sdk()) {
-    return (GBitmap *) applib_type_zalloc(GBitmapLegacy2);
+    return (GBitmap *)applib_type_zalloc(GBitmapLegacy2);
   }
   return applib_type_zalloc(GBitmap);
 }
@@ -90,39 +91,39 @@ uint8_t gbitmap_get_version(const GBitmap *bitmap) {
 }
 
 // indirection to allow conditional mocking in unit-tests
-T_STATIC
+PBL_T_STATIC
 #if !UNITTEST
 // apparently, GCC doesn't inline this otherwise
 // scary, I wonder how many more places like these aren't inlined
-ALWAYS_INLINE
+PBL_ALWAYS_INLINE
 #endif
 GBitmapDataRowInfo prv_gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
   if (bitmap->info.format == GBitmapFormat8BitCircular) {
     const GBitmapDataRowInfoInternal *info = &bitmap->data_row_infos[y];
-    return (GBitmapDataRowInfo) {
-        .data = (uint8_t *)bitmap->addr + info->offset,
-        .min_x = info->min_x,
-        .max_x = info->max_x,
+    return (GBitmapDataRowInfo){
+      .data = (uint8_t *)bitmap->addr + info->offset,
+      .min_x = info->min_x,
+      .max_x = info->max_x,
     };
   } else {
-    return (GBitmapDataRowInfo) {
-        .data = (uint8_t*)bitmap->addr + y * bitmap->row_size_bytes,
-        .min_x = 0,
-        // while this is conceptually wrong for .max_x as it should be
-        // (.row_size_bytes / .bytes_per_pixel) - 1
-        // it's still a valid value as we assume grect_get_max_x(.bounds) < .row_size_bytes * bpp
-        // that way this is an efficient implementation of this functions contract
-        .max_x = grect_get_max_x(&bitmap->bounds) - 1,
+    return (GBitmapDataRowInfo){
+      .data = (uint8_t *)bitmap->addr + y * bitmap->row_size_bytes,
+      .min_x = 0,
+      // while this is conceptually wrong for .max_x as it should be
+      // (.row_size_bytes / .bytes_per_pixel) - 1
+      // it's still a valid value as we assume grect_get_max_x(.bounds) < .row_size_bytes * bpp
+      // that way this is an efficient implementation of this functions contract
+      .max_x = grect_get_max_x(&bitmap->bounds) - 1,
     };
   }
 }
 
-MOCKABLE GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
+PBL_T_MOCKABLE GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
   return prv_gbitmap_get_data_row_info(bitmap, y);
 }
 
 void gbitmap_init_with_data(GBitmap *bitmap, const uint8_t *data) {
-  BitmapData* bitmap_data = (BitmapData*) data;
+  BitmapData *bitmap_data = (BitmapData *)data;
 
   memset(bitmap, 0, prv_gbitmap_size());
 
@@ -132,7 +133,7 @@ void gbitmap_init_with_data(GBitmap *bitmap, const uint8_t *data) {
   bitmap->info.is_bitmap_heap_allocated = false;
 
   // Note that our container contains values for the origin, but we want to ignore them.
-  // This is because orginally we just serialized GBitmap to disk,
+  // This is because originally we just serialized GBitmap to disk,
   // but these fields don't really make sense for static images.
   // These origin fields are only used when reusing a byte buffer in a sub bitmap.
   // This allows us to have a shallow copy of a portion of a parent bitmap.
@@ -148,8 +149,8 @@ void gbitmap_init_with_data(GBitmap *bitmap, const uint8_t *data) {
   if (gbitmap_get_palette_size(gbitmap_get_format(bitmap)) > 0) {
     PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
     // Palette is positioned right after the pixel data
-    bitmap->palette = (GColor*)(bitmap_data->data +
-        (bitmap->row_size_bytes * bitmap->bounds.size.h));
+    bitmap->palette =
+        (GColor *)(bitmap_data->data + (bitmap->row_size_bytes * bitmap->bounds.size.h));
     // Don't flag this as heap allocated, as it gets freed along with pixel data
     bitmap->info.is_palette_heap_allocated = false;
   }
@@ -160,8 +161,8 @@ void gbitmap_init_with_data(GBitmap *bitmap, const uint8_t *data) {
   prv_init_gbitmap_version(bitmap);
 }
 
-GBitmap* gbitmap_create_with_data(const uint8_t *data) {
-  GBitmap* bitmap = prv_allocate_gbitmap();
+GBitmap *gbitmap_create_with_data(const uint8_t *data) {
+  GBitmap *bitmap = prv_allocate_gbitmap();
   if (bitmap) {
     gbitmap_init_with_data(bitmap, data);
   }
@@ -170,8 +171,8 @@ GBitmap* gbitmap_create_with_data(const uint8_t *data) {
 
 void gbitmap_init_as_sub_bitmap(GBitmap *sub_bitmap, const GBitmap *base_bitmap, GRect sub_rect) {
   if (gbitmap_get_version(base_bitmap) == GBITMAP_VERSION_0) {
-    GBitmapLegacy2 *legacy_bitmap = (GBitmapLegacy2 *) sub_bitmap;
-    *legacy_bitmap = *(GBitmapLegacy2 *) base_bitmap;
+    GBitmapLegacy2 *legacy_bitmap = (GBitmapLegacy2 *)sub_bitmap;
+    *legacy_bitmap = *(GBitmapLegacy2 *)base_bitmap;
     // it's the responsibility of the parent bitmap to free the underlying data
     legacy_bitmap->is_heap_allocated = false;
   } else {
@@ -184,7 +185,7 @@ void gbitmap_init_as_sub_bitmap(GBitmap *sub_bitmap, const GBitmap *base_bitmap,
   sub_bitmap->bounds = sub_rect;
 }
 
-GBitmap* gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect) {
+GBitmap *gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect) {
   GBitmap *bitmap = prv_allocate_gbitmap();
   if (bitmap) {
     gbitmap_init_as_sub_bitmap(bitmap, base_bitmap, sub_rect);
@@ -192,7 +193,7 @@ GBitmap* gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect
   return bitmap;
 }
 
-static GColor* prv_allocate_palette(GBitmapFormat format) {
+static GColor *prv_allocate_palette(GBitmapFormat format) {
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
   GColor *palette = NULL;
   uint8_t palette_size = gbitmap_get_palette_size(format);
@@ -205,7 +206,7 @@ static GColor* prv_allocate_palette(GBitmapFormat format) {
 #define BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format) \
   ((format) == GBitmapFormat8BitCircular && (size).w == DISP_COLS && (size).h == DISP_ROWS)
 
-T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
+PBL_T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
 #if PBL_ROUND
   if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
     return DISPLAY_FRAMEBUFFER_BYTES;
@@ -235,7 +236,7 @@ static bool prv_gbitmap_allocate_data_for_size(GBitmap *bitmap, GSize size, GBit
   return false;
 }
 
-static GBitmap* prv_gbitmap_create_blank(GSize size, GBitmapFormat format) {
+static GBitmap *prv_gbitmap_create_blank(GSize size, GBitmapFormat format) {
   GBitmap *bitmap = prv_allocate_gbitmap();
   if (bitmap) {
     if (!prv_gbitmap_allocate_data_for_size(bitmap, size, format)) {
@@ -286,9 +287,9 @@ static bool prv_is_palettized_format(GBitmapFormat format) {
   return format >= GBitmapFormat1BitPalette && format <= GBitmapFormat4BitPalette;
 }
 
-T_STATIC GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size,
-                                                                       GBitmapFormat format) {
-  GBitmap* bitmap = prv_gbitmap_create_blank(size, format);
+PBL_T_STATIC GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size,
+                                                                           GBitmapFormat format) {
+  GBitmap *bitmap = prv_gbitmap_create_blank(size, format);
 
   // If bitmap allocated and format requires a palette
   if (bitmap && prv_is_palettized_format(format)) {
@@ -304,7 +305,7 @@ T_STATIC GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize siz
   return bitmap;
 }
 
-GBitmap* gbitmap_create_blank(GSize size, GBitmapFormat format) {
+GBitmap *gbitmap_create_blank(GSize size, GBitmapFormat format) {
   if (process_manager_compiled_with_legacy2_sdk() && format != GBitmapFormat1Bit) {
     return NULL;
   }
@@ -316,12 +317,12 @@ GBitmap* gbitmap_create_blank(GSize size, GBitmapFormat format) {
   return prv_gbitmap_create_blank_internal_no_platform_checks(size, format);
 }
 
-GBitmapLegacy2* gbitmap_create_blank_2bit(GSize size) {
-  return (GBitmapLegacy2 *) gbitmap_create_blank(size, GBitmapFormat1Bit);
+GBitmapLegacy2 *gbitmap_create_blank_2bit(GSize size) {
+  return (GBitmapLegacy2 *)gbitmap_create_blank(size, GBitmapFormat1Bit);
 }
 
-GBitmap* gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format,
-    GColor *palette, bool free_on_destroy) {
+GBitmap *gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format, GColor *palette,
+                                           bool free_on_destroy) {
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
 
   if (!prv_platform_supports_format(size, format)) {
@@ -341,14 +342,14 @@ GBitmap* gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format,
 }
 
 // Adapted from http://aggregate.org/MAGIC/#Bit%20Reversal
-T_STATIC uint8_t prv_byte_reverse(uint8_t b) {
+PBL_T_STATIC uint8_t prv_byte_reverse(uint8_t b) {
   b = (b & 0xaa) >> 1 | (b & 0x55) << 1;
   b = (b & 0xcc) >> 2 | (b & 0x33) << 2;
   b = (b & 0xf0) >> 4 | (b & 0x0f) << 4;
   return b;
 }
 
-GBitmap* gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap) {
+GBitmap *gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap) {
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
   GBitmap *bitmap = NULL;
   if (src_bitmap && gbitmap_get_format(src_bitmap) == GBitmapFormat1Bit) {
@@ -356,7 +357,7 @@ GBitmap* gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap) {
     // This eliminates edge cases where the bounds may start within a byte,
     // and not enough space would be allocated. This allows us to do all copying
     // from { 0, 0 } and simplifies copy.
-    GSize size = (GSize) {
+    GSize size = (GSize){
       .w = src_bitmap->bounds.size.w + src_bitmap->bounds.origin.x,
       .h = src_bitmap->bounds.size.h + src_bitmap->bounds.origin.y
     };
@@ -380,7 +381,7 @@ GBitmap* gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap) {
   return bitmap;
 }
 
-bool gbitmap_init_with_resource(GBitmap* bitmap, uint32_t resource_id) {
+bool gbitmap_init_with_resource(GBitmap *bitmap, uint32_t resource_id) {
   ResAppNum app_resource_bank = sys_get_current_resource_num();
   return gbitmap_init_with_resource_system(bitmap, app_resource_bank, resource_id);
 }
@@ -417,25 +418,21 @@ static bool prv_init_with_pbi_data(GBitmap *bitmap, uint8_t *data, size_t data_s
   const GBitmapFormat format = gbitmap_get_format(bitmap);
   const size_t addr_offset = offsetof(BitmapData, data);
   const uint32_t pixel_data_bytes = bitmap->row_size_bytes * bitmap->bounds.size.h;
-  const uint32_t required_total_size_bytes =
-      addr_offset + // header size
-      pixel_data_bytes  + // pixel data
-      gbitmap_get_palette_size(format); // palette data
+  const uint32_t required_total_size_bytes = addr_offset +                     // header size
+                                             pixel_data_bytes +                // pixel data
+                                             gbitmap_get_palette_size(format); // palette data
 
   const uint32_t required_row_size_bits =
       (bitmap->bounds.size.w * gbitmap_get_bits_per_pixel(format));
   // Convert from 8 bits in a byte, taking care to round up to the next whole byte.
   const uint32_t required_row_size_bytes = (required_row_size_bits + 7) / 8;
 
-  if (data_size != required_total_size_bytes ||
-      required_row_size_bytes > bitmap->row_size_bytes) {
-    PBL_LOG_WRN("Bitmap metadata is inconsistent! data_size %u",
-            (unsigned int) data_size);
-    PBL_LOG_WRN("format %u row_size_bytes %"PRIu16" width %"PRId16" height %"PRId16,
-            format, bitmap->row_size_bytes, bitmap->bounds.size.w, bitmap->bounds.size.h);
+  if (data_size != required_total_size_bytes || required_row_size_bytes > bitmap->row_size_bytes) {
+    PBL_LOG_WRN("Bitmap metadata is inconsistent! data_size %u", (unsigned int)data_size);
+    PBL_LOG_WRN("format %u row_size_bytes %" PRIu16 " width %" PRId16 " height %" PRId16, format,
+                bitmap->row_size_bytes, bitmap->bounds.size.w, bitmap->bounds.size.h);
     return false;
   }
-
 
   // Move the actual pixel data up to the front of the buffer.
   // This way bitmap->addr points to the start of the buffer and can be directly freed.
@@ -445,14 +442,14 @@ static bool prv_init_with_pbi_data(GBitmap *bitmap, uint8_t *data, size_t data_s
 
   // Move where the palette now points to, palette is positioned right after the pixel data
   if (gbitmap_get_palette_size(format) > 0) {
-    bitmap->palette = (GColor*)((uint8_t*)bitmap->addr +
-        (bitmap->row_size_bytes * bitmap->bounds.size.h));
+    bitmap->palette =
+        (GColor *)((uint8_t *)bitmap->addr + (bitmap->row_size_bytes * bitmap->bounds.size.h));
   }
 
   return true;
 }
 
-bool gbitmap_init_with_resource_system(GBitmap* bitmap, ResAppNum app_num, uint32_t resource_id) {
+bool gbitmap_init_with_resource_system(GBitmap *bitmap, ResAppNum app_num, uint32_t resource_id) {
   if (!bitmap) {
     return false;
   }
@@ -514,15 +511,15 @@ GBitmapFormat gbitmap_get_format(const GBitmap *bitmap) {
   return bitmap->info.format;
 }
 
-uint8_t* gbitmap_get_data(const GBitmap *bitmap) {
+uint8_t *gbitmap_get_data(const GBitmap *bitmap) {
   if (!bitmap) {
     return NULL;
   }
   return bitmap->addr;
 }
 
-void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format,
-                      uint16_t row_size_bytes, bool free_on_destroy) {
+void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format, uint16_t row_size_bytes,
+                      bool free_on_destroy) {
   if (bitmap) {
     bitmap->addr = data;
     bitmap->info.format = format;
@@ -531,7 +528,7 @@ void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format,
   }
 }
 
-GColor* gbitmap_get_palette(const GBitmap *bitmap) {
+GColor *gbitmap_get_palette(const GBitmap *bitmap) {
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
   if (!bitmap) {
     return NULL;
@@ -563,7 +560,7 @@ void gbitmap_set_bounds(GBitmap *bitmap, GRect bounds) {
   }
 }
 
-void gbitmap_deinit(GBitmap* bitmap) {
+void gbitmap_deinit(GBitmap *bitmap) {
   if (gbitmap_get_info(bitmap).is_bitmap_heap_allocated) {
     applib_resource_munmap_or_free(bitmap->addr);
   }
@@ -577,7 +574,7 @@ void gbitmap_deinit(GBitmap* bitmap) {
   }
 }
 
-void gbitmap_destroy(GBitmap* bitmap) {
+void gbitmap_destroy(GBitmap *bitmap) {
   if (!bitmap) {
     return;
   }

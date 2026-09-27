@@ -27,7 +27,7 @@ void dls_list_insert_session(DataLoggingSession *logging_session);
 
 //! Creates a new DataLoggingSession object that is only initialized with the parameters given. The
 //! session will only be initialized with the given parameters. The .storage and .comm members must
-//! be seperately initialized. Also, the resulting object will need to be added to the list of
+//! be separately initialized. Also, the resulting object will need to be added to the list of
 //! sessions using one of dls_list_add_new_session and dls_list_insert_session. May return NULL if
 //! we've created too many sessions.
 DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType type, uint16_t size,
@@ -41,7 +41,7 @@ void dls_list_rebuild_from_storage(void);
 //! Call callback for each session we have. Pass the data param through to the callback each time.
 //! If the callback returns false, stop iterating immediately and return false. Returns true
 //! otherwise.
-typedef bool (*DlsListCallback)(DataLoggingSession*, void*);
+typedef bool (*DlsListCallback)(DataLoggingSession *, void *);
 bool dls_list_for_each_session(DlsListCallback cb, void *data);
 
 void dls_list_init(void);

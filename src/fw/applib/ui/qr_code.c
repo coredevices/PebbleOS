@@ -37,8 +37,8 @@ static void prv_qr_code_update_proc(QRCode *qr_code, GContext *ctx) {
   GColor old_fill_color;
   bool ret;
 
-  if ((qr_code->data == NULL) || (qr_code->data_len == 0U) ||
-      (qr_code->layer.bounds.size.w <= 0) || (qr_code->layer.bounds.size.h <= 0)) {
+  if ((qr_code->data == NULL) || (qr_code->data_len == 0U) || (qr_code->layer.bounds.size.w <= 0) ||
+      (qr_code->layer.bounds.size.h <= 0)) {
     return;
   }
 
@@ -114,7 +114,8 @@ static void prv_qr_code_update_proc(QRCode *qr_code, GContext *ctx) {
 }
 
 void qr_code_init_with_parameters(QRCode *qr_code, const GRect *frame, const void *data,
-                                  size_t data_len, QRCodeECC ecc, GColor fg_color, GColor bg_color) {
+                                  size_t data_len, QRCodeECC ecc, GColor fg_color,
+                                  GColor bg_color) {
   PBL_ASSERTN(qr_code);
   *qr_code = (QRCode){};
   qr_code->layer.frame = *frame;
@@ -126,24 +127,23 @@ void qr_code_init_with_parameters(QRCode *qr_code, const GRect *frame, const voi
   qr_code->fg_color = fg_color;
   qr_code->bg_color = bg_color;
   layer_set_clips(&qr_code->layer, true);
-  
+
   layer_mark_dirty(&qr_code->layer);
 }
 
 void qr_code_init(QRCode *qr_code, const GRect *frame) {
-  qr_code_init_with_parameters(qr_code, frame, NULL, 0, QRCodeECCMedium, 
-                               GColorBlack, GColorWhite);
+  qr_code_init_with_parameters(qr_code, frame, NULL, 0, QRCodeECCMedium, GColorBlack, GColorWhite);
 }
 
-QRCode* qr_code_create(GRect frame) {
-  QRCode* qr_code = applib_type_malloc(QRCode);
+QRCode *qr_code_create(GRect frame) {
+  QRCode *qr_code = applib_type_malloc(QRCode);
   if (qr_code) {
     qr_code_init(qr_code, &frame);
   }
   return qr_code;
 }
 
-void qr_code_destroy(QRCode* qr_code) {
+void qr_code_destroy(QRCode *qr_code) {
   if (qr_code) {
     applib_free(qr_code);
   }

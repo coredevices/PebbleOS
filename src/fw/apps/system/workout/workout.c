@@ -12,21 +12,16 @@
 #include "applib/app.h"
 #include "applib/ui/dialogs/expandable_dialog.h"
 #include "applib/ui/ui.h"
-#include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "popups/health_tracking_ui.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/workout_service.h"
-#include <pbl/logging/logging.h>
 #include "resource/resource_ids.auto.h"
 #include "popups/health_tracking_ui.h"
-
-#include <stdio.h>
 
 // Workout app versions
 // 0: Invalid (app was never opened)
@@ -53,7 +48,7 @@ static ActivitySessionType s_activity_type = DEFAULT_ACTIVITY_TYPE;
 static void prv_prep_and_open_active_window(ActivitySessionType type) {
   WorkoutAppData *data = app_state_get_user_data();
 
-  data->workout_controller = (WorkoutController) {
+  data->workout_controller = (WorkoutController){
     .is_paused = workout_service_is_paused,
     .pause = workout_service_pause_workout,
     .stop = workout_service_stop_workout,
@@ -63,9 +58,8 @@ static void prv_prep_and_open_active_window(ActivitySessionType type) {
     .get_distance_string = health_util_get_distance_string,
   };
 
-  data->active_window = workout_active_create_for_activity_type(type,
-                                                                &data->workout_data,
-                                                                &data->workout_controller);
+  data->active_window =
+      workout_active_create_for_activity_type(type, &data->workout_data, &data->workout_controller);
   workout_active_window_push(data->active_window);
 }
 
@@ -129,8 +123,8 @@ static void prv_show_workout_detected_dialog(WorkoutAppData *data) {
 
   char text_buffer[32];
   const uint32_t length_s = rtc_get_time() - data->ongoing_session.start_utc;
-  health_util_format_hours_minutes_seconds(
-      text_buffer, sizeof(text_buffer), length_s, true, workout_dialog);
+  health_util_format_hours_minutes_seconds(text_buffer, sizeof(text_buffer), length_s, true,
+                                           workout_dialog);
 
   workout_dialog_set_subtext(workout_dialog, text_buffer);
 
@@ -175,9 +169,8 @@ static void prv_show_workout_ended_dialog(WorkoutAppData *data) {
 void workout_push_summary_window(void) {
   WorkoutAppData *data = app_state_get_user_data();
 
-  data->summary_window = workout_summary_window_create(s_activity_type,
-                                                       prv_start_workout_cb,
-                                                       prv_select_workout_cb);
+  data->summary_window =
+      workout_summary_window_create(s_activity_type, prv_start_workout_cb, prv_select_workout_cb);
   workout_summary_window_push(data->summary_window);
 }
 
@@ -185,10 +178,11 @@ void workout_push_summary_window(void) {
 // Initialization
 
 static void prv_init(void) {
-    if (!activity_is_initialized()) {
+  if (!activity_is_initialized()) {
     /// Workouts waiting for time sync
-    static const char *msg = i18n_noop("Workout requires the time to be synced."
-                                       " Please connect your phone.");
+    static const char *msg = i18n_noop(
+        "Workout requires the time to be synced."
+        " Please connect your phone.");
     health_tracking_ui_show_message(RESOURCE_ID_ALARM_CLOCK_TINY, msg, true);
     return;
   }
@@ -202,8 +196,9 @@ static void prv_init(void) {
 
   if (activity_prefs_get_workout_app_opened_version() != CURRENT_WORKOUT_APP_VERSION) {
     /// Workout app first use text
-    static const char *msg = i18n_noop("Wear your watch snug and 2 fingers' width above "
-                                       "your wrist bone for best results.");
+    static const char *msg = i18n_noop(
+        "Wear your watch snug and 2 fingers' width above "
+        "your wrist bone for best results.");
     health_tracking_ui_show_message(RESOURCE_ID_WORKOUT_APP_HR_PULSE_TINY, msg, true);
   }
 
@@ -253,13 +248,15 @@ static void prv_main(void) {
 
 const PebbleProcessMd *workout_app_get_info(void) {
   static const PebbleProcessMdSystem s_workout_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      .uuid = {0xfe, 0xf8, 0x2c, 0x82, 0x71, 0x76, 0x4e, 0x22,
-               0x88, 0xde, 0x35, 0xa3, 0xfc, 0x18, 0xd4, 0x3f},
-    },
+    .common =
+        {
+          .main_func = &prv_main,
+          .uuid =
+              {0xfe, 0xf8, 0x2c, 0x82, 0x71, 0x76, 0x4e, 0x22, 0x88, 0xde, 0x35, 0xa3, 0xfc, 0x18,
+               0xd4, 0x3f},
+        },
     .name = i18n_noop("Workout"),
     .icon_resource_id = RESOURCE_ID_ACTIVITY_TINY,
   };
-  return (const PebbleProcessMd*) &s_workout_app_info;
+  return (const PebbleProcessMd *)&s_workout_app_info;
 }

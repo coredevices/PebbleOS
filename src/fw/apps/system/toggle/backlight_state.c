@@ -5,7 +5,6 @@
 
 #include "applib/app.h"
 #include "applib/ui/action_toggle.h"
-#include "process_management/app_manager.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/light.h"
 #include "shell/prefs.h"
@@ -35,7 +34,7 @@ static const ActionToggleImpl s_backlight_state_action_toggle_impl = {
 };
 
 static void prv_main(void) {
-  action_toggle_push(&(ActionToggleConfig) {
+  action_toggle_push(&(ActionToggleConfig){
     .impl = &s_backlight_state_action_toggle_impl,
     .set_exit_reason = true,
   });
@@ -44,12 +43,14 @@ static void prv_main(void) {
 
 const PebbleProcessMd *backlight_state_toggle_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-    .common = {
-      .main_func = &prv_main,
-      .uuid = BACKLIGHT_STATE_TOGGLE_UUID,
-      .visibility = ProcessVisibilityQuickLaunch,
-    },
-    .name = i18n_noop("Backlight"),
+    .common =
+        {
+          .main_func = &prv_main,
+          .uuid = BACKLIGHT_STATE_TOGGLE_UUID,
+          .visibility = ProcessVisibilityQuickLaunch,
+        },
+    /// The Quick Launch action that toggles the backlight.
+    .name = i18n_noop("Toggle Backlight"),
   };
   return &s_app_info.common;
 }

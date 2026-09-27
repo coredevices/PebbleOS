@@ -12,58 +12,56 @@
 #include "resource/resource_storage_flash.h"
 #include "pbl/services/system_task.h"
 #include "system/bootbits.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 
-#define IMAGING_CMD_ERASE (1)
-#define IMAGING_CMD_WRITE (2)
-#define IMAGING_CMD_CRC (3)
-#define IMAGING_CMD_QUERY_REGION (4)
+#define IMAGING_CMD_ERASE           (1)
+#define IMAGING_CMD_WRITE           (2)
+#define IMAGING_CMD_CRC             (3)
+#define IMAGING_CMD_QUERY_REGION    (4)
 #define IMAGING_CMD_FINALIZE_REGION (5)
 
-#define IMAGING_RESP_ACK_ERASE (128)
-#define IMAGING_RESP_ACK_WRITE (129)
-#define IMAGING_RESP_CRC (130)
+#define IMAGING_RESP_ACK_ERASE       (128)
+#define IMAGING_RESP_ACK_WRITE       (129)
+#define IMAGING_RESP_CRC             (130)
 #define IMAGING_RESP_REGION_GEOMETRY (131)
 #define IMAGING_RESP_FINALIZE_REGION (132)
 
-#define IMAGING_RESP_MALFORMED_CMD (192)
+#define IMAGING_RESP_MALFORMED_CMD  (192)
 #define IMAGING_RESP_INTERNAL_ERROR (193)
 
-#define FLASH_REGION_PRF (1)
+#define FLASH_REGION_PRF              (1)
 #define FLASH_REGION_SYSTEM_RESOURCES (2)
 
 typedef union Command {
   uint8_t opcode;
-  struct PACKED EraseCommand {
+  struct PBL_PACKED EraseCommand {
     uint8_t opcode;
     uint32_t address;
     uint32_t length;
   } erase;
-  struct PACKED WriteCommand {
+  struct PBL_PACKED WriteCommand {
     uint8_t opcode;
     uint32_t address;
     uint8_t data[0];
   } write;
-  struct PACKED CrcCommand {
+  struct PBL_PACKED CrcCommand {
     uint8_t opcode;
     uint32_t address;
     uint32_t length;
   } crc;
-  struct PACKED RegionCommand {
+  struct PBL_PACKED RegionCommand {
     uint8_t opcode;
     uint8_t region;
   } region;
 } Command;
-
 
 static void prv_handle_erase(Command *cmd, size_t length);
 static void prv_handle_write(Command *cmd, size_t length);
 static void prv_handle_crc(Command *cmd, size_t length);
 static void prv_handle_query_region(Command *cmd, size_t length);
 static void prv_handle_finalize_region(Command *cmd, size_t length);
-static void prv_respond_malformed_command(Command *cmd, size_t length,
-                                          const char *message);
+static void prv_respond_malformed_command(Command *cmd, size_t length, const char *message);
 
 void pulse_flash_imaging_handler(void *packet, size_t length) {
   Command *command = packet;
@@ -99,7 +97,7 @@ static bool s_erase_in_progress = false;
 static uint32_t s_erase_start_address;
 static uint32_t s_erase_length;
 
-typedef struct PACKED EraseAndWriteAck {
+typedef struct PBL_PACKED EraseAndWriteAck {
   uint8_t opcode;
   uint32_t address;
   uint32_t length;
@@ -115,9 +113,8 @@ static void prv_handle_erase(Command *cmd, size_t length) {
   }
 
   if (s_erase_in_progress) {
-    EraseAndWriteAck *ack = pulse_best_effort_send_begin(
-        PULSE_PROTOCOL_FLASH_IMAGING);
-    *ack = (EraseAndWriteAck) {
+    EraseAndWriteAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+    *ack = (EraseAndWriteAck){
       .opcode = IMAGING_RESP_ACK_ERASE,
       .address = s_erase_start_address,
       .length = s_erase_length,
@@ -129,9 +126,8 @@ static void prv_handle_erase(Command *cmd, size_t length) {
     s_erase_start_address = cmd->erase.address;
     s_erase_length = cmd->erase.length;
 
-    EraseAndWriteAck *message = pulse_best_effort_send_begin(
-        PULSE_PROTOCOL_FLASH_IMAGING);
-    *message = (EraseAndWriteAck) {
+    EraseAndWriteAck *message = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+    *message = (EraseAndWriteAck){
       .opcode = IMAGING_RESP_ACK_ERASE,
       .address = s_erase_start_address,
       .length = s_erase_length,
@@ -140,17 +136,15 @@ static void prv_handle_erase(Command *cmd, size_t length) {
     pulse_best_effort_send(message, sizeof(EraseAndWriteAck));
 
     uint32_t end_address = cmd->erase.address + cmd->erase.length;
-    flash_erase_optimal_range(
-        cmd->erase.address, cmd->erase.address, end_address,
-        (end_address + SECTOR_SIZE_BYTES - 1) & SECTOR_ADDR_MASK,
-        prv_erase_complete, NULL);
+    flash_erase_optimal_range(cmd->erase.address, cmd->erase.address, end_address,
+                              (end_address + SECTOR_SIZE_BYTES - 1) & SECTOR_ADDR_MASK,
+                              prv_erase_complete, NULL);
   }
 }
 
 static void prv_erase_complete(void *ignored, status_t result) {
-  EraseAndWriteAck *message = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
-  *message = (EraseAndWriteAck) {
+  EraseAndWriteAck *message = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+  *message = (EraseAndWriteAck){
     .opcode = IMAGING_RESP_ACK_ERASE,
     .address = s_erase_start_address,
     .length = s_erase_length,
@@ -176,9 +170,8 @@ static void prv_handle_write(Command *cmd, size_t command_length) {
   size_t write_length = command_length - sizeof(cmd->write);
   flash_write_bytes(&cmd->write.data[0], cmd->write.address, write_length);
 
-  EraseAndWriteAck *ack = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
-  *ack = (EraseAndWriteAck) {
+  EraseAndWriteAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+  *ack = (EraseAndWriteAck){
     .opcode = IMAGING_RESP_ACK_WRITE,
     .address = cmd->write.address,
     .length = write_length,
@@ -199,7 +192,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
     return;
   }
 
-  typedef struct PACKED CrcAck {
+  typedef struct PBL_PACKED CrcAck {
     uint8_t opcode;
     uint32_t address;
     uint32_t length;
@@ -209,7 +202,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
   uint32_t crc = flash_calculate_legacy_defective_checksum(cmd->crc.address, cmd->crc.length);
 
   CrcAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
-  *ack = (CrcAck) {
+  *ack = (CrcAck){
     .opcode = IMAGING_RESP_CRC,
     .address = cmd->crc.address,
     .length = cmd->crc.length,
@@ -230,8 +223,7 @@ static void prv_handle_query_region(Command *cmd, size_t length) {
       // assume a query of the region means we are going to write to it
       flash_prf_set_protection(false);
       region_base = FLASH_REGION_SAFE_FIRMWARE_BEGIN;
-      region_length = FLASH_REGION_SAFE_FIRMWARE_END -
-          FLASH_REGION_SAFE_FIRMWARE_BEGIN;
+      region_length = FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN;
       break;
     case FLASH_REGION_SYSTEM_RESOURCES: {
       const SystemResourceBank *bank = resource_storage_flash_get_unused_bank();
@@ -245,16 +237,15 @@ static void prv_handle_query_region(Command *cmd, size_t length) {
       break;
   }
 
-  typedef struct PACKED RegionGeometry {
+  typedef struct PBL_PACKED RegionGeometry {
     uint8_t opcode;
     uint8_t region;
     uint32_t address;
     uint32_t length;
   } RegionGeometry;
 
-  RegionGeometry *resp = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
-  *resp = (RegionGeometry) {
+  RegionGeometry *resp = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
+  *resp = (RegionGeometry){
     .opcode = IMAGING_RESP_REGION_GEOMETRY,
     .region = cmd->region.region,
     .address = region_base,
@@ -290,16 +281,14 @@ static void prv_handle_finalize_region(Command *cmd, size_t length) {
   pulse_best_effort_send(resp, sizeof(resp->region));
 }
 
-static void prv_respond_malformed_command(Command *cmd, size_t length,
-                                          const char *message) {
-  typedef struct PACKED MalformedCommandResponse {
+static void prv_respond_malformed_command(Command *cmd, size_t length, const char *message) {
+  typedef struct PBL_PACKED MalformedCommandResponse {
     uint8_t opcode;
     uint8_t bad_command[9];
     char error_message[40];
   } MalformedCommandResponse;
 
-  MalformedCommandResponse *resp = pulse_best_effort_send_begin(
-      PULSE_PROTOCOL_FLASH_IMAGING);
+  MalformedCommandResponse *resp = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
   resp->opcode = IMAGING_RESP_MALFORMED_CMD;
 
   memcpy(resp->bad_command, cmd, MIN(length, sizeof(resp->bad_command)));

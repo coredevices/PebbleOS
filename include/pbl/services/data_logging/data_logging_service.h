@@ -13,7 +13,6 @@
 //! also trigger a flush of all data logging data to the phone
 // #define DLS_DEBUG_SEND_IMMEDIATELY
 
-
 struct DataLoggingSession;
 typedef struct DataLoggingSession DataLoggingSession;
 
@@ -55,15 +54,15 @@ void dls_inactivate_sessions(PebbleTask task);
 //! least DLS_SESSION_BUFFER_SIZE bytes large. It will be freed by the data logging service when the
 //! session is closed if this method returns no error. The worker task can optionally pass NULL for
 //! buffer and the buffer will be allocated in the system heap for it by the data logging service.
-DataLoggingSession* dls_create_current_process(uint32_t tag, DataLoggingItemType item_type,
-                                               uint16_t item_size, void* buffer, bool resume);
+DataLoggingSession *dls_create_current_process(uint32_t tag, DataLoggingItemType item_type,
+                                               uint16_t item_size, void *buffer, bool resume);
 
 //! Create a new session
-DataLoggingSession* dls_create(uint32_t tag, DataLoggingItemType item_type, uint16_t item_size,
-                               bool buffered, bool resume, const Uuid* uuid);
+DataLoggingSession *dls_create(uint32_t tag, DataLoggingItemType item_type, uint16_t item_size,
+                               bool buffered, bool resume, const Uuid *uuid);
 
 //! Append data to a logging session. Buffered sessions log asynchronously. Non buffered ones block.
-DataLoggingResult dls_log(DataLoggingSession *s, const void* data, uint32_t num_items);
+DataLoggingResult dls_log(DataLoggingSession *s, const void *data, uint32_t num_items);
 
 //! Finish up a session
 void dls_finish(DataLoggingSession *s);

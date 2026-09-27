@@ -66,12 +66,10 @@ static char *prv_get_cell_text(unsigned index, void *context) {
                (int)(data->date.year + STDTIME_YEAR_OFFSET));
       return data->cell_buf;
     case DateInputIndexMonth:
-      snprintf(data->cell_buf, sizeof(data->cell_buf), "%02d",
-               (int)(data->date.month + 1));
+      snprintf(data->cell_buf, sizeof(data->cell_buf), "%02d", (int)(data->date.month + 1));
       return data->cell_buf;
     case DateInputIndexDay:
-      snprintf(data->cell_buf, sizeof(data->cell_buf), "%02d",
-               (int)data->date.day);
+      snprintf(data->cell_buf, sizeof(data->cell_buf), "%02d", (int)data->date.day);
       return data->cell_buf;
     default:
       return "";
@@ -94,17 +92,17 @@ static void prv_handle_inc(unsigned index, void *context) {
   switch ((DateInputIndex)index) {
     case DateInputIndexYear:
       data->date.year = date_time_selection_step_year(data->date.year, 1);
-      data->date.day = date_time_selection_truncate_date(
-          data->date.year, data->date.month, data->date.day);
+      data->date.day =
+          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
       break;
     case DateInputIndexMonth:
       data->date.month = date_time_selection_step_month(data->date.month, 1);
-      data->date.day = date_time_selection_truncate_date(
-          data->date.year, data->date.month, data->date.day);
+      data->date.day =
+          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
       break;
     case DateInputIndexDay:
-      data->date.day = date_time_selection_step_day(
-          data->date.year, data->date.month, data->date.day, 1);
+      data->date.day =
+          date_time_selection_step_day(data->date.year, data->date.month, data->date.day, 1);
       break;
     default:
       break;
@@ -116,17 +114,17 @@ static void prv_handle_dec(unsigned index, void *context) {
   switch ((DateInputIndex)index) {
     case DateInputIndexYear:
       data->date.year = date_time_selection_step_year(data->date.year, -1);
-      data->date.day = date_time_selection_truncate_date(
-          data->date.year, data->date.month, data->date.day);
+      data->date.day =
+          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
       break;
     case DateInputIndexMonth:
       data->date.month = date_time_selection_step_month(data->date.month, -1);
-      data->date.day = date_time_selection_truncate_date(
-          data->date.year, data->date.month, data->date.day);
+      data->date.day =
+          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
       break;
     case DateInputIndexDay:
-      data->date.day = date_time_selection_step_day(
-          data->date.year, data->date.month, data->date.day, -1);
+      data->date.day =
+          date_time_selection_step_day(data->date.year, data->date.month, data->date.day, -1);
       break;
     default:
       break;
@@ -157,13 +155,12 @@ void date_selection_window_set_to_current_date(DateSelectionWindowData *window) 
   // the first button press.
   window->date.year = date_time_selection_step_year(now.tm_year, 0);
   window->date.month = now.tm_mon;
-  window->date.day = date_time_selection_truncate_date(
-      window->date.year, window->date.month, now.tm_mday);
+  window->date.day =
+      date_time_selection_truncate_date(window->date.year, window->date.month, now.tm_mday);
 }
 
-void date_selection_window_init(DateSelectionWindowData *window, const char *label,
-                                GColor color, DateSelectionCompleteCallback complete,
-                                void *context) {
+void date_selection_window_init(DateSelectionWindowData *window, const char *label, GColor color,
+                                DateSelectionCompleteCallback complete, void *context) {
   *window = (DateSelectionWindowData){};
 
   window->complete_callback = complete;
@@ -175,8 +172,8 @@ void date_selection_window_init(DateSelectionWindowData *window, const char *lab
   window_set_user_data(w, window);
 
   // Selection layer setup
-  const DateSelectionSizeConfig * const cfg = prv_config();
-  const int num_cells = 3;  // Year, Month, Day
+  const DateSelectionSizeConfig *const cfg = prv_config();
+  const int num_cells = 3; // Year, Month, Day
   SelectionLayer *sel = &window->selection_layer;
   selection_layer_init(sel, &GRectZero, num_cells);
   selection_layer_set_cell_width(sel, DateInputIndexYear, cfg->year_cell_width);
@@ -188,17 +185,17 @@ void date_selection_window_init(DateSelectionWindowData *window, const char *lab
     selection_layer_set_active_bg_color(sel, color);
   }
 
-  layer_set_frame(&sel->layer,
-                  &GRect(0, cfg->top_offset, w->layer.bounds.size.w,
-                         selection_layer_default_cell_height()));
+  layer_set_frame(&sel->layer, &GRect(0, cfg->top_offset, w->layer.bounds.size.w,
+                                      selection_layer_default_cell_height()));
 
   selection_layer_set_click_config_onto_window(sel, w);
-  selection_layer_set_callbacks(sel, window, (SelectionLayerCallbacks){
-    .get_cell_text = prv_get_cell_text,
-    .complete = prv_handle_complete,
-    .increment = prv_handle_inc,
-    .decrement = prv_handle_dec,
-  });
+  selection_layer_set_callbacks(sel, window,
+                                (SelectionLayerCallbacks){
+                                  .get_cell_text = prv_get_cell_text,
+                                  .complete = prv_handle_complete,
+                                  .increment = prv_handle_inc,
+                                  .decrement = prv_handle_dec,
+                                });
   layer_add_child(&w->layer, &sel->layer);
 
   // Label setup
@@ -208,9 +205,8 @@ void date_selection_window_init(DateSelectionWindowData *window, const char *lab
   if (label) {
     const int lines = 1;
     const int line_height = fonts_get_font_height(header_font);
-    layer_set_frame(&label_layer->layer,
-                    &GRect(0, cfg->label_origin_y, w->layer.bounds.size.w,
-                           (lines + 1) * line_height + line_height / 2));
+    layer_set_frame(&label_layer->layer, &GRect(0, cfg->label_origin_y, w->layer.bounds.size.w,
+                                                (lines + 1) * line_height + line_height / 2));
 #if PBL_ROUND
     text_layer_enable_screen_text_flow_and_paging(label_layer, 4 /* inset */);
 #endif
@@ -220,12 +216,11 @@ void date_selection_window_init(DateSelectionWindowData *window, const char *lab
 
   // Status bar setup
   status_bar_layer_init(&window->status_layer);
-  status_bar_layer_set_colors(&window->status_layer,
-                              PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack),
+  status_bar_layer_set_colors(&window->status_layer, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack),
                               PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
-  status_bar_layer_set_separator_mode(&window->status_layer,
-                                      PBL_IF_COLOR_ELSE(OPTION_MENU_STATUS_SEPARATOR_MODE,
-                                                        StatusBarLayerSeparatorModeNone));
+  status_bar_layer_set_separator_mode(
+      &window->status_layer,
+      PBL_IF_COLOR_ELSE(OPTION_MENU_STATUS_SEPARATOR_MODE, StatusBarLayerSeparatorModeNone));
   layer_add_child(&w->layer, &window->status_layer.layer);
 }
 

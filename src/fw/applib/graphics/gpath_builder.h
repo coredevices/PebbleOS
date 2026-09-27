@@ -57,7 +57,7 @@ typedef struct {
 //! of points given
 //!
 //! @param max_points Size of the points buffer
-//! @return A pointer to GPathBuilder. NULL if object couldnt be created
+//! @return A pointer to GPathBuilder. NULL if object couldn't be created
 GPathBuilder *gpath_builder_create(uint32_t max_points);
 
 //! Destroys GPathBuilder previously created with gpath_builder_create()
@@ -83,8 +83,8 @@ bool gpath_builder_line_to_point(GPathBuilder *builder, GPoint to_point);
 //! @param control_point_1 control point for start of the bezier curve
 //! @param control_point_2 control point for end of the bezier curve
 //! @return True if curve was added successfully False if there was no space in GPathBuilder struct
-bool gpath_builder_curve_to_point(GPathBuilder *builder, GPoint to_point,
-                                  GPoint control_point_1, GPoint control_point_2);
+bool gpath_builder_curve_to_point(GPathBuilder *builder, GPoint to_point, GPoint control_point_1,
+                                  GPoint control_point_2);
 
 //! Creates a new GPath on the heap based on a data from GPathBuilder
 //!

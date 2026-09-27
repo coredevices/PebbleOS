@@ -4,6 +4,7 @@
 #include "clar.h"
 #include "fixtures/load_test_resources.h"
 
+#include "kernel/events.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/i18n/mo.h"
 #include "pbl/services/filesystem/pfs.h"
@@ -29,7 +30,7 @@
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
 #include "stubs_system_reset.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 #include "stubs_memory_layout.h"
 
 // Fakes
@@ -46,6 +47,13 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
+static int s_num_language_change_events;
+void event_put(PebbleEvent *event) {
+  if (event->type == PEBBLE_LANGUAGE_CHANGE_EVENT) {
+    s_num_language_change_events++;
+  }
+}
+
 // Setup
 /////////////////////////
 void test_i18n__initialize(void) {
@@ -60,7 +68,7 @@ void test_i18n__initialize(void) {
 void test_i18n__cleanup(void) {
 }
 
-extern I18nString *prv_list_find_string(const char *string, void * owner);
+extern I18nString *prv_list_find_string(const char *string, void *owner);
 
 void test_i18n__music(void) {
   const char *first = i18n_get("Music", (void *)0x12345);
@@ -81,6 +89,24 @@ void test_i18n__music(void) {
 void test_i18n__locale(void) {
   cl_assert(strcmp(i18n_get_locale(), "fr_FR") == 0);
   cl_assert_equal_i(i18n_get_version(), 24);
+}
+
+void test_i18n__english_with_installed_pack(void) {
+  shell_prefs_set_language_english(true);
+  i18n_set_resource(RESOURCE_ID_STRINGS);
+
+  cl_assert_equal_s(i18n_get_locale(), "en_US");
+  cl_assert_equal_s(i18n_get("Music", __FILE__), "Music");
+  i18n_free_all(__FILE__);
+}
+
+void test_i18n__english_without_installed_pack(void) {
+  cl_assert_equal_i(pfs_remove("lang"), S_SUCCESS);
+  i18n_set_resource(RESOURCE_ID_STRINGS);
+
+  cl_assert_equal_s(i18n_get_locale(), "en_US");
+  cl_assert_equal_s(i18n_get("Music", __FILE__), "Music");
+  i18n_free_all(__FILE__);
 }
 
 void test_i18n__get_with_buffer(void) {
@@ -172,4 +198,28 @@ void test_i18n__reset_language(void) {
   // reinitialize
   test_i18n__cleanup();
   test_i18n__initialize();
+}
+
+void test_i18n__language_change_event(void) {
+  s_num_language_change_events = 0;
+
+  i18n_set_resource(RESOURCE_ID_STRINGS);
+  cl_assert_equal_i(s_num_language_change_events, 0);
+
+  i18n_enable(false);
+  cl_assert_equal_i(s_num_language_change_events, 1);
+  cl_assert_equal_s(i18n_get("Music", __FILE__), "Music");
+  i18n_free_all(__FILE__);
+
+  i18n_enable(false);
+  cl_assert_equal_i(s_num_language_change_events, 1);
+
+  i18n_enable(true);
+  cl_assert_equal_i(s_num_language_change_events, 2);
+  cl_assert_equal_s(i18n_get("Music", __FILE__), "Musique");
+  i18n_free_all(__FILE__);
+
+  shell_prefs_set_language_english(true);
+  i18n_set_resource(RESOURCE_ID_STRINGS);
+  cl_assert_equal_i(s_num_language_change_events, 3);
 }

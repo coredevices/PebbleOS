@@ -24,7 +24,8 @@
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
 
-void kernel_free(void *p) {}
+void kernel_free(void *p) {
+}
 
 // Declared in syscall/syscall.h; in the test build DEFINE_SYSCALL is a plain function.
 void sys_touch_set_raw_subscribed(bool subscribed);
@@ -228,8 +229,8 @@ void test_touch__has_app_subscribers_ignores_shared_subscriptions(void) {
   // event-service subscription as raw handlers; those subscriptions must NOT
   // read as app subscribers, or wake-on-every-touch comes back with menu
   // gestures off.
-  s_add_subscriber_cb(PebbleTask_KernelMain);  // modal twin
-  s_add_subscriber_cb(PebbleTask_App);         // app twin
+  s_add_subscriber_cb(PebbleTask_KernelMain); // modal twin
+  s_add_subscriber_cb(PebbleTask_App);        // app twin
   cl_assert(!touch_has_app_subscribers());
   s_remove_subscriber_cb(PebbleTask_App);
   s_remove_subscriber_cb(PebbleTask_KernelMain);

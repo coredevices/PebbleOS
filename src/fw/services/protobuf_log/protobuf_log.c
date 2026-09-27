@@ -9,16 +9,14 @@
 #include <pbl/drivers/rtc.h>
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_serials.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pb.h"
-#include "pb_decode.h"
 #include "pb_encode.h"
 #include "pbl/services/data_logging/data_logging_service.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/version.h"
 #include "pbl/util/math.h"
-#include "pbl/util/size.h"
 #include "util/time/time.h"
 
 #include "pbl/util/uuid.h"
@@ -26,25 +24,20 @@
 #include <string.h>
 
 // These headers auto-generated from the measurements.proto
-#include "nanopb/common.pb.h"
 #include "nanopb/event.pb.h"
 #include "nanopb/measurements.pb.h"
 #include "nanopb/payload.pb.h"
 
 PBL_LOG_MODULE_DEFINE(service_protobuf_log, CONFIG_SERVICE_PROTOBUF_LOG_LOG_LEVEL);
 
-#define PROTOBUF_LOG_DEBUG(fmt, args...) \
-            PBL_LOG_D_DBG(LOG_DOMAIN_PROTOBUF, fmt, ## args)
-
 #define MLOG_MAX_VARINT_ENCODED_SIZE 5
 
 // Our globals
 typedef struct PLogState {
-  PebbleMutex *mutex;
+  struct pbl_mutex mutex;
   DataLoggingSession *dls_session;
 } PLogState;
 static PLogState s_plog_state;
-
 
 // ---------------------------------------------------------------------------------------
 // Get the data logging session. Creating it if not already created
@@ -53,9 +46,8 @@ static DataLoggingSession *prv_get_dls_session(void) {
     const bool buffered = true;
     const bool resume = false;
     Uuid system_uuid = UUID_SYSTEM;
-    s_plog_state.dls_session = dls_create(DlsSystemTagProtobufLogSession,
-                                          DATA_LOGGING_BYTE_ARRAY, PLOG_DLS_RECORD_SIZE, buffered,
-                                          resume, &system_uuid);
+    s_plog_state.dls_session = dls_create(DlsSystemTagProtobufLogSession, DATA_LOGGING_BYTE_ARRAY,
+                                          PLOG_DLS_RECORD_SIZE, buffered, resume, &system_uuid);
     if (!s_plog_state.dls_session) {
       // This can happen when you are not connected to the phone and have rebooted a number of
       // times because each time you reboot, you get new sessions created and reach the limit
@@ -67,13 +59,12 @@ static DataLoggingSession *prv_get_dls_session(void) {
   return s_plog_state.dls_session;
 }
 
-
 // ---------------------------------------------------------------------------------------------
 // Our default transport, which sends the data over data logging
 static bool prv_dls_transport(uint8_t *buffer, size_t buf_size) {
   bool success = false;
 
-  mutex_lock(s_plog_state.mutex);
+  pbl_mutex_lock(&s_plog_state.mutex, PBL_FOREVER);
   {
     DataLoggingSession *dls_session = prv_get_dls_session();
     if (!dls_session) {
@@ -91,22 +82,20 @@ static bool prv_dls_transport(uint8_t *buffer, size_t buf_size) {
     }
   }
 unlock:
-  mutex_unlock(s_plog_state.mutex);
+  pbl_mutex_unlock(&s_plog_state.mutex);
   return success;
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Encode a struct `msg` with the field number and fields passed.
 static bool prv_encode_struct(pb_ostream_t *stream, uint32_t field_number,
-                              const pb_msgdesc_t * fields, const void *msg) {
+                              const pb_msgdesc_t *fields, const void *msg) {
   // Encode the field tag and data type
   if (!pb_encode_tag(stream, PB_WT_STRING, field_number)) {
     return false;
   }
   return pb_encode_submessage(stream, fields, msg);
 }
-
 
 // -----------------------------------------------------------------------------------------
 // Encode a payload containing the data blob passed in
@@ -126,25 +115,30 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
   const char *watch_serial = mfg_get_serial_number();
 
   pebble_pipeline_Payload payload = {
-    .sender = {
-      .type = {
-        .funcs.encode = protobuf_log_util_encode_string,
-        .arg = (void *)PLOG_PAYLOAD_SENDER_TYPE,
-      },
-      .id = {
-        .funcs.encode = protobuf_log_util_encode_string,
-        .arg = (void *)watch_serial,
-      },
-      .has_version = true,
-      .version = {
-        .major = v_major,
-        .minor = v_minor,
-        .patch = {
-          .funcs.encode = protobuf_log_util_encode_string,
-          .arg = (void *)version_patch_ptr,
+    .sender =
+        {
+          .type =
+              {
+                .funcs.encode = protobuf_log_util_encode_string,
+                .arg = (void *)PLOG_PAYLOAD_SENDER_TYPE,
+              },
+          .id =
+              {
+                .funcs.encode = protobuf_log_util_encode_string,
+                .arg = (void *)watch_serial,
+              },
+          .has_version = true,
+          .version =
+              {
+                .major = v_major,
+                .minor = v_minor,
+                .patch =
+                    {
+                      .funcs.encode = protobuf_log_util_encode_string,
+                      .arg = (void *)version_patch_ptr,
+                    },
+              },
         },
-      },
-    },
     .send_time_utc = rtc_get_time(),
   };
 
@@ -160,7 +154,7 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
       pb_write(stream, ms_encoder_arg.buffer, ms_encoder_arg.len);
       break;
     case ProtobufLogType_Measurements:
-      payload.measurement_sets = (pb_callback_t) {
+      payload.measurement_sets = (pb_callback_t){
         .funcs.encode = protobuf_log_util_encode_buffer,
         .arg = &ms_encoder_arg,
       };
@@ -175,7 +169,6 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
   return success;
 }
 
-
 // -----------------------------------------------------------------------------------------
 // Free all memory associated with a session
 static void prv_session_free(PLogSession *session) {
@@ -184,9 +177,8 @@ static void prv_session_free(PLogSession *session) {
   kernel_free(session);
 }
 
-
 bool protobuf_log_init(void) {
-  s_plog_state.mutex = mutex_create();
+  pbl_mutex_init(&s_plog_state.mutex);
   return true;
 }
 
@@ -203,14 +195,13 @@ static size_t prv_session_extra_space_needed(const ProtobufLogConfig *config) {
   return 0;
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Starts/restarts a measurement session.
 static bool prv_session_measurement_encode_start(PLogSession *session) {
   const ProtobufLogConfig *config = &session->config;
 
   // Set the types pointer to the space allocated right after the PLogSession
-  ProtobufLogMeasurementType *types_copy = (ProtobufLogMeasurementType *) (session + 1);
+  ProtobufLogMeasurementType *types_copy = (ProtobufLogMeasurementType *)(session + 1);
   const size_t extra_space = prv_session_extra_space_needed(config);
   // Copy the types array directly after the Session bytes.
   memcpy(types_copy, config->measurements.types, extra_space);
@@ -225,10 +216,11 @@ static bool prv_session_measurement_encode_start(PLogSession *session) {
   };
 
   pebble_pipeline_MeasurementSet msg = {
-    .uuid = {
-      .funcs.encode = protobuf_log_util_encode_uuid,
-      .arg = &uuid,
-    },
+    .uuid =
+        {
+          .funcs.encode = protobuf_log_util_encode_uuid,
+          .arg = &uuid,
+        },
     .time_utc = session->start_utc,
     .utc_to_local = time_util_utc_to_local_offset(),
     .types = {
@@ -275,9 +267,7 @@ static uint32_t prv_get_hdr_reserved_size(ProtobufLogConfig *config) {
   return substream.bytes_written + MLOG_MAX_VARINT_ENCODED_SIZE;
 }
 
-
-ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config,
-                                   ProtobufLogTransportCB transport,
+ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config, ProtobufLogTransportCB transport,
                                    size_t max_msg_size) {
   // Error check the passed in max encoded message size
   PBL_ASSERTN(max_msg_size <= PLOG_DLS_RECORD_SIZE);
@@ -300,13 +290,13 @@ ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config,
   // Number of bytes that are needed to encode the payload structure
   // (not including the data blob)
   const uint32_t payload_hdr_size = prv_get_hdr_reserved_size(config);
-  PROTOBUF_LOG_DEBUG("Creating payload session with hdr size of %"PRIu32, payload_hdr_size);
+  PBL_LOG_DBG("Creating payload session with hdr size of %" PRIu32, payload_hdr_size);
 
   // Create a buffer for the encoded data blob. We form this first as the caller calls
   // protobuf_log_session_add_* repeatedly. Once it's filled up, we grab it as the
   // data blob portion of the payload that's formed in msg_buffer.
   uint32_t max_data_size = max_msg_size - payload_hdr_size - sizeof(PLogMessageHdr);
-  PROTOBUF_LOG_DEBUG("Max data buffer size: %"PRIu32, max_data_size);
+  PBL_LOG_DBG("Max data buffer size: %" PRIu32, max_data_size);
   uint8_t *data_buffer = kernel_zalloc(max_data_size);
   if (!data_buffer) {
     kernel_free(msg_buffer);
@@ -323,7 +313,7 @@ ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config,
     return NULL;
   }
 
-  *session = (PLogSession) {
+  *session = (PLogSession){
     .config = *config,
     .msg_buffer = msg_buffer,
     .data_buffer = data_buffer,
@@ -343,22 +333,20 @@ ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config,
   return session;
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Sets the stream to PB_OSTREAM_SIZING and calculates the size of the protobuf structs
-static uint32_t prv_get_encoded_struct_size(uint32_t field_number, const pb_msgdesc_t * fields,
+static uint32_t prv_get_encoded_struct_size(uint32_t field_number, const pb_msgdesc_t *fields,
                                             const void *msg) {
   pb_ostream_t stream = PB_OSTREAM_SIZING;
   prv_encode_struct(&stream, field_number, fields, msg);
   return stream.bytes_written;
 }
 
-
 // ---------------------------------------------------------------------------------------
 // Takes a generic protobuf struct, calculates the size, and writes it out to the internal buffer.
 // If it is full, flush then log it.
-static bool prv_log_struct(PLogSession *session, uint32_t field_number,
-                           const pb_msgdesc_t * fields, const void *msg) {
+static bool prv_log_struct(PLogSession *session, uint32_t field_number, const pb_msgdesc_t *fields,
+                           const void *msg) {
   // Calculate the size of our struct encoded on wire
   const uint32_t calc_size = prv_get_encoded_struct_size(field_number, fields, msg);
   // Calculate our data blob buffer size if we add this struct to it
@@ -367,8 +355,8 @@ static bool prv_log_struct(PLogSession *session, uint32_t field_number,
   // If it fits, add it. If it doesn't, flush first.
   if (size_if_added > session->max_data_size) {
     // We would be over capacity if we added this message. Let's flush first.
-    PROTOBUF_LOG_DEBUG("Session: 0x%x - Would have been over limit at size %"PRIu32", flushing",
-                       (int)session, size_if_added);
+    PBL_LOG_DBG("Session: 0x%x - Would have been over limit at size %" PRIu32 ", flushing",
+                (int)session, size_if_added);
     protobuf_log_session_flush(session);
   }
 
@@ -382,9 +370,8 @@ static bool prv_log_struct(PLogSession *session, uint32_t field_number,
   return true;
 }
 
-
 bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sample_utc,
-                                          uint32_t num_values, uint32_t *values) {
+                                           uint32_t num_values, uint32_t *values) {
   PBL_ASSERTN(session_ref != NULL);
   PLogSession *session = (PLogSession *)session_ref;
   PBL_ASSERTN(session->config.type == ProtobufLogType_Measurements);
@@ -394,8 +381,8 @@ bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sa
   // error check
   PBL_ASSERT(num_values == session->config.measurements.num_types, "Wrong number of values passed");
 
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Adding measurement sample with %"PRIu32" values",
-                     (int)session_ref, num_values);
+  PBL_LOG_DBG("Session: 0x%x - Adding measurement sample with %" PRIu32 " values", (int)session_ref,
+              num_values);
 
   // Encode the Measurement
   PLogPackedVarintsEncoderArg packed_varint_encoder_arg = {
@@ -410,13 +397,10 @@ bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sa
     },
   };
 
-  bool success = prv_log_struct(session,
-                                pebble_pipeline_MeasurementSet_measurements_tag,
-                                &pebble_pipeline_Measurement_msg,
-                                &msg);
+  bool success = prv_log_struct(session, pebble_pipeline_MeasurementSet_measurements_tag,
+                                &pebble_pipeline_Measurement_msg, &msg);
   return success;
 }
-
 
 bool protobuf_log_session_add_event(ProtobufLogRef session_ref, pebble_pipeline_Event *event) {
   PBL_ASSERTN(session_ref != NULL);
@@ -432,20 +416,17 @@ bool protobuf_log_session_add_event(ProtobufLogRef session_ref, pebble_pipeline_
   event->created_time_utc = rtc_get_time();
   event->has_created_time_utc = true;
   event->utc_to_local = time_util_utc_to_local_offset();
-  event->uuid = (pb_callback_t) {
+  event->uuid = (pb_callback_t){
     .funcs.encode = protobuf_log_util_encode_uuid,
     .arg = &uuid,
   };
 
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Adding event with type: %d", (int)session_ref, event->type);
+  PBL_LOG_DBG("Session: 0x%x - Adding event with type: %d", (int)session_ref, event->type);
 
-  bool success = prv_log_struct(session,
-                                pebble_pipeline_Payload_events_tag,
-                                &pebble_pipeline_Event_msg,
-                                event);
+  bool success = prv_log_struct(session, pebble_pipeline_Payload_events_tag,
+                                &pebble_pipeline_Event_msg, event);
   return success;
 }
-
 
 bool protobuf_log_session_flush(ProtobufLogRef session_ref) {
   PBL_ASSERTN(session_ref != NULL);
@@ -454,8 +435,8 @@ bool protobuf_log_session_flush(ProtobufLogRef session_ref) {
 
   // Encode the buffer into a Payload
   const size_t hdr_size = sizeof(PLogMessageHdr);
-  pb_ostream_t stream = pb_ostream_from_buffer(session->msg_buffer + hdr_size,
-                                               session->max_msg_size - hdr_size);
+  pb_ostream_t stream =
+      pb_ostream_from_buffer(session->msg_buffer + hdr_size, session->max_msg_size - hdr_size);
 
   bool success = prv_populate_payload(&session->config, session->data_stream.bytes_written,
                                       session->data_buffer, &stream);
@@ -466,12 +447,12 @@ bool protobuf_log_session_flush(ProtobufLogRef session_ref) {
 
   // Fill in the message header now
   PLogMessageHdr *hdr = (PLogMessageHdr *)session->msg_buffer;
-  *hdr = (PLogMessageHdr) {
+  *hdr = (PLogMessageHdr){
     .msg_size = stream.bytes_written,
   };
 
   // Send it out now
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Flushing %d bytes", (int)session_ref, hdr->msg_size);
+  PBL_LOG_DBG("Session: 0x%x - Flushing %d bytes", (int)session_ref, hdr->msg_size);
   success = (session->transport)(session->msg_buffer, hdr->msg_size + sizeof(PLogMessageHdr));
   if (!success) {
     PBL_LOG_ERR("Failure when sending encoded message, resetting session");
@@ -485,9 +466,8 @@ exit:
   return (success && encode_success);
 }
 
-
 bool protobuf_log_session_delete(ProtobufLogRef session_ref) {
-  PROTOBUF_LOG_DEBUG("Session: 0x%x - Deleting", (int)session_ref);
+  PBL_LOG_DBG("Session: 0x%x - Deleting", (int)session_ref);
 
   if (session_ref == NULL) {
     return true;

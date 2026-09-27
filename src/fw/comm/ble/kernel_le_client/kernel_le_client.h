@@ -12,7 +12,7 @@
 //! - bootstrap the ANCS module
 //! - bootstrap the "Service Changed" module
 
-void kernel_le_client_handle_bonding_change(BTBondingID bonding, BtPersistBondingOp op);
+void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
 
 void kernel_le_client_handle_event(const PebbleEvent *event);
 

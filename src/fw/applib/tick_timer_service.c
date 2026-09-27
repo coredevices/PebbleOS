@@ -5,7 +5,6 @@
 #include "tick_timer_service_private.h"
 
 #include "event_service_client.h"
-#include "process_management/app_manager.h"
 
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/services/clock.h"
@@ -21,7 +20,7 @@
 #include "system/passert.h"
 
 // ----------------------------------------------------------------------------------------------------
-static TickTimerServiceState* prv_get_state(PebbleTask task) {
+static TickTimerServiceState *prv_get_state(PebbleTask task) {
   if (task == PebbleTask_Unknown) {
     task = pebble_task_get_current();
   }
@@ -36,7 +35,6 @@ static TickTimerServiceState* prv_get_state(PebbleTask task) {
     WTF;
   }
 }
-
 
 static void do_handle(PebbleEvent *e, void *context) {
   TickTimerServiceState *state = prv_get_state(PebbleTask_Unknown);
@@ -107,9 +105,8 @@ void tick_timer_service_unsubscribe(void) {
   }
 }
 
-
 void tick_timer_service_state_init(TickTimerServiceState *state) {
-  *state = (TickTimerServiceState) {
+  *state = (TickTimerServiceState){
     .tick_service_info = {
       .type = PEBBLE_TICK_EVENT,
       .handler = &do_handle,

@@ -3,28 +3,23 @@
 
 #pragma once
 
-#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
-
-#include <bluetooth/bluetooth_types.h>
-#include <pbl/util/attributes.h>
-
-#include <inttypes.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/kernel/compiler.h>
 
 #define SPRF_PAGE_IDX_INVALID ((uint16_t)~0)
 
 #define SPRF_MAX_NUM_PAGES_MULT(num) ((num) * 3 / 4)
 
 typedef enum {
-  SprfValidFields_LocalEncryptionInfoValid  = (1 << 0),
+  SprfValidFields_LocalEncryptionInfoValid = (1 << 0),
   SprfValidFields_RemoteEncryptionInfoValid = (1 << 1),
-  SprfValidFields_RemoteIdentityInfoValid   = (1 << 2),
-  SprfValidFields_RemoteSigningInfoValid    = (1 << 3),
+  SprfValidFields_RemoteIdentityInfoValid = (1 << 2),
+  SprfValidFields_RemoteSigningInfoValid = (1 << 3),
 } SprfValidFields;
 
 #ifndef __clang__
 _Static_assert(sizeof(SprfValidFields) == 1, "SprfValidFields unexpected size");
 #endif
-
 
 typedef enum {
   SprfMagic_ValidEntry = 0x46525053,
@@ -36,13 +31,16 @@ _Static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 
 //! This is the struct written out to the Shared PRF flash region
 //!
-//! It's composed of seven sub entries:
+//! It's composed of eight sub entries:
 //!   root_keys: Root keys (only identity since that is all Dialog needs)
 //!   ble_pairing_data: The pairing info for the device most recently paired to the watch
 //!   ble_pairing_name: The name of the device most recently paired to the watch
 //!   pinned_address: Pinned address of the device most recently paired to watch (may be empty)
 //!   getting_started: Captures whether or not we have gone through onboarding
 //!   local_name: Not used yet, but saved for future proofing
+//!   local_identity_address: Random static identity address of the watch, for controllers
+//!     without one of their own. Carved out of main_fw_scratch, so firmware that predates it
+//!     neither validates it nor drops it when rewriting the struct
 //!   main_fw_scratch: A region for normal fw to stash info in the future if needed
 //!
 //! Each entry, or field, has its own crc which is written once the write of the field is complete.
@@ -61,30 +59,30 @@ _Static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 //! which are some 2^n multiple so this size pretty much guarantees that a divisible number
 //! of structs can fit in the region allocated
 
-typedef struct PACKED SprfRootKeys {
+typedef struct PBL_PACKED SprfRootKeys {
   uint32_t crc;
-  SM128BitKey keys[SMRootKeyTypeNum];
+  struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
 } SprfRootKeys;
 _Static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfBlePairingData {
+typedef struct PBL_PACKED SprfBlePairingData {
   uint32_t crc; // CRC over the 'pairing_data' struct ('name' through 'fields')
 
   // local encryption data
-  SMLongTermKey l_ltk; // 16 byte key
+  struct pbl_bt_sm_key l_ltk; // 16 byte key
   uint64_t l_rand;
   uint16_t l_ediv;
 
   // remote encryption data
   uint16_t r_ediv;
-  SMLongTermKey r_ltk;
+  struct pbl_bt_sm_key r_ltk;
   uint64_t r_rand;
 
-  SMIdentityResolvingKey irk; // 16 byte key
-  SMConnectionSignatureResolvingKey csrk; // 16 byte key
-  BTDeviceInternal identity;
+  struct pbl_bt_sm_key irk;  // 16 byte key
+  struct pbl_bt_sm_key csrk; // 16 byte key
+  struct pbl_bt_device_internal identity;
 
-  SprfValidFields fields:8;
+  SprfValidFields fields : 8;
   bool is_mitm_protection_enabled;
   bool requires_address_pinning;
 
@@ -93,35 +91,42 @@ typedef struct PACKED SprfBlePairingData {
 } SprfBlePairingData;
 _Static_assert(offsetof(SprfBlePairingData, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfBlePairingName {
+typedef struct PBL_PACKED SprfBlePairingName {
   uint32_t crc;
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 } SprfBlePairingName;
 _Static_assert(offsetof(SprfBlePairingName, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfPinnedAddress {
+typedef struct PBL_PACKED SprfPinnedAddress {
   uint32_t crc;
-  BTDeviceAddress pinned_address;
+  struct pbl_bt_addr pinned_address;
   uint8_t rsvd[2];
 } SprfPinnedAddress;
 _Static_assert(offsetof(SprfPinnedAddress, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfGettingStarted {
+typedef struct PBL_PACKED SprfGettingStarted {
   uint32_t crc;
   bool is_complete;
   uint8_t rsvd[3];
 } SprfGettingStarted;
 _Static_assert(offsetof(SprfGettingStarted, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SprfLocalName {
+typedef struct PBL_PACKED SprfLocalName {
   // Not used today, but in the future we could replace 'Pebble XXXX' with
   // a user friendly name, 'Chris' Pebble'
   uint32_t crc;
-  char name[BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 } SprfLocalName;
 _Static_assert(offsetof(SprfLocalName, crc) == 0, "crc must be the first field");
 
-typedef struct PACKED SharedPRFData {
+typedef struct PBL_PACKED SprfLocalIdentityAddress {
+  uint32_t crc;
+  struct pbl_bt_addr address;
+  uint8_t rsvd[2];
+} SprfLocalIdentityAddress;
+_Static_assert(offsetof(SprfLocalIdentityAddress, crc) == 0, "crc must be the first field");
+
+typedef struct PBL_PACKED SharedPRFData {
   SprfMagic magic;
   uint8_t version;
   uint8_t rsvd[3];
@@ -132,13 +137,14 @@ typedef struct PACKED SharedPRFData {
   SprfPinnedAddress pinned_address;
   SprfGettingStarted getting_started;
   SprfLocalName local_name;
+  SprfLocalIdentityAddress local_identity_address;
 
   // Occasions have arisen in the past where a region in sharedPRF that
   // main FW can stash info related to a pairing. That is the intent of this region.
-  struct PACKED {
-    uint8_t rsvd[44];
+  struct PBL_PACKED {
+    uint8_t rsvd[32];
   } main_fw_scratch;
 } SharedPRFData;
 
-_Static_assert(BT_DEVICE_NAME_BUFFER_SIZE == 20, "Changing the length will break SharedPRF");
+_Static_assert(PBL_BT_DEVICE_NAME_BUFFER_SIZE == 20, "Changing the length will break SharedPRF");
 _Static_assert(sizeof(SharedPRFData) == 256, "SharedPRFData does not match expected size");

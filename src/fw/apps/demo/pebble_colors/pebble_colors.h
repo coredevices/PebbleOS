@@ -5,4 +5,4 @@
 
 #include "process_management/pebble_process_md.h"
 
-const PebbleProcessMd* pebble_colors_get_app_info();
+const PebbleProcessMd *pebble_colors_get_app_info();

@@ -6,7 +6,6 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_install_manager.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
@@ -15,14 +14,14 @@ PBL_LOG_MODULE_DEFINE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEM
 #define ORDER_FILE "lnc_ord"
 
 typedef struct {
-  PebbleMutex *order_mutex;
+  struct pbl_mutex order_mutex;
   bool file_known_missing;
 } AppOrderData;
 
 static AppOrderData s_data;
 
 void app_order_storage_init(void) {
-  s_data.order_mutex = mutex_create();
+  pbl_mutex_init(&s_data.order_mutex);
 }
 
 #if UNITTEST
@@ -37,11 +36,11 @@ AppMenuOrderStorage *app_order_read_order(void) {
 
   AppMenuOrderStorage *storage = NULL;
   bool delete_file = false;
-  mutex_lock(s_data.order_mutex);
+  pbl_mutex_lock(&s_data.order_mutex, PBL_FOREVER);
 
   // Early exit if we already know the file doesn't exist
   if (s_data.file_known_missing) {
-    mutex_unlock(s_data.order_mutex);
+    pbl_mutex_unlock(&s_data.order_mutex);
     return NULL;
   }
 
@@ -49,7 +48,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   if ((fd = pfs_open(ORDER_FILE, OP_FLAG_READ, 0, 0)) < 0) {
     PBL_LOG_DBG("App menu order file does not exist");
     s_data.file_known_missing = true;
-    mutex_unlock(s_data.order_mutex);
+    pbl_mutex_unlock(&s_data.order_mutex);
     return NULL;
   }
 
@@ -79,8 +78,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   const int read_size = list_length * sizeof(AppInstallId);
   int rd_sz;
   if ((rd_sz = pfs_read(fd, (uint8_t *)storage->id_list, read_size)) != read_size) {
-    PBL_LOG_ERR("Corrupted ordered install_id list (Rd %d of %d bytes)",
-        rd_sz, read_size);
+    PBL_LOG_ERR("Corrupted ordered install_id list (Rd %d of %d bytes)", rd_sz, read_size);
     app_free(storage);
     storage = NULL;
     delete_file = true;
@@ -96,13 +94,13 @@ cleanup:
     pfs_remove(ORDER_FILE);
   }
 
-  mutex_unlock(s_data.order_mutex);
+  pbl_mutex_unlock(&s_data.order_mutex);
   return storage;
 }
 
 //! Should be called on system task.
 static void prv_app_order_write_order(AppMenuOrderStorage *storage) {
-  mutex_lock(s_data.order_mutex);
+  pbl_mutex_lock(&s_data.order_mutex, PBL_FOREVER);
 
   int storage_size = sizeof(AppMenuOrderStorage) + (storage->list_length * sizeof(AppInstallId));
 
@@ -131,7 +129,7 @@ static void prv_app_order_write_order(AppMenuOrderStorage *storage) {
 
 cleanup:
   kernel_free(storage);
-  mutex_unlock(s_data.order_mutex);
+  pbl_mutex_unlock(&s_data.order_mutex);
 }
 
 typedef struct {
@@ -154,7 +152,7 @@ int prv_uuid_search(const Uuid *find_me, const Uuid *uuid_list, uint8_t count) {
 // if an entry appears in the UUID list, place it's install_id in the correct index of
 // storage->id_list
 bool prv_enumerate_apps(AppInstallEntry *entry, void *data) {
-  UuidTranslateData *my_data = (UuidTranslateData *) data;
+  UuidTranslateData *my_data = (UuidTranslateData *)data;
 
   int idx = prv_uuid_search(&entry->uuid, my_data->uuid_list, my_data->count);
 
@@ -165,7 +163,6 @@ bool prv_enumerate_apps(AppInstallEntry *entry, void *data) {
   my_data->storage->id_list[idx] = entry->install_id;
   return true; // continue iterating
 }
-
 
 //! Should be called on system task.
 void write_uuid_list_to_file(const Uuid *uuid_list, uint8_t count) {

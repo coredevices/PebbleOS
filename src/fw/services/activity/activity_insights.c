@@ -8,45 +8,34 @@
 #include "pbl/services/activity/insights_settings.h"
 
 #include "applib/event_service_client.h"
-#include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
-#include "resource/resource_ids.auto.h"
 #include "resource/timeline_resource_ids.auto.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/hr_util.h"
-#include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/timeline/health_layout.h"
-#include "pbl/services/timeline/metricgroup.h"
 #include "pbl/services/timeline/timeline.h"
 #include "pbl/services/timeline/weather_layout.h"
-#include "shell/prefs.h"
-#include "shell/system_app_ids.auto.h"
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
+#include "pbl/util/testing.h"
 #include "pbl/util/math.h"
-#include "pbl/util/size.h"
 #include "util/stats.h"
 #include "pbl/util/string.h"
 #include "util/time/time.h"
-#include "util/units.h"
 
 #include <stdio.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
-#define INSIGHTS_LOG_DEBUG(fmt, args...) \
-        PBL_LOG_D_DBG(LOG_DOMAIN_ACTIVITY_INSIGHTS, fmt, ## args)
-
 #define SUBTITLE_BUFFER_LENGTH 18
-#define TIME_BUFFER_LENGTH 9
+#define TIME_BUFFER_LENGTH     9
 
 #define NUM_COPY_VARIANTS 5
-#define VARIANT_RANDOM (-1)
+#define VARIANT_RANDOM    (-1)
 
 // The sleep summary notification only fires when the sleep exit lands within this local
 // time-of-day window ([min, max)). The timeline pin is updated regardless.
@@ -113,7 +102,7 @@ static EventServiceInfo s_blobdb_event_info;     // Used to detect pin deletion 
 
 // Timestamp and UUID of the last time we added a new summary pin - stored to flash to allow
 // us to continue to update the pin across reboots
-typedef struct PACKED SummaryPinLastState {
+typedef struct PBL_PACKED SummaryPinLastState {
   time_t last_triggered_utc;
   Uuid uuid;
 } SummaryPinLastState;
@@ -221,7 +210,7 @@ typedef struct SummaryPinConfig {
   ActivityInsightSettings *insight_settings;
   const char *short_title;
   char *short_subtitle;
-  char *detail_text;    // Note: this is not automatically localized
+  char *detail_text; // Note: this is not automatically localized
   HealthCardType health_card_type;
   TimelineResourceId icon; // Icon which is shown in the timeline list view
   SummaryPinPercentageConfig percent_config[PercentTierCount];
@@ -236,19 +225,23 @@ static const SummaryPinConfig ACTIVITY_SUMMARY_PIN_CONFIG = {
   .icon = TIMELINE_RESOURCE_ACTIVITY,
 
   .percent_config = {
-    { // PercentTier_AboveAverage
+    {
+      // PercentTier_AboveAverage
       .body = i18n_noop("Do you feel more energetic, sharper or optimistic? Being active helps!"),
       .detail_text = i18n_noop("GREAT DAY TODAY"),
     },
-    { // PercentTier_OnAverage
+    {
+      // PercentTier_OnAverage
       .body = i18n_noop("You're being consistent and that's important, keep at it!"),
       .detail_text = i18n_noop("CONSISTENT!"),
     },
-    { // PercentTier_BelowAverage
+    {
+      // PercentTier_BelowAverage
       .body = i18n_noop("Resting is fine, but try to recover and step it up tomorrow!"),
       .detail_text = i18n_noop("NOT VERY ACTIVE"),
     },
-    { // PercentTier_Fail
+    {
+      // PercentTier_Fail
       .body = i18n_noop("Resting is fine, but try to recover and step it up tomorrow!"),
       .detail_text = i18n_noop("NOT VERY ACTIVE"),
     },
@@ -265,16 +258,20 @@ static const SummaryPinConfig SLEEP_SUMMARY_PIN_CONFIG = {
   .icon = TIMELINE_RESOURCE_SLEEP,
 
   .percent_config = {
-    { // PercentTier_AboveAverage
+    {
+      // PercentTier_AboveAverage
       .body = i18n_noop("You had a good night! Feel the energy 😃"),
     },
-    { // PercentTier_OnAverage
+    {
+      // PercentTier_OnAverage
       .body = i18n_noop("It's great that you're keeping a consistent sleep routine!"),
     },
-    { // PercentTier_BelowAverage
+    {
+      // PercentTier_BelowAverage
       .body = i18n_noop("A good night's sleep goes a long way! Try to get more hours tonight."),
     },
-    { // PercentTier_Fail
+    {
+      // PercentTier_Fail
       .body = i18n_noop("A good night's sleep goes a long way! Try to get more hours tonight."),
     },
   }
@@ -331,14 +328,12 @@ static void prv_build_notification_attr_list(AttributeList *attr_list, const cha
 
 // ------------------------------------------------------------------------------------------------
 // Generates a new timeline item for a reward notification
-static NOINLINE TimelineItem *prv_create_reward_notification(time_t notif_time,
-    const RewardNotifConfig *notif_config) {
+static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
+    time_t notif_time, const RewardNotifConfig *notif_config) {
   AttributeList notif_attr_list = {0};
-  prv_build_notification_attr_list(&notif_attr_list,
-                                   i18n_get(notif_config->text_body, &notif_attr_list),
-                                   notif_config->icon,
-                                   notif_config->insight_type,
-                                   ActivitySessionType_None);
+  prv_build_notification_attr_list(
+      &notif_attr_list, i18n_get(notif_config->text_body, &notif_attr_list), notif_config->icon,
+      notif_config->insight_type, ActivitySessionType_None);
 
   AttributeList positive_attr_list = {0};
   attribute_list_add_cstring(&positive_attr_list, AttributeIdTitle,
@@ -367,7 +362,7 @@ static NOINLINE TimelineItem *prv_create_reward_notification(time_t notif_time,
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
     .num_actions = num_actions,
-    .actions = (TimelineItemAction[]) {
+    .actions = (TimelineItemAction[]){
       {
         .id = ActivityInsightResponseTypePositive,
         .type = TimelineItemActionTypeInsightResponse,
@@ -387,10 +382,9 @@ static NOINLINE TimelineItem *prv_create_reward_notification(time_t notif_time,
   };
 
   // Note: it's fine if this returns null, since the parent functions will check for a null pointer
-  TimelineItem *item = timeline_item_create_with_attributes(notif_time, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification, &notif_attr_list,
-                                                            &action_group);
+  TimelineItem *item =
+      timeline_item_create_with_attributes(notif_time, 0, TimelineItemTypeNotification,
+                                           LayoutIdNotification, &notif_attr_list, &action_group);
 
   i18n_free_all(&notif_attr_list);
   attribute_list_destroy_list(&notif_attr_list);
@@ -436,7 +430,7 @@ static void prv_set_open_app_action(AttributeList *action_attr_list, HealthCardT
 }
 
 // ------------------------------------------------------------------------------------------------
-static NOINLINE TimelineItem *prv_create_pin_with_response_items(
+static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
     time_t pin_time_utc, time_t now_utc, uint32_t duration_m, LayoutId layout_id,
     AttributeList *pin_attr_list, HealthCardType health_card_type, int num_responses,
     ResponseItem *response_items) {
@@ -444,8 +438,8 @@ static NOINLINE TimelineItem *prv_create_pin_with_response_items(
   prv_set_open_app_action(&open_attr_list, health_card_type, pin_attr_list);
 
   AttributeList remove_attr_list = {0};
-  attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle, i18n_get("Remove",
-                                                                           pin_attr_list));
+  attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle,
+                             i18n_get("Remove", pin_attr_list));
 
   const int num_actions = 2 + num_responses;
   TimelineItemActionGroup action_group = {
@@ -453,7 +447,7 @@ static NOINLINE TimelineItem *prv_create_pin_with_response_items(
     // Malloc the actions in order to save stack space
     .actions = kernel_zalloc_check(sizeof(TimelineItemAction) * num_actions),
   };
-  action_group.actions[0] = (TimelineItemAction) {
+  action_group.actions[0] = (TimelineItemAction){
     .id = 0,
     .type = TimelineItemActionTypeOpenWatchApp,
     .attr_list = open_attr_list,
@@ -462,22 +456,21 @@ static NOINLINE TimelineItem *prv_create_pin_with_response_items(
     ResponseItem *response_item = &response_items[i];
     attribute_list_add_cstring(&response_item->attr_list, AttributeIdTitle,
                                i18n_get(response_item->text, pin_attr_list));
-    action_group.actions[i + 1] = (TimelineItemAction) {
+    action_group.actions[i + 1] = (TimelineItemAction){
       .id = response_items->type,
       .type = TimelineItemActionTypeInsightResponse,
       .attr_list = response_item->attr_list,
     };
   }
-  action_group.actions[num_responses + 1] = (TimelineItemAction) {
+  action_group.actions[num_responses + 1] = (TimelineItemAction){
     .id = 1,
     .type = TimelineItemActionTypeRemove,
     .attr_list = remove_attr_list,
   };
 
   // Note: it's fine if this returns null, since the parent functions will check for a null pointer
-  TimelineItem *item = timeline_item_create_with_attributes(pin_time_utc, duration_m,
-                                                            TimelineItemTypePin, layout_id,
-                                                            pin_attr_list, &action_group);
+  TimelineItem *item = timeline_item_create_with_attributes(
+      pin_time_utc, duration_m, TimelineItemTypePin, layout_id, pin_attr_list, &action_group);
 
   for (int i = 0; i < num_responses; i++) {
     ResponseItem *response_item = &response_items[i];
@@ -517,10 +510,10 @@ PercentTier prv_calc_percent_tier(const SummaryPinConfig *config, ActivityScalar
 
 // ------------------------------------------------------------------------------------------------
 // Generates a new timeline item for a summary pin
-static NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t now_utc,
-                                                     ActivityScalarStore cur_val,
-                                                     ActivityScalarStore average,
-                                                     const SummaryPinConfig *config) {
+static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t now_utc,
+                                                         ActivityScalarStore cur_val,
+                                                         ActivityScalarStore average,
+                                                         const SummaryPinConfig *config) {
   AttributeList pin_attr_list = {0};
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
                              i18n_get(config->short_title, &pin_attr_list));
@@ -531,21 +524,24 @@ static NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t
     uint8_t bg_color;
     TimelineResourceId card_icon;
   } s_tier_config[PercentTierCount] = {
-    [PercentTier_Fail] = {
-      .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("BELOW AVG"), i18n_noop("Below avg")),
-      .bg_color = GColorOrangeARGB8,
-      .card_icon = TIMELINE_RESOURCE_ARROW_DOWN,
-    },
-    [PercentTier_BelowAverage] = {
-      .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("BELOW AVG"), i18n_noop("Below avg")),
-      .bg_color = GColorOrangeARGB8,
-      .card_icon = TIMELINE_RESOURCE_ARROW_DOWN,
-    },
-    [PercentTier_OnAverage] = {
-      .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("ON AVG"), i18n_noop("On avg")),
-      .bg_color = GColorVividCeruleanARGB8,
-      .card_icon = TIMELINE_RESOURCE_THUMBS_UP,
-    },
+    [PercentTier_Fail] =
+        {
+          .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("BELOW AVG"), i18n_noop("Below avg")),
+          .bg_color = GColorOrangeARGB8,
+          .card_icon = TIMELINE_RESOURCE_ARROW_DOWN,
+        },
+    [PercentTier_BelowAverage] =
+        {
+          .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("BELOW AVG"), i18n_noop("Below avg")),
+          .bg_color = GColorOrangeARGB8,
+          .card_icon = TIMELINE_RESOURCE_ARROW_DOWN,
+        },
+    [PercentTier_OnAverage] =
+        {
+          .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("ON AVG"), i18n_noop("On avg")),
+          .bg_color = GColorVividCeruleanARGB8,
+          .card_icon = TIMELINE_RESOURCE_THUMBS_UP,
+        },
     [PercentTier_AboveAverage] = {
       .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("ABOVE AVG"), i18n_noop("Above avg")),
       .bg_color = GColorIslamicGreenARGB8,
@@ -572,9 +568,8 @@ static NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t
   } else {
     detail_text = config->detail_text;
   }
-  attribute_list_add_cstring(&pin_attr_list,
-                             PBL_IF_RECT_ELSE(AttributeIdLocationName, AttributeIdTitle),
-                             detail_text);
+  attribute_list_add_cstring(
+      &pin_attr_list, PBL_IF_RECT_ELSE(AttributeIdLocationName, AttributeIdTitle), detail_text);
 
   attribute_list_add_cstring(&pin_attr_list, AttributeIdBody,
                              i18n_get(percent_config->body, &pin_attr_list));
@@ -641,11 +636,10 @@ static void prv_push_reward(time_t now_utc, const RewardNotifConfig *notif_confi
   notif_config->state->last_triggered_utc = time_util_get_midnight_of(now_utc);
 
   // Save out the trigger time
-  prv_save_state(notif_config->settings_key,
-                 &notif_config->state->last_triggered_utc,
+  prv_save_state(notif_config->settings_key, &notif_config->state->last_triggered_utc,
                  sizeof(notif_config->state->last_triggered_utc));
 
-  INSIGHTS_LOG_DEBUG("Saved reward state: %ld", notif_config->state->last_triggered_utc);
+  PBL_LOG_DBG("Saved reward state: %ld", notif_config->state->last_triggered_utc);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -657,14 +651,13 @@ static bool prv_stats_filter(int index, int32_t value, void *context) {
 // ------------------------------------------------------------------------------------------------
 // Calculates the mean and median of a metric over the entire history we have for it and counts the
 // total and consecutive days of history
-T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
-                                                 ActivityInsightMetricHistoryStats *stats) {
+PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
+                                                     ActivityInsightMetricHistoryStats *stats) {
   int32_t *history = kernel_malloc_check(sizeof(int32_t[ACTIVITY_HISTORY_DAYS]));
   activity_get_metric(metric, ACTIVITY_HISTORY_DAYS, history);
 
-  const StatsBasicOp op =
-      (StatsBasicOp_Average | StatsBasicOp_Count | StatsBasicOp_ConsecutiveFirst |
-       StatsBasicOp_Median);
+  const StatsBasicOp op = (StatsBasicOp_Average | StatsBasicOp_Count |
+                           StatsBasicOp_ConsecutiveFirst | StatsBasicOp_Median);
   struct {
     int32_t mean;
     int32_t count;
@@ -676,7 +669,7 @@ T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
   stats_calculate_basic(op, &history[1], ACTIVITY_HISTORY_DAYS - 1, prv_stats_filter, NULL,
                         &result.mean);
 
-  *stats = (ActivityInsightMetricHistoryStats) {
+  *stats = (ActivityInsightMetricHistoryStats){
     .metric = metric,
     .mean = result.mean,
     .total_days = result.count,
@@ -686,9 +679,9 @@ T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
 
   kernel_free(history);
 
-  INSIGHTS_LOG_DEBUG("Metric history stats - med: %"PRIu32" mean: %"PRIu32" tot: %"PRIu8
-                     " cons: %"PRIu8, stats->median, stats->mean, stats->total_days,
-                     stats->consecutive_days);
+  PBL_LOG_DBG("Metric history stats - med: %" PRIu32 " mean: %" PRIu32 " tot: %" PRIu8
+              " cons: %" PRIu8,
+              stats->median, stats->mean, stats->total_days, stats->consecutive_days);
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -698,16 +691,17 @@ static bool prv_validate_history_stats(const ActivityInsightMetricHistoryStats *
   // Make sure we have enough history
   if ((stats->total_days < insight_settings->reward.min_days_data) ||
       (stats->consecutive_days < insight_settings->reward.continuous_min_days_data)) {
-    INSIGHTS_LOG_DEBUG("History validation failed - total/consecutive days didn't match: "
-                       "%"PRIu8" %"PRIu8, stats->total_days, stats->consecutive_days);
+    PBL_LOG_DBG(
+        "History validation failed - total/consecutive days didn't match: "
+        "%" PRIu8 " %" PRIu8,
+        stats->total_days, stats->consecutive_days);
     return false;
   }
 
   // We want to look at the x days before today (which is always index 0), so add 1
   uint32_t history_len = insight_settings->reward.target_qualifying_days + 1;
   if (history_len > ACTIVITY_HISTORY_DAYS) {
-    PBL_LOG_ERR("Insight qualifying history length is too long: %"PRIu32,
-            history_len);
+    PBL_LOG_ERR("Insight qualifying history length is too long: %" PRIu32, history_len);
     return false;
   }
 
@@ -721,16 +715,14 @@ static bool prv_validate_history_stats(const ActivityInsightMetricHistoryStats *
   // (start at 1 since we don't care about today's metric)
   for (uint32_t i = 1; i < history_len; ++i) {
     if (history[i] < (int32_t)target) {
-      INSIGHTS_LOG_DEBUG("History validation failed - not above target on day %"PRIu32
-                         ": %"PRIi32, i, history[i]);
+      PBL_LOG_DBG("History validation failed - not above target on day %" PRIu32 ": %" PRIi32, i,
+                  history[i]);
       return false;
     }
   }
 
   return true;
 }
-
-
 
 // ------------------------------------------------------------------------------------------------
 // This is called during init and midnight rollover in order to update our stats for the sleep
@@ -748,9 +740,7 @@ void activity_insights_recalculate_stats(void) {
   s_activity_reward_state.active_minutes = 0;
 
   // Reset summary pin data
-  s_activity_pin_state = (ActivityPinState) {
-    .uuid = UUID_INVALID
-  };
+  s_activity_pin_state = (ActivityPinState){.uuid = UUID_INVALID};
 }
 
 static ActivitySleepState prv_get_sleep_state(void) {
@@ -775,29 +765,28 @@ static bool prv_reward_check_common(const ActivityInsightSettings *insight_setti
     return false;
   }
 
-  time_t time_next_trigger = insight_state->last_triggered_utc +
-      insight_settings->reward.notif_min_interval_seconds;
+  time_t time_next_trigger =
+      insight_state->last_triggered_utc + insight_settings->reward.notif_min_interval_seconds;
   if (time_next_trigger > now_utc) {
     // Stop here if not enough time has passed to trigger this reward
-    INSIGHTS_LOG_DEBUG("Not triggering activity reward - too soon to trigger");
+    PBL_LOG_DBG("Not triggering activity reward - too soon to trigger");
     return false;
   }
 
   // Make sure we're not still sleeping
   if (prv_get_sleep_state() != ActivitySleepStateAwake) {
-    INSIGHTS_LOG_DEBUG("Not triggering reward - asleep");
+    PBL_LOG_DBG("Not triggering reward - asleep");
     return false;
   }
 
   // Finally, make sure the current metric value is over the target
-  ActivityScalarStore target = ((uint32_t)(metric_stats->median *
-      insight_settings->reward.target_percent_of_median)) / 100;
+  ActivityScalarStore target =
+      ((uint32_t)(metric_stats->median * insight_settings->reward.target_percent_of_median)) / 100;
 
   int32_t cur_metric;
   activity_get_metric(metric_stats->metric, 1, &cur_metric);
   if (cur_metric < (int32_t)target) {
-    INSIGHTS_LOG_DEBUG("Not triggering reward - not over target: %"PRIi32,
-                       cur_metric);
+    PBL_LOG_DBG("Not triggering reward - not over target: %" PRIi32, cur_metric);
     return false;
   }
 
@@ -806,7 +795,7 @@ static bool prv_reward_check_common(const ActivityInsightSettings *insight_setti
 
 // ------------------------------------------------------------------------------------------------
 static void prv_do_sleep_reward(time_t now_utc) {
-  INSIGHTS_LOG_DEBUG("Checking sleep reward...");
+  PBL_LOG_DBG("Checking sleep reward...");
   if (!prv_reward_check_common(&s_sleep_reward_settings, &s_sleep_reward_state.common,
                                &s_sleep_stats, now_utc)) {
     return;
@@ -816,8 +805,8 @@ static void prv_do_sleep_reward(time_t now_utc) {
   int32_t sleep_state_seconds;
   activity_get_metric(ActivityMetricSleepStateSeconds, 1, &sleep_state_seconds);
   if (sleep_state_seconds < s_sleep_reward_settings.reward.sleep.trigger_after_wakeup_seconds) {
-    INSIGHTS_LOG_DEBUG("Not triggering sleep reward - haven't been awake long enough: %"PRId32,
-                       sleep_state_seconds);
+    PBL_LOG_DBG("Not triggering sleep reward - haven't been awake long enough: %" PRId32,
+                sleep_state_seconds);
     return;
   }
 
@@ -829,13 +818,13 @@ static void prv_do_sleep_reward(time_t now_utc) {
 // Format a time given in seconds after midnight
 static void prv_strcat_formatted_time(int32_t time_seconds, char *out_buf, size_t buf_length,
                                       const void *i18n_owner) {
-  struct tm time = (struct tm) {
+  struct tm time = (struct tm){
     .tm_hour = time_seconds / SECONDS_PER_HOUR,
     .tm_min = (time_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
   };
 
-  const char *format = clock_is_24h_style() ?
-      i18n_get("%H:%M", i18n_owner) : i18n_get("%l:%M%p", i18n_owner);
+  const char *format =
+      clock_is_24h_style() ? i18n_get("%H:%M", i18n_owner) : i18n_get("%l:%M%p", i18n_owner);
 
   char time_str_buf[TIME_BUFFER_LENGTH];
   strftime(time_str_buf, TIME_BUFFER_LENGTH, format, &time);
@@ -844,8 +833,7 @@ static void prv_strcat_formatted_time(int32_t time_seconds, char *out_buf, size_
 
 // -----------------------------------------------------------------------------------------
 // Generates the sleep enter/exit time and total time strings
-static void prv_generate_sleep_pin_strings(int32_t sleep_enter_seconds,
-                                           int32_t sleep_exit_seconds,
+static void prv_generate_sleep_pin_strings(int32_t sleep_enter_seconds, int32_t sleep_exit_seconds,
                                            int32_t sleep_total_seconds) {
   SLEEP_SUMMARY_PIN_CONFIG.detail_text[0] = '\0';
   prv_strcat_formatted_time(sleep_enter_seconds, SLEEP_SUMMARY_PIN_CONFIG.detail_text,
@@ -870,7 +858,6 @@ static bool prv_push_sleep_summary_pin(time_t now_utc, time_t pin_time_utc,
                                        int32_t sleep_enter_seconds, int32_t sleep_exit_seconds,
                                        int32_t sleep_total_seconds,
                                        ActivityScalarStore sleep_average_seconds, Uuid *uuid) {
-
   prv_generate_sleep_pin_strings(sleep_enter_seconds, sleep_exit_seconds, sleep_total_seconds);
 
   // Insert or update the pin
@@ -878,16 +865,14 @@ static bool prv_push_sleep_summary_pin(time_t now_utc, time_t pin_time_utc,
                               sleep_average_seconds, &SLEEP_SUMMARY_PIN_CONFIG);
 }
 
-
 // -----------------------------------------------------------------------------------------
-static NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySession *session) {
+static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySession *session) {
   AttributeList pin_attr_list = {};
 
   attribute_list_add_resource_id(&pin_attr_list, AttributeIdIconPin, TIMELINE_RESOURCE_SLEEP);
   attribute_list_add_uint8(&pin_attr_list, AttributeIdHealthInsightType,
                            ActivityInsightType_ActivitySessionNap);
-  attribute_list_add_uint8(&pin_attr_list, AttributeIdHealthActivityType,
-                           ActivitySessionType_Nap);
+  attribute_list_add_uint8(&pin_attr_list, AttributeIdHealthActivityType, ActivitySessionType_Nap);
   attribute_list_add_uint32(&pin_attr_list, AttributeIdTimestamp, session->start_utc);
 
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
@@ -904,8 +889,7 @@ static NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySession
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortSubtitle, short_subtitle);
   attribute_list_add_cstring(&pin_attr_list, AttributeIdSubtitle, elapsed);
 
-  const char *title_i18n = PBL_IF_RECT_ELSE(i18n_noop("YOU NAPPED"),
-                                            i18n_noop("Of napping"));
+  const char *title_i18n = PBL_IF_RECT_ELSE(i18n_noop("YOU NAPPED"), i18n_noop("Of napping"));
   attribute_list_add_cstring(&pin_attr_list,
                              PBL_IF_RECT_ELSE(AttributeIdTitle, AttributeIdLocationName),
                              i18n_get(title_i18n, &pin_attr_list));
@@ -918,9 +902,8 @@ static NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySession
   clock_copy_time_string_timestamp(end_time, TIME_STRING_TIME_LENGTH,
                                    session->start_utc + duration_s);
   snprintf(time_range, max_attr_length, time_range_fmt, start_time, end_time);
-  attribute_list_add_cstring(&pin_attr_list,
-                             PBL_IF_RECT_ELSE(AttributeIdLocationName, AttributeIdTitle),
-                             time_range);
+  attribute_list_add_cstring(
+      &pin_attr_list, PBL_IF_RECT_ELSE(AttributeIdLocationName, AttributeIdTitle), time_range);
 
   // Don't display the time in the title
   attribute_list_add_uint8(&pin_attr_list, AttributeIdDisplayTime, WeatherTimeType_None);
@@ -929,11 +912,11 @@ static NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySession
 
   const int num_responses = 2;
   ResponseItem *response_items = kernel_zalloc_check(num_responses * sizeof(ResponseItem));
-  response_items[0] = (ResponseItem) {
+  response_items[0] = (ResponseItem){
     .type = ActivityInsightResponseTypePositive,
     .text = i18n_noop("I feel great!"),
   };
-  response_items[1] = (ResponseItem) {
+  response_items[1] = (ResponseItem){
     .type = ActivityInsightResponseTypeNegative,
     .text = i18n_noop("I need more"),
   };
@@ -965,8 +948,7 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
   const int max_notif_length = 128;
   char *body = kernel_malloc_check(max_notif_length);
   snprintf(body, max_notif_length,
-           i18n_get("Aren't naps great? You knocked out for %dH %dM!", body),
-           hours, minutes);
+           i18n_get("Aren't naps great? You knocked out for %dH %dM!", body), hours, minutes);
   i18n_free_all(body);
   const NotificationConfig config = {
     .notif_time = notif_time,
@@ -974,10 +956,11 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
     .insight_type = ActivityInsightType_ActivitySessionNap,
     .icon_id = TIMELINE_RESOURCE_SLEEP,
     .body = body,
-    .open_pin = {
-      .enabled = true,
-      .uuid = pin_uuid,
-    },
+    .open_pin =
+        {
+          .enabled = true,
+          .uuid = pin_uuid,
+        },
     .response = {
       .enabled = true,
       .type = ActivityInsightResponseTypeMisclassified,
@@ -988,13 +971,11 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
   kernel_free(body);
 }
 
-
 // -----------------------------------------------------------------------------------------
 static void prv_push_nap_session(time_t now_utc, ActivitySession *session) {
   Uuid pin_uuid = UUID_INVALID;
   TimelineItem *pin_item = prv_create_nap_pin(now_utc, session);
-  if (prv_push_pin(pin_item, &pin_uuid) &&
-      activity_prefs_sleep_insights_are_enabled()) {
+  if (prv_push_pin(pin_item, &pin_uuid) && activity_prefs_sleep_insights_are_enabled()) {
     prv_push_nap_session_notification(now_utc, session, &pin_uuid);
   }
 }
@@ -1007,7 +988,7 @@ static void prv_do_sleep_notification(time_t now_utc, time_t sleep_exit_utc,
   }
 
   if (s_sleep_pin_state.notified) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - already notified");
+    PBL_LOG_DBG("Not notifying sleep pin - already notified");
     return;
   }
 
@@ -1016,15 +997,14 @@ static void prv_do_sleep_notification(time_t now_utc, time_t sleep_exit_utc,
   const int exit_minute_of_day = time_util_get_minute_of_day(sleep_exit_utc);
   if (exit_minute_of_day < SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MIN ||
       exit_minute_of_day >= SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MAX) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - exit outside wake window (%d)",
-                       exit_minute_of_day);
+    PBL_LOG_DBG("Not notifying sleep pin - exit outside wake window (%d)", exit_minute_of_day);
     return;
   }
 
   // Notify about the pin after a certain amount of time
   const time_t since_exited = now_utc - sleep_exit_utc;
   if (since_exited < s_sleep_summary_settings.summary.sleep.trigger_notif_seconds) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - not trigger time yet (%ld)", since_exited);
+    PBL_LOG_DBG("Not notifying sleep pin - not trigger time yet (%ld)", since_exited);
     return;
   }
 
@@ -1032,8 +1012,8 @@ static void prv_do_sleep_notification(time_t now_utc, time_t sleep_exit_utc,
   const int trigger_active_minutes =
       s_sleep_summary_settings.summary.sleep.trigger_notif_active_minutes;
   if (s_sleep_pin_state.active_minutes < trigger_active_minutes) {
-    INSIGHTS_LOG_DEBUG("Not notifying sleep pin - not active enough (%d < %d)",
-                       s_sleep_pin_state.active_minutes, trigger_active_minutes);
+    PBL_LOG_DBG("Not notifying sleep pin - not active enough (%d < %d)",
+                s_sleep_pin_state.active_minutes, trigger_active_minutes);
     return;
   }
 
@@ -1053,7 +1033,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
 
   // Don't bother adding a summary if we don't have any history for an average
   if (s_sleep_stats.total_days == 0) {
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - no stats");
+    PBL_LOG_DBG("Not adding sleep pin - no stats");
     return;
   }
 
@@ -1061,7 +1041,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
   int32_t sleep_state;
   activity_get_metric(ActivityMetricSleepState, 1, &sleep_state);
   if (sleep_state != ActivitySleepStateAwake) {
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - still asleep");
+    PBL_LOG_DBG("Not adding sleep pin - still asleep");
     return;
   }
 
@@ -1071,7 +1051,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
   time_t sleep_exit_utc = 0;
   activity_sessions_prv_get_sleep_bounds_utc(now_utc, &sleep_enter_utc, &sleep_exit_utc);
   if (sleep_exit_utc <= sleep_enter_utc) {
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - no sleep data for last night");
+    PBL_LOG_DBG("Not adding sleep pin - no sleep data for last night");
     return;
   }
 
@@ -1079,13 +1059,13 @@ static void prv_do_sleep_summary(time_t now_utc) {
   // Bounds changes within one window (merged sessions, evening extensions) update the pin
   // below without re-arming the notification.
   const time_t window_utc = activity_sessions_prv_get_sleep_window_start_utc(now_utc);
-  if (window_utc != s_sleep_pin_state.window_utc
-      || now_utc < s_sleep_pin_state.last_triggered_utc) {
+  if (window_utc != s_sleep_pin_state.window_utc ||
+      now_utc < s_sleep_pin_state.last_triggered_utc) {
     // Checking "now_utc < s_sleep_pin_state.last_triggered_utc" catches cases where
     // the activity_test integration test might have created a pin in the future (because it
     // mucks with the real time clock)
-    INSIGHTS_LOG_DEBUG("Starting pin for new sleep window");
-    s_sleep_pin_state = (SleepPinState) {
+    PBL_LOG_DBG("Starting pin for new sleep window");
+    s_sleep_pin_state = (SleepPinState){
       .uuid = UUID_INVALID,
       .first_enter_utc = sleep_enter_utc,
       .window_utc = window_utc,
@@ -1094,7 +1074,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
 
   if (s_sleep_pin_state.removed) {
     // If this pin was removed by the user, don't bother updating it.
-    INSIGHTS_LOG_DEBUG("Pin was removed");
+    PBL_LOG_DBG("Pin was removed");
     return;
   }
 
@@ -1108,20 +1088,19 @@ static void prv_do_sleep_summary(time_t now_utc) {
 
   // If the bounds haven't changed since we last pushed the pin, send the notification for it
   // now if we haven't already.
-  if (sleep_exit_utc <= s_sleep_pin_state.last_triggered_utc
-      && sleep_enter_utc == s_sleep_pin_state.first_enter_utc) {
+  if (sleep_exit_utc <= s_sleep_pin_state.last_triggered_utc &&
+      sleep_enter_utc == s_sleep_pin_state.first_enter_utc) {
     // Notify about the sleep pin
     prv_do_sleep_notification(now_utc, sleep_exit_utc, sleep_total_seconds);
-    INSIGHTS_LOG_DEBUG("Not adding sleep pin - already checked session %ld", sleep_exit_utc);
+    PBL_LOG_DBG("Not adding sleep pin - already checked session %ld", sleep_exit_utc);
     return;
   }
 
   // Insert or update the pin. This intentionally leaves "notified" untouched: within one
   // sleep window the notification fires at most once, however often the bounds extend.
-  INSIGHTS_LOG_DEBUG("Adding sleep pin");
+  PBL_LOG_DBG("Adding sleep pin");
   prv_push_sleep_summary_pin(now_utc, sleep_exit_utc, sleep_enter_seconds, sleep_exit_seconds,
-                             sleep_total_seconds, s_sleep_stats.mean,
-                             &s_sleep_pin_state.uuid);
+                             sleep_total_seconds, s_sleep_stats.mean, &s_sleep_pin_state.uuid);
 
   // Update sleep pin state
   s_sleep_pin_state.last_triggered_utc = sleep_exit_utc;
@@ -1133,7 +1112,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
 }
 
 // ------------------------------------------------------------------------------------------------
-void NOINLINE activity_insights_process_sleep_data(time_t now_utc) {
+void PBL_NOINLINE activity_insights_process_sleep_data(time_t now_utc) {
   // Check sleep insights
   if (activity_prefs_sleep_insights_are_enabled()) {
     prv_do_sleep_reward(now_utc);
@@ -1144,8 +1123,8 @@ void NOINLINE activity_insights_process_sleep_data(time_t now_utc) {
 
 // ------------------------------------------------------------------------------------------------
 // Checks to see if we should trigger an activity reward
-static NOINLINE void prv_do_activity_reward(time_t now_utc) {
-  INSIGHTS_LOG_DEBUG("Checking activity reward...");
+static PBL_NOINLINE void prv_do_activity_reward(time_t now_utc) {
+  PBL_LOG_DBG("Checking activity reward...");
   if (!prv_reward_check_common(&s_activity_reward_settings, &s_activity_reward_state.common,
                                &s_activity_stats, now_utc)) {
     return;
@@ -1154,9 +1133,11 @@ static NOINLINE void prv_do_activity_reward(time_t now_utc) {
   // Make sure the user is currently active
   if (s_activity_reward_state.active_minutes <
       s_activity_reward_settings.reward.activity.trigger_active_minutes) {
-    INSIGHTS_LOG_DEBUG("Not showing activity reward - have only been currently active for "
-                       "%"PRIu32" minutes out of %"PRIu8, s_activity_reward_state.active_minutes,
-                       s_activity_reward_settings.reward.activity.trigger_active_minutes);
+    PBL_LOG_DBG(
+        "Not showing activity reward - have only been currently active for "
+        "%" PRIu32 " minutes out of %" PRIu8,
+        s_activity_reward_state.active_minutes,
+        s_activity_reward_settings.reward.activity.trigger_active_minutes);
     return;
   }
 
@@ -1188,7 +1169,7 @@ static ActivityScalarStore prv_cur_step_avg(time_t now_utc, int minute_of_day) {
 
 // ------------------------------------------------------------------------------------------------
 // Creates a notification to notify the user of a new pin with a response action
-static NOINLINE TimelineItem *prv_create_notification(const NotificationConfig *config) {
+static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConfig *config) {
   AttributeList notif_attr_list = {};
   ActivitySession *session = config->session;
   prv_build_notification_attr_list(&notif_attr_list, config->body, config->icon_id,
@@ -1232,26 +1213,26 @@ static NOINLINE TimelineItem *prv_create_notification(const NotificationConfig *
   int num_actions = 0;
   int action_id = 0;
   TimelineItemAction actions[max_num_actions];
-  actions[num_actions++] = (TimelineItemAction) {
+  actions[num_actions++] = (TimelineItemAction){
     .id = action_id++,
     .type = TimelineItemActionTypeDismiss,
     .attr_list = dismiss_action_attr_list,
   };
   if (config->open_pin.enabled) {
-    actions[num_actions++] = (TimelineItemAction) {
+    actions[num_actions++] = (TimelineItemAction){
       .id = action_id++,
       .type = TimelineItemActionTypeOpenPin,
       .attr_list = open_pin_action_attr_list,
     };
   } else if (config->open_app.enabled) {
-    actions[num_actions++] = (TimelineItemAction) {
+    actions[num_actions++] = (TimelineItemAction){
       .id = action_id++,
       .type = TimelineItemActionTypeOpenWatchApp,
       .attr_list = open_app_action_attr_list,
     };
   }
   if (config->response.enabled) {
-    actions[num_actions++] = (TimelineItemAction) {
+    actions[num_actions++] = (TimelineItemAction){
       .id = config->response.type,
       .type = TimelineItemActionTypeInsightResponse,
       .attr_list = response_action_attr_list,
@@ -1263,10 +1244,9 @@ static NOINLINE TimelineItem *prv_create_notification(const NotificationConfig *
   };
 
   // Note: it's fine if this returns null, since the parent functions will check for a null pointer
-  TimelineItem *item = timeline_item_create_with_attributes(config->notif_time, 0,
-                                                            TimelineItemTypeNotification,
-                                                            LayoutIdNotification, &notif_attr_list,
-                                                            &action_group);
+  TimelineItem *item =
+      timeline_item_create_with_attributes(config->notif_time, 0, TimelineItemTypeNotification,
+                                           LayoutIdNotification, &notif_attr_list, &action_group);
   i18n_free_all(&notif_attr_list);
   attribute_list_destroy_list(&notif_attr_list);
   attribute_list_destroy_list(&dismiss_action_attr_list);
@@ -1280,8 +1260,8 @@ static NOINLINE TimelineItem *prv_create_notification(const NotificationConfig *
 // Creates a notification to notify the user of a new pin with a response action
 static void prv_create_and_push_notification(const NotificationConfig *config) {
   TimelineItem *item = prv_create_notification(config);
-  prv_push_notification(item, (config->open_pin.enabled && config->open_pin.uuid ?
-                               config->open_pin.uuid : NULL));
+  prv_push_notification(
+      item, (config->open_pin.enabled && config->open_pin.uuid ? config->open_pin.uuid : NULL));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1294,51 +1274,60 @@ static int32_t prv_get_step_count(void) {
 
 // ------------------------------------------------------------------------------------------------
 // Creates a notification to notify the user of the activity summary
-static void prv_push_activity_summary_notification(
-    time_t notif_time, int32_t steps_total, int32_t steps_average, int variant) {
+static void prv_push_activity_summary_notification(time_t notif_time, int32_t steps_total,
+                                                   int32_t steps_average, int variant) {
   static InsightCopyVariants s_tier_config[PercentTierCount] = {
-    [PercentTier_AboveAverage] = {
-      .num_variants = 5,
-      .variants = {
-        i18n_noop("Killer job! You've walked %d steps today which is %d%% above your typical. "
-                  "Do it again tomorrow and you'll be on top of the world!"),
-        i18n_noop("Nice moves! You've walked %d steps today which is %d%% above your typical. "
-                  "Crush it again tomorrow 😀"),
-        i18n_noop("Hey rockstar 🎤 You've walked %d steps today "
-                  "which is %d%% above your typical. Nothing can stop you!"),
-        i18n_noop("We can barely keep up! "
-                  "You walked %d steps today which is %d%% above your typical. "
-                  "You're on 🔥"),
-        i18n_noop("You walked %d steps today which is %d%% above your typical. "
-                  "You just outstepped YOURSELF. Mic drop."),
-      },
-    },
-    [PercentTier_OnAverage] = {
-      .num_variants = 4,
-      .variants = {
-        i18n_noop("You walked %d steps today; keep it up! "
-                  "Being active is the key to feeling like a million bucks. "
-                  "Try to beat your typical tomorrow."),
-        i18n_noop("Good job! You walked %d steps today–do it again tomorrow."),
-        i18n_noop("Someone's on the move 👊 You walked %d steps today; "
-                  "keep doing what you're doing!"),
-        i18n_noop("You keep moving, we'll keep counting! You've clocked in %d steps today. "
-                  "Keep it rolling, hot stuff."),
-      },
-    },
-    [PercentTier_BelowAverage] = {
-      .num_variants = 4,
-      .variants = {
-        i18n_noop("You walked %d steps today which is %d%% below your typical. "
-                  "Try to be more active tomorrow–you can do it!"),
-        i18n_noop("You walked %d steps which is %d%% below your typical. "
-                  "Being active makes you feel amaaaazing–try to get back on track tomorrow."),
-        i18n_noop("You walked %d steps today which is %d%% below your typical. "
-                  "Don't worry, tomorrow is just around the corner 😀"),
-        i18n_noop("You walked %d steps which is %d%% below your typical, "
-                  "but don't stress. You'll crush it tomorrow 😉"),
-      },
-    },
+    [PercentTier_AboveAverage] =
+        {
+          .num_variants = 5,
+          .variants =
+              {
+                i18n_noop(
+                    "Killer job! You've walked %d steps today which is %d%% above your typical. "
+                    "Do it again tomorrow and you'll be on top of the world!"),
+                i18n_noop(
+                    "Nice moves! You've walked %d steps today which is %d%% above your typical. "
+                    "Crush it again tomorrow 😀"),
+                i18n_noop("Hey rockstar 🎤 You've walked %d steps today "
+                          "which is %d%% above your typical. Nothing can stop you!"),
+                i18n_noop("We can barely keep up! "
+                          "You walked %d steps today which is %d%% above your typical. "
+                          "You're on 🔥"),
+                i18n_noop("You walked %d steps today which is %d%% above your typical. "
+                          "You just outstepped YOURSELF. Mic drop."),
+              },
+        },
+    [PercentTier_OnAverage] =
+        {
+          .num_variants = 4,
+          .variants =
+              {
+                i18n_noop("You walked %d steps today; keep it up! "
+                          "Being active is the key to feeling like a million bucks. "
+                          "Try to beat your typical tomorrow."),
+                i18n_noop("Good job! You walked %d steps today–do it again tomorrow."),
+                i18n_noop("Someone's on the move 👊 You walked %d steps today; "
+                          "keep doing what you're doing!"),
+                i18n_noop("You keep moving, we'll keep counting! You've clocked in %d steps today. "
+                          "Keep it rolling, hot stuff."),
+              },
+        },
+    [PercentTier_BelowAverage] =
+        {
+          .num_variants = 4,
+          .variants =
+              {
+                i18n_noop("You walked %d steps today which is %d%% below your typical. "
+                          "Try to be more active tomorrow–you can do it!"),
+                i18n_noop(
+                    "You walked %d steps which is %d%% below your typical. "
+                    "Being active makes you feel amaaaazing–try to get back on track tomorrow."),
+                i18n_noop("You walked %d steps today which is %d%% below your typical. "
+                          "Don't worry, tomorrow is just around the corner 😀"),
+                i18n_noop("You walked %d steps which is %d%% below your typical, "
+                          "but don't stress. You'll crush it tomorrow 😉"),
+              },
+        },
     [PercentTier_Fail] = {
       .num_variants = 3,
       .variants = {
@@ -1352,9 +1341,8 @@ static void prv_push_activity_summary_notification(
   };
 
   int percentage;
-  PercentTier tier = prv_calc_percent_tier(&ACTIVITY_SUMMARY_PIN_CONFIG,
-                                           steps_total,
-                                           steps_average, &percentage);
+  PercentTier tier =
+      prv_calc_percent_tier(&ACTIVITY_SUMMARY_PIN_CONFIG, steps_total, steps_average, &percentage);
   const bool above_fail_threshold =
       steps_total >= ACTIVITY_SUMMARY_PIN_CONFIG.insight_settings->summary.activity.max_fail_steps;
   if ((tier == PercentTier_BelowAverage || tier == PercentTier_Fail) && above_fail_threshold) {
@@ -1387,56 +1375,65 @@ static void prv_push_activity_summary_notification(
   kernel_free(body);
 }
 
-
 // ------------------------------------------------------------------------------------------------
 // Creates a notification to notify the user of the sleep summary
 static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep_total_seconds,
                                                 int32_t sleep_average_seconds, int variant) {
   static InsightCopyVariants s_tier_config[PercentTierCount] = {
-    [PercentTier_AboveAverage] = {
-      .num_variants = 5,
-      .variants = {
-        /// Sleep notification on wake up, slept above their typical sleep duration
-        i18n_noop("Refreshed? You slept for %dH %dM which is %d%% above your typical. "
-                  "Go tackle your day 😃."),
-        i18n_noop("You caught some killer zzz’s! You slept for %dH %dM which is %d%% above "
-                  "your typical. Keep it up."),
-        i18n_noop("Rise and shine! You slept for %dH %dM which is %d%% above your typical. "
-                  "Do it again tonight, sleep master."),
-        i18n_noop("Mmmm...what a night. You slept for %dH %dM which is %d%% above your typical. "
-                  "That's gotta feel good!"),
-        i18n_noop("That's a lot of sheep you just counted! "
-                  "You slept for %dH %dM which is %d%% above your typical. Boom shakalaka."),
-      },
-    },
-    [PercentTier_OnAverage] = {
-      .num_variants = 4,
-      .variants = {
-        /// Sleep notification on wake up, slept similar to their typical sleep duration
-        i18n_noop("Good mornin’. You slept for %dH %dM. "
-                  "Every good day begins with a solid night’s sleep..."
-                  "kinda like that one 😉 Keep it up!"),
-        i18n_noop("Good morning! You slept for %dH %dM. Consistency is key; "
-                  "keep doing what you're doing 😃."),
-        i18n_noop("You're rockin' the shut eye! You slept for %dH %dM. Make it a nightly ritual. "
-                  "You deserve it."),
-        i18n_noop("Feelin' good? You slept for %dH %dM. Nothing can stop you now 👊"),
-      },
-    },
-    [PercentTier_BelowAverage] = {
-      .num_variants = 4,
-      .variants = {
-        /// Sleep notification on wake up, slept below their typical sleep duration
-        i18n_noop("Hey sleepy head. You slept for %dH %dM which "
-                  "is %d%% below your typical. Try to get more tonight!"),
-        i18n_noop("Groggy? You slept for %dH %dM which is %d%% below your typical. Sleep "
-                  "is important for everything you do-try getting more shut eye tonight!"),
-        i18n_noop("It's a new day! You slept for %dH %dM which is %d%% below your typical. "
-                  "It's not your best, but there's always tonight."),
-        i18n_noop("Goooood morning! You slept for %dH %dM which is %d%% below your typical. "
-                  "Go crush your day and then get back in bed 😉"),
-      },
-    },
+    [PercentTier_AboveAverage] =
+        {
+          .num_variants = 5,
+          .variants =
+              {
+                /// Sleep notification on wake up, slept above their typical sleep duration
+                i18n_noop("Refreshed? You slept for %dH %dM which is %d%% above your typical. "
+                          "Go tackle your day 😃."),
+                i18n_noop("You caught some killer zzz’s! You slept for %dH %dM which is %d%% above "
+                          "your typical. Keep it up."),
+                i18n_noop("Rise and shine! You slept for %dH %dM which is %d%% above your typical. "
+                          "Do it again tonight, sleep master."),
+                i18n_noop(
+                    "Mmmm...what a night. You slept for %dH %dM which is %d%% above your typical. "
+                    "That's gotta feel good!"),
+                i18n_noop(
+                    "That's a lot of sheep you just counted! "
+                    "You slept for %dH %dM which is %d%% above your typical. Boom shakalaka."),
+              },
+        },
+    [PercentTier_OnAverage] =
+        {
+          .num_variants = 4,
+          .variants =
+              {
+                /// Sleep notification on wake up, slept similar to their typical sleep duration
+                i18n_noop("Good mornin’. You slept for %dH %dM. "
+                          "Every good day begins with a solid night’s sleep..."
+                          "kinda like that one 😉 Keep it up!"),
+                i18n_noop("Good morning! You slept for %dH %dM. Consistency is key; "
+                          "keep doing what you're doing 😃."),
+                i18n_noop(
+                    "You're rockin' the shut eye! You slept for %dH %dM. Make it a nightly ritual. "
+                    "You deserve it."),
+                i18n_noop("Feelin' good? You slept for %dH %dM. Nothing can stop you now 👊"),
+              },
+        },
+    [PercentTier_BelowAverage] =
+        {
+          .num_variants = 4,
+          .variants =
+              {
+                /// Sleep notification on wake up, slept below their typical sleep duration
+                i18n_noop("Hey sleepy head. You slept for %dH %dM which "
+                          "is %d%% below your typical. Try to get more tonight!"),
+                i18n_noop("Groggy? You slept for %dH %dM which is %d%% below your typical. Sleep "
+                          "is important for everything you do-try getting more shut eye tonight!"),
+                i18n_noop("It's a new day! You slept for %dH %dM which is %d%% below your typical. "
+                          "It's not your best, but there's always tonight."),
+                i18n_noop(
+                    "Goooood morning! You slept for %dH %dM which is %d%% below your typical. "
+                    "Go crush your day and then get back in bed 😉"),
+              },
+        },
     [PercentTier_Fail] = {
       .num_variants = 3,
       .variants = {
@@ -1453,12 +1450,12 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
   const int hours = sleep_total_seconds / SECONDS_PER_HOUR;
   const int minutes = (sleep_total_seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
   int percentage;
-  PercentTier tier = prv_calc_percent_tier(&SLEEP_SUMMARY_PIN_CONFIG , sleep_total_seconds,
-                                                 sleep_average_seconds, &percentage);
+  PercentTier tier = prv_calc_percent_tier(&SLEEP_SUMMARY_PIN_CONFIG, sleep_total_seconds,
+                                           sleep_average_seconds, &percentage);
 
   if ((tier == PercentTier_BelowAverage || tier == PercentTier_Fail) &&
       sleep_total_seconds / SECONDS_PER_MINUTE >=
-      SLEEP_SUMMARY_PIN_CONFIG.insight_settings->summary.sleep.max_fail_minutes) {
+          SLEEP_SUMMARY_PIN_CONFIG.insight_settings->summary.sleep.max_fail_minutes) {
     // we don't want to show a negative insights if you've slept 7 hours
     tier = PercentTier_OnAverage;
   }
@@ -1493,8 +1490,7 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
 // ------------------------------------------------------------------------------------------------
 static bool prv_push_activity_summary_pin(time_t now_utc, time_t pin_time_utc, int minute_of_day,
                                           ActivityScalarStore steps,
-                                          ActivityScalarStore total_steps_avg,
-                                          Uuid *uuid) {
+                                          ActivityScalarStore total_steps_avg, Uuid *uuid) {
   sniprintf(ACTIVITY_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
             i18n_get("%u Steps", &ACTIVITY_SUMMARY_PIN_CONFIG), steps);
 
@@ -1506,7 +1502,7 @@ static bool prv_push_activity_summary_pin(time_t now_utc, time_t pin_time_utc, i
 
 // ------------------------------------------------------------------------------------------------
 // Checks to see if we should add/update an activity summary pin
-static NOINLINE void prv_do_activity_summary(time_t now_utc) {
+static PBL_NOINLINE void prv_do_activity_summary(time_t now_utc) {
   if (!s_activity_summary_settings.enabled) {
     return;
   }
@@ -1520,16 +1516,16 @@ static NOINLINE void prv_do_activity_summary(time_t now_utc) {
   const int minute_of_day = time_util_get_minute_of_day(now_utc);
   if ((minute_of_day < s_activity_summary_settings.summary.activity.trigger_minute) ||
       s_activity_pin_state.removed) {
-    INSIGHTS_LOG_DEBUG("Not adding activity pin - before trigger time (%d < %d) or removed (%d)",
-                       minute_of_day, s_activity_summary_settings.summary.activity.trigger_minute,
-                       s_activity_pin_state.removed);
+    PBL_LOG_DBG("Not adding activity pin - before trigger time (%d < %d) or removed (%d)",
+                minute_of_day, s_activity_summary_settings.summary.activity.trigger_minute,
+                s_activity_pin_state.removed);
     return;
   }
 
   // Make sure we actually have a step count
   const int32_t steps = prv_get_step_count();
   if (steps <= 0) {
-    INSIGHTS_LOG_DEBUG("Not adding activity pin - no steps");
+    PBL_LOG_DBG("Not adding activity pin - no steps");
     return;
   }
 
@@ -1537,7 +1533,7 @@ static NOINLINE void prv_do_activity_summary(time_t now_utc) {
   const time_t next_update_time = s_activity_pin_state.next_update_time;
   ActivityScalarStore next_step_count = s_activity_pin_state.next_step_count;
   if ((now_utc < next_update_time) && (steps < (int32_t)next_step_count)) {
-    INSIGHTS_LOG_DEBUG("Not updating activity pin - less than next update time and next steps");
+    PBL_LOG_DBG("Not updating activity pin - less than next update time and next steps");
     return;
   }
 
@@ -1549,8 +1545,9 @@ static NOINLINE void prv_do_activity_summary(time_t now_utc) {
   // Determine the average for today
   ActivityScalarStore total_steps_avg = prv_cur_step_avg(now_utc, minute_of_day);
 
-  const time_t pin_time_utc = time_util_get_midnight_of(now_utc) +
-          (s_activity_summary_settings.summary.activity.trigger_minute * SECONDS_PER_MINUTE);
+  const time_t pin_time_utc =
+      time_util_get_midnight_of(now_utc) +
+      (s_activity_summary_settings.summary.activity.trigger_minute * SECONDS_PER_MINUTE);
 
   if (prv_push_activity_summary_pin(now_utc, pin_time_utc, minute_of_day, steps, total_steps_avg,
                                     &s_activity_pin_state.uuid)) {
@@ -1563,7 +1560,7 @@ static NOINLINE void prv_do_activity_summary(time_t now_utc) {
 
     // Trigger a notification to go with the new pin (only if we're at the trigger time)
     if (activity_prefs_activity_insights_are_enabled() &&
-        (minute_of_day == s_activity_summary_settings.summary.activity.trigger_minute)  &&
+        (minute_of_day == s_activity_summary_settings.summary.activity.trigger_minute) &&
         s_activity_summary_settings.summary.activity.show_notification) {
       prv_push_activity_summary_notification(pin_time_utc, steps, total_steps_avg, VARIANT_RANDOM);
     }
@@ -1571,7 +1568,7 @@ static NOINLINE void prv_do_activity_summary(time_t now_utc) {
 }
 
 // ------------------------------------------------------------------------------------------------
-static const char* prv_get_intro_str_for_activity(ActivitySession *session) {
+static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
   switch (session->type) {
     case ActivitySessionType_Walk: {
       static const InsightCopyVariants s_walking_intros = {
@@ -1638,8 +1635,7 @@ static void prv_add_metric_duration_info(StringList *headings, int headings_buf_
   if (duration_m <= MINUTES_PER_HOUR) {
     snprintf(duration_str, duration_buffer_size, i18n_get("%d Min", headings), duration_m);
   } else {
-    health_util_format_hours_and_minutes(duration_str, duration_buffer_size,
-                                         duration_s, headings);
+    health_util_format_hours_and_minutes(duration_str, duration_buffer_size, duration_s, headings);
   }
 
   const char *activity_label;
@@ -1661,13 +1657,13 @@ static void prv_add_avg_pace_metric_info(StringList *headings, int headings_buf_
   char pace_str[pace_buf_size];
   const int pace_s = health_util_get_pace(session->length_min * SECONDS_PER_MINUTE,
                                           session->step_data.distance_meters);
-  int offset = health_util_format_hours_minutes_seconds(pace_str, pace_buf_size, pace_s,
-                                                        false, headings);
+  int offset =
+      health_util_format_hours_minutes_seconds(pace_str, pace_buf_size, pace_s, false, headings);
 
   snprintf(pace_str + offset, pace_buf_size - offset, " /%s", prv_get_distance_unit(headings));
 
-  string_list_add_string(headings, headings_buf_size,
-                         i18n_get("Avg Pace", headings), headings_buf_size);
+  string_list_add_string(headings, headings_buf_size, i18n_get("Avg Pace", headings),
+                         headings_buf_size);
   string_list_add_string(values, values_buf_size, pace_str, values_buf_size);
 }
 
@@ -1679,11 +1675,11 @@ static void prv_add_distance_metric_info(StringList *headings, int headings_buf_
   int offset = health_util_format_distance(distance_str, distance_buf_size,
                                            session->step_data.distance_meters);
 
-  snprintf(distance_str + offset, distance_buf_size - offset,
-           " %s", prv_get_distance_unit(headings));
+  snprintf(distance_str + offset, distance_buf_size - offset, " %s",
+           prv_get_distance_unit(headings));
 
-  string_list_add_string(headings, headings_buf_size,
-                         i18n_get("Distance", headings), headings_buf_size);
+  string_list_add_string(headings, headings_buf_size, i18n_get("Distance", headings),
+                         headings_buf_size);
   string_list_add_string(values, values_buf_size, distance_str, values_buf_size);
 }
 
@@ -1694,8 +1690,8 @@ static void prv_add_step_metric_info(StringList *headings, int headings_buf_size
   char step_str[step_buf_size];
   snprintf(step_str, step_buf_size, "%d", session->step_data.steps);
 
-  string_list_add_string(headings, headings_buf_size,
-                         i18n_get("Steps", headings), headings_buf_size);
+  string_list_add_string(headings, headings_buf_size, i18n_get("Steps", headings),
+                         headings_buf_size);
   string_list_add_string(values, values_buf_size, step_str, values_buf_size);
 }
 
@@ -1707,21 +1703,20 @@ static void prv_add_active_calories_metric_info(StringList *headings, int headin
   const int active_calories = session->step_data.active_kcalories;
   snprintf(calories_str, calories_buf_size, "%d", active_calories);
 
-  string_list_add_string(headings, headings_buf_size,
-                         i18n_get("Active Calories", headings), headings_buf_size);
+  string_list_add_string(headings, headings_buf_size, i18n_get("Active Calories", headings),
+                         headings_buf_size);
   string_list_add_string(values, values_buf_size, calories_str, values_buf_size);
 }
 
-static void prv_add_hr_metric_info(StringList *headings, int headings_buf_size,
-                                   StringList *values, int values_buf_size,
-                                   int32_t avg_hr, int32_t *hr_zone_time_s) {
+static void prv_add_hr_metric_info(StringList *headings, int headings_buf_size, StringList *values,
+                                   int values_buf_size, int32_t avg_hr, int32_t *hr_zone_time_s) {
   const size_t hr_buf_size = 8;
   char hr_str[hr_buf_size];
 
   if (avg_hr) {
-    snprintf(hr_str, hr_buf_size, "%"PRIi32"", avg_hr);
-    string_list_add_string(headings, headings_buf_size,
-                           i18n_get("Avg HR", headings), headings_buf_size);
+    snprintf(hr_str, hr_buf_size, "%" PRIi32 "", avg_hr);
+    string_list_add_string(headings, headings_buf_size, i18n_get("Avg HR", headings),
+                           headings_buf_size);
     string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
   }
 
@@ -1729,22 +1724,22 @@ static void prv_add_hr_metric_info(StringList *headings, int headings_buf_size,
     const int zone_1_minutes = ROUND(hr_zone_time_s[HRZone_Zone1], SECONDS_PER_MINUTE);
     if (zone_1_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_1_minutes);
-      string_list_add_string(headings, headings_buf_size,
-                             i18n_get("Fat Burn", headings), headings_buf_size);
+      string_list_add_string(headings, headings_buf_size, i18n_get("Fat Burn", headings),
+                             headings_buf_size);
       string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
     const int zone_2_minutes = ROUND(hr_zone_time_s[HRZone_Zone2], SECONDS_PER_MINUTE);
     if (zone_2_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_2_minutes);
-      string_list_add_string(headings, headings_buf_size,
-                             i18n_get("Endurance", headings), headings_buf_size);
+      string_list_add_string(headings, headings_buf_size, i18n_get("Endurance", headings),
+                             headings_buf_size);
       string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
     const int zone_3_minutes = ROUND(hr_zone_time_s[HRZone_Zone3], SECONDS_PER_MINUTE);
     if (zone_3_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_3_minutes);
-      string_list_add_string(headings, headings_buf_size,
-                             i18n_get("Performance", headings), headings_buf_size);
+      string_list_add_string(headings, headings_buf_size, i18n_get("Performance", headings),
+                             headings_buf_size);
       string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
   }
@@ -1753,8 +1748,7 @@ static void prv_add_hr_metric_info(StringList *headings, int headings_buf_size,
 // ------------------------------------------------------------------------------------------------
 // Creates a notification to notify the user of the activity session
 void activity_insights_push_activity_session_notification(time_t notif_time,
-                                                          ActivitySession *session,
-                                                          int32_t avg_hr,
+                                                          ActivitySession *session, int32_t avg_hr,
                                                           int32_t *hr_zone_time_s) {
   if (session->length_min <= 0) {
     return;
@@ -1774,7 +1768,6 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
   const int values_buf_size = 128;
   StringList *values = kernel_zalloc_check(values_buf_size);
 
-
   if (session->type == ActivitySessionType_Run) {
     type = ActivityInsightType_ActivitySessionRun;
     icon = TIMELINE_RESOURCE_RUN;
@@ -1782,10 +1775,10 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
     prv_add_metric_duration_info(headings, headings_buf_size, values, values_buf_size, session);
     prv_add_avg_pace_metric_info(headings, headings_buf_size, values, values_buf_size, session);
     prv_add_distance_metric_info(headings, headings_buf_size, values, values_buf_size, session);
-    prv_add_active_calories_metric_info(headings, headings_buf_size,
-                                        values, values_buf_size, session);
-    prv_add_hr_metric_info(headings, headings_buf_size, values, values_buf_size,
-                           avg_hr, hr_zone_time_s);
+    prv_add_active_calories_metric_info(headings, headings_buf_size, values, values_buf_size,
+                                        session);
+    prv_add_hr_metric_info(headings, headings_buf_size, values, values_buf_size, avg_hr,
+                           hr_zone_time_s);
   } else if (session->type == ActivitySessionType_Walk) {
     type = ActivityInsightType_ActivitySessionWalk;
     icon = TIMELINE_RESOURCE_ACTIVITY;
@@ -1794,22 +1787,27 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
     prv_add_avg_pace_metric_info(headings, headings_buf_size, values, values_buf_size, session);
     prv_add_distance_metric_info(headings, headings_buf_size, values, values_buf_size, session);
     prv_add_step_metric_info(headings, headings_buf_size, values, values_buf_size, session);
-    prv_add_active_calories_metric_info(headings, headings_buf_size,
-                                        values, values_buf_size, session);
-    prv_add_hr_metric_info(headings, headings_buf_size, values, values_buf_size,
-                           avg_hr, hr_zone_time_s);
+    prv_add_active_calories_metric_info(headings, headings_buf_size, values, values_buf_size,
+                                        session);
+    prv_add_hr_metric_info(headings, headings_buf_size, values, values_buf_size, avg_hr,
+                           hr_zone_time_s);
   } else if (session->type == ActivitySessionType_Open) {
     type = ActivityInsightType_ActivitySessionOpen;
     icon = TIMELINE_RESOURCE_HEART;
 
     prv_add_metric_duration_info(headings, headings_buf_size, values, values_buf_size, session);
-    prv_add_hr_metric_info(headings, headings_buf_size, values, values_buf_size,
-                           avg_hr, hr_zone_time_s);
+    // Open workouts are often stationary (weights, yoga, ...), where the distance-based estimate
+    // is 0. Skip the row rather than show a misleading zero.
+    if (session->step_data.active_kcalories > 0) {
+      prv_add_active_calories_metric_info(headings, headings_buf_size, values, values_buf_size,
+                                          session);
+    }
+    prv_add_hr_metric_info(headings, headings_buf_size, values, values_buf_size, avg_hr,
+                           hr_zone_time_s);
   } else {
     // Unsupported activity type
     goto cleanup;
   }
-
 
   const NotificationConfig config = {
     .notif_time = notif_time,
@@ -1846,25 +1844,25 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
   }
 
   if (s_session_pin_state.start_utc >= session->start_utc) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - session too old");
+    PBL_LOG_DBG("Not adding session pin - session too old");
     return;
   }
 
   if (now_utc - (session->start_utc + SECONDS_PER_MINUTE * session->length_min) <
       s_activity_session_settings.session.activity.trigger_cooldown_minutes * SECONDS_PER_MINUTE) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - cooldown not yet elapsed");
+    PBL_LOG_DBG("Not adding session pin - cooldown not yet elapsed");
     return;
   }
 
   if (prv_get_sleep_state() != ActivitySleepStateAwake) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - asleep");
+    PBL_LOG_DBG("Not adding session pin - asleep");
     return;
   }
 
   if (session->length_min < s_activity_session_settings.session.activity.trigger_elapsed_minutes) {
-    INSIGHTS_LOG_DEBUG("Not adding session pin - not long enough (%"PRIu16" < %"PRIu16")",
-                       session->length_min,
-                       s_activity_session_settings.session.activity.trigger_elapsed_minutes);
+    PBL_LOG_DBG("Not adding session pin - not long enough (%" PRIu16 " < %" PRIu16 ")",
+                session->length_min,
+                s_activity_session_settings.session.activity.trigger_elapsed_minutes);
     return;
   }
 
@@ -1875,8 +1873,7 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
 
   s_session_pin_state.start_utc = session->start_utc;
 
-  prv_save_state(ActivitySettingsKeyInsightActivitySessionTime,
-                 &s_session_pin_state.start_utc,
+  prv_save_state(ActivitySettingsKeyInsightActivitySessionTime, &s_session_pin_state.start_utc,
                  sizeof(s_session_pin_state.start_utc));
 
   if (s_activity_session_settings.session.show_notification) {
@@ -1915,7 +1912,7 @@ void prv_process_activity_sessions(time_t now_utc) {
 }
 
 // ------------------------------------------------------------------------------------------------
-void NOINLINE activity_insights_process_minute_data(time_t now_utc) {
+void PBL_NOINLINE activity_insights_process_minute_data(time_t now_utc) {
   // Update our active stats - needs to happen each iteration to ensure it's current
   // If we're above the 'active' threshold, increment the number of consecutive active minutes,
   // otherwise, reset to 0
@@ -1945,7 +1942,7 @@ static void prv_settings_file_changed_cb(void *data);
 
 // Reloads the reward settings from flash and caches them
 static void prv_reload_settings(void *not_used) {
-  INSIGHTS_LOG_DEBUG("Reloading insights settings");
+  PBL_LOG_DBG("Reloading insights settings");
 
   if (s_pfs_cb_handle) {
     activity_insights_settings_unwatch(s_pfs_cb_handle);
@@ -2010,7 +2007,7 @@ void activity_insights_init(time_t now_utc) {
   prv_reload_settings(NULL);
 
   // Subscribe to pin removal events
-  s_blobdb_event_info = (EventServiceInfo) {
+  s_blobdb_event_info = (EventServiceInfo){
     .type = PEBBLE_BLOBDB_EVENT,
     .handler = prv_blobdb_event_handler,
   };
@@ -2025,18 +2022,17 @@ void activity_insights_init(time_t now_utc) {
                       &s_sleep_reward_state.common.last_triggered_utc,
                       sizeof(s_sleep_reward_state.common.last_triggered_utc));
     prv_restore_state(file, ActivitySettingsKeyInsightActivityRewardTime,
-                        &s_activity_reward_state.common.last_triggered_utc,
-                        sizeof(s_activity_reward_state.common.last_triggered_utc));
+                      &s_activity_reward_state.common.last_triggered_utc,
+                      sizeof(s_activity_reward_state.common.last_triggered_utc));
     prv_restore_state(file, ActivitySettingsKeyInsightActivitySummaryState,
                       &activity_pin_last_state, sizeof(activity_pin_last_state));
-    prv_restore_state(file, ActivitySettingsKeyInsightSleepSummaryState,
-                      &s_sleep_pin_state, sizeof(s_sleep_pin_state));
+    prv_restore_state(file, ActivitySettingsKeyInsightSleepSummaryState, &s_sleep_pin_state,
+                      sizeof(s_sleep_pin_state));
     prv_restore_state(file, ActivitySettingsKeyInsightNapSessionTime,
                       &s_nap_pin_state.last_triggered_utc,
                       sizeof(s_nap_pin_state.last_triggered_utc));
     prv_restore_state(file, ActivitySettingsKeyInsightActivitySessionTime,
-                      &s_session_pin_state.start_utc,
-                      sizeof(s_session_pin_state.start_utc));
+                      &s_session_pin_state.start_utc, sizeof(s_session_pin_state.start_utc));
     activity_private_settings_close(file);
   }
 
@@ -2048,10 +2044,8 @@ void activity_insights_init(time_t now_utc) {
     s_sleep_pin_state.notified = true;
   }
 
-  INSIGHTS_LOG_DEBUG("Last sleep reward state: %ld",
-                     s_sleep_reward_state.common.last_triggered_utc);
-  INSIGHTS_LOG_DEBUG("Last activity reward state: %ld",
-                     s_activity_reward_state.common.last_triggered_utc);
+  PBL_LOG_DBG("Last sleep reward state: %ld", s_sleep_reward_state.common.last_triggered_utc);
+  PBL_LOG_DBG("Last activity reward state: %ld", s_activity_reward_state.common.last_triggered_utc);
 
   // Recalculate metric stats
   activity_insights_recalculate_stats();
@@ -2106,8 +2100,8 @@ static void prv_test_push_summary_pins(void *unused) {
   prv_push_sleep_summary_pin(now_utc, exit_utc, enter_seconds, exit_seconds,
                              total_seconds + deviate_seconds, total_seconds, &uuid);
   uuid = UUID_INVALID;
-  prv_push_sleep_summary_pin(now_utc, exit_utc, enter_seconds, exit_seconds,
-                             total_seconds, total_seconds, &uuid);
+  prv_push_sleep_summary_pin(now_utc, exit_utc, enter_seconds, exit_seconds, total_seconds,
+                             total_seconds, &uuid);
   uuid = UUID_INVALID;
   prv_push_sleep_summary_pin(now_utc, exit_utc, enter_seconds, exit_seconds,
                              total_seconds - deviate_seconds, total_seconds, &uuid);
@@ -2116,13 +2110,12 @@ static void prv_test_push_summary_pins(void *unused) {
                              total_seconds - 3 * deviate_seconds, total_seconds, &uuid);
   if (activity_prefs_sleep_insights_are_enabled()) {
     for (int i = 0; i < NUM_COPY_VARIANTS; i++) {
-      prv_push_sleep_summary_notification(now_utc, total_seconds + deviate_seconds,
-                                          total_seconds, i);
+      prv_push_sleep_summary_notification(now_utc, total_seconds + deviate_seconds, total_seconds,
+                                          i);
       prv_push_sleep_summary_notification(now_utc, total_seconds, total_seconds, i);
-      prv_push_sleep_summary_notification(now_utc, total_seconds - deviate_seconds,
-                                          total_seconds, i);
-      prv_push_sleep_summary_notification(now_utc, deviate_seconds,
-                                          total_seconds, i);
+      prv_push_sleep_summary_notification(now_utc, total_seconds - deviate_seconds, total_seconds,
+                                          i);
+      prv_push_sleep_summary_notification(now_utc, deviate_seconds, total_seconds, i);
     }
   }
 }
@@ -2152,12 +2145,12 @@ static void prv_test_push_walk_run_session(void *unused) {
     },
   };
   int32_t avg_walk_hr = 120;
-  int32_t walk_hr_zone_time_s[HRZoneCount] = {10 * SECONDS_PER_MINUTE,
-                                              15 * SECONDS_PER_MINUTE,
-                                              10 * SECONDS_PER_MINUTE,
-                                              0  * SECONDS_PER_MINUTE};
-  activity_insights_push_activity_session_notification(now_utc, &walk_session,
-                                                       avg_walk_hr, walk_hr_zone_time_s);
+  int32_t walk_hr_zone_time_s[HRZoneCount] = {
+    10 * SECONDS_PER_MINUTE, 15 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE,
+    0 * SECONDS_PER_MINUTE
+  };
+  activity_insights_push_activity_session_notification(now_utc, &walk_session, avg_walk_hr,
+                                                       walk_hr_zone_time_s);
 
   ActivitySession run_session = {
     .type = ActivitySessionType_Run,
@@ -2170,12 +2163,12 @@ static void prv_test_push_walk_run_session(void *unused) {
     },
   };
   int32_t avg_run_hr = 150;
-  int32_t run_hr_zone_time_s[HRZoneCount] = {5  * SECONDS_PER_MINUTE,
-                                             10 * SECONDS_PER_MINUTE,
-                                             10 * SECONDS_PER_MINUTE,
-                                             15 * SECONDS_PER_MINUTE};
-  activity_insights_push_activity_session_notification(now_utc, &run_session,
-                                                       avg_run_hr, run_hr_zone_time_s);
+  int32_t run_hr_zone_time_s[HRZoneCount] = {
+    5 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE,
+    15 * SECONDS_PER_MINUTE
+  };
+  activity_insights_push_activity_session_notification(now_utc, &run_session, avg_run_hr,
+                                                       run_hr_zone_time_s);
 
   ActivitySession open_session = {
     .type = ActivitySessionType_Open,
@@ -2188,12 +2181,11 @@ static void prv_test_push_walk_run_session(void *unused) {
     },
   };
   int32_t avg_open_hr = 130;
-  int32_t open_hr_zone_time_s[HRZoneCount] = {2  * SECONDS_PER_MINUTE,
-                                              0  * SECONDS_PER_MINUTE,
-                                              18 * SECONDS_PER_MINUTE,
-                                              10 * SECONDS_PER_MINUTE};
-  activity_insights_push_activity_session_notification(now_utc, &open_session,
-                                                       avg_open_hr, open_hr_zone_time_s);
+  int32_t open_hr_zone_time_s[HRZoneCount] = {
+    2 * SECONDS_PER_MINUTE, 0 * SECONDS_PER_MINUTE, 18 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE
+  };
+  activity_insights_push_activity_session_notification(now_utc, &open_session, avg_open_hr,
+                                                       open_hr_zone_time_s);
 }
 
 static void prv_test_push_nap_session(void *unused) {

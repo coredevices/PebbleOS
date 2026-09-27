@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "pebble_compat.h"
 #include "weather_types.h"
 
 // "The Weather Report" — the screen SELECT opens from the forecast list.
@@ -18,7 +17,6 @@
 void weather_report_reset(void);
 
 void weather_report_push(const WeatherLocationForecast *days, size_t num_days, int start_day_index);
-
 
 // Arm a hard-cut entrance for the NEXT push (no system slide, no slide-in) — used when a
 // transition scene (the unfold) has already delivered the entrance. Rect only.

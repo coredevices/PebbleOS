@@ -7,7 +7,6 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/text_layer.h"
 #include "applib/ui/window.h"
-#include "board/board.h"
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/clocksource.h>
@@ -16,46 +15,43 @@
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
-#include "pbl/util/size.h"
 
-#include <FreeRTOS.h>
-#include <semphr.h>
+#include "pbl/kernel/sem.h"
 
-#include "hal/nrf_clock.h"
 #include "nrfx_i2s.h"
 #include "nrfx_pdm.h"
 
 #include "console/dbgserial.h"
 
 #define DUMP_RECORDING_DBGSERIAL 0
-#define PLAY_SINEWAVE 0
+#define PLAY_SINEWAVE            0
 
-#define DA7212_PLL_STATUS            0x03
-#define DA7212_CIF_CTRL              0x1D
-#define DA7212_DIG_ROUTING_DAI       0x21
-#define DA7212_SR                    0x22
-#define DA7212_REFERENCES            0x23
-#define DA7212_PLL_FRAC_TOP          0x24
-#define DA7212_PLL_FRAC_BOT          0x25
-#define DA7212_PLL_INTEGER           0x26
-#define DA7212_PLL_CTRL              0x27
-#define DA7212_DAI_CLK_MODE          0x28
-#define DA7212_DAI_CTRL              0x29
-#define DA7212_DIG_ROUTING_DAC       0x2A
-#define DA7212_DAC_FILTERS5          0x40
-#define DA7212_DAC_R_GAIN            0x46
-#define DA7212_LINE_GAIN             0x4A
-#define DA7212_MIXOUT_R_SELECT       0x4C
-#define DA7212_SYSTEM_MODES_OUTPUT   0x51
-#define DA7212_DAC_R_CTRL            0x6A
-#define DA7212_LINE_CTRL             0x6D
-#define DA7212_MIXOUT_R_CTRL         0x6F
-#define DA7212_LDO_CTRL              0x90
-#define DA7212_GAIN_RAMP_CTRL        0x92
-#define DA7212_TONE_GEN_CFG1         0xB4
-#define DA7212_TONE_GEN_CYCLES       0xB6
-#define DA7212_TONE_GEN_ON_PER       0xBB
-#define DA7212_SYSTEM_ACTIVE         0xFD
+#define DA7212_PLL_STATUS          0x03
+#define DA7212_CIF_CTRL            0x1D
+#define DA7212_DIG_ROUTING_DAI     0x21
+#define DA7212_SR                  0x22
+#define DA7212_REFERENCES          0x23
+#define DA7212_PLL_FRAC_TOP        0x24
+#define DA7212_PLL_FRAC_BOT        0x25
+#define DA7212_PLL_INTEGER         0x26
+#define DA7212_PLL_CTRL            0x27
+#define DA7212_DAI_CLK_MODE        0x28
+#define DA7212_DAI_CTRL            0x29
+#define DA7212_DIG_ROUTING_DAC     0x2A
+#define DA7212_DAC_FILTERS5        0x40
+#define DA7212_DAC_R_GAIN          0x46
+#define DA7212_LINE_GAIN           0x4A
+#define DA7212_MIXOUT_R_SELECT     0x4C
+#define DA7212_SYSTEM_MODES_OUTPUT 0x51
+#define DA7212_DAC_R_CTRL          0x6A
+#define DA7212_LINE_CTRL           0x6D
+#define DA7212_MIXOUT_R_CTRL       0x6F
+#define DA7212_LDO_CTRL            0x90
+#define DA7212_GAIN_RAMP_CTRL      0x92
+#define DA7212_TONE_GEN_CFG1       0xB4
+#define DA7212_TONE_GEN_CYCLES     0xB6
+#define DA7212_TONE_GEN_ON_PER     0xBB
+#define DA7212_SYSTEM_ACTIVE       0xFD
 
 #define RECORDING_MS      3000
 #define SAMPLE_RATE_HZ    16000
@@ -66,23 +62,23 @@
 #define SAMPLE_SIZE_BYTES (SAMPLE_BITS / 8)
 #define BLOCK_SIZE        (N_SAMPLES * SAMPLE_SIZE_BYTES)
 
-#define FLASH_START       FLASH_REGION_FIRMWARE_DEST_BEGIN
-#define FLASH_END         FLASH_REGION_FIRMWARE_DEST_END
+#define FLASH_START FLASH_REGION_FIRMWARE_DEST_BEGIN
+#define FLASH_END   FLASH_REGION_FIRMWARE_DEST_END
 
 #if !PLAY_SINEWAVE
 static int16_t s_buf[2][N_SAMPLES];
 static int16_t *s_buf_rd;
 static int16_t *s_buf_wr;
 static uint8_t s_buf_idx;
-static SemaphoreHandle_t s_data_ready;
-static SemaphoreHandle_t s_need_data;
+static PBL_SEM_DEFINE(s_data_ready, 0, 1);
+static PBL_SEM_DEFINE(s_need_data, 0, 1);
 #endif
 static nrfx_i2s_buffers_t s_i2s_bufs;
 
 #if !PLAY_SINEWAVE
 static const nrfx_pdm_t s_pdm = NRFX_PDM_INSTANCE(0);
 static nrfx_pdm_config_t s_pdm_cfg =
-  NRFX_PDM_DEFAULT_CONFIG(NRF_GPIO_PIN_MAP(1, 0), NRF_GPIO_PIN_MAP(0, 24));
+    NRFX_PDM_DEFAULT_CONFIG(NRF_GPIO_PIN_MAP(1, 0), NRF_GPIO_PIN_MAP(0, 24));
 #endif
 
 static const nrfx_i2s_t s_i2s = NRFX_I2S_INSTANCE(0);
@@ -196,7 +192,8 @@ static void prv_codec_standby(void) {
 
 static void prv_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t status) {
 #if !PLAY_SINEWAVE
-  PBL_ASSERT(!(status == NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED && p_released == NULL), "I2S buffers re-used");
+  PBL_ASSERT(!(status == NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED && p_released == NULL),
+             "I2S buffers re-used");
 
   if (status == NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED) {
     s_i2s_bufs.p_tx_buffer = (uint32_t *)s_buf[s_buf_idx];
@@ -205,16 +202,14 @@ static void prv_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t stat
   }
 
   if (p_released != NULL && p_released->p_tx_buffer != NULL) {
-    BaseType_t woken;
     s_buf_wr = (int16_t *)p_released->p_tx_buffer;
-    xSemaphoreGiveFromISR(s_need_data, &woken);
-    portYIELD_FROM_ISR(woken);
+    pbl_sem_give(&s_need_data);
   }
 #endif
 }
 
 #if !PLAY_SINEWAVE
-static void prv_pdm_evt_handler(nrfx_pdm_evt_t const * p_evt) {
+static void prv_pdm_evt_handler(nrfx_pdm_evt_t const *p_evt) {
   PBL_ASSERT(p_evt->error == NRFX_PDM_NO_ERROR, "PDM overflow");
 
   if (p_evt->buffer_requested) {
@@ -223,18 +218,14 @@ static void prv_pdm_evt_handler(nrfx_pdm_evt_t const * p_evt) {
   }
 
   if (p_evt->buffer_released) {
-    BaseType_t woken;
     s_buf_rd = p_evt->buffer_released;
-    xSemaphoreGiveFromISR(s_data_ready, &woken);
-    portYIELD_FROM_ISR(woken);
+    pbl_sem_give(&s_data_ready);
   }
 }
 
 static void prv_mic_capture(void) {
   uint32_t flash_addr;
   nrfx_err_t err;
-
-  s_data_ready = xSemaphoreCreateBinary();
 
   clocksource_hfxo_request();
 
@@ -255,7 +246,7 @@ static void prv_mic_capture(void) {
 
   flash_addr = FLASH_START;
   for (unsigned int i = 0U; i < RECORDING_MS / CAPTURE_MS; i++) {
-    xSemaphoreTake(s_data_ready, portMAX_DELAY);
+    pbl_sem_take(&s_data_ready, PBL_FOREVER);
 
     flash_write_bytes((uint8_t *)s_buf_rd, flash_addr, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
@@ -266,7 +257,7 @@ static void prv_mic_capture(void) {
 
   clocksource_hfxo_release();
 
-  vSemaphoreDelete(s_data_ready);
+  pbl_sem_deinit(&s_data_ready);
 
 #if DUMP_RECORDING_DBGSERIAL
   flash_addr = FLASH_START;
@@ -289,8 +280,6 @@ static void prv_mic_capture(void) {
 static void prv_playback(void) {
   uint32_t flash_addr;
   nrfx_err_t err;
-
-  s_need_data = xSemaphoreCreateBinary();
 
   clocksource_hfxo_request();
 
@@ -320,7 +309,7 @@ static void prv_playback(void) {
     flash_read_bytes((uint8_t *)s_buf_wr, flash_addr, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
 
-    xSemaphoreTake(s_need_data, portMAX_DELAY);
+    pbl_sem_take(&s_need_data, PBL_FOREVER);
   }
 
   prv_codec_standby();
@@ -330,7 +319,7 @@ static void prv_playback(void) {
 
   clocksource_hfxo_release();
 
-  vSemaphoreDelete(s_need_data);
+  pbl_sem_deinit(&s_need_data);
 
   flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
 }
@@ -405,11 +394,12 @@ static void s_main(void) {
 
 const PebbleProcessMd *mfg_mic_asterix_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
-      .common.main_func = &s_main,
-      // UUID: 95ada1ce-04b3-46b0-8519-0b42260b5c39
-      .common.uuid = {0x95, 0xad, 0xa1, 0xce, 0x04, 0xb3, 0x46, 0xb0,
-                      0x85, 0x19, 0x0b, 0x42, 0x26, 0x0b, 0x5c, 0x39},
-      .name = "MfgMicAsterix",
+    .common.main_func = &s_main,
+    // UUID: 95ada1ce-04b3-46b0-8519-0b42260b5c39
+    .common.uuid =
+        {0x95, 0xad, 0xa1, 0xce, 0x04, 0xb3, 0x46, 0xb0, 0x85, 0x19, 0x0b, 0x42, 0x26, 0x0b, 0x5c,
+         0x39},
+    .name = "MfgMicAsterix",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

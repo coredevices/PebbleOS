@@ -4,25 +4,26 @@
 #pragma once
 
 #include "pbl/services/timezone_database.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
-int WEAK timezone_database_get_region_count(void) {
+int PBL_WEAK timezone_database_get_region_count(void) {
   return 0;
 }
 
-bool WEAK timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_info) {
+bool PBL_WEAK timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_info) {
   return false;
 }
 
-bool WEAK timezone_database_load_region_name(uint16_t region_id, char *region_name) {
+bool PBL_WEAK timezone_database_load_region_name(uint16_t region_id, char *region_name) {
   return false;
 }
 
-bool WEAK timezone_database_load_dst_rule(uint8_t dst_id, TimezoneDSTRule *start,
-                                          TimezoneDSTRule *end) {
+bool PBL_WEAK timezone_database_load_dst_rule(uint8_t dst_id, TimezoneDSTRule *start,
+                                              TimezoneDSTRule *end) {
   return false;
 }
 
-int WEAK timezone_database_find_region_by_name(const char *region_name, int region_name_length) {
+int PBL_WEAK timezone_database_find_region_by_name(const char *region_name,
+                                                   int region_name_length) {
   return 0;
 }

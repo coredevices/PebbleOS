@@ -6,8 +6,8 @@ these pages summarize and point, they do not duplicate.
 
 ## Layering
 
-PebbleOS is a FreeRTOS-based firmware (kernel vendored as a submodule under
-`third_party/freertos`). The main source layers, as described on the
+PebbleOS runs on its own [kernel API](kernel.md) (`include/pbl/kernel`,
+implemented under `kernel/`). The main source layers, as described on the
 <a href="../apidoc/index.html">API reference</a> main page:
 
 - `src/fw/applib` — application framework and UI, the API surface exposed to
@@ -18,7 +18,9 @@ PebbleOS is a FreeRTOS-based firmware (kernel vendored as a submodule under
 - `src/fw/drivers` — hardware drivers (public interfaces under
   `include/pbl/drivers`).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
-  logging, included via the `pbl/logging/` header path.
+  logging, cron, the Bluetooth backends and the
+  [task watchdog](task_watchdog.md), included via the `pbl/logging/`,
+  `pbl/cron/`, `pbl/bluetooth/` and `pbl/task_wdt/` header paths.
 
 Alongside these sit `src/fw/shell` (launcher/watchface UX flow),
 `src/fw/process_management` (app lifecycle) and `src/fw/comm` (phone
@@ -26,7 +28,7 @@ communication).
 
 ## Task model
 
-The firmware runs a fixed set of FreeRTOS tasks, enumerated in
+The firmware runs a fixed set of kernel threads, enumerated in
 `src/fw/kernel/pebble_tasks.h`: KernelMain, KernelBackground, Worker, App,
 the Bluetooth tasks (host, controller, HCI), NewTimers and
 [PULSE](../reference/pulse2/pulse2.md). `main()`
@@ -41,7 +43,7 @@ launch, coordinated through boot bits (see `BOOT_BIT_*` usage in
 
 Normal firmware and PRF (Pebble Recovery Firmware — the minimal fallback
 image used to reinstall the main firmware) are separate compile-time
-variants: `./pbl configure --variant=prf` (see
+variants: `pbl configure --variant=prf` (see
 [build options](../development/options.md)) applies `src/fw/prj_prf.conf` on
 top of the base config, disabling the JS engine and marking the image as
 recovery firmware.
@@ -87,9 +89,12 @@ prose:
   latency and supervision timeouts, and why the firmware deviates from the
   spec-recommended parameter-update pause for iOS.
 
-Beneath it, the transport is a pluggable backend selected per SoC in
-`src/bluetooth-fw/` — NimBLE (`third_party/nimble`) for all current boards,
-plus QEMU and stub backends.
+Beneath it sits NimBLE (`third_party/nimble`), glued in by
+`subsys/bluetooth/`. The HCI transport is chosen per SoC (`BT_HCI`): the
+NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
+and a fake controller on QEMU that acknowledges every command so the host
+runs without a radio. On QEMU the phone link is the emulator's serial
+channel, `src/fw/comm/qemu_transport.c`.
 
 ## Storage
 
@@ -119,4 +124,7 @@ Longer design documents live as their own pages:
 ```{toctree}
 :maxdepth: 1
 activity/index.md
+kernel.md
+kernel_internals.md
+task_watchdog.md
 ```

@@ -5,19 +5,16 @@
 
 #include "applib/graphics/framebuffer.h"
 #include "applib/ui/animation_private.h"
-#include "console/pulse_protocol_impl.h"
-#include <pbl/drivers/display/display.h>
 #include "kernel/event_loop.h"
 #include "pbl/services/compositor/compositor.h"
 #include "pbl/services/compositor/compositor_display.h"
 #include "system/status_codes.h"
-#include "pbl/util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 #include <stdint.h>
 #include <string.h>
 
-
-typedef struct PACKED FramebufferStatResp {
+typedef struct PBL_PACKED FramebufferStatResp {
   uint8_t flags;
   uint16_t width;
   uint16_t height;
@@ -25,23 +22,22 @@ typedef struct PACKED FramebufferStatResp {
   uint32_t length;
 } FramebufferStatResp;
 
-static int framebuffer_domain_read(uint8_t *buf, uint32_t address, uint32_t length,
-                                        void *context) {
-  uint8_t *fb_offset = (uint8_t*)compositor_get_framebuffer()->buffer + address;
+static int framebuffer_domain_read(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
+  uint8_t *fb_offset = (uint8_t *)compositor_get_framebuffer()->buffer + address;
   memcpy(buf, fb_offset, length);
   return length;
 }
 
 static int framebuffer_domain_write(uint8_t *buf, uint32_t address, uint32_t length,
-                                         void *context) {
-  uint8_t *fb_offset = (uint8_t*)compositor_get_framebuffer()->buffer + address;
+                                    void *context) {
+  uint8_t *fb_offset = (uint8_t *)compositor_get_framebuffer()->buffer + address;
   memcpy(fb_offset, buf, length);
   return length;
 }
 
 static int framebuffer_domain_stat(uint8_t *resp, size_t resp_max_len, void *context) {
-  FramebufferStatResp *stat_resp = (FramebufferStatResp*) resp;
-  *stat_resp = (FramebufferStatResp) {
+  FramebufferStatResp *stat_resp = (FramebufferStatResp *)resp;
+  *stat_resp = (FramebufferStatResp){
     .flags = 0,
     .length = FRAMEBUFFER_SIZE_BYTES,
     .width = DISP_COLS,
@@ -67,7 +63,7 @@ static void framebuffer_domain_close_cb(void *foo) {
   compositor_display_update(NULL);
 }
 
-static status_t framebuffer_domain_close(void* data) {
+static status_t framebuffer_domain_close(void *data) {
   animation_private_resume();
 
   // Force the compositor to redraw the framebuffer

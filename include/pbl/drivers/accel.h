@@ -5,7 +5,6 @@
 
 #include "pbl/services/imu/units.h"
 
-#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -237,7 +236,6 @@ extern void accel_offload_work(AccelOffloadCallback cb);
 //! threshold, where any minor amount of motion would trigger the system shake event.
 //! Note: Setting this value does not ensure that shake detection is enabled.
 void accel_set_shake_sensitivity_high(bool sensitivity_high);
-
 
 //! Update the accelerometer shake sensitivity as a percentage value from 0 to 100.
 //! Note: Setting this value does not ensure that shake detection is enabled.

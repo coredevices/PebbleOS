@@ -9,7 +9,7 @@
 #include <pbl/drivers/i2c.h>
 #include "kernel/pbl_malloc.h"
 #include "kernel/util/sleep.h"
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
@@ -37,47 +37,47 @@ static AudioPwrState s_pwr_state = AudioPwrCold;
 static TimerID s_idle_timer = TIMER_INVALID_ID;
 // Serializes cold/warm/active transitions and their I/O so audio_start,
 // audio_stop, and prv_idle_shutdown can't race across threads.
-static PebbleMutex *s_audio_mutex;
+static PBL_MUTEX_DEFINE(s_audio_mutex);
 
 static void prv_idle_shutdown(void *data);
 
 // ---------------------------------------------------------------------------
 // DA7212 codec registers used by the driver.
 // ---------------------------------------------------------------------------
-#define DA7212_PLL_STATUS            0x03
-#define DA7212_CIF_CTRL              0x1D
-#define DA7212_DIG_ROUTING_DAI       0x21
-#define DA7212_SR                    0x22
-#define DA7212_REFERENCES            0x23
-#define DA7212_PLL_FRAC_TOP          0x24
-#define DA7212_PLL_FRAC_BOT          0x25
-#define DA7212_PLL_INTEGER           0x26
-#define DA7212_PLL_CTRL              0x27
-#define DA7212_DAI_CLK_MODE          0x28
-#define DA7212_DAI_CTRL              0x29
-#define DA7212_DIG_ROUTING_DAC       0x2A
-#define DA7212_DAC_FILTERS5          0x40
-#define DA7212_DAC_R_GAIN            0x46
-#define DA7212_LINE_GAIN             0x4A
-#define DA7212_MIXOUT_R_SELECT       0x4C
-#define DA7212_SYSTEM_MODES_OUTPUT   0x51
-#define DA7212_DAC_R_CTRL            0x6A
-#define DA7212_LINE_CTRL             0x6D
-#define DA7212_MIXOUT_R_CTRL         0x6F
-#define DA7212_LDO_CTRL              0x90
-#define DA7212_GAIN_RAMP_CTRL        0x92
-#define DA7212_SYSTEM_ACTIVE         0xFD
+#define DA7212_PLL_STATUS          0x03
+#define DA7212_CIF_CTRL            0x1D
+#define DA7212_DIG_ROUTING_DAI     0x21
+#define DA7212_SR                  0x22
+#define DA7212_REFERENCES          0x23
+#define DA7212_PLL_FRAC_TOP        0x24
+#define DA7212_PLL_FRAC_BOT        0x25
+#define DA7212_PLL_INTEGER         0x26
+#define DA7212_PLL_CTRL            0x27
+#define DA7212_DAI_CLK_MODE        0x28
+#define DA7212_DAI_CTRL            0x29
+#define DA7212_DIG_ROUTING_DAC     0x2A
+#define DA7212_DAC_FILTERS5        0x40
+#define DA7212_DAC_R_GAIN          0x46
+#define DA7212_LINE_GAIN           0x4A
+#define DA7212_MIXOUT_R_SELECT     0x4C
+#define DA7212_SYSTEM_MODES_OUTPUT 0x51
+#define DA7212_DAC_R_CTRL          0x6A
+#define DA7212_LINE_CTRL           0x6D
+#define DA7212_MIXOUT_R_CTRL       0x6F
+#define DA7212_LDO_CTRL            0x90
+#define DA7212_GAIN_RAMP_CTRL      0x92
+#define DA7212_SYSTEM_ACTIVE       0xFD
 
 // DAC_R_GAIN value corresponding to 0 dB per DA7212 datasheet.
-#define DA7212_DAC_R_GAIN_0DB        0x6f
+#define DA7212_DAC_R_GAIN_0DB 0x6f
 // Attenuation span, in 0.75 dB DAC_R_GAIN steps, that volume 1..100 maps
 // onto (64 steps = 48 dB).
 #define DA7212_DAC_GAIN_VOL_RANGE_STEPS 64
 
-#define I2S_BUF_SAMPLES_STEREO       (NRF5_AUDIO_I2S_BUF_SAMPLES_MONO * 2)
-#define I2S_BUF_SIZE_BYTES           (I2S_BUF_SAMPLES_STEREO * sizeof(int16_t))
+#define I2S_BUF_SAMPLES_STEREO (NRF5_AUDIO_I2S_BUF_SAMPLES_MONO * 2)
+#define I2S_BUF_SIZE_BYTES     (I2S_BUF_SAMPLES_STEREO * sizeof(int16_t))
 // nrfx_i2s buffer_size is counted in 32-bit words.
-#define I2S_BUF_SIZE_WORDS           (I2S_BUF_SIZE_BYTES / sizeof(uint32_t))
+#define I2S_BUF_SIZE_WORDS (I2S_BUF_SIZE_BYTES / sizeof(uint32_t))
 
 static void prv_i2s_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t status);
 
@@ -86,7 +86,7 @@ static void prv_i2s_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t 
 // ---------------------------------------------------------------------------
 
 static void prv_codec_write(AudioDevice *dev, uint8_t reg, uint8_t value) {
-  uint8_t data[2] = { reg, value };
+  uint8_t data[2] = {reg, value};
   i2c_use(dev->codec);
   bool ok = i2c_write_block(dev->codec, sizeof(data), data);
   i2c_release(dev->codec);
@@ -157,8 +157,7 @@ static void prv_codec_prepare(AudioDevice *dev) {
   prv_codec_write(dev, 0xF0, 0x00);
   psleep(40);
 
-  PBL_ASSERT(prv_codec_read(dev, DA7212_PLL_STATUS) == 0x07,
-             "DA7212 PLL not locked");
+  PBL_ASSERT(prv_codec_read(dev, DA7212_PLL_STATUS) == 0x07, "DA7212 PLL not locked");
 
   // Gain ramp off: the mfg test uses a multi-second ramp for smooth
   // mic-capture playback, but for the speaker service we want audio as soon
@@ -331,9 +330,9 @@ static void prv_i2s_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t 
     prv_fill_i2s_buffer(state, fill_buf);
 
     nrfx_i2s_buffers_t next = {
-        .p_tx_buffer = (uint32_t *)fill_buf,
-        .p_rx_buffer = NULL,
-        .buffer_size = I2S_BUF_SIZE_WORDS,
+      .p_tx_buffer = (uint32_t *)fill_buf,
+      .p_rx_buffer = NULL,
+      .buffer_size = I2S_BUF_SIZE_WORDS,
     };
     (void)nrfx_i2s_next_buffers_set(&dev->i2s_instance, &next);
     state->buf_idx = (state->buf_idx + 1) % NRF5_AUDIO_I2S_BUF_COUNT;
@@ -350,11 +349,6 @@ void audio_init(AudioDevice *audio_device) {
   PBL_ASSERTN(audio_device);
   AudioDeviceState *state = audio_device->state;
 
-  if (s_audio_mutex == NULL) {
-    s_audio_mutex = mutex_create();
-    PBL_ASSERTN(s_audio_mutex != INVALID_MUTEX_HANDLE);
-  }
-
   // Skip the memset on a warm restart — the buffers and live ISR state are
   // still in use and would be leaked / clobbered.
   if (s_pwr_state == AudioPwrCold) {
@@ -367,10 +361,10 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   PBL_ASSERTN(audio_device);
   AudioDeviceState *state = audio_device->state;
 
-  mutex_lock(s_audio_mutex);
+  pbl_mutex_lock(&s_audio_mutex, PBL_FOREVER);
 
   if (state->is_running) {
-    mutex_unlock(s_audio_mutex);
+    pbl_mutex_unlock(&s_audio_mutex);
     PBL_LOG_WRN("Audio already running");
     return;
   }
@@ -388,13 +382,13 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
     state->callback_pending = false;
     state->is_running = true;
     s_pwr_state = AudioPwrActive;
-    mutex_unlock(s_audio_mutex);
+    pbl_mutex_unlock(&s_audio_mutex);
     PBL_LOG_DBG("Audio started (warm)");
     return;
   }
 
   if (!prv_allocate_buffers(state)) {
-    mutex_unlock(s_audio_mutex);
+    pbl_mutex_unlock(&s_audio_mutex);
     return;
   }
 
@@ -412,9 +406,9 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   // lock it. HFXO is also needed by the I2S peripheral for MCK generation.
   clocksource_hfxo_request();
 
-  nrfx_i2s_config_t cfg = NRFX_I2S_DEFAULT_CONFIG(
-      audio_device->sck_pin, audio_device->lrck_pin, audio_device->mck_pin,
-      audio_device->sdout_pin, audio_device->sdin_pin);
+  nrfx_i2s_config_t cfg =
+      NRFX_I2S_DEFAULT_CONFIG(audio_device->sck_pin, audio_device->lrck_pin, audio_device->mck_pin,
+                              audio_device->sdout_pin, audio_device->sdin_pin);
   cfg.irq_priority = audio_device->irq_priority;
   cfg.channels = NRF_I2S_CHANNELS_STEREO;
   cfg.sample_width = NRF_I2S_SWIDTH_16BIT;
@@ -430,16 +424,15 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   // for 16-bit stereo (validate_config only enforces this in master mode).
   cfg.ratio = NRF_I2S_RATIO_256X;
 
-  nrfx_err_t err = nrfx_i2s_init(&audio_device->i2s_instance, &cfg,
-                                 prv_i2s_data_handler);
+  nrfx_err_t err = nrfx_i2s_init(&audio_device->i2s_instance, &cfg, prv_i2s_data_handler);
   PBL_ASSERT(err == NRFX_SUCCESS, "nrfx_i2s_init failed: %d", err);
 
   // Prime the first buffer with silence; real samples arrive via audio_write.
   memset(state->i2s_bufs[0], 0, I2S_BUF_SIZE_BYTES);
   nrfx_i2s_buffers_t initial = {
-      .p_tx_buffer = (uint32_t *)state->i2s_bufs[0],
-      .p_rx_buffer = NULL,
-      .buffer_size = I2S_BUF_SIZE_WORDS,
+    .p_tx_buffer = (uint32_t *)state->i2s_bufs[0],
+    .p_rx_buffer = NULL,
+    .buffer_size = I2S_BUF_SIZE_WORDS,
   };
   state->buf_idx = 1;
 
@@ -461,7 +454,7 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   prv_codec_start_dai(audio_device);
 
   s_pwr_state = AudioPwrActive;
-  mutex_unlock(s_audio_mutex);
+  pbl_mutex_unlock(&s_audio_mutex);
 
   PBL_LOG_DBG("Audio started");
 }
@@ -494,21 +487,21 @@ void audio_set_volume(AudioDevice *audio_device, int volume) {
     return;
   }
 
-  mutex_lock(s_audio_mutex);
+  pbl_mutex_lock(&s_audio_mutex, PBL_FOREVER);
   if (s_pwr_state != AudioPwrCold) {
     prv_apply_volume(audio_device);
   }
-  mutex_unlock(s_audio_mutex);
+  pbl_mutex_unlock(&s_audio_mutex);
 }
 
 void audio_stop(AudioDevice *audio_device) {
   PBL_ASSERTN(audio_device);
   AudioDeviceState *state = audio_device->state;
 
-  mutex_lock(s_audio_mutex);
+  pbl_mutex_lock(&s_audio_mutex, PBL_FOREVER);
 
   if (!state->is_running) {
-    mutex_unlock(s_audio_mutex);
+    pbl_mutex_unlock(&s_audio_mutex);
     return;
   }
 
@@ -527,7 +520,7 @@ void audio_stop(AudioDevice *audio_device) {
   if (s_idle_timer != TIMER_INVALID_ID) {
     new_timer_start(s_idle_timer, AUDIO_IDLE_SHUTDOWN_MS, prv_idle_shutdown,
                     (void *)(uintptr_t)audio_device, 0);
-    mutex_unlock(s_audio_mutex);
+    pbl_mutex_unlock(&s_audio_mutex);
     PBL_LOG_DBG("Audio paused (warm)");
     return;
   }
@@ -550,7 +543,7 @@ void audio_stop(AudioDevice *audio_device) {
   prv_free_buffers(state);
 
   s_pwr_state = AudioPwrCold;
-  mutex_unlock(s_audio_mutex);
+  pbl_mutex_unlock(&s_audio_mutex);
 
   PBL_LOG_DBG("Audio stopped");
 }
@@ -558,11 +551,11 @@ void audio_stop(AudioDevice *audio_device) {
 static void prv_idle_shutdown(void *data) {
   AudioDevice *audio_device = (AudioDevice *)data;
 
-  mutex_lock(s_audio_mutex);
+  pbl_mutex_lock(&s_audio_mutex, PBL_FOREVER);
 
   if (s_pwr_state != AudioPwrWarm) {
     // audio_start beat us to the mutex, or we're already cold.
-    mutex_unlock(s_audio_mutex);
+    pbl_mutex_unlock(&s_audio_mutex);
     return;
   }
 
@@ -585,7 +578,7 @@ static void prv_idle_shutdown(void *data) {
   prv_free_buffers(state);
 
   s_pwr_state = AudioPwrCold;
-  mutex_unlock(s_audio_mutex);
+  pbl_mutex_unlock(&s_audio_mutex);
 
   PBL_LOG_DBG("Audio fully stopped");
 }

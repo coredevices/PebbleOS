@@ -5,33 +5,33 @@
 
 #include "services/light/als_screen_compensation.h"
 #include "applib/graphics/gtypes.h"
-#include <pbl/drivers/ambient_light.h>  // AMBIENT_LIGHT_LEVEL_MAX
+#include <pbl/drivers/ambient_light.h> // AMBIENT_LIGHT_LEVEL_MAX
 
 #include <string.h>
 
 // Q8 unity gain and black-scale clamps used throughout.
-#define UNITY_Q8 (256u)
-#define SCALE_8X_Q8 (8u * 256u)
+#define UNITY_Q8     (256u)
+#define SCALE_8X_Q8  (8u * 256u)
 #define SCALE_32X_Q8 (32u * 256u)
 
 // 8-bit pixel bytes for fully-opaque white / black (argb: a=3).
-#define PX_WHITE (0xFFu)  // & 0x3F == 0x3F
-#define PX_BLACK (0xC0u)  // & 0x3F == 0x00
+#define PX_WHITE (0xFFu) // & 0x3F == 0x3F
+#define PX_BLACK (0xC0u) // & 0x3F == 0x00
 
 // --- Fakes for the region helper's only external dependencies ---------------
 // Real lookup lives in gtypes.c; we only need the white/black entries here so
 // the region-averaging logic is exercised without linking the graphics libs.
 const GColor8Component g_color_luminance_lookup[64] = {
-  [0x00] = 0,  // black -> luminance 0
-  [0x3F] = 3,  // white -> luminance 3 (max)
+  [0x00] = 0, // black -> luminance 0
+  [0x3F] = 3, // white -> luminance 3 (max)
 };
 
 // Mirrors the non-circular branch of the real gbitmap_get_data_row_info().
 GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
   return (GBitmapDataRowInfo){
-      .data = (uint8_t *)bitmap->addr + y * bitmap->row_size_bytes,
-      .min_x = 0,
-      .max_x = (int16_t)(grect_get_max_x(&bitmap->bounds) - 1),
+    .data = (uint8_t *)bitmap->addr + y * bitmap->row_size_bytes,
+    .min_x = 0,
+    .max_x = (int16_t)(grect_get_max_x(&bitmap->bounds) - 1),
   };
 }
 
@@ -44,8 +44,10 @@ static GBitmap prv_make_bitmap(uint8_t *pixels, int16_t w, int16_t h) {
   return b;
 }
 
-void test_als_screen_compensation__initialize(void) {}
-void test_als_screen_compensation__cleanup(void) {}
+void test_als_screen_compensation__initialize(void) {
+}
+void test_als_screen_compensation__cleanup(void) {
+}
 
 // --- als_compensation_apply() ----------------------------------------------
 
@@ -62,9 +64,9 @@ void test_als_screen_compensation__apply_black_is_full_scale(void) {
 void test_als_screen_compensation__apply_inverse_luminance(void) {
   // Inverse-luminance: gain(L) = 256/lum. Use a large black_scale so the dark
   // clamp doesn't engage. raw 256 -> corrected == gain (256/lum * 256 / 256).
-  cl_assert_equal_i(als_compensation_apply(256, UNITY_Q8 / 2, SCALE_32X_Q8), 512);   // 2.00x
-  cl_assert_equal_i(als_compensation_apply(256, 85, SCALE_32X_Q8), 771);             // ~3.01x
-  cl_assert_equal_i(als_compensation_apply(256, 170, SCALE_32X_Q8), 385);            // ~1.51x
+  cl_assert_equal_i(als_compensation_apply(256, UNITY_Q8 / 2, SCALE_32X_Q8), 512); // 2.00x
+  cl_assert_equal_i(als_compensation_apply(256, 85, SCALE_32X_Q8), 771);           // ~3.01x
+  cl_assert_equal_i(als_compensation_apply(256, 170, SCALE_32X_Q8), 385);          // ~1.51x
 }
 
 void test_als_screen_compensation__apply_clamps_dark_end(void) {

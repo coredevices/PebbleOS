@@ -13,18 +13,15 @@
 #include "comm/bt_lock.h"
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/watchdog.h>
-#include "flash_region/flash_region.h"
 #include "kernel/pbl_malloc.h"
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_manager.h"
-#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
-#include "pbl/os/mutex.h"
+#include "pbl/kernel/mutex.h"
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 #include "pbl/util/string.h"
@@ -39,7 +36,6 @@ static bool s_sends_enabled_pp = true;
 static bool s_sends_enabled_run_level = true;
 
 #define DATALOGGING_DO_FLUSH_CHECK_INTERVAL_MINUTES 5
-
 
 static bool prv_sends_enabled(void) {
   return (s_sends_enabled_run_level && s_sends_enabled_pp);
@@ -76,15 +72,14 @@ static bool prv_add_send_entry_cb(DataLoggingSession *session, void *data) {
     PBL_LOG_WRN("OOM building DLS flush list; truncating pass");
     return false;
   }
-  *entry = (DataLoggingSendEntry) {
+  *entry = (DataLoggingSendEntry){
     .session = session,
     .app_uuid = session->app_uuid,
     .timestamp = session->session_created_timestamp,
     .tag = session->tag,
     .empty = ctx->empty,
   };
-  ctx->head = (DataLoggingSendEntry *)list_insert_before((ListNode *)ctx->head,
-                                                         &entry->list_node);
+  ctx->head = (DataLoggingSendEntry *)list_insert_before((ListNode *)ctx->head, &entry->list_node);
   return true;
 }
 
@@ -103,8 +98,7 @@ static void prv_send_next_session_system_task_cb(void *data) {
     return;
   }
 
-  DataLoggingSendEntry *new_head =
-      (DataLoggingSendEntry *)list_pop_head((ListNode *)entry);
+  DataLoggingSendEntry *new_head = (DataLoggingSendEntry *)list_pop_head((ListNode *)entry);
 
   // The session may have been freed between snapshot and now; the identity
   // tuple guards against the pointer being reused for a different session.
@@ -148,13 +142,12 @@ static void prv_send_all_sessions_system_task_cb(void *empty_all_data) {
   prv_send_next_session_system_task_cb(ctx.head);
 }
 
-
 // ----------------------------------------------------------------------------------------
 //! @param data unused
 static void prv_check_all_sessions_timer_cb(void *data) {
   // If sends are not enabled, do nothing
   if (!prv_sends_enabled()) {
-    PBL_LOG_INFO("Not sending sessions beause sending is disabled");
+    PBL_LOG_INFO("Not sending sessions because sending is disabled");
     return;
   }
 
@@ -164,13 +157,12 @@ static void prv_check_all_sessions_timer_cb(void *data) {
   // messages. However, occasionally we do want to flush everything out.
   static int check_counter = 0;
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "send all sessions: empty %s connected %s counter %u",
-      bool_to_str(check_counter == 0),
-      bool_to_str(comm_session_get_system_session() != NULL),
-      check_counter);
+  PBL_LOG_DBG("send all sessions: empty %s connected %s counter %u",
+              bool_to_str(check_counter == 0),
+              bool_to_str(comm_session_get_system_session() != NULL), check_counter);
 
   system_task_add_callback(prv_send_all_sessions_system_task_cb,
-                           (void*)(uintptr_t)(check_counter == 0));
+                           (void *)(uintptr_t)(check_counter == 0));
 
   // force a flush every 15 minutes
   static const int EMPTY_ALL_SESSIONS_INTERVAL_MINUTES =
@@ -178,19 +170,14 @@ static void prv_check_all_sessions_timer_cb(void *data) {
   check_counter = (check_counter + 1) % EMPTY_ALL_SESSIONS_INTERVAL_MINUTES;
 }
 
-
 // ----------------------------------------------------------------------------------------
-static RegularTimerInfo prv_check_all_sessions_timer_info = {
-  .cb = prv_check_all_sessions_timer_cb
-};
-
+static RegularTimerInfo prv_check_all_sessions_timer_info = {.cb = prv_check_all_sessions_timer_cb};
 
 // ----------------------------------------------------------------------------------------
 static void prv_remove_logging_session(DataLoggingSession *data) {
   DataLoggingSession *logging_session = (DataLoggingSession *)data;
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Removing session %d.",
-            logging_session->comm.session_id);
+  PBL_LOG_DBG("Removing session %d.", logging_session->comm.session_id);
 
   dls_endpoint_close_session(logging_session->comm.session_id);
   dls_storage_delete_logging_storage(logging_session);
@@ -205,7 +192,7 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
 
   // If sends are not enabled, ignore
   if (!prv_sends_enabled()) {
-    PBL_LOG_INFO("Not sending session beause sending is disabled");
+    PBL_LOG_INFO("Not sending session because sending is disabled");
     return true;
   }
 
@@ -217,10 +204,10 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
   int32_t total_bytes = logging_session->storage.num_bytes;
   bool inactive = (dls_get_session_status(logging_session) == DataLoggingStatusInactive);
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "de-logging session %"PRIu8", tag %"PRIu32
-            " (inactive %s tot_bytes %"PRIu32" empty %s)",
-            logging_session->comm.session_id, logging_session->tag,
-            bool_to_str(inactive), total_bytes, bool_to_str(empty));
+  PBL_LOG_DBG("de-logging session %" PRIu8 ", tag %" PRIu32 " (inactive %s tot_bytes %" PRIu32
+              " empty %s)",
+              logging_session->comm.session_id, logging_session->tag, bool_to_str(inactive),
+              total_bytes, bool_to_str(empty));
 
   if (inactive && (total_bytes == 0)) {
     prv_remove_logging_session(logging_session);
@@ -257,19 +244,16 @@ exit:
   return (success);
 }
 
-
 // ----------------------------------------------------------------------------------------
 void dls_pause(void) {
   regular_timer_remove_callback(&prv_check_all_sessions_timer_info);
 }
-
 
 // ----------------------------------------------------------------------------------------
 void dls_resume(void) {
   regular_timer_add_multiminute_callback(&prv_check_all_sessions_timer_info,
                                          DATALOGGING_DO_FLUSH_CHECK_INTERVAL_MINUTES);
 }
-
 
 // ----------------------------------------------------------------------------------------
 void dls_init(void) {
@@ -284,12 +268,10 @@ void dls_init(void) {
   s_initialized = true;
 }
 
-
 // ----------------------------------------------------------------------------------------
 bool dls_initialized(void) {
   return s_initialized;
 }
-
 
 // ----------------------------------------------------------------------------------------
 void dls_clear(void) {
@@ -297,13 +279,11 @@ void dls_clear(void) {
   dls_storage_invalidate_all();
 }
 
-
 // ----------------------------------------------------------------------------------------
 // Get the send_enable setting
 bool dls_get_send_enable(void) {
   return prv_sends_enabled();
 }
-
 
 // ----------------------------------------------------------------------------------------
 // Set the send_enable setting
@@ -316,7 +296,6 @@ void dls_set_send_enable_pp(bool setting) {
 void dls_set_send_enable_run_level(bool setting) {
   s_sends_enabled_run_level = setting;
 }
-
 
 // ----------------------------------------------------------------------------------------
 // Callback used by dls_inactivate_sessions.
@@ -336,8 +315,7 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
   Uuid system_uuid = UUID_SYSTEM;
   if (!uuid_equal(&session->app_uuid, &system_uuid)) {
     if (task == session->task) {
-      PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "Inactivating session: %"PRIu8,
-                session->comm.session_id);
+      PBL_LOG_DBG("Inactivating session: %" PRIu8, session->comm.session_id);
 
       // Free the buffer if it's in kernel heap. If not in kernel heap we are intentionally not
       // freeing the data->buffer_storage because it was allocated on the client's heap, and the
@@ -352,7 +330,7 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
 
       session->status = DataLoggingStatusInactive;
       // Free up the data and mutex for this session
-      mutex_destroy(session->data->mutex);
+      pbl_mutex_deinit(&session->data->mutex);
       kernel_free(session->data);
       session->data = NULL;
     }
@@ -361,17 +339,15 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
   return true;
 }
 
-
 // ----------------------------------------------------------------------------------------
 void dls_send_all_sessions(void) {
   // If sends are not enabled, do nothing
   if (!prv_sends_enabled()) {
-    PBL_LOG_INFO("Not sending sessions beause sending is disabled");
+    PBL_LOG_INFO("Not sending sessions because sending is disabled");
     return;
   }
-  system_task_add_callback(prv_send_all_sessions_system_task_cb, (void*) true);
+  system_task_add_callback(prv_send_all_sessions_system_task_cb, (void *)true);
 }
-
 
 // ----------------------------------------------------------------------------------------
 // Mark all sessions belonging to 'task' as inactive so that no more data can be added to them.
@@ -380,14 +356,13 @@ void dls_inactivate_sessions(PebbleTask task) {
   dls_list_for_each_session(prv_inactivate_sessions_each_cb, (void *)(uintptr_t)task);
 }
 
-
 // ----------------------------------------------------------------------------------------
 static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item_type,
                                           uint16_t item_size, bool buffered, void *buffer,
-                                          bool resume, const Uuid* uuid) {
+                                          bool resume, const Uuid *uuid) {
   // validate size parameter
-  if (item_size == 0 || (buffered && item_size > DLS_SESSION_MAX_BUFFERED_ITEM_SIZE)
-     || (!buffered && item_size > DLS_ENDPOINT_MAX_PAYLOAD)) {
+  if (item_size == 0 || (buffered && item_size > DLS_SESSION_MAX_BUFFERED_ITEM_SIZE) ||
+      (!buffered && item_size > DLS_ENDPOINT_MAX_PAYLOAD)) {
     PBL_LOG_ERR("invalid logging_session item size, %d", item_size);
     return (NULL);
   } else if (item_type == DATA_LOGGING_UINT || item_type == DATA_LOGGING_INT) {
@@ -446,21 +421,18 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
   return (logging_session);
 }
 
-
 // ----------------------------------------------------------------------------------------
-DataLoggingSession* dls_create(uint32_t tag, DataLoggingItemType item_type, uint16_t item_size,
-                               bool buffered, bool resume, const Uuid* uuid) {
+DataLoggingSession *dls_create(uint32_t tag, DataLoggingItemType item_type, uint16_t item_size,
+                               bool buffered, bool resume, const Uuid *uuid) {
   return prv_dls_create(tag, item_type, item_size, buffered, NULL /*buffer*/, resume, uuid);
 }
 
-
 // ----------------------------------------------------------------------------------------
-DataLoggingSession* dls_create_current_process(uint32_t tag, DataLoggingItemType item_type,
-                                               uint16_t item_size, void* buffer, bool resume) {
+DataLoggingSession *dls_create_current_process(uint32_t tag, DataLoggingItemType item_type,
+                                               uint16_t item_size, void *buffer, bool resume) {
   const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
   return prv_dls_create(tag, item_type, item_size, true, buffer, resume, &md->uuid);
 }
-
 
 // ----------------------------------------------------------------------------------------
 void dls_finish(DataLoggingSession *logging_session) {
@@ -479,7 +451,7 @@ void dls_finish(DataLoggingSession *logging_session) {
   int timeout = 1000; // 1 second
   while (logging_session->data->buffer_storage != NULL && timeout) {
     int bytes_pending = shared_circular_buffer_get_read_space_remaining(
-                          &logging_session->data->buffer, &logging_session->data->buffer_client);
+        &logging_session->data->buffer, &logging_session->data->buffer_client);
     if (bytes_pending == 0) {
       break;
     }
@@ -503,9 +475,8 @@ exit:
   dls_send_all_sessions();
 }
 
-
 // ----------------------------------------------------------------------------------------
-static bool prv_write_session_to_flash(DataLoggingSession* session, void *data) {
+static bool prv_write_session_to_flash(DataLoggingSession *session, void *data) {
   dls_storage_write_session(session);
   return true;
 }
@@ -514,9 +485,8 @@ static void prv_write_all_sessions_to_flash(void *data) {
   dls_list_for_each_session(prv_write_session_to_flash, NULL);
 }
 
-
 // ----------------------------------------------------------------------------------------
-DataLoggingResult dls_log(DataLoggingSession *session, const void* data, uint32_t num_items) {
+DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_t num_items) {
 #ifndef CONFIG_RELEASE
   // TODO: We should be able to remove this requirement once PBL-23925 is fixed
   //
@@ -545,8 +515,8 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void* data, uint32_
     return (DATA_LOGGING_CLOSED);
   }
 
-  PBL_LOG_D_DBG(LOG_DOMAIN_DATA_LOGGING, "logging %d items of size %d to session %d",
-            (int)num_items, (int)session->item_size, session->comm.session_id);
+  PBL_LOG_DBG("logging %d items of size %d to session %d", (int)num_items, (int)session->item_size,
+              session->comm.session_id);
 
   if (!session->data->buffer_storage) {
     // Unbuffered, we can write to storage immediately
@@ -563,8 +533,7 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void* data, uint32_
     goto unlock_and_exit;
   }
 
-  shared_circular_buffer_write(&session->data->buffer, data, num_bytes,
-                               false /*advance_slackers*/);
+  shared_circular_buffer_write(&session->data->buffer, data, num_bytes, false /*advance_slackers*/);
 
   // Only enqueue work on the system_task if we're not already waiting on the system task to handle
   // previously enqueued work for this session.
@@ -581,12 +550,10 @@ unlock_and_exit:
   return (result);
 }
 
-
 // ----------------------------------------------------------------------------------------
 bool dls_is_session_valid(DataLoggingSession *logging_session) {
   return dls_list_is_session_valid(logging_session);
 }
-
 
 // ----------------------------------------------------------------------------------------
 // These methods provided for unit tests

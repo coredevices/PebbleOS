@@ -1,17 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "process_management/app_install_manager_private.h"
 #include "pbl/services/process_management/app_order_storage.h"
 #include "pbl/services/comm_session/session.h"
-#include "system/hexdump.h"
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "system/status_codes.h"
 #include "pbl/util/uuid.h"
-
-#include <stdbool.h>
-#include <string.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_order_endpoint, CONFIG_SERVICE_APP_ORDER_ENDPOINT_LOG_LEVEL);
 
@@ -48,7 +41,7 @@ typedef struct {
 
 static void prv_send_result(CommSession *session, uint8_t result) {
   PBL_LOG_DBG("Sending result of %d", result);
-  comm_session_send_data(session, APP_ORDER_ENDPOINT_ID, (uint8_t*)&result, sizeof(result),
+  comm_session_send_data(session, APP_ORDER_ENDPOINT_ID, (uint8_t *)&result, sizeof(result),
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
@@ -66,7 +59,7 @@ static void prv_handle_app_order_msg(CommSession *session, const uint8_t *data, 
   prv_send_result(session, APP_ORDER_RES_SUCCESS);
 }
 
-void app_order_protocol_msg_callback(CommSession *session, const uint8_t* data, size_t length) {
+void app_order_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   // header includes APP_ORDER_CMD and a num_uuids uint8_t
   const uint8_t header_len = sizeof(AppOrderCommand) + sizeof(uint8_t);
 

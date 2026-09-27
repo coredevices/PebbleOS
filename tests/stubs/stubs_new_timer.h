@@ -27,6 +27,6 @@ bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p) {
 void new_timer_delete(TimerID timer) {
 }
 
-void* new_timer_debug_get_current_callback(void) {
+void *new_timer_debug_get_current_callback(void) {
   return NULL;
 }

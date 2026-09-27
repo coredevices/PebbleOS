@@ -4,15 +4,12 @@
 #include "worker.h"
 
 #include "process_management/worker_manager.h"
-#include "process_state/worker_state/worker_state.h"
 #include "applib/event_service_client.h"
 #include "syscall/syscall.h"
-#include "pbl/services/event_service.h"
 #include <pbl/logging/logging.h>
 
-
 // -------------------------------------------------------------------------------------------------
-static bool prv_handle_event(PebbleEvent* event) {
+static bool prv_handle_event(PebbleEvent *event) {
   PebbleEventType type = event->type;
 
   switch (type) {
@@ -25,7 +22,6 @@ static bool prv_handle_event(PebbleEvent* event) {
       return false;
   }
 }
-
 
 // -------------------------------------------------------------------------------------------------
 void worker_event_loop(void) {
@@ -49,9 +45,7 @@ void worker_event_loop(void) {
   }
 }
 
-
 // -------------------------------------------------------------------------------------------------
 void worker_launch_app(void) {
   sys_launch_app_for_worker();
 }
-

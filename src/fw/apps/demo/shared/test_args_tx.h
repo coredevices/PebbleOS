@@ -9,4 +9,4 @@ typedef struct {
   uint8_t data;
 } TestArgsData;
 
-const PebbleProcessMd* test_args_sender_get_app_info();
+const PebbleProcessMd *test_args_sender_get_app_info();
