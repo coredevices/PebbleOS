@@ -263,29 +263,12 @@ void alerts_preferences_dnd_get_schedule(DoNotDisturbScheduleType type,
                                          DoNotDisturbSchedule *schedule_out);
 
 /**
- * @brief Store a DND schedule.
- *
- * @param type Schedule to set.
- * @param schedule New schedule.
- */
-void alerts_preferences_dnd_set_schedule(DoNotDisturbScheduleType type,
-                                         const DoNotDisturbSchedule *schedule);
-
-/**
  * @brief Get whether a DND schedule is enabled.
  *
  * @param type Schedule to check.
  * @return true if enabled.
  */
 bool alerts_preferences_dnd_is_schedule_enabled(DoNotDisturbScheduleType type);
-
-/**
- * @brief Store whether a DND schedule is enabled.
- *
- * @param type Schedule to change.
- * @param enable true to enable.
- */
-void alerts_preferences_dnd_set_schedule_enabled(DoNotDisturbScheduleType type, bool enable);
 
 /**
  * @brief Get whether calendar-aware (smart) DND is enabled.

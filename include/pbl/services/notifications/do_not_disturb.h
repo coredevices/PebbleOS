@@ -141,35 +141,12 @@ void do_not_disturb_refresh_active_state(void);
 void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule_out);
 
 /**
- * @brief Set a DND schedule and re-evaluate the DND state.
- *
- * @param type Schedule to set.
- * @param schedule New schedule.
- */
-void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule);
-
-/**
  * @brief Check whether a DND schedule is enabled.
  *
  * @param type Schedule to check.
  * @return true if enabled.
  */
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type);
-
-/**
- * @brief Enable or disable a DND schedule and re-evaluate the DND state.
- *
- * @param type Schedule to change.
- * @param scheduled true to enable.
- */
-void do_not_disturb_set_schedule_enabled(DoNotDisturbScheduleType type, bool scheduled);
-
-/**
- * @brief Toggle a DND schedule and re-evaluate the DND state.
- *
- * @param type Schedule to toggle.
- */
-void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type);
 
 /** @brief Initialize the DND service and arm the schedule timers. */
 //! Iterate over all quiet time schedules. Callback is called for each slot (0..MAX_QUIET_TIME_SCHEDULES-1)
