@@ -388,51 +388,8 @@ void do_not_disturb_get_schedule(DoNotDisturbScheduleType type,
   alerts_preferences_dnd_get_schedule(type, schedule_out);
 }
 
-void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule) {
-  alerts_preferences_dnd_set_schedule(type, schedule);
-  QuietTimeScheduleConfig qt_config;
-  int qt_index = (type == WeekdaySchedule) ? 0 : 1;
-  QuietTimeKind qt_kind = (type == WeekdaySchedule) ? QT_KIND_WEEKDAYS : QT_KIND_WEEKENDS;
-  bool enabled = alerts_preferences_dnd_is_schedule_enabled(type);
-  qt_config = (QuietTimeScheduleConfig){
-    .is_used = true,
-    .kind = qt_kind,
-    .from_hour = schedule->from_hour,
-    .from_minute = schedule->from_minute,
-    .to_hour = schedule->to_hour,
-    .to_minute = schedule->to_minute,
-    .enabled = enabled,
-  };
-  memset(qt_config.scheduled_days, 0, sizeof(qt_config.scheduled_days));
-  alerts_preferences_qt_set_schedule(qt_index, &qt_config);
-  prv_try_update_schedule_mode_callback(true);
-}
-
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type) {
   return alerts_preferences_dnd_is_schedule_enabled(type);
-}
-
-void do_not_disturb_set_schedule_enabled(DoNotDisturbScheduleType type, bool scheduled) {
-  alerts_preferences_dnd_set_schedule_enabled(type, scheduled);
-  int qt_index = (type == WeekdaySchedule) ? 0 : 1;
-  QuietTimeScheduleConfig qt_config;
-  alerts_preferences_qt_get_schedule(qt_index, &qt_config);
-  qt_config.is_used = true;
-  qt_config.enabled = scheduled;
-  alerts_preferences_qt_set_schedule(qt_index, &qt_config);
-  prv_try_update_schedule_mode_callback(true);
-}
-
-void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type) {
-  alerts_preferences_dnd_set_schedule_enabled(type,
-                                              !alerts_preferences_dnd_is_schedule_enabled(type));
-  int qt_index = (type == WeekdaySchedule) ? 0 : 1;
-  QuietTimeScheduleConfig qt_config;
-  alerts_preferences_qt_get_schedule(qt_index, &qt_config);
-  qt_config.is_used = true;
-  qt_config.enabled = !qt_config.enabled;
-  alerts_preferences_qt_set_schedule(qt_index, &qt_config);
-  prv_try_update_schedule_mode_callback(true);
 }
 
 //! Quiet Time schedule API

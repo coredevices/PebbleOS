@@ -91,13 +91,7 @@ void do_not_disturb_refresh_active_state(void);
 
 void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule_out);
 
-void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule);
-
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type);
-
-void do_not_disturb_set_schedule_enabled(DoNotDisturbScheduleType type, bool scheduled);
-
-void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type);
 
 //! Iterate over all quiet time schedules. Callback is called for each slot (0..MAX_QUIET_TIME_SCHEDULES-1)
 //! regardless of whether the slot is active.

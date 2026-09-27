@@ -733,19 +733,8 @@ void alerts_preferences_dnd_get_schedule(DoNotDisturbScheduleType type,
   *schedule_out = s_dnd_schedule[type].schedule;
 };
 
-void alerts_preferences_dnd_set_schedule(DoNotDisturbScheduleType type,
-                                         const DoNotDisturbSchedule *schedule) {
-  s_dnd_schedule[type].schedule = *schedule;
-  SET_PREF(s_dnd_schedule_keys[type].schedule_pref_key, s_dnd_schedule[type].schedule);
-};
-
 bool alerts_preferences_dnd_is_schedule_enabled(DoNotDisturbScheduleType type) {
   return s_dnd_schedule[type].enabled;
-}
-
-void alerts_preferences_dnd_set_schedule_enabled(DoNotDisturbScheduleType type, bool on) {
-  s_dnd_schedule[type].enabled = on;
-  SET_PREF(s_dnd_schedule_keys[type].enabled_pref_key, s_dnd_schedule[type].enabled);
 }
 
 static void prv_set_qt_pref(int index, const QuietTimeScheduleConfig *config) {
