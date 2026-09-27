@@ -62,7 +62,6 @@ void event_put(PebbleEvent* event) {
   if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT) s_num_dnd_events_put++;
   else if (event->type == PEBBLE_PREF_CHANGE_EVENT) s_num_pref_change_events_put++;
 }
-}
 
 // Thursday, March 12, 2015, 00:00 UTC
 static const int s_thursday_00_00 = 1426118400;

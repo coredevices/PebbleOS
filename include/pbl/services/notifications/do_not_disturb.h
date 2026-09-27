@@ -68,7 +68,7 @@ typedef enum {
 //! The scheduled_days array is always present but only meaningful when kind == QT_KIND_CUSTOM.
 //! For other kinds, the day mask is derived from the kind at runtime.
 //! is_used indicates whether the slot contains a valid schedule (unused slots are zeroed out).
-typedef struct PACKED QuietTimeScheduleConfig {
+typedef struct PBL_PACKED QuietTimeScheduleConfig {
   bool is_used;
   QuietTimeKind kind;
   bool scheduled_days[DAYS_PER_WEEK];
@@ -226,5 +226,11 @@ void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e);
 
 /** @brief Push the manual DND toggle prompt, which sets manual DND to the opposite state. */
 void do_not_disturb_manual_toggle_with_dialog(void);
+
+#if UNITTEST
+#include "pbl/services/new_timer/new_timer.h"
+TimerID get_dnd_timer_id(void);
+void set_dnd_timer_id(TimerID id);
+#endif
 
 /** @} */
