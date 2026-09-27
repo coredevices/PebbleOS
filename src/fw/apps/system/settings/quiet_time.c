@@ -114,13 +114,12 @@ static const char *prv_get_dnd_mask_subtitle(void *i18n_key) {
   return title;
 }
 
-
 static const char *prv_get_smart_dnd_subtitle(void *i18n_key) {
   return i18n_get(do_not_disturb_is_smart_dnd_enabled() ? "On" : "Off", i18n_key);
 }
 
 static void prv_get_qt_time(const QuietTimeScheduleConfig *config, char *time_string,
-                             const uint8_t len) {
+                            const uint8_t len) {
   clock_format_time(time_string, len, config->from_hour, config->from_minute, true);
   strcat(time_string, " - ");
   uint8_t current_length = strnlen(time_string, len);
@@ -195,14 +194,12 @@ static void prv_complete_schedule(TimeRangeSelectionWindowData *schedule_window,
   app_window_stack_remove(&schedule_window->window, animated);
 }
 
-static void prv_time_range_select_window_push(int index,
-                                              SettingsQuietTimeScheduleData *data) {
+static void prv_time_range_select_window_push(int index, SettingsQuietTimeScheduleData *data) {
   QuietTimeScheduleConfig config;
   quiet_time_get_schedule(index, &config);
   TimeRangeSelectionWindowData *schedule_window = &data->schedule_window;
   data->selected_schedule_index = index;
-  time_range_selection_window_init(schedule_window, GColorCobaltBlue,
-                                   prv_complete_schedule, data);
+  time_range_selection_window_init(schedule_window, GColorCobaltBlue, prv_complete_schedule, data);
 
   schedule_window->from.hour = config.from_hour;
   schedule_window->from.minute = config.from_minute;
@@ -211,9 +208,8 @@ static void prv_time_range_select_window_push(int index,
   app_window_stack_push(&schedule_window->window, true);
 }
 
-static void prv_dnd_set_schedule(ActionMenu *action_menu,
-                                const ActionMenuItem *item,
-                                void *context) {
+static void prv_dnd_set_schedule(ActionMenu *action_menu, const ActionMenuItem *item,
+                                 void *context) {
   int index = (int)(uintptr_t)item->action_data;
   SettingsQuietTimeScheduleData *data = context;
   quiet_time_set_schedule_enabled(index, true);
@@ -222,17 +218,15 @@ static void prv_dnd_set_schedule(ActionMenu *action_menu,
   prv_time_range_select_window_push(index, data);
 }
 
-static void prv_dnd_delete_schedule(ActionMenu *action_menu,
-                                     const ActionMenuItem *item,
-                                     void *context) {
+static void prv_dnd_delete_schedule(ActionMenu *action_menu, const ActionMenuItem *item,
+                                    void *context) {
   int index = (int)(uintptr_t)item->action_data;
   SettingsQuietTimeScheduleData *data = context;
   quiet_time_delete_schedule(index);
   prv_schedule_refresh(data);
 }
 
-static void prv_dnd_change_days(ActionMenu *action_menu,
-                                const ActionMenuItem *item,
+static void prv_dnd_change_days(ActionMenu *action_menu, const ActionMenuItem *item,
                                 void *context) {
   int index = (int)(uintptr_t)item->action_data;
   SettingsQuietTimeScheduleData *data = context;
@@ -250,9 +244,8 @@ static void prv_dnd_change_days(ActionMenu *action_menu,
   day_picker_push(picker_config, prv_change_days_callback, data);
 }
 
-static void prv_scheduled_dnd_menu_cleanup(ActionMenu *action_menu,
-                                   const ActionMenuItem *item,
-                                   void *context) {
+static void prv_scheduled_dnd_menu_cleanup(ActionMenu *action_menu, const ActionMenuItem *item,
+                                           void *context) {
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   SettingsQuietTimeScheduleData *data = context;
   time_range_selection_window_deinit(&data->schedule_window);
@@ -261,8 +254,7 @@ static void prv_scheduled_dnd_menu_cleanup(ActionMenu *action_menu,
   task_free(root_level);
 }
 
-static void prv_scheduled_dnd_menu_push(int index,
-                                        SettingsQuietTimeScheduleData *data) {
+static void prv_scheduled_dnd_menu_push(int index, SettingsQuietTimeScheduleData *data) {
   data->action_menu = (ActionMenuConfig){
     .context = data,
     .colors.background = shell_prefs_get_theme_highlight_color(),
@@ -296,25 +288,25 @@ static void prv_scheduled_dnd_menu_push(int index,
   level->items[DNDMenuItemDisable] = (ActionMenuItem){
     .label = data->action_menu_text,
     .perform_action = prv_toggle_scheduled_dnd,
-    .action_data = (void*)(uintptr_t)index,
+    .action_data = (void *)(uintptr_t)index,
   };
 
-  level->items[DNDMenuItemChangeSchedule] = (ActionMenuItem) {
+  level->items[DNDMenuItemChangeSchedule] = (ActionMenuItem){
     .label = i18n_get("Change Time", &data->action_menu),
     .perform_action = prv_dnd_set_schedule,
-    .action_data = (void*)(uintptr_t)index,
+    .action_data = (void *)(uintptr_t)index,
   };
 
-  level->items[DNDMenuItemChangeDays] = (ActionMenuItem) {
+  level->items[DNDMenuItemChangeDays] = (ActionMenuItem){
     .label = i18n_get("Change Days", &data->action_menu),
     .perform_action = prv_dnd_change_days,
-    .action_data = (void*)(uintptr_t)index,
+    .action_data = (void *)(uintptr_t)index,
   };
 
-  level->items[DNDMenuItemDelete] = (ActionMenuItem) {
+  level->items[DNDMenuItemDelete] = (ActionMenuItem){
     .label = i18n_get("Delete", &data->action_menu),
     .perform_action = prv_dnd_delete_schedule,
-    .action_data = (void*)(uintptr_t)index,
+    .action_data = (void *)(uintptr_t)index,
   };
 
   data->action_menu.root_level = level;
@@ -372,7 +364,7 @@ static void prv_change_days_callback(DayPickerResult result, void *context) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static void prv_schedule_deinit_cb(SettingsCallbacks *context) {
-  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
   gbitmap_deinit(&data->plus_icon);
   i18n_free_all(data);
   app_free(data);
@@ -380,7 +372,7 @@ static void prv_schedule_deinit_cb(SettingsCallbacks *context) {
 
 static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                      const Layer *cell_layer, uint16_t row, bool selected) {
-  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
 
   // Row 0: the "+ Add Schedule" cell, mirroring the Alarms list.
   if (row == 0) {
@@ -390,20 +382,18 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     if (!data->can_add_schedule) { // schedule limit reached
       if (menu_cell_layer_is_highlighted(cell_layer)) {
         if (data->show_limit_reached_text) {
-          const GFont font =
-              system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
+          const GFont font = system_theme_get_font_for_default_size(TextStyleFont_MenuCellSubtitle);
 
           box = GRect(0, 0, cell_layer->bounds.size.w, fonts_get_font_height(font));
 
           const char *text = i18n_get("Limit reached.", data);
-          box.size = graphics_text_layout_get_max_used_size(ctx, text, font, box,
-                                                            GTextOverflowModeTrailingEllipsis,
-                                                            GTextAlignmentCenter, NULL);
+          box.size = graphics_text_layout_get_max_used_size(
+              ctx, text, font, box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
           grect_align(&box, &cell_layer->bounds, GAlignCenter, true /* clip */);
           box.origin.y -= fonts_get_font_cap_offset(font);
 
-          graphics_draw_text(ctx, text, font, box,
-                             GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+          graphics_draw_text(ctx, text, font, box, GTextOverflowModeFill, GTextAlignmentCenter,
+                             NULL);
           return;
         } else { // "+" cell highlighted
           new_bitmap_resource = RESOURCE_ID_PLUS_ICON_DOTTED;
@@ -462,7 +452,7 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
 }
 
 static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t row) {
-  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
 
   if (row == 0) {
     if (!data->can_add_schedule) {
@@ -488,7 +478,7 @@ static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t ro
 }
 
 static uint16_t prv_schedule_num_rows_cb(SettingsCallbacks *context) {
-  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *) context;
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
   // Row 0 is the "+" cell, then one row per active schedule.
   return 1 + data->num_schedules;
 }

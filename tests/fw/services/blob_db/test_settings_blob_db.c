@@ -35,12 +35,18 @@
 #include "stubs_sleep.h"
 #include "stubs_task_wdt.h"
 
-void PBL_WEAK alerts_preferences_lock(void) { }
-void PBL_WEAK alerts_preferences_unlock(void) { }
-void PBL_WEAK alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) { }
-void PBL_WEAK prefs_private_lock(void) { }
-void PBL_WEAK prefs_private_unlock(void) { }
-void PBL_WEAK prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) { }
+void PBL_WEAK alerts_preferences_lock(void) {
+}
+void PBL_WEAK alerts_preferences_unlock(void) {
+}
+void PBL_WEAK alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
+}
+void PBL_WEAK prefs_private_lock(void) {
+}
+void PBL_WEAK prefs_private_unlock(void) {
+}
+void PBL_WEAK prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
+}
 
 // Sync infra we link out: provide stubs that record what the production code
 // would have asked sync.c to do.
@@ -87,8 +93,8 @@ static void prv_store_watch_value(const char *key, const void *val, size_t val_l
                                   time_t last_updated) {
   SettingsFile file;
   cl_must_pass(settings_file_open(&file, "notifpref", 1024));
-  cl_must_pass(settings_file_set_with_timestamp(&file, key, strlen(key), val, val_len,
-                                                last_updated));
+  cl_must_pass(
+      settings_file_set_with_timestamp(&file, key, strlen(key), val, val_len, last_updated));
   settings_file_close(&file);
 }
 
@@ -101,8 +107,9 @@ void test_settings_blob_db__stale_phone_write_enqueues_writeback(void) {
   // Phone pushes a stale value (older timestamp) for the same key.
   const bool phone_value = false;
   const time_t phone_ts = 50;
-  status_t rv = settings_blob_db_insert_with_timestamp(
-      (const uint8_t *)key, strlen(key), (const uint8_t *)&phone_value, sizeof(phone_value), phone_ts);
+  status_t rv = settings_blob_db_insert_with_timestamp((const uint8_t *)key, strlen(key),
+                                                       (const uint8_t *)&phone_value,
+                                                       sizeof(phone_value), phone_ts);
   cl_assert_equal_i(rv, E_INVALID_OPERATION);
 
   // The reject path should have enqueued a writeback of the watch's value.
@@ -130,8 +137,9 @@ void test_settings_blob_db__fresh_phone_write_does_not_enqueue_writeback(void) {
   // Phone pushes a newer value than what the watch has.
   const bool phone_value = false;
   const time_t phone_ts = 100;
-  status_t rv = settings_blob_db_insert_with_timestamp(
-      (const uint8_t *)key, strlen(key), (const uint8_t *)&phone_value, sizeof(phone_value), phone_ts);
+  status_t rv = settings_blob_db_insert_with_timestamp((const uint8_t *)key, strlen(key),
+                                                       (const uint8_t *)&phone_value,
+                                                       sizeof(phone_value), phone_ts);
   cl_assert_equal_i(rv, S_SUCCESS);
 
   // Fresh writes must not trigger a writeback (they originated from the phone).
@@ -143,8 +151,8 @@ void test_settings_blob_db__phone_write_to_unknown_key_does_not_enqueue_writebac
   // rejected by the whitelist without enqueuing a writeback.
   const char *key = "notARealKey";
   const uint8_t val = 1;
-  status_t rv = settings_blob_db_insert_with_timestamp(
-      (const uint8_t *)key, strlen(key), &val, sizeof(val), 100);
+  status_t rv = settings_blob_db_insert_with_timestamp((const uint8_t *)key, strlen(key), &val,
+                                                       sizeof(val), 100);
   cl_assert_equal_i(rv, E_INVALID_OPERATION);
   cl_assert_equal_i(s_sync_record_call_count, 0);
 }

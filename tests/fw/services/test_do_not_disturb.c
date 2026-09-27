@@ -61,11 +61,13 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
-void event_put(PebbleEvent* event) {
+void event_put(PebbleEvent *event) {
   // Count DND and pref events separately; the receive path posts both,
   // the local setter path only the DND event.
-  if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT) s_num_dnd_events_put++;
-  else if (event->type == PEBBLE_PREF_CHANGE_EVENT) s_num_pref_change_events_put++;
+  if (event->type == PEBBLE_DO_NOT_DISTURB_EVENT)
+    s_num_dnd_events_put++;
+  else if (event->type == PEBBLE_PREF_CHANGE_EVENT)
+    s_num_pref_change_events_put++;
 }
 
 // Thursday, March 12, 2015, 00:00 UTC
@@ -339,7 +341,7 @@ void test_do_not_disturb__is_active(void) {
   cl_assert(active == true);
 
   // !Manual && !Scheduled && Smart
-  do_not_disturb_set_manually_enabled(false); // Overrides all DND and disables
+  do_not_disturb_set_manually_enabled(false);        // Overrides all DND and disables
   quiet_time_set_schedule_enabled(sched_idx, false); // Clears overrides
   active = do_not_disturb_is_active();
   cl_assert(active == true);
@@ -799,20 +801,20 @@ void test_do_not_disturb__qt_create_custom_with_days(void) {
 void test_do_not_disturb__qt_scheduled_days_derivation(void) {
   bool days[DAYS_PER_WEEK];
 
-  QuietTimeScheduleConfig config_everyday = { .kind = QT_KIND_EVERYDAY };
+  QuietTimeScheduleConfig config_everyday = {.kind = QT_KIND_EVERYDAY};
   quiet_time_get_scheduled_days(&config_everyday, days);
   for (int i = 0; i < DAYS_PER_WEEK; i++) {
     cl_assert(days[i] == true);
   }
 
-  QuietTimeScheduleConfig config_weekdays = { .kind = QT_KIND_WEEKDAYS };
+  QuietTimeScheduleConfig config_weekdays = {.kind = QT_KIND_WEEKDAYS};
   quiet_time_get_scheduled_days(&config_weekdays, days);
   cl_assert(days[Sunday] == false);
   cl_assert(days[Monday] == true);
   cl_assert(days[Saturday] == false);
   cl_assert(days[Friday] == true);
 
-  QuietTimeScheduleConfig config_weekends = { .kind = QT_KIND_WEEKENDS };
+  QuietTimeScheduleConfig config_weekends = {.kind = QT_KIND_WEEKENDS};
   quiet_time_get_scheduled_days(&config_weekends, days);
   cl_assert(days[Sunday] == true);
   cl_assert(days[Monday] == false);
@@ -1475,4 +1477,3 @@ void test_do_not_disturb__qt_schedule_size_mismatch_dropped_on_load(void) {
   // Clean up so later tests start clean.
   prv_delete_pref("qtSchedule0");
 }
-

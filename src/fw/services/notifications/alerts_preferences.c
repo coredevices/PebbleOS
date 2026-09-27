@@ -232,17 +232,18 @@ static void prv_migrate_qt_schedules(SettingsFile *file) {
   // customised weekend) must not re-run on the next boot and clobber edits
   // or deletes made in the new UI.
   static const DoNotDisturbScheduleType s_migrated_types[2] = {
-    WeekdaySchedule, WeekendSchedule,
+    WeekdaySchedule,
+    WeekendSchedule,
   };
   static const QuietTimeKind s_migrated_kinds[2] = {
-    QT_KIND_WEEKDAYS, QT_KIND_WEEKENDS,
+    QT_KIND_WEEKDAYS,
+    QT_KIND_WEEKENDS,
   };
   for (int i = 0; i < 2; i++) {
     const DoNotDisturbScheduleType type = s_migrated_types[i];
     s_qt_schedule[i] = (QuietTimeScheduleConfig){
       .is_used = (s_dnd_schedule[type].schedule.from_hour != 0 ||
-                  s_dnd_schedule[type].schedule.to_hour != 0 ||
-                  s_dnd_schedule[type].enabled),
+                  s_dnd_schedule[type].schedule.to_hour != 0 || s_dnd_schedule[type].enabled),
       .kind = s_migrated_kinds[i],
       .from_hour = s_dnd_schedule[type].schedule.from_hour,
       .from_minute = s_dnd_schedule[type].schedule.from_minute,
@@ -251,8 +252,8 @@ static void prv_migrate_qt_schedules(SettingsFile *file) {
       .enabled = s_dnd_schedule[type].enabled,
     };
     memset(s_qt_schedule[i].scheduled_days, 0, sizeof(s_qt_schedule[i].scheduled_days));
-    settings_file_set(file, s_qt_schedule_keys[i], strlen(s_qt_schedule_keys[i]),
-                      &s_qt_schedule[i], sizeof(QuietTimeScheduleConfig));
+    settings_file_set(file, s_qt_schedule_keys[i], strlen(s_qt_schedule_keys[i]), &s_qt_schedule[i],
+                      sizeof(QuietTimeScheduleConfig));
   }
 }
 
@@ -418,7 +419,7 @@ void alerts_preferences_init(void) {
     const char *qt_key = s_qt_schedule_keys[i];
     const int stored_len = settings_file_get_len(&file, qt_key, strlen(qt_key));
     if (stored_len == 0) {
-      continue;  // No record yet; the slot stays empty.
+      continue; // No record yet; the slot stays empty.
     }
     if (stored_len != (int)sizeof(QuietTimeScheduleConfig)) {
       // A short or corrupt record must not yield a half-valid schedule.
@@ -737,8 +738,8 @@ bool alerts_preferences_dnd_is_schedule_enabled(DoNotDisturbScheduleType type) {
 
 static void prv_set_qt_pref(int index, const QuietTimeScheduleConfig *config) {
   s_qt_schedule[index] = *config;
-  prv_set_pref(s_qt_schedule_keys[index], strlen(s_qt_schedule_keys[index]),
-               config, sizeof(QuietTimeScheduleConfig));
+  prv_set_pref(s_qt_schedule_keys[index], strlen(s_qt_schedule_keys[index]), config,
+               sizeof(QuietTimeScheduleConfig));
 }
 
 void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out) {

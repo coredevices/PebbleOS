@@ -514,8 +514,7 @@ typedef struct {
   bool found_dirty;
 } IsDirtyContext;
 
-static bool prv_is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info,
-                                   void *context) {
+static bool prv_is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   IsDirtyContext *ctx = (IsDirtyContext *)context;
 
   if (!info->dirty) {
@@ -637,7 +636,7 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
     return E_INTERNAL;
   }
 
-  IsDirtyContext ctx = { .found_dirty = false };
+  IsDirtyContext ctx = {.found_dirty = false};
 
   // Check shell prefs file
   prefs_private_lock();
@@ -787,8 +786,8 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     // response as success and keeps showing its (stale) local value.
     settings_file_close(&file);
     prv_unlock_for_file(is_notif_pref);
-    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu",
-            (unsigned long)ctx.last_modified, (unsigned long)timestamp);
+    PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu", (unsigned long)ctx.last_modified,
+                (unsigned long)timestamp);
     blob_db_sync_record(BlobDBIdSettings, key, key_len, ctx.last_modified);
     return E_INVALID_OPERATION;
   }
