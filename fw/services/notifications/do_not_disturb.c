@@ -190,15 +190,19 @@ static int prv_schedule_end_minutes(const QuietTimeScheduleConfig *schedule) {
   return to_minutes;
 }
 
-static bool prv_is_time_in_range(const struct tm *now, const QuietTimeScheduleConfig *schedule) {
-  int now_minutes = now->tm_hour * 60 + now->tm_min;
-  int from_minutes = schedule->from_hour * 60 + schedule->from_minute;
-  int to_minutes = prv_schedule_end_minutes(schedule);
-  if (from_minutes <= to_minutes) {
-    return (now_minutes >= from_minutes && now_minutes < to_minutes);
-  } else {
-    return (now_minutes >= from_minutes || now_minutes < to_minutes);
+//! Whether a schedule is active now. A wrapping window belongs to the day it
+//! started on: after midnight it is still yesterday's window.
+static bool prv_schedule_is_active(const struct tm *now, const QuietTimeScheduleConfig *s) {
+  bool days[DAYS_PER_WEEK];
+  quiet_time_get_scheduled_days(s, days);
+  int now_m = now->tm_hour * 60 + now->tm_min;
+  int from_m = s->from_hour * 60 + s->from_minute;
+  int to_m = prv_schedule_end_minutes(s);
+  if (from_m <= to_m) {
+    return days[now->tm_wday] && now_m >= from_m && now_m < to_m;
   }
+  int yesterday = (now->tm_wday + DAYS_PER_WEEK - 1) % DAYS_PER_WEEK;
+  return (days[now->tm_wday] && now_m >= from_m) || (days[yesterday] && now_m < to_m);
 }
 
 static bool prv_is_any_qt_schedule_active_now(void) {
@@ -206,10 +210,7 @@ static bool prv_is_any_qt_schedule_active_now(void) {
   rtc_get_time_tm(&time);
   for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
     if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled) continue;
-    bool days[DAYS_PER_WEEK];
-    quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
-    if (!days[time.tm_wday]) continue;
-    if (prv_is_time_in_range(&time, &s_qt_schedule_cache[i])) return true;
+    if (prv_schedule_is_active(&time, &s_qt_schedule_cache[i])) return true;
   }
   return false;
 }
@@ -238,9 +239,11 @@ static void prv_update_schedule_mode_timer_callback(void *not_used) {
   prv_try_update_schedule_mode_callback(true);
 }
 
-static void prv_set_schedule_mode_timer() {
-  struct tm time;
-  rtc_get_time_tm(&time);
+static void prv_set_schedule_mode_timer(void) {
+  struct tm now_tm;
+  rtc_get_time_tm(&now_tm);
+  const int now_sec = now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec;
+  const time_t midnight_in = time_util_get_seconds_until_daily_time(&now_tm, 0, 0);
   time_t earliest_transition = SECONDS_PER_DAY * 7;
   bool currently_active = prv_is_any_qt_schedule_active_now();
 
@@ -248,24 +251,42 @@ static void prv_set_schedule_mode_timer() {
     if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled) continue;
     bool days[DAYS_PER_WEEK];
     quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
+    const int from_sec =
+        s_qt_schedule_cache[i].from_hour * 3600 + s_qt_schedule_cache[i].from_minute * 60;
+    const int from_min = s_qt_schedule_cache[i].from_hour * 60 + s_qt_schedule_cache[i].from_minute;
+    const int to_min = prv_schedule_end_minutes(&s_qt_schedule_cache[i]);
+    const int to_sec = to_min * 60;
+    const bool wrapping = (from_min > to_min);
 
-    if (days[time.tm_wday]) {
-      int to_minutes = prv_schedule_end_minutes(&s_qt_schedule_cache[i]);
-      time_t s = time_util_get_seconds_until_daily_time(&time,
-                   s_qt_schedule_cache[i].from_hour, s_qt_schedule_cache[i].from_minute);
-      time_t e = time_util_get_seconds_until_daily_time(&time,
-                   to_minutes / 60, to_minutes % 60);
-      earliest_transition = MIN(earliest_transition, MIN(s, e));
+    for (int d = 0; d < DAYS_PER_WEEK; d++) {
+      const int day = (now_tm.tm_wday + d) % DAYS_PER_WEEK;
+      if (!days[day]) {
+        continue;
+      }
+      if (d == 0) {
+        if (from_sec > now_sec) {
+          earliest_transition = MIN(earliest_transition, (time_t)(from_sec - now_sec));
+        }
+        if (wrapping) {
+          // The window runs past midnight: its end is tomorrow.
+          earliest_transition = MIN(earliest_transition, midnight_in + to_sec);
+        } else if (to_sec > now_sec) {
+          earliest_transition = MIN(earliest_transition, (time_t)(to_sec - now_sec));
+        }
+      } else {
+        // Absolute time of 00:00 d days from now, plus the boundary offset.
+        const time_t day_start = midnight_in + (d - 1) * SECONDS_PER_DAY;
+        earliest_transition = MIN(earliest_transition, day_start + from_sec);
+        if (wrapping) {
+          earliest_transition = MIN(earliest_transition, day_start + SECONDS_PER_DAY + to_sec);
+        }
+      }
     }
 
-    // Find the next scheduled day: check tomorrow first, then days 2..6 ahead
-    time_t midnight = time_util_get_seconds_until_daily_time(&time, 0, 0);
-    for (int d = 1; d < DAYS_PER_WEEK; d++) {
-      int future_day = (time.tm_wday + d) % DAYS_PER_WEEK;
-      if (days[future_day]) {
-        earliest_transition = MIN(earliest_transition, midnight + (d - 1) * SECONDS_PER_DAY);
-        break;
-      }
+    // A wrapping window started yesterday ends this morning.
+    const int yesterday = (now_tm.tm_wday + DAYS_PER_WEEK - 1) % DAYS_PER_WEEK;
+    if (wrapping && days[yesterday] && to_sec > now_sec) {
+      earliest_transition = MIN(earliest_transition, (time_t)(to_sec - now_sec));
     }
   }
 
