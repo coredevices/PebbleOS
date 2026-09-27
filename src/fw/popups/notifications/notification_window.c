@@ -1016,8 +1016,26 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
       &config, window_manager_get_window_stack(NOTIFICATION_PRIORITY));
 }
 
+static bool prv_hold_select_dismisses_individual(void) {
+  return alerts_preferences_get_notification_hold_select_action() ==
+         NotificationHoldSelectAction_DismissIndividual;
+}
+
+static void prv_dismiss_current_notification(NotificationWindowData *window_data) {
+  TimelineItem *item = prv_get_current_notification(window_data);
+  const TimelineItemAction *dismiss = item ? timeline_item_find_dismiss_action(item) : NULL;
+  if (dismiss) {
+    // Same as Dismiss in the action menu, with its result dialog
+    timeline_actions_invoke_action(dismiss, item, NULL, NULL);
+  }
+}
+
 static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *data) {
-  prv_dismiss_all(data, NULL);
+  if (prv_hold_select_dismisses_individual()) {
+    prv_dismiss_current_notification(data);
+  } else {
+    prv_dismiss_all(data, NULL);
+  }
 }
 
 static void prv_back_button_single_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -1028,7 +1046,7 @@ static void prv_back_button_single_click_handler(ClickRecognizerRef recognizer, 
 static void prv_click_config_provider(void *data) {
   NotificationWindowData *window_data = data;
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_single_click_handler);
-  if (window_data->allow_dismiss_all) {
+  if (window_data->allow_dismiss_all || prv_hold_select_dismisses_individual()) {
     window_long_click_subscribe(BUTTON_ID_SELECT, 1000, prv_select_long_click_handler, NULL);
   }
   window_set_click_context(BUTTON_ID_SELECT, data);
