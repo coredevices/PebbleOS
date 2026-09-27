@@ -22,6 +22,7 @@
 #include "stubs_app_state.h"
 #include "stubs_app_timer.h"
 #include "stubs_click.h"
+#include "stubs_codepoint.h"
 #include "stubs_fonts.h"
 #include "stubs_graphics.h"
 #include "stubs_heap.h"
@@ -33,6 +34,7 @@
 #include "stubs_system_theme.h"
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
+#include "stubs_utf8.h"
 #include "stubs_vibes.h"
 
 // ---------------------------------------------------------------------------------------------

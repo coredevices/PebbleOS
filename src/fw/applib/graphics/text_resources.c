@@ -542,7 +542,7 @@ static bool prv_load_font_res(ResAppNum app_num, uint32_t resource_id, FontResou
 
 // @param owner_out if non-NULL, receives the FontInfo owning the returned resource. It is a font
 // other than font_info only when the emoji font takes over.
-static const FontResource *prv_font_res_for_codepoint(Codepoint codepoint,
+static const FontResource *prv_font_res_for_codepoint(Codepoint codepoint, FontCache *font_cache,
                                                       const FontInfo *font_info,
                                                       const FontInfo **owner_out) {
   const FontInfo *owner = font_info;
@@ -553,11 +553,20 @@ static const FontResource *prv_font_res_for_codepoint(Codepoint codepoint,
     // Latin & emoji codepoints are in base, others are in extension
     font_res = &font_info->extension;
   } else if (codepoint_is_emoji(codepoint) && font_info->base.app_num == SYSTEM_APP) {
-    // Size against the base: that is the baseline emoji glyphs get aligned to when drawn
-    FontInfo *emoji_font = fonts_get_system_emoji_font_for_size(font_info->base.md.max_height);
-    if (emoji_font) {
-      owner = emoji_font;
-      font_res = &emoji_font->base;
+    // A base font carrying its own emoji glyphs (e.g. a larger curated set)
+    // wins over the global sized fallback; otherwise size against the base.
+    prv_check_font_cache(font_cache, &font_info->base);
+    if (prv_get_glyph_metadata_from_spi(codepoint, font_cache, &font_info->base,
+                                        false /* need_bitmap */)) {
+      owner = font_info;
+      font_res = &font_info->base;
+    } else {
+      // Size against the base: that is the baseline emoji glyphs get aligned to when drawn
+      FontInfo *emoji_font = fonts_get_system_emoji_font_for_size(font_info->base.md.max_height);
+      if (emoji_font) {
+        owner = emoji_font;
+        font_res = &emoji_font->base;
+      }
     }
   }
 
@@ -613,7 +622,8 @@ static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint c
                                               const FontInfo **owner_out,
                                               const FontResource **font_res_out) {
   const FontInfo *owner = font_info;
-  const FontResource *font_res = prv_font_res_for_codepoint(codepoint, font_info, &owner);
+  const FontResource *font_res =
+      prv_font_res_for_codepoint(codepoint, font_cache, font_info, &owner);
   prv_check_font_cache(font_cache, font_res);
   const GlyphData *data =
       prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);

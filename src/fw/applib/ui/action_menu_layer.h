@@ -53,6 +53,14 @@ typedef struct {
 
   const ActionMenuItem *short_items;
   int num_short_items;
+#if PBL_ROUND
+  //! Short-grid selection anchoring the current row partition. The layout
+  //! only reflows when the cursor pushes past the visible window edge.
+  int short_anchor;
+  //! Top menu row of the visible short-grid window. The cursor roams inside
+  //! it; the window scrolls (without reflowing) when the cursor leaves it.
+  int short_window_top;
+#endif
   void *context;
 } ActionMenuLayer;
 

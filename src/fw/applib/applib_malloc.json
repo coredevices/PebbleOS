@@ -74,10 +74,10 @@
         "_comment": "Only for 3.x apps"
     }, {
         "name": "ActionMenuData",
-        "size_3x_padding": 86,
+        "size_3x_padding": 78,
         "size_3x": 954,
         "dependencies": ["Window", "MenuLayer", "Layer", "Layer"],
-        "_comment": "Only for 3.x apps. size_3x includes +16 for the embedded MenuLayer's two grown TouchNavWidgetNodes."
+        "_comment": "Only for 3.x apps. size_3x includes +16 for the embedded MenuLayer's two grown TouchNavWidgetNodes. Padding reduced by 8 for ActionMenuLayer.short_anchor and short_window_top."
     }, {
         "name": "AnimationLegacy2",
         "size_2x": 40,

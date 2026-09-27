@@ -261,6 +261,16 @@
     },
     {
       "type": "font",
+      "name": "GOTHIC_40_EMOJI_PICKER",
+      "file": "normal/base/pbf/EMOJI_40_PICKER.pbf"
+    },
+    {
+      "type": "font",
+      "name": "GOTHIC_44_EMOJI_PICKER_COLOR",
+      "file": "normal/base/pbf/EMOJI_44_PICKER_COLOR.pbf"
+    },
+    {
+      "type": "font",
       "name": "GOTHIC_36",
       "file": "normal/base/pbf/GOTHIC_36.pbf",
       "extended": true

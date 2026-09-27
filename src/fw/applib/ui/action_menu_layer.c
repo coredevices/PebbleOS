@@ -5,9 +5,11 @@
 #include "action_menu_window_private.h"
 
 #include "applib/applib_malloc.auto.h"
+#include "applib/fonts/codepoint.h"
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/graphics.h"
 #include "applib/graphics/text.h"
+#include "applib/graphics/utf8.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/menu_layer.h"
 #include "applib/ui/property_animation.h"
@@ -16,6 +18,7 @@
 #include "shell/system_theme.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
+#include "pbl/util/size.h"
 #include "pbl/util/testing.h"
 
 #define INDICATOR "»"
@@ -26,7 +29,9 @@ static const int VERTICAL_PADDING = PBL_IF_COLOR_ELSE(2, 4);
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
 static const int EXTRA_PADDING_1_BIT = 2;
 #endif
+#if !PBL_ROUND
 static const int SHORT_COL_COUNT = 3;
+#endif
 static const int MAX_NUM_VISIBLE_LINES = 2;
 #if PBL_ROUND
 static const int SHORT_ITEM_MAX_ROWS_SPALDING = 3;
@@ -36,6 +41,69 @@ static GFont prv_get_item_font(void) {
   return system_theme_get_font(TextStyleFont_MenuCellTitle);
 }
 
+// Thin-grid (emoji) cells use a larger font with a fixed gap between rows.
+static const int SHORT_ROW_GAP = 6;
+
+static GFont prv_get_short_item_font(void) {
+  // Temporarily fixed while diagnosing content-size resolution on device.
+  return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+}
+
+static int16_t prv_get_short_item_height(void) {
+  return fonts_get_font_height(prv_get_short_item_font());
+}
+
+// Curated 40px emoji art (2x the 28px masters) for the reply picker grid.
+// when the resource isn't present (e.g. unit-test fixtures), in which case
+// emoji cells fall back to the short-item font.
+static GFont s_picker_emoji_font;
+static bool s_picker_emoji_font_resolved;
+
+static GFont prv_get_picker_emoji_font(void) {
+  if (!s_picker_emoji_font_resolved) {
+    s_picker_emoji_font_resolved = true;
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+    // Full-color art on color displays, 1-bit art elsewhere.
+    s_picker_emoji_font = fonts_get_system_font(FONT_KEY_GOTHIC_44_EMOJI_PICKER_COLOR);
+#else
+    s_picker_emoji_font = fonts_get_system_font(FONT_KEY_GOTHIC_40_EMOJI_PICKER);
+#endif
+  }
+  return s_picker_emoji_font;
+}
+
+static bool prv_is_emoji_label(const char *label) {
+  if (!label || label[0] == '\0') {
+    return false;
+  }
+  return codepoint_is_emoji(utf8_peek_codepoint((utf8_t *)label, NULL));
+}
+
+// Font for one thin-grid cell: curated 36px art for emoji, short font else.
+static GFont prv_get_short_cell_font(const char *label, int16_t *height_out) {
+  GFont font = prv_get_short_item_font();
+  if (prv_is_emoji_label(label)) {
+    GFont emoji_font = prv_get_picker_emoji_font();
+    if (emoji_font) {
+      font = emoji_font;
+    }
+  }
+  if (height_out) {
+    *height_out = fonts_get_font_height(font);
+  }
+  return font;
+}
+
+// Uniform row height so mixed cells still align: tallest cell font + gap.
+static int16_t prv_get_short_row_height(void) {
+  int16_t height = prv_get_short_item_height();
+  GFont emoji_font = prv_get_picker_emoji_font();
+  if (emoji_font) {
+    height = MAX(height, fonts_get_font_height(emoji_font));
+  }
+  return height + SHORT_ROW_GAP;
+}
+
 #if PBL_ROUND
 //! Only used on round displays to achieve a fish-eye effect
 static GFont prv_get_unfocused_item_font(void) {
@@ -43,35 +111,120 @@ static GFont prv_get_unfocused_item_font(void) {
 }
 #endif
 
+#if PBL_ROUND
+// Dynamic circular grid: the centered (selected) row always fits four cells,
+// rows above and below take three, list ends take the remainder.
+//
+// The partition below is evaluated against a FROZEN anchor
+// (ActionMenuLayer.short_anchor), not the live selection: the cursor roams
+// freely inside the frozen layout, and the layout only reflows when the
+// cursor pushes past the visible window edge (down on the last cell of the
+// bottom visible row, up on the first cell of the top visible row).
+// Linear item order is preserved so every cell stays reachable.
+//
+// Widest row; sets the shared column width so gaps stay identical.
+static const int SHORT_ROW_MAX_COLUMNS = 4;
+
+// Center 4-block containing the anchor; edge-clamped so the anchor is always
+// inside. Row above/below counts derive from this.
+static int prv_anchor_center_start(int anchor, int total) {
+  if (total <= 4) {
+    return 0;
+  }
+  int start = (anchor / 4) * 4;
+  if (anchor >= start + 4) {
+    start = anchor - 3;
+  }
+  if (start + 4 > total) {
+    start = total - 4;
+  }
+  return MAX(start, 0);
+}
+
+static int prv_anchor_rows_above(int anchor, int total) {
+  return (prv_anchor_center_start(anchor, total) + 2) / 3;
+}
+
+// First item index of a short row under the given anchor; equals total
+// when past the end.
+static int prv_short_row_start(int row, int sel, int total) {
+  const int center = prv_anchor_center_start(sel, total);
+  const int above = prv_anchor_rows_above(sel, total);
+  if (row < above) {
+    return MAX(0, center - 3 * (above - row));
+  }
+  if (row == above) {
+    return center;
+  }
+  return MIN(center + 4 + 3 * (row - above - 1), total);
+}
+
+static int prv_short_row_count(int row, int sel, int total) {
+  const int start = prv_short_row_start(row, sel, total);
+  if (start >= total) {
+    return 0;
+  }
+  const int above = prv_anchor_rows_above(sel, total);
+  if (row == above) {
+    return MIN(4, total - start);
+  }
+  const int next = (row < above) ? prv_short_row_start(row + 1, sel, total) : start + 3;
+  return MIN(next, total) - start;
+}
+
+static int prv_short_num_rows(int sel, int total) {
+  int rows = 0;
+  while (prv_short_row_start(rows, sel, total) < total) {
+    rows++;
+  }
+  return rows;
+}
+
+// Short row of a linear item index under the given anchor.
+static int prv_short_row_for_item(int item_idx, int sel, int total) {
+  int row = 0;
+  while (prv_short_row_start(row + 1, sel, total) <= item_idx) {
+    row++;
+  }
+  return row;
+}
+#endif
+
 static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
   ActionMenuLayer *aml = callback_context;
   return (uint16_t)(aml->num_items +
+#if PBL_ROUND
+                    prv_short_num_rows(aml->short_anchor, aml->num_short_items));
+#else
                     (aml->num_short_items + SHORT_COL_COUNT - 1) / SHORT_COL_COUNT);
+#endif
 }
 
 static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
                                  ActionMenuLayer *aml, ActionMenuItem *items, int num_items,
                                  int sel_idx) {
-  const GFont font = aml->layout_cache.font;
-  const int16_t font_height = fonts_get_font_height(font);
   const GRect *layer_bounds = &cell_layer->bounds;
   GRect r = *layer_bounds;
 #if PBL_ROUND
-  // more narrow on round
-  r = grect_inset_internal(r, 25, 0);
-  // center the columns horizontally if there's only one row
-  const bool is_single_short_row = aml->num_short_items <= SHORT_COL_COUNT;
-  r.size.w /= is_single_short_row ? num_items : SHORT_COL_COUNT;
+  // more narrow on round; one shared column width keeps gaps identical on
+  // every row, with shorter rows centered
+  r = grect_inset_internal(r, 6, 0);
+  r.size.w /= SHORT_ROW_MAX_COLUMNS;
+  r.origin.x += (r.size.w * (SHORT_ROW_MAX_COLUMNS - num_items)) / 2;
 #else
   r.size.w /= SHORT_COL_COUNT;
 #endif
-  r.origin.y += (r.size.h - font_height) / 2 - 4;
 
   for (int i = 0; i < num_items; i++) {
     if (!items[i].label) {
       break;
     }
+
+    int16_t font_height;
+    const GFont font = prv_get_short_cell_font(items[i].label, &font_height);
+    GRect tr = r;
+    tr.origin.y += (tr.size.h - font_height) / 2 - 4;
 
     if (sel_idx == i) {
       graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
@@ -82,19 +235,28 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
       graphics_context_set_fill_color(ctx, GColorWhite);
 
       const int16_t y_offset = 1;
-      const int16_t padding = r.size.w / 6;
+      const int16_t padding = tr.size.w / 6;
       const uint16_t corner_radius = 4;
-      GRect bg_rect = r;
+      GRect bg_rect = tr;
       bg_rect.origin.y = layer_bounds->origin.y;
       bg_rect.size.h = layer_bounds->size.h;
       bg_rect = grect_inset_internal(bg_rect, padding, y_offset);
       graphics_fill_round_rect(ctx, &bg_rect, corner_radius, GCornersAll);
+#else
+      // 2px underline below the focused glyph so the selection is visible.
+      graphics_context_set_fill_color(ctx, GColorWhite);
+      const int16_t underline_gap = 3;
+      const int16_t underline_inset = 4;
+      const GRect underline =
+          GRect(tr.origin.x + underline_inset, tr.origin.y + font_height + underline_gap,
+                tr.size.w - (2 * underline_inset), 2);
+      graphics_fill_rect(ctx, &underline);
 #endif
     } else {
       graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
     }
 
-    graphics_draw_text(ctx, items[i].label, font, r, GTextOverflowModeTrailingEllipsis,
+    graphics_draw_text(ctx, items[i].label, font, tr, GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentCenter, NULL);
     r.origin.x += r.size.w;
   }
@@ -444,9 +606,16 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell
     const bool selected = menu_layer_is_index_selected(&aml->menu_layer, cell_index);
     prv_cell_item_draw(ctx, cell_layer, aml, item, selected);
   } else {
-    const int base_idx = (cell_index->row - aml->num_items) * SHORT_COL_COUNT;
-    const int sel_idx = aml->selected_index - (base_idx + aml->num_items);
+    const int short_row = cell_index->row - aml->num_items;
+#if PBL_ROUND
+    const int anchor = aml->short_anchor;
+    const int base_idx = prv_short_row_start(short_row, anchor, aml->num_short_items);
+    const int num_items = prv_short_row_count(short_row, anchor, aml->num_short_items);
+#else
+    const int base_idx = short_row * SHORT_COL_COUNT;
     const int num_items = CLIP(aml->num_short_items - base_idx, 0, SHORT_COL_COUNT);
+#endif
+    const int sel_idx = aml->selected_index - (base_idx + aml->num_items);
     prv_cell_column_draw(ctx, cell_layer, aml, (ActionMenuItem *)&aml->short_items[base_idx],
                          num_items, sel_idx);
   }
@@ -456,7 +625,12 @@ static int prv_get_menu_layer_row(ActionMenuLayer *aml, int item_index) {
   if (item_index < aml->num_items) {
     return item_index;
   } else {
+#if PBL_ROUND
+    return aml->num_items + prv_short_row_for_item(item_index - aml->num_items, aml->short_anchor,
+                                                   aml->num_short_items);
+#else
     return aml->num_items + (item_index - aml->num_items) / SHORT_COL_COUNT;
+#endif
   }
 }
 
@@ -482,7 +656,57 @@ PBL_T_STATIC void prv_set_selected_index(ActionMenuLayer *aml, int new_selected_
     // For short columns, aml->selected_index needs to be updated here, because the column index
     // will be lost in the menu layer selection changed callback. Otherwise, it will be updated
     // in prv_selection_changed_cb() to ensure the correct index is used by the draw functions.
+#if PBL_ROUND
+    const int total = aml->num_short_items;
+    const int old_short = CLIP(aml->selected_index - aml->num_items, 0, total - 1);
+    const int new_short = new_selected_index - aml->num_items;
+    // Roam viewport under the frozen partition, tracked across moves: the
+    // cursor moves freely inside it, which is also what the edge trigger is
+    // evaluated against (a cursor-centered window could never be reached).
+    const int anchor = aml->short_anchor;
+    const int num_rows = prv_short_num_rows(anchor, total);
+    const int first_row = CLIP(aml->short_window_top, 0, MAX(num_rows - 1, 0));
+    aml->short_window_top = first_row;
+    int last_row = first_row;
+    while (last_row + 1 < num_rows && last_row - first_row < 2) {
+      last_row++;
+    }
+    const int first_item = prv_short_row_start(first_row, anchor, total);
+    const int last_item = prv_short_row_start(last_row, anchor, total) +
+                          prv_short_row_count(last_row, anchor, total) - 1;
     aml->selected_index = new_selected_index;
+    MenuRowAlign align = MenuRowAlignNone;
+    if (new_short != old_short && ((new_short > old_short && old_short == last_item) ||
+                                   (new_short < old_short && old_short == first_item))) {
+      // Page turn: reflow around the new selection and recenter on it.
+      aml->short_anchor = new_short;
+      menu_layer_reload_data(&aml->menu_layer);
+      const int new_row =
+          prv_short_row_for_item(new_short, aml->short_anchor, aml->num_short_items);
+      aml->short_window_top = (new_row == 0) ? 0 : new_row - 1;
+      align = MenuRowAlignCenter;
+      animated = false;
+    } else {
+      // Roam: keep the frozen layout, scroll only if the target left the window.
+      const int target_row = prv_short_row_for_item(new_short, anchor, total);
+      if (target_row < aml->short_window_top) {
+        aml->short_window_top = target_row;
+        align = MenuRowAlignTop;
+      } else if (target_row > aml->short_window_top + 2) {
+        aml->short_window_top = target_row - 2;
+        align = MenuRowAlignBottom;
+      }
+    }
+    const int menu_layer_index = prv_get_menu_layer_row(aml, new_selected_index);
+    menu_layer_set_selected_index(&aml->menu_layer, MenuIndex(0, menu_layer_index), align,
+                                  animated);
+    if (selection_changed) {
+      prv_selection_changed(aml);
+    }
+    return;
+#else
+    aml->selected_index = new_selected_index;
+#endif
   }
 
   const int menu_layer_index = prv_get_menu_layer_row(aml, new_selected_index);
@@ -540,10 +764,9 @@ static int16_t prv_get_cell_padding(ActionMenuLayer *aml) {
 static int16_t prv_get_cell_height_cb(struct MenuLayer *menu_layer, MenuIndex *cell_index,
                                       void *context) {
   ActionMenuLayer *aml = (ActionMenuLayer *)context;
-  const int16_t line_height = fonts_get_font_height(aml->layout_cache.font);
-  // If we have short items, just return the line height.
+  // Short items use the uniform grid row height (tallest cell font + gap).
   if (prv_aml_is_short(aml)) {
-    return line_height;
+    return prv_get_short_row_height();
   }
 
 #if PBL_ROUND
@@ -551,6 +774,7 @@ static int16_t prv_get_cell_height_cb(struct MenuLayer *menu_layer, MenuIndex *c
              ? MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT
              : MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT;
 #else
+  const int16_t line_height = fonts_get_font_height(aml->layout_cache.font);
   const int16_t max_visible_height = line_height * MAX_NUM_VISIBLE_LINES;
   const int16_t actual_height = aml->layout_cache.item_heights[cell_index->row];
   return (VERTICAL_PADDING * 2) + MIN(max_visible_height, actual_height);
@@ -562,6 +786,12 @@ static int16_t prv_get_separator_height_cb(struct MenuLayer *menu_layer, MenuInd
   // We use the separator to pad the cells (insert spacing), so we compute the height
   // needed for each separator here.
   ActionMenuLayer *aml = callback_context;
+#if !PBL_ROUND
+  // Thin-grid rows already include SHORT_ROW_GAP in the cell height.
+  if (prv_aml_is_short(aml)) {
+    return 0;
+  }
+#endif
   return prv_get_cell_padding(aml);
 }
 
@@ -660,8 +890,21 @@ static void prv_selection_changed_cb(struct MenuLayer *menu_layer, MenuIndex new
   } else if (prv_get_menu_layer_row(aml, aml->selected_index) != new_index.row) {
     // A touch tap moves the menu selection directly, bypassing prv_set_selected_index, so no
     // column index was pre-set for this short-item row; adopt its first column.
+    // The partition is left as-is (no reflow) to avoid reentering the menu layer
+    // from inside its own selection callback; just recenter the roam window.
     prv_unschedule_item_animation(aml);
+#if PBL_ROUND
+    aml->selected_index =
+        aml->num_items + prv_short_row_start(new_index.row - aml->num_items, aml->short_anchor,
+                                             aml->num_short_items);
+    {
+      const int tapped_row = new_index.row - aml->num_items;
+      const int num_rows = prv_short_num_rows(aml->short_anchor, aml->num_short_items);
+      aml->short_window_top = CLIP(tapped_row - 1, 0, MAX(num_rows - 1, 0));
+    }
+#else
     aml->selected_index = aml->num_items + (new_index.row - aml->num_items) * SHORT_COL_COUNT;
+#endif
     prv_selection_changed(aml);
   }
 }
@@ -673,12 +916,12 @@ static void prv_changed_proc(Layer *layer) {
 #if PBL_ROUND
   if (prv_aml_is_short(aml)) {
     // clip the menu layer to show exactly SHORT_ITEM_MAX_ROWS_SPALDING lines at a time
-    const int16_t font_height = fonts_get_font_height(aml->layout_cache.font);
+    const int16_t cell_height = prv_get_short_row_height();
     const int16_t cell_padding = prv_get_cell_padding(aml);
     const int num_visible_rows =
         MIN(prv_get_num_rows(&aml->menu_layer, 0, aml), SHORT_ITEM_MAX_ROWS_SPALDING);
     menu_layer_frame.size.h =
-        (font_height * num_visible_rows) + (cell_padding * (num_visible_rows - 1));
+        (cell_height * num_visible_rows) + (cell_padding * (num_visible_rows - 1));
     grect_align(&menu_layer_frame, aml_bounds, GAlignCenter, true /* clip */);
   }
 #endif
@@ -739,6 +982,17 @@ static void prv_update_aml_cache(ActionMenuLayer *aml, int selected_index) {
   // column the finger meant — keep the two-step tap (select, then activate) for those instead of
   // the plain menus' tap-to-activate.
   menu_layer_set_tap_select_only(&aml->menu_layer, prv_aml_is_short(aml));
+
+#if PBL_ROUND
+  // Fresh row partition, anchored one block in so the initial view leads
+  // with a 3-cell row over the fat middle row.
+  if (aml->num_short_items > 0) {
+    aml->short_anchor = MIN(3, aml->num_short_items - 1);
+  } else {
+    aml->short_anchor = 0;
+  }
+  aml->short_window_top = 0;
+#endif
 
   layer_mark_dirty(&aml->layer);
   menu_layer_reload_data(&aml->menu_layer);

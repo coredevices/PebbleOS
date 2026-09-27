@@ -25,6 +25,7 @@ typedef enum {
 #endif
   SettingsMenuItemActivity,
   SettingsMenuItemSystem,
+  SettingsMenuItemEmojiSelectionDemo,
   SettingsMenuItem_Count,
   SettingsMenuItem_Invalid
 } SettingsMenuItem;
