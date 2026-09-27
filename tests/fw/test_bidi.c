@@ -314,6 +314,24 @@ void test_bidi__separator_after_terminator_does_not_bind(void) {
   prv_assert_runs("ם 50%-60% ם", expected, 5);
 }
 
+void test_bidi__riyal_sign_is_a_terminator(void) {
+  // The Saudi riyal sign is a currency sign like the euro sign, so it binds to
+  // a European number (W5) but not to an Arabic one.
+  static const ExpectedRun hebrew[] = {
+    {0, 3, true},
+    {3, 5, false}, // "50\u20c1"
+    {8, 3, true},
+  };
+  prv_assert_runs("\u05dd 50\u20c1 \u05dd", hebrew, 3);
+
+  static const ExpectedRun arabic[] = {
+    {0, 3, true},
+    {3, 2, false}, // "50"
+    {5, 6, true},  // "\u20c1 \u0645"
+  };
+  prv_assert_runs("\u0645 50\u20c1 \u0645", arabic, 3);
+}
+
 void test_bidi__trailing_emoji_joins_the_arabic_run(void) {
   // A trailing neutral has no strong character after it, so it takes the
   // paragraph direction and ends up at the visual start of the line.

@@ -153,6 +153,7 @@ static BidiClass prv_class(Codepoint cp) {
     case 0x00B0: // Degree sign
     case 0x00B1: // Plus-minus sign
     case 0x20AC: // Euro sign
+    case 0x20C1: // Saudi riyal sign
       return BidiClassET;
     case 0x2212: // Minus sign
       return BidiClassES;
