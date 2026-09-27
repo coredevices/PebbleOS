@@ -36,15 +36,19 @@ typedef enum {
 //! The scheduled_days array is always present but only meaningful when kind == QT_KIND_CUSTOM.
 //! For other kinds, the day mask is derived from the kind at runtime.
 //! is_used indicates whether the slot contains a valid schedule (unused slots are zeroed out).
+//!
+//! This struct is persisted to flash and synced to the phone, so its layout
+//! is explicit: single-byte fields only, no compiler-dependent enum or bool
+//! sizes. Bump handling below if this layout ever changes.
 typedef struct PBL_PACKED QuietTimeScheduleConfig {
-  bool is_used;
-  QuietTimeKind kind;
-  bool scheduled_days[DAYS_PER_WEEK];
+  uint8_t is_used;
+  uint8_t kind;
+  uint8_t scheduled_days[DAYS_PER_WEEK];
   uint8_t from_hour;
   uint8_t from_minute;
   uint8_t to_hour;
   uint8_t to_minute;
-  bool enabled;
+  uint8_t enabled;
 } QuietTimeScheduleConfig;
 
 typedef enum ManualDNDFirstUseSource {
@@ -121,7 +125,7 @@ const char *quiet_time_get_string_for_kind(QuietTimeKind kind);
 //! Display string for custom scheduled days. Buffer must be at least 28 bytes
 //! (7 short day abbreviations + 6 comma separators + NUL). A single selected
 //! day uses the long form (e.g. "Wednesdays", 11 bytes incl. NUL).
-void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, size_t buf_len);
+void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffer, size_t buf_len);
 
 //! Get the number of active (enabled and non-empty) schedule slots
 int quiet_time_get_num_active(void);

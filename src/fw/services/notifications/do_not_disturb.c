@@ -466,7 +466,7 @@ const char *quiet_time_get_string_for_kind(QuietTimeKind kind) {
   }
 }
 
-void quiet_time_get_string_for_custom(const bool *scheduled_days, char *buffer, size_t buf_len) {
+void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffer, size_t buf_len) {
   static const char * const day_strings[] = {
     i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"), i18n_noop("Wed"),
     i18n_noop("Thu"), i18n_noop("Fri"), i18n_noop("Sat"),

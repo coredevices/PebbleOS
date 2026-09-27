@@ -836,14 +836,14 @@ void test_do_not_disturb__qt_display_strings(void) {
   cl_assert_equal_s(str, "Custom");
 
   char buf[28];
-  bool days[DAYS_PER_WEEK] = {false};
+  uint8_t days[DAYS_PER_WEEK] = {0};
   days[Monday] = true;
   days[Wednesday] = true;
   days[Friday] = true;
   quiet_time_get_string_for_custom(days, buf, sizeof(buf));
   cl_assert_equal_s(buf, "Mon,Wed,Fri");
 
-  bool single_day[DAYS_PER_WEEK] = {false};
+  uint8_t single_day[DAYS_PER_WEEK] = {0};
   single_day[Tuesday] = true;
   quiet_time_get_string_for_custom(single_day, buf, sizeof(buf));
   cl_assert_equal_s(buf, "Tuesdays");
@@ -855,7 +855,7 @@ void test_do_not_disturb__qt_display_strings(void) {
   cl_assert_equal_s(small_buf + 3, "");
 
   // Multi-day truncation: no trailing comma when content is cut
-  bool many_days[DAYS_PER_WEEK] = {false};
+  uint8_t many_days[DAYS_PER_WEEK] = {0};
   many_days[Monday] = true;
   many_days[Wednesday] = true;
   many_days[Friday] = true;
@@ -864,7 +864,7 @@ void test_do_not_disturb__qt_display_strings(void) {
   cl_assert_equal_s(tiny_buf, "Mon,Wed");
 
   // Multi-day truncation with room: truncation is marked with an ellipsis
-  bool all_days[DAYS_PER_WEEK] = {true, true, true, true, true, true, true};
+  uint8_t all_days[DAYS_PER_WEEK] = {1, 1, 1, 1, 1, 1, 1};
   char tight_buf[23]; // fits "Mon,Tue,Wed,Thu,Fri…" with terminator
   quiet_time_get_string_for_custom(all_days, tight_buf, sizeof(tight_buf));
   cl_assert_equal_s(tight_buf, "Mon,Tue,Wed,Thu,Fri…");
@@ -1368,5 +1368,54 @@ void test_do_not_disturb__phone_legacy_schedule_mirrors_qt_slot(void) {
   prv_delete_pref("dndWeekdaySchedule");
   prv_delete_pref("dndWeekdayScheduleEnabled");
   quiet_time_delete_schedule(0);
+}
+
+//! A truncated phone write (e.g. an older layout) must not corrupt the slot:
+//! the previous value is kept and no DND event fires.
+void test_do_not_disturb__phone_qt_schedule_size_mismatch_ignored(void) {
+  QuietTimeScheduleConfig config = {
+    .is_used = true,
+    .kind = QT_KIND_EVERYDAY,
+    .from_hour = 13,
+    .to_hour = 14,
+    .enabled = true,
+  };
+  int idx = quiet_time_create_schedule(&config);
+  cl_assert(idx >= 0);
+  // initialize wiped every slot, so the first free slot is slot 0, which the
+  // truncated write below targets.
+  cl_assert(idx == 0);
+
+  s_num_dnd_events_put = 0;
+  const uint8_t short_record[4] = {1, 2, 3, 4};
+  prv_simulate_phone_write("qtSchedule0", short_record, sizeof(short_record));
+
+  QuietTimeScheduleConfig slot0;
+  quiet_time_get_schedule(0, &slot0);
+  cl_assert(slot0.is_used == true);
+  cl_assert(slot0.kind == QT_KIND_EVERYDAY);
+  cl_assert(slot0.from_hour == 13);
+  cl_assert(slot0.to_hour == 14);
+  cl_assert_equal_i(s_num_dnd_events_put, 0);
+
+  // Clean up so later tests start clean.
+  prv_delete_pref("qtSchedule0");
+  quiet_time_delete_schedule(idx);
+}
+
+//! A truncated record on flash is dropped at load instead of yielding a
+//! half-valid schedule.
+void test_do_not_disturb__qt_schedule_size_mismatch_dropped_on_load(void) {
+  const uint8_t short_record[4] = {1, 2, 3, 4};
+  prv_simulate_phone_write("qtSchedule0", short_record, sizeof(short_record));
+
+  alerts_preferences_init();
+
+  QuietTimeScheduleConfig slot0;
+  quiet_time_get_schedule(0, &slot0);
+  cl_assert(slot0.is_used == false);
+
+  // Clean up so later tests start clean.
+  prv_delete_pref("qtSchedule0");
 }
 

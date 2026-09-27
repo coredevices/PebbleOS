@@ -427,9 +427,19 @@ void alerts_preferences_init(void) {
                s_dnd_schedule[WeekendSchedule].enabled);
 
   for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    const char *qt_key = s_qt_schedule_keys[i];
+    const int stored_len = settings_file_get_len(&file, qt_key, strlen(qt_key));
+    if (stored_len == 0) {
+      continue;  // No record yet; the slot stays empty.
+    }
+    if (stored_len != (int)sizeof(QuietTimeScheduleConfig)) {
+      // A short or corrupt record must not yield a half-valid schedule.
+      PBL_LOG_ERR("QT slot %d has unexpected size %d, dropping it", i, stored_len);
+      memset(&s_qt_schedule[i], 0, sizeof(s_qt_schedule[i]));
+      continue;
+    }
     __typeof__(s_qt_schedule[i]) _tmp;
-    if (settings_file_get(&file, s_qt_schedule_keys[i], strlen(s_qt_schedule_keys[i]),
-                          &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+    if (settings_file_get(&file, qt_key, strlen(qt_key), &_tmp, sizeof(_tmp)) == S_SUCCESS) {
       s_qt_schedule[i] = _tmp;
     }
   }
@@ -918,6 +928,12 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
     size_t qt_key_len = strlen(qt_key);
     if ((key_len == (int)qt_key_len || key_len == (int)(qt_key_len + 1)) &&
         memcmp(key, qt_key, qt_key_len) == 0) {
+      if (settings_file_get_len(&file, key, key_len) != (int)sizeof(QuietTimeScheduleConfig)) {
+        // Version skew or corruption: ignore the write rather than trusting
+        // a truncated record.
+        PBL_LOG_WRN("QT slot %d has unexpected size, ignoring phone write", i);
+        goto done;
+      }
       QuietTimeScheduleConfig _tmp;
       if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
         s_qt_schedule[i] = _tmp;
