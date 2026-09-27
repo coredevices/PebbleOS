@@ -9,7 +9,7 @@
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/settings/settings_file.h"
 #include "shell/prefs_private.h"
-#include "util/attributes.h"
+#include "pbl/kernel/compiler.h"
 
 // Fixture
 /////////////////////////////////////////////////
@@ -33,14 +33,14 @@
 #include "stubs_rand_ptr.h"
 #include "stubs_session.h"
 #include "stubs_sleep.h"
-#include "stubs_task_watchdog.h"
+#include "stubs_task_wdt.h"
 
-void WEAK alerts_preferences_lock(void) { }
-void WEAK alerts_preferences_unlock(void) { }
-void WEAK alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) { }
-void WEAK prefs_private_lock(void) { }
-void WEAK prefs_private_unlock(void) { }
-void WEAK prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) { }
+void PBL_WEAK alerts_preferences_lock(void) { }
+void PBL_WEAK alerts_preferences_unlock(void) { }
+void PBL_WEAK alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) { }
+void PBL_WEAK prefs_private_lock(void) { }
+void PBL_WEAK prefs_private_unlock(void) { }
+void PBL_WEAK prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) { }
 
 // Sync infra we link out: provide stubs that record what the production code
 // would have asked sync.c to do.
