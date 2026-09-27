@@ -11,6 +11,7 @@
 #include "comm/ble/gatt_client_operations.h"
 
 #include "kernel/event_loop.h"
+#include "pbl/drivers/rtc.h"
 #include "kernel/pbl_malloc.h"
 
 #include "pbl/services/evented_timer.h"
@@ -176,6 +177,8 @@ typedef struct ANCSClient {
   // Consecutive alive checks whose Control Point write iOS rejected.
   uint8_t consecutive_rejected_alive_checks;
   ANCSReconcile *reconcile;
+  //! When the current subscription started, 0 while not subscribed
+  time_t subscribed_since;
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
@@ -1276,6 +1279,7 @@ void ancs_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
       prv_ancs_is_alive_start_tracking();
       prv_start_temp_notification_connection_delay_timer();
       prv_reconcile_start_collecting();
+      s_ancs_client->subscribed_since = rtc_get_time();
     }
   } else {
     PBL_LOG_ERR("Failed to subscribe charx: %u (error=%u)", characteristic_id, error);
@@ -1286,6 +1290,7 @@ void ancs_invalidate_all_references(void) {
   for (int c = 0; c < NumANCSCharacteristic; c++) {
     s_ancs_client->characteristics[c] = PBL_BT_CHARACTERISTIC_INVALID;
   }
+  s_ancs_client->subscribed_since = 0;
 
   prv_reset_and_flush();
   prv_put_ancs_disconnected_event();
@@ -1562,6 +1567,10 @@ void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
 bool ancs_is_connected(void) {
   return s_ancs_client && (s_ancs_client->characteristics[ANCSCharacteristicControl] !=
                            PBL_BT_CHARACTERISTIC_INVALID);
+}
+
+time_t ancs_get_subscribed_since(void) {
+  return s_ancs_client ? s_ancs_client->subscribed_since : 0;
 }
 
 void ancs_handle_ios9_or_newer_detected(void) {
