@@ -1107,6 +1107,63 @@ void test_do_not_disturb__qt_migration_from_legacy(void) {
   }
 }
 
+//! Migration runs exactly once: with a default weekday plus a customised
+//! weekend, a later boot must not rewrite the weekend slot from the legacy
+//! values and undo edits made in the new UI.
+void test_do_not_disturb__qt_migration_runs_once(void) {
+  // Start without any QT slots so migration has something to do.
+  prv_delete_pref("qtSchedule0");
+  prv_delete_pref("qtSchedule1");
+
+  // Weekday at default, weekend customised. All four legacy keys are written
+  // so the restore below does not pick up stale in-memory values.
+  DoNotDisturbSchedule weekday_default = {0};
+  const bool disabled = false;
+  prv_write_legacy_schedule_pref("dndWeekdaySchedule", &weekday_default, sizeof(weekday_default));
+  prv_write_legacy_schedule_pref("dndWeekdayScheduleEnabled", &disabled, sizeof(disabled));
+  DoNotDisturbSchedule weekend_custom = {
+    .from_hour = 0,
+    .from_minute = 0,
+    .to_hour = 10,
+    .to_minute = 0,
+  };
+  const bool enabled = true;
+  prv_write_legacy_schedule_pref("dndWeekendSchedule", &weekend_custom, sizeof(weekend_custom));
+  prv_write_legacy_schedule_pref("dndWeekendScheduleEnabled", &enabled, sizeof(enabled));
+
+  alerts_preferences_init();
+
+  // Both slots exist now, but only the weekend one is used.
+  QuietTimeScheduleConfig qt_config;
+  quiet_time_get_schedule(0, &qt_config);
+  cl_assert(qt_config.is_used == false);
+  quiet_time_get_schedule(1, &qt_config);
+  cl_assert(qt_config.is_used == true);
+  cl_assert(qt_config.kind == QT_KIND_WEEKENDS);
+  cl_assert(qt_config.enabled == true);
+
+  // The user deletes the weekend slot...
+  quiet_time_delete_schedule(1);
+  quiet_time_get_schedule(1, &qt_config);
+  cl_assert(qt_config.is_used == false);
+
+  // ...and the next boot must not bring it back from the legacy values.
+  alerts_preferences_init();
+  quiet_time_get_schedule(0, &qt_config);
+  cl_assert(qt_config.is_used == false);
+  quiet_time_get_schedule(1, &qt_config);
+  cl_assert(qt_config.is_used == false);
+
+  // Clean up: remove the legacy keys and QT slots so later tests start clean.
+  prv_delete_pref("dndWeekdaySchedule");
+  prv_delete_pref("dndWeekdayScheduleEnabled");
+  prv_delete_pref("dndWeekendSchedule");
+  prv_delete_pref("dndWeekendScheduleEnabled");
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    quiet_time_delete_schedule(i);
+  }
+}
+
 void test_do_not_disturb__qt_create_finds_unused_slot(void) {
   // Fill slots 0-1, leave slot 2 empty (is_used == false)
   QuietTimeScheduleConfig config0 = {
