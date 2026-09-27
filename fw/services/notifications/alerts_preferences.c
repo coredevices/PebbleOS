@@ -809,6 +809,40 @@ static bool prv_is_dnd_state_key(const char *key) {
   return false;
 }
 
+//! Mirror a phone-originated legacy schedule write onto its QT slot. Slot
+//! types double as QT indices: migration puts the weekday schedule in slot 0
+//! and the weekend schedule in slot 1. The mirror applies while the slot is
+//! still the legacy one (unused, or kind Weekdays/Weekends); once the user
+//! replaces it with another kind, the legacy key no longer applies and the
+//! write only updates the legacy struct. Runs with the settings file open.
+static void prv_mirror_legacy_schedule_to_qt(SettingsFile *file, const char *matched_key) {
+  for (int type = 0; type < NumDNDSchedules; type++) {
+    if (strcmp(matched_key, s_dnd_schedule_keys[type].schedule_pref_key) != 0 &&
+        strcmp(matched_key, s_dnd_schedule_keys[type].enabled_pref_key) != 0) {
+      continue;
+    }
+    const int qt_index = type;
+    const QuietTimeKind qt_kind = (type == WeekdaySchedule) ? QT_KIND_WEEKDAYS : QT_KIND_WEEKENDS;
+    if (s_qt_schedule[qt_index].is_used && s_qt_schedule[qt_index].kind != qt_kind) {
+      return;
+    }
+    QuietTimeScheduleConfig qt_config = {
+      .is_used = true,
+      .kind = qt_kind,
+      .from_hour = s_dnd_schedule[type].schedule.from_hour,
+      .from_minute = s_dnd_schedule[type].schedule.from_minute,
+      .to_hour = s_dnd_schedule[type].schedule.to_hour,
+      .to_minute = s_dnd_schedule[type].schedule.to_minute,
+      .enabled = s_dnd_schedule[type].enabled,
+    };
+    memset(qt_config.scheduled_days, 0, sizeof(qt_config.scheduled_days));
+    s_qt_schedule[qt_index] = qt_config;
+    settings_file_set(file, s_qt_schedule_keys[qt_index], strlen(s_qt_schedule_keys[qt_index]),
+                      &qt_config, sizeof(qt_config));
+    return;
+  }
+}
+
 void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   if (event->type != BlobDBEventTypeInsert) {
     return;
@@ -893,12 +927,16 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   // Legacy DND schedule keys (dndWeekdaySchedule, etc.) are already handled by
   // the RELOAD_IF_MATCH calls above, which goto done on match. One-time
   // migration to the qtSchedule* keys happens in prv_migrate_qt_schedules
-  // at init; new local edits keep the QT slots in sync via the legacy
-  // setters in do_not_disturb.c.
+  // at init; the mirror below keeps the QT slots in sync with later
+  // phone-originated legacy writes.
 
 #undef RELOAD_IF_MATCH
 
 done:
+  // A phone write to a legacy schedule key also updates the mirrored QT slot.
+  if (matched_key) {
+    prv_mirror_legacy_schedule_to_qt(&file, matched_key);
+  }
   settings_file_close(&file);
   pbl_mutex_unlock(&s_mutex);
 

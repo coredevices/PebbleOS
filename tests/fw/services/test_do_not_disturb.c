@@ -1297,3 +1297,71 @@ void test_do_not_disturb__phone_qt_schedule_synced(void) {
   cl_assert_equal_i(s_num_dnd_events_put, 1);
 }
 
+//! A phone write to a legacy schedule key lands on the mirrored QT slot while
+//! that slot still mirrors it, and stops applying once the user replaces the
+//! slot with another kind.
+void test_do_not_disturb__phone_legacy_schedule_mirrors_qt_slot(void) {
+  // Time is Thursday 00:00 in the fixture.
+  cl_assert(do_not_disturb_is_active() == false);
+  s_num_dnd_events_put = 0;
+
+  // Phone sets the weekday window 22:00-06:00 and enables it.
+  DoNotDisturbSchedule legacy_schedule = {
+    .from_hour = 22,
+    .from_minute = 0,
+    .to_hour = 6,
+    .to_minute = 0,
+  };
+  const bool enabled = true;
+  prv_simulate_phone_write("dndWeekdaySchedule", &legacy_schedule, sizeof(legacy_schedule));
+  prv_simulate_phone_write("dndWeekdayScheduleEnabled", &enabled, sizeof(enabled));
+
+  // Slot 0 mirrors it: Thursday 00:00 is still Wednesday's window.
+  QuietTimeScheduleConfig slot0;
+  quiet_time_get_schedule(0, &slot0);
+  cl_assert(slot0.is_used == true);
+  cl_assert(slot0.kind == QT_KIND_WEEKDAYS);
+  cl_assert(slot0.from_hour == 22);
+  cl_assert(slot0.to_hour == 6);
+  cl_assert(slot0.enabled == true);
+  cl_assert(do_not_disturb_is_active() == true);
+  cl_assert_equal_i(s_num_dnd_events_put, 1);
+
+  // The user replaces slot 0 with a custom schedule...
+  QuietTimeScheduleConfig custom = {
+    .kind = QT_KIND_CUSTOM,
+    .from_hour = 9,
+    .from_minute = 0,
+    .to_hour = 17,
+    .to_minute = 0,
+    .enabled = true,
+  };
+  memset(custom.scheduled_days, 0, sizeof(custom.scheduled_days));
+  custom.scheduled_days[Monday] = true;
+  quiet_time_set_schedule(0, &custom);
+
+  // ...so a further legacy phone write no longer touches the slot...
+  DoNotDisturbSchedule legacy_schedule2 = {
+    .from_hour = 20,
+    .from_minute = 0,
+    .to_hour = 8,
+    .to_minute = 0,
+  };
+  prv_simulate_phone_write("dndWeekdaySchedule", &legacy_schedule2, sizeof(legacy_schedule2));
+  quiet_time_get_schedule(0, &slot0);
+  cl_assert(slot0.kind == QT_KIND_CUSTOM);
+  cl_assert(slot0.from_hour == 9);
+  cl_assert(slot0.to_hour == 17);
+
+  // ...but the legacy struct itself still tracks the phone value.
+  DoNotDisturbSchedule legacy_out;
+  do_not_disturb_get_schedule(WeekdaySchedule, &legacy_out);
+  cl_assert(legacy_out.from_hour == 20);
+  cl_assert(legacy_out.to_hour == 8);
+
+  // Clean up so later tests start clean.
+  prv_delete_pref("dndWeekdaySchedule");
+  prv_delete_pref("dndWeekdayScheduleEnabled");
+  quiet_time_delete_schedule(0);
+}
+
