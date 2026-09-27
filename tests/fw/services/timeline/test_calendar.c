@@ -12,6 +12,7 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
+#include "stubs_pending_dismissals.h"
 #include "stubs_analytics.h"
 #include "stubs_ancs.h"
 #include "stubs_ancs_notifications.h"

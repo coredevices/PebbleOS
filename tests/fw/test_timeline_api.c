@@ -19,6 +19,7 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
+#include "stubs_pending_dismissals.h"
 #include "stubs_analytics.h"
 #include "stubs_app_cache.h"
 #include "stubs_app_install_manager.h"

@@ -12,6 +12,7 @@
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
 #include "pbl/services/notifications/ancs/ancs_reconcile.h"
+#include "pbl/services/notifications/pending_dismissals.h"
 #include "pbl/util/size.h"
 
 #include "clar.h"
@@ -132,6 +133,48 @@ void ancs_reconcile_by_content(const ANCSReconcileEntry *entries, size_t num_ent
   s_num_recorded_entries = num_entries;
   prv_record_live_uids(live_uids, num_live_uids);
 }
+
+// Fake queue of dismissals made while away: resolving sends `s_pending_send_uid`, if set
+static bool s_pending_has_ancs;
+static bool s_pending_canary_found;
+static ANCSReconcileEntry s_pending_canary;
+static uint32_t s_pending_send_uid;
+static int s_num_pending_resolved_by_uid;
+static int s_num_pending_resolved_by_content;
+
+bool pending_dismissals_has_ancs(void) {
+  return s_pending_has_ancs;
+}
+
+bool pending_dismissals_find_ancs_canary(const uint32_t *uids, size_t num_uids,
+                                         ANCSReconcileEntry *canary_out) {
+  *canary_out = s_pending_canary;
+  return s_pending_canary_found;
+}
+
+static void prv_pending_send(PendingDismissalSendCallback send) {
+  if (s_pending_send_uid) {
+    send(s_pending_send_uid, ActionIDNegative);
+  }
+}
+
+void pending_dismissals_resolve_ancs_by_uid(const uint32_t *uids, size_t num_uids,
+                                            PendingDismissalSendCallback send) {
+  s_num_pending_resolved_by_uid++;
+  prv_pending_send(send);
+}
+
+void pending_dismissals_resolve_ancs_by_content(const ANCSReconcileEntry *entries,
+                                                size_t num_entries,
+                                                PendingDismissalSendCallback send) {
+  s_num_pending_resolved_by_content++;
+  prv_pending_send(send);
+}
+
+// Actions the fake iPhone performed
+static uint32_t s_performed_action_uid;
+static uint8_t s_performed_action_id;
+static int s_num_performed_actions;
 
 // What the fake iPhone's Notification Center holds, for the catch-up's app and date fetches
 typedef struct {
@@ -282,6 +325,15 @@ enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
 
   const CPDSMessage *cmd_header = (const CPDSMessage *)buffer;
 
+  if (cmd_header->command_id == CommandIDPerformNotificationAction) {
+    const PerformNotificationActionMsg *action = (const PerformNotificationActionMsg *)buffer;
+    s_performed_action_uid = action->notification_uid;
+    s_performed_action_id = action->action_id;
+    s_num_performed_actions++;
+    ancs_handle_write_response(0, PBL_BT_GATT_ERROR_SUCCESS);
+    return PBL_BT_ERRNO_OK;
+  }
+
   // The catch-up only asks for the app identifier and the date
   if ((cmd_header->command_id == CommandIDGetNotificationAttributes) &&
       (length == sizeof(GetNotificationAttributesMsg) + 2)) {
@@ -425,6 +477,12 @@ void test_ancs__initialize(void) {
   s_num_ios_notifications = 0;
   s_num_reconcile_fetches = 0;
   s_ios_ignores_reconcile_fetches = false;
+  s_pending_has_ancs = false;
+  s_pending_canary_found = false;
+  s_pending_send_uid = 0;
+  s_num_pending_resolved_by_uid = 0;
+  s_num_pending_resolved_by_content = 0;
+  s_num_performed_actions = 0;
   regular_timer_init();
   s_num_requested_notif_attributes = 0;
   s_num_requested_app_attributes = 0;
@@ -1059,4 +1117,70 @@ void test_ancs__reconcile_cancelled_by_disconnection(void) {
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), allocs_before);
   cl_assert_equal_i(s_num_by_uid_calls, 0);
   cl_assert_equal_i(s_num_by_content_calls, 0);
+}
+
+void test_ancs__reconcile_sends_pending_dismissals(void) {
+  // Everything on the watch was dismissed while away: only the queued dismissals remain, and one of
+  // them checks the UIDs
+  s_has_candidates = false;
+  s_pending_has_ancs = true;
+  s_pending_canary_found = true;
+  s_pending_canary = (ANCSReconcileEntry){.uid = 5, .app_id_hash = 'a', .timestamp = 'x'};
+  s_pending_send_uid = 5;
+  prv_add_ios_notification(5, 'a', 'x');
+
+  prv_reconnect();
+  prv_replay(5);
+  prv_end_reconnect_window();
+
+  cl_assert_equal_i(s_num_reconcile_fetches, 1);
+  cl_assert_equal_i(s_num_pending_resolved_by_uid, 1);
+  cl_assert_equal_i(s_num_pending_resolved_by_content, 0);
+  cl_assert_equal_i(s_num_performed_actions, 1);
+  cl_assert_equal_i(s_performed_action_uid, 5);
+  cl_assert_equal_i(s_performed_action_id, ActionIDNegative);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+  cl_assert_equal_i(prv_get_queue_depth(), 0);
+}
+
+void test_ancs__reconcile_sends_pending_dismissals_after_uid_change(void) {
+  s_has_candidates = false;
+  s_pending_has_ancs = true;
+  s_pending_canary_found = true;
+  s_pending_canary = (ANCSReconcileEntry){.uid = 5, .app_id_hash = 'a', .timestamp = 'x'};
+  // iOS renumbered: the dismissed notification is now 8
+  s_pending_send_uid = 8;
+  prv_add_ios_notification(5, 'b', 'y');
+  prv_add_ios_notification(8, 'a', 'x');
+
+  prv_reconnect();
+  prv_replay(5);
+  prv_replay(8);
+  prv_end_reconnect_window();
+
+  cl_assert_equal_i(s_num_reconcile_fetches, 3);
+  cl_assert_equal_i(s_num_pending_resolved_by_uid, 0);
+  cl_assert_equal_i(s_num_pending_resolved_by_content, 1);
+  cl_assert_equal_i(s_num_performed_actions, 1);
+  cl_assert_equal_i(s_performed_action_uid, 8);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+}
+
+void test_ancs__reconcile_keeps_pending_dismissals_on_failure(void) {
+  s_has_candidates = false;
+  s_pending_has_ancs = true;
+  s_pending_canary_found = true;
+  s_pending_canary = (ANCSReconcileEntry){.uid = 5, .app_id_hash = 'a', .timestamp = 'x'};
+  s_pending_send_uid = 5;
+  s_ios_ignores_reconcile_fetches = true;
+
+  prv_reconnect();
+  prv_replay(5);
+  prv_end_reconnect_window();
+  regular_timer_fire_seconds(10);
+
+  // Left queued for the next connection
+  cl_assert_equal_i(s_num_pending_resolved_by_uid, 0);
+  cl_assert_equal_i(s_num_pending_resolved_by_content, 0);
+  cl_assert_equal_i(s_num_performed_actions, 0);
 }

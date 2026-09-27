@@ -73,9 +73,11 @@ status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
 void timeline_pin_window_push_modal(TimelineItem *item) {
 }
 
+static bool s_app_disconnected;
+
 CommSession *comm_session_get_system_session(void) {
-  // This can't be NULL (in that case we don't try to send the message)
-  return (CommSession *)1;
+  // Not NULL unless a test disconnects the app: then no message is sent
+  return s_app_disconnected ? NULL : (CommSession *)1;
 }
 
 void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,

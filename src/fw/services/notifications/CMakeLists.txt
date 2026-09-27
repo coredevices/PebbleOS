@@ -17,6 +17,7 @@ set(sources
   notification_image.c
   notification_storage.c
   notifications.c
+  pending_dismissals.c
 )
 pbl_library()
 pbl_library_sources(${sources})

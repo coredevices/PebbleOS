@@ -21,6 +21,7 @@
 // Stubs
 /////////////////////
 
+#include "stubs_pending_dismissals.h"
 #include "stubs_action_menu.h"
 #include "stubs_activity.h"
 #include "stubs_alerts.h"

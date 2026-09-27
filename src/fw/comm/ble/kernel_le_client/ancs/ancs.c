@@ -16,6 +16,7 @@
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
 #include "pbl/services/notifications/ancs/ancs_reconcile.h"
+#include "pbl/services/notifications/pending_dismissals.h"
 #include "pbl/services/regular_timer.h"
 
 #include "system/hexdump.h"
@@ -724,6 +725,9 @@ static void prv_start_temp_notification_connection_delay_timer(void) {
 //! and the replay can be compared directly. Otherwise each replayed notification's app and date
 //! are fetched and compared instead. Any failed fetch cancels the catch-up so that nothing still
 //! on the phone is dismissed.
+//!
+//! Notifications dismissed on the watch while it was away are dismissed on iOS at the same time,
+//! once the UIDs iOS uses for them are known (see pending_dismissals.h).
 
 static void prv_reconcile_free(void) {
   if (!s_ancs_client || !s_ancs_client->reconcile) {
@@ -785,6 +789,10 @@ static void prv_reconcile_push_fetch(uint32_t uid) {
   prv_notif_queue_push_common(node);
 }
 
+static void prv_send_pending_dismissal(uint32_t uid, uint8_t action_id) {
+  prv_notif_queue_push_action(uid, action_id);
+}
+
 static void prv_reconcile_fetch_next(void) {
   ANCSReconcile *reconcile = s_ancs_client->reconcile;
   if (reconcile->next_fetch < reconcile->num_uids) {
@@ -794,6 +802,8 @@ static void prv_reconcile_fetch_next(void) {
 
   ancs_reconcile_by_content(reconcile->entries, reconcile->num_entries, reconcile->live_uids,
                             reconcile->num_live_uids);
+  pending_dismissals_resolve_ancs_by_content(reconcile->entries, reconcile->num_entries,
+                                             prv_send_pending_dismissal);
   prv_reconcile_free();
 }
 
@@ -836,6 +846,8 @@ static void prv_reconcile_advance(void) {
         ancs_reconcile_canary_matches(&reconcile->canary, &reconcile->fetched)) {
       ancs_reconcile_by_uid(reconcile->uids, reconcile->num_uids, reconcile->live_uids,
                             reconcile->num_live_uids);
+      pending_dismissals_resolve_ancs_by_uid(reconcile->uids, reconcile->num_uids,
+                                             prv_send_pending_dismissal);
       prv_reconcile_free();
     } else {
       prv_reconcile_start_fetching();
@@ -860,14 +872,18 @@ static void prv_reconcile_window_ended_cb(void *data) {
     return;
   }
 
-  // An empty replay can't be told apart from one that never came, so it removes nothing
+  // An empty replay can't be told apart from one that never came, so it dismisses nothing
   if ((s_ancs_client->version != ANCSVersion_iOS9OrNewer) || reconcile->overflowed ||
-      (reconcile->num_uids == 0) || !ancs_reconcile_has_candidates()) {
+      (reconcile->num_uids == 0) ||
+      (!ancs_reconcile_has_candidates() && !pending_dismissals_has_ancs())) {
     prv_reconcile_free();
     return;
   }
 
-  if (ancs_reconcile_find_canary(reconcile->uids, reconcile->num_uids, &reconcile->canary)) {
+  // Dismissals made while away can check the UIDs too, when nothing on the watch can
+  if (ancs_reconcile_find_canary(reconcile->uids, reconcile->num_uids, &reconcile->canary) ||
+      pending_dismissals_find_ancs_canary(reconcile->uids, reconcile->num_uids,
+                                          &reconcile->canary)) {
     reconcile->phase = ReconcilePhaseCanary;
     prv_reconcile_push_fetch(reconcile->canary.uid);
   } else {
@@ -1541,6 +1557,11 @@ void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
   } else {
     launcher_task_add_callback(prv_serialize_action_launcher_task_cb, action_msg_ptr);
   }
+}
+
+bool ancs_is_connected(void) {
+  return s_ancs_client && (s_ancs_client->characteristics[ANCSCharacteristicControl] !=
+                           PBL_BT_CHARACTERISTIC_INVALID);
 }
 
 void ancs_handle_ios9_or_newer_detected(void) {
