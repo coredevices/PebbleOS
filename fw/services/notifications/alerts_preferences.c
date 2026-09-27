@@ -224,45 +224,33 @@ static void prv_migrate_qt_schedules(SettingsFile *file) {
     return;
   }
 
-#define SET_QT_PREF_ALREADY_OPEN(index) \
-  do { \
-    settings_file_set(file, s_qt_schedule_keys[index], strlen(s_qt_schedule_keys[index]), \
-                      &s_qt_schedule[index], sizeof(QuietTimeScheduleConfig)); \
-  } while (0)
-
-  if (s_dnd_schedule[WeekdaySchedule].schedule.from_hour != 0 ||
-      s_dnd_schedule[WeekdaySchedule].schedule.to_hour != 0 ||
-      s_dnd_schedule[WeekdaySchedule].enabled) {
-    s_qt_schedule[0] = (QuietTimeScheduleConfig){
-      .is_used = true,
-      .kind = QT_KIND_WEEKDAYS,
-      .from_hour = s_dnd_schedule[WeekdaySchedule].schedule.from_hour,
-      .from_minute = s_dnd_schedule[WeekdaySchedule].schedule.from_minute,
-      .to_hour = s_dnd_schedule[WeekdaySchedule].schedule.to_hour,
-      .to_minute = s_dnd_schedule[WeekdaySchedule].schedule.to_minute,
-      .enabled = s_dnd_schedule[WeekdaySchedule].enabled,
+  // Always write both slots, even when empty: slot 0's existence marks
+  // migration as done. A partially-migrated state (e.g. default weekday plus
+  // customised weekend) must not re-run on the next boot and clobber edits
+  // or deletes made in the new UI.
+  static const DoNotDisturbScheduleType s_migrated_types[2] = {
+    WeekdaySchedule, WeekendSchedule,
+  };
+  static const QuietTimeKind s_migrated_kinds[2] = {
+    QT_KIND_WEEKDAYS, QT_KIND_WEEKENDS,
+  };
+  for (int i = 0; i < 2; i++) {
+    const DoNotDisturbScheduleType type = s_migrated_types[i];
+    s_qt_schedule[i] = (QuietTimeScheduleConfig){
+      .is_used = (s_dnd_schedule[type].schedule.from_hour != 0 ||
+                  s_dnd_schedule[type].schedule.to_hour != 0 ||
+                  s_dnd_schedule[type].enabled),
+      .kind = s_migrated_kinds[i],
+      .from_hour = s_dnd_schedule[type].schedule.from_hour,
+      .from_minute = s_dnd_schedule[type].schedule.from_minute,
+      .to_hour = s_dnd_schedule[type].schedule.to_hour,
+      .to_minute = s_dnd_schedule[type].schedule.to_minute,
+      .enabled = s_dnd_schedule[type].enabled,
     };
-    memset(s_qt_schedule[0].scheduled_days, 0, sizeof(s_qt_schedule[0].scheduled_days));
-    SET_QT_PREF_ALREADY_OPEN(0);
+    memset(s_qt_schedule[i].scheduled_days, 0, sizeof(s_qt_schedule[i].scheduled_days));
+    settings_file_set(file, s_qt_schedule_keys[i], strlen(s_qt_schedule_keys[i]),
+                      &s_qt_schedule[i], sizeof(QuietTimeScheduleConfig));
   }
-
-  if (s_dnd_schedule[WeekendSchedule].schedule.from_hour != 0 ||
-      s_dnd_schedule[WeekendSchedule].schedule.to_hour != 0 ||
-      s_dnd_schedule[WeekendSchedule].enabled) {
-    s_qt_schedule[1] = (QuietTimeScheduleConfig){
-      .is_used = true,
-      .kind = QT_KIND_WEEKENDS,
-      .from_hour = s_dnd_schedule[WeekendSchedule].schedule.from_hour,
-      .from_minute = s_dnd_schedule[WeekendSchedule].schedule.from_minute,
-      .to_hour = s_dnd_schedule[WeekendSchedule].schedule.to_hour,
-      .to_minute = s_dnd_schedule[WeekendSchedule].schedule.to_minute,
-      .enabled = s_dnd_schedule[WeekendSchedule].enabled,
-    };
-    memset(s_qt_schedule[1].scheduled_days, 0, sizeof(s_qt_schedule[1].scheduled_days));
-    SET_QT_PREF_ALREADY_OPEN(1);
-  }
-
-#undef SET_QT_PREF_ALREADY_OPEN
 }
 
 static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
