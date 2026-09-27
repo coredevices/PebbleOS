@@ -118,7 +118,7 @@ void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
   strncpy(md->name, info->name, sizeof(md->name));
   md->name[sizeof(md->name) - 1] = 0;
 
-  md->size_bytes = info->virtual_size;
+  md->size_bytes = process_info_get_virtual_size(info);
 
   md->process_version = info->process_version;
   md->sdk_version = info->sdk_version;
@@ -144,7 +144,7 @@ void process_metadata_init_with_resource_header(PebbleProcessMdResource *md,
   strncpy(md->name, info->name, sizeof(md->name));
   md->name[sizeof(md->name) - 1] = 0;
 
-  md->size_bytes = info->virtual_size;
+  md->size_bytes = process_info_get_virtual_size(info);
   md->bin_resource_id = bin_resource_id;
 }
 

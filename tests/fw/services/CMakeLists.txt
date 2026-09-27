@@ -380,6 +380,18 @@ pbl_clar_test(test_app_menu_data_source
   OVERRIDES dummy_board fake_app_registry
 )
 
+pbl_clar_test(test_process_loader_storage
+  SOURCES
+    lib/util/build_id.c
+    src/fw/kernel/util/segment.c
+    src/fw/process_management/pebble_process_info.c
+    src/fw/process_management/pebble_process_md.c
+    src/fw/services/process_management/app_storage.c
+    src/fw/services/process_management/process_loader_storage.c
+    src/fw/util/legacy_checksum.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_app_fetch_endpoint
   SOURCES
     src/fw/util/rand/rand.c

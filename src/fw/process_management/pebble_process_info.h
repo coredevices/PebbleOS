@@ -62,8 +62,13 @@ typedef enum {
 // (Junior Whopper / 2.0?) .major:0x08 .minor:0x02 -- 2.0, added resource crc and resource timestamp
 // .major:0x09 .minor:0x00 -- 2.0, no more reloc_list_start
 // .major:0x10 .minor:0x00 -- 2.0, added virtual_size
+// .major:0x10 .minor:0x01 -- added load_size_hi and virtual_size_hi, for images over 64 KiB
 #define PROCESS_INFO_CURRENT_STRUCT_VERSION_MAJOR 0x10
-#define PROCESS_INFO_CURRENT_STRUCT_VERSION_MINOR 0x0
+#define PROCESS_INFO_CURRENT_STRUCT_VERSION_MINOR 0x1
+
+// The first struct version with load_size_hi and virtual_size_hi
+#define PROCESS_INFO_FIRST_WIDE_SIZE_STRUCT_VERSION_MAJOR 0x10
+#define PROCESS_INFO_FIRST_WIDE_SIZE_STRUCT_VERSION_MINOR 0x1
 
 // process info version for last know 1.x
 // let this be a warning to engineers everywhere
@@ -169,9 +174,10 @@ typedef enum {
 // (tap/pan/swipe + window attach/detach) to apps (rev 107) sdk.major:0x5 .minor:0x69 -- Add
 // app_touch_navigation_enable() opt-in for third-party touch nav (rev 108) sdk.major:0x5
 // .minor:0x6a -- Add HRV sampling API (health_service_set_hrv_sample_period) (rev 109)
+// sdk.major:0x5 .minor:0x6b -- 24-bit app load and virtual sizes (no API changes) (rev 109)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6a
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6b
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
@@ -207,18 +213,21 @@ int version_compare(Version a, Version b);
 
 //! @internal
 // WARNING: changes in this struct must be reflected in:
-// - tintin/waftools/inject_metadata.py
+// - sdk/tools/inject_metadata.py
+// - tools/app_header.py
 // - iOS/PebblePrivateKit/PebblePrivateKit/PBBundle.m
 typedef struct PBL_PACKED {
   char header[8];          //!< Sentinal value, should always be 'PBLAPP'
   Version struct_version;  //!< version of this structure's format
   Version sdk_version;     //!< version of the SDK used to build this process
   Version process_version; //!< version of the process. Note this omits any semver "patch" version.
-  uint16_t
-      load_size;   //!< size of the binary in flash, including this metadata but not the reloc table
+  //! Low 16 bits of the size of the binary in flash, including this metadata but not the reloc
+  //! table. The firmware reads the whole size with process_info_get_load_size().
+  uint16_t load_size;
   uint32_t offset; //!< The entry point of this executable
-  uint32_t
-      crc; //!< CRC of the data only, ie, not including this struct or the reloc table at the end
+  //! CRC from PROCESS_INFO_CRC_START_OFFSET to the end of the image. It covers load_size_hi and
+  //! virtual_size_hi but not the reloc table at the end.
+  uint32_t crc;
   char name[PROCESS_NAME_BYTES];    //!< Name to display on the menu
   char company[COMPANY_NAME_BYTES]; //!< Name of the maker of this process
   uint32_t icon_resource_id;        //!< Resource ID within this bank to use as a 32x32 icon
@@ -246,8 +255,20 @@ typedef struct PBL_PACKED {
   } uuid;                      //!< The process's UUID
   uint32_t resource_crc;       //!< CRC of the resource data only
   uint32_t resource_timestamp; //!< timestamp of the resource data
-  uint16_t virtual_size; //!< The total amount of memory used by the process (.text + .data + .bss)
+  //! Low 16 bits of the total amount of memory used by the process (.text + .data + .bss). Read
+  //! the whole size with process_info_get_virtual_size() in the firmware.
+  uint16_t virtual_size;
+  //! Bits 16 to 23 of load_size. Only read from struct version 0x10.0x01, since older binaries
+  //! have linker padding here.
+  uint8_t load_size_hi;
+  //! Bits 16 to 23 of virtual_size. Only read from struct version 0x10.0x01.
+  uint8_t virtual_size_hi;
 } PebbleProcessInfo;
+
+//! The app CRC runs from here to the end of the image. It is the end of the 0x10.0x00 header, so
+//! the CRC takes in load_size_hi and virtual_size_hi, and every struct version checks the same
+//! bytes.
+#define PROCESS_INFO_CRC_START_OFFSET 0x82
 
 //! @internal
 typedef struct PBL_PACKED {

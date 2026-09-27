@@ -23,10 +23,8 @@ extern const void *const g_pbl_system_tbl[];
 
 // ----------------------------------------------------------------------------------------------
 static bool prv_verify_checksum(const PebbleProcessInfo *app_info, const uint8_t *data) {
-  const size_t header_size = sizeof(PebbleProcessInfo);
-
-  const uint8_t *crc_data = data + header_size;
-  const uint32_t app_size = app_info->load_size - header_size;
+  const uint8_t *crc_data = data + PROCESS_INFO_CRC_START_OFFSET;
+  const uint32_t app_size = process_info_get_load_size(app_info) - PROCESS_INFO_CRC_START_OFFSET;
   uint32_t calculated_crc = legacy_defective_checksum_memory(crc_data, app_size);
 
   if (app_info->crc != calculated_crc) {
@@ -54,6 +52,14 @@ static bool prv_offset_is_halfword_aligned(size_t offset) {
   return ((offset & (sizeof(uint16_t) - 1)) == 0);
 }
 
+static size_t prv_header_size(const PebbleProcessInfo *info) {
+  const Version first_wide = {
+    .major = PROCESS_INFO_FIRST_WIDE_SIZE_STRUCT_VERSION_MAJOR,
+    .minor = PROCESS_INFO_FIRST_WIDE_SIZE_STRUCT_VERSION_MINOR,
+  };
+  return version_compare(info->struct_version, first_wide) < 0 ? 0x82 : sizeof(*info);
+}
+
 static bool prv_validate_process_info(const PebbleProcessInfo *info, MemorySegment *destination,
                                       size_t *load_size_out) {
   if (strncmp("PBLAPP", info->header, sizeof(info->header)) != 0) {
@@ -62,9 +68,9 @@ static bool prv_validate_process_info(const PebbleProcessInfo *info, MemorySegme
   }
 
   const size_t segment_size = memory_segment_get_size(destination);
-  const size_t header_size = sizeof(PebbleProcessInfo);
-  const size_t image_size = info->load_size;
-  const size_t virtual_size = info->virtual_size;
+  const size_t header_size = prv_header_size(info);
+  const size_t image_size = process_info_get_load_size(info);
+  const size_t virtual_size = process_info_get_virtual_size(info);
 
   size_t load_size;
   if (!app_storage_get_process_load_size(info, &load_size)) {
@@ -88,8 +94,8 @@ static bool prv_validate_process_info(const PebbleProcessInfo *info, MemorySegme
   }
 
   if (load_size > segment_size) {
-    PBL_LOG_ERR("App/Worker exceeds available program space: %" PRIu16 " + (%" PRIu32 " * 4) = %zu",
-                info->load_size, info->num_reloc_entries, load_size);
+    PBL_LOG_ERR("App/Worker exceeds available program space: %zu + (%" PRIu32 " * 4) = %zu",
+                image_size, info->num_reloc_entries, load_size);
     return false;
   }
 
@@ -113,9 +119,10 @@ static bool prv_validate_process_info(const PebbleProcessInfo *info, MemorySegme
 
 static bool prv_process_info_matches_md(const PebbleProcessInfo *info,
                                         const PebbleProcessMd *app_md) {
-  if (process_metadata_get_size_bytes(app_md) != info->virtual_size) {
-    PBL_LOG_WRN("App metadata virtual size mismatch: md=%" PRIu32 " info=%" PRIu16,
-                process_metadata_get_size_bytes(app_md), info->virtual_size);
+  const uint32_t virtual_size = process_info_get_virtual_size(info);
+  if (process_metadata_get_size_bytes(app_md) != virtual_size) {
+    PBL_LOG_WRN("App metadata virtual size mismatch: md=%" PRIu32 " info=%" PRIu32,
+                process_metadata_get_size_bytes(app_md), virtual_size);
     return false;
   }
 
@@ -142,7 +149,9 @@ static bool prv_apply_relocations(const PebbleProcessInfo *info, MemorySegment *
   // Slot values are still relative to the app image
   // Legacy SDK apps can have a non-word-aligned image size, which places the
   // table itself at an unaligned offset, so entries must be read bytewise
-  uint8_t *reloc_table = prv_offset_to_address(destination, info->load_size);
+  const uint32_t image_size = process_info_get_load_size(info);
+  const uint32_t virtual_size = process_info_get_virtual_size(info);
+  uint8_t *reloc_table = prv_offset_to_address(destination, image_size);
 
   for (uint32_t i = 0; i < info->num_reloc_entries; ++i) {
     // A target has to land inside the image and past the header, otherwise the
@@ -151,8 +160,8 @@ static bool prv_apply_relocations(const PebbleProcessInfo *info, MemorySegment *
     // slots inside packed structs), so slots are accessed bytewise as well
     uint32_t reloc_offset;
     memcpy(&reloc_offset, &reloc_table[i * sizeof(uint32_t)], sizeof(reloc_offset));
-    if (!prv_offset_range_fits(reloc_offset, sizeof(uint32_t), info->load_size) ||
-        (reloc_offset < sizeof(PebbleProcessInfo))) {
+    if (!prv_offset_range_fits(reloc_offset, sizeof(uint32_t), image_size) ||
+        (reloc_offset < prv_header_size(info))) {
       PBL_LOG_WRN("Invalid app relocation target[%" PRIu32 "]: 0x%" PRIx32, i, reloc_offset);
       return false;
     }
@@ -162,7 +171,7 @@ static bool prv_apply_relocations(const PebbleProcessInfo *info, MemorySegment *
     memcpy(&app_relative_value, addr_to_change, sizeof(app_relative_value));
     // One past the end of an object is a valid pointer in C, you just cannot deref it
     // A value of exactly virtual_size points there, which is safe here since we never do
-    if (app_relative_value > info->virtual_size) {
+    if (app_relative_value > virtual_size) {
       PBL_LOG_WRN("Invalid app relocation value[%" PRIu32 "]: 0x%" PRIx32, i, app_relative_value);
       return false;
     }

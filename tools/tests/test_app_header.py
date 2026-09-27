@@ -38,6 +38,9 @@ V2_APP_HEADER = (
     b"\xd0\x52\xc8\x0d"
 )
 
+# V2_APP_HEADER as struct version 0x10.0x01, with load_size_hi = 0x01 and virtual_size_hi = 0x02
+V3_APP_HEADER = V2_APP_HEADER[:9] + b"\x01" + V2_APP_HEADER[10:] + b"\x01\x02"
+
 
 class TestAppHeader(unittest.TestCase):
     def test_deserialize_v1_header(self):
@@ -84,6 +87,17 @@ class TestAppHeader(unittest.TestCase):
         self.assertEqual(h.resource_timestamp, 1389382350)
         self.assertEqual(h.virtual_size, 3528)
 
+    def test_deserialize_v3_header(self):
+        h = PebbleAppHeader(V3_APP_HEADER)
+        self.assertEqual(h.struct_version_major, PebbleAppHeader.V3_STRUCT_VERSION[0])
+        self.assertEqual(h.struct_version_minor, PebbleAppHeader.V3_STRUCT_VERSION[1])
+        self.assertEqual(h.app_size, 3233)
+        self.assertEqual(h.virtual_size, 3528)
+        self.assertEqual(h.load_size_hi, 0x01)
+        self.assertEqual(h.virtual_size_hi, 0x02)
+        self.assertEqual(h.app_size_total, 0x10000 + 3233)
+        self.assertEqual(h.virtual_size_total, 0x20000 + 3528)
+
     def test_deserialize_serialize_v1(self):
         h = PebbleAppHeader(V1_APP_HEADER)
         bytes = h.serialize()
@@ -93,6 +107,11 @@ class TestAppHeader(unittest.TestCase):
         h = PebbleAppHeader(V2_APP_HEADER)
         bytes = h.serialize()
         self.assertEqual(bytes, V2_APP_HEADER)
+
+    def test_deserialize_serialize_v3(self):
+        h = PebbleAppHeader(V3_APP_HEADER)
+        bytes = h.serialize()
+        self.assertEqual(bytes, V3_APP_HEADER)
 
 
 if __name__ == "__main__":

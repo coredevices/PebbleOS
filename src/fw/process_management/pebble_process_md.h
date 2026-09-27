@@ -111,7 +111,7 @@ typedef struct PebbleProcessMdFlash {
   //! Size in bytes of the app region that is occupied when this app is loaded
   //! Used when sizing the app heap. For first-party apps, this value will
   //! always be zero.
-  uint16_t size_bytes;
+  uint32_t size_bytes;
 
   //! The version specified by the author for this process
   Version process_version;
@@ -140,12 +140,22 @@ typedef struct {
 
   //! Size in bytes of the app region that is occupied when this app is loaded
   //! Used when sizing the app heap.
-  uint16_t size_bytes;
+  uint32_t size_bytes;
 
   //! The resource number of the app binary
   uint32_t bin_resource_id;
 
 } PebbleProcessMdResource;
+
+// Declared here rather than in pebble_process_info.h, which also ships in the app SDK
+
+//! @param info The process header
+//! @return The size of the binary in flash, including the header but not the reloc table
+uint32_t process_info_get_load_size(const PebbleProcessInfo *info);
+
+//! @param info The process header
+//! @return The memory the process uses once loaded (.text + .data + .bss)
+uint32_t process_info_get_virtual_size(const PebbleProcessInfo *info);
 
 const char *process_metadata_get_name(const PebbleProcessMd *md);
 uint32_t process_metadata_get_size_bytes(const PebbleProcessMd *md);

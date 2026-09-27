@@ -49,9 +49,19 @@ class PebbleAppHeader:
     ]
     V2_HEADER_LENGTH = 10 + 120
 
+    # 122 bytes
+    V3_STRUCT_VERSION = (0x10, 0x01)
+    V3_STRUCT_DEFINITION: ClassVar = [
+        *V2_STRUCT_DEFINITION,
+        ("B", "load_size_hi", None, None),
+        ("B", "virtual_size_hi", None, None),
+    ]
+    V3_HEADER_LENGTH = 10 + 122
+
     DEFINITION_MAP: ClassVar = {
         V1_STRUCT_VERSION: V1_STRUCT_DEFINITION,
         V2_STRUCT_VERSION: V2_STRUCT_DEFINITION,
+        V3_STRUCT_VERSION: V3_STRUCT_DEFINITION,
     }
 
     @classmethod
@@ -84,6 +94,14 @@ class PebbleAppHeader:
             field_name = elem[1]
             transform = elem[2]
             info[field_name] = value if not transform else transform(value)
+
+        # From 0x10.0x01 the sizes carry 24 bits, split across two fields each.
+        # Read-only views. serialize() packs app_size and load_size_hi, not these.
+        if "load_size_hi" in info:
+            info["app_size_total"] = info["app_size"] | info["load_size_hi"] << 16
+            info["virtual_size_total"] = (
+                info["virtual_size"] | info["virtual_size_hi"] << 16
+            )
         return info
 
     def serialize(self):

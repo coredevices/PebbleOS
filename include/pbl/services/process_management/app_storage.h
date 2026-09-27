@@ -28,7 +28,6 @@ typedef enum AppStorageGetAppInfoResult {
   GET_APP_INFO_SUCCESS,
   GET_APP_INFO_COULD_NOT_READ_FORMAT,
   GET_APP_INFO_INCOMPATIBLE_SDK,
-  GET_APP_INFO_APP_TOO_LARGE
 } AppStorageGetAppInfoResult;
 
 //! Retrieve the process metadata for a given app_bank and performs sanity checks
