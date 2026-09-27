@@ -153,9 +153,10 @@ void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSche
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type);
 
 /** @brief Initialize the DND service and arm the schedule timers. */
-//! Iterate over all quiet time schedules. Callback is called for each slot (0..MAX_QUIET_TIME_SCHEDULES-1)
-//! regardless of whether the slot is active.
-typedef void (*QuietTimeScheduleCallback)(int index, const QuietTimeScheduleConfig *config, void *context);
+//! Iterate over all quiet time schedules. Callback is called for each slot
+//! (0..MAX_QUIET_TIME_SCHEDULES-1) regardless of whether the slot is active.
+typedef void (*QuietTimeScheduleCallback)(int index, const QuietTimeScheduleConfig *config,
+                                          void *context);
 void quiet_time_for_each_schedule(QuietTimeScheduleCallback cb, void *context);
 
 //! Get/set an individual quiet time schedule slot
@@ -173,7 +174,8 @@ void quiet_time_delete_schedule(int index);
 void quiet_time_set_schedule_enabled(int index, bool enabled);
 
 //! Derive the day mask for a schedule kind. For QT_KIND_CUSTOM, copies from config->scheduled_days.
-void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config, bool out_days[DAYS_PER_WEEK]);
+void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config,
+                                   bool out_days[DAYS_PER_WEEK]);
 
 //! Display string for a QuietTimeKind
 const char *quiet_time_get_string_for_kind(QuietTimeKind kind);
