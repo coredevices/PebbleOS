@@ -3,7 +3,15 @@
 `subsys/fuel_gauge/` estimates the state of charge (SOC) of a single Li-ion
 or Li-po cell from voltage, current and temperature measurements. Its API is
 `include/pbl/fuel_gauge/fuel_gauge.h`. The library is plain C over `<math.h>`
-with no OS dependencies: the caller feeds it measurements.
+with no OS dependencies: the battery service feeds it measurements.
+
+It is an open alternative to the prebuilt Nordic nRF Fuel Gauge library. The
+battery service selects the estimator with the `BATTERY_SOC` choice:
+
+- `CONFIG_BATTERY_SOC_VOLTAGE`: voltage curve lookup (QEMU and older boards)
+- `CONFIG_NRF_FUEL_GAUGE`: Nordic library, the default with the nPM1300
+- `CONFIG_BATTERY_SOC_FUEL_GAUGE`: this estimator, with the board's cell
+  model from `fw/services/battery/fuel_gauge/models/<board>.c`
 
 ## Cell model
 
@@ -127,3 +135,8 @@ In both cases it starts over from the voltage.
 - There is no OCV hysteresis between charge and discharge. The fitted curve
   sits between the two branches when the logs include charging.
 - Capacity fade with aging is not tracked.
+- The board models in the tree are placeholders until the cells are
+  characterized. The OCV comes from the voltage-curve backend's discharge
+  table, which tops out at 4.23 V while obelix and getafix charge to 4.35 V
+  and 4.45 V. The reported SOC therefore stays at 100% for a while after a
+  full charge, and time to full leaves out the CV phase.
