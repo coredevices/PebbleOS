@@ -164,7 +164,7 @@ void _REENT_INIT_PTR(void) {
 void app_comm_set_sniff_interval(const SniffInterval interval) {
 }
 
-void app_idle_timeout_start(void) {
+void app_idle_timeout_start(uint32_t timeout_ms) {
 }
 
 void app_idle_timeout_stop(void) {

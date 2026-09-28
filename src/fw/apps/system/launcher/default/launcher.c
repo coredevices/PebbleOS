@@ -176,7 +176,7 @@ static void prv_main(void) {
 
   prv_launcher_menu_window_push();
 
-  app_idle_timeout_start();
+  app_idle_timeout_start(APP_IDLE_TIMEOUT_LAUNCHER_MS);
 
   app_event_loop();
 }

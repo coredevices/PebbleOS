@@ -3,8 +3,18 @@
 
 #pragma once
 
-//! Start using the idle timeout for the current app.
-void app_idle_timeout_start(void);
+#include <stdint.h>
+
+#define APP_IDLE_TIMEOUT_LAUNCHER_MS  (30 * 1000)
+#define APP_IDLE_TIMEOUT_MENU_MS      (60 * 1000)
+#define APP_IDLE_TIMEOUT_BLUETOOTH_MS (3 * 60 * 1000)
+
+//! Start using the idle timeout for the current app. After timeout_ms without activity the
+//! watchface is launched.
+void app_idle_timeout_start(uint32_t timeout_ms);
+
+//! Change the timeout of the running idle timeout and restart it. No-op if it isn't running.
+void app_idle_timeout_set_duration(uint32_t timeout_ms);
 
 //! Stop using the idle timeout for the current app. This is safe to call even if the idle timeout
 //! wasn't running.

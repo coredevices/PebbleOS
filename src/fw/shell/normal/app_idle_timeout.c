@@ -11,6 +11,10 @@
 #include "system/passert.h"
 
 TimerID s_timer;
+uint32_t s_timeout_ms;
+// Bumped when an app stops using the timeout, so stale duration changes queued by it are dropped
+static uint32_t s_generation;
+static uint32_t s_pending_timeout_ms;
 bool s_app_paused = false;
 bool s_app_started = false;
 // Tracks the physical finger, independent of the app lifecycle: a finger on the screen halts the
@@ -18,8 +22,6 @@ bool s_app_started = false;
 bool s_touch_held = false;
 
 #ifndef CONFIG_NO_WATCH_TIMEOUT
-static const int WATCHFACE_TIMEOUT_MS = 30000;
-
 static void prv_kernel_callback_watchface_launch(void *data) {
   watchface_launch_default(shell_get_watchface_compositor_animation(true /* watchface_is_dest */));
 }
@@ -35,23 +37,38 @@ static void prv_start_timer(bool create) {
   }
 
   if (s_timer != TIMER_INVALID_ID && !s_app_paused && !s_touch_held && s_app_started) {
-    bool success =
-        new_timer_start(s_timer, WATCHFACE_TIMEOUT_MS, prv_timeout_expired, NULL, 0 /* flags */);
+    bool success = new_timer_start(s_timer, s_timeout_ms, prv_timeout_expired, NULL, 0 /* flags */);
     PBL_ASSERTN(success);
   }
 }
 #endif
 
-void app_idle_timeout_start(void) {
+void app_idle_timeout_start(uint32_t timeout_ms) {
   PBL_ASSERTN(s_timer == TIMER_INVALID_ID);
 
+  s_timeout_ms = timeout_ms;
   s_app_started = true;
 #ifndef CONFIG_NO_WATCH_TIMEOUT
   prv_start_timer(true /* create a timer */);
 #endif
 }
 
+static void prv_kernel_callback_set_duration(void *data) {
+  if ((uint32_t)(uintptr_t)data != s_generation) {
+    return;
+  }
+  s_timeout_ms = s_pending_timeout_ms;
+  app_idle_timeout_refresh();
+}
+
+void app_idle_timeout_set_duration(uint32_t timeout_ms) {
+  // Timer state is owned by KernelMain; hop there so pause/touch can't race the restart
+  s_pending_timeout_ms = timeout_ms;
+  launcher_task_add_callback(prv_kernel_callback_set_duration, (void *)(uintptr_t)s_generation);
+}
+
 void app_idle_timeout_stop(void) {
+  s_generation++;
   if (s_timer != TIMER_INVALID_ID) {
     new_timer_delete(s_timer);
     s_timer = TIMER_INVALID_ID;

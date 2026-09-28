@@ -13,6 +13,7 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
 #include "system/passert.h"
+#include "shell/normal/app_idle_timeout.h"
 #include "shell/prefs.h"
 #include "pbl/util/size.h"
 
@@ -211,6 +212,7 @@ static void handle_deinit(void) {
 
 static void s_main(void) {
   handle_init();
+  app_idle_timeout_start(APP_IDLE_TIMEOUT_MENU_MS);
   app_event_loop();
   handle_deinit();
 }

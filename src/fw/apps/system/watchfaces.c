@@ -11,6 +11,7 @@
 #include "kernel/pbl_malloc.h"
 #include "process_management/app_manager.h"
 #include "process_management/app_menu_data_source.h"
+#include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
@@ -200,6 +201,7 @@ static void handle_init(void) {
 
 static void s_main(void) {
   handle_init();
+  app_idle_timeout_start(APP_IDLE_TIMEOUT_MENU_MS);
 
   app_event_loop();
 }

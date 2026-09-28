@@ -12,7 +12,7 @@
 
 #include <stdlib.h>
 
-void app_idle_timeout_start(void) {
+void app_idle_timeout_start(uint32_t timeout_ms) {
 }
 
 void app_idle_timeout_refresh(void) {

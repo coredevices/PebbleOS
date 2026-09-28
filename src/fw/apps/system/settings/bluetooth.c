@@ -20,6 +20,7 @@
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/system_icons.h"
 #include "resource/resource_ids.auto.h"
+#include "shell/normal/app_idle_timeout.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/bluetooth/local_id.h"
 #include "pbl/services/bluetooth/pairability.h"
@@ -592,6 +593,8 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
 
   i18n_free_all(data);
 
+  app_idle_timeout_set_duration(APP_IDLE_TIMEOUT_MENU_MS);
+
   prv_clear_remote_list(data);
   for (unsigned int idx = 0; idx < NumIcons; ++idx) {
     gbitmap_deinit(&data->icon_heap_bitmap[idx]);
@@ -616,6 +619,9 @@ static Window *prv_init(void) {
     .expand = prv_expand_cb,
     .hide = prv_hide_cb,
   };
+
+  // Pairing from the phone can take a while, give it more time
+  app_idle_timeout_set_duration(APP_IDLE_TIMEOUT_BLUETOOTH_MS);
 
   return settings_window_create(SettingsMenuItemBluetooth, &data->callbacks);
 }
