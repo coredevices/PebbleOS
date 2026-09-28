@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
@@ -100,11 +99,6 @@ uint32_t ambient_light_get_light_level(void) {
   return level;
 }
 
-void command_als_read(void) {
-  char buffer[16];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRIu32 "", ambient_light_get_light_level());
-}
-
 uint32_t ambient_light_get_dark_threshold(void) {
   return s_sensor_light_dark_threshold;
 }
@@ -138,3 +132,14 @@ AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level) {
     return AmbientLightLevelVeryLight;
   }
 }
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_als_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pbl_shell_print(sh, "%" PRIu32, ambient_light_get_light_level());
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_als, read, NULL, "Read the raw light level", prv_cmd_als_read, 0, 0);
+#endif

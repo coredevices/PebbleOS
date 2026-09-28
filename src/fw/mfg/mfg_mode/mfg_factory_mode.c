@@ -38,6 +38,13 @@ bool mfg_is_mfg_mode(void) {
   return s_mfg_mode;
 }
 
-void command_enter_mfg(void) {
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_enter(const struct pbl_shell *sh, size_t argc, char **argv) {
   mfg_enter_mfg_mode_and_launch_app();
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_mfg, enter, NULL, "Enter manufacturing mode", prv_cmd_enter, 0, 0);
+#endif

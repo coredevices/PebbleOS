@@ -11,6 +11,10 @@
 #include <inttypes.h>
 #include <string.h>
 
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+#endif
+
 static const char *const MEMORY_REGION_NAMES[] = {
 // Keep the four RESERVED entries in lockstep with MemoryRegion_Reserved*
 // in memory_layout.h. SiFli's fifth region (mailbox) overlaps with the
@@ -280,3 +284,23 @@ bool memory_layout_is_cstring_in_region(const MpuRegion *region, const char *str
 
   return true;
 }
+
+#ifdef CONFIG_SHELL
+static int prv_cmd_mpu(const struct pbl_shell *sh, size_t argc, char **argv) {
+  for (size_t i = 0; i < ARRAY_LENGTH(MEMORY_REGION_NAMES); ++i) {
+    MpuRegion region = mpu_get_region(i);
+
+    if (!region.enabled) {
+      pbl_shell_print(sh, "%u Not enabled", (unsigned int)i);
+      continue;
+    }
+
+    pbl_shell_print(sh, "%u < %-22s>: Addr %p Size 0x%08" PRIx32 " %s Perms: %s", (unsigned int)i,
+                    MEMORY_REGION_NAMES[i], (void *)region.base_address, region.size,
+                    region.executable ? "X" : "-", prv_permissions_str(region.permissions));
+  }
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_sys, mpu, NULL, "Dump the MPU regions", prv_cmd_mpu, 0, 0);
+#endif

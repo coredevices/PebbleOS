@@ -7,7 +7,6 @@
 #include "comm/ble/gap_le_connect.h"
 #include "comm/ble/gap_le_connection.h"
 #include "comm/ble/kernel_le_client/kernel_le_client.h"
-#include "console/prompt.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/kernel/mutex.h"
@@ -15,7 +14,6 @@
 #include "pbl/services/bluetooth/local_addr.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage.h"
 #include "pbl/services/settings/settings_file.h"
-#include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
@@ -1494,26 +1492,27 @@ void bt_persistent_storage_delete_all_pairings(void) {
   shared_prf_storage_erase_ble_pairing_data();
 }
 
-static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN], pbl_bt_bonding_id_t bond_id,
-                                     BtPersistBondingData *data) {
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RELEASE)
+#include <pbl/shell/shell.h>
+
+static void prv_dump_bonding_db_data(const struct pbl_shell *sh, pbl_bt_bonding_id_t bond_id,
+                                     const BtPersistBondingData *data) {
   bool matches_prf;
 
   if (data->type == BtPersistBondingTypeBTClassic) {
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "Classic Key %d (legacy)", (int)bond_id);
+    pbl_shell_print(sh, "Classic Key %d (legacy)", (int)bond_id);
   } else if (data->type == BtPersistBondingTypeBLE) {
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "LE Key %d", (int)bond_id);
+    pbl_shell_print(sh, "LE Key %d", (int)bond_id);
 
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " ANCS: %d Gateway: %d Req Pin: %d",
-                             (int)data->ble_data.supports_ancs, (int)data->ble_data.is_gateway,
-                             (int)data->ble_data.requires_address_pinning);
+    pbl_shell_print(sh, " ANCS: %d Gateway: %d Req Pin: %d", (int)data->ble_data.supports_ancs,
+                    (int)data->ble_data.is_gateway, (int)data->ble_data.requires_address_pinning);
 
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Name: %s", data->ble_data.name);
+    pbl_shell_print(sh, " Name: %s", data->ble_data.name);
 
     struct pbl_bt_sm_pairing_info info = {};
     bt_persistent_storage_assign_sm_pairing_info(&info, &data->ble_data.pairing_info);
-    bluetooth_persistent_storage_debug_dump_ble_pairing_info(&display_buf[0], &info);
+    bluetooth_persistent_storage_debug_dump_ble_pairing_info(sh, &info);
 
-    // does this info match the key stored in shared resources
     struct pbl_bt_sm_pairing_info sprf_info = {};
     bool requires_address_pinning;
     uint8_t flags;
@@ -1521,62 +1520,50 @@ static void prv_dump_bonding_db_data(char display_buf[DISPLAY_BUF_LEN], pbl_bt_b
     matches_prf = (memcmp(&sprf_info, &info, sizeof(sprf_info)) == 0);
     matches_prf &= (requires_address_pinning == data->ble_data.requires_address_pinning);
     matches_prf &= (flags == data->ble_data.flags);
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN,
-                             " struct pbl_bt_sm_pairing_info matches Shared PRF: %s",
-                             bool_to_str(matches_prf));
+    pbl_shell_print(sh, " Pairing info matches Shared PRF: %s", bool_to_str(matches_prf));
   } else {
-    prompt_send_response("Unhandled type of GapBondingDB Data!");
-    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&data, sizeof(*data));
+    pbl_shell_print(sh, "Unhandled type of GapBondingDB Data!");
+    pbl_shell_hexdump(sh, data, sizeof(*data));
   }
 }
 
-static void prv_dump_cccd_db_data(char display_buf[DISPLAY_BUF_LEN], pbl_bt_cccd_id_t cccd_id,
-                                  BtPersistCCCDData *data) {
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "CCCD Key %d", (int)cccd_id);
-
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Peer Address: " PBL_BT_ADDR_FMT,
-                           PBL_BT_ADDR_XPLODE_PTR(&data->peer.address));
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Handle: 0x%" PRIx16,
-                           data->chr_val_handle);
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Flags: 0x%" PRIx16, data->flags);
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Value Changed: %s",
-                           bool_to_str(data->value_changed));
+static void prv_dump_cccd_db_data(const struct pbl_shell *sh, pbl_bt_cccd_id_t cccd_id,
+                                  const BtPersistCCCDData *data) {
+  pbl_shell_print(sh, "CCCD Key %d", (int)cccd_id);
+  pbl_shell_print(sh, " Peer Address: " PBL_BT_ADDR_FMT,
+                  PBL_BT_ADDR_XPLODE_PTR(&data->peer.address));
+  pbl_shell_print(sh, " Handle: 0x%" PRIx16, data->chr_val_handle);
+  pbl_shell_print(sh, " Flags: 0x%" PRIx16, data->flags);
+  pbl_shell_print(sh, " Value Changed: %s", bool_to_str(data->value_changed));
 }
 
 static bool prv_dump_bt_persistent_storage_contents(SettingsFile *file, SettingsRecordInfo *info,
                                                     void *context) {
+  const struct pbl_shell *sh = context;
+
   if (info->key_len == 0 || info->val_len == 0) {
-    prompt_send_response("key or val of 0 length");
+    pbl_shell_print(sh, "key or val of 0 length");
     return true;
   }
-  char *display_buf = kernel_malloc_check(DISPLAY_BUF_LEN);
 
-  // get the key
   uint8_t key[info->key_len];
   memset(key, 0x0, info->key_len);
   info->get_key(file, &key[0], info->key_len);
-  // prompt_send_response("Raw dump Key");
-  // PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&key, info->key_len);
 
   uint8_t val[info->val_len];
   memset(val, 0x0, info->val_len);
   info->get_val(file, &val[0], info->val_len);
-  // prompt_send_response("Raw dump Value:");
-  // PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&val, info->val_len);
 
   if (memcmp(key, ACTIVE_GATEWAY_KEY, info->key_len) == 0) {
     PBL_ASSERTN(info->val_len == sizeof(pbl_bt_bonding_id_t));
     pbl_bt_bonding_id_t id;
     memcpy(&id, val, sizeof(pbl_bt_bonding_id_t));
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "%s : %d", ACTIVE_GATEWAY_KEY, (int)id);
-
+    pbl_shell_print(sh, "%s : %d", ACTIVE_GATEWAY_KEY, (int)id);
   } else if (memcmp(key, IS_UNFAITHFUL_KEY, info->key_len) == 0) {
     PBL_ASSERTN(info->val_len == sizeof(bool));
     bool is_unfaithful;
     memcpy(&is_unfaithful, val, sizeof(bool));
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "%s  : %d", IS_UNFAITHFUL_KEY,
-                             (int)is_unfaithful);
-
+    pbl_shell_print(sh, "%s  : %d", IS_UNFAITHFUL_KEY, (int)is_unfaithful);
   } else if (memcmp(key, ROOT_KEYS_KEY, info->key_len) == 0) {
     struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM],
         sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
@@ -1584,53 +1571,50 @@ static bool prv_dump_bt_persistent_storage_contents(SettingsFile *file, Settings
     memcpy(&root_keys, val, sizeof(root_keys));
 
     bluetooth_persistent_storage_debug_dump_root_keys(
-        &root_keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION],
-        &root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY]);
+        sh, &root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY],
+        &root_keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]);
 
     if (shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
                                         &sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
         shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
                                         &sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
-      bool root_keys_match =
-          memcmp(&root_keys, &sprf_root_keys,
-                 sizeof(struct pbl_bt_sm_key) * PBL_BT_SM_ROOT_KEY_TYPE_NUM) == 0;
-      prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Root keys match shared prf: %s",
-                               bool_to_str(root_keys_match));
+      bool root_keys_match = memcmp(&root_keys, &sprf_root_keys, sizeof(root_keys)) == 0;
+      pbl_shell_print(sh, " Root keys match shared prf: %s", bool_to_str(root_keys_match));
     }
   } else if (memcmp(key, DEVICE_NAME_KEY, info->key_len) == 0) {
     char dev_name[info->val_len + 1];
-    memcpy(&dev_name, val, info->val_len);
-    prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "Device Name: %s", dev_name);
+    memcpy(dev_name, val, info->val_len);
+    dev_name[info->val_len] = '\0';
+    pbl_shell_print(sh, "Device Name: %s", dev_name);
   } else if (memcmp(key, BLE_PINNED_ADDRESS_KEY, info->key_len) == 0) {
     if (info->val_len == sizeof(struct pbl_bt_addr)) {
       const struct pbl_bt_addr *address = (const struct pbl_bt_addr *)val;
-      prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, "Pinned address: " PBL_BT_ADDR_FMT,
-                               PBL_BT_ADDR_XPLODE_PTR(address));
+      pbl_shell_print(sh, "Pinned address: " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_PTR(address));
     }
   } else if (info->key_len == sizeof(pbl_bt_bonding_id_t)) {
     pbl_bt_bonding_id_t bonding_id;
 
     memcpy(&bonding_id, key, sizeof(pbl_bt_bonding_id_t));
     PBL_ASSERTN(sizeof(BtPersistBondingData) == info->val_len);
-    prv_dump_bonding_db_data(display_buf, bonding_id, (BtPersistBondingData *)&val);
+    prv_dump_bonding_db_data(sh, bonding_id, (const BtPersistBondingData *)val);
   } else if (info->key_len == sizeof(pbl_bt_cccd_id_t)) {
     pbl_bt_cccd_id_t cccd_id;
 
     memcpy(&cccd_id, key, sizeof(pbl_bt_cccd_id_t));
     PBL_ASSERTN(sizeof(BtPersistCCCDData) == info->val_len);
-    prv_dump_cccd_db_data(display_buf, cccd_id, (BtPersistCCCDData *)&val);
+    prv_dump_cccd_db_data(sh, cccd_id, (const BtPersistCCCDData *)val);
   } else {
-    prompt_send_response("Something new be in the bonding DB!");
-    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, &key[0], info->key_len);
-    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, &val[0], info->val_len);
+    pbl_shell_print(sh, "Something new be in the bonding DB!");
+    pbl_shell_hexdump(sh, key, info->key_len);
+    pbl_shell_hexdump(sh, val, info->val_len);
   }
 
-  prompt_send_response("");
+  pbl_shell_print(sh, "%s", "");
 
-  kernel_free(display_buf);
   return true;
 }
 
-void bluetooth_persistent_storage_dump_contents(void) {
-  prv_file_each(prv_dump_bt_persistent_storage_contents, NULL);
+void bluetooth_persistent_storage_dump_contents(const struct pbl_shell *sh) {
+  prv_file_each(prv_dump_bt_persistent_storage_contents, (void *)sh);
 }
+#endif

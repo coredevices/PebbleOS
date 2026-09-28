@@ -3,7 +3,6 @@
 
 #include <string.h>
 
-#include "console/prompt.h"
 #include <pbl/drivers/rtc.h>
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/analytics/backend.h"
@@ -391,30 +390,28 @@ const struct pbl_analytics_backend_ops pbl_analytics__native_ops = {
   .add = prv_add,
 };
 
-void command_analytics_native_metrics_dump(void) {
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_metrics(const struct pbl_shell *sh, size_t argc, char **argv) {
   struct native_heartbeat_record record;
-  char buffer[64];
 
   prv_record_metrics(&record, false);
 
 #define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) \
-  prompt_send_response_fmt(buffer, sizeof(buffer), STRINGIFY(key) "=%" PRIu32, record.metric_##key);
+  pbl_shell_print(sh, STRINGIFY(key) "=%" PRIu32, record.metric_##key);
 #define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) \
-  prompt_send_response_fmt(buffer, sizeof(buffer), STRINGIFY(key) "=%" PRId32, record.metric_##key);
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale)                            \
-  prompt_send_response_fmt(buffer, sizeof(buffer), STRINGIFY(key) "=%" PRIu32 ".%" PRIu32, \
-                           record.metric_##key / (scale),                                  \
-                           record.metric_##key - (record.metric_##key / (scale)) * (scale));
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)         \
-  prompt_send_response_fmt(                                           \
-      buffer, sizeof(buffer), STRINGIFY(key) "=%" PRId32 ".%" PRIu32, \
-      record.metric_##key / (scale),                                  \
-      (uint32_t)(record.metric_##key - (record.metric_##key / (scale)) * (scale)));
-#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                                       \
-  prompt_send_response_fmt(buffer, sizeof(buffer), STRINGIFY(key) "=%" PRId32 " ms", \
-                           record.metric_##key);
+  pbl_shell_print(sh, STRINGIFY(key) "=%" PRId32, record.metric_##key);
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale)                              \
+  pbl_shell_print(sh, STRINGIFY(key) "=%" PRIu32 ".%" PRIu32, record.metric_##key / (scale), \
+                  record.metric_##key - (record.metric_##key / (scale)) * (scale));
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)                                \
+  pbl_shell_print(sh, STRINGIFY(key) "=%" PRId32 ".%" PRIu32, record.metric_##key / (scale), \
+                  (uint32_t)(record.metric_##key - (record.metric_##key / (scale)) * (scale)));
+#define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) \
+  pbl_shell_print(sh, STRINGIFY(key) "=%" PRId32 " ms", record.metric_##key);
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) \
-  prompt_send_response_fmt(buffer, sizeof(buffer), STRINGIFY(key) "=%s", record.metric_##key);
+  pbl_shell_print(sh, STRINGIFY(key) "=%s", record.metric_##key);
 #include "pbl/services/analytics/analytics.def"
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
@@ -422,4 +419,10 @@ void command_analytics_native_metrics_dump(void) {
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
+
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_analytics, metrics, NULL, "Dump the current metrics", prv_cmd_metrics, 0,
+                     0);
+#endif

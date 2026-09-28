@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "console/prompt.h"
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/task_wdt/task_wdt.h>
@@ -2173,116 +2172,24 @@ void pfs_collect_diagnostic_data(int fd, void *diagnostic_buf, size_t diagnostic
   pbl_mutex_unlock(&s_pfs_mutex);
 }
 
-// pass in either 0 or 1 to as argument
-void pfs_command_fs_format(const char *erase_headers) {
-  int write_erase_headers = atoi(erase_headers);
-  if (write_erase_headers == 1) {
-    pfs_format(true /* write erase headers */);
-  } else {
-    pfs_format(false /* write erase headers */);
-  }
-}
-
-void pfs_command_dump_hdr(const char *page) {
-  uint16_t pg = (uint16_t)atoi(page);
-  if (pg > s_pfs_page_count) {
-    prompt_send_response("ERROR");
-    return;
-  }
-
-  uint8_t hdr[FILE_NAME_OFFSET + 10];
-  prv_flash_read((uint8_t *)&hdr, sizeof(hdr), prv_page_to_flash_offset(pg));
-
-  PBL_HEXDUMP_D_SERIAL(LOG_LEVEL_DEBUG, hdr, sizeof(hdr));
-}
-
-void pfs_command_fs_ls(void) {
-  char display_buf[80];
-  int pages_in_use = 0;
-
-  prompt_send_response("Page:\tFilename\tFile Size\tFile Info\tErase Count\n");
-
-  for (uint16_t pg = 0; pg < s_pfs_page_count; pg++) {
-    PageHeader pg_hdr;
-    FileHeader file_hdr;
-    pg_hdr.page_flags = prv_get_page_flags(pg);
-
-    if (!IS_PAGE_TYPE(pg_hdr.page_flags, PAGE_FLAG_START_PAGE)) {
-      pages_in_use += IS_PAGE_TYPE(pg_hdr.page_flags, PAGE_FLAG_CONT_PAGE) ? 1 : 0;
-      continue; // only start pages contain file name info
-    }
-    pages_in_use++;
-
-    if (read_header(pg, &pg_hdr, &file_hdr) != PageAndFileHdrValid) {
-      snprintf(display_buf, sizeof(display_buf), "%3d: Corrupt Sector", pg);
-      prompt_send_response(display_buf);
-    }
-
-    char file_name[file_hdr.file_namelen + 1];
-    file_name[file_hdr.file_namelen] = '\0';
-
-    prv_flash_read((uint8_t *)file_name, file_hdr.file_namelen,
-                   prv_page_to_flash_offset(pg) + FILE_NAME_OFFSET);
-
-    snprintf(display_buf, sizeof(display_buf), "%3d:\t%8s%s\t%5d\t\t0x%x\t%15d", pg, file_name,
-             is_tmp_file(pg) ? "(tmp)" : "", (int)file_hdr.file_size, file_hdr.file_type,
-             (int)pg_hdr.erase_count);
-    prompt_send_response(display_buf);
-  }
-
-  snprintf(display_buf, sizeof(display_buf),
-           "\n---\n%d / %d pages in use "
-           "(%" PRIu32 " kB available)",
-           pages_in_use, s_pfs_page_count, get_available_pfs_space() / 1024);
-  prompt_send_response(display_buf);
-}
-
 // Dump the first n bytes of a file (from current seek position)
 void pfs_debug_dump(int fd, int num_bytes) {
-  char buf[16];
   uint8_t *bytes = kernel_malloc(num_bytes);
 
   if (bytes == NULL) {
-    prompt_send_response("malloc error");
+    PBL_LOG_ERR("malloc error");
     goto cleanup;
   }
 
   memset(bytes, 0x00, num_bytes);
   if ((num_bytes = pfs_read(fd, bytes, num_bytes)) < 0) {
-    prompt_send_response_fmt(buf, sizeof(buf), "rd err: %d", num_bytes);
+    PBL_LOG_ERR("rd err: %d", num_bytes);
     goto cleanup;
   }
 
   PBL_HEXDUMP_D_SERIAL(LOG_LEVEL_DEBUG, bytes, num_bytes);
-
-  prompt_send_response("DONE");
 cleanup:
   kernel_free(bytes);
-}
-
-void pfs_command_cat(const char *filename, const char *num_chars) {
-  int fd = pfs_open(filename, OP_FLAG_READ, 0, 0);
-  char buf[16];
-  if (fd < 0) {
-    prompt_send_response_fmt(buf, sizeof(buf), "fd open err: %d", fd);
-    return;
-  }
-  int num_bytes = atoi(num_chars);
-  pfs_debug_dump(fd, num_bytes);
-  pfs_close(fd);
-}
-
-void pfs_command_crc(const char *filename) {
-  int fd = pfs_open(filename, OP_FLAG_READ, 0, 0);
-  char buffer[32];
-  if (fd < 0) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "fd open err: %d", fd);
-    return;
-  }
-  size_t num_bytes = pfs_get_file_size(fd);
-  uint32_t crc = pfs_crc_calculate_file(fd, 0, num_bytes);
-  pfs_close(fd);
-  prompt_send_response_fmt(buffer, sizeof(buffer), "CRC: %" PRIx32, crc);
 }
 
 /*
@@ -2336,4 +2243,105 @@ void test_force_reboot_during_garbage_collection(uint16_t start_page) {
 void test_override_last_written_page(uint16_t start_page) {
   s_test_last_page_written_override = s_last_page_written;
 }
+#endif
+
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_format(const struct pbl_shell *sh, size_t argc, char **argv) {
+  unsigned long erase_headers;
+  if (pbl_shell_strtoul(argv[1], &erase_headers) != 0) {
+    pbl_shell_error(sh, "invalid value '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  pfs_format(erase_headers == 1);
+  return 0;
+}
+
+static int prv_cmd_ls(const struct pbl_shell *sh, size_t argc, char **argv) {
+  int pages_in_use = 0;
+
+  pbl_shell_print(sh, "Page:\tFilename\tFile Size\tFile Info\tErase Count");
+
+  for (uint16_t pg = 0; pg < s_pfs_page_count; pg++) {
+    PageHeader pg_hdr;
+    FileHeader file_hdr;
+    pg_hdr.page_flags = prv_get_page_flags(pg);
+
+    if (!IS_PAGE_TYPE(pg_hdr.page_flags, PAGE_FLAG_START_PAGE)) {
+      pages_in_use += IS_PAGE_TYPE(pg_hdr.page_flags, PAGE_FLAG_CONT_PAGE) ? 1 : 0;
+      continue;
+    }
+    pages_in_use++;
+
+    if (read_header(pg, &pg_hdr, &file_hdr) != PageAndFileHdrValid) {
+      pbl_shell_print(sh, "%3d: Corrupt Sector", pg);
+      continue;
+    }
+
+    char file_name[file_hdr.file_namelen + 1];
+    file_name[file_hdr.file_namelen] = '\0';
+
+    prv_flash_read((uint8_t *)file_name, file_hdr.file_namelen,
+                   prv_page_to_flash_offset(pg) + FILE_NAME_OFFSET);
+
+    pbl_shell_print(sh, "%3d:\t%8s%s\t%5d\t\t0x%x\t%15d", pg, file_name,
+                    is_tmp_file(pg) ? "(tmp)" : "", (int)file_hdr.file_size, file_hdr.file_type,
+                    (int)pg_hdr.erase_count);
+  }
+
+  pbl_shell_print(sh, "---");
+  pbl_shell_print(sh, "%d / %d pages in use (%" PRIu32 " kB available)", pages_in_use,
+                  s_pfs_page_count, get_available_pfs_space() / 1024);
+  return 0;
+}
+
+static int prv_cmd_rm(const struct pbl_shell *sh, size_t argc, char **argv) {
+  status_t rv = pfs_remove(argv[1]);
+  if (rv != S_SUCCESS) {
+    pbl_shell_error(sh, "remove failed (%" PRId32 ")", rv);
+    return -EIO;
+  }
+
+  return 0;
+}
+
+static int prv_cmd_hdr(const struct pbl_shell *sh, size_t argc, char **argv) {
+  unsigned long pg;
+  if (pbl_shell_strtoul(argv[1], &pg) != 0 || pg >= s_pfs_page_count) {
+    pbl_shell_error(sh, "invalid page '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  uint8_t hdr[FILE_NAME_OFFSET + 10];
+  prv_flash_read(hdr, sizeof(hdr), prv_page_to_flash_offset(pg));
+
+  pbl_shell_hexdump(sh, hdr, sizeof(hdr));
+  return 0;
+}
+
+static int prv_cmd_crc(const struct pbl_shell *sh, size_t argc, char **argv) {
+  int fd = pfs_open(argv[1], OP_FLAG_READ, 0, 0);
+  if (fd < 0) {
+    pbl_shell_error(sh, "open failed (%d)", fd);
+    return -EIO;
+  }
+
+  size_t num_bytes = pfs_get_file_size(fd);
+  uint32_t crc = pfs_crc_calculate_file(fd, 0, num_bytes);
+  pfs_close(fd);
+
+  pbl_shell_print(sh, "CRC: %" PRIx32, crc);
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_SET_CREATE(sub_pfs);
+PBL_SHELL_CMD_REGISTER(pfs, sub_pfs, "Filesystem", NULL);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, format, NULL, "Format <erase_headers:0|1>", prv_cmd_format, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, ls, NULL, "List files", prv_cmd_ls, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, rm, NULL, "Remove a file <name>", prv_cmd_rm, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, hdr, NULL, "Dump a page header <page>", prv_cmd_hdr, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, crc, NULL, "Print the CRC of a file <name>", prv_cmd_crc, 2, 0);
 #endif

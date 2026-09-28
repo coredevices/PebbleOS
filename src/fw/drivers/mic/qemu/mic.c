@@ -5,7 +5,6 @@
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
@@ -110,13 +109,4 @@ bool mic_is_running(MicDevice *this) {
 uint32_t mic_get_channels(MicDevice *this) {
   PBL_ASSERTN(this);
   return this->channels ? this->channels : 1;
-}
-
-void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
-                       char *format_str) {
-  prompt_send_response("Microphone console commands not supported on QEMU");
-}
-
-void command_mic_read(void) {
-  prompt_send_response("Microphone read command not supported on QEMU");
 }

@@ -7,13 +7,18 @@
 #include "window_stack.h"
 #include "window_stack_private.h"
 
-#include "console/prompt.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include <pbl/logging/logging.h>
 
 #include "pbl/kernel/sem.h"
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+#include <errno.h>
+#endif
 
 void app_window_stack_push(Window *window, bool animated) {
   PBL_LOG_DBG("Pushing window %p onto app window stack %p", window, app_state_get_window_stack());
@@ -48,9 +53,7 @@ uint32_t app_window_stack_count(void) {
   return window_stack_count(app_state_get_window_stack());
 }
 
-// Commands
-////////////////////////////////////
-
+#ifdef CONFIG_SHELL
 typedef struct WindowStackInfoContext {
   struct pbl_sem interlock;
   WindowStackDump *dump;
@@ -68,7 +71,8 @@ static void prv_window_stack_info_cb(void *ctx) {
   pbl_sem_give(&info->interlock);
 }
 
-void command_window_stack_info(void) {
+static int prv_cmd_windows(const struct pbl_shell *sh, size_t argc, char **argv) {
+  int ret = 0;
   struct WindowStackInfoContext info = {0};
   pbl_sem_init(&info.interlock, 0, 1);
   // FIXME: Dumping the app window stack from another task without a
@@ -81,17 +85,21 @@ void command_window_stack_info(void) {
   pbl_sem_deinit(&info.interlock);
 
   if (info.count > 0 && !info.dump) {
-    prompt_send_response("Couldn't allocate buffers for window stack data");
+    pbl_shell_error(sh, "couldn't allocate buffers for window stack data");
+    ret = -ENOMEM;
     goto cleanup;
   }
 
-  char buffer[128];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Window Stack, top to bottom: (%zu)",
-                           info.count);
+  pbl_shell_print(sh, "Window Stack, top to bottom: (%zu)", info.count);
   for (size_t i = 0; i < info.count; ++i) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "window %p <%s>", info.dump[i].addr,
-                             info.dump[i].name);
+    pbl_shell_print(sh, "window %p <%s>", info.dump[i].addr, info.dump[i].name);
   }
 cleanup:
   kernel_free(info.dump);
+  return ret;
 }
+
+PBL_SHELL_SUBCMD_SET_CREATE(sub_ui);
+PBL_SHELL_CMD_REGISTER(ui, sub_ui, "User interface debugging", NULL);
+PBL_SHELL_SUBCMD_ADD(sub_ui, windows, NULL, "Show the app window stack", prv_cmd_windows, 0, 0);
+#endif

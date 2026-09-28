@@ -10,7 +10,6 @@
 #include "applib/fonts/fonts.h"
 #include "applib/ui/dialogs/dialog.h"
 #include "applib/ui/dialogs/simple_dialog.h"
-#include "console/prompt.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/ui/kernel_ui.h"
@@ -53,6 +52,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "pbl/util/testing.h"
+
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
+#include <pbl/shell/shell.h>
+
+#include <errno.h>
+#endif
 
 #define RETURN_CRASH_TIMEOUT_TICKS (60 * RTC_TICKS_HZ)
 
@@ -845,26 +850,6 @@ bool app_manager_is_app_supported(const PebbleProcessMd *md) {
   return prv_get_app_segment_size(md) > 0;
 }
 
-// Commands
-///////////////////////////////////////////////////////////
-
-void command_get_active_app_metadata(void) {
-  char buffer[32];
-
-  const PebbleProcessMd *app_metadata = app_manager_get_current_app_md();
-  if (app_metadata != NULL) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "app name: %s",
-                             process_metadata_get_name(app_metadata));
-    prompt_send_response_fmt(buffer, sizeof(buffer), "is watchface: %d",
-                             (app_metadata->process_type == ProcessTypeWatchface));
-    prompt_send_response_fmt(buffer, sizeof(buffer), "visibility: %u", app_metadata->visibility);
-    prompt_send_response_fmt(buffer, sizeof(buffer), "bank: %d",
-                             (uint8_t)process_metadata_get_res_bank_num(app_metadata));
-  } else {
-    prompt_send_response("metadata lookup failed: no app running");
-  }
-}
-
 // -------------------------------------------------------------------------------------------
 /*!
   @brief User mode access to its UUID.
@@ -905,3 +890,22 @@ DEFINE_SYSCALL(ResAppNum, sys_get_current_resource_num, void) {
 DEFINE_SYSCALL(AppInstallId, sys_app_manager_get_current_app_id, void) {
   return app_manager_get_current_app_id();
 }
+
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
+static int prv_cmd_app_active(const struct pbl_shell *sh, size_t argc, char **argv) {
+  const PebbleProcessMd *app_metadata = app_manager_get_current_app_md();
+  if (app_metadata == NULL) {
+    pbl_shell_error(sh, "metadata lookup failed: no app running");
+    return -ENOENT;
+  }
+
+  pbl_shell_print(sh, "app name: %s", process_metadata_get_name(app_metadata));
+  pbl_shell_print(sh, "is watchface: %d", (app_metadata->process_type == ProcessTypeWatchface));
+  pbl_shell_print(sh, "visibility: %u", app_metadata->visibility);
+  pbl_shell_print(sh, "bank: %d", (uint8_t)process_metadata_get_res_bank_num(app_metadata));
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_app, active, NULL, "Show the running app metadata", prv_cmd_app_active, 0,
+                     0);
+#endif

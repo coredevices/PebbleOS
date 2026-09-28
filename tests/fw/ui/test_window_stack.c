@@ -36,7 +36,6 @@
 #include "stubs_plugin_service.h"
 #include "stubs_print.h"
 #include "stubs_process_manager.h"
-#include "stubs_prompt.h"
 #include "stubs_resources.h"
 #include "stubs_syscalls.h"
 #include "stubs_unobstructed_area.h"

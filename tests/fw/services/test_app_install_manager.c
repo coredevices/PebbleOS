@@ -44,7 +44,6 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_persist.h"
 #include "stubs_process_manager.h"
-#include "stubs_prompt.h"
 #include "stubs_quick_launch.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_serial.h"

@@ -46,7 +46,6 @@
 #include "stubs_passert.h"
 #include "stubs_persist.h"
 #include "stubs_print.h"
-#include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_resources.h"
 #include "stubs_serial.h"

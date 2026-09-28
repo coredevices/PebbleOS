@@ -78,7 +78,6 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
 #include "stubs_pbl_malloc.h"
 #include "stubs_print.h"
 #include "stubs_process_manager.h"
-#include "stubs_prompt.h"
 #include "stubs_serial.h"
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"

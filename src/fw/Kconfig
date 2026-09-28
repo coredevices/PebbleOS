@@ -90,12 +90,6 @@ config UI_DEBUG
     help
       Enable the window dump and layer nudge CLI commands.
 
-config PROMPT
-    bool "Serial console prompt"
-    default y
-    help
-      Build the serial console. Disable to save space.
-
 config MALLOC_INSTRUMENTATION
     bool "Malloc instrumentation"
     help

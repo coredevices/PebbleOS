@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(excl)
-if(NOT CONFIG_PROMPT)
+if(NOT CONFIG_SHELL)
   list(APPEND excl
-    prompt.c
-    prompt_commands.c
+    shell_dbgserial.c
+    shell_pulse.c
   )
 endif()
 pbl_library()

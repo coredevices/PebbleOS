@@ -6,7 +6,6 @@
 #include "pbl/services/blob_db/sync.h"
 #include "pbl/services/blob_db/sync_util.h"
 
-#include "console/prompt.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/filesystem/pfs.h"
@@ -366,42 +365,48 @@ uint32_t ios_notif_pref_db_get_flags(const uint8_t *app_id, int key_len) {
 }
 #endif
 
-// ----------------------------------------------------------------------------------------------
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
+#include <errno.h>
+#include <pbl/shell/shell.h>
+
 static bool prv_print_notif_pref_db(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+  const struct pbl_shell *sh = context;
   char app_id[64];
   info->get_key(file, app_id, info->key_len);
   app_id[info->key_len] = '\0';
-  prompt_send_response(app_id);
+  pbl_shell_print(sh, "%s", app_id);
 
-  char buffer[64];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Dirty: %s", info->dirty ? "Yes" : "No");
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Last modified: %" PRIu32 "",
-                           info->last_modified);
+  pbl_shell_print(sh, "Dirty: %s", info->dirty ? "Yes" : "No");
+  pbl_shell_print(sh, "Last modified: %" PRIu32, info->last_modified);
 
   SerializedNotifPrefs *serialized_prefs = NULL;
   prv_get_serialized_prefs(file, (uint8_t *)app_id, info->key_len, &serialized_prefs);
   if (!serialized_prefs) {
-    prompt_send_response("Failed to read prefs");
-    prompt_send_response("");
+    pbl_shell_error(sh, "failed to read prefs");
+    pbl_shell_print(sh, "%s", "");
     return true;
   }
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Attributes: %d,  Actions: %d",
-                           serialized_prefs->num_attributes, serialized_prefs->num_actions);
-
-  // TODO: Print the attributes and actions
+  pbl_shell_print(sh, "Attributes: %d,  Actions: %d", serialized_prefs->num_attributes,
+                  serialized_prefs->num_actions);
 
   prv_free_serialized_prefs(serialized_prefs);
-  prompt_send_response("");
+  pbl_shell_print(sh, "%s", "");
   return true;
 }
 
-void command_dump_notif_pref_db(void) {
+static int prv_cmd_prefs(const struct pbl_shell *sh, size_t argc, char **argv) {
   SettingsFile file;
   if (S_SUCCESS != prv_file_open_and_lock(&file)) {
-    return;
+    pbl_shell_error(sh, "failed to open the database");
+    return -EIO;
   }
 
-  settings_file_each(&file, prv_print_notif_pref_db, NULL);
+  settings_file_each(&file, prv_print_notif_pref_db, (void *)sh);
 
   prv_file_close_and_unlock(&file);
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_notif, prefs, NULL, "Dump the notification preferences", prv_cmd_prefs, 0,
+                     0);
+#endif

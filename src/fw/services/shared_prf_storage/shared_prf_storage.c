@@ -692,9 +692,6 @@ void shared_prf_store_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info,
   WTF;
 }
 
-void command_force_shared_prf_flush(void) {
-}
-
 //!
 //! Unit test functions
 //!

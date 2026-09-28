@@ -25,6 +25,8 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
+#include <pbl/shell/shell.h>
+
 #define FRAME_POOL_SIZE (3)
 
 #define FRAME_DELIMITER '\0'
@@ -260,4 +262,13 @@ void pulse_best_effort_send_cancel(void *buf) {
 void pulse_change_baud_rate(uint32_t new_baud) {
   dbgserial_change_baud_rate(new_baud);
 }
+
+#ifdef CONFIG_SHELL
+static int prv_cmd_pulse(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pulse_start();
+  return 0;
+}
+
+PBL_SHELL_CMD_REGISTER(PULSEv1, NULL, "Switch the debug serial to PULSEv1", prv_cmd_pulse);
+#endif
 #endif

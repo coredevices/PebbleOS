@@ -4,9 +4,6 @@
 #include <pbl/drivers/vibe.h>
 
 #include <pbl/drivers/qemu/qemu_serial.h>
-#include "console/prompt.h"
-
-#include <stdlib.h>
 
 static bool s_vibe_on;
 
@@ -50,19 +47,22 @@ uint8_t vibe_get_calibration(void) {
 void vibe_apply_calibration(uint8_t cali) {
 }
 
-void command_vibe_ctl(const char *arg) {
-  int strength = atoi(arg);
+#ifdef CONFIG_SHELL
+#include <errno.h>
 
-  const bool out_of_bounds = ((strength < 0) || (strength > VIBE_STRENGTH_MAX));
-  const bool not_a_number = (strength == 0 && arg[0] != '0');
-  if (out_of_bounds || not_a_number) {
-    prompt_send_response("Invalid argument");
-    return;
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_vibe(const struct pbl_shell *sh, size_t argc, char **argv) {
+  long strength;
+  if (pbl_shell_strtol(argv[1], &strength) != 0 || strength < 0 || strength > VIBE_STRENGTH_MAX) {
+    pbl_shell_error(sh, "invalid argument '%s'", argv[1]);
+    return -EINVAL;
   }
 
-  vibe_set_strength(strength);
-
-  const bool turn_on = strength != 0;
-  vibe_ctl(turn_on);
-  prompt_send_response("OK");
+  vibe_set_strength((int8_t)strength);
+  vibe_ctl(strength != 0);
+  return 0;
 }
+
+PBL_SHELL_CMD_ARG_REGISTER(vibe, NULL, "Vibrate at <strength 0-100>", prv_cmd_vibe, 2, 0);
+#endif

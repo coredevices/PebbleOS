@@ -7,7 +7,7 @@
 #include "console/dbgserial_input.h"
 #include "console/pulse_protocol_impl.h"
 #include "console_internal.h"
-#include "prompt.h"
+#include "shell_dbgserial.h"
 
 #include "console/pulse_internal.h"
 #include "pbl/kernel/types.h"
@@ -20,7 +20,7 @@ static bool s_serial_console_initialized;
 static bool s_prompt_enabled = false;
 
 static void logging_handle_character(char c, bool *should_context_switch) {
-#ifndef CONFIG_PROMPT
+#ifndef CONFIG_SHELL
   return;
 #endif
   // Remember, you're in an interrupt here!
@@ -30,7 +30,7 @@ static void logging_handle_character(char c, bool *should_context_switch) {
       PBL_LOG_DBG("Ignoring prompt request, not yet ready!");
       return;
     }
-    console_switch_to_prompt();
+    shell_dbgserial_start_from_isr(should_context_switch);
   }
 }
 
@@ -88,9 +88,9 @@ void serial_console_set_state(SerialConsoleState new_state) {
   s_serial_console_state = new_state;
 
   switch (s_serial_console_state) {
-#ifdef CONFIG_PROMPT
+#ifdef CONFIG_SHELL
     case SERIAL_CONSOLE_STATE_PROMPT:
-      dbgserial_register_character_callback(prompt_handle_character);
+      dbgserial_register_character_callback(shell_dbgserial_handle_char);
       dbgserial_set_rx_dma_enabled(false);
       break;
 #endif

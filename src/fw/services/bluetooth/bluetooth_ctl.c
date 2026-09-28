@@ -11,7 +11,6 @@
 #ifdef CONFIG_QEMU
 #include "comm/qemu_transport.h"
 #endif
-#include "console/dbgserial.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/kernel/mutex.h"
@@ -258,18 +257,27 @@ void bt_ctl_reset_bluetooth(void) {
   }
 }
 
-void command_bt_airplane_mode(const char *new_mode) {
-  // as tests run using command_bt_airplane_mode, will retain nomenclature
-  // but work as override mode change
-  BtCtlModeOverride override = BtCtlModeOverrideStop;
-  if (strcmp(new_mode, "exit") == 0) {
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+#include <errno.h>
+
+static int prv_cmd_airplane(const struct pbl_shell *sh, size_t argc, char **argv) {
+  BtCtlModeOverride override;
+
+  if (strcmp(argv[1], "on") == 0) {
+    override = BtCtlModeOverrideStop;
+  } else if (strcmp(argv[1], "off") == 0) {
     override = BtCtlModeOverrideNone;
-  }
-  bt_ctl_set_override_mode(override);
-  bool new_state = bt_ctl_is_bluetooth_active();
-  if (!new_state) {
-    dbgserial_putstr("Entered airplane mode");
   } else {
-    dbgserial_putstr("Left airplane mode");
+    pbl_shell_error(sh, "invalid mode '%s'", argv[1]);
+    return -EINVAL;
   }
+
+  bt_ctl_set_override_mode(override);
+  pbl_shell_print(sh, "%s airplane mode", bt_ctl_is_bluetooth_active() ? "Left" : "Entered");
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, airplane, NULL, "Airplane mode <on|off>", prv_cmd_airplane, 2, 0);
+#endif

@@ -238,3 +238,10 @@ bool battery_monitor_critical_lockout(void) {
 TimerID battery_monitor_get_standby_timer_id(void) {
   return s_standby_timer_id;
 }
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+PBL_SHELL_SUBCMD_SET_CREATE(sub_battery);
+PBL_SHELL_CMD_REGISTER(battery, sub_battery, "Battery", NULL);
+#endif

@@ -521,28 +521,6 @@ void mic_stop(const MicDevice *this) {
   pbl_mutex_unlock(&state->mutex);
 }
 
-#include "console/prompt.h"
-
-void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
-                       char *format_str) {
-  prompt_send_response("Microphone console commands not supported");
-  prompt_send_response("Use the standard microphone API instead");
-}
-
-void command_mic_read(void) {
-  pbl_irq_lock();
-  const uint32_t captured = s_state->capture_bytes;
-  const uint32_t dispatched = s_state->dispatched_bytes;
-  const uint32_t dropped = s_state->dropped_bytes;
-  const unsigned backlog = s_state->peak_backlog;
-  pbl_irq_unlock();
-  char buffer[128];
-  prompt_send_response_fmt(buffer, sizeof(buffer),
-                           "mic captured=%" PRIu32 " dispatched=%" PRIu32 " dropped=%" PRIu32
-                           " peak_backlog=%u",
-                           captured, dispatched, dropped, backlog);
-}
-
 bool mic_is_running(const MicDevice *this) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);
@@ -554,3 +532,35 @@ uint32_t mic_get_channels(const MicDevice *this) {
   PBL_ASSERTN(this);
   return this->channels ? this->channels : 1;
 }
+
+#ifdef CONFIG_SHELL
+#include <errno.h>
+
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_mic_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (s_state == NULL) {
+    pbl_shell_error(sh, "not initialized");
+    return -ENODEV;
+  }
+
+  pbl_irq_lock();
+  const uint32_t captured = s_state->capture_bytes;
+  const uint32_t dispatched = s_state->dispatched_bytes;
+  const uint32_t dropped = s_state->dropped_bytes;
+  const unsigned backlog = s_state->peak_backlog;
+  pbl_irq_unlock();
+
+  pbl_shell_print(
+      sh, "mic captured=%" PRIu32 " dispatched=%" PRIu32 " dropped=%" PRIu32 " peak_backlog=%u",
+      captured, dispatched, dropped, backlog);
+  return 0;
+}
+
+static const struct pbl_shell_cmd sub_mic[] = {
+  PBL_SHELL_CMD(read, NULL, "Print the capture statistics", prv_cmd_mic_read),
+  PBL_SHELL_SUBCMD_SET_END,
+};
+
+PBL_SHELL_CMD_REGISTER(mic, sub_mic, "Microphone", NULL);
+#endif

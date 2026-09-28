@@ -15,7 +15,6 @@
 #include "applib/ui/window_stack.h"
 #include "applib/ui/window_stack_animation.h"
 #include "applib/ui/window_stack_private.h"
-#include "console/prompt.h"
 #include "kernel/events.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
@@ -27,6 +26,10 @@
 #include "system/profiler.h"
 
 #include "pbl/kernel/sem.h"
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+#endif
 
 typedef struct ModalContext {
   WindowStack window_stack;
@@ -629,9 +632,17 @@ void modal_window_push(Window *window, ModalPriority priority, bool animated) {
   window_stack_push(modal_manager_get_window_stack(priority), window, animated);
 }
 
-// Commands
-////////////////////////////
+void modal_manager_reset(void) {
+  for (ModalPriority idx = ModalPriorityInvalid + 1; idx < NumModalPriorities; idx++) {
+    memset(&s_modal_window_stacks[idx], 0, sizeof(ModalContext));
+  }
 
+  s_modal_min_priority = ModalPriorityDiscreet;
+
+  modal_manager_init();
+}
+
+#ifdef CONFIG_SHELL
 typedef struct WindowStackInfoContext {
   struct pbl_sem interlock;
   WindowStackDump *dumps[NumModalPriorities];
@@ -652,7 +663,7 @@ static void prv_modal_window_stack_info_cb(void *ctx) {
   pbl_sem_give(&info->interlock);
 }
 
-void command_modal_stack_info(void) {
+static int prv_cmd_modals(const struct pbl_shell *sh, size_t argc, char **argv) {
   WindowStackInfoContext info = {0};
   pbl_sem_init(&info.interlock, 0, 1);
 
@@ -660,31 +671,23 @@ void command_modal_stack_info(void) {
   pbl_sem_take(&info.interlock, PBL_FOREVER);
   pbl_sem_deinit(&info.interlock);
 
-  prompt_send_response("Modal Stack, top to bottom:");
+  pbl_shell_print(sh, "Modal Stack, top to bottom:");
 
-  char buffer[128];
   for (ModalPriority priority = NumModalPriorities - 1; priority > ModalPriorityInvalid;
        --priority) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "Priority: %d (%zu)", priority,
-                             info.counts[priority]);
+    pbl_shell_print(sh, "Priority: %d (%zu)", priority, info.counts[priority]);
     if (info.counts[priority] > 0 && !info.dumps[priority]) {
-      prompt_send_response("Couldn't allocate buffers for modal stack data");
+      pbl_shell_error(sh, "couldn't allocate buffers for modal stack data");
     } else {
       for (size_t i = 0; i < info.counts[priority]; ++i) {
-        prompt_send_response_fmt(buffer, sizeof(buffer), "window %p <%s>",
-                                 info.dumps[priority][i].addr, info.dumps[priority][i].name);
+        pbl_shell_print(sh, "window %p <%s>", info.dumps[priority][i].addr,
+                        info.dumps[priority][i].name);
       }
     }
     kernel_free(info.dumps[priority]);
   }
+  return 0;
 }
 
-void modal_manager_reset(void) {
-  for (ModalPriority idx = ModalPriorityInvalid + 1; idx < NumModalPriorities; idx++) {
-    memset(&s_modal_window_stacks[idx], 0, sizeof(ModalContext));
-  }
-
-  s_modal_min_priority = ModalPriorityDiscreet;
-
-  modal_manager_init();
-}
+PBL_SHELL_SUBCMD_ADD(sub_ui, modals, NULL, "Show the modal window stacks", prv_cmd_modals, 0, 0);
+#endif

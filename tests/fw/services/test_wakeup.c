@@ -28,7 +28,6 @@
 #include "stubs_language_ui.h"
 #include "stubs_logging.h"
 #include "stubs_print.h"
-#include "stubs_prompt.h"
 #include "stubs_serial.h"
 #include "stubs_passert.h"
 #include "stubs_pebble_process_md.h"

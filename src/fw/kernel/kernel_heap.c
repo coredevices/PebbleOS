@@ -8,6 +8,10 @@
 
 #include <cmsis_core.h>
 
+#if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
+#include <pbl/shell/shell.h>
+#endif
+
 static Heap s_kernel_heap;
 static bool s_interrupts_disabled_by_heap;
 static uint32_t s_pri_mask; // cache basepri mask we restore to in heap_unlock
@@ -64,10 +68,19 @@ Heap *kernel_heap_get(void) {
   return &s_kernel_heap;
 }
 
-// Serial Commands
-///////////////////////////////////////////////////////////
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
-void command_dump_malloc_kernel(void) {
+void kernel_heap_dump_instrumentation(void) {
   heap_dump_malloc_instrumentation_to_dbgserial(&s_kernel_heap);
 }
+
+#ifdef CONFIG_SHELL
+static int prv_cmd_heap_kernel(const struct pbl_shell *sh, size_t argc, char **argv) {
+  kernel_heap_dump_instrumentation();
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_SET_CREATE(sub_sys_heap);
+PBL_SHELL_SUBCMD_ADD(sub_sys, heap, sub_sys_heap, "Dump heap allocations", NULL, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys_heap, kernel, NULL, "Dump the kernel heap", prv_cmd_heap_kernel, 0, 0);
+#endif
 #endif

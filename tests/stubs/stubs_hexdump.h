@@ -14,10 +14,6 @@ void hexdump_using_serial(int level, const char *src_filename, int src_line_numb
                           const char *line_buffer) {
 }
 
-void hexdump_using_prompt(int level, const char *src_filename, int src_line_number,
-                          const char *line_buffer) {
-}
-
 void hexdump_using_pbllog(int level, const char *src_filename, int src_line_number,
                           const char *line_buffer) {
 }

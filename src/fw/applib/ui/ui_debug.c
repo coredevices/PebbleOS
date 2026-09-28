@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_UI_DEBUG
+#if defined(CONFIG_UI_DEBUG) && defined(CONFIG_SHELL)
 
 #include "ui.h"
 #include "applib/ui/app_window_stack.h"
 #include "kernel/ui/modals/modal_manager.h"
 
-#include "console/dbgserial.h"
+#include <pbl/shell/shell.h>
 
 extern void text_layer_update_proc(TextLayer *text_layer, GContext *ctx);
 extern void action_bar_update_proc(ActionBarLayer *action_bar, GContext *ctx);
@@ -20,7 +20,7 @@ extern void rot_bitmap_layer_update_proc(RotBitmapLayer *image, GContext *ctx);
 extern void scroll_layer_draw_shadow_sublayer(Layer *shadow_sublayer, GContext *ctx);
 extern void window_do_layer_update_proc(Layer *layer, GContext *ctx);
 
-const char *layer_debug_guess_type(Layer *layer) {
+static const char *prv_guess_type(Layer *layer) {
   if (layer == NULL) {
     return "NULL";
   };
@@ -55,50 +55,42 @@ const char *layer_debug_guess_type(Layer *layer) {
   }
 }
 
-static void layer_dump_tree_node(Layer *node, uint8_t indentation_level, char *buffer,
-                                 uint8_t buffer_size);
+static void prv_dump_level(const struct pbl_shell *sh, Layer *node, uint8_t indentation_level);
 
-void layer_dump_level(Layer *node, uint8_t indentation_level, char *buffer, uint8_t buffer_size) {
+static void prv_dump_node(const struct pbl_shell *sh, Layer *node, uint8_t indentation_level) {
+  pbl_shell_print(sh, "%*s(%s*) %p b:{{%i, %i}, {%i, %i}} f:{{%i, %i}, {%i, %i}} c:%u h:%u w:%p",
+                  (indentation_level * 2), "", prv_guess_type(node), node, node->bounds.origin.x,
+                  node->bounds.origin.y, node->bounds.size.w, node->bounds.size.h,
+                  node->frame.origin.x, node->frame.origin.y, node->frame.size.w,
+                  node->frame.size.h, node->clips, node->hidden, node->window);
+  if (node->first_child) {
+    prv_dump_level(sh, node->first_child, indentation_level + 1);
+  }
+}
+
+static void prv_dump_level(const struct pbl_shell *sh, Layer *node, uint8_t indentation_level) {
   while (node) {
-    layer_dump_tree_node(node, indentation_level, buffer, buffer_size);
+    prv_dump_node(sh, node, indentation_level);
     node = node->next_sibling;
   }
 }
 
-static void layer_dump_tree_node(Layer *node, uint8_t indentation_level, char *buffer,
-                                 uint8_t buffer_size) {
-  const bool hidden = node->hidden;
-  const bool clips = node->clips;
-  const char *layer_type_string = layer_debug_guess_type(node);
-  dbgserial_putstr_fmt(buffer, buffer_size,
-                       "%*s(%s*) %p b:{{%i, %i}, {%i, %i}} f:{{%i, %i}, {%i, %i}} c:%u h:%u w:%p",
-                       (indentation_level * 2), "", layer_type_string, node, node->bounds.origin.x,
-                       node->bounds.origin.y, node->bounds.size.w, node->bounds.size.h,
-                       node->frame.origin.x, node->frame.origin.y, node->frame.size.w,
-                       node->frame.size.h, clips, hidden, node->window);
-  if (node->first_child) {
-    layer_dump_level(node->first_child, ++indentation_level, buffer, buffer_size);
-  }
-}
-
-void layer_dump_tree(Layer *node) {
-  const uint8_t buffer_size = 128;
-  char buffer[buffer_size];
-  layer_dump_level(node, 0, buffer, buffer_size);
-}
-
-void command_dump_window(void) {
+static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
   Window *window = modal_manager_get_top_window();
   if (!window) {
     window = app_window_stack_get_top_window();
     if (window == NULL) {
-      return;
+      return 0;
     }
   }
   const char *window_name = window_get_debug_name(window);
   if (window_name) {
-    dbgserial_putstr(window_name);
+    pbl_shell_print(sh, "%s", window_name);
   }
-  layer_dump_tree(window_get_root_layer(window));
+  prv_dump_level(sh, window_get_root_layer(window), 0);
+  return 0;
 }
-#endif /* CONFIG_UI_DEBUG */
+
+PBL_SHELL_SUBCMD_ADD(sub_ui, dump, NULL, "Dump the layer tree of the top window", prv_cmd_dump, 0,
+                     0);
+#endif

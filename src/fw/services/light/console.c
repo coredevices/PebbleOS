@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#ifdef CONFIG_SHELL
 #include <inttypes.h>
 
-#include "console/prompt.h"
 #include <pbl/drivers/ambient_light.h>
+#include <pbl/shell/shell.h>
 #include "kernel/util/sleep.h"
 #include "pbl/services/light.h"
 
@@ -21,34 +22,36 @@
 #include <string.h>
 #endif
 
+PBL_SHELL_SUBCMD_SET_CREATE(sub_als);
+PBL_SHELL_CMD_REGISTER(als, sub_als, "Ambient light sensor", NULL);
+
+#ifndef CONFIG_RECOVERY_FW
 // Let the sensor settle after a backlight-off transition before reading.
 #define ALS_LUX_SETTLE_MS (250)
 
-void command_light_test(void) {
-  char buffer[64];
+static int prv_cmd_backlight_test(const struct pbl_shell *sh, size_t argc, char **argv) {
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
   // Print raw, region luminance, and the corrected value to sanity-check the
   // under-display compensation.
   const uint32_t raw = ambient_light_get_light_level();
   const uint16_t lum_q8 = als_compensation_sample_luminance();
   const uint32_t corr = als_compensation_apply(raw, lum_q8, CONFIG_ALS_BLACK_SCALE_Q8);
-  prompt_send_response_fmt(buffer, sizeof(buffer),
-                           "als raw: %" PRIu32 " lum_q8: %" PRIu16 " corr: %" PRIu32, raw, lum_q8,
-                           corr);
+  pbl_shell_print(sh, "als raw: %" PRIu32 " lum_q8: %" PRIu16 " corr: %" PRIu32, raw, lum_q8, corr);
 #else
-  prompt_send_response_fmt(buffer, sizeof(buffer), "als: %" PRIu32,
-                           ambient_light_get_light_level());
+  pbl_shell_print(sh, "als: %" PRIu32, ambient_light_get_light_level());
 #endif
   light_enable_interaction();
-  prompt_send_response_fmt(buffer, sizeof(buffer), "brightness: %" PRIu8 "%%",
-                           light_get_current_brightness_percent());
+  pbl_shell_print(sh, "brightness: %" PRIu8 "%%", light_get_current_brightness_percent());
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_backlight, test, NULL, "Turn the light on and print its state",
+                     prv_cmd_backlight_test, 0, 0);
 
 // Print raw, compensated, and lux values in one shot. Forces the backlight off
 // for the read: the light service suspends ALS sampling while the LED is on,
 // so a reading taken then would be a stale cached value.
-void command_als_lux(void) {
-  char buffer[96];
+static int prv_cmd_als_lux(const struct pbl_shell *sh, size_t argc, char **argv) {
   light_allow(false);
   psleep(ALS_LUX_SETTLE_MS);
   const uint32_t raw = ambient_light_get_light_level();
@@ -60,14 +63,16 @@ void command_als_lux(void) {
 #endif
   light_allow(true);
   if (ambient_light_lux_available()) {
-    prompt_send_response_fmt(buffer, sizeof(buffer),
-                             "als raw: %" PRIu32 " corr: %" PRIu32 " lux: %" PRIu32, raw, corr,
-                             ambient_light_level_to_lux(corr));
+    pbl_shell_print(sh, "als raw: %" PRIu32 " corr: %" PRIu32 " lux: %" PRIu32, raw, corr,
+                    ambient_light_level_to_lux(corr));
   } else {
-    prompt_send_response_fmt(buffer, sizeof(buffer),
-                             "als raw: %" PRIu32 " corr: %" PRIu32 " lux: n/a", raw, corr);
+    pbl_shell_print(sh, "als raw: %" PRIu32 " corr: %" PRIu32 " lux: n/a", raw, corr);
   }
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_als, lux, NULL, "Read raw, compensated and lux values", prv_cmd_als_lux, 0,
+                     0);
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
@@ -125,8 +130,7 @@ static uint32_t prv_als_read_raw_avg(uint8_t n) {
 // dark-gray / light-gray / white -> lum_q8 0/85/170/256) at the current ambient,
 // printing raw and gain-vs-white at each. Run at several ambient levels to map
 // the transmittance curve.
-void command_als_curve(void) {
-  char buf[80];
+static int prv_cmd_als_curve(const struct pbl_shell *sh, size_t argc, char **argv) {
   static const struct {
     const char *name;
     uint8_t px;
@@ -154,15 +158,19 @@ void command_als_curve(void) {
       raw_white = (raw > 0) ? raw : 1;
     }
     const uint32_t gain_x100 = (raw > 0) ? (raw_white * 100u / raw) : 0;
-    prompt_send_response_fmt(
-        buf, sizeof(buf),
-        "als curve: %s lum_q8=%" PRIu16 " raw=%" PRIu32 " gain=%" PRIu32 ".%02" PRIu32 "x",
+    pbl_shell_print(
+        sh, "als curve: %s lum_q8=%" PRIu16 " raw=%" PRIu32 " gain=%" PRIu32 ".%02" PRIu32 "x",
         levels[i].name, levels[i].lum_q8, raw, gain_x100 / 100u, gain_x100 % 100u);
   }
 
   compositor_unfreeze();
   animation_private_resume();
-  prompt_send_response("als: press a button to repaint");
+  pbl_shell_print(sh, "als: press a button to repaint");
+  return 0;
 }
 
+PBL_SHELL_SUBCMD_ADD(sub_als, curve, NULL, "Measure the screen transmittance curve",
+                     prv_cmd_als_curve, 0, 0);
 #endif // CONFIG_ALS_SCREEN_COMPENSATION
+#endif // CONFIG_RECOVERY_FW
+#endif // CONFIG_SHELL

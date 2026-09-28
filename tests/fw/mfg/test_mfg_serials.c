@@ -2,20 +2,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "mfg/mfg_serials.h"
-#include "console/prompt_commands.h"
 #include <pbl/drivers/otp.h>
 
 #include "clar.h"
 
 #include "stubs_passert.h"
 #include "stubs_logging.h"
-#include "stubs_prompt.h"
 #include "fake_otp.h"
 
 #include <signal.h>
-
-extern void command_hwver_write(const char *);
-extern void command_pcba_serial_write(const char *);
 
 // Tests
 /////////////////////////////////////////////
@@ -29,6 +24,7 @@ void test_mfg_serials__cleanup(void) {
 
 void test_mfg_serials__hw_version(void) {
   const char *hw_version;
+  uint8_t index;
 
   // Initially, bunch of XXs:
   hw_version = mfg_get_hw_version();
@@ -36,13 +32,14 @@ void test_mfg_serials__hw_version(void) {
 
   // Test writing & reading back:
   const char *written_hw_version1 = "ABCDEFG";
-  command_hwver_write(written_hw_version1);
+  mfg_write_hw_version(written_hw_version1, strlen(written_hw_version1), &index);
   hw_version = mfg_get_hw_version();
   cl_assert(strcmp(written_hw_version1, hw_version) == 0);
 }
 
-void test_mfg_serials__serial_number_console(void) {
+void test_mfg_serials__serial_number(void) {
   const char *serial;
+  uint8_t index;
 
   // Initially, bunch of XXs:
   serial = mfg_get_serial_number();
@@ -50,13 +47,14 @@ void test_mfg_serials__serial_number_console(void) {
 
   // Test writing & reading back:
   const char *written_serial1 = "ABCDEFGHIJKL";
-  command_serial_write(written_serial1);
+  mfg_write_serial_number(written_serial1, strlen(written_serial1), &index);
   serial = mfg_get_serial_number();
   cl_assert_equal_s(written_serial1, serial);
 }
 
 void test_mfg_serials__pcba_serial_number(void) {
   const char *pcba_serial;
+  uint8_t index;
 
   // Initially, bunch of XXs:
   pcba_serial = mfg_get_pcba_serial_number();
@@ -64,20 +62,20 @@ void test_mfg_serials__pcba_serial_number(void) {
 
   // Test writing & reading back:
   const char *written_pcba_serial1 = "01234567901";
-  command_pcba_serial_write(written_pcba_serial1);
+  mfg_write_pcba_serial_number(written_pcba_serial1, strlen(written_pcba_serial1), &index);
   pcba_serial = mfg_get_pcba_serial_number();
   cl_assert_equal_s(written_pcba_serial1, pcba_serial);
 
   // Reject overly long writes; original preserved.
   const char *written_pcba_serial_long = "abcdefghijkxyz";
-  command_pcba_serial_write(written_pcba_serial_long);
+  mfg_write_pcba_serial_number(written_pcba_serial_long, strlen(written_pcba_serial_long), &index);
   pcba_serial = mfg_get_pcba_serial_number();
   cl_assert_equal_s(written_pcba_serial1, pcba_serial);
 
   // OTP_PCBA_SERIAL only has one slot, so subsequent valid writes also fail
   // and the original value is preserved.
   const char *written_pcba_serial2 = "abcdefghijkx";
-  command_pcba_serial_write(written_pcba_serial2);
+  mfg_write_pcba_serial_number(written_pcba_serial2, strlen(written_pcba_serial2), &index);
   pcba_serial = mfg_get_pcba_serial_number();
   cl_assert_equal_s(written_pcba_serial1, pcba_serial);
 }

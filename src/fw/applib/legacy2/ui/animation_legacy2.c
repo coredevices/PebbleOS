@@ -364,33 +364,3 @@ void animation_legacy2_set_custom_curve(AnimationLegacy2 *animation,
 AnimationCurveFunction animation_legacy2_get_custom_curve(AnimationLegacy2 *animation) {
   return prv_custom_curve_ptr_unpack(animation->custom_curve_function);
 }
-
-static void dump_scheduler(char *buffer, int buffer_size,
-                           AnimationLegacy2Scheduler *animation_legacy2_scheduler) {
-  AnimationLegacy2 *animation = (AnimationLegacy2 *)animation_legacy2_scheduler->head;
-  while (animation) {
-    dbgserial_putstr_fmt(
-        buffer, buffer_size,
-        "<%p> { abs_start_time_ms = %" PRIu32 ", delay = %" PRIu32 ", duration = %" PRIu32
-        ", "
-        "curve = %i, run = %p }",
-        animation, animation->abs_start_time_ms, animation->delay_ms, animation->duration_ms,
-        animation->curve, animation->implementation->update);
-
-    animation = (AnimationLegacy2 *)list_get_next(&animation->list_node);
-  }
-}
-
-void command_legacy2_animations_info(void) {
-  char buffer[128];
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "Now: %" PRIu32,
-                       animation_legacy2_get_ms_since_system_start());
-
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "Kernel AnimationLegacy2s:");
-  dump_scheduler(buffer, sizeof(buffer),
-                 (AnimationLegacy2Scheduler *)kernel_applib_get_animation_state());
-
-  dbgserial_putstr_fmt(buffer, sizeof(buffer), "App AnimationLegacy2s:");
-  dump_scheduler(buffer, sizeof(buffer),
-                 (AnimationLegacy2Scheduler *)app_state_get_animation_state());
-}

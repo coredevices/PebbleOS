@@ -3,7 +3,6 @@
 
 #include <pbl/drivers/vibe.h>
 #include "board/board.h"
-#include "console/prompt.h"
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
@@ -582,29 +581,33 @@ void vibe_apply_calibration(uint8_t cali) {
   PBL_LOG_DBG("AW86225: applied stored calibration trim=0x%02x", s_trim_lra);
 }
 
-void command_vibe_ctl(const char *arg) {
-  if (!strcmp(arg, "cal")) {
-    status_t rc = vibe_calibrate();
-    if (rc != S_SUCCESS) {
-      prompt_send_response("F0 cali fail");
-    } else {
-      prompt_send_response("F0 cali success");
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <string.h>
+
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_vibe(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (strcmp(argv[1], "cal") == 0) {
+    if (vibe_calibrate() != S_SUCCESS) {
+      pbl_shell_error(sh, "F0 calibration failed");
+      return -EIO;
     }
-
-    return;
-  }
-  int strength = atoi(arg);
-
-  const bool out_of_bounds = ((strength < 0) || (strength > VIBE_STRENGTH_MAX));
-  const bool not_a_number = (strength == 0 && arg[0] != '0');
-  if (out_of_bounds || not_a_number) {
-    prompt_send_response("Invalid argument");
-    return;
+    pbl_shell_print(sh, "F0 calibration succeeded");
+    return 0;
   }
 
-  vibe_set_strength(strength);
+  long strength;
+  if (pbl_shell_strtol(argv[1], &strength) != 0 || strength < 0 || strength > VIBE_STRENGTH_MAX) {
+    pbl_shell_error(sh, "invalid argument '%s'", argv[1]);
+    return -EINVAL;
+  }
 
-  const bool turn_on = strength != 0;
-  vibe_ctl(turn_on);
-  prompt_send_response("OK");
+  vibe_set_strength((int8_t)strength);
+  vibe_ctl(strength != 0);
+  return 0;
 }
+
+PBL_SHELL_CMD_ARG_REGISTER(vibe, NULL, "Vibrate at <strength 0-100>, or <cal> to calibrate",
+                           prv_cmd_vibe, 2, 0);
+#endif

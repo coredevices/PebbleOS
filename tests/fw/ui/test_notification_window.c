@@ -60,7 +60,6 @@
 #include "stubs_pin_db.h"
 #include "stubs_print.h"
 #include "stubs_process_manager.h"
-#include "stubs_prompt.h"
 #include "stubs_regular_timer.h"
 #include "stubs_reminder_db.h"
 #include "stubs_reminders.h"

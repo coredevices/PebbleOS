@@ -130,10 +130,14 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_
   }
 }
 
-// Serial Commands
-//////////////////////////////////////////////////////////////////////
-void command_ping_send(void) {
-  // Override last send time
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_ping(const struct pbl_shell *sh, size_t argc, char **argv) {
   s_last_send_time = 0;
   ping_send_if_due();
+  return 0;
 }
+
+PBL_SHELL_CMD_REGISTER(ping, NULL, "Send a ping to the phone", prv_cmd_ping);
+#endif

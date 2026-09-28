@@ -1,7 +1,6 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/ambient_light.h>
-#include "console/prompt.h"
 
 void ambient_light_init(void) {
 }
@@ -20,11 +19,6 @@ void ambient_light_resume(void) {
 
 uint32_t ambient_light_get_light_level(void) {
   return 0;
-}
-
-void command_als_read(void) {
-  char buffer[16];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRIu32 "", ambient_light_get_light_level());
 }
 
 uint32_t ambient_light_get_dark_threshold(void) {
@@ -49,3 +43,14 @@ bool ambient_light_lux_available(void) {
 uint32_t ambient_light_level_to_lux(uint32_t light_level) {
   return light_level;
 }
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_als_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pbl_shell_print(sh, "%" PRIu32, ambient_light_get_light_level());
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_als, read, NULL, "Read the raw light level", prv_cmd_als_read, 0, 0);
+#endif

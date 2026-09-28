@@ -9,6 +9,10 @@
 #include "syscall/syscall.h"
 #include "tinymt32.h"
 
+#if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
+#include <pbl/shell/shell.h>
+#endif
+
 typedef struct {
   Heap heap;
 
@@ -125,10 +129,11 @@ HealthServiceState *worker_state_get_health_service_state(void) {
   return &s_worker_state_ptr->health_service_state;
 }
 
-// ===================================================================================================
-// Serial Commands
-#ifdef CONFIG_MALLOC_INSTRUMENTATION
-void command_dump_malloc_worker(void) {
+#if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
+static int prv_cmd_heap_worker(const struct pbl_shell *sh, size_t argc, char **argv) {
   heap_dump_malloc_instrumentation_to_dbgserial(worker_state_get_heap());
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_sys_heap, worker, NULL, "Dump the worker heap", prv_cmd_heap_worker, 0, 0);
 #endif

@@ -4,7 +4,6 @@
 #include <pbl/drivers/vibe.h>
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
@@ -179,46 +178,45 @@ uint8_t vibe_get_calibration(void) {
 void vibe_apply_calibration(uint8_t cali) {
 }
 
-void command_vibe_ctl(const char *arg) {
-  if (!strcmp(arg, "cal")) {
-    status_t res;
-    char buf[64];
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <string.h>
 
-    prompt_send_response("vibe cal...");
+#include <pbl/shell/shell.h>
 
-    res = vibe_calibrate();
-    if (res != S_SUCCESS) {
-      prompt_send_response_fmt(buf, 64, "vibe cal failed");
-    } else {
-      prompt_send_response_fmt(buf, 64, "vibe cal succeeded");
+static int prv_cmd_vibe(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (strcmp(argv[1], "cal") == 0) {
+    pbl_shell_print(sh, "vibe cal...");
+    if (vibe_calibrate() != S_SUCCESS) {
+      pbl_shell_error(sh, "vibe cal failed");
+      return -EIO;
     }
-
-    return;
+    pbl_shell_print(sh, "vibe cal succeeded");
+    return 0;
   }
 
-  if (!strcmp(arg, "reg")) {
-    prompt_send_response("vibe regs:");
+  if (strcmp(argv[1], "reg") == 0) {
+    pbl_shell_print(sh, "vibe regs:");
     for (int i = 0; i <= 0x22; i++) {
       uint8_t reg;
-      char buf[64];
       prv_read_register(i, &reg);
-      prompt_send_response_fmt(buf, 64, "  vibe reg %02x: %02x", i, reg);
+      pbl_shell_print(sh, "  vibe reg %02x: %02x", i, reg);
     }
-    return;
+    return 0;
   }
 
-  int strength = atoi(arg);
-
-  const bool out_of_bounds = ((strength < 0) || (strength > VIBE_STRENGTH_MAX));
-  const bool not_a_number = (strength == 0 && arg[0] != '0');
-  if (out_of_bounds || not_a_number) {
-    prompt_send_response("Invalid argument");
-    return;
+  long strength;
+  if (pbl_shell_strtol(argv[1], &strength) != 0 || strength < 0 || strength > VIBE_STRENGTH_MAX) {
+    pbl_shell_error(sh, "invalid argument '%s'", argv[1]);
+    return -EINVAL;
   }
 
-  vibe_set_strength(strength);
-
-  const bool turn_on = strength != 0;
-  vibe_ctl(turn_on);
-  prompt_send_response("OK");
+  vibe_set_strength((int8_t)strength);
+  vibe_ctl(strength != 0);
+  return 0;
 }
+
+PBL_SHELL_CMD_ARG_REGISTER(vibe, NULL,
+                           "Vibrate at <strength 0-100>, <cal> to calibrate or <reg> to dump",
+                           prv_cmd_vibe, 2, 0);
+#endif

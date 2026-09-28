@@ -23,11 +23,9 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_passert.h"
 #include "stubs_print.h"
-#include "stubs_prompt.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"
 #include "stubs_syscalls.h"
-#include "stubs_prompt.h"
 #include "stubs_task_wdt.h"
 #include "stubs_memory_layout.h"
 

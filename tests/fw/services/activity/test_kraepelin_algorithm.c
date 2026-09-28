@@ -23,7 +23,6 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 #include "stubs_pbl_malloc.h"
-#include "stubs_prompt.h"
 #include "stubs_sleep.h"
 
 // Fakes

@@ -4,7 +4,6 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/temperature.h>
-#include "console/prompt.h"
 
 void temperature_init(void) {
 }
@@ -13,7 +12,13 @@ int32_t temperature_read(void) {
   return 0;
 }
 
-void command_temperature_read(void) {
-  char buffer[32];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRId32 " ", temperature_read());
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_temp(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pbl_shell_print(sh, "%" PRId32, temperature_read());
+  return 0;
 }
+
+PBL_SHELL_CMD_REGISTER(temp, NULL, "Read the temperature", prv_cmd_temp);
+#endif

@@ -1,15 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdio.h>
 #include <inttypes.h>
 
 #include "drivers/flash.h"
 #include "drivers/rtc.h"
-#include "console/prompt.h"
 #include "kernel/util/idle.h"
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/soc/nrf/sleep.h"
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+#endif
 
 #include <cmsis_core.h>
 
@@ -83,28 +85,6 @@ bool pbl_soc_tick_enable(void) {
 
 static uint32_t s_last_ticks = 0;
 
-void dump_current_runtime_stats(void) {
-  uint32_t sleep_ticks = s_analytics_sleep_ticks;
-  uint32_t full_sleep_ticks = s_analytics_full_sleep_ticks;
-
-  uint32_t now_ticks = rtc_get_ticks();
-  uint32_t total_ticks = now_ticks - s_last_ticks;
-  uint32_t running_ticks = total_ticks - full_sleep_ticks - sleep_ticks;
-
-  char buf[160];
-  snprintf(buf, sizeof(buf), "Run:     %" PRIu32 " ticks (%" PRIu32 " %%)", running_ticks,
-           (running_ticks * 100) / total_ticks);
-  prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Sleep 0: %" PRIu32 " ticks (%" PRIu32 " %%)", sleep_ticks,
-           (sleep_ticks * 100) / total_ticks);
-  prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Sleep 1: %" PRIu32 " ticks (%" PRIu32 " %%)", full_sleep_ticks,
-           (full_sleep_ticks * 100) / total_ticks);
-  prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Total:   %" PRIu32 " ticks", total_ticks);
-  prompt_send_response(buf);
-}
-
 void pbl_analytics_external_collect_cpu_stats(void) {
   uint32_t full_sleep_ticks = s_analytics_full_sleep_ticks;
   uint32_t sleep_ticks = s_analytics_sleep_ticks;
@@ -133,3 +113,25 @@ void pbl_analytics_external_collect_cpu_stats(void) {
   s_analytics_sleep_ticks = 0;
   s_analytics_full_sleep_ticks = 0;
 }
+
+#ifdef CONFIG_SHELL
+static int prv_cmd_cpustats(const struct pbl_shell *sh, size_t argc, char **argv) {
+  uint32_t sleep_ticks = s_analytics_sleep_ticks;
+  uint32_t full_sleep_ticks = s_analytics_full_sleep_ticks;
+
+  uint32_t now_ticks = rtc_get_ticks();
+  uint32_t total_ticks = now_ticks - s_last_ticks;
+  uint32_t running_ticks = total_ticks - full_sleep_ticks - sleep_ticks;
+
+  pbl_shell_print(sh, "Run:     %" PRIu32 " ticks (%" PRIu32 " %%)", running_ticks,
+                  (running_ticks * 100) / total_ticks);
+  pbl_shell_print(sh, "Sleep 0: %" PRIu32 " ticks (%" PRIu32 " %%)", sleep_ticks,
+                  (sleep_ticks * 100) / total_ticks);
+  pbl_shell_print(sh, "Sleep 1: %" PRIu32 " ticks (%" PRIu32 " %%)", full_sleep_ticks,
+                  (full_sleep_ticks * 100) / total_ticks);
+  pbl_shell_print(sh, "Total:   %" PRIu32 " ticks", total_ticks);
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_sys, cpustats, NULL, "Show CPU sleep statistics", prv_cmd_cpustats, 0, 0);
+#endif

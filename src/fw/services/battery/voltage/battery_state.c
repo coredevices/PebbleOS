@@ -314,17 +314,6 @@ int32_t battery_state_get_temp(void) {
   return 0;
 }
 
-#include "console/prompt.h"
-void command_print_battery_status(void) {
-  char buffer[32];
-  PreciseBatteryChargeState state = prv_get_precise_charge_state(&s_last_battery_state);
-  prompt_send_response_fmt(buffer, 32, "%" PRIu16 " mV", s_last_battery_state.voltage);
-  prompt_send_response_fmt(buffer, 32, "batt_percent: %" PRIu32 "%%",
-                           ratio32_to_percent(state.charge_percent));
-  prompt_send_response_fmt(buffer, 32, "plugged: %s", state.is_plugged ? "YES" : "NO");
-  prompt_send_response_fmt(buffer, 32, "charging: %s", state.is_charging ? "YES" : "NO");
-}
-
 /////////////////
 // Analytics
 
@@ -346,17 +335,38 @@ void pbl_analytics_external_collect_battery(void) {
   s_analytics_last_cpct = battery_soc_cpct;
 }
 
-static void prv_set_forced_charge_state(bool is_charging) {
-  battery_force_charge_enable(is_charging);
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <pbl/shell/shell.h>
 
-  // Trigger an immediate update to the state machine: may trigger an event
-  battery_state_force_update();
+static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) {
+  PreciseBatteryChargeState state = prv_get_precise_charge_state(&s_last_battery_state);
+
+  pbl_shell_print(sh, "%" PRIu16 " mV", s_last_battery_state.voltage);
+  pbl_shell_print(sh, "batt_percent: %" PRIu32 "%%", ratio32_to_percent(state.charge_percent));
+  pbl_shell_print(sh, "plugged: %s", state.is_plugged ? "YES" : "NO");
+  pbl_shell_print(sh, "charging: %s", state.is_charging ? "YES" : "NO");
+  return 0;
 }
 
-void command_battery_charge_option(const char *option) {
-  if (!strcmp("disable", option)) {
-    prv_set_forced_charge_state(false);
-  } else if (!strcmp("enable", option)) {
-    prv_set_forced_charge_state(true);
+static int prv_cmd_chargeopt(const struct pbl_shell *sh, size_t argc, char **argv) {
+  bool is_charging;
+
+  if (!strcmp("disable", argv[1])) {
+    is_charging = false;
+  } else if (!strcmp("enable", argv[1])) {
+    is_charging = true;
+  } else {
+    pbl_shell_error(sh, "invalid option '%s'", argv[1]);
+    return -EINVAL;
   }
+
+  battery_force_charge_enable(is_charging);
+  battery_state_force_update();
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_battery, status, NULL, "Print the battery state", prv_cmd_status, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_battery, chargeopt, NULL, "Force charging <enable|disable>",
+                     prv_cmd_chargeopt, 2, 0);
+#endif

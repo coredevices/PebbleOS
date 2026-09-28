@@ -27,8 +27,5 @@ bool pbl_soc_tick_enable(void) {
   return false;
 }
 
-void dump_current_runtime_stats(void) {
-}
-
 void pbl_analytics_external_collect_cpu_stats(void) {
 }

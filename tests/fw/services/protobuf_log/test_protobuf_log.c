@@ -23,7 +23,6 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_pbl_malloc.h"
-#include "stubs_prompt.h"
 #include "stubs_serial.h"
 
 #include "fake_rtc.h"

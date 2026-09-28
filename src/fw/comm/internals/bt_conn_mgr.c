@@ -17,8 +17,6 @@
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 
-#include <stdlib.h>
-
 //! The Bluetooth Connection Manager is responsible for managing the power
 //! state of the active bluetooth connections. Sub-modules using bluetooth are
 //! expected to notify this module when they are active or expect inbound data
@@ -361,17 +359,31 @@ void bt_conn_mgr_info_deinit(ConnectionMgrInfo **info) {
   *info = NULL;
 }
 
-void command_change_le_mode(char *mode) {
-  // assume we only have one connection for debug
-  GAPLEConnection *conn_hdl = gap_le_connection_any();
-  enum pbl_bt_response_time_state state = atoi(mode);
-
-  conn_mgr_set_ble_conn_response_time(conn_hdl, PBL_BT_CONSUMER_PROMPT, state,
-                                      MAX_PERIOD_RUN_FOREVER);
-}
-
 enum pbl_bt_response_time_state conn_mgr_get_latency_for_le_connection(GAPLEConnection *hdl,
                                                                        uint16_t *secs_to_wait) {
   bt_lock_assert_held(true);
   return prv_determine_latency_for_connection(hdl->conn_mgr_info->requests, secs_to_wait, NULL);
 }
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+#include <errno.h>
+
+static int prv_cmd_le_mode(const struct pbl_shell *sh, size_t argc, char **argv) {
+  unsigned long state;
+
+  if (pbl_shell_strtoul(argv[1], &state) != 0 || state >= PBL_BT_RESPONSE_TIME_NUM) {
+    pbl_shell_error(sh, "invalid mode '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  conn_mgr_set_ble_conn_response_time(gap_le_connection_any(), PBL_BT_CONSUMER_PROMPT,
+                                      (enum pbl_bt_response_time_state)state,
+                                      MAX_PERIOD_RUN_FOREVER);
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, le_mode, NULL, "Set the LE response time <0-2>", prv_cmd_le_mode, 2,
+                     0);
+#endif

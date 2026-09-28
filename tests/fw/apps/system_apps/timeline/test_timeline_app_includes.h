@@ -59,7 +59,6 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_phone_call_util.h"
 #include "stubs_process_manager.h"
-#include "stubs_prompt.h"
 #include "stubs_property_animation.h"
 #include "stubs_regular_timer.h"
 #include "stubs_reminder_db.h"

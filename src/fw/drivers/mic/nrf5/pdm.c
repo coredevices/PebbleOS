@@ -466,23 +466,6 @@ void mic_stop(const MicDevice *this) {
   pbl_mutex_unlock(&state->mutex);
 }
 
-#include "console/prompt.h"
-
-// Console command stubs for Asterix (since we don't have accessory connector)
-// These commands are defined in the console command table but Asterix doesn't need
-// the full accessory-based microphone streaming functionality
-
-void command_mic_start(char *timeout_str, char *sample_size_str, char *sample_rate_str,
-                       char *format_str) {
-  prompt_send_response("Microphone console commands not supported on Asterix");
-  prompt_send_response("Use the standard microphone API instead");
-}
-
-void command_mic_read(void) {
-  prompt_send_response("Microphone read command not supported on Asterix");
-  prompt_send_response("Use the standard microphone API instead");
-}
-
 bool mic_is_running(const MicDevice *this) {
   PBL_ASSERTN(this);
   PBL_ASSERTN(this->state);

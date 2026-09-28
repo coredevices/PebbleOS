@@ -11,6 +11,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#if defined(CONFIG_SHELL) && defined(CONFIG_PROFILER)
+#include <pbl/shell/shell.h>
+#endif
+
 #ifdef CONFIG_SOC_NRF52
 #include <drivers/nrfx_common.h>
 #include <soc/nrfx_coredep.h>
@@ -232,16 +236,30 @@ void profiler_print_stats(void) {
   }
 }
 
-void command_profiler_stop(void) {
-  PROFILER_STOP;
-  PROFILER_PRINT_STATS;
-}
-
-void command_profiler_start(void) {
+#if defined(CONFIG_SHELL) && defined(CONFIG_PROFILER)
+static int prv_cmd_start(const struct pbl_shell *sh, size_t argc, char **argv) {
   PROFILER_INIT;
   PROFILER_START;
+  return 0;
 }
 
-void command_profiler_stats(void) {
+static int prv_cmd_stop(const struct pbl_shell *sh, size_t argc, char **argv) {
+  PROFILER_STOP;
   PROFILER_PRINT_STATS;
+  return 0;
 }
+
+static int prv_cmd_stats(const struct pbl_shell *sh, size_t argc, char **argv) {
+  PROFILER_PRINT_STATS;
+  return 0;
+}
+
+static const struct pbl_shell_cmd sub_profiler[] = {
+  PBL_SHELL_CMD(start, NULL, "Reset and start profiling", prv_cmd_start),
+  PBL_SHELL_CMD(stop, NULL, "Stop profiling and log the stats", prv_cmd_stop),
+  PBL_SHELL_CMD(stats, NULL, "Log the stats", prv_cmd_stats),
+  PBL_SHELL_SUBCMD_SET_END,
+};
+
+PBL_SHELL_CMD_REGISTER(profiler, sub_profiler, "Profiler", NULL);
+#endif

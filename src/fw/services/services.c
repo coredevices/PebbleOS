@@ -4,16 +4,10 @@
 #include "pbl/services/services.h"
 #include "pbl/services/runlevel.h"
 
-#include <stdlib.h>
-#include <string.h>
-
-#include "console/prompt.h"
 #include "pbl/services/services_common.h"
 #include "pbl/services/services_normal.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/size.h"
-#include "pbl/util/string.h"
 
 void services_early_init(void) {
 #ifndef CONFIG_RECOVERY_FW
@@ -36,44 +30,4 @@ void services_set_runlevel(RunLevel runlevel) {
 #ifndef CONFIG_RECOVERY_FW
   services_normal_set_runlevel(runlevel);
 #endif
-}
-
-static const char *s_runlevel_debug_names[] = {
-#define RUNLEVEL(number, name) [number] = #name,
-#include "runlevel.def"
-#undef RUNLEVEL
-};
-
-void prv_list_runlevels(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_runlevel_debug_names); ++i) {
-    char response[80];
-    itoa_int(i, response, 10);
-    strcat(response, " - ");
-    strcat(response, s_runlevel_debug_names[i]);
-    prompt_send_response(response);
-  }
-}
-
-void command_set_runlevel(char *arg) {
-  if (strcmp(arg, "list") == 0) {
-    prv_list_runlevels();
-    return;
-  }
-
-  int runlevel = atoi(arg);
-  if (runlevel < 0 || runlevel >= RunLevel_COUNT) {
-    prompt_send_response("Unknown runlevel");
-    return;
-  } else if (runlevel == 0 && arg[0] != '0') {
-    prompt_send_response("Invalid runlevel number. Choices:");
-    prv_list_runlevels();
-    return;
-  }
-
-  char response[80];
-  strcpy(response, "Switching to runlevel ");
-  strcat(response, s_runlevel_debug_names[runlevel]);
-  prompt_send_response(response);
-
-  services_set_runlevel(runlevel);
 }

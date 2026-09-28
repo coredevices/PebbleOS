@@ -3,7 +3,6 @@
 
 #include "pbl/services/clock.h"
 
-#include "console/prompt.h"
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "pbl/services/comm_session/session.h"
@@ -664,30 +663,6 @@ DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
   return t;
 }
 
-void command_timezone_clear(void) {
-  rtc_timezone_clear();
-}
-
-void command_get_time(void) {
-  char buffer[80];
-  char time_buffer[26];
-  prompt_send_response_fmt(buffer, 80, "Time is now <%s>", rtc_get_time_string(time_buffer));
-}
-
-void command_set_time(const char *arg) {
-  time_t t = atoi(arg);
-  if (t == 0) {
-    prompt_send_response("Invalid length");
-    return;
-  }
-
-  prv_update_time_info_and_generate_event(&t, NULL);
-
-  char buffer[80];
-  char time_buffer[26];
-  prompt_send_response_fmt(buffer, 80, "Time is now <%s>", rtc_get_time_string(time_buffer));
-}
-
 void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
   if (!region_name) {
     return;
@@ -1058,3 +1033,33 @@ void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {
   *hour = new_minutes / MINUTES_PER_HOUR;
   *minute = new_minutes % MINUTES_PER_HOUR;
 }
+
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_set(const struct pbl_shell *sh, size_t argc, char **argv) {
+  long val;
+  if (pbl_shell_strtol(argv[1], &val) != 0 || val == 0) {
+    pbl_shell_error(sh, "invalid timestamp '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  time_t t = val;
+  prv_update_time_info_and_generate_event(&t, NULL);
+
+  char time_buffer[26];
+  pbl_shell_print(sh, "Time is now <%s>", rtc_get_time_string(time_buffer));
+  return 0;
+}
+
+static int prv_cmd_tz_clear(const struct pbl_shell *sh, size_t argc, char **argv) {
+  rtc_timezone_clear();
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_SET_CREATE(sub_time);
+PBL_SHELL_CMD_REGISTER(time, sub_time, "Time and timezone", NULL);
+PBL_SHELL_SUBCMD_ADD(sub_time, set, NULL, "Set the time <unix_timestamp>", prv_cmd_set, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_time, tz_clear, NULL, "Clear the timezone", prv_cmd_tz_clear, 0, 0);
+#endif

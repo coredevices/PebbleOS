@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "console/prompt.h"
 #include <pbl/drivers/mcu.h>
 #include "mfg/mfg_info.h"
 #include "mfg/mfg_serials.h"
@@ -26,6 +25,10 @@
 #include <pbl/bluetooth/types.h>
 
 #include <string.h>
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+#endif
 
 #define VERSION_REQUEST  0x00
 #define VERSION_RESPONSE 0x01
@@ -169,9 +172,10 @@ void system_version_protocol_msg_callback(CommSession *session, const uint8_t *d
   }
 }
 
-void command_version_info(void) {
+#ifdef CONFIG_SHELL
+static int prv_cmd_version(const struct pbl_shell *sh, size_t argc, char **argv) {
 #ifdef CONFIG_MFG
-  prompt_send_response("MANUFACTURING FW");
+  pbl_shell_print(sh, "MANUFACTURING FW");
 #endif
 
   bool (*fun_ptr[2])(
@@ -179,32 +183,30 @@ void command_version_info(void) {
   const char *label[2] = {"Running", "Recovery"};
 
   FirmwareMetadata fw_metadata;
-  char buffer[128];
   for (int i = 0; i < 2; ++i) {
     bool success = fun_ptr[i](&fw_metadata);
     if (success) {
-      prompt_send_response_fmt(
-          buffer, sizeof(buffer),
-          "%s FW:\n  ts:%" PRIu32 "\n  tag:%s\n  short:%s\n  recov:%u\n  platform:%u", label[i],
-          fw_metadata.version_timestamp, fw_metadata.version_tag, fw_metadata.version_short,
-          fw_metadata.is_recovery_firmware, fw_metadata.hw_platform);
+      pbl_shell_print(sh, "%s FW:", label[i]);
+      pbl_shell_print(sh, "  ts:%" PRIu32, fw_metadata.version_timestamp);
+      pbl_shell_print(sh, "  tag:%s", fw_metadata.version_tag);
+      pbl_shell_print(sh, "  short:%s", fw_metadata.version_short);
+      pbl_shell_print(sh, "  recov:%u", fw_metadata.is_recovery_firmware);
+      pbl_shell_print(sh, "  platform:%u", fw_metadata.hw_platform);
 
       if ((i == 0) && fw_metadata.is_dual_slot) {
-        prompt_send_response_fmt(buffer, sizeof(buffer), "  dual slot");
+        pbl_shell_print(sh, "  dual slot");
         if (!fw_metadata.is_recovery_firmware) {
-          prompt_send_response_fmt(buffer, sizeof(buffer), "  current slot:%s",
-                                   fw_metadata.is_slot_0 ? "0" : "1");
+          pbl_shell_print(sh, "  current slot:%s", fw_metadata.is_slot_0 ? "0" : "1");
         }
       }
     } else {
-      prompt_send_response_fmt(buffer, sizeof(buffer), "%s FW: no version info or lookup failed",
-                               label[i]);
+      pbl_shell_print(sh, "%s FW: no version info or lookup failed", label[i]);
     }
   }
 
   char build_id_string[64];
   version_copy_current_build_id_hex_string(build_id_string, sizeof(build_id_string));
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Build Id:%s", build_id_string);
+  pbl_shell_print(sh, "Build Id:%s", build_id_string);
 
   char serial_number[MFG_SERIAL_NUMBER_SIZE + 1];
   mfg_info_get_serialnumber(serial_number, sizeof(serial_number));
@@ -216,18 +218,23 @@ void command_version_info(void) {
   size_t mcu_serial_size = sizeof(mcu_serial);
   StatusCode err = mcu_get_serial(mcu_serial, &mcu_serial_size);
   if (err != S_SUCCESS) {
-    prompt_send_response_fmt(buffer, sizeof(buffer), "MCU Serial: N/A (%d)", err);
+    pbl_shell_print(sh, "MCU Serial: N/A (%d)", err);
   } else {
     char serial_str[sizeof(mcu_serial) * 2 + 1];
     byte_stream_to_hex_string(serial_str, sizeof(serial_str), mcu_serial, mcu_serial_size, false);
-    prompt_send_response_fmt(buffer, sizeof(buffer), "MCU Serial: %s", serial_str);
+    pbl_shell_print(sh, "MCU Serial: %s", serial_str);
   }
 
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Boot:0x%08" PRIx32 "\nHW:%s\nSN:%s",
-                           boot_version_read(), hw_version, serial_number);
+  pbl_shell_print(sh, "Boot:0x%08" PRIx32, boot_version_read());
+  pbl_shell_print(sh, "HW:%s", hw_version);
+  pbl_shell_print(sh, "SN:%s", serial_number);
 
   ResourceVersion system_resources_version = resource_get_system_version();
-  prompt_send_response_fmt(buffer, sizeof(buffer),
-                           "System Resources:\n  CRC:0x%" PRIx32 "\n  Valid:%s",
-                           system_resources_version.crc, bool_to_str(system_resource_is_valid()));
+  pbl_shell_print(sh, "System Resources:");
+  pbl_shell_print(sh, "  CRC:0x%" PRIx32, system_resources_version.crc);
+  pbl_shell_print(sh, "  Valid:%s", bool_to_str(system_resource_is_valid()));
+  return 0;
 }
+
+PBL_SHELL_CMD_REGISTER(version, NULL, "Show firmware and hardware versions", prv_cmd_version);
+#endif

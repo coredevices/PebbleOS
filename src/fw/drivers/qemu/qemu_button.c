@@ -6,11 +6,9 @@
 #include <pbl/drivers/debounced_button.h>
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include "kernel/events.h"
 
 #include <cmsis_core.h>
-#include <stdlib.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
@@ -99,33 +97,55 @@ void button_set_rotated(bool rotated) {
   (void)rotated;
 }
 
-void command_button_read(const char *button_id_str) {
-  int button = atoi(button_id_str);
-  if (button < 0 || button >= NUM_BUTTONS) {
-    prompt_send_response("Invalid button");
-    return;
-  }
-  if (button_is_pressed(button)) {
-    prompt_send_response("down");
-  } else {
-    prompt_send_response("up");
-  }
-}
-
 void debounced_button_init(void) {
   // QEMU handles debounce in the GPIO device itself
   button_init();
 }
 
-void command_put_raw_button_event(const char *button_index, const char *is_button_down_event) {
-  int button = atoi(button_index);
-  int is_down = atoi(is_button_down_event);
-  if (button < 0 || button >= NUM_BUTTONS) {
-    return;
+#ifdef CONFIG_SHELL
+#include <errno.h>
+
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_button_raw(const struct pbl_shell *sh, size_t argc, char **argv) {
+  long button;
+  long is_down;
+
+  if (pbl_shell_strtol(argv[1], &button) != 0 || button < 0 || button >= NUM_BUTTONS) {
+    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
+    return -EINVAL;
   }
+
+  if (pbl_shell_strtol(argv[2], &is_down) != 0 || (is_down != 0 && is_down != 1)) {
+    pbl_shell_error(sh, "invalid state '%s'", argv[2]);
+    return -EINVAL;
+  }
+
   PebbleEvent e = {
     .type = is_down ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
-    .button.button_id = button,
+    .button.button_id = (ButtonId)button,
   };
   event_put(&e);
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_button, raw, NULL, "Inject a raw event <id> <0=up|1=down>",
+                     prv_cmd_button_raw, 3, 0);
+
+#ifdef CONFIG_RECOVERY_FW
+static int prv_cmd_button_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  long button;
+
+  if (pbl_shell_strtol(argv[1], &button) != 0 || button < 0 || button >= NUM_BUTTONS) {
+    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  pbl_shell_print(sh, "%s", button_is_pressed((ButtonId)button) ? "down" : "up");
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_button, read, NULL, "Read the state of button <id>", prv_cmd_button_read,
+                     2, 0);
+#endif
+#endif

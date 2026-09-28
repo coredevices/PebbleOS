@@ -43,6 +43,11 @@ typedef enum MfgSerialsResult {
 MfgSerialsResult mfg_write_serial_number(const char *serial, size_t serial_size,
                                          uint8_t *out_index);
 
+MfgSerialsResult mfg_write_pcba_serial_number(const char *serial, size_t serial_size,
+                                              uint8_t *out_index);
+
+MfgSerialsResult mfg_write_hw_version(const char *hwver, size_t hwver_size, uint8_t *out_index);
+
 #if defined(CONFIG_IS_BIGBOARD)
 //! Writes a fake serial number based on the unique identifier of the MCU
 void mfg_write_bigboard_serial_number(void);

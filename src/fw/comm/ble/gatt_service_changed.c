@@ -223,19 +223,39 @@ void pbl_bt_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *con
   bt_unlock();
 }
 
-//////////////////////////////////
-// Prompt commands
-//////////////////////////////////
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
 
-void command_ble_send_service_changed_indication(void) {
+#include <errno.h>
+
+static int prv_cmd_svc_changed(const struct pbl_shell *sh, size_t argc, char **argv) {
   prv_send_service_changed_indication(gap_le_connection_any());
+  return 0;
 }
 
-void command_ble_rediscover(void) {
-  // assume we only have one connection for debug
+PBL_SHELL_SUBCMD_ADD(sub_bt, svc_changed, NULL, "Send a Service Changed indication",
+                     prv_cmd_svc_changed, 0, 0);
+
+static int prv_cmd_rediscover(const struct pbl_shell *sh, size_t argc, char **argv) {
+  struct pbl_bt_device_internal *device = kernel_malloc_check(sizeof(*device));
+
+  bt_lock();
   GAPLEConnection *conn_hdl = gap_le_connection_any();
-  struct pbl_bt_device_internal *device =
-      (struct pbl_bt_device_internal *)kernel_malloc_check(sizeof(struct pbl_bt_device_internal));
-  *device = conn_hdl->device;
+  if (conn_hdl) {
+    *device = conn_hdl->device;
+  }
+  bt_unlock();
+
+  if (!conn_hdl) {
+    kernel_free(device);
+    pbl_shell_error(sh, "not connected");
+    return -ENOTCONN;
+  }
+
   system_task_add_callback(prv_rediscover_kernelbg_cb, device);
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, rediscover, NULL, "Rediscover the remote GATT database",
+                     prv_cmd_rediscover, 0, 0);
+#endif

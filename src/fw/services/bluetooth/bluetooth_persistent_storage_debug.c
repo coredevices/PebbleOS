@@ -1,91 +1,73 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RELEASE)
+
 #include "pbl/services/bluetooth/bluetooth_persistent_storage_debug.h"
 
-#include "console/prompt.h"
 #include "pbl/services/shared_prf_storage/shared_prf_storage_debug.h"
-#include "system/hexdump.h"
-#include <pbl/logging/logging.h>
 #include "pbl/util/string.h"
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/sm_util.h>
-
-//
-// Strictly for debug. Pretty-prints most of the pairing information saved
-// in the gap bonding db and shared PRF.
-//
+#include <pbl/shell/shell.h>
 
 void bluetooth_persistent_storage_debug_dump_ble_pairing_info(
-    char *display_buf, const struct pbl_bt_sm_pairing_info *info) {
-  prompt_send_response(" Local Encryption Info: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->local_encryption_info,
-                       sizeof(info->local_encryption_info));
+    const struct pbl_shell *sh, const struct pbl_bt_sm_pairing_info *info) {
+  pbl_shell_print(sh, " Local Encryption Info:");
+  pbl_shell_hexdump(sh, &info->local_encryption_info, sizeof(info->local_encryption_info));
 
-  prompt_send_response(" Remote Encryption Info: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->remote_encryption_info,
-                       sizeof(info->remote_encryption_info));
+  pbl_shell_print(sh, " Remote Encryption Info:");
+  pbl_shell_hexdump(sh, &info->remote_encryption_info, sizeof(info->remote_encryption_info));
 
-  prompt_send_response(" struct pbl_bt_sm_key: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->irk, sizeof(info->irk));
+  pbl_shell_print(sh, " IRK:");
+  pbl_shell_hexdump(sh, &info->irk, sizeof(info->irk));
 
-  prompt_send_response(" struct pbl_bt_device_internal: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->identity,
-                       sizeof(struct pbl_bt_device_internal));
+  pbl_shell_print(sh, " Identity:");
+  pbl_shell_hexdump(sh, &info->identity, sizeof(info->identity));
 
-  prompt_send_response(" struct pbl_bt_sm_key: ");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)&info->csrk, sizeof(struct pbl_bt_sm_key));
+  pbl_shell_print(sh, " CSRK:");
+  pbl_shell_hexdump(sh, &info->csrk, sizeof(info->csrk));
 
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN,
-                           " local encryption valid:  %s\n"
-                           " remote encryption valid: %s\n"
-                           " remote identity valid:   %s\n"
-                           " remote signature valid:  %s\n",
-                           bool_to_str(info->is_local_encryption_info_valid),
-                           bool_to_str(info->is_remote_encryption_info_valid),
-                           bool_to_str(info->is_remote_encryption_info_valid),
-                           bool_to_str(info->is_remote_signing_info_valid));
+  pbl_shell_print(sh, " local encryption valid:  %s",
+                  bool_to_str(info->is_local_encryption_info_valid));
+  pbl_shell_print(sh, " remote encryption valid: %s",
+                  bool_to_str(info->is_remote_encryption_info_valid));
+  pbl_shell_print(sh, " remote identity valid:   %s",
+                  bool_to_str(info->is_remote_identity_info_valid));
+  pbl_shell_print(sh, " remote signature valid:  %s",
+                  bool_to_str(info->is_remote_signing_info_valid));
 }
 
-void bluetooth_persistent_storage_debug_dump_classic_pairing_info(char *display_buf,
-                                                                  struct pbl_bt_addr *addr,
-                                                                  char *device_name,
-                                                                  struct pbl_bt_sm_key *link_key,
-                                                                  uint8_t platform_bits) {
-  prompt_send_response(" Link Key:");
-  PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)link_key, sizeof(struct pbl_bt_sm_key));
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " BT ADDR: " PBL_BT_BD_ADDR_FMT,
-                           PBL_BT_ADDR_XPLODE(*addr));
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Name: %s", device_name);
-  prompt_send_response_fmt(display_buf, DISPLAY_BUF_LEN, " Platform Bits: 0x%x",
-                           (int)platform_bits);
-}
+void bluetooth_persistent_storage_debug_dump_root_keys(const struct pbl_shell *sh,
+                                                       const struct pbl_bt_sm_key *irk,
+                                                       const struct pbl_bt_sm_key *erk) {
+  pbl_shell_print(sh, "Root keys:");
 
-void bluetooth_persistent_storage_debug_dump_root_keys(struct pbl_bt_sm_key *irk,
-                                                       struct pbl_bt_sm_key *erk) {
-  prompt_send_response("Root Key hexdumps:");
-
-  prompt_send_response(" IRK:");
+  pbl_shell_print(sh, " IRK:");
   if (irk) {
-    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)irk, sizeof(struct pbl_bt_sm_key));
+    pbl_shell_hexdump(sh, irk, sizeof(*irk));
   } else {
-    prompt_send_response("  None");
-  };
+    pbl_shell_print(sh, "  None");
+  }
 
-  prompt_send_response(" ERK:");
+  pbl_shell_print(sh, " ERK:");
   if (erk) {
-    PBL_HEXDUMP_D_PROMPT(LOG_LEVEL_DEBUG, (uint8_t *)erk, sizeof(struct pbl_bt_sm_key));
+    pbl_shell_hexdump(sh, erk, sizeof(*erk));
   } else {
-    prompt_send_response("  None");
-  };
+    pbl_shell_print(sh, "  None");
+  }
 }
 
-extern void bluetooth_persistent_storage_dump_contents(void);
-void command_gapdb_dump(void) {
-#if !defined(CONFIG_RECOVERY_FW)
-  bluetooth_persistent_storage_dump_contents();
+static int prv_cmd_gapdb(const struct pbl_shell *sh, size_t argc, char **argv) {
+#ifndef CONFIG_RECOVERY_FW
+  bluetooth_persistent_storage_dump_contents(sh);
 #endif
-  shared_prf_storage_dump_contents();
+  shared_prf_storage_dump_contents(sh);
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, gapdb, NULL, "Dump the bonding database", prv_cmd_gapdb, 0, 0);
+
+#endif

@@ -5,7 +5,6 @@ set(sources
   ble_bas.c
   bluetooth_ctl.c
   bluetooth_persistent_storage_debug.c
-  bluetooth_prompt.c
   bonding.c
   dis.c
   local_addr.c
@@ -24,3 +23,4 @@ else()
 endif()
 pbl_library()
 pbl_library_sources(${sources})
+pbl_library_sources_ifdef(CONFIG_SHELL shell.c)

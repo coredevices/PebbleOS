@@ -17,7 +17,6 @@
 ///////////////////////////////////////////////////////////
 #include "stubs_common.h"
 #include "stubs_blob_db_sync_util.h"
-#include "stubs_prompt.h"
 #include "stubs_sleep.h"
 #include "stubs_nexmo.h"
 #include "stubs_codepoint.h"

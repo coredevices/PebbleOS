@@ -4,7 +4,6 @@
 #include <pbl/drivers/backlight.h>
 
 #include "board/board.h"
-#include "console/prompt.h"
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 #include <pbl/drivers/backlight.h>
 #endif

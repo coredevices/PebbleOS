@@ -24,6 +24,10 @@
 #include "pbl/util/math.h"
 
 #include <string.h>
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+#endif
 #include "pbl/util/testing.h"
 
 KERNEL_READONLY_DATA static bool s_paused = false;
@@ -1780,7 +1784,17 @@ Animation *animation_clone(Animation *animation_h) {
   return prv_animation_clone(state, animation);
 }
 
-// ------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------
+void animation_private_pause(void) {
+  s_paused = true;
+}
+
+// -------------------------------------------------------------------------------------------
+void animation_private_resume(void) {
+  s_paused = false;
+}
+
+#ifdef CONFIG_SHELL
 static void prv_dump_animations(ListNode *node, bool is_scheduled, char *buffer, int buffer_size) {
   while (node) {
     AnimationPrivate *animation = (AnimationPrivate *)node;
@@ -1815,7 +1829,6 @@ static void prv_dump_legacy_animations(ListNode *head, char *buffer, int buffer_
   }
 }
 
-// -------------------------------------------------------------------------------------------
 static void prv_dump_scheduler(char *buffer, int buffer_size, AnimationState *state) {
   pbl_irq_lock();
   if (animation_private_using_legacy_2(state)) {
@@ -1828,18 +1841,7 @@ static void prv_dump_scheduler(char *buffer, int buffer_size, AnimationState *st
   pbl_irq_unlock();
 }
 
-// -------------------------------------------------------------------------------------------
-void animation_private_pause(void) {
-  s_paused = true;
-}
-
-// -------------------------------------------------------------------------------------------
-void animation_private_resume(void) {
-  s_paused = false;
-}
-
-// -------------------------------------------------------------------------------------------
-void command_animations_info(void) {
+static int prv_cmd_anim_info(const struct pbl_shell *sh, size_t argc, char **argv) {
   char buffer[128];
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "Now: %" PRIu32, prv_get_ms_since_system_start());
 
@@ -1848,14 +1850,25 @@ void command_animations_info(void) {
 
   dbgserial_putstr_fmt(buffer, sizeof(buffer), "App Animations:");
   prv_dump_scheduler(buffer, sizeof(buffer), app_state_get_animation_state());
+  return 0;
 }
 
-// -------------------------------------------------------------------------------------------
-void command_pause_animations(void) {
+static int prv_cmd_anim_pause(const struct pbl_shell *sh, size_t argc, char **argv) {
   animation_private_pause();
+  return 0;
 }
 
-// -------------------------------------------------------------------------------------------
-void command_resume_animations(void) {
+static int prv_cmd_anim_resume(const struct pbl_shell *sh, size_t argc, char **argv) {
   animation_private_resume();
+  return 0;
 }
+
+static const struct pbl_shell_cmd sub_ui_anim[] = {
+  PBL_SHELL_CMD(info, NULL, "Dump the scheduled animations", prv_cmd_anim_info),
+  PBL_SHELL_CMD(pause, NULL, "Pause all animations", prv_cmd_anim_pause),
+  PBL_SHELL_CMD(resume, NULL, "Resume all animations", prv_cmd_anim_resume),
+  PBL_SHELL_SUBCMD_SET_END,
+};
+
+PBL_SHELL_SUBCMD_ADD(sub_ui, anim, sub_ui_anim, "Animations", NULL, 0, 0);
+#endif

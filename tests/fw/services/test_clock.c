@@ -33,7 +33,6 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_pbl_malloc.h"
-#include "stubs_prompt.h"
 #include "stubs_regular_timer.h"
 #include "stubs_serial.h"
 #include "stubs_session.h"

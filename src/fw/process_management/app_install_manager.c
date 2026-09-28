@@ -10,7 +10,6 @@
 
 #include "applib/event_service_client.h"
 #include "apps/system_app_registry.h"
-#include "console/prompt.h"
 #include <pbl/task_wdt/task_wdt.h>
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"

@@ -8,3 +8,7 @@
 void kernel_heap_init(void);
 
 Heap *kernel_heap_get(void);
+
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
+void kernel_heap_dump_instrumentation(void);
+#endif

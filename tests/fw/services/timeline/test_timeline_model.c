@@ -45,7 +45,6 @@ static TimezoneInfo tz = {
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
 #include "stubs_pebble_tasks.h"
-#include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_regular_timer.h"
 #include "stubs_resources.h"

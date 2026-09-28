@@ -9,7 +9,6 @@
 #include "applib/ui/dialogs/confirmation_dialog.h"
 #include "applib/ui/window.h"
 #include "apps/prf/mfg_test_result.h"
-#include "console/prompt.h"
 #include "kernel/event_loop.h"
 #include "kernel/pbl_malloc.h"
 #include "mfg/mfg_mode/mfg_factory_mode.h"
@@ -186,14 +185,6 @@ static void prv_button_click_handler(ClickRecognizerRef recognizer, void *data) 
   layer_mark_dirty(&app_data->window.layer);
 }
 
-static void prv_change_pattern(void *data) {
-  AppData *app_data = app_state_get_user_data();
-
-  app_data->test_pattern = (TestPattern)data;
-
-  layer_mark_dirty(&app_data->window.layer);
-}
-
 static void prv_config_provider(void *data) {
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_button_click_handler);
 }
@@ -233,8 +224,17 @@ const PebbleProcessMd *mfg_display_app_get_info(void) {
   return (const PebbleProcessMd *)&s_app_info;
 }
 
-// Prompt Commands
-///////////////////////////////////////////////////////////////////////////////
+#if defined(CONFIG_SHELL) && defined(CONFIG_MFG)
+#include <errno.h>
+#include <pbl/shell/shell.h>
+
+static void prv_change_pattern(void *data) {
+  AppData *app_data = app_state_get_user_data();
+
+  app_data->test_pattern = (TestPattern)data;
+
+  layer_mark_dirty(&app_data->window.layer);
+}
 
 static void prv_launch_app_cb(void *data) {
   if (app_manager_get_current_app_md() == mfg_display_app_get_info()) {
@@ -247,7 +247,7 @@ static void prv_launch_app_cb(void *data) {
   }
 }
 
-void command_display_set(const char *color) {
+static int prv_cmd_display(const struct pbl_shell *sh, size_t argc, char **argv) {
   const char *const ARGS[] = {
     [TestPattern_Crosshair] = "crosshair",
     [TestPattern_Black] = "black",
@@ -262,19 +262,22 @@ void command_display_set(const char *color) {
   };
 
   for (unsigned int i = 0; i < ARRAY_LENGTH(ARGS); ++i) {
-    if (!strcmp(color, ARGS[i])) {
-      // Do this first because it launches the mfg menu using a callback, as if we did this in the
-      // callback we send below to launch the display app it would end up launching the menu on
-      // top of the display app.
+    if (!strcmp(argv[1], ARGS[i])) {
+      // Enter mfg mode first: its menu launches from a callback and would cover the display app.
       if (!mfg_is_mfg_mode()) {
         mfg_enter_mfg_mode_and_launch_app();
       }
 
       launcher_task_add_callback(prv_launch_app_cb, (void *)i);
-      prompt_send_response("OK");
-      return;
+      pbl_shell_print(sh, "OK");
+      return 0;
     }
   }
 
-  prompt_send_response("Invalid command");
+  pbl_shell_error(sh, "invalid pattern '%s'", argv[1]);
+  return -EINVAL;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_mfg, display, NULL, "Show a test pattern <pattern>", prv_cmd_display, 2,
+                     0);
+#endif

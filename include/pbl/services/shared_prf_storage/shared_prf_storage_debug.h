@@ -3,4 +3,6 @@
 
 #pragma once
 
-void shared_prf_storage_dump_contents(void);
+struct pbl_shell;
+
+void shared_prf_storage_dump_contents(const struct pbl_shell *sh);

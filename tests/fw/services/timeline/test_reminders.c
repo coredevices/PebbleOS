@@ -54,7 +54,6 @@ void event_put(PebbleEvent *event) {
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
 #include "stubs_pin_db.h"
-#include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_sleep.h"
 #include "stubs_task_wdt.h"

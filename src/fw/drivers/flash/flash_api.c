@@ -514,8 +514,14 @@ status_t flash_lock_security_register(uint32_t addr) {
 }
 #endif // CONFIG_RECOVERY_FW
 
-#include "console/prompt.h"
-void command_flash_unprotect(void) {
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_flash_unprotect(const struct pbl_shell *sh, size_t argc, char **argv) {
   flash_impl_unprotect();
-  prompt_send_response("OK");
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_flash, unprotect, NULL, "Remove the flash write protection",
+                     prv_cmd_flash_unprotect, 0, 0);
+#endif

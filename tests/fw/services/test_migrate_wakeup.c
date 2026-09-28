@@ -34,7 +34,6 @@
 #include "stubs_mutex.h"
 #include "stubs_hexdump.h"
 #include "stubs_pebble_process_md.h"
-#include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_task_wdt.h"
 #include "stubs_compiled_with_legacy2_sdk.h"

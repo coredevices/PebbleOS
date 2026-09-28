@@ -5,6 +5,7 @@
 
 #include "system/reboot_reason.h"
 #include "kernel/fault_handling.h"
+#include "kernel/kernel_heap.h"
 
 #include "kernel/pebble_tasks.h"
 #include "syscall/syscall.h"
@@ -136,8 +137,6 @@ void assert_failed(uint8_t *file, uint32_t line) {
                         "STM32 peripheral library tripped an assert");
 }
 
-extern void command_dump_malloc_kernel(void);
-
 PBL_NORETURN void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
   unsigned int used = 0, free_bytes = 0, max_free = 0;
   if (heap_ptr) {
@@ -147,7 +146,7 @@ PBL_NORETURN void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
                  bytes, saved_lr, used, free_bytes, max_free);
 
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
-  command_dump_malloc_kernel();
+  kernel_heap_dump_instrumentation();
 #endif
 
   trigger_oom_fault(bytes, saved_lr, heap_ptr);

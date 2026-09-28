@@ -2,10 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
-#include <stdio.h>
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include "drivers/flash.h"
 #include "drivers/rtc.h"
 #include "drivers/sf32lb52/rc10k.h"
@@ -13,6 +11,10 @@
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "pbl/util/math.h"
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+#endif
 
 #include <bf0_hal.h>
 
@@ -334,42 +336,6 @@ void SysTick_Handler(void) {
   // with XIP, and can easily span multiple ticks)
 }
 
-void dump_current_runtime_stats(void) {
-  uint32_t wfi_ticks = s_analytics_wfi_ticks;
-  uint32_t deepwfi_ticks = s_analytics_deepwfi_ticks;
-  uint32_t deepsleep_ticks = s_analytics_deepsleep_ticks;
-
-  RtcTicks now_ticks = rtc_get_ticks();
-  uint32_t total_ticks = (uint32_t)(now_ticks - s_last_ticks);
-  uint32_t running_ticks = total_ticks - wfi_ticks - deepwfi_ticks - deepsleep_ticks;
-
-  char buf[160];
-  snprintf(buf, sizeof(buf), "Run:       %" PRIu32 " ticks (%" PRIu32 " %%)", running_ticks,
-           (running_ticks * 100) / total_ticks);
-  prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "WFI:       %" PRIu32 " ticks (%" PRIu32 " %%)", wfi_ticks,
-           (wfi_ticks * 100) / total_ticks);
-  prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Deep WFI:  %" PRIu32 " ticks (%" PRIu32 " %%)", deepwfi_ticks,
-           (deepwfi_ticks * 100) / total_ticks);
-  prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Deepsleep: %" PRIu32 " ticks (%" PRIu32 " %%)", deepsleep_ticks,
-           (deepsleep_ticks * 100) / total_ticks);
-  prompt_send_response(buf);
-  snprintf(buf, sizeof(buf), "Tot:       %" PRIu32 " ticks", total_ticks);
-  prompt_send_response(buf);
-}
-
-void command_force_wfi(const char *arg) {
-  if (arg[0] == '1') {
-    s_force_wfi = true;
-    prompt_send_response("WFI forced ON (deep WFI and deep sleep disabled)");
-  } else {
-    s_force_wfi = false;
-    prompt_send_response("WFI forced OFF (deep WFI and deep sleep allowed)");
-  }
-}
-
 void pbl_analytics_external_collect_cpu_stats(void) {
   uint32_t wfi_ticks = s_analytics_wfi_ticks;
   uint32_t deepwfi_ticks = s_analytics_deepwfi_ticks;
@@ -405,3 +371,40 @@ void pbl_analytics_external_collect_cpu_stats(void) {
   s_analytics_deepsleep_ticks = 0;
   s_analytics_ipc_not_idle_count = 0;
 }
+
+#ifdef CONFIG_SHELL
+static int prv_cmd_cpustats(const struct pbl_shell *sh, size_t argc, char **argv) {
+  uint32_t wfi_ticks = s_analytics_wfi_ticks;
+  uint32_t deepwfi_ticks = s_analytics_deepwfi_ticks;
+  uint32_t deepsleep_ticks = s_analytics_deepsleep_ticks;
+
+  RtcTicks now_ticks = rtc_get_ticks();
+  uint32_t total_ticks = (uint32_t)(now_ticks - s_last_ticks);
+  uint32_t running_ticks = total_ticks - wfi_ticks - deepwfi_ticks - deepsleep_ticks;
+
+  pbl_shell_print(sh, "Run:       %" PRIu32 " ticks (%" PRIu32 " %%)", running_ticks,
+                  (running_ticks * 100) / total_ticks);
+  pbl_shell_print(sh, "WFI:       %" PRIu32 " ticks (%" PRIu32 " %%)", wfi_ticks,
+                  (wfi_ticks * 100) / total_ticks);
+  pbl_shell_print(sh, "Deep WFI:  %" PRIu32 " ticks (%" PRIu32 " %%)", deepwfi_ticks,
+                  (deepwfi_ticks * 100) / total_ticks);
+  pbl_shell_print(sh, "Deepsleep: %" PRIu32 " ticks (%" PRIu32 " %%)", deepsleep_ticks,
+                  (deepsleep_ticks * 100) / total_ticks);
+  pbl_shell_print(sh, "Tot:       %" PRIu32 " ticks", total_ticks);
+  return 0;
+}
+
+static int prv_cmd_wfi(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (argv[1][0] == '1') {
+    s_force_wfi = true;
+    pbl_shell_print(sh, "WFI forced ON (deep WFI and deep sleep disabled)");
+  } else {
+    s_force_wfi = false;
+    pbl_shell_print(sh, "WFI forced OFF (deep WFI and deep sleep allowed)");
+  }
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_sys, cpustats, NULL, "Show CPU sleep statistics", prv_cmd_cpustats, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys, wfi, NULL, "Force plain WFI when idle <0|1>", prv_cmd_wfi, 2, 0);
+#endif

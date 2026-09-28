@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(sources
-  dls_command.c
   dls_endpoint.c
   dls_list.c
   dls_main.c
@@ -11,3 +10,4 @@ set(sources
 )
 pbl_library()
 pbl_library_sources(${sources})
+pbl_library_sources_ifdef(CONFIG_SHELL shell.c)

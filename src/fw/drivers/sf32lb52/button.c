@@ -4,7 +4,6 @@
 #include <pbl/drivers/button.h>
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "system/passert.h"
@@ -48,17 +47,23 @@ void button_init(void) {
   }
 }
 
-void command_button_read(const char *button_id_str) {
-  int button = atoi(button_id_str);
+#if defined(CONFIG_SHELL) && defined(CONFIG_RECOVERY_FW)
+#include <errno.h>
 
-  if (button < 0 || button >= NUM_BUTTONS) {
-    prompt_send_response("Invalid button");
-    return;
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_button_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  long button;
+
+  if (pbl_shell_strtol(argv[1], &button) != 0 || button < 0 || button >= NUM_BUTTONS) {
+    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
+    return -EINVAL;
   }
 
-  if (button_is_pressed(button)) {
-    prompt_send_response("down");
-  } else {
-    prompt_send_response("up");
-  }
+  pbl_shell_print(sh, "%s", button_is_pressed((ButtonId)button) ? "down" : "up");
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_button, read, NULL, "Read the state of button <id>", prv_cmd_button_read,
+                     2, 0);
+#endif

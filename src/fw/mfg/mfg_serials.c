@@ -5,7 +5,6 @@
 
 #include "mfg_serials.h"
 
-#include "console/prompt.h"
 #include "pbl/util/size.h"
 
 static const uint8_t OTP_SERIAL_SLOT_INDICES[] = {
@@ -18,9 +17,6 @@ static const char DUMMY_SERIAL[MFG_SERIAL_NUMBER_SIZE + 1] = "XXXXXXXXXXXX";
 // FIXME: shouldn't the dummy HWVER be 9 X's?
 static const char DUMMY_HWVER[MFG_HW_VERSION_SIZE + 1] = "XXXXXXXX";
 static const char DUMMY_PCBA_SERIAL[MFG_PCBA_SERIAL_NUMBER_SIZE + 1] = "XXXXXXXXXXXX";
-
-static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t index,
-                               const char *value, const char *name);
 
 const char *mfg_get_serial_number(void) {
   // Trying from "most recent" slot to "least recent":
@@ -92,97 +88,12 @@ MfgSerialsResult mfg_write_pcba_serial_number(const char *serial, size_t serial_
                                     serial, serial_size, out_index);
 }
 
-static MfgSerialsResult prv_mfg_write_hw_version(const char *hwver, size_t hwver_size,
-                                                 uint8_t *out_index) {
+MfgSerialsResult mfg_write_hw_version(const char *hwver, size_t hwver_size, uint8_t *out_index) {
   if ((hwver_size > MFG_HW_VERSION_SIZE) || hwver[hwver_size] != '\0') {
     return MfgSerialsResultFailIncorrectLength;
   }
   return prv_mfg_write_data_to_slot(OTP_HWVER_SLOT_INDICES, ARRAY_LENGTH(OTP_HWVER_SLOT_INDICES),
                                     hwver, hwver_size, out_index);
-}
-
-void command_serial_read(void) {
-  prompt_send_response(mfg_get_serial_number());
-}
-
-void command_hwver_read(void) {
-  prompt_send_response(mfg_get_hw_version());
-}
-
-void command_pcba_serial_read(void) {
-  prompt_send_response(mfg_get_pcba_serial_number());
-}
-
-void command_serial_write(const char *serial) {
-  MfgSerialsResult result;
-  uint8_t index = 0;
-
-  size_t serial_len = strlen(serial);
-  if ((serial_len >= 11) && (serial_len <= MFG_SERIAL_NUMBER_SIZE)) {
-    result = mfg_write_serial_number(serial, serial_len, &index);
-  } else {
-    result = MfgSerialsResultFailIncorrectLength;
-  }
-
-  mfg_print_feedback(result, index, serial, "Serial");
-}
-
-void command_hwver_write(const char *hwver) {
-  MfgSerialsResult result;
-  uint8_t index = 0;
-
-  size_t hwver_len = strlen(hwver);
-  if (hwver_len > 0) {
-    result = prv_mfg_write_hw_version(hwver, hwver_len, &index);
-  } else {
-    result = MfgSerialsResultFailIncorrectLength;
-  }
-
-  mfg_print_feedback(result, index, hwver, "HW version");
-}
-
-void command_pcba_serial_write(const char *pcba_serial) {
-  MfgSerialsResult result;
-  uint8_t index = 0;
-
-  size_t pcba_serial_len = strlen(pcba_serial);
-  if ((pcba_serial_len > 0) && (pcba_serial_len <= MFG_PCBA_SERIAL_NUMBER_SIZE)) {
-    result = mfg_write_pcba_serial_number(pcba_serial, pcba_serial_len, &index);
-  } else {
-    result = MfgSerialsResultFailIncorrectLength;
-  }
-
-  mfg_print_feedback(result, index, pcba_serial, "PCBA Serial");
-}
-
-static void mfg_print_feedback(const MfgSerialsResult result, const uint8_t index,
-                               const char *value, const char *name) {
-  switch (result) {
-    case MfgSerialsResultAlreadyWritten: {
-      char buffer[48];
-      const char *const field = otp_get_slot(index);
-      prompt_send_response_fmt(buffer, sizeof(buffer), "%s already present! %s", name, field);
-      break;
-    }
-    case MfgSerialsResultCorrupt: {
-      char buffer[48];
-      prompt_send_response_fmt(buffer, sizeof(buffer), "Writing failed; %s may be corrupt!", name);
-      break;
-    }
-    case MfgSerialsResultFailIncorrectLength: {
-      prompt_send_response("Incorrect length");
-      break;
-    }
-    case MfgSerialsResultFailNoMoreSpace: {
-      prompt_send_response("No more space!");
-      break;
-    }
-    case MfgSerialsResultSuccess:
-      prompt_send_response("OK");
-      break;
-    default:
-      break;
-  }
 }
 
 #if defined(CONFIG_IS_BIGBOARD)
@@ -234,4 +145,93 @@ void mfg_write_bigboard_serial_number(void) {
     mfg_write_serial_number(serial_number, MFG_SERIAL_NUMBER_SIZE, NULL);
   }
 }
+#endif
+
+#if defined(CONFIG_SHELL) && defined(CONFIG_RECOVERY_FW)
+#include <errno.h>
+#include <pbl/shell/shell.h>
+
+static int prv_print_feedback(const struct pbl_shell *sh, const MfgSerialsResult result,
+                              const uint8_t index, const char *name) {
+  switch (result) {
+    case MfgSerialsResultAlreadyWritten:
+      pbl_shell_error(sh, "%s already present! %s", name, otp_get_slot(index));
+      return -EEXIST;
+    case MfgSerialsResultCorrupt:
+      pbl_shell_error(sh, "Writing failed; %s may be corrupt!", name);
+      return -EIO;
+    case MfgSerialsResultFailIncorrectLength:
+      pbl_shell_error(sh, "Incorrect length");
+      return -EINVAL;
+    case MfgSerialsResultFailNoMoreSpace:
+      pbl_shell_error(sh, "No more space!");
+      return -ENOSPC;
+    case MfgSerialsResultSuccess:
+      pbl_shell_print(sh, "OK");
+      return 0;
+    default:
+      return -EIO;
+  }
+}
+
+static int prv_cmd_serial(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (argc == 1) {
+    pbl_shell_print(sh, "%s", mfg_get_serial_number());
+    return 0;
+  }
+
+  MfgSerialsResult result;
+  uint8_t index = 0;
+  size_t len = strlen(argv[1]);
+  if ((len >= 11) && (len <= MFG_SERIAL_NUMBER_SIZE)) {
+    result = mfg_write_serial_number(argv[1], len, &index);
+  } else {
+    result = MfgSerialsResultFailIncorrectLength;
+  }
+
+  return prv_print_feedback(sh, result, index, "Serial");
+}
+
+static int prv_cmd_hwver(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (argc == 1) {
+    pbl_shell_print(sh, "%s", mfg_get_hw_version());
+    return 0;
+  }
+
+  MfgSerialsResult result;
+  uint8_t index = 0;
+  size_t len = strlen(argv[1]);
+  if (len > 0) {
+    result = mfg_write_hw_version(argv[1], len, &index);
+  } else {
+    result = MfgSerialsResultFailIncorrectLength;
+  }
+
+  return prv_print_feedback(sh, result, index, "HW version");
+}
+
+static int prv_cmd_pcbaserial(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (argc == 1) {
+    pbl_shell_print(sh, "%s", mfg_get_pcba_serial_number());
+    return 0;
+  }
+
+  MfgSerialsResult result;
+  uint8_t index = 0;
+  size_t len = strlen(argv[1]);
+  if ((len > 0) && (len <= MFG_PCBA_SERIAL_NUMBER_SIZE)) {
+    result = mfg_write_pcba_serial_number(argv[1], len, &index);
+  } else {
+    result = MfgSerialsResultFailIncorrectLength;
+  }
+
+  return prv_print_feedback(sh, result, index, "PCBA Serial");
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_mfg, serial, NULL, "Read or write the serial number [serial]",
+                     prv_cmd_serial, 1, 1);
+PBL_SHELL_SUBCMD_ADD(sub_mfg, hwver, NULL, "Read or write the HW version [hwver]", prv_cmd_hwver, 1,
+                     1);
+PBL_SHELL_SUBCMD_ADD(sub_mfg, pcbaserial, NULL, "Read or write the PCBA serial number [serial]",
+                     prv_cmd_pcbaserial, 1, 1);
 #endif

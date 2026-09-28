@@ -223,41 +223,6 @@ static void prv_multi_click_timeout_callback(void *data) {
   }
 }
 
-void command_put_button_event(const char *button_index, const char *click_type) {
-  int button = atoi(button_index);
-  const bool needs_reset = false;
-  ClickHandlerOffset offset;
-
-  if ((button < 0 || button > NUM_BUTTONS)) {
-    return;
-  }
-
-  switch (*click_type) {
-    case 's':
-      offset = ClickHandlerOffsetSingle;
-      break;
-    case 'm':
-      offset = ClickHandlerOffsetMulti;
-      break;
-    case 'l':
-      offset = ClickHandlerOffsetLong;
-      break;
-    case 'r':
-      offset = ClickHandlerOffsetLongRelease;
-      break;
-    case 'u':
-      offset = ClickHandlerOffsetRawUp;
-      break;
-    case 'd':
-      offset = ClickHandlerOffsetRawDown;
-      break;
-    default:
-      return;
-  }
-
-  prv_dispatch_event(&(app_state_get_click_manager()->recognizers[button]), offset, needs_reset);
-}
-
 void click_recognizer_handle_button_down(ClickRecognizer *recognizer) {
   recognizer->is_button_down = true;
 

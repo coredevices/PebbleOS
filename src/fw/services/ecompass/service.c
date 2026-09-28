@@ -6,16 +6,13 @@
 #include "applib/accel_service.h"
 #include "applib/compass_service.h"
 #include "pbl/util/trig.h"
-#include "console/prompt.h"
 #include <pbl/drivers/mag.h>
-#include "kernel/event_loop.h"
 #include "pbl/services/event_service.h"
 #include "pbl/services/regular_timer.h"
 #include "syscall/syscall_internal.h"
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "kernel/util/sleep.h"
 
 PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 
@@ -39,9 +36,6 @@ static bool s_saved_corr_present = false;
 static int16_t s_saved_corr[3] = {0};
 
 static int32_t s_last_heading = -1; // the last heading we found
-#ifdef CONFIG_RECOVERY_FW
-static MagData s_last_mag_sample = {0};
-#endif
 
 //////////////////////////////////////////////////////////////////////////////////
 // Calibration state variables
@@ -257,10 +251,6 @@ void ecompass_service_handle(void) {
     return;
   }
 
-#ifdef CONFIG_RECOVERY_FW
-  s_last_mag_sample = mag_data;
-#endif
-
   // industry standard for heading coordinates uses NED convention (check out
   // Freescale's AN4248 or ST's AN3192 as examples). Therefore, we map pebbles
   // coordinate system (ENU) to NED in this service module
@@ -369,44 +359,3 @@ DEFINE_SYSCALL(void, sys_ecompass_get_last_heading, CompassHeadingData *data) {
     .is_declination_valid = false
   };
 }
-
-//////////////////////////////////////////////////////////////////////////////////
-// Recovery firmware commands
-
-#ifdef CONFIG_RECOVERY_FW
-static void prv_ecompass_start_callback(void *context) {
-  s_accel_session = accel_session_create();
-  accel_session_raw_data_subscribe(s_accel_session, ACCEL_SAMPLING_25HZ, 5,
-                                   prv_accel_for_compass_handler);
-  mag_start_sampling();
-}
-
-static void prv_ecompass_stop_callback(void *context) {
-  accel_session_data_unsubscribe(s_accel_session);
-  accel_session_delete(s_accel_session);
-  mag_release();
-}
-
-//! Serial command for reading a single value from the compass.
-void command_compass_peek(void) {
-  int32_t prev_heading = s_last_heading;
-
-  launcher_task_add_callback(prv_ecompass_start_callback, NULL);
-
-  // wait for last heading to be updated
-  int retries = 50; // 5 seconds should be ample time
-  while ((prev_heading == s_last_heading) && retries-- > 0) {
-    psleep(100);
-  }
-
-  launcher_task_add_callback(prv_ecompass_stop_callback, NULL);
-  psleep(5); // give the compass some time to stop
-
-  char buffer[40];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "%" PRId32 " degrees",
-                           (s_last_heading * 360) / TRIG_MAX_ANGLE);
-
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Mx=%d, My=%d, Mz=%d", s_last_mag_sample.x,
-                           s_last_mag_sample.y, s_last_mag_sample.z);
-}
-#endif // CONFIG_RECOVERY_FW

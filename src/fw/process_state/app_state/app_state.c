@@ -27,6 +27,10 @@
 #include "pbl/kernel/compiler.h"
 #include "tinymt32.h"
 
+#if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
+#include <pbl/shell/shell.h>
+#endif
+
 typedef struct {
   Heap heap;
 
@@ -596,10 +600,11 @@ void app_state_set_current_timeline_item_action_source(TimelineItemActionSource 
   s_app_state_ptr->current_timeline_item_action_source = current_source;
 }
 
-// Serial Commands
-///////////////////////////////////////////////////////////
-#ifdef CONFIG_MALLOC_INSTRUMENTATION
-void command_dump_malloc_app(void) {
+#if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
+static int prv_cmd_heap_app(const struct pbl_shell *sh, size_t argc, char **argv) {
   heap_dump_malloc_instrumentation_to_dbgserial(app_state_get_heap());
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_sys_heap, app, NULL, "Dump the app heap", prv_cmd_heap_app, 0, 0);
 #endif

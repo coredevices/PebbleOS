@@ -29,6 +29,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
+#include <pbl/shell/shell.h>
+#endif
+
 #define MAX_TO_WORKER_EVENTS 8
 static ProcessContext s_worker_task_context;
 static PBL_MSGQ_DEFINE(s_to_worker_event_queue, sizeof(PebbleEvent), MAX_TO_WORKER_EVENTS);
@@ -373,11 +377,15 @@ void worker_manager_disable(void) {
 }
 
 // ------------------------------------------------------------------------------------------------
-void command_worker_kill(void) {
-  process_manager_put_kill_process_event(PebbleTask_Worker, true /*graceful*/);
-}
-
-// ------------------------------------------------------------------------------------------------
 DEFINE_SYSCALL(AppInstallId, sys_worker_manager_get_current_worker_id, void) {
   return worker_manager_get_current_worker_id();
 }
+
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
+static int prv_cmd_worker_kill(const struct pbl_shell *sh, size_t argc, char **argv) {
+  process_manager_put_kill_process_event(PebbleTask_Worker, true /*graceful*/);
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_worker, kill, NULL, "Kill the running worker", prv_cmd_worker_kill, 0, 0);
+#endif

@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/vibe.h>
@@ -186,28 +185,34 @@ uint8_t vibe_get_calibration(void) {
 void vibe_apply_calibration(uint8_t cali) {
 }
 
-void command_vibe_ctl(const char *arg) {
-  int8_t strength;
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <string.h>
 
-  if (strcmp(arg, "cal") == 0) {
-    status_t ret = vibe_calibrate();
-    if (ret != S_SUCCESS) {
-      prompt_send_response("Calibration failed");
-    } else {
-      prompt_send_response("Calibration succeeded");
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_vibe(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (strcmp(argv[1], "cal") == 0) {
+    if (vibe_calibrate() != S_SUCCESS) {
+      pbl_shell_error(sh, "calibration failed");
+      return -EIO;
     }
-
-    return;
+    pbl_shell_print(sh, "calibration succeeded");
+    return 0;
   }
 
-  strength = (int8_t)atoi(arg);
-  if ((strength < VIBE_STRENGTH_MIN) || (strength > VIBE_STRENGTH_MAX)) {
-    prompt_send_response("Invalid argument");
-    return;
+  long strength;
+  if (pbl_shell_strtol(argv[1], &strength) != 0 || strength < VIBE_STRENGTH_MIN ||
+      strength > VIBE_STRENGTH_MAX) {
+    pbl_shell_error(sh, "invalid argument '%s'", argv[1]);
+    return -EINVAL;
   }
 
-  vibe_set_strength(strength);
+  vibe_set_strength((int8_t)strength);
   vibe_ctl(strength != 0);
-
-  prompt_send_response("OK");
+  return 0;
 }
+
+PBL_SHELL_CMD_ARG_REGISTER(vibe, NULL, "Vibrate at <strength -100-100>, or <cal> to calibrate",
+                           prv_cmd_vibe, 2, 0);
+#endif

@@ -188,17 +188,33 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
   }
 }
 
-// Serial commands
-///////////////////////////////////////////////////////////
-void command_put_raw_button_event(const char *button_index, const char *is_button_down_event) {
-  PebbleEvent e;
-  int is_down = atoi(is_button_down_event);
-  int button = atoi(button_index);
+#ifdef CONFIG_SHELL
+#include <errno.h>
 
-  if ((button < 0 || button > NUM_BUTTONS) || (is_down != 1 && is_down != 0)) {
-    return;
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_button_raw(const struct pbl_shell *sh, size_t argc, char **argv) {
+  long button;
+  long is_down;
+
+  if (pbl_shell_strtol(argv[1], &button) != 0 || button < 0 || button >= NUM_BUTTONS) {
+    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
+    return -EINVAL;
   }
-  e.type = (is_down) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT;
-  e.button.button_id = button;
+
+  if (pbl_shell_strtol(argv[2], &is_down) != 0 || (is_down != 0 && is_down != 1)) {
+    pbl_shell_error(sh, "invalid state '%s'", argv[2]);
+    return -EINVAL;
+  }
+
+  PebbleEvent e = {
+    .type = is_down ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
+    .button.button_id = (ButtonId)button,
+  };
   event_put(&e);
+  return 0;
 }
+
+PBL_SHELL_SUBCMD_ADD(sub_button, raw, NULL, "Inject a raw event <id> <0=up|1=down>",
+                     prv_cmd_button_raw, 3, 0);
+#endif

@@ -9,7 +9,6 @@
 #include "logging_private.h"
 #include "kernel/util/stack_info.h"
 
-#include "console/prompt.h"
 #include "console/serial_console.h"
 #include "debug/advanced_logging.h"
 #include <pbl/drivers/rtc.h>
@@ -163,15 +162,25 @@ void kernel_pbl_log_from_fault_handler_fmt(const char *src_filename, uint16_t sr
   kernel_pbl_log_from_fault_handler(src_filename, src_line_number, buffer);
 }
 
-// Serial Commands
-///////////////////////////////////////////////////////////
-void command_log_level_set(const char *level) {
-  char buffer[32];
-  g_pbl_log_level = atoi(level);
-  prompt_send_response_fmt(buffer, 32, "Log level set to: %i", g_pbl_log_level);
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_level(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (argc > 1) {
+    long level;
+    if (pbl_shell_strtol(argv[1], &level) != 0) {
+      pbl_shell_error(sh, "invalid level '%s'", argv[1]);
+      return -EINVAL;
+    }
+    g_pbl_log_level = level;
+  }
+
+  pbl_shell_print(sh, "Log level: %i", g_pbl_log_level);
+  return 0;
 }
 
-void command_log_level_get(void) {
-  char buffer[32];
-  prompt_send_response_fmt(buffer, 32, "Log level: %i", g_pbl_log_level);
-}
+PBL_SHELL_SUBCMD_SET_CREATE(sub_log);
+PBL_SHELL_CMD_REGISTER(log, sub_log, "Logging", NULL);
+PBL_SHELL_SUBCMD_ADD(sub_log, level, NULL, "Get or set the log level [level]", prv_cmd_level, 1, 1);
+#endif

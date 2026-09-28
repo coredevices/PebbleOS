@@ -105,8 +105,6 @@ void passert_check_not_task(enum PebbleTask unexpected_task);
 
 #endif // UNITTEST
 
-// extern void command_dump_malloc(void);
-
 #ifdef CONFIG_LOG_HASHED
 
 #define PBL_CROAK(msg, ...)                                                                 \

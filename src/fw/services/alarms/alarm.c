@@ -1490,7 +1490,13 @@ void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm
   }
 }
 
-// ----------------------------------------------------------------------------------------------
-void command_alarm(void) {
+#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_alarm(const struct pbl_shell *sh, size_t argc, char **argv) {
   prv_put_alarm_event();
+  return 0;
 }
+
+PBL_SHELL_CMD_REGISTER(alarm, NULL, "Fire an alarm event", prv_cmd_alarm);
+#endif

@@ -30,19 +30,3 @@ void launcher_panic(uint32_t error_code) {
 uint32_t launcher_panic_get_current_error(void) {
   return s_current_error;
 }
-
-void command_sim_panic_cb(void *data) {
-  PebbleEvent event = {
-    .type = PEBBLE_PANIC_EVENT,
-    .panic = {
-      .error_code = (uint32_t)data,
-    },
-  };
-  event_put(&event);
-}
-
-extern void command_sim_panic(const char *error_code_str) {
-  uint32_t error_code = atoi(error_code_str);
-
-  launcher_task_add_callback(command_sim_panic_cb, (void *)error_code);
-}

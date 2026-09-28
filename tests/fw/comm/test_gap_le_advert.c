@@ -28,7 +28,6 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
-#include "stubs_prompt.h"
 
 bool static s_is_connected_as_slave = false;
 

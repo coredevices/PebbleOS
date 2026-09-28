@@ -31,7 +31,6 @@
 #include "stubs_mutex.h"
 #include "stubs_hexdump.h"
 #include "stubs_passert.h"
-#include "stubs_prompt.h"
 #include "stubs_task_wdt.h"
 #include "stubs_pebble_tasks.h"
 #include "stubs_sleep.h"

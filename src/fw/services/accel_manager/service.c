@@ -3,7 +3,6 @@
 
 #include "pbl/services/accel_manager.h"
 
-#include "console/prompt.h"
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/vibe.h>
 #include "kernel/events.h"
@@ -920,25 +919,6 @@ void accel_offload_work_from_isr(AccelOffloadCallback cb, bool *should_context_s
 
 void accel_offload_work(AccelOffloadCallback cb) {
   new_timer_add_work_callback(prv_handle_accel_driver_work_cb, cb);
-}
-
-void command_accel_peek(void) {
-  AccelData data;
-
-  int result = sys_accel_manager_peek(&data);
-  PBL_LOG_DBG("result: %d", result);
-
-  char buffer[20];
-  prompt_send_response_fmt(buffer, sizeof(buffer), "X: %" PRId16, data.x);
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Y: %" PRId16, data.y);
-  prompt_send_response_fmt(buffer, sizeof(buffer), "Z: %" PRId16, data.z);
-}
-
-void command_accel_num_samples(char *num_samples) {
-  int num = atoi(num_samples);
-  pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
-  accel_set_num_samples(num);
-  pbl_mutex_unlock(&s_accel_manager_mutex);
 }
 
 #if UNITTEST

@@ -10,7 +10,6 @@
 #include <pbl/drivers/battery.h>
 
 #include "board/board.h"
-#include "console/prompt.h"
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/exti.h>
 #include <pbl/drivers/i2c.h>
@@ -757,33 +756,6 @@ int battery_charge_status_get(BatteryChargeStatus *status) {
   return 0;
 }
 
-void command_pmic_read_registers(void) {
-  char buffer[64];
-#define SAY(x)                                                                                \
-  do {                                                                                        \
-    uint8_t reg;                                                                              \
-    int rv = prv_read_register(PmicRegisters_##x, &reg);                                      \
-    prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: " #x " = %02x (rv %d)", reg, rv); \
-  } while (0)
-  SAY(ERRLOG_SCRATCH0);
-  SAY(ERRLOG_SCRATCH1);
-  SAY(BUCK_BUCK1NORMVOUT);
-  SAY(BUCK_BUCK2NORMVOUT);
-  SAY(BUCK_BUCKSTATUS);
-  SAY(VBUSIN_VBUSINSTATUS);
-  SAY(BCHARGER_BCHGCHARGESTATUS);
-  SAY(BCHARGER_BCHGERRREASON);
-  prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: Vsys = %d mV", pmic_get_vsys());
-  prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: Vbat = %d mV", battery_get_millivolts());
-}
-
-void command_pmic_status(void) {
-}
-
-void command_pmic_rails(void) {
-  // TODO: Implement.
-}
-
 static bool gpio_set(Npm1300GpioId_t id, bool is_high) {
   bool rv = false;
   switch (id) {
@@ -865,3 +837,35 @@ Npm1300Ops_t NPM1300_OPS = {
   .ldo2_set_enabled = ldo2_set_enabled,
   .dischg_limit_ma_set = dischg_limit_ma_set,
 };
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_pmic_regs(const struct pbl_shell *sh, size_t argc, char **argv) {
+#define SAY(x)                                                   \
+  do {                                                           \
+    uint8_t reg;                                                 \
+    int rv = prv_read_register(PmicRegisters_##x, &reg);         \
+    pbl_shell_print(sh, "PMIC: " #x " = %02x (rv %d)", reg, rv); \
+  } while (0)
+  SAY(ERRLOG_SCRATCH0);
+  SAY(ERRLOG_SCRATCH1);
+  SAY(BUCK_BUCK1NORMVOUT);
+  SAY(BUCK_BUCK2NORMVOUT);
+  SAY(BUCK_BUCKSTATUS);
+  SAY(VBUSIN_VBUSINSTATUS);
+  SAY(BCHARGER_BCHGCHARGESTATUS);
+  SAY(BCHARGER_BCHGERRREASON);
+#undef SAY
+  pbl_shell_print(sh, "PMIC: Vsys = %d mV", pmic_get_vsys());
+  pbl_shell_print(sh, "PMIC: Vbat = %d mV", battery_get_millivolts());
+  return 0;
+}
+
+static const struct pbl_shell_cmd sub_pmic[] = {
+  PBL_SHELL_CMD(regs, NULL, "Dump the main registers", prv_cmd_pmic_regs),
+  PBL_SHELL_SUBCMD_SET_END,
+};
+
+PBL_SHELL_CMD_REGISTER(pmic, sub_pmic, "PMIC", NULL);
+#endif

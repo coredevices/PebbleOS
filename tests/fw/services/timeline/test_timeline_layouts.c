@@ -84,7 +84,6 @@ void clock_get_until_time_capitalized(char *buffer, int buf_size, time_t timesta
 #include "stubs_pebble_process_info.h"
 #include "stubs_pebble_tasks.h"
 #include "stubs_process_manager.h"
-#include "stubs_prompt.h"
 #include "stubs_property_animation.h"
 #include "stubs_serial.h"
 #include "stubs_shell_prefs.h"

@@ -5,7 +5,6 @@
 #include "pbl/services/hrm/hrm_manager_private.h"
 
 #include "applib/health_service.h"
-#include "console/prompt.h"
 #include <pbl/drivers/hrm.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
@@ -988,53 +987,6 @@ void hrm_manager_enable(bool on) {
   pbl_mutex_unlock(&s_manager_state.lock);
 }
 
-static HRMSessionRef s_console_session = HRM_INVALID_SESSION_REF;
-static void prv_console_unsubscribe_callback(void *data) {
-  sys_hrm_manager_unsubscribe(s_console_session);
-  s_console_session = HRM_INVALID_SESSION_REF;
-  prompt_command_finish();
-}
-
-static void prv_console_read_callback(PebbleHRMEvent *event, void *context) {
-  if (event->event_type == HRMEvent_BPM) {
-    system_task_add_callback(prv_console_unsubscribe_callback, NULL);
-    char buf[32];
-    prompt_send_response_fmt(buf, 32, "BPM: %" PRIu8 " quality: %" PRIu8, event->bpm.bpm,
-                             event->bpm.quality);
-  }
-}
-
-void command_hrm_read(void) {
-  sys_hrm_manager_unsubscribe(s_console_session);
-  s_console_session = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM,
-      false /*low_latency*/, prv_console_read_callback, NULL);
-  prompt_command_continues_after_returning();
-}
-
-static void prv_console_spo2_read_callback(PebbleHRMEvent *event, void *context) {
-  if (event->event_type == HRMEvent_SpO2) {
-    system_task_add_callback(prv_console_unsubscribe_callback, NULL);
-    char buf[32];
-    prompt_send_response_fmt(buf, 32, "SpO2: %" PRIu8 "%% quality: %" PRIu8, event->spo2.percent,
-                             event->spo2.quality);
-  }
-}
-
-void command_spo2_read(void) {
-  // A console subscriber is subject to the pref mask like any other background subscriber, so
-  // bail out with a message instead of leaving the prompt waiting on a reading that never comes.
-  if (!(prv_prefs_allowed_features() & HRMFeature_SpO2)) {
-    prompt_send_response("Blood oxygen monitoring is disabled");
-    return;
-  }
-  sys_hrm_manager_unsubscribe(s_console_session);
-  s_console_session = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_SpO2,
-      false /*low_latency*/, prv_console_spo2_read_callback, NULL);
-  prompt_command_continues_after_returning();
-}
-
 HRMAccelData *hrm_manager_get_accel_data(void) {
   pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
   return &s_manager_state.accel_data;
@@ -1067,3 +1019,74 @@ void hrm_manager_process_cleanup(PebbleTask task, AppInstallId app_id) {
   sys_hrm_manager_set_update_interval(state->session_ref, state->update_interval_s,
                                       HRM_MANAGER_APP_EXIT_EXPIRATION_SEC);
 }
+
+#if defined(CONFIG_SHELL) && defined(CONFIG_HRM)
+#include <errno.h>
+
+#include <pbl/shell/shell.h>
+
+static const struct pbl_shell *s_console_sh;
+static HRMSessionRef s_console_session = HRM_INVALID_SESSION_REF;
+static PebbleHRMEvent s_console_event;
+
+static void prv_console_finish_cb(void *data) {
+  const struct pbl_shell *sh = s_console_sh;
+
+  if (sh == NULL) {
+    return;
+  }
+
+  s_console_sh = NULL;
+  sys_hrm_manager_unsubscribe(s_console_session);
+  s_console_session = HRM_INVALID_SESSION_REF;
+
+  if (s_console_event.event_type == HRMEvent_BPM) {
+    pbl_shell_print(sh, "BPM: %" PRIu8 " quality: %" PRIu8, s_console_event.bpm.bpm,
+                    s_console_event.bpm.quality);
+  } else {
+    pbl_shell_print(sh, "SpO2: %" PRIu8 "%% quality: %" PRIu8, s_console_event.spo2.percent,
+                    s_console_event.spo2.quality);
+  }
+  pbl_shell_cmd_done(sh, 0);
+}
+
+static void prv_console_read_callback(PebbleHRMEvent *event, void *context) {
+  const HRMEventType type = (HRMEventType)(uintptr_t)context;
+
+  if (event->event_type == type) {
+    s_console_event = *event;
+    system_task_add_callback(prv_console_finish_cb, NULL);
+  }
+}
+
+static int prv_console_subscribe(const struct pbl_shell *sh, HRMFeature feature,
+                                 HRMEventType type) {
+  sys_hrm_manager_unsubscribe(s_console_session);
+  s_console_sh = sh;
+  s_console_session = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, feature, false /*low_latency*/,
+      prv_console_read_callback, (void *)(uintptr_t)type);
+  return -EINPROGRESS;
+}
+
+static int prv_cmd_hrm_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  return prv_console_subscribe(sh, HRMFeature_BPM, HRMEvent_BPM);
+}
+
+static int prv_cmd_spo2_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  // Console subscribers are subject to the pref mask; a reading would never come.
+  if (!(prv_prefs_allowed_features() & HRMFeature_SpO2)) {
+    pbl_shell_error(sh, "blood oxygen monitoring is disabled");
+    return -EPERM;
+  }
+  return prv_console_subscribe(sh, HRMFeature_SpO2, HRMEvent_SpO2);
+}
+
+static const struct pbl_shell_cmd sub_hrm[] = {
+  PBL_SHELL_CMD(read, NULL, "Read the heart rate", prv_cmd_hrm_read),
+  PBL_SHELL_CMD(spo2, NULL, "Read the blood oxygen level", prv_cmd_spo2_read),
+  PBL_SHELL_SUBCMD_SET_END,
+};
+
+PBL_SHELL_CMD_REGISTER(hrm, sub_hrm, "Heart rate monitor", NULL);
+#endif

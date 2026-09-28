@@ -573,30 +573,6 @@ int32_t battery_state_get_temperature(void) {
   return s_last_temp_mc;
 }
 
-#include "console/prompt.h"
-void command_print_battery_status(void) {
-  char buffer[32];
-
-  prompt_send_response_fmt(buffer, 32, "%" PRId32 " mV", s_last_voltage_mv);
-  prompt_send_response_fmt(buffer, 32, "soc: %" PRIu8 "%% (%" PRIu32 ")",
-                           s_last_battery_charge_state.pct,
-                           s_last_battery_charge_state.charge_percent);
-  if (s_last_tte == 0U) {
-    prompt_send_response_fmt(buffer, 32, "tte: N/A");
-  } else {
-    prompt_send_response_fmt(buffer, 32, "tte: %" PRIu32 "s", s_last_tte);
-  }
-  if (s_last_ttf == 0U) {
-    prompt_send_response_fmt(buffer, 32, "ttf: N/A");
-  } else {
-    prompt_send_response_fmt(buffer, 32, "ttf: %" PRIu32 "s", s_last_ttf);
-  }
-  prompt_send_response_fmt(buffer, 32, "plugged: %s",
-                           s_last_battery_charge_state.is_plugged ? "YES" : "NO");
-  prompt_send_response_fmt(buffer, 32, "charging: %s",
-                           s_last_battery_charge_state.is_charging ? "YES" : "NO");
-}
-
 /////////////////
 // Analytics
 
@@ -624,17 +600,47 @@ void pbl_analytics_external_collect_battery(void) {
   PBL_ANALYTICS_SET_UNSIGNED(battery_tte_s, s_last_tte);
 }
 
-static void prv_set_forced_charge_state(bool is_charging) {
-  battery_force_charge_enable(is_charging);
+#ifdef CONFIG_SHELL
+#include <errno.h>
+#include <pbl/shell/shell.h>
 
-  // Trigger an immediate update to the state machine: may trigger an event
-  battery_state_force_update();
-}
-
-void command_battery_charge_option(const char *option) {
-  if (!strcmp("disable", option)) {
-    prv_set_forced_charge_state(false);
-  } else if (!strcmp("enable", option)) {
-    prv_set_forced_charge_state(true);
+static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pbl_shell_print(sh, "%" PRId32 " mV", s_last_voltage_mv);
+  pbl_shell_print(sh, "soc: %" PRIu8 "%% (%" PRIu32 ")", s_last_battery_charge_state.pct,
+                  s_last_battery_charge_state.charge_percent);
+  if (s_last_tte == 0U) {
+    pbl_shell_print(sh, "tte: N/A");
+  } else {
+    pbl_shell_print(sh, "tte: %" PRIu32 "s", s_last_tte);
   }
+  if (s_last_ttf == 0U) {
+    pbl_shell_print(sh, "ttf: N/A");
+  } else {
+    pbl_shell_print(sh, "ttf: %" PRIu32 "s", s_last_ttf);
+  }
+  pbl_shell_print(sh, "plugged: %s", s_last_battery_charge_state.is_plugged ? "YES" : "NO");
+  pbl_shell_print(sh, "charging: %s", s_last_battery_charge_state.is_charging ? "YES" : "NO");
+  return 0;
 }
+
+static int prv_cmd_chargeopt(const struct pbl_shell *sh, size_t argc, char **argv) {
+  bool is_charging;
+
+  if (!strcmp("disable", argv[1])) {
+    is_charging = false;
+  } else if (!strcmp("enable", argv[1])) {
+    is_charging = true;
+  } else {
+    pbl_shell_error(sh, "invalid option '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  battery_force_charge_enable(is_charging);
+  battery_state_force_update();
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_battery, status, NULL, "Print the battery state", prv_cmd_status, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_battery, chargeopt, NULL, "Force charging <enable|disable>",
+                     prv_cmd_chargeopt, 2, 0);
+#endif

@@ -16,8 +16,6 @@ void ambient_light_resume(void) {
 uint32_t ambient_light_get_light_level(void) {
   return 0;
 }
-void command_als_read(void) {
-}
 uint32_t ambient_light_get_dark_threshold(void) {
   return 0;
 }

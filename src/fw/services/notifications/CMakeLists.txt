@@ -19,3 +19,4 @@ set(sources
 )
 pbl_library()
 pbl_library_sources(${sources})
+pbl_library_sources_ifdef(CONFIG_SHELL shell.c)

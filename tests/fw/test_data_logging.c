@@ -46,7 +46,6 @@
 #include "stubs_logging.h"
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
-#include "stubs_prompt.h"
 #include "stubs_rand_ptr.h"
 #include "stubs_serial.h"
 #include "stubs_sleep.h"

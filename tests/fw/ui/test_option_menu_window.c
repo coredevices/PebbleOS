@@ -39,7 +39,6 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_print.h"
 #include "stubs_process_manager.h"
-#include "stubs_prompt.h"
 #include "stubs_serial.h"
 #include "stubs_shell_prefs.h"
 #include "stubs_sleep.h"
