@@ -214,9 +214,9 @@ void value_picker_touch_init(ValuePickerTouch *touch, Layer *parent, ValuePicker
     .step = step,
     .context = context,
   };
+#ifdef CONFIG_TOUCH
   layer_init(&touch->layer, &parent->bounds);
   layer_add_child(parent, &touch->layer);
-#ifdef CONFIG_TOUCH
   TouchNavState *state = prv_task_touch_nav_state();
   if (state && state->manager) {
     touch_nav_registry_add(state, TouchNavWidgetType_Scroll,
@@ -237,7 +237,7 @@ void value_picker_touch_deinit(ValuePickerTouch *touch) {
       recognizer_manager_cancel_and_reset(state->manager);
     }
   }
-#endif
   layer_remove_from_parent(&touch->layer);
   layer_deinit(&touch->layer);
+#endif
 }

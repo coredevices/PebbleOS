@@ -8,8 +8,10 @@
 #include "applib/applib_malloc.auto.h"
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/system_icons.h"
+#include "pbl/util/size.h"
 
 #include <limits.h>
+#include <stdio.h>
 
 #if defined(CONFIG_RECOVERY_FW) || defined(CONFIG_MFG)
 #define NUMBER_FONT_KEY FONT_KEY_GOTHIC_24_BOLD
@@ -70,6 +72,7 @@ static void click_config_provider(NumberWindow *nf) {
                                (ClickHandler)select_click_handler);
 }
 
+#ifdef CONFIG_TOUCH
 static void prv_step(int direction, void *context) {
   if (direction > 0) {
     up_click_handler(NULL, context);
@@ -77,6 +80,18 @@ static void prv_step(int direction, void *context) {
     down_click_handler(NULL, context);
   }
 }
+#else
+static GRect prv_get_text_frame(Layer *window_layer) {
+  const int16_t x_margin = 5;
+  const int16_t label_y_offset = PBL_IF_ROUND_ELSE(40, 16);
+  const GEdgeInsets insets =
+      PBL_IF_ROUND_ELSE(GEdgeInsets(ACTION_BAR_WIDTH + x_margin),
+                        GEdgeInsets(0, ACTION_BAR_WIDTH + x_margin, 0, x_margin));
+  GRect frame = grect_inset(window_layer->bounds, insets);
+  frame.origin.y = label_y_offset;
+  return frame;
+}
+#endif
 
 //! Drawing function for our Window's base Layer: everything on screen except the ActionBarLayer.
 void prv_update_proc(Layer *layer, GContext *ctx) {
@@ -86,6 +101,32 @@ void prv_update_proc(Layer *layer, GContext *ctx) {
   _Static_assert(offsetof(NumberWindow, window) == 0, "");
   NumberWindow *nw = (NumberWindow *)layer;
 
+#ifndef CONFIG_TOUCH
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, &layer->bounds);
+  graphics_context_set_text_color(ctx, GColorBlack);
+
+  GRect frame = prv_get_text_frame(layer);
+  frame.size.h = 54;
+
+  TextLayoutExtended cached_label_layout = {};
+  graphics_draw_text(ctx, nw->label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), frame,
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter,
+                     (TextLayout *)&cached_label_layout);
+
+  char value_output_buffer[12];
+  snprintf(value_output_buffer, ARRAY_LENGTH(value_output_buffer), "%" PRId32, nw->value);
+
+  frame.origin.y += cached_label_layout.max_used_size.h;
+#if PBL_RECT
+  const int16_t output_offset_from_label = 15;
+  frame.origin.y += output_offset_from_label;
+#endif
+  frame.size.h = 48;
+
+  graphics_draw_text(ctx, value_output_buffer, fonts_get_system_font(NUMBER_FONT_KEY), frame,
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+#else
   ValuePickerStyle style = *value_picker_default_style();
   style.value_font_key = NUMBER_FONT_KEY;
   const ValuePickerContent content = {
@@ -96,6 +137,7 @@ void prv_update_proc(Layer *layer, GContext *ctx) {
     .step = nw->step_size,
   };
   value_picker_draw(ctx, &layer->bounds, &content, &style);
+#endif
 }
 
 void number_window_set_label(NumberWindow *nw, const char *label) {
@@ -176,10 +218,12 @@ void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbac
   ActionBarLayer *action_bar = &nw->action_bar;
   action_bar_layer_init(action_bar);
 
+#ifdef CONFIG_TOUCH
   nw->touch = applib_malloc(sizeof(ValuePickerTouch));
   if (nw->touch) {
     value_picker_touch_init(nw->touch, &nw->window.layer, prv_step, nw);
   }
+#endif
 }
 
 NumberWindow *number_window_create(const char *label, NumberWindowCallbacks callbacks,
