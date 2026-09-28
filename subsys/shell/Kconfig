@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SHELL
+    bool "Shell"
+    default y
+    help
+      Command shell. Commands register themselves with
+      PBL_SHELL_CMD_REGISTER() and run on KernelBG, one shell instance per
+      backend.
+
+if SHELL
+
+config SHELL_CMD_BUFF_SIZE
+    int "Command line buffer size"
+    default 128
+    help
+      Longest command line, in bytes, a shell accepts.
+
+config SHELL_ARGC_MAX
+    int "Maximum number of arguments"
+    default 12
+    help
+      Most words a command line may have, the command included.
+
+config SHELL_PRINTF_BUFF_SIZE
+    int "Print buffer size"
+    default 128
+    help
+      Stack buffer each print is formatted into; longer output is truncated.
+
+config SHELL_RX_BUFF_SIZE
+    int "Receive buffer size"
+    range 16 255
+    default 64
+    help
+      Characters an interactive shell queues from its backend before they
+      are processed.
+
+endif # SHELL
