@@ -19,6 +19,9 @@ struct TouchNavState *app_state_get_touch_nav_state(void);
 struct TouchNavState *modal_manager_get_touch_nav_state(void);
 
 #define TOUCH_PIXELS_PER_STEP 18
+#define NEIGHBOR_HEIGHT       22
+#define NEIGHBOR_FONT_KEY     FONT_KEY_GOTHIC_18_BOLD
+#define NEIGHBOR_COLOR        PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack)
 #endif
 
 // Look and feel
@@ -27,7 +30,11 @@ struct TouchNavState *modal_manager_get_touch_nav_state(void);
 #define DEFAULT_ACTIVE_COLOR   GColorWhite
 #define DEFAULT_INACTIVE_COLOR GColorDarkGray
 
+#ifdef CONFIG_TOUCH
+#define BUTTON_HOLD_REPEAT_MS 50
+#else
 #define BUTTON_HOLD_REPEAT_MS 100
+#endif
 
 // Animation - I was told the video that was provides was at 28fps. This means each frame is 35.7ms
 // 3 frames in the video
@@ -319,6 +326,38 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
   }
 }
 
+#ifdef CONFIG_TOUCH
+static bool prv_shows_neighbors(const SelectionLayer *selection_layer) {
+  return selection_layer->is_active && selection_layer->callbacks.get_neighbor_text;
+}
+
+static void prv_draw_neighbors(SelectionLayer *selection_layer, GContext *ctx) {
+  if (!prv_shows_neighbors(selection_layer) || selection_layer->slide_amin_progress ||
+      selection_layer->slide_settle_anim_progress) {
+    return;
+  }
+  const unsigned idx = selection_layer->selected_cell_idx;
+  int16_t x = prv_centered_offset_x(selection_layer);
+  for (unsigned i = 0; i < idx; i++) {
+    x += selection_layer->cell_widths[i] + selection_layer->cell_padding;
+  }
+  const int16_t width = selection_layer->cell_widths[idx];
+  const int16_t height = selection_layer->layer.frame.size.h;
+  const GFont font = fonts_get_system_font(NEIGHBOR_FONT_KEY);
+  graphics_context_set_text_color(ctx, NEIGHBOR_COLOR);
+
+  char text[8];
+  selection_layer->callbacks.get_neighbor_text(idx, 1, text, sizeof(text),
+                                               selection_layer->callback_context);
+  graphics_draw_text(ctx, text, font, GRect(x, -NEIGHBOR_HEIGHT - 2, width, NEIGHBOR_HEIGHT),
+                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  selection_layer->callbacks.get_neighbor_text(idx, -1, text, sizeof(text),
+                                               selection_layer->callback_context);
+  graphics_draw_text(ctx, text, font, GRect(x, height - 2, width, NEIGHBOR_HEIGHT),
+                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+}
+#endif
+
 static void prv_draw_selection_layer(SelectionLayer *selection_layer, GContext *ctx) {
   // The first thing that is drawn is the background for each cell
   prv_draw_cell_backgrounds(selection_layer, ctx);
@@ -333,6 +372,9 @@ static void prv_draw_selection_layer(SelectionLayer *selection_layer, GContext *
 
   // Finally the text is drawn over everything
   prv_draw_text(selection_layer, ctx);
+#ifdef CONFIG_TOUCH
+  prv_draw_neighbors(selection_layer, ctx);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -587,6 +629,16 @@ static TouchNavState *prv_task_touch_nav_state(void) {
                                                        : modal_manager_get_touch_nav_state();
 }
 
+static bool prv_contains_point(const Layer *layer, const GPoint *point) {
+  const SelectionLayer *selection_layer = (const SelectionLayer *)layer;
+  GRect frame = layer->frame;
+  if (prv_shows_neighbors(selection_layer)) {
+    frame.origin.y -= NEIGHBOR_HEIGHT;
+    frame.size.h += 2 * NEIGHBOR_HEIGHT;
+  }
+  return grect_contains_point(&frame, point);
+}
+
 static int prv_touch_cell_at(SelectionLayer *selection_layer, GPoint point_on_screen) {
   GRect global_frame;
   layer_get_global_frame(&selection_layer->layer, &global_frame);
@@ -758,7 +810,16 @@ void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, u
   layer_set_clips(&selection_layer->layer, false);
   layer_set_update_proc(&selection_layer->layer, (LayerUpdateProc)prv_draw_selection_layer);
 #ifdef CONFIG_TOUCH
+  layer_set_contains_point_override(&selection_layer->layer, prv_contains_point);
   prv_touch_nav_register(selection_layer);
+#endif
+}
+
+int selection_layer_neighbor_height(void) {
+#ifdef CONFIG_TOUCH
+  return NEIGHBOR_HEIGHT;
+#else
+  return 0;
 #endif
 }
 

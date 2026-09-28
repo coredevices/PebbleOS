@@ -8,6 +8,8 @@
 #include "property_animation.h"
 #include "applib/fonts/fonts.h"
 
+#include <stddef.h>
+
 #define SELECTION_LAYER_DEFAULT_CELL_HEIGHT PBL_IF_RECT_ELSE(34, 40)
 
 #define MAX_SELECTION_LAYER_CELLS 3
@@ -20,11 +22,17 @@ typedef void (*SelectionLayerIncrementCallback)(unsigned selected_cell_idx, void
 
 typedef void (*SelectionLayerDecrementCallback)(unsigned selected_cell_idx, void *callback_context);
 
+//! Writes the text the cell would show after `delta` steps, without changing any state.
+typedef void (*SelectionLayerGetNeighborText)(unsigned index, int delta, char *buffer,
+                                              size_t buffer_size, void *callback_context);
+
 typedef struct SelectionLayerCallbacks {
   SelectionLayerGetCellText get_cell_text;
   SelectionLayerCompleteCallback complete;
   SelectionLayerIncrementCallback increment;
   SelectionLayerDecrementCallback decrement;
+  //! Optional. On touch watches, the active cell shows its neighbors above and below.
+  SelectionLayerGetNeighborText get_neighbor_text;
 } SelectionLayerCallbacks;
 
 typedef struct SelectionLayer {
@@ -72,6 +80,9 @@ typedef struct SelectionLayer {
 void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, unsigned num_cells);
 
 SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells);
+
+//! Height of the neighbor band drawn above and below the cells, 0 on watches without touch.
+int selection_layer_neighbor_height(void);
 
 void selection_layer_deinit(SelectionLayer *selection_layer);
 

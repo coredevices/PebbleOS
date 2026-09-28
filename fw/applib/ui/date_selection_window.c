@@ -58,22 +58,28 @@ static const DateSelectionSizeConfig *prv_config(void) {
 // Cell text rendering
 // ---------------------------------------------------------------------------
 
-static char *prv_get_cell_text(unsigned index, void *context) {
-  DateSelectionWindowData *data = context;
+static void prv_format_cell(const DateData *date, unsigned index, char *buffer,
+                            size_t buffer_size) {
   switch ((DateInputIndex)index) {
     case DateInputIndexYear:
-      snprintf(data->cell_buf, sizeof(data->cell_buf), "%04d",
-               (int)(data->date.year + STDTIME_YEAR_OFFSET));
-      return data->cell_buf;
+      snprintf(buffer, buffer_size, "%04d", (int)(date->year + STDTIME_YEAR_OFFSET));
+      break;
     case DateInputIndexMonth:
-      snprintf(data->cell_buf, sizeof(data->cell_buf), "%02d", (int)(data->date.month + 1));
-      return data->cell_buf;
+      snprintf(buffer, buffer_size, "%02d", (int)(date->month + 1));
+      break;
     case DateInputIndexDay:
-      snprintf(data->cell_buf, sizeof(data->cell_buf), "%02d", (int)data->date.day);
-      return data->cell_buf;
+      snprintf(buffer, buffer_size, "%02d", (int)date->day);
+      break;
     default:
-      return "";
+      buffer[0] = '\0';
+      break;
   }
+}
+
+static char *prv_get_cell_text(unsigned index, void *context) {
+  DateSelectionWindowData *data = context;
+  prv_format_cell(&data->date, index, data->cell_buf, sizeof(data->cell_buf));
+  return data->cell_buf;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,48 +93,37 @@ static void prv_handle_complete(void *context) {
   }
 }
 
-static void prv_handle_inc(unsigned index, void *context) {
-  DateSelectionWindowData *data = context;
+static void prv_step(DateData *date, unsigned index, int delta) {
   switch ((DateInputIndex)index) {
     case DateInputIndexYear:
-      data->date.year = date_time_selection_step_year(data->date.year, 1);
-      data->date.day =
-          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
+      date->year = date_time_selection_step_year(date->year, delta);
+      date->day = date_time_selection_truncate_date(date->year, date->month, date->day);
       break;
     case DateInputIndexMonth:
-      data->date.month = date_time_selection_step_month(data->date.month, 1);
-      data->date.day =
-          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
+      date->month = date_time_selection_step_month(date->month, delta);
+      date->day = date_time_selection_truncate_date(date->year, date->month, date->day);
       break;
     case DateInputIndexDay:
-      data->date.day =
-          date_time_selection_step_day(data->date.year, data->date.month, data->date.day, 1);
+      date->day = date_time_selection_step_day(date->year, date->month, date->day, delta);
       break;
     default:
       break;
   }
 }
 
+static void prv_handle_inc(unsigned index, void *context) {
+  prv_step(&((DateSelectionWindowData *)context)->date, index, 1);
+}
+
 static void prv_handle_dec(unsigned index, void *context) {
-  DateSelectionWindowData *data = context;
-  switch ((DateInputIndex)index) {
-    case DateInputIndexYear:
-      data->date.year = date_time_selection_step_year(data->date.year, -1);
-      data->date.day =
-          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
-      break;
-    case DateInputIndexMonth:
-      data->date.month = date_time_selection_step_month(data->date.month, -1);
-      data->date.day =
-          date_time_selection_truncate_date(data->date.year, data->date.month, data->date.day);
-      break;
-    case DateInputIndexDay:
-      data->date.day =
-          date_time_selection_step_day(data->date.year, data->date.month, data->date.day, -1);
-      break;
-    default:
-      break;
-  }
+  prv_step(&((DateSelectionWindowData *)context)->date, index, -1);
+}
+
+static void prv_handle_get_neighbor_text(unsigned index, int delta, char *buffer,
+                                         size_t buffer_size, void *context) {
+  DateData date = ((DateSelectionWindowData *)context)->date;
+  prv_step(&date, index, delta);
+  prv_format_cell(&date, index, buffer, buffer_size);
 }
 
 // ---------------------------------------------------------------------------
@@ -195,6 +190,7 @@ void date_selection_window_init(DateSelectionWindowData *window, const char *lab
                                   .complete = prv_handle_complete,
                                   .increment = prv_handle_inc,
                                   .decrement = prv_handle_dec,
+                                  .get_neighbor_text = prv_handle_get_neighbor_text,
                                 });
   layer_add_child(&w->layer, &sel->layer);
 
@@ -213,6 +209,12 @@ void date_selection_window_init(DateSelectionWindowData *window, const char *lab
     text_layer_set_text(label_layer, label);
     layer_set_hidden(&label_layer->layer, false);
   }
+
+#ifdef CONFIG_TOUCH
+  // The label's frame overlaps the cells; the topmost sibling receives the touch.
+  layer_remove_from_parent(&sel->layer);
+  layer_add_child(&w->layer, &sel->layer);
+#endif
 
   // Status bar setup
   status_bar_layer_init(&window->status_layer);
