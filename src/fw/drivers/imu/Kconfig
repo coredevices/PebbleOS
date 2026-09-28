@@ -3,6 +3,14 @@
 
 menu "IMU"
 
+config IMU_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The imu shell command, to read the accelerometer and magnetometer
+      drivers directly.
+
 choice ACCEL
     prompt "Accelerometer"
     optional
