@@ -30,6 +30,7 @@
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/timeline/notification_layout.h"
+#include "pbl/services/timeline/timeline_actions.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
@@ -232,6 +233,25 @@ static bool prv_push_single_notification_window(const Uuid *id) {
   return true;
 }
 
+static bool prv_hold_select_dismisses_individual(void) {
+  return alerts_preferences_get_notification_hold_select_action() ==
+         NotificationHoldSelectAction_DismissIndividual;
+}
+
+static void prv_dismiss_notification(const Uuid *id) {
+  TimelineItem notification;
+  if (!notification_storage_get((Uuid *)id, &notification)) {
+    return;
+  }
+  const TimelineItemAction *dismiss = timeline_item_find_dismiss_action(&notification);
+  if (dismiss) {
+    // Same as Dismiss in the notification's action menu, with its result dialog. The row goes
+    // away once the notification is marked dismissed.
+    timeline_actions_invoke_action(dismiss, &notification, NULL, NULL);
+  }
+  timeline_item_free_allocated_buffer(&notification);
+}
+
 static uint16_t prv_group_window_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
                                               void *context) {
   NotificationGroupWindow *group_window = context;
@@ -284,6 +304,18 @@ static void prv_group_window_select(MenuLayer *menu_layer, MenuIndex *cell_index
   }
 }
 
+static void prv_group_window_select_long(MenuLayer *menu_layer, MenuIndex *cell_index,
+                                         void *context) {
+  NotificationGroupWindow *group_window = context;
+  if (!prv_hold_select_dismisses_individual()) {
+    prv_group_window_select(menu_layer, cell_index, context);
+    return;
+  }
+  if (cell_index->row < group_window->count) {
+    prv_dismiss_notification(&group_window->notification_ids[cell_index->row]);
+  }
+}
+
 static void prv_group_window_load(Window *window) {
   NotificationGroupWindow *group_window = window_get_user_data(window);
   GRect sender_frame = window->layer.bounds;
@@ -305,6 +337,7 @@ static void prv_group_window_load(Window *window) {
                              .get_cell_height = prv_group_window_get_cell_height,
                              .draw_row = prv_group_window_draw_row,
                              .select_click = prv_group_window_select,
+                             .select_long_click = prv_group_window_select_long,
                            });
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
   menu_layer_set_highlight_colors(
@@ -644,6 +677,22 @@ static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, vo
                                          animated);
 }
 
+static void prv_select_long_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  NotificationsData *notifications_data = data;
+  NotificationHistoryRow *row =
+      (notifications_data->history.rows && (cell_index->row > 0))
+          ? notifications_history_get_row(&notifications_data->history, cell_index->row - 1)
+          : NULL;
+  // Holding Select on a notification dismisses it. Anywhere else, and with the setting off, it
+  // opens the row like a click.
+  if (!prv_hold_select_dismisses_individual() || !row ||
+      notifications_history_row_is_collapsed_group(row)) {
+    prv_select_callback(menu_layer, cell_index, data);
+    return;
+  }
+  prv_dismiss_notification(notifications_history_row_get_latest_id(row));
+}
+
 static uint16_t prv_get_num_rows_callback(struct MenuLayer *menu_layer, uint16_t section_index,
                                           void *data) {
   NotificationsData *notifications_data = data;
@@ -962,6 +1011,7 @@ static void prv_window_load(Window *window) {
                              .draw_row = prv_draw_row_callback,
                              .get_cell_height = prv_get_cell_height,
                              .select_click = prv_select_callback,
+                             .select_long_click = prv_select_long_callback,
                            });
 
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
