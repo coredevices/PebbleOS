@@ -40,7 +40,8 @@
       "type": { "enum": ["font"] },
       "file": { "type": "string" },
       "targetPlatforms": { "$ref": "attributes.json#/targetPlatforms" },
-      "characterRegex": { "type": "string" }
+      "characterRegex": { "type": "string" },
+      "pixelHeight": { "type": "integer", "minimum": 1, "maximum": 255 }
     },
     "required": ["name", "type", "file"]
   },
