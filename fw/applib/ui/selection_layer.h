@@ -57,6 +57,16 @@ typedef struct SelectionLayer {
   AnimationImplementation slide_amin_impl;
   unsigned slide_settle_anim_progress;
   AnimationImplementation slide_settle_anim_impl;
+
+  //! Layout-compatible with TouchNavWidgetNode; declared unconditionally so the struct size is
+  //! board-independent.
+  struct {
+    void *next;
+    void *layer;
+    void *ops;
+    void *widget;
+  } touch_nav_node;
+  int16_t touch_drag_steps;
 } SelectionLayer;
 
 void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, unsigned num_cells);

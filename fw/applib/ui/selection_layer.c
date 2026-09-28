@@ -10,6 +10,17 @@
 #include "shell/system_theme.h"
 #include <pbl/logging/logging.h>
 
+#ifdef CONFIG_TOUCH
+#include "applib/ui/recognizer/recognizer_manager.h"
+#include "applib/ui/recognizer/touch_nav.h"
+#include "kernel/pebble_tasks.h"
+
+struct TouchNavState *app_state_get_touch_nav_state(void);
+struct TouchNavState *modal_manager_get_touch_nav_state(void);
+
+#define TOUCH_PIXELS_PER_STEP 18
+#endif
+
 // Look and feel
 #define DEFAULT_CELL_PADDING   10
 #define DEFAULT_SELECTED_INDEX 0
@@ -534,8 +545,7 @@ void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   }
 }
 
-void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer *)context;
+static void prv_advance(SelectionLayer *selection_layer) {
   if (selection_layer->is_active) {
     animation_unschedule(selection_layer->next_cell_animation);
     if (selection_layer->selected_cell_idx == selection_layer->num_cells - 1) {
@@ -545,6 +555,10 @@ void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
       prv_run_slide_animation(selection_layer);
     }
   }
+}
+
+void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  prv_advance((SelectionLayer *)context);
 }
 
 static void prv_click_config_provider(SelectionLayer *selection_layer) {
@@ -560,12 +574,170 @@ static void prv_click_config_provider(SelectionLayer *selection_layer) {
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
 }
 
+#ifdef CONFIG_TOUCH
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//! Touch: tap a cell to select it (tap the selected cell to advance), drag vertically to change
+//! the selected cell's value, swipe right for BACK and left for SELECT.
+
+_Static_assert(sizeof(((SelectionLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
+               "SelectionLayer touch_nav_node must match TouchNavWidgetNode layout");
+
+static TouchNavState *prv_task_touch_nav_state(void) {
+  return (pebble_task_get_current() == PebbleTask_App) ? app_state_get_touch_nav_state()
+                                                       : modal_manager_get_touch_nav_state();
+}
+
+static int prv_touch_cell_at(SelectionLayer *selection_layer, GPoint point_on_screen) {
+  GRect global_frame;
+  layer_get_global_frame(&selection_layer->layer, &global_frame);
+  const int16_t x = point_on_screen.x - global_frame.origin.x;
+  const int16_t half_padding = selection_layer->cell_padding / 2;
+  int16_t cell_x = prv_centered_offset_x(selection_layer);
+  for (unsigned i = 0; i < selection_layer->num_cells; i++) {
+    const int16_t width = selection_layer->cell_widths[i];
+    if (width == 0) {
+      continue;
+    }
+    if (x >= cell_x - half_padding && x < cell_x + width + half_padding) {
+      return i;
+    }
+    cell_x += width + selection_layer->cell_padding;
+  }
+  return -1;
+}
+
+static int16_t prv_touch_steps_from_drag(int16_t delta_y) {
+  const int16_t half_step = TOUCH_PIXELS_PER_STEP / 2;
+  return (delta_y >= 0 ? delta_y + half_step : delta_y - half_step) / TOUCH_PIXELS_PER_STEP;
+}
+
+static void prv_touch_apply_drag(SelectionLayer *selection_layer, int16_t delta_y) {
+  const int16_t steps = prv_touch_steps_from_drag(delta_y);
+  if (steps == selection_layer->touch_drag_steps) {
+    return;
+  }
+  while (selection_layer->touch_drag_steps != steps) {
+    const bool is_up = steps > selection_layer->touch_drag_steps;
+    const SelectionLayerIncrementCallback func =
+        is_up ? selection_layer->callbacks.increment : selection_layer->callbacks.decrement;
+    if (func) {
+      func(selection_layer->selected_cell_idx, selection_layer->callback_context);
+    }
+    selection_layer->touch_drag_steps += is_up ? 1 : -1;
+  }
+  layer_mark_dirty(&selection_layer->layer);
+}
+
+static bool prv_ops_can_start(void *w) {
+  return ((SelectionLayer *)w)->is_active;
+}
+
+static void prv_ops_pan_started(void *w) {
+  ((SelectionLayer *)w)->touch_drag_steps = 0;
+}
+
+static GPointReturn prv_ops_get_base_offset(void *w) {
+  return GPointZero;
+}
+
+static void prv_ops_pan_update(void *w, GPoint base, GPoint delta) {
+  prv_touch_apply_drag(w, delta.y);
+}
+
+static void prv_ops_pan_snap(void *w, GPoint base, GPoint final_delta, GPoint velocity) {
+  prv_touch_apply_drag(w, final_delta.y);
+}
+
+static void prv_ops_pan_cancel(void *w) {
+}
+
+static void prv_ops_tap(void *w, GPoint point_on_screen) {
+  SelectionLayer *selection_layer = w;
+  if (!selection_layer->is_active) {
+    return;
+  }
+  const int cell_idx = prv_touch_cell_at(selection_layer, point_on_screen);
+  if (cell_idx < 0) {
+    return;
+  }
+  if ((unsigned)cell_idx == selection_layer->selected_cell_idx) {
+    prv_advance(selection_layer);
+    return;
+  }
+  // Unscheduling a running slide advances the index, so assign afterwards.
+  animation_unschedule(selection_layer->next_cell_animation);
+  selection_layer->selected_cell_idx = cell_idx;
+  layer_mark_dirty(&selection_layer->layer);
+}
+
+static void prv_ops_swipe(void *w, SwipeDirection direction) {
+  const TouchNavState *state = prv_task_touch_nav_state();
+  if (!state || !state->ops) {
+    return;
+  }
+  const TouchNavOps *ops = state->ops;
+  if (ops->is_animating && ops->is_animating(ops->ctx)) {
+    return;
+  }
+  if (direction == SwipeDirection_Left) {
+    if (ops->emit_button) {
+      ops->emit_button(ops->ctx, BUTTON_ID_SELECT);
+    }
+  } else if (ops->top_overrides_back && ops->top_overrides_back(ops->ctx)) {
+    if (ops->emit_button) {
+      ops->emit_button(ops->ctx, BUTTON_ID_BACK);
+    }
+  } else if (ops->pop_top) {
+    ops->pop_top(ops->ctx);
+  }
+}
+
+static const TouchNavWidgetOps s_selection_touch_nav_ops = {
+  .can_start = prv_ops_can_start,
+  .pan_started = prv_ops_pan_started,
+  .get_base_offset = prv_ops_get_base_offset,
+  .pan_update = prv_ops_pan_update,
+  .pan_snap = prv_ops_pan_snap,
+  .pan_cancel = prv_ops_pan_cancel,
+  .tap = prv_ops_tap,
+  .swipe = prv_ops_swipe,
+};
+
+static void prv_touch_nav_register(SelectionLayer *selection_layer) {
+  TouchNavState *state = prv_task_touch_nav_state();
+  if (!state || !state->manager) {
+    return;
+  }
+  touch_nav_registry_add(state, TouchNavWidgetType_Scroll,
+                         (TouchNavWidgetNode *)&selection_layer->touch_nav_node,
+                         &selection_layer->layer, &s_selection_touch_nav_ops, selection_layer);
+}
+
+static void prv_touch_nav_deregister(SelectionLayer *selection_layer) {
+  TouchNavState *state = prv_task_touch_nav_state();
+  if (!state) {
+    return;
+  }
+  const bool was_target = state->latched_target && state->latched_target->widget == selection_layer;
+  touch_nav_registry_remove(state, TouchNavWidgetType_Scroll,
+                            (TouchNavWidgetNode *)&selection_layer->touch_nav_node);
+  if (was_target && state->manager) {
+    recognizer_manager_cancel_and_reset(state->manager);
+  }
+}
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! API
 void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, unsigned num_cells) {
   if (num_cells > MAX_SELECTION_LAYER_CELLS) {
     num_cells = MAX_SELECTION_LAYER_CELLS;
   }
+
+#ifdef CONFIG_TOUCH
+  // Re-init zeroes the node, so unlink it first to keep the registry list intact.
+  prv_touch_nav_deregister(selection_layer);
+#endif
 
   // Set layer defaults
   *selection_layer = (SelectionLayer){
@@ -585,6 +757,9 @@ void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, u
   layer_set_frame(&selection_layer->layer, frame);
   layer_set_clips(&selection_layer->layer, false);
   layer_set_update_proc(&selection_layer->layer, (LayerUpdateProc)prv_draw_selection_layer);
+#ifdef CONFIG_TOUCH
+  prv_touch_nav_register(selection_layer);
+#endif
 }
 
 SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells) {
@@ -597,6 +772,9 @@ SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells) {
 }
 
 void selection_layer_deinit(SelectionLayer *selection_layer) {
+#ifdef CONFIG_TOUCH
+  prv_touch_nav_deregister(selection_layer);
+#endif
   animation_unschedule(selection_layer->next_cell_animation);
   animation_unschedule(selection_layer->value_change_animation);
 }
