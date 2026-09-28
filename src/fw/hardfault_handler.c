@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "kernel/fault_handling.h"
 #include "logging/logging_private.h"
 #include "system/die.h"
 #include "system/reboot_reason.h"
@@ -114,7 +115,37 @@ void fault_handler_dump(char buffer[80], unsigned int *stacked_args) {
                                  pebble_task_get_name(pebble_task_get_current()));
 }
 
-static void hard_fault_handler_c(unsigned int *hardfault_args) {
+static void prv_stack_overflow(char buffer[80], unsigned int *hardfault_args) {
+  // A stacking error leaves the frame (partly) inside the guard, unreadable.
+  const bool frame_valid = !(SCB->CFSR & (1 << 4)); // MSTKERR
+  const PebbleTask task = pebble_task_get_current();
+  RebootReason reason = {
+    .code = RebootReasonCode_StackOverflow,
+    .data8[0] = task,
+    .extra = {.value = frame_valid ? hardfault_args[6] : 0},
+  };
+  reboot_reason_set(&reason);
+
+  PBL_LOG_FROM_FAULT_HANDLER_FMT(buffer, 80, "Stack overflow [task: %s]",
+                                 pebble_task_get_name(task));
+  if (frame_valid) {
+    fault_handler_dump(buffer, hardfault_args);
+  } else {
+    fault_handler_dump_cfsr(buffer);
+  }
+
+  reset_due_to_software_failure();
+}
+
+static void hard_fault_handler_c(unsigned int *hardfault_args, unsigned int exc_return) {
+  char buffer[80];
+
+  // Faults inside exception handlers (e.g. the context switch saving a thread's registers onto
+  // an exhausted stack) escalate straight to a HardFault.
+  if (fault_handling_hit_stack_guard(hardfault_args, exc_return)) {
+    prv_stack_overflow(buffer, hardfault_args);
+  }
+
   // Prefer LR (PC is often madness on a hardfault). Fall back through PC,
   // BFAR, MMFAR so crash reports always have a non-zero address to
   // fingerprint on.
@@ -133,7 +164,6 @@ static void hard_fault_handler_c(unsigned int *hardfault_args) {
 
   // Yay, ripping stuff from the internet!
   // http://blog.frankvh.com/2011/12/07/cortex-m3-m4-hard-fault-handler/
-  char buffer[80];
 
   // To inspect the SCB in GDB: p (*((SCB_Type *) 0xE000ED00))
 
@@ -157,5 +187,6 @@ void HardFault_Handler(void) {
       "ite eq\n"
       "mrseq r0, msp\n"
       "mrsne r0, psp\n"
+      "mov r1, lr\n"
       "b %0\n" ::"i"(hard_fault_handler_c));
 }
