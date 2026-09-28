@@ -90,8 +90,10 @@ static int prv_spo2_interval_to_index(HRMonitoringInterval interval) {
 enum SettingsHealthItem {
   SettingsHealthTrackingEnabled,
   SettingsHealthUnitDistance,
+#ifdef CONFIG_TOUCH
   SettingsHealthHeight,
   SettingsHealthAge,
+#endif
 #ifdef CONFIG_HRM
   SettingsHealthHRMonitoringInterval,
   SettingsHealthHRActivityTracking,
@@ -146,6 +148,7 @@ static void prv_spo2_interval_menu_push(SettingsHealthData *data) {
 }
 #endif
 
+#ifdef CONFIG_TOUCH
 // Height / Age value pickers
 /////////////////////////////
 
@@ -216,6 +219,7 @@ static void prv_age_picker_push(void) {
   prv_picker_push(i18n_noop("Age"), NULL, activity_prefs_get_age_years(), AGE_MIN_YEARS,
                   AGE_MAX_YEARS, prv_save_age);
 }
+#endif
 
 // Menu Callbacks
 /////////////////////////////
@@ -250,6 +254,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       }
       break;
     }
+#ifdef CONFIG_TOUCH
     case SettingsHealthHeight: {
       const int32_t height = prv_height_value();
       if (prv_height_is_imperial()) {
@@ -268,6 +273,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       menu_cell_basic_draw(ctx, cell_layer, i18n_get("Age", data), data->age_subtitle, NULL);
       return;
     }
+#endif
 #ifdef CONFIG_HRM
     case SettingsHealthHRMonitoringInterval: {
       title = i18n_noop("HR Monitoring");
@@ -330,12 +336,14 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       shell_prefs_set_units_distance(unit);
       break;
     }
+#ifdef CONFIG_TOUCH
     case SettingsHealthHeight:
       prv_height_picker_push();
       return;
     case SettingsHealthAge:
       prv_age_picker_push();
       return;
+#endif
 #ifdef CONFIG_HRM
     case SettingsHealthHRMonitoringInterval:
       prv_hrm_interval_menu_push((SettingsHealthData *)context);
