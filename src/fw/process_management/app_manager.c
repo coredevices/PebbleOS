@@ -179,6 +179,7 @@ void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
 #else
 #define APP_STACK_NORMAL_SIZE (2 * 1024)
 #endif
+#define APP_STACK_SYSTEM_SIZE (4 * 1024)
 
 static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
   switch (process_metadata_get_app_sdk_type(app_md)) {
@@ -215,6 +216,8 @@ static size_t prv_get_app_stack_size(const PebbleProcessMd *app_md) {
     case ProcessAppSDKType_Legacy2x:
     case ProcessAppSDKType_Legacy3x:
       return 2 * 1024;
+    case ProcessAppSDKType_System:
+      return APP_STACK_SYSTEM_SIZE;
     default:
       return APP_STACK_NORMAL_SIZE;
   }
