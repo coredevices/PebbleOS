@@ -5,7 +5,9 @@
 #include "option_menu.h"
 #include "window.h"
 
+#include "applib/ui/app_window_stack.h"
 #include "applib/ui/option_menu_window.h"
+#include "applib/ui/value_picker_window.h"
 #include "kernel/pbl_malloc.h"
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/i18n/i18n.h"
@@ -14,9 +16,27 @@
 #include "system/passert.h"
 #include "pbl/util/size.h"
 
+#include <inttypes.h>
+#include <stdio.h>
+
+#define HEIGHT_MIN_CM 100
+#define HEIGHT_MAX_CM 250
+#define HEIGHT_MIN_IN 39
+#define HEIGHT_MAX_IN 98
+#define MM_PER_IN_X10 254
+#define AGE_MIN_YEARS 10
+#define AGE_MAX_YEARS 100
+
 typedef struct SettingsHealthData {
   SettingsCallbacks callbacks;
+  char height_subtitle[16];
+  char age_subtitle[8];
 } SettingsHealthData;
+
+typedef struct SettingsHealthPicker {
+  ValuePickerWindow picker_window;
+  void (*save)(int32_t value);
+} SettingsHealthPicker;
 
 static const char *s_units_distance_labels[] = {
   i18n_noop("Kilometers"),
@@ -70,6 +90,8 @@ static int prv_spo2_interval_to_index(HRMonitoringInterval interval) {
 enum SettingsHealthItem {
   SettingsHealthTrackingEnabled,
   SettingsHealthUnitDistance,
+  SettingsHealthHeight,
+  SettingsHealthAge,
 #ifdef CONFIG_HRM
   SettingsHealthHRMonitoringInterval,
   SettingsHealthHRActivityTracking,
@@ -124,6 +146,77 @@ static void prv_spo2_interval_menu_push(SettingsHealthData *data) {
 }
 #endif
 
+// Height / Age value pickers
+/////////////////////////////
+
+static bool prv_height_is_imperial(void) {
+  return shell_prefs_get_units_distance() == UnitsDistance_Miles;
+}
+
+static int32_t prv_height_value(void) {
+  const int32_t height_mm = activity_prefs_get_height_mm();
+  return prv_height_is_imperial() ? (height_mm * 10 + MM_PER_IN_X10 / 2) / MM_PER_IN_X10
+                                  : (height_mm + 5) / 10;
+}
+
+static void prv_save_height(int32_t value) {
+  activity_prefs_set_height_mm(prv_height_is_imperial() ? (value * MM_PER_IN_X10 + 5) / 10
+                                                        : value * 10);
+}
+
+static void prv_save_age(int32_t value) {
+  activity_prefs_set_age_years(value);
+}
+
+static void prv_picker_selected(ValuePickerWindow *picker_window, void *context) {
+  SettingsHealthPicker *picker = context;
+  picker->save(value_picker_window_get_value(picker_window));
+  settings_menu_reload_data(SettingsMenuItemHealth);
+  settings_menu_mark_dirty(SettingsMenuItemHealth);
+  app_window_stack_remove(&picker_window->window, true /* animated */);
+}
+
+static void prv_picker_unload(ValuePickerWindow *picker_window, void *context) {
+  i18n_free_all(context);
+  app_free(context);
+}
+
+static void prv_picker_push(const char *title, const char *unit, int32_t value, int32_t min_value,
+                            int32_t max_value, void (*save)(int32_t value)) {
+  SettingsHealthPicker *picker = app_zalloc_check(sizeof(*picker));
+  picker->save = save;
+  const ValuePickerContent content = {
+    .title = i18n_get(title, picker),
+    .unit = unit ? i18n_get(unit, picker) : NULL,
+    .value = value,
+    .min_value = min_value,
+    .max_value = max_value,
+    .step = 1,
+  };
+  value_picker_window_init(&picker->picker_window, &content, NULL,
+                           (ValuePickerWindowCallbacks){
+                             .selected = prv_picker_selected,
+                             .unload = prv_picker_unload,
+                           },
+                           picker);
+  app_window_stack_push(&picker->picker_window.window, true /* animated */);
+}
+
+static void prv_height_picker_push(void) {
+  if (prv_height_is_imperial()) {
+    prv_picker_push(i18n_noop("Height"), i18n_noop("in"), prv_height_value(), HEIGHT_MIN_IN,
+                    HEIGHT_MAX_IN, prv_save_height);
+  } else {
+    prv_picker_push(i18n_noop("Height"), i18n_noop("cm"), prv_height_value(), HEIGHT_MIN_CM,
+                    HEIGHT_MAX_CM, prv_save_height);
+  }
+}
+
+static void prv_age_picker_push(void) {
+  prv_picker_push(i18n_noop("Age"), NULL, activity_prefs_get_age_years(), AGE_MIN_YEARS,
+                  AGE_MAX_YEARS, prv_save_age);
+}
+
 // Menu Callbacks
 /////////////////////////////
 
@@ -156,6 +249,24 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
         subtitle = s_units_distance_labels[unit];
       }
       break;
+    }
+    case SettingsHealthHeight: {
+      const int32_t height = prv_height_value();
+      if (prv_height_is_imperial()) {
+        snprintf(data->height_subtitle, sizeof(data->height_subtitle), "%" PRId32 "'%" PRId32 "\"",
+                 height / 12, height % 12);
+      } else {
+        snprintf(data->height_subtitle, sizeof(data->height_subtitle), "%" PRId32 " %s", height,
+                 i18n_get("cm", data));
+      }
+      menu_cell_basic_draw(ctx, cell_layer, i18n_get("Height", data), data->height_subtitle, NULL);
+      return;
+    }
+    case SettingsHealthAge: {
+      snprintf(data->age_subtitle, sizeof(data->age_subtitle), "%u",
+               (unsigned int)activity_prefs_get_age_years());
+      menu_cell_basic_draw(ctx, cell_layer, i18n_get("Age", data), data->age_subtitle, NULL);
+      return;
     }
 #ifdef CONFIG_HRM
     case SettingsHealthHRMonitoringInterval: {
@@ -219,6 +330,12 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       shell_prefs_set_units_distance(unit);
       break;
     }
+    case SettingsHealthHeight:
+      prv_height_picker_push();
+      return;
+    case SettingsHealthAge:
+      prv_age_picker_push();
+      return;
 #ifdef CONFIG_HRM
     case SettingsHealthHRMonitoringInterval:
       prv_hrm_interval_menu_push((SettingsHealthData *)context);
