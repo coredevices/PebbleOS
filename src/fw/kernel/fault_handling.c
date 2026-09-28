@@ -5,6 +5,7 @@
 #include "pbl/kernel/sched.h"
 #include "pbl/kernel/thread.h"
 #include "kernel/core_dump.h"
+#include "kernel/fault_handling.h"
 #include "logging/logging_private.h"
 #include "process_management/process_manager.h"
 #include "process_management/app_manager.h"
@@ -321,6 +322,37 @@ static void attempt_handle_generic_fault(unsigned int *stacked_args) {
 extern void fault_handler_dump(char buffer[80], unsigned int *stacked_args);
 extern void fault_handler_dump_cfsr(char buffer[80]);
 
+static bool prv_overlaps_stack_guard(uintptr_t start, uintptr_t end) {
+  static const uint8_t s_guard_regions[] = {
+    MemoryRegion_IsrStackGuard,
+    MemoryRegion_TaskStackGuard,
+    MemoryRegion_Task4, // syscall stack guard, when the task has one
+  };
+  for (unsigned int i = 0; i < ARRAY_LENGTH(s_guard_regions); i++) {
+    MpuRegion mpu_region = mpu_get_region(s_guard_regions[i]);
+    if (mpu_region.enabled && start < mpu_region.base_address + mpu_region.size &&
+        end > mpu_region.base_address) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool fault_handling_hit_stack_guard(const unsigned int *stacked_args, unsigned int exc_return) {
+  const uint8_t mmfsr = SCB->CFSR & 0xff;
+  if (mmfsr & (1 << 7) /* MMARVALID */) {
+    const uintptr_t fault_addr = SCB->MMFAR;
+    return prv_overlaps_stack_guard(fault_addr, fault_addr + 1);
+  }
+  if (mmfsr & (1 << 4) /* MSTKERR */) {
+    // Stacking faults leave MMFAR invalid, but SP already points at the frame.
+    const uintptr_t frame = (uintptr_t)stacked_args;
+    const size_t frame_words = (exc_return & 0x10) ? 8 : 26;
+    return prv_overlaps_stack_guard(frame, frame + frame_words * sizeof(uint32_t));
+  }
+  return false;
+}
+
 static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
   // Be very careful about touching stacked_args in this function. We can end up in the
   // memfault handler because we hit the stack guard, which indicates that we've run out of stack
@@ -335,25 +367,8 @@ static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
   PBL_LOG_FROM_FAULT_HANDLER("");
 
   // If if we faulted in a stack guard region, this indicates a stack overflow
-  bool stack_overflow = false;
-  const uint32_t cfsr = SCB->CFSR;
-  const uint8_t mmfsr = cfsr & 0xff;
-  if (mmfsr & (1 << 7)) {
-    uint32_t fault_addr = SCB->MMFAR;
-    static const uint8_t s_guard_regions[] = {
-      MemoryRegion_IsrStackGuard,
-      MemoryRegion_TaskStackGuard,
-      MemoryRegion_Task4, // syscall stack guard, when the task has one
-    };
-    for (unsigned int i = 0; i < ARRAY_LENGTH(s_guard_regions); i++) {
-      MpuRegion mpu_region = mpu_get_region(s_guard_regions[i]);
-      if (mpu_region.enabled &&
-          memory_layout_is_pointer_in_region(&mpu_region, (void *)fault_addr)) {
-        stack_overflow = true;
-        break;
-      }
-    }
-  }
+  const bool stack_overflow = fault_handling_hit_stack_guard(stacked_args, lr);
+  const uint8_t mmfsr = SCB->CFSR & 0xff;
 
   // If it's a stack overflow, backup the stack so that attempt_handle_hardware_fault() can jam in
   // our landing zone to return to
