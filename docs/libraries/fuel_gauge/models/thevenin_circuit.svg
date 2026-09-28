@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -15 600 240" width="600" height="240">
+  <style>
+    .w { fill: none; stroke: #8a8a8a; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .n { fill: #8a8a8a; }
+    .t { fill: none; stroke: #8a8a8a; stroke-width: 2; }
+    text { fill: #8a8a8a; font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif; font-size: 20px; }
+    .i { font-style: italic; }
+    .s { font-size: 14px; font-style: normal; }
+  </style>
+
+  <!-- OCV source -->
+  <circle class="w" cx="60" cy="125" r="24"/>
+  <path class="w" d="M60 107 v10 M55 112 h10 M55 138 h10"/>
+  <text x="18" y="132" text-anchor="end"><tspan>OCV(</tspan><tspan class="i">z</tspan><tspan>)</tspan></text>
+
+  <!-- top rail with R0 -->
+  <path class="w" d="M60 101 V60 H110"/>
+  <path class="w" d="M110 60 l5 -9 l10 18 l10 -18 l10 18 l10 -18 l10 18 l5 -9"/>
+  <path class="w" d="M170 60 H210"/>
+  <text x="140" y="38" text-anchor="middle" class="i">R<tspan class="s" dy="5">0</tspan></text>
+
+  <!-- R1 || C1 -->
+  <circle class="n" cx="210" cy="60" r="3.5"/>
+  <circle class="n" cx="350" cy="60" r="3.5"/>
+  <path class="w" d="M210 60 V25 H250 M310 25 H350 V60"/>
+  <path class="w" d="M250 25 l5 -9 l10 18 l10 -18 l10 18 l10 -18 l10 18 l5 -9"/>
+  <text x="280" y="12" text-anchor="middle" class="i">R<tspan class="s" dy="5">1</tspan></text>
+  <path class="w" d="M210 60 V95 H274 M286 95 H350 V60"/>
+  <path class="w" d="M274 80 V110 M286 80 V110"/>
+  <text x="280" y="72" text-anchor="middle" class="i">C<tspan class="s" dy="5">1</tspan></text>
+
+  <!-- v1 across the pair -->
+  <text x="214" y="132" text-anchor="middle">+</text>
+  <text x="280" y="134" text-anchor="middle" class="i">v<tspan class="s" dy="5">1</tspan></text>
+  <text x="346" y="132" text-anchor="middle">−</text>
+
+  <!-- output, current and terminal voltage -->
+  <path class="w" d="M350 60 H460"/>
+  <path class="w" d="M392 60 h22 M406 53 l9 7 l-9 7"/>
+  <text x="404" y="44" text-anchor="middle" class="i">i</text>
+  <path class="w" d="M60 149 V200 H460"/>
+  <circle class="t" cx="464" cy="60" r="4" style="fill: none"/>
+  <circle class="t" cx="464" cy="200" r="4" style="fill: none"/>
+  <text x="472" y="86">+</text>
+  <text x="472" y="186">−</text>
+  <text x="476" y="137" class="i">v</text>
+</svg>

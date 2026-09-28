@@ -16,4 +16,6 @@ config KRAEPELIN
     help
       Build the Kraepelin step and sleep tracking algorithm.
 
+rsource "fuel_gauge/Kconfig"
+
 endmenu

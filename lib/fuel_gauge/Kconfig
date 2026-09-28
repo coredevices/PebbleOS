@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config FUEL_GAUGE
+    bool
+    help
+      Battery state-of-charge estimation from voltage, current and
+      temperature measurements.
+
+if FUEL_GAUGE
+
+choice FUEL_GAUGE_ESTIMATOR
+    prompt "Estimator"
+    default FUEL_GAUGE_THEVENIN
+
+config FUEL_GAUGE_THEVENIN
+    bool "Thevenin model"
+    help
+      Extended Kalman filter over the cell's series resistance and one
+      RC polarization pair.
+
+endchoice
+
+if FUEL_GAUGE_THEVENIN
+
+config FUEL_GAUGE_THEVENIN_RC_MILLIOHM
+    int "RC pair resistance (mOhm)"
+    default 0
+    help
+      Resistance at 25 C of the RC pair, as tools/fuel_gauge/fuel_gauge.py
+      fit gives it. 0 leaves the pair out.
+
+config FUEL_GAUGE_THEVENIN_RC_TAU_MS
+    int "RC pair time constant (ms)"
+    default 0
+    help
+      Time constant of the RC pair.
+
+config FUEL_GAUGE_THEVENIN_R_TEMP_COEFF_PPM
+    int "Resistance temperature coefficient (ppm/C)"
+    range 0 80000
+    default 30000
+    help
+      The resistances scale by exp(coefficient * (25 - T)), with T in C.
+
+config FUEL_GAUGE_THEVENIN_VOLTAGE_NOISE_UV
+    int "Voltage noise (uV)"
+    default 15000
+    help
+      Standard deviation of the voltage measurement and cell model error.
+
+config FUEL_GAUGE_THEVENIN_CURRENT_NOISE_UA
+    int "Current noise (uA)"
+    default 5000
+    help
+      Standard deviation of the error of a current sample as the average
+      current over the time since the previous sample.
+
+endif
+
+endif
