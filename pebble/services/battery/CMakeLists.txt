@@ -2,13 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(sources battery_monitor.c)
-if(CONFIG_NRF_FUEL_GAUGE AND (NOT CONFIG_RECOVERY_FW OR CONFIG_MFG))
+if((CONFIG_NRF_FUEL_GAUGE OR CONFIG_BATTERY_SOC_FUEL_GAUGE) AND
+   (NOT CONFIG_RECOVERY_FW OR CONFIG_MFG))
   list(APPEND sources battery_state_store.c)
 endif()
 if(CONFIG_NRF_FUEL_GAUGE)
   list(APPEND sources
     nrf_fuel_gauge/battery_curve.c
     nrf_fuel_gauge/battery_state.c
+  )
+elseif(CONFIG_BATTERY_SOC_FUEL_GAUGE)
+  list(APPEND sources
+    fuel_gauge/battery_curve.c
+    fuel_gauge/battery_state.c
   )
 else()
   list(APPEND sources
