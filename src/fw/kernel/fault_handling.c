@@ -279,11 +279,17 @@ static void prv_return_to_landing_zone(uintptr_t stacked_pc, uintptr_t stacked_l
   // Now return to hardware_fault_landing_zone...
 }
 
-static void attempt_handle_stack_overflow(unsigned int *stacked_args, uintptr_t fault_pc) {
+// Only an unprivileged thread, faulting on its own stack, can be redirected to the landing zone.
+static bool prv_fault_is_recoverable(unsigned int exc_return) {
+  return (exc_return & 0x04) && !mcu_state_is_thread_privileged();
+}
+
+static void attempt_handle_stack_overflow(unsigned int *stacked_args, uintptr_t fault_pc,
+                                          unsigned int exc_return) {
   PebbleTask task = pebble_task_get_current();
   PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", pebble_task_get_name(task));
 
-  if (mcu_state_is_thread_privileged()) {
+  if (!prv_fault_is_recoverable(exc_return)) {
     // We're hosed! We can't recover so just reboot everything.
     RebootReason reason = {
       .code = RebootReasonCode_StackOverflow,
@@ -299,14 +305,14 @@ static void attempt_handle_stack_overflow(unsigned int *stacked_args, uintptr_t 
   prv_return_to_landing_zone(0, 0, stacked_args); // We can't get LR or PC, so just set to 0's.
 }
 
-static void attempt_handle_generic_fault(unsigned int *stacked_args) {
+static void attempt_handle_generic_fault(unsigned int *stacked_args, unsigned int exc_return) {
   uintptr_t stacked_lr = (uintptr_t)stacked_args[5];
   ;
   uintptr_t stacked_pc = (uintptr_t)stacked_args[6];
   ;
   ;
 
-  if (mcu_state_is_thread_privileged()) {
+  if (!prv_fault_is_recoverable(exc_return)) {
     // We're hosed! We can't recover so just reboot everything.
     kernel_fault(RebootReasonCode_HardFault, stacked_lr ? stacked_lr : stacked_pc);
     return;
@@ -393,14 +399,12 @@ static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
       fault_pc = SCB->MMFAR;
     }
 
-    stacked_args += 256; // Should be enough to get above the guard region and execute
-                         // hardware_fault_landing_zone
     if (lr & 0x04) {
+      stacked_args += 256; // Should be enough to get above the guard region and execute
+                           // hardware_fault_landing_zone
       __set_PSP((uint32_t)stacked_args);
-    } else {
-      __set_MSP((uint32_t)stacked_args);
     }
-    attempt_handle_stack_overflow(stacked_args, fault_pc);
+    attempt_handle_stack_overflow(stacked_args, fault_pc, lr);
 
   } else {
     prv_save_debug_registers(stacked_args);
@@ -414,7 +418,7 @@ static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
     //    set var $lr=<value of LR above>
     //    set var $pc=<value of PC above>
     //    bt
-    attempt_handle_generic_fault(stacked_args);
+    attempt_handle_generic_fault(stacked_args, lr);
   }
 }
 
@@ -430,7 +434,7 @@ void MemManage_Handler(void) {
       "b %0\n" ::"i"(mem_manage_handler_c));
 }
 
-static void busfault_handler_c(unsigned int *stacked_args) {
+static void busfault_handler_c(unsigned int *stacked_args, unsigned int lr) {
   PBL_LOG_FROM_FAULT_HANDLER("\r\n\r\n[BusFault_Handler!]");
   prv_save_debug_registers(stacked_args);
 
@@ -439,7 +443,7 @@ static void busfault_handler_c(unsigned int *stacked_args) {
 
   PBL_LOG_FROM_FAULT_HANDLER("");
 
-  attempt_handle_generic_fault(stacked_args);
+  attempt_handle_generic_fault(stacked_args, lr);
 }
 
 void BusFault_Handler(void) {
@@ -448,6 +452,7 @@ void BusFault_Handler(void) {
       "ite eq\n"
       "mrseq r0, msp\n"
       "mrsne r0, psp\n"
+      "mov r1, lr\n"
       "b %0\n" ::"i"(busfault_handler_c));
 }
 
@@ -466,13 +471,11 @@ static void usagefault_handler_c(unsigned int *stacked_args, unsigned int lr) {
     SCB->CFSR = SCB_CFSR_STKOF_Msk; // Clear by writing 1
 
     // No exception frame stacked on STKOF, so no PC available.
-    stacked_args += 256; // Back up SP to give landing zone room (see mem_manage_handler_c)
     if (lr & 0x04) {
+      stacked_args += 256; // Back up SP to give landing zone room (see mem_manage_handler_c)
       __set_PSP((uint32_t)stacked_args);
-    } else {
-      __set_MSP((uint32_t)stacked_args);
     }
-    attempt_handle_stack_overflow(stacked_args, 0);
+    attempt_handle_stack_overflow(stacked_args, 0, lr);
     return;
   }
 
@@ -483,7 +486,7 @@ static void usagefault_handler_c(unsigned int *stacked_args, unsigned int lr) {
 
   PBL_LOG_FROM_FAULT_HANDLER("");
 
-  attempt_handle_generic_fault(stacked_args);
+  attempt_handle_generic_fault(stacked_args, lr);
 }
 
 void UsageFault_Handler(void) {
