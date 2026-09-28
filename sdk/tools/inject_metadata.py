@@ -154,7 +154,11 @@ def inject_metadata(
             if len(columns) < 6:
                 continue
 
-            if columns[0] == ".bss" or columns[0] == ".data" and last_section_end_addr == 0:
+            if (
+                columns[0] == ".bss"
+                or columns[0] == ".data"
+                and last_section_end_addr == 0
+            ):
                 addr = int(columns[2], 16)
                 size = int(columns[4], 16)
                 last_section_end_addr = addr + size
@@ -172,31 +176,26 @@ def inject_metadata(
 
     def get_relocate_entries(elf_file):
         """returns a list of all the locations requiring an offset"""
-        # TODO: insert link to the wiki page I'm about to write about PIC and relocatable values
         entries = []
 
-        # get the .data locations
+        # Non-PIC libraries also embed absolute pointers in .text literal pools.
         readelf_relocs_process = Popen(
             ["arm-none-eabi-readelf", "-r", elf_file], stdout=PIPE
         )
         readelf_relocs_output = readelf_relocs_process.communicate()[0].decode("utf8")
         lines = readelf_relocs_output.splitlines()
 
-        i = 0
         reading_section = False
-        while i < len(lines):
-            if not reading_section:
-                # look for the next section
-                if lines[i].startswith("Relocation section '.rel.data"):
-                    reading_section = True
-                    i += 1  # skip the column title section
-            else:
-                if len(lines[i]) == 0:
-                    # end of the section
-                    reading_section = False
-                else:
-                    entries.append(int(lines[i].split(" ")[0], 16))
-            i += 1
+        for line in lines:
+            if line.startswith("Relocation section '"):
+                reading_section = line.startswith(
+                    ("Relocation section '.rel.text", "Relocation section '.rel.data")
+                )
+                continue
+            columns = line.split()
+            # PC-relative relocations are already resolved by the linker.
+            if reading_section and len(columns) >= 3 and columns[2] == "R_ARM_ABS32":
+                entries.append(int(columns[0], 16))
 
         # get any Global Offset Table (.got) entries
         readelf_relocs_process = Popen(
