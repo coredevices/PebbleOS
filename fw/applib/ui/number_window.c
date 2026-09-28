@@ -176,7 +176,10 @@ void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbac
   ActionBarLayer *action_bar = &nw->action_bar;
   action_bar_layer_init(action_bar);
 
-  value_picker_touch_init(&nw->touch, &nw->window.layer, prv_step, nw);
+  nw->touch = applib_malloc(sizeof(ValuePickerTouch));
+  if (nw->touch) {
+    value_picker_touch_init(nw->touch, &nw->window.layer, prv_step, nw);
+  }
 }
 
 NumberWindow *number_window_create(const char *label, NumberWindowCallbacks callbacks,
@@ -189,7 +192,11 @@ NumberWindow *number_window_create(const char *label, NumberWindowCallbacks call
 }
 
 static void number_window_deinit(NumberWindow *number_window) {
-  value_picker_touch_deinit(&number_window->touch);
+  if (number_window->touch) {
+    value_picker_touch_deinit(number_window->touch);
+    applib_free(number_window->touch);
+    number_window->touch = NULL;
+  }
   action_bar_layer_deinit(&number_window->action_bar);
   window_deinit(&number_window->window);
 }

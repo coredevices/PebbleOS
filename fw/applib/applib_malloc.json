@@ -147,7 +147,7 @@
     }, {
         "name": "NumberWindow",
         "size_2x": 352,
-        "size_3x_padding": 172,
+        "size_3x_padding": 204,
         "size_3x": 568,
         "dependencies": ["Window", "ActionBarLayer", "TextLayer", "TextLayer"]
     }, {

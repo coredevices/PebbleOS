@@ -194,15 +194,6 @@ static void prv_emit_button(ButtonId button) {
   }
 }
 
-static void prv_ops_tap(void *w, GPoint point_on_screen) {
-  const TouchNavState *state = prv_task_touch_nav_state();
-  if (!state) {
-    return;
-  }
-  prv_emit_button(touch_nav_action_bar_zone_button(&state->action_bar, point_on_screen,
-                                                   true /* require_icon_zone */));
-}
-
 static void prv_ops_swipe(void *w, SwipeDirection direction) {
   prv_emit_button(direction == SwipeDirection_Left ? BUTTON_ID_SELECT : BUTTON_ID_BACK);
 }
@@ -213,23 +204,23 @@ static const TouchNavWidgetOps s_value_picker_touch_nav_ops = {
   .pan_update = prv_ops_pan_update,
   .pan_snap = prv_ops_pan_snap,
   .pan_cancel = prv_ops_pan_cancel,
-  .tap = prv_ops_tap,
   .swipe = prv_ops_swipe,
 };
 #endif
 
-void value_picker_touch_init(ValuePickerTouch *touch, Layer *layer, ValuePickerStepHandler step,
+void value_picker_touch_init(ValuePickerTouch *touch, Layer *parent, ValuePickerStepHandler step,
                              void *context) {
   *touch = (ValuePickerTouch){
-    .layer = layer,
     .step = step,
     .context = context,
   };
+  layer_init(&touch->layer, &parent->bounds);
+  layer_add_child(parent, &touch->layer);
 #ifdef CONFIG_TOUCH
   TouchNavState *state = prv_task_touch_nav_state();
   if (state && state->manager) {
     touch_nav_registry_add(state, TouchNavWidgetType_Scroll,
-                           (TouchNavWidgetNode *)&touch->touch_nav_node, layer,
+                           (TouchNavWidgetNode *)&touch->touch_nav_node, &touch->layer,
                            &s_value_picker_touch_nav_ops, touch);
   }
 #endif
@@ -238,14 +229,15 @@ void value_picker_touch_init(ValuePickerTouch *touch, Layer *layer, ValuePickerS
 void value_picker_touch_deinit(ValuePickerTouch *touch) {
 #ifdef CONFIG_TOUCH
   TouchNavState *state = prv_task_touch_nav_state();
-  if (!state) {
-    return;
-  }
-  const bool was_target = state->latched_target && state->latched_target->widget == touch;
-  touch_nav_registry_remove(state, TouchNavWidgetType_Scroll,
-                            (TouchNavWidgetNode *)&touch->touch_nav_node);
-  if (was_target && state->manager) {
-    recognizer_manager_cancel_and_reset(state->manager);
+  if (state) {
+    const bool was_target = state->latched_target && state->latched_target->widget == touch;
+    touch_nav_registry_remove(state, TouchNavWidgetType_Scroll,
+                              (TouchNavWidgetNode *)&touch->touch_nav_node);
+    if (was_target && state->manager) {
+      recognizer_manager_cancel_and_reset(state->manager);
+    }
   }
 #endif
+  layer_remove_from_parent(&touch->layer);
+  layer_deinit(&touch->layer);
 }

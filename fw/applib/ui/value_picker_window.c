@@ -54,6 +54,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
 static void prv_load(Window *window) {
   ValuePickerWindow *picker_window = window_get_user_data(window);
+  value_picker_touch_init(&picker_window->touch, &window->layer, prv_step, picker_window);
   ActionBarLayer *action_bar = &picker_window->action_bar;
   action_bar_layer_init(action_bar);
   action_bar_layer_set_context(action_bar, picker_window);
@@ -62,7 +63,6 @@ static void prv_load(Window *window) {
   action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, &s_bar_icon_check_bitmap);
   action_bar_layer_add_to_window(action_bar, window);
   action_bar_layer_set_click_config_provider(action_bar, prv_click_config_provider);
-  value_picker_touch_init(&picker_window->touch, &window->layer, prv_step, picker_window);
 }
 
 static void prv_unload(Window *window) {

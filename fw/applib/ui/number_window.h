@@ -66,7 +66,8 @@ typedef struct NumberWindow {
   NumberWindowCallbacks callbacks;
   void *callback_context;
 
-  ValuePickerTouch touch;
+  //! Allocated separately so the struct stays within its 2.x allocation size.
+  ValuePickerTouch *touch;
 } NumberWindow;
 
 //! Initializes the NumberWindow.

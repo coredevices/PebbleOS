@@ -46,10 +46,13 @@ int16_t value_picker_steps_from_drag(int16_t delta_y);
 //! @param direction +1 to increase the value, -1 to decrease it.
 typedef void (*ValuePickerStepHandler)(int direction, void *context);
 
-//! Touch input for a value picker window: a vertical drag steps the value, a tap on an action bar
-//! icon presses its button, and a horizontal swipe navigates (right = BACK, left = SELECT).
+//! Touch input for a value picker window: a vertical drag steps the value and a horizontal swipe
+//! navigates (right = BACK, left = SELECT). Taps on the action bar reach it through the button
+//! bridge.
 typedef struct ValuePickerTouch {
-  Layer *layer;
+  //! Touch target covering the parent. The window root layer cannot be one: touch routing never
+  //! resolves to it.
+  Layer layer;
   ValuePickerStepHandler step;
   void *context;
   int16_t applied_steps;
@@ -63,7 +66,9 @@ typedef struct ValuePickerTouch {
   } touch_nav_node;
 } ValuePickerTouch;
 
-void value_picker_touch_init(ValuePickerTouch *touch, Layer *layer, ValuePickerStepHandler step,
+//! Adds the touch layer as a child of `parent`. Call before adding the action bar so the action
+//! bar stays on top of it.
+void value_picker_touch_init(ValuePickerTouch *touch, Layer *parent, ValuePickerStepHandler step,
                              void *context);
 
 void value_picker_touch_deinit(ValuePickerTouch *touch);
