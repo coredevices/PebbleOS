@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "shell/shell.h"
+#include "shell/system_shell.h"
 
 #include "apps/system_app_ids.h"
 #include "kernel/pbl_malloc.h"

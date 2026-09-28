@@ -7,7 +7,7 @@
 
 #include "kernel/event_loop.h"
 #include "shell/normal/watchface.h"
-#include "shell/shell.h"
+#include "shell/system_shell.h"
 
 // Stubs
 /////////////////////////////////////////////////////////////////////////

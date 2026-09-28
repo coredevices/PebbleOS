@@ -38,7 +38,7 @@
 #endif
 #include "shell/normal/app_idle_timeout.h"
 #include "shell/normal/watchface.h"
-#include "shell/shell.h"
+#include "shell/system_shell.h"
 #include "shell/system_app_state_machine.h"
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
