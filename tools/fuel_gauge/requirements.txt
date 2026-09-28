@@ -1,0 +1,3 @@
+# Fuel gauge cell model fitting (tools/fuel_gauge)
+scipy
+matplotlib
