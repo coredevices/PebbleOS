@@ -48,6 +48,8 @@ typedef struct LauncherMenuLayerTestAppNode {
 } LauncherMenuLayerTestAppNode;
 
 static bool s_use_pdc_icons;
+//! Replaces the Watchfaces row with Settings, whose glance shows the battery
+static bool s_show_settings_app;
 
 static const LauncherMenuLayerTestAppNode s_fake_app_nodes[LauncherMenuLayerTestAppCount] = {
   [LauncherMenuLayerTestApp_Watchfaces] = {
@@ -111,6 +113,11 @@ AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source, u
   const LauncherMenuLayerTestAppNode *test_node = &s_fake_app_nodes[row_index];
   static AppMenuNode node_copy;
   node_copy = test_node->node;
+  if (s_show_settings_app && (row_index == LauncherMenuLayerTestApp_Watchfaces)) {
+    node_copy.name = "Settings";
+    node_copy.uuid = (Uuid){0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7,
+                            0x9d, 0x42, 0x35, 0xbf, 0x47, 0xca, 0xad, 0xfe};
+  }
   node_copy.icon_resource_id =
       s_use_pdc_icons ? test_node->pdc_icon_resource_id : test_node->bitmap_icon_resource_id;
   return &node_copy;
@@ -179,7 +186,6 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include "stubs_app_manager.h"
 #include "stubs_app_window_stack.h"
 #include "stubs_app_timer.h"
-#include "stubs_battery_state_service.h"
 #include "stubs_bluetooth_ctl.h"
 #include "stubs_bootbits.h"
 #include "stubs_click.h"
@@ -234,6 +240,12 @@ bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
 }
 
 static PreferredContentSize s_content_size;
+
+static BatteryChargeState s_battery_state;
+
+BatteryChargeState battery_state_service_peek(void) {
+  return s_battery_state;
+}
 
 PreferredContentSize system_theme_get_content_size(void) {
   return s_content_size;
@@ -292,6 +304,8 @@ void test_launcher_menu_layer__initialize(void) {
   s_use_pdc_icons = false;
 
   s_content_size = PreferredContentSizeDefault;
+  s_show_settings_app = false;
+  s_battery_state = (BatteryChargeState){.charge_percent = 60};
 }
 
 void app_glance_db_deinit(void);
@@ -331,6 +345,37 @@ void prv_render_launcher_menu_layer(uint16_t selected_index) {
 
   launcher_menu_layer_deinit(&launcher_menu_layer);
   app_menu_data_source_deinit(&data_source);
+}
+
+#define GRID_CELL_PADDING 5
+
+//! Renders the launcher once per content size and checks the screens side by side, Small to
+//! Extra Large. Pixels outside a round display stay pink.
+static void prv_render_launcher_menu_layer_for_each_size(uint16_t selected_index,
+                                                         const char *pbi_file) {
+  const GSize grid_size = GSize(
+      GRID_CELL_PADDING + NumPreferredContentSizes * (DISP_COLS + GRID_CELL_PADDING), DISP_ROWS);
+  GBitmap *grid = gbitmap_create_blank(grid_size, GBitmapFormat8Bit);
+  memset(grid->addr, GColorShockingPinkARGB8, grid->row_size_bytes * grid_size.h);
+
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < NumPreferredContentSizes;
+       size++) {
+    s_content_size = size;
+    framebuffer_clear(fb);
+    prv_render_launcher_menu_layer(selected_index);
+
+    uint8_t *column =
+        (uint8_t *)grid->addr + GRID_CELL_PADDING + size * (DISP_COLS + GRID_CELL_PADDING);
+    for (int16_t y = 0; y < DISP_ROWS; y++) {
+      const GBitmapDataRowInfo row = gbitmap_get_data_row_info(&s_ctx.dest_bitmap, y);
+      for (int16_t x = row.min_x; x <= row.max_x; x++) {
+        column[y * grid->row_size_bytes + x] = row.data[x];
+      }
+    }
+  }
+
+  cl_check(gbitmap_pbi_eq(grid, pbi_file));
+  gbitmap_destroy(grid);
 }
 
 // Tests
@@ -516,4 +561,29 @@ void test_launcher_menu_layer__app_selected_and_apps_above_and_below_with_glance
   prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_launcher_menu_layer__content_sizes_with_glances(void) {
+  prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
+  prv_render_launcher_menu_layer_for_each_size(LauncherMenuLayerTestApp_InteriorApp, TEST_PBI_FILE);
+}
+
+void test_launcher_menu_layer__content_sizes_long_title(void) {
+  prv_render_launcher_menu_layer_for_each_size(LauncherMenuLayerTestApp_LongTitle, TEST_PBI_FILE);
+}
+
+void test_launcher_menu_layer__content_sizes_watchfaces(void) {
+  prv_render_launcher_menu_layer_for_each_size(LauncherMenuLayerTestApp_Watchfaces, TEST_PBI_FILE);
+}
+
+void test_launcher_menu_layer__content_sizes_settings(void) {
+  s_show_settings_app = true;
+  prv_render_launcher_menu_layer_for_each_size(LauncherMenuLayerTestApp_Watchfaces, TEST_PBI_FILE);
+}
+
+void test_launcher_menu_layer__content_sizes_settings_charging(void) {
+  s_show_settings_app = true;
+  s_battery_state =
+      (BatteryChargeState){.charge_percent = 60, .is_charging = true, .is_plugged = true};
+  prv_render_launcher_menu_layer_for_each_size(LauncherMenuLayerTestApp_Watchfaces, TEST_PBI_FILE);
 }
