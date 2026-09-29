@@ -52,9 +52,6 @@ void ragged_grid_init(RaggedGrid *grid, const RaggedGridConfig *config, int sele
 //! fat row fits when possible. Lists of at most slim_width items pin to 0.
 int ragged_grid_anchor_for(int selected, int total, const RaggedGridConfig *config);
 
-//! Rows above the fat row.
-int ragged_grid_rows_above(const RaggedGrid *grid);
-
 //! First item index of a row; equals total when past the end.
 //! Requires 0 <= row and total >= 0.
 int ragged_grid_row_start(const RaggedGrid *grid, int row, int total);
@@ -83,10 +80,6 @@ bool ragged_grid_should_reflow(const RaggedGrid *grid, int old_idx, int new_idx,
 //! Move the anchor to a selection and recenter the window on its row.
 //! Requires 0 <= new_idx < total.
 void ragged_grid_reflow(RaggedGrid *grid, int new_idx, int total);
-
-//! Clamp a window-top so the window always shows RAGGED_GRID_WINDOW_ROWS whole
-//! rows: lists shorter than a window pin to 0, the rest to rows - WINDOW_ROWS.
-int ragged_grid_clamp_window_top(const RaggedGrid *grid, int top, int total);
 
 //! Window-top value that centers \a row in the visible window, clamped to the
 //! list. Pure; shared by reflow centering and window re-centering.

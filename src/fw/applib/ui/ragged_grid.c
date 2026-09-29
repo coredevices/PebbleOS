@@ -30,7 +30,7 @@ int ragged_grid_anchor_for(int selected, int total, const RaggedGridConfig *conf
   return config->slim_width * CLIP(step, 1, max_step);
 }
 
-int ragged_grid_rows_above(const RaggedGrid *grid) {
+static int ragged_grid_rows_above(const RaggedGrid *grid) {
   return (grid->anchor + grid->config.slim_width - 1) / grid->config.slim_width;
 }
 
@@ -116,7 +116,9 @@ void ragged_grid_reflow(RaggedGrid *grid, int new_idx, int total) {
   grid->window_top = ragged_grid_window_top_for_row(grid, row, total);
 }
 
-int ragged_grid_clamp_window_top(const RaggedGrid *grid, int top, int total) {
+// Clamp a window-top so the window always shows RAGGED_GRID_WINDOW_ROWS whole
+// rows: lists shorter than a window pin to 0, the rest to rows - WINDOW_ROWS.
+static int ragged_grid_clamp_window_top(const RaggedGrid *grid, int top, int total) {
   const int rows = ragged_grid_num_rows(grid, total);
   // Clamp so the window is always full: a short list pins to the top.
   return CLIP(top, 0, MAX(rows - RAGGED_GRID_WINDOW_ROWS, 0));
