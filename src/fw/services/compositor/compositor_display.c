@@ -7,6 +7,9 @@
 #include "applib/graphics/gcolor_definitions.h"
 #include "applib/graphics/gtypes.h"
 #include "util/bitset.h"
+#include <pbl/drivers/rtc.h>
+#include "pbl/kernel/irq.h"
+#include "pbl/services/analytics/analytics.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -17,6 +20,10 @@
 static uint16_t s_current_flush_line;
 
 static void (*s_update_complete_handler)(void);
+
+static RtcTicks s_flush_start_ticks;
+static uint32_t s_flush_count;
+static RtcTicks s_flush_ticks;
 
 #ifdef CONFIG_BOARD_ASTERIX
 static const uint8_t s_corner_shape[] = {3, 1, 1};
@@ -131,6 +138,12 @@ static void prv_flush_complete_cb(void) {
   }
 #endif
 
+  RtcTicks elapsed = rtc_get_ticks() - s_flush_start_ticks;
+  pbl_irq_lock();
+  s_flush_count++;
+  s_flush_ticks += elapsed;
+  pbl_irq_unlock();
+
   s_current_flush_line = 0;
   framebuffer_reset_dirty(compositor_get_framebuffer());
 
@@ -156,9 +169,22 @@ void compositor_display_update(void (*handle_update_complete_cb)(void)) {
   s_update_complete_handler = handle_update_complete_cb;
   s_current_flush_line = 0;
 
+  s_flush_start_ticks = rtc_get_ticks();
   display_update(&prv_flush_get_next_line_cb, &prv_flush_complete_cb);
 }
 
 bool compositor_display_update_in_progress(void) {
   return display_update_in_progress();
+}
+
+void pbl_analytics_external_collect_display_stats(void) {
+  pbl_irq_lock();
+  uint32_t count = s_flush_count;
+  RtcTicks ticks = s_flush_ticks;
+  s_flush_count = 0;
+  s_flush_ticks = 0;
+  pbl_irq_unlock();
+
+  PBL_ANALYTICS_SET_UNSIGNED(display_update_count, count);
+  PBL_ANALYTICS_SET_UNSIGNED(display_flush_time_ms, (uint32_t)((ticks * 1000) / RTC_TICKS_HZ));
 }
