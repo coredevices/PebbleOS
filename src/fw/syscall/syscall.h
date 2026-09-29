@@ -56,7 +56,7 @@ void sys_current_process_schedule_callback(CallbackEventCallback async_cb, void 
 uint32_t sys_process_events_waiting(PebbleTask task);
 void sys_get_pebble_event(PebbleEvent *event);
 
-void sys_pbl_log(LogBinaryMessage *log_message, bool async);
+void sys_pbl_log(LogBinaryMessage *log_message, uint32_t flags);
 
 PBL_NORETURN void sys_app_fault(uint32_t stashed_lr);
 

@@ -43,7 +43,7 @@ DEFINE_SYSCALL(RtcTicks, sys_get_ticks, void) {
   return rtc_get_ticks();
 }
 
-DEFINE_SYSCALL(void, sys_pbl_log, LogBinaryMessage *log_message, bool async) {
+DEFINE_SYSCALL(void, sys_pbl_log, LogBinaryMessage *log_message, uint32_t flags) {
   // log_message points at a struct whose trailing message[] is sized by the
   // embedded message_length byte. Without a check, an app can hand us any
   // kernel address: log_level and message_length steer the formatting code,
@@ -55,7 +55,7 @@ DEFINE_SYSCALL(void, sys_pbl_log, LogBinaryMessage *log_message, bool async) {
     syscall_assert_userspace_buffer(log_message,
                                     sizeof(*log_message) + log_message->message_length);
   }
-  kernel_pbl_log(log_message, async);
+  kernel_pbl_log(log_message, flags);
 }
 
 DEFINE_SYSCALL(void, sys_copy_timezone_abbr, char *timezone_abbr, time_t time) {

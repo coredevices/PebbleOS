@@ -153,7 +153,7 @@ static void prv_release_log_state(LogState *state) {
   }
 }
 
-static void prv_log_internal(bool async, uint8_t log_level, const char *src_filename,
+static void prv_log_internal(uint32_t flags, uint8_t log_level, const char *src_filename,
                              int src_line_number, const char *fmt, va_list args) {
   LogState *state = prv_get_log_state();
   if (!state) {
@@ -165,7 +165,7 @@ static void prv_log_internal(bool async, uint8_t log_level, const char *src_file
 
   pbl_log_binary_format(state->buffer, sizeof(state->buffer), log_level, src_filename,
                         src_line_number, fmt, bin_args);
-  sys_pbl_log((LogBinaryMessage *)state->buffer, async);
+  sys_pbl_log((LogBinaryMessage *)state->buffer, flags);
 
   va_end(bin_args);
   prv_release_log_state(state);
@@ -173,11 +173,14 @@ static void prv_log_internal(bool async, uint8_t log_level, const char *src_file
 
 #ifdef CONFIG_LOG_HASHED
 
+static void prv_log_hashed(uint32_t flags, uint32_t core_number, uint32_t packed_loghash,
+                           va_list fmt_args);
+
 void pbl_log_hashed_sync(const uint32_t packed_loghash, ...) {
   va_list fmt_args;
   va_start(fmt_args, packed_loghash);
 
-  pbl_log_hashed_vargs(false, CORE_ID_MAIN_MCU, packed_loghash, fmt_args);
+  prv_log_hashed(0, CORE_ID_MAIN_MCU, packed_loghash, fmt_args);
 
   va_end(fmt_args);
 }
@@ -186,7 +189,26 @@ void pbl_log_hashed_async(const uint32_t packed_loghash, ...) {
   va_list fmt_args;
   va_start(fmt_args, packed_loghash);
 
-  pbl_log_hashed_vargs(true, CORE_ID_MAIN_MCU, packed_loghash, fmt_args);
+  prv_log_hashed(PBL_LOG_FLAG_ASYNC, CORE_ID_MAIN_MCU, packed_loghash, fmt_args);
+
+  va_end(fmt_args);
+}
+
+void pbl_log_hashed_filtered_sync(const uint32_t packed_loghash, ...) {
+  va_list fmt_args;
+  va_start(fmt_args, packed_loghash);
+
+  prv_log_hashed(PBL_LOG_FLAG_FILTERED, CORE_ID_MAIN_MCU, packed_loghash, fmt_args);
+
+  va_end(fmt_args);
+}
+
+void pbl_log_hashed_filtered_async(const uint32_t packed_loghash, ...) {
+  va_list fmt_args;
+  va_start(fmt_args, packed_loghash);
+
+  prv_log_hashed(PBL_LOG_FLAG_ASYNC | PBL_LOG_FLAG_FILTERED, CORE_ID_MAIN_MCU, packed_loghash,
+                 fmt_args);
 
   va_end(fmt_args);
 }
@@ -204,6 +226,11 @@ void pbl_log_hashed_core(const uint32_t core_number, const uint32_t packed_logha
 // Core Number must be shifted to the correct position.
 void pbl_log_hashed_vargs(const bool async, const uint32_t core_number,
                           const uint32_t packed_loghash, va_list fmt_args) {
+  prv_log_hashed(async ? PBL_LOG_FLAG_ASYNC : 0, core_number, packed_loghash, fmt_args);
+}
+
+static void prv_log_hashed(uint32_t flags, uint32_t core_number, uint32_t packed_loghash,
+                           va_list fmt_args) {
   LogState *state = prv_get_log_state();
   if (!state) {
     return;
@@ -276,7 +303,7 @@ void pbl_log_hashed_vargs(const bool async, const uint32_t core_number,
     }
   }
 
-  sys_pbl_log((LogBinaryMessage *)state->buffer, async);
+  sys_pbl_log((LogBinaryMessage *)state->buffer, flags);
   prv_release_log_state(state);
 }
 
@@ -284,16 +311,14 @@ void pbl_log_hashed_vargs(const bool async, const uint32_t core_number,
 
 void pbl_log_vargs(uint8_t log_level, const char *src_filename, int src_line_number,
                    const char *fmt, va_list args) {
-  const bool async = true;
-  prv_log_internal(async, log_level, src_filename, src_line_number, fmt, args);
+  prv_log_internal(PBL_LOG_FLAG_ASYNC, log_level, src_filename, src_line_number, fmt, args);
 }
 
 void pbl_log(uint8_t log_level, const char *src_filename, int src_line_number, const char *fmt,
              ...) {
   va_list args;
   va_start(args, fmt);
-  const bool async = true;
-  prv_log_internal(async, log_level, src_filename, src_line_number, fmt, args);
+  prv_log_internal(PBL_LOG_FLAG_ASYNC, log_level, src_filename, src_line_number, fmt, args);
   va_end(args);
 }
 
@@ -302,8 +327,24 @@ void pbl_log_sync(uint8_t log_level, const char *src_filename, int src_line_numb
   va_list args;
   va_start(args, fmt);
 
-  const bool async = false;
-  prv_log_internal(async, log_level, src_filename, src_line_number, fmt, args);
+  prv_log_internal(0, log_level, src_filename, src_line_number, fmt, args);
 
+  va_end(args);
+}
+
+void pbl_log_filtered(uint8_t log_level, const char *src_filename, int src_line_number,
+                      const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  prv_log_internal(PBL_LOG_FLAG_ASYNC | PBL_LOG_FLAG_FILTERED, log_level, src_filename,
+                   src_line_number, fmt, args);
+  va_end(args);
+}
+
+void pbl_log_filtered_sync(uint8_t log_level, const char *src_filename, int src_line_number,
+                           const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  prv_log_internal(PBL_LOG_FLAG_FILTERED, log_level, src_filename, src_line_number, fmt, args);
   va_end(args);
 }

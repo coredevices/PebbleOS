@@ -27,6 +27,10 @@ void pbl_log_hashed_async(const uint32_t packed_loghash, ...);
 
 void pbl_log_hashed_sync(const uint32_t packed_loghash, ...);
 
+// Variants for modules with a runtime level, bypassing the sink level filters.
+void pbl_log_hashed_filtered_async(const uint32_t packed_loghash, ...);
+void pbl_log_hashed_filtered_sync(const uint32_t packed_loghash, ...);
+
 // Core Number must be shifted to the correct position.
 void pbl_log_hashed_core(const uint32_t core_number, const uint32_t packed_loghash, ...);
 
@@ -42,6 +46,12 @@ void pbl_log(uint8_t log_level, const char *src_filename, int src_line_number, c
 
 void pbl_log_sync(uint8_t log_level, const char *src_filename, int src_line_number, const char *fmt,
                   ...) PBL_FORMAT_PRINTF(4, 5);
+
+void pbl_log_filtered(uint8_t log_level, const char *src_filename, int src_line_number,
+                      const char *fmt, ...) PBL_FORMAT_PRINTF(4, 5);
+
+void pbl_log_filtered_sync(uint8_t log_level, const char *src_filename, int src_line_number,
+                           const char *fmt, ...) PBL_FORMAT_PRINTF(4, 5);
 
 int pbl_log_binary_format(char *buffer, int buffer_len, const uint8_t log_level,
                           const char *src_filename_path, int src_line_number, const char *fmt,
@@ -169,9 +179,12 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
   _PBL_LOG_CAT(_PBL_LOG_MODULE_DEFINE_, _PBL_LOG_IS_ENABLED(level##_RUNTIME))(name, level)
 #define PBL_LOG_MODULE_DECLARE(name, level) \
   _PBL_LOG_CAT(_PBL_LOG_MODULE_DECLARE_, _PBL_LOG_IS_ENABLED(level##_RUNTIME))(name, level)
+#define _PBL_LOG_FN(fn, filtered_fn) (_pbl_log_module_runtime_level != NULL ? filtered_fn : fn)
 #else
 #define PBL_LOG_MODULE_DEFINE(name, level) PBL_UNUSED static const int16_t _pbl_log_module_level = 0
 #define PBL_LOG_MODULE_DECLARE(name, level) PBL_LOG_MODULE_DEFINE(name, level)
+// Host builds may not fold the selection and lack the filtered functions.
+#define _PBL_LOG_FN(fn, filtered_fn)        fn
 #endif
 
 //! Get/set the level of a module built with CONFIG_<module>_LOG_LEVEL_RUNTIME.
@@ -192,42 +205,47 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
     (level) <= __atomic_load_n(_pbl_log_module_runtime_level, __ATOMIC_RELAXED)))
 
 // Internal implementation macros (use level-named macros below instead)
+
 #ifdef CONFIG_LOG
 #ifdef CONFIG_LOG_HASHED
-#define PBL_LOG_COLOR(level, color, fmt, ...)                               \
-  do {                                                                      \
-    if (PBL_SHOULD_LOG(level)) {                                            \
-      NEW_LOG_HASH(pbl_log_hashed_async, level, color, fmt, ##__VA_ARGS__); \
-    }                                                                       \
+#define PBL_LOG_COLOR(level, color, fmt, ...)                                                      \
+  do {                                                                                             \
+    if (PBL_SHOULD_LOG(level)) {                                                                   \
+      NEW_LOG_HASH(_PBL_LOG_FN(pbl_log_hashed_async, pbl_log_hashed_filtered_async), level, color, \
+                   fmt, ##__VA_ARGS__);                                                            \
+    }                                                                                              \
   } while (0)
 
-#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                         \
-  do {                                                                     \
-    if (PBL_SHOULD_LOG(level)) {                                           \
-      NEW_LOG_HASH(pbl_log_hashed_sync, level, color, fmt, ##__VA_ARGS__); \
-    }                                                                      \
+#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                                               \
+  do {                                                                                           \
+    if (PBL_SHOULD_LOG(level)) {                                                                 \
+      NEW_LOG_HASH(_PBL_LOG_FN(pbl_log_hashed_sync, pbl_log_hashed_filtered_sync), level, color, \
+                   fmt, ##__VA_ARGS__);                                                          \
+    }                                                                                            \
   } while (0)
 #else
-#define PBL_LOG_COLOR(level, color, fmt, ...)                                                \
-  do {                                                                                       \
-    if (PBL_SHOULD_LOG(level)) {                                                             \
-      if (_pbl_log_module_name != NULL) {                                                    \
-        pbl_log(level, __FILE__, __LINE__, "%s: " fmt, _pbl_log_module_name, ##__VA_ARGS__); \
-      } else {                                                                               \
-        pbl_log(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                              \
-      }                                                                                      \
-    }                                                                                        \
+#define PBL_LOG_COLOR(level, color, fmt, ...)                                         \
+  do {                                                                                \
+    if (PBL_SHOULD_LOG(level)) {                                                      \
+      if (_pbl_log_module_name != NULL) {                                             \
+        _PBL_LOG_FN(pbl_log, pbl_log_filtered)(level, __FILE__, __LINE__, "%s: " fmt, \
+                                               _pbl_log_module_name, ##__VA_ARGS__);  \
+      } else {                                                                        \
+        pbl_log(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                       \
+      }                                                                               \
+    }                                                                                 \
   } while (0)
 
-#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                                                \
-  do {                                                                                            \
-    if (PBL_SHOULD_LOG(level)) {                                                                  \
-      if (_pbl_log_module_name != NULL) {                                                         \
-        pbl_log_sync(level, __FILE__, __LINE__, "%s: " fmt, _pbl_log_module_name, ##__VA_ARGS__); \
-      } else {                                                                                    \
-        pbl_log_sync(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                              \
-      }                                                                                           \
-    }                                                                                             \
+#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                                              \
+  do {                                                                                          \
+    if (PBL_SHOULD_LOG(level)) {                                                                \
+      if (_pbl_log_module_name != NULL) {                                                       \
+        _PBL_LOG_FN(pbl_log_sync, pbl_log_filtered_sync)(level, __FILE__, __LINE__, "%s: " fmt, \
+                                                         _pbl_log_module_name, ##__VA_ARGS__);  \
+      } else {                                                                                  \
+        pbl_log_sync(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                            \
+      }                                                                                         \
+    }                                                                                           \
   } while (0)
 #endif
 #else // !CONFIG_LOG

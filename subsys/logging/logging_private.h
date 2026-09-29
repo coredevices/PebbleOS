@@ -18,6 +18,10 @@ typedef struct PBL_PACKED LogBinaryMessage {
   char message[];
 } LogBinaryMessage;
 
+#define PBL_LOG_FLAG_ASYNC (1U << 0)
+//! Already filtered by a runtime module level, bypass the sink level filters.
+#define PBL_LOG_FLAG_FILTERED (1U << 1)
+
 //! This structure encapsulates the buffers and state used for formatting a log message.
 typedef struct {
   bool in_progress;               // Set true while a log is in progress
@@ -29,10 +33,10 @@ char pbl_log_get_level_char(const uint8_t log_level);
 
 //! Log a message to whatever specific channels are appropriate based on context and configuration.
 //! Internally calls kernel_pbl_log_serial and kernel_pbl_log_flash.
-void kernel_pbl_log(LogBinaryMessage *log_message, bool async);
+void kernel_pbl_log(LogBinaryMessage *log_message, uint32_t flags);
 
 //! Force a log message out the serial channel.
-void kernel_pbl_log_serial(LogBinaryMessage *log_message, bool async);
+void kernel_pbl_log_serial(LogBinaryMessage *log_message, uint32_t flags);
 
 //! Force a log message out the serial channel from a fault handler or
 //! other context where OS services are unavailable or can't be trusted,

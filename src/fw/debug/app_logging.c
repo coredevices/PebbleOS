@@ -30,7 +30,7 @@ DEFINE_SYSCALL(void, sys_app_log, size_t length, void *log_buffer) {
   AppLogBinaryMessage *message = log_buffer;
 
   // First log to serial, we always do this.
-  kernel_pbl_log_serial(&message->log_msg, false);
+  kernel_pbl_log_serial(&message->log_msg, 0);
 
   // Now check to see if app logging is enabled over bluetooth.
   if (s_app_logging_mode == AppLoggingDisabled) {

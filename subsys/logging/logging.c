@@ -31,8 +31,9 @@
 int g_pbl_log_level = PBL_LOG_LEVEL;
 bool g_pbl_log_enabled = true;
 
-static bool prv_check_serial_log_enabled(int level) {
-  return (g_pbl_log_enabled) && (level == LOG_LEVEL_ALWAYS || (level <= g_pbl_log_level));
+static bool prv_check_serial_log_enabled(int level, uint32_t flags) {
+  return (g_pbl_log_enabled) && ((flags & PBL_LOG_FLAG_FILTERED) || level == LOG_LEVEL_ALWAYS ||
+                                 (level <= g_pbl_log_level));
 }
 
 #ifndef CONFIG_PULSE_EVERYWHERE
@@ -105,13 +106,13 @@ static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_
 }
 #endif // CONFIG_PULSE_EVERYWHERE
 
-void kernel_pbl_log_serial(LogBinaryMessage *log_message, bool async) {
-  if (!prv_check_serial_log_enabled(log_message->log_level)) {
+void kernel_pbl_log_serial(LogBinaryMessage *log_message, uint32_t flags) {
+  if (!prv_check_serial_log_enabled(log_message->log_level, flags)) {
     return;
   }
 
 #ifdef CONFIG_PULSE_EVERYWHERE
-  if (async) {
+  if (flags & PBL_LOG_FLAG_ASYNC) {
     pulse_logging_log(log_message->log_level, log_message->filename,
                       htons(log_message->line_number), log_message->message);
   } else {
@@ -124,20 +125,21 @@ void kernel_pbl_log_serial(LogBinaryMessage *log_message, bool async) {
 #endif
 }
 
-void kernel_pbl_log_flash(LogBinaryMessage *log_message, bool async) {
+void kernel_pbl_log_flash(LogBinaryMessage *log_message, uint32_t flags) {
   int length = sizeof(*log_message) + log_message->message_length;
 
   if (g_pbl_log_enabled &&
-      (log_message->log_level == LOG_LEVEL_ALWAYS || (log_message->log_level <= FLASH_LOG_LEVEL))) {
-    pbl_log_advanced((const char *)log_message, length, async);
+      ((flags & PBL_LOG_FLAG_FILTERED) || log_message->log_level == LOG_LEVEL_ALWAYS ||
+       (log_message->log_level <= FLASH_LOG_LEVEL))) {
+    pbl_log_advanced((const char *)log_message, length, flags & PBL_LOG_FLAG_ASYNC);
   }
 }
 
-void kernel_pbl_log(LogBinaryMessage *log_message, bool async) {
-  kernel_pbl_log_serial(log_message, async);
+void kernel_pbl_log(LogBinaryMessage *log_message, uint32_t flags) {
+  kernel_pbl_log_serial(log_message, flags);
 
   if (!pbl_irq_is_locked() && !mcu_state_is_isr() && !pbl_sched_is_locked()) {
-    kernel_pbl_log_flash(log_message, async);
+    kernel_pbl_log_flash(log_message, flags);
   }
 }
 
