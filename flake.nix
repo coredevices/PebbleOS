@@ -2,7 +2,7 @@
   description = "Development environment for PebbleOS";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
   };
 
   outputs =
@@ -24,6 +24,15 @@
         };
       };
       forSupportedSystems = nixpkgs.lib.genAttrs (builtins.attrNames sdkBundles);
+      requirementsHash = builtins.hashString "sha256" (
+        builtins.concatStringsSep "\n" (map builtins.readFile [
+          ./requirements.txt
+          ./tools/libs/pbl-cli/pyproject.toml
+          ./tools/libs/pebble-commander/pyproject.toml
+          ./tools/libs/pulse2/pyproject.toml
+          ./tools/libs/pebble-loghash/pyproject.toml
+        ])
+      );
     in
     {
       devShells = forSupportedSystems (
@@ -86,13 +95,12 @@
         in
         {
           default = pkgs.mkShellNoCC {
+            PEBBLEOS_SDK_ROOT = "${pebbleos-sdk}";
             hardeningDisable = [ "fortify" ]; # the firmware is built unoptimized
-            nativeBuildInputs = with pkgs; [
-              pkg-config
-            ];
-            buildInputs = with pkgs; [
+            packages = with pkgs; [
               pebbleos-sdk
               cmake
+              dash
               gettext
               git
               librsvg
@@ -102,61 +110,36 @@
               python313
               meson
               ninja
+              pkg-config
+              uv
+              # Host compiler for Moddable and tests; x86 Linux tests need multilib.
+              (if stdenv.isLinux && stdenv.hostPlatform.isx86_64 then clang_multi else clang)
             ] ++ lib.optionals stdenv.isLinux [
-              # multilib clang (i686 sysroot for -m32 test builds) is x86-only
-              (if stdenv.hostPlatform.isx86_64 then clang_multi else clang)
               gcc
+            ];
+            buildInputs = with pkgs; lib.optionals stdenv.isDarwin [
+              apple-sdk
+            ] ++ lib.optionals stdenv.isLinux [
               # Required for Moddable build
-              dash
               glib
               gtk3
             ];
             shellHook = ''
-            # Ensure that apple command line tools are installed on macOS
-            ${pkgs.lib.optionalString pkgs.stdenv.isDarwin ''
-                # Verify Apple Command Line Tools are installed
-                if ! /usr/bin/xcrun --find clang &> /dev/null; then
-                  echo "❌ Error: Apple Command Line Tools not found!"
-                  echo "   Please install with: xcode-select --install"
-                  exit 1
-                fi
-                echo "✓ Apple CLT found: $(/usr/bin/clang --version | head -1)"
+              # Moddable's launcher recipes need echo to expand backslash escapes.
+              export MAKEFLAGS="''${MAKEFLAGS:+$MAKEFLAGS }SHELL=${pkgs.dash}/bin/dash"
 
-                # Moddable's mac/tools.mk generates launcher scripts via
-                # `echo '...\n...'` and depends on `\n` being expanded. macOS
-                # /bin/sh (bash 3.2, XSI-compliant in POSIX mode) does this,
-                # but Nix's bash 5.x — picked up as `sh` via PATH — does not,
-                # producing scripts with a malformed shebang. Pin make's SHELL
-                # to /bin/sh so the recipe runs under the expected shell.
-                export MAKEFLAGS="SHELL=/bin/sh"
-              ''}
-              # Disable pyenv to avoid conflicts
-              export PYENV_VERSION=system
-              unset PYENV_ROOT
-
-              # Prepare the python venv
               export VENV_DIR=".venv"
-              if [ ! -d "$VENV_DIR" ]; then
-                echo "Creating virtual environment..."
-                python -m venv "$VENV_DIR"
+              if [ ! -f "$VENV_DIR/pyvenv.cfg" ]; then
+                uv venv --python ${pkgs.python313.interpreter} "$VENV_DIR" || exit 1
               fi
-              source "$VENV_DIR/bin/activate"
+              source "$VENV_DIR/bin/activate" || exit 1
 
-              # Refresh existing environments when project dependencies change.
-              if [ -f "requirements.txt" ]; then
-                requirements_hash=$(${pkgs.coreutils}/bin/sha256sum requirements.txt)
-                requirements_stamp="$VENV_DIR/.requirements.sha256"
-                if [ "$requirements_hash" != "$(cat "$requirements_stamp" 2>/dev/null)" ]; then
-                  echo "Installing Python dependencies..."
-                  if python -m pip install -r requirements.txt; then
-                    printf '%s\n' "$requirements_hash" > "$requirements_stamp"
-                  else
-                    return 1
-                  fi
-                fi
+              # Refresh only when requirements or editable package metadata change.
+              requirements_stamp="$VENV_DIR/.requirements.sha256"
+              if [ "${requirementsHash}" != "$(cat "$requirements_stamp" 2>/dev/null)" ]; then
+                uv pip install --python "$VENV_DIR/bin/python" -r requirements.txt || exit 1
+                printf '%s\n' "${requirementsHash}" > "$requirements_stamp"
               fi
-              
-              echo "Python virtual environment activated."
             '';
           };
         }
