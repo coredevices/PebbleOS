@@ -65,6 +65,8 @@ static const char *s_syncable_settings[] = {
   "lightMotion",
   "lightTouch",
   "lightAmbientThreshold",
+  "chargingBlinkWhenFull",
+  "chargingVibeWhenFull",
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
   "lightDynamicMode",
 #endif
