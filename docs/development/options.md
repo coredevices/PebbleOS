@@ -84,5 +84,12 @@ Default log level, where `<LEVEL>` is one of `ERROR`, `WARNING`,
 Disable log messages hashing.
 This will increase ROM usage, but will not require a dictionary file to decode logs.
 
+:`-DCONFIG_<MODULE>_LOG_LEVEL_RUNTIME=y`:
+Keep all log messages of a module in the image and filter them at runtime,
+using `CONFIG_<MODULE>_LOG_LEVEL` as the initial level. The level is changed
+with `PBL_LOG_MODULE_LEVEL_SET(name, level)` and read with
+`PBL_LOG_MODULE_LEVEL_GET(name)`, where `name` is the one given to
+`PBL_LOG_MODULE_DEFINE`. This will increase ROM usage for that module.
+
 These and many more options can also be browsed and changed interactively with
 `pbl menuconfig` after configuring.

@@ -11,6 +11,9 @@
 # PBL_LOG_MODULE_DECLARE (see pbl/logging/logging.h): a LOG_LEVEL_* value,
 # LOG_LEVEL_OFF (-1) to disable the module, or the global default.
 #
+# CONFIG_<module>_LOG_LEVEL_RUNTIME makes CONFIG_<module>_LOG_LEVEL the initial
+# level instead, changeable at runtime with PBL_LOG_MODULE_LEVEL_SET.
+#
 # To give a module a different default, extend the named choice before
 # sourcing the template:
 #
@@ -57,3 +60,10 @@ config $(module)_LOG_LEVEL
     default 200 if $(module)_LOG_LEVEL_DEBUG
     default 255 if $(module)_LOG_LEVEL_DEBUG_VERBOSE
     default DEFAULT_LOG_LEVEL
+
+config $(module)_LOG_LEVEL_RUNTIME
+    bool "$(module-str) runtime log level"
+    depends on LOG
+    help
+      Keep all $(module-str) log messages in the image and filter them at
+      runtime, starting at the configured level. Increases flash usage.
