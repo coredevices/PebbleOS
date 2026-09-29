@@ -47,7 +47,6 @@ static FontHelper s_font_helpers[] = {
   // Prototype picker font isn't in the test fixtures; stand in with 28px art
   // so thin-grid tests keep rendering instead of asserting on a missing key.
   {.key = FONT_KEY_GOTHIC_40_EMOJI_PICKER, .handle = RESOURCE_ID_GOTHIC_28_EMOJI},
-  {.key = FONT_KEY_GOTHIC_44_EMOJI_PICKER_COLOR, .handle = RESOURCE_ID_GOTHIC_28_EMOJI},
   {.key = FONT_KEY_GOTHIC_36, .handle = RESOURCE_ID_GOTHIC_36},
   {.key = FONT_KEY_GOTHIC_36_BOLD, .handle = RESOURCE_ID_GOTHIC_36_BOLD},
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
