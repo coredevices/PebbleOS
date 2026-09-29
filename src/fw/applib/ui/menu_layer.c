@@ -2132,8 +2132,7 @@ void menu_layer_touch_handle_pan_update(MenuLayer *menu_layer, GPoint base,
 static void prv_menu_touch_spring_back_stopped(Animation *animation, bool finished, void *context) {
   (void)animation;
   (void)finished;
-  MenuLayer *menu_layer = (MenuLayer *)context;
-  scroll_layer_touch_fling_cleanup(&menu_layer->scroll_layer);
+  scroll_layer_touch_fling_cleanup(&((MenuLayer *)context)->scroll_layer);
 }
 
 static void prv_menu_touch_fling_stopped(Animation *animation, bool finished, void *context) {
@@ -2148,8 +2147,6 @@ static void prv_menu_touch_fling_stopped(Animation *animation, bool finished, vo
     // the offset -- whoever unscheduled owns the settle.
     prv_menu_touch_track_center_row(menu_layer);
     prv_menu_touch_settle_to_center(menu_layer, true /* animated */);
-  } else if (finished) {
-    // Plain menu: the coast has run out, so the scroll is settled.
   }
 }
 
@@ -2195,7 +2192,6 @@ void menu_layer_touch_handle_snap(MenuLayer *menu_layer, GPoint base, GPoint fin
   // Slow liftoff (or a coast too short to schedule): settle the final (unthrottled) offset.
   scroll_layer_set_content_offset(&menu_layer->scroll_layer, GPoint(0, new_y), false);
   if (!menu_layer->center_focused) {
-    // Plain menu: the offset is at its final resting place, so the scroll is settled.
     return;
   }
   // Carousel: the final delta may have crossed one more boundary than the last throttled pan
