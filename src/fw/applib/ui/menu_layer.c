@@ -37,7 +37,6 @@
 struct TouchNavState *app_state_get_touch_nav_state(void);
 struct TouchNavState *modal_manager_get_touch_nav_state(void);
 
-static void prv_menu_touch_nav_register(MenuLayer *menu_layer);
 static void prv_menu_touch_track_center_row(MenuLayer *menu_layer);
 static void prv_menu_update_overscroll_stretch(MenuLayer *menu_layer);
 static void prv_menu_touch_pin_center_highlight(MenuLayer *menu_layer);
@@ -987,7 +986,7 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
 #endif
 
 #ifdef CONFIG_TOUCH
-  prv_menu_touch_nav_register(menu_layer);
+  menu_layer_touch_nav_register(menu_layer);
 #endif
 }
 
@@ -2411,7 +2410,7 @@ static const TouchNavWidgetOps s_menu_touch_nav_ops = {
   .swipe = prv_menu_ops_swipe,
 };
 
-static void prv_menu_touch_nav_register(MenuLayer *menu_layer) {
+void menu_layer_touch_nav_register(MenuLayer *menu_layer) {
   // The legacy-2.x MenuLayer path is not a Tier-1 widget; it falls back to the Tier-2 bridge.
   if (process_manager_compiled_with_legacy2_sdk()) {
     return;

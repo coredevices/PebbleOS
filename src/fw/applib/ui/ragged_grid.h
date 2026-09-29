@@ -89,10 +89,10 @@ void ragged_grid_reflow(RaggedGrid *grid, int new_idx, int total);
 int ragged_grid_clamp_window_top(const RaggedGrid *grid, int top, int total);
 
 //! Window-top value that centers \a row in the visible window, clamped to the
-//! list. Pure; shared by reflow centering and tap-snap.
+//! list. Pure; shared by reflow centering and window re-centering.
 int ragged_grid_window_top_for_row(const RaggedGrid *grid, int row, int total);
 
 //! Re-derive the window from the row actually centered in the on-screen
-//! viewport (e.g. after a touch pan scrolled the viewport independently).
-//! Requires 0 <= viewport_row.
+//! viewport, after the viewport moved independently of the window. Requires
+//! 0 <= viewport_row.
 void ragged_grid_sync_window_to_viewport(RaggedGrid *grid, int viewport_row, int total);

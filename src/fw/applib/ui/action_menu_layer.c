@@ -41,8 +41,8 @@ static int16_t prv_get_cell_padding(ActionMenuLayer *aml);
 static const int SHORT_ITEM_MAX_ROWS_SPALDING = RAGGED_GRID_WINDOW_ROWS;
 // Horizontal content inset so the grid clears the round display edge.
 static const int SHORT_ROUND_H_INSET = 12;
-// Gutter drawn between neighbouring emoji in a row, so each is individually
-// aimable with a finger. The hit-test gutter matches it exactly.
+// Space drawn between neighbouring emoji in a row, so the glyphs read as
+// separate cells rather than one run of art.
 static const int SHORT_COL_GAP = 6;
 #endif
 
@@ -54,9 +54,9 @@ static GFont prv_get_item_font(void) {
 static const int SHORT_ROW_GAP = 6;
 
 static GFont prv_get_short_item_font(void) {
-  // Fixed 28px base for thin-grid text cells: emoji cells use the curated
-  // picker fonts explicitly, and there are no larger emoji assets for a
-  // theme-linked size to scale into. Revisit if bigger emoji fonts land.
+  // Fixed 28px base for thin-grid text cells. Emoji cells swap in the curated
+  // picker font instead, so a theme-linked size would only size the non-emoji
+  // cells; revisit if a theme needs to drive thin-grid text height.
   return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
 }
 
@@ -64,9 +64,9 @@ static int16_t prv_get_short_item_height(void) {
   return fonts_get_font_height(prv_get_short_item_font());
 }
 
-// Curated large emoji art for the reply picker grid (44px color / 40px 1-bit),
-// falling back to the short-item font when the resource isn't present (e.g.
-// unit-test fixtures).
+// Curated large emoji art for the reply picker grid, resolved once and NULL
+// when the build has no such resource (PRF), in which case callers keep the
+// short-item font.
 static GFont s_picker_emoji_font;
 static bool s_picker_emoji_font_resolved;
 
@@ -74,9 +74,9 @@ static GFont prv_get_picker_emoji_font(void) {
   if (!s_picker_emoji_font_resolved) {
     s_picker_emoji_font_resolved = true;
 #ifndef CONFIG_RECOVERY_FW
-    // A curated 1-bit subset, at 2x the stock emoji size. Deliberately not a
-    // separate color set: a larger color font would mean shipping new
-    // third-party artwork with its own licensing and provenance to track.
+    // A curated 1-bit subset at 2x the stock emoji size, used on every board
+    // rather than a per-color-depth font: a larger color set would mean
+    // shipping new third-party artwork with its own licensing to track.
     // PRF ships no emoji resources at all (its resource map has none, so the
     // generated font keys do not define this), so leave the picker on the
     // default short-item font there rather than naming a key that build does
@@ -161,8 +161,7 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
   r.size.w = column_width;
   // A gutter between columns: the slot pitch is unchanged (so a full row still
   // spans the same width), but each glyph is centred in its slot inset by half a
-  // gap, leaving visible space and a dead strip between neighbours. Fingers can
-  // aim at an individual emoji, and a tap landing in the gutter misses both.
+  // gap, leaving visible space between neighbours.
   column_inset = SHORT_COL_GAP / 2;
 #else
   r.size.w /= SHORT_COL_COUNT;
@@ -585,9 +584,10 @@ static void prv_selection_changed(ActionMenuLayer *aml) {
 }
 
 #if PBL_ROUND
-// Recenters the roam window on a tapped row without reflowing.
-static void prv_short_snap_window(ActionMenuLayer *aml, int tapped_row, int total) {
-  aml->short_grid.window_top = ragged_grid_window_top_for_row(&aml->short_grid, tapped_row, total);
+// Re-centres the roam window on a row reached outside prv_set_selected_index
+// (a selection change the menu layer drove itself), without reflowing.
+static void prv_short_snap_window(ActionMenuLayer *aml, int row, int total) {
+  aml->short_grid.window_top = ragged_grid_window_top_for_row(&aml->short_grid, row, total);
 }
 
 // Syncs the menu viewport to exactly show rows [window_top, window_top + 2].
@@ -860,10 +860,10 @@ static void prv_selection_changed_cb(struct MenuLayer *menu_layer, MenuIndex new
     aml->selected_index = new_index.row;
     prv_selection_changed(aml);
   } else if (prv_get_menu_layer_row(aml, aml->selected_index) != new_index.row) {
-    // A touch tap moves the menu selection directly, bypassing prv_set_selected_index, so no
-    // column index was pre-set for this short-item row; adopt its first column.
-    // The layout is left as-is (no reflow) to avoid reentering the menu layer
-    // from inside its own selection callback.
+    // The menu layer moved the selection to another row by itself, bypassing
+    // prv_set_selected_index, so no column index was pre-set for this short-item
+    // row; adopt its first column. The row partition is left as-is (no reflow) to
+    // avoid reentering the menu layer from inside its own selection callback.
     prv_unschedule_item_animation(aml);
 #if PBL_ROUND
     aml->selected_index =
@@ -879,11 +879,11 @@ static void prv_selection_changed_cb(struct MenuLayer *menu_layer, MenuIndex new
 
 #if PBL_ROUND
 // Menu viewport -> grid window sync, chained after the menu layer's own
-// offset-changed handler. Touch pans scroll the viewport in free pixels with
-// the selection untouched, so the window protocol must be re-derived from
-// where the viewport actually rests: the row at the viewport's center row
-// slot defines the window's middle row. Re-deriving (instead of trusting
-// window_top) keeps reflow triggers honest after a swipe.
+// offset-changed handler. The viewport can come to rest in free pixels with the
+// selection untouched, so the window is re-derived from where the viewport
+// actually rests: the row at the viewport's center slot defines the window's
+// middle row. Re-deriving rather than trusting window_top keeps the reflow
+// trigger honest when the offset moves by a non-row-aligned amount.
 static void prv_short_offset_changed_cb(ScrollLayer *scroll_layer, void *context) {
   MenuLayer *menu_layer = context;
   ActionMenuLayer *aml =
@@ -899,7 +899,6 @@ static void prv_short_offset_changed_cb(ScrollLayer *scroll_layer, void *context
   const int center_row = CLIP(center_y / pitch, 0, aml->num_short_items - 1);
   ragged_grid_sync_window_to_viewport(&aml->short_grid, center_row, aml->num_short_items);
 }
-
 #endif
 
 static void prv_changed_proc(Layer *layer) {
@@ -975,6 +974,19 @@ static void prv_update_aml_cache(ActionMenuLayer *aml, int selected_index) {
   // column the finger meant — keep the two-step tap (select, then activate) for those instead of
   // the plain menus' tap-to-activate.
   menu_layer_set_tap_select_only(&aml->menu_layer, prv_aml_is_short(aml));
+
+#if defined(PBL_ROUND) && defined(CONFIG_TOUCH)
+  // Thin-grid rows have a partition and a scroll window the touch path cannot keep in sync: a pan
+  // or tap moves the viewport by an amount the grid protocol does not model, so drive those menus
+  // from buttons (synthetic button events) and leave the Tier-1 widget off. Scoped to short menus
+  // so every other action menu keeps its normal touch behavior. Re-applied on every level push
+  // because a window can go from a text level to the emoji level and back.
+  if (prv_aml_is_short(aml)) {
+    menu_layer_touch_nav_deregister(&aml->menu_layer);
+  } else {
+    menu_layer_touch_nav_register(&aml->menu_layer);
+  }
+#endif
 
 #if PBL_ROUND
   // Fresh row layout, anchored for a 3-cell lead row over the fat middle
@@ -1065,13 +1077,8 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
   // recovers the AML from it.
   aml->menu_layer.scroll_layer.callbacks.content_offset_changed_handler =
       prv_short_offset_changed_cb;
-#ifdef CONFIG_TOUCH
-  // This window deliberately holds no Tier-1 touch widget: the embedded ScrollLayer is
-  // already deregistered by menu_layer_init, so dropping the menu layer too leaves nothing to
-  // latch a gesture, and touch arrives as the same synthetic button events the physical
-  // buttons produce. The row partition and viewport stay owned by the button path.
-  menu_layer_touch_nav_deregister(&aml->menu_layer);
-#endif
+  // Note: the Tier-1 touch opt-out for short menus lives in prv_update_aml_cache(),
+  // which is where the display mode is known and can change between levels.
 #endif
 
 #if !defined(CONFIG_RECOVERY_FW)

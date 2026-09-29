@@ -14,6 +14,13 @@ struct MenuIterator;
 void menu_layer_scroll_offset_changed_handler(ScrollLayer *scroll_layer, MenuLayer *menu_layer);
 
 //! @internal
+//! Re-add this menu layer to the Tier-1 touch widget registry, undoing
+//! \ref menu_layer_touch_nav_deregister. Idempotent, and a no-op on the
+//! legacy-2.x path, matching \ref menu_layer_init. The registry dedupes by
+//! address, so a repeated register keeps routing to this menu.
+void menu_layer_touch_nav_register(MenuLayer *menu_layer);
+
+//! @internal
 //! Drop this menu layer from the Tier-1 touch widget registry, so it never latches a gesture.
 //! The embedded ScrollLayer is already deregistered by \ref menu_layer_init, so with the menu
 //! layer gone the window holds no Tier-1 widget and touch falls through to the system bridge's
