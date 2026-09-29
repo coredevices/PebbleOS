@@ -808,15 +808,10 @@ void speaker_service_stream_close_owned(PebbleTask owner) {
     return;
   }
 
-  bool realtime = s_state.stream_realtime;
   s_state.stream_realtime = false;
-  if (realtime || s_state.pcm_stream.count > 0 || s_state.pcm_tail_samples > 0) {
-    // Data remaining - enter draining state
-    pcm_stream_mark_closing(&s_state.pcm_stream);
-    s_state.state = SpeakerStateDraining;
-  } else {
-    prv_stop_internal(SpeakerFinishReasonDone);
-  }
+  // The driver may still have queued audio even when the PCM ring is empty.
+  pcm_stream_mark_closing(&s_state.pcm_stream);
+  s_state.state = SpeakerStateDraining;
 
   pbl_mutex_unlock(&s_lock);
 }
