@@ -12,11 +12,13 @@
 #include "applib/graphics/utf8.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/menu_layer.h"
+#include "applib/ui/menu_layer_private.h"
 #include "applib/ui/property_animation.h"
 #include "kernel/ui/kernel_ui.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
+#include <stddef.h>
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/testing.h"
@@ -33,8 +35,15 @@ static const int EXTRA_PADDING_1_BIT = 2;
 static const int SHORT_COL_COUNT = 3;
 #endif
 static const int MAX_NUM_VISIBLE_LINES = 2;
+static bool prv_aml_is_short(ActionMenuLayer *aml);
 #if PBL_ROUND
-static const int SHORT_ITEM_MAX_ROWS_SPALDING = 3;
+static int16_t prv_get_cell_padding(ActionMenuLayer *aml);
+static const int SHORT_ITEM_MAX_ROWS_SPALDING = RAGGED_GRID_WINDOW_ROWS;
+// Horizontal content inset so the grid clears the round display edge.
+static const int SHORT_ROUND_H_INSET = 12;
+// Gutter drawn between neighbouring emoji in a row, so each is individually
+// aimable with a finger. The hit-test gutter matches it exactly.
+static const int SHORT_COL_GAP = 6;
 #endif
 
 static GFont prv_get_item_font(void) {
@@ -45,7 +54,9 @@ static GFont prv_get_item_font(void) {
 static const int SHORT_ROW_GAP = 6;
 
 static GFont prv_get_short_item_font(void) {
-  // Temporarily fixed while diagnosing content-size resolution on device.
+  // Fixed 28px base for thin-grid text cells: emoji cells use the curated
+  // picker fonts explicitly, and there are no larger emoji assets for a
+  // theme-linked size to scale into. Revisit if bigger emoji fonts land.
   return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
 }
 
@@ -53,9 +64,9 @@ static int16_t prv_get_short_item_height(void) {
   return fonts_get_font_height(prv_get_short_item_font());
 }
 
-// Curated 40px emoji art (2x the 28px masters) for the reply picker grid.
-// when the resource isn't present (e.g. unit-test fixtures), in which case
-// emoji cells fall back to the short-item font.
+// Curated large emoji art for the reply picker grid (44px color / 40px 1-bit),
+// falling back to the short-item font when the resource isn't present (e.g.
+// unit-test fixtures).
 static GFont s_picker_emoji_font;
 static bool s_picker_emoji_font_resolved;
 
@@ -79,7 +90,7 @@ static bool prv_is_emoji_label(const char *label) {
   return codepoint_is_emoji(utf8_peek_codepoint((utf8_t *)label, NULL));
 }
 
-// Font for one thin-grid cell: curated 36px art for emoji, short font else.
+// Font for one thin-grid cell: curated large emoji art for emoji, short font else.
 static GFont prv_get_short_cell_font(const char *label, int16_t *height_out) {
   GFont font = prv_get_short_item_font();
   if (prv_is_emoji_label(label)) {
@@ -112,82 +123,11 @@ static GFont prv_get_unfocused_item_font(void) {
 #endif
 
 #if PBL_ROUND
-// Dynamic circular grid: the centered (selected) row always fits four cells,
-// rows above and below take three, list ends take the remainder.
-//
-// The partition below is evaluated against a FROZEN anchor
-// (ActionMenuLayer.short_anchor), not the live selection: the cursor roams
-// freely inside the frozen layout, and the layout only reflows when the
-// cursor pushes past the visible window edge (down on the last cell of the
-// bottom visible row, up on the first cell of the top visible row).
-// Linear item order is preserved so every cell stays reachable.
-//
-// Widest row; sets the shared column width so gaps stay identical.
-static const int SHORT_ROW_MAX_COLUMNS = 4;
-
-// Center 4-block containing the anchor; edge-clamped so the anchor is always
-// inside. Row above/below counts derive from this.
-static int prv_anchor_center_start(int anchor, int total) {
-  if (total <= 4) {
-    return 0;
-  }
-  int start = (anchor / 4) * 4;
-  if (anchor >= start + 4) {
-    start = anchor - 3;
-  }
-  if (start + 4 > total) {
-    start = total - 4;
-  }
-  return MAX(start, 0);
-}
-
-static int prv_anchor_rows_above(int anchor, int total) {
-  return (prv_anchor_center_start(anchor, total) + 2) / 3;
-}
-
-// First item index of a short row under the given anchor; equals total
-// when past the end.
-static int prv_short_row_start(int row, int sel, int total) {
-  const int center = prv_anchor_center_start(sel, total);
-  const int above = prv_anchor_rows_above(sel, total);
-  if (row < above) {
-    return MAX(0, center - 3 * (above - row));
-  }
-  if (row == above) {
-    return center;
-  }
-  return MIN(center + 4 + 3 * (row - above - 1), total);
-}
-
-static int prv_short_row_count(int row, int sel, int total) {
-  const int start = prv_short_row_start(row, sel, total);
-  if (start >= total) {
-    return 0;
-  }
-  const int above = prv_anchor_rows_above(sel, total);
-  if (row == above) {
-    return MIN(4, total - start);
-  }
-  const int next = (row < above) ? prv_short_row_start(row + 1, sel, total) : start + 3;
-  return MIN(next, total) - start;
-}
-
-static int prv_short_num_rows(int sel, int total) {
-  int rows = 0;
-  while (prv_short_row_start(rows, sel, total) < total) {
-    rows++;
-  }
-  return rows;
-}
-
-// Short row of a linear item index under the given anchor.
-static int prv_short_row_for_item(int item_idx, int sel, int total) {
-  int row = 0;
-  while (prv_short_row_start(row + 1, sel, total) <= item_idx) {
-    row++;
-  }
-  return row;
-}
+// Short-grid row policy: fat middle rows of four, slim rows of three.
+static const RaggedGridConfig SHORT_GRID_CONFIG = {
+  .fat_width = 4,
+  .slim_width = 3,
+};
 #endif
 
 static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
@@ -195,7 +135,7 @@ static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
   ActionMenuLayer *aml = callback_context;
   return (uint16_t)(aml->num_items +
 #if PBL_ROUND
-                    prv_short_num_rows(aml->short_anchor, aml->num_short_items));
+                    ragged_grid_num_rows(&aml->short_grid, aml->num_short_items));
 #else
                     (aml->num_short_items + SHORT_COL_COUNT - 1) / SHORT_COL_COUNT);
 #endif
@@ -206,12 +146,19 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
                                  int sel_idx) {
   const GRect *layer_bounds = &cell_layer->bounds;
   GRect r = *layer_bounds;
+  int16_t column_inset = 0; // gutter half-width; round only
 #if PBL_ROUND
   // more narrow on round; one shared column width keeps gaps identical on
   // every row, with shorter rows centered
-  r = grect_inset_internal(r, 6, 0);
-  r.size.w /= SHORT_ROW_MAX_COLUMNS;
-  r.origin.x += (r.size.w * (SHORT_ROW_MAX_COLUMNS - num_items)) / 2;
+  r = grect_inset_internal(r, SHORT_ROUND_H_INSET, 0);
+  const int16_t column_width = r.size.w / aml->short_grid.config.fat_width;
+  r.origin.x += (r.size.w - column_width * num_items) / 2;
+  r.size.w = column_width;
+  // A gutter between columns: the slot pitch is unchanged (so a full row still
+  // spans the same width), but each glyph is centred in its slot inset by half a
+  // gap, leaving visible space and a dead strip between neighbours. Fingers can
+  // aim at an individual emoji, and a tap landing in the gutter misses both.
+  column_inset = SHORT_COL_GAP / 2;
 #else
   r.size.w /= SHORT_COL_COUNT;
 #endif
@@ -224,6 +171,7 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
     int16_t font_height;
     const GFont font = prv_get_short_cell_font(items[i].label, &font_height);
     GRect tr = r;
+    tr = grect_inset_internal(tr, column_inset, 0);
     tr.origin.y += (tr.size.h - font_height) / 2 - 4;
 
     if (sel_idx == i) {
@@ -608,9 +556,8 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell
   } else {
     const int short_row = cell_index->row - aml->num_items;
 #if PBL_ROUND
-    const int anchor = aml->short_anchor;
-    const int base_idx = prv_short_row_start(short_row, anchor, aml->num_short_items);
-    const int num_items = prv_short_row_count(short_row, anchor, aml->num_short_items);
+    const int base_idx = ragged_grid_row_start(&aml->short_grid, short_row, aml->num_short_items);
+    const int num_items = ragged_grid_row_count(&aml->short_grid, short_row, aml->num_short_items);
 #else
     const int base_idx = short_row * SHORT_COL_COUNT;
     const int num_items = CLIP(aml->num_short_items - base_idx, 0, SHORT_COL_COUNT);
@@ -626,8 +573,8 @@ static int prv_get_menu_layer_row(ActionMenuLayer *aml, int item_index) {
     return item_index;
   } else {
 #if PBL_ROUND
-    return aml->num_items + prv_short_row_for_item(item_index - aml->num_items, aml->short_anchor,
-                                                   aml->num_short_items);
+    return aml->num_items + ragged_grid_row_for_item(&aml->short_grid, item_index - aml->num_items,
+                                                     aml->num_short_items);
 #else
     return aml->num_items + (item_index - aml->num_items) / SHORT_COL_COUNT;
 #endif
@@ -640,6 +587,75 @@ static void prv_selection_changed(ActionMenuLayer *aml) {
     aml->callbacks.selection_changed(item, aml->context);
   }
 }
+
+#if PBL_ROUND
+// Recenters the roam window on a tapped row without reflowing.
+static void prv_short_snap_window(ActionMenuLayer *aml, int tapped_row, int total) {
+  aml->short_grid.window_top = ragged_grid_window_top_for_row(&aml->short_grid, tapped_row, total);
+}
+
+// Syncs the menu viewport to exactly show rows [window_top, window_top + 2].
+// One-way authority: the grid window dictates the scroll offset, so a stale
+// or mid-row offset can never linger (the initial-view clip and the
+// "free-pixel rest position" both heal here).
+static void prv_short_sync_scroll_to_window(ActionMenuLayer *aml, bool animated) {
+  const int total = aml->num_short_items;
+  const int num_rows = ragged_grid_num_rows(&aml->short_grid, total);
+  const int16_t row_h = prv_get_short_row_height();
+  const int16_t sep = prv_get_cell_padding(aml);
+  const int16_t frame_h = aml->menu_layer.scroll_layer.layer.frame.size.h;
+  const int16_t content_h = num_rows * row_h + (num_rows - 1) * sep;
+  int16_t offset;
+  if (aml->short_grid.window_top == 0) {
+    offset = 0; // window at list top: first row flush with the viewport top
+  } else if (aml->short_grid.window_top + SHORT_ITEM_MAX_ROWS_SPALDING >= num_rows) {
+    // window at list end: tail rows flush with the viewport bottom
+    offset = -(content_h - frame_h);
+  } else {
+    // mid-list: window top row flush with the viewport top
+    const int16_t row_y = aml->short_grid.window_top * (row_h + sep);
+    offset = -row_y;
+  }
+  scroll_layer_set_content_offset(&aml->menu_layer.scroll_layer, GPoint(0, offset), animated);
+}
+
+// The short-grid branch handles both the menu-layer selection and the
+// selection-changed callback itself; the common path below must not
+// repeat them with a hard-coded center alignment.
+static void prv_short_apply_selection(ActionMenuLayer *aml, int old_short, int new_short, int total,
+                                      bool changed, bool *animated) {
+  aml->selected_index = aml->num_items + new_short;
+  if (ragged_grid_should_reflow(&aml->short_grid, old_short, new_short, total)) {
+    ragged_grid_reflow(&aml->short_grid, new_short, total);
+    // Mute the menu's selection-changed callback across the reload: the row
+    // partition changes under the stale menu selection, and the reload's
+    // internal re-selection walk must not emit app callbacks for it (the
+    // real change is announced below, or not at all when unchanged).
+    const MenuLayerSelectionChangedCallback saved_cb = aml->menu_layer.callbacks.selection_changed;
+    aml->menu_layer.callbacks.selection_changed = NULL;
+    menu_layer_reload_data(&aml->menu_layer);
+    aml->menu_layer.callbacks.selection_changed = saved_cb;
+    prv_short_sync_scroll_to_window(aml, false);
+  } else {
+    const int target_row = ragged_grid_row_for_item(&aml->short_grid, new_short, total);
+    if (target_row < aml->short_grid.window_top) {
+      aml->short_grid.window_top = target_row;
+      prv_short_sync_scroll_to_window(aml, *animated);
+    } else if (target_row > aml->short_grid.window_top + SHORT_ITEM_MAX_ROWS_SPALDING - 1) {
+      aml->short_grid.window_top = target_row - (SHORT_ITEM_MAX_ROWS_SPALDING - 1);
+      prv_short_sync_scroll_to_window(aml, *animated);
+    }
+  }
+  // Move the menu layer's selection (highlight + row geometry) without
+  // scrolling: the viewport is owned by the grid window sync above.
+  menu_layer_set_selected_index(&aml->menu_layer,
+                                MenuIndex(0, prv_get_menu_layer_row(aml, aml->selected_index)),
+                                MenuRowAlignNone, false);
+  if (changed) {
+    prv_selection_changed(aml);
+  }
+}
+#endif
 
 PBL_T_STATIC void prv_set_selected_index(ActionMenuLayer *aml, int new_selected_index,
                                          bool animated) {
@@ -657,52 +673,12 @@ PBL_T_STATIC void prv_set_selected_index(ActionMenuLayer *aml, int new_selected_
     // will be lost in the menu layer selection changed callback. Otherwise, it will be updated
     // in prv_selection_changed_cb() to ensure the correct index is used by the draw functions.
 #if PBL_ROUND
-    const int total = aml->num_short_items;
-    const int old_short = CLIP(aml->selected_index - aml->num_items, 0, total - 1);
-    const int new_short = new_selected_index - aml->num_items;
-    // Roam viewport under the frozen partition, tracked across moves: the
-    // cursor moves freely inside it, which is also what the edge trigger is
-    // evaluated against (a cursor-centered window could never be reached).
-    const int anchor = aml->short_anchor;
-    const int num_rows = prv_short_num_rows(anchor, total);
-    const int first_row = CLIP(aml->short_window_top, 0, MAX(num_rows - 1, 0));
-    aml->short_window_top = first_row;
-    int last_row = first_row;
-    while (last_row + 1 < num_rows && last_row - first_row < 2) {
-      last_row++;
-    }
-    const int first_item = prv_short_row_start(first_row, anchor, total);
-    const int last_item = prv_short_row_start(last_row, anchor, total) +
-                          prv_short_row_count(last_row, anchor, total) - 1;
-    aml->selected_index = new_selected_index;
-    MenuRowAlign align = MenuRowAlignNone;
-    if (new_short != old_short && ((new_short > old_short && old_short == last_item) ||
-                                   (new_short < old_short && old_short == first_item))) {
-      // Page turn: reflow around the new selection and recenter on it.
-      aml->short_anchor = new_short;
-      menu_layer_reload_data(&aml->menu_layer);
-      const int new_row =
-          prv_short_row_for_item(new_short, aml->short_anchor, aml->num_short_items);
-      aml->short_window_top = (new_row == 0) ? 0 : new_row - 1;
-      align = MenuRowAlignCenter;
-      animated = false;
-    } else {
-      // Roam: keep the frozen layout, scroll only if the target left the window.
-      const int target_row = prv_short_row_for_item(new_short, anchor, total);
-      if (target_row < aml->short_window_top) {
-        aml->short_window_top = target_row;
-        align = MenuRowAlignTop;
-      } else if (target_row > aml->short_window_top + 2) {
-        aml->short_window_top = target_row - 2;
-        align = MenuRowAlignBottom;
-      }
-    }
-    const int menu_layer_index = prv_get_menu_layer_row(aml, new_selected_index);
-    menu_layer_set_selected_index(&aml->menu_layer, MenuIndex(0, menu_layer_index), align,
-                                  animated);
-    if (selection_changed) {
-      prv_selection_changed(aml);
-    }
+    // The short-grid branch handles both the menu-layer selection and the
+    // selection-changed callback itself; the common path below must not
+    // repeat them with a hard-coded center alignment.
+    prv_short_apply_selection(aml, aml->selected_index - aml->num_items,
+                              new_selected_index - aml->num_items, aml->num_short_items,
+                              selection_changed, &animated);
     return;
 #else
     aml->selected_index = new_selected_index;
@@ -890,24 +866,45 @@ static void prv_selection_changed_cb(struct MenuLayer *menu_layer, MenuIndex new
   } else if (prv_get_menu_layer_row(aml, aml->selected_index) != new_index.row) {
     // A touch tap moves the menu selection directly, bypassing prv_set_selected_index, so no
     // column index was pre-set for this short-item row; adopt its first column.
-    // The partition is left as-is (no reflow) to avoid reentering the menu layer
-    // from inside its own selection callback; just recenter the roam window.
+    // The layout is left as-is (no reflow) to avoid reentering the menu layer
+    // from inside its own selection callback.
     prv_unschedule_item_animation(aml);
 #if PBL_ROUND
     aml->selected_index =
-        aml->num_items + prv_short_row_start(new_index.row - aml->num_items, aml->short_anchor,
-                                             aml->num_short_items);
-    {
-      const int tapped_row = new_index.row - aml->num_items;
-      const int num_rows = prv_short_num_rows(aml->short_anchor, aml->num_short_items);
-      aml->short_window_top = CLIP(tapped_row - 1, 0, MAX(num_rows - 1, 0));
-    }
+        aml->num_items + ragged_grid_row_start(&aml->short_grid, new_index.row - aml->num_items,
+                                               aml->num_short_items);
+    prv_short_snap_window(aml, new_index.row - aml->num_items, aml->num_short_items);
 #else
     aml->selected_index = aml->num_items + (new_index.row - aml->num_items) * SHORT_COL_COUNT;
 #endif
     prv_selection_changed(aml);
   }
 }
+
+#if PBL_ROUND
+// Menu viewport -> grid window sync, chained after the menu layer's own
+// offset-changed handler. Touch pans scroll the viewport in free pixels with
+// the selection untouched, so the window protocol must be re-derived from
+// where the viewport actually rests: the row at the viewport's center row
+// slot defines the window's middle row. Re-deriving (instead of trusting
+// window_top) keeps reflow triggers honest after a swipe.
+static void prv_short_offset_changed_cb(ScrollLayer *scroll_layer, void *context) {
+  MenuLayer *menu_layer = context;
+  ActionMenuLayer *aml =
+      (ActionMenuLayer *)((uint8_t *)menu_layer - offsetof(ActionMenuLayer, menu_layer));
+  menu_layer_scroll_offset_changed_handler(scroll_layer, menu_layer);
+  if (!prv_aml_is_short(aml) || aml->num_short_items == 0) {
+    return;
+  }
+  const int16_t offset_y = scroll_layer_get_content_offset(scroll_layer).y;
+  const int16_t pitch = prv_get_short_row_height() + prv_get_cell_padding(aml);
+  const int16_t frame_h = aml->menu_layer.scroll_layer.layer.frame.size.h;
+  const int center_y = -offset_y + frame_h / 2;
+  const int center_row = CLIP(center_y / pitch, 0, aml->num_short_items - 1);
+  ragged_grid_sync_window_to_viewport(&aml->short_grid, center_row, aml->num_short_items);
+}
+
+#endif
 
 static void prv_changed_proc(Layer *layer) {
   ActionMenuLayer *aml = (ActionMenuLayer *)layer;
@@ -984,19 +981,23 @@ static void prv_update_aml_cache(ActionMenuLayer *aml, int selected_index) {
   menu_layer_set_tap_select_only(&aml->menu_layer, prv_aml_is_short(aml));
 
 #if PBL_ROUND
-  // Fresh row partition, anchored one block in so the initial view leads
-  // with a 3-cell row over the fat middle row.
-  if (aml->num_short_items > 0) {
-    aml->short_anchor = MIN(3, aml->num_short_items - 1);
-  } else {
-    aml->short_anchor = 0;
-  }
-  aml->short_window_top = 0;
+  // Fresh row layout, anchored for a 3-cell lead row over the fat middle
+  // row whenever the list is long enough.
+  ragged_grid_init(&aml->short_grid, &SHORT_GRID_CONFIG, selected_index - aml->num_items,
+                   aml->num_short_items);
 #endif
 
   layer_mark_dirty(&aml->layer);
   menu_layer_reload_data(&aml->menu_layer);
   prv_set_selected_index(aml, selected_index, false /* animated */);
+#if PBL_ROUND
+  if (prv_aml_is_short(aml)) {
+    // The initial view must be row-aligned with the fresh grid window (the
+    // menu layer inherits any offset from a previous level; an unaligned
+    // offset is what clips the lead row on re-entry).
+    prv_short_sync_scroll_to_window(aml, false);
+  }
+#endif
 }
 
 // Public API
@@ -1045,6 +1046,9 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
                                PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
 #if PBL_ROUND
   menu_layer_pad_bottom_enable(&aml->menu_layer, false);
+  // Must precede menu_layer_set_callbacks(): its reload queries the grid,
+  // which divides by the configured row widths.
+  ragged_grid_init(&aml->short_grid, &SHORT_GRID_CONFIG, 0, 0);
 #endif
   menu_layer_set_callbacks(&aml->menu_layer, aml,
                            &(MenuLayerCallbacks){
@@ -1058,6 +1062,21 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
                              .selection_changed = prv_selection_changed_cb,
                              .select_click = prv_select_click_cb,
                            });
+#if PBL_ROUND
+  // The AML owns viewport<->window sync on short menus: chain our handler
+  // after the menu layer's own so every pan frame re-derives window_top.
+  // The scroll layer passes its context (the menu layer); the callback
+  // recovers the AML from it.
+  aml->menu_layer.scroll_layer.callbacks.content_offset_changed_handler =
+      prv_short_offset_changed_cb;
+#ifdef CONFIG_TOUCH
+  // This window deliberately holds no Tier-1 touch widget: the embedded ScrollLayer is
+  // already deregistered by menu_layer_init, so dropping the menu layer too leaves nothing to
+  // latch a gesture, and touch arrives as the same synthetic button events the physical
+  // buttons produce. The row partition and viewport stay owned by the button path.
+  menu_layer_touch_nav_deregister(&aml->menu_layer);
+#endif
+#endif
 
 #if !defined(CONFIG_RECOVERY_FW)
   gbitmap_init_with_resource_system(&aml->item_animation.fade_top, SYSTEM_APP,
