@@ -9,6 +9,7 @@
 //! @addtogroup UI
 //! @{
 //!   @addtogroup RaggedGrid
+//!   @{
 //!
 //!   Row layout for grids whose rows hold different item counts (e.g. a
 //!   circular watch face fitting an extra column in its wide middle rows).
