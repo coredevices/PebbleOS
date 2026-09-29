@@ -21,6 +21,7 @@
 /////////////////////
 
 #include "fake_resource_syscalls.h"
+#include "fake_rtc.h"
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
 
@@ -66,6 +67,7 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
 
 #include "stubs_analytics.h"
 #include "stubs_app_install_manager.h"
+#include "stubs_app_timer.h"
 #include "stubs_app_state.h"
 #include "stubs_bootbits.h"
 #include "stubs_compiled_with_legacy2_sdk.h"
@@ -497,6 +499,57 @@ void test_menu_layer_system_cells__basic_cell_content_sizes(void) {
   system_theme_set_content_size(PreferredContentSizeDefault);
 
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+//! Highlighted text that doesn't fit shows an ellipsis, then scrolls sideways after a pause.
+//! Columns: start, mid-scroll, and a third-party app at the same time, which never scrolls.
+void test_menu_layer_system_cells__scrolling_text(void) {
+#if PBL_RECT
+  const int16_t cell_width = 144;
+  const MenuLayerSystemCellTestRowData rows[] = {
+    {"The Lord of the Rings", NULL, NULL, NULL, DEFAULT_ICON_ALIGN},
+    {"The Lord of the Rings", "The Fellowship of the Ring", NULL, NULL, DEFAULT_ICON_ALIGN},
+    {"Star Wars", "The Empire Strikes Back", NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
+  };
+  const int num_columns = 3;
+  const int16_t row_height = menu_cell_basic_cell_height();
+
+  gbitmap_destroy(s_dest_bitmap);
+  const GSize bitmap_size =
+      GSize(GRID_CELL_PADDING + num_columns * (cell_width + GRID_CELL_PADDING),
+            GRID_CELL_PADDING + ARRAY_LENGTH(rows) * (row_height + GRID_CELL_PADDING));
+  s_dest_bitmap = gbitmap_create_blank(bitmap_size, GBitmapFormat8Bit);
+  s_ctx.dest_bitmap = *s_dest_bitmap;
+  s_ctx.draw_state.clip_box.size = bitmap_size;
+  s_ctx.draw_state.drawing_box.size = bitmap_size;
+  memset(s_dest_bitmap->addr, GColorShockingPinkARGB8,
+         s_dest_bitmap->row_size_bytes * s_dest_bitmap->bounds.size.h);
+
+  for (unsigned int i = 0; i < ARRAY_LENGTH(rows); i++) {
+    GRect cell_bounds =
+        GRect(GRID_CELL_PADDING, GRID_CELL_PADDING + i * (row_height + GRID_CELL_PADDING),
+              cell_width, row_height);
+    fake_rtc_set_ticks(0);
+    prv_draw_cell(MenuCellType_Basic, &cell_bounds, &rows[i],
+                  &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);
+
+    // Past the 800 ms pause
+    fake_rtc_set_ticks(RTC_TICKS_HZ * 3 / 2);
+    cell_bounds.origin.x += cell_width + GRID_CELL_PADDING;
+    prv_draw_cell(MenuCellType_Basic, &cell_bounds, &rows[i],
+                  &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);
+
+    s_current_task = PebbleTask_App;
+    s_current_process_id = (AppInstallId)1;
+    cell_bounds.origin.x += cell_width + GRID_CELL_PADDING;
+    prv_draw_cell(MenuCellType_Basic, &cell_bounds, &rows[i],
+                  &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);
+    s_current_task = PebbleTask_KernelMain;
+    s_current_process_id = (AppInstallId)(-1);
+  }
+
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+#endif
 }
 
 //! Third-party apps must keep the runtime platform's default cell dimensions no matter what

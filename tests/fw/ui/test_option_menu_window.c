@@ -15,6 +15,7 @@
 #include "fake_app_state.h"
 #include "fake_content_indicator.h"
 #include "fake_graphics_context.h"
+#include "fake_rtc.h"
 #include "fixtures/load_test_resources.h"
 
 // Stubs
@@ -309,4 +310,22 @@ void test_option_menu_window__content_sizes_long_title_special_height_icons(void
 
 void test_option_menu_window__content_sizes_short_title_special_height_icons(void) {
   prv_render_for_each_size(prv_render_short_title_special_height_icons, TEST_PBI_FILE);
+}
+
+//! The selected single line row scrolls a title too long to fit sideways after a pause
+void test_option_menu_window__long_title_single_line_scrolled(void) {
+  MenuConfig config = {
+    .title = "Single Line",
+    .content_type = OptionMenuContentType_SingleLine,
+    .num_items = 3,
+    .items = (MenuItemConfig[]){
+      {.title = "Allow All Notifications"},
+      {.title = "Allow Phone Calls Only"},
+      {.title = "Mute All Notifications"},
+    },
+  };
+  prv_create_menu_and_render(&config);
+  fake_rtc_increment_ticks(RTC_TICKS_HZ * 3 / 2);
+  window_render(&s_data.option_menu.window, fake_graphics_context_get_context());
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }

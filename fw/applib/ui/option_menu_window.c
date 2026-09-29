@@ -4,6 +4,7 @@
 #include "option_menu_window.h"
 
 #include "applib/applib_malloc.auto.h"
+#include "applib/ui/menu_text_scroll.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/system_theme.h"
 #include "system/passert.h"
@@ -321,6 +322,20 @@ void option_menu_system_draw_row(OptionMenu *option_menu, GContext *ctx, const L
   const GTextAlignment text_alignment = PBL_IF_RECT_ELSE(
       GTextAlignmentLeft, option_menu->icons_enabled ? GTextAlignmentRight : GTextAlignmentCenter);
   GFont const title_font = option_menu->title_font;
+#if PBL_RECT
+  // The selected row scrolls a title too long for its single line sideways
+  const int16_t min_height = fonts_get_font_height(title_font);
+  if (title && selected && cell_frame->size.h < 2 * min_height) {
+    GRect text_frame = grect_inset(*cell_frame, GEdgeInsets(0, prv_get_style()->text_inset_single));
+    text_frame.origin.y -= fonts_get_font_cap_offset(title_font);
+    const int16_t overflow = menu_text_scroll_get_overflow(ctx, title, title_font, &text_frame);
+    if (overflow > 0) {
+      menu_text_scroll_draw_text(ctx, title, title_font, &text_frame, overflow_mode, overflow,
+                                 menu_text_scroll_get_offset(cell_layer, overflow));
+      return;
+    }
+  }
+#endif
   const GSize text_size = graphics_text_layout_get_max_used_size(
       ctx, title, title_font, *cell_frame, overflow_mode, text_alignment, NULL);
   GRect text_frame = *cell_frame;

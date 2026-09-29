@@ -165,7 +165,7 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
     title = node->name;
   }
 
-  option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame, title, false, NULL);
+  option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame, title, selected, NULL);
 }
 
 static uint16_t prv_row_height_cb(OptionMenu *option_menu, uint16_t row, bool is_selected,
