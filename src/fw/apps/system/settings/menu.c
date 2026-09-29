@@ -4,7 +4,6 @@
 #include "activity_tracker.h"
 #include "bluetooth.h"
 #include "display.h"
-#include "emoji_selection_demo.h"
 #include "menu.h"
 #include "notifications.h"
 #include "quick_launch.h"
@@ -36,7 +35,6 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemThemes] = settings_themes_get_info,
 #endif
   [SettingsMenuItemSystem] = settings_system_get_info,
-  [SettingsMenuItemEmojiSelectionDemo] = settings_emoji_selection_demo_get_info,
 };
 
 const SettingsModuleMetadata *settings_menu_get_submodule_info(SettingsMenuItem category) {
