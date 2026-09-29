@@ -26,6 +26,7 @@ void test_timeline_list_view__initialize(void) {
 }
 
 void test_timeline_list_view__cleanup(void) {
+  system_theme_set_content_size(PreferredContentSizeDefault);
 }
 
 // Helpers
@@ -186,6 +187,24 @@ void prv_create_and_render_pin_and_dot(bool past) {
 }
 
 void test_timeline_list_view__pin_and_dot_future(void) {
+  prv_create_and_render_pin_and_dot(false /* past */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__pin_and_dot_future_small(void) {
+  system_theme_set_content_size(PreferredContentSizeSmall);
+  prv_create_and_render_pin_and_dot(false /* past */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__pin_and_dot_future_medium(void) {
+  system_theme_set_content_size(PreferredContentSizeMedium);
+  prv_create_and_render_pin_and_dot(false /* past */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__pin_and_dot_future_extra_large(void) {
+  system_theme_set_content_size(PreferredContentSizeExtraLarge);
   prv_create_and_render_pin_and_dot(false /* past */);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
