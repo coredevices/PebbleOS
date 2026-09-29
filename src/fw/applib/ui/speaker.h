@@ -74,6 +74,7 @@ bool speaker_stream_open(SpeakerPcmFormat format, uint8_t volume);
 uint32_t speaker_stream_write(const void *data, uint32_t num_bytes);
 
 //! Close the PCM stream. Buffered data will be played before stopping.
+//! Completion is asynchronous; use speaker_stop() to cancel immediately.
 void speaker_stream_close(void);
 
 //! Stop any active speaker playback immediately.
