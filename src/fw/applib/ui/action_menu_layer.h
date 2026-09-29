@@ -10,9 +10,7 @@
 #include "applib/graphics/graphics.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/window_private.h"
-#if PBL_ROUND
 #include "applib/ui/ragged_grid.h"
-#endif
 #include "system/passert.h"
 
 typedef void (*ActionMenuLayerCallback)(const ActionMenuItem *item, void *context);
@@ -56,11 +54,13 @@ typedef struct {
 
   const ActionMenuItem *short_items;
   int num_short_items;
-#if PBL_ROUND
   //! Short-grid row layout: frozen between page turns, reflows only when the
-  //! cursor pushes past the visible window edge.
+  //! cursor pushes past the visible window edge. Present on every board, not just
+  //! round: applib_malloc.json pins ActionMenuData's 3.x size with an exact
+  //! static assert, which a board-varying struct can never satisfy, so the field
+  //! must not be PBL_ROUND-conditional. It is plain index math with no board
+  //! dependencies, so a rectangular menu simply never asks it anything.
   RaggedGrid short_grid;
-#endif
   void *context;
 } ActionMenuLayer;
 
