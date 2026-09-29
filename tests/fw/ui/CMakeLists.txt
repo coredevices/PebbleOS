@@ -219,6 +219,7 @@ pbl_clar_test(test_menu_layer
     fw/applib/ui/layer.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/shadows.c
     fw/applib/ui/animation_interpolate.c
     fw/applib/ui/animation_timing.c
@@ -241,6 +242,7 @@ pbl_clar_test(test_action_menu_layer
     fw/applib/ui/layer.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/shadows.c
     fw/applib/ui/animation_interpolate.c
     fw/applib/ui/animation_timing.c
@@ -256,6 +258,12 @@ pbl_clar_test(test_action_menu_layer
     tests/stubs/stubs_animation.c
   DEFINES CONFIG_TOUCH
   PLATFORMS obelix gabbro
+)
+
+pbl_clar_test(test_menu_text_scroll
+  SOURCES
+    fw/applib/ui/menu_text_scroll.c
+    tests/fakes/fake_rtc.c
 )
 
 pbl_clar_test(test_menu_layer_system_cells
@@ -297,6 +305,7 @@ pbl_clar_test(test_menu_layer_system_cells
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/applib/ui/menu_text_scroll.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -402,6 +411,7 @@ pbl_clar_test(test_action_menu_window
     fw/applib/ui/crumbs_layer.c
     fw/applib/ui/window.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/inverter_layer.c
     fw/applib/ui/content_indicator.c
@@ -454,6 +464,7 @@ pbl_clar_test(test_notification_window
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/applib/ui/menu_text_scroll.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -587,6 +598,7 @@ pbl_clar_test(test_simple_dialog
     fw/applib/ui/text_layer_flow.c
     fw/applib/ui/window.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/inverter_layer.c
@@ -636,6 +648,7 @@ pbl_clar_test(test_emoji_fonts
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/applib/ui/menu_text_scroll.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -744,6 +757,7 @@ pbl_clar_test(test_expandable_dialog
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -803,6 +817,7 @@ pbl_clar_test(test_selection_windows
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/applib/ui/menu_text_scroll.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -898,6 +913,7 @@ pbl_clar_test(test_timeline_peek
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/applib/ui/menu_text_scroll.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -1027,6 +1043,7 @@ pbl_clar_test(test_option_menu_window
     fw/applib/ui/content_indicator.c
     fw/applib/ui/inverter_layer.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/option_menu_window.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c

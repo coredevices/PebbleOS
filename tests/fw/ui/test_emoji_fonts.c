@@ -23,6 +23,7 @@
 #include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_app_state.h>
+#include <stubs_app_timer.h>
 #include <stubs_bootbits.h>
 #include <stubs_heap.h>
 #include <stubs_logging.h>
