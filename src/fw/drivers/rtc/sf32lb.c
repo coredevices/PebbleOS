@@ -54,6 +54,7 @@ static TimerID s_rtc_cal_timer;
 static uint32_t s_rtc_cycle_count_init = 0;
 static double s_rtc_a = 0.0;
 static double s_delta_total = 0.0;
+static bool s_rtc_div_calibrated = false;
 
 static void prv_reset_calibration_state(void) {
   s_rtc_cycle_count_init = 0;
@@ -120,7 +121,11 @@ static void prv_rtc_cal_timer_cb(void *data) {
     uint16_t sub;
     time_t t;
 
-    prv_rtc_reconfig();
+    // Reconfiguring re-enters RTC init mode, which drops the current sub-second
+    if (!s_rtc_div_calibrated) {
+      prv_rtc_reconfig();
+      s_rtc_div_calibrated = true;
+    }
     // Get initial lpcycle, RTC is running based on it.
     s_rtc_cycle_count_init = HAL_Get_backup(RTC_BACKUP_LPCYCLE);
     s_delta_total = 0.0;
@@ -466,8 +471,6 @@ void rtc_enable_backup_regs(void) {
 
 void rtc_calibrate_frequency(uint32_t frequency) {
 #ifndef SF32LB52_USE_LXT
-  prv_rtc_cal_timer_cb(NULL);
-
   s_rtc_cal_timer = new_timer_create();
   PBL_ASSERTN(s_rtc_cal_timer != TIMER_INVALID_ID);
 
