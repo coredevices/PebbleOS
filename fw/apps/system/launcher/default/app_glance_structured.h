@@ -64,8 +64,12 @@ struct LauncherAppGlanceStructured {
   GFont title_font;
   //! Cached subtitle font that will be used when drawing the structured app glance
   GFont subtitle_font;
-  // Cached text layout used when calculating the width of the subtitle during scrolling
+  // Cached text layouts used when calculating the width of the title and subtitle during scrolling
+  TextLayoutExtended title_scroll_calc_text_layout;
   TextLayoutExtended subtitle_scroll_calc_text_layout;
+  //! How long the title and subtitle each need to scroll (in milliseconds), 0 if they fit
+  uint32_t title_scroll_duration_ms;
+  uint32_t subtitle_scroll_duration_ms;
   //! Optional implementation-provided dynamic text node update callback for the subtitle
   GTextNodeTextDynamicUpdate subtitle_update;
   //! Whether or not selection animations should be disabled for this structured app glance

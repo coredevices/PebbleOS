@@ -480,6 +480,12 @@ void test_launcher_menu_layer__extra_large_with_glances(void) {
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
+void test_launcher_menu_layer__extra_large_watchfaces(void) {
+  s_content_size = PreferredContentSizeExtraLarge;
+  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_Watchfaces);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
 void test_launcher_menu_layer__medium_with_glances(void) {
   s_content_size = PreferredContentSizeMedium;
   prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
