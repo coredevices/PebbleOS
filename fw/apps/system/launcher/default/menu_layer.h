@@ -23,6 +23,11 @@ typedef struct LauncherMenuLayer {
   LauncherAppGlanceService glance_service;
   bool selection_animations_enabled;
   AppInstallId app_to_launch_after_next_render;
+#if PBL_RECT
+  //! Per row: whether the app's glance currently shows a subtitle (see LauncherRowSubtitleState)
+  uint8_t *row_subtitle_states;
+  uint16_t num_row_subtitle_states;
+#endif
 } LauncherMenuLayer;
 
 typedef struct LauncherMenuLayerSelectionState {

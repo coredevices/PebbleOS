@@ -171,7 +171,14 @@ static void prv_timer_callback(void *data) {
   launcher_app_glance_structured_notify_service_glance_changed(structured_glance);
 }
 
+static bool prv_has_subtitle(LauncherAppGlance *glance) {
+  LauncherAppGlanceWorkout *workout_glance =
+      launcher_app_glance_structured_get_data((LauncherAppGlanceStructured *)glance);
+  return workout_glance && workout_glance->subtitle[0] != '\0';
+}
+
 static const LauncherAppGlanceStructuredImpl s_workout_structured_glance_impl = {
+  .base_handlers.has_subtitle = prv_has_subtitle,
   .get_icon = prv_get_icon,
   .get_title = prv_get_title,
   .create_subtitle_node = prv_create_subtitle_node,

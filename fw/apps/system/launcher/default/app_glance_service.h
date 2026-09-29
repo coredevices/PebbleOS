@@ -68,6 +68,19 @@ void launcher_app_glance_service_draw_glance_for_app_node(LauncherAppGlanceServi
                                                           int16_t screen_center_y,
                                                           AppMenuNode *node);
 
+//! Check whether the launcher app glance for the provided app node currently shows a subtitle.
+//! @param service The service to use to load the glance
+//! @param node The \ref AppMenuNode of the app whose glance we should check
+bool launcher_app_glance_service_node_has_subtitle(LauncherAppGlanceService *service,
+                                                   AppMenuNode *node);
+
+//! Like \ref launcher_app_glance_service_node_has_subtitle, but only looks at glances already in
+//! the cache, so it never loads one.
+//! @param has_subtitle_out Set to whether the glance shows a subtitle, if it was in the cache
+//! @return Whether the glance was in the cache
+bool launcher_app_glance_service_peek_node_has_subtitle(LauncherAppGlanceService *service,
+                                                        AppMenuNode *node, bool *has_subtitle_out);
+
 //! Rewind any glance being played by the provided launcher app glance service.
 //! @param service The service for which to rewind any playing glance
 void launcher_app_glance_service_rewind_current_glance(LauncherAppGlanceService *service);

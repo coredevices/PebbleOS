@@ -383,6 +383,32 @@ void launcher_app_glance_service_draw_glance_for_app_node(LauncherAppGlanceServi
   }
 }
 
+bool launcher_app_glance_service_node_has_subtitle(LauncherAppGlanceService *service,
+                                                   AppMenuNode *node) {
+  // Sizing a row must not evict the glance the player is showing, so glances that aren't already
+  // cached are loaded just for this check
+  const LauncherAppGlance *cached_glance = prv_find_glance_in_cache(service, &node->uuid);
+  LauncherAppGlance *glance =
+      cached_glance ? (LauncherAppGlance *)cached_glance : prv_load_glance_for_node(node, service);
+  const bool has_subtitle =
+      !glance || !glance->handlers.has_subtitle || glance->handlers.has_subtitle(glance);
+  if (!cached_glance) {
+    launcher_app_glance_destroy(glance);
+  }
+  return has_subtitle;
+}
+
+bool launcher_app_glance_service_peek_node_has_subtitle(LauncherAppGlanceService *service,
+                                                        AppMenuNode *node, bool *has_subtitle_out) {
+  const LauncherAppGlance *glance = prv_find_glance_in_cache(service, &node->uuid);
+  if (!glance) {
+    return false;
+  }
+  *has_subtitle_out =
+      !glance->handlers.has_subtitle || glance->handlers.has_subtitle((LauncherAppGlance *)glance);
+  return true;
+}
+
 void launcher_app_glance_service_rewind_current_glance(LauncherAppGlanceService *service) {
   if (!service) {
     return;

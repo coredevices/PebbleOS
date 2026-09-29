@@ -144,7 +144,14 @@ static void prv_alarm_clock_event_handler([[maybe_unused]] PebbleEvent *event, v
   launcher_app_glance_structured_notify_service_glance_changed(structured_glance);
 }
 
+static bool prv_has_subtitle(LauncherAppGlance *glance) {
+  LauncherAppGlanceAlarms *alarms_glance =
+      launcher_app_glance_structured_get_data((LauncherAppGlanceStructured *)glance);
+  return alarms_glance && alarms_glance->subtitle[0] != '\0';
+}
+
 static const LauncherAppGlanceStructuredImpl s_alarms_structured_glance_impl = {
+  .base_handlers.has_subtitle = prv_has_subtitle,
   .get_icon = prv_get_icon,
   .get_title = prv_get_title,
   .create_subtitle_node = prv_create_subtitle_node,

@@ -167,7 +167,14 @@ static void prv_music_event_handler(PebbleEvent *event, void *context) {
   pbl_panic();
 }
 
+static bool prv_has_subtitle(LauncherAppGlance *glance) {
+  LauncherAppGlanceMusic *music_glance =
+      launcher_app_glance_structured_get_data((LauncherAppGlanceStructured *)glance);
+  return music_glance && music_glance->subtitle[0] != '\0';
+}
+
 static const LauncherAppGlanceStructuredImpl s_music_structured_glance_impl = {
+  .base_handlers.has_subtitle = prv_has_subtitle,
   .get_icon = prv_get_icon,
   .get_title = prv_get_title,
   .create_subtitle_node = prv_create_subtitle_node,

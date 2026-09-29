@@ -18,8 +18,14 @@ typedef struct LauncherAppGlance LauncherAppGlance;
 //! @param glance The glance whose current slice has been updated
 typedef void (*LauncherAppGlanceCurrentSliceUpdated)(LauncherAppGlance *glance);
 
+//! Called to check whether a launcher app glance currently shows a subtitle. A glance without this
+//! handler is assumed to have one.
+//! @param glance The glance to check
+typedef bool (*LauncherAppGlanceHasSubtitle)(LauncherAppGlance *glance);
+
 typedef struct LauncherAppGlanceHandlers {
   LauncherAppGlanceCurrentSliceUpdated current_slice_updated;
+  LauncherAppGlanceHasSubtitle has_subtitle;
 } LauncherAppGlanceHandlers;
 
 struct LauncherAppGlance {

@@ -314,8 +314,14 @@ static void prv_destructor(LauncherAppGlanceStructured *structured_glance) {
   app_free(generic_glance);
 }
 
+static bool prv_has_subtitle(LauncherAppGlance *glance) {
+  return glance->current_slice.type == AppGlanceSliceType_IconAndSubtitle &&
+         glance->current_slice.icon_and_subtitle.template_string[0] != '\0';
+}
+
 static const LauncherAppGlanceStructuredImpl s_generic_structured_glance_impl = {
   .base_handlers.current_slice_updated = prv_current_slice_updated,
+  .base_handlers.has_subtitle = prv_has_subtitle,
   .get_icon = prv_get_icon,
   .get_title = prv_get_title,
   .create_subtitle_node = prv_create_subtitle_node,
