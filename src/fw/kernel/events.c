@@ -388,7 +388,10 @@ void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
   int num_events_in_queue = pbl_msgq_num_used(queue);
   PebbleEvent event;
   for (int i = 0; i < num_events_in_queue; ++i) {
-    PBL_ASSERTN(pbl_msgq_get(queue, &event, PBL_NO_WAIT) == 0);
+    // The queue's consumer may take events while it is being drained
+    if (pbl_msgq_get(queue, &event, PBL_NO_WAIT) != 0) {
+      break;
+    }
     // event service does some book-keeping about events, notify it that we're dropping these.
     sys_event_service_cleanup(&event);
 #if !defined(CONFIG_RECOVERY_FW)
