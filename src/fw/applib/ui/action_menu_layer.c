@@ -74,16 +74,15 @@ static GFont prv_get_picker_emoji_font(void) {
   if (!s_picker_emoji_font_resolved) {
     s_picker_emoji_font_resolved = true;
 #ifndef CONFIG_RECOVERY_FW
-    // Full-color art on color displays, 1-bit art elsewhere. PRF ships no emoji
-    // resources at all (its resource map has none, so the generated font keys do
-    // not define these), so leave the picker on the default short-item font there
-    // rather than naming a key that build does not have. Both callers cope with
-    // a NULL font, so the fallback is simply the ordinary item font.
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-    s_picker_emoji_font = fonts_get_system_font(FONT_KEY_GOTHIC_44_EMOJI_PICKER_COLOR);
-#else
+    // A curated 1-bit subset, at 2x the stock emoji size. Deliberately not a
+    // separate color set: a larger color font would mean shipping new
+    // third-party artwork with its own licensing and provenance to track.
+    // PRF ships no emoji resources at all (its resource map has none, so the
+    // generated font keys do not define this), so leave the picker on the
+    // default short-item font there rather than naming a key that build does
+    // not have. Both callers cope with a NULL font, so the fallback is simply
+    // the ordinary item font.
     s_picker_emoji_font = fonts_get_system_font(FONT_KEY_GOTHIC_40_EMOJI_PICKER);
-#endif
 #endif
   }
   return s_picker_emoji_font;
@@ -196,15 +195,6 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
       bg_rect.size.h = layer_bounds->size.h;
       bg_rect = grect_inset_internal(bg_rect, padding, y_offset);
       graphics_fill_round_rect(ctx, &bg_rect, corner_radius, GCornersAll);
-#else
-      // 2px underline below the focused glyph so the selection is visible.
-      graphics_context_set_fill_color(ctx, GColorWhite);
-      const int16_t underline_gap = 3;
-      const int16_t underline_inset = 4;
-      const GRect underline =
-          GRect(tr.origin.x + underline_inset, tr.origin.y + font_height + underline_gap,
-                tr.size.w - (2 * underline_inset), 2);
-      graphics_fill_rect(ctx, &underline);
 #endif
     } else {
       graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
