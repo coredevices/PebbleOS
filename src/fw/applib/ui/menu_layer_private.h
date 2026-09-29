@@ -4,8 +4,21 @@
 #pragma once
 
 #include "menu_layer.h"
+#include "pbl/util/testing.h"
 
 struct MenuIterator;
+
+//! The menu layer's own ScrollLayer offset-changed handler (touch
+//! scrollbar upkeep, fling/carousel tracking). Callers that replace the scroll
+//! layer's callback must chain to this to keep menu behavior.
+void menu_layer_scroll_offset_changed_handler(ScrollLayer *scroll_layer, MenuLayer *menu_layer);
+
+//! @internal
+//! Drop this menu layer from the Tier-1 touch widget registry, so it never latches a gesture.
+//! The embedded ScrollLayer is already deregistered by \ref menu_layer_init, so with the menu
+//! layer gone the window holds no Tier-1 widget and touch falls through to the system bridge's
+//! synthetic button events -- the same input path as the physical buttons.
+void menu_layer_touch_nav_deregister(MenuLayer *menu_layer);
 
 typedef void (*MenuIteratorCallback)(struct MenuIterator *it);
 

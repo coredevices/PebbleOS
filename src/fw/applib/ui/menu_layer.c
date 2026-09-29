@@ -38,7 +38,6 @@ struct TouchNavState *app_state_get_touch_nav_state(void);
 struct TouchNavState *modal_manager_get_touch_nav_state(void);
 
 static void prv_menu_touch_nav_register(MenuLayer *menu_layer);
-static void prv_menu_touch_nav_deregister(MenuLayer *menu_layer);
 static void prv_menu_touch_track_center_row(MenuLayer *menu_layer);
 static void prv_menu_update_overscroll_stretch(MenuLayer *menu_layer);
 static void prv_menu_touch_pin_center_highlight(MenuLayer *menu_layer);
@@ -208,8 +207,7 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
 }
 #endif // PBL_ROUND
 
-static void prv_menu_scroll_offset_changed_handler(ScrollLayer *scroll_layer,
-                                                   MenuLayer *menu_layer) {
+void menu_layer_scroll_offset_changed_handler(ScrollLayer *scroll_layer, MenuLayer *menu_layer) {
 #ifdef CONFIG_TOUCH
   prv_menu_update_overscroll_stretch(menu_layer);
   if (menu_layer->touch_fling_active) {
@@ -947,7 +945,7 @@ void menu_layer_init_scroll_layer_callbacks(MenuLayer *menu_layer) {
       scroll_layer, (ScrollLayerCallbacks){
                       .click_config_provider = (ClickConfigProvider)prv_menu_click_config_provider,
                       .content_offset_changed_handler =
-                          (ScrollLayerCallback)prv_menu_scroll_offset_changed_handler,
+                          (ScrollLayerCallback)menu_layer_scroll_offset_changed_handler,
                     });
   scroll_layer->content_sublayer.update_proc = (LayerUpdateProc)menu_layer_update_proc;
 }
@@ -1009,7 +1007,7 @@ void menu_layer_deinit(MenuLayer *menu_layer) {
 #ifdef CONFIG_TOUCH
   // Deregister from the Tier-1 touch registry first so a gesture in flight on this widget is
   // cancelled with no client callbacks before its client state is torn down (double-deinit safe).
-  prv_menu_touch_nav_deregister(menu_layer);
+  menu_layer_touch_nav_deregister(menu_layer);
 #endif
   prv_cancel_selection_animation(menu_layer);
   prv_scrollbar_cancel_hide_timer(menu_layer);
@@ -2135,7 +2133,8 @@ void menu_layer_touch_handle_pan_update(MenuLayer *menu_layer, GPoint base,
 static void prv_menu_touch_spring_back_stopped(Animation *animation, bool finished, void *context) {
   (void)animation;
   (void)finished;
-  scroll_layer_touch_fling_cleanup(&((MenuLayer *)context)->scroll_layer);
+  MenuLayer *menu_layer = (MenuLayer *)context;
+  scroll_layer_touch_fling_cleanup(&menu_layer->scroll_layer);
 }
 
 static void prv_menu_touch_fling_stopped(Animation *animation, bool finished, void *context) {
@@ -2150,6 +2149,8 @@ static void prv_menu_touch_fling_stopped(Animation *animation, bool finished, vo
     // the offset -- whoever unscheduled owns the settle.
     prv_menu_touch_track_center_row(menu_layer);
     prv_menu_touch_settle_to_center(menu_layer, true /* animated */);
+  } else if (finished) {
+    // Plain menu: the coast has run out, so the scroll is settled.
   }
 }
 
@@ -2195,6 +2196,7 @@ void menu_layer_touch_handle_snap(MenuLayer *menu_layer, GPoint base, GPoint fin
   // Slow liftoff (or a coast too short to schedule): settle the final (unthrottled) offset.
   scroll_layer_set_content_offset(&menu_layer->scroll_layer, GPoint(0, new_y), false);
   if (!menu_layer->center_focused) {
+    // Plain menu: the offset is at its final resting place, so the scroll is settled.
     return;
   }
   // Carousel: the final delta may have crossed one more boundary than the last throttled pan
@@ -2428,7 +2430,7 @@ static void prv_menu_touch_nav_register(MenuLayer *menu_layer) {
                          &s_menu_touch_nav_ops, menu_layer);
 }
 
-static void prv_menu_touch_nav_deregister(MenuLayer *menu_layer) {
+void menu_layer_touch_nav_deregister(MenuLayer *menu_layer) {
   TouchNavState *state = prv_task_touch_nav_state();
   if (!state) {
     return;
