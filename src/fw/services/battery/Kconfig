@@ -6,14 +6,33 @@ config SERVICE_BATTERY
     help
       Battery monitor and state-of-charge estimation.
 
+choice BATTERY_SOC
+    prompt "State-of-charge estimation"
+    default NRF_FUEL_GAUGE if PMIC_NPM1300
+    default BATTERY_SOC_VOLTAGE
+
+config BATTERY_SOC_VOLTAGE
+    bool "Voltage curve"
+    help
+      Look the state of charge up in a voltage curve.
+
 config NRF_FUEL_GAUGE
     bool "Nordic nRF Fuel Gauge"
     depends on PMIC_NPM1300
-    default y if PMIC_NPM1300
     help
       Use the Nordic nRF Fuel Gauge library for state-of-charge
       estimation. Requires the nPM1300 PMIC; selects both the prebuilt
       nonfree fuel-gauge lib and the matching battery service impl.
+
+config BATTERY_SOC_FUEL_GAUGE
+    bool "Fuel gauge"
+    depends on PMIC_NPM1300
+    select FUEL_GAUGE
+    help
+      Use the open fuel gauge (subsys/fuel_gauge) with the cell model of
+      the board.
+
+endchoice
 
 if SERVICE_BATTERY
 

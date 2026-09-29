@@ -18,9 +18,10 @@ implemented under `kernel/`). The main source layers, as described on the
 - `src/fw/drivers` — hardware drivers (public interfaces under
   `include/pbl/drivers`).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
-  logging, cron, the Bluetooth backends and the
-  [task watchdog](task_watchdog.md), included via the `pbl/logging/`,
-  `pbl/cron/`, `pbl/bluetooth/` and `pbl/task_wdt/` header paths.
+  logging, cron, the Bluetooth backends, the [fuel gauge](fuel_gauge.md) and
+  the [task watchdog](task_watchdog.md), included via the `pbl/logging/`,
+  `pbl/cron/`, `pbl/bluetooth/`, `pbl/fuel_gauge/` and `pbl/task_wdt/`
+  header paths.
 
 Alongside these sit `src/fw/shell` (launcher/watchface UX flow),
 `src/fw/process_management` (app lifecycle) and `src/fw/comm` (phone
@@ -124,6 +125,7 @@ Longer design documents live as their own pages:
 ```{toctree}
 :maxdepth: 1
 activity/index.md
+fuel_gauge.md
 kernel.md
 kernel_internals.md
 task_watchdog.md

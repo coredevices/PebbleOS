@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config FUEL_GAUGE
+    bool "Fuel gauge"
+    help
+      Battery state-of-charge estimator: an extended Kalman filter over an
+      equivalent-circuit cell model, fed with voltage, current and
+      temperature measurements.

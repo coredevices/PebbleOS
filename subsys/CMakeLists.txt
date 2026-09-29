@@ -4,5 +4,6 @@
 pbl_include_directories(.)
 pbl_add_subdirectory_ifdef(CONFIG_BT bluetooth)
 pbl_add_subdirectory_ifdef(CONFIG_CRON cron)
+pbl_add_subdirectory_ifdef(CONFIG_FUEL_GAUGE fuel_gauge)
 add_subdirectory(logging)
 add_subdirectory(task_wdt)

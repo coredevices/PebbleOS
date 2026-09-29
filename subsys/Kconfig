@@ -3,5 +3,6 @@
 
 rsource "bluetooth/Kconfig"
 rsource "cron/Kconfig"
+rsource "fuel_gauge/Kconfig"
 rsource "logging/Kconfig"
 rsource "task_wdt/Kconfig"

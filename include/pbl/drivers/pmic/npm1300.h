@@ -3,6 +3,9 @@
 
 #pragma once
 
+//! Charger termination voltage programmed by the driver.
+#define NPM1300_TERM_VOLTAGE_MV 4350
+
 //! nPM1300 configuration
 typedef struct {
   //! Charge current (32-800mA, 2mA steps)
