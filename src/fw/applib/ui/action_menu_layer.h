@@ -10,6 +10,9 @@
 #include "applib/graphics/graphics.h"
 #include "applib/ui/animation.h"
 #include "applib/ui/window_private.h"
+#if PBL_ROUND
+#include "applib/ui/ragged_grid.h"
+#endif
 #include "system/passert.h"
 
 typedef void (*ActionMenuLayerCallback)(const ActionMenuItem *item, void *context);
@@ -54,12 +57,9 @@ typedef struct {
   const ActionMenuItem *short_items;
   int num_short_items;
 #if PBL_ROUND
-  //! Short-grid selection anchoring the current row partition. The layout
-  //! only reflows when the cursor pushes past the visible window edge.
-  int short_anchor;
-  //! Top menu row of the visible short-grid window. The cursor roams inside
-  //! it; the window scrolls (without reflowing) when the cursor leaves it.
-  int short_window_top;
+  //! Short-grid row layout: frozen between page turns, reflows only when the
+  //! cursor pushes past the visible window edge.
+  RaggedGrid short_grid;
 #endif
   void *context;
 } ActionMenuLayer;
