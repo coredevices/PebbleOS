@@ -16,9 +16,11 @@
 #include "kernel/ui/modals/modal_manager.h"
 #include "kernel/util/segment.h"
 #include "kernel/util/task_init.h"
+#include "pbl/kernel/mutex.h"
 #include "pbl/mcu/privilege.h"
 #include "popups/health_tracking_ui.h"
 #include "popups/timeline/peek.h"
+#include "process_management/app_install_manager.h"
 #include "process_management/app_run_state.h"
 #include "process_management/pebble_process_md.h"
 #include "process_management/process_heap.h"
@@ -236,6 +238,23 @@ PBL_T_STATIC size_t prv_get_stack_guard_size(void) {
   return (uintptr_t)__stack_guard_size__;
 }
 
+#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
+static PBL_MUTEX_DEFINE(s_watchface_metrics_mutex);
+static char s_watchface_name[APP_NAME_SIZE_BYTES];
+static char s_watchface_uuid[UUID_STRING_BUFFER_LENGTH];
+#endif
+
+void pbl_analytics_external_collect_watchface(void) {
+#if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
+  pbl_mutex_lock(&s_watchface_metrics_mutex, PBL_FOREVER);
+  if (s_watchface_name[0] != '\0') {
+    PBL_ANALYTICS_SET_STRING(watchface_name, s_watchface_name);
+    PBL_ANALYTICS_SET_STRING(watchface_uuid, s_watchface_uuid);
+  }
+  pbl_mutex_unlock(&s_watchface_metrics_mutex);
+#endif
+}
+
 // ---------------------------------------------------------------------------------------------
 //! @return True on success, False if:
 //!     - We fail to start the app. No app is running and the caller is responsible for starting
@@ -377,10 +396,10 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
 #if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
   if (app_md->process_type == ProcessTypeWatchface) {
     PBL_ANALYTICS_TIMER_START(watchface_time_ms);
-    PBL_ANALYTICS_SET_STRING(watchface_name, process_metadata_get_name(app_md));
-    char uuid_str[UUID_STRING_BUFFER_LENGTH];
-    uuid_to_string(&app_md->uuid, uuid_str);
-    PBL_ANALYTICS_SET_STRING(watchface_uuid, uuid_str);
+    pbl_mutex_lock(&s_watchface_metrics_mutex, PBL_FOREVER);
+    strncpy(s_watchface_name, process_metadata_get_name(app_md), sizeof(s_watchface_name) - 1);
+    uuid_to_string(&app_md->uuid, s_watchface_uuid);
+    pbl_mutex_unlock(&s_watchface_metrics_mutex);
   }
 #endif
 

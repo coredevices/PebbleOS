@@ -131,6 +131,7 @@ const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
   if (id == APP_ID_DEFAULT_WATCHFACE) {
     static const PebbleProcessMdSystem s_default_watchface_md = {
       .common.process_type = ProcessTypeWatchface,
+      .name = "Default Watchface",
     };
     return (const PebbleProcessMd *)&s_default_watchface_md;
   } else {
