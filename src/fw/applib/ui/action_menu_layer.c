@@ -73,11 +73,17 @@ static bool s_picker_emoji_font_resolved;
 static GFont prv_get_picker_emoji_font(void) {
   if (!s_picker_emoji_font_resolved) {
     s_picker_emoji_font_resolved = true;
+#ifndef CONFIG_RECOVERY_FW
+    // Full-color art on color displays, 1-bit art elsewhere. PRF ships no emoji
+    // resources at all (its resource map has none, so the generated font keys do
+    // not define these), so leave the picker on the default short-item font there
+    // rather than naming a key that build does not have. Both callers cope with
+    // a NULL font, so the fallback is simply the ordinary item font.
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-    // Full-color art on color displays, 1-bit art elsewhere.
     s_picker_emoji_font = fonts_get_system_font(FONT_KEY_GOTHIC_44_EMOJI_PICKER_COLOR);
 #else
     s_picker_emoji_font = fonts_get_system_font(FONT_KEY_GOTHIC_40_EMOJI_PICKER);
+#endif
 #endif
   }
   return s_picker_emoji_font;
