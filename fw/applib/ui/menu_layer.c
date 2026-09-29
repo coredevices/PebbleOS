@@ -18,6 +18,7 @@
 #include <applib/legacy2/ui/menu_layer_legacy2.h>
 #include <applib/ui/animation_timing.h>
 #include <applib/ui/click.h>
+#include <applib/ui/menu_text_scroll.h>
 #include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
@@ -1016,6 +1017,7 @@ void menu_layer_deinit(MenuLayer *menu_layer) {
 #endif
   prv_cancel_selection_animation(menu_layer);
   prv_scrollbar_cancel_hide_timer(menu_layer);
+  menu_text_scroll_layer_deinit(&menu_layer->scroll_layer.content_sublayer);
   layer_deinit(&menu_layer->inverter.layer);
   scroll_layer_deinit(&menu_layer->scroll_layer);
 }

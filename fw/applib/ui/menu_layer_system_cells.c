@@ -7,6 +7,7 @@
 
 #include <applib/ui/kino/kino_reel.h>
 #include <applib/ui/kino/kino_reel_gbitmap_private.h>
+#include <applib/ui/menu_text_scroll.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_install_types.h>
 #include <process_management/process_manager.h>
@@ -77,6 +78,39 @@ static const MenuCellDimensions *prv_get_cell_dimensions(void) {
       prv_use_platform_default_size() ? system_theme_get_default_content_size_for_runtime_platform()
                                       : system_theme_get_content_size();
   return &s_menu_cell_dimensions[size];
+}
+
+bool menu_text_scroll_is_allowed(void) {
+  return !prv_use_platform_default_size();
+}
+
+int16_t menu_text_scroll_get_overflow(GContext *ctx, const char *text, GFont font,
+                                      const GRect *box) {
+  const int16_t max_width = 1000;
+  const GSize size =
+      graphics_text_layout_get_max_used_size(ctx, text, font, GRect(0, 0, max_width, box->size.h),
+                                             GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  return MAX(0, size.w - box->size.w);
+}
+
+void menu_text_scroll_draw_text(GContext *ctx, const char *text, GFont font, const GRect *box,
+                                GTextOverflowMode overflow_mode, int16_t overflow, int16_t offset) {
+  if (overflow <= 0 || offset <= 0) {
+    graphics_draw_text(ctx, text, font, *box, overflow_mode, GTextAlignmentLeft, NULL);
+    return;
+  }
+
+  const GRect saved_clip_box = ctx->draw_state.clip_box;
+  GRect clip_box = grect_to_global_coordinates(*box, ctx);
+  grect_clip(&clip_box, &saved_clip_box);
+  ctx->draw_state.clip_box = clip_box;
+
+  GRect text_box = *box;
+  text_box.origin.x -= MIN(offset, overflow);
+  text_box.size.w += overflow;
+  graphics_draw_text(ctx, text, font, text_box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+
+  ctx->draw_state.clip_box = saved_clip_box;
 }
 
 int16_t menu_cell_basic_cell_height(void) {
@@ -223,16 +257,35 @@ static void prv_menu_cell_basic_draw_custom_rect(GContext *ctx, const Layer *cel
                        GTextAlignmentRight, NULL);
   }
 
+  // The highlighted cell of a system menu scrolls its overlong single line text sideways
+  const bool scrolls = cell_layer->is_highlighted &&
+                       config->overflow_mode != GTextOverflowModeWordWrap &&
+                       menu_text_scroll_is_allowed();
+  int16_t title_overflow = 0;
+  int16_t subtitle_overflow = 0;
+  int16_t scroll_offset = 0;
+  if (scrolls) {
+    title_overflow =
+        config->title ? menu_text_scroll_get_overflow(ctx, config->title, title_font, &box) : 0;
+    subtitle_overflow =
+        config->subtitle ? menu_text_scroll_get_overflow(ctx, config->subtitle, subtitle_font, &box)
+                         : 0;
+    const int16_t overflow = MAX(title_overflow, subtitle_overflow);
+    if (overflow > 0) {
+      scroll_offset = menu_text_scroll_get_offset(cell_layer, overflow);
+    }
+  }
+
   if (config->title) {
-    graphics_draw_text(ctx, config->title, title_font, box, config->overflow_mode,
-                       GTextAlignmentLeft, NULL);
+    menu_text_scroll_draw_text(ctx, config->title, title_font, &box, config->overflow_mode,
+                               title_overflow, scroll_offset);
   }
 
   if (config->subtitle) {
     box.origin.y += title_height;
     box.size.h = subtitle_height + 4;
-    graphics_draw_text(ctx, config->subtitle, subtitle_font, box, config->overflow_mode,
-                       GTextAlignmentLeft, NULL);
+    menu_text_scroll_draw_text(ctx, config->subtitle, subtitle_font, &box, config->overflow_mode,
+                               subtitle_overflow, scroll_offset);
   }
 }
 #endif // PBL_RECT
