@@ -136,6 +136,8 @@ typedef struct {
   //! Pixels to add to the glyph's top_offset when drawing, non-zero only when another font
   //! (emoji or system fallback) supplied the glyph
   int16_t baseline_adjust;
+  //! How many times larger to draw the glyph than its bitmap
+  uint8_t scale;
   //! Font resource the glyph was read from
   const FontResource *font_res;
   //! Offset of the glyph header within font_res

@@ -45,7 +45,7 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t id, uint32_t 
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, const Codepoint codepoint,
                                           FontInfo *fontinfo, GlyphLocation *location_out) {
   if (location_out) {
-    *location_out = (GlyphLocation){.font_res = &s_font_res};
+    *location_out = (GlyphLocation){.scale = 1, .font_res = &s_font_res};
   }
   return (const GlyphData *)s_font_data;
 }

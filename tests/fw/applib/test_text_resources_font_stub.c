@@ -7,6 +7,8 @@
 // its own FontInfo. This lives in a separate translation unit so it overrides the weak stub at
 // link time rather than colliding with it.
 
+#include <string.h>
+
 #include <applib/fonts/fonts.h>
 #include <resource/language_pack.h>
 #include <resource/resource_ids.auto.h>
@@ -15,8 +17,9 @@ FontInfo *s_test_fallback_font;
 
 // The only named keys the code under test asks for are the system emoji fonts, requested through
 // fonts_get_system_emoji_font_for_size(); a test installs one by pointing s_test_emoji_font at its
-// own FontInfo.
+// own FontInfo and s_test_emoji_font_key at the key it answers to.
 FontInfo *s_test_emoji_font;
+const char *s_test_emoji_font_key;
 FontInfo *s_test_language_fonts[LANGUAGE_PACK_COUNT];
 
 int s_test_language_font_calls;
@@ -34,6 +37,9 @@ bool sys_font_get_language_font(uint32_t base_resource_id, uint8_t slot, FontInf
 GFont sys_font_get_system_font(const char *key) {
   if (key == nullptr) {
     return s_test_fallback_font;
+  }
+  if (!s_test_emoji_font_key || strcmp(key, s_test_emoji_font_key) != 0) {
+    return nullptr;
   }
   return s_test_emoji_font;
 }

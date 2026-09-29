@@ -29,10 +29,11 @@ static FontInfo s_font_info;
 // lives in test_text_resources_font_stub.c so it resolves at link time without colliding with the
 // in-TU stub.
 extern FontInfo *s_test_fallback_font;
-// Installed emoji font, returned for any named font key (NULL = none, the default).
+// Installed emoji font and the key it answers to (NULL = none, the default).
 extern FontInfo *s_test_emoji_font;
 extern FontInfo *s_test_language_fonts[LANGUAGE_PACK_COUNT];
 extern int s_test_language_font_calls;
+extern const char *s_test_emoji_font_key;
 
 #define FONT_COMPRESSION_FIXTURE_PATH "font_compression"
 
@@ -56,6 +57,7 @@ void test_text_resources__initialize(void) {
   memset(&s_font_cache, 0, sizeof(s_font_cache));
   s_test_fallback_font = nullptr;
   s_test_emoji_font = nullptr;
+  s_test_emoji_font_key = nullptr;
   memset(s_test_language_fonts, 0, sizeof(FontInfo *) * LANGUAGE_PACK_COUNT);
   g_font_language_generation = 0;
   text_resources_reset_cache(&s_font_cache);
@@ -482,12 +484,55 @@ void test_text_resources__baseline_adjust_for_emoji_font(void) {
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_28_EMOJI, 0, &s_emoji));
   cl_assert_equal_i(s_emoji.base.md.max_height, 28);
   s_test_emoji_font = &s_emoji;
+  s_test_emoji_font_key = FONT_KEY_GOTHIC_28_EMOJI;
 
   const Codepoint PHONE_CODEPOINT = 0x260E;
   GlyphLocation loc = {.baseline_adjust = -1};
   const GlyphData *g = text_resources_get_glyph(&s_font_cache, PHONE_CODEPOINT, &s_font_info, &loc);
   cl_assert(g != nullptr);
+  cl_assert_equal_i(loc.scale, 1);
   cl_assert_equal_i(loc.baseline_adjust, 8); // 36px primary baseline - 28px emoji font baseline
+}
+
+// With the half-height emoji font available, 36px text draws it at twice the size, which fills
+// the line exactly.
+void test_text_resources__emoji_font_doubled_for_tall_text(void) {
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_36, 0, &s_font_info));
+
+  static FontInfo s_emoji;
+  memset(&s_emoji, 0, sizeof(s_emoji));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18_EMOJI, 0, &s_emoji));
+  cl_assert_equal_i(s_emoji.base.md.max_height, 18);
+  s_test_emoji_font = &s_emoji;
+  s_test_emoji_font_key = FONT_KEY_GOTHIC_18_EMOJI;
+
+  const Codepoint PHONE_CODEPOINT = 0x260E;
+  GlyphLocation loc = {.baseline_adjust = -1};
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, PHONE_CODEPOINT, &s_font_info, &loc);
+  cl_assert(g != nullptr);
+  cl_assert_equal_i(loc.scale, 2);
+  cl_assert_equal_i(loc.baseline_adjust, 0);
+
+  const int8_t advance =
+      text_resources_get_glyph_horiz_advance(&s_font_cache, PHONE_CODEPOINT, &s_font_info);
+  cl_assert_equal_i(advance, 2 * g->header.horiz_advance);
+}
+
+// Text no taller than an emoji font keeps emoji at their own size.
+void test_text_resources__emoji_font_not_doubled_for_short_text(void) {
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+
+  static FontInfo s_emoji;
+  memset(&s_emoji, 0, sizeof(s_emoji));
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18_EMOJI, 0, &s_emoji));
+  s_test_emoji_font = &s_emoji;
+  s_test_emoji_font_key = FONT_KEY_GOTHIC_18_EMOJI;
+
+  const Codepoint PHONE_CODEPOINT = 0x260E;
+  GlyphLocation loc = {};
+  cl_assert(text_resources_get_glyph(&s_font_cache, PHONE_CODEPOINT, &s_font_info, &loc));
+  cl_assert_equal_i(loc.scale, 1);
+  cl_assert_equal_i(loc.baseline_adjust, 0);
 }
 
 // A codepoint present in the primary font is served by the primary font; the fallback is not
