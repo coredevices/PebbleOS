@@ -235,6 +235,7 @@ pbl_clar_test(test_menu_layer
 pbl_clar_test(test_action_menu_layer
   SOURCES
     src/fw/applib/ui/action_menu_layer.c
+    src/fw/applib/ui/ragged_grid.c
     src/fw/applib/ui/layer.c
     src/fw/applib/ui/scroll_layer.c
     src/fw/applib/ui/menu_layer.c
@@ -394,6 +395,7 @@ pbl_clar_test(test_action_menu_window
     tests/stubs/stubs_system_theme.c
     src/fw/applib/ui/action_menu_hierarchy.c
     src/fw/applib/ui/action_menu_layer.c
+    src/fw/applib/ui/ragged_grid.c
     src/fw/applib/ui/action_menu_window.c
     src/fw/applib/ui/crumbs_layer.c
     src/fw/applib/ui/window.c
@@ -845,6 +847,11 @@ pbl_clar_test(test_text_layer_flow
     src/fw/applib/ui/text_layer_flow.c
     src/fw/applib/graphics/gcolor_definitions.c
     src/fw/applib/graphics/gtypes.c
+)
+
+pbl_clar_test(test_ragged_grid
+  SOURCES
+    src/fw/applib/ui/ragged_grid.c
 )
 
 pbl_clar_test(test_jumboji

@@ -10,6 +10,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/content_indicator.h"
 #include "applib/ui/content_indicator_private.h"
+#include "applib/ui/menu_layer_private.h"
 #include "apps/system/settings/notifications_private.h"
 #include "resource/resource.h"
 #include "shell/system_theme.h"
@@ -487,4 +488,160 @@ void test_action_menu_window__frozen_ignores_tap(void) {
   action_menu_unfreeze(action_menu);
   menu_layer->callbacks.select_click(menu_layer, &index, menu_layer->callback_context);
   cl_assert_equal_i(s_freezing_action_count, 2);
+}
+
+// Round short-grid protocol: frozen-partition roam/reflow against the real
+// menu layer, including the touch-scroll viewport sync. These encode the
+// two regressions the first refactor missed: the initial draw clipping the
+// lead row (born-with non-zero content offset), and the 3/3/4 desync where
+// the window protocol evaluated against a viewport the code no longer knew.
+//////////////////////
+
+#if PBL_ROUND
+// 21 emoji like the reply picker's default order.
+static const ActionMenuItem s_round_emoji_items[] = {
+  {.label = "😃", .is_leaf = 1}, {.label = "😉", .is_leaf = 1}, {.label = "😂", .is_leaf = 1},
+  {.label = "😍", .is_leaf = 1}, {.label = "😘", .is_leaf = 1}, {.label = "❤", .is_leaf = 1},
+  {.label = "😇", .is_leaf = 1}, {.label = "😎", .is_leaf = 1}, {.label = "😛", .is_leaf = 1},
+  {.label = "😟", .is_leaf = 1}, {.label = "😩", .is_leaf = 1}, {.label = "😭", .is_leaf = 1},
+  {.label = "😴", .is_leaf = 1}, {.label = "😐", .is_leaf = 1}, {.label = "😯", .is_leaf = 1},
+  {.label = "👍", .is_leaf = 1}, {.label = "👎", .is_leaf = 1}, {.label = "👌", .is_leaf = 1},
+  {.label = "💩", .is_leaf = 1}, {.label = "🎉", .is_leaf = 1}, {.label = "🍺", .is_leaf = 1},
+};
+#define NUM_ROUND_EMOJI 21
+
+static ActionMenuData *prv_open_round_emoji_menu(void) {
+  ActionMenuLevel *root_level = action_menu_level_create(NUM_ROUND_EMOJI);
+  action_menu_level_set_display_mode(root_level, ActionMenuLevelDisplayModeThin);
+  for (int i = 0; i < NUM_ROUND_EMOJI; i++) {
+    action_menu_level_add_action(root_level, s_round_emoji_items[i].label, prv_noop_action_callback,
+                                 NULL);
+  }
+  ActionMenuConfig config = {
+    .root_level = root_level,
+    .colors.background = GColorChromeYellow,
+    .did_close = prv_action_menu_did_close_cb,
+  };
+  ActionMenu *action_menu_window = app_action_menu_open(&config);
+  window_set_on_screen(&action_menu_window->window, true, true);
+  return window_get_user_data(&action_menu_window->window);
+}
+#endif // PBL_ROUND
+
+// Button-driven single step, mirroring prv_scroll_handler.
+static void prv_round_step(ActionMenuData *data, int delta) {
+  prv_set_selected_index(&data->action_menu_layer, data->action_menu_layer.selected_index + delta,
+                         false /* animated */);
+}
+
+// Simulates the settled state of a touch swipe: the viewport scrolls to an
+// arbitrary pixel offset with the selection untouched; the offset-changed
+// hook must re-derive the grid window from it.
+static void prv_round_swipe_to_row(ActionMenuData *data, int window_top_row) {
+  const int16_t pitch = 34 + 10; // fake fonts: row 34 + separator 10
+  scroll_layer_set_content_offset(&data->action_menu_layer.menu_layer.scroll_layer,
+                                  GPoint(0, -(window_top_row * pitch)), false);
+}
+
+// The initial view is row-aligned with the fresh grid window: lead slim row
+// flush at the viewport top (offset 0). Regression: the menu is born with
+// content offset -5 from the degenerate-frame centering pass, which clipped
+// the top row on first draw.
+void test_action_menu_window__round_initial_view_row_aligned(void) {
+#if PBL_ROUND
+  ActionMenuData *data = prv_open_round_emoji_menu();
+  ActionMenuLayer *aml = &data->action_menu_layer;
+
+  cl_check(aml->short_grid.window_top == 0);
+  cl_check(aml->short_grid.anchor == 3);
+  const int16_t offset = scroll_layer_get_content_offset(&aml->menu_layer.scroll_layer).y;
+  cl_check(offset == 0);
+#endif
+}
+
+// Full button-down walk from item 0 to the tail: roam inside the frozen
+// 3/4/3 partition, page turn at the window edge, tail settles flush.
+void test_action_menu_window__round_button_down_walk(void) {
+#if PBL_ROUND
+  ActionMenuData *data = prv_open_round_emoji_menu();
+  ActionMenuLayer *aml = &data->action_menu_layer;
+
+  // Frozen partition rows: [0-2],[3-6],[7-9],[10-12],[13-16],[17-19],[20].
+  // Roam down to item 9 (last cell of the bottom visible row).
+  for (int i = 0; i < 9; i++) {
+    prv_round_step(data, 1);
+    cl_check(aml->short_grid.anchor == 3); // frozen so far
+    const int16_t offset = scroll_layer_get_content_offset(&aml->menu_layer.scroll_layer).y;
+    cl_check(offset == 0); // viewport never leaves rows 0..2
+  }
+
+  // Pushing past it reflows around item 10: anchor 9, window [2..4], the
+  // window's top row flush at the viewport top.
+  prv_round_step(data, 1);
+  cl_check(aml->short_grid.anchor == 9);
+  cl_check(aml->short_grid.window_top == 2);
+  cl_check(aml->selected_index == 10);
+  const int16_t offset = scroll_layer_get_content_offset(&aml->menu_layer.scroll_layer).y;
+  cl_check(offset == -(2 * 44));
+
+  // Roam to the very tail.
+  for (int i = 0; i < 10; i++) {
+    prv_round_step(data, 1);
+  }
+  cl_check(aml->selected_index == 20);
+  cl_check(aml->short_grid.anchor == 15);
+  // Tail window (rows 4..6 of 7): tail flush with the viewport bottom
+  // (content 7*34+6*10 = 298; frame 3*34+2*10 = 122).
+  const int16_t tail_offset = scroll_layer_get_content_offset(&aml->menu_layer.scroll_layer).y;
+  cl_assert_equal_i(tail_offset, -(298 - 122));
+#endif
+}
+
+// Down to the tail and back up to the head: the walk re-enters the frozen
+// partition and ends row-aligned at the top with offset 0 — no manual
+// "scroll down then up" needed to un-clip the lead row.
+void test_action_menu_window__round_button_up_walk_returns_to_top(void) {
+#if PBL_ROUND
+  ActionMenuData *data = prv_open_round_emoji_menu();
+  ActionMenuLayer *aml = &data->action_menu_layer;
+
+  for (int i = 0; i < 20; i++) {
+    prv_round_step(data, 1);
+  }
+  for (int i = 0; i < 20; i++) {
+    prv_round_step(data, -1);
+  }
+  cl_check(aml->selected_index == 0);
+  cl_check(aml->short_grid.anchor == 3);
+  cl_check(aml->short_grid.window_top == 0);
+  const int16_t offset = scroll_layer_get_content_offset(&aml->menu_layer.scroll_layer).y;
+  cl_check(offset == 0);
+#endif
+}
+
+// After a touch swipe the viewport rests mid-list with the selection
+// untouched; the grid window must re-derive from the resting viewport so the
+// next button step evaluates reflow triggers against reality. Regression for
+// the 3/3/4 desync (window said rows 2..4, screen showed rows 1..3).
+void test_action_menu_window__round_swipe_syncs_window(void) {
+#if PBL_ROUND
+  ActionMenuData *data = prv_open_round_emoji_menu();
+  ActionMenuLayer *aml = &data->action_menu_layer;
+
+  // Swipe down one row: viewport rests with rows 1..3 in frame, selection
+  // still item 0. The window re-derives around the resting viewport's
+  // middle row (2), so window_top becomes 1.
+  prv_round_swipe_to_row(data, 1);
+  cl_check(aml->selected_index == 0);
+  cl_check(aml->short_grid.window_top == 1);
+
+  // A button step from the swiped state still moves through the frozen
+  // layout coherently.
+  prv_round_step(data, 1);
+  cl_check(aml->selected_index == 1);
+  cl_check(aml->short_grid.anchor == 3);
+  // The step's window-authority pass re-aligns the viewport to the window.
+  const int16_t offset = scroll_layer_get_content_offset(&aml->menu_layer.scroll_layer).y;
+  cl_check(offset == 0);
+#endif
 }
