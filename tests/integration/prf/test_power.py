@@ -88,7 +88,7 @@ def test_backlight_timeout(dut, power, record_property):
     time.sleep(BACKLIGHT_IDLE_S)
     with power.measure("backlight") as m:
         time.sleep(BACKLIGHT_PRESS_AT_S)
-        dut.prompt("click short 1")
+        dut.prompt(dut.command("click", button=1))
         time.sleep(BACKLIGHT_MEASURE_S - BACKLIGHT_PRESS_AT_S)
     on_s = _on_time_s(m.samples)
     record_property("backlight_on_s", on_s)

@@ -108,7 +108,15 @@ class Ui:
                 )
             )
         else:
-            self._click(f"click multiple {int(button)} {presses} {hold_ms} {gap_ms}")
+            self._click(
+                self.dut.command(
+                    "click_multiple",
+                    button=int(button),
+                    presses=presses,
+                    hold_ms=hold_ms,
+                    gap_ms=gap_ms,
+                )
+            )
         if settle:
             time.sleep(presses * (hold_ms + gap_ms) / 1000)
 
@@ -211,7 +219,7 @@ class Ui:
         """Window names, top first."""
         return [
             m.group(1)
-            for line in self.dut.prompt("window stack")
+            for line in self.dut.prompt(self.dut.command("windows"))
             if (m := _WINDOW.search(line))
         ]
 
@@ -221,7 +229,7 @@ class Ui:
         are only included with ``discreet``."""
         names = []
         priority = None
-        for line in self.dut.prompt("modal stack"):
+        for line in self.dut.prompt(self.dut.command("modals")):
             if m := _PRIORITY.search(line):
                 priority = int(m.group(1))
             elif (m := _WINDOW.search(line)) and (
@@ -240,7 +248,7 @@ class Ui:
     def apps(self):
         """Installed (non-system) apps, name -> install id."""
         found = {}
-        for line in self.dut.prompt("app list"):
+        for line in self.dut.prompt(self.dut.command("app_list")):
             m = _APP.match(line.strip())
             if m:
                 found[m.group(2)] = int(m.group(1))
@@ -267,7 +275,7 @@ class Ui:
             raise HarnessError(
                 f"no app named {app!r}; installed: {', '.join(apps) or 'none'}"
             )
-        response = self.dut.prompt(f"app launch {apps[app]}")
+        response = self.dut.prompt(self.dut.command("app_launch", id=apps[app]))
         if response != ["OK"]:
             raise PromptError(f"launching {app!r}: {response}")
 
@@ -279,7 +287,7 @@ class Ui:
     def set_time(self, when):
         """Set the RTC to ``when``, a datetime or a UNIX timestamp."""
         timestamp = int(when.timestamp() if hasattr(when, "timestamp") else when)
-        self.dut.prompt(f"set time {timestamp}")
+        self.dut.prompt(self.dut.command("set_time", timestamp=timestamp))
 
     def _stack_after(self, stack, timeout):
         """The window stack once it differs from ``stack``, or ``stack`` if

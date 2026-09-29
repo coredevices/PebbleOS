@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from harness import connections
+from harness import commands, connections
 from harness.connections import Capability
 from harness.errors import HarnessError, Unsupported, WatchTimeout
 from harness.logs import Dehasher, LogBuffer, LogFile
@@ -137,7 +137,7 @@ class DeviceAdapter(ABC):
         (so it can sleep as it would unplugged) and drop every connection
         meanwhile; reconnect once it listens again."""
         self._connection(Capability.PROMPT).prompt_no_reply(
-            f"console disable rx {int(seconds)}"
+            self.command("rx_disable", seconds=int(seconds))
         )
         until = time.monotonic() + seconds
         # Let the command go out before the port closes.
@@ -153,7 +153,7 @@ class DeviceAdapter(ABC):
     def standby(self):
         """Have the firmware turn the watch off (PRF only); :meth:`reset`
         turns it back on."""
-        self._connection(Capability.PROMPT).prompt_no_reply("enter standby")
+        self._connection(Capability.PROMPT).prompt_no_reply(self.command("standby"))
         time.sleep(QUIESCE_SEND_S)
         self.disconnect()
 
@@ -167,13 +167,13 @@ class DeviceAdapter(ABC):
         if not self.has(Capability.PROMPT):
             logger.warning("confirm the pairing on the watch: press Up")
             return
-        self.prompt("click short 1")
+        self.prompt(self.command("click", button=1))
 
     def reset(self):
         """Restart the firmware, and wait until it answers again."""
         if not self._hard_reset():
             try:
-                self.prompt("reset", timeout=2)
+                self.prompt(self.command("reset"), timeout=2)
             except WatchTimeout:
                 pass
         self.disconnect()
@@ -188,7 +188,7 @@ class DeviceAdapter(ABC):
         while time.monotonic() < deadline:
             try:
                 if self.has(Capability.PROMPT):
-                    self.prompt("version", timeout=5)
+                    self.prompt(self.command("version"), timeout=5)
                 else:
                     from libpebble2.protocol.system import (
                         WatchVersion,
@@ -226,6 +226,11 @@ class DeviceAdapter(ABC):
             f"no connection offers {capability.name.lower()}: "
             f"{', '.join(map(repr, self.connections)) or 'none open'}"
         )
+
+    def command(self, name, **args):
+        """Console command ``name`` (see :mod:`harness.commands`), as the
+        firmware spells it."""
+        return commands.command(self.build, name, **args)
 
     def prompt(self, command, timeout=20):
         """Run a prompt command, returning its response lines."""

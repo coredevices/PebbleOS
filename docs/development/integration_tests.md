@@ -249,7 +249,10 @@ The fixtures:
   `long_press`, `hold`, `swipe`, `tap` (QEMU only), `screenshot`,
   `wait_idle` (until the screen stops changing), `window_stack`,
   `modal_stack`, `top_window`, `launch_app`, `set_time` and `go_home`.
-- `prompt`: `dut.prompt`, skipping the test when there is no prompt.
+- `prompt`: `dut.prompt`, skipping the test when there is no prompt. The
+  commands the harness itself sends are spelled for the build's console,
+  the shell or the older prompt (`harness/commands.py`); `dut.command()`
+  gives them to tests.
 - `snapshot`: screenshot comparison, below.
 - `power`: current measurement, below.
 - `build`: the build under test (`board`, `platform`, `config`).
@@ -302,7 +305,7 @@ pbl -b build-obelix itest --device-serial /dev/tty.usbserial-1 \
 With a PPK2 the harness powers the watch on before the session, and
 `dut.reset()` power-cycles it. `power.measure_idle(name)` measures the watch
 as if it were unplugged: the console stops listening
-(`console disable rx`), which lets the firmware sleep as a release build
+(`sys rx_disable`), which lets the firmware sleep as a release build
 would, and the harness drops its connections for the duration. The watch
 is left to settle, then measured for 60 s, then the harness reconnects:
 
