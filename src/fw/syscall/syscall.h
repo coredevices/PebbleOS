@@ -103,6 +103,10 @@ uint8_t sys_speaker_get_state(void);
 void sys_speaker_register_finish(void);
 bool sys_speaker_is_muted(void);
 
+//! Streams the app's microphone to the phone. See mic_stream.h.
+uint8_t sys_mic_stream_start(void);
+void sys_mic_stream_stop(void);
+
 void sys_get_app_uuid(Uuid *uuid);
 bool sys_app_is_watchface(void);
 AppInstallId sys_app_manager_get_current_app_id(void);

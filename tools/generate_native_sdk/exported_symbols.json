@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "109",
+  "revision" : "110",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/ambient_light.h",
@@ -124,7 +124,8 @@
     "fw/applib/voice/dictation_session.h",
     "fw/applib/ui/content_indicator.h",
     "fw/applib/rockyjs/rocky.h",
-    "fw/applib/unobstructed_area_service.h"
+    "fw/applib/unobstructed_area_service.h",
+    "fw/applib/mic_stream.h"
   ],
   "exports": [
     {
@@ -4400,6 +4401,41 @@
               "type": "function",
               "name": "speaker_is_muted",
               "addedRevision": "100"
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "Microphone",
+          "appOnly": true,
+          "addedRevision": "110",
+          "exports": [
+            {
+              "type": "type",
+              "name": "MicStreamStartResult"
+            }, {
+              "type": "type",
+              "name": "MicStreamStopReason"
+            }, {
+              "type": "type",
+              "name": "MicStreamStartedHandler"
+            }, {
+              "type": "type",
+              "name": "MicStreamStoppedHandler"
+            }, {
+              "type": "type",
+              "name": "MicStreamHandlers"
+            }, {
+              "type": "function",
+              "name": "mic_stream_to_phone_start",
+              "addedRevision": "110"
+            }, {
+              "type": "function",
+              "name": "mic_stream_to_phone_stop",
+              "addedRevision": "110"
+            }, {
+              "type": "function",
+              "name": "mic_stream_to_phone_is_active",
+              "addedRevision": "110"
             }
           ]
         }, {
