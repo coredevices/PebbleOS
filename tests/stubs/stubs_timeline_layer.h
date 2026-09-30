@@ -19,10 +19,10 @@ bool PBL_WEAK timeline_layer_sidebar_is_on_right(void) {
   return true;
 }
 
-int16_t WEAK timeline_layer_get_icon_outer_inset(void) {
+int16_t PBL_WEAK timeline_layer_get_icon_outer_inset(void) {
   return 0;
 }
 
-int16_t WEAK timeline_layer_get_pin_text_origin_x(void) {
+int16_t PBL_WEAK timeline_layer_get_pin_text_origin_x(void) {
   return 0;
 }
