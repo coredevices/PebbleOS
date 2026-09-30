@@ -47,6 +47,7 @@ static const char *s_syncable_settings[] = {
   "unitsDistance",
   "unitsWind",
   "textStyle",
+  "systemTextSize",
   "stationaryMode",
 #ifdef CONFIG_ORIENTATION_MANAGER
   "displayOrientationLeftHanded",
@@ -142,6 +143,7 @@ static const char *s_syncable_notif_prefs[] = {
   "dndWeekendSchedule",
   "dndWeekendScheduleEnabled",
   "notifWindowTimeout",
+  "notifTextSize",
   "notifDesignStyle",
   "notifVibeDelay",
   "notifBacklight",
