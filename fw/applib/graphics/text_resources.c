@@ -741,6 +741,18 @@ const GlyphData *text_resources_get_glyph(FontCache *font_cache, const Codepoint
   return prv_get_glyph(font_cache, codepoint, font_info, true /* need_bitmap */, location_out);
 }
 
+GRect text_resources_get_glyph_frame(FontCache *font_cache, Codepoint codepoint,
+                                     FontInfo *font_info) {
+  GlyphLocation location;
+  const GlyphData *glyph =
+      prv_get_glyph(font_cache, codepoint, font_info, false /* need_bitmap */, &location);
+  if (!glyph) {
+    return GRectZero;
+  }
+  return GRect(glyph->header.left_offset_px, glyph->header.top_offset_px + location.baseline_adjust,
+               glyph->header.width_px, glyph->header.height_px);
+}
+
 bool text_resources_glyph_is_color(const GlyphLocation *location) {
   return location->font_res &&
          HAS_FEATURE(location->font_res->md.version, VERSION_FIELD_FEATURE_COLOR);
