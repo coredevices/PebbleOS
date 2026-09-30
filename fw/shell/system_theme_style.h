@@ -30,12 +30,29 @@ typedef struct SystemThemeOptionMenuStyle {
   int16_t right_text_inset_with_icon;
 } SystemThemeOptionMenuStyle;
 
+//! Fonts and cell geometry of the launcher for one content size
+typedef struct SystemThemeLauncherStyle {
+  const char *title_font_key;
+  const char *subtitle_font_key;
+  //! Vertical margin between the title and the subtitle
+  int16_t title_margin_h;
+#if PBL_RECT
+  int16_t cell_height;
+#else
+  int16_t focused_cell_height;
+  int16_t unfocused_cell_height;
+#endif
+} SystemThemeLauncherStyle;
+
 //! Everything the system UI draws differently for each preferred content size
 typedef struct SystemThemeStyle {
   //! Font keys for each text style
   const char *fonts[TextStyleFontCount];
   SystemThemeMenuCellStyle menu_cell;
   SystemThemeOptionMenuStyle option_menu;
+#if !defined(CONFIG_RECOVERY_FW)
+  SystemThemeLauncherStyle launcher;
+#endif
 } SystemThemeStyle;
 
 //! @return The style for the user's preferred content size

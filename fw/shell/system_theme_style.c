@@ -56,6 +56,19 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
               .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
             },
+#if !defined(CONFIG_RECOVERY_FW)
+        .launcher =
+            {
+              .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .subtitle_font_key = FONT_KEY_GOTHIC_14,
+#if PBL_RECT
+              .cell_height = 42,
+#else
+              .focused_cell_height = 52,
+              .unfocused_cell_height = 38,
+#endif
+            },
+#endif
       },
   [PreferredContentSizeMedium] =
       {
@@ -93,6 +106,19 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
               .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
             },
+#if !defined(CONFIG_RECOVERY_FW)
+        .launcher =
+            {
+              .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .subtitle_font_key = FONT_KEY_GOTHIC_14,
+#if PBL_RECT
+              .cell_height = 42,
+#else
+              .focused_cell_height = 52,
+              .unfocused_cell_height = 38,
+#endif
+            },
+#endif
       },
   [PreferredContentSizeLarge] =
       {
@@ -134,6 +160,20 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .text_inset_multi = -3,
               .right_text_inset_with_icon = 4,
             },
+#if !defined(CONFIG_RECOVERY_FW)
+        .launcher =
+            {
+              .title_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .subtitle_font_key = FONT_KEY_GOTHIC_18,
+              .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
+#if PBL_RECT
+              .cell_height = 50,
+#else
+              .focused_cell_height = 55,
+              .unfocused_cell_height = 45,
+#endif
+            },
+#endif
       },
   [PreferredContentSizeExtraLarge] = {
     .fonts =
@@ -167,16 +207,30 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
           .horizontal_inset = 10,
           .title_subtitle_left_margin = 34,
         },
-    .option_menu = {
+    .option_menu =
+        {
 #if PBL_RECT
-      .cell_heights[OptionMenuContentType_SingleLine] = 56,
+          .cell_heights[OptionMenuContentType_SingleLine] = 56,
 #endif
-      .top_inset = 1,
-      .right_icon_spacing = PBL_IF_RECT_ELSE(10, 35),
-      .text_inset_single = -1,
-      .text_inset_multi = -3,
-      .right_text_inset_with_icon = 4,
+          .top_inset = 1,
+          .right_icon_spacing = PBL_IF_RECT_ELSE(10, 35),
+          .text_inset_single = -1,
+          .text_inset_multi = -3,
+          .right_text_inset_with_icon = 4,
+        },
+#if !defined(CONFIG_RECOVERY_FW)
+    .launcher = {
+      .title_font_key = FONT_KEY_GOTHIC_28_BOLD,
+      .subtitle_font_key = FONT_KEY_GOTHIC_24,
+      .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
+#if PBL_RECT
+      .cell_height = 60,
+#else
+      .focused_cell_height = 66,
+      .unfocused_cell_height = 56,
+#endif
     },
+#endif
   },
 };
 
