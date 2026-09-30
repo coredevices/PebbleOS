@@ -6,6 +6,7 @@
 #include "applib/ui/vibes.h"
 #include "applib/ui/window_private.h"
 #include "apps/system/launcher/default/menu_layer.h"
+#include "apps/system/launcher/default/menu_layer_private.h"
 #include "shell/prefs.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/app_glances/app_glance_service.h"
@@ -586,4 +587,19 @@ void test_launcher_menu_layer__content_sizes_settings_charging(void) {
   s_battery_state =
       (BatteryChargeState){.charge_percent = 60, .is_charging = true, .is_plugged = true};
   prv_render_launcher_menu_layer_for_each_size(LauncherMenuLayerTestApp_Watchfaces, TEST_PBI_FILE);
+}
+
+//! The glance cache is sized for rows no shorter than the launcher's minimum
+void test_launcher_menu_layer__cell_heights_at_least_minimum(void) {
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < NumPreferredContentSizes;
+       size++) {
+    s_content_size = size;
+    const LauncherMenuLayerStyle *style = launcher_menu_layer_get_style();
+#if PBL_RECT
+    cl_assert(style->cell_height >= LAUNCHER_MENU_LAYER_MIN_CELL_HEIGHT);
+#else
+    cl_assert(style->focused_cell_height >= LAUNCHER_MENU_LAYER_MIN_FOCUSED_CELL_HEIGHT);
+    cl_assert(style->unfocused_cell_height >= LAUNCHER_MENU_LAYER_MIN_UNFOCUSED_CELL_HEIGHT);
+#endif
+  }
 }
