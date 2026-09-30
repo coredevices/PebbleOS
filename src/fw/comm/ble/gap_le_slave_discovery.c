@@ -10,7 +10,7 @@
 
 #include "comm/bt_lock.h"
 
-#include "git_version.auto.h"
+#include "pbl/version.h"
 
 #include "mfg/mfg_info.h"
 
@@ -107,9 +107,9 @@ static void prv_schedule_ad_job(void) {
     .color = mfg_info_get_watch_color(),
     .fw_version =
         {
-          .major = GIT_MAJOR_VERSION,
-          .minor = GIT_MINOR_VERSION,
-          .patch = GIT_PATCH_VERSION,
+          .major = PBL_VERSION_MAJOR,
+          .minor = PBL_VERSION_MINOR,
+          .patch = PBL_VERSION_PATCH,
         },
     .is_running_recovery_firmware = TINTIN_METADATA.is_recovery_firmware,
     .is_first_use = false, // !getting_started_is_complete(), // TODO

@@ -31,7 +31,7 @@
 #include "pbl/services/bluetooth/pairability.h"
 #include "pbl/services/comm_session/session.h"
 
-#include "git_version.auto.h"
+#include "pbl/version.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -140,8 +140,8 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
 
   // Set the name text
   if (data->is_showing_version) {
-    size_t len = MIN(strlen(GIT_TAG), sizeof(data->name_text_buffer) - 1);
-    memcpy(data->name_text_buffer, GIT_TAG, len);
+    size_t len = MIN(strlen(PBL_VERSION_TAG), sizeof(data->name_text_buffer) - 1);
+    memcpy(data->name_text_buffer, PBL_VERSION_TAG, len);
     data->name_text_buffer[len] = '\0';
   } else if ((comm_session_get_system_session() != NULL) && (gap_conn != NULL)) {
     // If we have connected to a device and we have a connection to the mobile app, show the device

@@ -16,7 +16,7 @@
 #include "pbl/services/bluetooth/local_id.h"
 #include "pbl/util/size.h"
 
-#include "git_version.auto.h"
+#include "pbl/version.h"
 
 #include <pbl/bluetooth/types.h>
 #include <stdbool.h>
@@ -93,7 +93,7 @@ static void prv_handle_init(void) {
 
   // Build QR code string
   snprintf(data->qr_buffer, sizeof(data->qr_buffer), "%s;%s;%s;%u;%u;%s", serial_number,
-           data->bt_mac_buffer, GIT_TAG, battery_mv, battery_pct, color_short_name);
+           data->bt_mac_buffer, PBL_VERSION_TAG, battery_mv, battery_pct, color_short_name);
 
   QRCode *qr_code = &data->qr_code;
   qr_code_init_with_parameters(

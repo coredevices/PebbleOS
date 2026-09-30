@@ -3,23 +3,6 @@
 
 pbl_include_directories(. applib/vendor/uPNG applib/vendor/tinflate)
 
-# The firmware reports the version it was built from.
-set(git_version ${CMAKE_CURRENT_BINARY_DIR}/git_version.auto.h)
-add_custom_command(
-  OUTPUT ${git_version} ${CMAKE_CURRENT_BINARY_DIR}/git_version.stamp
-  COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/generate.py git-version
-          --template ${CMAKE_CURRENT_SOURCE_DIR}/git_version.auto.h.in
-          --output ${git_version}
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/git_version.auto.h.in
-  WORKING_DIRECTORY ${PBL_BASE}
-  COMMENT "Checking the firmware version"
-  VERBATIM
-)
-# The stamp is never written, so the version is re-checked on every build;
-# the header itself is only rewritten when it actually changes.
-add_custom_target(pbl_git_version DEPENDS ${git_version})
-add_dependencies(pbl_generated_headers pbl_git_version)
-
 add_subdirectory(startup)
 add_subdirectory(drivers)
 add_subdirectory(board)

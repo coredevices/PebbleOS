@@ -7,7 +7,7 @@
 #include "system/version.h"
 #include "mfg/mfg_info.h"
 
-#include "git_version.auto.h"
+#include "pbl/version.h"
 
 DEFINE_SYSCALL(WatchInfoColor, sys_watch_info_get_color, void) {
   return mfg_info_get_watch_color();
@@ -83,8 +83,8 @@ WatchInfoModel watch_info_get_model() {
 
 WatchInfoVersion watch_info_get_firmware_version(void) {
   return (WatchInfoVersion){
-    .major = GIT_MAJOR_VERSION,
-    .minor = GIT_MINOR_VERSION,
-    .patch = GIT_PATCH_VERSION
+    .major = PBL_VERSION_MAJOR,
+    .minor = PBL_VERSION_MINOR,
+    .patch = PBL_VERSION_PATCH
   };
 }

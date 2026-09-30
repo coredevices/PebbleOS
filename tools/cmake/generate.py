@@ -44,10 +44,10 @@ def read_config(path):
     return config
 
 
-# --- git_version.auto.h ----------------------------------------------------
+# --- pbl/version.h ---------------------------------------------------------
 
 
-def cmd_git_version(args):
+def cmd_version(args):
     revision = gitinfo.get_git_revision()
     # Truncate the commit to fit in the versions struct. It may become
     # ambiguous, but that beats failing the build over a long hash.
@@ -342,10 +342,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("git-version")
+    p = sub.add_parser("version")
     p.add_argument("--template", required=True)
     p.add_argument("--output", required=True)
-    p.set_defaults(func=cmd_git_version)
+    p.set_defaults(func=cmd_version)
 
     p = sub.add_parser("app-registry")
     p.add_argument("--input", required=True)

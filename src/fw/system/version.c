@@ -16,16 +16,16 @@
 
 #include "version.h"
 
-#include "git_version.auto.h"
+#include "pbl/version.h"
 
 //! This symbol and its contents are provided by the linker script, see the
 //! .note.gnu.build-id section in src/fw/fw_common.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
 const FirmwareMetadata TINTIN_METADATA PBL_SECTION(".pbl_fw_version") = {
-  .version_timestamp = GIT_TIMESTAMP,
-  .version_tag = GIT_TAG,
-  .version_short = GIT_REVISION,
+  .version_timestamp = PBL_VERSION_TIMESTAMP,
+  .version_tag = PBL_VERSION_TAG,
+  .version_short = PBL_VERSION_GIT_SHA,
 
   .is_recovery_firmware = FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE,
   .is_ble_firmware = false,
@@ -148,13 +148,13 @@ void version_copy_current_build_id_hex_string(char *buffer, size_t buffer_bytes_
 
 void version_get_major_minor_patch(unsigned int *major, unsigned int *minor,
                                    char const **patch_ptr) {
-  *major = GIT_MAJOR_VERSION;
-  *minor = GIT_MINOR_VERSION;
-  *patch_ptr = GIT_PATCH_VERBOSE_STRING;
+  *major = PBL_VERSION_MAJOR;
+  *minor = PBL_VERSION_MINOR;
+  *patch_ptr = PBL_VERSION_VERBOSE_STR;
 }
 
 bool version_is_release_build(void) {
-  const char *tag = GIT_TAG;
+  const char *tag = PBL_VERSION_TAG;
 
   if (*tag++ != 'v') {
     return false;
