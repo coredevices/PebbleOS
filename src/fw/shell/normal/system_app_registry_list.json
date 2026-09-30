@@ -687,6 +687,11 @@
       "id": -101,
       "enum": "QUICK_LAUNCH_NOTHING",
       "md_fn": "quick_launch_nothing_get_app_info"
+    },
+    {
+      "id": -102,
+      "enum": "BUTTON_LOCK_AUTO_TOGGLE",
+      "md_fn": "button_lock_auto_toggle_get_app_info"
     }
   ],
   "resource_apps": [
