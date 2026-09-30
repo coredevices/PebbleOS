@@ -17,6 +17,7 @@
 #include "kernel/ui/kernel_ui.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/system_theme.h"
+#include "shell/system_theme_style.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/testing.h"
@@ -85,7 +86,8 @@ static int prv_short_row_start(const ActionMenuLayer *aml, int row) {
 #if PBL_ROUND
 //! Only used on round displays to achieve a fish-eye effect
 static GFont prv_get_unfocused_item_font(void) {
-  return system_theme_get_font(TextStyleFont_Header);
+  const PreferredContentSize size = system_theme_get_style()->action_menu.unfocused_item_size;
+  return fonts_get_system_font(system_theme_get_style_for_size(size)->fonts[TextStyleFont_Header]);
 }
 #endif
 
