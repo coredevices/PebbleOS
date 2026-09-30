@@ -10,6 +10,15 @@
 #include "applib/graphics/gtypes.h"
 #include "applib/platform.h"
 
+#if !defined(CONFIG_RECOVERY_FW)
+//! Space between a launcher glance and the display edge
+#if PBL_DISPLAY_HEIGHT >= 200
+#define LAUNCHER_GLANCE_INSET 10
+#else
+#define LAUNCHER_GLANCE_INSET PBL_IF_RECT_ELSE(6, 23)
+#endif
+#endif
+
 static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeSmall] =
       {
@@ -67,6 +76,8 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
             {
               .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
               .subtitle_font_key = FONT_KEY_GOTHIC_14,
+              .glance_left_inset = LAUNCHER_GLANCE_INSET,
+              .glance_right_inset = LAUNCHER_GLANCE_INSET,
 #if PBL_RECT
               .cell_height = 42,
 #else
@@ -127,6 +138,8 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
             {
               .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
               .subtitle_font_key = FONT_KEY_GOTHIC_14,
+              .glance_left_inset = LAUNCHER_GLANCE_INSET,
+              .glance_right_inset = LAUNCHER_GLANCE_INSET,
 #if PBL_RECT
               .cell_height = 42,
 #else
@@ -190,6 +203,8 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
             {
               .title_font_key = FONT_KEY_GOTHIC_24_BOLD,
               .subtitle_font_key = FONT_KEY_GOTHIC_18,
+              .glance_left_inset = LAUNCHER_GLANCE_INSET,
+              .glance_right_inset = LAUNCHER_GLANCE_INSET,
               .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
 #if PBL_RECT
               .cell_height = 50,
@@ -257,6 +272,8 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
         {
           .title_font_key = FONT_KEY_GOTHIC_28_BOLD,
           .subtitle_font_key = FONT_KEY_GOTHIC_24,
+          .glance_left_inset = LAUNCHER_GLANCE_INSET,
+          .glance_right_inset = LAUNCHER_GLANCE_INSET,
           .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
 #if PBL_RECT
           .cell_height = 60,

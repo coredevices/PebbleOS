@@ -36,6 +36,9 @@ typedef struct SystemThemeLauncherStyle {
   const char *subtitle_font_key;
   //! Vertical margin between the title and the subtitle
   int16_t title_margin_h;
+  //! Space between a glance and the display edge, or the circle's edge on large round displays
+  int16_t glance_left_inset;
+  int16_t glance_right_inset;
 #if PBL_RECT
   int16_t cell_height;
 #else
