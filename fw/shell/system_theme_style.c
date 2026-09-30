@@ -7,6 +7,7 @@
 #include "system_theme_style.h"
 
 #include "applib/fonts/fonts.h"
+#include "applib/graphics/gtypes.h"
 #include "applib/platform.h"
 
 static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
@@ -39,6 +40,14 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               //! @note this is the same as Medium until Small is designed
               [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
             },
+        .menu_cell =
+            {
+              .basic_cell_height = PBL_IF_RECT_ELSE(42, 44),
+              .app_basic_cell_height = 44,
+              .small_cell_height = 34,
+              .horizontal_inset = 5,
+              .title_subtitle_left_margin = 30,
+            },
       },
   [PreferredContentSizeMedium] =
       {
@@ -60,6 +69,14 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
               [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
+            },
+        .menu_cell =
+            {
+              .basic_cell_height = 44,
+              .app_basic_cell_height = 44,
+              .small_cell_height = 34,
+              .horizontal_inset = 5,
+              .title_subtitle_left_margin = 30,
             },
       },
   [PreferredContentSizeLarge] =
@@ -83,29 +100,45 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
               [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
             },
+        .menu_cell =
+            {
+              .basic_cell_height = PBL_IF_RECT_ELSE(50, 61),
+              .app_basic_cell_height = 61,
+              .small_cell_height = 42,
+              .horizontal_inset = 10,
+              .title_subtitle_left_margin = 34,
+            },
       },
   [PreferredContentSizeExtraLarge] = {
-    .fonts = {
-      [TextStyleFont_Header] = FONT_KEY_GOTHIC_28_BOLD,
+    .fonts =
+        {
+          [TextStyleFont_Header] = FONT_KEY_GOTHIC_28_BOLD,
 #if !defined(CONFIG_RECOVERY_FW)
-      [TextStyleFont_Title] = FONT_KEY_GOTHIC_36_BOLD,
-      [TextStyleFont_Body] = FONT_KEY_GOTHIC_36,
+          [TextStyleFont_Title] = FONT_KEY_GOTHIC_36_BOLD,
+          [TextStyleFont_Body] = FONT_KEY_GOTHIC_36,
 #endif
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
-      [TextStyleFont_Caption] = FONT_KEY_GOTHIC_24,
-      [TextStyleFont_Footer] = FONT_KEY_GOTHIC_24,
-      [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_28_BOLD,
-      [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_28,
+          //! @note this is the same as Large until ExtraLarge is designed
+          [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
+          [TextStyleFont_Caption] = FONT_KEY_GOTHIC_24,
+          [TextStyleFont_Footer] = FONT_KEY_GOTHIC_24,
+          [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_28_BOLD,
+          [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_28,
 #if !defined(CONFIG_RECOVERY_FW)
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+          //! @note this is the same as Large until ExtraLarge is designed
+          [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
 #endif
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
-      //! @note this is the same as Large until ExtraLarge is designed
-      [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
-      [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
+          //! @note this is the same as Large until ExtraLarge is designed
+          [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
+          //! @note this is the same as Large until ExtraLarge is designed
+          [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
+          [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
+        },
+    .menu_cell = {
+      .basic_cell_height = PBL_IF_RECT_ELSE(64, 85),
+      .app_basic_cell_height = 85,
+      .small_cell_height = 52,
+      .horizontal_inset = 10,
+      .title_subtitle_left_margin = 34,
     },
   },
 };
