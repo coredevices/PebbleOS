@@ -351,6 +351,10 @@ static GColor s_theme_highlight_color = GColorVividCerulean;
 #define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR    "musicShowProgressBar"
 #define PREF_KEY_MUSIC_SHOW_ALBUM_ART       "musicShowAlbumArt"
 #define PREF_KEY_BUTTON_LOCK_HOLD_MS        "buttonLockHoldMs"
+#define PREF_KEY_BUTTON_LOCK_AUTO_MS        "buttonLockAutoMs"
+#define PREF_KEY_BUTTON_LOCK_AUTO_PAUSED    "buttonLockAutoPaused"
+#define PREF_KEY_BUTTON_LOCK_AUTO_SCOPE     "buttonLockAutoScope"
+#define PREF_KEY_BUTTON_LOCK_AUTO_NOT_CHRG  "buttonLockAutoNotCharging"
 
 static bool s_menu_scroll_wrap_around = false;
 static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
@@ -360,6 +364,12 @@ static bool s_music_show_album_art = false;
 
 //! Hold duration for the button lock combo; 0 disables the feature.
 static uint32_t s_button_lock_hold_ms = 0;
+//! Idle duration before the button lock engages on its own; 0 disables auto-lock.
+static uint32_t s_button_lock_auto_ms = 0;
+//! Set by the Quick Launch action to pause auto-lock without losing the duration.
+static bool s_button_lock_auto_paused = false;
+static ButtonLockAutoScope s_button_lock_auto_scope = ButtonLockAutoScopeBoth;
+static bool s_button_lock_auto_not_charging = true;
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -964,6 +974,39 @@ static bool prv_set_s_button_lock_hold_ms(uint32_t *hold_ms) {
     default:
       return false;
   }
+}
+
+static bool prv_set_s_button_lock_auto_ms(uint32_t *auto_ms) {
+  switch (*auto_ms) {
+    case 0:
+    case 10000:
+    case 30000:
+    case 60000:
+    case 300000:
+      s_button_lock_auto_ms = *auto_ms;
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool prv_set_s_button_lock_auto_paused(bool *paused) {
+  s_button_lock_auto_paused = *paused;
+  return true;
+}
+
+static bool prv_set_s_button_lock_auto_scope(ButtonLockAutoScope *scope) {
+  if (*scope >= ButtonLockAutoScopeCount) {
+    s_button_lock_auto_scope = ButtonLockAutoScopeBoth;
+    return false;
+  }
+  s_button_lock_auto_scope = *scope;
+  return true;
+}
+
+static bool prv_set_s_button_lock_auto_not_charging(bool *enabled) {
+  s_button_lock_auto_not_charging = *enabled;
+  return true;
 }
 
 static bool prv_set_s_menu_scroll_wrap_around(bool *enabled) {
@@ -2292,6 +2335,46 @@ uint32_t shell_prefs_get_button_lock_hold_ms(void) {
 
 void shell_prefs_set_button_lock_hold_ms(uint32_t hold_ms) {
   prv_pref_set(PREF_KEY_BUTTON_LOCK_HOLD_MS, &hold_ms, sizeof(uint32_t));
+  if (hold_ms == 0) {
+    // Auto-lock without an unlock combo would be inescapable.
+    shell_prefs_set_button_lock_auto_ms(0);
+  }
+}
+
+uint32_t shell_prefs_get_button_lock_auto_ms(void) {
+  return s_button_lock_auto_ms;
+}
+
+void shell_prefs_set_button_lock_auto_ms(uint32_t auto_ms) {
+  prv_pref_set(PREF_KEY_BUTTON_LOCK_AUTO_MS, &auto_ms, sizeof(uint32_t));
+  if (auto_ms == 0) {
+    // Don't inherit a stale pause the next time auto-lock is switched on.
+    shell_prefs_set_button_lock_auto_paused(false);
+  }
+}
+
+bool shell_prefs_get_button_lock_auto_paused(void) {
+  return s_button_lock_auto_paused;
+}
+
+void shell_prefs_set_button_lock_auto_paused(bool paused) {
+  prv_pref_set(PREF_KEY_BUTTON_LOCK_AUTO_PAUSED, &paused, sizeof(bool));
+}
+
+ButtonLockAutoScope shell_prefs_get_button_lock_auto_scope(void) {
+  return s_button_lock_auto_scope;
+}
+
+void shell_prefs_set_button_lock_auto_scope(ButtonLockAutoScope scope) {
+  prv_pref_set(PREF_KEY_BUTTON_LOCK_AUTO_SCOPE, &scope, sizeof(ButtonLockAutoScope));
+}
+
+bool shell_prefs_get_button_lock_auto_not_charging(void) {
+  return s_button_lock_auto_not_charging;
+}
+
+void shell_prefs_set_button_lock_auto_not_charging(bool enabled) {
+  prv_pref_set(PREF_KEY_BUTTON_LOCK_AUTO_NOT_CHRG, &enabled, sizeof(bool));
 }
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
