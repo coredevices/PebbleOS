@@ -249,6 +249,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
     case PEBBLE_BATTERY_CONNECTION_EVENT: {
       const bool is_connected = e->battery_connection.is_connected;
       battery_state_handle_connection_event(is_connected);
+      button_lock_handle_charger_change(is_connected);
       if (is_connected) {
         light_enable_interaction();
       } else {
@@ -324,9 +325,11 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         // A finger on the screen is ongoing interaction: halt the app idle timeout until liftoff.
         // A motionless hold emits no further touch events, so a timer refresh alone can't cover it.
         app_idle_timeout_touch_down();
+        button_lock_handle_activity();
       } else if (e->touch.event.type == TouchEvent_Liftoff) {
         light_touch_up();
         touch_session_extend();
+        button_lock_handle_activity();
         app_idle_timeout_touch_up();
       }
       if (compositor_is_animating() || is_modal_focused) {

@@ -7,6 +7,8 @@
 #include "applib/ui/dialogs/simple_dialog.h"
 #include "kernel/events.h"
 #include "kernel/ui/modals/modal_manager.h"
+#include "pbl/services/battery/battery_state.h"
+#include "shell/prefs.h"
 
 #include "clar.h"
 
@@ -24,6 +26,44 @@ static uint32_t s_pref_hold_ms;
 
 uint32_t shell_prefs_get_button_lock_hold_ms(void) {
   return s_pref_hold_ms;
+}
+
+static uint32_t s_pref_auto_ms;
+static bool s_pref_auto_paused;
+static ButtonLockAutoScope s_pref_auto_scope;
+static bool s_pref_auto_not_charging;
+
+uint32_t shell_prefs_get_button_lock_auto_ms(void) {
+  return s_pref_auto_ms;
+}
+
+bool shell_prefs_get_button_lock_auto_paused(void) {
+  return s_pref_auto_paused;
+}
+
+ButtonLockAutoScope shell_prefs_get_button_lock_auto_scope(void) {
+  return s_pref_auto_scope;
+}
+
+bool shell_prefs_get_button_lock_auto_not_charging(void) {
+  return s_pref_auto_not_charging;
+}
+
+static bool s_is_plugged;
+
+BatteryChargeState battery_get_charge_state(void) {
+  return (BatteryChargeState){.is_plugged = s_is_plugged};
+}
+
+static bool s_modal_enabled;
+static ModalProperty s_modal_properties = ModalPropertyDefault;
+
+bool modal_manager_get_enabled(void) {
+  return s_modal_enabled;
+}
+
+ModalProperty modal_manager_get_properties(void) {
+  return s_modal_properties;
 }
 
 static bool s_watchface_running;
