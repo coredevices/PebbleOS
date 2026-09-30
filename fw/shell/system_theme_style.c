@@ -184,6 +184,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
 #if PBL_RECT
               .cell_height = 50,
+              .title_only_cell_height = 42,
 #else
               .focused_cell_height = 55,
               .unfocused_cell_height = 45,
@@ -242,6 +243,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
       .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
 #if PBL_RECT
       .cell_height = 60,
+      .title_only_cell_height = 46,
 #else
       .focused_cell_height = 66,
       .unfocused_cell_height = 56,
