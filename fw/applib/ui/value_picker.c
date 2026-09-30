@@ -48,6 +48,7 @@ const ValuePickerStyle *value_picker_default_style(void) {
     .value_font_key = FONT_KEY_BITHAM_34_MEDIUM_NUMBERS,
     .unit_font_key = FONT_KEY_GOTHIC_18_BOLD,
     .neighbor_font_key = FONT_KEY_GOTHIC_24_BOLD,
+    .title_y = TITLE_Y,
   };
   return &s_style;
 }
@@ -111,7 +112,7 @@ void value_picker_draw(GContext *ctx, const GRect *bounds, const ValuePickerCont
   graphics_fill_rect(ctx, bounds);
 
   const GRect content_bounds = GRect(0, 0, bounds->size.w - ACTION_BAR_WIDTH, bounds->size.h);
-  GRect frame = GRect(0, TITLE_Y, content_bounds.size.w, 30);
+  GRect frame = GRect(0, style->title_y, content_bounds.size.w, 30);
   if (content->title) {
     graphics_context_set_text_color(ctx, style->metadata_color);
     graphics_draw_text(ctx, content->title, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), frame,

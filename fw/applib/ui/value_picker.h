@@ -21,6 +21,7 @@ typedef struct ValuePickerStyle {
   const char *value_font_key;
   const char *unit_font_key;
   const char *neighbor_font_key;
+  int16_t title_y;
 } ValuePickerStyle;
 
 typedef struct ValuePickerContent {
