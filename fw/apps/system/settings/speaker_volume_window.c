@@ -67,6 +67,7 @@ void speaker_volume_window_push(void) {
   data->picker_style = *value_picker_default_style();
   data->picker_style.value_font_key = FONT_KEY_LECO_38_BOLD_NUMBERS;
   data->picker_style.unit_font_key = FONT_KEY_LECO_38_BOLD_NUMBERS;
+  data->picker_style.neighbor_font_key = FONT_KEY_LECO_20_BOLD_NUMBERS;
   value_picker_window_init(&data->picker_window, &content, &data->picker_style,
                            (ValuePickerWindowCallbacks){
                              .changed = prv_changed,

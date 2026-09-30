@@ -47,6 +47,7 @@ const ValuePickerStyle *value_picker_default_style(void) {
     .neighbor_color = GColorDarkGray,
     .value_font_key = FONT_KEY_BITHAM_34_MEDIUM_NUMBERS,
     .unit_font_key = FONT_KEY_GOTHIC_18_BOLD,
+    .neighbor_font_key = FONT_KEY_GOTHIC_24_BOLD,
   };
   return &s_style;
 }
@@ -61,13 +62,13 @@ static void prv_format(const ValuePickerContent *content, char *buffer, size_t b
 }
 
 static void prv_draw_neighbor(GContext *ctx, GRect frame, const ValuePickerContent *content,
-                              int64_t value) {
+                              const ValuePickerStyle *style, int64_t value) {
   if (value < content->min_value || value > content->max_value) {
     return;
   }
   char text[16];
   prv_format(content, text, sizeof(text), (int32_t)value);
-  graphics_draw_text(ctx, text, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), frame,
+  graphics_draw_text(ctx, text, fonts_get_system_font(style->neighbor_font_key), frame,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
@@ -97,10 +98,10 @@ static void prv_draw_current_value(GContext *ctx, const GRect *content_bounds,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   if (unit_width) {
     graphics_context_set_text_color(ctx, style->metadata_color);
-    graphics_draw_text(ctx, unit, unit_font,
-                       GRect(value_x + value_width + spacing, y + unit_y_offset, unit_width,
-                             48 - unit_y_offset),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+    graphics_draw_text(
+        ctx, unit, unit_font,
+        GRect(value_x + value_width + spacing, y + unit_y_offset, unit_width, 48 - unit_y_offset),
+        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   }
 }
 
@@ -120,7 +121,7 @@ void value_picker_draw(GContext *ctx, const GRect *bounds, const ValuePickerCont
   graphics_context_set_text_color(ctx, style->neighbor_color);
   frame.origin.y = TOP_Y;
   frame.size.h = 34;
-  prv_draw_neighbor(ctx, frame, content, (int64_t)content->value + content->step);
+  prv_draw_neighbor(ctx, frame, content, style, (int64_t)content->value + content->step);
 
   const int16_t horizontal_inset = PBL_IF_ROUND_ELSE(22, 9);
   GRect selection_frame =
@@ -134,7 +135,7 @@ void value_picker_draw(GContext *ctx, const GRect *bounds, const ValuePickerCont
 
   graphics_context_set_text_color(ctx, style->neighbor_color);
   frame.origin.y = BOTTOM_Y;
-  prv_draw_neighbor(ctx, frame, content, (int64_t)content->value - content->step);
+  prv_draw_neighbor(ctx, frame, content, style, (int64_t)content->value - content->step);
 }
 
 int16_t value_picker_steps_from_drag(int16_t delta_y) {
