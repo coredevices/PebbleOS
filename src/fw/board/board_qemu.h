@@ -149,7 +149,6 @@ typedef struct QemuDisplayDevice {
   uint16_t height;
   uint8_t bpp;
   int irqn;
-  int irq_priority;
 } QemuDisplayDevice;
 typedef const QemuDisplayDevice DisplayDevice;
 

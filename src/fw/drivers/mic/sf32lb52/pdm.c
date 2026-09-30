@@ -88,7 +88,6 @@ void mic_init(const MicDevice *this) {
   hpdm->Init.SampleRate = this->sample_rate;
   hpdm->Init.ChannelDepth = this->channel_depth;
   hpdm->Init.clkSrc = 9600000;
-  HAL_NVIC_SetPriority(this->pdm_irq, this->pdm_irq_priority, 0);
 
   state->is_initialized = true;
 }
@@ -357,8 +356,8 @@ static bool prv_start_pdm_capture(const MicDevice *this) {
   if (hpdm->Init.clkSrc == 3072000 || hpdm->Init.SampleRate == PDM_SAMPLE_96KHZ) {
     bf0_enable_pll(hpdm->Init.SampleRate, 0);
   }
-  HAL_NVIC_EnableIRQ(this->pdm_dma_irq);
-  HAL_NVIC_EnableIRQ(this->pdm_irq);
+  pbl_irq_enable(this->pdm_dma_irq);
+  pbl_irq_enable(this->pdm_irq);
   res |= HAL_PDM_Receive_DMA(hpdm, hpdm->pRxBuffPtr, hpdm->RxXferSize);
 
   return !res;
@@ -427,8 +426,8 @@ static bool prv_start(const MicDevice *this, MicDataHandlerCB data_handler, void
 
   // Start PDM capture
   if (!prv_start_pdm_capture(this)) {
-    HAL_NVIC_DisableIRQ(this->pdm_dma_irq);
-    HAL_NVIC_DisableIRQ(this->pdm_irq);
+    pbl_irq_disable(this->pdm_dma_irq);
+    pbl_irq_disable(this->pdm_irq);
     HAL_PDM_DMAStop(hpdm);
     HAL_PDM_DeInit(hpdm);
     HAL_RCC_DisableModule(RCC_MOD_PDM1);
@@ -490,8 +489,8 @@ void mic_stop(const MicDevice *this) {
   // Mark as stopped first to prevent new buffer requests
   state->is_running = false;
 
-  HAL_NVIC_DisableIRQ(this->pdm_dma_irq);
-  HAL_NVIC_DisableIRQ(this->pdm_irq);
+  pbl_irq_disable(this->pdm_dma_irq);
+  pbl_irq_disable(this->pdm_irq);
   HAL_PDM_DMAStop(hpdm);
   HAL_PDM_DeInit(hpdm);
   // Free dynamically allocated buffers

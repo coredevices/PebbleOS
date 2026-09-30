@@ -348,14 +348,13 @@ void audec_start(AudioDevice *audio_device, AudioTransCB cb) {
 
   prv_bf0_audio_pll_config(audio_device, &codec_dac_clk_config[haudcodec->Init.samplerate_index]);
   HAL_AUDCODEC_Config_TChanel(haudcodec, 0, &haudcodec->Init.dac_cfg);
-  HAL_NVIC_SetPriority(audio_device->audec_dma_irq, audio_device->irq_priority, 0);
   // The buffer was memset() to zero by the CPU at init and is again at stop;
   // those writes may still be sitting in D-cache. Push them to RAM so the
   // codec DMA reads silence on the first transfer instead of stale memory.
   dcache_flush(haudcodec->buf[HAL_AUDCODEC_DAC_CH0], haudcodec->bufSize);
   HAL_AUDCODEC_Transmit_DMA(haudcodec, haudcodec->buf[HAL_AUDCODEC_DAC_CH0], haudcodec->bufSize,
                             HAL_AUDCODEC_DAC_CH0);
-  HAL_NVIC_EnableIRQ(audio_device->audec_dma_irq);
+  pbl_irq_enable(audio_device->audec_dma_irq);
   state->tx_instanc = HAL_AUDCODEC_DAC_CH0;
 
   // Digital gain must be programmed before the DAC path opens, otherwise
@@ -416,7 +415,7 @@ void audec_stop(AudioDevice *audio_device) {
 
   prv_bf0_disable_pll(state);
 
-  HAL_NVIC_DisableIRQ(audio_device->audec_dma_irq);
+  pbl_irq_disable(audio_device->audec_dma_irq);
   state->trans_cb = NULL;
   HAL_AUDCODEC_DMAStop(haudcodec, HAL_AUDCODEC_DAC_CH0);
   haudcodec->channel_ref &= ~(1 << HAL_AUDCODEC_DAC_CH0);

@@ -28,11 +28,9 @@ typedef const struct UARTDevice {
   Pinmux rx;
   Pinmux tx;
   IRQn_Type irqn;
-  uint8_t irq_priority;
   IRQn_Type dma_irqn;
-  uint8_t dma_irq_priority;
 } UARTDevice;
 
-// thinly wrapped by the IRQ handler in board_*.c
+// Connected with PBL_IRQ_CONNECT() in board_*.c
 void uart_irq_handler(UARTDevice *dev);
 void uart_dma_irq_handler(UARTDevice *dev);

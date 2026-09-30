@@ -10,6 +10,7 @@
 #include "kernel/util/delay.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include <pbl/drivers/rtc.h>
+#include "pbl/kernel/irq.h"
 #include "pbl/mcu/cache.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include <pbl/logging/logging.h>
@@ -353,8 +354,7 @@ void display_init(void) {
   HAL_LCDC_LayerSetFormat(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, LCDC_PIXEL_FORMAT_RGB332);
   HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_rotated_180);
 
-  HAL_NVIC_SetPriority(DISPLAY->irqn, DISPLAY->irq_priority, 0);
-  HAL_NVIC_EnableIRQ(DISPLAY->irqn);
+  pbl_irq_enable(DISPLAY->irqn);
 
   prv_display_on();
 

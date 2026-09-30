@@ -5,6 +5,7 @@
 #include <pbl/drivers/uart/qemu.h>
 
 #include "board/board.h"
+#include "pbl/kernel/irq.h"
 #include "system/passert.h"
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
@@ -32,9 +33,7 @@ void uart_init(UARTDevice *dev) {
   REG32(dev->base_addr + UART_INT) = INT_RX_PENDING | INT_TX_PENDING;
   // Disable interrupts initially
   REG32(dev->base_addr + UART_CTRL) = 0;
-  // Enable this UART's IRQ in the NVIC
-  NVIC_SetPriority(dev->irqn, dev->irq_priority);
-  NVIC_EnableIRQ(dev->irqn);
+  pbl_irq_enable(dev->irqn);
 }
 
 void uart_init_open_drain(UARTDevice *dev) {
@@ -168,7 +167,7 @@ void uart_clear_rx_dma_buffer(UARTDevice *dev) {
   (void)dev;
 }
 
-// Called from the IRQ handler trampoline defined via IRQ_MAP in the board file
+// Connected with PBL_IRQ_CONNECT() in the board file
 void uart_irq_handler(UARTDevice *dev) {
   uint32_t int_status = REG32(dev->base_addr + UART_INT);
 

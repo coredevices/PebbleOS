@@ -22,8 +22,7 @@ struct UARTDevice {
   UARTDeviceState *state;
   uint32_t base_addr;
   int irqn;
-  int irq_priority;
 };
 
-// Called from the IRQ handler trampoline (IRQ_MAP)
+// Connected with PBL_IRQ_CONNECT() in the board file
 void uart_irq_handler(UARTDevice *dev);

@@ -45,9 +45,7 @@ static UARTDevice DBG_UART_DEVICE = {
         .flags = PIN_PULLUP,
       },
   .irqn = USART1_IRQn,
-  .irq_priority = 5,
   .dma_irqn = DMAC1_CH1_IRQn,
-  .dma_irq_priority = 5,
 };
 
 UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
@@ -138,7 +136,6 @@ static DisplayJDIState s_display_state = {
 static DisplayJDIDevice s_display = {
   .state = &s_display_state,
   .irqn = LCDC1_IRQn,
-  .irq_priority = 5,
   .vcom =
       {
         .lptim = hwp_lptim2,
@@ -281,7 +278,6 @@ static struct I2CBusHal s_i2c_bus_hal_1 = {
       },
   .module = RCC_MOD_I2C1,
   .irqn = I2C1_IRQn,
-  .irq_priority = 5,
 };
 
 static I2CBusState s_i2c_bus_state_1;
@@ -367,7 +363,6 @@ static struct I2CBusHal s_i2c_bus_hal_2 = {
       },
   .module = RCC_MOD_I2C2,
   .irqn = I2C2_IRQn,
-  .irq_priority = 5,
 };
 
 static I2CBusState s_i2c_bus_state_2;
@@ -439,7 +434,6 @@ static struct I2CBusHal s_i2c_bus_hal_3 = {
       },
   .module = RCC_MOD_I2C3,
   .irqn = I2C3_IRQn,
-  .irq_priority = 5,
 };
 
 static I2CBusState s_i2c_bus_state_3;
@@ -554,7 +548,6 @@ static const MicDevice mic_device = {
       },
   .pdm_dma_irq = DMAC1_CH5_IRQn,
   .pdm_irq = PDM1_IRQn,
-  .pdm_irq_priority = 5,
 #ifdef CONFIG_RECOVERY_FW
   // PRF mic test needs stereo capture to verify both microphones
   .channels = 2,

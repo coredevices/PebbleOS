@@ -20,7 +20,6 @@ typedef const struct I2CBusHal {
   Pinmux sda;
   RCC_MODULE_TYPE module;
   IRQn_Type irqn;
-  uint8_t irq_priority;
 } I2CBusHal;
 
 void i2c_irq_handler(I2CBus *bus);

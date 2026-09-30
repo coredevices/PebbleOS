@@ -23,7 +23,6 @@ typedef struct DisplayJDISplash {
 typedef const struct DisplayJDIDevice {
   DisplayJDIState *state;
   IRQn_Type irqn;
-  uint8_t irq_priority;
   struct {
     LPTIM_TypeDef *lptim;
     uint8_t freq_hz;

@@ -4,6 +4,7 @@
 #include <pbl/drivers/uart/sf32lb.h>
 
 #include <pbl/drivers/uart.h>
+#include "pbl/kernel/irq.h"
 #include "pbl/mcu/cache.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/passert.h"
@@ -42,8 +43,7 @@ static void prv_init(UARTDevice *dev, uint32_t mode) {
   if (dev->state->hdma.Instance != NULL) {
     __HAL_LINKDMA(&dev->state->huart, hdmarx, dev->state->hdma);
 
-    HAL_NVIC_SetPriority(dev->dma_irqn, dev->dma_irq_priority, 0);
-    HAL_NVIC_EnableIRQ(dev->dma_irqn);
+    pbl_irq_enable(dev->dma_irqn);
 
     __HAL_UART_ENABLE_IT(&dev->state->huart, UART_IT_IDLE);
   }
@@ -123,10 +123,9 @@ void uart_wait_for_tx_complete(UARTDevice *dev) {
 static void prv_set_interrupt_enabled(UARTDevice *dev, bool enabled) {
   if (enabled) {
     PBL_ASSERTN(dev->state->tx_irq_handler || dev->state->rx_irq_handler);
-    HAL_NVIC_SetPriority(dev->irqn, dev->irq_priority, 0);
-    HAL_NVIC_EnableIRQ(dev->irqn);
+    pbl_irq_enable(dev->irqn);
   } else {
-    HAL_NVIC_DisableIRQ(dev->irqn);
+    pbl_irq_disable(dev->irqn);
   }
 }
 

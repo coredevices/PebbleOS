@@ -15,7 +15,6 @@ static struct UARTDevice DBG_UART_DEVICE = {
   .state = &s_dbg_uart_state,
   .base_addr = QEMU_UART2_BASE,
   .irqn = UART2_IRQn,
-  .irq_priority = 5,
 };
 
 UARTDevice *const DBG_UART = (UARTDevice *)&DBG_UART_DEVICE;
@@ -27,7 +26,6 @@ static struct UARTDevice QEMU_UART_DEVICE = {
   .state = &s_qemu_uart_state,
   .base_addr = QEMU_UART1_BASE,
   .irqn = UART1_IRQn,
-  .irq_priority = 6,
 };
 
 UARTDevice *const QEMU_UART = (UARTDevice *)&QEMU_UART_DEVICE;
@@ -39,7 +37,6 @@ static struct UARTDevice BT_HCI_UART_DEVICE = {
   .state = &s_bt_hci_uart_state,
   .base_addr = QEMU_UART3_BASE,
   .irqn = UART3_IRQn,
-  .irq_priority = 6,
 };
 
 UARTDevice *const BT_HCI_UART = (UARTDevice *)&BT_HCI_UART_DEVICE;
@@ -53,7 +50,6 @@ static QemuDisplayDevice s_display = {
   .height = 168,
   .bpp = 1,
   .irqn = DISPLAY_IRQn,
-  .irq_priority = 5,
 };
 
 DisplayDevice *const DISPLAY = &s_display;

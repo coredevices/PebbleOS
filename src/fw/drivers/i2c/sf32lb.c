@@ -135,6 +135,5 @@ void i2c_hal_init(I2CBus *bus) {
   ret = HAL_I2C_Init(hdl);
   PBL_ASSERTN(ret == HAL_OK);
 
-  HAL_NVIC_SetPriority(hal->irqn, hal->irq_priority, 0);
-  NVIC_EnableIRQ(hal->irqn);
+  pbl_irq_enable(hal->irqn);
 }

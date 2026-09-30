@@ -7,6 +7,7 @@
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/exti.h>
 #include "kernel/events.h"
+#include "pbl/kernel/irq.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/bootbits.h"
 #include "system/reset.h"
@@ -43,8 +44,7 @@ static void initialize_button_timer(void) {
   s_tim_hdl.Init.Period = TIMER_PERIOD_TICKS;
   HAL_GPT_Base_Init(&s_tim_hdl);
 
-  HAL_NVIC_SetPriority(BOARD_CONFIG_BUTTON.timer_irqn, 7, 0);
-  HAL_NVIC_EnableIRQ(BOARD_CONFIG_BUTTON.timer_irqn);
+  pbl_irq_enable(BOARD_CONFIG_BUTTON.timer_irqn);
 
   __HAL_GPT_CLEAR_FLAG(&s_tim_hdl, GPT_FLAG_UPDATE);
   __HAL_GPT_URS_ENABLE(&s_tim_hdl);

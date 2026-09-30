@@ -54,7 +54,6 @@ typedef const struct MicDevice {
   MicDeviceState *state;
   PDM_TypeDef *pdm_instance;
   IRQn_Type pdm_irq;
-  uint32_t pdm_irq_priority;
   IRQn_Type pdm_dma_irq;
   Pinmux clk_gpio;
   Pinmux data_gpio;

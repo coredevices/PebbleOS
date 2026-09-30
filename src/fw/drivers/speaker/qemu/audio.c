@@ -3,6 +3,7 @@
 
 #include <cmsis_core.h>
 #include <pbl/drivers/speaker/qemu/audio.h>
+#include <pbl/kernel/irq.h>
 
 #include "services/system_task.h"
 
@@ -51,9 +52,7 @@ void audio_start(AudioDevice *dev, AudioTransCB cb) {
   REG32(dev->base_addr + AUDIO_INTCTRL) = INT_BUFAVAIL; // enable IRQ
   REG32(dev->base_addr + AUDIO_CTRL) = 1;               // enable
 
-  // Enable NVIC IRQ
-  NVIC_SetPriority(dev->irqn, 5);
-  NVIC_EnableIRQ(dev->irqn);
+  pbl_irq_enable(dev->irqn);
 }
 
 uint32_t audio_write(AudioDevice *dev, void *buf, uint32_t size) {
@@ -77,7 +76,7 @@ void audio_stop(AudioDevice *dev) {
   REG32(dev->base_addr + AUDIO_CTRL) = 0;
   REG32(dev->base_addr + AUDIO_INTCTRL) = 0;
 
-  NVIC_DisableIRQ(dev->irqn);
+  pbl_irq_disable(dev->irqn);
 
   dev->state->trans_cb = NULL;
 }

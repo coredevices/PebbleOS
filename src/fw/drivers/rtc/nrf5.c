@@ -311,8 +311,7 @@ void rtc_init(void) {
   prv_restore_rtc_time_state();
   s_did_init_rtc = true;
 
-  NVIC_SetPriority(BOARD_RTC_IRQN, PBL_IRQ_PRIO_KERNEL);
-  NVIC_EnableIRQ(BOARD_RTC_IRQN);
+  pbl_irq_enable(BOARD_RTC_IRQN);
 
 #if TEST_RTC_FREQ
   // FIXME: can be removed after FIRM-121 is fixed
@@ -428,5 +427,5 @@ void rtc_irq_handler(void) {
     nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
   }
 
-  NVIC_ClearPendingIRQ(BOARD_RTC_IRQN);
+  pbl_irq_clear_pending(BOARD_RTC_IRQN);
 }
