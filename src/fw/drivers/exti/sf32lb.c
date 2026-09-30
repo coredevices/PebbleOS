@@ -7,6 +7,7 @@
 
 #include "board/board.h"
 #include "kernel/events.h"
+#include "pbl/kernel/irq.h"
 #include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(driver_exti_sf32lb, CONFIG_DRIVER_EXTI_LOG_LEVEL);
@@ -87,15 +88,14 @@ void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback
       break;
   }
 
-  HAL_NVIC_DisableIRQ(GPIO1_IRQn);
+  pbl_irq_disable(PBL_IRQN(GPIO1));
 
   HAL_PIN_Set(PAD_PA00 + cfg.gpio_pin, GPIO_A0 + cfg.gpio_pin, flags, 1);
   HAL_GPIO_Init(cfg.peripheral, &init);
 
   prv_insert_handler(cfg.peripheral, cfg.gpio_pin, cb);
 
-  HAL_NVIC_SetPriority(GPIO1_IRQn, 6, 0);
-  HAL_NVIC_EnableIRQ(GPIO1_IRQn);
+  pbl_irq_enable(PBL_IRQN(GPIO1));
 }
 
 void exti_enable(ExtiConfig cfg) {
@@ -123,6 +123,4 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
   PBL_LOG_WRN("No handler found for GPIO pin %u", GPIO_Pin);
 }
 
-void GPIO1_IRQHandler(void) {
-  HAL_GPIO_IRQHandler(hwp_gpio1);
-}
+PBL_IRQ_CONNECT(GPIO1, 6, HAL_GPIO_IRQHandler, hwp_gpio1, 0);

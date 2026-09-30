@@ -4,6 +4,7 @@
 #include <nrfx_i2s.h>
 
 #include "board/board.h"
+#include "pbl/kernel/irq.h"
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
@@ -61,21 +62,22 @@ static UARTDevice DBG_UART_DEVICE = {
   .counter = NRFX_TIMER_INSTANCE(2),
 };
 UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
-IRQ_MAP_NRFX(UART0_UARTE0, nrfx_uarte_0_irq_handler);
+PBL_IRQ_CONNECT(UART0_UARTE0, NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_uarte_0_irq_handler, ,
+                0);
 /* PERIPHERAL ID 8 */
 
 /* buttons */
-IRQ_MAP_NRFX(TIMER1, nrfx_timer_1_irq_handler);
-IRQ_MAP_NRFX(TIMER2, nrfx_timer_2_irq_handler);
+PBL_IRQ_CONNECT(TIMER1, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_1_irq_handler, , 0);
+PBL_IRQ_CONNECT(TIMER2, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_2_irq_handler, , 0);
 
 /* display */
 PwmState DISPLAY_EXTCOMIN_STATE;
-IRQ_MAP_NRFX(SPIM3, nrfx_spim_3_irq_handler);
+PBL_IRQ_CONNECT(SPIM3, NRFX_SPIM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_spim_3_irq_handler, , 0);
 
 /* PERIPHERAL ID 10 */
 
 /* EXTI */
-IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_0_irq_handler);
+PBL_IRQ_CONNECT(GPIOTE, NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_gpiote_0_irq_handler, , 0);
 
 /* nPM1300 */
 static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
@@ -100,7 +102,8 @@ static const I2CBus I2C_NPMC_IIC1_BUS = {
       },
   .name = "I2C_NPMC_IIC1",
 };
-IRQ_MAP_NRFX(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, nrfx_twim_1_irq_handler);
+PBL_IRQ_CONNECT(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
+                nrfx_twim_1_irq_handler, , 0);
 /* PERIPHERAL ID 9 */
 
 static const I2CSlavePort I2C_SLAVE_NPM1300 = {
@@ -133,7 +136,8 @@ static const I2CBus I2C_IIC2_BUS = {
       },
   .name = "I2C_IIC2",
 };
-IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
+PBL_IRQ_CONNECT(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
+                nrfx_twim_0_irq_handler, , 0);
 
 static const I2CSlavePort I2C_SLAVE_DRV2604 = {
   .bus = &I2C_IIC2_BUS,
@@ -205,9 +209,9 @@ static const LSM6DSOConfig s_lsm6dso_config = {
 
 const LSM6DSOConfig *const LSM6DSO = &s_lsm6dso_config;
 
-IRQ_MAP_NRFX(I2S, nrfx_i2s_0_irq_handler);
+PBL_IRQ_CONNECT(I2S, 5, nrfx_i2s_0_irq_handler, , 0);
 
-IRQ_MAP_NRFX(PDM, NRFX_PDM_INST_HANDLER_GET(0));
+PBL_IRQ_CONNECT(PDM, NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY, NRFX_PDM_INST_HANDLER_GET(0), , 0);
 
 /* PERIPHERAL ID 11 */
 
@@ -254,9 +258,9 @@ AudioDevice *const AUDIO = (AudioDevice *)&s_audio_device;
 /* asterix shares SPI with flash, which we don't support */
 
 PwmState BACKLIGHT_PWM_STATE;
-IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
+PBL_IRQ_CONNECT(PWM0, NRFX_PWM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_pwm_0_irq_handler, , 0);
 
-IRQ_MAP_NRFX(RTC1, rtc_irq_handler);
+PBL_IRQ_CONNECT(RTC1, 7, rtc_irq_handler, , 0);
 
 const Npm1300Config NPM1300_CONFIG = {
   // 128mA = ~1C (rapid charge)

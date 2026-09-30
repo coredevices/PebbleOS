@@ -11,26 +11,6 @@
 #include "bf0_hal_pinmux.h"
 #include <pbl/drivers/button_id.h>
 
-#define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
-
-enum {
-#define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
-#include "irq_sf32lb52.def"
-#undef IRQ_DEF
-};
-
-//! Creates a trampoline to the interrupt handler defined within the driver
-#define IRQ_MAP(irq, handler, device) \
-  void irq##_IRQHandler(void) {       \
-    handler(device);                  \
-  }                                   \
-  _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
-/*
- * The above static assert checks that the requested IRQ is valid by checking that the enum
- * value (generated above) is declared. The static assert itself will not trip, but you will get
- * a compilation error from that line if the IRQ does not exist within irq_sf32lb.def.
- */
-
 #define GPIO_Port_NULL NULL
 #define GPIO_Pin_NULL  0U
 

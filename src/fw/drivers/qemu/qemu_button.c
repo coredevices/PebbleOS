@@ -59,10 +59,7 @@ static void prv_gpio_irq_handler(void) {
   }
 }
 
-// IRQ trampoline for GPIO IRQ (IRQ 6)
-void GPIO_IRQHandler(void) {
-  prv_gpio_irq_handler();
-}
+PBL_IRQ_CONNECT(GPIO, 6, prv_gpio_irq_handler, , 0);
 
 void button_init(void) {
   uint32_t base = QEMU_GPIO_BASE;
@@ -73,10 +70,7 @@ void button_init(void) {
   // Enable edge interrupt
   REG32(base + GPIO_INTCTRL) = 1;
 
-  // Enable GPIO IRQ in NVIC - priority must be >= PBL_IRQ_PRIO_MAX_SYSCALL
-  // to safely call FreeRTOS API from ISR. Use priority 6 (lower urgency than max syscall).
-  NVIC_SetPriority(GPIO_IRQn, 6);
-  NVIC_EnableIRQ(GPIO_IRQn);
+  pbl_irq_enable(PBL_IRQN(GPIO));
 
   s_last_state = REG32(base + GPIO_BTN_STATE);
 }

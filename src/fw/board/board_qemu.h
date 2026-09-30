@@ -11,26 +11,6 @@
 
 #include <pbl/drivers/button_id.h>
 
-#define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
-
-enum {
-#define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
-#include "irq_qemu.def"
-#undef IRQ_DEF
-};
-
-//! Creates a trampoline to the interrupt handler defined within the driver
-#define IRQ_MAP(irq, handler, device) \
-  void irq##_IRQHandler(void) {       \
-    handler(device);                  \
-  }                                   \
-  _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
-/*
- * The above static assert checks that the requested IRQ is valid by checking that the enum
- * value (generated above) is declared. The static assert itself will not trip, but you will get
- * a compilation error from that line if the IRQ does not exist within irq_qemu.def.
- */
-
 // Compatibility type for gpio.h (QEMU has no real GPIO peripheral struct)
 typedef void GPIO_TypeDef;
 

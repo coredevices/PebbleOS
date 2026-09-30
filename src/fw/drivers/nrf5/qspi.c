@@ -17,6 +17,7 @@
 #include <hal/nrf_qspi.h>
 #include <nrfx.h>
 
+#include "pbl/kernel/irq.h"
 #include "pbl/kernel/sem.h"
 #include "pbl/kernel/compiler.h"
 
@@ -39,11 +40,13 @@
 
 static uint8_t PBL_ALIGNED(4) s_bounce_buf[32];
 
-void QSPI_IRQHandler(void) {
+static void prv_qspi_irq_handler(void) {
   nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
 
   pbl_sem_give(&QSPI_FLASH->qspi->state->sem);
 }
+
+PBL_IRQ_CONNECT(QSPI, 5, prv_qspi_irq_handler, , 0);
 
 // -----------------------------------------------------------------------------
 // Internal helpers
@@ -382,8 +385,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   // Configure QE if needed
   prv_configure_qe(dev);
 
-  NVIC_SetPriority(QSPI_IRQn, 5);
-  NVIC_EnableIRQ(QSPI_IRQn);
+  pbl_irq_enable(PBL_IRQN(QSPI));
 
   pbl_sem_init(&dev->qspi->state->sem, 0, 1);
   dev->qspi->state->initialized = true;

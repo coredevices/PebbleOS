@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "board/board.h"
+#include "pbl/kernel/irq.h"
 
 // UART device for debug serial
 #include <pbl/drivers/uart/qemu.h>
@@ -97,13 +98,12 @@ static MicDevice MIC_DEVICE = {
 };
 MicDevice *const MIC = &MIC_DEVICE;
 
-// IRQ handler trampolines
-IRQ_MAP(UART2, uart_irq_handler, DBG_UART);
-IRQ_MAP(UART1, uart_irq_handler, QEMU_UART);
+PBL_IRQ_CONNECT(UART2, 5, uart_irq_handler, DBG_UART, 0);
+PBL_IRQ_CONNECT(UART1, 6, uart_irq_handler, QEMU_UART, 0);
 #ifdef CONFIG_BT_HCI_UART
-IRQ_MAP(UART3, uart_irq_handler, BT_HCI_UART);
+PBL_IRQ_CONNECT(UART3, 6, uart_irq_handler, BT_HCI_UART, 0);
 #endif
-IRQ_MAP(AUDIO, qemu_audio_irq_handler, AUDIO);
+PBL_IRQ_CONNECT(AUDIO, 5, qemu_audio_irq_handler, AUDIO, 0);
 
 void board_early_init(void) {
 }

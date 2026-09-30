@@ -23,38 +23,6 @@
 
 #define GPIO_Port_NULL (NULL)
 #define GPIO_Pin_NULL  ((uint16_t)-1)
-//! Guaranteed invalid IRQ priority
-#define IRQ_PRIORITY_INVALID (1 << __NVIC_PRIO_BITS)
-
-// This is generated in order to facilitate the check within the IRQ_MAP macro below
-enum {
-#define IRQ_DEF(num, irq) IS_VALID_IRQ__##irq,
-#if defined(CONFIG_SOC_NRF52)
-#include "irq_nrf52.def"
-#else
-#error need IRQ table for new micro family
-#endif
-#undef IRQ_DEF
-};
-
-//! Creates a trampoline to the interrupt handler defined within the driver
-#define IRQ_MAP(irq, handler, device) \
-  void irq##_IRQHandler(void) {       \
-    handler(device);                  \
-  }                                   \
-  _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
-
-#define IRQ_MAP_NRFX(irq, handler) \
-  void irq##_IRQHandler(void) {    \
-    handler();                     \
-  }                                \
-  _Static_assert(IS_VALID_IRQ__##irq || true, "(See comment below)")
-
-/*
- * The above static assert checks that the requested IRQ is valid by checking that the enum
- * value (generated above) is declared. The static assert itself will not trip, but you will get
- * a compilation error from that line if the IRQ does not exist within irq_nrf52.def.
- */
 
 typedef struct {
   nrfx_gpiote_t peripheral;

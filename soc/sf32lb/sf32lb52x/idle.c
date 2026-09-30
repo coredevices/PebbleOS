@@ -21,6 +21,7 @@
 #include <ipc_queue.h>
 
 #include "pbl/kernel/idle.h"
+#include "pbl/kernel/irq.h"
 
 // HAL tick counter (milliseconds) - used by HAL timeout functions
 extern __IO uint32_t uwTick;
@@ -307,7 +308,7 @@ bool pbl_soc_tick_enable(void) {
   return true;
 }
 
-void AON_IRQHandler(void) {
+PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
   uint32_t status;
 
   NVIC_DisableIRQ(AON_IRQn);

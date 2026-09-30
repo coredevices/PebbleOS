@@ -12,7 +12,7 @@ include/pbl/kernel/     public API: types, irq, thread, mutex, sem, msgq, poll, 
 include/pbl/kernel/backend.h   per-object private state the public structs embed
 include/pbl/kernel/compiler.h  compiler abstraction, backed by compiler/gcc.h and compiler/clang.h
 kernel/                 scheduler, objects, tick conversion
-kernel/arch/arm/        Cortex-M port: context switch, SVC, MPU, SysTick, idle
+kernel/arch/arm/        Cortex-M port: context switch, SVC, MPU, SysTick, idle, vector table
 kernel/arch/posix/      host port for the unit tests
 ```
 
@@ -56,6 +56,38 @@ the syscall layer needs.
 need: a thread walk with saved registers in the canonical order the core dump
 format expects, saved PC/LR/CONTROL of a blocked thread, stack bounds and
 high-water marks, and a run-time stats snapshot.
+
+### Interrupts
+
+SoC interrupts are bound at build time; there is no runtime handler
+registration and the vector table is in flash:
+
+```c
+PBL_IRQ_CONNECT(I2C1, 5, i2c_irq_handler, I2C1_BUS, 0);
+
+PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
+  /* handler body */
+}
+```
+
+A line is named after its `PBL_SOC_IRQN_<line>` define in the SoC's
+checked-in `soc_irqs.h`, which also gives its number: `PBL_IRQN(I2C1)` is
+`PBL_SOC_IRQN_I2C1`. The defines were generated once from the vendor
+`IRQn_Type`, so the names match the CMSIS `<line>_IRQn`, and every binding
+asserts that the two numbers still agree. The SoC's line count is
+`CONFIG_NUM_IRQS`, set in `soc/*/Kconfig.defconfig`.
+
+`PBL_IRQ_CONNECT()` calls `isr(arg)` with whatever type `isr` takes (an
+empty `arg` calls `isr()`); `PBL_IRQ_DIRECT()` takes the handler body
+instead. Binding a line twice fails to link, and a line without a
+`PBL_SOC_IRQN_<line>` fails to compile.
+
+The priority is in controller units (0 is the most urgent) and is
+programmed for every connected line by `pbl_irq_init()` at boot, so drivers
+only call `pbl_irq_enable()` and `pbl_irq_disable()`. A priority more urgent
+than `PBL_IRQ_PRIO_MAX_SYSCALL` is a build error unless the line is flagged
+`PBL_IRQ_ZERO_LATENCY`, in which case the ISR must not call the kernel. An
+enabled line nobody connected lands in `arch_irq_spurious()`, which asserts.
 
 ### Idle
 

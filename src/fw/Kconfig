@@ -98,10 +98,6 @@ config MALLOC_INSTRUMENTATION
 config PROFILER
     bool "Profiler"
 
-config PROFILE_INTERRUPTS
-    bool "Profile all interrupts"
-    select PROFILER
-
 config PERFORMANCE_TESTS
     bool "Performance test instrumentation"
     select PROFILER

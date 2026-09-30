@@ -4,6 +4,7 @@
 #include "board/board.h"
 #include "board/splash.h"
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include "pbl/kernel/irq.h"
 #include "system/passert.h"
 
 static UARTDeviceState s_dbg_uart_state = {
@@ -51,8 +52,8 @@ static UARTDevice DBG_UART_DEVICE = {
 
 UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 
-IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
-IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
+PBL_IRQ_CONNECT(USART1, 5, uart_irq_handler, DBG_UART, 0);
+PBL_IRQ_CONNECT(DMAC1_CH1, 5, uart_dma_irq_handler, DBG_UART, 0);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {
@@ -240,7 +241,7 @@ static DisplayJDIDevice s_display = {
 };
 
 DisplayJDIDevice *const DISPLAY = &s_display;
-IRQ_MAP(LCDC1, display_jdi_irq_handler, DISPLAY);
+PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
 
 const LedControllerAW9364E AW9364E = {
   .gpio = {
@@ -293,7 +294,7 @@ static I2CBus s_i2c_bus_1 = {
 
 I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
-IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
+PBL_IRQ_CONNECT(I2C1, 5, i2c_irq_handler, I2C1_BUS, 0);
 
 static LIS2DW12State s_lis2dw12_state;
 
@@ -378,7 +379,7 @@ static I2CBus s_i2c_bus_2 = {
 };
 
 I2CBus *const I2C2_BUS = &s_i2c_bus_2;
-IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
+PBL_IRQ_CONNECT(I2C2, 5, i2c_irq_handler, I2C2_BUS, 0);
 
 static const I2CSlavePort s_i2c_cst816 = {
   .bus = &s_i2c_bus_2,
@@ -450,7 +451,7 @@ static I2CBus s_i2c_bus_3 = {
 };
 
 I2CBus *const I2C3_BUS = &s_i2c_bus_3;
-IRQ_MAP(I2C3, i2c_irq_handler, I2C3_BUS);
+PBL_IRQ_CONNECT(I2C3, 5, i2c_irq_handler, I2C3_BUS, 0);
 
 static const I2CSlavePort s_i2c_npm1300 = {
   .bus = &s_i2c_bus_3,
@@ -525,7 +526,7 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .timer = GPTIM2,
   .timer_irqn = GPTIM2_IRQn,
 };
-IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
+PBL_IRQ_CONNECT(GPTIM2, 7, debounced_button_irq_handler, GPTIM2, 0);
 
 static MicDeviceState mic_state = {
   .hdma = {
@@ -564,8 +565,8 @@ static const MicDevice mic_device = {
   .channel_depth = 16,
 };
 const MicDevice *MIC = &mic_device;
-IRQ_MAP(PDM1, pdm1_data_handler, MIC);
-IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
+PBL_IRQ_CONNECT(PDM1, 5, pdm1_data_handler, MIC, 0);
+PBL_IRQ_CONNECT(DMAC1_CH5, 5, pdm1_l_dma_handler, MIC, 0);
 
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;

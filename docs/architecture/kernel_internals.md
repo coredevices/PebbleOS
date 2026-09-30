@@ -85,6 +85,17 @@ copies the exception frame onto the thread's dedicated syscall stack when
 pointer and stacked return slot to `pbl_kernel_syscall_entered()`, which is
 what the firmware's syscall island expects.
 
+The vector table (`kernel/arch/arm/vector_table.c`) is a constant array in
+`.isr_vector`. `PBL_LISTIFY()` expands its `CONFIG_NUM_IRQS` slots to
+`pbl_isr_<n>`, each a weak alias of `arch_irq_spurious()` that
+`PBL_IRQ_CONNECT()` or `PBL_IRQ_DIRECT()` overrides with a strong
+definition, `n` being the line's `PBL_SOC_IRQN_<line>`. Each binding also
+drops a `{irq, prio}` record into the `.pbl_irq_prio` section, which
+`pbl_irq_init()` walks to program the NVIC after pointing VTOR at the table.
+A weak default never pulls an object out of a static library, so a binding
+inside a `stlib` library only takes effect when something else in the same
+object is referenced.
+
 The port defines `pbl_cur` in `.kernel_unpriv_ro_bss`, the firmware's
 unprivileged-readable kernel data, because `pbl_thread_current()` and
 `pebble_task_get_current()` run unprivileged inside apps.

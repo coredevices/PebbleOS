@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/irq.h>
 #include <system/passert.h>
 
 #undef UNUSED
@@ -10,19 +11,19 @@ static void (*radio_irq)(void);
 static void (*rtc0_irq)(void);
 static void (*rng_irq)(void);
 
-void RADIO_IRQHandler(void) {
+PBL_IRQ_DIRECT(RADIO, 5, 0) {
   if (radio_irq != NULL) {
     radio_irq();
   }
 }
 
-void RTC0_IRQHandler(void) {
+PBL_IRQ_DIRECT(RTC0, 7, 0) {
   if (rtc0_irq != NULL) {
     rtc0_irq();
   }
 }
 
-void RNG_IRQHandler(void) {
+PBL_IRQ_DIRECT(RNG, 7, 0) {
   if (rng_irq != NULL) {
     rng_irq();
   }

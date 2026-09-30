@@ -7,6 +7,7 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
+#include "pbl/kernel/irq.h"
 #include "system/passert.h"
 #include "kernel/util/delay.h"
 
@@ -55,8 +56,8 @@ static UARTDevice DBG_UART_DEVICE = {
 
 UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 
-IRQ_MAP(USART1, uart_irq_handler, DBG_UART);
-IRQ_MAP(DMAC1_CH1, uart_dma_irq_handler, DBG_UART);
+PBL_IRQ_CONNECT(USART1, 5, uart_irq_handler, DBG_UART, 0);
+PBL_IRQ_CONNECT(DMAC1_CH1, 5, uart_dma_irq_handler, DBG_UART, 0);
 
 static DisplayJDIState s_display_state = {
   .hlcdc = {
@@ -187,7 +188,7 @@ static DisplayJDIDevice s_display = {
 };
 
 DisplayJDIDevice *const DISPLAY = &s_display;
-IRQ_MAP(LCDC1, display_jdi_irq_handler, DISPLAY);
+PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {
@@ -289,7 +290,7 @@ static I2CBus s_i2c_bus_1 = {
 
 I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
-IRQ_MAP(I2C1, i2c_irq_handler, I2C1_BUS);
+PBL_IRQ_CONNECT(I2C1, 5, i2c_irq_handler, I2C1_BUS, 0);
 
 static const I2CSlavePort s_i2c_npm1300 = {
   .bus = &s_i2c_bus_1,
@@ -355,7 +356,7 @@ static I2CBus s_i2c_bus_2 = {
 
 I2CBus *const I2C2_BUS = &s_i2c_bus_2;
 
-IRQ_MAP(I2C2, i2c_irq_handler, I2C2_BUS);
+PBL_IRQ_CONNECT(I2C2, 5, i2c_irq_handler, I2C2_BUS, 0);
 
 static LSM6DSOState s_lsm6dso_state;
 
@@ -466,7 +467,7 @@ static I2CBus s_i2c_bus_3 = {
 
 I2CBus *const I2C3_BUS = &s_i2c_bus_3;
 
-IRQ_MAP(I2C3, i2c_irq_handler, I2C3_BUS);
+PBL_IRQ_CONNECT(I2C3, 5, i2c_irq_handler, I2C3_BUS, 0);
 
 static const I2CSlavePort s_i2c_cst816 = {
   .bus = &s_i2c_bus_3,
@@ -533,7 +534,7 @@ static I2CBus s_i2c_bus_4 = {
 
 I2CBus *const I2C4_BUS = &s_i2c_bus_4;
 
-IRQ_MAP(I2C4, i2c_irq_handler, I2C4_BUS);
+PBL_IRQ_CONNECT(I2C4, 5, i2c_irq_handler, I2C4_BUS, 0);
 
 static const I2CSlavePort s_i2c_gh3x2x = {
   .bus = &s_i2c_bus_4,
@@ -609,7 +610,7 @@ const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .timer = GPTIM2,
   .timer_irqn = GPTIM2_IRQn,
 };
-IRQ_MAP(GPTIM2, debounced_button_irq_handler, GPTIM2);
+PBL_IRQ_CONNECT(GPTIM2, 7, debounced_button_irq_handler, GPTIM2, 0);
 
 static MicDeviceState mic_state = {
   .hdma = {
@@ -648,8 +649,8 @@ static const MicDevice mic_device = {
   .channel_depth = 16,
 };
 const MicDevice *MIC = &mic_device;
-IRQ_MAP(PDM1, pdm1_data_handler, MIC);
-IRQ_MAP(DMAC1_CH5, pdm1_l_dma_handler, MIC);
+PBL_IRQ_CONNECT(PDM1, 5, pdm1_data_handler, MIC, 0);
+PBL_IRQ_CONNECT(DMAC1_CH5, 5, pdm1_l_dma_handler, MIC, 0);
 
 static void prv_audio_power_up(void) {
   NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
@@ -684,7 +685,7 @@ static const AudioDevice audio_device = {
   .power_ops = &prv_audio_power_ops,
 };
 const AudioDevice *AUDIO = &audio_device;
-IRQ_MAP(DMAC1_CH4, audec_dac0_dma_irq_handler, AUDIO);
+PBL_IRQ_CONNECT(DMAC1_CH4, 5, audec_dac0_dma_irq_handler, AUDIO, 0);
 
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;

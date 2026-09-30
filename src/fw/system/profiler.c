@@ -40,37 +40,11 @@ Profiler g_profiler;
 #define PROFILER_NODE(name) ProfilerNode g_profiler_node_##name = {.module_name = #name};
 #include "profiler_list.h"
 #undef PROFILER_NODE
-#ifdef CONFIG_PROFILE_INTERRUPTS
-#define IRQ_DEF(idx, irq) ProfilerNode g_profiler_node_##irq##_IRQ = {.module_name = #irq "_IRQ"};
-#if defined(CONFIG_QEMU)
-#include "irq_qemu.def"
-#elif defined(CONFIG_SOC_NRF52)
-#include "irq_nrf52.def"
-#elif defined(CONFIG_SOC_SF32LB52)
-#include "irq_sf32lb52.def"
-#else
-#error "No IRQ definition for this MICRO_FAMILY"
-#endif
-#undef IRQ_DEF
-#endif
 
 static ProfilerNode *s_profiler_nodes[] = {
 #define PROFILER_NODE(name) &g_profiler_node_##name,
 #include "profiler_list.h"
 #undef PROFILER_NODE
-#ifdef CONFIG_PROFILE_INTERRUPTS
-#define IRQ_DEF(idx, irq) &g_profiler_node_##irq##_IRQ,
-#if defined(CONFIG_QEMU)
-#include "irq_qemu.def"
-#elif defined(CONFIG_SOC_NRF52)
-#include "irq_nrf52.def"
-#elif defined(CONFIG_SOC_SF32LB52)
-#include "irq_sf32lb52.def"
-#else
-#error "No IRQ definition for this MICRO_FAMILY"
-#endif
-#undef IRQ_DEF
-#endif
 };
 
 static void prv_profiler_node_add(ProfilerNode *node) {

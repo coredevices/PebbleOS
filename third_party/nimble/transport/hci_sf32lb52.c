@@ -9,6 +9,7 @@
 #include <bf0_hal.h>
 #include <kernel/pebble_tasks.h>
 #include <pbl/bluetooth/id_addr.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
 #include <system/hexdump.h>
@@ -183,6 +184,10 @@ void prv_hci_trace_mbuf(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet) {
 #define prv_hci_trace_mbuf(type, om, h4tl_packet)
 #endif
 
+void LCPU2HCPU_IRQHandler(void);
+
+PBL_IRQ_CONNECT(LCPU2HCPU, 5, LCPU2HCPU_IRQHandler, , 0);
+
 static int32_t prv_ipc_rx_ind(ipc_queue_handle_t handle, size_t size) {
   pbl_sem_give(&s_ipc_data_ready);
 
@@ -218,7 +223,6 @@ static int prv_config_ipc(void) {
     return -1;
   }
 
-  NVIC_SetPriority(LCPU2HCPU_IRQn, 5);
   ret = ipc_queue_open(s_ipc_port);
   if (ret != 0) {
     PBL_LOG_ERR("ipc_queue_open failed (%" PRId32 ")", ret);
@@ -346,7 +350,7 @@ void ble_transport_ll_init(void) {
 }
 
 void ble_transport_ll_deinit(void) {
-  NVIC_DisableIRQ(LCPU2HCPU_IRQn);
+  pbl_irq_disable(PBL_IRQN(LCPU2HCPU));
   ipc_queue_close(s_ipc_port);
   ipc_queue_deinit(s_ipc_port);
   s_ipc_port = IPC_QUEUE_INVALID_HANDLE;

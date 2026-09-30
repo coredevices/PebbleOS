@@ -4,6 +4,7 @@
 #include "board/board.h"
 #include <pbl/drivers/touch/touch_sensor.h>
 #include "pbl/services/system_task.h"
+#include "pbl/kernel/irq.h"
 #include "pbl/services/touch/touch.h"
 
 #include <cmsis_core.h>
@@ -38,7 +39,7 @@ static void prv_process_touch_update(void *unused) {
   }
 }
 
-void TOUCH_IRQHandler(void) {
+static void prv_touch_irq_handler(void) {
   REG32(QEMU_TOUCH_BASE + TOUCH_INTSTAT) = INT_TOUCH_EVENT;
 
   if (!s_callback_scheduled) {
@@ -48,14 +49,15 @@ void TOUCH_IRQHandler(void) {
   }
 }
 
+PBL_IRQ_CONNECT(TOUCH, 6, prv_touch_irq_handler, , 0);
+
 void touch_sensor_init(void) {
   const uint32_t base = QEMU_TOUCH_BASE;
 
   REG32(base + TOUCH_INTSTAT) = INT_TOUCH_EVENT;
   REG32(base + TOUCH_INTCTRL) = INT_TOUCH_EVENT;
 
-  NVIC_SetPriority(TOUCH_IRQn, 6);
-  NVIC_EnableIRQ(TOUCH_IRQn);
+  pbl_irq_enable(PBL_IRQN(TOUCH));
 }
 
 void touch_sensor_set_enabled(bool enabled) {
