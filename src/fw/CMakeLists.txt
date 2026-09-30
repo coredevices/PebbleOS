@@ -3,7 +3,6 @@
 
 pbl_include_directories(. applib/vendor/uPNG applib/vendor/tinflate)
 
-add_subdirectory(startup)
 add_subdirectory(drivers)
 add_subdirectory(board)
 add_subdirectory(shell)

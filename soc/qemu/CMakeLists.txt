@@ -5,5 +5,6 @@ pbl_library()
 pbl_include_directories(.)
 pbl_library_sources(
   init.c
+  startup.c
   idle.c
 )
