@@ -14,6 +14,7 @@
 #include <applib/ui/kino/kino_reel/unfold.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
+#include <shell/system_theme_style.h>
 
 //! Title text vertically centered position
 #define TEXT_OFFSET_Y ((DISP_ROWS / 2) + PBL_IF_RECT_ELSE(46, 42))
@@ -136,8 +137,9 @@ void peek_layer_init(PeekLayer *peek_layer, const GRect *frame) {
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->title.text_layer);
   // subtitle layer
   text_layer_init_with_parameters(&peek_layer->subtitle.text_layer, &text_rect, nullptr,
-                                  fonts_get_system_font(FONT_KEY_GOTHIC_18), GColorBlack,
-                                  GColorClear, text_alignment, GTextOverflowModeTrailingEllipsis);
+                                  fonts_get_system_font(SYSTEM_THEME_FONT_KEY_PEEK_SUBTITLE),
+                                  GColorBlack, GColorClear, text_alignment,
+                                  GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->subtitle.text_layer);
 
   // initialize labels with empty strings
