@@ -19,6 +19,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
+    fw/shell/system_theme_style.c
     fw/apps/system/launcher/default/app_glance.c
     fw/apps/system/launcher/default/app_glance_alarms.c
     fw/apps/system/launcher/default/app_glance_generic.c
