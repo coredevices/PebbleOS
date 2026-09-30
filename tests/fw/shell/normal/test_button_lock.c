@@ -369,6 +369,51 @@ void test_button_lock__locked_swallows_input_and_hints(void) {
   cl_assert_equal_i(s_num_dialogs_created, 2);
 }
 
+void test_button_lock__hint_rises_above_an_interrupting_modal(void) {
+  prv_toggle_lock();
+
+  // An alarm would render over a hint pushed at ModalPriorityAlert, so the hint
+  // goes onto the alarm's own stack instead.
+  s_modal_enabled = true;
+  s_modal_properties = ModalProperty_Exists;
+  s_modal_top_focused_priority = ModalPriorityAlarm;
+
+  cl_assert(prv_press(BUTTON_ID_SELECT));
+  cl_assert(prv_release(BUTTON_ID_SELECT));
+  cl_assert_equal_s(s_last_dialog_text, "Hold Back + Down to unlock");
+  cl_assert_equal_i(s_last_dialog_priority, ModalPriorityAlarm);
+}
+
+void test_button_lock__hint_stays_at_alert_below_alert_modals(void) {
+  prv_toggle_lock();
+
+  // An incoming call is below Alert, where the hint is already visible.
+  s_modal_enabled = true;
+  s_modal_properties = ModalProperty_Exists;
+  s_modal_top_focused_priority = ModalPriorityPhone;
+
+  cl_assert(prv_press(BUTTON_ID_SELECT));
+  cl_assert(prv_release(BUTTON_ID_SELECT));
+  cl_assert_equal_i(s_last_dialog_priority, ModalPriorityAlert);
+}
+
+void test_button_lock__lock_toasts_stay_at_alert(void) {
+  s_modal_enabled = true;
+  s_modal_properties = ModalProperty_Exists;
+  s_modal_top_focused_priority = ModalPriorityAlarm;
+
+  // The lock/unlock feedback must never cover an alarm.
+  prv_toggle_lock();
+  cl_assert(button_lock_is_locked());
+  cl_assert_equal_s(s_last_dialog_text, "Buttons Locked");
+  cl_assert_equal_i(s_last_dialog_priority, ModalPriorityAlert);
+
+  prv_toggle_lock();
+  cl_assert(!button_lock_is_locked());
+  cl_assert_equal_s(s_last_dialog_text, "Buttons Unlocked");
+  cl_assert_equal_i(s_last_dialog_priority, ModalPriorityAlert);
+}
+
 void test_button_lock__unlock_restores_touch_pref(void) {
   prv_toggle_lock();
   cl_assert(button_lock_is_locked());
