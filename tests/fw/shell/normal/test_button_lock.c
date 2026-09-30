@@ -55,6 +55,12 @@ BatteryChargeState battery_get_charge_state(void) {
   return (BatteryChargeState){.is_plugged = s_is_plugged};
 }
 
+static bool s_workout_ongoing;
+
+bool workout_service_is_workout_ongoing(void) {
+  return s_workout_ongoing;
+}
+
 static bool s_modal_enabled;
 static ModalProperty s_modal_properties = ModalPropertyDefault;
 
@@ -181,6 +187,11 @@ static bool prv_release(ButtonId id) {
   return button_lock_handle_button_event(&e);
 }
 
+//! button_lock_init creates the combo timer first and the auto-lock timer
+//! second, and this test is the only thing creating timers.
+#define COMBO_TIMER_ID (1)
+#define AUTO_TIMER_ID  (2)
+
 static void prv_invoke_kernel_cb(void) {
   cl_assert(s_kernel_cb != NULL);
   CallbackEventCallback cb = s_kernel_cb;
@@ -192,10 +203,23 @@ static void prv_invoke_kernel_cb(void) {
 static void prv_toggle_lock(void) {
   prv_press(BUTTON_ID_BACK);
   prv_press(BUTTON_ID_DOWN);
-  stub_new_timer_invoke(1 /* num_to_invoke */);
+  stub_new_timer_fire(COMBO_TIMER_ID);
   prv_invoke_kernel_cb();
   prv_release(BUTTON_ID_BACK);
   prv_release(BUTTON_ID_DOWN);
+}
+
+//! A button press and release, which is all auto-lock needs to see to restart.
+static void prv_activity(void) {
+  prv_press(BUTTON_ID_SELECT);
+  prv_release(BUTTON_ID_SELECT);
+}
+
+//! Let the idle timer expire and run the posted KernelMain callback.
+static void prv_expire_auto_lock(void) {
+  cl_assert(stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+  stub_new_timer_fire(AUTO_TIMER_ID);
+  prv_invoke_kernel_cb();
 }
 
 // Tests
@@ -209,6 +233,14 @@ void test_button_lock__initialize(void) {
   }
 
   s_pref_hold_ms = 2000;
+  s_pref_auto_ms = 0;
+  s_pref_auto_paused = false;
+  s_pref_auto_scope = ButtonLockAutoScopeBoth;
+  s_pref_auto_not_charging = true;
+  s_is_plugged = false;
+  s_workout_ongoing = false;
+  s_modal_enabled = false;
+  s_modal_properties = ModalPropertyDefault;
   s_watchface_running = true;
 
   // Unwind state a previous test may have left behind.
@@ -401,4 +433,174 @@ void test_button_lock__unlock_while_hint_visible_pops_it(void) {
   cl_assert(!button_lock_is_locked());
   cl_assert_equal_i(s_num_dialogs_popped, 1);
   cl_assert_equal_s(s_last_dialog_text, "Buttons Unlocked");
+}
+
+// Auto-lock
+///////////////////////////////////////////////////////////////////////////////
+
+void test_button_lock__auto_lock_off_by_default(void) {
+  prv_activity();
+  cl_assert(!stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__auto_lock_engages_after_idle(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  cl_assert_equal_i(stub_new_timer_timeout(AUTO_TIMER_ID), 30000);
+
+  prv_expire_auto_lock();
+
+  cl_assert(button_lock_is_locked());
+  cl_assert_equal_i(s_num_short_pulses, 1);
+  cl_assert(!s_touch_enabled);
+  cl_assert_equal_s(s_last_dialog_text, "Buttons Locked");
+}
+
+void test_button_lock__auto_lock_needs_the_unlock_combo(void) {
+  s_pref_hold_ms = 0;
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  cl_assert(!stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__auto_lock_respects_pause(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_paused = true;
+  prv_activity();
+  cl_assert(!stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__auto_lock_disarmed_until_first_activity(void) {
+  s_pref_auto_ms = 30000;
+  button_lock_disarm_auto_lock_for_test();
+  cl_assert(!stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+
+  // Nothing but real activity may arm it, so a charger change must not either.
+  button_lock_handle_charger_change(false /* is_plugged */);
+  cl_assert(!stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+
+  prv_activity();
+  cl_assert(stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__auto_lock_postponed_while_charging(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+
+  s_is_plugged = true;
+  prv_expire_auto_lock();
+
+  cl_assert(!button_lock_is_locked());
+  // Postponed, not cancelled: the cable can go away without any activity.
+  cl_assert(stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+
+  s_is_plugged = false;
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__charging_does_not_release_an_engaged_lock(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+
+  button_lock_handle_charger_change(true /* is_plugged */);
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_ignores_charger_when_pref_off(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_not_charging = false;
+  s_is_plugged = true;
+  prv_activity();
+
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_postponed_while_modal_focused(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+
+  // An alarm or an incoming call must stay dismissable.
+  s_modal_enabled = true;
+  s_modal_properties = ModalProperty_Exists;
+  prv_expire_auto_lock();
+
+  cl_assert(!button_lock_is_locked());
+  cl_assert(stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__auto_lock_scope_general_use(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_scope = ButtonLockAutoScopeGeneralUse;
+  s_workout_ongoing = true;
+  prv_activity();
+
+  prv_expire_auto_lock();
+  cl_assert(!button_lock_is_locked());
+
+  s_workout_ongoing = false;
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_scope_during_activity(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_scope = ButtonLockAutoScopeDuringActivity;
+  prv_activity();
+
+  prv_expire_auto_lock();
+  cl_assert(!button_lock_is_locked());
+
+  s_workout_ongoing = true;
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_idle_while_locked(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  prv_toggle_lock();
+  cl_assert(button_lock_is_locked());
+  cl_assert(!stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+
+  // Buttons pressed while locked must not re-arm it either.
+  prv_press(BUTTON_ID_SELECT);
+  prv_release(BUTTON_ID_SELECT);
+  cl_assert(!stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__auto_lock_rearms_after_unlock(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+
+  prv_toggle_lock();
+  cl_assert(!button_lock_is_locked());
+  cl_assert(stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__touch_activity_restarts_the_countdown(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  stub_new_timer_stop(AUTO_TIMER_ID);
+
+  button_lock_handle_activity();
+  cl_assert(stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+void test_button_lock__disabling_the_combo_releases_the_lock(void) {
+  prv_toggle_lock();
+  cl_assert(button_lock_is_locked());
+
+  // Otherwise nothing could release it: the combo is the only way out.
+  s_pref_hold_ms = 0;
+  button_lock_handle_prefs_changed();
+  prv_invoke_kernel_cb();
+
+  cl_assert(!button_lock_is_locked());
+  cl_assert(s_touch_enabled);
 }

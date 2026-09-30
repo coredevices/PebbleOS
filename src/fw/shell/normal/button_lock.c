@@ -235,6 +235,15 @@ void button_lock_init(void) {
   s_auto_timer = new_timer_create();
 }
 
+#if UNITTEST
+//! Put auto-lock back into its just-booted state, which is otherwise only
+//! reachable by rebooting.
+void button_lock_disarm_auto_lock_for_test(void) {
+  s_auto_armed = false;
+  new_timer_stop(s_auto_timer);
+}
+#endif
+
 bool button_lock_is_locked(void) {
   return s_locked;
 }

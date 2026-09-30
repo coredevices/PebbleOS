@@ -40,3 +40,7 @@ void button_lock_handle_charger_change(bool is_plugged);
 //! Re-evaluate the auto-lock state after the button lock prefs changed, and
 //! release the lock if the unlock combo was just turned off.
 void button_lock_handle_prefs_changed(void);
+
+#if UNITTEST
+void button_lock_disarm_auto_lock_for_test(void);
+#endif
