@@ -57,6 +57,7 @@
 #include "pbl/services/wakeup.h"
 #include "pbl/services/runlevel.h"
 #include "shell/normal/app_idle_timeout.h"
+#include "shell/normal/button_lock.h"
 #include "shell/normal/watchface.h"
 #include "shell/prefs.h"
 #include "shell/shell_event_loop.h"
@@ -161,12 +162,13 @@ static void back_button_force_quit_handler(void *data) {
 static void launcher_handle_button_event(PebbleEvent *e) {
   ButtonId button_id = e->button.button_id;
   const bool watchface_running = app_manager_is_watchface_running();
+  const bool swallow = button_lock_handle_button_event(e);
 
   // trigger the backlight on any button down event
   if (e->type == PEBBLE_BUTTON_DOWN_EVENT) {
     PBL_ANALYTICS_ADD(button_pressed_count, 1);
 
-    if (button_id == BUTTON_ID_BACK && !watchface_running &&
+    if (!swallow && button_id == BUTTON_ID_BACK && !watchface_running &&
         process_metadata_get_run_level(app_manager_get_current_app_md()) ==
             ProcessAppRunLevelNormal) {
       // Start timer for force-quitting app
@@ -207,6 +209,12 @@ static void launcher_handle_button_event(PebbleEvent *e) {
 
   app_idle_timeout_refresh();
 
+  if (swallow) {
+    // Button lock: hide the event from every task.
+    e->task_mask = (PebbleTaskBitset)~0;
+    return;
+  }
+
   if (compositor_is_animating()) {
     // mask the app task if we're already animating
     e->task_mask |= 1 << PebbleTask_App;
@@ -241,6 +249,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
     case PEBBLE_BATTERY_CONNECTION_EVENT: {
       const bool is_connected = e->battery_connection.is_connected;
       battery_state_handle_connection_event(is_connected);
+      button_lock_handle_charger_change(is_connected);
       if (is_connected) {
         light_enable_interaction();
       } else {
@@ -316,9 +325,11 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         // A finger on the screen is ongoing interaction: halt the app idle timeout until liftoff.
         // A motionless hold emits no further touch events, so a timer refresh alone can't cover it.
         app_idle_timeout_touch_down();
+        button_lock_handle_activity();
       } else if (e->touch.event.type == TouchEvent_Liftoff) {
         light_touch_up();
         touch_session_extend();
+        button_lock_handle_activity();
         app_idle_timeout_touch_up();
       }
       if (compositor_is_animating() || is_modal_focused) {

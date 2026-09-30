@@ -122,6 +122,10 @@ WindowStack *modal_manager_find_window_stack(ModalContextFilterCallback filter_c
 //! @returns pointer to a \ref WindowStack
 WindowStack *modal_manager_get_window_stack(ModalPriority priority);
 
+//! Returns the priority of the highest visible stack whose top window takes
+//! input, or ModalPriorityInvalid if there is none.
+ModalPriority modal_manager_get_top_focused_priority(void);
+
 //! Returns the \ref Window of the current visible stack if there is one,
 //! otherwise NULL.
 //! @returns Pointer to a \ref Window
