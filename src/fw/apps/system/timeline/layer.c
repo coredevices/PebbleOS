@@ -213,7 +213,7 @@ static void prv_get_icon_frame_exact(TimelineLayer *layer, int index, GRect *ico
   frame.origin.y += style->icon_offset_y;
   // On the right, grow the pin frame so the icon sits icon_right_margin from the screen edge.
   if (timeline_layer_sidebar_is_on_right()) {
-  frame.size.w += style->right_margin - style->icon_right_margin;
+    frame.size.w += style->right_margin - style->icon_right_margin;
   }
   timeline_layout_get_icon_frame(&frame, layer->scroll_direction, icon_frame);
 }

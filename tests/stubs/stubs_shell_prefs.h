@@ -86,15 +86,15 @@ void PBL_WEAK shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior b
 #ifdef CONFIG_ORIENTATION_MANAGER
 static bool s_display_orientation_left = false;
 
-bool WEAK display_orientation_is_left(void) {
+bool PBL_WEAK display_orientation_is_left(void) {
   return s_display_orientation_left;
 }
 
-bool WEAK sys_display_orientation_is_left(void) {
+bool PBL_WEAK sys_display_orientation_is_left(void) {
   return s_display_orientation_left;
 }
 
-void WEAK display_orientation_set_left(bool left) {
+void PBL_WEAK display_orientation_set_left(bool left) {
   s_display_orientation_left = left;
 }
 #endif
