@@ -104,6 +104,7 @@ uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
 static FrameBuffer *fb = NULL;
 
 void test_expandable_dialog__initialize(void) {
+  display_orientation_set_left(false);
   fb = malloc(sizeof(FrameBuffer));
   framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   // Must use System init mode to enable orphan avoidance algorithm
@@ -163,4 +164,42 @@ void test_expandable_dialog__dismiss_tutorial_portuguese_orphan(void) {
   prv_push_and_render_expandable_dialog(expandable_dialog, num_times_to_scroll_down);
 
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_expandable_dialog__left_hand_status_bar_remains_centered(void) {
+  display_orientation_set_left(true);
+  ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
+      "Left hand", RESOURCE_ID_QUICK_DISMISS, "Confirm this action.", GColorBlack, GColorWhite,
+      NULL, RESOURCE_ID_ACTION_BAR_ICON_CHECK, NULL);
+  Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
+  dialog_show_status_bar_layer(dialog, true);
+  prv_push_and_render_expandable_dialog(expandable_dialog, 0);
+  cl_assert_equal_i(dialog->status_layer.layer.frame.origin.x, 0);
+  cl_assert_equal_i(dialog->status_layer.layer.frame.size.w, DISP_COLS);
+}
+
+void test_expandable_dialog__left_hand_content_mirrors_right_hand_margins(void) {
+  GRect right_frames[3];
+  for (int left = 0; left < 2; ++left) {
+    display_orientation_set_left(left);
+    ExpandableDialog *expandable = expandable_dialog_create_with_params(
+        "Margins", RESOURCE_ID_QUICK_DISMISS, "Confirm this action.", GColorBlack, GColorWhite,
+        NULL, RESOURCE_ID_ACTION_BAR_ICON_CHECK, NULL);
+    expandable_dialog_set_header(expandable, "Confirm");
+    prv_push_and_render_expandable_dialog(expandable, 0);
+    const GRect frames[] = {
+      expandable->header_layer.layer.frame,
+      expandable->dialog.text_layer.layer.frame,
+      expandable->dialog.icon_layer.layer.frame,
+    };
+    for (unsigned i = 0; i < ARRAY_LENGTH(frames); ++i) {
+      if (!left) {
+        right_frames[i] = frames[i];
+      } else {
+        cl_assert_equal_i(frames[i].size.w, right_frames[i].size.w);
+        cl_assert_equal_i(frames[i].origin.x, DISP_COLS - grect_get_max_x(&right_frames[i]));
+      }
+    }
+    window_deinit(&expandable->dialog.window);
+  }
 }
