@@ -9,7 +9,8 @@
 
 //! System Theme Text Style is a font collection used to unify text styles across the system.
 //! It contains a variety of different font sizes for use in an application, each meant for a
-//! distinct class of use cases. Each font type will resize based on the user's preferences.
+//! distinct class of use cases. Each font type will resize based on the user's preferences,
+//! except the fixed styles marked below.
 //! Consumers should attempt to have a complete mapping of their font types to the system style.
 
 typedef enum TextStyleFont {
@@ -53,6 +54,16 @@ typedef enum TextStyleFont {
   //! Paragraph Header is for text that describes the content of a body paragraph. The size is
   //! smaller than both Body and Header.
   TextStyleFont_ParagraphHeader,
+#if !defined(CONFIG_RECOVERY_FW)
+  //! The styles below are fixed: they don't follow the user's preference, so callers read them
+  //! at the platform's default content size.
+  //! Card Subtitle is for the subtitle of a timeline pin's details. It is always bold.
+  TextStyleFont_CardSubtitle,
+  //! Calendar Recurring is for the label that marks a calendar pin as a recurring event.
+  TextStyleFont_CalendarRecurring,
+  //! Peek Subtitle is for the subtitle of the timeline peek shown over the watchface.
+  TextStyleFont_PeekSubtitle,
+#endif
 
   TextStyleFontCount
 } TextStyleFont;

@@ -39,6 +39,12 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
               //! @note this is the same as Medium until Small is designed
               [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
+#if !defined(CONFIG_RECOVERY_FW)
+              [TextStyleFont_CardSubtitle] = FONT_KEY_GOTHIC_24_BOLD,
+              [TextStyleFont_CalendarRecurring] =
+                  PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),
+              [TextStyleFont_PeekSubtitle] = FONT_KEY_GOTHIC_18,
+#endif
             },
         .menu_cell =
             {
@@ -94,6 +100,12 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_14_BOLD,
               [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_14,
+#if !defined(CONFIG_RECOVERY_FW)
+              [TextStyleFont_CardSubtitle] = FONT_KEY_GOTHIC_24_BOLD,
+              [TextStyleFont_CalendarRecurring] =
+                  PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),
+              [TextStyleFont_PeekSubtitle] = FONT_KEY_GOTHIC_18,
+#endif
             },
         .menu_cell =
             {
@@ -148,6 +160,11 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
               [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
               [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
+#if !defined(CONFIG_RECOVERY_FW)
+              [TextStyleFont_CardSubtitle] = FONT_KEY_GOTHIC_24_BOLD,
+              [TextStyleFont_CalendarRecurring] = FONT_KEY_GOTHIC_18_BOLD,
+              [TextStyleFont_PeekSubtitle] = FONT_KEY_GOTHIC_18,
+#endif
             },
         .menu_cell =
             {
@@ -210,6 +227,11 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
           //! @note this is the same as Large until ExtraLarge is designed
           [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
           [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
+#if !defined(CONFIG_RECOVERY_FW)
+          [TextStyleFont_CardSubtitle] = FONT_KEY_GOTHIC_24_BOLD,
+          [TextStyleFont_CalendarRecurring] = FONT_KEY_GOTHIC_18_BOLD,
+          [TextStyleFont_PeekSubtitle] = FONT_KEY_GOTHIC_18,
+#endif
         },
     .menu_cell =
         {
