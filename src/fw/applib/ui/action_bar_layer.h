@@ -290,7 +290,7 @@ void action_bar_layer_set_background_color(ActionBarLayer *action_bar, GColor ba
 //! to the right edge; system and kernel UI always follow orientation. Call before
 //! \ref action_bar_layer_add_to_window(); it does not move a bar already
 //! attached to a window. Toggling Left-Handed Mode in Settings likewise leaves
-//! attached bars in place until the window is reopened or the bar is added again.
+//! attached bars in place until the bar is added again.
 //! @param follow true to place action bars on the button side in Left-Handed Mode
 void action_bar_layer_set_follows_display_orientation(bool follow);
 

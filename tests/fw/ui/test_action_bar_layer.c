@@ -384,3 +384,32 @@ void test_action_bar_layer__late_opt_in_does_not_move_attached_bar(void) {
   action_bar_layer_deinit(&bar);
   layer_deinit(&window.layer);
 }
+
+void test_action_bar_layer__worker_setter_is_no_op(void) {
+  s_left_handed = true;
+  s_task = PebbleTask_Worker;
+  s_sdk_type = ProcessAppSDKType_4x;
+  action_bar_layer_set_follows_display_orientation(true);
+  cl_assert(action_bar_layer_is_on_right());
+  s_task = PebbleTask_App;
+  cl_assert(action_bar_layer_is_on_right());
+}
+
+void test_action_bar_layer__system_opt_out_still_follows_orientation(void) {
+  s_left_handed = true;
+  action_bar_layer_set_follows_display_orientation(false);
+  cl_assert(!action_bar_layer_is_on_right());
+  cl_assert_equal_i(prv_add_and_get_x(), 0);
+}
+
+void test_action_bar_layer__inset_preserves_nonzero_bounds_origin(void) {
+  const GRect bounds = GRect(7, 11, DISP_COLS, DISP_ROWS);
+  GRect inset = action_bar_layer_inset_bounds(bounds);
+  cl_assert_equal_i(inset.origin.x, bounds.origin.x);
+  cl_assert_equal_i(inset.origin.y, bounds.origin.y);
+  s_left_handed = true;
+  inset = action_bar_layer_inset_bounds(bounds);
+  cl_assert_equal_i(inset.origin.x, bounds.origin.x + ACTION_BAR_WIDTH);
+  cl_assert_equal_i(inset.origin.y, bounds.origin.y);
+  cl_assert_equal_i(inset.size.w, bounds.size.w - ACTION_BAR_WIDTH);
+}
