@@ -507,7 +507,7 @@ static void prv_dma_request_processing(AudioDeviceState *state) {
   // underrun beats resetting the system over a full queue.
   if (state->trans_cb && !state->callback_pending && free_size >= CFG_AUDIO_PLAYBACK_PIPE_SIZE) {
     state->callback_pending = true;
-    if (!system_task_add_callback_from_isr_droppable(prv_audio_trans_bg, (void *)state)) {
+    if (!system_task_add_callback_from_isr_droppable_raised(prv_audio_trans_bg, (void *)state)) {
       state->callback_pending = false;
     }
   }

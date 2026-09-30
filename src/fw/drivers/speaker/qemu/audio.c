@@ -91,7 +91,7 @@ void qemu_audio_irq_handler(AudioDevice *dev) {
   // Schedule callback on system task; a drop is retried on the next interrupt
   if (dev->state->trans_cb && !dev->state->callback_pending) {
     dev->state->callback_pending = true;
-    if (!system_task_add_callback_from_isr_droppable(prv_audio_system_task_cb,
+    if (!system_task_add_callback_from_isr_droppable_raised(prv_audio_system_task_cb,
                                                             (void *)dev)) {
       dev->state->callback_pending = false;
     }
