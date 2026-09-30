@@ -16,6 +16,7 @@
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
+#include <shell/system_theme_style.h>
 
 // Fakes
 /////////////////////
@@ -528,7 +529,9 @@ void test_menu_layer_system_cells__third_party_app_keeps_platform_default(void) 
   // Positive control: a system process follows the content size
   system_theme_set_content_size(PreferredContentSizeExtraLarge);
   s_current_task = PebbleTask_KernelMain;
-  cl_assert_equal_i(menu_cell_basic_cell_height(), PBL_IF_RECT_ELSE(64, 85));
+  cl_assert_equal_i(
+      menu_cell_basic_cell_height(),
+      system_theme_get_style_for_size(PreferredContentSizeExtraLarge)->menu_cell.basic_cell_height);
 
   // Restore process identity and content size for subsequent tests
   s_current_process_id = (AppInstallId)(-1);

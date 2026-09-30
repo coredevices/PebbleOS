@@ -552,6 +552,7 @@ pbl_clar_test(test_simple_dialog
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -639,6 +640,7 @@ pbl_clar_test(test_emoji_fonts
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -709,6 +711,7 @@ pbl_clar_test(test_expandable_dialog
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/board/displays/display_getafix.c
     drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
