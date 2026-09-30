@@ -102,12 +102,35 @@ static const CertificationIds s_certification_ids_obelix = {
   .japan_telec_r_id = "201-260506",
 };
 
+static const RegulatoryFlags s_regulatory_flags_getafix = {
+  .has_canada_ised = true,
+  .has_eu_ce = true,
+  .has_eu_weee = true,
+  .has_ukca = true,
+  .has_usa_fcc = true,
+};
+
+static const CertificationIds s_certification_ids_getafix = {
+  .company_name = "Core Devices LLC",
+  .product_type = "Smart watch",
+  .trademark = "Pebble",
+  .place_of_origin = "Made in China",
+  .dc_input = "5 V / 500 mA",
+  .rated_voltage = "3.87 V",
+  .milliampere_hour = "70 mAh",
+  .watt_hour = "0.271 Wh",
+  .canada_ised_id = "34223-PR2",
+  .usa_fcc_id = "2BQB2-PR2",
+};
+
 static const RegulatoryFlags *prv_get_regulatory_flags(void) {
 #ifdef CONFIG_BOARD_ASTERIX
   // TODO: add applicable flags
   return &s_regulatory_flags_fallback;
 #elif defined(CONFIG_BOARD_OBELIX)
   return &s_regulatory_flags_obelix;
+#elif defined(CONFIG_BOARD_GETAFIX)
+  return &s_regulatory_flags_getafix;
 #else
   return &s_regulatory_flags_fallback;
 #endif
@@ -120,6 +143,8 @@ static const CertificationIds *prv_get_certification_ids(void) {
   return &s_certification_ids_fallback;
 #elif defined(CONFIG_BOARD_OBELIX)
   return &s_certification_ids_obelix;
+#elif defined(CONFIG_BOARD_GETAFIX)
+  return &s_certification_ids_getafix;
 #else
   return &s_certification_ids_fallback;
 #endif
