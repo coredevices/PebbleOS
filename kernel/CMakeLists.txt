@@ -9,3 +9,4 @@ pbl_library_sources(${sources})
 pbl_library_include_directories(. arch)
 
 pbl_include_directories(arch/arm/include)
+pbl_linker_sources(rom-start arch/arm/irq.ld)

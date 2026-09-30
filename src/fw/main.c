@@ -69,6 +69,7 @@
 
 #include "debug/debug.h"
 
+#include "pbl/kernel/irq.h"
 #include "pbl/kernel/sched.h"
 #include "pbl/kernel/thread.h"
 
@@ -107,10 +108,7 @@ static void print_splash_screen(void) {
 int main(void) {
   soc_early_init();
 
-  extern void *__ISR_VECTOR_TABLE__; // Defined in linker script
-  SCB->VTOR = (uint32_t)&__ISR_VECTOR_TABLE__;
-
-  NVIC_SetPriorityGrouping(3); // 4 bits for group priority; 0 bits for subpriority
+  pbl_irq_init();
 
   enable_fault_handlers();
 
