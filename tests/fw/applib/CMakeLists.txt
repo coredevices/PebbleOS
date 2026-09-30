@@ -29,7 +29,7 @@ pbl_clar_test(test_app_outbox
 pbl_clar_test(test_cpu_cache
   SOURCES
     src/fw/applib/cpu_cache.c
-    lib/os/mcu/cache_arm.c
+    kernel/arch/arm/cache.c
   DEFINES UNITTEST_WITH_SYSCALL_PRIVILEGES=1
   OVERRIDES dummy_board
 )
