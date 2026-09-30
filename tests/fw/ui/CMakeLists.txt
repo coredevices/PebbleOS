@@ -238,6 +238,7 @@ pbl_clar_test(test_menu_layer
 pbl_clar_test(test_action_menu_layer
   SOURCES
     fw/applib/ui/action_menu_layer.c
+    fw/shell/system_theme_style.c
     fw/applib/ui/layer.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/menu_layer.c

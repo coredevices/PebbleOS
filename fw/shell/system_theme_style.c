@@ -69,6 +69,10 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
             },
 #endif
+        .action_menu =
+            {
+              .unfocused_item_size = PreferredContentSizeSmall,
+            },
       },
   [PreferredContentSizeMedium] =
       {
@@ -119,6 +123,10 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
             },
 #endif
+        .action_menu =
+            {
+              .unfocused_item_size = PreferredContentSizeMedium,
+            },
       },
   [PreferredContentSizeLarge] =
       {
@@ -174,6 +182,10 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
             },
 #endif
+        .action_menu =
+            {
+              .unfocused_item_size = PreferredContentSizeLarge,
+            },
       },
   [PreferredContentSizeExtraLarge] = {
     .fonts =
@@ -219,18 +231,22 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
           .right_text_inset_with_icon = 4,
         },
 #if !defined(CONFIG_RECOVERY_FW)
-    .launcher = {
-      .title_font_key = FONT_KEY_GOTHIC_28_BOLD,
-      .subtitle_font_key = FONT_KEY_GOTHIC_24,
-      .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
+    .launcher =
+        {
+          .title_font_key = FONT_KEY_GOTHIC_28_BOLD,
+          .subtitle_font_key = FONT_KEY_GOTHIC_24,
+          .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
 #if PBL_RECT
-      .cell_height = 60,
+          .cell_height = 60,
 #else
-      .focused_cell_height = 66,
-      .unfocused_cell_height = 56,
+          .focused_cell_height = 66,
+          .unfocused_cell_height = 56,
 #endif
+        },
+#endif
+    .action_menu = {
+      .unfocused_item_size = PreferredContentSizeExtraLarge,
     },
-#endif
   },
 };
 

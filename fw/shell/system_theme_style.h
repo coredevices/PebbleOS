@@ -44,12 +44,19 @@ typedef struct SystemThemeLauncherStyle {
 #endif
 } SystemThemeLauncherStyle;
 
+//! Sizes of action menus
+typedef struct SystemThemeActionMenuStyle {
+  //! Content size whose Header font draws the items around the selected one on round displays
+  PreferredContentSize unfocused_item_size;
+} SystemThemeActionMenuStyle;
+
 //! Everything the system UI draws differently for each preferred content size
 typedef struct SystemThemeStyle {
   //! Font keys for each text style
   const char *fonts[TextStyleFontCount];
   SystemThemeMenuCellStyle menu_cell;
   SystemThemeOptionMenuStyle option_menu;
+  SystemThemeActionMenuStyle action_menu;
 #if !defined(CONFIG_RECOVERY_FW)
   SystemThemeLauncherStyle launcher;
 #endif
