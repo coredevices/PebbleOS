@@ -128,6 +128,16 @@ int ragged_grid_window_top_for_row(const RaggedGrid *grid, int row, int total) {
   return ragged_grid_clamp_window_top(grid, row - (RAGGED_GRID_WINDOW_ROWS - 1) / 2, total);
 }
 
+bool ragged_grid_recenter_window(RaggedGrid *grid, int row) {
+  const int previous_top = grid->window_top;
+  if (row < grid->window_top) {
+    grid->window_top = row;
+  } else if (row > grid->window_top + (RAGGED_GRID_WINDOW_ROWS - 1)) {
+    grid->window_top = row - (RAGGED_GRID_WINDOW_ROWS - 1);
+  }
+  return grid->window_top != previous_top;
+}
+
 void ragged_grid_sync_window_to_viewport(RaggedGrid *grid, int viewport_row, int total) {
   grid->window_top = ragged_grid_window_top_for_row(grid, viewport_row, total);
 }

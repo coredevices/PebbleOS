@@ -85,6 +85,13 @@ void ragged_grid_reflow(RaggedGrid *grid, int new_idx, int total);
 //! list. Pure; shared by reflow centering and window re-centering.
 int ragged_grid_window_top_for_row(const RaggedGrid *grid, int row, int total);
 
+//! Nudge the existing window so \a row is visible, without recentering it: only
+//! moves the window when \a row sits outside [window_top, window_top + rows).
+//! Returns true when the window moved. This is the roam-window update the
+//! production step path applies between reflows; kept here so callers and
+//! tests exercise one implementation.
+bool ragged_grid_recenter_window(RaggedGrid *grid, int row);
+
 //! Re-derive the window from the row actually centered in the on-screen
 //! viewport, after the viewport moved independently of the window. Requires
 //! 0 <= viewport_row.

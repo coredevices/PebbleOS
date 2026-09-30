@@ -159,14 +159,25 @@ void test_ragged_grid__sync_window_to_viewport(void) {
   cl_check(grid.window_top == 4);
 }
 
-// Recenters the roam window on a row, as the production roam path does.
-static void prv_recenter_window(RaggedGrid *grid, int row) {
-  if (row < grid->window_top) {
-    grid->window_top = row;
-  }
-  if (row > grid->window_top + (RAGGED_GRID_WINDOW_ROWS - 1)) {
-    grid->window_top = row - (RAGGED_GRID_WINDOW_ROWS - 1);
-  }
+void test_ragged_grid__recenter_window(void) {
+  // Inside the window: no move.
+  RaggedGrid grid = prv_grid(3, 0);
+  ragged_grid_recenter_window(&grid, 1);
+  cl_check(grid.window_top == 0);
+
+  // Below the window: the window slides so the target row is its bottom row.
+  grid = prv_grid(3, 0);
+  ragged_grid_recenter_window(&grid, 2); // bottom row of the window: no move
+  cl_check(grid.window_top == 0);
+  ragged_grid_recenter_window(&grid, 3);
+  cl_check(grid.window_top == 1);
+
+  // Above the window: the target row becomes the window's top row.
+  grid = prv_grid(3, 1);
+  ragged_grid_recenter_window(&grid, 0);
+  cl_check(grid.window_top == 0);
+  ragged_grid_recenter_window(&grid, 1); // now inside the window: no move
+  cl_check(grid.window_top == 0);
 }
 
 // Walks from *sel towards the list edge in direction delta, applying the
@@ -184,7 +195,7 @@ static int prv_walk(RaggedGrid *grid, int *sel, int total, int delta, bool *visi
       reflows++;
       ragged_grid_reflow(grid, next, total);
     } else {
-      prv_recenter_window(grid, ragged_grid_row_for_item(grid, next, total));
+      ragged_grid_recenter_window(grid, ragged_grid_row_for_item(grid, next, total));
     }
     *sel = next;
     visited[*sel] = true;
