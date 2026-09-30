@@ -12,6 +12,11 @@ EMOJI_28~color.pbf files are the color-display variants of these fonts. They
 carry the same glyphs, some of them colored, and every notice in this file
 applies to them as well.
 
+The EMOJI_40_PICKER.pbf file is a derived font: each of its glyphs is an
+exact 2× nearest-neighbour upscale of the same codepoint's glyph in
+EMOJI_28.pbf, so it introduces no artwork of its own and every notice in
+this file applies to it as well.
+
 The original community glyphs described below are retained unchanged and remain
 under the Apache License, Version 2.0.
 =============================================================================
