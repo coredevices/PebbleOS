@@ -54,7 +54,8 @@ static const DialogCallbacks s_hint_dialog_callbacks = {
   .unload = prv_hint_dialog_unload,
 };
 
-static SimpleDialog *prv_push_popup(const char *text, const DialogCallbacks *callbacks) {
+static SimpleDialog *prv_push_popup(const char *text, const DialogCallbacks *callbacks,
+                                    ModalPriority priority) {
   SimpleDialog *simple_dialog = simple_dialog_create("ButtonLock");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
   const char *msg = i18n_get(text, dialog);
@@ -64,17 +65,26 @@ static SimpleDialog *prv_push_popup(const char *text, const DialogCallbacks *cal
     dialog_set_callbacks(dialog, callbacks, NULL);
   }
   i18n_free(msg, dialog);
-  // Alert: above notifications/calls so the feedback is visible over them, but
-  // below BT pairing and alarms, which must never be hidden by a lock toast.
-  simple_dialog_push(simple_dialog, modal_manager_get_window_stack(ModalPriorityAlert));
+  simple_dialog_push(simple_dialog, modal_manager_get_window_stack(priority));
   return simple_dialog;
+}
+
+//! The hint answers a button press, so it has to be readable no matter what is
+//! on screen: at Alert an alarm or a pairing prompt would render over it and
+//! the watch would just look dead. Pushing onto the interrupting modal's own
+//! stack puts the hint on top of it for the popup's lifetime, without adding a
+//! priority above ModalPriorityAlarm.
+static ModalPriority prv_hint_priority(void) {
+  const ModalPriority top = modal_manager_get_top_focused_priority();
+  return (top > ModalPriorityAlert) ? top : ModalPriorityAlert;
 }
 
 static void prv_show_hint_popup(void) {
   if (s_hint_dialog) {
     return;
   }
-  s_hint_dialog = prv_push_popup(i18n_noop("Hold Back + Down to unlock"), &s_hint_dialog_callbacks);
+  s_hint_dialog = prv_push_popup(i18n_noop("Hold Back + Down to unlock"), &s_hint_dialog_callbacks,
+                                 prv_hint_priority());
 }
 
 static void prv_pop_hint_popup(void) {
@@ -111,7 +121,11 @@ static void prv_set_locked(bool locked) {
   }
 
   prv_pop_hint_popup();
-  prv_push_popup(s_locked ? i18n_noop("Buttons Locked") : i18n_noop("Buttons Unlocked"), NULL);
+  // Alert: above notifications/calls so the feedback is visible over them, but
+  // below BT pairing and alarms, which must never be hidden by a lock toast the
+  // user did not ask for.
+  prv_push_popup(s_locked ? i18n_noop("Buttons Locked") : i18n_noop("Buttons Unlocked"), NULL,
+                 ModalPriorityAlert);
 
   prv_auto_lock_update();
 }

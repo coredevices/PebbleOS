@@ -72,6 +72,12 @@ ModalProperty modal_manager_get_properties(void) {
   return s_modal_properties;
 }
 
+static ModalPriority s_modal_top_focused_priority = ModalPriorityInvalid;
+
+ModalPriority modal_manager_get_top_focused_priority(void) {
+  return s_modal_enabled ? s_modal_top_focused_priority : ModalPriorityInvalid;
+}
+
 static bool s_watchface_running;
 
 bool app_manager_is_watchface_running(void) {
@@ -262,6 +268,7 @@ void test_button_lock__initialize(void) {
   s_num_dialogs_popped = 0;
   s_last_dialog_text = NULL;
   s_last_dialog_priority = ModalPriorityInvalid;
+  s_modal_top_focused_priority = ModalPriorityInvalid;
 }
 
 void test_button_lock__cleanup(void) {
