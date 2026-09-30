@@ -42,6 +42,7 @@ typedef struct AudioState {
   void *playback_context;
   uint32_t playback_time;
   bool playback_started;
+  bool running;
   //! Set while a prv_audio_trans_bg refill callback is queued on the system
   //! task; the DMA ISR must not enqueue another until it has run.
   volatile bool callback_pending;
