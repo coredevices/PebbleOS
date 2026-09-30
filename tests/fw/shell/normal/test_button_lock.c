@@ -7,6 +7,7 @@
 #include "applib/ui/dialogs/simple_dialog.h"
 #include "kernel/events.h"
 #include "kernel/ui/modals/modal_manager.h"
+#include "resource/resource_ids.auto.h"
 #include "pbl/services/battery/battery_state.h"
 #include "shell/prefs.h"
 
@@ -143,6 +144,9 @@ Dialog *simple_dialog_get_dialog(SimpleDialog *simple_dialog) {
 
 void dialog_set_text(Dialog *dialog, const char *text) {
   s_last_dialog_text = text;
+}
+
+void dialog_set_icon(Dialog *dialog, uint32_t icon_id) {
 }
 
 void dialog_set_timeout(Dialog *dialog, uint32_t timeout) {

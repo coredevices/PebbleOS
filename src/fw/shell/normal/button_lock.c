@@ -10,6 +10,7 @@
 #include "kernel/event_loop.h"
 #include "kernel/ui/modals/modal_manager.h"
 #include "process_management/app_manager.h"
+#include "resource/resource_ids.auto.h"
 #include "pbl/services/battery/battery_state.h"
 #include "shell/normal/watchface.h"
 #include "shell/prefs.h"
@@ -60,6 +61,7 @@ static SimpleDialog *prv_push_popup(const char *text, const DialogCallbacks *cal
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
   const char *msg = i18n_get(text, dialog);
   dialog_set_text(dialog, msg);
+  dialog_set_icon(dialog, RESOURCE_ID_BUTTON_LOCK);
   dialog_set_timeout(dialog, BUTTON_LOCK_POPUP_TIMEOUT_MS);
   if (callbacks) {
     dialog_set_callbacks(dialog, callbacks, NULL);
