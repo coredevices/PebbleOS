@@ -214,6 +214,7 @@ pbl_clar_test(test_timeline_layouts
     fw/services/timeline/weather_layout.c
     fw/services/weather/weather_types.c
     fw/shell/system_theme.c
+    fw/shell/system_theme_style.c
     tests/stubs/stubs_clock.c
     tests/stubs/stubs_timeline_layout.c
   PLATFORMS obelix gabbro asterix
