@@ -258,13 +258,21 @@ ClickManager *modal_manager_get_click_manager(void) {
   return &s_modal_window_click_manager;
 }
 
-static WindowStack *prv_find_window_stack(ModalContextFilterCallback callback, void *data) {
+static ModalPriority prv_find_priority(ModalContextFilterCallback callback, void *data) {
   for (ModalPriority idx = NumModalPriorities - 1; idx >= ModalPriorityMin; idx--) {
     if (callback(&s_modal_window_stacks[idx], data)) {
-      return &s_modal_window_stacks[idx].window_stack;
+      return idx;
     }
   }
-  return nullptr;
+  return ModalPriorityInvalid;
+}
+
+static WindowStack *prv_find_window_stack(ModalContextFilterCallback callback, void *data) {
+  const ModalPriority priority = prv_find_priority(callback, data);
+  if (priority == ModalPriorityInvalid) {
+    return nullptr;
+  }
+  return &s_modal_window_stacks[priority].window_stack;
 }
 
 WindowStack *modal_manager_find_window_stack(ModalContextFilterCallback filter_cb, void *ctx) {
@@ -284,6 +292,13 @@ void modal_manager_mark_dirty(void) {
       layer_mark_dirty(window_get_root_layer(window));
     }
   }
+}
+
+ModalPriority modal_manager_get_top_focused_priority(void) {
+  if (!modal_manager_get_enabled()) {
+    return ModalPriorityInvalid;
+  }
+  return prv_find_priority(prv_has_visible_focusable_window, nullptr);
 }
 
 Window *modal_manager_get_top_window(void) {
