@@ -368,6 +368,7 @@ void audec_start(AudioDevice* audio_device, AudioTransCB cb) {
     state->trans_cb = cb;
 
     soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
+    state->running = true;
 
     prv_allocate_buffers(state);
 
@@ -423,6 +424,10 @@ void audec_stop(AudioDevice* audio_device) {
     AudioDeviceState* state = audio_device->state;
     AUDCODEC_HandleTypeDef *haudcodec = &state->audcodec;
 
+    if (!state->running) {
+        return;
+    }
+
     prv_bf0_disable_pll(state);
 
     HAL_NVIC_DisableIRQ(audio_device->audec_dma_irq);
@@ -438,6 +443,7 @@ void audec_stop(AudioDevice* audio_device) {
     prv_free_buffers(state);
     memset(haudcodec->buf[HAL_AUDCODEC_DAC_CH0], 0, haudcodec->bufSize);
 
+    state->running = false;
     soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
