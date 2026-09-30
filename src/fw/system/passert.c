@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "pbl/kernel/compiler.h"
+#include "pbl/kernel/debug.h"
 
 #define CORE_NUMBER 0
 
@@ -98,6 +99,10 @@ PBL_NORETURN void passert_failed_no_message_with_lr(const char *filename, int li
 
 PBL_NORETURN void passert_failed_no_message(const char *filename, int line_number) {
   handle_passert_failed(filename, line_number, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", NULL);
+}
+
+PBL_NORETURN void pbl_kernel_assert_failed(const char *filename, int line) {
+  handle_passert_failed(filename, line, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", NULL);
 }
 
 PBL_NORETURN void wtf(void) {

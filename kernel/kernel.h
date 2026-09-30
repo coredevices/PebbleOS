@@ -9,14 +9,18 @@
 #include "pbl/kernel/irq.h"
 #include "pbl/kernel/sched.h"
 #include "pbl/kernel/thread.h"
-#include "pbl/os/assert.h"
 
 #include "arch.h"
 
 //! Internal interface between the objects, the scheduler and the arch code.
 //! Everything here is called with interrupts locked unless noted.
 
-#define KERNEL_ASSERT(x) OS_ASSERT(x)
+#define KERNEL_ASSERT(x)                                 \
+  do {                                                   \
+    if (PBL_UNLIKELY(!(x))) {                            \
+      pbl_kernel_assert_failed(__FILE_NAME__, __LINE__); \
+    }                                                    \
+  } while (0)
 
 //! Woken by resume after being suspended while blocked.
 #define KWAKE_INTERRUPTED (-EINTR)

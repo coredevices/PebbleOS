@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "pbl/kernel/compiler.h"
 #include "pbl/kernel/thread.h"
 
 //! Introspection for core dumps, fault handling, the task watchdog and telemetry.
@@ -73,3 +74,6 @@ size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
                                  uint32_t *total_run_time);
 
 size_t pbl_thread_count(void);
+
+//! Implemented by the platform. Called when a kernel assertion fails.
+PBL_NORETURN void pbl_kernel_assert_failed(const char *filename, int line);

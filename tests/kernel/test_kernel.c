@@ -4,7 +4,6 @@
 #include "clar.h"
 
 #include "pbl/kernel/kernel.h"
-#include "pbl/os/assert.h"
 
 #include "kernel_test.h"
 
@@ -18,13 +17,9 @@
 // a time under the kernel's scheduling decisions, and time only moves when a
 // test delivers ticks or every thread is blocked.
 
-PBL_NORETURN void os_assertion_failed(const char *filename, int line) {
+PBL_NORETURN void pbl_kernel_assert_failed(const char *filename, int line) {
   fprintf(stderr, "kernel assert at %s:%d\n", filename, line);
   abort();
-}
-
-PBL_NORETURN void os_assertion_failed_lr(const char *filename, int line, uint32_t lr) {
-  os_assertion_failed(filename, line);
 }
 
 #define STACK 4096
