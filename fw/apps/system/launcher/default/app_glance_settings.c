@@ -21,12 +21,12 @@
 
 #include <applib/battery_state_service.h>
 #include <applib/graphics/gpath.h>
+#include <applib/graphics/text_resources.h>
 #include <apps/system/timeline/text_node.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <shell/system_theme.h>
 
 //! Horizontal span of one row of the charging bolt, top to bottom
 typedef struct ChargingIconRow {
@@ -34,57 +34,16 @@ typedef struct ChargingIconRow {
   uint8_t w;
 } ChargingIconRow;
 
-static const ChargingIconRow s_charging_icon_rows_medium[] = {
+static const ChargingIconRow s_charging_icon_rows_small[] = {
   {4, 1}, {3, 2}, {2, 2}, {1, 3}, {0, 7}, {3, 3}, {3, 2}, {2, 2}, {2, 1},
 };
 
-static const ChargingIconRow s_charging_icon_rows_extra_large[] = {
+static const ChargingIconRow s_charging_icon_rows_large[] = {
   {5, 1}, {4, 2}, {3, 3}, {2, 3}, {1, 3}, {0, 9}, {0, 9}, {4, 3}, {3, 3}, {3, 2}, {2, 2}, {2, 1},
 };
 
-typedef struct SettingsGlanceIconStyle {
-  GSize battery_size;
-  int16_t charging_width;
-  const ChargingIconRow *charging_rows;
-  uint8_t num_charging_rows;
-  //! Pushes the icons down from the top of the subtitle line to center them on the text
-  int16_t offset_y;
-} SettingsGlanceIconStyle;
-
-static const SettingsGlanceIconStyle s_icon_styles[NumPreferredContentSizes] = {
-  //! @note this is the same as Medium until Small is designed
-  [PreferredContentSizeSmall] =
-      {
-        .battery_size = {16, 9},
-        .charging_width = 7,
-        .charging_rows = s_charging_icon_rows_medium,
-        .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_medium),
-        .offset_y = 2,
-      },
-  [PreferredContentSizeMedium] =
-      {
-        .battery_size = {16, 9},
-        .charging_width = 7,
-        .charging_rows = s_charging_icon_rows_medium,
-        .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_medium),
-        .offset_y = 2,
-      },
-  [PreferredContentSizeLarge] =
-      {
-        .battery_size = {16, 9},
-        .charging_width = 7,
-        .charging_rows = s_charging_icon_rows_medium,
-        .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_medium),
-        .offset_y = 5,
-      },
-  [PreferredContentSizeExtraLarge] = {
-    .battery_size = {21, 12},
-    .charging_width = 9,
-    .charging_rows = s_charging_icon_rows_extra_large,
-    .num_charging_rows = ARRAY_LENGTH(s_charging_icon_rows_extra_large),
-    .offset_y = 7,
-  },
-};
+#define CHARGING_ICON_SMALL_WIDTH 7
+#define CHARGING_ICON_LARGE_WIDTH 9
 
 typedef struct LauncherAppGlanceSettingsState {
   BatteryChargeState battery_charge_state;
@@ -101,7 +60,6 @@ typedef struct LauncherAppGlanceSettings {
   char battery_percent_text[5]; //!< longest string is "100%" (4 characters + 1 for NULL terminator)
   KinoReel *icon;
   uint32_t icon_resource_id;
-  const SettingsGlanceIconStyle *icon_style;
   uint8_t subtitle_font_height;
   LauncherAppGlanceSettingsState glance_state;
   EventServiceInfo battery_state_event_info;
@@ -125,6 +83,13 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
   return NULL_SAFE_FIELD_ACCESS(settings_glance, title, nullptr);
 }
 
+//! Returns where the subtitle font draws its digits, relative to the top of a subtitle line
+static GRect prv_get_digit_frame(GContext *ctx, LauncherAppGlanceStructured *structured_glance) {
+  GFont font = structured_glance->subtitle_font;
+  const GRect glyph = text_resources_get_glyph_frame(&ctx->font_cache, '0', font);
+  return GRect(0, glyph.origin.y - fonts_get_font_cap_offset(font), 0, glyph.size.h);
+}
+
 static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
                                            [[maybe_unused]] const GTextNodeDrawConfig *config,
                                            bool render, GSize *size_out, void *user_data) {
@@ -132,21 +97,32 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
 
-  const SettingsGlanceIconStyle *style = settings_glance->icon_style;
+  // Stretch the closest bolt to the digit height
+  const GRect digits = prv_get_digit_frame(ctx, structured_glance);
+  const int16_t h = digits.size.h;
+  const bool is_large = (h >= (int16_t)ARRAY_LENGTH(s_charging_icon_rows_large));
+  const ChargingIconRow *rows = is_large ? s_charging_icon_rows_large : s_charging_icon_rows_small;
+  const int16_t num_rows = is_large ? ARRAY_LENGTH(s_charging_icon_rows_large)
+                                    : ARRAY_LENGTH(s_charging_icon_rows_small);
+  const int16_t width =
+      (is_large ? CHARGING_ICON_LARGE_WIDTH : CHARGING_ICON_SMALL_WIDTH) * h / num_rows;
 
   if (render) {
     // Icons are always black on color displays, white on B&W when highlighted
     graphics_context_set_fill_color(
         ctx, PBL_IF_COLOR_ELSE(GColorBlack, launcher_app_glance_structured_get_highlight_color(
                                                 structured_glance)));
-    for (unsigned int i = 0; i < style->num_charging_rows; i++) {
-      const ChargingIconRow *row = &style->charging_rows[i];
-      graphics_fill_rect(ctx, &GRect(rect->origin.x + row->x, rect->origin.y + i, row->w, 1));
+    for (int16_t y = 0; y < h; y++) {
+      const ChargingIconRow *row = &rows[y * num_rows / h];
+      const int16_t x = row->x * h / num_rows;
+      const int16_t w = MAX(1, (row->x + row->w) * h / num_rows - x);
+      graphics_fill_rect(ctx,
+                         &GRect(rect->origin.x + x, rect->origin.y + digits.origin.y + y, w, 1));
     }
   }
 
   if (size_out) {
-    *size_out = GSize(style->charging_width, settings_glance->subtitle_font_height);
+    *size_out = GSize(width, settings_glance->subtitle_font_height);
   }
 }
 
@@ -157,19 +133,29 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
 
-  const GSize battery_silhouette_icon_size = settings_glance->icon_style->battery_size;
+  // Match the digit height, keeping the proportions of the original 16x9 battery
+  const GRect digits = prv_get_digit_frame(ctx, structured_glance);
+  const int16_t h = digits.size.h;
+  const int16_t w = h * 16 / 9;
+  const int16_t border = MAX(2, h * 2 / 9);
+  const int16_t tip_w = border;
 
   if (render) {
-    const int16_t w = battery_silhouette_icon_size.w;
-    const int16_t h = battery_silhouette_icon_size.h;
+    const GPoint origin = GPoint(rect->origin.x, rect->origin.y + digits.origin.y);
     const GPoint battery_silhouette_path_points[] = {
-      {0, 0},         {w - 1, 0},     {w - 1, 1},     {w + 1, 2},
-      {w + 1, h - 3}, {w - 1, h - 3}, {w - 1, h - 1}, {0, h - 1},
+      {0, 0},
+      {w - 1, 0},
+      {w - 1, border - 1},
+      {w - 1 + tip_w, border},
+      {w - 1 + tip_w, h - 1 - border},
+      {w - 1, h - 1 - border},
+      {w - 1, h - 1},
+      {0, h - 1},
     };
     GPath battery_silhouette_path = (GPath){
       .num_points = ARRAY_LENGTH(battery_silhouette_path_points),
       .points = (GPoint *)battery_silhouette_path_points,
-      .offset = rect->origin,
+      .offset = origin,
     };
 
     const GColor battery_silhouette_color =
@@ -181,13 +167,13 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
 
     // Draw the battery silhouette
     const GRect battery_silhouette_frame = (GRect){
-      .origin = rect->origin,
-      .size = battery_silhouette_icon_size,
+      .origin = origin,
+      .size = GSize(w, h),
     };
     gpath_draw_filled(ctx, &battery_silhouette_path);
 
     // Inset the filled area
-    GRect battery_fill_rect = grect_inset_internal(battery_silhouette_frame, 3, 2);
+    GRect battery_fill_rect = grect_inset_internal(battery_silhouette_frame, border + 1, border);
 #if !PBL_COLOR
     // Fill the battery silhouette all the way for B&W, in order to make the BG black always.
     graphics_context_set_fill_color(ctx, GColorBlack);
@@ -205,7 +191,7 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   }
 
   if (size_out) {
-    *size_out = GSize(battery_silhouette_icon_size.w, settings_glance->subtitle_font_height);
+    *size_out = GSize(w, settings_glance->subtitle_font_height);
   }
 }
 
@@ -257,12 +243,8 @@ static GTextNode *prv_create_subtitle_node(LauncherAppGlanceStructured *structur
                                            vertically_centered_battery_percent_text_node);
   }
 
-  const int16_t subtitle_icon_offset_y = settings_glance->icon_style->offset_y;
-
   GTextNodeCustom *battery_icon_node =
       graphics_text_node_create_custom(prv_battery_icon_node_draw_cb, structured_glance);
-  // Push the battery icon down to center it properly
-  battery_icon_node->node.offset.y += subtitle_icon_offset_y;
 
   // Achieves the design spec'd 6 px horizontal spacing b/w the battery icon and charging icon
   battery_icon_node->node.margin.w = 7;
@@ -274,8 +256,6 @@ static GTextNode *prv_create_subtitle_node(LauncherAppGlanceStructured *structur
   if (settings_glance->glance_state.battery_charge_state.is_plugged) {
     GTextNodeCustom *charging_icon_node =
         graphics_text_node_create_custom(prv_charging_icon_node_draw_cb, structured_glance);
-    // Push the charging icon down to center it properly
-    charging_icon_node->node.offset.y += subtitle_icon_offset_y;
     GTextNode *vertically_centered_charging_icon_node =
         prv_wrap_text_node_in_vertically_centered_container(&charging_icon_node->node);
     graphics_text_node_container_add_child(&horizontal_container_node->container,
@@ -434,8 +414,6 @@ LauncherAppGlance *launcher_app_glance_settings_create(const AppMenuNode *node) 
   const size_t title_size = sizeof(settings_glance->title);
   strncpy(settings_glance->title, node->name, title_size);
   settings_glance->title[title_size - 1] = '\0';
-
-  settings_glance->icon_style = &s_icon_styles[system_theme_get_content_size()];
 
   // Cache the subtitle font height for simplifying layout calculations
   settings_glance->subtitle_font_height = fonts_get_font_height(
