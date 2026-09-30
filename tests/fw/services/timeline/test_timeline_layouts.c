@@ -310,6 +310,31 @@ void test_timeline_layouts__weather(void) {
 #endif
 }
 
+static const TimelineLayoutTestConfig s_weather_config = {
+  .layout_id = LayoutIdWeather,
+  .title = "The Greatest Sunrise Ever",
+  .subtitle = "90°/60°",
+  .location_name = "Redwood City",
+  .body = "A clear sky. Low around 60F.",
+  .icon_timeline_res_id = TIMELINE_RESOURCE_PARTLY_CLOUDY,
+  .weather_time_type = WeatherTimeType_Pin,
+};
+
+void test_timeline_layouts__weather_small(void) {
+  prv_check_layout_for_size(PreferredContentSizeSmall, &s_weather_config, TEST_PBI_FILE_X(peek),
+                            TEST_PBI_FILE_X(details1));
+}
+
+void test_timeline_layouts__weather_medium(void) {
+  prv_check_layout_for_size(PreferredContentSizeMedium, &s_weather_config, TEST_PBI_FILE_X(peek),
+                            TEST_PBI_FILE_X(details1));
+}
+
+void test_timeline_layouts__weather_extra_large(void) {
+  prv_check_layout_for_size(PreferredContentSizeExtraLarge, &s_weather_config,
+                            TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+}
+
 static void prv_check_renders_like(const TimelineLayoutTestConfig *config,
                                    const TimelineLayoutTestConfig *reference,
                                    size_t num_down_clicks) {
@@ -383,4 +408,44 @@ void test_timeline_layouts__sports_ingame(void) {
 
   prv_construct_and_render_sports_layout(GameStateInGame, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details1)));
+}
+
+//! Checks a sports pin's peek and first page of details at the given content size
+static void prv_check_sports_layout_for_size(PreferredContentSize size, GameState state,
+                                             const char *peek_file, const char *details_file) {
+  system_theme_set_content_size(size);
+  prv_construct_and_render_sports_layout(state, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, peek_file));
+  prv_construct_and_render_sports_layout(state, 1);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, details_file));
+}
+
+void test_timeline_layouts__sports_pregame_small(void) {
+  prv_check_sports_layout_for_size(PreferredContentSizeSmall, GameStatePreGame,
+                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+}
+
+void test_timeline_layouts__sports_pregame_medium(void) {
+  prv_check_sports_layout_for_size(PreferredContentSizeMedium, GameStatePreGame,
+                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+}
+
+void test_timeline_layouts__sports_pregame_extra_large(void) {
+  prv_check_sports_layout_for_size(PreferredContentSizeExtraLarge, GameStatePreGame,
+                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+}
+
+void test_timeline_layouts__sports_ingame_small(void) {
+  prv_check_sports_layout_for_size(PreferredContentSizeSmall, GameStateInGame,
+                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+}
+
+void test_timeline_layouts__sports_ingame_medium(void) {
+  prv_check_sports_layout_for_size(PreferredContentSizeMedium, GameStateInGame,
+                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+}
+
+void test_timeline_layouts__sports_ingame_extra_large(void) {
+  prv_check_sports_layout_for_size(PreferredContentSizeExtraLarge, GameStateInGame,
+                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
 }
