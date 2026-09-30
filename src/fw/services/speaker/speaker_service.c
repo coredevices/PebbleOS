@@ -309,7 +309,16 @@ static void prv_audio_trans_cb(uint32_t *free_size) {
   if (s_state.source_type == SpeakerSourceStream && s_state.stream_realtime) {
     prv_refill_realtime_locked();
   } else {
-    prv_refill_locked();
+    // Catch up queued PCM without inserting silence between short packets.
+    uint32_t refill_count =
+        s_state.source_type == SpeakerSourceStream ? *free_size / sizeof(s_state.refill_buf) : 1;
+    while (refill_count-- && s_state.state != SpeakerStateIdle) {
+      prv_refill_locked();
+      if (s_state.source_type == SpeakerSourceStream &&
+          pcm_stream_available(&s_state.pcm_stream) == 0) {
+        break;
+      }
+    }
   }
   pbl_mutex_unlock(&s_lock);
 }
