@@ -156,8 +156,8 @@ static void prv_expandable_dialog_load(Window *window) {
     w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
         right_aligned_box_reduction;
 #else
-    x = content_x_start;
     w = frame.size.w - right_margin_px - action_bar_offset - right_aligned_box_reduction;
+    x = (show_action_bar && !action_bar_on_right) ? frame.size.w - w : 0;
 #endif
     y = icon ? icon_offset + icon_size.h : -HEADER_OFFSET;
 
@@ -187,6 +187,11 @@ static void prv_expandable_dialog_load(Window *window) {
   y = (icon ? icon_offset + icon_size.h : -TEXT_OFFSET) + header_content_height;
   w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
       right_aligned_box_reduction;
+#if PBL_ROUND
+  if (show_action_bar && !action_bar_on_right) {
+    x = frame.size.w - left_margin_px - w;
+  }
+#endif
   h = INT16_MAX; // height is clamped to content size
   GFont font = expandable_dialog->body_font;
 
@@ -249,12 +254,13 @@ static void prv_expandable_dialog_load(Window *window) {
     window_set_click_config_provider_with_context(window, prv_config_provider, expandable_dialog);
   }
 
+  PBL_UNUSED const uint16_t icon_right_x = frame.size.w - right_margin_px - left_margin_px -
+                                           action_bar_offset - right_aligned_box_reduction -
+                                           icon_size.h;
   x = PBL_IF_RECT_ELSE(
       content_x_start + left_margin_px,
       (show_action_bar)
-          ? (action_bar_on_right ? (frame.size.w - right_margin_px - left_margin_px -
-                                    action_bar_offset - right_aligned_box_reduction - icon_size.h)
-                                 : (content_x_start + left_margin_px))
+          ? (action_bar_on_right ? icon_right_x : frame.size.w - icon_right_x - icon_size.w)
           : (90 - icon_size.h / 2));
   y = icon_offset + PBL_IF_RECT_ELSE(0, 5);
   if (dialog_init_icon_layer(dialog, icon, GPoint(x, y), false /* not animated */)) {
