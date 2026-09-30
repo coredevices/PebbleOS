@@ -4,4 +4,3 @@
 add_subdirectory(c)
 add_subdirectory(util)
 add_subdirectory(btutil)
-add_subdirectory(os)
