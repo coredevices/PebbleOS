@@ -31,10 +31,12 @@ static void prv_save(int value) {
 
 #ifdef CONFIG_TOUCH
 
+#include "applib/fonts/fonts.h"
 #include "applib/ui/value_picker_window.h"
 
 typedef struct SpeakerVolumeWindowData {
   ValuePickerWindow picker_window;
+  ValuePickerStyle picker_style;
 } SpeakerVolumeWindowData;
 
 static void prv_changed(ValuePickerWindow *picker_window, void *context) {
@@ -62,7 +64,10 @@ void speaker_volume_window_push(void) {
     .max_value = 100,
     .step = VOLUME_STEP,
   };
-  value_picker_window_init(&data->picker_window, &content, NULL,
+  data->picker_style = *value_picker_default_style();
+  data->picker_style.value_font_key = FONT_KEY_LECO_38_BOLD_NUMBERS;
+  data->picker_style.unit_font_key = FONT_KEY_LECO_38_BOLD_NUMBERS;
+  value_picker_window_init(&data->picker_window, &content, &data->picker_style,
                            (ValuePickerWindowCallbacks){
                              .changed = prv_changed,
                              .selected = prv_selected,

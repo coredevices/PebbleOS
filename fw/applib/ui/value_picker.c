@@ -46,6 +46,7 @@ const ValuePickerStyle *value_picker_default_style(void) {
     .metadata_color = GColorBlack,
     .neighbor_color = GColorDarkGray,
     .value_font_key = FONT_KEY_BITHAM_34_MEDIUM_NUMBERS,
+    .unit_font_key = FONT_KEY_GOTHIC_18_BOLD,
   };
   return &s_style;
 }
@@ -77,7 +78,8 @@ static void prv_draw_current_value(GContext *ctx, const GRect *content_bounds,
   prv_format(content, value, sizeof(value), content->value);
   const char *unit = content->unit ? content->unit : "";
   GFont value_font = fonts_get_system_font(style->value_font_key);
-  GFont unit_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  GFont unit_font = fonts_get_system_font(style->unit_font_key);
+  const int16_t unit_y_offset = (unit_font == value_font) ? 0 : 16;
   const GRect measure_frame = GRect(0, 0, content_bounds->size.w, 48);
   const int16_t value_width =
       app_graphics_text_layout_get_content_size(
@@ -96,7 +98,8 @@ static void prv_draw_current_value(GContext *ctx, const GRect *content_bounds,
   if (unit_width) {
     graphics_context_set_text_color(ctx, style->metadata_color);
     graphics_draw_text(ctx, unit, unit_font,
-                       GRect(value_x + value_width + spacing, y + 16, unit_width, 24),
+                       GRect(value_x + value_width + spacing, y + unit_y_offset, unit_width,
+                             48 - unit_y_offset),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   }
 }

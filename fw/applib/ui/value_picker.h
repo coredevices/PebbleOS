@@ -19,6 +19,7 @@ typedef struct ValuePickerStyle {
   GColor metadata_color;
   GColor neighbor_color;
   const char *value_font_key;
+  const char *unit_font_key;
 } ValuePickerStyle;
 
 typedef struct ValuePickerContent {
