@@ -130,6 +130,32 @@ void test_text_resources__get_glyph_multiple(void) {
   cl_assert_equal_m(c_glyph_data_bytes, glyph->data, glyph_size_bytes);
 }
 
+void test_text_resources__glyph_frame(void) {
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+
+  const GRect frame = text_resources_get_glyph_frame(&s_font_cache, '0', &s_font_info);
+  const GlyphData *glyph = text_resources_get_glyph(&s_font_cache, '0', &s_font_info, nullptr);
+  cl_assert_equal_i(frame.origin.x, glyph->header.left_offset_px);
+  cl_assert_equal_i(frame.origin.y, glyph->header.top_offset_px);
+  cl_assert_equal_i(frame.size.w, glyph->header.width_px);
+  cl_assert_equal_i(frame.size.h, glyph->header.height_px);
+  // A digit sits inside the line of text
+  cl_assert(frame.size.h > 0);
+  cl_assert(frame.origin.y > 0);
+  cl_assert(frame.origin.y + frame.size.h <= s_font_info.max_height);
+}
+
+void test_text_resources__glyph_frame_of_missing_glyph(void) {
+  cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_18, 0, &s_font_info));
+
+  // A codepoint the font lacks draws the wildcard box, so it has the box's frame
+  const GRect missing = text_resources_get_glyph_frame(&s_font_cache, 0x4E00, &s_font_info);
+  const GRect wildcard = text_resources_get_glyph_frame(
+      &s_font_cache, s_font_info.base.md.wildcard_codepoint, &s_font_info);
+  cl_assert(missing.size.h > 0);
+  cl_assert_equal_m(&missing, &wildcard, sizeof(GRect));
+}
+
 void test_text_resources__init_backup_font(void) {
   // load the built in fallback font
   uint32_t font_fallback = RESOURCE_ID_FONT_FALLBACK_INTERNAL;

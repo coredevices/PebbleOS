@@ -10,6 +10,7 @@
 
 #include <applib/fonts/codepoint.h>
 #include <applib/fonts/fonts_private.h>
+#include <applib/graphics/gtypes.h>
 
 typedef struct PBL_PACKED {
   uint8_t width_px;
@@ -140,6 +141,12 @@ typedef struct {
 //! @note for color glyphs only the header is returned; the body is streamed from location_out
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
                                           FontInfo *font_info, GlyphLocation *location_out);
+
+//! @return Where a glyph draws relative to the start of its line of text. A codepoint the font
+//! lacks gives the frame of the glyph drawn in its place (from the fallback font, the wildcard
+//! box or a space), as text_resources_get_glyph() does; GRectZero only if none of those load.
+GRect text_resources_get_glyph_frame(FontCache *font_cache, Codepoint codepoint,
+                                     FontInfo *font_info);
 
 bool text_resources_glyph_is_color(const GlyphLocation *location);
 
