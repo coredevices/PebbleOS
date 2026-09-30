@@ -174,10 +174,17 @@ static HAL_StatusTypeDef prv_display_update_start(void) {
   dcache_align(&fb_addr, &fb_size);
   dcache_flush((const void *)fb_addr, fb_size);
 
-  // Only send the dirty region that was converted to RGB332 format
-  HAL_LCDC_SetROIArea(&state->hlcdc, 0, s_update_y0, PBL_DISPLAY_WIDTH - 1, s_update_y1);
-  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer, 0, s_update_y0,
-                        PBL_DISPLAY_WIDTH - 1, s_update_y1);
+  // The ROI is in panel lines, which are mirrored when VMirror is on
+  uint16_t roi_y0 = s_update_y0;
+  uint16_t roi_y1 = s_update_y1;
+  if (s_rotated_180) {
+    roi_y0 = PBL_DISPLAY_HEIGHT - 1 - s_update_y1;
+    roi_y1 = PBL_DISPLAY_HEIGHT - 1 - s_update_y0;
+  }
+
+  HAL_LCDC_SetROIArea(&state->hlcdc, 0, roi_y0, PBL_DISPLAY_WIDTH - 1, roi_y1);
+  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer, 0, 0,
+                        PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
   return HAL_LCDC_SendLayerData_IT(&state->hlcdc);
 }
 
