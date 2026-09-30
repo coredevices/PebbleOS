@@ -15,11 +15,26 @@ typedef struct SystemThemeMenuCellStyle {
   int16_t title_subtitle_left_margin;
 } SystemThemeMenuCellStyle;
 
+//! Sizes of option menus
+typedef struct SystemThemeOptionMenuStyle {
+#if PBL_RECT
+  //! Cell heights for single and double line content, or 0 for the basic menu cell height
+  int16_t single_line_cell_height;
+  int16_t double_line_cell_height;
+#endif
+  int16_t top_inset;
+  int16_t right_icon_spacing;
+  int16_t text_inset_single;
+  int16_t text_inset_multi;
+  int16_t right_text_inset_with_icon;
+} SystemThemeOptionMenuStyle;
+
 //! Everything the system UI draws differently for each preferred content size
 typedef struct SystemThemeStyle {
   //! Font keys for each text style
   const char *fonts[TextStyleFontCount];
   SystemThemeMenuCellStyle menu_cell;
+  SystemThemeOptionMenuStyle option_menu;
 } SystemThemeStyle;
 
 //! @return The style for the user's preferred content size

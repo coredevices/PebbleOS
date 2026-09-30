@@ -48,6 +48,14 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .horizontal_inset = 5,
               .title_subtitle_left_margin = 30,
             },
+        //! @note this is the same as Medium until Small is designed
+        .option_menu =
+            {
+#if PBL_RECT
+              .double_line_cell_height = 56,
+#endif
+              .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
+            },
       },
   [PreferredContentSizeMedium] =
       {
@@ -77,6 +85,13 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .small_cell_height = 34,
               .horizontal_inset = 5,
               .title_subtitle_left_margin = 30,
+            },
+        .option_menu =
+            {
+#if PBL_RECT
+              .double_line_cell_height = 56,
+#endif
+              .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
             },
       },
   [PreferredContentSizeLarge] =
@@ -114,6 +129,17 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .horizontal_inset = 10,
               .title_subtitle_left_margin = 34,
             },
+        .option_menu =
+            {
+#if PBL_RECT
+              .single_line_cell_height = 46,
+#endif
+              .top_inset = 1,
+              .right_icon_spacing = PBL_IF_RECT_ELSE(10, 35),
+              .text_inset_single = -1,
+              .text_inset_multi = -3,
+              .right_text_inset_with_icon = 4,
+            },
       },
   [PreferredContentSizeExtraLarge] = {
     .fonts =
@@ -139,12 +165,23 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
           [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
           [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
         },
-    .menu_cell = {
-      .basic_cell_height = PBL_IF_RECT_ELSE(64, 85),
-      .app_basic_cell_height = 85,
-      .small_cell_height = 52,
-      .horizontal_inset = 10,
-      .title_subtitle_left_margin = 34,
+    .menu_cell =
+        {
+          .basic_cell_height = PBL_IF_RECT_ELSE(64, 85),
+          .app_basic_cell_height = 85,
+          .small_cell_height = 52,
+          .horizontal_inset = 10,
+          .title_subtitle_left_margin = 34,
+        },
+    .option_menu = {
+#if PBL_RECT
+      .single_line_cell_height = 56,
+#endif
+      .top_inset = 1,
+      .right_icon_spacing = PBL_IF_RECT_ELSE(10, 35),
+      .text_inset_single = -1,
+      .text_inset_multi = -3,
+      .right_text_inset_with_icon = 4,
     },
   },
 };

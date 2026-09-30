@@ -7,57 +7,11 @@
 #include <applib/ui/menu_text_scroll.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
+#include <shell/system_theme_style.h>
 #include <system/passert.h>
 
-typedef struct OptionMenuStyle {
-#if PBL_RECT
-  uint16_t cell_heights[OptionMenuContentTypeCount];
-#endif
-  int16_t top_inset;
-  int16_t right_icon_spacing;
-  int16_t text_inset_single;
-  int16_t text_inset_multi;
-  int16_t right_text_inset_with_icon;
-} OptionMenuStyle;
-
-static const OptionMenuStyle s_style_medium = {
-#if PBL_RECT
-  .cell_heights[OptionMenuContentType_DoubleLine] = 56,
-#endif
-  .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
-};
-
-static const OptionMenuStyle s_style_large = {
-#if PBL_RECT
-  .cell_heights[OptionMenuContentType_SingleLine] = 46,
-#endif
-  .top_inset = 1,
-  .right_icon_spacing = PBL_IF_RECT_ELSE(10, 35),
-  .text_inset_single = -1,
-  .text_inset_multi = -3,
-  .right_text_inset_with_icon = 4,
-};
-
-static const OptionMenuStyle s_style_extra_large = {
-#if PBL_RECT
-  .cell_heights[OptionMenuContentType_SingleLine] = 56,
-#endif
-  .top_inset = 1,
-  .right_icon_spacing = PBL_IF_RECT_ELSE(10, 35),
-  .text_inset_single = -1,
-  .text_inset_multi = -3,
-  .right_text_inset_with_icon = 4,
-};
-
-static const OptionMenuStyle *const s_styles[NumPreferredContentSizes] = {
-  [PreferredContentSizeSmall] = &s_style_medium,
-  [PreferredContentSizeMedium] = &s_style_medium,
-  [PreferredContentSizeLarge] = &s_style_large,
-  [PreferredContentSizeExtraLarge] = &s_style_extra_large,
-};
-
-static const OptionMenuStyle *prv_get_style(void) {
-  return s_styles[system_theme_get_content_size()];
+static const SystemThemeOptionMenuStyle *prv_get_style(void) {
+  return &system_theme_get_style()->option_menu;
 }
 
 static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index,
@@ -69,12 +23,25 @@ static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t sectio
   return 0;
 }
 
+#if PBL_RECT
+static int16_t prv_get_style_cell_height(OptionMenuContentType content_type) {
+  const SystemThemeOptionMenuStyle *const style = prv_get_style();
+  switch (content_type) {
+    case OptionMenuContentType_SingleLine:
+      return style->single_line_cell_height;
+    case OptionMenuContentType_DoubleLine:
+      return style->double_line_cell_height;
+    default:
+      return 0;
+  }
+}
+#endif
+
 uint16_t option_menu_default_cell_height(OptionMenuContentType content_type, bool selected) {
-  [[maybe_unused]] const OptionMenuStyle *const style = prv_get_style();
   const int16_t cell_height =
       PBL_IF_ROUND_ELSE(selected ? MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT
                                  : MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
-                        style->cell_heights[content_type]);
+                        prv_get_style_cell_height(content_type));
   return cell_height ?: menu_cell_basic_cell_height();
 }
 
@@ -99,7 +66,7 @@ static int32_t prv_draw_selection_icon(const OptionMenu *option_menu, GContext *
   GRect icon_frame = {.size = chosen_icon_bounds};
   grect_align(&icon_frame, cell_layer_bounds, GAlignRight, false);
 
-  const OptionMenuStyle *const style = prv_get_style();
+  const SystemThemeOptionMenuStyle *const style = prv_get_style();
   icon_frame.origin.x -= style->right_icon_spacing;
 
   const GBitmap *const icon =
@@ -134,7 +101,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
         grect_inset(remaining_rect, GEdgeInsets(0, 0, 0, left_text_inset_to_prevent_clipping));
   }
 #else
-  const OptionMenuStyle *const style = prv_get_style();
+  const SystemThemeOptionMenuStyle *const style = prv_get_style();
   const int32_t left_text_inset = menu_cell_basic_horizontal_inset();
   const int32_t right_text_inset =
       option_menu->icons_enabled ? style->right_text_inset_with_icon : left_text_inset;
@@ -349,7 +316,7 @@ void option_menu_system_draw_row(OptionMenu *option_menu, GContext *ctx, const L
   const GAlign text_frame_alignment =
       PBL_IF_RECT_ELSE(GAlignLeft, option_menu->icons_enabled ? GAlignRight : GAlignCenter);
   grect_align(&text_frame, cell_frame, text_frame_alignment, true /* clips */);
-  const OptionMenuStyle *const style = prv_get_style();
+  const SystemThemeOptionMenuStyle *const style = prv_get_style();
   const int16_t text_inset =
       (text_size.h > min_text_height) ? style->text_inset_multi : style->text_inset_single;
   text_frame = grect_inset(text_frame, GEdgeInsets(0, text_inset));
