@@ -10,7 +10,7 @@
 #include "process_management/app_install_manager.h"
 #include "pbl/services/app_outbox_service.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 extern const SessionSendJobImpl s_app_message_send_job_impl;
 extern void comm_session_send_queue_cleanup(CommSession *session);
@@ -171,8 +171,8 @@ void test_app_message_sender__initialize(void) {
   s_process_md.allow_js = false;
 
   PebbleProtocolHeader *header = (PebbleProtocolHeader *)TEST_EXPECTED_PP_MSG;
-  header->length = htons(sizeof(TEST_PAYLOAD));
-  header->endpoint_id = htons(ALLOWED_ENDPOINT_ID);
+  header->length = pbl_cpu_to_be16(sizeof(TEST_PAYLOAD));
+  header->endpoint_id = pbl_cpu_to_be16(ALLOWED_ENDPOINT_ID);
   memcpy(TEST_EXPECTED_PP_MSG + sizeof(*header), TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
 
   app_message_sender_init();

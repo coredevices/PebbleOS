@@ -17,7 +17,7 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/testing.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 #include "pbl/services/analytics/analytics.h"
@@ -297,8 +297,8 @@ PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInf
 }
 
 static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
-  tz_data->utc_time = ntohl(tz_data->utc_time);
-  tz_data->utc_offset_min = ntohs(tz_data->utc_offset_min);
+  tz_data->utc_time = pbl_be32_to_cpu(tz_data->utc_time);
+  tz_data->utc_offset_min = pbl_be16_to_cpu(tz_data->utc_offset_min);
 
   TimezoneInfo tz_info = prv_get_timezone_info_from_data(tz_data);
   shell_prefs_set_automatic_timezone_id(tz_info.timezone_id);
@@ -340,7 +340,7 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
 
       response_buffer[0] = 0x01;
 
-      *(uint32_t *)(response_buffer + 1) = htonl(t);
+      *(uint32_t *)(response_buffer + 1) = pbl_cpu_to_be32(t);
 
       comm_session_send_data(session, protocol_time_endpoint_id, response_buffer,
                              response_buffer_length, COMM_SESSION_DEFAULT_TIMEOUT);
@@ -350,7 +350,7 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
     }
     // Set time:
     case 0x02: {
-      time_t new_time = ntohl(*(uint32_t *)data);
+      time_t new_time = pbl_be32_to_cpu(*(uint32_t *)data);
       prv_handle_set_time_msg(new_time);
       break;
     }

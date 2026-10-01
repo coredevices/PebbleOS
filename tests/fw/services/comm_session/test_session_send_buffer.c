@@ -8,7 +8,7 @@
 #include "pbl/services/comm_session/session_send_queue.h"
 #include "pbl/services/comm_session/protocol.h"
 
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/size.h"
 
 #include "pbl/kernel/sem.h"
@@ -302,8 +302,8 @@ void test_session_send_buffer__send_queue_interface(void) {
       job, 0, expected_bytes_incl_pebble_protocol_header, pp_data_out);
   cl_assert_equal_i(bytes_copied, expected_bytes_incl_pebble_protocol_header);
   PebbleProtocolHeader *header = (PebbleProtocolHeader *)pp_data_out;
-  cl_assert_equal_i(header->length, htons(max_payload_length));
-  cl_assert_equal_i(header->endpoint_id, htons(ENDPOINT_ID));
+  cl_assert_equal_i(header->length, pbl_cpu_to_be16(max_payload_length));
+  cl_assert_equal_i(header->endpoint_id, pbl_cpu_to_be16(ENDPOINT_ID));
   cl_assert_equal_i(
       memcmp(pp_data_out + sizeof(PebbleProtocolHeader), fake_data_payload, max_payload_length), 0);
 
@@ -313,7 +313,7 @@ void test_session_send_buffer__send_queue_interface(void) {
       job, offset, expected_bytes_incl_pebble_protocol_header, pp_data_out);
   cl_assert_equal_i(bytes_copied, expected_bytes_incl_pebble_protocol_header - offset);
   header = (PebbleProtocolHeader *)(pp_data_out - offset);
-  cl_assert_equal_i(header->endpoint_id, htons(ENDPOINT_ID));
+  cl_assert_equal_i(header->endpoint_id, pbl_cpu_to_be16(ENDPOINT_ID));
   cl_assert_equal_i(memcmp(pp_data_out + sizeof(PebbleProtocolHeader) - offset, fake_data_payload,
                            max_payload_length - offset),
                     0);
@@ -326,8 +326,8 @@ void test_session_send_buffer__send_queue_interface(void) {
     PebbleProtocolHeader *header = (PebbleProtocolHeader *)data_out;
     if (bytes_read == 0) {
       cl_assert(read_space >= sizeof(PebbleProtocolHeader));
-      cl_assert_equal_i(header->length, htons(max_payload_length));
-      cl_assert_equal_i(header->endpoint_id, htons(ENDPOINT_ID));
+      cl_assert_equal_i(header->length, pbl_cpu_to_be16(max_payload_length));
+      cl_assert_equal_i(header->endpoint_id, pbl_cpu_to_be16(ENDPOINT_ID));
       cl_assert_equal_i(memcmp(data_out + sizeof(PebbleProtocolHeader), fake_data_payload,
                                read_space - sizeof(PebbleProtocolHeader)),
                         0);

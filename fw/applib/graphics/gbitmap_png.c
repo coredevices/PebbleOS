@@ -6,7 +6,7 @@
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"
 #include "syscall/syscall.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #define PNG_DECODE_ERROR "PNG decoding failed"
 #define PNG_MEMORY_ERROR "PNG memory allocation failed"
@@ -26,7 +26,7 @@ static GBitmapFormat prv_get_format_for_bpp(uint8_t bits_per_pixel) {
 bool gbitmap_png_data_is_png(const uint8_t *data, size_t data_size) {
   if (data_size >= sizeof(PNG_SIGNATURE)) {
     // PNG files start with [137, 'P', 'N', 'G']
-    return (ntohl(*(uint32_t *)data) == PNG_SIGNATURE);
+    return (pbl_be32_to_cpu(*(uint32_t *)data) == PNG_SIGNATURE);
   }
   return false;
 }
@@ -60,8 +60,8 @@ int32_t png_seek_chunk_in_resource_system(ResAppNum app_num, uint32_t resource_i
     }
 
     // Need to byte swap it
-    marker.length = ntohl(marker.length);
-    marker.chunk_type = ntohl(marker.chunk_type);
+    marker.length = pbl_be32_to_cpu(marker.length);
+    marker.chunk_type = pbl_be32_to_cpu(marker.chunk_type);
 
     if (marker.chunk_type == CHUNK_ACTL) {
       actl_chunk_found = true;
@@ -275,7 +275,7 @@ int32_t gbitmap_png_get_transparent_gray_value(upng_t *upng) {
   uint8_t *alpha_palette = NULL;
   uint16_t alpha_palette_entries = upng_get_alpha_palette(upng, &alpha_palette);
   if (alpha_palette_entries == 2) {
-    transparent_gray = ntohs(*(uint16_t *)alpha_palette);
+    transparent_gray = pbl_be16_to_cpu(*(uint16_t *)alpha_palette);
   }
   return transparent_gray;
 }

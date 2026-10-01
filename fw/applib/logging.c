@@ -15,7 +15,7 @@
 #include <pbl/logging/log_hashing.h>
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/string.h"
 
 #include <stdarg.h>
@@ -81,10 +81,10 @@ int pbl_log_binary_format(char *buffer, int buffer_len, const uint8_t log_level,
   LogBinaryMessage *msg = (LogBinaryMessage *)buffer;
 
   time_t time_seconds = sys_get_time();
-  msg->timestamp = htonl(time_seconds);
+  msg->timestamp = pbl_cpu_to_be32(time_seconds);
 
   msg->log_level = log_level;
-  msg->line_number = htons(src_line_number & 0xffff);
+  msg->line_number = pbl_cpu_to_be16(src_line_number & 0xffff);
   msg->message_length = 0;
 
   // Ensure we only send the last 15 characters of a filename
@@ -251,7 +251,7 @@ static void prv_log_hashed(uint32_t flags, uint32_t core_number, uint32_t packed
   LogBinaryMessage *msg = (LogBinaryMessage *)buffer;
 
   time_t time_seconds = sys_get_time();
-  msg->timestamp = htonl(time_seconds);
+  msg->timestamp = pbl_cpu_to_be32(time_seconds);
   msg->message_length = 0;
 
   /*

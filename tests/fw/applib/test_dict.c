@@ -3,7 +3,6 @@
 
 #include "applib/dict.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
 #include "pbl/util/size.h"
 
 #include "clar.h"

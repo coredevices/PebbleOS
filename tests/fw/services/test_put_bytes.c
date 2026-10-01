@@ -9,7 +9,7 @@
 #include "system/firmware_storage.h"
 #include <pbl/logging/logging.h>
 #include "pbl/kernel/compiler.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include <pbl/bluetooth/conn_event_stats.h>
 
@@ -174,9 +174,9 @@ static void prv_receive_data(CommSession *session, const uint8_t *data, size_t l
 static void prv_receive_init(uint32_t total_size, PutBytesObjectType object_type) {
   InitRequest init_msg = (InitRequest){
     .cmd = CmdInit,
-    .total_size = htonl(total_size),
+    .total_size = pbl_cpu_to_be32(total_size),
     .type = object_type,
-    .cookie = htonl(1),
+    .cookie = pbl_cpu_to_be32(1),
   };
   prv_receive_data(s_session, (const uint8_t *)&init_msg, sizeof(init_msg));
 }
@@ -185,9 +185,9 @@ static void prv_receive_init_cookie(uint32_t total_size, PutBytesObjectType obje
                                     uint32_t cookie) {
   InitRequest init_msg = (InitRequest){
     .cmd = CmdInit,
-    .total_size = htonl(total_size),
+    .total_size = pbl_cpu_to_be32(total_size),
     .type = object_type | (1 << 7),
-    .cookie = htonl(cookie),
+    .cookie = pbl_cpu_to_be32(cookie),
   };
   prv_receive_data(s_session, (const uint8_t *)&init_msg, sizeof(init_msg));
 }
@@ -198,7 +198,7 @@ static void prv_receive_init_file(uint32_t total_size, const char *fn, size_t fn
   InitRequest *init_msg = (InitRequest *)buffer;
   *init_msg = (InitRequest){
     .cmd = CmdInit,
-    .total_size = htonl(total_size),
+    .total_size = pbl_cpu_to_be32(total_size),
     .type = ObjectFile,
   };
   memcpy(&init_msg->filename[0], fn, fn_len);
@@ -211,8 +211,8 @@ static void prv_receive_put(uint32_t cookie, const uint8_t *payload, uint32_t pa
   PutRequest *put_msg = (PutRequest *)buffer;
   *put_msg = (PutRequest){
     .cmd = CmdPut,
-    .cookie = htonl(cookie),
-    .payload_size = htonl(payload_size),
+    .cookie = pbl_cpu_to_be32(cookie),
+    .payload_size = pbl_cpu_to_be32(payload_size),
   };
   memcpy(&put_msg->payload[0], payload, payload_size);
   prv_receive_data(s_session, buffer, sizeof(buffer));
@@ -221,8 +221,8 @@ static void prv_receive_put(uint32_t cookie, const uint8_t *payload, uint32_t pa
 static void prv_receive_commit(uint32_t cookie, uint32_t crc) {
   CommitRequest commit_msg = (CommitRequest){
     .cmd = CmdCommit,
-    .cookie = htonl(cookie),
-    .crc = htonl(crc),
+    .cookie = pbl_cpu_to_be32(cookie),
+    .crc = pbl_cpu_to_be32(crc),
   };
   prv_receive_data(s_session, (const uint8_t *)&commit_msg, sizeof(commit_msg));
 }
@@ -230,7 +230,7 @@ static void prv_receive_commit(uint32_t cookie, uint32_t crc) {
 static void prv_receive_abort(uint32_t cookie) {
   AbortRequest abort_msg = (AbortRequest){
     .cmd = CmdAbort,
-    .cookie = htonl(cookie),
+    .cookie = pbl_cpu_to_be32(cookie),
   };
   prv_receive_data(s_session, (const uint8_t *)&abort_msg, sizeof(abort_msg));
 }
@@ -238,7 +238,7 @@ static void prv_receive_abort(uint32_t cookie) {
 static void prv_receive_install(uint32_t cookie) {
   InstallRequest install_msg = (InstallRequest){
     .cmd = CmdInstall,
-    .cookie = htonl(cookie),
+    .cookie = pbl_cpu_to_be32(cookie),
   };
   prv_receive_data(s_session, (const uint8_t *)&install_msg, sizeof(install_msg));
 }
@@ -321,7 +321,7 @@ static void prv_system_msg_sent_callback(uint16_t endpoint_id, const uint8_t *da
   cl_assert_equal_i(data_length, 5);
 
   ResponseMsg *response_msg = (ResponseMsg *)data;
-  s_last_response_cookie = ntohl(response_msg->cookie);
+  s_last_response_cookie = pbl_be32_to_cpu(response_msg->cookie);
   if (response_msg->response == ResponseAck) {
     ++s_acks_received;
   } else if (response_msg->response == ResponseNack) {
@@ -577,8 +577,8 @@ void test_put_bytes__put_message_length_field_too_long(void) {
   PutRequest *put_msg = (PutRequest *)buffer;
   *put_msg = (PutRequest){
     .cmd = CmdPut,
-    .cookie = htonl(s_last_response_cookie),
-    .payload_size = htonl(payload_size) + 1 /* one off! */,
+    .cookie = pbl_cpu_to_be32(s_last_response_cookie),
+    .payload_size = pbl_cpu_to_be32(payload_size) + 1 /* one off! */,
   };
   memcpy(&put_msg->payload[0], chunk, payload_size);
   prv_receive_data(s_session, buffer, sizeof(buffer));

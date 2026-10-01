@@ -9,7 +9,7 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/size.h"
 
 // Generated table of endpoint handler (s_protocol_endpoints):
@@ -172,10 +172,10 @@ void comm_session_receive_router_write(CommSession *session, const uint8_t *data
 
       // Complete header received!
       const PebbleProtocolHeader *header_big_endian = (PebbleProtocolHeader *)rtr->header_buffer;
-      const uint16_t endpoint_id = ntohs(header_big_endian->endpoint_id);
+      const uint16_t endpoint_id = pbl_be16_to_cpu(header_big_endian->endpoint_id);
 
       const PebbleProtocolEndpoint *endpoint = prv_find_endpoint(endpoint_id);
-      const uint32_t payload_length = ntohs(header_big_endian->length);
+      const uint32_t payload_length = pbl_be16_to_cpu(header_big_endian->length);
 
       if (prv_handle_endpoint_error_and_skip_message_if_needed(session, endpoint, endpoint_id)) {
         prv_skip_message(rtr, payload_length);

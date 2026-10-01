@@ -13,7 +13,7 @@
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include <pbl/bluetooth/conn_event_stats.h>
 #include "pbl/kernel/types.h"
@@ -58,7 +58,7 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
     .hdr.cmd_id = GET_BYTES_CMD_OBJECT_INFO,
     .hdr.transaction_id = transaction_id,
     .error_code = result,
-    .num_bytes = htonl(0),
+    .num_bytes = pbl_cpu_to_be32(0),
   };
 
   bool success = comm_session_send_data(session, GET_BYTES_ENDPOINT_ID, (const uint8_t *)&rsp,
@@ -139,7 +139,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
     *rsp = (GetBytesRspObjectData){
       .hdr.cmd_id = GET_BYTES_CMD_OBJECT_DATA,
       .hdr.transaction_id = state->transaction_id,
-      .byte_offset = htonl(state->storage.current_offset),
+      .byte_offset = pbl_cpu_to_be32(state->storage.current_offset),
     };
 
     // read the next chunk from storage
@@ -154,8 +154,8 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
     const GetBytesRspObjectInfo rsp = (const GetBytesRspObjectInfo){
       .hdr.cmd_id = GET_BYTES_CMD_OBJECT_INFO,
       .hdr.transaction_id = state->transaction_id,
-      .error_code = htonl(GET_BYTES_OK),
-      .num_bytes = htonl(state->num_bytes),
+      .error_code = pbl_cpu_to_be32(GET_BYTES_OK),
+      .num_bytes = pbl_cpu_to_be32(state->num_bytes),
     };
     comm_session_send_buffer_write(sb, (const uint8_t *)&rsp, sizeof(rsp));
     state->sent_header = true;
@@ -225,8 +225,8 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state, const ui
     case GET_BYTES_CMD_GET_FLASH: {
       state->object_type = GetBytesObjectFlash;
       GetBytesFlashHeader *hdr = (GetBytesFlashHeader *)data;
-      info.flash_start_addr = ntohl(hdr->start_addr);
-      info.flash_len = ntohl(hdr->len);
+      info.flash_start_addr = pbl_be32_to_cpu(hdr->start_addr);
+      info.flash_len = pbl_be32_to_cpu(hdr->len);
       PBL_LOG_DBG("Fetching %d bytes starting at %d", (int)info.flash_len,
                   (int)info.flash_start_addr);
       bool rv = gb_storage_setup(&state->storage, state->object_type, &info);

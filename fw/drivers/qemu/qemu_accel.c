@@ -49,7 +49,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 PBL_LOG_MODULE_DECLARE(imu, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
@@ -153,9 +153,9 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
   pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
   {
     for (uint32_t i = 0; i < s_num_rcv_samples; ++i) {
-      s_rcv_buffer[i].x = ntohs(hdr->samples[i].x);
-      s_rcv_buffer[i].y = ntohs(hdr->samples[i].y);
-      s_rcv_buffer[i].z = ntohs(hdr->samples[i].z);
+      s_rcv_buffer[i].x = pbl_be16_to_cpu(hdr->samples[i].x);
+      s_rcv_buffer[i].y = pbl_be16_to_cpu(hdr->samples[i].y);
+      s_rcv_buffer[i].z = pbl_be16_to_cpu(hdr->samples[i].z);
       PBL_LOG_VERBOSE("  x,y,z from host: %d, %d, %d", s_rcv_buffer[i].x, s_rcv_buffer[i].y,
                       s_rcv_buffer[i].z);
     }
@@ -170,7 +170,7 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
 
   // Send a response, even though none of the clients care about it.
   QemuProtocolAccelResponseHeader resp = {
-    .avail_space = htons(QEMU_ACCEL_RCV_BUFFER_SAMPLES),
+    .avail_space = pbl_cpu_to_be16(QEMU_ACCEL_RCV_BUFFER_SAMPLES),
   };
   qemu_serial_send(QemuProtocol_Accel, (uint8_t *)&resp, sizeof(resp));
 }

@@ -11,7 +11,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include <pbl/util/math.h>
-#include <util/net.h>
+#include <pbl/util/byteorder.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -63,34 +63,34 @@ static void prv_send_configure_request(PPPControlProtocol *this) {
   *request = (struct LCPPacket){
     .code = ControlCode_ConfigureRequest,
     .identifier = id,
-    .length = hton16(LCP_HEADER_LEN),
+    .length = pbl_be16_make(LCP_HEADER_LEN),
   };
   pulse_link_send(request, LCP_HEADER_LEN);
 }
 
 static void prv_send_configure_ack(PPPControlProtocol *this, struct LCPPacket *triggering_packet) {
-  if (ntoh16(triggering_packet->length) > pulse_link_max_send_size()) {
+  if (pbl_be16_get(triggering_packet->length) > pulse_link_max_send_size()) {
     // Too big to send and truncation will corrupt the packet.
     PBL_LOG_ERR("Configure-Request too large to Ack");
     return;
   }
   struct LCPPacket *packet = pulse_link_send_begin(this->protocol_number);
-  memcpy(packet, triggering_packet, ntoh16(triggering_packet->length));
+  memcpy(packet, triggering_packet, pbl_be16_get(triggering_packet->length));
   packet->code = ControlCode_ConfigureAck;
-  pulse_link_send(packet, ntoh16(triggering_packet->length));
+  pulse_link_send(packet, pbl_be16_get(triggering_packet->length));
 }
 
 static void prv_send_configure_reject(PPPControlProtocol *this, struct LCPPacket *bad_packet) {
-  if (ntoh16(bad_packet->length) > pulse_link_max_send_size()) {
+  if (pbl_be16_get(bad_packet->length) > pulse_link_max_send_size()) {
     // Too big to send and truncation will corrupt the packet.
     // There isn't really anything we can do.
     PBL_LOG_ERR("Configure-Request too large to Reject");
     return;
   }
   struct LCPPacket *packet = pulse_link_send_begin(this->protocol_number);
-  memcpy(packet, bad_packet, ntoh16(bad_packet->length));
+  memcpy(packet, bad_packet, pbl_be16_get(bad_packet->length));
   packet->code = ControlCode_ConfigureReject;
-  pulse_link_send(packet, ntoh16(bad_packet->length));
+  pulse_link_send(packet, pbl_be16_get(bad_packet->length));
 }
 
 static void prv_send_terminate_request(PPPControlProtocol *this) {
@@ -101,7 +101,7 @@ static void prv_send_terminate_request(PPPControlProtocol *this) {
   *packet = (struct LCPPacket){
     .code = ControlCode_TerminateRequest,
     .identifier = id,
-    .length = hton16(LCP_HEADER_LEN),
+    .length = pbl_be16_make(LCP_HEADER_LEN),
   };
   pulse_link_send(packet, LCP_HEADER_LEN);
 }
@@ -119,7 +119,7 @@ static void prv_send_terminate_ack(PPPControlProtocol *this, int identifier) {
   *packet = (struct LCPPacket){
     .code = ControlCode_TerminateAck,
     .identifier = identifier,
-    .length = hton16(LCP_HEADER_LEN),
+    .length = pbl_be16_make(LCP_HEADER_LEN),
   };
   pulse_link_send(packet, LCP_HEADER_LEN);
 }
@@ -128,7 +128,8 @@ static void prv_send_code_reject(PPPControlProtocol *this, struct LCPPacket *bad
   struct LCPPacket *packet = pulse_link_send_begin(this->protocol_number);
   packet->code = ControlCode_CodeReject;
   packet->identifier = this->state->next_code_reject_id++;
-  size_t body_len = MIN(ntoh16(bad_packet->length), pulse_link_max_send_size() - LCP_HEADER_LEN);
+  size_t body_len =
+      MIN(pbl_be16_get(bad_packet->length), pulse_link_max_send_size() - LCP_HEADER_LEN);
   memcpy(packet->data, bad_packet, body_len);
   pulse_link_send(packet, LCP_HEADER_LEN + body_len);
 }
@@ -172,7 +173,7 @@ static void prv_on_timeout(void *context) {
 }
 
 static bool prv_handle_configure_request(PPPControlProtocol *this, struct LCPPacket *packet) {
-  if (ntoh16(packet->length) == LCP_HEADER_LEN) { // The request has no options
+  if (pbl_be16_get(packet->length) == LCP_HEADER_LEN) { // The request has no options
     prv_send_configure_ack(this, packet);
     return true;
   } else {
@@ -220,7 +221,7 @@ static void prv_on_configure_ack(PPPControlProtocol *this, struct LCPPacket *pac
     // Invalid packet; silently discard
     return;
   }
-  if (ntoh16(packet->length) != LCP_HEADER_LEN) {
+  if (pbl_be16_get(packet->length) != LCP_HEADER_LEN) {
     // Only configure requests with no options are sent at the moment.
     // If the length is greater than four, there are options in the Ack
     // which means that the Ack'ed options list does not match the
@@ -437,8 +438,8 @@ void ppp_control_protocol_handle_incoming_packet(PPPControlProtocol *this, void 
   }
 
   struct LCPPacket *packet = raw_packet;
-  if (length < sizeof(*packet) || ntoh16(packet->length) < sizeof(*packet) ||
-      length < ntoh16(packet->length)) {
+  if (length < sizeof(*packet) || pbl_be16_get(packet->length) < sizeof(*packet) ||
+      length < pbl_be16_get(packet->length)) {
     // Invalid packet; silently discard
     goto done;
   }

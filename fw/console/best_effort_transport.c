@@ -12,7 +12,7 @@
 #include "console/pulse_control_message_protocol.h"
 #include "system/passert.h"
 #include <pbl/kernel/compiler.h>
-#include <util/net.h>
+#include <pbl/util/byteorder.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -62,8 +62,8 @@ void pulse2_best_effort_control_on_packet(void *packet, size_t length) {
 // ==========================================
 
 typedef struct PBL_PACKED BestEffortPacket {
-  net16 protocol;
-  net16 length;
+  pbl_be16_t protocol;
+  pbl_be16_t length;
   char information[];
 } BestEffortPacket;
 
@@ -78,16 +78,16 @@ void pulse2_best_effort_transport_on_packet(void *raw_packet, size_t length) {
   }
 
   BestEffortPacket *packet = raw_packet;
-  if (length < ntoh16(packet->length)) {
+  if (length < pbl_be16_get(packet->length)) {
     // Packet truncated; discard
     return;
   }
-  size_t info_length = ntoh16(packet->length) - sizeof(BestEffortPacket);
+  size_t info_length = pbl_be16_get(packet->length) - sizeof(BestEffortPacket);
   // This variable is read in the macro-expansion below, but linters
   // have a hard time figuring that out.
   (void)info_length;
 
-  switch (ntoh16(packet->protocol)) {
+  switch (pbl_be16_get(packet->protocol)) {
     case PULSE_CONTROL_MESSAGE_PROTOCOL:
       pulse_control_message_protocol_on_packet(&s_best_effort_pcmp, packet->information,
                                                info_length);
@@ -108,7 +108,7 @@ void pulse2_best_effort_transport_on_packet(void *raw_packet, size_t length) {
 void *pulse_best_effort_send_begin(const uint16_t app_protocol) {
   PBL_ASSERTN(s_layer_up);
   BestEffortPacket *packet = pulse_link_send_begin(PULSE2_BEST_EFFORT_TRANSPORT_PROTOCOL);
-  packet->protocol = hton16(app_protocol);
+  packet->protocol = pbl_be16_make(app_protocol);
   return &packet->information;
 }
 
@@ -122,7 +122,7 @@ void pulse_best_effort_send(void *buf, const size_t length) {
   // pulse_link_send.
   BestEffortPacket *packet = (void *)((char *)buf - offsetof(BestEffortPacket, information));
   size_t packet_size = length + sizeof(BestEffortPacket);
-  packet->length = hton16(packet_size);
+  packet->length = pbl_be16_make(packet_size);
   pulse_link_send(packet, packet_size);
 }
 

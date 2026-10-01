@@ -19,7 +19,7 @@
 #include <pbl/logging/logging.h>
 #include "system/version.h"
 #include "pbl/kernel/compiler.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/string.h"
 
 #include <pbl/bluetooth/types.h>
@@ -51,8 +51,8 @@ struct PBL_PACKED VersionsMessage {
   // on 1.X mobile application versions.
   PebbleProtocolCapabilities capabilities;
   bool is_unfaithful;
-  net16 activity_insights_version;
-  net16 javascript_bytecode_version;
+  pbl_be16_t activity_insights_version;
+  pbl_be16_t javascript_bytecode_version;
 };
 
 static void fixup_string(char *str, unsigned int length) {
@@ -62,7 +62,7 @@ static void fixup_string(char *str, unsigned int length) {
 }
 
 static void prv_fixup_firmware_metadata(FirmwareMetadata *fw_metadata) {
-  fw_metadata->version_timestamp = htonl(fw_metadata->version_timestamp);
+  fw_metadata->version_timestamp = pbl_cpu_to_be32(fw_metadata->version_timestamp);
   fixup_string(fw_metadata->version_tag, sizeof(fw_metadata->version_tag));
   fixup_string(fw_metadata->version_short, sizeof(fw_metadata->version_short));
 }
@@ -81,14 +81,14 @@ static void prv_fixup_running_firmware_metadata(FirmwareMetadata *fw_metadata) {
 }
 
 static void resource_version_to_network_endian(ResourceVersion *resources_version) {
-  resources_version->crc = htonl(resources_version->crc);
-  resources_version->timestamp = htonl(resources_version->timestamp);
+  resources_version->crc = pbl_cpu_to_be32(resources_version->crc);
+  resources_version->timestamp = pbl_cpu_to_be32(resources_version->timestamp);
 }
 
 static void prv_send_watch_versions(CommSession *session) {
   struct VersionsMessage versions_msg = {
     .command = VERSION_RESPONSE,
-    .boot_version = htonl(boot_version_read()),
+    .boot_version = pbl_cpu_to_be32(boot_version_read()),
   };
 
   _Static_assert(sizeof(struct VersionsMessage) >=
@@ -109,7 +109,7 @@ static void prv_send_watch_versions(CommSession *session) {
 
   strncpy(versions_msg.iso_locale, i18n_get_locale(), ISO_LOCALE_LENGTH - 1);
   versions_msg.iso_locale[ISO_LOCALE_LENGTH - 1] = '\0';
-  versions_msg.lang_version = htons(i18n_get_version());
+  versions_msg.lang_version = pbl_cpu_to_be16(i18n_get_version());
   PBL_LOG_DBG("Sending lang version: %d", versions_msg.lang_version);
 
   // Set the capabilities as zero, effectively saying that we don't support anything.
@@ -153,7 +153,7 @@ static void prv_send_watch_versions(CommSession *session) {
 
   versions_msg.is_unfaithful = bt_persistent_storage_is_unfaithful();
 #if !defined(CONFIG_RECOVERY_FW)
-  versions_msg.activity_insights_version = hton16(activity_insights_settings_get_version());
+  versions_msg.activity_insights_version = pbl_be16_make(activity_insights_settings_get_version());
 #endif
 
   comm_session_send_data(session, s_endpoint_id, (uint8_t *)&versions_msg, sizeof(versions_msg),

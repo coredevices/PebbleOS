@@ -13,7 +13,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "syscall/syscall.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 KinoReel *kino_reel_create_with_resource(uint32_t resource_id) {
   ResAppNum app_num = sys_get_current_resource_num();
@@ -32,7 +32,7 @@ KinoReel *kino_reel_create_with_resource_system(ResAppNum app_num, uint32_t reso
     return NULL;
   }
 
-  switch (ntohl(data_signature)) {
+  switch (pbl_be32_to_cpu(data_signature)) {
     case PDCS_SIGNATURE:
       return kino_reel_pdcs_create_with_resource_system(app_num, resource_id);
     case PDCI_SIGNATURE:

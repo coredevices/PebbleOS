@@ -9,7 +9,7 @@
 #include "system/passert.h"
 
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include <pbl/btutil/bt_uuid.h>
 #include "pbl/kernel/compiler.h"
@@ -184,8 +184,9 @@ static bool parse_manufact_spec(const BLEAdElement *elem, const BLEAdParseCallba
     // Call back to client with parsed data:
     const uint8_t manufacturer_data_size =
         elem->header.length - sizeof(*company_id) - 1 /* -1 Type Byte */;
-    return callbacks->manufacturer_cb(ltohs(*company_id), elem->data + sizeof(*company_id),
-                                      manufacturer_data_size, cb_data);
+    return callbacks->manufacturer_cb(pbl_le16_to_cpu(*company_id),
+                                      elem->data + sizeof(*company_id), manufacturer_data_size,
+                                      cb_data);
   }
 
   return true; // continue parsing
@@ -700,7 +701,7 @@ bool ble_ad_set_manufacturer_specific_data(struct pbl_bt_ad_data *ad, uint16_t c
   element->header.length =
       sizeof(struct BLEAdElementManufacturerSpecific) - 1 /* -1 Length byte */ + size;
   element->header.type = BLEAdTypeManufacturerSpecific;
-  element->company_id = ltohs(company_id);
+  element->company_id = pbl_le16_to_cpu(company_id);
   memcpy(element->data, data, size);
   return prv_write_element_to_ad_data(ad, (const BLEAdElement *)element);
 }

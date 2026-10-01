@@ -11,7 +11,7 @@
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "pbl/kernel/compiler.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include <inttypes.h>
 
@@ -49,7 +49,8 @@ static void prv_send_ping_kernel_bg_cb(void *unused) {
     // Are we idle?
     bool idle = (battery_is_usb_connected() || accel_is_idle());
 
-    PingMsgV2 ping_msg = (PingMsgV2){.hdr = {.cmd = 0, .cookie = htonl(42)}, .idle = idle};
+    PingMsgV2 ping_msg =
+        (PingMsgV2){.hdr = {.cmd = 0, .cookie = pbl_cpu_to_be32(42)}, .idle = idle};
     bool success = comm_session_send_data(system_session, PING_ENDPOINT, (const uint8_t *)&ping_msg,
                                           sizeof(ping_msg), COMM_SESSION_DEFAULT_TIMEOUT);
     if (success) {
@@ -103,12 +104,12 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_
       }
 
       // Ping message
-      uint32_t cookie = ntohl(ping->hdr.cookie);
+      uint32_t cookie = pbl_be32_to_cpu(ping->hdr.cookie);
       PBL_LOG_DBG("Ping c=%" PRIu32 "", cookie);
       launcher_task_add_callback(prv_push_window, NULL);
 
       // Send the pong response
-      PongMsg pong = {.hdr = {.cmd = 1, .cookie = htonl(cookie)}};
+      PongMsg pong = {.hdr = {.cmd = 1, .cookie = pbl_cpu_to_be32(cookie)}};
       comm_session_send_data(session, PING_ENDPOINT, (uint8_t *)&pong, sizeof(pong),
                              COMM_SESSION_DEFAULT_TIMEOUT);
       break;
@@ -121,7 +122,7 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_
       }
 
       PongMsg *pong = (PongMsg *)data;
-      PBL_LOG_DBG("Pong c=%" PRIu32, ntohl(pong->hdr.cookie));
+      PBL_LOG_DBG("Pong c=%" PRIu32, pbl_be32_to_cpu(pong->hdr.cookie));
       break;
 
     default:

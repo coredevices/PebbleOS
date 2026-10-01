@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <util/net.h>
+#include <pbl/util/byteorder.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -19,4 +19,4 @@ void pulse_control_message_protocol_on_packet(PulseControlMessageProtocol *this,
                                               size_t length);
 
 void pulse_control_message_protocol_send_port_closed_message(PulseControlMessageProtocol *this,
-                                                             net16 port);
+                                                             pbl_be16_t port);

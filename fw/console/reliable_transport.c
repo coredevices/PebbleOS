@@ -16,7 +16,7 @@
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
 #include <pbl/kernel/compiler.h>
-#include <util/net.h>
+#include <pbl/util/byteorder.h>
 
 #include "pbl/kernel/sem.h"
 
@@ -53,8 +53,8 @@ typedef union ReliablePacket {
     uint8_t sequence_number : 7;
     bool poll : 1;
     uint8_t ack_number : 7;
-    net16 protocol;
-    net16 length;
+    pbl_be16_t protocol;
+    pbl_be16_t length;
     char information[];
   } i;
   struct PBL_PACKED ReliableSupervisoryPacket {
@@ -115,8 +115,8 @@ static void prv_send_info_packet(uint8_t sequence_number, uint16_t app_protocol,
     .sequence_number = sequence_number,
     .poll = true,
     .ack_number = s_receive_variable,
-    .protocol = hton16(app_protocol),
-    .length = hton16(packet_size),
+    .protocol = pbl_be16_make(app_protocol),
+    .length = pbl_be16_make(packet_size),
   };
   memcpy(&packet->i.information[0], information, info_length);
   pulse_link_send(packet, packet_size);
@@ -132,7 +132,7 @@ static void prv_process_ack(uint8_t ack_number) {
 }
 
 static void prv_send_port_closed_message(void *context) {
-  net16 bad_port;
+  pbl_be16_t bad_port;
   memcpy(&bad_port, &context, sizeof(bad_port));
   pulse_control_message_protocol_send_port_closed_message(&s_reliable_pcmp, bad_port);
 }
@@ -170,13 +170,13 @@ void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length
     }
     if (packet->i.sequence_number == s_receive_variable) {
       s_receive_variable = (s_receive_variable + 1) % MODULUS;
-      if (ntoh16(packet->i.length) <= length) {
-        size_t info_length = ntoh16(packet->i.length) - sizeof(ReliablePacket);
+      if (pbl_be16_get(packet->i.length) <= length) {
+        size_t info_length = pbl_be16_get(packet->i.length) - sizeof(ReliablePacket);
         // This variable is read in the macro-expansion below, but linters
         // have a hard time figuring that out.
         (void)info_length;
 
-        switch (ntoh16(packet->i.protocol)) {
+        switch (pbl_be16_get(packet->i.protocol)) {
           case PULSE_CONTROL_MESSAGE_PROTOCOL:
             // TODO PBL-37695: PCMP sends packets synchronously, which will
             //      trip the not-KernelMain check on pulse_reliable_send_begin.
@@ -206,7 +206,7 @@ void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length
             "field (expected %" PRIu16 ", got %" PRIu16
             " data bytes). "
             "Discarding.",
-            ntoh16(packet->i.length), (uint16_t)length);
+            pbl_be16_get(packet->i.length), (uint16_t)length);
         return;
       }
     }

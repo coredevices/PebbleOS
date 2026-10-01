@@ -10,7 +10,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/drivers/vibe.h>
 #include "applib/applib_malloc.auto.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 PBL_LOG_MODULE_DECLARE(service_vibes, CONFIG_SERVICE_VIBES_LOG_LEVEL);
 
@@ -41,7 +41,7 @@ static bool prv_vibe_score_resource_is_valid(ResAppNum app_num, uint32_t resourc
   uint32_t data_signature;
   if (!(sys_resource_load_range(app_num, resource_id, 0, (uint8_t *)&data_signature,
                                 sizeof(data_signature)) == sizeof(data_signature) &&
-        (ntohl(data_signature) == expected_signature))) {
+        (pbl_be32_to_cpu(data_signature) == expected_signature))) {
     return false;
   }
 

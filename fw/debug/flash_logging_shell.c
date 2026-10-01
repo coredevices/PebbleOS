@@ -9,7 +9,7 @@
 #include "debug/flash_logging.h"
 #include "logging/logging_private.h"
 #include "pbl/services/system_task.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include <errno.h>
 #include <stdint.h>
@@ -27,8 +27,8 @@ static bool prv_dump_line_cb(uint8_t *msg, uint32_t total_length) {
 
   message->message[message->message_length] = 0;
   pbl_shell_print(s_dump_sh, "%c %s %s:%d> %s", pbl_log_get_level_char(message->log_level),
-                  time_t_to_string(time_buffer, htonl(message->timestamp)), message->filename,
-                  (int)htons(message->line_number), message->message);
+                  time_t_to_string(time_buffer, pbl_cpu_to_be32(message->timestamp)),
+                  message->filename, (int)pbl_cpu_to_be16(message->line_number), message->message);
   return true;
 }
 
@@ -81,7 +81,7 @@ static void prv_spam_cb(void *data) {
 
   for (int i = 0; i < 16; ++i) {
     LogBinaryMessage *msg = (LogBinaryMessage *)buffer;
-    msg->timestamp = htonl(base + iteration * 16 + i);
+    msg->timestamp = pbl_cpu_to_be32(base + iteration * 16 + i);
     msg->log_level = LOG_LEVEL_ERROR;
     msg->message_length = sizeof(buffer) - sizeof(LogBinaryMessage);
     msg->line_number = 0;

@@ -9,7 +9,7 @@
 #include "pbl/services/app_message/app_message_sender.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/testing.h"
 
 PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
@@ -169,8 +169,8 @@ static AppMessageSenderError prv_sanity_check_msg_and_fill_header(const AppOutbo
   const size_t pp_payload_length = (message->length - offsetof(AppMessageAppOutboxData, payload));
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)message->consumer_data;
   app_message_send_job->header = (const PebbleProtocolHeader){
-    .endpoint_id = htons(endpoint_id),
-    .length = htons(pp_payload_length),
+    .endpoint_id = pbl_cpu_to_be16(endpoint_id),
+    .length = pbl_cpu_to_be16(pp_payload_length),
   };
 
   return AppMessageSenderErrorSuccess;

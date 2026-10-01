@@ -8,7 +8,7 @@
 
 #include <pbl/drivers/qemu/qemu_serial.h>
 #include <pbl/drivers/qemu/qemu_serial_private.h>
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include "clar.h"
 
@@ -44,15 +44,16 @@ static void prv_send_bytes(void *p, uint32_t size) {
 // ------------------------------------------------------------------------------------
 static void prv_send_hdr(uint16_t protocol, uint16_t data_len) {
   QemuCommChannelHdr hdr = (QemuCommChannelHdr){
-    .signature = htons(QEMU_HEADER_SIGNATURE),
-    .protocol = htons(protocol),
-    .len = htons(data_len)
+    .signature = pbl_cpu_to_be16(QEMU_HEADER_SIGNATURE),
+    .protocol = pbl_cpu_to_be16(protocol),
+    .len = pbl_cpu_to_be16(data_len)
   };
   prv_send_bytes(&hdr, sizeof(hdr));
 }
 
 static void prv_send_footer(void) {
-  QemuCommChannelFooter footer = (QemuCommChannelFooter){.signature = htons(QEMU_FOOTER_SIGNATURE)};
+  QemuCommChannelFooter footer =
+      (QemuCommChannelFooter){.signature = pbl_cpu_to_be16(QEMU_FOOTER_SIGNATURE)};
   prv_send_bytes(&footer, sizeof(footer));
 }
 

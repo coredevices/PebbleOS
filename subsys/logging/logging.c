@@ -17,7 +17,7 @@
 #include "pbl/mcu/interrupts.h"
 #include "pbl/mcu/privilege.h"
 
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/string.h"
 
 #include <ctype.h>
@@ -114,14 +114,14 @@ void kernel_pbl_log_serial(LogBinaryMessage *log_message, uint32_t flags) {
 #ifdef CONFIG_PULSE_EVERYWHERE
   if (flags & PBL_LOG_FLAG_ASYNC) {
     pulse_logging_log(log_message->log_level, log_message->filename,
-                      htons(log_message->line_number), log_message->message);
+                      pbl_cpu_to_be16(log_message->line_number), log_message->message);
   } else {
     pulse_logging_log_sync(log_message->log_level, log_message->filename,
-                           htons(log_message->line_number), log_message->message);
+                           pbl_cpu_to_be16(log_message->line_number), log_message->message);
   }
 #else
-  prv_log_serial(log_message->log_level, log_message->filename, htons(log_message->line_number),
-                 log_message->message);
+  prv_log_serial(log_message->log_level, log_message->filename,
+                 pbl_cpu_to_be16(log_message->line_number), log_message->message);
 #endif
 }
 

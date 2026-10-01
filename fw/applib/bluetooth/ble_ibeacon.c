@@ -4,7 +4,7 @@
 #include "ble_ibeacon.h"
 
 #include "applib/applib_malloc.auto.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include <string.h>
 #include "pbl/kernel/compiler.h"
@@ -96,8 +96,8 @@ bool ble_ibeacon_parse(const struct pbl_bt_ad_data *ad, int8_t rssi, BLEiBeacon 
     const int8_t tx_power = raw_ibeacon.calibrated_tx_power;
     *ibeacon_out = (const BLEiBeacon){
       .uuid = UuidMakeFromBEBytes(raw_ibeacon.uuid),
-      .major = ntohs(raw_ibeacon.major),
-      .minor = ntohs(raw_ibeacon.minor),
+      .major = pbl_be16_to_cpu(raw_ibeacon.major),
+      .minor = pbl_be16_to_cpu(raw_ibeacon.minor),
       .distance_cm = calculate_distance_cm(tx_power, rssi),
       .rssi = rssi,
       .calibrated_tx_power = tx_power,
@@ -114,8 +114,8 @@ bool ble_ibeacon_compose(const BLEiBeacon *ibeacon_in, struct pbl_bt_ad_data *ad
     .type = APPLE_TYPE_IBEACON,
     .length = APPLE_IBEACON_LENGTH,
     // Major/Minor are part of Apple's iBeacon spec and are Big Endian!
-    .major = htons(ibeacon_in->major),
-    .minor = htons(ibeacon_in->minor),
+    .major = pbl_cpu_to_be16(ibeacon_in->major),
+    .minor = pbl_cpu_to_be16(ibeacon_in->minor),
     .calibrated_tx_power = ibeacon_in->calibrated_tx_power,
   };
   // Uuid is stored Big Endian on Pebble, so just copy over:

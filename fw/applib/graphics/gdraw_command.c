@@ -8,7 +8,7 @@
 #include "applib/graphics/gpath.h"
 #include "system/passert.h"
 #include "syscall/syscall.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 bool gdraw_command_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
                                      uint32_t expected_signature, uint32_t *data_size) {
@@ -16,7 +16,7 @@ bool gdraw_command_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
   uint32_t data_signature;
   if (!(sys_resource_load_range(app_num, resource_id, 0, (uint8_t *)&data_signature,
                                 sizeof(data_signature)) == sizeof(data_signature) &&
-        (ntohl(data_signature) == expected_signature))) {
+        (pbl_be32_to_cpu(data_signature) == expected_signature))) {
     return NULL;
   }
 

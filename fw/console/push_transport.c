@@ -8,7 +8,7 @@
 #include "console/pulse2_transport_impl.h"
 #include "system/passert.h"
 #include <pbl/kernel/compiler.h>
-#include <util/net.h>
+#include <pbl/util/byteorder.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -16,14 +16,14 @@
 #define PULSE2_PUSH_TRANSPORT_PROTOCOL (0x5021)
 
 typedef struct PBL_PACKED PushPacket {
-  net16 protocol;
-  net16 length;
+  pbl_be16_t protocol;
+  pbl_be16_t length;
   char information[];
 } PushPacket;
 
 void *pulse_push_send_begin(uint16_t app_protocol) {
   PushPacket *packet = pulse_link_send_begin(PULSE2_PUSH_TRANSPORT_PROTOCOL);
-  packet->protocol = hton16(app_protocol);
+  packet->protocol = pbl_be16_make(app_protocol);
   return &packet->information;
 }
 
@@ -35,7 +35,7 @@ void pulse_push_send(void *buf, size_t length) {
   // pulse_link_send.
   PushPacket *packet = (void *)((char *)buf - offsetof(PushPacket, information));
   size_t packet_size = length + sizeof(PushPacket);
-  packet->length = hton16(packet_size);
+  packet->length = pbl_be16_make(packet_size);
   pulse_link_send(packet, packet_size);
 }
 

@@ -7,7 +7,6 @@
 #include "pbl/services/comm_session/session_internal.h"
 #include "pbl/services/comm_session/session_remote_os.h"
 #include "pbl/services/comm_session/session_remote_version.h"
-#include "util/net.h"
 
 static CommSession s_session;
 

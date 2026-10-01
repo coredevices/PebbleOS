@@ -12,7 +12,7 @@
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 #include "pbl/kernel/compiler.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 PBL_LOG_MODULE_DECLARE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
@@ -58,9 +58,9 @@ static void prv_send_error_response(CommSession *session, uint8_t response) {
     .session = session,
     .header = {
       .response_code = response,
-      .version = htonl(1),
-      .width = htonl(0),
-      .height = htonl(0),
+      .version = pbl_cpu_to_be32(1),
+      .width = pbl_cpu_to_be32(0),
+      .height = pbl_cpu_to_be32(0),
     },
   };
 
@@ -172,14 +172,14 @@ void screenshot_send_next_chunk(void *raw_state) {
     const ScreenshotHeader header = (const ScreenshotHeader){
       .response_code = SCREENSHOT_OK,
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
-      .version = htonl(1),
+      .version = pbl_cpu_to_be32(1),
 #elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-      .version = htonl(2),
+      .version = pbl_cpu_to_be32(2),
 #else
 #warning "Need CONFIG_SCREEN_COLOR_DEPTH_BITS for screenshot version."
 #endif
-      .width = htonl(state->framebuffer.width),
-      .height = htonl(state->framebuffer.height),
+      .width = pbl_cpu_to_be32(state->framebuffer.width),
+      .height = pbl_cpu_to_be32(state->framebuffer.height),
     };
     comm_session_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
     // Fill the rest of this packet with image data.

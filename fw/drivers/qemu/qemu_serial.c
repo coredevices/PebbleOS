@@ -17,7 +17,7 @@
 #include "system/hexdump.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/size.h"
 
 #include "comm/qemu_transport.h"
@@ -79,11 +79,11 @@ static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   PBL_LOG_DBG("Got compass msg: magnetic_heading: %" PRId32 ", calib_status:%u",
-              ntohl(hdr->magnetic_heading), hdr->calib_status);
+              pbl_be32_to_cpu(hdr->magnetic_heading), hdr->calib_status);
   PebbleEvent e = {
     .type = PEBBLE_COMPASS_DATA_EVENT,
     .compass_data = {
-      .magnetic_heading = ntohl(hdr->magnetic_heading),
+      .magnetic_heading = pbl_be32_to_cpu(hdr->magnetic_heading),
       .calib_status = hdr->calib_status
     }
   };
@@ -146,7 +146,7 @@ static void prv_health_metric_msg_callback(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  const int32_t value = (int32_t)ntohl(hdr->value);
+  const int32_t value = (int32_t)pbl_be32_to_cpu(hdr->value);
   PBL_LOG_DBG("Got health metric msg: metric: %d, value: %" PRId32, hdr->metric, value);
 
 #if !defined(CONFIG_RECOVERY_FW)
@@ -354,9 +354,9 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
 
   // Send the header
   QemuCommChannelHdr hdr = (QemuCommChannelHdr){
-    .signature = htons(QEMU_HEADER_SIGNATURE),
-    .protocol = htons(protocol),
-    .len = htons(len)
+    .signature = pbl_cpu_to_be16(QEMU_HEADER_SIGNATURE),
+    .protocol = pbl_cpu_to_be16(protocol),
+    .len = pbl_cpu_to_be16(len)
   };
   prv_send((uint8_t *)&hdr, sizeof(hdr));
 
@@ -364,7 +364,8 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
   prv_send(data, len);
 
   // Send the footer
-  QemuCommChannelFooter footer = (QemuCommChannelFooter){.signature = htons(QEMU_FOOTER_SIGNATURE)};
+  QemuCommChannelFooter footer =
+      (QemuCommChannelFooter){.signature = pbl_cpu_to_be16(QEMU_FOOTER_SIGNATURE)};
   prv_send((uint8_t *)&footer, sizeof(footer));
 
   pbl_mutex_unlock(&s_qemu_state.qemu_comm_lock);

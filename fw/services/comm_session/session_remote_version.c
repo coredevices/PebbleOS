@@ -12,7 +12,7 @@
 #include "kernel/event_loop.h"
 
 #include "pbl/kernel/compiler.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
@@ -126,7 +126,7 @@ static void prv_handle_phone_versions_response(CommSession *session, const uint8
   }
 
   comm_session_set_capabilities(session, capability_flags);
-  const uint32_t platform_bits = ntohl(response->platform_bitfield);
+  const uint32_t platform_bits = pbl_be32_to_cpu(response->platform_bitfield);
 
   const bool is_system = comm_session_is_system(session);
   PBL_LOG_INFO("Phone app: is_system=%u, plf=0x%" PRIx32 ", capabilities=0x%" PRIx32, is_system,

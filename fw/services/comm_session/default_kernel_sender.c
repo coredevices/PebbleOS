@@ -11,7 +11,7 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/testing.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #include "pbl/kernel/sem.h"
 
@@ -114,7 +114,7 @@ static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoin
     .consumed_length = 0,
     .session = session,
     .header = {
-      .endpoint_id = htons(endpoint_id),
+      .endpoint_id = pbl_cpu_to_be16(endpoint_id),
       .length = 0,
     },
   };
@@ -268,7 +268,7 @@ void comm_session_send_buffer_end_write(SendBuffer *sb) {
   sb->queue_job = (const SessionSendQueueJob){
     .impl = &s_default_kernel_send_job_impl,
   };
-  sb->header.length = ntohs(sb->written_length);
+  sb->header.length = pbl_be16_to_cpu(sb->written_length);
   comm_session_send_queue_add_job(session, (SessionSendQueueJob **)&sb);
 }
 

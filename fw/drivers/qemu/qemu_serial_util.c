@@ -10,7 +10,7 @@
 #include <pbl/logging/logging.h>
 
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 // -----------------------------------------------------------------------------------------
 void qemu_serial_private_init_state(QemuSerialGlobals *state) {
@@ -109,8 +109,8 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
 
         // Do byte swapping
         state->hdr.signature = QEMU_HEADER_SIGNATURE;
-        state->hdr.protocol = ntohs(state->hdr.protocol);
-        state->hdr.len = ntohs(state->hdr.len);
+        state->hdr.protocol = pbl_be16_to_cpu(state->hdr.protocol);
+        state->hdr.len = pbl_be16_to_cpu(state->hdr.len);
 
         // Validity checking
         if (state->hdr.len > QEMU_MAX_DATA_LEN) {
@@ -149,7 +149,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
           shared_circular_buffer_read_consume(&state->isr_buffer, &state->isr_buffer_client,
                                               sizeof(footer), (uint8_t *)&footer, &bytes_read);
           bytes_avail -= bytes_read;
-          footer.signature = ntohs(footer.signature);
+          footer.signature = pbl_be16_to_cpu(footer.signature);
           if (footer.signature != QEMU_FOOTER_SIGNATURE) {
             PBL_LOG_WRN("Invalid footer signature");
           }

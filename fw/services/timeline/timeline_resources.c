@@ -11,7 +11,7 @@
 #include "syscall/syscall.h"
 #include "syscall/syscall_internal.h"
 #include "system/passert.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/uuid.h"
 #include "pbl/util/testing.h"
 
@@ -58,7 +58,7 @@ PBL_T_STATIC bool prv_validate_lut(ResAppNum res_app_num) {
     return false;
   }
 
-  return (ntohl(data_signature) == TLUT_SIGNATURE);
+  return (pbl_be32_to_cpu(data_signature) == TLUT_SIGNATURE);
 }
 
 PBL_T_STATIC uint32_t prv_get_app_resource_id(ResAppNum res_app_num, TimelineResourceId timeline_id,

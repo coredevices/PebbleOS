@@ -58,7 +58,7 @@ void pulse_control_message_protocol_on_packet(PulseControlMessageProtocol *this,
 }
 
 void pulse_control_message_protocol_send_port_closed_message(PulseControlMessageProtocol *this,
-                                                             net16 port) {
+                                                             pbl_be16_t port) {
   PCMPPacket *message = this->send_begin_fn(PULSE_CONTROL_MESSAGE_PROTOCOL);
   message->code = PCMPCode_PortClosed;
   memcpy(message->information, &port, sizeof(port));

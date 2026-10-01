@@ -6,7 +6,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -17,7 +17,7 @@ static void prv_send_meta_response_kernelbg_cb(void *data) {
 
   // Swap endpoint_id bytes to be Big-Endian:
   meta_response_info_heap_copy->payload.endpoint_id =
-      htons(meta_response_info_heap_copy->payload.endpoint_id);
+      pbl_cpu_to_be16(meta_response_info_heap_copy->payload.endpoint_id);
 
   uint16_t payload_size;
   if (meta_response_info_heap_copy->payload.error_code == MetaResponseCodeCorruptedMessage) {

@@ -12,7 +12,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 
 #if defined(CONFIG_SERVICE_TOUCH)
 #include "applib/ui/recognizer/swipe.h"
@@ -387,7 +387,8 @@ void remote_input_protocol_msg_callback(CommSession *session, const uint8_t *dat
         if (length >= sizeof(RemoteInputButtonMsg)) {
           const RemoteInputButtonMsg *msg = (const RemoteInputButtonMsg *)data;
           result = remote_input_button_press((ButtonId)msg->button_id, msg->presses,
-                                             ntohs(msg->hold_ms), ntohs(msg->gap_ms));
+                                             pbl_be16_to_cpu(msg->hold_ms),
+                                             pbl_be16_to_cpu(msg->gap_ms));
         }
         break;
       case RemoteInputCommand_ButtonSet:
@@ -399,7 +400,7 @@ void remote_input_protocol_msg_callback(CommSession *session, const uint8_t *dat
       case RemoteInputCommand_Swipe:
         if (length >= sizeof(RemoteInputSwipeMsg)) {
           const RemoteInputSwipeMsg *msg = (const RemoteInputSwipeMsg *)data;
-          const uint16_t duration_ms = ntohs(msg->duration_ms);
+          const uint16_t duration_ms = pbl_be16_to_cpu(msg->duration_ms);
           result = remote_input_swipe(
               (RemoteInputSwipeDirection)msg->direction,
               (duration_ms > 0) ? duration_ms : REMOTE_INPUT_SWIPE_DEFAULT_DURATION_MS);

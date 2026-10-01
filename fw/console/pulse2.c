@@ -26,7 +26,7 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/crc32.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include "pbl/util/size.h"
 
 #include "pbl/kernel/msgq.h"
@@ -44,7 +44,7 @@
 #define RX_MAX_FRAME_SIZE   (PULSE_MAX_RECEIVE_UNIT + PULSE_MIN_FRAME_LENGTH)
 
 #define FRAME_DELIMITER '\x55'
-#define LINK_HEADER_LEN sizeof(net16)
+#define LINK_HEADER_LEN sizeof(pbl_be16_t)
 
 // Link Control Protocol
 // =====================
@@ -80,9 +80,9 @@ static void prv_on_protocol_reject(PPPControlProtocol *this, struct LCPPacket *p
 static void prv_on_echo_request(PPPControlProtocol *this, struct LCPPacket *packet) {
   if (this->state->link_state == LinkState_Opened) {
     struct LCPPacket *reply = pulse_link_send_begin(this->protocol_number);
-    memcpy(reply, packet, ntoh16(packet->length));
+    memcpy(reply, packet, pbl_be16_get(packet->length));
     reply->code = ControlCode_EchoReply;
-    pulse_link_send(reply, ntoh16(packet->length));
+    pulse_link_send(reply, pbl_be16_get(packet->length));
   }
 }
 
@@ -165,9 +165,9 @@ static void prv_process_received_frame(size_t frame_length) {
 
   uint32_t fcs;
   if (crc32(CRC32_INIT, s_current_rx_frame, frame_length) == CRC32_RESIDUE) {
-    net16 protocol_be;
+    pbl_be16_t protocol_be;
     memcpy(&protocol_be, s_current_rx_frame, sizeof(protocol_be));
-    uint16_t protocol = ntoh16(protocol_be);
+    uint16_t protocol = pbl_be16_get(protocol_be);
     void *body = &s_current_rx_frame[sizeof(protocol_be)];
     size_t body_len = frame_length - sizeof(protocol_be) - sizeof(fcs);
     switch (protocol) {
@@ -382,7 +382,7 @@ void *pulse_link_send_begin(const uint16_t protocol) {
     pbl_mutex_lock(&s_tx_buffer_mutex, PBL_FOREVER);
   }
 
-  net16 header = hton16(protocol);
+  pbl_be16_t header = pbl_be16_make(protocol);
   memcpy(s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE), &header, sizeof(header));
   return s_tx_buffer + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) + sizeof(header);
 }

@@ -24,7 +24,7 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/testing.h"
 #include "pbl/util/math.h"
-#include "util/net.h"
+#include "pbl/util/byteorder.h"
 #include <pbl/bluetooth/analytics.h>
 
 #include "pbl/kernel/sem.h"
@@ -423,7 +423,7 @@ static void prv_send_response(ResponseCode code, uint32_t token) {
   struct {
     uint8_t response_code;
     uint32_t token;
-  } PBL_PACKED msg = {.response_code = code, .token = htonl(token)};
+  } PBL_PACKED msg = {.response_code = code, .token = pbl_cpu_to_be32(token)};
 
   bool success = comm_session_send_data(comm_session_get_system_session(), PB_ENDPOINT_ID,
                                         (uint8_t *)&msg, sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
@@ -605,7 +605,7 @@ static bool prv_parse_init_index(const InitRequest *init_request, uint32_t *inde
     // along with the message, and when put_bytes is done later my the mobile apps, it will send
     // the same cookie back in the Init message.
 
-    *index_out = ntohl(init_request->cookie);
+    *index_out = pbl_be32_to_cpu(init_request->cookie);
   } else {
     // legacy putbytes requests, bank numbers
     if (init_request->index >= MAX_APP_BANKS) {
@@ -702,14 +702,14 @@ static void prv_do_init(void) {
     InitRequestExtraInfo *info =
         (InitRequestExtraInfo *)&s_pb_state.receiver.buffer[extra_info_offset];
     const uint32_t append_offset_magic = 0xBE4354EF;
-    if (ntohl(info->init_req_magic) == append_offset_magic) {
-      append_offset = ntohl(info->append_offset);
+    if (pbl_be32_to_cpu(info->init_req_magic) == append_offset_magic) {
+      append_offset = pbl_be32_to_cpu(info->append_offset);
       PBL_LOG_INFO("Restarting FW Update at offset %" PRIu32, append_offset);
     }
   }
 
   // Setup our state
-  const uint32_t size = ntohl(request->total_size);
+  const uint32_t size = pbl_be32_to_cpu(request->total_size);
   s_pb_state.total_size = size;
   s_pb_state.append_offset = append_offset;
   s_pb_state.remaining_bytes = size;
@@ -765,7 +765,7 @@ static bool prv_check_putrequest_for_errors(const PutRequest *request_hdr,
                                             uint32_t tot_request_size);
 
 static bool prv_do_put(const PutRequest *request, uint32_t request_size, uint32_t token) {
-  uint32_t data_length = ntohl(request->length);
+  uint32_t data_length = pbl_be32_to_cpu(request->length);
 
   pbl_sem_take(&s_pb_semaphore, PBL_FOREVER);
   uint32_t remaining_bytes = s_pb_state.remaining_bytes;
@@ -793,7 +793,7 @@ static void prv_do_commit(void) {
 
   const CommitRequest *request = (const CommitRequest *)s_pb_state.receiver.buffer;
 
-  uint32_t crc = ntohl(request->crc);
+  uint32_t crc = pbl_be32_to_cpu(request->crc);
   uint32_t calculated_crc = pb_storage_calculate_crc(&s_pb_state.storage, PutBytesCrcType_Legacy);
   bool commit_succeeded = (calculated_crc == crc);
 
@@ -851,7 +851,7 @@ static uint32_t prv_parse_token(const PutBytesCommand command, const SharedHeade
   if (command == PutBytesInit) {
     return 0;
   }
-  return ntohl(header->token);
+  return pbl_be32_to_cpu(header->token);
 }
 
 static bool prv_check_for_state_error(PutBytesCommand cmd, uint32_t token, uint32_t req_length) {
@@ -866,7 +866,7 @@ static bool prv_check_for_state_error(PutBytesCommand cmd, uint32_t token, uint3
 static bool prv_check_putrequest_for_errors(const PutRequest *request_hdr,
                                             uint32_t tot_request_size) {
   uint32_t req_size = tot_request_size - sizeof(PutRequest);
-  uint32_t data_length = ntohl(request_hdr->length);
+  uint32_t data_length = pbl_be32_to_cpu(request_hdr->length);
   if (data_length > req_size) {
     PBL_LOG_ERR("Length value longer than buffer");
     return true;
