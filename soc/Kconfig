@@ -5,15 +5,19 @@ choice
     prompt "SoC"
     help
       SoC family. Real boards pick a vendor SoC; QEMU boards pick
-      SOC_QEMU and then choose a Cortex core explicitly.
+      SOC_QEMU and then choose the emulated core.
 
 config SOC_NRF52
     bool "Nordic nRF52"
     select HAL_NORDIC
+    select CPU_CORTEX_M4
+    select CPU_HAS_FPU
 
 config SOC_SF32LB52
     bool "SiFli SF32LB52"
     select HAL_SIFLI
+    select CPU_STAR_MC1
+    select CPU_HAS_FPU
 
 config SOC_QEMU
     bool "QEMU emulated"
@@ -36,22 +40,15 @@ config QEMU
       sense under emulation.
 
 choice
-    prompt "ARM Cortex core"
-    default CORTEX_M4 if SOC_NRF52
-    default CORTEX_M33 if SOC_SF32LB52
+    prompt "Emulated core"
+    depends on SOC_QEMU
 
-config CORTEX_M4
+config SOC_QEMU_CORTEX_M4
     bool "Cortex-M4"
+    select CPU_CORTEX_M4
 
-config CORTEX_M33
+config SOC_QEMU_CORTEX_M33
     bool "Cortex-M33"
+    select CPU_CORTEX_M33
 
 endchoice
-
-config MPU_TYPE_ARMV8M
-    bool
-    default y if CORTEX_M33
-
-config MPU_TYPE_ARMV7M
-    bool
-    default y if !MPU_TYPE_ARMV8M

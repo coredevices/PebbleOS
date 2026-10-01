@@ -52,3 +52,5 @@ config KERNEL_MUTEX_LOCK_LR
 	default y
 
 endmenu
+
+rsource "arch/arm/Kconfig"

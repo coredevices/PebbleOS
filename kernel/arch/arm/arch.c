@@ -13,13 +13,13 @@
 #include "kernel.h"
 #include "pbl/kernel/compiler.h"
 
-#if defined(__VFP_FP__) && !defined(__SOFTFP__)
+#ifdef CONFIG_CPU_HAS_FPU
 #define HAS_FPU 1
 #else
 #define HAS_FPU 0
 #endif
 
-#ifdef CONFIG_MPU_TYPE_ARMV8M
+#ifdef CONFIG_CPU_CORTEX_M_HAS_SPLIM
 #define HAS_PSPLIM 1
 #else
 #define HAS_PSPLIM 0
@@ -28,8 +28,6 @@
 #define NUM_MPU_REGIONS 4
 #ifdef CONFIG_SOC_SF32LB52
 #define FIRST_MPU_REGION 8
-#elif defined(CONFIG_QEMU) && defined(CONFIG_CORTEX_M33)
-#define FIRST_MPU_REGION 4
 #else
 #define FIRST_MPU_REGION 4
 #endif

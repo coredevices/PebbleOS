@@ -3,9 +3,9 @@
 
 #pragma once
 
-#if defined(CONFIG_QEMU) && defined(CONFIG_CORTEX_M4)
+#if defined(CONFIG_SOC_QEMU_CORTEX_M4)
 #include "pebble/qemu_cm4.h"
-#elif defined(CONFIG_QEMU) && defined(CONFIG_CORTEX_M33)
+#elif defined(CONFIG_SOC_QEMU_CORTEX_M33)
 #include "pebble/qemu_cm33.h"
 #elif defined(MICRO_FAMILY_STM32F4)
 #include <stm32f4xx.h>

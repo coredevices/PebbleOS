@@ -4,9 +4,9 @@
 set(nonfree pebbleos-nonfree)
 
 if(CONFIG_NRF_FUEL_GAUGE)
-  if(CONFIG_CORTEX_M4)
+  if(CONFIG_CPU_CORTEX_M4)
     set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m4/soft-float)
-  elseif(CONFIG_CORTEX_M33)
+  elseif(CONFIG_CPU_CORTEX_M33)
     set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m33/soft-float)
   endif()
   pbl_include_directories(

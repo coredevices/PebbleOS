@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CPU_CORTEX_M
+	bool
+	help
+	  ARM Cortex-M core. Selected through the CPU the SoC selects.
+
+config CPU_CORTEX_M4
+	bool
+	select CPU_CORTEX_M
+	select ARMV7_M
+
+config CPU_CORTEX_M33
+	bool
+	select CPU_CORTEX_M
+	select ARMV8_M_MAINLINE
+
+config CPU_STAR_MC1
+	bool
+	select CPU_CORTEX_M33
+	select ARMV8_M_DSP
+	help
+	  Arm China STAR-MC1, compatible with the Cortex-M33.
+
+config ARMV7_M
+	bool
+	help
+	  ARMv7-M architecture.
+
+config ARMV8_M_MAINLINE
+	bool
+	select CPU_CORTEX_M_HAS_SPLIM
+	help
+	  ARMv8-M Mainline architecture.
+
+config ARMV8_M_DSP
+	bool
+	depends on ARMV8_M_MAINLINE
+	help
+	  ARMv8-M DSP extension.
+
+config CPU_CORTEX_M_HAS_SPLIM
+	bool
+	help
+	  MSPLIM and PSPLIM stack limit registers.
+
+config CPU_HAS_FPU
+	bool
+	help
+	  Single-precision FPU: FPv4-SP on ARMv7-M, FPv5-SP on ARMv8-M.
+
+config MPU_TYPE_ARMV8M
+	bool
+	default y if ARMV8_M_MAINLINE
+
+config MPU_TYPE_ARMV7M
+	bool
+	default y if ARMV7_M
