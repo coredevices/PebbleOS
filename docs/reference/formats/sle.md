@@ -3,7 +3,7 @@
 SLE is a small run-length encoding tuned for binary blobs that mix long
 zero runs with otherwise incompressible data. The encoder is
 `tools/sparse_length_encoding.py`; the firmware-side decoder is
-`src/fw/util/sle.c`.
+`fw/util/sle.c`.
 
 The encoded stream is:
 

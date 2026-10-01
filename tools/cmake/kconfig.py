@@ -138,12 +138,12 @@ def main():
         kconf.load_config(revision_defconfig, replace=False)
         sources.append(revision_defconfig)
 
-    prj_conf = os.path.join(srcdir, "src", "fw", "prj.conf")
+    prj_conf = os.path.join(srcdir, "fw", "prj.conf")
     if os.path.exists(prj_conf):
         kconf.load_config(prj_conf, replace=False)
         sources.append(prj_conf)
 
-    variant_conf = os.path.join(srcdir, "src", "fw", f"prj_{args.variant}.conf")
+    variant_conf = os.path.join(srcdir, "fw", f"prj_{args.variant}.conf")
     if os.path.exists(variant_conf):
         kconf.load_config(variant_conf, replace=False)
         sources.append(variant_conf)

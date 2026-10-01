@@ -5,9 +5,9 @@ PebbleOS is the operating system running on Pebble smartwatches.
 ## Organization
 
 - `docs`: project documentation
+- `fw`: firmware source
 - `resources`: firmware resources (icons, fonts, etc.)
 - `sdk`: application SDK generation files
-- `src`: firmware source
 - `subsys`: OS subsystems, e.g. logging
 - `tests`: tests
 - `third_party`: third-party code in git submodules, also includes glue code

@@ -29,7 +29,7 @@ typedef enum {
 } ExpandedViewEntrance;
 
 // Full-screen "expanded weather" card for TODAY — a standalone recreation of the
-// Pebble Timeline weather pin card (src/fw/services/timeline/weather_layout.c):
+// Pebble Timeline weather pin card (fw/services/timeline/weather_layout.c):
 // a condition title, the big LECO temperature, the weather icon, the location, a
 // friendly date header, and a short stats body.
 //

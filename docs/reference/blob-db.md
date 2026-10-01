@@ -3,8 +3,8 @@
 BlobDB is the key-value store the phone uses to push data to the watch
 (notifications, timeline pins, app metadata, weather, settings, …). Two
 Pebble Protocol endpoints speak it: `0xb1db` for phone-initiated writes
-(`src/fw/services/blob_db/endpoint.c`) and `0xb2db` for watch-initiated
-sync (`src/fw/services/blob_db/endpoint2.c`). Command opcodes and
+(`fw/services/blob_db/endpoint.c`) and `0xb2db` for watch-initiated
+sync (`fw/services/blob_db/endpoint2.c`). Command opcodes and
 response codes are in `include/pbl/services/blob_db/endpoint_private.h`,
 database ids in `include/pbl/services/blob_db/api.h`. All multi-byte
 fields are little-endian.
@@ -66,4 +66,4 @@ in `endpoint2.c`.
 | `0x06` | iOSNotifPref |        |               |
 
 New databases register a `BlobDBId` and an entry in `s_blob_dbs` in
-`src/fw/services/blob_db/api.c`.
+`fw/services/blob_db/api.c`.

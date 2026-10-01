@@ -109,7 +109,7 @@ before the trailing pstrings; stamp `minor_version = 2`):
 | `daily_feels_like[7]` | i16 x7 | daily `apparent_temperature_max`, per day (index 0 = today) | same unit as the other temps; 32767 (UNKNOWN_TEMP) per unknown slot |
 
 These feed the report page's warnings ladder (`prv_build_alert` in
-`src/fw/apps/system/weather/weather_app_layout.c`), most severe first: hail,
+`fw/apps/system/weather/weather_app_layout.c`), most severe first: hail,
 storms, heavy snow/rain, wintry mix, flood risk, strong winds, freezing rungs,
 heatwave, UV, visibility, humidity, precipitation chances, wind — with calm
 sign-offs otherwise. Old-minor records simply never fire the new rungs.

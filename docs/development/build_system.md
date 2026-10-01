@@ -40,7 +40,7 @@ pbl_library_sources(service.c util.c)
   has to list them. Dependencies between firmware libraries do not need
   declaring either: they resolve at the final link.
 - The library is named after its directory
-  (`src/fw/services/timeline` → `src__fw__services__timeline`). Give it a
+  (`fw/services/timeline` → `fw__services__timeline`). Give it a
   name of its own with `pbl_library_named()` when something refers to it,
   or when one directory builds more than one library.
 - The target is only created once the library gets its first source file,

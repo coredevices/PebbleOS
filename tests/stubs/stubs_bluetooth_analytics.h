@@ -6,7 +6,7 @@
 // The bluetooth_analytics interface was reworked off the Bluetopia GAPAPI types onto the
 // transport-agnostic struct pbl_bt_conn_params / struct pbl_bt_device_internal types from
 // bluetooth/gap_le_connect.h. These stubs mirror the current declarations in
-// src/fw/comm/bluetooth_analytics.h.
+// fw/comm/bluetooth_analytics.h.
 
 #include "pbl/bluetooth/gap_le_connect.h"
 

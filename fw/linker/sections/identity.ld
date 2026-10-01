@@ -7,7 +7,7 @@
      * identifies the binary. This hash gets inserted by the linker;
      * we're passing the flag --build-id=sha1 to do this.
      * The variable TINTIN_BUILD_ID is provided, so that the values can be used
-     * in the firmware code. See src/core/util/version.c for its use. */
+     * in the firmware code. See fw/system/version.c for its use. */
     .note.gnu.build-id : {
         __start_gnu_build_id_start = .;
         PROVIDE(TINTIN_BUILD_ID = .);

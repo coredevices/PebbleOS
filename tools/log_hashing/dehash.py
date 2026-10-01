@@ -16,8 +16,8 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-DICT_FIRMWARE = "build/src/fw/loghash_dict.json"
-DICT_PRF = "build/prf/src/fw/loghash_dict.json"
+DICT_FIRMWARE = "build/fw/loghash_dict.json"
+DICT_PRF = "build/prf/fw/loghash_dict.json"
 
 BUILD_ID_STR = "BUILD ID: "
 HASH_STR_LEN = 40

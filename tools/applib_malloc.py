@@ -186,7 +186,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--json",
         type=str,
-        default="src/fw/applib/applib_malloc.json",
+        default="fw/applib/applib_malloc.json",
         help="Specify the JSON file to use",
     )
     parser.add_argument(

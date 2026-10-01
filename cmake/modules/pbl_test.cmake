@@ -45,10 +45,10 @@ set(PBL_TEST_C_FLAGS
 )
 
 # Headers every test sees, in the order the compiler must find them:
-# src/fw/util/time first, since its time.h deliberately shadows the
+# fw/util/time first, since its time.h deliberately shadows the
 # host's, then the overrides, fakes and stubs ahead of the firmware.
 set(PBL_TEST_INCLUDES_HEAD
-  src/fw/util/time
+  fw/util/time
   include
 )
 set(PBL_TEST_INCLUDES_TAIL
@@ -60,11 +60,9 @@ set(PBL_TEST_INCLUDES_TAIL
   include
   kernel/arch/posix/include
   subsys
-  src/core
-  src/fw
-  src/boot
-  src/fw/applib/vendor/tinflate
-  src/fw/applib/vendor/uPNG
+  fw
+  fw/applib/vendor/tinflate
+  fw/applib/vendor/uPNG
   third_party/nanopb/nanopb
   third_party/tinymt/TinyMT/tinymt
 )
@@ -284,7 +282,7 @@ function(_pbl_test_add id)
     set(display ${platform})
   endif()
   set(options -Wno-unused-command-line-argument
-              -include${PBL_BASE}/src/fw/board/displays/display_${display}.h)
+              -include${PBL_BASE}/fw/board/displays/display_${display}.h)
 
   # Everything that changes the generated code, and nothing that does
   # not: two tests agreeing on all of it share their objects.

@@ -3,55 +3,55 @@
 
 pbl_clar_test(test_kickstart
   SOURCES
-    src/fw/applib/fonts/codepoint.c
-    src/fw/applib/graphics/@BITDEPTH@_bit/framebuffer.c
-    src/fw/applib/graphics/@BITDEPTH@_bit/bitblt_private.c
-    src/fw/applib/graphics/bitblt.c
-    src/fw/applib/graphics/framebuffer.c
-    src/fw/applib/graphics/gbitmap.c
-    src/fw/applib/graphics/gbitmap_png.c
-    src/fw/applib/graphics/gbitmap_sequence.c
-    src/fw/applib/graphics/gcolor_definitions.c
-    src/fw/applib/graphics/gdraw_command.c
-    src/fw/applib/graphics/gdraw_command_frame.c
-    src/fw/applib/graphics/gdraw_command_image.c
-    src/fw/applib/graphics/gdraw_command_list.c
-    src/fw/applib/graphics/gdraw_command_sequence.c
-    src/fw/applib/graphics/gpath.c
-    src/fw/applib/graphics/graphics.c
-    src/fw/applib/graphics/graphics_bitmap.c
-    src/fw/applib/graphics/graphics_circle.c
-    src/fw/applib/graphics/graphics_line.c
-    src/fw/applib/graphics/graphics_private.c
-    src/fw/applib/graphics/graphics_private_raw.c
-    src/fw/applib/graphics/gtransform.c
-    src/fw/applib/graphics/gtypes.c
-    src/fw/applib/graphics/perimeter.c
-    src/fw/applib/graphics/text_layout.c
-    src/fw/applib/graphics/bidi.c
-    src/fw/applib/graphics/arabic_shaping.c
-    src/fw/applib/graphics/text_render.c
-    src/fw/applib/graphics/text_resources.c
-    src/fw/applib/graphics/utf8.c
-    src/fw/applib/ui/status_bar_layer.c
-    src/fw/applib/ui/layer.c
-    src/fw/applib/vendor/tinflate/tinflate.c
-    src/fw/applib/vendor/uPNG/upng.c
-    src/fw/board/displays/display_getafix.c
-    src/fw/drivers/flash/flash_crc.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
-    src/fw/resource/resource.c
-    src/fw/resource/resource_storage.c
-    src/fw/resource/resource_storage_builtin.c
-    src/fw/resource/resource_storage_file.c
-    src/fw/resource/resource_storage_flash.c
-    src/fw/services/filesystem/app_file.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/system/hexdump.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
+    fw/applib/fonts/codepoint.c
+    fw/applib/graphics/@BITDEPTH@_bit/framebuffer.c
+    fw/applib/graphics/@BITDEPTH@_bit/bitblt_private.c
+    fw/applib/graphics/bitblt.c
+    fw/applib/graphics/framebuffer.c
+    fw/applib/graphics/gbitmap.c
+    fw/applib/graphics/gbitmap_png.c
+    fw/applib/graphics/gbitmap_sequence.c
+    fw/applib/graphics/gcolor_definitions.c
+    fw/applib/graphics/gdraw_command.c
+    fw/applib/graphics/gdraw_command_frame.c
+    fw/applib/graphics/gdraw_command_image.c
+    fw/applib/graphics/gdraw_command_list.c
+    fw/applib/graphics/gdraw_command_sequence.c
+    fw/applib/graphics/gpath.c
+    fw/applib/graphics/graphics.c
+    fw/applib/graphics/graphics_bitmap.c
+    fw/applib/graphics/graphics_circle.c
+    fw/applib/graphics/graphics_line.c
+    fw/applib/graphics/graphics_private.c
+    fw/applib/graphics/graphics_private_raw.c
+    fw/applib/graphics/gtransform.c
+    fw/applib/graphics/gtypes.c
+    fw/applib/graphics/perimeter.c
+    fw/applib/graphics/text_layout.c
+    fw/applib/graphics/bidi.c
+    fw/applib/graphics/arabic_shaping.c
+    fw/applib/graphics/text_render.c
+    fw/applib/graphics/text_resources.c
+    fw/applib/graphics/utf8.c
+    fw/applib/ui/status_bar_layer.c
+    fw/applib/ui/layer.c
+    fw/applib/vendor/tinflate/tinflate.c
+    fw/applib/vendor/uPNG/upng.c
+    fw/board/displays/display_getafix.c
+    fw/drivers/flash/flash_crc.c
+    fw/flash_region/filesystem_regions.c
+    fw/flash_region/flash_region.c
+    fw/resource/resource.c
+    fw/resource/resource_storage.c
+    fw/resource/resource_storage_builtin.c
+    fw/resource/resource_storage_file.c
+    fw/resource/resource_storage_flash.c
+    fw/services/filesystem/app_file.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/system/hexdump.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -61,20 +61,20 @@ pbl_clar_test(test_kickstart
     tests/fixtures/resources/pfs_resource_table.c
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_system_theme.c
-    src/fw/applib/graphics/gpath_builder.c
-    src/fw/applib/ui/animation_interpolate.c
-    src/fw/applib/ui/shadows.c
-    src/fw/applib/ui/text_layer.c
-    src/fw/applib/ui/window.c
-    src/fw/apps/system/timeline/text_node.c
-    src/fw/services/activity/health_util.c
-    src/fw/util/buffer.c
-    src/fw/util/stats.c
-    src/fw/util/time/mktime.c
-    src/fw/util/time/time.c
+    fw/applib/graphics/gpath_builder.c
+    fw/applib/ui/animation_interpolate.c
+    fw/applib/ui/shadows.c
+    fw/applib/ui/text_layer.c
+    fw/applib/ui/window.c
+    fw/apps/system/timeline/text_node.c
+    fw/services/activity/health_util.c
+    fw/util/buffer.c
+    fw/util/stats.c
+    fw/util/time/mktime.c
+    fw/util/time/time.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
-    src/fw/apps/watch/kickstart/kickstart.c
+    fw/apps/watch/kickstart/kickstart.c
   PLATFORMS obelix gabbro
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

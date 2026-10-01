@@ -23,8 +23,8 @@ function(pbl_init)
   set_property(GLOBAL PROPERTY PBL_STATIC_LIBS "")
 endfunction()
 
-# Name a library after its directory, e.g. src/fw/services/timeline ->
-# src__fw__services__timeline. Mirrors the waf model this replaces.
+# Name a library after its directory, e.g. fw/services/timeline ->
+# fw__services__timeline. Mirrors the waf model this replaces.
 function(pbl_library_default_name out)
   file(RELATIVE_PATH rel ${PBL_BASE} ${CMAKE_CURRENT_SOURCE_DIR})
   string(REPLACE "/" "__" name ${rel})

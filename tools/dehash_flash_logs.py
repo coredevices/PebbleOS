@@ -186,7 +186,6 @@ def main():
             os.path.dirname(__file__),
             "..",
             "build",
-            "src",
             "fw",
             "loghash_dict.json",
         )

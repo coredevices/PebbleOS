@@ -3,7 +3,7 @@
 Pebble Draw Commands are the vector-graphics format behind
 `GDrawCommand`: an image (`.pdc` / PDCI) or animation sequence (PDCS) of
 stroke/fill commands rendered at runtime. The packed structs and file
-magics are defined in `src/fw/applib/graphics/gdraw_command_private.h`;
+magics are defined in `fw/applib/graphics/gdraw_command_private.h`;
 files are generated from SVG or JSON by `tools/generate_pdcs/` (the
 serializers and format docstring live in
 `tools/generate_pdcs/pebble_commands.py`), and `tools/pdc2png` renders

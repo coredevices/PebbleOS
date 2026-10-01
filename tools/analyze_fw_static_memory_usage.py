@@ -72,7 +72,7 @@ def analyze_map(map_file, sections):
     # We're looking for groups of lines like the following...
     #
     # .text.do_tap_handle
-    #            0x0000000008010e08       0x28 src/fw/applib/accel_service.c.3.o
+    #            0x0000000008010e08       0x28 fw/applib/accel_service.c.3.o
 
     symbol_pattern = re.compile(r""" \.?[^\.\s]*\.(\S+)""")
     for line in lines:
@@ -132,7 +132,7 @@ def print_groups(text_section, verbose):
         ("fw/kernel/services/", "FW Kernel Services"),
         ("fw/", "FW Other"),
         ("core/", "FW Other"),
-        ("build/src/fw", "FW Other"),
+        ("build/fw", "FW Other"),
     ]
 
     class Group:

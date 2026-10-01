@@ -71,7 +71,7 @@ def generate_dehash_arguments():
         "bold": -1,
         "print_core": False,
         "dict_path": os.environ.get(
-            "PBL_CONSOLE_DICT_PATH", "build/src/fw/loghash_dict.json"
+            "PBL_CONSOLE_DICT_PATH", "build/fw/loghash_dict.json"
         ),
     }
 

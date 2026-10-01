@@ -13,7 +13,7 @@ def find_board_config(board_name):
     script_dir = Path(__file__).parent.parent
     config_path = (
         script_dir
-        / "src/fw/board/boards/support"
+        / "fw/board/boards/support"
         / f"board_{board_name}_nrfjprog_config.toml"
     )
 

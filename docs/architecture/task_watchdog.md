@@ -40,14 +40,14 @@ watchdog (`include/pbl/drivers/watchdog.h`).
 
 ## Users
 
-- `src/fw/main.c` starts the watchdog, suspends it for the first 30 s of
+- `fw/main.c` starts the watchdog, suspends it for the first 30 s of
   boot, adds the NewTimers channel (fed from a regular timer, which proves
   the timer thread still runs callbacks) and the KernelMain channel, which
   the launcher event loop feeds.
-- `src/fw/services/system_task/service.c` owns the KernelBackground
+- `fw/services/system_task/service.c` owns the KernelBackground
   channel. Its callback throttles the app thread to the idle priority for a
   short time when the system task is ready to run but starved.
-- `src/fw/console/pulse2.c` owns the PULSE channel.
+- `fw/console/pulse2.c` owns the PULSE channel.
 - Flash, filesystem and console code feeds the calling thread's channel from
   loops that legitimately run for seconds.
 
@@ -57,6 +57,6 @@ watchdog (`include/pbl/drivers/watchdog.h`).
 virtual time; see `docs/development/testing.md` for how to run it.
 
 The QEMU boards carry a real hardware watchdog (the CMSDK APB watchdog,
-driven by `src/fw/drivers/watchdog/qemu.c`), so both paths can be tried in
+driven by `fw/drivers/watchdog/qemu.c`), so both paths can be tried in
 the emulator: `wdt stall main` ends in a core dump, and `wdt stall irq`
 ends in a hardware reset that the next boot reports as a watchdog reset.

@@ -121,7 +121,7 @@ add_link_options(-Wl,--warn-common ${pbl_arch_flags} ${pbl_optimize})
 add_compile_options("SHELL:-include ${PBL_AUTOCONF_H}")
 
 # time.h shims the firmware needs ahead of the toolchain's.
-include_directories(${PBL_BASE}/src/fw/util/time)
+include_directories(${PBL_BASE}/fw/util/time)
 
 # MAX_FONT_GLYPH_SIZE comes from the SDK platform description.
 execute_process(

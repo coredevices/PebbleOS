@@ -19,7 +19,7 @@
 #include "pbl/version.h"
 
 //! This symbol and its contents are provided by the linker script, see the
-//! .note.gnu.build-id section in src/fw/fw_common.ld
+//! .note.gnu.build-id section in fw/fw_common.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
 const FirmwareMetadata TINTIN_METADATA PBL_SECTION(".pbl_fw_version") = {

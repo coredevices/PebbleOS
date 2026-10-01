@@ -2,11 +2,11 @@
 
 PBI is the raw bitmap format used for image resources and `GBitmap` data.
 The authoritative description is the Doxygen block in
-`src/fw/applib/graphics/gbitmap_pbi.h`; files are produced by
+`fw/applib/graphics/gbitmap_pbi.h`; files are produced by
 `tools/bitmapgen.py` (shipped in the app SDK) and loaded by
-`gbitmap_init_with_data()` in `src/fw/applib/graphics/gbitmap.c`. The
+`gbitmap_init_with_data()` in `fw/applib/graphics/gbitmap.c`. The
 `info_flags` bit layout is `BitmapInfo` in
-`src/fw/applib/graphics/gtypes.h`.
+`fw/applib/graphics/gtypes.h`.
 
 A PBI file is a 12-byte header, then pixel data, then (for palettized
 formats) the palette. All multi-byte fields are little-endian:

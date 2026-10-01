@@ -4,7 +4,7 @@
 #pragma once
 
 //! This module handles the collection and sending of periodic protobuf payloads to the phone
-//! using the protobuf schemas in src/fw/services/protobuf_log/proto and sent to the phone via
+//! using the protobuf schemas in fw/services/protobuf_log/proto and sent to the phone via
 //! data logging.
 
 #include "pbl/services/hrm/hrm_manager.h"
@@ -14,7 +14,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// Generated from src/fw/services/protobuf_log/proto
+// Generated from fw/services/protobuf_log/proto
 #include "measurements.pb.h"
 #include "event.pb.h"
 

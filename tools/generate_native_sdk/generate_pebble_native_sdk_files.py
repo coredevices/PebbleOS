@@ -38,8 +38,8 @@ COMPILER_HEADERS = (
 )
 
 
-def copy_compiler_headers(pbl_src_dir, sdk_include_dir):
-    include_dir = path.join(path.dirname(pbl_src_dir), "include")
+def copy_compiler_headers(pbl_root_dir, sdk_include_dir):
+    include_dir = path.join(pbl_root_dir, "include")
     for header in COMPILER_HEADERS:
         dest = path.join(sdk_include_dir, header)
         os.makedirs(path.dirname(dest), exist_ok=True)
@@ -64,8 +64,8 @@ PEBBLE_APP_H_TEXT = """\
 
 def generate_shim_files(
     shim_def_path,
-    pbl_src_dir,
-    pbl_output_src_dir,
+    pbl_root_dir,
+    pbl_output_dir,
     sdk_include_dir,
     sdk_lib_dir,
     platform_name,
@@ -90,13 +90,7 @@ def generate_shim_files(
         internal_sdk_build,
         frozen_revision=frozen_revision,
     )
-    root_dir = os.path.dirname(pbl_src_dir)
-    files = [
-        os.path.join(pbl_src_dir, f)
-        if os.path.exists(os.path.join(pbl_src_dir, f))
-        else os.path.join(root_dir, f)
-        for f in files
-    ]
+    files = [os.path.join(pbl_root_dir, f) for f in files]
 
     functions = []
     stubbed_functions = []
@@ -126,7 +120,7 @@ def generate_shim_files(
 
     compiler_flags = [f"-D{d}" for d in platform_info["DEFINES"]]
 
-    compiler_flags.append(f"-I{pbl_src_dir}/../kernel/arch/arm/include")
+    compiler_flags.append(f"-I{pbl_root_dir}/kernel/arch/arm/include")
     if autoconf:
         compiler_flags.extend(["-imacros", autoconf])
 
@@ -135,7 +129,7 @@ def generate_shim_files(
         functions,
         types,
         defines,
-        pbl_output_src_dir,
+        pbl_output_dir,
         internal_sdk_build=internal_sdk_build,
         compiler_flags=compiler_flags,
     )
@@ -171,9 +165,8 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
     # On platforms with Moddable XS support, ship xsffi.h alongside the SDK so
     # apps that use the FFI bindings can include it directly.
     if platform_info.get("HAS_MODDABLE_XS"):
-        repo_root = path.dirname(pbl_src_dir)
         xsffi_src = path.join(
-            repo_root,
+            pbl_root_dir,
             "third_party",
             "moddable",
             "moddable",
@@ -199,10 +192,10 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
         make_app_shim_lib(sorted_functions, sdk_lib_dir)
 
     # Build pebble.auto.c to build into our firmware
-    make_fw_shims(sorted_functions, pbl_output_src_dir)
+    make_fw_shims(sorted_functions, pbl_output_dir)
 
     # Build .json API description, used as input for static analysis tools:
-    make_json_api_description(sorted_functions, pbl_output_src_dir)
+    make_json_api_description(sorted_functions, pbl_output_dir)
 
     for filename, version_functions in (
         ("pebble_sdk_version.h", (f for f in all_functions if not f.worker_only)),
@@ -226,7 +219,7 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument("config")
-    parser.add_argument("src_dir")
+    parser.add_argument("root_dir")
     parser.add_argument("output_dir")
     parser.add_argument("platform_name")
     parser.add_argument(
@@ -237,41 +230,41 @@ if __name__ == "__main__":
     options = parser.parse_args()
 
     shim_config = path.normpath(path.abspath(options.config))
-    pbl_src_dir = path.normpath(path.abspath(options.src_dir))
-    pbl_output_src_dir = path.normpath(path.abspath(options.output_dir))
+    pbl_root_dir = path.normpath(path.abspath(options.root_dir))
+    pbl_output_dir = path.normpath(path.abspath(options.output_dir))
 
     sdk_include_dir = path.join(path.abspath(options.sdk_dir), INCLUDE_DIR)
     sdk_lib_dir = path.join(path.abspath(options.sdk_dir), LIB_DIR)
 
-    if not path.isdir(pbl_src_dir):
-        raise RuntimeError(f"'{pbl_src_dir}' does not exist")
+    if not path.isdir(pbl_root_dir):
+        raise RuntimeError(f"'{pbl_root_dir}' does not exist")
 
     for d in (sdk_include_dir, sdk_lib_dir):
         if not path.isdir(d):
             os.makedirs(d)
 
     shutil.copy(
-        path.join(pbl_src_dir, "fw", "process_management", "pebble_process_info.h"),
+        path.join(pbl_root_dir, "fw", "process_management", "pebble_process_info.h"),
         path.join(sdk_include_dir, "pebble_process_info.h"),
     )
 
     shutil.copy(
-        path.join(pbl_src_dir, "fw/applib/graphics", "gcolor_definitions.h"),
+        path.join(pbl_root_dir, "fw/applib/graphics", "gcolor_definitions.h"),
         path.join(sdk_include_dir, "gcolor_definitions.h"),
     )
 
     # Copy unsupported function warnings header to SDK
     shutil.copy(
-        path.join(pbl_src_dir, "fw", "applib", "pebble_warn_unsupported_functions.h"),
+        path.join(pbl_root_dir, "fw", "applib", "pebble_warn_unsupported_functions.h"),
         path.join(sdk_include_dir, "pebble_warn_unsupported_functions.h"),
     )
 
-    copy_compiler_headers(pbl_src_dir, sdk_include_dir)
+    copy_compiler_headers(pbl_root_dir, sdk_include_dir)
 
     generate_shim_files(
         shim_config,
-        pbl_src_dir,
-        pbl_output_src_dir,
+        pbl_root_dir,
+        pbl_output_dir,
         sdk_include_dir,
         sdk_lib_dir,
         options.platform_name,

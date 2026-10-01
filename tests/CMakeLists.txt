@@ -82,12 +82,12 @@ add_custom_target(pbl_generated_headers)
 pbl_include_directories(${PBL_BASE}/include ${PBL_BASE}/include/pbl)
 
 add_subdirectory(${PBL_BASE}/third_party/nanopb ${CMAKE_BINARY_DIR}/third_party/nanopb)
-add_subdirectory(${PBL_BASE}/src/fw/services/protobuf_log/proto
-                 ${CMAKE_BINARY_DIR}/src/fw/services/protobuf_log/proto)
+add_subdirectory(${PBL_BASE}/fw/services/protobuf_log/proto
+                 ${CMAKE_BINARY_DIR}/fw/services/protobuf_log/proto)
 add_subdirectory(${PBL_BASE}/lib/util ${CMAKE_BINARY_DIR}/lib/util)
 add_subdirectory(${PBL_BASE}/lib/btutil ${CMAKE_BINARY_DIR}/lib/btutil)
 add_subdirectory(${PBL_BASE}/tools/pdc2png ${CMAKE_BINARY_DIR}/tools/pdc2png)
-set(PBL_PROTO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/src/fw/services/protobuf_log/proto)
+set(PBL_PROTO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/fw/services/protobuf_log/proto)
 
 add_subdirectory(vendor/duma)
 

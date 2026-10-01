@@ -111,7 +111,7 @@ arg_core = False
 
 dict_path = os.getenv("PBL_CONSOLE_DICT_PATH")
 if not dict_path:
-    dict_path = "build/src/fw/loghash_dict.json"
+    dict_path = "build/fw/loghash_dict.json"
 
 arglist = os.getenv("PBL_CONSOLE_ARGS")
 if arglist:

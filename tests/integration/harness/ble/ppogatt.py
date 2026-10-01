@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Pebble Protocol over GATT, the phone's side of a session
-(src/fw/comm/ble/kernel_le_client/ppogatt).
+(fw/comm/ble/kernel_le_client/ppogatt).
 
 Reversed, the watch hosts the service and the phone starts the session with
 a Reset Request; forward, the phone hosts it and the watch starts it. The

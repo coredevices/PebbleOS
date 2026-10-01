@@ -212,17 +212,14 @@ def parse_file(
     filename, filenames, func, internal_sdk_build=False, compiler_flags=None
 ):
     root_dir = os.path.join(os.path.dirname(__file__), "../..")
-    src_dir = os.path.join(root_dir, "src")
 
     args = [
-        f"-I{src_dir}/core",
         f"-I{root_dir}/include",
         f"-I{root_dir}/subsys",
-        f"-I{src_dir}/fw",
-        f"-I{src_dir}/fw/applib/vendor/uPNG",
-        f"-I{src_dir}/fw/applib/vendor/tinflate",
-        f"-I{src_dir}/libc/include",
-        f"-I{src_dir}/../build/src/fw",
+        f"-I{root_dir}/fw",
+        f"-I{root_dir}/fw/applib/vendor/uPNG",
+        f"-I{root_dir}/fw/applib/vendor/tinflate",
+        f"-I{root_dir}/build/fw",
         "-DSDK",
         "-fno-builtin-itoa",
     ]
@@ -231,7 +228,7 @@ def parse_file(
     for inc_sub_dir in ["fw/util"]:
         args += [inc_sub_dir]
         args += [
-            f"-I{d}" for d in glob.glob(os.path.join(src_dir, f"{inc_sub_dir}/*/"))
+            f"-I{d}" for d in glob.glob(os.path.join(root_dir, f"{inc_sub_dir}/*/"))
         ]
 
     if internal_sdk_build:

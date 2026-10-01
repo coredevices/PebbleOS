@@ -6,7 +6,7 @@
 
 Output layout: [u32 LE inflated_size][raw DEFLATE stream]
 The stream is consumed on-watch by tinflate_uncompress() (raw deflate, no zlib
-header), see src/fw/apps/system/weather/globe_view.c prv_load_inflated().
+header), see fw/apps/system/weather/globe_view.c prv_load_inflated().
 
 --pdc-payload strips the 8-byte PDC file header ("PDCS"/"PDCI" magic + u32 size)
 first: gdraw_command_sequence pointers address the PAYLOAD directly, so the

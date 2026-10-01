@@ -9,7 +9,7 @@ pbl_clar_test(test_pulse_logging
 pbl_clar_test(test_log_modules
   SOURCES
     subsys/logging/logging.c
-    src/fw/applib/logging.c
+    fw/applib/logging.c
     tests/subsys/logging/runtime_module_peer.c
     tests/subsys/logging/static_module_peer.c
   DEFINES CONFIG_PULSE_EVERYWHERE=1 CONFIG_DEFAULT_LOG_LEVEL=100

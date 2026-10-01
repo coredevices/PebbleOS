@@ -191,11 +191,11 @@ The following sections discuss how the step and sleep tracking algorithms are in
 
 ### Code organization
 
-The core of the Health support logic is implemented in the activity service, which is in the `src/fw/services/activity` directory. The 3rd party API, which calls into the activity service, is implemented in `src/fw/applib/health_service.c.` 
+The core of the Health support logic is implemented in the activity service, which is in the `fw/services/activity` directory. The 3rd party API, which calls into the activity service, is implemented in `fw/applib/health_service.c.` 
 
 The activity service implements the step and sleep algorithms and all of the supporting logic required to integrate the algorithms into the system. It has the following directory structure:
 
-	src/fw/services/activity
+	fw/services/activity
 	  activity.c
 	  activity_insights.c
 	  kraepelin/
@@ -208,7 +208,7 @@ The activity service implements the step and sleep algorithms and all of the sup
 - **kraepelin\_algorithm.c** The core step and sleep algorithm code. This module is intended to be operating system agnostic and contains minimal calls to external functions. This module originated from open source code provided by the Stanford Wearables Lab. 
 - **kraepelin/activity\_algorithm\_kraepelin.c** This module wraps the core algorithm code found in `kraepelin_algorithm.c` to make it conform to the internal activity service algorithm API expected by activity.c. An alternative algorithm implementation would just need to implement this same API in order for it to be accessible from `activity.c`. This modules handles all memory allocations, persistent storage management, and other system integration functions for the raw algorithm code found in kraepelin\_algorithm.c.  
 
-The 3rd party Health API is implemented in `src/fw/applib/health_service.c`. The `health_service.c` module implements the “user land” logic for the Health API and makes calls into the activity service (which runs in privileged mode) to access the raw step and sleep data. 
+The 3rd party Health API is implemented in `fw/applib/health_service.c`. The `health_service.c` module implements the “user land” logic for the Health API and makes calls into the activity service (which runs in privileged mode) to access the raw step and sleep data. 
 
 ### Step Counting
 

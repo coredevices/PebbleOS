@@ -579,7 +579,7 @@ def render_svg(colors=None):
 
 
 if __name__ == "__main__":
-    # e.g. --download_wikipedia --json snowy_colors.json --header ../src/fw/applib/graphics/gcolor_definitions.h
+    # e.g. --download_wikipedia --json snowy_colors.json --header ../fw/applib/graphics/gcolor_definitions.h
     parser = argparse.ArgumentParser(
         description="Generate various files that contain Snowy's 64 colors"
     )

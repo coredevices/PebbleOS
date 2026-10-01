@@ -2,9 +2,9 @@
 
 Fonts ship in firmware resources as binary PBF files, generated from TTF
 input by `tools/font/fontgen.py` and parsed at runtime by
-`src/fw/applib/graphics/text_resources.c`. The on-disk structs live in
-`src/fw/applib/fonts/fonts_private.h` and
-`src/fw/applib/graphics/text_resources.h`; `tools/font/` also contains
+`fw/applib/graphics/text_resources.c`. The on-disk structs live in
+`fw/applib/fonts/fonts_private.h` and
+`fw/applib/graphics/text_resources.h`; `tools/font/` also contains
 standalone readers (`dump_font.py`, `pbf_extract.py`, `pbf_repack.py`).
 
 A PBF file is four consecutive sections, all multi-byte fields

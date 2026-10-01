@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Linker script assembly. Libraries that need additions to the master
-# script (src/fw/linker/pebbleos.ld) register fragments against one of its
+# script (fw/linker/pebbleos.ld) register fragments against one of its
 # hook points; the fragments are aggregated into snippets-<location>.ld
 # files that the master script includes.
 
@@ -92,10 +92,10 @@ function(pbl_linker_script out_script out_depends)
   list(APPEND depends ${dir}/ramfunc-objects.ld)
 
   # Fragments included by the master script and by the SoC fragments.
-  file(GLOB_RECURSE common CONFIGURE_DEPENDS ${PBL_BASE}/src/fw/linker/*.ld)
+  file(GLOB_RECURSE common CONFIGURE_DEPENDS ${PBL_BASE}/fw/linker/*.ld)
   list(APPEND depends ${common} ${PBL_AUTOCONF_H})
 
-  set(master ${PBL_BASE}/src/fw/linker/pebbleos.ld)
+  set(master ${PBL_BASE}/fw/linker/pebbleos.ld)
   set(script ${PROJECT_BINARY_DIR}/pebbleos.ld.pre)
 
   # The linker script goes through the C preprocessor, which gives it
@@ -103,7 +103,7 @@ function(pbl_linker_script out_script out_depends)
   add_custom_command(
     OUTPUT ${script}
     COMMAND ${CMAKE_C_COMPILER} -x assembler-with-cpp -nostdinc -undef -E -P
-            -I${dir} -I${PBL_BASE}/src/fw/linker
+            -I${dir} -I${PBL_BASE}/fw/linker
             -include ${PBL_AUTOCONF_H} ${master} -o ${script}
     DEPENDS ${master} ${depends}
     COMMENT "Preprocessing linker script"

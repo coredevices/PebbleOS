@@ -18,7 +18,7 @@ execute_process(
 text = open(sys.argv[1]).read()
 for part in ('MAJOR', 'MINOR'):
     print(int(re.search(r'PROCESS_INFO_CURRENT_SDK_VERSION_%s (\\S+)' % part, text).group(1), 16))"
-    ${PBL_BASE}/src/fw/process_management/pebble_process_info.h
+    ${PBL_BASE}/fw/process_management/pebble_process_info.h
   OUTPUT_VARIABLE sdk_version
   OUTPUT_STRIP_TRAILING_WHITESPACE
   COMMAND_ERROR_IS_FATAL ANY

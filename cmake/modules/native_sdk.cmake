@@ -19,8 +19,7 @@ function(pbl_native_sdk)
 root = os.getcwd()
 files = json.load(open(sys.argv[1]))['files']
 for f in files:
-    src = os.path.join(root, 'src', f)
-    print(src if os.path.exists(src) else os.path.join(root, f))"
+    print(os.path.join(root, f))"
       ${symbols}
     WORKING_DIRECTORY ${PBL_BASE}
     OUTPUT_VARIABLE headers
@@ -29,7 +28,7 @@ for f in files:
   )
   string(REPLACE "\n" ";" headers "${headers}")
 
-  set(PBL_PEBBLE_AUTO_C ${PROJECT_BINARY_DIR}/src/fw/pebble.auto.c)
+  set(PBL_PEBBLE_AUTO_C ${PROJECT_BINARY_DIR}/fw/pebble.auto.c)
   set(outputs
     ${PBL_PEBBLE_AUTO_C}
     ${sdk_dir}/include/pebble.h
@@ -47,7 +46,7 @@ for f in files:
     OUTPUT ${outputs}
     COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${script} --sdk-dir=${sdk_dir}
             --autoconf ${PROJECT_BINARY_DIR}/autoconf.h
-            ${symbols} ${PBL_BASE}/src ${PROJECT_BINARY_DIR}/src
+            ${symbols} ${PBL_BASE} ${PROJECT_BINARY_DIR}
             ${PBL_PLATFORM_NAME}
     DEPENDS ${script} ${symbols} ${headers}
     WORKING_DIRECTORY ${PBL_BASE}

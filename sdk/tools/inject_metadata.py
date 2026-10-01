@@ -14,7 +14,7 @@ import stm32_crc
 from pbpack import ResourcePack
 
 # Pebble App Metadata Struct
-# These are offsets of the PebbleProcessInfo struct in src/fw/app_management/pebble_process_info.h
+# These are offsets of the PebbleProcessInfo struct in fw/app_management/pebble_process_info.h
 HEADER_ADDR = 0x0  # 8 bytes
 STRUCT_VERSION_ADDR = 0x8  # 2 bytes
 SDK_VERSION_ADDR = 0xA  # 2 bytes
@@ -39,7 +39,7 @@ VIRTUAL_SIZE_HI_ADDR = 0x83  # 1 byte
 CRC_START_ADDR = 0x82
 
 # Pebble App Flags
-# These are PebbleAppFlags from src/fw/app_management/pebble_process_info.h
+# These are PebbleAppFlags from fw/app_management/pebble_process_info.h
 PROCESS_INFO_STANDARD_APP = 0
 PROCESS_INFO_WATCH_FACE = 1 << 0
 PROCESS_INFO_VISIBILITY_HIDDEN = 1 << 1

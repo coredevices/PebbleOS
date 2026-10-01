@@ -7,16 +7,16 @@ can call), three things must change together — the firmware build alone will
 not surface it to apps:
 
 1. **Implement the applib wrapper and syscall** — add the function to the
-   appropriate `src/fw/applib/.../<area>.c/.h`, declare the `sys_*` syscall in
-   `src/fw/syscall/syscall.h`, and define it with `DEFINE_SYSCALL` (from
-   `src/fw/syscall/syscall_internal.h`), either in the matching
-   `src/fw/syscall/<area>_syscalls.c` or alongside the implementation it
+   appropriate `fw/applib/.../<area>.c/.h`, declare the `sys_*` syscall in
+   `fw/syscall/syscall.h`, and define it with `DEFINE_SYSCALL` (from
+   `fw/syscall/syscall_internal.h`), either in the matching
+   `fw/syscall/<area>_syscalls.c` or alongside the implementation it
    wraps.
 2. **Register the symbol** in
    `tools/generate_native_sdk/exported_symbols.json` under the matching
    group, with an `addedRevision` matching the new SDK revision.
 3. **Bump the SDK revision** in
-   `src/fw/process_management/pebble_process_info.h`: increment
+   `fw/process_management/pebble_process_info.h`: increment
    `PROCESS_INFO_CURRENT_SDK_VERSION_MINOR` and add a comment line above the
    `#define` following the existing pattern, e.g. `// sdk.major:0x5
 .minor:0x66 -- <description> (rev 105)`. The `rev` number in the comment
@@ -50,7 +50,7 @@ native watchapps, all under `build/`:
   `__attribute__`.
 - `build/sdk/<platform>/lib/libpebble.a` — static library containing
   trampolines that call the exported functions in flash
-- `build/src/fw/pebble.auto.c` — `g_pbl_system_tbl`, the table of function
+- `build/fw/pebble.auto.c` — `g_pbl_system_tbl`, the table of function
   pointers the trampolines use to find an exported function's address;
   compiled into the firmware image
 

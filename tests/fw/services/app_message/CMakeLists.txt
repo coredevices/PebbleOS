@@ -3,20 +3,20 @@
 
 pbl_clar_test(test_app_message_receiver
   SOURCES
-    src/fw/applib/app_inbox.c
-    src/fw/applib/app_message/app_message_receiver.c
-    src/fw/services/app_message/app_message_receiver.c
-    src/fw/services/app_inbox_service/service.c
+    fw/applib/app_inbox.c
+    fw/applib/app_message/app_message_receiver.c
+    fw/services/app_message/app_message_receiver.c
+    fw/services/app_inbox_service/service.c
   OVERRIDES applib_malloc
 )
 
 pbl_clar_test(test_app_message_sender
   SOURCES
-    src/fw/services/app_message/app_message_sender.c
-    src/fw/services/comm_session/session_send_queue.c
+    fw/services/app_message/app_message_sender.c
+    fw/services/comm_session/session_send_queue.c
 )
 
 pbl_clar_test(test_app_session_capabilities
   SOURCES
-    src/fw/services/comm_session/app_session_capabilities.c
+    fw/services/comm_session/app_session_capabilities.c
 )

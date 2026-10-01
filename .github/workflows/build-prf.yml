@@ -27,7 +27,7 @@ jobs:
               - 'platform/**'
               - 'resources/**'
               - 'soc/**'
-              - 'src/**'
+              - 'fw/**'
               - 'tools/**'
               - 'third_party/**'
               - 'cmake/**'

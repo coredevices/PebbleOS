@@ -17,14 +17,14 @@ add_custom_target(pbl_timezone_fixture DEPENDS ${timezone_fixture})
 
 pbl_clar_test(test_pfs
   SOURCES
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/system/hexdump.c
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/system/hexdump.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
     tests/fakes/fake_spi_flash.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
   PLATFORMS obelix
   DEFINES DUMA_DISABLED
@@ -33,10 +33,10 @@ pbl_clar_test(test_pfs
 
 pbl_clar_test(test_put_bytes
   SOURCES
-    src/fw/services/put_bytes/put_bytes.c
-    src/fw/services/put_bytes/put_bytes_storage.c
+    fw/services/put_bytes/put_bytes.c
+    fw/services/put_bytes/put_bytes_storage.c
     tests/fakes/fake_session.c
-    src/fw/util/legacy_checksum.c
+    fw/util/legacy_checksum.c
     tests/fakes/fake_events.c
     tests/fakes/fake_put_bytes_storage_mem.c
     tests/fakes/fake_resource_storage.c
@@ -50,39 +50,39 @@ pbl_clar_test(test_cron
   SOURCES
     tests/fakes/fake_rtc.c
     subsys/cron/cron.c
-    src/fw/util/time/time.c
-    src/fw/util/time/mktime.c
+    fw/util/time/time.c
+    fw/util/time/mktime.c
 )
 
 pbl_clar_test(test_contacts
   SOURCES
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/services/contacts/attributes_address.c
-    src/fw/services/contacts/contacts.c
-    src/fw/services/blob_db/contacts_db.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/services/timeline/item.c
-    src/fw/services/timeline/attributes_actions.c
-    src/fw/services/timeline/attribute_group.c
-    src/fw/services/timeline/attribute.c
-    src/fw/util/stringlist.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
-    src/fw/util/rand/rand.c
-    src/fw/util/time/time.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/services/contacts/attributes_address.c
+    fw/services/contacts/contacts.c
+    fw/services/blob_db/contacts_db.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/services/timeline/item.c
+    fw/services/timeline/attributes_actions.c
+    fw/services/timeline/attribute_group.c
+    fw/services/timeline/attribute.c
+    fw/util/stringlist.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
+    fw/util/rand/rand.c
+    fw/util/time/time.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
   OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_evented_timer
   SOURCES
-    src/fw/services/evented_timer/service.c
+    fw/services/evented_timer/service.c
 )
 
 pbl_clar_test(test_music_endpoint
@@ -90,36 +90,36 @@ pbl_clar_test(test_music_endpoint
     tests/fakes/fake_events.c
     tests/fakes/fake_session.c
     tests/fakes/fake_rtc.c
-    src/fw/services/music/endpoint.c
-    src/fw/services/music/service.c
+    fw/services/music/endpoint.c
+    fw/services/music/service.c
 )
 
 pbl_clar_test(test_imaging
   SOURCES
     tests/fakes/fake_session.c
-    src/fw/services/imaging/imaging.c
+    fw/services/imaging/imaging.c
 )
 
 pbl_clar_test(test_analytics_native
   SOURCES
-    src/fw/services/analytics/native.c
+    fw/services/analytics/native.c
 )
 
 pbl_clar_test(test_compass_cal
   SOURCES
-    src/fw/services/ecompass/correction.c
+    fw/services/ecompass/correction.c
 )
 
 pbl_clar_test(test_light
   SOURCES
-    src/fw/services/light/service.c
+    fw/services/light/service.c
   OVERRIDES getafix_backlight
 )
 
 pbl_clar_test(test_als_screen_compensation
   SOURCES
-    src/fw/services/light/als_screen_compensation_math.c
-    src/fw/services/light/als_screen_compensation_region.c
+    fw/services/light/als_screen_compensation_math.c
+    fw/services/light/als_screen_compensation_region.c
   DEFINES CONFIG_ALS_SCREEN_COMPENSATION CONFIG_AMBIENT_LIGHT_BITS=16
   OVERRIDES dummy_board
 )
@@ -128,101 +128,101 @@ pbl_clar_test(test_phone_pp
   SOURCES
     tests/fakes/fake_events.c
     tests/fakes/fake_session.c
-    src/fw/services/phone_call/util.c
-    src/fw/services/phone_pp/service.c
+    fw/services/phone_call/util.c
+    fw/services/phone_pp/service.c
   OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_phone_call
   SOURCES
-    src/fw/services/phone_call/service.c
+    fw/services/phone_call/service.c
 )
 
 pbl_clar_test(test_regular_timer
   SOURCES
-    src/fw/services/regular_timer/service.c
+    fw/services/regular_timer/service.c
     tests/fakes/fake_rtc.c
 )
 
 pbl_clar_test(test_debounced_connection_service
   SOURCES
-    src/fw/services/regular_timer/service.c
+    fw/services/regular_timer/service.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_session.c
-    src/fw/services/debounced_connection_service/service.c
+    fw/services/debounced_connection_service/service.c
 )
 
 pbl_clar_test(test_timeline_item
   SOURCES
     tests/fakes/fake_rtc.c
-    src/fw/util/rand/rand.c
+    fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/services/timeline/item.c
-    src/fw/services/timeline/attributes_actions.c
-    src/fw/services/timeline/attribute_group.c
-    src/fw/services/timeline/attribute.c
-    src/fw/util/stringlist.c
-    src/fw/util/time/time.c
+    fw/services/timeline/item.c
+    fw/services/timeline/attributes_actions.c
+    fw/services/timeline/attribute_group.c
+    fw/services/timeline/attribute.c
+    fw/util/stringlist.c
+    fw/util/time/time.c
 )
 
 pbl_clar_test(test_clock
   SOURCES
-    src/fw/services/i18n/i18n.c
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/resource/resource.c
-    src/fw/resource/resource_storage.c
-    src/fw/resource/resource_storage_builtin.c
-    src/fw/resource/resource_storage_file.c
-    src/fw/resource/resource_storage_flash.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/filesystem/app_file.c
-    src/fw/util/time/time.c
-    src/fw/util/time/mktime.c
+    fw/services/i18n/i18n.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/resource/resource.c
+    fw/resource/resource_storage.c
+    fw/resource/resource_storage_builtin.c
+    fw/resource/resource_storage_file.c
+    fw/resource/resource_storage_flash.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/filesystem/app_file.c
+    fw/util/time/time.c
+    fw/util/time/mktime.c
     tests/fakes/fake_bootbits.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
-    src/fw/drivers/flash/flash_crc.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
+    fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_events.c
     tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fixtures/resources/pfs_resource_table.c
-    src/fw/services/timezone_database/service.c
-    src/fw/services/clock/service.c
+    fw/services/timezone_database/service.c
+    fw/services/clock/service.c
   OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_timezone_database
   SOURCES
     tests/fakes/fake_spi_flash.c
-    src/fw/services/timezone_database/service.c
+    fw/services/timezone_database/service.c
   OVERRIDES test_timezone  DEPENDS pbl_timezone_fixture
 )
 
 pbl_clar_test(test_wakeup
   SOURCES
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/util/rand/rand.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/process_management/pebble_process_info.c
-    src/fw/resource/resource.c
-    src/fw/resource/resource_storage.c
-    src/fw/resource/resource_storage_builtin.c
-    src/fw/resource/resource_storage_file.c
-    src/fw/resource/resource_storage_flash.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/filesystem/app_file.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/services/wakeup/service.c
+    fw/process_management/pebble_process_info.c
+    fw/resource/resource.c
+    fw/resource/resource_storage.c
+    fw/resource/resource_storage_builtin.c
+    fw/resource/resource_storage_file.c
+    fw/resource/resource_storage_flash.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/filesystem/app_file.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/services/wakeup/service.c
     tests/fakes/fake_bootbits.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
-    src/fw/drivers/flash/flash_crc.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
+    fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c
@@ -232,24 +232,24 @@ pbl_clar_test(test_wakeup
 
 pbl_clar_test(test_migrate_wakeup
   SOURCES
-    src/fw/drivers/flash/flash_crc.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
-    src/fw/process_management/pebble_process_info.c
-    src/fw/resource/resource.c
-    src/fw/resource/resource_storage.c
-    src/fw/resource/resource_storage_builtin.c
-    src/fw/resource/resource_storage_file.c
-    src/fw/resource/resource_storage_flash.c
-    src/fw/services/filesystem/app_file.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/services/wakeup/service.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
-    src/fw/util/rand/rand.c
+    fw/drivers/flash/flash_crc.c
+    fw/flash_region/filesystem_regions.c
+    fw/flash_region/flash_region.c
+    fw/process_management/pebble_process_info.c
+    fw/resource/resource.c
+    fw/resource/resource_storage.c
+    fw/resource/resource_storage_builtin.c
+    fw/resource/resource_storage_file.c
+    fw/resource/resource_storage_flash.c
+    fw/services/filesystem/app_file.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/services/wakeup/service.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
+    fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
@@ -261,21 +261,21 @@ pbl_clar_test(test_migrate_wakeup
 
 pbl_clar_test(test_registry_endpoint
   SOURCES
-    src/fw/services/registry_endpoint/service.c
+    fw/services/registry_endpoint/service.c
 )
 
 pbl_clar_test(test_audio_endpoint
   SOURCES
-    src/fw/services/audio_endpoint/service.c
+    fw/services/audio_endpoint/service.c
     tests/fakes/fake_session.c
 )
 
 pbl_clar_test(test_speaker_service
   SOURCES
-    src/fw/services/speaker/speaker_service.c
-    src/fw/services/speaker/note_sequence.c
-    src/fw/services/speaker/pcm_stream.c
-    src/fw/services/speaker/track_player.c
+    fw/services/speaker/speaker_service.c
+    fw/services/speaker/note_sequence.c
+    fw/services/speaker/pcm_stream.c
+    fw/services/speaker/track_player.c
     tests/fakes/fake_events.c
   DEFINES CONFIG_SPEAKER=1
   OVERRIDES dummy_board
@@ -283,16 +283,16 @@ pbl_clar_test(test_speaker_service
 
 pbl_clar_test(test_transcription
   SOURCES
-    src/fw/services/voice/transcription.c
+    fw/services/voice/transcription.c
 )
 
 pbl_clar_test(test_voice_endpoint
   SOURCES
-    src/fw/util/rand/rand.c
+    fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/util/generic_attribute.c
-    src/fw/services/voice/transcription.c
-    src/fw/services/voice_endpoint/service.c
+    fw/util/generic_attribute.c
+    fw/services/voice/transcription.c
+    fw/services/voice_endpoint/service.c
     tests/fakes/fake_session.c
   DEFINES CONFIG_MIC
   OVERRIDES dummy_board
@@ -300,16 +300,16 @@ pbl_clar_test(test_voice_endpoint
 
 pbl_clar_test(test_app_cache
   SOURCES
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/services/filesystem/app_file.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/app_cache/service.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/services/filesystem/app_file.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/app_cache/service.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_events.c
@@ -318,31 +318,31 @@ pbl_clar_test(test_app_cache
 
 pbl_clar_test(test_app_install_manager
   SOURCES
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/resource/resource.c
-    src/fw/resource/resource_storage.c
-    src/fw/resource/resource_storage_builtin.c
-    src/fw/resource/resource_storage_file.c
-    src/fw/resource/resource_storage_flash.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/filesystem/app_file.c
-    src/fw/services/app_cache/service.c
-    src/fw/services/process_management/app_storage.c
-    src/fw/process_management/app_install_manager.c
-    src/fw/process_management/pebble_process_md.c
-    src/fw/services/blob_db/app_db.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/util/rand/rand.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/resource/resource.c
+    fw/resource/resource_storage.c
+    fw/resource/resource_storage_builtin.c
+    fw/resource/resource_storage_file.c
+    fw/resource/resource_storage_flash.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/filesystem/app_file.c
+    fw/services/app_cache/service.c
+    fw/services/process_management/app_storage.c
+    fw/process_management/app_install_manager.c
+    fw/process_management/pebble_process_md.c
+    fw/services/blob_db/app_db.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/applib/graphics/gcolor_definitions.c
-    src/fw/applib/graphics/gtypes.c
-    src/fw/process_management/pebble_process_info.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
-    src/fw/drivers/flash/flash_crc.c
+    fw/applib/graphics/gcolor_definitions.c
+    fw/applib/graphics/gtypes.c
+    fw/process_management/pebble_process_info.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
+    fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fakes/fake_system_app_registry_apps.c
@@ -352,32 +352,32 @@ pbl_clar_test(test_app_install_manager
 
 pbl_clar_test(test_app_menu_data_source
   SOURCES
-    src/fw/applib/graphics/gcolor_definitions.c
-    src/fw/applib/graphics/gtypes.c
-    src/fw/drivers/flash/flash_crc.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/flash_region/flash_region.c
-    src/fw/process_management/app_install_manager.c
-    src/fw/process_management/app_menu_data_source.c
-    src/fw/process_management/pebble_process_info.c
-    src/fw/process_management/pebble_process_md.c
-    src/fw/resource/resource.c
-    src/fw/resource/resource_storage.c
-    src/fw/resource/resource_storage_builtin.c
-    src/fw/resource/resource_storage_file.c
-    src/fw/resource/resource_storage_flash.c
-    src/fw/services/app_cache/service.c
-    src/fw/services/blob_db/app_db.c
-    src/fw/services/filesystem/app_file.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/process_management/app_order_storage.c
-    src/fw/services/process_management/app_storage.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
-    src/fw/util/rand/rand.c
+    fw/applib/graphics/gcolor_definitions.c
+    fw/applib/graphics/gtypes.c
+    fw/drivers/flash/flash_crc.c
+    fw/flash_region/filesystem_regions.c
+    fw/flash_region/flash_region.c
+    fw/process_management/app_install_manager.c
+    fw/process_management/app_menu_data_source.c
+    fw/process_management/pebble_process_info.c
+    fw/process_management/pebble_process_md.c
+    fw/resource/resource.c
+    fw/resource/resource_storage.c
+    fw/resource/resource_storage_builtin.c
+    fw/resource/resource_storage_file.c
+    fw/resource/resource_storage_flash.c
+    fw/services/app_cache/service.c
+    fw/services/blob_db/app_db.c
+    fw/services/filesystem/app_file.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/process_management/app_order_storage.c
+    fw/services/process_management/app_storage.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
+    fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -389,20 +389,20 @@ pbl_clar_test(test_app_menu_data_source
 pbl_clar_test(test_process_loader_storage
   SOURCES
     lib/util/build_id.c
-    src/fw/kernel/util/segment.c
-    src/fw/process_management/pebble_process_info.c
-    src/fw/process_management/pebble_process_md.c
-    src/fw/services/process_management/app_storage.c
-    src/fw/services/process_management/process_loader_storage.c
-    src/fw/util/legacy_checksum.c
+    fw/kernel/util/segment.c
+    fw/process_management/pebble_process_info.c
+    fw/process_management/pebble_process_md.c
+    fw/services/process_management/app_storage.c
+    fw/services/process_management/process_loader_storage.c
+    fw/util/legacy_checksum.c
   OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_app_fetch_endpoint
   SOURCES
-    src/fw/util/rand/rand.c
+    fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    src/fw/services/app_fetch_endpoint/service.c
+    fw/services/app_fetch_endpoint/service.c
     tests/fakes/fake_events.c
     tests/fakes/fake_session.c
   OVERRIDES dummy_board
@@ -410,8 +410,8 @@ pbl_clar_test(test_app_fetch_endpoint
 
 pbl_clar_test(test_accel_manager
   SOURCES
-    src/fw/util/shared_circular_buffer.c
-    src/fw/services/accel_manager/service.c
+    fw/util/shared_circular_buffer.c
+    fw/services/accel_manager/service.c
     tests/fakes/fake_events.c
   DEFINES CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES=25
   OVERRIDES dummy_board
@@ -419,7 +419,7 @@ pbl_clar_test(test_accel_manager
 
 pbl_clar_test(test_shared_prf_storage_v3
   SOURCES
-    src/fw/services/shared_prf_storage/shared_prf_storage.c
+    fw/services/shared_prf_storage/shared_prf_storage.c
     tests/fakes/fake_flash_region.c
     tests/fakes/fake_spi_flash.c
   PLATFORMS obelix
@@ -428,24 +428,24 @@ pbl_clar_test(test_shared_prf_storage_v3
 
 pbl_clar_test(test_app_file
   SOURCES
-    src/fw/services/filesystem/app_file.c
+    fw/services/filesystem/app_file.c
 )
 
 pbl_clar_test(test_do_not_disturb
   SOURCES
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/services/notifications/alerts_preferences.c
-    src/fw/services/notifications/do_not_disturb.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/services/notifications/alerts_preferences.c
+    fw/services/notifications/do_not_disturb.c
     subsys/cron/cron.c
-    src/fw/util/time/time.c
-    src/fw/util/time/mktime.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
+    fw/util/time/time.c
+    fw/util/time/mktime.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
   OVERRIDES dummy_board
@@ -453,63 +453,63 @@ pbl_clar_test(test_do_not_disturb
 
 pbl_clar_test(test_weather_service
   SOURCES
-    src/fw/util/pstring.c
-    src/fw/util/time/time.c
-    src/fw/util/crc8.c
-    src/fw/util/legacy_checksum.c
+    fw/util/pstring.c
+    fw/util/time/time.c
+    fw/util/crc8.c
+    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
-    src/fw/flash_region/flash_region.c
-    src/fw/flash_region/filesystem_regions.c
-    src/fw/services/settings/settings_file.c
-    src/fw/services/settings/settings_raw_iter.c
-    src/fw/services/filesystem/flash_translation.c
-    src/fw/services/filesystem/pfs.c
-    src/fw/services/blob_db/weather_db.c
-    src/fw/services/weather/weather_service.c
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/blob_db/weather_db.c
+    fw/services/weather/weather_service.c
     tests/fw/services/blob_db/weather_data_shared.c
   OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_vibe
   SOURCES
-    src/fw/services/vibe_pattern/service.c
-    src/fw/applib/ui/vibes.c
+    fw/services/vibe_pattern/service.c
+    fw/applib/ui/vibes.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
 )
 
 pbl_clar_test(test_vibe_intensity
   SOURCES
-    src/fw/services/vibes/vibe_intensity.c
+    fw/services/vibes/vibe_intensity.c
 )
 
 pbl_clar_test(test_vibe_score
   SOURCES
-    src/fw/services/vibes/vibe_score.c
-    src/fw/util/generic_attribute.c
+    fw/services/vibes/vibe_score.c
+    fw/util/generic_attribute.c
 )
 
 pbl_clar_test(test_vibe_score_info
   SOURCES
-    src/fw/services/vibes/vibe_score_info.c
+    fw/services/vibes/vibe_score_info.c
 )
 
 pbl_clar_test(test_touch
   SOURCES
-    src/fw/services/touch/touch.c
+    fw/services/touch/touch.c
     tests/fakes/fake_events.c
 )
 
 pbl_clar_test(test_touch_session
   SOURCES
-    src/fw/services/touch/touch_session.c
+    fw/services/touch/touch_session.c
     tests/fakes/fake_rtc.c
 )
 
 pbl_clar_test(test_hrm_manager
   SOURCES
-    src/fw/services/hrm/hrm_manager.c
+    fw/services/hrm/hrm_manager.c
     kernel/tick.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
@@ -519,10 +519,10 @@ pbl_clar_test(test_hrm_manager
 
 pbl_clar_test(test_app_glance_service
   SOURCES
-    src/fw/services/app_glances/app_glance_service.c
-    src/fw/services/blob_db/app_glance_db.c
-    src/fw/services/timeline/attribute.c
-    src/fw/util/crc8.c
+    fw/services/app_glances/app_glance_service.c
+    fw/services/blob_db/app_glance_db.c
+    fw/services/timeline/attribute.c
+    fw/util/crc8.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
   OVERRIDES dummy_board

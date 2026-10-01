@@ -72,7 +72,7 @@ def generate_tree(f, additional_symbols, config):
                     src_path = k
                     break
                 if symbol.startswith(("sys_", "syscall")):
-                    src_path = "build/src/fw/syscall.auto.s"
+                    src_path = "build/fw/syscall.auto.s"
                     break
         path = os.path.join(src_path, symbol)
         tree = tree_add_value(tree, path, size)

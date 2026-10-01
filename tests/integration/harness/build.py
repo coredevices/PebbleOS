@@ -100,7 +100,7 @@ class Build:
 
     @property
     def loghash_dict(self):
-        return self.join("src", "fw", "loghash_dict.json")
+        return self.join("fw", "loghash_dict.json")
 
     def flash_region(self, name):
         """``(address, size)`` of a flash region (e.g. ``FILESYSTEM``), from
@@ -110,7 +110,6 @@ class Build:
                 continue
             header = os.path.join(
                 self.topdir,
-                "src",
                 "fw",
                 "flash_region",
                 f"flash_region_{key[len('CONFIG_FLASH_') :].lower()}.h",

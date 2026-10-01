@@ -99,7 +99,7 @@ function(pbl_link_firmware)
 
   # Hashed log strings: the dictionary the console and the bundle use to
   # turn hashes back into messages.
-  set(loghash ${PROJECT_BINARY_DIR}/src/fw/loghash_dict.json)
+  set(loghash ${PROJECT_BINARY_DIR}/fw/loghash_dict.json)
   if(CONFIG_LOG_HASHED)
     set(fw_loghash ${PROJECT_BINARY_DIR}/pebbleos_loghash_dict.json)
     add_custom_command(

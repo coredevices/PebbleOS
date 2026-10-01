@@ -10,12 +10,12 @@ PebbleOS runs on its own [kernel API](kernel.md) (`include/pbl/kernel`,
 implemented under `kernel/`). The main source layers, as described on the
 <a href="../apidoc/index.html">API reference</a> main page:
 
-- `src/fw/applib` — application framework and UI, the API surface exposed to
+- `fw/applib` — application framework and UI, the API surface exposed to
   watchapps ([SDK export](../development/sdk_export.md) describes how
   functions get there).
-- `src/fw/services` — system services (Bluetooth, filesystem, activity, …).
-- `src/fw/kernel` — task management, events, memory.
-- `src/fw/drivers` — hardware drivers (public interfaces under
+- `fw/services` — system services (Bluetooth, filesystem, activity, …).
+- `fw/kernel` — task management, events, memory.
+- `fw/drivers` — hardware drivers (public interfaces under
   `include/pbl/drivers`).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
   logging, cron, the Bluetooth backends, the [debug shell](shell.md) and the
@@ -23,29 +23,29 @@ implemented under `kernel/`). The main source layers, as described on the
   `pbl/cron/`, `pbl/bluetooth/`, `pbl/shell/` and `pbl/task_wdt/` header
   paths.
 
-Alongside these sit `src/fw/shell` (launcher/watchface UX flow),
-`src/fw/process_management` (app lifecycle) and `src/fw/comm` (phone
+Alongside these sit `fw/shell` (launcher/watchface UX flow),
+`fw/process_management` (app lifecycle) and `fw/comm` (phone
 communication).
 
 ## Task model
 
 The firmware runs a fixed set of kernel threads, enumerated in
-`src/fw/kernel/pebble_tasks.h`: KernelMain, KernelBackground, Worker, App,
+`fw/kernel/pebble_tasks.h`: KernelMain, KernelBackground, Worker, App,
 the Bluetooth tasks (host, controller, HCI), NewTimers and
 [PULSE](../reference/pulse2/pulse2.md). `main()`
-(`src/fw/main.c`) performs SoC init and spawns KernelMain, which brings up
+(`fw/main.c`) performs SoC init and spawns KernelMain, which brings up
 the rest of the system.
 
 ## Boot and firmware variants
 
 The bootloader is not part of this tree; it selects which firmware image to
 launch, coordinated through boot bits (see `BOOT_BIT_*` usage in
-`src/fw/main.c`) and the slot metadata in `src/fw/system/firmware_storage.h`.
+`fw/main.c`) and the slot metadata in `fw/system/firmware_storage.h`.
 
 Normal firmware and PRF (Pebble Recovery Firmware — the minimal fallback
 image used to reinstall the main firmware) are separate compile-time
 variants: `pbl configure --variant=prf` (see
-[build options](../development/options.md)) applies `src/fw/prj_prf.conf` on
+[build options](../development/options.md)) applies `fw/prj_prf.conf` on
 top of the base config, disabling the JS engine and marking the image as
 recovery firmware.
 
@@ -53,31 +53,31 @@ recovery firmware.
 
 - **App identity** — an installed app is referred to by several identifiers
   (`AppInstallId`, `AppInstallEntry`, UUID, `PebbleProcessMd`); the comment
-  at the top of `src/fw/process_management/app_install_manager.h` explains
+  at the top of `fw/process_management/app_install_manager.h` explains
   which to use where and which are deprecated.
 - **Shell flow** — which app launches at startup and what happens when an
   app exits is a deliberately flat state machine rooted in the launcher and
   the watchface; see the diagrammed comment at the top of
-  `src/fw/shell/normal/system_app_state_machine.c`.
+  `fw/shell/normal/system_app_state_machine.c`.
 - **Privilege boundary** — third-party app and worker code runs unprivileged
   (processes built into the firmware stay privileged); anything
   touching OS state crosses into the kernel through a `sys_*` syscall
-  (declared in `src/fw/syscall/syscall.h`) defined with `DEFINE_SYSCALL`
-  from `src/fw/syscall/syscall_internal.h`, which raises privileges on
+  (declared in `fw/syscall/syscall.h`) defined with `DEFINE_SYSCALL`
+  from `fw/syscall/syscall_internal.h`, which raises privileges on
   entry and drops them on return unless the caller was already privileged.
 
 ## Memory layout
 
-`src/fw/linker/pebbleos.ld` ("Section concepts!" comment) documents the
+`fw/linker/pebbleos.ld` ("Section concepts!" comment) documents the
 flash/RAM picture: VMA vs LMA, the kernel data/bss/stack/heap region, and
 the fixed app region where third-party app code, data and heap live.
-`src/fw/linker/memory.ld` explains how SRAM is carved between kernel, app
-and worker regions, and `src/fw/linker/regions.ld` notes the MPU
+`fw/linker/memory.ld` explains how SRAM is carved between kernel, app
+and worker regions, and `fw/linker/regions.ld` notes the MPU
 power-of-two constraints.
 
 ## Bluetooth
 
-`src/fw/comm/ble/` is the host-side BLE layer and carries substantial design
+`fw/comm/ble/` is the host-side BLE layer and carries substantial design
 prose:
 
 - `gap_le_connect.c` — connection management and the "connection intent"
@@ -95,11 +95,11 @@ Beneath it sits NimBLE (`third_party/nimble`), glued in by
 NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
 and a fake controller on QEMU that acknowledges every command so the host
 runs without a radio. On QEMU the phone link is the emulator's serial
-channel, `src/fw/comm/qemu_transport.c`.
+channel, `fw/comm/qemu_transport.c`.
 
 ## Storage
 
-PFS, the Pebble File System, lives in `src/fw/services/filesystem/`. The API
+PFS, the Pebble File System, lives in `fw/services/filesystem/`. The API
 and on-flash layout are documented in `pfs.h`; the wear-leveling strategy
 (round-robin page allocation tracking the last written page) is described
 alongside the allocator in `pfs.c`.
@@ -110,13 +110,13 @@ alongside the allocator in `pfs.c`.
   between the dumb low-level driver and the accel service that owns
   buffering, clients and subsampling, so the same service code runs on any
   accel part.
-- **Flash** — `src/fw/drivers/flash/README.md` documents the two flash APIs:
+- **Flash** — `fw/drivers/flash/README.md` documents the two flash APIs:
   the main one, and a coredump-only path that must work without OS services.
 
 ## Coredumps
 
 The on-flash coredump image format (header plus chunked records, including
-per-thread register sets) is documented in `src/fw/kernel/core_dump.c`.
+per-thread register sets) is documented in `fw/kernel/core_dump.c`.
 
 ## Design documents
 

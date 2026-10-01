@@ -63,7 +63,7 @@ def cmd_version(args):
     write_if_changed(args.output, content)
 
 
-# --- System app registry (src/fw/shell) ------------------------------------
+# --- System app registry (fw/shell) ------------------------------------
 
 
 def uuid_to_byte_hex_str(uuid):
@@ -169,7 +169,7 @@ def cmd_app_registry(args):
     write_if_changed(args.enum, "".join(out))
 
 
-# --- Pebble protocol endpoint table (src/fw/services/comm_session) ---------
+# --- Pebble protocol endpoint table (fw/services/comm_session) ---------
 
 
 def cmd_endpoints_table(args):

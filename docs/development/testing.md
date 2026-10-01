@@ -94,7 +94,7 @@ the repository root:
 ```cmake
 pbl_clar_test(test_pfs
   SOURCES
-    src/fw/services/filesystem/pfs.c
+    fw/services/filesystem/pfs.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

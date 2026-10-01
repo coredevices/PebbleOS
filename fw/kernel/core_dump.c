@@ -64,7 +64,7 @@ extern char *itoa(int value, char *str, int base);
 #define RETURNS_TO_PSP(exc_return) ((exc_return & 0x4) == 0x4)
 
 //! This symbol and its contents are provided by the linker script, see the
-//! .note.gnu.build-id section in src/fw/stm32f2xx_flash_fw.ld
+//! .note.gnu.build-id section in fw/stm32f2xx_flash_fw.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
 
 extern uint8_t __RAM_start__;

@@ -132,8 +132,8 @@ static void prv_apply_volume(AudioDevice *dev) {
 // divide down to exactly 16 kHz LRCK, while the DA7212 PLL can synthesize
 // exactly 12.288 MHz system clock from our 4 MHz MCK and emit a true 16 kHz
 // WCLK when SR=0x05. Register values are taken from
-// src/fw/apps/prf/mfg_mic_asterix.c (PLL setup) and
-// src/fw/apps/prf/mfg_speaker_asterix.c (codec-master DAI mode).
+// fw/apps/prf/mfg_mic_asterix.c (PLL setup) and
+// fw/apps/prf/mfg_speaker_asterix.c (codec-master DAI mode).
 static void prv_codec_prepare(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_CIF_CTRL, 0x80);
   psleep(10);

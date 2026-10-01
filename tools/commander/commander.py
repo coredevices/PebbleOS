@@ -139,7 +139,7 @@ class InteractivePebbleCommander:
     def __init__(self, loghash_path=None, tty=None):
         self.cmdr = PebbleCommander(tty=tty, interactive=True)
         if loghash_path is None:
-            loghash_path = "build/src/fw/loghash_dict.json"
+            loghash_path = "build/fw/loghash_dict.json"
         self.dehasher = LogDehash(loghash_path)
         self.cmdr.attach_log_listener(self.log_listener)
 

@@ -14,14 +14,14 @@ from pebble.loghashing.newlogging import dehash_line, dehash_line_unformatted
 
 test_log_dict = {
     "43": {
-        "file": "../src/fw/activity/activity.c",
+        "file": "../fw/activity/activity.c",
         "line": "804",
         "level": "200",
         "color": "YELLOW",
         "msg": "activity tracking started",
     },
     "114": {
-        "file": "../src/fw/driver/ispp.c",
+        "file": "../fw/driver/ispp.c",
         "line": "1872",
         "level": "0",
         "color": "RED",
@@ -36,27 +36,27 @@ test_log_dict = {
     },
     "64856": {
         "color": "GREY",
-        "file": "../src/fw/services/common/clock.c",
+        "file": "../fw/services/common/clock.c",
         "level": "200",
         "line": "768",
         "msg": "Changed timezone to id %u, gmtoff is %ld",
     },
     "100000": {
         "color": "GREY",
-        "file": "../src/fw/services/common/string.c",
+        "file": "../fw/services/common/string.c",
         "level": "200",
         "line": "111",
         "msg": "string 1 %s, string 2 %s",
     },
     "11082": {
         "color": "GREY",
-        "file": "../src/fw/resource/resource_storage.c",
+        "file": "../fw/resource/resource_storage.c",
         "level": "50",
         "line": "120",
         "msg": "0x%lx != 0x%lx",
     },
     "75": {
-        "file": "../src/fw/activity/activity.c",
+        "file": "../fw/activity/activity.c",
         "line": "804",
         "level": "200",
         "color": "YELLOW",

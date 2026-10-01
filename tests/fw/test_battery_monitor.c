@@ -270,7 +270,7 @@ critical -> lpm
 lpm -> critical
 critical -> good
 */
-// Must mirror the PowerStateID enum in src/fw/services/battery/battery_monitor.c.
+// Must mirror the PowerStateID enum in fw/services/battery/battery_monitor.c.
 // PowerStatePluggedIn was added in 9d3a9548f ("add plugged in status"): whenever
 // the watch is plugged in, it ignores battery level/charge status and operates
 // normally, so the state machine reports PluggedIn rather than Good/LowPower.
