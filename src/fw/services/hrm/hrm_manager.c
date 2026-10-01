@@ -210,9 +210,11 @@ static HRMFeature prv_subscriber_allowed_features(const HRMSubscriberState *stat
 
 // The GH3X2X lights one optical path at a time: SpO2 uses the red/IR LEDs, BPM/HRV use the green
 // LED. Returns true if this feature set maps to the red/IR (SpO2) path.
+#ifndef CONFIG_MFG
 static bool prv_features_use_ir_path(HRMFeature features) {
   return (features & HRMFeature_SpO2) != 0;
 }
+#endif
 
 // Resolve the features wanted by all due subscribers down to the one optical path we can run now
 // (the paths are mutually exclusive in hardware). The red/IR (SpO2) path wins whenever it is due:

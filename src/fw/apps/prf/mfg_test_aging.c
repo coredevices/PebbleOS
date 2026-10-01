@@ -28,6 +28,8 @@
 #include <pbl/logging/logging.h>
 #include "util/time/time.h"
 
+#include <stdio.h>
+
 #define STATUS_STRING_LEN                200
 #define COMPONENT_TEST_DURATION_SEC      10
 #define COMPONENT_BACKLIGHT_DURATION_SEC 2
