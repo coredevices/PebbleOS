@@ -87,6 +87,20 @@ void test_gtypes__grect_shortest_side(void) {
   cl_assert_equal_i(10, grect_shortest_side(GRect(0, 0, -20, 10)));
 }
 
+void test_gtypes__grect_union(void) {
+  GRect r1 = GRect(10, 20, 30, 40);
+  GRect r2 = GRect(5, 50, 10, 20);
+  cl_assert_equal_grect(GRect(5, 20, 35, 50), grect_union(&r1, &r2));
+
+  r1 = GRect(0, 0, 260, 260);
+  r2 = GRect(0, 0, 260, 16);
+  cl_assert_equal_grect(GRect(0, 0, 260, 260), grect_union(&r1, &r2));
+
+  r1 = GRect(-10, -20, 30, 40);
+  r2 = GRect(100, 300, 10, 10);
+  cl_assert_equal_grect(GRect(-10, -20, 120, 330), grect_union(&r1, &r2));
+}
+
 void test_gtypes__grect_inset(void) {
   GRect rect = GRect(10, 20, 30, 40);
   cl_assert_equal_grect(GRect(12, 23, 26, 34), grect_inset_internal(rect, 2, 3));

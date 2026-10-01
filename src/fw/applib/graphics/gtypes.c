@@ -128,10 +128,10 @@ GRect grect_union(const GRect *r1, const GRect *r2) {
   GRect s_r2 = *r2;
   grect_standardize(&s_r1);
   grect_standardize(&s_r2);
-  const uint8_t min_x = MIN(s_r2.origin.x, s_r1.origin.x);
-  const uint8_t min_y = MIN(s_r2.origin.y, s_r1.origin.y);
-  const uint8_t max_x = MAX(s_r2.origin.x + s_r2.size.w, s_r1.origin.x + s_r1.size.w);
-  const uint8_t max_y = MAX(s_r2.origin.y + s_r2.size.h, s_r1.origin.y + s_r1.size.h);
+  const int16_t min_x = MIN(s_r2.origin.x, s_r1.origin.x);
+  const int16_t min_y = MIN(s_r2.origin.y, s_r1.origin.y);
+  const int16_t max_x = MAX(s_r2.origin.x + s_r2.size.w, s_r1.origin.x + s_r1.size.w);
+  const int16_t max_y = MAX(s_r2.origin.y + s_r2.size.h, s_r1.origin.y + s_r1.size.h);
   GRect result = GRect(min_x, min_y, max_x - min_x, max_y - min_y);
   return result;
 }
