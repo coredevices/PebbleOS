@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "psram.h"
+
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
@@ -117,7 +119,17 @@ PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
 
 PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
   prv_save_iser();
+
+#ifdef CONFIG_SF32LB52_PSRAM
+  soc_sf32lb_psram_enter_low_power();
+#endif
+
   pbl_flash_power_down(FLASH, prv_deepsleep, nullptr);
+
+#ifdef CONFIG_SF32LB52_PSRAM
+  soc_sf32lb_psram_exit_low_power();
+#endif
+
   prv_restore_iser();
 }
 

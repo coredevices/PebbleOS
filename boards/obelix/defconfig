@@ -1,6 +1,7 @@
 # obelix board configuration
 
 CONFIG_SOC_SF32LB52=y
+CONFIG_SOC_SF32LB52JUD6=y
 
 CONFIG_HAL_SIFLI_SF32LB52=y
 

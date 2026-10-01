@@ -39,6 +39,15 @@ config SRAM_BASE
 config SRAM_SIZE
     default 0x7fc00
 
+# The S-bus alias of MPI1, sized by the variant.
+config EXTRAM_BASE
+    default 0x60000000
+
+config EXTRAM_SIZE
+    default 0x1000000 if SOC_SF32LB527UD6 || SOC_SF32LB52JUD6
+    default 0x800000 if SOC_SF32LB525UC6 || SOC_SF32LB52GUC6
+    default 0x400000 if SOC_SF32LB523UB6 || SOC_SF32LB52EUB6
+
 config FIRMWARE_OFFSET
     default 4096
 

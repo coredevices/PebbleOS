@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_SF32LB52
+
+choice SOC_SF32LB52_VARIANT
+    prompt "SF32LB52 variant"
+    help
+      Part number, which sets the memory in the package. Names follow
+      Zephyr's.
+
+config SOC_SF32LB520U36
+    bool "SF32LB520U36 (1 MiB NOR flash)"
+
+config SOC_SF32LB523UB6
+    bool "SF32LB523UB6 (4 MiB PSRAM)"
+    select SOC_SF32LB52_HAS_PSRAM
+
+config SOC_SF32LB525UC6
+    bool "SF32LB525UC6 (8 MiB PSRAM)"
+    select SOC_SF32LB52_HAS_PSRAM
+
+config SOC_SF32LB527UD6
+    bool "SF32LB527UD6 (16 MiB PSRAM)"
+    select SOC_SF32LB52_HAS_PSRAM
+
+config SOC_SF32LB52BU36
+    bool "SF32LB52BU36 (1 MiB NOR flash)"
+
+config SOC_SF32LB52EUB6
+    bool "SF32LB52EUB6 (4 MiB PSRAM)"
+    select SOC_SF32LB52_HAS_PSRAM
+
+config SOC_SF32LB52GUC6
+    bool "SF32LB52GUC6 (8 MiB PSRAM)"
+    select SOC_SF32LB52_HAS_PSRAM
+
+config SOC_SF32LB52JUD6
+    bool "SF32LB52JUD6 (16 MiB PSRAM)"
+    select SOC_SF32LB52_HAS_PSRAM
+
+endchoice
+
+config SOC_SF32LB52_HAS_PSRAM
+    bool
+
+config SF32LB52_PSRAM
+    bool "SiP PSRAM"
+    depends on SOC_SF32LB52_HAS_PSRAM
+    select EXTRAM
+    select HAL_SIFLI_MPI_PSRAM
+    help
+      Bring up the PSRAM in the SiP (MPI1) and use it as external RAM.
+      Its size is set by the variant. Its type is detected at boot from
+      the package ID, as a variant may ship with more than one.
+
+config SF32LB52_PSRAM_HALF_SLEEP
+    bool "Put the PSRAM in half-sleep during deep sleep"
+    depends on SF32LB52_PSRAM
+    default y
+    help
+      Half-sleep retains data at a lower current than standby, at the
+      cost of a 150 us wake-up on every deep sleep exit.
+
+endif # SOC_SF32LB52
