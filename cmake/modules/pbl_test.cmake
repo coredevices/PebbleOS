@@ -331,7 +331,7 @@ function(_pbl_test_add id)
   # DUMA catches memory corruption; a handful of tests trip over it. It
   # has to come before any system library: it overrides malloc, and once
   # the linker has bound that to libc it stops looking.
-  set(libs ${LIBS} libutil libbtutil)
+  set(libs ${LIBS} libutil libbtutil libcrc)
   if(NOT "DUMA_DISABLED" IN_LIST defines)
     list(APPEND libs duma pthread)
   endif()

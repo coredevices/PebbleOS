@@ -3,6 +3,7 @@
 
 pbl_include_directories(.)
 pbl_add_subdirectory_ifdef(CONFIG_BT bluetooth)
+add_subdirectory(crc)
 pbl_add_subdirectory_ifdef(CONFIG_CRON cron)
 add_subdirectory(logging)
 pbl_add_subdirectory_ifdef(CONFIG_SHELL shell)

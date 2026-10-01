@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "CRC"
+
+config CRC_HW_ACCEL
+    bool
+    help
+      Selected by drivers implementing pbl_crc_hw_crc32() and
+      pbl_crc_hw_crc32_legacy() from pbl/drivers/crc.h.
+
+config CRC_HW_MIN_LEN
+    int "Minimum length to compute in hardware"
+    depends on CRC_HW_ACCEL
+    default 32
+    help
+      Buffers shorter than this are computed in software, where
+      programming the CRC unit would cost more than it saves.
+
+endmenu

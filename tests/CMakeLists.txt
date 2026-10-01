@@ -86,6 +86,7 @@ add_subdirectory(${PBL_BASE}/fw/services/protobuf_log/proto
                  ${CMAKE_BINARY_DIR}/fw/services/protobuf_log/proto)
 add_subdirectory(${PBL_BASE}/lib/util ${CMAKE_BINARY_DIR}/lib/util)
 add_subdirectory(${PBL_BASE}/lib/btutil ${CMAKE_BINARY_DIR}/lib/btutil)
+add_subdirectory(${PBL_BASE}/subsys/crc ${CMAKE_BINARY_DIR}/libcrc)
 add_subdirectory(${PBL_BASE}/tools/pdc2png ${CMAKE_BINARY_DIR}/tools/pdc2png)
 set(PBL_PROTO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/fw/services/protobuf_log/proto)
 
