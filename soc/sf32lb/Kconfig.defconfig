@@ -36,6 +36,10 @@ config SRAM_BASE
 config SRAM_SIZE
     default 0x7fc00
 
+# The S-bus alias of MPI1. Boards with PSRAM set EXTRAM_SIZE.
+config EXTRAM_BASE
+    default 0x60000000 if EXTRAM
+
 config FIRMWARE_OFFSET
     default 4096
 

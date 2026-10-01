@@ -41,6 +41,12 @@ struct pbl_npm1300_regulator {
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_regulator_ops pbl_npm1300_regulator_ops;
+
+#ifdef CONFIG_REGULATOR_NPM1300_BUCK1_ALWAYS_ON
+#define PBL_NPM1300_FORCED_ON(_rail) ((_rail) == PBL_NPM1300_BUCK1)
+#else
+#define PBL_NPM1300_FORCED_ON(_rail) false
+#endif
 /** @endcond */
 
 /**
@@ -52,13 +58,15 @@ extern const struct pbl_regulator_ops pbl_npm1300_regulator_ops;
  * @param _rail Rail, an @ref pbl_npm1300_rail.
  * @param _voltage_uv Output voltage in uV.
  * @param _ldo LDSW rails only: run as an LDO.
- * @param _always_on Switched on at init and never off.
+ * @param _always_on Switched on at init and never off. BUCK1 also is with
+ *                   CONFIG_REGULATOR_NPM1300_BUCK1_ALWAYS_ON.
  */
-#define PBL_NPM1300_REGULATOR_DEFINE(sym, _name, _pmic, _rail, _voltage_uv, _ldo, _always_on)     \
-  PBL_REGULATOR_STATE_DEFINE(sym);                                                                \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_npm1300_regulator, struct pbl_regulator, reg) {             \
-    .reg = PBL_REGULATOR_INIT(sym, _name, &(_pmic)->dev, &pbl_npm1300_regulator_ops, _always_on), \
-    .rail = (_rail), .voltage_mv = (_voltage_uv) / 1000, .ldo = (_ldo),                           \
+#define PBL_NPM1300_REGULATOR_DEFINE(sym, _name, _pmic, _rail, _voltage_uv, _ldo, _always_on) \
+  PBL_REGULATOR_STATE_DEFINE(sym);                                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_npm1300_regulator, struct pbl_regulator, reg) {         \
+    .reg = PBL_REGULATOR_INIT(sym, _name, &(_pmic)->dev, &pbl_npm1300_regulator_ops,          \
+                              (_always_on) || PBL_NPM1300_FORCED_ON(_rail)),                  \
+    .rail = (_rail), .voltage_mv = (_voltage_uv) / 1000, .ldo = (_ldo),                       \
   }
 
 /** @} */

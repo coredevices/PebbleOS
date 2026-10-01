@@ -5,3 +5,14 @@
 # The MFG microphone test uses Speex's kiss_fft.
 config SPEEX
     default y if RECOVERY_FW
+
+# The SF32LB52xUD6 package memory (sf32lb52xud.dtsi): 16 MiB of PSRAM
+config SOC_SF32LB52_HAS_PSRAM
+    default y
+
+config EXTRAM_SIZE
+    default 0x1000000 if EXTRAM
+
+# BUCK1 supplies VDD_SIP, which powers the PSRAM
+config REGULATOR_NPM1300_BUCK1_ALWAYS_ON
+    default y if SF32LB52_PSRAM
