@@ -3,9 +3,11 @@
 
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
+#include "pbl/services/notifications/do_not_disturb.h"
 
 #include <pbl/drivers/rtc.h>
-#include "pbl/services/notifications/do_not_disturb.h"
+#include "popups/notifications/notification_window.h"
+#include "pbl/services/analytics/analytics.h"
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "shell/prefs_private.h"
@@ -13,6 +15,7 @@
 #include "pbl/util/math.h"
 #include "pbl/kernel/mutex.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define FILE_NAME "notifpref"
@@ -77,6 +80,13 @@ static bool s_do_not_disturb_manually_enabled = false;
 
 #define PREF_KEY_DND_SMART_ENABLED "dndSmartEnabled"
 static bool s_do_not_disturb_smart_dnd_enabled = false;
+
+// Must stay in sync with MAX_QUIET_TIME_SCHEDULES and the qtSchedule* entries
+// in settings_blob_db.c's s_syncable_notif_prefs.
+static const char *const s_qt_schedule_keys[MAX_QUIET_TIME_SCHEDULES] = {
+  "qtSchedule0", "qtSchedule1", "qtSchedule2", "qtSchedule3", "qtSchedule4",
+};
+static QuietTimeScheduleConfig s_qt_schedule[MAX_QUIET_TIME_SCHEDULES];
 
 #define PREF_KEY_FIRST_USE_COMPLETE "firstUseComplete"
 static uint32_t s_first_use_complete = 0;
@@ -209,6 +219,41 @@ static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
     DELETE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE);
     DELETE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE_ENABLED);
 #undef DELETE_PREF
+  }
+}
+
+static void prv_migrate_qt_schedules(SettingsFile *file) {
+  if (settings_file_exists(file, s_qt_schedule_keys[0], strlen(s_qt_schedule_keys[0]))) {
+    return;
+  }
+
+  // Always write both slots, even when empty: slot 0's existence marks
+  // migration as done. A partially-migrated state (e.g. default weekday plus
+  // customised weekend) must not re-run on the next boot and clobber edits
+  // or deletes made in the new UI.
+  static const DoNotDisturbScheduleType s_migrated_types[2] = {
+    WeekdaySchedule,
+    WeekendSchedule,
+  };
+  static const QuietTimeKind s_migrated_kinds[2] = {
+    QT_KIND_WEEKDAYS,
+    QT_KIND_WEEKENDS,
+  };
+  for (int i = 0; i < 2; i++) {
+    const DoNotDisturbScheduleType type = s_migrated_types[i];
+    s_qt_schedule[i] = (QuietTimeScheduleConfig){
+      .is_used = (s_dnd_schedule[type].schedule.from_hour != 0 ||
+                  s_dnd_schedule[type].schedule.to_hour != 0 || s_dnd_schedule[type].enabled),
+      .kind = s_migrated_kinds[i],
+      .from_hour = s_dnd_schedule[type].schedule.from_hour,
+      .from_minute = s_dnd_schedule[type].schedule.from_minute,
+      .to_hour = s_dnd_schedule[type].schedule.to_hour,
+      .to_minute = s_dnd_schedule[type].schedule.to_minute,
+      .enabled = s_dnd_schedule[type].enabled,
+    };
+    memset(s_qt_schedule[i].scheduled_days, 0, sizeof(s_qt_schedule[i].scheduled_days));
+    settings_file_set(file, s_qt_schedule_keys[i], strlen(s_qt_schedule_keys[i]), &s_qt_schedule[i],
+                      sizeof(QuietTimeScheduleConfig));
   }
 }
 
@@ -369,6 +414,25 @@ void alerts_preferences_init(void) {
                s_dnd_schedule[WeekendSchedule].schedule);
   RESTORE_PREF(s_dnd_schedule_keys[WeekendSchedule].enabled_pref_key,
                s_dnd_schedule[WeekendSchedule].enabled);
+
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    const char *qt_key = s_qt_schedule_keys[i];
+    const int stored_len = settings_file_get_len(&file, qt_key, strlen(qt_key));
+    if (stored_len == 0) {
+      continue; // No record yet; the slot stays empty.
+    }
+    if (stored_len != (int)sizeof(QuietTimeScheduleConfig)) {
+      // A short or corrupt record must not yield a half-valid schedule.
+      PBL_LOG_ERR("QT slot %d has unexpected size %d, dropping it", i, stored_len);
+      memset(&s_qt_schedule[i], 0, sizeof(s_qt_schedule[i]));
+      continue;
+    }
+    __typeof__(s_qt_schedule[i]) _tmp;
+    if (settings_file_get(&file, qt_key, strlen(qt_key), &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+      s_qt_schedule[i] = _tmp;
+    }
+  }
+
   RESTORE_PREF(PREF_KEY_FIRST_USE_COMPLETE, s_first_use_complete);
   RESTORE_PREF(PREF_KEY_NOTIF_WINDOW_TIMEOUT, s_notif_window_timeout_ms);
   RESTORE_PREF(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
@@ -382,6 +446,7 @@ void alerts_preferences_init(void) {
 
   prv_migrate_legacy_dnd_schedule(&file);
   prv_migrate_notification_content_size(&file);
+  prv_migrate_qt_schedules(&file);
 
   const VibeScoreId orig_vibe_score_notifications = s_vibe_score_notifications;
   const VibeScoreId orig_vibe_score_incoming_calls = s_vibe_score_incoming_calls;
@@ -667,19 +732,36 @@ void alerts_preferences_dnd_get_schedule(DoNotDisturbScheduleType type,
   *schedule_out = s_dnd_schedule[type].schedule;
 };
 
-void alerts_preferences_dnd_set_schedule(DoNotDisturbScheduleType type,
-                                         const DoNotDisturbSchedule *schedule) {
-  s_dnd_schedule[type].schedule = *schedule;
-  SET_PREF(s_dnd_schedule_keys[type].schedule_pref_key, s_dnd_schedule[type].schedule);
-};
-
 bool alerts_preferences_dnd_is_schedule_enabled(DoNotDisturbScheduleType type) {
   return s_dnd_schedule[type].enabled;
 }
 
-void alerts_preferences_dnd_set_schedule_enabled(DoNotDisturbScheduleType type, bool on) {
-  s_dnd_schedule[type].enabled = on;
-  SET_PREF(s_dnd_schedule_keys[type].enabled_pref_key, s_dnd_schedule[type].enabled);
+static void prv_set_qt_pref(int index, const QuietTimeScheduleConfig *config) {
+  s_qt_schedule[index] = *config;
+  prv_set_pref(s_qt_schedule_keys[index], strlen(s_qt_schedule_keys[index]), config,
+               sizeof(QuietTimeScheduleConfig));
+}
+
+void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out) {
+  if (index >= 0 && index < MAX_QUIET_TIME_SCHEDULES) {
+    *out = s_qt_schedule[index];
+  }
+}
+
+void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig *config) {
+  if (index >= 0 && index < MAX_QUIET_TIME_SCHEDULES) {
+    prv_set_qt_pref(index, config);
+  }
+}
+
+int alerts_preferences_qt_get_num_active(void) {
+  int count = 0;
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (s_qt_schedule[i].is_used) {
+      count++;
+    }
+  }
+  return count;
 }
 
 bool alerts_preferences_check_and_set_first_use_complete(FirstUseSource source) {
@@ -721,7 +803,46 @@ static bool prv_is_dnd_state_key(const char *key) {
       return true;
     }
   }
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (strcmp(key, s_qt_schedule_keys[i]) == 0) {
+      return true;
+    }
+  }
   return false;
+}
+
+//! Mirror a phone-originated legacy schedule write onto its QT slot. Slot
+//! types double as QT indices: migration puts the weekday schedule in slot 0
+//! and the weekend schedule in slot 1. The mirror applies while the slot is
+//! still the legacy one (unused, or kind Weekdays/Weekends); once the user
+//! replaces it with another kind, the legacy key no longer applies and the
+//! write only updates the legacy struct. Runs with the settings file open.
+static void prv_mirror_legacy_schedule_to_qt(SettingsFile *file, const char *matched_key) {
+  for (int type = 0; type < NumDNDSchedules; type++) {
+    if (strcmp(matched_key, s_dnd_schedule_keys[type].schedule_pref_key) != 0 &&
+        strcmp(matched_key, s_dnd_schedule_keys[type].enabled_pref_key) != 0) {
+      continue;
+    }
+    const int qt_index = type;
+    const QuietTimeKind qt_kind = (type == WeekdaySchedule) ? QT_KIND_WEEKDAYS : QT_KIND_WEEKENDS;
+    if (s_qt_schedule[qt_index].is_used && s_qt_schedule[qt_index].kind != qt_kind) {
+      return;
+    }
+    QuietTimeScheduleConfig qt_config = {
+      .is_used = true,
+      .kind = qt_kind,
+      .from_hour = s_dnd_schedule[type].schedule.from_hour,
+      .from_minute = s_dnd_schedule[type].schedule.from_minute,
+      .to_hour = s_dnd_schedule[type].schedule.to_hour,
+      .to_minute = s_dnd_schedule[type].schedule.to_minute,
+      .enabled = s_dnd_schedule[type].enabled,
+    };
+    memset(qt_config.scheduled_days, 0, sizeof(qt_config.scheduled_days));
+    s_qt_schedule[qt_index] = qt_config;
+    settings_file_set(file, s_qt_schedule_keys[qt_index], strlen(s_qt_schedule_keys[qt_index]),
+                      &qt_config, sizeof(qt_config));
+    return;
+  }
 }
 
 void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
@@ -790,9 +911,40 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_DND_AUTO_DISMISS, s_dnd_auto_dismiss);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
 
+  // Check QT schedule keys
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    const char *qt_key = s_qt_schedule_keys[i];
+    size_t qt_key_len = strlen(qt_key);
+    if ((key_len == (int)qt_key_len || key_len == (int)(qt_key_len + 1)) &&
+        memcmp(key, qt_key, qt_key_len) == 0) {
+      if (settings_file_get_len(&file, key, key_len) != (int)sizeof(QuietTimeScheduleConfig)) {
+        // Version skew or corruption: ignore the write rather than trusting
+        // a truncated record.
+        PBL_LOG_WRN("QT slot %d has unexpected size, ignoring phone write", i);
+        goto done;
+      }
+      QuietTimeScheduleConfig _tmp;
+      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+        s_qt_schedule[i] = _tmp;
+        matched_key = qt_key;
+      }
+      goto done;
+    }
+  }
+
+  // Legacy DND schedule keys (dndWeekdaySchedule, etc.) are already handled by
+  // the RELOAD_IF_MATCH calls above, which goto done on match. One-time
+  // migration to the qtSchedule* keys happens in prv_migrate_qt_schedules
+  // at init; the mirror below keeps the QT slots in sync with later
+  // phone-originated legacy writes.
+
 #undef RELOAD_IF_MATCH
 
 done:
+  // A phone write to a legacy schedule key also updates the mirrored QT slot.
+  if (matched_key) {
+    prv_mirror_legacy_schedule_to_qt(&file, matched_key);
+  }
   settings_file_close(&file);
   pbl_mutex_unlock(&s_mutex);
 
