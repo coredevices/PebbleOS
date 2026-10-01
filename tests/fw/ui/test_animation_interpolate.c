@@ -25,6 +25,18 @@ void test_animation_interpolate__override_is_null(void) {
   cl_assert_equal_i(10000, interpolate_int16(ANIMATION_NORMALIZED_MAX, -10000, 10000));
 }
 
+void test_animation_interpolate__gsize(void) {
+  const GSize from = GSize(10, 100);
+  const GSize to = GSize(30, 300);
+  const int32_t half = ANIMATION_NORMALIZED_MAX / 2;
+  const GSize mid = interpolate_gsize(half, from, to);
+  cl_assert_equal_i(interpolate_int16(half, from.w, to.w), mid.w);
+  cl_assert_equal_i(interpolate_int16(half, from.h, to.h), mid.h);
+  const GSize end = interpolate_gsize(ANIMATION_NORMALIZED_MAX, from, to);
+  cl_assert_equal_i(30, end.w);
+  cl_assert_equal_i(300, end.h);
+}
+
 static AnimationProgress s_override_progress;
 static int64_t s_override_from;
 static int64_t s_override_to;

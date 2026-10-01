@@ -39,7 +39,7 @@ Fixed_S32_16 interpolate_fixed32(int32_t normalized, Fixed_S32_16 from, Fixed_S3
 GSize interpolate_gsize(int32_t normalized, GSize from, GSize to) {
   return (GSize){
     .w = interpolate_int16(normalized, from.w, to.w),
-    .h = interpolate_int16(normalized, from.w, to.w),
+    .h = interpolate_int16(normalized, from.h, to.h),
   };
 }
 
