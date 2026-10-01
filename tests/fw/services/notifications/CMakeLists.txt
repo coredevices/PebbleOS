@@ -21,7 +21,6 @@ pbl_clar_test(test_notification_storage
     fw/services/notifications/notification_storage.c
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    fw/util/stringlist.c
     fw/util/time/time.c
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c

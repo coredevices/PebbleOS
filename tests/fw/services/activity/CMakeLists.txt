@@ -35,7 +35,6 @@ pbl_clar_test(test_activity_insights
   SOURCES
     fw/util/crc8.c
     fw/util/stats.c
-    fw/util/stringlist.c
     fw/util/time/time.c
     fw/util/time/mktime.c
     fw/services/activity/activity_insights.c

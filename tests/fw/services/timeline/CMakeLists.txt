@@ -186,7 +186,6 @@ pbl_clar_test(test_timeline_layouts
     fw/system/hexdump.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
-    fw/util/stringlist.c
     fw/util/time/time.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_clock.c

@@ -44,7 +44,7 @@ static Attribute action2_attributes[] = {
   {.id = AttributeIdTitle, .cstring = "Archive"},
 };
 
-static StringList string_list = {
+static struct pbl_string_list string_list = {
   .serialized_byte_length = 3,
   .data = "A\0B",
 };
@@ -114,13 +114,14 @@ static void compare_attr_list(AttributeList a, AttributeList b) {
         cl_assert_equal_i(a.attributes[i].int8, b.attributes[i].int8);
         break;
       case AttributeIdCannedResponses: {
-        StringList *list_a = a.attributes[i].string_list;
-        StringList *list_b = b.attributes[i].string_list;
+        struct pbl_string_list *list_a = a.attributes[i].string_list;
+        struct pbl_string_list *list_b = b.attributes[i].string_list;
         cl_assert_equal_i(list_a->serialized_byte_length, list_b->serialized_byte_length);
-        cl_assert_equal_i(string_list_count(list_a), string_list_count(list_b));
-        uint32_t count = string_list_count(list_a);
+        cl_assert_equal_i(pbl_string_list_count(list_a), pbl_string_list_count(list_b));
+        uint32_t count = pbl_string_list_count(list_a);
         for (uint32_t idx = 0; i < count; i++) {
-          cl_assert_equal_s(string_list_get_at(list_a, idx), string_list_get_at(list_b, idx));
+          cl_assert_equal_s(pbl_string_list_get_at(list_a, idx),
+                            pbl_string_list_get_at(list_b, idx));
         }
         break;
       }

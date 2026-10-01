@@ -49,8 +49,8 @@ typedef struct NotificationConfig {
   TimelineResourceId icon_id;
   const char *body;
 
-  StringList *headings;
-  StringList *values;
+  struct pbl_string_list *headings;
+  struct pbl_string_list *values;
 
   struct {
     bool enabled;
@@ -1624,8 +1624,8 @@ static const char *prv_get_distance_unit(void *i18n_owner) {
   return health_util_get_distance_string(i18n_get("mi", i18n_owner), i18n_get("km", i18n_owner));
 }
 
-static void prv_add_metric_duration_info(StringList *headings, int headings_buf_size,
-                                         StringList *values, int values_buf_size,
+static void prv_add_metric_duration_info(struct pbl_string_list *headings, int headings_buf_size,
+                                         struct pbl_string_list *values, int values_buf_size,
                                          ActivitySession *session) {
   const size_t duration_buffer_size = sizeof("00:00:00");
   char duration_str[duration_buffer_size];
@@ -1646,12 +1646,12 @@ static void prv_add_metric_duration_info(StringList *headings, int headings_buf_
   } else {
     activity_label = i18n_get("Workout", headings);
   }
-  string_list_add_string(headings, headings_buf_size, activity_label, headings_buf_size);
-  string_list_add_string(values, values_buf_size, duration_str, values_buf_size);
+  pbl_string_list_add_string(headings, headings_buf_size, activity_label, headings_buf_size);
+  pbl_string_list_add_string(values, values_buf_size, duration_str, values_buf_size);
 }
 
-static void prv_add_avg_pace_metric_info(StringList *headings, int headings_buf_size,
-                                         StringList *values, int values_buf_size,
+static void prv_add_avg_pace_metric_info(struct pbl_string_list *headings, int headings_buf_size,
+                                         struct pbl_string_list *values, int values_buf_size,
                                          ActivitySession *session) {
   const int pace_buf_size = 16;
   char pace_str[pace_buf_size];
@@ -1662,13 +1662,13 @@ static void prv_add_avg_pace_metric_info(StringList *headings, int headings_buf_
 
   snprintf(pace_str + offset, pace_buf_size - offset, " /%s", prv_get_distance_unit(headings));
 
-  string_list_add_string(headings, headings_buf_size, i18n_get("Avg Pace", headings),
-                         headings_buf_size);
-  string_list_add_string(values, values_buf_size, pace_str, values_buf_size);
+  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Avg Pace", headings),
+                             headings_buf_size);
+  pbl_string_list_add_string(values, values_buf_size, pace_str, values_buf_size);
 }
 
-static void prv_add_distance_metric_info(StringList *headings, int headings_buf_size,
-                                         StringList *values, int values_buf_size,
+static void prv_add_distance_metric_info(struct pbl_string_list *headings, int headings_buf_size,
+                                         struct pbl_string_list *values, int values_buf_size,
                                          ActivitySession *session) {
   const size_t distance_buf_size = 8;
   char distance_str[distance_buf_size];
@@ -1678,69 +1678,71 @@ static void prv_add_distance_metric_info(StringList *headings, int headings_buf_
   snprintf(distance_str + offset, distance_buf_size - offset, " %s",
            prv_get_distance_unit(headings));
 
-  string_list_add_string(headings, headings_buf_size, i18n_get("Distance", headings),
-                         headings_buf_size);
-  string_list_add_string(values, values_buf_size, distance_str, values_buf_size);
+  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Distance", headings),
+                             headings_buf_size);
+  pbl_string_list_add_string(values, values_buf_size, distance_str, values_buf_size);
 }
 
-static void prv_add_step_metric_info(StringList *headings, int headings_buf_size,
-                                     StringList *values, int values_buf_size,
+static void prv_add_step_metric_info(struct pbl_string_list *headings, int headings_buf_size,
+                                     struct pbl_string_list *values, int values_buf_size,
                                      ActivitySession *session) {
   const size_t step_buf_size = 8;
   char step_str[step_buf_size];
   snprintf(step_str, step_buf_size, "%d", session->step_data.steps);
 
-  string_list_add_string(headings, headings_buf_size, i18n_get("Steps", headings),
-                         headings_buf_size);
-  string_list_add_string(values, values_buf_size, step_str, values_buf_size);
+  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Steps", headings),
+                             headings_buf_size);
+  pbl_string_list_add_string(values, values_buf_size, step_str, values_buf_size);
 }
 
-static void prv_add_active_calories_metric_info(StringList *headings, int headings_buf_size,
-                                                StringList *values, int values_buf_size,
+static void prv_add_active_calories_metric_info(struct pbl_string_list *headings,
+                                                int headings_buf_size,
+                                                struct pbl_string_list *values, int values_buf_size,
                                                 ActivitySession *session) {
   const size_t calories_buf_size = 8;
   char calories_str[calories_buf_size];
   const int active_calories = session->step_data.active_kcalories;
   snprintf(calories_str, calories_buf_size, "%d", active_calories);
 
-  string_list_add_string(headings, headings_buf_size, i18n_get("Active Calories", headings),
-                         headings_buf_size);
-  string_list_add_string(values, values_buf_size, calories_str, values_buf_size);
+  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Active Calories", headings),
+                             headings_buf_size);
+  pbl_string_list_add_string(values, values_buf_size, calories_str, values_buf_size);
 }
 
-static void prv_add_hr_metric_info(StringList *headings, int headings_buf_size, StringList *values,
-                                   int values_buf_size, int32_t avg_hr, int32_t *hr_zone_time_s) {
+static void prv_add_hr_metric_info(struct pbl_string_list *headings, int headings_buf_size,
+                                   struct pbl_string_list *values, int values_buf_size,
+                                   int32_t avg_hr, int32_t *hr_zone_time_s) {
   const size_t hr_buf_size = 8;
   char hr_str[hr_buf_size];
 
   if (avg_hr) {
     snprintf(hr_str, hr_buf_size, "%" PRIi32 "", avg_hr);
-    string_list_add_string(headings, headings_buf_size, i18n_get("Avg HR", headings),
-                           headings_buf_size);
-    string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
+    pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Avg HR", headings),
+                               headings_buf_size);
+    pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
   }
 
   if (hr_zone_time_s) {
     const int zone_1_minutes = ROUND(hr_zone_time_s[HRZone_Zone1], SECONDS_PER_MINUTE);
     if (zone_1_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_1_minutes);
-      string_list_add_string(headings, headings_buf_size, i18n_get("Fat Burn", headings),
-                             headings_buf_size);
-      string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
+      pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Fat Burn", headings),
+                                 headings_buf_size);
+      pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
     const int zone_2_minutes = ROUND(hr_zone_time_s[HRZone_Zone2], SECONDS_PER_MINUTE);
     if (zone_2_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_2_minutes);
-      string_list_add_string(headings, headings_buf_size, i18n_get("Endurance", headings),
-                             headings_buf_size);
-      string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
+      pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Endurance", headings),
+                                 headings_buf_size);
+      pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
     const int zone_3_minutes = ROUND(hr_zone_time_s[HRZone_Zone3], SECONDS_PER_MINUTE);
     if (zone_3_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_3_minutes);
-      string_list_add_string(headings, headings_buf_size, i18n_get("Performance", headings),
-                             headings_buf_size);
-      string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
+      pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Performance", headings),
+                                 headings_buf_size);
+      pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
   }
 }
@@ -1763,10 +1765,10 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
   snprintf(body, body_buf_size, "%s", i18n_get(intro_str, body));
 
   const int headings_buf_size = 128;
-  StringList *headings = kernel_zalloc_check(headings_buf_size);
+  struct pbl_string_list *headings = kernel_zalloc_check(headings_buf_size);
 
   const int values_buf_size = 128;
-  StringList *values = kernel_zalloc_check(values_buf_size);
+  struct pbl_string_list *values = kernel_zalloc_check(values_buf_size);
 
   if (session->type == ActivitySessionType_Run) {
     type = ActivityInsightType_ActivitySessionRun;

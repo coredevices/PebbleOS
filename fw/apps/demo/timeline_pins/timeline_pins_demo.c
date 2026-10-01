@@ -160,8 +160,8 @@ static void prv_add_calendar_pin(int32_t delta_time_s, int32_t duration_m, bool 
   }
   attribute_list_add_cstring(&list, AttributeIdTitle, "Weekly All Hands design stuff");
   attribute_list_add_cstring(&list, AttributeIdLocationName, "ConfRM-HIGH_Video Room");
-  static StringList headings = StringListLiteral("Description\0Attendees\0Organizer");
-  static StringList paragraphs = StringListLiteral(
+  static struct pbl_string_list headings = StringListLiteral("Description\0Attendees\0Organizer");
+  static struct pbl_string_list paragraphs = StringListLiteral(
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt "
       "ut labore et dolore magna aliqua.\0"
       "Ryan Case\nBrad Murray\0Sarah Otten");
@@ -192,8 +192,9 @@ static void prv_add_generic_pin(int32_t delta_time_s, bool has_subtitle) {
   attribute_list_add_cstring(&list, AttributeIdLocationName,
                              "145 Williams John\n"
                              "Palo Alto");
-  static StringList headings = StringListLiteral("Attendees\0Organizer");
-  static StringList paragraphs = StringListLiteral("Ryan Case\nBrad Murray\0Sarah Otten");
+  static struct pbl_string_list headings = StringListLiteral("Attendees\0Organizer");
+  static struct pbl_string_list paragraphs =
+      StringListLiteral("Ryan Case\nBrad Murray\0Sarah Otten");
   attribute_list_add_string_list(&list, AttributeIdHeadings, &headings);
   attribute_list_add_string_list(&list, AttributeIdParagraphs, &paragraphs);
   attribute_list_add_cstring(&list, AttributeIdBody, "Body message");
@@ -224,8 +225,9 @@ static void prv_add_activity_session_pin(int32_t delta_time_s, int32_t duration_
   icons->values[1] = TIMELINE_RESOURCE_DURATION;
   icons->values[2] = TIMELINE_RESOURCE_CALORIES;
   icons->values[3] = TIMELINE_RESOURCE_DISTANCE;
-  static StringList names = StringListLiteral("Pace\0Run duration\0Calories burned\0Distance");
-  static StringList values = StringListLiteral(
+  static struct pbl_string_list names =
+      StringListLiteral("Pace\0Run duration\0Calories burned\0Distance");
+  static struct pbl_string_list values = StringListLiteral(
       "7:45\0"
       "30M\0"
       "8384\0"

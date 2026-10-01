@@ -69,7 +69,6 @@
 #include "stubs_simple_dialog.h"
 #include "stubs_sleep.h"
 #include "stubs_sports_layout.h"
-#include "stubs_stringlist.h"
 #include "stubs_syscall_internal.h"
 #include "stubs_syscalls.h"
 #include "stubs_task_wdt.h"

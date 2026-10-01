@@ -219,9 +219,9 @@ static const char *prv_get_font_key_for_size(TextStyleFont style_font,
 GTextNodeVertical *layout_create_headings_paragraphs_node(
     const LayoutLayer *layout, const LayoutNodeHeadingsParagraphsConfig *config) {
   const AttributeList *attributes = layout->attributes;
-  StringList *headings = attribute_get_string_list(attributes, AttributeIdHeadings);
-  StringList *paragraphs = attribute_get_string_list(attributes, AttributeIdParagraphs);
-  const size_t num_headings = string_list_count(headings);
+  struct pbl_string_list *headings = attribute_get_string_list(attributes, AttributeIdHeadings);
+  struct pbl_string_list *paragraphs = attribute_get_string_list(attributes, AttributeIdParagraphs);
+  const size_t num_headings = pbl_string_list_count(headings);
   if (num_headings == 0) {
     return NULL;
   }
@@ -240,8 +240,8 @@ GTextNodeVertical *layout_create_headings_paragraphs_node(
   GTextNodeVertical *vertical_node = graphics_text_node_create_vertical(num_headings * 2);
 
   for (unsigned int i = 0; i < num_headings; i++) {
-    const char *heading = string_list_get_at(headings, i);
-    const char *paragraph = string_list_get_at(paragraphs, i);
+    const char *heading = pbl_string_list_get_at(headings, i);
+    const char *paragraph = pbl_string_list_get_at(paragraphs, i);
     if (!heading || !paragraph) {
       break;
     }
@@ -379,8 +379,8 @@ GTextNodeVertical *layout_create_metrics_node(const LayoutLayer *layout_ref) {
   }
 
   const AttributeList *attributes = layout_ref->attributes;
-  StringList *names = attribute_get_string_list(attributes, AttributeIdMetricNames);
-  StringList *values = attribute_get_string_list(attributes, AttributeIdMetricValues);
+  struct pbl_string_list *names = attribute_get_string_list(attributes, AttributeIdMetricNames);
+  struct pbl_string_list *values = attribute_get_string_list(attributes, AttributeIdMetricValues);
   Uint32List *icons = attribute_get_uint32_list(attributes, AttributeIdMetricIcons);
   if (!icons) {
     return NULL;
@@ -402,8 +402,8 @@ GTextNodeVertical *layout_create_metrics_node(const LayoutLayer *layout_ref) {
   GTextNodeVertical *vertical_node = graphics_text_node_create_vertical(num_nodes);
 
   for (unsigned int i = 0; i < num_metrics; i++) {
-    const char *name = string_list_get_at(names, i);
-    const char *value = string_list_get_at(values, i);
+    const char *name = pbl_string_list_get_at(names, i);
+    const char *value = pbl_string_list_get_at(values, i);
     if (!name || !value) {
       break;
     }

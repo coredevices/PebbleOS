@@ -285,19 +285,19 @@ void test_timeline_item__serialize_payload(void) {
 }
 
 void test_timeline_item__string_list(void) {
-  StringList *list = malloc(20);
+  struct pbl_string_list *list = malloc(20);
   memset(list, 0, 20);
   // no data
   list->serialized_byte_length = 0;
-  cl_assert_equal_i(0, string_list_count(list));
+  cl_assert_equal_i(0, pbl_string_list_count(list));
 
   list->serialized_byte_length = 3;
   // 4 empty strings
-  cl_assert_equal_i(4, string_list_count(list));
-  cl_assert_equal_s("", string_list_get_at(list, 0));
-  cl_assert_equal_s("", string_list_get_at(list, 1));
-  cl_assert_equal_s("", string_list_get_at(list, 2));
-  cl_assert_equal_s("", string_list_get_at(list, 3));
+  cl_assert_equal_i(4, pbl_string_list_count(list));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 0));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 1));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 2));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 3));
 
   // non-null-terminated string is treated as one string - this is the standard case
   // please note that the string will only be terminated if there's another \0 following
@@ -308,8 +308,8 @@ void test_timeline_item__string_list(void) {
   list->data[2] = 'c'; // end of data
   list->data[3] = 'd';
   list->data[4] = '\0';
-  cl_assert_equal_i(1, string_list_count(list));
-  cl_assert_equal_s("abcd", string_list_get_at(list, 0));
+  cl_assert_equal_i(1, pbl_string_list_count(list));
+  cl_assert_equal_s("abcd", pbl_string_list_get_at(list, 0));
 
   // 1 string (null terminated) => 2 strings, last is empty
   list->serialized_byte_length = 3;
@@ -317,9 +317,9 @@ void test_timeline_item__string_list(void) {
   list->data[1] = 'b';
   list->data[2] = '\0'; // end of data
   list->data[3] = '\0';
-  cl_assert_equal_i(2, string_list_count(list));
-  cl_assert_equal_s("ab", string_list_get_at(list, 0));
-  cl_assert_equal_s("", string_list_get_at(list, 1));
+  cl_assert_equal_i(2, pbl_string_list_count(list));
+  cl_assert_equal_s("ab", pbl_string_list_get_at(list, 0));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 1));
 
   // 2 strings (non-null terminated) - this is the standard case
   list->serialized_byte_length = 4;
@@ -328,9 +328,9 @@ void test_timeline_item__string_list(void) {
   list->data[2] = '\0';
   list->data[3] = 'c'; // end of data
   list->data[4] = '\0';
-  cl_assert_equal_i(2, string_list_count(list));
-  cl_assert_equal_s("ab", string_list_get_at(list, 0));
-  cl_assert_equal_s("c", string_list_get_at(list, 1));
+  cl_assert_equal_i(2, pbl_string_list_count(list));
+  cl_assert_equal_s("ab", pbl_string_list_get_at(list, 0));
+  cl_assert_equal_s("c", pbl_string_list_get_at(list, 1));
 
   // 3 strings (last two are is empty)
   list->serialized_byte_length = 4;
@@ -339,11 +339,11 @@ void test_timeline_item__string_list(void) {
   list->data[2] = '\0';
   list->data[3] = '\0'; // end of data
   list->data[4] = '\0';
-  cl_assert_equal_i(3, string_list_count(list));
-  cl_assert_equal_s("ab", string_list_get_at(list, 0));
-  cl_assert_equal_s("", string_list_get_at(list, 1));
-  cl_assert_equal_s("", string_list_get_at(list, 2));
-  cl_assert_equal_s(NULL, string_list_get_at(list, 3));
+  cl_assert_equal_i(3, pbl_string_list_count(list));
+  cl_assert_equal_s("ab", pbl_string_list_get_at(list, 0));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 1));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 2));
+  cl_assert_equal_s(NULL, pbl_string_list_get_at(list, 3));
 
   // 4 strings (first and last two are empty)
   list->serialized_byte_length = 4;
@@ -352,11 +352,11 @@ void test_timeline_item__string_list(void) {
   list->data[2] = '\0';
   list->data[3] = '\0'; // end of data
   list->data[4] = '\0';
-  cl_assert_equal_i(4, string_list_count(list));
-  cl_assert_equal_s("", string_list_get_at(list, 0));
-  cl_assert_equal_s("b", string_list_get_at(list, 1));
-  cl_assert_equal_s("", string_list_get_at(list, 2));
-  cl_assert_equal_s("", string_list_get_at(list, 3));
+  cl_assert_equal_i(4, pbl_string_list_count(list));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 0));
+  cl_assert_equal_s("b", pbl_string_list_get_at(list, 1));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 2));
+  cl_assert_equal_s("", pbl_string_list_get_at(list, 3));
 
   // 2 strings (last is not terminated and will fall through) will return 2 strings
   // when deserializing, the deserializer puts a \0 at the end
@@ -367,9 +367,9 @@ void test_timeline_item__string_list(void) {
   list->data[2] = 'b'; // end of data
   list->data[3] = 'c';
   list->data[4] = '\0';
-  cl_assert_equal_i(2, string_list_count(list));
-  cl_assert_equal_s("a", string_list_get_at(list, 0));
-  cl_assert_equal_s("bc", string_list_get_at(list, 1));
+  cl_assert_equal_i(2, pbl_string_list_count(list));
+  cl_assert_equal_s("a", pbl_string_list_get_at(list, 0));
+  cl_assert_equal_s("bc", pbl_string_list_get_at(list, 1));
 }
 
 static TimelineItemAction s_basic_action_list[] = {

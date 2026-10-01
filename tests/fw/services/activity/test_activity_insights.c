@@ -27,7 +27,6 @@
 #include "stubs_passert.h"
 #include "stubs_pebble_tasks.h"
 #include "stubs_rand_ptr.h"
-#include "stubs_stringlist.h"
 #include "stubs_system_task.h"
 
 bool activity_is_initialized(void) {
@@ -315,12 +314,12 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
 
   s_num_captured_metrics = 0;
   if (attr_list) {
-    StringList *headings = attribute_get_string_list(attr_list, AttributeIdHeadings);
-    StringList *values = attribute_get_string_list(attr_list, AttributeIdParagraphs);
-    const size_t num_metrics = string_list_count(headings);
+    struct pbl_string_list *headings = attribute_get_string_list(attr_list, AttributeIdHeadings);
+    struct pbl_string_list *values = attribute_get_string_list(attr_list, AttributeIdParagraphs);
+    const size_t num_metrics = pbl_string_list_count(headings);
     for (size_t i = 0; i < num_metrics && i < MAX_CAPTURED_METRICS; i++) {
-      const char *heading = string_list_get_at(headings, i);
-      const char *value = string_list_get_at(values, i);
+      const char *heading = pbl_string_list_get_at(headings, i);
+      const char *value = pbl_string_list_get_at(values, i);
       strncpy(s_captured_headings[i], heading ? heading : "", sizeof(s_captured_headings[i]) - 1);
       s_captured_headings[i][sizeof(s_captured_headings[i]) - 1] = '\0';
       strncpy(s_captured_values[i], value ? value : "", sizeof(s_captured_values[i]) - 1);

@@ -71,7 +71,6 @@ pbl_clar_test(test_contacts
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
     fw/services/timeline/attribute.c
-    fw/util/stringlist.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     fw/util/rand/rand.c
@@ -161,7 +160,6 @@ pbl_clar_test(test_timeline_item
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
     fw/services/timeline/attribute.c
-    fw/util/stringlist.c
     fw/util/time/time.c
 )
 

@@ -115,7 +115,7 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
     return false;
   }
 
-  StringList *rules =
+  struct pbl_string_list *rules =
       attribute_get_string_list(&app_notif_prefs->attr_list, AttributeIdNotificationFilteringRules);
   if (!rules || (rules->serialized_byte_length == 0)) {
     return false;
@@ -244,14 +244,14 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
     list_dirty = true;
   }
 
-  StringList *rules_attr = NULL;
+  struct pbl_string_list *rules_attr = NULL;
   if (app_notif_prefs) {
     rules_attr = attribute_get_string_list(&app_notif_prefs->attr_list,
                                            AttributeIdNotificationFilteringRules);
   }
-  StringList *default_rules = NULL;
+  struct pbl_string_list *default_rules = NULL;
   if (!rules_attr) {
-    default_rules = kernel_zalloc_check(sizeof(StringList) + sizeof(uint8_t));
+    default_rules = kernel_zalloc_check(sizeof(struct pbl_string_list) + sizeof(uint8_t));
     default_rules->serialized_byte_length = sizeof(uint8_t);
     default_rules->data[0] = 0; // zero filtering rules by default
     attribute_list_add_string_list(&new_attr_list, AttributeIdNotificationFilteringRules,

@@ -101,11 +101,11 @@ bool notification_window_is_modal(void) {
   return false;
 }
 
-size_t string_list_count(StringList *list) {
+size_t pbl_string_list_count(struct pbl_string_list *list) {
   return 0;
 }
 
-char *string_list_get_at(StringList *list, size_t index) {
+char *pbl_string_list_get_at(struct pbl_string_list *list, size_t index) {
   return NULL;
 }
 

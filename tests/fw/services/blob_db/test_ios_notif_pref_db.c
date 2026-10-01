@@ -96,7 +96,7 @@ void test_ios_notif_pref_db__read_flags(void) {
 void test_ios_notif_pref_db__store_prefs(void) {
   // Create an attribute list and action group
   struct {
-    StringList list;
+    struct pbl_string_list list;
     char data[9];
   } filtering_rules = {
     .list =
@@ -134,7 +134,7 @@ void test_ios_notif_pref_db__store_prefs(void) {
   Attribute *name = attribute_find(&notif_prefs->attr_list, AttributeIdAppName);
   cl_assert(name);
   cl_assert_equal_s(name->cstring, "GMail");
-  StringList *rules =
+  struct pbl_string_list *rules =
       attribute_get_string_list(&notif_prefs->attr_list, AttributeIdNotificationFilteringRules);
   cl_assert(rules);
   cl_assert_equal_i(rules->serialized_byte_length, filtering_rules.list.serialized_byte_length);

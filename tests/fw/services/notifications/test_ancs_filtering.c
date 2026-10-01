@@ -52,7 +52,7 @@ static uint8_t title_data[] = {
 static ANCSAttribute *s_title_attr = (ANCSAttribute *)&title_data;
 
 static struct {
-  StringList list;
+  struct pbl_string_list list;
   char data[1];
 } s_empty_filtering_rules = {
   .list =
@@ -412,7 +412,7 @@ void test_ancs_filtering__matches_text_rule_body_case_insensitive(void) {
   ANCSAttribute *body_attr = (ANCSAttribute *)&body_data;
 
   struct {
-    StringList list;
+    struct pbl_string_list list;
     char data[9];
   } filtering_rules = {
     .list =
@@ -437,7 +437,7 @@ void test_ancs_filtering__matches_text_rule_body_case_insensitive(void) {
 
 void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
   struct {
-    StringList list;
+    struct pbl_string_list list;
     char data[9];
   } filtering_rules = {
     .list =
@@ -463,7 +463,7 @@ void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
 
 void test_ancs_filtering__does_not_match_regex_rule(void) {
   struct {
-    StringList list;
+    struct pbl_string_list list;
     char data[9];
   } filtering_rules = {
     .list =
@@ -496,7 +496,7 @@ void test_ancs_filtering__matches_text_rule_title_via_subtitle(void) {
   ANCSAttribute *subtitle_attr = (ANCSAttribute *)&subtitle_data;
 
   struct {
-    StringList list;
+    struct pbl_string_list list;
     char data[11];
   } filtering_rules = {
     .list =

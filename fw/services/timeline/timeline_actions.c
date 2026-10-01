@@ -782,16 +782,16 @@ static ActionMenuLevel *prv_create_level(uint16_t num_items, ActionMenuLevel *pa
 static ActionMenuLevel *prv_create_template_level_from_action(ActionMenuLevel *parent_level,
                                                               TimelineItemAction *action,
                                                               void *i18n_owner) {
-  StringList *responses_list =
+  struct pbl_string_list *responses_list =
       attribute_get_string_list(&action->attr_list, AttributeIdCannedResponses);
-  uint16_t canned_responses_count = responses_list ? string_list_count(responses_list) : 0;
+  uint16_t canned_responses_count = responses_list ? pbl_string_list_count(responses_list) : 0;
 
   ActionMenuLevel *template_level;
   if (canned_responses_count) {
     // responses as provided by the action
     template_level = prv_create_level(canned_responses_count, parent_level);
     for (size_t i = 0; i < canned_responses_count; i++) {
-      const char *label = string_list_get_at(responses_list, i);
+      const char *label = pbl_string_list_get_at(responses_list, i);
       action_menu_level_add_action(template_level, label, prv_action_menu_cb, action);
     }
   } else {

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "stringlist.h"
+#include "pbl/util/string_list.h"
 
 #include "pbl/util/math.h"
 #include "pbl/util/string.h"
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-size_t string_list_count(StringList *list) {
+size_t pbl_string_list_count(struct pbl_string_list *list) {
   if (!list || list->serialized_byte_length == 0) {
     return 0;
   }
@@ -23,7 +23,7 @@ size_t string_list_count(StringList *list) {
   return result;
 }
 
-char *string_list_get_at(StringList *list, size_t index) {
+char *pbl_string_list_get_at(struct pbl_string_list *list, size_t index) {
   if (!list) {
     return NULL;
   }
@@ -42,15 +42,15 @@ char *string_list_get_at(StringList *list, size_t index) {
   }
 }
 
-int string_list_add_string(StringList *list, size_t max_list_size, const char *buffer,
-                           size_t max_str_size) {
+int pbl_string_list_add_string(struct pbl_string_list *list, size_t max_list_size,
+                               const char *buffer, size_t max_str_size) {
   if (!list) {
     return 0;
   }
 
   const size_t str_length = strnlen(buffer, max_str_size);
   const int size_remaining =
-      max_list_size - (sizeof(StringList) + list->serialized_byte_length + 1);
+      max_list_size - (sizeof(struct pbl_string_list) + list->serialized_byte_length + 1);
   if (size_remaining <= 0) {
     return 0;
   }

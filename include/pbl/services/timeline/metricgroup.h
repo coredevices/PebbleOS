@@ -7,8 +7,8 @@
 #include "timeline_resources.h"
 
 typedef struct MetricGroup {
-  StringList *names;
-  StringList *values;
+  struct pbl_string_list *names;
+  struct pbl_string_list *values;
   Uint32List *icons;
   int num_items;
   int max_num_items;

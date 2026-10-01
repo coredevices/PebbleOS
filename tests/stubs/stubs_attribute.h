@@ -27,7 +27,8 @@ void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uin
   return;
 }
 
-void attribute_list_add_string_list(AttributeList *list, AttributeId id, StringList *string_list) {
+void attribute_list_add_string_list(AttributeList *list, AttributeId id,
+                                    struct pbl_string_list *string_list) {
   return;
 }
 

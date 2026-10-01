@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/stringlist.h"
+#include "pbl/util/string_list.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -95,9 +95,9 @@ typedef enum {
   //! (uint8_t) Bitmask for which days of week notifications should be muted.
   //! Bit 1 = Sunday, Bit 7 = Saturday, Bit 8 unused.
   AttributeIdMuteDayOfWeek = 40,
-  //! (StringList) Metric names for pins to display numeric data
+  //! (struct pbl_string_list) Metric names for pins to display numeric data
   AttributeIdMetricNames = 41,
-  //! (StringList) Metric values for Generic pins to display numeric data
+  //! (struct pbl_string_list) Metric values for Generic pins to display numeric data
   AttributeIdMetricValues = 42,
   //! (Uint32List) Metric icons, casted to TimelineResourceId (uint16_t) on use
   AttributeIdMetricIcons = 43,
@@ -116,7 +116,7 @@ typedef enum {
   AttributeIdVibrationPattern = 49,
   //! (uint32_t) Timestamp when the mute should expire.
   AttributeIdMuteExpiration = 50,
-  //! (StringList) Notification filtering rules encoded as a byte array.
+  //! (struct pbl_string_list) Notification filtering rules encoded as a byte array.
   AttributeIdNotificationFilteringRules = 51,
   //! (uint8_t) The phone holds an image for this item, fetchable over the imaging endpoint
   //! (ImagingImageTypeNotification, keyed by the item's UUID). The value is the image's
@@ -146,7 +146,7 @@ typedef struct {
     int8_t int8;
     int16_t int16;
     int32_t int32;
-    StringList *string_list;
+    struct pbl_string_list *string_list;
     Uint32List *uint32_list;
   };
 } Attribute;
@@ -220,13 +220,14 @@ void attribute_list_add_resource_id(AttributeList *list, AttributeId id, uint32_
 void attribute_list_add_uint8(AttributeList *list, AttributeId id, uint8_t uint8);
 
 //! Append an attribute or replace an existing one in an attribute list.
-//! For StringList attributes, i.e. Headings, Paragraphs. This will not make
-//! a deep copy, so ensure the StringList is not freed until the attribute list
+//! For struct pbl_string_list attributes, i.e. Headings, Paragraphs. This will not make
+//! a deep copy, so ensure the struct pbl_string_list is not freed until the attribute list
 //! is copied or added to a timeline item
 //! @param list pointer to the attribute list
 //! @param id AttributeId of the attribute to add
-//! @param string_list StringList to store as the content of the attribute
-void attribute_list_add_string_list(AttributeList *list, AttributeId id, StringList *string_list);
+//! @param string_list struct pbl_string_list to store as the content of the attribute
+void attribute_list_add_string_list(AttributeList *list, AttributeId id,
+                                    struct pbl_string_list *string_list);
 
 //! Append an attribute or replace an existing one in an attribute list.
 //! For Uint32List attributes, i.e. MetricIcons, MetricValues. This will not make
@@ -272,7 +273,7 @@ const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
 //! @param attr_list a pointer to an attribute list
 //! @param id the attribute id of the desired attribute
 //! @return a pointer to the string list, NULL if not found
-StringList *attribute_get_string_list(const AttributeList *attr_list, AttributeId id);
+struct pbl_string_list *attribute_get_string_list(const AttributeList *attr_list, AttributeId id);
 
 //! Find a uint8 attribute in a list by attribute ID
 //! @param attr_list a pointer to an attribute list

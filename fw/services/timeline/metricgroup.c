@@ -8,7 +8,7 @@
 #include "pbl/services/timeline/attribute.h"
 
 MetricGroup *metric_group_create(int max_num_items, size_t max_item_string_size) {
-  const size_t max_list_size = StringListSize(max_num_items, max_item_string_size);
+  const size_t max_list_size = PBL_STRING_LIST_SIZE(max_num_items, max_item_string_size);
   MetricGroup *metric = task_zalloc_check(sizeof(MetricGroup));
   *metric = (MetricGroup){
     .names = task_zalloc_check(max_list_size),
@@ -36,11 +36,11 @@ bool metric_group_add_item(MetricGroup *metric_group, const char *name_i18n, con
     return false;
   }
   const size_t max_list_size =
-      StringListSize(metric_group->max_num_items, metric_group->max_item_string_size);
-  string_list_add_string(metric_group->names, max_list_size, i18n_get(name_i18n, i18n_owner),
-                         metric_group->max_item_string_size);
-  string_list_add_string(metric_group->values, max_list_size, value,
-                         metric_group->max_item_string_size);
+      PBL_STRING_LIST_SIZE(metric_group->max_num_items, metric_group->max_item_string_size);
+  pbl_string_list_add_string(metric_group->names, max_list_size, i18n_get(name_i18n, i18n_owner),
+                             metric_group->max_item_string_size);
+  pbl_string_list_add_string(metric_group->values, max_list_size, value,
+                             metric_group->max_item_string_size);
   metric_group->icons->values[metric_group->num_items++] = icon;
   metric_group->icons->num_values = metric_group->num_items;
   return true;
