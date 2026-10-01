@@ -8,7 +8,7 @@
 #include "weather_types.h"
 #include "pebble_compat.h"
 #include "pbl/services/clock.h" // clock_is_24h_style
-#include "util/graphics.h"      // raw_image_{get,set}_value_for_bitdepth
+#include "applib/graphics/raw_image.h"
 #include <time.h>
 
 // ---- Layout ----

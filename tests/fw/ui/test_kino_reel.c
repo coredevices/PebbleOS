@@ -7,7 +7,7 @@
 #include "applib/ui/kino/kino_reel_gbitmap_sequence.h"
 #include "applib/ui/kino/kino_reel_pdci.h"
 #include "applib/ui/kino/kino_reel_pdcs.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 
 #include "clar.h"
 

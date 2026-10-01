@@ -5,7 +5,7 @@
 
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 #include "pbl/util/math.h"
 
 #if !defined(__clang__)

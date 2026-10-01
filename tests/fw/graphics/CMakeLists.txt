@@ -634,3 +634,5 @@ pbl_clar_test(test_graphics_draw_rotated_bitmap
   PLATFORMS obelix gabbro
   TEST_IMAGES
 )
+
+pbl_clar_test(test_raw_image)

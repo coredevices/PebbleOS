@@ -4,7 +4,7 @@
 #include "gbitmap_sequence.h"
 
 #include "gbitmap_png.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 #include "util/time/time.h"
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"

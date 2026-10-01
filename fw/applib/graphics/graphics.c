@@ -13,7 +13,7 @@
 #include "process_state/app_state/app_state.h"
 #include "system/passert.h"
 #include "util/bitset.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 #include "pbl/util/math.h"
 
 #include <string.h>

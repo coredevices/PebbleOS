@@ -3,11 +3,11 @@
 
 #include <clar.h>
 
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 
 // Make sure that row stride, bit depth is all being used correctly.
 // Really, these are just some simple cases and sanity checks.
-void test_graphics__raw_image_get_value_for_bitdepth(void) {
+void test_raw_image__raw_image_get_value_for_bitdepth(void) {
   uint8_t test0[] = {0b11000000};
   uint8_t test1[] = {0, 0, 0, 0b11000000, 0};
   uint8_t test2[] = {0b11000000, 0b00110000, 0b00001100, 0b00000011};

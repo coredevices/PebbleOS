@@ -10,7 +10,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/bitset.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 #include "pbl/util/size.h"
 #include "pbl/util/testing.h"
 

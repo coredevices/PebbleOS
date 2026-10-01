@@ -10,7 +10,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "shell/system_theme.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 #include "pbl/util/size.h"
 
 #include "clar.h"

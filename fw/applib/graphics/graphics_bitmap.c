@@ -9,7 +9,7 @@
 #include "graphics_private.h"
 
 #include "system/passert.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 #include "pbl/util/trig.h"
 #include "pbl/util/testing.h"
 

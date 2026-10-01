@@ -6,7 +6,7 @@
 
 #include "applib/ui/window_private.h"
 #include "applib/ui/layer.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 
 #include "clar.h"
 #include "util.h"

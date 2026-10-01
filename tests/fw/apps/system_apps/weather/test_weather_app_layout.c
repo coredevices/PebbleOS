@@ -15,7 +15,7 @@
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
 #include "util/buffer.h"
-#include "util/graphics.h"
+#include "applib/graphics/raw_image.h"
 #include "pbl/util/hash.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
