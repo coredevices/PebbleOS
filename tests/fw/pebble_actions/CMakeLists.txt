@@ -25,7 +25,6 @@ pbl_clar_test(test_ancs_pebble_actions
     fw/services/timeline/timeline_actions.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
-    fw/util/pstring.c
     fw/util/rand/rand.c
     fw/util/time/time.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c

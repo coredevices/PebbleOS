@@ -8,7 +8,7 @@
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
 #include "util/date.h"
-#include "util/pstring.h"
+#include "pbl/util/pstring.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 
@@ -26,7 +26,7 @@ const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttrib
 
   for (unsigned int index = 0; index < ARRAY_LENGTH(map); ++index) {
     const struct ANCSAppMetadata *mapping = &map[index];
-    if (pstring_equal_cstring(&app_id->pstr, mapping->app_id)) {
+    if (pbl_pstring16_equal_cstring(&app_id->pstr, mapping->app_id)) {
       return mapping;
     }
   }
@@ -87,11 +87,11 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
 }
 
 bool ancs_notifications_util_is_phone(const ANCSAttribute *app_id) {
-  return (app_id && pstring_equal_cstring(&app_id->pstr, IOS_PHONE_APP_ID));
+  return (app_id && pbl_pstring16_equal_cstring(&app_id->pstr, IOS_PHONE_APP_ID));
 }
 
 bool ancs_notifications_util_is_sms(const ANCSAttribute *app_id) {
-  return (app_id && pstring_equal_cstring(&app_id->pstr, IOS_SMS_APP_ID));
+  return (app_id && pbl_pstring16_equal_cstring(&app_id->pstr, IOS_SMS_APP_ID));
 }
 
 bool ancs_notifications_util_is_group_sms(const ANCSAttribute *app_id,

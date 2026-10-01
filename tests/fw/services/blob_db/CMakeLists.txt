@@ -174,7 +174,6 @@ pbl_clar_test(test_notif_db
 
 pbl_clar_test(test_weather_db
   SOURCES
-    fw/util/pstring.c
     fw/util/time/time.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c

@@ -59,7 +59,7 @@ void ancs_phone_call_handle_incoming(uint32_t uid, ANCSProperty properties,
   const ANCSAttribute *caller_id = notif_attributes[FetchedNotifAttributeIndexTitle];
 
   char caller_id_str[caller_id->length + 1];
-  pstring_pstring16_to_string(&caller_id->pstr, caller_id_str);
+  pbl_pstring16_to_cstring(&caller_id->pstr, caller_id_str);
   prv_strip_formatting_chars(caller_id_str);
   PebblePhoneCaller *caller = phone_call_util_create_caller(caller_id_str, NULL);
 

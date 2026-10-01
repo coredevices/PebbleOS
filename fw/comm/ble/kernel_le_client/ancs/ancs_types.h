@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/kernel/compiler.h"
-#include "util/pstring.h"
+#include "pbl/util/pstring.h"
 #include "pbl/util/size.h"
 
 #include <stdbool.h>
@@ -198,7 +198,7 @@ static const FetchedAttribute s_fetched_app_attributes[] = {
 typedef struct PBL_PACKED {
   uint8_t id;
   union {
-    PascalString16 pstr;
+    struct pbl_pstring16 pstr;
     struct {
       uint16_t length;
       uint8_t value[]; //<! Not null terminated!

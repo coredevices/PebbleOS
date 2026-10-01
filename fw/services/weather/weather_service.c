@@ -36,15 +36,15 @@ static bool prv_entry_update_time_too_old_to_be_valid(const time_t update_time_u
 
 static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
                                          WeatherLocationForecast *forecast_out) {
-  PascalString16List pstring16_list;
+  struct pbl_pstring16_list pstring16_list;
   // v3 and v4 records place the trailing strings at different offsets; locate
   // them by the record's version (see weather_db.h).
-  pstring_project_list_on_serialized_array(&pstring16_list, weather_db_entry_get_strings(entry));
-  PascalString16 *location_pstring =
-      pstring_get_pstring16_from_list(&pstring16_list, WeatherDbStringIndex_LocationName);
+  pbl_pstring16_list_init(&pstring16_list, weather_db_entry_get_strings(entry));
+  struct pbl_pstring16 *location_pstring =
+      pbl_pstring16_list_get(&pstring16_list, WeatherDbStringIndex_LocationName);
 
-  PascalString16 *phrase_pstring =
-      pstring_get_pstring16_from_list(&pstring16_list, WeatherDbStringIndex_ShortPhrase);
+  struct pbl_pstring16 *phrase_pstring =
+      pbl_pstring16_list_get(&pstring16_list, WeatherDbStringIndex_ShortPhrase);
 
   // The string block is phone-controlled; a record can carry fewer strings than we index.
   if (!location_pstring || !phrase_pstring) {
@@ -81,10 +81,10 @@ static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
 
   // add 1 for null terminator
   forecast_out->location_name = task_zalloc_check(location_pstring->str_length + 1);
-  pstring_pstring16_to_string(location_pstring, forecast_out->location_name);
+  pbl_pstring16_to_cstring(location_pstring, forecast_out->location_name);
 
   forecast_out->current_weather_phrase = task_zalloc_check(phrase_pstring->str_length + 1);
-  pstring_pstring16_to_string(phrase_pstring, forecast_out->current_weather_phrase);
+  pbl_pstring16_to_cstring(phrase_pstring, forecast_out->current_weather_phrase);
 
   return true;
 }

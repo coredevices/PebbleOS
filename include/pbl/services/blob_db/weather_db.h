@@ -7,7 +7,7 @@
 #include "pbl/services/weather/weather_types.h"
 #include "system/status_codes.h"
 #include "pbl/kernel/compiler.h"
-#include "util/pstring.h"
+#include "pbl/util/pstring.h"
 #include "util/time/time.h"
 #include "pbl/util/uuid.h"
 
@@ -68,7 +68,7 @@ typedef struct PBL_PACKED {
   int16_t tomorrow_low_temp;
   time_t last_update_time_utc;
   bool is_current_location;
-  SerializedArray pstring16s;
+  struct pbl_serialized_array pstring16s;
 } WeatherDBEntryV3;
 
 // ---------------------------------------------------------------------------
@@ -166,7 +166,7 @@ typedef struct PBL_PACKED {
   int8_t tomorrow_hourly_temp[WEATHER_DB_HOURLY_COUNT];          // temp per hour 0-23
 
   // --- variable-length trailing strings (MUST stay last) ---
-  SerializedArray pstring16s;
+  struct pbl_serialized_array pstring16s;
 } WeatherDBEntry;
 
 typedef enum WeatherDbStringIndex {
@@ -187,7 +187,7 @@ typedef enum WeatherDbStringIndex {
 // Fixed portion of a v4.4 record — where a minor-4 record's trailing strings start.
 #define WEATHER_DB_V4_4_FIXED_SIZE (offsetof(WeatherDBEntry, tomorrow_hourly_count))
 // Fixed portion of a current (v4.5) record, i.e. everything except the trailing
-// pstring16s SerializedArray header/payload.
+// pstring16s struct pbl_serialized_array header/payload.
 #define WEATHER_DB_V4_FIXED_SIZE (offsetof(WeatherDBEntry, pstring16s))
 
 // Smallest acceptable record is a legacy v3 record (smaller fixed prefix).
@@ -238,10 +238,10 @@ static inline size_t weather_db_entry_strings_offset(uint8_t version, uint8_t mi
 //! @return a pointer to the trailing pstring16s array, located correctly for the
 //! record's version + minor. Use this instead of &entry->pstring16s so v3 and
 //! minor-0 records still resolve their strings after fields were appended.
-static inline SerializedArray *weather_db_entry_get_strings(WeatherDBEntry *entry) {
+static inline struct pbl_serialized_array *weather_db_entry_get_strings(WeatherDBEntry *entry) {
   const uint8_t minor = (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
-  return (SerializedArray *)((uint8_t *)entry +
-                             weather_db_entry_strings_offset(entry->version, minor));
+  return (struct pbl_serialized_array *)((uint8_t *)entry +
+                                         weather_db_entry_strings_offset(entry->version, minor));
 }
 
 // Memory ownership: pointer to key and entry must not be saved, as they become invalid after

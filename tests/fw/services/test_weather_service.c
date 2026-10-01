@@ -13,7 +13,7 @@
 #include "pbl/services/weather/weather_service.h"
 #include "pbl/services/weather/weather_service_private.h"
 #include "pbl/services/weather/weather_types.h"
-#include "util/pstring.h"
+#include "pbl/util/pstring.h"
 
 // Fixture
 ////////////////////////////////////////////////////////////////

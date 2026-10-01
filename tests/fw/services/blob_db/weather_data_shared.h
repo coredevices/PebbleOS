@@ -20,6 +20,9 @@
 #define TEST_WEATHER_DB_SHORT_PHRASE_HEAVY_SNOW    "Heavy Snow"
 #define TEST_WEATHER_DB_SHORT_PHRASE_HEAVY_RAIN    "Heavy Rain"
 
+void weather_shared_data_write_strings(struct pbl_serialized_array *strings, const char *location,
+                                       const char *phrase);
+
 void weather_shared_data_initialize_locations_order(void);
 
 void weather_shared_data_init(void);

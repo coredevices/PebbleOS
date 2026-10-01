@@ -47,10 +47,10 @@ static bool prv_should_add_sender_attr(const ANCSAttribute *app_id, const ANCSAt
 //! is assumed to be large enough to contain the string plus an optional
 //! ellipsis plus the zero terminator.
 //! @param add_ellipsis True if ellipsis must be added to buffer
-static char *prv_copy_pstring_and_add_ellipsis(const PascalString16 *pstring, char *buffer,
+static char *prv_copy_pstring_and_add_ellipsis(const struct pbl_pstring16 *pstring, char *buffer,
                                                bool add_ellipsis) {
   size_t bytes_added = pstring->str_length + 1;
-  pstring_pstring16_to_string(pstring, buffer);
+  pbl_pstring16_to_cstring(pstring, buffer);
   if (add_ellipsis) {
     bytes_added += prv_add_ellipsis(buffer, pstring->str_length);
   }
@@ -84,7 +84,7 @@ static uint8_t *prv_add_action_msg_to_attribute(uint8_t *buffer, const ANCSAttri
   const char *stripped_caption = NULL;
   char caption_buf[caption ? caption->length + 1 : 0];
   if (caption && caption->length > 0) {
-    pstring_pstring16_to_string(&caption->pstr, caption_buf);
+    pbl_pstring16_to_cstring(&caption->pstr, caption_buf);
     // Inserting a caption to an image can easily cause accidental leading whitespace
     stripped_caption = string_strip_leading_whitespace(caption_buf);
   }
@@ -346,7 +346,7 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
 
   if (display_name) {
     // dedupe title & display name, they often are the same
-    if (pstring_equal(&display_name->pstr, &title->pstr)) {
+    if (pbl_pstring16_equal(&display_name->pstr, &title->pstr)) {
       title = NULL;
     }
 

@@ -5,7 +5,7 @@
 #include "clar.h"
 
 #include "pbl/kernel/compiler.h"
-#include "util/pstring.h"
+#include "pbl/util/pstring.h"
 
 #include "pbl/services/blob_db/weather_db.h"
 #include "pbl/services/filesystem/pfs.h"
@@ -157,14 +157,7 @@ void test_weather_db__legacy_v3_inserted(void) {
   };
   entry->pstring16s.data_size = data_size;
 
-  PascalString16List pstring16_list;
-  pstring_project_list_on_serialized_array(&pstring16_list, &entry->pstring16s);
-  PascalString16 *location_name = pstring_create_pstring16_from_string((char *)location);
-  PascalString16 *short_phrase = pstring_create_pstring16_from_string((char *)phrase);
-  pstring_add_pstring16_to_list(&pstring16_list, location_name);
-  pstring_add_pstring16_to_list(&pstring16_list, short_phrase);
-  pstring_destroy_pstring16(location_name);
-  pstring_destroy_pstring16(short_phrase);
+  weather_shared_data_write_strings(&entry->pstring16s, location, phrase);
 
   WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6};
   cl_assert_equal_i(S_SUCCESS, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),

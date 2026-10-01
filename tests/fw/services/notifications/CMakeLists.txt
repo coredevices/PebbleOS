@@ -50,7 +50,6 @@ pbl_clar_test(test_ancs_notifications
     fw/services/phone_call/util.c
     fw/applib/fonts/codepoint.c
     fw/applib/graphics/utf8.c
-    fw/util/pstring.c
     fw/util/time/time.c
     tests/fakes/fake_events.c
 )
@@ -59,7 +58,6 @@ pbl_clar_test(test_ancs_notifications_util
   SOURCES
     fw/services/notifications/ancs/ancs_notifications_util.c
     fw/util/time/mktime.c
-    fw/util/pstring.c
     fw/util/time/time.c
     tests/fakes/fake_rtc.c
 )
@@ -70,7 +68,6 @@ pbl_clar_test(test_ancs_filtering
     fw/services/timeline/attribute.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
-    fw/util/pstring.c
     fw/util/time/time.c
 )
 
@@ -81,7 +78,6 @@ pbl_clar_test(test_nexmo
     fw/services/timeline/attribute.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
-    fw/util/pstring.c
     fw/util/time/time.c
     tests/fakes/fake_rtc.c
 )

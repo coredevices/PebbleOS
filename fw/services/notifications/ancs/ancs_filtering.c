@@ -8,7 +8,7 @@
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/timeline/attributes_actions.h"
 #include <pbl/logging/logging.h>
-#include "util/pstring.h"
+#include "pbl/util/pstring.h"
 
 #include <string.h>
 
@@ -80,7 +80,7 @@ static char *prv_attr_to_cstring(const ANCSAttribute *attr, size_t *len_out) {
     return NULL;
   }
   char *str = kernel_zalloc_check(attr->length + 1);
-  pstring_pstring16_to_string(&attr->pstr, str);
+  pbl_pstring16_to_cstring(&attr->pstr, str);
   *len_out = strlen(str);
   return str;
 }
@@ -213,10 +213,10 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
       existing_name = attribute_get_string(&app_notif_prefs->attr_list, AttributeIdAppName, "");
     }
 
-    if (!pstring_equal_cstring(&app_name_attr->pstr, existing_name)) {
+    if (!pbl_pstring16_equal_cstring(&app_name_attr->pstr, existing_name)) {
       // If the existing name doesn't match our new name, update the name
       app_name_buff = kernel_zalloc_check(app_name_attr->length + 1);
-      pstring_pstring16_to_string(&app_name_attr->pstr, app_name_buff);
+      pbl_pstring16_to_cstring(&app_name_attr->pstr, app_name_buff);
       attribute_list_add_cstring(&new_attr_list, AttributeIdAppName, app_name_buff);
       list_dirty = true;
       PBL_LOG_INFO("Adding app name to app prefs: <%s>", app_name_buff);

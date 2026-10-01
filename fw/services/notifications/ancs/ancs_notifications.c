@@ -23,7 +23,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/pstring.h"
+#include "pbl/util/pstring.h"
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
@@ -79,7 +79,7 @@ static time_t prv_get_timestamp_from_ancs_date(const ANCSAttribute *date,
 
     // copy out app ID to a char buffer
     char app_id_buffer[app_id->length + 1];
-    pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
+    pbl_pstring16_to_cstring(&app_id->pstr, app_id_buffer);
     PBL_LOG_WRN("No valid date. Offending iOS app: %s", app_id_buffer);
   }
 
@@ -99,7 +99,7 @@ static bool prv_calendar_reminder_filter(SerializedTimelineItemHeader *hdr, void
 static bool prv_should_ignore_because_calendar_reminder(const ANCSAttribute *app_id,
                                                         time_t timestamp,
                                                         const ANCSAttribute *title) {
-  if (!pstring_equal_cstring(&app_id->pstr, IOS_CALENDAR_APP_ID)) {
+  if (!pbl_pstring16_equal_cstring(&app_id->pstr, IOS_CALENDAR_APP_ID)) {
     return false;
   }
 
@@ -110,7 +110,7 @@ static bool prv_should_ignore_because_calendar_reminder(const ANCSAttribute *app
 
   // copy out calendar event title to a char buffer
   char calendar_title_buffer[title->length + 1];
-  pstring_pstring16_to_string(&title->pstr, calendar_title_buffer);
+  pbl_pstring16_to_cstring(&title->pstr, calendar_title_buffer);
 
   TimelineItem reminder;
 
@@ -137,13 +137,13 @@ static bool prv_reminder_filter(SerializedTimelineItemHeader *hdr, void *context
 static bool prv_should_ignore_because_time_reminder(const ANCSAttribute *app_id, time_t timestamp,
                                                     const ANCSAttribute *title, uint32_t uid,
                                                     const ANCSAttribute *attr_action_neg) {
-  if (!pstring_equal_cstring(&app_id->pstr, IOS_REMINDERS_APP_ID)) {
+  if (!pbl_pstring16_equal_cstring(&app_id->pstr, IOS_REMINDERS_APP_ID)) {
     return false;
   }
 
   // copy out reminder title to a char buffer
   char reminder_title_buffer[title->length + 1];
-  pstring_pstring16_to_string(&title->pstr, reminder_title_buffer);
+  pbl_pstring16_to_cstring(&title->pstr, reminder_title_buffer);
 
   TimelineItem reminder;
 
@@ -190,15 +190,15 @@ static bool prv_should_ignore_because_apple_mail_dot_app_bug(const ANCSAttribute
   // "This message has no content." when Mail.app is still fetching the body of the email.
   // PBL-8407 / PBL-1090 / Apple bug report number: rdr://17851582
   // Obviously this only works around the issue when the language is set to English.
-  if (!pstring_equal_cstring(&app_id->pstr, IOS_MAIL_APP_ID)) {
+  if (!pbl_pstring16_equal_cstring(&app_id->pstr, IOS_MAIL_APP_ID)) {
     return false;
   }
   static const char loading_str[] = "Loading\xe2\x80\xa6";
-  if (pstring_equal_cstring(&message->pstr, loading_str)) {
+  if (pbl_pstring16_equal_cstring(&message->pstr, loading_str)) {
     return true;
   }
   static const char no_content_str[] = "This message has no content.";
-  if (pstring_equal_cstring(&message->pstr, no_content_str)) {
+  if (pbl_pstring16_equal_cstring(&message->pstr, no_content_str)) {
     return true;
   }
   return false;
@@ -238,7 +238,7 @@ static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
 
   if (prv_should_ignore_because_muted(app_notif_prefs)) {
     char app_id_buffer[app_id->length + 1];
-    pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
+    pbl_pstring16_to_cstring(&app_id->pstr, app_id_buffer);
 
     PBL_LOG_DBG("Ignoring notification from <%s>: Muted", app_id_buffer);
     return true;
@@ -246,7 +246,7 @@ static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
 
   if (ancs_filtering_matches_rules(app_notif_prefs, title, subtitle, message)) {
     char app_id_buffer[app_id->length + 1];
-    pstring_pstring16_to_string(&app_id->pstr, app_id_buffer);
+    pbl_pstring16_to_cstring(&app_id->pstr, app_id_buffer);
 
     PBL_LOG_DBG("Ignoring notification from <%s>: Matched filtering rule", app_id_buffer);
     return true;

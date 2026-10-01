@@ -38,3 +38,5 @@ pbl_clar_test(test_base64)
 pbl_clar_test(test_buffer)
 
 pbl_clar_test(test_string_list)
+
+pbl_clar_test(test_pstring)

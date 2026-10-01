@@ -117,7 +117,6 @@ pbl_clar_test(test_ancs_util
 
 pbl_clar_test(test_ancs
   SOURCES
-    fw/util/pstring.c
     fw/util/time/mktime.c
     fw/util/time/time.c
     fw/comm/ble/kernel_le_client/ancs/ancs_util.c

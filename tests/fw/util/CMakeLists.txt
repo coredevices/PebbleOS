@@ -36,8 +36,3 @@ pbl_clar_test(test_generic_attribute
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
 )
 
-pbl_clar_test(test_pstring
-  SOURCES
-    fw/util/pstring.c
-)
-

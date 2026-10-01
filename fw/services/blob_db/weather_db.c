@@ -49,16 +49,17 @@ static void prv_close_file_and_unlock_mutex(void) {
 
 // Every byte past the fixed fields is phone-controlled, so the trailing string
 // block must be fully bounded by val_len before a record is accepted: the
-// SerializedArray header, its data_size, and every pstring16 a reader can be
+// struct pbl_serialized_array header, its data_size, and every pstring16 a reader can be
 // handed. The walk mirrors pstring.c (traversal advances by the LOW byte of a
 // pstring's length; the full uint16 length is what gets read back out).
 static bool prv_strings_block_is_valid(const uint8_t *val, size_t val_len, size_t strings_offset) {
-  if (strings_offset + sizeof(SerializedArray) > val_len) {
+  if (strings_offset + sizeof(struct pbl_serialized_array) > val_len) {
     return false;
   }
-  const SerializedArray *strings = (const SerializedArray *)(val + strings_offset);
+  const struct pbl_serialized_array *strings =
+      (const struct pbl_serialized_array *)(val + strings_offset);
   const size_t block_size = strings->data_size;
-  if (block_size > val_len - strings_offset - sizeof(SerializedArray)) {
+  if (block_size > val_len - strings_offset - sizeof(struct pbl_serialized_array)) {
     return false;
   }
   size_t off = 0;
