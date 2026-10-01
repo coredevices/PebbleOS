@@ -76,7 +76,6 @@
 #include "stubs_time.h"
 #include "stubs_timeline.h"
 #include "stubs_timeline_actions.h"
-#include "stubs_timeline_item.h"
 #include "stubs_timeline_layer.h"
 #include "stubs_timeline_peek.h"
 #include "stubs_vibes.h"
@@ -88,6 +87,39 @@
 #include "stubs_window_stack.h"
 
 #include "pbl/services/notifications/alerts_preferences_private.h"
+
+// Local replacements for stubs_timeline_item.h, which reports every item and action as non-ANCS
+void timeline_item_destroy(TimelineItem *item) {
+}
+
+void timeline_item_free_allocated_buffer(TimelineItem *item) {
+}
+
+TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t duration,
+                                                   TimelineItemType type, LayoutId layout,
+                                                   AttributeList *attr_list,
+                                                   TimelineItemActionGroup *action_group) {
+  return NULL;
+}
+
+bool timeline_item_action_is_ancs(const TimelineItemAction *action) {
+  return action->type == TimelineItemActionTypeAncsNegative ||
+         action->type == TimelineItemActionTypeAncsDelete ||
+         action->type == TimelineItemActionTypeAncsDial ||
+         action->type == TimelineItemActionTypeAncsPositive;
+}
+
+bool timeline_item_action_is_dismiss(const TimelineItemAction *action) {
+  return false;
+}
+
+TimelineItemAction *timeline_item_find_dismiss_action(const TimelineItem *item) {
+  return NULL;
+}
+
+bool timeline_item_is_ancs_notif(const TimelineItem *item) {
+  return item->header.ancs_notif;
+}
 
 // Local replacements for stubs_alerts_preferences.h so the notification status
 // bar style is settable per test (a strong override cannot share a TU with the
@@ -125,6 +157,15 @@ bool alerts_preferences_get_notification_vibe_delay(void) {
 
 PreferredContentSize alerts_preferences_get_notification_content_size(void) {
   return NotificationContentSizeSystem;
+}
+
+NotificationHoldSelectAction alerts_preferences_get_notification_hold_select_action(void) {
+  return NotificationHoldSelectAction_DismissAll;
+}
+
+static time_t s_ancs_subscribed_since;
+time_t ancs_get_subscribed_since(void) {
+  return s_ancs_subscribed_since;
 }
 
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
@@ -331,6 +372,7 @@ extern NotificationWindowData s_notification_window_data;
 extern bool s_in_use;
 
 void test_notification_window__initialize(void) {
+  s_ancs_subscribed_since = 0;
   fake_app_state_init();
   load_system_resources_fixture();
 
@@ -514,4 +556,74 @@ void test_notification_window__big_bold(void) {
       PBL_IF_RECT_ELSE((PreferredContentSizeDefault < PreferredContentSizeLarge) ? 1 : 0, 0);
   prv_prepare_canvas_and_render_notification_windows(num_down_scrolls);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+// Action menu availability
+////////////////////////////////////////////////////////////////
+
+extern bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
+                                                  const TimelineItem *item,
+                                                  const TimelineItemAction *action);
+extern bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
+                                                    const TimelineItem *item);
+
+static TimelineItemAction s_ancs_dismiss = {.type = TimelineItemActionTypeAncsNegative};
+
+static TimelineItem prv_ancs_notification(time_t timestamp) {
+  return (TimelineItem){
+    .header = {.type = TimelineItemTypeNotification, .ancs_notif = true, .timestamp = timestamp},
+    .action_group = {.num_actions = 1, .actions = &s_ancs_dismiss},
+  };
+}
+
+void test_notification_window__app_offers_ancs_actions_of_current_session(void) {
+  NotificationWindowData app = {.is_modal = false};
+  const time_t now = rtc_get_time();
+  s_ancs_subscribed_since = now - 100;
+
+  TimelineItem item = prv_ancs_notification(now - 10);
+  cl_assert(prv_should_show_action_in_action_menu(&app, &item, &s_ancs_dismiss));
+
+  // Dismissed or acted on, on the phone or on the watch
+  item.header.dismissed = true;
+  cl_assert(!prv_should_show_action_in_action_menu(&app, &item, &s_ancs_dismiss));
+  item.header.dismissed = false;
+  item.header.actioned = true;
+  cl_assert(!prv_should_show_action_in_action_menu(&app, &item, &s_ancs_dismiss));
+}
+
+void test_notification_window__app_hides_ancs_actions_with_stale_uids(void) {
+  NotificationWindowData app = {.is_modal = false};
+  const time_t now = rtc_get_time();
+  s_ancs_subscribed_since = now - 100;
+
+  // Received on an earlier session: iOS may have renumbered it
+  TimelineItem older = prv_ancs_notification(now - 101);
+  cl_assert(!prv_should_show_action_in_action_menu(&app, &older, &s_ancs_dismiss));
+
+  // Dated in the future, like a calendar event: when it was received is unknown
+  TimelineItem future = prv_ancs_notification(now + 60 * 60);
+  cl_assert(!prv_should_show_action_in_action_menu(&app, &future, &s_ancs_dismiss));
+
+  // Not connected to ANCS
+  s_ancs_subscribed_since = 0;
+  TimelineItem current = prv_ancs_notification(now - 10);
+  cl_assert(!prv_should_show_action_in_action_menu(&app, &current, &s_ancs_dismiss));
+}
+
+void test_notification_window__popup_offers_ancs_actions(void) {
+  NotificationWindowData popup = {.is_modal = true};
+  TimelineItem item = prv_ancs_notification(rtc_get_time() - 1000);
+  cl_assert(prv_should_show_action_in_action_menu(&popup, &item, &s_ancs_dismiss));
+}
+
+void test_notification_window__app_always_provides_action_menu(void) {
+  TimelineItem no_actions = {.header = {.type = TimelineItemTypeNotification, .ancs_notif = true}};
+
+  NotificationWindowData app = {.is_modal = false};
+  cl_assert(prv_should_provide_action_menu_for_item(&app, &no_actions));
+
+  // The popup keeps offering it only with actions
+  NotificationWindowData popup = {.is_modal = true};
+  cl_assert(!prv_should_provide_action_menu_for_item(&popup, &no_actions));
 }

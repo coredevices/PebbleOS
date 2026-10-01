@@ -10,12 +10,14 @@ set(sources
   ancs/ancs_notifications.c
   ancs/ancs_notifications_util.c
   ancs/ancs_phone_call.c
+  ancs/ancs_reconcile.c
   ancs/nexmo.c
   do_not_disturb.c
   do_not_disturb_toggle.c
   notification_image.c
   notification_storage.c
   notifications.c
+  pending_dismissals.c
 )
 pbl_library()
 pbl_library_sources(${sources})

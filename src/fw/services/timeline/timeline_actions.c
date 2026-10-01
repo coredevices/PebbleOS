@@ -33,6 +33,7 @@
 #include "pbl/services/bluetooth/ble_hrm.h"
 #include "pbl/services/notifications/action_chaining_window.h"
 #include "pbl/services/notifications/alerts_preferences.h"
+#include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
 #include "pbl/services/notifications/notification_constants.h"
 #include "pbl/services/notifications/notification_storage.h"
@@ -704,6 +705,11 @@ void timeline_actions_invoke_action(const TimelineItemAction *action, const Time
 }
 
 static void prv_push_dismiss_first_use_dialog(ActionMenu *action_menu) {
+  // The tutorial teaches holding Select to dismiss all, which the user may have remapped
+  if (alerts_preferences_get_notification_hold_select_action() !=
+      NotificationHoldSelectAction_DismissAll) {
+    return;
+  }
   if (alerts_preferences_check_and_set_first_use_complete(FirstUseSourceDismiss)) {
     return;
   }

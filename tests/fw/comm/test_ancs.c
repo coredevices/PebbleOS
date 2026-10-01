@@ -11,6 +11,8 @@
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/regular_timer.h"
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
+#include "pbl/services/notifications/ancs/ancs_reconcile.h"
+#include "pbl/services/notifications/pending_dismissals.h"
 #include "pbl/util/size.h"
 
 #include "clar.h"
@@ -64,6 +66,127 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 bool shell_prefs_get_language_english(void) {
   return false;
 }
+
+// Fake catch-up service: an entry's app is its app identifier's first character and its
+// timestamp its date's first character
+#define MAX_RECORDED 8
+
+static bool s_has_candidates;
+static bool s_canary_found;
+static ANCSReconcileEntry s_canary;
+static int s_num_by_uid_calls;
+static int s_num_by_content_calls;
+static uint32_t s_recorded_uids[MAX_RECORDED];
+static size_t s_num_recorded_uids;
+static uint32_t s_recorded_live_uids[MAX_RECORDED];
+static size_t s_num_recorded_live_uids;
+static ANCSReconcileEntry s_recorded_entries[MAX_RECORDED];
+static size_t s_num_recorded_entries;
+
+void ancs_reconcile_entry_from_attributes(uint32_t uid, const ANCSAttribute *app_id,
+                                          const ANCSAttribute *date,
+                                          ANCSReconcileEntry *entry_out) {
+  *entry_out = (ANCSReconcileEntry){
+    .uid = uid,
+    .app_id_hash = (app_id && app_id->length) ? app_id->value[0] : 0,
+    .timestamp = (date && date->length) ? date->value[0] : 0,
+  };
+}
+
+bool ancs_reconcile_has_candidates(void) {
+  return s_has_candidates;
+}
+
+bool ancs_reconcile_find_canary(const uint32_t *uids, size_t num_uids,
+                                ANCSReconcileEntry *canary_out) {
+  *canary_out = s_canary;
+  return s_canary_found;
+}
+
+bool ancs_reconcile_canary_matches(const ANCSReconcileEntry *expected,
+                                   const ANCSReconcileEntry *fetched) {
+  return (fetched->timestamp != 0) && (fetched->timestamp == expected->timestamp) &&
+         (fetched->app_id_hash == expected->app_id_hash);
+}
+
+static void prv_record_live_uids(const uint32_t *live_uids, size_t num_live_uids) {
+  cl_assert(num_live_uids <= MAX_RECORDED);
+  memcpy(s_recorded_live_uids, live_uids, num_live_uids * sizeof(uint32_t));
+  s_num_recorded_live_uids = num_live_uids;
+}
+
+void ancs_reconcile_by_uid(const uint32_t *uids, size_t num_uids, const uint32_t *live_uids,
+                           size_t num_live_uids) {
+  s_num_by_uid_calls++;
+  cl_assert(num_uids <= MAX_RECORDED);
+  memcpy(s_recorded_uids, uids, num_uids * sizeof(uint32_t));
+  s_num_recorded_uids = num_uids;
+  prv_record_live_uids(live_uids, num_live_uids);
+}
+
+void ancs_reconcile_by_content(const ANCSReconcileEntry *entries, size_t num_entries,
+                               const uint32_t *live_uids, size_t num_live_uids) {
+  s_num_by_content_calls++;
+  cl_assert(num_entries <= MAX_RECORDED);
+  memcpy(s_recorded_entries, entries, num_entries * sizeof(ANCSReconcileEntry));
+  s_num_recorded_entries = num_entries;
+  prv_record_live_uids(live_uids, num_live_uids);
+}
+
+// Fake queue of dismissals made while away: resolving sends `s_pending_send_uid`, if set
+static bool s_pending_has_ancs;
+static bool s_pending_canary_found;
+static ANCSReconcileEntry s_pending_canary;
+static uint32_t s_pending_send_uid;
+static int s_num_pending_resolved_by_uid;
+static int s_num_pending_resolved_by_content;
+
+bool pending_dismissals_has_ancs(void) {
+  return s_pending_has_ancs;
+}
+
+bool pending_dismissals_find_ancs_canary(const uint32_t *uids, size_t num_uids,
+                                         ANCSReconcileEntry *canary_out) {
+  *canary_out = s_pending_canary;
+  return s_pending_canary_found;
+}
+
+static void prv_pending_send(PendingDismissalSendCallback send) {
+  if (s_pending_send_uid) {
+    send(s_pending_send_uid, ActionIDNegative);
+  }
+}
+
+void pending_dismissals_resolve_ancs_by_uid(const uint32_t *uids, size_t num_uids,
+                                            PendingDismissalSendCallback send) {
+  s_num_pending_resolved_by_uid++;
+  prv_pending_send(send);
+}
+
+void pending_dismissals_resolve_ancs_by_content(const ANCSReconcileEntry *entries,
+                                                size_t num_entries,
+                                                PendingDismissalSendCallback send) {
+  s_num_pending_resolved_by_content++;
+  prv_pending_send(send);
+}
+
+// Actions the fake iPhone performed
+static uint32_t s_performed_action_uid;
+static uint8_t s_performed_action_id;
+static int s_num_performed_actions;
+
+// What the fake iPhone's Notification Center holds, for the catch-up's app and date fetches
+typedef struct {
+  uint32_t uid;
+  char app;
+  char date;
+} FakeIOSNotification;
+
+#define MAX_FAKE_IOS_NOTIFICATIONS 4
+static FakeIOSNotification s_ios_notifications[MAX_FAKE_IOS_NOTIFICATIONS];
+static int s_num_ios_notifications;
+static int s_num_reconcile_fetches;
+static bool s_ios_ignores_reconcile_fetches;
 
 static bool s_block_event_callback = false;
 EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
@@ -200,6 +323,47 @@ enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
       ((GetNotificationAttributesMsg *)s_mms_with_caption_dict)->notification_uid;
 
   const CPDSMessage *cmd_header = (const CPDSMessage *)buffer;
+
+  if (cmd_header->command_id == CommandIDPerformNotificationAction) {
+    const PerformNotificationActionMsg *action = (const PerformNotificationActionMsg *)buffer;
+    s_performed_action_uid = action->notification_uid;
+    s_performed_action_id = action->action_id;
+    s_num_performed_actions++;
+    ancs_handle_write_response(0, PBL_BT_GATT_ERROR_SUCCESS);
+    return PBL_BT_ERRNO_OK;
+  }
+
+  // The catch-up only asks for the app identifier and the date
+  if ((cmd_header->command_id == CommandIDGetNotificationAttributes) &&
+      (length == sizeof(GetNotificationAttributesMsg) + 2)) {
+    s_num_reconcile_fetches++;
+    if (s_ios_ignores_reconcile_fetches) {
+      return PBL_BT_ERRNO_OK;
+    }
+    const uint32_t uid = ((GetNotificationAttributesMsg *)buffer)->notification_uid;
+    for (int i = 0; i < s_num_ios_notifications; i++) {
+      if (s_ios_notifications[i].uid == uid) {
+        uint8_t response[sizeof(GetNotificationAttributesMsg) + 8];
+        *(GetNotificationAttributesMsg *)response = (GetNotificationAttributesMsg){
+          .command_id = CommandIDGetNotificationAttributes,
+          .notification_uid = uid,
+        };
+        uint8_t *attrs = response + sizeof(GetNotificationAttributesMsg);
+        memcpy(attrs,
+               (uint8_t[]){
+                 NotificationAttributeIDAppIdentifier, 1, 0, s_ios_notifications[i].app,
+                 NotificationAttributeIDDate, 1, 0, s_ios_notifications[i].date
+               },
+               8);
+        prv_fake_receiving_ds_notification(sizeof(response), response);
+        return PBL_BT_ERRNO_OK;
+      }
+    }
+    // No such notification any more
+    ancs_handle_write_response(0, 0xA2);
+    return PBL_BT_ERRNO_OK;
+  }
+
   if (cmd_header->command_id == CommandIDGetAppAttributes) {
     s_num_requested_app_attributes++;
 
@@ -302,6 +466,22 @@ enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
 
 void test_ancs__initialize(void) {
   s_block_event_callback = false;
+  s_has_candidates = true;
+  s_canary_found = false;
+  s_num_by_uid_calls = 0;
+  s_num_by_content_calls = 0;
+  s_num_recorded_uids = 0;
+  s_num_recorded_live_uids = 0;
+  s_num_recorded_entries = 0;
+  s_num_ios_notifications = 0;
+  s_num_reconcile_fetches = 0;
+  s_ios_ignores_reconcile_fetches = false;
+  s_pending_has_ancs = false;
+  s_pending_canary_found = false;
+  s_pending_send_uid = 0;
+  s_num_pending_resolved_by_uid = 0;
+  s_num_pending_resolved_by_content = 0;
+  s_num_performed_actions = 0;
   regular_timer_init();
   s_num_requested_notif_attributes = 0;
   s_num_requested_app_attributes = 0;
@@ -779,3 +959,227 @@ void test_ancs__alive_check_escalates_when_wedged(void) {
 //  // The last one was a phone notification but I changed it so it no longer is
 //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
 //}
+
+// Post-reconnect catch-up
+///////////////////////////////////////////////////////////
+
+#define RECONNECT_WINDOW_SECONDS 10
+
+static void prv_add_ios_notification(uint32_t uid, char app, char date) {
+  cl_assert(s_num_ios_notifications < MAX_FAKE_IOS_NOTIFICATIONS);
+  s_ios_notifications[s_num_ios_notifications++] =
+      (FakeIOSNotification){.uid = uid, .app = app, .date = date};
+}
+
+static void prv_reconnect(void) {
+  ancs_handle_ios9_or_newer_detected();
+  ancs_handle_subscribe(s_characteristics[ANCSCharacteristicData], BLESubscriptionNotifications,
+                        PBL_BT_GATT_ERROR_SUCCESS);
+}
+
+static void prv_replay(uint32_t uid) {
+  NSNotification ns_notification = {
+    .event_id = EventIDNotificationAdded,
+    .event_flags = EventFlagPreExisting,
+    .category_id = CategoryIDSocial,
+    .category_count = 1,
+    .uid = uid,
+  };
+  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
+}
+
+static void prv_end_reconnect_window(void) {
+  regular_timer_fire_seconds(RECONNECT_WINDOW_SECONDS);
+}
+
+void test_ancs__reconcile_uids_unchanged(void) {
+  s_canary_found = true;
+  s_canary = (ANCSReconcileEntry){.uid = 2, .app_id_hash = 'a', .timestamp = 'x'};
+  prv_add_ios_notification(1, 'b', 'y');
+  prv_add_ios_notification(2, 'a', 'x');
+
+  prv_reconnect();
+  prv_replay(1);
+  prv_replay(2);
+  // A notification that arrives while reconnecting is never removed
+  prv_send_notification((uint8_t *)&s_complete_dict);
+  // Replayed notifications are still not shown again
+  cl_assert_equal_i(s_num_requested_notif_attributes, 1);
+  prv_end_reconnect_window();
+
+  // Only the canary is fetched, then the replay is compared by UID
+  cl_assert_equal_i(s_num_reconcile_fetches, 1);
+  cl_assert_equal_i(s_num_by_uid_calls, 1);
+  cl_assert_equal_i(s_num_by_content_calls, 0);
+  cl_assert_equal_i(s_num_recorded_uids, 2);
+  cl_assert_equal_i(s_recorded_uids[0], 1);
+  cl_assert_equal_i(s_recorded_uids[1], 2);
+  cl_assert_equal_i(s_num_recorded_live_uids, 1);
+  cl_assert_equal_i(s_recorded_live_uids[0],
+                    ((GetNotificationAttributesMsg *)s_complete_dict)->notification_uid);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+  cl_assert_equal_i(prv_get_queue_depth(), 0);
+}
+
+void test_ancs__reconcile_uids_changed(void) {
+  s_canary_found = true;
+  s_canary = (ANCSReconcileEntry){.uid = 2, .app_id_hash = 'a', .timestamp = 'x'};
+  // iOS renumbered: UID 2 is now a different notification, and UID 3 is gone by the time it's
+  // fetched
+  prv_add_ios_notification(1, 'a', 'x');
+  prv_add_ios_notification(2, 'c', 'z');
+
+  prv_reconnect();
+  prv_replay(1);
+  prv_replay(2);
+  prv_replay(3);
+  prv_end_reconnect_window();
+
+  // The canary, then every replayed notification
+  cl_assert_equal_i(s_num_reconcile_fetches, 4);
+  cl_assert_equal_i(s_num_by_uid_calls, 0);
+  cl_assert_equal_i(s_num_by_content_calls, 1);
+  cl_assert_equal_i(s_num_recorded_entries, 2);
+  cl_assert_equal_i(s_recorded_entries[0].uid, 1);
+  cl_assert_equal_i(s_recorded_entries[0].app_id_hash, 'a');
+  cl_assert_equal_i(s_recorded_entries[0].timestamp, 'x');
+  cl_assert_equal_i(s_recorded_entries[1].uid, 2);
+  cl_assert_equal_i(s_recorded_entries[1].app_id_hash, 'c');
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+}
+
+void test_ancs__reconcile_without_canary_compares_content(void) {
+  prv_add_ios_notification(7, 'a', 'x');
+
+  prv_reconnect();
+  prv_replay(7);
+  prv_end_reconnect_window();
+
+  cl_assert_equal_i(s_num_reconcile_fetches, 1);
+  cl_assert_equal_i(s_num_by_content_calls, 1);
+  cl_assert_equal_i(s_num_recorded_entries, 1);
+}
+
+void test_ancs__reconcile_failed_fetch_removes_nothing(void) {
+  s_ios_ignores_reconcile_fetches = true;
+
+  prv_reconnect();
+  prv_replay(1);
+  prv_end_reconnect_window();
+  cl_assert_equal_i(s_num_reconcile_fetches, 1);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+
+  // The fetch times out: the catch-up is cancelled rather than finished with partial data
+  regular_timer_fire_seconds(10);
+  cl_assert_equal_i(s_num_reconcile_fetches, 1);
+  cl_assert_equal_i(s_num_by_uid_calls, 0);
+  cl_assert_equal_i(s_num_by_content_calls, 0);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+  cl_assert_equal_i(prv_get_queue_depth(), 0);
+}
+
+void test_ancs__reconcile_skipped(void) {
+  // Before iOS 9 the replay isn't reliable
+  ancs_handle_subscribe(s_characteristics[ANCSCharacteristicData], BLESubscriptionNotifications,
+                        PBL_BT_GATT_ERROR_SUCCESS);
+  prv_replay(1);
+  prv_end_reconnect_window();
+
+  // Nothing replayed
+  prv_reconnect();
+  prv_end_reconnect_window();
+
+  // Nothing on the watch to compare
+  s_has_candidates = false;
+  prv_reconnect();
+  prv_replay(1);
+  prv_end_reconnect_window();
+
+  cl_assert_equal_i(s_num_reconcile_fetches, 0);
+  cl_assert_equal_i(s_num_by_uid_calls, 0);
+  cl_assert_equal_i(s_num_by_content_calls, 0);
+}
+
+void test_ancs__reconcile_cancelled_by_disconnection(void) {
+  s_ios_ignores_reconcile_fetches = true;
+  const int allocs_before = fake_pbl_malloc_num_net_allocs();
+
+  prv_reconnect();
+  prv_replay(1);
+  prv_end_reconnect_window();
+  cl_assert_equal_i(s_num_reconcile_fetches, 1);
+
+  ancs_invalidate_all_references();
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+  cl_assert_equal_i(prv_get_queue_depth(), 0);
+  // The catch-up's state went with it
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), allocs_before);
+  cl_assert_equal_i(s_num_by_uid_calls, 0);
+  cl_assert_equal_i(s_num_by_content_calls, 0);
+}
+
+void test_ancs__reconcile_sends_pending_dismissals(void) {
+  // Everything on the watch was dismissed while away: only the queued dismissals remain, and one of
+  // them checks the UIDs
+  s_has_candidates = false;
+  s_pending_has_ancs = true;
+  s_pending_canary_found = true;
+  s_pending_canary = (ANCSReconcileEntry){.uid = 5, .app_id_hash = 'a', .timestamp = 'x'};
+  s_pending_send_uid = 5;
+  prv_add_ios_notification(5, 'a', 'x');
+
+  prv_reconnect();
+  prv_replay(5);
+  prv_end_reconnect_window();
+
+  cl_assert_equal_i(s_num_reconcile_fetches, 1);
+  cl_assert_equal_i(s_num_pending_resolved_by_uid, 1);
+  cl_assert_equal_i(s_num_pending_resolved_by_content, 0);
+  cl_assert_equal_i(s_num_performed_actions, 1);
+  cl_assert_equal_i(s_performed_action_uid, 5);
+  cl_assert_equal_i(s_performed_action_id, ActionIDNegative);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+  cl_assert_equal_i(prv_get_queue_depth(), 0);
+}
+
+void test_ancs__reconcile_sends_pending_dismissals_after_uid_change(void) {
+  s_has_candidates = false;
+  s_pending_has_ancs = true;
+  s_pending_canary_found = true;
+  s_pending_canary = (ANCSReconcileEntry){.uid = 5, .app_id_hash = 'a', .timestamp = 'x'};
+  // iOS renumbered: the dismissed notification is now 8
+  s_pending_send_uid = 8;
+  prv_add_ios_notification(5, 'b', 'y');
+  prv_add_ios_notification(8, 'a', 'x');
+
+  prv_reconnect();
+  prv_replay(5);
+  prv_replay(8);
+  prv_end_reconnect_window();
+
+  cl_assert_equal_i(s_num_reconcile_fetches, 3);
+  cl_assert_equal_i(s_num_pending_resolved_by_uid, 0);
+  cl_assert_equal_i(s_num_pending_resolved_by_content, 1);
+  cl_assert_equal_i(s_num_performed_actions, 1);
+  cl_assert_equal_i(s_performed_action_uid, 8);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+}
+
+void test_ancs__reconcile_keeps_pending_dismissals_on_failure(void) {
+  s_has_candidates = false;
+  s_pending_has_ancs = true;
+  s_pending_canary_found = true;
+  s_pending_canary = (ANCSReconcileEntry){.uid = 5, .app_id_hash = 'a', .timestamp = 'x'};
+  s_pending_send_uid = 5;
+  s_ios_ignores_reconcile_fetches = true;
+
+  prv_reconnect();
+  prv_replay(5);
+  prv_end_reconnect_window();
+  regular_timer_fire_seconds(10);
+
+  // Left queued for the next connection
+  cl_assert_equal_i(s_num_pending_resolved_by_uid, 0);
+  cl_assert_equal_i(s_num_pending_resolved_by_content, 0);
+  cl_assert_equal_i(s_num_performed_actions, 0);
+}

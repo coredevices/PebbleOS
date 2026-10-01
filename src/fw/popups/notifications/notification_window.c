@@ -25,6 +25,8 @@
 #include "process_management/process_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
+#include "comm/ble/kernel_le_client/ancs/ancs.h"
+#include "pbl/drivers/rtc.h"
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 #include "pbl/services/comm_session/session.h"
 #include "pbl/services/evented_timer.h"
@@ -78,8 +80,8 @@ PBL_T_STATIC NotificationWindowData s_notification_window_data;
 PBL_T_STATIC bool s_in_use = false;
 struct pbl_mutex s_notification_window_mutex;
 
-static bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
-                                                    const TimelineItem *item);
+PBL_T_STATIC bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
+                                                          const TimelineItem *item);
 
 static void prv_handle_notification_removed_common(Uuid *, NotificationType);
 
@@ -675,9 +677,19 @@ static void prv_setup_reminder_watchdog(NotificationWindowData *data) {
 // Clicks
 ///////////////////////
 
-static bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
-                                                  const TimelineItem *item,
-                                                  const TimelineItemAction *action) {
+// An ANCS action addresses the notification by its UID, which iOS may renumber when the watch
+// reconnects, so only trust it for notifications received on the current ANCS session. iOS Calendar
+// sets the event's time as the date, which says nothing about when it was received.
+static bool prv_is_from_current_ancs_session(const TimelineItem *item) {
+  const time_t since = ancs_get_subscribed_since();
+  const time_t max_clock_skew_s = 60;
+  return (since != 0) && (item->header.timestamp >= since) &&
+         (item->header.timestamp <= rtc_get_time() + max_clock_skew_s);
+}
+
+PBL_T_STATIC bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
+                                                        const TimelineItem *item,
+                                                        const TimelineItemAction *action) {
   if (timeline_item_is_ancs_notif(item)) {
     if (data->is_modal) {
       // If we are in the modal popup show all available actions. We are fairly certain that the
@@ -685,10 +697,12 @@ static bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
       // should work
       return true;
     } else {
-      // If we are in the notifications app, only show non ANCS actions. Pre iOS9 we can't really
-      // know if the notification is still in the notification center or not, so we play it safe
-      // and only show non ANCS actions. Once iOS9 is more widespread we can look at updating this
-      return !timeline_item_action_is_ancs(action);
+      // In the notifications app, the notification may have left the notification center since.
+      // iOS reports that, and acting on it, by marking it dismissed or actioned, so only offer ANCS
+      // actions while it is still active, and while its UID is still valid.
+      return !timeline_item_action_is_ancs(action) ||
+             (!item->header.actioned && !item->header.dismissed &&
+              prv_is_from_current_ancs_session(item));
     }
   } else { // Android
     // Show all actions unless the item has already been acted upon, in which case show none
@@ -699,8 +713,13 @@ static bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
   }
 }
 
-static bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
-                                                    const TimelineItem *item) {
+PBL_T_STATIC bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
+                                                          const TimelineItem *item) {
+  if (!data->is_modal) {
+    // In the notifications app the menu always has something to offer, like Quiet Time, as it has
+    // when the notification pops up
+    return true;
+  }
   for (int i = 0; i < item->action_group.num_actions; i++) {
     TimelineItemAction *action = &item->action_group.actions[i];
     if (prv_should_show_action_in_action_menu(data, item, action)) {
@@ -1030,8 +1049,26 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
       &config, window_manager_get_window_stack(NOTIFICATION_PRIORITY));
 }
 
+static bool prv_hold_select_dismisses_individual(void) {
+  return alerts_preferences_get_notification_hold_select_action() ==
+         NotificationHoldSelectAction_DismissIndividual;
+}
+
+static void prv_dismiss_current_notification(NotificationWindowData *window_data) {
+  TimelineItem *item = prv_get_current_notification(window_data);
+  const TimelineItemAction *dismiss = item ? timeline_item_find_dismiss_action(item) : NULL;
+  if (dismiss) {
+    // Same as Dismiss in the action menu, with its result dialog
+    timeline_actions_invoke_action(dismiss, item, NULL, NULL);
+  }
+}
+
 static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *data) {
-  prv_dismiss_all(data, NULL);
+  if (prv_hold_select_dismisses_individual()) {
+    prv_dismiss_current_notification(data);
+  } else {
+    prv_dismiss_all(data, NULL);
+  }
 }
 
 static void prv_back_button_single_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -1042,7 +1079,7 @@ static void prv_back_button_single_click_handler(ClickRecognizerRef recognizer, 
 static void prv_click_config_provider(void *data) {
   NotificationWindowData *window_data = data;
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_single_click_handler);
-  if (window_data->allow_dismiss_all) {
+  if (window_data->allow_dismiss_all || prv_hold_select_dismisses_individual()) {
     window_long_click_subscribe(BUTTON_ID_SELECT, 1000, prv_select_long_click_handler, NULL);
   }
   window_set_click_context(BUTTON_ID_SELECT, data);

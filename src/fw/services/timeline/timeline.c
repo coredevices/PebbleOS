@@ -22,6 +22,7 @@
 #include "pbl/services/blob_db/reminder_db.h"
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/notifications/notifications.h"
+#include "pbl/services/notifications/pending_dismissals.h"
 #include "pbl/services/phone_call_util.h"
 #include "pbl/services/timeline/actions_endpoint.h"
 #include <pbl/logging/logging.h>
@@ -715,6 +716,14 @@ static void prv_remove_pin_action(const TimelineItem *item, const TimelineItemAc
   }
 }
 
+static bool prv_ancs_is_connected(void) {
+#if defined(CONFIG_BT_ANCS_CLIENT)
+  return ancs_is_connected();
+#else
+  return false;
+#endif
+}
+
 static void prv_dismiss_local_notification_action(const TimelineItem *item) {
   // TODO: PBL-23915
   // We leak this i18n'd string because not leaking it is really hard.
@@ -866,6 +875,10 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     case TimelineItemActionTypeAncsPositive:
     case TimelineItemActionTypeAncsNegative:
     case TimelineItemActionTypeAncsDelete: {
+      if (!prv_ancs_is_connected()) {
+        // The action can't reach iOS now, so it is sent once iOS is back
+        pending_dismissals_add(item, action);
+      }
       prv_perform_ancs_negative_action(item, action);
       notification_storage_set_status(&item->header.id, TimelineItemStatusDismissed);
       break;
@@ -877,6 +890,12 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
           (((item->header.type == TimelineItemTypeNotification) ||
             (item->header.type == TimelineItemTypeReminder)) &&
            !timeline_get_private_data_source((Uuid *)&item->header.parent_id))) {
+        prv_dismiss_local_notification_action(item);
+        return;
+      }
+
+      // Without the Pebble app, dismiss on the watch now and on the phone once it reconnects
+      if (!comm_session_get_system_session() && pending_dismissals_add(item, action)) {
         prv_dismiss_local_notification_action(item);
         return;
       }

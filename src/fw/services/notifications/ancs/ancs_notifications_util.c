@@ -86,6 +86,21 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
   return mktime(&time_tm);
 }
 
+#define APP_ID_HASH_PREFIX_LENGTH 32
+
+uint32_t ancs_notifications_util_hash_app_id(const uint8_t *app_id, size_t length) {
+  if (length > APP_ID_HASH_PREFIX_LENGTH) {
+    length = APP_ID_HASH_PREFIX_LENGTH;
+  }
+  // FNV-1a
+  uint32_t hash = 2166136261u;
+  for (size_t i = 0; i < length; i++) {
+    hash ^= app_id[i];
+    hash *= 16777619u;
+  }
+  return hash;
+}
+
 bool ancs_notifications_util_is_phone(const ANCSAttribute *app_id) {
   return (app_id && pstring_equal_cstring(&app_id->pstr, IOS_PHONE_APP_ID));
 }

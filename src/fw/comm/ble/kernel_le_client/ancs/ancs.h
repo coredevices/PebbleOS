@@ -5,6 +5,8 @@
 
 #include "applib/bluetooth/ble_client.h"
 
+#include <time.h>
+
 //! @file ancs.h Module implementing an ANCS client.
 //! See http://bit.ly/ancs-spec for Apple's documentation of ANCS
 
@@ -76,6 +78,14 @@ void ancs_destroy(void);
 
 //! This function is safe to call from any task.
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id);
+
+//! @return whether the watch is connected to ANCS and can perform actions on iOS notifications
+bool ancs_is_connected(void);
+
+//! @return when the watch subscribed to the current ANCS session, or 0 when it isn't subscribed.
+//! iOS may renumber notifications across sessions, so only the UIDs of notifications received since
+//! then are known to be valid.
+time_t ancs_get_subscribed_since(void);
 
 //! Called by kernel_le_client/dis/dis.c
 void ancs_handle_ios9_or_newer_detected(void);
