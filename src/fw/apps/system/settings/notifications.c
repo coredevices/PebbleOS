@@ -13,14 +13,22 @@
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/i18n/i18n.h"
+#include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/alerts_preferences_private.h"
 #include "pbl/services/notifications/alerts_private.h"
+#include "pbl/services/notifications/notification_sounds.h"
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "util/time/time.h"
 
 // Offset between vibe intensity menu item index and vibe intensity enum values
 #define INTENSITY_ROW_OFFSET 1
+
+#ifdef CONFIG_SPEAKER
+//! Matches NOTIFICATION_SOUND_VOLUME in notification_window.c so the preview
+//! is heard at the volume the real notification will use.
+#define NOTIFICATION_SOUND_PREVIEW_VOLUME 50
+#endif
 
 typedef struct {
   SettingsCallbacks callbacks;
@@ -33,6 +41,9 @@ enum NotificationsItem {
   NotificationsItemWindowTimeout,
 #if PBL_BW
   NotificationsItemDesignStyle,
+#endif
+#ifdef CONFIG_SPEAKER
+  NotificationsItemSound,
 #endif
   NotificationsItemVibeDelay,
   NotificationsItemBacklight,
@@ -365,6 +376,14 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
     }
 #endif /* PBL_BW */
+#ifdef CONFIG_SPEAKER
+    case NotificationsItemSound: {
+      /// String within Settings->Notifications that selects the notification sound
+      title = i18n_noop("Sound");
+      subtitle = notification_sounds_get_name(alerts_preferences_get_notification_sound());
+      break;
+    }
+#endif /* CONFIG_SPEAKER */
     case NotificationsItemVibeDelay: {
       /// String within Settings->Notifications that describes when vibration happens
       title = i18n_noop("Vibe Timing");
@@ -422,6 +441,18 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_design_style_menu_push(data);
       break;
 #endif /* PBL_BW */
+#ifdef CONFIG_SPEAKER
+    case NotificationsItemSound: {
+      const NotificationSound sound =
+          notification_sounds_cycle_next(alerts_preferences_get_notification_sound());
+      alerts_preferences_set_notification_sound(sound);
+      if (sound != NotificationSound_None) {
+        // Preview the newly selected sound
+        notification_sounds_play(sound, NOTIFICATION_SOUND_PREVIEW_VOLUME);
+      }
+      break;
+    }
+#endif /* CONFIG_SPEAKER */
     case NotificationsItemVibeDelay:
       prv_vibe_delay_menu_push(data);
       break;
