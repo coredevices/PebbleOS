@@ -459,12 +459,12 @@ void graphics_private_draw_horizontal_line_delta_prepared(GContext *ctx, GBitmap
                                                           Fixed_S16_3 delta1, Fixed_S16_3 delta2,
                                                           GColor color) {
   // Extended sides AA calculations
-  uint8_t left_aa_offset =
+  int16_t left_aa_offset =
       (delta1.integer > 1)
           ? ((delta1.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value)
           : 1;
 
-  uint8_t right_aa_offset =
+  int16_t right_aa_offset =
       (delta2.integer > 1)
           ? ((delta2.raw_value + (FIXED_S16_3_ONE.raw_value / 2)) / FIXED_S16_3_ONE.raw_value)
           : 1;

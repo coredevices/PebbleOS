@@ -1264,8 +1264,8 @@ typedef void (*GDrawRawBlendVerticalLineFunc)(GContext *ctx, int16_t x, int16_t 
                                               GColor color);
 
 typedef void (*GDrawRawAssignHorizontalLineDeltaFunc)(GContext *ctx, int16_t y, Fixed_S16_3 x1,
-                                                      Fixed_S16_3 x2, uint8_t left_aa_offset,
-                                                      uint8_t right_aa_offset,
+                                                      Fixed_S16_3 x2, int16_t left_aa_offset,
+                                                      int16_t right_aa_offset,
                                                       int16_t clip_box_min_x,
                                                       int16_t clip_box_max_x, GColor color);
 

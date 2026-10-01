@@ -197,8 +197,8 @@ void test_graphics_draw_core__blend_horizontal_line_raw(void) {
 };
 
 void prv_assign_horizontal_line_delta_raw(GBitmap *framebuffer, int16_t y, Fixed_S16_3 x1,
-                                          Fixed_S16_3 x2, uint8_t left_aa_offset,
-                                          uint8_t right_aa_offset, int16_t clip_box_min_x,
+                                          Fixed_S16_3 x2, int16_t left_aa_offset,
+                                          int16_t right_aa_offset, int16_t clip_box_min_x,
                                           int16_t clip_box_max_x, GColor color);
 
 static void prv_hline_pattern_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y, int16_t x1,
