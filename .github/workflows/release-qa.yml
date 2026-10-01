@@ -78,5 +78,7 @@ jobs:
             echo "::warning::UNICORN_DISPATCH_TOKEN not set, skipping"
             exit 0
           fi
-          gh workflow run one-off-pebbleos-test.yml -R coredevices/unicorn \
+          # --ref: without it gh asks GraphQL for unicorn's default branch, which
+          # needs Contents read; the dispatch token only has Actions read/write.
+          gh workflow run one-off-pebbleos-test.yml -R coredevices/unicorn --ref main \
             -f to_pbz_run_id="${RUN_ID}"
