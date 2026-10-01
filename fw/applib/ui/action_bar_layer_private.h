@@ -15,6 +15,9 @@
 //! System and kernel UI follow left-hand display orientation.
 bool action_bar_layer_is_on_right(void);
 
+//! Side of \a action_bar: the one it took when added to a window, else the current preference.
+bool action_bar_layer_side_is_right(const ActionBarLayer *action_bar);
+
 //! X origin of the content area beside the action bar (0 when the bar is on the right).
 int16_t action_bar_layer_get_content_origin_x(void);
 
