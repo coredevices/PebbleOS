@@ -4,7 +4,7 @@
 #pragma once
 
 //! This module handles the collection and sending of periodic protobuf payloads to the phone
-//! using the protobuf schema defined at src/fw/idl/nanopb/*.proto and sent to the phone via
+//! using the protobuf schemas in src/fw/services/protobuf_log/proto and sent to the phone via
 //! data logging.
 
 #include "pbl/services/hrm/hrm_manager.h"
@@ -14,9 +14,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// Auto generated header produced by compiling the .proto files in src/fw/idl
-#include "nanopb/measurements.pb.h"
-#include "nanopb/event.pb.h"
+// Generated from src/fw/services/protobuf_log/proto
+#include "measurements.pb.h"
+#include "event.pb.h"
 
 // Create an alias typedef for the auto-generated name
 typedef pebble_pipeline_MeasurementSet_Type ProtobufLogMeasurementType;

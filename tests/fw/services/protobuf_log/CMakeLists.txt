@@ -12,5 +12,5 @@ pbl_clar_test(test_protobuf_log
     src/fw/util/time/time.c
     tests/fakes/fake_rtc.c
     tests/fw/services/protobuf_log/protobuf_log_test_helpers.c
-  LIBS nanopb proto_schemas
+  LIBS nanopb protobuf_log_schemas
 )

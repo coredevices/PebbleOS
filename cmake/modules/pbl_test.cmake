@@ -264,7 +264,7 @@ function(_pbl_test_add id)
       list(APPEND rest ${PBL_BASE}/${dir})
     endif()
   endforeach()
-  list(APPEND rest ${PBL_IDL_INCLUDE_DIR} ${PBL_BASE}/include/pbl)
+  list(APPEND rest ${PBL_PROTO_INCLUDE_DIR} ${PBL_BASE}/include/pbl)
   set(includes ${head} ${rest})
 
   set(defines ${PBL_TEST_DEFINES} ${DEFINES} UNITTEST

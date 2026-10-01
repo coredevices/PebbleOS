@@ -7,7 +7,7 @@
 
 #include "pbl/services/activity/activity.h"
 
-#include "nanopb/event.pb.h"
+#include "event.pb.h"
 #include "system/passert.h"
 
 #include <stdbool.h>

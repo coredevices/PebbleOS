@@ -24,9 +24,9 @@
 #include <string.h>
 
 // These headers auto-generated from the measurements.proto
-#include "nanopb/event.pb.h"
-#include "nanopb/measurements.pb.h"
-#include "nanopb/payload.pb.h"
+#include "event.pb.h"
+#include "measurements.pb.h"
+#include "payload.pb.h"
 
 PBL_LOG_MODULE_DEFINE(service_protobuf_log, CONFIG_SERVICE_PROTOBUF_LOG_LOG_LEVEL);
 

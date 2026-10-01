@@ -10,7 +10,7 @@
 
 #define TMP_FILE    "tmp_protoc_bytes"
 #define TINTIN_PATH "/Users/thoffman/dev/tintin"
-#define PROTO_PATH  "/src/idl/nanopb"
+#define PROTO_PATH  "/src/fw/services/protobuf_log/proto"
 #define PROTOC_PATH "/usr/local/bin/protoc"
 
 void protobuf_log_test_parse_protoc(uint8_t *msg) {

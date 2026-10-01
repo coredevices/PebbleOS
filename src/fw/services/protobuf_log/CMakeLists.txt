@@ -10,3 +10,5 @@ set(sources
 )
 pbl_library()
 pbl_library_sources(${sources})
+
+add_subdirectory(proto)

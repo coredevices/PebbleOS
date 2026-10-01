@@ -9,8 +9,8 @@
 
 #include "pb_decode.h"
 
-#include "nanopb/payload.pb.h"
-#include "nanopb/measurements.pb.h"
+#include "payload.pb.h"
+#include "measurements.pb.h"
 #include "system/passert.h"
 
 #include <pbl/util/uuid.h>

@@ -6,7 +6,7 @@
 
 #include "pbl/services/hrm/hrm_manager.h"
 
-#include "nanopb/measurements.pb.h"
+#include "measurements.pb.h"
 #include "system/passert.h"
 
 #include <pbl/util/size.h>

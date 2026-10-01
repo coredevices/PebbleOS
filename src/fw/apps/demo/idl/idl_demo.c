@@ -12,8 +12,7 @@
 
 #include "pb_decode.h"
 #include "pb_encode.h"
-#include "nanopb/simple.pb.h"
-#include "nanopb/measurements.pb.h"
+#include "simple.pb.h"
 
 static void prv_init(void) {
   SimpleMessage msg = {
