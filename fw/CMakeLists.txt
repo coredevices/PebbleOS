@@ -20,7 +20,6 @@ add_subdirectory(process_state)
 add_subdirectory(resource)
 add_subdirectory(syscall)
 add_subdirectory(system)
-add_subdirectory(util)
 add_subdirectory(apps/core)
 
 if(CONFIG_RECOVERY_FW)
