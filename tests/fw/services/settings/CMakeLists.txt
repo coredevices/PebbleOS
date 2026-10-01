@@ -3,7 +3,7 @@
 
 pbl_clar_test(test_settings_file
   SOURCES
-    fw/util/dict.c
+    fw/applib/dict.c
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     tests/fakes/fake_spi_flash.c

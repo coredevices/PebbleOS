@@ -9,7 +9,7 @@ pbl_clar_test(test_app_message
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/pebble_process_info.c
-    fw/util/dict.c
+    fw/applib/dict.c
 )
 
 pbl_clar_test(test_app_inbox
@@ -38,7 +38,7 @@ pbl_clar_test(test_persist
   SOURCES
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
-    fw/util/dict.c
+    fw/applib/dict.c
     fw/applib/persist.c
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -156,4 +156,9 @@ pbl_clar_test(test_template_string
   SOURCES
     fw/applib/template_string.c
   OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_dict
+  SOURCES
+    fw/applib/dict.c
 )

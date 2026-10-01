@@ -91,7 +91,7 @@ pbl_clar_test(test_launcher_app_message
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/launcher_app_message.c
-    fw/util/dict.c
+    fw/applib/dict.c
     tests/fakes/fake_session.c
 )
 

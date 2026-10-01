@@ -18,11 +18,6 @@ pbl_clar_test(test_time
     tests/fakes/fake_rtc.c
 )
 
-pbl_clar_test(test_dict
-  SOURCES
-    fw/util/dict.c
-)
-
 pbl_clar_test(test_buffer
   SOURCES
     fw/util/buffer.c

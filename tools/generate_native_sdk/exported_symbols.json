@@ -10,7 +10,7 @@
     "include/pbl/drivers/ambient_light.h",
     "include/pbl/drivers/button_id.h",
     "fw/system/status_codes.h",
-    "fw/util/dict.h",
+    "fw/applib/dict.h",
     "include/pbl/util/list.h",
     "include/pbl/util/math.h",
     "include/pbl/util/size.h",

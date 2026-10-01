@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "util/dict.h"
+#include "applib/dict.h"
 #include "pbl/util/list.h"
 
 //! @addtogroup Foundation

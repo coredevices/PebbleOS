@@ -9,7 +9,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include "util/dict.h"
+#include "applib/dict.h"
 
 #define LAUNCHER_MESSAGE_ENDPOINT_ID (0x31)
 
