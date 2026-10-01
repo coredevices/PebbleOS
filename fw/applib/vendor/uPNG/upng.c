@@ -47,8 +47,8 @@
 #include "tinflate.h"
 
 // Used to allow direct character buffer access with offsets and byteswap in place
-#define MAKE_WORD_PTR(p)  MAKE_WORD((p)[0], (p)[1], (p)[2], (p)[3])
-#define MAKE_SHORT_PTR(p) (uint16_t)((MAKE_BYTE((p)[0]) << 8) | MAKE_BYTE((p)[1]))
+#define MAKE_WORD_PTR(p)  PBL_FOURCC((p)[0], (p)[1], (p)[2], (p)[3])
+#define MAKE_SHORT_PTR(p) (uint16_t)(((uint8_t)((p)[0]) << 8) | (uint8_t)((p)[1]))
 
 #define FIRST_LENGTH_CODE_INDEX 257
 #define LAST_LENGTH_CODE_INDEX  285

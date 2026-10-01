@@ -14,14 +14,14 @@
 #include "pbl/services/app_cache.h"
 #include "pbl/services/timeline/timeline.h"
 #include <pbl/logging/logging.h>
-#include "util/units.h"
+#include "pbl/util/units.h"
 #include "pbl/util/uuid.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define PIN_DB_MAX_AGE   (3 * SECONDS_PER_DAY) // so we get at two full past days in there
 #define PIN_DB_FILE_NAME "pindb"
-#define PIN_DB_MAX_SIZE  KiBYTES(40) // TODO [FBO] variable size / reasonable value
+#define PIN_DB_MAX_SIZE  PBL_KIB(40) // TODO [FBO] variable size / reasonable value
 
 static TimelineItemStorage s_pin_db_storage;
 

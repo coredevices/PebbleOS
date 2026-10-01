@@ -22,7 +22,7 @@
 #include "system/passert.h"
 #include "util/base64.h"
 #include "pbl/util/math.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include <pbl/cron/cron.h>
 
@@ -1412,7 +1412,7 @@ bool activity_init(void) {
 
   // Init variables used to compute the derived metrics
   s_activity_state.steps_per_minute_last_steps = s_activity_state.step_data.steps;
-  s_activity_state.distance_mm = s_activity_state.step_data.distance_meters * MM_PER_METER;
+  s_activity_state.distance_mm = s_activity_state.step_data.distance_meters * PBL_MM_PER_M;
   s_activity_state.active_calories =
       s_activity_state.step_data.active_kcalories * ACTIVITY_CALORIES_PER_KCAL;
   int minute_of_day = time_util_get_minute_of_day(utc_now);

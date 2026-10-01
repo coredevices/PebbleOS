@@ -18,7 +18,7 @@
 #include <pbl/logging/logging.h>
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include "kernel/pbl_malloc.h"
 
@@ -27,7 +27,7 @@ PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 #define SETTINGS_FILE_NAME "wakeup"
 // settings file => 29 bytes * 30 apps * 8 wakeup events = ~7000 bytes
 // This should be more than enough space to store all the wakeup events we will ever want.
-#define SETTINGS_FILE_SIZE KiBYTES(8)
+#define SETTINGS_FILE_SIZE PBL_KIB(8)
 // This represents the size of the buffer that is allocated to pass into the wakeup_ui
 // to show that an app's wakeup event had triggered while the watch was off. To reduce
 // complexity, I have hard coded this buffer to a max size instead of going the linked_list

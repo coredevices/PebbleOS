@@ -14,13 +14,13 @@
 #include "system/passert.h"
 #include "system/status_codes.h"
 #include "pbl/util/math.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define SETTINGS_FILE_NAME "appdb"
 // Holds about ~150 app metadata blobs
-#define SETTINGS_FILE_SIZE KiBYTES(20)
+#define SETTINGS_FILE_SIZE PBL_KIB(20)
 
 #define FIRST_VALID_INSTALL_ID (INSTALL_ID_INVALID + 1)
 
@@ -43,7 +43,7 @@ struct AppDBInitData {
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_db.mutex, PBL_FOREVER);
   status_t rv = settings_file_open_growable(&s_app_db.settings_file, SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE, KiBYTES(4));
+                                            SETTINGS_FILE_SIZE, PBL_KIB(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_db.mutex);
   }

@@ -18,7 +18,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
-#include "util/ratio.h"
+#include "pbl/util/ratio.h"
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -178,7 +178,7 @@ static void prv_update_state(void *force_update) {
 
   // Update Percent & Filtering
 
-  const uint32_t ALWAYS_UPDATE_THRESHOLD = ratio32_from_percent(10);
+  const uint32_t ALWAYS_UPDATE_THRESHOLD = pbl_ratio32_from_percent(10);
   bool likely_stable = prv_is_stable(&s_last_battery_state);
 
   uint32_t new_charge_percent =
@@ -199,7 +199,7 @@ static void prv_update_state(void *force_update) {
 
   PBL_LOG_DBG("mV Raw: %" PRIu16 " Ratio: %" PRIu32 " Percent: %" PRIu32,
               s_last_battery_state.voltage, s_last_battery_state.percent,
-              ratio32_to_percent(s_last_battery_state.percent));
+              pbl_ratio32_to_percent(s_last_battery_state.percent));
 
   if (forced || likely_stable || s_last_battery_state.percent <= ALWAYS_UPDATE_THRESHOLD ||
       charging || state_changed) {
@@ -240,7 +240,7 @@ void battery_state_init(void) {
   battery_state_force_update();
 
   s_analytics_previous_mv = s_last_battery_state.voltage;
-  s_analytics_last_cpct = (s_last_battery_state.percent * 10000U) / RATIO32_MAX;
+  s_analytics_last_cpct = (s_last_battery_state.percent * 10000U) / PBL_RATIO32_MAX;
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
@@ -256,7 +256,7 @@ void battery_state_handle_connection_event(bool is_connected) {
 PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state) {
   PreciseBatteryChargeState event_state = {
     .charge_percent = state->percent,
-    .pct = ratio32_to_percent(state->percent),
+    .pct = pbl_ratio32_to_percent(state->percent),
     .is_charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged),
     .is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged)
   };
@@ -278,7 +278,7 @@ BatteryChargeState battery_get_charge_state(void) {
   int32_t percent_normalized = percent;
   uint8_t charge_percent = (uint8_t)percent;
 #else
-  int32_t percent = ratio32_to_percent(s_last_battery_state.percent);
+  int32_t percent = pbl_ratio32_to_percent(s_last_battery_state.percent);
 
   // subtract low power reserve, so developer will see 0% when we're approaching low power mode
   int32_t percent_normalized = MAX((percent - BOARD_CONFIG_POWER.low_power_threshold +
@@ -317,7 +317,7 @@ int32_t battery_state_get_temp(void) {
 // Note that this is run on a different thread than battery_state!
 void pbl_analytics_external_collect_battery(void) {
   int32_t battery_mv = s_last_battery_state.voltage;
-  uint32_t battery_soc_cpct = (s_last_battery_state.percent * 10000U) / RATIO32_MAX;
+  uint32_t battery_soc_cpct = (s_last_battery_state.percent * 10000U) / PBL_RATIO32_MAX;
   int32_t d_mv;
   uint32_t d_soc_cpct;
 
@@ -340,7 +340,7 @@ static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) 
   PreciseBatteryChargeState state = prv_get_precise_charge_state(&s_last_battery_state);
 
   pbl_shell_print(sh, "%" PRIu16 " mV", s_last_battery_state.voltage);
-  pbl_shell_print(sh, "batt_percent: %" PRIu32 "%%", ratio32_to_percent(state.charge_percent));
+  pbl_shell_print(sh, "batt_percent: %" PRIu32 "%%", pbl_ratio32_to_percent(state.charge_percent));
   pbl_shell_print(sh, "plugged: %s", state.is_plugged ? "YES" : "NO");
   pbl_shell_print(sh, "charging: %s", state.is_charging ? "YES" : "NO");
   return 0;

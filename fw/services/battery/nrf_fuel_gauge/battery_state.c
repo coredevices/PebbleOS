@@ -15,7 +15,7 @@
 #include "syscall/syscall_internal.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/ratio.h"
+#include "pbl/util/ratio.h"
 
 #ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/settings/settings_file.h"
@@ -369,7 +369,7 @@ static void prv_update_state(void *force_update) {
   prv_track_soc_min();
   if (pct_int != s_last_battery_charge_state.pct) {
     s_last_battery_charge_state.pct = pct_int;
-    s_last_battery_charge_state.charge_percent = (uint32_t)(pct * RATIO32_MAX) / 100U;
+    s_last_battery_charge_state.charge_percent = (uint32_t)(pct * PBL_RATIO32_MAX) / 100U;
     update = true;
   }
 
@@ -523,7 +523,7 @@ void battery_state_init(void) {
   s_last_soc_cpct = (uint32_t)(pct * 100.0f);
   prv_track_soc_min();
   s_last_battery_charge_state.pct = (uint8_t)ceilf(pct);
-  s_last_battery_charge_state.charge_percent = (uint32_t)(pct * RATIO32_MAX) / 100U;
+  s_last_battery_charge_state.charge_percent = (uint32_t)(pct * PBL_RATIO32_MAX) / 100U;
 
   if (s_last_battery_charge_state.is_charging) {
     PBL_ANALYTICS_TIMER_START(battery_charge_time_ms);

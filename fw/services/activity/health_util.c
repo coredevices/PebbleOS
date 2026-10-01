@@ -7,7 +7,7 @@
 #include "pbl/services/activity/activity.h"
 #include "shell/prefs.h"
 #include "util/time/time.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -137,9 +137,9 @@ int health_util_format_whole_and_decimal(char *buffer, size_t buffer_size, int n
 int health_util_get_distance_factor(void) {
   switch (shell_prefs_get_units_distance()) {
     case UnitsDistance_Miles:
-      return METERS_PER_MILE;
+      return PBL_M_PER_MILE;
     case UnitsDistance_KM:
-      return METERS_PER_KM;
+      return PBL_M_PER_KM;
     case UnitsDistanceCount:
       break;
   }

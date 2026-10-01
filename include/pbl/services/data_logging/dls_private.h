@@ -12,7 +12,7 @@
 #include "system/hexdump.h"
 #include "pbl/kernel/compiler.h"
 #include "util/shared_circular_buffer.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 #include "pbl/util/uuid.h"
 
 #include <stdint.h>
@@ -22,20 +22,20 @@
 // File name is formatted as: ("%s%d", DLS_FILE_NAME_PREFIX, session_id)
 #define DLS_FILE_NAME_PREFIX "dls_storage_"
 static const uint32_t DLS_FILE_NAME_MAX_LEN = 20;
-static const uint32_t DLS_FILE_INIT_SIZE_BYTES = KiBYTES(4);
+static const uint32_t DLS_FILE_INIT_SIZE_BYTES = PBL_KIB(4);
 
 // Limits on how much free space we try to reserver for a session file
-static const uint32_t DLS_MIN_FILE_FREE_BYTES = KiBYTES(8);
-static const uint32_t DLS_MAX_FILE_FREE_BYTES = KiBYTES(100);
+static const uint32_t DLS_MIN_FILE_FREE_BYTES = PBL_KIB(8);
+static const uint32_t DLS_MAX_FILE_FREE_BYTES = PBL_KIB(100);
 
 // Min amount of available space at the end of a file before we decide to grow it
-static const uint32_t DLS_MIN_FREE_BYTES = KiBYTES(1);
+static const uint32_t DLS_MIN_FREE_BYTES = PBL_KIB(1);
 
 // Max # of sessions we allow
 static const uint32_t DLS_MAX_NUM_SESSIONS = 20;
 
 // Maximum total amount of storage we are allowed to use on the file system.
-static const uint32_t DLS_TOTAL_STORAGE_BYTES = KiBYTES(640);
+static const uint32_t DLS_TOTAL_STORAGE_BYTES = PBL_KIB(640);
 
 // Maximum amount of space allowed for data over and above the minimum allotment per session
 #define DLS_MAX_DATA_BYTES \

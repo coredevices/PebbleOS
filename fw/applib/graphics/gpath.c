@@ -10,7 +10,7 @@
 #include "applib/app_logging.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
-#include "util/swap.h"
+#include "pbl/util/misc.h"
 #include "pbl/util/trig.h"
 
 #include <string.h>
@@ -64,7 +64,7 @@ static void sort16(int16_t *values, size_t length) {
   for (unsigned int i = 0; i < length; i++) {
     for (unsigned int j = i + 1; j < length; j++) {
       if (values[i] > values[j]) {
-        swap16(&values[i], &values[j]);
+        PBL_SWAP(values[i], values[j]);
       }
     }
   }
@@ -541,7 +541,7 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
       int16_t x_b = intersections_down[j];
       if (x_a != x_b) {
         if (x_a > x_b) {
-          swap16(&x_a, &x_b);
+          PBL_SWAP(x_a, x_b);
         }
         cb(ctx, i, (Fixed_S16_3){.integer = x_a}, (Fixed_S16_3){.integer = x_b},
            (Fixed_S16_3){.integer = -1}, (Fixed_S16_3){.integer = -1}, user_data);

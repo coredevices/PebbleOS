@@ -20,7 +20,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "util/time/time.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include "pbl/kernel/mutex.h"
 #include "pbl/util/testing.h"
@@ -197,7 +197,7 @@ static void prv_handle_movement_update(HealthEventMovementUpdateData *event) {
     // Calculate the distance delta
     const time_t delta_ms = (now_ts - wrkt_data->last_movement_event_time_ts) * MS_PER_SECOND;
     const int32_t delta_distance_mm = activity_private_compute_distance_mm(delta_steps, delta_ms);
-    wrkt_data->distance_m += (delta_distance_mm / MM_PER_METER);
+    wrkt_data->distance_m += (delta_distance_mm / PBL_MM_PER_M);
 
     // Calculate active calories
     const int32_t active_calories =

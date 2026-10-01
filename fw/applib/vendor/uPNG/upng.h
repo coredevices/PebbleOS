@@ -42,24 +42,24 @@
 #include <stdbool.h>
 
 #include "pbl/kernel/compiler.h"
-#include "util/pack.h"
+#include "pbl/util/misc.h"
 
 // PNG files start with [137, 'P', 'N', 'G']
-#define PNG_SIGNATURE MAKE_WORD('\x89', 'P', 'N', 'G')
+#define PNG_SIGNATURE PBL_FOURCC('\x89', 'P', 'N', 'G')
 
 #define PNG_HEADER_SIZE 33 // Full header == 8 + 25 (PNG_file_signature + IHDR_CHUNK)
 #define CHUNK_META_SIZE 12 // PNG Chunks have 12 bytes of metadata (Length, Type, CRC)
 #define FCTL_CHUNK_SIZE (26 + CHUNK_META_SIZE) // FCTL data_size + META_SIZE
 
-#define CHUNK_IHDR MAKE_WORD('I', 'H', 'D', 'R') // Image Header Chunk
-#define CHUNK_IDAT MAKE_WORD('I', 'D', 'A', 'T') // Image Data Chunk
-#define CHUNK_PLTE MAKE_WORD('P', 'L', 'T', 'E') // Palette Chunk
-#define CHUNK_IEND MAKE_WORD('I', 'E', 'N', 'D') // Image End Chunk
-#define CHUNK_TRNS MAKE_WORD('t', 'R', 'N', 'S') // Alpha transparency for palettized images
-#define CHUNK_ACTL MAKE_WORD('a', 'c', 'T', 'L') // Animation control (APNG)
-#define CHUNK_ADTL MAKE_WORD('a', 'd', 'T', 'L') // Animation duration (APNG)
-#define CHUNK_FDAT MAKE_WORD('f', 'd', 'A', 'T') // Frame Data (APNG)
-#define CHUNK_FCTL MAKE_WORD('f', 'c', 'T', 'L') // Frame control (APNG)
+#define CHUNK_IHDR PBL_FOURCC('I', 'H', 'D', 'R') // Image Header Chunk
+#define CHUNK_IDAT PBL_FOURCC('I', 'D', 'A', 'T') // Image Data Chunk
+#define CHUNK_PLTE PBL_FOURCC('P', 'L', 'T', 'E') // Palette Chunk
+#define CHUNK_IEND PBL_FOURCC('I', 'E', 'N', 'D') // Image End Chunk
+#define CHUNK_TRNS PBL_FOURCC('t', 'R', 'N', 'S') // Alpha transparency for palettized images
+#define CHUNK_ACTL PBL_FOURCC('a', 'c', 'T', 'L') // Animation control (APNG)
+#define CHUNK_ADTL PBL_FOURCC('a', 'd', 'T', 'L') // Animation duration (APNG)
+#define CHUNK_FDAT PBL_FOURCC('f', 'd', 'A', 'T') // Frame Data (APNG)
+#define CHUNK_FCTL PBL_FOURCC('f', 'c', 'T', 'L') // Frame control (APNG)
 
 #define APNG_DEFAULT_DELAY_UNITS (100) // APNG default delay units (ie. 1/100 per frame)
 

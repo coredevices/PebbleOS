@@ -13,7 +13,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +24,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 #define HEALTH_DB_MAX_KEY_LEN 30
 
 static const char *HEALTH_DB_FILE_NAME = "healthdb";
-static const int HEALTH_DB_MAX_SIZE = KiBYTES(12);
+static const int HEALTH_DB_MAX_SIZE = PBL_KIB(12);
 static PBL_MUTEX_DEFINE(s_mutex);
 
 #define MOVEMENT_DATA_KEY_SUFFIX "_movementData"
@@ -86,7 +86,7 @@ static status_t prv_file_open_and_lock(SettingsFile *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   status_t rv =
-      settings_file_open_growable(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE, KiBYTES(8));
+      settings_file_open_growable(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE, PBL_KIB(8));
   if (rv != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open settings file");
     pbl_mutex_unlock(&s_mutex);

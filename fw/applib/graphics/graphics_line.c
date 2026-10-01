@@ -6,7 +6,7 @@
 #include "graphics.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
-#include "util/swap.h"
+#include "pbl/util/misc.h"
 #include "pbl/util/testing.h"
 
 #define MINIMUM_PRECISE_STROKE_WIDTH 2
@@ -19,13 +19,13 @@ PBL_T_MOCKABLE void graphics_line_draw_1px_non_aa(GContext *ctx, GPoint p0, GPoi
 
   int steep = abs(p1.y - p0.y) > abs(p1.x - p0.x);
   if (steep) {
-    swap16(&p0.x, &p0.y);
-    swap16(&p1.x, &p1.y);
+    PBL_SWAP(p0.x, p0.y);
+    PBL_SWAP(p1.x, p1.y);
   }
 
   if (p0.x > p1.x) {
-    swap16(&p0.x, &p1.x);
-    swap16(&p0.y, &p1.y);
+    PBL_SWAP(p0.x, p1.x);
+    PBL_SWAP(p0.y, p1.y);
   }
 
   int dx = p1.x - p0.x;
@@ -107,7 +107,7 @@ PBL_T_MOCKABLE void graphics_line_draw_1px_aa(GContext *ctx, GPoint p0, GPoint p
     int16_t end = x1 + (dx * xi);
 
     if (end < start) {
-      swap16(&start, &end);
+      PBL_SWAP(start, end);
     }
 
     graphics_private_draw_horizontal_line_prepared(ctx, framebuffer, &ctx->draw_state.clip_box, y1,

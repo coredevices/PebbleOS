@@ -18,7 +18,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -27,7 +27,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 //! need to guarantee all of the apps's glances on the watch can have the same number of slices,
 //! and that number currently evaluates to 69050 bytes. We provide some additional space beyond that
 //! for some safety margin and easy future expansion, and thus use 80KB for the settings file size.
-#define SETTINGS_FILE_SIZE (KiBYTES(80))
+#define SETTINGS_FILE_SIZE (PBL_KIB(80))
 
 #define APP_GLANCE_DB_GLANCE_MAX_SIZE  \
   (sizeof(SerializedAppGlanceHeader) + \
@@ -603,7 +603,7 @@ status_t app_glance_db_delete_glance(const Uuid *uuid) {
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
   const status_t rv = settings_file_open_growable(
-      &s_app_glance_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, KiBYTES(4));
+      &s_app_glance_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_glance_db.mutex);
   }

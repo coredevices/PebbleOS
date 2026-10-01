@@ -6,10 +6,10 @@
 #include "resource/resource.h"
 #include "pbl/kernel/compiler.h"
 #include "util/generic_attribute.h"
-#include "util/pack.h"
+#include "pbl/util/misc.h"
 
 #define VIBE_SCORE_VERSION (1)
-#define VIBE_SIGNATURE     MAKE_WORD('V', 'I', 'B', 'E')
+#define VIBE_SIGNATURE     PBL_FOURCC('V', 'I', 'B', 'E')
 #define VIBE_DATA_OFFSET   sizeof(VIBE_SIGNATURE)
 
 typedef enum VibeAttributeId {

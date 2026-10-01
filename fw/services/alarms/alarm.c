@@ -23,7 +23,7 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/testing.h"
 #include "pbl/util/string.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include <pbl/cron/cron.h>
 
@@ -35,7 +35,7 @@ PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 #define MAX_CONFIGURED_ALARMS  (10)
 
 #define ALARM_FILE_NAME          "alarms"
-#define ALARM_MAX_FILE_SIZE      KiBYTES(1) // ~50 alarms or so
+#define ALARM_MAX_FILE_SIZE      PBL_KIB(1) // ~50 alarms or so
 #define NUM_ALARM_PINS_PER_ALARM (3)
 #define ALARM_ENTRY_SIZE         (UUID_SIZE * NUM_ALARM_PINS_PER_ALARM)
 

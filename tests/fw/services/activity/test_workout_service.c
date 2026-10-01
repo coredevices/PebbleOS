@@ -10,7 +10,7 @@
 #include "drivers/hrm.h"
 #include "process_management/app_install_types.h"
 #include "util/time/time.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 // ---------------------------------------------------------------------------------------
 #include "stubs_activity_insights.h"
@@ -313,7 +313,7 @@ void test_workout_service__takeover_activity_session(void) {
   // Compute our own version of active_kcalories
   const int32_t distance_delta_m = (new_distance_m - distance_m);
   const int32_t calculated_active_kcalories =
-      ROUND(activity_private_compute_active_calories(distance_delta_m * MM_PER_METER,
+      ROUND(activity_private_compute_active_calories(distance_delta_m * PBL_MM_PER_M,
                                                      600 * MS_PER_SECOND),
             ACTIVITY_CALORIES_PER_KCAL);
 

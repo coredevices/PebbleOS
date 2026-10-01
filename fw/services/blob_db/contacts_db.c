@@ -10,11 +10,11 @@
 #include "pbl/kernel/mutex.h"
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 #include "pbl/util/uuid.h"
 
 #define SETTINGS_FILE_NAME "contactsdb"
-#define SETTINGS_FILE_SIZE (KiBYTES(30))
+#define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
 static struct {
   SettingsFile settings_file;
@@ -28,7 +28,7 @@ static struct {
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_contacts_db.mutex, PBL_FOREVER);
   status_t rv = settings_file_open_growable(&s_contacts_db.settings_file, SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE, KiBYTES(4));
+                                            SETTINGS_FILE_SIZE, PBL_KIB(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_contacts_db.mutex);
   }

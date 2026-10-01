@@ -2615,7 +2615,7 @@ void test_activity__prv_set_metric(void) {
   activity_get_metric(ActivityMetricDistanceMeters, 2, metric_values);
   cl_assert_equal_i(metric_values[0], 66);
   cl_assert_equal_i(metric_values[1], 22);
-  cl_assert_equal_i(activity_metrics_prv_get_distance_mm(), 66 * MM_PER_METER);
+  cl_assert_equal_i(activity_metrics_prv_get_distance_mm(), 66 * PBL_MM_PER_M);
 
   activity_metrics_prv_set_metric(ActivityMetricActiveKCalories, Thursday, 22);
   activity_metrics_prv_set_metric(ActivityMetricActiveKCalories, Wednesday, 33);

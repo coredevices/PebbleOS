@@ -10,7 +10,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
-#include "util/ratio.h"
+#include "pbl/util/ratio.h"
 
 #include <stdint.h>
 #include "pbl/util/testing.h"
@@ -137,7 +137,7 @@ static void prv_enter_standby(void) {
 
 static void prv_log_battery_state(PreciseBatteryChargeState state) {
   const uint16_t k_min_percent_diff = 5;
-  const uint16_t percent = ratio32_to_percent(state.charge_percent);
+  const uint16_t percent = pbl_ratio32_to_percent(state.charge_percent);
 
   union LoggingBattState {
     struct {
@@ -184,7 +184,8 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
   bool critical = (state.charge_percent == 0) && !state.is_charging;
 
 #ifndef CONFIG_RECOVERY_FW
-  const uint32_t LOW_POWER_PERCENT = ratio32_from_percent(BOARD_CONFIG_POWER.low_power_threshold);
+  const uint32_t LOW_POWER_PERCENT =
+      pbl_ratio32_from_percent(BOARD_CONFIG_POWER.low_power_threshold);
 
   bool low_power = !state.is_charging && (state.charge_percent <= LOW_POWER_PERCENT);
   if (low_power && s_first_run && !state.is_plugged) {
@@ -193,7 +194,7 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
     s_low_on_first_run = false;
   }
 #else
-  const uint32_t PRF_LOW_POWER_THRESHOLD_PERCENT = ratio32_from_percent(5);
+  const uint32_t PRF_LOW_POWER_THRESHOLD_PERCENT = pbl_ratio32_from_percent(5);
 
   // We want to keep the LPM UI up until we've hit 10% regardless of charging
   bool low_power = state.charge_percent < PRF_LOW_POWER_THRESHOLD_PERCENT;

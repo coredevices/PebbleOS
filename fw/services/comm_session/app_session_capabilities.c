@@ -7,11 +7,11 @@
 #include "pbl/services/settings/settings_file.h"
 #include "pbl/kernel/mutex.h"
 #include "system/passert.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #define APP_SESSION_CAPABILITIES_CACHE_FILENAME "app_comm"
 
-#define APP_SESSION_CAPABILITIES_CACHE_FILE_MAX_USED_SPACE (KiBYTES(2))
+#define APP_SESSION_CAPABILITIES_CACHE_FILE_MAX_USED_SPACE (PBL_KIB(2))
 
 static PBL_MUTEX_DEFINE(s_mutex);
 

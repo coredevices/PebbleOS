@@ -6,7 +6,7 @@
 #include "board/board.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
-#include "util/ratio.h"
+#include "pbl/util/ratio.h"
 #include "pbl/util/size.h"
 
 typedef struct VoltagePoint {
@@ -134,7 +134,7 @@ static uint32_t prv_sample_scaled_charge_percent(uint32_t battery_mv, bool is_ch
 }
 
 uint32_t battery_curve_sample_ratio32_charge_percent(uint32_t battery_mv, bool is_charging) {
-  const uint32_t scaling_factor = ratio32_from_percent(100) / 100 + 1;
+  const uint32_t scaling_factor = pbl_ratio32_from_percent(100) / 100 + 1;
   return prv_sample_scaled_charge_percent(battery_mv, is_charging, scaling_factor);
 }
 

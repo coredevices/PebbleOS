@@ -14,7 +14,7 @@
 #include "process_management/app_manager.h"
 #include "pbl/services/battery/battery_curve.h"
 #include "shell/normal/battery_ui.h"
-#include "util/ratio.h"
+#include "pbl/util/ratio.h"
 
 extern void battery_ui_reset_fsm_for_tests(void);
 
@@ -116,7 +116,7 @@ void modal_manager_set_min_priority(ModalPriority priority) {
 static PreciseBatteryChargeState prv_make_state(uint8_t percent, bool is_charging,
                                                 bool is_plugged) {
   PreciseBatteryChargeState state = (PreciseBatteryChargeState){
-    .charge_percent = ratio32_from_percent(percent),
+    .charge_percent = pbl_ratio32_from_percent(percent),
     .pct = percent,
     .is_charging = is_charging,
     .is_plugged = is_plugged

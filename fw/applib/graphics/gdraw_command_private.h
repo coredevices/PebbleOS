@@ -10,7 +10,7 @@
 #include "gdraw_command_sequence.h"
 
 #include "applib/graphics/gtypes.h"
-#include "util/pack.h"
+#include "pbl/util/misc.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -18,11 +18,11 @@
 
 #define GDRAW_COMMAND_VERSION (1)
 
-#define PDCS_SIGNATURE   MAKE_WORD('P', 'D', 'C', 'S')
+#define PDCS_SIGNATURE   PBL_FOURCC('P', 'D', 'C', 'S')
 #define PDCS_SIZE_OFFSET sizeof(PDCS_SIGNATURE)
 #define PDCS_DATA_OFFSET (PDCS_SIZE_OFFSET + sizeof(uint32_t))
 
-#define PDCI_SIGNATURE   MAKE_WORD('P', 'D', 'C', 'I')
+#define PDCI_SIGNATURE   PBL_FOURCC('P', 'D', 'C', 'I')
 #define PDCI_SIZE_OFFSET sizeof(PDCI_SIGNATURE)
 #define PDCI_DATA_OFFSET (PDCI_SIZE_OFFSET + sizeof(uint32_t))
 

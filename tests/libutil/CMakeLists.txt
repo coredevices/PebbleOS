@@ -28,3 +28,7 @@ pbl_clar_test(test_sort)
 pbl_clar_test(test_byteorder)
 
 pbl_clar_test(test_bitops)
+
+pbl_clar_test(test_misc)
+
+pbl_clar_test(test_ratio)

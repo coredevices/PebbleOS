@@ -48,7 +48,7 @@ typedef struct {
   uint32_t large;
 } TimelineLutEntry;
 
-#define TLUT_SIGNATURE   MAKE_WORD('T', 'L', 'U', 'T')
+#define TLUT_SIGNATURE   PBL_FOURCC('T', 'L', 'U', 'T')
 #define TLUT_DATA_OFFSET sizeof(TLUT_SIGNATURE)
 #define TLUT_RESOURCE_ID 1
 

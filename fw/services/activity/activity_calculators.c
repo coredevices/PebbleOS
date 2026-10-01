@@ -5,7 +5,7 @@
 
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/activity/activity_private.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include <pbl/util/math.h>
 
@@ -116,7 +116,7 @@ uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t
 
   // Figure out the rate and see if it's walking or running. We set the walking threshold at
   // 120 m/min. This is 2m/s or 2 mm/ms
-  const unsigned int k_max_walking_rate_mm_per_min = 120 * MM_PER_METER;
+  const unsigned int k_max_walking_rate_mm_per_min = 120 * PBL_MM_PER_M;
   uint64_t rate_mm_per_min = distance_mm_64 * MS_PER_SECOND * SECONDS_PER_MINUTE / ms_64;
   bool walking = (rate_mm_per_min <= k_max_walking_rate_mm_per_min);
   uint64_t k_constant_x1000;
@@ -129,7 +129,7 @@ uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t
   uint64_t weight_dag = activity_prefs_get_weight_dag(); // 10 grams = 1 dag
 
   uint32_t calories = ROUND(k_constant_x1000 * (uint64_t)distance_mm * weight_dag,
-                            1000 * MM_PER_METER * ACTIVITY_DAG_PER_KG);
+                            1000 * PBL_MM_PER_M * ACTIVITY_DAG_PER_KG);
 
   // Return calories
   PBL_LOG_DBG("Got delta active calories of %" PRIu32 " ", calories);

@@ -23,14 +23,14 @@ typedef struct {
   GfxTest *current_test;
 } AppData;
 
-#define RAND_SEED  (775762732) // Randomly selected
-#define US_PER_MS  (1000)
-#define US_PER_S   (1000 * 1000)
-#define TARGET_FPS (30)
+#define RAND_SEED         (775762732) // Randomly selected
+#define PBL_USEC_PER_MSEC (1000)
+#define PBL_USEC_PER_SEC  (1000 * 1000)
+#define TARGET_FPS        (30)
 #define US_PER_FRAME \
-  (20 * US_PER_MS) // Upper bound on amount of time available to the rest of
-                   // the system while a frame is being pushed out to the
-                   // display with the cpu clock at 64MHz
+  (20 * PBL_USEC_PER_MSEC) // Upper bound on amount of time available to the rest of
+                           // the system while a frame is being pushed out to the
+                           // display with the cpu clock at 64MHz
 
 #define GFX_TEST(name) extern GfxTest g_gfx_test_##name;
 #include "list.h"
@@ -58,7 +58,7 @@ static void prv_test_update_proc(Layer *layer, GContext *ctx) {
 
   PROFILER_INIT;
   PROFILER_START;
-  while (PROFILER_NODE_GET_TOTAL_US(gfx_test_update_proc) < (test->duration * US_PER_S)) {
+  while (PROFILER_NODE_GET_TOTAL_US(gfx_test_update_proc) < (test->duration * PBL_USEC_PER_SEC)) {
     PROFILER_NODE_START(gfx_test_update_proc);
     test->test_proc(layer, ctx);
     PROFILER_NODE_STOP(gfx_test_update_proc);

@@ -10,13 +10,13 @@
 #include "pbl/services/weather/weather_service.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define SETTINGS_FILE_NAME "weatherdb"
 
-#define SETTINGS_FILE_SIZE (KiBYTES(30))
+#define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
 static struct {
   SettingsFile settings_file;
@@ -35,7 +35,7 @@ typedef struct WeatherDBIteratorData {
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
   status_t rv = settings_file_open_growable(&s_weather_db.settings_file, SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE, KiBYTES(4));
+                                            SETTINGS_FILE_SIZE, PBL_KIB(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_weather_db.mutex);
   }

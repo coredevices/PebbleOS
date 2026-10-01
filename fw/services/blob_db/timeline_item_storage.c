@@ -7,7 +7,7 @@
 #include "kernel/pbl_malloc.h"
 #include "pbl/services/settings/settings_raw_iter.h"
 #include <pbl/logging/logging.h>
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -255,7 +255,7 @@ void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, ui
   };
   pbl_mutex_init(&storage->mutex);
   status_t rv =
-      settings_file_open_growable(&storage->file, storage->name, storage->max_size, KiBYTES(8));
+      settings_file_open_growable(&storage->file, storage->name, storage->max_size, PBL_KIB(8));
   if (FAILED(rv)) {
     PBL_LOG_ERR("Unable to create settings file %s, rv = %" PRId32 "!", filename, rv);
   }

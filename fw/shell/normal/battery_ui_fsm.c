@@ -16,7 +16,7 @@
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/vibes/vibe_intensity.h"
 #include "shell/normal/watchface.h"
-#include "util/ratio.h"
+#include "pbl/util/ratio.h"
 #include "pbl/util/size.h"
 
 // The Battery UI state machine keeps track of when to notify the user of a
@@ -114,7 +114,8 @@ static uint8_t prv_get_warning_percent(BatteryUIWarningLevel level) {
 // State functions
 
 static void prv_display_warning(void *data) {
-  const uint8_t percent = ratio32_to_percent(((PreciseBatteryChargeState *)data)->charge_percent);
+  const uint8_t percent =
+      pbl_ratio32_to_percent(((PreciseBatteryChargeState *)data)->charge_percent);
   bool new_warning = false;
   const BatteryUIWarningLevel num_points = ARRAY_LENGTH(s_warning_points) - 1;
 
@@ -252,7 +253,7 @@ static BatteryUIStateID prv_get_state(PreciseBatteryChargeState *state) {
     return BatteryCritical;
   } else if (low_power_is_active()) {
     return BatteryLowPower;
-  } else if (ratio32_to_percent(state->charge_percent) <= prv_get_warning_percent(0)) {
+  } else if (pbl_ratio32_to_percent(state->charge_percent) <= prv_get_warning_percent(0)) {
     return BatteryWarning;
   } else {
     return BatteryGood;

@@ -19,7 +19,7 @@
 #include "pbl/util/math.h"
 #include "util/shared_circular_buffer.h"
 #include "util/time/time.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
@@ -164,7 +164,7 @@ static void prv_create_activity_session_cb(void *context, KAlgActivityType kalg_
       .steps = steps,
       .active_kcalories = ROUND(active_calories, ACTIVITY_CALORIES_PER_KCAL),
       .resting_kcalories = ROUND(resting_calories, ACTIVITY_CALORIES_PER_KCAL),
-      .distance_meters = ROUND(distance_mm, MM_PER_METER),
+      .distance_meters = ROUND(distance_mm, PBL_MM_PER_M),
     },
   };
   if (delete) {

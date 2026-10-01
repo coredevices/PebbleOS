@@ -14,7 +14,7 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "util/stats.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/activity/activity_algorithm.h"
@@ -215,7 +215,7 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
       };
       event_put(&e);
     } else if (metric == ActivityMetricDistanceMeters) {
-      state->distance_mm = state->step_data.distance_meters * MM_PER_METER;
+      state->distance_mm = state->step_data.distance_meters * PBL_MM_PER_M;
     } else if (metric == ActivityMetricActiveKCalories) {
       state->active_calories = state->step_data.active_kcalories * ACTIVITY_CALORIES_PER_KCAL;
     } else if (metric == ActivityMetricRestingKCalories) {
@@ -293,7 +293,7 @@ static void prv_update_real_time_derived_metrics(void) {
   ActivityState *state = activity_private_state();
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
-    state->step_data.distance_meters = ROUND(state->distance_mm, MM_PER_METER);
+    state->step_data.distance_meters = ROUND(state->distance_mm, PBL_MM_PER_M);
     PBL_LOG_DBG("new distance: %" PRIu32 "", state->step_data.distance_meters);
 
     state->step_data.active_kcalories = ROUND(state->active_calories, ACTIVITY_CALORIES_PER_KCAL);

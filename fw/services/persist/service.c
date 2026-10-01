@@ -18,12 +18,12 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 
-#define PERSIST_STORAGE_MAX_SPACE     MiBYTES(1)
-#define PERSIST_STORAGE_INITIAL_ALLOC KiBYTES(4)
+#define PERSIST_STORAGE_MAX_SPACE     PBL_MIB(1)
+#define PERSIST_STORAGE_INITIAL_ALLOC PBL_KIB(4)
 
 typedef struct PersistStore {
   ListNode list_node;

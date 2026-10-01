@@ -21,7 +21,7 @@
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 #include "util/time/time.h"
-#include "util/units.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 
@@ -52,9 +52,9 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 //! Keep enough room for the maximum sized application based on platform, plus a little more room.
 //! Source: https://pebbletechnology.atlassian.net/wiki/display/DEV/PBW+3.0
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(UNITTEST)
-#define APP_SPACE_BUFFER KiBYTES(300)
+#define APP_SPACE_BUFFER PBL_KIB(300)
 #else
-#define APP_SPACE_BUFFER MiBYTES(4)
+#define APP_SPACE_BUFFER PBL_MIB(4)
 #endif
 
 #define MAX_PRIORITY ((uint32_t)~0)
