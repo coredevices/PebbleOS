@@ -78,6 +78,7 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LSM6DSO_CTRL5_C           0x14U
 #define LSM6DSO_CTRL9_XL          0x18U
 #define LSM6DSO_ALL_INT_SRC       0x1AU
+#define LSM6DSO_WAKE_UP_SRC       0x1BU
 #define LSM6DSO_STATUS_REG        0x1EU
 #define LSM6DSO_OUTX_L_A          0x28U
 #define LSM6DSO_FIFO_STATUS1      0x3AU
@@ -120,8 +121,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LSM6DSO_INT1_CTRL_FIFO_TH  (1U << 3U)
 #define LSM6DSO_INT1_CTRL_FIFO_OVR (1U << 4U)
 
-// ALL_INT_SRC fields
-#define LSM6DSO_ALL_INT_SRC_WU_IA (1U << 1U)
+// WAKE_UP_SRC fields
+#define LSM6DSO_WAKE_UP_SRC_WU_IA              (1U << 3U)
+#define LSM6DSO_WAKE_UP_SRC_AXIS_WU(chip_axis) (1U << (2U - (chip_axis)))
 
 // STATUS_REG fields
 #define LSM6DSO_STATUS_REG_XLDA (1U << 0U)
@@ -365,6 +367,34 @@ static void prv_lsm6dso_drain_fifo(void) {
 static void prv_lsm6dso_recover(void);
 static uint32_t prv_ms_since_last_fifo_read(void);
 
+static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
+  uint8_t raw[LSM6DSO_SAMPLE_SIZE_BYTES] = {0U};
+  IMUCoordinateAxis axis = AXIS_Z;
+  int16_t val = 0;
+  bool found = false;
+
+  if (!prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, sizeof(raw))) {
+    PBL_LOG_ERR("Failed to read sample");
+  }
+
+  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
+    int16_t v;
+
+    if ((wake_up_src & LSM6DSO_WAKE_UP_SRC_AXIS_WU(LSM6DSO->axis_map[a])) == 0U) {
+      continue;
+    }
+
+    v = prv_axis_raw_mg(a, raw);
+    if (!found || ABS(v) > ABS(val)) {
+      axis = a;
+      val = v;
+      found = true;
+    }
+  }
+
+  accel_cb_shake_detected(axis, (val < 0) ? -1 : 1);
+}
+
 //! INT1 servicing pass kind, logged by the no-action diagnostic
 typedef enum {
   Lsm6dsoInt1PassInitial = 0,
@@ -377,7 +407,7 @@ typedef enum {
 static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) {
   bool ret;
   uint8_t fifo_status[2] = {0U, 0U};
-  uint8_t all_int_src = 0U;
+  uint8_t wake_up_src = 0U;
   bool action_taken = false;
   bool fifo_overrun = false;
   bool shake = false;
@@ -387,7 +417,7 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
   // Read all device registers back-to-back to keep the I2C critical section
   // short, then convert/dispatch below. The sample processing has no dependency
   // on these reads, so deferring it avoids stretching the gap between the FIFO
-  // read and the ALL_INT_SRC read if this task gets preempted mid-handler.
+  // read and the WAKE_UP_SRC read if this task gets preempted mid-handler.
   if (LSM6DSO->state->num_samples > 0U) {
     // WTM/OVR flags and DIFF must come from one burst read: a split read can
     // catch the FIFO counter mid-update and see WTM_IA set with DIFF reading 0
@@ -419,13 +449,13 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
   }
 
   if (LSM6DSO->state->shake_detection_enabled) {
-    ret = prv_lsm6dso_read(LSM6DSO_ALL_INT_SRC, &all_int_src, 1);
+    ret = prv_lsm6dso_read(LSM6DSO_WAKE_UP_SRC, &wake_up_src, 1);
     if (!ret) {
-      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+      PBL_LOG_ERR("Could not read WAKE_UP_SRC register");
       return false;
     }
 
-    shake = (all_int_src & LSM6DSO_ALL_INT_SRC_WU_IA) != 0U;
+    shake = (wake_up_src & LSM6DSO_WAKE_UP_SRC_WU_IA) != 0U;
   }
 
   if (fifo_overrun) {
@@ -443,10 +473,7 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
     // WU_IA stays set while the wake-up condition persists (LIR), so only
     // dispatch on its assertion to avoid flooding events
     if (!LSM6DSO->state->wu_active) {
-      PBL_LOG_DBG("Shake detected");
-      // TODO: provide more info about the shake (axis, direction, etc.) or
-      // refactor shake to be non-dimensional
-      accel_cb_shake_detected(AXIS_Z, 0);
+      prv_lsm6dso_dispatch_shake(wake_up_src);
     }
     action_taken = true;
   }
@@ -455,10 +482,10 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
   if (!action_taken) {
     // Registers not read this pass (gated on num_samples/shake state) log as 0
     PBL_LOG_WRN("INT1 triggered but no action taken (FIFO_STATUS2 0x%02" PRIx8
-                " ALL_INT_SRC 0x%02" PRIx8 " num_samples %" PRIu16
+                " WAKE_UP_SRC 0x%02" PRIx8 " num_samples %" PRIu16
                 " shake_en %d pass %u"
                 " last_read %" PRIu32 "ms ago)",
-                fifo_status[1], all_int_src, LSM6DSO->state->num_samples,
+                fifo_status[1], wake_up_src, LSM6DSO->state->num_samples,
                 LSM6DSO->state->shake_detection_enabled, (unsigned int)pass,
                 prv_ms_since_last_fifo_read());
   }
