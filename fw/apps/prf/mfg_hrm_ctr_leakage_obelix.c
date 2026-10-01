@@ -23,7 +23,7 @@
 #include "process_management/process_manager.h"
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/hrm/hrm_manager.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "pbl/util/size.h"
 #include "pbl/util/trig.h"
 

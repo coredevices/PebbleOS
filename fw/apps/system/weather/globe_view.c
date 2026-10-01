@@ -1727,7 +1727,7 @@ static inline bool prv_bw_lit(uint8_t argb8, int x, int y) {
 // Bayer-dithered bit. (weather_fb_row_set stays for pure black/white intents.)
 static inline void prv_globe_px(uint8_t *row_data, int x, int y, uint8_t argb8) {
 #if PBL_BW
-  bitset8_update(row_data, (unsigned)x, prv_bw_lit(argb8, x, y));
+  pbl_bitset8_update(row_data, (unsigned)x, prv_bw_lit(argb8, x, y));
 #else
   row_data[x] = argb8;
 #endif

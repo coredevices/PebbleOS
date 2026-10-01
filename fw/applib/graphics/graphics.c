@@ -12,7 +12,7 @@
 #include "process_management/process_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "system/passert.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "applib/graphics/raw_image.h"
 #include "pbl/util/math.h"
 
@@ -396,7 +396,7 @@ static void prv_graphics_convert_8_bit_to_1_bit(const GBitmap *from, GBitmap *to
     int to_idx_base = y * to->row_size_bytes;
     uint8_t *line = to_buffer + to_idx_base;
     for (int x = x_start; x < x_end; ++x) {
-      bitset8_clear(line, x);
+      pbl_bitset8_clear(line, x);
     }
   }
 }

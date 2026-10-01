@@ -14,7 +14,7 @@
 #include "apps/prf/mfg_test_result.h"
 #include "process_state/app_state/app_state.h"
 #include "process_management/pebble_process_md.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "pbl/util/size.h"
 
 #include <stdbool.h>
@@ -75,7 +75,7 @@ static void prv_button_click_handler(ClickRecognizerRef recognizer, void *data) 
   AppData *app_data = app_state_get_user_data();
 
   ButtonId button_id_pressed = click_recognizer_get_button_id(recognizer);
-  bitset32_set(&app_data->buttons_pressed, button_id_pressed);
+  pbl_bitset32_set(&app_data->buttons_pressed, button_id_pressed);
   layer_set_hidden((struct Layer *)&app_data->arrows[button_id_pressed], true);
 
   if (app_data->test_complete) {

@@ -8,7 +8,7 @@
 #include "syscall/syscall.h"
 #include "system/passert.h"
 #include "text_resources.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "pbl/util/math.h"
 #include "pbl/util/testing.h"
 
@@ -299,7 +299,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
   // Use bit-rotate to align to shift the bitmap to align with the destination.
   // The advantage of rotate vs. bitwise shift is that we can use
   // the bits that wrapped around for the next dest_block
-  rotl32(src, dest_shift);
+  src = pbl_rotl32(src, dest_shift);
   int8_t src_rotated = dest_shift;
   // how many 32-bit blocks do we need to bitblt on each row. If we're not word aligned we'll need
   // to modify an extra partial word, as we'll have an incomplete word on either side of the line
@@ -318,10 +318,10 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
 
     // Simulate the rotate that happens at the bottom of the bitblt loop so our source value is set
     // up just as if we actually rendered those first few lines.
-    rotl32(src, (dest_shift_at_line_begin +
-                 ((0 - ((uint8_t)glyph_metrics.size.w)) % 32) *
-                     (clipped_glyph_target.origin.y - glyph_target.origin.y)) %
-                    32);
+    src = pbl_rotl32(src, (dest_shift_at_line_begin +
+                           ((0 - ((uint8_t)glyph_metrics.size.w)) % 32) *
+                               (clipped_glyph_target.origin.y - glyph_target.origin.y)) %
+                              32);
     src_rotated =
         (dest_shift_at_line_begin + ((0 - ((uint8_t)glyph_metrics.size.w)) % 32) *
                                         (clipped_glyph_target.origin.y - glyph_target.origin.y)) %
@@ -352,7 +352,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
         src = *(++glyph_block);
         glyph_block_bits_left += 32;
         // Need to account for the dest_shift when loading up the new glyph block
-        rotl32(src, glyph_block_bits_left + dest_shift);
+        src = pbl_rotl32(src, glyph_block_bits_left + dest_shift);
         src_rotated = glyph_block_bits_left + dest_shift;
       }
 
@@ -424,7 +424,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
         // We ran out of bits in the current glyph block. Get the next glyph blob:
         src = *(++glyph_block);
         glyph_block_bits_left += 32;
-        rotl32(src, dest_shift);
+        src = pbl_rotl32(src, dest_shift);
         src_rotated = dest_shift;
         // Continue with this dest_block if there is still space left:
         if (dest_shift) {
@@ -442,14 +442,14 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
       int jump_words = (right_clip - glyph_block_bits_left) / 32 + 1;
       glyph_block += jump_words;
       src = *glyph_block;
-      rotl32(src, src_rotated);
+      src = pbl_rotl32(src, src_rotated);
       glyph_block_bits_left += 32 * jump_words;
     }
     glyph_block_bits_left -= right_clip;
 
     // Rotate the bits into the right position for the next row:
     dest_shift = dest_shift_at_line_begin - dest_shift;
-    rotl32(src, dest_shift % 32);
+    src = pbl_rotl32(src, dest_shift % 32);
     src_rotated = (src_rotated + dest_shift) % 32;
   }
 

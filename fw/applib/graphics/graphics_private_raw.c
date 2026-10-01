@@ -6,7 +6,7 @@
 #include "graphics_private_raw.h"
 #include "gtypes.h"
 #include "system/passert.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "pbl/util/math.h"
 #include "pbl/util/testing.h"
 
@@ -210,7 +210,7 @@ PBL_T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t 
 
   for (int i = y1; i < y2; i++) {
     uint8_t *line = ((uint8_t *)framebuffer->addr) + (framebuffer->row_size_bytes * i);
-    bitset8_update(line, x, !black);
+    pbl_bitset8_update(line, x, !black);
   }
 #endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 }

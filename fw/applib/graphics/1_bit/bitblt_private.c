@@ -9,7 +9,7 @@
 #include "applib/graphics/gtypes.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "applib/graphics/raw_image.h"
 #include "pbl/util/size.h"
 #include "pbl/util/testing.h"
@@ -120,7 +120,7 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_1bit(GBitmap *dest_bitmap,
         uint8_t cindex = raw_image_get_value_for_bitdepth(src, src_x, src_y,
                                                           src_bitmap->row_size_bytes, src_bpp);
         uint32_t mask = 0;
-        bitset32_update(&mask, dest_x, look_up.transparent_mask[cindex]);
+        pbl_bitset32_update(&mask, dest_x, look_up.transparent_mask[cindex]);
 
         // This can be optimized by performing actions on the current word all at once
         // instead of iterating through each pixel

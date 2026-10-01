@@ -8,8 +8,9 @@
 #include <pbl/drivers/exti.h>
 #include "kernel/events.h"
 #include "system/bootbits.h"
+#include "system/reboot_reason.h"
 #include "system/reset.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 
 #include <nrfx.h>
 
@@ -116,7 +117,7 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
   // We handle all 4 buttons every time this interrupt is fired.
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     // What stable state is the button in, according to the debouncing algorithm?
-    bool debounced_button_state = bitset32_get(&s_debounced_button_state, i);
+    bool debounced_button_state = pbl_bitset32_get(&s_debounced_button_state, i);
     // What is the current physical state of the button?
     bool is_pressed = button_is_pressed(i);
 
@@ -136,7 +137,7 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
     if (s_button_timers[i] == NUM_DEBOUNCE_SAMPLES) {
       s_button_timers[i] = 0;
 
-      bitset32_update(&s_debounced_button_state, i, is_pressed);
+      pbl_bitset32_update(&s_debounced_button_state, i, is_pressed);
 
       if (!is_pressed) {
         // A button has been released. Make sure we weren't tracking this as a stuck button.

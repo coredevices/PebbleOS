@@ -6,7 +6,7 @@
 #include "graphics_private.h"
 #include "gtypes.h"
 #include "system/passert.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "pbl/util/math.h"
 #include "pbl/util/testing.h"
 
@@ -41,7 +41,7 @@ static inline void set_pixel_raw_2bit(GContext *ctx, GPoint point) {
   bool black = (gcolor_equal(ctx->draw_state.stroke_color, GColorBlack));
 
   uint8_t *line = ((uint8_t *)ctx->dest_bitmap.addr) + (ctx->dest_bitmap.row_size_bytes * point.y);
-  bitset8_update(line, point.x, !black);
+  pbl_bitset8_update(line, point.x, !black);
 }
 #endif
 
@@ -312,7 +312,7 @@ void graphics_private_plot_pixel(GBitmap *framebuffer, GRect *clip_box, int x, i
   if (opacity <= (MAX_PLOT_BRIGHTNESS / 2)) {
     bool black = (gcolor_equal(color, GColorBlack));
     uint8_t *line = ((uint8_t *)framebuffer->addr) + (framebuffer->row_size_bytes * y);
-    bitset8_update(line, x, !black);
+    pbl_bitset8_update(line, x, !black);
   }
 #endif // PBL_COLOR
 }

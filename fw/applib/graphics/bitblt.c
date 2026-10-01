@@ -6,7 +6,7 @@
 
 #include "pbl/util/math.h"
 
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 
 void bitblt_into_1bit_setup_compositing_mode(GCompOp *compositing_mode, GColor tint_color) {
   if ((*compositing_mode == GCompOpTint) || (*compositing_mode == GCompOpTintLuminance)) {
@@ -64,7 +64,7 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_1bit(GBitmap *dest_bitmap, const GB
         (uint32_t *)src_block_x_begin + (src_y * src_row_length_words);
     uint32_t *src_block = src_block_begin;
     uint32_t src = *src_block;
-    rotl32(src, src_dest_shift);
+    src = pbl_rotl32(src, src_dest_shift);
     uint8_t src_bits_left = src_bits_left_at_line_begin;
 
     const uint32_t *dest_block_end = dest_block + num_dest_blocks_per_row;
@@ -118,7 +118,7 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_1bit(GBitmap *dest_bitmap, const GB
           src_bits_left = 32; // excessive right edge bits will be masked off eventually
         }
         src = *src_block;
-        rotl32(src, src_dest_shift);
+        src = pbl_rotl32(src, src_dest_shift);
         if (dest_shift) {
           continue;
         }

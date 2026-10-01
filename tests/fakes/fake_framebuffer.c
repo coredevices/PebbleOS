@@ -6,7 +6,7 @@
 #include <pbl/drivers/display.h>
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -37,7 +37,7 @@ void framebuffer_clear(FrameBuffer *f) {
 void framebuffer_clear_line(FrameBuffer *f, uint8_t y) {
   uint32_t *line = framebuffer_get_line(f, y);
   memset(line, 0xffffffff, FRAMEBUFFER_SIZE_BYTES);
-  bitset8_set(f->dirty_lines, y);
+  pbl_bitset8_set(f->dirty_lines, y);
 
   f->is_dirty = true;
 }
@@ -46,7 +46,7 @@ void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {
   const uint16_t y_start = rect.origin.y;
   const uint16_t y_end = y_start + rect.size.h;
   for (uint16_t y = y_start; y < y_end; ++y) {
-    bitset8_update(f->dirty_lines, y, is_dirty);
+    pbl_bitset8_update(f->dirty_lines, y, is_dirty);
   }
 
   f->is_dirty = true;
@@ -54,7 +54,7 @@ void framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {
 
 void framebuffer_set_line(FrameBuffer *f, uint8_t y, const uint32_t *buffer) {
   memcpy(framebuffer_get_line(f, y), buffer, FRAMEBUFFER_WORDS_PER_ROW);
-  bitset8_set(f->dirty_lines, y);
+  pbl_bitset8_set(f->dirty_lines, y);
 
   f->is_dirty = true;
 }
@@ -91,7 +91,7 @@ static void flush_complete(void) {
 
 static bool flush_get_next_line(DisplayRow *row) {
   while (s_current_flush_line < DISP_ROWS) {
-    if (bitset8_get(s_current_framebuffer->dirty_lines, s_current_flush_line)) {
+    if (pbl_bitset8_get(s_current_framebuffer->dirty_lines, s_current_flush_line)) {
       row->address = s_current_flush_line;
       row->data = framebuffer_get_line(s_current_framebuffer, s_current_flush_line);
       s_current_flush_line++;

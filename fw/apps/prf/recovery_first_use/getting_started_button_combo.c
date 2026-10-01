@@ -86,12 +86,12 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
 
 void getting_started_button_combo_button_pressed(GettingStartedButtonComboState *state,
                                                  ButtonId button_id) {
-  bitset8_set(&state->buttons_held_bitset, button_id);
+  pbl_bitset8_set(&state->buttons_held_bitset, button_id);
   prv_update_state(state);
 }
 
 void getting_started_button_combo_button_released(GettingStartedButtonComboState *state,
                                                   ButtonId button_id) {
-  bitset8_clear(&state->buttons_held_bitset, button_id);
+  pbl_bitset8_clear(&state->buttons_held_bitset, button_id);
   prv_update_state(state);
 }

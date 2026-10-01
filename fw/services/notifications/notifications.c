@@ -5,7 +5,7 @@
 
 #include "pbl/services/notifications/notification_storage.h"
 
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"

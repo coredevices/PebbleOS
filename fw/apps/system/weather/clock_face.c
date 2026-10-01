@@ -1026,7 +1026,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
             // Skip white pixels (background). The staging bitmap is 8-bit on
             // colour and 1-bit on BW — read accordingly.
 #if PBL_BW
-            if (bitset8_get(srow, (unsigned)sx))
+            if (pbl_bitset8_get(srow, (unsigned)sx))
               continue;
             weather_fb_row_set(ri.data, ax, GColorBlackARGB8);
 #else

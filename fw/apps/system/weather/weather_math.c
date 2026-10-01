@@ -300,7 +300,7 @@ void weather_capture_framebuffer_rect(GBitmap *fb, GBitmap *dst, GRect src_rect,
     if (xs <= xe) {
 #if PBL_BW
       for (int x = xs; x <= xe; x++) {
-        bitset8_update(dst_row, (unsigned)(x - sx), bitset8_get(ri.data, (unsigned)x));
+        pbl_bitset8_update(dst_row, (unsigned)(x - sx), pbl_bitset8_get(ri.data, (unsigned)x));
         weather_fb_row_set(ri.data, x, GColorWhiteARGB8);
       }
 #else

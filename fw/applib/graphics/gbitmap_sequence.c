@@ -10,7 +10,7 @@
 #include "applib/applib_malloc.auto.h"
 #include "syscall/syscall.h"
 #include "system/passert.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "pbl/util/math.h"
 
 #define APNG_DECODE_ERROR    "APNG decoding failed"
@@ -179,7 +179,7 @@ static void prv_set_pixel_in_row(uint8_t *row_data, GBitmapFormat bitmap_format,
   if (bitmap_format == GBitmapFormat1Bit) {
     if (!gcolor_is_invisible(color)) {
       const bool pixel_is_white = !gcolor_equal(color, GColorBlack);
-      bitset8_update(row_data, x, pixel_is_white);
+      pbl_bitset8_update(row_data, x, pixel_is_white);
     }
   } else if ((bitmap_format == GBitmapFormat8Bit) || (bitmap_format == GBitmapFormat8BitCircular)) {
     GColor8 *const destination_pixel = (GColor8 *)(row_data + x);

@@ -26,3 +26,5 @@ pbl_clar_test(test_struct)
 pbl_clar_test(test_sort)
 
 pbl_clar_test(test_byteorder)
+
+pbl_clar_test(test_bitops)

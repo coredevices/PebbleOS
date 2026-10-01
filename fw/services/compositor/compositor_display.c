@@ -6,7 +6,7 @@
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/gcolor_definitions.h"
 #include "applib/graphics/gtypes.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include <pbl/drivers/rtc.h>
 #include "pbl/kernel/irq.h"
 #include "pbl/services/analytics/analytics.h"
@@ -67,8 +67,8 @@ static bool prv_flush_get_next_line_cb(DisplayRow *row) {
                                : DISP_ROWS - s_current_flush_line - 1;
       uint8_t corner_width = s_corner_shape[corner_idx];
       for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
-        bitset8_clear(s_line_buffer, pixel);
-        bitset8_clear(s_line_buffer, DISP_COLS - pixel - 1);
+        pbl_bitset8_clear(s_line_buffer, pixel);
+        pbl_bitset8_clear(s_line_buffer, DISP_COLS - pixel - 1);
       }
       row->data = s_line_buffer;
     } else {

@@ -5,7 +5,7 @@
 #include "logging/logging_private.h"
 #include "system/die.h"
 #include "system/reboot_reason.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 
@@ -55,7 +55,7 @@ typedef struct IndexToName {
 static void print_set_indexes(char buffer[80], const uint8_t *bitset, const IndexToName *mappings,
                               unsigned int num_mappings) {
   for (unsigned int i = 0; i < num_mappings; ++i) {
-    if (bitset8_get(bitset, mappings[i].index)) {
+    if (pbl_bitset8_get(bitset, mappings[i].index)) {
       PBL_LOG_FROM_FAULT_HANDLER_FMT(buffer, 80, "    %s = yes", mappings[i].name);
     }
   }

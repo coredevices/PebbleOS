@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pebble_compat.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 
 // Format-safe framebuffer row pixel access, shared by every raw-blit routine in
 // the app. Colour boards address a row one byte per pixel; the BW boards pack
@@ -13,7 +13,7 @@
 // `argb8` carries GColor.argb; on BW any colour with a lit RGB bit lands white.
 static inline void weather_fb_row_set(uint8_t *row_data, int x, uint8_t argb8) {
 #if PBL_BW
-  bitset8_update(row_data, (unsigned)x, (argb8 & 0x3F) != 0);
+  pbl_bitset8_update(row_data, (unsigned)x, (argb8 & 0x3F) != 0);
 #else
   row_data[x] = argb8;
 #endif
@@ -21,7 +21,7 @@ static inline void weather_fb_row_set(uint8_t *row_data, int x, uint8_t argb8) {
 
 static inline uint8_t weather_fb_row_get(const uint8_t *row_data, int x) {
 #if PBL_BW
-  return bitset8_get(row_data, (unsigned)x) ? GColorWhiteARGB8 : GColorBlackARGB8;
+  return pbl_bitset8_get(row_data, (unsigned)x) ? GColorWhiteARGB8 : GColorBlackARGB8;
 #else
   return row_data[x];
 #endif

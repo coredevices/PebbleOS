@@ -11,7 +11,7 @@
 #include <pbl/drivers/gpio.h>
 #include "kernel/events.h"
 #include "system/passert.h"
-#include "util/reverse.h"
+#include "pbl/util/bitops.h"
 
 #include <hal/nrf_gpiote.h>
 #include <hal/nrf_rtc.h>
@@ -187,7 +187,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
     *pbuf++ = s_rotated_180 ? (PBL_DISPLAY_HEIGHT - 1) - row.address + 1 : row.address + 1;
     if (s_rotated_180) {
       for (int i = DISP_LINE_BYTES - 1; i >= 0; --i) {
-        *pbuf++ = reverse_byte(row.data[i]);
+        *pbuf++ = pbl_bitrev8(row.data[i]);
       }
     } else {
       memcpy(pbuf, row.data, DISP_LINE_BYTES);

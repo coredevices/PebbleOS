@@ -10,8 +10,9 @@
 #include "pbl/kernel/irq.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/bootbits.h"
+#include "system/reboot_reason.h"
 #include "system/reset.h"
-#include "util/bitset.h"
+#include "pbl/util/bitops.h"
 #include "bf0_hal_tim.h"
 
 /* Timer period 100us, auto reload is 2ms. */
@@ -109,7 +110,7 @@ static void prv_timer_handler(void) {
   static uint32_t s_debounced_button_state = 0;
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    bool debounced_button_state = bitset32_get(&s_debounced_button_state, i);
+    bool debounced_button_state = pbl_bitset32_get(&s_debounced_button_state, i);
     bool is_pressed = button_is_pressed(i);
 
     if (is_pressed == debounced_button_state) {
@@ -124,7 +125,7 @@ static void prv_timer_handler(void) {
     if (s_button_timers[i] == s_num_debounce_samples) {
       s_button_timers[i] = 0;
 
-      bitset32_update(&s_debounced_button_state, i, is_pressed);
+      pbl_bitset32_update(&s_debounced_button_state, i, is_pressed);
 
       PebbleEvent e = {
         .type = (is_pressed) ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
