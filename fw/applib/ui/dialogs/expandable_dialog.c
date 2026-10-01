@@ -285,7 +285,7 @@ static void prv_expandable_dialog_load(Window *window) {
             .colors.background = dialog->window.background_color,
           });
       layer_init(&expandable_dialog->content_down_arrow_layer,
-                 &GRect(content_x_start, frame.size.h - CONTENT_DOWN_ARROW_HEIGHT,
+                 &GRect(0, frame.size.h - CONTENT_DOWN_ARROW_HEIGHT,
                         PBL_IF_RECT_ELSE(frame.size.w - action_bar_offset, frame.size.w),
                         CONTENT_DOWN_ARROW_HEIGHT));
       layer_add_child(&window->layer, &expandable_dialog->content_down_arrow_layer);
