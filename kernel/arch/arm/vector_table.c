@@ -39,7 +39,7 @@ PBL_EXTERNALLY_VISIBLE PBL_SECTION(".isr_vector") const void *const arch_vector_
   MemManage_Handler,
   BusFault_Handler,
   UsageFault_Handler,
-  (void *)0x4E65576F, // NeWo, marks image as New World for bootloader
+  0,
   0,
   0,
   0,
