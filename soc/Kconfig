@@ -18,6 +18,7 @@ config SOC_SF32LB52
     select HAL_SIFLI
     select CPU_STAR_MC1
     select CPU_HAS_FPU
+    select SOC_HAS_RAMFUNC
 
 config SOC_QEMU
     bool "QEMU emulated"
@@ -52,3 +53,9 @@ config SOC_QEMU_CORTEX_M33
     select CPU_CORTEX_M33
 
 endchoice
+
+config SOC_HAS_RAMFUNC
+    bool
+    help
+      The SoC memory layout has a .ramfunc section, copied from flash to
+      RAM at boot.

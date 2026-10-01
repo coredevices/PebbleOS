@@ -89,6 +89,14 @@ than `PBL_IRQ_PRIO_MAX_SYSCALL` is a build error unless the line is flagged
 `PBL_IRQ_ZERO_LATENCY`, in which case the ISR must not call the kernel. An
 enabled line nobody connected lands in `arch_irq_spurious()`, which asserts.
 
+### Boot
+
+The kernel owns the reset vector. `Reset_Handler()` sets the stack limit
+registers on cores that have them and enters `kernel_prep_c()`, which copies
+`.data` (and `.ramfunc` on SoCs that select `CONFIG_SOC_HAS_RAMFUNC`), zeroes
+`.bss`, calls the SoC's `pbl_soc_early_init()` (`pbl/kernel/init.h`) for
+vendor system init, clocks and caches, and then calls `main()`.
+
 ### Idle
 
 The SoC tickless-idle code talks to the kernel through `pbl/kernel/idle.h`:

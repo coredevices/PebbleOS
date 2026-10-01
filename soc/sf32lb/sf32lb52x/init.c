@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/watchdog.h"
+#include "pbl/kernel/init.h"
 #include "system/passert.h"
 
 #include <bf0_hal.h>
@@ -9,9 +10,11 @@
 #define HCPU_FREQ_MHZ    240
 #define PWRKEY_RESET_CNT (32000 * 15)
 
-void soc_early_init(void) {
+void pbl_soc_early_init(void) {
   HAL_StatusTypeDef ret;
   uint32_t bootopt;
+
+  SystemInit();
 
   // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
   // that the flash is properly power cycled on reset. A flash power cycle is

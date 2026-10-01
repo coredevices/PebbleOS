@@ -81,8 +81,6 @@
 #include <pbl/drivers/qemu/qemu_serial.h>
 #endif
 
-void soc_early_init(void);
-
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;
 #ifndef CONFIG_MFG
 static TimerID s_uptime_timer = TIMER_INVALID_ID;
@@ -106,8 +104,6 @@ static void print_splash_screen(void) {
 }
 
 int main(void) {
-  soc_early_init();
-
   pbl_irq_init();
 
   enable_fault_handlers();
