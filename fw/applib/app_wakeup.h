@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "util/time/time.h"
+#include <time.h>
 #include "pbl/services/wakeup.h"
 
 //! @addtogroup Foundation

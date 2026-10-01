@@ -17,7 +17,7 @@
 #include "pbl/services/notifications/alerts_private.h"
 #include "system/passert.h"
 #include "pbl/util/size.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 // Offset between vibe intensity menu item index and vibe intensity enum values
 #define INTENSITY_ROW_OFFSET 1
@@ -141,8 +141,8 @@ static void prv_text_size_menu_push(SettingsNotificationsData *data) {
 
 // NOTE: Keep the following two arrays in sync and with the same size.
 static const uint32_t s_window_timeouts_ms[] = {
-  NOTIF_WINDOW_TIMEOUT_MIN,     30 * MS_PER_SECOND, 1 * MS_PER_MINUTE,
-  NOTIF_WINDOW_TIMEOUT_DEFAULT, 10 * MS_PER_MINUTE, NOTIF_WINDOW_TIMEOUT_INFINITE
+  NOTIF_WINDOW_TIMEOUT_MIN,     30 * PBL_MSEC_PER_SEC, 1 * PBL_MSEC_PER_MIN,
+  NOTIF_WINDOW_TIMEOUT_DEFAULT, 10 * PBL_MSEC_PER_MIN, NOTIF_WINDOW_TIMEOUT_INFINITE
 };
 
 static const char *s_window_timeouts_labels[] = {

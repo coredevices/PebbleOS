@@ -87,8 +87,9 @@ pbl_clar_test(test_workout_summary
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c
@@ -191,8 +192,9 @@ pbl_clar_test(test_workout_active
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c
@@ -293,8 +295,9 @@ pbl_clar_test(test_workout_dialog
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c
@@ -394,8 +397,9 @@ pbl_clar_test(test_workout_selection
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c

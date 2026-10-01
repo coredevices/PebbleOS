@@ -23,6 +23,8 @@
 #include "activity_demo.h"
 
 #include <stdio.h>
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 #define CURRENT_STEP_AVG 500
 #define DAILY_STEP_AVG   1000
@@ -53,9 +55,9 @@ static ActivityDemoAppData *s_data;
 
 // -------------------------------------------------------------------------------
 static void prv_convert_seconds_to_time(uint32_t secs_after_midnight, char *text, int text_len) {
-  uint32_t minutes_after_midnight = secs_after_midnight / SECONDS_PER_MINUTE;
-  uint32_t hour = minutes_after_midnight / MINUTES_PER_HOUR;
-  uint32_t minute = minutes_after_midnight % MINUTES_PER_HOUR;
+  uint32_t minutes_after_midnight = secs_after_midnight / PBL_SEC_PER_MIN;
+  uint32_t hour = minutes_after_midnight / PBL_MIN_PER_HOUR;
+  uint32_t minute = minutes_after_midnight % PBL_MIN_PER_HOUR;
 #pragma GCC diagnostic ignored "-Wformat-truncation"
   snprintf(text, text_len, "%d:%02d", (int)hour, (int)minute);
 }
@@ -86,14 +88,14 @@ static void prv_display_scalar_history_alert(ActivityDemoAppData *data, const ch
 }
 
 // -----------------------------------------------------------------------------------------
-static void prv_display_averages_alert(ActivityDemoAppData *data, DayInWeek day) {
+static void prv_display_averages_alert(ActivityDemoAppData *data, enum pbl_weekday day) {
   ActivityMetricAverages *averages = app_malloc_check(sizeof(ActivityMetricAverages));
   strcpy(data->debug_card.dialog_text, "Hourly avgs:");
   activity_get_step_averages(day, averages);
 
   // Sum into hours
-  const int k_avgs_per_hour = ACTIVITY_NUM_METRIC_AVERAGES / HOURS_PER_DAY;
-  for (int i = 0; i < HOURS_PER_DAY; i++) {
+  const int k_avgs_per_hour = ACTIVITY_NUM_METRIC_AVERAGES / PBL_HOUR_PER_DAY;
+  for (int i = 0; i < PBL_HOUR_PER_DAY; i++) {
     int value = 0;
     for (int j = i * k_avgs_per_hour; j < (i + 1) * k_avgs_per_hour; j++) {
       if (averages->average[j] == ACTIVITY_METRIC_AVERAGES_UNKNOWN) {
@@ -354,7 +356,7 @@ static void prv_debug_cmd_sleep_sessions(int index, void *context) {
     if (deep_sleep) {
       snprintf(temp, sizeof(temp), " %dm\n", (int)(session->length_min));
     } else {
-      time_t end_time = session->start_utc + (session->length_min * SECONDS_PER_MINUTE);
+      time_t end_time = session->start_utc + (session->length_min * PBL_SEC_PER_MIN);
       localtime_r(&end_time, &local_tm);
       strftime(temp, sizeof(temp), "-%H:%M\n", &local_tm);
     }
@@ -440,13 +442,13 @@ exit:
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_weekday_averages(int index, void *context) {
   ActivityDemoAppData *data = context;
-  prv_display_averages_alert(data, Monday);
+  prv_display_averages_alert(data, PBL_MONDAY);
 }
 
 // -----------------------------------------------------------------------------------------
 static void prv_debug_cmd_weekend_averages(int index, void *context) {
   ActivityDemoAppData *data = context;
-  prv_display_averages_alert(data, Saturday);
+  prv_display_averages_alert(data, PBL_SATURDAY);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -493,7 +495,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   }
 
   // Start as far back as 30 days ago
-  time_t utc_start = rtc_get_time() - 30 * SECONDS_PER_DAY;
+  time_t utc_start = rtc_get_time() - 30 * PBL_SEC_PER_DAY;
   uint32_t num_records = 0;
   while (true) {
     uint32_t chunk = k_size;
@@ -505,9 +507,9 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
       goto exit;
     }
     PBL_LOG_DBG("Got %d minutes with UTC of %d (delta of %d min)", (int)chunk, (int)utc_start,
-                (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
+                (int)(utc_start - prior_start) / PBL_SEC_PER_MIN);
     num_records += chunk;
-    utc_start += chunk * SECONDS_PER_MINUTE;
+    utc_start += chunk * PBL_SEC_PER_MIN;
     if (chunk == 0) {
       break;
     }
@@ -520,7 +522,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   // Print detail on the last few minutes
   const int k_print_batch_size = k_size;
   PBL_LOG_DBG("Fetching last %d minutes", k_print_batch_size);
-  utc_start = rtc_get_time() - (k_print_batch_size * SECONDS_PER_MINUTE);
+  utc_start = rtc_get_time() - (k_print_batch_size * PBL_SEC_PER_MIN);
   time_t prior_start = utc_start;
   uint32_t chunk = k_print_batch_size;
   success = activity_get_minute_history(minute_data, &chunk, &utc_start);
@@ -531,7 +533,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   }
 
   PBL_LOG_DBG("Got last %d minutes with UTC of %d (delta of %d min)", (int)chunk, (int)utc_start,
-              (int)(utc_start - prior_start) / SECONDS_PER_MINUTE);
+              (int)(utc_start - prior_start) / PBL_SEC_PER_MIN);
 
   const unsigned int k_num_last_minutes = 6;
   if (chunk >= k_num_last_minutes) {

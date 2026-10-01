@@ -11,6 +11,7 @@
 #include "pbl/services/activity/health_util.h"
 #include "shell/prefs.h"
 #include "pbl/util/size.h"
+#include "pbl/util/units.h"
 
 // Compile-time display offset calculations
 #define HEALTH_Y_OFFSET       ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
@@ -515,7 +516,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
   int max_data = 0;
   int crown_index = 0;
 
-  *num_zones = DAYS_PER_WEEK;
+  *num_zones = PBL_DAY_PER_WEEK;
 
   for (int i = 0; i < *num_zones; i++) {
     localtime_r(&time_utc, &time_tm);
@@ -558,7 +559,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
       crown_index = i;
     }
 
-    time_utc -= SECONDS_PER_DAY;
+    time_utc -= PBL_SEC_PER_DAY;
   }
 
   if (crown_index && show_crown) {

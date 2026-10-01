@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "pbl/services/time.h"
 
 static RtcTicks s_rtc_tick_count;
 static RtcTicks s_rtc_auto_increment = 0;

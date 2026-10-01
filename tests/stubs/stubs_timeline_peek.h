@@ -6,6 +6,7 @@
 #include "popups/timeline/peek.h"
 #include "pbl/services/timeline/peek.h"
 #include "pbl/kernel/compiler.h"
+#include "pbl/util/units.h"
 
 unsigned int PBL_WEAK timeline_peek_get_concurrent_height(unsigned int num_concurrent) {
   return 0;
@@ -35,7 +36,7 @@ bool PBL_WEAK timeline_peek_prefs_get_enabled() {
 }
 
 uint16_t PBL_WEAK timeline_peek_prefs_get_before_time() {
-  return (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
+  return (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / PBL_SEC_PER_MIN);
 }
 
 void PBL_WEAK timeline_peek_prefs_set_before_time(uint16_t before_time_m) {};

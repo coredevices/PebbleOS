@@ -12,6 +12,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/passert.h"
 #include "pbl/util/math.h"
+#include "pbl/util/units.h"
 
 #define SCROLL_OUT_MS         250
 #define BAR_HEIGHT            PROGRESS_SUGGESTED_HEIGHT
@@ -56,7 +57,7 @@ static void prv_show_peek_layer(ProgressWindow *data) {
     peek_layer_play(peek_layer);
     layer_add_child(root_layer, (Layer *)peek_layer);
 
-    const int standing_ms = 1 * MS_PER_SECOND;
+    const int standing_ms = 1 * PBL_MSEC_PER_SEC;
     data->peek_layer_timer = evented_timer_register(PEEK_LAYER_UNFOLD_DURATION + standing_ms, false,
                                                     prv_finished_failure_callback, data);
   } else {

@@ -16,6 +16,7 @@
 #include "pbl/util/struct.h"
 
 #include <stdio.h>
+#include "pbl/util/units.h"
 
 // We need enough space for the track artist and title (so 2 * MUSIC_BUFFER_LENGTH from music.h),
 // the delimiter string " - " (3), and 1 for the null terminator
@@ -85,7 +86,7 @@ static void prv_set_glance_icon(LauncherAppGlanceMusic *music_glance,
 
 static bool prv_should_display_music_state(MusicPlayState play_state,
                                            uint32_t last_updated_time_elapsed_ms) {
-  const uint32_t music_last_updated_display_threshold_ms = 30 * MS_PER_SECOND * SECONDS_PER_MINUTE;
+  const uint32_t music_last_updated_display_threshold_ms = 30 * PBL_MSEC_PER_SEC * PBL_SEC_PER_MIN;
 
   switch (play_state) {
     case MusicPlayStatePlaying:

@@ -9,8 +9,9 @@
 #include "kernel/pbl_malloc.h"
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 #include "pbl/util/testing.h"
+#include <time.h>
 
 PBL_T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {
   if (previous == NULL || current == NULL) {
@@ -27,11 +28,10 @@ PBL_T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, Activity
   // all we care about and they are sorted. Don't try to extend this to walk
   // or run sessions
 
-  const uint16_t max_apart_merge_secs = 5 * SECONDS_PER_MINUTE;
-  time_t end_time = previous->start_utc + previous->length_min * SECONDS_PER_MINUTE;
+  const uint16_t max_apart_merge_secs = 5 * PBL_SEC_PER_MIN;
+  time_t end_time = previous->start_utc + previous->length_min * PBL_SEC_PER_MIN;
   if ((end_time + max_apart_merge_secs) > current->start_utc) {
-    current->length_min +=
-        previous->length_min + (current->start_utc - end_time) / SECONDS_PER_MINUTE;
+    current->length_min += previous->length_min + (current->start_utc - end_time) / PBL_SEC_PER_MIN;
     current->start_utc = previous->start_utc;
     previous->length_min = 0;
     previous->type = ActivitySessionType_None;
@@ -73,7 +73,7 @@ void health_data_update(HealthData *health_data) {
 
   //! Step / activity related data
   // Get the step totals for today and the past 6 days
-  health_service_private_get_metric_history(HealthMetricStepCount, DAYS_PER_WEEK,
+  health_service_private_get_metric_history(HealthMetricStepCount, PBL_DAY_PER_WEEK,
                                             health_data->step_data);
   // Update distance / calories now that we have our steps
   health_data_update_step_derived_metrics(health_data);
@@ -85,7 +85,7 @@ void health_data_update(HealthData *health_data) {
   activity_get_metric_monthly_avg(ActivityMetricStepCount, &health_data->monthly_step_average);
 
   //! Sleep related data
-  health_service_private_get_metric_history(HealthMetricSleepSeconds, DAYS_PER_WEEK,
+  health_service_private_get_metric_history(HealthMetricSleepSeconds, PBL_DAY_PER_WEEK,
                                             health_data->sleep_data);
   // Check if we have sleep data for today. If not, we want to show the last sleep session
   // (yesterday's data)
@@ -208,8 +208,8 @@ int32_t health_data_steps_get_current_average(HealthData *health_data) {
   time_t utc_sec = rtc_get_time();
   struct tm local_tm;
   localtime_r(&utc_sec, &local_tm);
-  int32_t today_min = local_tm.tm_hour * MINUTES_PER_HOUR + local_tm.tm_min;
-  const int k_minutes_per_step_avg = MINUTES_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
+  int32_t today_min = local_tm.tm_hour * PBL_MIN_PER_HOUR + local_tm.tm_min;
+  const int k_minutes_per_step_avg = PBL_MIN_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
 
   // each average chunk is 15 mins long
   if (health_data->step_average_last_updated_time !=

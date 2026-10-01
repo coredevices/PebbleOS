@@ -36,7 +36,7 @@
 #include "pbl/util/list.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 typedef struct LoadedNotificationNode {
   ListNode node;
@@ -207,9 +207,9 @@ static void prv_notifications_history_init(NotificationsData *data) {
   time_t window = 0;
 
   if (range == NotificationGroupingRange_OneDay) {
-    window = SECONDS_PER_DAY;
+    window = PBL_SEC_PER_DAY;
   } else if (range == NotificationGroupingRange_OneWeek) {
-    window = 7 * SECONDS_PER_DAY;
+    window = 7 * PBL_SEC_PER_DAY;
   }
 
   if (window > 0) {

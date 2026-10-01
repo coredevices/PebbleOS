@@ -61,6 +61,7 @@
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score.h"
 #include "pbl/util/testing.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_alerts, CONFIG_SERVICE_ALERTS_LOG_LEVEL);
 
@@ -614,7 +615,7 @@ static void prv_pop_notification_window_after_delay(NotificationWindowData *data
 
 static time_t prv_get_stale_time(TimelineItem *item) {
   // Reminders become stale 10 minutes after their start time, or when the event is over
-  return item->header.timestamp + MAX(10, item->header.duration) * SECONDS_PER_MINUTE;
+  return item->header.timestamp + MAX(10, item->header.duration) * PBL_SEC_PER_MIN;
 }
 
 static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *cb_data) {

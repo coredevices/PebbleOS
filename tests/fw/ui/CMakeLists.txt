@@ -832,7 +832,6 @@ pbl_clar_test(test_selection_windows
     fw/applib/ui/time_selection_window.c
     fw/applib/ui/window.c
     fw/shell/system_theme.c
-    fw/util/date.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
   PLATFORMS obelix gabbro
@@ -939,7 +938,8 @@ pbl_clar_test(test_timeline_peek
     fw/services/timeline/timeline_layout.c
     fw/services/timeline/timeline_resources.c
     fw/shell/system_theme.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c

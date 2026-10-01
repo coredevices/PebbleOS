@@ -21,7 +21,7 @@
 #include "system/hexdump.h"
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #include <pbl/btutil/bt_device.h>
 
@@ -133,7 +133,7 @@ static void prv_request_reduced_latency_cb(void *data) {
 static void prv_request_low_latency_for_period_cb(void *data) {
   const uint32_t period_ms = (uintptr_t)data;
   prv_request_response_time(PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY, PBL_BT_RESPONSE_TIME_MIN,
-                            period_ms / MS_PER_SECOND);
+                            period_ms / PBL_MSEC_PER_SEC);
 }
 
 static void prv_music_request_reduced_latency(bool reduced_latency) {
@@ -450,8 +450,8 @@ static void prv_handle_track_duration_update(const AMSEntityUpdateNotification *
                                              const uint16_t value_length) {
   int32_t duration_ms = 0; // Default to 0 in case value_length is 0
   const bool success =
-      (!value_length ||
-       ams_util_float_string_parse(update->value_str, value_length, MS_PER_SECOND, &duration_ms));
+      (!value_length || ams_util_float_string_parse(update->value_str, value_length,
+                                                    PBL_MSEC_PER_SEC, &duration_ms));
   if (success) {
     music_update_track_duration(duration_ms);
   } else {

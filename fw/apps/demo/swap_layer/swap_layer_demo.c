@@ -26,9 +26,10 @@
 #include "pbl/util/size.h"
 
 #include <string.h>
+#include "pbl/util/units.h"
 
-#define MINUTES(m) ((m) * SECONDS_PER_MINUTE)
-#define HOURS(m)   ((m) * SECONDS_PER_MINUTE * MINUTES_PER_HOUR)
+#define MINUTES(m) ((m) * PBL_SEC_PER_MIN)
+#define HOURS(m)   ((m) * PBL_SEC_PER_MIN * PBL_MIN_PER_HOUR)
 
 typedef struct {
   TimelineItemType type;

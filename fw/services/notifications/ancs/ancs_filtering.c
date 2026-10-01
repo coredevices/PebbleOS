@@ -11,6 +11,7 @@
 #include "pbl/util/pstring.h"
 
 #include <string.h>
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
@@ -266,7 +267,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
   }
   uint32_t now = rtc_get_time();
   // Only perform an update if there is no timestamp or the current timestamp is more than a day old
-  if (!last_updated || (last_updated && now > (last_updated->uint32 + SECONDS_PER_DAY))) {
+  if (!last_updated || (last_updated && now > (last_updated->uint32 + PBL_SEC_PER_DAY))) {
     attribute_list_add_uint32(&new_attr_list, AttributeIdLastUpdated, now);
     list_dirty = true;
     PBL_LOG_INFO("Updating / adding timestamp to app prefs");

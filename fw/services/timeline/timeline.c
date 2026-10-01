@@ -29,7 +29,8 @@
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -44,8 +45,8 @@ struct TimelineNode {
 
 static uint32_t i18n_key;
 
-#define TIMELINE_FUTURE_WINDOW (3 * SECONDS_PER_DAY)
-#define TIMELINE_PAST_WINDOW   (2 * SECONDS_PER_DAY)
+#define TIMELINE_FUTURE_WINDOW (3 * PBL_SEC_PER_DAY)
+#define TIMELINE_PAST_WINDOW   (2 * PBL_SEC_PER_DAY)
 
 static bool s_bulk_action_mode = false;
 
@@ -89,7 +90,7 @@ static TimelineNode *prv_find_by_uuid(TimelineNode *head, Uuid *uuid) {
 static bool prv_is_in_window(time_t node_timestamp, uint16_t node_duration, time_t timestamp) {
   time_t future_window = time_util_get_midnight_of(timestamp + TIMELINE_FUTURE_WINDOW);
   time_t past_window = time_util_get_midnight_of(timestamp - TIMELINE_PAST_WINDOW);
-  time_t end_time = node_timestamp + (node_duration * SECONDS_PER_MINUTE);
+  time_t end_time = node_timestamp + (node_duration * PBL_SEC_PER_MIN);
   time_t start_time = node_timestamp;
 
   return !(start_time >= future_window || end_time < past_window);
@@ -103,7 +104,7 @@ static bool prv_show_event(TimelineNode *node, time_t timestamp, time_t midnight
   }
 
   // An event is in future until it ends
-  const time_t fudge_time = node->duration * SECONDS_PER_MINUTE;
+  const time_t fudge_time = node->duration * PBL_SEC_PER_MIN;
   // deal with all day events
   if (node->all_day && node->timestamp == midnight) {
     return show_all_day_events;
@@ -180,15 +181,15 @@ static void prv_remove_node(TimelineNode **head, TimelineNode *node) {
 static int prv_num_nodes_for_serialized_item(CommonTimelineItemHeader *header) {
   int num_days;
   if (header->all_day) {
-    num_days = header->duration ? (header->duration + MINUTES_PER_DAY - 1) / MINUTES_PER_DAY : 1;
+    num_days = header->duration ? (header->duration + PBL_MIN_PER_DAY - 1) / PBL_MIN_PER_DAY : 1;
   } else {
     // The span is the time between 0:00 on the first day of the event
     // and 24:00 on the last day of the event
-    const time_t start_span = time_util_get_midnight_of(header->timestamp - SECONDS_PER_DAY + 1);
+    const time_t start_span = time_util_get_midnight_of(header->timestamp - PBL_SEC_PER_DAY + 1);
     const time_t end_span =
-        time_util_get_midnight_of(header->timestamp + header->duration * SECONDS_PER_MINUTE - 1);
+        time_util_get_midnight_of(header->timestamp + header->duration * PBL_SEC_PER_MIN - 1);
     const time_t full_span = end_span - start_span;
-    num_days = full_span / SECONDS_PER_DAY;
+    num_days = full_span / PBL_SEC_PER_DAY;
   }
   return MAX(num_days, 1);
 }
@@ -207,24 +208,24 @@ static void prv_set_nodes(TimelineNode *nodes[], CommonTimelineItemHeader *heade
     nodes[0]->duration = header->duration;
   } else {
     // first item has correct timestamp, duration should make it last for the rest of the day
-    const time_t until_midnight = midnight_first + SECONDS_PER_DAY - header->timestamp;
-    nodes[0]->duration = until_midnight / SECONDS_PER_MINUTE;
+    const time_t until_midnight = midnight_first + PBL_SEC_PER_DAY - header->timestamp;
+    nodes[0]->duration = until_midnight / PBL_SEC_PER_MIN;
 
     // last item at end of event, duration 0
-    time_t endtime = header->timestamp + header->duration * SECONDS_PER_MINUTE;
+    time_t endtime = header->timestamp + header->duration * PBL_SEC_PER_MIN;
     nodes[num_nodes - 1]->timestamp = endtime;
     nodes[num_nodes - 1]->duration = 0;
     nodes[num_nodes - 1]->all_day = false;
   }
   nodes[0]->all_day =
-      (nodes[0]->duration == MINUTES_PER_DAY && nodes[0]->timestamp == midnight_first);
+      (nodes[0]->duration == PBL_MIN_PER_DAY && nodes[0]->timestamp == midnight_first);
 
   // middle days are all day events
   time_t midnight = time_util_get_midnight_of(header->timestamp);
   for (int i = 1; i < num_nodes - 1; i++) {
-    midnight += SECONDS_PER_DAY;
+    midnight += PBL_SEC_PER_DAY;
     nodes[i]->timestamp = midnight;
-    nodes[i]->duration = MINUTES_PER_DAY;
+    nodes[i]->duration = PBL_MIN_PER_DAY;
     nodes[i]->all_day = true;
   }
 }
@@ -236,7 +237,7 @@ static void prv_set_nodes_all_day(TimelineNode *nodes[], CommonTimelineItemHeade
 
   time_t midnight;
   // iOS doesn't correctly send the timestamp at UTC midnight, rather it sends it in local time
-  if (header->timestamp % SECONDS_PER_DAY != 0) {
+  if (header->timestamp % PBL_SEC_PER_DAY != 0) {
     // NOT at UTC midnight, so presumably an iOS bug
     midnight = time_util_get_midnight_of(header->timestamp);
   } else {
@@ -244,9 +245,9 @@ static void prv_set_nodes_all_day(TimelineNode *nodes[], CommonTimelineItemHeade
   }
   for (int i = 0; i < num_nodes; i++) {
     nodes[i]->timestamp = midnight;
-    nodes[i]->duration = MINUTES_PER_DAY;
+    nodes[i]->duration = PBL_MIN_PER_DAY;
     nodes[i]->all_day = true;
-    midnight += SECONDS_PER_DAY;
+    midnight += PBL_SEC_PER_DAY;
   }
 }
 
@@ -431,7 +432,7 @@ static void prv_prune_ordered_timeline_list(TimelineNode **head) {
   TimelineNode *next_node;
   while (node) {
     next_node = (TimelineNode *)list_get_next((ListNode *)node);
-    time_t end_time = node->timestamp + (node->duration * SECONDS_PER_MINUTE);
+    time_t end_time = node->timestamp + (node->duration * PBL_SEC_PER_MIN);
     if (pin_db_has_entry_expired(end_time)) {
       // remove the pin without emitting an event
       pin_db_delete((uint8_t *)&node->id, sizeof(Uuid));

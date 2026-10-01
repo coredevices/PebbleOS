@@ -26,7 +26,8 @@
 #include "pbl/services/light.h"
 #include "pbl/services/idle_watchdog.h"
 #include <pbl/logging/logging.h>
-#include "util/time/time.h"
+#include "pbl/util/units.h"
+#include <time.h>
 
 #define STATUS_STRING_LEN                200
 #define COMPONENT_TEST_DURATION_SEC      10
@@ -521,7 +522,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
     case AgingStateDischarging: {
       // This phase ticks once a minute (see the Idle->Discharge transition).
-      data->phase_elapsed_sec += SECONDS_PER_MINUTE;
+      data->phase_elapsed_sec += PBL_SEC_PER_MIN;
 
       BatteryConstants bc;
       battery_get_constants(&bc);

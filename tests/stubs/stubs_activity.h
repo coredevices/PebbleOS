@@ -5,6 +5,7 @@
 
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/kernel/compiler.h"
+#include "pbl/util/time.h"
 
 bool PBL_WEAK activity_tracking_on(void) {
   return true;
@@ -18,11 +19,13 @@ bool PBL_WEAK activity_get_sessions(uint32_t *session_entries, ActivitySession *
   return false;
 }
 
-bool PBL_WEAK activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *averages) {
+bool PBL_WEAK activity_get_step_averages(enum pbl_weekday day_of_week,
+                                         ActivityMetricAverages *averages) {
   return false;
 }
 
-void PBL_WEAK activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek day, int32_t value) {
+void PBL_WEAK activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday day,
+                                              int32_t value) {
 }
 
 bool PBL_WEAK activity_prefs_tracking_is_enabled(void) {
@@ -45,7 +48,7 @@ bool PBL_WEAK activity_prefs_blood_oxygen_activity_tracking_is_enabled(void) {
   return false;
 }
 
-bool activity_get_metric_typical(ActivityMetric metric, DayInWeek day, int32_t *value_out) {
+bool activity_get_metric_typical(ActivityMetric metric, enum pbl_weekday day, int32_t *value_out) {
   return false;
 }
 

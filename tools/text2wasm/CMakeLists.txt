@@ -57,7 +57,7 @@ set_target_properties(pebble_renderer PROPERTIES
 )
 target_include_directories(pebble_renderer PRIVATE
   "${OVERRIDES}"
-  "${PEBBLEOS_ROOT}/fw/util/time"
+  "${PEBBLEOS_ROOT}/lib/c/include"
   "${PEBBLEOS_ROOT}/tests/overrides/dummy_board"
   "${PEBBLEOS_ROOT}/tests/overrides/default"
   "${PEBBLEOS_ROOT}/tests/stubs"

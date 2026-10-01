@@ -4,7 +4,7 @@
 #pragma once
 
 #include "activity_private.h"
-#include "util/time/time.h"
+#include <time.h>
 
 #include <stdint.h>
 

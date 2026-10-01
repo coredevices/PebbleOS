@@ -9,6 +9,8 @@
 
 #include "stubs_blob_db_sync.h"
 #include "stubs_blob_db_sync_util.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 static int s_rand = 0;
 
@@ -95,7 +97,7 @@ void test_alarm_smart__cleanup(void) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //! Smart alarms
 
-#define SMART_ALARM_UPDATE_MIN (SMART_ALARM_SNOOZE_DELAY_S / SECONDS_PER_MINUTE)
+#define SMART_ALARM_UPDATE_MIN (SMART_ALARM_SNOOZE_DELAY_S / PBL_SEC_PER_MIN)
 
 void test_alarm_smart__trigger_30_min_early_awake(void) {
   AlarmId id;
@@ -112,8 +114,7 @@ void test_alarm_smart__trigger_30_min_early_awake(void) {
 
   time_t next_alarm_time;
   alarm_get_next_enabled_alarm(&next_alarm_time);
-  cl_assert_equal_i(next_alarm_time,
-                    s_current_day + 10 * SECONDS_PER_HOUR + 30 * SECONDS_PER_MINUTE);
+  cl_assert_equal_i(next_alarm_time, s_current_day + 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
 
   // Don't trigger too early
   prv_set_time(s_current_day, 9, 49);
@@ -175,7 +176,7 @@ void test_alarm_smart__trigger_15_min_early_light_sleep(void) {
 
   // Begin light sleep
   s_sleep_state = ActivitySleepStateLightSleep;
-  s_sleep_state_seconds = SMART_ALARM_MAX_LIGHT_SLEEP_S - 15 * SECONDS_PER_MINUTE;
+  s_sleep_state_seconds = SMART_ALARM_MAX_LIGHT_SLEEP_S - 15 * PBL_SEC_PER_MIN;
 
   // Smart alarms are first triggered by cron at T-30min
   prv_set_time(s_current_day, 10, 0);
@@ -187,7 +188,7 @@ void test_alarm_smart__trigger_15_min_early_light_sleep(void) {
   const int num_checks = 3;
   for (int i = 0; i < num_checks; i++) {
     // Step forward time and increase light sleep duration
-    s_sleep_state_seconds += 5 * SECONDS_PER_MINUTE;
+    s_sleep_state_seconds += 5 * PBL_SEC_PER_MIN;
     s_last_vmc = i == 2 ? 1 : 0;
     prv_set_time(s_current_day, 10, (i + 1) * 5);
     PBL_LOG_DBG("Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
@@ -232,7 +233,7 @@ void test_alarm_smart__trigger_at_timeout(void) {
   const int num_checks = 6;
   for (int i = 0; i < num_checks; i++) {
     // Step forward time and increase light sleep duration
-    s_sleep_state_seconds = (i + 1) * 5 * SECONDS_PER_MINUTE;
+    s_sleep_state_seconds = (i + 1) * 5 * PBL_SEC_PER_MIN;
     s_last_vmc = (i == 5);
     prv_set_time(s_current_day, 10, i * 5);
     PBL_LOG_DBG("Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
@@ -301,7 +302,7 @@ void test_alarm_smart__user_snooze_survives_clock_change(void) {
 
   const int num_checks = 6;
   for (int i = 0; i < num_checks; i++) {
-    s_sleep_state_seconds = (i + 1) * 5 * SECONDS_PER_MINUTE;
+    s_sleep_state_seconds = (i + 1) * 5 * PBL_SEC_PER_MIN;
     s_last_vmc = (i == 5);
     prv_set_time(s_current_day, 10, i * 5);
     stub_new_timer_invoke(1);
@@ -340,7 +341,7 @@ void test_alarm_smart__clock_change_still_force_triggers_sleep_poll(void) {
 
   // A couple of sleep polls, so the smart snooze counter is non-zero but the alarm has not fired
   for (int i = 0; i < 2; i++) {
-    s_sleep_state_seconds = (i + 1) * 5 * SECONDS_PER_MINUTE;
+    s_sleep_state_seconds = (i + 1) * 5 * PBL_SEC_PER_MIN;
     s_last_vmc = 0;
     prv_set_time(s_current_day, 10, i * 5);
     stub_new_timer_invoke(1);

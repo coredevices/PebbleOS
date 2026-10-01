@@ -14,7 +14,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 
 #include <hal/nrf_rtc.h>
 

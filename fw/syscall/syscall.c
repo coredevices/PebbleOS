@@ -15,6 +15,7 @@
 #include "logging/logging_private.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/string.h"
+#include "pbl/services/time.h"
 
 DEFINE_SYSCALL(int, sys_test, int arg) {
   uint32_t ipsr;

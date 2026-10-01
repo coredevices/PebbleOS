@@ -36,6 +36,7 @@
 #include "pbl/kernel/compiler.h"
 
 #include <pbl/bluetooth/types.h>
+#include "pbl/util/time.h"
 
 //! @internal
 //! Just a dummy syscall that we use in the user mode test app. Remove eventually.
@@ -191,7 +192,7 @@ BatteryChargeState sys_battery_get_charge_state(void);
 bool sys_activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history);
 bool sys_activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                      time_t *utc_start);
-bool sys_activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *averages);
+bool sys_activity_get_step_averages(enum pbl_weekday day_of_week, ActivityMetricAverages *averages);
 bool sys_activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions);
 bool sys_activity_sessions_is_session_type_ongoing(ActivitySessionType type);
 bool sys_activity_prefs_heart_rate_is_enabled(void);

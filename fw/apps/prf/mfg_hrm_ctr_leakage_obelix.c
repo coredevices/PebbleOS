@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "pbl/util/units.h"
 
 #define STATUS_STRING_LEN  32
 #define CTR_STRING_LEN     128
@@ -211,7 +212,7 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   // Use app data as session ref
   AppInstallId app_id = 1;
   app_data->hrm_session =
-      sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR, HRMFeature_BPM | HRMFeature_SpO2);
+      sys_hrm_manager_app_subscribe(app_id, 1, PBL_SEC_PER_HOUR, HRMFeature_BPM | HRMFeature_SpO2);
 
   app_timer_register(10, prv_update_status, &app_data->window.layer);
 }
@@ -274,7 +275,7 @@ static void prv_handle_init(void) {
 
   // Use app data as session ref
   AppInstallId app_id = 1;
-  data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR,
+  data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, PBL_SEC_PER_HOUR,
                                                     HRMFeature_CTR | HRMFeature_Leakage);
 
   app_window_stack_push(window, true);

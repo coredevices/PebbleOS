@@ -30,6 +30,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include "pbl/util/units.h"
 
 // Album art needs a colour display with enough RAM for a full-screen 4-bpp cover; only emery and
 // gabbro qualify. Flint and lower never request it, so their layout stays text-only.
@@ -964,9 +965,9 @@ static void prv_update_now_playing(MusicAppData *data) {
 }
 
 static void prv_copy_time_period(char *buffer, size_t n, uint32_t period_s) {
-  uint32_t hours = period_s / SECONDS_PER_HOUR;
-  uint32_t minutes = (period_s % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
-  uint32_t seconds = period_s % SECONDS_PER_MINUTE;
+  uint32_t hours = period_s / PBL_SEC_PER_HOUR;
+  uint32_t minutes = (period_s % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
+  uint32_t seconds = period_s % PBL_SEC_PER_MIN;
 #pragma GCC diagnostic ignored "-Wformat-truncation"
   if (hours > 0) {
     snprintf(buffer, n, "%" PRIu32 ":%02" PRIu32 ":%02" PRIu32, hours, minutes, seconds);

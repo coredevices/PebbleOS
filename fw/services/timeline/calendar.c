@@ -6,7 +6,7 @@
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include <pbl/logging/logging.h>
-#include "util/time/time.h"
+#include <time.h>
 
 static bool s_event_ongoing = false;
 

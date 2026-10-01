@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 
 void rtc_init(void) {
 }

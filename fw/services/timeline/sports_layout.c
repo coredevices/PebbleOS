@@ -15,7 +15,8 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 _Static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
                "Sports layout requires that all Home attributes are directly after Away");
@@ -55,7 +56,7 @@ static void prv_get_until_time(const LayoutLayer *layout, char *buffer, int buff
   const time_t now = rtc_get_time();
   const time_t difference = timestamp - now;
   size_t starts_len = 0;
-  if (difference <= SECONDS_PER_HOUR * max_relative_hrs &&
+  if (difference <= PBL_SEC_PER_HOUR * max_relative_hrs &&
       time_util_get_midnight_of(now) == time_util_get_midnight_of(timestamp)) {
     const char *starts = i18n_get("STARTS ", layout); // Freed by `timeline_layout_deinit`
     starts_len = strlen(starts);

@@ -19,6 +19,7 @@
 #include "stubs_logging.h"
 
 #include "test_recognizer_impl.h"
+#include "pbl/util/units.h"
 
 // The manager is not under test here; swallow the notification.
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
@@ -53,7 +54,7 @@ static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t 
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / MS_PER_SECOND);
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
 }
 
 // SWIPE_MAX_DURATION_MS (300) / SWIPE_MIN_LENGTH_PX (30) are private to swipe.c;
@@ -63,7 +64,7 @@ static void prv_advance_ms(uint32_t ms) {
 #define SWIPE_CAP_MS (300)
 #define SWIPE_MIN_PX (30)
 static RtcTicks prv_ticks_for_floored_ms(uint32_t ms) {
-  return ((RtcTicks)ms * RTC_TICKS_HZ + (MS_PER_SECOND - 1)) / MS_PER_SECOND;
+  return ((RtcTicks)ms * RTC_TICKS_HZ + (PBL_MSEC_PER_SEC - 1)) / PBL_MSEC_PER_SEC;
 }
 
 // Drive a single straight swipe from (sx, sy) to (ex, ey) over a fast duration, with the liftoff

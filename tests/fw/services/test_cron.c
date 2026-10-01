@@ -11,6 +11,8 @@
 #include "stubs_mutex.h"
 #include "stubs_passert.h"
 #include "fake_rtc.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 static uint32_t s_timer_timeout_ms;
 
@@ -359,7 +361,7 @@ void test_cron__already_elapsed(void) {
     .may_be_instant = true,
   };
 
-  prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_123456_gmt, 0, SECONDS_PER_MINUTE, 0);
+  prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_123456_gmt, 0, PBL_SEC_PER_MIN, 0);
 }
 
 struct {
@@ -513,7 +515,7 @@ void test_cron__simples(void) {
     // DST off
     prv_basic_test(&s_timezone_gmt, &test_cron, base, advance, advance, 0);
     // DST on
-    base -= SECONDS_PER_HOUR;
+    base -= PBL_SEC_PER_HOUR;
     prv_basic_test(&s_timezone_gmt, &test_cron, base, advance, advance, 2);
   }
 }
@@ -688,7 +690,7 @@ void test_cron__scheduled_after(void) {
   cl_assert_equal_i((uintptr_t)new_job.cb_data, 2);
   cl_assert_equal_i(pbl_cron_get_job_count(), 6);
 
-  fake_rtc_increment_time(SECONDS_PER_DAY * 60);
+  fake_rtc_increment_time(PBL_SEC_PER_DAY * 60);
   pbl_cron_wakeup();
   cl_assert_equal_i(pbl_cron_get_job_count(), 0);
 }
@@ -702,13 +704,13 @@ void test_cron__offset_negative_seconds_one_wday(void) {
     .hour = 0,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = -SECONDS_PER_DAY,
+    .offset_seconds = -PBL_SEC_PER_DAY,
 
     .wday = PBL_CRON_WDAY_FRIDAY,
     .may_be_instant = false,
   };
 
-  const time_t advance = 30 * SECONDS_PER_MINUTE;
+  const time_t advance = 30 * PBL_SEC_PER_MIN;
   prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_000000_gmt, advance, advance, 1);
 }
 
@@ -721,12 +723,12 @@ void test_cron__offset_negative_seconds_any_day(void) {
     .hour = 0,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = -SECONDS_PER_DAY,
+    .offset_seconds = -PBL_SEC_PER_DAY,
 
     .may_be_instant = false,
   };
 
-  const time_t advance = 30 * SECONDS_PER_MINUTE;
+  const time_t advance = 30 * PBL_SEC_PER_MIN;
   prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_000000_gmt, advance, advance, 1);
 }
 
@@ -739,13 +741,13 @@ void test_cron__offset_positive_seconds_one_wday(void) {
     .hour = 0,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = SECONDS_PER_DAY,
+    .offset_seconds = PBL_SEC_PER_DAY,
 
     .wday = PBL_CRON_WDAY_THURSDAY,
     .may_be_instant = false,
   };
 
-  const time_t advance = 30 * SECONDS_PER_MINUTE + SECONDS_PER_DAY;
+  const time_t advance = 30 * PBL_SEC_PER_MIN + PBL_SEC_PER_DAY;
   prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_000000_gmt, advance, advance, 1);
 }
 
@@ -758,12 +760,12 @@ void test_cron__offset_positive_seconds_any_day(void) {
     .hour = 0,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = SECONDS_PER_DAY,
+    .offset_seconds = PBL_SEC_PER_DAY,
 
     .may_be_instant = false,
   };
 
-  const time_t advance = 30 * SECONDS_PER_MINUTE;
+  const time_t advance = 30 * PBL_SEC_PER_MIN;
   prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_000000_gmt, advance, advance, 1);
 }
 
@@ -776,7 +778,7 @@ void test_cron__offset_negative_seconds_every_second(void) {
     .hour = PBL_CRON_HOUR_ANY,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = -SECONDS_PER_MINUTE,
+    .offset_seconds = -PBL_SEC_PER_MIN,
 
     .may_be_instant = true,
   };
@@ -793,7 +795,7 @@ void test_cron__offset_positive_seconds_every_second(void) {
     .hour = PBL_CRON_HOUR_ANY,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = SECONDS_PER_MINUTE,
+    .offset_seconds = PBL_SEC_PER_MIN,
 
     .may_be_instant = true,
   };
@@ -810,12 +812,12 @@ void test_cron__offset_negative_seconds_any_day_dst(void) {
     .hour = 1,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = -30 * SECONDS_PER_MINUTE,
+    .offset_seconds = -30 * PBL_SEC_PER_MIN,
 
     .may_be_instant = false,
   };
 
-  const time_t advance = SECONDS_PER_DAY;
+  const time_t advance = PBL_SEC_PER_DAY;
   prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_000000_gmt, advance, advance, 2);
 }
 
@@ -828,11 +830,11 @@ void test_cron__offset_positive_seconds_any_day_dst(void) {
     .hour = 0,
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
-    .offset_seconds = 30 * SECONDS_PER_MINUTE,
+    .offset_seconds = 30 * PBL_SEC_PER_MIN,
 
     .may_be_instant = false,
   };
 
-  const time_t advance = SECONDS_PER_DAY;
+  const time_t advance = PBL_SEC_PER_DAY;
   prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_000000_gmt, advance, advance, 2);
 }

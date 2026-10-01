@@ -11,6 +11,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/size.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -31,8 +32,8 @@ static PBL_MUTEX_DEFINE(s_insight_settings_mutex);
       .continuous_min_days_data = 2,                                                            \
       .target_qualifying_days = 2,                                                              \
       .target_percent_of_median = 120,                                                          \
-      .notif_min_interval_seconds = 7 * SECONDS_PER_DAY,                                        \
-      .sleep.trigger_after_wakeup_seconds = 2 * SECONDS_PER_HOUR                                \
+      .notif_min_interval_seconds = 7 * PBL_SEC_PER_DAY,                                        \
+      .sleep.trigger_after_wakeup_seconds = 2 * PBL_SEC_PER_HOUR                                \
     }                                                                                           \
   }
 
@@ -43,8 +44,8 @@ static PBL_MUTEX_DEFINE(s_insight_settings_mutex);
       .below_avg_threshold = -10,                                                               \
       .fail_threshold = -50,                                                                    \
       .sleep = {                                                                                \
-        .max_fail_minutes = 7 * MINUTES_PER_HOUR,                                               \
-        .trigger_notif_seconds = 30 * SECONDS_PER_MINUTE,                                       \
+        .max_fail_minutes = 7 * PBL_MIN_PER_HOUR,                                               \
+        .trigger_notif_seconds = 30 * PBL_SEC_PER_MIN,                                          \
         .trigger_notif_activity = 10,                                                           \
         .trigger_notif_active_minutes = 2                                                       \
       }                                                                                         \
@@ -58,7 +59,7 @@ static PBL_MUTEX_DEFINE(s_insight_settings_mutex);
       .continuous_min_days_data = 0,                                                            \
       .target_qualifying_days = 0,                                                              \
       .target_percent_of_median = 150,                                                          \
-      .notif_min_interval_seconds = 1 * SECONDS_PER_DAY,                                        \
+      .notif_min_interval_seconds = 1 * PBL_SEC_PER_DAY,                                        \
       .activity = {.trigger_active_minutes = 2, .trigger_steps_per_minute = 50}                 \
     }                                                                                           \
   }
@@ -70,9 +71,9 @@ static PBL_MUTEX_DEFINE(s_insight_settings_mutex);
       .below_avg_threshold = -10,                                                               \
       .fail_threshold = -50,                                                                    \
       .activity = {                                                                             \
-        .trigger_minute = (20 * MINUTES_PER_HOUR) + 30,                                         \
+        .trigger_minute = (20 * PBL_MIN_PER_HOUR) + 30,                                         \
         .update_threshold_steps = 1000,                                                         \
-        .update_max_interval_seconds = 30 * SECONDS_PER_MINUTE,                                 \
+        .update_max_interval_seconds = 30 * PBL_SEC_PER_MIN,                                    \
         .show_notification = true,                                                              \
         .max_fail_steps = 10000,                                                                \
       }                                                                                         \

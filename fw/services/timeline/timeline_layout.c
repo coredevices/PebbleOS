@@ -17,6 +17,8 @@
 #include "shell/system_theme.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 #define ARROW_SIZE_PX                                                                         \
   PREFERRED_CONTENT_SIZE_SWITCH(                                                              \
@@ -193,7 +195,7 @@ void timeline_layout_deinit(TimelineLayout *timeline_layout) {
 void timeline_layout_init_info(TimelineLayoutInfo *info, TimelineItem *item, time_t current_day) {
   *info = (TimelineLayoutInfo){
     .timestamp = item->header.timestamp,
-    .duration_s = item->header.duration * SECONDS_PER_MINUTE,
+    .duration_s = item->header.duration * PBL_SEC_PER_MIN,
     .current_day = current_day,
     .all_day = item->header.all_day,
   };

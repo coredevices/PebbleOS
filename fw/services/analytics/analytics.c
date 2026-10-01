@@ -12,7 +12,7 @@
 #include "system/reboot_reason.h"
 #include "system/version.h"
 #include "pbl/util/size.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 
 #define HEARTBEAT_PERIOD_SEC     3600
 #define ANALYTICS_STRING_MAX_LEN 64

@@ -48,6 +48,7 @@
 #include "stubs_vibes.h"
 #include "stubs_window_manager.h"
 #include "stubs_window_stack.h"
+#include "pbl/util/units.h"
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -63,7 +64,7 @@ void test_option_menu_window__initialize(void) {
   load_system_resources_fixture();
 
   s_data = (OptionMenuTestData){};
-  rtc_set_time(3 * SECONDS_PER_DAY);
+  rtc_set_time(3 * PBL_SEC_PER_DAY);
 }
 
 void test_option_menu_window__cleanup(void) {

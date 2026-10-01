@@ -13,6 +13,8 @@
 #include "pbl/services/blob_db/watch_app_prefs_db.h"
 #include "pbl/services/blob_db/weather_db.h"
 #include "pbl/services/weather/weather_service_private.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 #define WEATHER_PREFS_DATA_SIZE        \
   (sizeof(SerializedWeatherAppPrefs) + \
@@ -154,7 +156,7 @@ static void prv_initialize_entries(void) {
     // Make the last entry contain a timestamp that is too old to be included in weather_service
     // forecast list
     if (idx == WEATHER_DATA_SHARED_NUM_VALID_TIMESTAMP_ENTRIES) {
-      entry->last_update_time_utc = (time_start_of_today() - SECONDS_PER_DAY - 1);
+      entry->last_update_time_utc = (time_start_of_today() - PBL_SEC_PER_DAY - 1);
     }
     cl_assert_equal_i(S_SUCCESS, weather_db_insert((uint8_t *)&s_keys[idx], sizeof(WeatherDBKey),
                                                    (uint8_t *)entry, s_entry_sizes[idx]));

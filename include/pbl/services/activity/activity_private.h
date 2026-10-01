@@ -19,6 +19,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 // How often we update settings with the current step/sleep stats for today.
 #define ACTIVITY_SETTINGS_UPDATE_MIN 15
@@ -34,7 +36,7 @@ typedef uint32_t ActivityScalarStore;
 #define ACTIVITY_SCALAR_MAX UINT32_MAX
 
 // Each step average interval covers this many minutes
-#define ACTIVITY_STEP_AVERAGES_MINUTES (MINUTES_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES)
+#define ACTIVITY_STEP_AVERAGES_MINUTES (PBL_MIN_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES)
 
 // flash vs. the most amount of data we could lose if we reset.
 #define ACTIVITY_STEP_AVERAGES_PER_KEY 4
@@ -46,7 +48,7 @@ typedef uint32_t ActivityScalarStore;
 
 // We consider any sleep session that ends after this minute of the day (representing 9pm) as
 // part of the next day's sleep
-#define ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY (21 * MINUTES_PER_HOUR)
+#define ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY (21 * PBL_MIN_PER_HOUR)
 
 // Default HeartRate sampling ON time
 #define ACTIVITY_DEFAULT_HR_ON_TIME_SEC (60)
@@ -84,26 +86,26 @@ typedef uint32_t ActivityScalarStore;
 
 // Activity-triggered SpO2 (SpO2 during detected activities): how often to interrupt continuous HR
 // for one SpO2 point, how long to give each attempt, and how long to let HR recover before a retry.
-#define ACTIVITY_SPO2_ACTIVITY_INTERVAL_SEC (5 * SECONDS_PER_MINUTE)
+#define ACTIVITY_SPO2_ACTIVITY_INTERVAL_SEC (5 * PBL_SEC_PER_MIN)
 #define ACTIVITY_SPO2_ACTIVITY_ATTEMPT_SEC  (35)
-#define ACTIVITY_SPO2_ACTIVITY_BACKOFF_SEC  (SECONDS_PER_MINUTE)
+#define ACTIVITY_SPO2_ACTIVITY_BACKOFF_SEC  (PBL_SEC_PER_MIN)
 
 // The minimum number of samples needed before we can approximate the user's HR zone
 #define ACTIVITY_MIN_NUM_SAMPLES_FOR_HR_ZONE (5)
 
 // HRM Subscription values during ON and OFF periods
 #define ACTIVITY_HRM_SUBSCRIPTION_ON_PERIOD_SEC  (1)
-#define ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC (SECONDS_PER_DAY)
+#define ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC (PBL_SEC_PER_DAY)
 
 // After this many seconds without an HRM event, the cached worn-status is considered stale and
 // the sleep algorithm falls back to its accel-based not-worn heuristics. Sized to comfortably
 // cover the default HRMonitoringInterval_10Min cycle (~11 min) — at the longer 30/60-min
 // intervals the cache will simply expire between bursts and sleep detection won't lean on a
 // stale on-wrist reading.
-#define ACTIVITY_HRM_OFFWRIST_STALE_SEC (15 * SECONDS_PER_MINUTE)
+#define ACTIVITY_HRM_OFFWRIST_STALE_SEC (15 * PBL_SEC_PER_MIN)
 
 // Max number of stored HR samples to compute the median
-#define ACTIVITY_MAX_HR_SAMPLES (3 * SECONDS_PER_MINUTE)
+#define ACTIVITY_MAX_HR_SAMPLES (3 * PBL_SEC_PER_MIN)
 
 // Conversion factors
 #define ACTIVITY_DAG_PER_KG 100
@@ -606,7 +608,7 @@ uint32_t activity_metrics_prv_get_steps(void);
 ActivityScalarStore activity_metrics_prv_steps_per_minute(void);
 
 //! Set a metric's value. Used from BlobDB to honor requests from the phone
-void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek day, int32_t value);
+void activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday day, int32_t value);
 
 //! Force the current day's value of a metric to an exact value (may decrease it). Intended for
 //! QEMU/test injection of health data.

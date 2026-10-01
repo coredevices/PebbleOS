@@ -21,6 +21,7 @@
 #include "pbl/util/units.h"
 
 #include "kernel/pbl_malloc.h"
+#include "pbl/services/time.h"
 
 PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 

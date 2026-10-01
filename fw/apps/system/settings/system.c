@@ -37,7 +37,8 @@
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
 #include "system/version.h"
 
 #include "pbl/services/blob_db/api.h"
@@ -218,7 +219,7 @@ static void prv_populate_uptime_string(SystemInformationData *data) {
   uint32_t seconds_since_reboot = time_get_uptime_seconds();
 
   uint32_t days, hours, minutes, seconds;
-  time_util_split_seconds_into_parts(seconds_since_reboot, &days, &hours, &minutes, &seconds);
+  pbl_time_split_seconds(seconds_since_reboot, &days, &hours, &minutes, &seconds);
 
   sniprintf(data->uptime_string, sizeof(data->uptime_string),
             "%" PRIu32 "d %" PRIu32 "h %" PRIu32 "m %" PRIu32 "s", days, hours, minutes, seconds);

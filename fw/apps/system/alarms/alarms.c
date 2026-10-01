@@ -22,7 +22,7 @@
 #include "pbl/services/timeline/timeline.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #include <string.h>
 
@@ -35,7 +35,7 @@ typedef struct {
   ListNode node;
   AlarmId id;
   AlarmInfo info;
-  bool scheduled_days[DAYS_PER_WEEK];
+  bool scheduled_days[PBL_DAY_PER_WEEK];
 } AlarmNode;
 
 typedef struct AlarmsAppData {

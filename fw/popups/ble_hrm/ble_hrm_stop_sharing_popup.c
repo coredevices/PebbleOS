@@ -6,9 +6,9 @@
 #include "applib/ui/dialogs/simple_dialog.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
-#define BLE_HRM_CONFIRMATION_TIMEOUT_MS (2 * MS_PER_SECOND)
+#define BLE_HRM_CONFIRMATION_TIMEOUT_MS (2 * PBL_MSEC_PER_SEC)
 
 SimpleDialog *ble_hrm_stop_sharing_popup_create(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("Stopped Sharing");

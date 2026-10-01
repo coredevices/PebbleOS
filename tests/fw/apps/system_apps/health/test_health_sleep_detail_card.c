@@ -7,6 +7,7 @@
 #include "apps/system/health/data_private.h"
 
 #include "test_health_app_includes.h"
+#include "pbl/util/units.h"
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -67,8 +68,8 @@ void test_health_sleep_detail_card__render_no_data(void) {
 
 void test_health_sleep_detail_card__render_sleep_session(void) {
   HealthData health_data = {
-    .sleep_start = (23 * SECONDS_PER_HOUR) + (3 * SECONDS_PER_MINUTE),
-    .sleep_end = (7 * SECONDS_PER_HOUR) + (45 * SECONDS_PER_MINUTE),
+    .sleep_start = (23 * PBL_SEC_PER_HOUR) + (3 * PBL_SEC_PER_MIN),
+    .sleep_end = (7 * PBL_SEC_PER_HOUR) + (45 * PBL_SEC_PER_MIN),
   };
 
   prv_create_card_and_render(&health_data);
@@ -77,8 +78,8 @@ void test_health_sleep_detail_card__render_sleep_session(void) {
 
 void test_health_sleep_detail_card__render_sleep_session_same_start_end_time(void) {
   HealthData health_data = {
-    .sleep_start = (16 * SECONDS_PER_HOUR),
-    .sleep_end = (16 * SECONDS_PER_HOUR),
+    .sleep_start = (16 * PBL_SEC_PER_HOUR),
+    .sleep_end = (16 * PBL_SEC_PER_HOUR),
   };
 
   prv_create_card_and_render(&health_data);
@@ -87,7 +88,7 @@ void test_health_sleep_detail_card__render_sleep_session_same_start_end_time(voi
 
 void test_health_sleep_detail_card__render_30_day_avg(void) {
   HealthData health_data = {
-    .monthly_sleep_average = (8 * SECONDS_PER_HOUR) + (17 * SECONDS_PER_MINUTE),
+    .monthly_sleep_average = (8 * PBL_SEC_PER_HOUR) + (17 * PBL_SEC_PER_MIN),
   };
 
   prv_create_card_and_render(&health_data);
@@ -96,7 +97,7 @@ void test_health_sleep_detail_card__render_30_day_avg(void) {
 
 void test_health_sleep_detail_card__render_deep_sleep(void) {
   HealthData health_data = {
-    .deep_sleep = (3 * SECONDS_PER_HOUR) + (23 * SECONDS_PER_MINUTE),
+    .deep_sleep = (3 * PBL_SEC_PER_HOUR) + (23 * PBL_SEC_PER_MIN),
   };
 
   prv_create_card_and_render(&health_data);
@@ -105,12 +106,12 @@ void test_health_sleep_detail_card__render_deep_sleep(void) {
 
 void test_health_sleep_detail_card__render_sleep_data_1(void) {
   HealthData health_data = {
-    .sleep_data[0] = (7 * SECONDS_PER_HOUR) + (11 * SECONDS_PER_MINUTE),
-    .sleep_data[1] = (6 * SECONDS_PER_HOUR) + (52 * SECONDS_PER_MINUTE),
-    .sleep_data[2] = (7 * SECONDS_PER_HOUR) + (13 * SECONDS_PER_MINUTE),
-    .sleep_data[3] = (9 * SECONDS_PER_HOUR) + (21 * SECONDS_PER_MINUTE),
-    .sleep_data[4] = (9 * SECONDS_PER_HOUR) + (18 * SECONDS_PER_MINUTE),
-    .monthly_sleep_average = (8 * SECONDS_PER_HOUR) + (17 * SECONDS_PER_MINUTE),
+    .sleep_data[0] = (7 * PBL_SEC_PER_HOUR) + (11 * PBL_SEC_PER_MIN),
+    .sleep_data[1] = (6 * PBL_SEC_PER_HOUR) + (52 * PBL_SEC_PER_MIN),
+    .sleep_data[2] = (7 * PBL_SEC_PER_HOUR) + (13 * PBL_SEC_PER_MIN),
+    .sleep_data[3] = (9 * PBL_SEC_PER_HOUR) + (21 * PBL_SEC_PER_MIN),
+    .sleep_data[4] = (9 * PBL_SEC_PER_HOUR) + (18 * PBL_SEC_PER_MIN),
+    .monthly_sleep_average = (8 * PBL_SEC_PER_HOUR) + (17 * PBL_SEC_PER_MIN),
   };
 
   HealthDetailCard *card = (HealthDetailCard *)prv_create_card_and_render(&health_data);
@@ -133,14 +134,14 @@ void test_health_sleep_detail_card__render_sleep_data_1(void) {
 
 void test_health_sleep_detail_card__render_sleep_data_2(void) {
   HealthData health_data = {
-    .sleep_data[0] = (7 * SECONDS_PER_HOUR) + (14 * SECONDS_PER_MINUTE),
-    .sleep_data[1] = (4 * SECONDS_PER_HOUR) + (59 * SECONDS_PER_MINUTE),
-    .sleep_data[2] = (8 * SECONDS_PER_HOUR) + (17 * SECONDS_PER_MINUTE),
-    .sleep_data[3] = (5 * SECONDS_PER_HOUR) + (34 * SECONDS_PER_MINUTE),
-    .sleep_data[4] = (7 * SECONDS_PER_HOUR) + (12 * SECONDS_PER_MINUTE),
-    .sleep_data[5] = (8 * SECONDS_PER_HOUR) + (12 * SECONDS_PER_MINUTE),
-    .sleep_data[6] = (10 * SECONDS_PER_HOUR) + (11 * SECONDS_PER_MINUTE),
-    .monthly_sleep_average = (8 * SECONDS_PER_HOUR) + (36 * SECONDS_PER_MINUTE),
+    .sleep_data[0] = (7 * PBL_SEC_PER_HOUR) + (14 * PBL_SEC_PER_MIN),
+    .sleep_data[1] = (4 * PBL_SEC_PER_HOUR) + (59 * PBL_SEC_PER_MIN),
+    .sleep_data[2] = (8 * PBL_SEC_PER_HOUR) + (17 * PBL_SEC_PER_MIN),
+    .sleep_data[3] = (5 * PBL_SEC_PER_HOUR) + (34 * PBL_SEC_PER_MIN),
+    .sleep_data[4] = (7 * PBL_SEC_PER_HOUR) + (12 * PBL_SEC_PER_MIN),
+    .sleep_data[5] = (8 * PBL_SEC_PER_HOUR) + (12 * PBL_SEC_PER_MIN),
+    .sleep_data[6] = (10 * PBL_SEC_PER_HOUR) + (11 * PBL_SEC_PER_MIN),
+    .monthly_sleep_average = (8 * PBL_SEC_PER_HOUR) + (36 * PBL_SEC_PER_MIN),
   };
 
   HealthDetailCard *card = (HealthDetailCard *)prv_create_card_and_render(&health_data);

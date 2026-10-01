@@ -14,7 +14,7 @@
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #include <stdint.h>
 
@@ -197,7 +197,7 @@ static void prv_request_params_update(GAPLEConnection *connection,
   // requesting new parameters.
   uint32_t retry_ms = REQUEST_TIMEOUT_MS;
   if ((rtc_get_ticks() - connection->ticks_since_connection) < REQUIRED_INIT_PAUSE_TICKS) {
-    retry_ms = (REQUIRED_INIT_PAUSE_S * MS_PER_SECOND);
+    retry_ms = (REQUIRED_INIT_PAUSE_S * PBL_MSEC_PER_SEC);
     goto retry;
   }
 

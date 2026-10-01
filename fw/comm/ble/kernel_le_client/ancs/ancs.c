@@ -27,6 +27,7 @@
 #include "pbl/util/size.h"
 
 #include <string.h>
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -61,7 +62,7 @@ static void prv_op_timeout_kick(void);
 
 #define INVALID_NOTIFICATION_UID 0xFFFFFFFF
 
-#define ANCS_RETRY_TIME_MS (5 * MS_PER_SECOND)
+#define ANCS_RETRY_TIME_MS (5 * PBL_MSEC_PER_SEC)
 
 // Bounds the notification queue so a post-reconnect ANCS burst from many
 // chatty apps cannot grow it without limit. Action ops are not capped — they

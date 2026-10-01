@@ -22,7 +22,6 @@
 #include "pbl/services/timeline/timeline_actions.h"
 #include "shell/prefs.h"
 #include <pbl/logging/logging.h>
-#include "util/time/time.h"
 
 #include <string.h>
 

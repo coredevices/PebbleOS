@@ -8,7 +8,7 @@
 #include "system/status_codes.h"
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/pstring.h"
-#include "util/time/time.h"
+#include <time.h>
 #include "pbl/util/uuid.h"
 
 #include <stddef.h>

@@ -19,6 +19,7 @@
 #include "stubs_logging.h"
 
 #include "test_recognizer_impl.h"
+#include "pbl/util/units.h"
 
 // The manager is not under test here; swallow the notification.
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
@@ -50,7 +51,7 @@ static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t 
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / MS_PER_SECOND);
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
 }
 
 // tests

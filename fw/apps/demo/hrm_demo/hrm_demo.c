@@ -15,6 +15,7 @@
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "system/passert.h"
+#include "pbl/util/units.h"
 
 #define BPM_STRING_LEN 10
 
@@ -162,7 +163,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
       // Subscribe again if our subscription is expiring
       const uint32_t update_time_s = 1;
       app_data->session = sys_hrm_manager_app_subscribe(APP_ID_HRM_DEMO, update_time_s,
-                                                        SECONDS_PER_HOUR, HRMFeature_BPM);
+                                                        PBL_SEC_PER_HOUR, HRMFeature_BPM);
     }
   }
 }
@@ -179,7 +180,7 @@ static void prv_enable_hrm(void) {
   // TODO: Let the mobile app control this?
   const uint32_t update_time_s = 1;
   app_data->session = sys_hrm_manager_app_subscribe(APP_ID_HRM_DEMO, update_time_s,
-                                                    SECONDS_PER_HOUR, HRMFeature_BPM);
+                                                    PBL_SEC_PER_HOUR, HRMFeature_BPM);
 }
 
 static void prv_disable_hrm(void) {

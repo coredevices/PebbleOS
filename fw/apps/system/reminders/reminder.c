@@ -20,7 +20,8 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/timeline/timeline.h"
 #include "pbl/services/blob_db/watch_app_prefs_db.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
+#include <time.h>
 
 typedef enum ReminderAppUIState {
   ReminderAppUIState_Start,
@@ -189,7 +190,7 @@ static void prv_handle_dictation_event(PebbleEvent *e, void *context) {
       // If the user didn't specify a time set it to be 1 hour from the current time,
       // rounded up to the nearest 15 min.
       // Ex: a reminder created at 10:08 AM with no specified time is due at 11:15 AM
-      time_t utc_sec = rtc_get_time() + SECONDS_PER_HOUR + (15 * SECONDS_PER_MINUTE);
+      time_t utc_sec = rtc_get_time() + PBL_SEC_PER_HOUR + (15 * PBL_SEC_PER_MIN);
       struct tm local_tm;
       localtime_r(&utc_sec, &local_tm);
       local_tm.tm_min -= (local_tm.tm_min % 15);

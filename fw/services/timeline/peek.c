@@ -9,7 +9,8 @@
 #include "pbl/services/timeline/timeline.h"
 #include "shell/prefs.h"
 #include <pbl/logging/logging.h>
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 typedef struct TimelinePeekEventData {
   bool initialized;
@@ -65,7 +66,7 @@ static void prv_peek_did_update(void **context) {
 }
 
 static bool prv_is_in_peeking_time_window(SerializedTimelineItemHeader *header, time_t now) {
-  const unsigned int duration_s = header->common.duration * SECONDS_PER_MINUTE;
+  const unsigned int duration_s = header->common.duration * PBL_SEC_PER_MIN;
   const unsigned int show_duration_after_start_s =
       header->common.persistent ? duration_s : MIN(TIMELINE_PEEK_HIDE_AFTER_TIME_S, duration_s);
   // As soon as an event begins, it should peek, hence the show-before time being inclusive
@@ -85,7 +86,7 @@ static bool prv_peek_filter(SerializedTimelineItemHeader *header, void **context
   PeekUpdateContext *update = *(PeekUpdateContext **)context;
   const time_t now = rtc_get_time();
   const time_t start = header->common.timestamp;
-  const time_t end = start + (header->common.duration * SECONDS_PER_MINUTE);
+  const time_t end = start + (header->common.duration * PBL_SEC_PER_MIN);
   if (timeline_event_is_all_day(&header->common)) {
     if (WITHIN(now, start, end)) {
       update->today_has_all_day_event = true;
@@ -147,7 +148,7 @@ static uint32_t prv_calc_timeout(CommonTimelineItemHeader *item,
   const time_t now = rtc_get_time();
   const time_t start = item->timestamp;
   const unsigned int duration_m = item->duration;
-  const time_t end = start + (duration_m * SECONDS_PER_MINUTE);
+  const time_t end = start + (duration_m * PBL_SEC_PER_MIN);
   if (now >= end) {
     goto none;
   }
@@ -171,7 +172,7 @@ static uint32_t prv_calc_timeout(CommonTimelineItemHeader *item,
   if (time_type_out) {
     *time_type_out = time_type;
   }
-  return MIN(timeout_s, UINT32_MAX / MS_PER_SECOND) * MS_PER_SECOND;
+  return MIN(timeout_s, UINT32_MAX / PBL_MSEC_PER_SEC) * PBL_MSEC_PER_SEC;
 
 none:
   if (time_type_out) {
@@ -214,7 +215,7 @@ const TimelineEventImpl *timeline_peek_get_event_service(void) {
   if (!s_peek_event_data.initialized) {
     s_peek_event_data.initialized = true;
     s_peek_event_data.show_before_time_s =
-        (timeline_peek_prefs_get_before_time() * SECONDS_PER_MINUTE);
+        (timeline_peek_prefs_get_before_time() * PBL_SEC_PER_MIN);
   }
   return &s_event_impl;
 }

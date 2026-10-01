@@ -52,7 +52,7 @@ PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 #define ALARM_PREF_KEY_ARMED "ArmedAlarm"
 
 // How late a missed alarm may be before it is no longer worth firing.
-#define ALARM_MISSED_MAX_DELAY_S (5 * SECONDS_PER_MINUTE)
+#define ALARM_MISSED_MAX_DELAY_S (5 * PBL_SEC_PER_MIN)
 
 typedef struct PBL_PACKED AlarmArmedRecord {
   //! Cron execute time of the armed alarm, 0 if no alarm is armed.
@@ -83,7 +83,7 @@ typedef struct PBL_PACKED {
   uint8_t hour;
   uint8_t minute;
   // 1 entry per week day. True if the alarm should go off on that week day. Sunday = 0.
-  bool scheduled_days[DAYS_PER_WEEK];
+  bool scheduled_days[PBL_DAY_PER_WEEK];
   //! v3.12 alarm fields, compiled in even for unhealthy platforms to simplify compatibility
   union {
     //! These flags have the same value in memory and in flash.
@@ -274,7 +274,7 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
   time_t alarm_time = prv_get_alarm_time(alarm, pbl_cron_job_get_execute_time(cron));
 
   time_t last_alarm = 0;
-  for (int i = 0; alarm_time <= current_time + SECONDS_PER_DAY * 3; i++) {
+  for (int i = 0; alarm_time <= current_time + PBL_SEC_PER_DAY * 3; i++) {
     if (last_alarm != alarm_time) {
       last_alarm = alarm_time;
       localtime_r(&alarm_time, local_alarm_time);
@@ -289,7 +289,7 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
       }
     }
     alarm_time = prv_get_alarm_time(alarm, pbl_cron_job_get_execute_time_from_epoch(
-                                               cron, current_time + (i * SECONDS_PER_DAY)));
+                                               cron, current_time + (i * PBL_SEC_PER_DAY)));
   }
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_PINS};
@@ -322,9 +322,9 @@ static time_t prv_build_cron(AlarmConfig *config, struct pbl_cron_job *cron) {
     .offset_seconds = config->is_smart ? -SMART_ALARM_RANGE_S : 0,
 
     // Tolerate up to a 15 minute clock change before recalculating.
-    .clock_change_tolerance = 15 * SECONDS_PER_MINUTE,
+    .clock_change_tolerance = 15 * PBL_SEC_PER_MIN,
   };
-  for (int i = 0; i < DAYS_PER_WEEK; i++) {
+  for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
     cron->wday |= config->scheduled_days[i] ? (1 << i) : 0;
   }
   return pbl_cron_job_get_execute_time(cron);
@@ -659,7 +659,7 @@ static int prv_get_day_for_just_once_alarm(int hour, int minute) {
 
   if (hour < local_time.tm_hour || (hour == local_time.tm_hour && minute <= local_time.tm_min)) {
     // The time is before or equal to the current time. Schedule the alarm for tomorrow
-    return (local_time.tm_wday + 1) % DAYS_PER_WEEK;
+    return (local_time.tm_wday + 1) % PBL_DAY_PER_WEEK;
   } else {
     // The time hasn't happened yet today. Schedule it for today
     return local_time.tm_wday;
@@ -667,7 +667,7 @@ static int prv_get_day_for_just_once_alarm(int hour, int minute) {
 }
 
 static void prv_set_day_for_just_once_alarm(AlarmConfig *config, int hour, int minute) {
-  const bool scheduled_days[DAYS_PER_WEEK] = {false, false, false, false, false, false, false};
+  const bool scheduled_days[PBL_DAY_PER_WEEK] = {false, false, false, false, false, false, false};
   memcpy(&config->scheduled_days, scheduled_days, sizeof(scheduled_days));
 
   int wday = prv_get_day_for_just_once_alarm(hour, minute);
@@ -686,7 +686,7 @@ static void prv_refresh_just_once_alarm_days(SettingsFile *file) {
       continue;
     }
 
-    bool previous_days[DAYS_PER_WEEK];
+    bool previous_days[PBL_DAY_PER_WEEK];
     memcpy(previous_days, config.scheduled_days, sizeof(previous_days));
     prv_set_day_for_just_once_alarm(&config, config.hour, config.minute);
     if (memcmp(previous_days, config.scheduled_days, sizeof(previous_days)) == 0) {
@@ -841,22 +841,22 @@ static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context
   switch (type) {
     case ALARM_KIND_EVERYDAY:
       config->kind = ALARM_KIND_EVERYDAY;
-      const bool everyday[DAYS_PER_WEEK] = {true, true, true, true, true, true, true};
+      const bool everyday[PBL_DAY_PER_WEEK] = {true, true, true, true, true, true, true};
       memcpy(&config->scheduled_days, everyday, sizeof(everyday));
       break;
     case ALARM_KIND_WEEKENDS:
       config->kind = ALARM_KIND_WEEKENDS;
-      const bool weekends[DAYS_PER_WEEK] = {true, false, false, false, false, false, true};
+      const bool weekends[PBL_DAY_PER_WEEK] = {true, false, false, false, false, false, true};
       memcpy(&config->scheduled_days, weekends, sizeof(weekends));
       break;
     case ALARM_KIND_WEEKDAYS:
       config->kind = ALARM_KIND_WEEKDAYS;
-      const bool weekdays[DAYS_PER_WEEK] = {false, true, true, true, true, true, false};
+      const bool weekdays[PBL_DAY_PER_WEEK] = {false, true, true, true, true, true, false};
       memcpy(&config->scheduled_days, weekdays, sizeof(weekdays));
       break;
     case ALARM_KIND_JUST_ONCE:
       config->kind = ALARM_KIND_JUST_ONCE;
-      const bool no_day[DAYS_PER_WEEK] = {false, false, false, false, false, false, false};
+      const bool no_day[PBL_DAY_PER_WEEK] = {false, false, false, false, false, false, false};
       memcpy(&config->scheduled_days, no_day, sizeof(no_day));
       prv_set_day_for_just_once_alarm(config, config->hour, config->minute);
       break;
@@ -872,18 +872,18 @@ void alarm_set_kind(AlarmId id, AlarmKind kind) {
 
 // ----------------------------------------------------------------------------------------------
 static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *context) {
-  const bool (*scheduled_days)[DAYS_PER_WEEK] = context;
+  const bool (*scheduled_days)[PBL_DAY_PER_WEEK] = context;
   config->kind = ALARM_KIND_CUSTOM;
   memcpy(&config->scheduled_days, scheduled_days, sizeof(config->scheduled_days));
   return true;
 }
 
-void alarm_set_custom(AlarmId id, const bool scheduled_days[DAYS_PER_WEEK]) {
+void alarm_set_custom(AlarmId id, const bool scheduled_days[PBL_DAY_PER_WEEK]) {
   prv_alarm_operation(id, prv_set_alarm_custom_op, (void *)scheduled_days);
 }
 
 // ----------------------------------------------------------------------------------------------
-bool alarm_get_custom_days(AlarmId id, bool scheduled_days[DAYS_PER_WEEK]) {
+bool alarm_get_custom_days(AlarmId id, bool scheduled_days[PBL_DAY_PER_WEEK]) {
   SettingsFile file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
@@ -894,7 +894,7 @@ bool alarm_get_custom_days(AlarmId id, bool scheduled_days[DAYS_PER_WEEK]) {
   if (!rv) {
     goto cleanup;
   }
-  memcpy(scheduled_days, &config.scheduled_days, DAYS_PER_WEEK);
+  memcpy(scheduled_days, &config.scheduled_days, PBL_DAY_PER_WEEK);
 
 cleanup:
   prv_file_close_and_unlock(&file);
@@ -1119,15 +1119,15 @@ static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated) {
   // Set before arming the timer: a stale snooze callback queued on KernelBG cannot be cancelled by
   // new_timer_stop(), and would consume the flag if it ran while the timer was armed without it.
   s_user_snoozed = user_initiated;
-  PBL_LOG_INFO("Snoozing for %d minutes", snooze_delay_s / SECONDS_PER_MINUTE);
-  bool success = new_timer_start(s_snooze_timer_id, snooze_delay_s * MS_PER_SECOND,
+  PBL_LOG_INFO("Snoozing for %d minutes", snooze_delay_s / PBL_SEC_PER_MIN);
+  bool success = new_timer_start(s_snooze_timer_id, snooze_delay_s * PBL_MSEC_PER_SEC,
                                  prv_snooze_timer_callback, NULL, 0 /* flags*/);
   PBL_ASSERTN(success);
 }
 
 // ----------------------------------------------------------------------------------------------
 void alarm_set_snooze_alarm(void) {
-  prv_snooze_alarm(s_snooze_delay_m * SECONDS_PER_MINUTE, true /* user_initiated */);
+  prv_snooze_alarm(s_snooze_delay_m * PBL_SEC_PER_MIN, true /* user_initiated */);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1455,7 +1455,7 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
   return alarm_day_text;
 }
 
-void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm_day_text) {
+void alarm_get_string_for_custom(bool scheduled_days[PBL_DAY_PER_WEEK], char *alarm_day_text) {
   // 4 chars per day, 3 for letters and 1 for comma
   // max length = 7 days in a week * 4 chars per day = 28
   static const char *day_strings[7] = {i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"),

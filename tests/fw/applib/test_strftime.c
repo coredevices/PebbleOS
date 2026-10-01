@@ -25,6 +25,8 @@
 #include "stubs_task_wdt.h"
 #include "stubs_app_state.h"
 #include "stubs_worker_state.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 // Overrides
 //////////////////////////////////////////////////////////
@@ -268,9 +270,9 @@ void test_strftime__abusive(void) {
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
     .tm_year = 2015 - 1900,
-    .tm_mon = 0 + MONTHS_PER_YEAR,
+    .tm_mon = 0 + PBL_MONTH_PER_YEAR,
     .tm_mday = 2, // 2015/01/02
-    .tm_wday = 5 + DAYS_PER_WEEK,
+    .tm_wday = 5 + PBL_DAY_PER_WEEK,
     .tm_yday = 1, // Friday, 2nd day of the year
     .tm_gmtoff = 0,
     .tm_isdst = 0,

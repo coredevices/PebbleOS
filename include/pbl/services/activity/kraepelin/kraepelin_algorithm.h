@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
-#include "util/time/time.h"
+#include <time.h>
 
 // ---------------------------------------------------------------------------------------------
 // Equates

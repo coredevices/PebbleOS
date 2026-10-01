@@ -9,7 +9,7 @@
 #include "pbl/services/hrm/hrm_manager.h"
 #include "drivers/hrm.h"
 #include "process_management/app_install_types.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 #include "pbl/util/units.h"
 
 // ---------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
 }
 
 uint32_t time_get_uptime_seconds(void) {
-  return SECONDS_PER_DAY + rtc_get_time();
+  return PBL_SEC_PER_DAY + rtc_get_time();
 }
 
 static uint32_t s_total_step_count;
@@ -225,14 +225,14 @@ void test_workout_service__basic(void) {
   cl_assert_equal_i(hr_zone, 0);
 
   // Get some step info
-  prv_inc_time(5 * SECONDS_PER_MINUTE);
+  prv_inc_time(5 * PBL_SEC_PER_MIN);
   prv_inc_steps_and_put_event(900 /* 180 steps per min * 5 mins */);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 900);
   cl_assert_equal_i(5900, s_total_step_count);
   cl_assert_equal_i(distance_m, 1201 /* 1.2km in 5 mins is reasonable */);
-  cl_assert_equal_i(duration_s, 5 * SECONDS_PER_MINUTE);
+  cl_assert_equal_i(duration_s, 5 * PBL_SEC_PER_MIN);
 
   // Get some HR info
   prv_put_bpm_event(100, HRMQuality_Good);
@@ -242,14 +242,14 @@ void test_workout_service__basic(void) {
   cl_assert_equal_i(hr_zone, 0);
 
   // Get some more step info
-  prv_inc_time(5 * SECONDS_PER_MINUTE);
+  prv_inc_time(5 * PBL_SEC_PER_MIN);
   prv_inc_steps_and_put_event(900 /* 180 steps per min * 5 mins */);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 1800);
   cl_assert_equal_i(6800, s_total_step_count);
   cl_assert_equal_i(distance_m, 2402 /* 2.4km in 10 mins is reasonable */);
-  cl_assert_equal_i(duration_s, 10 * SECONDS_PER_MINUTE);
+  cl_assert_equal_i(duration_s, 10 * PBL_SEC_PER_MIN);
 
   // Get some more HR info
   prv_inc_time(10);
@@ -258,7 +258,7 @@ void test_workout_service__basic(void) {
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 180);
   cl_assert_equal_i(hr_zone, 3);
-  cl_assert_equal_i(duration_s, 10 * SECONDS_PER_MINUTE + 10);
+  cl_assert_equal_i(duration_s, 10 * PBL_SEC_PER_MIN + 10);
 
   cl_assert(workout_service_stop_workout());
   cl_assert(
@@ -314,7 +314,7 @@ void test_workout_service__takeover_activity_session(void) {
   const int32_t distance_delta_m = (new_distance_m - distance_m);
   const int32_t calculated_active_kcalories =
       ROUND(activity_private_compute_active_calories(distance_delta_m * PBL_MM_PER_M,
-                                                     600 * MS_PER_SECOND),
+                                                     600 * PBL_MSEC_PER_SEC),
             ACTIVITY_CALORIES_PER_KCAL);
 
   // Make sure that the new_active_kcalories has increased
@@ -652,7 +652,7 @@ void test_workout_service__working_out_past_midnight(void) {
 // Open the app and close the app. Make sure the HR monitor turns off instantly
 void test_workout_service__app_open_close_no_workout(void) {
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Open the app, confirm that we are now subscribed with no end in sight
   workout_service_frontend_opened();
@@ -669,7 +669,7 @@ void test_workout_service__app_open_close_no_workout(void) {
 // WORKOUT_ACTIVE_HR_SUBSCRIPTION_TS_EXPIRE
 void test_workout_service__app_open_close_active_workout(void) {
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Open the app, confirm that we are now subscribed with no end in sight
   workout_service_frontend_opened();
@@ -680,7 +680,7 @@ void test_workout_service__app_open_close_active_workout(void) {
 
   workout_service_frontend_closed();
   cl_assert_equal_b(s_hrm_subscribed, true);
-  cl_assert_equal_i(s_hrm_expiration, SECONDS_PER_HOUR);
+  cl_assert_equal_i(s_hrm_expiration, PBL_SEC_PER_HOUR);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -688,14 +688,14 @@ void test_workout_service__app_open_close_active_workout(void) {
 // since workout wasn't valid (too short)
 void test_workout_service__app_open_close_ended_invalid_workout(void) {
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Open the app, confirm that we are now subscribed with no end in sight
   workout_service_frontend_opened();
   cl_assert_equal_b(s_hrm_subscribed, true);
   cl_assert_equal_i(s_hrm_expiration, 0);
 
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   // Workout of 30 seconds duration. Should be invalid, not keep HR on after leaving
   prv_inc_time(30);
@@ -711,24 +711,24 @@ void test_workout_service__app_open_close_ended_invalid_workout(void) {
 // Make sure the HR stays on for WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE - 120s
 void test_workout_service__app_open_close_valid_workout(void) {
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Open the app, confirm that we are now subscribed with no end in sight
   workout_service_frontend_opened();
   cl_assert_equal_b(s_hrm_subscribed, true);
   cl_assert_equal_i(s_hrm_expiration, 0);
 
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   // Workout of 120 seconds duration. Should be valid
-  prv_inc_time(2 * SECONDS_PER_MINUTE);
+  prv_inc_time(2 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_stop_workout());
 
-  prv_inc_time(2 * SECONDS_PER_MINUTE);
+  prv_inc_time(2 * PBL_SEC_PER_MIN);
 
   workout_service_frontend_closed();
   cl_assert_equal_b(s_hrm_subscribed, true);
-  cl_assert_equal_i(s_hrm_expiration, 8 * SECONDS_PER_MINUTE);
+  cl_assert_equal_i(s_hrm_expiration, 8 * PBL_SEC_PER_MIN);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -739,20 +739,20 @@ void test_workout_service__app_open_close_valid_workout_hrm_disabled(void) {
   s_hrm_measurement_interval = HRMonitoringInterval_Disabled;
 
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Open the app, confirm that we are now subscribed with no end in sight
   workout_service_frontend_opened();
   cl_assert_equal_b(s_hrm_subscribed, true);
   cl_assert_equal_i(s_hrm_expiration, 0);
 
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   // Workout of 120 seconds duration. Should be valid
-  prv_inc_time(2 * SECONDS_PER_MINUTE);
+  prv_inc_time(2 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_stop_workout());
 
-  prv_inc_time(2 * SECONDS_PER_MINUTE);
+  prv_inc_time(2 * PBL_SEC_PER_MIN);
 
   workout_service_frontend_closed();
   cl_assert_equal_b(s_hrm_subscribed, false);
@@ -766,7 +766,7 @@ void test_workout_service__app_open_close_active_workout_hrm_disabled(void) {
   s_hrm_measurement_interval = HRMonitoringInterval_Disabled;
 
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   workout_service_frontend_opened();
   cl_assert_equal_b(s_hrm_subscribed, true);
@@ -776,7 +776,7 @@ void test_workout_service__app_open_close_active_workout_hrm_disabled(void) {
 
   workout_service_frontend_closed();
   cl_assert_equal_b(s_hrm_subscribed, true);
-  cl_assert_equal_i(s_hrm_expiration, SECONDS_PER_HOUR);
+  cl_assert_equal_i(s_hrm_expiration, PBL_SEC_PER_HOUR);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -784,21 +784,21 @@ void test_workout_service__app_open_close_active_workout_hrm_disabled(void) {
 // Make sure the HR turns off right after we leave the app.
 void test_workout_service__app_open_wait_close_valid_workout(void) {
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Open the app, confirm that we are now subscribed with no end in sight
   workout_service_frontend_opened();
   cl_assert_equal_b(s_hrm_subscribed, true);
   cl_assert_equal_i(s_hrm_expiration, 0);
 
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   // Workout of 120 seconds duration. Should be valid
-  prv_inc_time(2 * SECONDS_PER_MINUTE);
+  prv_inc_time(2 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_stop_workout());
 
   // Wait 20 minutes. By this time, as soon as we leave the app, we should turn off the HR device.
-  prv_inc_time(20 * SECONDS_PER_MINUTE);
+  prv_inc_time(20 * PBL_SEC_PER_MIN);
 
   workout_service_frontend_closed();
   cl_assert_equal_b(s_hrm_subscribed, false);
@@ -810,19 +810,19 @@ void test_workout_service__app_open_wait_close_valid_workout(void) {
 // subscription so sampling drops back to the user's preferred rate within a bounded time, even
 // if the user lingers on the summary screen or the app exit path is otherwise delayed.
 void test_workout_service__stop_workout_starts_recovery_timer(void) {
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   workout_service_frontend_opened();
   cl_assert_equal_b(s_hrm_subscribed, true);
   cl_assert_equal_i(s_hrm_expiration, 0);
 
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  prv_inc_time(2 * SECONDS_PER_MINUTE);
+  prv_inc_time(2 * PBL_SEC_PER_MIN);
   cl_assert(workout_service_stop_workout());
 
   // The 1-second subscription should now have a 10-minute expiration so it doesn't run forever.
   cl_assert_equal_b(s_hrm_subscribed, true);
-  cl_assert_equal_i(s_hrm_expiration, 10 * SECONDS_PER_MINUTE);
+  cl_assert_equal_i(s_hrm_expiration, 10 * PBL_SEC_PER_MIN);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -962,31 +962,31 @@ void test_workout_service__avg_hr(void) {
 // 60 min - Make sure the workout was ended.
 void test_workout_service__abandon_workout(void) {
   // Put some time into the clock
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Open the app and wait a minute
   workout_service_frontend_opened();
-  prv_inc_time(1 * SECONDS_PER_MINUTE);
+  prv_inc_time(1 * PBL_SEC_PER_MIN);
 
   // Start workout and workout for 5 minutes
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  prv_inc_time(5 * SECONDS_PER_MINUTE);
+  prv_inc_time(5 * PBL_SEC_PER_MIN);
 
   // Close app and wait 30 minutes
   workout_service_frontend_closed();
-  prv_inc_time(30 * SECONDS_PER_MINUTE);
+  prv_inc_time(30 * PBL_SEC_PER_MIN);
 
   // Make sure notification is not sent yet and the workout is still ongoing
   cl_assert_equal_b(s_abandoned_workout_notification_sent, false);
   cl_assert_equal_b(workout_service_is_workout_ongoing(), true);
 
   // Wait 25 minutes, call evented timer callback and make sure the notification is sent
-  prv_inc_time(25 * SECONDS_PER_MINUTE);
+  prv_inc_time(25 * PBL_SEC_PER_MIN);
   prv_abandoned_notification_timer_callback(NULL);
   cl_assert_equal_b(s_abandoned_workout_notification_sent, true);
 
   // Wait 5 minutes, call evented timer callback and make sure the workout was ended
-  prv_inc_time(5 * SECONDS_PER_MINUTE);
+  prv_inc_time(5 * PBL_SEC_PER_MIN);
   prv_abandon_workout_timer_callback(NULL);
   cl_assert_equal_b(workout_service_is_workout_ongoing(), false);
 }

@@ -14,7 +14,7 @@
 #include "applib/ui/animation.h"
 #include "applib/ui/animation_interpolate.h"
 #include "applib/ui/property_animation.h"
-#include "util/time/time.h"
+#include <time.h>
 #include <stdint.h>
 #include <string.h>
 

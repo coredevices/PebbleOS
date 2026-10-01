@@ -7,13 +7,14 @@
 
 #include "applib/fonts/fonts.h"
 #include "applib/ui/layer.h"
-#include "util/time/time.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 typedef enum {
-  HealthGraphIndex_Sunday = Sunday,
-  HealthGraphIndex_Monday = Monday,
-  HealthGraphIndex_Saturday = Saturday,
-  HealthGraphIndex_Average = HealthGraphIndex_Sunday + DAYS_PER_WEEK,
+  HealthGraphIndex_Sunday = PBL_SUNDAY,
+  HealthGraphIndex_Monday = PBL_MONDAY,
+  HealthGraphIndex_Saturday = PBL_SATURDAY,
+  HealthGraphIndex_Average = HealthGraphIndex_Sunday + PBL_DAY_PER_WEEK,
   HealthGraphIndexCount,
 } HealthGraphIndex;
 
@@ -43,7 +44,7 @@ struct HealthGraphCard {
 
   WeeklyStats stats;
   //! Today is 0. Save up to and including last week's day of the same week day
-  int32_t day_data[DAYS_PER_WEEK + 1];
+  int32_t day_data[PBL_DAY_PER_WEEK + 1];
   time_t data_timestamp; //!< Time at which the data applies in UTC seconds
   int32_t data_max;
 

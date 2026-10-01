@@ -41,6 +41,7 @@ Pebble App project.
 #include "pbl/util/size.h"
 
 #include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -369,8 +370,8 @@ typedef struct KAlgState {
 // Print a timestamp in a format useful for log messages (for debugging). This only prints
 // the hour and minute: HH:MM
 static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
-  int minutes = (utc / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
-  int hours = (utc / SECONDS_PER_HOUR) % HOURS_PER_DAY;
+  int minutes = (utc / PBL_SEC_PER_MIN) % PBL_MIN_PER_HOUR;
+  int hours = (utc / PBL_SEC_PER_HOUR) % PBL_HOUR_PER_DAY;
 
   snprintf(alg_state->log_time_fmt, sizeof(alg_state->log_time_fmt), "%02d:%02d", hours, minutes);
   return alg_state->log_time_fmt;
@@ -380,9 +381,9 @@ static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
 // Bound the auto-activity HR subscription and re-arm it each active minute, so it lapses on its own
 // if this state machine ever stops running. An activity survives k_max_inactive_minutes without
 // reaching here, so the window has to comfortably exceed that.
-#define KALG_ACTIVITY_HRM_EXPIRE_S (10 * SECONDS_PER_MINUTE)
+#define KALG_ACTIVITY_HRM_EXPIRE_S (10 * PBL_SEC_PER_MIN)
 // Interval the activity HR session is parked at while paused, freeing the shared optical path.
-#define KALG_ACTIVITY_HRM_PAUSED_INTERVAL_S (24u * SECONDS_PER_HOUR)
+#define KALG_ACTIVITY_HRM_PAUSED_INTERVAL_S (24u * PBL_SEC_PER_HOUR)
 #endif
 
 // ----------------------------------------------------------------------------------------
@@ -1420,7 +1421,7 @@ static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t v
     }
     state->maybe_not_worn_count++;
     state->potential_not_worn_len_m[0] =
-        ((utc_now - state->potential_not_worn_start[0]) / SECONDS_PER_MINUTE) + 1;
+        ((utc_now - state->potential_not_worn_start[0]) / PBL_SEC_PER_MIN) + 1;
 
   } else {
     // We just encountered a "definitely worn" minute
@@ -1467,22 +1468,22 @@ static bool prv_not_worn_during_session(KAlgState *alg_state, time_t session_sta
   const uint16_t k_min_not_worn_len_m = 150;
 
   // Compute the boundary locations
-  time_t not_worn_start_boundary = session_start_utc + (k_max_start_margin_m * SECONDS_PER_MINUTE);
+  time_t not_worn_start_boundary = session_start_utc + (k_max_start_margin_m * PBL_SEC_PER_MIN);
   time_t not_worn_end_boundary =
-      session_start_utc + ((session_len_m - k_min_end_margin_m) * SECONDS_PER_MINUTE);
-  time_t session_end = session_start_utc + (session_len_m * SECONDS_PER_MINUTE);
+      session_start_utc + ((session_len_m - k_min_end_margin_m) * PBL_SEC_PER_MIN);
+  time_t session_end = session_start_utc + (session_len_m * PBL_SEC_PER_MIN);
 
   for (int i = 0; i < KALG_NUM_NOT_WORN_SECTIONS; i++) {
     if (state->potential_not_worn_len_m[i] == 0) {
       continue;
     }
-    time_t not_worn_end = state->potential_not_worn_start[i] +
-                          (state->potential_not_worn_len_m[i] * SECONDS_PER_MINUTE);
+    time_t not_worn_end =
+        state->potential_not_worn_start[i] + (state->potential_not_worn_len_m[i] * PBL_SEC_PER_MIN);
 
     // If this sleep session overlaps a very long section of potential not worn, it is not-worn
     time_t overlap_start = MAX(state->potential_not_worn_start[i], session_start_utc);
     time_t overlap_end = MIN(not_worn_end, session_end);
-    if ((overlap_end - overlap_start) >= (k_min_not_worn_len_m * SECONDS_PER_MINUTE)) {
+    if ((overlap_end - overlap_start) >= (k_min_not_worn_len_m * PBL_SEC_PER_MIN)) {
       return true;
     }
 
@@ -1518,7 +1519,7 @@ static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample
   for (uint8_t i = 0; i < state->num_sessions; i++) {
     time_t start_utc = state->sleep_start_time + state->start_delta_sec[i];
     sessions_cb(context, KAlgActivityType_RestfulSleep, start_utc,
-                state->len_m[i] * SECONDS_PER_MINUTE, ongoing, abort /*delete*/, 0 /*steps*/,
+                state->len_m[i] * PBL_SEC_PER_MIN, ongoing, abort /*delete*/, 0 /*steps*/,
                 0 /*resting calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
   }
 
@@ -1620,7 +1621,7 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
   if (state->deep_start_time == KALG_START_TIME_NONE) {
     // We have not detected start yet, look for a start
     if (state->deep_score_count >= params->min_deep_score_count) {
-      state->deep_start_time = sample_time - (state->deep_score_count * SECONDS_PER_MINUTE);
+      state->deep_start_time = sample_time - (state->deep_score_count * PBL_SEC_PER_MIN);
       PBL_LOG_DBG("Detected deep sleep start at %s",
                   prv_log_time(alg_state, state->deep_start_time));
     }
@@ -1632,8 +1633,8 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
 
     if ((state->non_deep_score_count > 0) && (last_deep_run_size < params->min_deep_score_count)) {
       // We reached the end of it last_deep_run_size minutes ago
-      end_time = sample_time - (last_deep_run_size * SECONDS_PER_MINUTE);
-      uint16_t len_m = MAX((end_time - start_time) / SECONDS_PER_MINUTE, 0);
+      end_time = sample_time - (last_deep_run_size * PBL_SEC_PER_MIN);
+      uint16_t len_m = MAX((end_time - start_time) / PBL_SEC_PER_MIN, 0);
       PBL_LOG_DBG("Detected deep sleep of %" PRIu16 " minutes starting at %s ", len_m,
                   prv_log_time(alg_state, start_time));
 
@@ -1693,7 +1694,7 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
 
   // Compute the sleep score for the target minute and see if it's a sleep minute
   // The minute we are computing the score for *starts* at KALG_SLEEP_HALF_WIDTH + 1
-  time_t sample_utc = utc_now - ((KALG_SLEEP_HALF_WIDTH + 1) * SECONDS_PER_MINUTE);
+  time_t sample_utc = utc_now - ((KALG_SLEEP_HALF_WIDTH + 1) * PBL_SEC_PER_MIN);
   uint32_t score = prv_compute_sleep_score(state->minute_history, KALG_SLEEP_HALF_WIDTH);
   bool is_sleep_minute = ((score <= params->max_sleep_minute_score) && !not_worn);
 
@@ -1755,7 +1756,7 @@ static void prv_sleep_activity_update_session_state(
     // We haven't detected bedtime yet, see if we should start sleep
     if (state->current_stats.consecutive_sleep_minutes >= params->min_sleep_minutes) {
       state->current_stats.start_time =
-          sample_utc - (state->current_stats.consecutive_sleep_minutes * SECONDS_PER_MINUTE);
+          sample_utc - (state->current_stats.consecutive_sleep_minutes * PBL_SEC_PER_MIN);
       state->current_stats.num_non_zero_minutes = 0;
       state->current_stats.vmc_sum = 0;
 
@@ -1785,7 +1786,7 @@ static void prv_sleep_activity_update_session_state(
     } else if (state->current_stats.consecutive_awake_minutes >= wake_minutes_threshold) {
       // Too many awake minutes in a row
       *sleep_end_time =
-          sample_utc - (state->current_stats.consecutive_awake_minutes * SECONDS_PER_MINUTE);
+          sample_utc - (state->current_stats.consecutive_awake_minutes * PBL_SEC_PER_MIN);
 
     } else if (vmc > params->force_wake_minute_vmc) {
       // VMC for this minute is way too high
@@ -1856,8 +1857,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
   // How many minutes since sleep started?
   unsigned minutes_since_sleep_started = 0;
   if (state->current_stats.start_time != KALG_START_TIME_NONE) {
-    minutes_since_sleep_started =
-        (sample_utc - state->current_stats.start_time) / SECONDS_PER_MINUTE;
+    minutes_since_sleep_started = (sample_utc - state->current_stats.start_time) / PBL_SEC_PER_MIN;
   }
 
   // Determine if the current session (if any) should end or if we should start a new one
@@ -1873,8 +1873,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
   // If we've reached the end of a sleep cycle, validate the constraints of the session now
   // to see if we should accept it.
   if (sleep_end_time != KALG_START_TIME_NONE) {
-    uint16_t session_len_m =
-        (sleep_end_time - state->current_stats.start_time) / SECONDS_PER_MINUTE;
+    uint16_t session_len_m = (sleep_end_time - state->current_stats.start_time) / PBL_SEC_PER_MIN;
     // Detected waking up. Validate the other constraints of a sleep cycle
     PBL_LOG_DBG("Detected wake at %s, cycle_len: %u", prv_log_time(alg_state, sleep_end_time),
                 session_len_m);
@@ -1898,8 +1897,8 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
                   prv_log_time(alg_state, state->current_stats.start_time));
 
       sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
-                  session_len_m * SECONDS_PER_MINUTE, false /*ongoing*/, false /*delete*/,
-                  0 /*steps*/, 0 /*resting_calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
+                  session_len_m * PBL_SEC_PER_MIN, false /*ongoing*/, false /*delete*/, 0 /*steps*/,
+                  0 /*resting_calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
 
       // Inform the deep sleep detection logic that the sleep session just ended
       prv_deep_sleep_update(alg_state, sample_utc, score, KAlgDeepSleepAction_End,
@@ -1915,8 +1914,8 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
       PBL_LOG_DBG("Cycle rejected");
       // Delete the previously registered ongoing session
       sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
-                  session_len_m * SECONDS_PER_MINUTE, true /*ongoing*/, true /*delete*/,
-                  0 /*steps*/, 0 /*resting_calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
+                  session_len_m * PBL_SEC_PER_MIN, true /*ongoing*/, true /*delete*/, 0 /*steps*/,
+                  0 /*resting_calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
 
       // Inform the deep sleep detection logic that this sleep session was aborted
       prv_deep_sleep_update(alg_state, sample_utc, score, KAlgDeepSleepAction_Abort,
@@ -1936,17 +1935,17 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
       if (minutes_since_sleep_started >= params->min_sleep_cycle_len_minutes) {
         // Register ongoing sleep if we are in sleep
         sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
-                    minutes_since_sleep_started * SECONDS_PER_MINUTE, true /*ongoing*/,
+                    minutes_since_sleep_started * PBL_SEC_PER_MIN, true /*ongoing*/,
                     false /*delete*/, 0 /*steps*/, 0 /*resting_calories*/, 0 /*active_calories*/,
                     0 /*distance_mm*/);
 
         // Update summary stats
         state->summary_stats.sleep_start_utc = state->current_stats.start_time;
         state->summary_stats.uncertain_start_utc =
-            utc_now - (KALG_MAX_UNCERTAIN_SLEEP_M * SECONDS_PER_MINUTE);
+            utc_now - (KALG_MAX_UNCERTAIN_SLEEP_M * PBL_SEC_PER_MIN);
         state->summary_stats.sleep_len_m =
             (state->summary_stats.uncertain_start_utc - state->summary_stats.sleep_start_utc) /
-            SECONDS_PER_MINUTE;
+            PBL_SEC_PER_MIN;
       }
 
       // Inform deep sleep state machine of the new sample
@@ -2011,7 +2010,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
   const uint16_t k_max_inactive_minutes = 6;
 
   // An activity must be at least this number of minutes long
-  const uint32_t k_min_activity_secs = 10 * SECONDS_PER_MINUTE;
+  const uint32_t k_min_activity_secs = 10 * PBL_SEC_PER_MIN;
 
   // Is this an active minute?
   bool is_active_minute = (steps >= attr->min_steps_per_min) && (steps <= attr->max_steps_per_min);
@@ -2023,7 +2022,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
     // This is an active minute. Start a new activity, or extend the current one
     state->inactive_minute_count = 0;
     if (state->start_time == KALG_START_TIME_NONE) {
-      state->start_time = utc_now - SECONDS_PER_MINUTE;
+      state->start_time = utc_now - PBL_SEC_PER_MIN;
       PBL_LOG_DBG("Detected activity %d: start: %s ", (int)activity_type,
                   prv_log_time(alg_state, state->start_time));
     }
@@ -2043,7 +2042,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
         alg_state->activity_hrm_paused ? KALG_ACTIVITY_HRM_PAUSED_INTERVAL_S : 1u;
 
     // Make sure we have a couple active minutes in a row before enabling the HRM to save battery
-    const unsigned min_duration_for_hrm = 3 * SECONDS_PER_MINUTE;
+    const unsigned min_duration_for_hrm = 3 * PBL_SEC_PER_MIN;
     if (state->hrm_session != HRM_INVALID_SESSION_REF) {
       sys_hrm_manager_set_update_interval(state->hrm_session, hrm_interval_s,
                                           KALG_ACTIVITY_HRM_EXPIRE_S);
@@ -2085,7 +2084,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
     if (activity_ended) {
       // This activity has ended
       int32_t duration_secs =
-          utc_now - state->start_time - (state->inactive_minute_count * SECONDS_PER_MINUTE);
+          utc_now - state->start_time - (state->inactive_minute_count * PBL_SEC_PER_MIN);
       duration_secs = MAX(0, duration_secs);
       if ((uint32_t)duration_secs >= k_min_activity_secs) {
         PBL_LOG_DBG("Ending activity %d: steps: %" PRIu16 ", rest_cal: %" PRIu32
@@ -2127,7 +2126,7 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
   // reset, etc.) it could wreak havoc with our activity state machines, so we need to reset
   // state
   if ((utc_now < state->last_activity_update_utc) ||
-      (utc_now > (state->last_activity_update_utc + (5 * SECONDS_PER_MINUTE)))) {
+      (utc_now > (state->last_activity_update_utc + (5 * PBL_SEC_PER_MIN)))) {
     PBL_LOG_WRN("Resetting state due to time travel");
     prv_reset_state(state);
   };
@@ -2155,7 +2154,7 @@ time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType acti
   switch (activity) {
     case KAlgActivityType_Sleep:
     case KAlgActivityType_RestfulSleep:
-      return state->last_activity_update_utc - (KALG_SLEEP_HALF_WIDTH * SECONDS_PER_MINUTE);
+      return state->last_activity_update_utc - (KALG_SLEEP_HALF_WIDTH * PBL_SEC_PER_MIN);
       break;
     case KAlgActivityType_Run:
     case KAlgActivityType_Walk:

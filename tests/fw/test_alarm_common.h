@@ -47,6 +47,7 @@
 
 // Fakes
 #include "fake_spi_flash.h"
+#include "pbl/util/units.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Stubs
@@ -180,7 +181,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
 }
 
 int prv_hours_and_minutes_to_seconds(int hour, int minute) {
-  return (hour * SECONDS_PER_HOUR) + (minute * SECONDS_PER_MINUTE);
+  return (hour * PBL_SEC_PER_HOUR) + (minute * PBL_SEC_PER_MIN);
 }
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {

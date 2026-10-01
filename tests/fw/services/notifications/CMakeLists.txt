@@ -21,7 +21,8 @@ pbl_clar_test(test_notification_storage
     fw/services/notifications/notification_storage.c
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/services/timeline/item.c
@@ -50,15 +51,17 @@ pbl_clar_test(test_ancs_notifications
     fw/services/phone_call/util.c
     fw/applib/fonts/codepoint.c
     fw/applib/graphics/utf8.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_events.c
 )
 
 pbl_clar_test(test_ancs_notifications_util
   SOURCES
     fw/services/notifications/ancs/ancs_notifications_util.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_rtc.c
 )
 
@@ -68,7 +71,8 @@ pbl_clar_test(test_ancs_filtering
     fw/services/timeline/attribute.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
 )
 
 pbl_clar_test(test_nexmo
@@ -78,6 +82,7 @@ pbl_clar_test(test_nexmo
     fw/services/timeline/attribute.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_rtc.c
 )

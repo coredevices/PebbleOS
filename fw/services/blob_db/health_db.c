@@ -17,6 +17,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -35,8 +37,9 @@ static PBL_MUTEX_DEFINE(s_mutex);
 #define HR_ZONE_DATA_KEY_SUFFIX  "_heartRateZoneData"
 
 static const char *WEEKDAY_NAMES[] = {
-  [Sunday] = "sunday",     [Monday] = "monday", [Tuesday] = "tuesday",   [Wednesday] = "wednesday",
-  [Thursday] = "thursday", [Friday] = "friday", [Saturday] = "saturday",
+  [PBL_SUNDAY] = "sunday",       [PBL_MONDAY] = "monday",     [PBL_TUESDAY] = "tuesday",
+  [PBL_WEDNESDAY] = "wednesday", [PBL_THURSDAY] = "thursday", [PBL_FRIDAY] = "friday",
+  [PBL_SATURDAY] = "saturday",
 };
 
 #define CURRENT_MOVEMENT_DATA_VERSION 1
@@ -113,9 +116,9 @@ static bool prv_is_last_processed_timestamp_valid(time_t timestamp) {
   // We only store today + the last 6 days. Anything older than that should be ignored
   const time_t start_of_today = time_start_of_today();
   // This might not handle DST perfectly, but it should be good enough
-  const time_t oldest_valid_timestamp = start_of_today - (SECONDS_PER_DAY * 6);
+  const time_t oldest_valid_timestamp = start_of_today - (PBL_SEC_PER_DAY * 6);
 
-  if (timestamp < oldest_valid_timestamp || timestamp > start_of_today + SECONDS_PER_DAY) {
+  if (timestamp < oldest_valid_timestamp || timestamp > start_of_today + PBL_SEC_PER_DAY) {
     return false;
   }
 
@@ -125,14 +128,14 @@ static bool prv_is_last_processed_timestamp_valid(time_t timestamp) {
 //! Tell the activity service that it needs to update its "current" values (non typicals / averages)
 static void prv_notify_health_listeners(const char *key, int key_len, const uint8_t *val,
                                         int val_len) {
-  DayInWeek wday;
-  for (wday = 0; wday < DAYS_PER_WEEK; wday++) {
+  enum pbl_weekday wday;
+  for (wday = 0; wday < PBL_DAY_PER_WEEK; wday++) {
     if (strstr(key, WEEKDAY_NAMES[wday])) {
       break;
     }
   }
   // For logging
-  const DayInWeek cur_wday = time_util_get_day_in_week(rtc_get_time());
+  const enum pbl_weekday cur_wday = time_util_get_day_in_week(rtc_get_time());
 
   if (strstr(key, MOVEMENT_DATA_KEY_SUFFIX)) {
     MovementData *data = (MovementData *)val;
@@ -182,7 +185,7 @@ static void prv_notify_health_listeners(const char *key, int key_len, const uint
 // Public API
 /////////////////////////
 
-bool health_db_get_typical_value(ActivityMetric metric, DayInWeek day, int32_t *value_out) {
+bool health_db_get_typical_value(ActivityMetric metric, enum pbl_weekday day, int32_t *value_out) {
   char key[HEALTH_DB_MAX_KEY_LEN];
   snprintf(key, HEALTH_DB_MAX_KEY_LEN, "%s%s", WEEKDAY_NAMES[day], SLEEP_DATA_KEY_SUFFIX);
   const int key_len = strlen(key);
@@ -262,7 +265,7 @@ bool health_db_get_monthly_average_value(ActivityMetric metric, int32_t *value_o
   return (s == S_SUCCESS);
 }
 
-bool health_db_get_typical_step_averages(DayInWeek day, ActivityMetricAverages *averages) {
+bool health_db_get_typical_step_averages(enum pbl_weekday day, ActivityMetricAverages *averages) {
   if (!averages) {
     return false;
   }
@@ -289,7 +292,7 @@ bool health_db_get_typical_step_averages(DayInWeek day, ActivityMetricAverages *
 }
 
 //! For test / debug purposes only
-bool health_db_set_typical_values(ActivityMetric metric, DayInWeek day, uint16_t *values,
+bool health_db_set_typical_values(ActivityMetric metric, enum pbl_weekday day, uint16_t *values,
                                   int num_values) {
   char key[HEALTH_DB_MAX_KEY_LEN];
   snprintf(key, HEALTH_DB_MAX_KEY_LEN, "%s%s", WEEKDAY_NAMES[day], STEP_TYPICALS_KEY_SUFFIX);

@@ -44,6 +44,7 @@
 #include "fake_pbl_malloc.h"
 #include "fake_rtc.h"
 #include "fake_spi_flash.h"
+#include "pbl/util/units.h"
 
 #define PREF_KEY_DND_MANUALLY_ENABLED "dndManuallyEnabled"
 
@@ -412,14 +413,14 @@ void test_do_not_disturb__cron_fires_schedule_boundaries(void) {
   rtc_set_time(s_thursday_01_00);
   pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == true);
-  prv_assert_seconds_until_update(11.5 * SECONDS_PER_HOUR);
+  prv_assert_seconds_until_update(11.5 * PBL_SEC_PER_HOUR);
 
   do_not_disturb_set_manually_enabled(true);
   rtc_set_time(s_thursday_13_00);
   pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
-  prv_assert_seconds_until_update(12 * SECONDS_PER_HOUR);
+  prv_assert_seconds_until_update(12 * PBL_SEC_PER_HOUR);
 }
 
 void test_do_not_disturb__change_schedule_while_in_scheduled(void) {

@@ -17,6 +17,7 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
+#include "pbl/util/units.h"
 
 //////////////////////////////////////////
 //  Card Mode
@@ -150,7 +151,7 @@ static void prv_format_glance_end_time(const TimelineLayout *layout, char *buffe
   if (info->timestamp < info->current_day) {
     // End of multi-day
     clock_copy_time_string_timestamp(buffer, buffer_size, info->end_time);
-  } else if (info->end_time > layout->info->current_day + SECONDS_PER_DAY) {
+  } else if (info->end_time > layout->info->current_day + PBL_SEC_PER_DAY) {
     // Start of multi-day
     clock_get_date(buffer, buffer_size, info->end_time);
   } else {
@@ -210,10 +211,10 @@ static bool prv_should_show_start_and_stop(const TimelineLayout *layout) {
   const TimelineLayoutInfo *info = layout->info;
   // Draw if this is a day in a multi-day event
   const bool is_multi_day = (layout->info->all_day || info->timestamp < info->current_day ||
-                             info->end_time > info->current_day + SECONDS_PER_DAY);
+                             info->end_time > info->current_day + PBL_SEC_PER_DAY);
 
   // But not if it spans one day
-  const bool is_single_day = (info->duration_s <= SECONDS_PER_DAY);
+  const bool is_single_day = (info->duration_s <= PBL_SEC_PER_DAY);
 
   return (is_multi_day && !is_single_day);
 }

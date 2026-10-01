@@ -22,6 +22,7 @@
 #include "pbl/util/size.h"
 
 #include <stddef.h>
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
 
@@ -341,9 +342,9 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       RtcTicks cur_ticks = rtc_get_ticks();
       int32_t remaining_ticks = INT32_MAX;
       const int32_t spin_up_ticks =
-          (int32_t)pbl_ms_to_ticks(HRM_SENSOR_SPIN_UP_SEC * MS_PER_SECOND);
+          (int32_t)pbl_ms_to_ticks(HRM_SENSOR_SPIN_UP_SEC * PBL_MSEC_PER_SEC);
       const int64_t unserved_timeout_ticks =
-          pbl_ms_to_ticks(HRM_MAX_UNSERVED_TIME_SEC * MS_PER_SECOND);
+          pbl_ms_to_ticks(HRM_MAX_UNSERVED_TIME_SEC * PBL_MSEC_PER_SEC);
       // True once the sensor has been on a full serve window without satisfying every
       // subscriber. Only counts continuous on-time, so subscribers that went overdue while the
       // sensor was forced off (charging, run level) still get served first.
@@ -367,7 +368,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         }
         live_features |= sub_features;
         const int64_t interval_ticks =
-            (int64_t)pbl_ms_to_ticks(state->update_interval_s * MS_PER_SECOND);
+            (int64_t)pbl_ms_to_ticks(state->update_interval_s * PBL_MSEC_PER_SEC);
         int64_t subscriber_age_ticks;
         if (state->last_valid_bpm_ticks) {
           subscriber_age_ticks = cur_ticks - state->last_valid_bpm_ticks;
@@ -404,7 +405,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
 
       // How many milliseconds till we need to send the next sensor reading
       remaining_ms = pbl_ticks_to_ms(remaining_ticks);
-      HRM_LOG("Need sensor on again in %" PRIu32 " sec", remaining_ms / MS_PER_SECOND);
+      HRM_LOG("Need sensor on again in %" PRIu32 " sec", remaining_ms / PBL_MSEC_PER_SEC);
       turn_sensor_on = (remaining_ms <= 0);
     }
 

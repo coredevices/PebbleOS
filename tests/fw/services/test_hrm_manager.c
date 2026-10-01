@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <services/hrm/hrm_manager.h>
 #include "pbl/util/testing.h"
+#include "pbl/util/units.h"
 
 // -----------------------------------------------------------------------------
 // PBL_T_STATIC functions
@@ -196,7 +197,7 @@ void test_hrm_manager__initialize(void) {
 void test_hrm_manager__subscription(void) {
   AppInstallId app_id = 1;
   const uint32_t update_interval_s = 1;
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMFeature features = HRMFeature_BPM;
   HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(app_id, update_interval_s, expire_s, features);
@@ -276,7 +277,7 @@ void test_hrm_manager__same_path_superset_keeps_running(void) {
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   HRMSessionRef hrv_ref = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, SECONDS_PER_MINUTE, 0, HRMFeature_BPM | HRMFeature_HRV,
+      INSTALL_ID_INVALID, PBL_SEC_PER_MIN, 0, HRMFeature_BPM | HRMFeature_HRV,
       false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM | HRMFeature_HRV);
@@ -313,7 +314,7 @@ void test_hrm_manager__low_latency_only_for_live_foreground_app(void) {
   // Slowing the poll drops the subscription back to the default cadence (and vice versa). It is
   // applied at the next sensor start: a running session keeps its cadence rather than pay an
   // algorithm restart for it.
-  sys_hrm_manager_set_update_interval(app_ref, SECONDS_PER_MINUTE, 0);
+  sys_hrm_manager_set_update_interval(app_ref, PBL_SEC_PER_MIN, 0);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_b(prv_get_subscriber_state_from_ref(app_ref)->low_latency, false);
   cl_assert_equal_b(s_hrm_state.low_latency, true);
@@ -323,7 +324,7 @@ void test_hrm_manager__low_latency_only_for_live_foreground_app(void) {
   fake_system_task_callbacks_invoke_pending();
 
   // A slow-polling app starts the sensor on the default cadence.
-  app_ref = sys_hrm_manager_app_subscribe(1 /*app_id*/, SECONDS_PER_MINUTE, 0, HRMFeature_BPM);
+  app_ref = sys_hrm_manager_app_subscribe(1 /*app_id*/, PBL_SEC_PER_MIN, 0, HRMFeature_BPM);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_b(hrm_is_enabled(HRM), true);
   cl_assert_equal_b(s_hrm_state.low_latency, false);
@@ -382,7 +383,7 @@ void test_hrm_manager__spo2_preempts_green(void) {
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
 
   HRMSessionRef spo2_ref =
-      hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, SECONDS_PER_HOUR, 0, HRMFeature_SpO2,
+      hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, PBL_SEC_PER_HOUR, 0, HRMFeature_SpO2,
                                           false /*low_latency*/, prv_fake_hrm_2_cb, NULL);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_SpO2);
@@ -410,7 +411,7 @@ void test_hrm_manager__has_continuous_green_subscriber(void) {
   cl_assert(!hrm_manager_has_continuous_green_subscriber());
 
   HRMSessionRef slow_ref =
-      hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, SECONDS_PER_MINUTE, 0, HRMFeature_BPM,
+      hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, PBL_SEC_PER_MIN, 0, HRMFeature_BPM,
                                           false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
   cl_assert(!hrm_manager_has_continuous_green_subscriber());
 
@@ -470,7 +471,7 @@ void test_hrm_manager__app_cleanup_preserves_shorter_expiration(void) {
 
   AppInstallId app_id = 1;
   const uint32_t update_interval_s = 1;
-  const uint16_t shorter_expire_s = 10 * SECONDS_PER_MINUTE;
+  const uint16_t shorter_expire_s = 10 * PBL_SEC_PER_MIN;
   HRMFeature features = HRMFeature_BPM;
 
   HRMSessionRef session_ref =
@@ -490,7 +491,7 @@ void test_hrm_manager__app_cleanup_preserves_shorter_expiration(void) {
 // Test that app subscriptions expire correctly
 void test_hrm_manager__app_expiration(void) {
   AppInstallId app_id = 1;
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
   cl_assert(sys_hrm_manager_get_app_subscription(app_id) == session_ref);
 
@@ -525,7 +526,7 @@ void test_hrm_manager__app_expiration(void) {
 // Test that system subscriptions expire correctly
 void test_hrm_manager__kernel_expiration(void) {
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
                                           false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
@@ -566,7 +567,7 @@ void test_hrm_manager__subscribe_multiple(void) {
   stub_pebble_tasks_set_current(PebbleTask_App);
   AppInstallId app_id = 1;
   for (int i = 0; i < num_refs; ++i, app_id++) {
-    const uint16_t expire_s = SECONDS_PER_MINUTE;
+    const uint16_t expire_s = PBL_SEC_PER_MIN;
     session_refs[i] = sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
     app_ids[i] = app_id;
   }
@@ -595,7 +596,7 @@ void test_hrm_manager__feature_callbacks(void) {
 
   AppInstallId app_id = 1;
   for (int i = 0; i < num_refs; ++i, app_id++) {
-    const uint16_t expire_s = SECONDS_PER_MINUTE;
+    const uint16_t expire_s = PBL_SEC_PER_MIN;
     session_refs[i] = sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
   }
 
@@ -612,7 +613,7 @@ void test_hrm_manager__feature_callbacks(void) {
 void test_hrm_manager__no_feature_callbacks(void) {
   // Subscribe and fake data being sent
   AppInstallId app_id = 1;
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(app_id, 1, expire_s, 0 /* No feature */);
 
@@ -631,7 +632,7 @@ void test_hrm_manager__no_feature_callbacks(void) {
 
 void test_hrm_manager__different_feature_callbacks(void) {
   AppInstallId app_id = 1;
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef bpm_session = sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
   HRMSessionRef no_session =
       sys_hrm_manager_app_subscribe(app_id + 3, 1, expire_s, 0 /* no features */);
@@ -653,7 +654,7 @@ void test_hrm_manager__multiple_feature_callbacks(void) {
   AppInstallId app_id = 1;
   for (int i = 0; i < num_refs; ++i, app_id++) {
     session_refs[i] = TO_SESSION_REF(i + 1);
-    const uint16_t expire_s = SECONDS_PER_MINUTE;
+    const uint16_t expire_s = PBL_SEC_PER_MIN;
     sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
   }
 
@@ -671,7 +672,7 @@ void test_hrm_manager__system_task_data_callback(void) {
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   s_num_cb_events_1 = 0;
 
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
                                           false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
@@ -701,7 +702,7 @@ void test_hrm_manager__multiple_system_task_data_callbacks(void) {
   s_num_cb_events_1 = 0;
   s_num_cb_events_2 = 0;
 
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref_1 =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
                                           false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
@@ -735,7 +736,7 @@ void test_hrm_manager__multiple_system_task_data_callbacks(void) {
 
 void test_hrm_manager__set_features(void) {
   AppInstallId app_id = 1;
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   const HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
   HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session_ref);
@@ -754,7 +755,7 @@ void test_hrm_manager__set_features(void) {
 
 void test_hrm_manager__set_update_internal(void) {
   AppInstallId app_id = 1;
-  const uint16_t expire_a_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_a_s = PBL_SEC_PER_MIN;
   uint32_t update_interval_a_s = 1;
   HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(app_id, update_interval_a_s, expire_a_s, HRMFeature_BPM);
@@ -763,7 +764,7 @@ void test_hrm_manager__set_update_internal(void) {
   cl_assert(state->expire_utc == rtc_get_time() + expire_a_s);
 
   // Change update interval and expiration
-  const uint16_t expire_b_s = 2 * SECONDS_PER_MINUTE;
+  const uint16_t expire_b_s = 2 * PBL_SEC_PER_MIN;
   // TODO: PBL-37298 Support subscribing to different data rates
   uint32_t update_interval_b_s = 1;
   sys_hrm_manager_set_update_interval(session_ref, update_interval_b_s, expire_b_s);
@@ -820,8 +821,7 @@ void test_hrm_manager__enable_disable(void) {
   // 2. Subscribing while disabled should not enable the hrm
   hrm_manager_enable(false);
   fake_system_task_callbacks_invoke_pending();
-  HRMSessionRef session_ref =
-      sys_hrm_manager_app_subscribe(1, 1, SECONDS_PER_MINUTE, HRMFeature_BPM);
+  HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(1, 1, PBL_SEC_PER_MIN, HRMFeature_BPM);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_b(hrm_is_enabled(HRM), false);
 
@@ -842,14 +842,14 @@ void test_hrm_manager__enable_disable(void) {
 static void prv_advance_time_ms(uint32_t ms) {
   RtcTicks delta_ticks = pbl_ms_to_ticks(ms);
   fake_rtc_set_ticks(rtc_get_ticks() + delta_ticks);
-  rtc_set_time(rtc_get_time() + ms / MS_PER_SECOND);
+  rtc_set_time(rtc_get_time() + ms / PBL_MSEC_PER_SEC);
 }
 
 // Test that we handle different update intervals correctly
 void test_hrm_manager__update_interval(void) {
   AppInstallId app_id = 1;
   uint32_t update_interval_s = 600;
-  const uint16_t expire_s = 30 * SECONDS_PER_MINUTE;
+  const uint16_t expire_s = 30 * PBL_SEC_PER_MIN;
   HRMFeature features = HRMFeature_BPM;
   HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(app_id, update_interval_s, expire_s, features);
@@ -871,7 +871,7 @@ void test_hrm_manager__update_interval(void) {
 
   // The timer should be set to fire just before we need another update
   uint32_t timeout_ms = stub_new_timer_timeout(prv_get_timer_id());
-  cl_assert_equal_i(timeout_ms, (update_interval_s - HRM_SENSOR_SPIN_UP_SEC) * MS_PER_SECOND);
+  cl_assert_equal_i(timeout_ms, (update_interval_s - HRM_SENSOR_SPIN_UP_SEC) * PBL_MSEC_PER_SEC);
 
   // Fire the timer after the elapsed time, make sure we are re-enabled after that
   prv_advance_time_ms(timeout_ms);
@@ -976,7 +976,7 @@ void test_hrm_manager__app_queue_full_drops_without_panic(void) {
   stub_pebble_tasks_set_current(PebbleTask_App);
 
   AppInstallId app_id = 1;
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(app_id, 1, expire_s, HRMFeature_BPM);
 
   // App is not draining its event queue.
@@ -1021,7 +1021,7 @@ void test_hrm_manager__unserved_subscriber_timeout(void) {
   cl_assert_equal_b(hrm_is_enabled(HRM), true);
 
   // Once the serve window expires, the subscriber is deferred and the sensor powers off
-  prv_advance_time_ms((HRM_MAX_UNSERVED_TIME_SEC + 1) * MS_PER_SECOND);
+  prv_advance_time_ms((HRM_MAX_UNSERVED_TIME_SEC + 1) * PBL_MSEC_PER_SEC);
   for (int i = 0; i <= HRM_CHECK_SENSOR_DISABLE_COUNT; ++i) {
     hrm_manager_new_data_cb(&poor_data);
     fake_system_task_callbacks_invoke_pending();
@@ -1030,7 +1030,7 @@ void test_hrm_manager__unserved_subscriber_timeout(void) {
 
   // The re-enable timer waits out the subscriber's interval, not another immediate attempt
   uint32_t timeout_ms = stub_new_timer_timeout(prv_get_timer_id());
-  cl_assert_equal_i(timeout_ms, (600 - HRM_SENSOR_SPIN_UP_SEC) * MS_PER_SECOND);
+  cl_assert_equal_i(timeout_ms, (600 - HRM_SENSOR_SPIN_UP_SEC) * PBL_MSEC_PER_SEC);
 
   sys_hrm_manager_unsubscribe(session_ref);
 }
@@ -1048,7 +1048,7 @@ void test_hrm_manager__unserved_timeout_keeps_live_hr_on(void) {
     .hrm_bpm = 70,
     .hrm_quality = HRMQuality_Acceptable,
   };
-  prv_advance_time_ms((HRM_MAX_UNSERVED_TIME_SEC + 1) * MS_PER_SECOND);
+  prv_advance_time_ms((HRM_MAX_UNSERVED_TIME_SEC + 1) * PBL_MSEC_PER_SEC);
   for (int i = 0; i <= HRM_CHECK_SENSOR_DISABLE_COUNT; ++i) {
     hrm_manager_new_data_cb(&poor_data);
     fake_system_task_callbacks_invoke_pending();
@@ -1063,7 +1063,7 @@ void test_hrm_manager__immediate_off_wrist(void) {
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   s_num_cb_events_1 = 0;
 
-  const uint16_t expire_s = SECONDS_PER_MINUTE;
+  const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
                                           false /*low_latency*/, prv_fake_hrm_1_cb, NULL);

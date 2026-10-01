@@ -16,7 +16,6 @@
 #include "system/passert.h"
 #include "pbl/util/circular_buffer.h"
 #include "pbl/util/heap.h"
-#include "util/time/time.h"
 
 #include "nrfx_pdm.h"
 

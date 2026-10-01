@@ -18,7 +18,7 @@
 #include "pbl/util/base64.h"
 #include "pbl/util/math.h"
 #include "pbl/util/shared_cbuf.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 #include "pbl/util/units.h"
 
 #include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
@@ -124,7 +124,7 @@ static void prv_minute_data_file_close(SettingsFile *file) {
 // holds ALG_MINUTES_PER_RECORD minutes of data. To get the key index, we divide the UTC
 // time by ALG_MINUTES_PER_RECORD.
 static uint32_t prv_minute_file_get_settings_key(time_t utc) {
-  uint32_t seconds_per_key = ALG_MINUTES_PER_FILE_RECORD * SECONDS_PER_MINUTE;
+  uint32_t seconds_per_key = ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
   return utc / seconds_per_key;
 }
 
@@ -158,7 +158,7 @@ static void prv_create_activity_session_cb(void *context, KAlgActivityType kalg_
   ActivitySession session = {
     .type = activity,
     .start_utc = start_utc,
-    .length_min = len_sec / SECONDS_PER_MINUTE,
+    .length_min = len_sec / PBL_SEC_PER_MIN,
     .ongoing = ongoing,
     .step_data = {
       .steps = steps,
@@ -267,7 +267,7 @@ bool activity_algorithm_dump_minute_data_to_log(void) {
 
   // Figure out the oldest and newest possible time stamp for chunks that go into these buffers
   time_t now = rtc_get_time();
-  const time_t k_oldest_valid_utc = now - ALG_SLEEP_HISTORY_HOURS_FOR_TODAY * SECONDS_PER_HOUR;
+  const time_t k_oldest_valid_utc = now - ALG_SLEEP_HISTORY_HOURS_FOR_TODAY * PBL_SEC_PER_HOUR;
   const time_t k_newest_valid_utc = now;
 
   AlgLogMinuteFileContext context = (AlgLogMinuteFileContext){
@@ -390,7 +390,7 @@ exit:
 // -------------------------------------------------------------------------------------
 static void prv_init_minute_record(AlgMinuteRecordHdr *hdr, time_t utc_sec, bool for_file) {
   time_t local_time = time_utc_to_local(utc_sec);
-  int16_t local_time_offset_15_min = (local_time - utc_sec) / (15 * SECONDS_PER_MINUTE);
+  int16_t local_time_offset_15_min = (local_time - utc_sec) / (15 * PBL_SEC_PER_MIN);
 
   *hdr = (AlgMinuteRecordHdr){
     .version = for_file ? ALG_MINUTE_FILE_RECORD_VERSION : ALG_DLS_MINUTES_RECORD_VERSION,
@@ -531,7 +531,7 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
       file_record ? ALG_MINUTES_PER_FILE_RECORD : ALG_MINUTES_PER_DLS_RECORD;
 
   // Empty the circular buffer while we have enough for a record
-  time_t sleep_end_utc = sleep_start_utc + (sleep_len_m * SECONDS_PER_MINUTE);
+  time_t sleep_end_utc = sleep_start_utc + (sleep_len_m * PBL_SEC_PER_MIN);
 
   int16_t certain_m =
       (pbl_shared_cbuf_get_read_space_remaining(&s_alg_state->minute_data_cbuf, cbuf_client) /
@@ -560,7 +560,7 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
     // <= end_value, so we need to subtract one minute from the end to see if the start of this
     // test minute is entirely within the sleep range.
     bool was_sleeping =
-        WITHIN(cbuf_record->utc_sec, sleep_start_utc, sleep_end_utc - SECONDS_PER_MINUTE);
+        WITHIN(cbuf_record->utc_sec, sleep_start_utc, sleep_end_utc - PBL_SEC_PER_MIN);
 
     // Handle writing the record out to PFS
     if (file_record) {
@@ -647,7 +647,7 @@ static void prv_log_minute_data(time_t utc_now, AlgMinuteRecord *minute_rec) {
   // If there are any uncertain minutes, they will always be at the end
   int16_t uncertain_m = 0;
   if (sleep_stats.uncertain_start_utc != 0) {
-    uncertain_m = (utc_now - sleep_stats.uncertain_start_utc) / SECONDS_PER_MINUTE;
+    uncertain_m = (utc_now - sleep_stats.uncertain_start_utc) / PBL_SEC_PER_MIN;
   }
   if (uncertain_m > KALG_MAX_UNCERTAIN_SLEEP_M) {
     PBL_LOG_ERR("Unexpectedly large number of uncertain minutes");
@@ -707,7 +707,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
   ActivitySession *most_recent_nap_session = NULL;
   for (unsigned i = 0; i < num_input_sessions; i++, session++) {
     const unsigned start_minute = time_util_get_minute_of_day(session->start_utc);
-    const time_t end_utc = session->start_utc + (session->length_min * SECONDS_PER_MINUTE);
+    const time_t end_utc = session->start_utc + (session->length_min * PBL_SEC_PER_MIN);
     const unsigned end_minute = time_util_get_minute_of_day(end_utc);
 
     PBL_LOG_DBG("processing activity %d, start_min: %u, len: %" PRIu16 "", (int)session->type,
@@ -753,7 +753,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
       }
       if ((session->start_utc < most_recent_nap_session->start_utc) ||
           (session->start_utc > (most_recent_nap_session->start_utc +
-                                 (most_recent_nap_session->length_min * SECONDS_PER_MINUTE)))) {
+                                 (most_recent_nap_session->length_min * PBL_SEC_PER_MIN)))) {
         continue;
       }
     }
@@ -871,8 +871,8 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples,
   // Update our stepping rate if the algorithm just consumed samples
   if (consumed_samples != 0) {
     s_alg_state->rate_steps = new_steps;
-    s_alg_state->rate_elapsed_ms = (consumed_samples * MS_PER_SECOND) / KALG_SAMPLE_HZ;
-    s_alg_state->rate_computed_time_s = timestamp_ms / MS_PER_SECOND;
+    s_alg_state->rate_elapsed_ms = (consumed_samples * PBL_MSEC_PER_SEC) / KALG_SAMPLE_HZ;
+    s_alg_state->rate_computed_time_s = timestamp_ms / PBL_MSEC_PER_SEC;
   }
   prv_unlock();
 }
@@ -935,10 +935,10 @@ static void PBL_NOINLINE prv_reset_state_minute_handler(const AlgMinuteDLSSample
 static void prv_activity_update_states(time_t utc_sec, AlgMinuteRecord *record_out,
                                        bool shutting_down) {
   // Make sure each record gets time stamped exactly on a minute boundary.
-  utc_sec -= (utc_sec % SECONDS_PER_MINUTE);
+  utc_sec -= (utc_sec % PBL_SEC_PER_MIN);
 
   // Fill in the minute data structure that we log
-  record_out->utc_sec = utc_sec - SECONDS_PER_MINUTE; // this data is for the previous minute
+  record_out->utc_sec = utc_sec - PBL_SEC_PER_MIN; // this data is for the previous minute
   AlgMinuteDLSSample *m_rec = &record_out->data;
   uint32_t minute_distance_mm = prv_fill_minute_record(utc_sec, m_rec);
 
@@ -1089,7 +1089,7 @@ static bool prv_insert_health_minute_record(AlgReadMinutesContext *context, time
   }
 
   // See where this minute should go in the caller's buffer
-  int32_t dst_index = (record_utc - utc_start) / SECONDS_PER_MINUTE;
+  int32_t dst_index = (record_utc - utc_start) / PBL_SEC_PER_MIN;
   if (dst_index < 0) {
     // This record older than the caller wanted. Return false to look for more
     return false;
@@ -1136,7 +1136,7 @@ static bool prv_read_minute_history_file_cb(SettingsFile *file, SettingsRecordIn
   }
 
   // Check the exact time range using the value
-  const uint32_t k_seconds_per_chunk = ALG_MINUTES_PER_FILE_RECORD * SECONDS_PER_MINUTE;
+  const uint32_t k_seconds_per_chunk = ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
   if (chunk.hdr.time_utc + k_seconds_per_chunk < (uint32_t)context->oldest_requested_utc) {
     PBL_LOG_DBG("Minute chunk time out of range, skipping it");
     return true;
@@ -1145,7 +1145,7 @@ static bool prv_read_minute_history_file_cb(SettingsFile *file, SettingsRecordIn
 
   // Insert each of the minutes from this chunk into the caller's array
   time_t minute_utc = chunk.hdr.time_utc;
-  for (uint32_t i = 0; i < ALG_MINUTES_PER_FILE_RECORD; i++, minute_utc += SECONDS_PER_MINUTE) {
+  for (uint32_t i = 0; i < ALG_MINUTES_PER_FILE_RECORD; i++, minute_utc += PBL_SEC_PER_MIN) {
     bool done = prv_insert_health_minute_record(context, minute_utc, &chunk.samples[i].v5_fields,
                                                 chunk.samples[i].heart_rate_bpm);
     if (done) {
@@ -1193,7 +1193,7 @@ static void prv_read_minute_history_buffer(AlgReadMinutesContext *context) {
   // Finally, get the data for the partial last minute that has not even been saved to the circular
   // buffer yet
   time_t minute_utc = rtc_get_time();
-  uint32_t seconds_into_minute = minute_utc % SECONDS_PER_MINUTE;
+  uint32_t seconds_into_minute = minute_utc % PBL_SEC_PER_MIN;
   if (seconds_into_minute > 0) {
     minute_utc -= seconds_into_minute;
     AlgMinuteDLSSample current_minute;
@@ -1231,7 +1231,7 @@ bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32
   // Figure out the lowest key value for for chunks that go into this buffer
   time_t utc_now = rtc_get_time();
   const time_t oldest_possible =
-      utc_now - ALG_MINUTE_FILE_MAX_ENTRIES * ALG_MINUTES_PER_FILE_RECORD * SECONDS_PER_MINUTE;
+      utc_now - ALG_MINUTE_FILE_MAX_ENTRIES * ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
   time_t oldest_requested_utc = *utc_start;
   oldest_requested_utc = MAX(oldest_possible, oldest_requested_utc);
 
@@ -1332,7 +1332,7 @@ exit:
 // -------------------------------------------------------------------------------
 bool activity_algorithm_test_fill_minute_file(void) {
   bool success = false;
-  time_t utc_sec = rtc_get_time() - SECONDS_PER_MINUTE;
+  time_t utc_sec = rtc_get_time() - PBL_SEC_PER_MIN;
 
   AlgMinuteFileRecord record = {};
   prv_init_minute_record(&record.hdr, utc_sec, true /*for_file*/);
@@ -1341,7 +1341,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
   pfs_remove(ALG_MINUTE_DATA_FILE_NAME);
   s_alg_state->num_minute_records = 0;
 
-  uint32_t secs_per_record = ALG_MINUTES_PER_FILE_RECORD * SECONDS_PER_MINUTE;
+  uint32_t secs_per_record = ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
   time_t start_utc = utc_sec - ALG_MINUTE_FILE_MAX_ENTRIES * secs_per_record;
 
   PBL_LOG_DBG("Writing %" PRIu32 " records", (uint32_t)ALG_MINUTE_FILE_MAX_ENTRIES);
@@ -1384,7 +1384,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
 bool activity_algorithm_test_send_fake_minute_data_dls_record(void) {
   AlgMinuteDLSRecord record = {};
   prv_init_minute_record(&record.hdr,
-                         rtc_get_time() - (ALG_MINUTES_PER_DLS_RECORD * SECONDS_PER_MINUTE),
+                         rtc_get_time() - (ALG_MINUTES_PER_DLS_RECORD * PBL_SEC_PER_MIN),
                          false /*for_file*/);
 
   // Fill in fake data

@@ -46,3 +46,5 @@ pbl_clar_test(test_generic_attr)
 pbl_clar_test(test_stats)
 
 pbl_clar_test(test_shared_cbuf)
+
+pbl_clar_test(test_time)

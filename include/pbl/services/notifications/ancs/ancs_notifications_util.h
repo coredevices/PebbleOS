@@ -6,7 +6,7 @@
 #include "applib/graphics/gtypes.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 #include "pbl/kernel/compiler.h"
-#include "util/time/time.h"
+#include <time.h>
 
 #define IOS_PHONE_APP_ID     "com.apple.mobilephone"
 #define IOS_CALENDAR_APP_ID  "com.apple.mobilecal"

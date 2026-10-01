@@ -4,6 +4,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
+#include "pbl/util/time.h"
 
 #include "stubs_i18n.h"
 
@@ -13,6 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 PBL_WEAK const char *string_strip_leading_whitespace(const char *string) {
   const char *result_string = string;
@@ -24,10 +27,6 @@ PBL_WEAK const char *string_strip_leading_whitespace(const char *string) {
   }
 
   return result_string;
-}
-
-PBL_WEAK int time_util_get_num_hours(int hours, bool is24h) {
-  return is24h ? hours : (hours + 12 - 1) % 12 + 1;
 }
 
 PBL_WEAK bool clock_is_24h_style() {
@@ -81,7 +80,7 @@ size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minu
       format = add_space ? "%u:%02u PM" : "%u:%02uPM";
     }
   }
-  return sniprintf(buffer, size, format, time_util_get_num_hours(hours, is24h), minutes);
+  return sniprintf(buffer, size, format, pbl_time_display_hour(hours, is24h), minutes);
 }
 
 size_t clock_copy_time_string_timestamp(char *buffer, uint8_t size, time_t timestamp) {
@@ -105,7 +104,7 @@ size_t clock_get_day_date(char *buffer, int buf_size, time_t timestamp) {
 
 void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {
   const int new_minutes =
-      positive_modulo(*hour * MINUTES_PER_HOUR + *minute + delta_minutes, MINUTES_PER_DAY);
-  *hour = new_minutes / MINUTES_PER_HOUR;
-  *minute = new_minutes % MINUTES_PER_HOUR;
+      positive_modulo(*hour * PBL_MIN_PER_HOUR + *minute + delta_minutes, PBL_MIN_PER_DAY);
+  *hour = new_minutes / PBL_MIN_PER_HOUR;
+  *minute = new_minutes % PBL_MIN_PER_HOUR;
 }

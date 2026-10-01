@@ -10,6 +10,7 @@
 #include "pbl/services/i18n/i18n.h"
 
 #include <stdio.h>
+#include "pbl/util/units.h"
 
 typedef struct HealthSleepDetailCard {
   int32_t daily_avg;
@@ -36,10 +37,10 @@ static void prv_set_sleep_session(char *buffer, size_t buffer_size, int32_t slee
     return;
   }
 
-  const int start_hours = sleep_start / SECONDS_PER_HOUR;
-  const int start_minutes = (sleep_start % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
-  const int end_hours = sleep_end / SECONDS_PER_HOUR;
-  const int end_minutes = (sleep_end % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
+  const int start_hours = sleep_start / PBL_SEC_PER_HOUR;
+  const int start_minutes = (sleep_start % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
+  const int end_hours = sleep_end / PBL_SEC_PER_HOUR;
+  const int end_minutes = (sleep_end % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
 
   int pos = 0;
 

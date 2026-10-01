@@ -9,6 +9,7 @@
 #include "pbl/services/activity/health_util.h"
 
 #include <stdio.h>
+#include "pbl/util/units.h"
 
 typedef struct HealthHrDetailCard {
   int16_t num_headings;
@@ -18,13 +19,13 @@ typedef struct HealthHrDetailCard {
   HealthDetailZone zones[MAX_NUM_ZONES];
 } HealthHrDetailCardData;
 
-#define DEFAULT_MAX_PROGRESS (10 * SECONDS_PER_MINUTE)
+#define DEFAULT_MAX_PROGRESS (10 * PBL_SEC_PER_MIN)
 
 static void prv_set_zone(HealthDetailZone *zone, int32_t minutes, int32_t *max_progress,
                          const size_t buffer_size, const char *zone_label, void *i18n_owner) {
   *zone = (HealthDetailZone){
     .label = app_zalloc_check(buffer_size),
-    .progress = minutes * SECONDS_PER_MINUTE,
+    .progress = minutes * PBL_SEC_PER_MIN,
     .fill_color = PBL_IF_COLOR_ELSE(GColorSunsetOrange, GColorDarkGray),
   };
 
@@ -80,8 +81,8 @@ Window *health_hr_detail_card_create(HealthData *health_data) {
     .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
   };
 
-  prv_set_heading_value(heading->primary_value, buffer_size,
-                        (zone_time_minutes * SECONDS_PER_MINUTE), card_data);
+  prv_set_heading_value(heading->primary_value, buffer_size, (zone_time_minutes * PBL_SEC_PER_MIN),
+                        card_data);
 
   const HealthDetailCardConfig config = {
     .num_headings = card_data->num_headings,

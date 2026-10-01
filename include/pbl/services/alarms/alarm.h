@@ -5,9 +5,10 @@
 
 #include "board/board.h"
 
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 //! @file alarm.h
 //! Allows a user to set an alarm for a given time in the future. When this time arrives, a
@@ -15,9 +16,9 @@
 //!
 //! These alarm settings will be persisted across watch resets.
 
-#define SMART_ALARM_RANGE_S           (30 * SECONDS_PER_MINUTE)
-#define SMART_ALARM_SNOOZE_DELAY_S    (1 * SECONDS_PER_MINUTE)
-#define SMART_ALARM_MAX_LIGHT_SLEEP_S (30 * SECONDS_PER_MINUTE)
+#define SMART_ALARM_RANGE_S           (30 * PBL_SEC_PER_MIN)
+#define SMART_ALARM_SNOOZE_DELAY_S    (1 * PBL_SEC_PER_MIN)
+#define SMART_ALARM_MAX_LIGHT_SLEEP_S (30 * PBL_SEC_PER_MIN)
 #define SMART_ALARM_MAX_SMART_SNOOZE  (SMART_ALARM_RANGE_S / SMART_ALARM_SNOOZE_DELAY_S)
 
 #define ALARMS_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack)
@@ -53,7 +54,7 @@ typedef struct AlarmInfo {
   int minute;     //<! Range is 0-59
   AlarmKind kind; //<! The kind of recurrence the alarm will have
   //! A bool for each weekday (Sunday = index 0) enabled
-  bool (*scheduled_days)[DAYS_PER_WEEK];
+  bool (*scheduled_days)[PBL_DAY_PER_WEEK];
   bool enabled;         //<! Whether the alarm to go off at the specified time
   bool is_smart;        //<! Whether the alarm is a Smart Alarm
   bool sound_enabled;   //<! Whether the alarm should play a tone on speaker hardware
@@ -80,7 +81,7 @@ void alarm_set_kind(AlarmId id, AlarmKind kind);
 //! @param id The alarm that should be updated
 //! @param scheduled_days A bool for each weekday (Sunday = index 0) enabled
 //! each weekday that is marked as true
-void alarm_set_custom(AlarmId id, const bool scheduled_days[DAYS_PER_WEEK]);
+void alarm_set_custom(AlarmId id, const bool scheduled_days[PBL_DAY_PER_WEEK]);
 
 //! @param id The alarm that should be updated
 //! @param smart Whether the alarm is a smart alarm
@@ -112,7 +113,7 @@ AlarmId alarm_get_most_recent_id(void);
 //! @param scheduled_days An empty bool array for each weekday (Sunday = index 0)
 //! that is to be updated. Alarms will run on each weekday that is marked as true
 //! @return True if the alarm exists, False otherwise
-bool alarm_get_custom_days(AlarmId id, bool scheduled_days[DAYS_PER_WEEK]);
+bool alarm_get_custom_days(AlarmId id, bool scheduled_days[PBL_DAY_PER_WEEK]);
 
 //! @param id The alarm that should be modified
 //! @param enable Whether to enable the alarm
@@ -187,7 +188,7 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps);
 //! @param [in] scheduled_days A bool for each weekday (Sunday = index 0) enabled
 //! @param [out] alarm_day_text A character array that is to be updated with the days. It should
 //! have a minimum of 28 bytes allocated
-void alarm_get_string_for_custom(bool scheduled_days[DAYS_PER_WEEK], char *alarm_day_text);
+void alarm_get_string_for_custom(bool scheduled_days[PBL_DAY_PER_WEEK], char *alarm_day_text);
 
 //! Set the alarms app version opened
 void alarm_prefs_set_alarms_app_opened(uint8_t version);

@@ -19,6 +19,7 @@
 #include "pbl/util/size.h"
 
 #include <string.h>
+#include "pbl/util/units.h"
 
 typedef struct {
   OptionMenu *alarm_type_menu;
@@ -168,7 +169,7 @@ static void prv_time_picker_window_appear(Window *window) {
     .range = {
       .update = true,
       .text = is_smart ? i18n_get(range_text, data) : NULL,
-      .duration_m = SMART_ALARM_RANGE_S / SECONDS_PER_MINUTE,
+      .duration_m = SMART_ALARM_RANGE_S / PBL_SEC_PER_MIN,
       .enabled = is_smart,
     },
   };

@@ -93,20 +93,20 @@ void test_activity_calculators__distance(void) {
   // Do an normal walk for 12 mins. An average person should cover ~1km
   const int walk_time = 12;
   steps = walking_cadence_spm * walk_time;
-  time_ms = walk_time * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = walk_time * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int easy_walk_distance_m = activity_private_compute_distance_mm(steps, time_ms) / PBL_MM_PER_M;
   cl_assert_within(easy_walk_distance_m, 900, 1100);
 
   // Walk for 12 mins again, but this time faster. More distance should be covered
   steps = (walking_cadence_spm * 1.2) * walk_time;
-  time_ms = walk_time * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = walk_time * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int fast_walk_distance_m = activity_private_compute_distance_mm(steps, time_ms) / PBL_MM_PER_M;
   cl_assert_gt(fast_walk_distance_m, easy_walk_distance_m);
 
   // Walk for a long time. People can walk at roughly 5km/h, so we should be close to 50km
-  const int long_walk_time = 10 * MINUTES_PER_HOUR;
+  const int long_walk_time = 10 * PBL_MIN_PER_HOUR;
   steps = walking_cadence_spm * long_walk_time;
-  time_ms = long_walk_time * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = long_walk_time * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int long_walk_distance_m = activity_private_compute_distance_mm(steps, time_ms) / PBL_MM_PER_M;
   cl_assert_within(long_walk_distance_m, 48000, 52000);
 
@@ -116,21 +116,21 @@ void test_activity_calculators__distance(void) {
   // Running for 25 minutes should come out to roughly 5km
   const int run_time = 25;
   steps = running_cadence_spm * run_time;
-  time_ms = run_time * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = run_time * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int normal_run_distance_m = activity_private_compute_distance_mm(steps, time_ms) / PBL_MM_PER_M;
   cl_assert_within(normal_run_distance_m, 4500, 5500);
 
   // Running for 25 minutes again, but this time faster
   steps = (running_cadence_spm * 1.15) * run_time;
-  time_ms = run_time * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = run_time * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int fast_run_distance_m = activity_private_compute_distance_mm(steps, time_ms) / PBL_MM_PER_M;
   cl_assert_within(fast_run_distance_m, 6500, 7000);
   cl_assert_gt(fast_run_distance_m, normal_run_distance_m);
 
   // Run for 3.5 hours. This is a reasonable marathon time
-  const int long_run_time = 3 * MINUTES_PER_HOUR + 30;
+  const int long_run_time = 3 * PBL_MIN_PER_HOUR + 30;
   steps = running_cadence_spm * long_run_time;
-  time_ms = long_run_time * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = long_run_time * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int long_run_distance_m = activity_private_compute_distance_mm(steps, time_ms) / PBL_MM_PER_M;
   cl_assert_within(long_run_distance_m, 40000, 44000);
 
@@ -155,14 +155,14 @@ void test_activity_calculators__active_calories(void) {
 
   // Walk 1km in 12 minutes
   distance_mm = 1 * M_PER_KM * PBL_MM_PER_M;
-  time_ms = 12 * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = 12 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int walk_calories =
       activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(walk_calories, 20, 25); // This seems a little low, but not un-reasonable
 
   // Run 1km in 5 minutes. This should burn more calories than walking
   distance_mm = 1 * M_PER_KM * PBL_MM_PER_M;
-  time_ms = 5 * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = 5 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int run_calories =
       activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(run_calories, 40, 60); // This also seems a little low, but not un-reasonable
@@ -170,7 +170,7 @@ void test_activity_calculators__active_calories(void) {
 
   // Run 5km in 25 minutes
   distance_mm = 5 * M_PER_KM * PBL_MM_PER_M;
-  time_ms = 25 * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = 25 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int five_k_calories =
       activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(five_k_calories, 220, 250);
@@ -179,14 +179,14 @@ void test_activity_calculators__active_calories(void) {
   // PG: I went for the following run last night and my garmin watch said I burned 550 calories
   prv_set_user(Human_TallMale);
   distance_mm = 7 * M_PER_KM * PBL_MM_PER_M;
-  time_ms = 30 * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = 30 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int quick_run_calories =
       activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(quick_run_calories, 520, 580);
 
   // Run a marathon
   distance_mm = 42 * M_PER_KM * PBL_MM_PER_M;
-  time_ms = 3 * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MS_PER_SECOND;
+  time_ms = 3 * PBL_MIN_PER_HOUR * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
   int long_run_calories =
       activity_private_compute_active_calories(distance_mm, time_ms) / ACTIVITY_CALORIES_PER_KCAL;
   cl_assert_within(long_run_calories, 3000, 3200);
@@ -202,7 +202,7 @@ void test_activity_calculators__inactive_calories(void) {
   // so I would expect the values we get to be less than that. I don't know enough to make
   // better real world analogies though...
 
-  uint32_t long_time_m = 24 * MINUTES_PER_HOUR;
+  uint32_t long_time_m = 24 * PBL_MIN_PER_HOUR;
   uint32_t short_time_m = 5;
 
   prv_set_user(Human_ShortMale);

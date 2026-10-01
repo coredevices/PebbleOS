@@ -20,6 +20,8 @@
 #include "pbl/util/size.h"
 
 #include <sys/cdefs.h>
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 #define StringListLiteral(str)                       \
   {                                                  \
@@ -150,7 +152,7 @@ static void prv_add_calendar_pin(int32_t delta_time_s, int32_t duration_m, bool 
   time_t target = now + delta_time_s;
   if (is_all_day) {
     target = time_util_get_midnight_of(target);
-    duration_m = ((duration_m - 1) / MINUTES_PER_DAY + 1) * MINUTES_PER_DAY;
+    duration_m = ((duration_m - 1) / PBL_MIN_PER_DAY + 1) * PBL_MIN_PER_DAY;
   }
 
   AttributeList list = {};
@@ -301,7 +303,7 @@ void timeline_pins_demo_add_pins(TimelinePinsDemoSet pin_set) {
       prv_add_weather_pin(2 * 24 * 60 * 60);
       goto timeline;
     case TimelinePinsDemo_OngoingEvent: {
-      prv_add_calendar_pin(-(3 * SECONDS_PER_DAY) / 2, 3 * MINUTES_PER_DAY, is_all_day, !recurring,
+      prv_add_calendar_pin(-(3 * PBL_SEC_PER_DAY) / 2, 3 * PBL_MIN_PER_DAY, is_all_day, !recurring,
                            0, 0);
       goto timeline;
     }

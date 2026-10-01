@@ -9,6 +9,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(cron, CONFIG_CRON_LOG_LEVEL);
 
@@ -283,13 +285,13 @@ static bool prv_adjust_for_wday_spec(const struct pbl_cron_job *cron, struct tm 
   mktime(cron_tm);
   cron_tm->tm_mday -= 1;
   // We have 1 week to find a fitting date
-  for (int l = 0; l < DAYS_PER_WEEK; l++) {
+  for (int l = 0; l < PBL_DAY_PER_WEEK; l++) {
     if (cron->wday & (1 << cron_tm->tm_wday)) {
       break;
     }
     // Advance the day.
     cron_tm->tm_mday++;
-    cron_tm->tm_wday = (cron_tm->tm_wday + 1) % DAYS_PER_WEEK;
+    cron_tm->tm_wday = (cron_tm->tm_wday + 1) % PBL_DAY_PER_WEEK;
     adjusted = true;
   }
   return adjusted;

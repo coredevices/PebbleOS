@@ -13,6 +13,7 @@
 #include "system/passert.h"
 
 #include <string.h>
+#include "pbl/util/units.h"
 
 #define DAY_PICKER_CELL_HEIGHT \
   PBL_IF_RECT_ELSE(menu_cell_small_cell_height(), menu_cell_basic_cell_height())
@@ -30,7 +31,7 @@ typedef struct {
 typedef struct {
   Window window;
   MenuLayer menu_layer;
-  bool scheduled_days[DAYS_PER_WEEK];
+  bool scheduled_days[PBL_DAY_PER_WEEK];
   GBitmap deselected_icon;
   GBitmap selected_icon;
   GBitmap checkmark_icon;
@@ -122,7 +123,7 @@ static void prv_day_picker_handle_selection(MenuLayer *menu_layer, MenuIndex *ce
   memset(result.custom_days, 0, sizeof(result.custom_days));
 
   if (kind == DayPickerKindCustom) {
-    bool initial_days[DAYS_PER_WEEK] = {false};
+    bool initial_days[PBL_DAY_PER_WEEK] = {false};
     if (data->initial.kind == DayPickerKindCustom) {
       memcpy(initial_days, data->initial.custom_days, sizeof(initial_days));
     }
@@ -208,7 +209,7 @@ static uint16_t prv_custom_day_picker_get_num_sections(struct MenuLayer *menu_la
 
 static uint16_t prv_custom_day_picker_get_num_rows(struct MenuLayer *menu_layer,
                                                    uint16_t section_index, void *callback_context) {
-  return DAYS_PER_WEEK + 1;
+  return PBL_DAY_PER_WEEK + 1;
 }
 
 static int16_t prv_custom_day_picker_get_cell_height(struct MenuLayer *menu_layer,
@@ -255,11 +256,11 @@ static void prv_custom_day_picker_draw_row(GContext *ctx, const Layer *cell_laye
     graphics_draw_bitmap_in_rect(ctx, &data->checkmark_icon, &box);
   } else {
     const char *cell_text;
-    uint16_t day_index = cell_index->row % DAYS_PER_WEEK;
+    uint16_t day_index = cell_index->row % PBL_DAY_PER_WEEK;
     const struct lc_time_T *time_locale = time_locale_get();
     cell_text = i18n_get(time_locale->weekday[day_index], &data->window);
 
-    if (data->scheduled_days[(cell_index->row) % DAYS_PER_WEEK]) {
+    if (data->scheduled_days[(cell_index->row) % PBL_DAY_PER_WEEK]) {
       ptr_bitmap = &data->selected_icon;
     } else {
       ptr_bitmap = &data->deselected_icon;
@@ -289,7 +290,7 @@ static void prv_custom_day_picker_handle_selection(MenuLayer *menu_layer, MenuIn
       app_window_stack_pop(true);
     }
   } else {
-    uint16_t day_of_week = (cell_index->row) % DAYS_PER_WEEK;
+    uint16_t day_of_week = (cell_index->row) % PBL_DAY_PER_WEEK;
     data->scheduled_days[day_of_week] = !data->scheduled_days[day_of_week];
     layer_mark_dirty(menu_layer_get_layer(menu_layer));
   }
@@ -313,7 +314,7 @@ static void prv_custom_day_picker_window_unload(Window *window) {
   task_free(data);
 }
 
-void custom_day_picker_push(bool initial_days[DAYS_PER_WEEK], DayPickerCallback callback,
+void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallback callback,
                             void *context, GColor highlight_color) {
   CustomDayPickerData *data = task_malloc_check(sizeof(CustomDayPickerData));
   *data = (CustomDayPickerData){

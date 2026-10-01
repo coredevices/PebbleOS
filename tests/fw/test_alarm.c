@@ -9,6 +9,7 @@
 #include "stubs_blob_db_sync_util.h"
 #include "stubs_clock.h"
 #include "stubs_pbl_malloc.h"
+#include "pbl/util/units.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables
@@ -526,11 +527,11 @@ void test_alarm__reload_removes_untracked_future_pins(void) {
   const Uuid orphan = {.byte0 = 1};
   const Uuid past = {.byte0 = 2};
   const Uuid unrelated = {.byte0 = 3};
-  prv_fake_pin_record_add(orphan, alarm_source, rtc_get_time() + SECONDS_PER_HOUR, LayoutIdAlarm);
-  prv_fake_pin_record_add(past, alarm_source, rtc_get_time() - SECONDS_PER_HOUR, LayoutIdAlarm);
-  prv_fake_pin_record_add(unrelated, other_source, rtc_get_time() + SECONDS_PER_HOUR,
+  prv_fake_pin_record_add(orphan, alarm_source, rtc_get_time() + PBL_SEC_PER_HOUR, LayoutIdAlarm);
+  prv_fake_pin_record_add(past, alarm_source, rtc_get_time() - PBL_SEC_PER_HOUR, LayoutIdAlarm);
+  prv_fake_pin_record_add(unrelated, other_source, rtc_get_time() + PBL_SEC_PER_HOUR,
                           LayoutIdAlarm);
-  prv_fake_pin_record_add(tracked[0], alarm_source, rtc_get_time() + SECONDS_PER_HOUR,
+  prv_fake_pin_record_add(tracked[0], alarm_source, rtc_get_time() + PBL_SEC_PER_HOUR,
                           LayoutIdAlarm);
 
   const int removes_before = s_num_timeline_removes;
@@ -584,8 +585,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_timeline_adds, 3);
 
   alarm_get_next_enabled_alarm(&next_alarm_time);
-  cl_assert_equal_i(next_alarm_time,
-                    s_current_day + 10 * SECONDS_PER_HOUR + 30 * SECONDS_PER_MINUTE);
+  cl_assert_equal_i(next_alarm_time, s_current_day + 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
 
   id2 = alarm_create(&(AlarmInfo){.hour = 11, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
   prv_assert_alarm_config(id2, 11, 30, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
@@ -593,8 +593,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_timeline_removes, 0);
 
   alarm_get_next_enabled_alarm(&next_alarm_time);
-  cl_assert_equal_i(next_alarm_time,
-                    s_current_day + 10 * SECONDS_PER_HOUR + 30 * SECONDS_PER_MINUTE);
+  cl_assert_equal_i(next_alarm_time, s_current_day + 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
 
   // First alarm goes off. Second one should be up
   s_current_hour = 10;

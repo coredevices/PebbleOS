@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "pbl/util/units.h"
 
 #define MAX_FILTER_NAME_LENGTH 16
 
@@ -117,23 +118,23 @@ PBL_T_STATIC intmax_t prv_template_predicate_time(TemplateStringState *state) {
       // NOTE: This number of seconds is a hack! See PBL-39903
 #if SUPPORT_YEAR
       case 'y':
-        multiplier = 365 * SECONDS_PER_DAY;
+        multiplier = 365 * PBL_SEC_PER_DAY;
         break;
 #endif
         // NOTE: This number of seconds is a hack! See PBL-39903
 #if SUPPORT_MONTH
       case 'm':
-        multiplier = 30 * SECONDS_PER_DAY;
+        multiplier = 30 * PBL_SEC_PER_DAY;
         break;
 #endif
       case 'd':
-        multiplier = SECONDS_PER_DAY;
+        multiplier = PBL_SEC_PER_DAY;
         break;
       case 'H':
-        multiplier = SECONDS_PER_HOUR;
+        multiplier = PBL_SEC_PER_HOUR;
         break;
       case 'M':
-        multiplier = SECONDS_PER_MINUTE;
+        multiplier = PBL_SEC_PER_MIN;
         break;
       case 'S':
         multiplier = 1;
@@ -472,10 +473,10 @@ PBL_T_STATIC const char *prv_template_format_specifier(TemplateStringState *stat
   }
 
   int macro_units = 2;
-  if (value >= SECONDS_PER_MINUTE) {
+  if (value >= PBL_SEC_PER_MIN) {
     macro_units--;
   }
-  if (value >= SECONDS_PER_HOUR) {
+  if (value >= PBL_SEC_PER_HOUR) {
     macro_units--;
   }
   int macro_end = 3;
@@ -485,37 +486,37 @@ PBL_T_STATIC const char *prv_template_format_specifier(TemplateStringState *stat
 #if SUPPORT_YEAR
     case 'y': // year
       // NOTE: This number of seconds to divide by is a hack! See PBL-39903
-      prv_do_conversion(state, value, 365 * SECONDS_PER_DAY, 100, s_year_strings, add_units,
+      prv_do_conversion(state, value, 365 * PBL_SEC_PER_DAY, 100, s_year_strings, add_units,
                         zero_pad, modulus);
       break;
 #endif
 #if SUPPORT_MONTH
     case 'm': // month
       // NOTE: This number of seconds to divide by is a hack! See PBL-39903
-      prv_do_conversion(state, value, 30 * SECONDS_PER_DAY, 12, s_month_strings, add_units,
+      prv_do_conversion(state, value, 30 * PBL_SEC_PER_DAY, 12, s_month_strings, add_units,
                         zero_pad, modulus);
       break;
 #endif
     case 'd': // day
               // NOTE: This number of modulus is a hack! See PBL-39903
 #if SUPPORT_MONTH
-      prv_do_conversion(state, value, SECONDS_PER_DAY, 30, s_day_strings, add_units, zero_pad,
+      prv_do_conversion(state, value, PBL_SEC_PER_DAY, 30, s_day_strings, add_units, zero_pad,
                         modulus);
 #else
-      prv_do_conversion(state, value, SECONDS_PER_DAY, 0, s_day_strings, add_units, zero_pad,
+      prv_do_conversion(state, value, PBL_SEC_PER_DAY, 0, s_day_strings, add_units, zero_pad,
                         modulus);
 #endif
       break;
     case 'H': // hour
-      prv_do_conversion(state, value, SECONDS_PER_HOUR, HOURS_PER_DAY, s_hour_strings, add_units,
+      prv_do_conversion(state, value, PBL_SEC_PER_HOUR, PBL_HOUR_PER_DAY, s_hour_strings, add_units,
                         zero_pad, modulus);
       break;
     case 'M': // minute
-      prv_do_conversion(state, value, SECONDS_PER_MINUTE, MINUTES_PER_HOUR, s_minute_strings,
+      prv_do_conversion(state, value, PBL_SEC_PER_MIN, PBL_MIN_PER_HOUR, s_minute_strings,
                         add_units, zero_pad, modulus);
       break;
     case 'S': // second
-      prv_do_conversion(state, value, 1, SECONDS_PER_MINUTE, s_second_strings, add_units, zero_pad,
+      prv_do_conversion(state, value, 1, PBL_SEC_PER_MIN, s_second_strings, add_units, zero_pad,
                         modulus);
       break;
     case 'R': // H:M

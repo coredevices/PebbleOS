@@ -5,7 +5,7 @@
 
 #include "pbl/services/accel_manager_types.h"
 #include "process_management/app_install_types.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -47,7 +47,7 @@ typedef enum {
 #define HRM_MANAGER_MAX_ACCEL_SAMPLES  ((2 * HRM_MANAGER_ACCEL_RATE_MILLIHZ) / 1000)
 
 // When an app exits, we change its subscription (if any) to expire in this many seconds
-#define HRM_MANAGER_APP_EXIT_EXPIRATION_SEC SECONDS_PER_HOUR
+#define HRM_MANAGER_APP_EXIT_EXPIRATION_SEC PBL_SEC_PER_HOUR
 
 typedef struct {
   AccelRawData data[HRM_MANAGER_MAX_ACCEL_SAMPLES];

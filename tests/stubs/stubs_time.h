@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/kernel/compiler.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 
 time_t PBL_WEAK time_util_get_midnight_of(time_t ts) {
   return 0;

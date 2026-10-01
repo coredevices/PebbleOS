@@ -8,6 +8,7 @@
 #include "apps/system/health/detail_card.h"
 
 #include "test_health_app_includes.h"
+#include "pbl/util/units.h"
 
 // Fakes
 ////////////////////////////////////
@@ -83,11 +84,11 @@ void test_health_hr_summary_card__render_current_bpm(void) {
 }
 
 void test_health_hr_summary_card__render_timestamp(void) {
-  rtc_set_time(SECONDS_PER_DAY + (SECONDS_PER_HOUR * 12));
+  rtc_set_time(PBL_SEC_PER_DAY + (PBL_SEC_PER_HOUR * 12));
 
   HealthData health_data = {
     .current_hr_bpm = 110,
-    .hr_last_updated = rtc_get_time() - (SECONDS_PER_MINUTE * 5),
+    .hr_last_updated = rtc_get_time() - (PBL_SEC_PER_MIN * 5),
   };
 
   prv_create_card_and_render(&health_data);

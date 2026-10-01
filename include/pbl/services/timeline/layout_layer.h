@@ -9,7 +9,6 @@
 #include "applib/ui/animation.h"
 #include "applib/ui/layer.h"
 #include "pbl/util/uuid.h"
-#include "util/time/time.h"
 
 typedef enum {
   LayoutLayerAnchorTextDirectionUp,   // for scrolling up, past mode

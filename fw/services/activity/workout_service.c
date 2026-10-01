@@ -19,7 +19,7 @@
 #include "pbl/services/regular_timer.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 #include "pbl/util/units.h"
 
 #include "pbl/kernel/mutex.h"
@@ -27,11 +27,11 @@
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
-#define WORKOUT_HR_READING_TS_EXPIRE              (SECONDS_PER_MINUTE)
-#define WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE   (10 * SECONDS_PER_MINUTE)
-#define WORKOUT_ACTIVE_HR_SUBSCRIPTION_TS_EXPIRE  (SECONDS_PER_HOUR)
-#define WORKOUT_ABANDONED_NOTIFICATION_TIMEOUT_MS (55 * MS_PER_MINUTE)
-#define WORKOUT_ABANDON_WORKOUT_TIMEOUT_MS        (5 * MS_PER_MINUTE)
+#define WORKOUT_HR_READING_TS_EXPIRE              (PBL_SEC_PER_MIN)
+#define WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE   (10 * PBL_SEC_PER_MIN)
+#define WORKOUT_ACTIVE_HR_SUBSCRIPTION_TS_EXPIRE  (PBL_SEC_PER_HOUR)
+#define WORKOUT_ABANDONED_NOTIFICATION_TIMEOUT_MS (55 * PBL_MSEC_PER_MIN)
+#define WORKOUT_ABANDON_WORKOUT_TIMEOUT_MS        (5 * PBL_MSEC_PER_MIN)
 
 // Number of recent raw BPM samples used to reject motion-driven spikes in the live workout HR.
 // Small so it tracks real rapid changes (intervals) while still discarding single-sample outliers.
@@ -195,7 +195,7 @@ static void prv_handle_movement_update(HealthEventMovementUpdateData *event) {
     wrkt_data->steps += delta_steps;
 
     // Calculate the distance delta
-    const time_t delta_ms = (now_ts - wrkt_data->last_movement_event_time_ts) * MS_PER_SECOND;
+    const time_t delta_ms = (now_ts - wrkt_data->last_movement_event_time_ts) * PBL_MSEC_PER_SEC;
     const int32_t delta_distance_mm = activity_private_compute_distance_mm(delta_steps, delta_ms);
     wrkt_data->distance_m += (delta_distance_mm / PBL_MM_PER_M);
 
@@ -557,9 +557,9 @@ bool workout_service_stop_workout(void) {
     // Snapshot the session data so we can persist it after dropping the
     // workout mutex. activity_insights_push_activity_session_notification
     // creates a notification (blob_db flash write) that can take long enough
-    if (wrkt->duration_s >= SECONDS_PER_MINUTE) {
+    if (wrkt->duration_s >= PBL_SEC_PER_MIN) {
       const time_t len_min =
-          MIN(ACTIVITY_SESSION_MAX_LENGTH_MIN, wrkt->duration_s / SECONDS_PER_MINUTE);
+          MIN(ACTIVITY_SESSION_MAX_LENGTH_MIN, wrkt->duration_s / PBL_SEC_PER_MIN);
       session_to_save = (ActivitySession){
         .type = wrkt->type,
         .start_utc = wrkt->start_utc,
@@ -641,7 +641,7 @@ bool workout_service_takeover_activity_session(ActivitySession *session) {
 
     // Update the new workout to mirror the session we took over
     s_workout_data.current_workout->start_utc = session_copy.start_utc;
-    s_workout_data.current_workout->duration_s = session_copy.length_min * SECONDS_PER_MINUTE;
+    s_workout_data.current_workout->duration_s = session_copy.length_min * PBL_SEC_PER_MIN;
     s_workout_data.current_workout->steps = session_copy.step_data.steps;
     s_workout_data.current_workout->distance_m = session_copy.step_data.distance_meters;
     s_workout_data.current_workout->active_calories =

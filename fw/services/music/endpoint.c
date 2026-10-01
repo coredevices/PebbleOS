@@ -10,6 +10,7 @@
 #include "pbl/services/music_internal.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/math.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
@@ -261,7 +262,7 @@ static void prv_music_request_reduced_latency(bool reduced_latency) {
 static void prv_music_request_low_latency_for_period(uint32_t period_ms) {
   comm_session_set_responsiveness(comm_session_get_system_session(),
                                   PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY, PBL_BT_RESPONSE_TIME_MIN,
-                                  period_ms / MS_PER_SECOND);
+                                  period_ms / PBL_MSEC_PER_SEC);
 }
 
 static const MusicServerImplementation s_pp_music_implementation = {

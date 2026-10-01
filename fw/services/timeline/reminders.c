@@ -13,13 +13,14 @@
 #include "pbl/services/timeline/item.h"
 #include <pbl/logging/logging.h>
 #include "pbl/util/testing.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
 #define INVALID_SNOOZE_DELAY     0
-#define HALF_SNOOZE_END_MARK     30                                           // Seconds
-#define CONSTANT_SNOOZE_DELAY    (10 * SECONDS_PER_MINUTE)                    // Seconds
-#define CONSTANT_SNOOZE_END_MARK (48 * MINUTES_PER_HOUR * SECONDS_PER_MINUTE) // Seconds
+#define HALF_SNOOZE_END_MARK     30                                        // Seconds
+#define CONSTANT_SNOOZE_DELAY    (10 * PBL_SEC_PER_MIN)                    // Seconds
+#define CONSTANT_SNOOZE_END_MARK (48 * PBL_MIN_PER_HOUR * PBL_SEC_PER_MIN) // Seconds
 
 static RegularTimerInfo s_reminder_timer;
 static bool s_reminder_armed;

@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include "pbl/util/testing.h"
+#include "pbl/util/units.h"
 
 #define TEXT_COLOR       (GColorBlack)
 #define TEXT_ALIGNMENT   (PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight))
@@ -308,7 +309,7 @@ static GTextNode *prv_create_text_node(WorkoutActiveWindow *active_window,
     case WorkoutMetricType_Pace:
     case WorkoutMetricType_AvgPace: {
       if (active_window->workout_controller->get_metric_value(
-              metric_type, active_window->workout_data) >= SECONDS_PER_HOUR) {
+              metric_type, active_window->workout_data) >= PBL_SEC_PER_HOUR) {
         GTextNodeText *text_node =
             health_util_create_text_node_with_text(EM_DASH, units_font, TEXT_COLOR, container);
         text_node->node.offset.x += 1;

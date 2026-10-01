@@ -5,7 +5,7 @@
 
 #include "gbitmap_png.h"
 #include "applib/graphics/raw_image.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 #include "applib/app_logging.h"
 #include "applib/applib_malloc.auto.h"
 #include "syscall/syscall.h"
@@ -305,7 +305,7 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
     fctl.delay_den = (fctl.delay_den == 0) ? APNG_DEFAULT_DELAY_UNITS : fctl.delay_den;
     // Update the current_frame_delay_ms for this frame
     bitmap_sequence->current_frame_delay_ms =
-        ((uint32_t)fctl.delay_num * MS_PER_SECOND) / fctl.delay_den;
+        ((uint32_t)fctl.delay_num * PBL_MSEC_PER_SEC) / fctl.delay_den;
   }
 
   // Return the delay_ms for the new frame

@@ -20,6 +20,8 @@
 #include "pbl/services/activity/activity_algorithm.h"
 #include "pbl/services/activity/activity_calculators.h"
 #include "pbl/services/activity/activity_private.h"
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -32,7 +34,7 @@ static uint32_t prv_convert_none(ActivityScalarStore in) {
 }
 
 static uint32_t prv_convert_minutes_to_seconds(ActivityScalarStore in) {
-  return (uint32_t)in * SECONDS_PER_MINUTE;
+  return (uint32_t)in * PBL_SEC_PER_MIN;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -146,7 +148,8 @@ void activity_metrics_prv_get_metric_info(ActivityMetric metric, ActivityMetricI
 // Set the value of a given metric.
 // For the current day the cached value is only overridden when `force` is true or the new value is
 // higher than the current one. Historical values can be overridden with any value.
-static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value, bool force) {
+static void prv_set_metric(ActivityMetric metric, enum pbl_weekday wday, int32_t value,
+                           bool force) {
   if (!activity_tracking_on()) {
     return;
   }
@@ -161,7 +164,7 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
     case ActivityMetricSleepEnterAtSeconds:
     case ActivityMetricSleepExitAtSeconds:
       // We only store minutes for these metrics. Convert before saving
-      value /= SECONDS_PER_MINUTE;
+      value /= PBL_SEC_PER_MIN;
       break;
     default:
       break;
@@ -169,7 +172,7 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
 
   ActivityMetricInfo m_info = {};
   activity_metrics_prv_get_metric_info(metric, &m_info);
-  const DayInWeek cur_wday = time_util_get_day_in_week(rtc_get_time());
+  const enum pbl_weekday cur_wday = time_util_get_day_in_week(rtc_get_time());
 
   bool current_value_updated = false;
 
@@ -192,7 +195,7 @@ static void prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value,
     settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
                       sizeof(history));
 
-    int day = positive_modulo(cur_wday - wday, DAYS_PER_WEEK);
+    int day = positive_modulo(cur_wday - wday, PBL_DAY_PER_WEEK);
     if ((int32_t)history.values[day] != value) {
       history.values[day] = value;
 
@@ -231,7 +234,7 @@ unlock:
 // ----------------------------------------------------------------------------------------------
 // Set the value of a given metric. The current day's value is only overridden if the new value is
 // higher; historical values can be overridden with any value.
-void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek wday, int32_t value) {
+void activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday wday, int32_t value) {
   prv_set_metric(metric, wday, value, false /* force */);
 }
 
@@ -329,7 +332,7 @@ static void PBL_NOINLINE prv_update_step_derived_metrics(time_t utc_sec) {
       PBL_LOG_DBG("new step minutes: %" PRIu32 "", state->step_data.step_minutes);
 
       // The prior minute was the most recent active one
-      state->last_active_minute = time_util_minute_of_day_adjust(minute_of_day, -1);
+      state->last_active_minute = pbl_time_minute_of_day_adjust(minute_of_day, -1);
       PBL_LOG_DBG("last active minute: %" PRIu16 "", state->last_active_minute);
     }
 
@@ -670,7 +673,7 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       // If this is resting kcalories, the default for each day is not 0
       if (metric == ActivityMetricRestingKCalories) {
         uint32_t full_day_resting_calories =
-            activity_private_compute_resting_calories(MINUTES_PER_DAY);
+            activity_private_compute_resting_calories(PBL_MIN_PER_DAY);
         for (int i = 0; i < ACTIVITY_HISTORY_DAYS; i++) {
           if (i == 0) {
             uint32_t elapsed_minutes = time_util_get_minute_of_day(utc_now);

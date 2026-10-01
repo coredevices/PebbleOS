@@ -42,6 +42,7 @@
 #include "system/passert.h"
 #include "pbl/util/size.h"
 #include "pbl/util/testing.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -295,7 +296,7 @@ static void prv_show_progress_window(void *data_ptr) {
   progress_window_set_back_disabled(data->progress_window, true);
   progress_window_push(data->progress_window, prv_get_window_stack(data));
 
-  const unsigned action_result_timeout_ms = 5 * MS_PER_SECOND;
+  const unsigned action_result_timeout_ms = 5 * PBL_MSEC_PER_SEC;
   data->response.timer =
       evented_timer_register(action_result_timeout_ms, false, prv_timeout_handler, data);
 }
@@ -491,7 +492,7 @@ static void prv_subscribe_to_action_results_and_timeouts(ActionResultData *data,
   event_service_client_subscribe(&data->event_service_info);
 
   data->response.ignore_failures = ignore_failures;
-  const unsigned show_progress_timeout_ms = 1 * MS_PER_SECOND;
+  const unsigned show_progress_timeout_ms = 1 * PBL_MSEC_PER_SEC;
   data->response.timer =
       evented_timer_register(show_progress_timeout_ms, false, prv_show_progress_window, data);
 }
@@ -974,7 +975,7 @@ static void prv_postpone_15_minutes(ActionMenu *action_menu, const ActionMenuIte
   const TimelineItem *pin = timeline_action_menu->item;
   const TimelineItemAction *action = action_menu_item->action_data;
 
-  time_t new_time = rtc_get_time() + (15 * SECONDS_PER_MINUTE);
+  time_t new_time = rtc_get_time() + (15 * PBL_SEC_PER_MIN);
   prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
 }
 
@@ -1017,7 +1018,7 @@ static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem 
   const TimelineItemAction *action = action_menu_item->action_data;
 
   // The new time is 9am the following day
-  time_t tomorrow_utc = rtc_get_time() + SECONDS_PER_DAY;
+  time_t tomorrow_utc = rtc_get_time() + PBL_SEC_PER_DAY;
   struct tm local_tm;
   localtime_r(&tomorrow_utc, &local_tm);
   local_tm.tm_hour = 9;

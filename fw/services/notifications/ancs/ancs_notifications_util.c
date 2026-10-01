@@ -7,7 +7,8 @@
 #include "resource/timeline_resource_ids.auto.h"
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "util/date.h"
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
 #include "pbl/util/pstring.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
@@ -75,7 +76,7 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
   timestamp.day[0] = '\0';
   time_tm.tm_mon = atoi(timestamp.month) - 1;
   timestamp.month[0] = '\0';
-  time_tm.tm_year = atoi(timestamp.year) - STDTIME_YEAR_OFFSET;
+  time_tm.tm_year = atoi(timestamp.year) - PBL_TM_YEAR_ORIGIN;
 
   // We have to assume that the timezone of the phone matches the timezone of the watch
   time_t sys_time = rtc_get_time();

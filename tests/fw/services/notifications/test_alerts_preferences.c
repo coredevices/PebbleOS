@@ -26,6 +26,7 @@
 #include "stubs_vibe_score_info.h"
 
 #include "fake_spi_flash.h"
+#include "pbl/util/units.h"
 
 #define NOTIF_PREFS_FILE_NAME         "notifpref"
 #define NOTIF_PREFS_FILE_LEN          1024
@@ -118,9 +119,9 @@ void test_alerts_preferences__window_timeout_below_minimum(void) {
 }
 
 void test_alerts_preferences__window_timeout_keeps_valid_values(void) {
-  prv_set_notification_window_timeout(30 * MS_PER_SECOND);
+  prv_set_notification_window_timeout(30 * PBL_MSEC_PER_SEC);
   alerts_preferences_init();
-  cl_assert_equal_i(alerts_preferences_get_notification_window_timeout_ms(), 30 * MS_PER_SECOND);
+  cl_assert_equal_i(alerts_preferences_get_notification_window_timeout_ms(), 30 * PBL_MSEC_PER_SEC);
 
   prv_set_notification_window_timeout(NOTIF_WINDOW_TIMEOUT_INFINITE);
   alerts_preferences_init();

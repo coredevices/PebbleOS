@@ -11,6 +11,7 @@
 #include "syscall/syscall.h"
 
 #include <string.h>
+#include "pbl/util/units.h"
 
 // Maximum touchdown-to-liftoff duration for a press to count as a tap; a longer
 // contact is treated as a hold, not a tap. Value from the reference PT2 touch-nav
@@ -56,7 +57,7 @@ static bool prv_moved_too_far(const TapRecognizerData *data, const TouchEvent *t
 
 static uint32_t prv_touch_duration_ms(const TapRecognizerData *data) {
   const RtcTicks elapsed = sys_get_ticks() - data->state.touch_down_ticks;
-  return (uint32_t)((elapsed * MS_PER_SECOND) / RTC_TICKS_HZ);
+  return (uint32_t)((elapsed * PBL_MSEC_PER_SEC) / RTC_TICKS_HZ);
 }
 
 static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {

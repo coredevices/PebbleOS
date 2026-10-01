@@ -6,6 +6,8 @@
 #include "health_service.h"
 #include "event_service_client.h"
 #include "pbl/services/activity/activity.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 typedef struct {
   HealthValue totals[ACTIVITY_HISTORY_DAYS];
@@ -40,7 +42,7 @@ typedef struct {
   uint32_t cur_day_id; // Current day ID, used for cache validation
 
   // These are intraday step averages
-  DayInWeek step_averages_day;          // which day in the week the step averages are for
+  enum pbl_weekday step_averages_day;   // which day in the week the step averages are for
   ActivityMetricAverages step_averages; // intraday step averages
 
   // We cache the daily step totals since that metric is very likely to be requested by a
@@ -51,7 +53,7 @@ typedef struct {
   ActivitySession sessions[HEALTH_SERVICE_MAX_ACTIVITY_SESSIONS];
 
   // Storage for fetching minute history
-  HealthMinuteData minute_data[MINUTES_PER_HOUR];
+  HealthMinuteData minute_data[PBL_MIN_PER_HOUR];
 
   // Metric alert thresholds. 0 if not set.
   HealthServiceMetricAlertInfo alert_threshold_heart_rate;

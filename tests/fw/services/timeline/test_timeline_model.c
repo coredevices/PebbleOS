@@ -19,6 +19,7 @@
 #include "fake_spi_flash.h"
 #include "fake_pbl_malloc.h"
 #include "fake_rtc.h"
+#include "pbl/services/time.h"
 
 static TimezoneInfo tz = {
   .tm_gmtoff = -8 * 60 * 60, // PST

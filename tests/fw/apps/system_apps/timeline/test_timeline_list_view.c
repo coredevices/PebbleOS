@@ -7,6 +7,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 
 #include "test_timeline_app_includes.h"
+#include "pbl/util/units.h"
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -22,7 +23,7 @@ void test_timeline_list_view__initialize(void) {
   load_system_resources_fixture();
 
   s_data = (TimelineTestData){};
-  rtc_set_time(3 * SECONDS_PER_DAY);
+  rtc_set_time(3 * PBL_SEC_PER_DAY);
 }
 
 void test_timeline_list_view__cleanup(void) {
@@ -127,15 +128,15 @@ static void prv_create_and_render_title_and_subtitle(bool past, uint16_t first_d
   prv_create_list_view_and_render(&(ListViewConfig){
     .pins =
         {&(TimelineItemConfig){
-           .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
+           .relative_timestamp = (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN),
            .duration = first_duration_m,
            .title = "Jon Byrd birthday party",
            .subtitle = "Kaboom, Redwood City",
            .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
          },
          &(TimelineItemConfig){
-           .relative_timestamp = 12 * SECONDS_PER_HOUR,
-           .duration = MINUTES_PER_HOUR,
+           .relative_timestamp = 12 * PBL_SEC_PER_HOUR,
+           .duration = PBL_MIN_PER_HOUR,
            .title = "Design Review Meeting",
            .subtitle = "Batavia, Palo Alto",
            .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
@@ -145,12 +146,12 @@ static void prv_create_and_render_title_and_subtitle(bool past, uint16_t first_d
 }
 
 void test_timeline_list_view__title_and_subtitle_overlap_future(void) {
-  prv_create_and_render_title_and_subtitle(false /* past */, MINUTES_PER_HOUR);
+  prv_create_and_render_title_and_subtitle(false /* past */, PBL_MIN_PER_HOUR);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
 void test_timeline_list_view__title_and_subtitle_back_to_back_future(void) {
-  prv_create_and_render_title_and_subtitle(false /* past */, MINUTES_PER_HOUR / 2);
+  prv_create_and_render_title_and_subtitle(false /* past */, PBL_MIN_PER_HOUR / 2);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
@@ -168,15 +169,15 @@ void prv_create_and_render_pin_and_dot(bool past) {
   prv_create_list_view_and_render(&(ListViewConfig){
     .pins =
         {&(TimelineItemConfig){
-           .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
-           .duration = MINUTES_PER_HOUR,
+           .relative_timestamp = (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN),
+           .duration = PBL_MIN_PER_HOUR,
            .title = "Jon Byrd birthday party",
            .subtitle = "Kaboom, Redwood City",
            .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
          },
          &(TimelineItemConfig){
-           .relative_timestamp = SECONDS_PER_DAY + SECONDS_PER_HOUR,
-           .duration = MINUTES_PER_HOUR,
+           .relative_timestamp = PBL_SEC_PER_DAY + PBL_SEC_PER_HOUR,
+           .duration = PBL_MIN_PER_HOUR,
            .title = "Design Review Meeting",
            .subtitle = "Batavia, Palo Alto",
            .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
@@ -199,16 +200,16 @@ void prv_create_and_render_day_sep_tomorrow(bool past) {
   prv_create_list_view_and_render(&(ListViewConfig){
     .pins =
         {&(TimelineItemConfig){
-           .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
-           .duration = MINUTES_PER_HOUR,
+           .relative_timestamp = (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN),
+           .duration = PBL_MIN_PER_HOUR,
            .title = "Jon Byrd birthday party",
            .subtitle = "Kaboom, Redwood City",
            .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
          },
          &(TimelineItemConfig){
            .relative_timestamp =
-               ((11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE) + SECONDS_PER_DAY),
-           .duration = MINUTES_PER_HOUR,
+               ((11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN) + PBL_SEC_PER_DAY),
+           .duration = PBL_MIN_PER_HOUR,
            .title = "Design Review Meeting",
            .subtitle = "Batavia, Palo Alto",
            .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
@@ -231,9 +232,9 @@ void test_timeline_list_view__day_sep_tomorrow_past(void) {
 void prv_create_and_render_pin_and_fin(bool past) {
   prv_create_list_view_and_render(&(ListViewConfig){
     .pins = {&(TimelineItemConfig){
-      .relative_timestamp = (11 * SECONDS_PER_HOUR) + (30 * SECONDS_PER_MINUTE),
+      .relative_timestamp = (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN),
       .title = "Jon Byrd birthday party",
-      .duration = MINUTES_PER_HOUR,
+      .duration = PBL_MIN_PER_HOUR,
       .subtitle = "Kaboom, Redwood City",
       .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
     }},
@@ -256,9 +257,9 @@ void prv_create_and_render_all_day(bool past) {
     .pins = {&(TimelineItemConfig){
       // Must sit further back than the duration, or the past view correctly excludes it
       // for still being in progress.
-      .relative_timestamp = 2 * SECONDS_PER_DAY,
+      .relative_timestamp = 2 * PBL_SEC_PER_DAY,
       .title = "Independence Day",
-      .duration = MINUTES_PER_DAY,
+      .duration = PBL_MIN_PER_DAY,
       .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
       .all_day = true,
     }},

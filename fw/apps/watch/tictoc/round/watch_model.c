@@ -9,7 +9,7 @@
 #include "applib/tick_timer_service.h"
 #include "resource/resource_ids.auto.h"
 #include "syscall/syscall.h"
-#include "util/time/time.h"
+#include <time.h>
 
 #include <ctype.h>
 

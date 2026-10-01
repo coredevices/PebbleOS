@@ -63,7 +63,7 @@ uint32_t activity_private_compute_distance_mm(uint32_t steps, uint32_t ms) {
   //  stride_len = (a * steps * 1000 * 60 / milliseconds + b) * height
   // Compute the "(a * steps * 1000 * 60 / milliseconds + b)" component:
   uint64_t stride_len_component =
-      ROUND(k_a_x10000 * steps_64 * MS_PER_SECOND * SECONDS_PER_MINUTE, ms_64) + k_b_x10000;
+      ROUND(k_a_x10000 * steps_64 * PBL_MSEC_PER_SEC * PBL_SEC_PER_MIN, ms_64) + k_b_x10000;
 
   // Multiply by height to get stride_len, then by steps to get distance, then factor out our
   // constant multiplier at the very end to minimize rounding errors.
@@ -117,7 +117,7 @@ uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t
   // Figure out the rate and see if it's walking or running. We set the walking threshold at
   // 120 m/min. This is 2m/s or 2 mm/ms
   const unsigned int k_max_walking_rate_mm_per_min = 120 * PBL_MM_PER_M;
-  uint64_t rate_mm_per_min = distance_mm_64 * MS_PER_SECOND * SECONDS_PER_MINUTE / ms_64;
+  uint64_t rate_mm_per_min = distance_mm_64 * PBL_MSEC_PER_SEC * PBL_SEC_PER_MIN / ms_64;
   bool walking = (rate_mm_per_min <= k_max_walking_rate_mm_per_min);
   uint64_t k_constant_x1000;
   if (walking) {
@@ -159,7 +159,7 @@ uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
   }
 
   // Scale by the requested number of minutes
-  uint32_t resting_calories = ROUND(calories_per_day * elapsed_minutes, MINUTES_PER_DAY);
+  uint32_t resting_calories = ROUND(calories_per_day * elapsed_minutes, PBL_MIN_PER_DAY);
   PBL_LOG_DBG("resting_calories: %" PRIu32 "", resting_calories);
   return resting_calories;
 }

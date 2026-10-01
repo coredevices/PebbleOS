@@ -6,15 +6,15 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/activity/activity.h"
 #include "shell/prefs.h"
-#include "util/time/time.h"
+#include <time.h>
 #include "pbl/util/units.h"
 
 #include <limits.h>
 #include <stdio.h>
 
 static void prv_convert_duration_to_hours_and_minutes(int duration_s, int *hours, int *minutes) {
-  *hours = (duration_s / SECONDS_PER_HOUR) ?: INT_MIN;
-  *minutes = ((duration_s % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE) ?: INT_MIN;
+  *hours = (duration_s / PBL_SEC_PER_HOUR) ?: INT_MIN;
+  *minutes = ((duration_s % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN) ?: INT_MIN;
   if (*minutes == INT_MIN && *hours == INT_MIN) {
     *hours = 0;
   }
@@ -40,9 +40,9 @@ int health_util_format_hours_and_minutes(char *buffer, size_t buffer_size, int d
 
 int health_util_format_hours_minutes_seconds(char *buffer, size_t buffer_size, int duration_s,
                                              bool leading_zero, void *i18n_owner) {
-  const int hours = duration_s / SECONDS_PER_HOUR;
-  const int minutes = (duration_s % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
-  const int seconds = (duration_s % SECONDS_PER_HOUR) % SECONDS_PER_MINUTE;
+  const int hours = duration_s / PBL_SEC_PER_HOUR;
+  const int minutes = (duration_s % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
+  const int seconds = (duration_s % PBL_SEC_PER_HOUR) % PBL_SEC_PER_MIN;
   if (hours > 0) {
     const char *fmt = leading_zero ? "%02d:%02d:%02d" : "%d:%02d:%02d";
     return snprintf(buffer, buffer_size, i18n_get(fmt, i18n_owner), hours, minutes, seconds);
@@ -54,8 +54,8 @@ int health_util_format_hours_minutes_seconds(char *buffer, size_t buffer_size, i
 
 int health_util_format_minutes_and_seconds(char *buffer, size_t buffer_size, int duration_s,
                                            void *i18n_owner) {
-  int minutes = duration_s / SECONDS_PER_MINUTE;
-  int seconds = duration_s % SECONDS_PER_MINUTE;
+  int minutes = duration_s / PBL_SEC_PER_MIN;
+  int seconds = duration_s % PBL_SEC_PER_MIN;
   return snprintf(buffer, buffer_size, i18n_get("%d:%d", i18n_owner), minutes, seconds);
 }
 

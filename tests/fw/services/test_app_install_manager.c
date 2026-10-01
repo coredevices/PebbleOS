@@ -17,7 +17,8 @@
 #include "pbl/services/app_cache.h"
 #include "pbl/services/blob_db/app_db.h"
 #include "pbl/util/build_id.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -503,7 +504,7 @@ void test_app_install_manager__hidden_app_recently_communicated(void) {
   }
 
   // wait 10 minutes and ensure hidden
-  fake_rtc_init(0, INIT_TIME + (10 * SECONDS_PER_MINUTE));
+  fake_rtc_init(0, INIT_TIME + (10 * PBL_SEC_PER_MIN));
   cl_assert(true == app_install_entry_is_hidden(&entry));
 }
 
@@ -526,12 +527,12 @@ void test_app_install_manager__recently_communicated(void) {
   cl_assert_equal_b(true, app_install_is_prioritized(music_id));
 
   // Wait 10 minutes. Should return false
-  fake_rtc_increment_time(10 * SECONDS_PER_MINUTE);
+  fake_rtc_increment_time(10 * PBL_SEC_PER_MIN);
   cl_assert_equal_b(false, app_install_is_prioritized(music_id));
 
   // Update with most recent time but don't let it expire
   app_install_mark_prioritized(music_id, false /* can_expire */);
-  fake_rtc_increment_time(10 * SECONDS_PER_MINUTE);
+  fake_rtc_increment_time(10 * PBL_SEC_PER_MIN);
 
   // Ensure it hasn't expired
   cl_assert_equal_b(true, app_install_is_prioritized(music_id));

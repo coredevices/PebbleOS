@@ -87,8 +87,9 @@ pbl_clar_test(test_health_card_view
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
@@ -192,8 +193,9 @@ pbl_clar_test(test_health_activity_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
@@ -292,8 +294,9 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
@@ -392,8 +395,9 @@ pbl_clar_test(test_health_hr_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
@@ -492,8 +496,9 @@ pbl_clar_test(test_health_activity_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
@@ -591,8 +596,9 @@ pbl_clar_test(test_health_sleep_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
@@ -690,8 +696,9 @@ pbl_clar_test(test_health_hr_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
@@ -789,8 +796,9 @@ pbl_clar_test(test_health_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c

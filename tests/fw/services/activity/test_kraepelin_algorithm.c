@@ -14,7 +14,7 @@
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #include "clar.h"
 
@@ -69,6 +69,7 @@ bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <time.h>
 
 extern char *strdup(const char *s);
 
@@ -397,14 +398,14 @@ static uint32_t prv_feed_kalg_samples(AccelRawData *data, int num_samples,
 
   // Run some data through it, 1 minute at a time
   while (num_samples_left) {
-    int chunk_size = MIN(num_samples_left, KALG_SAMPLE_HZ * SECONDS_PER_MINUTE);
+    int chunk_size = MIN(num_samples_left, KALG_SAMPLE_HZ * PBL_SEC_PER_MIN);
     uint32_t steps;
     uint32_t consumed_samples;
     steps = kalg_analyze_samples(s_kalg_state, data, chunk_size, &consumed_samples);
     minute_steps += steps;
     total_steps += steps;
 
-    if (chunk_size == KALG_SAMPLE_HZ * SECONDS_PER_MINUTE) {
+    if (chunk_size == KALG_SAMPLE_HZ * PBL_SEC_PER_MIN) {
       // Capture the minute data for each minute
       TestMinuteData minute_data = {
         .steps = minute_steps,
@@ -464,7 +465,7 @@ static uint32_t prv_feed_reference_samples(AccelRawData *data, int num_samples) 
       steps = ref_accel_data_handler(accel_buf, chunk_size);
       chunk_size = 0;
     }
-    if (samples_in_minute >= KALG_SAMPLE_HZ * SECONDS_PER_MINUTE) {
+    if (samples_in_minute >= KALG_SAMPLE_HZ * PBL_SEC_PER_MIN) {
       ref_minute_stats(&orientation, &vmc);
       samples_in_minute = 0;
     }
@@ -497,7 +498,7 @@ typedef struct {
   SampleFileType type; // type of samples
 } SampleDiscoveryState;
 
-#define ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES (12 * SECONDS_PER_MINUTE * KALG_SAMPLE_HZ)
+#define ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES (12 * PBL_SEC_PER_MIN * KALG_SAMPLE_HZ)
 typedef struct {
   SampleDiscoveryState common;
   AccelRawData samples[ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES];
@@ -505,7 +506,7 @@ typedef struct {
 } AccelSampleDiscoveryState;
 static AccelSampleDiscoveryState s_accel_sample_discovery_state;
 
-#define SLEEP_SAMPLES_DISCOVERY_MAX_SAMPLES (40 * MINUTES_PER_HOUR)
+#define SLEEP_SAMPLES_DISCOVERY_MAX_SAMPLES (40 * PBL_MIN_PER_HOUR)
 typedef struct {
   SampleDiscoveryState common;
   AlgMinuteFileSample samples[SLEEP_SAMPLES_DISCOVERY_MAX_SAMPLES];
@@ -513,7 +514,7 @@ typedef struct {
 } SleepSampleDiscoveryState;
 static SleepSampleDiscoveryState s_sleep_sample_discovery_state;
 
-#define ACTIVITY_SAMPLES_DISCOVERY_MAX_SAMPLES (40 * MINUTES_PER_HOUR)
+#define ACTIVITY_SAMPLES_DISCOVERY_MAX_SAMPLES (40 * PBL_MIN_PER_HOUR)
 typedef struct {
   SampleDiscoveryState common;
   AlgMinuteFileSample samples[ACTIVITY_SAMPLES_DISCOVERY_MAX_SAMPLES];
@@ -1149,7 +1150,7 @@ void prv_activity_session_callback(void *context, KAlgActivityType activity_type
   cl_assert(entry_idx < MAX_CAPTURED_SESSIONS);
   s_captured_activity_sessions[entry_idx] = (KAlgTestActivitySession){
     .activity = activity_type,
-    .len_minutes = len_sec / SECONDS_PER_MINUTE,
+    .len_minutes = len_sec / PBL_SEC_PER_MIN,
     .start_utc = start_utc,
     .ongoing = ongoing,
     .steps = steps,
@@ -1159,7 +1160,7 @@ void prv_activity_session_callback(void *context, KAlgActivityType activity_type
   };
 
   printf("\nAdded new activity: %d, start_utc: %d, len_m: %d", (int)activity_type, (int)start_utc,
-         (int)len_sec / SECONDS_PER_MINUTE);
+         (int)len_sec / PBL_SEC_PER_MIN);
   if (entry_idx == s_num_captured_activity_sessions) {
     s_num_captured_activity_sessions++;
   }
@@ -1170,8 +1171,8 @@ void prv_activity_session_callback(void *context, KAlgActivityType activity_type
 // the hour and minute: HH:MM
 static const char *prv_log_time(time_t utc) {
   static char time_str[8];
-  int minutes = (utc / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
-  int hours = (utc / SECONDS_PER_HOUR) % HOURS_PER_DAY;
+  int minutes = (utc / PBL_SEC_PER_MIN) % PBL_MIN_PER_HOUR;
+  int hours = (utc / PBL_SEC_PER_HOUR) % PBL_HOUR_PER_DAY;
 
   snprintf(time_str, sizeof(time_str), "%02d:%02d", hours, minutes);
   return time_str;
@@ -1386,7 +1387,7 @@ void prv_sleep_session_callback(void *context, KAlgActivityType activity_type, t
   // Update/add session
   s_captured_sleep_sessions[entry_idx] = (KAlgTestSleepSession){
     .activity = activity_type,
-    .len_m = len_sec / SECONDS_PER_MINUTE,
+    .len_m = len_sec / PBL_SEC_PER_MIN,
     .start_utc = start_utc,
   };
 
@@ -1412,7 +1413,7 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
   KAlgTestSleepSession *container_session = NULL;
   for (uint32_t i = 0; i < s_num_captured_sleep_sessions; i++, session++) {
     // Get info on this session
-    time_t session_exit_utc = session->start_utc + session->len_m * SECONDS_PER_MINUTE;
+    time_t session_exit_utc = session->start_utc + session->len_m * PBL_SEC_PER_MIN;
 
     // Skip if not a sleep session
     bool is_restful = false;
@@ -1449,7 +1450,7 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
       cl_assert(container_session != NULL);
       cl_assert(session->start_utc >= container_session->start_utc);
       cl_assert(session->start_utc <
-                container_session->start_utc + container_session->len_m * SECONDS_PER_MINUTE);
+                container_session->start_utc + container_session->len_m * PBL_SEC_PER_MIN);
       last_deep_session_len_m = session->len_m;
       // Accumulate restful sleep stats
       results->deep.value += session->len_m;
@@ -1461,17 +1462,17 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
 
   // Fill in the rest of the sleep data metrics
   if (enter_utc != 0) {
-    results->start_at.value = (enter_utc - test_start_utc) / SECONDS_PER_MINUTE;
+    results->start_at.value = (enter_utc - test_start_utc) / PBL_SEC_PER_MIN;
   }
   if (exit_utc != 0) {
-    results->end_at.value = (exit_utc - test_start_utc) / SECONDS_PER_MINUTE;
+    results->end_at.value = (exit_utc - test_start_utc) / PBL_SEC_PER_MIN;
   }
 
   // Figure out our current state
-  if (exit_utc >= last_processed_utc - SECONDS_PER_MINUTE) {
+  if (exit_utc >= last_processed_utc - PBL_SEC_PER_MIN) {
     // We are sleeping
     results->in_sleep.value = true;
-    int unprocessed_m = (test_end_utc - last_processed_utc) / SECONDS_PER_MINUTE;
+    int unprocessed_m = (test_end_utc - last_processed_utc) / PBL_SEC_PER_MIN;
     if (exit_utc == deep_exit_utc) {
       results->in_deep_sleep.value = true;
       results->cur_state_elapsed.value = last_deep_session_len_m + unprocessed_m;
@@ -1480,9 +1481,9 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
     }
   } else {
     if (exit_utc != 0) {
-      results->cur_state_elapsed.value = (test_end_utc - exit_utc) / SECONDS_PER_MINUTE;
+      results->cur_state_elapsed.value = (test_end_utc - exit_utc) / PBL_SEC_PER_MIN;
     } else {
-      results->cur_state_elapsed.value = (test_end_utc - test_start_utc) / SECONDS_PER_MINUTE;
+      results->cur_state_elapsed.value = (test_end_utc - test_start_utc) / PBL_SEC_PER_MIN;
     }
   }
 }
@@ -1572,7 +1573,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
         break;
       }
 
-      now += SECONDS_PER_MINUTE;
+      now += PBL_SEC_PER_MIN;
       rtc_set_time(now);
     }
     time_t test_end_utc = now;
@@ -1731,7 +1732,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
         break;
       }
 
-      now += SECONDS_PER_MINUTE;
+      now += PBL_SEC_PER_MIN;
       rtc_set_time(now);
     }
 
@@ -1757,7 +1758,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
           break;
       }
 
-      int start_idx = (session->start_utc - test_start_utc) / SECONDS_PER_MINUTE;
+      int start_idx = (session->start_utc - test_start_utc) / PBL_SEC_PER_MIN;
       printf("\nfound %s len: %d, start: %d, ", desc, (int)session->len_minutes, start_idx);
 
       // Only compare the first activity found
@@ -1925,7 +1926,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
 static void prv_insert_artificial_activity_session(KAlgTestActivityMinute *samples, int samples_len,
                                                    KAlgTestActivitySession *session) {
   time_t now = rtc_get_time();
-  int start_idx = ((session->start_utc - now) / SECONDS_PER_MINUTE) + 1;
+  int start_idx = ((session->start_utc - now) / PBL_SEC_PER_MIN) + 1;
   int len = session->len_minutes;
 
   cl_assert(start_idx + len < samples_len);
@@ -1951,7 +1952,7 @@ static void prv_feed_activity_minutes(KAlgTestActivityMinute *samples, int sampl
                            true /*definitely_not_worn*/, samples[i].resting_calories,
                            samples[i].active_calories, samples[i].distance_mm,
                            false /* shutting_down */, prv_activity_session_callback, NULL);
-    now += SECONDS_PER_MINUTE;
+    now += PBL_SEC_PER_MIN;
     rtc_set_time(now);
   }
 }
@@ -1978,7 +1979,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
     int len = 20;
     KAlgTestActivitySession exp_session = {
       .activity = KAlgActivityType_Walk,
-      .start_utc = now + 10 * SECONDS_PER_MINUTE,
+      .start_utc = now + 10 * PBL_SEC_PER_MIN,
       .steps = len * 80, // 80 steps/min
       .len_minutes = len,
       .resting_calories = len * 100,
@@ -2004,7 +2005,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
     int len = 30;
     KAlgTestActivitySession exp_session = {
       .activity = KAlgActivityType_Run,
-      .start_utc = now + 10 * SECONDS_PER_MINUTE,
+      .start_utc = now + 10 * PBL_SEC_PER_MIN,
       .steps = len * 150, // 150 steps/min
       .len_minutes = len,
       .resting_calories = len * 100,
@@ -2038,7 +2039,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
     int len = 5;
     KAlgTestActivitySession exp_session = {
       .activity = KAlgActivityType_Walk,
-      .start_utc = now + 10 * SECONDS_PER_MINUTE,
+      .start_utc = now + 10 * PBL_SEC_PER_MIN,
       .steps = len * 80, // 80 steps/min
       .len_minutes = len,
       .resting_calories = len * 100,
@@ -2061,7 +2062,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
     int walk_len = 15;
     KAlgTestActivitySession exp_session_walk = {
       .activity = KAlgActivityType_Walk,
-      .start_utc = now + 5 * SECONDS_PER_MINUTE,
+      .start_utc = now + 5 * PBL_SEC_PER_MIN,
       .steps = walk_len * 80, // 80 steps/min
       .len_minutes = walk_len,
       .resting_calories = walk_len * 100,
@@ -2072,7 +2073,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
     int run_len = 15;
     KAlgTestActivitySession exp_session_run = {
       .activity = KAlgActivityType_Run,
-      .start_utc = now + 30 * SECONDS_PER_MINUTE,
+      .start_utc = now + 30 * PBL_SEC_PER_MIN,
       .steps = run_len * 150, // 150 steps/min
       .len_minutes = run_len,
       .resting_calories = run_len * 100,
@@ -2125,7 +2126,7 @@ void test_kraepelin_algorithm__sleep_stats(void) {
     // This particular sample has sleep from minute 32 to 353
     const int k_sleep_start_m = 32;
     const int k_sleep_end_m = 353;
-    const time_t k_sleep_start_utc = test_start_utc + k_sleep_start_m * SECONDS_PER_MINUTE;
+    const time_t k_sleep_start_utc = test_start_utc + k_sleep_start_m * PBL_SEC_PER_MIN;
 
     KAlgOngoingSleepStats stats;
     kalg_get_sleep_stats(s_kalg_state, &stats);
@@ -2141,7 +2142,7 @@ void test_kraepelin_algorithm__sleep_stats(void) {
     if (i >= (k_sleep_start_m + 70) && (i <= k_sleep_end_m)) {
       cl_assert_equal_i(stats.sleep_start_utc, k_sleep_start_utc);
       cl_assert_equal_i(stats.sleep_len_m, i - k_sleep_start_m - KALG_MAX_UNCERTAIN_SLEEP_M);
-      cl_assert_equal_i((now - stats.uncertain_start_utc) / SECONDS_PER_MINUTE,
+      cl_assert_equal_i((now - stats.uncertain_start_utc) / PBL_SEC_PER_MIN,
                         KALG_MAX_UNCERTAIN_SLEEP_M);
     }
 
@@ -2152,7 +2153,7 @@ void test_kraepelin_algorithm__sleep_stats(void) {
       cl_assert_equal_i(stats.uncertain_start_utc, 0);
     }
 
-    now += SECONDS_PER_MINUTE;
+    now += PBL_SEC_PER_MIN;
     rtc_set_time(now);
   }
 
@@ -2169,7 +2170,7 @@ static void prv_feed_walk_minutes(int num_minutes) {
                            true /*definitely_not_worn*/, 100 /*resting_calories*/,
                            200 /*active_calories*/, 1000 /*distance_mm*/, false /*shutting_down*/,
                            prv_activity_session_callback, NULL);
-    now += SECONDS_PER_MINUTE;
+    now += PBL_SEC_PER_MIN;
     rtc_set_time(now);
   }
 }
@@ -2231,13 +2232,13 @@ void test_kraepelin_algorithm__hrm_subscription_is_bounded(void) {
 
   // The window has to outlast the inactive-minute grace period, or an ongoing activity would
   // lose its subscription mid-walk
-  cl_assert(s_hrm_last_expire_s > 7 * SECONDS_PER_MINUTE);
+  cl_assert(s_hrm_last_expire_s > 7 * PBL_SEC_PER_MIN);
 
   // Each further active minute re-arms it rather than subscribing again
   s_hrm_last_expire_s = 0;
   prv_feed_walk_minutes(1);
   cl_assert_equal_i(s_hrm_live_subscriptions, 1);
-  cl_assert(s_hrm_last_expire_s > 7 * SECONDS_PER_MINUTE);
+  cl_assert(s_hrm_last_expire_s > 7 * PBL_SEC_PER_MIN);
 
   kalg_deinit(s_kalg_state);
   kernel_free(s_kalg_state);

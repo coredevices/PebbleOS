@@ -33,6 +33,7 @@
 #include "stubs_process_manager.h"
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
+#include "pbl/util/units.h"
 
 // ---------------------------------------------------------------------------------------------
 // Collaborator stubs the recognizer manager needs (mirrors test_recognizer_manager.c).
@@ -212,7 +213,7 @@ static void prv_dispatch(TouchEventType type, int16_t x, int16_t y, bool non_nav
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / MS_PER_SECOND);
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
 }
 
 // Drive a straight fast flick from (sx, sy) to (ex, ey) through the dispatcher. The route is

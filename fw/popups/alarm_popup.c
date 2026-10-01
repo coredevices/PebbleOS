@@ -18,7 +18,7 @@
 #include "pbl/services/light.h"
 #include "pbl/services/new_timer/new_timer.h"
 #include "pbl/services/alarms/alarm.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #include <stdio.h>
 
@@ -32,6 +32,7 @@
 #include "pbl/services/speaker/speaker_finish_reason.h"
 #include "pbl/services/speaker/speaker_service.h"
 #include "services/alarms/alarm_tones.h"
+#include <time.h>
 #endif
 
 PBL_LOG_MODULE_DECLARE(service_alerts, CONFIG_SERVICE_ALERTS_LOG_LEVEL);
@@ -210,7 +211,7 @@ static void prv_stop_sound(void) {
 #define TINTIN_VIBE_REPEAT_INTERVAL_MS (1000)
 #define TINTIN_MAX_VIBES               (10 * 60) // 10 minutes at 1 vibe a second
 #define TINTIN_LPM_VIBES_PER_MINUTE    (10)
-#define VIBE_DURATION                  (10 * SECONDS_PER_MINUTE * MS_PER_SECOND)
+#define VIBE_DURATION                  (10 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC)
 static void prv_vibe_kernel_main_cb(void *callback_context) {
   if (s_alarm_popup_data) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
@@ -265,7 +266,7 @@ static void prv_start_vibes(void) {
       s_alarm_popup_data->vibe_score = NULL;
     }
     vibe_repeat_interval_ms =
-        low_power_is_active() ? (SECONDS_PER_MINUTE * MS_PER_SECOND / TINTIN_LPM_VIBES_PER_MINUTE)
+        low_power_is_active() ? (PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC / TINTIN_LPM_VIBES_PER_MINUTE)
                               : TINTIN_VIBE_REPEAT_INTERVAL_MS;
   }
   s_alarm_popup_data->max_vibes = DIVIDE_CEIL(VIBE_DURATION, vibe_repeat_interval_ms);

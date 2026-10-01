@@ -14,7 +14,7 @@
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/util/size.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
@@ -135,8 +135,8 @@ static void prv_render_typical_steps(GContext *ctx, Layer *base_layer) {
     snprintf(steps_buffer, sizeof(steps_buffer), "%" PRId32, data->typical_steps);
 
     char bin_time[12];
-    clock_format_time(bin_time, sizeof(bin_time), data->typical_steps_bin_minute / MINUTES_PER_HOUR,
-                      data->typical_steps_bin_minute % MINUTES_PER_HOUR, false /* add_space */);
+    clock_format_time(bin_time, sizeof(bin_time), data->typical_steps_bin_minute / PBL_MIN_PER_HOUR,
+                      data->typical_steps_bin_minute % PBL_MIN_PER_HOUR, false /* add_space */);
 
     health_ui_render_split_typical_text_box(ctx, base_layer, steps_buffer, bin_time, daily_buffer,
                                             i18n_get("TOTAL", base_layer));

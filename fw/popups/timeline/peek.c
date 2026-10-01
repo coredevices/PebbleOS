@@ -17,6 +17,8 @@
 #include "pbl/util/size.h"
 
 #include <pbl/cron/cron.h>
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 #define TIMELINE_PEEK_FRAME_HIDDEN         GRect(0, DISP_ROWS, DISP_COLS, TIMELINE_PEEK_HEIGHT)
 #define TIMELINE_PEEK_OUTER_BORDER_WIDTH   PBL_IF_RECT_ELSE(2, 1)
@@ -419,7 +421,7 @@ void timeline_peek_init(void) {
   layer_init(&peek->layout_layer, &TIMELINE_PEEK_FRAME_HIDDEN);
   layer_add_child(&peek->window.layer, &peek->layout_layer);
 
-  timeline_peek_set_show_before_time(timeline_peek_prefs_get_before_time() * SECONDS_PER_MINUTE);
+  timeline_peek_set_show_before_time(timeline_peek_prefs_get_before_time() * PBL_SEC_PER_MIN);
 
   // Wait one event loop to show the timeline peek
   launcher_task_add_callback(prv_push_timeline_peek, NULL);

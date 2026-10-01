@@ -15,7 +15,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/status_codes.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
+#include <time.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -63,12 +64,12 @@ static void prv_new_timer_callback(void *unused) {
 static uint32_t prv_calc_timeout(const TimelineItem *item) {
   const time_t now = rtc_get_time();
   const time_t start = item->header.timestamp;
-  const time_t end = start + (item->header.duration * SECONDS_PER_MINUTE);
+  const time_t end = start + (item->header.duration * PBL_SEC_PER_MIN);
   if (now >= end) {
     return 0;
   }
   const uint32_t timeout_s = ((start > now) ? start : end) - now;
-  return MIN(timeout_s, UINT32_MAX / MS_PER_SECOND) * MS_PER_SECOND;
+  return MIN(timeout_s, UINT32_MAX / PBL_MSEC_PER_SEC) * PBL_MSEC_PER_SEC;
 }
 
 static void prv_set_timer(unsigned int timeout_ms) {
@@ -206,11 +207,11 @@ void timeline_event_refresh(void) {
 
 bool timeline_event_is_all_day(CommonTimelineItemHeader *common) {
   return (common->all_day ||
-          (common->duration >= MINUTES_PER_DAY)); // Include >= 24 hour events. See PBL-23584
+          (common->duration >= PBL_MIN_PER_DAY)); // Include >= 24 hour events. See PBL-23584
 }
 
 bool timeline_event_is_ongoing(time_t now, time_t event_start, int event_duration_m) {
-  return ((event_start <= now) && ((event_start + (SECONDS_PER_MINUTE * event_duration_m)) > now));
+  return ((event_start <= now) && ((event_start + (PBL_SEC_PER_MIN * event_duration_m)) > now));
 }
 
 bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now, int delta_start_s,

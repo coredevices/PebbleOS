@@ -13,6 +13,7 @@
 #include "syscall/syscall.h"
 #include "pbl/util/size.h"
 #include "pbl/util/trig.h"
+#include "pbl/util/units.h"
 
 typedef struct {
   Window window;
@@ -71,8 +72,9 @@ static void prv_layer_update_proc(Layer *layer, GContext *ctx) {
   sys_get_time_ms(&system_time_seconds, &system_time_ms);
 
   const uint16_t current_time_progress_ms =
-      (uint16_t)((system_time_seconds % (full_revolution_time_ms / MS_PER_SECOND)) * MS_PER_SECOND +
-                 (system_time_ms % MS_PER_SECOND));
+      (uint16_t)((system_time_seconds % (full_revolution_time_ms / PBL_MSEC_PER_SEC)) *
+                     PBL_MSEC_PER_SEC +
+                 (system_time_ms % PBL_MSEC_PER_SEC));
 
   const AnimationProgress animation_progress =
       current_time_progress_ms * ANIMATION_NORMALIZED_MAX / full_revolution_time_ms;

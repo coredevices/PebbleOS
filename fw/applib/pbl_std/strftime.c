@@ -23,6 +23,8 @@
 #include "pbl/services/i18n/i18n.h"
 #include "syscall/syscall.h"
 #include "pbl/util/math.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 #define INTFMT_PADSPACE (0)
 #define INTFMT_PADZERO  (1)
@@ -38,7 +40,7 @@ static int prv_week_of_year(const struct tm *t, bool monday_is_first_day) {
 }
 
 static int prv_full_year(int year) {
-  return year + TM_YEAR_ORIGIN;
+  return year + PBL_TM_YEAR_ORIGIN;
 }
 
 static int prv_iso8601_base_week(const struct tm *t) {
@@ -71,7 +73,7 @@ static int prv_year_week_count(int year, const struct tm *t, int normal_compare,
   int wday = (((t->tm_wday - t->tm_yday) % 7) + 7) % 7;
 
   // Don't ask me, I didn't decide this.
-  if (wday == normal_compare || (YEAR_IS_LEAP(year) && wday == leap_compare)) {
+  if (wday == normal_compare || (pbl_time_is_leap_year(year) && wday == leap_compare)) {
     return 53;
   } else {
     return 52;
@@ -209,7 +211,7 @@ size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *r
     // Process conversion specifiers
     switch (*fmt) {
       case 'a':
-        FMT_STRCOPY_I18N(time_locale->wday[t->tm_wday % DAYS_PER_WEEK]);
+        FMT_STRCOPY_I18N(time_locale->wday[t->tm_wday % PBL_DAY_PER_WEEK]);
       _fmt_strcopy:
         // old strftime doesn't use 'width' for strings
         if (!use_i18n && i18nstr) {
@@ -233,14 +235,14 @@ size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *r
         left -= length;
         break;
       case 'A':
-        FMT_STRCOPY_I18N(time_locale->weekday[t->tm_wday % DAYS_PER_WEEK]);
+        FMT_STRCOPY_I18N(time_locale->weekday[t->tm_wday % PBL_DAY_PER_WEEK]);
         break;
       case 'h': // SU
       case 'b':
-        FMT_STRCOPY_I18N(time_locale->mon[t->tm_mon % MONTHS_PER_YEAR]);
+        FMT_STRCOPY_I18N(time_locale->mon[t->tm_mon % PBL_MONTH_PER_YEAR]);
         break;
       case 'B':
-        FMT_STRCOPY_I18N(time_locale->month[t->tm_mon % MONTHS_PER_YEAR]);
+        FMT_STRCOPY_I18N(time_locale->month[t->tm_mon % PBL_MONTH_PER_YEAR]);
         break;
       case 'c':
         FMT_RECURSE_I18N(time_locale->c_fmt);

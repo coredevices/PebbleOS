@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "util/time/time.h"
+#include <time.h>
 
 struct tm *pbl_override_localtime(const time_t *timep) {
   static struct tm local_tm;

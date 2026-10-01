@@ -11,6 +11,7 @@
 #include "syscall/syscall.h"
 
 #include <string.h>
+#include "pbl/util/units.h"
 
 // SWIPE_MIN_LENGTH_PX and SWIPE_MAX_DURATION_MS live in swipe.h: synthetic gesture generators size
 // their paths from the same limits this recognizer enforces.
@@ -61,7 +62,7 @@ static const RecognizerImpl s_swipe_recognizer_impl = {
 };
 
 static uint32_t prv_ticks_to_ms(RtcTicks ticks) {
-  return (uint32_t)((ticks * MS_PER_SECOND) / RTC_TICKS_HZ);
+  return (uint32_t)((ticks * PBL_MSEC_PER_SEC) / RTC_TICKS_HZ);
 }
 
 static uint32_t prv_touch_duration_ms(const SwipeRecognizerData *data) {
@@ -105,9 +106,9 @@ static GPoint prv_compute_velocity(const SwipeRecognizerData *data) {
     return GPointZero;
   }
   const int32_t vx =
-      ((int32_t)(newest->point.x - oldest->point.x) * MS_PER_SECOND) / (int32_t)dt_ms;
+      ((int32_t)(newest->point.x - oldest->point.x) * PBL_MSEC_PER_SEC) / (int32_t)dt_ms;
   const int32_t vy =
-      ((int32_t)(newest->point.y - oldest->point.y) * MS_PER_SECOND) / (int32_t)dt_ms;
+      ((int32_t)(newest->point.y - oldest->point.y) * PBL_MSEC_PER_SEC) / (int32_t)dt_ms;
   return GPoint((int16_t)vx, (int16_t)vy);
 }
 

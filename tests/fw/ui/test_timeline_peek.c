@@ -28,6 +28,8 @@
 #include "fake_rtc.h"
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs) {
   snprintf(buffer, buf_size, "In 5 minutes");
@@ -106,7 +108,7 @@ void test_timeline_peek__initialize(void) {
   };
   time_util_update_timezone(&tz_info);
   rtc_set_timezone(&tz_info);
-  rtc_set_time(SECONDS_PER_DAY);
+  rtc_set_time(PBL_SEC_PER_DAY);
 
   // We start time out at 5pm on Jan 1, 2015 for all of these tests
   struct tm time_tm = {
@@ -187,7 +189,7 @@ static TimelineItem *prv_set_timeline_item(const TimelinePeekItemConfig *config,
       attribute_list_add_cstring(&list, AttributeIdSubtitle, config->subtitle);
     }
     attribute_list_add_uint32(&list, AttributeIdIconPin, config->icon);
-    item = timeline_item_create_with_attributes(timestamp, MINUTES_PER_HOUR, TimelineItemTypePin,
+    item = timeline_item_create_with_attributes(timestamp, PBL_MIN_PER_HOUR, TimelineItemTypePin,
                                                 LayoutIdGeneric, &list, NULL);
     attribute_list_destroy_list(&list);
   }
@@ -302,7 +304,7 @@ void test_timeline_peek__peek_title_only_concurrent_2(void) {
 
 void test_timeline_peek__peek_in_5_minutes(void) {
   prv_render_timeline_peek(&(TimelinePeekItemConfig){
-    .timestamp = rtc_get_time() + (5 * SECONDS_PER_MINUTE),
+    .timestamp = rtc_get_time() + (5 * PBL_SEC_PER_MIN),
     .title = "Stock for party 🍺",
     .subtitle = "Pebble Pad on Park",
     .icon = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,

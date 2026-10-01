@@ -11,6 +11,7 @@
 #include "pbl/util/uuid.h"
 
 #include <stdlib.h>
+#include "pbl/util/units.h"
 
 void app_idle_timeout_start(uint32_t timeout_ms) {
 }
@@ -142,7 +143,7 @@ bool timeline_peek_prefs_get_enabled(void) {
 void timeline_peek_prefs_set_before_time(uint16_t before_time_m) {
 }
 uint16_t timeline_peek_prefs_get_before_time(void) {
-  return (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
+  return (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / PBL_SEC_PER_MIN);
 }
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 void timeline_peek_prefs_set_unsupported_face_mode(TimelinePeekUnsupportedFaceMode mode) {

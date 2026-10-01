@@ -23,6 +23,7 @@
 #include "stubs_task_wdt.h"
 #include "stubs_app_state.h"
 #include "stubs_worker_state.h"
+#include "pbl/services/time.h"
 
 // Overrides
 //////////////////////////////////////////////////////////

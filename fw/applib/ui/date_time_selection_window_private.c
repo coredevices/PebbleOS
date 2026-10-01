@@ -5,7 +5,7 @@
 
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
-#include "util/date.h"
+#include "pbl/util/time.h"
 #include "pbl/util/math.h"
 
 #include <stdio.h>
@@ -29,9 +29,9 @@ int date_time_selection_step_minute(int minute, int delta) {
 }
 
 int date_time_selection_step_day(int year, int month, int day, int delta) {
-  bool is_leap_year = date_util_is_leap_year(year);
-  // This function expects Jan == 0, but date_util_get_max_days_in_month expects Jan == 1
-  int max_days = date_util_get_max_days_in_month(month + 1, is_leap_year);
+  bool is_leap_year = pbl_time_is_leap_year(year);
+  // This function expects Jan == 0, but pbl_time_days_in_month expects Jan == 1
+  int max_days = pbl_time_days_in_month(month + 1, is_leap_year);
   // This functions expects the first day of the month is 1, but wrap expects the first day of the
   // month is 0 (based off the mday element of the "tm" struct)
   return prv_wrap(day - 1, max_days, delta) + 1;
@@ -42,17 +42,17 @@ int date_time_selection_step_month(int month, int delta) {
 }
 
 int date_time_selection_truncate_date(int year, int month, int day) {
-  bool is_leap_year = date_util_is_leap_year(year);
+  bool is_leap_year = pbl_time_is_leap_year(year);
 
-  // date_util_get_max_days_in_month expects Jan == 1, but this function expects Jan == 0
-  int max_days = date_util_get_max_days_in_month(month + 1, is_leap_year);
+  // pbl_time_days_in_month expects Jan == 1, but this function expects Jan == 0
+  int max_days = pbl_time_days_in_month(month + 1, is_leap_year);
   return MIN(day, max_days);
 }
 
 int date_time_selection_step_year(int year, int delta) {
   year += delta;
-  return CLIP(year, MIN_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET,
-              MAX_SELECTABLE_YEAR - STDTIME_YEAR_OFFSET);
+  return CLIP(year, MIN_SELECTABLE_YEAR - PBL_TM_YEAR_ORIGIN,
+              MAX_SELECTABLE_YEAR - PBL_TM_YEAR_ORIGIN);
 }
 
 char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *buf) {

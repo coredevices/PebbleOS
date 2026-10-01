@@ -15,7 +15,7 @@
     "include/pbl/util/math.h",
     "include/pbl/util/size.h",
     "include/pbl/util/trig.h",
-    "fw/util/time/time.h",
+    "lib/c/include/time.h",
     "fw/applib/accel_service.h",
     "fw/applib/app.h",
     "fw/applib/app_comm.h",

@@ -5,9 +5,9 @@
 
 #include <stdbool.h>
 
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
-#define BLE_HRM_REMINDER_POPUP_DELAY_MINS (2 * MINUTES_PER_HOUR)
+#define BLE_HRM_REMINDER_POPUP_DELAY_MINS (2 * PBL_MIN_PER_HOUR)
 
 typedef struct GAPLEConnection GAPLEConnection;
 

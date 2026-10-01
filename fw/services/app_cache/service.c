@@ -20,7 +20,7 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
-#include "util/time/time.h"
+#include <time.h>
 #include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);

@@ -14,7 +14,7 @@
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/clock.h"
-#include "util/time/time.h"
+#include <time.h>
 
 typedef struct {
   Window low_power_window;

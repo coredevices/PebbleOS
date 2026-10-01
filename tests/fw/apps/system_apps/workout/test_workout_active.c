@@ -11,6 +11,7 @@
 #include "test_workout_app_includes.h"
 
 #include "stubs_window_manager.h"
+#include "pbl/util/units.h"
 
 bool s_hrm_is_present;
 
@@ -335,9 +336,9 @@ void test_workout_active__workout_render_hr_zone_3(void) {
 void test_workout_active__workout_render_very_slow_pace(void) {
   s_workout_data = (WorkoutData){
     .steps = 0,
-    .duration_s = SECONDS_PER_HOUR,
+    .duration_s = PBL_SEC_PER_HOUR,
     .distance_m = 1609,
-    .avg_pace = health_util_get_pace(SECONDS_PER_HOUR, 1609),
+    .avg_pace = health_util_get_pace(PBL_SEC_PER_HOUR, 1609),
     .bpm = 0,
     .hr_zone = 0,
   };

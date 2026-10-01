@@ -8,13 +8,13 @@
 #include "pbl/services/notifications/alerts_private.h"
 #include "pbl/services/notifications/do_not_disturb.h"
 #include "pbl/services/vibes/vibe_intensity.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score_info.h"
 
 #define NOTIF_WINDOW_TIMEOUT_INFINITE ((uint32_t)~0)
-#define NOTIF_WINDOW_TIMEOUT_DEFAULT  (3 * MS_PER_MINUTE)
-#define NOTIF_WINDOW_TIMEOUT_MIN      (15 * MS_PER_SECOND)
+#define NOTIF_WINDOW_TIMEOUT_DEFAULT  (3 * PBL_MSEC_PER_MIN)
+#define NOTIF_WINDOW_TIMEOUT_MIN      (15 * PBL_MSEC_PER_SEC)
 
 void alerts_preferences_init(void);
 

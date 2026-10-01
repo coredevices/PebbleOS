@@ -6,8 +6,9 @@ pbl_clar_test(test_activity
     fw/applib/health_service.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/time/time.c
-    fw/util/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
+    lib/c/time/mktime.c
     fw/services/regular_timer/service.c
     fw/services/activity/activity.c
     fw/services/activity/activity_metrics.c
@@ -33,8 +34,9 @@ pbl_clar_test(test_activity
 pbl_clar_test(test_activity_insights
   SOURCES
     fw/util/crc8.c
-    fw/util/time/time.c
-    fw/util/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
+    lib/c/time/mktime.c
     fw/services/activity/activity_insights.c
     fw/services/activity/insights_settings.c
     fw/services/timeline/attribute.c
@@ -67,8 +69,9 @@ pbl_clar_test(test_activity_algorithm_kraepelin
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/util/crc8.c
-    fw/util/time/time.c
-    fw/util/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
+    lib/c/time/mktime.c
     fw/services/regular_timer/service.c
     fw/services/activity/kraepelin/activity_algorithm_kraepelin.c
     fw/services/filesystem/flash_translation.c

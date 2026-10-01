@@ -16,6 +16,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "system/passert.h"
 #include "pbl/util/struct.h"
+#include "pbl/util/units.h"
 
 #define APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR (PROCESS_INFO_FIRST_4X_SDK_VERSION_MAJOR)
 #define APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR (PROCESS_INFO_FIRST_4X_SDK_VERSION_MINOR)
@@ -196,7 +197,7 @@ static void prv_update_subtitle_template_string_reeval_timer_if_necessary(
     return;
   }
 
-  const uint64_t time_until_next_reeval_ms = (uint64_t)time_until_next_reeval * MS_PER_SECOND;
+  const uint64_t time_until_next_reeval_ms = (uint64_t)time_until_next_reeval * PBL_MSEC_PER_SEC;
   if (time_until_next_reeval_ms > UINT32_MAX) {
     // Next reeval time is so far in the future that its offset in milliseconds from the
     // current time would overflow the argument to AppTimer, so just ignore this reeval because it's

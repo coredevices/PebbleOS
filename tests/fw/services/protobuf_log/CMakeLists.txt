@@ -8,8 +8,9 @@ pbl_clar_test(test_protobuf_log
     fw/services/protobuf_log/protobuf_log_activity_sessions.c
     fw/services/protobuf_log/protobuf_log_test.c
     fw/services/protobuf_log/protobuf_log_util.c
-    fw/util/time/mktime.c
-    fw/util/time/time.c
+    lib/c/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_rtc.c
     tests/fw/services/protobuf_log/protobuf_log_test_helpers.c
   LIBS nanopb protobuf_log_schemas

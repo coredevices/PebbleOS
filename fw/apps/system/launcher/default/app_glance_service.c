@@ -22,6 +22,7 @@
 #include "pbl/util/size.h"
 #include "pbl/util/struct.h"
 #include "pbl/util/uuid.h"
+#include "pbl/util/units.h"
 
 //! Cache twice the number of glances we'll show simultaneously in the launcher
 #define LAUNCHER_APP_GLANCE_SERVICE_CACHE_NUM_ENTRIES (2 * LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS)
@@ -76,7 +77,8 @@ static void prv_update_slice_expiration_timer_if_necessary(LauncherAppGlanceServ
     return;
   }
 
-  const uint64_t time_until_slice_expires_ms = (uint64_t)time_until_slice_expires * MS_PER_SECOND;
+  const uint64_t time_until_slice_expires_ms =
+      (uint64_t)time_until_slice_expires * PBL_MSEC_PER_SEC;
   if (time_until_slice_expires_ms > UINT32_MAX) {
     // Slice expiration time is so far in the future that its offset in milliseconds from the
     // current time would overflow the argument to AppTimer, so just ignore this slice because it's

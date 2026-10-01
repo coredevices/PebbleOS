@@ -16,6 +16,8 @@
 #include "pbl/services/activity/activity_algorithm.h"
 #include "pbl/services/activity/activity_insights.h"
 #include "pbl/services/activity/activity_private.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -24,8 +26,8 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 static void prv_get_earliest_end_times_utc(time_t utc_sec, time_t *sleep_earliest_end_utc,
                                            time_t *step_earliest_end_utc) {
   time_t start_of_today_utc = time_util_get_midnight_of(utc_sec);
-  int last_sleep_second_of_day = ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * SECONDS_PER_MINUTE;
-  *sleep_earliest_end_utc = start_of_today_utc - (SECONDS_PER_DAY - last_sleep_second_of_day);
+  int last_sleep_second_of_day = ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * PBL_SEC_PER_MIN;
+  *sleep_earliest_end_utc = start_of_today_utc - (PBL_SEC_PER_DAY - last_sleep_second_of_day);
   *step_earliest_end_utc = start_of_today_utc;
 }
 
@@ -53,7 +55,7 @@ void activity_sessions_prv_remove_out_of_range_activity_sessions(time_t utc_sec,
     }
 
     // See if we should keep this activity
-    time_t end_time = sessions[i].start_utc + (sessions[i].length_min * SECONDS_PER_MINUTE);
+    time_t end_time = sessions[i].start_utc + (sessions[i].length_min * PBL_SEC_PER_MIN);
     if ((end_time >= end_utc) && (end_time <= utc_sec) &&
         (!remove_ongoing || !sessions[i].ongoing)) {
       // Keep it
@@ -242,7 +244,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
     .activity = session->type,
     .utc_to_local = start_local - session->start_utc,
     .start_utc = (uint32_t)session->start_utc,
-    .elapsed_sec = session->length_min * SECONDS_PER_MINUTE,
+    .elapsed_sec = session->length_min * PBL_SEC_PER_MIN,
   };
   if (activity_sessions_prv_is_sleep_activity(session->type)) {
     dls_record.sleep_data = session->sleep_data;
@@ -273,7 +275,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
                ", "
                "elapsed_min: %" PRIu16 ", end_time: %" PRIu32 " ",
                (int)session->type, (uint32_t)session->start_utc, session->length_min,
-               (uint32_t)session->start_utc + (session->length_min * SECONDS_PER_MINUTE));
+               (uint32_t)session->start_utc + (session->length_min * PBL_SEC_PER_MIN));
 }
 
 // This structure holds stats we collected from going through a list of sleep sessions. It is
@@ -309,7 +311,7 @@ static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t m
   ActivitySession *session = state->activity_sessions;
   for (uint32_t i = 0; i < state->activity_sessions_count; i++, session++) {
     // Get info on this session
-    stats->last_session_len_sec = session->length_min * SECONDS_PER_MINUTE;
+    stats->last_session_len_sec = session->length_min * PBL_SEC_PER_MIN;
     time_t session_exit_utc = session->start_utc + stats->last_session_len_sec;
 
     // Skip if it ended too early
@@ -390,18 +392,16 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
 
     // Fill in the rest of the sleep data metrics: the current state, and how long we have been
     // in the current state
-    uint32_t delta_min =
-        abs((int32_t)(last_processed_utc - stats.last_exit_utc)) / SECONDS_PER_MINUTE;
+    uint32_t delta_min = abs((int32_t)(last_processed_utc - stats.last_exit_utc)) / PBL_SEC_PER_MIN;
 
     // Figure out our current state
     if (delta_min > 1) {
       // We are awake
       sleep_data->cur_state = ActivitySleepStateAwake;
       if (stats.last_exit_utc != 0) {
-        sleep_data->cur_state_elapsed_minutes =
-            (now_utc - stats.last_exit_utc) / SECONDS_PER_MINUTE;
+        sleep_data->cur_state_elapsed_minutes = (now_utc - stats.last_exit_utc) / PBL_SEC_PER_MIN;
       } else {
-        sleep_data->cur_state_elapsed_minutes = MINUTES_PER_DAY;
+        sleep_data->cur_state_elapsed_minutes = PBL_MIN_PER_DAY;
       }
     } else {
       // We are still sleeping
@@ -411,7 +411,7 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
         sleep_data->cur_state = ActivitySleepStateLightSleep;
       }
       sleep_data->cur_state_elapsed_minutes =
-          (stats.last_session_len_sec + now_utc - stats.last_exit_utc) / SECONDS_PER_MINUTE;
+          (stats.last_session_len_sec + now_utc - stats.last_exit_utc) / PBL_SEC_PER_MIN;
     }
 
     // If the info that is part of a health sleep event has changed, send out a notification event
@@ -423,8 +423,8 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
         .health_event = {
           .type = HealthEventSleepUpdate,
           .data.sleep_update = {
-            .total_seconds = sleep_data->total_minutes * SECONDS_PER_MINUTE,
-            .total_restful_seconds = sleep_data->restful_minutes * SECONDS_PER_MINUTE,
+            .total_seconds = sleep_data->total_minutes * PBL_SEC_PER_MIN,
+            .total_restful_seconds = sleep_data->restful_minutes * PBL_SEC_PER_MIN,
           },
         },
       };
@@ -448,12 +448,12 @@ unlock:
 time_t activity_sessions_prv_get_sleep_window_start_utc(time_t now_utc) {
   time_t start_of_today_utc = time_util_get_midnight_of(now_utc);
   int minute_of_day = time_util_get_minute_of_day(now_utc);
-  int last_sleep_second_of_day = ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * SECONDS_PER_MINUTE;
+  int last_sleep_second_of_day = ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * PBL_SEC_PER_MIN;
 
   if (minute_of_day < ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY) {
     // It is before the ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY (currently 9pm) cutoff, so use
     // the previous day's cutoff
-    return start_of_today_utc - (SECONDS_PER_DAY - last_sleep_second_of_day);
+    return start_of_today_utc - (PBL_SEC_PER_DAY - last_sleep_second_of_day);
   } else {
     // It is after 9pm, so use the 9pm cutoff
     return start_of_today_utc + last_sleep_second_of_day;
@@ -510,7 +510,7 @@ static void prv_log_activities(time_t now_utc) {
   ActivitySession *session = state->activity_sessions;
   for (uint32_t i = 0; i < state->activity_sessions_count; i++, session++) {
     // Get info on this activity
-    uint32_t session_len_sec = session->length_min * SECONDS_PER_MINUTE;
+    uint32_t session_len_sec = session->length_min * PBL_SEC_PER_MIN;
     time_t session_exit_utc = session->start_utc + session_len_sec;
 
     ActivityClassParams *params = NULL;
@@ -655,7 +655,7 @@ void PBL_NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
   // that end after ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY the previous day, so we just need to insure
   // that the end BEFORE ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY today.
   int last_sleep_utc_of_day =
-      time_util_get_midnight_of(utc_sec) + ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * SECONDS_PER_MINUTE;
+      time_util_get_midnight_of(utc_sec) + ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * PBL_SEC_PER_MIN;
   prv_update_sleep_metrics(utc_sec, last_sleep_utc_of_day, last_sleep_processed_utc);
 
   // Log any new activities we detected to the phone

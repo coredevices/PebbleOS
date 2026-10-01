@@ -38,6 +38,7 @@
 #include "stubs_task_wdt.h"
 #include "stubs_compiled_with_legacy2_sdk.h"
 #include "stubs_memory_layout.h"
+#include "pbl/util/time.h"
 
 #define TEST_UUID                                                                              \
   UuidMake(0xF9, 0xC6, 0xEB, 0xE4, 0x06, 0xCD, 0x46, 0xF1, 0xB1, 0x51, 0x24, 0x08, 0x74, 0xD2, \
@@ -48,7 +49,7 @@
 // int g_pbl_log_level = 0;
 // void pbl_log(uint8_t level, const char* src_filename, int src_line_number, const char* fmt, ...)
 // {}
-int time_util_get_num_hours(int hours, bool is24h) {
+int pbl_time_display_hour(int hours, bool is24h) {
   return 0;
 }
 

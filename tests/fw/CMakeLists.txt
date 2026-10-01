@@ -113,8 +113,9 @@ pbl_clar_test(test_alarm
     fw/services/alarms/alarm_pin.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/time/time.c
-    fw/util/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
+    lib/c/time/mktime.c
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     subsys/cron/cron.c
@@ -140,8 +141,9 @@ pbl_clar_test(test_alarm_smart
     fw/services/alarms/alarm_pin.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/time/time.c
-    fw/util/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
+    lib/c/time/mktime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     subsys/cron/cron.c
     fw/services/filesystem/flash_translation.c
@@ -293,7 +295,8 @@ pbl_clar_test(test_timeline_api
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     fw/util/rand/rand.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c

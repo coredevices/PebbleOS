@@ -17,7 +17,8 @@
 #include "pbl/services/activity/health_util.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 #include "pbl/util/trig.h"
 
 #include <string.h>
@@ -490,7 +491,7 @@ static void prv_update_typical_steps(KickstartData *data) {
 
 static void prv_update_daily_steps_avg(KickstartData *data) {
   data->daily_steps_avg = health_service_sum_averaged(HealthMetricStepCount, time_start_of_today(),
-                                                      time_start_of_today() + SECONDS_PER_DAY,
+                                                      time_start_of_today() + PBL_SEC_PER_DAY,
                                                       HealthServiceTimeScopeWeekly);
 }
 

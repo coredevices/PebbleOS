@@ -13,6 +13,7 @@
 #include "stubs_logging.h"
 #include "stubs_passert.h"
 #include "stubs_pbl_malloc.h"
+#include "pbl/util/units.h"
 
 // Fakes
 ////////////////////////////////////////////////////////////////
@@ -243,7 +244,7 @@ void test_ancs_filtering__record_app_update_timestamp(void) {
   };
   iOSNotifPrefs *existing_prefs = &prefs;
 
-  s_now += SECONDS_PER_DAY - 1;
+  s_now += PBL_SEC_PER_DAY - 1;
   ancs_filtering_record_app(&existing_prefs, s_app_id_attr, s_display_name_attr, s_title_attr);
   cl_assert(!s_performed_store);
 
@@ -303,17 +304,17 @@ void test_ancs_filtering__should_ignore_because_muted(void) {
   cl_assert(!ancs_filtering_is_muted(&mute_weekends));
   cl_assert(ancs_filtering_is_muted(&mute_weekdays));
 
-  s_now += SECONDS_PER_DAY; // Saturday Jan 2, 2016
+  s_now += PBL_SEC_PER_DAY; // Saturday Jan 2, 2016
   cl_assert(ancs_filtering_is_muted(&mute_always));
   cl_assert(ancs_filtering_is_muted(&mute_weekends));
   cl_assert(!ancs_filtering_is_muted(&mute_weekdays));
 
-  s_now += SECONDS_PER_DAY; // Sunday Jan 3, 2016
+  s_now += PBL_SEC_PER_DAY; // Sunday Jan 3, 2016
   cl_assert(ancs_filtering_is_muted(&mute_always));
   cl_assert(ancs_filtering_is_muted(&mute_weekends));
   cl_assert(!ancs_filtering_is_muted(&mute_weekdays));
 
-  s_now += SECONDS_PER_DAY; // Monday Jan 4, 2016
+  s_now += PBL_SEC_PER_DAY; // Monday Jan 4, 2016
   cl_assert(ancs_filtering_is_muted(&mute_always));
   cl_assert(!ancs_filtering_is_muted(&mute_weekends));
   cl_assert(ancs_filtering_is_muted(&mute_weekdays));

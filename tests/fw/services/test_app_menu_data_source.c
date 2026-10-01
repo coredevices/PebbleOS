@@ -74,6 +74,7 @@
 // Fake Includes
 ////////////////////////////////////
 #include "fake_spi_flash.h"
+#include "pbl/services/time.h"
 
 // Test reset function for app_order_storage cached state
 extern void app_order_storage_reset_for_tests(void);

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "applib/ui/ui.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -18,7 +18,7 @@ typedef enum {
 
 typedef struct {
   DayPickerKind kind;
-  bool custom_days[DAYS_PER_WEEK];
+  bool custom_days[PBL_DAY_PER_WEEK];
 } DayPickerResult;
 
 typedef struct {
@@ -31,7 +31,7 @@ typedef void (*DayPickerCallback)(DayPickerResult result, void *context);
 
 void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *context);
 
-void custom_day_picker_push(bool initial_days[DAYS_PER_WEEK], DayPickerCallback callback,
+void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallback callback,
                             void *context, GColor highlight_color);
 
 const char *day_picker_kind_get_string(DayPickerKind kind);

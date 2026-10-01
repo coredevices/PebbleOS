@@ -13,7 +13,7 @@
 #include "pbl/services/blob_db/weather_db.h"
 #include "pbl/services/weather/weather_types.h"
 #include "pbl/util/list.h"
-#include "util/time/time.h"
+#include <time.h>
 
 #include <stdint.h>
 

@@ -13,6 +13,8 @@
 #include "pbl/services/blob_db/watch_app_prefs_db.h"
 #include "pbl/services/blob_db/weather_db.h"
 #include <pbl/logging/logging.h>
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_weather, CONFIG_SERVICE_WEATHER_LOG_LEVEL);
 
@@ -30,7 +32,7 @@ static PBL_MUTEX_DEFINE(s_mutex);
 static WeatherLocationForecast *s_default_forecast;
 
 static bool prv_entry_update_time_too_old_to_be_valid(const time_t update_time_utc) {
-  const time_t oldest_valid_time_utc = time_start_of_today() - SECONDS_PER_DAY;
+  const time_t oldest_valid_time_utc = time_start_of_today() - PBL_SEC_PER_DAY;
   return (update_time_utc < oldest_valid_time_utc);
 }
 

@@ -39,7 +39,7 @@
 #include "shell/system_theme.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -47,6 +47,7 @@
 
 #include "pbl/services/vibes/vibe_client.h"
 #include "pbl/services/vibes/vibe_score.h"
+#include <time.h>
 
 #define DECLINE_DELAY_MS       2000
 #define SMS_REPLY_DELAY_MS     1200
@@ -477,7 +478,7 @@ static void prv_start_ringing(void) {
   }
   unsigned int vibe_interval_ms = vibe_score_get_duration_ms(s_phone_ui_data->vibe_score) +
                                   vibe_score_get_repeat_delay_ms(s_phone_ui_data->vibe_score);
-  vibe_repeat_interval_sec = DIVIDE_CEIL(vibe_interval_ms, MS_PER_SECOND);
+  vibe_repeat_interval_sec = DIVIDE_CEIL(vibe_interval_ms, PBL_MSEC_PER_SEC);
   prv_ring(NULL);
   regular_timer_add_multisecond_callback(&s_phone_ui_data->ring_timer, vibe_repeat_interval_sec);
 }
@@ -524,11 +525,11 @@ static void prv_update_call_time(void *unused) {
     prv_show_call_status();
   }
   const time_t duration = rtc_get_time() - s_phone_ui_data->call_start_time;
-  const int seconds = duration % SECONDS_PER_MINUTE;
-  int minutes = (duration - seconds) / SECONDS_PER_MINUTE;
-  if (minutes >= MINUTES_PER_HOUR) {
-    const int hours = minutes / MINUTES_PER_HOUR;
-    minutes = minutes % MINUTES_PER_HOUR;
+  const int seconds = duration % PBL_SEC_PER_MIN;
+  int minutes = (duration - seconds) / PBL_SEC_PER_MIN;
+  if (minutes >= PBL_MIN_PER_HOUR) {
+    const int hours = minutes / PBL_MIN_PER_HOUR;
+    minutes = minutes % PBL_MIN_PER_HOUR;
     sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "%u:%02u:%02u",
               hours, minutes, seconds);
   } else {

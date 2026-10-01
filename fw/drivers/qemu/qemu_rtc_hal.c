@@ -7,6 +7,7 @@
 #include <pbl/logging/logging.h>
 
 #include <stdio.h>
+#include "pbl/services/time.h"
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

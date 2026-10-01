@@ -12,7 +12,9 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/util/math.h"
 #include "pbl/util/string.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 // Compile-time display offset calculations
 #define DISPLAY_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
@@ -94,7 +96,7 @@ static void prv_draw_day_labels_background(HealthGraphCard *graph_card, GContext
 //! Get the corresponding data point for a weekday.
 //! Sunday is 0, and the day data begins with today and continues into the past.
 static int32_t prv_get_day_point(HealthGraphCard *graph_card, int weekday) {
-  const int index = positive_modulo(graph_card->current_day - weekday, DAYS_PER_WEEK);
+  const int index = positive_modulo(graph_card->current_day - weekday, PBL_DAY_PER_WEEK);
   return graph_card->day_data[index];
 }
 
@@ -115,7 +117,7 @@ static void prv_setup_day_bar_box(int weekday, GRect *box, int16_t bar_height) {
   // The center bars are slightly wider than the other bars
   // Note that Thursday is the center bar, not Wednesday since drawing begins with Monday
   //                                      S  M  T    W      T      F    S
-  const int bar_widths[DAYS_PER_WEEK] = {w, w, w, w + 1, w + 1, w + 1, w};
+  const int bar_widths[PBL_DAY_PER_WEEK] = {w, w, w, w + 1, w + 1, w + 1, w};
   const int bar_width = bar_widths[weekday];
 #else
   const int bar_width = w;
@@ -136,7 +138,7 @@ static void prv_draw_day_bar_wide(GContext *ctx, const GRect *box, const GRect *
 static void prv_draw_day_bar_thin(GContext *ctx, const GRect *box, int weekday, GColor bar_color) {
   GRect thin_box = *box;
   // Nudge the bars before Thursday (inclusive). Note that Sunday is on the right side, at the end
-  const int thin_offset_x = WITHIN(weekday, Monday, Thursday) ? 1 : 0;
+  const int thin_offset_x = WITHIN(weekday, PBL_MONDAY, PBL_THURSDAY) ? 1 : 0;
   const int thin_width = 5;
   thin_box.origin.x += thin_offset_x + (box->size.w - thin_width) / 2;
   thin_box.size.w = thin_width;
@@ -159,8 +161,8 @@ static int16_t prv_draw_day_bar(GContext *ctx, int weekday, const GRect *box, GC
 
 static bool prv_bar_should_be_wide(int draw_weekday, int current_weekday) {
   // The graph begins on Monday, so all bars from Monday until current (inclusive) should be wide
-  return (positive_modulo(draw_weekday - Monday, DAYS_PER_WEEK) <=
-          positive_modulo(current_weekday - Monday, DAYS_PER_WEEK));
+  return (positive_modulo(draw_weekday - PBL_MONDAY, PBL_DAY_PER_WEEK) <=
+          positive_modulo(current_weekday - PBL_MONDAY, PBL_DAY_PER_WEEK));
 }
 
 static GColor prv_get_bar_color(HealthGraphCard *graph_card, bool is_active, bool is_wide) {
@@ -178,8 +180,8 @@ static void prv_draw_day_bars(HealthGraphCard *graph_card, GContext *ctx) {
   const GRect *bounds = &graph_card->layer.bounds;
   GRect box = {.origin.x = (bounds->size.w - total_bar_widths) / 2, .origin.y = LABEL_OFFSET_Y};
   // The first day to draw is Monday, and draw a week's worth of bars
-  for (int i = Monday, draw_count = 0; draw_count < DAYS_PER_WEEK;
-       draw_count++, i = (i + 1) % DAYS_PER_WEEK) {
+  for (int i = PBL_MONDAY, draw_count = 0; draw_count < PBL_DAY_PER_WEEK;
+       draw_count++, i = (i + 1) % PBL_DAY_PER_WEEK) {
     // Setup the dimensions and color of the day bar
     const int32_t day_point = prv_get_day_point(graph_card, i);
     const int bar_height = prv_convert_to_graph_height(graph_card, day_point);
@@ -188,7 +190,7 @@ static void prv_draw_day_bars(HealthGraphCard *graph_card, GContext *ctx) {
     if (graph_card->current_day == i) {
       // Draw last week's bar as a thin bar behind this bar
       const int32_t last_bar_height =
-          prv_convert_to_graph_height(graph_card, graph_card->day_data[DAYS_PER_WEEK]);
+          prv_convert_to_graph_height(graph_card, graph_card->day_data[PBL_DAY_PER_WEEK]);
       prv_setup_day_bar_box(i, &box, last_bar_height);
       const GColor bar_color = prv_get_bar_color(graph_card, is_active, false /* wide bar */);
       prv_draw_day_bar(ctx, i, &box, bar_color, false /* wide bar */);
@@ -239,13 +241,13 @@ static int32_t prv_get_info_data_point(HealthGraphCard *graph_card) {
   // Show today's data point if the selection is a day of the week, otherwise show the weekday
   // average if the current day is a weekday or weekend average if the current day is on the weekend
   if (graph_card->selection == HealthGraphIndex_Average) {
-    return IS_WEEKDAY(graph_card->current_day) ? graph_card->stats.weekday.avg
-                                               : graph_card->stats.weekend.avg;
+    return pbl_time_is_weekday(graph_card->current_day) ? graph_card->stats.weekday.avg
+                                                        : graph_card->stats.weekend.avg;
   }
   int day_point = prv_get_day_point(graph_card, graph_card->selection);
   if (graph_card->selection == graph_card->current_day && day_point == 0) {
     // If today has no progress, use the info from last week
-    day_point = graph_card->day_data[DAYS_PER_WEEK];
+    day_point = graph_card->day_data[PBL_DAY_PER_WEEK];
   }
   return day_point;
 }
@@ -287,9 +289,9 @@ static bool prv_is_selection_last_weekday(HealthGraphCard *graph_card) {
   // Otherwise the selection is last week if either the selection is Sunday
   // or if the selection is greater than the current day
   return (((int)graph_card->current_day == graph_card->selection && graph_card->day_data[0] == 0) ||
-          ((graph_card->current_day == Sunday)
+          ((graph_card->current_day == PBL_SUNDAY)
                ? false
-               : ((int)graph_card->selection == Sunday ||
+               : ((int)graph_card->selection == PBL_SUNDAY ||
                   (int)graph_card->selection > graph_card->current_day)));
 }
 
@@ -298,16 +300,17 @@ size_t health_graph_format_weekday_prefix(HealthGraphCard *graph_card, char *buf
   if (prv_is_selection_last_weekday(graph_card)) {
     // The graph starts on Monday, so wrap around the selection and current_day for Sunday
     const time_t selection_time =
-        ((positive_modulo(graph_card->selection - Monday, DAYS_PER_WEEK) -
-          positive_modulo(graph_card->current_day - Monday, DAYS_PER_WEEK) - DAYS_PER_WEEK) *
-         SECONDS_PER_DAY) +
+        ((positive_modulo(graph_card->selection - PBL_MONDAY, PBL_DAY_PER_WEEK) -
+          positive_modulo(graph_card->current_day - PBL_MONDAY, PBL_DAY_PER_WEEK) -
+          PBL_DAY_PER_WEEK) *
+         PBL_SEC_PER_DAY) +
         graph_card->data_timestamp;
     const int pos = clock_get_month_named_abbrev_date(buffer, buffer_size, selection_time);
     strncat(buffer, i18n_get(": ", graph_card), buffer_size - pos - 1);
     return strlen(buffer);
   } else {
     struct tm local_tm = (struct tm){
-      .tm_wday = positive_modulo(graph_card->selection, DAYS_PER_WEEK),
+      .tm_wday = positive_modulo(graph_card->selection, PBL_DAY_PER_WEEK),
     };
     return strftime(buffer, buffer_size, i18n_get("%a: ", graph_card), &local_tm);
   }
@@ -444,6 +447,6 @@ void health_graph_card_cycle_selected(HealthGraphCard *graph_card) {
     graph_card->selection = HealthGraphIndex_Monday;
   } else {
     // Otherwise progress through the weekdays normally
-    graph_card->selection = (graph_card->selection + 1) % DAYS_PER_WEEK;
+    graph_card->selection = (graph_card->selection + 1) % PBL_DAY_PER_WEEK;
   }
 }

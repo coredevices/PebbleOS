@@ -6,6 +6,7 @@
 #include "settings_raw_iter.h"
 
 #include <time.h>
+#include "pbl/util/units.h"
 
 // Deleted records have their key stick around for at least DELETED_LIFETIME
 // before they can be garbage collected from the file in which they are
@@ -14,7 +15,7 @@
 // https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=26837564
 //
 // FIXME: See PBL-18945
-#define DELETED_LIFETIME (0 * SECONDS_PER_DAY)
+#define DELETED_LIFETIME (0 * PBL_SEC_PER_DAY)
 
 //! A SettingsFile is just a simple binary key-value store. Keys can be strings,
 //! uint32_ts, or arbitrary bytes. Values are similarly flexible. All

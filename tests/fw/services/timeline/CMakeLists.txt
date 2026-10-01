@@ -8,7 +8,8 @@ pbl_clar_test(test_reminders
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/flash_region/flash_region.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     fw/flash_region/filesystem_regions.c
     fw/services/blob_db/timeline_item_storage.c
     fw/services/settings/settings_file.c
@@ -36,7 +37,8 @@ pbl_clar_test(test_calendar
     fw/services/timeline/item.c
     fw/services/timeline/timeline.c
     fw/util/crc8.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
@@ -55,7 +57,8 @@ pbl_clar_test(test_timeline_peek_event
     fw/services/timeline/peek.c
     fw/services/timeline/timeline.c
     fw/util/crc8.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
@@ -71,8 +74,9 @@ pbl_clar_test(test_attribute
 
 pbl_clar_test(test_timeline_model
   SOURCES
-    fw/util/time/time.c
-    fw/util/time/mktime.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
+    lib/c/time/mktime.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
@@ -186,7 +190,8 @@ pbl_clar_test(test_timeline_layouts
     fw/system/hexdump.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
-    fw/util/time/time.c
+    fw/services/clock/time.c
+    lib/c/time/gmtime.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_display.c

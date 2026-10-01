@@ -5,6 +5,8 @@ pbl_library()
 pbl_library_sources(
   assert.c
   syscalls.c
+  time/gmtime.c
+  time/mktime.c
 )
 if(CONFIG_LIBC_NEWLIB_NANO)
   add_subdirectory(newlib)

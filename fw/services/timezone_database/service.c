@@ -13,6 +13,8 @@
 #include <pbl/util/size.h>
 
 #include <string.h>
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_timezone_database, CONFIG_SERVICE_TIMEZONE_DATABASE_LOG_LEVEL);
 
@@ -110,7 +112,7 @@ bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_inf
   *tz_info = (TimezoneInfo){
     .dst_id = tz_data.dst_id,
     .timezone_id = region_id,
-    .tm_gmtoff = tz_data.gmt_offset_minutes * SECONDS_PER_MINUTE,
+    .tm_gmtoff = tz_data.gmt_offset_minutes * PBL_SEC_PER_MIN,
     // Leave the dst_start and dst_end timestamps uninitialized
     .dst_start = 0,
     .dst_end = 0

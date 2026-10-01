@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "pbl/services/time.h"
+
 // time
 static time_t s_time = 0;
 static uint16_t s_millis = 0;

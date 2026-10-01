@@ -11,7 +11,7 @@
 #include "system/status_codes.h"
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/list.h"
-#include "util/time/time.h"
+#include <time.h>
 
 //! The BlobDB API is a single consistent API to a number of key/value stores on the watch.
 //! It is used in conjunction with the BlobDB endpoint.

@@ -6,6 +6,8 @@
 #include "apps/system/health/sleep_summary_card.h"
 
 #include "test_health_app_includes.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -67,7 +69,7 @@ void test_health_sleep_summary_card__render_no_data(void) {
 
 void test_health_sleep_summary_card__render_no_typical(void) {
   HealthData health_data = {
-    .monthly_sleep_average = (9 * SECONDS_PER_HOUR),
+    .monthly_sleep_average = (9 * PBL_SEC_PER_HOUR),
   };
 
   prv_create_card_and_render(&health_data);
@@ -77,12 +79,12 @@ void test_health_sleep_summary_card__render_no_typical(void) {
 void test_health_sleep_summary_card__render_no_sleep_last_night(void) {
   HealthData health_data = {
     // Used for text
-    .typical_sleep = (10 * SECONDS_PER_HOUR),
-    .monthly_sleep_average = (300 * SECONDS_PER_HOUR),
+    .typical_sleep = (10 * PBL_SEC_PER_HOUR),
+    .monthly_sleep_average = (300 * PBL_SEC_PER_HOUR),
 
     // Used for typical
-    .typical_sleep_start = -4 * SECONDS_PER_HOUR,
-    .typical_sleep_end = 7 * SECONDS_PER_HOUR,
+    .typical_sleep_start = -4 * PBL_SEC_PER_HOUR,
+    .typical_sleep_end = 7 * PBL_SEC_PER_HOUR,
   };
 
   prv_create_card_and_render(&health_data);
@@ -94,33 +96,33 @@ void test_health_sleep_summary_card__render_sleep_late_start_early_end1(void) {
 
   HealthData health_data = {
     // Used for text
-    .sleep_data[0] = (8 * SECONDS_PER_HOUR) + (12 * SECONDS_PER_MINUTE),
-    .typical_sleep = (10 * SECONDS_PER_HOUR),
-    .monthly_sleep_average = (300 * SECONDS_PER_HOUR),
+    .sleep_data[0] = (8 * PBL_SEC_PER_HOUR) + (12 * PBL_SEC_PER_MIN),
+    .typical_sleep = (10 * PBL_SEC_PER_HOUR),
+    .monthly_sleep_average = (300 * PBL_SEC_PER_HOUR),
 
     // Used for typical
-    .sleep_start = -3 * SECONDS_PER_HOUR,
-    .sleep_end = 5 * SECONDS_PER_HOUR,
-    .typical_sleep_start = -4 * SECONDS_PER_HOUR,
-    .typical_sleep_end = 7 * SECONDS_PER_HOUR,
+    .sleep_start = -3 * PBL_SEC_PER_HOUR,
+    .sleep_end = 5 * PBL_SEC_PER_HOUR,
+    .typical_sleep_start = -4 * PBL_SEC_PER_HOUR,
+    .typical_sleep_end = 7 * PBL_SEC_PER_HOUR,
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 3,
     .activity_sessions[0] =
         {
-          .start_utc = start_of_today - (3 * SECONDS_PER_HOUR), // 9pm
-          .length_min = (3 * MINUTES_PER_HOUR),
+          .start_utc = start_of_today - (3 * PBL_SEC_PER_HOUR), // 9pm
+          .length_min = (3 * PBL_MIN_PER_HOUR),
           .type = ActivitySessionType_Sleep,
         },
     .activity_sessions[1] =
         {
-          .start_utc = start_of_today + (1 * SECONDS_PER_HOUR), // 1am
-          .length_min = (4 * MINUTES_PER_HOUR),
+          .start_utc = start_of_today + (1 * PBL_SEC_PER_HOUR), // 1am
+          .length_min = (4 * PBL_MIN_PER_HOUR),
           .type = ActivitySessionType_Sleep,
         },
     .activity_sessions[2] = {
-      .start_utc = start_of_today + (2 * SECONDS_PER_HOUR), // 2am
-      .length_min = (1 * MINUTES_PER_HOUR) + 30,
+      .start_utc = start_of_today + (2 * PBL_SEC_PER_HOUR), // 2am
+      .length_min = (1 * PBL_MIN_PER_HOUR) + 30,
       .type = ActivitySessionType_RestfulSleep,
     },
   };
@@ -134,33 +136,33 @@ void test_health_sleep_summary_card__render_sleep_late_start_early_end2(void) {
 
   HealthData health_data = {
     // Used for text
-    .sleep_data[0] = (8 * SECONDS_PER_HOUR) + (12 * SECONDS_PER_MINUTE),
-    .typical_sleep = (10 * SECONDS_PER_HOUR),
-    .monthly_sleep_average = (300 * SECONDS_PER_HOUR),
+    .sleep_data[0] = (8 * PBL_SEC_PER_HOUR) + (12 * PBL_SEC_PER_MIN),
+    .typical_sleep = (10 * PBL_SEC_PER_HOUR),
+    .monthly_sleep_average = (300 * PBL_SEC_PER_HOUR),
 
     // Used for typical
-    .sleep_start = 0 * SECONDS_PER_HOUR,
-    .sleep_end = 7 * SECONDS_PER_HOUR,
-    .typical_sleep_start = -1 * SECONDS_PER_HOUR,
-    .typical_sleep_end = 8 * SECONDS_PER_HOUR,
+    .sleep_start = 0 * PBL_SEC_PER_HOUR,
+    .sleep_end = 7 * PBL_SEC_PER_HOUR,
+    .typical_sleep_start = -1 * PBL_SEC_PER_HOUR,
+    .typical_sleep_end = 8 * PBL_SEC_PER_HOUR,
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 3,
     .activity_sessions[0] =
         {
-          .start_utc = start_of_today - (0 * SECONDS_PER_HOUR), // 12am
-          .length_min = (7 * MINUTES_PER_HOUR),
+          .start_utc = start_of_today - (0 * PBL_SEC_PER_HOUR), // 12am
+          .length_min = (7 * PBL_MIN_PER_HOUR),
           .type = ActivitySessionType_Sleep,
         },
     .activity_sessions[1] =
         {
-          .start_utc = start_of_today + (2 * SECONDS_PER_HOUR), // 2am
-          .length_min = (1 * MINUTES_PER_HOUR) + 40,
+          .start_utc = start_of_today + (2 * PBL_SEC_PER_HOUR), // 2am
+          .length_min = (1 * PBL_MIN_PER_HOUR) + 40,
           .type = ActivitySessionType_RestfulSleep,
         },
     .activity_sessions[2] = {
-      .start_utc = start_of_today + (4 * SECONDS_PER_HOUR), // 4am
-      .length_min = (2 * MINUTES_PER_HOUR),
+      .start_utc = start_of_today + (4 * PBL_SEC_PER_HOUR), // 4am
+      .length_min = (2 * PBL_MIN_PER_HOUR),
       .type = ActivitySessionType_RestfulSleep,
     },
   };
@@ -174,33 +176,33 @@ void test_health_sleep_summary_card__render_sleep_early_start_early_end1(void) {
 
   HealthData health_data = {
     // Used for text
-    .sleep_data[0] = (8 * SECONDS_PER_HOUR) + (12 * SECONDS_PER_MINUTE),
-    .typical_sleep = (10 * SECONDS_PER_HOUR),
-    .monthly_sleep_average = (300 * SECONDS_PER_HOUR),
+    .sleep_data[0] = (8 * PBL_SEC_PER_HOUR) + (12 * PBL_SEC_PER_MIN),
+    .typical_sleep = (10 * PBL_SEC_PER_HOUR),
+    .monthly_sleep_average = (300 * PBL_SEC_PER_HOUR),
 
     // Used for typical
-    .sleep_start = -3 * SECONDS_PER_HOUR,
-    .sleep_end = 7 * SECONDS_PER_HOUR,
-    .typical_sleep_start = -1 * SECONDS_PER_HOUR,
-    .typical_sleep_end = 8 * SECONDS_PER_HOUR,
+    .sleep_start = -3 * PBL_SEC_PER_HOUR,
+    .sleep_end = 7 * PBL_SEC_PER_HOUR,
+    .typical_sleep_start = -1 * PBL_SEC_PER_HOUR,
+    .typical_sleep_end = 8 * PBL_SEC_PER_HOUR,
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 3,
     .activity_sessions[0] =
         {
-          .start_utc = start_of_today - (3 * SECONDS_PER_HOUR), // 9pm
-          .length_min = (10 * MINUTES_PER_HOUR),
+          .start_utc = start_of_today - (3 * PBL_SEC_PER_HOUR), // 9pm
+          .length_min = (10 * PBL_MIN_PER_HOUR),
           .type = ActivitySessionType_Sleep,
         },
     .activity_sessions[1] =
         {
-          .start_utc = start_of_today - (2 * SECONDS_PER_HOUR), // 10pm
-          .length_min = (1 * MINUTES_PER_HOUR),
+          .start_utc = start_of_today - (2 * PBL_SEC_PER_HOUR), // 10pm
+          .length_min = (1 * PBL_MIN_PER_HOUR),
           .type = ActivitySessionType_RestfulSleep,
         },
     .activity_sessions[2] = {
-      .start_utc = start_of_today + (3 * SECONDS_PER_HOUR), // 3am
-      .length_min = (1 * MINUTES_PER_HOUR) + 15,
+      .start_utc = start_of_today + (3 * PBL_SEC_PER_HOUR), // 3am
+      .length_min = (1 * PBL_MIN_PER_HOUR) + 15,
       .type = ActivitySessionType_RestfulSleep,
     },
   };
@@ -214,27 +216,27 @@ void test_health_sleep_summary_card__render_sleep_early_start_late_end1(void) {
 
   HealthData health_data = {
     // Used for text
-    .sleep_data[0] = (8 * SECONDS_PER_HOUR) + (12 * SECONDS_PER_MINUTE),
-    .typical_sleep = (10 * SECONDS_PER_HOUR),
-    .monthly_sleep_average = (300 * SECONDS_PER_HOUR),
+    .sleep_data[0] = (8 * PBL_SEC_PER_HOUR) + (12 * PBL_SEC_PER_MIN),
+    .typical_sleep = (10 * PBL_SEC_PER_HOUR),
+    .monthly_sleep_average = (300 * PBL_SEC_PER_HOUR),
 
     // Used for typical
-    .sleep_start = -3 * SECONDS_PER_HOUR,
-    .sleep_end = 7 * SECONDS_PER_HOUR,
-    .typical_sleep_start = -4 * SECONDS_PER_HOUR,
-    .typical_sleep_end = 5 * SECONDS_PER_HOUR,
+    .sleep_start = -3 * PBL_SEC_PER_HOUR,
+    .sleep_end = 7 * PBL_SEC_PER_HOUR,
+    .typical_sleep_start = -4 * PBL_SEC_PER_HOUR,
+    .typical_sleep_end = 5 * PBL_SEC_PER_HOUR,
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 2,
     .activity_sessions[0] =
         {
-          .start_utc = start_of_today - (3 * SECONDS_PER_HOUR),
-          .length_min = (3 * MINUTES_PER_HOUR),
+          .start_utc = start_of_today - (3 * PBL_SEC_PER_HOUR),
+          .length_min = (3 * PBL_MIN_PER_HOUR),
           .type = ActivitySessionType_Sleep,
         },
     .activity_sessions[1] = {
-      .start_utc = start_of_today + (1 * SECONDS_PER_HOUR),
-      .length_min = (6 * MINUTES_PER_HOUR),
+      .start_utc = start_of_today + (1 * PBL_SEC_PER_HOUR),
+      .length_min = (6 * PBL_MIN_PER_HOUR),
       .type = ActivitySessionType_Sleep,
     },
   };
@@ -248,21 +250,21 @@ void test_health_sleep_summary_card__render_sleep_late_start_late_end1(void) {
 
   HealthData health_data = {
     // Used for text
-    .sleep_data[0] = (8 * SECONDS_PER_HOUR) + (12 * SECONDS_PER_MINUTE),
-    .typical_sleep = (10 * SECONDS_PER_HOUR),
-    .monthly_sleep_average = (300 * SECONDS_PER_HOUR),
+    .sleep_data[0] = (8 * PBL_SEC_PER_HOUR) + (12 * PBL_SEC_PER_MIN),
+    .typical_sleep = (10 * PBL_SEC_PER_HOUR),
+    .monthly_sleep_average = (300 * PBL_SEC_PER_HOUR),
 
     // Used for typical
-    .sleep_start = -4 * SECONDS_PER_HOUR,
-    .sleep_end = 4 * SECONDS_PER_HOUR,
-    .typical_sleep_start = -3 * SECONDS_PER_HOUR,
-    .typical_sleep_end = 3 * SECONDS_PER_HOUR,
+    .sleep_start = -4 * PBL_SEC_PER_HOUR,
+    .sleep_end = 4 * PBL_SEC_PER_HOUR,
+    .typical_sleep_start = -3 * PBL_SEC_PER_HOUR,
+    .typical_sleep_end = 3 * PBL_SEC_PER_HOUR,
 
     // The sleep ring are filled by sleep sessions
     .num_activity_sessions = 1,
     .activity_sessions[0] = {
-      .start_utc = start_of_today - (4 * SECONDS_PER_HOUR),
-      .length_min = (8 * MINUTES_PER_HOUR),
+      .start_utc = start_of_today - (4 * PBL_SEC_PER_HOUR),
+      .length_min = (8 * PBL_MIN_PER_HOUR),
       .type = ActivitySessionType_Sleep,
     }
   };

@@ -37,7 +37,7 @@ add_executable(pdc2png
 
 target_include_directories(pdc2png PRIVATE
   # Ahead of the rest: this time.h deliberately shadows the host's.
-  ${PBL_BASE}/fw/util/time
+  ${PBL_BASE}/lib/c/include
   ${PBL_BASE}/tests/stubs
   ${PBL_BASE}/tests/fw/graphics
   ${PBL_BASE}/fw/applib/vendor/uPNG

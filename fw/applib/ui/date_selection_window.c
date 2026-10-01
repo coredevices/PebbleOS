@@ -6,7 +6,7 @@
 #include "applib/ui/option_menu_window.h"
 #include "pbl/services/clock.h"
 #include "shell/system_theme.h"
-#include "util/date.h"
+#include "pbl/util/time.h"
 
 #include <stdio.h>
 
@@ -63,7 +63,7 @@ static char *prv_get_cell_text(unsigned index, void *context) {
   switch ((DateInputIndex)index) {
     case DateInputIndexYear:
       snprintf(data->cell_buf, sizeof(data->cell_buf), "%04d",
-               (int)(data->date.year + STDTIME_YEAR_OFFSET));
+               (int)(data->date.year + PBL_TM_YEAR_ORIGIN));
       return data->cell_buf;
     case DateInputIndexMonth:
       snprintf(data->cell_buf, sizeof(data->cell_buf), "%02d", (int)(data->date.month + 1));

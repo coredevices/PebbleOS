@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "util/time/time.h"
+#include <time.h>
 
 void activity_insights_recalculate_stats(void) {
   return;

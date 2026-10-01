@@ -9,7 +9,8 @@
 #include "applib/accel_service_private.h"
 #include "applib/health_service.h"
 #include "pbl/kernel/compiler.h"
-#include "util/time/time.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 // Max # of days of history we store
 #define ACTIVITY_HISTORY_DAYS 30
@@ -215,7 +216,7 @@ typedef struct PBL_PACKED {
 typedef struct {
 } ActivitySessionDataSleeping;
 
-#define ACTIVITY_SESSION_MAX_LENGTH_MIN MINUTES_PER_DAY
+#define ACTIVITY_SESSION_MAX_LENGTH_MIN PBL_MIN_PER_DAY
 
 typedef struct PBL_PACKED {
   time_t start_utc;             // session start time
@@ -480,7 +481,7 @@ void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval)
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history);
 
 //! Get the typical value for a metric on a given day of the week
-bool activity_get_metric_typical(ActivityMetric metric, DayInWeek day, int32_t *value_out);
+bool activity_get_metric_typical(ActivityMetric metric, enum pbl_weekday day, int32_t *value_out);
 
 //! Get the value for a metric over the last 4 weeks
 bool activity_get_metric_monthly_avg(ActivityMetric metric, int32_t *value_out);
@@ -524,7 +525,7 @@ typedef struct {
 //! @param[out] averages pointer to ActivityStepAverages structure that will be filled
 //!     in with the step averages.
 //! @return true on success, false on failure
-bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *averages);
+bool activity_get_step_averages(enum pbl_weekday day_of_week, ActivityMetricAverages *averages);
 
 //! Control raw accel sample collection. This method can be used to start and stop raw
 //! accel sample collection. The samples are sent to data logging with tag

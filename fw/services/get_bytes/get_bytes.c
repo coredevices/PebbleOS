@@ -21,6 +21,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "pbl/util/units.h"
 
 PBL_LOG_MODULE_DEFINE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
 
@@ -80,7 +81,7 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
 
 static void prv_gather_and_record_stats(GetBytesState *state) {
   uint32_t elapsed_time_ms = pbl_ticks_to_ms(rtc_get_ticks() - state->start_ticks);
-  uint32_t bytes_per_sec = ((state->num_bytes * MS_PER_SECOND) / elapsed_time_ms);
+  uint32_t bytes_per_sec = ((state->num_bytes * PBL_MSEC_PER_SEC) / elapsed_time_ms);
   PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %" PRIu32 " bytes/sec", bytes_per_sec);
   bluetooth_analytics_handle_get_bytes_stats(state->object_type, state->num_bytes, elapsed_time_ms,
                                              &state->conn_event_stats);

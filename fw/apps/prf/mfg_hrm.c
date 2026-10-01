@@ -16,6 +16,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include "pbl/util/units.h"
 
 #ifdef CONFIG_HRM
 
@@ -108,7 +109,7 @@ static void prv_handle_init(void) {
   // Use app data as session ref
   AppInstallId app_id = 1;
   data->hrm_session =
-      sys_hrm_manager_app_subscribe(app_id, 1, SECONDS_PER_HOUR, HRMFeature_BPM | HRMFeature_SpO2);
+      sys_hrm_manager_app_subscribe(app_id, 1, PBL_SEC_PER_HOUR, HRMFeature_BPM | HRMFeature_SpO2);
 
   app_window_stack_push(window, true);
 }

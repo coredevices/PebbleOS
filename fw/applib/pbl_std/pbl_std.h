@@ -6,12 +6,24 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "util/time/time.h"
+#include <time.h>
 
 /*
  * C Standard Library functions for consumption by 3rd party apps
  *
  */
+
+#define SECONDS_PER_MINUTE (60)
+
+#define MINUTES_PER_HOUR (60)
+
+#define SECONDS_PER_HOUR (SECONDS_PER_MINUTE * MINUTES_PER_HOUR)
+
+#define HOURS_PER_DAY (24)
+
+#define MINUTES_PER_DAY (HOURS_PER_DAY * MINUTES_PER_HOUR)
+
+#define SECONDS_PER_DAY (MINUTES_PER_DAY * SECONDS_PER_MINUTE)
 
 //! @addtogroup StandardC Standard C
 //! @{

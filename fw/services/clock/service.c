@@ -21,6 +21,9 @@
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
 #include "pbl/services/analytics/analytics.h"
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 #ifndef CONFIG_RECOVERY_FW
 #include "pbl/services/notifications/do_not_disturb.h"
@@ -88,17 +91,17 @@ static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz
   };
   // A few countries actually have their DST rule on the midnight AFTER a day
   // This is subtly different from the midnight OF a day.
-  if (rule->hour >= HOURS_PER_DAY) {
-    time_tm.tm_hour %= HOURS_PER_DAY;
+  if (rule->hour >= PBL_HOUR_PER_DAY) {
+    time_tm.tm_hour %= PBL_HOUR_PER_DAY;
   }
   // Brazil delays DST end by one week every 3 years for elections
-  if (tz_info->dst_id == DSTID_BRAZIL && (((TM_YEAR_ORIGIN + year) % 3) == 2) && is_end) {
-    time_tm.tm_mday += DAYS_PER_WEEK;
+  if (tz_info->dst_id == DSTID_BRAZIL && (((PBL_TM_YEAR_ORIGIN + year) % 3) == 2) && is_end) {
+    time_tm.tm_mday += PBL_DAY_PER_WEEK;
   }
   time_t uxtime = mktime(&time_tm);
   gmtime_r(&uxtime, &time_tm);
 
-  for (int i = 0; i < DAYS_PER_WEEK; i++) { // max is DAYS_PER_WEEK to find a day_of_week
+  for (int i = 0; i < PBL_DAY_PER_WEEK; i++) { // max is DAYS_PER_WEEK to find a day_of_week
     // we also have to check month here, as leap-year case puts us 1 day past feb
 #define DSTRULE_WDAY_ANY (255)
     if ((time_tm.tm_wday == rule->wday || rule->wday == DSTRULE_WDAY_ANY) &&
@@ -110,8 +113,8 @@ static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz
     gmtime_r(&uxtime, &time_tm);
   }
 
-  if (rule->hour >= HOURS_PER_DAY) {
-    time_tm.tm_mday += rule->hour / HOURS_PER_DAY;
+  if (rule->hour >= PBL_HOUR_PER_DAY) {
+    time_tm.tm_mday += rule->hour / PBL_HOUR_PER_DAY;
     uxtime = mktime(&time_tm);
     gmtime_r(&uxtime, &time_tm);
   }
@@ -128,9 +131,9 @@ static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz
   }
   // Lord Howe Island has a half-hour DST
   if (tz_info->dst_id == DSTID_LORDHOWE) {
-    uxtime -= time_tm.tm_isdst ? SECONDS_PER_HOUR / 2 : 0;
+    uxtime -= time_tm.tm_isdst ? PBL_SEC_PER_HOUR / 2 : 0;
   } else {
-    uxtime -= time_tm.tm_isdst ? SECONDS_PER_HOUR : 0;
+    uxtime -= time_tm.tm_isdst ? PBL_SEC_PER_HOUR : 0;
   }
   uxtime -= time_tm.tm_gmtoff;
   return uxtime;
@@ -228,7 +231,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
   TimezoneInfo tz_info = {
     .dst_id = 0,
     .timezone_id = UNKNOWN_TIMEZONE_ID,
-    .tm_gmtoff = tz_data->utc_offset_min * SECONDS_PER_MINUTE,
+    .tm_gmtoff = tz_data->utc_offset_min * PBL_SEC_PER_MIN,
     .dst_start = 0,
     .dst_end = 0,
   };
@@ -388,7 +391,7 @@ PBL_T_STATIC void prv_watch_dst(void *user) {
   const bool is_dst = time_get_isdst(rtc_get_time());
 
 #ifndef CONFIG_RECOVERY_FW
-  const time_t seconds_into_hour = time_utc_to_local(rtc_get_time()) % SECONDS_PER_HOUR;
+  const time_t seconds_into_hour = time_utc_to_local(rtc_get_time()) % PBL_SEC_PER_HOUR;
   if (s_hourly_chime_armed && alerts_should_vibrate_for_type(AlertOther) &&
       (seconds_into_hour < HOURLY_CHIME_GRACE_PERIOD_SECONDS)) {
     uint32_t vibe_id = vibe_score_info_get_resource_id(
@@ -471,7 +474,7 @@ size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minu
       format = add_space ? "%u:%02u PM" : "%u:%02uPM";
     }
   }
-  return sniprintf(buffer, size, format, time_util_get_num_hours(hours, is24h), minutes);
+  return sniprintf(buffer, size, format, pbl_time_display_hour(hours, is24h), minutes);
 }
 
 size_t clock_copy_time_string_timestamp(char *buffer, uint8_t size, time_t timestamp) {
@@ -541,11 +544,11 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
   time_t midtime = timestamp / 2 + end_time / 2;
   if (midtime > now) { // future
     time_t difference = timestamp - now;
-    if (timestamp < now || difference < SECONDS_PER_MINUTE) {
+    if (timestamp < now || difference < PBL_SEC_PER_MIN) {
       i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
       strncpy(number_buffer, "", number_buffer_size);
-    } else if (difference <= SECONDS_PER_HOUR) {
-      snprintf(number_buffer, number_buffer_size, "%ld", difference / SECONDS_PER_MINUTE);
+    } else if (difference <= PBL_SEC_PER_HOUR) {
+      snprintf(number_buffer, number_buffer_size, "%ld", difference / PBL_SEC_PER_MIN);
       i18n_get_with_buffer(" MIN. TO", word_buffer, word_buffer_size);
     } else {
       prv_copy_time_string_timestamp(number_buffer, number_buffer_size, word_buffer,
@@ -553,7 +556,7 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
     }
   } else { // past
     time_t difference = now - timestamp;
-    if (now < timestamp || difference < SECONDS_PER_MINUTE) {
+    if (now < timestamp || difference < PBL_SEC_PER_MIN) {
       i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
       strncpy(number_buffer, "", number_buffer_size);
     } else {
@@ -568,7 +571,7 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
 void clock_get_event_relative_time_string(char *number_buffer, int number_buffer_size,
                                           char *word_buffer, int word_buffer_size, time_t timestamp,
                                           uint16_t duration, time_t current_day, bool all_day) {
-  time_t end_time = timestamp + duration * SECONDS_PER_MINUTE;
+  time_t end_time = timestamp + duration * PBL_SEC_PER_MIN;
   if (all_day) {
     // all day event, multiday or single day
     prv_get_relative_all_day_string(word_buffer, word_buffer_size, current_day);
@@ -676,11 +679,11 @@ void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
       // Show something like UTC-4 or UTC-10.25
       // This will typically happen in the emulator when we know the UTC offset, but not
       // the timezone (fallback case).
-      int gmt_offset_m = time_get_gmtoffset() / SECONDS_PER_MINUTE;
-      int hour_offset = gmt_offset_m / MINUTES_PER_HOUR;
+      int gmt_offset_m = time_get_gmtoffset() / PBL_SEC_PER_MIN;
+      int hour_offset = gmt_offset_m / PBL_MIN_PER_HOUR;
 
       char min_buf[4] = {0};
-      int min_offset_percent = ((ABS(gmt_offset_m) % MINUTES_PER_HOUR) * 100) / MINUTES_PER_HOUR;
+      int min_offset_percent = ((ABS(gmt_offset_m) % PBL_MIN_PER_HOUR) * 100) / PBL_MIN_PER_HOUR;
       if (min_offset_percent) {
         snprintf(min_buf, sizeof(min_buf), ".%d", min_offset_percent);
       }
@@ -713,11 +716,11 @@ void clock_get_friendly_date(char *buffer, int buf_size, time_t timestamp) {
 
   if (midnight == today_midnight) {
     i18n_get_with_buffer("Today", buffer, buf_size);
-  } else if (midnight == (today_midnight - SECONDS_PER_DAY)) {
+  } else if (midnight == (today_midnight - PBL_SEC_PER_DAY)) {
     i18n_get_with_buffer("Yesterday", buffer, buf_size);
-  } else if (midnight == (today_midnight + SECONDS_PER_DAY)) {
+  } else if (midnight == (today_midnight + PBL_SEC_PER_DAY)) {
     i18n_get_with_buffer("Tomorrow", buffer, buf_size);
-  } else if (midnight <= (today_midnight + (5 * SECONDS_PER_DAY))) {
+  } else if (midnight <= (today_midnight + (5 * PBL_SEC_PER_DAY))) {
     // Use weekday name up to 5 days in the future, aka "Sunday"
     prv_format_time(buffer, buf_size, i18n_noop("%A"), timestamp);
   } else {
@@ -758,9 +761,9 @@ static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t 
                                              bool capitalized, bool with_fulltime) {
   time_t today_midnight = time_util_get_midnight_of(rtc_get_time());
   time_t timestamp_midnight = time_util_get_midnight_of(timestamp);
-  time_t yesterday_midnight = time_util_get_midnight_of(rtc_get_time() - SECONDS_PER_DAY);
-  time_t last_week_midnight = time_util_get_midnight_of(rtc_get_time() - SECONDS_PER_WEEK);
-  time_t next_week_midnight = time_util_get_midnight_of(rtc_get_time() + SECONDS_PER_WEEK);
+  time_t yesterday_midnight = time_util_get_midnight_of(rtc_get_time() - PBL_SEC_PER_DAY);
+  time_t last_week_midnight = time_util_get_midnight_of(rtc_get_time() - PBL_SEC_PER_WEEK);
+  time_t next_week_midnight = time_util_get_midnight_of(rtc_get_time() + PBL_SEC_PER_WEEK);
 
   const char *time_fmt = NULL;
   int style;
@@ -861,11 +864,11 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
   if (today_midnight != timestamp_midnight) {
     prv_clock_get_full_relative_time(buffer, buf_size, timestamp, capitalized, with_fulltime);
 
-  } else if (difference >= (SECONDS_PER_HOUR * max_relative_hrs)) {
+  } else if (difference >= (PBL_SEC_PER_HOUR * max_relative_hrs)) {
     prv_clock_get_full_relative_time(buffer, buf_size, timestamp, capitalized, with_fulltime);
 
-  } else if (difference >= SECONDS_PER_HOUR) {
-    const int num_hrs = prv_round(difference, SECONDS_PER_HOUR, RoundTypeHalfUp) / SECONDS_PER_HOUR;
+  } else if (difference >= PBL_SEC_PER_HOUR) {
+    const int num_hrs = prv_round(difference, PBL_SEC_PER_HOUR, RoundTypeHalfUp) / PBL_SEC_PER_HOUR;
 
     const char *str_fmt;
     if (capitalized) {
@@ -877,9 +880,9 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
     }
     snprintf(buffer, buf_size, i18n_get(str_fmt, buffer), num_hrs);
 
-  } else if (difference >= SECONDS_PER_MINUTE) {
+  } else if (difference >= PBL_SEC_PER_MIN) {
     const int num_minutes =
-        prv_round(difference, SECONDS_PER_MINUTE, RoundTypeAlwaysDown) / SECONDS_PER_MINUTE;
+        prv_round(difference, PBL_SEC_PER_MIN, RoundTypeAlwaysDown) / PBL_SEC_PER_MIN;
 
     const char *str_fmt;
     if (capitalized) {
@@ -894,9 +897,9 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
   } else if (difference >= 0) {
     strncpy(buffer, capitalized ? i18n_get("NOW", buffer) : i18n_get("Now", buffer), buf_size);
 
-  } else if (difference >= -(SECONDS_PER_HOUR - SECONDS_PER_MINUTE)) {
+  } else if (difference >= -(PBL_SEC_PER_HOUR - PBL_SEC_PER_MIN)) {
     const int num_minutes =
-        prv_round(-difference, SECONDS_PER_MINUTE, RoundTypeAlwaysUp) / SECONDS_PER_MINUTE;
+        prv_round(-difference, PBL_SEC_PER_MIN, RoundTypeAlwaysUp) / PBL_SEC_PER_MIN;
 
     const char *str_fmt;
     if (capitalized) {
@@ -908,9 +911,9 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
     }
     snprintf(buffer, buf_size, i18n_get(str_fmt, buffer), num_minutes);
 
-  } else if (difference >= -(SECONDS_PER_HOUR * max_relative_hrs)) {
+  } else if (difference >= -(PBL_SEC_PER_HOUR * max_relative_hrs)) {
     const int num_hrs =
-        prv_round(-difference, SECONDS_PER_HOUR, RoundTypeHalfDown) / SECONDS_PER_HOUR;
+        prv_round(-difference, PBL_SEC_PER_HOUR, RoundTypeHalfDown) / PBL_SEC_PER_HOUR;
 
     const char *str_fmt;
     if (capitalized) {
@@ -965,7 +968,7 @@ size_t clock_get_month_named_abbrev_date(char *buffer, size_t buffer_size, time_
 void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
   const time_t now = rtc_get_time();
   const time_t clamped_timestamp = MIN(now, timestamp);
-  prv_clock_get_relative_time_string(buffer, buf_size, clamped_timestamp, false, HOURS_PER_DAY,
+  prv_clock_get_relative_time_string(buffer, buf_size, clamped_timestamp, false, PBL_HOUR_PER_DAY,
                                      true);
 }
 
@@ -1029,9 +1032,9 @@ const char *clock_get_relative_daypart_string(time_t current_timestamp,
 
 void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {
   const int new_minutes =
-      positive_modulo(*hour * MINUTES_PER_HOUR + *minute + delta_minutes, MINUTES_PER_DAY);
-  *hour = new_minutes / MINUTES_PER_HOUR;
-  *minute = new_minutes % MINUTES_PER_HOUR;
+      positive_modulo(*hour * PBL_MIN_PER_HOUR + *minute + delta_minutes, PBL_MIN_PER_DAY);
+  *hour = new_minutes / PBL_MIN_PER_HOUR;
+  *minute = new_minutes % PBL_MIN_PER_HOUR;
 }
 
 #ifdef CONFIG_SHELL

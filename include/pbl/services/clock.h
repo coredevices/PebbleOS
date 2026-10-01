@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 #include <inttypes.h>
-#include "util/time/time.h"
+#include <time.h>
 
 //! @addtogroup Foundation
 //! @{

@@ -217,19 +217,13 @@ def parse_file(
         f"-I{root_dir}/include",
         f"-I{root_dir}/subsys",
         f"-I{root_dir}/fw",
+        f"-I{root_dir}/lib/c/include",
         f"-I{root_dir}/fw/applib/vendor/uPNG",
         f"-I{root_dir}/fw/applib/vendor/tinflate",
         f"-I{root_dir}/build/fw",
         "-DSDK",
         "-fno-builtin-itoa",
     ]
-
-    # Add header search paths, recursing subdirs:
-    for inc_sub_dir in ["fw/util"]:
-        args += [inc_sub_dir]
-        args += [
-            f"-I{d}" for d in glob.glob(os.path.join(root_dir, f"{inc_sub_dir}/*/"))
-        ]
 
     if internal_sdk_build:
         args.append("-DINTERNAL_SDK_BUILD")

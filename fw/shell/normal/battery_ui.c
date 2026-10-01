@@ -15,7 +15,6 @@
 #include "pbl/services/battery/battery_curve.h"
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
-#include "util/time/time.h"
 
 typedef void (*DialogUpdateFn)(Dialog *, void *);
 

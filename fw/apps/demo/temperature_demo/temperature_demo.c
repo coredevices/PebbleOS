@@ -16,6 +16,7 @@
 #include "temperature_demo.h"
 
 #include <stdio.h>
+#include "pbl/util/units.h"
 
 #define USE_FAKE_DATA 0
 
@@ -33,7 +34,7 @@
 #define PLOT_WIDTH  DISP_COLS
 #define PLOT_RECT   GRect(0, PLOT_TOP, PLOT_WIDTH, PLOT_HEIGHT)
 
-#define READ_HISTORY_ENTRIES (4 * MINUTES_PER_HOUR)
+#define READ_HISTORY_ENTRIES (4 * PBL_MIN_PER_HOUR)
 static int32_t s_temp_readings[READ_HISTORY_ENTRIES];
 
 // Demo temperature

@@ -23,6 +23,8 @@
 
 #include <stdio.h>
 #include <services/activity/activity.h>
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 // Test the activity API
 typedef struct {
@@ -260,7 +262,7 @@ static void prv_feed_light_sleep_min(uint32_t minutes) {
       prv_feed_idle_movement_sec(60);
     }
     activity_test_run_minute_callback();
-    rtc_set_time(rtc_get_time() + SECONDS_PER_MINUTE);
+    rtc_set_time(rtc_get_time() + PBL_SEC_PER_MIN);
     prv_clear_event_queue();
   }
 }
@@ -279,7 +281,7 @@ static void prv_feed_deep_sleep_min(uint32_t minutes) {
       prv_feed_idle_movement_sec(60);
     }
     activity_test_run_minute_callback();
-    rtc_set_time(rtc_get_time() + SECONDS_PER_MINUTE);
+    rtc_set_time(rtc_get_time() + PBL_SEC_PER_MIN);
     prv_clear_event_queue();
   }
 }
@@ -399,33 +401,33 @@ static void prv_test_sleep(void *context) {
   activity_get_metric(ActivityMetricSleepRestfulSeconds, 1, &deep_sleep);
   deep_sleep -= before_deep;
 
-  PBL_LOG_DBG("total: %d, deep: %d", (int)total_sleep / SECONDS_PER_MINUTE,
-              (int)deep_sleep / SECONDS_PER_MINUTE);
+  PBL_LOG_DBG("total: %d, deep: %d", (int)total_sleep / PBL_SEC_PER_MIN,
+              (int)deep_sleep / PBL_SEC_PER_MIN);
   const int k_min_total_sleep_min = 240;
   const int k_max_total_sleep_min = 280;
   const int k_min_deep_sleep_min = 40;
   const int k_max_deep_sleep_min = 80;
-  if ((total_sleep < k_min_total_sleep_min * SECONDS_PER_MINUTE) ||
-      (total_sleep > k_max_total_sleep_min * SECONDS_PER_MINUTE)) {
+  if ((total_sleep < k_min_total_sleep_min * PBL_SEC_PER_MIN) ||
+      (total_sleep > k_max_total_sleep_min * PBL_SEC_PER_MIN)) {
     passed = false;
   }
-  if ((deep_sleep < k_min_deep_sleep_min * SECONDS_PER_MINUTE) ||
-      (deep_sleep > k_max_deep_sleep_min * SECONDS_PER_MINUTE)) {
+  if ((deep_sleep < k_min_deep_sleep_min * PBL_SEC_PER_MIN) ||
+      (deep_sleep > k_max_deep_sleep_min * PBL_SEC_PER_MIN)) {
     passed = false;
   }
 
   // Check other sleep metrics
   activity_get_metric(ActivityMetricSleepEnterAtSeconds, 1, &value);
-  PBL_LOG_DBG("entry minute: %d", (int)(value / SECONDS_PER_MINUTE));
+  PBL_LOG_DBG("entry minute: %d", (int)(value / PBL_SEC_PER_MIN));
 
   activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, &value);
-  PBL_LOG_DBG("exit minute: %d", (int)(value / SECONDS_PER_MINUTE));
+  PBL_LOG_DBG("exit minute: %d", (int)(value / PBL_SEC_PER_MIN));
 
   activity_get_metric(ActivityMetricSleepState, 1, &value);
   PBL_LOG_DBG("sleep state: %d", (int)value);
 
   activity_get_metric(ActivityMetricSleepStateSeconds, 1, &value);
-  PBL_LOG_DBG("sleep state minutes: %d", (int)(value / SECONDS_PER_MINUTE));
+  PBL_LOG_DBG("sleep state minutes: %d", (int)(value / PBL_SEC_PER_MIN));
 
   prv_test_end(context, passed);
 }
@@ -450,13 +452,13 @@ static void prv_test_sleep_time_change(void *context) {
   prv_feed_light_sleep_min(1);
 
   // Shift UTC time back by 75 days
-  rtc_set_time(rtc_get_time() - 75 * SECONDS_PER_DAY - 6 * SECONDS_PER_HOUR);
+  rtc_set_time(rtc_get_time() - 75 * PBL_SEC_PER_DAY - 6 * PBL_SEC_PER_HOUR);
 
   // Sleep a little more
   prv_feed_light_sleep_min(10);
 
   // Restore time to just after we started sleeping before
-  rtc_set_time(start_sleep_time + 5 * SECONDS_PER_MINUTE);
+  rtc_set_time(start_sleep_time + 5 * PBL_SEC_PER_MIN);
 
   // Sleep a little more, should not crash
   prv_feed_steps_min(90);
@@ -466,7 +468,7 @@ static void prv_test_sleep_time_change(void *context) {
   int32_t value;
   activity_get_metric(ActivityMetricSleepTotalSeconds, 1, &value);
   PBL_LOG_DBG("sleep total: %" PRIi32 " ", value);
-  if (value < (60 * SECONDS_PER_MINUTE) || value > (100 * SECONDS_PER_MINUTE)) {
+  if (value < (60 * PBL_SEC_PER_MIN) || value > (100 * PBL_SEC_PER_MIN)) {
     passed = false;
   }
 
@@ -517,14 +519,14 @@ static void prv_test_nap(void *context) {
   PBL_LOG_DBG("test start time: %d", (int)now_utc);
 
   const time_t midnight_utc = time_util_get_midnight_of(now_utc);
-  const time_t nap_time_start = midnight_utc + (ALG_PRIMARY_MORNING_MINUTE * SECONDS_PER_MINUTE);
-  const time_t nap_time_end = midnight_utc + (ALG_PRIMARY_EVENING_MINUTE * SECONDS_PER_MINUTE);
+  const time_t nap_time_start = midnight_utc + (ALG_PRIMARY_MORNING_MINUTE * PBL_SEC_PER_MIN);
+  const time_t nap_time_end = midnight_utc + (ALG_PRIMARY_EVENING_MINUTE * PBL_SEC_PER_MIN);
 
   // Go to one hour after the time sleeps are considered naps if we aren't currently in it
   if (!WITHIN(now_utc, nap_time_start, nap_time_end)) {
     const time_t next_nap_time =
-        (nap_time_start < now_utc ? nap_time_start + SECONDS_PER_DAY : nap_time_start) +
-        SECONDS_PER_HOUR;
+        (nap_time_start < now_utc ? nap_time_start + PBL_SEC_PER_DAY : nap_time_start) +
+        PBL_SEC_PER_HOUR;
     rtc_set_time(next_nap_time);
   }
 
@@ -574,8 +576,8 @@ static void prv_test_nap(void *context) {
 static void prv_test_sleep_reward(void *context) {
   bool passed = true;
 
-  const ActivityScalarStore AVERAGE_SLEEP = 1 * MINUTES_PER_HOUR;
-  const ActivityScalarStore GOOD_SLEEP = 2 * MINUTES_PER_HOUR;
+  const ActivityScalarStore AVERAGE_SLEEP = 1 * PBL_MIN_PER_HOUR;
+  const ActivityScalarStore GOOD_SLEEP = 2 * PBL_MIN_PER_HOUR;
 
   // Hack to get around midnight rollover bug (only affects tests)
   rtc_set_time(time_util_get_midnight_of(rtc_get_time()));
@@ -606,10 +608,10 @@ static void prv_test_sleep_reward(void *context) {
     prv_feed_deep_sleep_min(GOOD_SLEEP);
 
     // Walk long enough to be registered as "awake" for over 2 hours
-    prv_feed_steps_min((2.5 * MINUTES_PER_HOUR) + ACTIVITY_SESSION_UPDATE_MIN);
+    prv_feed_steps_min((2.5 * PBL_MIN_PER_HOUR) + ACTIVITY_SESSION_UPDATE_MIN);
 
     // Fast forward time
-    rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 4 * SECONDS_PER_DAY);
+    rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 4 * PBL_SEC_PER_DAY);
   }
 
   activity_prefs_sleep_insights_set_enabled(prev_insights_enabled);
@@ -649,7 +651,7 @@ static void prv_test_activity_reward(void *context) {
   prv_feed_steps_min(k_num_minutes);
 
   // Fast forward a day and check that we update the settings cache when the file changes
-  rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 1 * SECONDS_PER_DAY);
+  rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 1 * PBL_SEC_PER_DAY);
 
   ActivityInsightSettings original_settings;
   activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD, &original_settings);
@@ -670,11 +672,11 @@ static void prv_test_sleep_summary(void *context) {
   bool passed = true;
 
   // Start at 1am to make sure it doesn't get registered as a nap
-  rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 1 * SECONDS_PER_HOUR);
+  rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 1 * PBL_SEC_PER_HOUR);
 
   activity_prefs_sleep_insights_set_enabled(true);
 
-  const ActivityScalarStore AVERAGE_SLEEP = 2 * MINUTES_PER_HOUR;
+  const ActivityScalarStore AVERAGE_SLEEP = 2 * PBL_MIN_PER_HOUR;
 
   // History with low median but good sleep over the past few days
   ActivitySettingsValueHistory sleep_history = {
@@ -693,13 +695,13 @@ static void prv_test_sleep_summary(void *context) {
   prv_feed_steps_min(ACTIVITY_SESSION_UPDATE_MIN + 1);
 
   // Do some deep sleep
-  prv_feed_deep_sleep_min(2 * MINUTES_PER_HOUR);
+  prv_feed_deep_sleep_min(2 * PBL_MIN_PER_HOUR);
 
   // Walk long enough to be registered as "awake"
   prv_feed_steps_min(ACTIVITY_SESSION_UPDATE_MIN + 1);
 
   // Trigger the insight notif
-  prv_feed_steps_min(2 * MINUTES_PER_HOUR);
+  prv_feed_steps_min(2 * PBL_MIN_PER_HOUR);
 
   prv_test_end(context, passed);
 }

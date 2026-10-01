@@ -12,7 +12,7 @@
 #include "process_state/app_state/app_state.h"
 #include "pbl/services/activity/activity.h"
 #include "pbl/services/hrm/hrm_manager.h"
-#include "util/time/time.h"
+#include "pbl/util/units.h"
 
 #define SPO2_TEST_PERCENT_LEN 12
 #define SPO2_TEST_DETAIL_LEN  160
@@ -90,7 +90,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
   } else if (hrm->event_type == HRMEvent_SubscriptionExpiring) {
     // Re-subscribe so the test keeps running for long sessions.
     app_data->session = sys_hrm_manager_app_subscribe(APP_ID_SPO2_TEST, 1 /*update_interval_s*/,
-                                                      SECONDS_PER_HOUR, HRMFeature_SpO2);
+                                                      PBL_SEC_PER_HOUR, HRMFeature_SpO2);
   }
 }
 
@@ -102,7 +102,7 @@ static void prv_enable_spo2(AppData *app_data) {
   event_service_client_subscribe(&app_data->hrm_event_info);
 
   app_data->session = sys_hrm_manager_app_subscribe(APP_ID_SPO2_TEST, 1 /*update_interval_s*/,
-                                                    SECONDS_PER_HOUR, HRMFeature_SpO2);
+                                                    PBL_SEC_PER_HOUR, HRMFeature_SpO2);
 }
 
 static void prv_disable_spo2(AppData *app_data) {

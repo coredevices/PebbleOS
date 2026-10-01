@@ -15,6 +15,7 @@
 #include "pbl/services/clock.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/util/size.h"
+#include "pbl/util/units.h"
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
@@ -35,7 +36,7 @@ typedef struct HealthHrSummaryCardData {
   GFont units_font;
 } HealthHrSummaryCardData;
 
-#define PULSING_HEART_TIMEOUT (30 * MS_PER_SECOND)
+#define PULSING_HEART_TIMEOUT (30 * PBL_MSEC_PER_SEC)
 
 #define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack))
 #define PROGRESS_OUTLINE_COLOR    (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
@@ -131,7 +132,7 @@ static void prv_render_timstamp(GContext *ctx, Layer *base_layer) {
   const size_t buffer_size = 32;
   char buffer[buffer_size];
 
-  clock_get_until_time_without_fulltime(buffer, buffer_size, data->last_updated, HOURS_PER_DAY);
+  clock_get_until_time_without_fulltime(buffer, buffer_size, data->last_updated, PBL_HOUR_PER_DAY);
 
   const int y = PBL_IF_RECT_ELSE(130, 136) + HEALTH_Y_OFFSET;
   GRect rect = GRect(0, y, base_layer->bounds.size.w, 35);

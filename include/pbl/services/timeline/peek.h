@@ -4,14 +4,15 @@
 #pragma once
 
 #include "event.h"
+#include "pbl/util/units.h"
 
 //! Default time at which the Timeline Peek will show an event before it starts.
 //! This setting is user configurable.
-#define TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S (10 * SECONDS_PER_MINUTE)
+#define TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S (10 * PBL_SEC_PER_MIN)
 
 //! Time at which the Timeline Peek will hide an event after it starts.
 //! This settings is not user configurable.
-#define TIMELINE_PEEK_HIDE_AFTER_TIME_S (10 * SECONDS_PER_MINUTE)
+#define TIMELINE_PEEK_HIDE_AFTER_TIME_S (10 * PBL_SEC_PER_MIN)
 
 //! TimelinePeek event subtypes which signify the relation between now and the event timestamp
 typedef enum TimelinePeekTimeType {

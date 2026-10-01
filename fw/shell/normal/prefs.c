@@ -23,6 +23,7 @@
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/i18n/i18n.h"
 #include "resource/resource_ids.auto.h"
+#include "pbl/util/units.h"
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include "pbl/services/orientation_manager.h"
 #endif
@@ -312,7 +313,7 @@ static bool s_timeline_peek_enabled = true;
 
 #define PREF_KEY_TIMELINE_PEEK_BEFORE_TIME_M "timelineQuickViewBeforeTimeMin"
 static uint16_t s_timeline_peek_before_time_m =
-    (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / SECONDS_PER_MINUTE);
+    (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / PBL_SEC_PER_MIN);
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 #define PREF_KEY_TIMELINE_PEEK_WATCHFACE_FIT "timelineQuickViewWatchfaceFit"
@@ -836,7 +837,7 @@ static bool prv_set_s_timeline_peek_enabled(bool *enabled) {
 
 static bool prv_set_s_timeline_peek_before_time_m(uint16_t *before_time_m) {
   s_timeline_peek_before_time_m = *before_time_m;
-  timeline_peek_set_show_before_time(*before_time_m * SECONDS_PER_MINUTE);
+  timeline_peek_set_show_before_time(*before_time_m * PBL_SEC_PER_MIN);
   return true;
 }
 

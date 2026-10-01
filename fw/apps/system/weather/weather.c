@@ -29,6 +29,7 @@
 
 #include "pebble_compat.h"
 #include "pbl/services/timeline/timeline.h" // UUID_WEATHER_DATA_SOURCE
+#include "pbl/util/units.h"
 
 #define WX_MAX_DAYS 7
 
@@ -141,7 +142,7 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
       i18n_noop("Sunday"),   i18n_noop("Monday"), i18n_noop("Tuesday"),  i18n_noop("Wednesday"),
       i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
     };
-    time_t t = rtc_get_time() + (time_t)day_offset * SECONDS_PER_DAY;
+    time_t t = rtc_get_time() + (time_t)day_offset * PBL_SEC_PER_DAY;
     struct tm *lt = localtime(&t); // compat maps to pbl_override_localtime
     int w = (lt && lt->tm_wday >= 0 && lt->tm_wday < 7) ? lt->tm_wday : 0;
     i18n_get_with_buffer(kWday[w], buf, bufsize);

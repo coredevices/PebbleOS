@@ -21,14 +21,17 @@
 #include "pbl/util/size.h"
 #include "pbl/util/stats.h"
 #include "pbl/util/testing.h"
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 // Fetching minute history can take a while, so we limit the amount of data we will ever access
 // in one call to this
-#define HS_MAX_MINUTE_DATA_SEC (2 * SECONDS_PER_HOUR)
+#define HS_MAX_MINUTE_DATA_SEC (2 * PBL_SEC_PER_HOUR)
 
 // The limit to how old an HealthMetricHeartRateBPM sample can be and still return it within
 // the peek function.
-#define HS_MAX_AGE_HR_SAMPLE (15 * SECONDS_PER_MINUTE)
+#define HS_MAX_AGE_HR_SAMPLE (15 * PBL_SEC_PER_MIN)
 
 // ----------------------------------------------------------------------------------------------
 static bool prv_is_heart_rate_metric(HealthMetric metric) {
@@ -38,7 +41,7 @@ static bool prv_is_heart_rate_metric(HealthMetric metric) {
 // ----------------------------------------------------------------------------------------------
 // Checks whether the interval between start and end are specifying a time within the past minute.
 static bool prv_interval_within_last_minute(time_t now_utc, time_t start, time_t end) {
-  const time_t last_minute = (now_utc - SECONDS_PER_MINUTE);
+  const time_t last_minute = (now_utc - PBL_SEC_PER_MIN);
   const bool within_last_minute = ((start <= end) && (start >= last_minute) && (end <= now_utc));
   return within_last_minute;
 }
@@ -102,8 +105,8 @@ static time_t prv_get_midnight_of_local_time(time_t now) {
 
 // ----------------------------------------------------------------------------------------
 // Return true if the passed in day is a weekend
-static bool prv_is_weekend(DayInWeek day) {
-  return (day == Sunday) || (day == Saturday);
+static bool prv_is_weekend(enum pbl_weekday day) {
+  return (day == PBL_SUNDAY) || (day == PBL_SATURDAY);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -221,7 +224,7 @@ static bool prv_get_metric_daily_history(HealthServiceState *state, HealthMetric
 // @param[out] stats the stats for this metric are returned here
 // @param[in] weekly_day which day of the week to use when computing the weekly stats
 static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
-                                 HealthServiceMetricStats *stats, DayInWeek weekly_day) {
+                                 HealthServiceMetricStats *stats, enum pbl_weekday weekly_day) {
   // Get the daily history for this metric
   HealthServiceDailyHistory daily_totals;
   if (!prv_get_metric_daily_history(state, metric, &daily_totals)) {
@@ -245,7 +248,7 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   // We want to sum only the days that are this far from index 0 (which is local_tm.tm_wday)
   int day_offset = local_tm->tm_wday - weekly_day;
   if (day_offset < 0) {
-    day_offset += DAYS_PER_WEEK;
+    day_offset += PBL_DAY_PER_WEEK;
   }
   pbl_stats_calculate(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
                       health_service_private_weekly_filter, (void *)(uintptr_t)day_offset,
@@ -254,7 +257,7 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   // If the average is 0 (this can happen if we don't have any history), set the averages based
   // on today's total so far
   time_t seconds_today = now_utc - sys_time_start_of_today();
-  HealthValue per_day_default = (daily_totals.totals[0] * SECONDS_PER_DAY) / MAX(1, seconds_today);
+  HealthValue per_day_default = (daily_totals.totals[0] * PBL_SEC_PER_DAY) / MAX(1, seconds_today);
   if (stats->weekday.sum == 0) {
     stats->weekday = (HealthServiceStats){
       .sum = per_day_default,
@@ -287,7 +290,8 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
 // ----------------------------------------------------------------------------------------------
 // Return intra-day averages for the given metric
 static bool prv_get_intraday_averages(HealthServiceState *state, HealthMetric metric,
-                                      ActivityMetricAverages *averages, DayInWeek day_in_week) {
+                                      ActivityMetricAverages *averages,
+                                      enum pbl_weekday day_in_week) {
   // If the cache is valid, return cached data.
   if (state->cache && (metric == HealthMetricStepCount) && state->cache->step_averages_valid &&
       (day_in_week == state->cache->step_averages_day)) {
@@ -354,14 +358,14 @@ static bool prv_get_intraday_averages(HealthServiceState *state, HealthMetric me
 // to time_end is always <= 1 day.
 static HealthValue prv_sum_intraday_averages(ActivityMetricAverages *averages, time_t time_start,
                                              time_t time_end) {
-  PBL_ASSERTN((time_end - time_start) <= SECONDS_PER_DAY);
+  PBL_ASSERTN((time_end - time_start) <= PBL_SEC_PER_DAY);
   struct tm *local_tm = pbl_override_localtime(&time_start);
 
   // Add up the metric averages for the passed in time range
   time_t chunk_start_time = time_start;
-  const int k_seconds_per_step_avg = SECONDS_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
-  unsigned int second_idx = local_tm->tm_hour * SECONDS_PER_HOUR +
-                            local_tm->tm_min * SECONDS_PER_MINUTE + local_tm->tm_sec;
+  const int k_seconds_per_step_avg = PBL_SEC_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
+  unsigned int second_idx =
+      local_tm->tm_hour * PBL_SEC_PER_HOUR + local_tm->tm_min * PBL_SEC_PER_MIN + local_tm->tm_sec;
   unsigned int chunk_idx = second_idx / k_seconds_per_step_avg;
 
   HealthValue result = 0;
@@ -381,7 +385,7 @@ static HealthValue prv_sum_intraday_averages(ActivityMetricAverages *averages, t
     // Increment indices and time to the next chunk
     chunk_start_time += seconds_in_chunk;
     second_idx += seconds_in_chunk;
-    second_idx %= SECONDS_PER_DAY;
+    second_idx %= PBL_SEC_PER_DAY;
 
     chunk_idx++;
     chunk_idx %= ACTIVITY_NUM_METRIC_AVERAGES;
@@ -410,12 +414,12 @@ PBL_T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
   time_end = sys_time_utc_to_local(time_end);
 
   // we use this value as a reference to calculate the range of valid data entries
-  const time_t midnight_after_now = prv_get_midnight_of_local_time(now) + SECONDS_PER_DAY;
+  const time_t midnight_after_now = prv_get_midnight_of_local_time(now) + PBL_SEC_PER_DAY;
 
   // never work with values in the future
   time_end = MIN(time_end, now);
   // never work with values older than the supported history of data
-  time_start = MAX(time_start, midnight_after_now - (SECONDS_PER_DAY * ACTIVITY_HISTORY_DAYS));
+  time_start = MAX(time_start, midnight_after_now - (PBL_SEC_PER_DAY * ACTIVITY_HISTORY_DAYS));
   if (time_end < time_start) {
     return false;
   }
@@ -426,27 +430,27 @@ PBL_T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
     // we treat time_end as exclusive, if one passes exactly midnight, we don't count that day
     const time_t midnight_after_end = (midnight_before_end == time_end)
                                           ? midnight_before_end
-                                          : (midnight_before_end + SECONDS_PER_DAY);
+                                          : (midnight_before_end + PBL_SEC_PER_DAY);
 
     // no additional range changes (e.g. < 0 or >= ACTIVITY_HISTORY_DAYS needed due to checks above)
-    range->last_day_idx = (midnight_after_now - midnight_after_end) / SECONDS_PER_DAY;
+    range->last_day_idx = (midnight_after_now - midnight_after_end) / PBL_SEC_PER_DAY;
 
     // always positive and <= ACTIVITY_HISTORY_DAYS due to check above
-    range->num_days = (midnight_after_end - midnight_before_start) / SECONDS_PER_DAY;
+    range->num_days = (midnight_after_end - midnight_before_start) / PBL_SEC_PER_DAY;
 
     // we calculate how many seconds are covered on the first/last day of the range to allow
     // clients to do some interpolation.
     // if there's only one day, we return the number of seconds in the total range for both values
-    const uint32_t seconds_first_day = SECONDS_PER_DAY - (time_start - midnight_before_start);
+    const uint32_t seconds_first_day = PBL_SEC_PER_DAY - (time_start - midnight_before_start);
     // compensate for cases where time_end is on a day boundary
     const uint32_t seconds_last_day =
-        (time_end == midnight_before_end) ? SECONDS_PER_DAY : (time_end - midnight_before_end);
+        (time_end == midnight_before_end) ? PBL_SEC_PER_DAY : (time_end - midnight_before_end);
     const uint32_t total_seconds = time_end - time_start;
 
     range->seconds_first_day = (range->num_days == 1) ? total_seconds : seconds_first_day;
     range->seconds_last_day = (range->num_days == 1) ? total_seconds : seconds_last_day;
     range->seconds_total_last_day =
-        (range->last_day_idx == 0) ? (now - midnight_before_end) : SECONDS_PER_DAY;
+        (range->last_day_idx == 0) ? (now - midnight_before_end) : PBL_SEC_PER_DAY;
   }
 
   return true;
@@ -498,7 +502,7 @@ PBL_T_STATIC void prv_adjust_value_boundaries(HealthValue *values, size_t num_va
     const uint32_t oldest_day_idx = range->num_days - 1;
     values[oldest_day_idx] =
         (HealthValue)(((int64_t)values[oldest_day_idx] * range->seconds_first_day) /
-                      SECONDS_PER_DAY);
+                      PBL_SEC_PER_DAY);
   }
 }
 
@@ -610,7 +614,7 @@ static HealthValue prv_compute_aggregate_averaged_using_daily_totals(
 
   // Scale result by the actual amount of requested time if asked for a sum
   if (aggregation == HealthAggregationSum) {
-    result = result * (time_end - time_start) / SECONDS_PER_DAY;
+    result = result * (time_end - time_start) / PBL_SEC_PER_DAY;
   }
   return result;
 }
@@ -649,7 +653,7 @@ static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState
 
   // If the current value is within the time range, incorporate it into the stats
   time_t now_utc = sys_get_time();
-  if (time_end > now_utc - SECONDS_PER_MINUTE) {
+  if (time_end > now_utc - PBL_SEC_PER_MIN) {
     HealthValue current_value;
     bool success = sys_activity_get_metric(ActivityMetricHeartRateRawBPM, 1, &current_value);
     if (success && current_value != 0) {
@@ -678,7 +682,7 @@ static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState
 
     // Update the metric from this new batch of data
     for (unsigned i = 0; (i < num_records) && (time_start < time_end);
-         i++, time_start += SECONDS_PER_MINUTE) {
+         i++, time_start += PBL_SEC_PER_MIN) {
       if (minute_data[i].heart_rate_bpm == 0) {
         // Ignore minutes that have no heart rate BPM
         continue;
@@ -811,7 +815,7 @@ PBL_T_STATIC bool prv_activity_session_matches(const ActivitySession *session,
     return false;
   }
 
-  unsigned int length_sec = session->length_min * SECONDS_PER_MINUTE;
+  unsigned int length_sec = session->length_min * PBL_SEC_PER_MIN;
   const bool time_matches =
       session->start_utc < time_end && (time_t)(session->start_utc + length_sec) > time_start;
   return time_matches;
@@ -825,8 +829,8 @@ PBL_T_STATIC int64_t prv_session_compare(const ActivitySession *a, const Activit
   switch (direction) {
     case HealthIterationDirectionPast:
       // sessions that end later come first
-      return (b->start_utc + (b->length_min * SECONDS_PER_MINUTE)) -
-             (a->start_utc + (a->length_min * SECONDS_PER_MINUTE));
+      return (b->start_utc + (b->length_min * PBL_SEC_PER_MIN)) -
+             (a->start_utc + (a->length_min * PBL_SEC_PER_MIN));
     case HealthIterationDirectionFuture:
       // sessions that start earlier come first
       return a->start_utc - b->start_utc;
@@ -872,19 +876,19 @@ bool health_service_private_non_zero_filter(int index, int32_t value, void *cont
 bool health_service_private_weekday_filter(int index, int32_t value, void *tm_weekday_ref) {
   const int tm_weekday = (int)(uintptr_t)tm_weekday_ref;
   return (health_service_private_non_zero_filter(index, value, NULL) &&
-          IS_WEEKDAY(positive_modulo(tm_weekday - index, DAYS_PER_WEEK)));
+          pbl_time_is_weekday(positive_modulo(tm_weekday - index, PBL_DAY_PER_WEEK)));
 }
 
 bool health_service_private_weekend_filter(int index, int32_t value, void *tm_weekday_ref) {
   const int tm_weekday = (int)(uintptr_t)tm_weekday_ref;
   return (health_service_private_non_zero_filter(index, value, NULL) &&
-          IS_WEEKEND(positive_modulo(tm_weekday - index, DAYS_PER_WEEK)));
+          pbl_time_is_weekend(positive_modulo(tm_weekday - index, PBL_DAY_PER_WEEK)));
 }
 
 bool health_service_private_weekly_filter(int index, int32_t value, void *tm_weekday_ref) {
   const int tm_weekday = (int)(uintptr_t)tm_weekday_ref;
   return (health_service_private_non_zero_filter(index, value, NULL) &&
-          (positive_modulo(tm_weekday - index, DAYS_PER_WEEK) == 0));
+          (positive_modulo(tm_weekday - index, PBL_DAY_PER_WEEK) == 0));
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -960,7 +964,7 @@ HealthValue health_service_sum_today(HealthMetric metric) {
     return 0;
   }
   const time_t today_midnight = sys_time_start_of_today();
-  const time_t tomorrow_midnight = today_midnight + SECONDS_PER_DAY;
+  const time_t tomorrow_midnight = today_midnight + PBL_SEC_PER_DAY;
   return health_service_sum(metric, today_midnight, tomorrow_midnight);
 }
 
@@ -1058,7 +1062,7 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
   // --------
   // If asked for an averaged sum over less than a day, we can use the intraday averages
   if ((scope != HealthServiceTimeScopeOnce) && (aggregation == HealthAggregationSum) &&
-      ((time_end - time_start) < SECONDS_PER_DAY)) {
+      ((time_end - time_start) < PBL_SEC_PER_DAY)) {
     // For now, we will use the day of the week that time_start falls on. In the future, we could
     // be better about blending weekday with weekend if the time range spans both
     struct tm *local_tm = pbl_override_localtime(&time_start);
@@ -1075,7 +1079,7 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
 
     } else if ((scope == HealthServiceTimeScopeDaily) ||
                (scope == HealthServiceTimeScopeDailyWeekdayOrWeekend)) {
-      for (DayInWeek day = Sunday; day <= Saturday; day++) {
+      for (enum pbl_weekday day = PBL_SUNDAY; day <= PBL_SATURDAY; day++) {
         if (scope == HealthServiceTimeScopeDailyWeekdayOrWeekend) {
           if (is_weekend != prv_is_weekend(day)) {
             continue;
@@ -1314,10 +1318,10 @@ uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32
 
   // only query for as many records as necessary for the given time span
   if (time_end) {
-    const time_t lower_bounded_start = (*time_start / SECONDS_PER_MINUTE) * SECONDS_PER_MINUTE;
-    const time_t upper_bounded_end = *time_end + SECONDS_PER_MINUTE - 1;
+    const time_t lower_bounded_start = (*time_start / PBL_SEC_PER_MIN) * PBL_SEC_PER_MIN;
+    const time_t upper_bounded_end = *time_end + PBL_SEC_PER_MIN - 1;
     const uint32_t needed_partial_minutes =
-        (upper_bounded_end - lower_bounded_start) / SECONDS_PER_MINUTE;
+        (upper_bounded_end - lower_bounded_start) / PBL_SEC_PER_MIN;
     num_records = MIN(num_records, needed_partial_minutes);
   }
 
@@ -1327,7 +1331,7 @@ uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32
   }
 
   if (time_end) {
-    *time_end = *time_start + SECONDS_PER_MINUTE * num_records;
+    *time_end = *time_start + PBL_SEC_PER_MIN * num_records;
   }
   return num_records;
 }
@@ -1424,7 +1428,7 @@ void health_service_activities_iterate(HealthActivityMask activity_mask, time_t 
           break;
       }
       if (!callback(session_activity, session->start_utc,
-                    session->start_utc + (session->length_min * SECONDS_PER_MINUTE), context)) {
+                    session->start_utc + (session->length_min * PBL_SEC_PER_MIN), context)) {
         // clients can interrupt the iteration at any time
         break;
       }

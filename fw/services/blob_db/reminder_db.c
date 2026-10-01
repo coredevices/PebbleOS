@@ -18,7 +18,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 #define REMINDER_DB_FILE_NAME "reminderdb"
 #define REMINDER_DB_MAX_SIZE  PBL_KIB(40)
 #define MAX_REMINDER_SIZE     SETTINGS_VAL_MAX_LEN
-#define MAX_REMINDER_AGE      (15 * SECONDS_PER_MINUTE)
+#define MAX_REMINDER_AGE      (15 * PBL_SEC_PER_MIN)
 
 typedef struct {
   TimelineItemStorageFilterCallback filter_cb;

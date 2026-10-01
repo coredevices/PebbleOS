@@ -35,6 +35,8 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/workout_service.h"
 #include "pbl/util/testing.h"
+#include "pbl/services/time.h"
+#include "pbl/util/time.h"
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -72,14 +74,14 @@ static bool prv_activity_allowed_to_be_enabled(void) {
 static uint32_t prv_get_hrm_period_sec(void) {
   switch (activity_prefs_get_hrm_measurement_interval()) {
     case HRMonitoringInterval_5Min:
-      return 5 * SECONDS_PER_MINUTE;
+      return 5 * PBL_SEC_PER_MIN;
     case HRMonitoringInterval_30Min:
-      return 30 * SECONDS_PER_MINUTE;
+      return 30 * PBL_SEC_PER_MIN;
     case HRMonitoringInterval_1Hour:
-      return SECONDS_PER_HOUR;
+      return PBL_SEC_PER_HOUR;
     case HRMonitoringInterval_10Min:
     default:
-      return 10 * SECONDS_PER_MINUTE;
+      return 10 * PBL_SEC_PER_MIN;
   }
 }
 #endif
@@ -280,12 +282,12 @@ static void prv_heart_rate_deinit(void) {
 static uint32_t prv_get_spo2_period_sec(void) {
   switch (activity_prefs_get_spo2_measurement_interval()) {
     case HRMonitoringInterval_30Min:
-      return 30 * SECONDS_PER_MINUTE;
+      return 30 * PBL_SEC_PER_MIN;
     case HRMonitoringInterval_1Hour:
-      return SECONDS_PER_HOUR;
+      return PBL_SEC_PER_HOUR;
     case HRMonitoringInterval_10Min:
     default:
-      return 10 * SECONDS_PER_MINUTE;
+      return 10 * PBL_SEC_PER_MIN;
   }
 }
 #endif
@@ -1165,7 +1167,7 @@ static void prv_feed_samples_system_cb(void *context_in) {
   time_t time_s;
   uint16_t time_ms;
   rtc_get_time_ms(&time_s, &time_ms);
-  uint64_t timestamp = ((uint64_t)time_s) * MS_PER_SECOND + time_ms;
+  uint64_t timestamp = ((uint64_t)time_s) * PBL_MSEC_PER_SEC + time_ms;
 
   // Feed samples into the algorithm
   prv_accel_cb(context->data, context->num_samples, timestamp);
@@ -1639,7 +1641,7 @@ DEFINE_SYSCALL(bool, sys_activity_get_minute_history, HealthMinuteData *minute_d
 }
 
 // ------------------------------------------------------------------------------------------------
-bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *averages) {
+bool activity_get_step_averages(enum pbl_weekday day_of_week, ActivityMetricAverages *averages) {
   if (!s_activity_initialized) {
     return false;
   }
@@ -1647,7 +1649,7 @@ bool activity_get_step_averages(DayInWeek day_of_week, ActivityMetricAverages *a
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_get_step_averages, DayInWeek day_of_week,
+DEFINE_SYSCALL(bool, sys_activity_get_step_averages, enum pbl_weekday day_of_week,
                ActivityMetricAverages *averages) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(averages, sizeof(*averages));
@@ -1657,7 +1659,7 @@ DEFINE_SYSCALL(bool, sys_activity_get_step_averages, DayInWeek day_of_week,
 }
 
 // ------------------------------------------------------------------------------------------------
-bool activity_get_metric_typical(ActivityMetric metric, DayInWeek day, int32_t *value_out) {
+bool activity_get_metric_typical(ActivityMetric metric, enum pbl_weekday day, int32_t *value_out) {
   if (!s_activity_initialized) {
     *value_out = 0;
     return false;
@@ -1946,7 +1948,7 @@ bool activity_test_fill_minute_file(void) {
 static void prv_send_fake_dls_records_system_cb(void *context_param) {
   // Send a fake legacy sleep logging record
   time_t utc_now = rtc_get_time();
-  time_t session_start_utc = utc_now - (4 * SECONDS_PER_HOUR);
+  time_t session_start_utc = utc_now - (4 * PBL_SEC_PER_HOUR);
 
   // Send one of each activity type
   for (ActivitySessionType activity = ActivitySessionType_Sleep;
@@ -1957,7 +1959,7 @@ static void prv_send_fake_dls_records_system_cb(void *context_param) {
       .type = activity,
     };
     activity_sessions_prv_send_activity_session_to_data_logging(&session);
-    session_start_utc += 20 * SECONDS_PER_MINUTE;
+    session_start_utc += 20 * PBL_SEC_PER_MIN;
   }
 
   // Send a fake minute-data record
@@ -1990,7 +1992,7 @@ void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int
     const time_t now = rtc_get_time();
     struct tm local_tm;
     localtime_r(&now, &local_tm);
-    DayInWeek day_of_week = local_tm.tm_wday;
+    enum pbl_weekday day_of_week = local_tm.tm_wday;
 
     uint16_t step_avg_array[ACTIVITY_STEP_AVERAGES_PER_KEY] = {};
     for (int i = 0; i < ACTIVITY_STEP_AVERAGES_PER_KEY; i++) {

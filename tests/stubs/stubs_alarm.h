@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pbl/kernel/compiler.h"
-#include "util/time/time.h"
+#include <time.h>
 
 #include <stdbool.h>
 

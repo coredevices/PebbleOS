@@ -31,6 +31,8 @@
 #include "pbl/kernel/mutex.h"
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/testing.h>
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 typedef struct PBL_PACKED RecentApp {
   AppInstallId id;
@@ -54,7 +56,7 @@ typedef struct RecentAppCache {
 static RecentAppCache s_recent_apps;
 
 //! timeout for an app that has OnCommunication visibility (given in seconds)
-static int32_t VISIBILITY_ON_ACTIVITY_TIMEOUT_SECONDS = (5 * SECONDS_PER_MINUTE);
+static int32_t VISIBILITY_ON_ACTIVITY_TIMEOUT_SECONDS = (5 * PBL_SEC_PER_MIN);
 
 static bool prv_app_install_entry_from_app_db_entry(AppInstallId id, AppDBEntry *db_entry,
                                                     AppInstallEntry *install_entry);

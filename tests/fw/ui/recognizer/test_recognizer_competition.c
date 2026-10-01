@@ -38,6 +38,7 @@
 #include "stubs_ui_window.h"
 #include "stubs_unobstructed_area.h"
 #include "test_recognizer_impl.h"
+#include "pbl/util/units.h"
 
 static RecognizerList *s_app_list;
 static Layer *s_active_layer;
@@ -119,7 +120,7 @@ static void prv_dispatch(RecognizerManager *manager, TouchEventType type, int16_
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / MS_PER_SECOND);
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
 }
 
 typedef struct CompetitionScene {

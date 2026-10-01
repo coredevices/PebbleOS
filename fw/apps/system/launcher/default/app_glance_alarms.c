@@ -17,6 +17,7 @@
 #include "pbl/util/struct.h"
 
 #include <stdio.h>
+#include "pbl/services/time.h"
 
 typedef struct LauncherAppGlanceAlarms {
   char title[APP_NAME_SIZE_BYTES];

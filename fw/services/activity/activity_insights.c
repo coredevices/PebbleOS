@@ -25,7 +25,8 @@
 #include "pbl/util/math.h"
 #include "pbl/util/stats.h"
 #include "pbl/util/string.h"
-#include "util/time/time.h"
+#include "pbl/services/time.h"
+#include "pbl/util/units.h"
 
 #include <stdio.h>
 
@@ -39,8 +40,8 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 // The sleep summary notification only fires when the sleep exit lands within this local
 // time-of-day window ([min, max)). The timeline pin is updated regardless.
-#define SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MIN (4 * MINUTES_PER_HOUR)
-#define SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MAX (18 * MINUTES_PER_HOUR)
+#define SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MIN (4 * PBL_MIN_PER_HOUR)
+#define SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MAX (18 * PBL_MIN_PER_HOUR)
 
 typedef struct NotificationConfig {
   time_t notif_time;
@@ -819,8 +820,8 @@ static void prv_do_sleep_reward(time_t now_utc) {
 static void prv_strcat_formatted_time(int32_t time_seconds, char *out_buf, size_t buf_length,
                                       const void *i18n_owner) {
   struct tm time = (struct tm){
-    .tm_hour = time_seconds / SECONDS_PER_HOUR,
-    .tm_min = (time_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+    .tm_hour = time_seconds / PBL_SEC_PER_HOUR,
+    .tm_min = (time_seconds % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN
   };
 
   const char *format =
@@ -845,8 +846,8 @@ static void prv_generate_sleep_pin_strings(int32_t sleep_enter_seconds, int32_t 
                             SUBTITLE_BUFFER_LENGTH, &SLEEP_SUMMARY_PIN_CONFIG);
 
   // Generate short subtitle text with the current step count
-  int hours = sleep_total_seconds / SECONDS_PER_HOUR;
-  int minutes = (sleep_total_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE;
+  int hours = sleep_total_seconds / PBL_SEC_PER_HOUR;
+  int minutes = (sleep_total_seconds % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
   sniprintf(SLEEP_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
             i18n_get("%uH %uM Sleep", &SLEEP_SUMMARY_PIN_CONFIG), hours, minutes);
 
@@ -882,7 +883,7 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
   const size_t max_attr_length = 64;
   char *elapsed = kernel_zalloc_check(max_attr_length);
   char *short_subtitle = kernel_zalloc_check(max_attr_length);
-  const uint32_t duration_s = session->length_min * SECONDS_PER_MINUTE;
+  const uint32_t duration_s = session->length_min * PBL_SEC_PER_MIN;
   health_util_format_hours_and_minutes(elapsed, max_attr_length, duration_s, &pin_attr_list);
   const char *short_subtitle_fmt = i18n_get("%s of sleep", &pin_attr_list); /// "10H 30M of sleep"
   snprintf(short_subtitle, max_attr_length, short_subtitle_fmt, elapsed);
@@ -941,8 +942,8 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
 // Creates a notification to notify the user of the nap session
 static void prv_push_nap_session_notification(time_t notif_time, ActivitySession *session,
                                               Uuid *pin_uuid) {
-  const int hours = session->length_min / MINUTES_PER_HOUR;
-  const int minutes = session->length_min % MINUTES_PER_HOUR;
+  const int hours = session->length_min / PBL_MIN_PER_HOUR;
+  const int minutes = session->length_min % PBL_MIN_PER_HOUR;
 
   // Enough to fit the filled out format string below and i18n variants
   const int max_notif_length = 128;
@@ -1153,7 +1154,7 @@ static ActivityScalarStore prv_cur_step_avg(time_t now_utc, int minute_of_day) {
   activity_get_step_averages(time_util_get_day_in_week(now_utc), averages);
 
   // Sum up the averages
-  const int minutes_per_step_avg = MINUTES_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
+  const int minutes_per_step_avg = PBL_MIN_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
   int num_chunks = minute_of_day / minutes_per_step_avg;
   ActivityScalarStore total_steps_avg = 0;
   for (int i = 0; i < ACTIVITY_NUM_METRIC_AVERAGES && i < num_chunks; ++i) {
@@ -1447,14 +1448,14 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
     },
   };
 
-  const int hours = sleep_total_seconds / SECONDS_PER_HOUR;
-  const int minutes = (sleep_total_seconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR;
+  const int hours = sleep_total_seconds / PBL_SEC_PER_HOUR;
+  const int minutes = (sleep_total_seconds / PBL_SEC_PER_MIN) % PBL_MIN_PER_HOUR;
   int percentage;
   PercentTier tier = prv_calc_percent_tier(&SLEEP_SUMMARY_PIN_CONFIG, sleep_total_seconds,
                                            sleep_average_seconds, &percentage);
 
   if ((tier == PercentTier_BelowAverage || tier == PercentTier_Fail) &&
-      sleep_total_seconds / SECONDS_PER_MINUTE >=
+      sleep_total_seconds / PBL_SEC_PER_MIN >=
           SLEEP_SUMMARY_PIN_CONFIG.insight_settings->summary.sleep.max_fail_minutes) {
     // we don't want to show a negative insights if you've slept 7 hours
     tier = PercentTier_OnAverage;
@@ -1547,7 +1548,7 @@ static PBL_NOINLINE void prv_do_activity_summary(time_t now_utc) {
 
   const time_t pin_time_utc =
       time_util_get_midnight_of(now_utc) +
-      (s_activity_summary_settings.summary.activity.trigger_minute * SECONDS_PER_MINUTE);
+      (s_activity_summary_settings.summary.activity.trigger_minute * PBL_SEC_PER_MIN);
 
   if (prv_push_activity_summary_pin(now_utc, pin_time_utc, minute_of_day, steps, total_steps_avg,
                                     &s_activity_pin_state.uuid)) {
@@ -1630,9 +1631,9 @@ static void prv_add_metric_duration_info(struct pbl_string_list *headings, int h
   const size_t duration_buffer_size = sizeof("00:00:00");
   char duration_str[duration_buffer_size];
 
-  const int duration_s = session->length_min * SECONDS_PER_MINUTE;
-  const int duration_m = ROUND(duration_s, SECONDS_PER_MINUTE);
-  if (duration_m <= MINUTES_PER_HOUR) {
+  const int duration_s = session->length_min * PBL_SEC_PER_MIN;
+  const int duration_m = ROUND(duration_s, PBL_SEC_PER_MIN);
+  if (duration_m <= PBL_MIN_PER_HOUR) {
     snprintf(duration_str, duration_buffer_size, i18n_get("%d Min", headings), duration_m);
   } else {
     health_util_format_hours_and_minutes(duration_str, duration_buffer_size, duration_s, headings);
@@ -1655,7 +1656,7 @@ static void prv_add_avg_pace_metric_info(struct pbl_string_list *headings, int h
                                          ActivitySession *session) {
   const int pace_buf_size = 16;
   char pace_str[pace_buf_size];
-  const int pace_s = health_util_get_pace(session->length_min * SECONDS_PER_MINUTE,
+  const int pace_s = health_util_get_pace(session->length_min * PBL_SEC_PER_MIN,
                                           session->step_data.distance_meters);
   int offset =
       health_util_format_hours_minutes_seconds(pace_str, pace_buf_size, pace_s, false, headings);
@@ -1723,21 +1724,21 @@ static void prv_add_hr_metric_info(struct pbl_string_list *headings, int heading
   }
 
   if (hr_zone_time_s) {
-    const int zone_1_minutes = ROUND(hr_zone_time_s[HRZone_Zone1], SECONDS_PER_MINUTE);
+    const int zone_1_minutes = ROUND(hr_zone_time_s[HRZone_Zone1], PBL_SEC_PER_MIN);
     if (zone_1_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_1_minutes);
       pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Fat Burn", headings),
                                  headings_buf_size);
       pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
-    const int zone_2_minutes = ROUND(hr_zone_time_s[HRZone_Zone2], SECONDS_PER_MINUTE);
+    const int zone_2_minutes = ROUND(hr_zone_time_s[HRZone_Zone2], PBL_SEC_PER_MIN);
     if (zone_2_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_2_minutes);
       pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Endurance", headings),
                                  headings_buf_size);
       pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
-    const int zone_3_minutes = ROUND(hr_zone_time_s[HRZone_Zone3], SECONDS_PER_MINUTE);
+    const int zone_3_minutes = ROUND(hr_zone_time_s[HRZone_Zone3], PBL_SEC_PER_MIN);
     if (zone_3_minutes) {
       snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_3_minutes);
       pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Performance", headings),
@@ -1850,8 +1851,8 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
     return;
   }
 
-  if (now_utc - (session->start_utc + SECONDS_PER_MINUTE * session->length_min) <
-      s_activity_session_settings.session.activity.trigger_cooldown_minutes * SECONDS_PER_MINUTE) {
+  if (now_utc - (session->start_utc + PBL_SEC_PER_MIN * session->length_min) <
+      s_activity_session_settings.session.activity.trigger_cooldown_minutes * PBL_SEC_PER_MIN) {
     PBL_LOG_DBG("Not adding session pin - cooldown not yet elapsed");
     return;
   }
@@ -2068,7 +2069,7 @@ void activity_insights_init(time_t now_utc) {
 // QA Testing functions
 static void prv_test_push_summary_pins(void *unused) {
   time_t now_utc = rtc_get_time();
-  int minute_of_day = (20 * MINUTES_PER_HOUR) + 30; // Activity pins only trigger after 8:30
+  int minute_of_day = (20 * PBL_MIN_PER_HOUR) + 30; // Activity pins only trigger after 8:30
 
   Uuid uuid_way_below = UUID_INVALID;
   Uuid uuid_below = UUID_INVALID;
@@ -2093,10 +2094,10 @@ static void prv_test_push_summary_pins(void *unused) {
   }
 
   time_t midnight = time_util_get_midnight_of(now_utc);
-  int32_t enter_seconds = (23 * SECONDS_PER_HOUR); // 11 pm the day before
-  int32_t exit_seconds = (7 * SECONDS_PER_HOUR);   // 7 am today
-  int32_t total_seconds = (8 * SECONDS_PER_HOUR);
-  int32_t deviate_seconds = (2 * SECONDS_PER_HOUR);
+  int32_t enter_seconds = (23 * PBL_SEC_PER_HOUR); // 11 pm the day before
+  int32_t exit_seconds = (7 * PBL_SEC_PER_HOUR);   // 7 am today
+  int32_t total_seconds = (8 * PBL_SEC_PER_HOUR);
+  int32_t deviate_seconds = (2 * PBL_SEC_PER_HOUR);
   time_t exit_utc = midnight + exit_seconds;
   uuid = UUID_INVALID;
   prv_push_sleep_summary_pin(now_utc, exit_utc, enter_seconds, exit_seconds,
@@ -2138,7 +2139,7 @@ static void prv_test_push_walk_run_session(void *unused) {
   const time_t now_utc = rtc_get_time();
   ActivitySession walk_session = {
     .type = ActivitySessionType_Walk,
-    .start_utc = now_utc - 30 * SECONDS_PER_MINUTE - 15 * SECONDS_PER_MINUTE,
+    .start_utc = now_utc - 30 * PBL_SEC_PER_MIN - 15 * PBL_SEC_PER_MIN,
     .length_min = 30,
     .step_data = {
       .steps = 2400,
@@ -2148,15 +2149,14 @@ static void prv_test_push_walk_run_session(void *unused) {
   };
   int32_t avg_walk_hr = 120;
   int32_t walk_hr_zone_time_s[HRZoneCount] = {
-    10 * SECONDS_PER_MINUTE, 15 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE,
-    0 * SECONDS_PER_MINUTE
+    10 * PBL_SEC_PER_MIN, 15 * PBL_SEC_PER_MIN, 10 * PBL_SEC_PER_MIN, 0 * PBL_SEC_PER_MIN
   };
   activity_insights_push_activity_session_notification(now_utc, &walk_session, avg_walk_hr,
                                                        walk_hr_zone_time_s);
 
   ActivitySession run_session = {
     .type = ActivitySessionType_Run,
-    .start_utc = now_utc - 30 * SECONDS_PER_MINUTE - 12 * SECONDS_PER_MINUTE,
+    .start_utc = now_utc - 30 * PBL_SEC_PER_MIN - 12 * PBL_SEC_PER_MIN,
     .length_min = 30,
     .step_data = {
       .steps = 4200,
@@ -2166,15 +2166,14 @@ static void prv_test_push_walk_run_session(void *unused) {
   };
   int32_t avg_run_hr = 150;
   int32_t run_hr_zone_time_s[HRZoneCount] = {
-    5 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE,
-    15 * SECONDS_PER_MINUTE
+    5 * PBL_SEC_PER_MIN, 10 * PBL_SEC_PER_MIN, 10 * PBL_SEC_PER_MIN, 15 * PBL_SEC_PER_MIN
   };
   activity_insights_push_activity_session_notification(now_utc, &run_session, avg_run_hr,
                                                        run_hr_zone_time_s);
 
   ActivitySession open_session = {
     .type = ActivitySessionType_Open,
-    .start_utc = now_utc - 30 * SECONDS_PER_MINUTE - 12 * SECONDS_PER_MINUTE,
+    .start_utc = now_utc - 30 * PBL_SEC_PER_MIN - 12 * PBL_SEC_PER_MIN,
     .length_min = 30,
     .step_data = {
       .steps = 0,
@@ -2184,7 +2183,7 @@ static void prv_test_push_walk_run_session(void *unused) {
   };
   int32_t avg_open_hr = 130;
   int32_t open_hr_zone_time_s[HRZoneCount] = {
-    2 * SECONDS_PER_MINUTE, 0 * SECONDS_PER_MINUTE, 18 * SECONDS_PER_MINUTE, 10 * SECONDS_PER_MINUTE
+    2 * PBL_SEC_PER_MIN, 0 * PBL_SEC_PER_MIN, 18 * PBL_SEC_PER_MIN, 10 * PBL_SEC_PER_MIN
   };
   activity_insights_push_activity_session_notification(now_utc, &open_session, avg_open_hr,
                                                        open_hr_zone_time_s);
@@ -2192,10 +2191,10 @@ static void prv_test_push_walk_run_session(void *unused) {
 
 static void prv_test_push_nap_session(void *unused) {
   const time_t now_utc = rtc_get_time();
-  const int length_min = MINUTES_PER_HOUR + MINUTES_PER_HOUR / 2;
+  const int length_min = PBL_MIN_PER_HOUR + PBL_MIN_PER_HOUR / 2;
   ActivitySession session = {
     .type = ActivitySessionType_Nap,
-    .start_utc = now_utc - length_min * SECONDS_PER_MINUTE,
+    .start_utc = now_utc - length_min * PBL_SEC_PER_MIN,
     .length_min = length_min,
   };
   prv_push_nap_session(now_utc, &session);

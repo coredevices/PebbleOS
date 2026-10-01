@@ -21,6 +21,8 @@
 #include "stubs_pebble_tasks.h"
 #include "stubs_pbl_malloc.h"
 #include "stubs_worker_state.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 status_t pfs_remove(const char *name) {
   fake_settings_file_reset();
@@ -49,7 +51,7 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
 }
 
 int s_metric_updated_count = 0;
-void activity_metrics_prv_set_metric(ActivityMetric metric, DayInWeek day, int32_t value) {
+void activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday day, int32_t value) {
   printf("s_metric_updated_count: %d\n", s_metric_updated_count);
   s_metric_updated_count++;
 }
@@ -95,7 +97,7 @@ static uint32_t s_movement_data[] = {
 
 static uint32_t s_old_movement_data[] = {
   1, // Version
-  NOW - (7 * SECONDS_PER_DAY),
+  NOW - (7 * PBL_SEC_PER_DAY),
   1234, // Steps
   1111, // Active K Calories
   2222, // Resting K Calories
@@ -105,7 +107,7 @@ static uint32_t s_old_movement_data[] = {
 
 static uint32_t s_future_movement_data[] = {
   1, // Version
-  NOW + SECONDS_PER_DAY,
+  NOW + PBL_SEC_PER_DAY,
   1234, // Steps
   1111, // Active K Calories
   2222, // Resting K Calories
@@ -143,7 +145,7 @@ static uint32_t s_sleep_data[] = {
 
 static uint32_t s_old_sleep_data[] = {
   1, // Version
-  NOW - (7 * SECONDS_PER_DAY),
+  NOW - (7 * PBL_SEC_PER_DAY),
   1234, // Sleep Duration
   1111, // Deep Sleep Duration
   2222, // Fall Asleep Time
@@ -193,14 +195,14 @@ void test_health_db__blob_db_api(void) {
 
   // check
   int32_t val_out;
-  cl_assert(health_db_get_typical_value(ActivityMetricSleepTotalSeconds, Monday, &val_out));
+  cl_assert(health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalSleepDuration]);
 
   // delete
   cl_assert_equal_i(health_db_delete((uint8_t *)key, strlen(key)), S_SUCCESS);
 
   // check
-  cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
 
   // insert again
   cl_assert_equal_i(
@@ -208,21 +210,21 @@ void test_health_db__blob_db_api(void) {
       S_SUCCESS);
 
   // check
-  cl_assert(health_db_get_typical_value(ActivityMetricSleepTotalSeconds, Monday, &val_out));
+  cl_assert(health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalSleepDuration]);
 
   // flush
   cl_assert_equal_i(health_db_flush(), S_SUCCESS);
 
   // check
-  cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
 
   // insert something with an older version (this will succeed)
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_invalid_sleep_data,
                                      sizeof(s_sleep_data)),
                     S_SUCCESS);
   // check
-  cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
 }
 
 void test_health_db__movement_data(void) {
@@ -236,15 +238,15 @@ void test_health_db__movement_data(void) {
   // check typicals (not stored)
   int32_t val_out;
 
-  cl_assert(!health_db_get_typical_value(ActivityMetricStepCount, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricStepCount, PBL_MONDAY, &val_out));
 
-  cl_assert(!health_db_get_typical_value(ActivityMetricActiveSeconds, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricActiveSeconds, PBL_MONDAY, &val_out));
 
-  cl_assert(!health_db_get_typical_value(ActivityMetricRestingKCalories, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricRestingKCalories, PBL_MONDAY, &val_out));
 
-  cl_assert(!health_db_get_typical_value(ActivityMetricActiveKCalories, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricActiveKCalories, PBL_MONDAY, &val_out));
 
-  cl_assert(!health_db_get_typical_value(ActivityMetricDistanceMeters, Monday, &val_out));
+  cl_assert(!health_db_get_typical_value(ActivityMetricDistanceMeters, PBL_MONDAY, &val_out));
 }
 
 void test_health_db__sleep_data(void) {
@@ -258,16 +260,16 @@ void test_health_db__sleep_data(void) {
   // check typicals
   int32_t val_out;
 
-  cl_assert(health_db_get_typical_value(ActivityMetricSleepTotalSeconds, Monday, &val_out));
+  cl_assert(health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalSleepDuration]);
 
-  cl_assert(health_db_get_typical_value(ActivityMetricSleepRestfulSeconds, Monday, &val_out));
+  cl_assert(health_db_get_typical_value(ActivityMetricSleepRestfulSeconds, PBL_MONDAY, &val_out));
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalDeepSleepDuration]);
 
-  cl_assert(health_db_get_typical_value(ActivityMetricSleepEnterAtSeconds, Monday, &val_out));
+  cl_assert(health_db_get_typical_value(ActivityMetricSleepEnterAtSeconds, PBL_MONDAY, &val_out));
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalFallAsleepTime]);
 
-  cl_assert(health_db_get_typical_value(ActivityMetricSleepExitAtSeconds, Monday, &val_out));
+  cl_assert(health_db_get_typical_value(ActivityMetricSleepExitAtSeconds, PBL_MONDAY, &val_out));
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalWakeupTime]);
 }
 
@@ -282,9 +284,12 @@ void test_health_db__hr_zone_data(void) {
   // check typicals (not stored)
   int32_t val_out;
 
-  cl_assert(!health_db_get_typical_value(ActivityMetricHeartRateZone1Minutes, Monday, &val_out));
-  cl_assert(!health_db_get_typical_value(ActivityMetricHeartRateZone2Minutes, Monday, &val_out));
-  cl_assert(!health_db_get_typical_value(ActivityMetricHeartRateZone3Minutes, Monday, &val_out));
+  cl_assert(
+      !health_db_get_typical_value(ActivityMetricHeartRateZone1Minutes, PBL_MONDAY, &val_out));
+  cl_assert(
+      !health_db_get_typical_value(ActivityMetricHeartRateZone2Minutes, PBL_MONDAY, &val_out));
+  cl_assert(
+      !health_db_get_typical_value(ActivityMetricHeartRateZone3Minutes, PBL_MONDAY, &val_out));
 }
 
 void test_health_db__step_averages(void) {

@@ -14,6 +14,7 @@
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/util/size.h"
+#include "pbl/util/units.h"
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
@@ -41,7 +42,7 @@ typedef struct HealthSleepSummaryCardData {
 #define NO_DATA_TEXT_COLOR    (PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack))
 #define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorOxfordBlue, GColorWhite))
 
-#define TWELVE_HOURS (SECONDS_PER_HOUR * 12)
+#define TWELVE_HOURS (PBL_SEC_PER_HOUR * 12)
 
 static void prv_render_sleep_sessions(GContext *ctx, HealthSleepSummaryCardData *data) {
   const int num_sessions = health_data_sleep_get_num_sessions(data->health_data);
@@ -63,9 +64,9 @@ static void prv_render_sleep_sessions(GContext *ctx, HealthSleepSummaryCardData 
     struct tm local_tm;
     localtime_r(&session->start_utc, &local_tm);
 
-    const int session_start_24h = (local_tm.tm_sec + local_tm.tm_min * SECONDS_PER_MINUTE +
-                                   local_tm.tm_hour * SECONDS_PER_HOUR);
-    const int session_end_24h = session_start_24h + (session->length_min * SECONDS_PER_MINUTE);
+    const int session_start_24h =
+        (local_tm.tm_sec + local_tm.tm_min * PBL_SEC_PER_MIN + local_tm.tm_hour * PBL_SEC_PER_HOUR);
+    const int session_end_24h = session_start_24h + (session->length_min * PBL_SEC_PER_MIN);
 
     const int session_start_12h = session_start_24h % TWELVE_HOURS;
     const int session_end_12h = session_end_24h % TWELVE_HOURS;
@@ -86,7 +87,7 @@ static void prv_render_typical_markers(GContext *ctx, HealthSleepSummaryCardData
 
   if (sleep_start_24h || sleep_end_24h) {
 #if PBL_COLOR
-    const int time_fuzz = (2 * SECONDS_PER_MINUTE);
+    const int time_fuzz = (2 * PBL_SEC_PER_MIN);
     const int sleep_start_12h = (sleep_start_24h) % TWELVE_HOURS;
     const int sleep_end_12h = (sleep_end_24h - time_fuzz) % TWELVE_HOURS;
     const int sleep_start = (sleep_start_12h * HEALTH_PROGRESS_BAR_MAX_VALUE / TWELVE_HOURS);

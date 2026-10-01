@@ -19,6 +19,7 @@
 #include "stubs_logging.h"
 
 #include "test_recognizer_impl.h"
+#include "pbl/util/units.h"
 
 // The manager is not under test here; swallow the notification.
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
@@ -50,7 +51,7 @@ static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t 
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / MS_PER_SECOND);
+  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
 }
 
 // TAP_MAX_DURATION_MS (300) is private to tap.c; the cap is part of the tap
@@ -59,7 +60,7 @@ static void prv_advance_ms(uint32_t ms) {
 // the boundary exact regardless of RTC_TICKS_HZ (1000 or 1024 by board).
 #define TAP_CAP_MS (300)
 static RtcTicks prv_ticks_for_floored_ms(uint32_t ms) {
-  return ((RtcTicks)ms * RTC_TICKS_HZ + (MS_PER_SECOND - 1)) / MS_PER_SECOND;
+  return ((RtcTicks)ms * RTC_TICKS_HZ + (PBL_MSEC_PER_SEC - 1)) / PBL_MSEC_PER_SEC;
 }
 
 // tests

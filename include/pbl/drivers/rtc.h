@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "util/time/time.h"
+#include "pbl/services/time.h"
 
 typedef uint64_t RtcTicks;
 

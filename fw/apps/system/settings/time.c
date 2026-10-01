@@ -14,8 +14,6 @@
 #include "applib/ui/time_selection_window.h"
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
-#include "util/date.h"
-#include "util/time/time.h"
 #include "pbl/util/string.h"
 
 #include "pbl/services/clock.h"

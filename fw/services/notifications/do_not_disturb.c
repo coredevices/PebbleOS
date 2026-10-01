@@ -24,7 +24,8 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
-#include "util/time/time.h"
+#include "pbl/util/time.h"
+#include "pbl/util/units.h"
 
 #include <pbl/cron/cron.h>
 #include <stdbool.h>
@@ -149,7 +150,8 @@ static void prv_schedule_cron_callback(struct pbl_cron_job *job, void *data) {
 static DoNotDisturbScheduleType prv_current_schedule_type(void) {
   struct tm time;
   rtc_get_time_tm(&time);
-  return ((time.tm_wday == Saturday || time.tm_wday == Sunday) ? WeekendSchedule : WeekdaySchedule);
+  return ((time.tm_wday == PBL_SATURDAY || time.tm_wday == PBL_SUNDAY) ? WeekendSchedule
+                                                                       : WeekdaySchedule);
 }
 
 static bool prv_is_in_schedule_period(void) {
@@ -160,12 +162,12 @@ static bool prv_is_in_schedule_period(void) {
 
   DoNotDisturbSchedule schedule;
   do_not_disturb_get_schedule(type, &schedule);
-  const int from = schedule.from_hour * MINUTES_PER_HOUR + schedule.from_minute;
-  const int to = schedule.to_hour * MINUTES_PER_HOUR + schedule.to_minute;
+  const int from = schedule.from_hour * PBL_MIN_PER_HOUR + schedule.from_minute;
+  const int to = schedule.to_hour * PBL_MIN_PER_HOUR + schedule.to_minute;
 
   struct tm time;
   rtc_get_time_tm(&time);
-  const int now = time.tm_hour * MINUTES_PER_HOUR + time.tm_min;
+  const int now = time.tm_hour * PBL_MIN_PER_HOUR + time.tm_min;
 
   if (from < to) {
     return now >= from && now < to;

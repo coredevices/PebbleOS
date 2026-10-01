@@ -12,6 +12,7 @@
 #include "stubs_passert.h"
 
 #include <string.h>
+#include "pbl/services/time.h"
 
 //! Find a region ID for the given region name.
 //! @return a valid, matching region ID, or -1 if no region was found

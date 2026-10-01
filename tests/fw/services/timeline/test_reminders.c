@@ -22,6 +22,7 @@
 #include "fake_spi_flash.h"
 #include "fake_system_task.h"
 #include "stubs_layout_layer.h"
+#include "pbl/services/time.h"
 static time_t now = 0;
 static int num_events_put = 0;
 
