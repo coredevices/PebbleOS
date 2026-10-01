@@ -147,7 +147,6 @@ pbl_clar_test(test_app_glance
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
     fw/util/crc8.c
-    fw/util/lru_cache.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
   OVERRIDES dummy_board

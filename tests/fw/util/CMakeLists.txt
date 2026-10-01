@@ -28,17 +28,6 @@ pbl_clar_test(test_buffer
     fw/util/buffer.c
 )
 
-pbl_clar_test(test_lru_cache
-  SOURCES
-    fw/util/lru_cache.c
-)
-
-pbl_clar_test(test_mbuf
-  SOURCES
-    fw/util/mbuf.c
-    fw/util/mbuf_iterator.c
-)
-
 pbl_clar_test(test_rand
   SOURCES
     fw/util/rand/rand.c
@@ -62,11 +51,6 @@ pbl_clar_test(test_generic_attribute
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
 )
 
-pbl_clar_test(test_hdlc
-  SOURCES
-    fw/util/hdlc.c
-)
-
 pbl_clar_test(test_stringlist
   SOURCES
     fw/util/stringlist.c
@@ -77,12 +61,3 @@ pbl_clar_test(test_pstring
     fw/util/pstring.c
 )
 
-pbl_clar_test(test_ihex
-  SOURCES
-    fw/util/ihex.c
-)
-
-pbl_clar_test(test_sle
-  SOURCES
-    fw/util/sle.c
-)

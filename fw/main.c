@@ -54,7 +54,6 @@
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/kernel_applib_state.h"
 #include "kernel/util/delay.h"
-#include "util/mbuf.h"
 #include "system/firmware_storage.h"
 #include "system/passert.h"
 #include "system/version.h"
@@ -108,7 +107,6 @@ int main(void) {
 
   kernel_heap_init();
 
-  mbuf_init();
   delay_init();
   dbgserial_init();
   pulse_early_init();

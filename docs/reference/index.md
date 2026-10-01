@@ -71,5 +71,4 @@ formats/font.md
 formats/pbi.md
 formats/pdc.md
 formats/timezone.md
-formats/sle.md
 ```
