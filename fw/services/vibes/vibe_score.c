@@ -19,19 +19,19 @@ PBL_LOG_MODULE_DECLARE(service_vibes, CONFIG_SERVICE_VIBES_LOG_LEVEL);
 // vibe_pattern. The LPM alarm score uses 50s. Keep in sync with json2vibe.py.
 #define VIBE_SCORE_MAX_REPEAT_DELAY_MS (60000)
 
-static VibeNote *prv_vibe_score_get_note_list(GenericAttribute *notes_attribute) {
+static VibeNote *prv_vibe_score_get_note_list(struct pbl_generic_attr *notes_attribute) {
   return (VibeNote *)notes_attribute->data;
 }
 
-static VibeNoteIndex *prv_vibe_score_get_pattern_list(GenericAttribute *pattern_attribute) {
+static VibeNoteIndex *prv_vibe_score_get_pattern_list(struct pbl_generic_attr *pattern_attribute) {
   return (VibeNoteIndex *)pattern_attribute->data;
 }
 
-static unsigned int prv_vibe_score_get_num_note_types(GenericAttribute *notes_attribute) {
+static unsigned int prv_vibe_score_get_num_note_types(struct pbl_generic_attr *notes_attribute) {
   return notes_attribute->length / sizeof(VibeNote);
 }
 
-static unsigned int prv_vibe_score_get_pattern_length(GenericAttribute *pattern_attribute) {
+static unsigned int prv_vibe_score_get_pattern_length(struct pbl_generic_attr *pattern_attribute) {
   return pattern_attribute->length / sizeof(VibeNoteIndex);
 }
 
@@ -71,14 +71,15 @@ bool vibe_score_validate(VibeScore *score, uint32_t data_size) {
   }
 
   // check if attr_list_size is correct
-  if (score->attr_list_size != (data_size - (sizeof(VibeScore) - sizeof(GenericAttributeList)))) {
+  if (score->attr_list_size !=
+      (data_size - (sizeof(VibeScore) - sizeof(struct pbl_generic_attr_list)))) {
     return false;
   }
 
   // check exact file size to contain all flexible-sized data
   for (unsigned int i = 0; i < score->attr_list.num_attributes; i++) {
-    GenericAttribute *attribute = (GenericAttribute *)((uint8_t *)score + total_size);
-    total_size += sizeof(GenericAttribute);
+    struct pbl_generic_attr *attribute = (struct pbl_generic_attr *)((uint8_t *)score + total_size);
+    total_size += sizeof(struct pbl_generic_attr);
     if (data_size < total_size) {
       return false;
     }
@@ -92,10 +93,10 @@ bool vibe_score_validate(VibeScore *score, uint32_t data_size) {
   }
 
   // check to see all indices point to valid notes
-  GenericAttribute *notes_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_Notes, score->attr_list_size);
-  GenericAttribute *pattern_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_Pattern, score->attr_list_size);
+  struct pbl_generic_attr *notes_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_Notes, score->attr_list_size);
+  struct pbl_generic_attr *pattern_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_Pattern, score->attr_list_size);
   if (!notes_attribute || !pattern_attribute) {
     return false;
   }
@@ -112,8 +113,8 @@ bool vibe_score_validate(VibeScore *score, uint32_t data_size) {
     }
   }
 
-  GenericAttribute *repeat_delay_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_RepeatDelay, score->attr_list_size);
+  struct pbl_generic_attr *repeat_delay_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_RepeatDelay, score->attr_list_size);
   if (repeat_delay_attribute) {
     if (repeat_delay_attribute->length != sizeof(uint16_t)) {
       return false;
@@ -152,10 +153,10 @@ unsigned int vibe_score_get_duration_ms(VibeScore *score) {
   if (!score) {
     return 0;
   }
-  GenericAttribute *notes_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_Notes, score->attr_list_size);
-  GenericAttribute *pattern_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_Pattern, score->attr_list_size);
+  struct pbl_generic_attr *notes_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_Notes, score->attr_list_size);
+  struct pbl_generic_attr *pattern_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_Pattern, score->attr_list_size);
   PBL_ASSERTN(notes_attribute && pattern_attribute);
 
   unsigned int duration_ms = 0;
@@ -174,8 +175,8 @@ unsigned int vibe_score_get_repeat_delay_ms(VibeScore *score) {
   if (!score) {
     return 0;
   }
-  GenericAttribute *repeat_delay_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_RepeatDelay, score->attr_list_size);
+  struct pbl_generic_attr *repeat_delay_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_RepeatDelay, score->attr_list_size);
   if (repeat_delay_attribute) {
     uint16_t *repeat_delay = (uint16_t *)repeat_delay_attribute->data;
     return *repeat_delay;
@@ -185,10 +186,10 @@ unsigned int vibe_score_get_repeat_delay_ms(VibeScore *score) {
 
 void vibe_score_do_vibe(VibeScore *score) {
   PBL_ASSERTN(score);
-  GenericAttribute *notes_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_Notes, score->attr_list_size);
-  GenericAttribute *pattern_attribute = generic_attribute_find_attribute(
-      &score->attr_list, VibeAttributeId_Pattern, score->attr_list_size);
+  struct pbl_generic_attr *notes_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_Notes, score->attr_list_size);
+  struct pbl_generic_attr *pattern_attribute =
+      pbl_generic_attr_find(&score->attr_list, VibeAttributeId_Pattern, score->attr_list_size);
   PBL_ASSERTN(notes_attribute && pattern_attribute);
 
   VibeNote *note_list = prv_vibe_score_get_note_list(notes_attribute);

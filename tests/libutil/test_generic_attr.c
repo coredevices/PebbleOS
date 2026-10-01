@@ -3,24 +3,27 @@
 
 #include "clar.h"
 
-#include "pbl/services/voice_endpoint_private.h"
+#include "pbl/util/generic_attr.h"
 
-#include "fake_pebble_tasks.h"
+#include <string.h>
 
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_rand_ptr.h"
+enum {
+  AttrIdTranscription = 0x02,
+  AttrIdAppUuid = 0x03,
+};
+
+#define UUID_SIZE 16
 
 // setup and teardown
-void test_generic_attribute__initialize(void) {
+void test_generic_attr__initialize(void) {
 }
 
-void test_generic_attribute__cleanup(void) {
+void test_generic_attr__cleanup(void) {
 }
 
 // tests
 
-void test_generic_attribute__find_attribute(void) {
+void test_generic_attr__find_attribute(void) {
   uint8_t data1[] = {
     0x02, // attribute list - num attributes
 
@@ -206,71 +209,80 @@ void test_generic_attribute__find_attribute(void) {
     'a',
   };
 
-  GenericAttributeList *attr_list1 = (GenericAttributeList *)data1;
-  GenericAttributeList *attr_list2 = (GenericAttributeList *)data2;
+  struct pbl_generic_attr_list *attr_list1 = (struct pbl_generic_attr_list *)data1;
+  struct pbl_generic_attr_list *attr_list2 = (struct pbl_generic_attr_list *)data2;
 
-  GenericAttribute *attr1 =
-      generic_attribute_find_attribute(attr_list1, VEAttributeIdTranscription, sizeof(data1));
+  struct pbl_generic_attr *attr1 =
+      pbl_generic_attr_find(attr_list1, AttrIdTranscription, sizeof(data1));
   cl_assert(attr1);
-  cl_assert_equal_i(attr1->id, VEAttributeIdTranscription);
+  cl_assert_equal_i(attr1->id, AttrIdTranscription);
   cl_assert_equal_i(attr1->length, 0x2F);
-  size_t offset = sizeof(GenericAttributeList) + sizeof(GenericAttribute);
+  size_t offset = sizeof(struct pbl_generic_attr_list) + sizeof(struct pbl_generic_attr);
   cl_assert_equal_p(attr1->data, &data1[offset]);
 
-  GenericAttribute *attr2 =
-      generic_attribute_find_attribute(attr_list1, VEAttributeIdAppUuid, sizeof(data1));
+  struct pbl_generic_attr *attr2 = pbl_generic_attr_find(attr_list1, AttrIdAppUuid, sizeof(data1));
   cl_assert(attr2);
-  cl_assert_equal_i(attr2->id, VEAttributeIdAppUuid);
+  cl_assert_equal_i(attr2->id, AttrIdAppUuid);
   cl_assert_equal_i(attr2->length, 16);
-  offset = sizeof(GenericAttributeList) + sizeof(GenericAttribute) + attr1->length +
-           sizeof(GenericAttribute);
+  offset = sizeof(struct pbl_generic_attr_list) + sizeof(struct pbl_generic_attr) + attr1->length +
+           sizeof(struct pbl_generic_attr);
   cl_assert_equal_p(attr2->data, &data1[offset]);
 
-  attr1 = generic_attribute_find_attribute(attr_list2, VEAttributeIdAppUuid, sizeof(data2));
+  attr1 = pbl_generic_attr_find(attr_list2, AttrIdAppUuid, sizeof(data2));
   cl_assert(attr1);
-  cl_assert_equal_i(attr1->id, VEAttributeIdAppUuid);
+  cl_assert_equal_i(attr1->id, AttrIdAppUuid);
   cl_assert_equal_i(attr1->length, 16);
-  offset = sizeof(GenericAttributeList) + sizeof(GenericAttribute);
+  offset = sizeof(struct pbl_generic_attr_list) + sizeof(struct pbl_generic_attr);
   cl_assert_equal_p(attr1->data, &data2[offset]);
 
-  attr2 = generic_attribute_find_attribute(attr_list2, VEAttributeIdTranscription, sizeof(data2));
+  attr2 = pbl_generic_attr_find(attr_list2, AttrIdTranscription, sizeof(data2));
   cl_assert(attr2);
-  cl_assert_equal_i(attr2->id, VEAttributeIdTranscription);
+  cl_assert_equal_i(attr2->id, AttrIdTranscription);
   cl_assert_equal_i(attr2->length, 0x2F);
-  offset = sizeof(GenericAttributeList) + sizeof(GenericAttribute) + attr1->length +
-           sizeof(GenericAttribute);
+  offset = sizeof(struct pbl_generic_attr_list) + sizeof(struct pbl_generic_attr) + attr1->length +
+           sizeof(struct pbl_generic_attr);
   cl_assert_equal_p(attr2->data, &data2[offset]);
 
-  GenericAttribute *attr3 =
-      generic_attribute_find_attribute(attr_list1, VEAttributeIdAppUuid, sizeof(data1) - 1);
+  struct pbl_generic_attr *attr3 =
+      pbl_generic_attr_find(attr_list1, AttrIdAppUuid, sizeof(data1) - 1);
   cl_assert(!attr3);
 
-  attr3 = generic_attribute_find_attribute(attr_list1, VEAttributeIdAppUuid,
-                                           sizeof(data1) - sizeof(Uuid));
+  attr3 = pbl_generic_attr_find(attr_list1, AttrIdAppUuid, sizeof(data1) - UUID_SIZE);
   cl_assert(!attr3);
 
-  attr3 = generic_attribute_find_attribute(attr_list1, VEAttributeIdAppUuid,
-                                           sizeof(data1) - sizeof(Uuid) - 1);
+  attr3 = pbl_generic_attr_find(attr_list1, AttrIdAppUuid, sizeof(data1) - UUID_SIZE - 1);
   cl_assert(!attr3);
 }
 
-void test_generic_attribute__add_attribute(void) {
+void test_generic_attr__add_attribute(void) {
   uint8_t data[] = {0x01, 0x55, 0x77, 0x54, 0x47};
-  uint8_t data_out[(2 * sizeof(GenericAttribute)) + sizeof(data) + sizeof(Uuid)];
-  GenericAttribute *next = (GenericAttribute *)data_out;
-  next = generic_attribute_add_attribute(next, VEAttributeIdTranscription, data, sizeof(data));
-  size_t offset = sizeof(GenericAttribute) + sizeof(data);
+  uint8_t data_out[(2 * sizeof(struct pbl_generic_attr)) + sizeof(data) + UUID_SIZE];
+  struct pbl_generic_attr *next = (struct pbl_generic_attr *)data_out;
+  next = pbl_generic_attr_add(next, AttrIdTranscription, data, sizeof(data));
+  size_t offset = sizeof(struct pbl_generic_attr) + sizeof(data);
   cl_assert_equal_p((uint8_t *)next, &data_out[offset]);
-  GenericAttribute expected = {.id = VEAttributeIdTranscription, .length = sizeof(data)};
-  cl_assert_equal_m(&expected, data_out, sizeof(GenericAttribute));
-  cl_assert_equal_m(&data_out[sizeof(GenericAttribute)], data, sizeof(data));
+  struct pbl_generic_attr expected = {.id = AttrIdTranscription, .length = sizeof(data)};
+  cl_assert_equal_m(&expected, data_out, sizeof(struct pbl_generic_attr));
+  cl_assert_equal_m(&data_out[sizeof(struct pbl_generic_attr)], data, sizeof(data));
 
-  Uuid uuid;
-  uuid_generate(&uuid);
-  next = generic_attribute_add_attribute(next, VEAttributeIdAppUuid, &uuid, sizeof(uuid));
+  uint8_t uuid[UUID_SIZE];
+  for (size_t i = 0; i < sizeof(uuid); i++) {
+    uuid[i] = (uint8_t)(0xa5 ^ i);
+  }
+  next = pbl_generic_attr_add(next, AttrIdAppUuid, uuid, sizeof(uuid));
   cl_assert_equal_p((uint8_t *)next, data_out + sizeof(data_out));
-  expected = (GenericAttribute){.id = VEAttributeIdAppUuid, .length = sizeof(Uuid)};
-  cl_assert_equal_m(&expected, &data_out[offset], sizeof(GenericAttribute));
-  offset += sizeof(GenericAttribute);
-  cl_assert_equal_m(&uuid, &data_out[offset], sizeof(uuid));
+  expected = (struct pbl_generic_attr){.id = AttrIdAppUuid, .length = UUID_SIZE};
+  cl_assert_equal_m(&expected, &data_out[offset], sizeof(struct pbl_generic_attr));
+  offset += sizeof(struct pbl_generic_attr);
+  cl_assert_equal_m(uuid, &data_out[offset], sizeof(uuid));
+}
+
+void test_generic_attr__empty_attribute_at_end(void) {
+  const uint8_t data[] = {0x02, 0x01, 0x01, 0x00, 0xaa, 0x02, 0x00, 0x00};
+  struct pbl_generic_attr_list *list = (struct pbl_generic_attr_list *)data;
+
+  struct pbl_generic_attr *attr = pbl_generic_attr_find(list, 0x02, sizeof(data));
+  cl_assert(attr);
+  cl_assert_equal_i(attr->length, 0);
+  cl_assert(!pbl_generic_attr_find(list, 0x02, sizeof(data) - 1));
 }

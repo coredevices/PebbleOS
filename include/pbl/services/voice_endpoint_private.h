@@ -6,7 +6,7 @@
 #include "pbl/services/audio_endpoint.h"
 #include "pbl/services/voice_endpoint.h"
 #include "pbl/kernel/compiler.h"
-#include "util/generic_attribute.h"
+#include "pbl/util/generic_attr.h"
 
 // Shared message definitions with unit test
 
@@ -40,7 +40,7 @@ typedef struct PBL_PACKED {
   VEFlags flags;
   VoiceEndpointSessionType session_type : 8;
   AudioEndpointSessionId session_id;
-  GenericAttributeList attr_list;
+  struct pbl_generic_attr_list attr_list;
 } SessionSetupMsg;
 
 typedef struct PBL_PACKED {
@@ -55,5 +55,5 @@ typedef struct PBL_PACKED {
   VEFlags flags;
   AudioEndpointSessionId session_id;
   VoiceEndpointResult result : 8;
-  GenericAttributeList attr_list;
+  struct pbl_generic_attr_list attr_list;
 } VoiceSessionResultMsg;

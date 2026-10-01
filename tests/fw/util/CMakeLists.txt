@@ -29,10 +29,3 @@ pbl_clar_test(test_legacy_checksum
     fw/util/legacy_checksum.c
 )
 
-pbl_clar_test(test_generic_attribute
-  SOURCES
-    fw/util/rand/rand.c
-    fw/util/generic_attribute.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
-)
-

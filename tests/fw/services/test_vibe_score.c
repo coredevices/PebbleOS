@@ -74,10 +74,10 @@ void test_vibe_score__double_pulse(void) {
     0, // reserved bytes
     18,
     0, // attr_list_size
-    2, // GenericAttributeList.num_attributes
+    2, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     8,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     15,
     0,   // VibeNote.vibe_duration_ms
     9,   // VibeNote.brake_duration_ms
@@ -88,7 +88,7 @@ void test_vibe_score__double_pulse(void) {
     0, // VibeNote.strength
     VibeAttributeId_Pattern,
     3,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0,
     1,
     0
@@ -127,10 +127,10 @@ void test_vibe_score__repeat_delay_is_valid(void) {
     0, // reserved bytes
     23,
     0, // attr_list_size
-    3, // GenericAttributeList.num_attributes
+    3, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     8,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     15,
     0,   // VibeNote.vibe_duration_ms
     9,   // VibeNote.brake_duration_ms
@@ -141,13 +141,13 @@ void test_vibe_score__repeat_delay_is_valid(void) {
     0, // VibeNote.strength
     VibeAttributeId_Pattern,
     3,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0,
     1,
     0,
     VibeAttributeId_RepeatDelay,
     2,
-    0, // GenericAttribute.length (2 bytes for a uint16)
+    0, // struct pbl_generic_attr.length (2 bytes for a uint16)
     12,
     12 // repeat_delay value
   };
@@ -173,10 +173,10 @@ void test_vibe_score__repeat_delay_lpm_alarm_is_valid(void) {
     0, // reserved bytes
     23,
     0, // attr_list_size
-    3, // GenericAttributeList.num_attributes
+    3, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     8,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     15,
     0,   // VibeNote.vibe_duration_ms
     9,   // VibeNote.brake_duration_ms
@@ -187,13 +187,13 @@ void test_vibe_score__repeat_delay_lpm_alarm_is_valid(void) {
     0, // VibeNote.strength
     VibeAttributeId_Pattern,
     3,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0,
     1,
     0,
     VibeAttributeId_RepeatDelay,
     2,
-    0, // GenericAttribute.length (2 bytes for a uint16)
+    0, // struct pbl_generic_attr.length (2 bytes for a uint16)
     0x50,
     0xC3 // repeat_delay value (50000)
   };
@@ -219,10 +219,10 @@ void test_vibe_score__repeat_delay_too_long_is_invalid(void) {
     0, // reserved bytes
     23,
     0, // attr_list_size
-    3, // GenericAttributeList.num_attributes
+    3, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     8,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     15,
     0,   // VibeNote.vibe_duration_ms
     9,   // VibeNote.brake_duration_ms
@@ -233,13 +233,13 @@ void test_vibe_score__repeat_delay_too_long_is_invalid(void) {
     0, // VibeNote.strength
     VibeAttributeId_Pattern,
     3,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0,
     1,
     0,
     VibeAttributeId_RepeatDelay,
     2,
-    0, // GenericAttribute.length (2 bytes for a uint16)
+    0, // struct pbl_generic_attr.length (2 bytes for a uint16)
     0x61,
     0xEA // repeat_delay value (60001, above the cap)
   };
@@ -262,10 +262,10 @@ void test_vibe_score__test_get_duration_ms(void) {
     0, // reserved bytes
     18,
     0, // attr_list_size
-    2, // GenericAttributeList.num_attributes
+    2, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     8,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     200,
     0,   // VibeNote.vibe_duration_ms
     1,   // VibeNote.brake_duration_ms
@@ -276,7 +276,7 @@ void test_vibe_score__test_get_duration_ms(void) {
     0, // VibeNote.strength
     VibeAttributeId_Pattern,
     3,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0,
     1,
     0
@@ -303,10 +303,10 @@ void test_vibe_score__test_get_repeat_delay_ms_custom_delay(void) {
     0, // reserved bytes
     23,
     0, // attr_list_size
-    3, // GenericAttributeList.num_attributes
+    3, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     8,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     200,
     0,   // VibeNote.vibe_duration_ms
     1,   // VibeNote.brake_duration_ms
@@ -317,7 +317,7 @@ void test_vibe_score__test_get_repeat_delay_ms_custom_delay(void) {
     0, // VibeNote.strength
     VibeAttributeId_Pattern,
     3,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0,
     1,
     0,
@@ -349,10 +349,10 @@ void test_vibe_score__test_get_repeat_delay_ms_default_delay(void) {
     0, // reserved bytes
     18,
     0, // attr_list_size
-    2, // GenericAttributeList.num_attributes
+    2, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     8,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     200,
     0,   // VibeNote.vibe_duration_ms
     1,   // VibeNote.brake_duration_ms
@@ -363,7 +363,7 @@ void test_vibe_score__test_get_repeat_delay_ms_default_delay(void) {
     0, // VibeNote.strength
     VibeAttributeId_Pattern,
     3,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0,
     1,
     0
@@ -390,17 +390,17 @@ void test_vibe_score__test_bad_attr_size(void) {
     0, // reserved bytes
     11,
     0, // attr_list_size (right value is 12)
-    2, // GenericAttributeList.num_attributes
+    2, // struct pbl_generic_attr_list.num_attributes
     VibeAttributeId_Notes,
     4,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     1,
     0,   // VibeNote.vibe_duration_ms
     1,   // VibeNote.brake_duration_ms
     100, // VibeNote.strength
     VibeAttributeId_Pattern,
     1,
-    0, // GenericAttribute.length
+    0, // struct pbl_generic_attr.length
     0
   };
   s_resource_buffer = buffer;

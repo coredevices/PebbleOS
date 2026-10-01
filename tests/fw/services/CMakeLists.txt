@@ -288,7 +288,6 @@ pbl_clar_test(test_voice_endpoint
   SOURCES
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
-    fw/util/generic_attribute.c
     fw/services/voice/transcription.c
     fw/services/voice_endpoint/service.c
     tests/fakes/fake_session.c
@@ -484,7 +483,6 @@ pbl_clar_test(test_vibe_intensity
 pbl_clar_test(test_vibe_score
   SOURCES
     fw/services/vibes/vibe_score.c
-    fw/util/generic_attribute.c
 )
 
 pbl_clar_test(test_vibe_score_info

@@ -123,9 +123,9 @@ static void prv_test_session_setup_msg(uint16_t endpoint_id, const uint8_t *data
                                        unsigned int length) {
   cl_assert_equal_i(endpoint_id, 11000);
 
-  size_t expected_len = sizeof(SessionSetupMsg) + sizeof(GenericAttribute) +
+  size_t expected_len = sizeof(SessionSetupMsg) + sizeof(struct pbl_generic_attr) +
                         sizeof(AudioTransferInfoSpeex) +
-                        (s_app_initiated ? (sizeof(GenericAttribute) + sizeof(Uuid)) : 0);
+                        (s_app_initiated ? (sizeof(struct pbl_generic_attr) + sizeof(Uuid)) : 0);
   cl_assert_equal_i(length, expected_len);
 
   SessionSetupMsg *msg = (SessionSetupMsg *)data;
@@ -386,7 +386,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   voice_endpoint_protocol_msg_callback(NULL, dictation_result, sizeof(dictation_result));
   fake_system_task_callbacks_invoke_pending();
   cl_assert(s_transcription != NULL);
-  size_t offset = sizeof(VoiceSessionResultMsg) + sizeof(GenericAttribute);
+  size_t offset = sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr);
   cl_assert_equal_m(s_transcription, &dictation_result[offset], sizeof(dictation_result) - offset);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
@@ -565,15 +565,16 @@ void test_voice_endpoint__handle_dictation_result_app_initiated(void) {
   voice_endpoint_protocol_msg_callback(NULL, dictation_result_1, sizeof(dictation_result_1));
   fake_system_task_callbacks_invoke_pending();
   cl_assert(s_transcription != NULL);
-  size_t offset = sizeof(VoiceSessionResultMsg) + sizeof(GenericAttribute);
-  cl_assert_equal_m(s_transcription, &dictation_result_1[offset],
-                    sizeof(dictation_result_1) - offset - sizeof(GenericAttribute) - sizeof(Uuid));
+  size_t offset = sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr);
+  cl_assert_equal_m(
+      s_transcription, &dictation_result_1[offset],
+      sizeof(dictation_result_1) - offset - sizeof(struct pbl_generic_attr) - sizeof(Uuid));
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
   cl_assert_equal_i(s_app_initiated, true);
 
-  offset =
-      sizeof(VoiceSessionResultMsg) + sizeof(GenericAttribute) + 0x2F + sizeof(GenericAttribute);
+  offset = sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr) + 0x2F +
+           sizeof(struct pbl_generic_attr);
   cl_assert_equal_m(&s_app_uuid, &dictation_result_1[offset], sizeof(Uuid));
 }
 

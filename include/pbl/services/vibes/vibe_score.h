@@ -5,7 +5,7 @@
 
 #include "resource/resource.h"
 #include "pbl/kernel/compiler.h"
-#include "util/generic_attribute.h"
+#include "pbl/util/generic_attr.h"
 #include "pbl/util/misc.h"
 
 #define VIBE_SCORE_VERSION (1)
@@ -23,7 +23,7 @@ typedef struct PBL_PACKED VibeScore {
   uint16_t version;
   uint8_t reserved[4];
   uint16_t attr_list_size;
-  GenericAttributeList attr_list;
+  struct pbl_generic_attr_list attr_list;
 } VibeScore;
 
 typedef struct PBL_PACKED VibeNote {

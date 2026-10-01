@@ -9,7 +9,7 @@
 #include "pbl/services/voice/voice.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/generic_attribute.h"
+#include "pbl/util/generic_attr.h"
 #include "pbl/util/uuid.h"
 
 #include <sys/types.h>
@@ -23,10 +23,10 @@ PBL_LOG_MODULE_DEFINE(service_voice_endpoint, CONFIG_SERVICE_VOICE_ENDPOINT_LOG_
 #ifdef CONFIG_MIC
 static bool prv_handle_result_common(VoiceEndpointResult result, bool app_initiated,
                                      AudioEndpointSessionId session_id,
-                                     GenericAttributeList *attr_list, size_t attr_list_size,
+                                     struct pbl_generic_attr_list *attr_list, size_t attr_list_size,
                                      Uuid **app_uuid_out) {
-  GenericAttribute *uuid_attr =
-      generic_attribute_find_attribute(attr_list, VEAttributeIdAppUuid, attr_list_size);
+  struct pbl_generic_attr *uuid_attr =
+      pbl_generic_attr_find(attr_list, VEAttributeIdAppUuid, attr_list_size);
   if (app_initiated && !uuid_attr) {
     PBL_LOG_WRN(
         "No app UUID found for dictation response from app-initiated "
@@ -55,7 +55,8 @@ static bool prv_handle_result_common(VoiceEndpointResult result, bool app_initia
 }
 
 static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size) {
-  const size_t attr_list_size = size - sizeof(VoiceSessionResultMsg) + sizeof(GenericAttributeList);
+  const size_t attr_list_size =
+      size - sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr_list);
   const bool app_initiated = (msg->flags.app_initiated == 1);
   Uuid *app_uuid = NULL;
 
@@ -64,8 +65,8 @@ static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size)
     return;
   }
 
-  GenericAttribute *transcription_attr =
-      generic_attribute_find_attribute(&msg->attr_list, VEAttributeIdTranscription, attr_list_size);
+  struct pbl_generic_attr *transcription_attr =
+      pbl_generic_attr_find(&msg->attr_list, VEAttributeIdTranscription, attr_list_size);
 
   if (!transcription_attr || transcription_attr->length == 0) {
     PBL_LOG_WRN("No transcription attribute found");
@@ -87,7 +88,8 @@ static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size)
 }
 
 static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
-  const size_t attr_list_size = size - sizeof(VoiceSessionResultMsg) + sizeof(GenericAttributeList);
+  const size_t attr_list_size =
+      size - sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr_list);
   const bool app_initiated = (msg->flags.app_initiated == 1);
   Uuid *app_uuid = NULL;
 
@@ -101,15 +103,15 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
 
   // The timestamp attribute is optional
   time_t timestamp = 0;
-  GenericAttribute *timestamp_attr =
-      generic_attribute_find_attribute(&msg->attr_list, VEAttributeIdTimestamp, attr_list_size);
+  struct pbl_generic_attr *timestamp_attr =
+      pbl_generic_attr_find(&msg->attr_list, VEAttributeIdTimestamp, attr_list_size);
   if (timestamp_attr && timestamp_attr->length == sizeof(uint32_t)) {
     uint32_t *timestamp_ptr = (uint32_t *)timestamp_attr->data;
     timestamp = *timestamp_ptr;
   }
 
-  GenericAttribute *reminder_attr =
-      generic_attribute_find_attribute(&msg->attr_list, VEAttributeIdReminder, attr_list_size);
+  struct pbl_generic_attr *reminder_attr =
+      pbl_generic_attr_find(&msg->attr_list, VEAttributeIdReminder, attr_list_size);
 
   if (!reminder_attr || reminder_attr->length == 0) {
     PBL_LOG_WRN("No reminder attribute found");
@@ -186,9 +188,9 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
                                   PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
 
   // We're only sending one attribute now: the speex audio transfer info packet
-  size_t size = sizeof(SessionSetupMsg) + sizeof(GenericAttribute) +
+  size_t size = sizeof(SessionSetupMsg) + sizeof(struct pbl_generic_attr) +
                 sizeof(AudioTransferInfoSpeex) +
-                (app_uuid ? (sizeof(Uuid) + sizeof(GenericAttribute)) : 0);
+                (app_uuid ? (sizeof(Uuid) + sizeof(struct pbl_generic_attr)) : 0);
   SessionSetupMsg *msg = kernel_malloc_check(size);
   *msg = (SessionSetupMsg){
     .msg_id = MsgIdSessionSetup,
@@ -197,7 +199,7 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
     .attr_list.num_attributes = 1,
   };
 
-  GenericAttribute *attr = msg->attr_list.attributes;
+  struct pbl_generic_attr *attr = msg->attr_list.attributes;
   if (app_uuid) {
     // set this after struct initialization because the rest of the fields in the bitfield are left
     // uninitialized if just one is set.
@@ -207,11 +209,11 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
     msg->attr_list.num_attributes += 1;
 
     // add app UUID attribute
-    attr = generic_attribute_add_attribute(attr, VEAttributeIdAppUuid, app_uuid, sizeof(Uuid));
+    attr = pbl_generic_attr_add(attr, VEAttributeIdAppUuid, app_uuid, sizeof(Uuid));
   }
 
-  attr = generic_attribute_add_attribute(attr, VEAttributeIdAudioTransferInfoSpeex, info,
-                                         sizeof(AudioTransferInfoSpeex));
+  attr = pbl_generic_attr_add(attr, VEAttributeIdAudioTransferInfoSpeex, info,
+                              sizeof(AudioTransferInfoSpeex));
 
   size_t actual_size = (uint8_t *)attr - (uint8_t *)msg;
   PBL_ASSERTN(actual_size == size);
