@@ -14,6 +14,7 @@ typedef struct PeekLayout {
   TimelineLayoutInfo info;
   TimelineLayout *timeline_layout;
   TimelineItem *item;
+  bool icon_on_right; //!< Icon side the layout was built for.
 } PeekLayout;
 
 typedef struct TimelinePeek {
