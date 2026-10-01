@@ -27,7 +27,12 @@ void graphics_draw_pixel(GContext *ctx, GPoint point) {
 }
 void graphics_fill_rect(GContext *ctx, const GRect *rect) {
 }
-void graphics_private_draw_horizontal_line() {
+static int16_t s_hline_max_x;
+void graphics_private_draw_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_3 x1,
+                                           Fixed_S16_3 x2) {
+  if (x2.integer > s_hline_max_x) {
+    s_hline_max_x = x2.integer;
+  }
 }
 void graphics_private_draw_vertical_line() {
 }
@@ -368,6 +373,15 @@ void test_graphics_circle__fill_radial(void) {
   cl_assert_gpoint_precise(s_center, 4.5, 5.5);
   cl_assert_fixedS16_3(s_radius_outer, 4.5);
   cl_assert_fixedS16_3(s_radius_inner, 1.5);
+}
+
+void test_graphics_circle__stroke_large_radius(void) {
+  GContext ctx = {
+    .draw_state = {.stroke_width = 5, .antialiased = false},
+  };
+  s_hline_max_x = 0;
+  graphics_draw_circle(&ctx, GPointZero, 254);
+  cl_assert(s_hline_max_x >= 254);
 }
 
 void test_graphics_circle__DEG_TO_TRIGANGLE(void) {

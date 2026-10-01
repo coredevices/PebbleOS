@@ -379,7 +379,7 @@ static void prv_stroke_circle_quadrant_full(GContext *ctx, GPoint p, uint16_t ra
   // This algorithm will draw stroked circle with variable width (only odd numbers for now)
   const uint8_t half_stroke_width = stroke_width / 2;
   const int16_t inner_radius = radius - half_stroke_width;
-  const uint8_t outer_radius = radius + half_stroke_width;
+  const uint16_t outer_radius = radius + half_stroke_width;
 
   if (inner_radius < 1) {
     // Hack for filling circles: filling is done by line primitives using stroke_color by default
