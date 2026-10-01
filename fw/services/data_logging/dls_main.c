@@ -405,10 +405,10 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
         logging_session->data->buffer_in_kernel_heap = true;
       }
       logging_session->data->buffer_storage = buffer;
-      shared_circular_buffer_init(&logging_session->data->buffer,
-                                  logging_session->data->buffer_storage, buf_size);
-      shared_circular_buffer_add_client(&logging_session->data->buffer,
-                                        &logging_session->data->buffer_client);
+      pbl_shared_cbuf_init(&logging_session->data->buffer, logging_session->data->buffer_storage,
+                           buf_size);
+      pbl_shared_cbuf_add_client(&logging_session->data->buffer,
+                                 &logging_session->data->buffer_client);
     } else {
       // non buffered sessions can only be created/used from KernelBG
       PBL_ASSERT_TASK(PebbleTask_KernelBackground);
@@ -450,7 +450,7 @@ void dls_finish(DataLoggingSession *logging_session) {
   // Wait for write buffer to empty
   int timeout = 1000; // 1 second
   while (logging_session->data->buffer_storage != NULL && timeout) {
-    int bytes_pending = shared_circular_buffer_get_read_space_remaining(
+    int bytes_pending = pbl_shared_cbuf_get_read_space_remaining(
         &logging_session->data->buffer, &logging_session->data->buffer_client);
     if (bytes_pending == 0) {
       break;
@@ -528,12 +528,12 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_
     goto unlock_and_exit;
   }
 
-  if (shared_circular_buffer_get_write_space_remaining(&session->data->buffer) < num_bytes) {
+  if (pbl_shared_cbuf_get_write_space_remaining(&session->data->buffer) < num_bytes) {
     result = DATA_LOGGING_BUSY;
     goto unlock_and_exit;
   }
 
-  shared_circular_buffer_write(&session->data->buffer, data, num_bytes, false /*advance_slackers*/);
+  pbl_shared_cbuf_write(&session->data->buffer, data, num_bytes, false /*advance_slackers*/);
 
   // Only enqueue work on the system_task if we're not already waiting on the system task to handle
   // previously enqueued work for this session.

@@ -301,14 +301,14 @@ static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
   // remaining as the RX interrupt will be disabled from the time the buffer
   // fills up until when the buffer is drained.
   bool success =
-      shared_circular_buffer_write(&s_qemu_state.isr_buffer, &byte, 1, false /*advance_slackers*/);
+      pbl_shared_cbuf_write(&s_qemu_state.isr_buffer, &byte, 1, false /*advance_slackers*/);
   if (!success) {
     PBL_LOG_ERR("ISR buf too small 0x%x", byte);
     s_qemu_state.recv_error_count++;
   }
 
   bool buffer_full = false;
-  if (!shared_circular_buffer_get_write_space_remaining(&s_qemu_state.isr_buffer)) {
+  if (!pbl_shared_cbuf_get_write_space_remaining(&s_qemu_state.isr_buffer)) {
     // There's no more room in the buffer, so disable the RX interrupt. No more
     // data will be read from the UART until prv_process_receive_buffer() is
     // run, draining the buffer and re-enabling the RX interrupt. QEMU will

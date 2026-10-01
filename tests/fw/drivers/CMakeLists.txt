@@ -4,7 +4,6 @@
 pbl_clar_test(test_qemu_serial
   SOURCES
     fw/drivers/qemu/qemu_serial_util.c
-    fw/util/shared_circular_buffer.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

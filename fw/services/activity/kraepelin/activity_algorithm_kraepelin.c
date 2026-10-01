@@ -17,7 +17,7 @@
 #include "system/passert.h"
 #include "pbl/util/base64.h"
 #include "pbl/util/math.h"
-#include "util/shared_circular_buffer.h"
+#include "pbl/util/shared_cbuf.h"
 #include "util/time/time.h"
 #include "pbl/util/units.h"
 
@@ -73,11 +73,11 @@ typedef struct {
   // back and zero out the steps in older minutes once we determine that we were definitely
   // asleep for those minutes (there can be a KALG_MAX_AWAKE_LAG minute lag before we figure out
   // that we woke up).
-  SharedCircularBuffer minute_data_cbuf;
+  struct pbl_shared_cbuf minute_data_cbuf;
   AlgMinuteRecord minute_data_storage[ALG_MINUTE_CBUF_NUM_RECORDS];
 
-  SharedCircularBufferClient file_minute_data_client;
-  SharedCircularBufferClient dls_minute_data_client;
+  struct pbl_shared_cbuf_client file_minute_data_client;
+  struct pbl_shared_cbuf_client dls_minute_data_client;
   AlgMinuteRecord cbuf_record; // space for tmp record here to decrease stack requirements
 } AlgState;
 static AlgState *s_alg_state = NULL;
@@ -525,7 +525,7 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
                                                  AlgMinuteFileRecord *file_record,
                                                  AlgMinuteDLSRecord *dls_record, bool force_send) {
   // Get the circular buffer client we are working with
-  SharedCircularBufferClient *cbuf_client =
+  struct pbl_shared_cbuf_client *cbuf_client =
       file_record ? &s_alg_state->file_minute_data_client : &s_alg_state->dls_minute_data_client;
   const int16_t minutes_per_record =
       file_record ? ALG_MINUTES_PER_FILE_RECORD : ALG_MINUTES_PER_DLS_RECORD;
@@ -533,10 +533,10 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
   // Empty the circular buffer while we have enough for a record
   time_t sleep_end_utc = sleep_start_utc + (sleep_len_m * SECONDS_PER_MINUTE);
 
-  int16_t certain_m = (shared_circular_buffer_get_read_space_remaining(
-                           &s_alg_state->minute_data_cbuf, cbuf_client) /
-                       sizeof(AlgMinuteRecord)) -
-                      uncertain_m;
+  int16_t certain_m =
+      (pbl_shared_cbuf_get_read_space_remaining(&s_alg_state->minute_data_cbuf, cbuf_client) /
+       sizeof(AlgMinuteRecord)) -
+      uncertain_m;
   int minutes_this_record = MIN(certain_m, minutes_per_record);
   if (minutes_this_record == 0) {
     // nothing to send, even if we really wanted to
@@ -550,9 +550,9 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
   AlgMinuteRecord *cbuf_record = &s_alg_state->cbuf_record;
   for (int i = 0; i < minutes_this_record; i++) {
     uint16_t length_out;
-    bool success = shared_circular_buffer_read_consume(&s_alg_state->minute_data_cbuf, cbuf_client,
-                                                       sizeof(*cbuf_record), (uint8_t *)cbuf_record,
-                                                       &length_out);
+    bool success =
+        pbl_shared_cbuf_read_consume(&s_alg_state->minute_data_cbuf, cbuf_client,
+                                     sizeof(*cbuf_record), (uint8_t *)cbuf_record, &length_out);
     PBL_ASSERTN(success);
 
     // See if we need to zero out steps in this record. We check that the start of the minute
@@ -626,15 +626,15 @@ static void prv_log_minute_data(time_t utc_now, AlgMinuteRecord *minute_rec) {
   // Store the minute data into our circular buffer. The only place we ever read from this buffer
   // is below in this same method (during prv_send_minute_data) only from the KernelBG task, so no
   // need for a lock.
-  bool success = shared_circular_buffer_write(&s_alg_state->minute_data_cbuf, (uint8_t *)minute_rec,
-                                              sizeof(*minute_rec), false /*advance_slackers*/);
+  bool success = pbl_shared_cbuf_write(&s_alg_state->minute_data_cbuf, (uint8_t *)minute_rec,
+                                       sizeof(*minute_rec), false /*advance_slackers*/);
   if (!success) {
     // Although unlikely, we could get buffer overruns if we failed to open up the data logging
     // session after a number of retries. In that case, we will start dropping the oldest
     // minute data from data logging.
     PBL_LOG_ERR("Circular buffer overrun");
-    success = shared_circular_buffer_write(&s_alg_state->minute_data_cbuf, (uint8_t *)minute_rec,
-                                           sizeof(*minute_rec), true /*advance_slackers*/);
+    success = pbl_shared_cbuf_write(&s_alg_state->minute_data_cbuf, (uint8_t *)minute_rec,
+                                    sizeof(*minute_rec), true /*advance_slackers*/);
   }
   PBL_ASSERTN(success);
 
@@ -792,13 +792,10 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
     .k_state = k_state,
   };
   pbl_mutex_init(&s_alg_state->mutex);
-  shared_circular_buffer_init(&s_alg_state->minute_data_cbuf,
-                              (uint8_t *)s_alg_state->minute_data_storage,
-                              sizeof(s_alg_state->minute_data_storage));
-  shared_circular_buffer_add_client(&s_alg_state->minute_data_cbuf,
-                                    &s_alg_state->file_minute_data_client);
-  shared_circular_buffer_add_client(&s_alg_state->minute_data_cbuf,
-                                    &s_alg_state->dls_minute_data_client);
+  pbl_shared_cbuf_init(&s_alg_state->minute_data_cbuf, (uint8_t *)s_alg_state->minute_data_storage,
+                       sizeof(s_alg_state->minute_data_storage));
+  pbl_shared_cbuf_add_client(&s_alg_state->minute_data_cbuf, &s_alg_state->file_minute_data_client);
+  pbl_shared_cbuf_add_client(&s_alg_state->minute_data_cbuf, &s_alg_state->dls_minute_data_client);
 
   // Init the algorithm state
   kalg_init(k_state, NULL);
@@ -1167,21 +1164,21 @@ static bool prv_read_minute_history_file_cb(SettingsFile *file, SettingsRecordIn
 // the request and has already been updated to reflect the data we already fetched from flash.
 static void prv_read_minute_history_buffer(AlgReadMinutesContext *context) {
   // Make a copy of the circular buffer client because we don't want to permanently consume data
-  SharedCircularBufferClient *cbuf_client = &s_alg_state->file_minute_data_client;
-  SharedCircularBufferClient cbuf_client_bck = *cbuf_client;
+  struct pbl_shared_cbuf_client *cbuf_client = &s_alg_state->file_minute_data_client;
+  struct pbl_shared_cbuf_client cbuf_client_bck = *cbuf_client;
 
   AlgMinuteRecord *cbuf_record = &s_alg_state->cbuf_record;
-  int16_t avail_minutes = (shared_circular_buffer_get_read_space_remaining(
-                               &s_alg_state->minute_data_cbuf, cbuf_client) /
-                           sizeof(*cbuf_record));
+  int16_t avail_minutes =
+      (pbl_shared_cbuf_get_read_space_remaining(&s_alg_state->minute_data_cbuf, cbuf_client) /
+       sizeof(*cbuf_record));
 
   // Insert data from ram into the caller's minute buffer
   while (avail_minutes--) {
     // Read the next minute out of the buffer
     uint16_t length_out;
-    bool success = shared_circular_buffer_read_consume(&s_alg_state->minute_data_cbuf, cbuf_client,
-                                                       sizeof(*cbuf_record), (uint8_t *)cbuf_record,
-                                                       &length_out);
+    bool success =
+        pbl_shared_cbuf_read_consume(&s_alg_state->minute_data_cbuf, cbuf_client,
+                                     sizeof(*cbuf_record), (uint8_t *)cbuf_record, &length_out);
     PBL_ASSERTN(success);
 
     time_t record_utc = cbuf_record->utc_sec;

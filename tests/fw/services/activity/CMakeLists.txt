@@ -67,7 +67,6 @@ pbl_clar_test(test_activity_algorithm_kraepelin
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/util/crc8.c
-    fw/util/shared_circular_buffer.c
     fw/util/time/time.c
     fw/util/time/mktime.c
     fw/services/regular_timer/service.c

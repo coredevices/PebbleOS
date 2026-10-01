@@ -597,8 +597,8 @@ bool dls_storage_write_session(DataLoggingSession *session) {
   }
 
   session->data->write_request_pending = false;
-  int bytes_remaining = shared_circular_buffer_get_read_space_remaining(
-      &session->data->buffer, &session->data->buffer_client);
+  int bytes_remaining = pbl_shared_cbuf_get_read_space_remaining(&session->data->buffer,
+                                                                 &session->data->buffer_client);
   if (bytes_remaining == 0) {
     goto exit;
   }
@@ -611,15 +611,14 @@ bool dls_storage_write_session(DataLoggingSession *session) {
   while (bytes_remaining > 0) {
     const uint8_t *read_ptr;
     uint16_t bytes_read;
-    success = shared_circular_buffer_read(&session->data->buffer, &session->data->buffer_client,
-                                          bytes_remaining, &read_ptr, &bytes_read);
+    success = pbl_shared_cbuf_read(&session->data->buffer, &session->data->buffer_client,
+                                   bytes_remaining, &read_ptr, &bytes_read);
     PBL_ASSERTN(success);
     success = prv_write_data(&session->storage, read_ptr, bytes_read);
     if (!success) {
       goto exit;
     }
-    shared_circular_buffer_consume(&session->data->buffer, &session->data->buffer_client,
-                                   bytes_read);
+    pbl_shared_cbuf_consume(&session->data->buffer, &session->data->buffer_client, bytes_read);
     bytes_remaining -= bytes_read;
   }
 

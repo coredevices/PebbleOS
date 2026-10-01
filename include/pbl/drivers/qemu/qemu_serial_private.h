@@ -5,7 +5,7 @@
 
 #include "pbl/kernel/mutex.h"
 #include "pbl/kernel/compiler.h"
-#include "util/shared_circular_buffer.h"
+#include "pbl/util/shared_cbuf.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -49,8 +49,8 @@ typedef enum {
 typedef struct {
   bool initialized;
   struct pbl_mutex qemu_comm_lock;
-  SharedCircularBuffer isr_buffer;
-  SharedCircularBufferClient isr_buffer_client;
+  struct pbl_shared_cbuf isr_buffer;
+  struct pbl_shared_cbuf_client isr_buffer_client;
 
   QemuRecvState recv_state;
   uint8_t prev_byte;

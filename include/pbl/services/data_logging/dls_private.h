@@ -11,7 +11,7 @@
 #include "pbl/services/comm_session/protocol.h"
 #include "system/hexdump.h"
 #include "pbl/kernel/compiler.h"
-#include "util/shared_circular_buffer.h"
+#include "pbl/util/shared_cbuf.h"
 #include "pbl/util/units.h"
 #include "pbl/util/uuid.h"
 
@@ -123,8 +123,8 @@ typedef struct {
 //! Information needed while a session is active (watch app still adding more data).
 typedef struct {
   struct pbl_mutex mutex;
-  SharedCircularBuffer buffer; //! A data buffer
-  SharedCircularBufferClient buffer_client;
+  struct pbl_shared_cbuf buffer; //! A data buffer
+  struct pbl_shared_cbuf_client buffer_client;
   uint8_t *buffer_storage; //! Storage for the buffer
   //! true if buffer_storage is in kernel heap, else it's in dls_create() caller's heap
   bool buffer_in_kernel_heap : 1;

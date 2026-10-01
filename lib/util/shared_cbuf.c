@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "shared_circular_buffer.h"
+#include "pbl/util/shared_cbuf.h"
 
-#include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include "pbl/util/assert.h"
 #include "pbl/util/math.h"
 
 #include <string.h>
 
 // -------------------------------------------------------------------------------------------------
 // Returns the amount of data available for the given client
-static uint32_t prv_get_data_length(const SharedCircularBuffer *buffer,
-                                    SharedCircularBufferClient *client) {
+static uint32_t prv_get_data_length(const struct pbl_shared_cbuf *buffer,
+                                    struct pbl_shared_cbuf_client *client) {
   uint32_t len;
 
   // The end_index is the index of the next byte to go into the buffer
@@ -31,8 +30,8 @@ static uint32_t prv_get_data_length(const SharedCircularBuffer *buffer,
 // -------------------------------------------------------------------------------------------------
 // Returns max amount of data available among all clients
 // On exit, *max_client will contain the client with the most amount of data available
-static uint32_t prv_get_max_data_length(const SharedCircularBuffer *buffer,
-                                        SharedCircularBufferClient **max_client) {
+static uint32_t prv_get_max_data_length(const struct pbl_shared_cbuf *buffer,
+                                        struct pbl_shared_cbuf_client **max_client) {
   ListNode *iter = buffer->clients;
   if (!iter) {
     *max_client = NULL;
@@ -42,9 +41,9 @@ static uint32_t prv_get_max_data_length(const SharedCircularBuffer *buffer,
   uint32_t max_data = 0;
   uint32_t len;
   while (iter) {
-    len = prv_get_data_length(buffer, (SharedCircularBufferClient *)iter);
+    len = prv_get_data_length(buffer, (struct pbl_shared_cbuf_client *)iter);
     if (len >= max_data) {
-      *max_client = (SharedCircularBufferClient *)iter;
+      *max_client = (struct pbl_shared_cbuf_client *)iter;
       max_data = len;
     }
 
@@ -54,8 +53,7 @@ static uint32_t prv_get_max_data_length(const SharedCircularBuffer *buffer,
 }
 
 // -------------------------------------------------------------------------------------------------
-void shared_circular_buffer_init(SharedCircularBuffer *buffer, uint8_t *storage,
-                                 uint16_t storage_size) {
+void pbl_shared_cbuf_init(struct pbl_shared_cbuf *buffer, uint8_t *storage, uint16_t storage_size) {
   buffer->buffer = storage;
   buffer->buffer_size = storage_size;
   buffer->clients = NULL;
@@ -63,28 +61,27 @@ void shared_circular_buffer_init(SharedCircularBuffer *buffer, uint8_t *storage,
 }
 
 // -------------------------------------------------------------------------------------------------
-bool shared_circular_buffer_add_client(SharedCircularBuffer *buffer,
-                                       SharedCircularBufferClient *client) {
-  PBL_ASSERTN(!list_contains(buffer->clients, &client->list_node));
+bool pbl_shared_cbuf_add_client(struct pbl_shared_cbuf *buffer,
+                                struct pbl_shared_cbuf_client *client) {
+  UTIL_ASSERT(!list_contains(buffer->clients, &client->list_node));
   buffer->clients = list_prepend(buffer->clients, &client->list_node);
   client->read_index = buffer->write_index;
   return true;
 }
 
 // -------------------------------------------------------------------------------------------------
-void shared_circular_buffer_remove_client(SharedCircularBuffer *buffer,
-                                          SharedCircularBufferClient *client) {
-  PBL_ASSERTN(list_contains(buffer->clients, &client->list_node));
+void pbl_shared_cbuf_remove_client(struct pbl_shared_cbuf *buffer,
+                                   struct pbl_shared_cbuf_client *client) {
+  UTIL_ASSERT(list_contains(buffer->clients, &client->list_node));
   list_remove(&client->list_node, &buffer->clients, NULL);
 }
 
 // -------------------------------------------------------------------------------------------------
-bool shared_circular_buffer_write_reserve(SharedCircularBuffer *buffer, uint16_t length,
-                                          bool advance_slackers, uint8_t **seg1,
-                                          uint16_t *seg1_length, uint8_t **seg2) {
+bool pbl_shared_cbuf_write_reserve(struct pbl_shared_cbuf *buffer, uint16_t length,
+                                   bool advance_slackers, uint8_t **seg1, uint16_t *seg1_length,
+                                   uint8_t **seg2) {
   // If no clients, no need to write
   if (!buffer->clients) {
-    PBL_LOG_WRN("no readers");
     return false;
   }
 
@@ -94,7 +91,7 @@ bool shared_circular_buffer_write_reserve(SharedCircularBuffer *buffer, uint16_t
   }
 
   // Make sure there's room, deleting bytes from slackers if requested
-  SharedCircularBufferClient *slacker;
+  struct pbl_shared_cbuf_client *slacker;
   uint32_t max_data = prv_get_max_data_length(buffer, &slacker);
   uint32_t avail_space = buffer->buffer_size - 1 - max_data;
   while (length > avail_space) {
@@ -123,17 +120,17 @@ bool shared_circular_buffer_write_reserve(SharedCircularBuffer *buffer, uint16_t
 }
 
 // -------------------------------------------------------------------------------------------------
-void shared_circular_buffer_write_commit(SharedCircularBuffer *buffer, uint16_t length) {
+void pbl_shared_cbuf_write_commit(struct pbl_shared_cbuf *buffer, uint16_t length) {
   buffer->write_index = (buffer->write_index + length) % buffer->buffer_size;
 }
 
 // -------------------------------------------------------------------------------------------------
-bool shared_circular_buffer_write(SharedCircularBuffer *buffer, const uint8_t *data,
-                                  uint16_t length, bool advance_slackers) {
+bool pbl_shared_cbuf_write(struct pbl_shared_cbuf *buffer, const uint8_t *data, uint16_t length,
+                           bool advance_slackers) {
   uint8_t *seg1, *seg2;
   uint16_t seg1_length;
-  if (!shared_circular_buffer_write_reserve(buffer, length, advance_slackers, &seg1, &seg1_length,
-                                            &seg2)) {
+  if (!pbl_shared_cbuf_write_reserve(buffer, length, advance_slackers, &seg1, &seg1_length,
+                                     &seg2)) {
     return false;
   }
 
@@ -142,15 +139,15 @@ bool shared_circular_buffer_write(SharedCircularBuffer *buffer, const uint8_t *d
     memcpy(seg2, data + seg1_length, length - seg1_length);
   }
 
-  shared_circular_buffer_write_commit(buffer, length);
+  pbl_shared_cbuf_write_commit(buffer, length);
   return true;
 }
 
 // ---------------------------------------------------------------------------------------------
-bool shared_circular_buffer_read(const SharedCircularBuffer *buffer,
-                                 SharedCircularBufferClient *client, uint16_t length,
-                                 const uint8_t **data_out, uint16_t *length_out) {
-  PBL_ASSERTN(list_contains(buffer->clients, &client->list_node));
+bool pbl_shared_cbuf_read(const struct pbl_shared_cbuf *buffer,
+                          struct pbl_shared_cbuf_client *client, uint16_t length,
+                          const uint8_t **data_out, uint16_t *length_out) {
+  UTIL_ASSERT(list_contains(buffer->clients, &client->list_node));
 
   uint32_t data_length = prv_get_data_length(buffer, client);
   if (data_length < length) {
@@ -166,9 +163,9 @@ bool shared_circular_buffer_read(const SharedCircularBuffer *buffer,
 }
 
 // -------------------------------------------------------------------------------------------------
-bool shared_circular_buffer_consume(SharedCircularBuffer *buffer,
-                                    SharedCircularBufferClient *client, uint16_t length) {
-  PBL_ASSERTN(list_contains(buffer->clients, &client->list_node));
+bool pbl_shared_cbuf_consume(struct pbl_shared_cbuf *buffer, struct pbl_shared_cbuf_client *client,
+                             uint16_t length) {
+  UTIL_ASSERT(list_contains(buffer->clients, &client->list_node));
   uint32_t data_length = prv_get_data_length(buffer, client);
   if (data_length < length) {
     return false;
@@ -179,23 +176,23 @@ bool shared_circular_buffer_consume(SharedCircularBuffer *buffer,
 }
 
 // -------------------------------------------------------------------------------------------------
-uint16_t shared_circular_buffer_get_write_space_remaining(const SharedCircularBuffer *buffer) {
-  SharedCircularBufferClient *slacker;
+uint16_t pbl_shared_cbuf_get_write_space_remaining(const struct pbl_shared_cbuf *buffer) {
+  struct pbl_shared_cbuf_client *slacker;
   uint32_t max_data = prv_get_max_data_length(buffer, &slacker);
   return buffer->buffer_size - 1 - max_data;
 }
 
 // -------------------------------------------------------------------------------------------------
-uint16_t shared_circular_buffer_get_read_space_remaining(const SharedCircularBuffer *buffer,
-                                                         SharedCircularBufferClient *client) {
-  PBL_ASSERTN(list_contains(buffer->clients, &client->list_node));
+uint16_t pbl_shared_cbuf_get_read_space_remaining(const struct pbl_shared_cbuf *buffer,
+                                                  struct pbl_shared_cbuf_client *client) {
+  UTIL_ASSERT(list_contains(buffer->clients, &client->list_node));
   return prv_get_data_length(buffer, client);
 }
 
 // -------------------------------------------------------------------------------------------------
-bool shared_circular_buffer_read_consume(SharedCircularBuffer *buffer,
-                                         SharedCircularBufferClient *client, uint16_t length,
-                                         uint8_t *data, uint16_t *length_out) {
+bool pbl_shared_cbuf_read_consume(struct pbl_shared_cbuf *buffer,
+                                  struct pbl_shared_cbuf_client *client, uint16_t length,
+                                  uint8_t *data, uint16_t *length_out) {
   uint16_t data_length = prv_get_data_length(buffer, client);
   uint16_t bytes_left = MIN(length, data_length);
 
@@ -204,9 +201,9 @@ bool shared_circular_buffer_read_consume(SharedCircularBuffer *buffer,
     uint16_t chunk;
     const uint8_t *read_ptr;
 
-    shared_circular_buffer_read(buffer, client, bytes_left, &read_ptr, &chunk);
+    pbl_shared_cbuf_read(buffer, client, bytes_left, &read_ptr, &chunk);
     memcpy(data, read_ptr, chunk);
-    shared_circular_buffer_consume(buffer, client, chunk);
+    pbl_shared_cbuf_consume(buffer, client, chunk);
 
     data += chunk;
     bytes_left -= chunk;
@@ -216,25 +213,24 @@ bool shared_circular_buffer_read_consume(SharedCircularBuffer *buffer,
 }
 
 // -------------------------------------------------------------------------------------------------
-void shared_circular_buffer_add_subsampled_client(SharedCircularBuffer *buffer,
-                                                  SubsampledSharedCircularBufferClient *client,
-                                                  uint32_t subsample_numerator,
-                                                  uint32_t subsample_denominator) {
-  PBL_ASSERTN(shared_circular_buffer_add_client(buffer, &client->buffer_client));
-  subsampled_shared_circular_buffer_client_set_ratio(client, subsample_numerator,
-                                                     subsample_denominator);
+void pbl_shared_cbuf_add_subsampled_client(struct pbl_shared_cbuf *buffer,
+                                           struct pbl_shared_cbuf_subsampled_client *client,
+                                           uint32_t subsample_numerator,
+                                           uint32_t subsample_denominator) {
+  UTIL_ASSERT(pbl_shared_cbuf_add_client(buffer, &client->buffer_client));
+  pbl_shared_cbuf_subsampled_client_set_ratio(client, subsample_numerator, subsample_denominator);
 }
 
 // -------------------------------------------------------------------------------------------------
-void shared_circular_buffer_remove_subsampled_client(SharedCircularBuffer *buffer,
-                                                     SubsampledSharedCircularBufferClient *client) {
-  shared_circular_buffer_remove_client(buffer, &client->buffer_client);
+void pbl_shared_cbuf_remove_subsampled_client(struct pbl_shared_cbuf *buffer,
+                                              struct pbl_shared_cbuf_subsampled_client *client) {
+  pbl_shared_cbuf_remove_client(buffer, &client->buffer_client);
 }
 
 // -------------------------------------------------------------------------------------------------
-void subsampled_shared_circular_buffer_client_set_ratio(
-    SubsampledSharedCircularBufferClient *client, uint32_t numerator, uint32_t denominator) {
-  PBL_ASSERTN(numerator > 0 && denominator >= numerator);
+void pbl_shared_cbuf_subsampled_client_set_ratio(struct pbl_shared_cbuf_subsampled_client *client,
+                                                 uint32_t numerator, uint32_t denominator) {
+  UTIL_ASSERT(numerator > 0 && denominator >= numerator);
   if (client->numerator != numerator || client->denominator != denominator) {
     // The subsampling algorithm does not need the subsampling ratio to
     // be normalized to reduced form.
@@ -247,18 +243,18 @@ void subsampled_shared_circular_buffer_client_set_ratio(
 }
 
 // -------------------------------------------------------------------------------------------------
-size_t shared_circular_buffer_read_subsampled(SharedCircularBuffer *buffer,
-                                              SubsampledSharedCircularBufferClient *client,
-                                              size_t item_size, void *data, uint16_t num_items) {
+size_t pbl_shared_cbuf_read_subsampled(struct pbl_shared_cbuf *buffer,
+                                       struct pbl_shared_cbuf_subsampled_client *client,
+                                       size_t item_size, void *data, uint16_t num_items) {
   uint16_t bytes_available = prv_get_data_length(buffer, &client->buffer_client);
 
   // Optimized case when no subsampling
   if (client->numerator == client->denominator) {
     num_items = MIN(num_items, bytes_available / item_size);
     uint16_t bytes_out;
-    shared_circular_buffer_read_consume(buffer, &client->buffer_client, num_items * item_size,
-                                        (uint8_t *)data, &bytes_out);
-    PBL_ASSERTN(bytes_out == num_items * item_size);
+    pbl_shared_cbuf_read_consume(buffer, &client->buffer_client, num_items * item_size,
+                                 (uint8_t *)data, &bytes_out);
+    UTIL_ASSERT(bytes_out == num_items * item_size);
     return num_items;
   }
 
@@ -274,13 +270,13 @@ size_t shared_circular_buffer_read_subsampled(SharedCircularBuffer *buffer,
     if (client->subsample_state >= client->denominator) {
       client->subsample_state %= client->denominator;
       uint16_t bytes_out;
-      shared_circular_buffer_read_consume(buffer, &client->buffer_client, item_size,
-                                          (uint8_t *)out_buf, &bytes_out);
-      PBL_ASSERTN(bytes_out == item_size);
+      pbl_shared_cbuf_read_consume(buffer, &client->buffer_client, item_size, (uint8_t *)out_buf,
+                                   &bytes_out);
+      UTIL_ASSERT(bytes_out == item_size);
       out_buf += item_size;
       items_read++;
     } else {
-      PBL_ASSERTN(shared_circular_buffer_consume(buffer, &client->buffer_client, item_size));
+      UTIL_ASSERT(pbl_shared_cbuf_consume(buffer, &client->buffer_client, item_size));
     }
   }
   return items_read;

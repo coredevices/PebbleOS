@@ -407,7 +407,6 @@ pbl_clar_test(test_app_fetch_endpoint
 
 pbl_clar_test(test_accel_manager
   SOURCES
-    fw/util/shared_circular_buffer.c
     fw/services/accel_manager/service.c
     tests/fakes/fake_events.c
   DEFINES CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES=25

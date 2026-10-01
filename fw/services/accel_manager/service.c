@@ -19,7 +19,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
-#include "util/shared_circular_buffer.h"
+#include "pbl/util/shared_cbuf.h"
 
 #include <inttypes.h>
 
@@ -37,7 +37,7 @@ typedef struct AccelManagerState {
   ListNode list_node; // Entry into the s_data_subscribers linked list
 
   //! Client pointing into s_buffer
-  SubsampledSharedCircularBufferClient buffer_client;
+  struct pbl_shared_cbuf_subsampled_client buffer_client;
   //! The sampling interval we've promised to this client after subsampling.
   uint32_t sampling_interval_us;
   //! The requested number of samples needed before calling data_cb_handler
@@ -77,7 +77,7 @@ static uint8_t s_shake_subscribers_count = 0;
 static uint8_t s_double_tap_subscribers_count = 0;
 
 //! Circular buffer that raw accel data is written into before being subsampled for each client
-static SharedCircularBuffer s_buffer;
+static struct pbl_shared_cbuf s_buffer;
 //! Storage for s_buffer, sized to hold ~2 batches plus headroom, with a floor
 //! that keeps buffering room for high-rate app subscribers.
 static uint8_t s_buffer_storage[MAX(200, 2 * CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES + 50) *
@@ -216,8 +216,7 @@ static void prv_setup_subsampling(uint32_t sampling_interval) {
 
     PBL_LOG_DBG("set subsampling for session %p to %" PRIu32 "/%" PRIu32, state, numerator,
                 denominator);
-    subsampled_shared_circular_buffer_client_set_ratio(&state->buffer_client, numerator,
-                                                       denominator);
+    pbl_shared_cbuf_subsampled_client_set_ratio(&state->buffer_client, numerator, denominator);
     state = (AccelManagerState *)state->list_node.next;
   }
 }
@@ -288,9 +287,9 @@ static void prv_dispatch_data(bool post_event) {
 
     // if subscribed but not looking for any samples then just drop the data
     if (state->samples_per_update == 0) {
-      uint16_t len = shared_circular_buffer_get_read_space_remaining(
-          &s_buffer, &state->buffer_client.buffer_client);
-      shared_circular_buffer_consume(&s_buffer, &state->buffer_client.buffer_client, len);
+      uint16_t len =
+          pbl_shared_cbuf_get_read_space_remaining(&s_buffer, &state->buffer_client.buffer_client);
+      pbl_shared_cbuf_consume(&s_buffer, &state->buffer_client.buffer_client, len);
       state = (AccelManagerState *)state->list_node.next;
       continue;
     }
@@ -300,8 +299,8 @@ static void prv_dispatch_data(bool post_event) {
     while (state->num_samples < state->samples_per_update) {
       // Read available data.
       AccelManagerBufferData data;
-      if (!shared_circular_buffer_read_subsampled(&s_buffer, &state->buffer_client, sizeof(data),
-                                                  &data, 1)) {
+      if (!pbl_shared_cbuf_read_subsampled(&s_buffer, &state->buffer_client, sizeof(data), &data,
+                                           1)) {
         // we have drained all available samples
         break;
       }
@@ -381,7 +380,7 @@ void accel_manager_update_sensitivity(uint8_t sensitivity_percent) {
 }
 
 void accel_manager_init(void) {
-  shared_circular_buffer_init(&s_buffer, s_buffer_storage, sizeof(s_buffer_storage));
+  pbl_shared_cbuf_init(&s_buffer, s_buffer_storage, sizeof(s_buffer_storage));
 
   event_service_init(PEBBLE_ACCEL_SHAKE_EVENT, &prv_shake_add_subscriber_cb,
                      &prv_shake_remove_subscriber_cb);
@@ -471,7 +470,7 @@ DEFINE_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, AccelSampl
     }
 
     // Add as a consumer to the accel buffer
-    shared_circular_buffer_add_subsampled_client(&s_buffer, &state->buffer_client, 1, 1);
+    pbl_shared_cbuf_add_subsampled_client(&s_buffer, &state->buffer_client, 1, 1);
 
     // Update the sampling rate and num samples of the driver considering the new
     // subscriber's request
@@ -520,7 +519,7 @@ DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *stat
   {
     event_outstanding = state->event_posted;
     // Remove this subscriber and free up its state variables
-    shared_circular_buffer_remove_subsampled_client(&s_buffer, &state->buffer_client);
+    pbl_shared_cbuf_remove_subsampled_client(&s_buffer, &state->buffer_client);
     list_remove(&state->list_node, &s_data_subscribers /* &head */, NULL /* &tail */);
     kernel_free(state);
 
@@ -705,8 +704,8 @@ static bool prv_shared_buffer_empty(void) {
   {
     AccelManagerState *state = (AccelManagerState *)s_data_subscribers;
     while (state) {
-      int left = shared_circular_buffer_get_read_space_remaining(
-          &s_buffer, &state->buffer_client.buffer_client);
+      int left =
+          pbl_shared_cbuf_get_read_space_remaining(&s_buffer, &state->buffer_client.buffer_client);
       if (left != 0) {
         empty = false;
         break;
@@ -746,12 +745,12 @@ void accel_cb_new_sample(AccelDriverSample const *data) {
 
   // if we have one or more clients who fell behind reading out of the buffer,
   // we will advance them until there is enough space available for the new data
-  bool rv = shared_circular_buffer_write(&s_buffer, (uint8_t *)&accel_buffer_data,
-                                         sizeof(accel_buffer_data), false /*advance_slackers*/);
+  bool rv = pbl_shared_cbuf_write(&s_buffer, (uint8_t *)&accel_buffer_data,
+                                  sizeof(accel_buffer_data), false /*advance_slackers*/);
   if (!rv) {
     PBL_LOG_WRN("Accel subscriber fell behind, truncating data");
-    rv = shared_circular_buffer_write(&s_buffer, (uint8_t *)&accel_buffer_data,
-                                      sizeof(accel_buffer_data), true /*advance_slackers*/);
+    rv = pbl_shared_cbuf_write(&s_buffer, (uint8_t *)&accel_buffer_data, sizeof(accel_buffer_data),
+                               true /*advance_slackers*/);
   }
 
   PBL_ASSERTN(rv);
@@ -797,12 +796,12 @@ void accel_cb_new_samples(AccelRawBatch const *batch) {
   const uint16_t total = batch->num_samples * sizeof(AccelManagerBufferData);
   uint8_t *seg1, *seg2;
   uint16_t seg1_length;
-  bool rv = shared_circular_buffer_write_reserve(&s_buffer, total, false /*advance_slackers*/,
-                                                 &seg1, &seg1_length, &seg2);
+  bool rv = pbl_shared_cbuf_write_reserve(&s_buffer, total, false /*advance_slackers*/, &seg1,
+                                          &seg1_length, &seg2);
   if (!rv) {
     PBL_LOG_WRN("Accel subscriber fell behind, truncating data");
-    rv = shared_circular_buffer_write_reserve(&s_buffer, total, true /*advance_slackers*/, &seg1,
-                                              &seg1_length, &seg2);
+    rv = pbl_shared_cbuf_write_reserve(&s_buffer, total, true /*advance_slackers*/, &seg1,
+                                       &seg1_length, &seg2);
   }
   PBL_ASSERTN(rv);
 
@@ -825,7 +824,7 @@ void accel_cb_new_samples(AccelRawBatch const *batch) {
     ++dst;
   }
 
-  shared_circular_buffer_write_commit(&s_buffer, total);
+  pbl_shared_cbuf_write_commit(&s_buffer, total);
 
   prv_dispatch_data(true /* post_event */);
 }
@@ -933,7 +932,7 @@ void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *n
 }
 
 void test_accel_manager_reset(void) {
-  s_buffer = (SharedCircularBuffer){};
+  s_buffer = (struct pbl_shared_cbuf){};
   AccelManagerState *state = (AccelManagerState *)s_data_subscribers;
   while (state) {
     AccelManagerState *free_state = state;

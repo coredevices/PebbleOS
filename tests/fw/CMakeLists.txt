@@ -215,7 +215,6 @@ pbl_clar_test(test_data_logging
     fw/services/data_logging/dls_endpoint.c
     fw/services/data_logging/dls_syscalls.c
     fw/services/regular_timer/service.c
-    fw/util/shared_circular_buffer.c
     tests/fakes/fake_spi_flash.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
