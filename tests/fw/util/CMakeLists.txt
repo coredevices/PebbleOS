@@ -19,11 +19,6 @@ pbl_clar_test(test_rand
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
 )
 
-pbl_clar_test(test_stats
-  SOURCES
-    fw/util/stats.c
-)
-
 pbl_clar_test(test_legacy_checksum
   SOURCES
     fw/util/legacy_checksum.c

@@ -1,21 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "stats.h"
-
-#include "kernel/pbl_malloc.h"
+#include "pbl/util/stats.h"
 
 #include <pbl/util/math.h>
 #include <pbl/util/sort.h>
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 // ------------------------------------------------------------------------------------------------
 // Returns the median of a given array
 // If given an even number of elements, it will return the lower of the two values
 // Torben median algorithm from http://ndevilla.free.fr/median/median/index.html
 static int32_t prv_calculate_median(const int32_t *data, uint32_t num_data, int32_t min,
-                                    int32_t max, uint32_t num_values, StatsBasicFilter filter,
+                                    int32_t max, uint32_t num_values, pbl_stats_filter_t filter,
                                     void *context) {
   if ((num_data == 0) || (num_values == 0)) {
     return 0;
@@ -74,8 +73,8 @@ static int32_t prv_calculate_median(const int32_t *data, uint32_t num_data, int3
 }
 
 // ------------------------------------------------------------------------------------------------
-void stats_calculate_basic(StatsBasicOp op, const int32_t *data, size_t num_data,
-                           StatsBasicFilter filter, void *context, int32_t *basic_out) {
+void pbl_stats_calculate(enum pbl_stats_op op, const int32_t *data, size_t num_data,
+                         pbl_stats_filter_t filter, void *context, int32_t *basic_out) {
   if (!data) {
     return;
   }
@@ -86,12 +85,12 @@ void stats_calculate_basic(StatsBasicOp op, const int32_t *data, size_t num_data
   int32_t consecutive_max = 0;
   int32_t consecutive_current = 0;
   int32_t consecutive_first = 0;
-  bool calc_consecutive_first = (op & StatsBasicOp_ConsecutiveFirst);
+  bool calc_consecutive_first = (op & PBL_STATS_OP_CONSECUTIVE_FIRST);
 
   for (size_t i = 0; i < num_data; i++) {
     const int32_t value = data[i];
     if (filter && !filter(i, value, context)) {
-      if (op & StatsBasicOp_Consecutive) {
+      if (op & PBL_STATS_OP_CONSECUTIVE) {
         if (consecutive_current > consecutive_max) {
           consecutive_max = consecutive_current;
         }
@@ -100,16 +99,16 @@ void stats_calculate_basic(StatsBasicOp op, const int32_t *data, size_t num_data
       calc_consecutive_first = false;
       continue;
     }
-    if (op & (StatsBasicOp_Sum | StatsBasicOp_Average)) {
+    if (op & (PBL_STATS_OP_SUM | PBL_STATS_OP_AVERAGE)) {
       sum += value;
     }
-    if ((op & (StatsBasicOp_Min | StatsBasicOp_Median)) && (value < min)) {
+    if ((op & (PBL_STATS_OP_MIN | PBL_STATS_OP_MEDIAN)) && (value < min)) {
       min = value;
     }
-    if ((op & (StatsBasicOp_Max | StatsBasicOp_Median)) && (value > max)) {
+    if ((op & (PBL_STATS_OP_MAX | PBL_STATS_OP_MEDIAN)) && (value > max)) {
       max = value;
     }
-    if (op & StatsBasicOp_Consecutive) {
+    if (op & PBL_STATS_OP_CONSECUTIVE) {
       consecutive_current++;
     }
     if (calc_consecutive_first) {
@@ -118,28 +117,28 @@ void stats_calculate_basic(StatsBasicOp op, const int32_t *data, size_t num_data
     num_values++;
   }
   int out_index = 0;
-  if (op & StatsBasicOp_Sum) {
+  if (op & PBL_STATS_OP_SUM) {
     basic_out[out_index++] = sum;
   }
-  if (op & StatsBasicOp_Average) {
+  if (op & PBL_STATS_OP_AVERAGE) {
     basic_out[out_index++] = num_values ? sum / num_values : 0;
   }
-  if (op & StatsBasicOp_Min) {
+  if (op & PBL_STATS_OP_MIN) {
     basic_out[out_index++] = min;
   }
-  if (op & StatsBasicOp_Max) {
+  if (op & PBL_STATS_OP_MAX) {
     basic_out[out_index++] = max;
   }
-  if (op & StatsBasicOp_Count) {
+  if (op & PBL_STATS_OP_COUNT) {
     basic_out[out_index++] = num_values;
   }
-  if (op & StatsBasicOp_Consecutive) {
+  if (op & PBL_STATS_OP_CONSECUTIVE) {
     basic_out[out_index++] = MAX(consecutive_max, consecutive_current);
   }
-  if (op & StatsBasicOp_ConsecutiveFirst) {
+  if (op & PBL_STATS_OP_CONSECUTIVE_FIRST) {
     basic_out[out_index++] = consecutive_first;
   }
-  if (op & StatsBasicOp_Median) {
+  if (op & PBL_STATS_OP_MEDIAN) {
     basic_out[out_index++] =
         prv_calculate_median(data, num_data, min, max, num_values, filter, context);
   }
@@ -176,14 +175,14 @@ static int prv_cmp_weighted_value(const void *a, const void *b) {
 //!   (not weighted mean) of the two values is returned.
 //! NOTES:
 //!   Integer division is used throughout. Take note. That is why this is here.
-int32_t stats_calculate_weighted_median(const int32_t *vals, const int32_t *weights_x100,
-                                        size_t num_data) {
+int32_t pbl_stats_weighted_median(const int32_t *vals, const int32_t *weights_x100,
+                                  size_t num_data) {
   if (!vals || !weights_x100 || num_data < 1) {
     // Invalid args
     return 0;
   }
 
-  WeightedValue *values = task_zalloc(sizeof(int32_t) * num_data * 2);
+  WeightedValue *values = calloc(num_data, sizeof(*values));
   if (!values) {
     return 0;
   }
@@ -199,7 +198,7 @@ int32_t stats_calculate_weighted_median(const int32_t *vals, const int32_t *weig
 
   // Find the sum of all of the weights
   int32_t S_x100;
-  stats_calculate_basic(StatsBasicOp_Sum, weights_x100, num_data, NULL, NULL, &S_x100);
+  pbl_stats_calculate(PBL_STATS_OP_SUM, weights_x100, num_data, NULL, NULL, &S_x100);
 
   if (S_x100 == 0) {
     // All weights are zero
@@ -227,7 +226,7 @@ int32_t stats_calculate_weighted_median(const int32_t *vals, const int32_t *weig
     k++;
   }
 
-  task_free(values);
+  free(values);
 
   return rv;
 }

@@ -19,7 +19,7 @@
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
-#include "util/stats.h"
+#include "pbl/util/stats.h"
 #include "pbl/util/testing.h"
 
 // Fetching minute history can take a while, so we limit the amount of data we will ever access
@@ -234,22 +234,22 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
 
   // Compute weekly, weekday, and daily stats
   *stats = (HealthServiceMetricStats){};
-  const StatsBasicOp op = (StatsBasicOp_Sum | StatsBasicOp_Average | StatsBasicOp_Count |
-                           StatsBasicOp_Min | StatsBasicOp_Max);
-  stats_calculate_basic(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
-                        health_service_private_weekday_filter, (void *)(uintptr_t)local_tm->tm_wday,
-                        &stats->weekday.sum);
-  stats_calculate_basic(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
-                        health_service_private_weekend_filter, (void *)(uintptr_t)local_tm->tm_wday,
-                        &stats->weekend.sum);
+  const enum pbl_stats_op op = (PBL_STATS_OP_SUM | PBL_STATS_OP_AVERAGE | PBL_STATS_OP_COUNT |
+                                PBL_STATS_OP_MIN | PBL_STATS_OP_MAX);
+  pbl_stats_calculate(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
+                      health_service_private_weekday_filter, (void *)(uintptr_t)local_tm->tm_wday,
+                      &stats->weekday.sum);
+  pbl_stats_calculate(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
+                      health_service_private_weekend_filter, (void *)(uintptr_t)local_tm->tm_wday,
+                      &stats->weekend.sum);
   // We want to sum only the days that are this far from index 0 (which is local_tm.tm_wday)
   int day_offset = local_tm->tm_wday - weekly_day;
   if (day_offset < 0) {
     day_offset += DAYS_PER_WEEK;
   }
-  stats_calculate_basic(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
-                        health_service_private_weekly_filter, (void *)(uintptr_t)day_offset,
-                        &stats->weekly.sum);
+  pbl_stats_calculate(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
+                      health_service_private_weekly_filter, (void *)(uintptr_t)day_offset,
+                      &stats->weekly.sum);
 
   // If the average is 0 (this can happen if we don't have any history), set the averages based
   // on today's total so far
@@ -864,7 +864,7 @@ static MeasurementSystem prv_get_shell_prefs_metric_for_distance(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-// Filter callbacks used by stats_calculate_basic()
+// Filter callbacks used by pbl_stats_calculate()
 bool health_service_private_non_zero_filter(int index, int32_t value, void *context) {
   return (index > 0 && value > 0);
 }

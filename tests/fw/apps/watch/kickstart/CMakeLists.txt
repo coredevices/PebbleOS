@@ -68,7 +68,6 @@ pbl_clar_test(test_kickstart
     fw/applib/ui/window.c
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
-    fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
     tests/fakes/fake_clock.c

@@ -13,7 +13,7 @@
 #include "system/passert.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
-#include "util/stats.h"
+#include "pbl/util/stats.h"
 #include "pbl/util/units.h"
 
 #include "pbl/services/activity/activity.h"
@@ -378,10 +378,10 @@ static void prv_update_median_hr_bpm(ActivityState *state) {
     }
 
     // Calculate the total weight
-    stats_calculate_basic(StatsBasicOp_Sum, weight_buf, hr->num_samples, NULL, NULL, &total_weight);
+    pbl_stats_calculate(PBL_STATS_OP_SUM, weight_buf, hr->num_samples, NULL, NULL, &total_weight);
 
     // Calculate the weighted median
-    median = stats_calculate_weighted_median(sample_buf, weight_buf, num_hr_samples);
+    median = pbl_stats_weighted_median(sample_buf, weight_buf, num_hr_samples);
     task_free(sample_buf);
     task_free(weight_buf);
 

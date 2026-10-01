@@ -104,37 +104,37 @@ bool health_service_private_get_metric_history(HealthMetric metric, uint32_t his
 bool health_service_private_get_yesterdays_sleep_activity(HealthValue *enter_sec,
                                                           HealthValue *exit_sec);
 
-// Utility callback function that can be used for the stats_calculate_basic() call. This
+// Utility callback function that can be used for the pbl_stats_calculate() call. This
 // particular callback returns true for all non-zero items.
 // @param index the index of the daily total we are processing (0 = today, 1 = yesterday, etc.)
 // @param value the value of the given daily total
-// @tm_weekday_ref the context argument passed to the stats_calculate_basic() call, which
+// @tm_weekday_ref the context argument passed to the pbl_stats_calculate() call, which
 //  in this case is ignored
 bool health_service_private_non_zero_filter(int index, int32_t value, void *tm_weekday_ref);
 
-// Utility callback function that can be used for the stats_calculate_basic() call. This
+// Utility callback function that can be used for the pbl_stats_calculate() call. This
 // particular callback returns true for weekdays (Mon-Fri).
 // @param index the index of the daily total we are processing (0 = today, 1 = yesterday, etc.)
 // @param value the value of the given daily total
-// @tm_weekday_ref the context argument passed to the stats_calculate_basic() call, which
+// @tm_weekday_ref the context argument passed to the pbl_stats_calculate() call, which
 //  in this case is the day of the week (Sunday, Monday, etc.) of index 0 in the daily totals,
 //  typecast to a ptr.
 bool health_service_private_weekday_filter(int index, int32_t value, void *tm_weekday_ref);
 
-// Utility callback function that can be used for the stats_calculate_basic() call. This
+// Utility callback function that can be used for the pbl_stats_calculate() call. This
 // particular callback returns true for weekend days (Sat-Sun).
 // @param index the index of the daily total we are processing (0 = today, 1 = yesterday, etc.)
 // @param value the value of the given daily total
-// @tm_weekday_ref the context argument passed to the stats_calculate_basic() call, which
+// @tm_weekday_ref the context argument passed to the pbl_stats_calculate() call, which
 //  in this case is the day of the week (Sunday, Monday, etc.) of index 0 in the daily totals,
 //  typecast to a ptr.
 bool health_service_private_weekend_filter(int index, int32_t value, void *tm_weekday_ref);
 
-// Utility callback function that can be used for the stats_calculate_basic() call. This
+// Utility callback function that can be used for the pbl_stats_calculate() call. This
 // particular callback returns true for only days of the week that match tm_weekday_ref
 // @param index the index of the daily total we are processing (0 = today, 1 = yesterday, etc.)
 // @param value the value of the given daily total
-// @tm_weekday_ref the context argument passed to the stats_calculate_basic() call, which
+// @tm_weekday_ref the context argument passed to the pbl_stats_calculate() call, which
 //  in this case is the day of the week (Sunday, Monday, etc.) of index 0 in the daily totals,
 //  typecast to a ptr.
 bool health_service_private_weekly_filter(int index, int32_t value, void *tm_weekday_ref);

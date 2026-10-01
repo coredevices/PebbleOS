@@ -23,7 +23,7 @@
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/testing.h"
 #include "pbl/util/math.h"
-#include "util/stats.h"
+#include "pbl/util/stats.h"
 #include "pbl/util/string.h"
 #include "util/time/time.h"
 
@@ -656,8 +656,8 @@ PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
   int32_t *history = kernel_malloc_check(sizeof(int32_t[ACTIVITY_HISTORY_DAYS]));
   activity_get_metric(metric, ACTIVITY_HISTORY_DAYS, history);
 
-  const StatsBasicOp op = (StatsBasicOp_Average | StatsBasicOp_Count |
-                           StatsBasicOp_ConsecutiveFirst | StatsBasicOp_Median);
+  const enum pbl_stats_op op = (PBL_STATS_OP_AVERAGE | PBL_STATS_OP_COUNT |
+                                PBL_STATS_OP_CONSECUTIVE_FIRST | PBL_STATS_OP_MEDIAN);
   struct {
     int32_t mean;
     int32_t count;
@@ -666,8 +666,8 @@ PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
   } result;
 
   // Note: we ignore history[0] since it's the current day
-  stats_calculate_basic(op, &history[1], ACTIVITY_HISTORY_DAYS - 1, prv_stats_filter, NULL,
-                        &result.mean);
+  pbl_stats_calculate(op, &history[1], ACTIVITY_HISTORY_DAYS - 1, prv_stats_filter, NULL,
+                      &result.mean);
 
   *stats = (ActivityInsightMetricHistoryStats){
     .metric = metric,
