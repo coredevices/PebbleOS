@@ -612,7 +612,9 @@ Animation *timeline_layer_create_up_down_animation(TimelineLayer *layer, uint32_
 }
 
 #if PBL_ROUND
-static void prv_draw_round_flip(GContext *ctx, const GRect *layer_bounds, const int sidebar_x) {
+//! sidebar_x is the strip's origin as if it were on the right; mirrored when it is on the left.
+static void prv_draw_round_flip(GContext *ctx, const GRect *layer_bounds, const int sidebar_x,
+                                bool on_right) {
   // Use a radius larger than the screen's radius so we don't see the top/bottom of the circle
   int16_t circle_radius = DISP_COLS * 3 / 4;
   const int16_t flip_overlap_region_width = layer_bounds->size.w / 5;
@@ -623,16 +625,23 @@ static void prv_draw_round_flip(GContext *ctx, const GRect *layer_bounds, const 
     // Don't draw the circle in the flip region overlap; we want an instantaneous jump past this
     // region during the flip
     const int16_t circle_left_edge_x = MIN(sidebar_x, flip_point_x);
-    const GPoint circle_center = GPoint(circle_left_edge_x + circle_radius, bounds_center.y);
+    GPoint circle_center = GPoint(circle_left_edge_x + circle_radius, bounds_center.y);
+    if (!on_right) {
+      circle_center.x = layer_bounds->size.w - circle_center.x;
+    }
     graphics_fill_circle(ctx, circle_center, circle_radius);
   } else {
-    // Otherwise, use fill_radial to fill the sidebar as a radial on the right side of the screen
-    const GPoint circle_center = GPoint(sidebar_x - circle_radius, bounds_center.y);
+    // Otherwise, use fill_radial to fill the sidebar as a radial on the sidebar side of the screen
+    GPoint circle_center = GPoint(sidebar_x - circle_radius, bounds_center.y);
+    const int16_t outer_radius = layer_bounds->size.w - circle_center.x;
+    if (!on_right) {
+      circle_center.x = layer_bounds->size.w - circle_center.x;
+    }
     // Add half the final sidebar width to the radius so we see a bounce-back effect at the end
     const TimelineLayerStyle *style = prv_get_style();
     circle_radius += style->sidebar_width / 2;
-    graphics_fill_radial_internal(ctx, circle_center, circle_radius,
-                                  layer_bounds->size.w - circle_center.x, 0, TRIG_MAX_ANGLE);
+    graphics_fill_radial_internal(ctx, circle_center, circle_radius, outer_radius, 0,
+                                  TRIG_MAX_ANGLE);
   }
 }
 #endif
@@ -664,7 +673,8 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   // return early so we don't draw the arrow notch
 #if PBL_ROUND
   if (timeline_layer->animating_intro_or_exit) {
-    prv_draw_round_flip(ctx, bounds, sidebar_rect.origin.x);
+    prv_draw_round_flip(ctx, bounds, bounds->size.w - sidebar_width,
+                        timeline_layer_sidebar_is_on_right());
     return;
   }
 #endif

@@ -97,12 +97,12 @@ static const TimelineLayoutStyle *prv_get_style(void) {
   return s_styles[PreferredContentSizeDefault];
 }
 
-// Pin text (time, title, subtitle) is left-aligned on the right-hand strip;
-// mirror it to right-aligned when the sidebar sits on the left.
+// Pin text (time, title, subtitle) is left-aligned on rect and right-aligned on round with the
+// right-hand strip; mirror it when the sidebar sits on the left.
 static GTextAlignment prv_get_pin_text_alignment(void) {
-  return PBL_IF_RECT_ELSE(
-      timeline_layer_sidebar_is_on_right() ? GTextAlignmentLeft : GTextAlignmentRight,
-      GTextAlignmentRight);
+  const bool on_right = timeline_layer_sidebar_is_on_right();
+  return PBL_IF_RECT_ELSE(on_right ? GTextAlignmentLeft : GTextAlignmentRight,
+                          on_right ? GTextAlignmentRight : GTextAlignmentLeft);
 }
 
 TimelineResourceId timeline_layout_get_icon_resource_id(LayoutLayerMode mode,
