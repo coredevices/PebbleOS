@@ -21,6 +21,7 @@
 #include <stdio.h>
 
 #include "kernel/pebble_tasks.h"
+#include "pbl/util/rand32.h"
 #include "system/passert.h"
 #include "tinymt32.h"
 
@@ -65,12 +66,12 @@ static int prv_next(tinymt32_t *state) {
   return tinymt32_generate_uint32(state);
 }
 
-uint32_t rand32(void) {
+uint32_t pbl_rand32(void) {
   return prv_next(prv_get_seed_ptr());
 }
 
 int rand(void) {
-  return rand32() & 0x7FFFFFFF;
+  return pbl_rand32() & 0x7FFFFFFF;
 }
 
 int rand_r(unsigned int *seedp) { // Please don't use this

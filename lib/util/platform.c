@@ -30,6 +30,6 @@ PBL_WEAK PBL_NORETURN void util_assertion_failed(const char *filename, int line)
   exit(EXIT_FAILURE);
 }
 
-PBL_WEAK uint32_t rand32(void) {
+PBL_WEAK uint32_t pbl_rand32(void) {
   return ((uint32_t)rand() << 1) + (uint32_t)rand();
 }

@@ -36,7 +36,7 @@ pbl_clar_test(test_bt_conn_mgr
 
 pbl_clar_test(test_gatt_client_accessors
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gatt_client_accessors.c
@@ -51,7 +51,7 @@ pbl_clar_test(test_gatt_client_accessors
 
 pbl_clar_test(test_gatt_client_discovery
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gatt_client_accessors.c
@@ -66,7 +66,7 @@ pbl_clar_test(test_gatt_client_discovery
 
 pbl_clar_test(test_gatt_client_subscriptions
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gap_le_task.c
@@ -84,7 +84,7 @@ pbl_clar_test(test_gatt_client_subscriptions
 
 pbl_clar_test(test_gatt_service_changed_client
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gatt_client_discovery.c
     fw/comm/ble/gatt_service_changed.c
@@ -96,7 +96,7 @@ pbl_clar_test(test_gatt_service_changed_client
 
 pbl_clar_test(test_gatt_service_changed_server
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gatt_client_discovery.c
@@ -125,7 +125,7 @@ pbl_clar_test(test_ancs
     fw/comm/ble/kernel_le_client/ancs/ancs.c
     fw/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c
     fw/services/regular_timer/service.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_events.c
     tests/fakes/fake_kernel_services_notifications.c
@@ -145,7 +145,7 @@ pbl_clar_test(test_ancs
 pbl_clar_test(test_kernel_le_client
   SOURCES
     fw/comm/ble/kernel_le_client/kernel_le_client.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
 )
 
@@ -155,7 +155,7 @@ pbl_clar_test(test_ppogatt_v0
     fw/system/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
@@ -169,7 +169,7 @@ pbl_clar_test(test_ppogatt_v1
     fw/system/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c

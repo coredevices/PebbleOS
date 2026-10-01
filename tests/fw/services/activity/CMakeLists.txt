@@ -41,7 +41,7 @@ pbl_clar_test(test_activity_insights
     fw/services/activity/insights_settings.c
     fw/services/timeline/attribute.c
     fw/services/timeline/metricgroup.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_settings_file.c

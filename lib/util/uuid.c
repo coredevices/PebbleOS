@@ -16,7 +16,7 @@ void uuid_generate(Uuid *uuid_out) {
   uint8_t uuid_bytes[UUID_SIZE];
   uint32_t *uuid_words = (uint32_t *)uuid_bytes;
   for (size_t i = 0; i < UUID_SIZE / sizeof(uint32_t); i++) {
-    uuid_words[i] = rand32();
+    uuid_words[i] = pbl_rand32();
   }
   // set the version bits
   uuid_bytes[6] = (uuid_bytes[6] & ~0xF0) | 0x40;

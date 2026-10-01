@@ -52,7 +52,7 @@ static void prv_fill_bd_addr(uint8_t *rp) {
 
 static void prv_fill_rand(uint8_t *rp) {
   struct ble_hci_le_rand_rp *r = (void *)rp;
-  r->random_number = ((uint64_t)rand32() << 32) | rand32();
+  r->random_number = ((uint64_t)pbl_rand32() << 32) | pbl_rand32();
 }
 
 static void prv_fill_sugg_def_data_len(uint8_t *rp) {

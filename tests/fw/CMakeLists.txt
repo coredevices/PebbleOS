@@ -4,7 +4,7 @@
 pbl_clar_test(test_clar
   SOURCES
     fw/applib/graphics/gtypes.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
 )
 
@@ -88,7 +88,7 @@ pbl_clar_test(test_word_iterator
 
 pbl_clar_test(test_launcher_app_message
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/launcher_app_message.c
     fw/applib/dict.c
@@ -116,7 +116,7 @@ pbl_clar_test(test_alarm
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     lib/c/time/mktime.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     subsys/cron/cron.c
     fw/services/filesystem/flash_translation.c
@@ -227,7 +227,7 @@ pbl_clar_test(test_data_logging
     tests/fakes/fake_session.c
     tests/fakes/fake_rtc.c
     fw/applib/data_logging.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
   OVERRIDES dummy_board
 )
@@ -240,7 +240,7 @@ pbl_clar_test(test_memory_layout
 pbl_clar_test(test_app_manager
   SOURCES
     fw/applib/app_exit_reason.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/process_manager.c
     fw/process_management/pebble_process_info.c
@@ -294,7 +294,7 @@ pbl_clar_test(test_timeline_api
     fw/services/timeline/timeline.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -306,7 +306,7 @@ pbl_clar_test(test_timeline_api
 
 pbl_clar_test(test_app_run_state
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/app_run_state.c
 )

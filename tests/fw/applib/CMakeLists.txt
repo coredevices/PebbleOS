@@ -6,7 +6,7 @@ pbl_clar_test(test_app_message
     fw/applib/app_message/app_message.c
     fw/applib/app_message/app_message_outbox.c
     fw/applib/app_message/app_message_inbox.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/pebble_process_info.c
     fw/applib/dict.c
@@ -40,7 +40,7 @@ pbl_clar_test(test_persist
     fw/flash_region/flash_region.c
     fw/applib/dict.c
     fw/applib/persist.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/filesystem/app_file.c
     fw/services/filesystem/flash_translation.c

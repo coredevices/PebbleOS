@@ -74,7 +74,7 @@ pbl_clar_test(test_contacts
     fw/services/timeline/attribute.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -156,7 +156,7 @@ pbl_clar_test(test_debounced_connection_service
 pbl_clar_test(test_timeline_item
   SOURCES
     tests/fakes/fake_rtc.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/timeline/item.c
     fw/services/timeline/attributes_actions.c
@@ -207,7 +207,7 @@ pbl_clar_test(test_wakeup
   SOURCES
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/pebble_process_info.c
     fw/resource/resource.c
@@ -251,7 +251,7 @@ pbl_clar_test(test_migrate_wakeup
     fw/services/wakeup/service.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
@@ -290,7 +290,7 @@ pbl_clar_test(test_transcription
 
 pbl_clar_test(test_voice_endpoint
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/voice/transcription.c
     fw/services/voice_endpoint/service.c
@@ -336,7 +336,7 @@ pbl_clar_test(test_app_install_manager
     fw/services/blob_db/app_db.c
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/applib/graphics/gcolor_definitions.c
     fw/applib/graphics/gtypes.c
@@ -378,7 +378,7 @@ pbl_clar_test(test_app_menu_data_source
     fw/services/settings/settings_raw_iter.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -401,7 +401,7 @@ pbl_clar_test(test_process_loader_storage
 
 pbl_clar_test(test_app_fetch_endpoint
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/app_fetch_endpoint/service.c
     tests/fakes/fake_events.c

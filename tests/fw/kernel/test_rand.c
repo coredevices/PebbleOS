@@ -8,7 +8,7 @@
 #include <clar.h>
 
 #include "kernel/pebble_tasks.h"
-#include "util/rand.h"
+#include "pbl/util/rand32.h"
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@ void test_rand__smoke_test(void) {
 
   uint32_t values[RANDOM_CHECK_LENGTH];
   for (size_t i = 0; i < RANDOM_CHECK_LENGTH; i++) {
-    values[i] = rand32();
+    values[i] = pbl_rand32();
     for (size_t l = 0; l < i; l++) {
       printf("i,l: %zu,%zu\n", i, l);
       cl_assert(values[i] != values[l]);

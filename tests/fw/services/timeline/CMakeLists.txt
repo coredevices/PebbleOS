@@ -5,7 +5,7 @@ pbl_clar_test(test_reminders
   SOURCES
     fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/flash_region/flash_region.c
     fw/services/clock/time.c
@@ -80,7 +80,7 @@ pbl_clar_test(test_timeline_model
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     fw/flash_region/filesystem_regions.c

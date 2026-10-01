@@ -19,7 +19,7 @@ pbl_clar_test(test_alerts_preferences
 pbl_clar_test(test_notification_storage
   SOURCES
     fw/services/notifications/notification_storage.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c

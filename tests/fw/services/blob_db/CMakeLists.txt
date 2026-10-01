@@ -73,7 +73,7 @@ pbl_clar_test(test_app_db
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     fw/flash_region/flash_region.c
@@ -102,7 +102,7 @@ pbl_clar_test(test_contacts_db
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     fw/flash_region/flash_region.c
@@ -120,7 +120,7 @@ pbl_clar_test(test_watch_app_prefs_db
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     fw/flash_region/flash_region.c
@@ -136,7 +136,7 @@ pbl_clar_test(test_watch_app_prefs_db
 pbl_clar_test(test_reminder_db
   SOURCES
     fw/util/crc8.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     fw/services/clock/time.c
@@ -158,7 +158,7 @@ pbl_clar_test(test_notif_db
     fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_kernel_services_notifications.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     fw/flash_region/filesystem_regions.c
@@ -197,7 +197,7 @@ pbl_clar_test(test_weather_db
 
 pbl_clar_test(test_prefs_db
   SOURCES
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
@@ -222,7 +222,7 @@ pbl_clar_test(test_ios_notif_pref_db
   SOURCES
     fw/util/crc8.c
     lib/util/uuid.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c

@@ -15,7 +15,7 @@ pbl_clar_test(test_settings_file
     fw/system/hexdump.c
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
-    fw/util/rand/rand.c
+    fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
   DEFINES DUMA_DISABLED
   OVERRIDES dummy_board

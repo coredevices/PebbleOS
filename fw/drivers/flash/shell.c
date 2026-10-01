@@ -14,7 +14,7 @@
 #include "pbl/services/system_task.h"
 #include "pbl/util/math.h"
 #include "system/passert.h"
-#include "util/rand.h"
+#include "pbl/util/rand32.h"
 
 #include <errno.h>
 #include <inttypes.h>
@@ -461,7 +461,7 @@ static void prv_flash_stress_callback(void *data) {
     return;
   }
 
-  int bufsz = rand32() % 1024;
+  int bufsz = pbl_rand32() % 1024;
   uint8_t *buf = kernel_malloc(bufsz);
   if (!buf) {
     PBL_LOG_ALWAYS("flash stress test: malloc of size %d failed", bufsz);
@@ -469,7 +469,7 @@ static void prv_flash_stress_callback(void *data) {
     return;
   }
 
-  uint32_t lfsr_seed = rand32();
+  uint32_t lfsr_seed = pbl_rand32();
   if (lfsr_seed == 0) {
     lfsr_seed = 1;
   }

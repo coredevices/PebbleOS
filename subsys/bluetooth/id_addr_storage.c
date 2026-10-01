@@ -16,8 +16,8 @@ static void prv_generate(struct pbl_bt_addr *addr) {
   bool valid;
 
   do {
-    uint32_t lo = rand32();
-    uint32_t hi = rand32();
+    uint32_t lo = pbl_rand32();
+    uint32_t hi = pbl_rand32();
 
     addr->octets[0] = lo;
     addr->octets[1] = lo >> 8;
