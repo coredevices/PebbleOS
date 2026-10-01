@@ -4,6 +4,7 @@
 #include "clar.h"
 
 #include "applib/ui/layer.h"
+#include "applib/ui/picker_touch.h"
 #include "applib/ui/window.h"
 #include "applib/ui/recognizer/recognizer.h"
 #include "applib/ui/recognizer/recognizer_impl.h"
@@ -154,6 +155,14 @@ static Layer s_child_layer;
 static RecognizerList s_global_list;
 static RecognizerManager s_recognizer_manager;
 static TouchNavState s_state;
+
+TouchNavState *app_state_get_touch_nav_state(void) {
+  return &s_state;
+}
+
+TouchNavState *modal_manager_get_touch_nav_state(void) {
+  return &s_state;
+}
 
 void test_touch_nav__initialize(void) {
   fake_rtc_init(0, 0);
@@ -1299,4 +1308,62 @@ void test_touch_nav__widget_touchdown_op(void) {
   cl_assert_equal_i(s_widget.pan_snap_calls, 1);
 
   touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node2);
+}
+
+typedef struct PickerTouchTestContext {
+  int steps;
+  GPoint tap;
+  bool can_start;
+} PickerTouchTestContext;
+
+static void prv_picker_step(int direction, void *context) {
+  ((PickerTouchTestContext *)context)->steps += direction;
+}
+
+static void prv_picker_tap(GPoint point_on_screen, void *context) {
+  ((PickerTouchTestContext *)context)->tap = point_on_screen;
+}
+
+static bool prv_picker_can_start(void *context) {
+  return ((PickerTouchTestContext *)context)->can_start;
+}
+
+void test_touch_nav__picker_touch_routes_gestures_and_unregisters(void) {
+  PickerTouchTestContext context = {
+    .can_start = true,
+  };
+  PickerTouch touch;
+  picker_touch_init(&touch, &s_child_layer,
+                    (PickerTouchCallbacks){
+                      .step = prv_picker_step,
+                      .tap = prv_picker_tap,
+                      .can_start = prv_picker_can_start,
+                    },
+                    &context);
+
+  TouchNavWidgetNode *node = s_state.scroll_head;
+  cl_assert_equal_p(node, &touch.touch_nav_node);
+  cl_assert_equal_p(node->layer, &s_child_layer);
+  cl_assert(node->ops->can_start(node->widget));
+
+  node->ops->pan_started(node->widget);
+  node->ops->pan_update(node->widget, GPointZero, GPoint(0, 27));
+  cl_assert_equal_i(context.steps, 2);
+  node->ops->pan_update(node->widget, GPointZero, GPoint(0, -27));
+  cl_assert_equal_i(context.steps, -2);
+
+  node->ops->tap(node->widget, GPoint(12, 34));
+  cl_assert_equal_i(context.tap.x, 12);
+  cl_assert_equal_i(context.tap.y, 34);
+
+  node->ops->swipe(node->widget, SwipeDirection_Left);
+  cl_assert_equal_i(s_fake.emit_count, 1);
+  cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
+  node->ops->swipe(node->widget, SwipeDirection_Right);
+  cl_assert_equal_i(s_fake.pop_count, 1);
+
+  s_state.latched_target = node;
+  picker_touch_deinit(&touch);
+  cl_assert_equal_p(s_state.scroll_head, NULL);
+  cl_assert_equal_p(s_state.latched_target, NULL);
 }

@@ -9,6 +9,9 @@
 #include "kernel/ui/kernel_ui.h"
 #include "kernel/ui/system_icons.h"
 #include "pbl/util/size.h"
+#ifdef CONFIG_TOUCH
+#include "value_picker_layer.h"
+#endif
 
 #include <limits.h>
 #include <stdio.h>
@@ -19,12 +22,43 @@
 #define NUMBER_FONT_KEY FONT_KEY_BITHAM_34_MEDIUM_NUMBERS
 #endif
 
+#ifdef CONFIG_TOUCH
+static ValuePickerLayer *prv_get_picker_layer(const NumberWindow *number_window) {
+  return number_window->private_data;
+}
+
+static ValuePickerContent prv_get_picker_content(const NumberWindow *number_window) {
+  return (ValuePickerContent){
+    .title = number_window->label,
+    .value = number_window->value,
+    .min_value = number_window->min_val,
+    .max_value = number_window->max_val,
+    .step = number_window->step_size,
+  };
+}
+#endif
+
 // updates the textual output value of the numberwindow to match the actual value
 static void update_output_value(NumberWindow *nf) {
+#ifdef CONFIG_TOUCH
+  ValuePickerLayer *picker_layer = prv_get_picker_layer(nf);
+  if (picker_layer) {
+    const ValuePickerContent content = prv_get_picker_content(nf);
+    value_picker_layer_set_content(picker_layer, &content);
+    return;
+  }
+#endif
   layer_mark_dirty(&nf->window.layer);
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
+#ifdef CONFIG_TOUCH
+  ValuePickerLayer *picker_layer = prv_get_picker_layer(nf);
+  if (picker_layer) {
+    value_picker_layer_step(picker_layer, 1);
+    return;
+  }
+#endif
   bool is_increased = false;
   int32_t new_val = nf->value + nf->step_size;
   if (new_val <= nf->max_val && new_val > nf->value) {
@@ -40,6 +74,13 @@ static void up_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
+#ifdef CONFIG_TOUCH
+  ValuePickerLayer *picker_layer = prv_get_picker_layer(nf);
+  if (picker_layer) {
+    value_picker_layer_step(picker_layer, -1);
+    return;
+  }
+#endif
   bool is_decreased = false;
   int32_t new_val = nf->value - nf->step_size;
   if (new_val >= nf->min_val && new_val < nf->value) {
@@ -73,14 +114,30 @@ static void click_config_provider(NumberWindow *nf) {
 }
 
 #ifdef CONFIG_TOUCH
-static void prv_step(int direction, void *context) {
+static bool prv_can_step(ValuePickerLayer *picker_layer, int direction, void *context) {
+  (void)picker_layer;
+  const NumberWindow *number_window = context;
+  if (number_window->step_size <= 0) {
+    return false;
+  }
+  const int64_t value =
+      (int64_t)number_window->value + direction * (int64_t)number_window->step_size;
+  return value >= number_window->min_val && value <= number_window->max_val;
+}
+
+static void prv_changed(ValuePickerLayer *picker_layer, int direction, void *context) {
+  NumberWindow *number_window = context;
+  number_window->value = value_picker_layer_get_value(picker_layer);
   if (direction > 0) {
-    up_click_handler(NULL, context);
-  } else {
-    down_click_handler(NULL, context);
+    if (number_window->callbacks.incremented) {
+      number_window->callbacks.incremented(number_window, number_window->callback_context);
+    }
+  } else if (direction < 0 && number_window->callbacks.decremented) {
+    number_window->callbacks.decremented(number_window, number_window->callback_context);
   }
 }
-#else
+#endif
+
 static GRect prv_get_text_frame(Layer *window_layer) {
   const int16_t x_margin = 5;
   const int16_t label_y_offset = PBL_IF_ROUND_ELSE(40, 16);
@@ -91,17 +148,18 @@ static GRect prv_get_text_frame(Layer *window_layer) {
   frame.origin.y = label_y_offset;
   return frame;
 }
-#endif
 
-//! Drawing function for our Window's base Layer: everything on screen except the ActionBarLayer.
-void prv_update_proc(Layer *layer, GContext *ctx) {
-  // This is safe because Layer is the first member in Window and Window is the first member in
-  // NumberWindow.
+static void prv_update_proc(Layer *layer, GContext *ctx) {
   _Static_assert(offsetof(Window, layer) == 0, "");
   _Static_assert(offsetof(NumberWindow, window) == 0, "");
   NumberWindow *nw = (NumberWindow *)layer;
 
-#ifndef CONFIG_TOUCH
+#ifdef CONFIG_TOUCH
+  if (prv_get_picker_layer(nw)) {
+    return;
+  }
+#endif
+
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, &layer->bounds);
   graphics_context_set_text_color(ctx, GColorBlack);
@@ -126,45 +184,33 @@ void prv_update_proc(Layer *layer, GContext *ctx) {
 
   graphics_draw_text(ctx, value_output_buffer, fonts_get_system_font(NUMBER_FONT_KEY), frame,
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-#else
-  ValuePickerStyle style = *value_picker_default_style();
-  style.value_font_key = NUMBER_FONT_KEY;
-  const ValuePickerContent content = {
-    .title = nw->label,
-    .value = nw->value,
-    .min_value = nw->min_val,
-    .max_value = nw->max_val,
-    .step = nw->step_size,
-  };
-  value_picker_draw(ctx, &layer->bounds, &content, &style);
-#endif
 }
 
 void number_window_set_label(NumberWindow *nw, const char *label) {
   nw->label = label;
-  layer_mark_dirty(&nw->window.layer);
+  update_output_value(nw);
 }
 
 void number_window_set_max(NumberWindow *nf, int32_t max) {
   nf->max_val = max;
   if (nf->value > max) {
     nf->value = max;
-    update_output_value(nf);
   }
   if (nf->min_val > max) {
     nf->min_val = max;
   }
+  update_output_value(nf);
 }
 
 void number_window_set_min(NumberWindow *nf, int32_t min) {
   nf->min_val = min;
   if (nf->value < min) {
     nf->value = min;
-    update_output_value(nf);
   }
   if (nf->max_val < min) {
     nf->max_val = min;
   }
+  update_output_value(nf);
 }
 
 void number_window_set_value(NumberWindow *nf, int32_t value) {
@@ -180,6 +226,7 @@ void number_window_set_value(NumberWindow *nf, int32_t value) {
 
 void number_window_set_step_size(NumberWindow *nf, int32_t step) {
   nf->step_size = step;
+  update_output_value(nf);
 }
 
 int32_t number_window_get_value(const NumberWindow *nf) {
@@ -219,9 +266,23 @@ void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbac
   action_bar_layer_init(action_bar);
 
 #ifdef CONFIG_TOUCH
-  nw->touch = applib_malloc(sizeof(ValuePickerTouch));
-  if (nw->touch) {
-    value_picker_touch_init(nw->touch, &nw->window.layer, prv_step, nw);
+  ValuePickerLayer *picker_layer = applib_malloc(sizeof(*picker_layer));
+  nw->private_data = picker_layer;
+  if (picker_layer) {
+    ValuePickerStyle style = *value_picker_layer_default_style();
+    style.value_font_key = NUMBER_FONT_KEY;
+    const ValuePickerContent content = prv_get_picker_content(nw);
+    const GRect frame = GRect(0, 0, nw->window.layer.bounds.size.w - ACTION_BAR_WIDTH,
+                              nw->window.layer.bounds.size.h);
+    value_picker_layer_init(picker_layer, &frame, &content, &style,
+                            (ValuePickerLayerCallbacks){
+                              .changed = prv_changed,
+                              .can_step = prv_can_step,
+                            },
+                            nw);
+    layer_add_child(&nw->window.layer, &picker_layer->layer);
+    value_picker_layer_enable_touch(picker_layer);
+    window_set_background_color(&nw->window, style.background_color);
   }
 #endif
 }
@@ -236,11 +297,14 @@ NumberWindow *number_window_create(const char *label, NumberWindowCallbacks call
 }
 
 static void number_window_deinit(NumberWindow *number_window) {
-  if (number_window->touch) {
-    value_picker_touch_deinit(number_window->touch);
-    applib_free(number_window->touch);
-    number_window->touch = NULL;
+#ifdef CONFIG_TOUCH
+  ValuePickerLayer *picker_layer = prv_get_picker_layer(number_window);
+  if (picker_layer) {
+    value_picker_layer_deinit(picker_layer);
+    applib_free(picker_layer);
+    number_window->private_data = NULL;
   }
+#endif
   action_bar_layer_deinit(&number_window->action_bar);
   window_deinit(&number_window->window);
 }

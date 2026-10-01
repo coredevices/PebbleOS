@@ -8,6 +8,10 @@
 #include "property_animation.h"
 #include "applib/fonts/fonts.h"
 
+#ifdef CONFIG_TOUCH
+#include "picker_touch.h"
+#endif
+
 #include <stddef.h>
 
 #define SELECTION_LAYER_DEFAULT_CELL_HEIGHT PBL_IF_RECT_ELSE(34, 40)
@@ -66,15 +70,9 @@ typedef struct SelectionLayer {
   unsigned slide_settle_anim_progress;
   AnimationImplementation slide_settle_anim_impl;
 
-  //! Layout-compatible with TouchNavWidgetNode; declared unconditionally so the struct size is
-  //! board-independent.
-  struct {
-    void *next;
-    void *layer;
-    void *ops;
-    void *widget;
-  } touch_nav_node;
-  int16_t touch_drag_steps;
+#ifdef CONFIG_TOUCH
+  PickerTouch picker_touch;
+#endif
 } SelectionLayer;
 
 void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, unsigned num_cells);

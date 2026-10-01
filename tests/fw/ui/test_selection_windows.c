@@ -3,8 +3,10 @@
 
 #include "applib/graphics/framebuffer.h"
 #include "applib/graphics/graphics.h"
+#include "applib/ui/picker_touch.h"
 #include "applib/ui/time_range_selection_window.h"
 #include "applib/ui/time_selection_window.h"
+#include "applib/ui/value_picker_layer.h"
 #include "applib/ui/app_window_stack.h"
 #include "apps/system/settings/notifications_private.h"
 #include "resource/resource.h"
@@ -221,4 +223,70 @@ void test_selection_windows__time_selection_window(void) {
 void test_selection_windows__time_range_selection_window(void) {
   prv_prepare_canvas_and_render_for_each_size(prv_render_time_range_selection_window);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_selection_windows__picker_touch_steps_from_drag(void) {
+  cl_assert_equal_i(picker_touch_steps_from_drag(0), 0);
+  cl_assert_equal_i(picker_touch_steps_from_drag(8), 0);
+  cl_assert_equal_i(picker_touch_steps_from_drag(9), 1);
+  cl_assert_equal_i(picker_touch_steps_from_drag(18), 1);
+  cl_assert_equal_i(picker_touch_steps_from_drag(27), 2);
+  cl_assert_equal_i(picker_touch_steps_from_drag(-8), 0);
+  cl_assert_equal_i(picker_touch_steps_from_drag(-9), -1);
+  cl_assert_equal_i(picker_touch_steps_from_drag(-18), -1);
+  cl_assert_equal_i(picker_touch_steps_from_drag(-27), -2);
+}
+
+typedef struct PickerTestContext {
+  int change;
+  bool can_step;
+} PickerTestContext;
+
+static void prv_picker_changed(ValuePickerLayer *picker_layer, int direction, void *context) {
+  (void)picker_layer;
+  PickerTestContext *test_context = context;
+  test_context->change = direction;
+}
+
+static bool prv_picker_can_step(ValuePickerLayer *picker_layer, int direction, void *context) {
+  (void)picker_layer;
+  (void)direction;
+  return ((PickerTestContext *)context)->can_step;
+}
+
+void test_selection_windows__value_picker_layer_state(void) {
+  const GRect frame = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const ValuePickerContent content = {
+    .value = 9,
+    .min_value = -5,
+    .max_value = 10,
+    .step = 2,
+  };
+  PickerTestContext context = {
+    .can_step = true,
+  };
+  ValuePickerLayer picker_layer;
+  value_picker_layer_init(&picker_layer, &frame, &content, NULL,
+                          (ValuePickerLayerCallbacks){
+                            .changed = prv_picker_changed,
+                            .can_step = prv_picker_can_step,
+                          },
+                          &context);
+
+  cl_assert(value_picker_layer_step(&picker_layer, 1));
+  cl_assert_equal_i(value_picker_layer_get_value(&picker_layer), 10);
+  cl_assert_equal_i(context.change, 1);
+  cl_assert(!value_picker_layer_step(&picker_layer, 1));
+  cl_assert_equal_i(context.change, 1);
+
+  context.can_step = false;
+  cl_assert(!value_picker_layer_step(&picker_layer, -1));
+  cl_assert_equal_i(value_picker_layer_get_value(&picker_layer), 10);
+
+  ValuePickerContent updated_content = content;
+  updated_content.value = -20;
+  value_picker_layer_set_content(&picker_layer, &updated_content);
+  cl_assert_equal_i(value_picker_layer_get_value(&picker_layer), -5);
+
+  value_picker_layer_deinit(&picker_layer);
 }

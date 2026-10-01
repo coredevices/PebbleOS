@@ -827,10 +827,12 @@ pbl_clar_test(test_selection_windows
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_system_theme.c
     fw/applib/ui/date_time_selection_window_private.c
+    fw/applib/ui/picker_touch.c
     fw/applib/ui/selection_layer.c
     fw/applib/ui/text_layer.c
     fw/applib/ui/time_range_selection_window.c
     fw/applib/ui/time_selection_window.c
+    fw/applib/ui/value_picker_layer.c
     fw/applib/ui/window.c
     fw/shell/system_theme.c
     fw/util/date.c

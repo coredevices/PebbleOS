@@ -75,6 +75,7 @@ pbl_clar_test(test_touch_nav
   SOURCES
     fw/applib/graphics/gtypes.c
     fw/applib/ui/layer.c
+    fw/applib/ui/picker_touch.c
     fw/applib/ui/recognizer/recognizer.c
     fw/applib/ui/recognizer/recognizer_manager.c
     fw/applib/ui/recognizer/pan.c

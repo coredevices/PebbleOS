@@ -6,7 +6,6 @@
 #include "layer.h"
 #include "text_layer.h"
 #include "action_bar_layer.h"
-#include "value_picker.h"
 #include "window.h"
 
 //! @file number_window.h
@@ -67,7 +66,7 @@ typedef struct NumberWindow {
   void *callback_context;
 
   //! Allocated separately so the struct stays within its 2.x allocation size.
-  ValuePickerTouch *touch;
+  void *private_data;
 } NumberWindow;
 
 //! Initializes the NumberWindow.
