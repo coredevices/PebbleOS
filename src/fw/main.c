@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#include "debug/power_tracking.h"
-
 #include "board/board.h"
 
 #include "console/dbgserial.h"
@@ -216,8 +214,6 @@ static void init_drivers(void) {
 
   rtc_init_timers();
   rtc_alarm_init();
-
-  power_tracking_init();
 }
 
 static void clear_reset_loop_detection_bits(void) {

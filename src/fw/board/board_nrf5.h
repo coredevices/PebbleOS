@@ -6,7 +6,6 @@
 #include "display.h"
 
 #include <pbl/drivers/button_id.h>
-#include "debug/power_tracking.h"
 
 #include <stdint.h>
 #include <stdbool.h>

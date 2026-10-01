@@ -17,6 +17,7 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
 #include "flash_region/flash_region.h"
 
 // QSPI

@@ -6,7 +6,6 @@
 #include <pbl/drivers/i2c/hal.h>
 
 #include "board/board.h"
-#include "debug/power_tracking.h"
 #include "pbl/services/analytics/analytics.h"
 #include <pbl/drivers/rtc.h>
 #include "pbl/kernel/types.h"

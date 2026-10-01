@@ -8,7 +8,6 @@
 #endif
 
 #include "board/board.h"
-#include "debug/power_tracking.h"
 #include <pbl/drivers/battery.h>
 #include "kernel/events.h"
 #include "pbl/services/analytics/analytics.h"
@@ -201,8 +200,6 @@ static void prv_update_state(void *force_update) {
   PBL_LOG_DBG("mV Raw: %" PRIu16 " Ratio: %" PRIu32 " Percent: %" PRIu32,
               s_last_battery_state.voltage, s_last_battery_state.percent,
               ratio32_to_percent(s_last_battery_state.percent));
-
-  PWR_TRACK_BATT(charging ? "CHARGING" : "DISCHARGING", s_last_battery_state.voltage);
 
   if (forced || likely_stable || s_last_battery_state.percent <= ALWAYS_UPDATE_THRESHOLD ||
       charging || state_changed) {
