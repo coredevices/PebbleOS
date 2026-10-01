@@ -150,15 +150,16 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
       return;
     }
 
-    // Check to see if the watch is face up or face down. If it is assume the watch is off wrist
+    // Face up or face down probably means off the wrist, so don't open a window. Defer and retry
+    // next tick without restamping the period, as for the SpO2 conflict above.
     // The z-axis is encoded in the 4 most significant bits of the orientation
     const uint8_t z_axis = s_activity_state.last_orientation >> 4;
     const bool watch_is_flat = z_axis == 0 || z_axis == 8;
-
-    const bool should_be_sampling = !s_activity_state.hr.currently_sampling && !watch_is_flat;
     if (!s_activity_state.hr.currently_sampling && watch_is_flat) {
-      PBL_LOG_DBG("Not subscribing to HRM: watch is flat(ish)");
+      return;
     }
+
+    const bool should_be_sampling = !s_activity_state.hr.currently_sampling;
 
     // Pick the subscription rate (essentially ON and OFF)
     const uint32_t desired_interval_sec = (should_be_sampling)
