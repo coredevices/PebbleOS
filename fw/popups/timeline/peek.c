@@ -38,8 +38,8 @@ unsigned int timeline_peek_get_concurrent_height(unsigned int num_concurrent) {
   return prv_get_concurrent_height(MIN(num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT));
 }
 
-static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
-                                unsigned int num_concurrent, bool icon_on_right) {
+static void prv_draw_background(GContext *ctx, const GRect *frame_orig, unsigned int num_concurrent,
+                                bool icon_on_right) {
   GRect frame = *frame_orig;
 #if PBL_RECT
   // Fill all the way to the bottom of the screen
