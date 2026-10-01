@@ -6,7 +6,7 @@
 #include "applib/app_timer.h"
 #include "applib/ui/scroll_layer.h"
 #include "applib/ui/layer.h"
-#include "util/buffer.h"
+#include "pbl/util/buffer.h"
 
 typedef struct {
   ContentIndicatorDirection direction : 2;
@@ -40,8 +40,8 @@ struct ContentIndicator {
 
 //! This union allows us to statically allocate the storage for a buffer of content indicators.
 typedef union {
-  Buffer buffer;
-  uint8_t buffer_storage[sizeof(Buffer) + CONTENT_INDICATOR_BUFFER_SIZE_BYTES];
+  struct pbl_buffer buffer;
+  uint8_t buffer_storage[sizeof(struct pbl_buffer) + CONTENT_INDICATOR_BUFFER_SIZE_BYTES];
 } ContentIndicatorsBuffer;
 
 //! @internal

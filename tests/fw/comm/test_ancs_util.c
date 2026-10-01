@@ -5,7 +5,7 @@
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_util.h"
 
-#include "util/buffer.h"
+#include "pbl/util/buffer.h"
 
 #include "clar.h"
 
@@ -73,11 +73,12 @@ void test_ancs_util__should_extract_dict_from_buffer(void) {
       "This is a very complicated case, Maude. You know, a lotta ins, lotta outs, lotta what-have-you's. And, uh, lotta strands to keep in my head, man. Lotta strands in old Duder's head. Luckily I'm adherin";
 
   int bytes_written;
-  Buffer *b = buffer_create(500);
-  bytes_written = buffer_add(b, s_chunked_dict_part_one, sizeof(s_chunked_dict_part_one));
+  struct pbl_buffer *b = malloc(sizeof(*b) + 500);
+  pbl_buffer_init(b, 500);
+  bytes_written = pbl_buffer_add(b, s_chunked_dict_part_one, sizeof(s_chunked_dict_part_one));
   cl_assert_equal_i(bytes_written, sizeof(s_chunked_dict_part_one));
 
-  bytes_written = buffer_add(b, s_chunked_dict_part_two, sizeof(s_chunked_dict_part_two));
+  bytes_written = pbl_buffer_add(b, s_chunked_dict_part_two, sizeof(s_chunked_dict_part_two));
   cl_assert_equal_i(bytes_written, sizeof(s_chunked_dict_part_two));
 
   bool error = false;
@@ -108,10 +109,11 @@ void test_ancs_util__should_detect_duplicate_message(void) {
 
   ancs_util_reset_notification_cache();
 
-  Buffer *b = buffer_create(500);
-  cl_assert_equal_i(buffer_add(b, s_chunked_dict_part_one, sizeof(s_chunked_dict_part_one)),
+  struct pbl_buffer *b = malloc(sizeof(*b) + 500);
+  pbl_buffer_init(b, 500);
+  cl_assert_equal_i(pbl_buffer_add(b, s_chunked_dict_part_one, sizeof(s_chunked_dict_part_one)),
                     sizeof(s_chunked_dict_part_one));
-  cl_assert_equal_i(buffer_add(b, s_chunked_dict_part_two, sizeof(s_chunked_dict_part_two)),
+  cl_assert_equal_i(pbl_buffer_add(b, s_chunked_dict_part_two, sizeof(s_chunked_dict_part_two)),
                     sizeof(s_chunked_dict_part_two));
 
   bool error = false;

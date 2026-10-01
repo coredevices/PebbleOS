@@ -10,7 +10,7 @@
 #include "applib/graphics/graphics.h"
 #include "kernel/ui/kernel_ui.h"
 #include "system/passert.h"
-#include "util/buffer.h"
+#include "pbl/util/buffer.h"
 #include "pbl/util/size.h"
 #include "pbl/util/testing.h"
 
@@ -33,9 +33,9 @@ bool prv_content_indicator_init(ContentIndicator *content_indicator) {
 
   // Add the content indicator to the appropriate buffer
   ContentIndicatorsBuffer *content_indicators_buffer = content_indicator_get_current_buffer();
-  Buffer *buffer = &content_indicators_buffer->buffer;
+  struct pbl_buffer *buffer = &content_indicators_buffer->buffer;
   size_t bytes_written =
-      buffer_add(buffer, (uint8_t *)&content_indicator, sizeof(ContentIndicator *));
+      pbl_buffer_add(buffer, (uint8_t *)&content_indicator, sizeof(ContentIndicator *));
   // Return whether or not the content indicator was successfully written to the buffer
   return (bytes_written == sizeof(ContentIndicator *));
 }
@@ -53,7 +53,7 @@ static bool prv_content_indicator_iterate(ContentIndicatorIteratorCb iterator_cb
   }
 
   ContentIndicatorsBuffer *content_indicators_buffer = content_indicator_get_current_buffer();
-  Buffer *buffer = &content_indicators_buffer->buffer;
+  struct pbl_buffer *buffer = &content_indicators_buffer->buffer;
   for (size_t offset = 0; offset < buffer->bytes_written; offset += sizeof(ContentIndicator *)) {
     // We have to break up the access into two parts, otherwise we get a strict-aliasing error
     ContentIndicator **content_indicator_address = (ContentIndicator **)(buffer->data + offset);
@@ -163,8 +163,8 @@ void content_indicator_deinit(ContentIndicator *content_indicator) {
 
   // Remove the content indicator from the appropriate buffer
   ContentIndicatorsBuffer *content_indicators_buffer = content_indicator_get_current_buffer();
-  Buffer *buffer = &content_indicators_buffer->buffer;
-  buffer_remove(buffer, buffer_offset_bytes, sizeof(ContentIndicator *));
+  struct pbl_buffer *buffer = &content_indicators_buffer->buffer;
+  pbl_buffer_remove(buffer, buffer_offset_bytes, sizeof(ContentIndicator *));
 }
 
 void content_indicator_destroy(ContentIndicator *content_indicator) {
@@ -351,5 +351,5 @@ void content_indicator_init_buffer(ContentIndicatorsBuffer *content_indicators_b
   if (!content_indicators_buffer) {
     return;
   }
-  buffer_init(&content_indicators_buffer->buffer, CONTENT_INDICATOR_BUFFER_SIZE_BYTES);
+  pbl_buffer_init(&content_indicators_buffer->buffer, CONTENT_INDICATOR_BUFFER_SIZE_BYTES);
 }

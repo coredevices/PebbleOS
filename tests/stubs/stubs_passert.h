@@ -29,6 +29,10 @@ void passert_failed(const char *filename, int line_number, const char *message, 
     ;
 }
 
+void util_assertion_failed(const char *filename, int line) {
+  passert_failed(filename, line, NULL);
+}
+
 void passert_failed_no_message(const char *filename, int line_number) {
   passert_failed(filename, line_number, NULL);
 }

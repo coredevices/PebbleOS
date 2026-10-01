@@ -110,7 +110,6 @@ pbl_clar_test(test_timeline_list_view
     fw/services/timeline/timeline_layout.c
     fw/services/timeline/timeline_resources.c
     fw/shell/system_theme.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/stringlist.c
     fw/util/time/mktime.c
@@ -234,7 +233,6 @@ pbl_clar_test(test_timeline_no_events
     fw/services/timeline/timeline_layout.c
     fw/services/timeline/timeline_resources.c
     fw/shell/system_theme.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/stringlist.c
     fw/util/time/mktime.c

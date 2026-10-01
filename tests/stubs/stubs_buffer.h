@@ -3,28 +3,18 @@
 
 #pragma once
 
-size_t buffer_get_bytes_remaining(Buffer *b) {
+#include "pbl/util/buffer.h"
+
+void pbl_buffer_init(struct pbl_buffer *buffer, size_t capacity) {
+}
+
+size_t pbl_buffer_add(struct pbl_buffer *buffer, const void *data, size_t length) {
   return 0;
 }
 
-size_t buffer_add(Buffer *const b, const uint8_t *const data, const size_t length) {
+size_t pbl_buffer_remove(struct pbl_buffer *buffer, size_t offset, size_t length) {
   return 0;
 }
 
-size_t buffer_remove(Buffer *const b, const size_t offset, const size_t length) {
-  return 0;
-}
-
-Buffer *buffer_create(const size_t size_bytes) {
-  return NULL;
-}
-
-void buffer_init(Buffer *const buffer, const size_t length) {
-}
-
-void buffer_clear(Buffer *const buffer) {
-}
-
-bool buffer_is_empty(Buffer *const buffer) {
-  return true;
+void pbl_buffer_clear(struct pbl_buffer *buffer) {
 }

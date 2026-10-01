@@ -7,7 +7,6 @@ pbl_clar_test(test_ble_ad_parse
     fw/util/rand/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/system/hexdump.c
-    fw/util/buffer.c
     tests/fakes/fake_rtc.c
 )
 

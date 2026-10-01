@@ -5,7 +5,7 @@
 
 #include "applib/ui/content_indicator.h"
 #include "applib/ui/content_indicator_private.h"
-#include "util/buffer.h"
+#include "pbl/util/buffer.h"
 
 // Fakes
 ////////////////////////////////////
@@ -48,7 +48,7 @@ ContentIndicatorConfig helper_get_dummy_config(void) {
 
 void helper_check_buffer_for_content_indicator(size_t index, ContentIndicator *content_indicator) {
   ContentIndicatorsBuffer *content_indicators_buffer = content_indicator_get_current_buffer();
-  Buffer *buffer = &content_indicators_buffer->buffer;
+  struct pbl_buffer *buffer = &content_indicators_buffer->buffer;
   ContentIndicator **content_indicators = (ContentIndicator **)buffer->data;
   cl_assert_equal_p(content_indicators[index], content_indicator);
 }
@@ -102,7 +102,7 @@ void test_content_indicator__init_should_add_to_buffer(void) {
 
 void test_content_indicator__deinit_should_remove_from_buffer(void) {
   ContentIndicatorsBuffer *content_indicators_buffer = content_indicator_get_current_buffer();
-  Buffer *buffer = &content_indicators_buffer->buffer;
+  struct pbl_buffer *buffer = &content_indicators_buffer->buffer;
 
   ContentIndicator content_indicator;
   size_t bytes_written = 0;
@@ -204,16 +204,16 @@ void test_content_indicator__creating_for_scroll_layer(void) {
 
 void test_content_indicator__should_only_be_created_for_scroll_layer_upon_client_access(void) {
   ContentIndicatorsBuffer *content_indicators_buffer = content_indicator_get_current_buffer();
-  Buffer *buffer = &content_indicators_buffer->buffer;
+  struct pbl_buffer *buffer = &content_indicators_buffer->buffer;
   // At the start of the test, the buffer should be empty
-  cl_assert(buffer_is_empty(buffer));
+  cl_assert_equal_i(buffer->bytes_written, 0);
 
   ScrollLayer scroll_layer;
   // Trying to access the ContentIndicator for this ScrollLayer should return NULL because we
   // haven't tried to access it as the client yet
   cl_assert_equal_p(content_indicator_get_for_scroll_layer(&scroll_layer), NULL);
   // And the buffer should still be empty
-  cl_assert(buffer_is_empty(buffer));
+  cl_assert_equal_i(buffer->bytes_written, 0);
 
   // Now we try to access it as the client, which should actually create the ContentIndicator
   ContentIndicator *content_indicator =

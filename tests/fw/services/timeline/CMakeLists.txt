@@ -184,7 +184,6 @@ pbl_clar_test(test_timeline_layouts
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/buffer.c
     fw/util/crc8.c
     fw/util/legacy_checksum.c
     fw/util/stringlist.c

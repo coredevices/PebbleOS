@@ -34,3 +34,5 @@ pbl_clar_test(test_misc)
 pbl_clar_test(test_ratio)
 
 pbl_clar_test(test_base64)
+
+pbl_clar_test(test_buffer)

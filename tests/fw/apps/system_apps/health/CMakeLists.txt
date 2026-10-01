@@ -87,7 +87,6 @@ pbl_clar_test(test_health_card_view
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
@@ -194,7 +193,6 @@ pbl_clar_test(test_health_activity_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
@@ -296,7 +294,6 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
@@ -398,7 +395,6 @@ pbl_clar_test(test_health_hr_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
@@ -500,7 +496,6 @@ pbl_clar_test(test_health_activity_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
@@ -601,7 +596,6 @@ pbl_clar_test(test_health_sleep_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
@@ -702,7 +696,6 @@ pbl_clar_test(test_health_hr_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c
@@ -803,7 +796,6 @@ pbl_clar_test(test_health_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    fw/util/buffer.c
     fw/util/stats.c
     fw/util/time/mktime.c
     fw/util/time/time.c

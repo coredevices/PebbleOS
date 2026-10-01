@@ -11,7 +11,7 @@
 #include "resource/resource.h"
 #include "resource/resource_ids.auto.h"
 #include "pbl/services/timeline/timeline_resources.h"
-#include "util/buffer.h"
+#include "pbl/util/buffer.h"
 #include "applib/graphics/raw_image.h"
 #include "pbl/util/hash.h"
 #include "pbl/util/math.h"

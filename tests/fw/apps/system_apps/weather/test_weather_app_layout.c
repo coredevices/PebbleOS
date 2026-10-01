@@ -14,7 +14,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 #include "shell/prefs.h"
 #include "shell/system_theme.h"
-#include "util/buffer.h"
+#include "pbl/util/buffer.h"
 #include "applib/graphics/raw_image.h"
 #include "pbl/util/hash.h"
 #include "pbl/util/math.h"

@@ -23,7 +23,7 @@
 
 #include "pbl/kernel/compiler.h"
 #include "pbl/util/testing.h"
-#include "util/buffer.h"
+#include "pbl/util/buffer.h"
 #include "pbl/util/size.h"
 
 #include <string.h>
@@ -75,10 +75,10 @@ static void prv_op_timeout_kick(void);
 typedef struct {
   uint8_t command_id;
   union {
-    Buffer buffer;
-    // `Buffer` has a variable sized uint8_t at the end of the struct. `buffer_storage` adds
-    // the required backing storage space right after it:
-    uint8_t buffer_storage[sizeof(Buffer) + NOTIFICATION_ATTRIBUTES_MAX_BUFFER_LENGTH];
+    struct pbl_buffer buffer;
+    // `struct pbl_buffer` has a variable sized uint8_t at the end of the struct. `buffer_storage`
+    // adds the required backing storage space right after it:
+    uint8_t buffer_storage[sizeof(struct pbl_buffer) + NOTIFICATION_ATTRIBUTES_MAX_BUFFER_LENGTH];
   };
 } ReassemblyContext;
 
@@ -638,7 +638,7 @@ static void prv_start_temp_notification_connection_delay_timer(void) {
 
 static void prv_reset_reassembly_context(void) {
   memset(s_ancs_client->attributes, 0, sizeof(s_ancs_client->attributes));
-  buffer_clear(&s_ancs_client->reassembly_ctx.buffer);
+  pbl_buffer_clear(&s_ancs_client->reassembly_ctx.buffer);
 }
 
 static bool prv_is_reassembly_in_progress(void) {
@@ -660,7 +660,7 @@ static bool prv_reassembly_start(const uint8_t *const data, const size_t length)
     reassembly_ctx->command_id = cmd_header->command_id;
 
     // Append the partial response to the reassembly buffer:
-    const int bytes_written = buffer_add(&reassembly_ctx->buffer, data, length);
+    const int bytes_written = pbl_buffer_add(&reassembly_ctx->buffer, data, length);
     // If this gets hit, NOTIFICATION_ATTRIBUTES_MAX_BUFFER_LENGTH is too small:
     PBL_ASSERTN(bytes_written);
 
@@ -671,7 +671,7 @@ static bool prv_reassembly_start(const uint8_t *const data, const size_t length)
 
 static bool prv_reassembly_append(const uint8_t *const data, const size_t length) {
   PBL_ASSERTN(s_ancs_client->state == ANCSClientStateReassemblingNotification);
-  return (buffer_add(&s_ancs_client->reassembly_ctx.buffer, data, length) != 0);
+  return (pbl_buffer_add(&s_ancs_client->reassembly_ctx.buffer, data, length) != 0);
 }
 
 static uint8_t prv_current_command_id(const uint8_t *data) {
@@ -794,7 +794,7 @@ fail:
 // -----------------------------------------------------------------------------
 // Get Notification Attributes request
 
-static void prv_add_attributes_to_request(Buffer *request_buffer) {
+static void prv_add_attributes_to_request(struct pbl_buffer *request_buffer) {
   static const struct PBL_PACKED {
     NotificationAttributeID positive_action : 8;
     NotificationAttributeID negative_action : 8;
@@ -822,7 +822,8 @@ static void prv_add_attributes_to_request(Buffer *request_buffer) {
     .date = NotificationAttributeIDDate,
   };
 
-  buffer_add(request_buffer, (const uint8_t *)&finishing_attributes, sizeof(finishing_attributes));
+  pbl_buffer_add(request_buffer, (const uint8_t *)&finishing_attributes,
+                 sizeof(finishing_attributes));
 }
 
 static void prv_get_app_attributes(const ANCSAttribute *app_id) {
@@ -875,9 +876,11 @@ static void prv_get_notification_attributes(uint32_t uid) {
   };
 
   static const size_t request_max_size = 32;
-  Buffer *request_buffer = buffer_create(request_max_size);
+  struct pbl_buffer *request_buffer =
+      kernel_malloc_check(sizeof(*request_buffer) + request_max_size);
+  pbl_buffer_init(request_buffer, request_max_size);
   const size_t written_size =
-      buffer_add(request_buffer, (const uint8_t *)&cmd_header, sizeof(cmd_header));
+      pbl_buffer_add(request_buffer, (const uint8_t *)&cmd_header, sizeof(cmd_header));
   PBL_ASSERTN(written_size == sizeof(cmd_header));
 
   prv_add_attributes_to_request(request_buffer);
@@ -1256,8 +1259,8 @@ void ancs_handle_ios9_or_newer_detected(void) {
 void ancs_create(void) {
   PBL_ASSERTN(s_ancs_client == NULL);
   s_ancs_client = (ANCSClient *)kernel_zalloc_check(sizeof(ANCSClient));
-  buffer_init(&s_ancs_client->reassembly_ctx.buffer,
-              sizeof(s_ancs_client->reassembly_ctx.buffer_storage));
+  pbl_buffer_init(&s_ancs_client->reassembly_ctx.buffer,
+                  sizeof(s_ancs_client->reassembly_ctx.buffer_storage));
   ancs_app_name_storage_init();
 }
 

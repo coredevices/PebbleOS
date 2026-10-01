@@ -206,7 +206,6 @@ pbl_clar_test(test_modal_touch_nav
 pbl_clar_test(test_content_indicator
   SOURCES
     fw/applib/graphics/gtypes.c
-    fw/util/buffer.c
     fw/applib/ui/layer.c
     fw/applib/ui/content_indicator.c
 )

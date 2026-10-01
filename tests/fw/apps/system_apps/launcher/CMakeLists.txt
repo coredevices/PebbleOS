@@ -88,7 +88,6 @@ pbl_clar_test(test_launcher_menu_layer
     fw/services/blob_db/app_glance_db.c
     fw/services/filesystem/app_file.c
     fw/services/timeline/attribute.c
-    fw/util/buffer.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_settings_file.c
