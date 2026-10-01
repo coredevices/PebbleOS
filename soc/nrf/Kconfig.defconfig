@@ -48,4 +48,8 @@ config NIMBLE_MSYS_1_BLOCK_COUNT
 config NIMBLE_MSYS_1_BLOCK_SIZE
     default 304
 
+
+config NUM_IRQS
+    default 48
+
 endif # SOC_NRF52

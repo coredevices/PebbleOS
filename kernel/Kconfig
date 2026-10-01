@@ -20,6 +20,13 @@ config KERNEL_IRQ_PRIO_MAX_SYSCALL
 	int "Highest NVIC priority allowed to call into the kernel"
 	default 191
 
+config NUM_IRQS
+	int
+	range 1 512
+	help
+	  Number of SoC interrupt lines, i.e. vector table entries past the
+	  core exceptions. Defaulted per SoC in soc/*/Kconfig.defconfig.
+
 config KERNEL_NUM_PRIORITIES
 	int "Number of thread priorities"
 	default 5

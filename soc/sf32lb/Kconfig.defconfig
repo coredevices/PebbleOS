@@ -47,4 +47,8 @@ config FIRMWARE_OFFSET
 config NIMBLE_BLE_TRANSPORT_ACL_COUNT
     default 60
 
+
+config NUM_IRQS
+    default 99
+
 endif # SOC_SF32LB52

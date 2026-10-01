@@ -29,4 +29,8 @@ config SRAM_SIZE
     default 0x3ff00 if PLATFORM_FLINT
     default 0x7fc00
 
+
+config NUM_IRQS
+    default 13
+
 endif # SOC_QEMU

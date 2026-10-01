@@ -1,0 +1,77 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+//! SF32LB52x HCPU IRQ lines, from its CMSIS IRQn_Type.
+
+#pragma once
+
+#define PBL_SOC_IRQN_AON       0
+#define PBL_SOC_IRQN_BLE_MAC   1
+#define PBL_SOC_IRQN_DMAC2_CH1 2
+#define PBL_SOC_IRQN_DMAC2_CH2 3
+#define PBL_SOC_IRQN_DMAC2_CH3 4
+#define PBL_SOC_IRQN_DMAC2_CH4 5
+#define PBL_SOC_IRQN_DMAC2_CH5 6
+#define PBL_SOC_IRQN_DMAC2_CH6 7
+#define PBL_SOC_IRQN_DMAC2_CH7 8
+#define PBL_SOC_IRQN_DMAC2_CH8 9
+#define PBL_SOC_IRQN_PATCH     10
+#define PBL_SOC_IRQN_DM_MAC    11
+#define PBL_SOC_IRQN_USART4    12
+#define PBL_SOC_IRQN_USART5    13
+#define PBL_SOC_IRQN_SECU2     14
+#define PBL_SOC_IRQN_BT_MAC    15
+#define PBL_SOC_IRQN_BTIM3     16
+#define PBL_SOC_IRQN_BTIM4     17
+#define PBL_SOC_IRQN_PTC2      18
+#define PBL_SOC_IRQN_LPTIM3    19
+#define PBL_SOC_IRQN_GPIO2     20
+#define PBL_SOC_IRQN_HPSYS0    21
+#define PBL_SOC_IRQN_HPSYS1    22
+#define PBL_SOC_IRQN_LPTIM1    46
+#define PBL_SOC_IRQN_LPTIM2    47
+#define PBL_SOC_IRQN_PMUC      48
+#define PBL_SOC_IRQN_RTC       49
+#define PBL_SOC_IRQN_DMAC1_CH1 50
+#define PBL_SOC_IRQN_DMAC1_CH2 51
+#define PBL_SOC_IRQN_DMAC1_CH3 52
+#define PBL_SOC_IRQN_DMAC1_CH4 53
+#define PBL_SOC_IRQN_DMAC1_CH5 54
+#define PBL_SOC_IRQN_DMAC1_CH6 55
+#define PBL_SOC_IRQN_DMAC1_CH7 56
+#define PBL_SOC_IRQN_DMAC1_CH8 57
+#define PBL_SOC_IRQN_LCPU2HCPU 58
+#define PBL_SOC_IRQN_USART1    59
+#define PBL_SOC_IRQN_SPI1      60
+#define PBL_SOC_IRQN_I2C1      61
+#define PBL_SOC_IRQN_EPIC      62
+#define PBL_SOC_IRQN_LCDC1     63
+#define PBL_SOC_IRQN_I2S1      64
+#define PBL_SOC_IRQN_GPADC     65
+#define PBL_SOC_IRQN_EFUSEC    66
+#define PBL_SOC_IRQN_AES       67
+#define PBL_SOC_IRQN_PTC1      68
+#define PBL_SOC_IRQN_TRNG      69
+#define PBL_SOC_IRQN_GPTIM1    70
+#define PBL_SOC_IRQN_GPTIM2    71
+#define PBL_SOC_IRQN_BTIM1     72
+#define PBL_SOC_IRQN_BTIM2     73
+#define PBL_SOC_IRQN_USART2    74
+#define PBL_SOC_IRQN_SPI2      75
+#define PBL_SOC_IRQN_I2C2      76
+#define PBL_SOC_IRQN_EXTDMA    77
+#define PBL_SOC_IRQN_I2C4      78
+#define PBL_SOC_IRQN_SDMMC1    79
+#define PBL_SOC_IRQN_PDM1      82
+#define PBL_SOC_IRQN_GPIO1     84
+#define PBL_SOC_IRQN_MPI1      85
+#define PBL_SOC_IRQN_MPI2      86
+#define PBL_SOC_IRQN_EZIP      89
+#define PBL_SOC_IRQN_AUDPRC    90
+#define PBL_SOC_IRQN_TSEN      91
+#define PBL_SOC_IRQN_USBC      92
+#define PBL_SOC_IRQN_I2C3      93
+#define PBL_SOC_IRQN_ATIM1     94
+#define PBL_SOC_IRQN_USART3    95
+#define PBL_SOC_IRQN_AUD_HP    96
+#define PBL_SOC_IRQN_SECU1     98
