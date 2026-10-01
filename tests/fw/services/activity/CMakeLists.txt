@@ -6,7 +6,6 @@ pbl_clar_test(test_activity
     fw/applib/health_service.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/base64.c
     fw/util/stats.c
     fw/util/time/time.c
     fw/util/time/mktime.c
@@ -34,7 +33,6 @@ pbl_clar_test(test_activity
 
 pbl_clar_test(test_activity_insights
   SOURCES
-    fw/util/base64.c
     fw/util/crc8.c
     fw/util/stats.c
     fw/util/stringlist.c
@@ -71,7 +69,6 @@ pbl_clar_test(test_activity_algorithm_kraepelin
   SOURCES
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/base64.c
     fw/util/crc8.c
     fw/util/shared_circular_buffer.c
     fw/util/time/time.c

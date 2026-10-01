@@ -15,7 +15,7 @@
 #include "pbl/services/settings/settings_file.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/base64.h"
+#include "pbl/util/base64.h"
 #include "pbl/util/math.h"
 #include "util/shared_circular_buffer.h"
 #include "util/time/time.h"
@@ -234,15 +234,15 @@ static bool prv_log_minute_file_minutes_cb(SettingsFile *file, SettingsRecordInf
   uint32_t chunk_size = sizeof(AlgMinuteFileRecord) / 2;
   uint8_t *binary_data = (uint8_t *)&chunk;
 
-  int32_t num_chars = base64_encode(base64_buf, sizeof(base64_buf), binary_data, chunk_size);
+  int32_t num_chars = pbl_base64_encode(base64_buf, sizeof(base64_buf), binary_data, chunk_size);
   PBL_ASSERTN(num_chars + 1 < (int)sizeof(base64_buf));
   // NOTE: we use pbl_log_sync instead of PBL_LOG because we don't want these messages
   // hashed. Hashing them doesn't save any space and requires that you unhash before you can
   // parse the data out of the logs.
   pbl_log_sync(LOG_LEVEL_INFO, __FILE_NAME__, __LINE__, "SLP: %s", base64_buf);
 
-  num_chars = base64_encode(base64_buf, sizeof(base64_buf), binary_data + chunk_size,
-                            sizeof(AlgMinuteFileRecord) - chunk_size);
+  num_chars = pbl_base64_encode(base64_buf, sizeof(base64_buf), binary_data + chunk_size,
+                                sizeof(AlgMinuteFileRecord) - chunk_size);
   PBL_ASSERTN(num_chars + 1 < (int)sizeof(base64_buf));
   pbl_log_sync(LOG_LEVEL_INFO, __FILE_NAME__, __LINE__, "SLP: %s", base64_buf);
   return true;

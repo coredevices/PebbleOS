@@ -20,7 +20,7 @@
 #include "syscall/syscall_internal.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/base64.h"
+#include "pbl/util/base64.h"
 #include "pbl/util/math.h"
 #include "pbl/util/units.h"
 
@@ -1081,11 +1081,11 @@ static void prv_collect_raw_samples(AccelRawData *accel_data, uint32_t num_sampl
       uint32_t chunk_size = sizeof(data->record) / 2;
       uint8_t *binary_data = (uint8_t *)&data->record;
       int32_t num_chars =
-          base64_encode(data->base64_buf, sizeof(data->base64_buf), binary_data, chunk_size);
+          pbl_base64_encode(data->base64_buf, sizeof(data->base64_buf), binary_data, chunk_size);
       PBL_ASSERTN(num_chars + 1 < (int)sizeof(data->base64_buf));
       pbl_log(LOG_LEVEL_INFO, __FILE_NAME__, __LINE__, "RAW: %s", data->base64_buf);
-      num_chars = base64_encode(data->base64_buf, sizeof(data->base64_buf),
-                                binary_data + chunk_size, sizeof(data->record) - chunk_size);
+      num_chars = pbl_base64_encode(data->base64_buf, sizeof(data->base64_buf),
+                                    binary_data + chunk_size, sizeof(data->record) - chunk_size);
       PBL_ASSERTN(num_chars + 1 < (int)sizeof(data->base64_buf));
       pbl_log(LOG_LEVEL_INFO, __FILE_NAME__, __LINE__, "RAW: %s", data->base64_buf);
 
