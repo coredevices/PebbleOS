@@ -216,9 +216,12 @@ static HAL_StatusTypeDef prv_display_update_start(void) {
     roi_y1 = PBL_DISPLAY_HEIGHT - 1 - s_update_y0;
   }
 
+  // The LCDC pairs canvas and layer lines by position, so the layer must
+  // cover exactly the ROI
   HAL_LCDC_SetROIArea(&state->hlcdc, 0, roi_y0, PBL_DISPLAY_WIDTH - 1, roi_y1);
-  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_framebuffer, 0, 0,
-                        PBL_DISPLAY_WIDTH - 1, PBL_DISPLAY_HEIGHT - 1);
+  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT,
+                        &s_framebuffer[s_update_y0 * PBL_DISPLAY_WIDTH], 0, roi_y0,
+                        PBL_DISPLAY_WIDTH - 1, roi_y1);
   return HAL_LCDC_SendLayerData_IT(&state->hlcdc);
 }
 
