@@ -41,4 +41,10 @@ config HAL_SIFLI_LCPU_CONFIG
       Enable the LCPU_CONFIG (LCPU configuration exchange) SiFli
       HAL module.
 
+config HAL_SIFLI_MPI_PSRAM
+    bool "MPI PSRAM HAL module"
+    help
+      Enable the MPI (memory peripheral interface) PSRAM SiFli HAL
+      module driver.
+
 endif # HAL_SIFLI
