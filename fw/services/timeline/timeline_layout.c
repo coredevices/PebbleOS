@@ -296,7 +296,8 @@ static void prv_init_icon(TimelineLayout *timeline_layout, const GRect *icon_fra
   if (timeline_layout->layout_layer.mode == LayoutLayerModeCard) {
     kino_layer_set_alignment(icon_layer, timeline_layout->impl->card_icon_align);
   } else if (PBL_IF_ROUND_ELSE(timeline_layout->layout_layer.mode == LayoutLayerModePeek, false)) {
-    kino_layer_set_alignment(icon_layer, GAlignLeft);
+    kino_layer_set_alignment(icon_layer,
+                             timeline_layer_sidebar_is_on_right() ? GAlignLeft : GAlignRight);
   }
   layer_add_child(&timeline_layout->layout_layer.layer, &icon_layer->layer);
   kino_layer_play(icon_layer);
@@ -610,11 +611,14 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 
   if (is_peek) {
     vertical_node->container.size.w = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
+    const bool icon_on_right = timeline_layer_sidebar_is_on_right();
     const size_t num_horizontal_nodes = 2;
     GTextNodeHorizontal *horizontal_node =
         graphics_text_node_create_horizontal(num_horizontal_nodes);
-    graphics_text_node_container_add_child(&horizontal_node->container,
-                                           &vertical_node->container.node);
+    if (icon_on_right) {
+      graphics_text_node_container_add_child(&horizontal_node->container,
+                                             &vertical_node->container.node);
+    }
     const size_t num_horizontal_icon_nodes = 1;
     const size_t num_vertical_icon_nodes = 1;
     GTextNodeHorizontal *horizontal_icon_node =
@@ -624,16 +628,22 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     graphics_text_node_container_add_child(&horizontal_icon_node->container,
                                            &vertical_icon_node->container.node);
     horizontal_icon_node->horizontal_alignment = GTextAlignmentCenter;
+    horizontal_icon_node->container.size.w = TIMELINE_PEEK_ICON_BOX_WIDTH;
     vertical_icon_node->vertical_alignment = GVerticalAlignmentCenter;
     GTextNodeCustom *icon_node = timeline_layout_create_icon_node(layout);
     const unsigned int num_concurrent = layout->info->num_concurrent;
     const unsigned int concurrent_height = timeline_peek_get_concurrent_height(num_concurrent);
-    gpoint_add_eq(
-        &icon_node->node.offset,
-        GPoint(PBL_IF_RECT_ELSE(1, 2), PBL_IF_RECT_ELSE(0, -1) - (concurrent_height / 2)));
+    const int16_t icon_offset_x = PBL_IF_RECT_ELSE(1, 2);
+    gpoint_add_eq(&icon_node->node.offset,
+                  GPoint(icon_on_right ? icon_offset_x : -icon_offset_x,
+                         PBL_IF_RECT_ELSE(0, -1) - (concurrent_height / 2)));
     graphics_text_node_container_add_child(&vertical_icon_node->container, &icon_node->node);
     graphics_text_node_container_add_child(&horizontal_node->container,
                                            &horizontal_icon_node->container.node);
+    if (!icon_on_right) {
+      graphics_text_node_container_add_child(&horizontal_node->container,
+                                             &vertical_node->container.node);
+    }
     return &horizontal_node->container.node;
   }
 

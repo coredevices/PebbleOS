@@ -3,6 +3,7 @@
 
 #include "peek_private.h"
 
+#include "applib/ui/action_bar_layer_private.h"
 #include "applib/ui/property_animation.h"
 #include "process_management/app_manager.h"
 #include "applib/ui/window_stack.h"
@@ -49,7 +50,9 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
   graphics_fill_rect(ctx, &frame);
 
   // Draw the icon background
-  frame.origin.x += DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
+  if (action_bar_layer_is_on_right()) {
+    frame.origin.x += DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
+  }
   frame.size.w = TIMELINE_PEEK_ICON_BOX_WIDTH;
   graphics_context_set_fill_color(ctx, TIMELINE_FUTURE_COLOR);
   graphics_fill_rect(ctx, &frame);
