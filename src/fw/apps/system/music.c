@@ -48,9 +48,10 @@
 // Unified round media layout: a full-screen backdrop, a progress arc along the bezel whose gap
 // hugs the action bar, a centred artist / title / times stack across the widest band of the
 // circle, and the state icon anchoring the bottom.
-#define ART_ROUND_ARTIST_Y (DISP_ROWS / 2 - 70)
-#define ART_ROUND_TITLE_Y  (DISP_ROWS / 2 - 48) // region symmetric about the display centre
-#define ART_ROUND_TITLE_H  96 // up to three Gothic 28 Bold lines, ellipsised beyond
+#define ART_ROUND_CLOCK_Y  10
+#define ART_ROUND_ARTIST_Y (DISP_ROWS / 2 - 76)
+#define ART_ROUND_TITLE_Y  (DISP_ROWS / 2 - 42)
+#define ART_ROUND_TITLE_H  90 // up to three Gothic 28 Bold lines, ellipsised beyond
 #define ART_ROUND_TIMES_Y  (DISP_ROWS / 2 + 58)
 // Symmetric side margin for the text stack: centred on the true display centre, and wide lines
 // still clear the action bar's crescent on the right.
@@ -1091,7 +1092,7 @@ static GRect prv_art_artist_rect(void) {
   return GRect(0, art_bottom - 26, content_w, 26);
 #else
   return GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_ARTIST_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN,
-               24);
+               30);
 #endif
 }
 
@@ -1172,6 +1173,21 @@ static void prv_title_update_proc(Layer *layer, GContext *ctx) {
 }
 
 #if MUSIC_ROUND_MEDIA_LAYOUT
+static void prv_round_clock_update_proc(Layer *layer, GContext *ctx) {
+  MusicAppData *data = app_state_get_user_data();
+  char time[TITLE_TEXT_BUFFER_SIZE];
+  clock_copy_time_string(time, sizeof(time));
+  const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24);
+  if (data->has_album_art) {
+    prv_draw_outlined_text(ctx, time, font, layer->bounds, GTextOverflowModeTrailingEllipsis,
+                           GTextAlignmentCenter);
+  } else {
+    graphics_context_set_text_color(ctx, GColorBlack);
+    graphics_draw_text(ctx, time, font, layer->bounds, GTextOverflowModeTrailingEllipsis,
+                       GTextAlignmentCenter, NULL);
+  }
+}
+
 //! Fill part of the bezel arc band. Degrees run clockwise from 12 o'clock and the range may pass
 //! through 360 (the fill is split there).
 static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_deg,
@@ -1179,13 +1195,16 @@ static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_
   if (to_deg <= from_deg) {
     return;
   }
+  // The radial primitive stops half a pixel inside its bounds; overlap the display's clip edge.
+  const GRect ring_bounds = grect_inset(*bounds, GEdgeInsets(-1));
+  const uint16_t thickness = ART_ROUND_RING_THICKNESS + 1;
   if (to_deg <= 360) {
-    graphics_fill_radial(ctx, *bounds, GOvalScaleModeFitCircle, ART_ROUND_RING_THICKNESS,
+    graphics_fill_radial(ctx, ring_bounds, GOvalScaleModeFitCircle, thickness,
                          DEG_TO_TRIGANGLE(from_deg), DEG_TO_TRIGANGLE(to_deg));
   } else {
-    graphics_fill_radial(ctx, *bounds, GOvalScaleModeFitCircle, ART_ROUND_RING_THICKNESS,
+    graphics_fill_radial(ctx, ring_bounds, GOvalScaleModeFitCircle, thickness,
                          DEG_TO_TRIGANGLE(from_deg), TRIG_MAX_ANGLE);
-    graphics_fill_radial(ctx, *bounds, GOvalScaleModeFitCircle, ART_ROUND_RING_THICKNESS, 0,
+    graphics_fill_radial(ctx, ring_bounds, GOvalScaleModeFitCircle, thickness, 0,
                          DEG_TO_TRIGANGLE(to_deg - 360));
   }
 }
@@ -1212,8 +1231,8 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
     char times[24];
     snprintf(times, sizeof(times), "%s / %s", data->position_buffer, data->length_buffer);
     const GRect box =
-        GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 22);
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+        GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 30);
+    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
     if (data->has_album_art) {
       prv_draw_outlined_text(ctx, times, font, box, GTextOverflowModeFill, GTextAlignmentCenter);
     } else {
@@ -1409,7 +1428,9 @@ static void prv_title_restore(MusicAppData *data) {
 // Place the artist as a centred, outlined single line over the bottom of the cover.
 static void prv_artist_setup_art(MusicAppData *data) {
   const GRect ar = prv_art_artist_rect();
-  text_layer_set_font(&data->artist_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_font(&data->artist_text_layer,
+                      fonts_get_system_font(MUSIC_ROUND_MEDIA_LAYOUT ? FONT_KEY_GOTHIC_24_BOLD
+                                                                     : FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(&data->artist_text_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(&data->artist_text_layer, GTextOverflowModeTrailingEllipsis);
   layer_set_frame(&data->artist_text_layer.layer, &ar);
@@ -1430,7 +1451,7 @@ static void prv_artist_restore(MusicAppData *data) {
 }
 
 //! Reflect the current art state: show/hide the cover, lay out the artist (outlined, over the art)
-//! and the scrolling title, and swap the clock to the outlined big style so it stays legible over
+//! and the scrolling title, and outline the clock so it stays legible over
 //! the cover. A full-window repaint clears the moved layers' old pixels.
 static void prv_apply_art_appearance(MusicAppData *data) {
   const GBitmap *art = music_album_art_lock();
@@ -1472,10 +1493,11 @@ static void prv_apply_art_appearance(MusicAppData *data) {
   // The bezel arc + drawn times replace the stock bar and time labels permanently on round.
   prv_update_layout(data);
 #endif
-  // The big clock belongs to the media layout. Over art it's white with a black outline (matching
-  // the artist) so the time reads over the cover; in the media layout without art it's plain big
-  // black. The stock (rectangular, no-art) layout keeps the normal status-bar clock.
+  // The round clock uses a lighter font below the bezel; art keeps its contrasting outline.
   StatusBarLayerMode clock_mode;
+#if MUSIC_ROUND_MEDIA_LAYOUT
+  clock_mode = StatusBarLayerModeClock;
+#else
   if (!prv_use_media_layout(data)) {
     clock_mode = StatusBarLayerModeClock;
   } else if (data->has_album_art) {
@@ -1483,9 +1505,14 @@ static void prv_apply_art_appearance(MusicAppData *data) {
   } else {
     clock_mode = StatusBarLayerModeClockLargeBold;
   }
+#endif
   status_bar_layer_set_colors(&data->status_layer, GColorClear,
                               data->has_album_art ? GColorWhite : GColorBlack);
   status_bar_layer_set_mode(&data->status_layer, clock_mode);
+#if MUSIC_ROUND_MEDIA_LAYOUT
+  const GRect clock_frame = GRect(0, ART_ROUND_CLOCK_Y, DISP_COLS, 30);
+  layer_set_frame(&data->status_layer.layer, &clock_frame);
+#endif
   layer_mark_dirty(&data->window.layer);
 }
 
@@ -1588,6 +1615,11 @@ static void prv_init_ui(Window *window) {
 
   StatusBarLayer *status_layer = &data->status_layer;
   status_bar_layer_init(status_layer);
+#if MUSIC_ROUND_MEDIA_LAYOUT
+  layer_set_update_proc(&status_layer->layer, prv_round_clock_update_proc);
+  // The custom clock needs more height than the stock status bar.
+  status_layer->layer.property_changed_proc = NULL;
+#endif
   GRect status_layer_frame = status_layer->layer.frame;
   const int16_t STATUS_BAR_LAYER_WIDTH =
       PBL_IF_RECT_ELSE(WINDOW_SIZE.w - ACTION_BAR_WIDTH, WINDOW_SIZE.w);
