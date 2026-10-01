@@ -148,8 +148,8 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
   GColor8 *output = (GColor8 *)(destination_data_row_info.data + x1.integer);
 
   // First pixel with blending if fraction is different than 0
-  const uint16_t data_row_offset =
-      (uint16_t)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
+  const unsigned int data_row_offset =
+      (unsigned int)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
   if (x1.fraction != 0) {
     graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, *input, x1.integer,
                                             (uint8_t)(FIXED_S16_3_ONE.raw_value - x1.fraction));
@@ -208,8 +208,8 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
   GColor8 *output = (GColor8 *)(destination_data_row_info.data + x);
 
   // first pixel with blending
-  const uint16_t data_row_offset =
-      (uint16_t)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
+  const unsigned int data_row_offset =
+      (unsigned int)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
   if (y1.fraction != 0) {
     // Only draw the pixel if its within the bitmap data row range
     if (WITHIN(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {

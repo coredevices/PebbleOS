@@ -43,8 +43,8 @@ static const uint8_t s_corner_shape[] = {3, 3, 2, 1};
 #define CORNER_MAX_WIDTH 3
 static uint8_t s_saved_corners[CORNER_SAVE_ROWS * 2]
                               [CORNER_MAX_WIDTH * 2]; // [row][left+right pixels]
-static uint8_t s_dirty_y0;
-static uint8_t s_dirty_y1;
+static uint16_t s_dirty_y0;
+static uint16_t s_dirty_y1;
 #endif
 
 //! display_update get next line callback
