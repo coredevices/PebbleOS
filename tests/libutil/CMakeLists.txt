@@ -13,8 +13,6 @@ pbl_clar_test(test_string)
 
 pbl_clar_test(test_math_fixed)
 
-pbl_clar_test(test_crc32)
-
 pbl_clar_test(test_uuid)
 
 pbl_clar_test(test_circular_cache)

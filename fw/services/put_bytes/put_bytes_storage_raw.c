@@ -92,7 +92,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *sta
 
         // TODO: We are perpetuating the defective crc here. Maybe this is as good an excuse as any
         // for the mobile apps to implement flash_crc32
-        uint32_t crc = flash_calculate_legacy_defective_checksum(stop_read_address, bytes_written);
+        uint32_t crc = flash_crc32_legacy(stop_read_address, bytes_written);
 
         *status = (PbInstallStatus){.num_bytes_written = bytes_written, .crc_of_bytes = crc};
 
@@ -159,7 +159,7 @@ uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType 
   const unsigned int start_address = layout->start_address + layout->start_offset;
   const unsigned int length = storage->current_offset - layout->start_offset;
   if (crc_type == PutBytesCrcType_Legacy) {
-    return flash_calculate_legacy_defective_checksum(start_address, length);
+    return flash_crc32_legacy(start_address, length);
   }
 
   return flash_crc32(start_address, length);

@@ -10,8 +10,6 @@ pbl_clar_test(test_alerts_preferences
     fw/services/notifications/alerts_preferences.c
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
   OVERRIDES dummy_board
 )
@@ -31,8 +29,6 @@ pbl_clar_test(test_notification_storage
     fw/services/timeline/attribute.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
   OVERRIDES dummy_board

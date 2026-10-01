@@ -10,7 +10,7 @@
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "pbl/util/crc32.h"
+#include "pbl/crc/crc.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -370,7 +370,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
   const unsigned int chunk_size = 128;
   uint8_t buffer[chunk_size];
 
-  uint32_t crc = crc32(0, NULL, 0);
+  uint32_t crc = 0;
   while (bytes_read < cmd->crc.length) {
     uint32_t read_len = MIN(cmd->crc.length - bytes_read, chunk_size);
     int ret = pulse_fd->impl->read_proc(buffer, cmd->crc.address + bytes_read, read_len,
@@ -382,7 +382,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
     }
 
     bytes_read += ret;
-    crc = crc32(crc, buffer, read_len);
+    crc = pbl_crc32(crc, buffer, read_len);
   }
 
   CRCResponse *resp = pulse_reliable_send_begin(PULSE2_BULKIO_PROTOCOL);

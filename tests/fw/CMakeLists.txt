@@ -28,8 +28,6 @@ pbl_clar_test(test_i18n
     fw/services/filesystem/pfs.c
     fw/services/filesystem/app_file.c
     tests/fakes/fake_bootbits.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -128,8 +126,6 @@ pbl_clar_test(test_alarm
     fw/services/timeline/item.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
   DEFINES CAPABILITY_HAS_HEALTH_TRACKING=0
   OVERRIDES dummy_board
@@ -155,8 +151,6 @@ pbl_clar_test(test_alarm_smart
     fw/services/timeline/item.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -185,8 +179,6 @@ pbl_clar_test(test_alerts
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
     tests/fakes/fake_battery.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
   OVERRIDES dummy_board
@@ -218,8 +210,6 @@ pbl_clar_test(test_data_logging
     fw/services/data_logging/dls_syscalls.c
     fw/services/regular_timer/service.c
     tests/fakes/fake_spi_flash.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/services/filesystem/pfs.c
@@ -292,8 +282,6 @@ pbl_clar_test(test_timeline_api
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/item.c
     fw/services/timeline/timeline.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/kernel/rand.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c

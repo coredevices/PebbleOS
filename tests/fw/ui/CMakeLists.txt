@@ -306,8 +306,6 @@ pbl_clar_test(test_menu_layer_system_cells
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -379,8 +377,6 @@ pbl_clar_test(test_action_menu_window
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -463,8 +459,6 @@ pbl_clar_test(test_notification_window
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -558,8 +552,6 @@ pbl_clar_test(test_simple_dialog
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -645,8 +637,6 @@ pbl_clar_test(test_emoji_fonts
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -715,8 +705,6 @@ pbl_clar_test(test_expandable_dialog
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -812,8 +800,6 @@ pbl_clar_test(test_selection_windows
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -907,8 +893,6 @@ pbl_clar_test(test_timeline_peek
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c
@@ -1005,8 +989,6 @@ pbl_clar_test(test_option_menu_window
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c

@@ -9,7 +9,7 @@
 #include "kernel/pbl_malloc.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "pbl/util/crc32.h"
+#include "pbl/crc/crc.h"
 
 #include <pbl/btutil/sm_util.h>
 #include "pbl/kernel/mutex.h"
@@ -95,7 +95,7 @@ static bool prv_field_valid(const uint8_t *field, size_t field_size) {
 
   const uint32_t field_crc = *(uint32_t *)field;
   const bool valid_crc =
-      (field_crc == crc32(CRC32_INIT, SPRF_FIELD_DATA(field), SPRF_FIELD_DATA_SIZE(field_size)));
+      (field_crc == pbl_crc32(0, SPRF_FIELD_DATA(field), SPRF_FIELD_DATA_SIZE(field_size)));
   return valid_crc;
 }
 
@@ -208,7 +208,7 @@ static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, 
   const size_t field_data_size = SPRF_FIELD_DATA_SIZE(field_size);
   const uint32_t old_crc = FIELD_CRC_FROM_DATA(data, offset);
   const uint32_t new_crc =
-      (calc_crc) ? crc32(CRC32_INIT, SPRF_FIELD_DATA(field), field_data_size) : SPRF_UNWRITTEN_CRC;
+      (calc_crc) ? pbl_crc32(0, SPRF_FIELD_DATA(field), field_data_size) : SPRF_UNWRITTEN_CRC;
   const bool same_data =
       (0 == memcmp(SPRF_FIELD_DATA(field), SPRF_FIELD_DATA(((uint8_t *)data) + offset),
                    field_data_size));
@@ -598,8 +598,7 @@ bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_o
     const size_t offset = offsetof(SharedPRFData, local_identity_address);
     flash_read_bytes((uint8_t *)&data, prv_current_page_flash_addr() + offset, sizeof(data));
 
-    const uint32_t crc =
-        crc32(CRC32_INIT, SPRF_FIELD_DATA(&data), SPRF_FIELD_DATA_SIZE(sizeof(data)));
+    const uint32_t crc = pbl_crc32(0, SPRF_FIELD_DATA(&data), SPRF_FIELD_DATA_SIZE(sizeof(data)));
     if (data.crc == SPRF_UNWRITTEN_CRC || data.crc != crc) {
       goto unlock;
     }

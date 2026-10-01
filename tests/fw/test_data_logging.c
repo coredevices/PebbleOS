@@ -23,7 +23,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 
-#include "util/legacy_checksum.h"
+#include "pbl/crc/crc.h"
 #include "pbl/util/list.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
@@ -121,7 +121,7 @@ static uint32_t prv_get_random_buffer(uint8_t **buf, unsigned int size) {
   }
 
   *buf = temp;
-  return legacy_defective_checksum_memory(temp, size);
+  return pbl_crc32_legacy(temp, size);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ static void prv_check_session_data(DataLoggingSessionRef logging_session, uint32
   uint32_t read_bytes = dls_test_read(logging_session, buffer, num_bytes);
   cl_assert(read_bytes == num_bytes);
 
-  uint32_t session_crc = legacy_defective_checksum_memory(buffer, num_bytes);
+  uint32_t session_crc = pbl_crc32_legacy(buffer, num_bytes);
   cl_assert(crc == session_crc);
 
   dls_test_consume(logging_session, num_bytes);
@@ -561,7 +561,7 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
   }
 
   // Verify the received data
-  uint32_t session_crc = legacy_defective_checksum_memory(rcv_buffer, rcv_bytes);
+  uint32_t session_crc = pbl_crc32_legacy(rcv_buffer, rcv_bytes);
   cl_assert(random_crc == session_crc);
 
   // Free buffer

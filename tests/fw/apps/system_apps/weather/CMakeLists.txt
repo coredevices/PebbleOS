@@ -53,8 +53,6 @@ pbl_clar_test(test_weather_app_layout
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     tests/fakes/fake_applib_resource.c

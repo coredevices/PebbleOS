@@ -11,7 +11,6 @@ pbl_clar_test(test_timeline
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/item.c
     fw/services/timeline/timeline.c
-    fw/util/crc8.c
     lib/c/time/mktime.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
@@ -30,7 +29,6 @@ pbl_clar_test(test_pin_db
     fw/services/timeline/attribute_group.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/item.c
-    fw/util/crc8.c
     lib/c/time/mktime.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
@@ -70,8 +68,6 @@ pbl_clar_test(test_blob_db2_endpoint
 
 pbl_clar_test(test_app_db
   SOURCES
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -90,7 +86,6 @@ pbl_clar_test(test_app_glance_db
   SOURCES
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
-    fw/util/crc8.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
     tests/fakes/fake_events.c
@@ -99,8 +94,6 @@ pbl_clar_test(test_app_glance_db
 
 pbl_clar_test(test_contacts_db
   SOURCES
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -117,8 +110,6 @@ pbl_clar_test(test_contacts_db
 
 pbl_clar_test(test_watch_app_prefs_db
   SOURCES
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -135,7 +126,6 @@ pbl_clar_test(test_watch_app_prefs_db
 
 pbl_clar_test(test_reminder_db
   SOURCES
-    fw/util/crc8.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
@@ -154,8 +144,6 @@ pbl_clar_test(test_reminder_db
 
 pbl_clar_test(test_notif_db
   SOURCES
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_kernel_services_notifications.c
     fw/kernel/rand.c
@@ -180,8 +168,6 @@ pbl_clar_test(test_weather_db
   SOURCES
     fw/services/clock/time.c
     lib/c/time/gmtime.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     fw/flash_region/flash_region.c
@@ -210,8 +196,6 @@ pbl_clar_test(test_prefs_db
     fw/services/blob_db/prefs_db.c
     fw/shell/normal/prefs.c
     tests/stubs/stubs_i18n.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_accel_service.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_rtc.c
@@ -220,7 +204,6 @@ pbl_clar_test(test_prefs_db
 
 pbl_clar_test(test_ios_notif_pref_db
   SOURCES
-    fw/util/crc8.c
     lib/util/uuid.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -239,7 +222,6 @@ pbl_clar_test(test_ios_notif_pref_db
 
 pbl_clar_test(test_health_db
   SOURCES
-    fw/util/crc8.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     tests/fakes/fake_settings_file.c

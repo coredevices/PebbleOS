@@ -49,7 +49,6 @@ void event_put(PebbleEvent *event) {
 #include "stubs_analytics.h"
 #include "stubs_blob_db_sync.h"
 #include "stubs_blob_db_sync_util.h"
-#include "stubs_crc.h"
 #include "stubs_hexdump.h"
 #include "stubs_logging.h"
 #include "stubs_mutex.h"

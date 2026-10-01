@@ -22,8 +22,6 @@ pbl_clar_test(test_activity
     fw/shell/normal/prefs.c
     tests/stubs/stubs_i18n.c
     tests/fakes/fake_accel_service.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -33,7 +31,6 @@ pbl_clar_test(test_activity
 
 pbl_clar_test(test_activity_insights
   SOURCES
-    fw/util/crc8.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     lib/c/time/mktime.c
@@ -68,7 +65,6 @@ pbl_clar_test(test_activity_algorithm_kraepelin
   SOURCES
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/util/crc8.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     lib/c/time/mktime.c
@@ -79,7 +75,6 @@ pbl_clar_test(test_activity_algorithm_kraepelin
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
     tests/fakes/fake_accel_service.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c

@@ -48,8 +48,6 @@ pbl_clar_test(test_persist
     fw/services/persist/service.c
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c
@@ -103,8 +101,6 @@ pbl_clar_test(test_text_resources
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/services/filesystem/app_file.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -146,7 +142,6 @@ pbl_clar_test(test_app_glance
     fw/services/app_glances/app_glance_service.c
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
-    fw/util/crc8.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
   OVERRIDES dummy_board

@@ -55,8 +55,6 @@ pbl_clar_test(test_health_card_view
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -161,8 +159,6 @@ pbl_clar_test(test_health_activity_summary_card
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -262,8 +258,6 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -363,8 +357,6 @@ pbl_clar_test(test_health_hr_summary_card
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -464,8 +456,6 @@ pbl_clar_test(test_health_activity_detail_card
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -564,8 +554,6 @@ pbl_clar_test(test_health_sleep_detail_card
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -664,8 +652,6 @@ pbl_clar_test(test_health_hr_detail_card
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
@@ -764,8 +750,6 @@ pbl_clar_test(test_health_detail_card
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c

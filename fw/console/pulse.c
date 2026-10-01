@@ -21,7 +21,7 @@
 #include "pbl/services/system_task.h"
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "util/legacy_checksum.h"
+#include "pbl/crc/crc.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -149,7 +149,7 @@ static void prv_process_received_frame(void *frame_ptr) {
   uint32_t fcs;
   // Comply with strict aliasing rules. The memcpy is optimized away.
   memcpy(&fcs, &frame->data[frame->length - sizeof(fcs)], sizeof(fcs));
-  uint32_t crc = legacy_defective_checksum_memory(&frame->data, frame->length - sizeof(fcs));
+  uint32_t crc = pbl_crc32_legacy(&frame->data, frame->length - sizeof(fcs));
 
   if (fcs == crc) {
     prv_reset_keepalive_timer();
@@ -236,8 +236,7 @@ void pulse_best_effort_send(void *buf, const size_t payload_length) {
   // Rewind the pointer to the beginning of the buffer
   char *frame = ((char *)buf) - COBS_OVERHEAD(PULSE_MAX_SEND_SIZE) - LINK_HEADER_LEN;
   size_t length = LINK_HEADER_LEN + payload_length;
-  uint32_t fcs =
-      legacy_defective_checksum_memory(frame + COBS_OVERHEAD(PULSE_MAX_SEND_SIZE), length);
+  uint32_t fcs = pbl_crc32_legacy(frame + COBS_OVERHEAD(PULSE_MAX_SEND_SIZE), length);
 
   memcpy(&frame[length + COBS_OVERHEAD(PULSE_MAX_SEND_SIZE)], &fcs, sizeof(fcs));
   length += sizeof(fcs);

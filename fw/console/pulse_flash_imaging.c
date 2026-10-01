@@ -199,7 +199,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
     uint32_t crc;
   } CrcAck;
 
-  uint32_t crc = flash_calculate_legacy_defective_checksum(cmd->crc.address, cmd->crc.length);
+  uint32_t crc = flash_crc32_legacy(cmd->crc.address, cmd->crc.length);
 
   CrcAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
   *ack = (CrcAck){

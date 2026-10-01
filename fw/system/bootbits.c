@@ -8,7 +8,7 @@
 #include "flash_region/flash_region.h"
 #include <pbl/logging/logging.h>
 #include "system/version.h"
-#include "pbl/util/crc32.h"
+#include "pbl/crc/crc.h"
 
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
@@ -33,7 +33,7 @@ static uint32_t PBL_SECTION(".retained") retained[256 / 4];
 
 void retained_write(uint8_t id, uint32_t value) {
   retained[id] = value;
-  uint32_t crc32_computed = crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
+  uint32_t crc32_computed = pbl_crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
   retained[NRF_RETAINED_REGISTER_CRC] = crc32_computed;
 }
 
@@ -44,7 +44,7 @@ uint32_t retained_read(uint8_t id) {
 void boot_bit_init(void) {
   // Make sure that the bootbits have a valid CRC -- otherwise, their
   // in-memory value is probably scrambled and should be reset.
-  uint32_t crc32_computed = crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
+  uint32_t crc32_computed = pbl_crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
   if (crc32_computed != retained[NRF_RETAINED_REGISTER_CRC]) {
     PBL_LOG_WRN(
         "Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!",

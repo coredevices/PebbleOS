@@ -42,7 +42,7 @@ void pb_storage_write(PutBytesStorage *storage, uint32_t offset, const uint8_t *
 void pb_storage_append(PutBytesStorage *storage, const uint8_t *buffer, uint32_t length);
 
 typedef enum {
-  PutBytesCrcType_Legacy = 0, // See 'legacy_defective_checksum' calculation
+  PutBytesCrcType_Legacy = 0, // See pbl_crc32_legacy()
   PutBytesCrcType_CRC32,
 } PutBytesCrcType;
 

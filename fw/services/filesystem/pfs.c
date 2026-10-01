@@ -23,8 +23,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "util/crc8.h"
-#include "util/legacy_checksum.h"
+#include "pbl/crc/crc.h"
 #include "pbl/util/math.h"
 
 PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
@@ -367,11 +366,11 @@ static uint32_t compute_pg_header_crc(PageHeader *hdr) {
   // don't factor fields which can change after file write into crc calc
   crc_hdr.last_written = 0xff;
 
-  return legacy_defective_checksum_memory(&crc_hdr, offsetof(PageHeader, hdr_crc));
+  return pbl_crc32_legacy(&crc_hdr, offsetof(PageHeader, hdr_crc));
 }
 
 static uint32_t compute_file_header_crc(FileHeader *hdr) {
-  return legacy_defective_checksum_memory(hdr, offsetof(FileHeader, hdr_crc));
+  return pbl_crc32_legacy(hdr, offsetof(FileHeader, hdr_crc));
 }
 
 // the start page is written to, the end page is not written to.
@@ -779,7 +778,7 @@ static void pfs_prepare_for_file_creation(uint32_t file_size, uint32_t max_elaps
 // In the future, the next_page field may be updated dynamically (i.e to resize
 // a file). Use a CRC to catch corruption issues in this field.
 static uint8_t crc8_next_page(uint16_t next_page) {
-  return crc8_calculate_bytes((uint8_t *)&next_page, sizeof(next_page), true /* big_endian */);
+  return pbl_crc8_reversed(0, &next_page, sizeof(next_page));
 }
 
 static status_t get_next_page(uint16_t curr_page, uint16_t *next_page) {
@@ -2130,8 +2129,8 @@ uint32_t get_available_pfs_space(void) {
 }
 
 uint32_t pfs_crc_calculate_file(int fd, uint32_t offset, uint32_t num_bytes) {
-  LegacyChecksum checksum;
-  legacy_defective_checksum_init(&checksum);
+  struct pbl_crc32_legacy checksum;
+  pbl_crc32_legacy_init(&checksum);
 
   // grab the pfs lock to prevent lock inversion with crc lock
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
@@ -2143,13 +2142,13 @@ uint32_t pfs_crc_calculate_file(int fd, uint32_t offset, uint32_t num_bytes) {
 
   while (num_bytes > chunk_size) {
     pfs_read(fd, buffer, chunk_size);
-    legacy_defective_checksum_update(&checksum, buffer, chunk_size);
+    pbl_crc32_legacy_update(&checksum, buffer, chunk_size);
     num_bytes -= chunk_size;
   }
 
   pfs_read(fd, buffer, num_bytes);
-  legacy_defective_checksum_update(&checksum, buffer, num_bytes);
-  uint32_t crc = legacy_defective_checksum_finish(&checksum);
+  pbl_crc32_legacy_update(&checksum, buffer, num_bytes);
+  uint32_t crc = pbl_crc32_legacy_finish(&checksum);
 
   pbl_mutex_unlock(&s_pfs_mutex);
 

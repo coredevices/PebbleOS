@@ -10,7 +10,7 @@
 #include "pbl/services/filesystem/pfs.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/crc8.h"
+#include "pbl/crc/crc.h"
 
 #include <string.h>
 #include <time.h>
@@ -334,7 +334,7 @@ static bool key_matches(SettingsRawIter *iter, const uint8_t *key, int key_len) 
   if (key_len != hdr->key_len) {
     return false;
   }
-  if (crc8_calculate_bytes(key, key_len, true /* big_endian */) != hdr->key_hash) {
+  if (pbl_crc8_reversed(0, key, key_len) != hdr->key_hash) {
     return false;
   }
   uint8_t hdr_key[hdr->key_len];
@@ -546,7 +546,7 @@ static status_t prv_settings_file_set_internal(SettingsFile *file, const void *k
   SettingsRecordHeader new_hdr;
   memset(&new_hdr, 0xff, sizeof(new_hdr));
   new_hdr.last_modified = timestamp;
-  new_hdr.key_hash = crc8_calculate_bytes(key, key_len, true /* big_endian */);
+  new_hdr.key_hash = pbl_crc8_reversed(0, key, key_len);
   new_hdr.key_len = key_len;
   new_hdr.val_len = val_len;
 

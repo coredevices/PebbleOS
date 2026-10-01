@@ -88,7 +88,7 @@ static uint32_t resource_storage_system_bank_metadata_size(ResourceStoreEntry *e
 static uint32_t resource_storage_system_bank_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                                      uint32_t entry_offset) {
   uint32_t start_offset = resource_store_get_metadata_size(entry) + entry_offset;
-  return flash_calculate_legacy_defective_checksum(BANK.begin + start_offset, num_bytes);
+  return flash_crc32_legacy(BANK.begin + start_offset, num_bytes);
 }
 
 static uint32_t resource_storage_system_bank_read(ResourceStoreEntry *entry, uint32_t offset,

@@ -50,8 +50,6 @@ pbl_clar_test(test_kickstart
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c

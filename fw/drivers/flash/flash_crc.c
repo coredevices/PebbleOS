@@ -5,8 +5,7 @@
 
 #include "kernel/pbl_malloc.h"
 #include <pbl/logging/logging.h>
-#include "pbl/util/crc32.h"
-#include "util/legacy_checksum.h"
+#include "pbl/crc/crc.h"
 
 #include <stdint.h>
 
@@ -30,42 +29,42 @@ uint32_t flash_crc32(uint32_t flash_addr, uint32_t num_bytes) {
   void *buffer;
   unsigned int chunk_size = prv_allocate_crc_buffer(&buffer);
 
-  uint32_t crc = CRC32_INIT;
+  uint32_t crc = 0;
   while (num_bytes > chunk_size) {
     flash_read_bytes(buffer, flash_addr, chunk_size);
-    crc = crc32(crc, buffer, chunk_size);
+    crc = pbl_crc32(crc, buffer, chunk_size);
 
     num_bytes -= chunk_size;
     flash_addr += chunk_size;
   }
 
   flash_read_bytes(buffer, flash_addr, num_bytes);
-  crc = crc32(crc, buffer, num_bytes);
+  crc = pbl_crc32(crc, buffer, num_bytes);
 
   kernel_free(buffer);
 
   return crc;
 }
 
-uint32_t flash_calculate_legacy_defective_checksum(uint32_t flash_addr, uint32_t num_bytes) {
+uint32_t flash_crc32_legacy(uint32_t flash_addr, uint32_t num_bytes) {
   void *buffer;
   unsigned int chunk_size = prv_allocate_crc_buffer(&buffer);
 
-  LegacyChecksum checksum;
-  legacy_defective_checksum_init(&checksum);
+  struct pbl_crc32_legacy checksum;
+  pbl_crc32_legacy_init(&checksum);
 
   while (num_bytes > chunk_size) {
     flash_read_bytes(buffer, flash_addr, chunk_size);
-    legacy_defective_checksum_update(&checksum, buffer, chunk_size);
+    pbl_crc32_legacy_update(&checksum, buffer, chunk_size);
 
     num_bytes -= chunk_size;
     flash_addr += chunk_size;
   }
 
   flash_read_bytes(buffer, flash_addr, num_bytes);
-  legacy_defective_checksum_update(&checksum, buffer, num_bytes);
+  pbl_crc32_legacy_update(&checksum, buffer, num_bytes);
 
   kernel_free(buffer);
 
-  return legacy_defective_checksum_finish(&checksum);
+  return pbl_crc32_legacy_finish(&checksum);
 }

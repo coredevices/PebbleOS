@@ -48,8 +48,6 @@ pbl_clar_test(test_launcher_menu_layer
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_display.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c

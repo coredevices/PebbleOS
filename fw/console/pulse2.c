@@ -24,7 +24,7 @@
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "pbl/util/crc32.h"
+#include "pbl/crc/crc.h"
 #include "pbl/util/math.h"
 #include "pbl/util/byteorder.h"
 #include "pbl/util/size.h"
@@ -164,7 +164,7 @@ static void prv_process_received_frame(size_t frame_length) {
   }
 
   uint32_t fcs;
-  if (crc32(CRC32_INIT, s_current_rx_frame, frame_length) == CRC32_RESIDUE) {
+  if (pbl_crc32(0, s_current_rx_frame, frame_length) == PBL_CRC32_RESIDUE) {
     pbl_be16_t protocol_be;
     memcpy(&protocol_be, s_current_rx_frame, sizeof(protocol_be));
     uint16_t protocol = pbl_be16_get(protocol_be);
@@ -394,7 +394,7 @@ void pulse_link_send(void *buf, const size_t payload_length) {
   // Rewind the pointer to the beginning of the buffer
   char *frame = ((char *)buf) - COBS_OVERHEAD(FRAME_MAX_SEND_SIZE) - LINK_HEADER_LEN;
   size_t length = LINK_HEADER_LEN + payload_length;
-  uint32_t fcs = crc32(CRC32_INIT, frame + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE), length);
+  uint32_t fcs = pbl_crc32(0, frame + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE), length);
 
   memcpy(&frame[length + COBS_OVERHEAD(FRAME_MAX_SEND_SIZE)], &fcs, sizeof(fcs));
   length += sizeof(fcs);

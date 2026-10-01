@@ -129,7 +129,7 @@ static int prv_cmd_crc(const struct pbl_shell *sh, size_t argc, char **argv) {
     return -EINVAL;
   }
 
-  pbl_shell_print(sh, "CRC: %" PRIx32, flash_calculate_legacy_defective_checksum(address, length));
+  pbl_shell_print(sh, "CRC: %" PRIx32, flash_crc32_legacy(address, length));
   return 0;
 }
 

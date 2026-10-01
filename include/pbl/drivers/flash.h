@@ -182,7 +182,7 @@ void flash_prf_set_protection(bool do_protect);
 uint32_t flash_crc32(uint32_t flash_addr, uint32_t length);
 
 //! Apply the legacy defective checksum to a region of flash.
-uint32_t flash_calculate_legacy_defective_checksum(uint32_t flash_addr, uint32_t length);
+uint32_t flash_crc32_legacy(uint32_t flash_addr, uint32_t length);
 
 //! Call this before any external flash access (including memory-mapped)
 //! to power on the flash peripheral if it wasn't already, and

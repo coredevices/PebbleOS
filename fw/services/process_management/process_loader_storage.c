@@ -10,7 +10,7 @@
 #include "pbl/services/process_management/app_storage.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
-#include "util/legacy_checksum.h"
+#include "pbl/crc/crc.h"
 
 #include <inttypes.h>
 #include <stdint.h>
@@ -25,7 +25,7 @@ extern const void *const g_pbl_system_tbl[];
 static bool prv_verify_checksum(const PebbleProcessInfo *app_info, const uint8_t *data) {
   const uint8_t *crc_data = data + PROCESS_INFO_CRC_START_OFFSET;
   const uint32_t app_size = process_info_get_load_size(app_info) - PROCESS_INFO_CRC_START_OFFSET;
-  uint32_t calculated_crc = legacy_defective_checksum_memory(crc_data, app_size);
+  uint32_t calculated_crc = pbl_crc32_legacy(crc_data, app_size);
 
   if (app_info->crc != calculated_crc) {
     PBL_LOG_WRN("Calculated App CRC is 0x%" PRIx32 ", expected 0x%" PRIx32 "!", calculated_crc,

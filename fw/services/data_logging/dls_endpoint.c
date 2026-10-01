@@ -15,7 +15,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
-#include "util/legacy_checksum.h"
+#include "pbl/crc/crc.h"
 #include "pbl/util/math.h"
 
 #include <inttypes.h>
@@ -291,7 +291,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
     .command = DataLoggingEndpointCmdData,
     .session_id = logging_session->comm.session_id,
     .items_left_hereafter = 0xffff, // FIXME: logging_session->storage.num_bytes - num_bytes,
-    .crc32 = legacy_defective_checksum_memory(data, num_bytes),
+    .crc32 = pbl_crc32_legacy(data, num_bytes),
   };
   comm_session_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
   comm_session_send_buffer_write(sb, data, num_bytes);

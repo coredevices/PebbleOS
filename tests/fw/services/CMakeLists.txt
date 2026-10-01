@@ -23,8 +23,6 @@ pbl_clar_test(test_pfs
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     tests/fakes/fake_spi_flash.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
   PLATFORMS obelix
   DEFINES DUMA_DISABLED
@@ -36,7 +34,6 @@ pbl_clar_test(test_put_bytes
     fw/services/put_bytes/put_bytes.c
     fw/services/put_bytes/put_bytes_storage.c
     tests/fakes/fake_session.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_events.c
     tests/fakes/fake_put_bytes_storage_mem.c
     tests/fakes/fake_resource_storage.c
@@ -72,8 +69,6 @@ pbl_clar_test(test_contacts
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/attribute_group.c
     fw/services/timeline/attribute.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/kernel/rand.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
@@ -183,8 +178,6 @@ pbl_clar_test(test_clock
     lib/c/time/gmtime.c
     lib/c/time/mktime.c
     tests/fakes/fake_bootbits.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_events.c
@@ -222,8 +215,6 @@ pbl_clar_test(test_wakeup
     fw/services/settings/settings_raw_iter.c
     fw/services/wakeup/service.c
     tests/fakes/fake_bootbits.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -249,8 +240,6 @@ pbl_clar_test(test_migrate_wakeup
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
     fw/services/wakeup/service.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_bootbits.c
@@ -309,8 +298,6 @@ pbl_clar_test(test_app_cache
     fw/services/app_cache/service.c
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_events.c
@@ -341,8 +328,6 @@ pbl_clar_test(test_app_install_manager
     fw/applib/graphics/gcolor_definitions.c
     fw/applib/graphics/gtypes.c
     fw/process_management/pebble_process_info.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fixtures/resources/builtin_resources.auto.c
@@ -376,8 +361,6 @@ pbl_clar_test(test_app_menu_data_source
     fw/services/process_management/app_storage.c
     fw/services/settings/settings_file.c
     fw/services/settings/settings_raw_iter.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
@@ -395,7 +378,6 @@ pbl_clar_test(test_process_loader_storage
     fw/process_management/pebble_process_md.c
     fw/services/process_management/app_storage.c
     fw/services/process_management/process_loader_storage.c
-    fw/util/legacy_checksum.c
   OVERRIDES dummy_board
 )
 
@@ -445,8 +427,6 @@ pbl_clar_test(test_do_not_disturb
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     lib/c/time/mktime.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
   OVERRIDES dummy_board
@@ -456,8 +436,6 @@ pbl_clar_test(test_weather_service
   SOURCES
     fw/services/clock/time.c
     lib/c/time/gmtime.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     fw/flash_region/flash_region.c
@@ -522,7 +500,6 @@ pbl_clar_test(test_app_glance_service
     fw/services/app_glances/app_glance_service.c
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
-    fw/util/crc8.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
   OVERRIDES dummy_board

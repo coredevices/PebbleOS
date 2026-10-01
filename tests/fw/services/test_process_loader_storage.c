@@ -13,7 +13,7 @@
 #include "resource/resource.h"
 #include "resource/resource_storage.h"
 #include "pbl/util/math.h"
-#include "util/legacy_checksum.h"
+#include "pbl/crc/crc.h"
 
 #include <inttypes.h>
 #include <stdalign.h>
@@ -105,8 +105,8 @@ static PebbleProcessInfo *prv_header(void) {
 static void prv_set_crc(void) {
   PebbleProcessInfo *info = prv_header();
   const uint32_t load_size = process_info_get_load_size(info);
-  info->crc = legacy_defective_checksum_memory(&s_image[PROCESS_INFO_CRC_START_OFFSET],
-                                               load_size - PROCESS_INFO_CRC_START_OFFSET);
+  info->crc = pbl_crc32_legacy(&s_image[PROCESS_INFO_CRC_START_OFFSET],
+                               load_size - PROCESS_INFO_CRC_START_OFFSET);
 }
 
 static void prv_build_wide_image(void) {

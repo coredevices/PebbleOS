@@ -7,8 +7,6 @@ pbl_clar_test(test_settings_file
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     tests/fakes/fake_spi_flash.c
-    fw/util/crc8.c
-    fw/util/legacy_checksum.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     tests/fakes/fake_rtc.c

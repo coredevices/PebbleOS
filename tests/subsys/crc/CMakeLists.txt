@@ -16,3 +16,7 @@ pbl_clar_test(test_crc_hw
     CONFIG_CRC_HW_ACCEL=1
     CONFIG_CRC_HW_MIN_LEN=16
 )
+
+pbl_clar_test(test_crc32)
+
+pbl_clar_test(test_crc32_legacy)

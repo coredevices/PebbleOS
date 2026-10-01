@@ -3,7 +3,7 @@
 
 #include "pbl/services/settings/settings_file.h"
 #include "system/status_codes.h"
-#include "util/crc8.h"
+#include "pbl/crc/crc.h"
 
 #include <string.h>
 #include <stdint.h>
@@ -35,7 +35,7 @@ void fake_settings_file_reset(void) {
 status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
                            size_t val_out_len) {
   if (settings_file_exists(file, key, key_len)) {
-    const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
+    const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     memcpy(val_out, s_settings_file.values[key_crc8], val_out_len);
     return S_SUCCESS;
   }
@@ -51,7 +51,7 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
   cl_assert(val_copy && key_copy);
   memcpy(val_copy, val, val_len);
   memcpy(key_copy, key, key_len);
-  const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
+  const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
   if (s_settings_file.values[key_crc8] != NULL) {
     cl_assert(memcmp(key, s_settings_file.keys[key_crc8], key_len) == 0);
   }
@@ -68,7 +68,7 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
 
 int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
   if (settings_file_exists(file, key, key_len)) {
-    const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
+    const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     return s_settings_file.val_lens[key_crc8];
   }
 
@@ -77,7 +77,7 @@ int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
 
 status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
   if (settings_file_exists(file, key, key_len)) {
-    const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
+    const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     free(s_settings_file.values[key_crc8]);
     free(s_settings_file.keys[key_crc8]);
     s_settings_file.values[key_crc8] = NULL;
@@ -117,14 +117,14 @@ void settings_file_close(SettingsFile *file) {
 }
 
 bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len) {
-  const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
+  const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
   return (s_settings_file.values[key_crc8] != NULL &&
           memcmp(s_settings_file.keys[key_crc8], key, key_len) == 0);
 }
 
 status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t key_len) {
   if (settings_file_exists(file, key, key_len)) {
-    const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
+    const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     s_settings_file.dirty[key_crc8] = false;
     return S_SUCCESS;
   }
@@ -134,7 +134,7 @@ status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t k
 status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_len, size_t offset,
                                 uint8_t byte) {
   if (settings_file_exists(file, key, key_len)) {
-    const uint8_t key_crc8 = crc8_calculate_bytes(key, key_len, false);
+    const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     uint8_t *val_bytes = s_settings_file.values[key_crc8];
     val_bytes[offset] &= byte;
     return S_SUCCESS;
