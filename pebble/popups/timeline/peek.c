@@ -44,7 +44,7 @@ unsigned int timeline_peek_get_concurrent_height(unsigned int num_concurrent) {
 }
 
 static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
-                                unsigned int num_concurrent) {
+                                unsigned int num_concurrent, bool icon_on_right) {
   GRect frame = *frame_orig;
 #if PBL_RECT
   // Fill all the way to the bottom of the screen
@@ -55,7 +55,7 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
   graphics_fill_rect(ctx, &frame);
 
   // Draw the icon background
-  if (action_bar_layer_is_on_right()) {
+  if (icon_on_right) {
     frame.origin.x += PBL_DISPLAY_WIDTH - TIMELINE_PEEK_ICON_BOX_WIDTH;
   }
   frame.size.w = TIMELINE_PEEK_ICON_BOX_WIDTH;
@@ -91,7 +91,7 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
 }
 
 void timeline_peek_draw_background(GContext *ctx, const GRect *frame, unsigned int num_concurrent) {
-  prv_draw_background(ctx, frame, num_concurrent);
+  prv_draw_background(ctx, frame, num_concurrent, action_bar_layer_is_on_right());
 }
 
 static void prv_timeline_peek_update_proc(Layer *layer, GContext *ctx) {
@@ -99,10 +99,13 @@ static void prv_timeline_peek_update_proc(Layer *layer, GContext *ctx) {
   const unsigned int num_concurrent =
       peek->peek_layout ? MIN(peek->peek_layout->info.num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT)
                         : 0;
+  // Match the side the cached layout was built for, not the live preference
+  const bool icon_on_right =
+      peek->peek_layout ? peek->peek_layout->icon_on_right : action_bar_layer_is_on_right();
   if (peek->removing_concurrent && (num_concurrent > 0)) {
-    prv_draw_background(ctx, &TIMELINE_PEEK_FRAME_VISIBLE, num_concurrent - 1);
+    prv_draw_background(ctx, &TIMELINE_PEEK_FRAME_VISIBLE, num_concurrent - 1, icon_on_right);
   }
-  prv_draw_background(ctx, &peek->layout_layer.frame, num_concurrent);
+  prv_draw_background(ctx, &peek->layout_layer.frame, num_concurrent, icon_on_right);
 }
 
 static void prv_redraw([[maybe_unused]] void *data) {
@@ -141,6 +144,7 @@ static PeekLayout *prv_create_layout(TimelineItem *item, unsigned int num_concur
   layout->item = item;
   timeline_layout_init_info(&layout->info, item, time_util_get_midnight_of(pbl_realtime()));
   layout->info.num_concurrent = num_concurrent;
+  layout->icon_on_right = action_bar_layer_is_on_right();
   const LayoutLayerConfig config = {
     .frame = &GRect(0, 0, PBL_DISPLAY_WIDTH, TIMELINE_PEEK_HEIGHT),
     .attributes = &item->attr_list,
