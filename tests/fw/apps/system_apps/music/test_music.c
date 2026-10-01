@@ -119,12 +119,47 @@ uint8_t music_get_now_playing_generation(void) {
 
 // Album art fake: the tests hand the "service-owned" cover bitmap straight to the app.
 static GBitmap *s_album_art;
+struct ImagingAlbumArt {
+  uint16_t width;
+  uint16_t height;
+  uint16_t row_size;
+  uint8_t palette[16];
+  uint8_t *pixels;
+};
+static struct ImagingAlbumArt *s_segmented_art;
 static bool s_album_art_current;
 static int s_album_art_lock_depth;
 
 const struct GBitmap *music_album_art_lock(void) {
   s_album_art_lock_depth++;
   return s_album_art;
+}
+
+const ImagingAlbumArt *music_album_art_image_lock(void) {
+  s_album_art_lock_depth++;
+  return s_segmented_art;
+}
+
+uint16_t imaging_album_art_width(const ImagingAlbumArt *art) {
+  return art->width;
+}
+uint16_t imaging_album_art_height(const ImagingAlbumArt *art) {
+  return art->height;
+}
+uint16_t imaging_album_art_row_size(const ImagingAlbumArt *art) {
+  return art->row_size;
+}
+const uint8_t *imaging_album_art_palette(const ImagingAlbumArt *art) {
+  return art->palette;
+}
+bool imaging_album_art_decode_tile(const ImagingAlbumArt *art, uint16_t tile, uint8_t *output,
+                                   size_t output_size) {
+  const size_t rows = MIN(10, art->height - tile * 10);
+  const size_t length = rows * art->row_size;
+  if (output_size < length)
+    return false;
+  memcpy(output, art->pixels + tile * 10 * art->row_size, length);
+  return true;
 }
 
 void music_album_art_unlock(void) {
@@ -267,6 +302,7 @@ GContext *graphics_context_get_current_context(void) {
 }
 
 void test_music__initialize(void) {
+  stub_pbl_malloc_set_task_malloc_should_fail(false);
   s_music_title[0] = '\0';
   s_music_artist[0] = '\0';
   s_music_play_state = MusicPlayStateUnknown;
@@ -277,6 +313,7 @@ void test_music__initialize(void) {
   s_music_now_playing_generation = 0;
 
   s_album_art = NULL;
+  s_segmented_art = NULL;
   s_album_art_current = false;
   s_album_art_lock_depth = 0;
 
@@ -309,6 +346,11 @@ void test_music__cleanup(void) {
     free(s_album_art->palette);
     free(s_album_art);
     s_album_art = NULL;
+  }
+  if (s_segmented_art) {
+    free(s_segmented_art->pixels);
+    free(s_segmented_art);
+    s_segmented_art = NULL;
   }
 }
 
@@ -413,7 +455,7 @@ void test_music__album_art_requested_on_launch(void) {
 #if MUSIC_ALBUM_ART_SUPPORTED
   cl_assert_equal_i(s_imaging_request_count, 1);
   cl_assert_equal_i(s_imaging_request_token, 1);
-  cl_assert_equal_i(s_imaging_request_format, ImagingFormat4BitPalette);
+  cl_assert_equal_i(s_imaging_request_format, ImagingFormat4BitPaletteLz4);
   const int16_t side = PBL_IF_RECT_ELSE(DISP_COLS - ACTION_BAR_WIDTH, DISP_COLS);
   cl_assert_equal_i(s_imaging_request_width, side);
   cl_assert_equal_i(s_imaging_request_height, side);
@@ -421,6 +463,53 @@ void test_music__album_art_requested_on_launch(void) {
   cl_assert_equal_s(s_imaging_request_artist, "King Gizzard & The Lizard Wizard");
 #else
   cl_assert_equal_i(s_imaging_request_count, 0);
+#endif
+}
+
+void test_music__segmented_art_draws_exact_palette_pixels_with_clip(void) {
+#if MUSIC_ALBUM_ART_SUPPORTED
+  const uint16_t side = PBL_IF_RECT_ELSE(DISP_COLS - ACTION_BAR_WIDTH, DISP_COLS);
+  s_segmented_art = calloc(1, sizeof(*s_segmented_art));
+  s_segmented_art->width = side;
+  s_segmented_art->height = side;
+  s_segmented_art->row_size = (side + 1) / 2;
+  s_segmented_art->pixels = calloc(side, s_segmented_art->row_size);
+  s_segmented_art->palette[0] = GColorBlack.argb;
+  s_segmented_art->palette[1] = GColorWhite.argb;
+  s_segmented_art->palette[2] = GColorClear.argb;
+  s_segmented_art->palette[3] = 0x7f; // partial alpha must be copied exactly
+  s_segmented_art->pixels[0] = 0x12;
+  s_segmented_art->pixels[1] = 0x30;
+  Layer layer = {.bounds = GRect(0, 0, side, side)};
+  const GDrawState saved = s_ctx.draw_state;
+  s_ctx.draw_state.drawing_box.origin = GPoint(100, 120);
+  s_ctx.draw_state.clip_box = GRect(101, 120, 2, 1);
+  const GBitmapDataRowInfo row = gbitmap_get_data_row_info(&s_ctx.dest_bitmap, 120);
+  const uint8_t outside_left = row.data[100];
+  const uint8_t outside_right = row.data[103];
+  prv_draw_segmented_album_art(&layer, &s_ctx, s_segmented_art);
+  cl_assert_equal_i(row.data[100], outside_left);
+  cl_assert_equal_i(row.data[101], GColorClear.argb);
+  cl_assert_equal_i(row.data[102], 0x7f);
+  cl_assert_equal_i(row.data[103], outside_right);
+  cl_assert(!s_ctx.lock);
+
+  stub_pbl_malloc_set_task_malloc_should_fail(true);
+  prv_draw_segmented_album_art(&layer, &s_ctx, s_segmented_art);
+  stub_pbl_malloc_set_task_malloc_should_fail(false);
+  cl_assert(!s_ctx.lock);
+  s_ctx.draw_state = saved;
+
+#if MUSIC_ROUND_MEDIA_LAYOUT
+  // The circular framebuffer has short rows at the poles and full-width rows at the equator.
+  s_segmented_art->pixels[130 * s_segmented_art->row_size] = 0x10;
+  prv_draw_segmented_album_art(&layer, &s_ctx, s_segmented_art);
+  const GBitmapDataRowInfo middle = gbitmap_get_data_row_info(&s_ctx.dest_bitmap, 130);
+  cl_assert_equal_i(middle.data[0], GColorWhite.argb);
+  const GBitmapDataRowInfo top = gbitmap_get_data_row_info(&s_ctx.dest_bitmap, 0);
+  cl_assert(top.min_x <= 130 && top.max_x >= 130);
+  cl_assert(!s_ctx.lock);
+#endif
 #endif
 }
 

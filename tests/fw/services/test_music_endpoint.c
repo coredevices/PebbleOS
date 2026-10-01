@@ -279,6 +279,38 @@ void test_music_endpoint__held_art_is_released_when_transfer_starts(void) {
   music_album_art_unlock();
 }
 
+void test_music_endpoint__segmented_art_respects_generation_and_no_image(void) {
+  s_imaging_art_free_count = 0;
+  music_update_now_playing("first", 5, "artist", 6, "album", 5);
+  const uint8_t first = music_get_now_playing_generation();
+  cl_assert(s_imaging_album_art_handler != NULL);
+  ImagingAlbumArt *first_art = malloc(1);
+  s_imaging_album_art_handler(first, first_art);
+  cl_assert(music_album_art_is_current());
+  cl_assert(music_album_art_image_lock() == first_art);
+  music_album_art_unlock();
+
+  music_update_now_playing("second", 6, "artist", 6, "album", 5);
+  const uint8_t second = music_get_now_playing_generation();
+  s_imaging_album_art_handler(first, malloc(1));
+  cl_assert_equal_i(s_imaging_art_free_count, 1);
+  cl_assert(!music_album_art_is_current());
+  cl_assert(music_album_art_image_lock() == first_art);
+  music_album_art_unlock();
+
+  s_imaging_will_receive_handlers[ImagingImageTypeAlbumArt](second);
+  cl_assert_equal_i(s_imaging_art_free_count, 2);
+  cl_assert(music_album_art_image_lock() == NULL);
+  music_album_art_unlock();
+  s_imaging_album_art_handler(second, malloc(1));
+  cl_assert(music_album_art_is_current());
+  s_imaging_album_art_handler(second, NULL);
+  cl_assert_equal_i(s_imaging_art_free_count, 3);
+  cl_assert(music_album_art_is_current());
+  cl_assert(music_album_art_image_lock() == NULL);
+  music_album_art_unlock();
+}
+
 void test_music_endpoint__ignore_now_playing_while_not_connected(void) {
   // Don't connect app, but receive Now Playing info. Should be ignored:
   prv_receive_and_assert_all(false /* expect_is_handled */);

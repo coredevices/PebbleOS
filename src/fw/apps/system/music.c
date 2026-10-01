@@ -31,6 +31,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ART_TILE_ROWS         (10)
+#define ART_TILE_BUFFER_BYTES (1500)
+
 // Album art needs a colour display with enough RAM for a full-screen 4-bpp cover; only emery and
 // gabbro qualify. Flint and lower never request it, so their layout stays text-only.
 #if defined(CONFIG_PLATFORM_EMERY) || defined(CONFIG_PLATFORM_GABBRO)
@@ -1243,7 +1246,55 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
 }
 #endif
 
+static void prv_draw_segmented_album_art(Layer *layer, GContext *ctx,
+                                         const ImagingAlbumArt *image) {
+  if (image) {
+    uint8_t *tile_data = task_malloc(ART_TILE_BUFFER_BYTES);
+    GBitmap *framebuffer = tile_data ? graphics_capture_frame_buffer(ctx) : NULL;
+    if (framebuffer) {
+      const int16_t width = imaging_album_art_width(image);
+      const int16_t height = imaging_album_art_height(image);
+      const int16_t row_size = imaging_album_art_row_size(image);
+      const int16_t origin_x =
+          ctx->draw_state.drawing_box.origin.x + (layer->bounds.size.w - width) / 2;
+      const int16_t origin_y =
+          ctx->draw_state.drawing_box.origin.y + (layer->bounds.size.h - height) / 2;
+      GRect clip = GRect(origin_x, origin_y, width, height);
+      grect_clip(&clip, &ctx->draw_state.clip_box);
+      grect_clip(&clip, &framebuffer->bounds);
+      const uint8_t *palette = imaging_album_art_palette(image);
+      for (uint16_t tile = 0; tile < (height + ART_TILE_ROWS - 1) / ART_TILE_ROWS; ++tile) {
+        if (!imaging_album_art_decode_tile(image, tile, tile_data, ART_TILE_BUFFER_BYTES))
+          break;
+        const int16_t rows = MIN(ART_TILE_ROWS, height - tile * ART_TILE_ROWS);
+        for (int16_t row = 0; row < rows; ++row) {
+          const int16_t y = origin_y + tile * ART_TILE_ROWS + row;
+          if (y < clip.origin.y || y >= grect_get_max_y(&clip))
+            continue;
+          const GBitmapDataRowInfo dst = gbitmap_get_data_row_info(framebuffer, y);
+          const int16_t left = MAX(clip.origin.x, dst.min_x);
+          const int16_t right = MIN(grect_get_max_x(&clip), dst.max_x + 1);
+          const uint8_t *src = tile_data + row * row_size;
+          for (int16_t x = left; x < right; ++x) {
+            const int16_t src_x = x - origin_x;
+            const uint8_t packed = src[src_x / 2];
+            const uint8_t index = (src_x & 1) ? packed & 15 : packed >> 4;
+            dst.data[x] = palette[index];
+          }
+        }
+      }
+      graphics_release_frame_buffer(ctx, framebuffer);
+    }
+    task_free(tile_data);
+  }
+}
+
 static void prv_album_art_update_proc(Layer *layer, GContext *ctx) {
+  const ImagingAlbumArt *image = music_album_art_image_lock();
+  if (image && shell_prefs_get_music_show_album_art()) {
+    prv_draw_segmented_album_art(layer, ctx, image);
+  }
+  music_album_art_unlock();
   // Hold the art locked for the whole draw so the service can't free it mid-blit.
   const GBitmap *art = music_album_art_lock();
   if (art && shell_prefs_get_music_show_album_art()) {
@@ -1278,7 +1329,7 @@ static void prv_maybe_request_album_art(void) {
   char title[MUSIC_BUFFER_LENGTH];
   char artist[MUSIC_BUFFER_LENGTH];
   music_get_now_playing(title, artist, NULL);
-  imaging_request_album_art(music_get_now_playing_generation(), ImagingFormat4BitPalette, side,
+  imaging_request_album_art(music_get_now_playing_generation(), ImagingFormat4BitPaletteLz4, side,
                             side, title, artist);
 #endif
 }
@@ -1455,7 +1506,10 @@ static void prv_artist_restore(MusicAppData *data) {
 //! the cover. A full-window repaint clears the moved layers' old pixels.
 static void prv_apply_art_appearance(MusicAppData *data) {
   const GBitmap *art = music_album_art_lock();
-  data->has_album_art = (art != NULL) && shell_prefs_get_music_show_album_art();
+  const bool has_bitmap = art != NULL;
+  music_album_art_unlock();
+  const ImagingAlbumArt *image = music_album_art_image_lock();
+  data->has_album_art = (has_bitmap || image != NULL) && shell_prefs_get_music_show_album_art();
   music_album_art_unlock();
 
   layer_set_hidden(&data->album_art_layer, !prv_use_media_layout(data));

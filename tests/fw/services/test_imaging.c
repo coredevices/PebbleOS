@@ -9,6 +9,7 @@
 #include "pbl/services/comm_session/session.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 // Stubs & Fakes
@@ -52,6 +53,7 @@ static int s_failures;
 static uint8_t s_last_token;
 static uint8_t s_last_failure_token;
 static GBitmap *s_last_bitmap;
+static ImagingAlbumArt *s_last_art;
 
 Heap *kernel_heap_get(void) {
   static Heap heap;
@@ -79,6 +81,13 @@ static void prv_art_handler(uint8_t token, GBitmap *bitmap) {
   s_last_token = token;
   prv_free_last_bitmap();
   s_last_bitmap = bitmap;
+}
+
+static void prv_segmented_art_handler(uint8_t token, ImagingAlbumArt *art) {
+  s_deliveries++;
+  s_last_token = token;
+  imaging_album_art_free(s_last_art);
+  s_last_art = art;
 }
 
 static void prv_will_receive_handler(uint8_t token) {
@@ -154,6 +163,19 @@ static void prv_receive_valid_image(uint8_t token) {
   prv_receive(buf, len);
 }
 
+static void prv_receive_encoded_art(const uint8_t *encoded, uint16_t encoded_len,
+                                    uint32_t declared_len) {
+  uint8_t buf[128];
+  const size_t head = sizeof(ImagingResponseHeader) + 6 + sizeof(s_palette);
+  const size_t length = prv_build_response(
+      buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, encoded_len, 4, 2,
+      ImagingFormat4BitPaletteLz4, s_palette, sizeof(s_palette), encoded, encoded_len);
+  memmove(buf + head + 4, buf + head, encoded_len);
+  for (unsigned int i = 0; i < 4; ++i)
+    buf[head + i] = declared_len >> (i * 8);
+  prv_receive(buf, length + 4);
+}
+
 // Tests
 ///////////////////////////////////////////////////////////
 
@@ -164,6 +186,7 @@ void test_imaging__initialize(void) {
   s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
   fake_transport_set_connected(s_transport, true);
   imaging_register_handler(ImagingImageTypeAlbumArt, prv_art_handler);
+  imaging_register_album_art_handler(NULL);
   imaging_register_transfer_handlers(ImagingImageTypeAlbumArt, prv_will_receive_handler,
                                      prv_failure_handler);
   imaging_register_handler(ImagingImageTypeNotification, prv_notif_handler);
@@ -180,11 +203,14 @@ void test_imaging__initialize(void) {
   s_last_token = 0;
   s_last_failure_token = 0;
   s_last_bitmap = NULL;
+  s_last_art = NULL;
   stub_pbl_malloc_set_kernel_malloc_should_fail(false);
 }
 
 void test_imaging__cleanup(void) {
   prv_free_last_bitmap();
+  imaging_album_art_free(s_last_art);
+  s_last_art = NULL;
   fake_comm_session_cleanup();
 }
 
@@ -201,6 +227,131 @@ void test_imaging__single_chunk_image(void) {
   cl_assert_equal_i(s_last_bitmap->info.format, GBitmapFormat4BitPalette);
   cl_assert(memcmp(s_last_bitmap->addr, s_pixels, sizeof(s_pixels)) == 0);
   cl_assert_equal_i(((GColor *)s_last_bitmap->palette)[1].argb, s_palette[1]);
+}
+
+void test_imaging__compressed_album_art_literal_tile(void) {
+  imaging_register_album_art_handler(prv_segmented_art_handler);
+  // One 4x2 tile: LZ4 token with four literal bytes and no match.
+  const uint8_t encoded[] = {5, 0, 0x40, 0x01, 0x20, 0x12, 0x01};
+  prv_receive_encoded_art(encoded, sizeof(encoded), sizeof(encoded));
+  cl_assert_equal_i(s_failures, 0);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert(s_last_art != NULL);
+  cl_assert_equal_i(imaging_album_art_width(s_last_art), 4);
+  cl_assert_equal_i(imaging_album_art_height(s_last_art), 2);
+  cl_assert_equal_i(imaging_album_art_row_size(s_last_art), 2);
+  cl_assert_equal_i(imaging_album_art_palette(s_last_art)[1], s_palette[1]);
+  uint8_t decoded[4];
+  cl_assert(imaging_album_art_decode_tile(s_last_art, 0, decoded, sizeof(decoded)));
+  cl_assert_equal_i(memcmp(decoded, s_pixels, sizeof(decoded)), 0);
+  cl_assert(!imaging_album_art_decode_tile(s_last_art, 1, decoded, sizeof(decoded)));
+  cl_assert(!imaging_album_art_decode_tile(s_last_art, 0, decoded, 3));
+}
+
+void test_imaging__compressed_album_art_rejects_bad_tiles(void) {
+  imaging_register_album_art_handler(prv_segmented_art_handler);
+  // LZ4 back reference at the start has no preceding bytes to refer to.
+  const uint8_t bad_offset[] = {3, 0, 0, 1, 0};
+  prv_receive_encoded_art(bad_offset, sizeof(bad_offset), sizeof(bad_offset));
+  cl_assert_equal_i(s_failures, 1);
+  cl_assert_equal_i(s_deliveries, 0);
+  // Raw tile must have exactly row_size*height bytes.
+  const uint8_t short_raw[] = {3, 0x80, 1, 2, 3};
+  prv_receive_encoded_art(short_raw, sizeof(short_raw), sizeof(short_raw));
+  cl_assert_equal_i(s_failures, 2);
+  // Declared stream length and chunk bytes must agree.
+  const uint8_t good_raw[] = {4, 0x80, 1, 2, 3, 4};
+  prv_receive_encoded_art(good_raw, sizeof(good_raw), sizeof(good_raw) + 1);
+  cl_assert_equal_i(s_failures, 3);
+  const uint8_t zero_offset[] = {3, 0, 0, 0, 0};
+  prv_receive_encoded_art(zero_offset, sizeof(zero_offset), sizeof(zero_offset));
+  const uint8_t truncated_extension[] = {2, 0, 0xf0, 0xff};
+  prv_receive_encoded_art(truncated_extension, sizeof(truncated_extension),
+                          sizeof(truncated_extension));
+  const uint8_t literal_overrun[] = {2, 0, 0x40, 0};
+  prv_receive_encoded_art(literal_overrun, sizeof(literal_overrun), sizeof(literal_overrun));
+  const uint8_t match_overrun[] = {4, 0, 0x10, 0x11, 1, 0};
+  prv_receive_encoded_art(match_overrun, sizeof(match_overrun), sizeof(match_overrun));
+  cl_assert_equal_i(s_failures, 7);
+  cl_assert_equal_i(s_deliveries, 0);
+}
+
+void test_imaging__raw_full_screen_album_art_uses_segments(void) {
+  imaging_register_album_art_handler(prv_segmented_art_handler);
+  stub_pbl_malloc_reset_kernel_malloc_max_requested();
+  uint8_t buf[600];
+  uint8_t pixels[512];
+  memset(pixels, 0x12, sizeof(pixels));
+  const uint32_t total = 130 * 260;
+  for (uint32_t offset = 0; offset < total; offset += sizeof(pixels)) {
+    const uint16_t chunk = MIN(sizeof(pixels), total - offset);
+    const uint8_t flags = (offset == 0 ? ImagingResponseFlagFirst : 0) |
+                          (offset + chunk == total ? ImagingResponseFlagLast : 0);
+    const size_t length =
+        prv_build_response(buf, TEST_TOKEN, flags, offset, chunk, 260, 260,
+                           ImagingFormat4BitPalette, s_palette, sizeof(s_palette), pixels, chunk);
+    prv_receive(buf, length);
+  }
+  cl_assert_equal_i(s_failures, 0);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert(s_last_art != NULL);
+  cl_assert(stub_pbl_malloc_get_kernel_malloc_max_requested() <= 1500);
+  uint8_t decoded[1300];
+  cl_assert(imaging_album_art_decode_tile(s_last_art, 25, decoded, sizeof(decoded)));
+  for (size_t i = 0; i < sizeof(decoded); ++i)
+    cl_assert_equal_i(decoded[i], 0x12);
+}
+
+static void prv_check_phone_vector(const char *name) {
+  char path[512];
+  snprintf(path, sizeof(path), "%simaging/%s.packets", CLAR_FIXTURE_PATH, name);
+  FILE *packets = fopen(path, "rb");
+  cl_assert(packets != NULL);
+  snprintf(path, sizeof(path), "%simaging/%s.raw", CLAR_FIXTURE_PATH, name);
+  FILE *expected = fopen(path, "rb");
+  cl_assert(expected != NULL);
+  imaging_register_album_art_handler(prv_segmented_art_handler);
+  stub_pbl_malloc_reset_kernel_malloc_max_requested();
+  uint8_t message[1100] = {ImagingCmdIDResponse};
+  for (;;) {
+    uint8_t count[2];
+    const size_t read_count = fread(count, 1, 2, packets);
+    if (!read_count)
+      break;
+    cl_assert_equal_i(read_count, 2);
+    const size_t length = count[0] | (count[1] << 8);
+    cl_assert(length < sizeof(message) - 1);
+    cl_assert_equal_i(fread(message + 1, 1, length, packets), length);
+    prv_receive(message, length + 1);
+  }
+  fclose(packets);
+  cl_assert_equal_i(s_failures, 0);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert(s_last_art != NULL);
+  cl_assert(stub_pbl_malloc_get_kernel_malloc_max_requested() <= 1500);
+  const uint16_t width = imaging_album_art_width(s_last_art);
+  const uint16_t height = imaging_album_art_height(s_last_art);
+  const size_t row_size = imaging_album_art_row_size(s_last_art);
+  cl_assert_equal_i(width, 260);
+  cl_assert_equal_i(height, 260);
+  cl_assert_equal_i(row_size, 130);
+  uint8_t decoded[1300];
+  uint8_t reference[1300];
+  for (uint16_t tile = 0; tile < 26; ++tile) {
+    cl_assert(imaging_album_art_decode_tile(s_last_art, tile, decoded, sizeof(decoded)));
+    cl_assert_equal_i(fread(reference, 1, sizeof(reference), expected), sizeof(reference));
+    cl_assert_equal_i(memcmp(decoded, reference, sizeof(reference)), 0);
+  }
+  cl_assert_equal_i(fgetc(expected), EOF);
+  fclose(expected);
+}
+
+void test_imaging__kotlin_gabbro_vector_matches_all_pixels(void) {
+  prv_check_phone_vector("gabbro");
+}
+
+void test_imaging__kotlin_incompressible_vector_matches_all_pixels(void) {
+  prv_check_phone_vector("random");
 }
 
 void test_imaging__multi_chunk_image(void) {

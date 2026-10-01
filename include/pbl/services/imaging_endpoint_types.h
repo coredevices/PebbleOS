@@ -31,9 +31,10 @@ typedef enum {
 
 //! Pixel encoding the watch is asking for (and that the response is packed in).
 typedef enum {
-  ImagingFormat1Bit = 0x00,        //!< 1-bpp black & white.
-  ImagingFormat8BitColor = 0x01,   //!< 8-bpp GColor8.
-  ImagingFormat4BitPalette = 0x02, //!< 4-bpp palettized GColor8 (up to 16 colours).
+  ImagingFormat1Bit = 0x00,           //!< 1-bpp black & white.
+  ImagingFormat8BitColor = 0x01,      //!< 8-bpp GColor8.
+  ImagingFormat4BitPalette = 0x02,    //!< 4-bpp palettized GColor8 (up to 16 colours).
+  ImagingFormat4BitPaletteLz4 = 0x03, //!< Independent 10-row LZ4/raw tiles, 4-bpp palette.
 } ImagingFormat;
 
 //! Watch -> Phone. Fixed head, then type-specific parameters.
@@ -81,4 +82,9 @@ typedef struct PBL_PACKED {
   //   uint8_t  format;          // ImagingFormat
   //   uint8_t  palette_count;   // palette formats only: 1..16 (0 for non-palette)
   //   uint8_t  palette[palette_count];  // GColor8 entries
+  // For ImagingFormat4BitPaletteLz4 only, after the palette:
+  //   uint32_t encoded_len; // LE byte count of the complete encoded stream
+  //   Repeated ceil(height / 10) times in the stream:
+  //     uint16_t tile_len; // LE, bit 15 means raw; low 15 bits count following bytes
+  //     uint8_t tile[tile_len & 0x7fff]; // LZ4 block or raw packed 4-bpp rows
 } ImagingResponseHeader;

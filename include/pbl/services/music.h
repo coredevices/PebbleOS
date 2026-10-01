@@ -109,6 +109,7 @@ const char *music_get_connected_server_debug_name(void);
 // Album art
 
 struct GBitmap;
+typedef struct ImagingAlbumArt ImagingAlbumArt;
 
 //! @return An 8-bit generation token that changes whenever the current track changes (title, artist
 //! or album). The Music app re-requests art when it changes; servers echo it in album-art transfers
@@ -129,3 +130,5 @@ const struct GBitmap *music_album_art_lock(void);
 
 //! Release the album art borrowed with music_album_art_lock.
 void music_album_art_unlock(void);
+//! Borrow segmented 4-bpp art. Release with music_album_art_unlock().
+const ImagingAlbumArt *music_album_art_image_lock(void);

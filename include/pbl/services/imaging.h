@@ -12,15 +12,28 @@
 #include "pbl/util/uuid.h"
 
 struct GBitmap;
+typedef struct ImagingAlbumArt ImagingAlbumArt;
 typedef struct CommSession CommSession;
 
-//! Generic image-fetch service. Consumers (album art, ...) ask the phone for an image and get the
-//! reassembled bitmap back through a registered handler. Watch-pull only, capability-gated.
+//! Generic image-fetch service. Consumers ask the phone for an image and receive a bitmap or
+//! segmented album art through a registered handler. Watch-pull only, capability-gated.
 
 //! Called on KernelMain when a requested image finishes transferring. `bitmap` is NULL when the
 //! phone reported it has no image (ImagingResponseFlagNoImage). Ownership of a non-NULL `bitmap`
 //! (and its pixel/palette buffers) passes to the handler. `token` echoes the request.
 typedef void (*ImagingReceivedHandler)(uint8_t token, struct GBitmap *bitmap);
+typedef void (*ImagingAlbumArtHandler)(uint8_t token, ImagingAlbumArt *art);
+
+//! The album-art receiver retains packed pixels in small kernel allocations. The caller owns art.
+void imaging_register_album_art_handler(ImagingAlbumArtHandler handler);
+void imaging_album_art_free(ImagingAlbumArt *art);
+uint16_t imaging_album_art_width(const ImagingAlbumArt *art);
+uint16_t imaging_album_art_height(const ImagingAlbumArt *art);
+uint16_t imaging_album_art_row_size(const ImagingAlbumArt *art);
+const uint8_t *imaging_album_art_palette(const ImagingAlbumArt *art);
+//! Decode one tile (at most ten 4-bpp rows) into output. output_size must cover the tile.
+bool imaging_album_art_decode_tile(const ImagingAlbumArt *art, uint16_t tile, uint8_t *output,
+                                   size_t output_size);
 
 //! Called before the first chunk's image buffers are allocated.
 typedef void (*ImagingWillReceiveHandler)(uint8_t token);

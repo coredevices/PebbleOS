@@ -10,12 +10,16 @@
 #include <pbl/util/heap.h>
 
 static Heap s_heap;
+static bool s_task_malloc_should_fail;
+void stub_pbl_malloc_set_task_malloc_should_fail(bool should_fail) {
+  s_task_malloc_should_fail = should_fail;
+}
 Heap *task_heap_get_for_current_task(void) {
   return &s_heap;
 }
 
 void *task_malloc(size_t bytes) {
-  return malloc(bytes);
+  return s_task_malloc_should_fail ? NULL : malloc(bytes);
 }
 
 void *task_realloc(void *ptr, size_t bytes) {
@@ -80,12 +84,23 @@ void app_free(void *ptr) {
 
 // Set to make kernel_malloc/kernel_strdup return NULL, for OOM testing.
 static bool s_kernel_malloc_should_fail = false;
+static size_t s_kernel_malloc_max_requested;
+
+void stub_pbl_malloc_reset_kernel_malloc_max_requested(void) {
+  s_kernel_malloc_max_requested = 0;
+}
+
+size_t stub_pbl_malloc_get_kernel_malloc_max_requested(void) {
+  return s_kernel_malloc_max_requested;
+}
 
 void stub_pbl_malloc_set_kernel_malloc_should_fail(bool should_fail) {
   s_kernel_malloc_should_fail = should_fail;
 }
 
 void *kernel_malloc(size_t bytes) {
+  if (bytes > s_kernel_malloc_max_requested)
+    s_kernel_malloc_max_requested = bytes;
   if (s_kernel_malloc_should_fail) {
     return NULL;
   }

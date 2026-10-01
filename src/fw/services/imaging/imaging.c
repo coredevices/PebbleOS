@@ -20,11 +20,216 @@ PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
 
 static const uint16_t IMAGING_ENDPOINT = 0x35;
 
-// Full-screen 4-bpp on the largest supported display (260x260) is ~34 KB. Cap generously and reject
-// anything larger to bound kernel-heap use against a malformed or hostile phone.
-#define IMAGING_MAX_BYTES       (40 * 1024)
-#define IMAGING_MAX_DIM         (300)
-#define IMAGING_PALETTE_ENTRIES (16)
+// A full-screen 260x260 cover is 33,800 packed bytes. Segment album art so no allocation grows
+// with that total, and cap the encoded stream against malformed or hostile responses.
+#define IMAGING_MAX_BYTES         (40 * 1024)
+#define IMAGING_MAX_DIM           (300)
+#define IMAGING_PALETTE_ENTRIES   (16)
+#define IMAGING_ART_SEGMENT_BYTES (512)
+#define IMAGING_ART_SEGMENTS \
+  ((IMAGING_MAX_BYTES + IMAGING_ART_SEGMENT_BYTES - 1) / IMAGING_ART_SEGMENT_BYTES)
+#define IMAGING_ART_TILE_ROWS (10)
+#define IMAGING_ART_MAX_TILES \
+  ((IMAGING_MAX_DIM + IMAGING_ART_TILE_ROWS - 1) / IMAGING_ART_TILE_ROWS)
+
+struct ImagingAlbumArt {
+  uint8_t *segments[IMAGING_ART_SEGMENTS];
+  uint32_t tile_offsets[IMAGING_ART_MAX_TILES];
+  uint8_t palette[IMAGING_PALETTE_ENTRIES];
+  uint32_t length;
+  uint16_t width;
+  uint16_t height;
+  uint16_t row_size;
+  uint8_t palette_count;
+  bool compressed;
+};
+
+static ImagingAlbumArtHandler s_album_art_handler;
+
+void imaging_register_album_art_handler(ImagingAlbumArtHandler handler) {
+  s_album_art_handler = handler;
+}
+
+void imaging_album_art_free(ImagingAlbumArt *art) {
+  if (!art) {
+    return;
+  }
+  for (unsigned int i = 0; i < ARRAY_LENGTH(art->segments); ++i) {
+    kernel_free(art->segments[i]);
+  }
+  kernel_free(art);
+}
+
+uint16_t imaging_album_art_width(const ImagingAlbumArt *art) {
+  return art->width;
+}
+uint16_t imaging_album_art_height(const ImagingAlbumArt *art) {
+  return art->height;
+}
+uint16_t imaging_album_art_row_size(const ImagingAlbumArt *art) {
+  return art->row_size;
+}
+const uint8_t *imaging_album_art_palette(const ImagingAlbumArt *art) {
+  return art->palette;
+}
+
+static bool prv_art_read(const ImagingAlbumArt *art, uint32_t offset, uint8_t *out) {
+  if (offset >= art->length) {
+    return false;
+  }
+  *out = art->segments[offset / IMAGING_ART_SEGMENT_BYTES][offset % IMAGING_ART_SEGMENT_BYTES];
+  return true;
+}
+
+static bool prv_art_copy(const ImagingAlbumArt *art, uint32_t offset, uint8_t *out, size_t length) {
+  if (offset > art->length || length > art->length - offset) {
+    return false;
+  }
+  while (length) {
+    const size_t segment_offset = offset % IMAGING_ART_SEGMENT_BYTES;
+    const size_t n = MIN(length, IMAGING_ART_SEGMENT_BYTES - segment_offset);
+    memcpy(out, art->segments[offset / IMAGING_ART_SEGMENT_BYTES] + segment_offset, n);
+    out += n;
+    offset += n;
+    length -= n;
+  }
+  return true;
+}
+
+//! Bounded LZ4 block decoder; source remains in segmented storage.
+static bool prv_art_lz4(const ImagingAlbumArt *art, uint32_t start, uint32_t length,
+                        uint8_t *output, size_t output_size) {
+  uint32_t src = start;
+  const uint32_t end = start + length;
+  size_t dst = 0;
+  while (src < end) {
+    uint8_t token;
+    if (!prv_art_read(art, src++, &token)) {
+      return false;
+    }
+    size_t literals = token >> 4;
+    if (literals == 15) {
+      uint8_t extra;
+      do {
+        if (src >= end || !prv_art_read(art, src++, &extra))
+          return false;
+        literals += extra;
+        if (literals > output_size)
+          return false;
+      } while (extra == 255);
+    }
+    if (literals > output_size - dst || literals > end - src ||
+        !prv_art_copy(art, src, output + dst, literals))
+      return false;
+    src += literals;
+    dst += literals;
+    if (src == end)
+      return dst == output_size;
+    uint8_t lo, hi;
+    if (end - src < 2 || !prv_art_read(art, src++, &lo) || !prv_art_read(art, src++, &hi))
+      return false;
+    const size_t back = lo | (hi << 8);
+    if (!back || back > dst)
+      return false;
+    size_t match = (token & 15) + 4;
+    if ((token & 15) == 15) {
+      uint8_t extra;
+      do {
+        if (src >= end || !prv_art_read(art, src++, &extra))
+          return false;
+        match += extra;
+        if (match > output_size)
+          return false;
+      } while (extra == 255);
+    }
+    if (match > output_size - dst)
+      return false;
+    for (size_t i = 0; i < match; ++i)
+      output[dst + i] = output[dst + i - back];
+    dst += match;
+  }
+  return false;
+}
+
+bool imaging_album_art_decode_tile(const ImagingAlbumArt *art, uint16_t tile, uint8_t *output,
+                                   size_t output_size) {
+  if (!art || !output ||
+      tile >= (art->height + IMAGING_ART_TILE_ROWS - 1) / IMAGING_ART_TILE_ROWS) {
+    return false;
+  }
+  const uint16_t rows = MIN(IMAGING_ART_TILE_ROWS, art->height - tile * IMAGING_ART_TILE_ROWS);
+  const size_t raw_size = (size_t)art->row_size * rows;
+  if (output_size < raw_size)
+    return false;
+  if (!art->compressed) {
+    return prv_art_copy(art, (uint32_t)tile * IMAGING_ART_TILE_ROWS * art->row_size, output,
+                        raw_size);
+  }
+  const uint32_t offset = art->tile_offsets[tile];
+  uint8_t lo, hi;
+  if (!prv_art_read(art, offset, &lo) || !prv_art_read(art, offset + 1, &hi))
+    return false;
+  const uint16_t header = lo | (hi << 8);
+  const size_t length = header & 0x7fff;
+  const uint32_t start = offset + 2;
+  if (!length || start > art->length || length > art->length - start)
+    return false;
+  if (header & 0x8000) {
+    return length == raw_size && prv_art_copy(art, start, output, raw_size);
+  }
+  return prv_art_lz4(art, start, length, output, raw_size);
+}
+
+static bool prv_art_validate(ImagingAlbumArt *art) {
+  if (!art->compressed)
+    return true;
+  uint8_t *scratch = kernel_malloc(1500);
+  if (!scratch)
+    return false;
+  uint32_t offset = 0;
+  bool valid = true;
+  const uint16_t tiles = (art->height + IMAGING_ART_TILE_ROWS - 1) / IMAGING_ART_TILE_ROWS;
+  for (uint16_t tile = 0; tile < tiles; ++tile) {
+    uint8_t lo, hi;
+    if (offset + 2 > art->length || !prv_art_read(art, offset, &lo) ||
+        !prv_art_read(art, offset + 1, &hi)) {
+      valid = false;
+      break;
+    }
+    const uint32_t length = (lo | (hi << 8)) & 0x7fff;
+    if (!length || offset + 2 + length > art->length) {
+      valid = false;
+      break;
+    }
+    art->tile_offsets[tile] = offset;
+    if (!imaging_album_art_decode_tile(art, tile, scratch, 1500)) {
+      valid = false;
+      break;
+    }
+    offset += 2 + length;
+  }
+  kernel_free(scratch);
+  return valid && offset == art->length;
+}
+
+static bool prv_art_append(ImagingAlbumArt *art, uint32_t offset, const uint8_t *data,
+                           size_t length) {
+  while (length) {
+    const size_t index = offset / IMAGING_ART_SEGMENT_BYTES;
+    const size_t part_offset = offset % IMAGING_ART_SEGMENT_BYTES;
+    const size_t n = MIN(length, IMAGING_ART_SEGMENT_BYTES - part_offset);
+    if (!art->segments[index]) {
+      art->segments[index] = kernel_malloc(IMAGING_ART_SEGMENT_BYTES);
+      if (!art->segments[index])
+        return false;
+    }
+    memcpy(art->segments[index] + part_offset, data, n);
+    data += n;
+    offset += n;
+    length -= n;
+  }
+  return true;
+}
 
 static ImagingReceivedHandler s_handlers[ImagingImageTypeCount];
 static ImagingWillReceiveHandler s_will_receive_handlers[ImagingImageTypeCount];
@@ -53,11 +258,13 @@ static struct {
   uint32_t received_bytes;
   uint8_t *pixels;
   GColor *palette; // NULL for non-palette formats
+  ImagingAlbumArt *art;
 } s_rx;
 
 static void prv_rx_reset(void) {
   kernel_free(s_rx.pixels);
   kernel_free(s_rx.palette);
+  imaging_album_art_free(s_rx.art);
   s_rx = (__typeof__(s_rx)){0};
 }
 
@@ -98,7 +305,12 @@ static uint8_t prv_response_type(const ImagingResponseHeader *hdr) {
   return (hdr->flags & IMAGING_RESPONSE_FLAG_TYPE_MASK) >> IMAGING_RESPONSE_FLAG_TYPE_SHIFT;
 }
 
-static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
+static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap, ImagingAlbumArt *art) {
+  if (type == ImagingImageTypeAlbumArt && s_album_art_handler && !bitmap) {
+    s_album_art_handler(token, art);
+    return;
+  }
+  imaging_album_art_free(art);
   ImagingReceivedHandler handler = (type < ARRAY_LENGTH(s_handlers)) ? s_handlers[type] : NULL;
   if (handler) {
     handler(token, bitmap);
@@ -155,6 +367,8 @@ bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t wid
   memcpy(cursor, artist, artist_len);
   cursor += artist_len;
 
+  // Temporary INFO diagnostics for on-watch album-art testing.
+  PBL_LOG_INFO("Art request token=%u fmt=%u %ux%u", token, (unsigned int)format, width, height);
   comm_session_send_data(session, IMAGING_ENDPOINT, payload, cursor - payload,
                          COMM_SESSION_DEFAULT_TIMEOUT);
   return true;
@@ -218,13 +432,13 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       pbl_mutex_unlock(&s_lock);
     }
     prv_rx_reset();
-    prv_deliver(hdr->token, type, NULL);
+    prv_deliver(hdr->token, type, NULL, NULL);
     return;
   }
 
   if (hdr->flags & ImagingResponseFlagNoImage) {
     prv_rx_reset();
-    prv_deliver(hdr->token, type, NULL);
+    prv_deliver(hdr->token, type, NULL, NULL);
     return;
   }
 
@@ -242,7 +456,15 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     const uint8_t palette_count = cursor[5];
     cursor += 6;
     GBitmapFormat gformat;
-    const uint16_t max_palette = prv_gbitmap_format_for(format, &gformat);
+    const bool compressed = (format == ImagingFormat4BitPaletteLz4);
+    if (compressed && type != ImagingImageTypeAlbumArt) {
+      prv_drop(type, hdr->token, length, "compressed non-album image");
+      return;
+    }
+    const uint16_t max_palette =
+        compressed ? IMAGING_PALETTE_ENTRIES : prv_gbitmap_format_for(format, &gformat);
+    if (compressed)
+      gformat = GBitmapFormat4BitPalette;
     if (width == 0 || height == 0 || width > IMAGING_MAX_DIM || height > IMAGING_MAX_DIM ||
         palette_count > max_palette || (max_palette > 0 && palette_count == 0)) {
       prv_drop(type, hdr->token, length, "invalid image metadata");
@@ -253,7 +475,17 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       return;
     }
     const uint16_t row_size = gbitmap_format_get_row_size_bytes(width, gformat);
-    const uint32_t total = (uint32_t)row_size * height;
+    const uint32_t raw_total = (uint32_t)row_size * height;
+    uint32_t total = raw_total;
+    if (compressed) {
+      if ((size_t)(msg_end - cursor) < (size_t)palette_count + 4) {
+        prv_drop(type, hdr->token, length, "short compressed length");
+        return;
+      }
+      const uint8_t *encoded_length = cursor + palette_count;
+      total = (uint32_t)encoded_length[0] | ((uint32_t)encoded_length[1] << 8) |
+              ((uint32_t)encoded_length[2] << 16) | ((uint32_t)encoded_length[3] << 24);
+    }
     if (total == 0 || total > IMAGING_MAX_BYTES) {
       prv_drop(type, hdr->token, total, "invalid image size");
       return;
@@ -265,12 +497,34 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       will_receive(hdr->token);
     }
 
-    s_rx.pixels = kernel_zalloc(total);
-    if (!s_rx.pixels) {
-      prv_drop(type, hdr->token, total, "pixel allocation failed");
+    const bool segmented_art = type == ImagingImageTypeAlbumArt && s_album_art_handler &&
+                               gformat == GBitmapFormat4BitPalette;
+    if (compressed && !segmented_art) {
+      prv_drop(type, hdr->token, total, "compressed art without handler");
       return;
     }
-    if (max_palette > 0) {
+    if (segmented_art) {
+      s_rx.art = kernel_zalloc(sizeof(*s_rx.art));
+      if (!s_rx.art) {
+        prv_drop(type, hdr->token, total, "art allocation failed");
+        return;
+      }
+      s_rx.art->length = total;
+      s_rx.art->width = width;
+      s_rx.art->height = height;
+      s_rx.art->row_size = row_size;
+      s_rx.art->palette_count = palette_count;
+      s_rx.art->compressed = compressed;
+      memcpy(s_rx.art->palette, cursor, palette_count);
+      cursor += palette_count + (compressed ? 4 : 0);
+    } else {
+      s_rx.pixels = kernel_zalloc(total);
+      if (!s_rx.pixels) {
+        prv_drop(type, hdr->token, total, "pixel allocation failed");
+        return;
+      }
+    }
+    if (max_palette > 0 && !segmented_art) {
       s_rx.palette = kernel_zalloc(IMAGING_PALETTE_ENTRIES * sizeof(GColor));
       if (!s_rx.palette) {
         prv_drop(type, hdr->token, total, "palette allocation failed");
@@ -310,12 +564,46 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "invalid chunk");
     return;
   }
-  memcpy(s_rx.pixels + hdr->offset, cursor, hdr->chunk_len);
+  if (s_rx.art) {
+    if (!prv_art_append(s_rx.art, hdr->offset, cursor, hdr->chunk_len)) {
+      prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "art segment allocation failed");
+      return;
+    }
+  } else {
+    memcpy(s_rx.pixels + hdr->offset, cursor, hdr->chunk_len);
+  }
   s_rx.received_bytes += hdr->chunk_len;
 
   if (hdr->flags & ImagingResponseFlagLast) {
     if (s_rx.received_bytes != s_rx.total_bytes) {
       prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "incomplete image");
+      return;
+    }
+    if (s_rx.art) {
+      if (!prv_art_validate(s_rx.art)) {
+        prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "invalid art encoding");
+        return;
+      }
+      const uint8_t token = s_rx.token;
+      ImagingAlbumArt *art = s_rx.art;
+      // Temporary INFO diagnostics; tile headers have already passed validation.
+      PBL_LOG_INFO("Art received token=%u fmt=%u %ux%u encoded=%" PRIu32 " raw=%" PRIu32, token,
+                   art->compressed ? 3u : 2u, art->width, art->height, art->length,
+                   (uint32_t)art->row_size * art->height);
+      if (art->compressed) {
+        const unsigned int tiles =
+            (art->height + IMAGING_ART_TILE_ROWS - 1) / IMAGING_ART_TILE_ROWS;
+        unsigned int raw_tiles = 0;
+        for (unsigned int tile = 0; tile < tiles; ++tile) {
+          uint8_t hi = 0;
+          prv_art_read(art, art->tile_offsets[tile] + 1, &hi);
+          raw_tiles += (hi & 0x80) != 0;
+        }
+        PBL_LOG_INFO("Art tiles token=%u lz4=%u raw=%u", token, tiles - raw_tiles, raw_tiles);
+      }
+      s_rx.art = NULL;
+      prv_rx_reset();
+      prv_deliver(token, type, NULL, art);
       return;
     }
     GBitmap *bmp = kernel_zalloc(sizeof(GBitmap));
@@ -334,7 +622,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     s_rx.pixels = NULL;
     s_rx.palette = NULL;
     prv_rx_reset();
-    prv_deliver(token, type, bmp);
+    prv_deliver(token, type, bmp, NULL);
   }
 }
 

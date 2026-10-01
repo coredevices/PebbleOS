@@ -5,8 +5,22 @@
 
 #include "pbl/services/imaging.h"
 #include "pbl/kernel/compiler.h"
+#include <stdlib.h>
 
 static ImagingReceivedHandler s_imaging_received_handlers[ImagingImageTypeCount];
+static ImagingAlbumArtHandler s_imaging_album_art_handler;
+static int s_imaging_art_free_count;
+
+void PBL_WEAK imaging_register_album_art_handler(ImagingAlbumArtHandler handler) {
+  s_imaging_album_art_handler = handler;
+}
+
+void PBL_WEAK imaging_album_art_free(ImagingAlbumArt *art) {
+  if (art) {
+    s_imaging_art_free_count++;
+    free(art);
+  }
+}
 static ImagingWillReceiveHandler s_imaging_will_receive_handlers[ImagingImageTypeCount];
 static ImagingTransferFailedHandler s_imaging_transfer_failed_handlers[ImagingImageTypeCount];
 

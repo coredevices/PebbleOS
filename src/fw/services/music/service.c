@@ -66,11 +66,10 @@ struct MusicServiceContext {
   //! @see music_skip_seeks_within_track
   bool skip_seeks_within_track;
 
-  //! Album art for the current track, or NULL if none. Owned by the service; freed with
-  //! kernel_free. Deliberately kept (up to ~34 KB of kernel heap on the largest displays) even
-  //! while the Music app is closed, so reopening it shows the cover instantly; a track change,
-  //! NoArt reply or server disconnect replaces or frees it.
+  //! Legacy bitmap art. Kept while the app is closed for immediate redisplay.
   GBitmap *album_art;
+  //! Full-resolution 4-bpp art retained in small segments, compressed when the phone supports it.
+  ImagingAlbumArt *album_art_image;
 
   //! The now_playing_generation the current album art response was for. A track change bumps
   //! now_playing_generation without clearing the art (so the previous art stays on screen until the
@@ -91,6 +90,10 @@ static void prv_imaging_album_art_received(uint8_t token, GBitmap *bitmap) {
   music_set_album_art(bitmap, token);
 }
 
+static void prv_imaging_album_art_image_received(uint8_t token, ImagingAlbumArt *art) {
+  music_set_album_art_image(art, token);
+}
+
 static void prv_imaging_album_art_will_receive(uint8_t token) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   if (token == s_music_ctx.now_playing_generation) {
@@ -106,6 +109,7 @@ static void prv_imaging_album_art_transfer_failed(uint8_t token) {
 void music_init(void) {
   pbl_mutex_init(&s_music_ctx.mutex);
   imaging_register_handler(ImagingImageTypeAlbumArt, prv_imaging_album_art_received);
+  imaging_register_album_art_handler(prv_imaging_album_art_image_received);
   imaging_register_transfer_handlers(ImagingImageTypeAlbumArt, prv_imaging_album_art_will_receive,
                                      prv_imaging_album_art_transfer_failed);
 }
@@ -140,6 +144,8 @@ static bool prv_str_differs(const char *dest, const char *src, size_t src_length
 
 //! Free the currently-stored album art. Caller must hold the mutex.
 static void prv_free_album_art_locked(void) {
+  imaging_album_art_free(s_music_ctx.album_art_image);
+  s_music_ctx.album_art_image = NULL;
   if (s_music_ctx.album_art) {
     kernel_free(s_music_ctx.album_art->addr);
     kernel_free(s_music_ctx.album_art->palette);
@@ -574,6 +580,20 @@ void music_set_album_art(GBitmap *bitmap, uint8_t token) {
   prv_put_album_art_updated_event();
 }
 
+void music_set_album_art_image(ImagingAlbumArt *art, uint8_t token) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  if (token != s_music_ctx.now_playing_generation) {
+    imaging_album_art_free(art);
+    pbl_mutex_unlock(&s_music_ctx.mutex);
+    return;
+  }
+  prv_free_album_art_locked();
+  s_music_ctx.album_art_image = art;
+  s_music_ctx.album_art_generation = token;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+  prv_put_album_art_updated_event();
+}
+
 void music_album_art_transfer_failed(uint8_t token) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   const bool is_current = (token == s_music_ctx.now_playing_generation);
@@ -599,6 +619,11 @@ const GBitmap *music_album_art_lock(void) {
   // Held until music_album_art_unlock so the bitmap can't be freed mid-draw. The recursive mutex is
   // released by the matching unlock call.
   return s_music_ctx.album_art;
+}
+
+const ImagingAlbumArt *music_album_art_image_lock(void) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  return s_music_ctx.album_art_image;
 }
 
 void music_album_art_unlock(void) {
