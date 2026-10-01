@@ -687,6 +687,14 @@
       "id": -101,
       "enum": "QUICK_LAUNCH_NOTHING",
       "md_fn": "quick_launch_nothing_get_app_info"
+    },
+    {
+      "id": -102,
+      "enum": "TOUCH_TOGGLE",
+      "md_fn": "touch_toggle_get_app_info",
+      "ifdefs": [
+        "CONFIG_TOUCH"
+      ]
     }
   ],
   "resource_apps": [

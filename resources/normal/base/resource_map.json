@@ -2535,6 +2535,11 @@
       "file": "normal/base/images/Pebble_80x80_Airplane.svg"
     },
     {
+      "type": "pdc",
+      "name": "TOUCH",
+      "file": "normal/base/images/Pebble_80x80_Touch.svg"
+    },
+    {
       "type": "png",
       "name": "WX_SUNNY_TINY",
       "file": "normal/base/images/wx_sunny_day_25x25.png"
