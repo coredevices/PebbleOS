@@ -82,4 +82,11 @@
 #define PBL_UNSORTED_SECTION_END(name)   __asm("__stop_" #name) PBL_WEAK
 #endif
 
+#ifdef CONFIG_EXTRAM
+//! Place the zero-initialized variable in external RAM.
+#define PBL_SECTION_EXTRAM PBL_SECTION(".extram.bss")
+#else
+#define PBL_SECTION_EXTRAM
+#endif
+
 /** @} */
