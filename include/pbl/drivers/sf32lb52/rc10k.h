@@ -1,6 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#pragma once
+
+#include <stdint.h>
+
 /**
  * @defgroup drivers_sf32lb52 SF32LB52
  * @ingroup drivers

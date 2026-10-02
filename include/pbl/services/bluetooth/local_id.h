@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#pragma once
+
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/id.h>
 
