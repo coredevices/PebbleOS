@@ -4,10 +4,12 @@
 import re
 import sys
 
+from doc_comments import to_bang_comments
+
 block_comment_re = re.compile(r"""(^//!.*$(\n)?)+""", flags=re.MULTILINE)
 
 addtogroup_start_re = re.compile(
-    r"""//!\s+@addtogroup\s+(?P<name>\S+)(\s+(?P<display_name>.+))?$"""
+    r"""//!\s+@(?:addtogroup|defgroup)\s+(?P<name>\S+)(\s+(?P<display_name>.+))?$"""
 )
 block_start_re = re.compile(r"""//!\s+@{""")
 block_end_re = re.compile(r"""//!\s+@}""")
@@ -34,6 +36,7 @@ def add_group_comment(group_comment, group_stack, groups):
 
 def scan_file_content_for_groups(content, groups):
     group_stack = []
+    pending_group = None
 
     in_group_description = False
     group_comment = ""
@@ -43,15 +46,20 @@ def scan_file_content_for_groups(content, groups):
         for line in comment_block.splitlines():
             result = addtogroup_start_re.search(line)
             if result is not None:
-                group_stack.append(result.group("name"))
+                pending_group = result.group("name")
+                group_comment = ""
 
                 if result.group("display_name") is not None:
-                    g = find_group(group_stack, groups)
+                    g = find_group(group_stack + [pending_group], groups)
                     if g is not None:
                         g.display_name = result.group("display_name")
 
                 in_group_description = True
             elif block_start_re.search(line) is not None:
+                # Without a pending group this opens a member group (e.g. @name)
+                group_stack.append(pending_group)
+                pending_group = None
+
                 in_group_description = False
 
                 group_comment.strip()
@@ -86,8 +94,8 @@ def parse_file(filename, groups, defines):
     with open(filename) as f:
         content = f.read()
 
-    scan_file_content_for_groups(content, groups)
-    scan_file_content_for_defines(content, defines)
+    scan_file_content_for_groups(to_bang_comments(content), groups)
+    scan_file_content_for_defines(to_bang_comments(content), defines)
 
 
 def extract_comments(filenames, groups, defines):
@@ -126,6 +134,58 @@ def test_handle_macro():
     assert defines[1].comment == "//! This is a documented define"
     assert defines[2].comment == "//! This is a multiline\n//! documented define."
     assert defines[3].comment is None
+
+    defines = [TestDefine("BAR")]
+    scan_file_content_for_defines(
+        to_bang_comments("/**\n * @brief Javadoc define.\n */\n#define BAR 1\n"),
+        defines,
+    )
+    assert defines[0].comment == "//! @brief Javadoc define."
+
+
+def test_scan_groups_javadoc():
+    class TestGroup:
+        def __init__(self, stack):
+            self.stack = stack
+            self.comment = None
+            self.display_name = None
+
+        def group_stack(self):
+            return self.stack
+
+    test_input = to_bang_comments("""
+/**
+ * @addtogroup Foundation
+ * @{
+ */
+
+/**
+ * @defgroup services_clock Clock
+ * @ingroup services
+ */
+
+/**
+ * @name Flags
+ * @{
+ */
+#define A 1
+/** @} */
+
+/**
+ * @addtogroup WallTime Wall Time
+ * Wall time description.
+ * @{
+ */
+/** @} */
+
+/** @} */
+""")
+
+    groups = [TestGroup(["Foundation", "WallTime"])]
+    scan_file_content_for_groups(test_input, groups)
+
+    assert groups[0].display_name == "Wall Time"
+    assert groups[0].comment == "//! Wall time description."
 
 
 if __name__ == "__main__":

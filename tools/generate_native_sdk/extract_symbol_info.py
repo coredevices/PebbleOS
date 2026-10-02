@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 import clang
 from generate_native_sdk import parse_c_decl
+from generate_native_sdk.doc_comments import to_bang_comments
 
 
 def extract_exported_functions(node, functions=(), types=(), defines=()):
@@ -39,7 +40,7 @@ def extract_exported_functions(node, functions=(), types=(), defines=()):
                 comment = parse_c_decl.get_comment_string_for_decl(node)
                 if (
                     comment is not None
-                    and not comment.startswith("//! @internal")
+                    and not to_bang_comments(comment).startswith("//! @internal")
                     and (e.comment is None or len(comment) > len(e.comment))
                 ):
                     e.comment = comment
