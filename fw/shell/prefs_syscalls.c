@@ -8,7 +8,3 @@
 PBL_SYSCALL(UnitsDistance, sys_shell_prefs_get_units_distance) {
   return shell_prefs_get_units_distance();
 }
-
-PBL_SYSCALL(GColor, sys_shell_prefs_get_theme_highlight_color, void) {
-  return shell_prefs_get_theme_highlight_color();
-}

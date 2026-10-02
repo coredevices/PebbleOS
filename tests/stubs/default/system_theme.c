@@ -30,16 +30,20 @@ GFont PBL_WEAK system_theme_get_font_for_default_size(TextStyleFont font) {
   return nullptr;
 }
 
-GColor WEAK system_theme_get_bg_color(void) {
+GColor PBL_WEAK system_theme_get_bg_color(void) {
   return GColorWhite;
 }
 
-GColor WEAK system_theme_get_fg_color(void) {
+GColor PBL_WEAK system_theme_get_fg_color(void) {
   return GColorBlack;
 }
 
-bool WEAK system_theme_is_dark_mode(void) {
+bool PBL_WEAK system_theme_is_dark_mode(void) {
   return false;
+}
+
+GColor PBL_WEAK system_theme_get_highlight_color(void) {
+  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 }
 
 PreferredContentSize PBL_WEAK system_theme_get_default_content_size_for_runtime_platform(void) {
