@@ -522,7 +522,7 @@ void *heap_realloc(Heap *const heap, void *ptr, unsigned long nbytes, uintptr_t 
   if (new_ptr && ptr) {
     // Copy over old data.
     const HeapInfo_t *heap_info_ptr = HEAP_INFO_FOR_PTR(ptr);
-    const uint16_t original_size = heap_info_ptr->Size * ALIGNMENT_SIZE;
+    const size_t original_size = (heap_info_ptr->Size - HEAP_INFO_BLOCK_SIZE(0)) * ALIGNMENT_SIZE;
     memcpy(new_ptr, ptr, MIN(nbytes, original_size));
     heap_free(heap, ptr, client_pc);
   }
