@@ -23,7 +23,7 @@
 /** @brief Length of the queue between audio_write() and DMA, in milliseconds. */
 #define CIRCULAR_BUF_SIZE_MS (128)
 /** @brief Length of the queue between audio_write() and DMA, in samples. */
-#define CIRCULAR_BUF_SIZE_SAMPLES ((MIC_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
+#define CIRCULAR_BUF_SIZE_SAMPLES ((AUDIO_PLAYBACK_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
 /** @brief Size of the queue between audio_write() and DMA, in bytes. */
 #define CIRCULAR_BUF_SIZE_BYTES (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
 
