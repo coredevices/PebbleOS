@@ -619,6 +619,14 @@
       ]
     },
     {
+      "id": -194,
+      "enum": "VOICE_DEMO",
+      "md_fn": "voice_demo_get_app_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_VOICE_DEMO"
+      ]
+    },
+    {
       "id": -90,
       "enum": "REMINDERS",
       "md_fn": "reminder_app_get_info",
