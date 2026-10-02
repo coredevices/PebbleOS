@@ -12,7 +12,7 @@
  * @{
  */
 
-/** @brief Connection event counters, see pbl_bt_analytics_get_conn_event_stats(). */
+/** @brief Connection event counters. */
 struct pbl_bt_slave_conn_event_stats {
   /** Connection events that have elapsed. */
   uint32_t num_conn_events;

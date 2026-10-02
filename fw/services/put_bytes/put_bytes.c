@@ -25,7 +25,7 @@
 #include "pbl/util/testing.h"
 #include "pbl/util/math.h"
 #include "pbl/util/byteorder.h"
-#include <pbl/bluetooth/analytics.h>
+#include <pbl/bluetooth/conn_event_stats.h>
 
 #include "pbl/kernel/sem.h"
 

@@ -81,10 +81,6 @@ void bluetooth_analytics_handle_put_bytes_stats(
     const struct pbl_bt_slave_conn_event_stats *orig_stats) {
 }
 
-bool pbl_bt_analytics_get_conn_event_stats(struct pbl_bt_slave_conn_event_stats *stats) {
-  return false;
-}
-
 typedef enum {
   CmdInit = 0x01,
   CmdPut = 0x02,

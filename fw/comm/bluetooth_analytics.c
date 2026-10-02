@@ -10,7 +10,7 @@
 #include "pbl/services/comm_session/session.h"
 #include <pbl/logging/logging.h>
 
-#include <pbl/bluetooth/analytics.h>
+#include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 
 typedef struct {

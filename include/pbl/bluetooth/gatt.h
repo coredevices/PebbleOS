@@ -163,16 +163,6 @@ struct pbl_bt_gatt_client_op_write_response {
 };
 
 /**
- * @brief Confirm a received indication.
- *
- * Not implemented by the NimBLE backend, which confirms indications on reception.
- *
- * @param connection_id Backend specific connection identifier.
- * @param transaction_id Transaction of the indication.
- */
-void pbl_bt_gatt_acknowledge_indication(uint32_t connection_id, uint32_t transaction_id);
-
-/**
  * @brief Answer a read of the Service Changed CCCD.
  *
  * Does nothing in the NimBLE backend.
