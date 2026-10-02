@@ -22,6 +22,12 @@ static void prv_notification_migration_iterator_callback(TimelineItem *notificat
 
 void notifications_handle_notification_action_result(
     PebbleSysNotificationActionResult *action_result) {
+  // Mark it actioned here rather than in a window, which may have closed before the reply came
+  if (action_result && (action_result->type == ActionResultTypeSuccess ||
+                        action_result->type == ActionResultTypeSuccessANCSDismiss)) {
+    notification_storage_set_status(&action_result->id, TimelineItemStatusActioned);
+  }
+
   PebbleEvent launcher_event = {
     .type = PEBBLE_SYS_NOTIFICATION_EVENT,
     .sys_notification = {

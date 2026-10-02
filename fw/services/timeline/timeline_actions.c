@@ -36,6 +36,7 @@
 #include "pbl/services/notifications/ancs/ancs_notifications.h"
 #include "pbl/services/notifications/notification_constants.h"
 #include "pbl/services/notifications/notification_storage.h"
+#include "pbl/services/notifications/notifications.h"
 #include "pbl/services/timeline/timeline.h"
 #include "pbl/services/timeline/timeline_resources.h"
 #include <pbl/logging/logging.h>
@@ -1193,6 +1194,18 @@ static void prv_dismiss_all_step(void *context) {
       timeline_invoke_action(&item, action, NULL);
       timeline_enable_ancs_bulk_action_mode(false);
       ctx->performed_actions = true;
+
+      // Only the first action result reaches Dismiss All, so one the phone turns down later, or a
+      // bulk ANCS one with no result, would never be marked. Mark each one here instead, unless
+      // its dismiss goes to a phone that is not connected and so fails.
+      const bool reaches_phone =
+          timeline_item_action_is_ancs(action) || comm_session_get_system_session();
+      if (info->type == NotificationMobile && reaches_phone) {
+        notification_storage_set_status(&info->id, TimelineItemStatusActioned);
+        Uuid *id = kernel_malloc_check(sizeof(Uuid));
+        *id = info->id;
+        notifications_handle_notification_acted_upon(id);
+      }
 
       // FIXME: PBL-34338 There are other actions that should also use bulk mode to avoid crashes
       // such as dismissing notifications on Android while disconnected

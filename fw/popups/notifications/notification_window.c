@@ -1492,7 +1492,6 @@ static void prv_handle_action_result(PebbleSysNotificationActionResult *action_r
 
   // the notification has been acted on. Remove it.
   NotificationWindowData *data = &s_notification_window_data;
-  notification_storage_set_status(&action_result->id, TimelineItemStatusActioned);
   data->notifications_modified = true;
 
   if (data->is_modal) {

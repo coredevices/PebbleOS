@@ -38,6 +38,13 @@ pbl_clar_test(test_notification_storage
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_notifications
+  SOURCES
+    fw/services/notifications/notifications.c
+    tests/fakes/fake_events.c
+    tests/fakes/fake_notification_storage_status.c
+)
+
 pbl_clar_test(test_ancs_notifications
   SOURCES
     fw/services/notifications/ancs/ancs_notifications.c
