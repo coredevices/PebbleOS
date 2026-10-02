@@ -4,32 +4,65 @@
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/id.h>
 
-//! Called by bl_ctl right after the stack starts, to configure the local device name and address.
+/**
+ * @defgroup services_bluetooth_local_id Local identity
+ * @ingroup services_bluetooth
+ * @brief Local device name and identity address.
+ * @{
+ */
+
+/**
+ * @brief Configure the local name and cache the identity address, right after the stack starts.
+ *
+ * Uses the stored device name, or "Pebble XXXX" from the last two address bytes.
+ */
 void bt_local_id_configure_driver(void);
 
-//! Sets a new device name, overriding the existing (default) one.
-//! The name will be truncated to PBL_BT_DEVICE_NAME_BUFFER_SIZE - 1 characters.
+/**
+ * @brief Override the device name.
+ *
+ * Truncated to @c PBL_BT_DEVICE_NAME_BUFFER_SIZE - 1 characters. Not persisted.
+ *
+ * @param device_name New name.
+ */
 void bt_local_id_set_device_name(const char *device_name);
 
-//! Copies the name of the local device into the given buffer.
-//! @param name_out Buffer into which the name is copied
-//! @param is_le Only consumed if the device used is dual mode. If so,
-//               this changes the name returned
+/**
+ * @brief Copy the device name.
+ *
+ * @param[out] name_out Destination buffer.
+ * @param is_le Meant to select the LE name on dual mode devices; currently ignored.
+ */
 void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE], bool is_le);
 
-//! Copies the address of the local device.
+/**
+ * @brief Copy the local identity address.
+ *
+ * @param[out] addr_out Address.
+ */
 void bt_local_id_copy_address(struct pbl_bt_addr *addr_out);
 
-//! Copies a hex-formatted string representation ("0x000000000000") of the device address into the
-//! given buffer. The buffer should be at least PBL_BT_BD_ADDR_FMT_BUFFER_SIZE bytes in size to fit
-//! the address string.
-//! If there is no local address known, the string "Unknown" will be copied into the buffer.
+/**
+ * @brief Format the local address as a hex string ("0x000000000000").
+ *
+ * Writes "Unknown" if the address is not known.
+ *
+ * @param[out] addr_hex_str_out Destination buffer.
+ */
 void bt_local_id_copy_address_hex_string(char addr_hex_str_out[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE]);
 
-//! Copies a MAC-formatted string representation ("00:00:00:00:00:00") of the device address into
-//! the given buffer. The buffer should be at least PBL_BT_BD_ADDR_FMT_BUFFER_SIZE bytes in size to
-//! fit the address string.
+/**
+ * @brief Format the local address as a MAC string ("00:00:00:00:00:00").
+ *
+ * @param[out] addr_mac_str_out Destination buffer.
+ */
 void bt_local_id_copy_address_mac_string(char addr_mac_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]);
 
-//! Generates a struct pbl_bt_addr from the serial number of the watch
+/**
+ * @brief Derive a static random address from the watch serial number.
+ *
+ * @param[out] addr_out Generated address.
+ */
 void bt_local_id_generate_address_from_serial(struct pbl_bt_addr *addr_out);
+
+/** @} */

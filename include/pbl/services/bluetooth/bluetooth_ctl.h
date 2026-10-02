@@ -5,35 +5,107 @@
 
 #include <stdbool.h>
 
+/**
+ * @defgroup services_bluetooth Bluetooth services
+ * @ingroup services
+ * @brief Firmware-side Bluetooth management on top of the Bluetooth stack.
+ *
+ * Covers starting and stopping the stack, the bonding database, the local identity and
+ * address, pairability, and the GATT services the firmware implements (battery, heart rate,
+ * device information).
+ *
+ * The stack runs while it is enabled (by the runlevel system) and either airplane mode is off
+ * or the override forces it on:
+ *
+ * @code{.c}
+ * bt_ctl_set_airplane_mode_async(false);
+ *
+ * // Once the stack is up, be discoverable and pairable for a minute.
+ * if (bt_ctl_is_bluetooth_running()) {
+ *   bt_pairability_use_ble_for_period(60);
+ * }
+ * @endcode
+ */
+
+/**
+ * @defgroup services_bluetooth_bluetooth_ctl Bluetooth control
+ * @ingroup services_bluetooth
+ * @brief Start, stop and reset the Bluetooth stack.
+ * @{
+ */
+
+/** @brief Override of the airplane mode setting. */
 typedef enum {
+  /** Follow the airplane mode setting. */
   BtCtlModeOverrideNone,
+  /** Keep the stack stopped. */
   BtCtlModeOverrideStop,
+  /** Keep the stack running regardless of airplane mode. */
   BtCtlModeOverrideRun
 } BtCtlModeOverride;
 
+/**
+ * @brief Initialize Bluetooth control, loading the persisted airplane mode setting.
+ *
+ * Must be called before any setter.
+ */
 void bt_ctl_init(void);
 
-//! returns the airplane mode state
+/**
+ * @brief Get the airplane mode setting.
+ *
+ * @return True if airplane mode is on.
+ */
 bool bt_ctl_is_airplane_mode_on(void);
 
-//! Returns whether the bluetooth stack is supposed to be up and running (but might not because it's
-//! still starting or in the middle of resetting).
+/**
+ * @brief Check whether the stack is supposed to be running.
+ *
+ * It may not actually be running yet, e.g. while starting or resetting.
+ *
+ * @return True if enabled and not stopped by airplane mode or the override.
+ */
 bool bt_ctl_is_bluetooth_active(void);
 
-//! Returns whether the bluetooth stack is up and running or not.
+/**
+ * @brief Check whether the stack is up and running.
+ *
+ * @return True if running.
+ */
 bool bt_ctl_is_bluetooth_running(void);
 
-// The following three functions are used for setting the flags that define the state of
-// the bluetooth stack.
-
-//! Sets the airplane mode flag. The flag is persisted across reboots
+/**
+ * @brief Set and persist airplane mode.
+ *
+ * The stack is started or stopped later from KernelBG.
+ *
+ * @param enabled True to turn airplane mode on.
+ */
 void bt_ctl_set_airplane_mode_async(bool enabled);
 
-//! Sets enable flag (used by the runlevel system).
+/**
+ * @brief Enable or disable Bluetooth, as requested by the runlevel system.
+ *
+ * Starts or stops the stack synchronously as needed.
+ *
+ * @param enabled True to enable.
+ */
 void bt_ctl_set_enabled(bool enabled);
 
-//! Sets the override mode used to stop and start the bluetooth independent of the airplane mode.
+/**
+ * @brief Set the airplane mode override.
+ *
+ * Starts or stops the stack synchronously as needed.
+ *
+ * @param override New override mode.
+ */
 void bt_ctl_set_override_mode(BtCtlModeOverride override);
 
-//! Reset bluetooth using sequential calls to comm_stop() and comm_start()
+/**
+ * @brief Restart the stack from KernelBG.
+ *
+ * No-op if Bluetooth is not active.
+ */
 void bt_ctl_reset_bluetooth(void);
+
+/** @} */

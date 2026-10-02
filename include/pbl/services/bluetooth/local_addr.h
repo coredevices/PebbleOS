@@ -5,25 +5,52 @@
 
 #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
 
-struct pbl_bt_addr;
+/**
+ * @defgroup services_bluetooth_local_addr Local address
+ * @ingroup services_bluetooth
+ * @brief Cycling of the local resolvable private address, and the pinned address.
+ *
+ * A single persistent pinned address is generated once. While cycling is paused (by
+ * pairability or by bondings that require address pinning) the pinned address is used on air.
+ * @{
+ */
 
-//! Pauses cycling of local Private Resolvable Address (ref counted).
-//! As long as the cycling is paused, the address that is used "on air" will be stable for the
-//! duration that the BT stack is up (so the address can be expected to have changed after rebooting
-//! or resetting the stack).
-//! In case the local address is currently pinned, this function will be a no-op.
+/** @cond INTERNAL_HIDDEN */
+struct pbl_bt_addr;
+/** @endcond */
+
+/**
+ * @brief Pause address cycling and use the pinned address (reference counted).
+ */
 void bt_local_addr_pause_cycling(void);
 
-//! Resumes cycling of local Private Resolvable Address (ref counted).
-//! In case the local address is currently pinned, this function will be a no-op.
+/**
+ * @brief Release a bt_local_addr_pause_cycling() reference; cycling resumes at zero.
+ */
 void bt_local_addr_resume_cycling(void);
 
-//! Called by BT driver to indicate what the local address was that was used during the pairing
-//! and pinning was requested. See comment in the implementation for more details.
+/**
+ * @brief Report the local address used when a pairing requested pinning.
+ *
+ * Called by the Bluetooth driver; only checked against the pinned address and logged.
+ *
+ * @param addr Local address used during pairing.
+ */
 void bt_local_addr_pin(const struct pbl_bt_addr *addr);
 
-//! Handler for bonding changes (deletions primarily).
+/**
+ * @brief Handle a bonding change.
+ *
+ * Pauses or resumes cycling depending on whether any bonding requires address pinning.
+ *
+ * @param bonding Affected bonding.
+ * @param op Change made.
+ */
 void bt_local_addr_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
 
-//! Called during the BT stack initialization.
+/**
+ * @brief Initialize when the stack starts, generating the pinned address if needed.
+ */
 void bt_local_addr_init(void);
+
+/** @} */
