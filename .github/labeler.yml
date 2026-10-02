@@ -1,0 +1,10 @@
+pending:hw-validation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - fw/drivers/**
+          - kernel/**
+          - soc/**
+          - subsys/bluetooth/**
+          - third_party/hal_nordic/**
+          - third_party/hal_sifli/**
+          - third_party/nimble/**

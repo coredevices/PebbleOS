@@ -1,0 +1,38 @@
+name: PR labels
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Add labels based on modified paths
+        uses: actions/labeler@v6
+
+  blocking:
+    needs: label
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check for blocking labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BLOCKING: '["DNM", "pending:hw-validation", "pending:sdk-review"]'
+        run: |
+          labels=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+            --jq '[.labels[].name]')
+          found=$(jq -nr --argjson l "$labels" --argjson b "$BLOCKING" \
+            '$l - ($l - $b) | .[]')
+          if [ -n "$found" ]; then
+            while read -r label; do
+              echo "::error::Pull request has blocking label '$label'"
+            done <<< "$found"
+            exit 1
+          fi
