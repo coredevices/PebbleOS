@@ -64,14 +64,4 @@ bool iter_next(Iterator *iter);
  */
 bool iter_prev(Iterator *iter);
 
-/**
- * @brief Get the state of an iterator.
- *
- * Declared but not implemented.
- *
- * @param iter Iterator.
- * @return Iterator state.
- */
-IteratorState iter_get_state(Iterator *iter);
-
 /** @} */
