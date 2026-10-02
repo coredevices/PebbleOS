@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+/** @cond INTERNAL_HIDDEN */
+
 // @nolint
 // please don't change these values manually, they are derived from the spreadsheet
 // "Notification Colors"
@@ -80,3 +82,4 @@ APP(IOS_CALENDAR_APP_ID, TIMELINE_RESOURCE_TIMELINE_CALENDAR, GColorRedARGB8),
     APP("com.bunq.ios", TIMELINE_RESOURCE_PAY_BILL, GColorVividCeruleanARGB8),
 
 #undef APP
+    /** @endcond */

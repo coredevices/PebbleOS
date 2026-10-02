@@ -3,11 +3,22 @@
 
 #pragma once
 
+/**
+ * @defgroup services_notifications_notification_constants Notification constants
+ * @ingroup services_notifications
+ * @brief Constants shared by the SMS reply and phone call UIs.
+ * @{
+ */
+
+/** @brief Highlight color of SMS reply menus. */
 #define SMS_REPLY_COLOR GColorIslamicGreen
 
-// Notif pref db key for send text
+/** @brief Notification preferences key holding the Send Text app's reply actions. */
 #define SEND_TEXT_NOTIF_PREF_KEY "com.pebble.sendText"
 
-// Notif pref db keys for incoming call reply
+/** @brief Notification preferences key holding incoming call replies on Android. */
 #define ANDROID_PHONE_KEY "com.pebble.android.phone"
-#define IOS_PHONE_KEY     "com.apple.mobilephone"
+/** @brief Notification preferences key holding incoming call replies on iOS. */
+#define IOS_PHONE_KEY "com.apple.mobilephone"
+
+/** @} */

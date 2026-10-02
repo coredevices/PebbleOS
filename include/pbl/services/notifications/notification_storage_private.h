@@ -3,10 +3,21 @@
 
 #pragma once
 
-//! Notification storage file size
+/**
+ * @defgroup services_notifications_notification_storage_private Notification storage sizing
+ * @ingroup services_notifications
+ * @brief Size of the notification storage file.
+ * @{
+ */
+
+/** @brief Size of the notification storage file, in bytes. */
 #define NOTIFICATION_STORAGE_FILE_SIZE (30 * 1024)
 
-//! Minimum increment of space to free up when compressing.
-//! The higher the value, the less often we need to compress,
-//! but we will lose more notifications
+/**
+ * @brief Minimum amount of space, in bytes, freed when storage is full.
+ *
+ * Larger values compress less often but drop more notifications.
+ */
 #define NOTIFICATION_STORAGE_MINIMUM_INCREMENT_SIZE (NOTIFICATION_STORAGE_FILE_SIZE / 4)
+
+/** @} */
