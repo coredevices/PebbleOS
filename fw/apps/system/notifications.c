@@ -884,8 +884,13 @@ static void prv_handle_notification_removed(Uuid *id) {
 }
 
 static void prv_handle_notification_acted_upon(Uuid *id) {
-  prv_group_window_remove_notification(s_data, id);
-  notifications_history_remove(&s_data->history, id);
+  // Removed on the phone: close it if open, but keep it in the history
+  uint8_t status;
+  if (!notification_storage_get_status(id, &status) ||
+      notifications_history_is_hidden(&(CommonTimelineItemHeader){.status = status})) {
+    prv_group_window_remove_notification(s_data, id);
+    notifications_history_remove(&s_data->history, id);
+  }
   app_notification_window_remove_notification_by_id(id);
 }
 

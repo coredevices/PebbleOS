@@ -290,7 +290,9 @@ void test_notifications_history__only_notifications_within_range_are_grouped(voi
   prv_assert_id(&prv_row(1)->notification.id, 1);
 }
 
-void test_notifications_history__actioned_and_dismissed_notifications_are_skipped(void) {
+// Android marks a notification Dismissed when it leaves the phone's shade, and iOS when it
+// leaves Notification Center. Only an action taken on the watch sets Actioned.
+void test_notifications_history__only_actioned_notifications_are_skipped(void) {
   notifications_history_deinit(&s_history);
   notifications_history_init(&s_history, false, 0);
 
@@ -303,20 +305,28 @@ void test_notifications_history__actioned_and_dismissed_notifications_are_skippe
     .timestamp = 200,
     .status = TimelineItemStatusActioned,
   };
-  CommonTimelineItemHeader dismissed = {
+  CommonTimelineItemHeader read_on_phone = {
     .id = prv_id(3),
     .timestamp = 300,
     .status = TimelineItemStatusDismissed,
   };
+  CommonTimelineItemHeader dismissed_on_watch = {
+    .id = prv_id(4),
+    .timestamp = 400,
+    .status = TimelineItemStatusDismissed | TimelineItemStatusActioned,
+  };
   notifications_history_add_header(&s_history, &kept);
   notifications_history_add_header(&s_history, &actioned);
-  notifications_history_add_header(&s_history, &dismissed);
+  notifications_history_add_header(&s_history, &read_on_phone);
+  notifications_history_add_header(&s_history, &dismissed_on_watch);
 
-  cl_assert_equal_i(notifications_history_get_row_count(&s_history), 1);
-  prv_assert_id(&prv_row(0)->notification.id, 1);
+  cl_assert_equal_i(notifications_history_get_row_count(&s_history), 2);
+  prv_assert_id(&prv_row(0)->notification.id, 3);
+  prv_assert_id(&prv_row(1)->notification.id, 1);
 }
 
-void test_notifications_history__actioned_and_dismissed_notifications_are_not_grouped(void) {
+void test_notifications_history__read_on_phone_is_grouped_and_actioned_is_not(void) {
+  static const Uuid s_android_notifications_source = UUID_NOTIFICATIONS_DATA_SOURCE;
   Attribute sender = {
     .id = AttributeIdSender,
     .cstring = "Anna",
@@ -325,6 +335,7 @@ void test_notifications_history__actioned_and_dismissed_notifications_are_not_gr
     .header =
         {
           .id = prv_id(3),
+          .parent_id = s_android_notifications_source,
           .timestamp = 300,
           .type = TimelineItemTypeNotification,
           .status = TimelineItemStatusDismissed,
@@ -345,6 +356,6 @@ void test_notifications_history__actioned_and_dismissed_notifications_are_not_gr
 
   cl_assert_equal_i(notifications_history_get_row_count(&s_history), 1);
   cl_assert(prv_row(0)->is_group);
-  cl_assert_equal_i(prv_row(0)->group.count, 2);
-  prv_assert_id(notifications_history_row_get_latest_id(prv_row(0)), 2);
+  cl_assert_equal_i(prv_row(0)->group.count, 3);
+  prv_assert_id(notifications_history_row_get_latest_id(prv_row(0)), 3);
 }

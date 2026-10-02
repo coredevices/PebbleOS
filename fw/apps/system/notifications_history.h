@@ -40,8 +40,10 @@ typedef struct NotificationHistory {
   uint32_t next_sequence;
 } NotificationHistory;
 
+//! Only actions taken on the watch hide a notification. The phone sets Dismissed when it is read
+//! there, so that alone does not.
 static inline bool notifications_history_is_hidden(const CommonTimelineItemHeader *header) {
-  return header->status & (TimelineItemStatusActioned | TimelineItemStatusDismissed);
+  return header->status & TimelineItemStatusActioned;
 }
 
 void notifications_history_init(NotificationHistory *history, bool group_by_sender,
