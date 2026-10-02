@@ -5,15 +5,27 @@
 
 #include <stdint.h>
 
-//! Gesture event type
+/**
+ * @addtogroup services_touch
+ * @{
+ */
+
+/** @brief Gesture event type. */
 typedef enum GestureEventType {
+  /** Single tap. */
   GestureEvent_Tap,
+  /** Double tap. */
   GestureEvent_DoubleTap,
 } GestureEventType;
 
-//! Gesture event data, carried directly in PebbleGestureEvent
+/** @brief Gesture event data, carried in @c PebbleGestureEvent. */
 typedef struct GestureEvent {
+  /** Gesture. */
   GestureEventType type : 8;
+  /** X coordinate in pixels. */
   int16_t x;
+  /** Y coordinate in pixels. */
   int16_t y;
 } GestureEvent;
+
+/** @} */

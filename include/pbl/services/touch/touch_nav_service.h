@@ -5,17 +5,31 @@
 
 #include <stdbool.h>
 
-//! Run the master touch-navigation enable/disable transaction.
-//!
-//! Coordinates the kernel and app twins of the touch-nav bridge and the permanent sensor hold in
-//! the mandated order (see \ref touch_nav_transaction_apply). The pref value itself is persisted by
-//! the shell pref system before this is called; this flips the runtime gate and juggles the
-//! subscriptions and hold.
-//!
-//! @param enable true to turn touch navigation on, false to turn it off
+/**
+ * @defgroup services_touch_touch_nav_service Touch navigation
+ * @ingroup services_touch
+ * @brief Enabling and disabling system touch navigation.
+ * @{
+ */
+
+/**
+ * @brief Run the touch navigation enable or disable transaction.
+ *
+ * Coordinates the kernel and app navigation dispatchers and the system sensor hold in the order
+ * required by touch_nav_transaction_apply(), and subscribes an already running app when
+ * enabling. The pref is persisted by the shell before this is called; this flips the runtime
+ * gate and updates the subscriptions and hold.
+ *
+ * @param enable true to turn touch navigation on, false to turn it off.
+ */
 void touch_nav_set_enabled(bool enable);
 
-//! Notify the touch-nav service that the master "Touch" pref changed WITHOUT changing the
-//! effective system state (the Touch Navigation sub-pref is off). Re-evaluates the app twin for
-//! the running app: an explicitly opted-in app follows the master pref alone.
+/**
+ * @brief Notify that the master "Touch" pref changed without changing the effective state.
+ *
+ * Called when the "Touch Navigation" sub-pref is off. Re-evaluates the running app, since an app
+ * that opted in follows the master pref alone.
+ */
 void touch_nav_master_changed(void);
+
+/** @} */
