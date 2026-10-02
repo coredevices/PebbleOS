@@ -8,64 +8,91 @@
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/sm_types.h>
 
-//! Used to version the struct if we have to add additional fields in the future.
-//! 1: Added BLE and BT Classic pairing data
-//! 2: Added getting started is complete bit
-//! 3: Added remote Rand, remote EDIV, local DIV, local EDIV, is_..._valid flags, local device name
+/**
+ * @defgroup services_shared_prf_storage_v2_sprf Legacy shared PRF storage layout
+ * @ingroup services_shared_prf_storage
+ * @brief Former single-struct layout of the shared PRF storage, not used by the firmware.
+ * @{
+ */
+
+/**
+ * @brief Layout version.
+ *
+ * - 1: Added BLE and BT Classic pairing data.
+ * - 2: Added getting started is complete bit.
+ * - 3: Added remote Rand, remote EDIV, local DIV, local EDIV, is_..._valid flags, local device
+ *   name.
+ */
 #define SHARED_PRF_STORAGE_VERSION 3
 
+/** @brief BLE pairing. */
 typedef struct PBL_PACKED {
-  // Remote device name
+  /** Remote device name. */
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
-  // DIV / EDIV that was handed to the remote with our LTK (used when Pebble is Slave):
+  /** EDIV handed to the remote with our LTK, used when the watch is peripheral. */
   uint16_t local_ediv;
+  /** DIV handed to the remote with our LTK, used when the watch is peripheral. */
   uint16_t local_div;
 
-  // Remote encryption info (used when Pebble is Master):
+  /** Remote LTK, used when the watch is central. */
   struct pbl_bt_sm_key ltk;
+  /** Remote Rand, used when the watch is central. */
   uint64_t rand;
+  /** Remote EDIV, used when the watch is central. */
   uint16_t ediv;
 
-  // Remote identity info (used when Pebble is Slave):
+  /** Remote IRK, used when the watch is peripheral. */
   struct pbl_bt_sm_key irk;
+  /** Remote identity address, used when the watch is peripheral. */
   struct pbl_bt_device_internal identity;
 
-  // Remote signature key:
+  /** Remote signature key. */
   struct pbl_bt_sm_key csrk;
 
-  //! True if local_div and local_ediv are valid
+  /** @ref local_div and @ref local_ediv are valid. */
   bool is_local_encryption_info_valid : 1;
 
-  //! True if ltk, rand and ediv are valid
+  /** @ref ltk, @ref rand and @ref ediv are valid. */
   bool is_remote_encryption_info_valid : 1;
 
-  //! True if irk and identity are valid
+  /** @ref irk and @ref identity are valid. */
   bool is_remote_identity_info_valid : 1;
 
-  //! True if csrk is valid
-  //! @note Since iOS 9, CSRK is no longer exchanged.
+  /** @ref csrk is valid. Since iOS 9, the CSRK is no longer exchanged. */
   bool is_remote_signing_info_valid : 1;
 } BLEPairingData;
 
+/** @brief BT Classic pairing. */
 typedef struct PBL_PACKED {
+  /** Remote address. */
   struct pbl_bt_addr address;
+  /** Link key. */
   struct pbl_bt_sm_key link_key;
+  /** Remote device name. */
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+  /** Remote platform bits. */
   uint8_t platform_bits;
 } BTClassicPairingData;
 
+/** @brief Legacy shared PRF storage contents. */
 typedef struct PBL_PACKED {
+  /** Layout version, see @ref SHARED_PRF_STORAGE_VERSION. */
   uint32_t version;
 
-  // Customized local device name, or zero-length string if the default device name should be used
+  /** Custom local device name, empty to use the default name. */
   char local_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
-  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM]; // ER and IR key
+  /** BLE root keys (ER and IR). */
+  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
 
-  // We rely on these two pieces of data being adjacent to each other
+  /** BLE pairing, must be adjacent to @ref bt_classic_data. */
   BLEPairingData ble_data;
+  /** BT Classic pairing. */
   BTClassicPairingData bt_classic_data;
 
+  /** Onboarding has been completed. */
   bool getting_started_is_complete;
 } SharedPRFData;
+
+/** @} */

@@ -6,106 +6,186 @@
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/sm_types.h>
 
-//!
-//! This module is used to share data between PRF and Normal FW
-//!
+/**
+ * @defgroup services_shared_prf_storage Shared PRF storage
+ * @ingroup services
+ * @brief Bluetooth pairing and settings shared between the recovery (PRF) and normal firmware.
+ *
+ * Data is kept in a dedicated flash region as a rolling list of 256-byte entries (see
+ * @ref services_shared_prf_storage_v3_sprf). Each field carries its own CRC; changing a field
+ * invalidates the current entry and rewrites the data into the next one, and the region is erased
+ * once it fills up. All functions are serialized by a mutex.
+ * @{
+ */
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Custom Local Device Name
-
-//! @param local_device_name_out Storage for the local device name.
-//! @param max_size Size of the local_device_name_out buffer
-//! @return true if there is a valid local device name stored, otherwise false (a zero-length string
-//! will be assigned to local_device_name_out)
+/**
+ * @brief Get the custom local device name.
+ *
+ * @param[out] local_device_name_out Buffer for the name, may be NULL. Set to an empty string when
+ *                                   no name is stored.
+ * @param max_size Size of @p local_device_name_out in bytes.
+ * @return true if a non-empty name is stored.
+ */
 bool shared_prf_storage_get_local_device_name(char *local_device_name_out, size_t max_size);
 
-//! Stores the customized local device name
-//! @param local_device_name The device name to store
+/**
+ * @brief Store the custom local device name.
+ *
+ * @param local_device_name Name to store, or NULL to erase it.
+ */
 void shared_prf_storage_set_local_device_name(const char *local_device_name);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! BLE Root Keys
-
-//! Copies the BLE Encryption Root (ER) or Identity Root (IR) keys out of the shared storage.
-//! @param key_out Storage into which ER or IR should be copied.
-//! @param key_type The type of key to copy
-//! @return true if ER and IR are copied, false if there are no keys have been found to copy.
+/**
+ * @brief Get a BLE root key.
+ *
+ * @param key_type Encryption Root (ER) or Identity Root (IR) key.
+ * @param[out] key_out Key, may be NULL.
+ * @return true if a non-zero key is stored.
+ */
 bool shared_prf_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
                                      struct pbl_bt_sm_key *key_out);
 
-//! Stores new BLE Encryption Root (ER) and Identity Root (IR) keys in the shared storage.
+/**
+ * @brief Store the BLE root keys.
+ *
+ * @param keys_in Array of @c PBL_BT_SM_ROOT_KEY_TYPE_NUM keys indexed by
+ *                @ref pbl_bt_sm_root_key_type, or NULL to store zeroed keys.
+ */
 void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! BLE Pairing Data
-
-//! Returns true if there is a valid pairing, otherwise false.
-//! Out params are only valid if the function returns true
-//! Pass in NULL for any values that you aren't interested in
+/**
+ * @brief Get the BLE pairing.
+ *
+ * Output parameters may be NULL and are only valid when true is returned.
+ *
+ * @param[out] pairing_info_out Pairing keys.
+ * @param[out] name_out Buffer of @c PBL_BT_DEVICE_NAME_BUFFER_SIZE bytes for the remote device
+ *                      name, empty if none is stored.
+ * @param[out] requires_address_pinning_out Whether the pairing requires address pinning.
+ * @param[out] flags Pairing flags.
+ * @return true if a pairing is stored.
+ */
 bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
                                              char *name_out, bool *requires_address_pinning_out,
                                              uint8_t *flags);
 
-//! @param pairing_info Data structure containing all the pairing info available.
-//! @param name Optional device name to store. Pass NULL if not available.
-//! @param requires_address_pinning Whether the pairing requires address pinning.
-//! @param flags Pairing flags to store.
+/**
+ * @brief Store the BLE pairing, replacing the previous one.
+ *
+ * Empty pairing info is ignored.
+ *
+ * @param pairing_info Pairing keys.
+ * @param name Remote device name, or NULL to keep the stored name.
+ * @param requires_address_pinning Whether the pairing requires address pinning.
+ * @param flags Pairing flags.
+ */
 void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
                                                const char *name, bool requires_address_pinning,
                                                uint8_t flags);
 
+/** @brief Erase the BLE pairing and its device name. */
 void shared_prf_storage_erase_ble_pairing_data(void);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! BLE Pinned Address
-
-//! Returns true if there is a valid pinned address, otherwise false.
-//! Out params are only valid if the function returns true
-//! Pass in NULL for any values that you aren't interested in
+/**
+ * @brief Get the pinned BLE address.
+ *
+ * @param[out] address_out Address, may be NULL. Only valid when true is returned.
+ * @return true if a pinned address is stored.
+ */
 bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out);
 
-//! Stores the new BLE Pinned Address in the shared storage.
+/**
+ * @brief Store the pinned BLE address.
+ *
+ * @param address Address, or NULL to erase it.
+ */
 void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Local Identity Address
-
-//! Returns true if a local identity address is stored, otherwise false.
+/**
+ * @brief Get the local identity address.
+ *
+ * @param[out] address_out Address, may be NULL. Only valid when true is returned.
+ * @return true if a local identity address is stored.
+ */
 bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_out);
 
-//! Stores the local identity address, or erases it if address is NULL.
+/**
+ * @brief Store the local identity address.
+ *
+ * @param address Address, or NULL to erase it.
+ */
 void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *address);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! BT Classic Pairing Data
-
-//! Returns true if there is a valid pairing, otherwise false.
-//! Out params are only valid if the function returns true
-//! Pass in NULL for any values that you aren't interested in
+/**
+ * @brief Get a BT Classic pairing.
+ *
+ * BT Classic is not supported: asserts if called.
+ *
+ * @param[out] addr_out Remote address.
+ * @param[out] device_name_out Remote device name.
+ * @param[out] link_key_out Link key.
+ * @param[out] platform_bits Remote platform bits.
+ * @return Does not return.
+ */
 bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,
                                                     char *device_name_out,
                                                     struct pbl_bt_sm_key *link_key_out,
                                                     uint8_t *platform_bits);
 
+/**
+ * @brief Store a BT Classic pairing.
+ *
+ * BT Classic is not supported: asserts if called.
+ *
+ * @param addr Remote address.
+ * @param device_name Remote device name.
+ * @param link_key Link key.
+ * @param platform_bits Remote platform bits.
+ */
 void shared_prf_storage_store_bt_classic_pairing_data(struct pbl_bt_addr *addr,
                                                       const char *device_name,
                                                       struct pbl_bt_sm_key *link_key,
                                                       uint8_t platform_bits);
 
+/**
+ * @brief Store the BT Classic remote platform bits.
+ *
+ * BT Classic is not supported: asserts if called.
+ *
+ * @param platform_bits Remote platform bits.
+ */
 void shared_prf_storage_store_platform_bits(uint8_t platform_bits);
 
+/**
+ * @brief Erase the BT Classic pairing.
+ *
+ * BT Classic is not supported: asserts if called.
+ */
 void shared_prf_storage_erase_bt_classic_pairing_data(void);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Getting Started Is Complete
-
+/**
+ * @brief Check whether onboarding (getting started) has been completed.
+ *
+ * @return true if completed.
+ */
 bool shared_prf_storage_get_getting_started_complete(void);
 
+/**
+ * @brief Set whether onboarding (getting started) has been completed.
+ *
+ * @param set true if completed.
+ */
 void shared_prf_storage_set_getting_started_complete(bool set);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Factory Reset
-
+/** @brief Erase all shared data, for a factory reset. */
 void shared_prf_storage_wipe_all(void);
 
+/**
+ * @brief Initialize shared PRF storage.
+ *
+ * Finds the valid entry, and erases the region, keeping that entry, when more than 75% of the
+ * region is used so that later writes are unlikely to block on an erase.
+ */
 void shared_prf_storage_init(void);
+
+/** @} */
