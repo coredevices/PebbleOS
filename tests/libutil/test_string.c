@@ -73,6 +73,27 @@ void test_string__test_concat_str_int(void) {
   cl_assert_equal_i(buf[6], 'x');
 }
 
+void test_string__test_safe_strcat(void) {
+  char buf[8];
+
+  memset(buf, 'x', sizeof(buf));
+  strcpy(buf, "ab");
+  safe_strcat(buf, "cd", 6);
+  cl_assert_equal_s(buf, "abcd");
+
+  memset(buf, 'x', sizeof(buf));
+  strcpy(buf, "ab");
+  safe_strcat(buf, "cdefgh", 6);
+  cl_assert_equal_s(buf, "abcde");
+  cl_assert_equal_i(buf[6], 'x');
+
+  memset(buf, 'x', sizeof(buf));
+  strcpy(buf, "abcde");
+  safe_strcat(buf, "f", 6);
+  cl_assert_equal_s(buf, "abcde");
+  cl_assert_equal_i(buf[6], 'x');
+}
+
 void test_string__test_itoa_int(void) {
   char buf[32];
 

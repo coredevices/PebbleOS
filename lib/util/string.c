@@ -168,9 +168,9 @@ void byte_stream_to_hex_string(char *out_buf, size_t out_buf_len, const uint8_t 
 
 // -------------------------------------------------------------------------------
 void safe_strcat(char *dst, const char *src, int dst_space) {
-  int remaining = dst_space - strlen(dst);
-  if (dst_space > 0) {
-    strncat(dst, src, remaining);
+  if (dst_space <= 0) {
+    return;
   }
   dst[dst_space - 1] = 0;
+  strncat(dst, src, dst_space - 1 - strlen(dst));
 }
