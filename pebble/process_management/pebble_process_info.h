@@ -190,9 +190,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x72 -- Add notification count service (rev 115)
 // sdk.major:0x5 .minor:0x73 -- Add platform_has_feature() (rev 116)
 // sdk.major:0x5 .minor:0x74 -- Add the pressure service (rev 117)
+// sdk.major:0x5 .minor:0x75 -- Add blood oxygen (SpO2) peek API to health service (rev 118)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x74
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x75
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
