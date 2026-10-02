@@ -10,68 +10,120 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-//! The transcription module validates and manipulates the serialized format of the transcription
-//! structure received from the phone over the voice endpoint.
+/**
+ * @defgroup services_voice_transcription Transcription
+ * @ingroup services_voice
+ * @brief Validation and traversal of serialized transcriptions received from the phone.
+ *
+ * A transcription is kept in memory exactly as received over the voice endpoint: packed,
+ * variable-length sentences, each a list of variable-length words.
+ *
+ * @code{.c}
+ * static bool count_word(const TranscriptionWord *word, void *data) {
+ *   (*(size_t *)data)++;
+ *   return true;
+ * }
+ *
+ * if (transcription_validate(t, size)) {
+ *   size_t words = 0;
+ *   const TranscriptionSentence *s = &t->sentences[0];
+ *   transcription_iterate_words(s->words, s->word_count, count_word, &words);
+ * }
+ * @endcode
+ * @{
+ */
 
-//! Transcription types supported. Only the sentence list transcription is currently supported, but
-//! this allows for different formats in future
+/** @brief Transcription format. */
 typedef enum {
+  /** List of sentences, the only supported format. */
   TranscriptionTypeSentenceList = 0x01
 } TranscriptionType;
 
-//! A word string with associated confidence value and length. The string is not zero terminated
+/** @brief Word with its confidence value. */
 typedef struct PBL_PACKED {
-  uint8_t confidence; //!< Word confidence value (1 - 100%) or 0 if confidence value is not valid
-  uint16_t length;    //!< Length of word
-  utf8_t data[];      //!< UTF-8 encoded text
+  /** Confidence in percent (1-100), or 0 if not available. */
+  uint8_t confidence;
+  /** Length of @ref data in bytes. */
+  uint16_t length;
+  /** UTF-8 text, not zero terminated. */
+  utf8_t data[];
 } TranscriptionWord;
 
-//! A serialized list of words making up a sentence.
+/** @brief Sentence, a serialized list of words. */
 typedef struct PBL_PACKED {
+  /** Number of words. */
   uint16_t word_count;
+  /** Serialized words; use transcription_iterate_words() as they have variable length. */
   TranscriptionWord words[];
 } TranscriptionSentence;
 
-//! A transcription consists of one of more sentences, each of which is broken up into a list of
-//! words with a confidence value for each word. Not all recognizers support multiple sentences and
-//! not all support confidence per word. The simplest representation of a string would be a single
-//! list of words (with their confidence values set to zero) making up a single sentence.
-//! The list of objects is serialized in memory as it would be received over the endpoint.
+/**
+ * @brief Transcription: one or more sentences of words.
+ *
+ * Not all recognizers produce several sentences or per-word confidence; the simplest
+ * transcription is a single sentence with all confidence values set to 0.
+ */
 typedef struct PBL_PACKED {
+  /** Format of the transcription. */
   TranscriptionType type : 8;
+  /** Number of sentences. */
   uint8_t sentence_count;
+  /** Serialized sentences; use transcription_iterate_sentences() as they have variable length. */
   TranscriptionSentence sentences[];
 } Transcription;
 
-//! Callback for iterating over a list of word sentences
-//! @param sentence   Current sentence in iteration
-//! @param data       Context data pointer
-//! @return true to continue iteration, false to end iteration
+/**
+ * @brief Sentence iteration callback.
+ *
+ * @param sentence Current sentence.
+ * @param data Context pointer.
+ * @return true to continue, false to stop the iteration.
+ */
 typedef bool (*TranscriptionSentenceIterateCb)(const TranscriptionSentence *sentence, void *data);
 
-//! Callback for iterating over a list of words
-//! @param word   Current word in iteration
-//! @param data   Context data pointer
-//! @return true to continue iteration, false to end iteration
+/**
+ * @brief Word iteration callback.
+ *
+ * @param word Current word.
+ * @param data Context pointer.
+ * @return true to continue, false to stop the iteration.
+ */
 typedef bool (*TranscriptionWordIterateCb)(const TranscriptionWord *word, void *data);
 
-//! Check that a transcription object is valid (called to check transcriptions received from phone)
+/**
+ * @brief Check that a transcription received from the phone is well formed.
+ *
+ * The format must be supported, every sentence and word non-empty, words free of control
+ * characters other than backspace, and the content must exactly fill @p size bytes.
+ *
+ * @param transcription Transcription to check, may be NULL.
+ * @param size Size of the received buffer in bytes.
+ * @return true if the transcription is valid.
+ */
 bool transcription_validate(const Transcription *transcription, size_t size);
 
-//! Iterate over a list of serialized TranscriptionSentence objects
-//! @param sentences        Beginning of serialized list
-//! @param count            Number of TranscriptionSentence objects in list
-//! @param handle_sentence  Callback for handling each sentence
-//! @param data             Context data pointer - passed into handler callback
-//! @return a pointer to the end of the serialized list
+/**
+ * @brief Iterate over a serialized list of sentences.
+ *
+ * @param sentences First sentence.
+ * @param count Number of sentences.
+ * @param handle_sentence Callback for each sentence, may be NULL to only skip over the list.
+ * @param data Context pointer passed to @p handle_sentence.
+ * @return End of the list, or the sentence at which the callback stopped the iteration.
+ */
 void *transcription_iterate_sentences(const TranscriptionSentence *sentences, size_t count,
                                       TranscriptionSentenceIterateCb handle_sentence, void *data);
 
-//! Iterate over list of serialized TranscriptionWord objects
-//! @param words        Beginning of serialized list
-//! @param count        Number of words in list
-//! @param handle_word  Callback for handling each word
-//! @param data         Context data pointer - passed into handler callback
-//! @return a pointer to the end of the serialized list
+/**
+ * @brief Iterate over a serialized list of words.
+ *
+ * @param words First word.
+ * @param count Number of words.
+ * @param handle_word Callback for each word, may be NULL to only skip over the list.
+ * @param data Context pointer passed to @p handle_word.
+ * @return End of the list, or the word at which the callback stopped the iteration.
+ */
 void *transcription_iterate_words(const TranscriptionWord *words, size_t count,
                                   TranscriptionWordIterateCb handle_word, void *data);
+
+/** @} */
