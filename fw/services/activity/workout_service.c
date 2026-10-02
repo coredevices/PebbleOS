@@ -451,7 +451,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
     }
 
     // Before starting this new session we need to deal with any in progress sessions
-    uint32_t num_sessions = 0;
+    uint32_t num_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
     ActivitySession *sessions =
         kernel_zalloc_check(sizeof(ActivitySession) * ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
     activity_get_sessions(&num_sessions, sessions);
