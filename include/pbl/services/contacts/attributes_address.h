@@ -8,80 +8,142 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/**
+ * @defgroup services_contacts_attributes_address Contact addresses
+ * @ingroup services_contacts
+ * @brief (De)serialization of attribute lists together with contact addresses.
+ *
+ * Deserializing is a two-pass process: parse the payload to size the buffer, then lay out the
+ * lists in the buffer and fill them.
+ *
+ * @code{.c}
+ * size_t str_size;
+ * uint8_t attrs_per_addr[num_addresses];
+ * if (!attributes_address_parse_serial_data(num_attributes, num_addresses, data, size,
+ *                                           &str_size, attrs_per_addr)) {
+ *   return false;
+ * }
+ * size_t buf_size = attributes_address_get_buffer_size(num_attributes, num_addresses,
+ *                                                      attrs_per_addr, str_size);
+ * uint8_t *buf = kernel_malloc_check(buf_size);
+ * uint8_t *cursor = buf;
+ * attributes_address_init(&attr_list, &addr_list, &cursor, num_attributes, num_addresses,
+ *                         attrs_per_addr);
+ * bool ok = attributes_address_deserialize(&attr_list, &addr_list, cursor, buf + buf_size,
+ *                                          data, size);
+ * @endcode
+ * @{
+ */
+
+/** @brief Address type. */
 typedef enum {
+  /** Invalid address. */
   AddressTypeInvalid,
+  /** Phone number. */
   AddressTypePhoneNumber,
+  /** Email address. */
   AddressTypeEmail,
 } AddressType;
 
+/** @brief Contact address. */
 typedef struct {
+  /** Address UUID. */
   Uuid id;
+  /** Address type. */
   AddressType type;
+  /** Address attributes (the address itself, label, ...). */
   AttributeList attr_list;
 } Address;
 
+/** @brief List of addresses. */
 typedef struct {
+  /** Number of entries in @ref addresses. */
   uint8_t num_addresses;
+  /** Addresses. */
   Address *addresses;
 } AddressList;
 
-//! Takes serialized data and fills two arrays: string_alloc_size_out and attributes_per_action_out
-//! The information in these arrays is used in the following steps
-//! @param num_attributes     number of non-address attributes
-//! @param num_addresses      number of addresses
-//! @param data               serialized data buffer
-//! @param data_size          size of the serial data buffer
-//! @param string_alloc_size_out         size of string buffer that is required
-//! @param attributes_per_address_out    an array of counts for the number of attributes per address
-//!                                      in order corresponding to address order
-//! @return True if the data was parsed successfully, False if not
+/**
+ * @brief Parse serialized attributes and addresses to size the deserialization buffer.
+ *
+ * @param num_attributes Number of attributes not belonging to an address.
+ * @param num_addresses Number of addresses.
+ * @param data Serialized attributes followed by serialized addresses.
+ * @param data_size Size of @p data in bytes.
+ * @param[out] string_alloc_size_out Size needed for all attribute strings.
+ * @param[out] attributes_per_address_out Number of attributes of each address, in address
+ * order; @p num_addresses entries.
+ * @return true if the data was parsed successfully.
+ */
 bool attributes_address_parse_serial_data(uint8_t num_attributes, uint8_t num_addresses,
                                           const uint8_t *data, size_t data_size,
                                           size_t *string_alloc_size_out,
                                           uint8_t *attributes_per_address_out);
 
-//! Return the size of the buffer needed to store the attributes, addresses and their strings
-//! @param num_attributes   number of non-address attributes
-//! @param num_addresses    number of addresses
-//! @param attributes_per_address    an array of counts for the number of attributes per address
-//!                                  in order corresponding to address order
-//! @param required_size_for_strings    total size of all attribute strings
-//! @return The size of the buffer required to store the attributes, address and strings
+/**
+ * @brief Get the buffer size needed to store attributes, addresses and their strings.
+ *
+ * @param num_attributes Number of attributes not belonging to an address.
+ * @param num_addresses Number of addresses.
+ * @param attributes_per_address Number of attributes of each address, in address order.
+ * @param required_size_for_strings Total size of all attribute strings.
+ * @return Required buffer size in bytes.
+ */
 size_t attributes_address_get_buffer_size(uint8_t num_attributes, uint8_t num_addresses,
                                           const uint8_t *attributes_per_address,
                                           size_t required_size_for_strings);
 
-//! Initializes an AttributeList and AddressList
-//! @param attr_list          The AttributeList to initialize
-//! @param addr_list          The AddressList to initialize
-//! @param buffer             The buffer to hold the list of attributes and address
-//! @param num_attributes     number of attributes
-//! @param num_addresses      number of addresses
-//! @param attributes_per_address   an array of counts for the number of attributes per address
-//!                                 in order corresponding to address order
+/**
+ * @brief Lay out an attribute list and an address list in a buffer.
+ *
+ * @param[out] attr_list Attribute list to initialize.
+ * @param[out] addr_list Address list to initialize.
+ * @param[in,out] buffer Cursor into the buffer; advanced past the attribute and address arrays,
+ * leaving it at the space for strings.
+ * @param num_attributes Number of attributes not belonging to an address.
+ * @param num_addresses Number of addresses.
+ * @param attributes_per_address Number of attributes of each address, in address order.
+ */
 void attributes_address_init(AttributeList *attr_list, AddressList *addr_list, uint8_t **buffer,
                              uint8_t num_attributes, uint8_t num_addresses,
                              const uint8_t *attributes_per_address);
 
-//! Fills an AttributeList and AddressList from serialized data
-//! @param attr_list          The AttributeList to fill
-//! @param addr_list          The AddressList to fill
-//! @param buffer             The buffer which holds the list of attributes and address
-//! @param buf_end            A pointer to the end of the buffer
-//! @param payload            Serialized payload buffer
-//! @param payload_size       Size of the payload buffer in bytes
+/**
+ * @brief Fill an attribute list and an address list from serialized data.
+ *
+ * The lists must have been set up with attributes_address_init().
+ *
+ * @param[in,out] attr_list Attribute list to fill.
+ * @param[in,out] addr_list Address list to fill.
+ * @param buffer Space for strings, as left by attributes_address_init().
+ * @param buf_end End of the buffer.
+ * @param payload Serialized attributes followed by serialized addresses.
+ * @param payload_size Size of @p payload in bytes.
+ * @return true on success.
+ */
 bool attributes_address_deserialize(AttributeList *attr_list, AddressList *addr_list,
                                     uint8_t *buffer, uint8_t *buf_end, const uint8_t *payload,
                                     size_t payload_size);
 
-//! Calculate the required size for a buffer to store address & attributes
+/**
+ * @brief Get the serialized size of an attribute list and an address list.
+ *
+ * @param list Attribute list.
+ * @param addr_list Address list.
+ * @return Size in bytes needed by attributes_address_serialize_payload().
+ */
 size_t attributes_address_get_serialized_payload_size(AttributeList *list, AddressList *addr_list);
 
-//! Serializes an attribute list and address list into a buffer
-//! @param attr_list          The AttributeList to serialize
-//! @param addr_list          The AddressList to serialize
-//! @param buffer a pointer to the buffer to write to
-//! @param buffer_size the size of the buffer in bytes
-//! @returns the number of bytes written to buffer
+/**
+ * @brief Serialize an attribute list and an address list.
+ *
+ * @param attr_list Attribute list.
+ * @param addr_list Address list.
+ * @param[out] buffer Output buffer.
+ * @param buffer_size Size of @p buffer in bytes.
+ * @return Number of bytes written.
+ */
 size_t attributes_address_serialize_payload(AttributeList *attr_list, AddressList *addr_list,
                                             uint8_t *buffer, size_t buffer_size);
+
+/** @} */
