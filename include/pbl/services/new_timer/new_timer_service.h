@@ -3,4 +3,12 @@
 
 #pragma once
 
+/**
+ * @addtogroup services_new_timer
+ * @{
+ */
+
+/** @brief Create the NewTimer task; called once at boot. */
 void new_timer_service_init(void);
+
+/** @} */

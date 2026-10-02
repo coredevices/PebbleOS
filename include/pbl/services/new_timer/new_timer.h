@@ -6,79 +6,144 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//! new_timer.h
-//!
-//! NewTimer is a very high priority thread that's used for executing timers and high-priority
-//! work for our drivers from interrupts. The timer functionality is just a wrapper around
-//! task_timer.h.
-//!
-//! Note: As of now most of our timers are executed in this thread, even if it's just a short
-//! callback to send an event to another thread with evented_timer.h. In the future these other
-//! threads will probably use their own TaskTimerManager instances instead and this thread will
-//! will get a whole lot less busy and reserved for only high priority work. At that time this
-//! thread will probably get renamed something like KernelHighPriority.
+/**
+ * @defgroup services_new_timer New timer
+ * @ingroup services
+ * @brief Timers and deferred work run on the high priority NewTimer task.
+ *
+ * NewTimer runs at the highest task priority and executes timer callbacks and work deferred from
+ * interrupts by drivers. Callbacks must be short: anything long should be handed to another task,
+ * e.g. with an evented timer or a system task callback. Timers are a wrapper around the kernel
+ * task timers.
+ *
+ * @code{.c}
+ * static TimerID s_timer;
+ *
+ * static void timeout_cb(void *data) {
+ *   // Runs on NewTimer.
+ * }
+ *
+ * s_timer = new_timer_create();
+ * new_timer_start(s_timer, 500, timeout_cb, NULL, TIMER_START_FLAG_REPEATING);
+ * // ...
+ * new_timer_stop(s_timer);
+ * new_timer_delete(s_timer);
+ * @endcode
+ * @{
+ */
 
+/**
+ * @brief Timer callback, run on the NewTimer task.
+ *
+ * @param data Data passed to new_timer_start().
+ */
 typedef void (*NewTimerCallback)(void *data);
 
+/** @brief Timer handle; ids are used instead of pointers to avoid use-after-free. */
 typedef uint32_t TimerID;
+/** @brief Invalid timer id, never returned by new_timer_create(). */
 #define TIMER_INVALID_ID 0
 
-//! Flags for new_timer_start()
-//! TIMER_START_FLAG_REPEATING          make this a repeating timer
-//!
-//! TIMER_START_FLAG_FAIL_IF_EXECUTING  If the timer callback is currently executing, do not
-//! schedule the timer and return false from new_timer_start. This can be helpful in usage patterns
-//! where the timer callback might be blocked on a semaphore owned by the task issuing the start.
-//!
-//! TIMER_START_FLAG_FAIL_IF_SCHEDULED If the timer is already scheduled, do not reschedule it and
-//! return false from new_timer_start.
-#define TIMER_START_FLAG_REPEATING         0x01
+/** @brief Re-arm the timer with the same timeout after each expiry. */
+#define TIMER_START_FLAG_REPEATING 0x01
+/**
+ * @brief Fail if the callback is executing.
+ *
+ * Neither schedule the timer nor wait; new_timer_start() returns false. Useful when the callback
+ * may be blocked on a semaphore owned by the task issuing the start.
+ */
 #define TIMER_START_FLAG_FAIL_IF_EXECUTING 0x02
+/** @brief Fail if the timer is already scheduled, instead of rescheduling it. */
 #define TIMER_START_FLAG_FAIL_IF_SCHEDULED 0x04
 
-//! Creates a new timer object. This timer will start out in the stopped state.
-//! @return the non-zero timer id or TIMER_INVALID_ID if OOM
+/**
+ * @brief Create a timer, initially stopped.
+ *
+ * Timers come from a fixed pool; running out of timers asserts.
+ *
+ * @return Non-zero timer id.
+ */
 TimerID new_timer_create(void);
 
-//! Schedule an existing timer to execute in timeout_ms. If the timer was already started, it will
-//! be rescheduled for the new time.
-//! @param[in] timer ID
-//! @param[in] timeout_ms timeout in milliseconds
-//! @param[in] cb pointer to the user's callback procedure
-//! @param[in] cb_data reference data for the callback
-//! @param[in] flags one or more TIMER_START_FLAG_.* flags
-//! @return True if successful, false if timer was not rescheduled. Note that it will never return
-//!     false if none of the FAIL_IF_* flags are set.
+/**
+ * @brief Schedule a timer.
+ *
+ * A timer that is already scheduled is rescheduled for the new time, unless
+ * @ref TIMER_START_FLAG_FAIL_IF_SCHEDULED is given.
+ *
+ * @param timer Timer id.
+ * @param timeout_ms Timeout in milliseconds.
+ * @param cb Callback.
+ * @param cb_data Data passed to @p cb.
+ * @param flags Zero or more TIMER_START_FLAG_ values.
+ * @return true on success; false is only returned when one of the FAIL_IF flags applies.
+ */
 bool new_timer_start(TimerID timer, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
                      uint32_t flags);
 
-//! Stop a timer. For repeating timers, even if this method returns false (callback is currently
-//! executing) the timer will not run again. Safe to call on timers that aren't currently started.
-//! @param[in] timer ID
-//! @return False if timer's callback is current executing, true if not.
+/**
+ * @brief Stop a timer.
+ *
+ * Safe to call on a timer that is not scheduled. A repeating timer does not run again even if
+ * its callback is executing.
+ *
+ * @param timer Timer id.
+ * @return false if the callback is executing, true otherwise.
+ */
 bool new_timer_stop(TimerID timer);
 
-//! Get scheduled status of a timer
-//! @param[in] timer ID
-//! @param[out] expire_ms_p if not NULL, the number of milliseconds until this timer will fire is
-//! returned in
-//!              *expire_ms_p. If the timer is not scheduled (return value is false), this value
-//!              should be ignored.
-//! @return True if timer is scheduled, false if not
+/**
+ * @brief Check whether a timer is scheduled.
+ *
+ * @param timer Timer id.
+ * @param[out] expire_ms_p If not NULL, milliseconds until the timer fires; only valid when
+ * scheduled.
+ * @return true if the timer is scheduled.
+ */
 bool new_timer_scheduled(TimerID timer, uint32_t *expire_ms_p);
 
-//! Delete a timer
-//! @param[in] timer ID
+/**
+ * @brief Delete a timer, stopping it first.
+ *
+ * If the callback is executing, the timer is freed after it returns.
+ *
+ * @param timer Timer id.
+ */
 void new_timer_delete(TimerID timer);
 
-// Timer watchdog uses this
+/**
+ * @brief Get the callback being executed, for the watchdog.
+ *
+ * @return Running timer or work callback, or NULL.
+ */
 void *new_timer_debug_get_current_callback(void);
 
+/**
+ * @brief Work callback, run on the NewTimer task.
+ *
+ * @param data Data passed when queuing the work.
+ */
 typedef void (*NewTimerWorkCallback)(void *data);
 
-//! Push a piece of work onto the new timer thread from an ISR. Used to handle time sensitive
-//! hardware events.
+/**
+ * @brief Queue work on the NewTimer task from an ISR.
+ *
+ * Used to handle time sensitive hardware events. The work is dropped if the queue is full.
+ *
+ * @param cb Work callback.
+ * @param data Data passed to @p cb.
+ */
 void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data);
 
-//! @return True if there was space in the queue, false otherwise
+/**
+ * @brief Queue work on the NewTimer task.
+ *
+ * Waits up to 50 ticks for space in the queue.
+ *
+ * @param cb Work callback.
+ * @param data Data passed to @p cb.
+ * @return true if queued, false if the queue stayed full.
+ */
 bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data);
+
+/** @} */
