@@ -5,13 +5,26 @@
 
 #include <stdint.h>
 
-//! Coarse description of what the user is doing, so the HR sensor's PPG algorithm can switch to a
-//! motion-tuned model. The mapping to the underlying algorithm's per-activity modes lives in the
-//! driver; callers just describe the activity. Kept board/driver-independent so the (widely
-//! included) HRM manager private header can use it without dragging in the HRMDevice type.
+/**
+ * @defgroup services_hrm_hrm_activity_scene HRM activity scene
+ * @ingroup services_hrm
+ * @brief What the user is doing, so the sensor algorithm can use a motion-tuned model.
+ *
+ * The driver maps scenes to its algorithm's modes. Kept independent of boards and drivers so
+ * the HRM manager private header can use it.
+ * @{
+ */
+
+/** @brief Activity scene for the heart rate algorithm. */
 typedef enum {
-  HRMActivityScene_Default = 0,   //!< Rest / background sampling; algorithm's general-purpose mode.
-  HRMActivityScene_Walk,          //!< Walking.
-  HRMActivityScene_Run,           //!< Running (incl. high heart rate).
-  HRMActivityScene_HighIntensity, //!< Open / mixed high-intensity exercise.
+  /** Rest or background sampling: the algorithm's general-purpose mode. */
+  HRMActivityScene_Default = 0,
+  /** Walking. */
+  HRMActivityScene_Walk,
+  /** Running, including high heart rates. */
+  HRMActivityScene_Run,
+  /** Open or mixed high-intensity exercise. */
+  HRMActivityScene_HighIntensity,
 } HRMActivityScene;
+
+/** @} */
