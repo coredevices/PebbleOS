@@ -1468,7 +1468,7 @@ static void prv_delete_all_pairings_itr(SettingsFile *old_file, SettingsFile *ne
   void *data = kernel_malloc_check(info->val_len);
   info->get_val(old_file, data, info->val_len);
 
-  settings_file_set(new_file, key, info->key_len, &data, info->val_len);
+  settings_file_set(new_file, key, info->key_len, data, info->val_len);
 
   kernel_free(key);
   kernel_free(data);
@@ -1480,12 +1480,10 @@ void bt_persistent_storage_delete_all_pairings(void) {
     SettingsFile fd;
     status_t rv =
         settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
-    if (rv) {
-      return;
+    if (rv == S_SUCCESS) {
+      settings_file_rewrite(&fd, prv_delete_all_pairings_itr, NULL);
+      settings_file_close(&fd);
     }
-
-    settings_file_rewrite(&fd, prv_delete_all_pairings_itr, NULL);
-    settings_file_close(&fd);
   }
   prv_unlock();
 
