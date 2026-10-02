@@ -5,33 +5,69 @@
 
 #include <stdint.h>
 
+/**
+ * @defgroup services_vibes_vibe_intensity Vibe intensity
+ * @ingroup services_vibes
+ * @brief Default strength of all vibrations.
+ * @{
+ */
+
+/** @brief Vibration intensity. */
 typedef enum VibeIntensity {
+  /** Low, 40 % strength. */
   VibeIntensityLow,
+  /** Medium, 60 % strength. */
   VibeIntensityMedium,
+  /** High, full strength. */
   VibeIntensityHigh,
+  /** Number of intensities. */
   VibeIntensityNum,
 } VibeIntensity;
 
+/** @brief Intensity used when the user has not chosen one. */
 #define DEFAULT_VIBE_INTENSITY VibeIntensityHigh
 
+/** @brief Apply the intensity stored in the alert preferences. */
 void vibe_intensity_init(void);
 
-//! Returns the corresponding strength for the given level of intensity.
-//! The strength corresponds to a percentage of the max strength, ie in the range [0,100].
+/**
+ * @brief Get the strength of an intensity.
+ *
+ * @param intensity Intensity.
+ * @return Percentage of the maximum strength, 0-100. Unknown intensities map to 100.
+ */
 uint8_t get_strength_for_intensity(VibeIntensity intensity);
 
-//! Sets the intensity of ALL vibrations (not just notifications)
+/**
+ * @brief Set the default strength of all vibrations (not just notifications).
+ *
+ * Does not persist the intensity.
+ *
+ * @param intensity Intensity to apply.
+ */
 void vibe_intensity_set(VibeIntensity intensity);
 
-//! Gets the current vibe intensity
+/**
+ * @brief Get the intensity stored in the alert preferences.
+ *
+ * @return Current intensity.
+ */
 VibeIntensity vibe_intensity_get(void);
 
-//! Returns a string representation of the provided vibe intensity.
-//! @param intensity The intensity for which to get a string representation
-//! @return A string representation of the provided intensity, or NULL if the intensity is invalid
+/**
+ * @brief Get the display name of an intensity.
+ *
+ * @param intensity Intensity.
+ * @return Untranslated name, to be passed through i18n, or NULL if @p intensity is invalid.
+ */
 const char *vibe_intensity_get_string_for_intensity(VibeIntensity intensity);
 
-//! Gets the next intensity in the vibe intensity cycle
-//! @param intensity Input intensity for which to get the next intensity
-//! @return The next vibe intensity in the cycle
+/**
+ * @brief Get the next intensity in the cycle, wrapping around.
+ *
+ * @param intensity Current intensity.
+ * @return Next intensity.
+ */
 VibeIntensity vibe_intensity_cycle_next(VibeIntensity intensity);
+
+/** @} */
