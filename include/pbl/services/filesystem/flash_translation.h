@@ -7,55 +7,89 @@
 #include <stdbool.h>
 #include <string.h>
 
-//! Flash Translation Layer
-//!
-//! This module allows our filesystem, PFS, to grow into multiple flash regions while keeping a
-//! contiguous virtual address space.
-//!
-//! On boot, this module checks each region to see if the filesystem is active in said region.
-//! If so, it adds the region to the flash translation space and continues processing the
-//! remaining regions. If the filesystem was not previously active in the region, then the region
-//! is first migrated (by calling the migration function pointer) and is added to the
-//! flash translation space.
+/**
+ * @defgroup services_filesystem_flash_translation Flash translation layer
+ * @ingroup services_filesystem
+ * @brief Contiguous virtual address space for PFS over several flash regions.
+ *
+ * Lets PFS grow into multiple flash regions while keeping a contiguous virtual address space.
+ * Regions are added in the order of the board's filesystem region list. On boot, the regions
+ * where PFS is already active are added as they are; the remaining ones are erased and then
+ * added, growing the filesystem.
+ * @{
+ */
 
-//! Adds a flash region to the flash translation layer. This increases the overall size of the
-//! flash translation space by (region_end - region_start)
-//! @param region_start start of the region
-//! @param region_end end of the region
-//! @param erase_new_region Whether or not to erase the region before adding
+/**
+ * @brief Append a flash region to the translation space.
+ *
+ * The region must be the next one in the filesystem region list; otherwise the call is ignored.
+ * Grows the PFS size by @p region_end - @p region_start.
+ *
+ * @param region_start Start address of the region.
+ * @param region_end End address of the region, exclusive.
+ * @param erase_new_region Erase the region before adding it.
+ */
 void ftl_add_region(uint32_t region_start, uint32_t region_end, bool erase_new_region);
 
-//! Gets the size of the flash translation space.
-//! @return - the size of the flash translation space in number of bytes.
+/**
+ * @brief Get the size of the translation space.
+ *
+ * @return Size in bytes.
+ */
 uint32_t ftl_get_size(void);
 
-//! Erases a SECTOR in the flash translation space starting at the given virtual flash offset.
-//! There is an ASSERT to check if size is exactly the size of the region being erased.
-//!
-//! @param size size of sector to erase. Should be equal to SUBSECTOR_SIZE_BYTES
-//! @param offset virtual flash offset to erase the SUBSECTOR
+/**
+ * @brief Erase a sector of the translation space.
+ *
+ * @param size Size of the area to erase, must equal @c SECTOR_SIZE_BYTES (asserted).
+ * @param offset Virtual offset of the sector.
+ */
 void ftl_erase_sector(uint32_t size, uint32_t offset);
-//! same as ftl_erase_sector except it operates on a SUBSECTOR
+
+/**
+ * @brief Erase a subsector of the translation space.
+ *
+ * @param size Size of the area to erase, must equal @c SUBSECTOR_SIZE_BYTES (asserted).
+ * @param offset Virtual offset of the subsector.
+ */
 void ftl_erase_subsector(uint32_t size, uint32_t offset);
 
-//! Reads the data at the virtual flash address given and writes it to the data buffer.
-//! @param buffer The data block to write to
-//! @param size The number of bytes from flash to write into buffer (must be <= the size of buffer)
-//! @param offset Where to read the bytes from in the virtual flash translation space.
+/**
+ * @brief Read from the translation space.
+ *
+ * @param[out] buffer Destination buffer.
+ * @param size Number of bytes to read, at most the size of @p buffer.
+ * @param offset Virtual offset to read from.
+ */
 void ftl_read(void *buffer, size_t size, uint32_t offset);
 
-//! Writes the data buffer to the virtual flash address given.
-//! @param buffer The data block to write to flash
-//! @param size The number of bytes from buffer to write (must be <= the size of buffer)
-//! @param offset Where to write the bytes in the virtual flash translation space.
+/**
+ * @brief Write to the translation space.
+ *
+ * @param buffer Data to write.
+ * @param size Number of bytes to write, at most the size of @p buffer.
+ * @param offset Virtual offset to write to.
+ */
 void ftl_write(const void *buffer, size_t size, uint32_t offset);
 
-//! Formats all regions added to the flash translation layer
+/**
+ * @brief Format all regions of the translation space.
+ *
+ * Currently does nothing; use pfs_format() to erase the filesystem.
+ */
 void ftl_format(void);
 
-//! There are two steps to this function.
-//!   1. Add all regions where PFS already exists, and add them to the flash translation layer.
-//!   2. Migrate all regions where PFS does NOT exist and add them to the flash translation layer.
+/**
+ * @brief Build the translation space at boot.
+ *
+ * Adds the regions where PFS already exists, runs pfs_reboot_cleanup(), then erases and adds
+ * the remaining regions. Called by pfs_init().
+ */
 void ftl_populate_region_list(void);
 
+/**
+ * @brief Declared but not implemented.
+ */
 void add_initial_space_to_filesystem(void);
+
+/** @} */

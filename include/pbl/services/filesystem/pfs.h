@@ -10,198 +10,325 @@
 #include "system/status_codes.h"
 #include "pbl/util/list.h"
 
-//! Exported APIs for the Pebble File System (PFS)
-//!
-//! Things to note:
-//!  - All APIs are threadsafe
-//!  - PFS implements a basic wear-leveling strategy to extend the life of
-//!    the flash part
-//!  - PFS allows the allocation of blocks of space which appear to the consumer
-//!    as a contiguous region. It is up to the consumer to manage how they
-//!    want to manage the allocated space
-//!  - Assumes underlying HW is a NOR flash chip. This means that when a
-//!    0 bit value is written to a given location, the file needs to be erased
-//!    or rewritten to change it back to a 1. (pfs_open (i.e OP_FLAG_OVERWRITE)
-//!    provides a mechanism that consumers can leverage to accomplish this)
-//!  - Erasing flash sectors is a costly operation (from both a time/power
-//!    perspective). Care should be taken not to constantly be deleting/creating
-//!    files
+/**
+ * @defgroup services_filesystem Filesystem
+ * @ingroup services
+ * @brief Pebble File System (PFS) on the external NOR flash.
+ *
+ * - All functions are thread-safe.
+ * - PFS implements basic wear leveling to extend the life of the flash part.
+ * - A file is a block of space of fixed size, set when it is created, that appears to the
+ *   caller as a contiguous region. Reads and writes past the end of the file fail. How the
+ *   space is used is up to the caller.
+ * - The flash is NOR: once a bit is written to 0, the file must be erased or rewritten to set it
+ *   back to 1. Opening with @ref OP_FLAG_OVERWRITE provides a safe way to do this.
+ * - Erasing flash sectors is slow and costs power: avoid repeatedly deleting and creating files.
+ *
+ * @code{.c}
+ * int fd = pfs_open("myfile", OP_FLAG_WRITE | OP_FLAG_READ, FILE_TYPE_STATIC, 128);
+ * if (fd >= 0) {
+ *   pfs_write(fd, data, sizeof(data));
+ *   pfs_seek(fd, 0, FSeekSet);
+ *   pfs_read(fd, buf, sizeof(data));
+ *   pfs_close(fd);
+ * }
+ * @endcode
+ * @{
+ */
 
-#define OP_FLAG_READ               (1 << 0)
-#define OP_FLAG_WRITE              (1 << 1)
-#define OP_FLAG_OVERWRITE          (1 << 2)
+/** @brief Open for reading; fails if the file does not exist. */
+#define OP_FLAG_READ (1 << 0)
+/** @brief Open for writing, creating the file if it does not exist. */
+#define OP_FLAG_WRITE (1 << 1)
+/** @brief Write a new version of an existing file, committed on pfs_close(). */
+#define OP_FLAG_OVERWRITE (1 << 2)
+/** @brief Skip checking the on-flash header CRCs. */
 #define OP_FLAG_SKIP_HDR_CRC_CHECK (1 << 3)
-#define OP_FLAG_USE_PAGE_CACHE     (1 << 4)
+/** @brief Cache the translation from file pages to flash pages. */
+#define OP_FLAG_USE_PAGE_CACHE (1 << 4)
 
-#define FILE_TYPE_STATIC  (0xfe)
+/** @brief File type of regular files. */
+#define FILE_TYPE_STATIC (0xfe)
+/** @brief Maximum length of a file name, without the NUL terminator. */
 #define FILE_MAX_NAME_LEN (255)
 
+/** @brief Reference point of pfs_seek(). */
 typedef enum {
+  /** Offset from the start of the file. */
   FSeekSet,
+  /** Offset from the current position. */
   FSeekCur
 } FSeekType;
 
-//! Used by pfs_watch_file to know which events to trigger callbacks on
-#define FILE_CHANGED_EVENT_CLOSED  (1 << 0)
+/** @brief pfs_watch_file() event: the file was closed after being opened for writing. */
+#define FILE_CHANGED_EVENT_CLOSED (1 << 0)
+/** @brief pfs_watch_file() event: the file was removed. */
 #define FILE_CHANGED_EVENT_REMOVED (1 << 1)
-#define FILE_CHANGED_EVENT_ALL     (FILE_CHANGED_EVENT_CLOSED | FILE_CHANGED_EVENT_REMOVED)
+/** @brief pfs_watch_file() events: all of them. */
+#define FILE_CHANGED_EVENT_ALL (FILE_CHANGED_EVENT_CLOSED | FILE_CHANGED_EVENT_REMOVED)
 
-//! Types used by pfs_watch_file()
+/**
+ * @brief Callback of pfs_watch_file().
+ *
+ * Runs on the task that closed or removed the file, with the PFS lock held: it must not call
+ * PFS.
+ *
+ * @param data Data passed to pfs_watch_file().
+ */
 typedef void (*PFSFileChangedCallback)(void *data);
+
+/** @brief Handle of a file watch, for pfs_unwatch_file(). */
 typedef void *PFSCallbackHandle;
 
-//! Used by pfs_list_files() and pfs_remove_files()
+/**
+ * @brief File name filter of pfs_create_file_list() and pfs_remove_files().
+ *
+ * @param name File name.
+ * @return true if the file matches.
+ */
 typedef bool (*PFSFilenameTestCallback)(const char *name);
 
-//! Format of each entry in the linked list returned by pfs_create_file_list
+/** @brief Entry of the list returned by pfs_create_file_list(). */
 typedef struct {
+  /** List node. */
   ListNode list_node;
+  /** NUL-terminated file name. */
   char name[];
 } PFSFileListEntry;
 
-//! @param name - The name of the file to be opened
-//! @param op_flags - The operation to be performed on the file
-//!
-//!   OP_FLAG_READ - Open a file such that pfs_read operations will work. If the
-//!    file does not exist, opening a file with just this mode set will fail
-//!
-//!   OP_FLAG_WRITE - Creates a file if it does not exist, else opens a file
-//!    such that pfs_write operations will work. It is up to the user to seek to
-//!    the desired offset within the file
-//!
-//!   OP_FLAG_OVERWRITE - Provides a safe mechanism to incrementally overwrite
-//!    a file that already exists with new data. Open will fail if the file does
-//!    not already exist on flash. The changes for the overwritten file are not
-//!    committed until the pfs_close is called. Until this time, pfs_open of the
-//!    'name' will return a hdl to the original file. This way there is always a
-//!    valid version of the file which can be read & the caller can copy parts
-//!    of the original file in hunks rather than allocating a lot of RAM.
-//!
-//!   OP_FLAG_SKIP_HDR_CRC_CHECK - For files which are not accessed frequently,
-//!    it is a good idea to sanity check the on-flash header CRCs to make sure
-//!    nothing has gone astray. This has performance ramifications if you are
-//!    doing thousands of opens on the same file so this flags allows consumers
-//!    to turn the check off
-//!
-//!   OP_FLAG_USE_PAGE_CACHE - Turns on caching for the translation from
-//!    virtual filesystem pages to their physical address. For large files with
-//!    a lot of random access this is advantageous because we need to read
-//!    flash bytes to get to the correct page. Ideally this should only be
-//!    used for read operations so that heap corruption does not lead to us
-//!    corrupting a file
-//!
-//! The following two parameters are only parsed when a file is
-//! overwritten/created:
-//!
-//! @param file_type  - The type of file being opened
-//! @param start_size - The initial space to be allocated for a file if it is
-//!                     being created
-//! @return - status_t error code if the operation failed,
-//!           else a fd handle >= 0 if operation was successful
+/**
+ * @brief Open a file.
+ *
+ * Flags:
+ * - @ref OP_FLAG_READ - pfs_read() works. With only this flag, fails if the file does not exist.
+ * - @ref OP_FLAG_WRITE - creates the file if it does not exist; pfs_write() works. The caller
+ *   seeks to the desired offset.
+ * - @ref OP_FLAG_OVERWRITE - safely and incrementally overwrites an existing file; fails if the
+ *   file does not exist. The new version is committed by pfs_close(); until then, opening
+ *   @p name returns the original file. There is always a valid version to read, and the caller
+ *   can copy parts of the original file in chunks instead of allocating a lot of RAM.
+ * - @ref OP_FLAG_SKIP_HDR_CRC_CHECK - skips the sanity check of the on-flash header CRCs, worth
+ *   it for files opened thousands of times.
+ * - @ref OP_FLAG_USE_PAGE_CACHE - caches the translation from file pages to flash pages, which
+ *   speeds up random access to large files. Best limited to reads, so that heap corruption
+ *   cannot corrupt the file.
+ *
+ * @param name File name, 1 to @ref FILE_MAX_NAME_LEN characters.
+ * @param op_flags @c OP_FLAG_* flags.
+ * @param file_type File type, used only when the file is created or overwritten.
+ * @param start_size File size in bytes, used only when the file is created or overwritten.
+ * @return File descriptor (>= 0) on success, negative @c status_t on failure.
+ * @retval E_INVALID_ARGUMENT Invalid name, or invalid type or zero size on creation.
+ * @retval E_DOES_NOT_EXIST The file does not exist and was not to be created.
+ * @retval E_BUSY The file is already open.
+ * @retval E_OUT_OF_RESOURCES No free file descriptor.
+ * @retval E_OUT_OF_STORAGE Not enough space to create the file.
+ */
 extern int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type, size_t start_size);
 
-//! Writes data to the fd specified. After each write, the internal file offset
-//! is moved forward
-//! @param fd - The fd to write data to
-//! @param buf - The buffer of data to write
-//! @param size - The number of bytes from buf to write
-//!               (must be <= the size of buf)
-//! @return - the number of bytes written or a status_t code on error
+/**
+ * @brief Write at the current position, then advance it.
+ *
+ * @param fd File descriptor opened for writing or overwriting.
+ * @param buf Data to write.
+ * @param size Number of bytes to write, at most the size of @p buf.
+ * @return Number of bytes written, or negative @c status_t on failure.
+ * @retval E_INVALID_ARGUMENT Invalid descriptor, not writable, or empty buffer.
+ * @retval E_RANGE The write goes past the end of the file.
+ */
 extern int pfs_write(int fd, const void *buf, size_t size);
 
-//! Reads data from the fd specified. After each read, the internal file offset
-//! is moved forward
-//! @param fd - the file to read data from
-//! @param buf - the buffer to store read data in
-//! @param size - the amount of data to read (must be <= the size of buf)
-//! @return - the number of bytes read or a status_t code on error
+/**
+ * @brief Read from the current position, then advance it.
+ *
+ * @param fd File descriptor opened for reading.
+ * @param[out] buf Destination buffer.
+ * @param size Number of bytes to read, at most the size of @p buf.
+ * @return Number of bytes read, or negative @c status_t on failure.
+ * @retval E_INVALID_ARGUMENT Invalid descriptor, not readable, or empty buffer.
+ * @retval E_RANGE The read goes past the end of the file.
+ */
 extern int pfs_read(int fd, void *buf, size_t size);
 
-//! Seeks to offset specified
-//! Returns the offset forwarded to on success,
-//! status_t code < 0 to indicate type of failure
+/**
+ * @brief Set the current position.
+ *
+ * @param fd File descriptor.
+ * @param offset Offset relative to @p seek_type.
+ * @param seek_type Reference point.
+ * @return New position on success, negative @c status_t on failure.
+ * @retval E_INVALID_ARGUMENT Invalid descriptor.
+ * @retval E_RANGE Position outside 0 to the file size.
+ */
 extern int pfs_seek(int fd, int offset, FSeekType seek_type);
 
-//! Frees up internal tracking data associated with a given file.
-//! @param fd - the fd to close
-//! @return - S_SUCCESS or appropriate error code on failure
+/**
+ * @brief Close a file.
+ *
+ * Commits an overwrite and notifies watchers if the file was opened for writing.
+ *
+ * @param fd File descriptor.
+ * @retval S_SUCCESS File closed.
+ * @retval E_INVALID_ARGUMENT Invalid descriptor.
+ */
 extern status_t pfs_close(int fd);
 
-//! calls pfs_close and pfs_remove on a file successively
-//! @param fd - the fd describing the file to remove
+/**
+ * @brief Close and remove a file.
+ *
+ * @param fd File descriptor.
+ * @return @c S_SUCCESS or negative @c status_t, as pfs_close() and pfs_remove().
+ */
 extern status_t pfs_close_and_remove(int fd);
 
-//! Unlinks a given file from the filesystem
-//! @param name - the name of the file to remove
-//! @return - S_SUCCESS or appropriate error code on failure
+/**
+ * @brief Remove a file.
+ *
+ * @param name File name.
+ * @retval S_SUCCESS File removed.
+ * @retval E_INVALID_ARGUMENT Invalid name.
+ * @return Other negative @c status_t on failure.
+ */
 extern status_t pfs_remove(const char *name);
 
-//! Returns the size of the file. (The amount of bytes that can be read out)
+/**
+ * @brief Get the size of a file, that is the number of bytes that can be read.
+ *
+ * @param fd File descriptor.
+ * @return Size in bytes, 0 for an invalid descriptor.
+ */
 extern size_t pfs_get_file_size(int fd);
 
-//! Should only be called before using FS
+/**
+ * @brief Initialize PFS, before any other use.
+ *
+ * Builds the flash translation layer, recovers from an interrupted garbage collection, and
+ * pre-erases some space.
+ *
+ * @param run_filesystem_check Format the flash if PFS is not active on it.
+ * @retval S_SUCCESS Always.
+ */
 extern status_t pfs_init(bool run_filesystem_check);
 
-//! Should only be called once after reboot and before any file operations
-//! are performed
+/**
+ * @brief Clean up after a reboot, once and before any file operation.
+ *
+ * Finishes or rolls back operations interrupted by the reboot.
+ */
 extern void pfs_reboot_cleanup(void);
 
-//! erases everything on the filesystem & removes any open
-//! file entries from the cache
-//! Note: assumes that pfs_init was called before this
+/**
+ * @brief Erase the whole filesystem and drop all open file descriptors.
+ *
+ * Requires pfs_init() to have been called.
+ *
+ * @param write_erase_headers Mark all pages as erased.
+ */
 extern void pfs_format(bool write_erase_headers);
 
-//! Returns the size of the pfs filesystem.
+/**
+ * @brief Get the size of the filesystem.
+ *
+ * @return Size in bytes.
+ */
 extern uint32_t pfs_get_size(void);
 
-//! Updates the size of the pfs filesystem.
-//! @param new_size new size
-//! @param new_region_erased if the pages being added have been erased and should be marked as so.
+/**
+ * @brief Set the size of the filesystem, as regions are added to it.
+ *
+ * @param new_size New size in bytes.
+ * @param new_region_erased The added pages are erased and should be marked as such.
+ */
 extern void pfs_set_size(uint32_t new_size, bool new_region_erased);
 
-//! Returns true is pfs is active on this device
+/**
+ * @brief Check whether PFS is active on this device.
+ *
+ * @return true if PFS is active.
+ */
 extern bool pfs_active(void);
 
-//! Returns true is pfs is active in the region
+/**
+ * @brief Check whether PFS is active in a range of the filesystem space.
+ *
+ * @param start_address Start of the range.
+ * @param ending_address End of the range, exclusive.
+ * @return true if PFS is active in the range.
+ */
 extern bool pfs_active_in_region(uint32_t start_address, uint32_t ending_address);
 
-//! In the case of a file which can actually make use of additional space
-//! beyond a certain minimum, this function will return the optimal size
-//! that should be used for such a file, in order to use no more sectors
-//! than the minimum size would.
+/**
+ * @brief Get the optimal size of a file that can use space beyond a minimum.
+ *
+ * Rounds @p min_size up to use all the space of the pages the file occupies anyway.
+ *
+ * @param min_size Minimum file size in bytes.
+ * @param namelen Length of the file name.
+ * @return Optimal file size in bytes.
+ */
 extern int pfs_sector_optimal_size(int min_size, int namelen);
 
-//! Returns the number of bytes available on the filesystem
+/**
+ * @brief Get the space available for new files.
+ *
+ * Only 80% of the filesystem is considered usable, to leave room for wear leveling.
+ *
+ * @return Available space in bytes.
+ */
 extern uint32_t get_available_pfs_space(void);
 
-//! Watch a file. The callback is called whenever the given file (by name) is closed with
-//! modifications or deleted
-//! @param filename - name of the file to watch
-//! @param callback - function to invoke when file is changed
-//! @param event_flags - which events the callback should be triggered on
-//! (see FILE_CHANGED_EVENT_ flags defined above)
-//! @param data - pointer passed to callback when invoked
-//! @return - cb handle to pass into \ref pfs_unwatch_file
+/**
+ * @brief Watch a file for changes.
+ *
+ * @param filename Name of the file to watch.
+ * @param callback Function called on the selected events.
+ * @param event_flags @c FILE_CHANGED_EVENT_* flags selecting the events.
+ * @param data Pointer passed to @p callback.
+ * @return Handle for pfs_unwatch_file().
+ */
 PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
                                  uint8_t event_flags, void *data);
 
-//! Stop watching a file.
+/**
+ * @brief Stop watching a file.
+ *
+ * @param cb_handle Handle returned by pfs_watch_file().
+ */
 void pfs_unwatch_file(PFSCallbackHandle cb_handle);
 
-//! calculate the CRC32 for a given part of a file
+/**
+ * @brief Compute the legacy CRC-32 of a part of a file.
+ *
+ * Moves the current position of @p fd.
+ *
+ * @param fd File descriptor opened for reading.
+ * @param offset Start offset.
+ * @param num_bytes Number of bytes.
+ * @return Checksum, see pbl_crc32_legacy().
+ */
 extern uint32_t pfs_crc_calculate_file(int fd, uint32_t offset, uint32_t num_bytes);
 
-//! Get a directory listing, calling the filter callback on each filename.
-//! Returns linked list of filenames, filtered by the callback.
-//! @param callback - name filter function to be called for each filename, or NULL to include
-//!          all files.
-//! @return - pointer to head node of linked list of names, or NULL if no names match
+/**
+ * @brief List the files whose name matches a filter.
+ *
+ * @param callback Name filter, or NULL to include all files.
+ * @return Head of a list of matching names, or NULL if none match. Free it with
+ * pfs_delete_file_list().
+ */
 extern PFSFileListEntry *pfs_create_file_list(PFSFilenameTestCallback callback);
 
-//! Delete a directory list returned by pfs_list_files
-//! @param list - pointer to head node of linked list of names
+/**
+ * @brief Free a list returned by pfs_create_file_list().
+ *
+ * @param list Head of the list.
+ */
 extern void pfs_delete_file_list(PFSFileListEntry *list);
 
-//! Run each filename in the filesystem through the filter callback and delete all files that match
-//! @param callback - callback to be called for on filename
+/**
+ * @brief Remove all files whose name matches a filter.
+ *
+ * @param callback Name filter.
+ */
 extern void pfs_remove_files(PFSFilenameTestCallback callback);
+
+/** @} */
