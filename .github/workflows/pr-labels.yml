@@ -16,15 +16,52 @@ jobs:
       - name: Add labels based on modified paths
         uses: actions/labeler@v6
 
+  submodules:
+    if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
+    runs-on: ubuntu-24.04
+    env:
+      BASE: ${{ github.event.pull_request.base.sha }}
+      HEAD: ${{ github.event.pull_request.head.sha }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request head
+        run: git fetch -q --filter=blob:none origin "refs/pull/$PR/head"
+
+      - name: Check submodule updates
+        id: check
+        run: .github/scripts/check-submodules.sh "$BASE" "$HEAD"
+
+      - name: Update label
+        if: ${{ !cancelled() && steps.check.outputs.pending != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LABEL: pending:submodule-merge
+          PENDING: ${{ steps.check.outputs.pending }}
+        run: |
+          api="repos/${{ github.repository }}/issues/$PR/labels"
+          present=$(gh api "$api" --jq "any(.[]; .name == \"$LABEL\")")
+          if [ "$PENDING" = true ] && [ "$present" = false ]; then
+            gh api -X POST "$api" -f "labels[]=$LABEL" --silent
+          elif [ "$PENDING" = false ] && [ "$present" = true ]; then
+            gh api -X DELETE "$api/$(jq -rn --arg l "$LABEL" '$l | @uri')" --silent
+          fi
+
   blocking:
-    needs: label
+    needs: [label, submodules]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - name: Check for blocking labels
         env:
           GH_TOKEN: ${{ github.token }}
-          BLOCKING: '["DNM", "pending:hw-validation", "pending:sdk-review"]'
+          BLOCKING: '["DNM", "pending:hw-validation", "pending:sdk-review", "pending:submodule-merge"]'
         run: |
           labels=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
             --jq '[.labels[].name]')
