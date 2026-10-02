@@ -260,6 +260,13 @@ void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
     return;
   }
 
+#ifdef CONFIG_APP_FRAMEBUFFER_EXTRAM
+  if (task == PebbleTask_App && memory_layout_is_buffer_in_region(
+                                    memory_layout_get_app_framebuffer_region(), buf, num_bytes)) {
+    return;
+  }
+#endif
+
   APP_LOG(APP_LOG_LEVEL_ERROR, "syscall failure! %p..%p is not in app space.", buf,
           (char *)buf + num_bytes);
   PBL_LOG_ERR("syscall failure! %p..%p is not in app space.", buf, (char *)buf + num_bytes);

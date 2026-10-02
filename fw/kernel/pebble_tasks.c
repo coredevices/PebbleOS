@@ -299,6 +299,13 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
   attr->regions[2] = stack_guard_region;
   attr->regions[3] = syscall_get_stack_guard_region(pebble_task);
 
+#ifdef CONFIG_APP_FRAMEBUFFER_EXTRAM
+  MpuRegion app_framebuffer_region;
+  mpu_init_region_from_region(&app_framebuffer_region, memory_layout_get_app_framebuffer_region(),
+                              pebble_task == PebbleTask_App /* allow_user_access */);
+  attr->regions[2] = &app_framebuffer_region;
+#endif
+
   struct pbl_thread *thread = &s_threads[pebble_task];
   PBL_ASSERT(pbl_thread_create(thread, attr) == 0, "Could not start task %s", attr->name);
   prv_task_register(pebble_task, thread);
@@ -318,7 +325,16 @@ void pebble_task_configure_idle_task(void) {
                               false /* allow_user_access */);
   mpu_init_region_from_region(&worker_region, memory_layout_get_worker_region(),
                               false /* allow_user_access */);
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {&app_region, &worker_region, NULL, NULL};
+  const MpuRegion *app_framebuffer = NULL;
+#ifdef CONFIG_APP_FRAMEBUFFER_EXTRAM
+  MpuRegion app_framebuffer_region;
+  mpu_init_region_from_region(&app_framebuffer_region, memory_layout_get_app_framebuffer_region(),
+                              false /* allow_user_access */);
+  app_framebuffer = &app_framebuffer_region;
+#endif
+  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
+    &app_region, &worker_region, app_framebuffer, NULL
+  };
   pbl_thread_regions_set(pbl_thread_idle(), regions);
 }
 

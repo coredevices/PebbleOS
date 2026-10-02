@@ -20,6 +20,11 @@ extern uint8_t __ramfunc_start[];
 extern uint8_t __ramfunc_end[];
 #endif
 
+#ifdef CONFIG_EXTRAM
+extern uint8_t __extram_bss_start[];
+extern uint8_t __extram_bss_end[];
+#endif
+
 extern int main(void);
 
 void kernel_prep_c(void) {
@@ -30,6 +35,10 @@ void kernel_prep_c(void) {
   memset(__bss_start, 0, __bss_end - __bss_start);
 
   pbl_soc_early_init();
+
+#ifdef CONFIG_EXTRAM
+  memset(__extram_bss_start, 0, __extram_bss_end - __extram_bss_start);
+#endif
 
   main();
 

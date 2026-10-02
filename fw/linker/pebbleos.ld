@@ -67,6 +67,10 @@ SECTIONS {
 
 #include "sections/kernel-ram.ld"
 
+#ifdef CONFIG_EXTRAM
+#include "sections/extram.ld"
+#endif
+
 #include "sections/identity.ld"
 
 #include "sections/log-strings.ld"

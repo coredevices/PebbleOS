@@ -134,6 +134,17 @@ endchoice
 # The per-platform constants below are the source of truth; each environment
 # just selects which legacy SDK platform it maps to.
 
+config APP_FRAMEBUFFER_EXTRAM
+    bool "Place the app framebuffer in external RAM"
+    depends on EXTRAM && MPU_TYPE_ARMV8M
+    default y
+    help
+      Keep the app framebuffer in external RAM, behind a dedicated App
+      task MPU region. The emery and gabbro runtime sizes shrink by the
+      framebuffer size (200x228 and 260x260 bytes, rounded up to keep
+      app RAM 32-byte aligned for the MPU), which goes to the kernel
+      heap.
+
 config APP_RAM_APLITE_SEGMENT_SIZE
     int
     default 25952
@@ -172,6 +183,7 @@ config APP_RAM_EMERY_SEGMENT_SIZE
 
 config APP_RAM_EMERY_RUNTIME_SIZE
     int
+    default 17888 if APP_FRAMEBUFFER_EXTRAM
     default 63488
 
 config APP_RAM_GABBRO_SEGMENT_SIZE
@@ -180,6 +192,7 @@ config APP_RAM_GABBRO_SEGMENT_SIZE
 
 config APP_RAM_GABBRO_RUNTIME_SIZE
     int
+    default 28640 if APP_FRAMEBUFFER_EXTRAM
     default 96256
 
 config APP_RAM_2X_SEGMENT_SIZE

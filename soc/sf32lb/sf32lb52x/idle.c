@@ -11,6 +11,7 @@
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "pbl/util/math.h"
+#include "psram.h"
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
@@ -101,6 +102,10 @@ PBL_SECTION_RAM static void prv_enter_deepslep(void) {
 
   prv_save_iser();
 
+#ifdef CONFIG_SF32LB52_PSRAM
+  soc_sf32lb_psram_enter_low_power();
+#endif
+
   HAL_FLASH_NOP_CMD(&flash_state->ctx.handle);
   HAL_FLASH_DEEP_PWRDOWN(&flash_state->ctx.handle);
   HAL_Delay_us(flash_state->t_enter_deep_us);
@@ -153,6 +158,10 @@ PBL_SECTION_RAM static void prv_enter_deepslep(void) {
 
   HAL_FLASH_RELEASE_DPD(&flash_state->ctx.handle);
   HAL_Delay_us(flash_state->t_exit_deep_us);
+
+#ifdef CONFIG_SF32LB52_PSRAM
+  soc_sf32lb_psram_exit_low_power();
+#endif
 
   prv_restore_iser();
 }

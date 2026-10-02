@@ -3,7 +3,9 @@
 
 #include "memory_layout.h"
 
+#include "applib/graphics/framebuffer.h"
 #include "logging/logging_private.h"
+#include "pbl/kernel/section.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
@@ -155,6 +157,24 @@ static const MpuRegion s_app_region = {
   .permissions = MpuPermissions_PrivRW,
 };
 
+#ifdef CONFIG_APP_FRAMEBUFFER_EXTRAM
+// Padded to the MPU granule, so the region covers nothing else
+typedef struct PBL_ALIGNED(32) {
+  FrameBuffer framebuffer;
+} AppFramebuffer;
+
+PBL_SECTION_EXTRAM static AppFramebuffer s_app_framebuffer;
+
+static const MpuRegion s_app_framebuffer_region = {
+  .region_num = MemoryRegion_AppFramebuffer,
+  .enabled = true,
+  .base_address = (uintptr_t)&s_app_framebuffer,
+  .size = sizeof(s_app_framebuffer),
+  .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
+  .permissions = MpuPermissions_PrivRW,
+};
+#endif
+
 static const MpuRegion s_worker_region = {
   .region_num = MemoryRegion_WorkerRAM,
   .enabled = true,
@@ -234,6 +254,12 @@ const MpuRegion *memory_layout_get_readonly_bss_region(void) {
 const MpuRegion *memory_layout_get_app_stack_guard_region(void) {
   return &s_app_stack_guard_region;
 }
+
+#ifdef CONFIG_APP_FRAMEBUFFER_EXTRAM
+const MpuRegion *memory_layout_get_app_framebuffer_region(void) {
+  return &s_app_framebuffer_region;
+}
+#endif
 
 const MpuRegion *memory_layout_get_worker_region(void) {
   return &s_worker_region;

@@ -22,6 +22,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "system/profiler.h"
+#include "pbl/kernel/section.h"
 #include "pbl/util/math.h"
 #include "pbl/util/testing.h"
 
@@ -31,6 +32,9 @@ PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 // are for the top-left corner, but can easily be translated to the other corners. This is used by
 
 //! This is our root framebuffer that everything gets composited into.
+#ifdef CONFIG_SERVICE_COMPOSITOR_FRAMEBUFFER_EXTRAM
+PBL_SECTION_EXTRAM
+#endif
 static FrameBuffer s_framebuffer;
 
 typedef enum {

@@ -19,6 +19,7 @@
 #include "applib/touch_service_private.h"
 #include "pbl/services/touch/touch.h"
 #include "pbl/drivers/button_id.h"
+#include "kernel/memory_layout.h"
 #include "kernel/util/segment.h"
 #include "process_management/app_install_types.h"
 #include "process_management/app_manager.h"
@@ -26,6 +27,8 @@
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
 #include "tinymt32.h"
+
+#include <string.h>
 
 #if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
 #include <pbl/shell/shell.h>
@@ -57,7 +60,7 @@ typedef struct {
 
   WindowStack window_stack;
 
-  FrameBuffer framebuffer;
+  FrameBuffer *framebuffer;
 
   GContext graphics_context;
 
@@ -147,6 +150,18 @@ bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_typ
 
   s_app_state_ptr->sdk_type = sdk_type;
   s_app_state_ptr->initial_obstruction_origin_y = obstruction_origin_y;
+
+#ifdef CONFIG_APP_FRAMEBUFFER_EXTRAM
+  const MpuRegion *fb_region = memory_layout_get_app_framebuffer_region();
+  s_app_state_ptr->framebuffer = (FrameBuffer *)fb_region->base_address;
+  // Not part of app RAM, so not wiped between apps
+  memset(s_app_state_ptr->framebuffer, 0, fb_region->size);
+#else
+  s_app_state_ptr->framebuffer = memory_segment_split(app_state_ram, NULL, sizeof(FrameBuffer));
+  if (!s_app_state_ptr->framebuffer) {
+    return false;
+  }
+#endif
 
   if (GBITMAP_NATIVE_FORMAT != GBitmapFormat1Bit && sdk_type == ProcessAppSDKType_Legacy2x) {
     // When running legacy2 aplite apps on basalt we actually have some space
@@ -289,14 +304,14 @@ PBL_NOINLINE void app_state_init(void) {
   // Set the correct framebuffer size depending on the SDK version
   GSize fb_size;
   app_manager_get_framebuffer_size(&fb_size);
-  framebuffer_init(&s_app_state_ptr->framebuffer, &fb_size);
+  framebuffer_init(s_app_state_ptr->framebuffer, &fb_size);
 
-  framebuffer_clear(&s_app_state_ptr->framebuffer);
+  framebuffer_clear(s_app_state_ptr->framebuffer);
 
   const GContextInitializationMode init_mode =
       (s_app_state_ptr->sdk_type == ProcessAppSDKType_System) ? GContextInitializationMode_System
                                                               : GContextInitializationMode_App;
-  graphics_context_init(&s_app_state_ptr->graphics_context, &s_app_state_ptr->framebuffer,
+  graphics_context_init(&s_app_state_ptr->graphics_context, s_app_state_ptr->framebuffer,
                         init_mode);
 
   ble_init_app_state();
@@ -389,7 +404,7 @@ WindowStack *app_state_get_window_stack() {
 }
 
 FrameBuffer *app_state_get_framebuffer() {
-  return &s_app_state_ptr->framebuffer;
+  return s_app_state_ptr->framebuffer;
 }
 
 GContext *app_state_get_graphics_context() {

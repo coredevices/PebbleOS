@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "drivers/watchdog.h"
+#include "psram.h"
 #include "pbl/kernel/init.h"
 #include "system/passert.h"
 
@@ -85,8 +86,13 @@ void pbl_soc_early_init(void) {
 
   // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
   hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
+#ifndef CONFIG_SF32LB52_PSRAM
   hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
+#endif
 
+#ifdef CONFIG_SF32LB52_PSRAM
+  soc_sf32lb_psram_init();
+#else
   // Set all PSRAM pins as analog (low-power)
   HAL_PIN_Set_Analog(PAD_SA00, 1);
   HAL_PIN_Set_Analog(PAD_SA01, 1);
@@ -101,6 +107,7 @@ void pbl_soc_early_init(void) {
   HAL_PIN_Set_Analog(PAD_SA10, 1);
   HAL_PIN_Set_Analog(PAD_SA11, 1);
   HAL_PIN_Set_Analog(PAD_SA12, 1);
+#endif
 
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_REQ, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_IRQ, AON_PIN_MODE_HIGH);

@@ -8,6 +8,14 @@ config SERVICE_COMPOSITOR
 
 if SERVICE_COMPOSITOR
 
+config SERVICE_COMPOSITOR_FRAMEBUFFER_EXTRAM
+    bool "Place the framebuffer in external RAM"
+    depends on EXTRAM
+    default y
+    help
+      Keep the system framebuffer in external RAM, leaving its SRAM to
+      the kernel heap.
+
 module = SERVICE_COMPOSITOR
 module-str = Compositor
 source "subsys/logging/Kconfig.template.log_level"

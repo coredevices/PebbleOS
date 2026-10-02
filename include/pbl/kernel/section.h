@@ -14,3 +14,10 @@
 #define PBL_SECTION_RAM
 #define PBL_SECTION_RAM_RODATA
 #endif
+
+#ifdef CONFIG_EXTRAM
+//! Place the zero-initialized variable in external RAM.
+#define PBL_SECTION_EXTRAM PBL_SECTION(".extram.bss")
+#else
+#define PBL_SECTION_EXTRAM
+#endif

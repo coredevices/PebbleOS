@@ -16,6 +16,7 @@
 #include "kernel/events.h"
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/services/system_task.h"
 #include <pbl/logging/logging.h>
 
@@ -193,8 +194,8 @@ static bool prv_write_register(uint16_t register_address, uint8_t datum) {
 // equals the VSET pin value (BUCKnVOUTSTATUS), quiescent current increases by
 // 1mA. To avoid this, first set BUCKnNORMVOUT to a different value, switch to
 // SW control, then set the desired voltage.
-static bool prv_buck_set_sw_ctrl(uint16_t normvout_reg, uint16_t voutstatus_reg,
-                                 uint8_t swctrlsel_bit, uint8_t desired_vout) {
+PBL_UNUSED static bool prv_buck_set_sw_ctrl(uint16_t normvout_reg, uint16_t voutstatus_reg,
+                                            uint8_t swctrlsel_bit, uint8_t desired_vout) {
   uint8_t voutstatus;
   if (!prv_read_register(voutstatus_reg, &voutstatus)) {
     return false;
@@ -302,10 +303,14 @@ bool pmic_init(void) {
 
 // FIXME(OBELIX,GETAFIX): Needs to be configurable at board level
 #if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
+  // BUCK1 powers the PSRAM (VDD_SiP), and boots at 1.8V: leave it alone if the
+  // PSRAM is used, else disable it.
+#ifndef CONFIG_SF32LB52_PSRAM
   // Anomaly 27: set BUCK1 to SW control with workaround, then disable it
   ok &= prv_buck_set_sw_ctrl(PmicRegisters_BUCK_BUCK1NORMVOUT, PmicRegisters_BUCK_BUCK1VOUTSTATUS,
                              PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL, 8 /* 1.8V */);
   ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
+#endif
   // enable 1.8V@LDO1
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  // LDO
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8); // 1.8V

@@ -31,7 +31,11 @@ enum MemoryRegionAssignments {
   MemoryRegion_AppRAM,
   MemoryRegion_WorkerRAM,
   MemoryRegion_TaskStackGuard,
-  MemoryRegion_Task4
+  MemoryRegion_Task4,
+#ifdef CONFIG_MPU_TYPE_ARMV8M
+  // ARMv8-M catches stack overflows with PSPLIM, leaving the guard slot free
+  MemoryRegion_AppFramebuffer = MemoryRegion_TaskStackGuard,
+#endif
 };
 
 void memory_layout_dump_mpu_regions_to_dbgserial(void);
@@ -43,6 +47,10 @@ const MpuRegion *memory_layout_get_app_stack_guard_region(void);
 
 const MpuRegion *memory_layout_get_readonly_bss_region(void);
 const MpuRegion *memory_layout_get_microflash_region(void);
+
+#ifdef CONFIG_APP_FRAMEBUFFER_EXTRAM
+const MpuRegion *memory_layout_get_app_framebuffer_region(void);
+#endif
 
 const MpuRegion *memory_layout_get_worker_region(void);
 const MpuRegion *memory_layout_get_worker_stack_guard_region(void);
