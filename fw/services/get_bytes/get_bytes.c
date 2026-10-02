@@ -164,6 +164,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
   comm_session_send_buffer_end_write(sb);
 
   if (state->storage.current_offset >= state->num_bytes) {
+    CommSession *session = state->session;
     prv_gather_and_record_stats(state);
 
     // If all done, mark the image as "read" and free up our state structure
@@ -172,8 +173,8 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
     s_get_bytes_in_progress = false;
     prv_put_status_event(DebugInfoStateFinished);
-    comm_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
-                                    PBL_BT_RESPONSE_TIME_MAX, 0);
+    comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_GET_BYTES, PBL_BT_RESPONSE_TIME_MAX,
+                                    0);
     return;
   } else {
     comm_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
