@@ -19,18 +19,6 @@
  */
 
 /**
- * @brief Draw the app framebuffer sliding in horizontally.
- *
- * Pixels uncovered past the destination (the animation overshoots) are filled with black.
- *
- * @param ctx Graphics context to draw into.
- * @param distance_normalized Animation progress, 0 to @c ANIMATION_NORMALIZED_MAX.
- * @param dir Direction of the visual elements.
- */
-void compositor_app_slide_transitions_animation_update(GContext *ctx, uint32_t distance_normalized,
-                                                       CompositorTransitionDirection dir);
-
-/**
  * @brief Get the horizontal slide transition between apps.
  *
  * @param flip_to_the_right Whether the visual elements move to the right.

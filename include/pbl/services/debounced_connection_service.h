@@ -23,13 +23,6 @@
 void debounced_connection_service_init(void);
 
 /**
- * @brief Check whether the phone is connected, debounced.
- *
- * @return true if connected.
- */
-bool debounced_connection_service_is_connected(void);
-
-/**
  * @brief Handle a comm session open or close event.
  *
  * @param e Comm session event.

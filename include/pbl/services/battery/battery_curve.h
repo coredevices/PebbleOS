@@ -62,15 +62,6 @@ void battery_curve_reset_for_tests(void);
 uint32_t battery_curve_sample_ratio32_charge_percent(uint32_t battery_mv, bool is_charging);
 
 /**
- * @brief Get the charge percentage for a voltage.
- *
- * @param battery_mv Battery voltage in mV.
- * @param is_charging true to use the charge curve.
- * @return Charge in percent.
- */
-uint32_t battery_curve_lookup_percent_by_voltage(uint32_t battery_mv, bool is_charging);
-
-/**
  * @brief Get the charge for a voltage, scaled by a factor, without compensations.
  *
  * Interpolates linearly between curve points and clamps to the curve ends.

@@ -87,9 +87,4 @@ void ftl_format(void);
  */
 void ftl_populate_region_list(void);
 
-/**
- * @brief Declared but not implemented.
- */
-void add_initial_space_to_filesystem(void);
-
 /** @} */

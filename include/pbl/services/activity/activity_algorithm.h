@@ -307,16 +307,6 @@ bool activity_algorithm_get_step_rate(uint16_t *steps, uint32_t *elapsed_ms, tim
 bool activity_algorithm_metrics_changed_notification(void);
 
 /**
- * @brief Set the step count.
- *
- * Used to restore the count when starting after a reboot.
- *
- * @param steps Steps.
- * @return true on success.
- */
-bool activity_algorithm_set_steps(uint32_t steps);
-
-/**
  * @brief Get the last minute processed by the sleep detector.
  *
  * @return UTC time of the minute.

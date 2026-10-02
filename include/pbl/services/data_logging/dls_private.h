@@ -226,19 +226,6 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty);
  */
 void dls_private_handle_disconnect(void *data);
 
-/**
- * @brief Not implemented, use dls_get_send_enable().
- *
- * @return Send enable setting.
- */
-bool dls_private_get_send_enable(void);
-/**
- * @brief Not implemented, use dls_set_send_enable_pp().
- *
- * @param setting Send enable setting.
- */
-void dls_private_set_send_enable(bool setting);
-
 /** @brief Data message, sent with @ref DataLoggingEndpointCmdData. */
 typedef struct PBL_PACKED {
   /** @ref DataLoggingEndpointCmdData. */

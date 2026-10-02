@@ -91,9 +91,6 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
  */
 DataLoggingSession *dls_list_get_next(DataLoggingSession *cur);
 
-/** @brief Not implemented, use dls_storage_rebuild(). */
-void dls_list_rebuild_from_storage(void);
-
 /**
  * @brief Callback for dls_list_for_each_session().
  *

@@ -30,12 +30,4 @@ const TimelineEventImpl *calendar_get_event_service(void);
  */
 bool calendar_event_is_ongoing(void);
 
-#if UNITTEST
-#include "pbl/services/new_timer/new_timer.h"
-/** @brief Get the calendar timer. Unit tests only. */
-TimerID get_calendar_timer_id(void);
-/** @brief Set the calendar timer. Unit tests only. */
-void set_calendar_timer_id(TimerID id);
-#endif
-
 /** @} */

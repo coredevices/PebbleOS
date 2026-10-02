@@ -131,13 +131,6 @@ void notifications_handle_notification_acted_upon(Uuid *notification_id);
 void notifications_handle_notification_removed(Uuid *notification_id);
 
 /**
- * @brief Handle an ANCS remove command; the notification is kept in history.
- *
- * @param ancs_uid ANCS UID of the removed notification.
- */
-void notifications_handle_ancs_notification_removed(uint32_t ancs_uid);
-
-/**
  * @brief Shift the timestamps of all stored notifications after a timezone change.
  *
  * @param new_tz_offset Offset in seconds subtracted from each stored timestamp.

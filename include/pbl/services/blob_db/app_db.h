@@ -50,15 +50,6 @@ typedef struct PBL_PACKED {
 typedef void (*AppDBEnumerateCb)(AppInstallId install_id, AppDBEntry *entry, void *data);
 
 /**
- * @brief Get the next unused install id.
- *
- * @note Declared only, there is no implementation.
- *
- * @return Install id.
- */
-int32_t app_db_get_next_unique_id(void);
-
-/**
  * @brief Find the install id of an app.
  *
  * @param uuid App UUID.

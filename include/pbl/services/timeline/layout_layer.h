@@ -265,15 +265,6 @@ const LayoutColors *layout_get_colors(const LayoutLayer *layout);
 const LayoutColors *layout_get_notification_colors(const LayoutLayer *layout);
 
 /**
- * @brief Get an animation of a layout to a mode.
- *
- * @param layout Layout.
- * @param final_mode Target mode.
- * @return Animation.
- */
-Animation *layout_get_animation(LayoutLayer *layout, LayoutLayerMode final_mode);
-
-/**
  * @brief Change the mode of a layout.
  *
  * @param layout Layout.
