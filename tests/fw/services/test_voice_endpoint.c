@@ -32,6 +32,7 @@ static AudioEndpointSessionId s_session_id;
 static bool s_app_initiated;
 static Uuid s_app_uuid;
 static uint8_t s_num_attributes;
+static int s_num_dictation_results;
 static char *s_reminder_str = NULL;
 static time_t s_timestamp;
 
@@ -51,6 +52,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
 void voice_handle_dictation_result(VoiceEndpointResult result, AudioEndpointSessionId session_id,
                                    Transcription *transcription, bool app_initiated,
                                    Uuid *app_uuid) {
+  s_num_dictation_results++;
   if (s_transcription) {
     free(s_transcription);
   }
@@ -449,6 +451,19 @@ void test_voice_endpoint__handle_dictation_result(void) {
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailTimeout);
   cl_assert_equal_i(s_app_initiated, false);
   cl_assert_equal_m(&s_app_uuid, &s_uuid_invalid, sizeof(Uuid));
+
+  // test that an invalid transcription (an empty word) is reported once, as such
+  s_session_id = 0;
+  s_num_dictation_results = 0;
+  dictation_result[7] = VoiceEndpointResultSuccess;
+  dictation_result[17] = 0x00; // length of word #1 of sentence #1
+  voice_endpoint_protocol_msg_callback(NULL, dictation_result, sizeof(dictation_result));
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_p(s_transcription, NULL);
+  cl_assert_equal_i(s_session_id, 0x2211);
+  cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidRecognizerResponse);
+  cl_assert_equal_i(s_num_dictation_results, 1);
+  dictation_result[17] = 0x05;
 
   // test that we can handle an invalid length message
   s_session_id = 0;

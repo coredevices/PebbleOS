@@ -82,6 +82,7 @@ static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size)
     PBL_LOG_WRN("Unrecognized transcription format received");
     voice_handle_dictation_result(VoiceEndpointResultFailInvalidRecognizerResponse, msg->session_id,
                                   NULL, app_initiated, app_uuid);
+    return;
   }
   voice_handle_dictation_result(msg->result, msg->session_id, transcription, app_initiated,
                                 app_uuid);
