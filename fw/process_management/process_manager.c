@@ -692,7 +692,10 @@ DEFINE_SYSCALL(void, sys_get_pebble_event, PebbleEvent *event) {
     syscall_assert_userspace_buffer(event, sizeof(*event));
   }
 
-  pbl_msgq_get(prv_get_context()->to_process_event_queue, event, PBL_FOREVER);
+  // A forced close suspends the task to read its registers. Resuming it ends this wait with
+  // -EINTR and no event, so wait again rather than hand the process an empty event.
+  while (pbl_msgq_get(prv_get_context()->to_process_event_queue, event, PBL_FOREVER) != 0) {
+  }
 }
 
 // -------------------------------------------------------------------------------------------

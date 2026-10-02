@@ -3,11 +3,16 @@
 
 #include "clar.h"
 
+#include <errno.h>
+
 #include "process_management/process_manager.h"
 #include "process_management/app_install_manager.h"
 #include "process_management/pebble_process_info.h"
 #include "pbl/services/blob_db/app_db.h"
 #include "pbl/util/size.h"
+
+// Fakes
+#include "fake_pebble_tasks.h"
 
 // Stubs
 #include "stubs_accel_service.h"
@@ -28,7 +33,6 @@
 #include "stubs_passert.h"
 #include "stubs_pbl_malloc.h"
 #include "stubs_pebble_process_md.h"
-#include "stubs_pebble_tasks.h"
 #include "stubs_persist.h"
 #include "stubs_resources.h"
 #include "stubs_syscalls.h"
@@ -130,7 +134,14 @@ uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) {
   return 0;
 }
 
+static int s_pbl_msgq_get__interrupted_count;
+static PebbleEvent s_pbl_msgq_get__event;
 int pbl_msgq_get(struct pbl_msgq *q, void *msg, pbl_timeout_t timeout) {
+  if (s_pbl_msgq_get__interrupted_count > 0) {
+    s_pbl_msgq_get__interrupted_count--;
+    return -EINTR;
+  }
+  *(PebbleEvent *)msg = s_pbl_msgq_get__event;
   return 0;
 }
 
@@ -139,6 +150,9 @@ int pbl_msgq_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout) {
 }
 
 void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
+}
+
+void pebble_task_unregister(PebbleTask task) {
 }
 
 void event_service_clear_process_subscriptions(void) {
@@ -210,6 +224,9 @@ void test_process_manager__initialize(void) {
   s_app_manager_launch_new_app__callcount = 0;
   s_app_manager_launch_new_app__config = (__typeof__(s_app_manager_launch_new_app__config)){};
   s_event_put__event = NULL;
+  s_pbl_msgq_get__interrupted_count = 0;
+  s_pbl_msgq_get__event = (PebbleEvent){};
+  stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 }
 
 void test_process_manager__check_SDK_compatible(void) {
@@ -291,4 +308,17 @@ void test_process_manager__requested_kill_survives_a_fetch(void) {
   cl_assert(fetch_args != NULL);
   cl_assert(fetch_args->forcefully);
   cl_assert(fetch_args->kill_requested);
+}
+
+//! A forced close's suspend and resume ends the wait with -EINTR and no event, so it waits again.
+//! Runs as the worker, the context the stubs provide. The app waits on the same syscall.
+void test_process_manager__get_pebble_event_waits_again_after_an_interrupted_wait(void) {
+  stub_pebble_tasks_set_current(PebbleTask_Worker);
+  s_pbl_msgq_get__interrupted_count = 1;
+  s_pbl_msgq_get__event = (PebbleEvent){.type = PEBBLE_PROCESS_DEINIT_EVENT};
+  PebbleEvent event = {};
+
+  sys_get_pebble_event(&event);
+
+  cl_assert_equal_i(event.type, PEBBLE_PROCESS_DEINIT_EVENT);
 }
