@@ -1078,7 +1078,7 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
     return;
   }
 
-  // Reverse mapping: 0 = max sensitivity (MIN threshold), 100 = min sensitivity (MAX threshold)
+  // Reverse mapping: 0 = min sensitivity (MAX threshold), 100 = max sensitivity (MIN threshold)
   // [0, 100] -> [wk_ths_max, wk_ths_min]
   raw = CONFIG_ACCEL_LSM6DSO_WK_THS_MAX -
         (percent * (CONFIG_ACCEL_LSM6DSO_WK_THS_MAX - CONFIG_ACCEL_LSM6DSO_WK_THS_MIN)) / 100U;
