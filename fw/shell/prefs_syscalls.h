@@ -6,3 +6,4 @@
 #include "shell/prefs.h"
 
 UnitsDistance sys_shell_prefs_get_units_distance(void);
+GColor sys_shell_prefs_get_theme_highlight_color(void);

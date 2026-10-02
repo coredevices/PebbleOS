@@ -1010,6 +1010,10 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
         int32_t sx_step = ((int32_t)src_w << 16) / dst_w;
         int32_t sy_step = ((int32_t)src_h << 16) / dst_h;
         int32_t sy_fp = sy_step >> 1;
+#if !PBL_BW
+        // Hoisted: system_theme_get_bg_color() is a syscall, far too costly per pixel.
+        const uint8_t bg_argb = system_theme_get_bg_color().argb;
+#endif
         for (int dy = 0; dy < dst_h; dy++, sy_fp += sy_step) {
           int sy = sy_fp >> 16;
           if (sy >= src_h)
@@ -1035,7 +1039,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
             weather_fb_row_set(ri.data, ax, GColorBlackARGB8);
 #else
             uint8_t pixel = srow[sx];
-            if (pixel == system_theme_get_bg_color().argb)
+            if (pixel == bg_argb)
               continue; // GColor8 white
             weather_fb_row_set(ri.data, ax, pixel);
 #endif
