@@ -7,71 +7,119 @@
 
 #include "pbl/services/put_bytes/put_bytes.h"
 
+/**
+ * @defgroup services_put_bytes_put_bytes_storage Put bytes storage
+ * @ingroup services_put_bytes
+ * @brief Backends storing received objects.
+ *
+ * Firmware, recovery and system resources use the raw flash backend, other objects the PFS file
+ * backend (not built in recovery firmware).
+ * @{
+ */
+
 struct PutBytesStorageImplementation;
+/** @brief Backend operations, see @ref services_put_bytes_put_bytes_storage_internal. */
 typedef struct PutBytesStorageImplementation PutBytesStorageImplementation;
 
+/** @brief Storage of an object being received. */
 typedef struct {
-  // A struct full of function pointers that implements a storage API
+  /** Backend operations, NULL when not initialized. */
   const PutBytesStorageImplementation *impl;
 
-  //! A void pointer that the PutBytesStorageImplementation is free to stash stuff into
+  /** Backend private data. */
   void *impl_data;
 
-  //! The offset into the storage we've initialized. Updated by pb_storage_append. pb_storage_init
-  //! may set this to a non-zero value.
+  /**
+   * Offset of the next append, advanced by pb_storage_append(). Set by pb_storage_init(), e.g.
+   * past a metadata header or to the append offset.
+   */
   uint32_t current_offset;
 } PutBytesStorage;
 
+/** @brief Object information passed to pb_storage_init(). */
 typedef struct {
+  /** Bank index of raw objects. */
   int index;
+  /** NUL-terminated file name of file objects. */
   char filename[];
 } PutBytesStorageInfo;
 
-//! Write data directly to the putbyte storage. Does not update storage->bytes_written
-//! @param storage A pointer to the storage struct representing the underlying storage
-//! @param offset the offset within the storage we'd like to write to
-//! @param buffer the data to write
-//! @param length the amount of data to write
+/**
+ * @brief Write data at an offset, without moving @ref PutBytesStorage::current_offset.
+ *
+ * The file backend only supports writing at the current offset.
+ *
+ * @param storage Storage.
+ * @param offset Offset within the storage.
+ * @param buffer Data.
+ * @param length Length of @p buffer in bytes.
+ */
 void pb_storage_write(PutBytesStorage *storage, uint32_t offset, const uint8_t *buffer,
                       uint32_t length);
 
-//! Append data to the end of a putbyte storage. Updates storage->bytes_written
-//! @param storage A pointer to the storage struct representing the underlying storage
-//! @param buffer the data to append
-//! @param length the amount of data to append
+/**
+ * @brief Append data at @ref PutBytesStorage::current_offset and advance it.
+ *
+ * @param storage Storage.
+ * @param buffer Data.
+ * @param length Length of @p buffer in bytes.
+ */
 void pb_storage_append(PutBytesStorage *storage, const uint8_t *buffer, uint32_t length);
 
+/** @brief CRC algorithms. */
 typedef enum {
-  PutBytesCrcType_Legacy = 0, // See pbl_crc32_legacy()
+  /** Legacy checksum, see pbl_crc32_legacy(). */
+  PutBytesCrcType_Legacy = 0,
+  /** CRC-32, see pbl_crc32(). Raw backend only. */
   PutBytesCrcType_CRC32,
 } PutBytesCrcType;
 
-//! Calculate the CRC of the data in storage
-//! @param storage A pointer to the storage struct representing the underlying storage
-//! @param crc_type The type of CRC to compute
-//! @return the checksum computed using 'crc_type' specified
-//! @see drivers/crc.h
+/**
+ * @brief Compute the CRC of the data written so far.
+ *
+ * Covers the data up to @ref PutBytesStorage::current_offset, excluding any metadata header.
+ *
+ * @param storage Storage.
+ * @param crc_type CRC algorithm.
+ * @return CRC.
+ */
 uint32_t pb_storage_calculate_crc(PutBytesStorage *storage, PutBytesCrcType crc_type);
 
-//! Initialize a storage struct for a new putbyte transaction
-//! @param storage a pointer-to-pointer to where we want to keep a reference to the storage
-//! @param object_type the type of putbyte object we're about to store
-//! @param total_size the size of the incoming object, in bytes
-//! @param append_offset if != 0, this means we are continuing a PB operation that previously failed
-//!                      for some reason. The incoming writes will start at this offset
-//! @param info additional information about the data (see PutBytesStorageInfo).
+/**
+ * @brief Initialize storage for a new transfer.
+ *
+ * Selects the backend for @p object_type and rejects objects larger than it can hold.
+ *
+ * @param[out] storage Storage, zeroed beforehand.
+ * @param object_type Object type.
+ * @param total_size Object size in bytes.
+ * @param info Object information.
+ * @param append_offset If non-zero, resume a previously interrupted transfer at this offset
+ *                      instead of starting over.
+ * @return true on success.
+ */
 bool pb_storage_init(PutBytesStorage *storage, PutBytesObjectType object_type, uint32_t total_size,
                      PutBytesStorageInfo *info, uint32_t append_offset);
 
-//! Deinitialize and free a storage struct after a transaction is over
-//! @param storage a pointer-to-pointer to where the reference to the storage is currently held
-//! @param is_success whether the putbyte transfer succeeded or not
-//! @note if putbytes is unsuccessful, the data will be deleted
+/**
+ * @brief Release storage after a transfer.
+ *
+ * Does nothing if the storage is not initialized. A failed file transfer deletes the file.
+ *
+ * @param storage Storage.
+ * @param is_success Whether the transfer succeeded.
+ */
 void pb_storage_deinit(PutBytesStorage *storage, bool is_success);
 
-//! Some types of storage allow the state of a partial installation to be recovered (today, just
-//! firmware & resources).
-//! @param obj_type The type of resource to recover the install status of
-//! @param[out] status How many bytes have been written and their crc
-//! @return True iff the status struct was populated with valid data
+/**
+ * @brief Recover the progress of a partially written object.
+ *
+ * Only supported for firmware, recovery and system resources.
+ *
+ * @param obj_type Object type.
+ * @param[out] status Bytes written and their CRC.
+ * @return true if @p status was filled in.
+ */
 bool pb_storage_get_status(PutBytesObjectType obj_type, PbInstallStatus *status);
+
+/** @} */
