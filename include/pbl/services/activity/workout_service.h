@@ -10,63 +10,169 @@
 
 #include <stdbool.h>
 
-//! Workouts are very similar to ActivitySessions, the only difference is that they are manually
-//! started / stopped, and update more frequently than automatically detected activities.
+/**
+ * @defgroup services_activity_workout_service Workout service
+ * @ingroup services_activity
+ * @brief Manually started and stopped activity sessions.
+ *
+ * Workouts are like detected activity sessions, but are started and stopped by the user and
+ * update more frequently. Only one workout runs at a time, and automatic session detection is
+ * disabled while it runs. Workouts of at least a minute are saved as manual
+ * @ref ActivitySession entries when stopped.
+ *
+ * @code{.c}
+ * if (workout_service_start_workout(ActivitySessionType_Run)) {
+ *   int32_t steps, duration_s, distance_m, bpm;
+ *   HRZone zone;
+ *
+ *   workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &zone);
+ *   ...
+ *   workout_service_stop_workout();
+ * }
+ * @endcode
+ * @{
+ */
 
-//! Note: If a workout is in progress, then we disable automatic activity detection.
-//! Note: Only 1 workout at a time is supported
-
+/** @brief Initialize the workout service. */
 void workout_service_init(void);
 
-//! Called by the frontend application to signal that the app has been opened.
-//! @note Must be called from PebbleTask_App
+/**
+ * @brief Signal that the workout app was opened.
+ *
+ * Cancels the abandoned workout reminder. Must be called from the app task.
+ */
 void workout_service_frontend_opened(void);
 
-//! Called by the frontend application to signal that the app has been closed.
-//! @note Must be called from PebbleTask_App
+/**
+ * @brief Signal that the workout app was closed.
+ *
+ * Arms a reminder notification for a workout left running. Must be called from the app task.
+ */
 void workout_service_frontend_closed(void);
 
-//! Event handler for Health events
+/**
+ * @brief Handle a health event (movement and heart rate updates).
+ *
+ * Called from the KernelMain event loop.
+ *
+ * @param event Event.
+ */
 void workout_service_health_event_handler(PebbleHealthEvent *event);
 
-//! Event handler for Activity events
+/**
+ * @brief Handle an activity event.
+ *
+ * Pauses the workout when activity tracking stops. Called from the KernelMain event loop.
+ *
+ * @param event Event.
+ */
 void workout_service_activity_event_handler(PebbleActivityEvent *event);
 
-//! Event handler for Workout events
+/**
+ * @brief Handle a workout event.
+ *
+ * Called from the KernelMain event loop.
+ *
+ * @param event Event.
+ */
 void workout_service_workout_event_handler(PebbleWorkoutEvent *event);
 
-//! Returns true if there is an ongoing workout
+/**
+ * @brief Check whether a workout is ongoing.
+ *
+ * @return true if a workout is ongoing, paused or not.
+ */
 bool workout_service_is_workout_ongoing(void);
 
-//! Pause or resume the workout's HR sampling so the shared optical path is free for a periodic
-//! SpO2 reading during a manual workout. No-op if there's no active workout HR session.
+/**
+ * @brief Pause or resume the workout's heart rate sampling.
+ *
+ * Frees the shared optical path for a SpO2 reading during a workout. No-op without a workout
+ * heart rate session.
+ *
+ * @param paused true to pause, false to resume.
+ */
 void workout_service_set_hrm_paused(bool paused);
 
-//! Returns true if the activity type is a supported workout
+/**
+ * @brief Check whether a session type can be a workout.
+ *
+ * @param type Session type.
+ * @return true for walks, runs and open workouts.
+ */
 bool workout_service_is_workout_type_supported(ActivitySessionType type);
 
-//! Start a new workout
-//! This stops / saves all ongoing automatically detected activity sessions
-//! All workouts must eventually get stopped
+/**
+ * @brief Start a workout.
+ *
+ * Ends ongoing detected sessions and disables automatic session detection. Every started
+ * workout must eventually be stopped.
+ *
+ * @param type Workout type.
+ * @return true on success, false if the type is unsupported or a workout is already ongoing.
+ */
 bool workout_service_start_workout(ActivitySessionType type);
 
-//! Pause / unpause the currect workout
+/**
+ * @brief Pause or resume the current workout.
+ *
+ * Paused time does not count toward the workout duration.
+ *
+ * @param should_be_paused true to pause, false to resume.
+ * @return true on success, false if no workout is ongoing.
+ */
 bool workout_service_pause_workout(bool should_be_paused);
 
-//! Stops the current workout. Resumes automatic activity session detection
+/**
+ * @brief Stop the current workout.
+ *
+ * Saves it as a session and notifies the user if it lasted at least a minute, and re-enables
+ * automatic session detection.
+ *
+ * @return true on success, false if no workout is ongoing.
+ */
 bool workout_service_stop_workout(void);
 
-//! Starts a workout using the data from the given activity session
+/**
+ * @brief Turn a detected activity session into a workout.
+ *
+ * The session is removed and a workout starts with its start time, duration, steps, distance and
+ * calories.
+ *
+ * @param session Session to take over.
+ * @return true on success.
+ */
 bool workout_service_takeover_activity_session(ActivitySession *session);
 
-//! Returns true if there is a paused workout
+/**
+ * @brief Check whether the current workout is paused.
+ *
+ * @return true if a workout is ongoing and paused.
+ */
 bool workout_service_is_paused(void);
 
-//! Get the current workout type
-//! Returns true if a workout is going on
+/**
+ * @brief Get the type of the current workout.
+ *
+ * @param[out] type_out Workout type.
+ * @return true if a workout is ongoing.
+ */
 bool workout_service_get_current_workout_type(ActivitySessionType *type_out);
 
-//! Dumps the current state of the workout
+/**
+ * @brief Get the current workout metrics.
+ *
+ * Each output is optional.
+ *
+ * @param[out] steps_out Steps.
+ * @param[out] duration_s_out Duration excluding pauses, in seconds.
+ * @param[out] distance_m_out Distance, in meters.
+ * @param[out] current_bpm_out Current heart rate, in beats per minute.
+ * @param[out] current_hr_zone_out Current heart rate zone.
+ * @return true if a workout is ongoing.
+ */
 bool workout_service_get_current_workout_info(int32_t *steps_out, int32_t *duration_s_out,
                                               int32_t *distance_m_out, int32_t *current_bpm_out,
                                               HRZone *current_hr_zone_out);
+
+/** @} */

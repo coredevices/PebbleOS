@@ -3,163 +3,265 @@
 #include <stdbool.h>
 #include <time.h>
 
-// ---------------------------------------------------------------------------------------------
-// Equates
-// number of samples per second
+/**
+ * @defgroup services_activity_kraepelin Kraepelin algorithm
+ * @ingroup services_activity
+ * @brief Step counting, sleep and activity session detection.
+ *
+ * The algorithm processes accelerometer samples at @ref KALG_SAMPLE_HZ in 5 second epochs (125
+ * samples). For each epoch it computes the FFT and the VMC (vector magnitude counts, a measure
+ * of movement calibrated against the Actigraph) and identifies the stepping frequency, giving
+ * the steps of the epoch. Once a minute, the minute stats (VMC, orientation) are fed with the
+ * minute's steps, calories and distance to state machines that detect walks, runs, sleep and
+ * restful sleep. See the health algorithms page of the architecture documentation for details.
+ *
+ * The caller owns the state, of size kalg_state_size():
+ *
+ * @code{.c}
+ * KAlgState *state = kernel_malloc_check(kalg_state_size());
+ * kalg_init(state, NULL);
+ *
+ * // For every batch of 25 Hz samples
+ * uint32_t consumed;
+ * steps += kalg_analyze_samples(state, samples, num_samples, &consumed);
+ *
+ * // Once a minute
+ * uint16_t vmc;
+ * uint8_t orientation;
+ * bool still;
+ * kalg_minute_stats(state, &vmc, &orientation, &still);
+ * kalg_activities_update(state, rtc_get_time(), minute_steps, vmc, orientation, not_worn,
+ *                        resting_cal, active_cal, distance_mm, false, session_cb, ctx);
+ *
+ * kalg_deinit(state);
+ * kernel_free(state);
+ * @endcode
+ * @{
+ */
+
+/** @brief Accelerometer sampling rate expected by the algorithm, in Hz. */
 #define KALG_SAMPLE_HZ 25
 
-// Number of grams per kilogram
+/** @brief Number of grams per kilogram. */
 #define KALG_GRAMS_PER_KG 1000
 
+/** @brief Opaque algorithm state. */
 typedef struct KAlgState KAlgState;
 
-// This value in the encoded_vmc field of a KalgSleepMinute structure indicates that the
-// watch was not worn
+/** @brief Encoded VMC value meaning the watch was not worn. */
 #define KALG_ENCODED_VMC_NOT_WORN 0
 
-// The minimum value if the watch was worn
+/** @brief Minimum encoded VMC value when the watch was worn. */
 #define KALG_ENCODED_VMC_MIN_WORN_VALUE 1
 
-// The maximum amount of time it takes for the sleep algorithm to figure out that the user
-// woke up. This is used by activity_algorithm_kraepelin.c at compile time so it must be
-// hard-coded. The correct value is checked in kalg_init() using a PBL_ASSERT since it can't
-// be checked at compile time.
-// should be: KALG_SLEEP_PARAMS.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1
+/**
+ * @brief Maximum delay, in minutes, for the sleep algorithm to detect that the user woke up.
+ *
+ * Needed at compile time by the activity algorithm glue, so it is hard-coded; kalg_init()
+ * asserts it matches the sleep parameters.
+ */
 #define KALG_MAX_UNCERTAIN_SLEEP_M 19
 
-// Activity types, used in KAlgSleepSessionCallback callback
+/** @brief Activity types reported to @ref KAlgActivitySessionCallback. */
 typedef enum {
-  // ActivityType_Sleep encapsulates an entire sleep session from sleep entry to wake, and
-  // contains both light and deep sleep periods. An ActivityType_RestfulSleep session identifies
-  // a restful period and its start and end times will always be inside of a ActivityType_Sleep
-  // session.
+  /**
+   * Entire sleep session from falling asleep to waking up, containing both light and restful
+   * periods.
+   */
   KAlgActivityType_Sleep,
 
-  // A restful period, these will always be inside of a ActivityType_Sleep session
+  /** Restful period, always inside a @ref KAlgActivityType_Sleep session. */
   KAlgActivityType_RestfulSleep,
 
-  // A "significant" length walk
+  /** Walk of significant length. */
   KAlgActivityType_Walk,
 
-  // A run
+  /** Run. */
   KAlgActivityType_Run,
 
   // Leave at end
+  /** Number of activity types. */
   KAlgActivityTypeCount,
 } KAlgActivityType;
 
-// Sleep stats, returned by kalg_get_sleep_stats
+/** @brief Ongoing sleep statistics, returned by kalg_get_sleep_stats(). */
 typedef struct {
-  time_t sleep_start_utc;     // start time of a recent sleep session. 0 if no session recently
-                              // detected, where "recent" means within the last
-                              // minimum_sleep_session_length minutes (currently 60).
-  uint16_t sleep_len_m;       // how many minutes of that sleep are *certain*, 0 if none.
-  time_t uncertain_start_utc; // start time of the uncertain area of the sleep session, which
-                              // always continues until the present time, 0 if none.
+  /**
+   * Start time of a recent sleep session, UTC; 0 if none was detected in the last 60 minutes
+   * (minimum sleep session length).
+   */
+  time_t sleep_start_utc;
+  /** Minutes of that sleep that are certain, 0 if none. */
+  uint16_t sleep_len_m;
+  /** Start of the uncertain part of the session, which lasts until now, UTC; 0 if none. */
+  time_t uncertain_start_utc;
 } KAlgOngoingSleepStats;
 
-// Callback called by kalg_activities_update to register activity sessions.
-// @param[in] context the context passed to kalg_activities_update()
-// @param[in] activity_type the type of activity
-// @param[in] start_utc start time of the activity
-// @param[in] len_sec length of the activity
-// @param[in] ongoing true if the activity is still ongoing, false if it ended
-// @param[in] delete if true, delete this session that was previously added
-// @param[in] steps the number of steps taken in this activity
-// @param[in] resting_calories the number of resting calories burned
-// @param[in] active_calories the number of active calories burned
-// @param[in] distance_mm the distance covered, in millimeters
+/**
+ * @brief Callback reporting activity sessions, called by kalg_activities_update().
+ *
+ * A session may be reported several times while ongoing, and deleted later.
+ *
+ * @param context Context passed to kalg_activities_update().
+ * @param activity_type Activity type.
+ * @param start_utc Start time, UTC.
+ * @param len_sec Length, in seconds.
+ * @param ongoing true if the activity is still ongoing.
+ * @param delete true to delete this previously reported session.
+ * @param steps Steps taken.
+ * @param resting_calories Resting calories (1/1000 kcal) burned.
+ * @param active_calories Active calories (1/1000 kcal) burned.
+ * @param distance_mm Distance covered, in millimeters.
+ */
 typedef void (*KAlgActivitySessionCallback)(void *context, KAlgActivityType activity_type,
                                             time_t start_utc, uint32_t len_sec, bool ongoing,
                                             bool delete, uint32_t steps, uint32_t resting_calories,
                                             uint32_t active_calories, uint32_t distance_mm);
 
-// Callback called by kalg_analyze_samples and kalg_compute_activities to record
-// statistics. This is used during algorithm development, not during normal runtime. The algorithm
-// passes a list of statistic names and their values to this callback so that they can be
-// collected and summarized
-// @param[in] num_stats the number of elements in the names and stats arrays
-// @param[in] names list of statistic names
-// @param[in] stats the value for each statistic
+/**
+ * @brief Callback receiving algorithm statistics.
+ *
+ * Only used during algorithm development, to collect and summarize named statistics.
+ *
+ * @param num_stats Number of elements in @p names and @p stats.
+ * @param names Statistic names.
+ * @param stats Statistic values.
+ */
 typedef void (*KAlgStatsCallback)(uint32_t num_stats, const char **names, int32_t *stats);
 
-// Return the amount of space needed for the state
+/**
+ * @brief Get the size of the algorithm state.
+ *
+ * @return Size of @ref KAlgState, in bytes.
+ */
 uint32_t kalg_state_size(void);
 
-// Init the state, return true on success
-// @param[in] stats_cb if not NULL, this callback will be called while analyzing samples with
-//  statistics that are computed.
+/**
+ * @brief Initialize the algorithm state.
+ *
+ * @param state State, of kalg_state_size() bytes.
+ * @param stats_cb If not NULL, called with statistics while analyzing samples.
+ * @return true on success.
+ */
 bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb);
 
-// Release resources held by the state. Must be called before freeing it.
-// @param[in] state the state structure passed into kalg_init
+/**
+ * @brief Release the resources held by the state.
+ *
+ * Must be called before freeing the state, otherwise the activity heart rate subscriptions
+ * outlive it.
+ *
+ * @param state State passed to kalg_init().
+ */
 void kalg_deinit(KAlgState *state);
 
-// Analyze a set of accel samples
-// @param[in] state the state structure passed into kalg_init
-// @param[in] samples array of accel samples
-// @param[in] num_samples number of samples in the samples array
-// @param[out] consumed_samples The number of samples that were just consumed to compute steps
-//             For many algorithms, this will often be 0 because the algorithm will wait until
-//             it has stored up a larger batch before it runs the step algorithm on the samples.
-// @return number of steps counted
+/**
+ * @brief Analyze accelerometer samples.
+ *
+ * Samples are buffered until a full epoch is available.
+ *
+ * @param state State passed to kalg_init().
+ * @param samples Samples, in mG, at @ref KALG_SAMPLE_HZ.
+ * @param num_samples Number of samples in @p samples.
+ * @param[out] consumed_samples Number of samples just processed to compute steps: an epoch
+ * (125) when one completed, 0 otherwise.
+ * @return Steps counted.
+ */
 uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *samples, uint32_t num_samples,
                               uint32_t *consumed_samples);
 
-// Return the last minute's stats and reset them for the next minute. The minute stats are logged
-// and also used for computing sleep
-// @param[in] state the state structure passed into kalg_init
-// @param[out] vmc the vmc (Vector Magnitude Counts) value is returned here
-// @param[out] orientation the orientation value is returned here
-// @param[out] still true if no movement above noise threshold was detected
+/**
+ * @brief Get the last minute's stats and reset them for the next minute.
+ *
+ * The minute stats are logged and used to compute sleep.
+ *
+ * @param state State passed to kalg_init().
+ * @param[out] vmc VMC (vector magnitude counts) of the minute.
+ * @param[out] orientation Average orientation: upper 4 bits are the angle to the Z axis, lower
+ * 4 bits the angle in the X-Y plane, each quantized to 16 steps.
+ * @param[out] still true if no movement above the noise threshold was detected (currently
+ * always false).
+ */
 void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bool *still);
 
-// Used by unit tests - run the partial epoch that hasn't been processed yet by
-// kalg_analyze_samples()
-// @param[in] state the state structure passed into kalg_init
-// @return number of steps counted
+/**
+ * @brief Process the partial epoch not yet processed by kalg_analyze_samples() (unit tests).
+ *
+ * @param state State passed to kalg_init().
+ * @return Steps counted.
+ */
 uint32_t kalg_analyze_finish_epoch(KAlgState *state);
 
-// Feed new minute data into the activity detection state machine. This logic looks for non-sleep
-// activities, like walks, runs, etc.
-// @param[in] state the state structure passed into kalg_init
-// @param[in] utc_now current timestamp in UTC
-// @param[in] steps number of steps taken in the last minute
-// @param[in] vmc VMC for the last minute
-// @param[in] orientation average orientation for the last minute
-// @param[in] definitely_not_worn true if the watch is definitely not being worn this minute
-//                       (caller passes "plugged into charger" OR'd with any other definite
-//                       not-worn hints such as a recent HRM off-wrist reading). Treated as a
-//                       hard "not worn" signal for sleep detection.
-// @param[in] resting_calories number of resting calories burned in the last minute
-// @param[in] active_calories number of active calories burned in the last minute
-// @param[in] distance_mm distance covered in millimeters in the last minute
-// @param[in] sessions_cb this callback will be called by kalg_compute_activities() for every
-//            session that it finds.
-// @param[in] context passed to the sessions_cb
+/**
+ * @brief Feed a minute of data to the walk, run and sleep detectors.
+ *
+ * Does nothing while activity tracking is disabled. A UTC time jump (backwards, or more than 5
+ * minutes forward) resets the detectors.
+ *
+ * @param state State passed to kalg_init().
+ * @param utc_now Current UTC time.
+ * @param steps Steps taken in the last minute.
+ * @param vmc VMC of the last minute.
+ * @param orientation Average orientation of the last minute.
+ * @param definitely_not_worn true if the watch is definitely not worn this minute (on the
+ * charger, or a recent off-wrist heart rate reading); a hard not-worn signal for sleep detection.
+ * @param resting_calories Resting calories (1/1000 kcal) burned in the last minute.
+ * @param active_calories Active calories (1/1000 kcal) burned in the last minute.
+ * @param distance_mm Distance covered in the last minute, in millimeters.
+ * @param shutting_down true to force all ongoing activities to end.
+ * @param sessions_cb Called for every session found.
+ * @param context Passed to @p sessions_cb.
+ */
 void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
                             uint8_t orientation, bool definitely_not_worn,
                             uint32_t resting_calories, uint32_t active_calories,
                             uint32_t distance_mm, bool shutting_down,
                             KAlgActivitySessionCallback sessions_cb, void *context);
 
-// Return the timestamp of the last minute that was processed for the given activity type
-// @param[in] state the state structure passed into kalg_init
-// @param[in] activity which type of activity
+/**
+ * @brief Get the last minute processed for an activity type.
+ *
+ * @param state State passed to kalg_init().
+ * @param activity Activity type.
+ * @return UTC time of the minute.
+ */
 time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity);
 
-// Get sleep stats
-// @param[out] stats this structure is filled in with the sleep stats
+/**
+ * @brief Get the ongoing sleep statistics.
+ *
+ * @param state State passed to kalg_init().
+ * @param[out] stats Sleep statistics.
+ */
 void kalg_get_sleep_stats(KAlgState *state, KAlgOngoingSleepStats *stats);
 
-//! Tells the algorithm whether or not it should automatically track activities
-//! @param kalg_state the state structure passed into kalg_init
-//! @param enable true to start tracking, false to stop tracking
+/**
+ * @brief Enable or disable automatic activity session detection.
+ *
+ * Resets the detectors.
+ *
+ * @param kalg_state State passed to kalg_init().
+ * @param enable true to detect sessions, false to stop.
+ */
 void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable);
 
-//! @return true if a continuous HRM session is currently active for a detected activity
+/**
+ * @brief Check whether a continuous heart rate session is active for a detected activity.
+ *
+ * @param kalg_state State passed to kalg_init().
+ * @return true if a walk or run heart rate session is active.
+ */
 bool kalg_activity_hrm_is_active(KAlgState *kalg_state);
 
-//! Pause or resume the continuous activity HRM session(s) by idling / restoring their update
-//! interval. Used to free the shared optical path for a periodic SpO2 reading during an activity.
+/**
+ * @brief Pause or resume the heart rate sessions of detected activities.
+ *
+ * Pausing sets their update interval to a day, freeing the shared optical path for a SpO2
+ * reading; resuming restores the 1 second interval.
+ *
+ * @param kalg_state State passed to kalg_init().
+ * @param paused true to pause, false to resume.
+ */
 void kalg_activity_hrm_set_paused(KAlgState *kalg_state, bool paused);
+
+/** @} */

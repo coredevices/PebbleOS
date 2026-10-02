@@ -9,116 +9,180 @@
 #include <stdint.h>
 #include <time.h>
 
-//! The maximum number of text nodes needed in a text node container
+/**
+ * @defgroup services_activity_health_util Health formatting helpers
+ * @ingroup services_activity
+ * @brief Formatting of durations, distances and paces for the health UI.
+ *
+ * Distances follow the user's distance units preference (miles or kilometers).
+ *
+ * @code{.c}
+ * char buf[HEALTH_WHOLE_AND_DECIMAL_LENGTH];
+ *
+ * health_util_format_distance(buf, sizeof(buf), distance_m); // "4.2"
+ * const char *units = health_util_get_distance_string("mi", "km");
+ * @endcode
+ * @{
+ */
+
+/** @brief Maximum number of text nodes needed in a text node container. */
 #define MAX_TEXT_NODES 5
 
-//! Extra 4 bytes is for i18n purposes
+/** @brief Buffer size for a "00.0" formatted value, with 4 extra bytes for translations. */
 #define HEALTH_WHOLE_AND_DECIMAL_LENGTH (sizeof("00.0") + 4)
 
-//! Format a duration in seconds to hours and minutes, e.g. "12H 59M"
-//! If duration is less than an hour, the format of "59M" is used.
-//! If duration is a multiple of an hour, the format of "12H" is used.
-//! If duration is 0, the string "0H" is used.
-//! @param[in,out] buffer the string buffer to write to
-//! @param buffer_size the size of the string buffer
-//! @param duration_s the duration is seconds
-//! @param i18n_owner i18n owner that must be called with i18n_free_all some time after usage
-//! @return snprintf-style number of bytes needed to be written not including the null terminator
+/**
+ * @brief Format a duration as hours and minutes, e.g. "12H 59M".
+ *
+ * Under an hour only minutes are shown ("59M"), whole hours only show hours ("12H"), and 0 is
+ * "0H".
+ *
+ * @param[out] buffer Output string.
+ * @param buffer_size Size of @p buffer.
+ * @param duration_s Duration, in seconds.
+ * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @return Number of characters written, excluding the terminator, snprintf-style.
+ */
 int health_util_format_hours_and_minutes(char *buffer, size_t buffer_size, int duration_s,
                                          void *i18n_owner);
 
-//! Create a text node and add it to the container and set the font and color
-//! @param buffer_size the size of the string buffer
-//! @param font GFont to be used for the text node
-//! @param color GColor to be used fot the text node
-//! @param container GTextNodeContainer that the text node will be added to
+/**
+ * @brief Create a text node with its own buffer and add it to a container.
+ *
+ * @param buffer_size Size of the text buffer allocated with the node.
+ * @param font Font of the node.
+ * @param color Color of the node.
+ * @param container Container the node is added to, or NULL.
+ * @return New text node.
+ */
 GTextNodeText *health_util_create_text_node(int buffer_size, GFont font, GColor color,
                                             GTextNodeContainer *container);
 
-//! Create a text node with text and add it to the container and set the font and color
-//! @param text the text string to be used for the text node
-//! @param font GFont to be used for the text node
-//! @param color GColor to be used fot the text node
-//! @param container GTextNodeContainer that the text node will be added to
+/**
+ * @brief Create a text node showing a string and add it to a container.
+ *
+ * @param text Text, which must outlive the node.
+ * @param font Font of the node.
+ * @param color Color of the node.
+ * @param container Container the node is added to, or NULL.
+ * @return New text node.
+ */
 GTextNodeText *health_util_create_text_node_with_text(const char *text, GFont font, GColor color,
                                                       GTextNodeContainer *container);
 
-//! Format a duration in seconds to hours, minutes and seconds, e.g. "1:15:32"
-//! @param[in,out] buffer the string buffer to write to
-//! @param buffer_size the size of the string buffer
-//! @param duration_s the duration is seconds
-//! @param leading_zero whether to include a leading zero in the formatted string
-//! @param i18n_owner i18n owner that must be called with i18n_free_all some time after usage
-//! @return snprintf-style number of bytes needed to be written not including the null terminator
+/**
+ * @brief Format a duration as hours, minutes and seconds, e.g. "1:15:32".
+ *
+ * Hours are omitted under an hour ("5:32").
+ *
+ * @param[out] buffer Output string.
+ * @param buffer_size Size of @p buffer.
+ * @param duration_s Duration, in seconds.
+ * @param leading_zero Whether to pad the first field to two digits.
+ * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @return snprintf() result.
+ */
 int health_util_format_hours_minutes_seconds(char *buffer, size_t buffer_size, int duration_s,
                                              bool leading_zero, void *i18n_owner);
 
-//! Format a duration in seconds to minutes and seconds, e.g. "5:32"
-//! @param[in,out] buffer the string buffer to write to
-//! @param buffer_size the size of the string buffer
-//! @param duration_s the duration is seconds
-//! @param i18n_owner i18n owner that must be called with i18n_free_all some time after usage
-//! @return snprintf-style number of bytes needed to be written not including the null terminator
+/**
+ * @brief Format a duration as minutes and seconds, e.g. "5:32".
+ *
+ * @param[out] buffer Output string.
+ * @param buffer_size Size of @p buffer.
+ * @param duration_s Duration, in seconds.
+ * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @return snprintf() result.
+ */
 int health_util_format_minutes_and_seconds(char *buffer, size_t buffer_size, int duration_s,
                                            void *i18n_owner);
 
-//! Format a duration in seconds to hours and minutes, e.g. "12H 59M", using text node
-//! number_font will be used for the nodes with hours and minutes,
-//! units_font will be used for the "H" and "M"
-//! If duration is less than an hour, the format of "59M" is used.
-//! If duration is a multiple of an hour, the format of "12H" is used.
-//! If duration is 0, the string "0H" is used.
-//! @param duration_s the duration is seconds
-//! @param i18n_owner i18n owner that must be called with i18n_free_all some time after usage
-//! @param number_font GFont to be used for the number text node
-//! @param units_font GFont to be used for the units text node
-//! @param color GColor to be used for the number and units text nodes
-//! @param container GTextNodeContainer that will have the new number and units text nodes added to
+/**
+ * @brief Add text nodes showing a duration as hours and minutes, e.g. "12h 59min".
+ *
+ * Under an hour only minutes are shown, whole hours only show hours, and 0 is "0h". Units are
+ * vertically aligned to the bottom of the numbers.
+ *
+ * @param duration_s Duration, in seconds.
+ * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @param number_font Font of the numbers.
+ * @param units_font Font of the units.
+ * @param color Color of all nodes.
+ * @param container Container the nodes are added to.
+ */
 void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i18n_owner,
                                                          GFont number_font, GFont units_font,
                                                          GColor color,
                                                          GTextNodeContainer *container);
 
-//! Convert a fraction into its whole and decimal parts
-//! ex. 5/2 has a whole part of 2 and a decimal part of .5
-//! @param numerator the numerator of the fraction
-//! @param denominator the denominator of the fraction
-//! @param[out] whole_part the whole part of the decimal representation
-//! @param[out] decimal_part the decimal part of the decimal representation
+/**
+ * @brief Split a fraction into whole and tenths parts, rounded to the nearest tenth.
+ *
+ * For example, 5/2 gives 2 and 5.
+ *
+ * @param numerator Numerator.
+ * @param denominator Denominator.
+ * @param[out] whole_part Whole part.
+ * @param[out] decimal_part Tenths digit.
+ */
 void health_util_convert_fraction_to_whole_and_decimal_part(int numerator, int denominator,
                                                             int *whole_part, int *decimal_part);
 
-//! Formats a fraction into its whole and decimal parts, e.g. "42.3"
-//! @param[in,out] buffer the string buffer to write to
-//! @param buffer_size the size of the string buffer
-//! @param numerator the numerator of the fraction
-//! @param denominator the denominator of the fraction
-//! @return number of bytes written to buffer not including the null terminator
+/**
+ * @brief Format a fraction with one decimal, e.g. "42.3".
+ *
+ * @param[out] buffer Output string.
+ * @param buffer_size Size of @p buffer.
+ * @param numerator Numerator.
+ * @param denominator Denominator.
+ * @return snprintf() result.
+ */
 int health_util_format_whole_and_decimal(char *buffer, size_t buffer_size, int numerator,
                                          int denominator);
 
-//! @return meters conversion factor for the user's distance pref
+/**
+ * @brief Get the number of meters in the user's distance unit.
+ *
+ * @return Meters per mile or per kilometer.
+ */
 int health_util_get_distance_factor(void);
 
-//! @return the pace from a distance in meters and a time in seconds
+/**
+ * @brief Compute a pace in the user's distance unit.
+ *
+ * @param time_s Time, in seconds.
+ * @param distance_meter Distance, in meters.
+ * @return Seconds per mile or kilometer, 0 if @p distance_meter is 0.
+ */
 time_t health_util_get_pace(int time_s, int distance_meter);
 
-//! Get the meters units string for the user's distance pref
-//! @param miles_string the units string to use if the user's preference is miles
-//! @param km_string the units string to use if the user's preference is kilometers
-//! @return meters units string matching the user's distance pref
+/**
+ * @brief Pick the units string matching the user's distance unit.
+ *
+ * @param miles_string String for miles.
+ * @param km_string String for kilometers.
+ * @return One of the strings.
+ */
 const char *health_util_get_distance_string(const char *miles_string, const char *km_string);
 
-//! Formats distance in meters based on the user's units preference, e.g. "42.3"
-//! @param[in,out] buffer the string buffer to write to
-//! @param buffer_size the size of the string buffer
-//! @param distance_m the distance in meters
-//! @return number of bytes written to buffer not including the null terminator
+/**
+ * @brief Format a distance in the user's distance unit with one decimal, e.g. "42.3".
+ *
+ * @param[out] buffer Output string.
+ * @param buffer_size Size of @p buffer.
+ * @param distance_m Distance, in meters.
+ * @return snprintf() result.
+ */
 int health_util_format_distance(char *buffer, size_t buffer_size, uint32_t distance_m);
 
-//! Convert distance in meters its whole and decimal parts in the user's distance pref
-//! @param distance_m the distance in meters
-//! @param[out] whole_part the whole part of the converted decimal representation
-//! @param[out] decimal_part the decimal part of the converted decimal representation
+/**
+ * @brief Convert a distance to the user's distance unit, as whole and tenths parts.
+ *
+ * @param distance_m Distance, in meters.
+ * @param[out] whole_part Whole part.
+ * @param[out] decimal_part Tenths digit.
+ */
 void health_util_convert_distance_to_whole_and_decimal_part(int distance_m, int *whole_part,
                                                             int *decimal_part);
+
+/** @} */

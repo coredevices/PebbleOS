@@ -5,21 +5,37 @@
 
 #include "pbl/util/units.h"
 
-// We divide the raw light sensor reading by this factor before storing it into AlgDlsMinuteData
+/**
+ * @addtogroup services_activity_kraepelin
+ * @{
+ */
+
+/** @brief Divisor applied to the raw light sensor reading stored in minute records. */
 #define ALG_RAW_LIGHT_SENSOR_DIVIDE_BY 16
 
-// Nap constraints, also used by unit tests
-// A sleep session in this range is always considered "primary" (not nap) sleep
-// ... if it ends after this minute in the evening
-#define ALG_PRIMARY_EVENING_MINUTE (21 * PBL_MIN_PER_HOUR) // 9pm
-// ... or starts before this minute in the morning
-#define ALG_PRIMARY_MORNING_MINUTE (12 * PBL_MIN_PER_HOUR) // 12pm
+/**
+ * @brief Sleep sessions ending after this minute of the day (9pm) are primary sleep, not naps.
+ */
+#define ALG_PRIMARY_EVENING_MINUTE (21 * PBL_MIN_PER_HOUR)
+/**
+ * @brief Sleep sessions starting before this minute of the day (12pm) are primary sleep, not
+ * naps.
+ */
+#define ALG_PRIMARY_MORNING_MINUTE (12 * PBL_MIN_PER_HOUR)
 
-// A sleep session outside of the primary range is considered a nap if it is less than
-// this duration, otherwise it is considered a primary sleep session
+/**
+ * @brief Maximum length of a nap, in minutes.
+ *
+ * Longer sleep sessions outside the primary range are primary sleep.
+ */
 #define ALG_MAX_NAP_MINUTES (3 * PBL_MIN_PER_HOUR)
 
-// Max number of hours of past data we process to figure out sleep for "today". If a sleep
-// cycle *ends* after midnight today, then we still count it as today's sleep. That means the
-// start of the sleep cycle could have started more than 24 hours ago.
+/**
+ * @brief Hours of past minute data processed to compute today's sleep.
+ *
+ * A sleep session ending after midnight counts as today's, so it may have started more than 24
+ * hours ago.
+ */
 #define ALG_SLEEP_HISTORY_HOURS_FOR_TODAY 36
+
+/** @} */

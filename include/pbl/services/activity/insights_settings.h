@@ -7,115 +7,201 @@
 #include "pbl/services/filesystem/pfs.h"
 #include "pbl/kernel/compiler.h"
 
-#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD     "sleep_reward"
-#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_SUMMARY    "sleep_summary"
-#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD  "activity_reward"
+/**
+ * @defgroup services_activity_insights_settings Insights settings
+ * @ingroup services_activity
+ * @brief Tunable parameters of the activity insights.
+ *
+ * Settings are stored per insight, keyed by name, in the @c insights settings file. Built-in
+ * defaults are used for insights missing from the file.
+ *
+ * @code{.c}
+ * ActivityInsightSettings settings;
+ *
+ * if (activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD, &settings) &&
+ *     settings.enabled) {
+ *   uint16_t delay_s = settings.reward.sleep.trigger_after_wakeup_seconds;
+ * }
+ * @endcode
+ * @{
+ */
+
+/** @brief Key of the sleep reward settings. */
+#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD "sleep_reward"
+/** @brief Key of the sleep summary settings. */
+#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_SUMMARY "sleep_summary"
+/** @brief Key of the activity reward settings. */
+#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD "activity_reward"
+/** @brief Key of the activity summary settings. */
 #define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SUMMARY "activity_summary"
+/** @brief Key of the activity session settings. */
 #define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SESSION "activity_session"
 
+/**
+ * @brief Reward insight settings.
+ *
+ * Day counts are in addition to today.
+ */
 typedef struct PBL_PACKED ActivityRewardSettings {
-  // Note: these parameters are the number of days in addition to 'today' that we want to look at
-  uint8_t min_days_data;            //!< How many days of the metric's history we require
-  uint8_t continuous_min_days_data; //!< How many consecutive days of history we require
-  uint8_t target_qualifying_days;   //!< Days that must be above target (on top of 'today')
+  /** Days of history required. */
+  uint8_t min_days_data;
+  /** Consecutive days of history required. */
+  uint8_t continuous_min_days_data;
+  /** Days that must be above target, in addition to today. */
+  uint8_t target_qualifying_days;
 
-  uint16_t target_percent_of_median;   //!< Percentage of median qualifying days must hit
-  uint32_t notif_min_interval_seconds; //!< How often we allow this insight to be shown
+  /** Percentage of the median that qualifying days must reach. */
+  uint16_t target_percent_of_median;
+  /** Minimum interval between two notifications of this insight, in seconds. */
+  uint32_t notif_min_interval_seconds;
 
-  // Insight-specific values
+  /** Insight specific settings. */
   union {
+    /** Sleep reward settings. */
     struct PBL_PACKED {
-      uint16_t trigger_after_wakeup_seconds; //!< Time we wait before showing sleep reward
+      /** Delay after waking up before showing the reward, in seconds. */
+      uint16_t trigger_after_wakeup_seconds;
     } sleep;
 
+    /** Activity reward settings. */
     struct PBL_PACKED {
-      uint8_t trigger_active_minutes;   //!< Time we must be currently active before showing reward
-      uint8_t trigger_steps_per_minute; //!< Steps per minute required for an 'active' minute
+      /** Minutes the user must currently have been active before showing the reward. */
+      uint8_t trigger_active_minutes;
+      /** Steps per minute required for an active minute. */
+      uint8_t trigger_steps_per_minute;
     } activity;
   };
 } ActivityRewardSettings;
 
+/**
+ * @brief Summary pin settings.
+ *
+ * Thresholds are percentages relative to 100% of the average: 105% is 5, 93% is -7.
+ */
 typedef struct PBL_PACKED ActivitySummarySettings {
-  int8_t above_avg_threshold; //!< Values greater than this are counted as above avg
-                              //!< In relation to 100% (eg 105% would be 5)
-  int8_t below_avg_threshold; //!< Values less than this are counted as above avg
-                              //!< In relation to 100% (eg 93% would be -7)
-  int8_t fail_threshold;      //!< Values less than this are counted as fail
-                              //!< In relation to 100% (e.g. 55% would be -45)
+  /** Values above this are above average. */
+  int8_t above_avg_threshold;
+  /** Values below this are below average. */
+  int8_t below_avg_threshold;
+  /** Values below this are a fail. */
+  int8_t fail_threshold;
 
+  /** Insight specific settings. */
   union {
+    /** Activity summary settings. */
     struct PBL_PACKED {
-      uint16_t trigger_minute;              //!< Minute of the day that we trigger the pin
-      uint16_t update_threshold_steps;      //!< Step delta that will cause the pin to update
-      uint32_t update_max_interval_seconds; //!< Max time we'll go without updating the pin
-      bool show_notification;               //!< Whether to show a notification
-      uint16_t max_fail_steps;              //!< Don't show negative if walked more than X steps
+      /** Minute of the day at which the pin is added. */
+      uint16_t trigger_minute;
+      /** Step change that causes the pin to be updated. */
+      uint16_t update_threshold_steps;
+      /** Maximum time without updating the pin, in seconds. */
+      uint32_t update_max_interval_seconds;
+      /** Whether to show a notification. */
+      bool show_notification;
+      /** Do not show a negative summary above this many steps. */
+      uint16_t max_fail_steps;
     } activity;
 
+    /** Sleep summary settings. */
     struct PBL_PACKED {
-      uint16_t max_fail_minutes;            //!< Don't show negative if slept more than X minutes
-      uint16_t trigger_notif_seconds;       //!< Time in seconds after wakeup to notify about sleep
-      uint16_t trigger_notif_activity;      //!< Minimum amount of steps per minute to trigger the
-                                            //!< Sleep summary notification
-      uint8_t trigger_notif_active_minutes; //!< Minimum amount of active minutes to trigger the
-                                            //!< Sleep summary notification
+      /** Do not show a negative summary above this many minutes of sleep. */
+      uint16_t max_fail_minutes;
+      /** Delay after waking up before the notification, in seconds. */
+      uint16_t trigger_notif_seconds;
+      /** Minimum steps per minute to trigger the notification. */
+      uint16_t trigger_notif_activity;
+      /** Minimum active minutes to trigger the notification. */
+      uint8_t trigger_notif_active_minutes;
     } sleep;
   };
 } ActivitySummarySettings;
 
+/** @brief Activity session insight settings. */
 typedef struct PBL_PACKED ActivitySessionSettings {
-  bool show_notification; //!< Whether to show a notification
+  /** Whether to show a notification. */
+  bool show_notification;
 
+  /** Session type specific settings. */
   union {
+    /** Walk and run settings. */
     struct PBL_PACKED {
-      uint16_t trigger_elapsed_minutes;  //!< Minimum length of a walk to be given an insight
-      uint16_t trigger_cooldown_minutes; //!< Minutes wait after end of session before notifying
+      /** Minimum session length to get an insight, in minutes. */
+      uint16_t trigger_elapsed_minutes;
+      /** Delay after the end of the session before notifying, in minutes. */
+      uint16_t trigger_cooldown_minutes;
     } activity;
   };
 } ActivitySessionSettings;
 
+/** @brief Settings of one insight. */
 typedef struct PBL_PACKED ActivityInsightSettings {
   // Common parameters
-  uint8_t version; //!< Current version of the struct - must be first
+  /** Struct version, must be first. Records with another version are ignored. */
+  uint8_t version;
 
-  bool enabled;   //!< Insight enabled
-  uint8_t unused; //!< Unused
+  /** Insight enabled. */
+  bool enabled;
+  /** Unused. */
+  uint8_t unused;
 
+  /** Insight specific settings. */
   union {
+    /** Reward settings. */
     ActivityRewardSettings reward;
+    /** Summary pin settings. */
     ActivitySummarySettings summary;
+    /** Activity session settings. */
     ActivitySessionSettings session;
   };
 } ActivityInsightSettings;
 
-//! Read a setting from the insights settings
-//! @param insight_name the name of the insight for which to get a setting
-//! @param[out] settings_out an ActivityInsightSettings struct to which the data will be written
-//! @returns true if the setting was found and the data is valid, false otherwise
-//! @note if this function returns false, settings_out will be zeroed out.
+/**
+ * @brief Read the settings of an insight.
+ *
+ * Falls back to the built-in defaults when the file has no valid record for the insight.
+ *
+ * @param insight_name Insight key, e.g. @ref ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD.
+ * @param[out] settings_out Settings; zeroed on failure.
+ * @return true if settings were found, false otherwise.
+ */
 bool activity_insights_settings_read(const char *insight_name,
                                      ActivityInsightSettings *settings_out);
 
-//! Write a setting to the insights settings (used for testing)
-//! @param insight_name the name of the insight for which to get a setting
-//! @param settings an ActivityInsightSettings struct which contains the data to be written
-//! @returns true if the setting was successfully saved
+/**
+ * @brief Write the settings of an insight (testing).
+ *
+ * @param insight_name Insight key.
+ * @param settings Settings.
+ * @return true if saved.
+ */
 bool activity_insights_settings_write(const char *insight_name, ActivityInsightSettings *settings);
 
-//! Get the current version of the insights settings
-//! @return the version number for the current insights settings
-//! @note this is separate from the struct version
+/**
+ * @brief Get the version of the insights settings file contents.
+ *
+ * Separate from @ref ActivityInsightSettings::version.
+ *
+ * @return Version, 0 by default.
+ */
 uint16_t activity_insights_settings_get_version(void);
 
-//! Initialize insights settings
+/** @brief Initialize the insights settings file. */
 void activity_insights_settings_init(void);
 
-//! Watch the insights settings file. The callback is called whenever the file is closed with
-//! modifications or deleted
-//! @param callback Function to call when the file has been modified
-//! @return Callback handle for passing into \ref activity_insights_settings_unwatch
+/**
+ * @brief Watch the insights settings file.
+ *
+ * @param callback Called when the file is closed after modifications, or deleted.
+ * @return Handle for activity_insights_settings_unwatch(), 0 if the activity service is not
+ * initialized.
+ */
 PFSCallbackHandle activity_insights_settings_watch(PFSFileChangedCallback callback);
 
-//! Stop watching the settings file
-//! @param cb_handle Callback handle which was returned by \ref activity_insights_settings_watch
+/**
+ * @brief Stop watching the insights settings file.
+ *
+ * @param cb_handle Handle returned by activity_insights_settings_watch().
+ */
 void activity_insights_settings_unwatch(PFSCallbackHandle cb_handle);
+
+/** @} */

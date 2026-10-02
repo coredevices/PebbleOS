@@ -12,76 +12,166 @@
 #include "pbl/util/time.h"
 #include "pbl/util/units.h"
 
-// Max # of days of history we store
+/**
+ * @defgroup services_activity Activity
+ * @ingroup services
+ * @brief Step counting, sleep tracking, activity sessions and health metrics.
+ *
+ * The activity service samples the accelerometer at 25 Hz and feeds the samples to the activity
+ * algorithm (see @ref services_activity_kraepelin) on KernelBG. The algorithm counts steps over
+ * 5 second epochs and, once a minute, produces a minute record (steps, VMC, orientation, light,
+ * heart rate, SpO2) that is stored in a minute file and sent to the phone through data logging.
+ * From the minute data it detects sleep, restful sleep, walks and runs, reported as
+ * @ref ActivitySession entries.
+ *
+ * Daily metrics are reset at midnight and the last @ref ACTIVITY_HISTORY_DAYS days are kept in
+ * the @c activity settings file. Units used across the service:
+ * - steps: count;
+ * - distance: meters (millimeters internally);
+ * - calories: kcal (calories, 1/1000 kcal, internally);
+ * - durations: seconds through activity_get_metric(), minutes in sessions and storage;
+ * - heart rate: beats per minute;
+ * - user height: millimeters, weight: decagrams (10 g).
+ *
+ * Today's step count and the previous days:
+ *
+ * @code{.c}
+ * int32_t steps[7];
+ *
+ * if (activity_get_metric(ActivityMetricStepCount, ARRAY_LENGTH(steps), steps)) {
+ *   // steps[0] is today, steps[1] yesterday, ...; -1 where no data is available
+ * }
+ *
+ * int32_t sleep_s;
+ * activity_get_metric(ActivityMetricSleepTotalSeconds, 1, &sleep_s);
+ * @endcode
+ *
+ * Sessions detected today:
+ *
+ * @code{.c}
+ * ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT];
+ * uint32_t count = ARRAY_LENGTH(sessions);
+ *
+ * if (activity_get_sessions(&count, sessions)) {
+ *   for (uint32_t i = 0; i < count; i++) {
+ *     if (sessions[i].type == ActivitySessionType_Walk) {
+ *       // sessions[i].length_min, sessions[i].step_data.steps, ...
+ *     }
+ *   }
+ * }
+ * @endcode
+ * @{
+ */
+
+/** @brief Number of days of metric history kept, today included. */
 #define ACTIVITY_HISTORY_DAYS 30
 
-// The max number of activity sessions we collect and cache at a time. Usually, there will only be
-// about 4 or 5 sleep sessions (1 container and a handful of restful periods) in a night and
-// a handful of walk and/or run sessions. Allocating space for 32 to should be more than enough.
+/**
+ * @brief Maximum number of activity sessions cached at a time.
+ *
+ * A night usually produces 4 or 5 sleep sessions (one container plus restful periods), plus a
+ * handful of walks and runs.
+ */
 #define ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT 32
 
-// Number of calories in a kcalorie
+/** @brief Number of calories in a kilocalorie. */
 #define ACTIVITY_CALORIES_PER_KCAL 1000
 
-// Values for ActivitySettingGender
+/** @brief User gender, used by the calorie computations. */
 typedef enum {
+  /** Female. */
   ActivityGenderFemale = 0,
+  /** Male. */
   ActivityGenderMale = 1,
+  /** Other; calorie formulas use the midpoint between female and male. */
   ActivityGenderOther = 2
 } ActivityGender;
 
-// Activity Settings Struct, for storing to prefs
+/** @brief User profile and activity preferences, as stored in prefs. */
 typedef struct PBL_PACKED ActivitySettings {
+  /** Height, in millimeters. */
   int16_t height_mm;
+  /** Weight, in decagrams (10 g). */
   int16_t weight_dag;
+  /** Activity tracking enabled. */
   bool tracking_enabled;
+  /** Activity insights enabled. */
   bool activity_insights_enabled;
+  /** Sleep insights enabled. */
   bool sleep_insights_enabled;
+  /** Age, in years. */
   int8_t age_years;
+  /** @ref ActivityGender value. */
   int8_t gender;
 } ActivitySettings;
 
-// Heart Rate Preferences Struct, for storing to prefs
+/** @brief Heart rate thresholds, in beats per minute, as stored in prefs. */
 typedef struct PBL_PACKED HeartRatePreferences {
+  /** Resting heart rate. */
   uint8_t resting_hr;
+  /** Heart rate at or above which the rate is considered elevated. */
   uint8_t elevated_hr;
+  /** Maximum heart rate. */
   uint8_t max_hr;
+  /** Lowest heart rate of zone 1. */
   uint8_t zone1_threshold;
+  /** Lowest heart rate of zone 2. */
   uint8_t zone2_threshold;
+  /** Lowest heart rate of zone 3. */
   uint8_t zone3_threshold;
 } HeartRatePreferences;
 
-// HRM measurement interval options
+/**
+ * @brief Background measurement interval for heart rate and SpO2.
+ *
+ * Values are persisted: new ones go at the end.
+ */
 typedef enum {
+  /** Every 10 minutes (default). */
   HRMonitoringInterval_10Min = 0,
+  /** Every 30 minutes. */
   HRMonitoringInterval_30Min,
+  /** Every hour. */
   HRMonitoringInterval_1Hour,
+  /** No background measurements. */
   HRMonitoringInterval_Disabled,
+  /** Every 5 minutes (heart rate only; SpO2 falls back to 10 minutes). */
   HRMonitoringInterval_5Min,
+  /** Number of intervals. */
   HRMonitoringIntervalCount,
 } HRMonitoringInterval;
 
-// Activity HRM Settings Struct, for storing to prefs
+/** @brief Heart rate monitor preferences, as stored in prefs. */
 typedef struct PBL_PACKED ActivityHRMSettings {
+  /** Heart rate monitoring enabled. */
   bool enabled;
-  uint8_t measurement_interval;   // HRMonitoringInterval value
-  bool activity_tracking_enabled; // HR tracking during detected activities (walk/run)
+  /** @ref HRMonitoringInterval value. */
+  uint8_t measurement_interval;
+  /** Continuous heart rate tracking during detected walks and runs. */
+  bool activity_tracking_enabled;
 } ActivityHRMSettings;
 
-// Activity SpO2 (blood oxygen) Settings Struct, for storing to prefs.
-// The on/off bit is synced from the phone under its own key
-// (PREF_KEY_BLOOD_OXYGEN_PREFERENCES); only the watch-local interval lives here.
+/**
+ * @brief Blood oxygen (SpO2) preferences, as stored in prefs.
+ *
+ * The on/off setting is synced from the phone under its own key
+ * (@c PREF_KEY_BLOOD_OXYGEN_PREFERENCES); only the watch-local interval lives here.
+ */
 typedef struct PBL_PACKED ActivitySpO2Settings {
-  uint8_t measurement_interval; // HRMonitoringInterval value
+  /** @ref HRMonitoringInterval value. */
+  uint8_t measurement_interval;
 } ActivitySpO2Settings;
 
-// Default values, taken from http://www.cdc.gov/nchs/fastats/body-measurements.htm
-#define ACTIVITY_DEFAULT_HEIGHT_MM 1620 // 5'3.8"
-// dag - decagram (10 g)
-#define ACTIVITY_DEFAULT_WEIGHT_DAG 7539 // 166.2 lbs
-#define ACTIVITY_DEFAULT_GENDER     ActivityGenderFemale
-#define ACTIVITY_DEFAULT_AGE_YEARS  30
+/** @brief Default user height, in millimeters (5'3.8", CDC average). */
+#define ACTIVITY_DEFAULT_HEIGHT_MM 1620
+/** @brief Default user weight, in decagrams (166.2 lbs, CDC average). */
+#define ACTIVITY_DEFAULT_WEIGHT_DAG 7539
+/** @brief Default user gender. */
+#define ACTIVITY_DEFAULT_GENDER ActivityGenderFemale
+/** @brief Default user age, in years. */
+#define ACTIVITY_DEFAULT_AGE_YEARS 30
 
+/** @brief Initializer for the default @ref ActivitySettings. */
 #define ACTIVITY_DEFAULT_PREFERENCES           \
   {                                            \
     .tracking_enabled = false,                 \
@@ -93,6 +183,11 @@ typedef struct PBL_PACKED ActivitySpO2Settings {
     .weight_dag = ACTIVITY_DEFAULT_WEIGHT_DAG, \
   }
 
+/**
+ * @brief Initializer for the default @ref HeartRatePreferences.
+ *
+ * Zone thresholds are 50%, 70% and 85% of the heart rate reserve.
+ */
 #define ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES \
   {                                             \
     .resting_hr = 70,                           \
@@ -103,6 +198,7 @@ typedef struct PBL_PACKED ActivitySpO2Settings {
     .zone3_threshold = 172 /* 85% of HRR */,    \
   }
 
+/** @brief Initializer for the default @ref ActivityHRMSettings. */
 #define ACTIVITY_HRM_DEFAULT_PREFERENCES                \
   {                                                     \
     .enabled = true,                                    \
@@ -110,497 +206,826 @@ typedef struct PBL_PACKED ActivitySpO2Settings {
     .activity_tracking_enabled = false,                 \
   }
 
+/** @brief Initializer for the default @ref ActivitySpO2Settings. */
 #define ACTIVITY_SPO2_DEFAULT_PREFERENCES               \
   {                                                     \
     .measurement_interval = HRMonitoringInterval_10Min, \
   }
 
-// We consider values outside of this range to be invalid
-// In the future we could pick these values based on user history
+/** @brief Lowest heart rate reading accepted as valid, in beats per minute. */
 #define ACTIVITY_DEFAULT_MIN_HR 40
+/** @brief Highest heart rate reading accepted as valid, in beats per minute. */
 #define ACTIVITY_DEFAULT_MAX_HR 200
 
-// Activity metric enums, accepted by activity_get_metric()
+/**
+ * @brief Metrics returned by activity_get_metric().
+ *
+ * Unless noted, values are totals for the current day (since local midnight). Only metrics
+ * marked as such have history.
+ */
 typedef enum {
+  /** First metric. */
   ActivityMetricFirst = 0,
+  /** Steps taken. Has history. */
   ActivityMetricStepCount = ActivityMetricFirst,
+  /** Seconds spent in active minutes (40 steps or more). Has history. */
   ActivityMetricActiveSeconds,
+  /** Resting kcal burned. Has history. */
   ActivityMetricRestingKCalories,
+  /** Active kcal burned. Has history. */
   ActivityMetricActiveKCalories,
+  /** Distance walked or run, in meters. Has history. */
   ActivityMetricDistanceMeters,
+  /** Seconds of sleep. Has history. */
   ActivityMetricSleepTotalSeconds,
+  /** Seconds of restful (deep) sleep. Has history. */
   ActivityMetricSleepRestfulSeconds,
-  ActivityMetricSleepEnterAtSeconds, // What time the user fell asleep. Measured in
-                                     // seconds after midnight.
-  ActivityMetricSleepExitAtSeconds,  // What time the user woke up. Measured in
-                                     // seconds after midnight
-  ActivityMetricSleepState,          // returns an ActivitySleepState enum value
-  ActivityMetricSleepStateSeconds,   // how many seconds we've been in the
-                                     // ActivityMetricSleepState state
+  /** Time the user fell asleep, in seconds after midnight. Has history. */
+  ActivityMetricSleepEnterAtSeconds,
+  /** Time the user woke up, in seconds after midnight. Has history. */
+  ActivityMetricSleepExitAtSeconds,
+  /** Current @ref ActivitySleepState value. */
+  ActivityMetricSleepState,
+  /** Seconds spent so far in the current @ref ActivityMetricSleepState. */
+  ActivityMetricSleepStateSeconds,
+  /** VMC (vector magnitude counts) of the last processed minute. */
   ActivityMetricLastVMC,
 
-  ActivityMetricHeartRateRawBPM,                 // Most recent heart rate reading
-  ActivityMetricHeartRateRawQuality,             // Heart rate signal quality
-  ActivityMetricHeartRateRawUpdatedTimeUTC,      // UTC of last heart rate update
-  ActivityMetricHeartRateFilteredBPM,            // Most recent "Stable (median)" HR reading
-  ActivityMetricHeartRateFilteredUpdatedTimeUTC, // UTC of last stable HR reading
+  /** Most recent heart rate reading, in beats per minute. */
+  ActivityMetricHeartRateRawBPM,
+  /** Quality of the most recent heart rate reading, an @c HRMQuality value. */
+  ActivityMetricHeartRateRawQuality,
+  /** UTC time of the most recent heart rate reading. */
+  ActivityMetricHeartRateRawUpdatedTimeUTC,
+  /** Most recent stable heart rate (median over a minute), in beats per minute. */
+  ActivityMetricHeartRateFilteredBPM,
+  /** UTC time of the most recent stable heart rate. */
+  ActivityMetricHeartRateFilteredUpdatedTimeUTC,
 
+  /** Minutes spent in heart rate zone 1 today. */
   ActivityMetricHeartRateZone1Minutes,
+  /** Minutes spent in heart rate zone 2 today. */
   ActivityMetricHeartRateZone2Minutes,
+  /** Minutes spent in heart rate zone 3 today. */
   ActivityMetricHeartRateZone3Minutes,
 
   // KEEP THIS AT THE END
+  /** Number of metrics. */
   ActivityMetricNumMetrics,
+  /** Invalid metric. */
   ActivityMetricInvalid = ActivityMetricNumMetrics,
 } ActivityMetric;
 
-// Activity session types, used in ActivitySession struct
+/** @brief Activity session types, used in @ref ActivitySession. Values are logged to the phone. */
 typedef enum {
+  /** No session. */
   ActivitySessionType_None = 0,
 
-  // ActivityType_Sleep encapsulates an entire sleep session from sleep entry to wake, and
-  // contains both light and deep sleep periods. An ActivityType_DeepSleep session identifies
-  // a restful period and its start and end times will always be inside of a ActivityType_Sleep
-  // session.
+  /**
+   * Entire sleep session from falling asleep to waking up, containing both light and restful
+   * periods.
+   */
   ActivitySessionType_Sleep = 1,
 
-  // A restful period, these will always be inside of a ActivityType_Sleep session
+  /** Restful period, always inside an @ref ActivitySessionType_Sleep session. */
   ActivitySessionType_RestfulSleep = 2,
 
-  // Like ActivityType_Sleep, but labeled as a nap because of its duration and time (as
-  // compared to the assumed nightly sleep).
+  /** Like @ref ActivitySessionType_Sleep, but labeled a nap because of its duration and time. */
   ActivitySessionType_Nap = 3,
 
-  // A restful period that was part of a nap, these will always be inside of a
-  // ActivityType_Nap session
+  /** Restful period, always inside an @ref ActivitySessionType_Nap session. */
   ActivitySessionType_RestfulNap = 4,
 
-  // A "significant" length walk
+  /** Walk of significant length. */
   ActivitySessionType_Walk = 5,
 
-  // A run
+  /** Run. */
   ActivitySessionType_Run = 6,
 
-  // Open workout. Basically a catch all / generic activity type
+  /** Open (generic) workout. */
   ActivitySessionType_Open = 7,
 
   // Leave at end
+  /** Number of session types. */
   ActivitySessionTypeCount,
+  /** Invalid session type. */
   ActivitySessionType_Invalid = ActivitySessionTypeCount,
 } ActivitySessionType;
 
-// Sleep state, used in AlgorithmStateMinuteData and to express possible values of
-// ActivityMetricSleepState when calling activity_get_metric().
+/**
+ * @brief Sleep state.
+ *
+ * Value of @ref ActivityMetricSleepState.
+ */
 typedef enum {
+  /** Awake. */
   ActivitySleepStateAwake = 0,
+  /** Restful (deep) sleep. */
   ActivitySleepStateRestfulSleep,
+  /** Light sleep. */
   ActivitySleepStateLightSleep,
+  /** Unknown. */
   ActivitySleepStateUnknown,
 } ActivitySleepState;
 
-// Data included for stepping related activities.
-// NOTE: modifying this struct requires a bump to the ACTIVITY_SESSION_LOGGING_VERSION and
-// an update to documentation on this wiki page:
-//   https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=46301269
+/**
+ * @brief Data of step based sessions (walk, run, open workout).
+ *
+ * Part of the data logging format: changing it requires bumping
+ * @c ACTIVITY_SESSION_LOGGING_VERSION.
+ */
 typedef struct PBL_PACKED {
-  uint16_t steps;             // number of steps
-  uint16_t active_kcalories;  // number of active kcalories
-  uint16_t resting_kcalories; // number of resting kcalories
-  uint16_t distance_meters;   // distance covered
+  /** Steps taken. */
+  uint16_t steps;
+  /** Active kcal burned. */
+  uint16_t active_kcalories;
+  /** Resting kcal burned. */
+  uint16_t resting_kcalories;
+  /** Distance covered, in meters. */
+  uint16_t distance_meters;
 } ActivitySessionDataStepping;
 
-// Data included for sleep related activities
-// NOTE: modifying this struct requires a bump to the ACTIVITY_SESSION_LOGGING_VERSION and
-// an update to documentation on this wiki page:
-//   https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=46301269
+/**
+ * @brief Data of sleep sessions (currently none).
+ *
+ * Part of the data logging format: changing it requires bumping
+ * @c ACTIVITY_SESSION_LOGGING_VERSION.
+ */
 typedef struct {
 } ActivitySessionDataSleeping;
 
+/** @brief Maximum length of a session, in minutes (one day). */
 #define ACTIVITY_SESSION_MAX_LENGTH_MIN PBL_MIN_PER_DAY
 
+/** @brief A detected or manual activity session. */
 typedef struct PBL_PACKED {
-  time_t start_utc;             // session start time
-  uint16_t length_min;          // length of session in minutes
-  ActivitySessionType type : 8; // type of activity
+  /** Start time, UTC. */
+  time_t start_utc;
+  /** Length, in minutes. */
+  uint16_t length_min;
+  /** Session type. */
+  ActivitySessionType type : 8;
+  /** Session flags. */
   union {
+    /** Individual flags. */
     struct {
-      uint8_t ongoing : 1; // activity still ongoing
-      uint8_t manual : 1;  // activity is a manual one
+      /** Session is still ongoing. */
+      uint8_t ongoing : 1;
+      /** Session was started manually (workout). */
+      uint8_t manual : 1;
+      /** Reserved. */
       uint8_t reserved : 6;
     };
+    /** All flags. */
     uint8_t flags;
   };
+  /** Type specific data. */
   union {
+    /** Data of step based sessions. */
     ActivitySessionDataStepping step_data;
+    /** Data of sleep sessions. */
     ActivitySessionDataSleeping sleep_data;
   };
 } ActivitySession;
 
-// Structure of data logging records generated by raw sample collection
-// Each of the 32bit samples in the record is encoded as follows:
-//    Each axis is encoded into 10 bits, by shifting the 16-bit raw value right by 3 bits and
-//    masking with 0x3FF. This is done because the max dynamic range of an axis is +/- 4000 and
-//    the least significant 3 bits are more or less noise.
-//    0bxx 10bits_x 10bits_y 10bits_z  The accel sensor generated a run of 0bxx samples with
-//                                     the given x, y, and z values
-#define ACTIVITY_RAW_SAMPLES_VERSION     2
+/**
+ * @brief Version of @ref ActivityRawSamplesRecord.
+ *
+ * Each 32-bit entry of a record encodes a run of identical samples: bits 31-30 hold the run
+ * size, then 10 bits per axis for x, y and z (most to least significant). An axis value is the
+ * 16-bit raw value (mG) rounded and shifted right by 3 bits, since the dynamic range is
+ * +/-4000 mG and the 3 least significant bits are mostly noise.
+ */
+#define ACTIVITY_RAW_SAMPLES_VERSION 2
+/** @brief Maximum number of encoded entries in a @ref ActivityRawSamplesRecord. */
 #define ACTIVITY_RAW_SAMPLES_MAX_ENTRIES 25
 
-// Utilities for the encoded samples collected by raw sample collection.
+/** @brief Bits per encoded axis value. */
 #define ACTIVITY_RAW_SAMPLE_VALUE_BITS (10)
-#define ACTIVITY_RAW_SAMPLE_VALUE_MASK (0x03FF) // 10 bits per axis
+/** @brief Mask of an encoded axis value. */
+#define ACTIVITY_RAW_SAMPLE_VALUE_MASK (0x03FF)
 
-// We throw away the least significant 3 bits and keep only 10 bits per axix. The + 4 is used
-// so that we round to nearest instead of rounding down as a result of the shift right
+/** @brief Right shift applied to raw axis values before encoding. */
 #define ACTIVITY_RAW_SAMPLE_SHIFT 3
+/**
+ * @brief Encode a raw axis value, rounding to nearest.
+ *
+ * @param x Raw axis value, in mG.
+ */
 #define ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(x) \
   ((((x) + 4) >> ACTIVITY_RAW_SAMPLE_SHIFT) & ACTIVITY_RAW_SAMPLE_VALUE_MASK)
 
-#define ACTIVITY_RAW_SAMPLE_MAX_RUN_SIZE       3
-#define ACTIVITY_RAW_SAMPLE_GET_RUN_SIZE(s)    ((s) >> (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS))
+/** @brief Maximum run size of an encoded entry. */
+#define ACTIVITY_RAW_SAMPLE_MAX_RUN_SIZE 3
+/**
+ * @brief Get the run size of an encoded entry.
+ *
+ * @param s Encoded entry.
+ */
+#define ACTIVITY_RAW_SAMPLE_GET_RUN_SIZE(s) ((s) >> (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS))
+/**
+ * @brief Set the run size of an encoded entry.
+ *
+ * @param s Encoded entry (lvalue).
+ * @param r Run size.
+ */
 #define ACTIVITY_RAW_SAMPLE_SET_RUN_SIZE(s, r) (s |= (r) << (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS))
-#define ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(x)     ((x) & 0x1000 ? -1 * (0x2000 - (x)) : (x))
+/**
+ * @brief Sign extend a decoded 13-bit axis value.
+ *
+ * @param x Decoded value, already shifted back left.
+ */
+#define ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(x) ((x) & 0x1000 ? -1 * (0x2000 - (x)) : (x))
 
+/**
+ * @brief Decode the x axis of an encoded entry, in mG.
+ *
+ * @param s Encoded entry.
+ */
 #define ACTIVITY_RAW_SAMPLE_GET_X(s)                                                           \
   ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(                                                             \
       (((uint32_t)s >> (2 * ACTIVITY_RAW_SAMPLE_VALUE_BITS)) & ACTIVITY_RAW_SAMPLE_VALUE_MASK) \
       << ACTIVITY_RAW_SAMPLE_SHIFT)
+/**
+ * @brief Decode the y axis of an encoded entry, in mG.
+ *
+ * @param s Encoded entry.
+ */
 #define ACTIVITY_RAW_SAMPLE_GET_Y(s)                                           \
   ACTIVITY_RAW_SAMPLE_SIGN_EXTEND(                                             \
       ((s >> ACTIVITY_RAW_SAMPLE_VALUE_BITS) & ACTIVITY_RAW_SAMPLE_VALUE_MASK) \
       << ACTIVITY_RAW_SAMPLE_SHIFT)
+/**
+ * @brief Decode the z axis of an encoded entry, in mG.
+ *
+ * @param s Encoded entry.
+ */
 #define ACTIVITY_RAW_SAMPLE_GET_Z(s) \
   ACTIVITY_RAW_SAMPLE_SIGN_EXTEND((s & ACTIVITY_RAW_SAMPLE_VALUE_MASK) << ACTIVITY_RAW_SAMPLE_SHIFT)
 
+/**
+ * @brief Encode a run of identical samples into an entry.
+ *
+ * @param run_size Number of samples in the run, up to @ref ACTIVITY_RAW_SAMPLE_MAX_RUN_SIZE.
+ * @param x Raw x axis value, in mG.
+ * @param y Raw y axis value, in mG.
+ * @param z Raw z axis value, in mG.
+ */
 #define ACTIVITY_RAW_SAMPLE_ENCODE(run_size, x, y, z)                                 \
   ((run_size) << (3 * ACTIVITY_RAW_SAMPLE_VALUE_BITS)) |                              \
       (ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(x) << (2 * ACTIVITY_RAW_SAMPLE_VALUE_BITS)) | \
       (ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(y) << ACTIVITY_RAW_SAMPLE_VALUE_BITS) |       \
       ACTIVITY_RAW_SAMPLE_VALUE_ENCODE(z)
 
-#define ACTIVITY_RAW_SAMPLE_FLAG_FIRST_RECORD 0x01 // Set for first record of session
-#define ACTIVITY_RAW_SAMPLE_FLAG_LAST_RECORD  0x02 // set for last record of session
+/** @brief @ref ActivityRawSamplesRecord flag: first record of a session. */
+#define ACTIVITY_RAW_SAMPLE_FLAG_FIRST_RECORD 0x01
+/** @brief @ref ActivityRawSamplesRecord flag: last record of a session. */
+#define ACTIVITY_RAW_SAMPLE_FLAG_LAST_RECORD 0x02
+/**
+ * @brief Data logging record of raw accelerometer sample collection.
+ *
+ * See @ref ACTIVITY_RAW_SAMPLES_VERSION for the entry encoding.
+ */
 typedef struct PBL_PACKED {
-  uint16_t version;    // Set to ACTIVITY_RAW_SAMPLE_VERSION
-  uint16_t session_id; // raw sample session id
-  uint32_t time_local; // local time
-  uint8_t flags;       // one or more of ACTIVITY_RAW_SAMPLE_FLAG_.*
-  uint8_t len;         // length of this blob, including this entire header
-  uint8_t num_samples; // number of uncompressed samples that this blob represents
-  uint8_t num_entries; // number of elements in the entries array below
+  /** @ref ACTIVITY_RAW_SAMPLES_VERSION. */
+  uint16_t version;
+  /** Raw sample collection session id. */
+  uint16_t session_id;
+  /** Local time. */
+  uint32_t time_local;
+  /** ACTIVITY_RAW_SAMPLE_FLAG_* flags. */
+  uint8_t flags;
+  /** Length of this record in bytes, header included. */
+  uint8_t len;
+  /** Number of samples the entries expand to. */
+  uint8_t num_samples;
+  /** Number of valid elements in @ref entries. */
+  uint8_t num_entries;
+  /** Encoded entries, each representing a run of up to 3 identical samples. */
   uint32_t entries[ACTIVITY_RAW_SAMPLES_MAX_ENTRIES];
-  // array of entries, each entry can represent multiple samples
-  // if we detect run lengths
 } ActivityRawSamplesRecord;
 
-//! Init the activity tracking service. This does not start it up - to start it up call
-//! activity_start_tracking();
-//! @return true if successfully initialized
+/**
+ * @brief Initialize the activity service.
+ *
+ * Does not start tracking, see activity_start_tracking().
+ *
+ * @return true on success.
+ */
 bool activity_init(void);
 
-//! Returns true if the activity service is initialized
+/**
+ * @brief Check whether the activity service is initialized.
+ *
+ * @return true if activity_init() succeeded.
+ */
 bool activity_is_initialized(void);
 
-//! Start the activity tracking service. This starts sampling of the accelerometer
-//! @param test_mode if true, samples must be fed in using activity_feed_samples()
-//! @return true if successfully started
+/**
+ * @brief Start activity tracking, sampling the accelerometer.
+ *
+ * Tracking starts asynchronously on KernelBG.
+ *
+ * @param test_mode If true, the accelerometer is not used and samples must be fed with
+ * activity_test_feed_samples().
+ * @return true if the start request was queued.
+ */
 bool activity_start_tracking(bool test_mode);
 
-//! Stop the activity tracking service.
-//! @return true if successfully stopped
+/**
+ * @brief Stop activity tracking.
+ *
+ * Tracking stops asynchronously on KernelBG.
+ *
+ * @return true if the stop request was queued.
+ */
 bool activity_stop_tracking(void);
 
-//! Return true if activity tracking is currently running
-//! @return true if activity tracking is currently running
+/**
+ * @brief Check whether activity tracking is running.
+ *
+ * @return true if tracking is currently running.
+ */
 bool activity_tracking_on(void);
 
-//! Enable/disable the activity service. This callback is ONLY for use by the service manager's
-//! services_set_runlevel() method. If false gets passed to this method, then tracking is
-//! turned off regardless of the state as set by activity_start_tracking/activity_stop_tracking.
+/**
+ * @brief Enable or disable the activity service for the current run level.
+ *
+ * Only for the service manager's services_set_runlevel(). While disabled, tracking is off
+ * regardless of activity_start_tracking() and activity_stop_tracking(), and resumes when
+ * re-enabled if it was started.
+ *
+ * @param enable Whether the run level allows the service.
+ */
 void activity_set_enabled(bool enable);
 
 // Functions for getting and setting the activity preferences (defined in shell/normal/prefs.c)
 
-//! Enable/disable activity tracking and store new setting in prefs for the next reboot
-//! @param enable if true, enable activity tracking
+/**
+ * @brief Persist whether activity tracking is enabled.
+ *
+ * @param enable If true, enable activity tracking.
+ */
 void activity_prefs_tracking_set_enabled(bool enable);
 
-//! Returns true if activity tracking is enabled
+/**
+ * @brief Check whether activity tracking is enabled in prefs.
+ *
+ * @return true if enabled.
+ */
 bool activity_prefs_tracking_is_enabled(void);
 
-//! Records the current time when called. Used to determine when activity was first used
-// so that we can send insights X days after activation
+/**
+ * @brief Record the activation time, if not recorded yet.
+ *
+ * Used to send insights a number of days after activation.
+ */
 void activity_prefs_set_activated(void);
 
-//! @return The utc timestamp of the first call to activity_prefs_set_activated()
-//! returns 0 if activity_prefs_set_activated() has never been called
+/**
+ * @brief Get the activation time.
+ *
+ * @return UTC time of the first activity_prefs_set_activated() call, 0 if never called.
+ */
 time_t activity_prefs_get_activation_time(void);
 
+/** @brief Forward declaration of @ref ActivationDelayInsightType. */
 typedef enum ActivationDelayInsightType ActivationDelayInsightType;
 
-//! @return True if the activation delay insight has fired
+/**
+ * @brief Check whether an activation delay insight has fired.
+ *
+ * @param type Insight.
+ * @return true if it has fired.
+ */
 bool activity_prefs_has_activation_delay_insight_fired(ActivationDelayInsightType type);
 
-//! Mark an activation delay insight as having fired
+/**
+ * @brief Mark an activation delay insight as fired.
+ *
+ * @param type Insight.
+ */
 void activity_prefs_set_activation_delay_insight_fired(ActivationDelayInsightType type);
 
-//! @return Which version of the health app was last opened
-//! @note 0 is "never opened"
+/**
+ * @brief Get the version of the health app that was last opened.
+ *
+ * @return Version, 0 if never opened.
+ */
 uint8_t activity_prefs_get_health_app_opened_version(void);
 
-//! Record that the health app has been opened at a given version
+/**
+ * @brief Record that the health app was opened.
+ *
+ * @param version Health app version.
+ */
 void activity_prefs_set_health_app_opened_version(uint8_t version);
 
-//! @return Which version of the workout app was last opened
-//! @note 0 is "never opened"
+/**
+ * @brief Get the version of the workout app that was last opened.
+ *
+ * @return Version, 0 if never opened.
+ */
 uint8_t activity_prefs_get_workout_app_opened_version(void);
 
-//! Record that the workout app has been opened at a given version
+/**
+ * @brief Record that the workout app was opened.
+ *
+ * @param version Workout app version.
+ */
 void activity_prefs_set_workout_app_opened_version(uint8_t version);
 
-//! Enable/disable activity insights
-//! @param enable if true, enable activity insights
+/**
+ * @brief Enable or disable activity insights.
+ *
+ * @param enable If true, enable activity insights.
+ */
 void activity_prefs_activity_insights_set_enabled(bool enable);
 
-//! Returns true if activity insights are enabled
+/**
+ * @brief Check whether activity insights are enabled.
+ *
+ * @return true if enabled.
+ */
 bool activity_prefs_activity_insights_are_enabled(void);
 
-//! Enable/disable sleep insights
-//! @param enable if true, enable sleep insights
+/**
+ * @brief Enable or disable sleep insights.
+ *
+ * @param enable If true, enable sleep insights.
+ */
 void activity_prefs_sleep_insights_set_enabled(bool enable);
 
-//! Returns true if sleep insights are enabled
+/**
+ * @brief Check whether sleep insights are enabled.
+ *
+ * @return true if enabled.
+ */
 bool activity_prefs_sleep_insights_are_enabled(void);
 
-//! Set the user height
-//! @param height_mm the height in mm
+/**
+ * @brief Set the user's height.
+ *
+ * @param height_mm Height, in millimeters.
+ */
 void activity_prefs_set_height_mm(uint16_t height_mm);
 
-//! Get the user height
-//! @return the user's height in mm
+/**
+ * @brief Get the user's height.
+ *
+ * @return Height, in millimeters.
+ */
 uint16_t activity_prefs_get_height_mm(void);
 
-//! Set the user weight
-//! @param weight_dag the weight in dag (decagrams)
+/**
+ * @brief Set the user's weight.
+ *
+ * @param weight_dag Weight, in decagrams (10 g).
+ */
 void activity_prefs_set_weight_dag(uint16_t weight_dag);
 
-//! Get the user weight
-//! @return the user's weight in dag
+/**
+ * @brief Get the user's weight.
+ *
+ * @return Weight, in decagrams (10 g).
+ */
 uint16_t activity_prefs_get_weight_dag(void);
 
-//! Set the user's gender
-//! @param gender the new gender
+/**
+ * @brief Set the user's gender.
+ *
+ * @param gender Gender.
+ */
 void activity_prefs_set_gender(ActivityGender gender);
 
-//! Get the user's gender
-//! @return the user's set gender
+/**
+ * @brief Get the user's gender.
+ *
+ * @return Gender.
+ */
 ActivityGender activity_prefs_get_gender(void);
 
-//! Set the user's age
-//! @param age_years the user's age in years
+/**
+ * @brief Set the user's age.
+ *
+ * @param age_years Age, in years.
+ */
 void activity_prefs_set_age_years(uint8_t age_years);
 
-//! Get the user's age in years
-//! @return the user's age in years
+/**
+ * @brief Get the user's age.
+ *
+ * @return Age, in years.
+ */
 uint8_t activity_prefs_get_age_years(void);
 
-//! Get the user's resting heart rate
+/**
+ * @brief Get the user's resting heart rate.
+ *
+ * @return Heart rate, in beats per minute.
+ */
 uint8_t activity_prefs_heart_get_resting_hr(void);
 
-//! Get the user's elevated heart rate
+/**
+ * @brief Get the heart rate at or above which the rate is considered elevated.
+ *
+ * @return Heart rate, in beats per minute.
+ */
 uint8_t activity_prefs_heart_get_elevated_hr(void);
 
-//! Get the user's max heart rate
+/**
+ * @brief Get the user's maximum heart rate.
+ *
+ * @return Heart rate, in beats per minute.
+ */
 uint8_t activity_prefs_heart_get_max_hr(void);
 
-//! Get the user's hr zone1 threshold (lowest HR in zone 1)
+/**
+ * @brief Get the lowest heart rate of zone 1.
+ *
+ * @return Heart rate, in beats per minute.
+ */
 uint8_t activity_prefs_heart_get_zone1_threshold(void);
 
-//! Get the user's hr zone2 threshold (lowest HR in zone 2)
+/**
+ * @brief Get the lowest heart rate of zone 2.
+ *
+ * @return Heart rate, in beats per minute.
+ */
 uint8_t activity_prefs_heart_get_zone2_threshold(void);
 
-//! Get the user's hr zone3 threshold (lowest HR in zone 3)
+/**
+ * @brief Get the lowest heart rate of zone 3.
+ *
+ * @return Heart rate, in beats per minute.
+ */
 uint8_t activity_prefs_heart_get_zone3_threshold(void);
 
-//! Return true if the HRM is enabled, false if not
+/**
+ * @brief Check whether heart rate monitoring is enabled.
+ *
+ * @return true if enabled.
+ */
 bool activity_prefs_heart_rate_is_enabled(void);
 
-//! Return true if blood oxygen (SpO2) monitoring is enabled, false if not. Declared unconditionally
-//! (like activity_prefs_heart_rate_is_enabled) because the HRM manager gates sensor power on it
-//! regardless of CONFIG_HRM.
+/**
+ * @brief Check whether background blood oxygen (SpO2) monitoring is enabled.
+ *
+ * Declared regardless of @c CONFIG_HRM since the HRM manager gates sensor power on it.
+ *
+ * @return true if enabled.
+ */
 bool activity_prefs_blood_oxygen_is_enabled(void);
 
-//! Return true if blood oxygen sampling during detected activities is enabled. Opt-in, only
-//! meaningful alongside HR-during-activities. Declared unconditionally; the HRM manager reads it
-//! to allow the SpO2 path during activities even when daily SpO2 monitoring is off.
+/**
+ * @brief Check whether SpO2 sampling during detected activities is enabled.
+ *
+ * Opt-in, only meaningful with heart rate tracking during activities. Allows the SpO2 path even
+ * when background SpO2 monitoring is off. Declared regardless of @c CONFIG_HRM.
+ *
+ * @return true if enabled.
+ */
 bool activity_prefs_blood_oxygen_activity_tracking_is_enabled(void);
 
 #ifdef CONFIG_HRM
-//! Get the HRM measurement interval setting
-//! @return the current HRMonitoringInterval value
+/**
+ * @brief Get the background heart rate measurement interval.
+ *
+ * @return Interval; @ref HRMonitoringInterval_10Min if the stored value is invalid.
+ */
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void);
 
-//! Set the HRM measurement interval
-//! @param interval the desired HRMonitoringInterval value
+/**
+ * @brief Set the background heart rate measurement interval.
+ *
+ * @param interval Interval.
+ */
 void activity_prefs_set_hrm_measurement_interval(HRMonitoringInterval interval);
 
-//! Return true if HR tracking during detected activities (walk/run) is enabled
+/**
+ * @brief Check whether heart rate tracking during detected walks and runs is enabled.
+ *
+ * @return true if enabled.
+ */
 bool activity_prefs_hrm_activity_tracking_is_enabled(void);
 
-//! Enable or disable HR tracking during detected activities (walk/run)
+/**
+ * @brief Enable or disable heart rate tracking during detected walks and runs.
+ *
+ * @param enabled If true, enable it.
+ */
 void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled);
 
-//! Enable or disable blood oxygen (SpO2) monitoring
+/**
+ * @brief Enable or disable background blood oxygen (SpO2) monitoring.
+ *
+ * The setting is synced to the phone.
+ *
+ * @param enabled If true, enable it.
+ */
 void activity_prefs_set_blood_oxygen_enabled(bool enabled);
 
-//! Enable or disable blood oxygen sampling during detected activities
+/**
+ * @brief Enable or disable SpO2 sampling during detected activities.
+ *
+ * @param enabled If true, enable it.
+ */
 void activity_prefs_set_blood_oxygen_activity_tracking_enabled(bool enabled);
 
-//! Get the SpO2 measurement interval setting
-//! @return the current HRMonitoringInterval value
+/**
+ * @brief Get the background SpO2 measurement interval.
+ *
+ * @return Interval; @ref HRMonitoringInterval_10Min if the stored value is invalid.
+ */
 HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void);
 
-//! Set the SpO2 measurement interval
-//! @param interval the desired HRMonitoringInterval value
+/**
+ * @brief Set the background SpO2 measurement interval.
+ *
+ * @param interval Interval.
+ */
 void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval);
 #endif
 
-//! Get the current and (optionally) historical values for a given metric. The caller passes
-//! in a pointer to an array that will be filled in with the results (current value for today at
-//! index 0, yesterday's at index 1, etc.)
-//! @param[in] metric which metric to fetch
-//! @param[in] history_len This must contain the length of the history array being passed in (as
-//!     number of entries). To determine a max size for this array, call
-//!     health_service_max_days_history().
-//! @param[out] history pointer to int32_t array that will contain the returned metric. The current
-//!     value will be at index 0, yesterday's at index 1, etc. For days where no history is
-//!     available, -1 will be written. For some metrics, like HealthMetricActiveDayID and
-//!     HealthMetricSleepDayID, history is not applicable, so all entries past entry 0 will
-//!     always be filled in with -1.
-//! @return true on success, false on failure
+/**
+ * @brief Get the current and, optionally, past values of a metric.
+ *
+ * Metrics without history only fill index 0.
+ *
+ * @param metric Metric to fetch.
+ * @param history_len Number of entries in @p history. At most @ref ACTIVITY_HISTORY_DAYS are
+ * used.
+ * @param[out] history Values: today at index 0, yesterday at index 1, etc. Days without data,
+ * and entries past index 0 for metrics without history, are set to -1.
+ * @return true on success, false on failure.
+ */
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history);
 
-//! Get the typical value for a metric on a given day of the week
+/**
+ * @brief Get the typical value of a metric for a day of the week.
+ *
+ * Typical values are computed by the phone and stored in the health database. Only sleep
+ * metrics (total, restful, enter and exit times) are available.
+ *
+ * @param metric Metric.
+ * @param day Day of the week.
+ * @param[out] value_out Typical value, 0 if unavailable.
+ * @return true if a value was found.
+ */
 bool activity_get_metric_typical(ActivityMetric metric, enum pbl_weekday day, int32_t *value_out);
 
-//! Get the value for a metric over the last 4 weeks
+/**
+ * @brief Get the average value of a metric over the last 4 weeks.
+ *
+ * Only @ref ActivityMetricStepCount and @ref ActivityMetricSleepTotalSeconds are available,
+ * as stored in the health database by the phone.
+ *
+ * @param metric Metric.
+ * @param[out] value_out Average value, 0 if unavailable.
+ * @return true if a value was found.
+ */
 bool activity_get_metric_monthly_avg(ActivityMetric metric, int32_t *value_out);
 
-//! Get detailed info about activity sessions. This fills in an array with info on all of the
-//! activity sessions that ended after 12am (midnight) of the current day. The caller must allocate
-//! space for the array and tell this method how many entries the array can hold
-//! ("session_entries"). This call returns the actual number of entries required, which may be
-//! greater or less than the passed in size. If it is greater, only the first session_entries are
-//! filled in.
-//! @param[in,out] *session_entries size of sessions array (as number of elements) on entry.
-//!                On exit, this is set to the number of entries required to hold all sessions.
-//! @param[out] sessions this array is filled in with the list of sessions.
-//! @return true on success, false on failure
+/**
+ * @brief Get the cached activity sessions.
+ *
+ * Sessions older than the current day are pruned once a minute, so these are today's sessions.
+ *
+ * @param[in,out] session_entries On entry, capacity of @p sessions in elements. On exit,
+ * number of sessions written.
+ * @param[out] sessions Filled with the sessions.
+ * @return true on success, false on failure.
+ */
 bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions);
 
-//! Return historical minute data.
-//! IMPORTANT: This call will block on KernelBG, so it can only be called from the app or
-//! worker task.
-//! @param[in] minute_data pointer to an array of HealthMinuteData records that will be filled
-//!     in with the historical minute data
-//! @param[in,out] num_records On entry, the number of records the minute_data array can hold.
-//!      On exit, the number of records in the minute data array that were written, including
-//!      any missing minutes between 0 and *num_records. To check to see if a specific minute is
-//!      missing, compare the vmc value of that record to HEALTH_MINUTE_DATA_MISSING_VMC_VALUE.
-//! @param[in,out] utc_start on entry, the UTC time of the first requested record. On exit,
-//!      the UTC time of the first record returned.
-//! @return true on success, false on failure
+/**
+ * @brief Get historical minute data.
+ *
+ * Blocks on KernelBG, so only callable from the app or worker task.
+ *
+ * @param[out] minute_data Array filled with one record per minute.
+ * @param[in,out] num_records On entry, capacity of @p minute_data. On exit, number of records
+ * written, missing minutes included (marked with @c is_invalid).
+ * @param[in,out] utc_start On entry, UTC time of the first requested minute. On exit, UTC time
+ * of the first returned minute.
+ * @return true on success, false on failure.
+ */
 bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                  time_t *utc_start);
 
-// Metric averages, returned by activity_get_step_averages()
-#define ACTIVITY_NUM_METRIC_AVERAGES (4 * 24) //!< one average for each 15 minute interval of a day
-#define ACTIVITY_METRIC_AVERAGES_UNKNOWN 0xFFFF //!< indicates the average is unknown
+/** @brief Number of step averages per day, one per 15 minute interval. */
+#define ACTIVITY_NUM_METRIC_AVERAGES (4 * 24)
+/** @brief Step average value meaning unknown. */
+#define ACTIVITY_METRIC_AVERAGES_UNKNOWN 0xFFFF
+/** @brief Typical steps for each 15 minute interval of a day. */
 typedef struct {
+  /** Typical steps per interval from midnight, @ref ACTIVITY_METRIC_AVERAGES_UNKNOWN if unknown. */
   uint16_t average[ACTIVITY_NUM_METRIC_AVERAGES];
 } ActivityMetricAverages;
 
-//! Return step averages.
-//! @param[in] day_of_week day of the week to get averages for. Sunday: 0, Monday: 1, etc.
-//! @param[out] averages pointer to ActivityStepAverages structure that will be filled
-//!     in with the step averages.
-//! @return true on success, false on failure
+/**
+ * @brief Get the typical step counts of a day of the week.
+ *
+ * Read from the health database, populated by the phone.
+ *
+ * @param day_of_week Day of the week.
+ * @param[out] averages Step averages; all unknown if unavailable.
+ * @return true on success, false on failure.
+ */
 bool activity_get_step_averages(enum pbl_weekday day_of_week, ActivityMetricAverages *averages);
 
-//! Control raw accel sample collection. This method can be used to start and stop raw
-//! accel sample collection. The samples are sent to data logging with tag
-//! ACTIVITY_DLS_TAG_RAW_SAMPLES and also PBL_LOG messages are generated by base64 encoding the
-//! data (so that it can be sent in a support request). Every time raw sample collection is
-//! enabled, a new raw sample session id is created. This session id is saved along with the
-//! samples and can be displayed to the user in the watch UI to help later identify specific
-//! sessions.
-//! @param[in] enable if true, enable sample collection
-//! @param[in] disable if true, disable sample collection
-//! @param[out] *enabled true if sample collection is currently enabled
-//! @param[out] *session_id the current raw sample session id. If sampling is currently disabled,
-//!     this is the session id of the most recently ended session.
-//! @param[out] *num_samples the number of samples collected for the current session. If sampling is
-//!     currently disabled, this is the number of samples collected in the most recently
-//!     ended session.
-//! @param[out] *seconds the number of seconds of data collected for the current session. If
-//!     sampling is currently disabled, this is the number of seconds of data in the most recently
-//!     ended session.
-//! @return true on success, false on error
+/**
+ * @brief Control raw accelerometer sample collection.
+ *
+ * Collected samples are sent to data logging as @ref ActivityRawSamplesRecord records and also
+ * logged base64-encoded with PBL_LOG, so they can be retrieved through a support request. Each
+ * enable starts a new session id, which can be shown to the user to identify the session.
+ *
+ * @param enable If true, enable sample collection.
+ * @param disable If true, disable sample collection.
+ * @param[out] enabled Whether sample collection is enabled.
+ * @param[out] session_id Current session id, or the last one if collection is disabled.
+ * @param[out] num_samples Samples collected in the current, or last, session.
+ * @param[out] seconds Seconds of data collected in the current, or last, session.
+ * @return true on success, false on error.
+ */
 bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, uint32_t *session_id,
                                     uint32_t *num_samples, uint32_t *seconds);
 
-//! Dump the current sleep data using PBL_LOG. We write out base64 encoded data using PBL_LOG
-//! so that it can be extracted using a support request.
-//! @return true on success, false on error
-//! IMPORTANT: This call will block on KernelBG, so it can only be called from the app or
-//! worker task.
+/**
+ * @brief Dump the minute data used for sleep base64-encoded with PBL_LOG.
+ *
+ * Used to extract it through a support request. Blocks on KernelBG, so only callable from the
+ * app or worker task.
+ *
+ * @return true on success, false on error.
+ */
 bool activity_dump_sleep_log(void);
 
-//! Used by test apps (running on firmware): feed in samples, bypassing the accelerometer.
-//! In order to use this, you must have called activity_start_tracking(test_mode = true);
-//! @param[in] data array of samples to feed in
-//! @param[in] num_samples number of samples in the data array
-//! @return true on success, false on error
+/**
+ * @brief Feed accelerometer samples, bypassing the accelerometer (test apps).
+ *
+ * Requires tracking started with activity_start_tracking() in test mode.
+ *
+ * @param data Samples.
+ * @param num_samples Number of samples in @p data.
+ * @return true on success, false on error.
+ */
 bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples);
 
-//! Used by test apps (running on firmware): call the periodic minute callback. This can be used to
-//! accelerate tests, to run in non-real time.
-//! @return true on success, false on error
+/**
+ * @brief Run the minute callback immediately (test apps).
+ *
+ * Allows running tests faster than real time.
+ *
+ * @return true on success, false on error.
+ */
 bool activity_test_run_minute_callback(void);
 
-//! Used by test apps (running on firmware): Get info on the minute data file
-//! @param[in] compact_first if true, compact the file first before getting info
-//! @param[out] *num_records how many records it contains
-//! @param[out] *data_bytes how many bytes of data it contains
-//! @param[out] *minutes how many minutes of data it contains
-//! @return true on success, false on error
+/**
+ * @brief Get information on the minute data file (test apps).
+ *
+ * @param compact_first If true, compact the file first.
+ * @param[out] num_records Number of records in the file.
+ * @param[out] data_bytes Bytes of data in the file.
+ * @param[out] minutes Minutes of data in the file.
+ * @return true on success, false on error.
+ */
 bool activity_test_minute_file_info(bool compact_first, uint32_t *num_records, uint32_t *data_bytes,
                                     uint32_t *minutes);
 
-//! Used by test apps (running on firmware): Fill up the minute data file with as much data as
-//! possible. Used for testing performance of compaction and checking for watchdog timeouts when
-//! the file gets very large.
-//! @return true on success, false on error
+/**
+ * @brief Fill the minute data file (test apps).
+ *
+ * Used to test compaction performance and watchdog timeouts with a large file.
+ *
+ * @return true on success, false on error.
+ */
 bool activity_test_fill_minute_file(void);
 
-//! Used by test apps (running on firmware): Send fake records to data logging. This sends the
-//! following records: AlgMinuteDLSRecord, ActivityLegacySleepSessionDataLoggingRecord,
-//! ActivitySessionDataLoggingRecord (one for each activity type).
-//! Useful for mobile app testing
-//! @return true if success
+/**
+ * @brief Send fake records to data logging (test apps).
+ *
+ * Sends an AlgMinuteDLSRecord, an ActivityLegacySleepSessionDataLoggingRecord and an
+ * ActivitySessionDataLoggingRecord for each session type. Useful for mobile app testing.
+ *
+ * @return true on success.
+ */
 bool activity_test_send_fake_dls_records(void);
 
-//! Used by test apps (running on firmware): Set the current step count
-//! Useful for testing the health app
-//! @param[in] new_steps the number of steps to set the current steps to
-//! @param[in] current_avg the value to set the current step average to
-//! @param[in] daily_avg the value to set the daily step average to
+/**
+ * @brief Set the current step count and averages (test apps).
+ *
+ * @param new_steps Steps taken today.
+ * @param current_avg Typical steps up to the current time.
+ * @param daily_avg Typical steps for the whole day.
+ */
 void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int32_t daily_avg);
 
-//! Used by test apps (running on firmware): Set the past seven days of history
-//! Useful for testing the health app
+/** @brief Fill the past days of step history with test data (test apps). */
 void activity_test_set_steps_history();
 
-//! Used by test apps (running on firmware): Set the past seven days of history
-//! Useful for testing the health app
+/** @brief Fill the past days of sleep history with test data (test apps). */
 void activity_test_set_sleep_history();
+
+/** @} */
