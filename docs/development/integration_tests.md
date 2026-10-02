@@ -213,13 +213,13 @@ pbl itest --collect-only -q --board obelix --device-type hardware
 ```
 
 What a test covers is a category marker: `smoke`, `ui`, `notifications`,
-`power` and `slow`. The full list is in `harness/plugin.py`; markers are
+`voice`, `power` and `slow`. The full list is in `harness/plugin.py`; markers are
 strict, so a new one must be added there.
 
 ## Writing a test
 
 Tests are grouped by area in subdirectories of `tests/integration`
-(`system`, `ui`, `notifications`, `power`). A test asks for the fixtures it
+(`system`, `ui`, `notifications`, `voice`, `power`). A test asks for the fixtures it
 needs:
 
 ```python
@@ -258,7 +258,9 @@ The fixtures:
 - `build`: the build under test (`board`, `platform`, `config`).
 
 `harness.helpers.notifications` inserts notifications as the phone app
-would.
+would, and `harness.helpers.voice.VoicePhone` answers dictation sessions
+(`voice start` on the shell) as the phone app would, recording the audio
+frames it receives.
 
 The launched device is shared by the whole session by default; for a fresh
 boot per test (or module) pass `--dut-scope function` (or `module`). The
