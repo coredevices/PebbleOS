@@ -10,6 +10,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * @defgroup drivers_mic_qemu QEMU microphone
+ * @ingroup drivers_mic
+ * @brief @ref drivers_mic implementation for QEMU, delivering silence on a timer.
+ * @{
+ */
+
+/** @cond INTERNAL_HIDDEN */
 typedef struct {
   TimerID timer;
   MicDataHandlerCB data_handler;
@@ -20,8 +28,14 @@ typedef struct {
   bool is_initialized;
   bool is_running;
 } MicDeviceState;
+/** @endcond */
 
+/** @brief QEMU microphone device. */
 typedef const struct MicDevice {
+  /** Driver runtime state. */
   MicDeviceState *state;
+  /** Number of channels. */
   uint32_t channels;
 } MicDevice;
+
+/** @} */

@@ -10,13 +10,24 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/**
+ * @defgroup drivers_speaker_sf32lb52 SF32LB52 audio
+ * @ingroup drivers_audio
+ * @brief @ref drivers_audio implementation for the SF32LB52 audio codec (AUDCODEC) DAC.
+ * @{
+ */
+
+/** @brief Size, in bytes, of each half of the DAC DMA buffer. */
 #define CFG_AUDIO_PLAYBACK_PIPE_SIZE (1024)
 
-// Circular buffer configuration
-#define CIRCULAR_BUF_SIZE_MS      (128)
+/** @brief Length of the queue between audio_write() and DMA, in milliseconds. */
+#define CIRCULAR_BUF_SIZE_MS (128)
+/** @brief Length of the queue between audio_write() and DMA, in samples. */
 #define CIRCULAR_BUF_SIZE_SAMPLES ((MIC_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
-#define CIRCULAR_BUF_SIZE_BYTES   (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
+/** @brief Size of the queue between audio_write() and DMA, in bytes. */
+#define CIRCULAR_BUF_SIZE_BYTES (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
 
+/** @cond INTERNAL_HIDDEN */
 typedef enum AUDIO_PLL_STATE_TAG {
   AUDIO_PLL_CLOSED,
   AUDIO_PLL_OPEN,
@@ -59,23 +70,52 @@ typedef struct AudioState {
   uint32_t diagnostic_write_drops;
 #endif
 } AudioDeviceState;
+/** @endcond */
 
+/** @brief SF32LB52 audio device. */
 typedef const struct AudioDevice {
+  /** Driver runtime state. */
   AudioDeviceState *state;
+  /** DAC DMA interrupt priority. */
   uint32_t irq_priority;
+  /** AUDPRC DMA channel; not used by the driver. */
   DMA_Channel_TypeDef *audprc_dma_channel;
+  /** AUDPRC DMA request; not used by the driver. */
   uint32_t audprc_dma_request;
+  /** AUDPRC DMA interrupt; not used by the driver. */
   IRQn_Type audprc_dma_irq;
+  /** AUDCODEC DAC DMA channel. */
   DMA_Channel_TypeDef *audec_dma_channel;
+  /** AUDCODEC DAC DMA request. */
   uint32_t audec_dma_request;
+  /** AUDCODEC DAC DMA interrupt. */
   IRQn_Type audec_dma_irq;
+  /** Power amplifier enable output. */
   OutputConfig pa_ctrl;
+  /** Board power hooks, or NULL. */
   const BoardPowerOps *power_ops;
+  /** Sample width in bits; not used by the driver. */
   uint8_t data_format;
+  /** Data mode; not used by the driver. */
   uint8_t data_mode;
+  /** Sample rate in Hz. */
   uint32_t samplerate;
+  /** Number of channels. */
   uint32_t channels;
 } AudioDevice;
 
+/**
+ * @brief AUDPRC DMA interrupt handler.
+ *
+ * @param audio_device Audio device.
+ */
 extern void audprc_dma_iqr_handler(AudioDevice *audio_device);
+
+/**
+ * @brief AUDCODEC DAC DMA interrupt handler.
+ *
+ * @param audio_device Audio device.
+ */
 extern void audec_dac0_dma_irq_handler(AudioDevice *audio_device);
+
+/** @} */

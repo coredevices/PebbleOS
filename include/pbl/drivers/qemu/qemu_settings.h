@@ -5,12 +5,28 @@
 
 #include <stdint.h>
 
+/**
+ * @defgroup drivers_qemu_qemu_settings Settings
+ * @ingroup drivers_qemu
+ * @brief Emulator settings passed by QEMU in the RTC backup registers.
+ * @{
+ */
+
+/** @brief QEMU settings. */
 typedef enum {
-  QemuSetting_FirstBootLogicEnable = 1, // Returns a bool
-  QemuSetting_DefaultConnected = 2,     // Returns a bool
-  QemuSetting_DefaultPluggedIn = 3,     // Returns a bool
+  /** Run the first boot logic (bool). */
+  QemuSetting_FirstBootLogicEnable = 1,
+  /** Start with the phone connected (bool). */
+  QemuSetting_DefaultConnected = 2,
+  /** Start with the charger plugged in (bool). */
+  QemuSetting_DefaultPluggedIn = 3,
 } QemuSetting;
 
-// ---------------------------------------------------------------------------------------
-// API
+/**
+ * @brief Read the given setting.
+ *
+ * @return Setting value; boolean settings are non-zero when set.
+ */
 uint32_t qemu_setting_get(QemuSetting);
+
+/** @} */

@@ -8,6 +8,30 @@
 
 #include "system/status_codes.h"
 
+/**
+ * @defgroup drivers_mcu MCU information
+ * @ingroup drivers
+ * @brief Microcontroller identification and cycle conversion.
+ * @{
+ */
+
+/**
+ * @brief Read the microcontroller's unique ID.
+ *
+ * @param[out] buf Buffer receiving the ID.
+ * @param[in,out] buf_sz Size of @p buf in bytes; set to the ID length on success.
+ * @retval S_SUCCESS ID read.
+ * @retval E_OUT_OF_MEMORY @p buf is too small.
+ * @retval E_DOES_NOT_EXIST The MCU has no readable unique ID.
+ */
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz);
 
+/**
+ * @brief Convert CPU cycles to milliseconds at the current core clock.
+ *
+ * @param cpu_ticks Number of CPU cycles.
+ * @return Duration in milliseconds.
+ */
 uint32_t mcu_cycles_to_milliseconds(uint64_t cpu_ticks);
+
+/** @} */

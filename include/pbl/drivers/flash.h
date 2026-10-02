@@ -9,245 +9,368 @@
 
 #include "system/status_codes.h"
 
+/**
+ * @defgroup drivers_flash Flash
+ * @ingroup drivers
+ * @brief External flash access.
+ *
+ * Thread-safe API on top of a part-specific low-level driver (see @ref drivers_flash_flash_impl).
+ * Reads and writes block; an in-progress erase is suspended while they run. Writes only clear
+ * bits, so the target range must be erased first. Erases work on subsectors and sectors, whose
+ * sizes depend on the part.
+ *
+ * @code{.c}
+ * static void prv_erased(void *context, status_t result) {
+ *   // Runs on a timer task: keep it short
+ * }
+ *
+ * flash_erase_subsector_blocking(addr);
+ * flash_write_bytes(data, addr, sizeof(data));
+ * flash_read_bytes(buf, addr, sizeof(buf));
+ *
+ * flash_erase_sector(other_addr, prv_erased, NULL);
+ * @endcode
+ * @{
+ */
+
+/** @brief Expected ID of a 32 Mbit part. */
 static const uint32_t EXPECTED_SPI_FLASH_ID_32MBIT = 0x20bb16;
+/** @brief Expected ID of a 64 Mbit part. */
 static const uint32_t EXPECTED_SPI_FLASH_ID_64MBIT = 0x20bb17;
 
+/** @brief Security (OTP) registers of the flash part. */
 typedef struct FlashSecurityRegisters {
+  /** Base address of each security register. */
   const uint32_t *sec_regs;
+  /** Number of security registers. */
   uint8_t num_sec_regs;
+  /** Size of each security register in bytes. */
   uint16_t sec_reg_size;
 } FlashSecurityRegisters;
 
-/**
- * Configure the micro's peripherals to communicate with the flash
- * chip.
- */
+/** @brief Initialize the flash driver and the flash part. */
 void flash_init(void);
 
-//! Stop all flash transactions.
+/**
+ * @brief Stop flash activity.
+ *
+ * Waits for an in-progress erase to finish. Does nothing before flash_init().
+ */
 void flash_stop(void);
 
 /**
- * Retrieve the first 3 bytes of the flash's device id. This ID
- * should remain fixed across all chips.
+ * @brief Read the device ID.
+ *
+ * @return First 3 bytes of the JEDEC device ID.
  */
 uint32_t flash_whoami(void);
 
 /**
- * Read 1 or more bytes starting at the specified 24bit address into
- * the provided buffer. This function does no range checking, so it is
- * currently possible to run off the end of the flash.
+ * @brief Read from flash.
  *
- * @param buffer A byte-buffer that will be used to store the data
- * read from flash.
- * @param start_addr The address of the first byte to be read from flash.
- * @param buffer_size The total number of bytes to be read from flash.
+ * No range checking is done.
+ *
+ * @param[out] buffer Buffer receiving the data.
+ * @param start_addr Flash address of the first byte.
+ * @param buffer_size Number of bytes to read.
  */
 void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size);
 
 /**
- * Write 1 or more bytes from the buffer to flash starting at the
- * specified 24bit address. This function will handle both writing a
- * buffer that is larger than the flash's page size and writing to a
- * non-page aligned address.
+ * @brief Write to flash.
  *
- * @param buffer A byte-buffer containing the data to be written to flash.
- * @param start_addr The address of the first byte to be written to flash.
- * @param buffer_size The total number of bytes to be written.
+ * Handles unaligned addresses and writes spanning several pages. Asserts on failure.
+ *
+ * @param buffer Data to write.
+ * @param start_addr Flash address of the first byte.
+ * @param buffer_size Number of bytes to write.
  */
 void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size);
 
+/**
+ * @brief Flash operation completion callback.
+ *
+ * @param context User context.
+ * @param result S_SUCCESS, S_NO_ACTION_REQUIRED if the area was already erased, or an error.
+ */
 typedef void (*FlashOperationCompleteCb)(void *context, status_t result);
 
 /**
- * Erase a subsector asynchronously.
+ * @brief Erase the subsector containing an address, asynchronously.
  *
- * The callback function will be called when the erase completes, whether the
- * erase succeeded or failed. The callback will be executed on an arbitrary
- * (possibly high-priority) task, so the callback function must return quickly.
- * The callback may also be called directly from within flash_erase_subsector.
+ * @p on_complete is called once the erase finishes, succeeded or not, from a timer task or
+ * directly from this function. It must return quickly.
+ *
+ * @param subsector_addr Address within the subsector.
+ * @param on_complete Completion callback.
+ * @param context User context passed to @p on_complete.
  */
 void flash_erase_subsector(uint32_t subsector_addr, FlashOperationCompleteCb on_complete,
                            void *context);
 
 /**
- * Erase a sector asynchronously.
+ * @brief Erase the sector containing an address, asynchronously.
  *
- * The callback function will be called when the erase completes, whether the
- * erase succeeded or failed. The callback will be executed on an arbitrary
- * (possibly high-priority) task, so the callback function must return quickly.
- * The callback may also be called directly from within flash_erase_sector.
+ * @p on_complete is called once the erase finishes, succeeded or not, from a timer task or
+ * directly from this function. It must return quickly.
+ *
+ * @param sector_addr Address within the sector.
+ * @param on_complete Completion callback.
+ * @param context User context passed to @p on_complete.
  */
 void flash_erase_sector(uint32_t sector_addr, FlashOperationCompleteCb on_complete, void *context);
 
 /**
- * Erase the subsector containing the specified address.
+ * @brief Erase the subsector containing an address.
+ *
+ * Blocks until done and asserts on failure.
+ *
+ * @param subsector_addr Address within the subsector.
  */
 void flash_erase_subsector_blocking(uint32_t subsector_addr);
 
 /**
- * Erase the sector containing the specified address.
+ * @brief Erase the sector containing an address.
  *
- * Beware: this function takes 100ms+ to execute, so be careful when you call it.
+ * Blocks until done, which takes 100 ms or more, and asserts on failure.
+ *
+ * @param sector_addr Address within the sector.
  */
 void flash_erase_sector_blocking(uint32_t sector_addr);
 
 /**
- * Check whether the sector containing the specified address is already erased.
+ * @brief Check whether the sector containing an address is erased.
+ *
+ * @param sector_addr Address within the sector.
+ * @return true if erased.
  */
 bool flash_sector_is_erased(uint32_t sector_addr);
 
 /**
- * Check whether the subsector containing the specified address is already erased.
+ * @brief Check whether the subsector containing an address is erased.
+ *
+ * @param sector_addr Address within the subsector.
+ * @return true if erased.
  */
 bool flash_subsector_is_erased(uint32_t sector_addr);
 
 /**
- * Erase the entire contents of flash.
+ * @brief Erase the entire flash.
  *
- * Note: This is a very slow (up to a minute) blocking operation. Don't let the watchdog kill
- * you when calling this.
+ * Blocks for up to a minute: make sure the watchdog does not fire.
  */
 void flash_erase_bulk(void);
 
 /**
- * Erase a region of flash asynchronously using as few erase operations as
- * possible.
+ * @brief Erase a range of flash asynchronously, using as few erase operations as possible.
  *
- * At least (max_start, min_end) but no more than (min_start, max_end) will be
- * erased. Both min_start and max_end must be aligned to a subsector address as
- * that is the smallest unit that can be erased.
+ * Erases at least [@p max_start, @p min_end) and at most [@p min_start, @p max_end), using
+ * sector erases where possible and subsector erases elsewhere.
+ *
+ * @param min_start Lowest address that may be erased, subsector aligned.
+ * @param max_start Highest address the erase may start at.
+ * @param min_end Lowest address the erase may end at (exclusive).
+ * @param max_end Highest address the erase may end at (exclusive), subsector aligned.
+ * @param on_complete Callback run once the whole range is erased or an erase failed.
+ * @param context User context passed to @p on_complete.
  */
 void flash_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
                                uint32_t max_end, FlashOperationCompleteCb on_complete,
                                void *context);
 
 /**
- * Configure the flash driver to enter a deep sleep mode between commands.
+ * @brief Let the flash enter deep sleep between commands.
+ *
+ * @param enable true to enable.
  */
 void flash_sleep_when_idle(bool enable);
 
-//! @return True if sleeping when idle is currently enabled.
+/**
+ * @brief Check whether flash_sleep_when_idle() is in effect.
+ *
+ * @return true if enabled.
+ */
 bool flash_get_sleep_when_idle(void);
 
+/** @brief Log the flash part's registers. */
 void debug_flash_dump_registers(void);
 
-//! @return true if the flash peripheral has been initialized.
+/**
+ * @brief Check whether flash_init() has run.
+ *
+ * @return true if initialized.
+ */
 bool flash_is_initialized(void);
 
-//! Helper function to check that the Flash ID (whoami) is correct
-//! @return true if the flash ID matches what we expect based on the board config
+/**
+ * @brief Check the device ID against the one expected for the board.
+ *
+ * @return true if it matches.
+ */
 bool flash_is_whoami_correct(void);
 
-//! Helper function to extract the Flash Size from the ID (whoami)
-//! @return the size of the flash in bytes
+/**
+ * @brief Get the flash size, from its device ID.
+ *
+ * @return Size in bytes.
+ */
 size_t flash_get_size(void);
 
-// This is only intended to be called when entering stop mode. It does not use
-// any locks because IRQs have already been disabled. The idea is to only incur
-// the wait penalty for entering/exiting deep sleep mode for the flash
-// before/after stop mode. The flash part consumes ~100uA in standby mode and
-// ~10uA when its in deep sleep mode. If the MCU is not in stop mode, this
-// difference is negligible
+/**
+ * @brief Put the flash in deep power-down before entering stop mode.
+ *
+ * Takes no locks; call only with interrupts disabled. The part draws about 100 uA in standby
+ * and 10 uA in deep power-down, which only matters while the MCU is in stop mode.
+ */
 void flash_power_down_for_stop_mode(void);
+
+/**
+ * @brief Wake the flash after stop mode.
+ *
+ * Counterpart of flash_power_down_for_stop_mode(), with the same constraints.
+ */
 void flash_power_up_after_stop_mode(void);
 
+/** @brief Flash read mode. */
 typedef enum {
+  /** Asynchronous reads. */
   FLASH_MODE_ASYNC = 0,
+  /** Synchronous burst reads. */
   FLASH_MODE_SYNC_BURST,
 
-  // Add new modes above this
+  /** Number of modes. */
   FLASH_MODE_NUM_MODES
 } FlashModeType;
 
 /**
- * Manually switches modes between asynchronous/synchronous
+ * @brief Switch the read mode.
  *
+ * @param mode New mode; burst mode is used only if the part supports it.
  */
 void flash_switch_mode(FlashModeType mode);
 
-// Returns the sector address that the given flash address lies in
+/**
+ * @brief Get the base address of the sector containing an address.
+ *
+ * @param flash_addr Flash address.
+ * @return Sector base address.
+ */
 uint32_t flash_get_sector_base_address(uint32_t flash_addr);
 
-// Returns the subsector address that the given flash address lies in
+/**
+ * @brief Get the base address of the subsector containing an address.
+ *
+ * @param flash_addr Flash address.
+ * @return Subsector base address.
+ */
 uint32_t flash_get_subsector_base_address(uint32_t flash_addr);
 
-// Enable write protection on flash
+/** @brief Enable write protection, if the part requires it to be enabled explicitly. */
 void flash_enable_write_protection(void);
 
-// Write-protects the prf region of flash
+/**
+ * @brief Write-protect the recovery firmware region, or remove all protection.
+ *
+ * @param do_protect true to protect the region, false to unprotect the whole flash.
+ */
 void flash_prf_set_protection(bool do_protect);
 
-//! Compute a CRC32 checksum of a region of flash.
+/**
+ * @brief Compute the CRC-32 of a flash region.
+ *
+ * @param flash_addr Start address.
+ * @param length Length in bytes.
+ * @return pbl_crc32() of the region.
+ */
 uint32_t flash_crc32(uint32_t flash_addr, uint32_t length);
 
-//! Apply the legacy defective checksum to a region of flash.
+/**
+ * @brief Compute the legacy checksum of a flash region.
+ *
+ * @param flash_addr Start address.
+ * @param length Length in bytes.
+ * @return pbl_crc32_legacy() of the region.
+ */
 uint32_t flash_crc32_legacy(uint32_t flash_addr, uint32_t length);
 
-//! Call this before any external flash access (including memory-mapped)
-//! to power on the flash peripheral if it wasn't already, and
-//! to increase the internal reference counter that prevents flash peripheral from powering down.
+/**
+ * @brief Take a reference keeping the flash peripheral powered.
+ *
+ * Call before any flash access, including memory-mapped reads. Release with flash_release().
+ */
 void flash_use(void);
 
-//! Convenience for \ref flash_release_many with num_locks = 1
+/** @brief Drop one reference taken with flash_use(). */
 void flash_release(void);
 
-//! Call this after you finished accessing external flash
-//! to decrease the internal reference counter by num_locks, and
-//! to turn off the flash peripheral if the reference counter reaches 0
-//! param num_locks usually 1, the amount by which the reference counter should be decremented
+/**
+ * @brief Drop several references taken with flash_use().
+ *
+ * The peripheral is powered down when the count reaches zero.
+ *
+ * @param num_locks Number of references to drop, usually 1.
+ */
 void flash_release_many(uint32_t num_locks);
 
-//! Read security register
-//!
-//! @param addr The address of the security register to read.
-//!
-//! @param [out] val The value of the security register read.
-//!
-//! @retval S_SUCCESS if the read was successful
-//! @retval StatusCode if the read failed
+/**
+ * @brief Read a byte from a security register.
+ *
+ * @param addr Security register address.
+ * @param[out] val Byte read.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_read_security_register(uint32_t addr, uint8_t *val);
 
-//! Check if a security register is locked
-//!
-//! @param addr The address of the security register to check.
-//! @param [out] locked True if the security registers are locked
-//!
-//! @retval S_SUCCESS if the check was successful
-//! @retval StatusCode if the check failed
+/**
+ * @brief Check whether a security register is locked.
+ *
+ * @param addr Security register address.
+ * @param[out] locked true if locked.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_security_register_is_locked(uint32_t addr, bool *locked);
 
-//! Erase security register
-//!
-//! @param addr The address of the security register to erase.
-//!
-//! @retval S_SUCCESS if the erase was successful
-//! @retval StatusCode if the erase failed
+/**
+ * @brief Erase a security register.
+ *
+ * @param addr Security register address.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_erase_security_register(uint32_t addr);
 
-//! Write security register
-//!
-//! @param addr The address of the security register to write.
-//!
-//! @param val The value to write to the security register.
-//!
-//! @retval S_SUCCESS if the write was successful
-//! @retval StatusCode if the write failed
+/**
+ * @brief Write a byte to a security register.
+ *
+ * @param addr Security register address.
+ * @param val Byte to write.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_write_security_register(uint32_t addr, uint8_t val);
 
-//! Obtain security registers information
-//!
-//! @returns The information about the security registers.
+/**
+ * @brief Get the security register layout.
+ *
+ * @return Security register information.
+ */
 const FlashSecurityRegisters *flash_security_registers_info(void);
 
 #ifdef CONFIG_RECOVERY_FW
-//! Lock security register
-//!
-//! @warning This is a one time operation and will permanently lock the security registers.
-//!
-//! @param addr The address of the security register to lock.
-//!
-//! @retval S_SUCCESS if the lock was successful
-//! @retval StatusCode if the lock failed
+/**
+ * @brief Permanently lock the security registers.
+ *
+ * Only available in the recovery firmware.
+ *
+ * @warning One-time operation that cannot be undone.
+ *
+ * @param addr Security register address.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_lock_security_register(uint32_t addr);
 #endif // CONFIG_RECOVERY_FW
+
+/** @} */

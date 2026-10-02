@@ -10,312 +10,395 @@
 #include <pbl/drivers/flash.h>
 #include "system/status_codes.h"
 
-//! Flash Low-Level API
-//!
-//! Unless otherwise specified, this API is non-reentrant. It is unsafe to
-//! call a function in one thread while another function is being executed in a
-//! second thread, and it is unsafe to call these functions from within a
-//! flash_impl callback.
+/**
+ * @defgroup drivers_flash_flash_impl Low-level flash driver
+ * @ingroup drivers_flash
+ * @brief Interface implemented by each flash part driver.
+ *
+ * Used by the flash API and by the core dump flash driver. Implementations do not rely on OS
+ * services, except where noted.
+ *
+ * Unless otherwise specified, functions are not reentrant: do not call one while another runs
+ * in a different thread, nor from within a flash_impl callback.
+ * @{
+ */
 
+/** @brief Flash address. */
 typedef uint32_t FlashAddress;
 
-//! Initialize the low-level flash implementation and hardware into a known
-//! state where it is ready to accept commands.
-//!
-//! @param coredump_mode True if we need this flash driver to not rely on any other system
-//!                      services such as FreeRTOS being available because we're in the middle
-//!                      of a core dump. This may result in slower operations.
+/**
+ * @brief Initialize the driver and bring the part to a state ready to accept commands.
+ *
+ * @param coredump_mode Do not rely on any OS service, because a core dump is in progress.
+ *                      Operations may be slower.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_init(bool coredump_mode);
 
-//! Enable or disable synchronous burst mode, if supported.
-//!
-//! Burst mode is disabled whenever \ref flash_impl_init is called.
-//!
-//! The result is undefined if this function is called while any other flash
-//! operation is in progress.
+/**
+ * @brief Enable or disable synchronous burst mode, if supported.
+ *
+ * Burst mode is disabled by flash_impl_init(). The result is undefined if another operation is
+ * in progress.
+ *
+ * @param enable true to enable burst mode.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_set_burst_mode(bool enable);
 
-//! Return the base address of the sector overlapping the given address.
-//!
-//! This function is reentrant.
+/**
+ * @brief Get the base address of the sector containing an address.
+ *
+ * Reentrant.
+ *
+ * @param addr Flash address.
+ * @return Sector base address.
+ */
 FlashAddress flash_impl_get_sector_base_address(FlashAddress addr);
 
-//! Return the base address of the subsector overlapping the given address.
-//!
-//! This function is reentrant.
+/**
+ * @brief Get the base address of the subsector containing an address.
+ *
+ * Reentrant.
+ *
+ * @param addr Flash address.
+ * @return Subsector base address.
+ */
 FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr);
 
-//! Query the flash hardware for its capacity in bytes.
+/**
+ * @brief Get the flash capacity.
+ *
+ * @return Capacity in bytes.
+ */
 size_t flash_impl_get_capacity(void);
 
-//! Enter a low-power state.
-//!
-//! Once in a low-power mode, all operations may fail until
-//! \ref flash_impl_exit_low_power_mode is called. This function is idempotent.
+/**
+ * @brief Enter a low-power state.
+ *
+ * Operations may fail until flash_impl_exit_low_power_mode() is called. Idempotent.
+ *
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_enter_low_power_mode(void);
 
-//! Exit a low-power state.
-//!
-//! Return the flash to a fully operational mode. This may be a time-intensive
-//! operation. This function is idempotent.
+/**
+ * @brief Leave the low-power state.
+ *
+ * May take a while. Idempotent.
+ *
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_exit_low_power_mode(void);
 
-//! Read data into a buffer.
-//!
-//! The result is undefined if this function is called while a write or erase is
-//! in progress.
+/**
+ * @brief Read data.
+ *
+ * The result is undefined if a write or erase is in progress.
+ *
+ * @param[out] buffer Buffer receiving the data.
+ * @param addr Flash address.
+ * @param len Number of bytes to read.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len);
 
-//! Initiate a DMA-accelerated flash read.
-//!
-//! The caller must ensure that the DMA transfer will not be interfered with
-//! by any clock changes or stoppages externally. (read: inhibit stop mode)
-//!
-//! This function will return immediately once the transfer has begun.
-//! \ref flash_impl_on_read_dma_complete_from_isr will be called from an
-//! interrupt context to signal that the transfer has completed. The effect of
-//! calling flash_impl_read_dma_begin a second time while another DMA transfer
-//! is currently in progress is undefined.
-//!
-//! The result is undefined if this function is called while a write or erase is
-//! in progress.
+/**
+ * @brief Start a DMA read.
+ *
+ * Returns once the transfer has started; flash_impl_on_read_dma_complete_from_isr() is called
+ * when it completes. The caller must keep clocks running for the duration (inhibit stop mode).
+ * Starting a second transfer while one is in progress, or calling this while a write or erase
+ * is in progress, is undefined.
+ *
+ * @param[out] buffer Buffer receiving the data.
+ * @param addr Flash address.
+ * @param len Number of bytes to read.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_read_dma_begin(void *buffer, FlashAddress addr, size_t len);
 
-//! Called from an interrupt context when the DMA read has completed. It is
-//! guaranteed that the call is made from an interrupt of low enough priority
-//! that RTOS API calls are safe to use, and that it is a tail-call from the end
-//! of the implementation's ISR (read: kernel calls are permissible).
-//!
-//! @param result S_SUCCESS iff the read completed successfully.
+/**
+ * @brief DMA read completion, implemented by the caller of the driver.
+ *
+ * Called from an interrupt of low enough priority for RTOS calls, as a tail call at the end of
+ * the driver's ISR.
+ *
+ * @param result S_SUCCESS if and only if the read succeeded.
+ */
 extern void flash_impl_on_read_dma_complete_from_isr(status_t result);
 
-//! If the flash part requires write protection to be explicitly enabled, enable it.
+/** @brief Enable write protection, if the part requires it to be enabled explicitly. */
 void flash_impl_enable_write_protection(void);
 
-//! Write protect a region of flash. Only one region may be protected at any
-//! given time.
-//!
-//! The result is undefined if this function is called while a write or erase is
-//! in progress.
+/**
+ * @brief Write-protect a range of sectors.
+ *
+ * Only one range may be protected at a time. The result is undefined if a write or erase is in
+ * progress.
+ *
+ * @param start_sector Address of the first protected sector.
+ * @param end_sector Address of the last protected sector.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector);
 
-//! Remove write protection.
-//!
-//! The result is undefined if this function is called while a write or erase is
-//! in progress.
+/**
+ * @brief Remove write protection.
+ *
+ * The result is undefined if a write or erase is in progress.
+ *
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_unprotect(void);
 
-//! Write a page of bytes to flash.
-//!
-//! @param buffer The source buffer.
-//! @param addr Destination flash address.
-//! @param len Length to write.
-//! @return The number of bytes that will be written to flash, assuming that the
-//!         write completes successfully, or a StatusCode error if there was an
-//!         error starting the write operation.
-//!
-//! Each call to flash_impl_write_page_begin begins a single flash write
-//! operation, writing the maximum amount of data supported by the hardware in
-//! a single operation. Multiple page writes may be required to write a complete
-//! buffer to flash.
-//!
-//! Example usage:
-//! \code
-//!   while (len) {
-//!     int written = flash_impl_write_page_begin(buffer, addr, len));
-//!     if (written < 0) {
-//!       // Handle error
-//!     }
-//!     status_t status;
-//!     while ((status = flash_impl_get_write_status()) == E_AGAIN) {
-//!       continue;
-//!     }
-//!     if (status != S_SUCCESS) {
-//!       // Handle error
-//!     }
-//!     buffer += written;
-//!     addr += written;
-//!     len -= written;
-//!   }
-//! \endcode
-//!
-//! The result is undefined if this function is called while a read or erase is
-//! in progress. It is an error to call this function while a write is
-//! in progress or suspended.
+/**
+ * @brief Start writing up to a page.
+ *
+ * Starts a single program operation with as much data as the part accepts at once; writing a
+ * whole buffer may take several calls:
+ *
+ * @code{.c}
+ * while (len) {
+ *   int written = flash_impl_write_page_begin(buffer, addr, len);
+ *   if (written < 0) {
+ *     // Handle error
+ *   }
+ *   status_t status;
+ *   while ((status = flash_impl_get_write_status()) == E_BUSY) {
+ *     continue;
+ *   }
+ *   if (status != S_SUCCESS) {
+ *     // Handle error
+ *   }
+ *   buffer += written;
+ *   addr += written;
+ *   len -= written;
+ * }
+ * @endcode
+ *
+ * The result is undefined if a read or erase is in progress. It is an error to call this while
+ * a write is in progress or suspended.
+ *
+ * @param buffer Data to write.
+ * @param addr Flash address.
+ * @param len Number of bytes available in @p buffer.
+ * @return Number of bytes that will be written if the write completes, or a negative
+ *         StatusCode if the write could not be started.
+ */
 int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t len);
 
-//! Poll the status of a flash page write.
-//!
-//! @return S_SUCCESS if the write has succeeded, E_ERROR if the write has
-//!         failed, E_BUSY if the write is still in progress or E_AGAIN if the
-//!         write is suspended.
+/**
+ * @brief Poll the status of a page write.
+ *
+ * @retval S_SUCCESS The write succeeded.
+ * @retval E_ERROR The write failed.
+ * @retval E_BUSY The write is in progress.
+ * @retval E_AGAIN The write is suspended.
+ */
 status_t flash_impl_get_write_status(void);
 
-//! Suspend an in-progress write so that reads and erases are permitted.
-//!
-//! @param addr The address passed to the \ref flash_impl_write_page_begin
-//!        call which initiated the write being suspended.
+/**
+ * @brief Suspend an in-progress write so reads and erases are permitted.
+ *
+ * @param addr Address passed to the flash_impl_write_page_begin() call that started the write.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_write_suspend(FlashAddress addr);
 
-//! Resume a previously-suspended write.
-//!
-//! @param addr The address passed to \ref flash_impl_write_suspend.
-//!
-//! The result is undefined if this function is called while a read or write is
-//! in progress.
+/**
+ * @brief Resume a suspended write.
+ *
+ * The result is undefined if a read or write is in progress.
+ *
+ * @param addr Address passed to flash_impl_write_suspend().
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_write_resume(FlashAddress addr);
 
-//! Erase the subsector which overlaps the given address.
-//!
-//! The result is undefined if this function is called while a read or write is
-//! in progress. It is an error to call this function while an erase is
-//! suspended.
+/**
+ * @brief Start erasing the subsector containing an address.
+ *
+ * The result is undefined if a read or write is in progress. It is an error to call this while
+ * an erase is suspended.
+ *
+ * @param subsector_addr Address within the subsector.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr);
 
-//! Erase the sector which overlaps the given address.
-//!
-//! The result is undefined if this function is called while a read or write is
-//! in progress. It is an error to call this function while an erase is
-//! suspended.
+/**
+ * @brief Start erasing the sector containing an address.
+ *
+ * The result is undefined if a read or write is in progress. It is an error to call this while
+ * an erase is suspended.
+ *
+ * @param sector_addr Address within the sector.
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_erase_sector_begin(FlashAddress sector_addr);
 
-//! Erase the entire flash.
-//!
-//! The result is undefined if this function is called while a read or write is
-//! in progress. It is an error to call this function while an erase is
-//! suspended.
+/**
+ * @brief Start erasing the entire flash.
+ *
+ * The result is undefined if a read or write is in progress. It is an error to call this while
+ * an erase is suspended.
+ *
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_erase_bulk_begin(void);
 
-//! Poll the status of a flash erase.
-//!
-//! @return S_SUCCESS if the erase has succeeded, E_ERROR if the erase has
-//!         failed, E_BUSY if the erase is still in progress or E_AGAIN if the
-//!         erase is suspended.
+/**
+ * @brief Poll the status of an erase.
+ *
+ * @retval S_SUCCESS The erase succeeded.
+ * @retval E_ERROR The erase failed.
+ * @retval E_BUSY The erase is in progress.
+ * @retval E_AGAIN The erase is suspended.
+ */
 status_t flash_impl_get_erase_status(void);
 
-//! Returns the typical duration of a subsector erase, in milliseconds.
-//!
-//! This function is reentrant.
+/**
+ * @brief Get the typical subsector erase duration.
+ *
+ * Reentrant.
+ *
+ * @return Duration in milliseconds.
+ */
 uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void);
 
-//! Returns the typical duration of a sector erase, in milliseconds.
-//!
-//! This function is reentrant.
+/**
+ * @brief Get the typical sector erase duration.
+ *
+ * Reentrant.
+ *
+ * @return Duration in milliseconds.
+ */
 uint32_t flash_impl_get_typical_sector_erase_duration_ms(void);
 
-//! Suspend an in-progress erase so that reads and writes are permitted.
-//!
-//! @param addr The sector address passed to the
-//!   \ref flash_impl_erase_subsector_begin or
-//!   \ref flash_impl_erase_sector_begin call which initiated the erase being
-//!   suspended.
-//!
-//! @return S_SUCCESS if the erase has been suspended, S_NO_ACTION_REQUIRED if
-//!         there was no erase in progress at the time, or an error code.
+/**
+ * @brief Suspend an in-progress erase so reads and writes are permitted.
+ *
+ * @param addr Address passed to the flash_impl_erase_subsector_begin() or
+ *             flash_impl_erase_sector_begin() call that started the erase.
+ * @retval S_SUCCESS The erase is suspended.
+ * @retval S_NO_ACTION_REQUIRED No erase was in progress.
+ * @return Otherwise an error.
+ */
 status_t flash_impl_erase_suspend(FlashAddress addr);
 
-//! Resume a previously-suspended erase.
-//!
-//! @param addr The address passed to \ref flash_impl_erase_suspend.
-//!
-//! The result is undefined if this function is called while a read or write is
-//! in progress.
+/**
+ * @brief Resume a suspended erase.
+ *
+ * The result is undefined if a read or write is in progress.
+ *
+ * @param addr Address passed to flash_impl_erase_suspend().
+ * @return S_SUCCESS or an error.
+ */
 status_t flash_impl_erase_resume(FlashAddress addr);
 
-//! Check whether the subsector overlapping the specified address is blank
-//! (reads as all 1's).
-//!
-//! @param addr An address within the subsector being checked.
-//!
-//! @return S_TRUE if blank, S_FALSE if any bit in the sector has been
-//!         programmed, or E_BUSY if another flash operation is in progress.
-//!
-//! This operation is hardware-accelerated if possible. This operation may not
-//! be performed if any reads, writes, or erases are in progress or suspended,
-//! and this operation cannot be suspended once initiated. The result is
-//! undefined if any other flash operation is initiated or in progress while a
-//! blank check operation is in progress.
-//!
-//! @warning This function may return S_TRUE on a subsector where an erase
-//!          operation was terminated prematurely. While such a subsector may
-//!          read back as blank, data loss may occur and writes may fail if the
-//!          subsector is not erased fully before it is written to.
+/**
+ * @brief Check whether the subsector containing an address is blank (all ones).
+ *
+ * Hardware accelerated where possible. Must not be called while any read, write or erase is in
+ * progress or suspended, cannot be suspended, and no other operation may start until it
+ * returns.
+ *
+ * @warning A subsector whose erase was interrupted may read as blank while not being fully
+ *          erased; writing it may then fail or lose data.
+ *
+ * @param addr Address within the subsector.
+ * @retval S_TRUE Blank.
+ * @retval S_FALSE At least one bit is programmed.
+ * @retval E_BUSY Another operation is in progress.
+ */
 status_t flash_impl_blank_check_subsector(FlashAddress addr);
 
-//! Check whether the sector overlapping the specified address is blank (reads
-//! as all 1's).
-//!
-//! @param addr An address within the sector being checked.
-//!
-//! @return S_TRUE if blank, S_FALSE if any bit in the sector has been
-//!         programmed, or E_BUSY if another flash operation is in progress.
-//!
-//! This operation is hardware-accelerated if possible. This operation may not
-//! be performed if any reads, writes, or erases are in progress or suspended,
-//! and this operation cannot be suspended once initiated. The result is
-//! undefined if any other flash operation is initiated or in progress while a
-//! blank check operation is in progress.
-//!
-//! @warning This function may return S_TRUE on a sector where an erase
-//!          operation was terminated prematurely. While such a sector may read
-//!          back as blank, data loss may occur and writes may fail if the
-//!          sector is not erased fully before it is written to.
+/**
+ * @brief Check whether the sector containing an address is blank (all ones).
+ *
+ * Hardware accelerated where possible. Must not be called while any read, write or erase is in
+ * progress or suspended, cannot be suspended, and no other operation may start until it
+ * returns.
+ *
+ * @warning A sector whose erase was interrupted may read as blank while not being fully
+ *          erased; writing it may then fail or lose data.
+ *
+ * @param addr Address within the sector.
+ * @retval S_TRUE Blank.
+ * @retval S_FALSE At least one bit is programmed.
+ * @retval E_BUSY Another operation is in progress.
+ */
 status_t flash_impl_blank_check_sector(FlashAddress addr);
 
+/** @brief Take a reference keeping the flash peripheral powered. */
 void flash_impl_use(void);
+/** @brief Drop one reference taken with flash_impl_use(). */
 void flash_impl_release(void);
+/**
+ * @brief Drop several references taken with flash_impl_use().
+ *
+ * @param num_locks Number of references to drop.
+ */
 void flash_impl_release_many(uint32_t num_locks);
 
-//! Read security register
-//!
-//! @param addr The address of the security register to read.
-//!
-//! @param [out] val The value of the security register read.
-//!
-//! @retval S_SUCCESS if the read was successful
-//! @retval StatusCode if the read failed
+/**
+ * @brief Read a byte from a security register.
+ *
+ * @param addr Security register address.
+ * @param[out] val Byte read.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val);
 
-//! Check if a security register is locked
-//!
-//! @param address The address of the security register to check.
-//! @param [out] locked True if the security registers are locked
-//!
-//! @retval S_SUCCESS if the check was successful
-//! @retval StatusCode if the check failed
+/**
+ * @brief Check whether a security register is locked.
+ *
+ * @param address Security register address.
+ * @param[out] locked true if locked.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p address is not in a security register, or
+ *         another error.
+ */
 status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked);
 
-//! Erase security register
-//!
-//! @param addr The address of the security register to erase.
-//!
-//! @retval S_SUCCESS if the erase was successful
-//! @retval StatusCode if the erase failed
+/**
+ * @brief Erase a security register.
+ *
+ * @param addr Security register address.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_impl_erase_security_register(uint32_t addr);
 
-//! Write security register
-//!
-//! @param addr The address of the security register to write.
-//!
-//! @param val The value to write to the security register.
-//!
-//! @retval S_SUCCESS if the write was successful
-//! @retval StatusCode if the write failed
+/**
+ * @brief Write a byte to a security register.
+ *
+ * @param addr Security register address.
+ * @param val Byte to write.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p addr is not in a security register, or another
+ *         error.
+ */
 status_t flash_impl_write_security_register(uint32_t addr, uint8_t val);
 
-//! Obtain security registers information
-//!
-//! @returns The information about the security registers.
+/**
+ * @brief Get the security register layout.
+ *
+ * @return Security register information.
+ */
 const FlashSecurityRegisters *flash_impl_security_registers_info(void);
 
 #ifdef CONFIG_RECOVERY_FW
-//! Lock security register
-//!
-//! @warning This is a one time operation and will permanently lock the security registers.
-//!
-//! @param address The address of the security register to lock.
-//!
-//! @retval S_SUCCESS if the lock was successful
-//! @retval StatusCode if the lock failed
+/**
+ * @brief Permanently lock the security registers.
+ *
+ * @warning One-time operation that cannot be undone.
+ *
+ * @param address Security register address.
+ * @return S_SUCCESS, E_INVALID_ARGUMENT if @p address is not in a security register, or
+ *         another error.
+ */
 status_t flash_impl_lock_security_register(uint32_t address);
 #endif // CONFIG_RECOVERY_FW
+
+/** @} */

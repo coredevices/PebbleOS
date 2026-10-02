@@ -6,6 +6,27 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/**
+ * @defgroup drivers_ambient_light Ambient light sensor
+ * @ingroup drivers
+ * @brief Ambient light sensor (ALS) driver interface.
+ *
+ * Readings are raw counts between 0 and #AMBIENT_LIGHT_LEVEL_MAX. Boards with calibration
+ * coefficients can convert them to lux with ambient_light_level_to_lux().
+ *
+ * Sampling is controlled by two reference counts kept by the common code: a client that will
+ * read the sensor soon primes it, and code that would disturb the reading (e.g. backlight
+ * bleed-through) suspends it. The sensor samples while primed and not suspended.
+ *
+ * @code{.c}
+ * ambient_light_prime();
+ * ...
+ * uint32_t lux = ambient_light_level_to_lux(ambient_light_get_light_level());
+ * ambient_light_release();
+ * @endcode
+ * @{
+ */
+
 //! Light level enum
 typedef enum AmbientLightLevel {
   AmbientLightLevelUnknown = 0,
@@ -15,58 +36,130 @@ typedef enum AmbientLightLevel {
   AmbientLightLevelVeryLight,
 } AmbientLightLevel;
 
+/**
+ * @var AmbientLightLevel AmbientLightLevelUnknown
+ * @brief No reading available.
+ * @var AmbientLightLevel AmbientLightLevelVeryDark
+ * @brief Well below the dark threshold.
+ * @var AmbientLightLevel AmbientLightLevelDark
+ * @brief Below the dark threshold.
+ * @var AmbientLightLevel AmbientLightLevelLight
+ * @brief At or above the dark threshold.
+ * @var AmbientLightLevel AmbientLightLevelVeryLight
+ * @brief Well above the dark threshold.
+ */
+
+/** @brief Number of AmbientLightLevel values. */
 #define AMBIENT_LIGHT_LEVEL_ENUM_COUNT (AmbientLightLevelVeryLight + 1)
 
+/** @cond INTERNAL_HIDDEN */
 #ifndef CONFIG_AMBIENT_LIGHT_BITS
 // Fallback for header parsers (e.g. SDK generator) that don't preload autoconf.h.
 #define CONFIG_AMBIENT_LIGHT_BITS 12
 #endif
+/** @endcond */
 
+/** @brief Upper bound of the raw light level scale (@c CONFIG_AMBIENT_LIGHT_BITS bits). */
 static const uint32_t AMBIENT_LIGHT_LEVEL_MAX = (1U << CONFIG_AMBIENT_LIGHT_BITS);
 
-/** Initialize the ambient light sensor */
+/** @brief Initialize the ambient light sensor. */
 void ambient_light_init(void);
 
-/** get the ambient light level scaled between 0 and AMBIENT_LIGHT_LEVEL_MAX
+/**
+ * @brief Read the light level.
+ *
+ * @return Raw light level between 0 and #AMBIENT_LIGHT_LEVEL_MAX, 0 if the sensor is not
+ *         initialized.
  */
 uint32_t ambient_light_get_light_level(void);
 
-//! Refcounted "I will want ALS readings soon" hint; bookkeeping lives in
-//! ambient_light_common.c and reaches the driver via
-//! ambient_light_driver_set_state().
+/**
+ * @brief Announce that readings will be wanted soon.
+ *
+ * Reference counted; balance with ambient_light_release(). Lets drivers that sample
+ * continuously start ahead of the first read.
+ */
 void ambient_light_prime(void);
+
+/** @brief Drop a reference taken with ambient_light_prime(). */
 void ambient_light_release(void);
 
-//! Refcounted "stop sampling right now" gate (e.g. backlight bleed-through).
-//! Physical sampling is on iff prime > 0 && suspend == 0.
+/**
+ * @brief Stop sampling until the matching ambient_light_resume().
+ *
+ * Reference counted. Used while something disturbs the sensor, e.g. backlight bleed-through.
+ */
 void ambient_light_suspend(void);
+
+/** @brief Drop a reference taken with ambient_light_suspend(). */
 void ambient_light_resume(void);
 
-//! Init the refcount framework. Called from the per-chip ambient_light_init().
+/**
+ * @brief Initialize the reference counting common to all drivers.
+ *
+ * Called by the driver's ambient_light_init(); prime and suspend requests made earlier are
+ * ignored.
+ */
 void ambient_light_common_init(void);
 
-//! Driver hook. `active` = prime > 0; `sampling` = active && suspend == 0.
-//! No-op for drivers without a sampling gate.
+/**
+ * @brief Apply the sampling state computed by the common code.
+ *
+ * Implemented by the driver and called with the common lock held whenever a reference count
+ * changes. A no-op for drivers without a sampling gate.
+ *
+ * @param active True while primed.
+ * @param sampling True while primed and not suspended.
+ */
 void ambient_light_driver_set_state(bool active, bool sampling);
 
-//! get the threshold between light and dark
+/**
+ * @brief Get the threshold between light and dark.
+ *
+ * @return Threshold, in the units returned by ambient_light_level_to_lux().
+ */
 uint32_t ambient_light_get_dark_threshold(void);
 
-//! set the threshold between light and dark
+/**
+ * @brief Set the threshold between light and dark.
+ *
+ * @param new_threshold Threshold, in the units returned by ambient_light_level_to_lux(), at most
+ *                      #AMBIENT_LIGHT_LEVEL_MAX.
+ */
 void ambient_light_set_dark_threshold(uint32_t new_threshold);
 
-//! figure out whether it is light outside
+/**
+ * @brief Check whether it is light.
+ *
+ * @return True if the current level, converted with ambient_light_level_to_lux(), is above the
+ *         dark threshold; false if dark or the sensor is unavailable.
+ */
 bool ambient_light_is_light();
 
-//! Convert a light level obtained from ambient_light_get_light_level() into an
-//! AmbientLightLevel enum value.
-//! @param[in] light_level the raw light level reading obtained from ambient_light_get_light_level
+/**
+ * @brief Classify a light level against the dark threshold.
+ *
+ * @param light_level Light level, in the units of the dark threshold.
+ * @return Light level class, AmbientLightLevelUnknown if the sensor is unavailable.
+ */
 AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level);
 
-//! Whether this board has raw-count -> lux conversion coefficients.
+/**
+ * @brief Check whether the board has raw-count to lux coefficients.
+ *
+ * @return True if ambient_light_level_to_lux() converts to lux.
+ */
 bool ambient_light_lux_available(void);
 
-//! Convert a light level (after screen compensation, if any) into lux using
-//! the board coefficients. On boards without coefficients the level is
-//! returned unchanged, so callers can consume the result unconditionally.
+/**
+ * @brief Convert a light level to lux using the board coefficients.
+ *
+ * On boards without coefficients the level is returned unchanged, so callers can use the
+ * result unconditionally.
+ *
+ * @param light_level Light level, after screen compensation if any.
+ * @return Light level in lux, or @p light_level if uncalibrated.
+ */
 uint32_t ambient_light_level_to_lux(uint32_t light_level);
+
+/** @} */

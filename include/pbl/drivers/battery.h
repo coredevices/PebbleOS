@@ -5,101 +5,163 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-/* TODO ***************************************************************
- * Some of the comments in this file may not be accurate for snowy.
- * Some thought should go into making sure that the function names and
- * comments are relevant to both snowy and previous generations
- * ********************************************************************/
+/**
+ * @defgroup drivers_battery Battery
+ * @ingroup drivers
+ * @brief Battery and charger driver interface.
+ *
+ * Implemented by the PMIC driver. The battery state service builds state of charge and
+ * charging state on top of it.
+ * @{
+ */
 
-//! Battery charge status.
+/** @brief Battery charge status. */
 typedef enum {
-  //! Unknown charge status.
+  /** Unknown charge status. */
   BatteryChargeStatusUnknown,
-  //! Charging is complete, battery full.
+  /** Charging is complete, battery full. */
   BatteryChargeStatusComplete,
-  //! Battery is in trickle charge mode.
+  /** Trickle charging. */
   BatteryChargeStatusTrickle,
-  //! Battery is in constant current charge mode.
+  /** Constant current charging. */
   BatteryChargeStatusCC,
-  //! Battery is in constant voltage charge mode.
+  /** Constant voltage charging. */
   BatteryChargeStatusCV,
 } BatteryChargeStatus;
 
-//! Battery constants.
+/** @brief Battery measurements. */
 typedef struct BatteryConstants {
-  //!< Battery voltage in millivolts.
+  /** Battery voltage in millivolts. */
   int32_t v_mv;
-  //!< Battery current in microamperes.
+  /** Battery current in microamperes. */
   int32_t i_ua;
-  //!< Battery temperature in millidegrees Celsius.
+  /** Battery temperature in millidegrees Celsius. */
   int32_t t_mc;
 } BatteryConstants;
 
+/** @brief Initialize the battery driver. */
 void battery_init(void);
 
-/** @returns the battery voltage after smoothing and averaging
+/**
+ * @brief Measure the battery voltage.
+ *
+ * @return Battery voltage in millivolts, 0 on failure.
  */
 int battery_get_millivolts(void);
 
 /**
- * Obtain battery constants.
+ * @brief Measure battery voltage, current and temperature.
  *
- * @param[out] constants
- *
- * @retval 0 On success.
- * @retval error Error code on failure.
+ * @param[out] constants Measurements.
+ * @retval 0 Success.
+ * @retval negative Error code on failure.
  */
 int battery_get_constants(BatteryConstants *constants);
 
-/** @returns true if the battery charge controller thinks we are charging.
- * This is often INCORRECT on Pebble Steel due to the additional current
- * draw from the LED when charging, and as a result, this is not
- * the definition of "charging" we use for most places in the
- * code (i.e. battery_get_charge_state().is_charging), which depends on
- * SoC percentage. If you are not the battery_monitor state machine,
- * you probably don't want to use this. See PBL-2538 for context.
+/**
+ * @brief Check whether the charge controller reports charging.
+ *
+ * This is the raw charger status, not the notion of charging used by the rest of the system,
+ * which comes from the battery state service. Always false while charging is forced off with
+ * battery_force_charge_enable().
+ *
+ * @return True if the charge controller is charging.
  */
 bool battery_charge_controller_thinks_we_are_charging(void);
 
-/** @returns true if both:
- * - the USB voltage is higher than 3.15V
- * - the USB voltage is higher than the battery voltage
+/**
+ * @brief Check whether USB power is connected.
+ *
+ * Always false while charging is forced off with battery_force_charge_enable().
+ *
+ * @return True if USB power is present.
  */
 bool battery_is_usb_connected(void);
+
+/**
+ * @brief Enable or disable the charger.
+ *
+ * @param charging_enabled True to allow charging.
+ */
 void battery_set_charge_enable(bool charging_enabled);
+
+/**
+ * @brief Enable or disable fast charging.
+ *
+ * A no-op on chargers that manage the charge current themselves.
+ *
+ * @param fast_charge_enabled True to allow fast charging.
+ */
 void battery_set_fast_charge(bool fast_charge_enabled);
 
-// These are used by battery_common to allow forcing of charge states
+/**
+ * @brief Driver implementation of battery_is_usb_connected().
+ *
+ * Ignores battery_force_charge_enable().
+ *
+ * @return True if USB power is present.
+ */
 bool battery_is_usb_connected_impl(void);
+
+/**
+ * @brief Driver implementation of battery_charge_controller_thinks_we_are_charging().
+ *
+ * Ignores battery_force_charge_enable().
+ *
+ * @return True if the charge controller is charging.
+ */
 bool battery_charge_controller_thinks_we_are_charging_impl(void);
+
+/**
+ * @brief Force charging on or off.
+ *
+ * Enables or disables the charger. While forced off, battery_is_usb_connected() and
+ * battery_charge_controller_thinks_we_are_charging() report false.
+ *
+ * @param is_charging True to allow charging, false to force it off.
+ */
 void battery_force_charge_enable(bool is_charging);
 
-//! The current voltage numbers from the battery. These structs are created by
-//! the battery_read_voltage_monitor struct. Each _total value is a sum of 40 samples where
-//! each sample is a number between 0 and 4095 representing a value between 0 and 1.8V. See
-//! the comments inside battery_convert_reading_to_millivolts to see how to convert this to a
-//! useful value.
+/**
+ * @brief Raw voltage monitor ADC reading.
+ *
+ * Each total is the sum of 40 samples, each between 0 and 4095 for 0 to 1.8 V. Use
+ * battery_convert_reading_to_millivolts() to convert it.
+ */
 typedef struct ADCVoltageMonitorReading {
+  /** Sum of the reference voltage samples. */
   uint32_t vref_total;
+  /** Sum of the monitored voltage samples. */
   uint32_t vmon_total;
 } ADCVoltageMonitorReading;
 
-//! Read voltage numbers through an ADC on the voltage monitor pin. This is usually hooked up
-//! to the battery voltage, but can be also used to read voltages on other rails by configuring
-//! the PMIC to different values.
+/**
+ * @brief Read the voltage monitor pin through the ADC.
+ *
+ * The pin usually carries the battery voltage, but the PMIC can route other rails to it.
+ *
+ * @return Raw reading.
+ */
 ADCVoltageMonitorReading battery_read_voltage_monitor(void);
 
-//! Convert a ADCVoltageMonitorReading into a single mV reading using a given dividing ratio.
-//! @param reading The voltage monitor reading to convert.
-//! @param numerator The numerator to multiply the result by.
-//! @param denominator The denominator to divide the result by.
+/**
+ * @brief Convert a voltage monitor reading to millivolts.
+ *
+ * @param reading Reading to convert.
+ * @param numerator Numerator of the divider ratio applied to the result.
+ * @param denominator Denominator of the divider ratio applied to the result.
+ * @return Voltage in millivolts.
+ */
 uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading, uint32_t numerator,
                                                uint32_t denominator);
 
-//! Get the current battery charge status.
-//!
-//! @param[out] status The current charge status.
-//!
-//! @retval 0 On success.
-//! @retval error Error code on failure.
+/**
+ * @brief Get the charge status.
+ *
+ * @param[out] status Current charge status.
+ * @retval 0 Success.
+ * @retval negative Error code on failure.
+ */
 int battery_charge_status_get(BatteryChargeStatus *status);
+
+/** @} */

@@ -11,27 +11,51 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// PDM Configuration
+/**
+ * @defgroup drivers_mic_nrf5 nRF5 PDM microphone
+ * @ingroup drivers_mic
+ * @brief @ref drivers_mic implementation for the nRF5 PDM peripheral.
+ * @{
+ */
+
+/** @brief Samples per PDM DMA buffer. */
 #define PDM_BUFFER_SIZE_SAMPLES (320)
-#define PDM_BUFFER_COUNT        (2)
-#define PDM_GAIN_DEFAULT        (NRF_PDM_GAIN_DEFAULT)
+/** @brief Number of PDM DMA buffers. */
+#define PDM_BUFFER_COUNT (2)
+/** @brief Default PDM gain. */
+#define PDM_GAIN_DEFAULT (NRF_PDM_GAIN_DEFAULT)
 
-// Circular buffer configuration
-#define CIRCULAR_BUF_SIZE_MS      (320)
+/** @brief Preferred length of the queue between DMA and the data handler, in milliseconds. */
+#define CIRCULAR_BUF_SIZE_MS (320)
+/** @brief Preferred queue length, in samples. */
 #define CIRCULAR_BUF_SIZE_SAMPLES ((MIC_SAMPLE_RATE * CIRCULAR_BUF_SIZE_MS) / 1000)
-#define CIRCULAR_BUF_SIZE_BYTES   (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
+/** @brief Preferred queue size, in bytes. */
+#define CIRCULAR_BUF_SIZE_BYTES (CIRCULAR_BUF_SIZE_SAMPLES * sizeof(int16_t))
 
-// Minimum fallback size when the heap is fragmented and the full circular
-// buffer alloc fails. Below this transcription quality degrades noticeably.
-#define CIRCULAR_BUF_MIN_SIZE_MS      (128)
+/**
+ * @brief Minimum queue length, in milliseconds, accepted when the heap is too fragmented for the
+ * preferred one.
+ *
+ * Transcription quality degrades noticeably below it.
+ */
+#define CIRCULAR_BUF_MIN_SIZE_MS (128)
+/** @brief Minimum queue length, in samples. */
 #define CIRCULAR_BUF_MIN_SIZE_SAMPLES ((MIC_SAMPLE_RATE * CIRCULAR_BUF_MIN_SIZE_MS) / 1000)
-#define CIRCULAR_BUF_MIN_SIZE_BYTES   (CIRCULAR_BUF_MIN_SIZE_SAMPLES * sizeof(int16_t))
+/** @brief Minimum queue size, in bytes. */
+#define CIRCULAR_BUF_MIN_SIZE_BYTES (CIRCULAR_BUF_MIN_SIZE_SAMPLES * sizeof(int16_t))
 
-// 32 ms shrink per retry gives ~7 attempts between 320 ms and 128 ms.
-#define CIRCULAR_BUF_STEP_MS      (32)
+/**
+ * @brief Queue shrink per allocation retry, in milliseconds.
+ *
+ * Gives about 7 attempts between the preferred and the minimum length.
+ */
+#define CIRCULAR_BUF_STEP_MS (32)
+/** @brief Queue shrink per allocation retry, in samples. */
 #define CIRCULAR_BUF_STEP_SAMPLES ((MIC_SAMPLE_RATE * CIRCULAR_BUF_STEP_MS) / 1000)
-#define CIRCULAR_BUF_STEP_BYTES   (CIRCULAR_BUF_STEP_SAMPLES * sizeof(int16_t))
+/** @brief Queue shrink per allocation retry, in bytes. */
+#define CIRCULAR_BUF_STEP_BYTES (CIRCULAR_BUF_STEP_SAMPLES * sizeof(int16_t))
 
+/** @cond INTERNAL_HIDDEN */
 typedef struct {
   nrfx_pdm_config_t pdm_config;
   int16_t *pdm_buffers[PDM_BUFFER_COUNT];
@@ -54,13 +78,21 @@ typedef struct {
   bool is_initialized;
   bool main_pending;
 } MicDeviceState;
+/** @endcond */
 
+/** @brief nRF5 PDM microphone device. */
 typedef const struct MicDevice {
+  /** Driver runtime state. */
   MicDeviceState *state;
 
-  // Hardware configuration
+  /** PDM instance. */
   const nrfx_pdm_t pdm_instance;
+  /** PDM clock pin. */
   uint32_t clk_pin;
+  /** PDM data pin. */
   uint32_t data_pin;
+  /** Number of channels, 1 or 2. */
   uint32_t channels;
 } MicDevice;
+
+/** @} */

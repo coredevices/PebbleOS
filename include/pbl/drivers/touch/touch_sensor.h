@@ -3,9 +3,29 @@
 
 #pragma once
 
+/**
+ * @defgroup drivers_touch Touch sensor
+ * @ingroup drivers
+ * @brief Touchscreen controller driver interface.
+ *
+ * Touch events are reported to the touch service.
+ * @{
+ */
+
+/**
+ * @brief Initialize the touch sensor.
+ *
+ * Called once at startup.
+ */
 void touch_sensor_init(void);
 
-//! Enable or disable touch sensor interrupts.
-//! When disabled, no touch events will be processed.
-//! @param enabled true to enable, false to disable
+/**
+ * @brief Enable or disable the touch sensor.
+ *
+ * While disabled, no touch events are reported.
+ *
+ * @param enabled true to enable.
+ */
 void touch_sensor_set_enabled(bool enabled);
+
+/** @} */
