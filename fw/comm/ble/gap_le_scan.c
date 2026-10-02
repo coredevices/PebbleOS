@@ -84,8 +84,8 @@ bool gap_le_is_scanning(void) {
 //! Copies over the pending report to the circular buffer and free the pending
 //! "slot". In case there is no space left, the pending report will be dropped.
 //! and a counter will be incremented
-void pbl_bt_cb_le_scan_handle_report(const GAPLERawAdReport *report_buffer, int length) {
-  const bool written = circular_buffer_write(&s_circular_buffer, (uint8_t *)report_buffer, length);
+void pbl_bt_cb_le_scan_handle_report(const GAPLERawAdReport *data, int length) {
+  const bool written = circular_buffer_write(&s_circular_buffer, (uint8_t *)data, length);
 
   if (!written) {
     ++s_dropped_reports;
