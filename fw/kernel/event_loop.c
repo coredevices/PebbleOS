@@ -401,7 +401,9 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
           // a PEBBLE_SET_TIME_EVENT handler triggered by pypkjs's SetUTC right
           // before install) otherwise stall the install until the dev manually
           // toggles to the launcher.  Real-user normal shell keeps graceful.
+          // Flagged as requested so the app manager doesn't treat the kill as a crash.
           .forcefully = (common.reason == APP_LAUNCH_PHONE),
+          .kill_requested = (common.reason == APP_LAUNCH_PHONE),
 #endif
         });
       }

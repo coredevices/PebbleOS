@@ -26,8 +26,9 @@ typedef enum {
 typedef struct AppLaunchConfig {
   LaunchConfigCommon common;
   const PebbleProcessMd *md;
-  bool restart;    //!< Allows the current app to be restarted
-  bool forcefully; //!< Causes the current app to be forcefully closed
+  bool restart;        //!< Allows the current app to be restarted
+  bool forcefully;     //!< Causes the current app to be forcefully closed
+  bool kill_requested; //!< The forced close was requested, so it isn't a crash
 } AppLaunchConfig;
 
 typedef struct AppLaunchEventConfig {
