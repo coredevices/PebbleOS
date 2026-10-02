@@ -103,7 +103,7 @@ bool pbl_shared_cbuf_write_reserve(struct pbl_shared_cbuf *buffer, uint16_t leng
     slacker->read_index = buffer->write_index;
 
     max_data = prv_get_max_data_length(buffer, &slacker);
-    avail_space = buffer->buffer_size - max_data;
+    avail_space = buffer->buffer_size - 1 - max_data;
   }
 
   *seg1 = &buffer->buffer[buffer->write_index];

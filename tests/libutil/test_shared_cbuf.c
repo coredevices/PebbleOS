@@ -176,6 +176,28 @@ void test_shared_cbuf__two_clients(void) {
   cl_assert_equal_i(pbl_shared_cbuf_get_write_space_remaining(&buffer), 5);
 }
 
+void test_shared_cbuf__advance_slackers_keeps_one_byte_free(void) {
+  struct pbl_shared_cbuf buffer;
+  uint8_t storage[10];
+  uint8_t data[10] = {0};
+  pbl_shared_cbuf_init(&buffer, storage, sizeof(storage));
+
+  struct pbl_shared_cbuf_client client1 = (struct pbl_shared_cbuf_client){};
+  struct pbl_shared_cbuf_client client2 = (struct pbl_shared_cbuf_client){};
+  pbl_shared_cbuf_add_client(&buffer, &client1);
+  pbl_shared_cbuf_add_client(&buffer, &client2);
+
+  cl_assert(pbl_shared_cbuf_write(&buffer, data, 4, false));
+  prv_read_and_consume(&buffer, &client2, data, 4);
+  cl_assert(pbl_shared_cbuf_write(&buffer, data, 5, false));
+  cl_assert_equal_i(pbl_shared_cbuf_get_read_space_remaining(&buffer, &client1), 9);
+  cl_assert_equal_i(pbl_shared_cbuf_get_read_space_remaining(&buffer, &client2), 5);
+
+  cl_assert(pbl_shared_cbuf_write(&buffer, data, 5, true));
+  cl_assert_equal_i(pbl_shared_cbuf_get_read_space_remaining(&buffer, &client1), 5);
+  cl_assert_equal_i(pbl_shared_cbuf_get_read_space_remaining(&buffer, &client2), 5);
+}
+
 void test_shared_cbuf__corner_case(void) {
   struct pbl_shared_cbuf buffer;
   uint8_t storage[4];
