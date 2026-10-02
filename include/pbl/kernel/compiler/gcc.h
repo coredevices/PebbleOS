@@ -3,6 +3,8 @@
 
 #pragma once
 
+/** @cond INTERNAL_HIDDEN */
+
 #define PBL_ALWAYS_INLINE_IMPL          inline __attribute__((__always_inline__))
 #define PBL_NOINLINE_IMPL               __attribute__((__noinline__))
 #define PBL_NORETURN_IMPL               __attribute__((__noreturn__))
@@ -32,3 +34,5 @@
 #define PBL_POPCOUNT_IMPL(x)            __builtin_popcount(x)
 #define PBL_BSWAP16_IMPL(x)             __builtin_bswap16(x)
 #define PBL_BSWAP32_IMPL(x)             __builtin_bswap32(x)
+
+/** @endcond */

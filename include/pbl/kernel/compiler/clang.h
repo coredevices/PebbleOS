@@ -3,6 +3,8 @@
 
 #pragma once
 
+/** @cond INTERNAL_HIDDEN */
+
 #include "pbl/kernel/compiler/gcc.h"
 
 #undef PBL_OPTIMIZE_IMPL
@@ -10,3 +12,5 @@
 
 #undef PBL_EXTERNALLY_VISIBLE_IMPL
 #define PBL_EXTERNALLY_VISIBLE_IMPL
+
+/** @endcond */

@@ -8,11 +8,13 @@
 
 #include "pbl_arch_thread.h"
 
+/** @cond INTERNAL_HIDDEN */
+
 struct pbl_thread;
 struct pbl_msgq;
 struct pbl_poll_group;
 
-//! Threads blocked on an object, highest priority first, FIFO within a priority.
+/* Threads blocked on an object, highest priority first, FIFO within a priority. */
 struct pbl_waitq {
   struct pbl_thread *head;
 };
@@ -58,3 +60,5 @@ struct pbl_poll_group_backend {
 };
 
 #define PBL_SEM_BACKEND_INITIALIZER(initial) {.count = (initial)}
+
+/** @endcond */
