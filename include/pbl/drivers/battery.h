@@ -123,39 +123,6 @@ bool battery_charge_controller_thinks_we_are_charging_impl(void);
 void battery_force_charge_enable(bool is_charging);
 
 /**
- * @brief Raw voltage monitor ADC reading.
- *
- * Each total is the sum of 40 samples, each between 0 and 4095 for 0 to 1.8 V. Use
- * battery_convert_reading_to_millivolts() to convert it.
- */
-typedef struct ADCVoltageMonitorReading {
-  /** Sum of the reference voltage samples. */
-  uint32_t vref_total;
-  /** Sum of the monitored voltage samples. */
-  uint32_t vmon_total;
-} ADCVoltageMonitorReading;
-
-/**
- * @brief Read the voltage monitor pin through the ADC.
- *
- * The pin usually carries the battery voltage, but the PMIC can route other rails to it.
- *
- * @return Raw reading.
- */
-ADCVoltageMonitorReading battery_read_voltage_monitor(void);
-
-/**
- * @brief Convert a voltage monitor reading to millivolts.
- *
- * @param reading Reading to convert.
- * @param numerator Numerator of the divider ratio applied to the result.
- * @param denominator Denominator of the divider ratio applied to the result.
- * @return Voltage in millivolts.
- */
-uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading, uint32_t numerator,
-                                               uint32_t denominator);
-
-/**
  * @brief Get the charge status.
  *
  * @param[out] status Current charge status.

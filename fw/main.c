@@ -28,7 +28,6 @@
 #include <pbl/drivers/temperature.h>
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/drivers/vibe.h>
-#include <pbl/drivers/voltage_monitor.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
 
@@ -163,10 +162,6 @@ static void init_drivers(void) {
   dbgserial_input_init();
 
   serial_console_init();
-
-#ifdef HAS_DRIVER_VOLTAGE_MONITOR
-  voltage_monitor_init();
-#endif
 
   battery_init();
   vibe_init();
