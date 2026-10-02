@@ -109,13 +109,6 @@ typedef const struct AudioDevice {
 } AudioDevice;
 
 /**
- * @brief AUDPRC DMA interrupt handler.
- *
- * @param audio_device Audio device.
- */
-extern void audprc_dma_iqr_handler(AudioDevice *audio_device);
-
-/**
  * @brief AUDCODEC DAC DMA interrupt handler.
  *
  * @param audio_device Audio device.

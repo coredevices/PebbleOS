@@ -12,9 +12,6 @@
  * @{
  */
 
-/** @brief Initialize the QEMU accelerometer. */
-void qemu_accel_init(void);
-
 /**
  * @brief Handle a @ref QemuProtocol_Accel message from the host.
  *

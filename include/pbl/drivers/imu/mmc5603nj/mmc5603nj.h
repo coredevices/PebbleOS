@@ -14,9 +14,6 @@
  * @{
  */
 
-/** @brief Initialize the MMC5603NJ. */
-void mmc5603nj_init(void);
-
 /**
  * @brief Set whether the watch is mounted rotated 180 degrees.
  *

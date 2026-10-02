@@ -94,13 +94,6 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count);
 
 void gh3x2x_wear_evt_notify(bool is_wear);
 
-/**
- * @brief Get the wear detection state.
- *
- * @return True if the watch is worn.
- */
-bool gh3x2x_is_wear_get(void);
-
 /** @brief Factory test type. */
 typedef enum {
   /** No test. */
