@@ -54,6 +54,14 @@ static bool prv_handle_result_common(VoiceEndpointResult result, bool app_initia
   return true;
 }
 
+static bool prv_is_empty_transcription(const Transcription *transcription, size_t size) {
+  if (size == sizeof(Transcription)) {
+    return transcription->sentence_count == 0;
+  }
+  return (size == sizeof(Transcription) + sizeof(TranscriptionSentence)) &&
+         (transcription->sentence_count == 1) && (transcription->sentences[0].word_count == 0);
+}
+
 static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size) {
   const size_t attr_list_size =
       size - sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr_list);
@@ -76,6 +84,13 @@ static void prv_handle_dictation_result(VoiceSessionResultMsg *msg, size_t size)
   }
 
   Transcription *transcription = (Transcription *)transcription_attr->data;
+  if (prv_is_empty_transcription(transcription, transcription_attr->length)) {
+    PBL_LOG_DBG("Empty transcription, no speech recognized");
+    voice_handle_dictation_result(VoiceEndpointResultFailInvalidRecognizerResponse, msg->session_id,
+                                  NULL, app_initiated, app_uuid);
+    return;
+  }
+
   bool valid = transcription_validate(transcription, transcription_attr->length);
 
   if (!valid) {

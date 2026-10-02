@@ -474,6 +474,53 @@ void test_voice_endpoint__handle_dictation_result(void) {
   dictation_result[7] = VoiceEndpointResultSuccess; // restore transcription result
 }
 
+void test_voice_endpoint__handle_dictation_result_empty(void) {
+  uint8_t dictation_result[] = {
+    0x02, // Message ID: Dictation result
+    0x00,
+    0x00,
+    0x00,
+    0x00, // flags
+    0x11,
+    0x22, // Audio streaming session ID
+    0x00, // Voice session result - success
+
+    0x01, // attribute list - num attributes
+
+    0x02, // attribute type - transcription
+    0x04,
+    0x00, // attribute length
+
+    // Transcription
+    0x01, // Transcription type
+    0x01, // Sentence count
+
+    // Sentence #1
+    0x00,
+    0x00, // Word count
+  };
+
+  s_num_dictation_results = 0;
+  voice_endpoint_protocol_msg_callback(NULL, dictation_result, sizeof(dictation_result));
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_p(s_transcription, NULL);
+  cl_assert_equal_i(s_session_id, 0x2211);
+  cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidRecognizerResponse);
+  cl_assert_equal_i(s_num_dictation_results, 1);
+
+  // no sentence at all
+  s_num_dictation_results = 0;
+  s_session_id = 0;
+  dictation_result[10] = 0x02; // attribute length
+  dictation_result[13] = 0x00; // sentence count
+  voice_endpoint_protocol_msg_callback(NULL, dictation_result, sizeof(dictation_result) - 2);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_p(s_transcription, NULL);
+  cl_assert_equal_i(s_session_id, 0x2211);
+  cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidRecognizerResponse);
+  cl_assert_equal_i(s_num_dictation_results, 1);
+}
+
 void test_voice_endpoint__handle_dictation_result_app_initiated(void) {
   uint8_t dictation_result_1[] = {
     0x02, // Message ID: Dictation result
