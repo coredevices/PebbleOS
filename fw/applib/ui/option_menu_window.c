@@ -86,6 +86,14 @@ bool option_menu_title_wraps(const OptionMenu *option_menu, const char *title) {
 }
 
 uint16_t option_menu_system_cell_height(OptionMenu *option_menu, const char *title, bool selected) {
+#if PBL_ROUND
+  // Give a title that wraps beside the icon room for its second line
+  if (title && !selected && option_menu->icons_enabled &&
+      option_menu->content_type != OptionMenuContentType_SingleLine &&
+      option_menu_title_wraps(option_menu, title)) {
+    return 2 * fonts_get_font_height(option_menu->title_font);
+  }
+#endif
   const uint16_t default_height =
       option_menu_default_cell_height(option_menu->content_type, selected);
   return default_height;
