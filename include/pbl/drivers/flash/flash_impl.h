@@ -103,31 +103,6 @@ status_t flash_impl_exit_low_power_mode(void);
  */
 status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len);
 
-/**
- * @brief Start a DMA read.
- *
- * Returns once the transfer has started; flash_impl_on_read_dma_complete_from_isr() is called
- * when it completes. The caller must keep clocks running for the duration (inhibit stop mode).
- * Starting a second transfer while one is in progress, or calling this while a write or erase
- * is in progress, is undefined.
- *
- * @param[out] buffer Buffer receiving the data.
- * @param addr Flash address.
- * @param len Number of bytes to read.
- * @return S_SUCCESS or an error.
- */
-status_t flash_impl_read_dma_begin(void *buffer, FlashAddress addr, size_t len);
-
-/**
- * @brief DMA read completion, implemented by the caller of the driver.
- *
- * Called from an interrupt of low enough priority for RTOS calls, as a tail call at the end of
- * the driver's ISR.
- *
- * @param result S_SUCCESS if and only if the read succeeded.
- */
-extern void flash_impl_on_read_dma_complete_from_isr(status_t result);
-
 /** @brief Enable write protection, if the part requires it to be enabled explicitly. */
 void flash_impl_enable_write_protection(void);
 

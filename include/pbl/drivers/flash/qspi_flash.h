@@ -128,18 +128,6 @@ void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active);
 status_t qspi_flash_blank_check(QSPIFlash *dev, uint32_t addr, bool is_subsector);
 
 /**
- * @brief Update bits of a register.
- *
- * @param dev Device.
- * @param read_instruction Instruction reading the register.
- * @param write_instruction Instruction writing the register.
- * @param value New bit values.
- * @param mask Bits to update.
- */
-void qspi_flash_ll_set_register_bits(QSPIFlash *dev, uint8_t read_instruction,
-                                     uint8_t write_instruction, uint8_t value, uint8_t mask);
-
-/**
  * @brief Enable write and erase protection.
  *
  * Uses the @c write_protection_enable instruction and checks the result of

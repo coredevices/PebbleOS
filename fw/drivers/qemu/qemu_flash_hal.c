@@ -86,13 +86,6 @@ status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_read_dma_begin(void *buffer, FlashAddress addr, size_t len) {
-  // No DMA in QEMU; do a synchronous read and report completion
-  status_t result = flash_impl_read_sync(buffer, addr, len);
-  flash_impl_on_read_dma_complete_from_isr(result);
-  return result;
-}
-
 void flash_impl_enable_write_protection(void) {
   // No-op for QEMU
 }

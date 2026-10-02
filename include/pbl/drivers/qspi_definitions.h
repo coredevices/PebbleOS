@@ -16,7 +16,7 @@
 
 /**
  * @defgroup drivers_qspi_definitions QSPI port
- * @ingroup drivers_qspi
+ * @ingroup drivers
  * @brief Board description of a QSPI port.
  *
  * The fields depend on the SoC.
@@ -74,13 +74,5 @@ typedef const struct QSPIPort {
   uint16_t clk_div;
 #endif
 } QSPIPort;
-
-/**
- * @brief Initialize the QSPI peripheral, its pins and DMA.
- *
- * @param dev QSPI port.
- * @param flash_size Size of the attached flash in bytes.
- */
-void qspi_init(QSPIPort *dev, uint32_t flash_size);
 
 /** @} */

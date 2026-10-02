@@ -59,13 +59,6 @@ void flash_init(void);
 void flash_stop(void);
 
 /**
- * @brief Read the device ID.
- *
- * @return First 3 bytes of the JEDEC device ID.
- */
-uint32_t flash_whoami(void);
-
-/**
  * @brief Read from flash.
  *
  * No range checking is done.
@@ -192,29 +185,12 @@ void flash_sleep_when_idle(bool enable);
  */
 bool flash_get_sleep_when_idle(void);
 
-/** @brief Log the flash part's registers. */
-void debug_flash_dump_registers(void);
-
 /**
  * @brief Check whether flash_init() has run.
  *
  * @return true if initialized.
  */
 bool flash_is_initialized(void);
-
-/**
- * @brief Check the device ID against the one expected for the board.
- *
- * @return true if it matches.
- */
-bool flash_is_whoami_correct(void);
-
-/**
- * @brief Get the flash size, from its device ID.
- *
- * @return Size in bytes.
- */
-size_t flash_get_size(void);
 
 /**
  * @brief Put the flash in deep power-down before entering stop mode.
@@ -296,12 +272,9 @@ uint32_t flash_crc32_legacy(uint32_t flash_addr, uint32_t length);
 /**
  * @brief Take a reference keeping the flash peripheral powered.
  *
- * Call before any flash access, including memory-mapped reads. Release with flash_release().
+ * Call before any flash access, including memory-mapped reads. Release with flash_release_many().
  */
 void flash_use(void);
-
-/** @brief Drop one reference taken with flash_use(). */
-void flash_release(void);
 
 /**
  * @brief Drop several references taken with flash_use().

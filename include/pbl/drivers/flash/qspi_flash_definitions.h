@@ -4,7 +4,7 @@
 #pragma once
 
 #include "board/board.h"
-#include <pbl/drivers/qspi.h>
+#include <pbl/drivers/qspi_definitions.h>
 #include "qspi_flash_part_definitions.h"
 
 /**
