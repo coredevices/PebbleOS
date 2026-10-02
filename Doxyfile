@@ -2488,7 +2488,32 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = __attribute__(x)=
+PREDEFINED             = __attribute__(x)= \
+                         PBL_ALWAYS_INLINE= \
+                         PBL_NOINLINE= \
+                         PBL_NORETURN= \
+                         PBL_NAKED= \
+                         PBL_DEPRECATED= \
+                         PBL_CONST_FUNC= \
+                         PBL_PURE_FUNC= \
+                         PBL_OPTIMIZE(level)= \
+                         PBL_FORMAT_PRINTF(fmt,va)= \
+                         PBL_CLEANUP(func)= \
+                         PBL_PACKED= \
+                         PBL_ALIGNED(bytes)= \
+                         PBL_USED= \
+                         PBL_UNUSED= \
+                         PBL_WEAK= \
+                         PBL_ALIAS(sym)= \
+                         PBL_EXTERNALLY_VISIBLE= \
+                         PBL_NOCOMMON= \
+                         PBL_SECTION(name)= \
+                         CONFIG_HRM=1 \
+                         CONFIG_ORIENTATION_MANAGER=1 \
+                         CONFIG_TOUCH=1 \
+                         CONFIG_WATCHDOG=1 \
+                         CONFIG_DYNAMIC_BACKLIGHT=1 \
+                         CONFIG_BACKLIGHT_HAS_COLOR=1
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
