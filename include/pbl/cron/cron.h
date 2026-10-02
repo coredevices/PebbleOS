@@ -9,151 +9,242 @@
 
 #include "pbl/util/list.h"
 
-//! @file cron.h
-//! Wall-clock based timer system. Designed for use in things such as alarms, calendar events, etc.
-//! Properly handles DST, etc.
+/**
+ * @defgroup cron Cron
+ * @ingroup subsys
+ * @brief Wall-clock timers, for alarms, calendar events and the like.
+ *
+ * A job matches a set of local times, like a crontab entry: each of the minute, hour, day of the
+ * month and month fields is a value or "any", and the days of the week are a mask. Scheduling a
+ * job computes its next matching time; the job fires once, then is unscheduled. DST transitions
+ * are handled, and clock changes recompute the execution times as configured per job.
+ *
+ * Callbacks run on the NewTimers thread, or on the caller of pbl_cron_handle_clock_change() for
+ * the jobs it finds due, without the cron lock held, so they may reschedule their own job. The
+ * job structures are owned by the caller and must stay valid while scheduled.
+ *
+ * @code{.c}
+ * static void prv_alarm_fired(struct pbl_cron_job *job, void *data) {
+ *   ...
+ *   pbl_cron_job_schedule(job);  // fire again on the next match
+ * }
+ *
+ * static struct pbl_cron_job s_alarm = {
+ *   .cb = prv_alarm_fired,
+ *   .minute = 30,
+ *   .hour = 7,
+ *   .mday = PBL_CRON_MDAY_ANY,
+ *   .month = PBL_CRON_MONTH_ANY,
+ *   .wday = PBL_CRON_WDAY_WEEKDAYS,
+ *   .clock_change_tolerance = 60,
+ * };
+ *
+ * time_t when = pbl_cron_job_schedule(&s_alarm);  // next weekday at 07:30
+ * @endcode
+ * @{
+ */
 
 struct pbl_cron_job;
 
+/**
+ * @brief Callback of a cron job.
+ *
+ * The job is already unscheduled when the callback runs.
+ *
+ * @param job Job that fired.
+ * @param data @ref pbl_cron_job::cb_data.
+ */
 typedef void (*pbl_cron_job_cb_t)(struct pbl_cron_job *job, void *data);
 
-//! Matches any possible value.
+/** @brief Any minute. */
 #define PBL_CRON_MINUTE_ANY (-1)
-#define PBL_CRON_HOUR_ANY   (-1)
-#define PBL_CRON_MDAY_ANY   (-1)
-#define PBL_CRON_MONTH_ANY  (-1)
+/** @brief Any hour. */
+#define PBL_CRON_HOUR_ANY (-1)
+/** @brief Any day of the month. */
+#define PBL_CRON_MDAY_ANY (-1)
+/** @brief Any month. */
+#define PBL_CRON_MONTH_ANY (-1)
 
-#define PBL_CRON_WDAY_SUNDAY    (1 << 0)
-#define PBL_CRON_WDAY_MONDAY    (1 << 1)
-#define PBL_CRON_WDAY_TUESDAY   (1 << 2)
+/** @brief Sunday in a day of the week mask. */
+#define PBL_CRON_WDAY_SUNDAY (1 << 0)
+/** @brief Monday in a day of the week mask. */
+#define PBL_CRON_WDAY_MONDAY (1 << 1)
+/** @brief Tuesday in a day of the week mask. */
+#define PBL_CRON_WDAY_TUESDAY (1 << 2)
+/** @brief Wednesday in a day of the week mask. */
 #define PBL_CRON_WDAY_WEDNESDAY (1 << 3)
-#define PBL_CRON_WDAY_THURSDAY  (1 << 4)
-#define PBL_CRON_WDAY_FRIDAY    (1 << 5)
-#define PBL_CRON_WDAY_SATURDAY  (1 << 6)
+/** @brief Thursday in a day of the week mask. */
+#define PBL_CRON_WDAY_THURSDAY (1 << 4)
+/** @brief Friday in a day of the week mask. */
+#define PBL_CRON_WDAY_FRIDAY (1 << 5)
+/** @brief Saturday in a day of the week mask. */
+#define PBL_CRON_WDAY_SATURDAY (1 << 6)
 
+/** @brief Monday to Friday. */
 #define PBL_CRON_WDAY_WEEKDAYS                                              \
   (PBL_CRON_WDAY_MONDAY | PBL_CRON_WDAY_TUESDAY | PBL_CRON_WDAY_WEDNESDAY | \
    PBL_CRON_WDAY_THURSDAY | PBL_CRON_WDAY_FRIDAY)
+/** @brief Saturday and Sunday. */
 #define PBL_CRON_WDAY_WEEKENDS (PBL_CRON_WDAY_SUNDAY | PBL_CRON_WDAY_SATURDAY)
-#define PBL_CRON_WDAY_ANY      (PBL_CRON_WDAY_WEEKENDS | PBL_CRON_WDAY_WEEKDAYS)
+/** @brief Every day of the week. */
+#define PBL_CRON_WDAY_ANY (PBL_CRON_WDAY_WEEKENDS | PBL_CRON_WDAY_WEEKDAYS)
 
+/** @brief Cron job. Fill in the schedule and callback, then call pbl_cron_job_schedule(). */
 struct pbl_cron_job {
-  //! internal, no touchy
+  /** Node in the list of scheduled jobs; internal. */
   ListNode list_node;
 
-  //! Cached execution timestamp in UTC.
-  //! This is set by `pbl_cron_job_schedule`, and is required to never be changed once the job has
-  //! been added.
+  /**
+   * Execution time in seconds since the epoch, set by pbl_cron_job_schedule(). Must not be
+   * changed while the job is scheduled.
+   */
   time_t cached_execute_time;
 
-  //! Callback that is called when the job fires.
+  /** Called when the job fires. */
   pbl_cron_job_cb_t cb;
+  /** Data passed to @ref cb. */
   void *cb_data;
 
-  //! Occasionally, the system gets a clock change event for various reasons:
-  //!  - User changed time-zones or a DST transition happened
-  //!  - User changed the time
-  //!  - Phone sent the current time and was different from ours, so we took theirs.
-  //! In the first case, the cron job's execute time will always be recalculated.
-  //! In the other two, we see if the time difference from the old time is >= this.
-  //! If it is, then we'll recalculate. Otherwise, we leave the calculated time alone.
-  //! In this way, 0 will always recalculate, and UINT32_MAX will never recalculate.
-  //!
-  //! Recalculating would essentially mean that a job that was "skipped over" will not fire until
-  //! the next match. If recalculation is not done, but the job was skipped over, it will fire
-  //! instantly.
-  //!
-  //! This value is specified in seconds.
+  /**
+   * Clock change, in seconds, from which the execution time is recalculated.
+   *
+   * A time zone or DST change always recalculates. A change of the time itself (set by the user
+   * or by the phone) recalculates when it is at least this large, so 0 always recalculates and
+   * UINT32_MAX never does. A recalculated job that was skipped over waits for its next match; a
+   * job that is not recalculated and was skipped over fires immediately.
+   */
   uint32_t clock_change_tolerance;
 
-  int8_t minute; //!< 0-59, or PBL_CRON_MINUTE_ANY
-  int8_t hour;   //!< 0-23, or PBL_CRON_HOUR_ANY
-  int8_t mday;   //!< 0-30, or PBL_CRON_MDAY_ANY
-  int8_t month;  //!< 0-11, or PBL_CRON_MONTH_ANY
+  /** Minute, 0 to 59, or @ref PBL_CRON_MINUTE_ANY. */
+  int8_t minute;
+  /** Hour, 0 to 23, or @ref PBL_CRON_HOUR_ANY. */
+  int8_t hour;
+  /** Day of the month, 0-based (0 to 30), or @ref PBL_CRON_MDAY_ANY. */
+  int8_t mday;
+  /** Month, 0 to 11, or @ref PBL_CRON_MONTH_ANY. */
+  int8_t month;
 
-  //! Seconds to offset the cron execution time applied after regular cron job time calculation.
-  //! For example, a cron scheduled for Monday at 0:15 with an offset of negative 30min will fire
-  //! on Sunday at 23:45.
+  /**
+   * Offset in seconds applied to the matched time. A job for Monday 0:15 with an offset of
+   * -1800 fires on Sunday at 23:45.
+   */
   int32_t offset_seconds;
 
   union {
+    /** All flags. */
     uint8_t flags;
 
     struct {
-      //! This should be any combination of PBL_CRON_WDAY_*. If zero, acts like PBL_CRON_WDAY_ANY.
+      /** Days of the week, a PBL_CRON_WDAY_ mask; 0 acts like @ref PBL_CRON_WDAY_ANY. */
       uint8_t wday : 7;
 
-      //! If this flag is set, the resulting execution time may be equal to the local epoch.
-      //! Having it set could be used for some event that must happen at the specified time even if
-      //! that time is right now.
+      /**
+       * Allow the execution time to be the current time, for events that must happen at the
+       * specified time even if that is right now.
+       */
       bool may_be_instant : 1;
     };
   };
 };
 
-//! Initialize the cron subsystem.
+/**
+ * @brief Initialize the cron subsystem.
+ */
 void pbl_cron_init(void);
 
-//! Adjust all cron jobs, as the wall clock has changed.
-//! @param utc_time_delta seconds the UTC time moved by.
-//! @param gmt_offset_delta seconds the GMT offset moved by; non-zero forces recalculation.
-//! @param dst_changed whether the DST state changed; true forces recalculation.
+/**
+ * @brief Adjust the scheduled jobs after a wall clock change.
+ *
+ * Recalculates execution times as described for @ref pbl_cron_job::clock_change_tolerance,
+ * then runs the jobs that are due.
+ *
+ * @param utc_time_delta Seconds the UTC time moved by.
+ * @param gmt_offset_delta Seconds the GMT offset moved by; non-zero forces recalculation.
+ * @param dst_changed Whether the DST state changed; true forces recalculation.
+ */
 void pbl_cron_handle_clock_change(int32_t utc_time_delta, int32_t gmt_offset_delta,
                                   bool dst_changed);
 
-//! Add a cron job. This will make the subsystem hold a reference to the specified job, so it must
-//! not leave scope or be destroyed until it is unscheduled.
-//! The job only gets scheduled once. For re-scheduling, you can call this on the job again.
-//! @param job pointer to the job to be scheduled.
-//! @returns time_t for when the job is destined to go off.
+/**
+ * @brief Schedule a job, or reschedule it if already scheduled.
+ *
+ * The job runs once, at its next matching time. The subsystem references the job until it fires
+ * or is unscheduled.
+ *
+ * @param job Job.
+ * @return Execution time, in seconds since the epoch.
+ */
 time_t pbl_cron_job_schedule(struct pbl_cron_job *job);
 
-//! Schedule a cron job to run after another cron job.
-//! This will make the subsystem hold a reference to the new job, so it must
-//! not leave scope or be destroyed until it is unscheduled.
-//! @param job pointer to the job after which we want our job to run. job must be scheduled.
-//! @param new_job pointer to the job to be scheduled. new_job must be unscheduled.
-//! @returns time_t for when the job is destined to go off.
-//! @note This API makes no guarantee that the two jobs will be scheduled back to back,
-//! only that new_job will have the same scheduled time as job and that it will trigger
-//! strictly after job.
+/**
+ * @brief Schedule a job to run right after another one.
+ *
+ * @p new_job takes the schedule of @p job and keeps its own callback and data. It fires after
+ * @p job, though not necessarily immediately after.
+ *
+ * @param job Scheduled job.
+ * @param new_job Job to schedule, not scheduled.
+ * @return Execution time, in seconds since the epoch.
+ */
 time_t pbl_cron_job_schedule_after(struct pbl_cron_job *job, struct pbl_cron_job *new_job);
 
-//! Remove a scheduled cron job.
-//! @param job pointer to the job to be unscheduled.
-//! @return true if the job was successfully removed (false may indicate no job was
-//!  scheduled at all or the cb is currently executing)
+/**
+ * @brief Unschedule a job.
+ *
+ * @param job Job.
+ * @return true if the job was removed, false if it was not scheduled (including while its
+ * callback runs).
+ */
 bool pbl_cron_job_unschedule(struct pbl_cron_job *job);
 
-//! Check if a cron job is scheduled.
-//! @param job pointer to the job to be checked for being scheduled.
-//! @returns true if scheduled or pending deletion, false otherwise
+/**
+ * @brief Check whether a job is scheduled.
+ *
+ * @param job Job.
+ * @return true if scheduled.
+ */
 bool pbl_cron_job_is_scheduled(struct pbl_cron_job *job);
 
-//! Calculate cron job's destined execution time, from the current time.
-//! @param job pointer to the job to get the execution time for.
-//! @returns time_t for when the job is destined to go off.
+/**
+ * @brief Compute the next execution time of a job from the current time.
+ *
+ * @param job Job.
+ * @return Execution time, in seconds since the epoch.
+ */
 time_t pbl_cron_job_get_execute_time(const struct pbl_cron_job *job);
 
-//! Calculate cron job's destined execution time if it were scheduled at the given time.
-//! @param job pointer to the job to get the execution time for.
-//! @param local_epoch the epoch for getting the job's execution time.
-//! @returns time_t for when the job is destined to go off.
+/**
+ * @brief Compute the next execution time of a job from a given time.
+ *
+ * @param job Job.
+ * @param local_epoch Time to compute from, in seconds since the epoch.
+ * @return Execution time, in seconds since the epoch.
+ */
 time_t pbl_cron_job_get_execute_time_from_epoch(const struct pbl_cron_job *job, time_t local_epoch);
 
 #if UNITTEST
-//! Remove all jobs.
+/** @brief Unschedule every job. Unit tests only. */
 void pbl_cron_clear_all_jobs(void);
 
-//! Clean up the cron subsystem.
+/** @brief Unschedule every job and stop the wakeup timer. Unit tests only. */
 void pbl_cron_deinit(void);
 
-//! The number of registered cron jobs.
+/**
+ * @brief Count the scheduled jobs. Unit tests only.
+ *
+ * @return Number of scheduled jobs.
+ */
 uint32_t pbl_cron_get_job_count(void);
 
-//! Run the cron timers if they've fired.
+/** @brief Run the jobs that are due. Unit tests only. */
 void pbl_cron_wakeup(void);
 
-//! Execute time of the earliest scheduled job, or 0 when none is scheduled.
+/**
+ * @brief Get the execution time of the earliest scheduled job. Unit tests only.
+ *
+ * @return Execution time, or 0 when no job is scheduled.
+ */
 time_t pbl_cron_get_next_execute_time(void);
 #endif
+
+/** @} */
