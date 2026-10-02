@@ -17,6 +17,7 @@ jobs:
         uses: actions/labeler@v6
 
   submodules:
+    name: pr-labels-submodules
     if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
     runs-on: ubuntu-24.04
     env:
@@ -54,6 +55,7 @@ jobs:
           fi
 
   blocking:
+    name: pr-labels-blocking
     needs: [label, submodules]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
