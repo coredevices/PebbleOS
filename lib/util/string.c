@@ -4,6 +4,7 @@
 #include "pbl/util/string.h"
 
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -136,9 +137,7 @@ bool convert_bt_addr_hex_str_to_bd_addr(const char *hex_str, uint8_t *bd_addr,
 }
 
 void concat_str_int(const char *str, uint32_t num, char *buf, uint8_t buf_len) {
-  uint8_t str_len = strlen(str);
-  strncpy(buf, str, str_len);
-  itoa_int(num, buf + str_len, 10);
+  snprintf(buf, buf_len, "%s%" PRIu32, str, num);
 }
 
 void toupper_str(char *str) {

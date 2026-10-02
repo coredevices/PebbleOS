@@ -110,9 +110,9 @@ bool convert_bt_addr_hex_str_to_bd_addr(const char *hex_str, uint8_t *bd_addr,
  * @brief Concatenate a string and a decimal number.
  *
  * @param str String.
- * @param num Number, formatted as a signed integer.
- * @param[out] buf Destination, large enough for @p str, 11 digits and the terminator.
- * @param buf_len Size of @p buf; not checked.
+ * @param num Number.
+ * @param[out] buf Destination, truncated and NUL-terminated if too small.
+ * @param buf_len Size of @p buf.
  */
 void concat_str_int(const char *str, uint32_t num, char *buf, uint8_t buf_len);
 
