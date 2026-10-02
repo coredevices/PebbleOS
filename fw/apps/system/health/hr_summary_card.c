@@ -234,12 +234,19 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
   };
 
   if (system_theme_is_dark_mode() && data->pulsing_heart) {
-    const uint32_t num_frames = gdraw_command_sequence_get_num_frames(data->pulsing_heart);
-    for (uint32_t i = 0; i < num_frames; i++) {
-      GDrawCommandFrame *f = gdraw_command_sequence_get_frame_by_index(data->pulsing_heart, i);
-      if (f) {
-        gdraw_command_list_iterate(gdraw_command_frame_get_command_list(f),
-                                   prv_recolor_pulsing_heart_cb, NULL);
+    // Coloring as is crashed the watch. Recolor a copy instead.
+    GDrawCommandSequence *clone = gdraw_command_sequence_clone(data->pulsing_heart);
+    if (clone) {
+      gdraw_command_sequence_destroy(data->pulsing_heart);
+      data->pulsing_heart = clone;
+
+      const uint32_t num_frames = gdraw_command_sequence_get_num_frames(data->pulsing_heart);
+      for (uint32_t i = 0; i < num_frames; i++) {
+        GDrawCommandFrame *f = gdraw_command_sequence_get_frame_by_index(data->pulsing_heart, i);
+        if (f) {
+          gdraw_command_list_iterate(gdraw_command_frame_get_command_list(f),
+                                     prv_recolor_pulsing_heart_cb, NULL);
+        }
       }
     }
   }
