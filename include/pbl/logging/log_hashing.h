@@ -1,74 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-/************************************************************************************************
- * New Logging
- *
- * The NewLogging system provides in place hashing during the compile stage of building, removing
- * logging strings from the source code and replacing them with a unique token, conserving space in
- * the firmware.
- *
- * The unique token is (well, see below) actually just a pointer to a new section in the .elf
- * named .log_strings. The .log_strings section is mapped to an unused portion of memory and
- * isn't compiled into the final firmware binary image.
- *
- * Token format:
- *   The token is actually a packed uint32_t. The format is as follows:
- *   31-29: num fmt conversions  [0-7]
- *   28-26: string index 2       [0-7], 1 based. 0 if no second string. 1-7 otherwise
- *   25-23: string index 1       [0-7], 1 based. 0 if no first string. 1-7 otherwise
- *   22-20: log level            [0-5] mapped onto LOG_LEVEL_ALWAYS through LOG_LEVEL_DEBUG_VERBOSE
- *      19: reserved
- *   18- 0: Offset info .log_strings section. This allows 512 KB of strings.
- *
- * Note: it might not be necessary to use so many bits for the log level. Dynamic flitering might
- * not be so important, and 'log to flash' could be 1 bit, or Curried to a set of function calls.
- * These changes would require more work in the logging infrastructure.
- *
- * .log_strings Section is formatted as follows:
- *  - .log_string.header: "NL<M><m>:<offset-mask>=<token-list>"
- *    where:
- *      - <M> is XX major version -- increase means not backwards compatible change
- *      - <m> is YY minor version -- increase means backwards compatible change
- *      - <offset-mask> defines the number of bits used in the token for the section offset
- *      - <token-list>: <token>:<token-list>
- *                    : '\0'
- *      - <token>: <file>
- *               : <line>
- *               : <level>
- *               : <color>
- *               : <fmt>
- *  - .log_core_number: "CORE<C>"
- *    where:
- *      - <C> is the core number. This will be two bits.
- *         For now, the primary core will be 00; the Bluetooth chip will be 01.
- *         These definitions will be different for every system -- all that matters is that they're
- *         internally consistent.
- *  - .log_string
- *    which is a list of <token-list> representing the log strings from the source code.
- *    Entries of the form "MODULE:<file>:<module-name>", emitted by PBL_LOG_MODULE_DEFINE /
- *    PBL_LOG_MODULE_DECLARE, are metadata mapping a source file to its log module; they are
- *    never referenced by a token.
- *
- * Note: this code must be compiled with -Os or the codesize will explode!
- *
- * Limitations:
- * - maximum 7 format conversions per print
- * - maximum 2 string conversions per print
- * - string parameters may not be flagged or formatted in any way --'%s' only.
- * - printing the '%' is not supported --  '%%' is not allowed.
- * - only 32 bit (or fewer) parameters currently supported automatically. Multi-word parameters
- *     require special handling.
- * - errors are not automatically detected. This will have to be done later by a script. Sorry.
- *
- * Extensions (to be implemented at some point):
- * - Colour groups/overrides
- * - MAC/BT address print: format specifier: %M/m
- * - ENUM print: %u[<enum name>]
- *
- * LogHash.dict:
- *   See https://pebbletechnology.atlassian.net/wiki/display/DEV/New+Logging.
- ***********************************************************************************************/
 #pragma once
 
 #include <stdio.h>
@@ -77,36 +9,97 @@
 #include <string.h>
 #include "pbl/kernel/compiler.h"
 
+/**
+ * @defgroup logging_log_hashing Log hashing
+ * @ingroup logging
+ * @brief Compile-time replacement of log strings by tokens (@c CONFIG_LOG_HASHED).
+ *
+ * Each PBL_LOG call site places "file:line:level:color:format" in the @c .log_strings section,
+ * which is linked at @ref LOG_STRINGS_SECTION_ADDRESS, outside the firmware image, and logs a
+ * token instead of the string. The host turns tokens back into messages with the dictionary
+ * extracted from the ELF file.
+ *
+ * Token layout:
+ * - bits 31-29: number of format conversions, 0 to 7;
+ * - bits 28-23: 1-based indices of up to two @c \%s conversions, 3 bits each, 0 for none;
+ * - bits 22-20: level, 0 to 5 for @ref LOG_LEVEL_ALWAYS to @ref LOG_LEVEL_DEBUG_VERBOSE;
+ * - bit 19: reserved;
+ * - bits 18-0: offset of the string in @c .log_strings (512 KiB).
+ *
+ * The @c .log_strings section holds:
+ * - @c .log_string.header: "NL\<major\>\<minor\>:\<offset mask\>=\<token list\>", the format
+ *   version and description of the entries;
+ * - @c .log_core_number: "CORE\<number\>", the core the strings belong to;
+ * - @c .log_string: the strings of every call site, plus "MODULE:\<file\>:\<module\>" entries
+ *   emitted by PBL_LOG_MODULE_DEFINE() and PBL_LOG_MODULE_DECLARE() that map files to log
+ *   modules and are never referenced by a token.
+ *
+ * Limitations: at most 7 conversions per message, at most 2 of them @c \%s, without flags or
+ * width; no @c \%\%; only arguments of 32 bits or less (see SPLIT_64_BIT_ARG()). Formats
+ * breaking them are not detected at build time. The code must be built with @c -Os, or the
+ * token computation is not folded.
+ * @{
+ */
+
+/** @brief Version of the @c .log_strings format, major and minor on two digits each. */
 #define NEW_LOG_VERSION "0102"
 
+/** @brief Address the @c .log_strings section is linked at; tokens are offsets from it. */
 #define LOG_STRINGS_SECTION_ADDRESS 0xC0000000
 
+/** @brief Position of the core number in a message ID. */
 #define PACKED_CORE_OFFSET 30 // 2 bits - Core number
-#define PACKED_CORE_MASK   0x03
+/** @brief Mask of the core number, 2 bits. */
+#define PACKED_CORE_MASK 0x03
 
+/** @brief Position of the number of format conversions in a token. */
 #define PACKED_NUM_FMT_OFFSET 29 // 3 bits - Number format conversions
-#define PACKED_NUM_FMT_MASK   0x07
+/** @brief Mask of the number of format conversions, 3 bits. */
+#define PACKED_NUM_FMT_MASK 0x07
+/** @brief Position of the first string conversion index in a token. */
 #define PACKED_STR1FMT_OFFSET 26 // 3 bits - indicies of string parameter 1 format conversion
-#define PACKED_STR1FMT_MASK   0x07
+/** @brief Mask of the first string conversion index, 3 bits. */
+#define PACKED_STR1FMT_MASK 0x07
+/** @brief Position of the second string conversion index in a token. */
 #define PACKED_STR2FMT_OFFSET 23 // 3 bits - indicies of string parameter 2 format conversion
-#define PACKED_STR2FMT_MASK   0x07
+/** @brief Mask of the second string conversion index, 3 bits. */
+#define PACKED_STR2FMT_MASK 0x07
+/** @brief Position of both string conversion indices in a token. */
 #define PACKED_STRFMTS_OFFSET 23 // 6 bits - indicies of string parameters 1 & 2.
-#define PACKED_STRFMTS_MASK   0x3f
-#define PACKED_LEVEL_OFFSET   20 // 3 bits  - log level
-#define PACKED_LEVEL_MASK     0x07
-#define PACKED_HASH_OFFSET    0
-#define PACKED_HASH_MASK      0x7FFFF // 19 bits - string table offset (512 KB)
+/** @brief Mask of both string conversion indices, 6 bits. */
+#define PACKED_STRFMTS_MASK 0x3f
+/** @brief Position of the packed level in a token. */
+#define PACKED_LEVEL_OFFSET 20 // 3 bits  - log level
+/** @brief Mask of the packed level, 3 bits. */
+#define PACKED_LEVEL_MASK 0x07
+/** @brief Position of the string offset in a token. */
+#define PACKED_HASH_OFFSET 0
+/** @brief Mask of the string offset, 19 bits. */
+#define PACKED_HASH_MASK 0x7FFFF // 19 bits - string table offset (512 KB)
 
+/** @brief Mask of the string indices and string offset of a message ID. */
 #define MSGID_STR_AND_HASH_MASK \
   ((PACKED_STRFMTS_MASK << PACKED_STRFMTS_OFFSET) | (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
+/** @brief Mask of the core number and string offset of a message ID. */
 #define MSGID_CORE_AND_HASH_MASK \
   ((PACKED_CORE_MASK << PACKED_CORE_OFFSET) | (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
 
 #ifndef STRINGIFY
+/**
+ * @brief Turn the argument into a string literal without expanding it.
+ *
+ * @param a Argument.
+ */
 #define STRINGIFY_NX(a) #a
-#define STRINGIFY(a)    STRINGIFY_NX(a)
+/**
+ * @brief Turn the expansion of the argument into a string literal.
+ *
+ * @param a Argument.
+ */
+#define STRINGIFY(a) STRINGIFY_NX(a)
 #endif // STRINGIFY
 
+/** @cond INTERNAL_HIDDEN */
 /* Printf Format argument checking.
  *
  * NB: it's critical that the 'if (false)' tag is included before the call to
@@ -237,3 +230,6 @@ PBL_ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const 
 
   return (offset - LOG_STRINGS_SECTION_ADDRESS);
 }
+/** @endcond */
+
+/** @} */
