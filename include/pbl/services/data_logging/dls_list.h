@@ -9,64 +9,155 @@
 #include <stdint.h>
 #include <time.h>
 
+/**
+ * @defgroup services_data_logging_dls_list Session list
+ * @ingroup services_data_logging
+ * @brief In-memory list of data logging sessions, sorted by session ID.
+ *
+ * The list is protected by a recursive mutex. Each active session also has its own mutex, taken
+ * with dls_lock_session().
+ * @{
+ */
+
+/**
+ * @brief Find a session by ID.
+ *
+ * @param session_id Session ID.
+ * @return Session, or NULL if not found.
+ */
 DataLoggingSession *dls_list_find_by_session_id(uint8_t session_id);
 
+/**
+ * @brief Find the active session with a given tag and owner.
+ *
+ * @param tag Session tag.
+ * @param app_uuid Owner UUID.
+ * @return Session, or NULL if not found.
+ */
 DataLoggingSession *dls_list_find_active_session(uint32_t tag, const Uuid *app_uuid);
 
+/**
+ * @brief Remove a session from the list and free it.
+ *
+ * @param logging_session Session to remove.
+ */
 void dls_list_remove_session(DataLoggingSession *logging_session);
 
-//! Deletes all session state in memory without changing the flash state.
+/** @brief Free all sessions in memory without touching flash. */
 void dls_list_remove_all(void);
 
-//! Add logging_session and assign ID
+/**
+ * @brief Assign a new random unique ID to a session and add it to the list.
+ *
+ * @param logging_session Session to add.
+ * @return Assigned session ID.
+ */
 uint8_t dls_list_add_new_session(DataLoggingSession *logging_session);
 
-//! Add logging session with an already assigned ID. Used at startup when restoring previous
-//! sessions from flash.
+/**
+ * @brief Add a session that already has an ID.
+ *
+ * Used at boot when restoring sessions from flash.
+ *
+ * @param logging_session Session to add.
+ */
 void dls_list_insert_session(DataLoggingSession *logging_session);
 
-//! Creates a new DataLoggingSession object that is only initialized with the parameters given. The
-//! session will only be initialized with the given parameters. The .storage and .comm members must
-//! be separately initialized. Also, the resulting object will need to be added to the list of
-//! sessions using one of dls_list_add_new_session and dls_list_insert_session. May return NULL if
-//! we've created too many sessions.
+/**
+ * @brief Allocate a session.
+ *
+ * Only the given fields are set; @ref DataLoggingSession::storage and
+ * @ref DataLoggingSession::comm must be initialized separately, and the session added with
+ * dls_list_add_new_session() or dls_list_insert_session(). Active sessions also get their
+ * @ref DataLoggingActiveState.
+ *
+ * @param tag Session tag.
+ * @param type Item type.
+ * @param size Item size in bytes.
+ * @param app_uuid Owner UUID.
+ * @param timestamp Creation time.
+ * @param status Initial status.
+ * @return Session, or NULL if there are already @c DLS_MAX_NUM_SESSIONS sessions.
+ */
 DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType type, uint16_t size,
                                             const Uuid *app_uuid, time_t timestamp,
                                             DataLoggingStatus status);
 
+/**
+ * @brief Iterate over the session list.
+ *
+ * @param cur Current session, or NULL to get the first one.
+ * @return Next session, or NULL at the end of the list.
+ */
 DataLoggingSession *dls_list_get_next(DataLoggingSession *cur);
 
+/** @brief Not implemented, use dls_storage_rebuild(). */
 void dls_list_rebuild_from_storage(void);
 
-//! Call callback for each session we have. Pass the data param through to the callback each time.
-//! If the callback returns false, stop iterating immediately and return false. Returns true
-//! otherwise.
+/**
+ * @brief Callback for dls_list_for_each_session().
+ *
+ * Called with the list mutex held, with the session and the user data. Returns false to stop
+ * iterating.
+ */
 typedef bool (*DlsListCallback)(DataLoggingSession *, void *);
+
+/**
+ * @brief Call a callback for each session, with the list mutex held.
+ *
+ * @param cb Callback.
+ * @param data User data passed to @p cb.
+ * @return false if @p cb stopped the iteration, true otherwise.
+ */
 bool dls_list_for_each_session(DlsListCallback cb, void *data);
 
+/** @brief Initialize the session list. */
 void dls_list_init(void);
 
-//! Checks to see if this is an actual valid data session
-//! Note that we pass in the logging_session parameter without making sure it's same. Make sure
-//! this function handles passing in random pointers that don't actually point to valid sessions or
-//! even valid memory.
+/**
+ * @brief Check whether a pointer refers to a session in the list.
+ *
+ * Safe to call with arbitrary pointers: only compares against the known sessions.
+ *
+ * @param logging_session Pointer to check.
+ * @return true if @p logging_session is in the list.
+ */
 bool dls_list_is_session_valid(DataLoggingSession *logging_session);
 
-//! Lock a session (if active). If session was active, locks it and returns true.
-//! If session is not active, returns false
+/**
+ * @brief Lock an active session.
+ *
+ * Must not be called with the list mutex held.
+ *
+ * @param session Session to lock.
+ * @return true if the session was active and is now locked, false if it is inactive.
+ */
 bool dls_lock_session(DataLoggingSession *session);
 
-//! Unlock a session previous locked by dls_lock_session()
+/**
+ * @brief Unlock a session locked with dls_lock_session().
+ *
+ * @param session Session to unlock.
+ * @param inactivate Inactivate the session, and free its active state, once its last lock is
+ *                   released.
+ */
 void dls_unlock_session(DataLoggingSession *session, bool inactivate);
 
-//! Return session status
+/**
+ * @brief Get the status of a session.
+ *
+ * @param session Session.
+ * @return Session status.
+ */
 DataLoggingStatus dls_get_session_status(DataLoggingSession *session);
 
-//! Assert that the current task owns the list mutex
+/** @brief Assert that the current task owns the list mutex. */
 void dls_assert_own_list_mutex(void);
 
-//! Lock the list mutex (recursive lock).
+/** @brief Lock the list mutex (recursive). */
 void dls_list_lock(void);
 
-//! Unlock the list mutex (recursive unlock)
+/** @brief Unlock the list mutex (recursive). */
 void dls_list_unlock(void);
+
+/** @} */

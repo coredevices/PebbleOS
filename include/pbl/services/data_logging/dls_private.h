@@ -19,191 +19,295 @@
 #include <stdlib.h>
 #include <time.h>
 
-// File name is formatted as: ("%s%d", DLS_FILE_NAME_PREFIX, session_id)
+/**
+ * @defgroup services_data_logging_dls_private Data logging internals
+ * @ingroup services_data_logging
+ * @brief Session structures, limits and wire format shared by the data logging service.
+ * @{
+ */
+
+/** @brief Prefix of session file names, followed by the decimal session ID. */
 #define DLS_FILE_NAME_PREFIX "dls_storage_"
+/** @brief Size of a buffer holding a session file name. */
 static const uint32_t DLS_FILE_NAME_MAX_LEN = 20;
+/** @brief Initial size of a session file. */
 static const uint32_t DLS_FILE_INIT_SIZE_BYTES = PBL_KIB(4);
 
-// Limits on how much free space we try to reserver for a session file
+/**
+ * @brief Minimum free space added when a session file grows.
+ *
+ * A file grows by half its unread data, clamped to this and @ref DLS_MAX_FILE_FREE_BYTES.
+ */
 static const uint32_t DLS_MIN_FILE_FREE_BYTES = PBL_KIB(8);
+/** @brief Maximum free space added when a session file grows. */
 static const uint32_t DLS_MAX_FILE_FREE_BYTES = PBL_KIB(100);
 
-// Min amount of available space at the end of a file before we decide to grow it
+/** @brief Free space left at the end of a session file below which the file is grown. */
 static const uint32_t DLS_MIN_FREE_BYTES = PBL_KIB(1);
 
-// Max # of sessions we allow
+/** @brief Maximum number of sessions. */
 static const uint32_t DLS_MAX_NUM_SESSIONS = 20;
 
-// Maximum total amount of storage we are allowed to use on the file system.
+/** @brief Maximum file system space used by all session files. */
 static const uint32_t DLS_TOTAL_STORAGE_BYTES = PBL_KIB(640);
 
-// Maximum amount of space allowed for data over and above the minimum allotment per session
+/** @brief Space available to session files beyond their initial size. */
 #define DLS_MAX_DATA_BYTES \
   (DLS_TOTAL_STORAGE_BYTES - (DLS_MAX_NUM_SESSIONS * DLS_FILE_INIT_SIZE_BYTES))
 
+/** @brief Session status. */
 typedef enum {
-  //! A session is active when it's first created and it's still being logged to.
+  /** Created and still being logged to. */
   DataLoggingStatusActive = 0x01,
-  //! A session is inactive when we have data to spool to the phone but the app that created the
-  //! session has since closed or the app has closed it by calling dls_finish.
+  /** Closed by its owner, or its owner exited; remaining data is still sent to the phone. */
   DataLoggingStatusInactive = 0x02,
 } DataLoggingStatus;
 
-// Endpoint commands
+/** @brief Data logging endpoint commands. */
 typedef enum {
+  /** Watch opens a session. */
   DataLoggingEndpointCmdOpen = 0x01,
+  /** Watch sends session data, see @ref DataLoggingSendDataMessage. */
   DataLoggingEndpointCmdData = 0x02,
+  /** Watch closes a session. */
   DataLoggingEndpointCmdClose = 0x03,
+  /** Phone reports the sessions it knows about. */
   DataLoggingEndpointCmdReport = 0x04,
+  /** Phone acknowledges an open or data message. */
   DataLoggingEndpointCmdAck = 0x05,
+  /** Phone rejects an open or data message. */
   DataLoggingEndpointCmdNack = 0x06,
+  /** Watch reports that an ack was not received in time. */
   DataLoggingEndpointCmdTimeout = 0x07,
+  /** Phone asks to send a session's data now. */
   DataLoggingEndpointCmdEmptySession = 0x08,
+  /** Phone asks whether sending is enabled. */
   DataLoggingEndpointCmdGetSendEnableReq = 0x09,
+  /** Watch answers @ref DataLoggingEndpointCmdGetSendEnableReq. */
   DataLoggingEndpointCmdGetSendEnableRsp = 0x0A,
+  /** Phone enables or disables sending. */
   DataLoggingEndpointCmdSetSendEnable = 0x0B,
 } DataLoggingEndpointCmd;
 
-//! Every command starts off with a 8-bit command byte. Commands from the phone will have their
-//! top bit set, where commands from watch will have the top bit cleared. See
-//! DataLoggingEndpointCmd for the values of the other 7 bits.
+/**
+ * @brief Mask of the command in the first byte of an endpoint message.
+ *
+ * The top bit is set in commands from the phone and clear in commands from the watch.
+ */
 static const uint8_t DLS_ENDPOINT_CMD_MASK = 0x7f;
 
+/** @brief Value of @ref DataLoggingSessionStorage::fd when the session has no open file. */
 #define DLS_INVALID_FILE (-1)
+/** @brief Location of a session's data in its file. */
 typedef struct DataLoggingSessionStorage {
-  //! Handle to the pfs file we are using. Set to DLS_INVALID_FILE if no storage yet
+  /** PFS file descriptor, or @ref DLS_INVALID_FILE when not open. */
   int fd;
 
-  //! Which byte offset in the file we are writing to
+  /** File offset of the next write. */
   uint32_t write_offset;
 
-  //! Which byte offset in the file we are reading from
+  /** File offset of the next read. */
   uint32_t read_offset;
 
-  //! Number of unread bytes in storage
+  /** Number of unread bytes. */
   uint32_t num_bytes;
 } DataLoggingSessionStorage;
 
-// Our little comm state machine...
-//
-//     +----------+  Rx Ack    +----------+    Tx Data   +----------+
-//     | Opening  |----------->| Idle     |+------------>| Sending  |
-//     +----------+            +----------+              +----------+
-//                                  ^                         |
-//                                  |       Rx Ack            |
-//                                  +-------------------------+
-
+/**
+ * @brief Endpoint state of a session.
+ *
+ * @verbatim
+    +----------+  Rx Ack    +----------+    Tx Data   +----------+
+    | Opening  |----------->| Idle     |+------------>| Sending  |
+    +----------+            +----------+              +----------+
+                                 ^                         |
+                                 |       Rx Ack            |
+                                 +-------------------------+
+   @endverbatim
+ */
 typedef enum {
-  //! The session is opening and waiting for the phone to acknowledge our open command.
+  /** Waiting for the phone to ack the open message. */
   DataLoggingSessionCommStateOpening,
-  //! The session is idle, ready to send data
+  /** Ready to send data. */
   DataLoggingSessionCommStateIdle,
-  //! The session has sent data to the phone and is waiting for an ack
+  /** Waiting for the phone to ack sent data. */
   DataLoggingSessionCommStateSending,
 } DataLoggingSessionCommState;
 
+/** @brief Endpoint state of a session. */
 typedef struct {
-  //! A session ID that is chosen by the watch and is unique to all the session IDs that the
-  //! watch knows about.
+  /** Session ID, chosen by the watch and unique among its sessions. */
   uint8_t session_id;
 
+  /** Endpoint state. */
   DataLoggingSessionCommState state : 8;
 
-  //! The number of times this session got nacked
+  /** Number of times the phone nacked this session. */
   uint8_t nack_count;
 
-  //! How many bytes we've sent to the phone that haven't been acked yet.
+  /** Bytes sent to the phone and not acked yet. */
   int num_bytes_pending;
 
-  //! The time in RtcTicks at which the current state will timeout while waiting for an ack. Set
-  //! to zero if we're not waiting for one.
+  /** Time in RTC ticks at which the pending ack times out, 0 when not waiting for one. */
   RtcTicks ack_timeout;
 } DataLoggingSessionComm;
 
-//! Information needed while a session is active (watch app still adding more data).
+/** @brief State of an active session. */
 typedef struct {
+  /** Session lock, see dls_lock_session(). */
   struct pbl_mutex mutex;
-  struct pbl_shared_cbuf buffer; //! A data buffer
+  /** Circular buffer of a buffered session. */
+  struct pbl_shared_cbuf buffer;
+  /** Reader of @ref buffer, consumed by KernelBG. */
   struct pbl_shared_cbuf_client buffer_client;
-  uint8_t *buffer_storage; //! Storage for the buffer
-  //! true if buffer_storage is in kernel heap, else it's in dls_create() caller's heap
+  /** Storage of @ref buffer, NULL for unbuffered sessions. */
+  uint8_t *buffer_storage;
+  /** @ref buffer_storage is on the kernel heap, else on the heap of the dls_create() caller. */
   bool buffer_in_kernel_heap : 1;
-  //! bool used to rate control how often we ask the system task to write us out to flash.
+  /** A flash write has been requested from KernelBG and not run yet. */
   bool write_request_pending : 1;
-  //! bool used to record the fact that a session should be inactivated once it is unlocked
-  //! (by dls_unlock_session())
+  /** Inactivate the session once its last lock is released, see dls_unlock_session(). */
   bool inactivate_pending : 1;
-  //! Incremented/decremented under global list mutex. This structure can only be freed up when
-  //! this reaches 0.
+  /** Number of locks held, changed under the list mutex. The state is freed only at 0. */
   uint8_t open_count;
 } DataLoggingActiveState;
 
-//! Data logging session metadata, struct in memory
+/** @brief Data logging session. */
 typedef struct DataLoggingSession {
   // FIXME use a ListNode instead of this custom list
-  struct DataLoggingSession *next; //!< The next logging_session in the linked list
+  /** Next session in the list. */
+  struct DataLoggingSession *next;
 
+  /** Owner UUID. */
   Uuid app_uuid;
+  /** Session tag. */
   uint32_t tag;
+  /** Task that created the session. */
   PebbleTask task;
 
+  /** Item type. */
   DataLoggingItemType item_type : 4;
+  /** Session status. */
   DataLoggingStatus status : 4;
+  /** Item size in bytes. */
   uint16_t item_size;
 
-  // A timestamp of when this session was first created.
+  /** Creation time. */
   time_t session_created_timestamp;
 
+  /** Endpoint state. */
   DataLoggingSessionComm comm;
 
+  /** Flash storage state. */
   DataLoggingSessionStorage storage;
 
-  //! This pointer only allocated for active sessions
+  /** Active state, NULL for inactive sessions. */
   DataLoggingActiveState *data;
 } DataLoggingSession;
 
+/**
+ * @brief Send the next chunk of a session's stored data to the phone.
+ *
+ * Must be called from KernelBG. Removes inactive sessions with no data left. Active sessions are
+ * only sent when they hold enough data, unless @p empty is set.
+ *
+ * @param logging_session Session.
+ * @param empty Send even if little data is stored.
+ * @return false on unexpected errors, true otherwise (including when nothing was sent).
+ */
 bool dls_private_send_session(DataLoggingSession *logging_session, bool empty);
 
-//! Must be called on the system task
-//! @param data unused
+/**
+ * @brief Reset the endpoint state of all sessions after a disconnection.
+ *
+ * Must be called from KernelBG.
+ *
+ * @param data Unused.
+ */
 void dls_private_handle_disconnect(void *data);
 
-//! Get/Set the current send_enable setting
+/**
+ * @brief Not implemented, use dls_get_send_enable().
+ *
+ * @return Send enable setting.
+ */
 bool dls_private_get_send_enable(void);
+/**
+ * @brief Not implemented, use dls_set_send_enable_pp().
+ *
+ * @param setting Send enable setting.
+ */
 void dls_private_set_send_enable(bool setting);
 
+/** @brief Data message, sent with @ref DataLoggingEndpointCmdData. */
 typedef struct PBL_PACKED {
+  /** @ref DataLoggingEndpointCmdData. */
   uint8_t command;
+  /** Session ID. */
   uint8_t session_id;
+  /** Items left after this message; currently always 0xffff. */
   uint32_t items_left_hereafter;
+  /** Legacy CRC-32 of @ref bytes. */
   uint32_t crc32;
+  /** Whole items. */
   uint8_t bytes[];
 } DataLoggingSendDataMessage;
 
-//! Size of the buffer we create for buffered sessions. This is the largest item size allowed
-//! for buffered sessions.
+/** @brief Largest item size, and largest dls_log() write, for buffered sessions. */
 static const uint32_t DLS_SESSION_MAX_BUFFERED_ITEM_SIZE = 300;
 
-//! Size of the buffer we create for buffered sessions. This must be 1 bigger than
-//! DLS_SESSION_MAX_BUFFERED_ITEM_SIZE because we build a circular buffer out of it
+/**
+ * @brief Size of a buffered session's buffer.
+ *
+ * One byte more than @ref DLS_SESSION_MAX_BUFFERED_ITEM_SIZE, as needed by the circular buffer.
+ */
 #define DLS_SESSION_MIN_BUFFER_SIZE (DLS_SESSION_MAX_BUFFERED_ITEM_SIZE + 1)
 
-//! Max payload we can send when we send logging data to the phone. This is the largest item
-//! size allowed for non-buffered sessions.
+/** @brief Largest data message payload, and largest item size for unbuffered sessions. */
 static const uint32_t DLS_ENDPOINT_MAX_PAYLOAD =
     (COMM_MAX_OUTBOUND_PAYLOAD_SIZE - sizeof(DataLoggingSendDataMessage));
 
-//! Unit tests only
+/**
+ * @brief Read session data, for unit tests only.
+ *
+ * @param logging_session Session.
+ * @param[out] buffer Destination.
+ * @param num_bytes Maximum number of bytes to read.
+ * @return See dls_storage_read().
+ */
 int dls_test_read(DataLoggingSession *logging_session, uint8_t *buffer, int num_bytes);
 
-//! Unit tests only
+/**
+ * @brief Consume session data, for unit tests only.
+ *
+ * @param logging_session Session.
+ * @param num_bytes Number of bytes to consume.
+ * @return @p num_bytes.
+ */
 int dls_test_consume(DataLoggingSession *logging_session, int num_bytes);
 
-//! Unit tests only
+/**
+ * @brief Get the number of unread bytes, for unit tests only.
+ *
+ * @param logging_session Session.
+ * @return Unread bytes.
+ */
 int dls_test_get_num_bytes(DataLoggingSession *logging_session);
 
-//! Unit tests only
+/**
+ * @brief Get the session tag, for unit tests only.
+ *
+ * @param logging_session Session.
+ * @return Session tag.
+ */
 int dls_test_get_tag(DataLoggingSession *logging_session);
 
-//! Unit tests only
+/**
+ * @brief Get the session ID, for unit tests only.
+ *
+ * @param logging_session Session.
+ * @return Session ID.
+ */
 uint8_t dls_test_get_session_id(DataLoggingSession *logging_session);
+
+/** @} */

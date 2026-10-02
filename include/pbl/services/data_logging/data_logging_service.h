@@ -7,82 +7,190 @@
 #include "pbl/util/uuid.h"
 #include "kernel/pebble_tasks.h"
 
-//! This can be helpful when debugging. It changes the behavior of data logging to send any
-//! stored data to the phone immediately after every dls_log()
-//! Another helpful testing feature is that doing a long press on any item in the launcher menu will
-//! also trigger a flush of all data logging data to the phone
+/**
+ * @defgroup services_data_logging Data logging
+ * @ingroup services
+ * @brief Sessions of fixed-size items persisted to flash and spooled to the phone.
+ *
+ * A session is identified by a tag and the UUID of its owner (@c UUID_SYSTEM for system
+ * services). Logged items are stored in a PFS file per session and sent to the phone over the
+ * data logging endpoint every few minutes, or right away when the session is finished.
+ *
+ * Buffered sessions copy items into a RAM circular buffer that KernelBG writes to flash, so
+ * logging does not block. Unbuffered sessions write to flash directly and may only be used from
+ * KernelBG.
+ *
+ * @code{.c}
+ * DataLoggingSession *s = dls_create(DlsSystemTagActivitySession, DATA_LOGGING_BYTE_ARRAY,
+ *                                    sizeof(struct record), true, false, &(Uuid)UUID_SYSTEM);
+ * if (s) {
+ *   if (dls_log(s, &record, 1) != DATA_LOGGING_SUCCESS) {
+ *     // dropped
+ *   }
+ *   dls_finish(s);
+ * }
+ * @endcode
+ *
+ * Defining @c DLS_DEBUG_SEND_IMMEDIATELY sends stored data to the phone after every dls_log(). A
+ * long press on any launcher menu item also flushes all sessions.
+ * @{
+ */
+
 // #define DLS_DEBUG_SEND_IMMEDIATELY
 
 struct DataLoggingSession;
+/** @brief Data logging session handle. */
 typedef struct DataLoggingSession DataLoggingSession;
 
-//! List of tags used by system services. These are all registered with a uuid of UUID_SYSTEM
+/** @brief Tags used by system services, all registered with @c UUID_SYSTEM. */
 typedef enum {
+  /** Device analytics heartbeat. */
   DlsSystemTagAnalyticsDeviceHeartbeat = 78,
+  /** App analytics heartbeat. */
   DlsSystemTagAnalyticsAppHeartbeat = 79,
+  /** Analytics event. */
   DlsSystemTagAnalyticsEvent = 80,
+  /** Activity minute data. */
   DlsSystemTagActivityMinuteData = 81,
+  /** Raw accelerometer samples. */
   DlsSystemTagActivityAccelSamples = 82,
+  /** Activity sessions. */
   DlsSystemTagActivitySession = 84,
+  /** Protobuf log sessions, see @ref services_protobuf_log. */
   DlsSystemTagProtobufLogSession = 85,
   // Tag 86 is retired; do not reuse.
+  /** Native analytics heartbeat. */
   DlsSystemTagAnalyticsNativeHeartbeat = 87,
 } DlsSystemTag;
 
-//! Init the data logging service. Called by the system at boot time.
+/**
+ * @brief Initialize the data logging service.
+ *
+ * Called at boot. Rebuilds the sessions stored in flash and starts the periodic flush.
+ */
 void dls_init(void);
 
-//! Return true if data logging initialized
+/**
+ * @brief Check whether dls_init() has run.
+ *
+ * @return true if data logging is initialized.
+ */
 bool dls_initialized(void);
 
-//! The nuclear option! Clear out all data logging state in memory as well as on the flash storage.
+/** @brief Delete all sessions, both in memory and in flash. */
 void dls_clear(void);
 
-//! Pause the data logging service
+/** @brief Stop the periodic flush of sessions to the phone. */
 void dls_pause(void);
 
-//! Resume the data logging service.
+/** @brief Restart the periodic flush of sessions to the phone. */
 void dls_resume(void);
 
-//! Find any sessions that the given task may have left in the DataLoggingStatusActive state and
-//! moves them forcibly to the inactive state. This may result in data loss if the buffers haven't
-//! been flushed to flash yet.
+/**
+ * @brief Inactivate all non-system sessions created by a task.
+ *
+ * Used when the task exits. Data still in a session's RAM buffer may be lost; data already in
+ * flash is still sent to the phone.
+ *
+ * @param task Task whose sessions are inactivated.
+ */
 void dls_inactivate_sessions(PebbleTask task);
 
-//! Create a new session using the UUID of the current process. This always creates a buffered
-//! session. Unless this is the worker task, buffer must be allocated by the caller and must be at
-//! least DLS_SESSION_BUFFER_SIZE bytes large. It will be freed by the data logging service when the
-//! session is closed if this method returns no error. The worker task can optionally pass NULL for
-//! buffer and the buffer will be allocated in the system heap for it by the data logging service.
+/**
+ * @brief Create a buffered session owned by the current process.
+ *
+ * @param tag Session tag.
+ * @param item_type Type of the logged items.
+ * @param item_size Size of one item in bytes, at most @c DLS_SESSION_MAX_BUFFERED_ITEM_SIZE.
+ * @param buffer Buffer of at least @c DLS_SESSION_MIN_BUFFER_SIZE bytes, freed by the service
+ *               when the session is closed. May be NULL only from the worker or kernel tasks,
+ *               in which case the buffer is allocated on the kernel heap.
+ * @param resume Reuse an active session with the same tag and UUID instead of finishing it.
+ * @return Session, or NULL on invalid parameters or too many sessions.
+ */
 DataLoggingSession *dls_create_current_process(uint32_t tag, DataLoggingItemType item_type,
                                                uint16_t item_size, void *buffer, bool resume);
 
-//! Create a new session
+/**
+ * @brief Create a session.
+ *
+ * Integer items must be 1, 2 or 4 bytes wide.
+ *
+ * @param tag Session tag.
+ * @param item_type Type of the logged items.
+ * @param item_size Size of one item in bytes.
+ * @param buffered Use a RAM buffer allocated on the kernel heap. Buffered sessions may be created
+ *                 from the worker or kernel tasks, unbuffered ones only from KernelBG.
+ * @param resume Reuse an active session with the same tag and UUID instead of finishing it.
+ * @param uuid Owner UUID.
+ * @return Session, or NULL on invalid parameters or too many sessions.
+ */
 DataLoggingSession *dls_create(uint32_t tag, DataLoggingItemType item_type, uint16_t item_size,
                                bool buffered, bool resume, const Uuid *uuid);
 
-//! Append data to a logging session. Buffered sessions log asynchronously. Non buffered ones block.
+/**
+ * @brief Append items to a session.
+ *
+ * Buffered sessions copy the data and return; unbuffered ones write it to flash before returning.
+ * Must not be called with the Bluetooth lock held.
+ *
+ * @param s Session.
+ * @param data Items to log.
+ * @param num_items Number of items in @p data.
+ * @retval DATA_LOGGING_SUCCESS Data logged.
+ * @retval DATA_LOGGING_INVALID_PARAMS @p num_items is 0, or the data does not fit in the buffer.
+ * @retval DATA_LOGGING_CLOSED The session is not active.
+ * @retval DATA_LOGGING_BUSY Not enough room in the session buffer.
+ * @retval DATA_LOGGING_INTERNAL_ERR Writing to flash failed.
+ */
 DataLoggingResult dls_log(DataLoggingSession *s, const void *data, uint32_t num_items);
 
-//! Finish up a session
+/**
+ * @brief Finish a session.
+ *
+ * Waits up to one second for buffered data to reach flash, inactivates the session and triggers a
+ * send of all sessions. The session is deleted once all its data has been sent.
+ *
+ * @param s Session.
+ */
 void dls_finish(DataLoggingSession *s);
 
-//! Checks to see if this is an actual valid data session.
-//! Note that we pass in the logging_session parameter without making sure it's the same. Make sure
-//! this function handles passing in random pointers that don't actually point to valid sessions or
-//! even valid memory.
+/**
+ * @brief Check whether a pointer refers to an existing session.
+ *
+ * Safe to call with arbitrary pointers: only compares against the known sessions.
+ *
+ * @param logging_session Pointer to check.
+ * @return true if @p logging_session is a known session.
+ */
 bool dls_is_session_valid(DataLoggingSession *logging_session);
 
-//! Triggers data logging to immediately send all stored data to the phone rather than wait for the
-//! next regular minute heartbeat. As a testing aid, a long press on any item in the launcher menu
-//! calls into this method.
+/**
+ * @brief Send all stored data to the phone now instead of at the next periodic flush.
+ *
+ * Does nothing when sending is disabled.
+ */
 void dls_send_all_sessions(void);
 
-//! Get the send_enable setting
+/**
+ * @brief Check whether sending to the phone is enabled.
+ *
+ * @return true if enabled by both the phone and the run level.
+ */
 bool dls_get_send_enable(void);
 
-//! Set the send_enable setting for PebbleProtocol
+/**
+ * @brief Enable or disable sending, as requested by the phone.
+ *
+ * @param setting true to enable.
+ */
 void dls_set_send_enable_pp(bool setting);
 
-//! Set the send_enable setting for Run Level
+/**
+ * @brief Enable or disable sending, as requested by the run level.
+ *
+ * @param setting true to enable.
+ */
 void dls_set_send_enable_run_level(bool setting);
+
+/** @} */
