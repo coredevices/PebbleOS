@@ -8,142 +8,218 @@
 
 #include "pbl/util/uuid.h"
 
-// -------------------------------------------------------------------------------------------------
-// Types and functions that a transport should use to manage the session:
+/**
+ * @defgroup services_comm_session_session_transport Transport interface
+ * @ingroup services_comm_session
+ * @brief Interface between sessions and the transports that carry them.
+ * @{
+ */
 
-//! Opaque type (can be anything)
+/** @brief Opaque transport context, defined by each transport. */
 typedef struct Transport Transport;
 
-//! Pointer to function implementing the sending of data that is enqueued in the send buffer
+/**
+ * @brief Send data enqueued in the session's send queue.
+ *
+ * @param transport Transport context.
+ */
 typedef void (*TransportSendNext)(Transport *transport);
 
-//! Pointer to function implementing the closing of the transport
-//! @note This is called by session.c in case there is a conflict: multiple transports for the
-//! 'system' destination. In this case, the older one will be closed. The transport MUST call
-//! comm_session_close() before returning from this call.
+/**
+ * @brief Close the transport.
+ *
+ * Called when another transport opens a system session; the older one is closed. The
+ * transport must call comm_session_close() before returning.
+ *
+ * @param transport Transport context.
+ */
 typedef void (*TransportClose)(Transport *transport);
 
-//! Pointer to function implementing the resetting of the transport.
+/**
+ * @brief Reset the transport.
+ *
+ * @param transport Transport context.
+ */
 typedef void (*TransportReset)(Transport *transport);
 
-//! Pointer to function which calls the appropriate connection speed API
-//! exported by bt_conn_mgr
+/**
+ * @brief Request a connection response time through the Bluetooth connection manager.
+ *
+ * @param transport Transport context.
+ * @param consumer Consumer making the request.
+ * @param state Requested response time state.
+ * @param max_period_secs Maximum time to stay in @p state.
+ * @param granted_handler Called once the state is granted. May be NULL.
+ */
 typedef void (*TransportSetConnectionResponsiveness)(
     Transport *transport, enum pbl_bt_consumer consumer, enum pbl_bt_response_time_state state,
     uint16_t max_period_secs, pbl_bt_responsiveness_granted_cb_t granted_handler);
 
-//! Pointer to function which returns the UUID of the app that the transport connects to.
+/**
+ * @brief Get the UUID of the app the transport connects to.
+ *
+ * @param transport Transport context.
+ * @return App UUID, or NULL if not known.
+ */
 typedef const Uuid *(*TransportGetUUID)(Transport *transport);
 
+/**
+ * @brief Get the transport type.
+ *
+ * @param transport Transport context.
+ * @return Transport type.
+ */
 typedef CommSessionTransportType (*TransportGetType)(Transport *transport);
 
-//! Pointer to function that schedules a callback to send data over the transport.
+/**
+ * @brief Schedule a callback that sends data over the transport.
+ *
+ * @param session Session with data to send.
+ * @return True if the callback was scheduled.
+ */
 typedef bool (*TransportSchedule)(CommSession *session);
 
+/**
+ * @brief Check whether the current task is the one TransportSchedule runs callbacks on.
+ *
+ * @param transport Transport context.
+ * @return True if called from that task.
+ */
 typedef bool (*TransportScheduleTask)(Transport *transport);
 
-//! Set of function pointers that the session can use to call back to the transport
+/** @brief Callbacks the session uses to drive its transport. */
 typedef struct TransportImplementation {
-  //! Pointer to function of that will trigger the transport to send out any newly enqueued data
-  //! from the send buffer. bt_lock() is held when this call is made. The implementation must be
-  //! able to handle send_next() getting called but having no data in the send buffer. (This is to
-  //! allow some implementations to flush out other types of data during the call)
+  /**
+   * Send newly enqueued data. Called with bt_lock() held; must cope with an empty send queue
+   * (it may flush other data, e.g. acks).
+   */
   TransportSendNext send_next;
 
+  /** Close the transport. NULL if it cannot be closed from the watch (iAP). */
   TransportClose close;
+  /** Reset the transport. */
   TransportReset reset;
+  /** Set the connection response time. */
   TransportSetConnectionResponsiveness set_connection_responsiveness;
 
-  //! This field is allowed to be NULL if the transport is not UUID-aware.
+  /** Get the connected app UUID. NULL if the transport is not UUID-aware. */
   TransportGetUUID get_uuid;
 
+  /** Get the transport type. */
   TransportGetType get_type;
 
-  //! Pointer to function that schedules a callback to send data over the transport.
-  //! When left NULL, pbl_bt_comm_schedule_send_next_job() will be used instead.
-  //! @note When providing a function, .schedule_task must be provided as well!
+  /**
+   * Schedule a send callback. When NULL, pbl_bt_comm_schedule_send_next_job() is used.
+   * Requires @ref is_current_task_schedule_task when set.
+   */
   TransportSchedule schedule;
+  /** Check whether the current task runs @ref schedule callbacks. */
   TransportScheduleTask is_current_task_schedule_task;
 } TransportImplementation;
 
-//! The "destination" of the transport
+/** @brief Whose traffic a transport carries. */
 typedef enum TransportDestination {
-  //! The transport carries Pebble Protocol solely for the "system", for example:
-  //! iSPP/iAP with Pebble iOS App.
+  /** Only the system, e.g. iAP with the Pebble iOS app. */
   TransportDestinationSystem,
 
-  //! The transport carries Pebble Protocol solely for a Pebble app, for example:
-  //! iSPP/iAP with 3rd party native iOS App and PebbleKit iOS.
+  /** Only one Pebble app, e.g. iAP with a third party iOS app using PebbleKit iOS. */
   TransportDestinationApp,
 
-  //! The transport carries Pebble Protocol for both the "system" and "app", for example:
-  //! Plain SPP with Pebble Android App.
+  /** Both system and apps, e.g. plain SPP with the Pebble Android app. */
   TransportDestinationHybrid,
 } TransportDestination;
 
-// -------------------------------------------------------------------------------------------------
-// Open & Close
-
-//! Called by a transport to open/create a Pebble Protocol session for it.
-//! @param transport Opaque reference to the underlying serial transport
-//! @param implementation Function pointers implementing the transport (e.g. to send data)
-//! @param destination Whether the transport carries Pebble Protocol for the "system", a 3rd
-//! party app, or both (see \ref TransportDestination).
-//! @return True if the session was opened successfully, false if not
-//! bt_lock() is expected to be taken by the caller!
+/**
+ * @brief Open a session on a transport.
+ *
+ * Opening a system or hybrid session closes an existing system session, unless either is
+ * PULSE. The caller must hold bt_lock().
+ *
+ * @param transport Transport context.
+ * @param implementation Transport callbacks.
+ * @param destination Whose traffic the transport carries.
+ * @return The new session, or NULL on failure (out of memory, or an existing system session
+ *         that cannot be closed).
+ */
 CommSession *comm_session_open(Transport *transport, const TransportImplementation *implementation,
                                TransportDestination destination);
 
-//! Called by the transport to indicate that the session associated with the given transport needs
-//! to be closed and cleaned up.
-//! bt_lock() is expected to be taken by the caller!
-//! @param session The session to close.
-//! @param reason For analytics tracking.
+/**
+ * @brief Close a session and release its resources.
+ *
+ * The caller must hold bt_lock().
+ *
+ * @param session Session to close.
+ * @param reason Close reason, for analytics.
+ */
 void comm_session_close(CommSession *session, CommSessionCloseReason reason);
 
-// -------------------------------------------------------------------------------------------------
-// Receiving
-
-//! Called by the transport to copy received data from a given buffer into the receive buffer.
-//! @note bt_lock() is expected to be taken by the caller!
+/**
+ * @brief Feed received bytes into the session's receive router.
+ *
+ * The caller must hold bt_lock().
+ *
+ * @param session Receiving session.
+ * @param data Received bytes.
+ * @param data_size Length of @p data in bytes.
+ */
 void comm_session_receive_router_write(CommSession *session, const uint8_t *data, size_t data_size);
 
-// -------------------------------------------------------------------------------------------------
-// Sending
-
-//! @note bt_lock() is expected to be taken by the caller!
-//! @return The total size in bytes, of all the messages in the queue.
+/**
+ * @brief Get the total length of all queued outbound data.
+ *
+ * The caller must hold bt_lock().
+ *
+ * @param session Session to query.
+ * @return Length in bytes.
+ */
 size_t comm_session_send_queue_get_length(const CommSession *session);
 
-//! Copies bytes from the send buffer into another buffer.
-//! @param session The session whose send queue to copy from
-//! @param start_offset The offset into the send buffer
-//! @param length The number of bytes to copy
-//! @param[out] data_out Pointer to the buffer into which to copy the data
-//! @return The number of bytes copied
-//! @note To avoid making a copy, consider using comm_session_send_queue_get_read_pointer().
-//! @note The caller must ensure there is enough data available, for example by getting the length
-//! by calling comm_session_send_queue_get_length().
-//! @note bt_lock() is expected to be taken by the caller!
+/**
+ * @brief Copy queued outbound data.
+ *
+ * The caller must ensure enough data is queued (see comm_session_send_queue_get_length()) and
+ * hold bt_lock(). comm_session_send_queue_get_read_pointer() avoids the copy.
+ *
+ * @param session Session to read from.
+ * @param start_offset Offset into the queued data.
+ * @param length Number of bytes to copy.
+ * @param[out] data_out Destination buffer.
+ * @return Number of bytes copied.
+ */
 size_t comm_session_send_queue_copy(CommSession *session, uint32_t start_offset, size_t length,
                                     uint8_t *data_out);
 
-//! Gets a read pointer and the number of bytes that can be read from the read pointer.
-//! @note Internally, a non-contiguous buffer is used, so it is possible that there is more data
-//! to read. To access the entire contents, call this function and comm_session_send_queue_consume()
-//! repeatedly until it returns zero.
-//! @param session The session whose send queue to read from
-//! @param data_out Pointer to the pointer to assign the read pointer to.
-//! @return The number of bytes that can be read starting at the read pointer.
+/**
+ * @brief Get a pointer to the next contiguous chunk of queued data.
+ *
+ * The queue is not contiguous: call this and comm_session_send_queue_consume() repeatedly
+ * until it returns 0 to access all data.
+ *
+ * @param session Session to read from.
+ * @param[out] data_out Read pointer.
+ * @return Number of bytes readable at @p data_out.
+ */
 size_t comm_session_send_queue_get_read_pointer(const CommSession *session,
                                                 const uint8_t **data_out);
 
-//! @note bt_lock() is expected to be taken by the caller!
+/**
+ * @brief Remove sent data from the queue, freeing completed jobs.
+ *
+ * The caller must hold bt_lock().
+ *
+ * @param session Session whose queue to consume.
+ * @param length Number of bytes sent.
+ */
 void comm_session_send_queue_consume(CommSession *session, size_t length);
 
-//! Schedule a KernelBG callback to the send_next function of the transport, if needed.
-//! In case a callback is already pending, this function is a no-op.
-//! If, by the time the callback executes, the send buffer is empty, no callback to send_next will
-//! be made either.
-//! @note bt_lock() is expected to be taken by the caller!
+/**
+ * @brief Schedule a call to the transport's send_next().
+ *
+ * No-op if a call is already pending. The caller must hold bt_lock().
+ *
+ * @param session Session with data to send.
+ */
 void comm_session_send_next(CommSession *session);
+
+/** @} */

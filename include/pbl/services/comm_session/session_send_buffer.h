@@ -5,46 +5,72 @@
 
 #include "pbl/services/comm_session/session.h"
 
+/**
+ * @defgroup services_comm_session_session_send_buffer Send buffers
+ * @ingroup services_comm_session
+ * @brief Build an outbound message piecemeal in a kernel-heap buffer.
+ *
+ * @code{.c}
+ * SendBuffer *sb = comm_session_send_buffer_begin_write(session, endpoint_id, sizeof(hdr) + len,
+ *                                                       COMM_SESSION_DEFAULT_TIMEOUT);
+ * if (sb) {
+ *   comm_session_send_buffer_write(sb, (const uint8_t *)&hdr, sizeof(hdr));
+ *   comm_session_send_buffer_write(sb, body, len);
+ *   comm_session_send_buffer_end_write(sb);
+ * }
+ * @endcode
+ * @{
+ */
+
+/** @brief Opaque buffer holding one outbound message. */
 typedef struct SendBuffer SendBuffer;
 
-//! @return The maximum number of bytes that a client can copy into a CommSessionSendBuffer, or
-//! zero if the session is invalid (e.g. disconnected in the mean time).
+/**
+ * @brief Get the largest payload a send buffer can hold.
+ *
+ * @param session Destination session.
+ * @return Maximum payload length in bytes, or 0 if @p session is not valid.
+ */
 size_t comm_session_send_buffer_get_max_payload_length(const CommSession *session);
 
-//! Creates a kernel-heap allocated buffer for outbound messages.
-//! This will block if the required space is not yet available.
-//! If you want to avoid the allocation on the kernel-heap, use comm_session_send_queue_add_job()
-//! directly.
-//! @see comm_session_send_data for a simpler, one-liner interface to send data.
-//! @note Remember to call comm_session_send_buffer_end_write when you're done.
-//! @note bt_lock() MUST NOT be held when making the call. For ..._write and ..._end_write it
-//! is fine if bt_lock() is held.
-//! @param session The session to which the message should be sent.
-//! @param endpoint_id The Pebble Protocol endpoint ID to send the message to.
-//! @param required_free_length The number of bytes of free space the caller needs at minumum. Once
-//! the function returns with `true`, the amount of space (or more) is guaranteed to be available.
-//! @param timeout_ms The maximum duration to wait for the send buffer to become available with the
-//! required number of bytes of free space.
-//! @return True if the "writer access" was successfully acquired, false otherwise.
+/**
+ * @brief Allocate a kernel-heap buffer for an outbound message.
+ *
+ * Blocks until enough space is available or the timeout expires. Must be followed by
+ * comm_session_send_buffer_end_write(). bt_lock() must not be held. Use
+ * comm_session_send_queue_add_job() to avoid the kernel-heap allocation, or
+ * comm_session_send_data() to send a message in one call.
+ *
+ * @param session Destination session.
+ * @param endpoint_id Pebble Protocol endpoint ID.
+ * @param required_free_length Payload space in bytes guaranteed to be available on success.
+ * @param timeout_ms Maximum time to wait for the space.
+ * @return Send buffer, or NULL on timeout, if the length exceeds the maximum payload, or if
+ *         @p session is not valid.
+ */
 SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
                                                  size_t required_free_length, uint32_t timeout_ms);
 
-//! Copies data into the send buffer of the session.
-//! @note The caller must have called comm_session_send_buffer_begin_write() first.
-//! @note bt_lock() may be held when making the call.
-//! @param send_buffer The send buffer of the session for which to enqueue data
-//! @param data Pointer to the data to enqueue
-//! @param length Length of the data to enqueue
-//! @return true if the data was successfully queued up for sending, or false if there was not
-//! enough space left in the send buffer to enqueue the data. Note that the `required_free_length`
-//! as passed into comm_session_send_buffer_begin_write() is guaranteed. Nonetheless, callers can
-//! try to stash in more data than `required_free_length` but will need to handle the return value
-//! of this function when it does attempt to write more than `required_free_length`.
+/**
+ * @brief Append payload data to a send buffer.
+ *
+ * bt_lock() may be held.
+ *
+ * @param send_buffer Buffer from comm_session_send_buffer_begin_write().
+ * @param data Data to append.
+ * @param length Length of @p data in bytes.
+ * @return True if appended; false if it does not fit. Writes within the
+ *         @c required_free_length passed to comm_session_send_buffer_begin_write() always fit.
+ */
 bool comm_session_send_buffer_write(SendBuffer *send_buffer, const uint8_t *data, size_t length);
 
-//! Finish writing to the send buffer. Any enqueued data will be transmitted after this call,
-//! to the session that was passed in the ..._begin_write() call.
-//! @note The caller must have called comm_session_send_buffer_begin_write() first.
-//! @note bt_lock() may be held when making the call.
-//! @param send_buffer The send buffer to release.
+/**
+ * @brief Finish a message and queue it for sending.
+ *
+ * Ownership of @p send_buffer passes to the send queue. bt_lock() may be held.
+ *
+ * @param send_buffer Buffer from comm_session_send_buffer_begin_write().
+ */
 void comm_session_send_buffer_end_write(SendBuffer *send_buffer);
+
+/** @} */

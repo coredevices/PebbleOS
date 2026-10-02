@@ -8,91 +8,140 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct CommSession CommSession;
+/**
+ * @defgroup services_comm_session_session_receive_router Receive router
+ * @ingroup services_comm_session
+ * @brief Inbound message parsing and dispatch to endpoint handlers.
+ *
+ * Endpoints are declared in @c fw/services/comm_session/protocol_endpoints_table.json.
+ * @{
+ */
 
-//! Pebble Protocol endpoint handler.
-//! @see protocol_endpoints_table.json
+/** @cond INTERNAL_HIDDEN */
+typedef struct CommSession CommSession;
+/** @endcond */
+
+/**
+ * @brief Pebble Protocol endpoint handler.
+ *
+ * @param session Session the message arrived on.
+ * @param data Message payload.
+ * @param length Length of @p data in bytes.
+ */
 typedef void (*PebbleProtocolEndpointHandler)(CommSession *session, const uint8_t *data,
                                               size_t length);
 
+/** @brief Who may send messages to an endpoint. */
 typedef enum {
-  PebbleProtocolAccessPublic = 1 << 0,  // reserved for 3rd party phone apps
-  PebbleProtocolAccessPrivate = 1 << 1, // reserved for Pebble phone app
-  PebbleProtocolAccessAny = ~0,         // anyone is allowed
+  /** Third party phone apps. */
+  PebbleProtocolAccessPublic = 1 << 0,
+  /** The Pebble mobile app. */
+  PebbleProtocolAccessPrivate = 1 << 1,
+  /** Anyone. */
+  PebbleProtocolAccessAny = ~0,
+  /** No one. */
   PebbleProtocolAccessNone = 0,
 } PebbleProtocolAccess;
 
+/** @brief Message receiver implementation, see struct ReceiverImplementation. */
 typedef struct ReceiverImplementation ReceiverImplementation;
 
-//! The info associated with a single Pebble Protocol endpoint.
-//! @see protocol_endpoints_table.json
+/** @brief A single Pebble Protocol endpoint. */
 typedef struct PebbleProtocolEndpoint {
+  /** Endpoint ID. */
   uint16_t endpoint_id;
+  /** Handler for complete messages. */
   PebbleProtocolEndpointHandler handler;
+  /** Senders allowed to use the endpoint. */
   PebbleProtocolAccess access_mask;
+  /** Receiver that buffers the endpoint's messages. */
   const ReceiverImplementation *receiver_imp;
+  /** Optional receiver configuration, passed to the receiver. */
   const void *receiver_opt;
 } PebbleProtocolEndpoint;
 
-//! Opaque type, can be anything, up to ReceiverImplementation what it actually contains.
-//! Receiver is the context associated with a messages that is currently being received and only
-//! that one message. At any time a message is being received by a CommSession, there is a
-//! one-to-one relationship between that CommSession and the Receiver, because messages cannot be
-//! interleaved inside one Pebble Protocol data stream.
-//! @see ReceiverImplementation
+/**
+ * @brief Opaque context of the message currently being received.
+ *
+ * Its contents are up to the @ref ReceiverImplementation. Messages are not interleaved within
+ * one session, so each session has at most one Receiver at a time.
+ */
 typedef struct Receiver Receiver;
 
-//! A ReceiverImplementation is responsible for creating a Receiver context (see "prepare"),
-//! buffering inbound message payload data (see "write") and finally scheduling the execution of
-//! the endpoint handler (see "finish").
-//! A ReceiverImplementation can be specific to the endpoint, for example, Put Bytes has a special
-//! receiver implementation, because of the big buffer it requires.
-//! However, a ReceiverImplementation can also be shared amongst multiple endpoints, which makes
-//! sense if the buffering needs for a set of endpoints are equal or very similar.
-//! @note There can be multiple CommSessions writing (partial) messages concurrently.
-//! The receiver is responsible for dealing with this. So if the messages are collected in one big
-//! circular buffer, it will have to take special measures to allow another CommSession to start
-//! writing something while another CommSession's message has not been fully received yet.
-//! @note All functions must be implemented, none of the function pointers can point to NULL.
+/**
+ * @brief Buffers inbound message payloads and schedules endpoint handlers.
+ *
+ * A receiver creates a Receiver context (prepare), buffers payload data (write) and schedules
+ * the endpoint handler (finish). It can be specific to one endpoint (Put Bytes needs a large
+ * buffer) or shared by endpoints with similar buffering needs.
+ *
+ * Several sessions may be writing partial messages concurrently; the receiver must handle
+ * that. All callbacks are mandatory.
+ */
 typedef struct ReceiverImplementation {
-  //! Prepares a Receiver context.
-  //! If there is not enough space left to be able to buffer the complete payload, NULL can be
-  //! returned to drop/ignore the message.
-  //! @param receiver_opt Optional per-endpoint configuration for the receiver, assigned through
-  //! protocol_endpoints_table.json.
+  /**
+   * @brief Prepare a Receiver context for a new message.
+   *
+   * The endpoint's @c receiver_opt is available through @p endpoint.
+   *
+   * @param session Session receiving the message.
+   * @param endpoint Destination endpoint.
+   * @param total_payload_length Payload length in bytes.
+   * @return Receiver context, or NULL to drop the message (e.g. not enough space).
+   */
   Receiver *(*prepare)(CommSession *session, const PebbleProtocolEndpoint *endpoint,
                        size_t total_payload_length);
 
-  //! Writes payload data of the current message to the Receiver context.
+  /**
+   * @brief Write payload data of the current message.
+   *
+   * @param receiver Receiver context.
+   * @param data Payload data.
+   * @param length Length of @p data in bytes.
+   */
   void (*write)(Receiver *receiver, const uint8_t *data, size_t length);
 
-  //! Indicates the complete payload data of the current message has been written.
-  //! When "finish" is called, execution of the endpoint handler should be scheduled by the
-  //! implementation. The implementation should also take care of cleaning up the Receiver context.
+  /**
+   * @brief Signal that the whole payload has been written.
+   *
+   * Schedules the endpoint handler and releases the Receiver context.
+   *
+   * @param receiver Receiver context.
+   */
   void (*finish)(Receiver *receiver);
 
-  //! Called when the session is closed, to clean up the Receiver context.
-  //! The message will be discarded and not be delivered to the endpoint handler.
+  /**
+   * @brief Discard the current message because the session closed.
+   *
+   * Releases the Receiver context without calling the endpoint handler.
+   *
+   * @param receiver Receiver context.
+   */
   void (*cleanup)(Receiver *receiver);
 } ReceiverImplementation;
 
-//! ReceiveRouter contains the state associated with parsing the Pebble Protocol header.
-//! This module will call the ReceiverImplementation to buffer and process the message payload.
+/**
+ * @brief Pebble Protocol header parsing state of a session.
+ *
+ * Payloads are handed to the endpoint's @ref ReceiverImplementation.
+ */
 typedef struct ReceiveRouter {
-  //! Total number of bytes received for the current message so far, including the header.
+  /** Bytes received for the current message so far, including the header. */
   uint16_t bytes_received;
 
-  //! Number of inbound bytes that should be ignored after the current point.
+  /** Number of upcoming inbound bytes to ignore. */
   uint16_t bytes_to_ignore;
 
-  //! Expected payload length of the current message in bytes.
+  /** Payload length of the current message in bytes. */
   uint16_t msg_payload_length;
 
-  //! In case the number of bytes received was less than the length of the header,
-  //! this buffer will be used to store those few bytes that were received.
+  /** Partially received header bytes. */
   uint8_t header_buffer[sizeof(PebbleProtocolHeader)];
 
-  //! Receiver of the current message.
+  /** Receiver implementation of the current message. */
   const ReceiverImplementation *receiver_imp;
+  /** Receiver context of the current message. */
   Receiver *receiver;
 } ReceiveRouter;
+
+/** @} */

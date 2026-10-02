@@ -6,13 +6,34 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/util/uuid.h"
 
-//! @param capability The capability to check for.
-//! @returns True if the session for the current application supports the capability of interest.
-//! If the session is currently not connected, it will use cached data. If no cache exists
-//! and the session is not connected, false will be returned.
+/**
+ * @defgroup services_comm_session_app_session_capabilities App session capability cache
+ * @ingroup services_comm_session
+ * @brief Per-app cache of app session capabilities, persisted in a settings file.
+ * @{
+ */
+
+/**
+ * @brief Check whether the current app's session supports a capability.
+ *
+ * When the app session is connected its capabilities are used and the cache is refreshed;
+ * otherwise the cached value is used.
+ *
+ * @param capability Capability to look for.
+ * @return True if supported; false if not, or if disconnected with nothing cached.
+ */
 bool comm_session_current_app_session_cache_has_capability(CommSessionCapability capability);
 
-//! Removes the cached app session capabilities for app with specified uuid.
+/**
+ * @brief Remove the cached capabilities of an app.
+ *
+ * @param app_uuid UUID of the app.
+ */
 void comm_session_app_session_capabilities_evict(const Uuid *app_uuid);
 
+/**
+ * @brief Initialize the cache, compacting its settings file.
+ */
 void comm_session_app_session_capabilities_init(void);
+
+/** @} */

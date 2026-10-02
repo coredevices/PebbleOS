@@ -13,37 +13,50 @@
 
 #include <stdbool.h>
 
-typedef struct SessionSendQueueJob SessionSendQueueJob;
+/**
+ * @defgroup services_comm_session_session_internal Session internals
+ * @ingroup services_comm_session
+ * @brief Session state, for the session module and its transports.
+ * @{
+ */
 
-//! Data structure representing a Pebble Protocol communication session.
-//! There can be multiple. For example, with the iAP transport, the Pebble app has a session and
-//! 3rd party apps share another separate session as well. With PPoGATT, the Pebble app has its own
-//! session, but each 3rd party app has its own session as well.
+/** @cond INTERNAL_HIDDEN */
+typedef struct SessionSendQueueJob SessionSendQueueJob;
+/** @endcond */
+
+/**
+ * @brief Pebble Protocol communication session.
+ *
+ * With iAP, the Pebble app has one session and third party apps share another. With PPoGATT,
+ * the Pebble app and each third party app have their own session.
+ */
 typedef struct CommSession {
+  /** Node in the list of open sessions. */
   ListNode node;
 
-  //! The underlying transport responsible for actually sending and receiving the Pebble Protocol
-  //! data. This can be SPP, iAP (see ispp.c), PPoGATT (see ppogatt.c) or QEMU (qemu_transport.c).
+  /** Transport carrying the session (SPP, iAP, PPoGATT, QEMU or PULSE). */
   Transport *transport;
 
-  //! Set of function pointers that the session uses to call back to the transport.
+  /** Callbacks into the transport. */
   const TransportImplementation *transport_imp;
 
-  //! True if a Kernel BG callback has been scheduled to call transport_imp->send_next()
+  /** True if a callback to the transport's send_next() is already scheduled. */
   bool is_send_next_call_pending;
 
-  //! True if the session is a system session (connected to the Pebble mobile app).
+  /** Whether the session serves the system, an app, or both. */
   TransportDestination destination;
 
-  // Extensions supported by the mobile endpoint, see
-  // https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=491698
+  /** Capabilities announced by the phone. */
   CommSessionCapability protocol_capabilities;
 
-  //! The send queue of this session. See session_send_queue.c
+  /** Head of the send queue. */
   SessionSendQueueJob *send_queue_head;
 
+  /** Inbound message parser state. */
   ReceiveRouter recv_router;
 
-  //! Absolute number of ticks since session opened.
+  /** RTC ticks when the session was opened. */
   RtcTicks open_ticks;
 } CommSession;
+
+/** @} */
