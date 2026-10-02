@@ -701,7 +701,7 @@ static void prv_last_updated_update(const LayoutLayer *layout,
 GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *layout,
                                                         const LayoutNodeConfig *config) {
   if (config->type != LayoutNodeType_Vertical) {
-    return timeline_layout_create_card_view_from_config(layout, config);
+    return layout_create_text_node_from_config(&layout->layout_layer, config);
   }
   LayoutNodeVerticalConfig vertical_config = *(LayoutNodeVerticalConfig *)config;
   const bool has_last_updated =
