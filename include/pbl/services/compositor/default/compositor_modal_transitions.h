@@ -5,9 +5,22 @@
 
 #include "pbl/services/compositor/compositor.h"
 
-//! @file compositor_modal_transitions.h
-//! Allows a user to create and configure compositor transition animations for modals.
+/**
+ * @defgroup services_compositor_default_compositor_modal_transitions Modal transitions
+ * @ingroup services_compositor_default
+ * @brief Transitions pushing and popping modal windows on color displays.
+ * @{
+ */
 
-//! @param modal_is_destination Whether the animation should animate to the modal or not
-//! @return \ref CompositorTransition for the requested modal animation
+/**
+ * @brief Get the transition to or from a modal window.
+ *
+ * Contracts to or expands from a ring, using PDC sequences on rectangular displays (none in
+ * PRF).
+ *
+ * @param modal_is_destination Whether the transition goes to the modal.
+ * @return Transition.
+ */
 const CompositorTransition *compositor_modal_transition_to_modal_get(bool modal_is_destination);
+
+/** @} */

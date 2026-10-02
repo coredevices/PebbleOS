@@ -18,32 +18,72 @@
 
 #include "applib/graphics/gdraw_command_sequence.h"
 
-//! @return Whether an app-to-app compositor animation should be skipped (e.g. if a modal is
-//!         being displayed)
+/**
+ * @defgroup services_compositor_compositor_transitions Transitions
+ * @ingroup services_compositor
+ * @brief Ready-made compositor transitions and helpers to build new ones.
+ *
+ * Including this header pulls in the transitions available on the platform (see
+ * @ref services_compositor_default and @ref services_compositor_legacy). Each getter returns a
+ * @ref CompositorTransition to pass to compositor_transition(); app-to-app getters return NULL
+ * when compositor_transition_app_to_app_should_be_skipped() says so, which switches without
+ * animation.
+ *
+ * @code{.c}
+ * const CompositorTransition *transition =
+ *     compositor_shutter_transition_get(CompositorTransitionDirectionLeft, GColorRed);
+ * compositor_transition(transition);
+ * @endcode
+ * @{
+ */
+
+/**
+ * @brief Check whether app-to-app transitions should be skipped.
+ *
+ * @return true if an opaque modal window covers the app, so the transition would not be seen.
+ */
 bool compositor_transition_app_to_app_should_be_skipped(void);
 
-//! Return a new normalized distance that represents the provided distance as a new normalized
-//! distance between the new start and end. `normalized` must be between start_distance and
-//! end_distance if you want a valid result.
+/**
+ * @brief Rescale animation progress to a sub-interval.
+ *
+ * @param time_normalized Progress to rescale, expected between @p interval_start and
+ *                        @p interval_end.
+ * @param interval_start Progress mapped to 0.
+ * @param interval_end Progress mapped to @c ANIMATION_NORMALIZED_MAX.
+ * @return Progress relative to the interval.
+ */
 AnimationProgress animation_timing_scaled(AnimationProgress time_normalized,
                                           AnimationProgress interval_start,
                                           AnimationProgress interval_end);
 
-//! Draw the next frame of the provided PDC sequence using the given options
-//! @param ctx The graphics context to use to draw the frame
-//! @param sequence The PDC sequence whose frame you want to draw
-//! @param distance_normalized The normalized distance for the current moment in the animation
-//! @param chroma_key_color The color to replace with the app's frame buffer
-//! @param stroke_color The color to use when drawing the stroke of the ring in the frame
-//! @param overdraw_color The color to use when "overdrawing" areas of the frame with no app content
-//!        (e.g. flip/flop animations need to draw the right color beyond the edges of the app face)
-//! @param inner If true, draw the app frame buffer inside the ring, otherwise outside
-//! @param framebuffer_offset Visual offset of the app frame buffer
+/**
+ * @brief Draw the frame of a PDC sequence for the current point of a transition.
+ *
+ * Does nothing if @p sequence is NULL. The sequence's red strokes are drawn with
+ * @p stroke_color.
+ *
+ * @param ctx Graphics context to draw into.
+ * @param sequence PDC sequence whose frame to draw.
+ * @param distance_normalized Animation progress, 0 to @c ANIMATION_NORMALIZED_MAX.
+ * @param chroma_key_color Color to replace with the app framebuffer, only used when @p inner.
+ * @param stroke_color Color for the stroke of the ring in the frame.
+ * @param overdraw_color Color for areas of the frame without app content (e.g. flip animations
+ *                       must draw the right color beyond the edges of the app face).
+ * @param inner If true, draw the app framebuffer inside the ring, otherwise outside.
+ * @param framebuffer_offset Visual offset of the app framebuffer. Currently ignored.
+ */
 void compositor_transition_pdcs_animation_update(GContext *ctx, GDrawCommandSequence *sequence,
                                                  uint32_t distance_normalized,
                                                  GColor chroma_key_color, GColor stroke_color,
                                                  GColor overdraw_color, bool inner,
                                                  const GPoint *framebuffer_offset);
 
-//! Draw implementation that can be used to fill lines with the contents of the app framebuffer
+/**
+ * @brief Draw implementation filling lines with the contents of the app framebuffer.
+ *
+ * Swap it into a graphics context to make fill operations reveal the app.
+ */
 extern const GDrawRawImplementation g_compositor_transitions_app_fb_draw_implementation;
+
+/** @} */

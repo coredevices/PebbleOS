@@ -5,17 +5,31 @@
 
 #include "applib/graphics/graphics.h"
 
-//! @file compositor_private.h
-//!
-//! Useful helpful function to help out implementing compositor animations
+/**
+ * @addtogroup services_compositor
+ * @{
+ */
 
-//! Trigger the app framebuffer to be copied to the system framebuffer
 void compositor_render_app(void);
 
-//! Trigger the modal window to be rendered to the system framebuffer
 void compositor_render_modal(void);
 
-//! A GPathDrawFilledCallback that can be used to fill pixels with the app's framebuffer
+/**
+ * @brief GPathDrawFilledCallback filling a span with the app framebuffer.
+ *
+ * Copies the matching pixels of the app framebuffer into the span, for transitions that reveal
+ * the app through a path.
+ *
+ * @param ctx Graphics context being drawn into.
+ * @param y Row of the span.
+ * @param x_range_begin Start of the span.
+ * @param x_range_end End of the span.
+ * @param delta_begin Unused.
+ * @param delta_end Unused.
+ * @param user_data Optional `const GPoint *` offset of the app framebuffer, or NULL.
+ */
 void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y, Fixed_S16_3 x_range_begin,
                                               Fixed_S16_3 x_range_end, Fixed_S16_3 delta_begin,
                                               Fixed_S16_3 delta_end, void *user_data);
+
+/** @} */
