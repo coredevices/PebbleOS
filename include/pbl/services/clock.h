@@ -17,16 +17,21 @@
  * language. Entities shared with the app SDK are documented in the SDK's Wall Time group.
  */
 
-//! @addtogroup Foundation
-//! @{
-//!   @addtogroup WallTime Wall Time
-//!   \brief Functions, data structures and other things related to wall clock time.
-//!
-//! This module contains utilities to get the current time and create strings with formatted
-//! dates and times.
-//!   @{
+/**
+ * @addtogroup Foundation
+ * @{
+ */
 
-//! The maximum length for a timezone full name (e.g. America/Chicago)
+/**
+ * @addtogroup WallTime Wall Time
+ * @brief Functions, data structures and other things related to wall clock time.
+ *
+ * This module contains utilities to get the current time and create strings with formatted
+ * dates and times.
+ * @{
+ */
+
+/** The maximum length for a timezone full name (e.g. America/Chicago) */
 #define TIMEZONE_NAME_LENGTH 32
 /**
  * @ingroup services_clock
@@ -49,16 +54,24 @@
  */
 #define TIME_STRING_DAY_DATE_LENGTH 3
 
-//! Weekday values
+/** @brief Weekday values */
 typedef enum {
-  TODAY = 0, //!< Today
-  SUNDAY,    //!< Sunday
-  MONDAY,    //!< Monday
-  TUESDAY,   //!< Tuesday
-  WEDNESDAY, //!< Wednesday
-  THURSDAY,  //!< Thursday
-  FRIDAY,    //!< Friday
-  SATURDAY,  //!< Saturday
+  /** Today */
+  TODAY = 0,
+  /** Sunday */
+  SUNDAY,
+  /** Monday */
+  MONDAY,
+  /** Tuesday */
+  TUESDAY,
+  /** Wednesday */
+  WEDNESDAY,
+  /** Thursday */
+  THURSDAY,
+  /** Friday */
+  FRIDAY,
+  /** Saturday */
+  SATURDAY,
 } WeekDay;
 
 /**
@@ -117,11 +130,15 @@ size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minu
  */
 size_t clock_copy_time_string_timestamp(char *buffer, uint8_t size, time_t timestamp);
 
-//! Copies a time string into the buffer, formatted according to the user's time display preferences
-//! (such as 12h/24h time). Example results: "7:30" or "15:00".
-//! @note AM/PM are also outputted with the time if the user's preference is 12h time.
-//! @param[out] buffer A pointer to the buffer to copy the time string into
-//! @param size The maximum size of buffer
+/**
+ * @brief Copies a time string into the buffer, formatted according to the user's time display
+ * preferences (such as 12h/24h time).
+ *
+ * Example results: "7:30" or "15:00".
+ * @note AM/PM are also outputted with the time if the user's preference is 12h time.
+ * @param[out] buffer A pointer to the buffer to copy the time string into
+ * @param size The maximum size of buffer
+ */
 void clock_copy_time_string(char *buffer, uint8_t size);
 
 /**
@@ -171,9 +188,11 @@ void clock_get_event_relative_time_string(char *number_buffer, int number_buffer
                                           char *word_buffer, int word_buffer_size, time_t timestamp,
                                           uint16_t duration, time_t current_day, bool all_day);
 
-//! Gets the user's 12/24h clock style preference.
-//! @return `true` if the user prefers 24h-style time display or `false` if the
-//! user prefers 12h-style time display.
+/**
+ * @brief Gets the user's 12/24h clock style preference.
+ * @return `true` if the user prefers 24h-style time display or `false` if the
+ * user prefers 12h-style time display.
+ */
 bool clock_is_24h_style(void);
 
 /**
@@ -184,8 +203,10 @@ bool clock_is_24h_style(void);
  */
 void clock_set_24h_style(bool is_24h_style);
 
-//! Checks if timezone is currently set, otherwise gmtime == localtime.
-//! @return `true` if timezone has been set, false otherwise
+/**
+ * @brief Checks if timezone is currently set, otherwise gmtime == localtime.
+ * @return `true` if timezone has been set, false otherwise
+ */
 bool clock_is_timezone_set(void);
 
 /**
@@ -268,13 +289,18 @@ void clock_set_timezone_by_region_id(uint16_t region_id);
  */
 void clock_set_time(time_t utc_time);
 
-//! Converts a (day, hour, minute) specification to a UTC timestamp occurring in the future
-//! Always returns a timestamp for the next occurring instance,
-//! example: specifying TODAY@14:30 when it is 14:40 will return a timestamp for 7 days from
-//! now at 14:30
-//! @param day WeekDay day of week including support for specifying TODAY
-//! @param hour hour specified in 24-hour format [0-23]
-//! @param minute minute [0-59]
+/**
+ * @brief Converts a (day, hour, minute) specification to a UTC timestamp occurring in the future.
+ *
+ * Always returns a timestamp for the next occurring instance,
+ * example: specifying TODAY@14:30 when it is 14:40 will return a timestamp for tomorrow at
+ * 14:30, while specifying the current day of the week will return a timestamp for 7 days from
+ * now.
+ * @param day WeekDay day of week including support for specifying TODAY
+ * @param hour hour specified in 24-hour format [0-23]
+ * @param minute minute [0-59]
+ * @return UTC timestamp of the next occurrence.
+ */
 time_t clock_to_timestamp(WeekDay day, int hour, int minute);
 
 /**
@@ -399,8 +425,9 @@ size_t clock_get_month_named_abbrev_date(char *buffer, size_t buffer_size, time_
 void clock_get_until_time_capitalized(char *buffer, int buf_size, time_t timestamp,
                                       int max_relative_hrs);
 
-//!   @} // end addtogroup WallTime
-//! @} // end addtogroup Foundation
+/** @} */
+
+/** @} */
 
 /**
  * @addtogroup services_clock

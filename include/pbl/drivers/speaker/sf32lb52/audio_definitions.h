@@ -54,13 +54,17 @@ typedef struct AudioState {
   uint32_t playback_time;
   bool playback_started;
   bool running;
-  //! Set while a prv_audio_trans_bg refill callback is queued on the system
-  //! task; the DMA ISR must not enqueue another until it has run.
+  /**
+   * Set while a prv_audio_trans_bg refill callback is queued on the system
+   * task; the DMA ISR must not enqueue another until it has run.
+   */
   volatile bool callback_pending;
   uint8_t volume;
-  //! Raw (unaligned) pointer returned by kernel_malloc for the AUDCODEC DAC
-  //! DMA buffer. haudcodec->buf[] is bumped up to a cache-line boundary so
-  //! dcache_flush() of one half can't touch the other half's lines.
+  /**
+   * Raw (unaligned) pointer returned by kernel_malloc for the AUDCODEC DAC
+   * DMA buffer. haudcodec->buf[] is bumped up to a cache-line boundary so
+   * dcache_flush() of one half can't touch the other half's lines.
+   */
   uint8_t *raw_dac_buffer;
 #ifdef CONFIG_SPEAKER_SF32LB_DIAGNOSTICS
   volatile uint32_t diagnostic_refills;

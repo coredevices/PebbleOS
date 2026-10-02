@@ -163,9 +163,11 @@ int32_t integer_sqrt(int64_t x);
  * The -Wtype-limits flag generated an error with the previous IS_SIGNED macro.
  * If an unsigned number was passed in the macro would check if the unsigned number was less than 0.
  */
-//! Determine whether a variable is signed or not.
-//! @param var The variable to evaluate.
-//! @return true if the variable is signed.
+/**
+ * Determine whether a variable is signed or not.
+ * @param var The variable to evaluate.
+ * @return true if the variable is signed.
+ */
 #define IS_SIGNED(var)                                                                       \
   (PBL_CHOOSE_EXPR(                                                                          \
       PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned char), false,                           \

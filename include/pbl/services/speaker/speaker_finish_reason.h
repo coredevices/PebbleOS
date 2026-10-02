@@ -3,10 +3,14 @@
 
 #pragma once
 
-//! Reason reported when speaker playback ends.
+/** @brief Reason reported when speaker playback ends. */
 typedef enum {
-  SpeakerFinishReasonDone = 0,  //!< Playback completed naturally
-  SpeakerFinishReasonStopped,   //!< Playback was stopped by the app
-  SpeakerFinishReasonPreempted, //!< Preempted by higher priority source
-  SpeakerFinishReasonError,     //!< An error occurred
+  /** Playback completed naturally */
+  SpeakerFinishReasonDone = 0,
+  /** Playback was stopped by the app */
+  SpeakerFinishReasonStopped,
+  /** Preempted by higher priority source */
+  SpeakerFinishReasonPreempted,
+  /** An error occurred */
+  SpeakerFinishReasonError,
 } SpeakerFinishReason;

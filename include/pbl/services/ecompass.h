@@ -5,37 +5,44 @@
 
 #include "pbl/services/battery/battery_monitor.h"
 
-//! Represents an angle relative to get to a reference direction, e.g. (magnetic) north.
-//! The angle value is scaled linearly, such that a value of TRIG_MAX_ANGLE
-//! corresponds to 360 degrees or 2 PI radians.
-//! Thus, if heading towards north, north is 0, west is TRIG_MAX_ANGLE/4,
-//! south is TRIG_MAX_ANGLE/2, and so on.
+/**
+ * @brief Represents an angle relative to get to a reference direction, e.g. (magnetic) north.
+ *
+ * The angle value is scaled linearly, such that a value of TRIG_MAX_ANGLE
+ * corresponds to 360 degrees or 2 PI radians.
+ * Thus, if heading towards north, north is 0, west is TRIG_MAX_ANGLE/4,
+ * south is TRIG_MAX_ANGLE/2, and so on.
+ */
 typedef int32_t CompassHeading;
 
-//! Enum describing the current state of the Compass Service
+/** @brief Enum describing the current state of the Compass Service */
 typedef enum {
-  //! The Compass Service is unavailable.
+  /** The Compass Service is unavailable. */
   CompassStatusUnavailable = -1,
-  //! Compass is calibrating: data is invalid and should not be used
-  //! Data will become valid once calibration is complete
+  /**
+   * Compass is calibrating: data is invalid and should not be used
+   * Data will become valid once calibration is complete
+   */
   CompassStatusDataInvalid = 0,
-  //! Compass is calibrating: the data is valid but the calibration is still being refined
+  /** Compass is calibrating: the data is valid but the calibration is still being refined */
   CompassStatusCalibrating,
-  //! Compass data is valid and the calibration has completed
+  /** Compass data is valid and the calibration has completed */
   CompassStatusCalibrated
 } CompassStatus;
 
-//! Structure containing a single heading towards magnetic and true north.
+/** @brief Structure containing a single heading towards magnetic and true north. */
 typedef struct {
-  //! Measured angle that increases counter-clockwise from magnetic north
-  //! (use `int clockwise_heading = TRIG_MAX_ANGLE - heading_data.magnetic_heading;`
-  //! for example to find your heading clockwise from magnetic north).
+  /**
+   * Measured angle that increases counter-clockwise from magnetic north
+   * (use `int clockwise_heading = TRIG_MAX_ANGLE - heading_data.magnetic_heading;`
+   * for example to find your heading clockwise from magnetic north).
+   */
   CompassHeading magnetic_heading;
-  //! Currently same value as magnetic_heading (reserved for future implementation).
+  /** Currently same value as magnetic_heading (reserved for future implementation). */
   CompassHeading true_heading;
-  //! Indicates the current state of the Compass Service calibration.
+  /** Indicates the current state of the Compass Service calibration. */
   CompassStatus compass_status;
-  //! Currently always false (reserved for future implementation).
+  /** Currently always false (reserved for future implementation). */
   bool is_declination_valid;
 } CompassHeadingData;
 

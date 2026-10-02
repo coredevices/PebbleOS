@@ -3,26 +3,34 @@
 
 #pragma once
 
-//! @addtogroup UI
-//! @{
-//!   @addtogroup Clicks
-//!   \brief Dealing with button input
-//!   @{
+/**
+ * @addtogroup UI
+ * @{
+ */
 
-//! Button ID values
-//! @see \ref click_recognizer_get_button_id()
+/**
+ * @addtogroup Clicks
+ * @brief Dealing with button input
+ * @{
+ */
+
+/**
+ * @brief Button ID values
+ * @see click_recognizer_get_button_id()
+ */
 typedef enum {
-  //! Back button
+  /** Back button */
   BUTTON_ID_BACK = 0,
-  //! Up button
+  /** Up button */
   BUTTON_ID_UP,
-  //! Select (middle) button
+  /** Select (middle) button */
   BUTTON_ID_SELECT,
-  //! Down button
+  /** Down button */
   BUTTON_ID_DOWN,
-  //! Total number of buttons
+  /** Total number of buttons */
   NUM_BUTTONS
 } ButtonId;
 
-//!   @} // end addtogroup Clicks
-//! @} // end addtogroup UI
+/** @} */
+
+/** @} */

@@ -8,24 +8,31 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/** @brief Waveform used to synthesize a note. */
 typedef enum {
+  /** Sine wave. */
   SpeakerWaveformSine = 0,
+  /** Square wave. */
   SpeakerWaveformSquare,
+  /** Triangle wave. */
   SpeakerWaveformTriangle,
+  /** Sawtooth wave. */
   SpeakerWaveformSawtooth,
+  /** Number of waveforms. */
   SpeakerWaveformCount
 } SpeakerWaveform;
 
-//! A single note in a sequence.
-//! midi_note: MIDI note number (0-127, 60=C4). 0 = rest (silence).
-//! waveform: SpeakerWaveform value.
-//! duration_ms: Note duration in ms (max 10000).
-//! velocity: Volume 0-127 (0 = use global volume).
+/** @brief A single note in a sequence. */
 typedef struct PBL_PACKED {
+  /** MIDI note number (0-127, 60=C4). 0 = rest (silence). */
   uint8_t midi_note;
+  /** SpeakerWaveform value. */
   uint8_t waveform;
+  /** Note duration in ms (max 10000). */
   uint16_t duration_ms;
+  /** Volume 0-127 (0 = use global volume). */
   uint8_t velocity;
+  /** Reserved, set to 0. */
   uint8_t reserved;
 } SpeakerNote;
 

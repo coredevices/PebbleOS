@@ -6,21 +6,29 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//! Touch event type
+/** @brief Touch event type */
 typedef enum TouchEventType {
+  /** A finger touched the screen. */
   TouchEvent_Touchdown,
+  /** The finger left the screen. */
   TouchEvent_Liftoff,
+  /** The finger moved while touching the screen. */
   TouchEvent_PositionUpdate,
 } TouchEventType;
 
-//! Touch event data, carried directly in PebbleTouchEvent
+/** @brief Touch event data, carried directly in PebbleTouchEvent */
 typedef struct TouchEvent {
+  /** Event type. */
   TouchEventType type : 8;
-  //! true when the touch must not drive navigation: the interaction session
-  //! was inactive at Touchdown (unarmed contact on the idle watchface).
-  //! Latched on Touchdown and carried across the whole gesture.
+  /**
+   * true when the touch must not drive navigation: the interaction session
+   * was inactive at Touchdown (unarmed contact on the idle watchface).
+   * Latched on Touchdown and carried across the whole gesture.
+   */
   bool non_navigational;
+  /** Horizontal position, in screen pixels. */
   int16_t x;
+  /** Vertical position, in screen pixels. */
   int16_t y;
 } TouchEvent;
 

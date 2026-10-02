@@ -27,27 +27,19 @@
  * @{
  */
 
-//! Light level enum
+/** @brief Light level enum */
 typedef enum AmbientLightLevel {
+  /** No reading available. */
   AmbientLightLevelUnknown = 0,
+  /** Well below the dark threshold. */
   AmbientLightLevelVeryDark,
+  /** Below the dark threshold. */
   AmbientLightLevelDark,
+  /** At or slightly above the dark threshold. */
   AmbientLightLevelLight,
+  /** Well above the dark threshold. */
   AmbientLightLevelVeryLight,
 } AmbientLightLevel;
-
-/**
- * @var AmbientLightLevel AmbientLightLevelUnknown
- * @brief No reading available.
- * @var AmbientLightLevel AmbientLightLevelVeryDark
- * @brief Well below the dark threshold.
- * @var AmbientLightLevel AmbientLightLevelDark
- * @brief Below the dark threshold.
- * @var AmbientLightLevel AmbientLightLevelLight
- * @brief At or above the dark threshold.
- * @var AmbientLightLevel AmbientLightLevelVeryLight
- * @brief Well above the dark threshold.
- */
 
 /** @brief Number of AmbientLightLevel values. */
 #define AMBIENT_LIGHT_LEVEL_ENUM_COUNT (AmbientLightLevelVeryLight + 1)

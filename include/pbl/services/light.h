@@ -19,18 +19,22 @@
  * the SDK's Light group.
  */
 
-//! @file light.h
-//! @addtogroup UI
-//! @{
-//!   @addtogroup Light Light
-//! \brief Controlling Pebble's backlight
-//!
-//! The Light API provides you with functions to turn on Pebble’s backlight or
-//! put it back into automatic control. You can trigger the backlight and schedule a timer
-//! to automatically disable the backlight after a short delay, which is the preferred
-//! method of interacting with the backlight.
-//!   @{
-//!
+/**
+ * @addtogroup UI
+ * @{
+ */
+
+/**
+ * @addtogroup Light Light
+ * @brief Controlling Pebble's backlight
+ *
+ * The Light API provides you with functions to turn on Pebble’s backlight or
+ * put it back into automatic control. You can trigger the backlight and schedule a timer
+ * to automatically disable the backlight after a short delay, which is the preferred
+ * method of interacting with the backlight.
+ * @{
+ */
+
 /**
  * @ingroup services_light
  * @brief Initialize the backlight service at startup.
@@ -71,7 +75,17 @@ void light_touch_down(void);
  */
 void light_touch_up(void);
 
-//! @copydoc app_light_enable
+/**
+ * @brief Turn the watch's backlight on or put it back into automatic control.
+ *
+ * Developers should take care when calling this function, keeping Pebble's backlight on for long
+ * periods of time will rapidly deplete the battery. Ignores the user's backlight settings; see
+ * light_enable_respect_settings().
+ *
+ * @param enable Turn the backlight on if `true`, otherwise `false` to turn it off and put it back
+ *               into automatic control. While buttons are held, the light stays on until they
+ *               are released.
+ */
 void light_enable(bool enable);
 
 /**
@@ -84,9 +98,14 @@ void light_enable(bool enable);
  */
 void light_enable_respect_settings(bool enable);
 
-//! @copydoc app_light_enable_interaction
-//! if light_enable was called (backlight was forced on),
-//! then do nothing
+/**
+ * @brief Trigger the backlight and schedule a timer to automatically disable the backlight
+ * after a short delay.
+ *
+ * This is the preferred method of interacting with the backlight. Does nothing while buttons are
+ * held or the backlight was forced on with light_enable(), and the light only turns on if the
+ * user's settings and the ambient light allow it.
+ */
 void light_enable_interaction(void);
 
 /**
@@ -97,13 +116,23 @@ void light_enable_interaction(void);
  */
 void light_reset_user_controlled(void);
 
-//! @copydoc app_light_set_color_rgb888
-//! rgb is a packed 0x00RRGGBB value (8 bits per channel). No-op on
-//! platforms without a color backlight.
+/**
+ * @brief Tint the backlight LED to a packed 24-bit RGB value.
+ *
+ * The override lasts until light_set_system_color() is called; the app manager calls it on app
+ * exit. While light_system_color_request() is held, the user's default color is shown instead.
+ * No-op on platforms without a color backlight.
+ *
+ * @param rgb Packed 0x00RRGGBB value; 8 bits per channel. High byte ignored.
+ */
 void light_set_color_rgb888(uint32_t rgb);
 
-//! @copydoc app_light_set_system_color
-//! No-op on platforms without a color backlight.
+/**
+ * @brief Restore the backlight to the user's default color.
+ *
+ * Clears the override set with light_set_color_rgb888(). No-op on platforms without a color
+ * backlight.
+ */
 void light_set_system_color(void);
 
 /**
@@ -170,8 +199,12 @@ void light_allow(bool allowed);
  */
 uint8_t light_get_current_brightness_percent(void);
 
-//! @return true if the backlight is currently on in any form (on, timed, or
-//! fading out). Returns false only when the backlight is fully off.
+/**
+ * @brief Check whether the backlight is on.
+ *
+ * @return true if the backlight is currently on in any form (on, timed, or
+ *         fading out). Returns false only when the backlight is fully off.
+ */
 bool light_is_on(void);
 
 /**
@@ -195,5 +228,6 @@ bool light_is_lit_by_touch(void);
  */
 uint32_t light_get_ambient_lux(void);
 
-//!   @} // group Light
-//! @} // group UI
+/** @} */
+
+/** @} */

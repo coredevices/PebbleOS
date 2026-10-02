@@ -170,8 +170,10 @@ enum pbl_weekday time_util_get_day_in_week(time_t utc_sec);
  */
 int time_util_get_minute_of_day(time_t utc_sec);
 
-//! Return the UTC time that corresponds to the start of today (midnight).
-//! @return the UTC time corresponding to the start of today (midnight)
+/**
+ * @brief Return the UTC time that corresponds to the start of today (midnight).
+ * @return the UTC time corresponding to the start of today (midnight)
+ */
 time_t time_start_of_today(void);
 
 /**

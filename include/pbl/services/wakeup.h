@@ -32,7 +32,7 @@
  */
 #define WAKEUP_CATCHUP_WINDOW (WAKEUP_EVENT_WINDOW / 2)
 
-//! WakeupId is an identifier for a wakeup event
+/** @brief WakeupId is an identifier for a wakeup event */
 typedef int32_t WakeupId;
 
 /** @brief Wakeup event passed to the app it launches. */

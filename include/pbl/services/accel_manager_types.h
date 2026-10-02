@@ -7,41 +7,43 @@
 #include <stdint.h>
 #include "pbl/kernel/compiler.h"
 
-//! Valid accelerometer sampling rates, in Hz
+/** @brief Valid accelerometer sampling rates, in Hz */
 typedef enum {
-  //! 10 HZ sampling rate
+  /** 10 HZ sampling rate */
   ACCEL_SAMPLING_10HZ = 10,
-  //! 25 HZ sampling rate [Default]
+  /** 25 HZ sampling rate [Default] */
   ACCEL_SAMPLING_25HZ = 25,
-  //! 50 HZ sampling rate
+  /** 50 HZ sampling rate */
   ACCEL_SAMPLING_50HZ = 50,
-  //! 100 HZ sampling rate
+  /** 100 HZ sampling rate */
   ACCEL_SAMPLING_100HZ = 100,
 } AccelSamplingRate;
 
-//! A single accelerometer sample for all three axes
+/** @brief A single accelerometer sample for all three axes */
 typedef struct PBL_PACKED {
-  //! acceleration along the x axis
+  /** acceleration along the x axis */
   int16_t x;
-  //! acceleration along the y axis
+  /** acceleration along the y axis */
   int16_t y;
-  //! acceleration along the z axis
+  /** acceleration along the z axis */
   int16_t z;
 } AccelRawData;
 
-//! A single accelerometer sample for all three axes including timestamp and
-//! vibration rumble status.
+/**
+ * @brief A single accelerometer sample for all three axes including timestamp and
+ * vibration rumble status.
+ */
 typedef struct PBL_PACKED AccelData {
-  //! acceleration along the x axis
+  /** acceleration along the x axis */
   int16_t x;
-  //! acceleration along the y axis
+  /** acceleration along the y axis */
   int16_t y;
-  //! acceleration along the z axis
+  /** acceleration along the z axis */
   int16_t z;
 
-  //! true if the watch vibrated when this sample was collected
+  /** true if the watch vibrated when this sample was collected */
   bool did_vibrate;
 
-  //! timestamp, in milliseconds
+  /** timestamp, in milliseconds */
   uint64_t timestamp;
 } AccelData;
