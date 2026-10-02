@@ -490,18 +490,6 @@ void gh3x2x_factory_test_disable(void) {
   system_task_add_callback(gh3x2x_factory_test_disable_handle, (void *)HRM);
 }
 
-uint8_t gh3x2x_factory_result_get(float *p_result) {
-  HRMDevice *p_dev = HRM;
-  if (p_result) {
-    GH3x2xFTData *p_factory = p_dev->state->factory;
-    if (p_factory != NULL && p_factory->count >= HRM_PPG_FACTORY_TEST_FIFO_LEN) {
-      memcpy(p_result, p_factory->result, sizeof(float) * HRM_PPG_FACTORY_TEST_FIFO_LEN);
-      return HRM_PPG_FACTORY_TEST_FIFO_LEN;
-    }
-  }
-  return 0;
-}
-
 void gh3x2x_set_work_mode(int32_t mode) {
   HRMDeviceState *state = HRM->state;
   // always enable soft adt
