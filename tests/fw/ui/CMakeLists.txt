@@ -378,7 +378,7 @@ pbl_clar_test(test_emoji_fonts
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_system_theme.c
-    fw/applib/fonts/fonts.c
+    tests/fakes/fake_fonts.c
   OVERRIDES dummy_board
   TEST_IMAGES
 )
