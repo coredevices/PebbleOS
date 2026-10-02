@@ -3,16 +3,21 @@
 
 #pragma once
 
-/*
- * chip_id.h
+/**
+ * @defgroup pebbleos_chip_id Processor IDs
+ * @ingroup pebbleos
+ * @brief IDs of the processors of a multi-processor device.
  *
- * This file specifies IDs for the different processors on our multi-processor devices.
- * The IDs are used to differenetiate the source of system logs, core dumps, etc.
- *
- * The IDs must be unique within a platform and must fit in 2 bits.
- * If we build a device with more than 4 log/core dump producing processors, this will need to be
- * addressed.
+ * They tell apart the source of hashed log messages (the 2-bit core field of a packed log hash)
+ * and of core dumps (the core number of the core dump image header). IDs must be unique within a
+ * platform and fit in 2 bits, which limits a device to four log or core dump producing
+ * processors.
+ * @{
  */
 
+/** @brief Main MCU, running PebbleOS. */
 #define CORE_ID_MAIN_MCU 0
-#define CORE_ID_BLE      1
+/** @brief Bluetooth controller. */
+#define CORE_ID_BLE 1
+
+/** @} */
