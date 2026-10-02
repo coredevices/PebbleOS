@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "109",
+  "revision" : "110",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/ambient_light.h",
@@ -645,6 +645,10 @@
               "type": "function",
               "name": "health_service_peek_current_value",
               "addedRevision": "83"
+            }, {
+              "type": "function",
+              "name": "health_service_peek_spo2_percent",
+              "addedRevision": "110"
             }, {
               "type": "type",
               "name": "HealthServiceTimeScope"
