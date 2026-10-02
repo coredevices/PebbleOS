@@ -7,69 +7,133 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Instruction cache and data cache are entirely separate. Therefore, you must both flush data
-// cache _and_ invalidate instruction cache for that region in order to properly execute new code.
+/**
+ * @defgroup mcu_cache Cache
+ * @ingroup mcu
+ * @brief Instruction and data cache maintenance.
+ *
+ * The instruction and data caches are separate: to execute newly written code, flush the data
+ * cache @e and invalidate the instruction cache for that region. A flush writes cached data back
+ * to memory and keeps it cached; an invalidate discards cached data so it is reloaded from
+ * memory on the next access; flush_invalidate does both.
+ *
+ * Range operations work on whole cache lines. Flushing memory beyond a buffer is harmless, but
+ * invalidating it destroys any pending writes to the neighbouring data, so align buffers that
+ * get invalidated (e.g. DMA receive buffers) with dcache_align() or
+ * dcache_alignment_mask_minimum().
+ *
+ * On cores without a cache every operation is a no-op and the line size reads as 1.
+ *
+ * @code{.c}
+ * uintptr_t addr = (uintptr_t)rx_buf;
+ * size_t size = rx_len;
+ *
+ * dcache_align(&addr, &size);
+ * dcache_invalidate((void *)addr, size); // after the DMA transfer, before reading rx_buf
+ * @endcode
+ * @{
+ */
 
-// A cache flush means the data is written out from the cache into memory. A cache invalidate
-// means the data in the cache is thrown out and will be reloaded from memory on the next access.
-// A flush does keep the data still in cache, so if you want to write out and invalidate, you want
-// to use flush_invalidate.
-
-// All cache operations MUST operate on the cache line size. You can safely flush memory that isn't
-// part of your buffer, but invalidation CAN AND WILL destroy other memory! Be very careful!
-
-// The cache line size on Cortex-M7 is 32 bytes.
-
-//! Enable instruction cache.
+/** @brief Enable the instruction cache, invalidating it first. */
 void icache_enable(void);
-//! Disable instruction cache.
+/** @brief Disable the instruction cache, invalidating it afterwards. */
 void icache_disable(void);
-//! Returns whether or not ICache is enabled
+/**
+ * @brief Check whether the instruction cache is enabled.
+ *
+ * @return true if enabled.
+ */
 bool icache_is_enabled(void);
-//! Returns line size of ICache.
+/**
+ * @brief Get the instruction cache line size.
+ *
+ * Only valid once icache_enable() has run.
+ *
+ * @return Line size in bytes, 1 without an instruction cache.
+ */
 uint32_t icache_line_size(void);
 
-//! Invalidate entire instruction cache.
+/** @brief Invalidate the entire instruction cache. */
 void icache_invalidate_all(void);
-//! Invalidate instruction cache for `addr` for `size` bytes.
-//! `addr` and `size` should both be aligned by the cache line size.
+/**
+ * @brief Invalidate the instruction cache for a range.
+ *
+ * @param addr Start address, aligned to the line size.
+ * @param size Size in bytes, a multiple of the line size.
+ */
 void icache_invalidate(void *addr, size_t size);
 
-//! Enable data cache.
+/** @brief Enable the data cache, invalidating it first. */
 void dcache_enable(void);
-//! Disable data cache.
+/** @brief Disable the data cache, flushing and invalidating it first. */
 void dcache_disable(void);
-//! Returns whether or not DCache is enabled
+/**
+ * @brief Check whether the data cache is enabled.
+ *
+ * @return true if enabled.
+ */
 bool dcache_is_enabled(void);
-//! Returns line size of DCache.
+/**
+ * @brief Get the data cache line size.
+ *
+ * Only valid once dcache_enable() has run.
+ *
+ * @return Line size in bytes, 1 without a data cache.
+ */
 uint32_t dcache_line_size(void);
 
-//! Flush entire data cache.
+/** @brief Flush the entire data cache. */
 void dcache_flush_all(void);
-//! Invalidate entire data cache.
+/** @brief Invalidate the entire data cache. */
 void dcache_invalidate_all(void);
-//! Flush, then invalidate entire data cache.
+/** @brief Flush, then invalidate the entire data cache. */
 void dcache_flush_invalidate_all(void);
 
-//! Flush data cache for `addr` for `size` bytes.
-//! `addr` and `size` should both be aligned by the cache line size.
+/**
+ * @brief Flush the data cache for a range.
+ *
+ * @param addr Start address, aligned to the line size.
+ * @param size Size in bytes, a multiple of the line size.
+ */
 void dcache_flush(const void *addr, size_t size);
-//! Invalidate data cache for `addr` for `size` bytes.
-//! `addr` and `size` should both be aligned by the cache line size.
+/**
+ * @brief Invalidate the data cache for a range.
+ *
+ * @param addr Start address, aligned to the line size.
+ * @param size Size in bytes, a multiple of the line size.
+ */
 void dcache_invalidate(void *addr, size_t size);
-//! Flush, then invalidate data cache for `addr` for `size` bytes.
-//! `addr` and `size` should both be aligned by the cache line size.
+/**
+ * @brief Flush, then invalidate the data cache for a range.
+ *
+ * @param addr Start address, aligned to the line size.
+ * @param size Size in bytes, a multiple of the line size.
+ */
 void dcache_flush_invalidate(const void *addr, size_t size);
 
-//! Aligns an address and size so that they are both aligned to the ICache line size, and still
-//! covers the range requested.
+/**
+ * @brief Widen a range to whole instruction cache lines.
+ *
+ * @param[in,out] addr Start address, rounded down to a line boundary.
+ * @param[in,out] size Size in bytes, grown so the range still covers the original one.
+ */
 void icache_align(uintptr_t *addr, size_t *size);
-//! Aligns an address and size so that they are both aligned to the DCache line size, and still
-//! covers the range requested.
+/**
+ * @brief Widen a range to whole data cache lines.
+ *
+ * @param[in,out] addr Start address, rounded down to a line boundary.
+ * @param[in,out] size Size in bytes, grown so the range still covers the original one.
+ */
 void dcache_align(uintptr_t *addr, size_t *size);
 
-//! For aligning things to work with the data cache, you will want to check what the cache line
-//! size is, and align accordingly. However, the hardware peripheral also might require a minimum
-//! alignment. So you pass the minimum alignment in bytes into `min`, and the return value is the
-//! mask you can apply to get the minimum aligned address.
+/**
+ * @brief Get the alignment mask for a buffer shared with a peripheral.
+ *
+ * Combines the data cache line size with an alignment the peripheral itself requires.
+ *
+ * @param min Minimum alignment in bytes, a power of two.
+ * @return The larger of @p min and the line size, minus 1: the address bits that must be clear.
+ */
 uint32_t dcache_alignment_mask_minimum(uint32_t min);
+
+/** @} */
