@@ -11,68 +11,88 @@
 #include "pbl/services/comm_session/session.h"
 #include "pbl/kernel/compiler.h"
 
-// This matches the entry we put into protocol_endpoints_table.h
+/**
+ * @defgroup services_get_bytes_get_bytes_private Get bytes protocol
+ * @ingroup services_get_bytes
+ * @brief Get bytes endpoint messages.
+ * @{
+ */
+
+/** @brief Get bytes endpoint ID. */
 static const uint16_t GET_BYTES_ENDPOINT_ID = 9000;
 
-// -----------------------------------------------------------------------------------------------
-// Support structures for returning the core dump over the comm session protocol.
-
-// A protocol request/response header
+/** @brief Header of every request and response. */
 typedef struct PBL_PACKED {
-  uint8_t cmd_id; // A value from GetBytesCmd
+  /** Command, a @ref GetBytesCmd value. */
+  uint8_t cmd_id;
+  /** Transaction ID chosen by the phone, echoed in responses. */
   uint8_t transaction_id;
 } GetBytesHeader;
 
-// The GET_BYTES_CMD_GET_COREDUMP request consists of only a GetBytesHeader
-
-// The GET_BYTES_CMD_GET_FILE request consists of a GetBytesFileHeader
+/** @brief @ref GET_BYTES_CMD_GET_FILE request. */
 typedef struct PBL_PACKED {
+  /** Header. */
   GetBytesHeader hdr;
+  /** Length of @ref filename, excluding the terminating NUL. */
   uint8_t filename_len;
+  /** NUL-terminated file name. */
   char filename[];
 } GetBytesFileHeader;
 
+/** @brief @ref GET_BYTES_CMD_GET_FLASH request. */
 typedef struct PBL_PACKED {
+  /** Header. */
   GetBytesHeader hdr;
+  /** Flash address. */
   uint32_t start_addr;
+  /** Length in bytes. */
   uint32_t len;
 } GetBytesFlashHeader;
 
-// Various values for GetBytesHeader.cmd_id
+/** @brief Get bytes commands. */
 typedef enum {
-  // Sent initially to start a coredump transfer
-  // Will return the last coredump which was saved to flash
+  /** Request the most recent core dump; the request is a bare @ref GetBytesHeader. */
   GET_BYTES_CMD_GET_COREDUMP = 0,
-  // Sent in response to GET_BYTES_CMD_GET_COREDUMP
+  /** Response with the object size or an error, see @ref GetBytesRspObjectInfo. */
   GET_BYTES_CMD_OBJECT_INFO = 1,
-  // Sent after GET_BYTES_CMD_OBJECT_INFO if error_code was 0.
+  /** Response with object data, see @ref GetBytesRspObjectData. */
   GET_BYTES_CMD_OBJECT_DATA = 2,
-  // Sent initially to start a file transfer
+  /** Request a file, see @ref GetBytesFileHeader. */
   GET_BYTES_CMD_GET_FILE = 3,
-  // Sent initially to start a flash transfer
+  /** Request a flash region, see @ref GetBytesFlashHeader. */
   GET_BYTES_CMD_GET_FLASH = 4,
-  // Sent initially to start a coredump transfer
-  // Will only return a coredump if it has not previously been read
+  /** Request the most recent core dump only if it has not been read yet. */
   GET_BYTES_CMD_GET_NEW_COREDUMP = 5,
 } GetBytesCmd;
 
-// The GET_BYTES_CMD_OBJECT_INFO response has this format
+/** @brief @ref GET_BYTES_CMD_OBJECT_INFO response. */
 typedef struct PBL_PACKED {
+  /** Header. */
   GetBytesHeader hdr;
-  uint8_t error_code; // 0 = no error and multiple GET_BYTES_CMD_OBJECT_DATA response will follow
-  uint32_t num_bytes; // total size of core dump image (will be 0 if error_code != 0).
+  /** A @ref GetBytesInfoErrorCode; data responses follow only for @ref GET_BYTES_OK. */
+  uint8_t error_code;
+  /** Total object size in bytes, 0 on error. */
+  uint32_t num_bytes;
 } GetBytesRspObjectInfo;
 
-// The GET_BYTES_CMD_OBJECT_DATA response has this format
+/** @brief @ref GET_BYTES_CMD_OBJECT_DATA response. */
 typedef struct PBL_PACKED {
+  /** Header. */
   GetBytesHeader hdr;
-  uint32_t byte_offset; // starting byte offset of this data chunk
+  /** Offset of @ref data in the object. */
+  uint32_t byte_offset;
+  /** Object data. */
   uint8_t data[];
 } GetBytesRspObjectData;
 
-// Using to send error response asynchronously
+/** @brief Error response sent asynchronously. */
 typedef struct GetBytesErrorResponse {
+  /** Session to reply on. */
   CommSession *session;
+  /** Transaction ID of the request. */
   int8_t transaction_id;
+  /** Error code. */
   GetBytesInfoErrorCode result;
 } GetBytesErrorResponse;
+
+/** @} */

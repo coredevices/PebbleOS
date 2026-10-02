@@ -8,48 +8,92 @@
 
 #include "pbl/services/get_bytes/get_bytes.h"
 
+/**
+ * @defgroup services_get_bytes_get_bytes_storage Get bytes storage
+ * @ingroup services_get_bytes
+ * @brief Backends reading the transferred objects.
+ *
+ * Each @ref GetBytesObjectType maps to a backend implementing setup, size, read and cleanup.
+ * File and flash backends are not built in release or recovery firmware.
+ * @{
+ */
+
+/** @brief Storage backend type. */
 typedef enum {
+  /** Unknown. */
   GetBytesStorageTypeUnknown,
+  /** Core dump flash region. */
   GetBytesStorageTypeCoredump,
+  /** PFS file. */
   GetBytesStorageTypeFile,
+  /** Raw flash. */
   GetBytesStorageTypeFlash
 } GetBytesStorageType;
 
 struct GetBytesStorageImplementation;
+/** @brief Backend operations, private to the get bytes service. */
 typedef struct GetBytesStorageImplementation GetBytesStorageImplementation;
 
+/** @brief Storage of an object being transferred. */
 typedef struct {
-  // A struct full of function pointers that implements a storage API
+  /** Backend operations. */
   const GetBytesStorageImplementation *impl;
 
-  //! A void pointer that the GetBytesStorageImplementation is free to stash stuff into
+  /** Backend private data. */
   void *impl_data;
 
-  //! The offset into the storage we've initialized. Updated by pb_storage_append. pb_storage_init
-  //! may set this to a non-zero value.
+  /** Offset of the next byte to read, advanced by gb_storage_read_next_chunk(). */
   uint32_t current_offset;
 } GetBytesStorage;
 
-// info used by the setup routines depending on the implementation
+/** @brief Request parameters passed to the backend setup. */
 typedef struct {
-  //! Used by GetBytesStorageTypeFile
+  /** File name, for @ref GetBytesStorageTypeFile. */
   char *filename;
-  //! Used by GetBytesStorageTypeFlash
+  /** Start address, for @ref GetBytesStorageTypeFlash. */
   uint32_t flash_start_addr;
+  /** Length in bytes, for @ref GetBytesStorageTypeFlash. */
   uint32_t flash_len;
-  //! Used by GetBytesStorageTypeCoredump
+  /** Only return a core dump not read yet, for @ref GetBytesStorageTypeCoredump. */
   bool only_get_new_coredump;
 } GetBytesStorageInfo;
 
-//! Set up the storage. This may include allocating memory, open a file descriptor, etc.
+/**
+ * @brief Set up the storage of an object, e.g. allocate memory or open a file.
+ *
+ * @param[out] storage Storage.
+ * @param object_type Object type, selecting the backend.
+ * @param info Request parameters.
+ * @return true on success.
+ */
 bool gb_storage_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                       GetBytesStorageInfo *info);
 
-//! Retrieve the size of the object that is to be sent
+/**
+ * @brief Get the size of the object.
+ *
+ * @param storage Storage.
+ * @param[out] size Object size in bytes.
+ * @return @ref GET_BYTES_OK, or the error to report to the phone.
+ */
 GetBytesInfoErrorCode gb_storage_get_size(GetBytesStorage *storage, uint32_t *size);
 
-//! Read a chunk of the object into a buffer
+/**
+ * @brief Read the next chunk of the object.
+ *
+ * @param storage Storage.
+ * @param[out] buffer Destination.
+ * @param len Number of bytes to read.
+ * @return true on success.
+ */
 bool gb_storage_read_next_chunk(GetBytesStorage *storage, uint8_t *buffer, uint32_t len);
 
-//! Cleanup the storage.
+/**
+ * @brief Release the storage.
+ *
+ * @param storage Storage.
+ * @param successful The whole object was sent. A sent core dump is marked as read.
+ */
 void gb_storage_cleanup(GetBytesStorage *storage, bool successful);
+
+/** @} */
