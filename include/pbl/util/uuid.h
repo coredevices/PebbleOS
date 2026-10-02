@@ -8,6 +8,23 @@
 #include <stdbool.h>
 #include "pbl/kernel/compiler.h"
 
+/**
+ * @defgroup util_uuid UUID
+ * @ingroup util
+ * @brief 128-bit universally unique identifiers.
+ *
+ * Uuid, its constructors, uuid_equal() and uuid_to_string() are also part of the app SDK.
+ *
+ * @code{.c}
+ * Uuid uuid;
+ * char str[UUID_STRING_BUFFER_LENGTH];
+ *
+ * uuid_generate(&uuid);
+ * uuid_to_string(&uuid, str);
+ * @endcode
+ * @{
+ */
+
 #define UUID_SIZE 16
 
 typedef struct PBL_PACKED {
@@ -29,7 +46,9 @@ typedef struct PBL_PACKED {
   uint8_t byte15;
 } Uuid;
 
+/** @brief Initializer of the all-zero UUID that identifies the system. */
 #define UUID_SYSTEM {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+/** @brief Initializer of the all-ones invalid UUID. */
 #define UUID_INVALID_INIT \
   {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 #define UUID_INVALID ((const Uuid)UUID_INVALID_INIT)
@@ -59,16 +78,29 @@ typedef struct PBL_PACKED {
 //! @return True if the two UUIDs are equal, false if they are not.
 bool uuid_equal(const Uuid *uu1, const Uuid *uu2);
 
-//! Generate a v4 compliant UUID
+/**
+ * @brief Generate a random (version 4) UUID.
+ *
+ * Uses pbl_rand32().
+ *
+ * @param[out] uuid_out Generated UUID.
+ */
 void uuid_generate(Uuid *uuid_out);
 
-//! Check if a UUID is the system UUID
-//! @return True if UUID is UUID_SYSTEM, false otherwise
+/**
+ * @brief Check whether a UUID is the system UUID (all zeros).
+ *
+ * @param uuid UUID to test.
+ * @return true if @p uuid equals @ref UUID_SYSTEM, false otherwise or for NULL.
+ */
 bool uuid_is_system(const Uuid *uuid);
 
-//! Tests whether a UUID is equal to UUID_INVALID
-//! @param uuid The UUID to test
-//! @return True uuid is equal to UUID_INVALID, false if not
+/**
+ * @brief Check whether a UUID is invalid.
+ *
+ * @param uuid UUID to test.
+ * @return true if @p uuid is NULL or equals UUID_INVALID.
+ */
 bool uuid_is_invalid(const Uuid *uuid);
 
 //! The minimum required length of a string used to hold a uuid (including null).
@@ -80,3 +112,5 @@ bool uuid_is_invalid(const Uuid *uuid);
 //! @param buffer Memory to write the string to. Must be at least \ref UUID_STRING_BUFFER_LENGTH
 //! bytes long.
 void uuid_to_string(const Uuid *uuid, char *buffer);
+
+/** @} */

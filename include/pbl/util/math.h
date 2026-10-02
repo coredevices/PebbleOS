@@ -6,53 +6,157 @@
 #include <stdint.h>
 #include "pbl/kernel/compiler.h"
 
+/**
+ * @defgroup util_math Integer math
+ * @ingroup util
+ * @brief Integer math macros and helpers.
+ *
+ * The macros evaluate their arguments more than once; do not pass expressions with side
+ * effects.
+ *
+ * @code{.c}
+ * int32_t clamped = CLIP(value, -100, 100);
+ * uint32_t pages = DIVIDE_CEIL(len, PAGE_SIZE);
+ * if (WITHIN(c, '0', '9')) {
+ *   ...
+ * }
+ * @endcode
+ * @{
+ */
+
 #ifndef MIN
+/**
+ * @brief Get the smaller of two values.
+ *
+ * @param a First value.
+ * @param b Second value.
+ */
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifndef MAX
+/**
+ * @brief Get the larger of two values.
+ *
+ * @param a First value.
+ * @param b Second value.
+ */
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
-#define ABS(a)                               (((a) > 0) ? (a) : -1 * (a))
-#define CLIP(n, min, max)                    ((n) < (min) ? (min) : ((n) > (max) ? (max) : (n)))
-#define ROUND(num, denom)                    (((num) + ((denom) / 2)) / (denom))
-#define WITHIN(n, min, max)                  ((n) >= (min) && (n) <= (max))
+/**
+ * @brief Get the absolute value.
+ *
+ * @param a Value.
+ */
+#define ABS(a) (((a) > 0) ? (a) : -1 * (a))
+/**
+ * @brief Clamp a value to a range.
+ *
+ * @param n Value.
+ * @param min Lower bound.
+ * @param max Upper bound.
+ */
+#define CLIP(n, min, max) ((n) < (min) ? (min) : ((n) > (max) ? (max) : (n)))
+/**
+ * @brief Divide, rounding half up, for non-negative operands.
+ *
+ * @param num Numerator.
+ * @param denom Denominator.
+ */
+#define ROUND(num, denom) (((num) + ((denom) / 2)) / (denom))
+/**
+ * @brief Check whether a value is within a closed range.
+ *
+ * @param n Value.
+ * @param min Lower bound, included.
+ * @param max Upper bound, included.
+ */
+#define WITHIN(n, min, max) ((n) >= (min) && (n) <= (max))
+/**
+ * @brief Check whether a range is within another closed range.
+ *
+ * @param n_min Lower bound of the inner range.
+ * @param n_max Upper bound of the inner range.
+ * @param min Lower bound of the outer range, included.
+ * @param max Upper bound of the outer range, included.
+ */
 #define RANGE_WITHIN(n_min, n_max, min, max) ((n_min) >= (min) && (n_max) <= (max))
 
-// Divide num by denom, rounding up (ceil(0.5) is 1.0, and ceil(-0.5) is 0.0)
-// ex. 3, 4 (ie. 3/4) : returns 1
-// ex. -3, 4 : returns 0
+/**
+ * @brief Divide, rounding up for positive results.
+ *
+ * Negative results round towards zero: DIVIDE_CEIL(3, 4) is 1 and DIVIDE_CEIL(-3, 4) is 0.
+ *
+ * @param num Numerator.
+ * @param denom Denominator, positive.
+ */
 #define DIVIDE_CEIL(num, denom) (((num) + ((denom) - 1)) / (denom))
 
-// Round value up to the next increment of modulus
-// ex. val = 152 mod = 32 : returns 160
-// val = -32 mod = 90 : returns -90
+/**
+ * @brief Round a value away from zero to a multiple of a modulus.
+ *
+ * ROUND_TO_MOD_CEIL(152, 32) is 160 and ROUND_TO_MOD_CEIL(-32, 90) is -90.
+ *
+ * @param val Value.
+ * @param mod Modulus; its sign is ignored.
+ */
 #define ROUND_TO_MOD_CEIL(val, mod)                                     \
   (((val) >= 0) ? ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)) \
                 : -((((-val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)))
 
-// Round unsigned value up to the next increment of modulus
-// ex. val = 152 mod = 32 : returns 160
+/**
+ * @brief Round an unsigned value up to a multiple of a modulus.
+ *
+ * ROUND_TO_MOD_CEIL_U(152, 32) is 160.
+ *
+ * @param val Value.
+ * @param mod Modulus; its sign is ignored.
+ */
 #define ROUND_TO_MOD_CEIL_U(val, mod) ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod))
 
+/**
+ * @brief Sign-extend the low bits of a value.
+ *
+ * @param a Value; bits above @p bits are ignored.
+ * @param bits Width of the signed value, 1 to 32.
+ * @return Sign-extended value.
+ */
 int32_t sign_extend(uint32_t a, int bits);
 
-//! Calculates the distance (end - start), taking a roll-over into account as good as it can get.
+/**
+ * @brief Compute the distance between two 32-bit serial numbers, handling wrap-around.
+ *
+ * @param start Start value.
+ * @param end End value.
+ * @return @p end - @p start, using serial number arithmetic (RFC 1982).
+ */
 int32_t serial_distance32(uint32_t start, uint32_t end);
 
-//! Calculates the distance (end - start), taking a roll-over into account as good as it can get.
-//! @param start the start value
-//! @param end the end value
-//! @param bits the number of bits that are valid in start and end.
+/**
+ * @brief Compute the distance between two serial numbers, handling wrap-around.
+ *
+ * @param start Start value.
+ * @param end End value.
+ * @param bits Number of valid bits in @p start and @p end.
+ * @return @p end - @p start, using serial number arithmetic (RFC 1982).
+ */
 int32_t serial_distance(uint32_t start, uint32_t end, int bits);
 
-/*
- * find the log base two of a number rounded up
+/**
+ * @brief Compute the base 2 logarithm, rounded up.
+ *
+ * @param n Value, greater than 0.
+ * @return ceil(log2(@p n)).
  */
 int ceil_log_two(uint32_t n);
 
-//! newton's method for floor(sqrt(x)) -> should always converge
+/**
+ * @brief Compute the integer square root with Newton's method.
+ *
+ * @param x Value.
+ * @return floor(sqrt(@p x)), 0 for negative values.
+ */
 int32_t integer_sqrt(int64_t x);
 
 /*
@@ -74,12 +178,27 @@ int32_t integer_sqrt(int64_t x);
                   PBL_CHOOSE_EXPR(PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned long long), \
                                   false, true))))))
 
-// http://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
+/**
+ * @brief Compute a modulo that is never negative.
+ *
+ * @param i Dividend.
+ * @param n Divisor, positive.
+ * @return @p i mod @p n, in [0, @p n).
+ */
 static inline int positive_modulo(int i, int n) {
   return (i % n + n) % n;
 }
 
-// https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles
+/**
+ * @brief Compute the distance from a value to the nearest multiple of a modulus.
+ *
+ * For angles, the smallest difference between two angles is
+ * distance_to_mod_boundary(a - b, 360).
+ *
+ * @param i Value.
+ * @param n Modulus, positive.
+ * @return Distance, 0 to @p n / 2.
+ */
 static inline int distance_to_mod_boundary(int32_t i, uint16_t n) {
   const int mod = positive_modulo(i, n);
   const int half = n / 2;
@@ -87,16 +206,22 @@ static inline int distance_to_mod_boundary(int32_t i, uint16_t n) {
 }
 
 /**
- * Compute the next backoff interval using a bounded binary exponential backoff formula.
+ * @brief Compute the next interval of a bounded binary exponential backoff.
  *
- * @param[in,out] attempt The number of retries performed so far. This count will be incremented by
- * the function.
- * @param[in] initial_value The inital backoff interval. Subsequent backoff attempts will be this
- * number multiplied by a power of 2.
- * @param[in] max_value The maximum backoff interval that returned by the function.
- * @return The next backoff interval.
+ * @param[in,out] attempt Retries performed so far, incremented by the call.
+ * @param initial_value First interval; later ones are this multiplied by a power of 2.
+ * @param max_value Maximum interval returned.
+ * @return Next interval, @p initial_value * 2^@p attempt capped to @p max_value.
  */
 uint32_t next_exponential_backoff(uint32_t *attempt, uint32_t initial_value, uint32_t max_value);
 
-//! Find the greatest common divisor of two numbers.
+/**
+ * @brief Compute the greatest common divisor of two numbers.
+ *
+ * @param a First number.
+ * @param b Second number.
+ * @return Greatest common divisor, 0 if either number is 0.
+ */
 uint32_t gcd(uint32_t a, uint32_t b);
+
+/** @} */

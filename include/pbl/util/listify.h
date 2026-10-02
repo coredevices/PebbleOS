@@ -3,9 +3,27 @@
 
 #pragma once
 
-//! Expands to F(0) F(1) ... F(n - 1); @p n is a decimal literal or a macro
-//! expanding to one, up to 512.
-#define PBL_LISTIFY(n, F)  PBL_LISTIFY_(n, F)
+/**
+ * @defgroup util_listify Listify
+ * @ingroup util
+ * @brief Preprocessor repetition.
+ * @{
+ */
+
+/**
+ * @brief Expand to F(0) F(1) ... F(n - 1).
+ *
+ * @code{.c}
+ * #define SLOT(i) {.id = i},
+ * static struct slot s_slots[] = {PBL_LISTIFY(4, SLOT)};
+ * @endcode
+ *
+ * @param n Count, a decimal literal or a macro expanding to one, up to 512.
+ * @param F Function-like macro taking the index.
+ */
+#define PBL_LISTIFY(n, F) PBL_LISTIFY_(n, F)
+
+/** @cond INTERNAL_HIDDEN */
 #define PBL_LISTIFY_(n, F) PBL_LISTIFY_##n(F)
 
 // clang-format off
@@ -523,3 +541,6 @@
 #define PBL_LISTIFY_511(F) PBL_LISTIFY_510(F) F(510)
 #define PBL_LISTIFY_512(F) PBL_LISTIFY_511(F) F(511)
 // clang-format on
+/** @endcond */
+
+/** @} */

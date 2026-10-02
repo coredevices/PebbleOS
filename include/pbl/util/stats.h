@@ -7,51 +7,86 @@
 #include <stddef.h>
 #include <stdint.h>
 
-//! Filter the basic statistical calculation.
-//! @param index Index of the value in the data array being calculated
-//! @param value Value of the current candidate data point being considered
-//! @param context User data which can be used for additional context
-//! @return true if the value should be included in the statistics, false otherwise
+/**
+ * @defgroup util_stats Statistics
+ * @ingroup util
+ * @brief Basic statistics over arrays of @c int32_t.
+ *
+ * @code{.c}
+ * int32_t out[2];
+ *
+ * pbl_stats_calculate(PBL_STATS_OP_SUM | PBL_STATS_OP_MAX, samples, num_samples, NULL, NULL,
+ *                     out);
+ * // out[0] is the sum, out[1] the maximum
+ * @endcode
+ * @{
+ */
+
+/**
+ * @brief Filter of the values included in pbl_stats_calculate().
+ *
+ * @param index Index of the value in the data array.
+ * @param value Value.
+ * @param context Filter data.
+ * @return true to include the value.
+ */
 typedef bool (*pbl_stats_filter_t)(int index, int32_t value, void *context);
 
-//! Bitfield that specifies which operations \ref pbl_stats_calculate should
-//! perform. The ops will operate only on the filtered values when a filter is present.
+/**
+ * @brief Operations of pbl_stats_calculate(), combined as a bit field.
+ *
+ * With a filter, every operation only considers the values it accepts.
+ */
 enum pbl_stats_op {
-  PBL_STATS_OP_SUM = (1 << 0),     //!< Calculate the sum
-  PBL_STATS_OP_AVERAGE = (1 << 1), //!< Calculate the average
-  //! Find the minimum value. If there is no data, or if no values match the filter, the minimum
-  //! will default to INT32_MAX.
+  /** Sum. */
+  PBL_STATS_OP_SUM = (1 << 0),
+  /** Average, truncated; 0 without values. */
+  PBL_STATS_OP_AVERAGE = (1 << 1),
+  /** Minimum; INT32_MAX without values. */
   PBL_STATS_OP_MIN = (1 << 2),
-  //! Find the maximum value. If there is no data, or if no values match the filter, the maximum
-  //! will default to INT32_MIN.
+  /** Maximum; INT32_MIN without values. */
   PBL_STATS_OP_MAX = (1 << 3),
-  //! Count the number of filtered values included in calculation.
-  //! Equivalent to the number of data points when no filter is applied.
+  /** Number of values included; the number of data points without a filter. */
   PBL_STATS_OP_COUNT = (1 << 4),
-  //! Find the maximum streak of consecutive filtered values included in calculation.
-  //! Equivalent to the number of data points when no filter is applied.
+  /** Longest run of consecutive values included; the number of data points without a filter. */
   PBL_STATS_OP_CONSECUTIVE = (1 << 5),
-  //! Find the first streak of consecutive filtered values included in calculation.
-  //! Equivalent to the number of data points when no filter is applied.
+  /** Length of the run of included values at the start of the data. */
   PBL_STATS_OP_CONSECUTIVE_FIRST = (1 << 6),
-  //! Find the median of filtered values included in calculation.
+  /** Median; the lower of the two middle values for an even count. */
   PBL_STATS_OP_MEDIAN = (1 << 7),
 };
 
-//! Calculate basic statistical information on a given array of int32_t values.
-//! When returning the results, the values will be written sequentially as defined in the enum to
-//! basic_out without gaps. For example, if given the op `(PBL_STATS_OP_MAX | PBL_STATS_OP_SUM)`,
-//! basic_out[0] will contain the sum and basic_out[1] will contain the max since Sum is specified
-//! before Max in enum pbl_stats_op. No gaps are present for Average or Min since those ops were
-//! not specified for calculation.
-//! @param op Bitfield of enum pbl_stats_op describing the operations to calculate
-//! @param data int32_t pointer to an array of data. If data is NULL, there will be no output
-//! @param num_data size_t number of data points in the data array
-//! @param filter Optional pbl_stats_filter_t to filter data against, NULL if none specified
-//! @param context Optional pbl_stats_filter_t context, NULL if non specified
-//! @param[out] basic_out address to an int32_t or int32_t array to write results to
+/**
+ * @brief Calculate basic statistics over an array.
+ *
+ * Results are written to @p basic_out in the order of enum pbl_stats_op, without gaps: for
+ * <tt>PBL_STATS_OP_MAX | PBL_STATS_OP_SUM</tt>, @p basic_out[0] is the sum and @p basic_out[1]
+ * the maximum.
+ *
+ * @param op Operations, a combination of enum pbl_stats_op.
+ * @param data Values. Nothing is written if NULL.
+ * @param num_data Number of values.
+ * @param filter Filter, or NULL to include every value.
+ * @param context Filter data.
+ * @param[out] basic_out One result per operation in @p op.
+ */
 void pbl_stats_calculate(enum pbl_stats_op op, const int32_t *data, size_t num_data,
                          pbl_stats_filter_t filter, void *context, int32_t *basic_out);
 
+/**
+ * @brief Calculate the weighted median of an array.
+ *
+ * The weighted median is the value x[k] such that the total weight of the values below it and
+ * the total weight of the values above it are each at most half the total weight. When two
+ * values qualify, their mean is returned. Uses integer division throughout and allocates a
+ * temporary copy with calloc().
+ *
+ * @param vals Values.
+ * @param weights_x100 Positive weights, scaled by 100.
+ * @param num_data Number of values.
+ * @return Weighted median, or 0 for invalid arguments, zero total weight or allocation failure.
+ */
 int32_t pbl_stats_weighted_median(const int32_t *vals, const int32_t *weights_x100,
                                   size_t num_data);
+
+/** @} */

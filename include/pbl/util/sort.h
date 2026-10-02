@@ -6,12 +6,26 @@
 #include <stdint.h>
 #include <stddef.h>
 
-//! Standard sort comparator function
+/**
+ * @defgroup util_sort Sorting
+ * @ingroup util
+ * @brief In-place sorting of small arrays.
+ * @{
+ */
+
+/** @brief qsort()-style comparator: negative, 0 or positive when a < b, a == b or a > b. */
 typedef int (*SortComparator)(const void *, const void *);
 
-//! Bubble sorts an array
-//! @param[in] array The array that should be sorted
-//! @param[in] num_elem Number of elements in the array
-//! @param[in] elem_size Size of each element in the array
-//! @param[in] comp SortComparator comparator function
+/**
+ * @brief Sort an array in ascending order with a quadratic exchange sort.
+ *
+ * Meant for small arrays; it is not stable.
+ *
+ * @param[in,out] array Array to sort.
+ * @param num_elem Number of elements.
+ * @param elem_size Size of an element in bytes.
+ * @param comp Comparator.
+ */
 void sort_bubble(void *array, size_t num_elem, size_t elem_size, SortComparator comp);
+
+/** @} */

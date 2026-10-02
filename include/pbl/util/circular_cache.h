@@ -9,43 +9,105 @@
 #include <stddef.h>
 #include <stdint.h>
 
-//! @note Needs to handle NULL items gracefully
+/**
+ * @defgroup util_circular_cache Circular cache
+ * @ingroup util
+ * @brief Fixed-size, array-backed cache that evicts its oldest item.
+ *
+ * Items are found by linear search with a comparator. See also @ref util_keyed_circular_cache.
+ * @{
+ */
+
+/**
+ * @brief Destructor called on an item about to be evicted or flushed.
+ *
+ * It is also called on slots that never held an item, so it must recognize those (e.g. all
+ * zeros).
+ *
+ * @param item Item.
+ */
 typedef void (*CircularCacheItemDestructor)(void *item);
 
-//! Array-backed circular cache
+/** @brief Circular cache state. */
 typedef struct {
-  uint8_t *cache;           //<! Pointer to the array
-  size_t item_size;         //<! Size of the array element in bytes
-  int next_erased_item_idx; //<! Next array element to be deleted
+  /** Item array. */
+  uint8_t *cache;
+  /** Size of an item in bytes. */
+  size_t item_size;
+  /** Index of the next item to evict. */
+  int next_erased_item_idx;
+  /** Number of items in @ref cache. */
   int total_items;
+  /** Comparator, returns 0 for matching items. */
   Comparator compare_cb;
+  /** Optional item destructor. */
   CircularCacheItemDestructor item_destructor;
 } CircularCache;
 
+/**
+ * @brief Initialize a circular cache.
+ *
+ * @param[out] c Circular cache.
+ * @param buffer Item array of @p total_items items of @p item_size bytes, initialized by the
+ * caller.
+ * @param item_size Size of an item in bytes.
+ * @param total_items Number of items.
+ * @param compare_cb Comparator, returns 0 for matching items.
+ */
 void circular_cache_init(CircularCache *c, uint8_t *buffer, size_t item_size, int total_items,
                          Comparator compare_cb);
 
-//! Add a destructor to be called when an item is evicted from the circular cache.
-//! @note the destructor needs to handle NULL items gracefully
+/**
+ * @brief Set the destructor called on items when they are evicted or flushed.
+ *
+ * @param c Circular cache.
+ * @param destructor Destructor, NULL for none.
+ */
 void circular_cache_set_item_destructor(CircularCache *c, CircularCacheItemDestructor destructor);
 
-//! @return True if the cache contains the data
-//! @note Item must be of size item_size
+/**
+ * @brief Check whether the cache contains an item.
+ *
+ * @param c Circular cache.
+ * @param item Item to compare against, of the cache's item size.
+ * @return true if an item matches.
+ */
 bool circular_cache_contains(CircularCache *c, void *item);
 
-//! @return Pointer to buffer of entry in cache that contains the data
-//! @note Item must be of size item_size
+/**
+ * @brief Find an item in the cache.
+ *
+ * @param c Circular cache.
+ * @param theirs Item to compare against, of the cache's item size.
+ * @return Matching item in the cache, or NULL.
+ */
 void *circular_cache_get(CircularCache *c, void *theirs);
 
-//! Push data of size item_size into the circular cache
-//! Overwrites the item at next_erased_item_idx
+/**
+ * @brief Copy an item into the cache, evicting the oldest one.
+ *
+ * @param c Circular cache.
+ * @param item Item, of the cache's item size.
+ */
 void circular_cache_push(CircularCache *c, void *item);
 
-//! Fills a circular cache with the representation an item, useful for non-zero clearing a cache
-//! @note this will assert if an item destructor is set
+/**
+ * @brief Set every slot of the cache to a copy of an item.
+ *
+ * Useful to clear a cache to a non-zero value. Asserts if an item destructor is set.
+ *
+ * @param c Circular cache.
+ * @param item Item, of the cache's item size.
+ */
 void circular_cache_fill(CircularCache *c, uint8_t *item);
 
-//! Flushes the buffer, calling destructors for each item in the cache. The calling module must
-//! be able to differentiate between a valid and invalid entry in the cache (e.g. the cache is not
-//! yet filled, so it has entries with zeroed out data).
+/**
+ * @brief Call the destructor on every slot and restart eviction from the first one.
+ *
+ * The item data is left in place.
+ *
+ * @param c Circular cache.
+ */
 void circular_cache_flush(CircularCache *c);
+
+/** @} */

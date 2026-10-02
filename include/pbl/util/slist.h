@@ -6,91 +6,204 @@
 #include <stdint.h>
 #include "order.h"
 
+/**
+ * @defgroup util_slist Singly linked list
+ * @ingroup util
+ * @brief Intrusive singly linked list.
+ *
+ * Like @ref util_list with half the per-node overhead, at the cost of linear-time removal. A list
+ * is referenced by its head.
+ *
+ * @code{.c}
+ * struct waiter {
+ *   SingleListNode node;
+ *   int id;
+ * };
+ *
+ * static SingleListNode *s_waiters;
+ *
+ * s_waiters = slist_prepend(s_waiters, &w->node);
+ *
+ * for (SingleListNode *n = s_waiters; n != NULL; n = slist_get_next(n)) {
+ *   struct waiter *it = container_of(n, struct waiter, node);
+ *   ...
+ * }
+ *
+ * slist_remove(&w->node, &s_waiters);
+ * @endcode
+ * @{
+ */
+
+/** @brief Singly linked list node, embedded in the listed structure. */
 typedef struct SingleListNode {
+  /** Next node, or NULL. */
   struct SingleListNode *next;
 } SingleListNode;
 
+/**
+ * @brief Filter for slist_find().
+ *
+ * @param found_node Node to check.
+ * @param data Callback data.
+ * @return true if @p found_node matches.
+ */
 typedef bool (*SingleListFilterCallback)(SingleListNode *found_node, void *data);
 
-//! - If a callback returns true, the iteration continues
-//! - If a callback returns false, the iteration stops.
+/**
+ * @brief Callback for slist_foreach().
+ *
+ * The callback may unlink or free @p node.
+ *
+ * @param node Current node.
+ * @param context Callback data.
+ * @return true to continue iterating, false to stop.
+ */
 typedef bool (*SingleListForEachCallback)(SingleListNode *node, void *context);
 
+/** @brief Initializer of an unlinked node. */
 #define SINGLE_LIST_NODE_NULL {.next = NULL}
 
-//! Initializes the node.
+/**
+ * @brief Initialize a node as unlinked.
+ *
+ * @param[out] node Node.
+ */
 void slist_init(SingleListNode *node);
 
-//! Inserts new_node after node in the list.
-//! Always returns new_node.
+/**
+ * @brief Insert a node after another one.
+ *
+ * @param node Node to insert after, may be NULL.
+ * @param new_node Node to insert.
+ * @return @p new_node.
+ */
 SingleListNode *slist_insert_after(SingleListNode *node, SingleListNode *new_node);
 
-//! Prepends new_node to the head of the list.
-//! @param head The current head of the list, can be NULL.
-//! @param new_node The node to prepend.
-//! Always returns the new head of the list.
+/**
+ * @brief Prepend a node to a list.
+ *
+ * @param head Head of the list, or NULL for an empty list.
+ * @param new_node Node to prepend, may be NULL.
+ * @return New head of the list.
+ */
 SingleListNode *slist_prepend(SingleListNode *head, SingleListNode *new_node);
 
-//! Appends new_node to the tail of the list that head is part of.
-//! @param head Any node in the list, can be NULL (will result in a list containing only new_node).
-//! @param new_node The node to append.
-//! Always returns the tail of the list.
+/**
+ * @brief Append a node to the tail of a list.
+ *
+ * @param head Any node in the list, or NULL for an empty list.
+ * @param new_node Node to append.
+ * @return @p new_node, the new tail.
+ */
 SingleListNode *slist_append(SingleListNode *head, SingleListNode *new_node);
 
-//! Removes the head of the list and returns the new head.
+/**
+ * @brief Unlink the head of a list.
+ *
+ * @param head Head of the list, may be NULL.
+ * @return New head, or NULL if the list is now empty.
+ */
 SingleListNode *slist_pop_head(SingleListNode *head);
 
-//! Removes the node from the list.
-//! @param node the SingleListNode to remove.
-//! @param[in,out] *head will be updated if the removed node happens to be the head.
-//! @note head must not be NULL.
+/**
+ * @brief Unlink a node from a list.
+ *
+ * Nothing is done if @p node is not in the list.
+ *
+ * @param node Node to remove.
+ * @param[in,out] head Head of the list, updated if it is @p node.
+ */
 void slist_remove(SingleListNode *node, SingleListNode **head);
 
-//! Gets the next node.
+/**
+ * @brief Get the next node.
+ *
+ * @param node Node, may be NULL.
+ * @return Next node, or NULL.
+ */
 SingleListNode *slist_get_next(SingleListNode *node);
 
-//! Gets the last node in the list.
+/**
+ * @brief Get the tail of a list.
+ *
+ * @param node Any node in the list, may be NULL.
+ * @return Tail, or NULL for NULL.
+ */
 SingleListNode *slist_get_tail(SingleListNode *node);
 
-//! @return true if the passed in node is the tail of a list.
+/**
+ * @brief Check whether a node is the tail of its list.
+ *
+ * @param node Node, may be NULL.
+ * @return true if @p node has no next node, false for NULL.
+ */
 bool slist_is_tail(const SingleListNode *node);
 
-//! Counts the number of nodes from head to tail.
+/**
+ * @brief Count the nodes of a list.
+ *
+ * @param head Head of the list, may be NULL.
+ * @return Number of nodes.
+ */
 uint32_t slist_count(SingleListNode *head);
 
-//! @param[in] head The head of the list to search.
-//! @param[in] node The node to search for.
-//! @returns True if the list contains node.
+/**
+ * @brief Check whether a list contains a node.
+ *
+ * @param head Head of the list, may be NULL.
+ * @param node Node to search for.
+ * @return true if @p node is in the list.
+ */
 bool slist_contains(const SingleListNode *head, const SingleListNode *node);
 
-//! Gets the first node that conforms to the given filter callback.
-//! @param head The list node from which to start the search.
-//! @param filter_callback A function returning true if the node matches the filter criteria.
-//! @param data Optional callback data.
+/**
+ * @brief Find the first matching node.
+ *
+ * @param head Node to start from, included in the search. May be NULL.
+ * @param filter_callback Filter.
+ * @param data Filter data.
+ * @return Matching node, or NULL.
+ */
 SingleListNode *slist_find(SingleListNode *head, SingleListFilterCallback filter_callback,
                            void *data);
 
-//! Adds a node to a list ordered by given comparator.
-//! @param[in] head The head of the list that we want to add to.
-//! @param[in] new_node The node being added.
-//! @param[in] comparator The comparison function to use.
-//! @param[in] ascending True to maintain the list ordered ascending from head to tail.
-//! @returns The (new) head of the list.
-//! @note This function will not sort existing nodes in the list.
+/**
+ * @brief Insert a node into a sorted list, keeping it sorted.
+ *
+ * Existing nodes are not sorted. Equal nodes keep their insertion order.
+ *
+ * @param head Head of the list, or NULL for an empty list.
+ * @param new_node Node to insert.
+ * @param comparator Called with an existing node and @p new_node; see Comparator.
+ * @param ascending true to keep the list in ascending order from head to tail.
+ * @return New head of the list.
+ */
 SingleListNode *slist_sorted_add(SingleListNode *head, SingleListNode *new_node,
                                  Comparator comparator, bool ascending);
 
-//! Concatenate two lists.
-//! @param list_a list onto which to concatenate list_b.
-//! @param list_b list to concatenate onto list_a.
-//! @return head of the new list.
+/**
+ * @brief Append a list to another one.
+ *
+ * @param list_a Head of the first list, may be NULL.
+ * @param list_b Head of the list to append, may be NULL.
+ * @return Head of the resulting list.
+ */
 SingleListNode *slist_concatenate(SingleListNode *list_a, SingleListNode *list_b);
 
-//! Iterates over each node and passes it into callback given.
-//! @param[in] head The head of the list that we want to iterate over.
-//! @param[in] each_cb The callback function to pass each node into.
-//! @param[in] context Optional callback data.
+/**
+ * @brief Call a function on each node of a list.
+ *
+ * @param head Head of the list, may be NULL.
+ * @param each_cb Callback; it may unlink or free the node it gets.
+ * @param context Callback data.
+ */
 void slist_foreach(SingleListNode *head, SingleListForEachCallback each_cb, void *context);
 
-//! Dump a list to PBL_LOG.
+/**
+ * @brief Log every node of a list with UTIL_LOG().
+ *
+ * @param head Head of the list.
+ */
 void slist_debug_dump(SingleListNode *head);
+
+/** @} */

@@ -7,125 +7,224 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * @defgroup util_heap Heap
+ * @ingroup util
+ * @brief First-fit heap allocator over a caller-provided memory region.
+ *
+ * Small allocations are taken from the start of the region and large ones (256 bytes or more)
+ * from the end, to limit fragmentation. Each block carries a small header. The heap is not thread
+ * safe unless given a lock with heap_set_lock_impl().
+ *
+ * @code{.c}
+ * static uint8_t s_region[4096];
+ * static Heap s_heap;
+ *
+ * heap_init(&s_heap, s_region, s_region + sizeof(s_region), false);
+ * void *p = heap_malloc(&s_heap, 100, (uintptr_t)__builtin_return_address(0));
+ * heap_free(&s_heap, p, 0);
+ * @endcode
+ * @{
+ */
+
+/** @cond INTERNAL_HIDDEN */
 struct _tagHeapInfo_t;
 typedef struct _tagHeapInfo_t HeapInfo_t;
+/** @endcond */
 
+/** @brief Lock function of a heap, called with HeapLockImpl::lock_context. */
 typedef void (*LockFunction)(void *);
+/** @brief Unlock function of a heap, called with HeapLockImpl::lock_context. */
 typedef void (*UnlockFunction)(void *);
 
+/** @brief Locking of a heap. */
 typedef struct HeapLockImpl {
+  /** Takes the lock. */
   LockFunction lock_function;
+  /** Releases the lock. */
   UnlockFunction unlock_function;
+  /** Context passed to both functions. */
   void *lock_context;
 } HeapLockImpl;
 
+/** @brief Handler of a double free, called with the pointer being freed. */
 typedef void (*DoubleFreeHandler)(void *);
+/**
+ * @brief Handler of a corrupted heap, called with the block where corruption was found.
+ *
+ * Called after the heap lock is released.
+ */
 typedef void (*CorruptionHandler)(void *);
 
+/** @brief Heap state. */
 typedef struct Heap {
-  // These HeapInfo_t structure pointers are initialized to the start and the end of the heap area.
-  // The begin will point to the first block that's in the heap area, where the end is actually a
-  // pointer to the first block *after* the heap area. This means the last block in the heap isn't
-  // actually at end, but at end - begin->PrevSize.
+  /** First block of the heap. */
   HeapInfo_t *begin;
+  /** End of the heap, right after the last block. */
   HeapInfo_t *end;
 
-  //! Number of allocated bytes, including beginners
+  /** Number of allocated bytes, including block headers. */
   unsigned int current_size;
-  //! Peak number of allocated bytes, including beginners
+  /** Peak of @ref current_size. */
   unsigned int high_water_mark;
 
+  /** Locking. */
   HeapLockImpl lock_impl;
 
+  /** Double free handler, NULL to assert. */
   DoubleFreeHandler double_free_handler;
+  /** Fill freed memory with a junk pattern (non-release builds). */
   bool fuzz_on_free;
 
+  /** Corrupted block found while locked, reported once unlocked. */
   void *corrupt_block;
+  /** Corruption handler, NULL to assert. */
   CorruptionHandler corruption_handler;
 } Heap;
 
-//! Initialize the heap inside the specified boundaries, zero-ing out the free
-//! list data structure.
-//!     @note Assumes 0 is not a valid address for allocation.
-//!     @param heap The heap to initialize
-//!     @param start The start of the heap will be the first int-aligned address >= start
-//!     @param end The end of the heap will be the last sizeof(HeaderBlock) aligned
-//!         address that is < end
-//!     @param fuzz_on_free if true, memsets memory contents to junk values upon free in order to
-//!                         catch bad accesses more quickly
+/**
+ * @brief Initialize a heap over a memory region, zeroing it.
+ *
+ * The usable size is capped to about 32767 alignment units (128 KiB with 4-byte units).
+ *
+ * @param[out] heap Heap.
+ * @param start Start of the region, rounded up to the alignment.
+ * @param end End of the region, exclusive, rounded down to the alignment.
+ * @param fuzz_on_free Fill freed memory with a junk pattern to catch use after free sooner.
+ */
 void heap_init(Heap *const heap, void *start, void *end, bool fuzz_on_free);
 
-//! Configure this heap for thread safety using the given locking implementation
+/**
+ * @brief Make a heap thread safe with a lock.
+ *
+ * @param heap Heap.
+ * @param lock_impl Lock functions.
+ */
 void heap_set_lock_impl(Heap *heap, HeapLockImpl lock_impl);
 
-//! Configure the heap with a pointer that gets called when a double free is detected.
-//! If this isn't configured on a heap, the default behaviour is to trigger a PBL_CROAK.
+/**
+ * @brief Set the function called on a double free, instead of asserting.
+ *
+ * @param heap Heap.
+ * @param double_free_handler Handler; the free is then ignored.
+ */
 void heap_set_double_free_handler(Heap *heap, DoubleFreeHandler double_free_handler);
 
-//! Configure the heap with a pointer that gets called when (and if) corruption is detected.
-//! If this isn't configured on a heap, the default behaviour is to trigger a PBL_CROAK.
+/**
+ * @brief Set the function called when corruption is detected, instead of asserting.
+ *
+ * @param heap Heap.
+ * @param corruption_handler Handler.
+ */
 void heap_set_corruption_handler(Heap *heap, CorruptionHandler corruption_handler);
 
-//! Allocate a fragment of memory on the given heap. Tries to avoid
-//! fragmentation by obtaining memory requests larger than LARGE_SIZE from the
-//! end of the buffer, while small fragments are taken from the start of the
-//! buffer.
-//! @note heap_init() must be called prior to using heap_malloc().
-//! @param heap The heap to allocate from
-//! @param nbytes Number of bytes to be allocated. Must be > 0.
-//! @param client_pc The PC register of the client who caused this malloc. Only used when
-//!                  CONFIG_MALLOC_INSTRUMENTATION is defined.
-//! @return A pointer to the start of the allocated memory
+/**
+ * @brief Allocate memory.
+ *
+ * @param heap Heap, initialized.
+ * @param nbytes Number of bytes, greater than 0.
+ * @param client_pc Caller address, recorded with @c CONFIG_MALLOC_INSTRUMENTATION.
+ * @return Allocated memory, or NULL if there is not enough contiguous free space.
+ */
 void *heap_malloc(Heap *const heap, unsigned long nbytes, uintptr_t client_pc);
 
-//! Return memory to free list. Where possible, make contiguous blocks of free
-//! memory. The function tries to verify that the structure is a valid fragment
-//! structure before the memory is freed. When a fragment is freed, adjacent
-//! free fragments may be combined.
-//!     @note heap_init() must be called prior to using heap_free().
-//!         otherwise, the free list will be NULL.)
-//!     @note Assumes that 0 is not a valid address for allocation.
+/**
+ * @brief Free memory, merging it with adjacent free blocks.
+ *
+ * @param heap Heap, initialized.
+ * @param ptr Memory allocated from @p heap, or NULL (no-op).
+ * @param client_pc Caller address, for instrumentation.
+ */
 void heap_free(Heap *const heap, void *ptr, uintptr_t client_pc);
 
-//! Allocate a new block of the given size, and copy over the data at ptr into
-//! the new block. If the new size is smaller than the old size, will only copy
-//! over as much data as possible. Frees ptr.
-//! @param heap The heap to allocate from
-//! @param ptr Points to the memory region to re-allocate.
-//! @param nbytes The total number of bytes to allocate.
-//! @param client_pc The PC register of the client who caused this malloc. Only used when
-//!                  CONFIG_MALLOC_INSTRUMENTATION is defined.
+/**
+ * @brief Reallocate memory.
+ *
+ * Always allocates a new block, copies as much of the old data as fits, then frees @p ptr.
+ *
+ * @param heap Heap.
+ * @param ptr Memory to reallocate, or NULL.
+ * @param nbytes New size in bytes.
+ * @param client_pc Caller address, recorded with @c CONFIG_MALLOC_INSTRUMENTATION.
+ * @return New memory, or NULL on failure (@p ptr is then left untouched).
+ */
 void *heap_realloc(Heap *const heap, void *ptr, unsigned long nbytes, uintptr_t client_pc);
 
-//! Allocate a buffer to hold anything. The initial contents of the buffer
-//! are zero'd.
+/**
+ * @brief Allocate zeroed memory.
+ *
+ * @param heap Heap.
+ * @param size Number of bytes.
+ * @param client_pc Caller address, for instrumentation.
+ * @return Allocated memory, or NULL.
+ */
 void *heap_zalloc(Heap *const heap, size_t size, uintptr_t client_pc);
 
-//! Allocate a buffer to hold an array of count elements, each of size size (in bytes)
-//! and initializes all bits to zero.
+/**
+ * @brief Allocate a zeroed array.
+ *
+ * The multiplication is not checked for overflow.
+ *
+ * @param heap Heap.
+ * @param count Number of elements.
+ * @param size Size of an element in bytes.
+ * @param client_pc Caller address, for instrumentation.
+ * @return Allocated memory, or NULL.
+ */
 void *heap_calloc(Heap *const heap, size_t count, size_t size, uintptr_t client_pc);
 
-//! @return True if ptr is on the given heap, false otherwise.
+/**
+ * @brief Check whether an address is within a heap.
+ *
+ * @param heap Heap.
+ * @param ptr Address.
+ * @return true if @p ptr is in the heap region.
+ */
 bool heap_contains_address(Heap *const heap, void *ptr);
 
-//! @return True if ptr is allocated on the given heap, false otherwise.
+/**
+ * @brief Check whether a pointer is an allocated block of a heap.
+ *
+ * @param heap Heap.
+ * @param ptr Pointer.
+ * @return true if @p ptr was returned by an allocation and not freed.
+ */
 bool heap_is_allocated(Heap *const heap, void *ptr);
 
-//! @return The size of the heap in bytes
+/**
+ * @brief Get the size of a heap.
+ *
+ * @param heap Heap.
+ * @return Size in bytes.
+ */
 size_t heap_size(const Heap *heap);
 
-//! @return the fewest amount of bytes that the given heap had free
+/**
+ * @brief Get the smallest amount of free memory the heap has had.
+ *
+ * @param heap Heap.
+ * @return Heap size minus the high water mark, in bytes.
+ */
 uint32_t heap_get_minimum_headroom(Heap *heap);
 
-//! Used for debugging.
-//! Calculates and outputs the current memory usage on the given heap.
-//!     @param heap The heap to calculate the totals for
-//!     @param used Output, will contain the number of bytes currently
-//!         allocated and in use.
-//!     @param free Output, will contain the number of unallocated bytes.
-//!     @param max_free Output, will contain size of the largest unallocated
-//!         fragment.
+/**
+ * @brief Calculate the current memory usage of a heap, for debugging.
+ *
+ * @param heap Heap.
+ * @param[out] used Bytes allocated.
+ * @param[out] free Bytes free.
+ * @param[out] max_free Size of the largest free block.
+ */
 void heap_calc_totals(Heap *const heap, unsigned int *used, unsigned int *free,
                       unsigned int *max_free);
 
+/**
+ * @brief Dump every block and the heap totals to the debug serial port.
+ *
+ * Only available with @c CONFIG_MALLOC_INSTRUMENTATION.
+ *
+ * @param heap Heap.
+ */
 void heap_dump_malloc_instrumentation_to_dbgserial(Heap *heap);
+
+/** @} */
