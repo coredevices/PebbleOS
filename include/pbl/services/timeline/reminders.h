@@ -7,39 +7,86 @@
 #include "pbl/services/timeline/item.h"
 #include "pbl/services/new_timer/new_timer.h"
 
+/**
+ * @defgroup services_timeline_reminders Reminders
+ * @ingroup services_timeline
+ * @brief Pops up reminders at their time.
+ *
+ * Reminders are timeline items of type TimelineItemTypeReminder stored in the Reminders BlobDB;
+ * their parent is the pin they remind of. A once-a-second check against the RTC triggers the next
+ * reminder, marks it reminded and posts a @c PEBBLE_REMINDER_EVENT.
+ * @{
+ */
+
+/** @brief A reminder. */
 typedef TimelineItem Reminder;
+/** @brief Id of a reminder. */
 typedef TimelineItemId ReminderId;
 
-//! Set the reminder timer to the next stored reminder chronologically
-//! @return S_SUCCESS or appropriate error
+/**
+ * @brief Arm the reminder timer for the next stored reminder.
+ *
+ * @return S_SUCCESS, also when there are no reminders, or an error.
+ */
 status_t reminders_update_timer(void);
 
-//! Insert a reminder to be popped up at a certain time
-//! @param reminder pointer to the reminder to be inserted
-//! @return S_SUCCESS or appropriate error
+/**
+ * @brief Insert a reminder into the Reminders database.
+ *
+ * @param reminder Reminder to insert.
+ * @return S_SUCCESS or an error.
+ */
 status_t reminders_insert(Reminder *reminder);
 
-//! Initialize the reminders so they can be activated on the watch
-//! @return S_SUCCESS or appropriate error
+/**
+ * @brief Initialize reminders and arm the timer.
+ *
+ * @return S_SUCCESS or an error.
+ */
 status_t reminders_init(void);
 
-//! Delete a reminder
-//! @param reminder_id pointer to an Id of the reminder to be deleted
-//! @return S_SUCCESS or appropriate error
+/**
+ * @brief Delete a reminder, emitting a BlobDB event.
+ *
+ * @param reminder_id Id of the reminder.
+ * @return S_SUCCESS or an error.
+ */
 status_t reminders_delete(ReminderId *reminder_id);
 
-//! @return True if the reminder can snooze for a non-zero amount of time, false otherwise.
+/**
+ * @brief Check whether a reminder can be snoozed.
+ *
+ * @param reminder Reminder.
+ * @return true if it can snooze for a non-zero amount of time.
+ */
 bool reminders_can_snooze(Reminder *reminder);
 
-//! Snooze a reminder
-//! @param reminder Pointer to the reminder to snooze
-//! @return S_SUCCESS, E_INVALID_OPERATION if cannot snooze, or some other error otherwise
+/**
+ * @brief Snooze a reminder.
+ *
+ * Long before the event of the parent pin, snoozes for half the time left; close to it, for a
+ * constant delay; too long after it, not at all. The reminder is reinserted with the new time and
+ * its reminded status cleared.
+ *
+ * @param reminder Reminder to snooze.
+ * @retval S_SUCCESS Snoozed.
+ * @retval E_INVALID_OPERATION The reminder cannot be snoozed.
+ * @return Another error if reinserting failed.
+ */
 status_t reminders_snooze(Reminder *reminder);
 
-//! Creates an event to alert the system that a reminder has been removed
-//! @param reminder_id Pointer to the uuid of the removed reminder
+/**
+ * @brief Post an event telling that a reminder was removed.
+ *
+ * @param reminder_id Id of the removed reminder.
+ */
 void reminders_handle_reminder_removed(const Uuid *reminder_id);
 
-//! Creates an event to alert the system that a triggered reminder has changed
-//! @param reminder_id Pointer to the uuid of the updated reminder
+/**
+ * @brief Post an event telling that a triggered reminder changed.
+ *
+ * @param reminder_id Id of the updated reminder.
+ */
 void reminders_handle_reminder_updated(const Uuid *reminder_id);
+
+/** @} */

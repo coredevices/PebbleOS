@@ -10,145 +10,290 @@
 #include "applib/ui/layer.h"
 #include "pbl/util/uuid.h"
 
+/**
+ * @defgroup services_timeline_layout_layer Layout layers
+ * @ingroup services_timeline
+ * @brief Layers that render templated content such as timeline items.
+ *
+ * A LayoutLayer displays a TimelineItem (pin, reminder or notification) from its attributes. It
+ * differs from a plain Layer in that:
+ *
+ * - it is modulated by a LayoutLayerMode, the context it is shown in, e.g. a detailed card or a
+ *   compact pin in the Timeline list;
+ * - it exposes generic methods: layout_create(), layout_destroy() and layout_get_size();
+ * - it is built from the set of attributes it displays;
+ * - sub-types are instantiated by LayoutId rather than through specialized constructors.
+ *
+ * @code{.c}
+ * TimelineLayoutInfo info;
+ * timeline_layout_init_info(&info, item, time_util_get_midnight_of(now));
+ * const LayoutLayerConfig config = {
+ *   .frame = &frame,
+ *   .attributes = &item->attr_list,
+ *   .mode = LayoutLayerModeCard,
+ *   .app_id = &item->header.parent_id,
+ *   .context = &info,
+ * };
+ * LayoutLayer *layout = layout_create(item->header.layout, &config);
+ * layer_add_child(parent, (Layer *)layout);
+ * ...
+ * layout_destroy(layout);
+ * @endcode
+ * @{
+ */
+
+/** @brief Direction in which text is anchored. */
 typedef enum {
-  LayoutLayerAnchorTextDirectionUp,   // for scrolling up, past mode
-  LayoutLayerAnchorTextDirectionDown, // for scrolling down, future mode
+  /** Scrolling up, past mode. */
+  LayoutLayerAnchorTextDirectionUp,
+  /** Scrolling down, future mode. */
+  LayoutLayerAnchorTextDirectionDown,
 } LayoutLayerAnchorTextDirection;
 
-//! LayoutLayer is a type of Layer that is used to display templated 3.0 content
-//! including \ref TimelineItem (pins, reminders, notifications) as well as AppFaces.
-//! LayoutLayers depart from traditional Layers in a few meaningful way.
-//! 1) LayoutLayers are modulated by a "mode", which is the context in which the LayoutLayer
-//! is displayed. Examples of modes are the "card" mode which displays detailed pin info
-//! and the "minimized" mode which is used to display a "toast" like mode of a pin.
-//! 2) LayoutLayers expose three more generic APIs:
-//! \ref layout_get_size which returns the size of the
-//! content within the layout as well as a generic constructor/destructor:
-//!  \ref layout_create / \ref layout_destroy.
-//! 3) LayoutLayers are constructed from a set of Attributes which they are meant to display.
-//! 4) Sub-types of LayoutLayer are instantiated by summoning the correct type ID rather than by
-//! calling a specialized constructor / destructor as per the Layer API.
-
-//! LayoutIds identify the type of a LayoutLayer. They are passed to the constructor to
-//! instantiate a specific sub-type of LayoutLayer. Simply stated, the LayoutLayer sub-type
-//! informs what kinds of attributes to expect.
+/**
+ * @brief Type of a LayoutLayer, which tells which attributes to expect.
+ *
+ * Stored in CommonTimelineItemHeader::layout.
+ */
 typedef enum {
-  LayoutIdUnknown = 0,      //!< Useful for catching error - 0 is not used as an id.
-  LayoutIdGeneric,          //!< Generic layout (probably only for testing)
-  LayoutIdCalendar,         //!< Calendar Pins
-  LayoutIdReminder,         //!< Generic Reminders
-  LayoutIdNotification,     //!< Generic Notifications
-  LayoutIdCommNotification, //!< Communication Notification
-  LayoutIdWeather,          //!< Weather Pins
-  LayoutIdSports,           //!< Sports Pins
-  LayoutIdAlarm,            //!< Alarm Pins
-  LayoutIdHealth,           //!< Health Pins
+  /** Not a valid id. */
+  LayoutIdUnknown = 0,
+  /** Generic pin; requires a title. */
+  LayoutIdGeneric,
+  /** Calendar pin; requires a title. */
+  LayoutIdCalendar,
+  /** Reminder, rendered by the notification layout; requires a title. */
+  LayoutIdReminder,
+  /** Notification; requires a title. */
+  LayoutIdNotification,
+  /** Communication notification; not implemented, never verifies. */
+  LayoutIdCommNotification,
+  /** Weather pin; requires a title and a location name. */
+  LayoutIdWeather,
+  /** Sports pin; requires a title. */
+  LayoutIdSports,
+  /** Alarm pin; requires a title and a subtitle. */
+  LayoutIdAlarm,
+  /** Health pin; requires a title. */
+  LayoutIdHealth,
+  /** Number of layout ids. */
   NumLayoutIds,
-  LayoutIdTest, //!< Layout only for unit tests with no attribute requirements
+  /** Unit test layout with no attribute requirements, rendered as generic. */
+  LayoutIdTest,
 } LayoutId;
 
+/** @brief Colors of a layout. */
 typedef struct {
+  /** Primary (foreground) color. */
   GColor primary_color;
+  /** Secondary color. */
   GColor secondary_color;
+  /** Background color. */
   GColor bg_color;
 } LayoutColors;
 
-//! LayoutLayerModes modulate the layout. The mode defines the
-//! context in which the layout is displayed.
+/** @brief Context in which a layout is displayed. */
 typedef enum {
+  /** No mode. */
   LayoutLayerModeNone = 0,
-  LayoutLayerModePeek,       //!< Overlay-style mode shown similar to a partially obstructing HUD
-  LayoutLayerModePinnedFat,  //!< Menu-style mode in the Timeline app (fat, first item)
-  LayoutLayerModePinnedThin, //!< Menu-style mode in the Timeline app (thin, second item)
-  LayoutLayerModeCard,       //!< Card mode, shows details of a TimelineItem
+  /** Overlay shown like a partially obstructing HUD (Timeline Peek). */
+  LayoutLayerModePeek,
+  /** Menu-style mode in the Timeline app, fat first item. */
+  LayoutLayerModePinnedFat,
+  /** Menu-style mode in the Timeline app, thin second item. */
+  LayoutLayerModePinnedThin,
+  /** Card showing the details of a TimelineItem. */
+  LayoutLayerModeCard,
+  /** Number of modes. */
   NumLayoutLayerModes,
 } LayoutLayerMode;
 
-//! Forward defined to break define cycle.
 struct LayoutLayer;
 
+/** @brief Configuration of a new LayoutLayer. */
 typedef struct LayoutLayerConfig LayoutLayerConfig;
 
-//! A destructor for a LayoutLayer
-//! @param layout the LayoutLayer to destroy
+/**
+ * @brief Destructor of a LayoutLayer.
+ *
+ * @param layout Layout to destroy.
+ */
 typedef void (*LayoutLayerDestructor)(struct LayoutLayer *layout);
 
-//! A constructor for a LayoutLayer
-//! @param frame the frame at which the LayoutLayer should be initialized.
-//! @param attributes a pointer to the list of attributes to display in the layout layer.
-//! Note that each LayoutLayer type expects a specific set of attributes
-//! @param mode the LayoutLayerMode for the context in which the layout is displayed
-//! @param context a context pointer
-//! @return A pointer to the newly minted LayoutLayer
+/**
+ * @brief Constructor of a LayoutLayer.
+ *
+ * @param config Configuration; each layout type expects specific attributes and context.
+ * @return New layout, allocated on the calling task's heap.
+ */
 typedef struct LayoutLayer *(*LayoutLayerConstructor)(const LayoutLayerConfig *config);
 
-//! A verifier for a layout
-//! @param existing_attributes array of booleans indicating which attributes exist
-//! @return true if the attribute list satisfies the layout requirements, false otherwise
+/**
+ * @brief Check whether attributes satisfy the requirements of a layout.
+ *
+ * @param existing_attributes Array of NumAttributeIds flags, indexed by AttributeId.
+ * @return true if the required attributes are present.
+ */
 typedef bool (*LayoutVerifier)(bool existing_attributes[]);
 
 #pragma push_macro("GSize")
 #undef GSize // [FBO] ugly work around for rogue macro
-//! Get the size of the content of a layout. This is defined by the length of the text and
-//! the size of the icons contained within the attributes.
-//! @param ctx a pointer to the GContext in which the layout is rendered
-//! @param layout a pointer to the LayoutLayer
-//! @return A GSize describing the size occupied by the LayoutLayer's content
+/**
+ * @brief Get the size of a layout's content, set by its text and icons.
+ *
+ * @param ctx Graphics context the layout is rendered in.
+ * @param layout Layout.
+ * @return Size of the content.
+ */
 typedef struct GSize (*LayoutLayerSizeGetter)(GContext *ctx, struct LayoutLayer *layout);
 #pragma pop_macro("GSize")
 
+/**
+ * @brief Change the mode of a layout.
+ *
+ * @param layout Layout.
+ * @param final_mode New mode.
+ */
 typedef void (*LayerLayerModeSetter)(struct LayoutLayer *layout, LayoutLayerMode final_mode);
 
 #if PBL_COLOR
+/**
+ * @brief Get the colors of a layout.
+ *
+ * @param layout Layout.
+ * @return Colors.
+ */
 typedef const LayoutColors *(*LayoutLayerColorsGetter)(const struct LayoutLayer *layout);
 #endif
 
+/**
+ * @brief Get the type-specific context of a layout.
+ *
+ * @param layout Layout.
+ * @return Context; the notification layout returns its TimelineItem.
+ */
 typedef void *(*LayoutLayerContextGetter)(struct LayoutLayer *layout);
 
-//! methods for the LayoutLayer type.
+/** @brief Methods of a LayoutLayer type. */
 typedef struct {
+  /** Content size getter. */
   LayoutLayerSizeGetter size_getter;
+  /** Destructor. */
   LayoutLayerDestructor destructor;
+  /** Mode setter. */
   LayerLayerModeSetter mode_setter;
 #if PBL_COLOR
+  /** Colors getter, may be NULL for the default colors. */
   LayoutLayerColorsGetter color_getter;
 #endif
+  /** Context getter, may be NULL. */
   LayoutLayerContextGetter context_getter;
 } LayoutLayerImpl;
 
-//! Data structure of a LayoutLayer.
+/** @brief Base of all layouts; can be cast to a Layer. */
 typedef struct LayoutLayer {
-  Layer layer;                 //!< The Layer underlying the LayoutLayer
-  LayoutLayerMode mode;        //!< The mode the LayoutLayer was created with
-  AttributeList *attributes;   //!< A pointer to the LayoutLayer's Attributes
-  const LayoutLayerImpl *impl; //!< The implementation (constructor, destructor, methods)
+  /** Underlying layer. */
+  Layer layer;
+  /** Current mode. */
+  LayoutLayerMode mode;
+  /** Attributes displayed; not owned. */
+  AttributeList *attributes;
+  /** Methods of the layout type. */
+  const LayoutLayerImpl *impl;
 } LayoutLayer;
 
+/** @brief Configuration of a new LayoutLayer. */
 struct LayoutLayerConfig {
+  /** Frame of the layer. */
   const GRect *frame;
+  /** Attributes to display; must outlive the layout. */
   AttributeList *attributes;
+  /** Initial mode. */
   LayoutLayerMode mode;
+  /** App owning the item, used to resolve app-published icons. */
   const Uuid *app_id;
+  /**
+   * Type-specific context: a TimelineLayoutInfo for timeline layouts, a NotificationLayoutInfo
+   * for the notification and reminder layouts.
+   */
   void *context;
 };
 
-//! Call the correct \c LayoutLayerConstructor for a given \ref LayoutId
+/**
+ * @brief Create a layout of a type.
+ *
+ * @param id Layout type; LayoutIdTest creates a generic layout. Must not be LayoutIdUnknown.
+ * @param config Configuration.
+ * @return New layout, allocated on the calling task's heap.
+ */
 LayoutLayer *layout_create(LayoutId id, const LayoutLayerConfig *config);
 
-//! Verify that the required attributes are there for the layout
+/**
+ * @brief Check whether attributes satisfy the requirements of a layout type.
+ *
+ * @param existing_attributes Array of NumAttributeIds flags, indexed by AttributeId.
+ * @param id Layout type.
+ * @return true if valid; always true for LayoutIdTest, false for unknown or unimplemented types.
+ */
 bool layout_verify(bool existing_attributes[], LayoutId id);
 
-//! Call the \c LayoutLayerSizeGetter for a given layout
+/**
+ * @brief Get the size of a layout's content.
+ *
+ * @param ctx Graphics context.
+ * @param layout Layout.
+ * @return Size of the content.
+ */
 GSize layout_get_size(GContext *ctx, LayoutLayer *layout);
 
+/**
+ * @brief Get the colors of a layout.
+ *
+ * @param layout Layout.
+ * @return Layout colors, or defaults on black and white platforms or if the type has none.
+ */
 const LayoutColors *layout_get_colors(const LayoutLayer *layout);
+
+/**
+ * @brief Get the colors of a notification layout.
+ *
+ * On black and white platforms the colors follow the notification design preference.
+ *
+ * @param layout Layout.
+ * @return Colors.
+ */
 const LayoutColors *layout_get_notification_colors(const LayoutLayer *layout);
 
+/**
+ * @brief Get an animation of a layout to a mode.
+ *
+ * @param layout Layout.
+ * @param final_mode Target mode.
+ * @return Animation.
+ */
 Animation *layout_get_animation(LayoutLayer *layout, LayoutLayerMode final_mode);
 
+/**
+ * @brief Change the mode of a layout.
+ *
+ * @param layout Layout.
+ * @param final_mode New mode.
+ */
 void layout_set_mode(LayoutLayer *layout, LayoutLayerMode final_mode);
 
-//! Call the \ref LayoutLayerDestructor for a given layout
+/**
+ * @brief Destroy a layout with its type's destructor.
+ *
+ * @param layout Layout.
+ */
 void layout_destroy(LayoutLayer *layout);
 
+/**
+ * @brief Get the type-specific context of a layout.
+ *
+ * @param layout Layout.
+ * @return Context, or NULL if the type has none.
+ */
 void *layout_get_context(LayoutLayer *layout);
+
+/** @} */

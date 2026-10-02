@@ -5,101 +5,159 @@
 
 #include "pbl/services/blob_db/pin_db.h"
 
+/**
+ * @defgroup services_timeline_event Timeline events
+ * @ingroup services_timeline
+ * @brief Tracks the next or current timeline event for services that react to it.
+ *
+ * Each registered service (calendar, Timeline Peek) supplies a TimelineEventImpl. Whenever pins
+ * change, a timer expires or a refresh is requested, the event service runs on KernelBG: it calls
+ * every will_update callback, passes each pin header through every filter, keeps one item per
+ * service, calls every update callback with it (or NULL), then every did_update callback. The next
+ * run is scheduled at the earliest of the timeouts returned by the update callbacks and the start
+ * or end of the selected item.
+ * @{
+ */
+
+/** @brief Delta meaning "unbounded" for timeline_event_starts_within(). */
 #define TIMELINE_EVENT_DELTA_INFINITE (INT32_MAX)
 
+/** @brief Services using the timeline event service. */
 typedef enum TimelineEventService {
+  /** Calendar, for smart Do Not Disturb. */
   TimelineEventService_Calendar,
+  /** Timeline Peek. */
   TimelineEventService_Peek,
 
+  /** Number of services. */
   TimelineEventServiceCount,
 } TimelineEventService;
 
-//! Called before filtering and updating begins. A double pointer user context is passed that may
-//! be used to setup state necessary for filtering and updating.
-//! @param context Double pointer to a user context.
+/**
+ * @brief Called before filtering and updating begins.
+ *
+ * @param context Pointer to the user context, which may be set up here for filtering and updating.
+ */
 typedef void (*TimelineEventWillUpdateCallback)(void **context);
 
-//! Called for every timeline event header for filter. Events that are meant to be considered for
-//! being passed to the update callback should return true. The event with the earliest timestamp
-//! will be passed to the update callback. This means only one event is passed along.
-//! @param header The header of the timeline event for consideration.
-//! @param context Double pointer to a user context. The same double pointer is passed to the
-//! update callback, so the user context pointer can be set or unset to affect the update callback.
-//! @return true to consider the passed event as the one to update with, false otherwise
+/**
+ * @brief Called for every pin header to filter.
+ *
+ * Of the headers accepted, only one, the earliest unless the comparator says otherwise, is passed
+ * to the update callback.
+ *
+ * @param header Header of the pin under consideration.
+ * @param context Pointer to the user context; the same pointer is passed to the update callback.
+ * @return true to consider the pin for the update.
+ */
 typedef bool (*TimelineEventFilterCallback)(SerializedTimelineItemHeader *header, void **context);
 
-//! Called after filtering and after updating. A double pointer user context is passed that may
-//! have been setup other callbacks. This callback can be used to teardown any such state that was
-//! setup.
-//! @param context Double pointer to a user context.
+/**
+ * @brief Called after filtering and updating, to tear down state set up by other callbacks.
+ *
+ * @param context Pointer to the user context.
+ */
 typedef void (*TimelineEventDidUpdateCallback)(void **context);
 
-//! Called when more than one item passed into filtering. Determines which item should remain.
-//! @param new_header The serialized header of the item that newly passed filtering.
-//! @param old_header The serialized header of the item that already passed filtering.
-//! @param context Double pointer to a user context.
-//! @return < 0 to replace with `new_header`, > 0 to keep old_header, or 0 to use either one.
+/**
+ * @brief Pick between two pins that passed filtering.
+ *
+ * @param new_header Header of the pin that newly passed filtering.
+ * @param old_header Header of the pin that passed filtering earlier.
+ * @param context Pointer to the user context.
+ * @return Negative to replace @p old_header with @p new_header; otherwise the earlier of the two
+ *         is kept.
+ */
 typedef int (*TimelineEventComparator)(SerializedTimelineItemHeader *new_header,
                                        SerializedTimelineItemHeader *old_header, void **context);
 
-//! Called with the nearest filtered event if any. If there was no filtered event, the update
-//! callback will be called with NULL. The update callback can optionally return a timeout until
-//! the next time it would like to filter again. The shortest among all the non-zero timeouts
-//! returned by all event events and the time until event start and event end in milliseconds
-//! will be used as the timeout until the next filtering.
-//! @param item The timeline item that is either next or current.
-//! @param context Double pointer to a user context. The same double pointer user context in the
-//! filter callback is passed, so the user context pointer can be set during filtering for use in
-//! this callback.
-//! @return a custom timeout or zero if no special timeout is requested
+/**
+ * @brief Called with the selected pin, or NULL if no pin passed filtering.
+ *
+ * @param item Next or current pin (header only), or NULL.
+ * @param context Pointer to the user context, as set during filtering.
+ * @return Milliseconds until the service wants to filter again, or 0 for no special timeout.
+ */
 typedef uint32_t (*TimelineEventUpdateCallback)(TimelineItem *item, void **context);
 
+/** @brief Callbacks of a timeline event service. */
 typedef struct TimelineEventImpl {
+  /** Called before filtering, may be NULL. */
   TimelineEventWillUpdateCallback will_update;
+  /** Filter. */
   TimelineEventFilterCallback filter;
+  /** Comparator, may be NULL to always keep the earliest pin. */
   TimelineEventComparator comparator;
+  /** Update. */
   TimelineEventUpdateCallback update;
+  /** Called after updating, may be NULL. */
   TimelineEventDidUpdateCallback did_update;
 } TimelineEventImpl;
 
+/**
+ * @brief Get the callbacks of a timeline event service.
+ *
+ * @return Callbacks.
+ */
 typedef const TimelineEventImpl *(*TimelineEventImplGetter)(void);
 
-//! Initialize the timeline event service. Timeline items can be inserted before initialization and
-//! the timeline event service will also take those new events into consideration. This also
-//! initializes all registered specialized timeline event services. See `s_services` in ./event.c.
+/**
+ * @brief Initialize the timeline event service and all registered services.
+ *
+ * Runs asynchronously on KernelBG. Pins inserted before initialization are taken into account.
+ */
 void timeline_event_init(void);
 
-//! Deinit the timeline event service
-//! @note Used for factory resetting
+/**
+ * @brief Stop the timeline event service.
+ *
+ * @note Used for factory resetting.
+ */
 void timeline_event_deinit(void);
 
-//! Should be called whenever a pin is added / deleted / changed. This makes sure the service is in
-//! sync with the current set of pins and not acting on stale data.
+/**
+ * @brief Resynchronize after a pin was added, deleted or changed.
+ *
+ * Keeps the services from acting on stale data.
+ */
 void timeline_event_handle_blobdb_event(void);
 
-//! Refresh the timeline event services.
+/** @brief Refresh the timeline event services. */
 void timeline_event_refresh(void);
 
-//! Whether the event is all day.
-//! @param common The common header of the event.
-//! @return true if the event is all day, false otherwise.
+/**
+ * @brief Check whether an event is all day.
+ *
+ * @param common Header of the event.
+ * @return true if flagged all day or lasting 24 hours or more.
+ */
 bool timeline_event_is_all_day(CommonTimelineItemHeader *common);
 
-//! Whether the event is ongoing.
-//! @param now The current time in seconds since the epoch.
-//! @param event_start The start of the event in seconds since the epoch.
-//! @param event_duration_m The duration of the event in minutes.
-//! @return true if the event is ongoing, false otherwise.
+/**
+ * @brief Check whether an event is ongoing.
+ *
+ * @param now Current time, in seconds since the epoch.
+ * @param event_start Start of the event, in seconds since the epoch.
+ * @param event_duration_m Duration of the event, in minutes.
+ * @return true if the event has started and not ended.
+ */
 bool timeline_event_is_ongoing(time_t now, time_t event_start, int event_duration_m);
 
-//! Whether the timeline event is between a time range specified relative to now.
-//! @note Only the timestamp is compared against, the duration of the event is not considered.
-//! @param common The common header of the event.
-//! @param now The current time since the epoch
-//! @param delta_start_s The delta seconds to apply to now to obtain the start time that the event
-//! can be within. Passing in TIMELINE_EVENT_DELTA_INFINITE means any past event.
-//! @param delta_end_s The delta seconds to apply to now to obtain the end time that the event
-//! can be within. Passing in TIMELINE_EVENT_DELTA_INFINITE means any future event.
-//! @return true if the event is within the specified time range, false otherwise.
+/**
+ * @brief Check whether a pin starts within a time range relative to now.
+ *
+ * @note Only the start is compared; the duration is not considered. Items other than pins never
+ * match.
+ *
+ * @param common Header of the event.
+ * @param now Current time, in seconds since the epoch.
+ * @param delta_start_s Seconds added to @p now to get the start of the range (exclusive), or
+ *                      @ref TIMELINE_EVENT_DELTA_INFINITE for any past event.
+ * @param delta_end_s Seconds added to @p now to get the end of the range (exclusive), or
+ *                    @ref TIMELINE_EVENT_DELTA_INFINITE for any future event.
+ * @return true if the pin starts within the range.
+ */
 bool timeline_event_starts_within(CommonTimelineItemHeader *common, time_t now, int delta_start_s,
                                   int delta_end_s);
+
+/** @} */

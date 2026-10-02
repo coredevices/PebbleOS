@@ -6,11 +6,23 @@
 #include "applib/fonts/codepoint.h"
 #include "resource/resource_ids.auto.h"
 
+/**
+ * @defgroup services_timeline_notification_jumboji_table Jumboji table
+ * @ingroup services_timeline
+ * @brief Emoji shown large ("Jumboji") when a notification body is just that emoji.
+ * @{
+ */
+
+/** @brief Emoji and its large image. */
 typedef struct {
+  /** Code point of the emoji. */
   Codepoint codepoint;
+  /** Resource of the large image. */
   ResourceId resource_id;
 #if UNITTEST
+  /** Emoji as UTF-8. */
   const char *string;
+  /** Name of the resource. */
   const char *resource_name;
 #endif
 } EmojiEntry;
@@ -18,10 +30,22 @@ typedef struct {
 #if UNITTEST
 #define EMOJI_ENTRY(string, codepoint, resource_id) {codepoint, resource_id, string, #resource_id}
 #else
+/**
+ * @brief Build an EmojiEntry initializer.
+ *
+ * @param string Emoji as UTF-8, kept only in unit tests.
+ * @param codepoint Code point.
+ * @param resource_id Resource of the large image.
+ */
 #define EMOJI_ENTRY(string, codepoint, resource_id) {codepoint, resource_id}
 #endif
 
-// Codepoint sorted table of supported Jumboji
+/**
+ * @brief Initializer of the Jumboji table, sorted by code point.
+ *
+ * @param ENTRY Macro building an entry from the emoji, code point and resource id, e.g.
+ *              EMOJI_ENTRY.
+ */
 #define JUMBOJI_TABLE(ENTRY)                                           \
   {                                                                    \
     ENTRY("♥️", 0x02665, RESOURCE_ID_EMOJI_HEART_LARGE),                \
@@ -44,3 +68,5 @@ typedef struct {
     ENTRY("😞", 0x1f61e, RESOURCE_ID_EMOJI_SAD_LARGE),                 \
     ENTRY("😟", 0x1f61f, RESOURCE_ID_EMOJI_SAD_LARGE),                 \
   }
+
+/** @} */
