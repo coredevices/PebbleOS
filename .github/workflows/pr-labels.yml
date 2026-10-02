@@ -58,14 +58,21 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/blocking-labels.yml
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - name: Check for blocking labels
         env:
           GH_TOKEN: ${{ github.token }}
-          BLOCKING: '["DNM", "pending:hw-validation", "pending:sdk-review", "pending:submodule-merge"]'
         run: |
+          blocking=$(yq -o=json -I=0 .github/blocking-labels.yml)
           labels=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
             --jq '[.labels[].name]')
-          found=$(jq -nr --argjson l "$labels" --argjson b "$BLOCKING" \
+          found=$(jq -nr --argjson l "$labels" --argjson b "$blocking" \
             '$l - ($l - $b) | .[]')
           if [ -n "$found" ]; then
             while read -r label; do
