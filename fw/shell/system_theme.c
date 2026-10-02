@@ -11,6 +11,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/light.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 
@@ -86,7 +87,7 @@ static bool prv_is_system_app(void) {
   return sdk_type == ProcessAppSDKType_System;
 }
 
-DEFINE_SYSCALL(bool, system_theme_is_dark_mode, void) {
+PBL_SYSCALL(bool, system_theme_is_dark_mode) {
   // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
   if (PBL_IF_COLOR_ELSE(false, true)) {
     return false;
@@ -124,11 +125,24 @@ DEFINE_SYSCALL(bool, system_theme_is_dark_mode, void) {
 }
 
 GColor system_theme_get_bg_color(void) {
+  if (!prv_is_system_app()) {
+    return GColorWhite;
+  }
   return system_theme_is_dark_mode() ? GColorBlack : GColorWhite;
 }
 
 GColor system_theme_get_fg_color(void) {
+  if (!prv_is_system_app()) {
+    return GColorBlack;
+  }
   return system_theme_is_dark_mode() ? GColorWhite : GColorBlack;
+}
+
+PBL_SYSCALL(GColor, system_theme_get_highlight_color) {
+  if (!prv_is_system_app()) {
+    return GColorBlack;
+  }
+  return shell_prefs_get_theme_highlight_color();
 }
 
 static const PreferredContentSize s_platform_default_content_sizes[] = {

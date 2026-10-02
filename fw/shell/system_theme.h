@@ -113,3 +113,7 @@ GColor system_theme_get_bg_color(void);
 //! @return The foreground color appropriate for the current theme (white in dark mode on color
 //!         displays, black otherwise).
 GColor system_theme_get_fg_color(void);
+
+//! @return The default menu highlight (accent) color: the user's theme highlight color for system
+//!         apps, GColorBlack for 3rd-party apps (their historical default).
+GColor system_theme_get_highlight_color(void);
