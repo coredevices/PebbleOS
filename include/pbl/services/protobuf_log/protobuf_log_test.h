@@ -8,32 +8,37 @@
 
 #include <stdint.h>
 
-// ---------------------------------------------------------------------------------------------
-// Decode an encoded payload with MeasurementSets. Used for debugging and unit tests.
-// @param[in] encoded_buf pointer to encoded data
-// @param[in] encoded_buf_size size of encoded data
-// @param[out] payload_sender_type returned payload sender type string
-// @param[out] payload_sender_id returned payload sender id string
-// @param[out] payload_sender_version_patch returned payload sender version patch string
-// @param[out] payload_send_time returned payload send time
-// @param[out] payload_sender_v_major returned payload sender version major digit
-// @param[out] payload_sender_v_minor returned payload sender version minor digit
-// @param[out] uuid returned UUID field
-// @param[out] time_utc returned time_utc field
-// @param[out] time_end_utc returned time_end_utc field
-// @param[out] utc_to_local returned utc_to_local field
-// @param[in:out] num_types on entry, length of the types array; on exit, returned number
-//   of measurement types in the types array
-// @param[out] types returned array of measurement types
-// @param[in:out] num_samples on entry, length of the offset_sec array; on exit, returned
-//   number of values in the offset_sec array
-// @param[out] offset_sec returned offset_sec value for each measurement
-// @param[in|out] num_values on entry, number of entries available in the values array; On exit,
-//   the actual number of values written to the values array
-// @param[out] values returned measurement values here. This will contain
-//   num_types * num_measurements values if num_values on entry was large enough
-// @param[out]
-// @return true on success, false on failure
+/**
+ * @defgroup services_protobuf_log_protobuf_log_test Payload decoding
+ * @ingroup services_protobuf_log
+ * @brief Decoders of encoded payloads, for debugging and unit tests.
+ * @{
+ */
+
+/**
+ * @brief Decode a payload of measurement sets.
+ *
+ * @param[out] type Payload type.
+ * @param encoded_buf Encoded payload.
+ * @param encoded_buf_size Size of @p encoded_buf in bytes.
+ * @param[out] payload_sender_type Sender type string.
+ * @param[out] payload_sender_id Sender ID string.
+ * @param[out] payload_sender_version_patch Sender version patch string.
+ * @param[out] payload_send_time Payload send time.
+ * @param[out] payload_sender_v_major Sender major version, may be NULL.
+ * @param[out] payload_sender_v_minor Sender minor version, may be NULL.
+ * @param[out] uuid Measurement set UUID.
+ * @param[out] time_utc Measurement set start UTC time.
+ * @param[out] time_end_utc Measurement set end UTC time.
+ * @param[out] utc_to_local Offset from UTC to local time.
+ * @param[in,out] num_types Capacity of @p types on entry, number of types on exit.
+ * @param[out] types Measurement types.
+ * @param[in,out] num_samples Capacity of @p offset_sec on entry, number of samples on exit.
+ * @param[out] offset_sec Offset of each sample in seconds.
+ * @param[in,out] num_values Capacity of @p values on entry, number of values on exit.
+ * @param[out] values Values, @p num_types per sample.
+ * @return true on success.
+ */
 bool protobuf_log_private_mset_decode(
     ProtobufLogType *type, void *encoded_buf, uint32_t encoded_buf_size,
     char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
@@ -44,27 +49,27 @@ bool protobuf_log_private_mset_decode(
     ProtobufLogMeasurementType *types, uint32_t *num_samples, uint32_t *offset_sec,
     uint32_t *num_values, uint32_t *values);
 
-// ---------------------------------------------------------------------------------------------
-// Decode an encoded payload with events. Used for debugging and unit tests.
-// @param[in] encoded_buf pointer to encoded data
-// @param[in] encoded_buf_size size of encoded data
-// @param[out] payload_sender_type returned payload sender type string
-// @param[out] payload_sender_id returned payload sender id string
-// @param[out] payload_sender_version_patch returned payload sender version patch string
-// @param[out] payload_send_time returned payload send time
-// @param[out] payload_sender_v_major returned payload sender version major digit
-// @param[out] payload_sender_v_minor returned payload sender version minor digit
-// @param[out] num_events on entry, length of events array; on exit, returned number
-//   of events in the events array
-// @param[out] events array of events
-// @param[out] event_uuids array of uuids for events
-// @param[out] num_sessions on entry, length of sessions array; on exit, returned number
-//   of sessions in the sessions array
-// @param[out] sessions array of ActivitySessions for events. Indexed by events.
-//   e.g. If there are three events and the first two are Unknown events and the third is an
-//        of type ActivitySession, then it's activity session will be at sessions[2].
-// @param[out]
-// @return true on success, false on failure
+/**
+ * @brief Decode a payload of events.
+ *
+ * @param[out] type Payload type.
+ * @param encoded_buf Encoded payload.
+ * @param encoded_buf_size Size of @p encoded_buf in bytes.
+ * @param[out] payload_sender_type Sender type string.
+ * @param[out] payload_sender_id Sender ID string.
+ * @param[out] payload_sender_version_patch Sender version patch string.
+ * @param[out] payload_send_time Payload send time.
+ * @param[out] payload_sender_v_major Sender major version, may be NULL.
+ * @param[out] payload_sender_v_minor Sender minor version, may be NULL.
+ * @param[in,out] num_events Capacity of @p events on entry, number of events on exit.
+ * @param[out] events Events.
+ * @param[out] event_uuids UUID of each event.
+ * @param[in,out] num_sessions Capacity of @p sessions on entry, number of activity sessions on
+ *                exit.
+ * @param[out] sessions Activity sessions, indexed like @p events: the session of event @c i is
+ *             at @c sessions[i].
+ * @return true on success.
+ */
 bool protobuf_log_private_events_decode(
     ProtobufLogType *type, void *encoded_buf, uint32_t encoded_buf_size,
     char payload_sender_type[PLOG_MAX_SENDER_TYPE_LEN],
@@ -73,3 +78,5 @@ bool protobuf_log_private_events_decode(
     uint32_t *payload_sender_v_major, uint32_t *payload_sender_v_minor, uint32_t *num_events,
     pebble_pipeline_Event *events, Uuid *event_uuids, uint32_t *num_sessions,
     ActivitySession *sessions);
+
+/** @} */
