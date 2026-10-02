@@ -15,7 +15,7 @@ void PBL_WEAK kino_player_set_callbacks(KinoPlayer *player, KinoPlayerCallbacks 
 }
 
 KinoReel *PBL_WEAK kino_player_get_reel(KinoPlayer *player) {
-  return NULL;
+  return player ? player->reel : NULL;
 }
 
 void PBL_WEAK kino_player_play(KinoPlayer *player) {
@@ -27,5 +27,9 @@ void PBL_WEAK kino_player_pause(KinoPlayer *player) {
 void PBL_WEAK kino_player_rewind(KinoPlayer *player) {
 }
 
+//! Keeps the reel so tests can move it to a point in its animation
 void PBL_WEAK kino_player_set_reel(KinoPlayer *player, KinoReel *reel, bool take_ownership) {
+  if (player) {
+    player->reel = reel;
+  }
 }

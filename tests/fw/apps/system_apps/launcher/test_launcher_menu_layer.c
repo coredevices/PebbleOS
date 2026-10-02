@@ -331,7 +331,8 @@ void prv_launcher_menu_layer_set_selection_index(LauncherMenuLayer *launcher_men
                                                  uint16_t index, MenuRowAlign row_align,
                                                  bool animated);
 
-void prv_render_launcher_menu_layer(uint16_t selected_index) {
+//! Renders the launcher with the selected glance elapsed_ms into its selection animation
+static void prv_render_launcher_menu_layer_at(uint16_t selected_index, uint32_t elapsed_ms) {
   AppMenuDataSource data_source = {};
   app_menu_data_source_init(&data_source, NULL, NULL);
   app_menu_data_source_enable_icons(&data_source, RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON);
@@ -344,11 +345,21 @@ void prv_render_launcher_menu_layer(uint16_t selected_index) {
   const MenuRowAlign row_align = PBL_IF_RECT_ELSE(MenuRowAlignTop, MenuRowAlignCenter);
   prv_launcher_menu_layer_set_selection_index(&launcher_menu_layer, selected_index, row_align,
                                               animated);
+  if (elapsed_ms) {
+    launcher_menu_layer_set_selection_animations_enabled(&launcher_menu_layer, true);
+    KinoReel *reel = kino_player_get_reel(&launcher_menu_layer.glance_service.glance_reel_player);
+    cl_assert(reel);
+    kino_reel_set_elapsed(reel, elapsed_ms);
+  }
 
   layer_render_tree(launcher_menu_layer_get_layer(&launcher_menu_layer), &s_ctx);
 
   launcher_menu_layer_deinit(&launcher_menu_layer);
   app_menu_data_source_deinit(&data_source);
+}
+
+void prv_render_launcher_menu_layer(uint16_t selected_index) {
+  prv_render_launcher_menu_layer_at(selected_index, 0);
 }
 
 //! Renders the launcher once per content size and checks the screens side by side, from Small
@@ -368,6 +379,12 @@ static void prv_render_launcher_menu_layer_for_each_size(uint16_t selected_index
 
 // Tests
 //////////////////////
+
+void test_launcher_menu_layer__long_title_scrolled(void) {
+  // Past the pause at the start of the scroll
+  prv_render_launcher_menu_layer_at(LauncherMenuLayerTestApp_LongTitle, 1000);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
 
 void test_launcher_menu_layer__no_icon(void) {
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_NoIcon);
