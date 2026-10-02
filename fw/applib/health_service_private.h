@@ -75,6 +75,9 @@ typedef struct HealthServiceState {
   HealthServiceCache *cache;
   EventServiceInfo health_event_service_info;
   uint16_t last_hrv_ppi_ms;
+  //! Most recent SpO2 reading, captured from HealthEventSpO2Update. Zeroed until the first
+  //! reading, so apps can treat 0 as "no reading". Only valid readings are broadcast.
+  uint8_t last_spo2_percent;
   //! Requested HR / HRV sampling periods; both map onto the app's single HRM subscription
   uint16_t hr_sample_period_sec;
   uint16_t hrv_sample_period_sec;

@@ -178,9 +178,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x6b -- 24-bit app load and virtual sizes (no API changes) (rev 109)
 // sdk.major:0x5 .minor:0x6c -- Add mic_stream_to_phone_start() (rev 110)
 // sdk.major:0x5 .minor:0x6d -- Permission-gated local microphone PCM capture (rev 111)
+// sdk.major:0x5 .minor:0x6e -- Add blood oxygen (SpO2) peek API to health service (rev 112)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6d
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6e
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
