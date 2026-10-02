@@ -5,25 +5,53 @@
 
 #include <stdbool.h>
 
-//! Set up a timer that will check the position of the watch every minute to see
-//! if any motion has occurred
+/**
+ * @defgroup services_stationary Stationary mode
+ * @ingroup services
+ * @brief Low power mode entered when the watch is not moving.
+ *
+ * Once enabled, the accelerometer is sampled every minute. After 30 minutes without motion the
+ * system switches to the stationary runlevel; motion or a button press switches it back.
+ * Stationary mode only runs while the user setting allows it, the runlevel permits it and the
+ * charger is disconnected.
+ * @{
+ */
+
+/** @brief Initialize the service. */
 void stationary_init(void);
 
-//! Stationary mode should only be enabled when the user settings allow for it and when
-//! the charger is not connected
+/**
+ * @brief Get the user setting.
+ *
+ * @return True if the user allows stationary mode.
+ */
 bool stationary_get_enabled(void);
 
-//! Set whether the stationary module is enabled. When disabled, all operations will end, we ensure
-//! that we are in a normal state, and the watch will not be able to enter stationary mode
+/**
+ * @brief Change the user setting.
+ *
+ * Disabling ends any stationary period and keeps the watch from entering stationary mode.
+ *
+ * @param enabled True to allow stationary mode.
+ */
 void stationary_set_enabled(bool enabled);
 
-//! Set whether the stationary service is allowed to be enabled for the current runlevel
+/**
+ * @brief Runlevel hook.
+ *
+ * @param allow True if the current runlevel allows stationary mode.
+ */
 void stationary_run_level_enable(bool allow);
 
-//! If the stationary module is enabled and currently in stationary mode, then
-//! we are put into a normal state. Call this if the system is about to do something that will
-//! probably require user interaction, like an alarm going off.
+/**
+ * @brief Leave stationary mode if active.
+ *
+ * Call before doing something that likely needs user interaction, such as an alarm. Must be
+ * called on KernelMain.
+ */
 void stationary_wake_up(void);
 
-//! Called by our event service system when there is a battery connection change
+/** @brief Handle a charger connection change. Called on KernelMain. */
 void stationary_handle_battery_connection_change_event(void);
+
+/** @} */

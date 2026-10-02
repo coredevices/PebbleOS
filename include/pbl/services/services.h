@@ -3,7 +3,19 @@
 
 #pragma once
 
-//! Initialize services that our kernel depends on
+/**
+ * @defgroup services_services Service initialization
+ * @ingroup services
+ * @brief Boot-time initialization of all services.
+ *
+ * Covers the common services and, except in the recovery firmware, the normal firmware ones.
+ * @{
+ */
+
+/** @brief Initialize the services the kernel depends on. */
 void services_early_init(void);
 
+/** @brief Initialize all services. */
 void services_init(void);
+
+/** @} */

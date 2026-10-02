@@ -8,59 +8,91 @@
 
 #include "pbl/services/new_timer/new_timer.h"
 
-//! @internal
-//! Event window is (in seconds) a reserved amount of time each wakeup_event receives
-//! in which other wakeup events cannot be scheduled
+/**
+ * @defgroup services_wakeup Wakeup
+ * @ingroup services
+ * @brief Scheduled app launches.
+ *
+ * Kernel side of the app wakeup API. Events are stored in the "wakeup" settings file and the
+ * next one is scheduled with a new_timer. When an event fires, its app is launched with
+ * @c APP_LAUNCH_WAKEUP, or receives a @c PEBBLE_WAKEUP_EVENT if already running. Events missed
+ * while the watch was off can be reported with a popup.
+ * @{
+ */
+
+/**
+ * @brief Time reserved around each event, in seconds, in which no other event can be scheduled.
+ */
 #define WAKEUP_EVENT_WINDOW 60
-//! @internal
-//! Number of wakeup events allowed per application (UUID)
+/** @brief Maximum number of events per app. */
 #define MAX_WAKEUP_EVENTS_PER_APP 8
-//! @internal
-//! Reduced event window or gap for catching up on missed events due to a time change
-//! or the service being disabled by the system (Power saving mode).
+/**
+ * @brief Reduced gap, in seconds, between events caught up after a time change or after the
+ * service was disabled (e.g. low power mode).
+ */
 #define WAKEUP_CATCHUP_WINDOW (WAKEUP_EVENT_WINDOW / 2)
 
 //! WakeupId is an identifier for a wakeup event
 typedef int32_t WakeupId;
 
-//! WakeupInfo is used to pass the wakeup event id and reason
-//! to the application that requested the wakeup event
+/** @brief Wakeup event passed to the app it launches. */
 typedef struct {
-  WakeupId wakeup_id;    //!< Identifier (Timestamp) of the wakeup event
-  int32_t wakeup_reason; //!< App provided reason for the wakeup event
+  /** Event identifier, its scheduling timestamp. */
+  WakeupId wakeup_id;
+  /** Reason given by the app when scheduling the event. */
+  int32_t wakeup_reason;
 } WakeupInfo;
 
-//! @internal
-//! This function initializes the wakeup service.
-//! Triggers a popup notification for any apps that missed a
-//! wakeup_event while the Pebble was off and specified
-//! notify_if_missed while scheduling the event.
-//! Deletes all expired wakeup_events from "wakeup" settings_file and
-//! schedules the next wakeup_event using a new_timer
+/**
+ * @brief Initialize the service.
+ *
+ * Deletes expired events, shows a popup for apps that missed an event while the watch was off
+ * and asked to be notified, and schedules the next event.
+ */
 void wakeup_init(void);
 
-//! @internal
-//! This function enables and disables the wakeup service.
+/**
+ * @brief Enable or disable the service.
+ *
+ * While disabled no event fires; pending ones are caught up when re-enabled.
+ *
+ * @param enabled True to enable.
+ */
 void wakeup_enable(bool enabled);
 
-//! @internal
-//! This function enables unit testing of the current wakeup event
+/**
+ * @brief Get the timer used to schedule events, for tests.
+ *
+ * @return Timer identifier.
+ */
 TimerID wakeup_get_current(void);
 
-//! @internal
-//! This function is used for testing and gets the next scheduled wakeup id
+/**
+ * @brief Get the next scheduled event, for tests.
+ *
+ * @return Event identifier.
+ */
 WakeupId wakeup_get_next_scheduled(void);
 
-//! @internal
-//! This function is used for migrating wakeup events after a timezone set
+/**
+ * @brief Convert events scheduled in local time to UTC after the timezone was set.
+ *
+ * @param utc_diff Local time minus UTC, in seconds.
+ */
 void wakeup_migrate_timezone(int utc_diff);
 
-//! @internal
-//! This function is called for significant time changes (>15s, timezone, DST).
-//! It rewrites the wakeup file to delete past events and show missed event popups.
+/**
+ * @brief Handle a significant time change (over 15 s, timezone or DST).
+ *
+ * Deletes past events, shows missed event popups and reschedules, on KernelBG.
+ */
 void wakeup_handle_significant_clock_change(void);
 
-//! @internal
-//! This function is called for all time changes (including small RTC calibrations).
-//! It reschedules the wakeup timer without deleting events or showing popups.
+/**
+ * @brief Handle any time change, including small RTC calibrations.
+ *
+ * Reschedules the next event without deleting events or showing popups.
+ */
 void wakeup_handle_clock_change(void);
+
+/** @} */

@@ -7,6 +7,18 @@
 #include <stdint.h>
 #include "shell/prefs.h"
 
+/**
+ * @defgroup services_light Backlight
+ * @ingroup services
+ * @brief Backlight state machine.
+ *
+ * Buttons and touches keep the backlight on while held and start a timed fade-out once released.
+ * Whether it turns on at all depends on the user's backlight settings and, with the ambient light
+ * sensor enabled, on the ambient light level. Apps can force the light on or off, and set its
+ * color on platforms with a color backlight. Entities shared with the app SDK are documented in
+ * the SDK's Light group.
+ */
+
 //! @file light.h
 //! @addtogroup UI
 //! @{
@@ -19,32 +31,57 @@
 //! method of interacting with the backlight.
 //!   @{
 //!
-//! @internal
-//! to be called when starting up to initialize variables correctly
+/**
+ * @ingroup services_light
+ * @brief Initialize the backlight service at startup.
+ */
 void light_init(void);
 
-//! @internal
-//! to be called by the launcher on a button down event
+/**
+ * @ingroup services_light
+ * @brief Handle a button press.
+ *
+ * Turns the backlight on, if allowed, until all buttons are released. Called by the launcher on
+ * button down.
+ */
 void light_button_pressed(void);
 
-//! @internal
-//! to be called by the launcher on a button up event
+/**
+ * @ingroup services_light
+ * @brief Handle a button release.
+ *
+ * Starts the fade-out timer once no button is held, unless the light is forced on. Called by the
+ * launcher on button up.
+ */
 void light_button_released(void);
 
-//! @internal
-//! to be called on touch finger-down; mirrors a button press (coalesced).
+/**
+ * @ingroup services_light
+ * @brief Handle a touch finger-down.
+ *
+ * Acts like a button press; repeated calls before light_touch_up() count once.
+ */
 void light_touch_down(void);
 
-//! @internal
-//! to be called on liftoff and on app teardown to release a light_touch_down()
-//! hold. No-op if no touch is holding the backlight.
+/**
+ * @ingroup services_light
+ * @brief Release the hold taken by light_touch_down().
+ *
+ * Called on liftoff and on app teardown. No-op if no touch is holding the backlight.
+ */
 void light_touch_up(void);
 
 //! @copydoc app_light_enable
 void light_enable(bool enable);
 
-//! @internal
-//! light_enable that adheres to user's backlight setting.
+/**
+ * @ingroup services_light
+ * @brief light_enable() that respects the user's backlight settings.
+ *
+ * When enabling, the light only turns on if the settings and ambient light allow it.
+ *
+ * @param enable true to force the light on, false to turn it off.
+ */
 void light_enable_respect_settings(bool enable);
 
 //! @copydoc app_light_enable_interaction
@@ -52,7 +89,12 @@ void light_enable_respect_settings(bool enable);
 //! then do nothing
 void light_enable_interaction(void);
 
-//! Reset the state if an app overrode the usual state machine using light_enable()
+/**
+ * @ingroup services_light
+ * @brief Return to the normal state machine after an app forced the light with light_enable().
+ *
+ * Also releases a touch hold that never saw its liftoff.
+ */
 void light_reset_user_controlled(void);
 
 //! @copydoc app_light_set_color_rgb888
@@ -64,50 +106,93 @@ void light_set_color_rgb888(uint32_t rgb);
 //! No-op on platforms without a color backlight.
 void light_set_system_color(void);
 
-//! Request that the system color take precedence over any app override.
-//! While the refcount is non-zero, the LED is forced to the user default
-//! color even if an app has set an override. Used by notifications and
-//! other modals so they display in neutral white without permanently
-//! clearing the underlying app's color.
+/**
+ * @ingroup services_light
+ * @brief Make the system color take precedence over any app color.
+ *
+ * Reference counted: while held, the LED shows the user's default color even if an app set an
+ * override. Used by notifications and other modals to show neutral white without clearing the
+ * app's color. No-op on platforms without a color backlight.
+ */
 void light_system_color_request(void);
 
-//! Release a system color request. When the refcount returns to zero, any
-//! app override is re-applied.
+/**
+ * @ingroup services_light
+ * @brief Release a light_system_color_request().
+ *
+ * When the count drops to zero, any app color is applied again.
+ */
 void light_system_color_release(void);
 
-//! @internal
+/**
+ * @ingroup services_light
+ * @brief Toggle the user's backlight enabled setting.
+ *
+ * Also clears a forced-on state and briefly shows the result.
+ */
 void light_toggle_enabled(void);
 
-//! @internal
+/**
+ * @ingroup services_light
+ * @brief Toggle the user's ambient light sensor setting.
+ */
 void light_toggle_ambient_sensor_enabled(void);
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-//! @internal
-//! Set the dynamic backlight mode and briefly turn the light on so the user
-//! sees the effect.
+/**
+ * @ingroup services_light
+ * @brief Set the dynamic backlight mode.
+ *
+ * Briefly turns the light on so the user sees the effect.
+ *
+ * @param mode New mode.
+ */
 void light_set_dynamic_mode(BacklightDynamicMode mode);
 #endif
 
-//! Switches for temporary disabling backlight (ie: low power mode)
+/**
+ * @ingroup services_light
+ * @brief Allow or disallow the backlight, e.g. in low power mode.
+ *
+ * Disallowing turns the light off.
+ *
+ * @param allowed true to allow the backlight.
+ */
 void light_allow(bool allowed);
 
-//! Get the current active backlight brightness as a percentage (0-100)
-//! This returns the actual current brightness, which may differ from the
-//! configured brightness when dynamic backlight is enabled.
+/**
+ * @ingroup services_light
+ * @brief Get the current backlight brightness.
+ *
+ * May differ from the configured brightness when dynamic backlight is enabled.
+ *
+ * @return Brightness in percent, 0-100.
+ */
 uint8_t light_get_current_brightness_percent(void);
 
 //! @return true if the backlight is currently on in any form (on, timed, or
 //! fading out). Returns false only when the backlight is fully off.
 bool light_is_on(void);
 
-//! @return true if the backlight is on and its current lit period was last
-//! started or refreshed by touch contact alone.
+/**
+ * @ingroup services_light
+ * @brief Check whether the backlight was lit by touch alone.
+ *
+ * @return true if the backlight is on and its current lit period was last started or refreshed
+ *         by touch contact alone.
+ */
 bool light_is_lit_by_touch(void);
 
-//! Ambient light level in lux: screen-compensated and converted with the
-//! board's calibration (raw counts pass through unchanged on boards without
-//! lux coefficients). Served from a short-lived cache; while the backlight is
-//! on, the last pre-backlight value is returned.
+/**
+ * @ingroup services_light
+ * @brief Get the ambient light level.
+ *
+ * Screen-compensated and converted with the board's calibration; raw counts pass through on
+ * boards without lux coefficients. Served from a short-lived cache; while the backlight is on,
+ * the last value read before it turned on is returned.
+ *
+ * @return Ambient light level in lux.
+ */
 uint32_t light_get_ambient_lux(void);
 
 //!   @} // group Light

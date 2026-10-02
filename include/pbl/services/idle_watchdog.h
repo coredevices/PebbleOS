@@ -3,14 +3,28 @@
 
 #pragma once
 
-//! Auto-shutdown when idle in PRF to increase the changes of getting Pebbles shipped
-//! that have some level of battery charge in them.
+/**
+ * @defgroup services_idle_watchdog PRF idle watchdog
+ * @ingroup services
+ * @brief Shuts down an idle watch running the recovery firmware.
+ *
+ * Puts the watch into standby after 10 minutes without Bluetooth connection changes, charger
+ * changes or button presses, unless a BLE connection is up or the charger is plugged in. This
+ * improves the chances of watches being shipped with some battery charge left.
+ * @{
+ */
 
-//! Initialize event subscriptions and start the watchdog. Called once at boot from KernelMain.
+/**
+ * @brief Subscribe to the events that feed the watchdog.
+ *
+ * Called once at boot from KernelMain. Does not start the watchdog.
+ */
 void prf_idle_watchdog_init(void);
 
-//! Start (or restart) the watchdog timer. Can be called from any task.
+/** @brief Start or restart the watchdog. Can be called from any task. */
 void prf_idle_watchdog_start(void);
 
-//! Stop the watchdog timer. Can be called from any task.
+/** @brief Stop the watchdog. Can be called from any task. */
 void prf_idle_watchdog_stop(void);
+
+/** @} */

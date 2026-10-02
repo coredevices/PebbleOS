@@ -5,69 +5,160 @@
 
 #include "pbl/util/list.h"
 
+/**
+ * @defgroup services_regular_timer Regular timers
+ * @ingroup services
+ * @brief Callbacks run every N seconds or every N minutes.
+ *
+ * All regular timers share one timer aligned to the RTC second boundary, so periodic work wakes
+ * the system at the same time. Second callbacks run shortly after each second boundary, minute
+ * callbacks when the wall-clock minute changes. Callbacks run on the NewTimers task and must not
+ * block for long.
+ *
+ * The caller owns the RegularTimerInfo, which must stay valid while registered:
+ *
+ * @code{.c}
+ * static void prv_tick(void *data) {
+ *   // Runs on the NewTimers task every 5 seconds.
+ * }
+ *
+ * static RegularTimerInfo s_timer = {
+ *   .cb = prv_tick,
+ * };
+ *
+ * regular_timer_add_multisecond_callback(&s_timer, 5);
+ * ...
+ * regular_timer_remove_callback(&s_timer);
+ * @endcode
+ * @{
+ */
+
+/**
+ * @brief Regular timer callback.
+ *
+ * @param data RegularTimerInfo::cb_data.
+ */
 typedef void (*RegularTimerCallback)(void *data);
 
+/** @brief Regular timer registration, owned by the caller. */
 typedef struct RegularTimerInfo {
+  /** @cond INTERNAL_HIDDEN */
   ListNode list_node;
+  /** @endcond */
+  /** Callback to run. */
   RegularTimerCallback cb;
+  /** Context passed to the callback. */
   void *cb_data;
 
-  // the following fields are for internal use by the regular timer service and should not be
-  // touched
+  /** @cond INTERNAL_HIDDEN */
   uint16_t private_reset_count;
   uint16_t private_count;
   bool is_executing;
   bool pending_delete;
+  /** @endcond */
 } RegularTimerInfo;
 
+/** @brief Initialize the service and start the shared timer. */
 void regular_timer_init(void);
 
-//! Add a callback that will be called every second.
+/**
+ * @brief Run a callback every second.
+ *
+ * @param cb Timer to register.
+ */
 void regular_timer_add_seconds_callback(RegularTimerInfo *cb);
-//! Add a callback that will be called every n seconds. This can also be called to change the
-//! schedule of an existing seconds timer, from inside or outside the callback procedure.
+
+/**
+ * @brief Run a callback every @p seconds seconds.
+ *
+ * Can also change the period of a registered seconds timer, from inside or outside its callback.
+ * Re-adding a timer pending deletion cancels the deletion. A timer cannot be both a seconds and
+ * a minutes timer.
+ *
+ * @param cb Timer to register.
+ * @param seconds Period in seconds.
+ */
 void regular_timer_add_multisecond_callback(RegularTimerInfo *cb, uint16_t seconds);
 
-//! Add a callback that will be called every minute
+/**
+ * @brief Run a callback every minute.
+ *
+ * @param cb Timer to register.
+ */
 void regular_timer_add_minutes_callback(RegularTimerInfo *cb);
-//! Add a callback that will be called every n minutes. This can also be called to change the
-//! schedule of an existing minute timer, from inside or outside the callback procedure.
+
+/**
+ * @brief Run a callback every @p minutes minutes.
+ *
+ * Can also change the period of a registered minutes timer, from inside or outside its callback.
+ * Re-adding a timer pending deletion cancels the deletion. A timer cannot be both a seconds and
+ * a minutes timer.
+ *
+ * @param cb Timer to register.
+ * @param minutes Period in minutes.
+ */
 void regular_timer_add_multiminute_callback(RegularTimerInfo *cb, uint16_t minutes);
 
-//! Remove a callback already registered for either seconds or minutes.
-//! WARNING: If you call this from your callback procedure, you are NOT allowed to free up the
-//! memory used for
-//!  the RegularTimerInfo structure until after your callback exits!
-//! @return true iff the timer was successfully stopped (false may indicate no timer was
-//!  scheduled at all or the cb is currently executing)
+/**
+ * @brief Unregister a seconds or minutes timer.
+ *
+ * If the callback is running, the timer is only marked for deletion and is removed when the
+ * callback returns. When called from the callback itself, the RegularTimerInfo must not be freed
+ * until the callback has returned.
+ *
+ * @param cb Timer to unregister.
+ * @retval true The timer was removed.
+ * @retval false The timer was not registered, or is running and was marked for deletion.
+ */
 bool regular_timer_remove_callback(RegularTimerInfo *cb);
 
-//! Check if a regular timer is currently scheduled
-//! @param cb pointer to the RegularTimerInfo struct for the timer
-//! @returns true if scheduled or pending deletion, false otherwise
+/**
+ * @brief Check whether a timer is registered.
+ *
+ * @param cb Timer to check.
+ * @return True if registered, including when pending deletion.
+ */
 bool regular_timer_is_scheduled(RegularTimerInfo *cb);
 
-//! Check if a regular timer is pending deletion. This means the timer
-//! has been unscheduled but is in the process of executing
-//! TODO: It would probably make sense to just fold this into the logic
-//!       for _is_scheduled() once we verify no consumers are relying on
-//!       this odd behavior
-//! @param cb pointer to the RegularTimerInfo struct for the timer
+/**
+ * @brief Check whether a timer is pending deletion.
+ *
+ * A timer is pending deletion when it was removed while its callback was running.
+ *
+ * @param cb Timer to check.
+ * @return True if pending deletion.
+ */
 bool regular_timer_pending_deletion(RegularTimerInfo *cb);
 
-// -----------------------------------------------------------------------------
-// For testing:
-
+/** @brief Stop the shared timer, for tests. */
 void regular_timer_deinit(void);
 
-//! Fires the second callbacks, for which (seconds_interval % secs) is 0.
+/**
+ * @brief Fire the seconds timers whose period is a multiple of @p secs, for tests.
+ *
+ * @param secs Period divisor.
+ */
 void regular_timer_fire_seconds(uint8_t secs);
 
-//! Fires the minutes callbacks, for which (minutes_interval % mins) is 0.
+/**
+ * @brief Fire the minutes timers whose period is a multiple of @p mins, for tests.
+ *
+ * @param mins Period divisor.
+ */
 void regular_timer_fire_minutes(uint8_t mins);
 
-//! The number of registered (multi) second callbacks.
+/**
+ * @brief Count the registered seconds timers, for tests.
+ *
+ * @return Number of timers.
+ */
 uint32_t regular_timer_seconds_count(void);
 
-//! The number of registered (multi) minute callbacks.
+/**
+ * @brief Count the registered minutes timers, for tests.
+ *
+ * @return Number of timers.
+ */
 uint32_t regular_timer_minutes_count(void);
+
+/** @} */

@@ -8,73 +8,104 @@
 
 #include "pbl/services/time.h"
 
-//! @file timezone_database.h
-//!
-//! Functionality for reading the timezone database that we have stored in resources.
+/**
+ * @defgroup services_timezone_database Timezone database
+ * @ingroup services
+ * @brief Read access to the timezone database stored in resources.
+ *
+ * The database holds the regions (continent/city name, UTC offset, abbreviation and DST rule
+ * index), pairs of DST rules, and links mapping legacy region names to regions.
+ * @{
+ */
 
-//! FIXME: Rename and document values
+/** @brief Flags of a TimezoneDSTRule. */
 typedef enum {
+  /** Search backwards, rather than forwards, from TimezoneDSTRule::mday for the weekday. */
   TIMEZONE_FLAG_DAY_DECREMENT = 1 << 0,
+  /** The transition time is in standard time rather than wall-clock time. */
   TIMEZONE_FLAG_STANDARD_TIME = 1 << 1,
+  /** The transition time is in UTC rather than wall-clock time. */
   TIMEZONE_FLAG_UTC_TIME = 1 << 2,
 } DSTRuleFlags;
 
-//! A structure describing when a given DST rule transitions from DST to standard time or from
-//! standard time to DST. Note that this struct matches our storage format exactly, so don't
-//! change it without changing the underlying format.
+/**
+ * @brief Transition between standard time and DST.
+ *
+ * Matches the storage format exactly; do not change it without changing the database format.
+ */
 typedef struct {
-  //! Describes the type of DSTRule this is. Possible values are 'D' for entering daylight savings
-  //! time, 'S' for leaving daylight savings time and entering standard time, or '\0' for timezones
-  //! that don't observe DST.
+  /**
+   * @c 'D' when entering DST, @c 'S' when entering standard time, or a NUL character if the
+   * timezone does not observe DST.
+   */
   char ds_label;
-  //! Which day of the week this rule is observed.
-  //! 0-indexed, starting with Sunday (ie Monday is 1, Tuesday is 2...).
-  //! A value of 255 indicates that this rule applies to any day of the week.
+  /** Day of the week, 0 being Sunday, or 255 for any day. */
   uint8_t wday;
-  //! A bitset of flags, see DSTRuleFlags.
+  /** DSTRuleFlags bits. */
   uint8_t flag;
-  //! Month to make the transition
-  //! 0 is January, 11 is December
+  /** Month, 0 being January. */
   uint8_t month;
-  //! Day of the month
-  //! Not zero indexed, 1 is the first day of the month
+  /** Day of the month, starting at 1. */
   uint8_t mday;
-  //! Hour of the day, range [0-23]
+  /** Hour of the day; values of 24 and above roll over to the following days. */
   uint8_t hour;
-  //! Minute of the hour
+  /** Minute of the hour. */
   uint8_t minute;
 
+  /** @cond INTERNAL_HIDDEN */
   uint8_t padding;
+  /** @endcond */
 } TimezoneDSTRule;
 
-//! @return The number of timezone regions we have in our database
+/**
+ * @brief Get the number of regions in the database.
+ *
+ * @return Number of regions.
+ */
 int timezone_database_get_region_count(void);
 
-//! Load a timezone region for a given region id.
-//! Note, this does not populate the actual bounds of the current DST period and instead leaves
-//! the .dst_start and .dst_end members in tz_info uninitialized.
-//!
-//! @param region_id The region ID to look up
-//! @param[out] tz_info The TimezoneInfo structure to populate with the region
+/**
+ * @brief Load the timezone information of a region.
+ *
+ * TimezoneInfo::dst_start and TimezoneInfo::dst_end are set to 0; the DST period is not computed.
+ *
+ * @param region_id Region to look up.
+ * @param[out] tz_info Timezone information.
+ * @return True on success, false if the database could not be read.
+ */
 bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_info);
 
-//! Load a timezone name for a given region ID.
-//!
-//! @param region_id The region ID to look up
-//! @param[out] region_name The resulting null-terminated name, including both the continent and
-//!                         the city name. This buffer must be at least TIMEZONE_NAME_LENGTH long
-//!                         in bytes.
-//! @return True if successful, false if the region ID was invalid.
+/**
+ * @brief Load the name of a region.
+ *
+ * @param region_id Region to look up.
+ * @param[out] region_name NUL terminated "continent/city" name, in a buffer of at least
+ *             @c TIMEZONE_NAME_LENGTH bytes.
+ * @return True on success, false if @p region_id is invalid.
+ */
 bool timezone_database_load_region_name(uint16_t region_id, char *region_name);
 
-//! Load a pair of DST rules for the given id.
-//!
-//! @param dst_id The DST rule ID to look up
-//! @param[out] start a TimezoneDSTRule structure to populate with the rule to enter DST
-//! @param[out] end a TimezoneDSTRule structure to populate with the rule to leave DST
-//! @return true if successful, false if the dst_id is invalid or the database is malformed
+/**
+ * @brief Load the pair of DST rules of a DST id.
+ *
+ * @param dst_id DST rule index, starting at 1.
+ * @param[out] start Rule entering DST.
+ * @param[out] end Rule leaving DST.
+ * @return True on success, false if @p dst_id is invalid, the timezone does not observe DST or
+ *         the database is malformed.
+ */
 bool timezone_database_load_dst_rule(uint8_t dst_id, TimezoneDSTRule *start, TimezoneDSTRule *end);
 
-//! Find a region ID for the given region name.
-//! @return a valid, matching region ID, or -1 if no region was found
+/**
+ * @brief Find a region by name.
+ *
+ * Region names are matched on their first @p region_name_length characters. Links are searched
+ * next, as phones may send legacy names such as "US/Pacific".
+ *
+ * @param region_name Name to look up, need not be NUL terminated.
+ * @param region_name_length Length of @p region_name.
+ * @return Region id, or -1 if not found.
+ */
 int timezone_database_find_region_by_name(const char *region_name, int region_name_length);
+
+/** @} */

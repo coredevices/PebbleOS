@@ -1,47 +1,71 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-//! @file poll_remote.h
-//! @brief Subsystem to send a "poll services" message at regular intervals to the iOS app.
-//! iOS prevents apps from doing networking in the background. By sending a message over
-//! Bluetooth, the app gets a limited time (up to 10 minutes) to run and do networking.
-//! In short, the watch is polling the phone to get the phone to poll web services (e.g. email).
-//! @author martijn
-
 #pragma once
 #include "pbl/services/regular_timer.h"
 #include <stdint.h>
 
+/**
+ * @defgroup services_poll_remote Remote polling
+ * @ingroup services
+ * @brief Periodic "poll services" requests to the phone app.
+ *
+ * iOS does not let apps do networking in the background, but a Bluetooth message grants the app
+ * a limited time to run. The watch thus periodically asks the phone to poll web services such as
+ * email. Intervals are configured per service, usually by the phone (endpoint 0xcafe).
+ * @{
+ */
+
+/** @brief Service the phone is asked to poll. */
 typedef enum {
+  /** Email. */
   POLL_REMOTE_SERVICE_MAIL = 0x0,
+  /** Data spooling. */
   POLL_REMOTE_SERVICE_DATA_SPOOLING = 0x1,
+  /** Number of services. */
   NUM_POLL_REMOTE_SERVICES
 } PollRemoteService;
 
-//! Initializes the PollRemote state
+/** @brief Initialize the per-service state. */
 void poll_remote_init(void);
 
-//! Sends poll request to phone app and restarts the timer, unless the time between now
-//! and the last time a "poll request" message was sent is shorted than min_interval_minutes.
-//! This can be used to trigger the poll for example by user interaction.
+/**
+ * @brief Send a poll request now, for instance on user interaction.
+ *
+ * Does nothing if less than the minimum interval elapsed since the last request, or when there
+ * is no system session. A sent request restarts the interval count.
+ *
+ * @param service Service to poll.
+ */
 void poll_remote_send_request(PollRemoteService service);
 
-//! Starts sending poll requests to the phone app at regular intervals.
-//! This will send one request immediately after calling this function.
-//! In case polling was already started, this function does nothing.
-//! @see poll_remote_stop
+/**
+ * @brief Start sending poll requests at the configured intervals.
+ *
+ * Restarts the interval count of every service. Does nothing if already started.
+ *
+ * @see poll_remote_stop
+ */
 void poll_remote_start(void);
 
-//! Stops sending poll requests.
-//! In case polling was already stopped, this function does nothing.
-//! @see poll_remote_start
+/**
+ * @brief Stop sending poll requests.
+ *
+ * Does nothing if already stopped.
+ *
+ * @see poll_remote_start
+ */
 void poll_remote_stop(void);
 
-//! Sets the polling intervals.
-//! @param service The poll remote service for which to set the intervals.
-//! @param min_interval_minutes The minimum interval between two "poll services" requests.
-//! Calls to poll_remote_send_request() will be no-ops if min_interval_minutes has not been reached.
-//! @param max_interval_minutes The maximum interval between two "poll services" requests.
-//! The automatic sending of poll requests will only occur when max_interval_minutes is reached.
+/**
+ * @brief Set the polling intervals of a service.
+ *
+ * @param service Service to configure.
+ * @param min_interval_minutes Minimum time between two requests; poll_remote_send_request() does
+ *        nothing before it elapsed.
+ * @param max_interval_minutes Interval of the automatic requests, 0 to disable them.
+ */
 void poll_remote_set_intervals(PollRemoteService service, const uint8_t min_interval_minutes,
                                const uint8_t max_interval_minutes);
+
+/** @} */

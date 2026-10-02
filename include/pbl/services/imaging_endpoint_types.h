@@ -7,43 +7,66 @@
 
 #include "pbl/kernel/compiler.h"
 
-//! Generic image-fetch endpoint (0x0035). The watch pulls an image from the phone: it sends an
-//! ImageRequest naming what it wants (type, encoding, dimensions and type-specific parameters), and
-//! the phone streams back the pixels in one or more ImageResponse chunks. Album art is the first
-//! consumer; notification images and others can reuse the same endpoint.
+/**
+ * @addtogroup services_imaging
+ * @{
+ */
 
+/** @brief Image-fetch endpoint (0x0035) command identifiers. */
 typedef enum {
-  // Watch -> Phone
+  /** Image request, watch to phone. */
   ImagingCmdIDRequest = 0x01,
-  // Phone -> Watch
+  /** Image response chunk, phone to watch. */
   ImagingCmdIDResponse = 0x02,
 
+  /** Invalid command. */
   ImagingCmdIDInvalid = 0xff,
 } ImagingCmdID;
 
-//! What the image is for. Determines the type-specific parameters in the request tail.
+/** @brief What an image is for; determines the type-specific parameters of the request. */
 typedef enum {
+  /** Album art of a music track. */
   ImagingImageTypeAlbumArt = 0x00,
+  /** Image attached to a notification. */
   ImagingImageTypeNotification = 0x01,
 
+  /** Number of image types. */
   ImagingImageTypeCount,
 } ImagingImageType;
 
-//! Pixel encoding the watch is asking for (and that the response is packed in).
+/** @brief Pixel encoding requested by the watch, and used by the response. */
 typedef enum {
-  ImagingFormat1Bit = 0x00,        //!< 1-bpp black & white.
-  ImagingFormat8BitColor = 0x01,   //!< 8-bpp GColor8.
-  ImagingFormat4BitPalette = 0x02, //!< 4-bpp palettized GColor8 (up to 16 colours).
+  /** 1-bpp black and white. */
+  ImagingFormat1Bit = 0x00,
+  /** 8-bpp GColor8. */
+  ImagingFormat8BitColor = 0x01,
+  /** 4-bpp palettized GColor8, up to 16 colors. */
+  ImagingFormat4BitPalette = 0x02,
 } ImagingFormat;
 
-//! Watch -> Phone. Fixed head, then type-specific parameters.
+/**
+ * @brief Image request header, watch to phone.
+ *
+ * Type-specific parameters follow:
+ * - For @ref ImagingImageTypeAlbumArt, @c uint8_t title length, title, @c uint8_t artist
+ *   length and artist. The phone returns art for that track, so the request cannot race a track
+ *   change, or no image.
+ * - For @ref ImagingImageTypeNotification, the 16-byte UUID of the timeline item, as the phone
+ *   keyed its cache.
+ */
 typedef struct PBL_PACKED {
-  uint8_t cmd;        //!< ImagingCmdIDRequest.
-  uint8_t token;      //!< Opaque; echoed in the response so the watch can match it to a request.
-  uint8_t image_type; //!< ImagingImageType.
-  uint8_t format;     //!< ImagingFormat the watch wants.
-  uint16_t width;     //!< Desired width in pixels.
-  uint16_t height;    //!< Desired height in pixels.
+  /** @ref ImagingCmdIDRequest. */
+  uint8_t cmd;
+  /** Opaque value echoed in the response to match it to the request. */
+  uint8_t token;
+  /** @ref ImagingImageType. */
+  uint8_t image_type;
+  /** Requested @ref ImagingFormat. */
+  uint8_t format;
+  /** Desired width in pixels. */
+  uint16_t width;
+  /** Desired height in pixels. */
+  uint16_t height;
   // Type-specific parameters follow. For ImagingImageTypeAlbumArt:
   //   uint8_t title_len;  char title[title_len];
   //   uint8_t artist_len; char artist[artist_len];
@@ -52,29 +75,49 @@ typedef struct PBL_PACKED {
   //   uint8_t item_id[16];  // the timeline item's UUID, as the phone keyed its cache
 } ImagingRequestHeader;
 
-//! Flags byte in an ImageResponse chunk.
+/** @brief Flags of an image response chunk. */
 typedef enum {
-  ImagingResponseFlagFirst = (1 << 0),       //!< First chunk; the image header precedes the pixels.
-  ImagingResponseFlagLast = (1 << 1),        //!< Last chunk of the transfer.
-  ImagingResponseFlagNoImage = (1 << 2),     //!< Phone has no image; no pixels follow.
-  ImagingResponseFlagUnsupported = (1 << 3), //!< Phone can't serve this image type; no pixels
-                                             //!< follow. The watch latches the type off for the
-                                             //!< rest of the connection and stops requesting it.
+  /** First chunk; the image header precedes the pixels. */
+  ImagingResponseFlagFirst = (1 << 0),
+  /** Last chunk of the transfer. */
+  ImagingResponseFlagLast = (1 << 1),
+  /** The phone has no image; no pixels follow. */
+  ImagingResponseFlagNoImage = (1 << 2),
+  /**
+   * The phone cannot serve this image type; no pixels follow. The watch stops requesting the type
+   * for the rest of the connection.
+   */
+  ImagingResponseFlagUnsupported = (1 << 3),
 } ImagingResponseFlags;
 
-//! Bits 4-7 of a response's `flags` carry the ImagingImageType it answers. Several consumers can
-//! have a request outstanding at once, and the token alone doesn't say which one a response is for.
-#define IMAGING_RESPONSE_FLAG_TYPE_MASK  (0xf0)
+/**
+ * @brief Mask of the @ref ImagingImageType a response answers, in bits 4-7 of its flags.
+ *
+ * Several consumers can have a request outstanding at once, and the token alone does not tell
+ * which one a response is for.
+ */
+#define IMAGING_RESPONSE_FLAG_TYPE_MASK (0xf0)
+/** @brief Shift of the image type in a response's flags. */
 #define IMAGING_RESPONSE_FLAG_TYPE_SHIFT (4)
 
-//! Phone -> Watch, chunked. `chunk_len` pixel bytes follow this header (after the image header on
-//! the first chunk).
+/**
+ * @brief Image response chunk header, phone to watch.
+ *
+ * @ref chunk_len pixel bytes follow. On the first chunk they are preceded by an image header:
+ * @c uint16_t width, @c uint16_t height, @c uint8_t @ref ImagingFormat, @c uint8_t palette count
+ * (1-16 for palette formats, else 0) and that many GColor8 palette entries.
+ */
 typedef struct PBL_PACKED {
-  uint8_t cmd;        //!< ImagingCmdIDResponse.
-  uint8_t token;      //!< Echo of the request token.
-  uint8_t flags;      //!< ImagingResponseFlags bitset.
-  uint32_t offset;    //!< Byte offset of this chunk's pixels into the pixel stream.
-  uint16_t chunk_len; //!< Number of pixel bytes in this chunk.
+  /** @ref ImagingCmdIDResponse. */
+  uint8_t cmd;
+  /** Token of the request. */
+  uint8_t token;
+  /** @ref ImagingResponseFlags and the image type. */
+  uint8_t flags;
+  /** Byte offset of this chunk's pixels in the pixel stream. */
+  uint32_t offset;
+  /** Number of pixel bytes in this chunk. */
+  uint16_t chunk_len;
   // First chunk only, before the pixel data:
   //   uint16_t width;
   //   uint16_t height;
@@ -82,3 +125,5 @@ typedef struct PBL_PACKED {
   //   uint8_t  palette_count;   // palette formats only: 1..16 (0 for non-palette)
   //   uint8_t  palette[palette_count];  // GColor8 entries
 } ImagingResponseHeader;
+
+/** @} */

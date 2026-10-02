@@ -5,12 +5,25 @@
 
 #include <stdbool.h>
 
-//! Currently this file serves as a cache for the existence of the SEND_TEXT_NOTIF_PREF_KEY, and
-//! a reply action within that key.
-//! This is required because a user can have a supported mobile app but not a supported carrier,
-//! and in that case we don't want to show the app in the launcher.
-//! We cache the existence of this key so that the launcher isn't slowed down by flash reads
+/**
+ * @defgroup services_send_text_service Send text
+ * @ingroup services
+ * @brief Availability of the Send Text app.
+ *
+ * Caches whether the Send Text notification preferences hold a reply action. A user can have a
+ * supported phone app but no supported carrier, in which case the app is hidden from the
+ * launcher. Caching avoids flash reads in the launcher.
+ * @{
+ */
 
+/** @brief Load the initial state and track preference changes. */
 void send_text_service_init(void);
 
+/**
+ * @brief Check whether Send Text can be used.
+ *
+ * @return True if the phone app supports it and a reply action is configured.
+ */
 bool send_text_service_is_send_text_supported(void);
+
+/** @} */
