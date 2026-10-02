@@ -64,6 +64,9 @@ typedef struct NumberWindow {
 
   NumberWindowCallbacks callbacks;
   void *callback_context;
+
+  //! Allocated separately so the struct stays within its 2.x allocation size.
+  void *private_data;
 } NumberWindow;
 
 //! Initializes the NumberWindow.

@@ -10,13 +10,23 @@
 #include "shell/system_theme.h"
 #include <pbl/logging/logging.h>
 
+#ifdef CONFIG_TOUCH
+#define NEIGHBOR_HEIGHT   22
+#define NEIGHBOR_FONT_KEY FONT_KEY_GOTHIC_18_BOLD
+#define NEIGHBOR_COLOR    PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack)
+#endif
+
 // Look and feel
 #define DEFAULT_CELL_PADDING   10
 #define DEFAULT_SELECTED_INDEX 0
 #define DEFAULT_ACTIVE_COLOR   GColorWhite
 #define DEFAULT_INACTIVE_COLOR GColorDarkGray
 
+#ifdef CONFIG_TOUCH
+#define BUTTON_HOLD_REPEAT_MS 50
+#else
 #define BUTTON_HOLD_REPEAT_MS 100
+#endif
 
 // Animation - I was told the video that was provides was at 28fps. This means each frame is 35.7ms
 // 3 frames in the video
@@ -308,6 +318,38 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
   }
 }
 
+#ifdef CONFIG_TOUCH
+static bool prv_shows_neighbors(const SelectionLayer *selection_layer) {
+  return selection_layer->is_active && selection_layer->callbacks.get_neighbor_text;
+}
+
+static void prv_draw_neighbors(SelectionLayer *selection_layer, GContext *ctx) {
+  if (!prv_shows_neighbors(selection_layer) || selection_layer->slide_amin_progress ||
+      selection_layer->slide_settle_anim_progress) {
+    return;
+  }
+  const unsigned idx = selection_layer->selected_cell_idx;
+  int16_t x = prv_centered_offset_x(selection_layer);
+  for (unsigned i = 0; i < idx; i++) {
+    x += selection_layer->cell_widths[i] + selection_layer->cell_padding;
+  }
+  const int16_t width = selection_layer->cell_widths[idx];
+  const int16_t height = selection_layer->layer.frame.size.h;
+  const GFont font = fonts_get_system_font(NEIGHBOR_FONT_KEY);
+  graphics_context_set_text_color(ctx, NEIGHBOR_COLOR);
+
+  char text[8];
+  selection_layer->callbacks.get_neighbor_text(idx, 1, text, sizeof(text),
+                                               selection_layer->callback_context);
+  graphics_draw_text(ctx, text, font, GRect(x, -NEIGHBOR_HEIGHT - 2, width, NEIGHBOR_HEIGHT),
+                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  selection_layer->callbacks.get_neighbor_text(idx, -1, text, sizeof(text),
+                                               selection_layer->callback_context);
+  graphics_draw_text(ctx, text, font, GRect(x, height - 2, width, NEIGHBOR_HEIGHT),
+                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+}
+#endif
+
 static void prv_draw_selection_layer(SelectionLayer *selection_layer, GContext *ctx) {
   // The first thing that is drawn is the background for each cell
   prv_draw_cell_backgrounds(selection_layer, ctx);
@@ -322,6 +364,9 @@ static void prv_draw_selection_layer(SelectionLayer *selection_layer, GContext *
 
   // Finally the text is drawn over everything
   prv_draw_text(selection_layer, ctx);
+#ifdef CONFIG_TOUCH
+  prv_draw_neighbors(selection_layer, ctx);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -534,8 +579,7 @@ void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   }
 }
 
-void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  SelectionLayer *selection_layer = (SelectionLayer *)context;
+static void prv_advance(SelectionLayer *selection_layer) {
   if (selection_layer->is_active) {
     animation_unschedule(selection_layer->next_cell_animation);
     if (selection_layer->selected_cell_idx == selection_layer->num_cells - 1) {
@@ -545,6 +589,10 @@ void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
       prv_run_slide_animation(selection_layer);
     }
   }
+}
+
+void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  prv_advance((SelectionLayer *)context);
 }
 
 static void prv_click_config_provider(SelectionLayer *selection_layer) {
@@ -560,12 +608,85 @@ static void prv_click_config_provider(SelectionLayer *selection_layer) {
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
 }
 
+#ifdef CONFIG_TOUCH
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//! Touch: tap a cell to select it (tap the selected cell to advance), drag vertically to change
+//! the selected cell's value, swipe right for BACK and left for SELECT.
+
+static bool prv_contains_point(const Layer *layer, const GPoint *point) {
+  const SelectionLayer *selection_layer = (const SelectionLayer *)layer;
+  GRect frame = layer->frame;
+  if (prv_shows_neighbors(selection_layer)) {
+    frame.origin.y -= NEIGHBOR_HEIGHT;
+    frame.size.h += 2 * NEIGHBOR_HEIGHT;
+  }
+  return grect_contains_point(&frame, point);
+}
+
+static int prv_touch_cell_at(SelectionLayer *selection_layer, GPoint point_on_screen) {
+  GRect global_frame;
+  layer_get_global_frame(&selection_layer->layer, &global_frame);
+  const int16_t x = point_on_screen.x - global_frame.origin.x;
+  const int16_t half_padding = selection_layer->cell_padding / 2;
+  int16_t cell_x = prv_centered_offset_x(selection_layer);
+  for (unsigned i = 0; i < selection_layer->num_cells; i++) {
+    const int16_t width = selection_layer->cell_widths[i];
+    if (width == 0) {
+      continue;
+    }
+    if (x >= cell_x - half_padding && x < cell_x + width + half_padding) {
+      return i;
+    }
+    cell_x += width + selection_layer->cell_padding;
+  }
+  return -1;
+}
+
+static void prv_touch_step(int direction, void *context) {
+  SelectionLayer *selection_layer = context;
+  const SelectionLayerIncrementCallback callback =
+      direction > 0 ? selection_layer->callbacks.increment : selection_layer->callbacks.decrement;
+  if (callback) {
+    callback(selection_layer->selected_cell_idx, selection_layer->callback_context);
+  }
+  layer_mark_dirty(&selection_layer->layer);
+}
+
+static bool prv_touch_can_start(void *context) {
+  return ((SelectionLayer *)context)->is_active;
+}
+
+static void prv_touch_tap(GPoint point_on_screen, void *context) {
+  SelectionLayer *selection_layer = context;
+  if (!selection_layer->is_active) {
+    return;
+  }
+  const int cell_idx = prv_touch_cell_at(selection_layer, point_on_screen);
+  if (cell_idx < 0) {
+    return;
+  }
+  if ((unsigned)cell_idx == selection_layer->selected_cell_idx) {
+    prv_advance(selection_layer);
+    return;
+  }
+  // Unscheduling a running slide advances the index, so assign afterwards.
+  animation_unschedule(selection_layer->next_cell_animation);
+  selection_layer->selected_cell_idx = cell_idx;
+  layer_mark_dirty(&selection_layer->layer);
+}
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! API
 void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, unsigned num_cells) {
   if (num_cells > MAX_SELECTION_LAYER_CELLS) {
     num_cells = MAX_SELECTION_LAYER_CELLS;
   }
+
+#ifdef CONFIG_TOUCH
+  // Re-init zeroes the node, so unlink it first to keep the registry list intact.
+  picker_touch_deinit(&selection_layer->picker_touch);
+#endif
 
   // Set layer defaults
   *selection_layer = (SelectionLayer){
@@ -585,6 +706,24 @@ void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, u
   layer_set_frame(&selection_layer->layer, frame);
   layer_set_clips(&selection_layer->layer, false);
   layer_set_update_proc(&selection_layer->layer, (LayerUpdateProc)prv_draw_selection_layer);
+#ifdef CONFIG_TOUCH
+  layer_set_contains_point_override(&selection_layer->layer, prv_contains_point);
+  picker_touch_init(&selection_layer->picker_touch, &selection_layer->layer,
+                    (PickerTouchCallbacks){
+                      .step = prv_touch_step,
+                      .tap = prv_touch_tap,
+                      .can_start = prv_touch_can_start,
+                    },
+                    selection_layer);
+#endif
+}
+
+int selection_layer_neighbor_height(void) {
+#ifdef CONFIG_TOUCH
+  return NEIGHBOR_HEIGHT;
+#else
+  return 0;
+#endif
 }
 
 SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells) {
@@ -597,6 +736,9 @@ SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells) {
 }
 
 void selection_layer_deinit(SelectionLayer *selection_layer) {
+#ifdef CONFIG_TOUCH
+  picker_touch_deinit(&selection_layer->picker_touch);
+#endif
   animation_unschedule(selection_layer->next_cell_animation);
   animation_unschedule(selection_layer->value_change_animation);
 }

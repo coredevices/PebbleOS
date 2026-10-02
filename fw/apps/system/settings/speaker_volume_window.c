@@ -7,19 +7,87 @@
 
 #include "menu.h"
 
-#include "applib/fonts/fonts.h"
-#include "applib/ui/ui.h"
+#include "applib/ui/app_window_stack.h"
 #include "kernel/pbl_malloc.h"
 #include "kernel/pebble_tasks.h"
-#include "kernel/ui/system_icons.h"
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/speaker/speaker_service.h"
 
+#define VOLUME_STEP 5
+
+static void prv_play_preview(int value) {
+  // Restart the preview on every step so rapid changes aren't rejected as same-priority playback.
+  speaker_service_stop_for_task(PebbleTask_App);
+  speaker_service_set_owner_task(PebbleTask_App);
+  speaker_service_play_volume_preview((uint8_t)value);
+}
+
+static void prv_save(int value) {
+  alerts_preferences_set_speaker_volume((uint8_t)value);
+  speaker_service_handle_audio_prefs_changed();
+  settings_menu_mark_dirty(SettingsMenuItemVibrations);
+}
+
+#ifdef CONFIG_TOUCH
+
+#include "applib/fonts/fonts.h"
+#include "applib/ui/value_picker_window.h"
+
+typedef struct SpeakerVolumeWindowData {
+  ValuePickerWindow picker_window;
+  ValuePickerStyle picker_style;
+} SpeakerVolumeWindowData;
+
+static void prv_changed(ValuePickerWindow *picker_window, void *context) {
+  prv_play_preview(value_picker_window_get_value(picker_window));
+}
+
+static void prv_selected(ValuePickerWindow *picker_window, void *context) {
+  prv_save(value_picker_window_get_value(picker_window));
+  app_window_stack_remove(&picker_window->window, true /* animated */);
+}
+
+static void prv_unload(ValuePickerWindow *picker_window, void *context) {
+  speaker_service_stop_for_task(PebbleTask_App);
+  i18n_free_all(context);
+  app_free(context);
+}
+
+void speaker_volume_window_push(void) {
+  SpeakerVolumeWindowData *data = app_zalloc_check(sizeof(*data));
+  const ValuePickerContent content = {
+    .title = i18n_get("Volume", data),
+    .unit = "%",
+    .value = alerts_preferences_get_speaker_volume(),
+    .min_value = 0,
+    .max_value = 100,
+    .step = VOLUME_STEP,
+  };
+  data->picker_style = *value_picker_layer_default_style();
+  data->picker_style.value_font_key = FONT_KEY_LECO_38_BOLD_NUMBERS;
+  data->picker_style.unit_font_key = FONT_KEY_LECO_38_BOLD_NUMBERS;
+  data->picker_style.neighbor_font_key = FONT_KEY_LECO_20_BOLD_NUMBERS;
+  data->picker_style.title_y = PBL_IF_ROUND_ELSE(24, 16);
+  value_picker_window_init(&data->picker_window, &content, &data->picker_style,
+                           (ValuePickerWindowCallbacks){
+                             .changed = prv_changed,
+                             .selected = prv_selected,
+                             .unload = prv_unload,
+                           },
+                           data);
+  app_window_stack_push(&data->picker_window.window, true /* animated */);
+}
+
+#else
+
+#include "applib/fonts/fonts.h"
+#include "applib/ui/ui.h"
+#include "kernel/ui/system_icons.h"
+
 #include <stddef.h>
 #include <stdio.h>
 
-#define VOLUME_STEP               5
 #define BUTTON_REPEAT_INTERVAL_MS 100
 
 typedef struct SpeakerVolumeWindowData {
@@ -27,14 +95,6 @@ typedef struct SpeakerVolumeWindowData {
   ActionBarLayer action_bar;
   int16_t value;
 } SpeakerVolumeWindowData;
-
-static void prv_play_preview(SpeakerVolumeWindowData *data) {
-  // Restart the preview on every step so rapid clicks aren't rejected as
-  // same-priority playback.
-  speaker_service_stop_for_task(PebbleTask_App);
-  speaker_service_set_owner_task(PebbleTask_App);
-  speaker_service_play_volume_preview((uint8_t)data->value);
-}
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
   _Static_assert(offsetof(Window, layer) == 0, "");
@@ -78,7 +138,7 @@ static void prv_set_value(SpeakerVolumeWindowData *data, int new_value) {
   }
   data->value = (int16_t)new_value;
   layer_mark_dirty(&data->window.layer);
-  prv_play_preview(data);
+  prv_play_preview(data->value);
 }
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, SpeakerVolumeWindowData *data) {
@@ -90,9 +150,7 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, SpeakerVolumeW
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, SpeakerVolumeWindowData *data) {
-  alerts_preferences_set_speaker_volume((uint8_t)data->value);
-  speaker_service_handle_audio_prefs_changed();
-  settings_menu_mark_dirty(SettingsMenuItemVibrations);
+  prv_save(data->value);
   app_window_stack_remove(&data->window, true /* animated */);
 }
 
@@ -142,5 +200,7 @@ void speaker_volume_window_push(void) {
 
   app_window_stack_push(&data->window, true /* animated */);
 }
+
+#endif // CONFIG_TOUCH
 
 #endif // CONFIG_SPEAKER

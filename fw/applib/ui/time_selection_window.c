@@ -5,6 +5,7 @@
 
 #include "applib/ui/option_menu_window.h"
 #include "pbl/services/clock.h"
+#include "pbl/util/math.h"
 #include "shell/system_theme.h"
 
 #include <stdio.h>
@@ -147,7 +148,10 @@ static void prv_update_range_text_layer(TimeSelectionWindowData *time_selection_
   TextLayer *top_layer = PBL_IF_RECT_ELSE(range_subtitle_text_layer, range_text_layer);
   TextLayer *bottom_layer = PBL_IF_RECT_ELSE(range_text_layer, range_subtitle_text_layer);
 
-  const int range_origin_y = prv_selection_config()->range_origin_y;
+  const int range_origin_y =
+      MAX(prv_selection_config()->range_origin_y,
+          grect_get_max_y(&time_selection_window->selection_layer.layer.frame) +
+              selection_layer_neighbor_height());
   const int extra_line_offset_y = PBL_IF_RECT_ELSE(2, 4);
   prv_vertical_align_text_layer(time_selection_window, top_layer, range_origin_y, 1,
                                 extra_line_offset_y);
@@ -185,6 +189,15 @@ static void prv_handle_dec(unsigned index, void *context) {
   TimeSelectionWindowData *data = context;
   date_time_handle_time_change(&data->time_data, index, -1);
   prv_update_range_text_layer(data);
+}
+
+static void prv_handle_get_neighbor_text(unsigned index, int delta, char *buffer,
+                                         size_t buffer_size, void *context) {
+  TimeSelectionWindowData *data = context;
+  TimeData time_data = data->time_data;
+  date_time_handle_time_change(&time_data, index, delta);
+  char cell_buf[sizeof(data->cell_buf)];
+  snprintf(buffer, buffer_size, "%s", date_time_selection_get_text(&time_data, index, cell_buf));
 }
 
 // Public Functions
@@ -251,6 +264,7 @@ void time_selection_window_init(TimeSelectionWindowData *time_selection_window,
                                   .complete = prv_handle_complete,
                                   .increment = prv_handle_inc,
                                   .decrement = prv_handle_dec,
+                                  .get_neighbor_text = prv_handle_get_neighbor_text,
                                 });
   layer_add_child(&window->layer, &time_selection_window->selection_layer.layer);
 
@@ -269,6 +283,12 @@ void time_selection_window_init(TimeSelectionWindowData *time_selection_window,
   TextLayer *range_subtitle_text_layer = &time_selection_window->range_subtitle_text_layer;
   prv_text_layer_init(&window->layer, range_subtitle_text_layer,
                       fonts_get_system_font(size_config->subtitle_font_key));
+
+#ifdef CONFIG_TOUCH
+  // The label's frame overlaps the cells; the topmost sibling receives the touch.
+  layer_remove_from_parent(&selection_layer->layer);
+  layer_add_child(&window->layer, &selection_layer->layer);
+#endif
 
   // Status setup
   status_bar_layer_init(&time_selection_window->status_layer);
