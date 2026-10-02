@@ -7,194 +7,246 @@
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/responsiveness.h>
 
+/**
+ * @defgroup bluetooth_pebble_pairing_service Pebble Pairing Service
+ * @ingroup bluetooth
+ * @brief GATT service through which the phone app checks the connection and triggers pairing.
+ *
+ * The service (PBL_BT_PPS_UUID_16BIT) has a Connectivity Status characteristic (read, notify)
+ * and a Trigger Pairing characteristic (read, write). The NimBLE backend does not implement the
+ * Connection Parameters characteristic. The wire formats below must fit the minimum ATT MTU.
+ * @{
+ */
+
+/** @brief UUID of the Connectivity Status characteristic, as an initializer list. */
 #define PBL_BT_PPS_CONNECTION_STATUS_UUID PBL_BT_PEBBLE_UUID_EXPAND(1)
-#define PBL_BT_PPS_TRIGGER_PAIRING_UUID   PBL_BT_PEBBLE_UUID_EXPAND(2)
-// Note: UUID 4 was used by the 3.14-rc Android App for V0 of the Connection Param characteristic
-// but never shipped externally
+/** @brief UUID of the Trigger Pairing characteristic, as an initializer list. */
+#define PBL_BT_PPS_TRIGGER_PAIRING_UUID PBL_BT_PEBBLE_UUID_EXPAND(2)
+/**
+ * @brief UUID of the Connection Parameters characteristic, as an initializer list.
+ *
+ * UUID 4 was used by a pre-release Android app for an earlier version of it and must not be
+ * reused.
+ */
 #define PBL_BT_PPS_CONNECTION_PARAMETERS_UUID PBL_BT_PEBBLE_UUID_EXPAND(5)
 
+/** @brief Application specific ATT errors returned by the service. */
 enum pbl_bt_pps_gatt_error {
+  /** Unknown command. */
   PBL_BT_PPS_GATT_ERROR_UNKNOWN_COMMAND_ID = PBL_BT_GATT_ERROR_APPLICATION_SPECIFIC_ERROR_START,
+  /** The requested remote desired state is invalid. */
   PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_INVALID_REMOTE_DESIRED_STATE,
+  /** The minimum connection interval is too small. */
   PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_MIN_SLOTS_TOO_SMALL,
+  /** The minimum connection interval is too large. */
   PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_MIN_SLOTS_TOO_LARGE,
+  /** The maximum connection interval is too large. */
   PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_MAX_SLOTS_TOO_LARGE,
+  /** The supervision timeout is too small. */
   PBL_BT_PPS_GATT_ERROR_CONN_PARAMS_SUPERVISION_TIMEOUT_TOO_SMALL,
+  /** The device does not support Packet Length Extension. */
   PBL_BT_PPS_GATT_ERROR_DEVICE_DOES_NOT_SUPPORT_PLE,
 };
 
-//! The connectivity status, with respect to the device reading it.
+/** @brief Connectivity Status value, with respect to the device reading it. */
 struct PBL_PACKED pbl_bt_pps_connectivity_status {
   union {
     struct {
-      //! true if the device that is reading the status is connected (always true)
+      /** True if the reading device is connected (always true). */
       bool ble_is_connected : 1;
-      //! true if the device that is reading the status is bonded, false if not
+      /** True if the reading device is bonded. */
       bool ble_is_bonded : 1;
-      //! true if the current LE link is encrypted, false if not
+      /** True if the current LE link is encrypted. */
       bool ble_is_encrypted : 1;
-      //! true if the watch has a bonding to a gateway (LE-based).
+      /** True if the watch has a bonding to an LE gateway. */
       bool has_bonded_gateway : 1;
-      //! true if the watch supports writing the "Don't send slave security request" bit.
-      //! See https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+GATT+Services
+      /**
+       * True if the watch supports the @ref pbl_bt_pps_trigger_request::no_slave_security_request
+       * bit.
+       */
       bool supports_pinning_without_security_request : 1;
-      //! true if the reversed ppogatt was enabled at the time of bonding
+      /** True if reversed PPoGATT was enabled at the time of bonding. */
       bool is_reversed_ppogatt_enabled : 1;
 
-      //! Reserved, leave zero for future use.
+      /** Reserved, zero. */
       uint32_t rsvd : 18;
 
-      //! The error of the last pairing process or all zeroes, if no pairing process has completed
-      //! or when there were no errors. Also see BT Spec 4.2, Vol 3, Part H, 3.5.5 Pairing Failed.
+      /**
+       * Error of the last pairing, or zero if no pairing completed or it succeeded.
+       *
+       * See Bluetooth Core Specification v4.2, Vol 3, Part H, 3.5.5 Pairing Failed.
+       */
       uint8_t last_pairing_result;
     };
+    /** Raw value. */
     uint8_t bytes[4];
   };
 };
 
 _Static_assert(sizeof(struct pbl_bt_pps_connectivity_status) == 4, "");
 
+/** @brief Value written to the Trigger Pairing characteristic. */
 struct PBL_PACKED pbl_bt_pps_trigger_request {
+  /** Pin the local address for this device. */
   bool should_pin_address : 1;
 
-  //! @note Not available in Bluetopia/cc2564x implementation
-  //! This flag and should_force_slave_security_request are mutually exclusive!
+  /**
+   * Don't send a security request. Mutually exclusive with
+   * @ref should_force_slave_security_request.
+   */
   bool no_slave_security_request : 1;
 
-  //! @note Not available in Bluetopia/cc2564x implementation
-  //! This flag and no_slave_security_request are mutually exclusive!
+  /**
+   * Send a security request even if the link is already encrypted. Mutually exclusive with
+   * @ref no_slave_security_request.
+   */
   bool should_force_slave_security_request : 1;
 
-  //! @note Not available in Bluetopia/cc2564x implementation
-  //! Flag to indicate that when re-pairing this device, the re-pairing should be accepted
-  //! automatically for this remote device (matching IRK or matching identity address).
-  //! @note This is a work-around for an Android 4.4.x bug. This opens up a security hole :( where
-  //! a phone could pretend to be the "trusted" phone and pair w/o the user even knowing about it.
-  //! @see https://pebbletechnology.atlassian.net/browse/PBL-39369
+  /**
+   * Accept re-pairing with this device automatically (matching IRK or identity address).
+   *
+   * @note A work-around for an Android 4.4.x bug. It opens a security hole: a phone could
+   * impersonate the trusted phone and pair without the user knowing.
+   */
   bool should_auto_accept_re_pairing : 1;
 
-  //! @note Not available in Bluetopia/cc2564x implementation
-  //! Flag to indicate that the PPoGATT server/client roles should be reversed to support the
-  //! connected phone. Some older Android phones' GATT service API is completely busted. For those
-  //! poor phones, this bit is set before pairing. The Pebble includes a "reversed" PPoGATT service
-  //! that the phone app can connect to as GATT client, but this service only works if this bit
-  //! gets set *before pairing*. This is a security measure: 1. to prevent non-paired devices from
-  //! talking to the "reversed" PPoGATT service. 2. to prevent non-Pebble apps on paired phone that
-  //! does support normal PPoGATT from connecting to the "reversed" PPoGATT service.
-  //! @see ppogatt_emulated_server_wa.c
-  //! @see https://pebbletechnology.atlassian.net/browse/PBL-39634
+  /**
+   * Reverse the PPoGATT server and client roles for this phone.
+   *
+   * For older Android phones with a broken GATT server API: the watch then hosts a "reversed"
+   * PPoGATT service the phone app connects to as a client. It only works if this bit is set
+   * before pairing, which keeps unpaired devices and non-Pebble apps on a phone that supports
+   * normal PPoGATT away from the reversed service.
+   */
   bool is_reversed_ppogatt_enabled : 1;
 };
 
+/** @brief A connection parameter set, in the Connection Parameters characteristic format. */
 struct PBL_PACKED pbl_bt_pps_conn_param_set {
-  //! interval_min_ms / 1.25 msec – valid range: 7.5 msec to 4 seconds
+  /** Minimum connection interval in 1.25 ms units, 7.5 ms to 4 s. */
   uint16_t interval_min_1_25ms;
 
-  //! (interval_max_ms - interval_min_ms) / 1.25 msec
-  //! @note To fit the parent struct in the minimum GATT MTU, this field is a delta and only one
-  //! byte instead of the uint16_t that the BT spec uses.
+  /**
+   * Maximum minus minimum connection interval in 1.25 ms units.
+   *
+   * A one-byte delta, not the spec's uint16_t, to fit the minimum MTU.
+   */
   uint8_t interval_max_delta_1_25ms;
 
-  //! Slave latency (in number of connection events)
-  //! @note To fit the parent struct in the minimum GATT MTU, this field is only one byte instead
-  //! of the uint16_t that the BT spec uses.
+  /**
+   * Peripheral latency in connection events.
+   *
+   * One byte, not the spec's uint16_t, to fit the minimum MTU.
+   */
   uint8_t slave_latency_events;
 
-  //! Supervision Timeout / 30 msec – valid range: 100 msec to 32 seconds. To fit this into one
-  //! byte and to fit the parent struct in the minimum GATT MTU, the increments is not the standard
-  //! 10msec!
+  /**
+   * Supervision timeout in 30 ms units (not the spec's 10 ms, to fit one byte), 100 ms to 32 s.
+   */
   uint8_t supervision_timeout_30ms;
 };
 
-//! The connection parameters settings, with respect to connection to the device reading them.
+/** @brief Connection Parameters read or notified value, for the reading device's connection. */
 struct PBL_PACKED pbl_bt_pps_conn_params_read_notif {
-  //! Capability bits. Reserved for future use.
+  /** True if Packet Length Extension is supported. */
   uint8_t packet_length_extension_supported : 1;
+  /** Reserved. */
   uint8_t rsvd : 7;
 
-  //! Current interval / 1.25 msec – valid range: 7.5 msec to 4 seconds
+  /** Current connection interval in 1.25 ms units, 7.5 ms to 4 s. */
   uint16_t current_interval_1_25ms;
 
-  //! Current Slave latency (in number of connection events) – actual max is 0x01F3, but in
-  //! practice values are much lower.
+  /** Current peripheral latency in connection events, at most 0x01F3. */
   uint16_t current_slave_latency_events;
 
-  //! Current Supervision Timeout / 10 msec – valid range: 100 msec to 32 seconds.
+  /** Current supervision timeout in 10 ms units, 100 ms to 32 s. */
   uint16_t current_supervision_timeout_10ms;
 };
 
+/** @brief Commands written to the Connection Parameters characteristic. */
 enum pbl_bt_pps_conn_params_write_cmd {
-  //! Allows phone to change connection parameter set and take over control of parameter management
+  /** Change the connection parameter sets and take over parameter management. */
   PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_PARAM_MGMT_SETTINGS = 0x00,
-  //! Issues a connection parameter change request if the watch is not in the desired state
+  /** Request a connection parameter change if the watch is not in the desired state. */
   PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_DESIRED_STATE = 0x01,
-  //! Controls settings for BLE 4.2 Packet Length Extension feature
+  /** Control the LE Packet Length Extension feature. */
   PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_ENABLE_PACKET_LENGTH_EXTENSION = 0x02,
-  //! If written to disables Dialog BLE sleep mode (safeguard against PBL-39777 in case it affects
-  //! more watches in the future)
+  /** Disable the controller sleep mode, a safeguard for a Dialog controller issue. */
   PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_INHIBIT_BLE_SLEEP = 0x03,
+  /** Number of commands. */
   PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_NUM,
 };
 
+/** @brief Payload of PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_PARAM_MGMT_SETTINGS. */
 struct PBL_PACKED pbl_bt_pps_remote_param_mgmt_settings {
-  //! If false/zero, Pebble should manage the connection parameters. If true/one, Pebble should
-  //! NOT manage the connection parameters. In this mode, Pebble will never request a
-  //! connection parameter change.
+  /**
+   * True if the remote device manages the connection parameters.
+   *
+   * The watch then never requests a connection parameter change.
+   */
   bool is_remote_device_managing_connection_parameters : 1;
+  /** Reserved. */
   uint8_t rsvd : 7;
-  //! Optional. Current parameters sets used by Pebble's Connection Parameter manager.
+  /** Optional parameter sets for the watch's connection parameter manager. */
   struct pbl_bt_pps_conn_param_set connection_parameter_sets[];
 };
 
+/** @brief Payload of PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_DESIRED_STATE. */
 struct PBL_PACKED pbl_bt_pps_remote_desired_state {
-  //! The desired ResponseTime as desired by the remote device.  The remote end can set this
-  //! value to a faster mode when it's about to transfer/receive a lot of data. For example,
-  //! when a lot of BlobDB operations are queued up, the watch doesn't know how much data is
-  //! queued up on the remote end. In this case, the remote could write "PBL_BT_RESPONSE_TIME_MIN"
-  //! so increase the speed temporarily. It's the remote end's responsibility to reset this to
-  //! PBL_BT_RESPONSE_TIME_MAX when the bulk transfer is done.  As a safety measure, the watch is
-  //! will reset it back to PBL_BT_RESPONSE_TIME_MAX after 5 minutes.  In case the phone app still
-  //! wants to keep a particular desired ResponseTime, the phone app is responsible for making sure
-  //! to write the value again before the 5 minute timer expires.
+  /**
+   * Response time desired by the remote device, an enum pbl_bt_response_time_state.
+   *
+   * The remote can ask for PBL_BT_RESPONSE_TIME_MIN before a bulk transfer the watch cannot
+   * anticipate, and is responsible for setting PBL_BT_RESPONSE_TIME_MAX when done. The watch
+   * falls back to PBL_BT_RESPONSE_TIME_MAX after 5 minutes; write again before then to keep the
+   * state.
+   */
   uint8_t state : 2;
 
+  /** Reserved. */
   uint8_t rsvd : 6;
 };
 
+/** @brief Payload of PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_ENABLE_PACKET_LENGTH_EXTENSION. */
 struct PBL_PACKED pbl_bt_pps_packet_length_extension {
+  /** Trigger an LL length request. */
   uint8_t trigger_ll_length_req : 1;
+  /** Reserved. */
   uint8_t rsvd : 7;
 };
 
+/** @brief Payload of PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_INHIBIT_BLE_SLEEP. */
 struct PBL_PACKED pbl_bt_pps_inhibit_ble_sleep {
-  uint8_t rsvd; // for future use
+  /** Reserved. */
+  uint8_t rsvd;
 };
 
-//! The connection parameters settings, with respect to connection to the device writing them.
+/** @brief Value written to the Connection Parameters characteristic. */
 struct PBL_PACKED pbl_bt_pps_conn_params_write {
+  /** The command, selects the payload. */
   enum pbl_bt_pps_conn_params_write_cmd cmd : 8;
+  /** Command payload, selected by @c cmd. */
   union PBL_PACKED {
-    //! Valid iff cmd ==
-    //! PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_PARAM_MGMT_SETTINGS
+    /** Valid iff @c cmd is PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_PARAM_MGMT_SETTINGS. */
     struct pbl_bt_pps_remote_param_mgmt_settings remote_param_mgmt_settings;
 
-    //! Valid iff cmd ==
-    //! PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_DESIRED_STATE
+    /** Valid iff @c cmd is PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_SET_REMOTE_DESIRED_STATE. */
     struct pbl_bt_pps_remote_desired_state remote_desired_state;
 
-    //! Valid iff cmd ==
-    //! PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_ENABLE_PACKET_LENGTH_EXTENSION
+    /** Valid iff @c cmd is PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_ENABLE_PACKET_LENGTH_EXTENSION. */
     struct pbl_bt_pps_packet_length_extension ple_req;
 
-    //! Valid iff cmd == PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_INHIBIT_BLE_SLEEP
+    /** Valid iff @c cmd is PBL_BT_PPS_CONN_PARAMS_WRITE_CMD_INHIBIT_BLE_SLEEP. */
     struct pbl_bt_pps_inhibit_ble_sleep ble_sleep;
   };
 };
 
+/** @brief Size of struct pbl_bt_pps_remote_param_mgmt_settings with all parameter sets. */
 #define PBL_BT_PPS_REMOTE_PARAM_MGMT_SETTINGS_SIZE_WITH_PARAM_SETS \
   (sizeof(struct pbl_bt_pps_remote_param_mgmt_settings) +          \
    (sizeof(struct pbl_bt_pps_conn_param_set) * PBL_BT_RESPONSE_TIME_NUM))
 
+/** @brief Size of a parameter management settings write with all parameter sets. */
 #define PBL_BT_PPS_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS                      \
   (offsetof(struct pbl_bt_pps_conn_params_write, remote_param_mgmt_settings) + \
    PBL_BT_PPS_REMOTE_PARAM_MGMT_SETTINGS_SIZE_WITH_PARAM_SETS)
@@ -205,25 +257,36 @@ _Static_assert(PBL_BT_PPS_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS <= 20, "Larger 
 _Static_assert(sizeof(struct pbl_bt_pps_conn_params_write) <= 20, "Larger than minimum MTU!");
 _Static_assert(sizeof(struct pbl_bt_pps_connectivity_status) <= 20, "Larger than minimum MTU!");
 
+/** @brief LE connection state kept by the firmware (see @c comm/ble/gap_le_connection.h). */
 typedef struct GAPLEConnection GAPLEConnection;
 
-//! Signals to the Pebble GATT service that status change has occurred (pairing, encryption, ...),
-//! allowing it to notify any BLE devices that are subscribed to connectivity status updates of the
-//! change.
-//! @param connection The connection for which the status was changed.
+/**
+ * @brief Signal a change of the connection status (pairing, encryption, ...).
+ *
+ * Notifies the Connectivity Status to the subscribed device.
+ *
+ * @param connection The connection whose status changed.
+ */
 void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection);
 
-//! Indicate to the FW that Connectivity Status characteristic has been unsubscribed from.
-//! This is used to detect that the Pebble iOS app has been terminated.
+/**
+ * @brief Called when the Connectivity Status characteristic is unsubscribed from.
+ *
+ * Used to detect that the Pebble iOS app was terminated. Not invoked by the NimBLE backend.
+ */
 extern void pbl_bt_cb_pps_handle_ios_app_termination_detected(void);
 
-//! Indicate to the FW that the Connection Parameters characteristic has been written to with a new
-//! values.
-//! @param device The device that wrote to the characteristic.
-//! @param conn_params The value as written to the Connection Parameters characteristic. The BT
-//! driver lib is expected to validate any written values and only call this function with valid
-//! values.
-//! @param conn_params_length The length of conn_params in bytes.
+/**
+ * @brief Called when the Connection Parameters characteristic was written.
+ *
+ * Not invoked by the NimBLE backend.
+ *
+ * @param device The device that wrote the characteristic.
+ * @param conn_params The value written, validated by the stack.
+ * @param conn_params_length Length of @p conn_params in bytes.
+ */
 extern void pbl_bt_cb_pps_handle_connection_parameter_write(
     const struct pbl_bt_device_internal *device,
     const struct pbl_bt_pps_conn_params_write *conn_params, size_t conn_params_length);
+
+/** @} */

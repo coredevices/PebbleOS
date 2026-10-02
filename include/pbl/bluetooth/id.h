@@ -5,24 +5,56 @@
 
 #include <pbl/bluetooth/types.h>
 
+/**
+ * @defgroup bluetooth_id Local identity
+ * @ingroup bluetooth
+ * @brief Local device name and addresses.
+ * @{
+ */
+
+/**
+ * @brief Set the local device name, served by the GAP service.
+ *
+ * @param device_name NUL-terminated name.
+ */
 void pbl_bt_id_set_local_device_name(const char device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE]);
 
+/**
+ * @brief Get the local identity address.
+ *
+ * @param[out] addr_out The address.
+ */
 void pbl_bt_id_copy_local_identity_address(struct pbl_bt_addr *addr_out);
 
-//! Configures the local address that the BT driver should use "on-air".
-//! @note This address and the identity address are different things!
-//! @note bt_lock() is held when this call is made.
-//! @param allow_cycling True if the controller is allowed to cycle the address (implies address
-//! pinning is *not* used!)
-//! @param pinned_address The address to use, or NULL for "don't care".
+/**
+ * @brief Configure the address used on air.
+ *
+ * This is not the identity address. Called with @c bt_lock() held. Does nothing in the NimBLE
+ * backend.
+ *
+ * @param allow_cycling true if the controller may cycle the address, which implies no pinning.
+ * @param pinned_address Address to use, or NULL for any.
+ */
 void pbl_bt_set_local_address(bool allow_cycling, const struct pbl_bt_addr *pinned_address);
 
-//! Copies a human-readable string of freeform info that uniquely identifies the Bluetooth chip.
-//! Used by MFG for part tracking purposes.
-//! @param[out] dest Buffer into which to copy the info.
-//! @param[in] dest_size Size of dest in bytes.
+/**
+ * @brief Get a human-readable string identifying the Bluetooth chip.
+ *
+ * Used by manufacturing for part tracking. The NimBLE backend returns @c "NimBLE".
+ *
+ * @param[out] dest Buffer to copy the string into.
+ * @param dest_size Size of @p dest in bytes.
+ */
 void pbl_bt_id_copy_chip_info_string(char *dest, size_t dest_size);
 
-//! Generates a new private resolvable address using the current IRK (as passed with the
-//! pbl_bt_start() call when setting up the stack).
+/**
+ * @brief Generate a resolvable private address from the local IRK.
+ *
+ * The NimBLE backend returns an all-zero address.
+ *
+ * @param[out] address_out The address.
+ * @return true on success.
+ */
 bool pbl_bt_id_generate_private_resolvable_address(struct pbl_bt_addr *address_out);
+
+/** @} */

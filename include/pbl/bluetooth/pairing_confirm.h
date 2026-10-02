@@ -5,31 +5,54 @@
 
 #include <stdbool.h>
 
-//! Forward declaration to internal, implementation specific state.
+/**
+ * @defgroup bluetooth_pairing_confirm Pairing confirmation
+ * @ingroup bluetooth
+ * @brief Ask the user to confirm a pairing request.
+ *
+ * @code{.c}
+ * void pbl_bt_cb_pairing_confirm_handle_request(const struct pbl_bt_pairing_confirm_ctx *ctx,
+ *                                               const char *device_name,
+ *                                               const char *confirmation_token) {
+ *   // Show the token, then on the user's answer:
+ *   pbl_bt_pairing_confirm(ctx, user_accepted);
+ * }
+ * @endcode
+ * @{
+ */
+
+/** @brief Opaque, backend specific pairing process context. */
 struct pbl_bt_pairing_confirm_ctx;
 
-//! Confirms a pairing request.
-//! @param[in] ctx The pairing request context, as previously passed to
-//! pbl_bt_cb_pairing_confirm_handle_request.
-//! @param[in] is_confirmed Pass true if the user confirmed the pairing.
+/**
+ * @brief Answer a pairing request.
+ *
+ * @param ctx The pairing process, as passed to pbl_bt_cb_pairing_confirm_handle_request().
+ * @param is_confirmed true if the user confirmed the pairing.
+ */
 void pbl_bt_pairing_confirm(const struct pbl_bt_pairing_confirm_ctx *ctx, bool is_confirmed);
 
-//! @param[in] ctx Pointer to opaque BT-driver-implementation specific context. The function can
-//! use the pointer value this to distinguish one pairing process from another, but the pointer
-//! should NOT be dereferenced by the FW side. Aside the fact that the struct is internal to
-//! the FW and therefore shouldn't be able to look inside it, the memory can be free'd at all times
-//! by the BT driver implementation. For example when the pairing process times out, the BT driver
-//! might free the memory that ctx is pointing to.
-//! @param[in] device_name Optional device name of the device that is attempting to pair. Pass NULL
-//! if the device name is not available.
-//! @param[in] confirmation_token Optional confirmation token. Pass NULL if not available.
-//! @note This function should immediately copy the device name and confirmation token, so the
-//! buffers do not have to continue existing after this function returns.
+/**
+ * @brief Called when a device requests pairing and the user must confirm it.
+ *
+ * @param ctx Identifies the pairing process. Compare it to tell processes apart, but never
+ *            dereference it: it may be released at any time, for example when the pairing
+ *            times out. The NimBLE backend uses the connection handle.
+ * @param device_name Name of the device, or NULL if not available.
+ * @param confirmation_token Numeric comparison value to display, or NULL if not available.
+ * @note @p device_name and @p confirmation_token are only valid during the call.
+ */
 extern void pbl_bt_cb_pairing_confirm_handle_request(const struct pbl_bt_pairing_confirm_ctx *ctx,
                                                      const char *device_name,
                                                      const char *confirmation_token);
 
-//! @param[in] ctx See pbl_bt_cb_pairing_confirm_handle_request
-//! @param[in] success True if the pairing process finished successfully.
+/**
+ * @brief Called when a pairing process finished.
+ *
+ * @param ctx The pairing process, see pbl_bt_cb_pairing_confirm_handle_request().
+ * @param success true if the pairing succeeded.
+ */
 extern void pbl_bt_cb_pairing_confirm_handle_completed(const struct pbl_bt_pairing_confirm_ctx *ctx,
                                                        bool success);
+
+/** @} */
