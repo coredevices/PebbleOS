@@ -16,7 +16,7 @@
 ////////////////////////////////////
 
 #include <stubs_app_state.h>
-#include <stubs_system_theme.h>
+#include <shell/system_theme.h>
 
 // Fakes
 ////////////////////////////////////
