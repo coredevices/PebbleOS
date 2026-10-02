@@ -3,9 +3,21 @@
 
 Doxygen-generated reference for the PebbleOS firmware sources.
 
-Good starting points:
+The public interfaces under @c include are grouped in
+<a href="topics.html">Topics</a>, following the include layout:
 
-- <a href="topics.html">Topics</a> — APIs grouped by subject (UI, Foundation, Graphics, ...)
+- @ref kernel — @c pbl/kernel
+- @ref mcu — @c pbl/mcu
+- @ref soc — @c pbl/soc
+- @ref drivers — @c pbl/drivers
+- @ref services — @c pbl/services
+- @ref subsys — @c pbl/bluetooth, @c pbl/crc, @c pbl/cron, @c pbl/logging,
+  @c pbl/shell, @c pbl/task_wdt
+- @ref lib — @c pbl/util, @c pbl/btutil
+- @ref pebbleos — @c pebbleos
+
+Other indexes:
+
 - <a href="annotated.html">Data Structures</a> — all structs and unions
 - <a href="files.html">Files</a> — browse by source tree layout
 - <a href="globals_func.html">Functions</a> — flat function index
@@ -17,7 +29,7 @@ Source tree overview:
 - @c fw/kernel — task management, events, memory
 - @c fw/drivers — hardware drivers
 - @c include — public headers (@c pbl API surface)
-- @c lib — shared libraries (util, os, btutil, c)
+- @c lib — shared libraries (util, btutil, c)
 - @c subsys — OS subsystems (logging, ...)
 
 For guides and protocol specifications see the

@@ -1,0 +1,28 @@
+/**
+@defgroup kernel Kernel
+@brief Threads, synchronization, interrupts and scheduling (@c pbl/kernel).
+
+@defgroup mcu MCU
+@brief CPU core helpers: interrupts, privilege, cache and FPU (@c pbl/mcu).
+
+@defgroup soc SoC
+@brief SoC-specific interfaces (@c pbl/soc).
+
+@defgroup drivers Drivers
+@brief Hardware driver interfaces (@c pbl/drivers).
+
+Each header defines the interface a driver class implements; board and SoC
+specific definitions live in the per-implementation subgroups.
+
+@defgroup services Services
+@brief System services built on top of the drivers (@c pbl/services).
+
+@defgroup subsys Subsystems
+@brief Self-contained OS subsystems (@c subsys/).
+
+@defgroup lib Libraries
+@brief Generic support libraries (@c lib/).
+
+@defgroup pebbleos Shared definitions
+@brief Definitions shared with the bootloader and host tooling (@c pebbleos/).
+*/
