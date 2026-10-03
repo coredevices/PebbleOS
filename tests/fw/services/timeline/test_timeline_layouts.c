@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "apps/system/timeline/pin_window.h"
+#include "pbl/services/alarms/alarm.h"
 #include "pbl/services/timeline/sports_layout.h"
 #include "pbl/services/timeline/weather_layout.h"
 
@@ -62,6 +63,10 @@ void clock_get_until_time_capitalized(char *buffer, int buf_size, time_t timesta
     strncpy(buffer, "IN 2 HOURS", buf_size);
     buffer[buf_size - 1] = '\0';
   }
+}
+
+const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
+  return all_caps ? "WEEKDAYS" : "Weekdays";
 }
 
 // Stubs
@@ -288,6 +293,30 @@ static const TimelineLayoutTestConfig s_generic_config = {
 
 void test_timeline_layouts__content_sizes_generic(void) {
   prv_check_pages_for_each_size(prv_render_config_page, &s_generic_config, 2, TEST_PBI_FILE);
+}
+
+static const TimelineLayoutTestConfig s_calendar_config = {
+  .layout_id = LayoutIdCalendar,
+  .title = "Design Review Meeting",
+  .location_name = "Batavia, Palo Alto",
+  .body = "Bring the latest mockups",
+  .icon_timeline_res_id = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+};
+
+void test_timeline_layouts__content_sizes_calendar(void) {
+  prv_check_pages_for_each_size(prv_render_config_page, &s_calendar_config, 2, TEST_PBI_FILE);
+}
+
+static const TimelineLayoutTestConfig s_alarm_config = {
+  .layout_id = LayoutIdAlarm,
+  .title = "Alarm",
+  .subtitle = "Weekdays",
+  .icon_timeline_res_id = TIMELINE_RESOURCE_ALARM_CLOCK,
+};
+
+void test_timeline_layouts__content_sizes_alarm(void) {
+  // The alarm card fits on one page
+  prv_check_pages_for_each_size(prv_render_config_page, &s_alarm_config, 1, TEST_PBI_FILE);
 }
 
 void test_timeline_layouts__weather(void) {

@@ -188,7 +188,9 @@ void prv_create_and_render_pin_and_dot(bool past) {
   prv_create_list_view_and_render(&(ListViewConfig){
     .pins =
         {&(TimelineItemConfig){
-           .relative_timestamp = (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN),
+           // In the future, 10:00 PM, the widest time in the time font
+           .relative_timestamp =
+               past ? (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN) : 22 * PBL_SEC_PER_HOUR,
            .duration = PBL_MIN_PER_HOUR,
            .title = "Jon Byrd birthday party",
            .subtitle = "Kaboom, Redwood City",
@@ -203,11 +205,6 @@ void prv_create_and_render_pin_and_dot(bool past) {
          }},
     .past = past,
   });
-}
-
-void test_timeline_list_view__pin_and_dot_future(void) {
-  prv_create_and_render_pin_and_dot(false /* past */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
 static void prv_render_pin_and_dot_future(void) {
@@ -254,6 +251,14 @@ void test_timeline_list_view__day_sep_tomorrow_future(void) {
 void test_timeline_list_view__day_sep_tomorrow_past(void) {
   prv_create_and_render_day_sep_tomorrow(true /* past */);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+static void prv_render_day_sep_tomorrow_future(void) {
+  prv_create_and_render_day_sep_tomorrow(false /* past */);
+}
+
+void test_timeline_list_view__content_sizes_day_sep_tomorrow_future(void) {
+  prv_check_for_each_size(prv_render_day_sep_tomorrow_future, TEST_PBI_FILE);
 }
 
 void prv_create_and_render_pin_and_fin(bool past) {
