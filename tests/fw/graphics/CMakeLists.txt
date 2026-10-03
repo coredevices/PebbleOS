@@ -134,7 +134,7 @@ pbl_clar_test(test_graphics_draw_bitmap
     third_party/uzlib/uzlib/src/adler32.c
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
-  PLATFORMS obelix
+  PLATFORMS obelix asterix
   TEST_IMAGES
 )
 
