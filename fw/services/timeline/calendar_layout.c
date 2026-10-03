@@ -90,7 +90,9 @@ static GTextNode *prv_icon_node_constructor(const LayoutLayer *layout_ref,
       prv_get_icon_resource_with_layout(&layout->timeline_layout);
   if (icon_resource == TIMELINE_RESOURCE_TIMELINE_CALENDAR ||
       icon_resource == TIMELINE_RESOURCE_TIMELINE_EMPTY_CALENDAR) {
+    // The calendar icon is drawn left of its slot, so give back the space it leaves
     text_node->offset.x += CARD_ICON_CALENDAR_OFFSET_X;
+    text_node->margin.w += CARD_ICON_CALENDAR_OFFSET_X;
   }
   return text_node;
 }
