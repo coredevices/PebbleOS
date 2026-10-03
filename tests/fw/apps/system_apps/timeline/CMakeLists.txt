@@ -114,6 +114,7 @@ pbl_clar_test(test_timeline_list_view
     tests/fakes/fake_fonts.c
     tests/fakes/fake_settings_file.c
     tests/fixtures/resources/timeline_resource_table.auto.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_evented_timer.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1

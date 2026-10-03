@@ -77,14 +77,14 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = timeline_layout_time_text_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.alignment = PBL_IF_RECT_ELSE(LayoutTextAlignment_Right, LayoutTextAlignment_Center),
     .text.extent.margin.h = PBL_IF_RECT_ELSE(0, -2), // time margin height
   };
   static const LayoutNodeTextAttributeConfig s_title_config = {
     .attr_id = AttributeIdTitle,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Title,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 4, // title margin height
@@ -98,13 +98,13 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_location_config = {
     .attr_id = AttributeIdLocationName,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.extent.margin.h = 10, // location margin height
   };
   static const LayoutNodeTextAttributeConfig s_body_config = {
     .attr_id = AttributeIdBody,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Body,
     .text.extent.margin.h = 12, // body margin height
   };

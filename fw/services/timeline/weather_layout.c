@@ -91,7 +91,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_title_update,
     .buffer_size = WEATHER_CARD_TITLE_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.fixed_lines = 1, // title fixed lines
     .text.alignment = LayoutTextAlignment_Center,
@@ -131,7 +131,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_glance_location_config = {
     .attr_id = AttributeIdLocationName,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.fixed_lines = 1, // glance location fixed lines
     .text.alignment = LayoutTextAlignment_Center,
@@ -141,7 +141,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_location_config = {
     .attr_id = AttributeIdLocationName,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.line_spacing_delta = 2, // location line spacing delta
     .text.extent.margin.h = PREFERRED_CONTENT_SIZE_SWITCH(
@@ -157,13 +157,13 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_body_header_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_ParagraphHeader,
     .text.extent.margin.h = TIMELINE_CARD_BODY_HEADER_MARGIN_HEIGHT, // body header margin height
   };
   static const LayoutNodeTextAttributeConfig s_body_config = {
     .attr_id = AttributeIdBody,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Body,
     .text.line_spacing_delta = -2,                            // body line spacing delta
     .text.extent.margin.h = TIMELINE_CARD_BODY_MARGIN_HEIGHT, // body margin height

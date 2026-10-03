@@ -96,7 +96,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx);
 static GTextNode *prv_create_pin_view_node(TimelineLayout *layout);
 
 static const TimelineLayoutStyle *prv_get_style(void) {
-  return s_styles[PreferredContentSizeDefault];
+  return s_styles[system_theme_get_content_size()];
 }
 
 TimelineResourceId timeline_layout_get_icon_resource_id(LayoutLayerMode mode,
@@ -221,7 +221,7 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
   const bool is_future = (scroll_direction == TimelineScrollDirectionDown);
   PBL_UNUSED const int offset_y_rect = -5;
   // Center the icon vertically at screen center (offsets differ by content size/style)
-  const bool use_large_style = (PreferredContentSizeDefault >= PreferredContentSizeLarge);
+  const bool use_large_style = (system_theme_get_content_size() >= PreferredContentSizeLarge);
   // s_style_large: future_top_margin=39, past layout origin=117, icon_offset_y=3
   // s_style_medium: future_top_margin=39, past layout origin=61, icon_offset_y=0
   PBL_UNUSED const int offset_y_round =
@@ -372,7 +372,7 @@ static GTextNode *prv_create_all_day_text_node(const TimelineLayout *layout) {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("All day"),
     .use_i18n = true,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Title,
     .text.fixed_lines = 1,
     .text.alignment = PBL_IF_RECT_ELSE(LayoutTextAlignment_Left, LayoutTextAlignment_Right),
@@ -420,7 +420,7 @@ static GTextNode *prv_create_hour_text_node(const TimelineLayout *layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_time_number_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_TimeHeaderNumbers,
     .text.fixed_lines = 1,
     .text.alignment = LayoutTextAlignment_Left,
@@ -431,7 +431,7 @@ static GTextNode *prv_create_hour_text_node(const TimelineLayout *layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_time_word_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_TimeHeaderWords,
     .text.fixed_lines = 1,
     .text.alignment = LayoutTextAlignment_Left,
@@ -493,6 +493,10 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
                                   GVerticalAlignmentTop);
   GTextNode *time_text_node = !is_peek ? prv_create_time_text_node(layout) : NULL;
   if (time_text_node) {
+#if PBL_RECT
+    // A long time may run into the sidebar's arrow instead of being cut short
+    time_text_node->margin.w -= timeline_layer_get_sidebar_arrow_width();
+#endif
     graphics_text_node_container_add_child(&vertical_node->container, time_text_node);
   }
 
@@ -517,7 +521,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 
     static const LayoutNodeTextConfig s_primary_config = {
       .extent.node.type = LayoutNodeType_Text,
-      .style = LayoutContentSizeDefault,
+      .style = LayoutContentSize_Auto,
       .style_font = TextStyleFont_Title,
       .alignment = ToLayoutTextAlignment(TIMELINE_LAYER_TEXT_ALIGNMENT),
     };
@@ -557,7 +561,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
       .text.extent.node.type = is_peek ? LayoutNodeType_TextDynamic : LayoutNodeType_Text,
       .update = prv_peek_time_text_update,
       .buffer_size = ATTRIBUTE_SUBTITLE_MAX_LEN,
-      .text.style = LayoutContentSizeDefault,
+      .text.style = LayoutContentSize_Auto,
       .text.style_font = TextStyleFont_PinSubtitle,
       .text.alignment = ToLayoutTextAlignment(TIMELINE_LAYER_TEXT_ALIGNMENT),
     };
@@ -713,7 +717,7 @@ GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *la
       &layout->layout_layer, &vertical_config.container.extent.node);
 
   const LayoutNodeHeadingsParagraphsConfig headings_paragraphs_config = {
-    .size = LayoutContentSizeDefault,
+    .size = LayoutContentSize_Auto,
     .heading_style_font = TextStyleFont_ParagraphHeader,
     .paragraph_style_font = TextStyleFont_Body,
   };
@@ -730,7 +734,7 @@ GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *la
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("Last updated"),
     .use_i18n = true,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_ParagraphHeader,
     .text.extent.margin.h = TIMELINE_CARD_BODY_HEADER_MARGIN_HEIGHT,
   };
@@ -743,7 +747,7 @@ GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *la
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_last_updated_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Body,
     .text.extent.margin.h = TIMELINE_CARD_BODY_MARGIN_HEIGHT,
   };
@@ -768,7 +772,7 @@ static void prv_page_break_node_callback(GContext *ctx, const GRect *box,
       [PreferredContentSizeLarge] = -1,
       //! @note this is the same as Large until ExtraLarge is designed
       [PreferredContentSizeExtraLarge] = -1,
-    })[PreferredContentSizeDefault];
+    })[system_theme_get_content_size()];
     const GPoint origin =
         GPoint(bounds->size.w / 2, bounds->size.h - TIMELINE_CARD_ARROW_HEIGHT + arrow_offset);
     gpath_move_to(&s_page_break_arrow_path, origin);

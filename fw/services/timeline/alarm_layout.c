@@ -129,7 +129,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_until_time_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.alignment = LayoutTextAlignment_Center,
     .text.extent.margin.h =
@@ -160,7 +160,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextDynamic,
     .update = prv_subtitle_update,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.alignment = LayoutTextAlignment_Center,
   };

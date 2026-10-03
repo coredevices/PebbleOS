@@ -90,7 +90,9 @@ static GTextNode *prv_icon_node_constructor(const LayoutLayer *layout_ref,
       prv_get_icon_resource_with_layout(&layout->timeline_layout);
   if (icon_resource == TIMELINE_RESOURCE_TIMELINE_CALENDAR ||
       icon_resource == TIMELINE_RESOURCE_TIMELINE_EMPTY_CALENDAR) {
+    // The calendar icon is drawn left of its slot, so give back the space it leaves
     text_node->offset.x += CARD_ICON_CALENDAR_OFFSET_X;
+    text_node->margin.w += CARD_ICON_CALENDAR_OFFSET_X;
   }
   return text_node;
 }
@@ -304,7 +306,7 @@ static GTextNode *prv_create_icon_label_node_rect(const LayoutLayer *layout,
   const LayoutNodeTextBufferConfig time_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = buffer,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.extent.margin.h = time_margin_h,
   };
@@ -313,6 +315,8 @@ static GTextNode *prv_create_icon_label_node_rect(const LayoutLayer *layout,
     // Don't append the icon if there is no node or if on round
     return node;
   }
+  // Keep the time on one line; what doesn't fit is cut off at the screen edge
+  node->margin.w = -DISP_COLS;
   GTextNodeHorizontal *horizontal_node = graphics_text_node_create_horizontal(2);
   GTextNodeCustom *image_node = prv_create_image_node(ctx->image);
   image_node->node.offset.y = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
@@ -331,7 +335,7 @@ static GTextNode *prv_construct_all_day_or_node(const LayoutLayer *layout_ref,
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("All Day"),
     .use_i18n = true,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
   };
   return layout_create_text_node_from_config(
@@ -393,7 +397,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_glance_title_config = {
     .attr_id = AttributeIdTitle,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Title,
     .text.fixed_lines = 2, // glance title fixed lines
     .text.line_spacing_delta = CARD_LINE_DELTA,
@@ -408,7 +412,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
 #endif
   static const LayoutNodeTextAttributeConfig s_glance_location_config = {
     .attr_id = AttributeIdLocationName,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.fixed_lines = 1, // glance location fixed lines
   };
@@ -421,14 +425,14 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_title_config = {
     .attr_id = AttributeIdTitle,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Title,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 7, // title margin height
   };
   static const LayoutNodeTextAttributeConfig s_location_config = {
     .attr_id = AttributeIdLocationName,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
     .text.extent.margin.h = 15, // location margin height
   };
@@ -455,14 +459,14 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_body_config = {
     .attr_id = AttributeIdBody,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Body,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 17, // body margin height
   };
   static const LayoutNodeTextAttributeConfig s_sender_config = {
     .attr_id = AttributeIdSender,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_PinSubtitle,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 17, // sender margin height

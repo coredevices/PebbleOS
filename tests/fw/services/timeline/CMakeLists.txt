@@ -195,10 +195,14 @@ pbl_clar_test(test_timeline_layouts
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fixtures/resources/pfs_resource_table.c
     tests/fixtures/resources/timeline_resource_table.auto.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_animation.c
     fw/apps/system/timeline/pin_window.c
     fw/popups/timeline/timeline_item_layer.c
+    fw/services/timeline/alarm_layout.c
     fw/services/timeline/attribute.c
+    fw/services/timeline/calendar_layout.c
+    fw/services/timeline/calendar_layout_resources.c
     fw/services/timeline/generic_layout.c
     fw/services/timeline/layout_layer.c
     fw/services/timeline/layout_node.c
@@ -210,7 +214,7 @@ pbl_clar_test(test_timeline_layouts
     fw/shell/system_theme.c
     tests/stubs/stubs_clock.c
     tests/stubs/stubs_timeline_layout.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
