@@ -404,6 +404,79 @@ void test_hrm_manager__spo2_preempts_green(void) {
   fake_system_task_callbacks_invoke_pending();
 }
 
+// ------------------------------------------------------------------------------------------
+// New SpO2 data is broadcast as a health service event so apps can read it.
+int s_health_event_count;
+static HealthEventType s_health_event_type;
+static HealthEventData s_health_event_data;
+
+static void prv_fake_health_event_cb(PebbleEvent *event) {
+  if (event->type != PEBBLE_HEALTH_SERVICE_EVENT) {
+    return;
+  }
+  s_health_event_count++;
+  s_health_event_type = event->health_event.type;
+  s_health_event_data = event->health_event.data;
+}
+
+void test_hrm_manager__spo2_health_event(void) {
+  s_activity_prefs_blood_oxygen_is_enabled = true;
+  fake_event_set_callback(prv_fake_health_event_cb);
+
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  HRMSessionRef spo2_ref =
+      hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, PBL_SEC_PER_HOUR, 0, HRMFeature_SpO2,
+                                          false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(s_hrm_state.features, HRMFeature_SpO2);
+
+  // A valid SpO2 sample is broadcast as a health service event carrying the percent.
+  const HRMData spo2_data = {
+    .features = HRMFeature_SpO2,
+    .spo2_percent = 97,
+    .spo2_quality = HRMQuality_Good,
+  };
+  s_health_event_count = 0;
+  hrm_manager_new_data_cb(&spo2_data);
+  cl_assert_equal_i(s_health_event_count, 1);
+  cl_assert_equal_i(s_health_event_type, HealthEventSpO2Update);
+  cl_assert_equal_i(s_health_event_data.spo2_update.percent, 97);
+
+  // A reading taken off-wrist is dropped: only valid readings reach apps.
+  const HRMData off_wrist_data = {
+    .features = HRMFeature_SpO2,
+    .spo2_percent = 90,
+    .spo2_quality = HRMQuality_OffWrist,
+  };
+  s_health_event_count = 0;
+  hrm_manager_new_data_cb(&off_wrist_data);
+  cl_assert_equal_i(s_health_event_count, 0);
+
+  // A reading the algorithm rejected is dropped too.
+  const HRMData invalid_data = {
+    .features = HRMFeature_SpO2,
+    .spo2_percent = 90,
+    .spo2_quality = HRMQuality_Worst,
+    .spo2_invalid = true,
+  };
+  s_health_event_count = 0;
+  hrm_manager_new_data_cb(&invalid_data);
+  cl_assert_equal_i(s_health_event_count, 0);
+
+  // Data that isn't SpO2 isn't broadcast as an SpO2 health event.
+  const HRMData bpm_data = {
+    .features = HRMFeature_BPM,
+    .hrm_bpm = 72,
+  };
+  s_health_event_count = 0;
+  hrm_manager_new_data_cb(&bpm_data);
+  cl_assert_equal_i(s_health_event_count, 0);
+
+  fake_event_set_callback(NULL);
+  sys_hrm_manager_unsubscribe(spo2_ref);
+  fake_system_task_callbacks_invoke_pending();
+}
+
 // A subscriber whose interval is within the spin-up time is always due and so keeps the green path
 // on continuously; pref-masked and SpO2 subscribers don't count.
 void test_hrm_manager__has_continuous_green_subscriber(void) {
