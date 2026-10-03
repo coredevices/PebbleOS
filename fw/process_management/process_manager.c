@@ -161,6 +161,7 @@ void process_manager_init_context(ProcessContext *context, const PebbleProcessMd
   // we are safe to kill until the app main starts
   context->safe_to_kill = true;
   context->closing_state = ProcessRunState_Running;
+  context->kill_requested = false;
   context->args = args;
   context->user_data = 0;
 
@@ -268,6 +269,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       fetch_args->common = config->common;
       fetch_args->app_id = id;
       fetch_args->forcefully = config->forcefully;
+      fetch_args->kill_requested = config->kill_requested;
 
       // if the data is wakeup info, then copy out that information.
       if ((config->common.reason == APP_LAUNCH_WAKEUP) && (config->common.args != NULL)) {
@@ -358,6 +360,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       .md = md,
       .common = config->common,
       .forcefully = config->forcefully,
+      .kill_requested = config->kill_requested,
     });
   }
 }

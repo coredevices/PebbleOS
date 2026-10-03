@@ -152,7 +152,9 @@ drop the link.
 An emulator built with `CONFIG_BT_HCI_UART` needs a controller of its own.
 By default it gets Bumble's software controllers (`virtual`), two linked
 in memory, one for the watch and one for the harness: they cover the host
-stacks and the protocols above them, not a radio, and are what CI uses.
+stacks and the protocols above them, not a radio, and are what CI uses: it
+runs the normal tests on a normal build and the PRF tests on a PRF build,
+both with `CONFIG_BT_HCI_UART`, so that tests needing a phone run too.
 With real ones it takes two dongles, one for the watch and one for the
 harness: the lab's (`--qemu-bt-hci lab`), or given on the command line:
 
@@ -213,13 +215,13 @@ pbl itest --collect-only -q --board obelix --device-type hardware
 ```
 
 What a test covers is a category marker: `smoke`, `ui`, `notifications`,
-`power` and `slow`. The full list is in `harness/plugin.py`; markers are
+`voice`, `power` and `slow`. The full list is in `harness/plugin.py`; markers are
 strict, so a new one must be added there.
 
 ## Writing a test
 
 Tests are grouped by area in subdirectories of `tests/integration`
-(`system`, `ui`, `notifications`, `power`). A test asks for the fixtures it
+(`system`, `ui`, `notifications`, `voice`, `power`). A test asks for the fixtures it
 needs:
 
 ```python
@@ -258,7 +260,9 @@ The fixtures:
 - `build`: the build under test (`board`, `platform`, `config`).
 
 `harness.helpers.notifications` inserts notifications as the phone app
-would.
+would, and `harness.helpers.voice.VoicePhone` answers dictation sessions
+(`voice start` on the shell) as the phone app would, recording the audio
+frames it receives.
 
 The launched device is shared by the whole session by default; for a fresh
 boot per test (or module) pass `--dut-scope function` (or `module`). The

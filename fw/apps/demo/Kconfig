@@ -68,5 +68,6 @@ rsource "trigger_alarm/Kconfig"
 rsource "vibe_and_logs/Kconfig"
 rsource "vibe_score/Kconfig"
 rsource "vibe_strength/Kconfig"
+rsource "voice_demo/Kconfig"
 
 endmenu

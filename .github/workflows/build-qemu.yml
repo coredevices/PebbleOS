@@ -47,10 +47,14 @@ jobs:
     strategy:
       matrix:
         board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
-        build: ["normal", "prf-itest"]
+        build: ["normal", "normal-itest", "prf-itest"]
         include:
           - build: normal
             variant: normal
+          - build: normal-itest
+            variant: normal
+            suffix: -normal-itest
+            options: -DCONFIG_BT_HCI_UART=y
           - build: prf-itest
             variant: prf
             suffix: -prf-itest
@@ -104,7 +108,7 @@ jobs:
           path: artifacts
 
       # What the integration tests need of the build, laid out as in build/;
-      # the firmware bundle is what the PRF tests install.
+      # the normal build's firmware bundle is what the PRF tests install.
       - name: Store integration test build
         uses: actions/upload-artifact@v7
         with:
@@ -130,8 +134,11 @@ jobs:
       fail-fast: false
       matrix:
         board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
-        build: ["normal", "prf-itest"]
+        build: ["normal-itest", "prf-itest"]
         include:
+          - build: normal-itest
+            suffix: -normal-itest
+            options: --qemu-bt-hci virtual
           - build: prf-itest
             suffix: -prf-itest
             options: --qemu-bt-hci virtual --main-build "$GITHUB_WORKSPACE/build-main" -m "not slow"

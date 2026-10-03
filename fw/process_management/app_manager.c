@@ -572,12 +572,13 @@ static bool prv_app_switch(bool gracefully) {
   }
 
   AppInstallId old_install_id = s_app_task_context.install_id;
+  // A forced close is a crash unless it was requested
+  const bool crashed = !gracefully && !s_app_task_context.kill_requested;
 
   // Kill the current app
   prv_app_cleanup();
 
-  // If we had to ungracefully kill the current app, switch to the launcher app
-  if (!gracefully) {
+  if (crashed) {
     app_install_release_md(s_next_app.md);
     s_next_app = (NextApp){
       .md = system_app_state_machine_get_default_app(),
@@ -606,8 +607,8 @@ static bool prv_app_switch(bool gracefully) {
 
   compositor_transition(s_next_app.common.transition);
 
-  // Check if we've exited gracefully.  Otherwise, display the crash dialog if appropriate.
-  if (!gracefully) {
+  // Display the crash dialog if appropriate
+  if (crashed) {
     prv_app_show_crash_ui(old_install_id);
   }
 
@@ -693,6 +694,11 @@ bool app_manager_launch_new_app(const AppLaunchConfig *config) {
     return false;
   }
 
+  // The request belongs to the close in progress, so a later launch can't clear it
+  if (config->kill_requested) {
+    s_app_task_context.kill_requested = true;
+  }
+
   s_next_app = (NextApp){
     .md = app_md,
     .common = config->common,
@@ -723,6 +729,7 @@ void app_manager_handle_app_fetch_request_event(const PebbleAppFetchRequestEvent
     .common.args = fetch_args,
     .common.transition = fetch_args->common.transition,
     .forcefully = fetch_args->forcefully,
+    .kill_requested = fetch_args->kill_requested,
   });
 }
 

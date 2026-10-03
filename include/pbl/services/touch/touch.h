@@ -35,6 +35,7 @@ typedef enum TouchGesture {
   TouchGesture_Tap,
   /** Double tap. */
   TouchGesture_DoubleTap,
+  TouchGesture_Palm,
 } TouchGesture;
 
 /** @brief Initialize the service and register the touch and gesture event types. */

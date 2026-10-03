@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DEMO_APP_VOICE_DEMO
+    bool "Voice Demo"
+    depends on SERVICE_VOICE

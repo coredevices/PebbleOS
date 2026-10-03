@@ -257,3 +257,38 @@ void test_process_manager__matching_cache_entry_launches(void) {
   cl_assert(s_event_put__event == NULL);
   cl_assert_equal_i(s_app_manager_launch_new_app__callcount, 1);
 }
+
+//! A requested forced close has to reach the app manager, or it's treated as a crash
+void test_process_manager__requested_kill_reaches_the_app_manager(void) {
+  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {0}}};
+  s_good_md.common.uuid = s_uuid_a;
+  s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
+  s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
+  s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
+
+  process_manager_launch_process(
+      &(ProcessLaunchConfig){.id = 1, .forcefully = true, .kill_requested = true});
+
+  cl_assert_equal_i(s_app_manager_launch_new_app__callcount, 1);
+  cl_assert(s_app_manager_launch_new_app__config.forcefully);
+  cl_assert(s_app_manager_launch_new_app__config.kill_requested);
+}
+
+//! An app that isn't cached yet goes through the fetch UI, so the request has to survive it
+void test_process_manager__requested_kill_survives_a_fetch(void) {
+  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {0}}};
+  s_stale_md.common.uuid = s_uuid_b;
+  s_app_install_get_md__result = (PebbleProcessMd *)&s_stale_md;
+  s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
+  s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
+
+  process_manager_launch_process(
+      &(ProcessLaunchConfig){.id = 1, .forcefully = true, .kill_requested = true});
+
+  cl_assert(s_event_put__event != NULL);
+  cl_assert_equal_i(s_event_put__event->type, PEBBLE_APP_FETCH_REQUEST_EVENT);
+  const AppFetchUIArgs *fetch_args = s_event_put__event->app_fetch_request.fetch_args;
+  cl_assert(fetch_args != NULL);
+  cl_assert(fetch_args->forcefully);
+  cl_assert(fetch_args->kill_requested);
+}

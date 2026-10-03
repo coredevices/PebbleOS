@@ -16,6 +16,7 @@ typedef enum GestureEventType {
   GestureEvent_Tap,
   /** Double tap. */
   GestureEvent_DoubleTap,
+  GestureEvent_Palm,
 } GestureEventType;
 
 /** @brief Gesture event data, carried in @c PebbleGestureEvent. */

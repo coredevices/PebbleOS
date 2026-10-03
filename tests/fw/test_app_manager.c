@@ -372,7 +372,11 @@ const CompositorTransition *shell_get_close_compositor_animation(AppInstallId cu
   return NULL;
 }
 
+// Both crash UI paths relaunch the default watchface once
+static int s_watchface_launch_default_count;
+
 void watchface_launch_default(const CompositorTransition *animation) {
+  s_watchface_launch_default_count++;
 }
 
 void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_md) {
@@ -386,6 +390,7 @@ void test_app_manager__initialize(void) {
   app_manager_init();
 
   s_last_to_app_event = (PebbleEvent){};
+  s_watchface_launch_default_count = 0;
 
   s_app_task_control_reg = 0x1; // Just leave everything as unprivileged
 }
@@ -431,6 +436,7 @@ void test_app_manager__start_third_party_and_crash_back_to_root(void) {
   app_manager_close_current_app(false /* gracefully */);
 
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_root_app);
+  cl_assert_equal_i(s_watchface_launch_default_count, 1);
 }
 
 void test_app_manager__start_borked_app(void) {
@@ -474,6 +480,75 @@ void test_app_manager__start_third_party_and_force_close_back_to_first(void) {
 
   // The app should have exited to the root app.
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_root_app);
+}
+
+// A requested forced close launches the new app, not the launcher and crash UI
+void test_app_manager__requested_forced_close_launches_the_requested_app(void) {
+  test_app_manager__start_third_party();
+  s_last_to_app_event = (PebbleEvent){0};
+
+  // The app is inside a syscall, so it can't be stopped straight away
+  stub_control_reg(0x0);
+  app_manager_launch_new_app(&(AppLaunchConfig){
+    .md = &s_launch_app.common,
+    .forcefully = true,
+    .kill_requested = true,
+  });
+
+  cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_third_party_app);
+  cl_assert_equal_i(s_last_to_app_event.type, PEBBLE_PROCESS_DEINIT_EVENT);
+
+  // The syscall exit trap marks it safe to kill and posts the kill
+  app_manager_get_task_context()->safe_to_kill = true;
+  app_manager_close_current_app(false /* gracefully */);
+
+  cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_launch_app);
+  cl_assert_equal_i(s_watchface_launch_default_count, 0);
+}
+
+// A second launch while the requested close is pending doesn't turn it into a crash
+void test_app_manager__second_launch_keeps_a_pending_request(void) {
+  test_app_manager__start_third_party();
+
+  stub_control_reg(0x0);
+  app_manager_launch_new_app(&(AppLaunchConfig){
+    .md = &s_launch_app.common,
+    .forcefully = true,
+    .kill_requested = true,
+  });
+  app_manager_launch_new_app(&(AppLaunchConfig){
+    .md = &s_root_app.common,
+  });
+  app_manager_get_task_context()->safe_to_kill = true;
+  app_manager_close_current_app(false /* gracefully */);
+
+  cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_root_app);
+  cl_assert_equal_i(s_watchface_launch_default_count, 0);
+}
+
+// Same, with the app stoppable at once
+void test_app_manager__requested_forced_close_outside_a_syscall_launches_the_requested_app(void) {
+  test_app_manager__start_third_party();
+
+  app_manager_launch_new_app(&(AppLaunchConfig){
+    .md = &s_launch_app.common,
+    .forcefully = true,
+    .kill_requested = true,
+  });
+
+  cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_launch_app);
+  cl_assert_equal_i(s_watchface_launch_default_count, 0);
+}
+
+// The request covers only that close, so a later crash is still a crash
+void test_app_manager__crash_after_a_requested_forced_close_is_still_a_crash(void) {
+  test_app_manager__requested_forced_close_outside_a_syscall_launches_the_requested_app();
+
+  app_manager_get_task_context()->safe_to_kill = true;
+  app_manager_close_current_app(false /* gracefully */);
+
+  cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_root_app);
+  cl_assert_equal_i(s_watchface_launch_default_count, 1);
 }
 
 void test_app_manager__watchface_crash_on_close(void) {

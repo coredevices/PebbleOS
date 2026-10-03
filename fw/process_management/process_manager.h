@@ -69,6 +69,9 @@ typedef struct ProcessContext {
   //! What state the process is currently running in. Managed by the app_manager/worker_manager
   ProcessRunState closing_state;
 
+  //! The forced close of this process was requested, so it isn't a crash
+  bool kill_requested;
+
   //! Arguments passed to the process'. This is a pointer to a struct
   //! that is defined by the application.
   const void *args;
@@ -88,6 +91,8 @@ typedef struct ProcessLaunchConfig {
   bool worker;
   //! true if the previous app should be closed forcefully, false otherwise.
   bool forcefully;
+  //! true if the forced close was requested, so it isn't treated as a crash.
+  bool kill_requested;
 } ProcessLaunchConfig;
 
 //! Init the process manager
