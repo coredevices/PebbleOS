@@ -15,6 +15,7 @@
 #include "applib/data_logging.h"
 #include "applib/event_service_client.h"
 #include "applib/fonts/fonts.h"
+#include "applib/tick_timer_service.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/ui/window_stack_animation.h"
 
@@ -228,6 +229,14 @@ bool sys_touch_app_nav_active(void);
 //! per-task event-service subscription cannot distinguish the raw slot from
 //! the nav twins' system slot. Not exported to the SDK.
 void sys_touch_set_raw_subscribed(bool subscribed);
+
+//! Tell the tick timer which units the calling task's tick timer service needs, so the tick event
+//! only comes every second while some task wants seconds, and send the task its first tick. Not
+//! exported to the SDK.
+void sys_tick_timer_subscribe(TimeUnits units);
+
+//! Undo sys_tick_timer_subscribe() for the calling task. Not exported to the SDK.
+void sys_tick_timer_unsubscribe(void);
 
 //! Publish the foreground ActionBarLayer snapshot to the current task's touch-nav state so a tap on
 //! the bar is routed into its UP/SELECT/DOWN zone. \a frame is the bar rectangle in global

@@ -43,6 +43,11 @@ pbl_clar_test(test_put_bytes
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_tick_timer
+  SOURCES
+    fw/services/tick_timer/service.c
+)
+
 pbl_clar_test(test_cron
   SOURCES
     tests/fakes/fake_rtc.c
