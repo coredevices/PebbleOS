@@ -61,6 +61,12 @@ static void prv_get_until_time(const LayoutLayer *layout, char *buffer, int buff
     const char *starts = i18n_get("STARTS ", layout); // Freed by `timeline_layout_deinit`
     starts_len = strlen(starts);
     strncpy(buffer, starts, buffer_size);
+#if PBL_ROUND
+    // Round's large header fits "STARTS" and the time until on separate lines
+    if ((starts_len > 0) && (starts_len < (size_t)buffer_size) && (buffer[starts_len - 1] == ' ')) {
+      buffer[starts_len - 1] = '\n';
+    }
+#endif
   }
   clock_get_until_time_capitalized(buffer + starts_len, buffer_size - starts_len, timestamp,
                                    max_relative_hrs);
@@ -82,9 +88,10 @@ static GTextNode *prv_subtitle_constructor(const LayoutLayer *layout_ref,
     .buffer_size = TIME_STRING_REQUIRED_LENGTH,
     .text.style = CARD_TOP_CONTENT_SIZE,
     .text.style_font = TextStyleFont_Header,
-    .text.fixed_lines = 1,
+    .text.fixed_lines = PBL_IF_ROUND_ELSE(2, 1),
     .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = SPORTS_SIZE_SWITCH(-1, 10),
+    .text.extent.offset.y = PBL_IF_ROUND_ELSE(-10, 0),
+    .text.extent.margin.h = SPORTS_SIZE_SWITCH(-1, PBL_IF_RECT_ELSE(10, -6)),
   };
   static const LayoutNodeTextAttributeConfig s_term_config = {
     .attr_id = AttributeIdSubtitle,
