@@ -23,6 +23,7 @@ static GContext s_ctx;
 #include "fake_settings_file.h"
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
+#include "fixtures/screen_grid.h"
 #include "pbl/services/timeline/timeline_resources.h"
 
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
@@ -348,35 +349,19 @@ void prv_render_launcher_menu_layer(uint16_t selected_index) {
   app_menu_data_source_deinit(&data_source);
 }
 
-#define GRID_CELL_PADDING 5
-
-//! Renders the launcher once per content size and checks the screens side by side, Small to
-//! Extra Large. Pixels outside a round display stay pink.
+//! Renders the launcher once per content size and checks the screens side by side, from Small
 static void prv_render_launcher_menu_layer_for_each_size(uint16_t selected_index,
                                                          const char *pbi_file) {
-  const GSize grid_size = GSize(
-      GRID_CELL_PADDING + NumPreferredContentSizes * (DISP_COLS + GRID_CELL_PADDING), DISP_ROWS);
-  GBitmap *grid = gbitmap_create_blank(grid_size, GBitmapFormat8Bit);
-  memset(grid->addr, GColorShockingPinkARGB8, grid->row_size_bytes * grid_size.h);
-
-  for (PreferredContentSize size = PreferredContentSizeSmall; size < NumPreferredContentSizes;
-       size++) {
+  ScreenGrid grid;
+  screen_grid_init(&grid, 1);
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < grid.num_sizes; size++) {
     s_content_size = size;
     framebuffer_clear(fb);
     prv_render_launcher_menu_layer(selected_index);
-
-    uint8_t *column =
-        (uint8_t *)grid->addr + GRID_CELL_PADDING + size * (DISP_COLS + GRID_CELL_PADDING);
-    for (int16_t y = 0; y < DISP_ROWS; y++) {
-      const GBitmapDataRowInfo row = gbitmap_get_data_row_info(&s_ctx.dest_bitmap, y);
-      for (int16_t x = row.min_x; x <= row.max_x; x++) {
-        column[y * grid->row_size_bytes + x] = row.data[x];
-      }
-    }
+    screen_grid_add(&grid, &s_ctx, size, 0);
   }
 
-  cl_check(gbitmap_pbi_eq(grid, pbi_file));
-  gbitmap_destroy(grid);
+  screen_grid_check(&grid, pbi_file);
 }
 
 // Tests
