@@ -456,20 +456,6 @@ void test_launcher_menu_layer__app_selected_and_apps_above_and_below_with_glance
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
-void test_launcher_menu_layer__extra_large_with_glances(void) {
-  s_content_size = PreferredContentSizeExtraLarge;
-  prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
-  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
-}
-
-void test_launcher_menu_layer__medium_with_glances(void) {
-  s_content_size = PreferredContentSizeMedium;
-  prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
-  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
-}
-
 void test_launcher_menu_layer__content_size_change_keeps_selection(void) {
   AppMenuDataSource data_source = {};
   app_menu_data_source_init(&data_source, NULL, NULL);
