@@ -292,6 +292,7 @@ typedef struct {
   GDrawCommandImage *image;
   CalendarLayoutBufferCallback callback;
   size_t buffer_size;
+  bool one_line;
 } IconLabelContext;
 
 static GTextNode *prv_create_icon_label_node_rect(const LayoutLayer *layout,
@@ -312,6 +313,10 @@ static GTextNode *prv_create_icon_label_node_rect(const LayoutLayer *layout,
   if (PBL_IF_RECT_ELSE(!node, true)) {
     // Don't append the icon if there is no node or if on round
     return node;
+  }
+  if (ctx->one_line) {
+    // Keep the time on one line; what doesn't fit is cut off at the screen edge
+    node->margin.w = -DISP_COLS;
   }
   GTextNodeHorizontal *horizontal_node = graphics_text_node_create_horizontal(2);
   GTextNodeCustom *image_node = prv_create_image_node(ctx->image);
@@ -347,6 +352,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .image = &g_calendar_start_icon.image,
     .callback = PBL_IF_RECT_ELSE(prv_format_glance_start_time, prv_set_glance_time_line_round),
     .buffer_size = PBL_IF_RECT_ELSE(TIME_STRING_TIME_LENGTH, CALENDAR_TIME_LINE_LENGTH),
+    .one_line = true,
   };
   static const LayoutNodeConstructorConfig s_glance_start_time_with_icon_config = {
     .extent.node.type = LayoutNodeType_Constructor,
@@ -363,6 +369,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .image = &g_calendar_end_icon.image,
     .callback = prv_format_glance_end_time,
     .buffer_size = MAX(TIME_STRING_TIME_LENGTH, TIME_STRING_DATE_LENGTH),
+    .one_line = true,
   };
   PBL_UNUSED static const LayoutNodeConstructorConfig s_glance_end_time_with_icon_config = {
     .extent.node.type = LayoutNodeType_Constructor,
