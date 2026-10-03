@@ -10,9 +10,9 @@
 #include <hal/nrf_wdt.h>
 
 void watchdog_init(void) {
+  // No effect if the bootloader already started it: a running WDT keeps its configuration.
   nrf_wdt_reload_request_enable(NRF_WDT, NRF_WDT_RR0);
-  /* WDT expiration: 8s */
-  nrf_wdt_reload_value_set(NRF_WDT, 32768 * 8);
+  nrf_wdt_reload_value_set(NRF_WDT, (32768ULL * CONFIG_WATCHDOG_TIMEOUT_MS) / 1000U);
 }
 
 void watchdog_start(void) {

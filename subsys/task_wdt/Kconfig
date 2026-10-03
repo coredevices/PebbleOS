@@ -19,10 +19,12 @@ config TASK_WDT_TIMEOUT_MS
 
 config TASK_WDT_CHECK_PERIOD_MS
     int "Check period in milliseconds"
-    default 1000
+    default 3000 if WATCHDOG && WATCHDOG_TIMEOUT_MS < 20000
+    default 10000
     help
       How often the watchdog thread checks its channels and feeds the
-      hardware watchdog. Keep it well below the hardware watchdog timeout.
+      hardware watchdog, waking the system up to do so. Must stay below
+      half of the hardware watchdog timeout.
 
 config TASK_WDT_GRACE_MS
     int "Grace period in milliseconds"

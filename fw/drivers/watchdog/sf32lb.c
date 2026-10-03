@@ -6,8 +6,6 @@
 
 #include "bf0_hal.h"
 
-#define WDT_TIMEOUT_S 10U
-
 static WDT_HandleTypeDef hwdt = {
   .Instance = hwp_wdt1,
 };
@@ -16,7 +14,7 @@ static McuRebootReason s_cached_reset_flag;
 
 void watchdog_init(void) {
   // On PebbleOS, we use RC32K as WDT clock source.
-  hwdt.Init.Reload = 32000 * WDT_TIMEOUT_S;
+  hwdt.Init.Reload = 32U * CONFIG_WATCHDOG_TIMEOUT_MS;
 
   __HAL_WDT_STOP(&hwdt);
   __HAL_WDT_INT(&hwdt, 0);

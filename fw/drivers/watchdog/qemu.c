@@ -21,8 +21,7 @@
 #define WDOG_CONTROL_RESEN (1 << 1)
 #define WDOG_UNLOCK        0x1ACCE551
 
-#define WDOG_CLK_HZ    1000000
-#define WDOG_TIMEOUT_S 8
+#define WDOG_CLK_HZ 1000000
 
 // Reset reason latch in the system controller (write 1 to clear).
 #define SYSCTRL_RESET_REASON (QEMU_SYSCTRL_BASE + 0x14)
@@ -35,7 +34,7 @@ static McuRebootReason s_cached_reset_flag;
 
 void watchdog_init(void) {
   REG32(WDOG_LOCK) = WDOG_UNLOCK;
-  REG32(WDOG_LOAD) = (WDOG_CLK_HZ * WDOG_TIMEOUT_S) / 2;
+  REG32(WDOG_LOAD) = ((uint64_t)WDOG_CLK_HZ * CONFIG_WATCHDOG_TIMEOUT_MS) / 1000U / 2U;
 }
 
 void watchdog_start(void) {

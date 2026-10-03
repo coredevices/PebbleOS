@@ -8,6 +8,17 @@ menuconfig WATCHDOG
 
 if WATCHDOG
 
+config WATCHDOG_TIMEOUT_MS
+    int "Timeout in milliseconds"
+    default 8000 if WATCHDOG_NRF5
+    default 30000
+    help
+      Time without a feed after which the hardware watchdog resets the
+      system. The task watchdog feeds it on every check.
+
+      The nRF5 watchdog cannot be reconfigured once running, and the
+      bootloader starts it: there this must match the bootloader timeout.
+
 config WATCHDOG_NRF5
     bool "Nordic nRF5"
     default y if SOC_NRF52
