@@ -72,7 +72,7 @@ pbl_clar_test(test_kickstart
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     fw/apps/watch/kickstart/kickstart.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
