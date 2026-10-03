@@ -12,6 +12,8 @@
 #include "applib/battery_state_service_private.h"
 #include "applib/tick_timer_service_private.h"
 
+#include "stubs_system_theme.h"
+
 #include "clar.h"
 
 // Stubs
