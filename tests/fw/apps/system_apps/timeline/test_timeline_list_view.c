@@ -7,6 +7,7 @@
 #include "pbl/services/timeline/timeline_resources.h"
 
 #include "test_timeline_app_includes.h"
+#include "fixtures/screen_grid.h"
 #include "pbl/util/units.h"
 
 // Setup and Teardown
@@ -122,6 +123,23 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
   pin_db_flush();
 }
 
+// Content size grids
+//////////////////////
+
+//! Renders once per content size and checks the screens side by side, from Small
+static void prv_check_for_each_size(void (*render)(void), const char *pbi_file) {
+  ScreenGrid grid;
+  screen_grid_init(&grid, 1);
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < grid.num_sizes; size++) {
+    system_theme_set_content_size(size);
+    s_data = (TimelineTestData){};
+    render();
+    screen_grid_add(&grid, fake_graphics_context_get_context(), size, 0);
+  }
+
+  screen_grid_check(&grid, pbi_file);
+}
+
 // Tests
 //////////////////////
 
@@ -192,22 +210,12 @@ void test_timeline_list_view__pin_and_dot_future(void) {
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
-void test_timeline_list_view__pin_and_dot_future_small(void) {
-  system_theme_set_content_size(PreferredContentSizeSmall);
+static void prv_render_pin_and_dot_future(void) {
   prv_create_and_render_pin_and_dot(false /* past */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
-void test_timeline_list_view__pin_and_dot_future_medium(void) {
-  system_theme_set_content_size(PreferredContentSizeMedium);
-  prv_create_and_render_pin_and_dot(false /* past */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
-void test_timeline_list_view__pin_and_dot_future_extra_large(void) {
-  system_theme_set_content_size(PreferredContentSizeExtraLarge);
-  prv_create_and_render_pin_and_dot(false /* past */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+void test_timeline_list_view__content_sizes_pin_and_dot_future(void) {
+  prv_check_for_each_size(prv_render_pin_and_dot_future, TEST_PBI_FILE);
 }
 
 void test_timeline_list_view__pin_and_dot_past(void) {

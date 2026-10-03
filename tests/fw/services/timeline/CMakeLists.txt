@@ -195,6 +195,7 @@ pbl_clar_test(test_timeline_layouts
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fixtures/resources/pfs_resource_table.c
     tests/fixtures/resources/timeline_resource_table.auto.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_animation.c
     fw/apps/system/timeline/pin_window.c
     fw/popups/timeline/timeline_item_layer.c

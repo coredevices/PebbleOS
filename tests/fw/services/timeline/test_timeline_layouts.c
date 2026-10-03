@@ -16,6 +16,7 @@
 
 #include "fake_content_indicator.h"
 #include "fixtures/load_test_resources.h"
+#include "fixtures/screen_grid.h"
 
 bool property_animation_init(PropertyAnimation *animation,
                              const PropertyAnimationImplementation *implementation, void *subject,
@@ -225,6 +226,31 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
   attribute_list_destroy_list(&attr_list);
 }
 
+// Content size grids
+//////////////////////
+
+typedef void (*RenderPageCallback)(const void *context, size_t num_down_clicks);
+
+//! Checks the first pages in one image: a row per page, a column per content size from Small
+static void prv_check_pages_for_each_size(RenderPageCallback render, const void *context,
+                                          size_t num_pages, const char *pbi_file) {
+  ScreenGrid grid;
+  screen_grid_init(&grid, num_pages);
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < grid.num_sizes; size++) {
+    system_theme_set_content_size(size);
+    for (size_t page = 0; page < num_pages; page++) {
+      render(context, page);
+      screen_grid_add(&grid, &s_ctx, size, page);
+    }
+  }
+
+  screen_grid_check(&grid, pbi_file);
+}
+
+static void prv_render_config_page(const void *context, size_t num_down_clicks) {
+  prv_construct_and_render_layout(context, num_down_clicks);
+}
+
 // Tests
 //////////////////////
 
@@ -260,30 +286,8 @@ static const TimelineLayoutTestConfig s_generic_config = {
   .icon_timeline_res_id = TIMELINE_RESOURCE_DINNER_RESERVATION,
 };
 
-//! Checks the peek and the first page of details at the given content size
-static void prv_check_layout_for_size(PreferredContentSize size,
-                                      const TimelineLayoutTestConfig *config, const char *peek_file,
-                                      const char *details_file) {
-  system_theme_set_content_size(size);
-  prv_construct_and_render_layout(config, 0);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, peek_file));
-  prv_construct_and_render_layout(config, 1);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, details_file));
-}
-
-void test_timeline_layouts__generic_small(void) {
-  prv_check_layout_for_size(PreferredContentSizeSmall, &s_generic_config, TEST_PBI_FILE_X(peek),
-                            TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__generic_medium(void) {
-  prv_check_layout_for_size(PreferredContentSizeMedium, &s_generic_config, TEST_PBI_FILE_X(peek),
-                            TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__generic_extra_large(void) {
-  prv_check_layout_for_size(PreferredContentSizeExtraLarge, &s_generic_config,
-                            TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+void test_timeline_layouts__content_sizes_generic(void) {
+  prv_check_pages_for_each_size(prv_render_config_page, &s_generic_config, 2, TEST_PBI_FILE);
 }
 
 void test_timeline_layouts__weather(void) {
@@ -320,19 +324,8 @@ static const TimelineLayoutTestConfig s_weather_config = {
   .weather_time_type = WeatherTimeType_Pin,
 };
 
-void test_timeline_layouts__weather_small(void) {
-  prv_check_layout_for_size(PreferredContentSizeSmall, &s_weather_config, TEST_PBI_FILE_X(peek),
-                            TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__weather_medium(void) {
-  prv_check_layout_for_size(PreferredContentSizeMedium, &s_weather_config, TEST_PBI_FILE_X(peek),
-                            TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__weather_extra_large(void) {
-  prv_check_layout_for_size(PreferredContentSizeExtraLarge, &s_weather_config,
-                            TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+void test_timeline_layouts__content_sizes_weather(void) {
+  prv_check_pages_for_each_size(prv_render_config_page, &s_weather_config, 2, TEST_PBI_FILE);
 }
 
 static void prv_check_renders_like(const TimelineLayoutTestConfig *config,
@@ -410,42 +403,16 @@ void test_timeline_layouts__sports_ingame(void) {
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE_X(details1)));
 }
 
-//! Checks a sports pin's peek and first page of details at the given content size
-static void prv_check_sports_layout_for_size(PreferredContentSize size, GameState state,
-                                             const char *peek_file, const char *details_file) {
-  system_theme_set_content_size(size);
-  prv_construct_and_render_sports_layout(state, 0);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, peek_file));
-  prv_construct_and_render_sports_layout(state, 1);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, details_file));
+static void prv_render_sports_page(const void *context, size_t num_down_clicks) {
+  prv_construct_and_render_sports_layout(*(const GameState *)context, num_down_clicks);
 }
 
-void test_timeline_layouts__sports_pregame_small(void) {
-  prv_check_sports_layout_for_size(PreferredContentSizeSmall, GameStatePreGame,
-                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+void test_timeline_layouts__content_sizes_sports_pregame(void) {
+  const GameState state = GameStatePreGame;
+  prv_check_pages_for_each_size(prv_render_sports_page, &state, 2, TEST_PBI_FILE);
 }
 
-void test_timeline_layouts__sports_pregame_medium(void) {
-  prv_check_sports_layout_for_size(PreferredContentSizeMedium, GameStatePreGame,
-                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__sports_pregame_extra_large(void) {
-  prv_check_sports_layout_for_size(PreferredContentSizeExtraLarge, GameStatePreGame,
-                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__sports_ingame_small(void) {
-  prv_check_sports_layout_for_size(PreferredContentSizeSmall, GameStateInGame,
-                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__sports_ingame_medium(void) {
-  prv_check_sports_layout_for_size(PreferredContentSizeMedium, GameStateInGame,
-                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
-}
-
-void test_timeline_layouts__sports_ingame_extra_large(void) {
-  prv_check_sports_layout_for_size(PreferredContentSizeExtraLarge, GameStateInGame,
-                                   TEST_PBI_FILE_X(peek), TEST_PBI_FILE_X(details1));
+void test_timeline_layouts__content_sizes_sports_ingame(void) {
+  const GameState state = GameStateInGame;
+  prv_check_pages_for_each_size(prv_render_sports_page, &state, 2, TEST_PBI_FILE);
 }
