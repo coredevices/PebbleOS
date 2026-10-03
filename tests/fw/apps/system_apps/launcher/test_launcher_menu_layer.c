@@ -226,7 +226,8 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include "stubs_workout_utils.h"
 
 GColor shell_prefs_get_theme_highlight_color(void) {
-  return GColorWhite;
+  // Black and white displays always highlight in black
+  return PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack);
 }
 
 bool alerts_preferences_get_notification_alternative_design(void) {
