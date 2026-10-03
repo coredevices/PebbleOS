@@ -493,6 +493,10 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
                                   GVerticalAlignmentTop);
   GTextNode *time_text_node = !is_peek ? prv_create_time_text_node(layout) : NULL;
   if (time_text_node) {
+#if PBL_RECT
+    // A long time may run into the sidebar's arrow instead of being cut short
+    time_text_node->margin.w -= timeline_layer_get_sidebar_arrow_width();
+#endif
     graphics_text_node_container_add_child(&vertical_node->container, time_text_node);
   }
 

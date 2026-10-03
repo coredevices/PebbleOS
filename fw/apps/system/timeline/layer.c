@@ -128,6 +128,10 @@ uint16_t timeline_layer_get_ideal_sidebar_width(void) {
   return prv_get_style()->sidebar_width;
 }
 
+uint16_t timeline_layer_get_sidebar_arrow_width(void) {
+  return prv_get_style()->sidebar_arrow_size.w;
+}
+
 ///////////////////////////////////////////////////////////
 // Drawing functions
 ///////////////////////////////////////////////////////////

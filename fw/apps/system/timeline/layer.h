@@ -85,6 +85,9 @@ uint16_t timeline_layer_get_fat_pin_height(void);
 
 uint16_t timeline_layer_get_ideal_sidebar_width(void);
 
+//! Width of the sidebar's arrow, which points into the pin area
+uint16_t timeline_layer_get_sidebar_arrow_width(void);
+
 void timeline_layer_get_layout_frame(TimelineLayer *layer, int index, GRect *frame_out);
 
 void timeline_layer_get_icon_frame(TimelineLayer *layer, int index, GRect *frame_out);

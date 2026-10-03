@@ -9,3 +9,7 @@
 uint16_t PBL_WEAK timeline_layer_get_ideal_sidebar_width(void) {
   return 0;
 }
+
+uint16_t PBL_WEAK timeline_layer_get_sidebar_arrow_width(void) {
+  return 0;
+}
