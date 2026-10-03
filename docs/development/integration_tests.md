@@ -152,7 +152,9 @@ drop the link.
 An emulator built with `CONFIG_BT_HCI_UART` needs a controller of its own.
 By default it gets Bumble's software controllers (`virtual`), two linked
 in memory, one for the watch and one for the harness: they cover the host
-stacks and the protocols above them, not a radio, and are what CI uses.
+stacks and the protocols above them, not a radio, and are what CI uses: it
+runs the normal tests on a normal build and the PRF tests on a PRF build,
+both with `CONFIG_BT_HCI_UART`, so that tests needing a phone run too.
 With real ones it takes two dongles, one for the watch and one for the
 harness: the lab's (`--qemu-bt-hci lab`), or given on the command line:
 
