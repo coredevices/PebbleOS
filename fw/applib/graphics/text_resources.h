@@ -5,6 +5,7 @@
 
 #include "applib/fonts/fonts_private.h"
 #include "applib/fonts/codepoint.h"
+#include "applib/graphics/gtypes.h"
 #include "pbl/util/keyed_circular_cache.h"
 
 #include <stdint.h>
@@ -142,6 +143,11 @@ typedef struct {
 //! @note for color glyphs only the header is returned; the body is streamed from location_out
 const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codepoint,
                                           FontInfo *font_info, GlyphLocation *location_out);
+
+//! @return Where a glyph draws relative to the start of its line of text, or GRectZero if the
+//! font has no glyph for the codepoint
+GRect text_resources_get_glyph_frame(FontCache *font_cache, Codepoint codepoint,
+                                     FontInfo *font_info);
 
 bool text_resources_glyph_is_color(const GlyphLocation *location);
 

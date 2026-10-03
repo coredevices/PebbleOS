@@ -234,6 +234,7 @@ pbl_clar_test(test_menu_layer
 pbl_clar_test(test_action_menu_layer
   SOURCES
     fw/applib/ui/action_menu_layer.c
+    fw/shell/system_theme_style.c
     fw/applib/ui/layer.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/menu_layer.c
@@ -318,6 +319,7 @@ pbl_clar_test(test_menu_layer_system_cells
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_system_theme.c
     fw/shell/system_theme.c
+    fw/shell/system_theme_style.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
   PLATFORMS obelix gabbro
@@ -400,6 +402,7 @@ pbl_clar_test(test_action_menu_window
     tests/fakes/fake_fonts.c
     tests/fakes/fake_firmware_emoji_resources.c
     fw/shell/system_theme.c
+    fw/shell/system_theme_style.c
     fw/applib/ui/shadows.c
   DEFINES "FIRMWARE_EMOJI_DIR=\"${PBL_BASE}/resources/normal/base/pbf\""
   PLATFORMS obelix gabbro asterix
@@ -489,6 +492,7 @@ pbl_clar_test(test_notification_window
     fw/services/timeline/timeline_layout.c
     fw/services/timeline/timeline_resources.c
     fw/shell/system_theme.c
+    fw/shell/system_theme_style.c
     tests/fakes/fake_animation.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_graphics_context.c
@@ -539,6 +543,7 @@ pbl_clar_test(test_simple_dialog
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/board/displays/display_getafix.c
     fw/drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -624,6 +629,7 @@ pbl_clar_test(test_emoji_fonts
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/board/displays/display_getafix.c
     fw/drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -692,6 +698,7 @@ pbl_clar_test(test_expandable_dialog
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/board/displays/display_getafix.c
     fw/drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
@@ -818,6 +825,7 @@ pbl_clar_test(test_selection_windows
     fw/applib/ui/time_selection_window.c
     fw/applib/ui/window.c
     fw/shell/system_theme.c
+    fw/shell/system_theme_style.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
   PLATFORMS obelix gabbro
@@ -922,6 +930,7 @@ pbl_clar_test(test_timeline_peek
     fw/services/timeline/timeline_layout.c
     fw/services/timeline/timeline_resources.c
     fw/shell/system_theme.c
+    fw/shell/system_theme_style.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
@@ -1010,6 +1019,7 @@ pbl_clar_test(test_option_menu_window
     fw/applib/ui/status_bar_layer.c
     fw/applib/ui/window.c
     fw/shell/system_theme.c
+    fw/shell/system_theme_style.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_graphics_context.c

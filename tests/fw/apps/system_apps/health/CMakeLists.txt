@@ -40,6 +40,7 @@ pbl_clar_test(test_health_card_view
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
@@ -144,6 +145,7 @@ pbl_clar_test(test_health_activity_summary_card
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
@@ -243,6 +245,7 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
@@ -342,6 +345,7 @@ pbl_clar_test(test_health_hr_summary_card
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
@@ -441,6 +445,7 @@ pbl_clar_test(test_health_activity_detail_card
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
@@ -539,6 +544,7 @@ pbl_clar_test(test_health_sleep_detail_card
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
@@ -637,6 +643,7 @@ pbl_clar_test(test_health_hr_detail_card
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
@@ -735,6 +742,7 @@ pbl_clar_test(test_health_detail_card
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/shell/system_theme_style.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/board/displays/display_getafix.c
