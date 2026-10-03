@@ -998,6 +998,7 @@ pbl_clar_test(test_option_menu_window
     tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fixtures/resources/pfs_resource_table.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_system_theme.c
     fw/applib/ui/animation_interpolate.c
