@@ -178,3 +178,19 @@ void test_ancs_notifications__handle_phone_call_removed(void) {
   cl_assert_equal_i(event.phone.source, PhoneCallSource_ANCS);
   cl_assert_equal_i(event.phone.call_identifier, uid);
 }
+
+// The history hides a notification only once it is actioned, so a removal from Notification
+// Center (most often the notification read on the phone) must set Dismissed and nothing else.
+void test_ancs_notifications__removed_from_notification_center_sets_only_dismissed(void) {
+  const uint32_t uid = 7;
+  Uuid id = UuidMake(0x21, 0x90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x07);
+  fake_notification_storage_set_existing_ancs_notification(&id, uid);
+
+  ancs_notifications_handle_notification_removed(uid, ANCSProperty_iOS9);
+
+  Uuid status_id;
+  const uint8_t status = fake_notification_storage_status_get_last(&status_id);
+  // uuid_equal is stubbed to return false in this file, so compare the bytes
+  cl_assert_equal_m(&status_id, &id, sizeof(Uuid));
+  cl_assert_equal_i(status, TimelineItemStatusDismissed);
+}
