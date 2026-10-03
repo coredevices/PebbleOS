@@ -4,6 +4,7 @@
 #include "forecast_list.h"
 #include "pbl/services/i18n/i18n.h"
 #include "expanded_view.h"
+#include "applib/ui/action_bar_layer_private.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/status_bar_layer.h" // status-bar height/offset constants (top time)
 #include "weather_math.h"
@@ -2681,7 +2682,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
   } else
     prv_canvas_draw_round_5day(layer, ctx);
-  // Pebble-Health "select" marker: a half-circle nub on the centre-right edge identifying the
+  // Pebble-Health "select" marker: a half-circle nub on the button-side edge identifying the
   // SELECT button. Same radius-13 oval as applib action_button_draw, but pushed further off-screen
   // so it only protrudes ~5px (origin.x = W - protrusion) — shallow enough to clear the right-hand
   // weather disc. Only on the resting main view — hidden during any transition so it never gets
@@ -2690,9 +2691,9 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       !s_list->report_fx) {
     const int protrusion = 5;
     GRect mb = layer_get_bounds(layer);
+    const int nub_x = action_bar_layer_is_on_right() ? (mb.size.w - protrusion) : (protrusion - 26);
     graphics_context_set_fill_color(ctx, GColorBlack);
-    graphics_fill_oval(ctx, GRect(mb.size.w - protrusion, (mb.size.h - 26) / 2, 26, 26),
-                       GOvalScaleModeFitCircle);
+    graphics_fill_oval(ctx, GRect(nub_x, (mb.size.h - 26) / 2, 26, 26), GOvalScaleModeFitCircle);
   }
 
 #if PBL_ROUND

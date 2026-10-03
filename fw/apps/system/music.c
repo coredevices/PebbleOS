@@ -11,6 +11,7 @@
 #include "applib/preferred_content_size.h"
 #include "applib/tick_timer_service.h"
 #include "applib/ui/app_window_stack.h"
+#include "applib/ui/action_bar_layer_private.h"
 #include "applib/ui/property_animation.h"
 #include "applib/ui/ui.h"
 #include "kernel/pbl_malloc.h"
@@ -185,6 +186,9 @@ static const MusicAppSizeConfig *const s_music_size_configs[NumPreferredContentS
   [PreferredContentSizeExtraLarge] = &s_music_size_config_large,
 };
 
+static bool prv_bar_on_right(void);
+static int16_t prv_content_origin_x(void);
+
 static const MusicAppSizeConfig *prv_config(void) {
   return s_music_size_configs[PreferredContentSizeDefault];
 }
@@ -199,35 +203,36 @@ static int prv_text_layer_width(void) {
 
 static GRect prv_artist_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->artist_field.origin_y, prv_text_layer_width(),
-               config->artist_field.size_h);
+  return GRect(prv_content_origin_x() + config->horizontal_margin, config->artist_field.origin_y,
+               prv_text_layer_width(), config->artist_field.size_h);
 }
 
 static GRect prv_title_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->title_field.origin_y, prv_text_layer_width(),
-               config->title_field.size_h);
+  return GRect(prv_content_origin_x() + config->horizontal_margin, config->title_field.origin_y,
+               prv_text_layer_width(), config->title_field.size_h);
 }
 
 static GRect prv_time_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->time_field.origin_y, prv_content_width(),
-               config->time_field.size_h);
+  return GRect(prv_content_origin_x() + config->horizontal_margin, config->time_field.origin_y,
+               prv_content_width(), config->time_field.size_h);
 }
 
 static GRect prv_cassette_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
   const int16_t cassette_x =
       config->horizontal_margin +
-      PBL_IF_RECT_ELSE(0, prv_content_width() - config->cassette_rect.size.w);
+      PBL_IF_RECT_ELSE(0,
+                       prv_bar_on_right() ? prv_content_width() - config->cassette_rect.size.w : 0);
   return GRect(cassette_x, config->cassette_rect.origin.y, config->cassette_rect.size.w,
                config->cassette_rect.size.h);
 }
 
 static GRect prv_track_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
-  return GRect(config->horizontal_margin, config->track_field.origin_y, prv_content_width(),
-               config->track_field.size_h);
+  return GRect(prv_content_origin_x() + config->horizontal_margin, config->track_field.origin_y,
+               prv_content_width(), config->track_field.size_h);
 }
 
 static const ButtonId BUTTON_FORWARD = BUTTON_ID_DOWN;
@@ -343,6 +348,16 @@ typedef struct {
   bool temporarily_show_progress;
   AppTimer *temporarily_show_progress_timer;
 } MusicAppData;
+
+// Follow the attached action bar's side so a preference change can't split content from the bar.
+static bool prv_bar_on_right(void) {
+  MusicAppData *data = app_state_get_user_data();
+  return data ? action_bar_layer_side_is_right(&data->action_bar) : action_bar_layer_is_on_right();
+}
+
+static int16_t prv_content_origin_x(void) {
+  return prv_bar_on_right() ? 0 : ACTION_BAR_WIDTH;
+}
 
 //! True when the screen uses the media layout (backdrop + centred stack) rather than the stock
 //! layout. Always on for the unified round layout; on rect only while art is showing.
@@ -1052,7 +1067,7 @@ static GRect prv_album_art_rect(void) {
   // Rect: a square band from the top down to just above the times row. Round: the cover fills the
   // whole display (it is already fetched at the full width) and the circle masks it.
   const int16_t art_h = PBL_IF_RECT_ELSE(prv_config()->time_field.origin_y - 2, DISP_ROWS);
-  return GRect(0, 0, prv_art_width(), art_h);
+  return GRect(PBL_IF_RECT_ELSE(prv_content_origin_x(), 0), 0, prv_art_width(), art_h);
 }
 
 // In album-art mode the track title moves down beside the tape (to the tape's right on rect
@@ -1064,8 +1079,9 @@ static GRect prv_art_title_rect(void) {
   const MusicAppSizeConfig *config = prv_config();
   const GRect tape = prv_cassette_rect();
   // Clear the tape frame plus a gap: the widest state icon (volume) fills the whole frame.
-  const int16_t x = tape.origin.x + tape.size.w + 2;
-  const int16_t right = DISP_COLS - ACTION_BAR_WIDTH - 7;
+  const int16_t content_x = prv_content_origin_x();
+  const int16_t x = content_x + tape.origin.x + tape.size.w + 2;
+  const int16_t right = content_x + DISP_COLS - ACTION_BAR_WIDTH - 7;
   // Single line, vertically centred in the band between the progress bar and the bottom of screen,
   // nudged up slightly since the glyph sits a touch low within the line box.
   const int16_t bar_bottom = config->track_field.origin_y + config->track_field.size_h;
@@ -1090,7 +1106,7 @@ static GRect prv_art_artist_rect(void) {
 #if PBL_RECT
   const int16_t content_w = DISP_COLS - ACTION_BAR_WIDTH;
   const int16_t art_bottom = prv_config()->time_field.origin_y - 2;
-  return GRect(0, art_bottom - 26, content_w, 26);
+  return GRect(prv_content_origin_x(), art_bottom - 26, content_w, 26);
 #else
   return GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_ARTIST_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN,
                30);
@@ -1195,6 +1211,15 @@ static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_
                                int32_t to_deg) {
   if (to_deg <= from_deg) {
     return;
+  }
+  if (!prv_bar_on_right()) {
+    const int32_t mirrored_from = 360 - to_deg;
+    to_deg = 360 - from_deg;
+    from_deg = mirrored_from;
+    if (from_deg < 0) {
+      from_deg += 360;
+      to_deg += 360;
+    }
   }
   // The radial primitive stops half a pixel inside its bounds; overlap the display's clip edge.
   const GRect ring_bounds = grect_inset(*bounds, GEdgeInsets(-1));
@@ -1524,8 +1549,8 @@ static void prv_init_ui(Window *window) {
 
   const GSize WINDOW_SIZE = window->layer.bounds.size;
 
-  const GTextAlignment ARTIST_TITLE_TEXT_ALIGNMENT =
-      PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight);
+  const GTextAlignment ARTIST_TITLE_TEXT_ALIGNMENT = PBL_IF_RECT_ELSE(
+      GTextAlignmentLeft, prv_bar_on_right() ? GTextAlignmentRight : GTextAlignmentLeft);
 
   const MusicAppSizeConfig *config = prv_config();
 
@@ -1571,15 +1596,17 @@ static void prv_init_ui(Window *window) {
   layer_set_update_proc(&data->title_text_layer.layer, prv_title_update_proc);
 
   const int16_t horizontal_margin = config->horizontal_margin;
-  layer_init(&data->cassette_container, &GRect(0, WINDOW_SIZE.h - horizontal_margin - 24,
-                                               WINDOW_SIZE.w - ACTION_BAR_WIDTH, 24));
+  layer_init(&data->cassette_container,
+             &GRect(prv_content_origin_x(), WINDOW_SIZE.h - horizontal_margin - 24,
+                    WINDOW_SIZE.w - ACTION_BAR_WIDTH, 24));
   layer_add_child(&data->window.layer, &data->cassette_container);
   layer_set_clips(&data->cassette_container, false);
 
   bitmap_layer_init(&data->cassette_layer, &cassette_rect);
   bitmap_layer_set_bitmap(&data->cassette_layer, &data->image_cassette);
   data->cassette_current_icon = &data->image_cassette;
-  const GAlign CASSETTE_LAYER_ALIGNMENT = PBL_IF_RECT_ELSE(GAlignTopLeft, GAlignTopRight);
+  const GAlign CASSETTE_LAYER_ALIGNMENT =
+      PBL_IF_RECT_ELSE(GAlignTopLeft, prv_bar_on_right() ? GAlignTopRight : GAlignTopLeft);
   bitmap_layer_set_alignment(&data->cassette_layer, CASSETTE_LAYER_ALIGNMENT);
   bitmap_layer_set_compositing_mode(&data->cassette_layer, GCompOpSet);
   layer_add_child(&data->cassette_container, &data->cassette_layer.layer);
@@ -1625,6 +1652,7 @@ static void prv_init_ui(Window *window) {
   const int16_t STATUS_BAR_LAYER_WIDTH =
       PBL_IF_RECT_ELSE(WINDOW_SIZE.w - ACTION_BAR_WIDTH, WINDOW_SIZE.w);
   status_layer_frame.size.w = STATUS_BAR_LAYER_WIDTH;
+  status_layer_frame.origin.x = PBL_IF_RECT_ELSE(prv_content_origin_x(), 0);
   layer_set_frame(&status_layer->layer, &status_layer_frame);
   status_bar_layer_set_colors(&data->status_layer, GColorClear, GColorBlack);
   layer_add_child(&data->window.layer, &status_layer->layer);

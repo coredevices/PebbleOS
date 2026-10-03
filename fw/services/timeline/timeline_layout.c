@@ -99,6 +99,14 @@ static const TimelineLayoutStyle *prv_get_style(void) {
   return s_styles[PreferredContentSizeDefault];
 }
 
+// Pin text (time, title, subtitle) is left-aligned on rect and right-aligned on round with the
+// right-hand strip; mirror it when the sidebar sits on the left.
+static GTextAlignment prv_get_pin_text_alignment(void) {
+  const bool on_right = timeline_layer_sidebar_is_on_right();
+  return PBL_IF_RECT_ELSE(on_right ? GTextAlignmentLeft : GTextAlignmentRight,
+                          on_right ? GTextAlignmentRight : GTextAlignmentLeft);
+}
+
 TimelineResourceId timeline_layout_get_icon_resource_id(LayoutLayerMode mode,
                                                         const AttributeList *attributes,
                                                         TimelineResourceSize card_icon_size,
@@ -226,8 +234,11 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
   // s_style_medium: future_top_margin=39, past layout origin=61, icon_offset_y=0
   PBL_UNUSED const int offset_y_round =
       use_large_style ? (is_future ? 76 : -2) : (is_future ? 40 : 17);
+  // Right: +2 matches the historic pin-icon inset. Left: same outer inset from the screen edge.
   const GPoint origin = {
-    .x = bounds->size.w - size.w + 2,
+    .x = timeline_layer_sidebar_is_on_right()
+             ? (bounds->size.w - size.w + 2)
+             : (timeline_layer_get_icon_outer_inset() - 2 - bounds->origin.x),
     .y = PBL_IF_RECT_ELSE(offset_y_rect, offset_y_round),
   };
   *frame = (GRect){gpoint_add(bounds->origin, origin), size};
@@ -287,7 +298,8 @@ static void prv_init_icon(TimelineLayout *timeline_layout, const GRect *icon_fra
   if (timeline_layout->layout_layer.mode == LayoutLayerModeCard) {
     kino_layer_set_alignment(icon_layer, timeline_layout->impl->card_icon_align);
   } else if (PBL_IF_ROUND_ELSE(timeline_layout->layout_layer.mode == LayoutLayerModePeek, false)) {
-    kino_layer_set_alignment(icon_layer, GAlignLeft);
+    kino_layer_set_alignment(icon_layer,
+                             timeline_layer_sidebar_is_on_right() ? GAlignLeft : GAlignRight);
   }
   layer_add_child(&timeline_layout->layout_layer.layer, &icon_layer->layer);
   kino_layer_play(icon_layer);
@@ -390,6 +402,7 @@ static GTextNode *prv_create_all_day_text_node(const TimelineLayout *layout) {
   };
   GTextNodeText *text_node = (GTextNodeText *)layout_create_text_node_from_config(
       &layout->layout_layer, &s_all_day_config.text.extent.node);
+  text_node->alignment = prv_get_pin_text_alignment();
   // TODO: PBL-30522 Enable timeline list view text flow
   // Remove when text flow is enabled
   if (PBL_IF_ROUND_ELSE(layout->layout_layer.mode == LayoutLayerModePinnedThin, false)) {
@@ -449,7 +462,7 @@ static GTextNode *prv_create_hour_text_node(const TimelineLayout *layout) {
 
   GTextNodeHorizontal *horizontal_node = (GTextNodeHorizontal *)layout_create_text_node_from_config(
       &layout->layout_layer, &s_horizontal_config.container.extent.node);
-  horizontal_node->horizontal_alignment = TIMELINE_LAYER_TEXT_ALIGNMENT;
+  horizontal_node->horizontal_alignment = prv_get_pin_text_alignment();
   return &horizontal_node->container.node;
 }
 
@@ -530,6 +543,9 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
         primary_text
             ?: attribute_get_string(attributes, AttributeIdShortTitle, NULL)
             ?: attribute_get_string(attributes, layout->impl->attributes.primary_id, "");
+    if (!is_peek) {
+      primary_node->alignment = prv_get_pin_text_alignment();
+    }
     primary_node->line_spacing_delta = style->primary_line_spacing_delta;
     int num_primary_lines = is_fat ? 2 : 1;
     if (is_peek) {
@@ -570,6 +586,9 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     } else {
       secondary_node->text = secondary_text;
     }
+    if (!is_peek) {
+      secondary_node->alignment = prv_get_pin_text_alignment();
+    }
     secondary_node->overflow = overflow;
     graphics_text_node_container_add_child(&vertical_node->container, &secondary_node->node);
 
@@ -594,11 +613,14 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 
   if (is_peek) {
     vertical_node->container.size.w = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
+    const bool icon_on_right = timeline_layer_sidebar_is_on_right();
     const size_t num_horizontal_nodes = 2;
     GTextNodeHorizontal *horizontal_node =
         graphics_text_node_create_horizontal(num_horizontal_nodes);
-    graphics_text_node_container_add_child(&horizontal_node->container,
-                                           &vertical_node->container.node);
+    if (icon_on_right) {
+      graphics_text_node_container_add_child(&horizontal_node->container,
+                                             &vertical_node->container.node);
+    }
     const size_t num_horizontal_icon_nodes = 1;
     const size_t num_vertical_icon_nodes = 1;
     GTextNodeHorizontal *horizontal_icon_node =
@@ -608,16 +630,22 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     graphics_text_node_container_add_child(&horizontal_icon_node->container,
                                            &vertical_icon_node->container.node);
     horizontal_icon_node->horizontal_alignment = GTextAlignmentCenter;
+    horizontal_icon_node->container.size.w = TIMELINE_PEEK_ICON_BOX_WIDTH;
     vertical_icon_node->vertical_alignment = GVerticalAlignmentCenter;
     GTextNodeCustom *icon_node = timeline_layout_create_icon_node(layout);
     const unsigned int num_concurrent = layout->info->num_concurrent;
     const unsigned int concurrent_height = timeline_peek_get_concurrent_height(num_concurrent);
-    gpoint_add_eq(
-        &icon_node->node.offset,
-        GPoint(PBL_IF_RECT_ELSE(1, 2), PBL_IF_RECT_ELSE(0, -1) - (concurrent_height / 2)));
+    const int16_t icon_offset_x = PBL_IF_RECT_ELSE(1, 2);
+    gpoint_add_eq(&icon_node->node.offset,
+                  GPoint(icon_on_right ? icon_offset_x : -icon_offset_x,
+                         PBL_IF_RECT_ELSE(0, -1) - (concurrent_height / 2)));
     graphics_text_node_container_add_child(&vertical_icon_node->container, &icon_node->node);
     graphics_text_node_container_add_child(&horizontal_node->container,
                                            &horizontal_icon_node->container.node);
+    if (!icon_on_right) {
+      graphics_text_node_container_add_child(&horizontal_node->container,
+                                             &vertical_node->container.node);
+    }
     return &horizontal_node->container.node;
   }
 
@@ -635,6 +663,7 @@ static void prv_get_pin_view_bounds(TimelineLayout *layout, GRect *box_out) {
     return;
   }
   box_out->size.w -= timeline_layer_get_ideal_sidebar_width();
+  box_out->origin.x += timeline_layer_get_pin_text_origin_x();
   if (PBL_IF_ROUND_ELSE(layout->layout_layer.mode == LayoutLayerModePinnedThin, false)) {
     const int thin_height = 20;
     box_out->size.h = thin_height;
