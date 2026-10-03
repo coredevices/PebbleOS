@@ -100,7 +100,7 @@ pbl_clar_test(test_workout_summary
     fw/apps/system/workout/dialog.c
     fw/apps/system/workout/utils.c
     fw/apps/system/workout/summary.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -203,7 +203,7 @@ pbl_clar_test(test_workout_active
     fw/apps/system/workout/data.c
     fw/apps/system/workout/dialog.c
     fw/apps/system/workout/active.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -305,7 +305,7 @@ pbl_clar_test(test_workout_dialog
     fw/applib/ui/menu_layer.c
     fw/apps/system/workout/data.c
     fw/apps/system/workout/dialog.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -407,7 +407,7 @@ pbl_clar_test(test_workout_selection
     fw/applib/ui/menu_layer.c
     fw/apps/system/workout/utils.c
     fw/apps/system/workout/selection.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
