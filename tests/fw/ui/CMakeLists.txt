@@ -320,7 +320,7 @@ pbl_clar_test(test_menu_layer_system_cells
     fw/shell/system_theme.c
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   OVERRIDES dummy_board
   TEST_IMAGES
 )
@@ -494,7 +494,7 @@ pbl_clar_test(test_notification_window
     tests/fakes/fake_graphics_context.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     tests/stubs/stubs_clock.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -580,7 +580,7 @@ pbl_clar_test(test_simple_dialog
     fw/applib/ui/inverter_layer.c
     fw/applib/ui/content_indicator.c
     tests/fakes/fake_fonts.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   OVERRIDES dummy_board
   TEST_IMAGES
 )
@@ -820,7 +820,7 @@ pbl_clar_test(test_selection_windows
     fw/shell/system_theme.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   OVERRIDES dummy_board
   TEST_IMAGES
 )
@@ -931,7 +931,7 @@ pbl_clar_test(test_timeline_peek
     tests/stubs/stubs_clock.c
     tests/stubs/stubs_timeline_layout.c
     tests/stubs/stubs_timeline_peek.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -1014,7 +1014,7 @@ pbl_clar_test(test_option_menu_window
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_graphics_context.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
