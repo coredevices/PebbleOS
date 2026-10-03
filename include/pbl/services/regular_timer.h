@@ -55,6 +55,7 @@ typedef struct RegularTimerInfo {
   uint16_t private_count;
   bool is_executing;
   bool pending_delete;
+  bool private_due;
   /** @endcond */
 } RegularTimerInfo;
 

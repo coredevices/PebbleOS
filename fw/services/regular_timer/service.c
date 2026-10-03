@@ -33,6 +33,8 @@ static int s_last_minute_fired = -1; // Track which minute we last fired on
 #define SECOND_BOUNDARY_MARGIN_MS 10
 static time_t s_last_second_fired;
 static bool s_last_second_fired_valid;
+static time_t s_next_fire;
+static bool s_armed;
 
 // -------------------------------------------------------------------------------------------
 // Passed to list_find() to determine if a callback is already registered or not
@@ -41,14 +43,26 @@ static bool prv_callback_registered_filter(ListNode *found_node, void *data) {
 }
 
 // -------------------------------------------------------------------------------------------
-static void do_callbacks(ListNode *list) {
+static void do_callbacks(ListNode *list, uint16_t elapsed) {
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
+
+  // Settle the counts first, so callbacks registered by the ones that run below start counting
+  // from now instead of being charged for the elapsed seconds.
+  for (ListNode *iter = list_get_next(list); iter != 0; iter = list_get_next(iter)) {
+    RegularTimerInfo *reg_timer = (RegularTimerInfo *)iter;
+    reg_timer->private_due = reg_timer->private_count <= elapsed;
+    if (reg_timer->private_due) {
+      reg_timer->private_count = reg_timer->private_reset_count;
+    } else {
+      reg_timer->private_count -= elapsed;
+    }
+  }
 
   for (ListNode *iter = list_get_next(list); iter != 0;) {
     RegularTimerInfo *reg_timer = (RegularTimerInfo *)iter;
 
-    if (--reg_timer->private_count == 0) {
-      reg_timer->private_count = reg_timer->private_reset_count;
+    if (reg_timer->private_due) {
+      reg_timer->private_due = false;
 
       // Release the mutex while we execute the callback
       reg_timer->is_executing = true;
@@ -78,10 +92,33 @@ static void do_callbacks(ListNode *list) {
 // -------------------------------------------------------------------------------------------
 static void timer_callback(void *data);
 
-static void prv_schedule_next_second(uint16_t ms) {
-  const uint32_t timeout_ms = (1000 - MIN(ms, 999)) + SECOND_BOUNDARY_MARGIN_MS;
+//! Arm the timer for second @p next; the RTC is at @p now and @p ms.
+static void prv_arm_locked(time_t now, uint16_t ms, time_t next) {
+  uint32_t timeout_ms = (uint32_t)(next - now - 1) * 1000 + (1000 - MIN(ms, 999));
+  // The timer runs on the system tick, which drifts from the RTC in deep sleep.
+  timeout_ms += SECOND_BOUNDARY_MARGIN_MS + timeout_ms / 1024;
   bool success = new_timer_start(s_timer_id, timeout_ms, timer_callback, NULL, 0 /*flags*/);
   PBL_ASSERTN(success);
+  s_next_fire = next;
+  s_armed = true;
+}
+
+//! The next second a seconds callback is due, or the next minute if sooner.
+static time_t prv_next_due_locked(time_t now) {
+  time_t next = now + (60 - (now % 60));
+  const time_t base = s_last_second_fired_valid ? s_last_second_fired : now;
+  for (ListNode *iter = list_get_next(&s_seconds_callbacks); iter; iter = list_get_next(iter)) {
+    const time_t due = MAX(base + ((RegularTimerInfo *)iter)->private_count, now + 1);
+    next = MIN(next, due);
+  }
+  return next;
+}
+
+static void prv_arm_next_locked(void) {
+  time_t now;
+  uint16_t ms;
+  rtc_get_time_ms(&now, &ms);
+  prv_arm_locked(now, ms, prv_next_due_locked(now));
 }
 
 // -------------------------------------------------------------------------------------------
@@ -91,15 +128,22 @@ static void timer_callback(void *data) {
   time_t t;
   uint16_t ms;
   rtc_get_time_ms(&t, &ms);
-  prv_schedule_next_second(ms);
 
+  pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
   if (s_last_second_fired_valid && (t == s_last_second_fired)) {
+    prv_arm_next_locked();
+    pbl_mutex_unlock(&s_callback_list_semaphore);
     return;
+  }
+  uint16_t elapsed = 1;
+  if (s_last_second_fired_valid && (t > s_last_second_fired)) {
+    elapsed = (uint16_t)MIN(t - s_last_second_fired, UINT16_MAX);
   }
   s_last_second_fired = t;
   s_last_second_fired_valid = true;
+  pbl_mutex_unlock(&s_callback_list_semaphore);
 
-  do_callbacks(&s_seconds_callbacks);
+  do_callbacks(&s_seconds_callbacks, elapsed);
 
   struct tm time;
   localtime_r(&t, &time);
@@ -125,8 +169,12 @@ static void timer_callback(void *data) {
     }
     s_last_minute_fire_ts = now_ts;
 
-    do_callbacks(&s_minutes_callbacks);
+    do_callbacks(&s_minutes_callbacks, 1);
   }
+
+  pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
+  prv_arm_next_locked();
+  pbl_mutex_unlock(&s_callback_list_semaphore);
 }
 
 // --------------------------------------------------------------------------------------------
@@ -135,15 +183,25 @@ void regular_timer_init(void) {
   uint16_t milliseconds;
   rtc_get_time_ms(&seconds, &milliseconds);
   s_timer_id = new_timer_create();
-  prv_schedule_next_second(milliseconds);
+  pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
+  prv_arm_locked(seconds, milliseconds, seconds + 1);
+  pbl_mutex_unlock(&s_callback_list_semaphore);
 }
 
 // -------------------------------------------------------------------------------------------
 void regular_timer_add_multisecond_callback(RegularTimerInfo *cb, uint16_t seconds) {
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
 
+  // Counts run from the last second handled, which may be a while ago.
+  time_t now;
+  uint16_t ms;
+  rtc_get_time_ms(&now, &ms);
+  const time_t behind =
+      (s_last_second_fired_valid && now > s_last_second_fired) ? now - s_last_second_fired : 0;
+
+  cb->private_due = false;
   cb->private_reset_count = seconds;
-  cb->private_count = seconds;
+  cb->private_count = (uint16_t)MIN(seconds + behind, UINT16_MAX);
 
   // Only add to the list if not already registered
   if (!list_find(&s_seconds_callbacks, prv_callback_registered_filter, &cb->list_node)) {
@@ -155,6 +213,13 @@ void regular_timer_add_multisecond_callback(RegularTimerInfo *cb, uint16_t secon
   } else {
     // If it is marked for deletion, remove the deletion flag
     cb->pending_delete = false;
+  }
+
+  if (s_armed) {
+    const time_t next = prv_next_due_locked(now);
+    if (next < s_next_fire) {
+      prv_arm_locked(now, ms, next);
+    }
   }
 
   pbl_mutex_unlock(&s_callback_list_semaphore);
@@ -170,6 +235,7 @@ void regular_timer_add_seconds_callback(RegularTimerInfo *cb) {
 void regular_timer_add_multiminute_callback(RegularTimerInfo *cb, uint16_t minutes) {
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
 
+  cb->private_due = false;
   cb->private_reset_count = minutes;
   cb->private_count = minutes;
 
@@ -242,6 +308,7 @@ void regular_timer_deinit(void) {
   new_timer_delete(s_timer_id);
   s_timer_id = TIMER_INVALID_ID;
   s_last_second_fired_valid = false;
+  s_armed = false;
 }
 
 static void prv_fire_callbacks(ListNode *list, uint16_t mod) {
@@ -257,7 +324,7 @@ static void prv_fire_callbacks(ListNode *list, uint16_t mod) {
   }
   pbl_mutex_unlock(&s_callback_list_semaphore);
 
-  do_callbacks(list);
+  do_callbacks(list, 1);
 }
 
 void regular_timer_fire_seconds(uint8_t secs) {
