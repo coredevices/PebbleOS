@@ -13,8 +13,9 @@
  * @brief Software watchdog that catches stuck threads and turns them into core dumps.
  *
  * Each channel watches one thread that has to keep proving it makes progress by feeding the
- * channel within its timeout. A thread at the highest priority checks the channels every
- * @c CONFIG_TASK_WDT_CHECK_PERIOD_MS and feeds the hardware watchdog. A channel that expires is
+ * channel within its timeout, unless it is waiting for work (see pbl_task_wdt_set_waiting()). A
+ * thread at the highest priority checks the channels every @c CONFIG_TASK_WDT_CHECK_PERIOD_MS and
+ * feeds the hardware watchdog. A channel that expires is
  * logged and recorded in the reboot reason, and its callback gets a chance to recover the
  * thread; once it stays expired for @c CONFIG_TASK_WDT_GRACE_MS, the system resets with a core
  * dump (with @c CONFIG_WATCHDOG; otherwise it only logs). The pool holds
@@ -106,6 +107,26 @@ void pbl_task_wdt_feed_thread(struct pbl_thread *thread);
  * For long operations that hold locks other watched threads wait on, such as flash erases.
  */
 void pbl_task_wdt_feed_all(void);
+
+/**
+ * @brief Mark the calling thread as waiting for work, or as busy again.
+ *
+ * A thread blocked waiting for work cannot be stuck, so its channels do not expire while it
+ * waits; going back to busy restarts their timeouts. A thread that only blocks to wait for work
+ * then needs no periodic feeding.
+ *
+ * @code{.c}
+ * while (running) {
+ *   pbl_task_wdt_set_waiting(true);
+ *   wait_for_work();
+ *   pbl_task_wdt_set_waiting(false);
+ *   do_work();
+ * }
+ * @endcode
+ *
+ * @param waiting True before blocking for work, false once there is work to do.
+ */
+void pbl_task_wdt_set_waiting(bool waiting);
 
 /**
  * @brief Keep every channel fed for a while, for phases where stalls are expected.
