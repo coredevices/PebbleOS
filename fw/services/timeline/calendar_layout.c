@@ -313,6 +313,8 @@ static GTextNode *prv_create_icon_label_node_rect(const LayoutLayer *layout,
     // Don't append the icon if there is no node or if on round
     return node;
   }
+  // Keep the time on one line; what doesn't fit is cut off at the screen edge
+  node->margin.w = -DISP_COLS;
   GTextNodeHorizontal *horizontal_node = graphics_text_node_create_horizontal(2);
   GTextNodeCustom *image_node = prv_create_image_node(ctx->image);
   image_node->node.offset.y = PREFERRED_CONTENT_SIZE_SWITCH(PreferredContentSizeDefault,
