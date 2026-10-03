@@ -88,6 +88,15 @@ bool option_menu_title_wraps(const OptionMenu *option_menu, const char *title) {
 uint16_t option_menu_system_cell_height(OptionMenu *option_menu, const char *title, bool selected) {
   const uint16_t default_height =
       option_menu_default_cell_height(option_menu->content_type, selected);
+#if PBL_RECT
+  // A title that fits on one line doesn't need room for a second
+  const uint16_t single_line_height =
+      option_menu_default_cell_height(OptionMenuContentType_SingleLine, selected);
+  if (title && single_line_height < default_height &&
+      !option_menu_title_wraps(option_menu, title)) {
+    return single_line_height;
+  }
+#endif
   return default_height;
 }
 
