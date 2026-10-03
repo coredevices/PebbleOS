@@ -3,17 +3,15 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
-#include "pbl/services/new_timer/new_timer.h"
-#include "system/passert.h"
+#include "pbl/services/regular_timer.h"
 
 #include "bf0_hal.h"
 
 PBL_LOG_MODULE_DECLARE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
 
 #define RC10K_DEFAULT_FREQ_HZ 10000UL
-#define RC10K_CAL_PERIOD_MS   15000U
-
-static TimerID s_rc10k_cal_timer;
+// One sample per minute; 25 of them keep the average over the last ~25 minutes.
+#define RC10K_CAL_AVE_WINDOW 25
 
 static void prv_rc10k_cal_timer_cb(void *data) {
   uint8_t lp_cycle;
@@ -22,21 +20,17 @@ static void prv_rc10k_cal_timer_cb(void *data) {
   // A dropped sample leaves the RTC running on a stale reference; the LCPU also
   // drives RC calibration here, so losing the mailbox is expected but must not
   // be silent - a run of these means the clock is drifting uncorrected.
-  const int rv = HAL_RC_CAL_update_reference_cycle_on_48M(lp_cycle);
+  const int rv = HAL_RC_CAL_update_reference_cycle_on_48M_ex(lp_cycle, 0, RC10K_CAL_AVE_WINDOW);
   if (rv != 0) {
     PBL_LOG_WRN("RC10K calibration failed: %d", rv);
   }
 }
 
 void rc10k_init(void) {
+  static RegularTimerInfo s_cal_timer = {.cb = prv_rc10k_cal_timer_cb};
+
   prv_rc10k_cal_timer_cb(NULL);
-
-  s_rc10k_cal_timer = new_timer_create();
-  PBL_ASSERTN(s_rc10k_cal_timer != TIMER_INVALID_ID);
-
-  bool success = new_timer_start(s_rc10k_cal_timer, RC10K_CAL_PERIOD_MS, prv_rc10k_cal_timer_cb,
-                                 NULL, TIMER_START_FLAG_REPEATING);
-  PBL_ASSERTN(success);
+  regular_timer_add_minutes_callback(&s_cal_timer);
 }
 
 uint32_t rc10k_get_freq_hz(void) {

@@ -14,7 +14,7 @@
 #include "system/passert.h"
 #include "pbl/services/time.h"
 #include <pbl/logging/logging.h>
-#include "pbl/services/new_timer/new_timer.h"
+#include "pbl/services/regular_timer.h"
 
 #include "bf0_hal_rtc.h"
 #include "pbl/kernel/compiler.h"
@@ -40,15 +40,10 @@ PBL_LOG_MODULE_DEFINE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
 // calibration value.
 #define MAX_DELTA_BETWEEN_RTC_AVE (HAL_RC_CAL_GetLPCycle() / 2)
 
-// Calibration period in milliseconds
-#define RTC_CAL_PERIOD_MS 60000
-
 // Maximum reasonable correction in seconds. If the calculated correction exceeds this,
 // something is wrong and we should reset calibration state instead of applying it.
 // 60 seconds is generous - normal drift should be milliseconds per calibration cycle.
 #define MAX_REASONABLE_CORRECTION_SECS 60
-
-static TimerID s_rtc_cal_timer;
 
 // Calibration state - must be reset when RTC time is set externally
 static uint32_t s_rtc_cycle_count_init = 0;
@@ -471,11 +466,7 @@ void rtc_enable_backup_regs(void) {
 
 void rtc_calibrate_frequency(uint32_t frequency) {
 #ifndef SF32LB52_USE_LXT
-  s_rtc_cal_timer = new_timer_create();
-  PBL_ASSERTN(s_rtc_cal_timer != TIMER_INVALID_ID);
-
-  bool success = new_timer_start(s_rtc_cal_timer, RTC_CAL_PERIOD_MS, prv_rtc_cal_timer_cb, NULL,
-                                 TIMER_START_FLAG_REPEATING);
-  PBL_ASSERTN(success);
+  static RegularTimerInfo s_cal_timer = {.cb = prv_rtc_cal_timer_cb};
+  regular_timer_add_minutes_callback(&s_cal_timer);
 #endif
 }
