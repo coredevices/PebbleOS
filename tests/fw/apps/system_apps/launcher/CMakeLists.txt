@@ -90,10 +90,11 @@ pbl_clar_test(test_launcher_menu_layer
     tests/fakes/fake_fonts.c
     tests/fakes/fake_settings_file.c
     tests/fixtures/resources/timeline_resource_table.auto.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_app_install_manager.c
     tests/stubs/stubs_app_menu_data_source.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   OVERRIDES dummy_board
   TEST_IMAGES
 )

@@ -132,7 +132,7 @@ pbl_clar_test(test_graphics_draw_bitmap
     fw/applib/ui/layer.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
-  PLATFORMS obelix
+  PLATFORMS obelix asterix
   TEST_IMAGES
 )
 

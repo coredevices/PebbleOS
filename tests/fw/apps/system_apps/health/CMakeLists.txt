@@ -99,7 +99,7 @@ pbl_clar_test(test_health_card_view
     fw/apps/system/health/sleep_summary_card.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/card_view.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -198,7 +198,7 @@ pbl_clar_test(test_health_activity_summary_card
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/activity_detail_card.c
     fw/apps/system/health/activity_summary_card.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -297,7 +297,7 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/sleep_detail_card.c
     fw/apps/system/health/sleep_summary_card.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -494,7 +494,7 @@ pbl_clar_test(test_health_activity_detail_card
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/activity_detail_card.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -592,7 +592,7 @@ pbl_clar_test(test_health_sleep_detail_card
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/sleep_detail_card.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -690,7 +690,7 @@ pbl_clar_test(test_health_hr_detail_card
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/hr_detail_card.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -787,7 +787,7 @@ pbl_clar_test(test_health_detail_card
     tests/fakes/fake_fonts.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
-  PLATFORMS obelix gabbro
+  PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
