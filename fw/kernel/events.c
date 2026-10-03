@@ -246,7 +246,7 @@ bool event_try_put_from_process(PebbleTask task, PebbleEvent *event) {
   return prv_try_event_put(queue, event);
 }
 
-bool event_take_timeout(PebbleEvent *event, int timeout_ms) {
+bool event_take_timeout(PebbleEvent *event, pbl_timeout_t timeout) {
   s_current_event = 0;
 
   // We must prioritize the from_kernel queue and always empty that first in order to avoid
@@ -261,8 +261,7 @@ bool event_take_timeout(PebbleEvent *event, int timeout_ms) {
   }
 
   // Wait for either the from_app, from_worker, or kernel queue to be ready.
-  struct pbl_msgq *activated_queue =
-      pbl_poll_group_wait(&s_system_event_queue_set, PBL_MSEC(timeout_ms));
+  struct pbl_msgq *activated_queue = pbl_poll_group_wait(&s_system_event_queue_set, timeout);
   if (!activated_queue) {
     return false;
   }

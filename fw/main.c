@@ -134,26 +134,6 @@ int main(void) {
   pbl_kernel_start();
 }
 
-static int s_new_timers_wdt_channel = -1;
-
-static void *prv_new_timers_wdt_expired(int channel_id, void *user_data) {
-  return new_timer_debug_get_current_callback();
-}
-
-static void watchdog_timer_callback(void *data) {
-  pbl_task_wdt_feed(s_new_timers_wdt_channel);
-}
-
-static void register_system_timers(void) {
-  s_new_timers_wdt_channel =
-      pbl_task_wdt_add(pebble_task_get_thread(PebbleTask_NewTimers), CONFIG_TASK_WDT_TIMEOUT_MS,
-                       prv_new_timers_wdt_expired, NULL);
-  PBL_ASSERTN(s_new_timers_wdt_channel >= 0);
-
-  static RegularTimerInfo watchdog_timer = {.list_node = {0, 0}, .cb = watchdog_timer_callback};
-  regular_timer_add_seconds_callback(&watchdog_timer);
-}
-
 static void init_drivers(void) {
   board_init();
 
@@ -259,7 +239,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   pbl_task_wdt_suspend(30 * 1000);
 
   pbl_analytics_init();
-  register_system_timers();
   system_task_timer_init();
 
   init_drivers();

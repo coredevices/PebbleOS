@@ -832,7 +832,7 @@ void event_put_from_process(PebbleTask task, PebbleEvent *event);
 //! Like event_put_from_app but it's allowed to fail.
 bool event_try_put_from_process(PebbleTask task, PebbleEvent *event);
 
-bool event_take_timeout(PebbleEvent *event, int timeout_ms);
+bool event_take_timeout(PebbleEvent *event, pbl_timeout_t timeout);
 
 //! Return a reference to the allocated buffer within an event, if applicable
 void **event_get_buffer(PebbleEvent *event);

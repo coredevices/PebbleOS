@@ -12,7 +12,6 @@
 #include "kernel/util/task_init.h"
 #include "pbl/mcu/fpu.h"
 #include "pbl/kernel/types.h"
-#include "pbl/services/regular_timer.h"
 #include "system/passert.h"
 
 #include "pbl/kernel/msgq.h"
@@ -49,18 +48,11 @@ static SystemTaskEventCallback s_current_cb;
 static int s_wdt_channel = -1;
 static TimerID s_throttle_timer = TIMER_INVALID_ID;
 
-static bool s_system_task_idle = true;
 static bool s_should_block_callbacks = false;
 static uint32_t s_raised_priority_refcount;
 
 static bool prv_is_accepting_callbacks() {
   return s_initialized && !s_should_block_callbacks;
-}
-
-static void system_task_idle_timer_callback(void *data) {
-  if (s_system_task_idle && pbl_poll_group_is_empty(&s_system_task_queue_set)) {
-    system_task_watchdog_feed();
-  }
 }
 
 static void prv_app_throttle_end(void *data) {
@@ -107,11 +99,11 @@ static void system_task_main(void *paramater) {
   task_init();
 
   while (true) {
-    s_system_task_idle = true;
-
     SystemTaskEvent event;
 
+    pbl_task_wdt_set_waiting(true);
     struct pbl_msgq *activated_queue = pbl_poll_group_wait(&s_system_task_queue_set, PBL_FOREVER);
+    pbl_task_wdt_set_waiting(false);
 
     // Get event from the activated queue
     bool result = (pbl_msgq_get(activated_queue, &event, PBL_NO_WAIT) == 0);
@@ -119,7 +111,6 @@ static void system_task_main(void *paramater) {
     // I believe its possible that we just reset the queue and accidentally
     // pended an extra event to the queue set so handle that case gracefully
     if (result) {
-      s_system_task_idle = false;
       s_current_cb = event.cb;
       event.cb(event.data);
       mcu_fpu_cleanup();
@@ -158,16 +149,6 @@ void system_task_init(void) {
 
 void system_task_timer_init(void) {
   s_throttle_timer = new_timer_create();
-
-  // Register a regular timer to kick the watchdog while we're waiting for something
-  // to do. The other way to do this is to have the queue wait in system_task_main time out
-  // occasionally, but that isn't necessarily second aligned and will require the watch
-  // to wakeup from sleep just to kick the watchdog. This way it's kicked at the same time as
-  // all the other regular tasks. Note that the system_task_idle_timer_callback only kicks
-  // the watchdog if we're currently waiting for work to do on the system_task. If we're in the
-  // middle of something we won't kick it.
-  static RegularTimerInfo idle_watchdog_timer = {.cb = system_task_idle_timer_callback};
-  regular_timer_add_seconds_callback(&idle_watchdog_timer);
 }
 
 void system_task_watchdog_feed(void) {

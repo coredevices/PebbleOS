@@ -21,7 +21,6 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/mcu/interrupts.h"
 #include "pbl/kernel/mutex.h"
-#include "pbl/services/regular_timer.h"
 #include "system/passert.h"
 #include "pbl/kernel/compiler.h"
 #include "pbl/crc/crc.h"
@@ -143,7 +142,6 @@ PBL_THREAD_STACK_DEFINE(s_pulse_task_stack, 1024);
 static PBL_MSGQ_DEFINE(s_pulse_task_queue, sizeof(uint8_t), RX_QUEUE_SIZE);
 // Wake up the PULSE task to process the receive queue or start the timer.
 static PBL_SEM_DEFINE(s_pulse_task_service_semaphore, 0, 1);
-static volatile bool s_pulse_task_idle = true;
 
 static uint8_t s_current_rx_frame[RX_MAX_FRAME_SIZE];
 
@@ -245,18 +243,9 @@ static void prv_pulse_task_feed_watchdog(void) {
   pbl_task_wdt_feed(s_wdt_channel);
 }
 
-static void prv_pulse_task_idle_timer_callback(void *data) {
-  if (s_pulse_task_idle && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
-    prv_pulse_task_feed_watchdog();
-  }
-}
-
 static void prv_pulse_task_main(void *unused) {
   s_wdt_channel = pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, NULL, NULL);
   PBL_ASSERTN(s_wdt_channel >= 0);
-
-  static RegularTimerInfo idle_watchdog_timer = {.cb = prv_pulse_task_idle_timer_callback};
-  regular_timer_add_seconds_callback(&idle_watchdog_timer);
 
   CobsDecodeContext frame_decode_ctx;
   cobs_streaming_decode_start(&frame_decode_ctx, s_current_rx_frame, RX_MAX_FRAME_SIZE);
@@ -266,9 +255,9 @@ static void prv_pulse_task_main(void *unused) {
     pbl_tick_t timeout = prv_poll_timer(&timer_sequence_number);
 
     if (timeout && pbl_msgq_num_used(&s_pulse_task_queue) == 0) {
-      s_pulse_task_idle = true;
+      pbl_task_wdt_set_waiting(true);
       pbl_sem_take(&s_pulse_task_service_semaphore, PBL_TICKS(timeout));
-      s_pulse_task_idle = false;
+      pbl_task_wdt_set_waiting(false);
 
       // Read the timer state again in case it changed while we were waiting.
       timeout = prv_poll_timer(&timer_sequence_number);
