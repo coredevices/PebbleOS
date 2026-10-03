@@ -141,7 +141,7 @@ static GTextNode *prv_broadcaster_header_constructor(const LayoutLayer *layout_r
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("Broadcaster"),
     .use_i18n = true,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_ParagraphHeader,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = SPORTS_SIZE_SWITCH(0, 4),
@@ -173,7 +173,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_body_config = {
     .attr_id = AttributeIdBody,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Body,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = SPORTS_SIZE_SWITCH(14, 22), // body margin height
@@ -184,7 +184,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_broadcaster_config = {
     .attr_id = AttributeIdBroadcaster,
-    .text.style = LayoutContentSizeDefault,
+    .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Body,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = SPORTS_SIZE_SWITCH(8, 17), // broadcaster margin height

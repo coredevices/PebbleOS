@@ -21,6 +21,7 @@
 #include "pbl/services/i18n/i18n.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "shell/normal/watchface.h"
+#include "shell/system_theme.h"
 #include "syscall/syscall.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
@@ -67,7 +68,7 @@ static const uint32_t TIMELINE_SLIDE_ANIMATION_MS = 150;
 static const uint32_t PEEK_SHOW_TIME_MS = 660;
 
 static const TimelineAppStyle *prv_get_style(void) {
-  return s_styles[PreferredContentSizeDefault];
+  return s_styles[system_theme_get_content_size()];
 }
 
 /////////////////////////////////////
