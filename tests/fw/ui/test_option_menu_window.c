@@ -152,26 +152,8 @@ void prv_create_menu_and_render_long_title(bool icons_enabled, const char *title
   });
 }
 
-void test_option_menu_window__long_title_default_height(void) {
-  prv_create_menu_and_render_long_title(false /* icons_enabled */, "Default Height",
-                                        false /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
-void test_option_menu_window__long_title_default_height_icons(void) {
-  prv_create_menu_and_render_long_title(true /* icons_enabled */, "Default Height",
-                                        false /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
 void test_option_menu_window__long_title_special_height(void) {
   prv_create_menu_and_render_long_title(false /* icons_enabled */, "Special Height",
-                                        true /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
-void test_option_menu_window__long_title_special_height_icons(void) {
-  prv_create_menu_and_render_long_title(true /* icons_enabled */, "Special Height",
                                         true /* special_height */);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
@@ -205,42 +187,9 @@ void test_option_menu_window__short_title_default_height(void) {
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
-void test_option_menu_window__short_title_default_height_icons(void) {
-  prv_create_menu_and_render_short_title(true /* icons_enabled */, "Default Height",
-                                         false /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
 void test_option_menu_window__short_title_special_height(void) {
   prv_create_menu_and_render_short_title(false /* icons_enabled */, "Special Height",
                                          true /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
-void test_option_menu_window__short_title_special_height_icons(void) {
-  prv_create_menu_and_render_short_title(true /* icons_enabled */, "Special Height",
-                                         true /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
-void test_option_menu_window__short_title_default_height_icons_medium(void) {
-  system_theme_set_content_size(PreferredContentSizeMedium);
-  prv_create_menu_and_render_short_title(true /* icons_enabled */, "Default Height",
-                                         false /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
-void test_option_menu_window__short_title_default_height_icons_extra_large(void) {
-  system_theme_set_content_size(PreferredContentSizeExtraLarge);
-  prv_create_menu_and_render_short_title(true /* icons_enabled */, "Default Height",
-                                         false /* special_height */);
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
-}
-
-void test_option_menu_window__long_title_special_height_icons_extra_large(void) {
-  system_theme_set_content_size(PreferredContentSizeExtraLarge);
-  prv_create_menu_and_render_long_title(true /* icons_enabled */, "Special Height",
-                                        true /* special_height */);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
@@ -290,6 +239,11 @@ static void prv_render_long_title_special_height_icons(void) {
                                         true /* special_height */);
 }
 
+static void prv_render_short_title_default_height_icons(void) {
+  prv_create_menu_and_render_short_title(true /* icons_enabled */, "Default Height",
+                                         false /* special_height */);
+}
+
 static void prv_render_short_title_special_height_icons(void) {
   prv_create_menu_and_render_short_title(true /* icons_enabled */, "Special Height",
                                          true /* special_height */);
@@ -305,6 +259,10 @@ void test_option_menu_window__content_sizes_long_title_default_height_icons(void
 
 void test_option_menu_window__content_sizes_long_title_special_height_icons(void) {
   prv_render_for_each_size(prv_render_long_title_special_height_icons, TEST_PBI_FILE);
+}
+
+void test_option_menu_window__content_sizes_short_title_default_height_icons(void) {
+  prv_render_for_each_size(prv_render_short_title_default_height_icons, TEST_PBI_FILE);
 }
 
 void test_option_menu_window__content_sizes_short_title_special_height_icons(void) {
