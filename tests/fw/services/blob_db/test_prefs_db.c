@@ -203,3 +203,21 @@ void test_prefs_db__button_lock_auto_off_clears_the_pause(void) {
   shell_prefs_set_button_lock_auto_ms(0);
   cl_assert(!shell_prefs_get_button_lock_auto_paused());
 }
+
+void test_prefs_db__button_lock_combo_rejects_invalid_values(void) {
+  ButtonLockCombo combo = ButtonLockComboUpSelect;
+  prv_phone_write("buttonLockCombo", &combo, sizeof(combo));
+  cl_assert_equal_i(shell_prefs_get_button_lock_combo(), ButtonLockComboUpSelect);
+
+  combo = ButtonLockComboCount;
+  prv_phone_write("buttonLockCombo", &combo, sizeof(combo));
+  cl_assert_equal_i(shell_prefs_get_button_lock_combo(), ButtonLockComboOff);
+  cl_assert_equal_i(prv_read_u32("buttonLockCombo"), ButtonLockComboOff);
+
+  // The boot load bypasses the handlers.
+  combo = ButtonLockComboCount;
+  cl_assert(prefs_private_write_backing((uint8_t *)"buttonLockCombo", strlen("buttonLockCombo"),
+                                        &combo, sizeof(combo)));
+  shell_prefs_init();
+  cl_assert_equal_i(shell_prefs_get_button_lock_combo(), ButtonLockComboOff);
+}

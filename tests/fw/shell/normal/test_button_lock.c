@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/battery/battery_state.h>
+#include <pbl/util/size.h>
 
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
@@ -832,4 +833,169 @@ void test_button_lock__touch_activity_restarts_the_countdown(void) {
 
   button_lock_handle_activity();
   cl_assert(stub_new_timer_is_scheduled(AUTO_TIMER_ID));
+}
+
+// Lock combo
+///////////////////////////////////////////////////////////////////////////////
+
+static const struct {
+  ButtonLockCombo combo;
+  ButtonId first;
+  ButtonId second;
+  //! A button outside the combo.
+  ButtonId other;
+  const char *hint;
+} s_combos[] = {
+  {ButtonLockComboBackDown, BUTTON_ID_BACK, BUTTON_ID_DOWN, BUTTON_ID_UP,
+   "Hold Back + Down to unlock"},
+  {ButtonLockComboUpSelect, BUTTON_ID_UP, BUTTON_ID_SELECT, BUTTON_ID_BACK,
+   "Hold Up + Center to unlock"},
+  {ButtonLockComboSelectDown, BUTTON_ID_SELECT, BUTTON_ID_DOWN, BUTTON_ID_UP,
+   "Hold Center + Down to unlock"},
+};
+
+//! Hold the Back + Down combo until the lock toggles.
+static void prv_toggle_with_combo(void) {
+  prv_press(BUTTON_ID_BACK);
+  prv_press(BUTTON_ID_DOWN);
+  prv_complete_hold();
+  prv_release(BUTTON_ID_BACK);
+  prv_release(BUTTON_ID_DOWN);
+}
+
+void test_button_lock__combo_off_is_inert(void) {
+  const int num_timer_starts_before = s_num_new_timer_start_calls;
+
+  cl_assert(!prv_press(BUTTON_ID_BACK));
+  cl_assert(!prv_press(BUTTON_ID_DOWN));
+  cl_assert_equal_i(s_num_new_timer_start_calls, num_timer_starts_before);
+  cl_assert(!prv_release(BUTTON_ID_BACK));
+  cl_assert(!prv_release(BUTTON_ID_DOWN));
+  cl_assert(!button_lock_is_locked());
+}
+
+void test_button_lock__each_combo_locks_and_unlocks(void) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_combos); i++) {
+    prv_unbind_all();
+    s_pref_combo = s_combos[i].combo;
+    s_num_cancel_force_quit_calls = 0;
+    s_num_watchface_reset_calls = 0;
+
+    cl_assert(!prv_press(s_combos[i].first));
+    cl_assert(prv_press(s_combos[i].second));
+    cl_assert_equal_i(s_num_cancel_force_quit_calls, 1);
+    cl_assert_equal_i(s_num_watchface_reset_calls, 1);
+    cl_assert_equal_i(stub_new_timer_timeout(HOLD_TIMER_ID), 2000);
+    prv_complete_hold();
+    cl_assert(button_lock_is_locked());
+    cl_assert_equal_s(s_last_dialog_text, "Buttons Locked");
+
+    // The first button's DOWN was delivered, so its UP must be too.
+    cl_assert(!prv_release(s_combos[i].first));
+    cl_assert(prv_release(s_combos[i].second));
+
+    // Pressing anything else while locked names the combo.
+    s_dialog_callbacks.unload(NULL);
+    prv_press(s_combos[i].other);
+    cl_assert_equal_s(s_last_dialog_text, s_combos[i].hint);
+    prv_release(s_combos[i].other);
+
+    prv_press(s_combos[i].first);
+    prv_press(s_combos[i].second);
+    prv_complete_hold();
+    cl_assert(!button_lock_is_locked());
+    cl_assert(prv_release(s_combos[i].first));
+    cl_assert(prv_release(s_combos[i].second));
+  }
+}
+
+void test_button_lock__combo_unlocks_a_quick_launch_lock(void) {
+  s_pref_combo = ButtonLockComboBackDown;
+  button_lock_engage();
+
+  // The Quick Launch gesture is named first.
+  prv_press(BUTTON_ID_UP);
+  prv_release(BUTTON_ID_UP);
+  cl_assert_equal_s(s_last_dialog_text, "Hold Center to unlock");
+
+  prv_toggle_with_combo();
+  cl_assert(!button_lock_is_locked());
+}
+
+void test_button_lock__combo_release_before_timeout_aborts(void) {
+  s_pref_combo = ButtonLockComboBackDown;
+
+  prv_press(BUTTON_ID_BACK);
+  prv_press(BUTTON_ID_DOWN);
+  cl_assert(!prv_release(BUTTON_ID_BACK));
+  cl_assert(!stub_new_timer_is_scheduled(HOLD_TIMER_ID));
+  // The second button's DOWN was swallowed, so its UP must be too.
+  cl_assert(prv_release(BUTTON_ID_DOWN));
+  cl_assert(!button_lock_is_locked());
+}
+
+void test_button_lock__combo_third_button_cancels_pending(void) {
+  s_pref_combo = ButtonLockComboBackDown;
+
+  prv_press(BUTTON_ID_BACK);
+  prv_press(BUTTON_ID_DOWN);
+  cl_assert(!prv_press(BUTTON_ID_SELECT));
+  cl_assert(!stub_new_timer_is_scheduled(HOLD_TIMER_ID));
+
+  prv_release(BUTTON_ID_SELECT);
+  prv_release(BUTTON_ID_BACK);
+  prv_release(BUTTON_ID_DOWN);
+  cl_assert(!button_lock_is_locked());
+}
+
+void test_button_lock__combo_no_watchface_reset_in_app(void) {
+  s_pref_combo = ButtonLockComboBackDown;
+  s_watchface_running = false;
+
+  prv_press(BUTTON_ID_BACK);
+  prv_press(BUTTON_ID_DOWN);
+  cl_assert_equal_i(s_num_watchface_reset_calls, 0);
+  cl_assert_equal_i(s_num_cancel_force_quit_calls, 1);
+  prv_release(BUTTON_ID_BACK);
+  prv_release(BUTTON_ID_DOWN);
+}
+
+void test_button_lock__combo_continuous_hold_toggles_once(void) {
+  s_pref_combo = ButtonLockComboBackDown;
+
+  prv_press(BUTTON_ID_BACK);
+  prv_press(BUTTON_ID_DOWN);
+  prv_complete_hold();
+  cl_assert(button_lock_is_locked());
+  cl_assert(!stub_new_timer_is_scheduled(HOLD_TIMER_ID));
+
+  prv_release(BUTTON_ID_BACK);
+  prv_release(BUTTON_ID_DOWN);
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__switching_off_the_only_gesture_releases_the_lock(void) {
+  prv_unbind_all();
+  s_pref_combo = ButtonLockComboBackDown;
+  prv_toggle_with_combo();
+  cl_assert(button_lock_is_locked());
+
+  s_pref_combo = ButtonLockComboOff;
+  button_lock_handle_prefs_changed();
+  prv_invoke_kernel_cb();
+  cl_assert(!button_lock_is_locked());
+  cl_assert(s_touch_enabled);
+}
+
+void test_button_lock__auto_lock_with_only_the_combo(void) {
+  prv_unbind_all();
+  s_pref_combo = ButtonLockComboBackDown;
+  s_pref_auto_ms = 30000;
+  prv_activity();
+
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+
+  prv_toggle_with_combo();
+  cl_assert(!button_lock_is_locked());
 }
