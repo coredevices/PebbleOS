@@ -12,6 +12,9 @@
 //! shell_prefs_get_button_lock_hold_ms unlocks. Only hold and combo Quick
 //! Launch gestures count, a single tap is too easy to trigger by accident.
 //!
+//! The lock combo (shell_prefs_get_button_lock_combo) also toggles the lock
+//! from anywhere, held for the same duration.
+//!
 //! The locked state is intentionally RAM-only: a reboot always unlocks. The
 //! hardware reset combo is handled at ISR level in the button driver and is
 //! unaffected by the lock.
