@@ -38,6 +38,12 @@ pbl_clar_test(test_battery_ui_fsm_percent
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_button_lock
+  SOURCES
+    fw/shell/normal/button_lock.c
+  DEFINES CONFIG_TOUCH
+)
+
 pbl_clar_test(test_dark_mode_updater
   SOURCES
     fw/shell/normal/dark_mode_updater.c
