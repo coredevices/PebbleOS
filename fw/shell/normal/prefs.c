@@ -19,6 +19,7 @@
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/normal/button_lock.h>
 #include <shell/normal/prefs_sync.h>
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
@@ -503,7 +504,11 @@ static bool prv_set_s_touch_enabled(bool *enabled) {
 #endif
   s_touch_enabled = *enabled;
 #ifdef CONFIG_TOUCH
-  touch_service_set_globally_enabled(*enabled);
+  // While the button lock holds touch disabled, only update the persisted pref (e.g. on a
+  // phone-side write); unlocking restores the touch service from it.
+  if (!button_lock_is_locked()) {
+    touch_service_set_globally_enabled(*enabled);
+  }
   if (prv_touch_navigation_effective() != was_effective) {
     touch_nav_set_enabled(prv_touch_navigation_effective());
   } else if (was_on != *enabled) {
@@ -637,24 +642,28 @@ static void prv_normalize_quick_launch_pref(QuickLaunchPreference *pref) {
 static bool prv_set_s_quick_launch_up(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_up = *pref;
+  button_lock_handle_prefs_changed();
   return true;
 }
 
 static bool prv_set_s_quick_launch_down(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_down = *pref;
+  button_lock_handle_prefs_changed();
   return true;
 }
 
 static bool prv_set_s_quick_launch_select(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_select = *pref;
+  button_lock_handle_prefs_changed();
   return true;
 }
 
 static bool prv_set_s_quick_launch_back(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_back = *pref;
+  button_lock_handle_prefs_changed();
   return true;
 }
 
@@ -673,12 +682,14 @@ static bool prv_set_s_quick_launch_single_click_down(QuickLaunchPreference *pref
 static bool prv_set_s_quick_launch_combo_back_up(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_combo_back_up = *pref;
+  button_lock_handle_prefs_changed();
   return true;
 }
 
 static bool prv_set_s_quick_launch_combo_up_down(QuickLaunchPreference *pref) {
   prv_normalize_quick_launch_pref(pref);
   s_quick_launch_combo_up_down = *pref;
+  button_lock_handle_prefs_changed();
   return true;
 }
 
