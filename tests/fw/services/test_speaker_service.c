@@ -259,9 +259,6 @@ static void prv_close_after_pcm_ring_is_empty(SpeakerPcmFormat format) {
   cl_assert_equal_i(speaker_service_stream_write(samples, sizeof(samples)), sizeof(samples));
   uint32_t space = 4096;
   s_trans_cb(&space);
-  if (format == SpeakerPcmFormat_16kHz_8bit) {
-    s_trans_cb(&space);
-  }
   const unsigned generated = s_samples_written;
   cl_assert_equal_i(generated, format == SpeakerPcmFormat_16kHz_8bit ? 1024 : 512);
 
