@@ -74,6 +74,7 @@ pbl_clar_test(test_health_card_view
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -178,6 +179,7 @@ pbl_clar_test(test_health_activity_summary_card
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -277,6 +279,7 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -376,6 +379,7 @@ pbl_clar_test(test_health_hr_summary_card
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -475,6 +479,7 @@ pbl_clar_test(test_health_activity_detail_card
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -573,6 +578,7 @@ pbl_clar_test(test_health_sleep_detail_card
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -671,6 +677,7 @@ pbl_clar_test(test_health_hr_detail_card
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c
@@ -769,6 +776,7 @@ pbl_clar_test(test_health_detail_card
     fw/applib/ui/kino/kino_reel/transform.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/menu_layer.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/text_layer.c

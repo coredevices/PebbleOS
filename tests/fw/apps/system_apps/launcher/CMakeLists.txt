@@ -65,6 +65,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/applib/ui/kino/kino_reel_pdci.c
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/menu_layer_system_cells.c
+    fw/applib/ui/menu_text_scroll.c
     fw/applib/vendor/tinflate/tinflate.c
     fw/applib/vendor/uPNG/upng.c
     fw/apps/system/launcher/default/app_glance.c
@@ -90,6 +91,7 @@ pbl_clar_test(test_launcher_menu_layer
     tests/fakes/fake_fonts.c
     tests/fakes/fake_settings_file.c
     tests/fixtures/resources/timeline_resource_table.auto.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_app_install_manager.c
     tests/stubs/stubs_app_menu_data_source.c
