@@ -17,6 +17,7 @@
 #include "fake_graphics_context.h"
 #include "fake_rtc.h"
 #include "fixtures/load_test_resources.h"
+#include "fixtures/screen_grid.h"
 
 // Stubs
 /////////////////////
@@ -312,20 +313,32 @@ void test_option_menu_window__content_sizes_short_title_special_height_icons(voi
   prv_render_for_each_size(prv_render_short_title_special_height_icons, TEST_PBI_FILE);
 }
 
-//! The selected single line row scrolls a title too long to fit sideways after a pause
+//! The selected single line row at rest, then after the pause once its overlong title scrolls
+//! sideways. Sizes where the title fits and doesn't scroll are blank in the second row.
 void test_option_menu_window__long_title_single_line_scrolled(void) {
   MenuConfig config = {
     .title = "Single Line",
     .content_type = OptionMenuContentType_SingleLine,
     .num_items = 3,
     .items = (MenuItemConfig[]){
-      {.title = "Allow All Notifications"},
+      {.title = "Allow Notifications From Every App"},
       {.title = "Allow Phone Calls Only"},
       {.title = "Mute All Notifications"},
     },
   };
-  prv_create_menu_and_render(&config);
-  fake_rtc_increment_ticks(RTC_TICKS_HZ * 3 / 2);
-  window_render(&s_data.option_menu.window, fake_graphics_context_get_context());
-  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+  GContext *ctx = fake_graphics_context_get_context();
+  ScreenGrid grid;
+  screen_grid_init_frames(&grid);
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < grid.num_sizes; size++) {
+    system_theme_set_content_size(size);
+    s_data = (OptionMenuTestData){};
+    prv_create_menu_and_render(&config);
+    screen_grid_add(&grid, ctx, size, 0);
+    fake_rtc_increment_ticks(RTC_TICKS_HZ * 3 / 2);
+    window_render(&s_data.option_menu.window, ctx);
+    screen_grid_add(&grid, ctx, size, 1);
+    // Ends the scroll so the next size starts from the beginning
+    option_menu_deinit(&s_data.option_menu);
+  }
+  screen_grid_check(&grid, TEST_PBI_FILE);
 }

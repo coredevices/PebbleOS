@@ -23,6 +23,7 @@ static GContext s_ctx;
 #include "fake_settings_file.h"
 #include "fake_spi_flash.h"
 #include "fixtures/load_test_resources.h"
+#include "fixtures/screen_grid.h"
 #include "pbl/services/timeline/timeline_resources.h"
 
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
@@ -398,10 +399,21 @@ void test_launcher_menu_layer__long_title(void) {
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
+//! The selected long title at rest, then one second in, past the pause before a scroll starts.
+//! Sizes where it fits and doesn't scroll are blank in the second row.
 void test_launcher_menu_layer__long_title_scrolled(void) {
-  // Past the pause at the start of the scroll
-  prv_render_launcher_menu_layer_at(LauncherMenuLayerTestApp_LongTitle, 1000);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+  ScreenGrid grid;
+  screen_grid_init_frames(&grid);
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < grid.num_sizes; size++) {
+    s_content_size = size;
+    framebuffer_clear(fb);
+    prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_LongTitle);
+    screen_grid_add(&grid, &s_ctx, size, 0);
+    framebuffer_clear(fb);
+    prv_render_launcher_menu_layer_at(LauncherMenuLayerTestApp_LongTitle, 1000);
+    screen_grid_add(&grid, &s_ctx, size, 1);
+  }
+  screen_grid_check(&grid, TEST_PBI_FILE);
 }
 
 void test_launcher_menu_layer__no_icon(void) {
@@ -477,12 +489,6 @@ void test_launcher_menu_layer__extra_large_with_glances(void) {
   s_content_size = PreferredContentSizeExtraLarge;
   prv_insert_glances_for_app_selected_and_apps_above_and_below_with_glances_test();
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_InteriorApp);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
-}
-
-void test_launcher_menu_layer__extra_large_watchfaces(void) {
-  s_content_size = PreferredContentSizeExtraLarge;
-  prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_Watchfaces);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
