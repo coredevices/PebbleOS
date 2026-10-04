@@ -196,6 +196,7 @@ void pbl_i18n_free(const char *string, const void *owner) {
 ///////////////////////////////////////////////////////////////////////////////
 
 extern struct pbl_delayed_work s_hold_timer;
+extern struct pbl_delayed_work s_auto_timer;
 
 static bool prv_press(ButtonId id) {
   PebbleEvent e = {
@@ -240,6 +241,19 @@ static void prv_invoke_kernel_cb(void) {
 static void prv_complete_hold(void) {
   cl_assert(fake_work_is_scheduled(&s_hold_timer));
   fake_work_fire(&s_hold_timer);
+  prv_invoke_kernel_cb();
+}
+
+//! A button press and release, which is all auto-lock needs to see to restart.
+static void prv_activity(void) {
+  prv_press(BUTTON_ID_UP);
+  prv_release(BUTTON_ID_UP);
+}
+
+//! Let the idle timer expire and run the posted KernelMain callback.
+static void prv_expire_auto_lock(void) {
+  cl_assert(fake_work_is_scheduled(&s_auto_timer));
+  fake_work_fire(&s_auto_timer);
   prv_invoke_kernel_cb();
 }
 
@@ -613,4 +627,172 @@ void test_button_lock__rebinding_the_last_gesture_releases_the_lock(void) {
   prv_invoke_kernel_cb();
   cl_assert(!button_lock_is_locked());
   cl_assert_equal_s(s_last_dialog_text, "Buttons Unlocked");
+}
+
+// Auto-lock
+///////////////////////////////////////////////////////////////////////////////
+
+void test_button_lock__auto_lock_off_by_default(void) {
+  prv_activity();
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__auto_lock_engages_after_idle(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  cl_assert_equal_i(fake_work_timeout_ms(&s_auto_timer), 30000);
+
+  prv_expire_auto_lock();
+
+  cl_assert(button_lock_is_locked());
+  cl_assert_equal_i(s_num_short_pulses, 1);
+  cl_assert(!s_touch_enabled);
+  cl_assert_equal_s(s_last_dialog_text, "Buttons Locked");
+}
+
+void test_button_lock__auto_lock_needs_an_unlock_gesture(void) {
+  prv_unbind_all();
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__rebinding_the_last_gesture_stops_the_countdown(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  cl_assert(fake_work_is_scheduled(&s_auto_timer));
+
+  prv_unbind_all();
+  button_lock_handle_prefs_changed();
+  prv_invoke_kernel_cb();
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__auto_lock_respects_pause(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_paused = true;
+  prv_activity();
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__auto_lock_disarmed_until_first_activity(void) {
+  s_pref_auto_ms = 30000;
+  button_lock_disarm_auto_lock_for_test();
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+
+  // Nothing but real activity may arm it, so a charger change must not either.
+  button_lock_handle_charger_change(false /* is_plugged */);
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+
+  prv_activity();
+  cl_assert(fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__auto_lock_postponed_while_charging(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+
+  s_is_plugged = true;
+  prv_expire_auto_lock();
+
+  cl_assert(!button_lock_is_locked());
+  // Postponed, not cancelled: the cable can go away without any activity.
+  cl_assert(fake_work_is_scheduled(&s_auto_timer));
+
+  s_is_plugged = false;
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__charging_does_not_release_an_engaged_lock(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+
+  button_lock_handle_charger_change(true /* is_plugged */);
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_ignores_charger_when_pref_off(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_not_charging = false;
+  s_is_plugged = true;
+  prv_activity();
+
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_postponed_while_modal_focused(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+
+  // An alarm or an incoming call must stay dismissable.
+  s_modal_enabled = true;
+  s_modal_properties = ModalProperty_Exists;
+  prv_expire_auto_lock();
+
+  cl_assert(!button_lock_is_locked());
+  cl_assert(fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__auto_lock_scope_general_use(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_scope = ButtonLockAutoScopeGeneralUse;
+  s_workout_ongoing = true;
+  prv_activity();
+
+  prv_expire_auto_lock();
+  cl_assert(!button_lock_is_locked());
+
+  s_workout_ongoing = false;
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_scope_during_activity(void) {
+  s_pref_auto_ms = 30000;
+  s_pref_auto_scope = ButtonLockAutoScopeDuringActivity;
+  prv_activity();
+
+  prv_expire_auto_lock();
+  cl_assert(!button_lock_is_locked());
+
+  s_workout_ongoing = true;
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+}
+
+void test_button_lock__auto_lock_idle_while_locked(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  button_lock_engage();
+  cl_assert(button_lock_is_locked());
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+
+  // Buttons pressed while locked must not re-arm it either.
+  prv_press(BUTTON_ID_SELECT);
+  prv_release(BUTTON_ID_SELECT);
+  cl_assert(!fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__auto_lock_rearms_after_unlock(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  prv_expire_auto_lock();
+  cl_assert(button_lock_is_locked());
+
+  prv_unlock();
+  cl_assert(!button_lock_is_locked());
+  cl_assert(fake_work_is_scheduled(&s_auto_timer));
+}
+
+void test_button_lock__touch_activity_restarts_the_countdown(void) {
+  s_pref_auto_ms = 30000;
+  prv_activity();
+  pbl_delayed_work_cancel(&s_auto_timer);
+
+  button_lock_handle_activity();
+  cl_assert(fake_work_is_scheduled(&s_auto_timer));
 }
