@@ -29,6 +29,12 @@ uint32_t shell_prefs_get_button_lock_hold_ms(void) {
   return s_pref_hold_ms;
 }
 
+static ButtonLockCombo s_pref_combo;
+
+ButtonLockCombo shell_prefs_get_button_lock_combo(void) {
+  return s_pref_combo;
+}
+
 static uint32_t s_pref_auto_ms;
 static bool s_pref_auto_paused;
 static ButtonLockAutoScope s_pref_auto_scope;
@@ -110,6 +116,24 @@ static ModalPriority s_modal_top_focused_priority = ModalPriorityInvalid;
 
 ModalPriority modal_manager_get_top_focused_priority(void) {
   return s_modal_enabled ? s_modal_top_focused_priority : ModalPriorityInvalid;
+}
+
+static bool s_watchface_running;
+
+bool app_manager_is_watchface_running(void) {
+  return s_watchface_running;
+}
+
+static int s_num_cancel_force_quit_calls;
+
+void launcher_cancel_force_quit(void) {
+  s_num_cancel_force_quit_calls++;
+}
+
+static int s_num_watchface_reset_calls;
+
+void watchface_reset_click_manager(void) {
+  s_num_watchface_reset_calls++;
 }
 
 static CallbackEventCallback s_kernel_cb;
@@ -278,6 +302,7 @@ void test_button_lock__initialize(void) {
   }
 
   s_pref_hold_ms = 2000;
+  s_pref_combo = ButtonLockComboOff;
   s_pref_auto_ms = 0;
   s_pref_auto_paused = false;
   s_pref_auto_scope = ButtonLockAutoScopeBoth;
@@ -297,6 +322,9 @@ void test_button_lock__initialize(void) {
     prv_unlock();
   }
 
+  s_watchface_running = true;
+  s_num_cancel_force_quit_calls = 0;
+  s_num_watchface_reset_calls = 0;
   s_kernel_cb = NULL;
   s_touch_enabled = true;
   s_touch_pref_enabled = true;

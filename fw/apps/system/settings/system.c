@@ -185,6 +185,13 @@ static const char *s_button_lock_hold_labels[] = {
   i18n_noop("5 Seconds"),
 };
 
+static const char *s_button_lock_combo_labels[] = {
+  [ButtonLockComboOff] = i18n_noop("Off"),
+  [ButtonLockComboBackDown] = i18n_noop("Back + Down"),
+  [ButtonLockComboUpSelect] = i18n_noop("Up + Center"),
+  [ButtonLockComboSelectDown] = i18n_noop("Center + Down"),
+};
+
 static const uint32_t s_button_lock_auto_values[] = {0, 10000, 30000, 60000, 300000};
 
 static const char *s_button_lock_auto_labels[] = {
@@ -218,8 +225,8 @@ static int prv_button_lock_auto_get_selection_index(void) {
   return 0;
 }
 
-//! Refresh the submenu: changing the auto-lock duration shows or hides the
-//! rows below it.
+//! Refresh the submenu: changing the lock combo or the auto-lock duration
+//! shows or hides the rows below them.
 static void prv_button_lock_settings_changed(void) {
   settings_menu_reload_data(SettingsMenuItemSystem);
   settings_menu_mark_dirty(SettingsMenuItemSystem);
@@ -241,6 +248,24 @@ static void prv_button_lock_hold_menu_push(SettingsButtonLockData *data) {
                             prv_button_lock_get_selection_index(), &callbacks,
                             ARRAY_LENGTH(s_button_lock_hold_labels), true /* icons_enabled */,
                             s_button_lock_hold_labels, data);
+}
+
+static void prv_button_lock_combo_menu_select(OptionMenu *option_menu, int selection,
+                                              void *context) {
+  shell_prefs_set_button_lock_combo((ButtonLockCombo)selection);
+  prv_button_lock_settings_changed();
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_button_lock_combo_menu_push(SettingsButtonLockData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_button_lock_combo_menu_select,
+  };
+  const char *title = PBL_IF_RECT_ELSE(i18n_noop("LOCK COMBO"), i18n_noop("Lock Combo"));
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            (int)shell_prefs_get_button_lock_combo(), &callbacks,
+                            ARRAY_LENGTH(s_button_lock_combo_labels), true /* icons_enabled */,
+                            s_button_lock_combo_labels, data);
 }
 
 static void prv_button_lock_auto_menu_select(OptionMenu *option_menu, int selection,
@@ -281,17 +306,18 @@ static void prv_button_lock_scope_menu_push(SettingsButtonLockData *data) {
 
 enum SettingsButtonLockItem {
   SettingsButtonLockHoldDuration,
+  SettingsButtonLockCombo,
   SettingsButtonLockAutoLock,
   SettingsButtonLockScope,
   SettingsButtonLockNotCharging,
   NumSettingsButtonLockItems,
 };
 
-//! Auto-lock needs an unlock gesture bound in Quick Launch, since that is the
-//! only way to release the lock, and its details are pointless while
-//! auto-lock is off.
+//! Auto-lock needs an unlock gesture, a Quick Launch one or the lock combo,
+//! since that is the only way to release the lock, and its details are
+//! pointless while auto-lock is off.
 static bool prv_button_lock_item_is_visible(uint16_t item) {
-  if (item == SettingsButtonLockHoldDuration) {
+  if ((item == SettingsButtonLockHoldDuration) || (item == SettingsButtonLockCombo)) {
     return true;
   }
   if (!button_lock_has_unlock_gesture()) {
@@ -333,6 +359,9 @@ static void prv_button_lock_select_click_cb(SettingsCallbacks *context, uint16_t
     case SettingsButtonLockHoldDuration:
       prv_button_lock_hold_menu_push(data);
       break;
+    case SettingsButtonLockCombo:
+      prv_button_lock_combo_menu_push(data);
+      break;
     case SettingsButtonLockAutoLock:
       prv_button_lock_auto_menu_push(data);
       break;
@@ -358,6 +387,10 @@ static void prv_button_lock_draw_row_cb(SettingsCallbacks *context, GContext *ct
     case SettingsButtonLockHoldDuration:
       title = i18n_noop("Hold Duration");
       subtitle = s_button_lock_hold_labels[prv_button_lock_get_selection_index()];
+      break;
+    case SettingsButtonLockCombo:
+      title = i18n_noop("Lock Combo");
+      subtitle = s_button_lock_combo_labels[shell_prefs_get_button_lock_combo()];
       break;
     case SettingsButtonLockAutoLock:
       title = i18n_noop("Auto-Lock");

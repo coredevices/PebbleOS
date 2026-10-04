@@ -352,6 +352,7 @@ static GColor s_theme_highlight_color = GColorVividCerulean;
 #define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR    "musicShowProgressBar"
 #define PREF_KEY_MUSIC_SHOW_ALBUM_ART       "musicShowAlbumArt"
 #define PREF_KEY_BUTTON_LOCK_HOLD_MS        "buttonLockHoldMs"
+#define PREF_KEY_BUTTON_LOCK_COMBO          "buttonLockCombo"
 #define PREF_KEY_BUTTON_LOCK_AUTO_MS        "buttonLockAutoMs"
 #define PREF_KEY_BUTTON_LOCK_AUTO_PAUSED    "buttonLockAutoPaused"
 #define PREF_KEY_BUTTON_LOCK_AUTO_SCOPE     "buttonLockAutoScope"
@@ -367,6 +368,7 @@ static bool s_music_show_album_art = false;
 
 //! How long the button lock's unlock gesture must be held.
 static uint32_t s_button_lock_hold_ms = BUTTON_LOCK_HOLD_MS_DEFAULT;
+static ButtonLockCombo s_button_lock_combo = ButtonLockComboOff;
 //! Idle duration before the button lock engages on its own; 0 disables auto-lock.
 static uint32_t s_button_lock_auto_ms = 0;
 //! Set by the Quick Launch action to pause auto-lock without losing the duration.
@@ -991,6 +993,13 @@ static bool prv_set_s_button_lock_hold_ms(uint32_t *hold_ms) {
   }
   s_button_lock_hold_ms = *hold_ms;
   return true;
+}
+
+static bool prv_set_s_button_lock_combo(ButtonLockCombo *combo) {
+  const bool valid = (*combo < ButtonLockComboCount);
+  s_button_lock_combo = valid ? *combo : ButtonLockComboOff;
+  button_lock_handle_prefs_changed();
+  return valid;
 }
 
 //! Only the durations the Settings UI offers.
@@ -2362,6 +2371,15 @@ uint32_t shell_prefs_get_button_lock_hold_ms(void) {
 
 void shell_prefs_set_button_lock_hold_ms(uint32_t hold_ms) {
   prv_pref_set(PREF_KEY_BUTTON_LOCK_HOLD_MS, &hold_ms, sizeof(uint32_t));
+}
+
+ButtonLockCombo shell_prefs_get_button_lock_combo(void) {
+  // The boot load bypasses the validating setter.
+  return (s_button_lock_combo < ButtonLockComboCount) ? s_button_lock_combo : ButtonLockComboOff;
+}
+
+void shell_prefs_set_button_lock_combo(ButtonLockCombo combo) {
+  prv_pref_set(PREF_KEY_BUTTON_LOCK_COMBO, &combo, sizeof(ButtonLockCombo));
 }
 
 uint32_t shell_prefs_get_button_lock_auto_ms(void) {

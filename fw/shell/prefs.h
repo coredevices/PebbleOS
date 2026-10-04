@@ -267,6 +267,21 @@ void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable);
 uint32_t shell_prefs_get_button_lock_hold_ms(void);
 void shell_prefs_set_button_lock_hold_ms(uint32_t hold_ms);
 
+//! Button combos that lock and unlock the button lock from anywhere. Only
+//! pairs that are free: Back + Select is the hardware reset combo, Back + Up
+//! and Up + Down are Quick Launch combos.
+typedef enum ButtonLockCombo {
+  ButtonLockComboOff,
+  ButtonLockComboBackDown,
+  ButtonLockComboUpSelect,
+  ButtonLockComboSelectDown,
+
+  ButtonLockComboCount,
+} ButtonLockCombo;
+
+ButtonLockCombo shell_prefs_get_button_lock_combo(void);
+void shell_prefs_set_button_lock_combo(ButtonLockCombo combo);
+
 //! Which situations the button lock auto-locks in.
 typedef enum ButtonLockAutoScope {
   ButtonLockAutoScopeGeneralUse,

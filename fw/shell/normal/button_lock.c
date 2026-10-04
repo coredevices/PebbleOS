@@ -15,8 +15,10 @@
 #include <applib/ui/vibes.h>
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
+#include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/quick_launch.h>
+#include <shell/normal/watchface.h>
 #include <shell/prefs.h>
 #include <shell/system_app_ids.auto.h>
 #include <system/passert.h>
@@ -48,6 +50,20 @@ static const ButtonLockGesture s_quick_launch_gestures[] = {
   {BUTTON_MASK(BUTTON_ID_BACK), i18n_noop("Hold Back to unlock")},
   {BUTTON_MASK(BUTTON_ID_BACK) | BUTTON_MASK(BUTTON_ID_UP), i18n_noop("Hold Back + Up to unlock")},
   {BUTTON_MASK(BUTTON_ID_UP) | BUTTON_MASK(BUTTON_ID_DOWN), i18n_noop("Hold Up + Down to unlock")},
+};
+
+//! The lock combos, indexed by ButtonLockCombo.
+static const ButtonLockGesture s_lock_combos[ButtonLockComboCount] = {
+  [ButtonLockComboBackDown] =
+      {BUTTON_MASK(BUTTON_ID_BACK) | BUTTON_MASK(BUTTON_ID_DOWN),
+       i18n_noop("Hold Back + Down to unlock")},
+  [ButtonLockComboUpSelect] =
+      {BUTTON_MASK(BUTTON_ID_UP) | BUTTON_MASK(BUTTON_ID_SELECT),
+       i18n_noop("Hold Up + Center to unlock")},
+  [ButtonLockComboSelectDown] = {
+    BUTTON_MASK(BUTTON_ID_SELECT) | BUTTON_MASK(BUTTON_ID_DOWN),
+    i18n_noop("Hold Center + Down to unlock")
+  },
 };
 
 static TimerID s_hold_timer = TIMER_INVALID_ID;
@@ -91,6 +107,12 @@ static bool prv_quick_launch_gesture_is_lock(uint8_t mask) {
   }
 }
 
+//! The configured lock combo, or NULL if it is off.
+static const ButtonLockGesture *prv_lock_combo(void) {
+  const ButtonLockCombo combo = shell_prefs_get_button_lock_combo();
+  return (combo == ButtonLockComboOff) ? NULL : &s_lock_combos[combo];
+}
+
 //! The first configured unlock gesture, or NULL if there is none.
 static const ButtonLockGesture *prv_first_unlock_gesture(void) {
   for (size_t i = 0; i < ARRAY_LENGTH(s_quick_launch_gestures); i++) {
@@ -98,7 +120,7 @@ static const ButtonLockGesture *prv_first_unlock_gesture(void) {
       return &s_quick_launch_gestures[i];
     }
   }
-  return NULL;
+  return prv_lock_combo();
 }
 
 bool button_lock_has_unlock_gesture(void) {
@@ -109,6 +131,11 @@ bool button_lock_has_unlock_gesture(void) {
 static uint8_t prv_held_gesture(void) {
   if (s_gesture_consumed || (s_buttons_held == 0)) {
     return 0;
+  }
+  // The lock combo toggles from anywhere, a Quick Launch gesture only unlocks.
+  const ButtonLockGesture *combo = prv_lock_combo();
+  if (combo && (s_buttons_held == combo->mask)) {
+    return s_buttons_held;
   }
   if (s_locked && prv_quick_launch_gesture_is_lock(s_buttons_held)) {
     return s_buttons_held;
@@ -382,6 +409,12 @@ bool button_lock_handle_button_event(PebbleEvent *e) {
     if (gesture) {
       s_pending_gesture = gesture;
       s_hold_generation++;
+      // Holding the lock combo inside an app must not force-quit it.
+      launcher_cancel_force_quit();
+      if (!s_locked && app_manager_is_watchface_running()) {
+        // Kill the first combo button's armed Quick Launch long click.
+        watchface_reset_click_manager();
+      }
       PBL_ASSERTN(new_timer_start(s_hold_timer, shell_prefs_get_button_lock_hold_ms(),
                                   prv_hold_timer_cb, (void *)(uintptr_t)s_hold_generation,
                                   0 /* flags */));
@@ -393,8 +426,12 @@ bool button_lock_handle_button_event(PebbleEvent *e) {
   }
 
   if (is_down) {
-    if (s_locked) {
-      if (!s_pending_gesture) {
+    // While unlocked, the first combo button's DOWN was already delivered (its
+    // click fires like with the Quick Launch combos), the completing one must
+    // stay invisible so no click recognizer arms for it. Its UP is swallowed
+    // via s_downs_delivered.
+    if (s_locked || s_pending_gesture) {
+      if (s_locked && !s_pending_gesture) {
         prv_show_hint_popup();
       }
       return true;
