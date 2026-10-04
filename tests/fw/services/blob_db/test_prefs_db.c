@@ -39,6 +39,8 @@
 #include <stubs_task_wdt.h>
 #include <stubs_timeline_peek.h>
 
+extern void shell_prefs_init(void);
+
 void prefs_sync_init(void) {
 }
 
@@ -161,4 +163,43 @@ void test_prefs_db__button_lock_hold_rejects_invalid_values(void) {
     cl_assert_equal_i(shell_prefs_get_button_lock_hold_ms(), 2000);
     cl_assert_equal_i(prv_read_u32("buttonLockHoldMs"), 2000);
   }
+}
+
+void test_prefs_db__button_lock_auto_rejects_invalid_values(void) {
+  uint32_t auto_ms = 30000;
+  prv_phone_write("buttonLockAutoMs", &auto_ms, sizeof(auto_ms));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_ms(), 30000);
+
+  // An unknown duration falls back to off, never to some short timeout.
+  auto_ms = 7;
+  prv_phone_write("buttonLockAutoMs", &auto_ms, sizeof(auto_ms));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_ms(), 0);
+  cl_assert_equal_i(prv_read_u32("buttonLockAutoMs"), 0);
+
+  ButtonLockAutoScope scope = ButtonLockAutoScopeGeneralUse;
+  prv_phone_write("buttonLockAutoScope", &scope, sizeof(scope));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_scope(), ButtonLockAutoScopeGeneralUse);
+  scope = ButtonLockAutoScopeCount;
+  prv_phone_write("buttonLockAutoScope", &scope, sizeof(scope));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_scope(), ButtonLockAutoScopeBoth);
+}
+
+void test_prefs_db__button_lock_auto_getters_guard_the_boot_load(void) {
+  // The boot load bypasses the handlers, so the getters must not trust the stored values.
+  const uint32_t auto_ms = 7;
+  const ButtonLockAutoScope scope = ButtonLockAutoScopeCount;
+  cl_assert(prefs_private_write_backing((uint8_t *)"buttonLockAutoMs", strlen("buttonLockAutoMs"),
+                                        &auto_ms, sizeof(auto_ms)));
+  cl_assert(prefs_private_write_backing((uint8_t *)"buttonLockAutoScope",
+                                        strlen("buttonLockAutoScope"), &scope, sizeof(scope)));
+  shell_prefs_init();
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_ms(), 0);
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_scope(), ButtonLockAutoScopeBoth);
+}
+
+void test_prefs_db__button_lock_auto_off_clears_the_pause(void) {
+  shell_prefs_set_button_lock_auto_ms(10000);
+  shell_prefs_set_button_lock_auto_paused(true);
+  shell_prefs_set_button_lock_auto_ms(0);
+  cl_assert(!shell_prefs_get_button_lock_auto_paused());
 }
