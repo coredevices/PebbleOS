@@ -314,11 +314,34 @@ static void prv_clear_payload_sizes_up_to(PPoGATTClient *client, uint32_t sn_end
 
 // -------------------------------------------------------------------------------------------------
 // Ack Time-out related things.
-// The effective timeout duration will be between 2 and 3 seconds, depending on when in the second
-// the timeout is set (RegularTimer is used).
+
+static void prv_timer_callback(void *unused);
+
+//! Only tick while some client waits for an ack, so an idle link does not wake the system.
+static void prv_update_ack_timer(void) {
+  bool waiting = false;
+  for (PPoGATTClient *client = s_ppogatt_head; client;
+       client = (PPoGATTClient *)client->node.next) {
+    if (client->out.ack_timeout_state != AckTimeoutState_Inactive) {
+      waiting = true;
+      break;
+    }
+  }
+
+  if (!waiting) {
+    if (regular_timer_is_scheduled(&s_ack_timer) && !regular_timer_pending_deletion(&s_ack_timer)) {
+      regular_timer_remove_callback(&s_ack_timer);
+    }
+  } else if (!regular_timer_is_scheduled(&s_ack_timer) ||
+             regular_timer_pending_deletion(&s_ack_timer)) {
+    s_ack_timer.cb = prv_timer_callback;
+    regular_timer_add_multisecond_callback(&s_ack_timer, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+  }
+}
 
 static void prv_reset_ack_timeout(PPoGATTClient *client) {
   client->out.ack_timeout_state = AckTimeoutState_Active;
+  prv_update_ack_timer();
 }
 
 static void prv_roll_back(PPoGATTClient *client, uint32_t sn) {
@@ -384,6 +407,7 @@ static void prv_ack_timeout_kernelmain_cb(void *unused) {
       prv_check_timeouts(client);
       client = (PPoGATTClient *)client->node.next;
     }
+    prv_update_ack_timer();
   }
   bt_unlock();
 }
@@ -407,10 +431,6 @@ static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry
   client->send_retry_timer = send_retry_timer;
   client->created_ticks = rtc_get_ticks();
   s_ppogatt_head = (PPoGATTClient *)list_prepend((ListNode *)s_ppogatt_head, &client->node);
-  if (!regular_timer_is_scheduled(&s_ack_timer)) {
-    s_ack_timer.cb = prv_timer_callback;
-    regular_timer_add_multisecond_callback(&s_ack_timer, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
-  }
   return client;
 }
 
@@ -444,9 +464,7 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   new_timer_delete(client->send_retry_timer);
   kernel_free(client);
 
-  if (s_ppogatt_head == NULL) {
-    regular_timer_remove_callback(&s_ack_timer);
-  }
+  prv_update_ack_timer();
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -709,6 +727,7 @@ static void prv_handle_ack(PPoGATTClient *client, uint32_t sn) {
   if (prv_is_packet_with_sn_awaiting_ack(client, sn)) {
     client->out.timeouts_counter = 0;
     client->out.ack_timeout_state = AckTimeoutState_Inactive;
+    prv_update_ack_timer();
 
     // Ack'd one of the packets in flight
     const uint32_t next_sn = prv_next_sn(sn);
