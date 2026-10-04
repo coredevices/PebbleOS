@@ -41,7 +41,7 @@ pbl_clar_test(test_battery_ui_fsm_percent
 pbl_clar_test(test_button_lock
   SOURCES
     pebble/shell/normal/button_lock.c
-  DEFINES CONFIG_TOUCH
+  DEFINES CONFIG_TOUCH CONFIG_SERVICE_ACTIVITY
 )
 
 pbl_clar_test(test_dark_mode_updater

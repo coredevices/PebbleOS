@@ -58,6 +58,15 @@ bool button_lock_is_locked(void) {
   return false;
 }
 
+void button_lock_handle_activity(void) {
+}
+
+void button_lock_handle_charger_change(bool is_plugged) {
+}
+
+void button_lock_handle_prefs_changed(void) {
+}
+
 void app_idle_timeout_refresh(void) {
 }
 
