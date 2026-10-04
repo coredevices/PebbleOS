@@ -151,6 +151,7 @@ typedef enum {
   SystemMenuItemInformation,
   SystemMenuItemCertification,
   SystemMenuItemStationaryToggle,
+  SystemMenuItemButtonLock,
   SystemMenuItemDebugging,
   SystemMenuItemShutDown,
   SystemMenuItemFactoryReset,
@@ -161,10 +162,119 @@ static const char *s_item_titles[SystemMenuItem_Count] = {
   [SystemMenuItemInformation] = i18n_noop("Information"),
   [SystemMenuItemCertification] = i18n_noop("Certification"),
   [SystemMenuItemStationaryToggle] = i18n_noop("Stand-By Mode"),
+  [SystemMenuItemButtonLock] = i18n_noop("Button Lock"),
   [SystemMenuItemDebugging] = i18n_noop("Debugging"),
   [SystemMenuItemShutDown] = i18n_noop("Shut Down"),
   [SystemMenuItemFactoryReset] = i18n_noop("Factory Reset"),
 };
+
+// Button Lock Settings
+/////////////////////////////
+
+typedef struct {
+  SettingsCallbacks callbacks;
+} SettingsButtonLockData;
+
+static const uint32_t s_button_lock_hold_values[] = {1000, 2000, 3000, 5000};
+
+static const char *s_button_lock_hold_labels[] = {
+  i18n_noop("1 Second"),
+  i18n_noop("2 Seconds"),
+  i18n_noop("3 Seconds"),
+  i18n_noop("5 Seconds"),
+};
+
+static int prv_button_lock_get_selection_index(void) {
+  const uint32_t hold_ms = shell_prefs_get_button_lock_hold_ms();
+  for (size_t i = 0; i < ARRAY_LENGTH(s_button_lock_hold_values); i++) {
+    if (s_button_lock_hold_values[i] == hold_ms) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+static void prv_button_lock_settings_changed(void) {
+  settings_menu_reload_data(SettingsMenuItemSystem);
+  settings_menu_mark_dirty(SettingsMenuItemSystem);
+}
+
+static void prv_button_lock_hold_menu_select(OptionMenu *option_menu, int selection,
+                                             void *context) {
+  shell_prefs_set_button_lock_hold_ms(s_button_lock_hold_values[selection]);
+  prv_button_lock_settings_changed();
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_button_lock_hold_menu_push(SettingsButtonLockData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_button_lock_hold_menu_select,
+  };
+  const char *title = PBL_IF_RECT_ELSE(i18n_noop("HOLD DURATION"), i18n_noop("Hold Duration"));
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            prv_button_lock_get_selection_index(), &callbacks,
+                            ARRAY_LENGTH(s_button_lock_hold_labels), true /* icons_enabled */,
+                            s_button_lock_hold_labels, data);
+}
+
+enum SettingsButtonLockItem {
+  SettingsButtonLockHoldDuration,
+  NumSettingsButtonLockItems,
+};
+
+static uint16_t prv_button_lock_num_rows_cb(SettingsCallbacks *context) {
+  return NumSettingsButtonLockItems;
+}
+
+static void prv_button_lock_select_click_cb(SettingsCallbacks *context, uint16_t row) {
+  SettingsButtonLockData *data = (SettingsButtonLockData *)context;
+  switch (row) {
+    case SettingsButtonLockHoldDuration:
+      prv_button_lock_hold_menu_push(data);
+      break;
+    default:
+      WTF;
+  }
+}
+
+static void prv_button_lock_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
+                                        const Layer *cell_layer, uint16_t row, bool selected) {
+  SettingsButtonLockData *data = (SettingsButtonLockData *)context;
+  const char *title = NULL;
+  const char *subtitle = NULL;
+  switch (row) {
+    case SettingsButtonLockHoldDuration:
+      title = i18n_noop("Hold Duration");
+      subtitle = s_button_lock_hold_labels[prv_button_lock_get_selection_index()];
+      break;
+    default:
+      WTF;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+}
+
+static void prv_button_lock_deinit_cb(SettingsCallbacks *context) {
+  SettingsButtonLockData *data = (SettingsButtonLockData *)context;
+  i18n_free_all(data);
+  app_free(data);
+}
+
+static void prv_button_lock_submenu_push(void) {
+  SettingsButtonLockData *data = app_malloc_check(sizeof(*data));
+  *data = (SettingsButtonLockData){};
+
+  data->callbacks = (SettingsCallbacks){
+    .deinit = prv_button_lock_deinit_cb,
+    .draw_row = prv_button_lock_draw_row_cb,
+    .select_click = prv_button_lock_select_click_cb,
+    .num_rows = prv_button_lock_num_rows_cb,
+  };
+
+  const char *title = i18n_noop("Button Lock");
+  Window *window =
+      settings_window_create_with_title(SettingsMenuItemSystem, title, &data->callbacks);
+  app_window_stack_push(window, true /* animated */);
+}
 
 // Common status bar component is used across all windows that need them.
 // This will init it and set the correct style to be used within the settings
@@ -1293,6 +1403,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     case SystemMenuItemStationaryToggle:
       subtitle = stationary_get_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
+    case SystemMenuItemButtonLock:
+      subtitle = i18n_get(s_button_lock_hold_labels[prv_button_lock_get_selection_index()], data);
+      break;
     case SystemMenuItemShutDown:
     case SystemMenuItemInformation:
     case SystemMenuItemCertification:
@@ -1322,6 +1435,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case SystemMenuItemStationaryToggle:
       stationary_set_enabled(!stationary_get_enabled());
+      break;
+    case SystemMenuItemButtonLock:
+      prv_button_lock_submenu_push();
       break;
     case SystemMenuItemShutDown:
       launcher_task_add_callback(prv_shutdown_cb, 0);
