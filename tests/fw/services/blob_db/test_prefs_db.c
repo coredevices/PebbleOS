@@ -3,6 +3,7 @@
 
 #include <pbl/services/blob_db/prefs_db.h>
 #include <pbl/services/filesystem/pfs.h>
+#include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
 
 #include <clar.h>
@@ -123,4 +124,41 @@ void test_prefs_db__insert_and_read(void) {
   // Read it back
   cl_assert(prefs_db_read((uint8_t *)key, key_len, (uint8_t *)&get_value, sizeof(get_value) + 1) <
             0);
+}
+
+// Button lock
+////////////////////////////////////////////////////////////////
+
+//! Write a pref the way the phone does: into the backing store, then the blob_db event.
+static void prv_phone_write(const char *key, const void *value, size_t len) {
+  cl_assert_equal_i(prefs_db_insert((uint8_t *)key, strlen(key), value, len), 0);
+  PebbleBlobDBEvent event = (PebbleBlobDBEvent){
+    .db_id = BlobDBIdPrefs,
+    .type = BlobDBEventTypeInsert,
+    .key = (uint8_t *)key,
+    .key_len = strlen(key),
+  };
+  prefs_private_handle_blob_db_event(&event);
+}
+
+static uint32_t prv_read_u32(const char *key) {
+  uint32_t value;
+  cl_assert_equal_i(prefs_db_read((uint8_t *)key, strlen(key), (uint8_t *)&value, sizeof(value)),
+                    0);
+  return value;
+}
+
+void test_prefs_db__button_lock_hold_rejects_invalid_values(void) {
+  uint32_t hold_ms = 3000;
+  prv_phone_write("buttonLockHoldMs", &hold_ms, sizeof(hold_ms));
+  cl_assert_equal_i(shell_prefs_get_button_lock_hold_ms(), 3000);
+
+  // 0 used to mean off, 10 s runs into the PMIC back-button reset.
+  const uint32_t invalid[] = {0, 10000, 7};
+  for (size_t i = 0; i < ARRAY_LENGTH(invalid); i++) {
+    hold_ms = invalid[i];
+    prv_phone_write("buttonLockHoldMs", &hold_ms, sizeof(hold_ms));
+    cl_assert_equal_i(shell_prefs_get_button_lock_hold_ms(), 2000);
+    cl_assert_equal_i(prv_read_u32("buttonLockHoldMs"), 2000);
+  }
 }
