@@ -258,6 +258,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
     case PEBBLE_BATTERY_CONNECTION_EVENT: {
       const bool is_connected = e->battery_connection.is_connected;
       battery_state_handle_connection_event(is_connected);
+      button_lock_handle_charger_change(is_connected);
       if (is_connected) {
         light_enable_interaction();
       } else {
@@ -348,6 +349,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         // trigger; letting it extend the session would let a stream of them sustain itself.
         if (s_touch_contact_engaged) {
           touch_session_extend();
+          button_lock_handle_activity();
         }
         app_idle_timeout_touch_up();
       }
@@ -377,6 +379,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         return;
       }
       s_touch_contact_engaged = true;
+      button_lock_handle_activity();
 #endif
       bool wake_on_gesture = false;
       switch (backlight_get_touch_wake()) {

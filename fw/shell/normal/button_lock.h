@@ -15,6 +15,11 @@
 //! The locked state is intentionally RAM-only: a reboot always unlocks. The
 //! hardware reset combo is handled at ISR level in the button driver and is
 //! unaffected by the lock.
+//!
+//! The lock can also engage on its own after shell_prefs_get_button_lock_auto_ms
+//! of inactivity. Auto-lock requires an unlock gesture, since without one the
+//! lock could never be released, and it only ever arms after the first
+//! activity following boot, so a fresh boot is always usable.
 
 //! Create resources used by the button lock. Called from shell_event_loop_init.
 void button_lock_init(void);
@@ -32,6 +37,19 @@ bool button_lock_has_unlock_gesture(void);
 //! @return true if the event must be swallowed (masked from all tasks).
 bool button_lock_handle_button_event(PebbleEvent *e);
 
-//! Re-evaluate the lock after the gestures that release it changed, and
-//! release it if none is left.
+//! Feed non-button user activity (e.g. touch) on KernelMain so it postpones
+//! auto-locking, just like a button press does. Only feed deliberate contact:
+//! a stream of false touches must not keep the watch from locking.
+void button_lock_handle_activity(void);
+
+//! Auto-lock never engages while the charger is plugged in, so arm or disarm
+//! the idle timer when the cable comes and goes instead of polling for it.
+void button_lock_handle_charger_change(bool is_plugged);
+
+//! Re-evaluate the lock after its prefs or the gestures that release it
+//! changed, and release it if no unlock gesture is left.
 void button_lock_handle_prefs_changed(void);
+
+#if UNITTEST
+void button_lock_disarm_auto_lock_for_test(void);
+#endif

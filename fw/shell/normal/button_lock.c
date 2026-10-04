@@ -4,6 +4,7 @@
 #include "button_lock.h"
 
 #include <pbl/logging/logging.h>
+#include <pbl/services/battery/battery_state.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/size.h>
@@ -22,6 +23,10 @@
 
 #ifdef CONFIG_TOUCH
 #include <pbl/services/touch/touch.h>
+#endif
+
+#ifdef CONFIG_SERVICE_ACTIVITY
+#include <pbl/services/activity/workout_service.h>
 #endif
 
 #define BUTTON_MASK(id)              (1 << (id))
@@ -46,6 +51,10 @@ static const ButtonLockGesture s_quick_launch_gestures[] = {
 };
 
 static TimerID s_hold_timer = TIMER_INVALID_ID;
+static TimerID s_auto_timer = TIMER_INVALID_ID;
+//! Auto-lock stays disarmed until the first activity after boot, so a fresh
+//! boot never locks itself before the user has touched the watch.
+static bool s_auto_armed;
 static uint8_t s_buttons_held;
 //! Deliver a button UP iff its DOWN was delivered, so click recognizers in
 //! the app/watchface never see an unbalanced press.
@@ -163,6 +172,8 @@ static void prv_pop_hint_popup(void) {
 // Lock state
 ///////////////////////////////////////////////////////////////////////////////
 
+static void prv_auto_lock_update(void);
+
 //! Engage or release the lock and give the user the matching feedback.
 //! Must run on KernelMain.
 static void prv_set_locked(bool locked) {
@@ -191,6 +202,8 @@ static void prv_set_locked(bool locked) {
   // user did not ask for.
   prv_push_popup(s_locked ? i18n_noop("Buttons Locked") : i18n_noop("Buttons Unlocked"), NULL,
                  ModalPriorityAlert);
+
+  prv_auto_lock_update();
 }
 
 static void prv_stop_hold(void) {
@@ -224,12 +237,106 @@ void button_lock_engage(void) {
   prv_set_locked(true);
 }
 
+// Auto-lock
+///////////////////////////////////////////////////////////////////////////////
+
+static void prv_auto_lock_timer_cb(void *data);
+
+//! Auto-lock needs an unlock gesture, without it the lock could never be
+//! released. The pause is owned by the Auto-Lock Quick Launch action.
+static bool prv_auto_lock_enabled(void) {
+  return (shell_prefs_get_button_lock_auto_ms() != 0) &&
+         !shell_prefs_get_button_lock_auto_paused() && button_lock_has_unlock_gesture();
+}
+
+static bool prv_auto_lock_scope_applies(void) {
+  bool workout_ongoing = false;
+#ifdef CONFIG_SERVICE_ACTIVITY
+  workout_ongoing = workout_service_is_workout_ongoing();
+#endif
+  switch (shell_prefs_get_button_lock_auto_scope()) {
+    case ButtonLockAutoScopeGeneralUse:
+      return !workout_ongoing;
+    case ButtonLockAutoScopeDuringActivity:
+      return workout_ongoing;
+    default:
+      return true;
+  }
+}
+
+//! Conditions that postpone auto-locking rather than disable it. They can all
+//! change without any user activity, so the timer is re-armed instead of
+//! dropped and the state is re-checked when it expires.
+static bool prv_auto_lock_postponed(void) {
+  if (shell_prefs_get_button_lock_auto_not_charging() && battery_get_charge_state().is_plugged) {
+    return true;
+  }
+  if (!prv_auto_lock_scope_applies()) {
+    return true;
+  }
+  // Never lock the user out of a focused modal, e.g. an alarm or an incoming call.
+  return modal_manager_get_enabled() && !(modal_manager_get_properties() & ModalProperty_Unfocused);
+}
+
+static bool prv_auto_lock_can_engage(void) {
+  return !s_locked && !s_pending_gesture && s_auto_armed && prv_auto_lock_enabled();
+}
+
+//! (Re)start the idle timer, or stop it when auto-lock cannot engage.
+static void prv_auto_lock_update(void) {
+  if (s_auto_timer == TIMER_INVALID_ID) {
+    return;
+  }
+  if (!prv_auto_lock_can_engage()) {
+    new_timer_stop(s_auto_timer);
+    return;
+  }
+  PBL_ASSERTN(new_timer_start(s_auto_timer, shell_prefs_get_button_lock_auto_ms(),
+                              prv_auto_lock_timer_cb, NULL, 0 /* flags */));
+}
+
+//! KernelMain callback posted by the idle timer.
+static void prv_auto_lock_expired_cb(void *data) {
+  if (!prv_auto_lock_can_engage()) {
+    return;
+  }
+  if (prv_auto_lock_postponed()) {
+    prv_auto_lock_update();
+    return;
+  }
+  button_lock_engage();
+}
+
+//! Runs on the NewTimer thread; just bounce to KernelMain.
+static void prv_auto_lock_timer_cb(void *data) {
+  launcher_task_add_callback(prv_auto_lock_expired_cb, NULL);
+}
+
+//! Note the user is around and restart the idle countdown.
+static void prv_auto_lock_note_activity(void) {
+  s_auto_armed = true;
+  prv_auto_lock_update();
+}
+
+void button_lock_handle_activity(void) {
+  if (s_locked) {
+    return;
+  }
+  prv_auto_lock_note_activity();
+}
+
+void button_lock_handle_charger_change(bool is_plugged) {
+  prv_auto_lock_update();
+}
+
 static void prv_prefs_changed_cb(void *data) {
   if (s_locked && !button_lock_has_unlock_gesture()) {
     // The unlock gesture just went away, so nothing could release the lock.
     prv_stop_hold();
     prv_set_locked(false);
+    return;
   }
+  prv_auto_lock_update();
 }
 
 void button_lock_handle_prefs_changed(void) {
@@ -238,7 +345,17 @@ void button_lock_handle_prefs_changed(void) {
 
 void button_lock_init(void) {
   s_hold_timer = new_timer_create();
+  s_auto_timer = new_timer_create();
 }
+
+#if UNITTEST
+//! Put auto-lock back into its just-booted state, which is otherwise only
+//! reachable by rebooting.
+void button_lock_disarm_auto_lock_for_test(void) {
+  s_auto_armed = false;
+  new_timer_stop(s_auto_timer);
+}
+#endif
 
 bool button_lock_is_locked(void) {
   return s_locked;
@@ -269,6 +386,10 @@ bool button_lock_handle_button_event(PebbleEvent *e) {
                                   prv_hold_timer_cb, (void *)(uintptr_t)s_hold_generation,
                                   0 /* flags */));
     }
+  }
+
+  if (!s_locked) {
+    prv_auto_lock_note_activity();
   }
 
   if (is_down) {

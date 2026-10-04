@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/services/battery/battery_state.h>
+
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <clar.h>
@@ -25,6 +27,39 @@ static uint32_t s_pref_hold_ms;
 
 uint32_t shell_prefs_get_button_lock_hold_ms(void) {
   return s_pref_hold_ms;
+}
+
+static uint32_t s_pref_auto_ms;
+static bool s_pref_auto_paused;
+static ButtonLockAutoScope s_pref_auto_scope;
+static bool s_pref_auto_not_charging;
+
+uint32_t shell_prefs_get_button_lock_auto_ms(void) {
+  return s_pref_auto_ms;
+}
+
+bool shell_prefs_get_button_lock_auto_paused(void) {
+  return s_pref_auto_paused;
+}
+
+ButtonLockAutoScope shell_prefs_get_button_lock_auto_scope(void) {
+  return s_pref_auto_scope;
+}
+
+bool shell_prefs_get_button_lock_auto_not_charging(void) {
+  return s_pref_auto_not_charging;
+}
+
+static bool s_is_plugged;
+
+BatteryChargeState battery_get_charge_state(void) {
+  return (BatteryChargeState){.is_plugged = s_is_plugged};
+}
+
+static bool s_workout_ongoing;
+
+bool workout_service_is_workout_ongoing(void) {
+  return s_workout_ongoing;
 }
 
 //! Quick Launch bindings: the app bound to each hold gesture and combo, and
@@ -161,8 +196,8 @@ void i18n_free(const char *string, const void *owner) {
 // Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-//! button_lock_init creates the hold timer, and this test is the only thing
-//! creating timers.
+//! button_lock_init creates the hold timer first and the auto-lock timer
+//! second, and this test is the only thing creating timers.
 #define HOLD_TIMER_ID (1)
 
 static bool prv_press(ButtonId id) {
@@ -229,6 +264,12 @@ void test_button_lock__initialize(void) {
   }
 
   s_pref_hold_ms = 2000;
+  s_pref_auto_ms = 0;
+  s_pref_auto_paused = false;
+  s_pref_auto_scope = ButtonLockAutoScopeBoth;
+  s_pref_auto_not_charging = true;
+  s_is_plugged = false;
+  s_workout_ongoing = false;
   prv_unbind_all();
   prv_bind_hold(BUTTON_ID_SELECT);
   s_modal_enabled = false;
