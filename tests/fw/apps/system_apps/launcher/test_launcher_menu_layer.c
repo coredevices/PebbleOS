@@ -380,10 +380,21 @@ static void prv_render_launcher_menu_layer_for_each_size(uint16_t selected_index
 // Tests
 //////////////////////
 
+//! The selected long title at rest, then one second in, past the pause before a scroll starts.
+//! Sizes where it fits and doesn't scroll are blank in the second row.
 void test_launcher_menu_layer__long_title_scrolled(void) {
-  // Past the pause at the start of the scroll
-  prv_render_launcher_menu_layer_at(LauncherMenuLayerTestApp_LongTitle, 1000);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+  ScreenGrid grid;
+  screen_grid_init_frames(&grid);
+  for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
+    s_content_size = size;
+    framebuffer_clear(fb);
+    prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_LongTitle);
+    screen_grid_add(&grid, &s_ctx, size, 0);
+    framebuffer_clear(fb);
+    prv_render_launcher_menu_layer_at(LauncherMenuLayerTestApp_LongTitle, 1000);
+    screen_grid_add(&grid, &s_ctx, size, 1);
+  }
+  screen_grid_check(&grid, TEST_PBI_FILE);
 }
 
 void test_launcher_menu_layer__no_icon(void) {
