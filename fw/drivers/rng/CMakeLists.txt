@@ -4,6 +4,8 @@
 set(sources)
 if(CONFIG_RNG_SF32LB)
   list(APPEND sources sf32lb.c)
+elseif(CONFIG_RNG_QEMU)
+  list(APPEND sources qemu.c)
 elseif(CONFIG_RNG_STUB)
   list(APPEND sources stubs.c)
 endif()

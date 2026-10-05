@@ -16,6 +16,12 @@ config RNG_SF32LB
     help
       Support for the SiFli SF32LB RNG.
 
+config RNG_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      QEMU RNG. QEMU emulates no RNG, so it returns a fixed value.
+
 config RNG_STUB
     bool "Stub"
     help
