@@ -6,6 +6,7 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
 #include "system/passert.h"
 #include "kernel/util/sleep.h"
 #include <string.h>
@@ -47,21 +48,20 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW862XX_REG_TRIMCFG3  (0x5A)
 #define AW862XX_REG_CHIPID    (0x64)
 
-#define AW862XX_BIT_PLAYCFG3_BRK_EN_MASK    (~(1 << 2))
-#define AW862XX_BIT_PLAYCFG3_BRK_ENABLE     (1 << 2)
-#define AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK (~(3 << 0))
-#define AW862XX_BIT_PLAYCFG3_PLAY_MODE_RAM  (0 << 0)
-#define AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT (2 << 0)
-#define AW862XX_BIT_PLAYCFG3_PLAY_MODE_STOP (3 << 0)
+#define AW862XX_PLAYCFG3_BRK_EN         PBL_BIT(2)
+#define AW862XX_PLAYCFG3_PLAY_MODE_MASK PBL_GENMASK(1, 0)
+#define AW862XX_PLAYCFG3_PLAY_MODE_RAM  0x0U
+#define AW862XX_PLAYCFG3_PLAY_MODE_CONT 0x2U
+#define AW862XX_PLAYCFG3_PLAY_MODE_STOP 0x3U
 
 /* PLAYCFG4: reg 0x09 RW */
-#define AW862XX_BIT_PLAYCFG4_STOP_ON (1 << 1)
-#define AW862XX_BIT_PLAYCFG4_GO_ON   (1 << 0)
+#define AW862XX_PLAYCFG4_STOP PBL_BIT(1)
+#define AW862XX_PLAYCFG4_GO   PBL_BIT(0)
 
 #define AW862XX_F0_CALI_LSB_PERMYRIAD   (24)
 #define AW862XX_CONTCFG1_EDGE_FREQ_NONE (0x00)
-#define AW862XX_CONTCFG1_SIN_MODE_COS   (1 << 0)
-#define AW862XX_CONTCFG1_EN_F0_DET      (1 << 3)
+#define AW862XX_CONTCFG1_SIN_MODE_COS   PBL_BIT(0)
+#define AW862XX_CONTCFG1_EN_F0_DET      PBL_BIT(3)
 #define AW862XX_CONTCFG2_CONF_F0        (24000U / CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ)
 #define AW862XX_CONTCFG3_F0_DET_DRV_WIDTH \
   (24000U / CONFIG_VIBE_AW86225_LRA_FREQUENCY_HZ - 8U - 8U - 15U)
@@ -70,12 +70,14 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW862XX_CONTCFG9_F0_DET_DRV2_TIME (0x14U)
 #define AW862XX_CONTCFG10_BRK_TIME        (0x08U)
 #define AW862XX_CONTCFG11_TRACK_MARGIN    (0x0FU)
-#define AW862XX_CONTCFG6_TRACK_EN         (1 << 7)
+#define AW862XX_CONTCFG6_TRACK_EN         PBL_BIT(7)
+#define AW862XX_CONTCFG6_DRV1_LVL_MASK    PBL_GENMASK(6, 0)
 #define AW862XX_RAM_BASE_ADDR             (0x0800U)
 #define AW862XX_RAM_HEADER_VERSION        (0x01U)
 #define AW862XX_RAM_HEADER_LEN            (1U + 4U)
 #define AW862XX_RAM_WAVEFORM              (1U)
 #define AW862XX_WAVCFG_END                (0U)
+#define AW862XX_WAVCFG9_SEQ1LOOP_MASK     PBL_GENMASK(7, 4)
 #define AW862XX_WAVCFG9_LOOP_INFINITE     (0x0FU)
 #define AW862XX_PLAYCFG2_GAIN_UNITY       (0x80U)
 #define AW862XX_RMS_TO_PEAK_MILLI         (1414U)
@@ -86,23 +88,17 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW862XX_VBAT_CODE_MAX             (1024U)
 #define AW862XX_PLAYCFG2_GAIN_LIMIT \
   (AW862XX_PLAYCFG2_GAIN_UNITY * AW862XX_VBAT_REFER_MV / AW862XX_VBAT_MIN_MV)
-#define AW862XX_RTPCFG1_ADDRH_MASK        (~(0x0F << 0))
-#define AW862XX_GLBRD5_STATE_MASK         (0x0F)
+#define AW862XX_RTPCFG1_ADDRH_MASK        PBL_GENMASK(3, 0)
+#define AW862XX_GLBRD5_STATE_MASK         PBL_GENMASK(3, 0)
 #define AW862XX_GLBRD5_STATE_STANDBY      (0x00)
-#define AW862XX_TRIMCFG3_TRIM_LRA_MASK    (~(0x3F))
-#define AW862XX_SYSCTRL1_RAMINIT_MASK     (~(1 << 3))
-#define AW862XX_SYSCTRL1_RAMINIT_ON       (1 << 3)
-#define AW862XX_SYSCTRL1_RAMINIT_OFF      (0 << 3)
-#define AW862XX_SYSCTRL2_STANDBY_MASK     (~(1 << 6))
-#define AW862XX_SYSCTRL2_STANDBY_ON       (1 << 6)
-#define AW862XX_SYSCTRL2_STANDBY_OFF      (0 << 6)
-#define AW862XX_SYSCTRL2_WAVDAT_MODE_MASK (~(3 << 0))
-#define AW862XX_SYSCTRL2_RATE_12K         (2 << 0)
-#define AW862XX_SYSCTRL7_GAIN_BYPASS_MASK (~(1 << 6))
-#define AW862XX_SYSCTRL7_GAIN_CHANGEABLE  (1 << 6)
-#define AW862XX_DETCFG2_VBAT_GO           (1 << 1)
-#define AW862XX_DET_LO_VBAT_MASK          (0x30)
-#define AW862XX_DET_LO_VBAT_SHIFT         (4)
+#define AW862XX_TRIMCFG3_TRIM_LRA_MASK    PBL_GENMASK(5, 0)
+#define AW862XX_SYSCTRL1_RAMINIT          PBL_BIT(3)
+#define AW862XX_SYSCTRL2_STANDBY          PBL_BIT(6)
+#define AW862XX_SYSCTRL2_WAVDAT_MODE_MASK PBL_GENMASK(1, 0)
+#define AW862XX_SYSCTRL2_RATE_12K         0x2U
+#define AW862XX_SYSCTRL7_GAIN_CHANGEABLE  PBL_BIT(6)
+#define AW862XX_DETCFG2_VBAT_GO           PBL_BIT(1)
+#define AW862XX_DET_LO_VBAT_MASK          PBL_GENMASK(5, 4)
 
 #define AW862XX_PWR_OFF_TIME           (2) /* ms */
 #define AW862XX_PWR_ON_TIME            (8) /* ms */
@@ -157,15 +153,13 @@ static bool prv_write_register_block(uint8_t register_address, const uint8_t *da
   return rv;
 }
 
-bool prv_modify_reg(uint8_t reg_addr, uint32_t mask, uint8_t reg_data) {
+static bool prv_update_bits(uint8_t reg_addr, uint8_t mask, uint8_t val) {
   uint8_t reg_val = 0;
-  uint8_t reg_mask = (uint8_t)mask;
 
   if (!prv_read_register(reg_addr, &reg_val)) {
     return false;
   }
-  reg_val &= reg_mask;
-  reg_val |= (reg_data & (~reg_mask));
+  reg_val = (reg_val & ~mask) | (val & mask);
   return prv_write_register(reg_addr, reg_val);
 }
 
@@ -177,35 +171,34 @@ static bool prv_aw862xx_play_go(bool flag) {
   uint8_t val;
 
   if (flag) {
-    return prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_BIT_PLAYCFG4_GO_ON);
+    return prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_PLAYCFG4_GO);
   }
 
   bool standby = false;
-  bool ret = prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT_MASK,
-                            AW862XX_SYSCTRL1_RAMINIT_ON);
-  ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK,
-                        AW862XX_BIT_PLAYCFG3_PLAY_MODE_STOP);
-  ret &= prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_BIT_PLAYCFG4_GO_ON);
-  ret &= prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT_MASK,
-                        AW862XX_SYSCTRL1_RAMINIT_OFF);
+  bool ret =
+      prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, AW862XX_SYSCTRL1_RAMINIT);
+  ret &= prv_update_bits(
+      AW862XX_REG_PLAYCFG3, AW862XX_PLAYCFG3_PLAY_MODE_MASK,
+      PBL_FIELD_PREP(AW862XX_PLAYCFG3_PLAY_MODE_MASK, AW862XX_PLAYCFG3_PLAY_MODE_STOP));
+  ret &= prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_PLAYCFG4_GO);
+  ret &= prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, 0);
   for (int i = 0; i < AW862XX_STOP_STANDBY_RETRIES; ++i) {
     if (!prv_read_register(AW862XX_REG_GLBRD5, &val)) {
       ret = false;
       break;
     }
-    if ((val & AW862XX_GLBRD5_STATE_MASK) == AW862XX_GLBRD5_STATE_STANDBY) {
+    if (PBL_FIELD_GET(AW862XX_GLBRD5_STATE_MASK, val) == AW862XX_GLBRD5_STATE_STANDBY) {
       standby = true;
       break;
     }
     psleep(AW862XX_STOP_STANDBY_POLL_MS);
   }
   if (!standby) {
-    ret &= prv_modify_reg(AW862XX_REG_SYSCTRL2, AW862XX_SYSCTRL2_STANDBY_MASK,
-                          AW862XX_SYSCTRL2_STANDBY_ON);
-    ret &= prv_modify_reg(AW862XX_REG_SYSCTRL2, AW862XX_SYSCTRL2_STANDBY_MASK,
-                          AW862XX_SYSCTRL2_STANDBY_OFF);
+    ret &=
+        prv_update_bits(AW862XX_REG_SYSCTRL2, AW862XX_SYSCTRL2_STANDBY, AW862XX_SYSCTRL2_STANDBY);
+    ret &= prv_update_bits(AW862XX_REG_SYSCTRL2, AW862XX_SYSCTRL2_STANDBY, 0);
     if (ret && prv_read_register(AW862XX_REG_GLBRD5, &val)) {
-      standby = (val & AW862XX_GLBRD5_STATE_MASK) == AW862XX_GLBRD5_STATE_STANDBY;
+      standby = PBL_FIELD_GET(AW862XX_GLBRD5_STATE_MASK, val) == AW862XX_GLBRD5_STATE_STANDBY;
     }
   }
   return ret && standby;
@@ -232,21 +225,19 @@ static uint8_t prv_gain_for_strength(uint8_t strength) {
 static void prv_update_vbat(void) {
   uint8_t hi = 0;
   uint8_t lo = 0;
-  bool ret = prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT_MASK,
-                            AW862XX_SYSCTRL1_RAMINIT_ON);
-  ret &= prv_modify_reg(AW862XX_REG_DETCFG2, ~AW862XX_DETCFG2_VBAT_GO, AW862XX_DETCFG2_VBAT_GO);
+  bool ret =
+      prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, AW862XX_SYSCTRL1_RAMINIT);
+  ret &= prv_update_bits(AW862XX_REG_DETCFG2, AW862XX_DETCFG2_VBAT_GO, AW862XX_DETCFG2_VBAT_GO);
   psleep(AW862XX_VBAT_DET_TIME);
   ret &= prv_read_register(AW862XX_REG_DET_VBAT, &hi);
   ret &= prv_read_register(AW862XX_REG_DET_LO, &lo);
-  ret &= prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT_MASK,
-                        AW862XX_SYSCTRL1_RAMINIT_OFF);
+  ret &= prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, 0);
   if (!ret) {
     PBL_LOG_WRN("AW86225: VBAT detect failed");
     return;
   }
 
-  uint32_t code =
-      ((uint32_t)hi << 2) | ((lo & AW862XX_DET_LO_VBAT_MASK) >> AW862XX_DET_LO_VBAT_SHIFT);
+  uint32_t code = ((uint32_t)hi << 2) | PBL_FIELD_GET(AW862XX_DET_LO_VBAT_MASK, lo);
   uint32_t vbat_mv = code * AW862XX_VBAT_FULL_SCALE_MV / AW862XX_VBAT_CODE_MAX;
   if (vbat_mv < AW862XX_VBAT_MIN_MV) {
     vbat_mv = AW862XX_VBAT_MIN_MV;
@@ -293,32 +284,34 @@ static bool prv_load_ram_image(void) {
   };
 
   prv_aw862xx_play_go(false);
-  bool ret = prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT_MASK,
-                            AW862XX_SYSCTRL1_RAMINIT_ON);
-  ret &= prv_modify_reg(AW862XX_REG_RTPCFG1, AW862XX_RTPCFG1_ADDRH_MASK, base >> 8);
+  bool ret =
+      prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, AW862XX_SYSCTRL1_RAMINIT);
+  ret &= prv_update_bits(AW862XX_REG_RTPCFG1, AW862XX_RTPCFG1_ADDRH_MASK,
+                         PBL_FIELD_PREP(AW862XX_RTPCFG1_ADDRH_MASK, base >> 8));
   ret &= prv_write_register(AW862XX_REG_RTPCFG2, base & 0xFF);
   ret &= prv_write_register_block(AW862XX_REG_RTPCFG3, fifo, sizeof(fifo));
   ret &= prv_write_register_block(AW862XX_REG_RAMADDRH, addr, sizeof(addr));
   ret &= prv_write_register_block(AW862XX_REG_RAMDATA, s_ram_image, sizeof(s_ram_image));
-  ret &= prv_modify_reg(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT_MASK,
-                        AW862XX_SYSCTRL1_RAMINIT_OFF);
+  ret &= prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, 0);
   return ret;
 }
 
 //! GAIN_CHANGEABLE lets PLAYCFG2 writes take effect mid-playback; otherwise
 //! the gain is latched at GO.
 static bool prv_config_ram_playback(void) {
-  bool ret = prv_modify_reg(AW862XX_REG_SYSCTRL2, AW862XX_SYSCTRL2_WAVDAT_MODE_MASK,
-                            AW862XX_SYSCTRL2_RATE_12K);
-  ret &= prv_modify_reg(AW862XX_REG_SYSCTRL7, AW862XX_SYSCTRL7_GAIN_BYPASS_MASK,
-                        AW862XX_SYSCTRL7_GAIN_CHANGEABLE);
-  ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK,
-                        AW862XX_BIT_PLAYCFG3_BRK_ENABLE);
-  ret &= prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK,
-                        AW862XX_BIT_PLAYCFG3_PLAY_MODE_RAM);
+  bool ret =
+      prv_update_bits(AW862XX_REG_SYSCTRL2, AW862XX_SYSCTRL2_WAVDAT_MODE_MASK,
+                      PBL_FIELD_PREP(AW862XX_SYSCTRL2_WAVDAT_MODE_MASK, AW862XX_SYSCTRL2_RATE_12K));
+  ret &= prv_update_bits(AW862XX_REG_SYSCTRL7, AW862XX_SYSCTRL7_GAIN_CHANGEABLE,
+                         AW862XX_SYSCTRL7_GAIN_CHANGEABLE);
+  ret &= prv_update_bits(AW862XX_REG_PLAYCFG3, AW862XX_PLAYCFG3_BRK_EN, AW862XX_PLAYCFG3_BRK_EN);
+  ret &= prv_update_bits(
+      AW862XX_REG_PLAYCFG3, AW862XX_PLAYCFG3_PLAY_MODE_MASK,
+      PBL_FIELD_PREP(AW862XX_PLAYCFG3_PLAY_MODE_MASK, AW862XX_PLAYCFG3_PLAY_MODE_RAM));
   ret &= prv_write_register(AW862XX_REG_WAVCFG1, AW862XX_RAM_WAVEFORM);
   ret &= prv_write_register(AW862XX_REG_WAVCFG2, AW862XX_WAVCFG_END);
-  ret &= prv_write_register(AW862XX_REG_WAVCFG9, AW862XX_WAVCFG9_LOOP_INFINITE << 4);
+  ret &= prv_write_register(AW862XX_REG_WAVCFG9, PBL_FIELD_PREP(AW862XX_WAVCFG9_SEQ1LOOP_MASK,
+                                                                AW862XX_WAVCFG9_LOOP_INFINITE));
   ret &= prv_write_register(AW862XX_REG_PLAYCFG2, prv_gain_for_strength(s_target_strength));
   return ret;
 }
@@ -330,15 +323,15 @@ static int prv_f0_detection(void) {
   uint16_t cont_f0_reg = 0;
   bool standby = false;
 
-  prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_PLAY_MODE_MASK,
-                 AW862XX_BIT_PLAYCFG3_PLAY_MODE_CONT);
+  prv_update_bits(AW862XX_REG_PLAYCFG3, AW862XX_PLAYCFG3_PLAY_MODE_MASK,
+                  PBL_FIELD_PREP(AW862XX_PLAYCFG3_PLAY_MODE_MASK, AW862XX_PLAYCFG3_PLAY_MODE_CONT));
   prv_write_register(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EDGE_FREQ_NONE |
                                                AW862XX_CONTCFG1_SIN_MODE_COS |
                                                AW862XX_CONTCFG1_EN_F0_DET);
-  prv_modify_reg(AW862XX_REG_CONTCFG6, ~AW862XX_CONTCFG6_TRACK_EN, AW862XX_CONTCFG6_TRACK_EN);
-  prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK,
-                 AW862XX_BIT_PLAYCFG3_BRK_ENABLE);
-  prv_modify_reg(AW862XX_REG_CONTCFG6, ~AW862XX_CONTCFG7_FULL_SCALE, AW862XX_CONTCFG7_FULL_SCALE);
+  prv_update_bits(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_TRACK_EN, AW862XX_CONTCFG6_TRACK_EN);
+  prv_update_bits(AW862XX_REG_PLAYCFG3, AW862XX_PLAYCFG3_BRK_EN, AW862XX_PLAYCFG3_BRK_EN);
+  prv_update_bits(AW862XX_REG_CONTCFG6, AW862XX_CONTCFG6_DRV1_LVL_MASK,
+                  PBL_FIELD_PREP(AW862XX_CONTCFG6_DRV1_LVL_MASK, AW862XX_CONTCFG7_FULL_SCALE));
   prv_write_register(AW862XX_REG_CONTCFG7, AW862XX_CONTCFG7_FULL_SCALE);
   prv_write_register(AW862XX_REG_CONTCFG2, AW862XX_CONTCFG2_CONF_F0);
   prv_write_register(AW862XX_REG_CONTCFG8, AW862XX_CONTCFG8_F0_DET_DRV1_TIME);
@@ -347,7 +340,7 @@ static int prv_f0_detection(void) {
   prv_write_register(AW862XX_REG_CONTCFG11, AW862XX_CONTCFG11_TRACK_MARGIN);
   prv_write_register(AW862XX_REG_CONTCFG3, AW862XX_CONTCFG3_F0_DET_DRV_WIDTH);
 
-  prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_BIT_PLAYCFG4_GO_ON);
+  prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_PLAYCFG4_GO);
   psleep(AW862XX_F0_DET_STANDBY_POLL_MS * 2);
 
   for (int i = 0; i < AW862XX_F0_DET_STANDBY_RETRIES; ++i) {
@@ -355,7 +348,7 @@ static int prv_f0_detection(void) {
       break;
     }
 
-    if ((reg_val & AW862XX_GLBRD5_STATE_MASK) == AW862XX_GLBRD5_STATE_STANDBY) {
+    if (PBL_FIELD_GET(AW862XX_GLBRD5_STATE_MASK, reg_val) == AW862XX_GLBRD5_STATE_STANDBY) {
       standby = true;
       break;
     }
@@ -365,7 +358,7 @@ static int prv_f0_detection(void) {
 
   if (!standby) {
     PBL_LOG_ERR("AW86225: F0 detect did not reach standby");
-    prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_BIT_PLAYCFG4_STOP_ON);
+    prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_PLAYCFG4_STOP);
   }
 
   bool ret = prv_read_register(AW862XX_REG_CONTRD14, &reg_val);
@@ -382,14 +375,14 @@ static int prv_f0_detection(void) {
   if (!ret || f0_reg == 0) {
     PBL_LOG_ERR("AW86225: F0 readback failed (i2c=%d, det=0x%04x, cont=0x%04x)", ret, f0_reg,
                 cont_f0_reg);
-    prv_modify_reg(AW862XX_REG_CONTCFG1, ~AW862XX_CONTCFG1_EN_F0_DET, 0);
-    prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK, 0);
+    prv_update_bits(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EN_F0_DET, 0);
+    prv_update_bits(AW862XX_REG_PLAYCFG3, AW862XX_PLAYCFG3_BRK_EN, 0);
     return -1;
   }
   f0 = 384000 / f0_reg;
 
-  prv_modify_reg(AW862XX_REG_CONTCFG1, ~AW862XX_CONTCFG1_EN_F0_DET, 0);
-  prv_modify_reg(AW862XX_REG_PLAYCFG3, AW862XX_BIT_PLAYCFG3_BRK_EN_MASK, 0);
+  prv_update_bits(AW862XX_REG_CONTCFG1, AW862XX_CONTCFG1_EN_F0_DET, 0);
+  prv_update_bits(AW862XX_REG_PLAYCFG3, AW862XX_PLAYCFG3_BRK_EN, 0);
 
   return f0;
 }
@@ -412,7 +405,8 @@ void vibe_init(void) {
   prv_build_ram_image();
   ret &= prv_load_ram_image();
   if (s_trim_lra != AW862XX_TRIM_LRA_INVALID) {
-    ret &= prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra);
+    ret &= prv_update_bits(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK,
+                           PBL_FIELD_PREP(AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra));
   }
 
   if (!ret) {
@@ -490,7 +484,7 @@ status_t vibe_calibrate(void) {
   }
 
   // Measure F0 with a neutral trim.
-  prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, 0);
+  prv_update_bits(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, 0);
 
   f0 = prv_f0_detection();
   if (f0 < 0) {
@@ -540,8 +534,9 @@ status_t vibe_calibrate(void) {
     f0_cali_lra = (char)f0_cali_step + 32;
   }
 
-  s_trim_lra = f0_cali_lra & 0x3F;
-  prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra);
+  s_trim_lra = PBL_FIELD_GET(AW862XX_TRIMCFG3_TRIM_LRA_MASK, f0_cali_lra);
+  prv_update_bits(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK,
+                  PBL_FIELD_PREP(AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra));
   PBL_LOG_DBG("AW86225: F0 cali measured %d Hz, trim=0x%02x", f0, s_trim_lra);
 
   return S_SUCCESS;
@@ -567,14 +562,15 @@ void vibe_apply_calibration(uint8_t cali) {
     return;
   }
 
-  if (!prv_trim_in_range(cali & 0x3F)) {
+  if (!prv_trim_in_range(PBL_FIELD_GET(AW862XX_TRIMCFG3_TRIM_LRA_MASK, cali))) {
     PBL_LOG_WRN("AW86225: ignoring stored calibration trim=0x%02x (out of F0 tolerance)",
-                cali & 0x3F);
+                PBL_FIELD_GET(AW862XX_TRIMCFG3_TRIM_LRA_MASK, cali));
     return;
   }
 
-  s_trim_lra = cali & 0x3F;
-  if (!prv_modify_reg(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra)) {
+  s_trim_lra = PBL_FIELD_GET(AW862XX_TRIMCFG3_TRIM_LRA_MASK, cali);
+  if (!prv_update_bits(AW862XX_REG_TRIMCFG3, AW862XX_TRIMCFG3_TRIM_LRA_MASK,
+                       PBL_FIELD_PREP(AW862XX_TRIMCFG3_TRIM_LRA_MASK, s_trim_lra))) {
     PBL_LOG_ERR("AW86225: failed to apply stored calibration");
     return;
   }
