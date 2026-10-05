@@ -64,7 +64,7 @@ elseif(CONFIG_SOC_NRF52)
     nrf5/debounced_button.c
   )
   pbl_library_named(driver_mcu)
-  pbl_library_sources(stubs/mcu.c)
+  pbl_library_sources(nrf5/mcu.c)
   pbl_library_named(driver_qspi)
   pbl_library_sources(nrf5/qspi.c)
   pbl_library_named(driver_nrf5_hfxo)
