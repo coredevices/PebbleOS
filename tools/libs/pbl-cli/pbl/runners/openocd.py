@@ -44,7 +44,7 @@ class OpenOcdRunner(Runner):
         if command == "flash":
             self._run_command(
                 f"init; reset halt; program {self.cfg.hex_file} reset;",
-                expect=["Programming Finished", "Programming Finished", "shutdown"],
+                expect=["Programming Started", "Programming Finished", "shutdown"],
                 enforce_expect=True,
             )
         elif command == "run":
@@ -136,4 +136,4 @@ class OpenOcdRunner(Runner):
                 expect_match = re.search(regex, result[match_start:])
                 if not expect_match:
                     raise RunnerError(f"OpenOCD expectation '{regex}' unfulfilled")
-                match_start = expect_match.end()
+                match_start += expect_match.end()
