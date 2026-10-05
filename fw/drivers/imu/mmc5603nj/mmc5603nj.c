@@ -183,8 +183,9 @@ bool prv_mmc5603nj_check_whoami(void) {
 
 static bool prv_mmc5603nj_reset(void) {
   // Software reset
-  if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL1,
-                           MMC5603NJ_CTRL1_BANDWIDTH_6ms6 | MMC5603NJ_CTRL1_SW_RESET)) {
+  if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL1, PBL_FIELD_PREP(MMC5603NJ_CTRL1_BANDWIDTH_MASK,
+                                                               MMC5603NJ_CTRL1_BANDWIDTH_6ms6) |
+                                                    MMC5603NJ_CTRL1_SW_RESET)) {
     PBL_LOG_ERR("MMC5603NJ: Failed to reset device.");
     return false;
   }
@@ -239,9 +240,10 @@ bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
     }
 
     // Start continuous mode
-    if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, MMC5603NJ_CTRL2_AUTOSET_PRD_100 |
-                                                      MMC5603NJ_CTRL2_PRD_SET_EN |
-                                                      MMC5603NJ_CTRL2_CMM_EN)) {
+    if (!prv_mmc5603nj_write(
+            MMC5603NJ_REG_CTRL2,
+            PBL_FIELD_PREP(MMC5603NJ_CTRL2_AUTOSET_PRD_MASK, MMC5603NJ_CTRL2_AUTOSET_PRD_100) |
+                MMC5603NJ_CTRL2_PRD_SET_EN | MMC5603NJ_CTRL2_CMM_EN)) {
       PBL_LOG_ERR("MMC5603NJ: Failed to start continuous mode.");
       return false;
     }

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <pbl/util/bits.h>
+
 /**
  * @defgroup drivers_imu_mmc5603nj_registers MMC5603NJ registers
  * @ingroup drivers_imu_mmc5603nj
@@ -98,13 +100,13 @@ static const uint8_t MMC5603NJ_SET_DELAY_MS = 1;
  */
 
 /** @brief OTP memory has been read. */
-static const uint8_t MMC5603NJ_STATUS1_OTP_READ_DONE_MASK = 0x10;
+#define MMC5603NJ_STATUS1_OTP_READ_DONE_MASK PBL_BIT(4)
 /** @brief Sensor is saturated. */
-static const uint8_t MMC5603NJ_STATUS1_SAT_SENSOR_MASK = 0x20;
+#define MMC5603NJ_STATUS1_SAT_SENSOR_MASK PBL_BIT(5)
 /** @brief Magnetic measurement done. */
-static const uint8_t MMC5603NJ_STATUS1_MEAS_M_DONE_MASK = 0x40;
+#define MMC5603NJ_STATUS1_MEAS_M_DONE_MASK PBL_BIT(6)
 /** @brief Temperature measurement done. */
-static const uint8_t MMC5603NJ_STATUS1_MEAS_T_DONE_MASK = 0x80;
+#define MMC5603NJ_STATUS1_MEAS_T_DONE_MASK PBL_BIT(7)
 
 /** @} */
 
@@ -114,23 +116,23 @@ static const uint8_t MMC5603NJ_STATUS1_MEAS_T_DONE_MASK = 0x80;
  */
 
 /** @brief Take a single magnetic field measurement. */
-static const uint8_t MMC5603NJ_CTRL0_TAKE_MEAS_M = 0x01;
+#define MMC5603NJ_CTRL0_TAKE_MEAS_M PBL_BIT(0)
 /** @brief Take a single temperature measurement. */
-static const uint8_t MMC5603NJ_CTRL0_TAKE_MEAS_T = 0x02;
+#define MMC5603NJ_CTRL0_TAKE_MEAS_T PBL_BIT(1)
 /** @brief Perform a single set operation. */
-static const uint8_t MMC5603NJ_CTRL0_DO_SET = 0x08;
+#define MMC5603NJ_CTRL0_DO_SET PBL_BIT(3)
 /** @brief Perform a single reset operation. */
-static const uint8_t MMC5603NJ_CTRL0_DO_RESET = 0x10;
+#define MMC5603NJ_CTRL0_DO_RESET PBL_BIT(4)
 /** @brief Enable automatic set/reset. */
-static const uint8_t MMC5603NJ_CTRL0_AUTO_SR_EN = 0x20;
+#define MMC5603NJ_CTRL0_AUTO_SR_EN PBL_BIT(5)
 /** @brief Perform a single self-test. */
-static const uint8_t MMC5603NJ_CTRL0_AUTO_ST_EN = 0x40;
+#define MMC5603NJ_CTRL0_AUTO_ST_EN PBL_BIT(6)
 /**
  * @brief Compute the measurement period for the ODR.
  *
  * Must be set before continuous-mode measurements are started.
  */
-static const uint8_t MMC5603NJ_CTRL0_CMM_FREQ_EN = 0x80;
+#define MMC5603NJ_CTRL0_CMM_FREQ_EN PBL_BIT(7)
 
 /** @} */
 
@@ -141,30 +143,32 @@ static const uint8_t MMC5603NJ_CTRL0_CMM_FREQ_EN = 0x80;
  * @{
  */
 
+/** @brief Bandwidth field. */
+#define MMC5603NJ_CTRL1_BANDWIDTH_MASK PBL_GENMASK(1, 0)
 /** @brief Bandwidth 0: 6.6 ms measurement. */
-static const uint8_t MMC5603NJ_CTRL1_BANDWIDTH_6ms6 = 0x00;
+#define MMC5603NJ_CTRL1_BANDWIDTH_6ms6 0U
 /** @brief Bandwidth 1: 3.5 ms measurement. */
-static const uint8_t MMC5603NJ_CTRL1_BANDWIDTH_3ms5 = 0x01;
+#define MMC5603NJ_CTRL1_BANDWIDTH_3ms5 1U
 /** @brief Bandwidth 2: 2.0 ms measurement. */
-static const uint8_t MMC5603NJ_CTRL1_BANDWIDTH_2ms = 0x02;
+#define MMC5603NJ_CTRL1_BANDWIDTH_2ms 2U
 /** @brief Bandwidth 3: 1.2 ms measurement. */
-static const uint8_t MMC5603NJ_CTRL1_BANDWIDTH_1ms2 = 0x03;
+#define MMC5603NJ_CTRL1_BANDWIDTH_1ms2 3U
 /** @brief Disable the X channel, shortening the measurement. */
-static const uint8_t MMC5603NJ_CTRL1_X_INHIBIT = 0x04;
+#define MMC5603NJ_CTRL1_X_INHIBIT PBL_BIT(2)
 /** @brief Disable the Y channel, shortening the measurement. */
-static const uint8_t MMC5603NJ_CTRL1_Y_INHIBIT = 0x08;
+#define MMC5603NJ_CTRL1_Y_INHIBIT PBL_BIT(3)
 /** @brief Disable the Z channel, shortening the measurement. */
-static const uint8_t MMC5603NJ_CTRL1_Z_INHIBIT = 0x10;
+#define MMC5603NJ_CTRL1_Z_INHIBIT PBL_BIT(4)
 /**
  * @brief Drive a DC current through the self-test coil, offsetting the measured field.
  *
  * Used to check whether the sensor is saturated.
  */
-static const uint8_t MMC5603NJ_CTRL1_ST_ENP = 0x20;
+#define MMC5603NJ_CTRL1_ST_ENP PBL_BIT(5)
 /** @brief As @ref MMC5603NJ_CTRL1_ST_ENP, in the opposite direction. */
-static const uint8_t MMC5603NJ_CTRL1_ST_ENM = 0x40;
+#define MMC5603NJ_CTRL1_ST_ENM PBL_BIT(6)
 /** @brief Software reset: clear all registers and reread OTP. */
-static const uint8_t MMC5603NJ_CTRL1_SW_RESET = 0x80;
+#define MMC5603NJ_CTRL1_SW_RESET PBL_BIT(7)
 
 /** @} */
 
@@ -175,32 +179,34 @@ static const uint8_t MMC5603NJ_CTRL1_SW_RESET = 0x80;
  * @{
  */
 
+/** @brief Automatic set/reset period field. */
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_MASK PBL_GENMASK(2, 0)
 /** @brief Automatic set/reset every measurement. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_1 = 0x00;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_1 0U
 /** @brief Automatic set/reset every 25 measurements. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_25 = 0x01;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_25 1U
 /** @brief Automatic set/reset every 75 measurements. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_75 = 0x02;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_75 2U
 /** @brief Automatic set/reset every 100 measurements. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_100 = 0x03;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_100 3U
 /** @brief Automatic set/reset every 250 measurements. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_250 = 0x04;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_250 4U
 /** @brief Automatic set/reset every 500 measurements. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_500 = 0x05;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_500 5U
 /** @brief Automatic set/reset every 1000 measurements. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_1000 = 0x06;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_1000 6U
 /** @brief Automatic set/reset every 2000 measurements. */
-static const uint8_t MMC5603NJ_CTRL2_AUTOSET_PRD_2000 = 0x07;
+#define MMC5603NJ_CTRL2_AUTOSET_PRD_2000 7U
 /** @brief Enable periodic automatic set (recommended). */
-static const uint8_t MMC5603NJ_CTRL2_PRD_SET_EN = 0x08;
+#define MMC5603NJ_CTRL2_PRD_SET_EN PBL_BIT(3)
 /**
  * @brief Enable continuous measurement mode.
  *
  * Requires the ODR and @ref MMC5603NJ_CTRL0_CMM_FREQ_EN to be set.
  */
-static const uint8_t MMC5603NJ_CTRL2_CMM_EN = 0x10;
+#define MMC5603NJ_CTRL2_CMM_EN PBL_BIT(4)
 /** @brief High power mode, allowing an ODR up to 1000 Hz. */
-static const uint8_t MMC5603NJ_CTRL2_HPOWER = 0x80;
+#define MMC5603NJ_CTRL2_HPOWER PBL_BIT(7)
 
 /** @} */
 
