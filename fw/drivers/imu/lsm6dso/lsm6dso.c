@@ -15,6 +15,7 @@
 #include "kernel/util/delay.h"
 #include "kernel/util/sleep.h"
 #include "pbl/util/math.h"
+#include <pbl/util/bits.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
@@ -58,13 +59,13 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LSM6DSO_SHAKE_STUCK_PASSES_MAX 3U
 
 // Scale range for 16-bit two's complement samples
-#define LSM6DSO_S16_SCALE_RANGE (1U << (16U - 1U))
+#define LSM6DSO_S16_SCALE_RANGE PBL_BIT(15)
 
 // FIFO tag identifying an accelerometer (XL) sample
 #define LSM6DSO_FIFO_TAG_XL_NC 0x02U
 
 // Maximum FIFO watermark (WTM[8:0] is 9 bits)
-#define LSM6DSO_FIFO_WTM_MAX 511U
+#define LSM6DSO_FIFO_WTM_MAX PBL_BIT_MASK(9)
 
 // Registers
 #define LSM6DSO_FIFO_CTRL1        0x07U
@@ -93,43 +94,46 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LSM6DSO_WHO_AM_I_VAL 0x6CU
 
 // CTRL1_XL fields
-#define LSM6DSO_CTRL1_XL_ODR_OFF   (0x0U << 4U)
-#define LSM6DSO_CTRL1_XL_ODR_12HZ5 (0x1U << 4U)
-#define LSM6DSO_CTRL1_XL_ODR_26HZ  (0x2U << 4U)
-#define LSM6DSO_CTRL1_XL_ODR_52HZ  (0x3U << 4U)
-#define LSM6DSO_CTRL1_XL_ODR_104HZ (0x4U << 4U)
-#define LSM6DSO_CTRL1_XL_ODR_208HZ (0x5U << 4U)
-#define LSM6DSO_CTRL1_XL_FS_2G     (0x0U << 2U)
-#define LSM6DSO_CTRL1_XL_FS_16G    (0x1U << 2U)
-#define LSM6DSO_CTRL1_XL_FS_4G     (0x2U << 2U)
-#define LSM6DSO_CTRL1_XL_FS_8G     (0x3U << 2U)
+#define LSM6DSO_CTRL1_XL_ODR_MASK  PBL_GENMASK(7, 4)
+#define LSM6DSO_CTRL1_XL_ODR_OFF   0x0U
+#define LSM6DSO_CTRL1_XL_ODR_12HZ5 0x1U
+#define LSM6DSO_CTRL1_XL_ODR_26HZ  0x2U
+#define LSM6DSO_CTRL1_XL_ODR_52HZ  0x3U
+#define LSM6DSO_CTRL1_XL_ODR_104HZ 0x4U
+#define LSM6DSO_CTRL1_XL_ODR_208HZ 0x5U
+#define LSM6DSO_CTRL1_XL_FS_MASK   PBL_GENMASK(3, 2)
+#define LSM6DSO_CTRL1_XL_FS_2G     0x0U
+#define LSM6DSO_CTRL1_XL_FS_16G    0x1U
+#define LSM6DSO_CTRL1_XL_FS_4G     0x2U
+#define LSM6DSO_CTRL1_XL_FS_8G     0x3U
 
 // CTRL3_C fields
-#define LSM6DSO_CTRL3_C_SW_RESET (1U << 0U)
-#define LSM6DSO_CTRL3_C_IF_INC   (1U << 2U)
-#define LSM6DSO_CTRL3_C_BDU      (1U << 6U)
+#define LSM6DSO_CTRL3_C_SW_RESET PBL_BIT(0)
+#define LSM6DSO_CTRL3_C_IF_INC   PBL_BIT(2)
+#define LSM6DSO_CTRL3_C_BDU      PBL_BIT(6)
 
 // CTRL5_C fields
-#define LSM6DSO_CTRL5_C_XL_ULP_EN (1U << 7U)
+#define LSM6DSO_CTRL5_C_XL_ULP_EN PBL_BIT(7)
 
 // CTRL9_XL fields
-#define LSM6DSO_CTRL9_XL_I3C_DISABLE (1U << 1U)
+#define LSM6DSO_CTRL9_XL_I3C_DISABLE PBL_BIT(1)
 
 // INT1_CTRL fields
-#define LSM6DSO_INT1_CTRL_DRDY_XL  (1U << 0U)
-#define LSM6DSO_INT1_CTRL_FIFO_TH  (1U << 3U)
-#define LSM6DSO_INT1_CTRL_FIFO_OVR (1U << 4U)
+#define LSM6DSO_INT1_CTRL_DRDY_XL  PBL_BIT(0)
+#define LSM6DSO_INT1_CTRL_FIFO_TH  PBL_BIT(3)
+#define LSM6DSO_INT1_CTRL_FIFO_OVR PBL_BIT(4)
 
 // ALL_INT_SRC fields
-#define LSM6DSO_ALL_INT_SRC_WU_IA (1U << 1U)
+#define LSM6DSO_ALL_INT_SRC_WU_IA PBL_BIT(1)
 
 // STATUS_REG fields
-#define LSM6DSO_STATUS_REG_XLDA (1U << 0U)
+#define LSM6DSO_STATUS_REG_XLDA PBL_BIT(0)
 
 // FIFO_CTRL2 fields
-#define LSM6DSO_FIFO_CTRL2_WTM8 (1U << 0U)
+#define LSM6DSO_FIFO_CTRL2_WTM8 PBL_BIT(0)
 
 // FIFO_CTRL3 fields
+#define LSM6DSO_FIFO_CTRL3_BDR_XL_MASK  PBL_GENMASK(3, 0)
 #define LSM6DSO_FIFO_CTRL3_BDR_XL_12HZ5 0x1U
 #define LSM6DSO_FIFO_CTRL3_BDR_XL_26HZ  0x2U
 #define LSM6DSO_FIFO_CTRL3_BDR_XL_52HZ  0x3U
@@ -137,35 +141,30 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 #define LSM6DSO_FIFO_CTRL3_BDR_XL_208HZ 0x5U
 
 // FIFO_CTRL4 fields
+#define LSM6DSO_FIFO_CTRL4_MODE_MASK   PBL_GENMASK(2, 0)
 #define LSM6DSO_FIFO_CTRL4_MODE_BYPASS 0x0U
 #define LSM6DSO_FIFO_CTRL4_MODE_STREAM 0x6U
 
 // FIFO_STATUS fields
-#define LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK 0x03U
-#define LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA  (1U << 6U)
-#define LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA  (1U << 7U)
+#define LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK PBL_GENMASK(1, 0)
+#define LSM6DSO_FIFO_STATUS2_FIFO_OVR_IA  PBL_BIT(6)
+#define LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA  PBL_BIT(7)
 
 // TAP_CFG0 fields (slope_fds left at 0 to select the slope filter for wake-up)
-#define LSM6DSO_TAP_CFG0_LIR             (1U << 0U)
-#define LSM6DSO_TAP_CFG0_INT_CLR_ON_READ (1U << 6U)
+#define LSM6DSO_TAP_CFG0_LIR             PBL_BIT(0)
+#define LSM6DSO_TAP_CFG0_INT_CLR_ON_READ PBL_BIT(6)
 
 // TAP_CFG2 fields
-#define LSM6DSO_TAP_CFG2_INTERRUPTS_ENABLE (1U << 7U)
+#define LSM6DSO_TAP_CFG2_INTERRUPTS_ENABLE PBL_BIT(7)
 
 // WAKE_UP_THS fields
-#define LSM6DSO_WAKE_UP_THS_WK_THS_POS  0U
-#define LSM6DSO_WAKE_UP_THS_WK_THS_MASK 0x3FU
-#define LSM6DSO_WAKE_UP_THS_WK_THS(val) \
-  (((val) << LSM6DSO_WAKE_UP_THS_WK_THS_POS) & LSM6DSO_WAKE_UP_THS_WK_THS_MASK)
+#define LSM6DSO_WAKE_UP_THS_WK_THS_MASK PBL_GENMASK(5, 0)
 
 // WAKE_UP_DUR fields
-#define LSM6DSO_WAKE_UP_DUR_WAKE_DUR_POS  5U
-#define LSM6DSO_WAKE_UP_DUR_WAKE_DUR_MASK 0x60U
-#define LSM6DSO_WAKE_UP_DUR_WAKE_DUR(val) \
-  (((val) << LSM6DSO_WAKE_UP_DUR_WAKE_DUR_POS) & LSM6DSO_WAKE_UP_DUR_WAKE_DUR_MASK)
+#define LSM6DSO_WAKE_UP_DUR_WAKE_DUR_MASK PBL_GENMASK(6, 5)
 
 // MD1_CFG fields
-#define LSM6DSO_MD1_CFG_INT1_WU (1U << 5U)
+#define LSM6DSO_MD1_CFG_INT1_WU PBL_BIT(5)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -206,15 +205,15 @@ static bool prv_lsm6dso_read_fifo(uint16_t samples) {
 static uint8_t prv_fs_bits(void) {
   switch (CONFIG_ACCEL_LSM6DSO_SCALE_MG) {
     case 2000U:
-      return LSM6DSO_CTRL1_XL_FS_2G;
+      return PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_FS_MASK, LSM6DSO_CTRL1_XL_FS_2G);
     case 4000U:
-      return LSM6DSO_CTRL1_XL_FS_4G;
+      return PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_FS_MASK, LSM6DSO_CTRL1_XL_FS_4G);
     case 8000U:
-      return LSM6DSO_CTRL1_XL_FS_8G;
+      return PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_FS_MASK, LSM6DSO_CTRL1_XL_FS_8G);
     case 16000U:
-      return LSM6DSO_CTRL1_XL_FS_16G;
+      return PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_FS_MASK, LSM6DSO_CTRL1_XL_FS_16G);
     default:
-      return LSM6DSO_CTRL1_XL_FS_2G;
+      return PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_FS_MASK, LSM6DSO_CTRL1_XL_FS_2G);
   }
 }
 
@@ -303,7 +302,7 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
   uint16_t wtm;
 
   // Bypass mode to flush the FIFO
-  val = LSM6DSO_FIFO_CTRL4_MODE_BYPASS;
+  val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL4_MODE_MASK, LSM6DSO_FIFO_CTRL4_MODE_BYPASS);
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL4, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write FIFO_CTRL4 register");
@@ -313,14 +312,14 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
   // Watermark threshold WTM[8:0]: low 8 bits in FIFO_CTRL1, MSB in FIFO_CTRL2
   wtm = MIN(num_samples, LSM6DSO_FIFO_WTM_MAX);
 
-  val = (uint8_t)(wtm & 0xFFU);
+  val = PBL_FIELD_GET(PBL_GENMASK(7, 0), wtm);
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL1, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write FIFO_CTRL1 register");
     return ret;
   }
 
-  val = (wtm >> 8U) & LSM6DSO_FIFO_CTRL2_WTM8;
+  val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL2_WTM8, PBL_FIELD_GET(PBL_BIT(8), wtm));
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL2, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write FIFO_CTRL2 register");
@@ -328,7 +327,8 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
   }
 
   // Accelerometer batch data rate (gyro left not batched)
-  val = prv_get_bdr(LSM6DSO->state->sampling_interval_us);
+  val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL3_BDR_XL_MASK,
+                       prv_get_bdr(LSM6DSO->state->sampling_interval_us));
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL3, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write FIFO_CTRL3 register");
@@ -336,7 +336,7 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
   }
 
   // Continuous (stream) mode
-  val = LSM6DSO_FIFO_CTRL4_MODE_STREAM;
+  val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL4_MODE_MASK, LSM6DSO_FIFO_CTRL4_MODE_STREAM);
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL4, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write FIFO_CTRL4 register");
@@ -358,7 +358,7 @@ static void prv_lsm6dso_drain_fifo(void) {
     return;
   }
 
-  samples = (((uint16_t)(status[1] & LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK)) << 8U) | status[0];
+  samples = (PBL_FIELD_GET(LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK, status[1]) << 8U) | status[0];
   samples = MIN(samples, LSM6DSO_FIFO_SIZE);
   if (samples == 0U) {
     return;
@@ -412,7 +412,7 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
       fifo_overrun = true;
     } else if ((fifo_status[1] & LSM6DSO_FIFO_STATUS2_FIFO_WTM_IA) != 0U) {
       samples =
-          (((uint16_t)(fifo_status[1] & LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK)) << 8U) | fifo_status[0];
+          (PBL_FIELD_GET(LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK, fifo_status[1]) << 8U) | fifo_status[0];
       if (samples > LSM6DSO_FIFO_SIZE) {
         samples = LSM6DSO_FIFO_SIZE;
       }
@@ -527,6 +527,7 @@ static void prv_lsm6dso_int1_irq_handler(void) {
 }
 
 static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detection_enabled) {
+  uint8_t odr;
   uint8_t val;
   bool ret;
 
@@ -536,26 +537,26 @@ static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detectio
   }
 
   if (sampling_interval_us == 0U) {
-    val = LSM6DSO_CTRL1_XL_ODR_OFF;
+    odr = LSM6DSO_CTRL1_XL_ODR_OFF;
     sampling_interval_us = 0UL;
   } else if (sampling_interval_us >= 80000UL) {
-    val = LSM6DSO_CTRL1_XL_ODR_12HZ5;
+    odr = LSM6DSO_CTRL1_XL_ODR_12HZ5;
     sampling_interval_us = 80000UL;
   } else if (sampling_interval_us >= 38461UL) {
-    val = LSM6DSO_CTRL1_XL_ODR_26HZ;
+    odr = LSM6DSO_CTRL1_XL_ODR_26HZ;
     sampling_interval_us = 38461UL;
   } else if (sampling_interval_us >= 19230UL) {
-    val = LSM6DSO_CTRL1_XL_ODR_52HZ;
+    odr = LSM6DSO_CTRL1_XL_ODR_52HZ;
     sampling_interval_us = 19230UL;
   } else if (sampling_interval_us >= 9615UL) {
-    val = LSM6DSO_CTRL1_XL_ODR_104HZ;
+    odr = LSM6DSO_CTRL1_XL_ODR_104HZ;
     sampling_interval_us = 9615UL;
   } else {
-    val = LSM6DSO_CTRL1_XL_ODR_208HZ;
+    odr = LSM6DSO_CTRL1_XL_ODR_208HZ;
     sampling_interval_us = 4807UL;
   }
 
-  val |= prv_fs_bits();
+  val = PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_ODR_MASK, odr) | prv_fs_bits();
 
   PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)", sampling_interval_us / 1000UL,
               sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
@@ -566,7 +567,7 @@ static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detectio
   }
 
   // Allow the accelerometer to stabilize after an ODR/power-mode change
-  if (val != (LSM6DSO_CTRL1_XL_ODR_OFF | prv_fs_bits())) {
+  if (odr != LSM6DSO_CTRL1_XL_ODR_OFF) {
     psleep(10);
   }
 
@@ -802,7 +803,7 @@ void accel_init(void) {
   }
 
   // Configure scale (ODR off until sampling is requested)
-  val = LSM6DSO_CTRL1_XL_ODR_OFF | prv_fs_bits();
+  val = PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_ODR_MASK, LSM6DSO_CTRL1_XL_ODR_OFF) | prv_fs_bits();
   ret = prv_lsm6dso_write(LSM6DSO_CTRL1_XL, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL1_XL register");
@@ -818,14 +819,14 @@ void accel_init(void) {
   }
 
   // Configure wake-up threshold defaults
-  val = LSM6DSO_WAKE_UP_DUR_WAKE_DUR(CONFIG_ACCEL_LSM6DSO_WK_DUR_DEFAULT);
+  val = PBL_FIELD_PREP(LSM6DSO_WAKE_UP_DUR_WAKE_DUR_MASK, CONFIG_ACCEL_LSM6DSO_WK_DUR_DEFAULT);
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_DUR, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_DUR register");
     return;
   }
 
-  val = LSM6DSO_WAKE_UP_THS_WK_THS(CONFIG_ACCEL_LSM6DSO_WK_THS_DEFAULT);
+  val = PBL_FIELD_PREP(LSM6DSO_WAKE_UP_THS_WK_THS_MASK, CONFIG_ACCEL_LSM6DSO_WK_THS_DEFAULT);
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
@@ -901,7 +902,7 @@ void accel_set_num_samples(uint32_t num_samples) {
 
   if (num_samples == 0U) {
     // Bypass FIFO (disable)
-    val = LSM6DSO_FIFO_CTRL4_MODE_BYPASS;
+    val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL4_MODE_MASK, LSM6DSO_FIFO_CTRL4_MODE_BYPASS);
     if (!prv_lsm6dso_write(LSM6DSO_FIFO_CTRL4, &val, 1)) {
       PBL_LOG_ERR("Could not write FIFO_CTRL4 register");
     }
@@ -971,7 +972,7 @@ int accel_peek(AccelDriverSample *data) {
   }
 
   // Enable continuous conversion at 52Hz to obtain a single measurement
-  ctrl1 = LSM6DSO_CTRL1_XL_ODR_52HZ | prv_fs_bits();
+  ctrl1 = PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_ODR_MASK, LSM6DSO_CTRL1_XL_ODR_52HZ) | prv_fs_bits();
   ret = prv_lsm6dso_write(LSM6DSO_CTRL1_XL, &ctrl1, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL1_XL register");
@@ -1068,8 +1069,9 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
     return;
   }
 
-  val = LSM6DSO_WAKE_UP_THS_WK_THS(sensitivity_high ? CONFIG_ACCEL_LSM6DSO_WK_THS_MIN
-                                                    : LSM6DSO->state->wk_ths_curr);
+  val = PBL_FIELD_PREP(LSM6DSO_WAKE_UP_THS_WK_THS_MASK, sensitivity_high
+                                                            ? CONFIG_ACCEL_LSM6DSO_WK_THS_MIN
+                                                            : LSM6DSO->state->wk_ths_curr);
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
@@ -1093,7 +1095,7 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
   raw = CONFIG_ACCEL_LSM6DSO_WK_THS_MAX -
         (percent * (CONFIG_ACCEL_LSM6DSO_WK_THS_MAX - CONFIG_ACCEL_LSM6DSO_WK_THS_MIN)) / 100U;
 
-  val = LSM6DSO_WAKE_UP_THS_WK_THS(raw);
+  val = PBL_FIELD_PREP(LSM6DSO_WAKE_UP_THS_WK_THS_MASK, raw);
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
