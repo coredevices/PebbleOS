@@ -249,16 +249,24 @@ const LedControllerAW9364E AW9364E = {
 };
 
 static I2CBusHalState s_i2c_bus_hal_state_1 = {
-  .hdl = {
-    .Instance = I2C1,
-    .Init =
-        {
-          .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-          .ClockSpeed = 400000,
-          .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-        },
-    .Mode = HAL_I2C_MODE_MASTER,
-    .core = CORE_ID_HCPU,
+  .hdl =
+      {
+        .Instance = I2C1,
+        .Init =
+            {
+              .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+              .ClockSpeed = 400000,
+              .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+      },
+  .hdma_rx = {
+    .Instance = DMA1_Channel6,
+    .Init = {
+      .Request = DMA_REQUEST_22,
+      .IrqPrio = 5,
+    },
   },
 };
 
@@ -278,6 +286,7 @@ static struct I2CBusHal s_i2c_bus_hal_1 = {
       },
   .module = RCC_MOD_I2C1,
   .irqn = I2C1_IRQn,
+  .dma_irqn = DMAC1_CH6_IRQn,
 };
 
 static I2CBusState s_i2c_bus_state_1;
@@ -291,6 +300,7 @@ static I2CBus s_i2c_bus_1 = {
 I2CBus *const I2C1_BUS = &s_i2c_bus_1;
 
 PBL_IRQ_CONNECT(I2C1, 5, i2c_irq_handler, I2C1_BUS, 0);
+PBL_IRQ_CONNECT(DMAC1_CH6, 5, i2c_dma_irq_handler, I2C1_BUS, 0);
 
 static LIS2DW12State s_lis2dw12_state;
 
