@@ -5,6 +5,7 @@
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
 #include "system/passert.h"
 
 #include <inttypes.h>
@@ -14,18 +15,20 @@ PBL_LOG_MODULE_DEFINE(driver_ambient_opt3001, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 static uint32_t s_sensor_light_dark_threshold;
 static bool s_initialized = false;
 
-#define OPT3001_RESULT                  0x00
-#define OPT3001_RESULT_EXPONENT_SHIFT   12
-#define OPT3001_RESULT_MANTISSA_MASK    0x0FFF
-#define OPT3001_CONFIG                  0x01
-#define OPT3001_CONFIG_RANGE_AUTO       0xC000
-#define OPT3001_CONFIG_CONVTIME_100MSEC 0x0000
-#define OPT3001_CONFIG_MODE_CONTINUOUS  0x0600
-#define OPT3001_CONFIG_MODE_SINGLESHOT  0x0200
-#define OPT3001_MFGID                   0x7E
-#define OPT3001_MFGID_VAL               0x5449 /* "TI" */
-#define OPT3001_DEVID                   0x7F
-#define OPT3001_DEVID_VAL               0x3001
+#define OPT3001_RESULT                 0x00
+#define OPT3001_RESULT_EXPONENT_MASK   PBL_GENMASK(15, 12)
+#define OPT3001_RESULT_MANTISSA_MASK   PBL_GENMASK(11, 0)
+#define OPT3001_CONFIG                 0x01
+#define OPT3001_CONFIG_RANGE_MASK      PBL_GENMASK(15, 12)
+#define OPT3001_CONFIG_RANGE_AUTO      0xCU
+#define OPT3001_CONFIG_CONVTIME_800MS  PBL_BIT(11)
+#define OPT3001_CONFIG_MODE_MASK       PBL_GENMASK(10, 9)
+#define OPT3001_CONFIG_MODE_SINGLESHOT 0x1U
+#define OPT3001_CONFIG_MODE_CONTINUOUS 0x3U
+#define OPT3001_MFGID                  0x7E
+#define OPT3001_MFGID_VAL              0x5449 /* "TI" */
+#define OPT3001_DEVID                  0x7F
+#define OPT3001_DEVID_VAL              0x3001
 
 static bool prv_read_register(uint8_t register_address, uint16_t *result) {
   uint8_t buf[2];
@@ -42,6 +45,13 @@ static bool prv_write_register(uint8_t register_address, uint16_t datum) {
   bool rv = i2c_write_block(I2C_OPT3001, 3, block);
   i2c_release(I2C_OPT3001);
   return rv;
+}
+
+static bool prv_configure(uint8_t mode) {
+  return prv_write_register(OPT3001_CONFIG,
+                            PBL_FIELD_PREP(OPT3001_CONFIG_RANGE_MASK, OPT3001_CONFIG_RANGE_AUTO) |
+                                PBL_FIELD_PREP(OPT3001_CONFIG_CONVTIME_800MS, 0) |
+                                PBL_FIELD_PREP(OPT3001_CONFIG_MODE_MASK, mode));
 }
 
 static uint32_t prv_get_default_ambient_light_dark_threshold(void) {
@@ -65,8 +75,7 @@ void ambient_light_init(void) {
   }
 
   if (BOARD_CONFIG.als_always_on) {
-    prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC |
-                                           OPT3001_CONFIG_MODE_CONTINUOUS);
+    prv_configure(OPT3001_CONFIG_MODE_CONTINUOUS);
   }
 
   ambient_light_common_init();
@@ -85,14 +94,13 @@ uint32_t ambient_light_get_light_level(void) {
   }
 
   if (!BOARD_CONFIG.als_always_on) {
-    prv_write_register(OPT3001_CONFIG, OPT3001_CONFIG_RANGE_AUTO | OPT3001_CONFIG_CONVTIME_100MSEC |
-                                           OPT3001_CONFIG_MODE_SINGLESHOT);
+    prv_configure(OPT3001_CONFIG_MODE_SINGLESHOT);
   }
 
   uint16_t result;
   prv_read_register(OPT3001_RESULT, &result);
-  uint32_t exp = result >> OPT3001_RESULT_EXPONENT_SHIFT;
-  uint32_t mant = result & OPT3001_RESULT_MANTISSA_MASK;
+  uint32_t exp = PBL_FIELD_GET(OPT3001_RESULT_EXPONENT_MASK, result);
+  uint32_t mant = PBL_FIELD_GET(OPT3001_RESULT_MANTISSA_MASK, result);
 
   uint32_t level = mant << exp;
 
