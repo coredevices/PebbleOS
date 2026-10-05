@@ -17,6 +17,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
+#include <pbl/util/bits.h>
 
 #include "cst816_fw.h"
 
@@ -33,6 +34,8 @@ PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 #define CST816_FW_VERSION_REG       0xA9
 #define CST816_TOUCH_DATA_REG       0x02
 #define CST816_TOUCH_DATA_SIZE      5
+#define CST816_FINGER_NUM_MASK      PBL_GENMASK(3, 0)
+#define CST816_POS_H_MASK           PBL_GENMASK(3, 0)
 #define CST816_GESTURE_ID           0x01
 #define CST816_GESTURE_NONE         0x00
 #define CST816_GESTURE_RIGHT        0x01
@@ -327,10 +330,10 @@ static void prv_process_pending_messages(void *context) {
     return;
   }
 
-  uint8_t press = data[0] & 0x0F;
+  uint8_t press = PBL_FIELD_GET(CST816_FINGER_NUM_MASK, data[0]);
   GPoint point = {
-    .x = (((uint16_t)(data[1] & 0x0F)) << 8) | data[2],
-    .y = (((uint16_t)(data[3] & 0X0F)) << 8) | data[4],
+    .x = (PBL_FIELD_GET(CST816_POS_H_MASK, data[1]) << 8) | data[2],
+    .y = (PBL_FIELD_GET(CST816_POS_H_MASK, data[3]) << 8) | data[4],
   };
 
   if (CST816->invert_x_axis) {
