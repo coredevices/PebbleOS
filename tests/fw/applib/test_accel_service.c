@@ -155,6 +155,22 @@ static void prv_raw_data_handler(AccelRawData *data, uint32_t num_samples, uint6
   s_raw_data_handler_calls++;
 }
 
+static void prv_unsubscribing_handler(AccelData *data, uint32_t num_samples) {
+  s_data_handler_calls++;
+  accel_data_service_unsubscribe();
+}
+
+static void prv_resubscribing_handler(AccelData *data, uint32_t num_samples) {
+  s_data_handler_calls++;
+  accel_data_service_unsubscribe();
+  accel_data_service_subscribe(1, prv_data_handler);
+}
+
+static void prv_replacing_handler(AccelData *data, uint32_t num_samples) {
+  s_data_handler_calls++;
+  accel_data_service_subscribe(1, prv_data_handler);
+}
+
 void test_accel_service__initialize(void) {
   accel_service_state_init(&s_app_state);
   accel_service_state_init(&s_worker_state);
@@ -326,4 +342,53 @@ void test_accel_service__subscribing_again_resets_the_sampling_rate(void) {
   prv_deliver(2);
 
   cl_assert_equal_i(s_timestamps[1] - s_timestamps[0], 40);
+}
+
+// Changing the subscription inside the data handler
+//////////////////////////////////////////
+
+//! A handler that unsubscribes leaves nothing to consume. Consuming for the subscription it just
+//! dropped gets the app killed.
+void test_accel_service__unsubscribing_in_the_handler_skips_the_consume(void) {
+  accel_data_service_subscribe(1, prv_unsubscribing_handler);
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_data_handler_calls, 1);
+  cl_assert_equal_i(s_consume_calls, 0);
+}
+
+//! A handler that unsubscribes and subscribes again has a new, empty subscription, which then
+//! delivers normally. It can land at the old one's address, so the check can't compare pointers.
+void test_accel_service__unsubscribing_and_subscribing_in_the_handler_skips_the_consume(void) {
+  accel_data_service_subscribe(1, prv_resubscribing_handler);
+  prv_deliver(1);
+  cl_assert_equal_i(s_consume_calls, 0);
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_data_handler_calls, 2);
+  cl_assert_equal_i(s_consume_calls, 1);
+}
+
+//! A handler that subscribes again without unsubscribing replaces its subscription the same way
+void test_accel_service__subscribing_again_in_the_handler_skips_the_consume(void) {
+  accel_data_service_subscribe(1, prv_replacing_handler);
+  prv_deliver(1);
+  cl_assert_equal_i(s_consume_calls, 0);
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_data_handler_calls, 2);
+  cl_assert_equal_i(s_consume_calls, 1);
+}
+
+//! A handler that keeps its subscription still consumes what it was given
+void test_accel_service__a_normal_handler_consumes_its_samples(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_data_handler_calls, 1);
+  cl_assert_equal_i(s_consume_calls, 1);
 }

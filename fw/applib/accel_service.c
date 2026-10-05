@@ -93,6 +93,7 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
                     state->raw_data[i].z);
   }
 
+  state->subscription_changed = false;
   if (state->raw_data_handler_deprecated) {
     state->raw_data_handler_deprecated(state->raw_data, num_samples);
 
@@ -112,6 +113,12 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
       timestamp_ms += time_interval_ms;
     }
     state->data_handler(data, num_samples);
+  }
+
+  // The handler unsubscribed or subscribed again, so these samples belong to a subscription
+  // that's gone and there's nothing left to consume.
+  if (state->subscription_changed) {
+    return 0;
   }
 
   // Tell accel_manager that it can put more data in now
@@ -166,6 +173,7 @@ static void prv_shared_subscribe(AccelServiceState *state, AccelSamplingRate sam
   AccelManagerState *old_manager_state = state->manager_state;
   state->manager_state =
       sys_accel_manager_data_subscribe(sampling_rate, prv_do_data_handle, state, handler_task);
+  state->subscription_changed = true;
   state->sampling_rate = sampling_rate;
   if (old_manager_state && sys_accel_manager_data_unsubscribe(old_manager_state)) {
     // A data event for the old subscription still points at this state, as on unsubscribe
@@ -375,6 +383,7 @@ void accel_session_data_unsubscribe(AccelServiceState *state) {
 
   applib_free(state->raw_data);
   state->manager_state = NULL;
+  state->subscription_changed = true;
   state->raw_data = NULL;
   state->data_handler = NULL;
   state->raw_data_handler = NULL;
