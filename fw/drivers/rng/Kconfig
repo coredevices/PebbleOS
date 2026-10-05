@@ -8,6 +8,15 @@ menuconfig RNG
 
 if RNG
 
+config RNG_NRF5
+    bool "Nordic nRF5"
+    default y if SOC_NRF52
+    select HAL_NORDIC
+    select NIMBLE_TRNG if BT_HCI_NRF52
+    help
+      Support for the Nordic nRF5 RNG. The driver owns the peripheral, so
+      the NimBLE nRF5 controller takes its random numbers from it.
+
 config RNG_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
@@ -21,11 +30,6 @@ config RNG_QEMU
     default y if SOC_QEMU
     help
       QEMU RNG. QEMU emulates no RNG, so it returns a fixed value.
-
-config RNG_STUB
-    bool "Stub"
-    help
-      Stub RNG implementation.
 
 module = DRIVER_RNG
 module-str = Random Number Generator
