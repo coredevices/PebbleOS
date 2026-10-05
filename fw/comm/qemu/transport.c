@@ -12,13 +12,13 @@
 
 #include "comm/bt_lock.h"
 
-#include <pbl/drivers/qemu/qemu_serial.h>
-#include <pbl/drivers/qemu/qemu_serial_private.h>
+#include "comm/qemu/serial.h"
+#include "comm/qemu/serial_private.h"
 
 #include "pbl/util/math.h"
 
-#include "comm/qemu_transport.h"
-#include <pbl/drivers/qemu/qemu_settings.h>
+#include "comm/qemu/transport.h"
+#include "comm/qemu/settings.h"
 
 typedef struct {
   CommSession *session;

@@ -12,8 +12,8 @@
 #include <time.h>
 
 /**
- * @defgroup drivers_qemu_qemu_serial_private Channel internals
- * @ingroup drivers_qemu
+ * @defgroup comm_qemu_serial_private Channel internals
+ * @ingroup comm_qemu
  * @brief QEMU channel framing and receive state machine, shared with the unit tests.
  * @{
  */

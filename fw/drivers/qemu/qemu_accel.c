@@ -43,7 +43,7 @@
 
 #include <pbl/drivers/accel.h>
 
-#include <pbl/drivers/qemu/qemu_serial.h>
+#include "comm/qemu/serial.h"
 #include <pbl/drivers/rtc.h>
 #include "pbl/kernel/mutex.h"
 #include <pbl/logging/logging.h>

@@ -192,3 +192,10 @@ pbl_clar_test(test_gap_le_connect
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_qemu_serial
+  SOURCES
+    fw/comm/qemu/serial_util.c
+    tests/fakes/fake_rtc.c
+  OVERRIDES dummy_board
+)

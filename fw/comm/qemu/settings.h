@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 /**
- * @defgroup drivers_qemu_qemu_settings Settings
- * @ingroup drivers_qemu
+ * @defgroup comm_qemu_settings Settings
+ * @ingroup comm_qemu
  * @brief Emulator settings passed by QEMU in the RTC backup registers.
  * @{
  */

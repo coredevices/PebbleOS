@@ -95,7 +95,7 @@ Beneath it sits NimBLE (`third_party/nimble`), glued in by
 NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
 and a fake controller on QEMU that acknowledges every command so the host
 runs without a radio. On QEMU the phone link is the emulator's serial
-channel, `fw/comm/qemu_transport.c`.
+channel, `fw/comm/qemu/`.
 
 ## Storage
 

@@ -5,17 +5,17 @@
 
 /**
  * @defgroup drivers_qemu_qemu_battery Battery
- * @ingroup drivers_qemu
+ * @ingroup drivers
  * @brief Battery state set from the QEMU host.
  * @{
  */
 
 /**
- * @brief Handle a @ref QemuProtocol_Battery message from the host.
+ * @brief Handle a `QemuProtocol_Battery` message from the host.
  *
- * Called by the QEMU serial driver.
+ * Called by the QEMU host channel.
  *
- * @param data Message payload, a @ref QemuProtocolBatteryHeader.
+ * @param data Message payload, a `QemuProtocolBatteryHeader`.
  * @param len Length of @p data in bytes.
  */
 void qemu_battery_msg_callback(const uint8_t *data, uint32_t len);

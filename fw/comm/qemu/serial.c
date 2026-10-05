@@ -3,8 +3,8 @@
 
 #include <pbl/drivers/qemu/qemu_accel.h>
 #include <pbl/drivers/qemu/qemu_battery.h>
-#include <pbl/drivers/qemu/qemu_serial.h>
-#include <pbl/drivers/qemu/qemu_serial_private.h>
+#include "comm/qemu/serial.h"
+#include "comm/qemu/serial_private.h"
 #include <pbl/drivers/uart.h>
 #include "kernel/events.h"
 #include "popups/timeline/peek.h"
@@ -20,7 +20,7 @@
 #include "pbl/util/byteorder.h"
 #include "pbl/util/size.h"
 
-#include "comm/qemu_transport.h"
+#include "comm/qemu/transport.h"
 
 #include <stdbool.h>
 

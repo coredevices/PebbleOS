@@ -9,7 +9,7 @@
 #include "comm/ble/gap_le.h"
 #include "comm/ble/gatt_client_subscriptions.h"
 #ifdef CONFIG_QEMU
-#include "comm/qemu_transport.h"
+#include "comm/qemu/transport.h"
 #endif
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"

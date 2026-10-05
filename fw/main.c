@@ -74,7 +74,7 @@
 
 #include <pbl/bluetooth/init.h>
 #ifdef CONFIG_QEMU
-#include <pbl/drivers/qemu/qemu_serial.h>
+#include "comm/qemu/serial.h"
 #endif
 
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;

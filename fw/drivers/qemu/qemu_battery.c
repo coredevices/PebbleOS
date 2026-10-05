@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/qemu/qemu_serial.h>
-#include <pbl/drivers/qemu/qemu_settings.h>
+#include "comm/qemu/serial.h"
+#include "comm/qemu/settings.h"
 
 #include "pbl/services/battery/battery_state.h"
 #include "pbl/services/battery/battery_curve.h"

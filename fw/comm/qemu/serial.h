@@ -13,9 +13,8 @@
 #include "pbl/kernel/compiler.h"
 
 /**
- * @defgroup drivers_qemu QEMU
- * @ingroup drivers
- * @brief Emulator drivers and the QEMU host channel.
+ * @defgroup comm_qemu QEMU host channel
+ * @brief Channel between the firmware and the QEMU host.
  *
  * The firmware exchanges framed messages with the host over a dedicated UART. Each frame is a
  * header (signature, protocol, length), a payload of up to 2048 bytes and a footer, all in
