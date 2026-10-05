@@ -39,7 +39,7 @@ if(CONFIG_QEMU)
   pbl_library_named(driver_button)
   pbl_library_sources(qemu/qemu_button.c)
   pbl_library_named(driver_mcu)
-  pbl_library_sources(stubs/mcu.c)
+  pbl_library_sources(qemu/qemu_mcu.c)
   pbl_library_named(driver_qemu_serial)
   pbl_library_sources(
     qemu/qemu_serial.c

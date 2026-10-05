@@ -22,7 +22,6 @@
  * @param[in,out] buf_sz Size of @p buf in bytes; set to the ID length on success.
  * @retval S_SUCCESS ID read.
  * @retval E_OUT_OF_MEMORY @p buf is too small.
- * @retval E_DOES_NOT_EXIST The MCU has no readable unique ID.
  */
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz);
 
