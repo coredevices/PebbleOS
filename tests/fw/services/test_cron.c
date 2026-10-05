@@ -92,7 +92,8 @@ void test_cron__timer_aligned_to_execute_second(void) {
   const time_t execute_time = pbl_cron_job_schedule(&job);
 
   cl_assert_equal_i(execute_time, 1447332300);
-  cl_assert_equal_i(s_timer_timeout_ms, 603250);
+  // 603250 ms away, aimed early by 1/256 plus the margin.
+  cl_assert_equal_i(s_timer_timeout_ms, 603250 - 603250 / 256 + 10);
   cl_assert(pbl_cron_job_unschedule(&job));
 }
 
@@ -837,4 +838,71 @@ void test_cron__offset_positive_seconds_any_day_dst(void) {
 
   const time_t advance = PBL_SEC_PER_DAY;
   prv_basic_test(&s_timezone_gmt, &test_cron, s_2015_nov12_000000_gmt, advance, advance, 2);
+}
+
+static const TimezoneInfo s_timezone_plus_one = {
+  .tm_zone = "CET",
+  .dst_id = 0,
+  .timezone_id = 1,
+  .tm_gmtoff = 3600,
+  .dst_start = 0,
+  .dst_end = 0,
+};
+
+void test_cron__schedule_at_fires_at_the_time(void) {
+  struct pbl_cron_job job = {.cb = prv_cron_callback};
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
+
+  pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 100);
+  cl_assert_equal_i(job.cached_execute_time, s_2015_nov12_123456_gmt + 100);
+  cl_assert_equal_i(s_timer_timeout_ms, 100000 - 100000 / 256 + 10);
+
+  // The timer expiring early re-arms for what is left.
+  fake_rtc_increment_time(99);
+  pbl_cron_wakeup();
+  cl_assert_equal_i((uintptr_t)job.cb_data, 0);
+  cl_assert_equal_i(s_timer_timeout_ms, 1000 - 1000 / 256 + 10);
+
+  fake_rtc_increment_time(1);
+  pbl_cron_wakeup();
+  cl_assert_equal_i((uintptr_t)job.cb_data, 1);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+}
+
+void test_cron__schedule_at_ignores_time_zone_changes(void) {
+  struct pbl_cron_job job = {.cb = prv_cron_callback};
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_plus_one);
+
+  pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 3600);
+  prv_clock_change(0, -3600, true);
+  cl_assert_equal_i(job.cached_execute_time, s_2015_nov12_123456_gmt + 3600);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 1);
+}
+
+void test_cron__schedule_at_runs_when_the_clock_passes_it(void) {
+  struct pbl_cron_job job = {.cb = prv_cron_callback};
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
+
+  pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 3600);
+  prv_clock_change(2 * 3600, 0, false);
+  cl_assert_equal_i((uintptr_t)job.cb_data, 1);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+}
+
+void test_cron__schedule_at_reschedules(void) {
+  struct pbl_cron_job late = {.cb = prv_cron_callback};
+  struct pbl_cron_job job = {.cb = prv_cron_callback};
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
+
+  pbl_cron_job_schedule_at(&late, s_2015_nov12_123456_gmt + 50);
+  pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 100);
+  pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 10);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 2);
+  cl_assert_equal_i(pbl_cron_get_next_execute_time(), s_2015_nov12_123456_gmt + 10);
+
+  fake_rtc_increment_time(10);
+  pbl_cron_wakeup();
+  cl_assert_equal_i((uintptr_t)job.cb_data, 1);
+  cl_assert_equal_i((uintptr_t)late.cb_data, 0);
+  cl_assert(pbl_cron_job_unschedule(&late));
 }
