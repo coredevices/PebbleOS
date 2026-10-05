@@ -15,6 +15,13 @@ config TEMPERATURE_SF32LB
     help
       Support for the SiFli SF32LB temperature sensor.
 
+config TEMPERATURE_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      QEMU temperature sensor. QEMU emulates none, so it reports a fixed
+      25 degrees Celsius.
+
 config TEMPERATURE_STUB
     bool "Stub"
     help
