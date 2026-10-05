@@ -29,12 +29,6 @@ typedef enum {
 } GPIOPuPd_TypeDef;
 
 typedef struct {
-  void *const peripheral;
-  const uint32_t gpio_pin;
-  GPIOPuPd_TypeDef pull;
-} ExtiConfig;
-
-typedef struct {
   void *gpio;
   uint8_t gpio_pin;
 } InputConfig;
@@ -94,7 +88,6 @@ typedef struct {
 } BoardConfigButton;
 
 typedef struct {
-  ExtiConfig pmic_int;
   const uint8_t low_power_threshold;
   const uint16_t battery_capacity_hours;
 } BoardConfigPower;

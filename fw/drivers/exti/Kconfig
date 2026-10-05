@@ -23,12 +23,6 @@ config EXTI_SF32LB
     help
       Support for the SiFli SF32LB external interrupt controller.
 
-config EXTI_QEMU
-    bool "QEMU External Interrupt"
-    default y if SOC_QEMU
-    help
-      Support for the QEMU external interrupt peripheral.
-
 module = DRIVER_EXTI
 module-str = External Interrupt
 source "subsys/logging/Kconfig.template.log_level"
