@@ -7,6 +7,7 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
 
 #include <string.h>
 
@@ -14,34 +15,44 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_drv2604, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 
 /* XXX: tune RATED_VOLTAGE? / OD_CLAMP? */
 
-#define DRV2604_STATUS                    0x00
-#define DRV2604_MODE                      0x01
-#define DRV2604_MODE_TRIGGER              0x00
-#define DRV2604_MODE_RTP                  0x05
-#define DRV2604_MODE_AUTOCAL              0x07
-#define DRV2604_MODE_STANDBY              0x40
-#define DRV2604_RTP_INPUT                 0x02
-#define DRV2604_GO                        0x0C
-#define DRV2604_RATED_VOLTAGE             0x16
-#define DRV2604_OD_CLAMP                  0x17
-#define DRV2604_A_CAL_COMP                0x18
-#define DRV2604_A_CAL_BEMF                0x19
-#define DRV2604_FBCTL                     0x1A
-#define DRV2604_FBCTL_LRA                 0x80
-#define DRV2604_FBCTL_FB_BRAKE_FACTOR(n)  ((n) << 4)
-#define DRV2604_FBCTL_LOOP_GAIN(n)        ((n) << 2)
-#define DRV2604_FBCTL_BEMF_GAIN(n)        ((n) << 0)
-#define DRV2604_CONTROL1                  0x1B
-#define DRV2604_CONTROL1_STARTUP_BOOST    0x80
-#define DRV2604_CONTROL1_DRIVE_TIME(n)    ((n) << 0)
-#define DRV2604_CONTROL2                  0x1C
-#define DRV2604_CONTROL2_BIDIR_INPUT      0x80
-#define DRV2604_CONTROL2_BRAKE_STABILIZER 0x40
-#define DRV2604_CONTROL2_SAMPLE_TIME(n)   ((n) << 4)
-#define DRV2604_CONTROL2_BLANKING_TIME(n) ((n) << 2)
-#define DRV2604_CONTROL2_IDISS_TIME(n)    ((n) << 0)
-#define DRV2604_CONTROL4                  0x1E
-#define DRV2604_CONTROL4_AUTO_CAL_TIME(n) ((n) << 4)
+#define DRV2604_STATUS                      0x00
+#define DRV2604_MODE                        0x01
+#define DRV2604_MODE_MODE_MASK              PBL_GENMASK(2, 0)
+#define DRV2604_MODE_TRIGGER                PBL_FIELD_PREP(DRV2604_MODE_MODE_MASK, 0x0)
+#define DRV2604_MODE_RTP                    PBL_FIELD_PREP(DRV2604_MODE_MODE_MASK, 0x5)
+#define DRV2604_MODE_AUTOCAL                PBL_FIELD_PREP(DRV2604_MODE_MODE_MASK, 0x7)
+#define DRV2604_MODE_STANDBY                PBL_BIT(6)
+#define DRV2604_RTP_INPUT                   0x02
+#define DRV2604_GO                          0x0C
+#define DRV2604_GO_GO                       PBL_BIT(0)
+#define DRV2604_RATED_VOLTAGE               0x16
+#define DRV2604_OD_CLAMP                    0x17
+#define DRV2604_A_CAL_COMP                  0x18
+#define DRV2604_A_CAL_BEMF                  0x19
+#define DRV2604_FBCTL                       0x1A
+#define DRV2604_FBCTL_LRA                   PBL_BIT(7)
+#define DRV2604_FBCTL_FB_BRAKE_FACTOR_MASK  PBL_GENMASK(6, 4)
+#define DRV2604_FBCTL_FB_BRAKE_FACTOR(n)    PBL_FIELD_PREP(DRV2604_FBCTL_FB_BRAKE_FACTOR_MASK, (n))
+#define DRV2604_FBCTL_LOOP_GAIN_MASK        PBL_GENMASK(3, 2)
+#define DRV2604_FBCTL_LOOP_GAIN(n)          PBL_FIELD_PREP(DRV2604_FBCTL_LOOP_GAIN_MASK, (n))
+#define DRV2604_FBCTL_BEMF_GAIN_MASK        PBL_GENMASK(1, 0)
+#define DRV2604_FBCTL_BEMF_GAIN(n)          PBL_FIELD_PREP(DRV2604_FBCTL_BEMF_GAIN_MASK, (n))
+#define DRV2604_CONTROL1                    0x1B
+#define DRV2604_CONTROL1_STARTUP_BOOST      PBL_BIT(7)
+#define DRV2604_CONTROL1_DRIVE_TIME_MASK    PBL_GENMASK(4, 0)
+#define DRV2604_CONTROL1_DRIVE_TIME(n)      PBL_FIELD_PREP(DRV2604_CONTROL1_DRIVE_TIME_MASK, (n))
+#define DRV2604_CONTROL2                    0x1C
+#define DRV2604_CONTROL2_BIDIR_INPUT        PBL_BIT(7)
+#define DRV2604_CONTROL2_BRAKE_STABILIZER   PBL_BIT(6)
+#define DRV2604_CONTROL2_SAMPLE_TIME_MASK   PBL_GENMASK(5, 4)
+#define DRV2604_CONTROL2_SAMPLE_TIME(n)     PBL_FIELD_PREP(DRV2604_CONTROL2_SAMPLE_TIME_MASK, (n))
+#define DRV2604_CONTROL2_BLANKING_TIME_MASK PBL_GENMASK(3, 2)
+#define DRV2604_CONTROL2_BLANKING_TIME(n)   PBL_FIELD_PREP(DRV2604_CONTROL2_BLANKING_TIME_MASK, (n))
+#define DRV2604_CONTROL2_IDISS_TIME_MASK    PBL_GENMASK(1, 0)
+#define DRV2604_CONTROL2_IDISS_TIME(n)      PBL_FIELD_PREP(DRV2604_CONTROL2_IDISS_TIME_MASK, (n))
+#define DRV2604_CONTROL4                    0x1E
+#define DRV2604_CONTROL4_AUTO_CAL_TIME_MASK PBL_GENMASK(5, 4)
+#define DRV2604_CONTROL4_AUTO_CAL_TIME(n)   PBL_FIELD_PREP(DRV2604_CONTROL4_AUTO_CAL_TIME_MASK, (n))
 
 static bool s_initialized = false;
 
@@ -166,7 +177,7 @@ status_t vibe_calibrate(void) {
                             DRV2604_CONTROL2_SAMPLE_TIME(3) | DRV2604_CONTROL2_BLANKING_TIME(1) |
                             DRV2604_CONTROL2_IDISS_TIME(1));
   bad |= !prv_write_register(DRV2604_CONTROL4, DRV2604_CONTROL4_AUTO_CAL_TIME(3));
-  bad |= !prv_write_register(DRV2604_GO, 1); /* GO */
+  bad |= !prv_write_register(DRV2604_GO, DRV2604_GO_GO);
 
   return bad ? E_ERROR : S_SUCCESS;
 }
