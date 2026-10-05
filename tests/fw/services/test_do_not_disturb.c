@@ -422,13 +422,13 @@ void test_do_not_disturb__disable_manual_dnd_when_scheduled_ends(void) {
 void test_do_not_disturb__timer_fires_schedule_boundaries(void) {
   int sched_idx = prv_create_qt_schedule(QT_KIND_WEEKDAYS, 1, 0, 12, 30, true);
   cl_assert(do_not_disturb_is_active() == false);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 3600 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 3600 * PBL_MSEC_PER_SEC);
 
   // Timer fires at 01:00: advance the clock and re-evaluate.
   rtc_set_time(s_thursday_01_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 41400 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 41400 * PBL_MSEC_PER_SEC);
 
   do_not_disturb_set_manually_enabled(true);
   rtc_set_time(s_thursday_13_00);
@@ -437,7 +437,7 @@ void test_do_not_disturb__timer_fires_schedule_boundaries(void) {
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   // Next wakeup is 01:00 on Friday (next scheduled day); no midnight entry.
   cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()),
-                    12 * SECONDS_PER_HOUR * MS_PER_SECOND);
+                    12 * PBL_SEC_PER_HOUR * PBL_MSEC_PER_SEC);
 
   quiet_time_delete_schedule(sched_idx);
 }
@@ -517,14 +517,14 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 23:00 on Friday. (14.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_friday_23_30); // In schedule
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
   // Timer will go off at 01:00 on Saturday (weekend window starts). (1.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 5400 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 5400 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_saturday_00_30);
   do_not_disturb_handle_clock_change();
@@ -532,21 +532,21 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   // Still Friday's window (started Friday 23:00), which runs past midnight.
   cl_assert(active == true);
   // Timer will go off at 01:00 on Saturday. (0.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
   // Timer will go off at 07:00 on Saturday (Friday's window ends). (5.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 01:00 on Sunday. (14.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * PBL_MSEC_PER_SEC);
 
   quiet_time_set_schedule_enabled(weekend_idx, false);
   rtc_set_time(s_saturday_01_30);
@@ -555,14 +555,14 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   // Still Friday's window (started Friday 23:00), which runs past midnight.
   cl_assert(active == true);
   // Timer will go off at 07:00 on Saturday (Friday's window ends). (5.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_thursday_00_00);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
   // Timer will go off at 07:00 on Thursday. (7.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 25200 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 25200 * PBL_MSEC_PER_SEC);
 
   // Check that there is a timer scheduled
   cl_assert(stub_new_timer_is_scheduled(get_dnd_timer_id()));
@@ -576,7 +576,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == true);
   // Timer will go off at 07:00 on Thursday. (7.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 25200 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 25200 * PBL_MSEC_PER_SEC);
 
   quiet_time_set_schedule_enabled(weekend_idx, true);
   quiet_time_set_schedule_enabled(weekday_idx, false);
@@ -585,7 +585,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 01:00 on Saturday. (48.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 172800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 172800 * PBL_MSEC_PER_SEC);
 
   quiet_time_set_schedule_enabled(weekend_idx, false);
   quiet_time_set_schedule_enabled(weekday_idx, true);
@@ -595,7 +595,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   // Still Friday's window (started Friday 23:00), which runs past midnight.
   cl_assert(active == true);
   // Timer will go off at 07:00 on Saturday (Friday's window ends). (5.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * PBL_MSEC_PER_SEC);
 
   // 10:30 PM - 8:30 AM on weekdays
   prv_qt_set_schedule_window(weekday_idx, 22, 30, 8, 30);
@@ -611,49 +611,49 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == true);
   // Timer will go off at 00:00 on Saturday. (0.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_saturday_00_00);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
   // Timer will go off at 08:30 on Saturday (Friday's window ends). (8.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 30600 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 30600 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 00:00 on Sunday. (13.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 48600 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 48600 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_sunday_9_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
   // Timer will go off at 10:00 on Sunday. (0.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_sunday_10_00);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 22:30 on Monday. (36.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 131400 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 131400 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_sunday_23_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 22:30 on Monday. (23.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 82800 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 82800 * PBL_MSEC_PER_SEC);
 
   rtc_set_time(s_monday_10_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
   // Timer will go off at 22:30 on Monday. (12.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 43200 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 43200 * PBL_MSEC_PER_SEC);
 
   quiet_time_delete_schedule(weekday_idx);
   quiet_time_delete_schedule(weekend_idx);
@@ -774,9 +774,9 @@ void test_do_not_disturb__qt_create_custom_with_days(void) {
     .enabled = true,
   };
   memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
-  config.scheduled_days[Monday] = true;
-  config.scheduled_days[Wednesday] = true;
-  config.scheduled_days[Friday] = true;
+  config.scheduled_days[PBL_MONDAY] = true;
+  config.scheduled_days[PBL_WEDNESDAY] = true;
+  config.scheduled_days[PBL_FRIDAY] = true;
 
   int idx = quiet_time_create_schedule(&config);
   cl_assert(idx >= 0);
@@ -784,37 +784,37 @@ void test_do_not_disturb__qt_create_custom_with_days(void) {
   QuietTimeScheduleConfig retrieved;
   quiet_time_get_schedule(idx, &retrieved);
   cl_assert(retrieved.kind == QT_KIND_CUSTOM);
-  cl_assert(retrieved.scheduled_days[Monday] == true);
-  cl_assert(retrieved.scheduled_days[Wednesday] == true);
-  cl_assert(retrieved.scheduled_days[Friday] == true);
-  cl_assert(retrieved.scheduled_days[Sunday] == false);
-  cl_assert(retrieved.scheduled_days[Saturday] == false);
+  cl_assert(retrieved.scheduled_days[PBL_MONDAY] == true);
+  cl_assert(retrieved.scheduled_days[PBL_WEDNESDAY] == true);
+  cl_assert(retrieved.scheduled_days[PBL_FRIDAY] == true);
+  cl_assert(retrieved.scheduled_days[PBL_SUNDAY] == false);
+  cl_assert(retrieved.scheduled_days[PBL_SATURDAY] == false);
 
   quiet_time_delete_schedule(idx);
 }
 
 void test_do_not_disturb__qt_scheduled_days_derivation(void) {
-  bool days[DAYS_PER_WEEK];
+  bool days[PBL_DAY_PER_WEEK];
 
   QuietTimeScheduleConfig config_everyday = {.kind = QT_KIND_EVERYDAY};
   quiet_time_get_scheduled_days(&config_everyday, days);
-  for (int i = 0; i < DAYS_PER_WEEK; i++) {
+  for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
     cl_assert(days[i] == true);
   }
 
   QuietTimeScheduleConfig config_weekdays = {.kind = QT_KIND_WEEKDAYS};
   quiet_time_get_scheduled_days(&config_weekdays, days);
-  cl_assert(days[Sunday] == false);
-  cl_assert(days[Monday] == true);
-  cl_assert(days[Saturday] == false);
-  cl_assert(days[Friday] == true);
+  cl_assert(days[PBL_SUNDAY] == false);
+  cl_assert(days[PBL_MONDAY] == true);
+  cl_assert(days[PBL_SATURDAY] == false);
+  cl_assert(days[PBL_FRIDAY] == true);
 
   QuietTimeScheduleConfig config_weekends = {.kind = QT_KIND_WEEKENDS};
   quiet_time_get_scheduled_days(&config_weekends, days);
-  cl_assert(days[Sunday] == true);
-  cl_assert(days[Monday] == false);
-  cl_assert(days[Saturday] == true);
-  cl_assert(days[Friday] == false);
+  cl_assert(days[PBL_SUNDAY] == true);
+  cl_assert(days[PBL_MONDAY] == false);
+  cl_assert(days[PBL_SATURDAY] == true);
+  cl_assert(days[PBL_FRIDAY] == false);
 }
 
 void test_do_not_disturb__qt_display_strings(void) {
@@ -833,15 +833,15 @@ void test_do_not_disturb__qt_display_strings(void) {
   cl_assert_equal_s(str, "Custom");
 
   char buf[28];
-  uint8_t days[DAYS_PER_WEEK] = {0};
-  days[Monday] = true;
-  days[Wednesday] = true;
-  days[Friday] = true;
+  uint8_t days[PBL_DAY_PER_WEEK] = {0};
+  days[PBL_MONDAY] = true;
+  days[PBL_WEDNESDAY] = true;
+  days[PBL_FRIDAY] = true;
   quiet_time_get_string_for_custom(days, buf, sizeof(buf));
   cl_assert_equal_s(buf, "Mon,Wed,Fri");
 
-  uint8_t single_day[DAYS_PER_WEEK] = {0};
-  single_day[Tuesday] = true;
+  uint8_t single_day[PBL_DAY_PER_WEEK] = {0};
+  single_day[PBL_TUESDAY] = true;
   quiet_time_get_string_for_custom(single_day, buf, sizeof(buf));
   cl_assert_equal_s(buf, "Tuesdays");
 
@@ -852,16 +852,16 @@ void test_do_not_disturb__qt_display_strings(void) {
   cl_assert_equal_s(small_buf + 3, "");
 
   // Multi-day truncation: no trailing comma when content is cut
-  uint8_t many_days[DAYS_PER_WEEK] = {0};
-  many_days[Monday] = true;
-  many_days[Wednesday] = true;
-  many_days[Friday] = true;
+  uint8_t many_days[PBL_DAY_PER_WEEK] = {0};
+  many_days[PBL_MONDAY] = true;
+  many_days[PBL_WEDNESDAY] = true;
+  many_days[PBL_FRIDAY] = true;
   char tiny_buf[8];
   quiet_time_get_string_for_custom(many_days, tiny_buf, sizeof(tiny_buf));
   cl_assert_equal_s(tiny_buf, "Mon,Wed");
 
   // Multi-day truncation with room: truncation is marked with an ellipsis
-  uint8_t all_days[DAYS_PER_WEEK] = {1, 1, 1, 1, 1, 1, 1};
+  uint8_t all_days[PBL_DAY_PER_WEEK] = {1, 1, 1, 1, 1, 1, 1};
   char tight_buf[23]; // fits "Mon,Tue,Wed,Thu,Fri…" with terminator
   quiet_time_get_string_for_custom(all_days, tight_buf, sizeof(tight_buf));
   cl_assert_equal_s(tight_buf, "Mon,Tue,Wed,Thu,Fri…");
@@ -960,7 +960,7 @@ void test_do_not_disturb__wrapping_schedule_belongs_to_start_day(void) {
   };
   memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
   // Wednesday, March 11, 2015
-  config.scheduled_days[Wednesday] = true;
+  config.scheduled_days[PBL_WEDNESDAY] = true;
   int idx = quiet_time_create_schedule(&config);
   cl_assert(idx >= 0);
   quiet_time_set_schedule_enabled(idx, true);
@@ -969,7 +969,7 @@ void test_do_not_disturb__wrapping_schedule_belongs_to_start_day(void) {
   rtc_set_time(1426118400 - 86400 + (21 * 3600) + (59 * 60)); // Wed 21:59
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 60 * MS_PER_SECOND);
+  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 60 * PBL_MSEC_PER_SEC);
 
   // Wednesday 22:00, window opens.
   rtc_set_time(1426118400 - 86400 + (22 * 3600)); // Wed 22:00
@@ -981,7 +981,7 @@ void test_do_not_disturb__wrapping_schedule_belongs_to_start_day(void) {
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()),
-                    5 * SECONDS_PER_HOUR * MS_PER_SECOND);
+                    5 * PBL_SEC_PER_HOUR * PBL_MSEC_PER_SEC);
 
   // Thursday 07:00, window end is exclusive.
   rtc_set_time(s_thursday_00_00 + (7 * 3600)); // Thu 07:00
@@ -1023,7 +1023,7 @@ void test_do_not_disturb__weekday_day_boundaries_inactive(void) {
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()),
-                    8 * SECONDS_PER_HOUR * MS_PER_SECOND);
+                    8 * PBL_SEC_PER_HOUR * PBL_MSEC_PER_SEC);
 
   // Clean up
   quiet_time_delete_schedule(idx);
@@ -1396,7 +1396,7 @@ void test_do_not_disturb__phone_legacy_schedule_mirrors_qt_slot(void) {
     .enabled = true,
   };
   memset(custom.scheduled_days, 0, sizeof(custom.scheduled_days));
-  custom.scheduled_days[Monday] = true;
+  custom.scheduled_days[PBL_MONDAY] = true;
   quiet_time_set_schedule(0, &custom);
 
   // ...so a further legacy phone write no longer touches the slot...

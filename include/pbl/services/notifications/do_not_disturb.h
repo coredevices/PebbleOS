@@ -75,7 +75,7 @@ typedef enum {
 typedef struct PBL_PACKED QuietTimeScheduleConfig {
   uint8_t is_used;
   uint8_t kind;
-  uint8_t scheduled_days[DAYS_PER_WEEK];
+  uint8_t scheduled_days[PBL_DAY_PER_WEEK];
   uint8_t from_hour;
   uint8_t from_minute;
   uint8_t to_hour;
@@ -175,7 +175,7 @@ void quiet_time_set_schedule_enabled(int index, bool enabled);
 
 //! Derive the day mask for a schedule kind. For QT_KIND_CUSTOM, copies from config->scheduled_days.
 void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config,
-                                   bool out_days[DAYS_PER_WEEK]);
+                                   bool out_days[PBL_DAY_PER_WEEK]);
 
 //! Display string for a QuietTimeKind
 const char *quiet_time_get_string_for_kind(QuietTimeKind kind);

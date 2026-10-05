@@ -147,36 +147,36 @@ static bool prv_is_any_qt_schedule_enabled(void) {
 }
 
 void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config,
-                                   bool out_days[DAYS_PER_WEEK]) {
+                                   bool out_days[PBL_DAY_PER_WEEK]) {
   switch (config->kind) {
     case QT_KIND_EVERYDAY:
-      for (int i = 0; i < DAYS_PER_WEEK; i++) {
+      for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
         out_days[i] = true;
       }
       break;
     case QT_KIND_WEEKDAYS:
-      out_days[Sunday] = false;
-      out_days[Monday] = true;
-      out_days[Tuesday] = true;
-      out_days[Wednesday] = true;
-      out_days[Thursday] = true;
-      out_days[Friday] = true;
-      out_days[Saturday] = false;
+      out_days[PBL_SUNDAY] = false;
+      out_days[PBL_MONDAY] = true;
+      out_days[PBL_TUESDAY] = true;
+      out_days[PBL_WEDNESDAY] = true;
+      out_days[PBL_THURSDAY] = true;
+      out_days[PBL_FRIDAY] = true;
+      out_days[PBL_SATURDAY] = false;
       break;
     case QT_KIND_WEEKENDS:
-      out_days[Sunday] = true;
-      out_days[Monday] = false;
-      out_days[Tuesday] = false;
-      out_days[Wednesday] = false;
-      out_days[Thursday] = false;
-      out_days[Friday] = false;
-      out_days[Saturday] = true;
+      out_days[PBL_SUNDAY] = true;
+      out_days[PBL_MONDAY] = false;
+      out_days[PBL_TUESDAY] = false;
+      out_days[PBL_WEDNESDAY] = false;
+      out_days[PBL_THURSDAY] = false;
+      out_days[PBL_FRIDAY] = false;
+      out_days[PBL_SATURDAY] = true;
       break;
     case QT_KIND_CUSTOM:
-      memcpy(out_days, config->scheduled_days, DAYS_PER_WEEK);
+      memcpy(out_days, config->scheduled_days, PBL_DAY_PER_WEEK);
       break;
     default:
-      memset(out_days, 0, DAYS_PER_WEEK);
+      memset(out_days, 0, PBL_DAY_PER_WEEK);
       break;
   }
 }
@@ -198,7 +198,7 @@ static int prv_schedule_end_minutes(const QuietTimeScheduleConfig *schedule) {
 //! Whether a schedule is active now. A wrapping window belongs to the day it
 //! started on: after midnight it is still yesterday's window.
 static bool prv_schedule_is_active(const struct tm *now, const QuietTimeScheduleConfig *s) {
-  bool days[DAYS_PER_WEEK];
+  bool days[PBL_DAY_PER_WEEK];
   quiet_time_get_scheduled_days(s, days);
   int now_m = now->tm_hour * 60 + now->tm_min;
   int from_m = s->from_hour * 60 + s->from_minute;
@@ -206,7 +206,7 @@ static bool prv_schedule_is_active(const struct tm *now, const QuietTimeSchedule
   if (from_m <= to_m) {
     return days[now->tm_wday] && now_m >= from_m && now_m < to_m;
   }
-  int yesterday = (now->tm_wday + DAYS_PER_WEEK - 1) % DAYS_PER_WEEK;
+  int yesterday = (now->tm_wday + PBL_DAY_PER_WEEK - 1) % PBL_DAY_PER_WEEK;
   return (days[now->tm_wday] && now_m >= from_m) || (days[yesterday] && now_m < to_m);
 }
 
@@ -246,18 +246,28 @@ static void prv_update_schedule_mode_timer_callback(void *not_used) {
   prv_try_update_schedule_mode_callback(true);
 }
 
+//! Seconds from now until the next daily occurrence of hour:minute (tomorrow if passed).
+static time_t prv_seconds_until_daily_time(const struct tm *now, int hour, int minute) {
+  int hour_diff = hour - now->tm_hour;
+  if (hour < now->tm_hour || (hour == now->tm_hour && minute <= now->tm_min)) {
+    hour_diff += PBL_HOUR_PER_DAY;
+  }
+  const int minutes_diff = hour_diff * PBL_MIN_PER_HOUR + (minute - now->tm_min);
+  return minutes_diff * PBL_SEC_PER_MIN - now->tm_sec;
+}
+
 static void prv_set_schedule_mode_timer(void) {
   struct tm now_tm;
   rtc_get_time_tm(&now_tm);
   const int now_sec = now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec;
-  const time_t midnight_in = time_util_get_seconds_until_daily_time(&now_tm, 0, 0);
-  time_t earliest_transition = SECONDS_PER_DAY * 7;
+  const time_t midnight_in = prv_seconds_until_daily_time(&now_tm, 0, 0);
+  time_t earliest_transition = PBL_SEC_PER_DAY * 7;
   bool currently_active = prv_is_any_qt_schedule_active_now();
 
   for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
     if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled)
       continue;
-    bool days[DAYS_PER_WEEK];
+    bool days[PBL_DAY_PER_WEEK];
     quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
     const int from_sec =
         s_qt_schedule_cache[i].from_hour * 3600 + s_qt_schedule_cache[i].from_minute * 60;
@@ -266,8 +276,8 @@ static void prv_set_schedule_mode_timer(void) {
     const int to_sec = to_min * 60;
     const bool wrapping = (from_min > to_min);
 
-    for (int d = 0; d < DAYS_PER_WEEK; d++) {
-      const int day = (now_tm.tm_wday + d) % DAYS_PER_WEEK;
+    for (int d = 0; d < PBL_DAY_PER_WEEK; d++) {
+      const int day = (now_tm.tm_wday + d) % PBL_DAY_PER_WEEK;
       if (!days[day]) {
         continue;
       }
@@ -283,16 +293,16 @@ static void prv_set_schedule_mode_timer(void) {
         }
       } else {
         // Absolute time of 00:00 d days from now, plus the boundary offset.
-        const time_t day_start = midnight_in + (d - 1) * SECONDS_PER_DAY;
+        const time_t day_start = midnight_in + (d - 1) * PBL_SEC_PER_DAY;
         earliest_transition = MIN(earliest_transition, day_start + from_sec);
         if (wrapping) {
-          earliest_transition = MIN(earliest_transition, day_start + SECONDS_PER_DAY + to_sec);
+          earliest_transition = MIN(earliest_transition, day_start + PBL_SEC_PER_DAY + to_sec);
         }
       }
     }
 
     // A wrapping window started yesterday ends this morning.
-    const int yesterday = (now_tm.tm_wday + DAYS_PER_WEEK - 1) % DAYS_PER_WEEK;
+    const int yesterday = (now_tm.tm_wday + PBL_DAY_PER_WEEK - 1) % PBL_DAY_PER_WEEK;
     if (wrapping && days[yesterday] && to_sec > now_sec) {
       earliest_transition = MIN(earliest_transition, (time_t)(to_sec - now_sec));
     }
@@ -316,7 +326,7 @@ static void prv_set_schedule_mode_timer(void) {
   // the current minute) could theoretically yield 0; never reboot the watch
   // over a schedule-config oddity.
   if (earliest_transition <= 0) {
-    earliest_transition = SECONDS_PER_DAY;
+    earliest_transition = PBL_SEC_PER_DAY;
   }
 
   PBL_LOG_DBG("%s scheduled period. %u seconds until update",
@@ -428,7 +438,7 @@ void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config) {
 int quiet_time_create_schedule(const QuietTimeScheduleConfig *config) {
   if (config->kind == QT_KIND_CUSTOM) {
     bool any_day = false;
-    for (int i = 0; i < DAYS_PER_WEEK; i++) {
+    for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
       any_day |= config->scheduled_days[i];
     }
     if (!any_day)
@@ -501,7 +511,7 @@ void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffe
 
   int num_days = 0;
   int last_day_idx = 0;
-  for (int i = 0; i < DAYS_PER_WEEK; i++) {
+  for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
     if (scheduled_days[i]) {
       num_days++;
       last_day_idx = i;
@@ -520,8 +530,8 @@ void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffe
   // Monday-first ordering: skip Sunday (index 0) and iterate Mon..Sat, then Sun.
   size_t pos = 0;
   bool truncated = false;
-  for (int idx = 1; idx <= DAYS_PER_WEEK; idx++) {
-    int i = idx % DAYS_PER_WEEK;
+  for (int idx = 1; idx <= PBL_DAY_PER_WEEK; idx++) {
+    int i = idx % PBL_DAY_PER_WEEK;
     if (!scheduled_days[i]) {
       continue;
     }
