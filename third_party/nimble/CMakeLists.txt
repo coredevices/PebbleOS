@@ -76,6 +76,10 @@ elseif(CONFIG_BT_HCI_FAKE)
   list(APPEND sources transport/hci_fake.c)
 endif()
 
+if(CONFIG_NIMBLE_TRNG)
+  list(APPEND sources port/src/trng.c)
+endif()
+
 pbl_include_directories(${includes})
 
 pbl_library_named(nimble)
