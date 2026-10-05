@@ -6,7 +6,6 @@
 #include "kernel/events.h"
 #include "pbl/services/blob_db/reminder_db.h"
 #include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/regular_timer.h"
 
 #include "clar.h"
 
@@ -18,7 +17,7 @@
 
 #include "fake_pbl_malloc.h"
 #include "fake_pebble_tasks.h"
-#include "fake_regular_timer.h"
+#include "fake_cron.h"
 #include "fake_spi_flash.h"
 #include "fake_system_task.h"
 #include "stubs_layout_layer.h"
@@ -58,16 +57,15 @@ void event_put(PebbleEvent *event) {
 #include "stubs_sleep.h"
 #include "stubs_task_wdt.h"
 
-extern RegularTimerInfo *get_reminder_timer(void);
 extern bool get_reminder_armed(void);
 extern time_t get_reminder_timestamp(void);
 extern ReminderId *get_reminder_id(void);
 
-// Drives the seconds-callback the same way the regular_timer service would.
+// Runs the reminder job if it is due at the given time.
 // system_task_add_callback is faked to enqueue, so we then drain the queue.
 static void prv_advance_to_and_fire(time_t target) {
   now = target;
-  fake_regular_timer_trigger(get_reminder_timer());
+  fake_cron_job_fire_if_due(now);
   fake_system_task_callbacks_invoke(1);
 }
 
@@ -126,7 +124,6 @@ void test_reminders__initialize(void) {
   pfs_init(false);
   reminder_db_init();
 
-  // Register the seconds callback so fake_regular_timer_trigger() can drive it.
   cl_assert_equal_i(reminders_init(), S_SUCCESS);
 
   // add all four explicitly out of order
@@ -201,7 +198,7 @@ void test_reminders__not_ready_yet(void) {
 
   // item2 has ts=100; before that, tick should do nothing.
   now = 50;
-  fake_regular_timer_trigger(get_reminder_timer());
+  fake_cron_job_fire_if_due(now);
   fake_system_task_callbacks_invoke(1);
   cl_assert_equal_i(num_events_put, 1);
   cl_assert(get_reminder_armed());
@@ -298,4 +295,16 @@ void test_reminders__stale_all_day(void) {
   // if the timestamp of s_all_day_reminder isn't adjusted, it would be rejected for being stale
   // since it "seems" to be timestamped at 15:30 PST, but it should be accepted
   cl_assert_equal_i(reminders_insert(&s_all_day_reminder), S_SUCCESS);
+}
+
+void test_reminders__scheduled_at_the_reminder_time(void) {
+  cl_assert_equal_i(reminders_init(), 0);
+  prv_advance_to_and_fire(0);
+  cl_assert_equal_i(num_events_put, 1);
+
+  // item2 is next, at 100: scheduled for exactly that time.
+  cl_assert(s_job != NULL);
+  cl_assert_equal_i(s_job_time, 100);
+  cl_assert(!fake_cron_job_fire_if_due(99));
+  cl_assert_equal_i(num_events_put, 1);
 }

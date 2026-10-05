@@ -3,10 +3,10 @@
 
 #include "pbl/services/timeline/reminders.h"
 
+#include <pbl/cron/cron.h>
 #include <pbl/drivers/rtc.h>
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
-#include "pbl/services/regular_timer.h"
 #include "pbl/services/system_task.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
@@ -22,7 +22,9 @@ PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 #define CONSTANT_SNOOZE_DELAY    (10 * PBL_SEC_PER_MIN)                    // Seconds
 #define CONSTANT_SNOOZE_END_MARK (48 * PBL_MIN_PER_HOUR * PBL_SEC_PER_MIN) // Seconds
 
-static RegularTimerInfo s_reminder_timer;
+static void prv_job_callback(struct pbl_cron_job *job, void *data);
+
+static struct pbl_cron_job s_reminder_job = {.cb = prv_job_callback};
 static bool s_reminder_armed;
 static time_t s_next_reminder_timestamp;
 static ReminderId s_next_reminder_id;
@@ -66,17 +68,14 @@ static void prv_trigger_reminder_system_task_callback(void *data) {
   reminders_update_timer();
 }
 
-// Polls once per second against the RTC. Same pattern cron uses internally,
-// avoids FreeRTOS-tick drift relative to wall-clock.
-static void prv_timer_callback(void *data) {
+static void prv_job_callback(struct pbl_cron_job *job, void *data) {
   if (!s_reminder_armed) {
-    return;
-  }
-  if (s_next_reminder_timestamp > rtc_get_time()) {
     return;
   }
   if (system_task_add_callback(prv_trigger_reminder_system_task_callback, &s_next_reminder_id)) {
     s_reminder_armed = false;
+  } else {
+    pbl_cron_job_schedule_at(job, rtc_get_time() + 1);
   }
 }
 
@@ -84,6 +83,7 @@ static status_t prv_set_timer(Reminder *item) {
   s_next_reminder_id = item->header.id;
   s_next_reminder_timestamp = item->header.timestamp;
   s_reminder_armed = true;
+  pbl_cron_job_schedule_at(&s_reminder_job, s_next_reminder_timestamp);
   PBL_LOG_DBG("Set reminder for %ld", s_next_reminder_timestamp);
   return S_SUCCESS;
 }
@@ -91,6 +91,7 @@ static status_t prv_set_timer(Reminder *item) {
 status_t reminders_update_timer(void) {
   PBL_LOG_DBG("Attempting to update timer.");
   s_reminder_armed = false;
+  pbl_cron_job_unschedule(&s_reminder_job);
 
   TimelineItem item = {{{0}}};
   status_t rv = reminder_db_next_item_header(&item);
@@ -110,10 +111,6 @@ status_t reminders_insert(Reminder *reminder) {
 }
 
 status_t reminders_init(void) {
-  if (s_reminder_timer.cb == NULL) {
-    s_reminder_timer.cb = prv_timer_callback;
-    regular_timer_add_seconds_callback(&s_reminder_timer);
-  }
   return reminders_update_timer();
 }
 
@@ -184,8 +181,8 @@ status_t reminders_snooze(Reminder *reminder) {
 }
 
 // only used for tests
-RegularTimerInfo *get_reminder_timer(void) {
-  return &s_reminder_timer;
+struct pbl_cron_job *get_reminder_job(void) {
+  return &s_reminder_job;
 }
 
 bool get_reminder_armed(void) {
