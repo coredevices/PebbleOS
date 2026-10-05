@@ -180,6 +180,18 @@ static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
   return ret;
 }
 
+static bool prv_lis2dw12_read_fifo(uint8_t samples) {
+  bool ret;
+
+  i2c_use(&LIS2DW12->i2c);
+  ret = i2c_read_register_block_dma(&LIS2DW12->i2c, LIS2DW12_OUT_X_L,
+                                    samples * LIS2DW12_SAMPLE_SIZE_BYTES,
+                                    LIS2DW12->state->raw_sample_buf);
+  i2c_release(&LIS2DW12->i2c);
+
+  return ret;
+}
+
 static int16_t prv_raw_to_s12(const uint8_t *raw) {
   uint16_t val;
 
@@ -298,8 +310,7 @@ static void prv_lis2dw12_drain_fifo(void) {
     return;
   }
 
-  if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
-                         samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
+  if (!prv_lis2dw12_read_fifo(samples)) {
     PBL_LOG_ERR("Failed to read samples");
     return;
   }
@@ -337,8 +348,7 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
     } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
       samples = LIS2DW12_FIFO_SAMPLES_DIFF_GET(val);
       if (samples > 0U) {
-        if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, LIS2DW12->state->raw_sample_buf,
-                               samples * LIS2DW12_SAMPLE_SIZE_BYTES)) {
+        if (!prv_lis2dw12_read_fifo(samples)) {
           PBL_LOG_ERR("Failed to read samples");
           return false;
         }

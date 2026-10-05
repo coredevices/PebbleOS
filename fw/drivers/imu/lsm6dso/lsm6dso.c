@@ -191,6 +191,18 @@ static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
   return ret;
 }
 
+static bool prv_lsm6dso_read_fifo(uint16_t samples) {
+  bool ret;
+
+  i2c_use(&LSM6DSO->i2c);
+  ret = i2c_read_register_block_dma(&LSM6DSO->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
+                                    samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
+                                    LSM6DSO->state->raw_sample_buf);
+  i2c_release(&LSM6DSO->i2c);
+
+  return ret;
+}
+
 static uint8_t prv_fs_bits(void) {
   switch (CONFIG_ACCEL_LSM6DSO_SCALE_MG) {
     case 2000U:
@@ -352,8 +364,7 @@ static void prv_lsm6dso_drain_fifo(void) {
     return;
   }
 
-  if (!prv_lsm6dso_read(LSM6DSO_FIFO_DATA_OUT_TAG, LSM6DSO->state->raw_sample_buf,
-                        samples * LSM6DSO_FIFO_WORD_SIZE_BYTES)) {
+  if (!prv_lsm6dso_read_fifo(samples)) {
     PBL_LOG_ERR("Failed to read samples");
     return;
   }
@@ -407,8 +418,7 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
       }
 
       if (samples > 0U) {
-        if (!prv_lsm6dso_read(LSM6DSO_FIFO_DATA_OUT_TAG, LSM6DSO->state->raw_sample_buf,
-                              samples * LSM6DSO_FIFO_WORD_SIZE_BYTES)) {
+        if (!prv_lsm6dso_read_fifo(samples)) {
           PBL_LOG_ERR("Failed to read samples");
           return false;
         }

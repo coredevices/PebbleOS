@@ -8,6 +8,8 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/rtc.h>
+#include "pbl/kernel/compiler.h"
+#include "pbl/mcu/cache.h"
 #include "pbl/services/regular_timer.h"
 
 /**
@@ -64,8 +66,9 @@ typedef struct LSM6DSOState {
   uint32_t sampling_interval_us;
   /** Samples per FIFO batch requested by the subscribers, 0 when not streaming. */
   uint16_t num_samples;
-  /** Raw FIFO read buffer. */
-  uint8_t raw_sample_buf[LSM6DSO_FIFO_SIZE * LSM6DSO_FIFO_WORD_SIZE_BYTES];
+  /** Raw FIFO read buffer, filled with i2c_read_register_block_dma(). */
+  uint8_t raw_sample_buf[DCACHE_ROUND_UP(
+      LSM6DSO_FIFO_SIZE * LSM6DSO_FIFO_WORD_SIZE_BYTES)] PBL_ALIGNED(DCACHE_LINE_SIZE_MAX);
   /** Watchdog timer detecting a stalled INT1 stream. */
   RegularTimerInfo int1_wdt_timer;
   /** Time of the last FIFO read. */
