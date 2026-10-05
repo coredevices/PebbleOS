@@ -38,8 +38,10 @@ typedef struct UARTState {
   bool tx_int_enabled;
   /** Unused. */
   bool rx_done_pending;
-  /** Receive DMA buffer. */
+  /** Receive DMA buffer, NULL when not receiving through DMA. */
   uint8_t *rx_dma_buffer;
+  /** Receive DMA running; paused while the receive interrupt is disabled. */
+  bool rx_dma_running;
   /** Size of the receive DMA buffer in bytes. */
   uint32_t rx_dma_length;
   /** Index of the receive sub-buffer queued next to the UARTE. */

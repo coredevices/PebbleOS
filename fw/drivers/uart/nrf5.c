@@ -247,9 +247,21 @@ void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_h
   dev->state->tx_irq_handler = irq_handler;
 }
 
+static void prv_rx_dma_start(UARTDevice *dev);
+static void prv_rx_dma_stop(UARTDevice *dev);
+
 void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
   PBL_ASSERTN(dev->state->initialized);
   dev->state->rx_int_enabled = enabled;
+
+  // A running receiver keeps the high-frequency clock on: stop it while nobody listens.
+  if (dev->state->rx_dma_buffer != NULL && enabled != dev->state->rx_dma_running) {
+    if (enabled) {
+      prv_rx_dma_start(dev);
+    } else {
+      prv_rx_dma_stop(dev);
+    }
+  }
 }
 
 void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
@@ -331,6 +343,10 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
   dev->state->rx_dma_length = length / DMA_BUFFERS;
   if (dev->state->rx_dma_length % 4)
     dev->state->rx_dma_length -= dev->state->rx_dma_length % 4;
+  prv_rx_dma_start(dev);
+}
+
+static void prv_rx_dma_start(UARTDevice *dev) {
   dev->state->rx_dma_index = 0;
   dev->state->rx_prod_index = 0;
   dev->state->rx_cons_index = 0;
@@ -343,11 +359,20 @@ void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
   nrfx_uarte_rx_buffer_set(&dev->periph, dev->state->rx_dma_buffer, dev->state->rx_dma_length);
   nrfx_uarte_rx_enable(&dev->periph,
                        NRFX_UARTE_RX_ENABLE_CONT | NRFX_UARTE_RX_ENABLE_KEEP_FIFO_CONTENT);
+  dev->state->rx_dma_running = true;
+}
+
+static void prv_rx_dma_stop(UARTDevice *dev) {
+  nrfx_uarte_rx_abort(&dev->periph, true, true);
+  nrfx_timer_disable(&dev->counter);
+  dev->state->rx_dma_running = false;
 }
 
 void uart_stop_rx_dma(UARTDevice *dev) {
-  nrfx_uarte_rx_abort(&dev->periph, true, true);
-  nrfx_timer_disable(&dev->counter);
+  if (dev->state->rx_dma_running) {
+    prv_rx_dma_stop(dev);
+  }
+  dev->state->rx_dma_buffer = NULL;
 }
 
 void uart_clear_rx_dma_buffer(UARTDevice *dev) {
