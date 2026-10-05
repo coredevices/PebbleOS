@@ -310,16 +310,24 @@ static const I2CSlavePort s_i2c_aw2016 = {
 I2CSlavePort *const I2C_AW2016 = &s_i2c_aw2016;
 
 static I2CBusHalState s_i2c_bus_hal_state_2 = {
-  .hdl = {
-    .Instance = I2C2,
-    .Init =
-        {
-          .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
-          .ClockSpeed = 400000,
-          .GeneralCallMode = I2C_GENERALCALL_DISABLE,
-        },
-    .Mode = HAL_I2C_MODE_MASTER,
-    .core = CORE_ID_HCPU,
+  .hdl =
+      {
+        .Instance = I2C2,
+        .Init =
+            {
+              .AddressingMode = I2C_ADDRESSINGMODE_7BIT,
+              .ClockSpeed = 400000,
+              .GeneralCallMode = I2C_GENERALCALL_DISABLE,
+            },
+        .Mode = HAL_I2C_MODE_MASTER,
+        .core = CORE_ID_HCPU,
+      },
+  .hdma_rx = {
+    .Instance = DMA1_Channel6,
+    .Init = {
+      .Request = DMA_REQUEST_23,
+      .IrqPrio = 5,
+    },
   },
 };
 
@@ -339,6 +347,7 @@ static I2CBusHal s_i2c_bus_hal_2 = {
       },
   .module = RCC_MOD_I2C2,
   .irqn = I2C2_IRQn,
+  .dma_irqn = DMAC1_CH6_IRQn,
 };
 
 static I2CBusState s_i2c_bus_state_2;
@@ -352,6 +361,7 @@ static I2CBus s_i2c_bus_2 = {
 I2CBus *const I2C2_BUS = &s_i2c_bus_2;
 
 PBL_IRQ_CONNECT(I2C2, 5, i2c_irq_handler, I2C2_BUS, 0);
+PBL_IRQ_CONNECT(DMAC1_CH6, 5, i2c_dma_irq_handler, I2C2_BUS, 0);
 
 static LSM6DSOState s_lsm6dso_state;
 
