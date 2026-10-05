@@ -112,6 +112,10 @@ void pbl_cron_handle_clock_change(int32_t utc_time_delta, int32_t gmt_offset_del
   prv_timer_callback(NULL);
 }
 
+void pbl_cron_handle_clock_correction(void) {
+  prv_timer_callback(NULL);
+}
+
 // --------------------------------------------------------------------------------------------
 void pbl_cron_init(void) {
   s_scheduled_jobs = NULL;

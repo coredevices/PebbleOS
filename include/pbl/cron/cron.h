@@ -169,6 +169,14 @@ void pbl_cron_handle_clock_change(int32_t utc_time_delta, int32_t gmt_offset_del
                                   bool dst_changed);
 
 /**
+ * @brief Catch up with a small correction of the wall clock.
+ *
+ * For corrections too small to recalculate execution times for: re-arms the wakeup timer for the
+ * corrected time and runs the jobs that are now due.
+ */
+void pbl_cron_handle_clock_correction(void);
+
+/**
  * @brief Schedule a job, or reschedule it if already scheduled.
  *
  * The job runs once, at its next matching time. The subsystem references the job until it fires

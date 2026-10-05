@@ -906,3 +906,32 @@ void test_cron__schedule_at_reschedules(void) {
   cl_assert_equal_i((uintptr_t)late.cb_data, 0);
   cl_assert(pbl_cron_job_unschedule(&late));
 }
+
+void test_cron__clock_correction_runs_due_jobs(void) {
+  struct pbl_cron_job job = {.cb = prv_cron_callback};
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
+
+  pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 5);
+  rtc_set_time(rtc_get_time() + 10);
+  pbl_cron_handle_clock_correction();
+  cl_assert_equal_i((uintptr_t)job.cb_data, 1);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+}
+
+void test_cron__clock_correction_keeps_execute_times(void) {
+  struct pbl_cron_job job = {
+    .cb = prv_cron_callback,
+    .minute = 45,
+    .hour = PBL_CRON_HOUR_ANY,
+    .mday = PBL_CRON_MDAY_ANY,
+    .month = PBL_CRON_MONTH_ANY,
+  };
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
+
+  const time_t execute_time = pbl_cron_job_schedule(&job);
+  rtc_set_time(rtc_get_time() + 10);
+  pbl_cron_handle_clock_correction();
+  cl_assert_equal_i(job.cached_execute_time, execute_time);
+  cl_assert_equal_i((uintptr_t)job.cb_data, 0);
+  cl_assert(pbl_cron_job_unschedule(&job));
+}

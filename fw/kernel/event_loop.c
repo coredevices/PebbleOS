@@ -488,6 +488,8 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
         wakeup_handle_significant_clock_change();
         pbl_cron_handle_clock_change(set_time_info->utc_time_delta, set_time_info->gmt_offset_delta,
                                      set_time_info->dst_changed);
+      } else {
+        pbl_cron_handle_clock_correction();
       }
 
       // Always reschedule wakeup timers on any time change to prevent timers from
