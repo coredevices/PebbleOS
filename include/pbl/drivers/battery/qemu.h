@@ -4,8 +4,8 @@
 #pragma once
 
 /**
- * @defgroup drivers_qemu_qemu_battery Battery
- * @ingroup drivers
+ * @defgroup drivers_battery_qemu QEMU battery
+ * @ingroup drivers_battery
  * @brief Battery state set from the QEMU host.
  * @{
  */

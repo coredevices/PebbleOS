@@ -3,7 +3,7 @@
 
 set(sources)
 if(CONFIG_PWM_QEMU)
-  list(APPEND sources ../qemu/qemu_pwm_hal.c)
+  list(APPEND sources qemu.c)
 elseif(CONFIG_PWM_NRF5)
   list(APPEND sources nrf5.c)
 elseif(CONFIG_PWM_SF32LB)

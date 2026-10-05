@@ -3,7 +3,7 @@
 
 set(sources battery_common.c)
 if(CONFIG_BATTERY_QEMU)
-  list(APPEND sources ../qemu/qemu_battery.c)
+  list(APPEND sources qemu.c)
 endif()
 pbl_library()
 pbl_library_sources(${sources})

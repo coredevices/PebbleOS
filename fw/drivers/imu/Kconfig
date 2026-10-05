@@ -35,6 +35,11 @@ config ACCEL_LSM6DSO
     help
       Support for the ST LSM6DSO accelerometer/gyroscope.
 
+config ACCEL_QEMU
+    bool "QEMU"
+    help
+      QEMU accelerometer, fed with samples from the QEMU host.
+
 endchoice
 
 if ACCEL_LIS2DW12

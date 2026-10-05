@@ -53,6 +53,12 @@ config VIBE_DRV2604
     help
       Support for the TI DRV2604 haptic driver.
 
+config VIBE_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      QEMU vibration motor, reporting its state to the QEMU host.
+
 module = DRIVER_VIBE
 module-str = Vibration Motor
 source "subsys/logging/Kconfig.template.log_level"

@@ -6,8 +6,8 @@
 #include <inttypes.h>
 
 /**
- * @defgroup drivers_qemu_qemu_accel Accelerometer
- * @ingroup drivers
+ * @defgroup drivers_accel_qemu QEMU accelerometer
+ * @ingroup drivers_accel
  * @brief Accelerometer fed with samples from the QEMU host.
  * @{
  */

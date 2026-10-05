@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/qemu/qemu_accel.h>
-#include <pbl/drivers/qemu/qemu_battery.h>
+#include <pbl/drivers/imu/qemu.h>
+#include <pbl/drivers/battery/qemu.h>
 #include "comm/qemu/serial.h"
 #include "comm/qemu/serial_private.h"
 #include <pbl/drivers/uart.h>

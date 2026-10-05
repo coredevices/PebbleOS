@@ -3,7 +3,7 @@
 
 set(sources)
 if(CONFIG_TOUCH_QEMU)
-  list(APPEND sources ../qemu/qemu_touch.c)
+  list(APPEND sources qemu.c)
 elseif(CONFIG_TOUCH_CST816)
   list(APPEND sources cst816/cst816.c)
 endif()

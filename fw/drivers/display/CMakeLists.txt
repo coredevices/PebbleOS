@@ -3,7 +3,7 @@
 
 set(sources)
 if(CONFIG_DISPLAY_QEMU)
-  list(APPEND sources ../qemu/qemu_display_hal.c)
+  list(APPEND sources qemu.c)
 elseif(CONFIG_DISPLAY_JDI_SF32LB)
   list(APPEND sources sf32lb/display_jdi.c)
   if(CONFIG_SHELL)

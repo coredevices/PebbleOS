@@ -4,7 +4,7 @@
 #include "pbl/services/battery/battery_state.h"
 
 #ifdef CONFIG_QEMU
-#include <pbl/drivers/qemu/qemu_battery.h>
+#include <pbl/drivers/battery/qemu.h>
 #endif
 
 #include "board/board.h"
