@@ -5,6 +5,7 @@ pbl_add_subdirectory_ifdef(CONFIG_SPEAKER speaker)
 pbl_add_subdirectory_ifdef(CONFIG_AMBIENT_LIGHT ambient)
 pbl_add_subdirectory_ifdef(CONFIG_TEMPERATURE temperature)
 pbl_add_subdirectory_ifdef(CONFIG_BATTERY battery)
+add_subdirectory(button)
 add_subdirectory(crc)
 add_subdirectory(imu)
 pbl_add_subdirectory_ifdef(CONFIG_DISPLAY display)
@@ -36,8 +37,6 @@ pbl_library_sources(
   ${mpu_arch_source}
 )
 if(CONFIG_QEMU)
-  pbl_library_named(driver_button)
-  pbl_library_sources(qemu/qemu_button.c)
   pbl_library_named(driver_mcu)
   pbl_library_sources(qemu/qemu_mcu.c)
   pbl_library_named(driver_qemu_serial)
@@ -54,11 +53,6 @@ if(CONFIG_QEMU)
     pbl_library_sources(imu/mag3110/mag3110.c)
   endif()
 elseif(CONFIG_SOC_NRF52)
-  pbl_library_named(driver_button)
-  pbl_library_sources(
-    nrf5/button.c
-    nrf5/debounced_button.c
-  )
   pbl_library_named(driver_mcu)
   pbl_library_sources(nrf5/mcu.c)
   pbl_library_named(driver_qspi)
@@ -66,11 +60,6 @@ elseif(CONFIG_SOC_NRF52)
   pbl_library_named(driver_nrf5_hfxo)
   pbl_library_sources(nrf5/hfxo.c)
 elseif(CONFIG_SOC_SF32LB52)
-  pbl_library_named(driver_button)
-  pbl_library_sources(
-    sf32lb52/button.c
-    sf32lb52/debounced_button.c
-  )
   pbl_library_named(driver_mcu)
   pbl_library_sources(sf32lb52/mcu.c)
   pbl_library_named(driver_qspi)

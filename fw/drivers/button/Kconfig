@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Button"
+
+config BUTTON_NRF5
+    bool "Nordic nRF5"
+    default y if SOC_NRF52
+    select HAL_NORDIC
+    help
+      Support for buttons on Nordic nRF5 GPIOs.
+
+config BUTTON_SF32LB
+    bool "SiFli SF32LB"
+    default y if SOC_SF32LB52
+    select HAL_SIFLI
+    help
+      Support for buttons on SiFli SF32LB GPIOs.
+
+config BUTTON_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      Support for the QEMU buttons.
+
+endmenu
