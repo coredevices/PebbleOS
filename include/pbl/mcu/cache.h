@@ -34,6 +34,17 @@
  * @{
  */
 
+/**
+ * @brief Largest data cache line of the supported cores, in bytes.
+ *
+ * A buffer aligned to it and sized in multiples of it owns every cache line it touches, so it can
+ * be invalidated without harming neighbouring data; see DCACHE_ROUND_UP().
+ */
+#define DCACHE_LINE_SIZE_MAX 32U
+
+/** @brief @p size rounded up to whole @ref DCACHE_LINE_SIZE_MAX lines. */
+#define DCACHE_ROUND_UP(size) (((size) + DCACHE_LINE_SIZE_MAX - 1U) & ~(DCACHE_LINE_SIZE_MAX - 1U))
+
 /** @brief Enable the instruction cache, invalidating it first. */
 void icache_enable(void);
 /** @brief Disable the instruction cache, invalidating it afterwards. */

@@ -89,6 +89,8 @@ typedef struct I2CTransfer {
   uint32_t idx;
   /** Data to write or buffer to read into. */
   uint8_t *data;
+  /** @ref data follows the i2c_read_register_block_dma() rules, so the HAL may use DMA. */
+  bool dma;
 } I2CTransfer;
 
 /** @brief Bus runtime state, owned by the common I2C code. */

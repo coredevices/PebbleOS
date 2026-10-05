@@ -94,6 +94,23 @@ bool i2c_read_register_block(I2CSlavePort *slave, uint8_t register_address_start
                              uint32_t read_size, uint8_t *result_buffer);
 
 /**
+ * @brief Read a block of registers into a buffer the controller may fill through DMA.
+ *
+ * Like i2c_read_register_block(), but the bus may use DMA and let the CPU sleep through the
+ * transfer. The buffer must be aligned to @ref DCACHE_LINE_SIZE_MAX and own the whole cache lines
+ * it covers, @c DCACHE_ROUND_UP(read_size) bytes: declare it with @c PBL_ALIGNED(
+ * DCACHE_LINE_SIZE_MAX) and that size.
+ *
+ * @param slave Device to read from.
+ * @param register_address_start First register address.
+ * @param read_size Number of bytes to read.
+ * @param[out] result_buffer Destination buffer, see above.
+ * @return True on success.
+ */
+bool i2c_read_register_block_dma(I2CSlavePort *slave, uint8_t register_address_start,
+                                 uint32_t read_size, uint8_t *result_buffer);
+
+/**
  * @brief Read data without sending a register address.
  *
  * @param slave Device to read from.
