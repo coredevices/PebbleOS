@@ -54,7 +54,6 @@ typedef struct PBL_PACKED DoNotDisturbSchedule {
   uint8_t to_minute;
 } DoNotDisturbSchedule;
 
-/** @brief Where manual DND was toggled from, matching the FirstUseSource values. */
 #define MAX_QUIET_TIME_SCHEDULES (5)
 
 typedef enum {
@@ -83,6 +82,7 @@ typedef struct PBL_PACKED QuietTimeScheduleConfig {
   uint8_t enabled;
 } QuietTimeScheduleConfig;
 
+/** @brief Where manual DND was toggled from, matching the FirstUseSource values. */
 typedef enum ManualDNDFirstUseSource {
   /** Notification action menu. */
   ManualDNDFirstUseSourceActionMenu = 0,
@@ -133,15 +133,15 @@ bool do_not_disturb_is_smart_dnd_enabled(void);
 /** @brief Toggle smart DND, showing the first use dialog the first time. */
 void do_not_disturb_toggle_smart_dnd(void);
 
+//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
+void do_not_disturb_refresh_active_state(void);
+
 /**
  * @brief Get a DND schedule.
  *
  * @param type Schedule to get.
  * @param[out] schedule_out Schedule.
  */
-//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
-void do_not_disturb_refresh_active_state(void);
-
 void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule_out);
 
 /**
@@ -152,7 +152,6 @@ void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSche
  */
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type);
 
-/** @brief Initialize the DND service and arm the schedule timers. */
 //! Iterate over all quiet time schedules. Callback is called for each slot
 //! (0..MAX_QUIET_TIME_SCHEDULES-1) regardless of whether the slot is active.
 typedef void (*QuietTimeScheduleCallback)(int index, const QuietTimeScheduleConfig *config,
@@ -188,6 +187,7 @@ void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffe
 //! Get the number of active (enabled and non-empty) schedule slots
 int quiet_time_get_num_active(void);
 
+/** @brief Initialize the DND service and arm the schedule timers. */
 void do_not_disturb_init(void);
 
 /** @brief Re-evaluate the schedule after the wall clock or timezone changed. */
