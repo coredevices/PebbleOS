@@ -278,6 +278,7 @@ AccelServiceState *accel_session_create(void) {
   AccelServiceState *state = kernel_malloc_check(sizeof(AccelServiceState));
 
   *state = (AccelServiceState){
+    .kernel_session = true,
     .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
     .accel_shake_info =
         {
@@ -359,9 +360,9 @@ void accel_session_data_unsubscribe(AccelServiceState *state) {
     return;
   }
   if (sys_accel_manager_data_unsubscribe(state->manager_state)) {
-    // There is a pending event posted. Only session tasks allocate memory for their state in the
-    // first place so only free the memory if this is true
-    state->deferred_free = prv_is_session_task();
+    // A queued data event still points at this state. Only a session from accel_session_create()
+    // is heap memory, so only that one is freed when the event drains.
+    state->deferred_free = state->kernel_session;
   }
 
   applib_free(state->raw_data);
