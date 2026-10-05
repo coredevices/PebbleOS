@@ -349,6 +349,13 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
 
     case PEBBLE_GESTURE_EVENT: {
 #ifdef CONFIG_TOUCH
+      if (e->gesture.event.type == GestureEvent_Palm) {
+        // palm gesture turns off the backlight
+        light_touch_up();
+        light_enable(false);
+        touch_session_reset();
+        return;
+      }
       s_touch_contact_engaged = true;
 #endif
       bool wake_on_gesture = false;
