@@ -154,13 +154,15 @@ void test_timeline_layouts__cleanup(void) {
 
 void prv_handle_down_click(ClickRecognizerRef recognizer, void *context);
 
-static void prv_render_layout(LayoutId layout_id, const AttributeList *attr_list,
-                              size_t num_down_clicks) {
+static void prv_render_layout(LayoutId layout_id, time_t timestamp, uint16_t duration_m,
+                              const AttributeList *attr_list, size_t num_down_clicks) {
   PBL_ASSERTN(attr_list);
 
   TimelineItem item = (TimelineItem){
     .header =
         (CommonTimelineItemHeader){
+          .timestamp = timestamp,
+          .duration = duration_m,
           .layout = layout_id,
           .type = TimelineItemTypePin,
         },
@@ -195,6 +197,8 @@ typedef struct TimelineLayoutTestConfig {
   TimelineResourceId icon_timeline_res_id;
   WeatherTimeType weather_time_type;
   uint8_t weather_pin_kind;
+  time_t timestamp;
+  uint16_t duration_m;
 } TimelineLayoutTestConfig;
 
 static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *config,
@@ -226,7 +230,8 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
   // Just need to put something here so our mocked clock_get_since_time() gets called
   attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 1337);
 
-  prv_render_layout(config->layout_id, &attr_list, num_down_clicks);
+  prv_render_layout(config->layout_id, config->timestamp, config->duration_m, &attr_list,
+                    num_down_clicks);
 
   attribute_list_destroy_list(&attr_list);
 }
@@ -305,6 +310,27 @@ static const TimelineLayoutTestConfig s_calendar_config = {
 
 void test_timeline_layouts__content_sizes_calendar(void) {
   prv_check_pages_for_each_size(prv_render_config_page, &s_calendar_config, 2, TEST_PBI_FILE);
+}
+
+static const TimelineLayoutTestConfig s_calendar_multi_day_config = {
+  .layout_id = LayoutIdCalendar,
+  .title = "Design Offsite",
+  .location_name = "Batavia, Palo Alto",
+  .body = "Bring the latest mockups",
+  .icon_timeline_res_id = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+  // 10:00 AM January 1 to 10:00 AM January 4, so the details show start and end dates
+  .timestamp = 10 * PBL_SEC_PER_HOUR,
+  .duration_m = 3 * PBL_MIN_PER_DAY,
+};
+
+//! Renders the peek and the third page, which shows both dates even when they wrap
+static void prv_render_multi_day_page(const void *context, size_t page) {
+  prv_construct_and_render_layout(context, page ? 2 : 0);
+}
+
+void test_timeline_layouts__content_sizes_calendar_multi_day(void) {
+  prv_check_pages_for_each_size(prv_render_multi_day_page, &s_calendar_multi_day_config, 2,
+                                TEST_PBI_FILE);
 }
 
 static const TimelineLayoutTestConfig s_alarm_config = {
@@ -411,7 +437,7 @@ static void prv_construct_and_render_sports_layout(GameState state, size_t num_d
   attribute_list_add_cstring(&attr_list, AttributeIdBroadcaster, "ESPN");
   attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 1337);
 
-  prv_render_layout(LayoutIdSports, &attr_list, num_down_clicks);
+  prv_render_layout(LayoutIdSports, 0, 0, &attr_list, num_down_clicks);
 
   attribute_list_destroy_list(&attr_list);
 }
