@@ -47,11 +47,8 @@ if(CONFIG_QEMU)
   )
   pbl_library_named(driver_qemu_settings)
   pbl_library_sources(qemu/qemu_settings.c)
-  pbl_library_named(driver_qemu_stubs)
-  pbl_library_sources(
-    stubs/ambient_light.c
-    qemu/qemu_vibe.c
-  )
+  pbl_library_named(driver_qemu_vibe)
+  pbl_library_sources(qemu/qemu_vibe.c)
   if(CONFIG_MAG)
     pbl_library_named(driver_mag3110)
     pbl_library_sources(imu/mag3110/mag3110.c)

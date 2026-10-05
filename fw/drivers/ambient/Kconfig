@@ -18,10 +18,18 @@ config AMBIENT_LIGHT_W1160
     help
       Support for the W1160 ambient light sensor.
 
+config AMBIENT_LIGHT_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      QEMU ambient light sensor. QEMU emulates none, so it always reads
+      complete darkness.
+
 config AMBIENT_LIGHT_BITS
     int "Ambient light sensor resolution (bits)"
     default 12 if AMBIENT_LIGHT_OPT3001
     default 16 if AMBIENT_LIGHT_W1160
+    default 12 if AMBIENT_LIGHT_QEMU
     help
       Number of bits in the ambient light sensor reading. Used to derive
       AMBIENT_LIGHT_LEVEL_MAX, which bounds the dark/backlight thresholds
