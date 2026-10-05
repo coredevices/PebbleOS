@@ -27,7 +27,7 @@ extern char *itoa(int value, char *str, int base);
 #include "logging/pulse_logging.h"
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/mpu.h>
+#include <pbl/mcu/mpu.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/drivers/rtc.h>
 

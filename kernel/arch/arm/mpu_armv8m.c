@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mpu.h>
+#include "pbl/mcu/mpu.h"
 
-#include "system/passert.h"
 #include "pbl/util/size.h"
 
 #include <cmsis_core.h>
+
+#include "kernel.h"
 
 // On SF32LB52 the SiFli vendor code (system_bf0_ap.c) programs its own MPU
 // regions in SystemInit() and burns MAIR indices 0..2 (code / ram / device)
@@ -29,7 +30,7 @@ static inline uint8_t mair_index(uint32_t cache_policy) {
 //     rely on this for thread-stack-overflow detection -- use PSPLIM.
 //   - PrivRW_UserRO: the AP field cannot split write access by privilege.
 //     We pick AP=0b01 (R/W any privilege level), which gives the user
-//     write access too. See the MpuPermissions doc in drivers/mpu.h.
+//     write access too. See the MpuPermissions doc in pbl/mcu/mpu.h.
 static const uint8_t s_permission_to_ap[MpuPermissionsCount] = {
   [MpuPermissions_NoAccess] = 0x2,      [MpuPermissions_PrivRW] = 0x0,
   [MpuPermissions_PrivRW_UserRO] = 0x1, [MpuPermissions_PrivRW_UserRW] = 0x1,
@@ -48,7 +49,7 @@ static const uint32_t s_cache_settings[] = {
 };
 
 static uint8_t get_permission_value(const MpuRegion *region) {
-  PBL_ASSERTN(region->permissions < MpuPermissionsCount);
+  KERNEL_ASSERT(region->permissions < MpuPermissionsCount);
   return s_permission_to_ap[region->permissions];
 }
 
@@ -92,11 +93,11 @@ void mpu_enable(void) {
 
 void mpu_get_register_settings(const MpuRegion *region, uint32_t *base_address_reg,
                                uint32_t *attributes_reg) {
-  PBL_ASSERTN(region);
-  PBL_ASSERTN((region->base_address & 0x1f) == 0);
-  PBL_ASSERTN((region->region_num & ~0xf) == 0);
-  PBL_ASSERTN((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
-  PBL_ASSERTN((region->size & 0x1f) == 0);
+  KERNEL_ASSERT(region);
+  KERNEL_ASSERT((region->base_address & 0x1f) == 0);
+  KERNEL_ASSERT((region->region_num & ~0xf) == 0);
+  KERNEL_ASSERT((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
+  KERNEL_ASSERT((region->size & 0x1f) == 0);
 
   *base_address_reg = ((region->base_address & MPU_RBAR_BASE_Msk) |
                        ((ARM_MPU_SH_INNER << MPU_RBAR_SH_Pos) & MPU_RBAR_SH_Msk) |

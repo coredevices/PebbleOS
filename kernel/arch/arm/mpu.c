@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mpu.h>
+#include "pbl/mcu/mpu.h"
 
 #include "pbl/mcu/cache.h"
-#include "system/passert.h"
 
 #include <cmsis_core.h>
+
+#include "kernel.h"
 
 extern const uint32_t __SRAM_size__[];
 #if !defined(SRAM_BASE)
@@ -36,7 +37,7 @@ bool mpu_memory_is_cachable(const void *addr) {
 void mpu_init_region_from_region(MpuRegion *copy, const MpuRegion *from, bool allow_user_access) {
   // Caller-side invariant: `from` is a PrivRW region (App/Worker RAM).
   // Toggle user RW based on which task is about to run.
-  PBL_ASSERTN(from->permissions == MpuPermissions_PrivRW);
+  KERNEL_ASSERT(from->permissions == MpuPermissions_PrivRW);
   *copy = *from;
   copy->permissions = allow_user_access ? MpuPermissions_PrivRW_UserRW : MpuPermissions_PrivRW;
 }

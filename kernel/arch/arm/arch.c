@@ -6,9 +6,9 @@
 
 #include <cmsis_core.h>
 
-#include "pbl/drivers/mpu.h"
 #include "pbl/kernel/idle.h"
 #include "pbl/mcu/interrupts.h"
+#include "pbl/mcu/mpu.h"
 
 #include "kernel.h"
 #include "pbl/kernel/compiler.h"

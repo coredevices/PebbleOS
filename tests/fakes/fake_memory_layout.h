@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mpu.h>
+#include <pbl/mcu/mpu.h>
 
 // Everything but NULL + 256
 const MpuRegion s_fake_app_region = {

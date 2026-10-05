@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mpu.h>
+#include "pbl/mcu/mpu.h"
 
-#include "system/passert.h"
 #include "pbl/util/size.h"
 
-#include <inttypes.h>
-
 #include <cmsis_core.h>
+
+#include "kernel.h"
 
 // ARMv7-M has a 3-bit AP field, so every MpuPermissions value maps to a
 // unique encoding (0x4 is reserved; 0x6/0x7 both decode to "RO any priv",
@@ -28,7 +27,7 @@ static const uint32_t s_cache_settings[] = {
 };
 
 static uint8_t get_permission_value(const MpuRegion *region) {
-  PBL_ASSERTN(region->permissions < MpuPermissionsCount);
+  KERNEL_ASSERT(region->permissions < MpuPermissionsCount);
   return s_permission_to_ap[region->permissions];
 }
 
@@ -73,7 +72,7 @@ typedef struct {
 } BlockLayout;
 
 static BlockLayout compute_block_layout(uintptr_t base, uint32_t size) {
-  PBL_ASSERT(size >= MPU_ARMV7M_MIN_REGION_SIZE, "MPU region too small: %" PRIu32, size);
+  KERNEL_ASSERT(size >= MPU_ARMV7M_MIN_REGION_SIZE);
 
   uint32_t block = MPU_ARMV7M_MIN_REGION_SIZE;
   while (block < size) {
@@ -99,8 +98,7 @@ static BlockLayout compute_block_layout(uintptr_t base, uint32_t size) {
     }
     block <<= 1;
   }
-  PBL_CROAK("MPU region cannot fit subregion alignment: base=0x%08" PRIxPTR " size=0x%" PRIx32,
-            base, size);
+  KERNEL_ASSERT(false);
 }
 
 static uint32_t get_size_field(uint32_t block_size) {
@@ -122,10 +120,10 @@ void mpu_enable(void) {
 // region.
 void mpu_get_register_settings(const MpuRegion *region, uint32_t *base_address_reg,
                                uint32_t *attributes_reg) {
-  PBL_ASSERTN(region);
-  PBL_ASSERTN((region->base_address & 0x1f) == 0);
-  PBL_ASSERTN((region->region_num & ~0xf) == 0);
-  PBL_ASSERTN((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
+  KERNEL_ASSERT(region);
+  KERNEL_ASSERT((region->base_address & 0x1f) == 0);
+  KERNEL_ASSERT((region->region_num & ~0xf) == 0);
+  KERNEL_ASSERT((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
 
   const BlockLayout layout = compute_block_layout(region->base_address, region->size);
 

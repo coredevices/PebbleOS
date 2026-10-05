@@ -25,16 +25,6 @@ pbl_add_subdirectory_ifdef(CONFIG_UART uart)
 pbl_add_subdirectory_ifdef(CONFIG_VIBE vibe)
 pbl_add_subdirectory_ifdef(CONFIG_WATCHDOG watchdog)
 pbl_add_subdirectory_ifdef(CONFIG_HRM hrm)
-if(CONFIG_MPU_TYPE_ARMV8M)
-  set(mpu_arch_source "mpu/mpu_armv8m.c")
-else()
-  set(mpu_arch_source "mpu/mpu_armv7m.c")
-endif()
-pbl_library_named(driver_mpu)
-pbl_library_sources(
-  mpu.c
-  ${mpu_arch_source}
-)
 if(CONFIG_QEMU)
   pbl_library_named(driver_button)
   pbl_library_sources(qemu/qemu_button.c)

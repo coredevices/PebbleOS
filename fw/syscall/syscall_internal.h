@@ -6,7 +6,7 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/kernel/compiler.h"
 
-#include <pbl/drivers/mpu.h>
+#include <pbl/mcu/mpu.h>
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -7,8 +7,8 @@
 #include <stdbool.h>
 
 /**
- * @defgroup drivers_mpu MPU
- * @ingroup drivers
+ * @defgroup mcu_mpu MPU
+ * @ingroup mcu
  * @brief Memory Protection Unit regions.
  *
  * Backends exist for ARMv7-M and ARMv8-M. Regions are described by their real base and size;
