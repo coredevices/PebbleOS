@@ -271,7 +271,7 @@ void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
 // in the privileged-only .kernel_bss output (RAM): unreadable by app
 // code, zeroed at boot. (Not section(".kernel_bss") -- that would orphan them.)
 #define SYSCALL_STACK_WORDS 512u // 2 KiB each; size against measured high-water.
-#ifdef CONFIG_MPU_TYPE_ARMV8M
+#ifdef CONFIG_ARMV8_M_MAINLINE
 #define SYSCALL_STACK_GUARD_WORDS 0u
 #else
 #define SYSCALL_STACK_GUARD_WORDS 8u // smallest ARMv7-M MPU region, naturally aligned
@@ -401,7 +401,7 @@ PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege(void) {
       " pop {r0, r1} \n"                    // r0,r1 = syscall return value
       " cbz r2, 1f \n"                      // skip stack switch if not relocated
       " msr psp, r2 \n" // back to the app stack (higher addr; safe vs low limit)
-#ifdef CONFIG_MPU_TYPE_ARMV8M
+#ifdef CONFIG_ARMV8_M_MAINLINE
       " msr psplim, r3 \n" // restore the app stack limit
 #endif
       " isb \n"

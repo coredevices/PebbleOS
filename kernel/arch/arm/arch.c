@@ -148,14 +148,14 @@ void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regio
     const MpuRegion *r = regions ? regions[i] : NULL;
     uint32_t rbar = 0;
     uint32_t attr = 0;
-#ifndef CONFIG_MPU_TYPE_ARMV8M
+#ifndef CONFIG_ARMV8_M_MAINLINE
     rbar = MPU_RBAR_VALID_Msk | (FIRST_MPU_REGION + i);
 #endif
     if (r != NULL) {
       KERNEL_ASSERT(r->region_num == FIRST_MPU_REGION + i);
       uint32_t base_reg;
       mpu_get_register_settings(r, &base_reg, &attr);
-#ifdef CONFIG_MPU_TYPE_ARMV8M
+#ifdef CONFIG_ARMV8_M_MAINLINE
       rbar = base_reg;
 #else
       rbar |= base_reg & ~(MPU_RBAR_VALID_Msk | MPU_RBAR_REGION_Msk);

@@ -12,8 +12,8 @@ pbl_library_sources(
   reset.c
   vector_table.c
 )
-pbl_library_sources_ifdef(CONFIG_MPU_TYPE_ARMV7M mpu_armv7m.c)
-pbl_library_sources_ifdef(CONFIG_MPU_TYPE_ARMV8M mpu_armv8m.c)
+pbl_library_sources_ifdef(CONFIG_ARMV7_M mpu_armv7m.c)
+pbl_library_sources_ifdef(CONFIG_ARMV8_M_MAINLINE mpu_armv8m.c)
 
 pbl_include_directories(include)
 pbl_linker_sources(rom-start irq.ld)

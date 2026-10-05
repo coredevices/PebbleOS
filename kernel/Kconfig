@@ -41,7 +41,7 @@ config KERNEL_THREAD_TLS_SLOTS
 
 config KERNEL_STACK_ALIGN
 	int "Thread stack alignment"
-	default 32 if MPU_TYPE_ARMV8M
+	default 32 if ARMV8_M_MAINLINE
 	default 256
 	help
 	  Alignment that lets the bottom of a stack be covered by an MPU

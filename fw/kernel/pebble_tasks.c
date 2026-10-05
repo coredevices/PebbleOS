@@ -262,7 +262,7 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
   }
 
   const MpuRegion *stack_guard_region = NULL;
-#ifndef CONFIG_MPU_TYPE_ARMV8M
+#ifndef CONFIG_ARMV8_M_MAINLINE
   // Per-task stack overflow detection: on ARMv7-M we plant a no-access
   // MPU region at the bottom of each task's stack. On ARMv8-M the kernel
   // sets PSPLIM to the same address, so the hardware stack-pointer-limit
