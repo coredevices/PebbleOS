@@ -142,9 +142,13 @@ static void prv_deliver(uint32_t num_samples) {
 
 static int s_data_handler_calls;
 static int s_raw_data_handler_calls;
+static uint64_t s_timestamps[2];
 
 static void prv_data_handler(AccelData *data, uint32_t num_samples) {
   s_data_handler_calls++;
+  for (uint32_t i = 0; i < num_samples && i < 2; i++) {
+    s_timestamps[i] = data[i].timestamp;
+  }
 }
 
 static void prv_raw_data_handler(AccelRawData *data, uint32_t num_samples, uint64_t timestamp) {
@@ -166,6 +170,8 @@ void test_accel_service__initialize(void) {
   s_consume_calls = 0;
   s_data_handler_calls = 0;
   s_raw_data_handler_calls = 0;
+  s_timestamps[0] = 0;
+  s_timestamps[1] = 0;
   stub_pebble_tasks_set_current(PebbleTask_App);
 }
 
@@ -308,4 +314,16 @@ void test_accel_service__a_replaced_kernel_session_is_freed_by_the_stale_event(v
   s_data_cb(s_data_cb_context);
 
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
+}
+
+//! Subscribing records its own rate. A rate left over from the old subscription spaces the
+//! sample timestamps for the wrong rate.
+void test_accel_service__subscribing_again_resets_the_sampling_rate(void) {
+  accel_data_service_subscribe(2, prv_data_handler);
+  accel_service_set_sampling_rate(ACCEL_SAMPLING_100HZ);
+  accel_data_service_subscribe(2, prv_data_handler);
+
+  prv_deliver(2);
+
+  cl_assert_equal_i(s_timestamps[1] - s_timestamps[0], 40);
 }

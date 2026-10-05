@@ -166,6 +166,7 @@ static void prv_shared_subscribe(AccelServiceState *state, AccelSamplingRate sam
   AccelManagerState *old_manager_state = state->manager_state;
   state->manager_state =
       sys_accel_manager_data_subscribe(sampling_rate, prv_do_data_handle, state, handler_task);
+  state->sampling_rate = sampling_rate;
   if (old_manager_state && sys_accel_manager_data_unsubscribe(old_manager_state)) {
     // A data event for the old subscription still points at this state, as on unsubscribe
     state->deferred_free |= state->kernel_session;
