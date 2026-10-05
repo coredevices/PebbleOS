@@ -7,21 +7,23 @@
 #include <pbl/drivers/vibe.h>
 #include "kernel/util/sleep.h"
 #include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
 #include "system/passert.h"
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 
 #define AW8623X_PLAYCFG3                0x08U
-#define AW8623X_PLAYCFG3_BRK_EN         (1U << 2U)
-#define AW8623X_PLAYCFG3_PLAY_MODE_CONT (2U << 0U)
+#define AW8623X_PLAYCFG3_BRK_EN         PBL_BIT(2)
+#define AW8623X_PLAYCFG3_PLAY_MODE_MASK PBL_GENMASK(1, 0)
+#define AW8623X_PLAYCFG3_PLAY_MODE_CONT 0x2U
 
 #define AW8623X_PLAYCFG4      0x09U
-#define AW8623X_PLAYCFG4_STOP (1U << 1U)
-#define AW8623X_PLAYCFG4_GO   (1U << 0U)
+#define AW8623X_PLAYCFG4_STOP PBL_BIT(1)
+#define AW8623X_PLAYCFG4_GO   PBL_BIT(0)
 
 #define AW8623X_CONTCFG1               0x17U
 #define AW8623X_CONTCFG1_EDGE_FRE_NONE 0x0U
-#define AW8623X_CONTCFG1_SIN_MODE_COS  (1U << 4U)
+#define AW8623X_CONTCFG1_SIN_MODE_COS  PBL_BIT(4)
 
 #define AW8623X_CONTCFG2               0x18U
 #define AW8623X_CONTCFG2_CONF_F0(freq) (24000U / (freq))
@@ -29,11 +31,13 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW8623X_CONTCFG3                 0x19U
 #define AW8623X_CONTCFG3_DRV_WIDTH(freq) (48000U / (freq))
 
-#define AW8623X_CONTCFG6          0x1CU
-#define AW8623X_CONTCFG6_TRACK_EN (1U << 7U)
+#define AW8623X_CONTCFG6               0x1CU
+#define AW8623X_CONTCFG6_TRACK_EN      PBL_BIT(7)
+#define AW8623X_CONTCFG6_DRV1_LVL_MASK PBL_GENMASK(6, 0)
 
-#define AW8623X_CONTCFG7              0x1DU
-#define AW8623X_CONTCFG7_DRV2_LVL_MAX 0x7FU
+#define AW8623X_CONTCFG7               0x1DU
+#define AW8623X_CONTCFG7_DRV2_LVL_MASK PBL_GENMASK(6, 0)
+#define AW8623X_CONTCFG7_DRV2_LVL_MAX  0x7FU
 
 #define AW8623X_CONTCFG8               0x1EU
 #define AW8623X_CONTCFG8_DRV1_TIME_MAX 0xFFU
@@ -42,14 +46,14 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW8623X_CONTCFG9_DRV2_TIME_MAX 0xFFU
 
 #define AW8623X_GLBRD5               0x3FU
-#define AW8623X_GLBRD5_STATE_MASK    0x0FU
+#define AW8623X_GLBRD5_STATE_MASK    PBL_GENMASK(3, 0)
 #define AW8623X_GLBRD5_STATE_STANDBY 0x00U
 
 #define AW8623X_SYSCTRL2         0x46U
-#define AW8623X_SYSCTRL2_STANDBY (1U << 6U)
+#define AW8623X_SYSCTRL2_STANDBY PBL_BIT(6)
 
 #define AW8623X_VBATCTRL              0x4EU
-#define AW8623X_VBATCTRL_VBAT_MODE_HW (1U << 6U)
+#define AW8623X_VBATCTRL_VBAT_MODE_HW PBL_BIT(6)
 
 #define AW8623X_IDH          0x57U
 #define AW8623X_IDH_CHIPID_H 0x23U
@@ -90,7 +94,7 @@ static bool prv_set_standby(bool standby) {
   if (!prv_read_register(AW8623X_SYSCTRL2, &val)) {
     return false;
   }
-  val = (val & ~AW8623X_SYSCTRL2_STANDBY) | (standby ? AW8623X_SYSCTRL2_STANDBY : 0);
+  val = (val & ~AW8623X_SYSCTRL2_STANDBY) | PBL_FIELD_PREP(AW8623X_SYSCTRL2_STANDBY, standby);
   return prv_write_register(AW8623X_SYSCTRL2, val);
 }
 
@@ -100,7 +104,7 @@ static bool prv_wait_for_standby(void) {
     if (!prv_read_register(AW8623X_GLBRD5, &val)) {
       return false;
     }
-    if ((val & AW8623X_GLBRD5_STATE_MASK) == AW8623X_GLBRD5_STATE_STANDBY) {
+    if (PBL_FIELD_GET(AW8623X_GLBRD5_STATE_MASK, val) == AW8623X_GLBRD5_STATE_STANDBY) {
       return true;
     }
     psleep(AW8623X_STOP_POLL_MS);
@@ -151,11 +155,15 @@ void vibe_init(void) {
   ret &= prv_write_register(AW8623X_CONTCFG2, AW8623X_CONTCFG2_CONF_F0(235U));
   ret &= prv_write_register(AW8623X_CONTCFG3, AW8623X_CONTCFG3_DRV_WIDTH(235U));
   const uint8_t scale = ((uint16_t)s_target_strength * AW8623X_CONTCFG7_DRV2_LVL_MAX) / 100U;
-  ret &= prv_write_register(AW8623X_CONTCFG6, scale | AW8623X_CONTCFG6_TRACK_EN);
-  ret &= prv_write_register(AW8623X_CONTCFG7, scale);
+  ret &=
+      prv_write_register(AW8623X_CONTCFG6, PBL_FIELD_PREP(AW8623X_CONTCFG6_DRV1_LVL_MASK, scale) |
+                                               AW8623X_CONTCFG6_TRACK_EN);
+  ret &=
+      prv_write_register(AW8623X_CONTCFG7, PBL_FIELD_PREP(AW8623X_CONTCFG7_DRV2_LVL_MASK, scale));
 
-  ret &= prv_write_register(AW8623X_PLAYCFG3,
-                            AW8623X_PLAYCFG3_BRK_EN | AW8623X_PLAYCFG3_PLAY_MODE_CONT);
+  ret &= prv_write_register(
+      AW8623X_PLAYCFG3, AW8623X_PLAYCFG3_BRK_EN | PBL_FIELD_PREP(AW8623X_PLAYCFG3_PLAY_MODE_MASK,
+                                                                 AW8623X_PLAYCFG3_PLAY_MODE_CONT));
   ret &= prv_write_register(AW8623X_VBATCTRL, AW8623X_VBATCTRL_VBAT_MODE_HW);
 
   PBL_ASSERTN(ret);
@@ -178,8 +186,10 @@ void vibe_set_strength(int8_t strength) {
   s_target_strength = strength;
   scale = ((uint16_t)strength * AW8623X_CONTCFG7_DRV2_LVL_MAX) / 100U;
 
-  ret = prv_write_register(AW8623X_CONTCFG6, scale | AW8623X_CONTCFG6_TRACK_EN);
-  ret &= prv_write_register(AW8623X_CONTCFG7, scale);
+  ret = prv_write_register(AW8623X_CONTCFG6, PBL_FIELD_PREP(AW8623X_CONTCFG6_DRV1_LVL_MASK, scale) |
+                                                 AW8623X_CONTCFG6_TRACK_EN);
+  ret &=
+      prv_write_register(AW8623X_CONTCFG7, PBL_FIELD_PREP(AW8623X_CONTCFG7_DRV2_LVL_MASK, scale));
   PBL_ASSERTN(ret);
 }
 
