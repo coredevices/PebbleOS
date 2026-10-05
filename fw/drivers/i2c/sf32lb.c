@@ -6,6 +6,7 @@
 #include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/hal.h>
 
+#include "pbl/mcu/cache.h"
 #include "pbl/soc/sf32lb/sleep.h"
 #include "system/passert.h"
 
@@ -27,6 +28,27 @@ static void prv_deepsleep_allow(I2CBus *bus) {
   if (blocked) {
     soc_sf32lb_sleep_release(SOC_SF32LB_DEEPSLEEP);
   }
+}
+
+static bool prv_dma_usable(I2CBus *bus, const I2CTransfer *transfer) {
+  return transfer->dma && bus->hal->state->hdma_rx.Instance != NULL &&
+         transfer->type == I2CTransferType_SendRegisterAddress &&
+         transfer->direction == I2CTransferDirection_Read &&
+         transfer->size >= I2C_SF32LB_DMA_MIN_BYTES;
+}
+
+//! Makes a completed DMA read visible to the CPU; stops an aborted one.
+static void prv_dma_finish(I2CBus *bus, bool completed) {
+  I2CBusHalState *state = bus->hal->state;
+  if (state->dma_data == NULL) {
+    return;
+  }
+  if (completed) {
+    dcache_invalidate(state->dma_data, DCACHE_ROUND_UP(state->dma_size));
+  } else {
+    HAL_DMA_Abort(&state->hdma_rx);
+  }
+  state->dma_data = NULL;
 }
 
 void i2c_irq_handler(I2CBus *bus) {
@@ -51,8 +73,13 @@ void i2c_irq_handler(I2CBus *bus) {
   }
 
   prv_deepsleep_allow(bus);
+  prv_dma_finish(bus, event == I2CTransferEvent_TransferComplete);
 
   i2c_handle_transfer_event(bus, event);
+}
+
+void i2c_dma_irq_handler(I2CBus *bus) {
+  HAL_DMA_IRQHandler(&bus->hal->state->hdma_rx);
 }
 
 void i2c_hal_init_transfer(I2CBus *bus) {
@@ -66,6 +93,7 @@ void i2c_hal_abort_transfer(I2CBus *bus) {
   HAL_I2C_Reset(hdl);
 
   prv_deepsleep_allow(bus);
+  prv_dma_finish(bus, false);
 }
 
 void i2c_hal_start_transfer(I2CBus *bus) {
@@ -74,7 +102,15 @@ void i2c_hal_start_transfer(I2CBus *bus) {
   I2C_HandleTypeDef *hdl = &hal->state->hdl;
   I2CTransfer *transfer = &bus->state->transfer;
 
-  if (transfer->type == I2CTransferType_SendRegisterAddress) {
+  if (prv_dma_usable(bus, transfer)) {
+    // Dropping the buffer's lines now keeps a dirty one from being evicted over the DMA data.
+    hal->state->dma_data = transfer->data;
+    hal->state->dma_size = transfer->size;
+    dcache_invalidate(transfer->data, DCACHE_ROUND_UP(transfer->size));
+    HAL_DMA_Init(&hal->state->hdma_rx);
+    ret = HAL_I2C_Mem_Read_DMA(hdl, transfer->device_address, transfer->register_address,
+                               I2C_MEMADD_SIZE_8BIT, transfer->data, transfer->size);
+  } else if (transfer->type == I2CTransferType_SendRegisterAddress) {
     if (transfer->direction == I2CTransferDirection_Read) {
       ret = HAL_I2C_Mem_Read_IT(hdl, transfer->device_address, transfer->register_address,
                                 I2C_MEMADD_SIZE_8BIT, transfer->data, transfer->size);
@@ -95,6 +131,7 @@ void i2c_hal_start_transfer(I2CBus *bus) {
   if (ret != HAL_OK) {
     HAL_I2C_Reset(hdl);
     prv_deepsleep_allow(bus);
+    prv_dma_finish(bus, false);
     bus->state->transfer_event = I2CTransferEvent_Error;
     pbl_sem_give(&bus->state->event_semaphore);
   }
@@ -134,6 +171,20 @@ void i2c_hal_init(I2CBus *bus) {
   HAL_RCC_EnableModule(hal->module);
   ret = HAL_I2C_Init(hdl);
   PBL_ASSERTN(ret == HAL_OK);
+
+  if (hal->state->hdma_rx.Instance != NULL) {
+    PBL_ASSERTN(dcache_line_size() <= DCACHE_LINE_SIZE_MAX);
+    DMA_InitTypeDef *init = &hal->state->hdma_rx.Init;
+    init->Direction = DMA_PERIPH_TO_MEMORY;
+    init->PeriphInc = DMA_PINC_DISABLE;
+    init->MemInc = DMA_MINC_ENABLE;
+    init->PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    init->MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    init->Mode = DMA_NORMAL;
+    init->Priority = DMA_PRIORITY_HIGH;
+    __HAL_LINKDMA(hdl, hdmarx, hal->state->hdma_rx);
+    pbl_irq_enable(hal->dma_irqn);
+  }
 
   pbl_irq_enable(hal->irqn);
 }
