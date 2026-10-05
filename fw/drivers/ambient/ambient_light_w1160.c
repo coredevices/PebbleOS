@@ -7,6 +7,7 @@
 #include "kernel/util/sleep.h"
 #include "pbl/kernel/mutex.h"
 #include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
 #include "system/passert.h"
 
 #include <inttypes.h>
@@ -48,23 +49,22 @@ PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 // Configuration register bits
 #define W1160_ALSCTRL_REG 0xA4
 
-#define W1160_POR_WAIT_TIME         (10)      /* ms */
-#define W1160_AGCCTRL1_AGC_EN       (0 << 7)  /* 1:en; 0:dis */
-#define W1160_AGCCTRL1_MGC_EN       (1)       /* 1:en; 0:dis */
-#define W1160_AGCCTRL2_SEL_MODE     (1 << 2)  /* must be 1 */
-#define W1160_AGCCTRL2_12B_MODE     (0 << 3)  /* 1:12bit */
-#define W1160_ALSCTRL_SAT_EN        (0 << 1)  /* 1:en; 0:dis */
-#define W1160_ALSCTRL_DATA_FORMAT12 (0 << 2)  /* 1:12bit 0:16bit */
-#define W1160_DATA_GC_LVL           (15 << 4) /* gc lelvel 15 */
-#define W1160_SAT_GC_CONFIG         (0x0A)
-#define W1160_SLOW_IT_CONFIG1       (0x03) /* 99ms ((0x3E7+1) * 99us) */
-#define W1160_SLOW_IT_CONFIG2       (0xE7)
-#define W1160_SLOW_ST_CONFIG1       (0x07) /* 200ms ((0x7CF+1) * 100us) */
-#define W1160_SLOW_ST_CONFIG2       (0xCF)
-#define W1160_SAMPLING_EN           (1 << 1) /* 1:en 0:dis */
-#define W1160_SAMPLING_DIS          (0 << 1) /* 1:en 0:dis */
-#define W1160_CHIP_ID               (0xE5)
-#define W1160_FLG_ALS_DR            (1 << 7)
+#define W1160_POR_WAIT_TIME           (10) /* ms */
+#define W1160_AGCCTRL1_AGC_EN         PBL_BIT(7)
+#define W1160_MANUAL_GAIN_CTRL_MGC_EN PBL_BIT(0)
+#define W1160_AGCCTRL2_SEL_MODE       PBL_BIT(2) /* must be 1 */
+#define W1160_AGCCTRL2_12B_MODE       PBL_BIT(3)
+#define W1160_ALSCTRL_SAT_EN          PBL_BIT(1)
+#define W1160_ALSCTRL_DATA_FORMAT12   PBL_BIT(2) /* 1:12bit 0:16bit */
+#define W1160_DATA_GC_LVL_MASK        PBL_GENMASK(7, 4)
+#define W1160_SAT_GC_CONFIG           (0x0A)
+#define W1160_SLOW_IT_CONFIG1         (0x03) /* 99ms ((0x3E7+1) * 99us) */
+#define W1160_SLOW_IT_CONFIG2         (0xE7)
+#define W1160_SLOW_ST_CONFIG1         (0x07) /* 200ms ((0x7CF+1) * 100us) */
+#define W1160_SLOW_ST_CONFIG2         (0xCF)
+#define W1160_STATE_SAMPLING_EN       PBL_BIT(1)
+#define W1160_CHIP_ID                 (0xE5)
+#define W1160_FLG_ALS_DR              PBL_BIT(7)
 
 #define W1160_RESULT_EXPONENT_SHIFT (12)
 #define W1160_RESULT_MANTISSA_MASK  (0x0FFF)
@@ -132,11 +132,14 @@ void ambient_light_init(void) {
     return;
   }
 
-  rv = prv_write_register(W1160_AGCCTRL1_REG, W1160_AGCCTRL1_AGC_EN);
-  rv &= prv_write_register(W1160_MANUAL_GAIN_CTRL_REG, W1160_AGCCTRL1_MGC_EN);
-  rv &= prv_write_register(W1160_DATA_GC_REG, W1160_DATA_GC_LVL);
-  rv &= prv_write_register(W1160_AGCCTRL2_REG, W1160_AGCCTRL2_SEL_MODE | W1160_AGCCTRL2_12B_MODE);
-  rv &= prv_write_register(W1160_ALSCTRL_REG, W1160_ALSCTRL_SAT_EN | W1160_ALSCTRL_DATA_FORMAT12);
+  rv = prv_write_register(W1160_AGCCTRL1_REG, PBL_FIELD_PREP(W1160_AGCCTRL1_AGC_EN, 0));
+  rv &= prv_write_register(W1160_MANUAL_GAIN_CTRL_REG,
+                           PBL_FIELD_PREP(W1160_MANUAL_GAIN_CTRL_MGC_EN, 1));
+  rv &= prv_write_register(W1160_DATA_GC_REG, PBL_FIELD_PREP(W1160_DATA_GC_LVL_MASK, 15));
+  rv &= prv_write_register(W1160_AGCCTRL2_REG, PBL_FIELD_PREP(W1160_AGCCTRL2_SEL_MODE, 1) |
+                                                   PBL_FIELD_PREP(W1160_AGCCTRL2_12B_MODE, 0));
+  rv &= prv_write_register(W1160_ALSCTRL_REG, PBL_FIELD_PREP(W1160_ALSCTRL_SAT_EN, 0) |
+                                                  PBL_FIELD_PREP(W1160_ALSCTRL_DATA_FORMAT12, 0));
   rv &= prv_write_register(W1160_THD_SAT_GC_REG, W1160_SAT_GC_CONFIG);
   rv &= prv_write_register(W1160_IT_SLOW1_REG, W1160_SLOW_IT_CONFIG1);
   rv &= prv_write_register(W1160_IT_SLOW2_REG, W1160_SLOW_IT_CONFIG2);
@@ -219,7 +222,7 @@ uint32_t ambient_light_get_light_level(void) {
   }
 
   // Unprimed one-shot: enable, poll, read, disable.
-  if (!prv_write_register(W1160_STATE_REG, W1160_SAMPLING_EN)) {
+  if (!prv_write_register(W1160_STATE_REG, W1160_STATE_SAMPLING_EN)) {
     PBL_LOG_ERR("Could not enable W1160 sampling");
     pbl_mutex_unlock(&s_state_mutex);
     return 0UL;
@@ -232,7 +235,7 @@ uint32_t ambient_light_get_light_level(void) {
     s_cache_valid = true;
   }
 
-  if (!prv_write_register(W1160_STATE_REG, W1160_SAMPLING_DIS)) {
+  if (!prv_write_register(W1160_STATE_REG, 0)) {
     PBL_LOG_ERR("Could not disable W1160 sampling");
     pbl_mutex_unlock(&s_state_mutex);
     return 0UL;
@@ -252,7 +255,7 @@ void ambient_light_driver_set_state(bool active, bool sampling) {
     s_cache_valid = false;
   }
   if (sampling != s_sampling_active) {
-    const uint8_t reg = sampling ? W1160_SAMPLING_EN : W1160_SAMPLING_DIS;
+    const uint8_t reg = PBL_FIELD_PREP(W1160_STATE_SAMPLING_EN, sampling);
     if (prv_write_register(W1160_STATE_REG, reg)) {
       s_sampling_active = sampling;
       if (sampling) {
