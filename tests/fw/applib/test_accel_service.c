@@ -8,6 +8,7 @@
 #include "kernel/pebble_tasks.h"
 #include "pbl/services/accel_manager.h"
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -40,28 +41,61 @@ AccelServiceState *worker_state_get_accel_state(void) {
   return &s_worker_state;
 }
 
-// Fake accel manager. A subscription is a tracked kernel allocation, and the test decides whether
-// a data event was still queued when it unsubscribes.
+// Fake accel manager. A subscription holds the samples waiting for its subscriber, and the test
+// decides whether a data event was still queued when it unsubscribes. Subscriptions come from a
+// small pool that hands back the slot freed most recently, the way a heap can hand back the block
+// it just freed, so a new subscription can land at the old one's address.
 struct AccelManagerState {
-  int unused;
+  uint32_t num_samples;
 };
 
+#define FAKE_SUBSCRIPTION_SLOTS 4
+static AccelManagerState s_slots[FAKE_SUBSCRIPTION_SLOTS];
+static bool s_slot_used[FAKE_SUBSCRIPTION_SLOTS];
+static int s_last_freed_slot;
+
 static bool s_event_outstanding;
+static int s_live_subscriptions;
+static int s_fewest_live_subscriptions;
 static AccelDataReadyCallback s_data_cb;
 static void *s_data_cb_context;
+static int s_consume_calls;
+
+// The real manager kills an app that passes a subscription it doesn't know
+static void prv_assert_live(const AccelManagerState *state) {
+  cl_assert(state >= s_slots && state < s_slots + FAKE_SUBSCRIPTION_SLOTS);
+  cl_assert(s_slot_used[state - s_slots]);
+}
 
 AccelManagerState *sys_accel_manager_data_subscribe(AccelSamplingRate rate,
                                                     AccelDataReadyCallback data_cb, void *context,
                                                     PebbleTask handler_task) {
-  AccelManagerState *state = kernel_malloc_check(sizeof(AccelManagerState));
+  int slot = s_last_freed_slot;
+  if (slot < 0 || s_slot_used[slot]) {
+    slot = 0;
+    while (s_slot_used[slot]) {
+      slot++;
+      cl_assert(slot < FAKE_SUBSCRIPTION_SLOTS);
+    }
+  }
+  s_slot_used[slot] = true;
+  s_last_freed_slot = -1;
+  AccelManagerState *state = &s_slots[slot];
   *state = (AccelManagerState){};
+  s_live_subscriptions++;
   s_data_cb = data_cb;
   s_data_cb_context = context;
   return state;
 }
 
 bool sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
-  kernel_free(state);
+  prv_assert_live(state);
+  s_slot_used[state - s_slots] = false;
+  s_last_freed_slot = state - s_slots;
+  s_live_subscriptions--;
+  if (s_live_subscriptions < s_fewest_live_subscriptions) {
+    s_fewest_live_subscriptions = s_live_subscriptions;
+  }
   return s_event_outstanding;
 }
 
@@ -70,52 +104,81 @@ uint32_t sys_accel_manager_get_max_samples_per_update(void) {
 }
 
 int sys_accel_manager_set_sampling_rate(AccelManagerState *state, AccelSamplingRate rate) {
+  prv_assert_live(state);
   return 0;
 }
 
 int sys_accel_manager_set_sample_buffer(AccelManagerState *state, AccelRawData *buffer,
                                         uint32_t samples_per_update) {
+  prv_assert_live(state);
   return 0;
 }
 
 uint32_t sys_accel_manager_get_num_samples(AccelManagerState *state, uint64_t *timestamp_ms) {
-  *timestamp_ms = 0;
-  return 0;
+  prv_assert_live(state);
+  *timestamp_ms = 1000;
+  return state->num_samples;
 }
 
+// The real manager also reports a failure when asked to consume a different number of samples
+// than the subscription holds
 bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t samples) {
-  return true;
+  prv_assert_live(state);
+  s_consume_calls++;
+  bool success = (samples == state->num_samples);
+  state->num_samples = 0;
+  return success;
 }
 
 int sys_accel_manager_peek(AccelData *accel_data) {
   return 0;
 }
 
-// Runs the data event the manager queued before the unsubscribe, the way the process's event
-// loop does once it drains its queue
-static void prv_drain_stale_event(void) {
+// Fills the app's current subscription with samples and runs its data event
+static void prv_deliver(uint32_t num_samples) {
+  s_app_state.manager_state->num_samples = num_samples;
   s_data_cb(s_data_cb_context);
 }
 
+static int s_data_handler_calls;
+static int s_raw_data_handler_calls;
+
 static void prv_data_handler(AccelData *data, uint32_t num_samples) {
+  s_data_handler_calls++;
 }
 
 static void prv_raw_data_handler(AccelRawData *data, uint32_t num_samples, uint64_t timestamp) {
+  s_raw_data_handler_calls++;
 }
 
 void test_accel_service__initialize(void) {
   accel_service_state_init(&s_app_state);
   accel_service_state_init(&s_worker_state);
+  for (int i = 0; i < FAKE_SUBSCRIPTION_SLOTS; i++) {
+    s_slot_used[i] = false;
+  }
+  s_last_freed_slot = -1;
   s_event_outstanding = false;
+  s_live_subscriptions = 0;
+  s_fewest_live_subscriptions = INT_MAX;
   s_data_cb = NULL;
   s_data_cb_context = NULL;
+  s_consume_calls = 0;
+  s_data_handler_calls = 0;
+  s_raw_data_handler_calls = 0;
   stub_pebble_tasks_set_current(PebbleTask_App);
 }
 
 void test_accel_service__cleanup(void) {
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  accel_data_service_unsubscribe();
+  cl_assert_equal_i(s_live_subscriptions, 0);
   fake_pbl_malloc_check_net_allocs();
   fake_pbl_malloc_clear_tracking();
 }
+
+// Unsubscribing with a data event still queued
+//////////////////////////////////////////
 
 //! An app that unsubscribes with a data event still queued has to survive that event. The state
 //! is part of the app's process state, so freeing it from the event faults the app.
@@ -124,7 +187,7 @@ void test_accel_service__app_unsubscribe_with_a_queued_event_keeps_its_state(voi
   s_event_outstanding = true;
   accel_data_service_unsubscribe();
 
-  prv_drain_stale_event();
+  s_data_cb(s_data_cb_context);
 
   cl_assert(!s_app_state.deferred_free);
 }
@@ -136,7 +199,7 @@ void test_accel_service__worker_unsubscribe_with_a_queued_event_keeps_its_state(
   s_event_outstanding = true;
   accel_data_service_unsubscribe();
 
-  prv_drain_stale_event();
+  s_data_cb(s_data_cb_context);
 
   cl_assert(!s_worker_state.deferred_free);
 }
@@ -151,7 +214,7 @@ void test_accel_service__kernel_session_with_a_queued_event_is_freed_by_the_even
   accel_session_delete(session);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 1);
 
-  prv_drain_stale_event();
+  s_data_cb(s_data_cb_context);
 
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
@@ -164,6 +227,85 @@ void test_accel_service__kernel_session_without_a_queued_event_is_freed_on_delet
   accel_session_data_unsubscribe(session);
 
   accel_session_delete(session);
+
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
+}
+
+// Subscribing again
+//////////////////////////////////////////
+
+//! Subscribing twice replaces the first subscription. Left registered, the manager keeps writing
+//! into the first sample buffer after it's freed and keeps the accelerometer running.
+void test_accel_service__subscribing_again_replaces_the_subscription(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+
+  accel_data_service_subscribe(5, prv_data_handler);
+
+  cl_assert_equal_i(s_live_subscriptions, 1);
+}
+
+//! The same when switching from processed to raw samples
+void test_accel_service__switching_to_raw_data_replaces_the_subscription(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+
+  accel_raw_data_service_subscribe(1, prv_raw_data_handler);
+
+  cl_assert_equal_i(s_live_subscriptions, 1);
+}
+
+//! The new subscription is added before the old one goes. With none in between, the manager
+//! clears the vibe history and drops the driver to its idle rate.
+void test_accel_service__a_replace_never_leaves_the_manager_without_a_subscriber(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+
+  accel_data_service_subscribe(5, prv_data_handler);
+
+  cl_assert_equal_i(s_fewest_live_subscriptions, 1);
+}
+
+//! After a replace, samples go to the new handler only
+void test_accel_service__a_replaced_subscription_delivers_to_the_new_handler(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+  accel_raw_data_service_subscribe(1, prv_raw_data_handler);
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_raw_data_handler_calls, 1);
+  cl_assert_equal_i(s_data_handler_calls, 0);
+  cl_assert_equal_i(s_consume_calls, 1);
+}
+
+//! A data event queued for the old subscription runs against the new one, and delivers only what
+//! the new subscription holds
+void test_accel_service__a_stale_event_after_a_replace_uses_the_new_subscription(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+  AccelDataReadyCallback stale_cb = s_data_cb;
+  void *stale_context = s_data_cb_context;
+  s_event_outstanding = true;
+  accel_data_service_subscribe(1, prv_data_handler);
+  s_event_outstanding = false;
+
+  stale_cb(stale_context);
+
+  cl_assert_equal_i(s_data_handler_calls, 0);
+  cl_assert_equal_i(s_consume_calls, 0);
+}
+
+//! A kernel session that subscribes again with an event queued for the old subscription, then
+//! unsubscribes and is deleted, is freed by that event. Freed on delete, the event runs on freed
+//! memory.
+void test_accel_service__a_replaced_kernel_session_is_freed_by_the_stale_event(void) {
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  AccelServiceState *session = accel_session_create();
+  accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
+  s_event_outstanding = true;
+  accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
+  s_event_outstanding = false;
+  accel_session_data_unsubscribe(session);
+  accel_session_delete(session);
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 1);
+
+  s_data_cb(s_data_cb_context);
 
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }

@@ -161,8 +161,15 @@ int accel_service_set_samples_per_update(uint32_t samples_per_update) {
 // ----------------------------------------------------------------------------------------------
 static void prv_shared_subscribe(AccelServiceState *state, AccelSamplingRate sampling_rate,
                                  uint32_t samples_per_update, PebbleTask handler_task) {
+  // Subscribing again replaces the current subscription. The new one is added before the old
+  // one is removed, so the manager is never left without a subscriber in between.
+  AccelManagerState *old_manager_state = state->manager_state;
   state->manager_state =
       sys_accel_manager_data_subscribe(sampling_rate, prv_do_data_handle, state, handler_task);
+  if (old_manager_state && sys_accel_manager_data_unsubscribe(old_manager_state)) {
+    // A data event for the old subscription still points at this state, as on unsubscribe
+    state->deferred_free |= state->kernel_session;
+  }
 
   accel_session_set_samples_per_update((AccelServiceState *)state, samples_per_update);
 }
