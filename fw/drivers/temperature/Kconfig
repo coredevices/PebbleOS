@@ -8,6 +8,13 @@ menuconfig TEMPERATURE
 
 if TEMPERATURE
 
+config TEMPERATURE_NRF5
+    bool "Nordic nRF5"
+    default y if SOC_NRF52
+    select HAL_NORDIC
+    help
+      Support for the Nordic nRF5 die temperature sensor.
+
 config TEMPERATURE_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
@@ -21,10 +28,5 @@ config TEMPERATURE_QEMU
     help
       QEMU temperature sensor. QEMU emulates none, so it reports a fixed
       25 degrees Celsius.
-
-config TEMPERATURE_STUB
-    bool "Stub"
-    help
-      Stub temperature sensor implementation.
 
 endif # TEMPERATURE
