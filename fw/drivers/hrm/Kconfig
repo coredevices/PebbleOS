@@ -23,10 +23,12 @@ config HRM_HRV
       HRV library. Off by default; HRV is only sampled while an app holds
       an HRV subscription.
 
-config HRM_STUB
-    bool "Stub"
+config HRM_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
     help
-      Stub heart rate monitor implementation.
+      QEMU heart rate monitor. QEMU emulates none, so it can be enabled
+      but never delivers samples.
 
 module = DRIVER_HRM
 module-str = Heart Rate Monitor

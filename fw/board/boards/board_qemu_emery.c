@@ -9,7 +9,7 @@
 #include <pbl/drivers/speaker/qemu/audio.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
-#include <pbl/drivers/hrm/stub.h>
+#include <pbl/drivers/hrm/qemu.h>
 
 static UARTDeviceState s_dbg_uart_state = {};
 
