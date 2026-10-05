@@ -51,7 +51,6 @@ if(CONFIG_QEMU)
   pbl_library_sources(
     stubs/ambient_light.c
     qemu/qemu_vibe.c
-    stubs/otp.c
   )
   if(CONFIG_MAG)
     pbl_library_named(driver_mag3110)

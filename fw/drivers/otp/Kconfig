@@ -14,4 +14,10 @@ config OTP_FLASH
       OTP backed by SPI NOR flash security registers
       (e.g. GD25 / GD25LQ family). Driver: otp_flash.c.
 
+config OTP_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      QEMU OTP. QEMU emulates none, so all slots read as locked and empty.
+
 endif # OTP
