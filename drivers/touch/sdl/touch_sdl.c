@@ -6,6 +6,7 @@
 
 #include "pbl/services/system_task.h"
 #include "pbl/services/touch/touch.h"
+#include "board/board.h"
 #include "touch_sdl_bottom.h"
 
 static bool s_enabled;
@@ -44,6 +45,7 @@ void touch_sdl_changed(bool pressed, int x, int y) {
 }
 
 void touch_sensor_init(void) {
+  touch_sdl_bottom_init(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   s_enabled = true;
 }
 

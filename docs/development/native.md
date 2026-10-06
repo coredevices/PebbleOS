@@ -31,7 +31,8 @@ build/pebbleos
 | Right, Enter, Space         | Select |
 | Left, Backspace, Escape     | Back   |
 
-The mouse drives the touchscreen.
+The mouse drives the touchscreen: click and drag, or scroll with the wheel or
+two fingers on a trackpad, which drags a finger from the pointer.
 
 The terminal is the watch's serial console: logs go there, and as on the
 watch, `Ctrl-C` opens the shell prompt and `Ctrl-D` leaves it. `Ctrl-\`
