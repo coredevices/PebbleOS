@@ -102,6 +102,13 @@ osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
 rsource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
+config RESOURCES_BOARD
+    string
+    help
+      Board whose resource maps (resources/*/<board>/resource_map.json)
+      the firmware uses, for boards that share another board's. Empty to
+      use the board's own.
+
 config QEMU_MACHINE
     string
     depends on QEMU

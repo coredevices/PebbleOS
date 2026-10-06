@@ -78,7 +78,7 @@ def cmd_app_registry(args):
         definition = json.load(f)
 
     system_apps = definition["system_apps"]
-    resource_apps = definition["resource_apps"]
+    resource_apps = [] if args.no_resource_apps else definition["resource_apps"]
 
     def entry_enabled(entry):
         defines = entry.get("ifdefs") or []
@@ -235,7 +235,9 @@ def cmd_endpoints_table(args):
 def cmd_applib_malloc(args):
     import applib_malloc
 
-    applib_malloc.generate_files(args.input, args.header, args.impl, args.min_sdk, False)
+    applib_malloc.generate_files(
+        args.input, args.header, args.impl, args.min_sdk, args.no_size_checks
+    )
 
 
 # --- Hashed log strings ----------------------------------------------------
@@ -353,6 +355,11 @@ def main():
     p.add_argument("--enum", required=True)
     p.add_argument("--config", required=True)
     p.add_argument("--board", required=True)
+    p.add_argument(
+        "--no-resource-apps",
+        action="store_true",
+        help="leave out the apps stored as resources (the stored apps are not built)",
+    )
     p.set_defaults(func=cmd_app_registry)
 
     p = sub.add_parser("endpoints-table")
@@ -366,6 +373,11 @@ def main():
     p.add_argument("--header", required=True)
     p.add_argument("--impl", required=True)
     p.add_argument("--min-sdk", type=int, required=True)
+    p.add_argument(
+        "--no-size-checks",
+        action="store_true",
+        help="skip the 3.x app ABI size checks (host builds, whose pointers are wider)",
+    )
     p.set_defaults(func=cmd_applib_malloc)
 
     p = sub.add_parser("loghash")

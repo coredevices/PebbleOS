@@ -17,7 +17,7 @@ else()
   message(FATAL_ERROR "No platform specified for ${PBL_BOARD}")
 endif()
 
-if(NOT PBL_BOARD_RUNNERS AND NOT CONFIG_QEMU)
+if(NOT PBL_BOARD_RUNNERS AND NOT CONFIG_QEMU AND NOT CONFIG_SOC_POSIX)
   message(FATAL_ERROR "Board ${PBL_BOARD} does not define any supported runners")
 endif()
 

@@ -172,6 +172,20 @@ elseif(CONFIG_LIBC_PICOLIBC)
   # link, so it belongs on the compile and the link line.
   pbl_libc_add_flags(-specs=${pbl_picolibc_specs} ${pbl_default_source_define}
                      ${pbl_sniprintf_defines})
+elseif(CONFIG_LIBC_HOST)
+  set(PBL_LIBC_LINK_FLAGS "")
+  set(PBL_LIBC_LIBS m)
+  pbl_libc_add_flags(${pbl_default_source_define} ${pbl_sniprintf_defines})
+  # What --wrap does on the target: the firmware allocates from its own
+  # heaps. Only the firmware libraries are renamed (through pbl_interface),
+  # not the host side nor the host libraries.
+  set(PBL_LIBC_DEFINITIONS
+    malloc=__wrap_malloc
+    free=__wrap_free
+    realloc=__wrap_realloc
+    calloc=__wrap_calloc
+  )
+  message(STATUS "libc: host")
 else()
   message(FATAL_ERROR "No C library selected (see lib/c/Kconfig)")
 endif()

@@ -7,7 +7,53 @@
 set(PBL_FIRMWARE_PY ${PBL_BASE}/tools/cmake/firmware.py)
 set(PBL_GENERATE_PY ${PBL_BASE}/tools/cmake/generate.py)
 
+# Without the linker script, the image is a host executable: no images.
+function(pbl_link_native)
+  get_property(object_libs GLOBAL PROPERTY PBL_OBJECT_LIBS)
+  get_property(static_libs GLOBAL PROPERTY PBL_STATIC_LIBS)
+
+  add_executable(pebbleos ${PBL_RESOURCE_SOURCES} ${PBL_FIRMWARE_SOURCES})
+  set_target_properties(pebbleos PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+  add_dependencies(pebbleos pbl_generated_headers)
+
+  foreach(lib ${object_libs})
+    target_sources(pebbleos PRIVATE $<TARGET_OBJECTS:${lib}>)
+  endforeach()
+
+  if(APPLE)
+    target_link_libraries(pebbleos PRIVATE pbl_interface ${static_libs} ${PBL_LIBC_LIBS})
+  else()
+    target_link_libraries(pebbleos PRIVATE pbl_interface
+      -Wl,--start-group ${static_libs} ${PBL_LIBC_LIBS} -Wl,--end-group)
+  endif()
+  get_property(link_options GLOBAL PROPERTY PBL_LINK_OPTIONS)
+  target_link_options(pebbleos PRIVATE ${link_options})
+  # As on the target, code nothing calls is dropped, along with what only it
+  # refers to.
+  if(APPLE)
+    # Packed structs hold pointers at unaligned offsets, which chained fixups
+    # cannot rebase.
+    target_link_options(pebbleos PRIVATE -Wl,-dead_strip -Wl,-no_fixup_chains)
+  else()
+    target_link_options(pebbleos PRIVATE -Wl,--gc-sections)
+  endif()
+
+  # The system resources the executable installs when started.
+  target_compile_definitions(posix_host PRIVATE PBL_POSIX_DEFAULT_RESOURCES="${PBL_PBPACK}")
+
+  set(artifacts pebbleos)
+  if(PBL_PBPACK)
+    list(APPEND artifacts ${PBL_PBPACK} ${PBL_LAYOUTS})
+  endif()
+  add_custom_target(pbl_firmware ALL DEPENDS ${artifacts})
+endfunction()
+
 function(pbl_link_firmware)
+  if(NOT PBL_LINKER_SCRIPT)
+    pbl_link_native()
+    return()
+  endif()
+
   get_property(object_libs GLOBAL PROPERTY PBL_OBJECT_LIBS)
   get_property(static_libs GLOBAL PROPERTY PBL_STATIC_LIBS)
 

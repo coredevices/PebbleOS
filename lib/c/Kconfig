@@ -31,6 +31,13 @@ config LIBC_PICOLIBC
       PebbleOS SDK toolchain ships one), otherwise built from the
       third_party/picolibc submodule with a warning.
 
+config LIBC_HOST
+    bool "Host C library"
+    depends on SOC_POSIX
+    help
+      The C library of the host the firmware runs on as a native
+      application.
+
 endchoice
 
 config LIBC_PICOLIBC_FROM_SOURCE

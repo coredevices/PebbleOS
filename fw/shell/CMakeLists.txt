@@ -10,6 +10,10 @@ else()
 endif()
 
 # The launcher's app registry, and the app id defines the sources use.
+set(registry_args "")
+if(CONFIG_SOC_POSIX)
+  list(APPEND registry_args --no-resource-apps)
+endif()
 set(registry ${CMAKE_CURRENT_BINARY_DIR}/system_app_registry_list.auto.h)
 set(app_ids ${CMAKE_CURRENT_BINARY_DIR}/system_app_ids.auto.h)
 add_custom_command(
@@ -17,7 +21,7 @@ add_custom_command(
   COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/generate.py app-registry
           --input ${CMAKE_CURRENT_SOURCE_DIR}/${shell}/system_app_registry_list.json
           --registry ${registry} --enum ${app_ids}
-          --config ${PBL_DOTCONFIG} --board ${PBL_BOARD_NAME}
+          --config ${PBL_DOTCONFIG} --board ${PBL_BOARD_NAME} ${registry_args}
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${shell}/system_app_registry_list.json
           ${PBL_DOTCONFIG}
   WORKING_DIRECTORY ${PBL_BASE}

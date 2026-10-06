@@ -6,6 +6,18 @@
 # hook points; the fragments are aggregated into snippets-<location>.ld
 # files that the master script includes.
 
+# Whether the image is linked with the firmware linker script. A native build
+# links with the host's default one instead: Mach-O linkers cannot gather
+# sections sorted by name, and ELF hosts do not insert the fragments (yet).
+# Without the script, PBL_SECTION() is a no-op and code collecting objects
+# across files uses PBL_UNSORTED_SECTION().
+if(CONFIG_ARCH_POSIX)
+  set(PBL_LINKER_SCRIPT OFF)
+  add_compile_definitions(PBL_NO_LINKER_SCRIPT)
+else()
+  set(PBL_LINKER_SCRIPT ON)
+endif()
+
 set(PBL_LINKER_SNIPPET_LOCATIONS memory rom-start ram-sections ramfunc footer)
 
 foreach(location ${PBL_LINKER_SNIPPET_LOCATIONS})
