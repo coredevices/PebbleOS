@@ -72,6 +72,7 @@ MAX_WORKER_MEMORY_SIZE = 10 * 1024
 
 ENTRY_PT_SYMBOL = "main"
 JUMP_TABLE_ADDR_SYMBOL = "pbl_table_addr"
+ABS_RELOC_TYPES = ("R_ARM_ABS32", "R_ARM_TARGET1")
 DEBUG = False
 
 
@@ -200,8 +201,9 @@ def inject_metadata(
                 )
                 continue
             columns = line.split()
-            # PC-relative relocations are already resolved by the linker.
-            if reading_section and len(columns) >= 3 and columns[2] == "R_ARM_ABS32":
+            # PC-relative relocations are already resolved by the linker. R_ARM_TARGET1 (used by
+            # .init_array and .fini_array) is linked as absolute on arm-none-eabi.
+            if reading_section and len(columns) >= 3 and columns[2] in ABS_RELOC_TYPES:
                 entries.append(int(columns[0], 16))
 
         # get any Global Offset Table (.got) entries

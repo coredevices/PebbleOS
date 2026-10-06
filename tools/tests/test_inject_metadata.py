@@ -38,7 +38,8 @@ class TestInjectMetadata(unittest.TestCase):
             elif command[1] == "-r":
                 output = (
                     "Relocation section '.rel.data' contains 1 entry:\n"
-                    "Offset Info Type\n000000b8 00000002 R_ARM_ABS32\n\n"
+                    "Offset Info Type\n000000b8 00000002 R_ARM_ABS32\n"
+                    "000000bc 00000026 R_ARM_TARGET1\n000000c0 0000000a R_ARM_THM_CALL\n\n"
                 )
             else:
                 output = ""
@@ -54,7 +55,7 @@ class TestInjectMetadata(unittest.TestCase):
             result = binary.read_bytes()
 
         self.assertEqual(result[0x84 : 0x84 + len(note)], note)
-        self.assertEqual(result[load_size:], struct.pack("<I", 0xB8))
+        self.assertEqual(result[load_size:], struct.pack("<II", 0xB8, 0xBC))
         self.assertEqual(
             struct.unpack_from("<I", result, 0x14)[0],
             stm32_crc.crc32(result[0x82:load_size]),
