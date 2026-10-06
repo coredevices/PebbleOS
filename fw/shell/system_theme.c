@@ -121,7 +121,8 @@ static const SystemThemeTextStyle s_text_styles[NumPreferredContentSizes] = {
 ////////////////////
 // Helpers
 
-static const char *prv_get_font_for_size(PreferredContentSize content_size, TextStyleFont font) {
+static PBL_ALWAYS_INLINE const char *prv_get_font_for_size(PreferredContentSize content_size,
+                                                           TextStyleFont font) {
   if (content_size >= NumPreferredContentSizes) {
     PBL_LOG_ERR("Requested a content size that is out of bounds (%d)", content_size);
     goto fail;
