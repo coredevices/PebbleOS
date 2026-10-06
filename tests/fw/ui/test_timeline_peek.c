@@ -31,6 +31,7 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
+#include <fixtures/screen_grid.h>
 
 void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs) {
   snprintf(buffer, buf_size, "In 5 minutes");
@@ -142,6 +143,7 @@ void test_timeline_peek__initialize(void) {
 }
 
 void test_timeline_peek__cleanup(void) {
+  system_theme_set_content_size(PreferredContentSizeDefault);
 }
 
 // Helpers
@@ -312,6 +314,43 @@ void test_timeline_peek__peek_in_5_minutes(void) {
     .num_concurrent = 2,
   });
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+// Content Size Tests
+//////////////////////
+
+static const TimelinePeekItemConfig s_content_size_items[] = {
+  {
+    .title = "CoreUX Design x Eng",
+    .subtitle = "ConfRM-Missile Command",
+    .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+  },
+  {
+    .title = "OMG I think the text fits!",
+    .icon = TIMELINE_RESOURCE_GENERIC_WARNING,
+    .num_concurrent = 2,
+  },
+};
+
+//! Renders the whole screen with the peek in place
+static void prv_render_timeline_peek_screen(const TimelinePeekItemConfig *config) {
+  TimelineItem *item = prv_set_timeline_item(config, false /* animated */);
+  timeline_peek_set_visible(true, false /* animated */);
+  prv_render_layer(&timeline_peek_get_peek()->window.layer, &DISP_FRAME, false /* use_screen */);
+  timeline_item_destroy(item);
+}
+
+void test_timeline_peek__content_sizes(void) {
+  ScreenGrid grid;
+  screen_grid_init(&grid, ARRAY_LENGTH(s_content_size_items));
+  for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
+    system_theme_set_content_size(size);
+    for (size_t row = 0; row < ARRAY_LENGTH(s_content_size_items); row++) {
+      prv_render_timeline_peek_screen(&s_content_size_items[row]);
+      screen_grid_add(&grid, &s_ctx, size, row);
+    }
+  }
+  screen_grid_check(&grid, TEST_PBI_FILE);
 }
 
 // Visibility Tests
