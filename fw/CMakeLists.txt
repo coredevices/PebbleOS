@@ -3,7 +3,6 @@
 
 pbl_include_directories(.)
 
-add_subdirectory(drivers)
 add_subdirectory(board)
 add_subdirectory(shell)
 add_subdirectory(services)

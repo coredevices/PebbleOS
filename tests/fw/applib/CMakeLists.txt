@@ -101,7 +101,7 @@ pbl_clar_test(test_text_resources
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/services/filesystem/app_file.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c

@@ -1,7 +1,7 @@
 pending:hw-validation:
   - changed-files:
       - any-glob-to-any-file:
-          - fw/drivers/**
+          - drivers/**
           - kernel/**
           - soc/**
           - subsys/bluetooth/**

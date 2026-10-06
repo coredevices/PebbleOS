@@ -15,7 +15,7 @@ implemented under `kernel/`). The main source layers, as described on the
   functions get there).
 - `fw/services` — system services (Bluetooth, filesystem, activity, …).
 - `fw/kernel` — task management, events, memory.
-- `fw/drivers` — hardware drivers (public interfaces under
+- `drivers/` — hardware drivers (public interfaces under
   `include/pbl/drivers`).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
   logging, cron, the Bluetooth backends, [CRC](crc.md), the
@@ -110,7 +110,7 @@ alongside the allocator in `pfs.c`.
   between the dumb low-level driver and the accel service that owns
   buffering, clients and subsampling, so the same service code runs on any
   accel part.
-- **Flash** — `fw/drivers/flash/README.md` documents the two flash APIs:
+- **Flash** — `drivers/flash/README.md` documents the two flash APIs:
   the main one, and a coredump-only path that must work without OS services.
 
 ## Coredumps

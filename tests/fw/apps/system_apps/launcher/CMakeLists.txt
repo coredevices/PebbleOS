@@ -37,7 +37,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/window.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c

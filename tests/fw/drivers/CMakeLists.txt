@@ -3,13 +3,13 @@
 
 pbl_clar_test(test_flash_api
   SOURCES
-    fw/drivers/flash/flash_api.c
+    drivers/flash/flash_api.c
   OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_flash_erase
   SOURCES
-    fw/drivers/flash/flash_erase.c
+    drivers/flash/flash_erase.c
   PLATFORMS obelix
   OVERRIDES dummy_board
 )

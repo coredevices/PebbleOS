@@ -41,7 +41,7 @@ are never offloaded.
 
 ## SF32LB
 
-`fw/drivers/crc/sf32lb.c` (`CONFIG_CRC_SF32LB`, default on SF32LB52) drives
+`drivers/crc/sf32lb.c` (`CONFIG_CRC_SF32LB`, default on SF32LB52) drives
 the CRC1 unit. It programs the polynomial, initial value and reflection for
 every burst of up to 256 bytes under `pbl_irq_lock()`, carrying the running
 value between bursts, so the unit needs no owner. That works before the

@@ -45,7 +45,7 @@ pbl_clar_test(test_health_card_view
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -151,7 +151,7 @@ pbl_clar_test(test_health_activity_summary_card
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -252,7 +252,7 @@ pbl_clar_test(test_health_sleep_summary_card
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -353,7 +353,7 @@ pbl_clar_test(test_health_hr_summary_card
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -454,7 +454,7 @@ pbl_clar_test(test_health_activity_detail_card
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -554,7 +554,7 @@ pbl_clar_test(test_health_sleep_detail_card
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -654,7 +654,7 @@ pbl_clar_test(test_health_hr_detail_card
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -754,7 +754,7 @@ pbl_clar_test(test_health_detail_card
     third_party/uzlib/uzlib/src/crc32.c
     third_party/upng/upng/upng.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c

@@ -298,7 +298,7 @@ pbl_clar_test(test_menu_layer_system_cells
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -371,7 +371,7 @@ pbl_clar_test(test_action_menu_window
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -455,7 +455,7 @@ pbl_clar_test(test_notification_window
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -550,7 +550,7 @@ pbl_clar_test(test_simple_dialog
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -637,7 +637,7 @@ pbl_clar_test(test_emoji_fonts
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -707,7 +707,7 @@ pbl_clar_test(test_expandable_dialog
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -804,7 +804,7 @@ pbl_clar_test(test_selection_windows
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -899,7 +899,7 @@ pbl_clar_test(test_timeline_peek
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c
@@ -997,7 +997,7 @@ pbl_clar_test(test_option_menu_window
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/board/displays/display_getafix.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/resource/resource.c

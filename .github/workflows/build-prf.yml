@@ -32,6 +32,7 @@ jobs:
               - 'platform/**'
               - 'resources/**'
               - 'soc/**'
+              - 'drivers/**'
               - 'fw/**'
               - 'tools/**'
               - 'third_party/**'

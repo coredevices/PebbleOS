@@ -28,7 +28,7 @@ pbl_clar_test(test_i18n
     fw/services/filesystem/pfs.c
     fw/services/filesystem/app_file.c
     tests/fakes/fake_bootbits.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c

@@ -32,7 +32,7 @@ negative errno; `-EINPROGRESS` keeps the shell busy until
 `pbl_shell_cmd_done()`, for commands that finish from a callback.
 
 Shell code is wrapped in `#ifdef CONFIG_SHELL`, and modules with a group of
-commands can gate them further; for example `fw/drivers/imu/shell.c`
+commands can gate them further; for example `drivers/imu/shell.c`
 builds with `CONFIG_IMU_SHELL`.
 
 ```c

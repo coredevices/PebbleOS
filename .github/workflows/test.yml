@@ -29,6 +29,7 @@ jobs:
               - 'resources/**'
               - 'sdk/**'
               - 'soc/**'
+              - 'drivers/**'
               - 'fw/**'
               - 'stored_apps/**'
               - 'subsys/**'

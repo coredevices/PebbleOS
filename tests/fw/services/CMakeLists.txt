@@ -183,7 +183,7 @@ pbl_clar_test(test_clock
     lib/c/time/gmtime.c
     lib/c/time/mktime.c
     tests/fakes/fake_bootbits.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_events.c
     tests/fakes/fake_spi_flash.c
@@ -220,7 +220,7 @@ pbl_clar_test(test_wakeup
     fw/services/settings/settings_raw_iter.c
     fw/services/wakeup/service.c
     tests/fakes/fake_bootbits.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c
@@ -230,7 +230,7 @@ pbl_clar_test(test_wakeup
 
 pbl_clar_test(test_migrate_wakeup
   SOURCES
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/process_management/pebble_process_info.c
@@ -333,7 +333,7 @@ pbl_clar_test(test_app_install_manager
     fw/applib/graphics/gcolor_definitions.c
     fw/applib/graphics/gtypes.c
     fw/process_management/pebble_process_info.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fakes/fake_system_app_registry_apps.c
@@ -345,7 +345,7 @@ pbl_clar_test(test_app_menu_data_source
   SOURCES
     fw/applib/graphics/gcolor_definitions.c
     fw/applib/graphics/gtypes.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/process_management/app_install_manager.c

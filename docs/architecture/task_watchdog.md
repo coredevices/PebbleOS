@@ -57,6 +57,6 @@ watchdog (`include/pbl/drivers/watchdog.h`).
 virtual time; see `docs/development/testing.md` for how to run it.
 
 The QEMU boards carry a real hardware watchdog (the CMSDK APB watchdog,
-driven by `fw/drivers/watchdog/qemu.c`), so both paths can be tried in
+driven by `drivers/watchdog/qemu.c`), so both paths can be tried in
 the emulator: `wdt stall main` ends in a core dump, and `wdt stall irq`
 ends in a hardware reset that the next boot reports as a watchdog reset.

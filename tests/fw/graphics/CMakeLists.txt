@@ -89,7 +89,7 @@ set(graphics_draw_text_sources
   fw/services/filesystem/flash_translation.c
   fw/services/filesystem/pfs.c
   fw/services/filesystem/app_file.c
-  fw/drivers/flash/flash_crc.c
+  drivers/flash/flash_crc.c
   tests/fakes/fake_fonts.c
   tests/fakes/fake_rtc.c
   tests/fakes/fake_spi_flash.c
@@ -172,7 +172,7 @@ pbl_clar_test(test_graphics_draw_text_flow
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/services/filesystem/app_file.c
-    fw/drivers/flash/flash_crc.c
+    drivers/flash/flash_crc.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
