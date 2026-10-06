@@ -29,6 +29,7 @@ static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 
 extern void pebble_pairing_service_init(void);
 extern void ppog_reversed_service_init(void);
+extern void accessory_transport_service_init(void);
 extern void nimble_discover_init(void);
 extern void nimble_gattc_op_queue_init(void);
 
@@ -175,6 +176,7 @@ bool pbl_bt_start(struct pbl_bt_config *config) {
   pebble_pairing_service_init();
   ble_svc_bas_init();
   ppog_reversed_service_init();
+  accessory_transport_service_init();
 
 #ifdef CONFIG_BT_GH3X2X_TUNING_SERVICE
   gh3x2x_tuning_service_init();

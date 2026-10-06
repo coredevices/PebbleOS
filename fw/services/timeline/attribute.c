@@ -59,6 +59,10 @@ static AttributeType prv_attribute_type(AttributeId id) {
     case AttributeIdAddress:
     case AttributeIdAuthCode:
     case AttributeIdSubtitleTemplateString:
+    // AccessoryNotifications reply context (feature id, notification id, action id).
+    case AttributeIdAccessoryFeatureId:
+    case AttributeIdAccessoryNotificationId:
+    case AttributeIdAccessoryActionId:
       return AttributeTypeString;
     case AttributeIdAncsAction:
     case AttributeIdSportsGameState:

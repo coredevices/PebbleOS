@@ -554,6 +554,7 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
       kernel_free(response_attributes.attributes);
       break;
     }
+    case TimelineItemActionTypeAccessoryResponse:
     case TimelineItemActionTypeResponse: {
       data->response.attribute = (Attribute){
         .id = AttributeIdTitle,
@@ -650,6 +651,9 @@ PBL_T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
     case TimelineItemActionTypeOpenWatchApp:
       prv_invoke_local_action(action, pin);
       return NULL;
+    case TimelineItemActionTypeAccessoryGeneric:
+      // Remote path so the Sent/Failed result dialog shows and closes the menu.
+      return prv_invoke_remote_action(action_menu, action, pin, NULL);
     case TimelineItemActionTypeAncsResponse:
     case TimelineItemActionTypeAncsGeneric:
     case TimelineItemActionTypeAncsNegative:
@@ -658,6 +662,7 @@ PBL_T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
     case TimelineItemActionTypeAncsDial:
     case TimelineItemActionTypeGeneric:
     case TimelineItemActionTypeResponse:
+    case TimelineItemActionTypeAccessoryResponse:
     case TimelineItemActionTypeDismiss:
     case TimelineItemActionTypeHttp:
     case TimelineItemActionTypeSnooze:
@@ -1061,8 +1066,14 @@ static ActionMenuLevel *prv_create_postpone_level(TimelineItemAction *action,
 
 void timeline_actions_add_action_to_root_level(TimelineItemAction *action,
                                                ActionMenuLevel *root_level) {
-  const char *label = attribute_get_string(&action->attr_list, AttributeIdTitle, "[Action]");
-  if (action->type == TimelineItemActionTypeResponse) {
+  const char *label = attribute_get_string(&action->attr_list, AttributeIdTitle, NULL);
+  if (!label) {
+    // A title-less dismiss (e.g. the watch-local one AccessoryNotifications adds) gets a
+    // localized label here, on KernelMain where i18n_get is safe.
+    label = timeline_item_action_is_dismiss(action) ? i18n_get("Dismiss", root_level) : "[Action]";
+  }
+  if (action->type == TimelineItemActionTypeResponse ||
+      action->type == TimelineItemActionTypeAccessoryResponse) {
     ActionMenuLevel *responses_level =
         prv_create_responses_level(action, root_level, false /* reply_prefix */);
     action_menu_level_add_child(root_level, responses_level, label);

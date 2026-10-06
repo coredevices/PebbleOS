@@ -60,6 +60,14 @@
 /** @brief Reversed PPoGATT data write characteristic, written by the phone. */
 #define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT (0x40000003)
 
+//! AccessoryNotifications transport (watch = GATT server; Apple pins no service, so
+//! this is ours). TX notify: watch->phone; RX write: phone->watch. Expanded with the
+//! Pebble Base UUID (@see pebble_bt_uuid_expand).
+#define PBL_BT_PEBBLE_AN_TRANSPORT_SERVICE_UUID_32BIT (0x50000000)
+#define PBL_BT_PEBBLE_AN_TRANSPORT_TX_CHARACTERISTIC_UUID_32BIT \
+  (0x50000001) // watch->phone (notify)
+#define PBL_BT_PEBBLE_AN_TRANSPORT_RX_CHARACTERISTIC_UUID_32BIT (0x50000002) // phone->watch (write)
+
 /** @brief Service UUID of the Pebble App Launch service. */
 #define PBL_BT_PEBBLE_APP_LAUNCH_SERVICE_UUID_32BIT (0x20000000)
 /** @brief Pebble App Launch characteristic. */

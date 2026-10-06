@@ -333,7 +333,8 @@ TimelineItemAction *timeline_item_find_dismiss_action(const TimelineItem *item) 
 
 static bool prv_action_reply_compare_func(const TimelineItemAction *action, void *data) {
   return (action->type == TimelineItemActionTypeAncsResponse) ||
-         (action->type == TimelineItemActionTypeResponse);
+         (action->type == TimelineItemActionTypeResponse) ||
+         (action->type == TimelineItemActionTypeAccessoryResponse);
 }
 
 TimelineItemAction *timeline_item_find_reply_action(const TimelineItem *item) {

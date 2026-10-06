@@ -282,6 +282,7 @@ pbl_clar_test(test_timeline_api
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/item.c
     fw/services/timeline/timeline.c
+    tests/stubs/stubs_accessory_notifications.c
     fw/kernel/rand.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c
