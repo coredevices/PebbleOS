@@ -19,6 +19,8 @@
 #define APNG_LOAD_ERROR      "Failed to load APNG"
 #define APNG_UPDATE_ERROR    "gbitmap_sequence failed to update bitmap"
 #define APNG_ELAPSED_WARNING "invalid elapsed_ms for gbitmap_sequence, forward progression only"
+#define APNG_DISPOSE_PREVIOUS_WARNING \
+  "APNG dispose op PREVIOUS unsupported, treated as NONE; re-encode without it"
 
 static bool prv_gbitmap_sequence_restart(GBitmapSequence *bitmap_sequence, bool reset_elapsed) {
   if (bitmap_sequence == NULL) {
@@ -296,6 +298,11 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
     // As a PNG image is only a single frame, display it forever
     bitmap_sequence->current_frame_delay_ms = PLAY_DURATION_INFINITE;
   } else {
+    if ((fctl.dispose_op == APNG_DISPOSE_OP_PREVIOUS) &&
+        !bitmap_sequence->dispose_op_previous_warned) {
+      APP_LOG(APP_LOG_LEVEL_WARNING, APNG_DISPOSE_PREVIOUS_WARNING);
+      bitmap_sequence->dispose_op_previous_warned = true;
+    }
     png_decoder_data->last_dispose_op = fctl.dispose_op;
     png_decoder_data->previous_xoffset = fctl.x_offset;
     png_decoder_data->previous_yoffset = fctl.y_offset;

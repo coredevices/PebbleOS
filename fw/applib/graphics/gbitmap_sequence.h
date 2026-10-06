@@ -29,6 +29,7 @@ typedef struct {
     struct {
       bool header_loaded : 1;
       bool data_is_loaded_from_flash : 1;
+      bool dispose_op_previous_warned : 1;
     };
   };
   GSize bitmap_size;               // Width & Height
@@ -50,6 +51,8 @@ typedef struct {
 //! Creates a GBitmapSequence from the specified resource (APNG/PNG files)
 //! @param resource_id Resource to load and create GBitmapSequence from.
 //! @return GBitmapSequence pointer if the resource was loaded, NULL otherwise
+//! @note APNG frames using the dispose operation APNG_DISPOSE_OP_PREVIOUS are not supported
+//! and are treated as APNG_DISPOSE_OP_NONE, so encode animations without it.
 GBitmapSequence *gbitmap_sequence_create_with_resource(uint32_t resource_id);
 
 //! @internal

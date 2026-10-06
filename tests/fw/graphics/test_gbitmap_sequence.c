@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "applib/app_logging.h"
 #include "applib/graphics/gbitmap_sequence.h"
 #include "applib/graphics/graphics.h"
 
@@ -38,6 +39,7 @@
 ////////////////////////////////////
 #include "stubs_applib_resource.h"
 #include "stubs_app_state.h"
+#define CUSTOM_LOG_INTERNAL
 #include "stubs_logging.h"
 #include "stubs_heap.h"
 #include "stubs_passert.h"
@@ -47,6 +49,18 @@
 #include "stubs_resources.h"
 #include "stubs_serial.h"
 #include "stubs_ui_window.h"
+
+static int s_dispose_previous_warnings;
+
+static void log_internal(uint8_t log_level, const char *src_filename, int src_line_number,
+                         const char *fmt, va_list args) {
+  if ((log_level == APP_LOG_LEVEL_WARNING) && strstr(fmt, "PREVIOUS")) {
+    s_dispose_previous_warnings++;
+  }
+  printf("%s:%d> ", GET_FILE_NAME(src_filename), src_line_number);
+  vprintf(fmt, args);
+  printf("\n");
+}
 
 #define GET_PBI_NAME(x) prv_get_image_name(__func__, x, "pbi")
 #define GET_APNG_NAME   prv_get_image_name(__func__, 0, "apng")
@@ -324,4 +338,62 @@ void test_gbitmap_sequence__1bit_to_1bit_notification(void) {
     snprintf(filename_buffer, sizeof(filename_buffer), "%s_%u.pbi", __func__, current_frame);
     cl_check(gbitmap_pbi_eq(bitmap, filename_buffer));
   }
+}
+
+static void prv_check_pixels(GBitmap *bitmap, const char *expected) {
+  for (int y = 0; y < 4; y++) {
+    const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, y);
+    for (int x = 0; x < 4; x++) {
+      const uint8_t argb = (expected[y * 4 + x] == 'B') ? GColorBlackARGB8 : GColorWhiteARGB8;
+      cl_assert_equal_i(row_info.data[x], argb);
+    }
+  }
+}
+
+// Tests 4x4 APNG with 3 frames: full white (dispose PREVIOUS), 2x2 black at 0,0
+// (dispose PREVIOUS) and 1x1 black at 3,3 (dispose NONE)
+// Result:
+//   - dispose op PREVIOUS behaves as NONE
+//   - the unsupported dispose op warning is logged once per sequence
+void test_gbitmap_sequence__dispose_op_previous(void) {
+  s_dispose_previous_warnings = 0;
+
+  uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
+  cl_assert(resource_id != UINT32_MAX);
+  GBitmapSequence *bitmap_sequence = gbitmap_sequence_create_with_resource(resource_id);
+  cl_assert(bitmap_sequence);
+  GBitmap *bitmap =
+      gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(bitmap_sequence), GBitmapFormat8Bit);
+  cl_assert(bitmap);
+
+  const char *frames[] = {
+    "WWWW"
+    "WWWW"
+    "WWWW"
+    "WWWW",
+    "BBWW"
+    "BBWW"
+    "WWWW"
+    "WWWW",
+    "BBWW"
+    "BBWW"
+    "WWWW"
+    "WWWB",
+  };
+
+  for (int loop = 0; loop < 2; loop++) {
+    for (int i = 0; i < ARRAY_LENGTH(frames); i++) {
+      cl_assert(gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL));
+      prv_check_pixels(bitmap, frames[i]);
+    }
+  }
+
+  cl_assert(gbitmap_sequence_restart(bitmap_sequence));
+  cl_assert(gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL));
+  prv_check_pixels(bitmap, frames[0]);
+
+  cl_assert_equal_i(s_dispose_previous_warnings, 1);
+
+  gbitmap_destroy(bitmap);
+  gbitmap_sequence_destroy(bitmap_sequence);
 }
