@@ -9,7 +9,7 @@
 #include "applib/graphics/graphics.h"
 #include "system/passert.h"
 
-#include <qrcodegen.h>
+#include <qrcodegen_ext.h>
 
 static inline enum qrcodegen_Ecc prv_ecc_to_qrcodegen(QRCodeECC ecc) {
   switch (ecc) {
@@ -29,6 +29,9 @@ static inline enum qrcodegen_Ecc prv_ecc_to_qrcodegen(QRCodeECC ecc) {
 static void prv_qr_code_update_proc(QRCode *qr_code, GContext *ctx) {
   uint8_t *qr_code_buf;
   uint8_t *tmp_buf;
+  enum qrcodegen_Ecc ecc;
+  int version;
+  size_t buf_len;
   int qr_size;
   int mod_size;
   int rend_size;
@@ -42,15 +45,20 @@ static void prv_qr_code_update_proc(QRCode *qr_code, GContext *ctx) {
     return;
   }
 
-  // NOTE: using maximum buffer length as we use qrcodegen_VERSION_MAX.
-  // We could potentially optimize this by calculating the minimum required version
-  // for the given input. LVGL does by adding some extra APIs to qrcodegen.
-  qr_code_buf = applib_malloc(qrcodegen_BUFFER_LEN_MAX);
+  ecc = prv_ecc_to_qrcodegen(qr_code->ecc);
+  version = qrcodegen_getMinFitVersion(ecc, qr_code->data_len);
+  if (version < 0) {
+    return;
+  }
+
+  buf_len = qrcodegen_BUFFER_LEN_FOR_VERSION(version);
+
+  qr_code_buf = applib_malloc(buf_len);
   if (qr_code_buf == NULL) {
     return;
   }
 
-  tmp_buf = applib_malloc(qrcodegen_BUFFER_LEN_MAX);
+  tmp_buf = applib_malloc(buf_len);
   if (tmp_buf == NULL) {
     applib_free(qr_code_buf);
     return;
@@ -58,9 +66,8 @@ static void prv_qr_code_update_proc(QRCode *qr_code, GContext *ctx) {
 
   memcpy(tmp_buf, qr_code->data, qr_code->data_len);
 
-  ret = qrcodegen_encodeBinary(tmp_buf, qr_code->data_len, qr_code_buf,
-                               prv_ecc_to_qrcodegen(qr_code->ecc), qrcodegen_VERSION_MIN,
-                               qrcodegen_VERSION_MAX, qrcodegen_Mask_AUTO, true);
+  ret = qrcodegen_encodeBinary(tmp_buf, qr_code->data_len, qr_code_buf, ecc, version, version,
+                               qrcodegen_Mask_AUTO, true);
   if (!ret) {
     applib_free(tmp_buf);
     applib_free(qr_code_buf);
