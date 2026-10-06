@@ -65,7 +65,7 @@ typedef struct {
   uint8_t counted_minutes; //!< Number of minutes passed since the last request
 } PollRemoteContext;
 
-static void poll_service_timer_callback();
+static void poll_service_timer_callback(void *data);
 
 static RegularTimerInfo s_poll_timer = {
   .cb = poll_service_timer_callback,

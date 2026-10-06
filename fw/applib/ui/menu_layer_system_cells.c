@@ -236,6 +236,7 @@ static void prv_menu_cell_basic_draw_custom_rect(GContext *ctx, const Layer *cel
 }
 #endif // PBL_RECT
 
+#if PBL_ROUND
 // This function duplicates `grect_inset()` but helps us save some stack space by using pointer
 // arguments and always inlining the function
 static PBL_ALWAYS_INLINE void prv_grect_inset(GRect *rect, GEdgeInsets *insets) {
@@ -533,6 +534,7 @@ static PBL_ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(
         ctx, &cell_layer_bounds, config, GTextAlignmentCenter, GAlignCenter, cell_is_selected);
   }
 }
+#endif // PBL_ROUND
 
 static PBL_ALWAYS_INLINE void prv_draw_cell(GContext *ctx, const Layer *cell_layer,
                                             const MenuCellLayerConfig *config) {

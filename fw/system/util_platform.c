@@ -9,7 +9,7 @@
 #include "pbl/util/logging.h"
 
 void util_log(const char *filename, int line, const char *string) {
-  pbl_log(LOG_LEVEL_INFO, filename, line, string);
+  pbl_log(LOG_LEVEL_INFO, filename, line, "%s", string);
 }
 
 void util_dbgserial_str(const char *string) {

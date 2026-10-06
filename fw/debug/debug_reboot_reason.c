@@ -109,10 +109,11 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
         }
       }
       break;
-    case RebootReasonCode_StackOverflow:
+    case RebootReasonCode_StackOverflow: {
       PebbleTask task = (PebbleTask)reason.data8[0];
       PBL_LOG_WRN("%s%sStackOverflow: Task #%d", restarted_safely_string, rebooted_due_to, task);
       break;
+    }
     case RebootReasonCode_EventQueueFull:
       PBL_LOG_WRN("%s%sEvent Queue Full", restarted_safely_string, rebooted_due_to);
       PBL_LOG_WRN("LR: 0x%" PRIx32 " Current: 0x%" PRIx32 " Dropped: 0x%" PRIx32,

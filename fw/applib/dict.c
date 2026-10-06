@@ -170,6 +170,10 @@ Tuple *dict_read_first(DictionaryIterator *iter) {
   return get_safe_cursor(iter);
 }
 
+// The SDK fixes the signature, though a promoted type before the ellipsis is
+// undefined behaviour for va_start(); GCC and clang handle it as expected.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvarargs"
 uint32_t dict_calc_buffer_size(const uint8_t count, ...) {
   uint32_t total_size = sizeof(Dictionary);
   if (count == 0) {
@@ -183,6 +187,7 @@ uint32_t dict_calc_buffer_size(const uint8_t count, ...) {
   va_end(vl);
   return total_size;
 }
+#pragma GCC diagnostic pop
 
 uint32_t dict_calc_buffer_size_from_tuplets(const Tuplet *const tuplets,
                                             const uint8_t tuplets_count) {

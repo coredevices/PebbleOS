@@ -333,7 +333,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
   }
 
   switch (error->status) {
-    case 0:
+    case 0: {
       char chr_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&dsc->uuid.u, chr_uuid_str);
       PBL_LOG_DBG("Found descriptor %s (hdl: 0x%" PRIx16 ")", chr_uuid_str, dsc->handle);
@@ -347,6 +347,7 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       service_node->num_descriptors++;
 
       break;
+    }
     case BLE_HS_EDONE:
       PBL_LOG_DBG("Descriptor discovery done");
 
@@ -411,7 +412,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
   }
 
   switch (error->status) {
-    case 0:
+    case 0: {
       char chr_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&chr->uuid.u, chr_uuid_str);
       PBL_LOG_DBG("Found characteristic %s (val hdl: 0x%" PRIx16 ", def hdl: 0x%" PRIx16 ")",
@@ -423,6 +424,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
       prv_list_append_or_set(&service_node->characteristics, &chr_node->node);
 
       break;
+    }
 
     case BLE_HS_EDONE:
       PBL_LOG_DBG("Characteristic discovery done");
@@ -493,8 +495,9 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
       char service_uuid_str[BLE_UUID_STR_LEN];
       ble_uuid_to_str(&service->uuid.u, service_uuid_str);
-      PBL_LOG_DBG("Found service %s, 0x%" PRIx16 "-0x%" PRIx16 " (total %lu)", service_uuid_str,
-                  service->start_handle, service->end_handle, list_count(context->services));
+      PBL_LOG_DBG("Found service %s, 0x%" PRIx16 "-0x%" PRIx16 " (total %" PRIu32 ")",
+                  service_uuid_str, service->start_handle, service->end_handle,
+                  list_count(context->services));
       break;
 
     case BLE_HS_EDONE:

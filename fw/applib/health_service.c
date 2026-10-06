@@ -1181,7 +1181,7 @@ bool health_service_cancel_metric_alert(HealthMetricAlert *alert) {
     return NULL;
   }
 
-  HealthMetric metric = (HealthMetric)alert;
+  HealthMetric metric = (HealthMetric)(uintptr_t)alert;
   if (prv_is_heart_rate_metric(metric) && !sys_activity_prefs_heart_rate_is_enabled()) {
     return false;
   }
@@ -1439,8 +1439,9 @@ void health_service_activities_iterate(HealthActivityMask activity_mask, time_t 
 // ----------------------------------------------------------------------------------------------
 bool health_service_private_get_yesterdays_sleep_activity(HealthValue *enter_sec,
                                                           HealthValue *exit_sec) {
-  return sys_activity_get_metric(ActivityMetricSleepEnterAtSeconds, 1, enter_sec) &
-         sys_activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, exit_sec);
+  const bool enter_ok = sys_activity_get_metric(ActivityMetricSleepEnterAtSeconds, 1, enter_sec);
+  const bool exit_ok = sys_activity_get_metric(ActivityMetricSleepExitAtSeconds, 1, exit_sec);
+  return enter_ok && exit_ok;
 }
 
 // ----------------------------------------------------------------------------------------------

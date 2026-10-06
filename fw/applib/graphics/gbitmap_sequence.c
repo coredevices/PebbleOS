@@ -168,14 +168,6 @@ void gbitmap_sequence_destroy(GBitmapSequence *bitmap_sequence) {
   }
 }
 
-static PBL_ALWAYS_INLINE GColor8 *prv_target_pixel_addr(GBitmap *bitmap, apng_fctl *fctl,
-                                                        uint32_t x, uint32_t y) {
-  uint32_t offset = (fctl->y_offset + y + bitmap->bounds.origin.y) * bitmap->row_size_bytes +
-                    (fctl->x_offset + x + bitmap->bounds.origin.x);
-  GColor8 *pixel_data = bitmap->addr;
-  return &pixel_data[offset];
-}
-
 static void prv_set_pixel_in_row(uint8_t *row_data, GBitmapFormat bitmap_format, uint32_t x,
                                  GColor8 color) {
   if (bitmap_format == GBitmapFormat1Bit) {

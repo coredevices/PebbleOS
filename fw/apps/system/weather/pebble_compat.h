@@ -104,6 +104,9 @@
 // CROAK (kill the app) on OOM and never return NULL — any `if (!p)` after these is
 // unreachable. Sites with a real fallback path (skip-the-effect scratch buffers,
 // optional resource loads) must use malloc_try instead.
+#undef calloc
+#undef malloc
+#undef free
 #define calloc(n, sz)  app_calloc_check((n), (sz))
 #define malloc(sz)     app_malloc_check(sz)
 #define malloc_try(sz) app_malloc(sz)

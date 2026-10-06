@@ -243,6 +243,7 @@ static inline void ble_npl_hw_exit_critical(uint32_t ctx) {
 static inline bool ble_npl_hw_is_in_critical(void) {
   return pbl_irq_is_locked();
 }
+#undef realloc
 #define realloc kernel_realloc
 
 #if NRF52_SERIES
