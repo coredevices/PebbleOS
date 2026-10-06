@@ -180,7 +180,7 @@ static void prv_launch_timeline_app(AppInstallId app_id, ButtonId button, AppLau
 static void prv_launch_quick_launch_app(AppInstallId app_id, ButtonId button,
                                         AppLaunchReason timeline_reason,
                                         AppQuickLaunchAction action) {
-  if (app_id == APP_ID_QUICK_LAUNCH_NOTHING) {
+  if ((app_id == INSTALL_ID_INVALID) || (app_id == APP_ID_QUICK_LAUNCH_NOTHING)) {
     return;
   }
 
