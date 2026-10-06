@@ -140,7 +140,10 @@ static void prv_stop_text_animation(TranscriptionDialog *transcription_dialog) {
 
 static void prv_transcription_dialog_unload(void *context) {
   TranscriptionDialog *transcription_dialog = context;
-  app_timer_cancel(transcription_dialog->pop_timer);
+  if (transcription_dialog->pop_timer) {
+    app_timer_cancel(transcription_dialog->pop_timer);
+    transcription_dialog->pop_timer = NULL;
+  }
   prv_stop_text_animation(transcription_dialog);
 }
 
@@ -157,6 +160,7 @@ static void prv_transcription_dialog_load(void *context) {
 
 static void prv_transcription_dialog_select_cb(void *context) {
   TranscriptionDialog *transcription_dialog = context;
+  transcription_dialog->pop_timer = NULL;
   if (transcription_dialog->keep_alive_on_select) {
     action_bar_layer_clear_icon(&transcription_dialog->e_dialog.action_bar, BUTTON_ID_SELECT);
   } else {
