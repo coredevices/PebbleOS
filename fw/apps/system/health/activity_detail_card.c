@@ -24,13 +24,14 @@ typedef struct HealthActivityDetailCard {
   HealthDetailZone zones[MAX_NUM_ZONES];
 } HealthActivityDetailCardData;
 
-static void prv_set_calories(char *buffer, size_t buffer_size, int32_t current_calories) {
+static void prv_set_calories(char *buffer, size_t buffer_size, int32_t current_calories,
+                             void *i18n_owner) {
   if (current_calories == 0) {
     strncpy(buffer, EN_DASH, buffer_size);
     return;
   }
 
-  snprintf(buffer, buffer_size, "%" PRId32, current_calories);
+  snprintf(buffer, buffer_size, "%" PRId32 "%s", current_calories, i18n_get("kcal", i18n_owner));
 }
 
 static void prv_set_distance(char *buffer, size_t buffer_size, int32_t current_distance_meters) {
@@ -89,7 +90,7 @@ Window *health_activity_detail_card_create(HealthData *health_data) {
   };
 
   prv_set_calories(heading->primary_value, buffer_len,
-                   health_data_current_calories_get(health_data));
+                   health_data_current_calories_get(health_data), card_data);
 
   prv_set_distance(heading->secondary_value, buffer_len,
                    health_data_current_distance_meters_get(health_data));

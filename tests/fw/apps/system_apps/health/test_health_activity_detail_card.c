@@ -70,6 +70,16 @@ void test_health_activity_detail_card__render_current_calories_and_distance(void
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
+void test_health_activity_detail_card__render_large_calories_and_distance(void) {
+  HealthData health_data = {
+    .current_calories = 2345,
+    .current_distance_meters = 23400,
+  };
+
+  prv_create_card_and_render(&health_data);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
 void test_health_activity_detail_card__render_no_calories(void) {
   HealthData health_data = {
     .current_calories = 0,
