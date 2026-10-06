@@ -7,19 +7,18 @@
 #include <applib/ui/animation.h>
 #include <applib/ui/window.h>
 #include <kernel/events.h>
+#include <shell/system_theme.h>
 
-#define TIMELINE_PEEK_HEIGHT                                                                   \
-  PREFERRED_CONTENT_SIZE_SWITCH(                                                               \
-      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */    \
-      /* small */ PBL_IF_RECT_ELSE(51, 45), /* medium */ PBL_IF_RECT_ELSE(51, 45), /* large */ \
-      59, /* This is the same as Large until ExtraLarge is designed */ /* x-large */ 59)
+#define TIMELINE_PEEK_HEIGHT                                                           \
+  PREFERRED_CONTENT_SIZE_SWITCH(system_theme_get_content_size(),                       \
+                                /* small */ PBL_IF_RECT_ELSE(51, 45),                  \
+                                /* medium */ PBL_IF_RECT_ELSE(51, 45), /* large */ 59, \
+                                /* x-large */ PBL_IF_RECT_ELSE(71, 67))
 
-#define TIMELINE_PEEK_ICON_BOX_WIDTH                                                         \
-  PREFERRED_CONTENT_SIZE_SWITCH(                                                             \
-      PreferredContentSizeDefault, /* This is the same as Medium until Small is designed */  \
-      /* small */ PBL_IF_RECT_ELSE(30, 51), /* medium */ PBL_IF_RECT_ELSE(30, 51),           \
-      /* large */ PBL_IF_RECT_ELSE(34, 51), /* This is the same as Large until ExtraLarge is \
-                                               designed */                                   \
+#define TIMELINE_PEEK_ICON_BOX_WIDTH                                               \
+  PREFERRED_CONTENT_SIZE_SWITCH(                                                   \
+      system_theme_get_content_size(), /* small */ PBL_IF_RECT_ELSE(30, 51),       \
+      /* medium */ PBL_IF_RECT_ELSE(30, 51), /* large */ PBL_IF_RECT_ELSE(34, 51), \
       /* x-large */ PBL_IF_RECT_ELSE(34, 51))
 
 #define TIMELINE_PEEK_MARGIN (5)
