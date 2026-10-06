@@ -220,6 +220,37 @@ function(pbl_link_options)
   set_property(GLOBAL APPEND PROPERTY PBL_LINK_OPTIONS ${ARGN})
 endfunction()
 
+# Host side of a native build: the bottom halves of drivers, compiled against
+# the host's headers and libraries only, none of the firmware's.
+define_property(GLOBAL PROPERTY PBL_HOST_SOURCES
+  BRIEF_DOCS "Sources of the host side of a native build")
+define_property(GLOBAL PROPERTY PBL_HOST_INCLUDE_DIRS
+  BRIEF_DOCS "Header directories of the host side of a native build")
+define_property(GLOBAL PROPERTY PBL_HOST_COMPILE_OPTIONS
+  BRIEF_DOCS "Compile options of the host side of a native build")
+
+function(pbl_host_sources)
+  foreach(src ${ARGN})
+    if(NOT IS_ABSOLUTE ${src})
+      set(src ${CMAKE_CURRENT_SOURCE_DIR}/${src})
+    endif()
+    set_property(GLOBAL APPEND PROPERTY PBL_HOST_SOURCES ${src})
+  endforeach()
+endfunction()
+
+function(pbl_host_include_directories)
+  foreach(dir ${ARGN})
+    if(NOT IS_ABSOLUTE ${dir})
+      set(dir ${CMAKE_CURRENT_SOURCE_DIR}/${dir})
+    endif()
+    set_property(GLOBAL APPEND PROPERTY PBL_HOST_INCLUDE_DIRS ${dir})
+  endforeach()
+endfunction()
+
+function(pbl_host_compile_options)
+  set_property(GLOBAL APPEND PROPERTY PBL_HOST_COMPILE_OPTIONS ${ARGN})
+endfunction()
+
 function(pbl_add_subdirectory_ifdef feature)
   if(${feature})
     foreach(dir ${ARGN})

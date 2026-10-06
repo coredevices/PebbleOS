@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config ARCH_POSIX
+	bool
+	help
+	  Kernel threads run as POSIX threads of a host process, one at a
+	  time. Selected by the SoC.

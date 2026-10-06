@@ -9,7 +9,7 @@ config KERNEL_IDLE_STACK_SIZE
 
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
-	default 1000 if QEMU || SOC_SF32LB52
+	default 1000 if QEMU || SOC_SF32LB52 || SOC_POSIX
 	default 1024
 
 config KERNEL_IRQ_PRIO_KERNEL
@@ -61,3 +61,4 @@ config RAMFUNC
 endmenu
 
 rsource "arch/arm/Kconfig"
+rsource "arch/posix/Kconfig"

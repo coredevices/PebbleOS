@@ -29,7 +29,7 @@ typedef struct {
 #include "displays/display_obelix.h"
 #elif defined(CONFIG_BOARD_GETAFIX_DVT) || defined(CONFIG_BOARD_GETAFIX_DVT2)
 #include "displays/display_getafix.h"
-#elif defined(CONFIG_BOARD_QEMU_EMERY)
+#elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
 #include "displays/display_qemu_emery.h"
 #elif defined(CONFIG_BOARD_QEMU_FLINT)
 #include "displays/display_qemu_flint.h"

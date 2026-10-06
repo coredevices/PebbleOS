@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # The active board's manufacturing sources.
-if(CONFIG_QEMU)
+if(CONFIG_QEMU OR CONFIG_SOC_POSIX)
   set(mfg_board qemu)
 elseif(CONFIG_BOARD_ASTERIX)
   set(mfg_board asterix)

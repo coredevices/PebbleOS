@@ -13,6 +13,8 @@
 #include "boards/board_getafix.h"
 #elif defined(CONFIG_BOARD_QEMU_EMERY)
 #include "boards/board_qemu_emery.h"
+#elif defined(CONFIG_BOARD_NATIVE_EMERY)
+#include "boards/board_native_emery.h"
 #elif defined(CONFIG_BOARD_QEMU_FLINT)
 #include "boards/board_qemu_flint.h"
 #elif defined(CONFIG_BOARD_QEMU_GABBRO)

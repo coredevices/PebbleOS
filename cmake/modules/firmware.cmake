@@ -20,6 +20,18 @@ function(pbl_link_native)
     target_sources(pebbleos PRIVATE $<TARGET_OBJECTS:${lib}>)
   endforeach()
 
+  # The host side keeps none of the firmware's include paths and flags.
+  get_property(host_sources GLOBAL PROPERTY PBL_HOST_SOURCES)
+  get_property(host_includes GLOBAL PROPERTY PBL_HOST_INCLUDE_DIRS)
+  get_property(host_options GLOBAL PROPERTY PBL_HOST_COMPILE_OPTIONS)
+  add_library(pbl_host OBJECT ${host_sources})
+  set_target_properties(pbl_host PROPERTIES
+    INCLUDE_DIRECTORIES "${host_includes}"
+    COMPILE_OPTIONS "-g;-Wall;-Wextra;-Wno-unused-parameter;${host_options}"
+    COMPILE_DEFINITIONS ""
+  )
+  target_sources(pebbleos PRIVATE $<TARGET_OBJECTS:pbl_host>)
+
   if(APPLE)
     target_link_libraries(pebbleos PRIVATE pbl_interface ${static_libs} ${PBL_LIBC_LIBS})
   else()
@@ -37,9 +49,6 @@ function(pbl_link_native)
   else()
     target_link_options(pebbleos PRIVATE -Wl,--gc-sections)
   endif()
-
-  # The system resources the executable installs when started.
-  target_compile_definitions(posix_host PRIVATE PBL_POSIX_DEFAULT_RESOURCES="${PBL_PBPACK}")
 
   set(artifacts pebbleos)
   if(PBL_PBPACK)

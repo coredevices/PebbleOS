@@ -20,9 +20,10 @@
  * @{
  */
 
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||     \
-    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) || \
-    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO)
+#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||         \
+    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) ||     \
+    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO) || \
+    defined(CONFIG_BOARD_NATIVE_EMERY)
 /** @brief OTP slot indexes. */
 enum {
   /** Hardware version. */
