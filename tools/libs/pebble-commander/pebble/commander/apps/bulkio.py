@@ -137,7 +137,7 @@ class OpenResponse:
 
     @classmethod
     def parse(cls, response):
-        response_type = ord(response[0])
+        response_type = response[0]
         if response_type != cls.response_type:
             raise ResponseParseError(f"Unexpected response type: {response_type!r}")
         return cls.Response._make(cls.response_struct.unpack(response))
@@ -152,7 +152,7 @@ class CloseResponse:
 
     @classmethod
     def parse(cls, response):
-        response_type = ord(response[0])
+        response_type = response[0]
         if response_type != cls.response_type:
             raise ResponseParseError(f"Unexpected response type: {response_type!r}")
         return cls.Response._make(cls.response_struct.unpack(response))
@@ -167,7 +167,7 @@ class ReadResponse:
 
     @classmethod
     def parse(cls, response):
-        if ord(response[0]) != cls.response_type:
+        if response[0] != cls.response_type:
             raise ResponseParseError(f"Unexpected response: {response!r}")
         header = response[: cls.header_size]
         body = response[cls.header_size :]
@@ -187,7 +187,7 @@ class WriteResponse:
 
     @classmethod
     def parse(cls, response):
-        response_type = ord(response[0])
+        response_type = response[0]
         if response_type != cls.response_type:
             raise ResponseParseError(f"Unexpected response type: {response_type!r}")
         return cls.Response._make(cls.response_struct.unpack(response))
@@ -202,7 +202,7 @@ class CRCResponse:
 
     @classmethod
     def parse(cls, response):
-        response_type = ord(response[0])
+        response_type = response[0]
         if response_type != cls.response_type:
             raise ResponseParseError(f"Unexpected response type: {response_type!r}")
         return cls.Response._make(cls.response_struct.unpack(response))
@@ -217,7 +217,7 @@ class StatResponse:
         self.tuple = collections.namedtuple(name, "fd flags " + fields)
 
     def parse(self, response):
-        response_type = ord(response[0])
+        response_type = response[0]
         if response_type != self.response_type:
             raise ResponseParseError(f"Unexpected response type: {response_type!r}")
         return self.tuple._make(self.struct.unpack(response))
@@ -235,7 +235,7 @@ class EraseResponse:
 
     @classmethod
     def parse(cls, response):
-        response_type = ord(response[0])
+        response_type = response[0]
         if response_type != cls.response_type:
             raise ResponseParseError(f"Unexpected response type: {response_type!r}")
         return cls.Response._make(cls.response_struct.unpack(response))
@@ -269,7 +269,7 @@ class PULSEIO_Base:
 
     @staticmethod
     def _process_args(*args, **kwargs):
-        return ""
+        return b""
 
     def _send_and_receive(self, cmd_type, resp_type, *args):
         cmd = cmd_type(*args)
@@ -337,15 +337,17 @@ class PULSEIO_Base:
         cmd = ReadCommand(self.fd, self.pos, length)
         self.socket.send(cmd.packet)
 
-        data = bytearray()
+        data = bytearray(length)
         bytes_left = length
         while bytes_left > 0:
             packet = self.socket.receive(block=True)
-            fd, _chunk_offset, chunk = ReadResponse.parse(packet)
+            fd, chunk_offset, chunk = ReadResponse.parse(packet)
             assert fd == self.fd
-            data.extend(chunk)
+            start = chunk_offset - self.pos
+            data[start : start + len(chunk)] = chunk
 
             bytes_left -= len(chunk)
+        self.pos += length
         return data
 
     def crc(self, length):
