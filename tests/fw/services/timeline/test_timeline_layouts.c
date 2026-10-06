@@ -246,7 +246,7 @@ static void prv_check_pages_for_each_size(RenderPageCallback render, const void 
                                           size_t num_pages, const char *pbi_file) {
   ScreenGrid grid;
   screen_grid_init(&grid, num_pages);
-  for (PreferredContentSize size = PreferredContentSizeSmall; size < grid.num_sizes; size++) {
+  for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
     system_theme_set_content_size(size);
     for (size_t page = 0; page < num_pages; page++) {
       render(context, page);

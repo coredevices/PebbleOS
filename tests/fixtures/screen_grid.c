@@ -32,7 +32,8 @@ static const char *const s_screen_grid_size_names[NumPreferredContentSizes] = {
 void screen_grid_init(ScreenGrid *grid, unsigned int num_rows) {
   cl_assert(num_rows <= SCREEN_GRID_MAX_ROWS);
   *grid = (ScreenGrid){
-    .num_sizes = MIN(PreferredContentSizeDefault + 2, NumPreferredContentSizes),
+    .first_size = MAX(PreferredContentSizeDefault - 1, PreferredContentSizeSmall),
+    .last_size = MIN(PreferredContentSizeDefault + 1, PreferredContentSizeExtraLarge),
     .num_rows = num_rows,
   };
 }
@@ -70,9 +71,10 @@ static void prv_screen_grid_draw_same_as(GContext *ctx, PreferredContentSize siz
 
 void screen_grid_add(ScreenGrid *grid, GContext *ctx, PreferredContentSize size,
                      unsigned int row) {
-  cl_assert(size < grid->num_sizes && row < grid->num_rows && !grid->rendered[row][size]);
+  cl_assert(size >= grid->first_size && size <= grid->last_size && row < grid->num_rows &&
+            !grid->rendered[row][size]);
   grid->rendered[row][size] = prv_screen_grid_read(&ctx->dest_bitmap);
-  for (PreferredContentSize earlier = 0; earlier < size; earlier++) {
+  for (PreferredContentSize earlier = grid->first_size; earlier < size; earlier++) {
     if (!memcmp(grid->rendered[row][earlier], grid->rendered[row][size], DISP_COLS * DISP_ROWS)) {
       prv_screen_grid_draw_same_as(ctx, earlier);
       grid->shown[row][size] = prv_screen_grid_read(&ctx->dest_bitmap);
@@ -81,10 +83,10 @@ void screen_grid_add(ScreenGrid *grid, GContext *ctx, PreferredContentSize size,
   }
 }
 
-//! True if every screen matches the Small screen in its row
-static bool prv_screen_grid_is_small_only(const ScreenGrid *grid) {
+//! True if every screen matches the first size's screen in its row
+static bool prv_screen_grid_is_first_size_only(const ScreenGrid *grid) {
   for (unsigned int row = 0; row < grid->num_rows; row++) {
-    for (PreferredContentSize size = 1; size < grid->num_sizes; size++) {
+    for (PreferredContentSize size = grid->first_size + 1; size <= grid->last_size; size++) {
       if (!grid->shown[row][size]) {
         return false;
       }
@@ -94,7 +96,8 @@ static bool prv_screen_grid_is_small_only(const ScreenGrid *grid) {
 }
 
 static GBitmap *prv_screen_grid_create_bitmap(const ScreenGrid *grid) {
-  const unsigned int num_columns = prv_screen_grid_is_small_only(grid) ? 1 : grid->num_sizes;
+  const unsigned int num_columns =
+      prv_screen_grid_is_first_size_only(grid) ? 1 : grid->last_size - grid->first_size + 1;
   // Padding separates columns and rows only when there are several
   const int16_t pad_x = (num_columns > 1) ? SCREEN_GRID_PADDING : 0;
   const int16_t pad_y = (grid->num_rows > 1) ? SCREEN_GRID_PADDING : 0;
@@ -106,7 +109,8 @@ static GBitmap *prv_screen_grid_create_bitmap(const ScreenGrid *grid) {
 
   for (unsigned int row = 0; row < grid->num_rows; row++) {
     for (unsigned int column = 0; column < num_columns; column++) {
-      const uint8_t *pixels = grid->shown[row][column] ?: grid->rendered[row][column];
+      const PreferredContentSize size = grid->first_size + column;
+      const uint8_t *pixels = grid->shown[row][size] ?: grid->rendered[row][size];
       cl_assert(pixels);
       const int16_t x_offset = pad_x + column * (DISP_COLS + pad_x);
       uint8_t *dest = (uint8_t *)bitmap->addr + (pad_y + row * (DISP_ROWS + pad_y)) *

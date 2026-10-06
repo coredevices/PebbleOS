@@ -3,9 +3,9 @@
 
 #pragma once
 
-//! Checks one test's screens at every content size in a single reference image: a column per
-//! size from Small, a row per screen. A screen identical to an earlier size in its row is labelled
-//! with that size. If every size matches, the image is just the Small column.
+//! Checks one test's screens at every content size the Text Size setting offers in a single
+//! reference image: a column per size, a row per screen. A screen identical to an earlier size in
+//! its row is labelled with that size. If every size matches, the image is just the first column.
 //! Tests that include this list tests/fixtures/screen_grid.c in their sources.
 
 #include "applib/graphics/gtypes.h"
@@ -16,8 +16,9 @@
 #define SCREEN_GRID_MAX_ROWS 2
 
 typedef struct ScreenGrid {
-  //! Sizes from Small to the largest the Text Size setting offers, one above the default
-  unsigned int num_sizes;
+  //! The sizes the Text Size setting offers: one below the default to one above it
+  PreferredContentSize first_size;
+  PreferredContentSize last_size;
   unsigned int num_rows;
   //! One byte per pixel: the screen as rendered, and as shown in the grid if labelled
   uint8_t *rendered[SCREEN_GRID_MAX_ROWS][NumPreferredContentSizes];

@@ -130,7 +130,7 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
 static void prv_check_for_each_size(void (*render)(void), const char *pbi_file) {
   ScreenGrid grid;
   screen_grid_init(&grid, 1);
-  for (PreferredContentSize size = PreferredContentSizeSmall; size < grid.num_sizes; size++) {
+  for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
     system_theme_set_content_size(size);
     s_data = (TimelineTestData){};
     render();
