@@ -234,6 +234,12 @@ void ecompass_service_init(void) {
 void ecompass_service_handle(void) {
   static int samples_collected = 0;
 
+  // Data-ready events are posted for any magnetometer user, but only a
+  // subscribed service holds a reference it may release and restart.
+  if (s_compass_subscribers_count == 0) {
+    return;
+  }
+
   // read magnetometer sample
   MagData mag_data;
   MagReadStatus rv = mag_read_data(&mag_data);
