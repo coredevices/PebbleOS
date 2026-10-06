@@ -45,6 +45,7 @@
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/notifications/notification_types.h"
 #include "pbl/services/notifications/notifications.h"
+#include "pbl/services/timeline/actions_endpoint.h"
 #include "pbl/services/timeline/attribute.h"
 #include "pbl/services/timeline/notification_layout.h"
 #include "pbl/services/timeline/swap_layer.h"
@@ -1147,6 +1148,7 @@ static void prv_window_unload(Window *window) {
 
   i18n_free_all(data);
   s_in_use = false;
+  timeline_action_endpoint_send_displayed_item(NULL);
 }
 
 //////////////////////
@@ -1197,6 +1199,7 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
   TimelineItem *n = layout_get_context(layout);
   Uuid *id = &n->header.id;
   notifications_presented_list_set_current(id);
+  timeline_action_endpoint_send_displayed_item(id);
 #if NOTIFICATION_IMAGE_SUPPORTED
   prv_maybe_request_notification_image(layout, n);
 #endif
