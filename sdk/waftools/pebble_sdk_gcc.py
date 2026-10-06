@@ -65,6 +65,8 @@ def configure(conf):
         "-fPIE",
         optimize_flag,
     ]
+    if "FROZEN_AT_REVISION" not in conf.env.PLATFORM:
+        pebble_linkflags.append("-nostartfiles")
 
     conf.env.prepend_value("CFLAGS", pebble_cflags)
     conf.env.prepend_value("LINKFLAGS", pebble_linkflags)
