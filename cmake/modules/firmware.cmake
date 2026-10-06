@@ -97,6 +97,19 @@ function(pbl_link_firmware)
 
   set(artifacts ${hex} ${bin})
 
+  set(syscalls_stamp ${PROJECT_BINARY_DIR}/pebbleos.syscalls)
+  add_custom_command(
+    OUTPUT ${syscalls_stamp}
+    COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_FIRMWARE_PY} check-syscalls
+            --elf ${elf} --objdump ${CMAKE_OBJDUMP}
+    COMMAND ${CMAKE_COMMAND} -E touch ${syscalls_stamp}
+    DEPENDS pebbleos ${PBL_FIRMWARE_PY}
+    WORKING_DIRECTORY ${PBL_BASE}
+    COMMENT "Checking syscall privilege checks"
+    VERBATIM
+  )
+  list(APPEND artifacts ${syscalls_stamp})
+
   # Hashed log strings: the dictionary the console and the bundle use to
   # turn hashes back into messages.
   set(loghash ${PROJECT_BINARY_DIR}/fw/loghash_dict.json)

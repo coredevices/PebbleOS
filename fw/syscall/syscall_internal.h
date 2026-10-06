@@ -27,7 +27,8 @@
 
 //! Useful function for checking syscall privileges.
 //! @return True if the most recent syscall originated from userspace, resulting in a privilege
-//! escalation. It can only be called from a function created with DEFINE_SYSCALL
+//! escalation. It can only be called from a function created with DEFINE_SYSCALL, or from a
+//! PBL_ALWAYS_INLINE helper of one; the firmware build checks this.
 #define PRIVILEGE_WAS_ELEVATED (syscall_internal_check_return_address(PBL_RETURN_ADDRESS(0)))
 
 //! Check if ret_addr points at the drop_privilege code
