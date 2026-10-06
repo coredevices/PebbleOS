@@ -38,6 +38,8 @@
 static PBL_MUTEX_DEFINE(s_gatt_client_subscriptions_mutex);
 static PBL_SEM_DEFINE(s_gatt_client_subscriptions_semphr, 0, 1);
 
+static unsigned int s_dropped_notifications;
+
 //! s_gatt_client_subscriptions_mutex must be taken when accessing these static variables below!
 
 //! Circular buffer holding notifications/indications that still need to be
@@ -223,10 +225,16 @@ void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *conne
 
     bt_lock();
     if (!consumed) {
-      PBL_LOG_ERR(
-          "Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
-          length, bt_lock_is_held() ? "yes" : "no");
+      if (s_dropped_notifications++ == 0) {
+        PBL_LOG_ERR(
+            "Subscription buffer full. Dropping GATT notification of %u bytes (bt_lock held: %s)",
+            length, bt_lock_is_held() ? "yes" : "no");
+      }
       continue;
+    }
+    if (PBL_UNLIKELY(s_dropped_notifications)) {
+      PBL_LOG_ERR("Dropped %u GATT notifications", s_dropped_notifications);
+      s_dropped_notifications = 0;
     }
     prv_lock();
     {
