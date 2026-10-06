@@ -7,414 +7,10 @@
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 #include "pbl/util/string.h"
+#include "pbl/util/utf8.h"
 
 #include <inttypes.h>
 #include <stdbool.h>
-
-////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-////////////////////////////////////////////////////////////////////////////////
-static const unsigned int VALID_UTF8 = 0;
-
-static const uint8_t utf8d[] = {
-  // The first part of the table maps bytes to character classes that
-  // to reduce the size of the transition table and create bitmasks.
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  1,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  9,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  7,
-  8,
-  8,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  2,
-  10,
-  3,
-  3,
-  3,
-  3,
-  3,
-  3,
-  3,
-  3,
-  3,
-  3,
-  3,
-  3,
-  4,
-  3,
-  3,
-  11,
-  6,
-  6,
-  6,
-  5,
-  8,
-  8,
-  8,
-  8,
-  8,
-  8,
-  8,
-  8,
-  8,
-  8,
-  8,
-
-  // The second part is a transition table that maps a combination
-  // of a state of the automaton and a character class to a state.
-  0,
-  12,
-  24,
-  36,
-  60,
-  96,
-  84,
-  12,
-  12,
-  12,
-  48,
-  72,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  0,
-  12,
-  12,
-  12,
-  12,
-  12,
-  0,
-  12,
-  0,
-  12,
-  12,
-  12,
-  24,
-  12,
-  12,
-  12,
-  12,
-  12,
-  24,
-  12,
-  24,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  24,
-  12,
-  12,
-  12,
-  12,
-  12,
-  24,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  24,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  36,
-  12,
-  36,
-  12,
-  12,
-  12,
-  36,
-  12,
-  12,
-  12,
-  12,
-  12,
-  36,
-  12,
-  36,
-  12,
-  12,
-  12,
-  36,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-  12,
-};
-
-static uint32_t utf8_decode(uint8_t *state, uint32_t *codepoint, uint32_t byte) {
-  uint32_t type = utf8d[byte];
-
-  *codepoint =
-      (*state != VALID_UTF8) ? (byte & 0x3fu) | (*codepoint << 6) : (0xff >> type) & (byte);
-
-  *state = utf8d[256 + *state + type];
-  return *state;
-}
 
 //! Print all code points in a c-string (debugging)
 //! @param s A null-terminated c-string
@@ -423,12 +19,12 @@ void utf8_print_code_points(utf8_t *s) {
   uint8_t state = 0;
 
   for (; *s; ++s) {
-    if (!utf8_decode(&state, &codepoint, *s)) {
+    if (!pbl_utf8_decode(&state, &codepoint, *s)) {
       PBL_LOG_ALWAYS("U+%04" PRIX32, codepoint);
     }
   }
 
-  if (state != VALID_UTF8) {
+  if (state != PBL_UTF8_ACCEPT) {
     PBL_LOG_ALWAYS("String is not well-formed");
   }
 }
@@ -446,7 +42,7 @@ uint32_t utf8_peek_codepoint(utf8_t *stream, utf8_t **next_ptr) {
   }
 
   for (; *stream; stream++) {
-    if (utf8_decode(&state, &codepoint, *stream)) {
+    if (pbl_utf8_decode(&state, &codepoint, *stream)) {
       // not done, loop again
       continue;
     }
@@ -472,7 +68,7 @@ utf8_t *utf8_get_next(utf8_t *stream) {
   }
 
   for (; *stream; stream++) {
-    if (!utf8_decode(&state, &codepoint, *stream)) {
+    if (!pbl_utf8_decode(&state, &codepoint, *stream)) {
       // Valid codepoint found; advance to start of next code point
       return ++stream;
     }
@@ -508,11 +104,11 @@ utf8_t *utf8_get_end(const char *text) {
   uint8_t state = 0;
 
   while (*stream) {
-    utf8_decode(&state, &codepoint, *stream);
+    pbl_utf8_decode(&state, &codepoint, *stream);
     stream++;
   }
 
-  bool success = (state == VALID_UTF8);
+  bool success = (state == PBL_UTF8_ACCEPT);
   if (!success) {
     return NULL;
   }

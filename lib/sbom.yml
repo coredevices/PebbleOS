@@ -16,3 +16,10 @@ components:
     description: portable snprintf implementation, with Pebble changes
     license: LicenseRef-snprintf-Powell
     url: http://www.jhweiss.de/software/snprintf.html
+
+  - name: utf8-decoder
+    paths: [util/utf8.c, ../include/pbl/util/utf8.h]
+    supplier: Bjoern Hoehrmann
+    description: Flexible and Economical UTF-8 Decoder
+    license: MIT
+    url: https://bjoern.hoehrmann.de/utf-8/decoder/dfa/

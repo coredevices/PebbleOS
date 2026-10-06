@@ -49,6 +49,7 @@ add_executable(pebble_renderer
   "${PEBBLEOS_ROOT}/lib/util/math.c"
   "${PEBBLEOS_ROOT}/lib/util/trig.c"
   "${PEBBLEOS_ROOT}/lib/util/iterator.c"
+  "${PEBBLEOS_ROOT}/lib/util/utf8.c"
 )
 set_target_properties(pebble_renderer PROPERTIES
   OUTPUT_NAME renderer

@@ -4,13 +4,6 @@
 # Third-party code kept in the firmware tree, see docs/development/sbom.md.
 
 components:
-  - name: utf8-decoder
-    path: applib/graphics/utf8.c
-    supplier: Bjoern Hoehrmann
-    description: Flexible and Economical UTF-8 Decoder
-    license: MIT
-    url: https://bjoern.hoehrmann.de/utf-8/decoder/dfa/
-
   - name: freebsd-timelocal
     paths: [applib/pbl_std/timelocal.c, applib/pbl_std/timelocal.h]
     supplier: The FreeBSD Project
