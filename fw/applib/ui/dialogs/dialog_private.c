@@ -15,7 +15,9 @@
 #include "system/passert.h"
 
 static void prv_app_timer_callback(void *context) {
-  dialog_pop(context);
+  Dialog *dialog = context;
+  dialog->timer = NULL;
+  dialog_pop(dialog);
 }
 
 void dialog_init(Dialog *dialog, const char *dialog_name) {
@@ -67,7 +69,10 @@ void dialog_load(Dialog *dialog) {
 
 // Unloads the core dialog. Should be called from each dialog window's unload callback.
 void dialog_unload(Dialog *dialog) {
-  app_timer_cancel(dialog->timer);
+  if (dialog->timer) {
+    app_timer_cancel(dialog->timer);
+    dialog->timer = NULL;
+  }
 
   if (dialog->show_status_layer) {
     status_bar_layer_deinit(&dialog->status_layer);
