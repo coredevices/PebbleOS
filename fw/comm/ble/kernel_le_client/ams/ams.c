@@ -656,7 +656,6 @@ void ams_handle_read_or_notification(pbl_bt_characteristic_t characteristic, con
     PBL_LOG_ERR("Unexpected characteristic (s_ams_client=%p)", s_ams_client);
     return;
   }
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, value, value_length);
   const AMSEntityUpdateNotification *update = (const AMSEntityUpdateNotification *)value;
   prv_handle_update(update, value_length - sizeof(*update));
 }
