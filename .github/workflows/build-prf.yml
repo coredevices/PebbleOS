@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main, '*-branch']
   workflow_call:
+    inputs:
+      sbom:
+        description: Also generate the software bill of materials
+        type: boolean
+        default: false
 
 jobs:
   changes-prf:
@@ -106,6 +111,10 @@ jobs:
       - name: Bundle
         run: pbl bundle
 
+      - name: SBOM
+        if: inputs.sbom
+        run: pbl build sbom
+
       - name: Copy artifacts
         env:
           BOARD: ${{ steps.artifact_board.outputs.NAME }}
@@ -126,6 +135,9 @@ jobs:
           cp build/pebbleos.hex "artifacts/${prefix}_${BOARD}_${version}.hex"
           cp build/pebbleos.bin "artifacts/${prefix}_${BOARD}_${version}.bin"
           cp build/pebbleos.elf "artifacts/${prefix}_${BOARD}_${version}.elf"
+          if [ -f build/pebbleos.cdx.json ]; then
+            cp build/pebbleos.cdx.json "artifacts/${prefix}_${BOARD}_${version}.cdx.json"
+          fi
 
       - name: Store
         uses: actions/upload-artifact@v7

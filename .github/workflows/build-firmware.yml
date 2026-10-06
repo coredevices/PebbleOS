@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main, '*-branch']
   workflow_call:
+    inputs:
+      sbom:
+        description: Also generate the software bill of materials
+        type: boolean
+        default: false
 
 jobs:
   changes-firmware:
@@ -114,6 +119,10 @@ jobs:
       - name: Bundle
         run: pbl bundle
 
+      - name: SBOM
+        if: inputs.sbom
+        run: pbl build sbom
+
       - name: Copy artifacts
         env:
           BOARD: ${{ steps.artifact_board.outputs.NAME }}
@@ -129,6 +138,9 @@ jobs:
           cp build/pebbleos.elf "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}.elf"
           cp build/pebbleos_loghash_dict.json \
             "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}_loghash_dict.json"
+          if [ -f build/pebbleos.cdx.json ]; then
+            cp build/pebbleos.cdx.json "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}.cdx.json"
+          fi
 
       - name: Copy translation source
         if: matrix.board == 'asterix'

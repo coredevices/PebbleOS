@@ -13,10 +13,14 @@ jobs:
   build-firmware:
     uses: ./.github/workflows/build-firmware.yml
     secrets: inherit
+    with:
+      sbom: true
 
   build-prf:
     uses: ./.github/workflows/build-prf.yml
     secrets: inherit
+    with:
+      sbom: true
 
   build-qemu:
     uses: ./.github/workflows/build-qemu.yml
