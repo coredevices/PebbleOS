@@ -7,6 +7,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/graphics/gtypes.h"
 #include "applib/graphics/text.h"
+#include "applib/ui/action_bar_layer_private.h"
 #include "applib/ui/dialogs/dialog_private.h"
 #include "applib/ui/layer.h"
 #include "applib/ui/text_layer.h"
@@ -103,6 +104,7 @@ static void prv_expandable_dialog_load(Window *window) {
   const uint16_t NM_LEFT_MARGIN_PX = 10;
 
   bool show_action_bar = expandable_dialog->show_action_bar;
+  const bool action_bar_on_right = action_bar_layer_is_on_right();
 
   uint16_t left_margin_px = show_action_bar ? SM_LEFT_MARGIN_PX : NM_LEFT_MARGIN_PX;
   uint16_t right_margin_px = left_margin_px;
@@ -114,8 +116,9 @@ static void prv_expandable_dialog_load(Window *window) {
 
   uint16_t status_layer_offset = dialog->show_status_layer * STATUS_BAR_LAYER_HEIGHT;
   uint16_t action_bar_offset = show_action_bar * ACTION_BAR_WIDTH;
+  uint16_t content_x_start = (show_action_bar && !action_bar_on_right) ? action_bar_offset : 0;
 
-  uint16_t x = 0;
+  uint16_t x = PBL_IF_RECT_ELSE(content_x_start, 0);
   uint16_t y = 0;
   uint16_t w = PBL_IF_RECT_ELSE(frame.size.w - action_bar_offset, frame.size.w);
   uint16_t h = STATUS_BAR_LAYER_HEIGHT;
@@ -142,17 +145,19 @@ static void prv_expandable_dialog_load(Window *window) {
 
   // Set up the header if this dialog is set to have one.
   GTextAlignment alignment = PBL_IF_RECT_ELSE(
-      GTextAlignmentLeft, (show_action_bar ? GTextAlignmentRight : GTextAlignmentCenter));
+      GTextAlignmentLeft,
+      (show_action_bar ? (action_bar_on_right ? GTextAlignmentRight : GTextAlignmentLeft)
+                       : GTextAlignmentCenter));
   uint16_t right_aligned_box_reduction = PBL_IF_RECT_ELSE(0, show_action_bar ? 10 : 0);
   if (has_header) {
     const uint16_t HEADER_OFFSET = 6;
 #if PBL_RECT
-    x = left_margin_px;
+    x = content_x_start + left_margin_px;
     w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
         right_aligned_box_reduction;
 #else
-    x = 0;
     w = frame.size.w - right_margin_px - action_bar_offset - right_aligned_box_reduction;
+    x = (show_action_bar && !action_bar_on_right) ? frame.size.w - w : 0;
 #endif
     y = icon ? icon_offset + icon_size.h : -HEADER_OFFSET;
 
@@ -178,10 +183,15 @@ static void prv_expandable_dialog_load(Window *window) {
 
   // Set up the text.
   const uint16_t TEXT_OFFSET = 6;
-  x = left_margin_px;
+  x = content_x_start + left_margin_px;
   y = (icon ? icon_offset + icon_size.h : -TEXT_OFFSET) + header_content_height;
   w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
       right_aligned_box_reduction;
+#if PBL_ROUND
+  if (show_action_bar && !action_bar_on_right) {
+    x = frame.size.w - left_margin_px - w;
+  }
+#endif
   h = INT16_MAX; // height is clamped to content size
   GFont font = expandable_dialog->body_font;
 
@@ -244,11 +254,14 @@ static void prv_expandable_dialog_load(Window *window) {
     window_set_click_config_provider_with_context(window, prv_config_provider, expandable_dialog);
   }
 
-  x = PBL_IF_RECT_ELSE(left_margin_px,
-                       (show_action_bar)
-                           ? (frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
-                              right_aligned_box_reduction - icon_size.h)
-                           : (90 - icon_size.h / 2));
+  PBL_UNUSED const uint16_t icon_right_x = frame.size.w - right_margin_px - left_margin_px -
+                                           action_bar_offset - right_aligned_box_reduction -
+                                           icon_size.h;
+  x = PBL_IF_RECT_ELSE(
+      content_x_start + left_margin_px,
+      (show_action_bar)
+          ? (action_bar_on_right ? icon_right_x : frame.size.w - icon_right_x - icon_size.w)
+          : (90 - icon_size.h / 2));
   y = icon_offset + PBL_IF_RECT_ELSE(0, 5);
   if (dialog_init_icon_layer(dialog, icon, GPoint(x, y), false /* not animated */)) {
     scroll_layer_add_child(scroll_layer, &dialog->icon_layer.layer);

@@ -359,3 +359,13 @@ bool shell_prefs_get_settings_dbs_compacted_v1(void) {
 void shell_prefs_set_settings_dbs_compacted_v1(bool done) {
   // Not used in SDK shell
 }
+
+#ifdef CONFIG_ORIENTATION_MANAGER
+bool display_orientation_is_left(void) {
+  return false;
+}
+
+void display_orientation_set_left(bool left) {
+  // Not used in SDK shell
+}
+#endif

@@ -68,7 +68,7 @@ pbl_clar_test(test_music
     fw/applib/ui/window.c
     tests/fakes/fake_fonts.c
   PLATFORMS asterix obelix gabbro
-  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
+  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1 CONFIG_ORIENTATION_MANAGER
   OVERRIDES dummy_board
   TEST_IMAGES
 )
