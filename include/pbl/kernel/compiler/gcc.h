@@ -34,5 +34,7 @@
 #define PBL_POPCOUNT_IMPL(x)            __builtin_popcount(x)
 #define PBL_BSWAP16_IMPL(x)             __builtin_bswap16(x)
 #define PBL_BSWAP32_IMPL(x)             __builtin_bswap32(x)
+#define PBL_ADD_OVERFLOW_IMPL(a, b, r)  __builtin_add_overflow(a, b, r)
+#define PBL_MUL_OVERFLOW_IMPL(a, b, r)  __builtin_mul_overflow(a, b, r)
 
 /** @endcond */

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include "pbl/kernel/compiler.h"
 
@@ -179,6 +181,54 @@ int32_t integer_sqrt(int64_t x);
                   PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned long), false,               \
                   PBL_CHOOSE_EXPR(PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned long long), \
                                   false, true))))))
+
+/**
+ * @brief Add two 32-bit unsigned integers, detecting overflow.
+ *
+ * @param a First operand.
+ * @param b Second operand.
+ * @param[out] result Sum, wrapped around on overflow.
+ * @return true if the sum overflowed.
+ */
+static inline bool pbl_u32_add_overflow(uint32_t a, uint32_t b, uint32_t *result) {
+  return PBL_ADD_OVERFLOW(a, b, result);
+}
+
+/**
+ * @brief Multiply two 32-bit unsigned integers, detecting overflow.
+ *
+ * @param a First operand.
+ * @param b Second operand.
+ * @param[out] result Product, wrapped around on overflow.
+ * @return true if the product overflowed.
+ */
+static inline bool pbl_u32_mul_overflow(uint32_t a, uint32_t b, uint32_t *result) {
+  return PBL_MUL_OVERFLOW(a, b, result);
+}
+
+/**
+ * @brief Add two sizes, detecting overflow.
+ *
+ * @param a First operand.
+ * @param b Second operand.
+ * @param[out] result Sum, wrapped around on overflow.
+ * @return true if the sum overflowed.
+ */
+static inline bool pbl_size_add_overflow(size_t a, size_t b, size_t *result) {
+  return PBL_ADD_OVERFLOW(a, b, result);
+}
+
+/**
+ * @brief Multiply two sizes, detecting overflow.
+ *
+ * @param a First operand.
+ * @param b Second operand.
+ * @param[out] result Product, wrapped around on overflow.
+ * @return true if the product overflowed.
+ */
+static inline bool pbl_size_mul_overflow(size_t a, size_t b, size_t *result) {
+  return PBL_MUL_OVERFLOW(a, b, result);
+}
 
 /**
  * @brief Compute a modulo that is never negative.

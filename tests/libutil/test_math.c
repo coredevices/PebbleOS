@@ -267,3 +267,38 @@ void test_math__gcd_basic_reversed(void) {
 void test_math__gcd_of_number_and_itself(void) {
   cl_assert_equal_i(10, gcd(10, 10));
 }
+
+void test_math__u32_add_overflow(void) {
+  uint32_t r;
+  cl_assert(!pbl_u32_add_overflow(1, 2, &r));
+  cl_assert_equal_i(r, 3);
+  cl_assert(!pbl_u32_add_overflow(UINT32_MAX - 1, 1, &r));
+  cl_assert(r == UINT32_MAX);
+  cl_assert(pbl_u32_add_overflow(UINT32_MAX, 2, &r));
+  cl_assert_equal_i(r, 1);
+}
+
+void test_math__u32_mul_overflow(void) {
+  uint32_t r;
+  cl_assert(!pbl_u32_mul_overflow(3, 4, &r));
+  cl_assert_equal_i(r, 12);
+  cl_assert(!pbl_u32_mul_overflow(0x10000, 0xffff, &r));
+  cl_assert(r == 0xffff0000u);
+  cl_assert(pbl_u32_mul_overflow(0x10000, 0x10000, &r));
+  cl_assert_equal_i(r, 0);
+}
+
+void test_math__size_add_overflow(void) {
+  size_t r;
+  cl_assert(!pbl_size_add_overflow(SIZE_MAX - 1, 1, &r));
+  cl_assert(r == SIZE_MAX);
+  cl_assert(pbl_size_add_overflow(SIZE_MAX, 1, &r));
+  cl_assert(r == 0);
+}
+
+void test_math__size_mul_overflow(void) {
+  size_t r;
+  cl_assert(!pbl_size_mul_overflow(SIZE_MAX / 4, 4, &r));
+  cl_assert(r == SIZE_MAX / 4 * 4);
+  cl_assert(pbl_size_mul_overflow(SIZE_MAX / 4 + 1, 4, &r));
+}
