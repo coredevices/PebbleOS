@@ -40,6 +40,15 @@ config SOC
       Stringified SoC name, for places that need the name as a token
       (e.g. sftool -c). Empty on QEMU and POSIX boards.
 
+config POSIX_EMSCRIPTEN
+    bool "Emscripten"
+    depends on SOC_POSIX
+    select ARCH_POSIX_FIBERS
+    help
+      The host is a browser, running the firmware as WebAssembly built
+      with Emscripten. Kernel threads are fibers on the browser's single
+      thread, and the browser's event loop drives the host side.
+
 config SDL
     bool
     depends on SOC_POSIX

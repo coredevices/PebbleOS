@@ -120,6 +120,21 @@ pbl configure --board=native_emery -DCONFIG_ASAN=y -DCONFIG_UBSAN=y
 - `CONFIG_TSAN`: ThreadSanitizer, not together with AddressSanitizer. Firmware
   threads take turns on one CPU, so it mostly checks the host side.
 
+## In a browser
+
+The `wasm` variant of the board builds the same virtual watch as
+WebAssembly, with [Emscripten](https://emscripten.org):
+
+```shell
+pbl configure --board=native_emery/wasm
+pbl build
+python3 -m http.server --directory build
+```
+
+Then open <http://localhost:8000/pebbleos.html>. Click the screen to give it
+the keyboard; the firmware log shows under it. The flash lives in memory, so
+the watch starts afresh on every load, and there is no shell.
+
 ## How it works
 
 The kernel's `posix` architecture (`kernel/arch/posix`) runs each kernel
@@ -149,6 +164,13 @@ A native build is linked without the firmware linker script
 gathers objects from many files, like the shell commands, then uses
 `PBL_UNSORTED_SECTION()`: the host linker collects the section on its own but
 cannot sort it, so the shell picks commands by name when looking them up.
+
+In a browser there is a single thread. The kernel's posix architecture then
+runs kernel threads as Emscripten fibers (`ARCH_POSIX_FIBERS`, with Asyncify)
+instead of pthreads, and the host's main loop is the browser's: each turn it
+delivers the interrupts, runs the kernel until it idles, and hands the browser
+back its thread. A kernel thread that never blocks gives the browser a turn
+every 20 ms.
 
 Things the linker script provides on the target, such as the heaps, the app
 RAM and the build ID, are plain objects in `soc/posix/memory.c`. Firmware

@@ -3,3 +3,7 @@
 
 config RESOURCES_BOARD
     default "qemu_emery"
+
+# A browser has no socket for the emulator's serial port.
+config QEMU_SERIAL
+    default y if !POSIX_EMSCRIPTEN

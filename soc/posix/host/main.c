@@ -14,6 +14,10 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
+
 #define MAX_OPTIONS 16
 #define MAX_HOOKS   16
 #define POLL_MS     10
@@ -124,6 +128,15 @@ static void prv_parse_options(int argc, char **argv) {
 }
 
 // Waits up to POLL_MS for a wake-up; returns whether to quit.
+#ifdef __EMSCRIPTEN__
+// The browser has the only thread: give it its turn, to draw and to queue
+// input, without waiting when there is work.
+static bool prv_wait(void) {
+  emscripten_sleep(s_woken ? 0 : POLL_MS);
+  s_woken = false;
+  return s_quit;
+}
+#else
 static bool prv_wait(void) {
   struct timeval now;
   gettimeofday(&now, nullptr);
@@ -144,6 +157,7 @@ static bool prv_wait(void) {
   pthread_mutex_unlock(&s_lock);
   return quit;
 }
+#endif
 
 int main(int argc, char **argv) {
   s_argv = argv;
@@ -182,6 +196,9 @@ int main(int argc, char **argv) {
 
   if (s_reboot) {
     fprintf(stderr, "\n*** reboot ***\n\n");
+#ifdef __EMSCRIPTEN__
+    emscripten_run_script("location.reload()");
+#endif
     execv(s_argv[0], s_argv);
     perror("execv");
     exit(1);
