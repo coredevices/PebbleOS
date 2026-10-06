@@ -476,6 +476,7 @@ pbl_clar_test(test_timeline_peek
     fw/system/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_system_theme.c
     fw/applib/ui/animation_interpolate.c
