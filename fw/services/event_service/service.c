@@ -6,6 +6,7 @@
 #include "kernel/pebble_tasks.h"
 #include "process_management/app_manager.h"
 #include "process_management/worker_manager.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/kernel/mutex.h"
 #include "pbl/services/event_service.h"
 #include "syscall/syscall_internal.h"
@@ -51,6 +52,8 @@ static PBL_MUTEX_DEFINE(s_plugin_list_mutex);
 // There's an event service for each event so that
 // System apps can also use the service
 static EventServiceEntry *s_event_services[PEBBLE_NUM_EVENTS];
+
+static unsigned int s_dropped_events;
 
 static void prv_event_service_unsubscribe(PebbleSubscriptionEvent *subscription) {
   EventServiceEntry *service = s_event_services[subscription->event_type];
@@ -213,8 +216,15 @@ void event_service_handle_event(PebbleEvent *e) {
         // because handling it inline could modify the event
         continue;
       } else {
-        if (!prv_event_service_send_event(service->subscribers[i], e)) {
-          PBL_LOG_ERR("Queue full! %d not delivered to task %d!", (int)e->type, (int)i);
+        if (prv_event_service_send_event(service->subscribers[i], e)) {
+          if (PBL_UNLIKELY(s_dropped_events)) {
+            PBL_LOG_ERR("Dropped %u events on full queues", s_dropped_events);
+            s_dropped_events = 0;
+          }
+        } else {
+          if (s_dropped_events++ == 0) {
+            PBL_LOG_ERR("Queue full! %d not delivered to task %d!", (int)e->type, (int)i);
+          }
 #ifndef CONFIG_RELEASE
           // For 3rd party apps, just close them. For a 1st party app or other task, reboot
           // the watch
