@@ -13,6 +13,7 @@ pbl_clar_test(test_kernel
     kernel/irq.c
     kernel/debug.c
     kernel/arch/posix/arch.c
+    kernel/arch/posix/test.c
   INCLUDES
     kernel
     kernel/arch

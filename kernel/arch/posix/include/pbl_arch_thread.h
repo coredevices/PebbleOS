@@ -3,15 +3,11 @@
 
 #pragma once
 
-#include <pthread.h>
-#include <stdbool.h>
+struct posix_thread;
 
 //! Each kernel thread is a pthread that runs only while the kernel says so.
+//! The pthread's state lives apart from the kernel thread, which can be
+//! recreated while an aborted pthread still waits on its own state.
 struct pbl_arch_thread {
-  pthread_t tid;
-  pthread_cond_t wake;
-  void (*entry)(void *);
-  void *arg;
-  bool created;
-  bool run;
+  struct posix_thread *pt;
 };
