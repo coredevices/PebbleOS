@@ -37,3 +37,6 @@
 [submodule "third_party/mbedtls/mbedtls"]
 	path = third_party/mbedtls/mbedtls
 	url = https://github.com/Mbed-TLS/mbedtls.git
+[submodule "third_party/uzlib/uzlib"]
+	path = third_party/uzlib/uzlib
+	url = https://github.com/coredevices/uzlib.git
