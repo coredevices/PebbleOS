@@ -19,6 +19,21 @@ from waflib.Task import Task
 from waflib.TaskGen import after_method, before_method, feature
 from waflib.Tools import c, c_preproc
 
+INIT_ARRAYS = """
+        . = ALIGN(4);
+        PROVIDE_HIDDEN(__preinit_array_start = .);
+        KEEP(*(.preinit_array))
+        PROVIDE_HIDDEN(__preinit_array_end = .);
+        PROVIDE_HIDDEN(__init_array_start = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)))
+        KEEP(*(.init_array))
+        PROVIDE_HIDDEN(__init_array_end = .);
+        PROVIDE_HIDDEN(__fini_array_start = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
+        KEEP(*(.fini_array))
+        PROVIDE_HIDDEN(__fini_array_end = .);
+"""
+
 # Override the default waf task __str__ method to include display of the HW platform being targeted
 Task.__str__ = wrap_task_name_with_platform
 
@@ -129,6 +144,7 @@ def build(bld):
             features="subst",
             source=find_sdk_component(bld, bld.env, "pebble_app.ld.template"),
             target=build_node.make_node("pebble_app.ld.auto"),
+            INIT_ARRAYS="" if "FROZEN_AT_REVISION" in bld.env.PLATFORM else INIT_ARRAYS,
             **bld.env.PLATFORM,
         )
 

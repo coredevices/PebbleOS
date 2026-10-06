@@ -70,7 +70,8 @@ MAX_APP_MEMORY_SIZE = 24 * 1024
 # See also WORKER_RAM in stm32f2xx_flash_fw.ld
 MAX_WORKER_MEMORY_SIZE = 10 * 1024
 
-ENTRY_PT_SYMBOL = "main"
+ENTRY_PT_SYMBOL = "pbl_process_entry"
+MAIN_SYMBOL = "main"
 JUMP_TABLE_ADDR_SYMBOL = "pbl_table_addr"
 ABS_RELOC_TYPES = ("R_ARM_ABS32", "R_ARM_TARGET1")
 DEBUG = False
@@ -230,11 +231,18 @@ def inject_metadata(
     nm_output = get_nm_output(target_elf)
 
     try:
-        app_entry_address = get_symbol_addr(nm_output, ENTRY_PT_SYMBOL)
+        main_address = get_symbol_addr(nm_output, MAIN_SYMBOL)
     except RuntimeError as e:
         raise RuntimeError(
             "Missing app entry point! Must be `int main(void) { ... }` "
         ) from e
+
+    # A libpebble.a built before it had an entry point leaves main as the entry.
+    try:
+        app_entry_address = get_symbol_addr(nm_output, ENTRY_PT_SYMBOL)
+    except RuntimeError:
+        app_entry_address = main_address
+
     jump_table_address = get_symbol_addr(nm_output, JUMP_TABLE_ADDR_SYMBOL)
 
     reloc_entries = get_relocate_entries(target_elf)

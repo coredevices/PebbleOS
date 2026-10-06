@@ -49,6 +49,8 @@ for f in files:
             ${symbols} ${PBL_BASE} ${PROJECT_BINARY_DIR}
             ${PBL_PLATFORM_NAME}
     DEPENDS ${script} ${symbols} ${headers}
+            ${PBL_BASE}/tools/generate_native_sdk/generate_app_shim.py
+            ${PBL_BASE}/sdk/libpebble/entry.c
     WORKING_DIRECTORY ${PBL_BASE}
     COMMENT "Generating native SDK shims"
     VERBATIM

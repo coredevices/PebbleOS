@@ -70,27 +70,38 @@ def gen_shim_asm(functions):
     return "\n".join(output)
 
 
+ENTRY_SRC = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "sdk",
+    "libpebble",
+    "entry.c",
+)
+ENTRY_CFLAGS = [
+    "-std=c11",
+    "-Os",
+    "-fPIE",
+    "-ffunction-sections",
+    "-fdata-sections",
+    "-Wall",
+    "-Werror",
+]
+
+
 class CompilationFailedError(Exception):
     pass
 
 
-def build_shim(shim_s, dest_dir):
-    shim_a = os.path.join(dest_dir, "libpebble.a")
-    # Delete any existing archive, otherwise `ar` will append/insert to it:
-    if os.path.exists(shim_a):
-        os.remove(shim_a)
-    shim_o_fd, shim_o = tempfile.mkstemp(suffix="pebble.o")
-    os.close(shim_o_fd)
+def _compile(src, obj, flags):
     gcc_process = subprocess.Popen(
         [
             "arm-none-eabi-gcc",
             "-mcpu=cortex-m3",
             "-mthumb",
-            "-fPIC",
+            *flags,
             "-c",
             "-o",
-            shim_o,
-            shim_s,
+            obj,
+            src,
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -100,15 +111,27 @@ def build_shim(shim_s, dest_dir):
         print(output[1])
         raise CompilationFailedError()
 
-    ar_process = subprocess.Popen(
-        ["arm-none-eabi-ar", "rcs", shim_a, shim_o],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    output = ar_process.communicate()
-    if ar_process.returncode != 0:
-        print(output[1])
-        raise CompilationFailedError()
+
+def build_shim(shim_s, dest_dir):
+    shim_a = os.path.join(dest_dir, "libpebble.a")
+    # Delete any existing archive, otherwise `ar` will append/insert to it:
+    if os.path.exists(shim_a):
+        os.remove(shim_a)
+
+    with tempfile.TemporaryDirectory() as obj_dir:
+        objs = [os.path.join(obj_dir, "pebble.o"), os.path.join(obj_dir, "entry.o")]
+        _compile(shim_s, objs[0], ["-fPIC"])
+        _compile(ENTRY_SRC, objs[1], ENTRY_CFLAGS)
+
+        ar_process = subprocess.Popen(
+            ["arm-none-eabi-ar", "rcs", shim_a, *objs],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        output = ar_process.communicate()
+        if ar_process.returncode != 0:
+            print(output[1])
+            raise CompilationFailedError()
 
 
 def make_app_shim_lib(functions, sdk_lib_dir):

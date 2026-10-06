@@ -1,5 +1,6 @@
 
 ENTRY(main)
+EXTERN(pbl_process_entry)
 
 MEMORY
 {
@@ -33,6 +34,7 @@ SECTIONS
     {
         KEEP(*(.data))
         *(.data.*)
+@INIT_ARRAYS@
     } > APP
 
     .bss :
